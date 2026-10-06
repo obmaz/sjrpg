@@ -1,4 +1,5 @@
-'use strict';
+import { player } from '../core/state.js';
+import { getQuest } from '../systems/quests.js';
 
 function renderQuestJournal() {
     const list = document.getElementById('questList');
@@ -29,3 +30,5 @@ function formatQuestProgress(quest, progress) {
         return progress >= quest.target ? '완료!' : `${quest.bossName || '보스'} 처치 필요`;
     return `${progress} / ${quest.target}`;
 }
+
+export { renderQuestJournal };

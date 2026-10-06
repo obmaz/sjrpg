@@ -1,4 +1,19 @@
-'use strict';
+import { canvas, ctx } from '../core/canvas.js';
+import { enemies, player } from '../core/state.js';
+import {
+    drawEnemyProjectiles,
+    drawFireZones,
+    drawFloatingTexts,
+    drawGoldPickups,
+    drawMounts,
+    drawParticles,
+    drawProjectiles,
+    drawVisionFog,
+    drawWeaponPickups,
+} from './effects.js';
+import { drawChests, drawEntity, drawNpcs, drawScarecrows } from './entities.js';
+import { drawMinimap } from './minimap.js';
+import { drawFountain, drawPortals, drawTerrain } from './terrain.js';
 
 // ============================================================
 //  RENDERING
@@ -65,3 +80,5 @@ function draw() {
         drawVisionFog();
     }
 }
+
+export { draw };

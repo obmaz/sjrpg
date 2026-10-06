@@ -1,5 +1,3 @@
-'use strict';
-
 // BOSS DEFINITIONS
 const BOSS_TYPES = [
     {
@@ -111,3 +109,5 @@ const BOSS_TYPES = [
 function getRandomBoss() {
     return BOSS_TYPES[Math.floor(Math.random() * BOSS_TYPES.length)];
 }
+
+export { BOSS_TYPES, getRandomBoss };

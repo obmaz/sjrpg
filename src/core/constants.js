@@ -1,5 +1,3 @@
-'use strict';
-
 // ============================================================
 //  TERRAIN GENERATION
 // ============================================================
@@ -35,3 +33,22 @@ const MAX_FRAME_DELTA = 0.1;
 const GAME_DURATION_SECONDS = 600;
 const POISON_TICK_INTERVAL = 10;
 const SNAKE_POISON_DURATION = 30;
+
+export {
+    TILE_SIZE,
+    MOUNT_WIDTH,
+    MOUNT_HEIGHT,
+    MAP_WIDTH,
+    MAP_HEIGHT,
+    FOUNTAIN_CENTER_X,
+    FOUNTAIN_CENTER_Y,
+    TILE_TYPES,
+    TILE_KEYS,
+    INVENTORY_CAPACITY,
+    INVENTORY_COLUMNS,
+    CONSUMABLE_CAPACITY,
+    MAX_FRAME_DELTA,
+    GAME_DURATION_SECONDS,
+    POISON_TICK_INTERVAL,
+    SNAKE_POISON_DURATION,
+};

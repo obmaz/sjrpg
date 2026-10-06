@@ -1,4 +1,6 @@
-'use strict';
+import { CONSUMABLE_CAPACITY } from '../core/constants.js';
+import { player } from '../core/state.js';
+import { DESERT_QUESTS, MAIN_QUESTS } from '../data/quests.js';
 
 function updateHud() {
     const weapon = player.weapon;
@@ -103,3 +105,5 @@ function updateHud() {
         }
     }
 }
+
+export { updateHud };

@@ -1,5 +1,3 @@
-'use strict';
-
 // ============================================================
 //  WEAPON / ITEM DEFINITIONS
 //  ability: 'combo' | 'wide' | 'combo_wide' | 'ranged' | 'fire' | 'legend' | 'push' | 'slam'
@@ -240,3 +238,5 @@ const WEAPONS = [
         desc: '맹독 광역 내려찍기',
     },
 ];
+
+export { WEAPONS };

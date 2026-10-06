@@ -1,5 +1,3 @@
-'use strict';
-
 // ============================================================
 //  CHEST TYPE DEFINITIONS
 // ============================================================
@@ -27,3 +25,5 @@ const CHEST_TYPES = [
         dropWeapons: ['axe', 'staff', 'firesword', 'legend', 'ice_sword'],
     },
 ];
+
+export { CHEST_TYPES };

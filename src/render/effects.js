@@ -1,4 +1,15 @@
-'use strict';
+import { camera, canvas, ctx } from '../core/canvas.js';
+import {
+    enemyProjectiles,
+    fireZones,
+    floatingTexts,
+    goldPickups,
+    mounts,
+    particles,
+    player,
+    projectiles,
+    weaponPickups,
+} from '../core/state.js';
 
 // ============================================================
 //  EFFECTS RENDERING (projectiles, particles, fire zones, floating texts, vision fog)
@@ -231,3 +242,15 @@ function drawVisionFog() {
         });
     }
 }
+
+export {
+    drawFireZones,
+    drawProjectiles,
+    drawEnemyProjectiles,
+    drawGoldPickups,
+    drawWeaponPickups,
+    drawMounts,
+    drawParticles,
+    drawFloatingTexts,
+    drawVisionFog,
+};

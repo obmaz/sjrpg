@@ -1,5 +1,3 @@
-'use strict';
-
 // ============================================================
 //  ENEMY TYPE DEFINITIONS
 // ============================================================
@@ -263,3 +261,5 @@ const DESERT_ENEMY_TYPES = [
         projSpeed: 300,
     },
 ];
+
+export { ENEMY_TYPES, DESERT_ENEMY_TYPES };

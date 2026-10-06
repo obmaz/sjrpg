@@ -1,4 +1,12 @@
-'use strict';
+import { recordDiscovery } from '../core/helpers.js';
+import { player, session } from '../core/state.js';
+import { AUX_WEAPONS } from '../data/aux-weapons.js';
+import { DESERT_QUESTS, MAIN_QUESTS, QUESTS } from '../data/quests.js';
+import { spawnDesertTraveler } from './spawning.js';
+import { updateHud } from '../ui/hud.js';
+import { addMessage } from '../ui/messages.js';
+import { renderQuestJournal } from '../ui/quest-journal.js';
+import { triggerVictory } from '../ui/results.js';
 
 function getQuest(id) {
     return QUESTS.find((q) => q.id === id) || null;
@@ -74,14 +82,14 @@ function updateQuestProgress() {
         addMessage('🏆 숲의 주요 퀘스트 완료! 황금 제국 퀘스트로 사막 모험을 이어가세요.', 'loot');
     }
     if (
-        !gameVictory &&
+        !session.gameVictory &&
         player.currentRegion === 'desert' &&
         DESERT_QUESTS.every((questId) => player.completedQuests.includes(questId))
     ) {
         triggerVictory('🏆 사막의 모든 퀘스트 완료! 진정한 승리!');
     }
     if (
-        !gameVictory &&
+        !session.gameVictory &&
         !player.desertUnlocked &&
         player.currentRegion === 'forest' &&
         player.completedQuests.includes('slay_boss') &&
@@ -94,3 +102,5 @@ function updateQuestProgress() {
     }
     if (changed) renderQuestJournal();
 }
+
+export { getQuest, isQuestAvailable, abandonRegionQuests, updateQuestProgress };

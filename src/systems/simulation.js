@@ -1,7 +1,41 @@
-'use strict';
+import { updateCamera } from '../core/canvas.js';
+import {
+    MAP_HEIGHT,
+    MAP_WIDTH,
+    MAX_FRAME_DELTA,
+    POISON_TICK_INTERVAL,
+    TILE_SIZE,
+} from '../core/constants.js';
+import {
+    checkPlayerDeath,
+    clamp,
+    distance,
+    isGameActive,
+    updateDeferredActions,
+} from '../core/helpers.js';
+import { player, portals, scarecrows, session } from '../core/state.js';
+import { updateEnemies } from './enemy-ai.js';
+import {
+    spawnFloatingText,
+    spawnParticles,
+    updateChests,
+    updateEnemyProjectiles,
+    updateFireZones,
+    updateFloatingTexts,
+    updateGoldPickups,
+    updateParticles,
+    updateProjectiles,
+    updateWeaponPickups,
+} from './entities.js';
+import { updatePlayer } from './player.js';
+import { updateQuestProgress } from './quests.js';
+import { checkPortalSpawn } from './travel.js';
+import { updateHud } from '../ui/hud.js';
+import { addMessage } from '../ui/messages.js';
+import { showGameOverScreen } from '../ui/results.js';
 
 function update(deltaTime) {
-    if (!isGameActive() || gamePaused || inventoryOpen) return;
+    if (!isGameActive() || session.gamePaused || session.inventoryOpen) return;
     if (checkPlayerDeath()) return;
 
     // Cap dt
@@ -106,3 +140,5 @@ function update(deltaTime) {
         if (sc.hurtTimer > 0) sc.hurtTimer -= clampedDeltaTime;
     }
 }
+
+export { update };

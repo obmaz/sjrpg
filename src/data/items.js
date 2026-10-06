@@ -1,5 +1,3 @@
-'use strict';
-
 const ITEMS = [
     {
         id: 'healpot',
@@ -45,3 +43,5 @@ const ITEMS = [
         use: 'return',
     },
 ];
+
+export { ITEMS };

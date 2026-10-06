@@ -1,5 +1,3 @@
-'use strict';
-
 const SHOP_ITEMS = {
     village: [
         { id: 'dagger', price: 50 },
@@ -14,6 +12,9 @@ const SHOP_ITEMS = {
         { itemId: 'antidote', price: 40 },
         { itemId: 'speedpot', price: 80 },
         { itemId: 'returngem', price: 500 },
+        { auxId: 'healpot', price: 120 },
+        { auxId: 'icebomb', price: 150 },
+        { auxId: 'taunt', price: 120 },
     ],
     blackmarket: [
         { id: 'firesword', price: 800 },
@@ -28,5 +29,12 @@ const SHOP_ITEMS = {
         { itemId: 'antidote', price: 40 },
         { itemId: 'speedpot', price: 80 },
         { itemId: 'returngem', price: 500 },
+        { auxId: 'thunder', price: 200 },
+        { auxId: 'poison', price: 180 },
+        { auxId: 'healpot', price: 120 },
+        { auxId: 'icebomb', price: 150 },
+        { auxId: 'taunt', price: 120 },
     ],
 };
+
+export { SHOP_ITEMS };

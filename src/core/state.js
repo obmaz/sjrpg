@@ -1,4 +1,20 @@
-'use strict';
+import { GAME_DURATION_SECONDS, MAP_HEIGHT, MAP_WIDTH, TILE_SIZE } from './constants.js';
+import { WEAPONS } from '../data/weapons.js';
+const session = {
+    terrainRevision: 0,
+    gamePaused: false,
+    slotMachineOpen: false,
+    gameOver: false,
+    gameVictory: false,
+    lastTime: performance.now(),
+    gameStarted: false,
+    inventoryOpen: false,
+    selectedInventoryIndex: 0,
+    compendiumOpen: false,
+    shopOpen: false,
+    currentShopType: 'village',
+    tileMap: [],
+};
 
 // ============================================================
 //  PLAYER
@@ -65,23 +81,14 @@ const goldPickups = []; // map gold
 const chests = []; // breakable chests
 const npcs = []; // NPCs on map
 const weaponPickups = []; // weapon drops on ground
-let gamePaused = false; // pause for dialogs
-let slotMachineOpen = false;
+// pause for dialogs
+
 const enemyProjectiles = []; // ranged enemy projectiles
 const mounts = []; // rideable mounts
 const portals = []; // stage portals
 const scarecrows = []; // training dummies (허수아비)
 const floatingTexts = [];
-let gameOver = false;
-let gameVictory = false;
-let lastTime = performance.now();
-let gameStarted = false;
-let inventoryOpen = false;
-let selectedInventoryIndex = 0;
-let compendiumOpen = false;
-let shopOpen = false;
-let currentShopType = 'village';
-let tileMap = [];
+
 const pendingGameActions = [];
 const WORLD_ENTITY_LISTS = [
     enemies,
@@ -99,3 +106,23 @@ const WORLD_ENTITY_LISTS = [
     floatingTexts,
     pendingGameActions,
 ];
+export {
+    player,
+    inventory,
+    enemies,
+    particles,
+    projectiles,
+    fireZones,
+    goldPickups,
+    chests,
+    npcs,
+    weaponPickups,
+    enemyProjectiles,
+    mounts,
+    portals,
+    scarecrows,
+    floatingTexts,
+    pendingGameActions,
+    WORLD_ENTITY_LISTS,
+    session,
+};

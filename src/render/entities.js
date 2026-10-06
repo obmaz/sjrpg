@@ -1,4 +1,7 @@
-'use strict';
+import { camera, canvas, ctx } from '../core/canvas.js';
+import { distance, getAvailableQuests } from '../core/helpers.js';
+import { chests, npcs, player, scarecrows } from '../core/state.js';
+import { getFacingAngle } from '../systems/combat.js';
 
 // ============================================================
 //  ENTITY RENDERING (enemies, player, NPCs, chests, pickups, mounts)
@@ -1341,3 +1344,5 @@ function drawScarecrows() {
         }
     }
 }
+
+export { drawNpcs, drawChests, drawEntity, drawScarecrows };

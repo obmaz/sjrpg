@@ -1,4 +1,16 @@
-'use strict';
+import { camera, canvas } from '../core/canvas.js';
+import {
+    FOUNTAIN_CENTER_X,
+    FOUNTAIN_CENTER_Y,
+    MAP_HEIGHT,
+    MAP_WIDTH,
+    TILE_KEYS,
+    TILE_SIZE,
+    TILE_TYPES,
+} from '../core/constants.js';
+import { getAvailableQuests } from '../core/helpers.js';
+import { enemies, npcs, player } from '../core/state.js';
+import { getTile } from '../systems/world.js';
 
 // ============================================================
 //  MINIMAP RENDERING
@@ -89,3 +101,5 @@ function drawMinimap() {
 
 // ============================================================
 //  INVENTORY UI
+
+export { drawMinimap };

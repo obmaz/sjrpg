@@ -1,4 +1,6 @@
-'use strict';
+import { MAP_HEIGHT, MAP_WIDTH, TILE_SIZE } from './constants.js';
+import { chests, enemies, player } from './state.js';
+import { isSolidTile, isWaterTile } from '../systems/world.js';
 
 // ============================================================
 //  COLLISION
@@ -133,3 +135,12 @@ function collidesWithEntities(x, y, w, h, self) {
 function rectanglesOverlap(x1, y1, w1, h1, x2, y2, w2, h2) {
     return x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2;
 }
+
+export {
+    collidesWithMap,
+    canOccupyMountPosition,
+    distanceBetweenRectangles,
+    advanceProjectile,
+    collidesWithEntities,
+    rectanglesOverlap,
+};

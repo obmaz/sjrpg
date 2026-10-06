@@ -1,4 +1,5 @@
-'use strict';
+import { player, session } from '../core/state.js';
+import { stopBgMusic } from '../systems/audio.js';
 
 // ============================================================
 //  GAME LOOP
@@ -13,11 +14,11 @@ function showGameOverScreen(reason) {
 }
 
 function showResultScreen(type, reason) {
-    if (gameOver || gameVictory) return;
+    if (session.gameOver || session.gameVictory) return;
     stopBgMusic();
     const isWin = type === 'victory';
-    if (isWin) gameVictory = true;
-    else gameOver = true;
+    if (isWin) session.gameVictory = true;
+    else session.gameOver = true;
 
     // Grade calculation
     const score = player.kills * 10 + player.gold + Math.floor(player.damageDealt / 5);
@@ -71,3 +72,5 @@ function showResultScreen(type, reason) {
         document.getElementById('gameOver').classList.remove('hidden');
     }
 }
+
+export { triggerVictory, showGameOverScreen };

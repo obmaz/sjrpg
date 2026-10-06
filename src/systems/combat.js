@@ -1,4 +1,19 @@
-'use strict';
+import { INVENTORY_CAPACITY } from '../core/constants.js';
+import { canAct, distance, getEnemiesInRadius, recordDiscovery } from '../core/helpers.js';
+import { enemies, inventory, particles, player, scarecrows } from '../core/state.js';
+import { WEAPONS } from '../data/weapons.js';
+import { playEnemyDeathSound, playHitSound, playSlashSound } from './audio.js';
+import {
+    spawnFireZone,
+    spawnFloatingText,
+    spawnParticles,
+    spawnProjectile,
+    spawnWeaponPickup,
+} from './entities.js';
+import { spawnMoreEnemies, spawnStageNpcs } from './spawning.js';
+import { checkPortalSpawn } from './travel.js';
+import { updateHud } from '../ui/hud.js';
+import { addMessage } from '../ui/messages.js';
 
 function attackWithWeapon() {
     if (!canAct()) return;
@@ -607,3 +622,5 @@ function hitScarecrow(scarecrow, dmg) {
     spawnFloatingText(scarecrow.x + scarecrow.w / 2, scarecrow.y - 8, `-${dmg}`, '#ffaa44');
     spawnParticles(scarecrow.x + scarecrow.w / 2, scarecrow.y + scarecrow.h / 2, '#ddcc88', 8);
 }
+
+export { attackWithWeapon, getPlayerAttackOrigin, offsetInDirection, getFacingAngle, damageEnemy };

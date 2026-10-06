@@ -1,4 +1,22 @@
-'use strict';
+import {
+    canOccupyMountPosition,
+    collidesWithEntities,
+    collidesWithMap,
+    rectanglesOverlap,
+} from '../core/collision.js';
+import {
+    FOUNTAIN_CENTER_X,
+    FOUNTAIN_CENTER_Y,
+    MAP_HEIGHT,
+    MAP_WIDTH,
+    MOUNT_HEIGHT,
+    MOUNT_WIDTH,
+    TILE_SIZE,
+} from '../core/constants.js';
+import { canAct, findNearbySpawnPosition } from '../core/helpers.js';
+import { mounts, player } from '../core/state.js';
+import { updateHud } from '../ui/hud.js';
+import { addMessage } from '../ui/messages.js';
 
 function dismountPlayer() {
     if (!canAct() || !player.mount) return;
@@ -79,3 +97,5 @@ function spawnMount(mountType, x, y) {
     mounts.push(mount);
     return mount;
 }
+
+export { dismountPlayer, spawnMount };

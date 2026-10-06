@@ -1,4 +1,15 @@
-'use strict';
+import {
+    canAct,
+    deferGameAction,
+    getEnemiesInRadius,
+    healPlayer,
+    isGameActive,
+} from '../core/helpers.js';
+import { enemies, particles, player, projectiles } from '../core/state.js';
+import { damageEnemy, getFacingAngle, getPlayerAttackOrigin, offsetInDirection } from './combat.js';
+import { spawnFireZone, spawnParticles, spawnProjectile } from './entities.js';
+import { updateHud } from '../ui/hud.js';
+import { addMessage } from '../ui/messages.js';
 
 // ============================================================
 //  AUXILIARY WEAPON
@@ -295,3 +306,5 @@ function placeTrap(auxiliaryWeapon, origin) {
     spawnParticles(fz.x, fz.y, '#aa8844', 8);
     addMessage('🪤 덫 설치!', 'info');
 }
+
+export { cycleAuxWeapon, useAuxWeapon, throwBoomerang };

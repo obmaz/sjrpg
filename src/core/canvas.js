@@ -1,4 +1,6 @@
-'use strict';
+import { MAP_HEIGHT, MAP_WIDTH, TILE_SIZE } from './constants.js';
+import { player, session } from './state.js';
+import { draw } from '../render/scene.js';
 
 // ============================================================
 //  2D RPG - 자연의 수호자
@@ -39,7 +41,7 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', () => {
     resizeCanvas();
-    if (gameStarted) {
+    if (session.gameStarted) {
         updateCamera(player.x + player.w / 2, player.y + player.h / 2);
         draw();
     }
@@ -58,3 +60,5 @@ function updateCamera(targetX, targetY) {
     camera.x = Math.max(0, Math.min(MAP_WIDTH * TILE_SIZE - canvas.width, camera.x));
     camera.y = Math.max(0, Math.min(MAP_HEIGHT * TILE_SIZE - canvas.height, camera.y));
 }
+
+export { canvas, ctx, camera, updateCamera };

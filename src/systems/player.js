@@ -1,10 +1,20 @@
-'use strict';
+import {
+    canOccupyMountPosition,
+    collidesWithEntities,
+    collidesWithMap,
+    rectanglesOverlap,
+} from '../core/collision.js';
+import { MAP_HEIGHT, MAP_WIDTH, TILE_SIZE } from '../core/constants.js';
+import { mounts, player, session } from '../core/state.js';
+import { attackWithWeapon } from './combat.js';
+import { keys } from '../ui/input.js';
+import { addMessage } from '../ui/messages.js';
 
 function updatePlayer(deltaTime) {
     // Movement - blocked when inventory is open
     let dx = 0,
         dy = 0;
-    if (!inventoryOpen) {
+    if (!session.inventoryOpen) {
         if (keys.ArrowLeft || keys.KeyA) dx -= 1;
         if (keys.ArrowRight || keys.KeyD) dx += 1;
         if (keys.ArrowUp || keys.KeyW) dy -= 1;
@@ -105,7 +115,7 @@ function updatePlayer(deltaTime) {
 
     // Attack - blocked when inventory is open
     player.attackTimer -= deltaTime;
-    if (!inventoryOpen && (keys.Space || keys.KeyJ) && player.attackTimer <= 0) {
+    if (!session.inventoryOpen && (keys.Space || keys.KeyJ) && player.attackTimer <= 0) {
         attackWithWeapon();
     }
 
@@ -126,3 +136,5 @@ function updatePlayer(deltaTime) {
     // Aux cooldown
     if (player.auxCooldown > 0) player.auxCooldown -= deltaTime;
 }
+
+export { updatePlayer };

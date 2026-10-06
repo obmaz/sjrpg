@@ -1,4 +1,12 @@
-'use strict';
+import { canAct, distance, getAvailableQuests, isGameActive } from '../core/helpers.js';
+import { npcs, player, portals, session } from '../core/state.js';
+import { isQuestAvailable } from '../systems/quests.js';
+import { interactPortal, travelToDesert } from '../systems/travel.js';
+import { openAppearancePanel } from './appearance.js';
+import { addMessage } from './messages.js';
+import { renderQuestJournal } from './quest-journal.js';
+import { openShop } from './shop.js';
+import { useSlotMachine } from './slot-machine.js';
 
 // ============================================================
 //  NPC INTERACTION & QUESTS
@@ -64,7 +72,7 @@ function interactNpc() {
 }
 
 function showNpcDialog(npc) {
-    gamePaused = true;
+    session.gamePaused = true;
     document.getElementById('npcDialog').classList.remove('hidden');
     document.getElementById('npcPortrait').textContent = npc.icon;
     document.getElementById('npcName').textContent = npc.name;
@@ -100,6 +108,8 @@ function acceptQuest(quest) {
 }
 
 function closeDialog() {
-    gamePaused = false;
+    session.gamePaused = false;
     document.getElementById('npcDialog').classList.add('hidden');
 }
+
+export { interactNpc, showDesertTravelDialog, acceptQuest, closeDialog };

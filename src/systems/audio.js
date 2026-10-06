@@ -1,5 +1,3 @@
-'use strict';
-
 // ============================================================
 //  SOUND SYSTEM (Web Audio API synthesized sounds)
 // ============================================================
@@ -335,3 +333,14 @@ function stopBgMusic() {
         backgroundMusic.currentTime = 0;
     }
 }
+
+export {
+    playSlashSound,
+    playHitSound,
+    playCoinSound,
+    playPlayerHurtSound,
+    playChestBreak,
+    playEnemyDeathSound,
+    startBgMusic,
+    stopBgMusic,
+};

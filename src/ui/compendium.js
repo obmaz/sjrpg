@@ -1,19 +1,31 @@
-'use strict';
+import { isGameActive } from '../core/helpers.js';
+import { player, session } from '../core/state.js';
+import { AUX_WEAPONS } from '../data/aux-weapons.js';
+import { BOSS_TYPES } from '../data/bosses.js';
+import { DESERT_ENEMY_TYPES, ENEMY_TYPES } from '../data/enemies.js';
+import { ITEMS } from '../data/items.js';
+import { WEAPONS } from '../data/weapons.js';
 
 // ============================================================
 //  COMPENDIUM (도감)
 // ============================================================
 
 function toggleCompendium() {
-    if (!isGameActive() || shopOpen || inventoryOpen || (gamePaused && !compendiumOpen)) return;
-    compendiumOpen = !compendiumOpen;
+    if (
+        !isGameActive() ||
+        session.shopOpen ||
+        session.inventoryOpen ||
+        (session.gamePaused && !session.compendiumOpen)
+    )
+        return;
+    session.compendiumOpen = !session.compendiumOpen;
     const panel = document.getElementById('compendiumPanel');
-    if (compendiumOpen) {
-        gamePaused = true;
+    if (session.compendiumOpen) {
+        session.gamePaused = true;
         panel.classList.remove('hidden');
         renderCompendium();
     } else {
-        gamePaused = false;
+        session.gamePaused = false;
         panel.classList.add('hidden');
     }
 }
@@ -125,3 +137,5 @@ function renderCompendium() {
     document.getElementById('compendiumStats').textContent =
         `무기 ${foundWeapons}/${totalWeapons} | 아이템 ${foundItems}/${totalItems} | 적 ${foundEnemies}/${totalEnemies}`;
 }
+
+export { toggleCompendium, renderCompendium };

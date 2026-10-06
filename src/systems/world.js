@@ -1,12 +1,14 @@
-'use strict';
+import { MAP_HEIGHT, MAP_WIDTH, TILE_KEYS, TILE_TYPES } from '../core/constants.js';
+import { SimpleNoise } from '../core/noise.js';
+import { session } from '../core/state.js';
 
 function generateForestMap(seed) {
     const noise = new SimpleNoise(seed);
     const moistureNoise = new SimpleNoise(seed + 9999);
-    tileMap = [];
+    session.tileMap = [];
 
     for (let y = 0; y < MAP_HEIGHT; y++) {
-        tileMap[y] = [];
+        session.tileMap[y] = [];
         for (let x = 0; x < MAP_WIDTH; x++) {
             // Height: -1 to 1
             const h = noise.fbm(x * 0.03, y * 0.03, 5, 2.3, 0.55);
@@ -49,7 +51,7 @@ function generateForestMap(seed) {
                 if (pathNoise < 0.08) tile = 'PATH';
             }
 
-            tileMap[y][x] = TILE_KEYS.indexOf(tile);
+            session.tileMap[y][x] = TILE_KEYS.indexOf(tile);
         }
     }
 
@@ -62,15 +64,15 @@ function generateForestMap(seed) {
             if (y >= 0 && y < MAP_HEIGHT && x >= 0 && x < MAP_WIDTH) {
                 const dist = Math.sqrt((x - fcx) ** 2 + (y - fcy) ** 2);
                 if (dist < 6.5) {
-                    tileMap[y][x] = TILE_KEYS.indexOf('SAND');
+                    session.tileMap[y][x] = TILE_KEYS.indexOf('SAND');
                 } else if (dist < 7.5) {
-                    tileMap[y][x] = TILE_KEYS.indexOf('DIRT');
+                    session.tileMap[y][x] = TILE_KEYS.indexOf('DIRT');
                 }
             }
         }
     }
     // Place fountain tile marker
-    tileMap[fcy][fcx] = TILE_KEYS.indexOf('GRASS');
+    session.tileMap[fcy][fcx] = TILE_KEYS.indexOf('GRASS');
 
     // Add decorative walls around fountain plaza (larger ring)
     const wallR = 6;
@@ -81,11 +83,11 @@ function generateForestMap(seed) {
             if (
                 dist > 6.2 &&
                 dist < 7.0 &&
-                tileMap[y][x] !== TILE_KEYS.indexOf('WATER') &&
-                tileMap[y][x] !== TILE_KEYS.indexOf('WATER_DEEP')
+                session.tileMap[y][x] !== TILE_KEYS.indexOf('WATER') &&
+                session.tileMap[y][x] !== TILE_KEYS.indexOf('WATER_DEEP')
             ) {
                 if (Math.abs(dist - 6.5) < 0.35 && (x + y) % 3 !== 0) {
-                    tileMap[y][x] = TILE_KEYS.indexOf('WALL');
+                    session.tileMap[y][x] = TILE_KEYS.indexOf('WALL');
                 }
             }
         }
@@ -99,12 +101,12 @@ function generateForestMap(seed) {
             if (
                 dist > 7.5 &&
                 dist < 10.5 &&
-                tileMap[y][x] !== TILE_KEYS.indexOf('WATER') &&
-                tileMap[y][x] !== TILE_KEYS.indexOf('WATER_DEEP')
+                session.tileMap[y][x] !== TILE_KEYS.indexOf('WATER') &&
+                session.tileMap[y][x] !== TILE_KEYS.indexOf('WATER_DEEP')
             ) {
                 // Create village paths and clearings
                 if ((x + y) % 4 === 0 || (x - y) % 4 === 0) {
-                    tileMap[y][x] = TILE_KEYS.indexOf('PATH');
+                    session.tileMap[y][x] = TILE_KEYS.indexOf('PATH');
                 }
             }
         }
@@ -147,7 +149,7 @@ function ensureConnectivity() {
     for (let y = 0; y < MAP_HEIGHT; y++) {
         for (let x = 0; x < MAP_WIDTH; x++) {
             if (!visited[y * MAP_WIDTH + x] && !isSolidTile(x, y)) {
-                tileMap[y][x] = TILE_KEYS.indexOf('WATER_DEEP');
+                session.tileMap[y][x] = TILE_KEYS.indexOf('WATER_DEEP');
             }
         }
     }
@@ -155,7 +157,7 @@ function ensureConnectivity() {
 
 function getTile(x, y) {
     if (x < 0 || y < 0 || x >= MAP_WIDTH || y >= MAP_HEIGHT) return TILE_KEYS.indexOf('WATER_DEEP');
-    return tileMap[y]?.[x] ?? TILE_KEYS.indexOf('WATER_DEEP');
+    return session.tileMap[y]?.[x] ?? TILE_KEYS.indexOf('WATER_DEEP');
 }
 
 function isSolidTile(x, y) {
@@ -170,10 +172,10 @@ function isWaterTile(x, y) {
 
 function generateDesertMap(seed) {
     const noise = new SimpleNoise(seed);
-    tileMap = [];
+    session.tileMap = [];
 
     for (let y = 0; y < MAP_HEIGHT; y++) {
-        tileMap[y] = [];
+        session.tileMap[y] = [];
         for (let x = 0; x < MAP_WIDTH; x++) {
             const h = noise.fbm(x * 0.03, y * 0.03, 4, 2.2, 0.5);
 
@@ -207,7 +209,7 @@ function generateDesertMap(seed) {
                 tile = 'BUSH';
             }
 
-            tileMap[y][x] = TILE_KEYS.indexOf(tile);
+            session.tileMap[y][x] = TILE_KEYS.indexOf(tile);
         }
     }
 
@@ -217,8 +219,10 @@ function generateDesertMap(seed) {
     const fcy = Math.floor(MAP_HEIGHT / 2);
     for (let y = fcy - 1; y <= fcy + 1; y++) {
         for (let x = fcx - 1; x <= fcx + 8; x++) {
-            tileMap[y][x] = TILE_KEYS.indexOf('PATH');
+            session.tileMap[y][x] = TILE_KEYS.indexOf('PATH');
         }
     }
     ensureConnectivity();
 }
+
+export { generateForestMap, getTile, isSolidTile, isWaterTile, generateDesertMap };

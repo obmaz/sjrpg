@@ -1,4 +1,28 @@
-'use strict';
+import {
+    canOccupyMountPosition,
+    collidesWithEntities,
+    collidesWithMap,
+} from '../core/collision.js';
+import {
+    FOUNTAIN_CENTER_X,
+    FOUNTAIN_CENTER_Y,
+    MAP_HEIGHT,
+    MAP_WIDTH,
+    MOUNT_HEIGHT,
+    MOUNT_WIDTH,
+    TILE_SIZE,
+} from '../core/constants.js';
+import { distance, findNearbySpawnPosition, findSpawnTile } from '../core/helpers.js';
+import { enemies, npcs, player, scarecrows } from '../core/state.js';
+import { getRandomBoss } from '../data/bosses.js';
+import { DESERT_ENEMY_TYPES, ENEMY_TYPES } from '../data/enemies.js';
+import { MOUNT_TYPES } from '../data/mounts.js';
+import { pickSpawnType, spawnLevelForTier } from '../data/spawns.js';
+import { spawnChest, spawnGoldPickup } from './entities.js';
+import { spawnMount } from './mounts.js';
+import { isReachableFromArrival } from './navigation.js';
+import { isSolidTile, isWaterTile } from './world.js';
+import { addMessage } from '../ui/messages.js';
 
 function spawnEnemy(type, x, y, level = null, options = {}) {
     const position = findNearbySpawnPosition(
@@ -7,6 +31,9 @@ function spawnEnemy(type, x, y, level = null, options = {}) {
         type.size,
         type.size,
         type.flying || type.megaBoss,
+        type.flying || type.megaBoss
+            ? () => true
+            : (px, py) => isReachableFromArrival(px, py, type.size, type.size),
     );
     if (!position) return null;
     const stageMultiplier = options.stageMultiplier ?? 1 + (player.stage - 1) * 0.25;
@@ -540,3 +567,17 @@ function spawnNpc(definition) {
     npcs.push(npc);
     return npc;
 }
+
+export {
+    spawnEnemy,
+    spawnBoss,
+    spawnEnemies,
+    spawnMoreEnemies,
+    spawnStageNpcs,
+    spawnInitialPickups,
+    spawnDesertTraveler,
+    spawnDesertEnemies,
+    spawnDesertPickups,
+    spawnDesertNpcs,
+    spawnNpc,
+};

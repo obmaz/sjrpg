@@ -1,4 +1,13 @@
-'use strict';
+import { isGameActive } from '../core/helpers.js';
+import { session } from '../core/state.js';
+import { cycleAuxWeapon, useAuxWeapon } from '../systems/auxiliary-weapons.js';
+import { useConsumable } from '../systems/consumables.js';
+import { dismountPlayer } from '../systems/mounts.js';
+import { closeAppearancePanel } from './appearance.js';
+import { toggleCompendium } from './compendium.js';
+import { closeDialog, interactNpc } from './dialogs.js';
+import { navigateInventory, selectInventoryItem, toggleInventory } from './inventory.js';
+import { closeShop } from './shop.js';
 
 const keys = {};
 const GAME_KEY_CODES = new Set([
@@ -27,9 +36,9 @@ const GAME_KEY_CODES = new Set([
 ]);
 
 function closeActivePanel() {
-    if (compendiumOpen) toggleCompendium();
-    else if (shopOpen) closeShop();
-    else if (inventoryOpen) toggleInventory();
+    if (session.compendiumOpen) toggleCompendium();
+    else if (session.shopOpen) closeShop();
+    else if (session.inventoryOpen) toggleInventory();
     else if (!document.getElementById('appearancePanel').classList.contains('hidden'))
         closeAppearancePanel();
     else if (!document.getElementById('npcDialog').classList.contains('hidden')) closeDialog();
@@ -41,7 +50,7 @@ function handleKeyDown(event) {
     if (!isGameActive() || !GAME_KEY_CODES.has(event.code)) return;
     event.preventDefault();
     keys[event.code] = true;
-    if (slotMachineOpen || (event.repeat && !event.code.startsWith('Arrow'))) return;
+    if (session.slotMachineOpen || (event.repeat && !event.code.startsWith('Arrow'))) return;
     switch (event.code) {
         case 'KeyI':
         case 'Escape':
@@ -66,13 +75,14 @@ function handleKeyDown(event) {
             toggleCompendium();
             break;
         case 'KeyE':
-            if (!inventoryOpen && !closeActivePanel()) interactNpc();
+            if (!session.inventoryOpen && !closeActivePanel()) interactNpc();
             break;
         case 'Enter':
-            if (inventoryOpen) selectInventoryItem();
+            if (session.inventoryOpen) selectInventoryItem();
             break;
         default:
-            if (inventoryOpen && event.code.startsWith('Arrow')) navigateInventory(event.code);
+            if (session.inventoryOpen && event.code.startsWith('Arrow'))
+                navigateInventory(event.code);
     }
 }
 
@@ -83,3 +93,5 @@ window.addEventListener('keyup', (event) => {
 window.addEventListener('blur', () => {
     for (const key of Object.keys(keys)) delete keys[key];
 });
+
+export { keys };

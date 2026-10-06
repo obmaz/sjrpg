@@ -1,5 +1,3 @@
-'use strict';
-
 // ============================================================
 //  SIMPLE VALUE NOISE for natural terrain
 // ============================================================
@@ -65,3 +63,5 @@ class SimpleNoise {
         return value / max;
     }
 }
+
+export { SimpleNoise };

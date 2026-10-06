@@ -1,5 +1,3 @@
-'use strict';
-
 // ============================================================
 //  QUESTS
 //  ------------------------------------------------------------
@@ -155,3 +153,5 @@ const QUESTS = [
 // 숲 완료는 사막 모험으로 이어지고, 사막 그룹 완료가 최종 승리입니다.
 const MAIN_QUESTS = ['kill_monsters', 'collect_gold', 'slay_boss'];
 const DESERT_QUESTS = ['collect_1000gold', 'slay_pharaoh'];
+
+export { QUESTS, MAIN_QUESTS, DESERT_QUESTS };

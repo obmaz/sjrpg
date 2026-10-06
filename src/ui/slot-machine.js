@@ -1,4 +1,24 @@
-'use strict';
+import { collidesWithEntities, collidesWithMap } from '../core/collision.js';
+import {
+    FOUNTAIN_CENTER_X,
+    FOUNTAIN_CENTER_Y,
+    INVENTORY_CAPACITY,
+    TILE_SIZE,
+} from '../core/constants.js';
+import {
+    applyPlayerPoison,
+    findSpawnTile,
+    isGameActive,
+    movePlayerTo,
+    recordDiscovery,
+} from '../core/helpers.js';
+import { inventory, player, session } from '../core/state.js';
+import { WEAPONS } from '../data/weapons.js';
+import { playCoinSound } from '../systems/audio.js';
+import { spawnParticles } from '../systems/entities.js';
+import { isSolidTile } from '../systems/world.js';
+import { updateHud } from './hud.js';
+import { addMessage } from './messages.js';
 
 // ============================================================
 //  SLOT MACHINE
@@ -6,7 +26,8 @@
 const SLOT_SYMBOLS = ['💰', '💸', '👁️', '☠️', '🌀', '💎'];
 
 function useSlotMachine() {
-    if (!isGameActive() || gamePaused || inventoryOpen || slotMachineOpen) return;
+    if (!isGameActive() || session.gamePaused || session.inventoryOpen || session.slotMachineOpen)
+        return;
     if (player.gold < 50) {
         addMessage('🎰 골드가 부족합니다! (50💰 필요)', 'damage');
         return;
@@ -40,8 +61,8 @@ function useSlotMachine() {
     const reel3 = document.getElementById('reel3');
     const resultText = document.getElementById('slotResult');
     modal.classList.remove('hidden');
-    slotMachineOpen = true;
-    gamePaused = true;
+    session.slotMachineOpen = true;
+    session.gamePaused = true;
     resultText.textContent = '';
 
     // Start spinning animation
@@ -97,8 +118,8 @@ function useSlotMachine() {
         // Close modal after delay
         setTimeout(() => {
             modal.classList.add('hidden');
-            slotMachineOpen = false;
-            gamePaused = false;
+            session.slotMachineOpen = false;
+            session.gamePaused = false;
             // Reset reel styles
             [reel1, reel2, reel3].forEach((r) => {
                 r.style.borderColor = '';
@@ -186,3 +207,5 @@ function randomTeleport() {
     const y = tile ? tile.y * TILE_SIZE - player.h / 2 : FOUNTAIN_CENTER_Y;
     movePlayerTo(x, y);
 }
+
+export { useSlotMachine, randomTeleport };

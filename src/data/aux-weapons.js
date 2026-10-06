@@ -1,5 +1,3 @@
-'use strict';
-
 // ============================================================
 //  AUXILIARY WEAPONS (10 types)
 //  uses: -1 = permanent, >0 = limited uses
@@ -119,3 +117,5 @@ const AUX_WEAPONS = [
         type: 'permanent',
     },
 ];
+
+export { AUX_WEAPONS };

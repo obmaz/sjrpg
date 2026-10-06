@@ -31,7 +31,7 @@ argument-hint: '[weapon|enemy|boss|aux|chest|item|quest] 설명'
    특정 적·보스에는 enemyName·bossName이 필요합니다.
 7. 숲 MAIN_QUESTS 완료는 다음 모험 안내이고, DESERT_QUESTS 완료가 최종 승리입니다.
 8. 지역·단계 조건은 isQuestAvailable()에서 처리합니다. 획득 이력은 recordDiscovery()로 보존합니다.
-9. 새 소스 파일은 index.html에 추가합니다. 모든 파일은 일반 script로 로드되며 게임 실행에 번들링이 필요하지 않습니다.
+9. 새 소스 파일은 사용하는 모듈에서 import합니다. 게임은 ES Modules로 로드되며 실행에 HTTP(S)가 필요하고 번들링은 필요하지 않습니다.
 10. npm run format과 npm run check를 실행하고, 가능하면 브라우저에서 콘텐츠를 직접 확인합니다.
     실제 화면·사운드 확인이 불가능하면 이를 검증 한계로 기록합니다.
 

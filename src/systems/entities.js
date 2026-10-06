@@ -1,4 +1,35 @@
-'use strict';
+import { advanceProjectile } from '../core/collision.js';
+import { INVENTORY_CAPACITY, TILE_SIZE } from '../core/constants.js';
+import {
+    distance,
+    findNearbySpawnPosition,
+    findSpawnTile,
+    getEnemiesInRadius,
+    healPlayer,
+    recordDiscovery,
+} from '../core/helpers.js';
+import {
+    chests,
+    enemies,
+    enemyProjectiles,
+    fireZones,
+    floatingTexts,
+    goldPickups,
+    inventory,
+    particles,
+    player,
+    projectiles,
+    weaponPickups,
+} from '../core/state.js';
+import { CHEST_TYPES } from '../data/chests.js';
+import { ENEMY_TYPES } from '../data/enemies.js';
+import { WEAPONS } from '../data/weapons.js';
+import { playChestBreak, playCoinSound } from './audio.js';
+import { damageEnemy, getPlayerAttackOrigin } from './combat.js';
+import { spawnEnemy } from './spawning.js';
+import { isSolidTile, isWaterTile } from './world.js';
+import { updateHud } from '../ui/hud.js';
+import { addMessage } from '../ui/messages.js';
 
 // ============================================================
 //  PARTICLES
@@ -359,3 +390,22 @@ function openChest(chest) {
         }
     }
 }
+
+export {
+    spawnParticles,
+    spawnProjectile,
+    spawnGoldPickup,
+    spawnWeaponPickup,
+    spawnChest,
+    spawnEnemyProjectile,
+    spawnFireZone,
+    spawnFloatingText,
+    updateParticles,
+    updateProjectiles,
+    updateFireZones,
+    updateFloatingTexts,
+    updateEnemyProjectiles,
+    updateGoldPickups,
+    updateWeaponPickups,
+    updateChests,
+};

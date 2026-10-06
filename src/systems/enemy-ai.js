@@ -1,4 +1,25 @@
-'use strict';
+import { getNavigationWaypoint } from './navigation.js';
+import {
+    collidesWithEntities,
+    collidesWithMap,
+    distanceBetweenRectangles,
+} from '../core/collision.js';
+import {
+    MAP_HEIGHT,
+    MAP_WIDTH,
+    SNAKE_POISON_DURATION,
+    TILE_KEYS,
+    TILE_SIZE,
+} from '../core/constants.js';
+import { applyPlayerPoison, distance } from '../core/helpers.js';
+import { enemies, player, session } from '../core/state.js';
+import { ENEMY_TYPES } from '../data/enemies.js';
+import { playPlayerHurtSound } from './audio.js';
+import { spawnEnemyProjectile, spawnFloatingText, spawnParticles } from './entities.js';
+import { spawnEnemy } from './spawning.js';
+import { getTile, isSolidTile } from './world.js';
+import { updateHud } from '../ui/hud.js';
+import { addMessage } from '../ui/messages.js';
 
 function updateEnemies(deltaTime) {
     for (const enemy of enemies) {
@@ -143,12 +164,34 @@ function updateEnemies(deltaTime) {
                 break;
         }
 
+        // Ground enemies steer along a body-aware route when terrain blocks the target.
+        if (
+            !enemy.flying &&
+            !enemy.megaBoss &&
+            (enemy.state === 'chase' ||
+                enemy.state === 'wander' ||
+                (enemy.state === 'ranged' && distanceToPlayer > rangedRange * 0.7))
+        ) {
+            const target = enemy.state === 'wander' ? enemy.wanderTarget : { x: px, y: py };
+            const waypoint = getNavigationWaypoint(
+                enemy,
+                target.x,
+                target.y,
+                deltaTime,
+                enemy.state === 'wander' ? 0 : meleeReach,
+            );
+            dx = waypoint ? waypoint.x - enemy.x : 0;
+            dy = waypoint ? waypoint.y - enemy.y : 0;
+        }
+
         // Normalize
         const magnitude = Math.sqrt(dx * dx + dy * dy);
         if (magnitude > 0) {
             dx = dx / magnitude;
             dy = dy / magnitude;
         }
+
+        const travelDistance = Math.min(speedPerFrame, magnitude);
 
         // Direction
         if (enemy.state !== 'hurt') {
@@ -179,8 +222,8 @@ function updateEnemies(deltaTime) {
             if (Math.abs(enemy.knockbackX) < 0.5) enemy.knockbackX = 0;
             if (Math.abs(enemy.knockbackY) < 0.5) enemy.knockbackY = 0;
         } else {
-            const mx = enemy.x + dx * speedPerFrame;
-            const my = enemy.y + dy * speedPerFrame;
+            const mx = enemy.x + dx * travelDistance;
+            const my = enemy.y + dy * travelDistance;
             if (enemy.flying || enemy.megaBoss) {
                 // Flying enemies ignore map collision
                 if (!collidesWithEntities(mx, enemy.y, enemy.w, enemy.h, enemy)) enemy.x = mx;
@@ -214,7 +257,8 @@ function updateEnemies(deltaTime) {
                     if (tx >= 0 && ty >= 0 && tx < MAP_WIDTH && ty < MAP_HEIGHT) {
                         const tk = TILE_KEYS[getTile(tx, ty)];
                         if (tk === 'TREE' || tk === 'BUSH' || tk === 'ROCK' || tk === 'WALL') {
-                            tileMap[ty][tx] = TILE_KEYS.indexOf('DIRT');
+                            session.tileMap[ty][tx] = TILE_KEYS.indexOf('DIRT');
+                            session.terrainRevision++;
                         }
                     }
                 }
@@ -240,3 +284,5 @@ function updateEnemies(deltaTime) {
         enemy.animTimer += deltaTime;
     }
 }
+
+export { updateEnemies };

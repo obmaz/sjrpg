@@ -1,4 +1,17 @@
-'use strict';
+import { updateCamera } from './canvas.js';
+import { collidesWithEntities, collidesWithMap } from './collision.js';
+import { MAP_HEIGHT, MAP_WIDTH, POISON_TICK_INTERVAL, TILE_SIZE } from './constants.js';
+import {
+    WORLD_ENTITY_LISTS,
+    enemies,
+    mounts,
+    pendingGameActions,
+    player,
+    session,
+} from './state.js';
+import { QUESTS } from '../data/quests.js';
+import { isQuestAvailable } from '../systems/quests.js';
+import { showGameOverScreen } from '../ui/results.js';
 
 function distance(x1, y1, x2, y2) {
     return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
@@ -9,11 +22,11 @@ function clamp(value, minimum, maximum) {
 }
 
 function isGameActive() {
-    return gameStarted && !gameOver && !gameVictory;
+    return session.gameStarted && !session.gameOver && !session.gameVictory;
 }
 
 function canAct() {
-    return isGameActive() && player.hp > 0 && !gamePaused && !inventoryOpen;
+    return isGameActive() && player.hp > 0 && !session.gamePaused && !session.inventoryOpen;
 }
 
 function checkPlayerDeath(reason = '전투 중 사망') {
@@ -65,14 +78,22 @@ function getAvailableQuests(npc) {
     );
 }
 
-function findNearbySpawnPosition(x, y, width, height, ignoreTerrain = false) {
+function findNearbySpawnPosition(
+    x,
+    y,
+    width,
+    height,
+    ignoreTerrain = false,
+    isReachable = () => true,
+) {
     const isValid = (px, py) =>
         px >= 0 &&
         py >= 0 &&
         px + width <= MAP_WIDTH * TILE_SIZE &&
         py + height <= MAP_HEIGHT * TILE_SIZE &&
         (ignoreTerrain || !collidesWithMap(px, py, width, height)) &&
-        !collidesWithEntities(px, py, width, height, null);
+        !collidesWithEntities(px, py, width, height, null) &&
+        isReachable(px, py);
     if (isValid(x, y)) return { x, y };
     for (let radius = 1; radius <= 6; radius++) {
         for (let dy = -radius; dy <= radius; dy++) {
@@ -119,3 +140,22 @@ function recordDiscovery(type, id) {
         collection.push(id);
     }
 }
+
+export {
+    distance,
+    clamp,
+    isGameActive,
+    canAct,
+    checkPlayerDeath,
+    healPlayer,
+    applyPlayerPoison,
+    movePlayerTo,
+    clearWorldEntities,
+    deferGameAction,
+    updateDeferredActions,
+    getAvailableQuests,
+    findNearbySpawnPosition,
+    getEnemiesInRadius,
+    findSpawnTile,
+    recordDiscovery,
+};

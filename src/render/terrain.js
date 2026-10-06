@@ -1,4 +1,16 @@
-'use strict';
+import { camera, canvas, ctx } from '../core/canvas.js';
+import {
+    FOUNTAIN_CENTER_X,
+    FOUNTAIN_CENTER_Y,
+    MAP_HEIGHT,
+    MAP_WIDTH,
+    TILE_KEYS,
+    TILE_SIZE,
+    TILE_TYPES,
+} from '../core/constants.js';
+import { distance } from '../core/helpers.js';
+import { particles, player, portals } from '../core/state.js';
+import { getTile } from '../systems/world.js';
 
 // ============================================================
 //  TERRAIN RENDERING
@@ -495,3 +507,5 @@ function drawPortals() {
 // ============================================================
 //  FIRE ZONE RENDERING
 // ============================================================
+
+export { drawTerrain, drawFountain, drawPortals };

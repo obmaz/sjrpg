@@ -1,10 +1,12 @@
-'use strict';
+import { player, session } from '../core/state.js';
+import { updateHud } from './hud.js';
+import { addMessage } from './messages.js';
 
 // ============================================================
 //  APPEARANCE PANEL (외관 변경)
 // ============================================================
 function openAppearancePanel() {
-    gamePaused = true;
+    session.gamePaused = true;
     const panel = document.getElementById('appearancePanel');
     panel.classList.remove('hidden');
 
@@ -33,6 +35,8 @@ function openAppearancePanel() {
 }
 
 function closeAppearancePanel() {
-    gamePaused = false;
+    session.gamePaused = false;
     document.getElementById('appearancePanel').classList.add('hidden');
 }
+
+export { openAppearancePanel, closeAppearancePanel };

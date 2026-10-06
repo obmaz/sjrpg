@@ -1,5 +1,3 @@
-'use strict';
-
 function initStartParticles() {
     const pCanvas = document.getElementById('startParticles');
     if (!pCanvas) return;
@@ -48,3 +46,5 @@ function initStartParticles() {
     }
     animate();
 }
+
+export { initStartParticles };

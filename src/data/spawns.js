@@ -1,5 +1,3 @@
-'use strict';
-
 // ============================================================
 //  SPAWN RULES  (per-map enemy spawning by distance from fountain)
 //  ------------------------------------------------------------
@@ -50,3 +48,5 @@ function pickSpawnType(region, dist) {
 function spawnLevelForTier(tier) {
     return 1 + tier * 3 + Math.floor(Math.random() * 3);
 }
+
+export { SPAWN_RULES, pickSpawnType, spawnLevelForTier };

@@ -1,5 +1,3 @@
-'use strict';
-
 const messageLog = document.getElementById('messageLog');
 function addMessage(text, cls = '') {
     const div = document.createElement('div');
@@ -12,3 +10,5 @@ function addMessage(text, cls = '') {
         messageLog.firstChild.remove();
     }
 }
+
+export { messageLog, addMessage };

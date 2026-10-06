@@ -1,4 +1,13 @@
-'use strict';
+import { updateCamera } from '../core/canvas.js';
+import { MAP_HEIGHT, MAP_WIDTH, TILE_SIZE } from '../core/constants.js';
+import { clearWorldEntities, distance, isGameActive } from '../core/helpers.js';
+import { player, portals } from '../core/state.js';
+import { abandonRegionQuests, updateQuestProgress } from './quests.js';
+import { spawnDesertEnemies, spawnDesertNpcs, spawnDesertPickups } from './spawning.js';
+import { generateDesertMap } from './world.js';
+import { showDesertTravelDialog } from '../ui/dialogs.js';
+import { updateHud } from '../ui/hud.js';
+import { addMessage } from '../ui/messages.js';
 
 // ============================================================
 //  PORTAL SYSTEM (분수 → 사막 포탈)
@@ -89,3 +98,5 @@ function travelToDesert() {
     addMessage('🏜️ 사막에 도착했습니다! 새로운 모험이 기다립니다!', 'loot');
     addMessage('☠️ 사막의 적들은 더욱 강력합니다...', 'damage');
 }
+
+export { checkPortalSpawn, interactPortal, travelToDesert };
