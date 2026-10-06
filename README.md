@@ -6,7 +6,10 @@ Canvas 2D와 순수 JavaScript로 만든 키보드 기반 싱글 플레이 브�
 
 ## 실행
 
+**온라인 플레이:** [GitHub Pages에서 게임 시작](https://obmaz.github.io/sjrpg/)
+
 `index.html`을 브라우저에서 열거나, 저장소 루트에서 로컬 서버를 실행합니다.
+`index.html` 단독 파일만으로는 실행되지 않으며 `src/`, `style.css`, `playful-pixels.mp3`가 함께 필요합니다.
 
 ```sh
 python -m http.server 8765 --bind 127.0.0.1
@@ -15,6 +18,17 @@ python -m http.server 8765 --bind 127.0.0.1
 브라우저에서 `http://127.0.0.1:8765`를 열고 **게임 시작**을 누릅니다.
 데스크톱 키보드를 기준으로 구현되어 있습니다. 효과음은 Web Audio API로 합성하며, 배경음악은 저장소의 `playful-pixels.mp3`를 재생합니다.
 외부 이미지·음원 다운로드는 필요하지 않습니다. 다시 도전은 페이지를 새로고침합니다.
+
+### GitHub Pages 배포
+
+`main`에 푸시하면 GitHub Actions가 의존성을 설치하고 `npm run check`를 실행합니다.
+검사를 통과한 커밋의 실행 파일만 Pages에 배포합니다. PR에서는 검사만 실행합니다.
+Actions의 **Check and deploy** 워크플로를 수동 실행해 다시 배포할 수도 있습니다.
+
+배포 파일은 `index.html`, `style.css`, `playful-pixels.mp3`, `src/`이며,
+개발 도구·테스트·`node_modules`는 배포 파일에 포함하지 않습니다.
+모든 리소스는 상대 경로를 사용하므로 `/sjrpg/` 경로에서도 실행됩니다.
+저장소 Settings → Pages의 Source는 **GitHub Actions**입니다.
 
 ## 조작
 
@@ -117,7 +131,7 @@ python -m http.server 8765 --bind 127.0.0.1
 │   ├── game.test.cjs          # 실제 게임 코드를 실행하는 회귀 테스트
 │   └── helpers/game-harness.cjs # DOM·Canvas·타이머를 대체하는 VM 환경
 ├── .github/skills/            # 콘텐츠 추가·디버깅 작업 지침
-└── .github/workflows/check.yml # push/PR 시 자동 검사
+└── .github/workflows/check.yml # push/PR 검사·main의 GitHub Pages 배포
 ```
 
 ## 아키텍처
