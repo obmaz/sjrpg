@@ -23,7 +23,7 @@ argument-hint: '[weapon|enemy|boss|aux|chest|item|quest] 설명'
 
 1. 기존 정의의 필드 계약을 확인하고 고유 ID를 사용합니다. 새 파일명은 kebab-case,
    함수·변수는 camelCase, 공유 상수는 UPPER_SNAKE_CASE를 따릅니다.
-2. 무기의 dropPool·dropWeapons, 상점의 id·itemId, 퀘스트 rewardAux가 실제 정의에 연결되는지 확인합니다.
+2. 무기의 dropPool·dropWeapons, 상점의 id·itemId·auxId, 퀘스트 rewardAux가 실제 정의에 연결되는지 확인합니다.
 3. 새로운 능력은 src/systems/combat.js 또는 src/systems/auxiliary-weapons.js에서 구현합니다.
 4. 적·보스는 spawnEnemy()의 공통 초기화 경로를 사용합니다. minionType은 숲 적 배열의 유효한 인덱스이며 0도 허용합니다.
 5. 보조무기는 제한형이면 uses 양수, 영구형이면 uses -1과 cooldown을 설정합니다.

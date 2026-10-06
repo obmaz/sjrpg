@@ -8,8 +8,8 @@
     "scripts": {
         "test": "node --experimental-vm-modules --test tests/*.test.cjs",
         "lint": "node scripts/check.cjs && eslint tests scripts eslint.config.mjs",
-        "format": "prettier --write src tests scripts index.html style.css package.json README.md eslint.config.mjs .prettierrc.json",
-        "format:check": "prettier --check src tests scripts index.html style.css package.json README.md eslint.config.mjs .prettierrc.json",
+        "format": "prettier --write src tests scripts docs index.html style.css package.json README.md AGENTS.md eslint.config.mjs .prettierrc.json",
+        "format:check": "prettier --check src tests scripts docs index.html style.css package.json README.md AGENTS.md eslint.config.mjs .prettierrc.json",
         "check": "npm run lint && npm run format:check && npm test"
     },
     "devDependencies": {
