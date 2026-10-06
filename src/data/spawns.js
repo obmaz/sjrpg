@@ -1,3 +1,5 @@
+'use strict';
+
 // ============================================================
 //  SPAWN RULES  (per-map enemy spawning by distance from fountain)
 //  ------------------------------------------------------------
@@ -14,21 +16,21 @@
 const SPAWN_RULES = {
     forest: {
         bands: [
-            { maxDist: 350,      types: [0, 1] },        // 슬라임, 고블린
-            { maxDist: 650,      types: [1, 2, 3] },     // 고블린, 늑대, 해골 전사
-            { maxDist: 1000,     types: [2, 3, 4, 7] },  // 늑대~다크 메이지, 거대 슬라임
-            { maxDist: Infinity, types: [3, 4, 8, 9] },  // 해골~다크 메이지, 트롤, 고대 골렘
+            { maxDist: 350, types: [0, 1] }, // 슬라임, 고블린
+            { maxDist: 650, types: [1, 2, 3] }, // 고블린, 늑대, 해골 전사
+            { maxDist: 1000, types: [2, 3, 4, 7] }, // 늑대~다크 메이지, 거대 슬라임
+            { maxDist: Infinity, types: [3, 4, 8, 9] }, // 해골~다크 메이지, 트롤, 고대 골렘
         ],
-        wildcard: { chance: 0.12, types: [6] },          // 독수리 (어디서나 가끔)
+        wildcard: { chance: 0.12, types: [6] }, // 독수리 (어디서나 가끔)
     },
     desert: {
         bands: [
-            { maxDist: 350,      types: [0, 1] },        // 전갈, 모래 도마뱀
-            { maxDist: 650,      types: [1, 2, 4] },     // 모래 도마뱀, 미라, 독사
-            { maxDist: 1000,     types: [2, 3, 4] },     // 미라, 모래 마법사, 독사
-            { maxDist: Infinity, types: [3, 5, 6] },     // 모래 마법사, 사막 트롤, 모래 골렘
+            { maxDist: 350, types: [0, 1] }, // 전갈, 모래 도마뱀
+            { maxDist: 650, types: [1, 2, 4] }, // 모래 도마뱀, 미라, 독사
+            { maxDist: 1000, types: [2, 3, 4] }, // 미라, 모래 마법사, 독사
+            { maxDist: Infinity, types: [3, 5, 6] }, // 모래 마법사, 사막 트롤, 모래 골렘
         ],
-        wildcard: { chance: 0.10, types: [5] },          // 사막 트롤 (어디서나 가끔)
+        wildcard: { chance: 0.1, types: [5] }, // 사막 트롤 (어디서나 가끔)
     },
 };
 
@@ -36,7 +38,7 @@ const SPAWN_RULES = {
 // 반환: { idx: 적 타입 인덱스, tier: 거리대(0=근접/저랩 ...) }
 function pickSpawnType(region, dist) {
     const rule = SPAWN_RULES[region] || SPAWN_RULES.forest;
-    let tier = rule.bands.findIndex(b => dist < b.maxDist);
+    let tier = rule.bands.findIndex((b) => dist < b.maxDist);
     if (tier < 0) tier = rule.bands.length - 1;
     // tier(거리대)는 항상 거리를 반영 → 레벨 표기에 사용. 와일드카드는 타입 풀만 교체.
     let types = rule.bands[tier].types;

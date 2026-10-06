@@ -1,0 +1,32 @@
+'use strict';
+
+const SHOP_ITEMS = {
+    village: [
+        { id: 'dagger', price: 50 },
+        { id: 'iron', price: 120 },
+        { id: 'axe', price: 250 },
+        { id: 'fan', price: 300 },
+        { id: 'whip', price: 350 },
+        { id: 'crossbow', price: 180 },
+        { id: 'staff', price: 400 },
+        { itemId: 'healpot', price: 30 },
+        { itemId: 'bomb', price: 60 },
+        { itemId: 'antidote', price: 40 },
+        { itemId: 'speedpot', price: 80 },
+        { itemId: 'returngem', price: 500 },
+    ],
+    blackmarket: [
+        { id: 'firesword', price: 800 },
+        { id: 'hammer', price: 1000 },
+        { id: 'legend', price: 2000 },
+        { id: 'scimitar', price: 600 },
+        { id: 'sandstorm', price: 1200 },
+        { id: 'ankh', price: 1500 },
+        { id: 'scorpion', price: 3000 },
+        { itemId: 'healpot', price: 30 },
+        { itemId: 'bomb', price: 60 },
+        { itemId: 'antidote', price: 40 },
+        { itemId: 'speedpot', price: 80 },
+        { itemId: 'returngem', price: 500 },
+    ],
+};

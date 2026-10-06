@@ -1,29 +1,32 @@
+'use strict';
+
 // ============================================================
 //  TERRAIN RENDERING
 // ============================================================
 function drawTerrain() {
     const startTX = Math.max(0, Math.floor(camera.x / TILE_SIZE) - 1);
     const startTY = Math.max(0, Math.floor(camera.y / TILE_SIZE) - 1);
-    const endTX = Math.min(MAP_W, Math.ceil((camera.x + canvas.width) / TILE_SIZE) + 1);
-    const endTY = Math.min(MAP_H, Math.ceil((camera.y + canvas.height) / TILE_SIZE) + 1);
+    const endTX = Math.min(MAP_WIDTH, Math.ceil((camera.x + canvas.width) / TILE_SIZE) + 1);
+    const endTY = Math.min(MAP_HEIGHT, Math.ceil((camera.y + canvas.height) / TILE_SIZE) + 1);
     const time = performance.now() / 1000;
 
     for (let ty = startTY; ty < endTY; ty++) {
         for (let tx = startTX; tx < endTX; tx++) {
             const tileKey = TILE_KEYS[getTile(tx, ty)];
-            const tile = TILE[tileKey];
             const screenX = tx * TILE_SIZE - camera.x;
             const screenY = ty * TILE_SIZE - camera.y;
             const seed = tx * 374761393 + ty * 668265263;
 
             // --- SHORELINE / EDGE DETECTION for solid tiles ---
-            const solid = TILE[tileKey].solid;
-            const nTop = getTile(tx, ty - 1); const nBot = getTile(tx, ty + 1);
-            const nLef = getTile(tx - 1, ty); const nRig = getTile(tx + 1, ty);
-            const topWalk = !TILE[TILE_KEYS[nTop]].solid;
-            const botWalk = !TILE[TILE_KEYS[nBot]].solid;
-            const lefWalk = !TILE[TILE_KEYS[nLef]].solid;
-            const rigWalk = !TILE[TILE_KEYS[nRig]].solid;
+            const solid = TILE_TYPES[tileKey].solid;
+            const nTop = getTile(tx, ty - 1);
+            const nBot = getTile(tx, ty + 1);
+            const nLef = getTile(tx - 1, ty);
+            const nRig = getTile(tx + 1, ty);
+            const topWalk = !TILE_TYPES[TILE_KEYS[nTop]].solid;
+            const botWalk = !TILE_TYPES[TILE_KEYS[nBot]].solid;
+            const lefWalk = !TILE_TYPES[TILE_KEYS[nLef]].solid;
+            const rigWalk = !TILE_TYPES[TILE_KEYS[nRig]].solid;
             const hasWalkNeighbor = solid && (topWalk || botWalk || lefWalk || rigWalk);
 
             if (tileKey === 'GRASS' || tileKey === 'GRASS_TALL') {
@@ -37,13 +40,13 @@ function drawTerrain() {
                 ctx.fillStyle = isTall ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0.07)';
                 for (let i = 0; i < 4; i++) {
                     const gx = screenX + 4 + ((seed + i * 137) % 24);
-                    const gy = screenY + 6 + ((seed >> (i * 3 + 1)) & 0xF);
+                    const gy = screenY + 6 + ((seed >> (i * 3 + 1)) & 0xf);
                     ctx.fillRect(gx, gy, 2, 5);
                     ctx.fillRect(gx + 2, gy - 1, 1, 4);
                 }
                 if ((seed & 7) === 0) {
                     ctx.fillStyle = isTall ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.06)';
-                    ctx.fillRect(screenX + (seed & 0xF), screenY + ((seed >> 4) & 0xF), 8, 8);
+                    ctx.fillRect(screenX + (seed & 0xf), screenY + ((seed >> 4) & 0xf), 8, 8);
                 }
             } else if (tileKey === 'DIRT' || tileKey === 'PATH') {
                 ctx.fillStyle = tileKey === 'PATH' ? '#d4c080' : '#c8a870';
@@ -54,7 +57,12 @@ function drawTerrain() {
                 ctx.fillRect(screenX + 2, screenY + 2, TILE_SIZE - 4, TILE_SIZE - 4);
                 ctx.fillStyle = 'rgba(0,0,0,0.08)';
                 if ((seed & 3) === 0) {
-                    ctx.fillRect(screenX + 6 + (seed % 16), screenY + 10 + ((seed >> 4) % 12), 3, 2);
+                    ctx.fillRect(
+                        screenX + 6 + (seed % 16),
+                        screenY + 10 + ((seed >> 4) % 12),
+                        3,
+                        2,
+                    );
                 }
             } else if (tileKey === 'SAND') {
                 ctx.fillStyle = '#e8d5a0';
@@ -105,9 +113,11 @@ function drawTerrain() {
                     const foamAlpha = 0.25 + Math.sin(time * 4 + tx + ty) * 0.08;
                     ctx.fillStyle = `rgba(255,255,255,${foamAlpha})`;
                     if (topWalk) ctx.fillRect(screenX + 3, screenY, TILE_SIZE - 6, 4);
-                    if (botWalk) ctx.fillRect(screenX + 3, screenY + TILE_SIZE - 4, TILE_SIZE - 6, 4);
+                    if (botWalk)
+                        ctx.fillRect(screenX + 3, screenY + TILE_SIZE - 4, TILE_SIZE - 6, 4);
                     if (lefWalk) ctx.fillRect(screenX, screenY + 3, 4, TILE_SIZE - 6);
-                    if (rigWalk) ctx.fillRect(screenX + TILE_SIZE - 4, screenY + 3, 4, TILE_SIZE - 6);
+                    if (rigWalk)
+                        ctx.fillRect(screenX + TILE_SIZE - 4, screenY + 3, 4, TILE_SIZE - 6);
                 }
             } else if (tileKey === 'WALL') {
                 // Stone wall - distinctly solid
@@ -153,33 +163,52 @@ function drawTerrain() {
                 ctx.closePath();
                 ctx.fill();
                 // a small forked branch + bark highlight
-                ctx.strokeStyle = '#5a3a22'; ctx.lineWidth = 2;
+                ctx.strokeStyle = '#5a3a22';
+                ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.moveTo(tcx, screenY + 18); ctx.lineTo(screenX + 21, screenY + 13);
-                ctx.moveTo(tcx, screenY + 20); ctx.lineTo(screenX + 11, screenY + 15);
+                ctx.moveTo(tcx, screenY + 18);
+                ctx.lineTo(screenX + 21, screenY + 13);
+                ctx.moveTo(tcx, screenY + 20);
+                ctx.lineTo(screenX + 11, screenY + 15);
                 ctx.stroke();
                 ctx.fillStyle = '#714c2c';
                 ctx.fillRect(screenX + 15, screenY + 16, 2, 13);
 
                 // Lumpy canopy: overlapping lobes → bushy, wider-than-tall crown
                 const lobes = [
-                    [tcx + sway,     screenY + 10, 8],
-                    [tcx - 7,        screenY + 12, 5.5],
-                    [tcx + 7,        screenY + 12, 5.5],
-                    [tcx - 4 + sway, screenY + 6,  5.5],
-                    [tcx + 4 + sway, screenY + 6,  5],
-                    [tcx + sway,     screenY + 3,  4],
+                    [tcx + sway, screenY + 10, 8],
+                    [tcx - 7, screenY + 12, 5.5],
+                    [tcx + 7, screenY + 12, 5.5],
+                    [tcx - 4 + sway, screenY + 6, 5.5],
+                    [tcx + 4 + sway, screenY + 6, 5],
+                    [tcx + sway, screenY + 3, 4],
                 ];
                 ctx.fillStyle = '#1d5418'; // dark base / outline
-                for (const [lx, ly, r] of lobes) { ctx.beginPath(); ctx.arc(lx, ly, r + 1, 0, Math.PI * 2); ctx.fill(); }
+                for (const [lx, ly, r] of lobes) {
+                    ctx.beginPath();
+                    ctx.arc(lx, ly, r + 1, 0, Math.PI * 2);
+                    ctx.fill();
+                }
                 ctx.fillStyle = '#2f7a26'; // mid foliage
-                for (const [lx, ly, r] of lobes) { ctx.beginPath(); ctx.arc(lx, ly, r, 0, Math.PI * 2); ctx.fill(); }
+                for (const [lx, ly, r] of lobes) {
+                    ctx.beginPath();
+                    ctx.arc(lx, ly, r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
                 ctx.fillStyle = '#46a834'; // sunlit highlights (upper-left of each lobe)
-                for (const [lx, ly, r] of lobes) { ctx.beginPath(); ctx.arc(lx - r * 0.35, ly - r * 0.4, r * 0.5, 0, Math.PI * 2); ctx.fill(); }
+                for (const [lx, ly, r] of lobes) {
+                    ctx.beginPath();
+                    ctx.arc(lx - r * 0.35, ly - r * 0.4, r * 0.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
                 // a couple of bright leaf dabs for texture
                 ctx.fillStyle = '#64c44a';
-                ctx.beginPath(); ctx.arc(tcx - 3 + sway, screenY + 5, 1.6, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(tcx + 4 + sway, screenY + 9, 1.4, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath();
+                ctx.arc(tcx - 3 + sway, screenY + 5, 1.6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(tcx + 4 + sway, screenY + 9, 1.4, 0, Math.PI * 2);
+                ctx.fill();
             } else if (tileKey === 'BUSH') {
                 ctx.fillStyle = '#78c858';
                 ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
@@ -256,8 +285,8 @@ function drawTerrain() {
 // ============================================================
 
 function drawFountain() {
-    const sx = FOUNTAIN_CX - camera.x;
-    const sy = FOUNTAIN_CY - camera.y;
+    const sx = FOUNTAIN_CENTER_X - camera.x;
+    const sy = FOUNTAIN_CENTER_Y - camera.y;
 
     if (sx < -120 || sx > canvas.width + 120 || sy < -120 || sy > canvas.height + 120) return;
 
@@ -310,10 +339,7 @@ function drawFountain() {
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(sx + Math.cos(a) * 6, sy - 19);
-        ctx.quadraticCurveTo(
-            sx + Math.cos(a) * rx, sy - 8,
-            sx + Math.cos(a + 0.2) * 24, sy + 4
-        );
+        ctx.quadraticCurveTo(sx + Math.cos(a) * rx, sy - 8, sx + Math.cos(a + 0.2) * 24, sy + 4);
         ctx.stroke();
     }
 
@@ -324,8 +350,8 @@ function drawFountain() {
             const a = Math.random() * Math.PI * 2;
             const r = 30 + Math.random() * 30;
             particles.push({
-                x: FOUNTAIN_CX + Math.cos(a) * r,
-                y: FOUNTAIN_CY + 10,
+                x: FOUNTAIN_CENTER_X + Math.cos(a) * r,
+                y: FOUNTAIN_CENTER_Y + 10,
                 vx: Math.cos(a) * (10 + Math.random() * 30),
                 vy: -20 - Math.random() * 40,
                 life: 0.3 + Math.random() * 0.2,
@@ -337,7 +363,12 @@ function drawFountain() {
     }
 
     // Heal glow when player nearby (costs gold)
-    const dist = distance(player.x + player.w / 2, player.y + player.h / 2, FOUNTAIN_CX, FOUNTAIN_CY);
+    const dist = distance(
+        player.x + player.w / 2,
+        player.y + player.h / 2,
+        FOUNTAIN_CENTER_X,
+        FOUNTAIN_CENTER_Y,
+    );
     if (dist < 180 && player.hp < player.maxHp && player.gold > 0) {
         const glowAlpha = 0.15 + Math.sin(time * 3) * 0.05;
         ctx.fillStyle = `rgba(255,180,100,${glowAlpha})`;
@@ -362,7 +393,8 @@ function drawFountain() {
         // No gold - show red indicator
         if (Math.floor(time * 2) % 2 === 0) {
             ctx.fillStyle = '#fff';
-            ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+            ctx.font = 'bold 11px sans-serif';
+            ctx.textAlign = 'center';
             ctx.fillText('💰 부족!', sx, sy - 40);
         }
     }
@@ -383,13 +415,20 @@ function drawPortals() {
         // Outer glow ring
         ctx.save();
         ctx.globalAlpha = 0.3 + Math.sin(time * 2) * 0.1;
-        const outerGrad = ctx.createRadialGradient(sx + p.w/2, sy + p.h/2, 10, sx + p.w/2, sy + p.h/2, 45 * pulse);
+        const outerGrad = ctx.createRadialGradient(
+            sx + p.w / 2,
+            sy + p.h / 2,
+            10,
+            sx + p.w / 2,
+            sy + p.h / 2,
+            45 * pulse,
+        );
         outerGrad.addColorStop(0, '#8844ff');
         outerGrad.addColorStop(0.5, '#6644cc');
         outerGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = outerGrad;
         ctx.beginPath();
-        ctx.arc(sx + p.w/2, sy + p.h/2, 45 * pulse, 0, Math.PI * 2);
+        ctx.arc(sx + p.w / 2, sy + p.h / 2, 45 * pulse, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
 
@@ -399,30 +438,45 @@ function drawPortals() {
             const rot = time * (1.5 + i * 0.5) + i * 2;
             ctx.save();
             ctx.globalAlpha = 0.5 - i * 0.12;
-            ctx.strokeStyle = i === 0 ? '#aa77ff' : (i === 1 ? '#8855dd' : '#6644bb');
+            ctx.strokeStyle = i === 0 ? '#aa77ff' : i === 1 ? '#8855dd' : '#6644bb';
             ctx.lineWidth = 3 - i * 0.5;
             ctx.beginPath();
-            ctx.ellipse(sx + p.w/2, sy + p.h/2, r * pulse, r * 0.5 * pulse, rot, 0, Math.PI * 2);
+            ctx.ellipse(
+                sx + p.w / 2,
+                sy + p.h / 2,
+                r * pulse,
+                r * 0.5 * pulse,
+                rot,
+                0,
+                Math.PI * 2,
+            );
             ctx.stroke();
             ctx.restore();
         }
 
         // Center bright core
-        const coreGrad = ctx.createRadialGradient(sx + p.w/2, sy + p.h/2, 1, sx + p.w/2, sy + p.h/2, 10 * pulse);
+        const coreGrad = ctx.createRadialGradient(
+            sx + p.w / 2,
+            sy + p.h / 2,
+            1,
+            sx + p.w / 2,
+            sy + p.h / 2,
+            10 * pulse,
+        );
         coreGrad.addColorStop(0, '#ffffff');
         coreGrad.addColorStop(0.3, '#ddaaff');
         coreGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = coreGrad;
         ctx.beginPath();
-        ctx.arc(sx + p.w/2, sy + p.h/2, 10 * pulse, 0, Math.PI * 2);
+        ctx.arc(sx + p.w / 2, sy + p.h / 2, 10 * pulse, 0, Math.PI * 2);
         ctx.fill();
 
         // Sparkle particles
         for (let i = 0; i < 5; i++) {
-            const a = time * 3 + i * Math.PI * 2 / 5;
+            const a = time * 3 + (i * Math.PI * 2) / 5;
             const r = 12 + Math.sin(time * 4 + i) * 5;
-            const px = sx + p.w/2 + Math.cos(a) * r;
-            const py = sy + p.h/2 + Math.sin(a) * r * 0.4;
+            const px = sx + p.w / 2 + Math.cos(a) * r;
+            const py = sy + p.h / 2 + Math.sin(a) * r * 0.4;
             ctx.fillStyle = '#ffffff';
             ctx.globalAlpha = 0.6 + Math.sin(time * 6 + i) * 0.3;
             ctx.beginPath();
@@ -434,7 +488,7 @@ function drawPortals() {
         ctx.fillStyle = '#ddaaff';
         ctx.font = 'bold 12px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('🌀 사막 포탈 [E]', sx + p.w/2, sy - 12);
+        ctx.fillText('🌀 사막 포탈 [E]', sx + p.w / 2, sy - 12);
     }
 }
 
