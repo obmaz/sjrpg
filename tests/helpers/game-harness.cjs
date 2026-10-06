@@ -2,7 +2,7 @@ const { readPageSources } = require('../../scripts/page-sources.cjs');
 const vm = require('node:vm');
 
 // Load the same classic scripts as the page, with deterministic browser timers.
-function loadGame() {
+function loadGame({ coarsePointer = false, innerHeight = 960 } = {}) {
     const elements = new Map();
     const listeners = {};
     const timers = [];
@@ -48,16 +48,25 @@ function loadGame() {
             pause() {},
         };
     }
+    const viewportStyles = new Map();
     const sandbox = vm.createContext({
         console,
         performance: { now: () => 0 },
         CanvasRenderingContext2D: function () {},
         window: {
+            innerHeight,
+            matchMedia: () => ({ matches: coarsePointer }),
             addEventListener: (name, cb) => {
                 listeners[name] = cb;
             },
         },
         document: {
+            documentElement: {
+                style: {
+                    setProperty: (name, value) => viewportStyles.set(name, value),
+                    getPropertyValue: (name) => viewportStyles.get(name) || '',
+                },
+            },
             getElementById(id) {
                 if (!elements.has(id)) elements.set(id, element());
                 return elements.get(id);

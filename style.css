@@ -5,6 +5,7 @@
 }
 
 body {
+    height: var(--app-height, 100vh);
     background: #1a1a2e;
     overflow: hidden;
     font-family: 'Segoe UI', system-ui, sans-serif;
@@ -18,7 +19,7 @@ body {
     top: 0;
     left: 0;
     width: calc(100vw / 1.5);
-    height: calc(100vh / 1.5);
+    height: calc(var(--app-height, 100vh) / 1.5);
     transform: scale(1.5);
     transform-origin: top left;
     pointer-events: none;
@@ -1089,7 +1090,7 @@ body {
     text-align: center;
     min-width: 420px;
     max-width: 520px;
-    max-height: 80vh;
+    max-height: calc(var(--app-height, 100vh) * 0.8);
     overflow-y: auto;
     animation: fadeInUp 0.3s ease-out;
     box-shadow: 0 0 40px rgba(255, 215, 0, 0.15);
@@ -1323,7 +1324,7 @@ body {
     text-align: center;
     min-width: 480px;
     max-width: 560px;
-    max-height: 82vh;
+    max-height: calc(var(--app-height, 100vh) * 0.82);
     overflow-y: auto;
     animation: fadeInUp 0.3s ease-out;
     box-shadow: 0 0 40px rgba(170, 136, 255, 0.2);
