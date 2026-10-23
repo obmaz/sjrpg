@@ -101,11 +101,17 @@ function initializeTouchControls() {
         touchItem2: 'Digit2',
         touchItem3: 'Digit3',
         closeInventory: 'Escape',
+        resumeInventory: 'Escape',
         closeShop: 'Escape',
+        resumeShop: 'Escape',
         closeNpcDialog: 'Escape',
+        resumeNpcDialog: 'Escape',
         closeAppearance: 'Escape',
+        resumeAppearance: 'Escape',
         closeCompendium: 'Escape',
         closeQuestJournal: 'Escape',
+        resumeQuestJournal: 'Escape',
+        resumeCompendium: 'Escape',
     };
     for (const [id, code] of Object.entries(actions)) {
         document.getElementById(id).addEventListener('click', () => {

@@ -2,6 +2,45 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame } = require('./helpers/game-harness.cjs');
 
+test('popup bounds follow the visible viewport without replacing the fixed game height', async () => {
+    const { run, listeners } = await loadGame({ coarsePointer: true, innerHeight: 844 });
+    run('initializePopupLayout(); window.innerHeight = 620;');
+    listeners.resize();
+    const style = (name) => run(`document.documentElement.style.getPropertyValue('${name}')`);
+    assert.equal(style('--popup-height'), '620px');
+    assert.equal(style('--app-height'), '844px');
+    run(
+        `window.visualViewport = { width: 390, height: 500, offsetTop: 24, offsetLeft: 0 }; syncPopupViewport();`,
+    );
+    assert.equal(style('--popup-height'), '500px');
+    assert.equal(style('--popup-top'), '24px');
+    assert.equal(style('--popup-width'), '390px');
+    run('window.visualViewport.height = 0; syncPopupViewport();');
+    assert.equal(style('--popup-height'), '620px');
+});
+
+test('visible viewport movement and fullscreen changes refresh popup bounds', async () => {
+    const { run, documentListeners } = await loadGame({ coarsePointer: true, innerHeight: 720 });
+    run(`const popupEvents = {};
+        window.visualViewport = {
+            width: 390, height: 600, offsetTop: 0, offsetLeft: 0,
+            addEventListener: (name, callback) => { popupEvents[name] = callback; }
+        };
+        initializePopupLayout(); initializePopupLayout();
+        window.visualViewport.height = 500; popupEvents.resize();`);
+    const style = (name) => run(`document.documentElement.style.getPropertyValue('${name}')`);
+    assert.equal(style('--popup-height'), '500px');
+    run('window.visualViewport.offsetTop = 30; popupEvents.scroll();');
+    assert.equal(style('--popup-top'), '30px');
+    run('window.visualViewport.height = 840; window.visualViewport.offsetTop = 0;');
+    documentListeners.fullscreenchange();
+    assert.equal(style('--popup-height'), '840px');
+    run('window.visualViewport.height = 600;');
+    documentListeners.webkitfullscreenchange();
+    assert.equal(style('--popup-height'), '600px');
+    assert.equal(style('--app-height'), '720px');
+});
+
 test('touch movement and held attack work together without releasing keyboard input', async () => {
     const { run, elements } = await loadGame({ coarsePointer: true });
     run('initializeTouchControls(); keys.KeyW=true;');

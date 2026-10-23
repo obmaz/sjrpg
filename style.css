@@ -463,17 +463,6 @@ body {
     font-size: 14px;
 }
 
-#inventory {
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 400px;
-    max-width: calc(100vw / 1.5 - 24px);
-    max-height: calc(var(--app-height, 100vh) / 1.5 - 24px);
-    overflow-y: auto;
-    z-index: 100;
-}
-
 #inventory h2 {
     text-align: center;
     margin-bottom: 12px;
@@ -1438,13 +1427,30 @@ body {
     flex: none;
     pointer-events: none;
 }
+#popupLayer {
+    --popup-gutter-top: max(12px, env(safe-area-inset-top, 0px));
+    --popup-gutter-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+    position: fixed;
+    top: var(--popup-top, 0px);
+    left: var(--popup-left, 0px);
+    width: var(--popup-width, 100vw);
+    height: var(--popup-height, 100dvh);
+    z-index: 200;
+    pointer-events: none;
+}
+#popupLayer > .overlay {
+    height: 100%;
+    padding: var(--popup-gutter-top) max(12px, env(safe-area-inset-right, 0px))
+        var(--popup-gutter-bottom) max(12px, env(safe-area-inset-left, 0px));
+    pointer-events: auto;
+}
 .game-window {
     display: flex;
     flex-direction: column;
     min-width: 0;
-    width: min(480px, calc(100% - 24px));
+    width: min(520px, 100%);
     max-width: 100%;
-    max-height: calc(var(--app-height, 100vh) / 1.5 - 28px);
+    max-height: 100%;
     padding: 0;
     overflow: hidden;
     color: var(--ui-ink);
@@ -1458,10 +1464,21 @@ body {
         inset 0 0 0 3px #0b1915,
         inset 0 0 0 4px #d7bb6c30;
     text-align: left;
+    animation: windowAppear 0.16s ease-out;
 }
-#inventory.game-window {
+@keyframes windowAppear {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+.inventory-box.game-window {
+    position: static;
+    transform: none;
     padding: 0;
-    width: min(480px, calc(100% - 24px));
+    width: min(520px, 100%);
 }
 .window-header {
     display: flex;
@@ -1536,6 +1553,7 @@ body {
     box-shadow: inset 0 2px 5px #0008;
 }
 .window-body {
+    flex: 1 1 auto;
     padding: 16px;
     overflow-y: auto;
     min-height: 0;
@@ -1543,6 +1561,26 @@ body {
     touch-action: pan-y;
     scrollbar-color: #9d8247 #10271e;
     scrollbar-width: thin;
+}
+.window-footer {
+    flex: none;
+    padding: 12px 16px 16px;
+    border-top: 1px solid #b89d5655;
+    background: linear-gradient(#1d382b, #10271f);
+    box-shadow: 0 -5px 14px #06171055;
+}
+.window-footer .game-button {
+    margin: 0;
+}
+.game-window .window-footer .hint,
+.game-window .window-footer .settings-note {
+    margin: 0 0 10px;
+    font-size: 10px;
+    line-height: 1.4;
+    color: var(--ui-muted);
+}
+.game-window .window-footer .hint:only-child {
+    margin: 0;
 }
 .window-intro,
 .game-window .window-intro {
@@ -1557,6 +1595,7 @@ body {
     margin: 14px 0 0;
     line-height: 1.5;
 }
+#inventory,
 #shopPanel,
 #npcDialog,
 #appearancePanel,
@@ -1578,6 +1617,8 @@ body {
     right: 12px;
     width: 210px;
     z-index: 20;
+    pointer-events: auto;
+    max-height: calc(100% - 100px);
 }
 #questJournal:not(.mobile-journal-open) .window-header {
     min-height: 44px;
@@ -1592,7 +1633,8 @@ body {
     height: 20px;
 }
 #questJournal:not(.mobile-journal-open) .eyebrow,
-#questJournal:not(.mobile-journal-open) #closeQuestJournal {
+#questJournal:not(.mobile-journal-open) #closeQuestJournal,
+#questJournal:not(.mobile-journal-open) .window-footer {
     display: none;
 }
 #questJournal.mobile-journal-open {
@@ -1602,6 +1644,7 @@ body {
     transform: translate(-50%, -50%);
     z-index: 120;
     width: min(460px, calc(100% - 24px));
+    max-height: calc(100% - var(--popup-gutter-top) - var(--popup-gutter-bottom));
 }
 #touchControls,
 .touch-start-hint {
@@ -1692,11 +1735,11 @@ body {
     margin-bottom: 12px;
 }
 #shopGold {
-    border-bottom: 1px solid #9d824755;
+    border: 0;
     color: #e3c67e;
     text-align: right;
-    padding: 0 0 12px;
-    margin-bottom: 12px;
+    padding: 0;
+    margin-bottom: 10px;
     font-size: 13px;
 }
 #npcPortrait {
@@ -1893,6 +1936,24 @@ body {
 .result-card h1 {
     color: #e6cc8d;
     font-family: Georgia, 'Batang', serif;
+}
+.result-card .window-header h1 {
+    margin: 0;
+    font-size: 26px;
+    letter-spacing: 1px;
+}
+.result-card .window-header .result-icon {
+    font-size: 32px;
+    margin: 0;
+}
+.result-card .window-body {
+    text-align: center;
+}
+.result-card #victoryMsg {
+    color: var(--ui-gold);
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0 0 14px;
 }
 .result-card button {
     margin: 18px auto 0;
@@ -2521,20 +2582,11 @@ body {
         transform: translate(-50%, -50%);
     }
     .game-window,
-    #inventory.game-window {
-        max-height: calc(var(--app-height, 100vh) - 32px);
-        width: min(460px, calc(100% - 24px));
+    .inventory-box.game-window {
+        max-height: 100%;
+        width: min(460px, 100%);
         padding: 0;
         border-radius: 14px;
-    }
-    #shopPanel,
-    #npcDialog,
-    #appearancePanel,
-    #compendiumPanel,
-    #settingsPanel,
-    #slotMachine {
-        padding: 0;
-        height: var(--app-height, 100vh);
     }
     .window-header {
         min-height: 76px;
@@ -2547,6 +2599,12 @@ body {
     }
     .window-body {
         padding: 14px;
+    }
+    .window-footer {
+        padding: 10px 14px 14px;
+    }
+    .keyboard-hint {
+        display: none;
     }
     #inventorySlots {
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2606,12 +2664,9 @@ body {
     .overlay p {
         margin-bottom: 12px;
     }
-    .result-card {
+    .result-card.game-window {
         min-width: 0;
-        width: calc(100% - 24px);
-        max-height: calc(var(--app-height, 100vh) - 24px);
-        overflow-y: auto;
-        padding: 20px;
+        padding: 0;
     }
     .result-stats {
         grid-template-columns: 1fr;
@@ -2657,12 +2712,8 @@ body {
         width: 56px;
         height: 56px;
     }
-    :root:is(:fullscreen, :-webkit-full-screen) #gameArea,
-    :root:is(:fullscreen, :-webkit-full-screen) .overlay {
+    :root:is(:fullscreen, :-webkit-full-screen) #gameArea {
         height: 100vh;
-    }
-    :root:is(:fullscreen, :-webkit-full-screen) .game-window {
-        max-height: calc(100vh - 32px);
     }
 }
 @media (pointer: coarse) and (max-width: 350px) {
