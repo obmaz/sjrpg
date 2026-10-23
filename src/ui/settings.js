@@ -1,11 +1,11 @@
 import { canAct, isGameActive } from '../core/helpers.js';
 import { preferences, setPreference } from '../core/preferences.js';
-import { session } from '../core/state.js';
+import { player, session } from '../core/state.js';
 import { startBgMusic, stopBgMusic } from '../systems/audio.js';
 import { resizeCanvas, updateCamera } from '../core/canvas.js';
-import { player } from '../core/state.js';
 
 let initialized = false;
+let fullscreenPending = false;
 
 function refreshSettings() {
     for (const [id, name] of [
@@ -26,6 +26,8 @@ function refreshSettings() {
               : '꺼짐';
     }
     const fullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    for (const id of ['settingsFullscreen', 'fullscreenButton'])
+        document.getElementById(id).disabled = fullscreenPending;
     document.getElementById('settingsFullscreen').textContent = fullscreen
         ? '전체화면 나가기'
         : '전체화면으로 전환';
@@ -56,6 +58,9 @@ function closeSettings() {
 }
 
 async function toggleFullscreen() {
+    if (fullscreenPending) return;
+    fullscreenPending = true;
+    refreshSettings();
     const status = document.getElementById('settingsStatus');
     try {
         const exit = document.exitFullscreen || document.webkitExitFullscreen;
@@ -76,8 +81,10 @@ async function toggleFullscreen() {
         status.textContent =
             '전체화면으로 전환하지 못했습니다. 브라우저에서 전체화면을 허용해 주세요.';
         if (canAct()) toggleSettings();
+    } finally {
+        fullscreenPending = false;
+        refreshSettings();
     }
-    refreshSettings();
 }
 
 function initializeSettings() {

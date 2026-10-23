@@ -2,6 +2,29 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame } = require('./helpers/game-harness.cjs');
 
+test('fullscreen requests cannot overlap and controls recover after completion or rejection', async () => {
+    const { run, elements } = await loadGame();
+    run(`initializeSettings(); toggleSettings(); let requestCount=0; let finishFullscreen;
+        document.documentElement.requestFullscreen=()=>{
+            requestCount++;
+            return new Promise(resolve => { finishFullscreen=resolve; });
+        };`);
+    const first = run('toggleFullscreen();');
+    const second = run('toggleFullscreen();');
+    assert.equal(run('requestCount'), 1);
+    assert.equal(elements.get('settingsFullscreen').disabled, true);
+    assert.equal(elements.get('fullscreenButton').disabled, true);
+    run('document.fullscreenElement=document.documentElement; finishFullscreen();');
+    await Promise.all([first, second]);
+    assert.equal(elements.get('settingsFullscreen').disabled, false);
+    assert.equal(elements.get('fullscreenButton').disabled, false);
+    assert.match(elements.get('settingsFullscreen').textContent, /나가기/);
+    run('document.exitFullscreen=()=>Promise.reject(new Error("denied"));');
+    await run('toggleFullscreen();');
+    assert.equal(elements.get('settingsFullscreen').disabled, false);
+    assert.equal(run('session.settingsOpen && session.gamePaused'), true);
+});
+
 test('settings pause the game, release touch input, and close without opening another panel', async () => {
     const { run, elements } = await loadGame({ coarsePointer: true });
     run(

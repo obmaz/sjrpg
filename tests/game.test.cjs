@@ -2,6 +2,27 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame } = require('./helpers/game-harness.cjs');
 
+test('popup buttons retain native keyboard activation without equipping or attacking', async () => {
+    const { run, listeners } = await loadGame();
+    run('inventory.push({...WEAPONS.find(w => w.id === "iron")}); toggleInventory();');
+    const weapon = run('player.weapon.id');
+    for (const code of ['Enter', 'Space']) {
+        let prevented = false;
+        listeners.keydown({
+            code,
+            target: { closest: () => ({}) },
+            preventDefault() {
+                prevented = true;
+            },
+        });
+        assert.equal(prevented, false, code);
+        assert.equal(run('player.weapon.id'), weapon);
+        assert.equal(run(`isKeyDown('${code}')`), false);
+    }
+    listeners.keydown({ code: 'Enter', preventDefault() {} });
+    assert.equal(run('player.weapon.id'), 'iron');
+});
+
 test('popup bounds follow the visible viewport without replacing the fixed game height', async () => {
     const { run, listeners } = await loadGame({ coarsePointer: true, innerHeight: 844 });
     run('initializePopupLayout(); window.innerHeight = 620;');

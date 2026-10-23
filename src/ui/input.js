@@ -110,6 +110,11 @@ function performInputAction(code) {
 
 function handleKeyDown(event) {
     if (!isGameActive() || !GAME_KEY_CODES.has(event.code)) return;
+    if (
+        (event.code === 'Space' || event.code === 'Enter') &&
+        event.target?.closest?.('.game-window button')
+    )
+        return;
     event.preventDefault();
     keys[event.code] = true;
     if (event.repeat && !event.code.startsWith('Arrow')) return;

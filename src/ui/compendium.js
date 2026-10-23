@@ -42,11 +42,12 @@ function renderCompendium() {
 
     WEAPONS.forEach((weapon) => {
         const owned = player.collection.weapons.includes(weapon.id);
-        const card = document.createElement('div');
+        const card = document.createElement('button');
+        card.type = 'button';
         card.className = 'compendium-card' + (owned ? '' : ' locked');
         card.innerHTML = `<span class="cc-icon">${owned ? weapon.icon : '❓'}</span><span class="cc-name">${owned ? weapon.name : '???'}</span>`;
         if (owned) {
-            card.title = `${weapon.icon} ${weapon.name}\nATK: ${weapon.atk}\n${weapon.desc || ''}\n능력: ${weapon.ability || '기본'}\n희귀도: ${weapon.rarity || '일반'}`;
+            card.title = `${weapon.icon} ${weapon.name}\nATK: ${weapon.atk}\n${weapon.desc || ''}\n희귀도: ${weapon.rarity || '일반'}`;
         } else {
             card.title = '아직 발견하지 못한 무기';
         }
@@ -61,7 +62,8 @@ function renderCompendium() {
 
     ITEMS.forEach((item) => {
         const owned = player.collection.items.includes(item.id);
-        const card = document.createElement('div');
+        const card = document.createElement('button');
+        card.type = 'button';
         card.className = 'compendium-card' + (owned ? '' : ' locked');
         card.innerHTML = `<span class="cc-icon">${owned ? item.icon : '❓'}</span><span class="cc-name">${owned ? item.name : '???'}</span>`;
         if (owned) {
@@ -96,7 +98,8 @@ function renderCompendium() {
 
     uniqueEnemies.forEach((enemy) => {
         const owned = player.collection.enemies.includes(enemy.name);
-        const card = document.createElement('div');
+        const card = document.createElement('button');
+        card.type = 'button';
         card.className = 'compendium-card' + (owned ? '' : ' locked');
         const kills = player.killsByName[enemy.name] || 0;
         card.innerHTML = `<span class="cc-icon">${owned ? enemy.icon || '👾' : '❓'}</span><span class="cc-name">${owned ? enemy.name : '???'}</span>`;
@@ -116,7 +119,8 @@ function renderCompendium() {
 
     AUX_WEAPONS.forEach((auxiliaryWeapon) => {
         const owned = player.collection.auxiliaryWeapons.includes(auxiliaryWeapon.id);
-        const card = document.createElement('div');
+        const card = document.createElement('button');
+        card.type = 'button';
         card.className = 'compendium-card' + (owned ? '' : ' locked');
         card.innerHTML = `<span class="cc-icon">${owned ? auxiliaryWeapon.icon : '❓'}</span><span class="cc-name">${owned ? auxiliaryWeapon.name : '???'}</span>`;
         if (owned) {
