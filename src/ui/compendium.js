@@ -136,6 +136,13 @@ function renderCompendium() {
     const foundEnemies = player.collection.enemies.length;
     document.getElementById('compendiumStats').textContent =
         `무기 ${foundWeapons}/${totalWeapons} | 아이템 ${foundItems}/${totalItems} | 적 ${foundEnemies}/${totalEnemies}`;
+    const details = document.getElementById('compendiumDetails');
+    details.textContent = '항목을 누르면 상세정보를 볼 수 있습니다.';
+    for (const card of grid.querySelectorAll('.compendium-card')) {
+        card.addEventListener('click', () => {
+            details.textContent = card.title;
+        });
+    }
 }
 
 export { toggleCompendium, renderCompendium };

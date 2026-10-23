@@ -10,6 +10,7 @@ import { spawnEnemies, spawnInitialPickups } from './systems/spawning.js';
 import { generateForestMap } from './systems/world.js';
 import { updateHud } from './ui/hud.js';
 import { addMessage } from './ui/messages.js';
+import { initializeTouchControls, updateTouchControls } from './ui/touch-controls.js';
 
 // ============================================================
 //  GAME LOGIC
@@ -19,6 +20,7 @@ function gameLoop(time) {
     const deltaTime = clamp((time - session.lastTime) / 1000, 0, MAX_FRAME_DELTA);
     session.lastTime = time;
     update(deltaTime);
+    updateTouchControls();
     if (session.gameStarted) draw();
     requestAnimationFrame(gameLoop);
 }
@@ -37,6 +39,7 @@ window.addEventListener('resize', () => {
 
 // Controls toggle
 function initializeUI() {
+    initializeTouchControls();
     const toggle = document.getElementById('controlsToggle');
     const panel = document.getElementById('controls');
     if (toggle && panel) {
@@ -62,6 +65,7 @@ function startGame() {
     if (session.gameStarted) return;
     document.getElementById('startScreen').classList.add('hidden');
     session.gameStarted = true;
+    updateTouchControls();
 
     // No initial aux weapon - obtain them through quests
 
@@ -80,8 +84,13 @@ function startGame() {
     addMessage('⛲ 맵 중앙 분수에서 체력 회복', 'info');
     addMessage('❗ NPC를 찾아 대화하세요 [E]', 'loot');
     addMessage('🎒 보조무기는 퀘스트 보상·상점에서 획득! (N/K 사용, Q 순환)', 'loot');
-    addMessage('이동: WASD | 공격: Space/J | 보조: N/K | 순환: Q | 인벤: I/Esc', 'info');
-    addMessage('📖 C: 도감 열기', 'info');
+    if (window.matchMedia('(pointer: coarse)').matches) {
+        addMessage('🎒 가방·도감·퀘스트는 화면 위 버튼을 누르세요.', 'info');
+        addMessage('왼쪽 조이스틱: 이동 | 오른쪽 공격: 누르고 있기', 'info');
+    } else {
+        addMessage('이동: WASD | 공격: Space/J | 보조: N/K | 순환: Q | 인벤: I/Esc', 'info');
+        addMessage('📖 C: 도감 열기', 'info');
+    }
 
     // Auto-collect starter weapon
     recordDiscovery('weapons', 'fist');

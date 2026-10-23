@@ -6,6 +6,16 @@ const path = require('node:path');
 async function loadGame({ coarsePointer = false, innerHeight = 960 } = {}) {
     const elements = new Map();
     const listeners = {};
+    const documentListeners = {};
+    function addListener(target, name, callback) {
+        const previous = target[name];
+        target[name] = previous
+            ? (event) => {
+                  previous(event);
+                  callback(event);
+              }
+            : callback;
+    }
     const timers = [];
     let drawCount = 0;
     const context2d = new Proxy(
@@ -23,6 +33,7 @@ async function loadGame({ coarsePointer = false, innerHeight = 960 } = {}) {
     );
     function element() {
         const classes = new Set(['hidden']);
+        const handlers = {};
         return {
             classList: {
                 add: (...names) => names.forEach((n) => classes.add(n)),
@@ -45,7 +56,20 @@ async function loadGame({ coarsePointer = false, innerHeight = 960 } = {}) {
                 child.parent = this;
                 this.children.push(child);
             },
-            addEventListener() {},
+            addEventListener: (name, callback) => addListener(handlers, name, callback),
+            dispatchEvent(event) {
+                handlers[event.type]?.(event);
+            },
+            getBoundingClientRect: () => ({ left: 0, top: 0, width: 128, height: 128 }),
+            setPointerCapture() {},
+            releasePointerCapture() {},
+            hasPointerCapture: () => false,
+            setAttribute(name, value) {
+                this[name] = value;
+            },
+            getAttribute(name) {
+                return this[name] ?? null;
+            },
             querySelectorAll: () => [],
             remove() {
                 if (this.parent) this.parent.children.splice(this.parent.children.indexOf(this), 1);
@@ -63,11 +87,12 @@ async function loadGame({ coarsePointer = false, innerHeight = 960 } = {}) {
             innerHeight,
             matchMedia: () => ({ matches: coarsePointer }),
             addEventListener: (name, cb) => {
-                listeners[name] = cb;
+                addListener(listeners, name, cb);
             },
         },
         document: {
             readyState: 'loading',
+            hidden: false,
             documentElement: {
                 style: {
                     setProperty: (name, value) => viewportStyles.set(name, value),
@@ -79,7 +104,7 @@ async function loadGame({ coarsePointer = false, innerHeight = 960 } = {}) {
                 return elements.get(id);
             },
             createElement: element,
-            addEventListener() {},
+            addEventListener: (name, callback) => addListener(documentListeners, name, callback),
         },
         requestAnimationFrame() {},
         setTimeout(cb, delay) {
@@ -144,7 +169,7 @@ async function loadGame({ coarsePointer = false, innerHeight = 960 } = {}) {
     run(
         'let randomSeed = 123; Math.random = () => ((randomSeed = (Math.imul(randomSeed, 1664525) + 1013904223) >>> 0) / 4294967296); gameStarted = true; generateForestMap(123);',
     );
-    return { run, elements, listeners, timers, productionGlobalLeaks };
+    return { run, elements, listeners, documentListeners, timers, productionGlobalLeaks };
 }
 
 module.exports = { loadGame };

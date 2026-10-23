@@ -2,6 +2,90 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame } = require('./helpers/game-harness.cjs');
 
+test('touch movement and held attack work together without releasing keyboard input', async () => {
+    const { run, elements } = await loadGame({ coarsePointer: true });
+    run('initializeTouchControls(); keys.KeyW=true;');
+    const pointer = (type, pointerId, clientX = 64, clientY = 64) => ({
+        type,
+        pointerId,
+        clientX,
+        clientY,
+        button: 0,
+        preventDefault() {},
+    });
+    const stick = elements.get('touchJoystick');
+    const attack = elements.get('touchAttack');
+    stick.dispatchEvent(pointer('pointerdown', 1, 114, 64));
+    attack.dispatchEvent(pointer('pointerdown', 2));
+    assert.equal(run("isKeyDown('ArrowRight')"), true);
+    assert.equal(run("isKeyDown('Space')"), true);
+    stick.dispatchEvent(pointer('pointerup', 1));
+    assert.equal(run("isKeyDown('ArrowRight')"), false);
+    assert.equal(run("isKeyDown('Space')"), true);
+    attack.dispatchEvent(pointer('pointercancel', 2));
+    assert.equal(run("isKeyDown('Space')"), false);
+    assert.equal(run("isKeyDown('KeyW')"), true);
+});
+
+test('touch controls release held input when a panel opens and close without another keyboard action', async () => {
+    const { run, elements } = await loadGame({ coarsePointer: true });
+    run(
+        'initializeTouchControls(); touchKeys.Space=true; touchKeys.ArrowLeft=true; toggleInventory(); updateTouchControls();',
+    );
+    assert.equal(run("isKeyDown('Space') || isKeyDown('ArrowLeft')"), false);
+    assert.equal(elements.get('touchControls').classList.contains('hidden'), true);
+    elements.get('closeInventory').dispatchEvent({ type: 'click' });
+    assert.equal(run('session.inventoryOpen'), false);
+    run('updateTouchControls();');
+    assert.equal(elements.get('touchControls').classList.contains('hidden'), false);
+});
+
+test('the touch quest journal pauses and closes even with no active quests', async () => {
+    const { run, elements } = await loadGame({ coarsePointer: true });
+    run('initializeTouchControls();');
+    elements.get('touchQuests').dispatchEvent({ type: 'click' });
+    assert.equal(run('session.questJournalOpen && session.gamePaused'), true);
+    elements.get('closeQuestJournal').dispatchEvent({ type: 'click' });
+    assert.equal(run('session.questJournalOpen || session.gamePaused'), false);
+    assert.equal(elements.get('questJournal').classList.contains('hidden'), true);
+});
+
+test('touch gestures release on focus loss, hidden documents and terminal states', async () => {
+    const { run, elements, listeners, documentListeners } = await loadGame({ coarsePointer: true });
+    run('initializeTouchControls();');
+    const press = () =>
+        elements
+            .get('touchAttack')
+            .dispatchEvent({ type: 'pointerdown', pointerId: 9, button: 0, preventDefault() {} });
+    press();
+    listeners.blur();
+    assert.equal(run("isKeyDown('Space')"), false);
+    press();
+    run('document.hidden=true;');
+    documentListeners.visibilitychange();
+    assert.equal(run("isKeyDown('Space')"), false);
+    run('document.hidden=false;');
+    press();
+    run('session.gameOver=true; updateTouchControls();');
+    assert.equal(run("isKeyDown('Space')"), false);
+    assert.equal(elements.get('touchControls').classList.contains('hidden'), true);
+});
+
+test('touch action buttons cannot spend items while paused or interrupt a slot machine', async () => {
+    const { run, elements } = await loadGame({ coarsePointer: true });
+    run(`initializeTouchControls(); player.items=[{...ITEMS[0]}]; player.auxWeapons=[{...AUX_WEAPONS[0]}];
+        player.auxWeapon=player.auxWeapons[0]; session.gamePaused=true;`);
+    elements.get('touchItem1').dispatchEvent({ type: 'click' });
+    elements.get('touchAux').dispatchEvent({ type: 'click' });
+    assert.equal(run('player.items.length'), 1);
+    assert.equal(run('player.auxWeapon.uses'), 3);
+    run('session.slotMachineOpen=true;');
+    elements.get('touchInventory').dispatchEvent({ type: 'click' });
+    elements.get('touchQuests').dispatchEvent({ type: 'click' });
+    assert.equal(run('session.inventoryOpen || session.questJournalOpen'), false);
+    assert.equal(run('session.gamePaused'), true);
+});
+
 test('desert travel leaves a walkable arrival connected to dry land and clears forest dummies', async () => {
     const { run } = await loadGame();
     run('scarecrows.push({x: 1}); travelToDesert();');

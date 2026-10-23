@@ -7,7 +7,7 @@ import {
 import { MAP_HEIGHT, MAP_WIDTH, TILE_SIZE } from '../core/constants.js';
 import { mounts, player, session } from '../core/state.js';
 import { attackWithWeapon } from './combat.js';
-import { keys } from '../ui/input.js';
+import { isKeyDown } from '../ui/input.js';
 import { addMessage } from '../ui/messages.js';
 
 function updatePlayer(deltaTime) {
@@ -15,10 +15,10 @@ function updatePlayer(deltaTime) {
     let dx = 0,
         dy = 0;
     if (!session.inventoryOpen) {
-        if (keys.ArrowLeft || keys.KeyA) dx -= 1;
-        if (keys.ArrowRight || keys.KeyD) dx += 1;
-        if (keys.ArrowUp || keys.KeyW) dy -= 1;
-        if (keys.ArrowDown || keys.KeyS) dy += 1;
+        if (isKeyDown('ArrowLeft') || isKeyDown('KeyA')) dx -= 1;
+        if (isKeyDown('ArrowRight') || isKeyDown('KeyD')) dx += 1;
+        if (isKeyDown('ArrowUp') || isKeyDown('KeyW')) dy -= 1;
+        if (isKeyDown('ArrowDown') || isKeyDown('KeyS')) dy += 1;
     }
 
     // Normalize diagonal
@@ -115,7 +115,11 @@ function updatePlayer(deltaTime) {
 
     // Attack - blocked when inventory is open
     player.attackTimer -= deltaTime;
-    if (!session.inventoryOpen && (keys.Space || keys.KeyJ) && player.attackTimer <= 0) {
+    if (
+        !session.inventoryOpen &&
+        (isKeyDown('Space') || isKeyDown('KeyJ')) &&
+        player.attackTimer <= 0
+    ) {
         attackWithWeapon();
     }
 

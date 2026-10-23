@@ -13,8 +13,14 @@ import {
     toggleInventory,
 } from './inventory.js';
 import { closeShop } from './shop.js';
+import { closeQuestJournal, toggleQuestJournal } from './quest-journal.js';
 
 const keys = {};
+const touchKeys = {};
+
+function isKeyDown(code) {
+    return !!(keys[code] || touchKeys[code]);
+}
 const GAME_KEY_CODES = new Set([
     'ArrowLeft',
     'ArrowRight',
@@ -32,6 +38,7 @@ const GAME_KEY_CODES = new Set([
     'KeyE',
     'KeyQ',
     'KeyC',
+    'KeyL',
     'Digit1',
     'Digit2',
     'Digit3',
@@ -42,7 +49,8 @@ const GAME_KEY_CODES = new Set([
 ]);
 
 function closeActivePanel() {
-    if (session.compendiumOpen) toggleCompendium();
+    if (session.questJournalOpen) closeQuestJournal();
+    else if (session.compendiumOpen) toggleCompendium();
     else if (session.shopOpen) closeShop();
     else if (session.inventoryOpen) toggleInventory();
     else if (!document.getElementById('appearancePanel').classList.contains('hidden'))
@@ -52,12 +60,9 @@ function closeActivePanel() {
     return true;
 }
 
-function handleKeyDown(event) {
-    if (!isGameActive() || !GAME_KEY_CODES.has(event.code)) return;
-    event.preventDefault();
-    keys[event.code] = true;
-    if (session.slotMachineOpen || (event.repeat && !event.code.startsWith('Arrow'))) return;
-    switch (event.code) {
+function performInputAction(code) {
+    if (!isGameActive() || session.slotMachineOpen) return;
+    switch (code) {
         case 'KeyI':
         case 'Escape':
             if (!closeActivePanel()) toggleInventory();
@@ -75,10 +80,13 @@ function handleKeyDown(event) {
         case 'Digit1':
         case 'Digit2':
         case 'Digit3':
-            useConsumable(Number(event.code.slice(-1)) - 1);
+            useConsumable(Number(code.slice(-1)) - 1);
             break;
         case 'KeyC':
             toggleCompendium();
+            break;
+        case 'KeyL':
+            toggleQuestJournal();
             break;
         case 'KeyE':
             if (!session.inventoryOpen && !closeActivePanel()) interactNpc();
@@ -90,9 +98,16 @@ function handleKeyDown(event) {
             if (session.inventoryOpen) dropInventoryItem();
             break;
         default:
-            if (session.inventoryOpen && event.code.startsWith('Arrow'))
-                navigateInventory(event.code);
+            if (session.inventoryOpen && code.startsWith('Arrow')) navigateInventory(code);
     }
+}
+
+function handleKeyDown(event) {
+    if (!isGameActive() || !GAME_KEY_CODES.has(event.code)) return;
+    event.preventDefault();
+    keys[event.code] = true;
+    if (event.repeat && !event.code.startsWith('Arrow')) return;
+    performInputAction(event.code);
 }
 
 window.addEventListener('keydown', handleKeyDown);
@@ -101,6 +116,7 @@ window.addEventListener('keyup', (event) => {
 });
 window.addEventListener('blur', () => {
     for (const key of Object.keys(keys)) delete keys[key];
+    for (const key of Object.keys(touchKeys)) delete touchKeys[key];
 });
 
-export { keys };
+export { keys, touchKeys, isKeyDown, performInputAction };

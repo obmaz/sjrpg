@@ -1426,3 +1426,463 @@ body {
 .compendium-card.locked .cc-name {
     color: #666;
 }
+
+/* Panels remain usable without a keyboard. */
+#inventory .panel-close,
+#questJournal .panel-close,
+.overlay .panel-close {
+    position: sticky;
+    top: 0;
+    float: right;
+    z-index: 3;
+    min-height: 44px;
+    padding: 8px 12px;
+    margin: 0 0 8px 8px;
+    border: 1px solid #8b8bba;
+    border-radius: 8px;
+    background: #25253f;
+    color: #fff;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+#closeQuestJournal {
+    display: none;
+}
+#questJournal.mobile-journal-open #closeQuestJournal {
+    display: block;
+}
+#touchControls,
+.touch-start-hint {
+    display: none;
+}
+
+.overlay .compendium-details {
+    font-size: 12px;
+    color: #d0d0ee;
+    white-space: pre-line;
+    text-align: left;
+    margin: 12px 0 0;
+}
+
+@media (pointer: coarse) {
+    body {
+        overscroll-behavior: none;
+    }
+    #gameArea {
+        width: 100vw;
+        height: var(--app-height, 100vh);
+        transform: none;
+        overflow: hidden;
+    }
+    #gameCanvas {
+        touch-action: none;
+    }
+    #hudTop {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        padding-top: env(safe-area-inset-top, 0px);
+        background: rgba(8, 8, 25, 0.9);
+    }
+    #hudLeft {
+        min-width: 0;
+        gap: 8px;
+        padding: 5px 10px;
+        border: 0;
+        background: none;
+    }
+    #charPortrait {
+        width: 34px;
+        height: 34px;
+    }
+    #portraitFace {
+        font-size: 23px;
+    }
+    #hpSection {
+        min-width: 0;
+        flex: 1;
+    }
+    #hpLabel {
+        display: none;
+    }
+    #hpSub {
+        flex-wrap: nowrap;
+        justify-content: space-between;
+    }
+    #hpSub #stageInfo {
+        margin: 0;
+        font-size: 11px;
+    }
+    #hudRight {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 5px;
+        padding: 2px 10px;
+        border: 0;
+        background: none;
+    }
+    #hudRight .equip-slot {
+        min-width: 0;
+        padding: 4px 6px;
+    }
+    #equipmentSlot,
+    #auxDisplay {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 11px;
+    }
+    #hudRight #itemSlots,
+    #hudRight #equipMount {
+        display: none !important;
+    }
+    #hudCenter {
+        flex: none;
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 3px 8px;
+        background: none;
+        min-height: 24px;
+        gap: 2px 8px;
+    }
+    #clearProgress {
+        font-size: 11px;
+        letter-spacing: 0;
+    }
+    #poisonDisplay {
+        font-size: 10px !important;
+    }
+    #touchControls {
+        display: block;
+        position: absolute;
+        inset: 0;
+        z-index: 30;
+        pointer-events: none;
+        --stick-size: 128px;
+        --action-size: 58px;
+        --bottom-gap: max(12px, env(safe-area-inset-bottom, 0px));
+    }
+    #touchControls button,
+    #touchJoystick {
+        pointer-events: auto;
+        touch-action: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+    #touchControls button {
+        min-height: 44px;
+        border: 1px solid #9997c8;
+        border-radius: 12px;
+        background: rgba(24, 24, 52, 0.88);
+        box-shadow: 0 2px 6px #0006;
+        color: #fff;
+        font: inherit;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    #touchControls button:disabled {
+        opacity: 0.4;
+    }
+    #touchControls button:active,
+    #touchControls button.active {
+        background: #605c94;
+        border-color: #ffe066;
+    }
+    .touch-menu {
+        position: absolute;
+        top: calc(110px + env(safe-area-inset-top, 0px));
+        left: max(8px, env(safe-area-inset-left, 0px));
+        display: flex;
+        gap: 5px;
+    }
+    .touch-menu button {
+        padding: 4px 10px;
+    }
+    #touchJoystick {
+        position: absolute;
+        bottom: var(--bottom-gap);
+        left: max(12px, env(safe-area-inset-left, 0px));
+        width: var(--stick-size);
+        height: var(--stick-size);
+        border: 2px solid #b5b7de88;
+        border-radius: 50%;
+        background: radial-gradient(circle, #20204488, #20204455);
+        box-shadow: inset 0 0 20px #0006;
+    }
+    #touchThumb {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 48px;
+        height: 48px;
+        border: 2px solid #ccc9ff;
+        border-radius: 50%;
+        background: #7270b4b3;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+    }
+    .stick-directions {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: #e0e0ff55;
+        font-size: 72px;
+        pointer-events: none;
+    }
+    .touch-actions {
+        position: absolute;
+        bottom: var(--bottom-gap);
+        right: max(12px, env(safe-area-inset-right, 0px));
+        display: grid;
+        grid-template-columns: repeat(2, var(--action-size));
+        grid-template-rows: repeat(2, var(--action-size));
+        gap: 8px;
+        align-items: center;
+    }
+    #touchControls .touch-actions button {
+        height: 100%;
+        border-radius: 50%;
+        padding: 0;
+        white-space: nowrap;
+    }
+    #touchControls #touchAttack {
+        background: #813b43df;
+        border: 2px solid #ffad82;
+        font-size: 14px;
+    }
+    #touchControls #touchAttack.active {
+        background: #bc6262;
+    }
+    #touchControls #touchAux {
+        color: #ffe066;
+        border-color: #e4c76e;
+    }
+    .touch-items {
+        position: absolute;
+        bottom: calc(var(--bottom-gap) + var(--stick-size) + 12px);
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 6px;
+    }
+    .touch-items button {
+        width: 46px;
+    }
+    #minimap {
+        width: 76px;
+        height: 76px;
+        top: 164px;
+        right: 8px;
+        bottom: auto;
+        opacity: 0.8;
+        pointer-events: none;
+    }
+    #controlsWrap {
+        display: none;
+    }
+    #messageLog {
+        bottom: 210px;
+        width: min(90%, 460px);
+        max-height: 100px;
+        overflow: hidden;
+    }
+    .msg {
+        font-size: 11px;
+        padding: 5px 10px;
+        flex-shrink: 0;
+    }
+    #messageLog .msg:nth-last-child(n + 3) {
+        display: none;
+    }
+    #questJournal:not(.mobile-journal-open) {
+        display: none;
+    }
+    #questJournal.mobile-journal-open {
+        inset: 20% 12px auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        max-height: calc(var(--app-height, 100vh) * 0.6);
+        overflow-y: auto;
+        z-index: 120;
+    }
+    #inventory {
+        width: calc(100% - 20px);
+        max-width: 480px;
+        max-height: calc(var(--app-height, 100vh) - 24px);
+        padding: 10px;
+        overscroll-behavior: contain;
+    }
+    #inventorySlots {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .inventory-slot {
+        height: 174px;
+    }
+    .inventory-slot.selected,
+    .inventory-slot:hover {
+        transform: none;
+    }
+    .inventory-slot .name {
+        font-size: 12px;
+    }
+    .inventory-slot .uses,
+    .inventory-slot .ability {
+        font-size: 11px;
+    }
+    .inventory-slot .inventory-drop {
+        min-height: 44px;
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+    #shopPanel,
+    #npcDialog,
+    #appearancePanel,
+    #compendiumPanel {
+        padding: 12px;
+        height: var(--app-height, 100vh);
+    }
+    .shop-box,
+    .dialog-box,
+    .appearance-box,
+    .compendium-box,
+    .slot-box,
+    .result-card {
+        min-width: 0;
+        width: min(100%, 480px);
+        max-width: 100%;
+        max-height: calc(var(--app-height, 100vh) - 32px);
+        overflow-y: auto;
+        padding: 14px;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
+    }
+    .overlay {
+        height: var(--app-height, 100vh);
+    }
+    .overlay h1 {
+        font-size: 32px;
+    }
+    .overlay p {
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+    .shop-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .shop-item {
+        min-height: 108px;
+    }
+    .dialog-option {
+        min-height: 48px;
+    }
+    .compendium-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .compendium-card {
+        width: 100%;
+    }
+    .appearance-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .appearance-option {
+        width: 100%;
+        min-width: 0;
+    }
+    .result-stats {
+        grid-template-columns: 1fr;
+        gap: 4px;
+        font-size: 12px;
+    }
+    .result-icon {
+        font-size: 32px;
+    }
+    .slot-reels {
+        gap: 8px;
+    }
+    .slot-reel {
+        width: 64px;
+        height: 64px;
+    }
+    .touch-start-hint {
+        display: block;
+        font-size: 13px !important;
+        margin: 10px 12px !important;
+    }
+    .game-title {
+        font-size: clamp(32px, 10vw, 60px) !important;
+        letter-spacing: 4px;
+    }
+    .title-frame {
+        width: 100%;
+        max-width: 420px;
+        padding: 16px 10px;
+    }
+    .title-sub {
+        font-size: 12px;
+        letter-spacing: 2px;
+    }
+    .start-content {
+        width: 100%;
+        max-height: 100%;
+        overflow-y: auto;
+        padding: 16px;
+    }
+    .title-ornament {
+        font-size: 16px;
+    }
+}
+
+@media (pointer: coarse) and (max-height: 500px) {
+    #touchControls {
+        --stick-size: 106px;
+        --action-size: 48px;
+        --bottom-gap: 8px;
+    }
+    #hudTop {
+        display: grid;
+        grid-template-columns: 250px minmax(0, 1fr);
+    }
+    #hudLeft {
+        grid-column: 1;
+        grid-row: 1;
+    }
+    #hudRight {
+        grid-column: 2;
+        grid-row: 1;
+    }
+    #hudCenter {
+        grid-column: 1 / -1;
+        grid-row: 2;
+    }
+    #touchControls #touchAttack {
+        font-size: 12px;
+    }
+    .touch-menu {
+        top: 76px;
+    }
+    .touch-items {
+        bottom: 10px;
+    }
+    #minimap {
+        top: 78px;
+    }
+    #messageLog {
+        bottom: 64px;
+        max-width: 320px;
+        max-height: 56px;
+    }
+    #inventorySlots {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .compendium-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+    #touchThumb {
+        width: 42px;
+        height: 42px;
+    }
+}

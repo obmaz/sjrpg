@@ -1,4 +1,5 @@
-import { player } from '../core/state.js';
+import { canAct, isGameActive } from '../core/helpers.js';
+import { player, session } from '../core/state.js';
 import { getQuest } from '../systems/quests.js';
 
 function renderQuestJournal() {
@@ -17,7 +18,28 @@ function renderQuestJournal() {
     }
     document
         .getElementById('questJournal')
-        .classList.toggle('hidden', player.activeQuests.length === 0);
+        .classList.toggle('hidden', player.activeQuests.length === 0 && !session.questJournalOpen);
+}
+
+function toggleQuestJournal() {
+    if (!isGameActive()) return;
+    if (session.questJournalOpen) {
+        closeQuestJournal();
+        return;
+    }
+    if (!canAct()) return;
+    session.questJournalOpen = true;
+    session.gamePaused = true;
+    document.getElementById('questJournal').classList.add('mobile-journal-open');
+    renderQuestJournal();
+}
+
+function closeQuestJournal() {
+    if (!session.questJournalOpen) return;
+    session.questJournalOpen = false;
+    session.gamePaused = false;
+    document.getElementById('questJournal').classList.remove('mobile-journal-open');
+    renderQuestJournal();
 }
 
 function formatQuestProgress(quest, progress) {
@@ -31,4 +53,4 @@ function formatQuestProgress(quest, progress) {
     return `${progress} / ${quest.target}`;
 }
 
-export { renderQuestJournal };
+export { renderQuestJournal, toggleQuestJournal, closeQuestJournal };
