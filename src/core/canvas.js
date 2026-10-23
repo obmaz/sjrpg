@@ -46,7 +46,9 @@ const camera = { x: 0, y: 0 };
 
 function updateCamera(targetX, targetY) {
     camera.x = targetX - canvas.width / 2;
-    camera.y = targetY - canvas.height / 2;
+    const mobilePortrait =
+        window.matchMedia('(pointer: coarse)').matches && canvas.height > canvas.width;
+    camera.y = targetY - canvas.height * (mobilePortrait ? 0.43 : 0.5);
     // Clamp
     camera.x = Math.max(0, Math.min(MAP_WIDTH * TILE_SIZE - canvas.width, camera.x));
     camera.y = Math.max(0, Math.min(MAP_HEIGHT * TILE_SIZE - canvas.height, camera.y));

@@ -15,6 +15,7 @@ import { applyPlayerPoison, distance } from '../core/helpers.js';
 import { enemies, player, session } from '../core/state.js';
 import { ENEMY_TYPES } from '../data/enemies.js';
 import { playPlayerHurtSound } from './audio.js';
+import { hapticImpact } from './feedback.js';
 import { damageEnemy } from './combat.js';
 import { spawnEnemyProjectile, spawnFloatingText, spawnParticles } from './entities.js';
 import { spawnEnemy } from './spawning.js';
@@ -127,6 +128,7 @@ function updateEnemies(deltaTime) {
                         let dmg = enemy.atk + Math.floor(Math.random() * 4);
                         if (player.shieldActive > 0) dmg = Math.floor(dmg * 0.5);
                         player.hp -= dmg;
+                        hapticImpact('hurt');
                         if (enemy.poison) applyPlayerPoison(SNAKE_POISON_DURATION, enemy.poisonDmg);
                         playPlayerHurtSound();
                         player.invincible = 0.5;

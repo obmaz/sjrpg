@@ -11,6 +11,7 @@ import { generateForestMap } from './systems/world.js';
 import { updateHud } from './ui/hud.js';
 import { addMessage } from './ui/messages.js';
 import { initializeTouchControls, updateTouchControls } from './ui/touch-controls.js';
+import { initializeSettings } from './ui/settings.js';
 
 // ============================================================
 //  GAME LOGIC
@@ -39,6 +40,7 @@ window.addEventListener('resize', () => {
 
 // Controls toggle
 function initializeUI() {
+    initializeSettings();
     initializeTouchControls();
     const toggle = document.getElementById('controlsToggle');
     const panel = document.getElementById('controls');

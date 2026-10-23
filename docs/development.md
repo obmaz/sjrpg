@@ -14,6 +14,7 @@
 ├── docs/development.md        # 현재 구조·동작 계약·검증·배포
 ├── src/
 │   ├── core/                  # 상수·상태·충돌·노이즈·Canvas·카메라·모바일 높이 고정
+│   │   └── preferences.js     # 소리·진동 설정의 검증·기기 저장
 │   ├── data/                  # 콘텐츠 정의와 거리별 적 선택 규칙
 │   ├── systems/
 │   │   ├── simulation.js      # 프레임별 게임 업데이트 순서
@@ -31,11 +32,13 @@
 │   │   ├── auxiliary-weapons.js # 보조무기 선택·사용
 │   │   ├── quests.js          # 수락 가능 여부·진행·보상·클리어 판정
 │   │   ├── travel.js          # 포탈·편도 지역 이동
-│   │   └── audio.js           # Web Audio 효과음·MP3 재생
+│   │   ├── audio.js           # Web Audio 효과음·MP3 재생
+│   │   └── feedback.js        # 타격·피격 진동 및 연속 진동 제한
 │   ├── ui/                    # 키보드·터치 조작, 인벤토리·상점·대화·도감·HUD·일지·메시지
 │   ├── render/                # Canvas 지형·엔티티·효과·미니맵·시작 화면
 │   └── game.js                # DOM 이벤트 초기화·게임 시작·프레임 루프
 ├── scripts/
+│   ├── build.cjs              # 배포용 정적 실행 파일을 dist/에 구성
 │   ├── page-sources.cjs       # HTML 진입점과 import/export 그래프 공통 로더
 │   └── check.cjs              # 소스 누락·문법·HTML 참조·ESLint 검사
 ├── tests/
@@ -141,6 +144,7 @@ A* 엔진은 게임 상태에 의존하지 않으며 walkability·edge clearance
 가로 폭은 계속 화면에 맞추며 데스크톱에서는 기존 창 크기 변경 동작을 유지합니다.
 고정은 현재 페이지가 열린 동안 유지됩니다. 화면 회전 후에도 최초 높이를 유지하므로
 새 방향의 높이에 맞추려면 페이지를 새로고침해야 합니다.
+사용자가 전체화면을 선택한 동안에는 전체화면 높이를 사용하며, 해제하면 원래 고정 높이로 돌아갑니다.
 높이 변경·회전·재진입의 고정 규칙은 회귀 테스트로 확인했으며 실제 모바일 주소창 동작은 기기 검증이 필요합니다.
 
 ### 터치 입력과 모바일 표시
@@ -153,7 +157,20 @@ A* 엔진은 게임 상태에 의존하지 않으며 walkability·edge clearance
   퀘스트 일지를 직접 열면 `session.questJournalOpen`과 일시정지를 함께 관리하고 닫을 때 해제합니다.
 - `pointer: coarse`에서 조작 버튼·작은 HUD·반응형 패널을 표시합니다. 가로 화면의 조작 영역은 높이를 줄이고,
   목록은 세로 스크롤을 허용하며 게임 조작 영역만 브라우저 터치 제스처를 막습니다. 패널마다 닫기 버튼을 제공합니다.
+- 모바일은 체력·목표를 상단에, 메뉴를 하단에 모으며 세로 화면의 카메라 기준점을 화면 높이 43%에 둬 조작 영역을 비웁니다.
+  공통 `game-window`·`window-header`·`window-body`와 HTML 내부 SVG 심벌로 프레임·아이콘·닫기 버튼을 통일합니다.
+  패널 본문만 스크롤하고 헤더는 유지합니다. 인벤토리의 키보드 열 수는 실제 Grid 열 수를 사용합니다.
 - `tests/game.test.cjs`의 터치 회귀는 DOM 이벤트 대체 환경이며, 실제 멀티터치·패널 스크롤·작은 화면 배치는 브라우저에서 별도로 확인합니다.
+
+### 설정과 피드백
+
+- `ui/settings.js`의 설정 패널은 `session.settingsOpen`·일시정지를 함께 관리합니다. 기존 패널이나 슬롯머신을 덮어 열지 않습니다.
+- `core/preferences.js`는 진동·음악·효과음의 불리언 값만 저장하며, 저장소 접근이 막혀도 현재 세션에서 설정을 사용합니다.
+  이 저장은 모험 진행 저장과 별개입니다.
+- 진동은 직접 적중·근접 피격·적 투사체·함정 피격에서 발생하며 장판·독 피해는 진동을 만들지 않습니다.
+  적중 진동은 70ms 간격으로 제한하고 끄기·화면 숨김·포커스 이탈 때 즉시 취소합니다.
+- 효과음을 끄면 오디오 노드를 생성하지 않습니다. 음악 재생 재시도도 현재 음악 설정을 확인합니다.
+- 전체화면은 사용자 버튼에서 브라우저 API를 호출하고, 미지원·거절 시 설정에 안내합니다. 전환 이벤트에서 Canvas와 카메라를 갱신합니다.
 
 ## 검증
 
@@ -162,6 +179,7 @@ Node.js 24 이상이 필요합니다. 런타임 실행에는 npm 설치가 필�
 ```sh
 npm ci
 npm run check
+npm run build
 ```
 
 | 명령                   | 용도                                                                          |
@@ -171,6 +189,7 @@ npm run check
 | `npm run format:check` | 포맷 확인                                                                     |
 | `npm test`             | Node 내장 테스트 러너로 게임 회귀 검사                                        |
 | `npm run check`        | lint → 포맷 확인 → 전체 테스트                                                |
+| `npm run build`        | 모듈 그래프 검증 후 실행 파일만 dist/에 구성                                  |
 
 정적 검사와 테스트는 `scripts/page-sources.cjs`의 동일한 import 그래프를 사용합니다.
 소스별로 ESLint를 실행하고 import 경로·named export·HTML ID·미정의 변수·import 대입을 검사합니다.
@@ -186,7 +205,7 @@ npm run check
 ## 배포
 
 `main`에 푸시하면 GitHub Actions가 의존성을 설치하고 `npm run check`를 실행합니다.
-검사를 통과한 커밋의 실행 파일만 Pages에 배포합니다. PR에서는 검사만 실행합니다.
+검사를 통과한 커밋의 `dist/` 빌드 산출물을 Pages 아티팩트로 업로드하고 배포합니다. PR에서는 검사·빌드만 실행합니다.
 Actions의 **Check and deploy** 워크플로를 수동 실행해 다시 배포할 수도 있습니다.
 
 배포 파일은 `index.html`, `style.css`, `playful-pixels.mp3`, `src/`이며,

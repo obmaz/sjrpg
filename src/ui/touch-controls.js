@@ -8,6 +8,7 @@ let attackPointer = null;
 let joystick;
 let thumb;
 let attackButton;
+const renderedItems = [];
 
 function releaseTouchControls() {
     for (const code of Object.keys(touchKeys)) delete touchKeys[code];
@@ -91,6 +92,7 @@ function initializeTouchControls() {
         touchInventory: 'KeyI',
         touchCompendium: 'KeyC',
         touchQuests: 'KeyL',
+        touchSettings: 'KeyP',
         touchDismount: 'KeyU',
         touchInteract: 'KeyE',
         touchAux: 'KeyN',
@@ -126,13 +128,20 @@ function updateTouchControls() {
     for (let i = 0; i < 3; i++) {
         const button = document.getElementById(`touchItem${i + 1}`);
         const item = player.items[i];
-        const text = `${i + 1} ${item ? item.icon : '—'}`;
-        if (button.textContent !== text) button.textContent = text;
+        const signature = item ? `${item.id}:${item.icon}` : 'empty';
+        if (renderedItems[i] !== signature) {
+            const icon = item
+                ? item.icon
+                : '<svg class="ui-icon" aria-hidden="true"><use href="#icon-potion"></use></svg>';
+            button.innerHTML = `<span class="quick-index">${i + 1}</span><span class="quick-icon">${icon}</span>`;
+            renderedItems[i] = signature;
+        }
         button.disabled = !enabled || !item;
         const label = item ? `${item.name} 사용` : `아이템 ${i + 1} 비어 있음`;
         if (button.getAttribute('aria-label') !== label) button.setAttribute('aria-label', label);
     }
     document.getElementById('touchDismount').disabled = !player.mount;
+    document.getElementById('touchDismount').classList.toggle('hidden', !player.mount);
     document.getElementById('touchAux').disabled = !player.auxWeapon || player.auxCooldown > 0;
     document.getElementById('touchCycle').disabled = player.auxWeapons.length < 2;
 }

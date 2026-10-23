@@ -24,7 +24,10 @@ function toggleInventory() {
 }
 
 function navigateInventory(code) {
-    const cols = INVENTORY_COLUMNS;
+    const cols =
+        typeof window.getComputedStyle === 'function'
+            ? window.getComputedStyle(inventorySlots).gridTemplateColumns.split(' ').length
+            : INVENTORY_COLUMNS;
     let row = Math.floor(session.selectedInventoryIndex / cols);
     let col = session.selectedInventoryIndex % cols;
     if (code === 'ArrowUp') row = Math.max(0, row - 1);

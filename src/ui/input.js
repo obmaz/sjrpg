@@ -14,6 +14,7 @@ import {
 } from './inventory.js';
 import { closeShop } from './shop.js';
 import { closeQuestJournal, toggleQuestJournal } from './quest-journal.js';
+import { closeSettings, toggleSettings } from './settings.js';
 
 const keys = {};
 const touchKeys = {};
@@ -39,6 +40,7 @@ const GAME_KEY_CODES = new Set([
     'KeyQ',
     'KeyC',
     'KeyL',
+    'KeyP',
     'Digit1',
     'Digit2',
     'Digit3',
@@ -49,7 +51,8 @@ const GAME_KEY_CODES = new Set([
 ]);
 
 function closeActivePanel() {
-    if (session.questJournalOpen) closeQuestJournal();
+    if (session.settingsOpen) closeSettings();
+    else if (session.questJournalOpen) closeQuestJournal();
     else if (session.compendiumOpen) toggleCompendium();
     else if (session.shopOpen) closeShop();
     else if (session.inventoryOpen) toggleInventory();
@@ -87,6 +90,9 @@ function performInputAction(code) {
             break;
         case 'KeyL':
             toggleQuestJournal();
+            break;
+        case 'KeyP':
+            toggleSettings();
             break;
         case 'KeyE':
             if (!session.inventoryOpen && !closeActivePanel()) interactNpc();

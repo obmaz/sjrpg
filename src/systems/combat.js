@@ -3,6 +3,7 @@ import { canAct, distance, getEnemiesInRadius, recordDiscovery } from '../core/h
 import { enemies, inventory, particles, player, scarecrows } from '../core/state.js';
 import { WEAPONS } from '../data/weapons.js';
 import { playEnemyDeathSound, playHitSound, playSlashSound } from './audio.js';
+import { hapticImpact } from './feedback.js';
 import {
     spawnFireZone,
     spawnFloatingText,
@@ -154,6 +155,7 @@ function damageEnemy(enemy, dmg, knockback = true, options = {}) {
     playHitSound();
     enemy.hurtTimer = 0.25;
     if (options.stagger !== false) {
+        hapticImpact('hit');
         enemy.state = 'hurt';
         enemy.stateTimer = 0.4;
     }

@@ -25,6 +25,7 @@ import { CHEST_TYPES } from '../data/chests.js';
 import { ENEMY_TYPES } from '../data/enemies.js';
 import { WEAPONS } from '../data/weapons.js';
 import { playChestBreak, playCoinSound } from './audio.js';
+import { hapticImpact } from './feedback.js';
 import { damageEnemy, getPlayerAttackOrigin } from './combat.js';
 import { spawnEnemy } from './spawning.js';
 import { isSolidTile, isWaterTile } from './world.js';
@@ -238,6 +239,7 @@ function updateEnemyProjectiles(deltaTime) {
             let dmg = projectile.dmg;
             if (player.shieldActive > 0) dmg = Math.floor(dmg * 0.5);
             player.hp -= dmg;
+            hapticImpact('hurt');
             player.invincible = 0.3;
             spawnFloatingText(player.x + player.w / 2, player.y - 8, `-${dmg}`, '#ff4444');
             spawnParticles(projectile.x, projectile.y, projectile.color, 6);
@@ -356,6 +358,7 @@ function openChest(chest) {
     if (chest.type === 'trap') {
         const dmg = chest.chestData.id === 'iron' ? 35 : 15;
         player.hp -= dmg;
+        hapticImpact('hurt');
         spawnParticles(cx, cy, '#ff4400', 25);
         addMessage(`💥 함정 상자! ${dmg} 피해!`, 'damage');
         updateHud();

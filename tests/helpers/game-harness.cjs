@@ -3,7 +3,12 @@ const vm = require('node:vm');
 const path = require('node:path');
 
 // Link the actual page modules, with deterministic browser timers.
-async function loadGame({ coarsePointer = false, innerHeight = 960 } = {}) {
+async function loadGame({
+    coarsePointer = false,
+    innerHeight = 960,
+    storage = new Map(),
+    vibrate,
+} = {}) {
     const elements = new Map();
     const listeners = {};
     const documentListeners = {};
@@ -82,8 +87,13 @@ async function loadGame({ coarsePointer = false, innerHeight = 960 } = {}) {
     const sandbox = vm.createContext({
         console,
         performance: { now: () => 0 },
+        navigator: vibrate ? { vibrate } : {},
         CanvasRenderingContext2D: function () {},
         window: {
+            localStorage: {
+                getItem: (key) => storage.get(key) ?? null,
+                setItem: (key, value) => storage.set(key, value),
+            },
             innerHeight,
             matchMedia: () => ({ matches: coarsePointer }),
             addEventListener: (name, cb) => {

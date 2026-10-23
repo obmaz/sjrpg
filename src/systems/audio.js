@@ -1,3 +1,4 @@
+import { preferences } from '../core/preferences.js';
 // ============================================================
 //  SOUND SYSTEM (Web Audio API synthesized sounds)
 // ============================================================
@@ -8,6 +9,7 @@ function getAudioContext() {
 }
 
 function playSlashSound() {
+    if (!preferences.soundEffects) return;
     try {
         const ac = getAudioContext();
         const t = ac.currentTime;
@@ -51,6 +53,7 @@ function playSlashSound() {
 }
 
 function playHitSound() {
+    if (!preferences.soundEffects) return;
     try {
         const ac = getAudioContext();
         const t = ac.currentTime;
@@ -69,6 +72,7 @@ function playHitSound() {
 }
 
 function playCoinSound() {
+    if (!preferences.soundEffects) return;
     try {
         const ac = getAudioContext();
         const t = ac.currentTime;
@@ -88,6 +92,7 @@ function playCoinSound() {
 }
 
 function playPlayerHurtSound() {
+    if (!preferences.soundEffects) return;
     try {
         const ac = getAudioContext();
         const t = ac.currentTime;
@@ -106,6 +111,7 @@ function playPlayerHurtSound() {
 }
 
 function playChestBreak(isIron) {
+    if (!preferences.soundEffects) return;
     try {
         const ac = getAudioContext();
         const t = ac.currentTime;
@@ -185,6 +191,7 @@ function playChestBreak(isIron) {
 }
 
 function playEnemyDeathSound(enemyName) {
+    if (!preferences.soundEffects) return;
     try {
         const ac = getAudioContext();
         const t = ac.currentTime;
@@ -314,13 +321,14 @@ function playEnemyDeathSound(enemyName) {
 // ============================================================
 let backgroundMusic = null;
 function startBgMusic() {
+    if (!preferences.music) return;
     if (!backgroundMusic) backgroundMusic = document.getElementById('bgMusic');
     if (!backgroundMusic) return;
     backgroundMusic.volume = 0.3;
     backgroundMusic.play().catch(() => {
         // Autoplay blocked — retry on next user interaction
         const tryPlay = () => {
-            if (backgroundMusic) backgroundMusic.play().catch(() => {});
+            if (backgroundMusic && preferences.music) backgroundMusic.play().catch(() => {});
         };
         document.addEventListener('click', tryPlay, { once: true });
         document.addEventListener('keydown', tryPlay, { once: true });

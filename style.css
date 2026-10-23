@@ -336,7 +336,7 @@ body {
 /* ============================================= */
 /*  START SCREEN - 판타지 테마                    */
 /* ============================================= */
-.start-overlay {
+#startScreen.start-overlay {
     background: radial-gradient(ellipse at center, #0d1525 0%, #060c18 60%, #020408 100%);
     z-index: 300;
 }
@@ -1190,22 +1190,6 @@ body {
     color: #88aacc;
 }
 
-/* Black market variant */
-#shopPanel.blackmarket .shop-box {
-    border-color: #8844aa;
-    box-shadow: 0 0 40px rgba(136, 68, 170, 0.2);
-}
-#shopPanel.blackmarket .shop-box h2 {
-    color: #cc88ff;
-}
-#shopPanel.blackmarket .shop-item {
-    border-color: #6a3a8a;
-}
-#shopPanel.blackmarket .shop-item:hover {
-    border-color: #cc88ff;
-    box-shadow: 0 4px 16px rgba(136, 68, 170, 0.25);
-}
-
 /* ============================================= */
 /*  SLOT MACHINE MODAL                            */
 /* ============================================= */
@@ -1427,48 +1411,596 @@ body {
     color: #666;
 }
 
-/* Panels remain usable without a keyboard. */
+/* Shared forest-and-brass interface. */
+:root {
+    --ui-ink: #f1e5c7;
+    --ui-muted: #a8b49a;
+    --ui-gold: #e5c77f;
+    --ui-brass: #9d8247;
+    --ui-deep: #0d211d;
+    --ui-panel: #19362b;
+    --ui-edge: #405441;
+}
+.ui-symbols {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+.ui-icon {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.65;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex: none;
+    pointer-events: none;
+}
+.game-window {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    width: min(480px, calc(100% - 24px));
+    max-width: 100%;
+    max-height: calc(var(--app-height, 100vh) / 1.5 - 28px);
+    padding: 0;
+    overflow: hidden;
+    color: var(--ui-ink);
+    border: 2px solid var(--ui-brass);
+    border-radius: 14px;
+    background:
+        repeating-linear-gradient(0deg, #ffffff02 0 1px, transparent 1px 4px),
+        linear-gradient(145deg, #253e30, #102820 65%, #142b24);
+    box-shadow:
+        0 20px 60px #0009,
+        inset 0 0 0 3px #0b1915,
+        inset 0 0 0 4px #d7bb6c30;
+    text-align: left;
+}
+#inventory.game-window {
+    padding: 0;
+    width: min(480px, calc(100% - 24px));
+}
+.window-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: none;
+    padding: 14px 16px;
+    min-height: 80px;
+    background: linear-gradient(180deg, #3f5437, #203c2d);
+    border-bottom: 1px solid var(--ui-brass);
+    box-shadow:
+        inset 0 2px #ead59438,
+        0 3px 0 #081b16;
+}
+.window-emblem {
+    width: 34px;
+    height: 34px;
+    color: var(--ui-gold);
+    filter: drop-shadow(0 2px 1px #0008);
+}
+.window-heading {
+    flex: 1;
+    min-width: 0;
+}
+.eyebrow {
+    display: block;
+    color: #b5bf94;
+    font-size: 9px;
+    letter-spacing: 2.4px;
+    margin-bottom: 4px;
+    font-weight: 700;
+}
+.window-heading h2,
+#inventory .window-heading h2 {
+    margin: 0;
+    text-align: left;
+    color: var(--ui-ink);
+    font-family: Georgia, 'Batang', serif;
+    font-size: 23px;
+    letter-spacing: 0.5px;
+}
+.game-window .panel-close,
 #inventory .panel-close,
-#questJournal .panel-close,
-.overlay .panel-close {
-    position: sticky;
-    top: 0;
-    float: right;
-    z-index: 3;
+#questJournal .panel-close {
+    display: grid;
+    place-items: center;
+    position: static;
+    float: none;
+    width: 44px;
+    height: 44px;
     min-height: 44px;
-    padding: 8px 12px;
-    margin: 0 0 8px 8px;
-    border: 1px solid #8b8bba;
-    border-radius: 8px;
-    background: #25253f;
-    color: #fff;
-    font: inherit;
-    font-size: 13px;
+    flex: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #b49856;
+    border-radius: 9px;
+    background: linear-gradient(#4a4c31, #263b2b);
+    color: #f0d79e;
+    box-shadow:
+        inset 0 1px #f9e4ad45,
+        inset 0 -3px #0a1e14,
+        0 2px 3px #0005;
     cursor: pointer;
     touch-action: manipulation;
 }
-
-#closeQuestJournal {
+.game-window .panel-close:hover {
+    background: #53603b;
+    transform: none;
+}
+.game-window .panel-close:active {
+    transform: translateY(1px);
+    box-shadow: inset 0 2px 5px #0008;
+}
+.window-body {
+    padding: 16px;
+    overflow-y: auto;
+    min-height: 0;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    scrollbar-color: #9d8247 #10271e;
+    scrollbar-width: thin;
+}
+.window-intro,
+.game-window .window-intro {
+    color: var(--ui-muted);
+    font-size: 12px;
+    line-height: 1.6;
+    margin: 0 0 14px;
+}
+.game-window .hint {
+    color: #a7b396;
+    font-size: 10px;
+    margin: 14px 0 0;
+    line-height: 1.5;
+}
+#shopPanel,
+#npcDialog,
+#appearancePanel,
+#compendiumPanel,
+#settingsPanel,
+#slotMachine {
+    z-index: 260;
+    background: #03110edb;
+    backdrop-filter: blur(5px);
+}
+#settingsPanel {
+    z-index: 280;
+}
+#slotMachine {
+    z-index: 290;
+}
+#questJournal {
+    top: 80px;
+    right: 12px;
+    width: 210px;
+    z-index: 20;
+}
+#questJournal:not(.mobile-journal-open) .window-header {
+    min-height: 44px;
+    padding: 8px;
+    gap: 6px;
+}
+#questJournal:not(.mobile-journal-open) .window-heading h2 {
+    font-size: 15px;
+}
+#questJournal:not(.mobile-journal-open) .window-emblem {
+    width: 20px;
+    height: 20px;
+}
+#questJournal:not(.mobile-journal-open) .eyebrow,
+#questJournal:not(.mobile-journal-open) #closeQuestJournal {
     display: none;
 }
-#questJournal.mobile-journal-open #closeQuestJournal {
-    display: block;
+#questJournal.mobile-journal-open {
+    top: 50%;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    z-index: 120;
+    width: min(460px, calc(100% - 24px));
 }
 #touchControls,
 .touch-start-hint {
     display: none;
 }
-
+.quest-entry {
+    padding: 12px 0;
+    border-color: #b89d5630;
+}
+.quest-entry .q-title {
+    color: #e6d395;
+}
+.quest-entry .q-progress {
+    display: inline-block;
+    margin-top: 5px;
+    color: #afc4a5;
+}
+.inventory-slot,
+.shop-item,
+.compendium-card,
+.appearance-option {
+    border-color: #65734c;
+    border-radius: 8px;
+    color: var(--ui-ink);
+    background: linear-gradient(145deg, #314b37, #122d23);
+    box-shadow:
+        inset 0 1px #d8e4a215,
+        inset 0 -3px #061c1555;
+}
+.inventory-slot.selected,
+.appearance-option.selected {
+    border-color: #e2c277 !important;
+    background: linear-gradient(145deg, #5b6040, #25452f);
+    box-shadow:
+        inset 0 0 0 1px #b8a266,
+        0 0 10px #bfa65830;
+    transform: none;
+}
+.inventory-slot:hover,
+.shop-item:hover,
+.compendium-card:hover,
+.appearance-option:hover {
+    border-color: #d8bd79;
+    background: #385038;
+    transform: none;
+}
+.inventory-slot .name,
+.shop-item .s-name,
+.compendium-card .cc-name {
+    color: #e5ddbd;
+}
+.inventory-slot .atk,
+.shop-item .s-atk {
+    color: #dba083;
+}
+.inventory-slot .ability,
+.shop-item .s-desc {
+    color: #a4bba0;
+}
+.inventory-slot .uses {
+    color: #dbca89;
+}
+.inventory-drop {
+    background: #422f27;
+    border-color: #8e6950;
+    color: #d7bfa5;
+}
+.compendium-section-header {
+    color: #dfc787;
+    border-color: #a38e4d50;
+    letter-spacing: 0.5px;
+}
 .overlay .compendium-details {
+    color: #c4d0b2;
     font-size: 12px;
-    color: #d0d0ee;
+    line-height: 1.6;
     white-space: pre-line;
     text-align: left;
-    margin: 12px 0 0;
+    padding: 12px;
+    border: 1px solid #7d855548;
+    background: #071d1666;
+    border-radius: 6px;
+    margin: 16px 0 0;
+}
+#compendiumStats {
+    color: #b8c29e;
+    font-size: 11px;
+    margin-bottom: 12px;
+}
+#shopGold {
+    border-bottom: 1px solid #9d824755;
+    color: #e3c67e;
+    text-align: right;
+    padding: 0 0 12px;
+    margin-bottom: 12px;
+    font-size: 13px;
+}
+#npcPortrait {
+    font-size: 48px;
+    text-align: center;
+    margin: 0 auto 8px;
+    width: 80px;
+    height: 80px;
+    border: 1px solid #9d8247;
+    background: #0f231c;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+}
+#npcName {
+    font-size: 18px;
+    color: #ead29e;
+    text-align: center;
+    margin-bottom: 8px;
+}
+.game-window #npcText {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #ccd4b8;
+    text-align: center;
+    margin-bottom: 16px;
+}
+.dialog-option {
+    border-color: #758056;
+    background: linear-gradient(#2d4b35, #1b3529);
+    padding: 14px;
+    border-radius: 8px;
+    min-height: 52px;
+}
+.dialog-option:hover {
+    background: #41583b;
+    border-color: #d7ba72;
+}
+.dialog-option .q-name {
+    color: #e5cd90;
+}
+.dialog-option .q-desc {
+    color: #aabb9d;
+}
+.dialog-option .q-reward {
+    color: #c9ba8a;
+}
+.game-button,
+.overlay .game-button,
+.result-card button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 50px;
+    padding: 12px 18px;
+    border: 1px solid #ecd092;
+    border-radius: 8px;
+    background: linear-gradient(#d2ad5f, #aa813c);
+    color: #172b20;
+    box-shadow:
+        inset 0 2px #ffe5a1a0,
+        inset 0 -4px #74562c,
+        0 3px 8px #0005;
+    font: inherit;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+}
+.game-button:hover,
+.overlay .game-button:hover,
+.result-card button:hover {
+    background: linear-gradient(#e4c77f, #bd984e);
+    transform: none;
+}
+.game-button:active,
+.overlay .game-button:active {
+    transform: translateY(2px);
+}
+.overlay .game-button.secondary {
+    background: linear-gradient(#355140, #243b2e);
+    color: #e4d5ad;
+    border-color: #7d8d5e;
+    box-shadow:
+        inset 0 1px #c8d9a72c,
+        inset 0 -3px #10261a;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+.setting-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 0;
+    border-bottom: 1px solid #a69a5530;
+}
+.setting-row > .ui-icon {
+    color: #d5bd7c;
+    width: 25px;
+    height: 25px;
+}
+.setting-copy {
+    flex: 1;
+    min-width: 0;
+}
+.setting-copy h3 {
+    font-size: 14px;
+    color: #ebdfbd;
+    margin-bottom: 5px;
+}
+.overlay .setting-copy p {
+    color: #a3b396;
+    font-size: 11px;
+    line-height: 1.5;
+    margin: 0;
+}
+.overlay .game-switch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 74px;
+    height: 44px;
+    padding: 5px;
+    flex: none;
+    background: #132a21;
+    border: 1px solid #63734d;
+    border-radius: 22px;
+    color: #a5b397;
+    box-shadow: inset 0 2px 5px #0006;
+    font-size: 10px;
+}
+.switch-knob {
+    position: absolute;
+    left: 5px;
+    top: 6px;
+    width: 30px;
+    height: 30px;
+    border: 1px solid #87986b;
+    border-radius: 50%;
+    background: linear-gradient(#71815a, #4d613f);
+    box-shadow: 0 2px 3px #0005;
+    transition: left 0.18s;
+}
+.switch-state {
+    position: absolute;
+    right: 9px;
+}
+.overlay .game-switch[aria-checked='true'] {
+    border-color: #bca462;
+    background: #375133;
+    color: #f2dfab;
+}
+.game-switch[aria-checked='true'] .switch-knob {
+    left: 37px;
+    border-color: #f0d99b;
+    background: linear-gradient(#e0c179, #aa8644);
+}
+.game-switch[aria-checked='true'] .switch-state {
+    left: 10px;
+    right: auto;
+}
+.overlay .game-switch:hover {
+    transform: none;
+    background: #30442b;
+}
+.overlay .game-switch:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+.settings-status {
+    color: #e5c984 !important;
+    font-size: 12px !important;
+    line-height: 1.6;
+    margin: 12px 0 !important;
+}
+.settings-status:empty {
+    display: none;
+}
+.overlay .settings-note {
+    font-size: 10px;
+    color: #889d83;
+    text-align: center;
+    margin: 16px 0;
+}
+.result-card {
+    background: linear-gradient(145deg, #28392a, #10251d);
+    border-color: #b49a59;
+    border-radius: 14px;
+    color: #e8d8b1;
+}
+.result-card h1 {
+    color: #e6cc8d;
+    font-family: Georgia, 'Batang', serif;
+}
+.result-card button {
+    margin: 18px auto 0;
+}
+.slot-reel {
+    border-color: #b3a265;
+    background: #172b21;
+}
+#startScreen.start-overlay {
+    background: radial-gradient(ellipse at 50% 40%, #355137, #0a211b 65%, #051510);
+}
+.start-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.35;
+    background:
+        repeating-linear-gradient(110deg, transparent 0 66px, #a5bf8005 67px 68px),
+        radial-gradient(ellipse at 15% 10%, #90a96655, transparent 50%);
+    pointer-events: none;
+}
+.guardian-crest {
+    display: grid;
+    place-items: center;
+    width: 116px;
+    height: 116px;
+    border: 1px solid #b99e58;
+    outline: 1px solid #d4b76633;
+    outline-offset: 7px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #52633b, #183c2b);
+    box-shadow:
+        0 0 70px #9ca95633,
+        inset 0 0 0 5px #152c20,
+        inset 0 0 0 6px #ac99564d;
+    margin: 0 auto 28px;
+}
+.guardian-crest .ui-icon {
+    width: 65px;
+    height: 65px;
+    color: #e4d290;
+    stroke-width: 1.2;
+}
+.title-frame {
+    border: 0;
+    background: none;
+    padding: 0 10px;
+    margin-bottom: 22px;
+    width: 100%;
+}
+.title-frame::before,
+.title-frame::after {
+    display: none;
+}
+.game-title {
+    font-family: Georgia, 'Batang', serif;
+    font-size: 38px;
+    letter-spacing: 3px;
+    color: #e8d69f;
+    text-shadow:
+        0 3px 0 #092417,
+        0 0 28px #b6a45c30;
+}
+.title-ornament {
+    color: #aabc8e;
+    letter-spacing: 3px;
+    font-size: 9px;
+    margin-bottom: 16px;
+}
+.title-sub {
+    font-size: 9px;
+    color: #b3bb94;
+    letter-spacing: 3px;
+    margin-top: 12px;
+}
+.overlay .start-desc {
+    color: #b5c7a7;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+.start-content .game-button {
+    width: 240px;
+    margin-top: 24px;
+    min-height: 58px;
+    font-size: 17px;
+    border-radius: 9px;
+}
+.overlay .start-footnote {
+    color: #74907a;
+    font-size: 10px;
+    margin: 32px 0 0;
+    letter-spacing: 0.4px;
+}
+#controlsWrap {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    z-index: 10;
+}
+.ctrl-toggle {
+    background: #173b29e6;
+    border-color: #a58f55;
+    color: #dec895;
 }
 
 @media (pointer: coarse) {
     body {
+        background: #10261e;
         overscroll-behavior: none;
     }
     #gameArea {
@@ -1484,76 +2016,135 @@ body {
         display: flex;
         flex-direction: column;
         height: auto;
-        padding-top: env(safe-area-inset-top, 0px);
-        background: rgba(8, 8, 25, 0.9);
+        padding: calc(8px + env(safe-area-inset-top, 0px)) 62px 0
+            max(10px, env(safe-area-inset-left, 0px));
+        gap: 5px;
+        background: linear-gradient(#0a251bec, #102f20c9 75%, transparent);
     }
     #hudLeft {
         min-width: 0;
-        gap: 8px;
-        padding: 5px 10px;
+        padding: 0;
         border: 0;
         background: none;
+        gap: 9px;
     }
     #charPortrait {
-        width: 34px;
-        height: 34px;
+        width: 43px;
+        height: 43px;
+        border: 2px solid #c0a461;
+        border-radius: 13px 13px 17px 17px;
+        background: linear-gradient(#4a623a, #243f2d);
+        box-shadow:
+            inset 0 0 0 2px #162d21,
+            0 3px 5px #0006;
     }
     #portraitFace {
-        font-size: 23px;
+        font-size: 27px;
     }
     #hpSection {
         min-width: 0;
         flex: 1;
+        gap: 3px;
     }
     #hpLabel {
-        display: none;
+        display: block;
+        font-size: 8px;
+        line-height: 9px;
+        color: #c5d4a9;
+        letter-spacing: 1px;
+    }
+    .hp-bar-outer {
+        height: 14px;
+        background: #261815;
+        border: 1px solid #c1a05b;
+        border-radius: 4px;
+        box-shadow:
+            0 0 0 1px #142b1d,
+            inset 0 2px 4px #0008;
+    }
+    .hp-bar-fill {
+        background: linear-gradient(#e27454, #b53f34 70%, #7b3027);
+        border-radius: 2px;
+        box-shadow: inset 0 2px #f3ad7a66;
+    }
+    #hpText {
+        font-size: 9px;
+        letter-spacing: 0.2px;
     }
     #hpSub {
         flex-wrap: nowrap;
         justify-content: space-between;
+        gap: 4px;
+        line-height: 14px;
     }
     #hpSub #stageInfo {
+        font-size: 10px;
         margin: 0;
-        font-size: 11px;
+        color: #e3cd90;
+    }
+    #hpSub #goldDisplay,
+    #hpSub #timeDisplay {
+        font-size: 10px;
+    }
+    #hudCenter {
+        order: 2;
+        flex: none;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 1px;
+        min-height: 21px;
+        padding: 3px 9px;
+        margin-left: 51px;
+        background: linear-gradient(90deg, #263c20d9, #1a321eaa);
+        border: 1px solid #a8904c55;
+        border-radius: 4px;
+    }
+    #clearProgress {
+        font-size: 10px;
+        line-height: 14px;
+        color: #dfd1a5;
+        letter-spacing: 0.1px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+    #poisonDisplay {
+        font-size: 9px;
+        line-height: 13px;
     }
     #hudRight {
+        order: 3;
         min-width: 0;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        display: flex;
+        justify-content: flex-start;
         gap: 5px;
-        padding: 2px 10px;
+        padding: 0 0 7px 51px;
         border: 0;
         background: none;
     }
     #hudRight .equip-slot {
         min-width: 0;
-        padding: 4px 6px;
+        flex: 1;
+        max-width: 160px;
+        border: 1px solid #94a0634a;
+        border-radius: 4px;
+        padding: 3px 5px;
+        gap: 3px;
+        background: #0b271bc9;
     }
     #equipmentSlot,
     #auxDisplay {
         overflow: hidden;
         text-overflow: ellipsis;
-        font-size: 11px;
+        font-size: 9px;
+        line-height: 14px;
+    }
+    #hudRight .equip-key {
+        font-size: 8px;
+        color: #b9b87e;
     }
     #hudRight #itemSlots,
     #hudRight #equipMount {
         display: none !important;
-    }
-    #hudCenter {
-        flex: none;
-        flex-direction: row;
-        flex-wrap: wrap;
-        padding: 3px 8px;
-        background: none;
-        min-height: 24px;
-        gap: 2px 8px;
-    }
-    #clearProgress {
-        font-size: 11px;
-        letter-spacing: 0;
-    }
-    #poisonDisplay {
-        font-size: 10px !important;
     }
     #touchControls {
         display: block;
@@ -1562,8 +2153,7 @@ body {
         z-index: 30;
         pointer-events: none;
         --stick-size: 128px;
-        --action-size: 58px;
-        --bottom-gap: max(12px, env(safe-area-inset-bottom, 0px));
+        --control-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
     }
     #touchControls button,
     #touchJoystick {
@@ -1573,192 +2163,439 @@ body {
         -webkit-tap-highlight-color: transparent;
     }
     #touchControls button {
-        min-height: 44px;
-        border: 1px solid #9997c8;
-        border-radius: 12px;
-        background: rgba(24, 24, 52, 0.88);
-        box-shadow: 0 2px 6px #0006;
-        color: #fff;
+        color: #e8d5a0;
         font: inherit;
-        font-size: 12px;
-        font-weight: bold;
+        cursor: pointer;
     }
-    #touchControls button:disabled {
-        opacity: 0.4;
+    #touchControls .screen-button {
+        position: absolute;
+        top: calc(10px + env(safe-area-inset-top, 0px));
+        right: max(10px, env(safe-area-inset-right, 0px));
+        width: 42px;
+        height: 42px;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        border: 1px solid #bba363;
+        border-radius: 9px;
+        background: linear-gradient(#3d5333, #1c3928);
+        box-shadow:
+            inset 0 1px #dfd49b40,
+            inset 0 -3px #112519,
+            0 3px 5px #0005;
     }
-    #touchControls button:active,
-    #touchControls button.active {
-        background: #605c94;
-        border-color: #ffe066;
+    .screen-button .control-caption {
+        display: none;
+    }
+    .screen-button .ui-icon {
+        width: 21px;
+        height: 21px;
     }
     .touch-menu {
         position: absolute;
-        top: calc(110px + env(safe-area-inset-top, 0px));
-        left: max(8px, env(safe-area-inset-left, 0px));
-        display: flex;
-        gap: 5px;
+        left: max(10px, env(safe-area-inset-left, 0px));
+        right: max(10px, env(safe-area-inset-right, 0px));
+        bottom: max(8px, env(safe-area-inset-bottom, 0px));
+        height: 58px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        padding: 4px;
+        gap: 4px;
+        border: 1px solid #a78c50;
+        border-radius: 12px;
+        background: linear-gradient(#344a30ed, #132f22f5);
+        box-shadow:
+            inset 0 2px #d8c27c28,
+            inset 0 -3px #091d13,
+            0 5px 15px #0006;
     }
     .touch-menu button {
-        padding: 4px 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        min-height: 46px;
+        padding: 3px;
+        border: 1px solid transparent;
+        border-radius: 7px;
+        background: transparent;
+    }
+    .touch-menu button + button {
+        border-left-color: #b19d5b28;
+    }
+    .touch-menu .ui-icon {
+        width: 23px;
+        height: 23px;
+    }
+    .control-caption {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+        line-height: 13px;
+        pointer-events: none;
+    }
+    #touchControls button:active,
+    #touchControls button.active {
+        filter: brightness(1.25);
+    }
+    #touchControls button:disabled {
+        filter: saturate(0.35);
+        opacity: 0.5;
+        cursor: default;
     }
     #touchJoystick {
         position: absolute;
-        bottom: var(--bottom-gap);
+        bottom: var(--control-bottom);
         left: max(12px, env(safe-area-inset-left, 0px));
         width: var(--stick-size);
         height: var(--stick-size);
-        border: 2px solid #b5b7de88;
+        border: 2px solid #b9ae754f;
         border-radius: 50%;
-        background: radial-gradient(circle, #20204488, #20204455);
-        box-shadow: inset 0 0 20px #0006;
+        background: radial-gradient(
+            circle,
+            #12392a55 45%,
+            #0a251b55 47% 64%,
+            #c9bd7433 65% 66%,
+            #153d2a44 67%
+        );
+        box-shadow:
+            inset 0 0 0 6px #0b271c44,
+            0 2px 10px #0003;
+    }
+    .stick-directions {
+        position: absolute;
+        inset: 15px;
+        display: grid;
+        place-items: center;
+        pointer-events: none;
+        color: #d7cc9e55;
+    }
+    .stick-directions .ui-icon {
+        width: 100%;
+        height: 100%;
+        stroke-width: 0.7;
     }
     #touchThumb {
         position: absolute;
         top: 50%;
         left: 50%;
-        width: 48px;
-        height: 48px;
-        border: 2px solid #ccc9ff;
+        width: 49px;
+        height: 49px;
+        border: 2px solid #b9b278;
         border-radius: 50%;
-        background: #7270b4b3;
         transform: translate(-50%, -50%);
-        pointer-events: none;
-    }
-    .stick-directions {
-        position: absolute;
-        inset: 0;
         display: grid;
         place-items: center;
-        color: #e0e0ff55;
-        font-size: 72px;
+        background: radial-gradient(circle at 35% 25%, #759268, #294d34 70%);
+        box-shadow:
+            inset 0 2px #dae3ae77,
+            inset 0 -4px #173422,
+            0 4px 10px #0007;
+        color: #e4d99f;
         pointer-events: none;
+    }
+    #touchThumb .ui-icon {
+        width: 25px;
+        height: 25px;
+    }
+    .stick-caption {
+        position: absolute;
+        bottom: -16px;
+        width: 100%;
+        text-align: center;
+        color: #e5dcbd9c;
+        font-size: 9px;
+        letter-spacing: 2px;
+    }
+    #touchJoystick.active {
+        border-color: #cfc28ba8;
     }
     .touch-actions {
         position: absolute;
-        bottom: var(--bottom-gap);
         right: max(12px, env(safe-area-inset-right, 0px));
-        display: grid;
-        grid-template-columns: repeat(2, var(--action-size));
-        grid-template-rows: repeat(2, var(--action-size));
-        gap: 8px;
-        align-items: center;
+        bottom: var(--control-bottom);
+        width: 146px;
+        height: 150px;
     }
     #touchControls .touch-actions button {
-        height: 100%;
-        border-radius: 50%;
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 2px;
         padding: 0;
-        white-space: nowrap;
+        border: 1px solid #b3aa71;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 20%, #60704b, #29442e 70%);
+        box-shadow:
+            inset 0 1px #e0d4a76e,
+            inset 0 -4px #172e1b,
+            0 4px 8px #0006;
     }
     #touchControls #touchAttack {
-        background: #813b43df;
-        border: 2px solid #ffad82;
-        font-size: 14px;
+        right: 0;
+        bottom: 0;
+        width: 78px;
+        height: 78px;
+        border: 2px solid #ecd18c;
+        background: radial-gradient(circle at 35% 20%, #e1c27a, #b58c42 65%, #896331);
+        color: #233c28;
+        box-shadow:
+            inset 0 2px #fff0c0aa,
+            inset 0 -6px #78562e,
+            0 4px 12px #0007,
+            0 0 0 4px #dec28225;
+    }
+    #touchAttack .ui-icon {
+        width: 32px;
+        height: 32px;
+        stroke-width: 1.8;
+    }
+    #touchAttack .control-caption {
+        font-size: 11px;
+        font-weight: 800;
     }
     #touchControls #touchAttack.active {
-        background: #bc6262;
+        background: radial-gradient(circle, #ffde8e, #cba257);
+        box-shadow:
+            inset 0 2px #fff6d8,
+            0 0 20px #f3d38770;
+        transform: scale(0.96);
     }
     #touchControls #touchAux {
-        color: #ffe066;
-        border-color: #e4c76e;
+        left: 0;
+        top: 44px;
+        width: 60px;
+        height: 60px;
+        color: #e5d29a;
+    }
+    #touchAux .ui-icon {
+        width: 25px;
+        height: 25px;
+    }
+    #touchControls #touchInteract {
+        right: 7px;
+        top: 0;
+        width: 47px;
+        height: 47px;
+    }
+    #touchInteract .ui-icon {
+        width: 19px;
+        height: 19px;
+    }
+    #touchInteract .control-caption {
+        font-size: 9px;
+    }
+    #touchControls #touchCycle {
+        left: 10px;
+        bottom: 0;
+        width: 44px;
+        height: 44px;
+    }
+    #touchCycle .ui-icon {
+        width: 18px;
+        height: 18px;
+    }
+    #touchCycle .control-caption {
+        font-size: 8px;
     }
     .touch-items {
         position: absolute;
-        bottom: calc(var(--bottom-gap) + var(--stick-size) + 12px);
+        bottom: calc(var(--control-bottom) + 137px);
         left: 50%;
         transform: translateX(-50%);
         display: flex;
         gap: 6px;
+        padding: 14px 7px 6px;
+        border: 1px solid #b1a46966;
+        border-radius: 8px;
+        background: linear-gradient(#263d2aba, #0f2a20c9);
+        box-shadow:
+            inset 0 1px #e9dc9a22,
+            0 4px 8px #0004;
     }
-    .touch-items button {
-        width: 46px;
+    .quickbar-title {
+        position: absolute;
+        top: 3px;
+        width: 100%;
+        left: 0;
+        color: #cbbd87;
+        font-size: 6px;
+        letter-spacing: 1.5px;
+        text-align: center;
+    }
+    #touchControls .touch-items button {
+        position: relative;
+        width: 44px;
+        height: 44px;
+        min-height: 44px;
+        padding: 0;
+        display: grid;
+        place-items: center;
+        border: 1px solid #ae9d60;
+        border-radius: 6px;
+        background: linear-gradient(145deg, #3c5137, #153322);
+        box-shadow: inset 0 1px #e0db9c25;
+    }
+    .quick-icon {
+        font-size: 24px;
+        line-height: 30px;
+    }
+    .quick-icon .ui-icon {
+        width: 24px;
+        height: 24px;
+        opacity: 0.5;
+    }
+    .quick-index {
+        position: absolute;
+        top: 2px;
+        left: 4px;
+        color: #cbbf85;
+        font-size: 8px;
+    }
+    #touchControls .dismount-button {
+        position: absolute;
+        bottom: calc(var(--control-bottom) + var(--stick-size) + 10px);
+        left: 16px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        height: 44px;
+        padding: 8px;
+        background: #254b31e6;
+        border: 1px solid #c4ab69;
+        border-radius: 7px;
+    }
+    #touchDismount .ui-icon {
+        width: 18px;
+        height: 18px;
     }
     #minimap {
+        top: calc(115px + env(safe-area-inset-top, 0px));
+        right: 10px;
+        bottom: auto;
         width: 76px;
         height: 76px;
-        top: 164px;
-        right: 8px;
-        bottom: auto;
-        opacity: 0.8;
+        border: 2px solid #b3a166;
+        border-radius: 50%;
+        background: #173821;
+        box-shadow:
+            0 0 0 3px #132d20b3,
+            0 3px 12px #0005;
         pointer-events: none;
+        opacity: 0.9;
     }
     #controlsWrap {
         display: none;
     }
     #messageLog {
-        bottom: 210px;
-        width: min(90%, 460px);
-        max-height: 100px;
+        top: 27%;
+        bottom: auto;
+        width: min(80%, 380px);
+        max-height: 48px;
         overflow: hidden;
     }
     .msg {
-        font-size: 11px;
-        padding: 5px 10px;
+        font-size: 10px;
+        line-height: 16px;
         flex-shrink: 0;
+        padding: 7px 12px;
+        border: 1px solid #b4a05d60;
+        border-radius: 5px;
+        background: #102a20de;
+        color: #d1ddba;
+        box-shadow: 0 3px 8px #0003;
     }
-    #messageLog .msg:nth-last-child(n + 3) {
+    #messageLog .msg:nth-last-child(n + 2) {
         display: none;
     }
     #questJournal:not(.mobile-journal-open) {
         display: none;
     }
     #questJournal.mobile-journal-open {
-        inset: 20% 12px auto !important;
-        max-width: none !important;
-        min-width: 0 !important;
-        max-height: calc(var(--app-height, 100vh) * 0.6);
-        overflow-y: auto;
-        z-index: 120;
+        inset: 50% auto auto 50%;
+        width: calc(100% - 24px);
+        max-width: 460px;
+        transform: translate(-50%, -50%);
     }
-    #inventory {
-        width: calc(100% - 20px);
-        max-width: 480px;
-        max-height: calc(var(--app-height, 100vh) - 24px);
-        padding: 10px;
-        overscroll-behavior: contain;
-    }
-    #inventorySlots {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .inventory-slot {
-        height: 174px;
-    }
-    .inventory-slot.selected,
-    .inventory-slot:hover {
-        transform: none;
-    }
-    .inventory-slot .name {
-        font-size: 12px;
-    }
-    .inventory-slot .uses,
-    .inventory-slot .ability {
-        font-size: 11px;
-    }
-    .inventory-slot .inventory-drop {
-        min-height: 44px;
-        padding: 8px 16px;
-        font-size: 12px;
+    .game-window,
+    #inventory.game-window {
+        max-height: calc(var(--app-height, 100vh) - 32px);
+        width: min(460px, calc(100% - 24px));
+        padding: 0;
+        border-radius: 14px;
     }
     #shopPanel,
     #npcDialog,
     #appearancePanel,
-    #compendiumPanel {
-        padding: 12px;
+    #compendiumPanel,
+    #settingsPanel,
+    #slotMachine {
+        padding: 0;
         height: var(--app-height, 100vh);
     }
-    .shop-box,
-    .dialog-box,
-    .appearance-box,
-    .compendium-box,
-    .slot-box,
-    .result-card {
-        min-width: 0;
-        width: min(100%, 480px);
-        max-width: 100%;
-        max-height: calc(var(--app-height, 100vh) - 32px);
-        overflow-y: auto;
+    .window-header {
+        min-height: 76px;
+        padding: 12px 14px;
+        gap: 10px;
+    }
+    .window-heading h2,
+    #inventory .window-heading h2 {
+        font-size: 22px;
+    }
+    .window-body {
         padding: 14px;
-        overscroll-behavior: contain;
-        touch-action: pan-y;
+    }
+    #inventorySlots {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 7px;
+    }
+    .inventory-slot {
+        height: 166px;
+        padding: 8px 5px 5px;
+    }
+    .inventory-slot .name {
+        font-size: 10px;
+    }
+    .inventory-slot .uses {
+        font-size: 9px;
+    }
+    .inventory-slot .ability {
+        font-size: 9px;
+        -webkit-line-clamp: 2;
+    }
+    .inventory-slot .inventory-drop {
+        min-height: 44px;
+        width: 100%;
+        font-size: 10px;
+        border-radius: 5px;
+    }
+    .shop-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .shop-item {
+        padding: 12px 8px;
+        min-height: 118px;
+    }
+    .compendium-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 7px;
+    }
+    .compendium-card {
+        width: 100%;
+        height: 69px;
+    }
+    .appearance-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .appearance-option {
+        width: 100%;
+        min-width: 0;
+        height: 60px;
     }
     .overlay {
         height: var(--app-height, 100vh);
@@ -1767,38 +2604,22 @@ body {
         font-size: 32px;
     }
     .overlay p {
-        font-size: 14px;
         margin-bottom: 12px;
     }
-    .shop-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .shop-item {
-        min-height: 108px;
-    }
-    .dialog-option {
-        min-height: 48px;
-    }
-    .compendium-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-    .compendium-card {
-        width: 100%;
-    }
-    .appearance-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-    .appearance-option {
-        width: 100%;
+    .result-card {
         min-width: 0;
+        width: calc(100% - 24px);
+        max-height: calc(var(--app-height, 100vh) - 24px);
+        overflow-y: auto;
+        padding: 20px;
     }
     .result-stats {
         grid-template-columns: 1fr;
-        gap: 4px;
+        gap: 3px;
         font-size: 12px;
     }
     .result-icon {
-        font-size: 32px;
+        font-size: 36px;
     }
     .slot-reels {
         gap: 8px;
@@ -1809,80 +2630,191 @@ body {
     }
     .touch-start-hint {
         display: block;
-        font-size: 13px !important;
-        margin: 10px 12px !important;
+        font-size: 11px !important;
+        color: #9bb28e !important;
+        margin: 5px 0 !important;
     }
     .game-title {
-        font-size: clamp(32px, 10vw, 60px) !important;
-        letter-spacing: 4px;
-    }
-    .title-frame {
-        width: 100%;
-        max-width: 420px;
-        padding: 16px 10px;
-    }
-    .title-sub {
-        font-size: 12px;
-        letter-spacing: 2px;
+        font-size: clamp(30px, 9vw, 40px) !important;
+        letter-spacing: 3px;
     }
     .start-content {
         width: 100%;
         max-height: 100%;
         overflow-y: auto;
-        padding: 16px;
+        padding: 28px 16px;
     }
-    .title-ornament {
-        font-size: 16px;
+    .start-content .game-button {
+        min-height: 58px;
+        width: min(260px, 100%);
+    }
+    .guardian-crest {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 28px;
+    }
+    .guardian-crest .ui-icon {
+        width: 56px;
+        height: 56px;
+    }
+    :root:is(:fullscreen, :-webkit-full-screen) #gameArea,
+    :root:is(:fullscreen, :-webkit-full-screen) .overlay {
+        height: 100vh;
+    }
+    :root:is(:fullscreen, :-webkit-full-screen) .game-window {
+        max-height: calc(100vh - 32px);
     }
 }
-
+@media (pointer: coarse) and (max-width: 350px) {
+    #touchControls {
+        --stick-size: 114px;
+    }
+    .touch-actions {
+        transform: scale(0.94);
+        transform-origin: bottom right;
+    }
+    #hudTop {
+        padding-left: 8px;
+        padding-right: 56px;
+    }
+    #charPortrait {
+        width: 38px;
+        height: 42px;
+    }
+    #hudCenter {
+        margin-left: 47px;
+        padding: 3px 5px;
+    }
+    #hudRight {
+        padding-left: 47px;
+    }
+    #hpSub #goldDisplay,
+    #hpSub #timeDisplay,
+    #hpSub #stageInfo {
+        font-size: 9px;
+    }
+    #touchControls .screen-button {
+        width: 38px;
+        height: 42px;
+    }
+    .touch-items {
+        bottom: calc(var(--control-bottom) + 127px);
+    }
+    .setting-row {
+        gap: 8px;
+    }
+    .setting-copy h3 {
+        font-size: 13px;
+    }
+    .overlay .setting-copy p {
+        font-size: 10px;
+    }
+}
 @media (pointer: coarse) and (max-height: 500px) {
     #touchControls {
         --stick-size: 106px;
-        --action-size: 48px;
-        --bottom-gap: 8px;
+        --control-bottom: max(10px, env(safe-area-inset-bottom, 0px));
     }
     #hudTop {
-        display: grid;
-        grid-template-columns: 250px minmax(0, 1fr);
-    }
-    #hudLeft {
-        grid-column: 1;
-        grid-row: 1;
-    }
-    #hudRight {
-        grid-column: 2;
-        grid-row: 1;
+        width: 340px;
+        padding-right: 10px;
     }
     #hudCenter {
-        grid-column: 1 / -1;
-        grid-row: 2;
+        min-height: 20px;
     }
-    #touchControls #touchAttack {
-        font-size: 12px;
+    #hudRight {
+        position: absolute;
+        left: 350px;
+        top: 12px;
+        width: min(280px, calc(100vw - 430px));
+        padding: 0;
     }
     .touch-menu {
-        top: 76px;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        width: 300px;
+        bottom: 8px;
+        height: 54px;
+    }
+    .touch-actions {
+        width: 138px;
+        height: 130px;
+    }
+    #touchControls #touchAttack {
+        width: 70px;
+        height: 70px;
+    }
+    #touchControls #touchAux {
+        width: 54px;
+        height: 54px;
+        top: 28px;
+    }
+    #touchControls #touchInteract {
+        width: 44px;
+        height: 44px;
+        top: -4px;
+        right: 2px;
     }
     .touch-items {
-        bottom: 10px;
+        bottom: 73px;
     }
     #minimap {
-        top: 78px;
+        top: 66px;
+        right: max(13px, env(safe-area-inset-right, 0px));
+        width: 62px;
+        height: 62px;
     }
     #messageLog {
-        bottom: 64px;
-        max-width: 320px;
-        max-height: 56px;
+        top: 30%;
+        max-width: 330px;
+    }
+    .guardian-crest {
+        width: 58px;
+        height: 58px;
+        margin-bottom: 14px;
+    }
+    .guardian-crest .ui-icon {
+        width: 34px;
+        height: 34px;
+    }
+    .start-content {
+        padding: 20px 16px;
+    }
+    .title-frame {
+        margin-bottom: 12px;
+    }
+    .title-ornament {
+        margin-bottom: 8px;
+    }
+    .overlay .start-footnote {
+        display: none;
+    }
+    .start-content .game-button {
+        margin-top: 14px;
+    }
+    .game-title {
+        font-size: 28px !important;
     }
     #inventorySlots {
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
+    .window-header {
+        min-height: 64px;
+        padding: 8px 14px;
+    }
     .compendium-grid {
         grid-template-columns: repeat(6, minmax(0, 1fr));
     }
-    #touchThumb {
-        width: 42px;
-        height: 42px;
+}
+@media (prefers-reduced-motion: reduce) {
+    .start-content,
+    .game-window,
+    .result-card,
+    .msg {
+        animation: none;
+    }
+    .switch-knob {
+        transition: none;
     }
 }

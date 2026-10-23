@@ -12,6 +12,7 @@ const session = {
     selectedInventoryIndex: 0,
     compendiumOpen: false,
     questJournalOpen: false,
+    settingsOpen: false,
     shopOpen: false,
     currentShopType: 'village',
     tileMap: [],

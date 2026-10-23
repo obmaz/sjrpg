@@ -3,301 +3,535 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-        <title>2D RPG - 자연의 수호자</title>
+        <meta name="theme-color" content="#132c25" />
+        <title>자연의 수호자</title>
         <link rel="stylesheet" href="style.css" />
         <script src="src/core/viewport.js"></script>
     </head>
     <body>
+        <svg class="ui-symbols" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <symbol id="icon-leaf" viewBox="0 0 24 24">
+                    <path d="M20 3C9 2 3 7 5 14c2 7 12 6 15-11Z" />
+                    <path d="M3 22 16 8M8 17l-1-6m4 3 5 1" />
+                </symbol>
+                <symbol id="icon-bag" viewBox="0 0 24 24">
+                    <path d="M8 7V5a4 4 0 0 1 8 0v2M5 7h14l2 15H3L5 7Z" />
+                    <path d="M8 12h8v5H8z" />
+                </symbol>
+                <symbol id="icon-book" viewBox="0 0 24 24">
+                    <path
+                        d="M3 4h7l2 2 2-2h7v16h-7l-2 2-2-2H3V4Zm9 2v16M6 8h3m6 0h3M6 12h3m6 0h3"
+                    />
+                </symbol>
+                <symbol id="icon-scroll" viewBox="0 0 24 24">
+                    <path
+                        d="M6 4h13v13a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3h11a3 3 0 0 0 6 0M6 4a2 2 0 0 0-4 0v2h4v11M9 8h6M9 11h6"
+                    />
+                </symbol>
+                <symbol id="icon-sword" viewBox="0 0 24 24">
+                    <path d="m14 3 7-1-1 7L9 20l-5-5L14 3Zm-9 9 7 7M2 22l5-5M3 19l2 2" />
+                </symbol>
+                <symbol id="icon-spark" viewBox="0 0 24 24">
+                    <path d="m14 2-3 8h7L9 22l2-9H5l9-11Z" />
+                </symbol>
+                <symbol id="icon-chat" viewBox="0 0 24 24">
+                    <path d="M21 11a8 8 0 0 1-8 8H7l-5 3 2-6a8 8 0 1 1 17-5Z" />
+                    <path d="M7 10h10M7 14h6" />
+                </symbol>
+                <symbol id="icon-cycle" viewBox="0 0 24 24">
+                    <path d="M20 7a9 9 0 0 0-16 3M4 17a9 9 0 0 0 16-3M20 2v5h-5M4 22v-5h5" />
+                </symbol>
+                <symbol id="icon-gear" viewBox="0 0 24 24">
+                    <path
+                        d="m9 3 1-2h4l1 2 3 2 3 1 1 4-2 2v3l1 2-3 3-3-1-3 1-2 2-4-1-1-3-2-2-2-1v-4l2-1 1-3 3-1 2-1Z"
+                    />
+                    <circle cx="12" cy="12" r="3" />
+                </symbol>
+                <symbol id="icon-expand" viewBox="0 0 24 24">
+                    <path d="M8 3H3v5m13-5h5v5M3 16v5h5m8 0h5v-5" />
+                    <path d="m3 3 6 6m12-6-6 6M3 21l6-6m12 6-6-6" />
+                </symbol>
+                <symbol id="icon-close" viewBox="0 0 24 24">
+                    <path d="m6 6 12 12M6 18 18 6" />
+                </symbol>
+                <symbol id="icon-foot" viewBox="0 0 24 24">
+                    <path d="M8 3v9l-4 7c-1 3 5 4 7 1l4-5V4M15 10h5M14 15h5M8 3h7" />
+                </symbol>
+                <symbol id="icon-potion" viewBox="0 0 24 24">
+                    <path d="M9 2h6v4l5 9c3 7-19 7-16 0l5-9V2Zm-1 0h8M6 14h12M9 17h1" />
+                </symbol>
+                <symbol id="icon-music" viewBox="0 0 24 24">
+                    <path d="M9 17V5l12-3v13M9 9l12-3" />
+                    <ellipse cx="6" cy="18" rx="3" ry="3" />
+                    <ellipse cx="18" cy="16" rx="3" ry="3" />
+                </symbol>
+                <symbol id="icon-speaker" viewBox="0 0 24 24">
+                    <path d="M3 9h4l5-5v16l-5-5H3V9Zm13-2a7 7 0 0 1 0 10m3-13a11 11 0 0 1 0 16" />
+                </symbol>
+                <symbol id="icon-vibrate" viewBox="0 0 24 24">
+                    <rect x="7" y="3" width="10" height="18" rx="2" />
+                    <path d="m3 7-2 3 2 3-2 3m20-9 2 3-2 3 2 3M11 17h2" />
+                </symbol>
+                <symbol id="icon-shield" viewBox="0 0 24 24">
+                    <path d="m12 2 9 4v6c0 5-9 10-9 10S3 17 3 12V6l9-4Z" />
+                    <path d="m8 12 3 3 5-6" />
+                </symbol>
+                <symbol id="icon-compass" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="m16 7-2 7-7 3 3-7 6-3Z" />
+                </symbol>
+            </defs>
+        </svg>
         <audio id="bgMusic" src="playful-pixels.mp3" loop preload="auto"></audio>
-
-        <!-- 게임 영역 (1.5배 확대) -->
         <div id="gameArea">
             <canvas id="gameCanvas"></canvas>
-
-            <!-- 인벤토리 패널 -->
-            <div id="inventory" class="panel hidden">
-                <button
-                    id="closeInventory"
-                    class="panel-close"
-                    type="button"
-                    aria-label="인벤토리 닫기"
-                >
-                    닫기 ×
-                </button>
-                <h2>🎒 인벤토리</h2>
-                <div id="inventorySlots"></div>
-                <p class="hint">클릭 / Enter: 장착 | 방향키: 선택 | Delete / 버리기: 내려놓기</p>
-                <p class="hint">내려놓은 무기는 120초 유지 | I / Esc: 닫기</p>
-            </div>
-
-            <!-- ===== 상단 HUD ===== -->
-            <div id="hudTop">
-                <!-- 왼쪽: 캐릭터 초상화 + HP -->
-                <div id="hudLeft">
-                    <div id="charPortrait">
-                        <div id="portraitFace">😊</div>
+            <div id="inventory" class="panel inventory-box game-window hidden">
+                <div class="window-header">
+                    <svg class="ui-icon window-emblem" aria-hidden="true" focusable="false">
+                        <use href="#icon-bag"></use>
+                    </svg>
+                    <div class="window-heading">
+                        <span class="eyebrow">EQUIPMENT</span>
+                        <h2>모험가의 가방</h2>
                     </div>
+                    <button
+                        id="closeInventory"
+                        class="panel-close"
+                        type="button"
+                        aria-label="모험가의 가방 닫기"
+                    >
+                        <svg class="ui-icon" aria-hidden="true" focusable="false">
+                            <use href="#icon-close"></use>
+                        </svg>
+                    </button>
+                </div>
+                <div class="window-body">
+                    <p class="window-intro">
+                        장비를 눌러 장착하세요. 버린 장비는 120초 동안 남습니다.
+                    </p>
+                    <div id="inventorySlots"></div>
+                    <p class="hint">Enter 장착 · Delete 버리기 · Esc 닫기</p>
+                </div>
+            </div>
+            <div id="hudTop">
+                <div id="hudLeft">
+                    <div id="charPortrait"><div id="portraitFace">😊</div></div>
                     <div id="hpSection">
-                        <div id="hpLabel">HP</div>
+                        <div id="hpLabel">생명력</div>
                         <div class="hp-bar-outer">
                             <div id="hpBarFill" class="hp-bar-fill"></div>
                             <span id="hpText">100 / 100</span>
                         </div>
                         <div id="hpSub">
-                            <span id="stageInfo">⚡ Stage 1</span>
-                            <span id="goldDisplay">💰 0</span>
-                            <span id="timeDisplay">⏱ 10:00</span>
+                            <span id="stageInfo">Stage 1</span><span id="goldDisplay">💰 0</span
+                            ><span id="timeDisplay">⏱ 10:00</span>
                         </div>
                     </div>
                 </div>
-
-                <!-- 중앙: 목표 + 메시지 -->
                 <div id="hudCenter">
-                    <div id="clearProgress">🎯 목표: 적 18마리 처치</div>
-                    <div
-                        id="poisonDisplay"
-                        style="color: #88ff44; font-size: 11px; font-weight: bold; display: none"
-                    >
-                        ☠️ 독
-                    </div>
+                    <div id="clearProgress">주요 퀘스트: 0 / 3</div>
+                    <div id="poisonDisplay" style="display: none"></div>
                 </div>
-
-                <!-- 오른쪽: 장비 + 보조무기 -->
                 <div id="hudRight">
                     <div id="equipMain" class="equip-slot">
-                        <span class="equip-key">⚔️</span>
-                        <span id="equipmentSlot">✊ 맨손</span>
+                        <span class="equip-key">⚔</span><span id="equipmentSlot">맨손</span>
                     </div>
                     <div id="equipAux" class="equip-slot">
-                        <span class="equip-key">N/K</span>
-                        <span id="auxDisplay">없음</span>
+                        <span class="equip-key">보조</span><span id="auxDisplay">없음</span>
                     </div>
                     <div id="equipMount" class="equip-slot" style="display: none">
-                        <span class="equip-key">U</span>
-                        <span id="mountDisplay"></span>
+                        <span class="equip-key">U</span><span id="mountDisplay"></span>
                     </div>
-                    <div id="itemSlots" class="equip-slot" style="gap: 2px">
-                        <span class="equip-key">1/2/3</span>
-                        <span id="item1" style="font-size: 16px">—</span>
-                        <span id="item2" style="font-size: 16px">—</span>
-                        <span id="item3" style="font-size: 16px">—</span>
+                    <div id="itemSlots" class="equip-slot">
+                        <span class="equip-key">1/2/3</span><span id="item1">—</span
+                        ><span id="item2">—</span><span id="item3">—</span>
                     </div>
                 </div>
             </div>
-
-            <!-- 미니맵 -->
             <canvas id="minimap" width="150" height="150"></canvas>
-
-            <!-- 조작법 (접이식) -->
-            <div
-                id="controlsWrap"
-                style="position: absolute; bottom: 16px; left: 16px; z-index: 10"
-            >
-                <button id="controlsToggle" class="ctrl-toggle" title="조작법">🎮 키 설명</button>
+            <div id="controlsWrap">
+                <button id="controlsToggle" class="ctrl-toggle">조작법</button
+                ><button id="desktopSettings" class="ctrl-toggle">설정</button>
                 <div id="controls" class="panel ctrl-panel hidden">
-                    <p>⬆⬇⬅➡ / WASD: 이동</p>
-                    <p style="color: #ff8888">Space / J: 공격</p>
-                    <p style="color: #ffd700">N / K: 보조 무기</p>
-                    <p style="color: #88ccff">U: 탈것 내리기</p>
-                    <p style="color: #aaffaa">E: NPC 대화 / 상점</p>
-                    <p>I / Esc: 인벤토리 (방향키+Enter 선택)</p>
-                    <p>인벤토리 Delete / 버리기: 무기 내려놓기</p>
-                    <p style="color: #ffaa44">Q: 보조무기 순환</p>
-                    <p style="color: #cc88ff">C: 도감 열기</p>
+                    <p>WASD / 방향키 이동 · Space / J 공격</p>
+                    <p>N / K 보조 · Q 보조 교체 · E 대화</p>
+                    <p>I 가방 · C 도감 · L 퀘스트 · P 설정</p>
+                    <p>1 / 2 / 3 아이템 · U 탈것 내리기</p>
                 </div>
             </div>
-
-            <!-- 퀘스트 저널 -->
-            <div
-                id="questJournal"
-                class="panel hidden"
-                style="top: 80px; right: 16px; min-width: 160px; max-width: 190px"
-            >
-                <button
-                    id="closeQuestJournal"
-                    class="panel-close"
-                    type="button"
-                    aria-label="퀘스트 닫기"
-                >
-                    닫기 ×
-                </button>
-                <h3 style="color: #ffd700; margin-bottom: 8px">📜 퀘스트</h3>
-                <div id="questList"></div>
-            </div>
-
-            <!-- 상점 패널 -->
-            <div
-                id="shopPanel"
-                class="overlay hidden"
-                style="z-index: 260; background: rgba(0, 0, 0, 0.75)"
-            >
-                <div class="shop-box">
-                    <button id="closeShop" class="panel-close" type="button" aria-label="상점 닫기">
-                        닫기 ×
-                    </button>
-                    <h2 id="shopTitle">🏪 상점</h2>
-                    <div
-                        id="shopGold"
-                        style="
-                            color: #ffd700;
-                            text-align: center;
-                            margin-bottom: 10px;
-                            font-size: 14px;
-                        "
-                    ></div>
-                    <div id="shopSlots" class="shop-grid"></div>
-                    <p class="hint" style="margin-top: 8px">클릭: 구매 | E / Esc: 닫기</p>
-                </div>
-            </div>
-
-            <!-- 슬롯머신 모달 -->
-            <div
-                id="slotMachine"
-                class="overlay hidden"
-                style="z-index: 270; background: rgba(0, 0, 0, 0.85)"
-            >
-                <div class="slot-box">
-                    <h2 style="color: #ff66ff; margin-bottom: 6px">🎰 슬롯머신</h2>
-                    <div class="slot-reels">
-                        <div class="slot-reel" id="reel1">❓</div>
-                        <div class="slot-reel" id="reel2">❓</div>
-                        <div class="slot-reel" id="reel3">❓</div>
+            <div id="questJournal" class="panel journal-box game-window hidden">
+                <div class="window-header">
+                    <svg class="ui-icon window-emblem" aria-hidden="true" focusable="false">
+                        <use href="#icon-scroll"></use>
+                    </svg>
+                    <div class="window-heading">
+                        <span class="eyebrow">QUEST JOURNAL</span>
+                        <h2>모험 일지</h2>
                     </div>
-                    <p
-                        id="slotResult"
-                        style="color: #ffd700; font-size: 16px; min-height: 24px; margin-top: 10px"
-                    ></p>
-                    <p class="hint" style="margin-top: 8px">잠시 기다려주세요...</p>
-                </div>
-            </div>
-
-            <!-- NPC 대화창 -->
-            <div
-                id="npcDialog"
-                class="overlay hidden"
-                style="z-index: 250; background: rgba(0, 0, 0, 0.7)"
-            >
-                <div class="dialog-box">
                     <button
-                        id="closeNpcDialog"
+                        id="closeQuestJournal"
                         class="panel-close"
                         type="button"
-                        aria-label="대화 닫기"
+                        aria-label="모험 일지 닫기"
                     >
-                        닫기 ×
+                        <svg class="ui-icon" aria-hidden="true" focusable="false">
+                            <use href="#icon-close"></use>
+                        </svg>
                     </button>
-                    <div id="npcPortrait" style="font-size: 48px">🧙‍♂️</div>
-                    <h2 id="npcName">노인</h2>
-                    <p id="npcText">안녕하신가, 모험가여...</p>
-                    <div id="npcOptions"></div>
-                    <p class="hint" style="margin-top: 8px">E / Esc: 닫기</p>
                 </div>
+                <div class="window-body"><div id="questList"></div></div>
             </div>
-
-            <!-- 외관 변경 패널 -->
-            <div
-                id="appearancePanel"
-                class="overlay hidden"
-                style="z-index: 270; background: rgba(0, 0, 0, 0.8)"
-            >
-                <div class="appearance-box">
-                    <button
-                        id="closeAppearance"
-                        class="panel-close"
-                        type="button"
-                        aria-label="외관 닫기"
-                    >
-                        닫기 ×
-                    </button>
-                    <h2 style="color: #ffd700; margin-bottom: 12px">🎭 외관 변경</h2>
-                    <div class="appearance-grid" id="appearanceGrid">
-                        <div class="appearance-option" data-face="😊"><span>😊</span></div>
-                        <div class="appearance-option" data-face="😎"><span>😎</span></div>
-                        <div class="appearance-option" data-face="🤠"><span>🤠</span></div>
-                        <div class="appearance-option" data-face="🦸"><span>🦸</span></div>
-                        <div class="appearance-option" data-face="🧝"><span>🧝</span></div>
-                        <div class="appearance-option" data-face="🧙"><span>🧙</span></div>
-                        <div class="appearance-option" data-face="🦹"><span>🦹</span></div>
-                        <div class="appearance-option" data-face="👑"><span>👑</span></div>
+            <div id="shopPanel" class="overlay hidden">
+                <div class="shop-box game-window">
+                    <div class="window-header">
+                        <svg class="ui-icon window-emblem" aria-hidden="true" focusable="false">
+                            <use href="#icon-bag"></use>
+                        </svg>
+                        <div class="window-heading">
+                            <span class="eyebrow">MERCHANT</span>
+                            <h2 id="shopTitle">마을 상점</h2>
+                        </div>
+                        <button
+                            id="closeShop"
+                            class="panel-close"
+                            type="button"
+                            aria-label="마을 상점 닫기"
+                        >
+                            <svg class="ui-icon" aria-hidden="true" focusable="false">
+                                <use href="#icon-close"></use>
+                            </svg>
+                        </button>
                     </div>
-                    <p class="hint" style="margin-top: 10px">클릭: 외관 선택 | E / Esc: 닫기</p>
+                    <div class="window-body">
+                        <div id="shopGold"></div>
+                        <div id="shopSlots" class="shop-grid"></div>
+                        <p class="hint">장비와 물품을 눌러 구매하세요.</p>
+                    </div>
                 </div>
             </div>
-
-            <!-- 도감 패널 -->
-            <div
-                id="compendiumPanel"
-                class="overlay hidden"
-                style="z-index: 260; background: rgba(0, 0, 0, 0.85)"
-            >
-                <div class="compendium-box">
-                    <button
-                        id="closeCompendium"
-                        class="panel-close"
-                        type="button"
-                        aria-label="도감 닫기"
-                    >
-                        닫기 ×
-                    </button>
-                    <h2 style="color: #ffd700; margin-bottom: 4px">📖 도감</h2>
-                    <p
-                        id="compendiumStats"
-                        style="color: #aaccff; font-size: 12px; margin-bottom: 8px"
-                    ></p>
-                    <div id="compendiumGrid" class="compendium-grid"></div>
-                    <p id="compendiumDetails" class="compendium-details" aria-live="polite">
-                        항목을 누르면 상세정보를 볼 수 있습니다.
-                    </p>
-                    <p class="hint" style="margin-top: 8px">
-                        탭 / 마우스 오버: 상세정보 | C / Esc: 닫기
-                    </p>
+            <div id="slotMachine" class="overlay hidden">
+                <div class="slot-box game-window">
+                    <div class="window-header">
+                        <svg class="ui-icon window-emblem" aria-hidden="true" focusable="false">
+                            <use href="#icon-spark"></use>
+                        </svg>
+                        <div class="window-heading">
+                            <span class="eyebrow">FORTUNE</span>
+                            <h2>행운의 제단</h2>
+                        </div>
+                    </div>
+                    <div class="window-body">
+                        <div class="slot-reels">
+                            <div class="slot-reel" id="reel1">❓</div>
+                            <div class="slot-reel" id="reel2">❓</div>
+                            <div class="slot-reel" id="reel3">❓</div>
+                        </div>
+                        <p id="slotResult" aria-live="polite"></p>
+                        <p class="hint">운명의 바퀴가 돌아갑니다…</p>
+                    </div>
                 </div>
             </div>
-
-            <!-- 메시지 로그 -->
+            <div id="npcDialog" class="overlay hidden">
+                <div class="dialog-box game-window">
+                    <div class="window-header">
+                        <svg class="ui-icon window-emblem" aria-hidden="true" focusable="false">
+                            <use href="#icon-chat"></use>
+                        </svg>
+                        <div class="window-heading">
+                            <span class="eyebrow">ENCOUNTER</span>
+                            <h2>여행자</h2>
+                        </div>
+                        <button
+                            id="closeNpcDialog"
+                            class="panel-close"
+                            type="button"
+                            aria-label="여행자 닫기"
+                        >
+                            <svg class="ui-icon" aria-hidden="true" focusable="false">
+                                <use href="#icon-close"></use>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="window-body">
+                        <div id="npcPortrait">🧙‍♂️</div>
+                        <h3 id="npcName">여행자</h3>
+                        <p id="npcText"></p>
+                        <div id="npcOptions"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="appearancePanel" class="overlay hidden">
+                <div class="appearance-box game-window">
+                    <div class="window-header">
+                        <svg class="ui-icon window-emblem" aria-hidden="true" focusable="false">
+                            <use href="#icon-shield"></use>
+                        </svg>
+                        <div class="window-heading">
+                            <span class="eyebrow">APPEARANCE</span>
+                            <h2>수호자의 모습</h2>
+                        </div>
+                        <button
+                            id="closeAppearance"
+                            class="panel-close"
+                            type="button"
+                            aria-label="수호자의 모습 닫기"
+                        >
+                            <svg class="ui-icon" aria-hidden="true" focusable="false">
+                                <use href="#icon-close"></use>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="window-body">
+                        <p class="window-intro">모험을 함께할 얼굴을 골라보세요.</p>
+                        <div class="appearance-grid" id="appearanceGrid">
+                            <div class="appearance-option" data-face="😊"><span>😊</span></div>
+                            <div class="appearance-option" data-face="😎"><span>😎</span></div>
+                            <div class="appearance-option" data-face="🤠"><span>🤠</span></div>
+                            <div class="appearance-option" data-face="🦸"><span>🦸</span></div>
+                            <div class="appearance-option" data-face="🧝"><span>🧝</span></div>
+                            <div class="appearance-option" data-face="🧙"><span>🧙</span></div>
+                            <div class="appearance-option" data-face="🦹"><span>🦹</span></div>
+                            <div class="appearance-option" data-face="👑"><span>👑</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="compendiumPanel" class="overlay hidden">
+                <div class="compendium-box game-window">
+                    <div class="window-header">
+                        <svg class="ui-icon window-emblem" aria-hidden="true" focusable="false">
+                            <use href="#icon-book"></use>
+                        </svg>
+                        <div class="window-heading">
+                            <span class="eyebrow">COLLECTION</span>
+                            <h2>수호자의 도감</h2>
+                        </div>
+                        <button
+                            id="closeCompendium"
+                            class="panel-close"
+                            type="button"
+                            aria-label="수호자의 도감 닫기"
+                        >
+                            <svg class="ui-icon" aria-hidden="true" focusable="false">
+                                <use href="#icon-close"></use>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="window-body">
+                        <p id="compendiumStats"></p>
+                        <div id="compendiumGrid" class="compendium-grid"></div>
+                        <p id="compendiumDetails" class="compendium-details" aria-live="polite">
+                            항목을 누르면 상세정보를 볼 수 있습니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div id="settingsPanel" class="overlay hidden">
+                <div class="settings-box game-window">
+                    <div class="window-header">
+                        <svg class="ui-icon window-emblem" aria-hidden="true" focusable="false">
+                            <use href="#icon-gear"></use>
+                        </svg>
+                        <div class="window-heading">
+                            <span class="eyebrow">SYSTEM</span>
+                            <h2>모험 설정</h2>
+                        </div>
+                        <button
+                            id="closeSettings"
+                            class="panel-close"
+                            type="button"
+                            aria-label="모험 설정 닫기"
+                        >
+                            <svg class="ui-icon" aria-hidden="true" focusable="false">
+                                <use href="#icon-close"></use>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="window-body">
+                        <p class="window-intro">
+                            잠시 숨을 고르세요. 설정을 보는 동안 모험은 멈춥니다.
+                        </p>
+                        <div class="setting-row">
+                            <svg class="ui-icon" aria-hidden="true" focusable="false">
+                                <use href="#icon-expand"></use>
+                            </svg>
+                            <div class="setting-copy">
+                                <h3>전체화면</h3>
+                                <p>화면을 넓게 사용해 모험에 집중하세요.</p>
+                            </div>
+                        </div>
+                        <button id="settingsFullscreen" class="game-button secondary" type="button">
+                            전체화면으로 전환
+                        </button>
+                        <div class="setting-row">
+                            <svg class="ui-icon" aria-hidden="true" focusable="false">
+                                <use href="#icon-vibrate"></use>
+                            </svg>
+                            <div class="setting-copy">
+                                <h3>타격 진동</h3>
+                                <p>공격 적중과 피격을 짧은 진동으로 느낍니다.</p>
+                            </div>
+                            <button
+                                id="vibrationToggle"
+                                class="game-switch"
+                                role="switch"
+                                aria-label="타격 진동"
+                                aria-checked="true"
+                                type="button"
+                            >
+                                <span class="switch-knob"></span
+                                ><span id="vibrationToggleState" class="switch-state">켜짐</span>
+                            </button>
+                        </div>
+                        <div class="setting-row">
+                            <svg class="ui-icon" aria-hidden="true" focusable="false">
+                                <use href="#icon-music"></use>
+                            </svg>
+                            <div class="setting-copy">
+                                <h3>배경음악</h3>
+                                <p>모험의 배경음악을 재생합니다.</p>
+                            </div>
+                            <button
+                                id="musicToggle"
+                                class="game-switch"
+                                role="switch"
+                                aria-label="배경음악"
+                                aria-checked="true"
+                                type="button"
+                            >
+                                <span class="switch-knob"></span
+                                ><span id="musicToggleState" class="switch-state">켜짐</span>
+                            </button>
+                        </div>
+                        <div class="setting-row">
+                            <svg class="ui-icon" aria-hidden="true" focusable="false">
+                                <use href="#icon-speaker"></use>
+                            </svg>
+                            <div class="setting-copy">
+                                <h3>효과음</h3>
+                                <p>공격·전리품·피격 효과음을 재생합니다.</p>
+                            </div>
+                            <button
+                                id="effectsToggle"
+                                class="game-switch"
+                                role="switch"
+                                aria-label="효과음"
+                                aria-checked="true"
+                                type="button"
+                            >
+                                <span class="switch-knob"></span
+                                ><span id="effectsToggleState" class="switch-state">켜짐</span>
+                            </button>
+                        </div>
+                        <p id="settingsStatus" class="settings-status" role="status"></p>
+                        <p class="settings-note">선택한 설정은 이 기기에 저장됩니다.</p>
+                        <button id="resumeGame" class="game-button" type="button">
+                            모험 계속하기
+                        </button>
+                    </div>
+                </div>
+            </div>
             <div id="messageLog"></div>
             <div id="touchControls" class="hidden" aria-label="터치 게임 조작">
-                <div class="touch-menu">
-                    <button id="touchInventory" type="button">🎒 가방</button>
-                    <button id="touchCompendium" type="button">📖 도감</button>
-                    <button id="touchQuests" type="button">📜 퀘스트</button>
-                    <button id="touchDismount" type="button">내리기</button>
-                </div>
+                <button
+                    id="fullscreenButton"
+                    class="screen-button"
+                    type="button"
+                    aria-label="전체화면"
+                >
+                    <svg class="ui-icon" aria-hidden="true" focusable="false">
+                        <use href="#icon-expand"></use></svg
+                    ><span class="control-caption">전체화면</span>
+                </button>
+                <nav class="touch-menu" aria-label="모험 메뉴">
+                    <button id="touchInventory" class="" type="button" aria-label="가방">
+                        <svg class="ui-icon" aria-hidden="true" focusable="false">
+                            <use href="#icon-bag"></use></svg
+                        ><span class="control-caption">가방</span></button
+                    ><button id="touchCompendium" class="" type="button" aria-label="도감">
+                        <svg class="ui-icon" aria-hidden="true" focusable="false">
+                            <use href="#icon-book"></use></svg
+                        ><span class="control-caption">도감</span></button
+                    ><button id="touchQuests" class="" type="button" aria-label="일지">
+                        <svg class="ui-icon" aria-hidden="true" focusable="false">
+                            <use href="#icon-scroll"></use></svg
+                        ><span class="control-caption">일지</span></button
+                    ><button id="touchSettings" class="" type="button" aria-label="설정">
+                        <svg class="ui-icon" aria-hidden="true" focusable="false">
+                            <use href="#icon-gear"></use></svg
+                        ><span class="control-caption">설정</span>
+                    </button>
+                </nav>
+                <button
+                    id="touchDismount"
+                    class="dismount-button"
+                    type="button"
+                    aria-label="내리기"
+                >
+                    <svg class="ui-icon" aria-hidden="true" focusable="false">
+                        <use href="#icon-foot"></use></svg
+                    ><span class="control-caption">내리기</span>
+                </button>
                 <div id="touchJoystick" role="group" aria-label="드래그해서 이동">
-                    <span class="stick-directions" aria-hidden="true">＋</span>
-                    <span id="touchThumb"></span>
+                    <span class="stick-directions" aria-hidden="true"
+                        ><svg class="ui-icon" aria-hidden="true" focusable="false">
+                            <use href="#icon-compass"></use></svg></span
+                    ><span id="touchThumb"
+                        ><svg class="ui-icon" aria-hidden="true" focusable="false">
+                            <use href="#icon-leaf"></use></svg></span
+                    ><span class="stick-caption">이동</span>
                 </div>
                 <div class="touch-actions">
-                    <button id="touchInteract" type="button">💬 대화</button>
-                    <button id="touchCycle" type="button">↻ 교체</button>
-                    <button id="touchAux" type="button">보조</button>
-                    <button id="touchAttack" type="button">⚔ 공격</button>
+                    <button id="touchInteract" class="" type="button" aria-label="대화">
+                        <svg class="ui-icon" aria-hidden="true" focusable="false">
+                            <use href="#icon-chat"></use></svg
+                        ><span class="control-caption">대화</span></button
+                    ><button id="touchCycle" class="" type="button" aria-label="교체">
+                        <svg class="ui-icon" aria-hidden="true" focusable="false">
+                            <use href="#icon-cycle"></use></svg
+                        ><span class="control-caption">교체</span></button
+                    ><button id="touchAux" class="" type="button" aria-label="보조">
+                        <svg class="ui-icon" aria-hidden="true" focusable="false">
+                            <use href="#icon-spark"></use></svg
+                        ><span class="control-caption">보조</span></button
+                    ><button id="touchAttack" class="" type="button" aria-label="공격">
+                        <svg class="ui-icon" aria-hidden="true" focusable="false">
+                            <use href="#icon-sword"></use></svg
+                        ><span class="control-caption">공격</span>
+                    </button>
                 </div>
                 <div class="touch-items" aria-label="소비 아이템">
-                    <button id="touchItem1" type="button">1 —</button>
-                    <button id="touchItem2" type="button">2 —</button>
-                    <button id="touchItem3" type="button">3 —</button>
+                    <span class="quickbar-title">QUICK ITEMS</span
+                    ><button id="touchItem1" type="button" aria-label="아이템 1">1 —</button
+                    ><button id="touchItem2" type="button" aria-label="아이템 2">2 —</button
+                    ><button id="touchItem3" type="button" aria-label="아이템 3">3 —</button>
                 </div>
             </div>
         </div>
-        <!-- 게임 영역 끝 -->
-
-        <!-- 시작 화면 -->
         <div id="startScreen" class="overlay start-overlay">
             <canvas id="startParticles"></canvas>
             <div class="start-content">
+                <div class="guardian-crest">
+                    <svg class="ui-icon" aria-hidden="true" focusable="false">
+                        <use href="#icon-leaf"></use>
+                    </svg>
+                </div>
                 <div class="title-frame">
-                    <div class="title-ornament">━━━━━━ ✦ ━━━━━━</div>
+                    <div class="title-ornament">✦ THE FOREST CALLS ✦</div>
                     <h1 class="game-title">자연의 수호자</h1>
                     <div class="title-sub">GUARDIAN OF NATURE</div>
-                    <div class="title-ornament">━━━━━━ ✦ ━━━━━━</div>
                 </div>
-                <p class="start-desc">보조무기는 게임 속에서 찾아보세요</p>
-                <p class="touch-start-hint">왼쪽 조이스틱으로 이동 · 오른쪽 버튼을 눌러 공격</p>
-                <button id="startGameBtn" class="start-game-btn">⚔️ 게임 시작</button>
+                <p class="start-desc">숲의 부름에 응답할 시간</p>
+                <p class="touch-start-hint">왼손으로 이동 · 오른손으로 전투</p>
+                <button id="startGameBtn" class="start-game-btn game-button">
+                    <svg class="ui-icon" aria-hidden="true" focusable="false">
+                        <use href="#icon-sword"></use></svg
+                    ><span>모험 시작</span>
+                </button>
+                <p class="start-footnote">숲을 지키고, 모래 너머의 비밀을 찾아서.</p>
             </div>
         </div>
-
         <!-- 게임오버 화면 -->
         <div id="gameOver" class="overlay hidden">
             <div class="result-card">

@@ -26,9 +26,9 @@ function openShop(shopType) {
     panel.classList.remove('hidden', 'blackmarket');
     if (shopType === 'blackmarket') {
         panel.classList.add('blackmarket');
-        title.textContent = '🥷 암시장';
+        title.textContent = '암시장';
     } else {
-        title.textContent = '🏪 상점';
+        title.textContent = '마을 상점';
     }
 
     goldDisplay.textContent = `보유 골드: 💰 ${player.gold}`;
