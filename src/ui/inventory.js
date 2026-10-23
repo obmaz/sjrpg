@@ -1,6 +1,7 @@
 import { INVENTORY_CAPACITY, INVENTORY_COLUMNS } from '../core/constants.js';
 import { isGameActive } from '../core/helpers.js';
 import { inventory, player, session } from '../core/state.js';
+import { spawnWeaponPickup } from '../systems/entities.js';
 import { updateHud } from './hud.js';
 import { addMessage } from './messages.js';
 
@@ -40,6 +41,29 @@ function selectInventoryItem() {
     }
 }
 
+function dropInventoryItem(index = session.selectedInventoryIndex) {
+    if (
+        !isGameActive() ||
+        !session.inventoryOpen ||
+        session.gamePaused ||
+        !Number.isInteger(index) ||
+        index < 0 ||
+        index >= inventory.length
+    )
+        return;
+    const item = inventory[index];
+    spawnWeaponPickup(player.x + player.w / 2, player.y + player.h / 2, item, {
+        pickupDelay: 1,
+    });
+    inventory.splice(index, 1);
+    session.selectedInventoryIndex = Math.max(
+        0,
+        Math.min(session.selectedInventoryIndex, inventory.length - 1),
+    );
+    refreshInventoryUI();
+    addMessage(`🎒 ${item.icon} ${item.name}을(를) 바닥에 내려놓았습니다. (120초 유지)`, 'info');
+}
+
 function refreshInventoryUI() {
     inventorySlots.innerHTML = '';
     for (let i = 0; i < INVENTORY_CAPACITY; i++) {
@@ -48,12 +72,23 @@ function refreshInventoryUI() {
         if (i === session.selectedInventoryIndex) slot.classList.add('selected');
         if (i < inventory.length) {
             const item = inventory[i];
-            slot.innerHTML = `<span class="icon">${item.icon}</span><span class="name">${item.name}</span><span class="atk">ATK ${item.atk}</span><span class="ability">${item.desc || ''}</span>`;
+            const usesText = item.uses === undefined ? '사용 횟수 무제한' : `남은 ${item.uses}회`;
+            slot.innerHTML = `<span class="icon">${item.icon}</span><span class="name">${item.name}</span><span class="atk">ATK ${item.atk}</span><span class="uses">${usesText}</span><span class="ability">${item.desc || ''}</span>`;
             slot.style.borderColor = item.color;
             slot.addEventListener('click', () => {
                 session.selectedInventoryIndex = i;
                 equipWeapon(i);
             });
+            const dropButton = document.createElement('button');
+            dropButton.type = 'button';
+            dropButton.className = 'inventory-drop';
+            dropButton.textContent = '버리기';
+            dropButton.title = `${item.name} 바닥에 내려놓기 (120초 유지)`;
+            dropButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                dropInventoryItem(i);
+            });
+            slot.appendChild(dropButton);
         } else {
             slot.classList.add('empty');
             slot.innerHTML = '<span class="icon">—</span><span class="name">빈 슬롯</span>';
@@ -79,4 +114,4 @@ function equipWeapon(index) {
     addMessage(`⚔️ ${item.name} 장착! (${item.desc || ''})`, 'loot');
 }
 
-export { toggleInventory, navigateInventory, selectInventoryItem };
+export { toggleInventory, navigateInventory, selectInventoryItem, dropInventoryItem };

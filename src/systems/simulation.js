@@ -15,6 +15,7 @@ import {
 } from '../core/helpers.js';
 import { player, portals, scarecrows, session } from '../core/state.js';
 import { updateEnemies } from './enemy-ai.js';
+import { emitEnvironmentalParticles } from './environment-effects.js';
 import {
     spawnFloatingText,
     spawnParticles,
@@ -56,6 +57,7 @@ function update(deltaTime) {
     updateParticles(clampedDeltaTime);
     updateFloatingTexts(clampedDeltaTime);
     updateCamera(player.x + player.w / 2, player.y + player.h / 2);
+    emitEnvironmentalParticles(clampedDeltaTime);
 
     // Fountain HP regen (costs gold)
     const fountainCX = (MAP_WIDTH / 2) * TILE_SIZE;

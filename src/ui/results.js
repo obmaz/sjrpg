@@ -39,6 +39,22 @@ function showResultScreen(type, reason) {
         grade = 'D';
         gradeColor = '#888888';
     }
+    if (isWin) {
+        const remainingRatio = player.gameTime / player.maxGameTime;
+        if (remainingRatio >= 0.5) {
+            grade = 'S';
+            gradeColor = '#ffd700';
+        } else if (remainingRatio >= 0.3) {
+            grade = 'A';
+            gradeColor = '#ff6644';
+        } else if (remainingRatio >= 0.1) {
+            grade = 'B';
+            gradeColor = '#44aaff';
+        } else {
+            grade = 'C';
+            gradeColor = '#88cc88';
+        }
+    }
 
     // Stats HTML
     const wpnIcon = player.weapon ? player.weapon.icon : '✊';
@@ -53,7 +69,7 @@ function showResultScreen(type, reason) {
         <div class="stat-row"><span class="label">🎒 보조무기</span><span class="value">${auxIcon} ${auxName}</span></div>
         <div class="stat-row"><span class="label">☠️ 처치한 적</span><span class="value good">${player.kills} 마리</span></div>
         <div class="stat-row"><span class="label">💥 누적 피해량</span><span class="value" style="color:#ffaa44;">${player.damageDealt}</span></div>
-        <div class="stat-row"><span class="label">💰 획득 골드</span><span class="value gold">${player.gold}</span></div>
+        <div class="stat-row"><span class="label">💰 보유 골드</span><span class="value gold">${player.gold}</span></div>
         <div class="stat-row"><span class="label">⚡ 도달 Stage</span><span class="value" style="color:#ffaa44;">Stage ${player.stage}</span></div>
         <div class="stat-row"><span class="label">⏱️ 남은 시간</span><span class="value">${timeStr}</span></div>
         <div class="stat-row"><span class="label">🎯 목표</span><span class="value ${isWin ? 'good' : 'bad'}">${reason}</span></div>

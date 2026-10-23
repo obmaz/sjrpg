@@ -57,7 +57,7 @@ function spawnParticles(x, y, color, count = 8) {
 //  PROJECTILES (for ranged weapons)
 // ============================================================
 
-function spawnProjectile(x, y, dir, speed, dmg, color, icon, sizeMult = 1) {
+function spawnProjectile(x, y, dir, speed, dmg, color, icon, sizeMult = 1, maxRange = null) {
     let vx = 0,
         vy = 0;
     switch (dir) {
@@ -75,7 +75,8 @@ function spawnProjectile(x, y, dir, speed, dmg, color, icon, sizeMult = 1) {
             break;
     }
     const baseSize = 6 * sizeMult;
-    projectiles.push({ x, y, vx, vy, dmg, color, icon, life: 0.8, size: baseSize });
+    const life = maxRange == null ? 0.8 : Math.max(0, maxRange) / Math.max(1, Math.abs(speed));
+    projectiles.push({ x, y, vx, vy, dmg, color, icon, life, size: baseSize });
 }
 
 function spawnGoldPickup(x, y, amount = 0) {
@@ -83,12 +84,13 @@ function spawnGoldPickup(x, y, amount = 0) {
     goldPickups.push({ x, y, amount, life: 60, bob: Math.random() * Math.PI * 2 });
 }
 
-function spawnWeaponPickup(x, y, weapon) {
+function spawnWeaponPickup(x, y, weapon, { pickupDelay = 0 } = {}) {
     weaponPickups.push({
         x,
         y,
         weapon: { ...weapon },
         life: 120,
+        pickupDelay,
         bob: Math.random() * Math.PI * 2,
     });
 }
@@ -125,8 +127,17 @@ function spawnEnemyProjectile(x, y, vx, vy, dmg, color) {
     enemyProjectiles.push({ x, y, vx, vy, dmg, color, life: 2, size: 5 });
 }
 
-function spawnFireZone(x, y, duration, dmg, radius = 40) {
-    fireZones.push({ x, y, duration, maxDuration: duration, dmg, radius, timer: 0 });
+function spawnFireZone(x, y, duration, dmg, radius = 40, options = {}) {
+    fireZones.push({
+        x,
+        y,
+        duration,
+        maxDuration: duration,
+        dmg,
+        radius,
+        timer: 0,
+        ...options,
+    });
 }
 
 // ============================================================
@@ -162,14 +173,29 @@ function updateProjectiles(deltaTime) {
 function updateFireZones(deltaTime) {
     for (let i = fireZones.length - 1; i >= 0; i--) {
         const fireZone = fireZones[i];
-        fireZone.duration -= deltaTime;
-        fireZone.timer += deltaTime;
+        const activeDelta = Math.min(deltaTime, Math.max(0, fireZone.duration));
+        fireZone.duration -= activeDelta;
+        fireZone.timer += activeDelta;
+
+        if (fireZone.singleUse) {
+            const target = getEnemiesInRadius(fireZone.x, fireZone.y, fireZone.radius)[0];
+            if (activeDelta > 0 && target) {
+                target.frozen = Math.max(target.frozen || 0, fireZone.freezeTime || 0);
+                damageEnemy(target, fireZone.dmg, false);
+                spawnParticles(fireZone.x, fireZone.y, '#aa8844', 8);
+                fireZones.splice(i, 1);
+            } else if (fireZone.duration <= 0) {
+                fireZones.splice(i, 1);
+            }
+            continue;
+        }
 
         // Damage enemies inside every 0.4s
-        if (fireZone.timer >= 0.4) {
-            fireZone.timer -= 0.4;
+        const tickInterval = fireZone.tickInterval || 0.4;
+        while (fireZone.timer + 1e-9 >= tickInterval) {
+            fireZone.timer = Math.max(0, fireZone.timer - tickInterval);
             for (const enemy of getEnemiesInRadius(fireZone.x, fireZone.y, fireZone.radius)) {
-                damageEnemy(enemy, fireZone.dmg);
+                damageEnemy(enemy, fireZone.dmg, false, { stagger: false });
                 spawnParticles(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, '#ff4400', 5);
             }
         }
@@ -267,6 +293,7 @@ function updateWeaponPickups(deltaTime) {
     for (let i = weaponPickups.length - 1; i >= 0; i--) {
         const weaponPickup = weaponPickups[i];
         weaponPickup.life -= deltaTime;
+        weaponPickup.pickupDelay = Math.max(0, (weaponPickup.pickupDelay || 0) - deltaTime);
         if (weaponPickup.life <= 0) {
             weaponPickups.splice(i, 1);
             continue;
@@ -277,7 +304,7 @@ function updateWeaponPickups(deltaTime) {
             weaponPickup.x,
             weaponPickup.y,
         );
-        if (dist < 28) {
+        if (dist < 28 && weaponPickup.pickupDelay <= 0) {
             if (inventory.length >= INVENTORY_CAPACITY) {
                 if (!weaponPickup.fullInventoryNotified) {
                     addMessage('🎒 인벤토리가 가득 찼습니다!', 'damage');

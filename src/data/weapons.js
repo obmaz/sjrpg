@@ -117,6 +117,7 @@ const WEAPONS = [
         fireDuration: 1.8,
         fireDmg: 6,
         projectileSpeed: 420,
+        projectileRange: 300,
         uses: 20,
         desc: '모든 능력 보유 (20회)',
     },
@@ -235,7 +236,10 @@ const WEAPONS = [
         range: 70,
         cooldown: 1.8,
         slamDmg: 20,
-        desc: '맹독 광역 내려찍기',
+        poisonDmg: 4,
+        poisonDuration: 4,
+        poisonInterval: 1,
+        desc: '광역 내려찍기 + 4초간 초당 독 피해 4',
     },
 ];
 

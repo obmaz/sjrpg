@@ -147,14 +147,16 @@ function getFacingAngle(dir) {
     }
 }
 
-function damageEnemy(enemy, dmg, knockback = true) {
+function damageEnemy(enemy, dmg, knockback = true, options = {}) {
     if (enemy.hp <= 0 || !enemies.includes(enemy)) return;
     enemy.hp -= dmg;
     player.damageDealt += dmg;
     playHitSound();
     enemy.hurtTimer = 0.25;
-    enemy.state = 'hurt';
-    enemy.stateTimer = 0.4;
+    if (options.stagger !== false) {
+        enemy.state = 'hurt';
+        enemy.stateTimer = 0.4;
+    }
     spawnFloatingText(enemy.x + enemy.w / 2, enemy.y - 8, `-${dmg}`, '#ff4444');
     // Knockback: push enemy away from player
     if (knockback) {
@@ -311,6 +313,7 @@ function rangedAttack(weapon) {
         weapon.color,
         weapon.icon,
         sizeMult,
+        weapon.range,
     );
 }
 
@@ -404,10 +407,12 @@ function legendAttack(weapon, comboBonus) {
     const baseDmg = weapon.atk + Math.floor(Math.random() * 5);
     const dmg = comboBonus > 0 ? Math.floor(baseDmg * comboBonus) : baseDmg;
 
-    for (const enemy of getEnemiesInRadius(origin.x, origin.y, range)) {
+    const targets = getEnemiesInRadius(origin.x, origin.y, range);
+    for (const enemy of targets) {
         damageEnemy(enemy, dmg);
         spawnParticles(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, '#ffd700', 12);
     }
+    if (targets.length === 0) player.comboHits = 0;
 
     // Fire zone
     spawnFireZone(origin.x, origin.y, weapon.fireDuration || 1.5, weapon.fireDmg || 6, 55);
@@ -422,6 +427,7 @@ function legendAttack(weapon, comboBonus) {
         '#ffd700',
         '✨',
         weapon.projectileSize || 1,
+        weapon.projectileRange ?? weapon.range,
     );
 }
 
@@ -538,6 +544,16 @@ function slamAttack(weapon) {
     for (const enemy of targets) {
         enemy.frozen = Math.max(enemy.frozen || 0, 0.4); // brief stun
         damageEnemy(enemy, dmg, true);
+        if (weapon.poisonDmg && weapon.poisonDuration && enemy.hp > 0) {
+            const interval = weapon.poisonInterval || 1;
+            const poison = enemy.enemyPoison;
+            enemy.enemyPoison = {
+                damage: Math.max(poison?.damage || 0, weapon.poisonDmg),
+                remaining: Math.max(poison?.remaining || 0, weapon.poisonDuration),
+                interval: Math.min(poison?.interval || interval, interval),
+                tick: poison ? Math.min(poison.tick, interval) : interval,
+            };
+        }
         spawnParticles(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, '#ddcc88', 12);
     }
     addMessage(
@@ -563,8 +579,10 @@ function killEnemy(enemy) {
         addMessage(`⚡ Stage ${player.stage} 돌입! 적들이 강해집니다!`, 'loot');
         spawnMoreEnemies();
         // Full heal on stage up
-        player.hp = player.maxHp;
-        addMessage('💚 단계 상승! 체력 완전 회복!', 'heal');
+        if (player.hp > 0) {
+            player.hp = player.maxHp;
+            addMessage('💚 단계 상승! 체력 완전 회복!', 'heal');
+        }
         // Spawn stage-gated NPCs
         spawnStageNpcs(oldStage, newStage);
     }

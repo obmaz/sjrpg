@@ -2,7 +2,7 @@ import { FOUNTAIN_CENTER_X, FOUNTAIN_CENTER_Y } from '../core/constants.js';
 import { canAct, getEnemiesInRadius, healPlayer, movePlayerTo } from '../core/helpers.js';
 import { player } from '../core/state.js';
 import { damageEnemy } from './combat.js';
-import { spawnFireZone, spawnParticles } from './entities.js';
+import { spawnParticles } from './entities.js';
 import { updateHud } from '../ui/hud.js';
 import { addMessage } from '../ui/messages.js';
 
@@ -19,13 +19,6 @@ function useConsumable(index) {
             break;
         case 'bomb':
             spawnParticles(player.x + player.w / 2, player.y + player.h / 2, '#ff4400', 35);
-            spawnFireZone(
-                player.x + player.w / 2,
-                player.y + player.h / 2,
-                0.5,
-                item.bombDmg,
-                item.bombRange,
-            );
             for (const enemy of getEnemiesInRadius(
                 player.x + player.w / 2,
                 player.y + player.h / 2,

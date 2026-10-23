@@ -390,6 +390,32 @@ function spawnDesertTraveler() {
 function spawnDesertEnemies() {
     const fcx = Math.floor(MAP_WIDTH / 2);
     const fcy = Math.floor(MAP_HEIGHT / 2);
+
+    // Reserve a valid boss position before ordinary enemies can occupy it.
+    const bossData = DESERT_ENEMY_TYPES.find((e) => e.isBoss);
+    if (bossData) {
+        const tile = findSpawnTile(10, (_tileX, _tileY, x, y) => {
+            const px = x * TILE_SIZE;
+            const py = y * TILE_SIZE;
+            return (
+                distance(px, py, player.x, player.y) >= 500 &&
+                !collidesWithMap(px, py, bossData.size, bossData.size) &&
+                !collidesWithEntities(px, py, bossData.size, bossData.size, null) &&
+                isReachableFromArrival(px, py, bossData.size, bossData.size)
+            );
+        });
+        if (tile) {
+            const boss = spawnEnemy(
+                bossData,
+                tile.x * TILE_SIZE,
+                tile.y * TILE_SIZE,
+                player.stage + 8,
+                { stageMultiplier: 1, randomizeSpeed: false },
+            );
+            if (boss) addMessage(`👑 ${bossData.name} 등장! 사막을 지배하는 자...`, 'damage');
+        }
+    }
+
     const enemyCount = 25;
     for (let i = 0; i < enemyCount; i++) {
         const tile = findSpawnTile(
@@ -404,28 +430,6 @@ function spawnDesertEnemies() {
             const { x: ex, y: ey } = tile;
             spawnByDistance('desert', ex, ey);
         }
-    }
-
-    // Spawn desert boss (Pharaoh) far away
-    const bossData = DESERT_ENEMY_TYPES.find((e) => e.isBoss);
-    if (bossData) {
-        const tile = findSpawnTile(
-            10,
-            (txi, tyi, x, y) =>
-                !isSolidTile(txi, tyi) &&
-                !isWaterTile(txi, tyi) &&
-                distance(x * TILE_SIZE, y * TILE_SIZE, player.x, player.y) >= 500,
-        );
-        if (!tile) return;
-        const { x: bx, y: by } = tile;
-        spawnEnemy(
-            bossData,
-            bx * TILE_SIZE + TILE_SIZE / 2,
-            by * TILE_SIZE + TILE_SIZE / 2,
-            player.stage + 8,
-            { stageMultiplier: 1, randomizeSpeed: false },
-        );
-        addMessage(`👑 ${bossData.name} 등장! 사막을 지배하는 자...`, 'damage');
     }
 }
 

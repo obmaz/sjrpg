@@ -9,7 +9,7 @@ import {
     TILE_TYPES,
 } from '../core/constants.js';
 import { distance } from '../core/helpers.js';
-import { particles, player, portals } from '../core/state.js';
+import { player, portals } from '../core/state.js';
 import { getTile } from '../systems/world.js';
 
 // ============================================================
@@ -355,25 +355,6 @@ function drawFountain() {
         ctx.stroke();
     }
 
-    // Splash particles at base
-    if (Math.random() < 0.7) {
-        const splashCount = 2 + Math.floor(Math.random() * 3);
-        for (let i = 0; i < splashCount; i++) {
-            const a = Math.random() * Math.PI * 2;
-            const r = 30 + Math.random() * 30;
-            particles.push({
-                x: FOUNTAIN_CENTER_X + Math.cos(a) * r,
-                y: FOUNTAIN_CENTER_Y + 10,
-                vx: Math.cos(a) * (10 + Math.random() * 30),
-                vy: -20 - Math.random() * 40,
-                life: 0.3 + Math.random() * 0.2,
-                maxLife: 0.5,
-                color: '#88ccff',
-                size: 1.5 + Math.random() * 3,
-            });
-        }
-    }
-
     // Heal glow when player nearby (costs gold)
     const dist = distance(
         player.x + player.w / 2,
@@ -387,20 +368,6 @@ function drawFountain() {
         ctx.beginPath();
         ctx.arc(sx, sy, 50, 0, Math.PI * 2);
         ctx.fill();
-
-        // Cost particles
-        if (Math.random() < 0.5) {
-            particles.push({
-                x: player.x + player.w / 2 + (Math.random() - 0.5) * 20,
-                y: player.y - 5,
-                vx: (Math.random() - 0.5) * 20,
-                vy: -20 - Math.random() * 30,
-                life: 0.4 + Math.random() * 0.3,
-                maxLife: 0.7,
-                color: '#ffaa66',
-                size: 2 + Math.random() * 3,
-            });
-        }
     } else if (dist < 180 && player.hp < player.maxHp && player.gold <= 0) {
         // No gold - show red indicator
         if (Math.floor(time * 2) % 2 === 0) {

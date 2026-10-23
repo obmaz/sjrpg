@@ -100,7 +100,13 @@ function useFireBomb(auxiliaryWeapon, origin) {
             size: 3 + Math.random() * 5,
         });
     }
-    spawnFireZone(origin.x, origin.y, 1.5, 10, radius * 0.7);
+    spawnFireZone(
+        origin.x,
+        origin.y,
+        auxiliaryWeapon.fireDuration,
+        auxiliaryWeapon.fireDmg,
+        radius * auxiliaryWeapon.fireRadiusRatio,
+    );
     for (const enemy of getEnemiesInRadius(origin.x, origin.y, radius)) {
         damageEnemy(enemy, auxiliaryWeapon.dmg);
         spawnParticles(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, '#ff4400', 10);
@@ -300,9 +306,16 @@ function activateShield(auxiliaryWeapon) {
 }
 
 function placeTrap(auxiliaryWeapon, origin) {
-    // Spawn trap as a long-lived damage zone in front of the player
+    // The trap waits for its first target, then deals damage and disappears.
     const fz = offsetInDirection(player.x + player.w / 2, player.y + player.h / 2, player.dir, 30);
-    spawnFireZone(fz.x, fz.y, 8, auxiliaryWeapon.dmg, 28);
+    spawnFireZone(
+        fz.x,
+        fz.y,
+        auxiliaryWeapon.duration,
+        auxiliaryWeapon.dmg,
+        auxiliaryWeapon.range,
+        { kind: 'trap', singleUse: true, freezeTime: auxiliaryWeapon.freezeTime },
+    );
     spawnParticles(fz.x, fz.y, '#aa8844', 8);
     addMessage('🪤 덫 설치!', 'info');
 }

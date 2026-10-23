@@ -20,6 +20,23 @@ function drawFireZones() {
         const sy = fz.y - camera.y;
         const alpha = Math.min(1, fz.duration / fz.maxDuration);
 
+        if (fz.kind === 'trap') {
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.strokeStyle = '#b89a6c';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(sx, sy, fz.radius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.fillStyle = '#fff';
+            ctx.font = '20px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🪤', sx, sy);
+            ctx.restore();
+            continue;
+        }
+
         // Fire glow
         const gradient = ctx.createRadialGradient(sx, sy, 5, sx, sy, fz.radius);
         gradient.addColorStop(0, `rgba(255,100,20,${0.5 * alpha})`);
@@ -225,22 +242,6 @@ function drawVisionFog() {
     gradient.addColorStop(1, 'rgba(0,0,10,0.92)');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Fog edge particles
-    if (Math.random() < 0.5) {
-        const a = Math.random() * Math.PI * 2;
-        const r = radius * (0.75 + Math.random() * 0.25);
-        particles.push({
-            x: player.x + player.w / 2 + Math.cos(a) * r,
-            y: player.y + player.h / 2 + Math.sin(a) * r,
-            vx: Math.cos(a) * 10,
-            vy: Math.sin(a) * 10,
-            life: 1.5,
-            maxLife: 1.5,
-            color: '#334466',
-            size: 2 + Math.random() * 3,
-        });
-    }
 }
 
 export {

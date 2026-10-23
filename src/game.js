@@ -1,4 +1,4 @@
-import { updateCamera } from './core/canvas.js';
+import { resizeCanvas, updateCamera } from './core/canvas.js';
 import { FOUNTAIN_CENTER_X, FOUNTAIN_CENTER_Y, MAX_FRAME_DELTA } from './core/constants.js';
 import { clamp, movePlayerTo, recordDiscovery } from './core/helpers.js';
 import { player, session } from './core/state.js';
@@ -26,6 +26,14 @@ function gameLoop(time) {
 // ============================================================
 //  INIT
 // ============================================================
+
+window.addEventListener('resize', () => {
+    resizeCanvas();
+    if (session.gameStarted) {
+        updateCamera(player.x + player.w / 2, player.y + player.h / 2);
+        draw();
+    }
+});
 
 // Controls toggle
 function initializeUI() {

@@ -213,12 +213,18 @@ function generateDesertMap(seed) {
         }
     }
 
-    // Keep a dry arrival area and a path across the oasis before flood filling.
-    // Starting the flood fill in water would erase every walkable desert tile.
+    // Keep a body-wide route from the dry arrival to a distant boss clearing.
+    // Tile connectivity alone does not guarantee a route for the 50px Pharaoh.
     const fcx = Math.floor(MAP_WIDTH / 2);
     const fcy = Math.floor(MAP_HEIGHT / 2);
+    const bossCenterX = fcx + 20;
     for (let y = fcy - 1; y <= fcy + 1; y++) {
-        for (let x = fcx - 1; x <= fcx + 8; x++) {
+        for (let x = fcx - 1; x <= bossCenterX; x++) {
+            session.tileMap[y][x] = TILE_KEYS.indexOf('PATH');
+        }
+    }
+    for (let y = fcy - 2; y <= fcy + 2; y++) {
+        for (let x = bossCenterX - 2; x <= bossCenterX + 2; x++) {
             session.tileMap[y][x] = TILE_KEYS.indexOf('PATH');
         }
     }

@@ -6,7 +6,12 @@ import { dismountPlayer } from '../systems/mounts.js';
 import { closeAppearancePanel } from './appearance.js';
 import { toggleCompendium } from './compendium.js';
 import { closeDialog, interactNpc } from './dialogs.js';
-import { navigateInventory, selectInventoryItem, toggleInventory } from './inventory.js';
+import {
+    dropInventoryItem,
+    navigateInventory,
+    selectInventoryItem,
+    toggleInventory,
+} from './inventory.js';
 import { closeShop } from './shop.js';
 
 const keys = {};
@@ -33,6 +38,7 @@ const GAME_KEY_CODES = new Set([
     'Space',
     'Escape',
     'Enter',
+    'Delete',
 ]);
 
 function closeActivePanel() {
@@ -79,6 +85,9 @@ function handleKeyDown(event) {
             break;
         case 'Enter':
             if (session.inventoryOpen) selectInventoryItem();
+            break;
+        case 'Delete':
+            if (session.inventoryOpen) dropInventoryItem();
             break;
         default:
             if (session.inventoryOpen && event.code.startsWith('Arrow'))

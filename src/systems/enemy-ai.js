@@ -15,14 +15,34 @@ import { applyPlayerPoison, distance } from '../core/helpers.js';
 import { enemies, player, session } from '../core/state.js';
 import { ENEMY_TYPES } from '../data/enemies.js';
 import { playPlayerHurtSound } from './audio.js';
+import { damageEnemy } from './combat.js';
 import { spawnEnemyProjectile, spawnFloatingText, spawnParticles } from './entities.js';
 import { spawnEnemy } from './spawning.js';
 import { getTile, isSolidTile } from './world.js';
 import { updateHud } from '../ui/hud.js';
 import { addMessage } from '../ui/messages.js';
 
+function updateEnemyPoisons(deltaTime) {
+    if (player.hp <= 0) return;
+    for (const enemy of [...enemies]) {
+        const poison = enemy.enemyPoison;
+        if (!poison || enemy.hp <= 0) continue;
+        const elapsed = Math.min(deltaTime, poison.remaining);
+        poison.remaining -= elapsed;
+        poison.tick -= elapsed;
+        while (poison.tick <= 1e-9 && enemy.hp > 0) {
+            poison.tick += poison.interval;
+            damageEnemy(enemy, poison.damage, false, { stagger: false });
+        }
+        if (poison.remaining <= 1e-9) delete enemy.enemyPoison;
+    }
+}
+
 function updateEnemies(deltaTime) {
-    for (const enemy of enemies) {
+    const frameEnemies = [...enemies];
+    updateEnemyPoisons(deltaTime);
+    for (const enemy of frameEnemies) {
+        if (player.hp <= 0) return;
         if (enemy.hp <= 0) continue;
 
         // Timers
@@ -70,6 +90,7 @@ function updateEnemies(deltaTime) {
         // Behavior
         let dx = 0,
             dy = 0;
+        let strafing = false;
         const speedPerFrame = enemy.speed * deltaTime;
 
         switch (enemy.state) {
@@ -143,8 +164,14 @@ function updateEnemies(deltaTime) {
                     dx = ex - px;
                     dy = ey - py; // Move away if too close
                 } else {
-                    dx = Math.random() - 0.5;
-                    dy = Math.random() - 0.5; // Strafe
+                    if (!(enemy.strafeTimer > 1e-9)) {
+                        enemy.strafeAngle = Math.random() * Math.PI * 2;
+                        enemy.strafeTimer = 0.5;
+                    }
+                    dx = Math.cos(enemy.strafeAngle);
+                    dy = Math.sin(enemy.strafeAngle);
+                    enemy.strafeTimer -= deltaTime;
+                    strafing = true;
                 }
                 if (enemy.rangeAttackCd <= 0) {
                     enemy.rangeAttackCd = enemy.rangeCooldown || 1.8;
@@ -191,7 +218,7 @@ function updateEnemies(deltaTime) {
             dy = dy / magnitude;
         }
 
-        const travelDistance = Math.min(speedPerFrame, magnitude);
+        const travelDistance = strafing ? speedPerFrame : Math.min(speedPerFrame, magnitude);
 
         // Direction
         if (enemy.state !== 'hurt') {
@@ -204,18 +231,23 @@ function updateEnemies(deltaTime) {
 
         // Movement (with knockback)
         if (enemy.knockbackX || enemy.knockbackY) {
-            const kbx = enemy.x + enemy.knockbackX * deltaTime * 4;
-            const kby = enemy.y + enemy.knockbackY * deltaTime * 4;
-            if (
-                !collidesWithMap(kbx, enemy.y, enemy.w, enemy.h) &&
-                !collidesWithEntities(kbx, enemy.y, enemy.w, enemy.h, enemy)
-            )
-                enemy.x = kbx;
-            if (
-                !collidesWithMap(enemy.x, kby, enemy.w, enemy.h) &&
-                !collidesWithEntities(enemy.x, kby, enemy.w, enemy.h, enemy)
-            )
-                enemy.y = kby;
+            const knockbackX = enemy.knockbackX * deltaTime * 4;
+            const knockbackY = enemy.knockbackY * deltaTime * 4;
+            const steps = Math.ceil(Math.max(Math.abs(knockbackX), Math.abs(knockbackY)) / 8);
+            for (let step = 0; step < steps; step++) {
+                const kbx = enemy.x + knockbackX / steps;
+                const kby = enemy.y + knockbackY / steps;
+                if (
+                    !collidesWithMap(kbx, enemy.y, enemy.w, enemy.h) &&
+                    !collidesWithEntities(kbx, enemy.y, enemy.w, enemy.h, enemy)
+                )
+                    enemy.x = kbx;
+                if (
+                    !collidesWithMap(enemy.x, kby, enemy.w, enemy.h) &&
+                    !collidesWithEntities(enemy.x, kby, enemy.w, enemy.h, enemy)
+                )
+                    enemy.y = kby;
+            }
             const decay = Math.pow(0.85, deltaTime * 60);
             enemy.knockbackX *= decay;
             enemy.knockbackY *= decay;
@@ -285,4 +317,4 @@ function updateEnemies(deltaTime) {
     }
 }
 
-export { updateEnemies };
+export { updateEnemies, updateEnemyPoisons };
