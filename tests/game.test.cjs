@@ -2,6 +2,25 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGame } = require('./helpers/game-harness.cjs');
 
+test('the real title initialization wires the start button on mobile and desktop', async () => {
+    for (const coarsePointer of [true, false]) {
+        const { run, elements, documentListeners } = await loadGame({
+            coarsePointer,
+            startAtTitle: true,
+        });
+        assert.equal(run('session.gameStarted'), false);
+        documentListeners.DOMContentLoaded();
+        elements.get('startGameBtn').dispatchEvent({ type: 'click' });
+        assert.equal(run('session.gameStarted'), true);
+        assert.equal(elements.get('startScreen').classList.contains('hidden'), true);
+        assert.ok(run('enemies.length') > 0);
+        assert.doesNotThrow(() => run('gameLoop(16);'));
+        const enemyCount = run('enemies.length');
+        elements.get('startGameBtn').dispatchEvent({ type: 'click' });
+        assert.equal(run('enemies.length'), enemyCount);
+    }
+});
+
 test('popup buttons retain native keyboard activation without equipping or attacking', async () => {
     const { run, listeners } = await loadGame();
     run('inventory.push({...WEAPONS.find(w => w.id === "iron")}); toggleInventory();');

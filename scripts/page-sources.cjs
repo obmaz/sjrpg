@@ -2,8 +2,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const espree = require('espree');
 
-const root = path.resolve(__dirname, '..');
-function readPageSources() {
+const defaultRoot = path.resolve(__dirname, '..');
+function readPageSources(root = defaultRoot) {
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
     if (new Set(ids).size !== ids.length) throw new Error('Duplicate HTML element ID');

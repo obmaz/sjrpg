@@ -8,6 +8,8 @@ async function loadGame({
     innerHeight = 960,
     storage = new Map(),
     vibrate,
+    startAtTitle = false,
+    projectRoot,
 } = {}) {
     const elements = new Map();
     const listeners = {};
@@ -110,6 +112,7 @@ async function loadGame({
                 },
             },
             getElementById(id) {
+                if (!page.pageIds.has(id)) return null;
                 if (!elements.has(id)) elements.set(id, element());
                 return elements.get(id);
             },
@@ -129,7 +132,7 @@ async function loadGame({
             timers[id - 1].cleared = true;
         },
     });
-    const page = readPageSources();
+    const page = readPageSources(projectRoot);
     const modules = new Map();
     for (const { file, source, type } of page.sources) {
         if (type === 'script') vm.runInContext(source, sandbox, { filename: file });
@@ -177,8 +180,10 @@ async function loadGame({
     });
     const run = (code) => vm.runInContext(code, sandbox);
     run(
-        'let randomSeed = 123; Math.random = () => ((randomSeed = (Math.imul(randomSeed, 1664525) + 1013904223) >>> 0) / 4294967296); gameStarted = true; generateForestMap(123);',
+        'let randomSeed = 123; Math.random = () => ((randomSeed = (Math.imul(randomSeed, 1664525) + 1013904223) >>> 0) / 4294967296);',
     );
+    if (!startAtTitle) run('gameStarted = true; generateForestMap(123);');
+    else sandbox.document.getElementById('startScreen').classList.remove('hidden');
     return { run, elements, listeners, documentListeners, timers, productionGlobalLeaks };
 }
 
