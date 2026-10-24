@@ -555,6 +555,8 @@ test('boarding from shore places the player on the boat and permits sailing', as
         player.x = 21 * TILE_SIZE; player.y = 20 * TILE_SIZE;
         spawnMount(MOUNT_TYPES.find(m => m.waterOnly), 19.5 * TILE_SIZE, player.y);
         updatePlayer(0.01);`);
+    assert.equal(run('player.mount'), null);
+    run('performInputAction("KeyE");');
     assert.equal(run('player.mount.id'), 'boat');
     assert.equal(run('player.x'), 19.5 * 32);
     run('keys.KeyA = true; updatePlayer(0.05);');

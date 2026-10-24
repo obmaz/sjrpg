@@ -4,6 +4,7 @@ import { camera, canvas } from '../core/canvas.js';
 import { getInteractionTarget } from '../systems/interactions.js';
 import { performInputAction, touchKeys } from './input.js';
 import { artClass } from './art.js';
+import { interactNpc } from './dialogs.js';
 
 let initialized = false;
 let stickPointer = null;
@@ -161,19 +162,12 @@ function initializeTouchControls() {
             worldPress = null;
             if (!canAct() || Math.hypot(event.clientX - press.x, event.clientY - press.y) > 14)
                 return;
-            const target = getInteractionTarget();
-            if (!target) return;
             const bounds = canvas.getBoundingClientRect();
             const x = ((event.clientX - bounds.left) * canvas.width) / bounds.width + camera.x;
             const y = ((event.clientY - bounds.top) * canvas.height) / bounds.height + camera.y;
-            const entity = target.entity;
-            if (
-                x >= entity.x - 12 &&
-                x <= entity.x + entity.w + 12 &&
-                y >= entity.y - 12 &&
-                y <= entity.y + entity.h + 12
-            ) {
-                performInputAction('KeyE');
+            const target = getInteractionTarget({ x, y });
+            if (target) {
+                interactNpc(target);
                 updateTouchControls();
             }
         });
@@ -243,12 +237,11 @@ function updateTouchControls() {
     worldButton.classList.toggle('hidden', !target);
     if (target) {
         const entity = target.entity;
-        setControlValue(
-            worldButton,
-            'textContent',
-            `${entity.name || '차원 포탈'} · ${target.label} 열기`,
-        );
-        worldButton.style.left = `${Math.max(106, Math.min(canvas.width - 106, entity.x + entity.w / 2 - camera.x))}px`;
+        setControlValue(worldButton, 'textContent', target.label);
+        const label = `${entity.name || '차원 포탈'} ${target.label}`;
+        if (worldButton.getAttribute('aria-label') !== label)
+            worldButton.setAttribute('aria-label', label);
+        worldButton.style.left = `${Math.max(56, Math.min(canvas.width - 56, entity.x + entity.w / 2 - camera.x))}px`;
         worldButton.style.top = `${Math.max(96, Math.min(canvas.height - 210, entity.y - camera.y - 52))}px`;
     }
     const interact = control('touchInteract');
@@ -261,7 +254,7 @@ function updateTouchControls() {
         interact.classList.toggle('ready', !!target);
     const interactionLabel = target
         ? `${target.kind === 'portal' ? '차원 포탈' : target.entity.name}, ${target.label}`
-        : '근처 인물이나 포탈에 다가가세요';
+        : '근처 대상에 다가가세요';
     if (interact.getAttribute('aria-label') !== interactionLabel)
         interact.setAttribute('aria-label', interactionLabel);
 }

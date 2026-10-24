@@ -14,7 +14,7 @@ test('large shop NPCs open from all four edges with a touch button and no keyboa
     ]) {
         run(`player.x=${x}; player.y=${y}; updateTouchControls();`);
         assert.equal(elements.get('worldInteract').classList.contains('hidden'), false);
-        assert.match(elements.get('worldInteract').textContent, /상점 열기/);
+        assert.equal(elements.get('worldInteract').textContent, '상점');
         elements.get('worldInteract').dispatchEvent({ type: 'click' });
         assert.equal(run('session.shopOpen && session.gamePaused'), true);
         assert.equal(run('isKeyDown("KeyE")'), false);

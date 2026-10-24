@@ -3260,7 +3260,7 @@ body {
 .world-interact {
     position: absolute;
     z-index: 35;
-    width: 204px;
+    width: 88px;
     min-height: 46px;
     padding: 10px;
     transform: translateX(-50%);

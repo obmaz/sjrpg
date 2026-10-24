@@ -2,10 +2,9 @@ import {
     canOccupyMountPosition,
     collidesWithEntities,
     collidesWithMap,
-    rectanglesOverlap,
 } from '../core/collision.js';
 import { MAP_HEIGHT, MAP_WIDTH, TILE_SIZE } from '../core/constants.js';
-import { mounts, player, session } from '../core/state.js';
+import { player, session } from '../core/state.js';
 import { attackWithWeapon } from './combat.js';
 import { isKeyDown } from '../ui/input.js';
 import { addMessage } from '../ui/messages.js';
@@ -63,32 +62,6 @@ function updatePlayer(deltaTime) {
     }
     if (canMove(player.x, newY)) {
         player.y = newY;
-    }
-
-    // Auto-mount: check nearby mounts
-    if (!mount) {
-        for (const m of mounts) {
-            if (
-                rectanglesOverlap(
-                    player.x,
-                    player.y,
-                    player.w,
-                    player.h,
-                    m.x - 5,
-                    m.y - 5,
-                    m.w + 10,
-                    m.h + 10,
-                ) &&
-                canOccupyMountPosition(m, m.x, m.y)
-            ) {
-                player.mount = m;
-                player.x = m.x;
-                player.y = m.y;
-                mounts.splice(mounts.indexOf(m), 1);
-                addMessage(`🐎 ${m.icon} ${m.name}에 탑승! (U: 내리기)`, 'loot');
-                break;
-            }
-        }
     }
 
     // Clamp to map

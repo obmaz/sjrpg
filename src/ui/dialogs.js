@@ -1,6 +1,7 @@
 import { canAct, getAvailableQuests, isGameActive } from '../core/helpers.js';
 import { player, session } from '../core/state.js';
 import { getInteractionTarget } from '../systems/interactions.js';
+import { boardMount } from '../systems/mounts.js';
 import { isQuestAvailable } from '../systems/quests.js';
 import { interactPortal, travelToDesert } from '../systems/travel.js';
 import { openAppearancePanel } from './appearance.js';
@@ -12,10 +13,13 @@ import { useSlotMachine } from './slot-machine.js';
 // ============================================================
 //  NPC INTERACTION & QUESTS
 // ============================================================
-function interactNpc() {
+function interactNpc(target = getInteractionTarget()) {
     if (!canAct()) return;
-    const target = getInteractionTarget();
     if (!target) return;
+    if (target.kind === 'mount') {
+        boardMount(target.entity);
+        return;
+    }
     if (target.kind === 'portal') {
         interactPortal();
         return;

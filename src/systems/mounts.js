@@ -3,6 +3,7 @@ import {
     collidesWithEntities,
     collidesWithMap,
     rectanglesOverlap,
+    distanceBetweenRectangles,
 } from '../core/collision.js';
 import {
     FOUNTAIN_CENTER_X,
@@ -17,6 +18,24 @@ import { canAct, findNearbySpawnPosition } from '../core/helpers.js';
 import { mounts, player } from '../core/state.js';
 import { updateHud } from '../ui/hud.js';
 import { addMessage } from '../ui/messages.js';
+
+function boardMount(mount) {
+    if (
+        !canAct() ||
+        player.mount ||
+        !mounts.includes(mount) ||
+        distanceBetweenRectangles(player, mount) >= 40 ||
+        !canOccupyMountPosition(mount, mount.x, mount.y)
+    )
+        return false;
+    player.mount = mount;
+    player.x = mount.x;
+    player.y = mount.y;
+    mounts.splice(mounts.indexOf(mount), 1);
+    addMessage(`${mount.icon} ${mount.name} 탑승`, 'loot');
+    updateHud();
+    return true;
+}
 
 function dismountPlayer() {
     if (!canAct() || !player.mount) return;
@@ -98,4 +117,4 @@ function spawnMount(mountType, x, y) {
     return mount;
 }
 
-export { dismountPlayer, spawnMount };
+export { boardMount, dismountPlayer, spawnMount };
