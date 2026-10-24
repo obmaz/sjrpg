@@ -1,6 +1,9 @@
 import { resizeCanvas, updateCamera } from './core/canvas.js';
 import { FOUNTAIN_CENTER_X, FOUNTAIN_CENTER_Y, MAX_FRAME_DELTA } from './core/constants.js';
 import { clamp, movePlayerTo, recordDiscovery } from './core/helpers.js';
+import { WEAPONS } from './data/weapons.js';
+import { AUX_WEAPONS } from './data/aux-weapons.js';
+import { updateTrailEncounters } from './systems/trail-encounters.js';
 import { player, session } from './core/state.js';
 import { draw } from './render/scene.js';
 import { initStartParticles } from './render/start-screen.js';
@@ -79,14 +82,22 @@ function startGame() {
     generateForestMap(seed);
 
     // Map generation guarantees a walkable arrival at the fountain.
-    movePlayerTo(FOUNTAIN_CENTER_X, FOUNTAIN_CENTER_Y);
+    movePlayerTo(FOUNTAIN_CENTER_X, FOUNTAIN_CENTER_Y + 175);
+    player.weapon = { ...WEAPONS.find((w) => w.id === 'iron') };
+    player.auxWeapon = { ...AUX_WEAPONS.find((w) => w.id === 'shuriken') };
+    player.auxWeapons = [player.auxWeapon];
+    recordDiscovery('weapons', player.weapon.id);
+    recordDiscovery('auxiliaryWeapons', player.auxWeapon.id);
 
     spawnEnemies();
     spawnInitialPickups();
+    session.trailEncounterTimer = 0;
+    session.trailEncountersEnabled = true;
+    updateTrailEncounters(0);
     updateHud();
     updateCamera(player.x + player.w / 2, player.y + player.h / 2);
 
-    addMessage('🌿 모험 시작! 주민에게 다가가 대화해 보세요.', 'info');
+    addMessage('⚔️ 숲길을 따라 전진하세요. 공격을 누르면 연속으로 벱니다.', 'info');
 
     // Auto-collect starter weapon
     recordDiscovery('weapons', 'fist');

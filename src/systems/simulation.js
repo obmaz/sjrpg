@@ -14,6 +14,7 @@ import {
     updateDeferredActions,
 } from '../core/helpers.js';
 import { player, portals, scarecrows, session } from '../core/state.js';
+import { updateTrailEncounters } from './trail-encounters.js';
 import { updateEnemies } from './enemy-ai.js';
 import { emitEnvironmentalParticles } from './environment-effects.js';
 import {
@@ -45,6 +46,7 @@ function update(deltaTime) {
     updatePlayer(clampedDeltaTime);
     updateDeferredActions(clampedDeltaTime);
     updateEnemies(clampedDeltaTime);
+    updateTrailEncounters(clampedDeltaTime);
     if (checkPlayerDeath()) return;
     updateProjectiles(clampedDeltaTime);
     updateEnemyProjectiles(clampedDeltaTime);

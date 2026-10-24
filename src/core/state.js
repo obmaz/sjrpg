@@ -2,6 +2,8 @@ import { GAME_DURATION_SECONDS, MAP_HEIGHT, MAP_WIDTH, TILE_SIZE } from './const
 import { WEAPONS } from '../data/weapons.js';
 const session = {
     terrainRevision: 0,
+    trailEncounterTimer: 0,
+    trailEncountersEnabled: false,
     gamePaused: false,
     slotMachineOpen: false,
     gameOver: false,

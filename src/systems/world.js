@@ -1,4 +1,5 @@
 import { MAP_HEIGHT, MAP_WIDTH, TILE_KEYS, TILE_TYPES } from '../core/constants.js';
+import { VILLAGE, villageTile } from '../data/village.js';
 import { SimpleNoise } from '../core/noise.js';
 import { session } from '../core/state.js';
 
@@ -113,14 +114,21 @@ function generateForestMap(seed) {
     }
 
     // Ensure map connectivity - fill isolated walkable areas
-    ensureConnectivity();
+    for (let y = 0; y < VILLAGE.height / 32; y++)
+        for (let x = 0; x < VILLAGE.width / 32; x++)
+            session.tileMap[VILLAGE.y / 32 + y][VILLAGE.x / 32 + x] = TILE_KEYS.indexOf(
+                villageTile((x + 0.5) / (VILLAGE.width / 32), (y + 0.5) / (VILLAGE.height / 32)),
+            );
+    // Flood fill starts on the footpath below the fountain.
+    ensureConnectivity('forest', 35);
+    session.terrainRevision++;
 }
 
-function ensureConnectivity(region = 'forest') {
+function ensureConnectivity(region = 'forest', arrivalRow = Math.floor(MAP_HEIGHT / 2)) {
     const visited = new Uint8Array(MAP_WIDTH * MAP_HEIGHT);
     const queue = [];
     const fcx = Math.floor(MAP_WIDTH / 2);
-    const fcy = Math.floor(MAP_HEIGHT / 2);
+    const fcy = arrivalRow;
     queue.push(fcx, fcy);
     visited[fcy * MAP_WIDTH + fcx] = 1;
 

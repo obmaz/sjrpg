@@ -40,6 +40,8 @@
 
 ## 아트
 
+`assets/village-scene.webp`는 사용자가 첨부한 대표 이미지의 구도를 바탕으로 UI·캐릭터·몬스터·상자를 제거하고 새로 생성한 환경 그림입니다. 실제 인물·전투·상호작용은 코드로 실행합니다.
+
 고대 드래곤은 이 게임을 위해 새로 생성한 붉은 비늘·황금 뿔·펼친 날개의 투명 보스 그림을 사용합니다.
 
 `assets/hero.webp`, `assets/atlas.webp`, `assets/terrain.webp`, `assets/world-forest.webp`, `assets/world-desert.webp`, `assets/ui-reference.webp`, `assets/controls.webp`, `assets/popup-frame.webp`, `assets/world-mounts.webp`, `assets/forest.webp`, `assets/ancient-dragon.webp`는 이 게임을 위해 생성한 이미지입니다.

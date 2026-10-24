@@ -1,3 +1,4 @@
+import { villageArtReady } from './village.js';
 import { camera, canvas, ctx } from '../core/canvas.js';
 import { distance, getAvailableQuests } from '../core/helpers.js';
 import { chests, npcs, player, scarecrows } from '../core/state.js';
@@ -14,6 +15,7 @@ import { drawPlayerMarker } from './presentation.js';
 function drawNpcs(entities = npcs) {
     const target = getInteractionTarget();
     for (const npc of entities) {
+        if (npc.paintedBuilding && villageArtReady()) continue;
         const sx = npc.x - camera.x,
             sy = npc.y - camera.y;
         // Glow effect for quest-givers
@@ -351,6 +353,7 @@ function drawEntity(entity) {
     const cy = screenY + entity.h / 2;
     const isPlayer = entity === player;
     let paintedWorld = false;
+    const spriteScale = entity.trailGuard ? 2.2 : 1.7;
 
     if (isPlayer) {
         drawPlayerMarker(cx, cy, entity);
@@ -361,7 +364,7 @@ function drawEntity(entity) {
             enemyWorldArt(entity),
             cx,
             screenY + entity.h,
-            entity.w * 1.7,
+            entity.w * spriteScale,
             entity.h * 1.8,
         );
         const illustrated =
@@ -380,7 +383,7 @@ function drawEntity(entity) {
         ? getWorldSpriteTop(
               enemyWorldArt(entity),
               screenY + entity.h,
-              entity.w * 1.7,
+              entity.w * spriteScale,
               entity.h * 1.8,
           )
         : screenY;
@@ -493,8 +496,8 @@ function drawPlayerShape(cx, cy, p) {
         heroKey,
         cx,
         cy + p.h / 2 + bob - (mount ? 10 : 0),
-        48,
-        58,
+        60,
+        72,
     );
     if (!paintedHero) {
         // ── ZELDA-STYLE CHARACTER ──

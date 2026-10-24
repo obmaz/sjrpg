@@ -14,6 +14,7 @@ import {
 } from '../core/constants.js';
 import { distance, findNearbySpawnPosition, findSpawnTile } from '../core/helpers.js';
 import { enemies, npcs, player, scarecrows } from '../core/state.js';
+import { inVillage } from '../data/village.js';
 import { getRandomBoss } from '../data/bosses.js';
 import { DESERT_ENEMY_TYPES, ENEMY_TYPES } from '../data/enemies.js';
 import { MOUNT_TYPES } from '../data/mounts.js';
@@ -276,8 +277,8 @@ function spawnForestNpcs() {
     // The first quest giver is visible in the opening mobile view.
     const sage = spawnNpc({
         ...npcDefs[0],
-        x: FOUNTAIN_CENTER_X - 108,
-        y: FOUNTAIN_CENTER_Y - 78,
+        x: FOUNTAIN_CENTER_X - 125,
+        y: FOUNTAIN_CENTER_Y + 54,
         w: 24,
         h: 28,
     });
@@ -290,16 +291,17 @@ function spawnForestNpcs() {
     const fcx = Math.floor(MAP_WIDTH / 2);
     const fcy = Math.floor(MAP_HEIGHT / 2);
     spawnNpc({
-        x: (fcx + 3) * TILE_SIZE + TILE_SIZE / 2 - 32,
-        y: (fcy - 2) * TILE_SIZE + TILE_SIZE / 2 - 32,
-        w: 64,
-        h: 64,
+        x: FOUNTAIN_CENTER_X + 112,
+        y: FOUNTAIN_CENTER_Y + 104,
+        w: 36,
+        h: 36,
         icon: '🏪',
         name: '상인',
         dialog: '어서오세요! 좋은 무기를 골드로 판매합니다.',
         quests: [],
         isShop: true,
         shopType: 'village',
+        paintedBuilding: true,
     });
 
     // ── Appearance change NPC (near fountain) ──
@@ -317,8 +319,8 @@ function spawnForestNpcs() {
 
     // ── Scarecrow (training dummy) right next to fountain ──
     scarecrows.push({
-        x: (fcx - 2) * TILE_SIZE + TILE_SIZE / 2 - 18,
-        y: (fcy - 2) * TILE_SIZE + TILE_SIZE / 2 - 4,
+        x: (fcx - 11) * TILE_SIZE,
+        y: (fcy + 3) * TILE_SIZE,
         w: 36,
         h: 54,
         hp: 99999,
@@ -556,6 +558,7 @@ function spawnQuestNpc(definition, minimumDistance) {
             !isSolidTile(tileX, tileY) &&
             !collidesWithMap(px, py, width, height) &&
             !collidesWithEntities(px, py, width, height, player) &&
+            !inVillage(px, py) &&
             distance(px, py, player.x, player.y) > minimumDistance
         );
     });

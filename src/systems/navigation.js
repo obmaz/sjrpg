@@ -41,9 +41,22 @@ export function isReachableFromArrival(x, y, width, height) {
             }
             return walkable[key] === 1;
         };
-        const sx = Math.floor(FOUNTAIN_CENTER_X / TILE_SIZE),
+        let sx = Math.floor(FOUNTAIN_CENTER_X / TILE_SIZE),
             sy = Math.floor(FOUNTAIN_CENTER_Y / TILE_SIZE);
         const queue = [];
+        if (!canVisit(sx, sy)) {
+            outer: for (let radius = 1; radius <= 8; radius++)
+                for (let dy = -radius; dy <= radius; dy++)
+                    for (let dx = -radius; dx <= radius; dx++) {
+                        const x = sx + dx,
+                            y = sy + dy;
+                        if (x >= 0 && y >= 0 && x < MAP_WIDTH && y < MAP_HEIGHT && canVisit(x, y)) {
+                            sx = x;
+                            sy = y;
+                            break outer;
+                        }
+                    }
+        }
         if (canVisit(sx, sy)) {
             reached[sy * MAP_WIDTH + sx] = 1;
             queue.push({ x: sx, y: sy });

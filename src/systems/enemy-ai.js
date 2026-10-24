@@ -17,6 +17,7 @@ import { ENEMY_TYPES } from '../data/enemies.js';
 import { playPlayerHurtSound } from './audio.js';
 import { hapticImpact } from './feedback.js';
 import { damageEnemy } from './combat.js';
+import { inVillage } from '../data/village.js';
 import { spawnEnemyProjectile, spawnFloatingText, spawnParticles } from './entities.js';
 import { spawnEnemy } from './spawning.js';
 import { getTile, isSolidTile } from './world.js';
@@ -66,7 +67,7 @@ function updateEnemies(deltaTime) {
             enemy.state = 'chase';
         }
 
-        const aggroRange = enemy.megaBoss ? 500 : enemy.isBoss ? 350 : 180;
+        const aggroRange = enemy.megaBoss ? 500 : enemy.isBoss ? 350 : enemy.trailGuard ? 320 : 180;
         const meleeReach = enemy.megaBoss ? 40 : enemy.isBoss ? 20 : 16;
         const distanceToPlayerBody = distanceBetweenRectangles(enemy, player);
         const rangedRange = enemy.ranged ? 200 : 0;
@@ -286,6 +287,11 @@ function updateEnemies(deltaTime) {
                 for (let dx = -1; dx <= 1; dx++) {
                     const tx = tileX + dx,
                         ty = tileY + dy;
+                    if (
+                        player.currentRegion === 'forest' &&
+                        inVillage(tx * TILE_SIZE, ty * TILE_SIZE)
+                    )
+                        continue;
                     if (tx >= 0 && ty >= 0 && tx < MAP_WIDTH && ty < MAP_HEIGHT) {
                         const tk = TILE_KEYS[getTile(tx, ty)];
                         if (tk === 'TREE' || tk === 'BUSH' || tk === 'ROCK' || tk === 'WALL') {

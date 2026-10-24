@@ -274,6 +274,9 @@ test('focus loss releases held movement keys', async () => {
 test('lethal damage near fountain ends the game before healing can resurrect the player', async () => {
     const { run } = await loadGame();
     run(
+        "tileMap=Array.from({length:MAP_HEIGHT},()=>Array(MAP_WIDTH).fill(TILE_KEYS.indexOf('GRASS')));",
+    );
+    run(
         'player.x = FOUNTAIN_CENTER_X; player.y = FOUNTAIN_CENTER_Y; player.hp = 1; player.gold = 100; player.fountainTimer = 1; spawnEnemyProjectile(player.x + player.w / 2, player.y + player.h / 2, 0, 0, 2, "red"); update(0.01);',
     );
     assert.equal(run('gameOver'), true);
@@ -408,6 +411,9 @@ test('completing forest quests allows the desert adventure to continue', async (
 
 test('boomerang returns on game time and does not cross region changes', async () => {
     const { run, timers } = await loadGame();
+    run(
+        "tileMap=Array.from({length:MAP_HEIGHT},()=>Array(MAP_WIDTH).fill(TILE_KEYS.indexOf('GRASS')));",
+    );
     run(
         "throwBoomerang(AUX_WEAPONS.find(a => a.id === 'boomerang'), getPlayerAttackOrigin()); gamePaused = true;",
     );
@@ -671,7 +677,7 @@ test('chests and all village NPCs fit on walkable terrain across map seeds', asy
         assert.equal(
             run(`npcs.filter(n => n.isShop && n.shopType === 'village' || n.name === '현자')
             .every(n => n.x >= FOUNTAIN_CENTER_X - 150 && n.x + n.w <= FOUNTAIN_CENTER_X + 150
-                && n.y >= FOUNTAIN_CENTER_Y - 130 && n.y + n.h < FOUNTAIN_CENTER_Y)`),
+                && n.y >= FOUNTAIN_CENTER_Y - 50 && n.y + n.h < FOUNTAIN_CENTER_Y + 180)`),
             true,
             `opening village services remain in a narrow mobile view for seed ${seed}`,
         );
@@ -831,4 +837,49 @@ test('control double taps are canceled without blocking auxiliary clicks', async
     assert.equal(prevented, true);
     elements.get('touchAux').dispatchEvent({ type: 'click' });
     assert.ok(run('player.auxCooldown') > 0);
+});
+
+test('painted village keeps the same walkable trail and blocked fountain across seeds', async () => {
+    const { run } = await loadGame();
+    let snapshot;
+    for (const seed of [0, 42, 123, 99999]) {
+        run(`generateForestMap(${seed});`);
+        const current = run('JSON.stringify(tileMap.slice(22,52).map(row=>row.slice(30,50)))');
+        if (snapshot) assert.equal(current, snapshot);
+        else snapshot = current;
+        assert.equal(run('isSolidTile(40,30)'), true);
+        assert.equal(run('collidesWithMap(1280,1135,24,28)'), false);
+    }
+});
+
+test('trail encounters use game time, stop at the cap and stay out of the village sanctuary', async () => {
+    const { run } = await loadGame();
+    run(
+        'clearWorldEntities();session.trailEncountersEnabled=true;player.x=1280;player.y=1135;updateTrailEncounters(0);',
+    );
+    assert.equal(run('enemies.length'), 3);
+    run('session.gamePaused=true;updateTrailEncounters(20);');
+    assert.equal(run('enemies.length'), 3);
+    run('session.gamePaused=false;updateTrailEncounters(9);');
+    assert.equal(run('enemies.length'), 3);
+    run('updateTrailEncounters(1);');
+    assert.equal(run('enemies.length'), 5);
+    run('for(let i=0;i<10;i++)updateTrailEncounters(10);');
+    assert.equal(run('enemies.length'), 9);
+    assert.equal(run('enemies.some(e=>collidesWithMap(e.x,e.y,e.w,e.h))'), false);
+    run(
+        'clearWorldEntities();session.trailEncounterTimer=0;player.y=1010;updateTrailEncounters(10);',
+    );
+    assert.equal(run('enemies.length'), 0);
+});
+
+test('boss terrain destruction preserves the painted village collision', async () => {
+    const { run } = await loadGame();
+    run(`clearWorldEntities();player.x=1280;player.y=1135;player.invincible=100;
+        const villageBefore=JSON.stringify(tileMap.slice(22,52).map(r=>r.slice(30,50)));
+        spawnBoss(BOSS_TYPES.find(b=>b.id==='ancient_dragon'),1280,960);updateEnemies(.1);`);
+    assert.equal(
+        run('JSON.stringify(tileMap.slice(22,52).map(r=>r.slice(30,50)))===villageBefore'),
+        true,
+    );
 });

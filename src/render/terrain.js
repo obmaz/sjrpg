@@ -9,6 +9,8 @@ import {
     TILE_TYPES,
 } from '../core/constants.js';
 import { distance } from '../core/helpers.js';
+import { inVillage } from '../data/village.js';
+import { villageArtReady, drawVillage } from './village.js';
 import { player, portals } from '../core/state.js';
 import { getTile } from '../systems/world.js';
 import { drawGroundMaterial } from './art.js';
@@ -33,6 +35,7 @@ function drawTerrain() {
 
     for (let ty = startTY; ty < endTY; ty++) {
         for (let tx = startTX; tx < endTX; tx++) {
+            if (villageArtReady() && inVillage(tx * TILE_SIZE, ty * TILE_SIZE)) continue;
             const tileKey = TILE_KEYS[getTile(tx, ty)];
             const screenX = tx * TILE_SIZE - camera.x;
             const screenY = ty * TILE_SIZE - camera.y;
@@ -385,6 +388,7 @@ function drawTerrain() {
     for (const forest of forestCrowns)
         drawForestCanopy(ctx, forest.x, forest.y, forest.tx, forest.ty);
     drawForestEdgeTrees(ctx, camera, canvas);
+    drawVillage(ctx, camera);
 }
 
 // ============================================================
@@ -392,6 +396,7 @@ function drawTerrain() {
 // ============================================================
 
 function drawFountain() {
+    if (villageArtReady()) return;
     const sx = FOUNTAIN_CENTER_X - camera.x;
     const sy = FOUNTAIN_CENTER_Y - camera.y;
 
