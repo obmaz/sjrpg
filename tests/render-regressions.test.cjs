@@ -221,3 +221,21 @@ test('nearby NPC actions use one compact world tag without a second canvas actio
         );
     }
 });
+
+test('forest cover follows map replacement and terrain destruction without mutating the world or RNG', async () => {
+    const { run } = await loadGame();
+    run(`tileMap=Array.from({length:MAP_HEIGHT},()=>Array(MAP_WIDTH).fill(TILE_KEYS.indexOf('GRASS')));
+        for(let y=10;y<=14;y++)for(let x=10;x<=14;x++)tileMap[y][x]=TILE_KEYS.indexOf('TREE');
+        Math.random=()=>{throw Error('forest view consumed gameplay RNG')};`);
+    assert.equal(run('getForestTile(12,12).dense'), true);
+    assert.equal(run('getForestTile(12,11).mask & 4'), 4);
+    run("tileMap[12][12]=TILE_KEYS.indexOf('DIRT');session.terrainRevision++;");
+    const before = run('JSON.stringify(tileMap)');
+    assert.equal(run('getForestTile(12,12).dense'), false);
+    assert.equal(run('getForestTile(12,11).mask & 4'), 0);
+    assert.equal(run('JSON.stringify(tileMap)'), before);
+    run(
+        "tileMap=Array.from({length:MAP_HEIGHT},()=>Array(MAP_WIDTH).fill(TILE_KEYS.indexOf('SAND')));",
+    );
+    assert.equal(run('getForestTile(12,12).dense'), false);
+});

@@ -769,3 +769,17 @@ test('padded UI artwork centres its painted joystick and thumb at the same point
         assert.ok(Math.abs(paintedY - 0.5) < 1e-8);
     }
 });
+
+test('sealed woodland gaps become undergrowth while natural water and desert connectivity remain unchanged', async () => {
+    for (const region of ['forest', 'desert']) {
+        const { run } = await loadGame();
+        run(`tileMap=Array.from({length:MAP_HEIGHT},()=>Array(MAP_WIDTH).fill(TILE_KEYS.indexOf('GRASS')));
+            for(let y=4;y<=6;y++)for(let x=4;x<=6;x++)if(x!==5||y!==5)tileMap[y][x]=TILE_KEYS.indexOf('TREE');
+            tileMap[15][15]=TILE_KEYS.indexOf('WATER');
+            ensureConnectivity('${region}');`);
+        assert.equal(run('TILE_KEYS[tileMap[5][5]]'), region === 'forest' ? 'BUSH' : 'WATER_DEEP');
+        assert.equal(run('isSolidTile(5,5)'), true);
+        assert.equal(run('TILE_KEYS[tileMap[15][15]]'), 'WATER');
+        assert.equal(run('isSolidTile(10,10)'), false);
+    }
+});

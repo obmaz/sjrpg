@@ -40,12 +40,13 @@
 
 ## 아트
 
-`assets/hero.webp`, `assets/atlas.webp`, `assets/terrain.webp`, `assets/world-forest.webp`, `assets/world-desert.webp`, `assets/ui-reference.webp`, `assets/controls.webp`, `assets/popup-frame.webp`, `assets/world-mounts.webp`는 이 게임을 위해 생성한 이미지입니다.
+`assets/hero.webp`, `assets/atlas.webp`, `assets/terrain.webp`, `assets/world-forest.webp`, `assets/world-desert.webp`, `assets/ui-reference.webp`, `assets/controls.webp`, `assets/popup-frame.webp`, `assets/world-mounts.webp`, `assets/forest.webp`는 이 게임을 위해 생성한 이미지입니다.
 배경은 숲의 유적·사막 왕국으로 통하는 포탈, 기존 아이콘 시트는 장비 8종·몬스터 초상 8종, 바닥은 잔디·흙·모래·돌길입니다.
 
 `docs/art/village-reference.webp`는 대표 플레이 화면의 생성 콘셉트입니다. 이를 그림체 기준으로 투명 배경의 숲·사막 시트를 각각 4×4로 제작했습니다.
 모험가 네 방향, 주민·시설·지형·주요 몬스터·탈것과 도감에 사용합니다. UI 시트는 같은 대표 이미지의 초상·황동 프레임·청록 버튼·조이스틱·메뉴 문양을 별도로 생성한 것입니다. 조작 시트는 중심 정렬과 둥근 메뉴를 위해 별도로 생성했습니다. `docs/art/popup-reference.webp`의 팝업 시안을 먼저 생성한 뒤, 같은 스타일의 빈 팝업 테두리를 생성해 코드로 구성한 창에 사용합니다. [월드 아트 기준](art-direction.md)에 셀 배치와 적용 규칙을 기록합니다.
 탈것 시트는 말·자전거·오토바이·배의 앞·왼쪽·뒤·오른쪽 모습을 같은 그림체로 생성한 것입니다. 실제 그림 경계를 측정해 잘림 없이 표시합니다.
+숲 재질은 같은 대표 이미지에서 수관·그늘·낙엽·이끼 바닥을 별도로 생성했습니다. 밀집 수관에는 기존 나무 그림의 잎 부분을 함께 사용합니다.
 WebP 변환은 투명도를 보존하며, 생성 원본 PNG는 보관합니다. 그림 크기는 충돌·HP·탑승 조건을 변경하지 않습니다. 숲의 상점과 첫 퀘스트 주민은 대표 화면 구성을 위해 분수 가까이 배치하며 기존 전체 몸체 검사를 사용합니다.
 
 ## SRD 저작자 표시

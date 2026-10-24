@@ -13,6 +13,12 @@ import { player, portals } from '../core/state.js';
 import { getTile } from '../systems/world.js';
 import { drawGroundMaterial } from './art.js';
 import { drawWorldSprite } from './world-art.js';
+import {
+    drawForestCanopy,
+    drawForestFloor,
+    drawForestGround,
+    drawForestEdgeTrees,
+} from './forest.js';
 
 // ============================================================
 //  TERRAIN RENDERING
@@ -23,6 +29,7 @@ function drawTerrain() {
     const endTX = Math.min(MAP_WIDTH, Math.ceil((camera.x + canvas.width) / TILE_SIZE) + 1);
     const endTY = Math.min(MAP_HEIGHT, Math.ceil((camera.y + canvas.height) / TILE_SIZE) + 1);
     const time = performance.now() / 1000;
+    const forestCrowns = [];
 
     for (let ty = startTY; ty < endTY; ty++) {
         for (let tx = startTX; tx < endTX; tx++) {
@@ -43,9 +50,17 @@ function drawTerrain() {
             const rigWalk = !TILE_TYPES[TILE_KEYS[nRig]].solid;
             const hasWalkNeighbor = solid && (topWalk || botWalk || lefWalk || rigWalk);
 
+            if (
+                (tileKey === 'TREE' || tileKey === 'BUSH') &&
+                drawForestGround(ctx, screenX, screenY, tx, ty)
+            ) {
+                forestCrowns.push({ x: screenX, y: screenY, tx, ty });
+                continue;
+            }
             const groundKey =
                 tileKey === 'SAND' && player.currentRegion === 'forest' ? 'PATH' : tileKey;
             if (drawGroundMaterial(ctx, groundKey, screenX, screenY, TILE_SIZE, tx, ty)) {
+                drawForestFloor(ctx, tileKey, screenX, screenY, tx, ty);
                 continue;
             }
             const desert = player.currentRegion === 'desert';
@@ -367,6 +382,9 @@ function drawTerrain() {
             }
         }
     }
+    for (const forest of forestCrowns)
+        drawForestCanopy(ctx, forest.x, forest.y, forest.tx, forest.ty);
+    drawForestEdgeTrees(ctx, camera, canvas);
 }
 
 // ============================================================

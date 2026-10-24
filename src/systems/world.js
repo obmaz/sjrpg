@@ -116,7 +116,7 @@ function generateForestMap(seed) {
     ensureConnectivity();
 }
 
-function ensureConnectivity() {
+function ensureConnectivity(region = 'forest') {
     const visited = new Uint8Array(MAP_WIDTH * MAP_HEIGHT);
     const queue = [];
     const fcx = Math.floor(MAP_WIDTH / 2);
@@ -145,14 +145,22 @@ function ensureConnectivity() {
         }
     }
 
-    // Convert unreachable walkable tiles to deep water
+    let changed = false;
+    // Closed woodland gaps become undergrowth; preserve real lakes and desert behaviour.
     for (let y = 0; y < MAP_HEIGHT; y++) {
         for (let x = 0; x < MAP_WIDTH; x++) {
             if (!visited[y * MAP_WIDTH + x] && !isSolidTile(x, y)) {
-                session.tileMap[y][x] = TILE_KEYS.indexOf('WATER_DEEP');
+                let nearbyTrees = 0;
+                if (region === 'forest')
+                    for (let dy = -1; dy <= 1; dy++)
+                        for (let dx = -1; dx <= 1; dx++)
+                            if (TILE_KEYS[getTile(x + dx, y + dy)] === 'TREE') nearbyTrees++;
+                session.tileMap[y][x] = TILE_KEYS.indexOf(nearbyTrees >= 2 ? 'BUSH' : 'WATER_DEEP');
+                changed = true;
             }
         }
     }
+    if (changed) session.terrainRevision++;
 }
 
 function getTile(x, y) {
@@ -228,7 +236,14 @@ function generateDesertMap(seed) {
             session.tileMap[y][x] = TILE_KEYS.indexOf('PATH');
         }
     }
-    ensureConnectivity();
+    ensureConnectivity('desert');
 }
 
-export { generateForestMap, getTile, isSolidTile, isWaterTile, generateDesertMap };
+export {
+    ensureConnectivity,
+    generateForestMap,
+    getTile,
+    isSolidTile,
+    isWaterTile,
+    generateDesertMap,
+};
