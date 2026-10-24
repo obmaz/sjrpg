@@ -145,8 +145,8 @@ function spawnFireZone(x, y, duration, dmg, radius = 40, options = {}) {
 //  FLOATING TEXT
 // ============================================================
 
-function spawnFloatingText(x, y, text, color = '#fff') {
-    floatingTexts.push({ x, y, text, color, life: 1.0 });
+function spawnFloatingText(x, y, text, color = '#fff', kind = 'info') {
+    floatingTexts.push({ x, y, text, color, kind, life: 1.0 });
 }
 
 function updateParticles(deltaTime) {

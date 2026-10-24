@@ -14,6 +14,7 @@ import {
 import { drawChests, drawEntity, drawNpcs, drawScarecrows } from './entities.js';
 import { drawMinimap } from './minimap.js';
 import { drawFountain, drawPortals, drawTerrain } from './terrain.js';
+import { drawWorldFrame } from './presentation.js';
 
 // ============================================================
 //  RENDERING
@@ -60,14 +61,12 @@ function draw() {
     // Draw scarecrows
     drawScarecrows();
 
-    // Draw enemies
-    for (const enemy of enemies) {
-        if (enemy.hp <= 0) continue;
-        drawEntity(enemy);
-    }
+    // Sort a copy so foreground bodies cover background bodies without reordering simulation state.
+    const actors = [...enemies.filter((enemy) => enemy.hp > 0), player];
+    actors.sort((first, second) => first.y + first.h - second.y - second.h);
+    for (const actor of actors) drawEntity(actor);
 
-    // Draw player
-    drawEntity(player);
+    drawWorldFrame();
 
     // Draw floating texts
     drawFloatingTexts();

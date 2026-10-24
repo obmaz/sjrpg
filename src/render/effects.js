@@ -1,4 +1,6 @@
 import { camera, canvas, ctx } from '../core/canvas.js';
+import { drawArtToken } from './art.js';
+import { visualMotionAllowed } from './presentation.js';
 import {
     enemyProjectiles,
     fireZones,
@@ -139,6 +141,13 @@ function drawWeaponPickups() {
         const sx = wp.x - camera.x,
             sy = wp.y - camera.y + Math.sin(wp.bob + performance.now() / 500) * 3;
         const w = wp.weapon;
+        if (['희귀', '영웅', '전설'].includes(w.rarity)) {
+            const beam = ctx.createLinearGradient(sx, sy - 58, sx, sy);
+            beam.addColorStop(0, `${w.color}00`);
+            beam.addColorStop(1, `${w.color}66`);
+            ctx.fillStyle = beam;
+            ctx.fillRect(sx - 7, sy - 58, 14, 58);
+        }
         // Outer glow
         ctx.fillStyle = 'rgba(255,255,255,0.3)';
         ctx.beginPath();
@@ -160,12 +169,17 @@ function drawWeaponPickups() {
         ctx.font = 'bold 16px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(w.icon, sx, sy);
-        // Name below
-        ctx.fillStyle = '#ffcc88';
-        ctx.font = 'bold 8px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(w.name, sx, sy + 16);
+        if (!drawArtToken(ctx, w.artIndex, sx, sy, 28)) ctx.fillText(w.icon, sx, sy);
+        // Nearby loot is named; distant drops keep only their silhouette and rarity beam.
+        if (Math.hypot(wp.x - player.x, wp.y - player.y) < 110) {
+            ctx.fillStyle = '#f5dfaa';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.strokeStyle = '#0a1d23';
+            ctx.lineWidth = 3;
+            ctx.strokeText(w.name, sx, sy + 22);
+            ctx.fillText(w.name, sx, sy + 22);
+        }
     }
 }
 
@@ -211,19 +225,22 @@ function drawParticles() {
 }
 
 function drawFloatingTexts() {
+    const motion = visualMotionAllowed();
+    ctx.save();
     for (const t of floatingTexts) {
         const alpha = Math.min(1, t.life * 2);
-        ctx.fillStyle = t.color;
+        const pop = motion ? 1 + Math.max(0, t.life - 0.8) * 1.4 : 1;
+        ctx.fillStyle = t.kind === 'damage' ? '#fff0dc' : t.color;
         ctx.globalAlpha = alpha;
-        ctx.font = 'bold 16px sans-serif';
+        ctx.font = `bold ${Math.round(16 * pop)}px sans-serif`;
         ctx.textAlign = 'center';
-        // Text shadow for visibility
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 3;
+        ctx.textBaseline = 'middle';
+        ctx.strokeStyle = '#08171f';
+        ctx.lineWidth = 3.5;
         ctx.strokeText(t.text, t.x - camera.x, t.y - camera.y);
         ctx.fillText(t.text, t.x - camera.x, t.y - camera.y);
     }
-    ctx.globalAlpha = 1;
+    ctx.restore();
 }
 
 // ============================================================

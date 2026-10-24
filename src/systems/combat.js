@@ -158,7 +158,13 @@ function damageEnemy(enemy, dmg, knockback = true, options = {}) {
         enemy.state = 'hurt';
         enemy.stateTimer = 0.4;
     }
-    spawnFloatingText(enemy.x + enemy.w / 2, enemy.y - 8, `-${dmg}`, '#ff4444');
+    spawnFloatingText(
+        enemy.x + enemy.w / 2,
+        enemy.y - (enemy.isBoss ? 54 : 36),
+        `-${dmg}`,
+        '#ff4444',
+        'damage',
+    );
     // Knockback: push enemy away from player
     if (knockback) {
         const dx = enemy.x + enemy.w / 2 - (player.x + player.w / 2);

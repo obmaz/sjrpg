@@ -201,6 +201,14 @@ function updateTouchControls() {
     const remaining = Math.max(0, player.auxCooldown);
     const cooldown = Math.max(auxiliary?.cooldown || 1, remaining);
     setControlValue(control('touchAttackIcon'), 'textContent', player.weapon.icon);
+    const attackCooldown =
+        player.lastAttackCooldown || player.weapon.cooldown || player.attackCooldown;
+    const attackRemaining = Math.max(0, Math.min(1, player.attackTimer / attackCooldown));
+    setControlValue(
+        control('touchAttackRing').style,
+        'strokeDashoffset',
+        String(Math.round(attackRemaining * 100)),
+    );
     setControlValue(
         control('touchAttackIcon'),
         'className',

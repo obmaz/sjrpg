@@ -116,3 +116,65 @@ test('HUD can restore the same auxiliary weapon after showing an empty slot', as
     );
     assert.equal(htmlWrites, 1);
 });
+
+test('enemy labels stay quiet until combat while bosses always identify themselves', async () => {
+    const { run } = await loadGame();
+    run(`camera.x=0; camera.y=0;
+        const shownLabels=[];
+        ctx.fillText=text=>shownLabels.push(text);
+        const shownEnemy={x:100,y:100,w:24,h:24,hp:20,maxHp:20,
+            name:'고블린',level:2,state:'wander',hurtTimer:0,frozen:0,animTimer:0,color:'#789'};
+        enemies.push(shownEnemy);
+        drawEntity(shownEnemy);`);
+    assert.equal(run('shownLabels.includes("고블린 Lv2")'), false);
+    for (const state of [
+        'shownEnemy.hp=19',
+        'shownEnemy.hp=20; shownEnemy.state="attack"',
+        'shownEnemy.state="wander"; shownEnemy.hurtTimer=0.1',
+        'shownEnemy.hurtTimer=0; shownEnemy.isBoss=true',
+    ]) {
+        run(`shownLabels.length=0; ${state}; drawEntity(shownEnemy);`);
+        assert.equal(run('shownLabels.includes("고블린 Lv2")'), true, state);
+    }
+    for (const isBoss of [false, true]) {
+        run(`shownEnemy.isBoss=${isBoss}; shownEnemy.hp=20; floatingTexts.length=0;
+            damageEnemy(shownEnemy,3,false);`);
+        assert.equal(run('shownEnemy.hp'), 17);
+        assert.equal(run('floatingTexts[0].kind'), 'damage');
+        assert.ok(run(`floatingTexts[0].y <= shownEnemy.y - ${isBoss ? 48 : 32}`));
+    }
+});
+
+test('depth sorting and world framing never reorder enemies or mutate combat state', async () => {
+    const { run } = await loadGame();
+    run(`enemies.length=0; camera.x=0; camera.y=0;
+        player.x=100; player.y=100; player.hp=20;
+        const actorTemplate={x:100,w:24,h:24,hp:20,maxHp:20,
+            state:'attack',hurtTimer:0,frozen:0,animTimer:0,color:'#789'};
+        enemies.push({...actorTemplate,y:150,name:'앞'}, {...actorTemplate,y:50,name:'뒤'});
+        const actorLabels=[]; ctx.fillText=text=>actorLabels.push(text);
+        Math.random=()=>{throw new Error('render consumed gameplay randomness')};`);
+    const before = run('JSON.stringify({player,enemies,floatingTexts,particles})');
+    run('draw();');
+    assert.ok(run('actorLabels.indexOf("뒤") < actorLabels.indexOf("앞")'));
+    for (const paused of [true, false]) {
+        run(`session.gamePaused=${paused}; for(let i=0;i<5;i++) draw();`);
+        assert.equal(run('JSON.stringify({player,enemies,floatingTexts,particles})'), before);
+    }
+});
+
+test('reduced motion removes damage number scaling without changing the event', async () => {
+    for (const reducedMotion of [false, true]) {
+        const { run } = await loadGame({ reducedMotion });
+        run(`spawnFloatingText(100,100,'-12','#f00','damage');
+            const damageFonts=[];
+            ctx.fillText=()=>damageFonts.push(ctx.font);
+            drawFloatingTexts();`);
+        assert.equal(
+            run('damageFonts[0]'),
+            reducedMotion ? 'bold 16px sans-serif' : 'bold 20px sans-serif',
+        );
+        assert.equal(run('floatingTexts[0].life'), 1);
+        assert.equal(run('floatingTexts[0].text'), '-12');
+    }
+});

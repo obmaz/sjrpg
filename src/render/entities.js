@@ -4,6 +4,7 @@ import { chests, npcs, player, scarecrows } from '../core/state.js';
 import { getFacingAngle } from '../systems/combat.js';
 import { drawArtToken } from './art.js';
 import { getInteractionTarget } from '../systems/interactions.js';
+import { drawPlayerMarker } from './presentation.js';
 
 // ============================================================
 //  ENTITY RENDERING (enemies, player, NPCs, chests, pickups, mounts)
@@ -332,6 +333,7 @@ function drawEntity(entity) {
     const isPlayer = entity === player;
 
     if (isPlayer) {
+        drawPlayerMarker(cx, cy, entity);
         drawPlayerShape(cx, cy, entity);
     } else {
         const illustrated = drawArtToken(ctx, entity.artIndex, cx, cy, entity.w * 1.3);
@@ -345,17 +347,24 @@ function drawEntity(entity) {
         }
     }
 
-    // HP bar (enemies)
-    if (!isPlayer && entity.maxHp > 0 && entity.hp < entity.maxHp) {
-        const barW = entity.w + 4;
-        const barH = 4;
-        const barX = screenX - 2;
-        const barY = screenY - 8;
-        ctx.fillStyle = '#333';
-        ctx.fillRect(barX, barY, barW, barH);
-        const ratio = entity.hp / entity.maxHp;
-        ctx.fillStyle = entity.isBoss ? '#ff4444' : '#ff6666';
+    const engaged =
+        entity.isBoss ||
+        entity.hp < entity.maxHp ||
+        entity.state === 'attack' ||
+        entity.hurtTimer > 0;
+    // Compact world-space health bars, shown only when useful.
+    if (!isPlayer && engaged && entity.maxHp > 0) {
+        const barW = Math.max(entity.isBoss ? 76 : 32, entity.w + 4);
+        const barH = entity.isBoss ? 7 : 5;
+        const barX = cx - barW / 2;
+        const barY = screenY - 9;
+        ctx.fillStyle = '#08191ddd';
+        ctx.fillRect(barX - 2, barY - 2, barW + 4, barH + 4);
+        const ratio = Math.max(0, Math.min(1, entity.hp / entity.maxHp));
+        ctx.fillStyle = entity.isBoss ? '#efb15c' : '#e57863';
         ctx.fillRect(barX, barY, barW * ratio, barH);
+        ctx.fillStyle = '#fff2c344';
+        ctx.fillRect(barX, barY, barW * ratio, 1);
     }
 
     // Boss crown
@@ -366,12 +375,18 @@ function drawEntity(entity) {
         ctx.fillText('👑', cx, screenY - 14);
     }
 
-    // Name tag with level (red for enemies)
-    ctx.fillStyle = isPlayer ? '#fff' : '#ff5555';
-    ctx.font = 'bold 11px sans-serif';
-    ctx.textAlign = 'center';
-    const levelText = entity.level ? ` Lv${entity.level}` : '';
-    ctx.fillText((entity.name || '') + levelText, cx, screenY - (entity.isBoss ? 28 : 12));
+    if (!isPlayer && engaged) {
+        ctx.fillStyle = entity.isBoss ? '#ffe4a3' : '#f4e5d4';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        const levelText = entity.level ? ` Lv${entity.level}` : '';
+        const label = (entity.name || '') + levelText;
+        const labelY = screenY - (entity.isBoss ? 30 : 16);
+        ctx.strokeStyle = '#081c22';
+        ctx.lineWidth = 3;
+        ctx.strokeText(label, cx, labelY);
+        ctx.fillText(label, cx, labelY);
+    }
 
     ctx.restore();
 }

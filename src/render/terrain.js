@@ -11,6 +11,7 @@ import {
 import { distance } from '../core/helpers.js';
 import { player, portals } from '../core/state.js';
 import { getTile } from '../systems/world.js';
+import { drawGroundMaterial } from './art.js';
 
 // ============================================================
 //  TERRAIN RENDERING
@@ -41,13 +42,20 @@ function drawTerrain() {
             const rigWalk = !TILE_TYPES[TILE_KEYS[nRig]].solid;
             const hasWalkNeighbor = solid && (topWalk || botWalk || lefWalk || rigWalk);
 
+            if (drawGroundMaterial(ctx, tileKey, screenX, screenY, TILE_SIZE, tx, ty)) {
+                if (tileKey === 'SAND' && player.currentRegion !== 'desert') {
+                    ctx.fillStyle = '#33443233';
+                    ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                }
+                continue;
+            }
             if (tileKey === 'GRASS' || tileKey === 'GRASS_TALL') {
                 const isTall = tileKey === 'GRASS_TALL';
-                ctx.fillStyle = isTall ? '#58b038' : '#78c858';
+                ctx.fillStyle = isTall ? '#42653b' : '#55774b';
                 ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
-                ctx.fillStyle = isTall ? '#489830' : '#68b048';
+                ctx.fillStyle = isTall ? '#385b35' : '#4c6e44';
                 ctx.fillRect(screenX, screenY, TILE_SIZE - 2, TILE_SIZE - 2);
-                ctx.fillStyle = isTall ? '#58b038' : '#78c858';
+                ctx.fillStyle = isTall ? '#42653b' : '#55774b';
                 ctx.fillRect(screenX + 2, screenY + 2, TILE_SIZE - 4, TILE_SIZE - 4);
                 ctx.fillStyle = isTall ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0.07)';
                 for (let i = 0; i < 4; i++) {
@@ -100,13 +108,13 @@ function drawTerrain() {
                 const allWater = topWater && botWater && lefWater && rigWater;
 
                 // Core water color fills the whole tile
-                const coreColor = isDeep ? '#185888' : '#2878b8';
+                const coreColor = isDeep ? '#1b3d55' : '#2c6370';
                 ctx.fillStyle = coreColor;
                 ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
 
                 // Only draw darker edges where water meets land
                 if (!allWater) {
-                    const edgeColor = isDeep ? '#0d3868' : '#185898';
+                    const edgeColor = isDeep ? '#102b40' : '#1c4855';
                     ctx.fillStyle = edgeColor;
                     if (!topWater) ctx.fillRect(screenX, screenY, TILE_SIZE, 3);
                     if (!botWater) ctx.fillRect(screenX, screenY + TILE_SIZE - 3, TILE_SIZE, 3);
@@ -116,9 +124,13 @@ function drawTerrain() {
 
                 // Water shimmer
                 const shimmer = Math.sin(time * 3 + tx * 0.5 + ty * 0.5) * 0.5 + 0.5;
-                ctx.fillStyle = `rgba(255,255,255,${0.06 + shimmer * 0.08})`;
-                ctx.fillRect(screenX + 4, screenY + 8, TILE_SIZE - 8, 2);
-                ctx.fillRect(screenX + 6, screenY + 18, TILE_SIZE - 12, 2);
+                ctx.strokeStyle = `rgba(201,235,224,${0.06 + shimmer * 0.06})`;
+                ctx.lineWidth = 1;
+                const rippleY = screenY + 8 + (seed % 11);
+                ctx.beginPath();
+                ctx.moveTo(screenX + 5, rippleY);
+                ctx.quadraticCurveTo(screenX + 16, rippleY + 3, screenX + 27, rippleY);
+                ctx.stroke();
 
                 // Shoreline foam edges
                 if (hasWalkNeighbor) {
@@ -154,8 +166,17 @@ function drawTerrain() {
                 }
             } else if (tileKey === 'TREE') {
                 // Grass base
-                ctx.fillStyle = '#78c858';
+                ctx.fillStyle = '#55774b';
                 ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                drawGroundMaterial(
+                    ctx,
+                    player.currentRegion === 'desert' ? 'SAND' : 'GRASS',
+                    screenX,
+                    screenY,
+                    TILE_SIZE,
+                    tx,
+                    ty,
+                );
                 const tcx = screenX + 16;
                 const sway = (seed % 5) - 2; // -2..2px crown variation per tile
 
@@ -222,8 +243,17 @@ function drawTerrain() {
                 ctx.arc(tcx + 4 + sway, screenY + 9, 1.4, 0, Math.PI * 2);
                 ctx.fill();
             } else if (tileKey === 'BUSH') {
-                ctx.fillStyle = '#78c858';
+                ctx.fillStyle = '#55774b';
                 ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                drawGroundMaterial(
+                    ctx,
+                    player.currentRegion === 'desert' ? 'SAND' : 'GRASS',
+                    screenX,
+                    screenY,
+                    TILE_SIZE,
+                    tx,
+                    ty,
+                );
                 // Shadow
                 ctx.fillStyle = 'rgba(0,0,0,0.2)';
                 ctx.beginPath();
@@ -244,8 +274,17 @@ function drawTerrain() {
                 ctx.arc(screenX + 13, screenY + 13, 7, 0, Math.PI * 2);
                 ctx.fill();
             } else if (tileKey === 'ROCK') {
-                ctx.fillStyle = '#78c858';
+                ctx.fillStyle = '#55774b';
                 ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                drawGroundMaterial(
+                    ctx,
+                    player.currentRegion === 'desert' ? 'SAND' : 'GRASS',
+                    screenX,
+                    screenY,
+                    TILE_SIZE,
+                    tx,
+                    ty,
+                );
                 // Shadow
                 ctx.fillStyle = 'rgba(0,0,0,0.25)';
                 const rx = screenX + 8 + (seed % 8);
@@ -269,9 +308,18 @@ function drawTerrain() {
                 ctx.arc(rx - 2, ry - 2, rr * 0.45, 0, Math.PI * 2);
                 ctx.fill();
             } else if (tileKey === 'FLOWER') {
-                ctx.fillStyle = '#78c858';
+                ctx.fillStyle = '#55774b';
                 ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
-                ctx.fillStyle = '#58b038';
+                drawGroundMaterial(
+                    ctx,
+                    player.currentRegion === 'desert' ? 'SAND' : 'GRASS',
+                    screenX,
+                    screenY,
+                    TILE_SIZE,
+                    tx,
+                    ty,
+                );
+                ctx.fillStyle = '#42653b';
                 ctx.fillRect(screenX + 14, screenY + 18, 2, 10);
                 ctx.fillStyle = '#e85078';
                 ctx.beginPath();

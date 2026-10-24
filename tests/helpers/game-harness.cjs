@@ -5,6 +5,7 @@ const path = require('node:path');
 // Link the actual page modules, with deterministic browser timers.
 async function loadGame({
     coarsePointer = false,
+    reducedMotion = false,
     innerHeight = 960,
     storage = new Map(),
     vibrate,
@@ -28,14 +29,16 @@ async function loadGame({
     const context2d = new Proxy(
         {},
         {
-            get: (_, name) =>
-                name === 'clearRect'
-                    ? () => {
-                          drawCount++;
-                      }
-                    : name === 'createRadialGradient' || name === 'createLinearGradient'
-                      ? () => ({ addColorStop() {} })
-                      : () => {},
+            get: (target, name) =>
+                Object.hasOwn(target, name)
+                    ? target[name]
+                    : name === 'clearRect'
+                      ? () => {
+                            drawCount++;
+                        }
+                      : name === 'createRadialGradient' || name === 'createLinearGradient'
+                        ? () => ({ addColorStop() {} })
+                        : () => {},
         },
     );
     function element() {
@@ -100,7 +103,9 @@ async function loadGame({
                 setItem: (key, value) => storage.set(key, value),
             },
             innerHeight,
-            matchMedia: () => ({ matches: coarsePointer }),
+            matchMedia: (query) => ({
+                matches: query.includes('prefers-reduced-motion') ? reducedMotion : coarsePointer,
+            }),
             addEventListener: (name, cb) => {
                 addListener(listeners, name, cb);
             },

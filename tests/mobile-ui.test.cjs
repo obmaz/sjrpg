@@ -100,3 +100,21 @@ test('inventory summary and capacity follow equipping and discarding weapons', a
     assert.equal(elements.get('inventoryCount').textContent, '0/12');
     assert.match(elements.get('equippedSummary').innerHTML, /롱소드/);
 });
+
+test('attack cooldown ring recovers without cancelling a held continuous attack', async () => {
+    const { run, elements } = await loadGame({ coarsePointer: true });
+    run('initializeTouchControls();');
+    const attack = elements.get('touchAttack');
+    attack.dispatchEvent({ type: 'pointerdown', pointerId: 7, button: 0, preventDefault() {} });
+    run('attackWithWeapon(); updateTouchControls();');
+    assert.equal(elements.get('touchAttackRing').style.strokeDashoffset, '100');
+    assert.equal(run('isKeyDown("Space")'), true);
+    assert.notEqual(attack.disabled, true);
+    run('player.attackTimer=player.lastAttackCooldown/2; updateTouchControls();');
+    assert.equal(elements.get('touchAttackRing').style.strokeDashoffset, '50');
+    assert.equal(run('isKeyDown("Space")'), true);
+    run('player.attackTimer=0; updateTouchControls();');
+    assert.equal(elements.get('touchAttackRing').style.strokeDashoffset, '0');
+    attack.dispatchEvent({ type: 'pointerup', pointerId: 7 });
+    assert.equal(run('isKeyDown("Space")'), false);
+});
