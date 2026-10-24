@@ -2111,8 +2111,8 @@ body {
         display: flex;
         flex-direction: column;
         height: auto;
-        padding: calc(8px + env(safe-area-inset-top, 0px)) 62px 0
-            max(10px, env(safe-area-inset-left, 0px));
+        padding: calc(8px + env(safe-area-inset-top, 0px))
+            max(10px, env(safe-area-inset-right, 0px)) 0 max(10px, env(safe-area-inset-left, 0px));
         gap: 5px;
         background: linear-gradient(#0a251bec, #102f20c9 75%, transparent);
     }
@@ -2262,30 +2262,6 @@ body {
         color: #e8d5a0;
         font: inherit;
         cursor: pointer;
-    }
-    #touchControls .screen-button {
-        position: absolute;
-        top: calc(10px + env(safe-area-inset-top, 0px));
-        right: max(10px, env(safe-area-inset-right, 0px));
-        width: 42px;
-        height: 42px;
-        display: grid;
-        place-items: center;
-        padding: 0;
-        border: 1px solid #bba363;
-        border-radius: 9px;
-        background: linear-gradient(#3d5333, #1c3928);
-        box-shadow:
-            inset 0 1px #dfd49b40,
-            inset 0 -3px #112519,
-            0 3px 5px #0005;
-    }
-    .screen-button .control-caption {
-        display: none;
-    }
-    .screen-button .ui-icon {
-        width: 21px;
-        height: 21px;
     }
     .touch-menu {
         position: absolute;
@@ -2819,7 +2795,7 @@ body {
     }
     #hudTop {
         padding-left: 8px;
-        padding-right: 56px;
+        padding-right: max(8px, env(safe-area-inset-right, 0px));
     }
     #charPortrait {
         width: 38px;
@@ -2836,10 +2812,6 @@ body {
     #hpSub #timeDisplay,
     #hpSub #stageInfo {
         font-size: 12px;
-    }
-    #touchControls .screen-button {
-        width: 38px;
-        height: 42px;
     }
     .touch-items {
         bottom: calc(var(--control-bottom) + 127px);
@@ -2867,7 +2839,7 @@ body {
         position: absolute;
         left: 350px;
         top: 12px;
-        width: min(280px, calc(100vw - 430px));
+        width: min(280px, calc(100vw - 350px - max(10px, env(safe-area-inset-right, 0px))));
         padding: 0;
     }
     .touch-menu {

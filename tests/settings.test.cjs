@@ -13,15 +13,38 @@ test('fullscreen requests cannot overlap and controls recover after completion o
     const second = run('toggleFullscreen();');
     assert.equal(run('requestCount'), 1);
     assert.equal(elements.get('settingsFullscreen').disabled, true);
-    assert.equal(elements.get('fullscreenButton').disabled, true);
     run('document.fullscreenElement=document.documentElement; finishFullscreen();');
     await Promise.all([first, second]);
     assert.equal(elements.get('settingsFullscreen').disabled, false);
-    assert.equal(elements.get('fullscreenButton').disabled, false);
     assert.match(elements.get('settingsFullscreen').textContent, /나가기/);
     run('document.exitFullscreen=()=>Promise.reject(new Error("denied"));');
     await run('toggleFullscreen();');
     assert.equal(elements.get('settingsFullscreen').disabled, false);
+    assert.equal(run('session.settingsOpen && session.gamePaused'), true);
+});
+
+test('the settings button enters and exits fullscreen while keeping the game paused', async () => {
+    const { run, elements } = await loadGame({ coarsePointer: true });
+    run(`initializeSettings(); toggleSettings();
+        document.documentElement.requestFullscreen=()=>{
+            document.fullscreenElement=document.documentElement;
+            return Promise.resolve();
+        };
+        document.exitFullscreen=()=>{
+            document.fullscreenElement=null;
+            return Promise.resolve();
+        };`);
+    const button = elements.get('settingsFullscreen');
+    button.dispatchEvent({ type: 'click' });
+    await run('Promise.resolve();');
+    assert.equal(run('document.fullscreenElement === document.documentElement'), true);
+    assert.equal(button.disabled, false);
+    assert.equal(button.textContent, '전체화면 나가기');
+    button.dispatchEvent({ type: 'click' });
+    await run('Promise.resolve();');
+    assert.equal(run('document.fullscreenElement'), null);
+    assert.equal(button.disabled, false);
+    assert.equal(button.textContent, '전체화면으로 전환');
     assert.equal(run('session.settingsOpen && session.gamePaused'), true);
 });
 

@@ -26,15 +26,10 @@ function refreshSettings() {
               : '꺼짐';
     }
     const fullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
-    for (const id of ['settingsFullscreen', 'fullscreenButton'])
-        document.getElementById(id).disabled = fullscreenPending;
+    document.getElementById('settingsFullscreen').disabled = fullscreenPending;
     document.getElementById('settingsFullscreen').textContent = fullscreen
         ? '전체화면 나가기'
         : '전체화면으로 전환';
-    document
-        .getElementById('fullscreenButton')
-        .setAttribute('aria-label', fullscreen ? '전체화면 나가기' : '전체화면');
-    document.getElementById('fullscreenButton').setAttribute('aria-pressed', String(fullscreen));
 }
 
 function toggleSettings() {
@@ -93,8 +88,7 @@ function initializeSettings() {
     document.getElementById('closeSettings').addEventListener('click', closeSettings);
     document.getElementById('resumeGame').addEventListener('click', closeSettings);
     document.getElementById('desktopSettings').addEventListener('click', toggleSettings);
-    for (const id of ['fullscreenButton', 'settingsFullscreen'])
-        document.getElementById(id).addEventListener('click', toggleFullscreen);
+    document.getElementById('settingsFullscreen').addEventListener('click', toggleFullscreen);
     for (const [id, name] of [
         ['vibrationToggle', 'vibration'],
         ['musicToggle', 'music'],
