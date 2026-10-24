@@ -95,9 +95,19 @@ function dismountPlayer() {
         }
     }
     if (!found) {
-        // Last resort: teleport to fountain (FOUNTAIN_CENTER_X/CY are already in pixels)
-        ox = FOUNTAIN_CENTER_X;
-        oy = FOUNTAIN_CENTER_Y;
+        // The painted fountain itself is solid; use the walkable arrival path.
+        const fallback = findNearbySpawnPosition(
+            FOUNTAIN_CENTER_X,
+            FOUNTAIN_CENTER_Y + (player.currentRegion === 'forest' ? 175 : 0),
+            player.w,
+            player.h,
+        );
+        if (!fallback) {
+            addMessage('물가에 더 가까이 가서 내려주세요.', 'info');
+            return;
+        }
+        ox = fallback.x;
+        oy = fallback.y;
         addMessage('⚠️ 내릴 곳이 없어 분수로 이동합니다.', 'info');
     }
     player.x = ox;

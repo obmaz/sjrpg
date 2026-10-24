@@ -1,6 +1,9 @@
 // A* is independent of game state. Callers supply body-aware walkability,
 // edge clearance, goal and heuristic functions.
-export function findGridPath(start, { width, height, isWalkable, canStep, isGoal, heuristic }) {
+export function findGridPath(
+    start,
+    { width, height, isWalkable, canStep, isGoal, heuristic, maxVisited = Infinity },
+) {
     const size = width * height;
     const costs = new Float64Array(size).fill(Infinity);
     const parents = new Int32Array(size).fill(-1);
@@ -44,11 +47,13 @@ export function findGridPath(start, { width, height, isWalkable, canStep, isGoal
         return null;
     costs[index(start.x, start.y)] = 0;
     push({ ...start, score: heuristic(start.x, start.y) });
-    while (heap.length) {
+    let visited = 0;
+    while (heap.length && visited < maxVisited) {
         const current = pop();
         const key = index(current.x, current.y);
         if (closed[key]) continue;
         closed[key] = 1;
+        visited++;
         if (isGoal(current.x, current.y)) {
             const result = [];
             for (let cursor = key; parents[cursor] !== -1; cursor = parents[cursor])

@@ -65,12 +65,24 @@ function updateEnemies(deltaTime) {
         const ey = enemy.y + enemy.h / 2;
         const distanceToPlayer = distance(ex, ey, px, py);
 
+        // Distant actors keep status timers but do not wander, collide or pathfind offscreen.
+        // Poison above still resolves everywhere; no rewards or boss state are discarded.
+        if (
+            distanceToPlayer > 1200 &&
+            enemy.state !== 'hurt' &&
+            !enemy.knockbackX &&
+            !enemy.knockbackY
+        ) {
+            enemy.moving = false;
+            continue;
+        }
+
         // State transitions
         if (enemy.state === 'hurt' && enemy.stateTimer <= 0) {
             enemy.state = 'chase';
         }
 
-        const aggroRange = enemy.megaBoss ? 500 : enemy.isBoss ? 350 : enemy.trailGuard ? 320 : 180;
+        const aggroRange = enemy.megaBoss ? 500 : enemy.isBoss ? 350 : enemy.trailGuard ? 520 : 180;
         const meleeReach = enemy.megaBoss ? 40 : enemy.isBoss ? 20 : 16;
         const distanceToPlayerBody = distanceBetweenRectangles(enemy, player);
         const rangedRange = enemy.ranged ? 200 : 0;
@@ -251,7 +263,7 @@ function updateEnemies(deltaTime) {
         enemy.y = Math.max(0, Math.min(MAP_HEIGHT * TILE_SIZE - enemy.h, enemy.y));
 
         // Boss: terrain destruction
-        if (enemy.destroyTerrain && enemy.hp > 0 && session.chunkMap !== session.tileMap) {
+        if (enemy.destroyTerrain && enemy.hp > 0 && session.landscapeMap !== session.tileMap) {
             const tileX = Math.floor(enemy.x / TILE_SIZE);
             const tileY = Math.floor(enemy.y / TILE_SIZE);
             for (let dy = -1; dy <= 1; dy++) {

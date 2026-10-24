@@ -927,47 +927,45 @@ test('only explicit flying or phasing abilities permit obstacle passage', async 
     }
 });
 
-test('large painted chunks repeat for a seed, vary by seed and keep their four body-wide ports open', async () => {
+test('continuous landscapes repeat by seed, provide large natural spaces and keep all drawn roads body-wide', async () => {
     const { run } = await loadGame();
     run(
-        'generateForestMap(123);const firstChunkMap=JSON.stringify(tileMap);generateForestMap(123);',
+        'generateForestMap(123);const firstLandscapeMap=JSON.stringify(tileMap);generateForestMap(123);',
     );
-    assert.equal(run('JSON.stringify(tileMap)===firstChunkMap'), true);
+    assert.equal(run('JSON.stringify(tileMap)===firstLandscapeMap'), true);
     run('generateForestMap(456);');
-    assert.equal(run('JSON.stringify(tileMap)===firstChunkMap'), false);
-    for (const region of ['forest', 'desert'])
-        for (let variant = 0; variant < 8; variant++) {
-            for (const [u, v] of [
-                [0.5, 0.025],
-                [0.5, 0.975],
-                [0.025, 0.5],
-                [0.975, 0.5],
-            ])
-                assert.ok(
-                    ['DIRT', 'SAND'].includes(run(`chunkTile(${variant},${u},${v},'${region}')`)),
-                );
-        }
+    assert.equal(run('JSON.stringify(tileMap)===firstLandscapeMap'), false);
     for (const region of ['forest', 'desert']) {
         run(
             `clearWorldEntities();player.currentRegion='${region}';${region === 'forest' ? 'generateForestMap' : 'generateDesertMap'}(12345);`,
         );
-        for (const x of [640, 1920])
-            for (const y of [384, 1024, 1664]) {
-                run(
-                    `var targetPosition=findNearbySpawnPosition(FOUNTAIN_CENTER_X+${x}-1280-12,FOUNTAIN_CENTER_Y+${y}-960-14,24,28);`,
-                );
-                assert.equal(
-                    run(
-                        '!!targetPosition && isReachableFromArrival(targetPosition.x,targetPosition.y,24,28)',
-                    ),
-                    true,
-                    `${region} ${x},${y}`,
-                );
-            }
+        assert.ok(run("tileMap.flat().filter(t=>TILE_KEYS[t]==='WATER').length") > 900, region);
+        assert.ok(
+            run('tileMap.flat().filter(t=>!TILE_TYPES[TILE_KEYS[t]].solid).length') > 28000,
+            region,
+        );
+        assert.ok(
+            run('session.landscape.lakes[0].bounds.right-session.landscape.lakes[0].bounds.left') >
+                1000,
+        );
+        assert.equal(
+            run(
+                `session.landscape.roads.every(road=>road.points.every(([x,y])=>!collidesWithMap(x-12,y-14,24,28)))`,
+            ),
+            true,
+            region,
+        );
+        assert.equal(
+            run(
+                `session.landscape.props.some(p=>session.landscape.roads.some(r=>roadDistance(p.x+p.w/2,p.y+p.h/2,r)<r.width/2+40))`,
+            ),
+            false,
+            region,
+        );
     }
 });
 
-test('outer forest and desert chunks sustain capped encounters on valid ground', async () => {
+test('outer forest and desert landscapes sustain capped encounters on valid ground', async () => {
     const { run } = await loadGame();
     for (const region of ['forest', 'desert']) {
         run(`clearWorldEntities();player.currentRegion='${region}';${region === 'forest' ? 'generateForestMap' : 'generateDesertMap'}(12345);
@@ -1010,22 +1008,45 @@ test('world dimensions expand threefold on both axes while the village remains c
     }
 });
 
-test('large scene variants offer distinct connected path layouts and repeatable mirrored appearances', async () => {
+test('roaming packs replenish far from the village after old packs fill the cap', async () => {
     const { run } = await loadGame();
-    for (const region of ['forest', 'desert'])
-        for (let variant = 0; variant < 8; variant++) {
-            run(
-                `var mask=chunkMask(${variant},'${region}');var paths=mask.flat().filter(t=>!TILE_TYPES[TILE_KEYS[t]].solid).length;`,
-            );
-            assert.ok(run('paths') > 60, `${region} ${variant}`);
-        }
-    run(
-        'var sceneLooks=new Set();var kinds=new Set();for(let y=-3;y<6;y++)for(let x=-3;x<8;x++){const look=chunkAppearance(77,x,y);sceneLooks.add(JSON.stringify(look));kinds.add(look.variant);}',
-    );
-    assert.equal(run('kinds.size'), 8);
-    assert.ok(run('sceneLooks.size') > 20);
+    run(`clearWorldEntities();generateForestMap(11);session.trailEncountersEnabled=true;
+        player.x=FOUNTAIN_CENTER_X;player.y=FOUNTAIN_CENTER_Y+175;
+        for(let i=0;i<40;i++)enemies.push({x:player.x,y:player.y+400,w:24,h:24,hp:100,trailGuard:i<20});
+        const remote=findNearbySpawnPosition(6800,4700,24,28);Object.assign(player,remote);
+        updateTrailEncounters(.1);`);
+    assert.ok(run('enemies.length') > 0);
+    assert.ok(run('enemies.length') <= 3);
     assert.equal(
-        run('JSON.stringify(chunkAppearance(77,3,2))===JSON.stringify(chunkAppearance(77,3,2))'),
+        run(
+            'enemies.every(e=>Math.hypot(e.x-player.x,e.y-player.y)<620 && !collidesWithMap(e.x,e.y,e.w,e.h))',
+        ),
         true,
     );
+});
+
+test('distant actors stop pathfinding while poison and status timers continue', async () => {
+    const { run } = await loadGame();
+    run(`clearWorldEntities();tileMap=Array.from({length:MAP_HEIGHT},()=>Array(MAP_WIDTH).fill(TILE_KEYS.indexOf('GRASS')));
+        player.x=FOUNTAIN_CENTER_X;player.y=FOUNTAIN_CENTER_Y;
+        const sleeper=spawnEnemy(ENEMY_TYPES[0],500,500);
+        sleeper.enemyPoison={remaining:2,tick:.05,interval:1,damage:1};
+        sleeper.frozen=.1;const sleepingX=sleeper.x;const sleepingHP=sleeper.hp;
+        updateEnemies(.1);updateEnemies(.1);`);
+    assert.equal(run('sleeper.x'), run('sleepingX'));
+    assert.equal(run('!!sleeper.navigation'), false);
+    assert.equal(run('sleeper.hp'), run('sleepingHP-1'));
+    assert.ok(run('sleeper.enemyPoison.remaining') < 2);
+    assert.ok(run('sleeper.frozen') <= 0);
+});
+
+test('dismounting in the middle of a natural lake returns to a clear arrival path', async () => {
+    const { run } = await loadGame();
+    run(`clearWorldEntities();generateForestMap(12345);player.x=5750;player.y=1700;
+        const boat=spawnMount(MOUNT_TYPES.find(m=>m.waterOnly),player.x,player.y);
+        player.mount=mounts.pop();dismountPlayer();`);
+    assert.equal(run('player.mount'), null);
+    assert.equal(run('collidesWithMap(player.x,player.y,player.w,player.h)'), false);
+    assert.equal(run('mounts[0].x'), 5750);
+    assert.equal(run('mounts[0].y'), 1700);
 });

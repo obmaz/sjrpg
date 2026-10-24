@@ -81,3 +81,12 @@ test('module evaluation keeps game state and functions out of the browser global
     const { productionGlobalLeaks } = await loadGame();
     assert.deepEqual(productionGlobalLeaks, []);
 });
+
+test('path search work is bounded for an unreachable target in the large world', async () => {
+    const { run } = await loadGame();
+    run(`let examined=0;
+        const limited=findGridPath({x:10,y:10},{width:240,height:180,isWalkable:()=>true,canStep:()=>true,
+            isGoal:()=>{examined++;return false;},heuristic:()=>0,maxVisited:512});`);
+    assert.equal(run('limited'), null);
+    assert.equal(run('examined'), 512);
+});

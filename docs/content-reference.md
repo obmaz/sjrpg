@@ -40,9 +40,7 @@
 
 ## 아트
 
-`assets/chunks-forest-paths.webp`·`assets/chunks-desert-paths.webp`는 굽은 길·원형 제단길·대각선 다리·정원 안뜰을 위해 새로 생성한 배경 시트입니다. 기존 네 종류와 합쳐 지역마다 여덟 종류를 사용하며 좌우 반전·조명은 런타임에서 적용합니다.
-
-`assets/chunks-forest.webp`와 `assets/chunks-desert.webp`는 시작 마을의 그림 스타일을 확장해 생성한 2×2 환경 시트입니다. 각 셀은 중앙 전투 공간과 네 방향 출입로가 있는 큰 숲길·호수·유적·꽃숲 또는 사막 길·오아시스·신전·협곡입니다. 인물·UI·몬스터는 포함하지 않습니다.
+`assets/landscape-materials.webp`는 연속 초원·숲 이끼·사구·자갈 평원·청록 물·흙길을 위해 생성한 3×2 바닥 재질 시트입니다. `assets/landscape-bridge.webp`는 같은 그림체로 생성한 투명 가로 목교입니다. 지형 윤곽·길·수역과 충돌은 코드의 공통 데이터로 구성하며, 생성 그림에 인물·UI·가짜 길을 포함하지 않습니다.
 
 `assets/actors-hero.webp`, `actors-hero-attack.webp`, `actors-creatures-a.webp`~`actors-creatures-d.webp`, `actors-villagers.webp`, `actors-vehicles.webp`는 같은 그림체로 새로 생성한 방향·걷기·검 공격 시트입니다. 주인공은 기존 청록 모험가 그림을 참조해 16방향으로 만들었으며 모든 이동 적·보스·주민·탈것에는 기본 8방향을 연결합니다.
 

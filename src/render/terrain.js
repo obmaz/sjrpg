@@ -9,7 +9,7 @@ import {
     TILE_TYPES,
 } from '../core/constants.js';
 import { distance } from '../core/helpers.js';
-import { drawWorldChunks } from './world-chunks.js';
+import { drawLandscape } from './landscape.js';
 import { inVillage } from '../data/village.js';
 import { villageArtReady, drawVillage } from './village.js';
 import { player, portals } from '../core/state.js';
@@ -27,7 +27,7 @@ import {
 //  TERRAIN RENDERING
 // ============================================================
 function drawTerrain() {
-    if (drawWorldChunks(ctx, camera, canvas)) {
+    if (drawLandscape(ctx, camera, canvas)) {
         drawVillage(ctx, camera);
         return;
     }

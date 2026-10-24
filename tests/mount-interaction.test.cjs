@@ -79,10 +79,25 @@ test('mount direction follows movement, survives stopping and is kept when dismo
             assert.equal(run('player.mount.dir'), direction, id);
             assert.equal(run(`getMountArtFrame('${id}',player.dir)[1]%4`), direction, id);
         }
+        if (id === 'boat')
+            run(
+                `for(let y=12;y<17;y++)for(let x=14;x<19;x++)tileMap[y][x]=TILE_KEYS.indexOf('SAND');`,
+            );
         run('dismountPlayer();');
         assert.equal(run('player.mount'), null, id);
         assert.equal(run('mounts[0].dir'), 3, id);
         run('player.x=mounts[0].x;player.y=mounts[0].y;player.dir=0;boardMount(mounts[0]);');
         assert.equal(run('player.dir'), 3, id);
     }
+});
+
+test('dismount stays aboard when neither nearby shore nor a valid arrival exists', async () => {
+    const { run } = await loadGame();
+    run(`clearWorldEntities();tileMap=Array.from({length:MAP_HEIGHT},()=>Array(MAP_WIDTH).fill(TILE_KEYS.indexOf('WATER')));
+        player.x=400;player.y=400;const stranded=spawnMount(MOUNT_TYPES.find(m=>m.id==='boat'),400,400);
+        boardMount(stranded);dismountPlayer();`);
+    assert.equal(run('player.mount===stranded'), true);
+    assert.equal(run('mounts.length'), 0);
+    assert.equal(run('player.x'), 400);
+    assert.equal(run('player.y'), 400);
 });

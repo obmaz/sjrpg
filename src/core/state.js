@@ -2,9 +2,9 @@ import { GAME_DURATION_SECONDS, MAP_HEIGHT, MAP_WIDTH, TILE_SIZE } from './const
 import { WEAPONS } from '../data/weapons.js';
 const session = {
     terrainRevision: 0,
-    chunkMap: null,
-    chunkSeed: 0,
-    chunkRegion: null,
+    landscapeMap: null,
+    landscape: null,
+    trailEncounterAnchor: null,
     trailEncounterTimer: 0,
     trailEncountersEnabled: false,
     gamePaused: false,

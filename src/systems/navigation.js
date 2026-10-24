@@ -44,7 +44,7 @@ export function isReachableFromArrival(x, y, width, height) {
         let sx = Math.floor(FOUNTAIN_CENTER_X / TILE_SIZE),
             sy = Math.floor(
                 (FOUNTAIN_CENTER_Y +
-                    (player.currentRegion === 'forest' && session.chunkMap === session.tileMap
+                    (player.currentRegion === 'forest' && session.landscapeMap === session.tileMap
                         ? 175
                         : 0)) /
                     TILE_SIZE,
@@ -163,6 +163,12 @@ export function getNavigationWaypoint(enemy, targetX, targetY, deltaTime, reach 
         enemy.navigation = null;
         return target;
     }
+    // A wander point inside a tree or lake is not a useful goal. Do not exhaust
+    // the whole world searching for an impossible exact destination.
+    if (reach === 0 && !canStand(enemy, target.x, target.y)) {
+        enemy.navigation = null;
+        return null;
+    }
     const goalX = Math.floor(targetX / TILE_SIZE),
         goalY = Math.floor(targetY / TILE_SIZE);
     const point = (x, y) => ({
@@ -217,6 +223,7 @@ export function getNavigationWaypoint(enemy, targetX, targetY, deltaTime, reach 
         const start = candidates[0];
         const path = start
             ? findGridPath(start, {
+                  maxVisited: enemy.state === 'wander' ? 512 : 4096,
                   width: MAP_WIDTH,
                   height: MAP_HEIGHT,
                   isWalkable,
@@ -231,7 +238,13 @@ export function getNavigationWaypoint(enemy, targetX, targetY, deltaTime, reach 
         // for slow enemies that take more than 0.5 seconds to cross a tile).
         if (path && (!points.length || !canTraverseTerrain(enemy, from, points[0])))
             points.unshift(point(start.x, start.y));
-        route = enemy.navigation = { goalX, goalY, map: session.tileMap, remaining: 0.5, points };
+        route = enemy.navigation = {
+            goalX,
+            goalY,
+            map: session.tileMap,
+            remaining: points.length ? 0.7 : 1.8,
+            points,
+        };
     }
     while (
         route.points.length &&
