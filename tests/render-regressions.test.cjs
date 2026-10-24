@@ -96,7 +96,7 @@ test('unchanged HUD output skips content, style and class mutations', async () =
     assert.equal(mutations, 0);
     run('player.gold++; updateHud();');
     assert.equal(mutations, 1);
-    assert.equal(elements.get('goldDisplay').textContent, '💰 1');
+    assert.equal(elements.get('goldDisplay').textContent, '1');
 });
 
 test('HUD can restore the same auxiliary weapon after showing an empty slot', async () => {
@@ -147,19 +147,26 @@ test('enemy labels stay quiet until combat while bosses always identify themselv
 
 test('depth sorting and world framing never reorder enemies or mutate combat state', async () => {
     const { run } = await loadGame();
-    run(`enemies.length=0; camera.x=0; camera.y=0;
+    run(`enemies.length=0; npcs.length=0; camera.x=0; camera.y=0;
         player.x=100; player.y=100; player.hp=20;
         const actorTemplate={x:100,w:24,h:24,hp:20,maxHp:20,
             state:'attack',hurtTimer:0,frozen:0,animTimer:0,color:'#789'};
         enemies.push({...actorTemplate,y:150,name:'앞'}, {...actorTemplate,y:50,name:'뒤'});
+        npcs.push({x:150,y:75,w:24,h:28,name:'주민',icon:'NPC_DEPTH',quests:[]});
         const actorLabels=[]; ctx.fillText=text=>actorLabels.push(text);
         Math.random=()=>{throw new Error('render consumed gameplay randomness')};`);
-    const before = run('JSON.stringify({player,enemies,floatingTexts,particles})');
+    const before = run(
+        'JSON.stringify({player,enemies,npcs,chests,mounts,floatingTexts,particles})',
+    );
     run('draw();');
-    assert.ok(run('actorLabels.indexOf("뒤") < actorLabels.indexOf("앞")'));
+    assert.ok(run('actorLabels.indexOf("뒤") < actorLabels.indexOf("NPC_DEPTH")'));
+    assert.ok(run('actorLabels.indexOf("NPC_DEPTH") < actorLabels.indexOf("앞")'));
     for (const paused of [true, false]) {
         run(`session.gamePaused=${paused}; for(let i=0;i<5;i++) draw();`);
-        assert.equal(run('JSON.stringify({player,enemies,floatingTexts,particles})'), before);
+        assert.equal(
+            run('JSON.stringify({player,enemies,npcs,chests,mounts,floatingTexts,particles})'),
+            before,
+        );
     }
 });
 
@@ -177,4 +184,19 @@ test('reduced motion removes damage number scaling without changing the event', 
         assert.equal(run('floatingTexts[0].life'), 1);
         assert.equal(run('floatingTexts[0].text'), '-12');
     }
+});
+
+test('painted hero portrait preserves chosen appearance and low-health feedback', async () => {
+    const { run, elements } = await loadGame();
+    run('updateHud();');
+    const face = elements.get('portraitFace');
+    assert.equal(face.classList.contains('painted-portrait'), true);
+    run("player.playerFace='😎'; updateHud();");
+    assert.equal(face.classList.contains('painted-portrait'), false);
+    assert.equal(face.textContent, '😎');
+    run("player.playerFace='😊'; player.hp=10; updateHud();");
+    assert.equal(face.classList.contains('painted-portrait'), false);
+    assert.equal(face.textContent, '🤕');
+    run('player.hp=100; updateHud();');
+    assert.equal(face.classList.contains('painted-portrait'), true);
 });

@@ -55,14 +55,20 @@ function updateHud() {
     setClass(portrait, 'warning', hpRatio >= 0.2 && hpRatio < 0.4);
     setClass(hudTop, 'danger', hpRatio < 0.2);
     setText('portraitFace', hpRatio < 0.2 ? '🤕' : hpRatio < 0.4 ? '😰' : player.playerFace);
+    setClass(
+        getHudElement('portraitFace'),
+        'painted-portrait',
+        hpRatio >= 0.4 && player.playerFace === '😊',
+    );
 
-    setText('goldDisplay', `💰 ${player.gold}`);
+    setText('goldDisplay', String(player.gold));
+    setValue(getHudElement('goldDisplay'), 'ariaLabel', `골드 ${player.gold}`);
     const minutes = Math.floor(player.gameTime / 60);
     const seconds = Math.floor(player.gameTime % 60);
     const timeDisplay = getHudElement('timeDisplay');
     const timeColor =
         player.gameTime < 60 ? '#ff4444' : player.gameTime < 180 ? '#ffaa44' : '#ff8866';
-    setValue(timeDisplay, 'textContent', `⏱ ${minutes}:${seconds.toString().padStart(2, '0')}`);
+    setValue(timeDisplay, 'textContent', `${minutes}:${seconds.toString().padStart(2, '0')}`);
     setValue(timeDisplay.style, 'color', timeColor);
 
     // Statuses can coexist: a speed boost must not hide ongoing poison damage.
@@ -79,6 +85,7 @@ function updateHud() {
     setValue(statusDisplay.style, 'color', player.poisonTimer > 0 ? '#88ff44' : '#ffff44');
     setValue(statusDisplay, 'textContent', statuses.join(' | '));
     setText('stageInfo', `Stage ${player.stage}`);
+    setText('heroLevel', String(player.stage));
 
     // Aux weapon display
     const auxiliaryWeapon = player.auxWeapon;

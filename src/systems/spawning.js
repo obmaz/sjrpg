@@ -272,7 +272,16 @@ function spawnForestNpcs() {
             quests: ['collect_gold', 'slay_boss', 'collect_riches', 'collect_1000gold'],
         },
     ];
-    for (const def of npcDefs) {
+    // The first quest giver is visible in the opening mobile view.
+    const sage = spawnNpc({
+        ...npcDefs[0],
+        x: FOUNTAIN_CENTER_X - 108,
+        y: FOUNTAIN_CENTER_Y - 78,
+        w: 24,
+        h: 28,
+    });
+    if (!sage) spawnQuestNpc(npcDefs[0], 100);
+    for (const def of npcDefs.slice(1)) {
         if (!spawnQuestNpc(def, 100)) continue;
     }
 
@@ -280,8 +289,8 @@ function spawnForestNpcs() {
     const fcx = Math.floor(MAP_WIDTH / 2);
     const fcy = Math.floor(MAP_HEIGHT / 2);
     spawnNpc({
-        x: (fcx + 8) * TILE_SIZE + TILE_SIZE / 2 - 32,
-        y: fcy * TILE_SIZE + TILE_SIZE / 2 - 32,
+        x: (fcx + 3) * TILE_SIZE + TILE_SIZE / 2 - 32,
+        y: (fcy - 2) * TILE_SIZE + TILE_SIZE / 2 - 32,
         w: 64,
         h: 64,
         icon: '🏪',

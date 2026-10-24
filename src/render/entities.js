@@ -3,16 +3,18 @@ import { distance, getAvailableQuests } from '../core/helpers.js';
 import { chests, npcs, player, scarecrows } from '../core/state.js';
 import { getFacingAngle } from '../systems/combat.js';
 import { drawArtToken } from './art.js';
+import { drawWorldSprite } from './world-art.js';
+import { enemyWorldArt } from '../data/art.js';
 import { getInteractionTarget } from '../systems/interactions.js';
 import { drawPlayerMarker } from './presentation.js';
 
 // ============================================================
 //  ENTITY RENDERING (enemies, player, NPCs, chests, pickups, mounts)
 // ============================================================
-function drawNpcs() {
+function drawNpcs(entities = npcs) {
     const target = getInteractionTarget();
     const touch = window.matchMedia('(pointer: coarse)').matches;
-    for (const npc of npcs) {
+    for (const npc of entities) {
         const sx = npc.x - camera.x,
             sy = npc.y - camera.y;
         // Glow effect for quest-givers
@@ -36,63 +38,87 @@ function drawNpcs() {
         ctx.ellipse(sx + npc.w / 2, sy + npc.h, npc.w / 2 + 2, 6, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // ── Draw human body shape ──
-        const isShopNPC = npc.isShop;
-        const bodySize = isShopNPC ? 1.6 : 1.0;
-        const bx = sx + npc.w / 2,
-            by = sy + npc.h / 2;
-        // Legs
-        ctx.fillStyle = '#4a3020';
-        ctx.fillRect(bx - 4 * bodySize, by + 2 * bodySize, 3 * bodySize, 7 * bodySize);
-        ctx.fillRect(bx + 1 * bodySize, by + 2 * bodySize, 3 * bodySize, 7 * bodySize);
-        // Body
-        ctx.fillStyle = isShopNPC ? '#886644' : '#5a4a8a';
-        ctx.beginPath();
-        ctx.roundRect(bx - 7 * bodySize, by - 2 * bodySize, 14 * bodySize, 10 * bodySize, 3);
-        ctx.fill();
-        // Arms
-        ctx.fillStyle = '#d8c098';
-        ctx.fillRect(bx - 10 * bodySize, by - 1 * bodySize, 4 * bodySize, 8 * bodySize);
-        ctx.fillRect(bx + 6 * bodySize, by - 1 * bodySize, 4 * bodySize, 8 * bodySize);
-        // Head
-        ctx.fillStyle = '#f0d8b0';
-        ctx.beginPath();
-        ctx.arc(bx, by - 5 * bodySize, 6 * bodySize, 0, Math.PI * 2);
-        ctx.fill();
+        const bx = sx + npc.w / 2;
+        const feetY = sy + npc.h;
+        const sprite = npc.isShop
+            ? player.currentRegion === 'desert'
+                ? 'desertShop'
+                : 'shop'
+            : npc.isDesertTraveler
+              ? 'traveler'
+              : npc.isStylist
+                ? 'stylist'
+                : npc.isSlotMachine
+                  ? 'merchant'
+                  : 'villager';
+        const painted = drawWorldSprite(
+            ctx,
+            sprite,
+            bx,
+            feetY,
+            npc.isShop ? 82 : 46,
+            npc.isShop ? 82 : 54,
+        );
+        if (!painted) {
+            // ── Draw human body shape ──
+            const isShopNPC = npc.isShop;
+            const bodySize = isShopNPC ? 1.6 : 1.0;
+            const bx = sx + npc.w / 2,
+                by = sy + npc.h / 2;
+            // Legs
+            ctx.fillStyle = '#4a3020';
+            ctx.fillRect(bx - 4 * bodySize, by + 2 * bodySize, 3 * bodySize, 7 * bodySize);
+            ctx.fillRect(bx + 1 * bodySize, by + 2 * bodySize, 3 * bodySize, 7 * bodySize);
+            // Body
+            ctx.fillStyle = isShopNPC ? '#886644' : '#5a4a8a';
+            ctx.beginPath();
+            ctx.roundRect(bx - 7 * bodySize, by - 2 * bodySize, 14 * bodySize, 10 * bodySize, 3);
+            ctx.fill();
+            // Arms
+            ctx.fillStyle = '#d8c098';
+            ctx.fillRect(bx - 10 * bodySize, by - 1 * bodySize, 4 * bodySize, 8 * bodySize);
+            ctx.fillRect(bx + 6 * bodySize, by - 1 * bodySize, 4 * bodySize, 8 * bodySize);
+            // Head
+            ctx.fillStyle = '#f0d8b0';
+            ctx.beginPath();
+            ctx.arc(bx, by - 5 * bodySize, 6 * bodySize, 0, Math.PI * 2);
+            ctx.fill();
 
-        // Face icon on head
-        ctx.font = `${bodySize * 18}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.fillText(npc.icon, bx, by - 5 * bodySize);
+            // Face icon on head
+            ctx.font = `${bodySize * 18}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillText(npc.icon, bx, by - 5 * bodySize);
+        }
+        const badgeY = feetY - (npc.isShop ? 82 : 54) * 0.8 - 10;
         // Quest indicator
         if (hasQuest) {
             ctx.fillStyle = '#ffd700';
             ctx.font = 'bold 14px sans-serif';
-            ctx.fillText('❗', sx + npc.w / 2, sy - 4);
+            ctx.fillText('❗', sx + npc.w / 2, badgeY);
         }
         // Shop indicator
         if (npc.isShop) {
             ctx.fillStyle = '#ffd700';
             ctx.font = 'bold 12px sans-serif';
-            ctx.fillText('💰', sx + npc.w / 2, sy - 4);
+            ctx.fillText('💰', sx + npc.w / 2, badgeY);
         }
         // Desert traveler indicator
         if (npc.isDesertTraveler) {
             ctx.fillStyle = '#ffaa44';
             ctx.font = 'bold 12px sans-serif';
-            ctx.fillText('🏜️', sx + npc.w / 2, sy - 4);
+            ctx.fillText('🏜️', sx + npc.w / 2, badgeY);
         }
         // Slot machine indicator
         if (npc.isSlotMachine) {
             ctx.fillStyle = '#ff66ff';
             ctx.font = 'bold 12px sans-serif';
-            ctx.fillText('🎰', sx + npc.w / 2, sy - 4);
+            ctx.fillText('🎰', sx + npc.w / 2, badgeY);
         }
         // Stylist indicator
         if (npc.isStylist) {
             ctx.fillStyle = '#aa88ff';
             ctx.font = 'bold 12px sans-serif';
-            ctx.fillText('💈', sx + npc.w / 2, sy - 4);
+            ctx.fillText('💈', sx + npc.w / 2, badgeY);
         }
         // The visible prompt and touch activation share the same reachable target.
         if (target?.entity === npc) {
@@ -101,8 +127,8 @@ function drawNpcs() {
             ctx.strokeStyle = '#09201b';
             ctx.lineWidth = 3;
             const hint = `${touch ? '터치' : '[E]'} ${target.label}`;
-            ctx.strokeText(hint, sx + npc.w / 2, sy - 16);
-            ctx.fillText(hint, sx + npc.w / 2, sy - 16);
+            ctx.strokeText(hint, sx + npc.w / 2, badgeY - 18);
+            ctx.fillText(hint, sx + npc.w / 2, badgeY - 18);
         }
     }
 }
@@ -261,8 +287,8 @@ function drawChestSprite(x, y, w, h, isIron) {
     );
 }
 
-function drawChests() {
-    for (const c of chests) {
+function drawChests(entities = chests) {
+    for (const c of entities) {
         if (c.opened) continue;
         const sx = c.x - camera.x,
             sy = c.y - camera.y;
@@ -279,7 +305,8 @@ function drawChests() {
             ctx.fill();
         }
 
-        drawChestSprite(sx, sy, cw, ch, isIron);
+        if (!drawWorldSprite(ctx, 'chest', sx + cw / 2, sy + ch, cw + 12, ch + 18))
+            drawChestSprite(sx, sy, cw, ch, isIron);
 
         // HP bar when damaged
         if (c.hp < c.maxHp) {
@@ -331,12 +358,22 @@ function drawEntity(entity) {
     const cx = screenX + entity.w / 2;
     const cy = screenY + entity.h / 2;
     const isPlayer = entity === player;
+    let paintedWorld = false;
 
     if (isPlayer) {
         drawPlayerMarker(cx, cy, entity);
         drawPlayerShape(cx, cy, entity);
     } else {
-        const illustrated = drawArtToken(ctx, entity.artIndex, cx, cy, entity.w * 1.3);
+        paintedWorld = drawWorldSprite(
+            ctx,
+            enemyWorldArt(entity),
+            cx,
+            screenY + entity.h,
+            entity.w * 1.7,
+            entity.h * 1.8,
+        );
+        const illustrated =
+            paintedWorld || drawArtToken(ctx, entity.artIndex, cx, cy, entity.w * 1.3);
         if (!illustrated) drawEnemyShape(cx, cy, entity);
         else if (entity.frozen > 0) {
             ctx.strokeStyle = '#b9efff';
@@ -347,6 +384,7 @@ function drawEntity(entity) {
         }
     }
 
+    const visualTop = paintedWorld ? screenY - entity.h * 0.42 : screenY;
     const engaged =
         entity.isBoss ||
         entity.hp < entity.maxHp ||
@@ -357,7 +395,7 @@ function drawEntity(entity) {
         const barW = Math.max(entity.isBoss ? 76 : 32, entity.w + 4);
         const barH = entity.isBoss ? 7 : 5;
         const barX = cx - barW / 2;
-        const barY = screenY - 9;
+        const barY = visualTop - 9;
         ctx.fillStyle = '#08191ddd';
         ctx.fillRect(barX - 2, barY - 2, barW + 4, barH + 4);
         const ratio = Math.max(0, Math.min(1, entity.hp / entity.maxHp));
@@ -372,7 +410,7 @@ function drawEntity(entity) {
         ctx.fillStyle = '#ffd700';
         ctx.font = '16px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('👑', cx, screenY - 14);
+        ctx.fillText('👑', cx - entity.w / 2 - 12, visualTop - 14);
     }
 
     if (!isPlayer && engaged) {
@@ -381,7 +419,7 @@ function drawEntity(entity) {
         ctx.textAlign = 'center';
         const levelText = entity.level ? ` Lv${entity.level}` : '';
         const label = (entity.name || '') + levelText;
-        const labelY = screenY - (entity.isBoss ? 30 : 16);
+        const labelY = visualTop - (entity.isBoss ? 30 : 16);
         ctx.strokeStyle = '#081c22';
         ctx.lineWidth = 3;
         ctx.strokeText(label, cx, labelY);
@@ -396,243 +434,260 @@ function drawPlayerShape(cx, cy, p) {
 
     // Draw mount if mounted
     if (mount) {
-        const mw = mount.w,
-            mh = mount.h;
-        // Mount shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.beginPath();
-        ctx.ellipse(cx, cy + mh / 2, mw / 2 - 4, 5, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // Mount body
-        ctx.fillStyle = mount.color;
-        if (mount.id === 'bicycle' || mount.id === 'motor') {
-            // Bike frame
-            ctx.strokeStyle = mount.color;
-            ctx.lineWidth = 3;
+        if (!drawWorldSprite(ctx, mount.id, cx, cy + p.h / 2, mount.w * 1.5, mount.h * 1.5)) {
+            const mw = mount.w,
+                mh = mount.h;
+            // Mount shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
             ctx.beginPath();
-            ctx.arc(cx, cy - 5, 10, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(cx + 8, cy + 8, 8, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(cx, cy - 5);
-            ctx.lineTo(cx + 8, cy - 10);
-            ctx.stroke();
-        } else if (mount.id === 'boat') {
-            ctx.fillStyle = '#8B6914';
-            ctx.beginPath();
-            ctx.moveTo(cx - mw / 3, cy + mh / 3);
-            ctx.lineTo(cx - mw / 3, cy - mh / 4);
-            ctx.quadraticCurveTo(cx, cy - mh / 2, cx + mw / 3, cy - mh / 4);
-            ctx.lineTo(cx + mw / 3, cy + mh / 3);
-            ctx.closePath();
+            ctx.ellipse(cx, cy + mh / 2, mw / 2 - 4, 5, 0, 0, Math.PI * 2);
             ctx.fill();
-        } else {
-            // Horse body
+            // Mount body
             ctx.fillStyle = mount.color;
-            ctx.beginPath();
-            ctx.ellipse(cx, cy, mw / 2 - 5, mh / 2 - 5, 0, 0, Math.PI * 2);
-            ctx.fill();
-            // Horse head
-            ctx.fillStyle = '#6b4c20';
-            ctx.beginPath();
-            ctx.arc(cx - mw / 3, cy - mh / 4, mw / 6, 0, Math.PI * 2);
-            ctx.fill();
+            if (mount.id === 'bicycle' || mount.id === 'motor') {
+                // Bike frame
+                ctx.strokeStyle = mount.color;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(cx, cy - 5, 10, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(cx + 8, cy + 8, 8, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(cx, cy - 5);
+                ctx.lineTo(cx + 8, cy - 10);
+                ctx.stroke();
+            } else if (mount.id === 'boat') {
+                ctx.fillStyle = '#8B6914';
+                ctx.beginPath();
+                ctx.moveTo(cx - mw / 3, cy + mh / 3);
+                ctx.lineTo(cx - mw / 3, cy - mh / 4);
+                ctx.quadraticCurveTo(cx, cy - mh / 2, cx + mw / 3, cy - mh / 4);
+                ctx.lineTo(cx + mw / 3, cy + mh / 3);
+                ctx.closePath();
+                ctx.fill();
+            } else {
+                // Horse body
+                ctx.fillStyle = mount.color;
+                ctx.beginPath();
+                ctx.ellipse(cx, cy, mw / 2 - 5, mh / 2 - 5, 0, 0, Math.PI * 2);
+                ctx.fill();
+                // Horse head
+                ctx.fillStyle = '#6b4c20';
+                ctx.beginPath();
+                ctx.arc(cx - mw / 3, cy - mh / 4, mw / 6, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            // Mount icon
+            ctx.fillStyle = '#fff';
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(mount.icon, cx, cy - 6);
         }
-        // Mount icon
-        ctx.fillStyle = '#fff';
-        ctx.font = '14px sans-serif';
+    }
+
+    const weapon = p.weapon;
+    const heroKey = ['heroDown', 'heroLeft', 'heroUp', 'heroRight'][p.dir];
+    const paintedHero = drawWorldSprite(
+        ctx,
+        heroKey,
+        cx,
+        cy + p.h / 2 + bob - (mount ? 10 : 0),
+        48,
+        58,
+    );
+    if (!paintedHero) {
+        // ── ZELDA-STYLE CHARACTER ──
+        // Green tunic body
+        const tunicGreen = '#30a840';
+        const tunicDark = '#208030';
+        const tunicLight = '#40c050';
+
+        // Legs / boots
+        ctx.fillStyle = '#5a3a20';
+        ctx.fillRect(cx - 5, cy + 4 + bob, 4, 8);
+        ctx.fillRect(cx + 1, cy + 4 + bob, 4, 8);
+        // Boots
+        ctx.fillStyle = '#3a2010';
+        ctx.fillRect(cx - 6, cy + 10 + bob, 5, 4);
+        ctx.fillRect(cx + 1, cy + 10 + bob, 5, 4);
+
+        // Tunic body - trapezoid shape
+        ctx.fillStyle = tunicDark;
+        ctx.beginPath();
+        ctx.moveTo(cx - 8, cy - 4 + bob);
+        ctx.lineTo(cx - 11, cy + 6 + bob);
+        ctx.lineTo(cx + 11, cy + 6 + bob);
+        ctx.lineTo(cx + 8, cy - 4 + bob);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = tunicGreen;
+        ctx.beginPath();
+        ctx.moveTo(cx - 6, cy - 3 + bob);
+        ctx.lineTo(cx - 9, cy + 4 + bob);
+        ctx.lineTo(cx + 9, cy + 4 + bob);
+        ctx.lineTo(cx + 6, cy - 3 + bob);
+        ctx.closePath();
+        ctx.fill();
+
+        // Brown belt across middle
+        ctx.fillStyle = '#5a3820';
+        ctx.fillRect(cx - 9, cy - 1 + bob, 18, 4);
+        // Gold buckle
+        ctx.fillStyle = '#d4a020';
+        ctx.fillRect(cx - 3, cy - 1 + bob, 6, 4);
+
+        // Tunic highlight
+        ctx.fillStyle = tunicLight;
+        ctx.fillRect(cx - 4, cy - 3 + bob, 3, 3);
+
+        // Arms (skin color)
+        ctx.fillStyle = '#f0c898';
+        // Left arm
+        ctx.fillRect(cx - 12, cy - 4 + bob, 4, 8);
+        // Right arm
+        ctx.fillRect(cx + 8, cy - 4 + bob, 4, 8);
+
+        // Shield on left arm (facing direction)
+        ctx.fillStyle = '#3355aa';
+        ctx.strokeStyle = '#8899cc';
+        ctx.lineWidth = 2;
+        let shieldX = cx - 13,
+            shieldY = cy - 6 + bob;
+        switch (p.dir) {
+            case 0:
+                shieldX = cx - 14;
+                shieldY = cy - 6 + bob;
+                break;
+            case 1:
+                shieldX = cx - 2;
+                shieldY = cy - 14 + bob;
+                break;
+            case 2:
+                shieldX = cx - 14;
+                shieldY = cy - 6 + bob;
+                break;
+            case 3:
+                shieldX = cx + 4;
+                shieldY = cy - 6 + bob;
+                break;
+        }
+        ctx.beginPath();
+        ctx.roundRect(shieldX, shieldY, 10, 12, 3);
+        ctx.fill();
+        ctx.stroke();
+        // Shield cross emblem
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(shieldX + 5, shieldY + 2);
+        ctx.lineTo(shieldX + 5, shieldY + 10);
+        ctx.moveTo(shieldX + 2, shieldY + 6);
+        ctx.lineTo(shieldX + 8, shieldY + 6);
+        ctx.stroke();
+
+        // Head
+        ctx.fillStyle = '#f0c898';
+        ctx.beginPath();
+        ctx.arc(cx, cy - 13 + bob, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Green cap (Link style)
+        ctx.fillStyle = tunicGreen;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 15 + bob, 7, Math.PI, Math.PI * 2);
+        ctx.fill();
+        // Cap back (trailing part)
+        ctx.fillStyle = tunicDark;
+        ctx.beginPath();
+        ctx.moveTo(cx + 6, cy - 16 + bob);
+        ctx.lineTo(cx + 14, cy - 18 + bob);
+        ctx.lineTo(cx + 10, cy - 13 + bob);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = tunicGreen;
+        ctx.beginPath();
+        ctx.moveTo(cx + 5, cy - 15 + bob);
+        ctx.lineTo(cx + 12, cy - 17 + bob);
+        ctx.lineTo(cx + 9, cy - 14 + bob);
+        ctx.closePath();
+        ctx.fill();
+
+        // Eyes (direction based)
+        ctx.fillStyle = '#222';
+        let eyeOffX = 0,
+            eyeOffY = 0;
+        switch (p.dir) {
+            case 0:
+                eyeOffY = 2;
+                break;
+            case 1:
+                eyeOffX = -2;
+                break;
+            case 2:
+                eyeOffY = -2;
+                break;
+            case 3:
+                eyeOffX = 2;
+                break;
+        }
+        ctx.beginPath();
+        ctx.arc(cx - 3 + eyeOffX, cy - 14 + bob + eyeOffY, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx + 3 + eyeOffX, cy - 14 + bob + eyeOffY, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Sword on back/right side
+        let swordX = cx + 10,
+            swordY = cy - 8 + bob;
+        let swordAngle = 0.3;
+        switch (p.dir) {
+            case 0:
+                swordX = cx + 11;
+                swordY = cy - 8 + bob;
+                swordAngle = 0.3;
+                break;
+            case 1:
+                swordX = cx + 4;
+                swordY = cy - 16 + bob;
+                swordAngle = -0.8;
+                break;
+            case 2:
+                swordX = cx + 11;
+                swordY = cy - 8 + bob;
+                swordAngle = 0.3;
+                break;
+            case 3:
+                swordX = cx + 11;
+                swordY = cy - 8 + bob;
+                swordAngle = 0.3;
+                break;
+        }
+        // Sword blade
+        ctx.save();
+        ctx.translate(swordX, swordY);
+        ctx.rotate(swordAngle);
+        ctx.fillStyle = '#c0c0d0';
+        ctx.fillRect(-1.5, -10, 3, 14);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-0.5, -9, 1, 3);
+        // Sword hilt
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(-3, 2, 6, 3);
+        // Sword gem
+        ctx.fillStyle = weapon.color;
+        ctx.beginPath();
+        ctx.arc(0, -8, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    } else if (p.playerFace !== '😊') {
+        ctx.font = '12px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(mount.icon, cx, cy - 6);
+        ctx.fillText(p.playerFace, cx + 14, cy - 26 + bob);
     }
-
-    // ── ZELDA-STYLE CHARACTER ──
-    // Green tunic body
-    const tunicGreen = '#30a840';
-    const tunicDark = '#208030';
-    const tunicLight = '#40c050';
-
-    // Legs / boots
-    ctx.fillStyle = '#5a3a20';
-    ctx.fillRect(cx - 5, cy + 4 + bob, 4, 8);
-    ctx.fillRect(cx + 1, cy + 4 + bob, 4, 8);
-    // Boots
-    ctx.fillStyle = '#3a2010';
-    ctx.fillRect(cx - 6, cy + 10 + bob, 5, 4);
-    ctx.fillRect(cx + 1, cy + 10 + bob, 5, 4);
-
-    // Tunic body - trapezoid shape
-    ctx.fillStyle = tunicDark;
-    ctx.beginPath();
-    ctx.moveTo(cx - 8, cy - 4 + bob);
-    ctx.lineTo(cx - 11, cy + 6 + bob);
-    ctx.lineTo(cx + 11, cy + 6 + bob);
-    ctx.lineTo(cx + 8, cy - 4 + bob);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = tunicGreen;
-    ctx.beginPath();
-    ctx.moveTo(cx - 6, cy - 3 + bob);
-    ctx.lineTo(cx - 9, cy + 4 + bob);
-    ctx.lineTo(cx + 9, cy + 4 + bob);
-    ctx.lineTo(cx + 6, cy - 3 + bob);
-    ctx.closePath();
-    ctx.fill();
-
-    // Brown belt across middle
-    ctx.fillStyle = '#5a3820';
-    ctx.fillRect(cx - 9, cy - 1 + bob, 18, 4);
-    // Gold buckle
-    ctx.fillStyle = '#d4a020';
-    ctx.fillRect(cx - 3, cy - 1 + bob, 6, 4);
-
-    // Tunic highlight
-    ctx.fillStyle = tunicLight;
-    ctx.fillRect(cx - 4, cy - 3 + bob, 3, 3);
-
-    // Arms (skin color)
-    ctx.fillStyle = '#f0c898';
-    // Left arm
-    ctx.fillRect(cx - 12, cy - 4 + bob, 4, 8);
-    // Right arm
-    ctx.fillRect(cx + 8, cy - 4 + bob, 4, 8);
-
-    // Shield on left arm (facing direction)
-    ctx.fillStyle = '#3355aa';
-    ctx.strokeStyle = '#8899cc';
-    ctx.lineWidth = 2;
-    let shieldX = cx - 13,
-        shieldY = cy - 6 + bob;
-    switch (p.dir) {
-        case 0:
-            shieldX = cx - 14;
-            shieldY = cy - 6 + bob;
-            break;
-        case 1:
-            shieldX = cx - 2;
-            shieldY = cy - 14 + bob;
-            break;
-        case 2:
-            shieldX = cx - 14;
-            shieldY = cy - 6 + bob;
-            break;
-        case 3:
-            shieldX = cx + 4;
-            shieldY = cy - 6 + bob;
-            break;
-    }
-    ctx.beginPath();
-    ctx.roundRect(shieldX, shieldY, 10, 12, 3);
-    ctx.fill();
-    ctx.stroke();
-    // Shield cross emblem
-    ctx.strokeStyle = '#ffd700';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(shieldX + 5, shieldY + 2);
-    ctx.lineTo(shieldX + 5, shieldY + 10);
-    ctx.moveTo(shieldX + 2, shieldY + 6);
-    ctx.lineTo(shieldX + 8, shieldY + 6);
-    ctx.stroke();
-
-    // Head
-    ctx.fillStyle = '#f0c898';
-    ctx.beginPath();
-    ctx.arc(cx, cy - 13 + bob, 8, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Green cap (Link style)
-    ctx.fillStyle = tunicGreen;
-    ctx.beginPath();
-    ctx.arc(cx, cy - 15 + bob, 7, Math.PI, Math.PI * 2);
-    ctx.fill();
-    // Cap back (trailing part)
-    ctx.fillStyle = tunicDark;
-    ctx.beginPath();
-    ctx.moveTo(cx + 6, cy - 16 + bob);
-    ctx.lineTo(cx + 14, cy - 18 + bob);
-    ctx.lineTo(cx + 10, cy - 13 + bob);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = tunicGreen;
-    ctx.beginPath();
-    ctx.moveTo(cx + 5, cy - 15 + bob);
-    ctx.lineTo(cx + 12, cy - 17 + bob);
-    ctx.lineTo(cx + 9, cy - 14 + bob);
-    ctx.closePath();
-    ctx.fill();
-
-    // Eyes (direction based)
-    ctx.fillStyle = '#222';
-    let eyeOffX = 0,
-        eyeOffY = 0;
-    switch (p.dir) {
-        case 0:
-            eyeOffY = 2;
-            break;
-        case 1:
-            eyeOffX = -2;
-            break;
-        case 2:
-            eyeOffY = -2;
-            break;
-        case 3:
-            eyeOffX = 2;
-            break;
-    }
-    ctx.beginPath();
-    ctx.arc(cx - 3 + eyeOffX, cy - 14 + bob + eyeOffY, 1.8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(cx + 3 + eyeOffX, cy - 14 + bob + eyeOffY, 1.8, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Sword on back/right side
-    const weapon = player.weapon;
-    let swordX = cx + 10,
-        swordY = cy - 8 + bob;
-    let swordAngle = 0.3;
-    switch (p.dir) {
-        case 0:
-            swordX = cx + 11;
-            swordY = cy - 8 + bob;
-            swordAngle = 0.3;
-            break;
-        case 1:
-            swordX = cx + 4;
-            swordY = cy - 16 + bob;
-            swordAngle = -0.8;
-            break;
-        case 2:
-            swordX = cx + 11;
-            swordY = cy - 8 + bob;
-            swordAngle = 0.3;
-            break;
-        case 3:
-            swordX = cx + 11;
-            swordY = cy - 8 + bob;
-            swordAngle = 0.3;
-            break;
-    }
-    // Sword blade
-    ctx.save();
-    ctx.translate(swordX, swordY);
-    ctx.rotate(swordAngle);
-    ctx.fillStyle = '#c0c0d0';
-    ctx.fillRect(-1.5, -10, 3, 14);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(-0.5, -9, 1, 3);
-    // Sword hilt
-    ctx.fillStyle = '#8B4513';
-    ctx.fillRect(-3, 2, 6, 3);
-    // Sword gem
-    ctx.fillStyle = weapon.color;
-    ctx.beginPath();
-    ctx.arc(0, -8, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
 
     // Attack swing effect - varies by weapon ability, more vivid
     const ability = weapon.ability || 'basic';

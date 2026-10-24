@@ -160,7 +160,7 @@ function damageEnemy(enemy, dmg, knockback = true, options = {}) {
     }
     spawnFloatingText(
         enemy.x + enemy.w / 2,
-        enemy.y - (enemy.isBoss ? 54 : 36),
+        enemy.y - enemy.h * 0.42 - (enemy.isBoss ? 54 : 36),
         `-${dmg}`,
         '#ff4444',
         'damage',

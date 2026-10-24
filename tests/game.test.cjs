@@ -667,6 +667,14 @@ test('chests and all village NPCs fit on walkable terrain across map seeds', asy
             `clearWorldEntities(); generateForestMap(${seed}); spawnEnemies(); spawnInitialPickups();`,
         );
         assert.equal(run('npcs.length'), 8, `NPC count for seed ${seed}`);
+        assert.equal(
+            run(`npcs.filter(n => n.isShop && n.shopType === 'village' || n.name === '현자')
+            .every(n => n.x >= FOUNTAIN_CENTER_X - 150 && n.x + n.w <= FOUNTAIN_CENTER_X + 150
+                && n.y >= FOUNTAIN_CENTER_Y - 130 && n.y + n.h < FOUNTAIN_CENTER_Y)`),
+            true,
+            `opening village services remain in a narrow mobile view for seed ${seed}`,
+        );
+
         assert.equal(run('chests.length'), 5, `chest count for seed ${seed}`);
         assert.equal(
             run(

@@ -90,7 +90,10 @@
 
             <div id="hudTop">
                 <div id="hudLeft">
-                    <div id="charPortrait"><div id="portraitFace">😊</div></div>
+                    <div id="charPortrait">
+                        <div id="portraitFace">😊</div>
+                        <span id="heroLevel" aria-label="모험 단계">1</span>
+                    </div>
                     <div id="hpSection">
                         <div id="hpLabel">생명력</div>
                         <div class="hp-bar-outer">
@@ -123,6 +126,7 @@
                 </div>
             </div>
             <canvas id="minimap" width="150" height="150"></canvas>
+            <div id="minimapFrame" aria-hidden="true"></div>
             <div id="regionBadge" class="mobile-region">푸른 숲</div>
             <div id="controlsWrap">
                 <button id="controlsToggle" class="ctrl-toggle">조작법</button
@@ -216,7 +220,7 @@
                         <span class="control-caption">공격</span>
                     </button>
                 </div>
-                <div class="touch-items" aria-label="소비 아이템">
+                <div id="touchItems" class="touch-items" aria-label="소비 아이템">
                     <span class="quickbar-title">빠른 아이템</span
                     ><button id="touchItem1" type="button" aria-label="아이템 1">1 —</button
                     ><button id="touchItem2" type="button" aria-label="아이템 2">2 —</button

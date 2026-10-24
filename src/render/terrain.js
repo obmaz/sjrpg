@@ -12,6 +12,7 @@ import { distance } from '../core/helpers.js';
 import { player, portals } from '../core/state.js';
 import { getTile } from '../systems/world.js';
 import { drawGroundMaterial } from './art.js';
+import { drawWorldSprite } from './world-art.js';
 
 // ============================================================
 //  TERRAIN RENDERING
@@ -42,12 +43,40 @@ function drawTerrain() {
             const rigWalk = !TILE_TYPES[TILE_KEYS[nRig]].solid;
             const hasWalkNeighbor = solid && (topWalk || botWalk || lefWalk || rigWalk);
 
-            if (drawGroundMaterial(ctx, tileKey, screenX, screenY, TILE_SIZE, tx, ty)) {
-                if (tileKey === 'SAND' && player.currentRegion !== 'desert') {
-                    ctx.fillStyle = '#33443233';
-                    ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
-                }
+            const groundKey =
+                tileKey === 'SAND' && player.currentRegion === 'forest' ? 'PATH' : tileKey;
+            if (drawGroundMaterial(ctx, groundKey, screenX, screenY, TILE_SIZE, tx, ty)) {
                 continue;
+            }
+            const desert = player.currentRegion === 'desert';
+            const prop = {
+                TREE: desert ? 'palm' : 'tree',
+                BUSH: desert ? 'cactus' : 'bush',
+                ROCK: desert ? 'sandstone' : 'rock',
+            }[tileKey];
+            if (prop) {
+                ctx.fillStyle = desert ? '#c6a363' : '#55774b';
+                ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                drawGroundMaterial(
+                    ctx,
+                    desert ? 'SAND' : 'GRASS',
+                    screenX,
+                    screenY,
+                    TILE_SIZE,
+                    tx,
+                    ty,
+                );
+                if (
+                    drawWorldSprite(
+                        ctx,
+                        prop,
+                        screenX + 16,
+                        screenY + 30,
+                        tileKey === 'TREE' ? 48 : 40,
+                        tileKey === 'TREE' ? 58 : 42,
+                    )
+                )
+                    continue;
             }
             if (tileKey === 'GRASS' || tileKey === 'GRASS_TALL') {
                 const isTall = tileKey === 'GRASS_TALL';
@@ -352,55 +381,62 @@ function drawFountain() {
 
     const time = performance.now() / 1000;
 
-    // Large fountain base (stone ring) - enlarged
-    ctx.fillStyle = '#7d7d8a';
-    ctx.beginPath();
-    ctx.ellipse(sx, sy + 14, 52, 18, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#90909a';
-    ctx.beginPath();
-    ctx.ellipse(sx, sy + 11, 46, 15, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Water in basin - larger
-    ctx.fillStyle = '#4db6e8';
-    ctx.beginPath();
-    ctx.ellipse(sx, sy + 8, 40, 13, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Water shimmer
-    ctx.fillStyle = 'rgba(255,255,255,0.15)';
-    ctx.beginPath();
-    ctx.ellipse(sx - 10, sy + 5, 10, 4, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Central pillar - larger
-    ctx.fillStyle = '#a0a0aa';
-    ctx.fillRect(sx - 8, sy - 22, 16, 32);
-    ctx.fillStyle = '#b0b0ba';
-    ctx.fillRect(sx - 5, sy - 20, 10, 28);
-
-    // Top basin - larger
-    ctx.fillStyle = '#90909a';
-    ctx.beginPath();
-    ctx.ellipse(sx, sy - 24, 18, 8, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#4db6e8';
-    ctx.beginPath();
-    ctx.ellipse(sx, sy - 26, 14, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Water streams (animated) - more streams
-    for (let i = 0; i < 6; i++) {
-        const a = (i / 6) * Math.PI * 2 + time * 0.5;
-        const rx = 14 + Math.sin(time * 2 + i) * 3;
-        ctx.strokeStyle = 'rgba(100,200,255,0.6)';
-        ctx.lineWidth = 2;
+    if (!drawWorldSprite(ctx, 'fountain', sx, sy + 28, 132, 132)) {
+        // Large fountain base (stone ring) - enlarged
+        ctx.fillStyle = '#7d7d8a';
         ctx.beginPath();
-        ctx.moveTo(sx + Math.cos(a) * 6, sy - 19);
-        ctx.quadraticCurveTo(sx + Math.cos(a) * rx, sy - 8, sx + Math.cos(a + 0.2) * 24, sy + 4);
-        ctx.stroke();
+        ctx.ellipse(sx, sy + 14, 52, 18, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#90909a';
+        ctx.beginPath();
+        ctx.ellipse(sx, sy + 11, 46, 15, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Water in basin - larger
+        ctx.fillStyle = '#4db6e8';
+        ctx.beginPath();
+        ctx.ellipse(sx, sy + 8, 40, 13, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Water shimmer
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        ctx.beginPath();
+        ctx.ellipse(sx - 10, sy + 5, 10, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Central pillar - larger
+        ctx.fillStyle = '#a0a0aa';
+        ctx.fillRect(sx - 8, sy - 22, 16, 32);
+        ctx.fillStyle = '#b0b0ba';
+        ctx.fillRect(sx - 5, sy - 20, 10, 28);
+
+        // Top basin - larger
+        ctx.fillStyle = '#90909a';
+        ctx.beginPath();
+        ctx.ellipse(sx, sy - 24, 18, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#4db6e8';
+        ctx.beginPath();
+        ctx.ellipse(sx, sy - 26, 14, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Water streams (animated) - more streams
+        for (let i = 0; i < 6; i++) {
+            const a = (i / 6) * Math.PI * 2 + time * 0.5;
+            const rx = 14 + Math.sin(time * 2 + i) * 3;
+            ctx.strokeStyle = 'rgba(100,200,255,0.6)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(sx + Math.cos(a) * 6, sy - 19);
+            ctx.quadraticCurveTo(
+                sx + Math.cos(a) * rx,
+                sy - 8,
+                sx + Math.cos(a + 0.2) * 24,
+                sy + 4,
+            );
+            ctx.stroke();
+        }
     }
 
     // Heal glow when player nearby (costs gold)

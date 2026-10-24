@@ -1,5 +1,5 @@
 import { canvas, ctx } from '../core/canvas.js';
-import { enemies, player } from '../core/state.js';
+import { chests, enemies, mounts, npcs, player } from '../core/state.js';
 import {
     drawEnemyProjectiles,
     drawFireZones,
@@ -49,22 +49,25 @@ function draw() {
     // Draw weapon pickups
     drawWeaponPickups();
 
-    // Draw chests
-    drawChests();
-
-    // Draw mounts
-    drawMounts();
-
-    // Draw NPCs
-    drawNpcs();
-
-    // Draw scarecrows
     drawScarecrows();
 
-    // Sort a copy so foreground bodies cover background bodies without reordering simulation state.
-    const actors = [...enemies.filter((enemy) => enemy.hp > 0), player];
-    actors.sort((first, second) => first.y + first.h - second.y - second.h);
-    for (const actor of actors) drawEntity(actor);
+    // Sort presentation records, never the simulation arrays. Props and people share depth.
+    const actors = [
+        ...chests.filter((entity) => !entity.opened).map((entity) => ({ entity, kind: 'chest' })),
+        ...mounts.map((entity) => ({ entity, kind: 'mount' })),
+        ...npcs.map((entity) => ({ entity, kind: 'npc' })),
+        ...enemies.filter((entity) => entity.hp > 0).map((entity) => ({ entity, kind: 'actor' })),
+        { entity: player, kind: 'actor' },
+    ];
+    actors.sort(
+        (first, second) => first.entity.y + first.entity.h - second.entity.y - second.entity.h,
+    );
+    for (const { entity, kind } of actors) {
+        if (kind === 'chest') drawChests([entity]);
+        else if (kind === 'mount') drawMounts([entity]);
+        else if (kind === 'npc') drawNpcs([entity]);
+        else drawEntity(entity);
+    }
 
     drawWorldFrame();
 

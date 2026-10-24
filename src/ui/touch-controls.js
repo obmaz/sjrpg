@@ -197,7 +197,12 @@ function updateTouchControls() {
     }
     document.getElementById('touchDismount').disabled = !player.mount;
     document.getElementById('touchDismount').classList.toggle('hidden', !player.mount);
+    const items = control('touchItems');
+    if (items && items.classList.contains('empty') !== (player.items.length === 0))
+        items.classList.toggle('empty', player.items.length === 0);
     const auxiliary = player.auxWeapon;
+    if (control('touchAux').classList.contains('empty') === !!auxiliary)
+        control('touchAux').classList.toggle('empty', !auxiliary);
     const remaining = Math.max(0, player.auxCooldown);
     const cooldown = Math.max(auxiliary?.cooldown || 1, remaining);
     setControlValue(control('touchAttackIcon'), 'textContent', player.weapon.icon);

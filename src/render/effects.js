@@ -1,5 +1,6 @@
 import { camera, canvas, ctx } from '../core/canvas.js';
 import { drawArtToken } from './art.js';
+import { drawWorldSprite } from './world-art.js';
 import { visualMotionAllowed } from './presentation.js';
 import {
     enemyProjectiles,
@@ -183,32 +184,28 @@ function drawWeaponPickups() {
     }
 }
 
-function drawMounts() {
-    for (const m of mounts) {
+function drawMounts(entities = mounts) {
+    for (const m of entities) {
         const sx = m.x - camera.x,
             sy = m.y - camera.y;
-        // Shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.4)';
-        ctx.beginPath();
-        ctx.ellipse(sx, sy + m.h / 2, m.w / 3 + 2, 7, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // Mount icon - big and bright
-        ctx.font = 'bold 36px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        // Text outline for visibility
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 4;
-        ctx.strokeText(m.icon, sx, sy);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(m.icon, sx, sy);
-        // Name label below
-        ctx.font = 'bold 12px sans-serif';
-        ctx.fillStyle = '#ffd700';
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 3;
-        ctx.strokeText(m.name, sx, sy + 24);
-        ctx.fillText(m.name, sx, sy + 24);
+        const cx = sx + m.w / 2,
+            feetY = sy + m.h;
+        const painted = drawWorldSprite(ctx, m.id, cx, feetY, m.w * 1.5, m.h * 1.5);
+        if (!painted) {
+            ctx.font = '32px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(m.icon, cx, sy + m.h / 2);
+        }
+        if (Math.hypot(m.x - player.x, m.y - player.y) < 100) {
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#f1dfad';
+            ctx.strokeStyle = '#0b2029';
+            ctx.lineWidth = 3;
+            ctx.strokeText(m.name, cx, feetY + 12);
+            ctx.fillText(m.name, cx, feetY + 12);
+        }
     }
 }
 
