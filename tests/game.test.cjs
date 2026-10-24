@@ -731,7 +731,7 @@ test('full-inventory slot jackpot reports gold conversion in the modal and log',
     assert.equal(run('player.gold'), 150);
     assert.equal(run('inventory.length'), 12);
     assert.ok(elements.get('slotResult').textContent.includes('대신 100골드'));
-    assert.ok(elements.get('messageLog').children.at(-1).textContent.includes('대신 100골드'));
+    assert.ok(elements.get('eventBubbles').children.at(-1).textContent.includes('대신 100골드'));
 });
 
 test('simulation can advance independently and frame loop draws paused and terminal states', async () => {

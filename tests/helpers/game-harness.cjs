@@ -79,7 +79,10 @@ async function loadGame({
             },
             querySelectorAll: () => [],
             remove() {
-                if (this.parent) this.parent.children.splice(this.parent.children.indexOf(this), 1);
+                if (!this.parent) return;
+                const index = this.parent.children.indexOf(this);
+                if (index >= 0) this.parent.children.splice(index, 1);
+                this.parent = null;
             },
             play: () => Promise.resolve(),
             pause() {},

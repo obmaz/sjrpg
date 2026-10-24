@@ -268,12 +268,7 @@ function updateGoldPickups(deltaTime) {
         if (dist < 30) {
             player.gold += goldPickup.amount;
             playCoinSound();
-            spawnFloatingText(
-                goldPickup.x,
-                goldPickup.y - 10,
-                `+${goldPickup.amount}💰`,
-                '#ffd700',
-            );
+            addMessage(`💰 +${goldPickup.amount} 골드`, 'loot');
             goldPickups.splice(i, 1);
             updateHud();
         }

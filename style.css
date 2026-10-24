@@ -864,54 +864,69 @@ body {
     display: none;
 }
 
-#messageLog {
-    position: absolute;
-    bottom: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
-    text-align: center;
+#eventBubbles {
+    position: fixed;
+    z-index: 320;
     display: flex;
-    flex-direction: column-reverse;
-    gap: 4px;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    transform: translate(-50%, -100%);
     pointer-events: none;
 }
-
-.msg {
-    background: rgba(0, 0, 0, 0.7);
-    color: #fff;
-    padding: 6px 16px;
-    border-radius: 20px;
+.event-bubble {
+    position: relative;
+    max-width: 100%;
+    padding: 9px 14px;
+    border: 1px solid #e6d9b8;
+    border-radius: 15px;
+    background: #fff5dfee;
+    color: #293d30;
+    box-shadow: 0 4px 14px #0004;
     font-size: 14px;
-    animation: fadeUp 2.5s forwards;
-    pointer-events: none;
+    font-weight: 600;
+    line-height: 1.5;
+    text-align: center;
+    overflow-wrap: anywhere;
+    animation: eventBubble 2.2s ease-out forwards;
 }
-
-.msg.damage {
-    color: #ff6666;
+.event-bubble:last-child::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: calc(50% - 5px);
+    width: 8px;
+    height: 8px;
+    background: inherit;
+    border-right: 1px solid #e6d9b8;
+    border-bottom: 1px solid #e6d9b8;
+    transform: rotate(45deg);
 }
-.msg.heal {
-    color: #66ff66;
+.event-bubble.loot {
+    background: #fff0bfee;
+    border-color: #dec58a;
 }
-.msg.loot {
-    color: #ffd700;
+.event-bubble.heal {
+    background: #e0f3d6ee;
+    border-color: #b4d3a3;
 }
-.msg.info {
-    color: #aaccff;
+.event-bubble.damage {
+    background: #ffe2d4ee;
+    border-color: #e0b19a;
 }
-
-@keyframes fadeUp {
+@keyframes eventBubble {
     0% {
-        opacity: 1;
-        transform: translateY(0);
+        opacity: 0;
+        translate: 0 7px;
     }
-    70% {
+    10%,
+    82% {
         opacity: 1;
-        transform: translateY(-10px);
+        translate: 0 0;
     }
     100% {
         opacity: 0;
-        transform: translateY(-30px);
+        translate: 0 -5px;
     }
 }
 
@@ -2643,27 +2658,6 @@ body {
     #controlsWrap {
         display: none;
     }
-    #messageLog {
-        top: 27%;
-        bottom: auto;
-        width: min(80%, 380px);
-        max-height: 88px;
-        overflow: hidden;
-    }
-    .msg {
-        font-size: 14px;
-        line-height: 21px;
-        flex-shrink: 0;
-        padding: 7px 12px;
-        border: 1px solid #b4a05d60;
-        border-radius: 5px;
-        background: #102a20de;
-        color: #d1ddba;
-        box-shadow: 0 3px 8px #0003;
-    }
-    #messageLog .msg:nth-last-child(n + 2) {
-        display: none;
-    }
     #questJournal:not(.mobile-journal-open) {
         display: none;
     }
@@ -2993,10 +2987,6 @@ body {
         top: calc(80px + env(safe-area-inset-top, 0px));
         right: max(10px, env(safe-area-inset-right, 0px));
     }
-    #messageLog {
-        top: 36%;
-        max-width: 330px;
-    }
     .guardian-crest {
         width: 58px;
         height: 58px;
@@ -3049,7 +3039,7 @@ body {
     .start-content,
     .game-window,
     .result-card,
-    .msg {
+    .event-bubble {
         animation: none;
     }
     .switch-knob {

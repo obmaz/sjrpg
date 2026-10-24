@@ -52,7 +52,6 @@ function attackWithWeapon() {
             comboBonus = weapon.comboMult || 2;
             player.comboHits = 0;
             spawnFloatingText(player.x + player.w / 2, player.y - 30, '💥 COMBO!', '#ffd700');
-            addMessage(`💥 ${comboMax}연속 타격! ${comboBonus}배 피해!`, 'loot');
         }
     }
 
@@ -206,7 +205,6 @@ function meleeAttack(weapon, comboBonus) {
     }
     if (targets.length === 0) {
         player.comboHits = 0;
-        addMessage('헛스윙!', 'info');
     }
 }
 
@@ -266,7 +264,6 @@ function wideAttack(weapon, comboBonus) {
     }
     if (!hit) {
         player.comboHits = 0;
-        addMessage('헛스윙!', 'info');
     }
 }
 
@@ -368,7 +365,6 @@ function fireAttack(weapon) {
 
     if (targets.length === 0) {
         player.comboHits = 0;
-        addMessage('🔥 불꽃이 땅을 태웠다!', 'info');
     }
 }
 
@@ -472,7 +468,6 @@ function pushAttack(weapon) {
         });
     }
 
-    let hit = false;
     for (const enemy of getEnemiesInRadius(origin.x, origin.y, range)) {
         const dx = enemy.x + enemy.w / 2 - origin.x;
         const dy = enemy.y + enemy.h / 2 - origin.y;
@@ -486,10 +481,8 @@ function pushAttack(weapon) {
             enemy.knockbackY = (dy / dist) * pushForce;
             enemy.frozen = 0.3;
             spawnParticles(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, '#aaddff', 6);
-            hit = true;
         }
     }
-    addMessage(hit ? `🌀 ${weapon.name} 강풍! 적 밀어냄!` : '🌀 바람이 허공을 갈랐다...', 'info');
 }
 
 function slamAttack(weapon) {
@@ -558,10 +551,6 @@ function slamAttack(weapon) {
         }
         spawnParticles(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, '#ddcc88', 12);
     }
-    addMessage(
-        targets.length > 0 ? `🔨 ${weapon.name} 360도 강타!` : '🔨 땅이 울렸다!',
-        targets.length > 0 ? 'damage' : 'info',
-    );
 }
 
 function killEnemy(enemy) {
@@ -597,12 +586,6 @@ function killEnemy(enemy) {
             inventory.push({ ...weapon });
             recordDiscovery('weapons', weapon.id);
             addMessage(`🎁 ${weapon.icon} ${weapon.name} 획득!`, 'loot');
-            spawnFloatingText(
-                enemy.x + enemy.w / 2,
-                enemy.y - 30,
-                `${weapon.icon} ${weapon.name}`,
-                '#ffd700',
-            );
         } else if (weapon) {
             spawnWeaponPickup(player.x + player.w / 2, player.y + player.h / 2, weapon);
             addMessage(`🎒 인벤토리가 가득 차 ${weapon.name}이(가) 발밑에 떨어졌습니다.`, 'loot');

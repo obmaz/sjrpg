@@ -9,7 +9,7 @@ import { update } from './systems/simulation.js';
 import { spawnEnemies, spawnInitialPickups } from './systems/spawning.js';
 import { generateForestMap } from './systems/world.js';
 import { updateHud } from './ui/hud.js';
-import { addMessage } from './ui/messages.js';
+import { addMessage, updateEventBubbles } from './ui/messages.js';
 import { initializeTouchControls, updateTouchControls } from './ui/touch-controls.js';
 import { initializeSettings } from './ui/settings.js';
 import { initializePopupLayout } from './ui/popup-layout.js';
@@ -24,6 +24,7 @@ function gameLoop(time) {
     update(deltaTime);
     updateTouchControls();
     if (session.gameStarted) draw();
+    updateEventBubbles();
     requestAnimationFrame(gameLoop);
 }
 
@@ -36,6 +37,7 @@ window.addEventListener('resize', () => {
     if (session.gameStarted) {
         updateCamera(player.x + player.w / 2, player.y + player.h / 2);
         draw();
+        updateEventBubbles();
     }
 });
 
@@ -84,17 +86,7 @@ function startGame() {
     updateHud();
     updateCamera(player.x + player.w / 2, player.y + player.h / 2);
 
-    addMessage('🗡️ 모험을 떠나세요!', 'info');
-    addMessage('⛲ 맵 중앙 분수에서 체력 회복', 'info');
-    addMessage('❗ NPC를 찾아 대화하세요 [E]', 'loot');
-    addMessage('🎒 보조무기는 퀘스트 보상·상점에서 획득! (N/K 사용, Q 순환)', 'loot');
-    if (window.matchMedia('(pointer: coarse)').matches) {
-        addMessage('🎒 가방·도감·일지·설정은 하단 메뉴에서 열 수 있어요.', 'info');
-        addMessage('왼쪽 조이스틱: 이동 | 오른쪽 공격: 누르고 있기', 'info');
-    } else {
-        addMessage('이동: WASD | 공격: Space/J | 보조: N/K | 순환: Q | 인벤: I/Esc', 'info');
-        addMessage('📖 C: 도감 열기', 'info');
-    }
+    addMessage('🌿 모험 시작! 주민에게 다가가 대화해 보세요.', 'info');
 
     // Auto-collect starter weapon
     recordDiscovery('weapons', 'fist');

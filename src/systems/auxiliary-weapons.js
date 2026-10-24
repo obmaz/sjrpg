@@ -111,7 +111,6 @@ function useFireBomb(auxiliaryWeapon, origin) {
         damageEnemy(enemy, auxiliaryWeapon.dmg);
         spawnParticles(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, '#ff4400', 10);
     }
-    addMessage(`🧨 ${auxiliaryWeapon.name} 폭발!`, 'damage');
 }
 
 function useIceBomb(auxiliaryWeapon, origin) {
@@ -135,11 +134,9 @@ function useIceBomb(auxiliaryWeapon, origin) {
         damageEnemy(enemy, auxiliaryWeapon.dmg);
         spawnParticles(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, '#88ccff', 8);
     }
-    addMessage(`❄️ 주변 적 얼림!`, 'info');
 }
 
 function useLightning(auxiliaryWeapon, origin) {
-    let hit = false;
     // Straight line in facing direction
     const radius = auxiliaryWeapon.range || 90;
     for (let i = 0; i < 12; i++) {
@@ -196,10 +193,8 @@ function useLightning(auxiliaryWeapon, origin) {
         if (along > 0 && along < radius && perp < 30) {
             damageEnemy(enemy, auxiliaryWeapon.dmg, true);
             spawnParticles(ex, ey, '#ffff44', 15);
-            hit = true;
         }
     }
-    if (hit) addMessage(`⚡ ${auxiliaryWeapon.name} 강타!`, 'damage');
 }
 
 function usePoisonZone(auxiliaryWeapon, origin) {
@@ -223,7 +218,6 @@ function usePoisonZone(auxiliaryWeapon, origin) {
             size: 2 + Math.random() * 3,
         });
     }
-    addMessage(`☠️ 독 안개 살포!`, 'damage');
 }
 
 function useHealingAuxiliary(auxiliaryWeapon) {
@@ -251,7 +245,6 @@ function useTaunt(auxiliaryWeapon) {
         enemy.state = 'chase';
         spawnParticles(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, '#ffff00', 8);
     }
-    addMessage(`🥁 모든 적 도발 + 스턴!`, 'info');
 }
 
 function throwBoomerang(auxiliaryWeapon, origin) {
@@ -264,7 +257,6 @@ function throwBoomerang(auxiliaryWeapon, origin) {
         const revDir = (throwDir + 2) % 4;
         spawnProjectile(rOrigin.x, rOrigin.y, revDir, 280, auxiliaryWeapon.dmg, '#aaccff', '🪃');
     });
-    addMessage('🪃 부메랑 투척!', 'info');
 }
 
 function throwShuriken(auxiliaryWeapon, origin) {
@@ -284,7 +276,6 @@ function throwShuriken(auxiliaryWeapon, origin) {
             size: 5,
         });
     }
-    addMessage('🔸 수리검 발사!', 'info');
 }
 
 function activateShield(auxiliaryWeapon) {
@@ -317,7 +308,6 @@ function placeTrap(auxiliaryWeapon, origin) {
         { kind: 'trap', singleUse: true, freezeTime: auxiliaryWeapon.freezeTime },
     );
     spawnParticles(fz.x, fz.y, '#aa8844', 8);
-    addMessage('🪤 덫 설치!', 'info');
 }
 
 export { cycleAuxWeapon, useAuxWeapon, throwBoomerang };

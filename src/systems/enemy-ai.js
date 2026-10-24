@@ -21,7 +21,6 @@ import { spawnEnemyProjectile, spawnFloatingText, spawnParticles } from './entit
 import { spawnEnemy } from './spawning.js';
 import { getTile, isSolidTile } from './world.js';
 import { updateHud } from '../ui/hud.js';
-import { addMessage } from '../ui/messages.js';
 
 function updateEnemyPoisons(deltaTime) {
     if (player.hp <= 0) return;
@@ -144,7 +143,6 @@ function updateEnemies(deltaTime) {
                             '#ff0000',
                             6,
                         );
-                        addMessage(`${enemy.icon} ${enemy.name}의 공격! -${dmg}`, 'damage');
                         updateHud();
                     }
                 }

@@ -51,7 +51,7 @@ test('an impossible boss spawn does not announce a Pharaoh that does not exist',
     assert.equal(run("enemies.filter(enemy => enemy.name === '파라오').length"), 0);
     assert.equal(
         elements
-            .get('messageLog')
+            .get('eventBubbles')
             ?.children.some((message) => message.textContent?.includes('파라오 등장')) || false,
         false,
     );
