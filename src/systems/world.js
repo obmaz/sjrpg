@@ -1,15 +1,37 @@
 import { MAP_HEIGHT, MAP_WIDTH, TILE_KEYS, TILE_TYPES } from '../core/constants.js';
 import { VILLAGE, villageTile } from '../data/village.js';
-import { chunkVariant, chunkCoordinates, chunkTile } from '../data/world-chunks.js';
+import {
+    chunkAppearance,
+    chunkMask,
+    CHUNK_SIZE,
+    CHUNK_ORIGIN_X,
+    CHUNK_ORIGIN_Y,
+} from '../data/world-chunks.js';
 import { session } from '../core/state.js';
 
 function generateChunkMap(seed, region) {
-    session.tileMap = Array.from({ length: MAP_HEIGHT }, (_, y) =>
-        Array.from({ length: MAP_WIDTH }, (_, x) => {
-            const { column, row, u, v } = chunkCoordinates(x * 32 + 16, y * 32 + 16);
-            return TILE_KEYS.indexOf(chunkTile(chunkVariant(seed, column, row), u, v, region));
-        }),
-    );
+    session.tileMap = Array.from({ length: MAP_HEIGHT }, () => Array(MAP_WIDTH));
+    const firstColumn = Math.floor(-CHUNK_ORIGIN_X / CHUNK_SIZE),
+        lastColumn = Math.floor((MAP_WIDTH * 32 - 1 - CHUNK_ORIGIN_X) / CHUNK_SIZE);
+    const firstRow = Math.floor(-CHUNK_ORIGIN_Y / CHUNK_SIZE),
+        lastRow = Math.floor((MAP_HEIGHT * 32 - 1 - CHUNK_ORIGIN_Y) / CHUNK_SIZE);
+    for (let row = firstRow; row <= lastRow; row++)
+        for (let column = firstColumn; column <= lastColumn; column++) {
+            const appearance = chunkAppearance(seed, column, row, region),
+                mask = chunkMask(appearance.variant, region);
+            const startX = (CHUNK_ORIGIN_X + column * CHUNK_SIZE) / 32,
+                startY = (CHUNK_ORIGIN_Y + row * CHUNK_SIZE) / 32;
+            for (let localY = 0; localY < 20; localY++) {
+                const y = startY + localY;
+                if (y < 0 || y >= MAP_HEIGHT) continue;
+                for (let localX = 0; localX < 20; localX++) {
+                    const x = startX + localX;
+                    if (x < 0 || x >= MAP_WIDTH) continue;
+                    session.tileMap[y][x] =
+                        mask[localY][appearance.mirrored ? 19 - localX : localX];
+                }
+            }
+        }
     session.chunkSeed = seed;
     session.chunkRegion = region;
     session.chunkMap = session.tileMap;
@@ -24,7 +46,7 @@ function generateForestMap(seed) {
                 villageTile((x + 0.5) / (VILLAGE.width / 32), (y + 0.5) / (VILLAGE.height / 32)),
             );
     // Flood fill starts on the footpath below the fountain.
-    ensureConnectivity('forest', 35);
+    ensureConnectivity('forest', Math.floor(MAP_HEIGHT / 2) + 5);
     session.terrainRevision++;
 }
 

@@ -42,7 +42,13 @@ export function isReachableFromArrival(x, y, width, height) {
             return walkable[key] === 1;
         };
         let sx = Math.floor(FOUNTAIN_CENTER_X / TILE_SIZE),
-            sy = Math.floor(FOUNTAIN_CENTER_Y / TILE_SIZE);
+            sy = Math.floor(
+                (FOUNTAIN_CENTER_Y +
+                    (player.currentRegion === 'forest' && session.chunkMap === session.tileMap
+                        ? 175
+                        : 0)) /
+                    TILE_SIZE,
+            );
         const queue = [];
         if (!canVisit(sx, sy)) {
             outer: for (let radius = 1; radius <= 8; radius++)
@@ -126,6 +132,14 @@ function canStand(enemy, x, y) {
 }
 
 export function canTraverseTerrain(enemy, from, to) {
+    // An axis-aligned sweep is exactly one enlarged rectangle, avoiding repeated grid checks.
+    if (from.x === to.x || from.y === to.y) {
+        return canStand(
+            { w: enemy.w + Math.abs(to.x - from.x), h: enemy.h + Math.abs(to.y - from.y) },
+            Math.min(from.x, to.x),
+            Math.min(from.y, to.y),
+        );
+    }
     // Swept body checks prevent squeezing through corners between clear nodes.
     const steps = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / 8));
     for (let step = 0; step <= steps; step++) {

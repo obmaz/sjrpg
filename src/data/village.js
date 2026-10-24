@@ -1,5 +1,11 @@
+import { FOUNTAIN_CENTER_X, FOUNTAIN_CENTER_Y } from '../core/constants.js';
 // Fixed painted opening: coordinates are shared by collision, rendering and encounters.
-const VILLAGE = Object.freeze({ x: 960, y: 704, width: 640, height: 960 });
+const VILLAGE = Object.freeze({
+    x: FOUNTAIN_CENTER_X - 320,
+    y: FOUNTAIN_CENTER_Y - 256,
+    width: 640,
+    height: 960,
+});
 function inVillage(x, y) {
     return (
         x >= VILLAGE.x &&

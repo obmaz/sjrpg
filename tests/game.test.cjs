@@ -431,7 +431,7 @@ test('random teleport checks the complete player footprint and dismounts on fall
     const { run } = await loadGame();
     run(`tileMap = Array.from({length: MAP_HEIGHT}, () => Array(MAP_WIDTH).fill(TILE_KEYS.indexOf('WATER')));
         tileMap[3][3] = TILE_KEYS.indexOf('SAND');
-        for (let y = 29; y <= 31; y++) for (let x = 39; x <= 41; x++) tileMap[y][x] = TILE_KEYS.indexOf('SAND');
+        for (let y = MAP_HEIGHT/2-1; y <= MAP_HEIGHT/2+1; y++) for (let x = MAP_WIDTH/2-1; x <= MAP_WIDTH/2+1; x++) tileMap[y][x] = TILE_KEYS.indexOf('SAND');
         Math.random = () => 0; player.mount = {...MOUNT_TYPES[0]}; randomTeleport();`);
     assert.equal(run('collidesWithMap(player.x, player.y, player.w, player.h)'), false);
     assert.equal(run('player.mount'), null);
@@ -844,18 +844,20 @@ test('painted village keeps the same walkable trail and blocked fountain across 
     let snapshot;
     for (const seed of [0, 42, 123, 99999]) {
         run(`generateForestMap(${seed});`);
-        const current = run('JSON.stringify(tileMap.slice(22,52).map(row=>row.slice(30,50)))');
+        const current = run(
+            'JSON.stringify(tileMap.slice(VILLAGE.y/32,(VILLAGE.y+VILLAGE.height)/32).map(row=>row.slice(VILLAGE.x/32,(VILLAGE.x+VILLAGE.width)/32)))',
+        );
         if (snapshot) assert.equal(current, snapshot);
         else snapshot = current;
-        assert.equal(run('isSolidTile(40,30)'), true);
-        assert.equal(run('collidesWithMap(1280,1135,24,28)'), false);
+        assert.equal(run('isSolidTile(MAP_WIDTH/2,MAP_HEIGHT/2)'), true);
+        assert.equal(run('collidesWithMap(FOUNTAIN_CENTER_X,FOUNTAIN_CENTER_Y+175,24,28)'), false);
     }
 });
 
 test('trail encounters use game time, stop at the cap and stay out of the village sanctuary', async () => {
     const { run } = await loadGame();
     run(
-        'clearWorldEntities();session.trailEncountersEnabled=true;player.x=1280;player.y=1135;updateTrailEncounters(0);',
+        'clearWorldEntities();session.trailEncountersEnabled=true;player.x=FOUNTAIN_CENTER_X;player.y=FOUNTAIN_CENTER_Y+175;updateTrailEncounters(0);',
     );
     assert.equal(run('enemies.length'), 3);
     run('session.gamePaused=true;updateTrailEncounters(20);');
@@ -868,18 +870,20 @@ test('trail encounters use game time, stop at the cap and stay out of the villag
     assert.equal(run('enemies.length'), 9);
     assert.equal(run('enemies.some(e=>collidesWithMap(e.x,e.y,e.w,e.h))'), false);
     run(
-        'clearWorldEntities();session.trailEncounterTimer=0;player.y=1010;updateTrailEncounters(10);',
+        'clearWorldEntities();session.trailEncounterTimer=0;player.y=FOUNTAIN_CENTER_Y+50;updateTrailEncounters(10);',
     );
     assert.equal(run('enemies.length'), 0);
 });
 
 test('boss terrain destruction preserves the painted village collision', async () => {
     const { run } = await loadGame();
-    run(`clearWorldEntities();player.x=1280;player.y=1135;player.invincible=100;
-        const villageBefore=JSON.stringify(tileMap.slice(22,52).map(r=>r.slice(30,50)));
-        spawnBoss(BOSS_TYPES.find(b=>b.id==='ancient_dragon'),1280,960);updateEnemies(.1);`);
+    run(`clearWorldEntities();player.x=FOUNTAIN_CENTER_X;player.y=FOUNTAIN_CENTER_Y+175;player.invincible=100;
+        const villageBefore=JSON.stringify(tileMap.slice(VILLAGE.y/32,(VILLAGE.y+VILLAGE.height)/32).map(r=>r.slice(VILLAGE.x/32,(VILLAGE.x+VILLAGE.width)/32)));
+        spawnBoss(BOSS_TYPES.find(b=>b.id==='ancient_dragon'),FOUNTAIN_CENTER_X,FOUNTAIN_CENTER_Y);updateEnemies(.1);`);
     assert.equal(
-        run('JSON.stringify(tileMap.slice(22,52).map(r=>r.slice(30,50)))===villageBefore'),
+        run(
+            'JSON.stringify(tileMap.slice(VILLAGE.y/32,(VILLAGE.y+VILLAGE.height)/32).map(r=>r.slice(VILLAGE.x/32,(VILLAGE.x+VILLAGE.width)/32)))===villageBefore',
+        ),
         true,
     );
 });
@@ -932,7 +936,7 @@ test('large painted chunks repeat for a seed, vary by seed and keep their four b
     run('generateForestMap(456);');
     assert.equal(run('JSON.stringify(tileMap)===firstChunkMap'), false);
     for (const region of ['forest', 'desert'])
-        for (let variant = 0; variant < 4; variant++) {
+        for (let variant = 0; variant < 8; variant++) {
             for (const [u, v] of [
                 [0.5, 0.025],
                 [0.5, 0.975],
@@ -947,14 +951,19 @@ test('large painted chunks repeat for a seed, vary by seed and keep their four b
         run(
             `clearWorldEntities();player.currentRegion='${region}';${region === 'forest' ? 'generateForestMap' : 'generateDesertMap'}(12345);`,
         );
-        // Each entirely visible outer region is connected to the shared arrival for ordinary bodies.
         for (const x of [640, 1920])
-            for (const y of [384, 1024, 1664])
+            for (const y of [384, 1024, 1664]) {
+                run(
+                    `var targetPosition=findNearbySpawnPosition(FOUNTAIN_CENTER_X+${x}-1280-12,FOUNTAIN_CENTER_Y+${y}-960-14,24,28);`,
+                );
                 assert.equal(
-                    run(`isReachableFromArrival(${x}-12,${y}-14,24,28)`),
+                    run(
+                        '!!targetPosition && isReachableFromArrival(targetPosition.x,targetPosition.y,24,28)',
+                    ),
                     true,
                     `${region} ${x},${y}`,
                 );
+            }
     }
 });
 
@@ -962,7 +971,7 @@ test('outer forest and desert chunks sustain capped encounters on valid ground',
     const { run } = await loadGame();
     for (const region of ['forest', 'desert']) {
         run(`clearWorldEntities();player.currentRegion='${region}';${region === 'forest' ? 'generateForestMap' : 'generateDesertMap'}(12345);
-    player.x=1920;player.y=1024;session.trailEncountersEnabled=true;session.trailEncounterTimer=0;updateTrailEncounters(0);`);
+    player.x=FOUNTAIN_CENTER_X+640;player.y=FOUNTAIN_CENTER_Y+64;session.trailEncountersEnabled=true;session.trailEncounterTimer=0;updateTrailEncounters(0);`);
         assert.ok(run('enemies.length') > 0, region);
         assert.equal(run('enemies.some(e=>collidesWithMap(e.x,e.y,e.w,e.h))'), false, region);
         run(
@@ -971,4 +980,52 @@ test('outer forest and desert chunks sustain capped encounters on valid ground',
         assert.equal(run('JSON.stringify(enemies)===encounterSnapshot'), true);
         run('session.gamePaused=false;');
     }
+});
+
+test('world dimensions expand threefold on both axes while the village remains centered and connected', async () => {
+    const { run } = await loadGame();
+    assert.equal(run('MAP_WIDTH*TILE_SIZE'), 7680);
+    assert.equal(run('MAP_HEIGHT*TILE_SIZE'), 5760);
+    assert.equal(run('VILLAGE.x+VILLAGE.width/2'), run('FOUNTAIN_CENTER_X'));
+    assert.equal(run('VILLAGE.y+256'), run('FOUNTAIN_CENTER_Y'));
+    for (const region of ['forest', 'desert']) {
+        run(
+            `clearWorldEntities();player.currentRegion='${region}';${region === 'forest' ? 'generateForestMap' : 'generateDesertMap'}(98765);`,
+        );
+        assert.equal(run('tileMap.length'), 180);
+        assert.equal(run('tileMap.every(r=>r.length===240 && r.every(Number.isInteger))'), true);
+        for (const [x, y] of [
+            [640, 1024],
+            [7040, 1024],
+            [640, 4864],
+            [7040, 4864],
+        ]) {
+            run(`var farPosition=findNearbySpawnPosition(${x}-12,${y}-14,24,28);`);
+            assert.equal(
+                run('!!farPosition && isReachableFromArrival(farPosition.x,farPosition.y,24,28)'),
+                true,
+                `${region} ${x} ${y}`,
+            );
+        }
+    }
+});
+
+test('large scene variants offer distinct connected path layouts and repeatable mirrored appearances', async () => {
+    const { run } = await loadGame();
+    for (const region of ['forest', 'desert'])
+        for (let variant = 0; variant < 8; variant++) {
+            run(
+                `var mask=chunkMask(${variant},'${region}');var paths=mask.flat().filter(t=>!TILE_TYPES[TILE_KEYS[t]].solid).length;`,
+            );
+            assert.ok(run('paths') > 60, `${region} ${variant}`);
+        }
+    run(
+        'var sceneLooks=new Set();var kinds=new Set();for(let y=-3;y<6;y++)for(let x=-3;x<8;x++){const look=chunkAppearance(77,x,y);sceneLooks.add(JSON.stringify(look));kinds.add(look.variant);}',
+    );
+    assert.equal(run('kinds.size'), 8);
+    assert.ok(run('sceneLooks.size') > 20);
+    assert.equal(
+        run('JSON.stringify(chunkAppearance(77,3,2))===JSON.stringify(chunkAppearance(77,3,2))'),
+        true,
+    );
 });

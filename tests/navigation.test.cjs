@@ -16,18 +16,20 @@ test('A* takes the shortest open detour and reports an unreachable destination',
 
 test('body-aware reachability rejects a giant at the far side of a narrow corridor', async () => {
     const { run } = await loadGame();
-    run(`tileMap = Array.from({length:MAP_HEIGHT},()=>Array(MAP_WIDTH).fill(TILE_KEYS.indexOf('WATER')));
-        for(let y=26;y<=34;y++) for(let x=36;x<=43;x++) tileMap[y][x]=TILE_KEYS.indexOf('SAND');
-        for(let y=26;y<=34;y++) for(let x=50;x<=60;x++) tileMap[y][x]=TILE_KEYS.indexOf('SAND');
-        for(let x=44;x<=49;x++) tileMap[30][x]=TILE_KEYS.indexOf('SAND');`);
-    assert.equal(run('isReachableFromArrival(56*TILE_SIZE,30*TILE_SIZE,24,24)'), true);
-    assert.equal(run('isReachableFromArrival(56*TILE_SIZE,30*TILE_SIZE,80,80)'), false);
+    run(`const ox=MAP_WIDTH/2-40,oy=MAP_HEIGHT/2-30;tileMap = Array.from({length:MAP_HEIGHT},()=>Array(MAP_WIDTH).fill(TILE_KEYS.indexOf('WATER')));
+        for(let y=26;y<=34;y++) for(let x=36;x<=43;x++) tileMap[y+oy][x+ox]=TILE_KEYS.indexOf('SAND');
+        for(let y=26;y<=34;y++) for(let x=50;x<=60;x++) tileMap[y+oy][x+ox]=TILE_KEYS.indexOf('SAND');
+        for(let x=44;x<=49;x++) tileMap[30+oy][x+ox]=TILE_KEYS.indexOf('SAND');`);
+    assert.equal(run('isReachableFromArrival((56+ox)*TILE_SIZE,(30+oy)*TILE_SIZE,24,24)'), true);
+    assert.equal(run('isReachableFromArrival((56+ox)*TILE_SIZE,(30+oy)*TILE_SIZE,80,80)'), false);
     assert.equal(
-        run("spawnEnemy(ENEMY_TYPES.find(e=>e.name==='황토 젤리'),56*TILE_SIZE,30*TILE_SIZE)"),
+        run(
+            "spawnEnemy(ENEMY_TYPES.find(e=>e.name==='황토 젤리'),(56+ox)*TILE_SIZE,(30+oy)*TILE_SIZE)",
+        ),
         null,
     );
-    run("tileMap[30][47]=TILE_KEYS.indexOf('WALL'); session.terrainRevision++;");
-    assert.equal(run('isReachableFromArrival(56*TILE_SIZE,30*TILE_SIZE,24,24)'), false);
+    run("tileMap[30+oy][47+ox]=TILE_KEYS.indexOf('WALL'); session.terrainRevision++;");
+    assert.equal(run('isReachableFromArrival((56+ox)*TILE_SIZE,(30+oy)*TILE_SIZE,24,24)'), false);
 });
 
 test('ground AI walks around a wall instead of repeatedly running into it', async () => {

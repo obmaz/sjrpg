@@ -9,9 +9,14 @@ import {
     TILE_TYPES,
 } from '../core/constants.js';
 import { getAvailableQuests } from '../core/helpers.js';
-import { enemies, npcs, player } from '../core/state.js';
+import { enemies, npcs, player, session } from '../core/state.js';
 import { getTile } from '../systems/world.js';
 
+let terrainImage = null;
+let terrainMap = null;
+let terrainRevision = -1;
+let terrainWidth = 0;
+let terrainHeight = 0;
 // ============================================================
 //  MINIMAP RENDERING
 // ============================================================
@@ -26,19 +31,36 @@ function drawMinimap() {
     mmCtx.fillStyle = 'rgba(10,10,30,0.85)';
     mmCtx.fillRect(0, 0, mmW, mmH);
 
-    // Draw terrain
-    for (let y = 0; y < MAP_HEIGHT; y += 2) {
-        for (let x = 0; x < MAP_WIDTH; x += 2) {
-            const tileKey = TILE_KEYS[getTile(x, y)];
-            mmCtx.fillStyle = TILE_TYPES[tileKey].color;
-            mmCtx.fillRect(
-                x * TILE_SIZE * scaleX,
-                y * TILE_SIZE * scaleY,
-                2 * TILE_SIZE * scaleX + 1,
-                2 * TILE_SIZE * scaleY + 1,
-            );
-        }
+    // The world is large; only rebuild the static map when terrain or size changes.
+    if (
+        !terrainImage ||
+        terrainMap !== session.tileMap ||
+        terrainRevision !== session.terrainRevision ||
+        terrainWidth !== mmW ||
+        terrainHeight !== mmH
+    ) {
+        terrainImage = document.createElement('canvas');
+        terrainImage.width = mmW;
+        terrainImage.height = mmH;
+        const paint = terrainImage.getContext('2d');
+        const stepX = Math.max(1, Math.ceil(MAP_WIDTH / mmW));
+        const stepY = Math.max(1, Math.ceil(MAP_HEIGHT / mmH));
+        for (let y = 0; y < MAP_HEIGHT; y += stepY)
+            for (let x = 0; x < MAP_WIDTH; x += stepX) {
+                paint.fillStyle = TILE_TYPES[TILE_KEYS[getTile(x, y)]].color;
+                paint.fillRect(
+                    x * TILE_SIZE * scaleX,
+                    y * TILE_SIZE * scaleY,
+                    stepX * TILE_SIZE * scaleX + 1,
+                    stepY * TILE_SIZE * scaleY + 1,
+                );
+            }
+        terrainMap = session.tileMap;
+        terrainRevision = session.terrainRevision;
+        terrainWidth = mmW;
+        terrainHeight = mmH;
     }
+    mmCtx.drawImage(terrainImage, 0, 0);
 
     // Draw enemies
     for (const e of enemies) {

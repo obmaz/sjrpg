@@ -270,3 +270,14 @@ test('last-use attacks retain their own visual and ranged projectiles retain wea
     }
     assert.equal(run('enemyWorldArt({name:"고대 드래곤",artIndex:null})'), 'ancientDragon');
 });
+
+test('large minimap terrain is cached between frames and refreshed after terrain edits', async () => {
+    const { run } = await loadGame();
+    run(`clearWorldEntities();const minimap=document.getElementById('minimap');minimap.width=100;minimap.height=100;
+   let mapPaints=0;ctx.fillRect=()=>mapPaints++;drawMinimap();const initialPaints=mapPaints;
+   mapPaints=0;drawMinimap();const repeatedPaints=mapPaints;
+   tileMap[0][0]=TILE_KEYS.indexOf('SAND');session.terrainRevision++;mapPaints=0;drawMinimap();`);
+    assert.ok(run('initialPaints') > 1000);
+    assert.ok(run('repeatedPaints') < 10);
+    assert.ok(run('mapPaints') > 1000);
+});
