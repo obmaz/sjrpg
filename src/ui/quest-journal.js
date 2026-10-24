@@ -1,8 +1,14 @@
 import { canAct, isGameActive } from '../core/helpers.js';
 import { player, session } from '../core/state.js';
 import { getQuest } from '../systems/quests.js';
+import { DESERT_QUESTS, MAIN_QUESTS } from '../data/quests.js';
 
 function renderQuestJournal() {
+    const desert = player.currentRegion === 'desert';
+    const regionQuests = desert ? DESERT_QUESTS : MAIN_QUESTS;
+    const completed = regionQuests.filter((id) => player.completedQuests.includes(id)).length;
+    document.getElementById('questSummary').textContent =
+        `${desert ? '황금 사막' : '푸른 숲'} · 주요 퀘스트 ${completed} / ${regionQuests.length} 완료`;
     const list = document.getElementById('questList');
     list.innerHTML = '';
     player.activeQuests.forEach((activeQuest) => {

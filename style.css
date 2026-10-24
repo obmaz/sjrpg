@@ -257,7 +257,7 @@ body {
     }
 }
 
-/* ----- 중앙: 목표 ----- */
+/* ----- 중앙: 진행 중인 상태 효과 ----- */
 #hudCenter {
     flex: 1;
     display: flex;
@@ -275,16 +275,9 @@ body {
     border-bottom: 1px solid rgba(80, 80, 140, 0.18);
 }
 
-#clearProgress {
-    font-size: 12px;
-    color: #ffe066;
-    font-weight: bold;
-    text-shadow: 0 0 6px rgba(255, 215, 0, 0.2);
-    letter-spacing: 0.5px;
-}
-
 /* ----- 오른쪽: 장비 ----- */
 #hudRight {
+    margin-left: auto;
     display: flex;
     gap: 5px;
     padding: 5px 12px;
@@ -2103,23 +2096,6 @@ body {
     color: #dec895;
 }
 
-#questTracker {
-    position: relative;
-    width: 100%;
-    border: 0;
-    padding: 0;
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    cursor: pointer;
-    pointer-events: auto;
-}
-#questTracker:focus-visible {
-    outline: 2px solid var(--ui-gold);
-    outline-offset: 2px;
-}
-.tracker-arrow,
-.tracker-meter,
 .mobile-region {
     display: none;
 }
@@ -2260,93 +2236,18 @@ body {
         grid-column: 1;
         flex: none;
         align-items: flex-start;
-        justify-content: flex-start;
-        gap: 1px;
-        min-height: 44px;
-        padding: 0;
+        padding: 4px 8px;
         margin: 0;
-        background: none;
-        border: 0;
-    }
-    #questTracker {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        min-height: 44px;
-        padding: 8px 10px 11px;
-        border: 1px solid #b9a35b66;
-        border-radius: 9px;
-        background: linear-gradient(110deg, #354b2de8, #142f22eb);
-        text-align: left;
-        overflow: hidden;
-    }
-    .tracker-arrow {
-        display: block;
-        color: #e5c77f;
-        font-size: 24px;
-        line-height: 24px;
-    }
-    .tracker-meter {
-        display: block;
-        position: absolute;
-        inset: auto 0 0;
-        height: 3px;
-        background: #071e16;
-    }
-    #questProgressFill {
-        display: block;
-        height: 100%;
-        background: linear-gradient(90deg, #799f5b, #e5c77f);
-        transition: width 0.3s;
-    }
-    #clearProgress {
-        font-size: 14px;
-        line-height: 20px;
-        color: #dfd1a5;
-        letter-spacing: 0.1px;
-        font-weight: 500;
-        white-space: normal;
+        background: #102a20de;
+        border: 1px solid #a8904c55;
+        border-radius: 6px;
     }
     #poisonDisplay {
         font-size: 12px;
         line-height: 18px;
     }
     #hudRight {
-        grid-column: 1 / -1;
-        min-width: 0;
-        display: flex;
-        justify-content: flex-start;
-        gap: 5px;
-        padding: 0;
-        border: 0;
-        background: none;
-    }
-    #hudRight .equip-slot {
-        min-width: 0;
-        flex: 1;
-        max-width: none;
-        border: 1px solid #94a0634a;
-        border-radius: 8px;
-        padding: 5px 8px;
-        gap: 3px;
-        background: #0b271bc9;
-    }
-    #equipmentSlot,
-    #auxDisplay {
-        min-width: 0;
-        white-space: normal;
-        overflow-wrap: anywhere;
-        font-size: 12px;
-        line-height: 20px;
-    }
-    #hudRight .equip-key {
-        font-size: 12px;
-        color: #b9b87e;
-    }
-    #hudRight #itemSlots,
-    #hudRight #equipMount {
-        display: none !important;
+        display: none;
     }
     #touchControls {
         display: block;
@@ -2953,10 +2854,6 @@ body {
     .overlay .game-switch {
         font-size: 12px;
     }
-    #equipmentSlot .weapon-stats {
-        display: inline;
-        font-size: inherit;
-    }
     .empty-quests {
         font-size: 14px;
     }
@@ -3048,16 +2945,6 @@ body {
         flex-direction: column;
         width: 300px;
         padding-right: 10px;
-    }
-    #hudCenter {
-        min-height: 20px;
-    }
-    #hudRight {
-        position: absolute;
-        left: 310px;
-        top: 12px;
-        width: min(280px, calc(100vw - 410px));
-        padding: 0;
     }
     .touch-menu {
         left: 50%;

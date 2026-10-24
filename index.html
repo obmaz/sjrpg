@@ -102,14 +102,7 @@
                         </div>
                     </div>
                 </div>
-                <div id="hudCenter">
-                    <button id="questTracker" type="button" aria-label="주요 퀘스트 일지 열기">
-                        <span id="clearProgress">주요 퀘스트: 0 / 3</span>
-                        <span class="tracker-arrow" aria-hidden="true">›</span>
-                        <span class="tracker-meter" aria-hidden="true"
-                            ><span id="questProgressFill"></span
-                        ></span>
-                    </button>
+                <div id="hudCenter" style="display: none">
                     <div id="poisonDisplay" style="display: none"></div>
                 </div>
                 <div id="hudRight">
@@ -304,7 +297,10 @@
                         </svg>
                     </button>
                 </div>
-                <div class="window-body"><div id="questList"></div></div>
+                <div class="window-body">
+                    <p id="questSummary" class="window-intro"></p>
+                    <div id="questList"></div>
+                </div>
                 <div class="window-footer">
                     <button id="resumeQuestJournal" class="game-button" type="button">
                         모험 계속하기

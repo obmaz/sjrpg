@@ -111,7 +111,6 @@ function initializeTouchControls() {
         touchInventory: 'KeyI',
         touchCompendium: 'KeyC',
         touchQuests: 'KeyL',
-        questTracker: 'KeyL',
         touchSettings: 'KeyP',
         touchDismount: 'KeyU',
         touchInteract: 'KeyE',

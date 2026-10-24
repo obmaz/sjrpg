@@ -443,15 +443,15 @@ test('shop purchases share capacity checks and copy definitions rather than muta
     assert.equal(run('player.gold'), 920);
 });
 
-test('consumed auxiliary weapons stay discovered and desert HUD shows desert quest progress', async () => {
+test('consumed auxiliary weapons stay discovered and the journal shows desert quest progress', async () => {
     const { run, elements } = await loadGame();
     run(
-        "player.collection.auxiliaryWeapons.push('firebomb'); renderCompendium(); player.currentRegion = 'desert'; player.completedQuests.push('collect_1000gold'); updateHud();",
+        "player.collection.auxiliaryWeapons.push('firebomb'); renderCompendium(); player.currentRegion = 'desert'; player.completedQuests.push('collect_1000gold'); renderQuestJournal();",
     );
     assert.ok(
         elements.get('compendiumGrid').children.some((card) => card.title?.includes('화염병')),
     );
-    assert.equal(elements.get('clearProgress').textContent, '📜 주요 퀘스트: 1 / 2');
+    assert.equal(elements.get('questSummary').textContent, '황금 사막 · 주요 퀘스트 1 / 2 완료');
 });
 
 test('content IDs, drop pools, spawn indices and quest rewards refer to existing definitions', async () => {

@@ -1,6 +1,5 @@
 import { CONSUMABLE_CAPACITY } from '../core/constants.js';
 import { player } from '../core/state.js';
-import { DESERT_QUESTS, MAIN_QUESTS } from '../data/quests.js';
 
 const hudElements = new Map();
 const renderedValues = new WeakMap();
@@ -75,6 +74,7 @@ function updateHud() {
         const poisonSeconds = Math.floor(player.poisonTimer % 60);
         statuses.push(`☠️ 독 ${poisonMinutes}:${poisonSeconds.toString().padStart(2, '0')}`);
     }
+    setValue(getHudElement('hudCenter').style, 'display', statuses.length ? 'flex' : 'none');
     setValue(statusDisplay.style, 'display', statuses.length ? 'block' : 'none');
     setValue(statusDisplay.style, 'color', player.poisonTimer > 0 ? '#88ff44' : '#ffff44');
     setValue(statusDisplay, 'textContent', statuses.join(' | '));
@@ -102,16 +102,6 @@ function updateHud() {
         setValue(auxDisplay.style, 'color', '#888');
     }
 
-    const regionQuests = player.currentRegion === 'desert' ? DESERT_QUESTS : MAIN_QUESTS;
-    const mainProgress = regionQuests.filter((questId) =>
-        player.completedQuests.includes(questId),
-    ).length;
-    setText('clearProgress', `📜 주요 퀘스트: ${mainProgress} / ${regionQuests.length}`);
-    setValue(
-        getHudElement('questProgressFill').style,
-        'width',
-        `${(mainProgress / regionQuests.length) * 100}%`,
-    );
     setText('regionBadge', player.currentRegion === 'desert' ? '황금 사막' : '푸른 숲');
 
     const mount = player.mount;

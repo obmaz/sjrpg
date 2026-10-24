@@ -31,20 +31,20 @@ test('mobile action buttons follow equipment, limited uses and cooldown recovery
     assert.equal(elements.get('touchAux').disabled, true);
 });
 
-test('the objective tracker opens the journal and updates progress for the current region', async () => {
+test('the journal menu contains regional quest totals without an extra HUD tracker', async () => {
     const { run, elements } = await loadGame({ coarsePointer: true });
     run(`initializeTouchControls(); player.completedQuests=[MAIN_QUESTS[0]]; updateHud();
         touchKeys.Space=true;`);
     assert.equal(elements.get('regionBadge').textContent, '푸른 숲');
-    assert.match(elements.get('clearProgress').textContent, /1 \/ 3/);
-    assert.ok(parseFloat(elements.get('questProgressFill').style.width) > 33);
-    elements.get('questTracker').dispatchEvent({ type: 'click' });
+    elements.get('touchQuests').dispatchEvent({ type: 'click' });
+    assert.match(elements.get('questSummary').textContent, /푸른 숲.*1 \/ 3 완료/);
     assert.equal(run('session.questJournalOpen && session.gamePaused'), true);
     assert.equal(run('isKeyDown("Space")'), false);
     elements.get('closeQuestJournal').dispatchEvent({ type: 'click' });
     run('player.currentRegion="desert"; player.completedQuests=[...DESERT_QUESTS]; updateHud();');
+    elements.get('touchQuests').dispatchEvent({ type: 'click' });
+    assert.match(elements.get('questSummary').textContent, /황금 사막.*2 \/ 2 완료/);
     assert.equal(elements.get('regionBadge').textContent, '황금 사막');
-    assert.equal(elements.get('questProgressFill').style.width, '100%');
 });
 
 test('interaction feedback matches the nearest NPC and preserves portal priority at the range boundary', async () => {

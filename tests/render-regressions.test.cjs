@@ -58,11 +58,13 @@ test('HUD displays poison together with speed and removes each status independen
     const status = elements.get('poisonDisplay');
     assert.match(status.textContent, /스피드 10\.0s/);
     assert.match(status.textContent, /독 4:00/);
+    assert.equal(elements.get('hudCenter').style.display, 'flex');
     run('player.speedBoost = 0; updateHud();');
     assert.equal(status.textContent, '☠️ 독 4:00');
     assert.equal(status.style.display, 'block');
     run('player.poisonTimer = 0; updateHud();');
     assert.equal(status.style.display, 'none');
+    assert.equal(elements.get('hudCenter').style.display, 'none');
 });
 
 test('unchanged HUD output skips content, style and class mutations', async () => {
