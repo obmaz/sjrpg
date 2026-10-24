@@ -33,6 +33,7 @@ function updatePlayer(deltaTime) {
     else if (dx > 0.3) player.dir = 3;
 
     const moving = dx !== 0 || dy !== 0;
+    if (moving && player.mount) player.mount.dir = player.dir;
 
     // Speed boost timer
     if (player.speedBoost > 0) {

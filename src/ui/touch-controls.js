@@ -251,10 +251,15 @@ function updateTouchControls() {
     if (target) {
         const entity = target.entity;
         setControlValue(worldButton, 'textContent', target.label);
+        const shortLabel = window.matchMedia('(pointer: coarse)').matches
+            ? target.label
+            : `E · ${target.label}`;
+        if (worldButton.getAttribute('data-label') !== shortLabel)
+            worldButton.setAttribute('data-label', shortLabel);
         const label = `${entity.name || '차원 포탈'} ${target.label}`;
         if (worldButton.getAttribute('aria-label') !== label)
             worldButton.setAttribute('aria-label', label);
-        worldButton.style.left = `${Math.max(56, Math.min(canvas.width - 56, entity.x + entity.w / 2 - camera.x))}px`;
+        worldButton.style.left = `${Math.max(32, Math.min(canvas.width - 32, entity.x + entity.w / 2 - camera.x))}px`;
         worldButton.style.top = `${Math.max(96, Math.min(canvas.height - 210, entity.y - camera.y - 52))}px`;
     }
     const interact = control('touchInteract');

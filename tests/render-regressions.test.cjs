@@ -200,3 +200,24 @@ test('painted hero portrait preserves chosen appearance and low-health feedback'
     run('player.hp=100; updateHud();');
     assert.equal(face.classList.contains('painted-portrait'), true);
 });
+
+test('nearby NPC actions use one compact world tag without a second canvas action label', async () => {
+    for (const coarsePointer of [false, true]) {
+        const { run, elements } = await loadGame({ coarsePointer });
+        run(`npcs.length=0;portals.length=0;player.x=500;player.y=570;
+            npcs.push({x:500,y:500,w:64,h:64,name:'상인',icon:'🏪',isShop:true,quests:[]});
+            const actionTexts=[];ctx.fillText=text=>actionTexts.push(text);
+            initializeTouchControls();drawNpcs();`);
+        assert.equal(elements.get('touchInteractLabel').textContent, '상점');
+        assert.equal(
+            elements.get('worldInteract').getAttribute('data-label'),
+            coarsePointer ? '상점' : 'E · 상점',
+        );
+        assert.equal(
+            run(
+                'actionTexts.some(text=>String(text).includes("상점")||String(text).includes("터치"))',
+            ),
+            false,
+        );
+    }
+});

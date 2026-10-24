@@ -1,6 +1,6 @@
 import { camera, canvas, ctx } from '../core/canvas.js';
 import { drawArtToken } from './art.js';
-import { drawWorldSprite } from './world-art.js';
+import { drawMountSprite } from './world-art.js';
 import { visualMotionAllowed } from './presentation.js';
 import {
     enemyProjectiles,
@@ -190,7 +190,7 @@ function drawMounts(entities = mounts) {
             sy = m.y - camera.y;
         const cx = sx + m.w / 2,
             feetY = sy + m.h;
-        const painted = drawWorldSprite(ctx, m.id, cx, feetY, m.w * 1.5, m.h * 1.5);
+        const painted = drawMountSprite(ctx, m, cx, feetY);
         if (!painted) {
             ctx.font = '32px sans-serif';
             ctx.textAlign = 'center';

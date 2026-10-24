@@ -4651,3 +4651,37 @@ body {
     font-size: 13px;
     line-height: 1.5;
 }
+/* A small location hint; the lower-right interaction button remains the main action. */
+#worldInteract {
+    width: 64px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    color: transparent;
+    font-size: 0;
+}
+#worldInteract::after {
+    content: attr(data-label);
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    padding: 3px 7px;
+    border: 1px solid #b6a47766;
+    border-radius: 9px;
+    background: #0c2b2dd9;
+    color: #e3dcc5;
+    font:
+        500 11px/14px system-ui,
+        sans-serif;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px #0005;
+    pointer-events: none;
+}
+#worldInteract:active::after {
+    background: #234b49;
+}

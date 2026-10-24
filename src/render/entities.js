@@ -3,7 +3,7 @@ import { distance, getAvailableQuests } from '../core/helpers.js';
 import { chests, npcs, player, scarecrows } from '../core/state.js';
 import { getFacingAngle } from '../systems/combat.js';
 import { drawArtToken } from './art.js';
-import { drawWorldSprite } from './world-art.js';
+import { drawWorldSprite, drawMountSprite } from './world-art.js';
 import { enemyWorldArt } from '../data/art.js';
 import { getInteractionTarget } from '../systems/interactions.js';
 import { drawPlayerMarker } from './presentation.js';
@@ -13,7 +13,6 @@ import { drawPlayerMarker } from './presentation.js';
 // ============================================================
 function drawNpcs(entities = npcs) {
     const target = getInteractionTarget();
-    const touch = window.matchMedia('(pointer: coarse)').matches;
     for (const npc of entities) {
         const sx = npc.x - camera.x,
             sy = npc.y - camera.y;
@@ -90,45 +89,38 @@ function drawNpcs(entities = npcs) {
             ctx.fillText(npc.icon, bx, by - 5 * bodySize);
         }
         const badgeY = feetY - (npc.isShop ? 82 : 54) * 0.8 - 10;
-        // Quest indicator
-        if (hasQuest) {
-            ctx.fillStyle = '#ffd700';
-            ctx.font = 'bold 14px sans-serif';
-            ctx.fillText('❗', sx + npc.w / 2, badgeY);
-        }
-        // Shop indicator
-        if (npc.isShop) {
-            ctx.fillStyle = '#ffd700';
-            ctx.font = 'bold 12px sans-serif';
-            ctx.fillText('💰', sx + npc.w / 2, badgeY);
-        }
-        // Desert traveler indicator
-        if (npc.isDesertTraveler) {
-            ctx.fillStyle = '#ffaa44';
-            ctx.font = 'bold 12px sans-serif';
-            ctx.fillText('🏜️', sx + npc.w / 2, badgeY);
-        }
-        // Slot machine indicator
-        if (npc.isSlotMachine) {
-            ctx.fillStyle = '#ff66ff';
-            ctx.font = 'bold 12px sans-serif';
-            ctx.fillText('🎰', sx + npc.w / 2, badgeY);
-        }
-        // Stylist indicator
-        if (npc.isStylist) {
-            ctx.fillStyle = '#aa88ff';
-            ctx.font = 'bold 12px sans-serif';
-            ctx.fillText('💈', sx + npc.w / 2, badgeY);
-        }
-        // The visible prompt and touch activation share the same reachable target.
-        if (target?.entity === npc) {
-            ctx.fillStyle = '#f7e6b0';
-            ctx.font = 'bold 13px sans-serif';
-            ctx.strokeStyle = '#09201b';
-            ctx.lineWidth = 3;
-            const hint = `${touch ? '터치' : '[E]'} ${target.label}`;
-            ctx.strokeText(hint, sx + npc.w / 2, badgeY - 18);
-            ctx.fillText(hint, sx + npc.w / 2, badgeY - 18);
+        // The compact DOM tag is the only action label above the selected NPC.
+        if (target?.entity !== npc) {
+            // Quest indicator
+            if (hasQuest) {
+                ctx.fillStyle = '#ffd700';
+                ctx.font = 'bold 11px sans-serif';
+                ctx.fillText('❗', sx + npc.w / 2, badgeY);
+            }
+            // Shop indicator
+            if (npc.isShop) {
+                ctx.fillStyle = '#ffd700';
+                ctx.font = '11px sans-serif';
+                ctx.fillText('💰', sx + npc.w / 2, badgeY);
+            }
+            // Desert traveler indicator
+            if (npc.isDesertTraveler) {
+                ctx.fillStyle = '#ffaa44';
+                ctx.font = '11px sans-serif';
+                ctx.fillText('🏜️', sx + npc.w / 2, badgeY);
+            }
+            // Slot machine indicator
+            if (npc.isSlotMachine) {
+                ctx.fillStyle = '#ff66ff';
+                ctx.font = '11px sans-serif';
+                ctx.fillText('🎰', sx + npc.w / 2, badgeY);
+            }
+            // Stylist indicator
+            if (npc.isStylist) {
+                ctx.fillStyle = '#aa88ff';
+                ctx.font = '11px sans-serif';
+                ctx.fillText('💈', sx + npc.w / 2, badgeY);
+            }
         }
     }
 }
@@ -434,7 +426,7 @@ function drawPlayerShape(cx, cy, p) {
 
     // Draw mount if mounted
     if (mount) {
-        if (!drawWorldSprite(ctx, mount.id, cx, cy + p.h / 2, mount.w * 1.5, mount.h * 1.5)) {
+        if (!drawMountSprite(ctx, mount, cx, cy + p.h / 2, p.dir)) {
             const mw = mount.w,
                 mh = mount.h;
             // Mount shadow

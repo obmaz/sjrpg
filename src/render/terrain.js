@@ -551,7 +551,8 @@ function drawPortals() {
         ctx.fillStyle = '#ddaaff';
         ctx.font = 'bold 12px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('🌀 사막 포탈 [E]', sx + p.w / 2, sy - 12);
+        ctx.font = '10px sans-serif';
+        ctx.fillText('포탈', sx + p.w / 2, sy - 12);
     }
 }
 

@@ -60,3 +60,29 @@ test('boarding rejects distant, paused, dead and obstructed mounts without movin
     assert.equal(run('player.mount'), null);
     assert.equal(run('mounts.includes(mount)'), true);
 });
+
+test('mount direction follows movement, survives stopping and is kept when dismounted and boarded again', async () => {
+    for (const id of ['horse', 'bicycle', 'motor', 'boat']) {
+        const { run } = await loadGame();
+        run(`clearWorldEntities(); tileMap=Array.from({length:MAP_HEIGHT},()=>Array(MAP_WIDTH).fill(TILE_KEYS.indexOf('${id === 'boat' ? 'WATER' : 'SAND'}')));
+            player.x=400;player.y=400;
+            const ride=spawnMount(MOUNT_TYPES.find(m=>m.id==='${id}'),400,400);
+            boardMount(ride);`);
+        for (const [key, direction] of [
+            ['KeyS', 0],
+            ['KeyA', 1],
+            ['KeyW', 2],
+            ['KeyD', 3],
+        ]) {
+            run(`keys.${key}=true;updatePlayer(0.01);delete keys.${key};updatePlayer(0.01);`);
+            assert.equal(run('player.dir'), direction, id);
+            assert.equal(run('player.mount.dir'), direction, id);
+            assert.equal(run(`getMountArtFrame('${id}',player.dir)[1]%4`), direction, id);
+        }
+        run('dismountPlayer();');
+        assert.equal(run('player.mount'), null, id);
+        assert.equal(run('mounts[0].dir'), 3, id);
+        run('player.x=mounts[0].x;player.y=mounts[0].y;player.dir=0;boardMount(mounts[0]);');
+        assert.equal(run('player.dir'), 3, id);
+    }
+});

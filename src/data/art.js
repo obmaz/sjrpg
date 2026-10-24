@@ -49,3 +49,33 @@ function enemyWorldArt(enemy) {
 }
 
 export { WORLD_FRAMES, enemyWorldArt };
+
+const MOUNT_ART_ROWS = Object.freeze({ horse: 0, bicycle: 1, motor: 2, boat: 3 });
+function getMountArtFrame(id, direction = 0) {
+    const row = MOUNT_ART_ROWS[id];
+    if (row === undefined) return null;
+    const facing = Number.isInteger(direction) && direction >= 0 && direction < 4 ? direction : 0;
+    return ['mounts', row * 4 + facing];
+}
+export { getMountArtFrame };
+
+// Measured sprite rectangles: row spacing in the generated sheet is not assumed uniform.
+const MOUNT_SPRITE_BOUNDS = [
+    [77, 24, 132, 327],
+    [320, 101, 302, 232],
+    [723, 22, 128, 328],
+    [941, 99, 309, 234],
+    [69, 383, 156, 263],
+    [305, 418, 329, 210],
+    [698, 383, 169, 263],
+    [913, 418, 322, 209],
+    [52, 676, 191, 267],
+    [296, 723, 346, 200],
+    [697, 690, 168, 247],
+    [915, 723, 338, 201],
+    [61, 951, 165, 271],
+    [302, 1013, 320, 158],
+    [702, 954, 156, 267],
+    [926, 1012, 315, 159],
+];
+export { MOUNT_SPRITE_BOUNDS };

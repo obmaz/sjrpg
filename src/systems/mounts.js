@@ -29,6 +29,7 @@ function boardMount(mount) {
     )
         return false;
     player.mount = mount;
+    player.dir = mount.dir ?? 0;
     player.x = mount.x;
     player.y = mount.y;
     mounts.splice(mounts.indexOf(mount), 1);
@@ -98,14 +99,14 @@ function dismountPlayer() {
     }
     player.x = ox;
     player.y = oy;
-    mounts.push({ ...m, x: mountX, y: mountY });
+    mounts.push({ ...m, dir: player.dir, x: mountX, y: mountY });
     player.mount = null;
     addMessage(`내렸습니다. ${m.icon} ${m.name}`, 'info');
     updateHud();
 }
 
 function spawnMount(mountType, x, y) {
-    const mount = { ...mountType, x, y, w: MOUNT_WIDTH, h: MOUNT_HEIGHT };
+    const mount = { ...mountType, x, y, w: MOUNT_WIDTH, h: MOUNT_HEIGHT, dir: 0 };
     if (mount.waterOnly) {
         if (!canOccupyMountPosition(mount, x, y)) return null;
     } else {
