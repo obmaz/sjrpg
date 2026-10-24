@@ -1,6 +1,8 @@
 import { getNavigationWaypoint } from './navigation.js';
 import {
     collidesWithEntities,
+    ignoresTerrain,
+    moveWithCollisions,
     collidesWithMap,
     distanceBetweenRectangles,
 } from '../core/collision.js';
@@ -195,8 +197,7 @@ function updateEnemies(deltaTime) {
 
         // Ground enemies steer along a body-aware route when terrain blocks the target.
         if (
-            !enemy.flying &&
-            !enemy.megaBoss &&
+            !ignoresTerrain(enemy) &&
             (enemy.state === 'chase' ||
                 enemy.state === 'wander' ||
                 (enemy.state === 'ranged' && distanceToPlayer > rangedRange * 0.7))
@@ -226,49 +227,23 @@ function updateEnemies(deltaTime) {
             magnitude > 0 && (enemy.state === 'chase' || enemy.state === 'wander' || strafing);
         if (enemy.state !== 'hurt' && magnitude > 0) setActorFacing(enemy, Math.atan2(dy, dx));
 
-        // Movement (with knockback)
+        const canOccupy = (x, y) =>
+            (ignoresTerrain(enemy) || !collidesWithMap(x, y, enemy.w, enemy.h)) &&
+            !collidesWithEntities(x, y, enemy.w, enemy.h, enemy);
         if (enemy.knockbackX || enemy.knockbackY) {
-            const knockbackX = enemy.knockbackX * deltaTime * 4;
-            const knockbackY = enemy.knockbackY * deltaTime * 4;
-            const steps = Math.ceil(Math.max(Math.abs(knockbackX), Math.abs(knockbackY)) / 8);
-            for (let step = 0; step < steps; step++) {
-                const kbx = enemy.x + knockbackX / steps;
-                const kby = enemy.y + knockbackY / steps;
-                if (
-                    !collidesWithMap(kbx, enemy.y, enemy.w, enemy.h) &&
-                    !collidesWithEntities(kbx, enemy.y, enemy.w, enemy.h, enemy)
-                )
-                    enemy.x = kbx;
-                if (
-                    !collidesWithMap(enemy.x, kby, enemy.w, enemy.h) &&
-                    !collidesWithEntities(enemy.x, kby, enemy.w, enemy.h, enemy)
-                )
-                    enemy.y = kby;
-            }
+            moveWithCollisions(
+                enemy,
+                enemy.knockbackX * deltaTime * 4,
+                enemy.knockbackY * deltaTime * 4,
+                canOccupy,
+            );
             const decay = Math.pow(0.85, deltaTime * 60);
             enemy.knockbackX *= decay;
             enemy.knockbackY *= decay;
             if (Math.abs(enemy.knockbackX) < 0.5) enemy.knockbackX = 0;
             if (Math.abs(enemy.knockbackY) < 0.5) enemy.knockbackY = 0;
         } else {
-            const mx = enemy.x + dx * travelDistance;
-            const my = enemy.y + dy * travelDistance;
-            if (enemy.flying || enemy.megaBoss) {
-                // Flying enemies ignore map collision
-                if (!collidesWithEntities(mx, enemy.y, enemy.w, enemy.h, enemy)) enemy.x = mx;
-                if (!collidesWithEntities(enemy.x, my, enemy.w, enemy.h, enemy)) enemy.y = my;
-            } else {
-                if (
-                    !collidesWithMap(mx, enemy.y, enemy.w, enemy.h) &&
-                    !collidesWithEntities(mx, enemy.y, enemy.w, enemy.h, enemy)
-                )
-                    enemy.x = mx;
-                if (
-                    !collidesWithMap(enemy.x, my, enemy.w, enemy.h) &&
-                    !collidesWithEntities(enemy.x, my, enemy.w, enemy.h, enemy)
-                )
-                    enemy.y = my;
-            }
+            moveWithCollisions(enemy, dx * travelDistance, dy * travelDistance, canOccupy);
         }
 
         // Clamp
@@ -276,7 +251,7 @@ function updateEnemies(deltaTime) {
         enemy.y = Math.max(0, Math.min(MAP_HEIGHT * TILE_SIZE - enemy.h, enemy.y));
 
         // Boss: terrain destruction
-        if (enemy.destroyTerrain && enemy.hp > 0) {
+        if (enemy.destroyTerrain && enemy.hp > 0 && session.chunkMap !== session.tileMap) {
             const tileX = Math.floor(enemy.x / TILE_SIZE);
             const tileY = Math.floor(enemy.y / TILE_SIZE);
             for (let dy = -1; dy <= 1; dy++) {

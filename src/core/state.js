@@ -2,6 +2,9 @@ import { GAME_DURATION_SECONDS, MAP_HEIGHT, MAP_WIDTH, TILE_SIZE } from './const
 import { WEAPONS } from '../data/weapons.js';
 const session = {
     terrainRevision: 0,
+    chunkMap: null,
+    chunkSeed: 0,
+    chunkRegion: null,
     trailEncounterTimer: 0,
     trailEncountersEnabled: false,
     gamePaused: false,
@@ -28,7 +31,7 @@ const player = {
     y: (MAP_HEIGHT * TILE_SIZE) / 2,
     w: 24,
     h: 28,
-    speed: 225, // pixels per second (1.25x)
+    speed: 245, // pixels per second
     hp: 100,
     maxHp: 100,
     weapon: WEAPONS[0], // 현재 장착 무기

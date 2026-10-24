@@ -9,7 +9,7 @@ function inVillage(x, y) {
     );
 }
 function villageTile(u, v) {
-    if (((u - 0.5) / 0.17) ** 2 + ((v - 0.245) / 0.095) ** 2 < 1) return 'ROCK';
+    if (((u - 0.5) / 0.19) ** 2 + ((v - 0.245) / 0.115) ** 2 < 1) return 'ROCK';
     if (u > 0.74 && v > 0.15 && v < 0.36) return 'ROCK';
     if (u < 0.25 && v > 0.4 && v < 0.67) return 'ROCK';
     if (u > 0.77 && v > 0.64) return 'ROCK';

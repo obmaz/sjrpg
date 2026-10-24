@@ -40,6 +40,8 @@
 
 ## 아트
 
+`assets/chunks-forest.webp`와 `assets/chunks-desert.webp`는 시작 마을의 그림 스타일을 확장해 생성한 2×2 환경 시트입니다. 각 셀은 중앙 전투 공간과 네 방향 출입로가 있는 큰 숲길·호수·유적·꽃숲 또는 사막 길·오아시스·신전·협곡입니다. 인물·UI·몬스터는 포함하지 않습니다.
+
 `assets/actors-hero.webp`, `actors-hero-attack.webp`, `actors-creatures-a.webp`~`actors-creatures-d.webp`, `actors-villagers.webp`, `actors-vehicles.webp`는 같은 그림체로 새로 생성한 방향·걷기·검 공격 시트입니다. 주인공은 기존 청록 모험가 그림을 참조해 16방향으로 만들었으며 모든 이동 적·보스·주민·탈것에는 기본 8방향을 연결합니다.
 
 `assets/village-scene.webp`는 사용자가 첨부한 대표 이미지의 구도를 바탕으로 UI·캐릭터·몬스터·상자를 제거하고 새로 생성한 환경 그림입니다. 실제 인물·전투·상호작용은 코드로 실행합니다.

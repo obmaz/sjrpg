@@ -5,16 +5,26 @@ import { isSolidTile, isWaterTile } from '../systems/world.js';
 // ============================================================
 //  COLLISION
 // ============================================================
+function ignoresTerrain(actor) {
+    return actor.flying === true || actor.phasing === true;
+}
+function moveWithCollisions(body, dx, dy, canOccupy) {
+    const steps = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 8));
+    for (let step = 0; step < steps; step++) {
+        if (canOccupy(body.x + dx / steps, body.y)) body.x += dx / steps;
+        if (canOccupy(body.x, body.y + dy / steps)) body.y += dy / steps;
+    }
+}
 function collidesWithMap(x, y, w, h) {
     return collidesWithTiles(x, y, w, h, isSolidTile);
 }
 
 function collidesWithTiles(x, y, w, h, isBlocked) {
-    const margin = 4;
+    const margin = 0;
     const left = Math.floor((x + margin) / TILE_SIZE);
-    const right = Math.floor((x + w - margin) / TILE_SIZE);
+    const right = Math.floor((x + w - margin - 1e-7) / TILE_SIZE);
     const top = Math.floor((y + margin) / TILE_SIZE);
-    const bottom = Math.floor((y + h - margin) / TILE_SIZE);
+    const bottom = Math.floor((y + h - margin - 1e-7) / TILE_SIZE);
     for (let ty = top; ty <= bottom; ty++) {
         for (let tx = left; tx <= right; tx++) {
             if (isBlocked(tx, ty)) return true;
@@ -137,6 +147,8 @@ function rectanglesOverlap(x1, y1, w1, h1, x2, y2, w2, h2) {
 }
 
 export {
+    ignoresTerrain,
+    moveWithCollisions,
     collidesWithMap,
     canOccupyMountPosition,
     distanceBetweenRectangles,

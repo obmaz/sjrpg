@@ -2,6 +2,7 @@
 const BOSS_TYPES = [
     {
         id: 'demon_king',
+        phasing: true,
         reference: { name: 'Balor', hp: 262, ac: 19, damageDice: '3d8+8', damage: 21, cr: '19' },
         artIndex: null,
         name: '초거대 마왕',
@@ -17,7 +18,7 @@ const BOSS_TYPES = [
         destroyTerrain: true,
         spawnMinions: false,
         gold: 500,
-        desc: '지형을 파괴하며 진격',
+        desc: '위상 이동으로 장애물을 통과',
     },
     {
         id: 'necromancer',
@@ -62,6 +63,7 @@ const BOSS_TYPES = [
     },
     {
         id: 'ancient_dragon',
+        flying: true,
         reference: {
             name: 'Ancient Red Dragon',
             hp: 546,
@@ -84,10 +86,11 @@ const BOSS_TYPES = [
         destroyTerrain: true,
         spawnMinions: false,
         gold: 800,
-        desc: '느리지만 모든 것이 강력',
+        desc: '비행 · 느리지만 강력한 브레스',
     },
     {
         id: 'volcano_dragon',
+        flying: true,
         reference: {
             name: 'Adult Red Dragon',
             hp: 256,
@@ -110,7 +113,7 @@ const BOSS_TYPES = [
         destroyTerrain: true,
         spawnMinions: false,
         gold: 600,
-        desc: '화염 브레스로 지형을 녹이며 진격',
+        desc: '비행 · 강력한 화염 브레스',
     },
     {
         id: 'shadow_assassin',

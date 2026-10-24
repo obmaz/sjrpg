@@ -9,6 +9,7 @@ import {
     TILE_TYPES,
 } from '../core/constants.js';
 import { distance } from '../core/helpers.js';
+import { drawWorldChunks } from './world-chunks.js';
 import { inVillage } from '../data/village.js';
 import { villageArtReady, drawVillage } from './village.js';
 import { player, portals } from '../core/state.js';
@@ -26,6 +27,10 @@ import {
 //  TERRAIN RENDERING
 // ============================================================
 function drawTerrain() {
+    if (drawWorldChunks(ctx, camera, canvas)) {
+        drawVillage(ctx, camera);
+        return;
+    }
     const startTX = Math.max(0, Math.floor(camera.x / TILE_SIZE) - 1);
     const startTY = Math.max(0, Math.floor(camera.y / TILE_SIZE) - 1);
     const endTX = Math.min(MAP_WIDTH, Math.ceil((camera.x + canvas.width) / TILE_SIZE) + 1);

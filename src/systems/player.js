@@ -1,5 +1,6 @@
 import {
     canOccupyMountPosition,
+    moveWithCollisions,
     collidesWithEntities,
     collidesWithMap,
 } from '../core/collision.js';
@@ -64,12 +65,7 @@ function updatePlayer(deltaTime) {
         mount
             ? canOccupyMountPosition(mount, x, y)
             : !collidesWithMap(x, y, pw, ph) && !collidesWithEntities(x, y, pw, ph, player);
-    if (canMove(newX, player.y)) {
-        player.x = newX;
-    }
-    if (canMove(player.x, newY)) {
-        player.y = newY;
-    }
+    moveWithCollisions(player, newX - player.x, newY - player.y, canMove);
 
     // Clamp to map
     player.x = Math.max(

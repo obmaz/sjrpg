@@ -1,5 +1,6 @@
 import {
     canOccupyMountPosition,
+    ignoresTerrain,
     collidesWithEntities,
     collidesWithMap,
 } from '../core/collision.js';
@@ -32,8 +33,8 @@ function spawnEnemy(type, x, y, level = null, options = {}) {
         y,
         type.size,
         type.size,
-        type.flying || type.megaBoss,
-        type.flying || type.megaBoss
+        ignoresTerrain(type),
+        ignoresTerrain(type)
             ? () => true
             : (px, py) => isReachableFromArrival(px, py, type.size, type.size),
     );
@@ -64,6 +65,7 @@ function spawnEnemy(type, x, y, level = null, options = {}) {
         megaBoss: type.megaBoss ?? false,
         ranged: type.ranged ?? false,
         flying: type.flying ?? false,
+        phasing: type.phasing ?? false,
         poison: type.poison ?? false,
         poisonDmg: type.poisonDmg ?? 1,
         rangeCooldown: type.rangeCooldown ?? 2,

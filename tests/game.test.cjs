@@ -883,3 +883,92 @@ test('boss terrain destruction preserves the painted village collision', async (
         true,
     );
 });
+
+test('ground bosses never gain wall passage solely from megaBoss size classification', async () => {
+    const { run } = await loadGame();
+    run(`clearWorldEntities();tileMap=Array.from({length:MAP_HEIGHT},()=>Array(MAP_WIDTH).fill(TILE_KEYS.indexOf('GRASS')));
+  player.x=850;player.y=500;player.invincible=999;
+  const groundBoss=spawnBoss({...BOSS_TYPES[1],size:48,speed:500,ranged:false,spawnMinions:false,destroyTerrain:false},500,500);
+        for(let y=0;y<MAP_HEIGHT;y++)tileMap[y][20]=TILE_KEYS.indexOf('WALL');session.terrainRevision++;`);
+    for (let i = 0; i < 20; i++) {
+        run('updateEnemies(.1);');
+        assert.equal(
+            run('collidesWithMap(groundBoss.x,groundBoss.y,groundBoss.w,groundBoss.h)'),
+            false,
+        );
+    }
+    assert.ok(run('groundBoss.x+groundBoss.w') <= 644);
+});
+
+test('fast ordinary monsters sweep their bodies instead of jumping through thin obstacles', async () => {
+    const { run } = await loadGame();
+    run(`clearWorldEntities();tileMap=Array.from({length:MAP_HEIGHT},()=>Array(MAP_WIDTH).fill(TILE_KEYS.indexOf('GRASS')));
+  player.x=400;player.y=620;player.invincible=999;
+  const fast=spawnEnemy({...ENEMY_TYPES[1],speed:2000,ranged:true,rangeCooldown:999},400,500,null,{randomizeSpeed:false});
+  for(let y=0;y<MAP_HEIGHT;y++)tileMap[y][16]=TILE_KEYS.indexOf('WALL');session.terrainRevision++;Math.random=()=>0;
+  updateEnemies(.1);`);
+    assert.ok(run('fast.x+fast.w') <= 516);
+    assert.equal(run('collidesWithMap(fast.x,fast.y,fast.w,fast.h)'), false);
+});
+
+test('only explicit flying or phasing abilities permit obstacle passage', async () => {
+    const { run } = await loadGame();
+    for (const ability of ['flying', 'phasing']) {
+        run(`clearWorldEntities();tileMap=Array.from({length:MAP_HEIGHT},()=>Array(MAP_WIDTH).fill(TILE_KEYS.indexOf('GRASS')));
+   player.x=800;player.y=500;player.invincible=999;
+   var special=spawnEnemy({...ENEMY_TYPES[1],${ability}:true,speed:200},500,500,null,{randomizeSpeed:false});special.trailGuard=true;
+   for(let y=0;y<MAP_HEIGHT;y++)tileMap[y][20]=TILE_KEYS.indexOf('WALL');session.terrainRevision++;
+   for(let i=0;i<20;i++)updateEnemies(.1);`);
+        assert.ok(run('special.x') > 672, ability);
+    }
+});
+
+test('large painted chunks repeat for a seed, vary by seed and keep their four body-wide ports open', async () => {
+    const { run } = await loadGame();
+    run(
+        'generateForestMap(123);const firstChunkMap=JSON.stringify(tileMap);generateForestMap(123);',
+    );
+    assert.equal(run('JSON.stringify(tileMap)===firstChunkMap'), true);
+    run('generateForestMap(456);');
+    assert.equal(run('JSON.stringify(tileMap)===firstChunkMap'), false);
+    for (const region of ['forest', 'desert'])
+        for (let variant = 0; variant < 4; variant++) {
+            for (const [u, v] of [
+                [0.5, 0.025],
+                [0.5, 0.975],
+                [0.025, 0.5],
+                [0.975, 0.5],
+            ])
+                assert.ok(
+                    ['DIRT', 'SAND'].includes(run(`chunkTile(${variant},${u},${v},'${region}')`)),
+                );
+        }
+    for (const region of ['forest', 'desert']) {
+        run(
+            `clearWorldEntities();player.currentRegion='${region}';${region === 'forest' ? 'generateForestMap' : 'generateDesertMap'}(12345);`,
+        );
+        // Each entirely visible outer region is connected to the shared arrival for ordinary bodies.
+        for (const x of [640, 1920])
+            for (const y of [384, 1024, 1664])
+                assert.equal(
+                    run(`isReachableFromArrival(${x}-12,${y}-14,24,28)`),
+                    true,
+                    `${region} ${x},${y}`,
+                );
+    }
+});
+
+test('outer forest and desert chunks sustain capped encounters on valid ground', async () => {
+    const { run } = await loadGame();
+    for (const region of ['forest', 'desert']) {
+        run(`clearWorldEntities();player.currentRegion='${region}';${region === 'forest' ? 'generateForestMap' : 'generateDesertMap'}(12345);
+    player.x=1920;player.y=1024;session.trailEncountersEnabled=true;session.trailEncounterTimer=0;updateTrailEncounters(0);`);
+        assert.ok(run('enemies.length') > 0, region);
+        assert.equal(run('enemies.some(e=>collidesWithMap(e.x,e.y,e.w,e.h))'), false, region);
+        run(
+            'session.gamePaused=true;var encounterSnapshot=JSON.stringify(enemies);updateTrailEncounters(60);',
+        );
+        assert.equal(run('JSON.stringify(enemies)===encounterSnapshot'), true);
+        run('session.gamePaused=false;');
+    }
+});

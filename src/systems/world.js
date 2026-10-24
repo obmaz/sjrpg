@@ -1,118 +1,22 @@
 import { MAP_HEIGHT, MAP_WIDTH, TILE_KEYS, TILE_TYPES } from '../core/constants.js';
 import { VILLAGE, villageTile } from '../data/village.js';
-import { SimpleNoise } from '../core/noise.js';
+import { chunkVariant, chunkCoordinates, chunkTile } from '../data/world-chunks.js';
 import { session } from '../core/state.js';
 
+function generateChunkMap(seed, region) {
+    session.tileMap = Array.from({ length: MAP_HEIGHT }, (_, y) =>
+        Array.from({ length: MAP_WIDTH }, (_, x) => {
+            const { column, row, u, v } = chunkCoordinates(x * 32 + 16, y * 32 + 16);
+            return TILE_KEYS.indexOf(chunkTile(chunkVariant(seed, column, row), u, v, region));
+        }),
+    );
+    session.chunkSeed = seed;
+    session.chunkRegion = region;
+    session.chunkMap = session.tileMap;
+    session.terrainRevision++;
+}
 function generateForestMap(seed) {
-    const noise = new SimpleNoise(seed);
-    const moistureNoise = new SimpleNoise(seed + 9999);
-    session.tileMap = [];
-
-    for (let y = 0; y < MAP_HEIGHT; y++) {
-        session.tileMap[y] = [];
-        for (let x = 0; x < MAP_WIDTH; x++) {
-            // Height: -1 to 1
-            const h = noise.fbm(x * 0.03, y * 0.03, 5, 2.3, 0.55);
-            // Moisture: -1 to 1
-            const m = moistureNoise.fbm(x * 0.04, y * 0.04, 4, 2.1, 0.5);
-
-            // Add some large-scale variation for continents
-            const continent = noise.noise2D(x * 0.008, y * 0.008) * 0.6;
-
-            const height = h + continent * 0.4;
-            const moisture = m;
-
-            let tile;
-            if (height < -0.35) {
-                tile = 'WATER_DEEP';
-            } else if (height < -0.2) {
-                tile = 'WATER';
-            } else if (height < -0.08) {
-                tile = 'SAND';
-            } else if (height < -0.02) {
-                tile = moisture > 0.1 ? 'GRASS_TALL' : 'GRASS';
-            } else if (height < 0.15) {
-                tile = moisture > 0.2 ? 'TREE' : moisture > 0 ? 'GRASS_TALL' : 'GRASS';
-            } else if (height < 0.3) {
-                tile = moisture > 0.15 ? 'TREE' : Math.random() < 0.3 ? 'BUSH' : 'ROCK';
-            } else {
-                tile = 'ROCK';
-            }
-
-            // Scatter flowers on grass
-            if (
-                (tile === 'GRASS' || tile === 'GRASS_TALL') &&
-                Math.abs(noise.noise2D(x * 1.7, y * 1.7)) > 0.6
-            ) {
-                tile = 'FLOWER';
-            }
-            // Create paths between areas (Zelda-like dirt paths)
-            if (tile === 'GRASS' || tile === 'GRASS_TALL') {
-                const pathNoise = Math.abs(noise.noise2D(x * 0.06 + 50, y * 0.06 + 50));
-                if (pathNoise < 0.08) tile = 'PATH';
-            }
-
-            session.tileMap[y][x] = TILE_KEYS.indexOf(tile);
-        }
-    }
-
-    // Clear fountain area at center (make it larger plaza with village)
-    const fcx = Math.floor(MAP_WIDTH / 2);
-    const fcy = Math.floor(MAP_HEIGHT / 2);
-    const plazaR = 7; // enlarged from 4
-    for (let y = fcy - plazaR; y <= fcy + plazaR; y++) {
-        for (let x = fcx - plazaR; x <= fcx + plazaR; x++) {
-            if (y >= 0 && y < MAP_HEIGHT && x >= 0 && x < MAP_WIDTH) {
-                const dist = Math.sqrt((x - fcx) ** 2 + (y - fcy) ** 2);
-                if (dist < 6.5) {
-                    session.tileMap[y][x] = TILE_KEYS.indexOf('SAND');
-                } else if (dist < 7.5) {
-                    session.tileMap[y][x] = TILE_KEYS.indexOf('DIRT');
-                }
-            }
-        }
-    }
-    // Place fountain tile marker
-    session.tileMap[fcy][fcx] = TILE_KEYS.indexOf('GRASS');
-
-    // Add decorative walls around fountain plaza (larger ring)
-    const wallR = 6;
-    for (let y = fcy - wallR; y <= fcy + wallR; y++) {
-        for (let x = fcx - wallR; x <= fcx + wallR; x++) {
-            if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) continue;
-            const dist = Math.sqrt((x - fcx) ** 2 + (y - fcy) ** 2);
-            if (
-                dist > 6.2 &&
-                dist < 7.0 &&
-                session.tileMap[y][x] !== TILE_KEYS.indexOf('WATER') &&
-                session.tileMap[y][x] !== TILE_KEYS.indexOf('WATER_DEEP')
-            ) {
-                if (Math.abs(dist - 6.5) < 0.35 && (x + y) % 3 !== 0) {
-                    session.tileMap[y][x] = TILE_KEYS.indexOf('WALL');
-                }
-            }
-        }
-    }
-
-    // Clear village buildings around the plaza (wider ring)
-    for (let y = fcy - 10; y <= fcy + 10; y++) {
-        for (let x = fcx - 10; x <= fcx + 10; x++) {
-            if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) continue;
-            const dist = Math.sqrt((x - fcx) ** 2 + (y - fcy) ** 2);
-            if (
-                dist > 7.5 &&
-                dist < 10.5 &&
-                session.tileMap[y][x] !== TILE_KEYS.indexOf('WATER') &&
-                session.tileMap[y][x] !== TILE_KEYS.indexOf('WATER_DEEP')
-            ) {
-                // Create village paths and clearings
-                if ((x + y) % 4 === 0 || (x - y) % 4 === 0) {
-                    session.tileMap[y][x] = TILE_KEYS.indexOf('PATH');
-                }
-            }
-        }
-    }
-
+    generateChunkMap(seed, 'forest');
     // Ensure map connectivity - fill isolated walkable areas
     for (let y = 0; y < VILLAGE.height / 32; y++)
         for (let x = 0; x < VILLAGE.width / 32; x++)
@@ -187,63 +91,7 @@ function isWaterTile(x, y) {
 }
 
 function generateDesertMap(seed) {
-    const noise = new SimpleNoise(seed);
-    session.tileMap = [];
-
-    for (let y = 0; y < MAP_HEIGHT; y++) {
-        session.tileMap[y] = [];
-        for (let x = 0; x < MAP_WIDTH; x++) {
-            const h = noise.fbm(x * 0.03, y * 0.03, 4, 2.2, 0.5);
-
-            let tile;
-            if (h < -0.25) {
-                tile = 'SAND';
-            } else if (h < -0.1) {
-                tile = Math.random() < 0.3 ? 'ROCK' : 'SAND';
-            } else if (h < 0.1) {
-                tile = Math.random() < 0.15 ? 'ROCK' : 'SAND';
-            } else if (h < 0.25) {
-                tile = Math.random() < 0.5 ? 'ROCK' : 'SAND';
-            } else {
-                tile = 'ROCK';
-            }
-
-            // Add oasis near center
-            const fcx = Math.floor(MAP_WIDTH / 2);
-            const fcy = Math.floor(MAP_HEIGHT / 2);
-            const dist = Math.sqrt((x - fcx) ** 2 + (y - fcy) ** 2);
-            if (dist < 4) {
-                tile = 'WATER';
-            } else if (dist < 6) {
-                tile = Math.random() < 0.5 ? 'GRASS' : 'SAND';
-            } else if (dist < 8) {
-                tile = Math.random() < 0.2 ? 'GRASS' : 'SAND';
-            }
-
-            // Scatter cacti (use BUSH)
-            if (tile === 'SAND' && Math.random() < 0.03) {
-                tile = 'BUSH';
-            }
-
-            session.tileMap[y][x] = TILE_KEYS.indexOf(tile);
-        }
-    }
-
-    // Keep a body-wide route from the dry arrival to a distant boss clearing.
-    // Tile connectivity alone does not guarantee a route for the 50px Pharaoh.
-    const fcx = Math.floor(MAP_WIDTH / 2);
-    const fcy = Math.floor(MAP_HEIGHT / 2);
-    const bossCenterX = fcx + 20;
-    for (let y = fcy - 1; y <= fcy + 1; y++) {
-        for (let x = fcx - 1; x <= bossCenterX; x++) {
-            session.tileMap[y][x] = TILE_KEYS.indexOf('PATH');
-        }
-    }
-    for (let y = fcy - 2; y <= fcy + 2; y++) {
-        for (let x = bossCenterX - 2; x <= bossCenterX + 2; x++) {
-            session.tileMap[y][x] = TILE_KEYS.indexOf('PATH');
-        }
-    }
+    generateChunkMap(seed, 'desert');
     ensureConnectivity('desert');
 }
 
