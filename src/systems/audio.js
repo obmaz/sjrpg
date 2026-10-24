@@ -196,7 +196,7 @@ function playEnemyDeathSound(enemyName) {
         const ac = getAudioContext();
         const t = ac.currentTime;
         const name = enemyName || '';
-        if (name.includes('슬라임')) {
+        if (name.includes('회색 점액괴물')) {
             const osc = ac.createOscillator();
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(200, t);

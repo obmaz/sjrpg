@@ -12,6 +12,10 @@ function buildSite(
         'index.html',
         'style.css',
         'playful-pixels.mp3',
+        ...fs
+            .readdirSync(path.join(projectRoot, 'assets'))
+            .filter((file) => file.endsWith('.webp'))
+            .map((file) => `assets/${file}`),
         ...sources.map((source) => source.file),
     ];
     const contents = new Map(

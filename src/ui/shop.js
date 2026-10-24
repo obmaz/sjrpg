@@ -8,6 +8,7 @@ import { WEAPONS } from '../data/weapons.js';
 import { playCoinSound } from '../systems/audio.js';
 import { updateHud } from './hud.js';
 import { addMessage } from './messages.js';
+import { itemArt } from './art.js';
 
 // ============================================================
 //  SHOP SYSTEM
@@ -47,12 +48,19 @@ function openShop(shopType) {
         const canAfford = player.gold >= entry.price;
         const card = document.createElement('div');
         card.className = 'shop-item' + (canAfford ? '' : ' unaffordable');
-        card.innerHTML = `<span class="s-icon">${item.icon}</span>
+        card.innerHTML = `${itemArt(item, 's-icon')}
             <span class="s-name">${item.name}</span>
             ${kind !== 'weapon' ? '' : `<span class="s-atk">ATK ${item.atk}</span>`}
             <span class="s-desc">${item.desc || ''}</span>
-            <span class="s-price">💰 ${entry.price}</span>`;
-        if (canAfford) card.addEventListener('click', () => buyShopItem(item, entry.price, kind));
+            <span class="damage-dice">${item.damageDice || ''} ${item.damageType || ''}</span>`;
+        const buy = document.createElement('button');
+        buy.type = 'button';
+        buy.className = 'shop-buy';
+        buy.textContent = `${entry.price} G · 구매`;
+        buy.disabled = !canAfford;
+        buy.setAttribute('aria-label', `${item.name} ${entry.price}골드로 구매`);
+        buy.addEventListener('click', () => buyShopItem(item, entry.price, kind));
+        card.appendChild(buy);
         slots.appendChild(card);
     });
 }

@@ -14,6 +14,10 @@ test('a new release cannot reuse cached UI modules after a control is removed', 
     const output = path.join(temporary, 'dist');
     const repository = path.resolve(__dirname, '..');
     const { sources } = readPageSources();
+    fs.mkdirSync(sourceRoot, { recursive: true });
+    fs.cpSync(path.join(repository, 'assets'), path.join(sourceRoot, 'assets'), {
+        recursive: true,
+    });
     for (const file of [
         'index.html',
         'style.css',
@@ -49,7 +53,7 @@ test('a new release cannot reuse cached UI modules after a control is removed', 
     assert.notEqual(current.assetRoot, previous.assetRoot);
     const deployedHtml = fs.readFileSync(path.join(output, 'index.html'), 'utf8');
     for (const [, resource] of deployedHtml.matchAll(/(?:src|href)="([^"]+)"/g)) {
-        if (resource.startsWith('#')) continue;
+        if (resource.startsWith('#') || resource.startsWith('https:')) continue;
         assert.ok(resource.startsWith(`${current.assetRoot}/`), resource);
         assert.ok(fs.existsSync(path.join(output, resource)), resource);
     }

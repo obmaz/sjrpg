@@ -1,11 +1,14 @@
 import { canAct } from '../core/helpers.js';
 import { player } from '../core/state.js';
+import { camera, canvas } from '../core/canvas.js';
 import { getInteractionTarget } from '../systems/interactions.js';
 import { performInputAction, touchKeys } from './input.js';
+import { artClass } from './art.js';
 
 let initialized = false;
 let stickPointer = null;
 let attackPointer = null;
+let worldPress = null;
 let joystick;
 let thumb;
 let attackButton;
@@ -38,6 +41,7 @@ function releaseTouchControls() {
         attackButton.releasePointerCapture(attackPointer);
     stickPointer = null;
     attackPointer = null;
+    worldPress = null;
     thumb.style.transform = 'translate(-50%, -50%)';
     joystick.classList.remove('active');
     attackButton.classList.remove('active');
@@ -114,6 +118,7 @@ function initializeTouchControls() {
         touchSettings: 'KeyP',
         touchDismount: 'KeyU',
         touchInteract: 'KeyE',
+        worldInteract: 'KeyE',
         touchAux: 'KeyN',
         touchCycle: 'KeyQ',
         touchItem1: 'Digit1',
@@ -142,6 +147,37 @@ function initializeTouchControls() {
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) releaseTouchControls();
     });
+    if (window.matchMedia('(pointer: coarse)').matches) {
+        canvas.addEventListener('pointerdown', (event) => {
+            if (canAct() && !worldPress && !(event.button > 0))
+                worldPress = { id: event.pointerId, x: event.clientX, y: event.clientY };
+        });
+        canvas.addEventListener('pointercancel', () => {
+            worldPress = null;
+        });
+        canvas.addEventListener('pointerup', (event) => {
+            const press = worldPress;
+            if (!press || press.id !== event.pointerId) return;
+            worldPress = null;
+            if (!canAct() || Math.hypot(event.clientX - press.x, event.clientY - press.y) > 14)
+                return;
+            const target = getInteractionTarget();
+            if (!target) return;
+            const bounds = canvas.getBoundingClientRect();
+            const x = ((event.clientX - bounds.left) * canvas.width) / bounds.width + camera.x;
+            const y = ((event.clientY - bounds.top) * canvas.height) / bounds.height + camera.y;
+            const entity = target.entity;
+            if (
+                x >= entity.x - 12 &&
+                x <= entity.x + entity.w + 12 &&
+                y >= entity.y - 12 &&
+                y <= entity.y + entity.h + 12
+            ) {
+                performInputAction('KeyE');
+                updateTouchControls();
+            }
+        });
+    }
     updateTouchControls();
 }
 
@@ -171,6 +207,11 @@ function updateTouchControls() {
     const remaining = Math.max(0, player.auxCooldown);
     const cooldown = Math.max(auxiliary?.cooldown || 1, remaining);
     setControlValue(control('touchAttackIcon'), 'textContent', player.weapon.icon);
+    setControlValue(
+        control('touchAttackIcon'),
+        'className',
+        `action-glyph ${artClass(player.weapon)}`,
+    );
     setControlValue(control('touchAuxIcon'), 'textContent', auxiliary?.icon || '✦');
     setControlValue(
         control('touchAuxStatus'),
@@ -198,6 +239,18 @@ function updateTouchControls() {
     control('touchAux').disabled = !enabled || !auxiliary || remaining > 0;
     document.getElementById('touchCycle').disabled = player.auxWeapons.length < 2;
     const target = enabled ? getInteractionTarget() : null;
+    const worldButton = control('worldInteract');
+    worldButton.classList.toggle('hidden', !target);
+    if (target) {
+        const entity = target.entity;
+        setControlValue(
+            worldButton,
+            'textContent',
+            `${entity.name || '차원 포탈'} · ${target.label} 열기`,
+        );
+        worldButton.style.left = `${Math.max(106, Math.min(canvas.width - 106, entity.x + entity.w / 2 - camera.x))}px`;
+        worldButton.style.top = `${Math.max(96, Math.min(canvas.height - 210, entity.y - camera.y - 52))}px`;
+    }
     const interact = control('touchInteract');
     setControlValue(interact, 'disabled', !target);
     setControlValue(control('touchInteractLabel'), 'textContent', target?.label || '대화');

@@ -23,7 +23,7 @@ test('body-aware reachability rejects a giant at the far side of a narrow corrid
     assert.equal(run('isReachableFromArrival(56*TILE_SIZE,30*TILE_SIZE,24,24)'), true);
     assert.equal(run('isReachableFromArrival(56*TILE_SIZE,30*TILE_SIZE,80,80)'), false);
     assert.equal(
-        run("spawnEnemy(ENEMY_TYPES.find(e=>e.name==='거대 슬라임'),56*TILE_SIZE,30*TILE_SIZE)"),
+        run("spawnEnemy(ENEMY_TYPES.find(e=>e.name==='황토 젤리'),56*TILE_SIZE,30*TILE_SIZE)"),
         null,
     );
     run("tileMap[30][47]=TILE_KEYS.indexOf('WALL'); session.terrainRevision++;");

@@ -53,6 +53,7 @@ function spawnEnemy(type, x, y, level = null, options = {}) {
         atk: Math.floor(type.atk * stageMultiplier),
         speed,
         name: type.name,
+        artIndex: type.artIndex,
         icon: type.icon ?? '',
         color: type.color,
         dropRate: Math.min(1, type.dropRate + (player.stage - 1) * 0.03),
@@ -185,7 +186,7 @@ const STAGE_NPCS = {
         {
             icon: '🛡️',
             name: '경비대장',
-            dialog: '해골 전사들을 처치해주게!',
+            dialog: '스켈레톤들을 처치해주게!',
             quests: ['hunt_skeletons'],
         },
     ],
@@ -260,7 +261,7 @@ function spawnForestNpcs() {
         {
             icon: '👨‍🌾',
             name: '농부',
-            dialog: '독수리가 내 작물을 망치고 있어요!',
+            dialog: '거대 독수리가 내 작물을 망치고 있어요!',
             quests: ['hunt_eagles'],
         },
         { icon: '🧝', name: '요정', dialog: '반짝이는 골드가 필요해!', quests: ['collect_coins'] },

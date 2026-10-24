@@ -1,10 +1,12 @@
 const ITEMS = [
     {
         id: 'healpot',
-        name: '회복약',
+        name: '치유의 물약',
         icon: '🧪',
         price: 30,
-        desc: 'HP 50 회복',
+        desc: 'HP 50 회복 · 치유의 물약 2d4+2에서 실시간 전투용 조정',
+        artIndex: 7,
+        referenceDice: '2d4+2',
         use: 'heal',
         healAmount: 50,
     },

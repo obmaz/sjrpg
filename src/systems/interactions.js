@@ -1,16 +1,11 @@
-import { distance } from '../core/helpers.js';
+import { distanceBetweenRectangles } from '../core/collision.js';
 import { npcs, player, portals } from '../core/state.js';
 
 function nearestInteraction(entities) {
     let nearest = null;
-    let closestDistance = 50;
+    let closestDistance = 40;
     for (const entity of entities) {
-        const separation = distance(
-            player.x + player.w / 2,
-            player.y + player.h / 2,
-            entity.x + entity.w / 2,
-            entity.y + entity.h / 2,
-        );
+        const separation = distanceBetweenRectangles(player, entity);
         if (separation < closestDistance) {
             nearest = entity;
             closestDistance = separation;

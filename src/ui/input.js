@@ -110,7 +110,10 @@ function performInputAction(code) {
 
 function handleKeyDown(event) {
     if (!isGameActive() || !GAME_KEY_CODES.has(event.code)) return;
-    if ((event.code === 'Space' || event.code === 'Enter') && event.target?.closest?.('button'))
+    if (
+        (event.code === 'Space' || event.code === 'Enter') &&
+        event.target?.closest?.('button, a[href]')
+    )
         return;
     event.preventDefault();
     keys[event.code] = true;

@@ -2,6 +2,8 @@
 const BOSS_TYPES = [
     {
         id: 'demon_king',
+        reference: { name: 'Balor', hp: 262, ac: 19, damageDice: '3d8+8', damage: 21, cr: '19' },
+        artIndex: null,
         name: '초거대 마왕',
         hp: 800,
         atk: 30,
@@ -19,6 +21,8 @@ const BOSS_TYPES = [
     },
     {
         id: 'necromancer',
+        reference: { name: 'Mage', hp: 40, ac: 12, damageDice: '8d6', damage: 28, cr: '6' },
+        artIndex: 11,
         name: '네크로맨서',
         hp: 350,
         atk: 12,
@@ -39,6 +43,8 @@ const BOSS_TYPES = [
     },
     {
         id: 'beast_lord',
+        reference: { name: 'Werewolf', hp: 58, ac: 11, damageDice: '1d8+2', damage: 6, cr: '3' },
+        artIndex: 9,
         name: '야수 군주',
         hp: 500,
         atk: 22,
@@ -56,6 +62,15 @@ const BOSS_TYPES = [
     },
     {
         id: 'ancient_dragon',
+        reference: {
+            name: 'Ancient Red Dragon',
+            hp: 546,
+            ac: 22,
+            damageDice: '2d10+10',
+            damage: 21,
+            cr: '24',
+        },
+        artIndex: null,
         name: '고대 드래곤',
         hp: 1000,
         atk: 25,
@@ -73,6 +88,15 @@ const BOSS_TYPES = [
     },
     {
         id: 'volcano_dragon',
+        reference: {
+            name: 'Adult Red Dragon',
+            hp: 256,
+            ac: 19,
+            damageDice: '2d10+8',
+            damage: 19,
+            cr: '17',
+        },
+        artIndex: null,
         name: '화산 드래곤',
         hp: 700,
         atk: 28,
@@ -90,6 +114,8 @@ const BOSS_TYPES = [
     },
     {
         id: 'shadow_assassin',
+        reference: { name: 'Assassin', hp: 78, ac: 15, damageDice: '1d6+3', damage: 6, cr: '8' },
+        artIndex: 11,
         name: '암살자 군주',
         hp: 250,
         atk: 35,
@@ -103,7 +129,7 @@ const BOSS_TYPES = [
         spawnCooldown: 5,
         spawnCount: 2,
         gold: 250,
-        desc: '초고속 근접 + 독수리소환',
+        desc: '초고속 근접 + 거대 독수리소환',
     },
 ];
 function getRandomBoss() {

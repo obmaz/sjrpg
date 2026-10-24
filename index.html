@@ -86,6 +86,9 @@
         <audio id="bgMusic" src="playful-pixels.mp3" loop preload="auto"></audio>
         <div id="gameArea">
             <canvas id="gameCanvas"></canvas>
+            <button id="worldInteract" class="world-interact hidden" type="button">
+                상점 열기
+            </button>
 
             <div id="hudTop">
                 <div id="hudLeft">
@@ -222,11 +225,11 @@
                     </svg>
                 </div>
                 <div class="title-frame">
-                    <div class="title-ornament">✦ THE FOREST CALLS ✦</div>
+                    <div class="title-ornament">FORESTBOUND · ACTION RPG</div>
                     <h1 class="game-title">자연의 수호자</h1>
                     <div class="title-sub">GUARDIAN OF NATURE</div>
                 </div>
-                <p class="start-desc">숲의 부름에 응답할 시간</p>
+                <p class="start-desc">숲의 유적에서, 모래의 왕국까지</p>
                 <p class="touch-start-hint">왼손으로 이동 · 오른손으로 전투</p>
                 <button id="startGameBtn" class="start-game-btn game-button">
                     <svg class="ui-icon" aria-hidden="true" focusable="false">
@@ -573,7 +576,16 @@
                         <p id="settingsStatus" class="settings-status" role="status"></p>
                     </div>
                     <div class="window-footer">
-                        <p class="settings-note">설정은 자동으로 저장됩니다.</p>
+                        <p class="settings-note">
+                            설정은 자동으로 저장됩니다.
+                            <a
+                                class="credits-link"
+                                href="https://github.com/obmaz/sjrpg/blob/main/docs/content-reference.md"
+                                target="_blank"
+                                rel="noopener"
+                                >규칙·아트 출처</a
+                            >
+                        </p>
                         <button id="resumeGame" class="game-button" type="button">
                             모험 계속하기
                         </button>

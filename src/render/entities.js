@@ -2,11 +2,15 @@ import { camera, canvas, ctx } from '../core/canvas.js';
 import { distance, getAvailableQuests } from '../core/helpers.js';
 import { chests, npcs, player, scarecrows } from '../core/state.js';
 import { getFacingAngle } from '../systems/combat.js';
+import { drawArtToken } from './art.js';
+import { getInteractionTarget } from '../systems/interactions.js';
 
 // ============================================================
 //  ENTITY RENDERING (enemies, player, NPCs, chests, pickups, mounts)
 // ============================================================
 function drawNpcs() {
+    const target = getInteractionTarget();
+    const touch = window.matchMedia('(pointer: coarse)').matches;
     for (const npc of npcs) {
         const sx = npc.x - camera.x,
             sy = npc.y - camera.y;
@@ -89,29 +93,15 @@ function drawNpcs() {
             ctx.font = 'bold 12px sans-serif';
             ctx.fillText('💈', sx + npc.w / 2, sy - 4);
         }
-        // Interaction hint
-        const dist = distance(
-            player.x + player.w / 2,
-            player.y + player.h / 2,
-            npc.x + npc.w / 2,
-            npc.y + npc.h / 2,
-        );
-        if (dist < 50) {
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 10px sans-serif';
-            ctx.fillText(
-                npc.isShop
-                    ? '[E] 상점'
-                    : npc.isSlotMachine
-                      ? '[E] 뽑기'
-                      : npc.isStylist
-                        ? '[E] 외관변경'
-                        : npc.isDesertTraveler
-                          ? '[E] 여행'
-                          : '[E] 대화',
-                sx + npc.w / 2,
-                sy - 16,
-            );
+        // The visible prompt and touch activation share the same reachable target.
+        if (target?.entity === npc) {
+            ctx.fillStyle = '#f7e6b0';
+            ctx.font = 'bold 13px sans-serif';
+            ctx.strokeStyle = '#09201b';
+            ctx.lineWidth = 3;
+            const hint = `${touch ? '터치' : '[E]'} ${target.label}`;
+            ctx.strokeText(hint, sx + npc.w / 2, sy - 16);
+            ctx.fillText(hint, sx + npc.w / 2, sy - 16);
         }
     }
 }
@@ -344,7 +334,15 @@ function drawEntity(entity) {
     if (isPlayer) {
         drawPlayerShape(cx, cy, entity);
     } else {
-        drawEnemyShape(cx, cy, entity);
+        const illustrated = drawArtToken(ctx, entity.artIndex, cx, cy, entity.w * 1.3);
+        if (!illustrated) drawEnemyShape(cx, cy, entity);
+        else if (entity.frozen > 0) {
+            ctx.strokeStyle = '#b9efff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(cx, cy, entity.w * 0.65, 0, Math.PI * 2);
+            ctx.stroke();
+        }
     }
 
     // HP bar (enemies)
@@ -762,7 +760,7 @@ function drawEnemyShape(cx, cy, e) {
     const name = e.name;
     const color = e.color;
 
-    if (name === '슬라임' || name === '거대 슬라임') {
+    if (name === '회색 점액괴물' || name === '황토 젤리') {
         // Dark pulsating slime
         const squish = 1 + Math.sin(e.animTimer * 4) * 0.08;
         ctx.fillStyle = '#3a2020';
@@ -837,7 +835,7 @@ function drawEnemyShape(cx, cy, e) {
         ctx.moveTo(cx + s * 0.8, cy - s * 0.1 + bob);
         ctx.quadraticCurveTo(cx + s * 1.3, cy - s * 0.8, cx + s * 1.0, cy - s * 1.1);
         ctx.stroke();
-    } else if (name === '해골 전사') {
+    } else if (name === '스켈레톤') {
         const s = sz;
         // Shadow
         ctx.fillStyle = 'rgba(0,0,0,0.3)';
@@ -881,7 +879,7 @@ function drawEnemyShape(cx, cy, e) {
         ctx.fillRect(cx + s * 0.5, cy - s * 0.5 + bob, 3, s * 1.2);
         ctx.fillStyle = '#ffd700';
         ctx.fillRect(cx + s * 0.4, cy - s * 0.5 + bob, 5, 3);
-    } else if (name === '다크 메이지') {
+    } else if (name === '컬티스트') {
         const s = sz;
         // Shadow
         ctx.fillStyle = 'rgba(0,0,0,0.3)';
@@ -941,7 +939,7 @@ function drawEnemyShape(cx, cy, e) {
         ctx.arc(cx + s * 0.5, cy - s * 0.4 + bob, s * 0.2, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
-    } else if (name === '악당 보스') {
+    } else if (name === '홉고블린 대장') {
         const s = sz;
         // Shadow + dark aura
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
@@ -1047,7 +1045,7 @@ function drawEnemyShape(cx, cy, e) {
         ctx.fillStyle = '#5a3a20';
         ctx.fillRect(cx + s * 0.5, cy - s * 0.5 + bob, s * 0.5, s * 0.25);
         ctx.fillRect(cx + s * 0.6, cy - s * 0.2 + bob, 5, s * 1.0);
-    } else if (name === '고대 골렘') {
+    } else if (name === '스톤 골렘') {
         const s = sz;
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
         ctx.beginPath();
@@ -1101,7 +1099,7 @@ function drawEnemyShape(cx, cy, e) {
         ctx.textAlign = 'center';
         ctx.fillText('⬡', cx, cy + s * 0.3 + bob);
         ctx.shadowBlur = 0;
-    } else if (name === '독수리') {
+    } else if (name === '거대 독수리') {
         // Flying eagle - fast, sweeps down
         const s = sz;
         // Shadow on ground

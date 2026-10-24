@@ -534,8 +534,8 @@ test('repeated desert travel cannot regenerate the world or discard desert progr
 test('large melee enemies attack when their body reaches the player', async () => {
     for (const definition of [
         "ENEMY_TYPES.find(e => e.name === '트롤')",
-        "ENEMY_TYPES.find(e => e.name === '거대 슬라임')",
-        "DESERT_ENEMY_TYPES.find(e => e.name === '사막 트롤')",
+        "ENEMY_TYPES.find(e => e.name === '황토 젤리')",
+        "DESERT_ENEMY_TYPES.find(e => e.name === '오우거')",
         'BOSS_TYPES[3]',
     ]) {
         const { run } = await loadGame();
@@ -588,7 +588,7 @@ test('fast projectiles hit small enemies crossed between frames', async () => {
     run(`tileMap = Array.from({length: MAP_HEIGHT}, () => Array(MAP_WIDTH).fill(TILE_KEYS.indexOf('SAND')));
         spawnEnemy(ENEMY_TYPES[0], 300, 300);
         spawnProjectile(285, 310, 3, 500, 3, 'red', ''); updateProjectiles(0.1);`);
-    assert.equal(run('enemies[0].hp'), 12);
+    assert.equal(run('enemies[0].hp'), run('enemies[0].maxHp - 3'));
     assert.equal(run('projectiles.length'), 0);
 });
 
@@ -599,7 +599,7 @@ test('projectiles stop at a crossed wall before damaging an enemy behind it', as
         spawnProjectile(305, 310, 3, 500, 3, 'red', ''); updateProjectiles(0.1);
         player.x = 358; player.y = 300;
         spawnEnemyProjectile(305, 310, 500, 0, 3, 'red'); updateEnemyProjectiles(0.1);`);
-    assert.equal(run('enemies[0].hp'), 15);
+    assert.equal(run('enemies[0].hp'), run('enemies[0].maxHp'));
     assert.equal(run('player.hp'), 100);
     assert.equal(run('projectiles.length + enemyProjectiles.length'), 0);
 });
@@ -609,8 +609,8 @@ test('projectiles hit the first enemy along the path regardless of array order',
     run(`tileMap = Array.from({length: MAP_HEIGHT}, () => Array(MAP_WIDTH).fill(TILE_KEYS.indexOf('SAND')));
         spawnEnemy(ENEMY_TYPES[0], 328, 300); spawnEnemy(ENEMY_TYPES[0], 300, 300);
         spawnProjectile(285, 310, 3, 500, 3, 'red', ''); updateProjectiles(0.1);`);
-    assert.equal(run('enemies[0].hp'), 15);
-    assert.equal(run('enemies[1].hp'), 12);
+    assert.equal(run('enemies[0].hp'), run('enemies[0].maxHp'));
+    assert.equal(run('enemies[1].hp'), run('enemies[1].maxHp - 3'));
 });
 
 test('expiring projectiles cannot damage targets beyond their remaining flight time', async () => {
@@ -619,7 +619,7 @@ test('expiring projectiles cannot damage targets beyond their remaining flight t
         spawnEnemy(ENEMY_TYPES[0], 325, 300);
         spawnProjectile(285, 310, 3, 500, 3, 'red', ''); projectiles[0].life = 0.01;
         updateProjectiles(0.1);`);
-    assert.equal(run('enemies[0].hp'), 15);
+    assert.equal(run('enemies[0].hp'), run('enemies[0].maxHp'));
     assert.equal(run('projectiles.length'), 0);
 });
 

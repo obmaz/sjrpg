@@ -11,7 +11,7 @@ test('mobile action buttons follow equipment, limited uses and cooldown recovery
         player.auxWeapon={...AUX_WEAPONS.find(w => w.id === 'shield')};
         player.auxWeapons=[player.auxWeapon]; player.auxCooldown=4; updateTouchControls();`);
     assert.equal(elements.get('touchAttackIcon').textContent, '🪓');
-    assert.match(elements.get('touchAttack').getAttribute('aria-label'), /전투 도끼/);
+    assert.match(elements.get('touchAttack').getAttribute('aria-label'), /배틀액스/);
     assert.equal(elements.get('touchAuxIcon').textContent, '🛡️');
     assert.equal(elements.get('touchAuxStatus').textContent, '4초');
     assert.equal(elements.get('touchAuxCount').textContent, '∞');
@@ -51,11 +51,11 @@ test('interaction feedback matches the nearest NPC and preserves portal priority
     const { run, elements } = await loadGame({ coarsePointer: true });
     run(`initializeTouchControls(); npcs.length=0; portals.length=0;
         player.x=500; player.y=500;
-        npcs.push({x:550,y:500,w:player.w,h:player.h,name:'상인',isShop:true});
+        npcs.push({x:564,y:500,w:player.w,h:player.h,name:'상인',isShop:true});
         updateTouchControls();`);
     const button = elements.get('touchInteract');
-    assert.equal(button.disabled, true, 'exactly 50px is outside interaction range');
-    run('npcs[0].x=549; updateTouchControls();');
+    assert.equal(button.disabled, true, 'a body gap of exactly 40px is outside interaction range');
+    run('npcs[0].x=563; updateTouchControls();');
     assert.equal(button.disabled, false);
     assert.equal(button.classList.contains('ready'), true);
     assert.equal(elements.get('touchInteractLabel').textContent, '상점');
@@ -94,9 +94,9 @@ test('inventory summary and capacity follow equipping and discarding weapons', a
     assert.equal(elements.get('inventoryCount').textContent, '2/12');
     assert.match(elements.get('equippedSummary').innerHTML, /맨손/);
     elements.get('inventorySlots').children[0].dispatchEvent({ type: 'click' });
-    assert.match(elements.get('equippedSummary').innerHTML, /철검/);
+    assert.match(elements.get('equippedSummary').innerHTML, /롱소드/);
     assert.equal(elements.get('inventoryCount').textContent, '1/12');
     run('dropInventoryItem(0);');
     assert.equal(elements.get('inventoryCount').textContent, '0/12');
-    assert.match(elements.get('equippedSummary').innerHTML, /철검/);
+    assert.match(elements.get('equippedSummary').innerHTML, /롱소드/);
 });

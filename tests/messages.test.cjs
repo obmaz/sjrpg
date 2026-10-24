@@ -22,7 +22,7 @@ test('gold and weapon pickups create short lived bubbles without a history panel
     assert.match(bubbles.children.at(-1).textContent, /25 골드/);
     run(`spawnWeaponPickup(player.x,player.y,WEAPONS.find(w=>w.id==='iron'));
         updateWeaponPickups(0);`);
-    assert.match(bubbles.children.at(-1).textContent, /철검 획득/);
+    assert.match(bubbles.children.at(-1).textContent, /롱소드 획득/);
     run('addMessage("추가 획득", "loot");');
     assert.equal(bubbles.children.length, 2);
     timers.filter((t) => t.delay === 2200).forEach((t) => t.cb());

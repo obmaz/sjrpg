@@ -4,6 +4,7 @@ import { inventory, player, session } from '../core/state.js';
 import { spawnWeaponPickup } from '../systems/entities.js';
 import { updateHud } from './hud.js';
 import { addMessage } from './messages.js';
+import { itemArt } from './art.js';
 
 // ============================================================
 //  INVENTORY UI
@@ -57,6 +58,7 @@ function dropInventoryItem(index = session.selectedInventoryIndex) {
     const item = inventory[index];
     spawnWeaponPickup(player.x + player.w / 2, player.y + player.h / 2, item, {
         pickupDelay: 1,
+        autoSalvage: false,
     });
     inventory.splice(index, 1);
     session.selectedInventoryIndex = Math.max(
@@ -71,7 +73,7 @@ function refreshInventoryUI() {
     document.getElementById('inventoryCount').textContent =
         `${inventory.length}/${INVENTORY_CAPACITY}`;
     document.getElementById('equippedSummary').innerHTML =
-        `<span class="equipped-icon" aria-hidden="true">${player.weapon.icon}</span><span><span class="equipped-caption">장착 중</span><strong>${player.weapon.name}</strong> · ATK ${player.weapon.atk}</span>`;
+        `${itemArt(player.weapon, 'equipped-icon')}<span><span class="equipped-caption">장착 중</span><strong>${player.weapon.name}</strong> · ATK ${player.weapon.atk}</span>`;
     inventorySlots.innerHTML = '';
     for (let i = 0; i < INVENTORY_CAPACITY; i++) {
         const slot = document.createElement('div');
@@ -80,7 +82,7 @@ function refreshInventoryUI() {
         if (i < inventory.length) {
             const item = inventory[i];
             const usesText = item.uses === undefined ? '사용 횟수 무제한' : `남은 ${item.uses}회`;
-            slot.innerHTML = `<span class="icon">${item.icon}</span><span class="name">${item.name}</span><span class="atk">ATK ${item.atk}</span><span class="uses">${usesText}</span><span class="ability">${item.desc || ''}</span>`;
+            slot.innerHTML = `${itemArt(item, 'icon')}<span class="rarity-badge">${item.rarity}</span><span class="name">${item.name}</span><span class="atk">ATK ${item.atk} · ${item.cooldown}초</span><span class="damage-dice">${item.damageDice || ''} ${item.damageType || ''}</span><span class="uses">${usesText}</span><span class="ability">${item.desc || ''}</span>`;
             slot.style.borderColor = item.color;
             slot.addEventListener('click', () => {
                 session.selectedInventoryIndex = i;

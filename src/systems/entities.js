@@ -1,12 +1,11 @@
 import { advanceProjectile } from '../core/collision.js';
-import { INVENTORY_CAPACITY, TILE_SIZE } from '../core/constants.js';
+import { TILE_SIZE } from '../core/constants.js';
 import {
     distance,
     findNearbySpawnPosition,
     findSpawnTile,
     getEnemiesInRadius,
     healPlayer,
-    recordDiscovery,
 } from '../core/helpers.js';
 import {
     chests,
@@ -15,7 +14,6 @@ import {
     fireZones,
     floatingTexts,
     goldPickups,
-    inventory,
     particles,
     player,
     projectiles,
@@ -31,6 +29,7 @@ import { spawnEnemy } from './spawning.js';
 import { isSolidTile, isWaterTile } from './world.js';
 import { updateHud } from '../ui/hud.js';
 import { addMessage } from '../ui/messages.js';
+import { receiveWeapon } from './loot.js';
 
 // ============================================================
 //  PARTICLES
@@ -85,13 +84,14 @@ function spawnGoldPickup(x, y, amount = 0) {
     goldPickups.push({ x, y, amount, life: 60, bob: Math.random() * Math.PI * 2 });
 }
 
-function spawnWeaponPickup(x, y, weapon, { pickupDelay = 0 } = {}) {
+function spawnWeaponPickup(x, y, weapon, { pickupDelay = 0, autoSalvage = true } = {}) {
     weaponPickups.push({
         x,
         y,
         weapon: { ...weapon },
         life: 120,
         pickupDelay,
+        autoSalvage,
         bob: Math.random() * Math.PI * 2,
     });
 }
@@ -302,16 +302,16 @@ function updateWeaponPickups(deltaTime) {
             weaponPickup.y,
         );
         if (dist < 28 && weaponPickup.pickupDelay <= 0) {
-            if (inventory.length >= INVENTORY_CAPACITY) {
+            if (
+                receiveWeapon(weaponPickup.weapon, { autoSalvage: weaponPickup.autoSalvage }) ===
+                'full'
+            ) {
                 if (!weaponPickup.fullInventoryNotified) {
                     addMessage('🎒 인벤토리가 가득 찼습니다!', 'damage');
                     weaponPickup.fullInventoryNotified = true;
                 }
                 continue;
             }
-            inventory.push({ ...weaponPickup.weapon });
-            recordDiscovery('weapons', weaponPickup.weapon.id);
-            addMessage(`🎁 ${weaponPickup.weapon.icon} ${weaponPickup.weapon.name} 획득!`, 'loot');
             playCoinSound();
             weaponPickups.splice(i, 1);
             updateHud();

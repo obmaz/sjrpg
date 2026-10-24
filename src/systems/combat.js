@@ -1,6 +1,5 @@
-import { INVENTORY_CAPACITY } from '../core/constants.js';
 import { canAct, distance, getEnemiesInRadius, recordDiscovery } from '../core/helpers.js';
-import { enemies, inventory, particles, player, scarecrows } from '../core/state.js';
+import { enemies, particles, player, scarecrows } from '../core/state.js';
 import { WEAPONS } from '../data/weapons.js';
 import { playEnemyDeathSound, playHitSound, playSlashSound } from './audio.js';
 import { hapticImpact } from './feedback.js';
@@ -15,6 +14,7 @@ import { spawnMoreEnemies, spawnStageNpcs } from './spawning.js';
 import { checkPortalSpawn } from './travel.js';
 import { updateHud } from '../ui/hud.js';
 import { addMessage } from '../ui/messages.js';
+import { receiveWeapon } from './loot.js';
 
 function attackWithWeapon() {
     if (!canAct()) return;
@@ -582,11 +582,7 @@ function killEnemy(enemy) {
     if (Math.random() < enemy.dropRate && enemy.dropPool.length > 0) {
         const weaponId = enemy.dropPool[Math.floor(Math.random() * enemy.dropPool.length)];
         const weapon = WEAPONS.find((weapon) => weapon.id === weaponId);
-        if (weapon && inventory.length < INVENTORY_CAPACITY) {
-            inventory.push({ ...weapon });
-            recordDiscovery('weapons', weapon.id);
-            addMessage(`🎁 ${weapon.icon} ${weapon.name} 획득!`, 'loot');
-        } else if (weapon) {
+        if (weapon && receiveWeapon(weapon) === 'full') {
             spawnWeaponPickup(player.x + player.w / 2, player.y + player.h / 2, weapon);
             addMessage(`🎒 인벤토리가 가득 차 ${weapon.name}이(가) 발밑에 떨어졌습니다.`, 'loot');
         }

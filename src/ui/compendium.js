@@ -5,6 +5,7 @@ import { BOSS_TYPES } from '../data/bosses.js';
 import { DESERT_ENEMY_TYPES, ENEMY_TYPES } from '../data/enemies.js';
 import { ITEMS } from '../data/items.js';
 import { WEAPONS } from '../data/weapons.js';
+import { itemArt } from './art.js';
 
 // ============================================================
 //  COMPENDIUM (도감)
@@ -45,9 +46,9 @@ function renderCompendium() {
         const card = document.createElement('button');
         card.type = 'button';
         card.className = 'compendium-card' + (owned ? '' : ' locked');
-        card.innerHTML = `<span class="cc-icon">${owned ? weapon.icon : '❓'}</span><span class="cc-name">${owned ? weapon.name : '???'}</span>`;
+        card.innerHTML = `${owned ? itemArt(weapon, 'cc-icon') : '<span class="cc-icon">❓</span>'}<span class="cc-name">${owned ? weapon.name : '???'}</span>`;
         if (owned) {
-            card.title = `${weapon.icon} ${weapon.name}\nATK: ${weapon.atk}\n${weapon.desc || ''}\n희귀도: ${weapon.rarity || '일반'}`;
+            card.title = `${weapon.icon} ${weapon.name}\nATK: ${weapon.atk}\n${weapon.desc || ''}\n희귀도: ${weapon.rarity || '일반'}\nSRD 참고 피해: ${weapon.damageDice || '특수'} ${weapon.damageType || ''}\n공격 간격: ${weapon.cooldown}초`;
         } else {
             card.title = '아직 발견하지 못한 무기';
         }
@@ -102,9 +103,11 @@ function renderCompendium() {
         card.type = 'button';
         card.className = 'compendium-card' + (owned ? '' : ' locked');
         const kills = player.killsByName[enemy.name] || 0;
-        card.innerHTML = `<span class="cc-icon">${owned ? enemy.icon || '👾' : '❓'}</span><span class="cc-name">${owned ? enemy.name : '???'}</span>`;
+        card.innerHTML = `${owned ? itemArt(enemy, 'cc-icon') : '<span class="cc-icon">❓</span>'}<span class="cc-name">${owned ? enemy.name : '???'}</span>`;
         if (owned) {
             card.title = `${enemy.icon || '👾'} ${enemy.name}\nHP: ${enemy.hp} | ATK: ${enemy.atk}\n처치 수: ${kills}마리\n${enemy.flying ? '🕊️ 비행' : ''}${enemy.ranged ? '🏹 원거리' : ''}${enemy.giant ? '👣 거대' : ''}`;
+            if (enemy.reference)
+                card.title += `\nSRD 참고: ${enemy.reference.name} · CR ${enemy.reference.cr} · AC ${enemy.reference.ac}\n원전 HP ${enemy.reference.hp} · 피해 ${enemy.reference.damageDice}`;
         } else {
             card.title = '아직 만나보지 못한 적';
         }
