@@ -1,5 +1,6 @@
-import { canAct, distance, getAvailableQuests, isGameActive } from '../core/helpers.js';
-import { npcs, player, portals, session } from '../core/state.js';
+import { canAct, getAvailableQuests, isGameActive } from '../core/helpers.js';
+import { player, session } from '../core/state.js';
+import { getInteractionTarget } from '../systems/interactions.js';
 import { isQuestAvailable } from '../systems/quests.js';
 import { interactPortal, travelToDesert } from '../systems/travel.js';
 import { openAppearancePanel } from './appearance.js';
@@ -13,24 +14,13 @@ import { useSlotMachine } from './slot-machine.js';
 // ============================================================
 function interactNpc() {
     if (!canAct()) return;
-    // Check portal first
-    if (portals.length > 0 && interactPortal()) return;
-
-    let closest = null,
-        closestDistance = 50;
-    for (const npc of npcs) {
-        const dist = distance(
-            player.x + player.w / 2,
-            player.y + player.h / 2,
-            npc.x + npc.w / 2,
-            npc.y + npc.h / 2,
-        );
-        if (dist < closestDistance) {
-            closest = npc;
-            closestDistance = dist;
-        }
+    const target = getInteractionTarget();
+    if (!target) return;
+    if (target.kind === 'portal') {
+        interactPortal();
+        return;
     }
-    if (!closest) return;
+    const closest = target.entity;
 
     // Shop NPC
     if (closest.isShop) {
@@ -59,7 +49,8 @@ function interactNpc() {
     const options = showNpcDialog(closest);
     const availableQuests = getAvailableQuests(closest);
     availableQuests.forEach((quest) => {
-        const questButton = document.createElement('div');
+        const questButton = document.createElement('button');
+        questButton.type = 'button';
         questButton.className = 'dialog-option';
         const badge = quest.main ? '⭐ ' : '';
         questButton.innerHTML = `<span class="q-name">${badge}📜 ${quest.name}</span><br><span class="q-desc">${quest.desc}</span><br><span class="q-reward">보상: ${quest.rewardText}</span>`;
@@ -84,7 +75,8 @@ function showNpcDialog(npc) {
 
 function showDesertTravelDialog(npc, description) {
     const options = showNpcDialog(npc);
-    const travelButton = document.createElement('div');
+    const travelButton = document.createElement('button');
+    travelButton.type = 'button';
     travelButton.className = 'dialog-option';
     travelButton.innerHTML = `<span class="q-name">🏜️ 사막으로 이동</span><br><span class="q-desc">${description}</span><br><span class="q-reward">⚠️ 돌아올 수 없으며 미완료 숲 퀘스트는 포기됩니다</span>`;
     travelButton.addEventListener('click', () => {

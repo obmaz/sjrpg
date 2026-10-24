@@ -1,10 +1,11 @@
 import { updateCamera } from '../core/canvas.js';
 import { MAP_HEIGHT, MAP_WIDTH, TILE_SIZE } from '../core/constants.js';
-import { clearWorldEntities, distance, isGameActive } from '../core/helpers.js';
+import { clearWorldEntities, isGameActive } from '../core/helpers.js';
 import { player, portals } from '../core/state.js';
 import { abandonRegionQuests, updateQuestProgress } from './quests.js';
 import { spawnDesertEnemies, spawnDesertNpcs, spawnDesertPickups } from './spawning.js';
 import { generateDesertMap } from './world.js';
+import { getInteractionTarget } from './interactions.js';
 import { showDesertTravelDialog } from '../ui/dialogs.js';
 import { updateHud } from '../ui/hud.js';
 import { addMessage } from '../ui/messages.js';
@@ -38,21 +39,8 @@ function spawnPortal() {
 }
 
 function interactPortal() {
-    let closestPortal = null,
-        closestDist = 50;
-    for (const p of portals) {
-        const dist = distance(
-            player.x + player.w / 2,
-            player.y + player.h / 2,
-            p.x + p.w / 2,
-            p.y + p.h / 2,
-        );
-        if (dist < closestDist) {
-            closestPortal = p;
-            closestDist = dist;
-        }
-    }
-    if (!closestPortal) return false;
+    const target = getInteractionTarget();
+    if (target?.kind !== 'portal') return false;
 
     showDesertTravelDialog(
         {

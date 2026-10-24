@@ -1812,6 +1812,16 @@ body {
     background: #41583b;
     border-color: #d7ba72;
 }
+.game-window .dialog-option {
+    font-family: inherit;
+    touch-action: manipulation;
+}
+.game-window .dialog-option:hover,
+.game-window .dialog-option:focus-visible {
+    background: #41583b;
+    border-color: #d7ba72;
+    transform: none;
+}
 .dialog-option .q-name {
     color: #e5cd90;
 }
@@ -2112,6 +2122,44 @@ body {
 .tracker-meter,
 .mobile-region {
     display: none;
+}
+.window-badge {
+    display: inline-block;
+    padding: 3px 7px;
+    border: 1px solid #c0ae6a66;
+    border-radius: 7px;
+    background: #10291f;
+    color: #e7cc89;
+    font:
+        600 12px/18px 'Segoe UI',
+        system-ui,
+        sans-serif;
+    vertical-align: middle;
+    letter-spacing: 0;
+}
+.equipped-summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    margin-bottom: 14px;
+    border: 1px solid #c4a45c;
+    border-radius: 10px;
+    background: linear-gradient(115deg, #625b334f, #263d29);
+    color: #ecddb6;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+.equipped-icon {
+    flex: none;
+    font-size: 30px;
+}
+.equipped-caption {
+    display: block;
+    margin-bottom: 2px;
+    color: #c8c59d;
+    font-size: 12px;
 }
 
 @media (pointer: coarse) {
@@ -2543,6 +2591,15 @@ body {
             0 0 20px #f3d38770;
         transform: scale(0.96);
     }
+    #touchControls #touchInteract.ready {
+        border-color: #f1d087;
+        background: radial-gradient(circle at 35% 20%, #9b9c54, #425938 75%);
+        box-shadow:
+            inset 0 1px #fff3ba88,
+            0 0 0 4px #e4c97630,
+            0 4px 12px #0006;
+        color: #fff0bd;
+    }
     #touchControls #touchAux {
         left: 0;
         top: 55px;
@@ -2582,9 +2639,8 @@ body {
     }
     .touch-items {
         position: absolute;
-        bottom: calc(var(--control-bottom) + 137px);
-        left: 50%;
-        transform: translateX(-50%);
+        bottom: calc(var(--control-bottom) + var(--stick-size) + 18px);
+        left: max(12px, env(safe-area-inset-left, 0px));
         display: flex;
         gap: 6px;
         padding: 22px 7px 6px;
@@ -2636,8 +2692,8 @@ body {
     }
     #touchControls .dismount-button {
         position: absolute;
-        bottom: calc(var(--control-bottom) + var(--stick-size) + 10px);
-        left: 16px;
+        bottom: calc(var(--control-bottom) + 190px);
+        right: max(12px, env(safe-area-inset-right, 0px));
         display: flex;
         align-items: center;
         gap: 5px;
@@ -2913,6 +2969,51 @@ body {
         height: 100vh;
     }
 }
+/* Portrait panels sit within thumb reach; the visible viewport still owns their bounds. */
+@media (pointer: coarse) and (max-width: 599px) {
+    #popupLayer > .overlay {
+        justify-content: flex-end;
+        padding-left: max(8px, env(safe-area-inset-left, 0px));
+        padding-right: max(8px, env(safe-area-inset-right, 0px));
+    }
+    .game-window,
+    .inventory-box.game-window {
+        width: 100%;
+        height: min(690px, 100%);
+        border-radius: 22px 22px 14px 14px;
+        animation: mobileWindowAppear 0.18s ease-out;
+    }
+    .window-header {
+        min-height: 64px;
+        padding: 10px 14px;
+    }
+    .window-header .eyebrow {
+        display: none;
+    }
+    .window-footer .game-button {
+        min-height: 54px;
+    }
+    #questJournal.mobile-journal-open {
+        top: auto;
+        bottom: var(--popup-gutter-bottom);
+        transform: translateX(-50%);
+        width: calc(
+            100% - max(8px, env(safe-area-inset-left, 0px)) -
+                max(8px, env(safe-area-inset-right, 0px))
+        );
+        height: min(690px, calc(100% - var(--popup-gutter-top) - var(--popup-gutter-bottom)));
+    }
+    @keyframes mobileWindowAppear {
+        from {
+            opacity: 0;
+            translate: 0 12px;
+        }
+        to {
+            opacity: 1;
+            translate: 0 0;
+        }
+    }
+}
 @media (pointer: coarse) and (max-width: 350px) {
     #touchControls {
         --stick-size: 114px;
@@ -2929,9 +3030,6 @@ body {
     #hpSub #timeDisplay,
     #hpSub #stageInfo {
         font-size: 12px;
-    }
-    .touch-items {
-        bottom: calc(var(--control-bottom) + 127px);
     }
     .setting-row {
         gap: 8px;
@@ -2965,13 +3063,13 @@ body {
         left: 50%;
         right: auto;
         transform: translateX(-50%);
-        width: 300px;
-        bottom: 8px;
+        width: min(300px, calc(100vw - 340px));
+        bottom: max(8px, env(safe-area-inset-bottom, 0px));
         height: 54px;
     }
     .touch-actions {
-        width: 138px;
-        height: 130px;
+        width: 150px;
+        height: 150px;
     }
     #touchControls #touchAttack {
         width: 70px;
@@ -2980,7 +3078,7 @@ body {
     #touchControls #touchAux {
         width: 54px;
         height: 54px;
-        top: 28px;
+        top: 36px;
     }
     #touchControls #touchInteract {
         width: 44px;
@@ -2990,6 +3088,13 @@ body {
     }
     .touch-items {
         bottom: 73px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    #touchControls .dismount-button {
+        left: max(12px, env(safe-area-inset-left, 0px));
+        right: auto;
+        bottom: calc(var(--control-bottom) + var(--stick-size) + 14px);
     }
     #minimap {
         top: calc(10px + env(safe-area-inset-top, 0px));

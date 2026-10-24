@@ -68,6 +68,10 @@ function dropInventoryItem(index = session.selectedInventoryIndex) {
 }
 
 function refreshInventoryUI() {
+    document.getElementById('inventoryCount').textContent =
+        `${inventory.length}/${INVENTORY_CAPACITY}`;
+    document.getElementById('equippedSummary').innerHTML =
+        `<span class="equipped-icon" aria-hidden="true">${player.weapon.icon}</span><span><span class="equipped-caption">장착 중</span><strong>${player.weapon.name}</strong> · ATK ${player.weapon.atk}</span>`;
     inventorySlots.innerHTML = '';
     for (let i = 0; i < INVENTORY_CAPACITY; i++) {
         const slot = document.createElement('div');

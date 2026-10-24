@@ -89,7 +89,7 @@ function startGame() {
     addMessage('❗ NPC를 찾아 대화하세요 [E]', 'loot');
     addMessage('🎒 보조무기는 퀘스트 보상·상점에서 획득! (N/K 사용, Q 순환)', 'loot');
     if (window.matchMedia('(pointer: coarse)').matches) {
-        addMessage('🎒 가방·도감·퀘스트는 화면 위 버튼을 누르세요.', 'info');
+        addMessage('🎒 가방·도감·일지·설정은 하단 메뉴에서 열 수 있어요.', 'info');
         addMessage('왼쪽 조이스틱: 이동 | 오른쪽 공격: 누르고 있기', 'info');
     } else {
         addMessage('이동: WASD | 공격: Space/J | 보조: N/K | 순환: Q | 인벤: I/Esc', 'info');

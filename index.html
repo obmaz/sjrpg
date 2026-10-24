@@ -184,8 +184,8 @@
                 <div class="touch-actions">
                     <button id="touchInteract" class="" type="button" aria-label="대화">
                         <svg class="ui-icon" aria-hidden="true" focusable="false">
-                            <use href="#icon-chat"></use></svg
-                        ><span class="control-caption">대화</span></button
+                            <use id="touchInteractSymbol" href="#icon-chat"></use></svg
+                        ><span id="touchInteractLabel" class="control-caption">대화</span></button
                     ><button id="touchCycle" class="" type="button" aria-label="교체">
                         <svg class="ui-icon" aria-hidden="true" focusable="false">
                             <use href="#icon-cycle"></use></svg
@@ -253,7 +253,10 @@
                         </svg>
                         <div class="window-heading">
                             <span class="eyebrow">EQUIPMENT</span>
-                            <h2>모험가의 가방</h2>
+                            <h2>
+                                모험가의 가방
+                                <span id="inventoryCount" class="window-badge">0/12</span>
+                            </h2>
                         </div>
                         <button
                             id="closeInventory"
@@ -270,6 +273,7 @@
                         <p class="window-intro">
                             장비를 눌러 장착하세요. 버린 장비는 120초 동안 남습니다.
                         </p>
+                        <div id="equippedSummary" class="equipped-summary"></div>
                         <div id="inventorySlots"></div>
                     </div>
                     <div class="window-footer">

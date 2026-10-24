@@ -1,5 +1,6 @@
 import { canAct } from '../core/helpers.js';
 import { player } from '../core/state.js';
+import { getInteractionTarget } from '../systems/interactions.js';
 import { performInputAction, touchKeys } from './input.js';
 
 let initialized = false;
@@ -197,6 +198,20 @@ function updateTouchControls() {
         control('touchAux').setAttribute('aria-label', auxiliaryLabel);
     control('touchAux').disabled = !enabled || !auxiliary || remaining > 0;
     document.getElementById('touchCycle').disabled = player.auxWeapons.length < 2;
+    const target = enabled ? getInteractionTarget() : null;
+    const interact = control('touchInteract');
+    setControlValue(interact, 'disabled', !target);
+    setControlValue(control('touchInteractLabel'), 'textContent', target?.label || '대화');
+    const symbol = `#${target?.symbol || 'icon-chat'}`;
+    if (control('touchInteractSymbol').getAttribute('href') !== symbol)
+        control('touchInteractSymbol').setAttribute('href', symbol);
+    if (interact.classList.contains('ready') !== !!target)
+        interact.classList.toggle('ready', !!target);
+    const interactionLabel = target
+        ? `${target.kind === 'portal' ? '차원 포탈' : target.entity.name}, ${target.label}`
+        : '근처 인물이나 포탈에 다가가세요';
+    if (interact.getAttribute('aria-label') !== interactionLabel)
+        interact.setAttribute('aria-label', interactionLabel);
 }
 
 export { initializeTouchControls, updateTouchControls, releaseTouchControls };
