@@ -1,9 +1,9 @@
 import { camera, canvas, ctx } from '../core/canvas.js';
 import { distance, getAvailableQuests } from '../core/helpers.js';
 import { chests, npcs, player, scarecrows } from '../core/state.js';
-import { getFacingAngle } from '../systems/combat.js';
+import { drawWeaponAttack } from './weapon-effects.js';
 import { drawArtToken } from './art.js';
-import { drawWorldSprite, drawMountSprite } from './world-art.js';
+import { drawWorldSprite, drawMountSprite, getWorldSpriteTop } from './world-art.js';
 import { enemyWorldArt } from '../data/art.js';
 import { getInteractionTarget } from '../systems/interactions.js';
 import { drawPlayerMarker } from './presentation.js';
@@ -376,7 +376,14 @@ function drawEntity(entity) {
         }
     }
 
-    const visualTop = paintedWorld ? screenY - entity.h * 0.42 : screenY;
+    const visualTop = paintedWorld
+        ? getWorldSpriteTop(
+              enemyWorldArt(entity),
+              screenY + entity.h,
+              entity.w * 1.7,
+              entity.h * 1.8,
+          )
+        : screenY;
     const engaged =
         entity.isBoss ||
         entity.hp < entity.maxHp ||
@@ -681,108 +688,7 @@ function drawPlayerShape(cx, cy, p) {
         ctx.fillText(p.playerFace, cx + 14, cy - 26 + bob);
     }
 
-    // Attack swing effect - varies by weapon ability, more vivid
-    const ability = weapon.ability || 'basic';
-    if (p.attackTimer > (weapon.cooldown || p.attackCooldown) - 0.16) {
-        const progress = ((weapon.cooldown || p.attackCooldown) - p.attackTimer) / 0.16;
-        const fa = getFacingAngle(p.dir);
-
-        if (ability === 'ranged') {
-            // Magic circle at origin - larger and brighter
-            ctx.strokeStyle = weapon.color;
-            ctx.lineWidth = 4;
-            ctx.shadowColor = weapon.color;
-            ctx.shadowBlur = 12;
-            ctx.beginPath();
-            const origin = { x: cx, y: cy };
-            switch (p.dir) {
-                case 0:
-                    origin.y = cy + p.h / 2 + 6;
-                    break;
-                case 1:
-                    origin.x = cx - p.w / 2 - 6;
-                    break;
-                case 2:
-                    origin.y = cy - p.h / 2 - 6;
-                    break;
-                case 3:
-                    origin.x = cx + p.w / 2 + 6;
-                    break;
-            }
-            ctx.arc(origin.x, origin.y, 12 + progress * 20, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-        } else if (ability === 'fire' || ability === 'legend') {
-            // Fire/legend arc - thicker and glowing
-            ctx.strokeStyle = weapon.color;
-            ctx.lineWidth = 5;
-            ctx.shadowColor = weapon.color;
-            ctx.shadowBlur = 15;
-            ctx.beginPath();
-            ctx.arc(
-                cx,
-                cy,
-                24 + progress * 35,
-                fa - 0.8 - progress * 0.4,
-                fa + 0.8 + progress * 0.4,
-            );
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-        } else if (ability === 'wide' || ability === 'combo_wide') {
-            // Wide slash - thicker
-            ctx.strokeStyle = weapon.color;
-            ctx.lineWidth = 4;
-            ctx.shadowColor = weapon.color;
-            ctx.shadowBlur = 10;
-            ctx.beginPath();
-            const wideAngle = weapon.wideAngle || 0.5;
-            ctx.arc(
-                cx,
-                cy,
-                24 + progress * 28,
-                fa - wideAngle - progress * 0.25,
-                fa + wideAngle + progress * 0.25,
-            );
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-        } else if (ability === 'push') {
-            // Push wind arc
-            ctx.strokeStyle = '#aaddff';
-            ctx.lineWidth = 3;
-            ctx.shadowColor = '#88ccff';
-            ctx.shadowBlur = 15;
-            ctx.beginPath();
-            ctx.arc(cx, cy, 20 + progress * 50, fa - 0.6, fa + 0.6);
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-        } else if (ability === 'slam') {
-            // Slam ground ring
-            ctx.strokeStyle = '#ddcc88';
-            ctx.lineWidth = 5;
-            ctx.shadowColor = '#cc9944';
-            ctx.shadowBlur = 20;
-            ctx.beginPath();
-            ctx.arc(cx, cy, 15 + progress * 40, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-        } else {
-            // Standard slash - thicker
-            ctx.strokeStyle = weapon.color;
-            ctx.lineWidth = 3.5;
-            ctx.shadowColor = weapon.color;
-            ctx.shadowBlur = 8;
-            ctx.beginPath();
-            ctx.arc(
-                cx,
-                cy,
-                20 + progress * 24,
-                fa - 0.4 - progress * 0.4,
-                fa + 0.4 + progress * 0.4,
-            );
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-        }
-    }
+    drawWeaponAttack(ctx, p, cx, cy);
 
     // Combo indicator
     if (p.comboHits > 0) {

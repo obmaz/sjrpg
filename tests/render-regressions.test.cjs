@@ -239,3 +239,34 @@ test('forest cover follows map replacement and terrain destruction without mutat
     );
     assert.equal(run('getForestTile(12,12).dense'), false);
 });
+
+test('each primary weapon renders a distinct attack without changing gameplay state', async () => {
+    const { run } = await loadGame();
+    run(`const strokes=[];ctx.arc=(...a)=>strokes.push(['arc',...a]);ctx.lineTo=(...a)=>strokes.push(['line',...a]);ctx.bezierCurveTo=(...a)=>strokes.push(['curve',...a]);
+        const traces=[];const weaponBefore=JSON.stringify(WEAPONS);
+        Math.random=()=>{throw new Error('drawing must not use randomness')};
+        for(const weapon of WEAPONS){
+            strokes.length=0;player.weapon=weapon;player.attackVisual={...weapon};player.attackSerial=1;
+            player.lastAttackCooldown=weapon.cooldown;player.attackTimer=weapon.cooldown-.08;
+            const before=JSON.stringify(player);drawWeaponAttack(ctx,player,0,0);
+            if(JSON.stringify(player)!==before)throw new Error('drawing mutated player');
+            traces.push(JSON.stringify(strokes));
+        }`);
+    assert.equal(run('new Set(traces).size'), 16);
+    assert.equal(run('JSON.stringify(WEAPONS)===weaponBefore'), true);
+});
+
+test('last-use attacks retain their own visual and ranged projectiles retain weapon identity', async () => {
+    const { run } = await loadGame();
+    run(
+        `clearWorldEntities();player.weapon={...WEAPONS.find(w=>w.id==='legend'),uses:1};attackWithWeapon();`,
+    );
+    assert.equal(run('player.weapon.id'), 'fist');
+    assert.equal(run('player.attackVisual.id'), 'legend');
+    assert.equal(run('projectiles[0].weaponId'), 'legend');
+    for (const id of ['crossbow', 'staff', 'sandstorm']) {
+        run(`player.weapon={...WEAPONS.find(w=>w.id==='${id}')};attackWithWeapon();`);
+        assert.equal(run('projectiles.at(-1).weaponId'), id);
+    }
+    assert.equal(run('enemyWorldArt({name:"고대 드래곤",artIndex:null})'), 'ancientDragon');
+});

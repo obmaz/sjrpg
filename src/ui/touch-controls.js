@@ -89,6 +89,9 @@ function releaseAttack(event) {
 function initializeTouchControls() {
     if (initialized) return;
     initialized = true;
+    const controls = document.getElementById('touchControls');
+    // Safari can recognize a double tap during a disabled cooldown button.
+    controls.addEventListener('dblclick', (event) => event.preventDefault());
     joystick = document.getElementById('touchJoystick');
     thumb = document.getElementById('touchThumb');
     attackButton = document.getElementById('touchAttack');

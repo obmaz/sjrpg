@@ -21,6 +21,7 @@ function attackWithWeapon() {
     const weapon = player.weapon;
     const cooldown = weapon.cooldown || player.attackCooldown;
     player.attackTimer = cooldown;
+    player.attackVisual = { ...weapon };
     player.attackSerial = (player.attackSerial || 0) + 1;
     player.lastAttackCooldown = cooldown;
     playSlashSound();
@@ -319,6 +320,7 @@ function rangedAttack(weapon) {
         weapon.icon,
         sizeMult,
         weapon.range,
+        weapon.id,
     );
 }
 
@@ -432,6 +434,7 @@ function legendAttack(weapon, comboBonus) {
         '✨',
         weapon.projectileSize || 1,
         weapon.projectileRange ?? weapon.range,
+        weapon.id,
     );
 }
 

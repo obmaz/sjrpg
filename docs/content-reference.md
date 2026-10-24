@@ -40,7 +40,9 @@
 
 ## 아트
 
-`assets/hero.webp`, `assets/atlas.webp`, `assets/terrain.webp`, `assets/world-forest.webp`, `assets/world-desert.webp`, `assets/ui-reference.webp`, `assets/controls.webp`, `assets/popup-frame.webp`, `assets/world-mounts.webp`, `assets/forest.webp`는 이 게임을 위해 생성한 이미지입니다.
+고대 드래곤은 이 게임을 위해 새로 생성한 붉은 비늘·황금 뿔·펼친 날개의 투명 보스 그림을 사용합니다.
+
+`assets/hero.webp`, `assets/atlas.webp`, `assets/terrain.webp`, `assets/world-forest.webp`, `assets/world-desert.webp`, `assets/ui-reference.webp`, `assets/controls.webp`, `assets/popup-frame.webp`, `assets/world-mounts.webp`, `assets/forest.webp`, `assets/ancient-dragon.webp`는 이 게임을 위해 생성한 이미지입니다.
 배경은 숲의 유적·사막 왕국으로 통하는 포탈, 기존 아이콘 시트는 장비 8종·몬스터 초상 8종, 바닥은 잔디·흙·모래·돌길입니다.
 
 `docs/art/village-reference.webp`는 대표 플레이 화면의 생성 콘셉트입니다. 이를 그림체 기준으로 투명 배경의 숲·사막 시트를 각각 4×4로 제작했습니다.

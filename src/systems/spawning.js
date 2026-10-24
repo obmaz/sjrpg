@@ -22,6 +22,7 @@ import { spawnChest, spawnGoldPickup } from './entities.js';
 import { spawnMount } from './mounts.js';
 import { isReachableFromArrival } from './navigation.js';
 import { isSolidTile, isWaterTile } from './world.js';
+import { getBoatWaters } from './boat-waters.js';
 import { addMessage } from '../ui/messages.js';
 
 function spawnEnemy(type, x, y, level = null, options = {}) {
@@ -521,9 +522,11 @@ function spawnInitialMounts() {
             spawnMount(mt, mx * TILE_SIZE + TILE_SIZE / 2, my * TILE_SIZE + TILE_SIZE / 2);
         }
     }
-    // Boat: spawn at water edge
+    // Boat: only navigable lakes with a usable shore
     const boat = { ...MOUNT_TYPES[3], w: MOUNT_WIDTH, h: MOUNT_HEIGHT };
+    const boatWaters = getBoatWaters();
     const boatTile = findSpawnTile(3, (_tileX, _tileY, x, y) => {
+        if (!boatWaters[_tileY * MAP_WIDTH + _tileX]) return false;
         const bx = x * TILE_SIZE;
         const by = y * TILE_SIZE;
         if (!canOccupyMountPosition(boat, bx, by)) return false;

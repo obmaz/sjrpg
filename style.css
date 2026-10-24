@@ -4685,3 +4685,13 @@ body {
 #worldInteract:active::after {
     background: #234b49;
 }
+
+/* Controls keep the same gesture policy while disabled or between buttons. */
+@media (any-pointer: coarse) {
+    #gameArea,
+    #touchControls,
+    #touchControls * {
+        touch-action: none;
+        -webkit-touch-callout: none;
+    }
+}

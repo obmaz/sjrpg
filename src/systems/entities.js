@@ -57,7 +57,18 @@ function spawnParticles(x, y, color, count = 8) {
 //  PROJECTILES (for ranged weapons)
 // ============================================================
 
-function spawnProjectile(x, y, dir, speed, dmg, color, icon, sizeMult = 1, maxRange = null) {
+function spawnProjectile(
+    x,
+    y,
+    dir,
+    speed,
+    dmg,
+    color,
+    icon,
+    sizeMult = 1,
+    maxRange = null,
+    weaponId = null,
+) {
     let vx = 0,
         vy = 0;
     switch (dir) {
@@ -76,7 +87,7 @@ function spawnProjectile(x, y, dir, speed, dmg, color, icon, sizeMult = 1, maxRa
     }
     const baseSize = 6 * sizeMult;
     const life = maxRange == null ? 0.8 : Math.max(0, maxRange) / Math.max(1, Math.abs(speed));
-    projectiles.push({ x, y, vx, vy, dmg, color, icon, life, size: baseSize });
+    projectiles.push({ x, y, vx, vy, dmg, color, icon, life, size: baseSize, weaponId });
 }
 
 function spawnGoldPickup(x, y, amount = 0) {

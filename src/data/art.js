@@ -34,6 +34,7 @@ const WORLD_FRAMES = Object.freeze({
 });
 
 function enemyWorldArt(enemy) {
+    if (enemy.name === '고대 드래곤') return 'ancientDragon';
     if (enemy.name === '파라오') return 'pharaoh';
     if (enemy.name === '회색 점액괴물' || enemy.name === '황토 젤리') return 'slime';
     return {

@@ -1,5 +1,6 @@
 import { camera, canvas, ctx } from '../core/canvas.js';
 import { drawArtToken } from './art.js';
+import { drawWeaponProjectile } from './weapon-effects.js';
 import { drawMountSprite } from './world-art.js';
 import { visualMotionAllowed } from './presentation.js';
 import {
@@ -59,6 +60,7 @@ function drawProjectiles() {
     for (const p of projectiles) {
         const sx = p.x - camera.x;
         const sy = p.y - camera.y;
+        if (drawWeaponProjectile(ctx, p, sx, sy)) continue;
         ctx.fillStyle = p.color.replace(')', ',0.4)').replace('rgb', 'rgba');
         if (p.color.startsWith('#')) {
             ctx.fillStyle = p.color + '66';

@@ -783,3 +783,52 @@ test('sealed woodland gaps become undergrowth while natural water and desert con
         assert.equal(run('isSolidTile(10,10)'), false);
     }
 });
+
+test('boats only spawn in a large connected navigable lake with a shore', async () => {
+    const { run } = await loadGame();
+    for (const shape of ['none', 'puddle', 'channel', 'separate', 'lake']) {
+        run(`clearWorldEntities(); tileMap=Array.from({length:MAP_HEIGHT},()=>Array(MAP_WIDTH).fill(TILE_KEYS.indexOf('GRASS')));
+            player.x=1200;player.y=900;
+            function water(x,y,w,h) {for(let dy=0;dy<h;dy++)for(let dx=0;dx<w;dx++)tileMap[y+dy][x+dx]=TILE_KEYS.indexOf('WATER');}`);
+        if (shape === 'puddle') run('water(12,12,4,4);');
+        if (shape === 'channel') run('water(12,12,2,40);');
+        if (shape === 'separate')
+            run('water(12,12,4,4);water(20,12,4,4);water(28,12,4,4);water(36,12,4,4);');
+        if (shape === 'lake') run('water(12,12,8,6);');
+        run('spawnInitialPickups();');
+        assert.equal(
+            run('mounts.filter(m=>m.id==="boat").length'),
+            shape === 'lake' ? 1 : 0,
+            shape,
+        );
+        if (shape === 'lake')
+            assert.equal(
+                run('mounts.filter(m=>m.id==="boat").every(m=>canOccupyMountPosition(m,m.x,m.y))'),
+                true,
+            );
+    }
+});
+
+test('duplicate weapon loot reports only the awarded gold', async () => {
+    const { run, elements } = await loadGame();
+    run('receiveWeapon(WEAPONS[1]);receiveWeapon(WEAPONS[1]);');
+    assert.equal(elements.get('eventBubbles').children.at(-1).textContent, '💰 +10 골드');
+    assert.equal(run('player.gold'), 10);
+});
+
+test('control double taps are canceled without blocking auxiliary clicks', async () => {
+    const { run, elements } = await loadGame({ coarsePointer: true });
+    run(
+        'initializeTouchControls();player.auxWeapon={...AUX_WEAPONS.find(w=>w.id==="shuriken")};player.auxWeapons=[player.auxWeapon];',
+    );
+    let prevented = false;
+    elements.get('touchControls').dispatchEvent({
+        type: 'dblclick',
+        preventDefault() {
+            prevented = true;
+        },
+    });
+    assert.equal(prevented, true);
+    elements.get('touchAux').dispatchEvent({ type: 'click' });
+    assert.ok(run('player.auxCooldown') > 0);
+});

@@ -1,6 +1,11 @@
 // World art keeps a foot anchor; directional mounts use measured content bounds.
 import { WORLD_FRAMES, getMountArtFrame, MOUNT_SPRITE_BOUNDS } from '../data/art.js';
 const sheets = {};
+let ancientDragon = null;
+if (typeof Image === 'function') {
+    ancientDragon = new Image();
+    ancientDragon.src = new URL('../../assets/ancient-dragon.webp', import.meta.url).href;
+}
 if (typeof Image === 'function') {
     for (const name of ['forest', 'desert', 'mounts']) {
         const sheet = new Image();
@@ -11,6 +16,11 @@ if (typeof Image === 'function') {
 
 // x is the body centre; feetY remains tied to the existing collision footprint.
 function drawWorldSprite(ctx, key, x, feetY, width, height = width) {
+    if (key === 'ancientDragon' && ancientDragon?.complete && ancientDragon.naturalWidth) {
+        const drawHeight = (width * ancientDragon.naturalHeight) / ancientDragon.naturalWidth;
+        ctx.drawImage(ancientDragon, x - width / 2, feetY - drawHeight, width, drawHeight);
+        return true;
+    }
     return drawSheetFrame(ctx, WORLD_FRAMES[key], x, feetY, width, height);
 }
 
@@ -46,4 +56,12 @@ function drawMountSprite(ctx, mount, x, feetY, direction = mount.dir ?? 0) {
     }
     return drawWorldSprite(ctx, mount.id, x, feetY, mount.w * 1.5, mount.h * 1.5);
 }
-export { drawWorldSprite, drawMountSprite };
+function getWorldSpriteTop(key, feetY, width, height) {
+    return (
+        feetY -
+        (key === 'ancientDragon' && ancientDragon?.naturalWidth
+            ? (width * ancientDragon.naturalHeight) / ancientDragon.naturalWidth
+            : height * 0.88)
+    );
+}
+export { drawWorldSprite, drawMountSprite, getWorldSpriteTop };

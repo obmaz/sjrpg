@@ -10,7 +10,7 @@ function receiveWeapon(weapon, { autoSalvage = true } = {}) {
         const gold = Math.max(5, Math.round((weapon.value || 50) * 0.2));
         player.gold += gold;
         recordDiscovery('weapons', weapon.id);
-        addMessage(`💰 중복 ${weapon.name} → ${gold} 골드`, 'loot');
+        addMessage(`💰 +${gold} 골드`, 'loot');
         return 'salvaged';
     }
     if (inventory.length >= INVENTORY_CAPACITY) return 'full';
