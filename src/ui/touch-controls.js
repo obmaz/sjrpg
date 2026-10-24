@@ -2,7 +2,7 @@ import { canAct } from '../core/helpers.js';
 import { player } from '../core/state.js';
 import { camera, canvas } from '../core/canvas.js';
 import { getInteractionTarget } from '../systems/interactions.js';
-import { performInputAction, touchKeys } from './input.js';
+import { performInputAction, touchKeys, touchStick } from './input.js';
 import { artClass } from './art.js';
 import { interactNpc } from './dialogs.js';
 
@@ -34,6 +34,8 @@ function setControlValue(target, property, value) {
 }
 
 function releaseTouchControls() {
+    touchStick.x = touchStick.y = 0;
+    touchStick.active = false;
     for (const code of Object.keys(touchKeys)) delete touchKeys[code];
     if (!initialized) return;
     if (stickPointer !== null && joystick.hasPointerCapture(stickPointer))
@@ -63,6 +65,10 @@ function moveStick(event) {
     const scale = magnitude > radius ? radius / magnitude : 1;
     thumb.style.transform = `translate(calc(-50% + ${x * scale}px), calc(-50% + ${y * scale}px))`;
     const moving = magnitude > radius * 0.2;
+    const strength = moving ? Math.min(1, (magnitude / radius - 0.2) / 0.8) : 0;
+    touchStick.x = magnitude ? (x / magnitude) * strength : 0;
+    touchStick.y = magnitude ? (y / magnitude) * strength : 0;
+    touchStick.active = true;
     const horizontal = moving && Math.abs(x) >= Math.abs(y) * 0.45;
     const vertical = moving && Math.abs(y) >= Math.abs(x) * 0.45;
     touchKeys.ArrowLeft = horizontal && x < 0;
@@ -74,6 +80,8 @@ function moveStick(event) {
 function releaseStick(event) {
     if (event.pointerId !== stickPointer) return;
     stickPointer = null;
+    touchStick.x = touchStick.y = 0;
+    touchStick.active = false;
     for (const code of ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']) delete touchKeys[code];
     thumb.style.transform = 'translate(-50%, -50%)';
     joystick.classList.remove('active');

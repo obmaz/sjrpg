@@ -5,8 +5,9 @@ import {
     healPlayer,
     isGameActive,
 } from '../core/helpers.js';
+import { getActorAngle } from '../core/facing.js';
 import { enemies, particles, player, projectiles } from '../core/state.js';
-import { damageEnemy, getFacingAngle, getPlayerAttackOrigin, offsetInDirection } from './combat.js';
+import { damageEnemy, getPlayerAttackOrigin, offsetInDirection } from './combat.js';
 import { spawnFireZone, spawnParticles, spawnProjectile } from './entities.js';
 import { updateHud } from '../ui/hud.js';
 import { addMessage } from '../ui/messages.js';
@@ -140,22 +141,9 @@ function useLightning(auxiliaryWeapon, origin) {
     // Straight line in facing direction
     const radius = auxiliaryWeapon.range || 90;
     for (let i = 0; i < 12; i++) {
-        let lx = origin.x,
-            ly = origin.y;
-        switch (player.dir) {
-            case 0:
-                ly += (i / 12) * radius;
-                break;
-            case 1:
-                lx -= (i / 12) * radius;
-                break;
-            case 2:
-                ly -= (i / 12) * radius;
-                break;
-            case 3:
-                lx += (i / 12) * radius;
-                break;
-        }
+        const angle = getActorAngle(player);
+        const lx = origin.x + Math.cos(angle) * (i / 12) * radius;
+        const ly = origin.y + Math.sin(angle) * (i / 12) * radius;
         particles.push({
             x: lx + (Math.random() - 0.5) * 16,
             y: ly + (Math.random() - 0.5) * 16,
@@ -167,29 +155,15 @@ function useLightning(auxiliaryWeapon, origin) {
             size: 2 + Math.random() * 3,
         });
     }
-    const vertical = player.dir === 0 || player.dir === 2;
+    const angle = getActorAngle(player);
     for (const enemy of getEnemiesInRadius(origin.x, origin.y, radius + 30)) {
         // Hit if the enemy is along the lightning line (in front, within width)
         const ex = enemy.x + enemy.w / 2,
             ey = enemy.y + enemy.h / 2;
         const dx = ex - origin.x,
             dy = ey - origin.y;
-        let along = 0;
-        switch (player.dir) {
-            case 0:
-                along = dy;
-                break;
-            case 1:
-                along = -dx;
-                break;
-            case 2:
-                along = -dy;
-                break;
-            case 3:
-                along = dx;
-                break;
-        }
-        const perp = Math.abs(vertical ? dx : dy);
+        const along = dx * Math.cos(angle) + dy * Math.sin(angle);
+        const perp = Math.abs(-dx * Math.sin(angle) + dy * Math.cos(angle));
         if (along > 0 && along < radius && perp < 30) {
             damageEnemy(enemy, auxiliaryWeapon.dmg, true);
             spawnParticles(ex, ey, '#ffff44', 15);
@@ -249,20 +223,45 @@ function useTaunt(auxiliaryWeapon) {
 
 function throwBoomerang(auxiliaryWeapon, origin) {
     const throwDir = player.dir;
-    spawnProjectile(origin.x, origin.y, throwDir, 320, auxiliaryWeapon.dmg, '#aaccff', '🪃');
+    const throwAngle = getActorAngle(player);
+    spawnProjectile(
+        origin.x,
+        origin.y,
+        throwDir,
+        320,
+        auxiliaryWeapon.dmg,
+        '#aaccff',
+        '🪃',
+        1,
+        null,
+        null,
+        throwAngle,
+    );
     // Boomerang returns after a delay
     deferGameAction(0.35, () => {
         if (!isGameActive()) return;
         const rOrigin = getPlayerAttackOrigin();
         const revDir = (throwDir + 2) % 4;
-        spawnProjectile(rOrigin.x, rOrigin.y, revDir, 280, auxiliaryWeapon.dmg, '#aaccff', '🪃');
+        spawnProjectile(
+            rOrigin.x,
+            rOrigin.y,
+            revDir,
+            280,
+            auxiliaryWeapon.dmg,
+            '#aaccff',
+            '🪃',
+            1,
+            null,
+            null,
+            throwAngle + Math.PI,
+        );
     });
 }
 
 function throwShuriken(auxiliaryWeapon, origin) {
     for (let i = -1; i <= 1; i++) {
         // 3-way spread around the facing angle
-        const fAngle = getFacingAngle(player.dir) + i * 0.25;
+        const fAngle = getActorAngle(player) + i * 0.25;
         const spd = 300;
         projectiles.push({
             x: origin.x,

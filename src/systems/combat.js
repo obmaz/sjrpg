@@ -1,3 +1,5 @@
+import { getActorAngle, setActorFacing } from '../core/facing.js';
+import { touchKeys } from '../ui/input.js';
 import { canAct, distance, getEnemiesInRadius, recordDiscovery } from '../core/helpers.js';
 import { enemies, particles, player, scarecrows } from '../core/state.js';
 import { WEAPONS } from '../data/weapons.js';
@@ -18,6 +20,30 @@ import { receiveWeapon } from './loot.js';
 
 function attackWithWeapon() {
     if (!canAct()) return;
+    if (touchKeys.Space && !player.moving) {
+        let target = null,
+            nearest = 140;
+        for (const enemy of enemies) {
+            if (enemy.hp <= 0) continue;
+            const d = Math.hypot(
+                enemy.x + enemy.w / 2 - player.x - player.w / 2,
+                enemy.y + enemy.h / 2 - player.y - player.h / 2,
+            );
+            if (d < nearest) {
+                target = enemy;
+                nearest = d;
+            }
+        }
+        if (target)
+            setActorFacing(
+                player,
+                Math.atan2(
+                    target.y + target.h / 2 - player.y - player.h / 2,
+                    target.x + target.w / 2 - player.x - player.w / 2,
+                ),
+            );
+    }
+    player.attackAngle = getActorAngle(player);
     const weapon = player.weapon;
     const cooldown = weapon.cooldown || player.attackCooldown;
     player.attackTimer = cooldown;
@@ -99,39 +125,22 @@ function attackWithWeapon() {
 }
 
 function getPlayerAttackOrigin() {
-    let ax = player.x + player.w / 2;
-    let ay = player.y + player.h / 2;
-    switch (player.dir) {
-        case 0:
-            ay += player.h / 2 + 6;
-            break;
-        case 1:
-            ax -= player.w / 2 + 6;
-            break;
-        case 2:
-            ay -= player.h / 2 + 6;
-            break;
-        case 3:
-            ax += player.w / 2 + 6;
-            break;
-    }
-    return { x: ax, y: ay };
+    const angle = getActorAngle(player);
+    return {
+        x: player.x + player.w / 2 + Math.cos(angle) * (player.w / 2 + 6),
+        y: player.y + player.h / 2 + Math.sin(angle) * (player.h / 2 + 6),
+    };
 }
 
 // Move a point `dist` px along the player's facing direction (0=down,1=left,2=up,3=right)
-function offsetInDirection(x, y, dir, dist) {
-    switch (dir) {
-        case 0:
-            return { x, y: y + dist };
-        case 1:
-            return { x: x - dist, y };
-        case 2:
-            return { x, y: y - dist };
-        case 3:
-            return { x: x + dist, y };
-        default:
-            return { x, y };
-    }
+function offsetInDirection(
+    x,
+    y,
+    dir,
+    dist,
+    angle = dir === player.dir ? getActorAngle(player) : getFacingAngle(dir),
+) {
+    return { x: x + Math.cos(angle) * dist, y: y + Math.sin(angle) * dist };
 }
 
 // dir: 0=down, 1=left, 2=up, 3=right → screen-space angle (0=right, π/2=down, π=left, -π/2=up)
@@ -187,7 +196,7 @@ function meleeAttack(weapon, comboBonus) {
     const range = weapon.range || 36;
     spawnParticles(origin.x, origin.y, weapon.color, 16);
     // Extra slash trail particles
-    const facing = getFacingAngle(player.dir);
+    const facing = getActorAngle(player);
     for (let i = 0; i < 6; i++) {
         const a = facing - 0.5 + Math.random();
         particles.push({
@@ -221,7 +230,7 @@ function wideAttack(weapon, comboBonus) {
     const angle = weapon.wideAngle || 0.3;
 
     // Wide arc particle effect - more particles, bigger
-    const facing = getFacingAngle(player.dir);
+    const facing = getActorAngle(player);
     for (let i = 0; i < 22; i++) {
         const a = facing - angle + (angle * 2 * i) / 21;
         const r = range * 0.45;
@@ -321,6 +330,7 @@ function rangedAttack(weapon) {
         sizeMult,
         weapon.range,
         weapon.id,
+        getActorAngle(player),
     );
 }
 
@@ -332,7 +342,7 @@ function fireAttack(weapon) {
     const range = weapon.range || 42;
 
     // Fire particles - much more intense
-    const facing = getFacingAngle(player.dir);
+    const facing = getActorAngle(player);
     for (let i = 0; i < 28; i++) {
         const a = facing - 0.6 + Math.random() * 1.2;
         const r = range * Math.random() * 0.8;
@@ -435,6 +445,7 @@ function legendAttack(weapon, comboBonus) {
         weapon.projectileSize || 1,
         weapon.projectileRange ?? weapon.range,
         weapon.id,
+        getActorAngle(player),
     );
 }
 
@@ -443,7 +454,7 @@ function pushAttack(weapon) {
     const range = weapon.range || 100;
     const pushForce = weapon.pushForce || 350;
     const pushAngle = weapon.pushAngle || 0.6;
-    const facing = getFacingAngle(player.dir);
+    const facing = getActorAngle(player);
 
     // Wind particle effect - more intense
     for (let i = 0; i < 35; i++) {

@@ -40,6 +40,8 @@
 
 ## 아트
 
+`assets/actors-hero.webp`, `actors-hero-attack.webp`, `actors-creatures-a.webp`~`actors-creatures-d.webp`, `actors-villagers.webp`, `actors-vehicles.webp`는 같은 그림체로 새로 생성한 방향·걷기·검 공격 시트입니다. 주인공은 기존 청록 모험가 그림을 참조해 16방향으로 만들었으며 모든 이동 적·보스·주민·탈것에는 기본 8방향을 연결합니다.
+
 `assets/village-scene.webp`는 사용자가 첨부한 대표 이미지의 구도를 바탕으로 UI·캐릭터·몬스터·상자를 제거하고 새로 생성한 환경 그림입니다. 실제 인물·전투·상호작용은 코드로 실행합니다.
 
 고대 드래곤은 이 게임을 위해 새로 생성한 붉은 비늘·황금 뿔·펼친 날개의 투명 보스 그림을 사용합니다.

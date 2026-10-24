@@ -1,3 +1,4 @@
+import { getActorAngle } from '../core/facing.js';
 // Weapon silhouettes use simulation attack time; drawing never rolls gameplay randomness.
 const WEAPON_EFFECTS = Object.freeze({
     fist: 'impact',
@@ -73,7 +74,7 @@ function drawWeaponAttack(ctx, actor, x, y) {
     const reach = Math.min(96, weapon.range || 40);
     ctx.save();
     ctx.translate(x, y);
-    ctx.rotate([Math.PI / 2, Math.PI, -Math.PI / 2, 0][actor.dir] || 0);
+    ctx.rotate(actor.attackAngle ?? getActorAngle(actor));
     ctx.globalAlpha *= Math.min(1, (1 - t) * 2.2);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';

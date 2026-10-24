@@ -1,4 +1,5 @@
 // World art keeps a foot anchor; directional mounts use measured content bounds.
+import { drawActorSprite } from './actor-art.js';
 import { WORLD_FRAMES, getMountArtFrame, MOUNT_SPRITE_BOUNDS } from '../data/art.js';
 const sheets = {};
 let ancientDragon = null;
@@ -44,6 +45,7 @@ function drawSheetFrame(ctx, frame, x, feetY, width, height) {
 }
 
 function drawMountSprite(ctx, mount, x, feetY, direction = mount.dir ?? 0) {
+    if (drawActorSprite(ctx, mount.id, mount, x, feetY, mount.w * 1.5, mount.h * 1.5)) return true;
     const sheet = sheets.mounts;
     const frame = getMountArtFrame(mount.id, direction);
     if (frame && sheet?.complete && sheet.naturalWidth) {

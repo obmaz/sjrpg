@@ -1,3 +1,5 @@
+import { drawActorSprite, getActorSpriteHeight } from './actor-art.js';
+import { actorArtKey } from '../data/actor-art.js';
 import { villageArtReady } from './village.js';
 import { camera, canvas, ctx } from '../core/canvas.js';
 import { distance, getAvailableQuests } from '../core/helpers.js';
@@ -52,14 +54,10 @@ function drawNpcs(entities = npcs) {
                 : npc.isSlotMachine
                   ? 'merchant'
                   : 'villager';
-        const painted = drawWorldSprite(
-            ctx,
-            sprite,
-            bx,
-            feetY,
-            npc.isShop ? 82 : 46,
-            npc.isShop ? 82 : 54,
-        );
+        const npcAngle = Math.atan2(player.y - npc.y, player.x - npc.x);
+        const painted =
+            (!npc.isShop && drawActorSprite(ctx, sprite, npc, bx, feetY, 46, 54, npcAngle)) ||
+            drawWorldSprite(ctx, sprite, bx, feetY, npc.isShop ? 82 : 46, npc.isShop ? 82 : 54);
         if (!painted) {
             // ── Draw human body shape ──
             const isShopNPC = npc.isShop;
@@ -318,12 +316,13 @@ function drawEntity(entity) {
     const screenX = entity.x - camera.x;
     const screenY = entity.y - camera.y;
 
-    // Skip if off screen
+    // Include the full illustrated silhouette above and around large collision bodies.
+    const margin = Math.max(60, entity.w * 0.9, entity.h * 0.9);
     if (
-        screenX + entity.w < -50 ||
-        screenX > canvas.width + 50 ||
-        screenY + entity.h < -50 ||
-        screenY > canvas.height + 50
+        screenX + entity.w < -margin ||
+        screenX > canvas.width + margin ||
+        screenY + entity.h < -margin ||
+        screenY > canvas.height + margin
     )
         return;
 
@@ -353,20 +352,33 @@ function drawEntity(entity) {
     const cy = screenY + entity.h / 2;
     const isPlayer = entity === player;
     let paintedWorld = false;
+    let paintedActor = false;
+    const actorHeight = entity.h * (entity.megaBoss ? 1.2 : 1.8);
     const spriteScale = entity.trailGuard ? 2.2 : 1.7;
 
     if (isPlayer) {
         drawPlayerMarker(cx, cy, entity);
         drawPlayerShape(cx, cy, entity);
     } else {
-        paintedWorld = drawWorldSprite(
+        paintedActor = drawActorSprite(
             ctx,
-            enemyWorldArt(entity),
+            actorArtKey(entity),
+            entity,
             cx,
             screenY + entity.h,
             entity.w * spriteScale,
-            entity.h * 1.8,
+            actorHeight,
         );
+        paintedWorld =
+            paintedActor ||
+            drawWorldSprite(
+                ctx,
+                enemyWorldArt(entity),
+                cx,
+                screenY + entity.h,
+                entity.w * spriteScale,
+                entity.h * 1.8,
+            );
         const illustrated =
             paintedWorld || drawArtToken(ctx, entity.artIndex, cx, cy, entity.w * 1.3);
         if (!illustrated) drawEnemyShape(cx, cy, entity);
@@ -379,14 +391,18 @@ function drawEntity(entity) {
         }
     }
 
-    const visualTop = paintedWorld
-        ? getWorldSpriteTop(
-              enemyWorldArt(entity),
-              screenY + entity.h,
-              entity.w * spriteScale,
-              entity.h * 1.8,
-          )
-        : screenY;
+    const visualTop = paintedActor
+        ? screenY +
+          entity.h -
+          getActorSpriteHeight(actorArtKey(entity), entity.w * spriteScale, actorHeight)
+        : paintedWorld
+          ? getWorldSpriteTop(
+                enemyWorldArt(entity),
+                screenY + entity.h,
+                entity.w * spriteScale,
+                entity.h * 1.8,
+            )
+          : screenY;
     const engaged =
         entity.isBoss ||
         entity.hp < entity.maxHp ||
@@ -491,14 +507,9 @@ function drawPlayerShape(cx, cy, p) {
 
     const weapon = p.weapon;
     const heroKey = ['heroDown', 'heroLeft', 'heroUp', 'heroRight'][p.dir];
-    const paintedHero = drawWorldSprite(
-        ctx,
-        heroKey,
-        cx,
-        cy + p.h / 2 + bob - (mount ? 10 : 0),
-        60,
-        72,
-    );
+    const paintedHero =
+        drawActorSprite(ctx, 'hero', p, cx, cy + p.h / 2 + bob - (mount ? 10 : 0), 60, 64) ||
+        drawWorldSprite(ctx, heroKey, cx, cy + p.h / 2 + bob - (mount ? 10 : 0), 60, 72);
     if (!paintedHero) {
         // ── ZELDA-STYLE CHARACTER ──
         // Green tunic body

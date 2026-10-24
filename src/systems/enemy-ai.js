@@ -17,6 +17,7 @@ import { ENEMY_TYPES } from '../data/enemies.js';
 import { playPlayerHurtSound } from './audio.js';
 import { hapticImpact } from './feedback.js';
 import { damageEnemy } from './combat.js';
+import { setActorFacing } from '../core/facing.js';
 import { inVillage } from '../data/village.js';
 import { spawnEnemyProjectile, spawnFloatingText, spawnParticles } from './entities.js';
 import { spawnEnemy } from './spawning.js';
@@ -221,14 +222,9 @@ function updateEnemies(deltaTime) {
 
         const travelDistance = strafing ? speedPerFrame : Math.min(speedPerFrame, magnitude);
 
-        // Direction
-        if (enemy.state !== 'hurt') {
-            if (Math.abs(dy) > Math.abs(dx)) {
-                enemy.dir = dy > 0 ? 0 : 2;
-            } else {
-                enemy.dir = dx > 0 ? 3 : 1;
-            }
-        }
+        enemy.moving =
+            magnitude > 0 && (enemy.state === 'chase' || enemy.state === 'wander' || strafing);
+        if (enemy.state !== 'hurt' && magnitude > 0) setActorFacing(enemy, Math.atan2(dy, dx));
 
         // Movement (with knockback)
         if (enemy.knockbackX || enemy.knockbackY) {

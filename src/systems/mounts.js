@@ -14,6 +14,7 @@ import {
     MOUNT_WIDTH,
     TILE_SIZE,
 } from '../core/constants.js';
+import { setActorFacing, getActorAngle } from '../core/facing.js';
 import { canAct, findNearbySpawnPosition } from '../core/helpers.js';
 import { mounts, player } from '../core/state.js';
 import { updateHud } from '../ui/hud.js';
@@ -30,6 +31,7 @@ function boardMount(mount) {
         return false;
     player.mount = mount;
     player.dir = mount.dir ?? 0;
+    setActorFacing(player, getActorAngle(mount));
     player.x = mount.x;
     player.y = mount.y;
     mounts.splice(mounts.indexOf(mount), 1);
@@ -41,6 +43,7 @@ function boardMount(mount) {
 function dismountPlayer() {
     if (!canAct() || !player.mount) return;
     const m = player.mount;
+    m.moving = false;
     const mountX = player.x,
         mountY = player.y;
     // Find a walkable tile near the mount
@@ -99,7 +102,7 @@ function dismountPlayer() {
     }
     player.x = ox;
     player.y = oy;
-    mounts.push({ ...m, dir: player.dir, x: mountX, y: mountY });
+    mounts.push({ ...m, dir: m.dir ?? player.dir, x: mountX, y: mountY });
     player.mount = null;
     addMessage(`내렸습니다. ${m.icon} ${m.name}`, 'info');
     updateHud();

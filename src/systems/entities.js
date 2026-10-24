@@ -68,6 +68,7 @@ function spawnProjectile(
     sizeMult = 1,
     maxRange = null,
     weaponId = null,
+    angle = null,
 ) {
     let vx = 0,
         vy = 0;
@@ -84,6 +85,10 @@ function spawnProjectile(
         case 3:
             vx = speed;
             break;
+    }
+    if (Number.isFinite(angle)) {
+        vx = Math.cos(angle) * speed;
+        vy = Math.sin(angle) * speed;
     }
     const baseSize = 6 * sizeMult;
     const life = maxRange == null ? 0.8 : Math.max(0, maxRange) / Math.max(1, Math.abs(speed));

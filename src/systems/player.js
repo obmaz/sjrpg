@@ -4,9 +4,10 @@ import {
     collidesWithMap,
 } from '../core/collision.js';
 import { MAP_HEIGHT, MAP_WIDTH, TILE_SIZE } from '../core/constants.js';
+import { getActorAngle, setActorFacing } from '../core/facing.js';
 import { player, session } from '../core/state.js';
 import { attackWithWeapon } from './combat.js';
-import { isKeyDown } from '../ui/input.js';
+import { isKeyDown, touchStick } from '../ui/input.js';
 import { addMessage } from '../ui/messages.js';
 
 function updatePlayer(deltaTime) {
@@ -20,20 +21,25 @@ function updatePlayer(deltaTime) {
         if (isKeyDown('ArrowDown') || isKeyDown('KeyS')) dy += 1;
     }
 
-    // Normalize diagonal
-    if (dx !== 0 && dy !== 0) {
-        dx *= 0.707;
-        dy *= 0.707;
+    if (touchStick.active && !session.inventoryOpen) {
+        dx = touchStick.x;
+        dy = touchStick.y;
+    } else {
+        const length = Math.hypot(dx, dy);
+        if (length > 1) {
+            dx /= length;
+            dy /= length;
+        }
     }
-
-    // Direction
-    if (dy > 0.3) player.dir = 0;
-    else if (dx < -0.3) player.dir = 1;
-    else if (dy < -0.3) player.dir = 2;
-    else if (dx > 0.3) player.dir = 3;
-
     const moving = dx !== 0 || dy !== 0;
-    if (moving && player.mount) player.mount.dir = player.dir;
+    player.moving = moving;
+    if (moving) setActorFacing(player, Math.atan2(dy, dx));
+    if (player.mount) player.mount.moving = moving;
+    if (moving && player.mount) {
+        player.mount.dir = player.dir;
+        setActorFacing(player.mount, getActorAngle(player));
+        player.mount.animFrame = player.animFrame;
+    }
 
     // Speed boost timer
     if (player.speedBoost > 0) {

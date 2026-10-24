@@ -36,6 +36,9 @@ const player = {
     auxWeapons: [], // inventory of aux weapons
     auxCooldown: 0,
     dir: 0, // 0=down, 1=left, 2=up, 3=right
+    facingAngle: null,
+    facingDir: null,
+    moving: false,
     animTimer: 0,
     animFrame: 0,
     attackTimer: 0,

@@ -1,4 +1,5 @@
 import { canvas, ctx } from '../core/canvas.js';
+import { getActorAngle } from '../core/facing.js';
 import { player } from '../core/state.js';
 
 const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -43,7 +44,7 @@ function drawWorldFrame() {
 function drawPlayerMarker(cx, cy, entity) {
     const size = entity.mount ? entity.mount.w : entity.w;
     const radius = Math.max(17, size * 0.62);
-    const angle = [Math.PI / 2, Math.PI, -Math.PI / 2, 0][entity.dir];
+    const angle = getActorAngle(entity);
     const y = cy + entity.h / 2;
     ctx.save();
     ctx.strokeStyle = '#8de4d4cc';

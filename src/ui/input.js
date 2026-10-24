@@ -18,6 +18,7 @@ import { closeSettings, toggleSettings } from './settings.js';
 
 const keys = {};
 const touchKeys = {};
+const touchStick = { x: 0, y: 0, active: false };
 
 function isKeyDown(code) {
     return !!(keys[code] || touchKeys[code]);
@@ -128,6 +129,8 @@ window.addEventListener('keyup', (event) => {
 window.addEventListener('blur', () => {
     for (const key of Object.keys(keys)) delete keys[key];
     for (const key of Object.keys(touchKeys)) delete touchKeys[key];
+    touchStick.x = touchStick.y = 0;
+    touchStick.active = false;
 });
 
-export { keys, touchKeys, isKeyDown, performInputAction };
+export { keys, touchKeys, touchStick, isKeyDown, performInputAction };
