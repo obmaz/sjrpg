@@ -103,7 +103,13 @@
                     </div>
                 </div>
                 <div id="hudCenter">
-                    <div id="clearProgress">주요 퀘스트: 0 / 3</div>
+                    <button id="questTracker" type="button" aria-label="주요 퀘스트 일지 열기">
+                        <span id="clearProgress">주요 퀘스트: 0 / 3</span>
+                        <span class="tracker-arrow" aria-hidden="true">›</span>
+                        <span class="tracker-meter" aria-hidden="true"
+                            ><span id="questProgressFill"></span
+                        ></span>
+                    </button>
                     <div id="poisonDisplay" style="display: none"></div>
                 </div>
                 <div id="hudRight">
@@ -123,6 +129,7 @@
                 </div>
             </div>
             <canvas id="minimap" width="150" height="150"></canvas>
+            <div id="regionBadge" class="mobile-region">푸른 숲</div>
             <div id="controlsWrap">
                 <button id="controlsToggle" class="ctrl-toggle">조작법</button
                 ><button id="desktopSettings" class="ctrl-toggle">설정</button>
@@ -184,17 +191,30 @@
                             <use href="#icon-cycle"></use></svg
                         ><span class="control-caption">교체</span></button
                     ><button id="touchAux" class="" type="button" aria-label="보조">
-                        <svg class="ui-icon" aria-hidden="true" focusable="false">
-                            <use href="#icon-spark"></use></svg
-                        ><span class="control-caption">보조</span></button
+                        <svg class="skill-ring" viewBox="0 0 64 64" aria-hidden="true">
+                            <circle class="skill-track" cx="32" cy="32" r="30"></circle>
+                            <circle
+                                id="touchAuxRing"
+                                cx="32"
+                                cy="32"
+                                r="30"
+                                pathLength="100"
+                            ></circle>
+                        </svg>
+                        <span id="touchAuxIcon" class="action-glyph" aria-hidden="true">✦</span>
+                        <span id="touchAuxStatus" class="control-caption">보조</span>
+                        <span
+                            id="touchAuxCount"
+                            class="action-count"
+                            aria-hidden="true"
+                        ></span></button
                     ><button id="touchAttack" class="" type="button" aria-label="공격">
-                        <svg class="ui-icon" aria-hidden="true" focusable="false">
-                            <use href="#icon-sword"></use></svg
-                        ><span class="control-caption">공격</span>
+                        <span id="touchAttackIcon" class="action-glyph" aria-hidden="true">✊</span>
+                        <span class="control-caption">공격</span>
                     </button>
                 </div>
                 <div class="touch-items" aria-label="소비 아이템">
-                    <span class="quickbar-title">QUICK ITEMS</span
+                    <span class="quickbar-title">빠른 아이템</span
                     ><button id="touchItem1" type="button" aria-label="아이템 1">1 —</button
                     ><button id="touchItem2" type="button" aria-label="아이템 2">2 —</button
                     ><button id="touchItem3" type="button" aria-label="아이템 3">3 —</button>

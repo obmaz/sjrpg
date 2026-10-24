@@ -2093,6 +2093,27 @@ body {
     color: #dec895;
 }
 
+#questTracker {
+    position: relative;
+    width: 100%;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    pointer-events: auto;
+}
+#questTracker:focus-visible {
+    outline: 2px solid var(--ui-gold);
+    outline-offset: 2px;
+}
+.tracker-arrow,
+.tracker-meter,
+.mobile-region {
+    display: none;
+}
+
 @media (pointer: coarse) {
     body {
         background: #10261e;
@@ -2108,20 +2129,26 @@ body {
         touch-action: none;
     }
     #hudTop {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 78px;
         height: auto;
         padding: calc(8px + env(safe-area-inset-top, 0px))
             max(10px, env(safe-area-inset-right, 0px)) 0 max(10px, env(safe-area-inset-left, 0px));
-        gap: 5px;
-        background: linear-gradient(#0a251bec, #102f20c9 75%, transparent);
+        gap: 7px 10px;
+        background: linear-gradient(#071f19a6, transparent);
+        font-variant-numeric: tabular-nums;
     }
     #hudLeft {
         min-width: 0;
-        padding: 0;
-        border: 0;
-        background: none;
-        gap: 9px;
+        grid-column: 1;
+        padding: 8px;
+        border: 1px solid #d1bd7859;
+        border-radius: 13px;
+        background: linear-gradient(135deg, #294c38ed, #0d2c22ed);
+        box-shadow:
+            inset 0 1px #ecdda530,
+            0 4px 12px #0005;
+        gap: 8px;
     }
     #charPortrait {
         width: 43px;
@@ -2142,7 +2169,7 @@ body {
         gap: 3px;
     }
     #hpLabel {
-        display: block;
+        display: none;
         font-size: 12px;
         line-height: 16px;
         color: #c5d4a9;
@@ -2182,17 +2209,48 @@ body {
         font-size: 14px;
     }
     #hudCenter {
-        order: 2;
+        grid-column: 1;
         flex: none;
         align-items: flex-start;
         justify-content: flex-start;
         gap: 1px;
-        min-height: 21px;
-        padding: 3px 9px;
-        margin-left: 51px;
-        background: linear-gradient(90deg, #263c20d9, #1a321eaa);
-        border: 1px solid #a8904c55;
-        border-radius: 4px;
+        min-height: 44px;
+        padding: 0;
+        margin: 0;
+        background: none;
+        border: 0;
+    }
+    #questTracker {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        min-height: 44px;
+        padding: 8px 10px 11px;
+        border: 1px solid #b9a35b66;
+        border-radius: 9px;
+        background: linear-gradient(110deg, #354b2de8, #142f22eb);
+        text-align: left;
+        overflow: hidden;
+    }
+    .tracker-arrow {
+        display: block;
+        color: #e5c77f;
+        font-size: 24px;
+        line-height: 24px;
+    }
+    .tracker-meter {
+        display: block;
+        position: absolute;
+        inset: auto 0 0;
+        height: 3px;
+        background: #071e16;
+    }
+    #questProgressFill {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, #799f5b, #e5c77f);
+        transition: width 0.3s;
     }
     #clearProgress {
         font-size: 14px;
@@ -2207,22 +2265,22 @@ body {
         line-height: 18px;
     }
     #hudRight {
-        order: 3;
+        grid-column: 1 / -1;
         min-width: 0;
         display: flex;
         justify-content: flex-start;
         gap: 5px;
-        padding: 0 0 7px 51px;
+        padding: 0;
         border: 0;
         background: none;
     }
     #hudRight .equip-slot {
         min-width: 0;
         flex: 1;
-        max-width: 160px;
+        max-width: none;
         border: 1px solid #94a0634a;
-        border-radius: 4px;
-        padding: 3px 5px;
+        border-radius: 8px;
+        padding: 5px 8px;
         gap: 3px;
         background: #0b271bc9;
     }
@@ -2387,8 +2445,8 @@ body {
         position: absolute;
         right: max(12px, env(safe-area-inset-right, 0px));
         bottom: var(--control-bottom);
-        width: 146px;
-        height: 150px;
+        width: 154px;
+        height: 170px;
     }
     #touchControls .touch-actions button {
         position: absolute;
@@ -2409,8 +2467,8 @@ body {
     #touchControls #touchAttack {
         right: 0;
         bottom: 0;
-        width: 78px;
-        height: 78px;
+        width: 84px;
+        height: 84px;
         border: 2px solid #ecd18c;
         background: radial-gradient(circle at 35% 20%, #e1c27a, #b58c42 65%, #896331);
         color: #233c28;
@@ -2419,6 +2477,55 @@ body {
             inset 0 -6px #78562e,
             0 4px 12px #0007,
             0 0 0 4px #dec28225;
+    }
+    .action-glyph {
+        font-size: 27px;
+        line-height: 30px;
+        filter: drop-shadow(0 2px 2px #0006);
+        pointer-events: none;
+    }
+    #touchAttack .action-glyph {
+        font-size: 34px;
+        line-height: 38px;
+    }
+    .action-count {
+        position: absolute;
+        right: -4px;
+        top: -7px;
+        min-width: 23px;
+        padding: 2px 4px;
+        border: 1px solid #c7b47b;
+        border-radius: 10px;
+        background: #10291f;
+        color: #f4dfaa;
+        font-size: 12px;
+        line-height: 16px;
+        pointer-events: none;
+    }
+    .action-count:empty {
+        display: none;
+    }
+    .skill-ring {
+        position: absolute;
+        inset: -6px;
+        width: calc(100% + 12px);
+        height: calc(100% + 12px);
+        fill: none;
+        stroke: #e5c77f;
+        stroke-width: 2;
+        transform: rotate(-90deg);
+        pointer-events: none;
+    }
+    .skill-track {
+        stroke: #a2b18b40;
+    }
+    #touchAuxRing {
+        stroke-dasharray: 100;
+        stroke-linecap: round;
+    }
+    #touchControls #touchAux:disabled {
+        opacity: 0.8;
+        filter: saturate(0.55);
     }
     #touchAttack .ui-icon {
         width: 32px;
@@ -2438,7 +2545,7 @@ body {
     }
     #touchControls #touchAux {
         left: 0;
-        top: 44px;
+        top: 55px;
         width: 60px;
         height: 60px;
         color: #e5d29a;
@@ -2450,8 +2557,8 @@ body {
     #touchControls #touchInteract {
         right: 7px;
         top: 0;
-        width: 47px;
-        height: 47px;
+        width: 52px;
+        height: 52px;
     }
     #touchInteract .ui-icon {
         width: 19px;
@@ -2463,8 +2570,8 @@ body {
     #touchControls #touchCycle {
         left: 10px;
         bottom: 0;
-        width: 44px;
-        height: 44px;
+        width: 48px;
+        height: 48px;
     }
     #touchCycle .ui-icon {
         width: 18px;
@@ -2545,8 +2652,8 @@ body {
         height: 18px;
     }
     #minimap {
-        top: calc(165px + env(safe-area-inset-top, 0px));
-        right: 10px;
+        top: calc(10px + env(safe-area-inset-top, 0px));
+        right: max(10px, env(safe-area-inset-right, 0px));
         bottom: auto;
         width: 76px;
         height: 76px;
@@ -2558,6 +2665,23 @@ body {
             0 3px 12px #0005;
         pointer-events: none;
         opacity: 0.9;
+    }
+    .mobile-region {
+        display: block;
+        position: absolute;
+        top: calc(94px + env(safe-area-inset-top, 0px));
+        right: max(10px, env(safe-area-inset-right, 0px));
+        width: 76px;
+        padding: 4px 0;
+        border: 1px solid #ac985a66;
+        border-radius: 6px;
+        background: #102a20ed;
+        color: #e3d3a2;
+        text-align: center;
+        font-size: 12px;
+        line-height: 16px;
+        pointer-events: none;
+        z-index: 10;
     }
     #controlsWrap {
         display: none;
@@ -2774,7 +2898,7 @@ body {
         font-size: 12px;
     }
     #equipmentSlot .weapon-stats {
-        display: block;
+        display: inline;
         font-size: inherit;
     }
     .empty-quests {
@@ -2801,13 +2925,6 @@ body {
         width: 38px;
         height: 42px;
     }
-    #hudCenter {
-        margin-left: 47px;
-        padding: 3px 5px;
-    }
-    #hudRight {
-        padding-left: 47px;
-    }
     #hpSub #goldDisplay,
     #hpSub #timeDisplay,
     #hpSub #stageInfo {
@@ -2829,7 +2946,9 @@ body {
         bottom: 6px;
     }
     #hudTop {
-        width: 340px;
+        display: flex;
+        flex-direction: column;
+        width: 300px;
         padding-right: 10px;
     }
     #hudCenter {
@@ -2837,9 +2956,9 @@ body {
     }
     #hudRight {
         position: absolute;
-        left: 350px;
+        left: 310px;
         top: 12px;
-        width: min(280px, calc(100vw - 350px - max(10px, env(safe-area-inset-right, 0px))));
+        width: min(280px, calc(100vw - 410px));
         padding: 0;
     }
     .touch-menu {
@@ -2873,13 +2992,17 @@ body {
         bottom: 73px;
     }
     #minimap {
-        top: 66px;
+        top: calc(10px + env(safe-area-inset-top, 0px));
         right: max(13px, env(safe-area-inset-right, 0px));
         width: 62px;
         height: 62px;
     }
+    .mobile-region {
+        top: calc(80px + env(safe-area-inset-top, 0px));
+        right: max(10px, env(safe-area-inset-right, 0px));
+    }
     #messageLog {
-        top: 30%;
+        top: 36%;
         max-width: 330px;
     }
     .guardian-crest {

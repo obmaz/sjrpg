@@ -9,6 +9,24 @@ let joystick;
 let thumb;
 let attackButton;
 const renderedItems = [];
+const controlElements = new Map();
+const renderedControls = new WeakMap();
+
+function control(id) {
+    if (!controlElements.has(id)) controlElements.set(id, document.getElementById(id));
+    return controlElements.get(id);
+}
+
+function setControlValue(target, property, value) {
+    let previous = renderedControls.get(target);
+    if (!previous) {
+        previous = {};
+        renderedControls.set(target, previous);
+    }
+    if (previous[property] === value) return;
+    target[property] = value;
+    previous[property] = value;
+}
 
 function releaseTouchControls() {
     for (const code of Object.keys(touchKeys)) delete touchKeys[code];
@@ -92,6 +110,7 @@ function initializeTouchControls() {
         touchInventory: 'KeyI',
         touchCompendium: 'KeyC',
         touchQuests: 'KeyL',
+        questTracker: 'KeyL',
         touchSettings: 'KeyP',
         touchDismount: 'KeyU',
         touchInteract: 'KeyE',
@@ -148,7 +167,35 @@ function updateTouchControls() {
     }
     document.getElementById('touchDismount').disabled = !player.mount;
     document.getElementById('touchDismount').classList.toggle('hidden', !player.mount);
-    document.getElementById('touchAux').disabled = !player.auxWeapon || player.auxCooldown > 0;
+    const auxiliary = player.auxWeapon;
+    const remaining = Math.max(0, player.auxCooldown);
+    const cooldown = Math.max(auxiliary?.cooldown || 1, remaining);
+    setControlValue(control('touchAttackIcon'), 'textContent', player.weapon.icon);
+    setControlValue(control('touchAuxIcon'), 'textContent', auxiliary?.icon || '✦');
+    setControlValue(
+        control('touchAuxStatus'),
+        'textContent',
+        !auxiliary ? '미획득' : remaining > 0 ? `${Math.ceil(remaining)}초` : '보조',
+    );
+    setControlValue(
+        control('touchAuxCount'),
+        'textContent',
+        auxiliary ? (auxiliary.uses === -1 ? '∞' : String(auxiliary.uses)) : '',
+    );
+    setControlValue(
+        control('touchAuxRing').style,
+        'strokeDashoffset',
+        String(auxiliary ? Math.round((remaining / cooldown) * 100) : 100),
+    );
+    const attackLabel = `${player.weapon.name} 공격, 누르고 있으면 연속 공격`;
+    if (attackButton.getAttribute('aria-label') !== attackLabel)
+        attackButton.setAttribute('aria-label', attackLabel);
+    const auxiliaryLabel = auxiliary
+        ? `${auxiliary.name}, ${remaining > 0 ? `${Math.ceil(remaining)}초 후 사용 가능` : '사용 가능'}`
+        : '보조무기 미획득';
+    if (control('touchAux').getAttribute('aria-label') !== auxiliaryLabel)
+        control('touchAux').setAttribute('aria-label', auxiliaryLabel);
+    control('touchAux').disabled = !enabled || !auxiliary || remaining > 0;
     document.getElementById('touchCycle').disabled = player.auxWeapons.length < 2;
 }
 

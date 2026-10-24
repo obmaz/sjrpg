@@ -107,6 +107,12 @@ function updateHud() {
         player.completedQuests.includes(questId),
     ).length;
     setText('clearProgress', `📜 주요 퀘스트: ${mainProgress} / ${regionQuests.length}`);
+    setValue(
+        getHudElement('questProgressFill').style,
+        'width',
+        `${(mainProgress / regionQuests.length) * 100}%`,
+    );
+    setText('regionBadge', player.currentRegion === 'desert' ? '황금 사막' : '푸른 숲');
 
     const mount = player.mount;
     const mountSlot = getHudElement('equipMount');
