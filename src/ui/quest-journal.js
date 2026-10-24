@@ -16,7 +16,12 @@ function renderQuestJournal() {
         if (!quest) return;
         const entry = document.createElement('div');
         entry.className = 'quest-entry';
-        entry.innerHTML = `<span class="q-title">${quest.name}</span><br><span class="q-progress">${formatQuestProgress(quest, activeQuest.progress)}</span>`;
+        const progress = Math.max(0, Math.min(quest.target, activeQuest.progress));
+        entry.innerHTML = `<span class="q-title">${quest.name}</span>
+            <p class="q-description">${quest.desc}</p>
+            <progress class="quest-progress" max="${quest.target}" value="${progress}" aria-label="${quest.name} 진행도"></progress>
+            <span class="q-progress">${formatQuestProgress(quest, activeQuest.progress)}</span>
+            <span class="q-reward">보상 · ${quest.rewardText || `${quest.rewardGold || 0}골드`}</span>`;
         list.appendChild(entry);
     });
     if (player.activeQuests.length === 0) {

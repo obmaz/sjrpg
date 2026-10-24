@@ -99,6 +99,7 @@ test('touch movement and held attack work together without releasing keyboard in
     assert.equal(run("isKeyDown('ArrowRight')"), true);
     assert.equal(run("isKeyDown('Space')"), true);
     stick.dispatchEvent(pointer('pointerup', 1));
+    assert.equal(elements.get('touchThumb').style.transform, 'translate(-50%, -50%)');
     assert.equal(run("isKeyDown('ArrowRight')"), false);
     assert.equal(run("isKeyDown('Space')"), true);
     attack.dispatchEvent(pointer('pointercancel', 2));
@@ -750,4 +751,21 @@ test('simulation can advance independently and frame loop draws paused and termi
     assert.equal(run('drawCount'), 0);
     run('gamePaused = true; gameLoop(10); gameOver = true; gameLoop(20);');
     assert.equal(run('drawCount'), 2);
+});
+
+test('padded UI artwork centres its painted joystick and thumb at the same point', async () => {
+    const { run } = await loadGame();
+    // The previous sheet's base and thumb occupy different positions inside their cells.
+    for (const bounds of [
+        [944, 39, 280, 275],
+        [42, 942, 260, 258],
+    ]) {
+        const result = run(`getUiSpriteStyle(${JSON.stringify(bounds)},1254,1254)`);
+        const scale = parseFloat(result.size) / 100;
+        const [x, y, w, h] = bounds;
+        const paintedX = ((1 - scale) * parseFloat(result.x)) / 100 + ((x + w / 2) * scale) / 1254;
+        const paintedY = ((1 - scale) * parseFloat(result.y)) / 100 + ((y + h / 2) * scale) / 1254;
+        assert.ok(Math.abs(paintedX - 0.5) < 1e-8);
+        assert.ok(Math.abs(paintedY - 0.5) < 1e-8);
+    }
 });

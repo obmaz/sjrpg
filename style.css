@@ -4165,3 +4165,489 @@ body {
         text-shadow: 0 2px 3px #00161c;
     }
 }
+/* New controls use content bounds so the artwork and pointer origin coincide. */
+.controls-skin-ready #touchControls .touch-menu button {
+    background: none;
+    border: 0;
+    box-shadow: none;
+    height: auto;
+    aspect-ratio: 1;
+    align-self: end;
+}
+.controls-skin-ready #touchControls .touch-menu button::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    aspect-ratio: 1;
+    transform: translateY(-50%);
+    background: url('assets/controls.webp') var(--sprite-x) var(--sprite-y) / var(--sprite-size)
+        no-repeat;
+    pointer-events: none;
+}
+.controls-skin-ready #touchControls .touch-menu .ui-icon {
+    visibility: hidden;
+}
+.controls-skin-ready #touchControls .touch-menu .control-caption {
+    position: absolute;
+    bottom: -12px;
+    font-size: 12px;
+    color: #f0dfb7;
+    text-shadow: 0 2px 3px #00161c;
+}
+@media (pointer: coarse) {
+    .controls-skin-ready #touchControls #touchJoystick,
+    .controls-skin-ready #touchControls #touchThumb,
+    .controls-skin-ready #touchControls #touchAttack,
+    .controls-skin-ready #touchControls #touchAttack.active,
+    .controls-skin-ready #touchControls #touchAux,
+    .controls-skin-ready #touchControls #touchCycle,
+    .controls-skin-ready #touchControls #touchInteract {
+        background: url('assets/controls.webp') var(--sprite-x) var(--sprite-y) / var(--sprite-size)
+            no-repeat;
+        border: 0;
+        box-shadow: none;
+    }
+    .controls-skin-ready #touchControls #touchAux.empty {
+        background-position: var(--empty-sprite-x) var(--empty-sprite-y);
+        background-size: var(--empty-sprite-size);
+    }
+    .controls-skin-ready #touchAttackIcon {
+        display: none;
+    }
+    .controls-skin-ready .stick-directions,
+    .controls-skin-ready #touchThumb .ui-icon {
+        display: none;
+    }
+    .controls-skin-ready #touchThumb {
+        width: 60px;
+        height: 60px;
+    }
+    .controls-skin-ready #touchJoystick {
+        opacity: 0.55;
+    }
+    .controls-skin-ready #touchJoystick.active {
+        opacity: 0.8;
+    }
+    .controls-skin-ready #touchAux.empty .action-glyph,
+    .controls-skin-ready #touchAux.empty .control-caption {
+        visibility: hidden;
+    }
+    .controls-skin-ready .attack-ring {
+        inset: 3%;
+        width: 94%;
+        height: 94%;
+    }
+}
+
+.reference-skin-ready #touchAttackIcon {
+    display: none;
+}
+#touchControls .touch-menu {
+    bottom: max(22px, env(safe-area-inset-bottom, 0px));
+}
+@media (pointer: coarse) {
+    .reference-skin-ready:not(.controls-skin-ready) #touchJoystick {
+        background: radial-gradient(circle, #193d3d33, #0e303744);
+        border: 1px solid #b8ac7966;
+        box-shadow: none;
+    }
+    .reference-skin-ready:not(.controls-skin-ready) #touchThumb {
+        background: radial-gradient(circle at 40% 35%, #a6a07a99, #59654d99);
+        border: 1px solid #beb28b88;
+        box-shadow: none;
+    }
+}
+
+/* Popup layout follows the generated inventory/shop/journal/settings concept. */
+.game-window {
+    position: relative;
+    isolation: isolate;
+    border: 1px solid #ab945f;
+    border-radius: 22px;
+    background:
+        radial-gradient(ellipse at 10% 5%, #2e534655, transparent 60%),
+        linear-gradient(135deg, #143c3d, #08282e);
+    box-shadow:
+        0 18px 60px #000b,
+        inset 0 0 0 4px #031e22,
+        inset 0 0 0 5px #a18e5a66;
+}
+.inventory-box.game-window {
+    position: relative;
+}
+.popup-skin-ready .game-window::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    z-index: 5;
+    border: 26px solid transparent;
+    border-image: url('assets/popup-frame.webp') 128 / 26px stretch;
+    pointer-events: none;
+}
+.window-header {
+    position: relative;
+    min-height: 92px;
+    padding: 24px 18px 12px;
+    gap: 8px;
+    border-bottom: 1px solid #c2a46a66;
+    background: linear-gradient(#31544a55, #092b2e77);
+    box-shadow: none;
+}
+.window-crest {
+    position: absolute;
+    top: 3px;
+    left: calc(50% - 16px);
+    width: 32px;
+    height: 20px;
+    color: #d3b972;
+    fill: #ac985c33;
+    stroke-width: 1.5;
+    pointer-events: none;
+}
+.window-emblem {
+    width: 36px;
+    height: 30px;
+    color: #d8bf80;
+}
+.window-heading .eyebrow {
+    display: none;
+}
+.game-window .window-heading h2,
+#inventory .window-heading h2 {
+    text-align: center;
+    color: #f1e1b9;
+    font-size: 23px;
+    letter-spacing: 1px;
+    text-shadow: 0 2px #061e22;
+}
+.game-window .panel-close,
+#inventory .panel-close,
+#questJournal .panel-close {
+    position: relative;
+    z-index: 6;
+    width: 44px;
+    height: 44px;
+    border: 2px solid #c4aa72;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 25%, #365750, #08292e 70%);
+    color: #f4dfac;
+    box-shadow:
+        inset 0 0 0 2px #061f24,
+        0 2px 4px #0007;
+}
+.game-window .panel-close .ui-icon {
+    width: 24px;
+    height: 24px;
+    stroke-width: 2.5;
+}
+.window-body {
+    padding: 16px 20px 20px;
+    scrollbar-color: #a88f61 #0a2a2d;
+}
+.window-footer {
+    padding: 12px 20px 18px;
+    background: linear-gradient(#0d303033, #062329bb);
+    border-top: 1px solid #b69e6444;
+    box-shadow: none;
+}
+.game-window .game-button,
+.overlay .game-window .game-button,
+.game-window .shop-buy {
+    min-height: 48px;
+    border: 1px solid #c9ad6b;
+    border-radius: 24px;
+    background: linear-gradient(#285958, #10363c);
+    color: #f3e5c0;
+    box-shadow:
+        inset 0 0 0 2px #082c31,
+        inset 0 3px #e8d4a022,
+        0 3px 6px #0006;
+    font-size: 16px;
+    text-shadow: 0 1px 2px #08252a;
+}
+.game-window .game-button:hover,
+.overlay .game-window .game-button:hover,
+.game-window .shop-buy:enabled:hover {
+    background: linear-gradient(#376c62, #19434a);
+}
+.game-window .shop-buy {
+    min-height: 44px;
+    padding: 8px 4px;
+    font-size: 14px;
+    border-radius: 14px;
+}
+.game-window .shop-buy:disabled {
+    color: #a2b3a7;
+    border-color: #626e5d;
+    background: #163236;
+    text-shadow: none;
+}
+.equipped-summary {
+    border: 1px solid #b79c62;
+    border-radius: 12px;
+    background: radial-gradient(ellipse at 10% 50%, #62744b3b, transparent), #12383b;
+    padding: 12px;
+    color: #f1dfae;
+}
+.equipped-summary .equipped-icon {
+    width: 64px;
+    height: 64px;
+}
+.inventory-slot,
+.shop-item,
+.compendium-card,
+.overlay .compendium-card {
+    border: 1px solid #7f8b70;
+    border-radius: 12px;
+    background:
+        radial-gradient(ellipse at 0 0, #566b4b44, transparent 75%),
+        linear-gradient(#13383a, #08282e);
+    box-shadow:
+        inset 0 0 0 3px #041f25,
+        0 3px 5px #0004;
+}
+.inventory-slot.selected {
+    border-color: #e2c17b !important;
+    background: radial-gradient(ellipse at 0 0, #6b794855, transparent 75%), #163d3d;
+    box-shadow:
+        inset 0 0 0 2px #b29d5a66,
+        0 0 8px #c9ae6344;
+}
+.inventory-slot.empty {
+    opacity: 0.6;
+    min-height: 116px;
+}
+.inventory-slot .name,
+.shop-item .s-name {
+    color: #f4e2b5;
+    font-size: 16px;
+}
+.inventory-slot .atk,
+.shop-item .s-atk {
+    color: #d9c084;
+}
+.inventory-slot .ability,
+.shop-item .s-desc {
+    color: #b8c4b3;
+}
+.inventory-drop {
+    min-height: 44px;
+    border-radius: 12px;
+    background: #173638;
+    border-color: #957e51;
+    color: #dbc996;
+}
+.shop-box .window-header {
+    min-height: 116px;
+    padding-bottom: 38px;
+}
+#shopGold {
+    position: absolute;
+    right: 20px;
+    bottom: 7px;
+    margin: 0;
+    padding: 3px 12px;
+    border: 1px solid #ab925e;
+    border-radius: 18px;
+    background: #08272c;
+    color: #eddaa2;
+    font-size: 14px;
+    line-height: 20px;
+}
+#questList {
+    display: grid;
+    gap: 12px;
+}
+.quest-entry {
+    position: relative;
+    padding: 18px 16px;
+    border: 1px solid #e0c798;
+    border-radius: 10px 14px 10px 13px;
+    color: #3d2e1b;
+    background:
+        radial-gradient(ellipse at 5% 5%, #f3dfb5, transparent 70%),
+        linear-gradient(110deg, #c9b080, #e0c69a 30%, #cbb081);
+    box-shadow:
+        inset 0 0 12px #8c653944,
+        0 3px 5px #0005;
+}
+.quest-entry .q-title {
+    color: #392b18;
+    font-size: 17px;
+    font-weight: 800;
+}
+.quest-entry .q-description {
+    color: #4a3921;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 6px 0 10px;
+}
+.quest-entry .q-progress {
+    color: #3e3820;
+    font-size: 14px;
+    margin: 6px 0;
+}
+.quest-entry .q-reward {
+    display: block;
+    color: #5d4325;
+    font-size: 13px;
+    margin-top: 4px;
+}
+.quest-progress {
+    display: block;
+    width: 100%;
+    height: 10px;
+    border: 1px solid #806c45;
+    border-radius: 6px;
+    background: #9a8b69;
+    overflow: hidden;
+    accent-color: #6d7f47;
+}
+.quest-progress::-webkit-progress-bar {
+    background: #a08d68;
+}
+.quest-progress::-webkit-progress-value {
+    background: linear-gradient(#9ca360, #5f7847);
+    border-radius: 5px;
+}
+.quest-progress::-moz-progress-bar {
+    background: #76894b;
+}
+.empty-quests {
+    border: 1px solid #9b875c66;
+    border-radius: 12px;
+    padding: 28px 16px;
+    color: #c3c8af;
+    text-align: center;
+    font-size: 14px;
+}
+.setting-row {
+    margin-bottom: 10px;
+    padding: 14px 12px;
+    border: 1px solid #71837077;
+    border-radius: 12px;
+    background: linear-gradient(110deg, #163a3d, #09292d);
+    box-shadow: inset 0 0 0 2px #051f24;
+    gap: 10px;
+}
+.overlay .setting-copy p {
+    color: #a8b9aa;
+    font-size: 13px;
+}
+.overlay .game-switch {
+    width: 74px;
+    height: 44px;
+    border-color: #988c5b;
+    background: #152d2f;
+}
+.overlay .game-switch[aria-checked='true'] {
+    background: #647a3b;
+    border-color: #c5b26d;
+}
+.game-switch[aria-checked='true'] .switch-knob {
+    background: linear-gradient(#e9cf89, #b08b4c);
+}
+.game-window .dialog-option {
+    border: 1px solid #88976e;
+    border-radius: 12px;
+    background: #123438;
+    padding: 14px;
+    color: #efe0b7;
+}
+.game-window .dialog-option:hover {
+    background: #254a46;
+}
+@media (pointer: coarse) {
+    .window-header {
+        min-height: 90px;
+        padding: 24px 14px 12px;
+    }
+    .window-body {
+        padding: 14px 16px 18px;
+    }
+    .window-footer {
+        padding: 12px 16px 18px;
+    }
+    .game-window .window-heading h2,
+    #inventory .window-heading h2 {
+        font-size: 22px;
+    }
+    .setting-row {
+        padding: 12px 10px;
+        gap: 8px;
+    }
+    .setting-row > .ui-icon {
+        width: 22px;
+        height: 22px;
+    }
+    .game-window .window-footer .game-button {
+        min-height: 52px;
+    }
+    .inventory-slot {
+        min-height: 210px;
+        padding: 10px 8px;
+    }
+    .inventory-slot.empty {
+        min-height: 108px;
+    }
+}
+/* World loot bubbles remain behind modal panels. */
+#eventBubbles {
+    z-index: 180;
+}
+/* Keep modal geometry independent of the decorative surface. */
+#questJournal.mobile-journal-open {
+    position: absolute;
+}
+.window-crest {
+    z-index: 6;
+}
+.window-header {
+    padding-left: 28px;
+    padding-right: 28px;
+}
+.window-body {
+    padding-left: 28px;
+    padding-right: 28px;
+}
+.window-footer {
+    padding-left: 28px;
+    padding-right: 28px;
+}
+.game-window .inventory-drop {
+    min-height: 44px;
+    padding: 8px;
+    border: 1px solid #9e8b59;
+    border-radius: 12px;
+    background: linear-gradient(#234a49, #103439);
+    color: #e8d9b3;
+    font-size: 14px;
+}
+.game-window .inventory-drop:hover {
+    background: #2c5751;
+}
+.game-window .shop-item:hover,
+.game-window .inventory-slot:hover {
+    background:
+        radial-gradient(ellipse at 0 0, #62744c44, transparent 75%),
+        linear-gradient(#1b4545, #0b2d33);
+    border-color: #c3aa70;
+}
+#popupLayer:has(> #questJournal.mobile-journal-open)::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: #03110edb;
+    backdrop-filter: blur(5px);
+    pointer-events: auto;
+}
+.window-footer {
+    padding-bottom: 32px;
+}
+.game-window .window-footer .settings-note {
+    font-size: 13px;
+    line-height: 1.5;
+}
