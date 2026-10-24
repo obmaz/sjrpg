@@ -14,7 +14,7 @@ function renderQuestJournal() {
         list.appendChild(entry);
     });
     if (player.activeQuests.length === 0) {
-        list.innerHTML = '<p style="color:#888;font-size:12px;">활성 퀘스트 없음</p>';
+        list.innerHTML = '<p class="empty-quests">활성 퀘스트 없음</p>';
     }
     document
         .getElementById('questJournal')

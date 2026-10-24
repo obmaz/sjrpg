@@ -39,7 +39,7 @@ function updateHud() {
     setValue(
         getHudElement('equipmentSlot'),
         'innerHTML',
-        `${weapon.icon} ${weapon.name} <span style="color:#ff8888;font-size:10px;">ATK ${weapon.atk}${usesText}</span>`,
+        `${weapon.icon} ${weapon.name} <span class="weapon-stats">ATK ${weapon.atk}${usesText}</span>`,
     );
     setText('hpText', `${Math.max(0, Math.round(player.hp))} / ${player.maxHp}`);
 
