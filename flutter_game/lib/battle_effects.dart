@@ -14,7 +14,8 @@ void areaStrike(
 }) {
   for (final mob in List<HuntEnemy>.of(s.mobs)) {
     final d = mob.body.center - center;
-    if (!mob.isDead &&
+    if (mob.combatReady &&
+        !mob.isDead &&
         !mob.isRemoving &&
         d.distance < radius &&
         s.world.clearLine(center, mob.body.center, const ui.Size(3, 3))) {
@@ -70,7 +71,8 @@ class ArcaneBolt extends GameComponent {
       }
       position.setValues(at.dx, at.dy);
       for (final mob in List<HuntEnemy>.of(session.mobs)) {
-        if (!mob.isDead &&
+        if (mob.combatReady &&
+            !mob.isDead &&
             !mob.isRemoving &&
             mob.body.inflate(7).contains(at)) {
           session.hit(mob, damage, direction * 12);
@@ -197,6 +199,7 @@ void chainLightning(Adventure s, ui.Offset from, double damage, int count) {
         s.mobs
             .where(
               (e) =>
+                  e.combatReady &&
                   !e.isDead &&
                   !e.isRemoving &&
                   !visited.contains(e) &&

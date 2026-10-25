@@ -23,6 +23,7 @@ class Adventure extends ChangeNotifier {
   late final TerrainArt terrain;
   final Progress progress;
   final loot = <GroundLoot>[];
+  final texts = <BattleText>[];
   final openedChests = <int>{};
   String notice = "";
   double noticeTime = 0, combatTime = 0;
@@ -106,14 +107,14 @@ class Adventure extends ChangeNotifier {
   }
 
   bool learn(SkillDef skill) {
-    if (!progress.learn(skill)) return false;
+    if (defeated || disposed || !progress.learn(skill)) return false;
     syncLife();
     refresh();
     return true;
   }
 
   bool equip(Gear item) {
-    if (!progress.equip(item)) return false;
+    if (defeated || disposed || !progress.equip(item)) return false;
     syncLife();
     refresh();
     return true;
@@ -136,6 +137,18 @@ class Adventure extends ChangeNotifier {
       syncLife();
       announce('생명 +55');
     }
+  }
+
+  HuntEnemy? get nearbyBoss {
+    for (final mob in mobs) {
+      if (mob.boss &&
+          !mob.isDead &&
+          !mob.isRemoving &&
+          (mob.body.center - hero.body.center).distance < 1300) {
+        return mob;
+      }
+    }
+    return null;
   }
 
   int get living => mobs.where((m) => !m.isDead && !m.isRemoving).length;
@@ -206,7 +219,9 @@ class Adventure extends ChangeNotifier {
     }
     // Exploration packs are recycled without rewards; bosses remain until defeated.
     for (final mob in List<HuntEnemy>.of(mobs)) {
-      if (!mob.boss && (mob.position - hero.position).length > 1500) {
+      if (mob.combatReady &&
+          !mob.boss &&
+          (mob.position - hero.position).length > 1500) {
         mob.removeFromParent();
       }
     }
@@ -279,7 +294,15 @@ class Adventure extends ChangeNotifier {
   }
 
   void bubble(String text, ui.Offset at, ui.Color color) {
-    game?.add(BattleText(this, text, at, color));
+    final next = BattleText(this, text, at, color);
+    final same = texts.where((t) => t.isReward == next.isReward).toList();
+    final limit = next.isReward ? 2 : 14;
+    if (same.length >= limit) {
+      same.first.removeFromParent();
+      texts.remove(same.first);
+    }
+    texts.add(next);
+    game?.add(next);
   }
 
   void hurtHero(double damage) {
@@ -313,7 +336,7 @@ class Adventure extends ChangeNotifier {
   }
 
   void hit(HuntEnemy mob, double damage, ui.Offset impulse) {
-    if (!active || mob.isDead || mob.isRemoving) return;
+    if (!active || !mob.combatReady || mob.isDead || mob.isRemoving) return;
     combatTime = 5;
     mob.life.remove(damage);
     mob.hurt = .14;
@@ -409,6 +432,7 @@ class Guardian extends Player with WithCollision {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
+    if (session.disposed || !hasGameRef || isRemoving) return;
     await add(RectangleHitbox(size: size));
     lastClearPosition = position.toOffset();
     collision.onMovementBlockedListener((other, data) {
@@ -443,6 +467,7 @@ class Guardian extends Player with WithCollision {
             event.id == LogicalKeyboardKey.keyN)) {
       skill();
     }
+    if (held && event.id == LogicalKeyboardKey.keyL) skill(secondary: true);
     if (held && event.id == LogicalKeyboardKey.shiftLeft) dodge();
     if (held && event.id == LogicalKeyboardKey.digit1) session.potion();
     if (held && event.id == LogicalKeyboardKey.digit2) {
@@ -494,6 +519,7 @@ class Guardian extends Player with WithCollision {
             .where(
               (e) =>
                   !e.isDead &&
+                  e.combatReady &&
                   !e.isRemoving &&
                   (e.body.center - body.center).distance <
                       (session.progress.heroClass == HeroClass.mage
@@ -543,29 +569,37 @@ class Guardian extends Player with WithCollision {
             math.cos(math.atan2(d.dy, d.dx) - angle),
           );
       if (d.distance < p.weapon.base.range + mob.size.x / 2 &&
-          diff.abs() < 1.25 &&
+          diff.abs() <
+              (p.weapon.base.style == 'spear'
+                  ? .5
+                  : p.weapon.base.style == 'axe'
+                  ? 1.5
+                  : 1.25) &&
           session.world.clearLine(
-            position.toOffset(),
-            mob.position.toOffset(),
+            body.center,
+            mob.body.center,
             const ui.Size(3, 3),
           )) {
         final push = d.distance > 0
-            ? d / d.distance * 23
+            ? d / d.distance * (p.weapon.base.style == 'hammer' ? 42 : 23)
             : const ui.Offset(0, 23);
         session.hit(mob, p.basicDamage * (session.combo == 0 ? 1.6 : 1), push);
       }
     }
   }
 
-  void skill() {
-    final p = session.progress, def = p.activeSkill, rank = p.rank(def.id);
-    if (!session.active || skillClock > 0 || rank == 0) return;
+  void skill({bool secondary = false}) {
+    final p = session.progress;
+    final def = secondary ? p.secondarySkillDef : p.activeSkill;
+    if (def == null) return;
+    final rank = p.rank(def.id);
+    if (!session.active || (cooldowns[def.id] ?? 0) > 0 || rank == 0) return;
     if (p.energy < def.cost) {
       session.announce('${p.heroClass.resource}가 부족합니다');
       return;
     }
     p.energy -= def.cost;
-    skillClock = def.cooldown;
+    cooldowns[def.id] = def.cooldown;
     final color = p.heroClass == HeroClass.warrior
         ? const ui.Color(0xffffcf81)
         : const ui.Color(0xff99e4ff);
@@ -703,33 +737,83 @@ class Guardian extends Player with WithCollision {
             center: center,
             radius: session.progress.weapon.base.range * .58,
           );
-      canvas.drawArc(
-        rect,
-        attackBearing - 1.2 + phase * .9,
-        1.6,
-        false,
-        ui.Paint()
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 7 * (1 - phase) + 1
-          ..strokeCap = ui.StrokeCap.round
-          ..color =
-              (session.progress.weapon.base.style == 'hammer'
-                      ? const ui.Color(0xffffbd6c)
-                      : session.progress.weapon.base.style == 'axe'
-                      ? const ui.Color(0xffffdfa3)
-                      : const ui.Color(0xffcbf8ff))
-                  .withValues(alpha: (1 - phase) * .9),
-      );
-      canvas.drawArc(
-        rect.deflate(5),
-        attackBearing - 1.1 + phase * .9,
-        1.3,
-        false,
-        ui.Paint()
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = ui.Color.fromRGBO(255, 249, 213, 1 - phase),
-      );
+      final style = session.progress.weapon.base.style,
+          direction = ui.Offset(
+            math.cos(attackBearing),
+            math.sin(attackBearing),
+          );
+      if (style == 'spear') {
+        final tip =
+            center +
+            direction * session.progress.weapon.base.range * (.5 + phase * .45);
+        canvas.drawLine(
+          center + direction * 15,
+          tip,
+          ui.Paint()
+            ..color = ui.Color.fromRGBO(212, 248, 255, 1 - phase)
+            ..strokeWidth = 4 * (1 - phase) + 1
+            ..strokeCap = ui.StrokeCap.round,
+        );
+        canvas.drawCircle(
+          tip,
+          3,
+          ui.Paint()
+            ..color = const ui.Color(0xfffff4c7).withValues(alpha: 1 - phase),
+        );
+      } else if (style == 'hammer') {
+        final at = center + direction * 65;
+        canvas.drawOval(
+          ui.Rect.fromCenter(
+            center: at,
+            width: 20 + phase * 72,
+            height: 14 + phase * 40,
+          ),
+          ui.Paint()
+            ..color = const ui.Color(0xffffc47d).withValues(alpha: 1 - phase)
+            ..style = ui.PaintingStyle.stroke
+            ..strokeWidth = 5 * (1 - phase) + 1,
+        );
+        for (var i = 0; i < 6; i++) {
+          final angle = i * math.pi / 3;
+          canvas.drawLine(
+            at +
+                ui.Offset(math.cos(angle), math.sin(angle)) * (12 + phase * 10),
+            at +
+                ui.Offset(math.cos(angle), math.sin(angle)) * (18 + phase * 35),
+            ui.Paint()
+              ..color = const ui.Color(0xffffdf94).withValues(alpha: 1 - phase)
+              ..strokeWidth = 2,
+          );
+        }
+      } else {
+        canvas.drawArc(
+          rect,
+          attackBearing - 1.2 + phase * .9,
+          1.6,
+          false,
+          ui.Paint()
+            ..style = ui.PaintingStyle.stroke
+            ..strokeWidth = 7 * (1 - phase) + 1
+            ..strokeCap = ui.StrokeCap.round
+            ..color =
+                (session.progress.weapon.base.style == 'hammer'
+                        ? const ui.Color(0xffffbd6c)
+                        : session.progress.weapon.base.style == 'axe'
+                        ? const ui.Color(0xffffdfa3)
+                        : const ui.Color(0xffcbf8ff))
+                    .withValues(alpha: (1 - phase) * .9),
+        );
+        canvas.drawArc(
+          rect.deflate(5),
+          attackBearing - 1.1 + phase * .9,
+          1.3,
+          false,
+          ui.Paint()
+            ..style = ui.PaintingStyle.stroke
+            ..strokeWidth = 2
+            ..color = ui.Color.fromRGBO(255, 249, 213, 1 - phase),
+        );
+      }
     }
     if (armorTime > 0 || frenzyTime > 0) {
       canvas.drawOval(
@@ -785,7 +869,7 @@ class HuntEnemy extends Enemy with WithCollision {
   final Adventure session;
   final String kind;
   final bool boss;
-  bool rewarded = false;
+  bool rewarded = false, combatReady = false;
   double bearing = math.pi / 2,
       anim = 0,
       hurt = 0,
@@ -794,12 +878,21 @@ class HuntEnemy extends Enemy with WithCollision {
       stun = 0,
       slow = 0;
   List<ui.Offset> route = [];
+  double slamClock = 4, windup = 0;
+  ui.Offset? slamTarget;
   ui.Offset? routeGoal;
   ui.Offset? lastClearPosition;
   ui.Rect get body => ui.Rect.fromLTWH(position.x, position.y, size.x, size.y);
   @override
+  void onMount() {
+    super.onMount();
+    combatReady = true;
+  }
+
+  @override
   Future<void> onLoad() async {
     await super.onLoad();
+    if (session.disposed || !hasGameRef || isRemoving) return;
     await add(RectangleHitbox(size: size));
     lastClearPosition = position.toOffset();
     collision.onMovementBlockedListener((other, data) {
@@ -812,7 +905,7 @@ class HuntEnemy extends Enemy with WithCollision {
 
   @override
   void update(double dt) {
-    if (!session.active || isDead || isRemoving) return;
+    if (!session.active || !combatReady || isDead || isRemoving) return;
     dt = math.min(dt, .05);
     var before = position.toOffset();
     final target = session.hero.body.center - body.center;
@@ -821,11 +914,55 @@ class HuntEnemy extends Enemy with WithCollision {
     slow = math.max(0, slow - dt);
     attackClock -= dt;
     replan -= dt;
+    slamClock -= dt;
     if (target.distance > 950) {
       stop();
       return;
     }
     if (stun > 0) {
+      if (windup > 0) {
+        windup = 0;
+        slamTarget = null;
+        slamClock = 4;
+      }
+      stop();
+      super.update(dt);
+      return;
+    }
+    if (boss && windup > 0) {
+      stop();
+      windup -= dt;
+      if (windup <= 0) {
+        final at = slamTarget;
+        if (at != null) {
+          if ((session.hero.body.center - at).distance < 105 &&
+              session.world.clearLine(
+                body.center,
+                session.hero.body.center,
+                const ui.Size(3, 3),
+              )) {
+            session.hurtHero(24);
+          }
+          session.game?.add(
+            RuneBurst(session, at, const ui.Color(0xffffad6b), radius: 105),
+          );
+        }
+        slamTarget = null;
+        slamClock = 5.5;
+      }
+      super.update(dt);
+      return;
+    }
+    if (boss &&
+        slamClock <= 0 &&
+        target.distance < 340 &&
+        session.world.clearLine(
+          body.center,
+          session.hero.body.center,
+          const ui.Size(3, 3),
+        )) {
+      slamTarget = session.hero.body.center;
+      windup = .85;
       stop();
       super.update(dt);
       return;
@@ -904,6 +1041,7 @@ class HuntEnemy extends Enemy with WithCollision {
 
   @override
   void onRemove() {
+    combatReady = false;
     session.mobs.remove(this);
     super.onRemove();
   }
@@ -920,6 +1058,54 @@ class HuntEnemy extends Enemy with WithCollision {
       ),
       ui.Paint()..color = const ui.Color(0x550d241b),
     );
+    if (windup > 0 && slamTarget != null) {
+      final center = slamTarget! - position.toOffset(),
+          t = (1 - windup / .85).clamp(0.0, 1.0);
+      canvas.drawOval(
+        ui.Rect.fromCenter(center: center, width: 210, height: 145),
+        ui.Paint()..color = ui.Color.fromRGBO(255, 101, 65, .12 + t * .18),
+      );
+      canvas.drawOval(
+        ui.Rect.fromCenter(center: center, width: 210, height: 145),
+        ui.Paint()
+          ..color = const ui.Color(0xffffb77c)
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+      canvas.drawArc(
+        ui.Rect.fromCenter(center: center, width: 210, height: 145),
+        -math.pi / 2,
+        math.pi * 2 * t,
+        false,
+        ui.Paint()
+          ..color = const ui.Color(0xffff7757)
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 5,
+      );
+    }
+    if (stun > 0 || slow > 0) {
+      final icy = slow > 0,
+          color = icy ? const ui.Color(0xff9ce9ff) : const ui.Color(0xffffd67d);
+      canvas.drawOval(
+        ui.Rect.fromCenter(
+          center: feet,
+          width: boss ? 70 : 42,
+          height: boss ? 25 : 16,
+        ),
+        ui.Paint()..color = color.withValues(alpha: .35),
+      );
+      final mark = ui.Offset(size.x / 2, boss ? -112 : -58);
+      for (var i = 0; i < 6; i++) {
+        final a = i * math.pi / 3;
+        canvas.drawLine(
+          mark,
+          mark + ui.Offset(math.cos(a) * 7, math.sin(a) * 7),
+          ui.Paint()
+            ..color = color
+            ..strokeWidth = 2,
+        );
+      }
+    }
     session.art.actor(
       canvas,
       kind,
@@ -1093,12 +1279,14 @@ class VillagePerson extends GameComponent {
 }
 
 class BattleText extends GameComponent {
-  BattleText(this.session, this.label, ui.Offset at, this.color) {
+  BattleText(this.session, this.label, ui.Offset at, this.color)
+    : isReward = !RegExp(r'^-?\d+$').hasMatch(label) {
     position = Vector2(at.dx, at.dy);
     size = Vector2(160, 35);
   }
   final Adventure session;
   final String label;
+  final bool isReward;
   final ui.Color color;
   double remaining = .9;
   @override
@@ -1107,10 +1295,17 @@ class BattleText extends GameComponent {
   bool get isVisible => true;
   @override
   void update(double dt) {
+    if (!session.active) return;
     super.update(dt);
     remaining -= dt;
     position.y -= dt * 27;
     if (remaining <= 0) removeFromParent();
+  }
+
+  @override
+  void onRemove() {
+    session.texts.remove(this);
+    super.onRemove();
   }
 
   @override

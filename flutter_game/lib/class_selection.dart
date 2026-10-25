@@ -14,6 +14,7 @@ class ClassSelection extends StatefulWidget {
 
 class _ClassSelectionState extends State<ClassSelection> {
   HeroClass selected = HeroClass.warrior;
+  bool get compact => MediaQuery.sizeOf(context).height < 520;
   @override
   Widget build(BuildContext context) => Scaffold(
     body: Stack(
@@ -32,10 +33,13 @@ class _ClassSelectionState extends State<ClassSelection> {
         SafeArea(
           child: LayoutBuilder(
             builder: (context, box) => SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+              padding: EdgeInsets.symmetric(
+                horizontal: 22,
+                vertical: compact ? 12 : 24,
+              ),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  minHeight: math.max(0, box.maxHeight - 48),
+                  minHeight: math.max(0, box.maxHeight - (compact ? 24 : 48)),
                 ),
                 child: Center(
                   child: ConstrainedBox(
@@ -43,19 +47,20 @@ class _ClassSelectionState extends State<ClassSelection> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text(
-                          'GUARDIAN OF NATURE',
-                          style: TextStyle(
-                            color: gold,
-                            fontSize: 11,
-                            letterSpacing: 3,
+                        if (!compact)
+                          const Text(
+                            'GUARDIAN OF NATURE',
+                            style: TextStyle(
+                              color: gold,
+                              fontSize: 11,
+                              letterSpacing: 3,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
+                        if (!compact) const SizedBox(height: 12),
+                        Text(
                           '자연의 수호자',
                           style: TextStyle(
-                            fontSize: 32,
+                            fontSize: compact ? 26 : 32,
                             fontWeight: FontWeight.bold,
                             color: cream,
                           ),
@@ -65,12 +70,13 @@ class _ClassSelectionState extends State<ClassSelection> {
                           '제1장 · 십자로의 숲',
                           style: TextStyle(color: cream, fontSize: 16),
                         ),
-                        const SizedBox(height: 30),
-                        const Text(
-                          '어떤 힘으로 어둠에 맞서겠습니까?',
-                          style: TextStyle(color: cream, fontSize: 15),
-                        ),
-                        const SizedBox(height: 18),
+                        SizedBox(height: compact ? 10 : 30),
+                        if (!compact)
+                          const Text(
+                            '어떤 힘으로 어둠에 맞서겠습니까?',
+                            style: TextStyle(color: cream, fontSize: 15),
+                          ),
+                        SizedBox(height: compact ? 10 : 18),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -86,32 +92,33 @@ class _ClassSelectionState extends State<ClassSelection> {
                               ),
                           ],
                         ),
-                        const SizedBox(height: 18),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: ink.withValues(alpha: .88),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: gold.withValues(alpha: .35),
+                        SizedBox(height: compact ? 10 : 18),
+                        if (!compact)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: ink.withValues(alpha: .88),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: gold.withValues(alpha: .35),
+                              ),
+                            ),
+                            child: Text(
+                              selected == HeroClass.warrior
+                                  ? '연속 베기로 분노를 모으고 함성으로 적을 제압하세요. 성장하면 소용돌이와 광전사의 격노를 배울 수 있습니다.'
+                                  : '화염탄으로 거리를 유지하고 서릿발로 적을 얼리세요. 성장하면 연쇄 번개와 유성을 배울 수 있습니다.',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                height: 1.7,
+                                color: cream,
+                              ),
                             ),
                           ),
-                          child: Text(
-                            selected == HeroClass.warrior
-                                ? '연속 베기로 분노를 모으고 함성으로 적을 제압하세요.\n성장하면 소용돌이와 광전사의 격노를 배울 수 있습니다.'
-                                : '화염탄으로 거리를 유지하고 서릿발로 적을 얼리세요.\n성장하면 연쇄 번개와 유성을 배울 수 있습니다.',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              height: 1.7,
-                              color: cream,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 22),
+                        SizedBox(height: compact ? 10 : 22),
                         SizedBox(
                           width: double.infinity,
-                          height: 56,
+                          height: compact ? 48 : 56,
                           child: FilledButton(
                             style: FilledButton.styleFrom(
                               backgroundColor: gold,
@@ -130,16 +137,17 @@ class _ClassSelectionState extends State<ClassSelection> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 14),
-                        const Text(
-                          '장비를 모으고, 스킬을 키워 첫 파수꾼을 쓰러뜨리세요.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Color(0xffb5c6b5),
-                            fontSize: 12,
-                            height: 1.6,
+                        if (!compact) const SizedBox(height: 14),
+                        if (!compact)
+                          const Text(
+                            '장비를 모으고, 스킬을 키워 첫 파수꾼을 쓰러뜨리세요.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color(0xffb5c6b5),
+                              fontSize: 12,
+                              height: 1.6,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -163,7 +171,12 @@ class _ClassSelectionState extends State<ClassSelection> {
         borderRadius: BorderRadius.circular(18),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.fromLTRB(10, 12, 10, 16),
+          padding: EdgeInsets.fromLTRB(
+            10,
+            compact ? 8 : 12,
+            10,
+            compact ? 10 : 16,
+          ),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
@@ -184,7 +197,7 @@ class _ClassSelectionState extends State<ClassSelection> {
           child: Column(
             children: [
               SizedBox(
-                height: 138,
+                height: compact ? 70 : 138,
                 width: 140,
                 child: CustomPaint(painter: ClassFigure(widget.art, c)),
               ),

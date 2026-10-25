@@ -232,4 +232,103 @@ void main() {
       }
     },
   );
+  test(
+    'a pending enemy cannot be killed until its collision lifecycle has mounted',
+    () {
+      final game = TestGame()..mountEnemies = false;
+      final s = Adventure(GameArt(), heroClass: HeroClass.mage);
+      s.start(game);
+      addTearDown(s.dispose);
+      final enemy = s.mobs.first, hp = enemy.life.value;
+      s.hit(enemy, 99999, Offset.zero);
+      expect(enemy.life.value, hp);
+      expect(s.progress.kills, 0);
+      enemy.combatReady = true;
+      s.hit(enemy, 99999, Offset.zero);
+      expect(s.progress.kills, 1);
+    },
+  );
+  test(
+    'two skill slots stay distinct and swapping cannot reset either cooldown',
+    () {
+      final s = Adventure(GameArt(), heroClass: HeroClass.mage);
+      s.start(TestGame());
+      addTearDown(s.dispose);
+      s.progress.gainXp(140);
+      s.progress.learn(mageSkills.firstWhere((d) => d.id == 'chainLightning'));
+      expect(s.progress.secondarySkill, 'chainLightning');
+      s.progress.energy = 90;
+      s.hero.skill();
+      s.hero.skill(secondary: true);
+      expect(s.hero.cooldowns['frostNova'], 6);
+      expect(s.hero.cooldowns['chainLightning'], 5);
+      expect(s.progress.energy, 44);
+      s.progress.selectSkill('chainLightning');
+      expect(s.progress.secondarySkill, 'frostNova');
+      s.hero.skill();
+      s.hero.skill(secondary: true);
+      expect(s.progress.energy, 44);
+      expect(s.progress.selectedSkill, isNot(s.progress.secondarySkill));
+    },
+  );
+  test(
+    'boss slam locks its warning area, can be evaded and is interrupted by a stun',
+    () {
+      final s = Adventure(GameArt());
+      s.start(TestGame());
+      addTearDown(s.dispose);
+      s.mobs.clear();
+      final center = s.world.bridge.center;
+      s.hero.position.setValues(center.dx - 100, center.dy - 11);
+      final boss = s.spawnEnemy(
+        'golem',
+        center + const Offset(60, -20),
+        boss: true,
+      )!..slamClock = 0;
+      boss.update(.05);
+      expect(boss.windup, greaterThan(0));
+      final locked = boss.slamTarget;
+      final moved = s.world.move(
+        s.hero.position.toOffset(),
+        const Offset(-150, 0),
+        s.hero.body.size,
+      );
+      s.hero.position.setValues(moved.dx, moved.dy);
+      expect(boss.slamTarget, locked);
+      for (var i = 0; i < 20; i++) {
+        boss.update(.05);
+      }
+      expect(s.progress.hp, s.progress.maxHp);
+      s.hero.position.setValues(center.dx - 100, center.dy - 11);
+      boss.slamClock = 0;
+      boss.update(.05);
+      for (var i = 0; i < 19; i++) {
+        boss.update(.05);
+      }
+      expect(
+        s.progress.hp,
+        closeTo(s.progress.maxHp - s.progress.mitigate(24), .001),
+      );
+      boss.windup = .5;
+      boss.stun = 1;
+      boss.update(.05);
+      expect(boss.windup, 0);
+      expect(boss.slamTarget, isNull);
+    },
+  );
+  test('battle feedback remains bounded and freezes with the simulation', () {
+    final s = Adventure(GameArt());
+    s.start(TestGame());
+    addTearDown(s.dispose);
+    for (var i = 0; i < 40; i++) {
+      s.bubble('+8 골드', arrival, const Color(0xffffd774));
+      s.bubble('18', arrival, const Color(0xffffedb4));
+    }
+    expect(s.texts.where((t) => t.isReward).length, 2);
+    expect(s.texts.length, 16);
+    final text = s.texts.last, remaining = text.remaining;
+    s.pause();
+    text.update(.5);
+    expect(text.remaining, remaining);
+  });
 }

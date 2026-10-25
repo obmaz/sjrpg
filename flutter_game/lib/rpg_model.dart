@@ -128,6 +128,7 @@ const gearCatalog = <GearDef>[
     '불씨 완드',
     GearSlot.weapon,
     heroClass: HeroClass.mage,
+    range: 540,
     attack: 14,
     tempo: .42,
     style: 'fire',
@@ -138,6 +139,7 @@ const gearCatalog = <GearDef>[
     '참나무 지팡이',
     GearSlot.weapon,
     heroClass: HeroClass.mage,
+    range: 540,
     attack: 18,
     health: 10,
     tempo: .45,
@@ -149,6 +151,7 @@ const gearCatalog = <GearDef>[
     '서리 완드',
     GearSlot.weapon,
     heroClass: HeroClass.mage,
+    range: 540,
     attack: 16,
     mana: 15,
     tempo: .37,
@@ -160,6 +163,7 @@ const gearCatalog = <GearDef>[
     '폭풍 마법봉',
     GearSlot.weapon,
     heroClass: HeroClass.mage,
+    range: 540,
     attack: 20,
     tempo: .39,
     style: 'lightning',
@@ -170,6 +174,7 @@ const gearCatalog = <GearDef>[
     '잿불 지팡이',
     GearSlot.weapon,
     heroClass: HeroClass.mage,
+    range: 540,
     attack: 26,
     tempo: .52,
     style: 'fire',
@@ -180,6 +185,7 @@ const gearCatalog = <GearDef>[
     '수정 홀',
     GearSlot.weapon,
     heroClass: HeroClass.mage,
+    range: 540,
     attack: 21,
     mana: 25,
     tempo: .4,
@@ -475,6 +481,7 @@ class Progress {
   double hp = 100, energy = 0, bonusAttack = 0, bonusHealth = 0;
   bool bossDefeated = false;
   String selectedSkill = '';
+  String? secondarySkill;
   final Map<String, int> ranks = {};
   final List<Gear> inventory = [];
   final Map<GearSlot, Gear> equipped = {};
@@ -482,6 +489,9 @@ class Progress {
   int get stage => 1;
   List<SkillDef> get skills =>
       heroClass == HeroClass.warrior ? warriorSkills : mageSkills;
+  SkillDef? get secondarySkillDef => secondarySkill == null
+      ? null
+      : skills.firstWhere((s) => s.id == secondarySkill);
   SkillDef get activeSkill => skills.firstWhere((s) => s.id == selectedSkill);
   int rank(String id) => ranks[id] ?? 0;
   int get nextLevelXp => 55 + (level - 1) * 30;
@@ -552,14 +562,26 @@ class Progress {
     if (!canLearn(skill)) return false;
     skillPoints--;
     ranks[skill.id] = rank(skill.id) + 1;
+    if (!skill.passive && skill.id != selectedSkill && secondarySkill == null) {
+      secondarySkill = skill.id;
+    }
     hp = math.min(hp, maxHp);
     return true;
   }
 
-  bool selectSkill(String id) {
+  bool selectSkill(String id, {int slot = 0}) {
     final found = skills.where((s) => s.id == id && !s.passive && rank(id) > 0);
-    if (found.isEmpty) return false;
-    selectedSkill = id;
+    if (found.isEmpty || (slot != 0 && slot != 1)) return false;
+    if (slot == 1) {
+      if (id == selectedSkill) {
+        if (secondarySkill == null) return false;
+        selectedSkill = secondarySkill!;
+      }
+      secondarySkill = id;
+    } else {
+      if (id == secondarySkill) secondarySkill = selectedSkill;
+      selectedSkill = id;
+    }
     return true;
   }
 

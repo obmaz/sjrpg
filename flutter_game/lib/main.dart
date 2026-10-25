@@ -222,7 +222,9 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
             : adventure.won
             ? 'victory'
             : panel;
-        final p = adventure.progress, skill = p.activeSkill;
+        final p = adventure.progress,
+            skill = p.activeSkill,
+            secondary = p.secondarySkillDef;
         return Stack(
           fit: StackFit.expand,
           children: [
@@ -292,6 +294,24 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   onTap: adventure.hero.skill,
                 ),
               ),
+              if (secondary != null)
+                Positioned(
+                  right: width < 360 ? 107 : 124,
+                  bottom: bottom + (short ? 104 : 130),
+                  child: ActionButton(
+                    art: widget.art,
+                    sprite: 'roundEmpty',
+                    icon: skillIcon(secondary.id),
+                    label: (adventure.hero.cooldowns[secondary.id] ?? 0) > 0
+                        ? '${adventure.hero.cooldowns[secondary.id]!.ceil()}초'
+                        : secondary.shortName,
+                    semanticLabel: '보조 ${secondary.name}',
+                    size: short ? 54 : 60,
+                    remaining: adventure.hero.cooldowns[secondary.id] ?? 0,
+                    total: secondary.cooldown,
+                    onTap: () => adventure.hero.skill(secondary: true),
+                  ),
+                ),
               Positioned(
                 right: width < 360 ? 112 : 134,
                 bottom: bottom + 20,
@@ -343,11 +363,22 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 top: media.padding.top + 110,
                 child: PotionBelt(adventure),
               ),
+              if (adventure.nearbyBoss != null)
+                Positioned(
+                  top: media.padding.top + (short ? 110 : 165),
+                  left: 0,
+                  right: 0,
+                  child: Center(child: BossHealth(adventure.nearbyBoss!)),
+                ),
               if (adventure.noticeTime > 0)
                 Positioned(
                   left: 55,
                   right: 55,
-                  top: media.padding.top + 143,
+                  top:
+                      media.padding.top +
+                      (adventure.nearbyBoss != null
+                          ? (short ? 170 : 225)
+                          : 160),
                   child: IgnorePointer(
                     child: Container(
                       padding: const EdgeInsets.symmetric(

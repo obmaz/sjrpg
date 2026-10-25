@@ -74,6 +74,26 @@ void main() {
         expect((camera - (hero.position + hero.size / 2)).length, lessThan(2));
         expect(hero.session.world.blocked(hero.body), false);
       }
+      // A spell must not remove a queued actor while its hitbox is still loading.
+      final pending = hero.session.spawnEnemy(
+        'goblin',
+        hero.position.toOffset() + const Offset(-100, 140),
+      )!;
+      expect(pending.combatReady, false);
+      hero.session.hit(pending, 99999, Offset.zero);
+      expect(pending.isDead, false);
+      for (var i = 0; i < 30; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 1)),
+        );
+      }
+      expect(pending.combatReady, true);
+      expect(pending.children.whereType<RectangleHitbox>(), isNotEmpty);
+      hero.session.hit(pending, 99999, Offset.zero);
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     },

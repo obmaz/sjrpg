@@ -195,7 +195,7 @@ class _SkillsViewState extends State<SkillsView> {
         ),
         const SizedBox(height: 12),
         const Text(
-          '레벨마다 1포인트 · 각 스킬 최대 5등급\n배운 사용 스킬은 아래에서 전투 버튼에 지정하세요.',
+          '레벨마다 1포인트 · 각 스킬 최대 5등급\n배운 사용 스킬 2개를 주·보조 버튼에 지정하세요.',
           style: TextStyle(fontSize: 13, height: 1.7, color: Color(0xffbbccbd)),
         ),
         const SizedBox(height: 18),
@@ -208,7 +208,8 @@ class _SkillsViewState extends State<SkillsView> {
     final p = widget.session.progress,
         rank = p.rank(skill.id),
         color = skillColor(skill),
-        selected = p.selectedSkill == skill.id;
+        selected = p.selectedSkill == skill.id,
+        secondary = p.secondarySkill == skill.id;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
@@ -307,7 +308,21 @@ class _SkillsViewState extends State<SkillsView> {
                       color: selected ? gold : const Color(0xff78917b),
                     ),
                   ),
-                  child: Text(selected ? '전투에 지정됨' : '전투에 지정'),
+                  child: Text(selected ? '주 스킬' : '주 슬롯 지정'),
+                ),
+              if (!skill.passive && rank > 0)
+                OutlinedButton(
+                  onPressed: () => setState(() {
+                    p.selectSkill(skill.id, slot: 1);
+                    widget.session.refresh();
+                  }),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: secondary ? gold : cream,
+                    side: BorderSide(
+                      color: secondary ? gold : const Color(0xff78917b),
+                    ),
+                  ),
+                  child: Text(secondary ? '보조 스킬' : '보조 슬롯 지정'),
                 ),
             ],
           ),
@@ -425,6 +440,16 @@ class _InventoryViewState extends State<InventoryView> {
                 item.stats,
                 style: const TextStyle(color: cream, fontSize: 14, height: 1.6),
               ),
+              if (item.base.slot == GearSlot.weapon) ...[
+                const SizedBox(height: 7),
+                Text(
+                  '무기 DPS ${(item.attack / item.base.tempo).toStringAsFixed(1)} · 기본 공격 주기',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xffa9beb1),
+                  ),
+                ),
+              ],
               if (!active && equipped != null) ...[
                 const SizedBox(height: 8),
                 Wrap(
@@ -432,6 +457,12 @@ class _InventoryViewState extends State<InventoryView> {
                   runSpacing: 4,
                   children: [
                     _delta('공격', item.attack - equipped.attack),
+                    if (item.base.slot == GearSlot.weapon)
+                      _delta(
+                        'DPS',
+                        item.attack / item.base.tempo -
+                            equipped.attack / equipped.base.tempo,
+                      ),
                     _delta('방어', item.armor - equipped.armor),
                     _delta('생명', item.health - equipped.health),
                     _delta('마나', item.mana - equipped.mana),
@@ -506,7 +537,7 @@ class _InventoryViewState extends State<InventoryView> {
   Widget _delta(String label, double value) => value == 0
       ? const SizedBox.shrink()
       : Text(
-          '$label ${value > 0 ? '+' : ''}${value.round()}',
+          '$label ${value > 0 ? '+' : ''}${label == 'DPS' ? value.toStringAsFixed(1) : value.round()}',
           style: TextStyle(
             fontSize: 13,
             color: value > 0
@@ -647,4 +678,44 @@ class PotionPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant PotionPainter oldDelegate) =>
       oldDelegate.blue != blue || oldDelegate.art != art;
+}
+
+class BossHealth extends StatelessWidget {
+  const BossHealth(this.enemy, {super.key});
+  final HuntEnemy enemy;
+  @override
+  Widget build(BuildContext context) => IgnorePointer(
+    child: Container(
+      width: 280,
+      padding: const EdgeInsets.fromLTRB(13, 8, 13, 10),
+      decoration: BoxDecoration(
+        color: const Color(0xdd182b26),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: gold.withValues(alpha: .75)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            enemy.windup > 0 ? '숲의 파수꾼 · 강타 준비' : '숲의 파수꾼',
+            style: const TextStyle(
+              color: cream,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: (enemy.life.value / enemy.life.max).clamp(0, 1),
+              minHeight: 7,
+              color: const Color(0xffd76d4d),
+              backgroundColor: const Color(0xff382923),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }

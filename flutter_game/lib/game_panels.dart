@@ -270,19 +270,19 @@ class _AdventurePanelState extends State<AdventurePanel> {
         _info(
           Icons.touch_app_outlined,
           '모바일 조작',
-          '왼쪽 조이스틱으로 이동합니다. 공격을 누르면 연속 공격하며, 지정한 스킬과 회피를 동시에 사용할 수 있습니다. 위쪽 물약은 터치하면 사용합니다.',
+          '왼쪽 조이스틱으로 이동합니다. 공격을 누르면 연속 공격하며, 주·보조 스킬과 회피를 동시에 사용할 수 있습니다. 위쪽 물약은 터치하면 사용합니다.',
         ),
         const SizedBox(height: 18),
         _info(
           Icons.auto_awesome,
           '장비와 스킬',
-          '가방에서 장비를 비교·장착·판매하세요. 레벨이 오르면 스킬 포인트를 1개 얻습니다. 스킬 화면에서 배우고 전투에 지정하세요.',
+          '가방에서 장비를 비교·장착·판매하세요. 레벨이 오르면 스킬 포인트를 1개 얻습니다. 스킬 화면에서 배우고 주·보조 버튼에 지정하세요.',
         ),
         const SizedBox(height: 18),
         _info(
           Icons.keyboard_outlined,
           '키보드 조작',
-          'WASD / 방향키 — 이동\nSpace / J — 연속 공격\nN / K — 지정 스킬\n왼쪽 Shift — 회피\n1 / 2 — 생명 / 자원 물약',
+          'WASD / 방향키 — 이동\nSpace / J — 연속 공격\nN / K — 주 스킬\nL — 보조 스킬\n왼쪽 Shift — 회피\n1 / 2 — 생명 / 자원 물약',
         ),
         const SizedBox(height: 18),
         const Text(
