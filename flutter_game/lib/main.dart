@@ -1,3 +1,4 @@
+import 'dart:async' as async;
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:bonfire/bonfire.dart';
@@ -10,6 +11,8 @@ import 'world_model.dart';
 import 'class_selection.dart';
 import 'battle_effects.dart';
 import 'rpg_widgets.dart';
+import 'game_checkpoint.dart';
+import 'save_bridge.dart' as storage;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,6 +51,10 @@ class _EntryPageState extends State<EntryPage> {
   bool started = false;
   int run = 0;
   HeroClass chosen = HeroClass.warrior;
+  GameCheckpoint? savedAdventure = GameCheckpoint.decode(
+    storage.readCheckpoint(),
+  );
+  bool resuming = false;
   @override
   Widget build(BuildContext context) => FutureBuilder<GameArt>(
     future: loading,
@@ -95,16 +102,28 @@ class _EntryPageState extends State<EntryPage> {
           key: ValueKey(run),
           art: art,
           heroClass: chosen,
+          checkpoint: resuming ? savedAdventure : null,
           onRestart: () => setState(() {
             run++;
             started = false;
+            savedAdventure = null;
+            resuming = false;
           }),
         );
       }
       return ClassSelection(
         art: art,
+        continueSummary: savedAdventure?.summary,
+        onContinue: savedAdventure == null
+            ? null
+            : () => setState(() {
+                chosen = savedAdventure!.progress.heroClass;
+                resuming = true;
+                started = true;
+              }),
         onBegin: (value) => setState(() {
           chosen = value;
+          resuming = false;
           started = true;
         }),
       );
@@ -117,8 +136,10 @@ class GamePage extends StatefulWidget {
     required this.art,
     required this.onRestart,
     this.heroClass = HeroClass.warrior,
+    this.checkpoint,
     super.key,
   });
+  final GameCheckpoint? checkpoint;
   final HeroClass heroClass;
   final GameArt art;
   final VoidCallback onRestart;
@@ -127,10 +148,24 @@ class GamePage extends StatefulWidget {
 }
 
 class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
-  late final Adventure adventure = Adventure(
-    widget.art,
-    heroClass: widget.heroClass,
-  );
+  late final Adventure adventure =
+      widget.checkpoint?.restore(widget.art) ??
+      Adventure(widget.art, heroClass: widget.heroClass);
+  async.Timer? saveTimer;
+  void Function()? stopSaveListener;
+  bool keepSave = true;
+  void saveNow() {
+    if (!keepSave) return;
+    final checkpoint = GameCheckpoint.capture(adventure);
+    if (checkpoint != null) storage.writeCheckpoint(checkpoint.encode());
+  }
+
+  void abandon() {
+    keepSave = false;
+    storage.clearCheckpoint();
+    widget.onRestart();
+  }
+
   late final Widget game;
   String? panel;
   final gameFocus = FocusNode();
@@ -138,6 +173,11 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    saveTimer = async.Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => saveNow(),
+    );
+    stopSaveListener = storage.listenForExit(saveNow);
     game = BonfireWidget(
       map: WorldMap.empty(size: Vector2(worldSize.width, worldSize.height)),
       player: adventure.hero,
@@ -171,6 +211,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
       onReady: (game) {
         game.camera.updateBoundsAndZoomFit(moveOnlyMapArea: true);
         adventure.start(game);
+        saveNow();
       },
     );
   }
@@ -178,16 +219,19 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed && adventure.ready && mounted) {
+      saveNow();
       open('pause');
     }
   }
 
   void open(String name) {
+    saveNow();
     adventure.pause();
     setState(() => panel = name);
   }
 
   void close() {
+    saveNow();
     setState(() => panel = null);
     adventure.resume();
     gameFocus.requestFocus();
@@ -195,6 +239,9 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    saveTimer?.cancel();
+    stopSaveListener?.call();
+    saveNow();
     WidgetsBinding.instance.removeObserver(this);
     adventure.dispose();
     gameFocus.dispose();
@@ -443,7 +490,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   session: adventure,
                   name: modal,
                   onClose: close,
-                  onRestart: widget.onRestart,
+                  onRestart: abandon,
                 ),
               ),
           ],

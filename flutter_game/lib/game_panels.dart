@@ -330,7 +330,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
         ),
         const SizedBox(height: 18),
         const Text(
-          '진행은 현재 모험 동안 유지됩니다. 새 모험이나 새로고침을 하면 초기화됩니다.',
+          '5초마다 이 브라우저에 자동 저장합니다. 다음에 모험 이어하기로 돌아올 수 있습니다. 새 모험을 시작하면 이전 진행을 덮어씁니다.',
           style: TextStyle(color: Color(0xffbacdbe), fontSize: 13, height: 1.7),
         ),
         const SizedBox(height: 16),

@@ -5,9 +5,17 @@ import 'game_ui.dart';
 import 'rpg_model.dart';
 
 class ClassSelection extends StatefulWidget {
-  const ClassSelection({required this.art, required this.onBegin, super.key});
+  const ClassSelection({
+    required this.art,
+    required this.onBegin,
+    this.onContinue,
+    this.continueSummary,
+    super.key,
+  });
   final GameArt art;
   final ValueChanged<HeroClass> onBegin;
+  final VoidCallback? onContinue;
+  final String? continueSummary;
   @override
   State<ClassSelection> createState() => _ClassSelectionState();
 }
@@ -70,6 +78,19 @@ class _ClassSelectionState extends State<ClassSelection> {
                           '제1장 · 십자로의 숲',
                           style: TextStyle(color: cream, fontSize: 16),
                         ),
+                        if (widget.onContinue != null) ...[
+                          const SizedBox(height: 16),
+                          FilledButton.icon(
+                            onPressed: widget.onContinue,
+                            icon: const Icon(Icons.play_arrow),
+                            label: const Text('모험 이어하기'),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            widget.continueSummary ?? '',
+                            style: const TextStyle(color: cream, fontSize: 14),
+                          ),
+                        ],
                         SizedBox(height: compact ? 10 : 30),
                         if (!compact)
                           const Text(
@@ -129,7 +150,9 @@ class _ClassSelectionState extends State<ClassSelection> {
                             ),
                             onPressed: () => widget.onBegin(selected),
                             child: Text(
-                              '${selected.title}로 모험 시작',
+                              widget.onContinue != null
+                                  ? '${selected.title}로 새 모험'
+                                  : '${selected.title}로 모험 시작',
                               style: const TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.bold,

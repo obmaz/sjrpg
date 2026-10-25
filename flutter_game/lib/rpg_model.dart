@@ -265,6 +265,34 @@ class Gear {
   final GearDef base;
   final Rarity rarity;
   final int power, vitality, focus;
+  Map<String, dynamic> toSave() => {
+    'serial': serial,
+    'base': base.id,
+    'rarity': rarity.name,
+    'power': power,
+    'vitality': vitality,
+    'focus': focus,
+  };
+  factory Gear.fromSave(Map<String, dynamic> data) {
+    int stat(String key) {
+      final value = data[key];
+      if (value is! int || value < 0 || value > 1000000) {
+        throw const FormatException('Invalid equipment value');
+      }
+      return value;
+    }
+
+    final serial = stat('serial');
+    if (serial == 0) throw const FormatException('Invalid equipment identity');
+    return Gear(
+      serial,
+      gearById(data['base'] as String),
+      rarity: Rarity.values.firstWhere((v) => v.name == data['rarity']),
+      power: stat('power'),
+      vitality: stat('vitality'),
+      focus: stat('focus'),
+    );
+  }
   String get name => rarity == Rarity.unique
       ? '파수꾼의 유산 · ${base.name}'
       : rarity == Rarity.common
@@ -508,6 +536,120 @@ class Progress {
   final Map<String, int> ranks = {};
   final List<Gear> inventory = [];
   final Map<GearSlot, Gear> equipped = {};
+  Map<String, dynamic> toSave() => {
+    'heroClass': heroClass.name,
+    'kills': kills,
+    'gold': gold,
+    'level': level,
+    'xp': xp,
+    'skillPoints': skillPoints,
+    'healingPotions': healingPotions,
+    'energyPotions': energyPotions,
+    'serial': _serial,
+    'hp': hp,
+    'energy': energy,
+    'bonusAttack': bonusAttack,
+    'bonusHealth': bonusHealth,
+    'bossDefeated': bossDefeated,
+    'selectedSkill': selectedSkill,
+    'secondarySkill': secondarySkill,
+    'ranks': Map<String, int>.of(ranks),
+    'inventory': inventory.map((g) => g.toSave()).toList(),
+    'equipped': equipped.map((slot, gear) => MapEntry(slot.name, gear.serial)),
+  };
+  static Progress? fromSave(dynamic value) {
+    try {
+      final data = Map<String, dynamic>.from(value as Map);
+      int integer(String key, {int max = 1000000000}) {
+        final v = data[key];
+        if (v is! int || v < 0 || v > max) {
+          throw const FormatException('Invalid progress');
+        }
+        return v;
+      }
+
+      double decimal(String key) {
+        final v = data[key];
+        if (v is! num || !v.isFinite || v < 0 || v > 1000000000) {
+          throw const FormatException('Invalid progress');
+        }
+        return v.toDouble();
+      }
+
+      final p = Progress(
+        heroClass: HeroClass.values.firstWhere(
+          (c) => c.name == data['heroClass'],
+        ),
+      );
+      p.level = integer('level', max: 10000);
+      if (p.level == 0) return null;
+      p.kills = integer('kills');
+      p.gold = integer('gold');
+      p.xp = integer('xp');
+      if (p.xp >= p.nextLevelXp) return null;
+      p.skillPoints = integer('skillPoints');
+      p.healingPotions = integer('healingPotions');
+      p.energyPotions = integer('energyPotions');
+      p.bonusAttack = decimal('bonusAttack');
+      p.bonusHealth = decimal('bonusHealth');
+      p.bossDefeated = data['bossDefeated'] as bool;
+      final items = data['inventory'] as List;
+      if (items.isEmpty || items.length > capacity) return null;
+      p.inventory.clear();
+      final identities = <int>{};
+      for (final item in items) {
+        final gear = Gear.fromSave(Map<String, dynamic>.from(item as Map));
+        if (!identities.add(gear.serial)) return null;
+        p.inventory.add(gear);
+      }
+      p.equipped.clear();
+      for (final entry in (data['equipped'] as Map).entries) {
+        final slot = GearSlot.values.firstWhere((s) => s.name == entry.key);
+        final item = p.inventory.firstWhere((g) => g.serial == entry.value);
+        if (item.base.slot != slot ||
+            (slot == GearSlot.weapon && item.base.heroClass != p.heroClass)) {
+          return null;
+        }
+        p.equipped[slot] = item;
+      }
+      if (!p.equipped.containsKey(GearSlot.weapon)) return null;
+      p.ranks.clear();
+      for (final entry in (data['ranks'] as Map).entries) {
+        final skill = p.skills.firstWhere((s) => s.id == entry.key);
+        final rank = entry.value;
+        if (rank is! int ||
+            rank < 1 ||
+            rank > 5 ||
+            skill.requiredLevel > p.level) {
+          return null;
+        }
+        p.ranks[skill.id] = rank;
+      }
+      if (p.rank(p.heroClass == HeroClass.warrior ? 'cleave' : 'firebolt') ==
+          0) {
+        return null;
+      }
+      p.selectedSkill = data['selectedSkill'] as String;
+      final active = p.skills.firstWhere((s) => s.id == p.selectedSkill);
+      if (active.passive || p.rank(active.id) == 0) return null;
+      p.secondarySkill = data['secondarySkill'] as String?;
+      if (p.secondarySkill != null) {
+        final secondary = p.skills.firstWhere((s) => s.id == p.secondarySkill);
+        if (secondary.passive ||
+            p.rank(secondary.id) == 0 ||
+            secondary.id == active.id) {
+          return null;
+        }
+      }
+      p._serial = math.max(integer('serial'), identities.reduce(math.max) + 1);
+      p.hp = decimal('hp').clamp(0, p.maxHp);
+      p.energy = decimal('energy').clamp(0, p.maxEnergy);
+      return p;
+    } catch (_) {
+      return null;
+    }
+  }
+
   static const capacity = 24;
   int get stage => 1;
   List<SkillDef> get skills =>

@@ -13,9 +13,10 @@ class Adventure extends ChangeNotifier {
     this.art, {
     int seed = 7829,
     HeroClass heroClass = HeroClass.warrior,
+    Progress? restoredProgress,
     DeviceSettings? device,
   }) : world = AdventureWorld(seed: seed),
-       progress = Progress(heroClass: heroClass),
+       progress = restoredProgress ?? Progress(heroClass: heroClass),
        device = device ?? DeviceSettings.shared {
     hero = Guardian(this);
     terrain = TerrainArt(world, art);
@@ -211,10 +212,17 @@ class Adventure extends ChangeNotifier {
   }
 
   void start(BonfireGameInterface ref) {
+    if (ready || disposed) return;
     game = ref;
     ready = true;
+    for (final mob in List<HuntEnemy>.of(mobs)) {
+      ref.add(mob);
+    }
+    for (final item in List<GroundLoot>.of(loot)) {
+      ref.add(item);
+    }
     waveTime = 4.5;
-    spawnPack(initial: true);
+    spawnPack(initial: (hero.position.toOffset() - arrival).distance < 220);
     refresh();
   }
 
