@@ -156,10 +156,10 @@ class _AdventurePanelState extends State<AdventurePanel> {
         ),
         _line(Icons.military_tech, '모험가', 'Lv.${p.level} ${p.heroClass.title}'),
         const SizedBox(height: 12),
-        OutlinedButton.icon(
-          onPressed: () => setState(() => showMap = !showMap),
-          icon: Icon(showMap ? Icons.expand_less : Icons.map_outlined),
-          label: Text(showMap ? '지도 접기' : '스테이지 지도 보기'),
+        GameAction(
+          showMap ? '지도 접기' : '스테이지 지도 보기',
+          onTap: () => setState(() => showMap = !showMap),
+          icon: showMap ? Icons.expand_less : Icons.map_outlined,
         ),
         if (showMap || name == 'map') ...[
           const SizedBox(height: 14),
@@ -248,16 +248,16 @@ class _AdventurePanelState extends State<AdventurePanel> {
         _line(Icons.timer_outlined, '모험 시간', gameTime(s.elapsed)),
         const SizedBox(height: 12),
         if (name == 'defeat' && widget.onRetryCheckpoint != null)
-          OutlinedButton.icon(
-            onPressed: widget.onRestart,
-            icon: const Icon(Icons.refresh),
-            label: const Text('직업을 바꿔 새 모험'),
+          GameAction(
+            '직업을 바꿔 새 모험',
+            onTap: widget.onRestart,
+            icon: Icons.refresh,
           ),
         if (name == 'victory')
-          OutlinedButton.icon(
-            onPressed: widget.onRestart,
-            icon: const Icon(Icons.refresh),
-            label: const Text('다른 직업으로 새 모험'),
+          GameAction(
+            '다른 직업으로 새 모험',
+            onTap: widget.onRestart,
+            icon: Icons.refresh,
           ),
       ];
     } else {
@@ -286,10 +286,11 @@ class _AdventurePanelState extends State<AdventurePanel> {
           style: TextStyle(color: Color(0xffbacdbe), fontSize: 13, height: 1.7),
         ),
         const SizedBox(height: 16),
-        OutlinedButton.icon(
-          onPressed: widget.onRestart,
-          icon: const Icon(Icons.refresh),
-          label: const Text('직업을 다시 선택해 새 모험'),
+        GameAction(
+          '직업 선택 · 새 모험',
+          semanticLabel: '직업을 다시 선택해 새 모험',
+          onTap: widget.onRestart,
+          icon: Icons.refresh,
         ),
       ];
     }

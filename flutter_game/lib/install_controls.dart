@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'game_ui.dart';
 import 'install_bridge.dart';
+import 'panel_controls.dart';
+import 'settings_controls.dart';
 
 class InstallControls extends StatefulWidget {
   const InstallControls({super.key});
@@ -29,22 +31,22 @@ class _InstallControlsState extends State<InstallControls> {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      OutlinedButton.icon(
-        onPressed: bridge.installed || pending
+      GameAction(
+        bridge.installed
+            ? '앱 설치됨'
+            : pending
+            ? '설치 확인 중'
+            : '앱 설치',
+        onTap: bridge.installed || pending
             ? null
             : () {
                 if (!bridge.available) {
                   showDialog<void>(
                     context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('앱 설치 안내'),
-                      content: Text(bridge.message),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('확인'),
-                        ),
-                      ],
+                    builder: (context) => GameNoticeDialog(
+                      title: '앱 설치 안내',
+                      message: bridge.message,
+                      icon: Icons.install_mobile,
                     ),
                   );
                   return;
@@ -52,16 +54,9 @@ class _InstallControlsState extends State<InstallControls> {
                 setState(() => pending = true);
                 bridge.request();
               },
-        icon: Icon(
-          bridge.installed ? Icons.check_circle_outline : Icons.install_mobile,
-        ),
-        label: Text(
-          bridge.installed
-              ? '앱 설치됨'
-              : pending
-              ? '설치 확인 중'
-              : '앱 설치',
-        ),
+        icon: bridge.installed
+            ? Icons.check_circle_outline
+            : Icons.install_mobile,
       ),
       const SizedBox(height: 8),
       Text(

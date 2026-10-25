@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'device_settings.dart';
 import 'game_ui.dart';
 import 'install_controls.dart';
+import 'panel_controls.dart';
+import 'settings_controls.dart';
 
 class DeviceControls extends StatefulWidget {
   const DeviceControls(this.settings, {super.key});
@@ -29,17 +31,17 @@ class _DeviceControlsState extends State<DeviceControls> {
             ),
           ),
           const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: settings.fullscreenSupported
+          GameAction(
+            settings.fullscreen ? '전체화면 끄기' : '전체화면 켜기',
+            onTap: settings.fullscreenSupported
                 ? () async {
                     final success = await settings.toggleFullscreen();
                     if (mounted) setState(() => failed = !success);
                   }
                 : null,
-            icon: Icon(
-              settings.fullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
-            ),
-            label: Text(settings.fullscreen ? '전체화면 끄기' : '전체화면 켜기'),
+            icon: settings.fullscreen
+                ? Icons.fullscreen_exit
+                : Icons.fullscreen,
           ),
           if (!settings.fullscreenSupported || failed)
             Padding(
@@ -52,32 +54,22 @@ class _DeviceControlsState extends State<DeviceControls> {
               ),
             ),
           const SizedBox(height: 12),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            activeThumbColor: gold,
-            title: const Text(
-              '타격 진동',
-              style: TextStyle(color: cream, fontSize: 16),
-            ),
-            subtitle: Text(
-              settings.vibrationSupported
-                  ? '공격 적중 · 피격 · 스킬 사용'
-                  : '이 브라우저에서는 진동을 지원하지 않습니다.',
-              style: const TextStyle(
-                color: Color(0xffbacdbe),
-                fontSize: 13,
-                height: 1.6,
-              ),
-            ),
+          GameSettingToggle(
+            label: '타격 진동',
+            icon: Icons.vibration,
+            subtitle: settings.vibrationSupported
+                ? '공격 적중 · 피격 · 스킬 사용'
+                : '이 브라우저에서는 진동을 지원하지 않습니다.',
             value: settings.hapticsEnabled,
             onChanged: settings.vibrationSupported ? settings.setHaptics : null,
           ),
-          OutlinedButton.icon(
-            onPressed: settings.vibrationSupported && settings.hapticsEnabled
+          const SizedBox(height: 12),
+          GameAction(
+            '진동 확인',
+            onTap: settings.vibrationSupported && settings.hapticsEnabled
                 ? () => settings.pulse(FeedbackKind.skill, preview: true)
                 : null,
-            icon: const Icon(Icons.vibration),
-            label: const Text('진동 확인'),
+            icon: Icons.vibration,
           ),
           const SizedBox(height: 8),
           const Text(
