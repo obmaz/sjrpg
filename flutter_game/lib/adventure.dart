@@ -11,6 +11,7 @@ import 'skill_aim.dart';
 import 'spell_vfx.dart';
 import 'shop_content.dart';
 import 'boss_attacks.dart';
+import 'audio_settings.dart';
 
 enum NearbyAction { chest, shrine, mount, dismount, shop, talk }
 
@@ -32,9 +33,11 @@ class Adventure extends ChangeNotifier {
     HeroClass heroClass = HeroClass.warrior,
     Progress? restoredProgress,
     DeviceSettings? device,
+    AudioSettings? audio,
   }) : world = AdventureWorld(seed: seed, stage: stage),
        progress = restoredProgress ?? Progress(heroClass: heroClass),
-       device = device ?? DeviceSettings.shared {
+       device = device ?? DeviceSettings.shared,
+       audio = audio ?? AudioSettings.shared {
     if (stage == WorldStage.past) timePath = TimePath.past;
     if (stage == WorldStage.future) timePath = TimePath.future;
     hero = Guardian(this);
@@ -71,6 +74,7 @@ class Adventure extends ChangeNotifier {
   }
   final GameArt art;
   final DeviceSettings device;
+  final AudioSettings audio;
   final AdventureWorld world;
   late final Guardian hero;
   late final TerrainArt terrain;
@@ -274,6 +278,7 @@ class Adventure extends ChangeNotifier {
   void completeStageIfReady() {
     if (!stageCleared || won) return;
     won = true;
+    audio.stop();
     releaseInput();
     game?.pauseEngine();
   }
@@ -371,6 +376,7 @@ class Adventure extends ChangeNotifier {
   void openChest() {
     final index = nearbyChest;
     if (!active || index == null) return;
+    audio.play(EffectSound.loot);
     device.pulse(FeedbackKind.loot);
     openedChests.add(index);
     progress.gold += 18;
@@ -495,6 +501,7 @@ class Adventure extends ChangeNotifier {
   }
 
   void pause() {
+    audio.stop();
     device.cancel();
     releaseInput();
     paused = true;
@@ -711,6 +718,7 @@ class Adventure extends ChangeNotifier {
     if (progress.heroClass == HeroClass.warrior) {
       progress.energy = math.min(progress.maxEnergy, progress.energy + 7);
     }
+    audio.play(EffectSound.hurt);
     device.pulse(FeedbackKind.hurt);
     progress.hp = math.max(0, progress.hp - damage);
     hero.life.remove(damage);
@@ -723,6 +731,7 @@ class Adventure extends ChangeNotifier {
     );
     if (progress.hp <= 0) {
       defeated = true;
+      audio.stop();
       releaseInput();
       game?.pauseEngine();
     }
@@ -761,6 +770,7 @@ class Adventure extends ChangeNotifier {
         progress.energy + progress.rageOnHit(protected: hero.armorTime > 0),
       );
     }
+    audio.play(EffectSound.impact);
     device.pulse(mob.isDead ? FeedbackKind.kill : FeedbackKind.hit);
     mob.impactPose = (mob.anim / .15).floor() % 2;
     mob.hurt = .14;
@@ -880,6 +890,7 @@ class Adventure extends ChangeNotifier {
   @override
   void dispose() {
     disposed = true;
+    audio.stop();
     device.cancel();
     releaseInput();
     terrain.dispose();
@@ -1130,6 +1141,17 @@ class Guardian extends Player with WithCollision {
     attackClock = session.progress.attackInterval * (frenzyTime > 0 ? .6 : 1);
     swing = .23;
     final p = session.progress;
+    session.audio.play(
+      p.heroClass == HeroClass.warrior
+          ? (p.weapon.base.style == 'hammer'
+                ? EffectSound.impact
+                : EffectSound.slash)
+          : switch (p.weapon.base.style) {
+              'ice' => EffectSound.ice,
+              'lightning' => EffectSound.lightning,
+              _ => EffectSound.fire,
+            },
+    );
     if (p.heroClass == HeroClass.mage) {
       session.game?.add(
         ArcaneBolt(
@@ -1199,6 +1221,14 @@ class Guardian extends Player with WithCollision {
       );
       return;
     }
+    session.audio.play(switch (def.id) {
+      'warcry' || 'frenzy' => EffectSound.warcry,
+      'frostNova' || 'iceArmor' => EffectSound.ice,
+      'chainLightning' => EffectSound.lightning,
+      'meteor' => EffectSound.fire,
+      'seismicSlam' => EffectSound.impact,
+      _ => EffectSound.slash,
+    });
     session.device.pulse(FeedbackKind.skill);
     p.energy -= def.cost;
     cooldowns[def.id] = def.cooldown;
@@ -1363,6 +1393,7 @@ class Guardian extends Player with WithCollision {
   void dodge() {
     if (!session.active || dodgeClock > 0 || !session.ensureOnFoot()) return;
     aim = null;
+    session.audio.play(EffectSound.dodge);
     session.device.pulse(FeedbackKind.dodge);
     rollBearing = bearing;
     impactHold = 0;

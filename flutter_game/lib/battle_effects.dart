@@ -6,6 +6,7 @@ import 'world_model.dart';
 import 'spell_vfx.dart';
 import 'device_settings.dart';
 import 'boss_attacks.dart';
+import 'audio_settings.dart';
 
 void areaStrike(
   Adventure s,
@@ -641,6 +642,7 @@ class MeteorFall extends GameComponent {
       struck = true;
       if (session.world.clearLine(origin, target, const ui.Size(3, 3))) {
         session.kickCamera(1.5);
+        session.audio.play(EffectSound.fire);
         session.device.pulse(FeedbackKind.skill);
         areaStrike(session, target, 175, damage, maxTargets: targetLimit);
         session.game?.add(
@@ -733,6 +735,7 @@ class GroundLoot extends GameComponent {
       return;
     }
     collected = true;
+    session.audio.play(EffectSound.loot);
     session.bubble(
       added ? item.name : '+${p.gold - goldBefore} 골드',
       position.toOffset() - const ui.Offset(0, 55),

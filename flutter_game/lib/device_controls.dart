@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'device_settings.dart';
+import 'audio_settings.dart';
 import 'game_ui.dart';
 import 'install_controls.dart';
 import 'panel_controls.dart';
@@ -79,6 +80,34 @@ class _DeviceControlsState extends State<DeviceControls> {
               fontSize: 12,
               height: 1.6,
             ),
+          ),
+          const SizedBox(height: 18),
+          AnimatedBuilder(
+            animation: AudioSettings.shared,
+            builder: (context, child) {
+              final audio = AudioSettings.shared;
+              return Column(
+                children: [
+                  GameSettingToggle(
+                    label: '전투 효과음',
+                    icon: Icons.volume_up_rounded,
+                    subtitle: audio.supported
+                        ? '공격 · 피격 · 획득'
+                        : '이 환경에서는 효과음을 지원하지 않습니다.',
+                    value: audio.enabled,
+                    onChanged: audio.supported ? audio.setEnabled : null,
+                  ),
+                  const SizedBox(height: 12),
+                  GameAction(
+                    '효과음 확인',
+                    icon: Icons.music_note_rounded,
+                    onTap: audio.supported && audio.enabled
+                        ? () => audio.play(EffectSound.slash, preview: true)
+                        : null,
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 22),
           const InstallControls(),
