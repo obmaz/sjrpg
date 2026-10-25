@@ -77,9 +77,23 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        await tester.tap(find.bySemanticsLabel('보관 장비 · 맹공의 기병의 장검'));
+        final info = find.bySemanticsLabel('보관 장비 · 맹공의 기병의 장검');
+        await tester.scrollUntilVisible(
+          info,
+          160,
+          scrollable: find.byType(Scrollable).first,
+        );
         await tester.pumpAndSettle();
-        await tester.tap(find.byTooltip('장비 잠금'));
+        await tester.tap(info);
+        await tester.pumpAndSettle();
+        final lock = find.bySemanticsLabel('${gear.name} 잠금');
+        await tester.scrollUntilVisible(
+          lock,
+          140,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(lock);
         await tester.pumpAndSettle();
         expect(gear.locked, true);
         expect(
@@ -88,16 +102,33 @@ void main() {
               .onTap,
           null,
         );
-        await tester.tap(find.byTooltip('상세 닫기'));
+        await tester.tap(find.bySemanticsLabel('전체'));
+        await tester.pumpAndSettle();
         await tester.pumpAndSettle();
         await tester.tap(find.bySemanticsLabel('잠금'));
         await tester.pumpAndSettle();
-        await tester.tap(find.bySemanticsLabel('보관 장비 · 맹공의 기병의 장검 · 잠금'));
+        final lockedInfo = find.bySemanticsLabel('보관 장비 · 맹공의 기병의 장검 · 잠금');
+        await tester.scrollUntilVisible(
+          lockedInfo,
+          160,
+          scrollable: find.byType(Scrollable).first,
+        );
         await tester.pumpAndSettle();
-        await tester.tap(find.byTooltip('장비 잠금 해제'));
+        await tester.tap(lockedInfo);
+        await tester.pumpAndSettle();
+        final unlock = find.bySemanticsLabel('${gear.name} 잠금 해제');
+        await tester.scrollUntilVisible(
+          unlock,
+          140,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(unlock);
         await tester.pumpAndSettle();
         final gold = p.gold;
-        await tester.tap(find.bySemanticsLabel('판매 +${gear.saleValue} G'));
+        await tester.tap(
+          find.bySemanticsLabel('${gear.name} 판매 · ${gear.saleValue} 골드'),
+        );
         await tester.pumpAndSettle();
         expect(p.gold, gold + gear.saleValue);
         expect(find.text('잠근 장비가 없습니다'), findsOneWidget);

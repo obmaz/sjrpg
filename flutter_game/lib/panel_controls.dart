@@ -29,6 +29,7 @@ class GameAction extends StatelessWidget {
       ),
     );
     return Semantics(
+      container: true,
       button: true,
       enabled: enabled,
       label: semanticLabel ?? label,

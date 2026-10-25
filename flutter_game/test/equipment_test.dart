@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/equipment_panel.dart';
 import 'package:guardian_new/game_art.dart';
+import 'package:guardian_new/panel_controls.dart';
 import 'package:guardian_new/rpg_model.dart';
 import 'support/test_game.dart';
 
@@ -37,6 +38,16 @@ void main() {
     },
   );
 
+  Future<void> reveal(WidgetTester tester, Finder target) async {
+    await tester.scrollUntilVisible(
+      target,
+      150,
+      scrollable: find.byType(Scrollable).first,
+      maxScrolls: 60,
+    );
+    await tester.pumpAndSettle();
+  }
+
   for (final size in const [
     Size(320, 420),
     Size(320, 640),
@@ -44,22 +55,24 @@ void main() {
     Size(844, 390),
   ]) {
     testWidgets(
-      'bag details keep actions reachable and preserve grid scroll at $size',
+      'one-screen equipment actions stay reachable without opening a modal at $size',
       (tester) async {
         tester.view.physicalSize = size;
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
         final semantics = tester.ensureSemantics();
+        Gear? first;
         for (var i = 0; i < 20; i++) {
-          s.progress.inventory.add(
-            s.progress.createGear(
-              gearById(i % 2 == 0 ? 'longsword' : 'chainmail'),
-              rarity: Rarity.rare,
-              power: i + 1,
-            ),
+          final item = s.progress.createGear(
+            gearById('longsword'),
+            rarity: Rarity.rare,
+            power: i + 1,
           );
+          s.progress.inventory.add(item);
+          first ??= item;
         }
+        final gear = first!;
         await tester.pumpWidget(
           MaterialApp(
             home: EquipmentPanel(session: s, onClose: () {}),
@@ -68,67 +81,34 @@ void main() {
         await tester.pumpAndSettle();
         final footer = find.bySemanticsLabel('모험 계속하기');
         final rect = tester.getRect(footer);
-        await tester.drag(find.byType(CustomScrollView), const Offset(0, -500));
-        await tester.pumpAndSettle();
+        final equip = find.byKey(ValueKey('equip-${gear.serial}'));
+        await reveal(tester, equip);
         expect(tester.getRect(footer), rect);
-        final gridState = tester.state<ScrollableState>(
-          find
-              .descendant(
-                of: find.byType(CustomScrollView),
-                matching: find.byType(Scrollable),
-              )
-              .first,
-        );
-        final offset = gridState.position.pixels;
-        final cells = find.byWidgetPredicate(
-          (w) =>
-              w is Semantics &&
-              (w.properties.label ?? '').startsWith('보관 장비 · 맹공의 기병의 장검'),
-        );
-        final cell = cells.evaluate().firstWhere((e) {
-          final r = tester.getRect(find.byWidget(e.widget));
-          return r.center.dy > 150 && r.center.dy < rect.top;
-        });
-        await tester.tap(find.byWidget(cell.widget));
-        await tester.pumpAndSettle();
-        final equip = find.bySemanticsLabel('장착');
-        expect(tester.getRect(equip).bottom, lessThanOrEqualTo(size.height));
         await tester.tap(equip);
         await tester.pumpAndSettle();
-        expect(find.bySemanticsLabel('장착 중'), findsOneWidget);
-        await tester.tap(find.byTooltip('상세 닫기'));
+        expect(s.progress.isEquipped(gear), true);
+        expect(find.byType(Dialog), findsNothing);
+        expect(find.byTooltip('옵션 접기'), findsNothing);
+        expect(tester.getRect(footer), rect);
+        final info = find.bySemanticsLabel('보관 장비 · ${gear.name} · 장착 중');
+        await reveal(tester, info);
+        await tester.tap(info);
         await tester.pumpAndSettle();
-        expect(gridState.position.pixels, closeTo(offset, .1));
+        final collapse = find.byTooltip('옵션 접기');
+        await reveal(tester, collapse);
+        expect(find.byType(Dialog), findsNothing);
+        expect(tester.getRect(footer), rect);
+        await tester.tap(collapse);
+        await tester.pumpAndSettle();
+        expect(find.byTooltip('옵션 접기'), findsNothing);
         expect(tester.takeException(), null);
         semantics.dispose();
       },
     );
   }
 
-  testWidgets('landscape storefront keeps product prices above the footer', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(844, 390);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final semantics = tester.ensureSemantics();
-    await tester.pumpWidget(
-      MaterialApp(
-        home: EquipmentPanel(session: s, startInShop: true, onClose: () {}),
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(
-      tester.getRect(find.bySemanticsLabel('기병의 장검 · 50 골드')).bottom,
-      lessThan(tester.getRect(find.bySemanticsLabel('모험 계속하기')).top),
-    );
-    expect(tester.takeException(), null);
-    semantics.dispose();
-  });
-
   testWidgets(
-    'merchant purchase can equip immediately and potion totals stay current',
+    'merchant equips with one purchase tap, blocks repeated quick purchase and updates potions',
     (tester) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
@@ -142,32 +122,79 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.bySemanticsLabel('기병의 장검 · 50 골드'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.bySemanticsLabel('50 G · 구매'));
+      final buy = find.byKey(const ValueKey('buy-equip-longsword'));
+      await tester.tap(buy);
       await tester.pumpAndSettle();
       expect(s.progress.gold, 150);
       expect(s.progress.inventory.length, 3);
-      await tester.tap(find.bySemanticsLabel('장착'));
-      await tester.pumpAndSettle();
       expect(s.progress.weapon.base.id, 'longsword');
-      await tester.tap(find.byTooltip('상세 닫기'));
+      expect(find.byType(Dialog), findsNothing);
+      expect(find.byTooltip('옵션 접기'), findsNothing);
+      expect(tester.widget<GameAction>(buy).onTap, null);
+      await tester.tap(buy);
       await tester.pumpAndSettle();
-      await tester.tap(find.bySemanticsLabel('가방'));
+      expect(s.progress.gold, 150);
+      expect(s.progress.inventory.length, 3);
+      await tester.tap(find.bySemanticsLabel('기병의 장검 · 50 골드'));
       await tester.pumpAndSettle();
-      expect(find.text('장비 가방'), findsOneWidget);
-      await tester.tap(find.bySemanticsLabel('상점'));
+      final keep = find.bySemanticsLabel('기병의 장검 구매 후 보관 · 50 골드');
+      await reveal(tester, keep);
+      final equipped = s.progress.weapon;
+      await tester.tap(keep);
       await tester.pumpAndSettle();
+      expect(s.progress.gold, 100);
+      expect(s.progress.inventory.length, 4);
+      expect(s.progress.weapon, equipped);
+      expect(s.progress.unseenGear, isEmpty);
       await tester.tap(find.bySemanticsLabel('물약'));
       await tester.pumpAndSettle();
-      await tester.tap(find.bySemanticsLabel('치유 물약 ×2 · 20 골드'));
-      await tester.pumpAndSettle();
       final potions = s.progress.healingPotions;
-      await tester.tap(find.bySemanticsLabel('20 G · 구매'));
+      final healing = find.bySemanticsLabel('치유 물약 ×2 구매 · 20 골드');
+      await reveal(tester, healing);
+      await tester.tap(healing);
       await tester.pumpAndSettle();
       expect(s.progress.healingPotions, potions + 2);
-      expect(s.progress.gold, 130);
+      expect(s.progress.gold, 80);
       expect(find.text('생명 55 회복 · 보유 ${potions + 2}개'), findsOneWidget);
+      expect(tester.takeException(), null);
+      semantics.dispose();
+    },
+  );
+
+  testWidgets(
+    'full bags block quick purchase and keep purchase without charging gold',
+    (tester) async {
+      s.progress.gold = 500;
+      while (s.progress.inventory.length < Progress.capacity) {
+        s.progress.inventory.add(s.progress.createGear(gearById('amber')));
+      }
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EquipmentPanel(session: s, startInShop: true, onClose: () {}),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<GameAction>(
+              find.byKey(const ValueKey('buy-equip-longsword')),
+            )
+            .onTap,
+        null,
+      );
+      await tester.tap(find.bySemanticsLabel('기병의 장검 · 50 골드'));
+      await tester.pumpAndSettle();
+      final keep = find.bySemanticsLabel('기병의 장검 구매 후 보관 · 50 골드');
+      await reveal(tester, keep);
+      expect(
+        tester
+            .widget<GameAction>(find.widgetWithText(GameAction, '구매 후 가방에 보관'))
+            .onTap,
+        null,
+      );
+      expect(s.progress.gold, 500);
+      expect(s.progress.inventory.length, Progress.capacity);
       expect(tester.takeException(), null);
       semantics.dispose();
     },

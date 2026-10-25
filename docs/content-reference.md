@@ -80,3 +80,5 @@ Flutter 전용 `actors-roll.png`는 전사·마법사의 웅크리기·구르기
 새 모험의 광신도(`cultist`)는 기존 생성형 8방향 그림을 사용하며 D&D 계열 이름을 참고한 독자 전투 패턴입니다. 시전 예고·목표 고정·직선 투사체·기절 중단을 적용하고 생명·피해·주기는 모바일 전투에 맞춰 조정했습니다.
 
 `flutter_game/art/dodge-icon.png`는 가죽 장화와 청록 잔상을 생성한 회피 버튼 그림입니다. 투명 원본 `/workspace/generated_images/exec-bfece1ee-3409-4b43-a45e-97d4d647083f.png`를 보존하고 배포용은 256px로 준비합니다. 실제 구르기·방향·무적 판정은 캐릭터 코드가 담당합니다.
+
+장비 목록 초안 `docs/art/equipment-mobile-reference.webp`는 이 게임을 위해 생성한 단일 화면 장비 UI 시안입니다. 원본은 `/workspace/generated_images/exec-91fb037f-1f08-4ab2-b7ad-6c0dd0eaa822.png`이며, 런타임은 기존 생성형 장비 그림을 사용하고 비교·바로 장착·인라인 옵션을 Flutter 위젯으로 구현합니다. 시안의 문구와 수치는 실제 장비 모델을 따르도록 적용합니다.

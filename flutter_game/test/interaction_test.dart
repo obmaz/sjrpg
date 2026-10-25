@@ -90,7 +90,9 @@ void main() {
     await tester.tap(cell);
     await tester.pumpAndSettle();
     expect(s.progress.unseenGear, isEmpty);
-    await tester.tap(find.byTooltip('상세 닫기'));
+    await tester.tap(find.bySemanticsLabel('전체'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('신규'));
     await tester.pumpAndSettle();
     expect(find.text('확인하지 않은 새 장비가 없습니다'), findsOneWidget);
     expect(tester.takeException(), null);

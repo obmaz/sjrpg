@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'adventure.dart';
 import 'game_ui.dart';
@@ -26,47 +25,51 @@ class EquipmentPanel extends StatefulWidget {
 
 class _EquipmentPanelState extends State<EquipmentPanel> {
   late bool shopping = widget.startInShop;
-  final bagScroll = ScrollController(),
-      shopScroll = ScrollController(),
-      detailScroll = ScrollController();
+  final bagScroll = ScrollController(), shopScroll = ScrollController();
   int bagTab = 0, shopTab = 0;
   Gear? detail;
   _Offer? offer;
   String message = '';
+  String? feedbackOffer;
+  int? pinnedGear;
+  Set<int> newTabItems = {};
   Adventure get s => widget.session;
   Progress get p => s.progress;
   @override
   void dispose() {
     bagScroll.dispose();
     shopScroll.dispose();
-    detailScroll.dispose();
     super.dispose();
   }
 
-  void inspect(Gear gear) => setState(() {
-    p.unseenGear.remove(gear.serial);
+  void inspect(Gear gear, {bool equipped = false}) {
+    setState(() {
+      p.unseenGear.remove(gear.serial);
+      detail = detail == gear && !equipped ? null : gear;
+      offer = null;
+      if (equipped) {
+        bagTab = 0;
+        pinnedGear = gear.serial;
+      }
+    });
+    if (equipped && bagScroll.hasClients) bagScroll.jumpTo(0);
     s.refresh();
-    detail = gear;
-    offer = null;
-    message = '';
-  });
-  void dismissDetail() => setState(() {
-    detail = null;
-    offer = null;
-    message = '';
-  });
+  }
+
   void tab(int index) => setState(() {
     if (shopping) {
       shopTab = index;
       if (shopScroll.hasClients) shopScroll.jumpTo(0);
     } else {
       bagTab = index;
+      pinnedGear = null;
+      detail = null;
+      if (index == 1) newTabItems = {...p.unseenGear};
       if (bagScroll.hasClients) bagScroll.jumpTo(0);
     }
   });
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
     return ColoredBox(
       color: const Color(0xcc040d10),
       child: SafeArea(
@@ -78,76 +81,48 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
               child: FramedSurface(
                 art: s.art,
                 compact: true,
-                child: Stack(
+                child: Column(
                   children: [
-                    Column(
-                      children: [
-                        _header(),
-                        GameTabs(
-                          shopping
-                              ? ['장비', '물약', '축복']
-                              : ['전체', '신규', '무기', '방어구', '부적', '잠금'],
-                          shopping ? shopTab : bagTab,
-                          tab,
-                        ),
-                        Expanded(child: shopping ? _store() : _inventory()),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
-                          child: Row(
-                            children: [
-                              if (widget.startInShop) ...[
-                                Expanded(
-                                  child: GameAction(
-                                    shopping ? '가방' : '상점',
-                                    icon: shopping
-                                        ? Icons.backpack_outlined
-                                        : Icons.storefront,
-                                    onTap: () => setState(() {
-                                      shopping = !shopping;
-                                      message = '';
-                                    }),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                              ],
-                              Expanded(
-                                flex: 2,
-                                child: GameAction(
-                                  '모험 계속하기',
-                                  primary: true,
-                                  icon: Icons.play_arrow_rounded,
-                                  onTap: widget.onClose,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    _header(),
+                    GameTabs(
+                      shopping
+                          ? ['장비', '물약', '축복']
+                          : ['전체', '신규', '무기', '방어구', '부적', '잠금'],
+                      shopping ? shopTab : bagTab,
+                      tab,
                     ),
-                    if (detail != null || offer != null) ...[
-                      Positioned.fill(
-                        child: GestureDetector(
-                          onTap: dismissDetail,
-                          child: const ColoredBox(color: Color(0xb300080a)),
-                        ),
-                      ),
-                      Align(
-                        alignment: media.size.width > 700
-                            ? Alignment.centerRight
-                            : Alignment.bottomCenter,
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: 420,
-                            maxHeight:
-                                (media.size.height -
-                                    media.padding.vertical -
-                                    20) *
-                                (media.size.height < 500 ? 1 : .84),
+                    Expanded(child: shopping ? _store() : _inventory()),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
+                      child: Row(
+                        children: [
+                          if (widget.startInShop) ...[
+                            Expanded(
+                              child: GameAction(
+                                shopping ? '가방' : '상점',
+                                icon: shopping
+                                    ? Icons.backpack_outlined
+                                    : Icons.storefront,
+                                onTap: () => setState(() {
+                                  shopping = !shopping;
+                                  message = '';
+                                }),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                          ],
+                          Expanded(
+                            flex: 2,
+                            child: GameAction(
+                              '모험 계속하기',
+                              primary: true,
+                              icon: Icons.play_arrow_rounded,
+                              onTap: widget.onClose,
+                            ),
                           ),
-                          child: _details(),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ],
                 ),
               ),
@@ -227,49 +202,27 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
   );
 
   Widget _inventory() {
-    final items = p.inventory
+    final items = p.inventory.reversed
         .where(
           (g) =>
               bagTab == 0 ||
               (bagTab == 1
-                  ? p.unseenGear.contains(g.serial)
+                  ? newTabItems.contains(g.serial) ||
+                        p.unseenGear.contains(g.serial)
                   : bagTab == 5
-                  ? g.locked
+                  ? g.locked || detail == g
                   : g.base.slot.index == bagTab - 2),
         )
         .toList();
-    final count = bagTab == 0
-        ? Progress.capacity
-        : math.max(4, (items.length / 4).ceil() * 4);
+    final pinned = items.indexWhere((g) => g.serial == pinnedGear);
+    if (pinned > 0) items.insert(0, items.removeAt(pinned));
     return _scroller(
       bagScroll,
       CustomScrollView(
         controller: bagScroll,
-        key: const PageStorageKey('equipment-grid'),
+        key: const PageStorageKey('equipment-list'),
         physics: const ClampingScrollPhysics(),
         slivers: [
-          if (bagTab == 1 && items.isEmpty)
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(18),
-                child: Text(
-                  '확인하지 않은 새 장비가 없습니다',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: _muted, fontSize: 14),
-                ),
-              ),
-            ),
-          if (bagTab == 5 && items.isEmpty)
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(18),
-                child: Text(
-                  '잠근 장비가 없습니다',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: _muted, fontSize: 14),
-                ),
-              ),
-            ),
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
             sliver: SliverToBoxAdapter(
@@ -340,25 +293,27 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
               ),
             ),
           ),
+
+          if (items.isEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text(
+                  bagTab == 1
+                      ? '확인하지 않은 새 장비가 없습니다'
+                      : bagTab == 5
+                      ? '잠근 장비가 없습니다'
+                      : '이 부위에 보관한 장비가 없습니다',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: _muted, fontSize: 14),
+                ),
+              ),
+            ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-            sliver: SliverLayoutBuilder(
-              builder: (context, constraints) {
-                final columns = constraints.crossAxisExtent > 460 ? 6 : 4;
-                return SliverGrid(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) =>
-                        _gearCell(index < items.length ? items[index] : null),
-                    childCount: count,
-                  ),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: columns,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                    childAspectRatio: .87,
-                  ),
-                );
-              },
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+            sliver: SliverList.builder(
+              itemCount: items.length,
+              itemBuilder: (context, i) => _gearRow(items[i]),
             ),
           ),
         ],
@@ -372,16 +327,21 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
             ? const Color(0xff34534b)
             : Color(gear.rarity.color);
     return Semantics(
+      container: true,
       button: gear != null,
       label: gear == null
           ? '빈 장비 칸'
           : '${equippedSlot != null ? '착용 ${_slotName(equippedSlot)} · ' : '보관 장비 · '}${gear.name}${active ? ' · 장착 중' : ''}${gear.locked ? ' · 잠금' : ''}${p.unseenGear.contains(gear.serial) ? ' · 신규' : ''}',
       excludeSemantics: true,
-      onTap: gear == null ? null : () => inspect(gear),
+      onTap: gear == null
+          ? null
+          : () => inspect(gear, equipped: equippedSlot != null),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: gear == null ? null : () => inspect(gear),
+          onTap: gear == null
+              ? null
+              : () => inspect(gear, equipped: equippedSlot != null),
           borderRadius: BorderRadius.circular(9),
           child: Container(
             decoration: BoxDecoration(
@@ -459,32 +419,12 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                       child: SizedBox(width: 8, height: 8),
                     ),
                   ),
-                if (gear != null && !active && _improvement(gear) > 0)
-                  const Positioned(
-                    left: 3,
-                    top: 3,
-                    child: Icon(
-                      Icons.arrow_upward_rounded,
-                      color: _mint,
-                      size: 16,
-                    ),
-                  ),
               ],
             ),
           ),
         ),
       ),
     );
-  }
-
-  double _improvement(Gear gear) {
-    final current = p.equipped[gear.base.slot];
-    if (current == null) return 1;
-    return gear.base.slot == GearSlot.weapon
-        ? gear.attack / gear.base.tempo - current.attack / current.base.tempo
-        : gear.base.slot == GearSlot.armor
-        ? gear.armor - current.armor
-        : gear.health + gear.mana - current.health - current.mana;
   }
 
   List<_Offer> get offers {
@@ -529,93 +469,17 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
 
   Widget _store() => _scroller(
     shopScroll,
-    GridView.builder(
+    ListView.builder(
       controller: shopScroll,
-      key: const PageStorageKey('merchant-grid'),
+      key: const PageStorageKey('merchant-list'),
       physics: const ClampingScrollPhysics(),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(8),
       itemCount: offers.length,
-      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 220,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio:
-            MediaQuery.sizeOf(context).width > 600 &&
-                MediaQuery.sizeOf(context).height < 500
-            ? 1.65
-            : .85,
-      ),
       itemBuilder: (context, i) {
         final entry = offers[i];
-        return Semantics(
-          button: true,
-          label: '${entry.title} · ${entry.price} 골드',
-          excludeSemantics: true,
-          onTap: () => setState(() {
-            offer = entry;
-            detail = null;
-            message = '';
-          }),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () => setState(() {
-                offer = entry;
-                detail = null;
-                message = '';
-              }),
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xff21463d), Color(0xff0e2927)],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: gold.withValues(alpha: .35)),
-                ),
-                child: Column(
-                  children: [
-                    Expanded(child: _offerArt(entry)),
-                    const SizedBox(height: 7),
-                    Text(
-                      entry.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: cream,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.monetization_on_rounded,
-                          color: gold,
-                          size: 15,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${entry.price}',
-                          style: const TextStyle(
-                            color: gold,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
+        return entry.gear == null
+            ? _consumableRow(entry)
+            : _gearRow(Gear(0, entry.gear!), entry: entry);
       },
     ),
   );
@@ -638,213 +502,448 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
           painter: EffectIconPainter(s.art, entry.id == 'power' ? 7 : 6),
         );
 
-  Widget _details() {
-    final gear = detail ?? (offer?.gear != null ? Gear(0, offer!.gear!) : null),
-        entry = offer;
-    final active = detail != null && p.isEquipped(detail!),
-        current = gear == null ? null : p.equipped[gear.base.slot];
+  bool _sameEquippedOffer(_Offer entry) {
+    final current = entry.gear == null ? null : p.equipped[entry.gear!.slot];
+    return current != null &&
+        current.base.id == entry.gear!.id &&
+        current.rarity == Rarity.common &&
+        current.power == 0 &&
+        current.vitality == 0 &&
+        current.focus == 0;
+  }
+
+  Widget _gearRow(Gear gear, {_Offer? entry}) {
+    final owned = entry == null, active = owned && p.isEquipped(gear);
+    final expanded = owned ? detail == gear : offer?.id == entry.id;
+    final current = p.equipped[gear.base.slot];
+    final color = Color(gear.rarity.color);
+    final full = !owned && p.inventory.length >= Progress.capacity;
+    final poor = !owned && p.gold < entry.price;
+    final already = !owned && _sameEquippedOffer(entry);
+    final usable = gear.base.usable(p.heroClass);
+    final label = owned
+        ? '보관 장비 · ${gear.name}${active ? ' · 장착 중' : ''}${gear.locked ? ' · 잠금' : ''}${p.unseenGear.contains(gear.serial) ? ' · 신규' : ''}'
+        : '${entry.title} · ${entry.price} 골드';
+    void select() {
+      if (owned) {
+        inspect(gear);
+      } else {
+        setState(() {
+          offer = expanded ? null : entry;
+          detail = null;
+        });
+      }
+    }
+
     return Container(
-      clipBehavior: Clip.antiAlias,
+      key: owned
+          ? ValueKey('gear-row-${gear.serial}')
+          : ValueKey('offer-${entry.id}'),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: const Color(0xff0d2828),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: gold.withValues(alpha: .65)),
-        boxShadow: const [BoxShadow(color: Color(0x99000000), blurRadius: 22)],
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            expanded ? const Color(0xff28483c) : const Color(0xff153a33),
+            const Color(0xff0d2827),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(
+          color: expanded ? gold : const Color(0xff36574c),
+          width: expanded ? 1.5 : 1,
+        ),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 6, 4, 6),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    entry != null
-                        ? '상인에게 구매'
-                        : active
-                        ? '장착 중인 장비'
-                        : '장비 비교',
-                    style: const TextStyle(
-                      color: gold,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Semantics(
+                  container: true,
+                  button: true,
+                  label: label,
+                  onTap: select,
+                  excludeSemantics: true,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: select,
+                      borderRadius: BorderRadius.circular(9),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 3),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 60,
+                              height: 74,
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: .1),
+                                borderRadius: BorderRadius.circular(9),
+                                border: Border.all(
+                                  color: color.withValues(alpha: .7),
+                                ),
+                              ),
+                              child: Stack(
+                                children: [
+                                  Positioned.fill(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(4),
+                                      child: CustomPaint(
+                                        painter: GearGlyph(gear, s.art),
+                                      ),
+                                    ),
+                                  ),
+                                  if (active || gear.locked)
+                                    Positioned(
+                                      right: 2,
+                                      top: 2,
+                                      child: Icon(
+                                        gear.locked
+                                            ? Icons.lock_rounded
+                                            : Icons.check_circle,
+                                        size: 15,
+                                        color: gear.locked ? gold : _mint,
+                                      ),
+                                    ),
+                                  if (owned &&
+                                      p.unseenGear.contains(gear.serial))
+                                    const Positioned(
+                                      left: 3,
+                                      top: 3,
+                                      child: Icon(
+                                        Icons.circle,
+                                        color: gold,
+                                        size: 8,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    gear.name,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: color,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      height: 1.25,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    '${gear.rarity.title} · ${_slotName(gear.base.slot)}',
+                                    style: const TextStyle(
+                                      color: _muted,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  if (gear.base.slot == GearSlot.weapon) ...[
+                                    _quickStat(
+                                      '공격',
+                                      gear.attack,
+                                      current?.attack,
+                                      active,
+                                    ),
+                                    _quickStat(
+                                      '초당',
+                                      gear.attack / gear.base.tempo,
+                                      current == null
+                                          ? null
+                                          : current.attack / current.base.tempo,
+                                      active,
+                                      decimal: true,
+                                    ),
+                                  ] else if (gear.base.slot ==
+                                      GearSlot.armor) ...[
+                                    _quickStat(
+                                      '방어',
+                                      gear.armor,
+                                      current?.armor,
+                                      active,
+                                    ),
+                                    _quickStat(
+                                      '생명',
+                                      gear.health,
+                                      current?.health,
+                                      active,
+                                    ),
+                                  ] else ...[
+                                    _quickStat(
+                                      '생명',
+                                      gear.health,
+                                      current?.health,
+                                      active,
+                                    ),
+                                    _quickStat(
+                                      gear.mana > 0 || (current?.mana ?? 0) > 0
+                                          ? '마나'
+                                          : '방어',
+                                      gear.mana > 0 || (current?.mana ?? 0) > 0
+                                          ? gear.mana
+                                          : gear.armor,
+                                      gear.mana > 0 || (current?.mana ?? 0) > 0
+                                          ? current?.mana
+                                          : current?.armor,
+                                      active,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
-                if (detail != null)
-                  IconButton(
-                    tooltip: detail!.locked ? '장비 잠금 해제' : '장비 잠금',
-                    onPressed: () {
-                      p.setGearLocked(detail!, !detail!.locked);
-                      s.refresh();
-                      setState(() {});
-                    },
-                    icon: Icon(
-                      detail!.locked
-                          ? Icons.lock_rounded
-                          : Icons.lock_open_rounded,
-                      color: gold,
-                      size: 21,
-                    ),
-                  ),
-                IconButton(
-                  tooltip: '상세 닫기',
-                  onPressed: dismissDetail,
-                  icon: const Icon(Icons.close, color: _muted, size: 21),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1, color: Color(0xff3b584c)),
-          Flexible(
-            child: Scrollbar(
-              controller: detailScroll,
-              thumbVisibility: true,
-              thickness: 3,
-              child: SingleChildScrollView(
-                controller: detailScroll,
-                physics: const ClampingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                  width: 76,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    SizedBox(
-                      height: 94,
-                      child: gear != null
-                          ? CustomPaint(painter: GearGlyph(gear, s.art))
-                          : _offerArt(entry!),
+                    GameAction(
+                      owned
+                          ? active
+                                ? '장착 중'
+                                : usable
+                                ? '장착'
+                                : '직업 제한'
+                          : already
+                          ? '장착 중'
+                          : '${entry.price} G',
+                      key: owned
+                          ? ValueKey('equip-${gear.serial}')
+                          : ValueKey('buy-equip-${entry.id}'),
+                      semanticLabel: owned
+                          ? '${gear.name} 장착'
+                          : '${entry.title} 구매 후 장착 · ${entry.price} 골드',
+                      primary: true,
+                      onTap: !usable || active || full || poor || already
+                          ? null
+                          : owned
+                          ? () {
+                              if (s.equip(gear)) setState(() {});
+                            }
+                          : () => purchase(entry, equip: true),
                     ),
-                    const SizedBox(height: 10),
-                    Text(
-                      gear?.name ?? entry!.title,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: gear == null ? cream : Color(gear.rarity.color),
-                        fontSize: 21,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      gear == null
-                          ? entry!.id == 'heal'
-                                ? '생명 55 회복 · 보유 ${p.healingPotions}개'
-                                : entry.id == 'energy'
-                                ? '${p.heroClass.resource} 60 회복 · 보유 ${p.energyPotions}개'
-                                : entry.description
-                          : '${gear.rarity.title} · ${_slotName(gear.base.slot)}',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: _muted,
-                        fontSize: 14,
-                        height: 1.6,
-                      ),
-                    ),
-                    if (message.isNotEmpty)
+                    if (!owned)
                       Padding(
-                        padding: const EdgeInsets.only(top: 12),
+                        padding: const EdgeInsets.only(top: 5),
                         child: Text(
-                          message,
+                          full
+                              ? '가방 가득'
+                              : poor
+                              ? '골드 부족'
+                              : already
+                              ? '사용 중'
+                              : '구매·장착',
                           textAlign: TextAlign.center,
-                          style: const TextStyle(color: _mint, fontSize: 14),
+                          style: const TextStyle(color: _muted, fontSize: 13),
                         ),
                       ),
-                    if (gear != null) ...[
-                      const SizedBox(height: 16),
-                      _stat('공격', gear.attack, current?.attack, active),
-                      if (gear.base.slot == GearSlot.weapon)
-                        _stat(
-                          '초당 피해',
-                          gear.attack / gear.base.tempo,
-                          current == null
-                              ? null
-                              : current.attack / current.base.tempo,
-                          active,
-                          decimal: true,
-                        ),
-                      _stat('방어', gear.armor, current?.armor, active),
-                      _stat('생명', gear.health, current?.health, active),
-                      _stat('마나', gear.mana, current?.mana, active),
-                      if (gear.base.haste > 0)
-                        _stat(
-                          '공격속도 %',
-                          gear.base.haste * 100,
-                          (current?.base.haste ?? 0) * 100,
-                          active,
-                        ),
-                      if (gear.base.slot == GearSlot.weapon)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 10),
-                          child: Text(
-                            '공격 주기 ${gear.base.tempo.toStringAsFixed(2)}초 · 사거리 ${gear.base.range.round()}',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: _muted, fontSize: 13),
-                          ),
-                        ),
-                    ],
                   ],
                 ),
               ),
+            ],
+          ),
+          if (!owned && feedbackOffer == entry.id && message.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                message,
+                style: const TextStyle(color: _mint, fontSize: 14),
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: entry != null
-                ? GameAction(
-                    p.inventory.length >= Progress.capacity &&
-                            entry.gear != null
-                        ? '가방이 가득 찼습니다'
-                        : p.gold < entry.price
-                        ? '골드가 부족합니다'
-                        : '${entry.price} G · 구매',
-                    primary: true,
-                    icon: Icons.monetization_on_rounded,
-                    onTap:
-                        p.gold < entry.price ||
-                            (entry.gear != null &&
-                                p.inventory.length >= Progress.capacity)
-                        ? null
-                        : purchase,
-                  )
-                : Row(
-                    children: [
-                      Expanded(
-                        child: GameAction(
-                          active ? '장착 중' : '장착',
-                          primary: true,
-                          icon: Icons.shield_outlined,
-                          onTap: active || !gear!.base.usable(p.heroClass)
-                              ? null
-                              : () {
-                                  s.equip(gear);
-                                  setState(() => message = '장착했습니다');
-                                },
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: GameAction(
-                          gear!.locked ? '잠긴 장비' : '판매 +${gear.saleValue} G',
-                          icon: gear.locked
-                              ? Icons.lock_rounded
-                              : Icons.sell_outlined,
-                          onTap: active || gear.locked
-                              ? null
-                              : () {
-                                  if (!p.sell(gear)) return;
-                                  s.refresh();
-                                  dismissDetail();
-                                },
-                        ),
-                      ),
-                    ],
+          if (expanded) ...[
+            const Padding(
+              padding: EdgeInsets.only(top: 10),
+              child: Divider(height: 1, color: Color(0xff36574c)),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              gear.name,
+              style: TextStyle(
+                color: color,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            _stat('공격', gear.attack, current?.attack, active),
+            _stat('방어', gear.armor, current?.armor, active),
+            _stat('생명', gear.health, current?.health, active),
+            _stat('마나', gear.mana, current?.mana, active),
+            if (gear.base.haste > 0 || (current?.base.haste ?? 0) > 0)
+              _stat(
+                '공격속도 %',
+                gear.base.haste * 100,
+                (current?.base.haste ?? 0) * 100,
+                active,
+              ),
+            if (gear.base.slot == GearSlot.weapon)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Text(
+                  '공격 주기 ${gear.base.tempo.toStringAsFixed(2)}초 · 사거리 ${gear.base.range.round()}',
+                  style: const TextStyle(color: _muted, fontSize: 13),
+                ),
+              ),
+            if (owned)
+              Row(
+                children: [
+                  Expanded(
+                    child: GameAction(
+                      gear.locked ? '잠금 해제' : '잠금',
+                      semanticLabel:
+                          '${gear.name} ${gear.locked ? '잠금 해제' : '잠금'}',
+                      onTap: () {
+                        p.setGearLocked(gear, !gear.locked);
+                        s.refresh();
+                        setState(() {});
+                      },
+                    ),
                   ),
-          ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: GameAction(
+                      gear.locked ? '잠긴 장비' : '${gear.saleValue} G 판매',
+                      semanticLabel: '${gear.name} 판매 · ${gear.saleValue} 골드',
+                      onTap: active || gear.locked
+                          ? null
+                          : () {
+                              if (p.sell(gear)) {
+                                s.refresh();
+                                setState(() => detail = null);
+                              }
+                            },
+                    ),
+                  ),
+                ],
+              )
+            else
+              GameAction(
+                '구매 후 가방에 보관',
+                semanticLabel: '${entry.title} 구매 후 보관 · ${entry.price} 골드',
+                onTap: full || poor ? null : () => purchase(entry),
+              ),
+            Align(
+              alignment: Alignment.center,
+              child: IconButton(
+                tooltip: '옵션 접기',
+                onPressed: select,
+                icon: const Icon(Icons.expand_less, color: _muted),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
+
+  Widget _quickStat(
+    String label,
+    double value,
+    double? previous,
+    bool active, {
+    bool decimal = false,
+  }) {
+    final diff = value - (previous ?? 0);
+    String number(double n) => decimal ? n.toStringAsFixed(1) : '${n.round()}';
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+            text: '$label ${number(value)}',
+            style: const TextStyle(color: cream),
+          ),
+          if (!active && diff.abs() > .01)
+            TextSpan(
+              text: ' ${diff > 0 ? '↑ +' : '↓ '}${number(diff)}',
+              style: TextStyle(
+                color: diff > 0 ? _mint : const Color(0xffffa493),
+              ),
+            ),
+        ],
+      ),
+      style: const TextStyle(fontSize: 14, height: 1.4),
+    );
+  }
+
+  Widget _consumableRow(_Offer entry) => Container(
+    key: ValueKey('offer-${entry.id}'),
+    margin: const EdgeInsets.only(bottom: 10),
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: const Color(0xff14372f),
+      borderRadius: BorderRadius.circular(13),
+      border: Border.all(color: const Color(0xff36574c)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            SizedBox(width: 54, height: 68, child: _offerArt(entry)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    entry.title,
+                    style: const TextStyle(
+                      color: cream,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    entry.description,
+                    style: const TextStyle(
+                      color: _muted,
+                      fontSize: 14,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 76,
+              child: GameAction(
+                '${entry.price} G',
+                primary: true,
+                semanticLabel: '${entry.title} 구매 · ${entry.price} 골드',
+                onTap: p.gold < entry.price ? null : () => purchase(entry),
+              ),
+            ),
+          ],
+        ),
+        if (feedbackOffer == entry.id && message.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              message,
+              style: const TextStyle(color: _mint, fontSize: 14),
+            ),
+          ),
+      ],
+    ),
+  );
 
   Widget _stat(
     String label,
@@ -890,9 +989,8 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
     );
   }
 
-  void purchase() {
-    final entry = offer;
-    if (entry == null) return;
+  void purchase(_Offer entry, {bool equip = false}) {
+    if (equip && _sameEquippedOffer(entry)) return;
     Gear? bought;
     final success = entry.gear != null
         ? (bought = s.buyGear(entry.gear!)) != null
@@ -904,16 +1002,15 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
             _ => false,
           };
     if (!success) return;
-    s.refresh();
-    if (detailScroll.hasClients) detailScroll.jumpTo(0);
+    if (bought != null) {
+      p.unseenGear.remove(bought.serial);
+      if (equip) s.equip(bought);
+    }
     setState(() {
-      message = '구매 완료 · ${entry.title}';
-      if (bought != null) {
-        p.unseenGear.remove(bought.serial);
-        detail = bought;
-        offer = null;
-      }
+      feedbackOffer = entry.id;
+      message = equip ? '장착 완료 · ${entry.title}' : '구매 완료 · ${entry.title}';
     });
+    s.refresh();
   }
 }
 
