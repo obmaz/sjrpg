@@ -156,14 +156,23 @@ class Adventure extends ChangeNotifier {
       }
       progress.energyPotions--;
       progress.energy = math.min(progress.maxEnergy, progress.energy + 60);
-      announce('${progress.heroClass.resource} +60');
+      bubble(
+        '+60 ${progress.heroClass.resource}',
+        hero.body.center - const ui.Offset(0, 80),
+        const ui.Color(0xff9fdfff),
+      );
     } else {
       if (progress.healingPotions <= 0 || progress.hp >= progress.maxHp) return;
       progress.healingPotions--;
       progress.hp = math.min(progress.maxHp, progress.hp + 55);
       syncLife();
-      announce('생명 +55');
+      bubble(
+        '+55 생명',
+        hero.body.center - const ui.Offset(0, 80),
+        const ui.Color(0xffffb6a0),
+      );
     }
+    refresh();
   }
 
   HuntEnemy? get nearbyBoss {
@@ -285,6 +294,7 @@ class Adventure extends ChangeNotifier {
     }
     // The fountain sanctuary heals gradually, never after a fatal hit.
     if (progress.hp > 0 &&
+        combatTime <= 0 &&
         (hero.position.toOffset() - const ui.Offset(3840, 3000)).distance <
             150) {
       progress.hp = math.min(progress.maxHp, progress.hp + dt * 4);
@@ -304,7 +314,11 @@ class Adventure extends ChangeNotifier {
       final desired = initial
           ? ui.Offset(3780 + (i % 3) * 62, 3220 + (i % 2) * 50)
           : at + ui.Offset(math.cos(angle) * r, math.sin(angle) * r);
-      final kind = ['goblin', 'wolf', 'skeleton'][(i + progress.level - 1) % 3];
+      final kind =
+          (progress.level >= 3 || world.isSand(at)) &&
+              (i == 0 || world.isSand(at) && i == 2)
+          ? 'cultist'
+          : ['goblin', 'wolf', 'skeleton'][(i + progress.level - 1) % 3];
       if (spawnEnemy(kind, desired) != null) added++;
     }
   }
@@ -387,6 +401,7 @@ class Adventure extends ChangeNotifier {
         progress.heroClass == HeroClass.warrior &&
         rageStrike != hero.strikes) {
       rageStrike = hero.strikes;
+      game?.add(ContactSpark(this, mob.body.center - const ui.Offset(0, 28)));
       progress.energy = math.min(progress.maxEnergy, progress.energy + 3);
     }
     device.pulse(mob.isDead ? FeedbackKind.kill : FeedbackKind.hit);
@@ -422,8 +437,8 @@ class Adventure extends ChangeNotifier {
       if (mob.boss || progress.kills % 3 == 0) {
         dropGear(progress.rollLoot(random, boss: mob.boss), mob.body.center);
       }
-      if (!mob.boss && progress.kills % 5 == 0) progress.healingPotions++;
-      if (!mob.boss && progress.kills % 7 == 0) progress.energyPotions++;
+      if (!mob.boss && progress.kills % 12 == 0) progress.healingPotions++;
+      if (!mob.boss && progress.kills % 14 == 0) progress.energyPotions++;
       bubble(
         '+${mob.boss ? 100 : 8} 골드',
         mob.position.toOffset() - const ui.Offset(0, 34),
@@ -607,10 +622,10 @@ class Guardian extends Player with WithCollision {
               (b.body.center - body.center).distance,
             ),
           );
-    if (velocity.length < 5 && candidates.isNotEmpty) {
+    if (candidates.isNotEmpty) {
       final d = candidates.first.body.center - body.center;
       angle = math.atan2(d.dy, d.dx);
-      bearing = angle;
+      if (velocity.length < 5) bearing = angle;
     }
     attackBearing = angle;
     strikes++;
@@ -671,7 +686,11 @@ class Guardian extends Player with WithCollision {
     final rank = p.rank(def.id);
     if (!session.active || (cooldowns[def.id] ?? 0) > 0 || rank == 0) return;
     if (p.energy < def.cost) {
-      session.announce('${p.heroClass.resource}가 부족합니다');
+      session.bubble(
+        '${p.heroClass.resource} 부족',
+        body.center - const ui.Offset(0, 75),
+        const ui.Color(0xffffc08d),
+      );
       return;
     }
     session.device.pulse(FeedbackKind.skill);
@@ -1093,6 +1112,23 @@ class HuntEnemy extends Enemy with WithCollision {
       super.update(dt);
       return;
     }
+    if (kind == 'cultist' && windup > 0) {
+      stop();
+      windup -= dt;
+      if (windup <= 0) {
+        final locked = slamTarget;
+        if (locked != null) {
+          final toward = locked - body.center;
+          session.game?.add(
+            ShadowBolt(session, body.center, math.atan2(toward.dy, toward.dx)),
+          );
+        }
+        slamTarget = null;
+        attackClock = 2.8;
+      }
+      super.update(dt);
+      return;
+    }
     if (boss && windup > 0) {
       stop();
       windup -= dt;
@@ -1131,7 +1167,12 @@ class HuntEnemy extends Enemy with WithCollision {
       super.update(dt);
       return;
     }
-    if (target.distance < (boss ? 64 : 42) &&
+    if (target.distance <
+            (boss
+                ? 64
+                : kind == 'cultist'
+                ? 280
+                : 42) &&
         session.world.clearLine(
           body.center,
           session.hero.body.center,
@@ -1139,14 +1180,20 @@ class HuntEnemy extends Enemy with WithCollision {
         )) {
       stop();
       if (attackClock <= 0) {
-        attackClock = boss ? 1.05 : 1.3;
-        session.hurtHero(
-          boss
-              ? 15
-              : kind == 'wolf'
-              ? 6
-              : 4,
-        );
+        if (kind == 'cultist') {
+          bearing = math.atan2(target.dy, target.dx);
+          slamTarget = session.hero.body.center;
+          windup = .65;
+        } else {
+          attackClock = boss ? 1.05 : 1.3;
+          session.hurtHero(
+            boss
+                ? 15
+                : kind == 'wolf'
+                ? 6
+                : 4,
+          );
+        }
       }
     } else if (hurt <= 0) {
       var toward = session.hero.position.toOffset();
@@ -1222,7 +1269,24 @@ class HuntEnemy extends Enemy with WithCollision {
       ),
       ui.Paint()..color = const ui.Color(0x550d241b),
     );
-    if (windup > 0 && slamTarget != null) {
+    if (kind == 'cultist' && windup > 0) {
+      canvas.drawOval(
+        ui.Rect.fromCenter(center: feet, width: 58, height: 22),
+        ui.Paint()
+          ..color = const ui.Color(0x99d567b6)
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+      paintCombatEffect(
+        session,
+        canvas,
+        feet - const ui.Offset(0, 26),
+        3,
+        const ui.Size.square(76),
+        opacity: .4 + .6 * (1 - windup / .65),
+      );
+    }
+    if (boss && windup > 0 && slamTarget != null) {
       final center = slamTarget! - position.toOffset(),
           t = (1 - windup / .85).clamp(0.0, 1.0);
       canvas.drawOval(

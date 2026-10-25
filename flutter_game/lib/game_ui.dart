@@ -73,14 +73,14 @@ class GameHud extends StatelessWidget {
               label:
                   '${p.heroClass.resource} ${p.energy.floor()} / ${p.maxEnergy.round()}',
               child: SizedBox(
-                height: 12,
+                height: 15,
                 child: Stack(
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
                         value: p.energy / p.maxEnergy,
-                        minHeight: 12,
+                        minHeight: 15,
                         color: p.heroClass == HeroClass.mage
                             ? const Color(0xff529bdf)
                             : const Color(0xffd49d40),
@@ -92,7 +92,7 @@ class GameHud extends StatelessWidget {
                         '${p.heroClass.resource} ${p.energy.floor()}',
                         style: const TextStyle(
                           color: cream,
-                          fontSize: 10,
+                          fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -105,7 +105,7 @@ class GameHud extends StatelessWidget {
           Positioned(
             left: 77,
             right: statusRight + 6,
-            top: 65,
+            top: 69,
             child: LinearProgressIndicator(
               value: p.xp / p.nextLevelXp,
               minHeight: 3,

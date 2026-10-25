@@ -26,6 +26,128 @@ void areaStrike(
   }
 }
 
+void paintCombatEffect(
+  Adventure session,
+  ui.Canvas canvas,
+  ui.Offset center,
+  int index,
+  ui.Size size, {
+  double opacity = 1,
+}) {
+  final image = session.art.images['combat-fx'];
+  if (image == null) return;
+  final cell = image.width / 4;
+  canvas.drawImageRect(
+    image,
+    ui.Rect.fromLTWH((index % 4) * cell, (index ~/ 4) * cell, cell, cell),
+    ui.Rect.fromCenter(center: center, width: size.width, height: size.height),
+    ui.Paint()
+      ..color = ui.Color.fromRGBO(255, 255, 255, opacity.clamp(0, 1))
+      ..filterQuality = ui.FilterQuality.medium,
+  );
+}
+
+class ContactSpark extends GameComponent {
+  ContactSpark(this.session, ui.Offset at) {
+    position = Vector2(at.dx, at.dy);
+    size = Vector2.all(1);
+  }
+  final Adventure session;
+  double age = 0;
+  @override
+  bool get isVisible => true;
+  @override
+  int get priority => 99999;
+  @override
+  void update(double dt) {
+    if (!session.active) return;
+    age += math.min(.05, dt);
+    if (age >= .18) removeFromParent();
+    super.update(dt);
+  }
+
+  @override
+  void render(ui.Canvas canvas) {
+    super.render(canvas);
+    final t = (age / .18).clamp(0.0, 1.0), side = 42 + t * 18;
+    paintCombatEffect(
+      session,
+      canvas,
+      ui.Offset.zero,
+      7,
+      ui.Size.square(side),
+      opacity: 1 - t,
+    );
+  }
+}
+
+class ShadowBolt extends GameComponent {
+  ShadowBolt(this.session, ui.Offset at, double angle, {this.damage = 8})
+    : direction = ui.Offset(math.cos(angle), math.sin(angle)) {
+    position = Vector2(at.dx, at.dy);
+    size = Vector2.all(12);
+  }
+  final Adventure session;
+  final ui.Offset direction;
+  final double damage;
+  double remaining = 2;
+  bool resolved = false;
+  @override
+  bool get isVisible => true;
+  void finish() {
+    resolved = true;
+    removeFromParent();
+  }
+
+  @override
+  void update(double dt) {
+    if (!session.active || resolved) return;
+    dt = math.min(dt, math.min(.05, remaining));
+    remaining -= dt;
+    final distance = dt * 280, steps = math.max(1, (distance / 5).ceil());
+    for (var i = 0; i < steps; i++) {
+      final at = position.toOffset() + direction * (distance / steps);
+      if (session.world.blocked(
+        ui.Rect.fromCenter(center: at, width: 6, height: 6),
+      )) {
+        finish();
+        return;
+      }
+      position.setValues(at.dx, at.dy);
+      if (session.hero.body.inflate(7).contains(at)) {
+        session.hurtHero(damage);
+        finish();
+        return;
+      }
+    }
+    if (remaining <= 0) finish();
+    super.update(dt);
+  }
+
+  @override
+  void render(ui.Canvas canvas) {
+    super.render(canvas);
+    const tip = ui.Offset(0, -14);
+    canvas.drawLine(
+      tip - direction * 23,
+      tip,
+      ui.Paint()
+        ..color = const ui.Color(0x88ef64b0)
+        ..strokeWidth = 10
+        ..strokeCap = ui.StrokeCap.round,
+    );
+    paintCombatEffect(
+      session,
+      canvas,
+      tip,
+      3,
+      const ui.Size.square(40),
+      opacity: (remaining / .2).clamp(0, 1),
+    );
+    canvas.drawCircle(tip, 4, ui.Paint()..color = const ui.Color(0xffffd2ef));
+  }
+}
+
 class ArcaneBolt extends GameComponent {
   ArcaneBolt(
     this.session,
@@ -79,7 +201,13 @@ class ArcaneBolt extends GameComponent {
           if (element == 'ice') mob.slow = math.max(mob.slow, 1.5);
           if (explosive) areaStrike(session, at, 85, damage * .35);
           session.game?.add(
-            RuneBurst(session, at, color, radius: explosive ? 85 : 27),
+            RuneBurst(
+              session,
+              at,
+              color,
+              radius: explosive ? 85 : 27,
+              icy: element == 'ice',
+            ),
           );
           finish();
           return;
@@ -112,6 +240,17 @@ class ArcaneBolt extends GameComponent {
         ..strokeCap = ui.StrokeCap.round,
     );
     c.drawCircle(tip, 3, ui.Paint()..color = const ui.Color(0xfffff5d5));
+    paintCombatEffect(
+      session,
+      c,
+      tip,
+      element == 'ice'
+          ? 2
+          : element == 'lightning'
+          ? 3
+          : 4,
+      const ui.Size.square(42),
+    );
   }
 }
 
@@ -149,6 +288,8 @@ class RuneBurst extends GameComponent {
       final cell = texture.width / 4,
           index = icy
               ? 2
+              : color == const ui.Color(0xffdbb4ff)
+              ? 3
               : color == const ui.Color(0xffffcf81)
               ? 0
               : color == const ui.Color(0xffff9952) ||
@@ -370,7 +511,8 @@ class MeteorFall extends GameComponent {
         ..strokeCap = ui.StrokeCap.round
         ..color = const ui.Color(0x88ff973d),
     );
-    c.drawCircle(p, 19, ui.Paint()..color = const ui.Color(0xffffd173));
+    paintCombatEffect(session, c, p, 4, const ui.Size(130, 150));
+    c.drawCircle(p, 7, ui.Paint()..color = const ui.Color(0xffffe7ba));
   }
 }
 

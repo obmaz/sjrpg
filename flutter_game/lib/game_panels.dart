@@ -13,11 +13,13 @@ class AdventurePanel extends StatefulWidget {
     required this.name,
     required this.onClose,
     required this.onRestart,
+    this.onRetryCheckpoint,
     super.key,
   });
   final Adventure session;
   final String name;
   final VoidCallback onClose, onRestart;
+  final VoidCallback? onRetryCheckpoint;
   @override
   State<AdventurePanel> createState() => _AdventurePanelState();
 }
@@ -144,7 +146,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
       body = [
         if (name == 'talk') ...[
           const Text(
-            '“네 갈래 길 아래에 오래된 어둠이 잠들어 있네. 먼저 이 숲의 파수꾼을 정화해 주게. 상자와 전리품을 모으고, 얻은 힘을 스스로 선택하게나.”',
+            '“네 갈래 길 아래에 오래된 어둠이 잠들어 있네. 먼저 이 숲의 파수꾼을 정화해 주게. 상자와 전리품을 모으고, 얻은 힘을 스스로 선택하게나. 전투를 벗어나 분수 곁에서 쉬면 생명이 회복된다네.”',
             style: TextStyle(fontSize: 16, height: 1.8, color: cream),
           ),
           const SizedBox(height: 22),
@@ -287,6 +289,8 @@ class _AdventurePanelState extends State<AdventurePanel> {
         Text(
           name == 'victory'
               ? '십자로의 숲을 정화했습니다.\n파수꾼의 유산과 남은 보물을 챙겨 보세요.'
+              : widget.onRetryCheckpoint != null
+              ? '마지막 저장 지점에서 다시 도전할 수 있습니다.\n장비와 스킬 성장은 유지됩니다.'
               : '힘을 키우고 다시 도전하세요.\n장비와 스킬 조합에 따라 전투가 달라집니다.',
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 17, height: 1.8, color: cream),
@@ -301,6 +305,12 @@ class _AdventurePanelState extends State<AdventurePanel> {
         _line(Icons.monetization_on_outlined, '보유 골드', '${p.gold} G'),
         _line(Icons.timer_outlined, '모험 시간', gameTime(s.elapsed)),
         const SizedBox(height: 12),
+        if (name == 'defeat' && widget.onRetryCheckpoint != null)
+          OutlinedButton.icon(
+            onPressed: widget.onRestart,
+            icon: const Icon(Icons.refresh),
+            label: const Text('직업을 바꿔 새 모험'),
+          ),
         if (name == 'victory')
           OutlinedButton.icon(
             onPressed: widget.onRestart,
@@ -429,7 +439,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
                             ),
                           ),
                           onPressed: name == 'defeat'
-                              ? widget.onRestart
+                              ? widget.onRetryCheckpoint ?? widget.onRestart
                               : name == 'victory'
                               ? () {
                                   s.continueExploring();
@@ -438,7 +448,9 @@ class _AdventurePanelState extends State<AdventurePanel> {
                               : widget.onClose,
                           child: Text(
                             name == 'defeat'
-                                ? '새로운 모험'
+                                ? widget.onRetryCheckpoint != null
+                                      ? '체크포인트 재도전'
+                                      : '새로운 모험'
                                 : name == 'victory'
                                 ? '계속 탐험하기'
                                 : '모험 계속하기',

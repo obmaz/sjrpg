@@ -112,6 +112,16 @@ class _EntryPageState extends State<EntryPage> {
           art: art,
           heroClass: chosen,
           checkpoint: resuming ? savedAdventure : null,
+          onRetryCheckpoint: () {
+            final checkpoint = GameCheckpoint.decode(storage.readCheckpoint());
+            setState(() {
+              run++;
+              savedAdventure = checkpoint;
+              resuming = checkpoint != null;
+              started = checkpoint != null;
+              if (checkpoint != null) chosen = checkpoint.progress.heroClass;
+            });
+          },
           onRestart: () => setState(() {
             run++;
             started = false;
@@ -146,12 +156,14 @@ class GamePage extends StatefulWidget {
     required this.onRestart,
     this.heroClass = HeroClass.warrior,
     this.checkpoint,
+    this.onRetryCheckpoint,
     super.key,
   });
   final GameCheckpoint? checkpoint;
   final HeroClass heroClass;
   final GameArt art;
   final VoidCallback onRestart;
+  final VoidCallback? onRetryCheckpoint;
   @override
   State<GamePage> createState() => _GamePageState();
 }
@@ -526,6 +538,13 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   name: modal,
                   onClose: close,
                   onRestart: abandon,
+                  onRetryCheckpoint:
+                      adventure.defeated &&
+                          widget.onRetryCheckpoint != null &&
+                          GameCheckpoint.decode(storage.readCheckpoint()) !=
+                              null
+                      ? widget.onRetryCheckpoint
+                      : null,
                 ),
               ),
           ],
