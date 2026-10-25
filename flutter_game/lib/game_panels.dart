@@ -77,7 +77,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
         s.timePath == null;
     final result = name == 'victory' || name == 'defeat';
     final canAdvance =
-        name == 'victory' &&
+        (name == 'victory' || name == 'journal' || name == 'talk') &&
         s.stageCleared &&
         widget.onAdvance != null &&
         (s.world.stage == WorldStage.forest ||
@@ -112,7 +112,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
       body = [
         CommissionBoard(
           session: s,
-          onAdvance: widget.onAdvance,
+          onAdvance: canAdvance ? null : widget.onAdvance,
           onCommit: () {
             widget.onCheckpoint?.call();
             setState(() {});
@@ -172,33 +172,42 @@ class _AdventurePanelState extends State<AdventurePanel> {
               : '${s.recoveredMemories} / ${stageMemories.length}',
         ),
         for (final memory in stageMemories)
-          ExpansionTile(
-            tilePadding: EdgeInsets.zero,
-            leading: Icon(
-              s.openedChests.contains(memory.chest)
-                  ? Icons.auto_stories
-                  : Icons.lock_outline,
-              color: s.openedChests.contains(memory.chest)
-                  ? gold
-                  : const Color(0xff7d9c90),
-            ),
-            title: Text(
-              s.openedChests.contains(memory.chest) ? memory.title : '찾지 못한 기억',
-              style: const TextStyle(fontSize: 15, color: cream),
-            ),
-            subtitle: Text(
-              memory.hint,
-              style: const TextStyle(fontSize: 13, color: Color(0xffa9c5b9)),
-            ),
-            childrenPadding: const EdgeInsets.only(bottom: 16),
-            children: [
-              Text(
+          Material(
+            type: MaterialType.transparency,
+            child: ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              leading: Icon(
                 s.openedChests.contains(memory.chest)
-                    ? memory.story
-                    : '이 길의 상자에 숲의 과거가 남아 있습니다.',
-                style: const TextStyle(fontSize: 15, height: 1.7, color: cream),
+                    ? Icons.auto_stories
+                    : Icons.lock_outline,
+                color: s.openedChests.contains(memory.chest)
+                    ? gold
+                    : const Color(0xff7d9c90),
               ),
-            ],
+              title: Text(
+                s.openedChests.contains(memory.chest)
+                    ? memory.title
+                    : '찾지 못한 기억',
+                style: const TextStyle(fontSize: 15, color: cream),
+              ),
+              subtitle: Text(
+                memory.hint,
+                style: const TextStyle(fontSize: 13, color: Color(0xffa9c5b9)),
+              ),
+              childrenPadding: const EdgeInsets.only(bottom: 16),
+              children: [
+                Text(
+                  s.openedChests.contains(memory.chest)
+                      ? memory.story
+                      : '이 길의 상자에 숲의 과거가 남아 있습니다.',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    height: 1.7,
+                    color: cream,
+                  ),
+                ),
+              ],
+            ),
           ),
         const SizedBox(height: 16),
         _line(
@@ -226,14 +235,6 @@ class _AdventurePanelState extends State<AdventurePanel> {
             style: const TextStyle(color: gold, fontSize: 14),
           ),
         ],
-        const SizedBox(height: 18),
-        if (s.stageCleared && widget.onAdvance != null)
-          GameAction(
-            '제2장 의뢰 받기',
-            primary: true,
-            icon: Icons.explore_rounded,
-            onTap: widget.onAdvance,
-          ),
       ];
     } else if (result) {
       body = [
@@ -394,22 +395,22 @@ class _AdventurePanelState extends State<AdventurePanel> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(22, 8, 22, 18),
                       child: GameAction(
-                        name == 'defeat'
+                        canAdvance
+                            ? advanceLabel
+                            : name == 'defeat'
                             ? widget.onRetryCheckpoint != null
                                   ? '체크포인트 재도전'
                                   : '새로운 모험'
                             : name == 'victory'
-                            ? canAdvance
-                                  ? advanceLabel
-                                  : '계속 탐험하기'
+                            ? '계속 탐험하기'
                             : '모험 계속하기',
                         primary: true,
-                        onTap: name == 'defeat'
+                        onTap: canAdvance
+                            ? widget.onAdvance
+                            : name == 'defeat'
                             ? widget.onRetryCheckpoint ?? widget.onRestart
                             : name == 'victory'
-                            ? canAdvance
-                                  ? widget.onAdvance
-                                  : continueExploring
+                            ? continueExploring
                             : widget.onClose,
                       ),
                     ),
