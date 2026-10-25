@@ -260,11 +260,13 @@ class Gear {
     this.power = 0,
     this.vitality = 0,
     this.focus = 0,
+    this.locked = false,
   });
   final int serial;
   final GearDef base;
   final Rarity rarity;
   final int power, vitality, focus;
+  bool locked;
   Map<String, dynamic> toSave() => {
     'serial': serial,
     'base': base.id,
@@ -272,6 +274,7 @@ class Gear {
     'power': power,
     'vitality': vitality,
     'focus': focus,
+    'locked': locked,
   };
   factory Gear.fromSave(Map<String, dynamic> data) {
     int stat(String key) {
@@ -284,6 +287,8 @@ class Gear {
 
     final serial = stat('serial');
     if (serial == 0) throw const FormatException('Invalid equipment identity');
+    final locked = data['locked'] ?? false;
+    if (locked is! bool) throw const FormatException('Invalid equipment lock');
     return Gear(
       serial,
       gearById(data['base'] as String),
@@ -291,6 +296,7 @@ class Gear {
       power: stat('power'),
       vitality: stat('vitality'),
       focus: stat('focus'),
+      locked: locked,
     );
   }
   String get name => rarity == Rarity.unique
@@ -854,8 +860,16 @@ class Progress {
   }
 
   bool isEquipped(Gear item) => equipped[item.base.slot] == item;
+  bool setGearLocked(Gear item, bool locked) {
+    if (!inventory.contains(item)) return false;
+    item.locked = locked;
+    return true;
+  }
+
   bool sell(Gear item) {
-    if (isEquipped(item) || !inventory.remove(item)) return false;
+    if (item.locked || isEquipped(item) || !inventory.remove(item)) {
+      return false;
+    }
     unseenGear.remove(item.serial);
     gold += item.saleValue;
     return true;

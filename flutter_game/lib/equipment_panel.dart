@@ -86,7 +86,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                         GameTabs(
                           shopping
                               ? ['장비', '물약', '축복']
-                              : ['전체', '신규', '무기', '방어구', '부적'],
+                              : ['전체', '신규', '무기', '방어구', '부적', '잠금'],
                           shopping ? shopTab : bagTab,
                           tab,
                         ),
@@ -233,6 +233,8 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
               bagTab == 0 ||
               (bagTab == 1
                   ? p.unseenGear.contains(g.serial)
+                  : bagTab == 5
+                  ? g.locked
                   : g.base.slot.index == bagTab - 2),
         )
         .toList();
@@ -252,6 +254,17 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                 padding: EdgeInsets.all(18),
                 child: Text(
                   '확인하지 않은 새 장비가 없습니다',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: _muted, fontSize: 14),
+                ),
+              ),
+            ),
+          if (bagTab == 5 && items.isEmpty)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.all(18),
+                child: Text(
+                  '잠근 장비가 없습니다',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: _muted, fontSize: 14),
                 ),
@@ -362,7 +375,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
       button: gear != null,
       label: gear == null
           ? '빈 장비 칸'
-          : '${equippedSlot != null ? '착용 ${_slotName(equippedSlot)} · ' : '보관 장비 · '}${gear.name}${active ? ' · 장착 중' : ''}${p.unseenGear.contains(gear.serial) ? ' · 신규' : ''}',
+          : '${equippedSlot != null ? '착용 ${_slotName(equippedSlot)} · ' : '보관 장비 · '}${gear.name}${active ? ' · 장착 중' : ''}${gear.locked ? ' · 잠금' : ''}${p.unseenGear.contains(gear.serial) ? ' · 신규' : ''}',
       excludeSemantics: true,
       onTap: gear == null ? null : () => inspect(gear),
       child: Material(
@@ -419,14 +432,21 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                       style: const TextStyle(fontSize: 11, color: cream),
                     ),
                   ),
-                if (active)
-                  const Positioned(
+                if (active || gear?.locked == true)
+                  Positioned(
                     right: 3,
                     top: 3,
-                    child: Icon(Icons.check_circle, color: _mint, size: 14),
+                    child: Icon(
+                      gear?.locked == true
+                          ? Icons.lock_rounded
+                          : Icons.check_circle,
+                      color: gear?.locked == true ? gold : _mint,
+                      size: 14,
+                    ),
                   ),
                 if (gear != null &&
                     !active &&
+                    !gear.locked &&
                     p.unseenGear.contains(gear.serial))
                   const Positioned(
                     right: 4,
@@ -652,6 +672,22 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                     ),
                   ),
                 ),
+                if (detail != null)
+                  IconButton(
+                    tooltip: detail!.locked ? '장비 잠금 해제' : '장비 잠금',
+                    onPressed: () {
+                      p.setGearLocked(detail!, !detail!.locked);
+                      s.refresh();
+                      setState(() {});
+                    },
+                    icon: Icon(
+                      detail!.locked
+                          ? Icons.lock_rounded
+                          : Icons.lock_open_rounded,
+                      color: gold,
+                      size: 21,
+                    ),
+                  ),
                 IconButton(
                   tooltip: '상세 닫기',
                   onPressed: dismissDetail,
@@ -789,9 +825,11 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: GameAction(
-                          '판매 +${gear!.saleValue} G',
-                          icon: Icons.sell_outlined,
-                          onTap: active
+                          gear!.locked ? '잠긴 장비' : '판매 +${gear.saleValue} G',
+                          icon: gear.locked
+                              ? Icons.lock_rounded
+                              : Icons.sell_outlined,
+                          onTap: active || gear.locked
                               ? null
                               : () {
                                   if (!p.sell(gear)) return;
