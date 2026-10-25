@@ -86,7 +86,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                     _header(),
                     GameTabs(
                       shopping
-                          ? ['장비', '물약', '축복']
+                          ? ['무기', '방어구', '부적', '물약', '축복']
                           : ['전체', '신규', '무기', '방어구', '부적', '잠금'],
                       shopping ? shopTab : bagTab,
                       tab,
@@ -428,7 +428,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
   }
 
   List<_Offer> get offers {
-    if (shopTab == 1) {
+    if (shopTab == 3) {
       return [
         _Offer('heal', '치유 물약 ×2', '생명 55 회복 · 보유 ${p.healingPotions}개', 20),
         _Offer(
@@ -439,31 +439,28 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
         ),
       ];
     }
-    if (shopTab == 2) {
+    if (shopTab == 4) {
       return [
-        const _Offer('power', '무기 강화', '현재 직업 공격력 +5', 45),
-        const _Offer('vitality', '생명 축복', '최대 생명 +20 · 생명 회복', 60),
+        _Offer(
+          'power',
+          '무기 강화',
+          '직업 공격력 +5 · 수련 ${p.attackTrainingRank}/${p.maxTrainingRank}',
+          p.attackTrainingCost,
+        ),
+        _Offer(
+          'vitality',
+          '생명 축복',
+          '최대 생명 +20 · 수련 ${p.vitalityTrainingRank}/${p.maxTrainingRank}',
+          p.vitalityTrainingCost,
+        ),
       ];
     }
-    final stock = p.heroClass == HeroClass.warrior
-        ? ['longsword', 'axe', 'spear', 'leather', 'chainmail', 'amber']
-        : [
-            'oakstaff',
-            'frostwand',
-            'stormrod',
-            'silkrobe',
-            'leather',
-            'sapphire',
-          ];
+    final stock = p.shopGear.where(
+      (gear) => gear.slot == GearSlot.values[shopTab],
+    );
     return [
-      for (final id in stock)
-        _Offer(
-          id,
-          gearById(id).name,
-          Gear(0, gearById(id)).stats,
-          gearById(id).value,
-          gear: gearById(id),
-        ),
+      for (final gear in stock)
+        _Offer(gear.id, gear.name, Gear(0, gear).stats, gear.value, gear: gear),
     ];
   }
 
@@ -899,69 +896,78 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
     );
   }
 
-  Widget _consumableRow(_Offer entry) => Container(
-    key: ValueKey('offer-${entry.id}'),
-    margin: const EdgeInsets.only(bottom: 10),
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: const Color(0xff14372f),
-      borderRadius: BorderRadius.circular(13),
-      border: Border.all(color: const Color(0xff36574c)),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            SizedBox(width: 54, height: 68, child: _offerArt(entry)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    entry.title,
-                    style: const TextStyle(
-                      color: cream,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+  Widget _consumableRow(_Offer entry) {
+    final capped =
+        entry.id == 'power' && !p.canTrainAttack ||
+        entry.id == 'vitality' && !p.canTrainVitality;
+    return Container(
+      key: ValueKey('offer-${entry.id}'),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xff14372f),
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(color: const Color(0xff36574c)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              SizedBox(width: 54, height: 68, child: _offerArt(entry)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.title,
+                      style: const TextStyle(
+                        color: cream,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    entry.description,
-                    style: const TextStyle(
-                      color: _muted,
-                      fontSize: 14,
-                      height: 1.4,
+                    const SizedBox(height: 5),
+                    Text(
+                      entry.description,
+                      style: const TextStyle(
+                        color: _muted,
+                        fontSize: 14,
+                        height: 1.4,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            SizedBox(
-              width: 76,
-              child: GameAction(
-                '${entry.price} G',
-                primary: true,
-                semanticLabel: '${entry.title} 구매 · ${entry.price} 골드',
-                onTap: p.gold < entry.price ? null : () => purchase(entry),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 76,
+                child: GameAction(
+                  capped ? '수련 완료' : '${entry.price} G',
+                  primary: true,
+                  semanticLabel: capped
+                      ? '${entry.title} · 현재 레벨 수련 완료'
+                      : '${entry.title} 구매 · ${entry.price} 골드',
+                  onTap: capped || !s.canTrade || p.gold < entry.price
+                      ? null
+                      : () => purchase(entry),
+                ),
               ),
-            ),
-          ],
-        ),
-        if (feedbackOffer == entry.id && message.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              message,
-              style: const TextStyle(color: _mint, fontSize: 14),
-            ),
+            ],
           ),
-      ],
-    ),
-  );
+          if (feedbackOffer == entry.id && message.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                message,
+                style: const TextStyle(color: _mint, fontSize: 14),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
   Widget _stat(
     String label,
@@ -1015,8 +1021,8 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
         : switch (entry.id) {
             'heal' => s.buyHeal(),
             'energy' => s.buyEnergy(),
-            'power' => s.buySword(),
-            'vitality' => s.buyVitality(),
+            'power' => s.buySword(expectedPrice: entry.price),
+            'vitality' => s.buyVitality(expectedPrice: entry.price),
             _ => false,
           };
     if (!success) return;

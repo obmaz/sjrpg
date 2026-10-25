@@ -649,6 +649,42 @@ class Progress {
     return id == null ? null : skills.firstWhere((skill) => skill.id == id);
   }
 
+  int get maxTrainingRank => 1 + (level - 1) ~/ 3;
+  int get attackTrainingRank => (bonusAttack / 5).floor();
+  int get vitalityTrainingRank => (bonusHealth / 20).floor();
+  bool get canTrainAttack => attackTrainingRank < maxTrainingRank;
+  bool get canTrainVitality => vitalityTrainingRank < maxTrainingRank;
+  int get attackTrainingCost => 45 + attackTrainingRank * 35;
+  int get vitalityTrainingCost => 60 + vitalityTrainingRank * 40;
+
+  List<GearDef> get shopGear {
+    final ids = heroClass == HeroClass.warrior
+        ? [
+            'longsword',
+            'axe',
+            'spear',
+            'mace',
+            if (level >= 5) ...['greatsword', 'twinaxes', 'runeblade'],
+            'leather',
+            'chainmail',
+            if (level >= 5) 'plate',
+            'amber',
+            if (level >= 5) 'fang',
+          ]
+        : [
+            'oakstaff',
+            'frostwand',
+            'stormrod',
+            if (level >= 5) ...['emberstaff', 'crystalorb'],
+            'silkrobe',
+            'leather',
+            if (level >= 5) 'frostrobe',
+            'sapphire',
+            if (level >= 5) ...['amber', 'fang'],
+          ];
+    return ids.map(gearById).toList();
+  }
+
   final Map<String, int> ranks = {};
   final List<Gear> inventory = [];
   final Set<int> unseenGear = {};

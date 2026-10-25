@@ -101,8 +101,12 @@ class Adventure extends ChangeNotifier {
       width: mount.def.bodySize.width,
       height: mount.def.bodySize.height,
     );
-    if (world.blocked(body, waterOnly: mount.def.waterOnly) ||
-        mobs.any((m) => !m.isDead && !m.isRemoving && m.body.overlaps(body))) {
+    if (world.blocked(body, waterOnly: mount.def.waterOnly)) {
+      announce('탈것 주변에 공간이 필요해요');
+      return false;
+    }
+    if (mobs.any((m) => !m.isDead && !m.isRemoving && m.body.overlaps(body))) {
+      announce('탈것 주변의 적을 먼저 정리하세요');
       return false;
     }
     releaseInput();
@@ -794,6 +798,17 @@ class Adventure extends ChangeNotifier {
           mob.body.center,
         );
       }
+      if (mob.boss && world.stage == WorldStage.forest) {
+        dropGear(
+          progress.createGear(
+            gearById('sentinel'),
+            rarity: Rarity.unique,
+            power: 3,
+            vitality: 10,
+          ),
+          mob.body.center + const ui.Offset(28, 12),
+        );
+      }
       if (!mob.boss && progress.kills % 12 == 0) progress.healingPotions++;
       if (!mob.boss && progress.kills % 14 == 0) progress.energyPotions++;
       bubble(
@@ -809,11 +824,12 @@ class Adventure extends ChangeNotifier {
     }
   }
 
-  bool buyHeal() => progress.buy(20, () => progress.healingPotions += 2);
+  bool get canTrade => ready && !disposed && !defeated && progress.hp > 0;
+  bool buyHeal() =>
+      canTrade && progress.buy(20, () => progress.healingPotions += 2);
   Gear? buyGear(GearDef def) {
-    if (disposed ||
-        defeated ||
-        !gearCatalog.contains(def) ||
+    if (!canTrade ||
+        !progress.shopGear.contains(def) ||
         !def.usable(progress.heroClass) ||
         progress.inventory.length >= Progress.capacity) {
       return null;
@@ -827,13 +843,32 @@ class Adventure extends ChangeNotifier {
     return bought;
   }
 
-  bool buyEnergy() => progress.buy(18, () => progress.energyPotions += 2);
-  bool buySword() => progress.buy(45, () => progress.swordDamage += 5);
-  bool buyVitality() => progress.buy(60, () {
-    progress.maxHp += 20;
-    progress.hp = progress.maxHp;
-    syncLife();
-  });
+  bool buyEnergy() =>
+      canTrade && progress.buy(18, () => progress.energyPotions += 2);
+  bool buySword({int? expectedPrice}) {
+    final cost = progress.attackTrainingCost;
+    if (!canTrade ||
+        !progress.canTrainAttack ||
+        expectedPrice != null && expectedPrice != cost) {
+      return false;
+    }
+    return progress.buy(cost, () => progress.bonusAttack += 5);
+  }
+
+  bool buyVitality({int? expectedPrice}) {
+    final cost = progress.vitalityTrainingCost;
+    if (!canTrade ||
+        !progress.canTrainVitality ||
+        expectedPrice != null && expectedPrice != cost) {
+      return false;
+    }
+    return progress.buy(cost, () {
+      progress.bonusHealth += 20;
+      progress.hp = progress.maxHp;
+      syncLife();
+    });
+  }
+
   @override
   void dispose() {
     disposed = true;

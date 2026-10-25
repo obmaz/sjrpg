@@ -94,3 +94,5 @@ Flutter 전용 `actors-roll.png`는 전사·마법사의 웅크리기·구르기
 `flutter_game/art/quest-sites.webp`는 필수 퀘스트의 뿌리 우물·달빛 샘·태양 제단을 각각 다른 형태로 생성한 3열 아틀라스입니다. 원본 `/workspace/generated_images/exec-06c4015c-de0b-42ba-a057-70a059b3dc37.png`의 각 물체를 투명 여백·일관된 바닥 기준으로 512px 셀에 준비했습니다. 탈것은 기존 `assets/actors-vehicles.webp`와 측정한 방향/동작 경계를 공유하며 새 디자인을 복제하지 않습니다.
 
 Flutter 후속 지도·의뢰는 `stage_content.dart`와 `AdventureWorld`의 지역별 지형에서 관리합니다. 제2장 의뢰는 두 시간축에 네 개씩이며 선행 의뢰·처치 목표·고유 성소·도착 스테이지가 연결됩니다. 새 지역은 `WorldStage`와 체크포인트 검증, 실제 렌더링·충돌·도로 접근 검사도 함께 연결해야 합니다.
+
+Flutter 상점 재고는 `Progress.shopGear`가 정의하며 UI와 실제 구매가 함께 사용합니다. 신규 판매 장비를 추가할 때 직업·레벨·실제 정의·구매 가격·카테고리를 연결해야 합니다. 고유 `sentinel` 부적은 숲 보스의 추가 보상이며, 희귀 무기 보상과 별도로 한 번 지급합니다.

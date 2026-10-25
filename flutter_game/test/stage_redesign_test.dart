@@ -30,6 +30,24 @@ void main() {
       s.spawnEnemy('goblin', p)!..life.initial(500),
   ];
   test(
+    'an occupied mount explains the blocker and becomes boardable after the enemy dies',
+    () {
+      final s = session();
+      final motor = s.mounts.firstWhere((m) => m.def.id == 'motor');
+      s.hero.position.setValues(motor.at.dx - 12, motor.at.dy + 55);
+      final enemy = s.spawnEnemy('goblin', motor.at - const Offset(12, 11))!;
+      final progress = s.progress.toSave();
+      expect(s.boardNearbyMount(), false);
+      expect(s.riding, null);
+      expect(s.notice, '탈것 주변의 적을 먼저 정리하세요');
+      expect(s.progress.toSave(), progress);
+      s.hit(enemy, 100000, Offset.zero);
+      expect(s.boardNearbyMount(), true);
+      expect(s.riding, motor);
+      expect(s.world.blocked(s.hero.body), false);
+    },
+  );
+  test(
     'melee starts with one target and cleave investment increases its cap',
     () {
       final s = session(), mobs = crowd(s);
