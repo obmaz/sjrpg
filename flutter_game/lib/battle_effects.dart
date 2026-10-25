@@ -5,6 +5,7 @@ import 'adventure.dart';
 import 'world_model.dart';
 import 'spell_vfx.dart';
 import 'device_settings.dart';
+import 'boss_attacks.dart';
 
 void areaStrike(
   Adventure s,
@@ -883,6 +884,55 @@ class StageLandmarks extends GameComponent {
         );
       }
       c.restore();
+    }
+  }
+}
+
+class BossAttackVisual extends GameComponent {
+  BossAttackVisual(
+    this.session,
+    this.source,
+    this.pattern, {
+    this.impact = false,
+  }) {
+    position = Vector2.zero();
+    size = Vector2(worldSize.width, worldSize.height);
+  }
+  final Adventure session;
+  final HuntEnemy source;
+  final BossAttack pattern;
+  final bool impact;
+  double age = 0;
+  bool get validWarning =>
+      !source.isDead &&
+      !source.isRemoving &&
+      identical(source.bossAttack, pattern);
+  @override
+  int get priority => 29;
+  @override
+  bool get isVisible => true;
+  @override
+  void update(double dt) {
+    if (session.disposed || !impact && !validWarning) {
+      removeFromParent();
+      return;
+    }
+    if (!session.active) return;
+    if (impact) {
+      age += math.min(.05, dt);
+      if (age >= .5) removeFromParent();
+    }
+    super.update(dt);
+  }
+
+  @override
+  void render(ui.Canvas canvas) {
+    super.render(canvas);
+    if (session.disposed) return;
+    if (impact) {
+      pattern.paintImpact(canvas, age / .5);
+    } else if (validWarning) {
+      pattern.paintWarning(canvas, 1 - source.windup / pattern.warningTime);
     }
   }
 }

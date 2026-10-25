@@ -10,6 +10,7 @@ import 'device_settings.dart';
 import 'skill_aim.dart';
 import 'spell_vfx.dart';
 import 'shop_content.dart';
+import 'boss_attacks.dart';
 
 enum NearbyAction { chest, shrine, mount, dismount, shop, talk }
 
@@ -1681,6 +1682,7 @@ class HuntEnemy extends Enemy with WithCollision {
   double pounceRemaining = 0, pounceDuration = 0, pounceBearing = 0;
   ui.Offset? pounceGoal;
   ui.Offset? slamTarget;
+  BossAttack? bossAttack;
   ui.Offset? routeGoal;
   ui.Offset? lastClearPosition;
   ui.Rect get body => ui.Rect.fromLTWH(position.x, position.y, size.x, size.y);
@@ -1716,7 +1718,7 @@ class HuntEnemy extends Enemy with WithCollision {
     attackClock -= dt;
     replan -= dt;
     slamClock -= dt;
-    if (target.distance > 950) {
+    if (target.distance > 950 && !(boss && windup > 0)) {
       stop();
       return;
     }
@@ -1725,6 +1727,7 @@ class HuntEnemy extends Enemy with WithCollision {
       if (windup > 0) {
         windup = 0;
         slamTarget = null;
+        bossAttack = null;
         pounceGoal = null;
         slamClock = 4;
         attackClock = math.max(attackClock, 1.2);
@@ -1811,22 +1814,32 @@ class HuntEnemy extends Enemy with WithCollision {
       stop();
       windup -= dt;
       if (windup <= 0) {
-        final at = slamTarget;
-        if (at != null) {
-          if ((session.hero.body.center - at).distance < 105 &&
+        final attack = bossAttack;
+        if (attack != null) {
+          final hero = session.hero.body.center;
+          if (attack.zones.any(
+                (zone) =>
+                    zone.contains(hero) &&
+                    session.world.clearLine(
+                      zone.center,
+                      hero,
+                      const ui.Size(3, 3),
+                    ),
+              ) &&
               session.world.clearLine(
-                body.center,
-                session.hero.body.center,
+                attack.origin,
+                hero,
                 const ui.Size(3, 3),
               )) {
-            session.hurtHero(24);
+            session.hurtHero(attack.damage);
           }
           session.game?.add(
-            RuneBurst(session, at, const ui.Color(0xffffad6b), radius: 105),
+            BossAttackVisual(session, this, attack, impact: true),
           );
         }
+        bossAttack = null;
         slamTarget = null;
-        slamClock = 5.5;
+        slamClock = attack?.recovery ?? 5.5;
       }
       super.update(dt);
       return;
@@ -1852,14 +1865,23 @@ class HuntEnemy extends Enemy with WithCollision {
     }
     if (boss &&
         slamClock <= 0 &&
-        target.distance < 340 &&
+        target.distance <
+            (session.world.stage == WorldStage.past ? 260 : 340) &&
         session.world.clearLine(
           body.center,
           session.hero.body.center,
           const ui.Size(3, 3),
         )) {
       slamTarget = session.hero.body.center;
-      windup = .85;
+      final attack = BossAttack.forStage(
+        session.world.stage,
+        body.center,
+        slamTarget!,
+        enraged: life.value < life.max * .5,
+      );
+      bossAttack = attack;
+      windup = attack.warningTime;
+      session.game?.add(BossAttackVisual(session, this, attack));
       stop();
       super.update(dt);
       return;
@@ -2127,31 +2149,6 @@ class HuntEnemy extends Enemy with WithCollision {
           opacity: .4 + .6 * (1 - windup / boltWarning),
         );
       }
-    }
-    if (boss && windup > 0 && slamTarget != null) {
-      final center = slamTarget! - position.toOffset(),
-          t = (1 - windup / .85).clamp(0.0, 1.0);
-      canvas.drawOval(
-        ui.Rect.fromCenter(center: center, width: 210, height: 145),
-        ui.Paint()..color = ui.Color.fromRGBO(255, 101, 65, .12 + t * .18),
-      );
-      canvas.drawOval(
-        ui.Rect.fromCenter(center: center, width: 210, height: 145),
-        ui.Paint()
-          ..color = const ui.Color(0xffffb77c)
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 2,
-      );
-      canvas.drawArc(
-        ui.Rect.fromCenter(center: center, width: 210, height: 145),
-        -math.pi / 2,
-        math.pi * 2 * t,
-        false,
-        ui.Paint()
-          ..color = const ui.Color(0xffff7757)
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 5,
-      );
     }
     if (stun > 0 || slow > 0) {
       final icy = slow > 0,
