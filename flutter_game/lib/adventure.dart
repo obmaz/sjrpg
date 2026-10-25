@@ -879,6 +879,9 @@ class Guardian extends Player with WithCollision {
         session.game?.add(RuneBurst(session, body.center, color, radius: 190));
       case 'whirlwind':
         spin = .5;
+        session.game?.add(
+          SpellBurst(session, SpellClip.whirlwind, body.center, radius: 175),
+        );
         invulnerable = math.max(invulnerable, .35);
         session.game?.add(
           WhirlwindPulse(session, this, p.swordDamage * (1.1 + rank * .24)),

@@ -7,7 +7,8 @@ import 'game_art.dart';
 enum SpellClip {
   meteorFlight('fx-meteor', 0, 8, .65, ui.Offset(.28, .75)),
   meteorImpact('fx-meteor', 8, 8, .56, ui.Offset(.5, .7)),
-  iceNova('fx-ice-nova', 0, 16, .72, ui.Offset(.5, .64));
+  iceNova('fx-ice-nova', 0, 16, .72, ui.Offset(.5, .64)),
+  whirlwind('fx-whirlwind', 0, 16, .5, ui.Offset(.5, .6));
 
   const SpellClip(
     this.asset,
@@ -63,7 +64,8 @@ bool paintSpellFrame(
 }
 
 class SpellBurst extends GameComponent {
-  SpellBurst(this.session, this.clip, ui.Offset at, {required this.radius}) {
+  SpellBurst(this.session, this.clip, ui.Offset at, {required this.radius})
+    : buildRevision = session.buildRevision {
     assert(clip != SpellClip.meteorFlight);
     position = Vector2(at.dx, at.dy);
     size = Vector2.all(1);
@@ -71,6 +73,7 @@ class SpellBurst extends GameComponent {
   final Adventure session;
   final SpellClip clip;
   final double radius;
+  final int buildRevision;
   double age = 0;
   bool finished = false;
   @override
@@ -79,7 +82,17 @@ class SpellBurst extends GameComponent {
   int get priority => 29;
   @override
   void update(double dt) {
-    if (!session.active || finished) return;
+    if (finished) return;
+    if (clip == SpellClip.whirlwind && buildRevision != session.buildRevision) {
+      finished = true;
+      removeFromParent();
+      return;
+    }
+    if (!session.active) return;
+    if (clip == SpellClip.whirlwind) {
+      final center = session.hero.body.center;
+      position.setValues(center.dx, center.dy);
+    }
     age = math.min(clip.duration, age + math.min(.05, dt));
     if (age >= clip.duration) {
       finished = true;
@@ -92,9 +105,18 @@ class SpellBurst extends GameComponent {
   void render(ui.Canvas canvas) {
     if (finished) return;
     super.render(canvas);
+    canvas.save();
+    if (clip == SpellClip.whirlwind) {
+      final offset = session.hero.body.center - position.toOffset();
+      canvas.translate(offset.dx, offset.dy);
+    }
     final t = (age / clip.duration).clamp(0.0, 1.0),
         icy = clip == SpellClip.iceNova;
-    final color = icy ? const ui.Color(0xffa5efff) : const ui.Color(0xffffbf73);
+    final color = icy
+        ? const ui.Color(0xffa5efff)
+        : clip == SpellClip.whirlwind
+        ? const ui.Color(0xffa8f6df)
+        : const ui.Color(0xffffbf73);
     final front = radius * (1 - math.pow(1 - t, 3));
     canvas.drawOval(
       ui.Rect.fromCenter(
@@ -140,6 +162,7 @@ class SpellBurst extends GameComponent {
       );
       canvas.restore();
     }
+    canvas.restore();
   }
 }
 

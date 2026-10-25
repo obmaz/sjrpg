@@ -24,6 +24,7 @@ class GameArt {
         'combat-fx',
         'fx-meteor',
         'fx-ice-nova',
+        'fx-whirlwind',
         'dodge-icon',
         'actors-roll',
         'terrain-materials',

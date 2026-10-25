@@ -130,7 +130,54 @@ void main() {
       expect(s.cameraImpact.length, 0);
     },
   );
-  for (final asset in ['fx-meteor', 'fx-ice-nova']) {
+  test(
+    'whirlwind frames follow the hero while preserving three pulses and reset cancellation',
+    () {
+      final s = Adventure(GameArt()), game = TestGame();
+      s.start(game);
+      addTearDown(s.dispose);
+      s.mobs.clear();
+      s.hero.position.setValues(6000, 4200);
+      final p = s.progress;
+      p.gainXp(1000);
+      p.gold = 200;
+      p.energy = p.maxEnergy;
+      expect(
+        s.learn(p.skills.firstWhere((skill) => skill.id == 'whirlwind')),
+        true,
+      );
+      final mob = s.spawnEnemy(
+        'golem',
+        const ui.Offset(6100, 4200),
+        boss: true,
+      )!;
+      final life = mob.life.value;
+      s.hero.skill(secondary: true);
+      final effect = game.added.whereType<SpellBurst>().single;
+      final pulse = game.added.whereType<WhirlwindPulse>().single;
+      expect(effect.clip, SpellClip.whirlwind);
+      s.hero.position.x += 40;
+      effect.update(.05);
+      expect(
+        (ui.Offset(effect.position.x, effect.position.y) - s.hero.body.center)
+            .distance,
+        lessThan(.01),
+      );
+      s.pause();
+      effect.update(.05);
+      expect(effect.age, .05);
+      s.resume();
+      for (var i = 0; i < 10; i++) {
+        pulse.update(.05);
+      }
+      expect(pulse.pulses, 3);
+      expect(mob.life.value, closeTo(life - pulse.damage * 3, .001));
+      expect(s.resetSkills(), true);
+      effect.update(.01);
+      expect(effect.finished, true);
+    },
+  );
+  for (final asset in ['fx-meteor', 'fx-ice-nova', 'fx-whirlwind']) {
     test(
       '$asset contains sixteen distinct transparent animation frames',
       () async {
