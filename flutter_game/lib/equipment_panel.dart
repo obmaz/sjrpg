@@ -157,7 +157,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                shopping ? '숲길 상점' : '장비 가방',
+                shopping ? '상점' : '장비 가방',
                 style: const TextStyle(
                   color: cream,
                   fontSize: 20,

@@ -79,7 +79,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
           'journal': s.world.stage.title,
           'map': '모험 지도',
           'settings': '모험 설정',
-          'shop': '숲길 상점',
+          'shop': '상점',
           'talk': s.world.stage == WorldStage.forest ? '숲의 현자' : '의뢰 게시판',
           'pause': '잠시 쉬어가기',
           'defeat': '쓰러진 수호자',

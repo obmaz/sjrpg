@@ -405,6 +405,98 @@ class MapPainter extends CustomPainter {
       }
     }
     c.restore();
+    Offset project(Offset at) => Offset(
+      (at.dx - view.left) / view.width * s.width,
+      (at.dy - view.top) / view.height * s.height,
+    );
+    final heroPoint = project(session.hero.body.center);
+    final shopPoint = project(session.world.merchantAt),
+        healPoint = project(session.world.healAt);
+    final groupServices = (shopPoint - healPoint).distance < 40 * markerScale;
+    final services = groupServices
+        ? [(project(session.world.spawn), '거점', Icons.cottage_rounded, gold)]
+        : [
+            (shopPoint, '상점', Icons.storefront_rounded, gold),
+            (
+              healPoint,
+              '회복',
+              Icons.water_drop_rounded,
+              const Color(0xff8ce6bd),
+            ),
+          ];
+    final occupied = <Offset>[heroPoint];
+    for (final (anchor, label, icon, color) in services) {
+      final radius = (round ? 7.0 : 10.0) * markerScale;
+      if (round &&
+          (anchor - rect.center).distance > s.shortestSide / 2 - radius - 3) {
+        continue;
+      }
+      var point = anchor;
+      if ((point - heroPoint).distance < 23 * markerScale) {
+        final delta = point - heroPoint;
+        point =
+            heroPoint +
+            (delta.distance < markerScale
+                    ? const Offset(0, -1)
+                    : delta / delta.distance) *
+                (23 * markerScale);
+      }
+      if (!round) {
+        for (
+          var shift = 0;
+          shift < 3 &&
+              occupied.any(
+                (other) => (point - other).distance < 21 * markerScale,
+              );
+          shift++
+        ) {
+          point += Offset(0, -24 * markerScale);
+        }
+      }
+      occupied.add(point);
+      if ((point - anchor).distance > markerScale) {
+        c.drawLine(
+          anchor,
+          point,
+          Paint()
+            ..color = color.withValues(alpha: .5)
+            ..strokeWidth = markerScale,
+        );
+      }
+      c.drawCircle(point, radius, Paint()..color = ink);
+      c.drawCircle(
+        point,
+        radius,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = markerScale
+          ..color = color,
+      );
+      final glyph = TextPainter(
+        text: TextSpan(
+          text: String.fromCharCode(icon.codePoint),
+          style: TextStyle(
+            fontFamily: icon.fontFamily,
+            fontSize: (round ? 11 : 15) * markerScale,
+            color: color,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      glyph.paint(c, point - Offset(glyph.width / 2, glyph.height / 2));
+      glyph.dispose();
+      if (!round &&
+          markerScale <= 2.5 &&
+          (point - heroPoint).distance > 45 * markerScale) {
+        session.art.text(
+          c,
+          label,
+          point - Offset(0, 22 * markerScale),
+          size: 13 * markerScale,
+          color: color,
+        );
+      }
+    }
     for (final site in session.visibleSites) {
       final done = session.cleansedSites.contains(site.id);
       var point = Offset(
@@ -453,7 +545,6 @@ class MapPainter extends CustomPainter {
         ..strokeWidth = 1
         ..color = Colors.white,
     );
-    if (!round) {}
     c.restore();
     if (round) {
       c.drawOval(

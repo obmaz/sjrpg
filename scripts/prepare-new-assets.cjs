@@ -49,6 +49,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'stage-materials',
         'actors-cyber',
         'cyber-props',
+        'ruin-props',
     ])
         fs.copyFileSync(
             path.join(root, `flutter_game/art/${name}.webp`),

@@ -172,6 +172,12 @@ class WorldProp {
   final Rect body;
   final String kind;
   final Size drawSize;
+  Iterable<Rect> get collisionBodies => kind == 'ruin-4'
+      ? [
+          Rect.fromLTWH(body.left, body.top, 26, body.height),
+          Rect.fromLTWH(body.right - 26, body.top, 26, body.height),
+        ]
+      : [body];
 }
 
 class Trail {
@@ -691,24 +697,72 @@ class AdventureWorld {
       _indexSolid(site.body);
     }
     if (stage == WorldStage.future) {
-      _indexSolid(
-        Rect.fromCenter(
-          center: merchantAt + const Offset(0, -70),
-          width: 90,
-          height: 46,
+      campProps.add(
+        WorldProp(
+          Rect.fromCenter(
+            center: merchantAt + const Offset(0, -70),
+            width: 90,
+            height: 46,
+          ),
+          'city-4',
+          const Size(172, 172),
         ),
       );
-      _indexSolid(
-        Rect.fromCenter(
-          center: spawn + const Offset(-280, -100),
-          width: 44,
-          height: 30,
+      campProps.add(
+        WorldProp(
+          Rect.fromCenter(center: healAt, width: 44, height: 30),
+          'city-5',
+          const Size(100, 100),
+        ),
+      );
+    } else {
+      campProps.add(
+        WorldProp(
+          Rect.fromCenter(
+            center: merchantAt + const Offset(0, -36),
+            width: 110,
+            height: 48,
+          ),
+          stage == WorldStage.sands ? 'ruin-0' : 'ruin-2',
+          const Size(200, 200),
+        ),
+      );
+      campProps.add(
+        WorldProp(
+          Rect.fromCenter(
+            center: healAt - const Offset(0, 18),
+            width: 64,
+            height: 36,
+          ),
+          stage == WorldStage.sands ? 'ruin-1' : 'ruin-3',
+          const Size(120, 120),
         ),
       );
     }
-    // Small, scattered obstacles leave broad navigable spaces between roads.
-    for (var y = 180.0; y < worldSize.height - 180; y += 280) {
-      for (var x = 180.0; x < worldSize.width - 180; x += 280) {
+    for (final prop in campProps) {
+      _indexSolid(prop.body);
+      for (
+        var by = (prop.body.top - prop.drawSize.height) ~/ 256;
+        by <= (prop.body.bottom + 50) ~/ 256;
+        by++
+      ) {
+        for (
+          var bx = (prop.body.left - prop.drawSize.width) ~/ 256;
+          bx <= (prop.body.right + prop.drawSize.width) ~/ 256;
+          bx++
+        ) {
+          propBuckets.putIfAbsent('$bx:$by', () => []).add(prop);
+        }
+      }
+    }
+    // Roadside silhouettes stay visible, while the entire road admits a mounted body.
+    final spacing = stage == WorldStage.future
+        ? 200.0
+        : stage == WorldStage.past
+        ? 230.0
+        : 280.0;
+    for (var y = 180.0; y < worldSize.height - 180; y += spacing) {
+      for (var x = 180.0; x < worldSize.width - 180; x += spacing) {
         final p = Offset(
           x + random.nextDouble() * 100,
           y + random.nextDouble() * 100,
@@ -716,30 +770,55 @@ class AdventureWorld {
         if (settlement.inflate(240).contains(p) ||
             sites.any((s) => (s.at - p).distance < 240) ||
             chests.any((c) => (c - p).distance < 130) ||
-            trails.any((t) => t.near(p, 170)) ||
+            trails.any((t) => t.near(p, 85)) ||
             isWater(p)) {
           continue;
         }
-        if (random.nextDouble() > (isWooded(p) ? .55 : .11)) continue;
+        if (random.nextDouble() >
+            (isWooded(p)
+                ? .55
+                : stage == WorldStage.future
+                ? .34
+                : stage == WorldStage.past
+                ? .22
+                : .11)) {
+          continue;
+        }
+        final oasis = lakes.any((lake) => lake.bounds.inflate(550).contains(p));
         final kind = stage == WorldStage.future
-            ? 'city-${random.nextInt(4)}'
+            ? 'city-${[0, 1, 2, 6][random.nextInt(4)]}'
             : isWooded(p)
             ? 'tree'
-            : stage == WorldStage.sands && random.nextBool()
-            ? 'cactus'
-            : 'ruin';
+            : stage == WorldStage.sands
+            ? (oasis && random.nextBool()
+                  ? 'ruin-7'
+                  : random.nextBool()
+                  ? 'cactus'
+                  : 'ruin-5')
+            : 'ruin-${4 + random.nextInt(3)}';
         final body = Rect.fromCenter(
           center: p,
-          width: kind == 'tree' ? 28 : 56,
-          height: 38,
+          width: kind == 'tree'
+              ? 28
+              : kind == 'ruin-4'
+              ? 96
+              : 74,
+          height: kind == 'tree' ? 38 : 44,
         );
+        final side = kind == 'ruin-4'
+            ? 180.0
+            : stage == WorldStage.future
+            ? 144.0 + random.nextInt(29)
+            : 128.0 + random.nextInt(25);
         final prop = WorldProp(
           body,
           kind,
-          kind == 'tree' ? const Size(165, 220) : const Size(110, 124),
+          kind == 'tree' ? const Size(165, 220) : Size(side, side),
         );
         props.add(prop);
-        _indexSolid(body);
+        for (final body in prop.collisionBodies) {
+          _indexSolid(body);
+        }
         for (
           var by = (body.top - prop.drawSize.height) ~/ 256;
           by <= (body.bottom + 50) ~/ 256;
@@ -762,13 +841,38 @@ class AdventureWorld {
   Offset get spawn => stage.spawn;
   Rect get settlement => stage == WorldStage.forest
       ? town
-      : Rect.fromCenter(center: spawn, width: 640, height: 500);
-  Offset get healAt => stage == WorldStage.future
-      ? spawn + const Offset(-280, -100)
-      : spawn - const Offset(0, 55);
-  Offset get merchantAt => stage == WorldStage.forest
+      : Rect.fromCenter(center: spawn, width: 900, height: 900);
+  Offset get healAt => stage == WorldStage.forest
+      ? spawn - const Offset(0, 55)
+      : spawn + const Offset(-280, -100);
+  late final Offset merchantAt = stage == WorldStage.forest
       ? const Offset(3952, 2984)
-      : spawn + const Offset(120, -70);
+      : stage == WorldStage.future
+      ? spawn + const Offset(120, -70)
+      : _merchantAnchor();
+  Offset _merchantAnchor() {
+    final preferred = spawn + const Offset(250, 280);
+    for (var radius = 0.0; radius <= 900; radius += 40) {
+      for (var i = 0; i < (radius == 0 ? 1 : 32); i++) {
+        final angle = i * math.pi / 16;
+        final candidate =
+            preferred + Offset(math.cos(angle), math.sin(angle)) * radius;
+        final body = Rect.fromCenter(
+          center: candidate - const Offset(0, 36),
+          width: 110,
+          height: 48,
+        );
+        if (!blocked(body) &&
+            trails.every(
+              (trail) => trail.distance(body.center) > trail.width / 2 + 75,
+            )) {
+          return candidate;
+        }
+      }
+    }
+    throw StateError('The authored camp has no accessible merchant site');
+  }
+
   Offset get elderAt => stage == WorldStage.forest
       ? const Offset(3660, 2952)
       : spawn + const Offset(-160, -70);
@@ -821,6 +925,7 @@ class AdventureWorld {
   );
   late final List<Trail> trails;
   final List<WorldProp> props = [];
+  final List<WorldProp> campProps = [];
   final Map<String, List<WorldProp>> propBuckets = {};
   final Map<String, List<Rect>> _solids = {};
   void _indexSolid(Rect rect) {

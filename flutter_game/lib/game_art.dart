@@ -40,6 +40,7 @@ class GameArt {
         'stage-materials',
         'actors-cyber',
         'cyber-props',
+        'ruin-props',
         'village-scene',
         'landscape-bridge',
         'world-forest',
@@ -311,6 +312,32 @@ class GameArt {
   }
 
   void prop(ui.Canvas canvas, WorldProp prop, {double opacity = 1}) {
+    if (prop.kind.startsWith('ruin-')) {
+      final image = images['ruin-props'];
+      if (image == null) return;
+      final index = int.parse(prop.kind.substring(5)),
+          side = prop.drawSize.height;
+      final feet = prop.body.bottomCenter;
+      canvas.drawImageRect(
+        image,
+        ui.Rect.fromLTWH(
+          index % 4 * image.width / 4,
+          index ~/ 4 * image.height / 2,
+          image.width / 4,
+          image.height / 2,
+        ),
+        ui.Rect.fromLTWH(
+          feet.dx - side / 2,
+          feet.dy - side * .9375,
+          side,
+          side,
+        ),
+        ui.Paint()
+          ..color = ui.Color.fromRGBO(255, 255, 255, opacity)
+          ..filterQuality = ui.FilterQuality.medium,
+      );
+      return;
+    }
     if (prop.kind.startsWith('city-')) {
       cityProp(
         canvas,

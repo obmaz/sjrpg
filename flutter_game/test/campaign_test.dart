@@ -54,6 +54,60 @@ void main() {
       },
     );
   }
+  test('camp services and ruined arch openings stay physically accessible', () {
+    for (final stage in WorldStage.values.skip(1)) {
+      final world = AdventureWorld(stage: stage);
+      expect(
+        world.blocked(
+          Rect.fromCenter(
+            center: world.merchantAt + const Offset(14, 24),
+            width: 28,
+            height: 24,
+          ),
+        ),
+        false,
+      );
+      expect(
+        world.blocked(
+          Rect.fromCenter(
+            center: world.healAt + const Offset(0, 60),
+            width: 28,
+            height: 24,
+          ),
+        ),
+        false,
+      );
+      expect(world.campProps.length, 2);
+    }
+    final world = AdventureWorld(stage: WorldStage.past);
+    final arches = world.props.where((p) => p.kind == 'ruin-4');
+    expect(arches, isNotEmpty);
+    var checked = 0;
+    for (final arch in arches.take(10)) {
+      for (final size in const [Size(28, 24), Size(40, 32)]) {
+        final start =
+            arch.body.center - Offset(size.width / 2, 80 + size.height / 2);
+        final end = start + const Offset(0, 160);
+        if (world.blocked(start & size) || world.blocked(end & size)) continue;
+        expect(
+          (world.move(start, end - start, size) - end).distance,
+          lessThan(2),
+        );
+        expect(
+          world.blocked(
+            Rect.fromCenter(
+              center: arch.body.centerLeft + const Offset(10, 0),
+              width: 10,
+              height: 10,
+            ),
+          ),
+          true,
+        );
+        checked++;
+      }
+    }
+    expect(checked, greaterThanOrEqualTo(10));
+  });
   test('stages use distinct geography, starts and monster themes', () {
     final worlds = [
       for (final stage in WorldStage.values) AdventureWorld(stage: stage),

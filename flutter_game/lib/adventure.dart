@@ -2191,12 +2191,22 @@ class WoodlandProp extends GameComponent {
     canvas.translate(-position.x, -position.y);
     final hero = session.hero.body;
     final covers =
-        prop.kind == 'tree' &&
+        (prop.kind == 'tree' ||
+            prop.kind.startsWith('city-') ||
+            prop.kind.startsWith('ruin-')) &&
         prop.body.bottom > hero.bottom &&
         prop.body.bottom - prop.drawSize.height < hero.bottom &&
         (prop.body.center.dx - hero.center.dx).abs() <
             prop.drawSize.width * .38;
-    session.art.prop(canvas, prop, opacity: covers ? .4 : 1);
+    session.art.prop(
+      canvas,
+      prop,
+      opacity: covers
+          ? prop.kind == 'tree'
+                ? .4
+                : .55
+          : 1,
+    );
     canvas.restore();
   }
 

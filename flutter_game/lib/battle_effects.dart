@@ -763,16 +763,6 @@ class StageLandmarks extends GameComponent {
     super.render(canvas);
     final c = canvas;
     final view = gameRef.camera.visibleWorldRect.inflate(120);
-    if (session.world.stage == WorldStage.future) {
-      final merchant = session.world.merchantAt + const ui.Offset(0, -48);
-      if (view.inflate(180).contains(merchant)) {
-        session.art.cityProp(c, 4, merchant, 172);
-      }
-      final healer = session.world.healAt + const ui.Offset(0, 20);
-      if (view.inflate(120).contains(healer)) {
-        session.art.cityProp(c, 5, healer, 100);
-      }
-    }
     for (final mount in session.mounts) {
       if (identical(mount, session.riding) || !view.contains(mount.at)) {
         continue;
