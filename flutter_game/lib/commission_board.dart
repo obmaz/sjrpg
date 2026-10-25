@@ -28,8 +28,28 @@ class CommissionBoard extends StatelessWidget {
             style: TextStyle(color: cream, fontSize: 15, height: 1.5),
           ),
           const SizedBox(height: 14),
-          for (final path in TimePath.values)
-            _choice(timeCommissions.firstWhere((q) => q.path == path)),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final choices = [
+                for (final path in TimePath.values)
+                  _choice(timeCommissions.firstWhere((q) => q.path == path)),
+              ];
+              if (constraints.maxWidth >= 560) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: choices[0]),
+                    const SizedBox(width: 14),
+                    Expanded(child: choices[1]),
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: choices,
+              );
+            },
+          ),
           const Text(
             '선택한 줄기에서 의뢰 네 개가 이어집니다. 다른 시간축은 잠깁니다.',
             style: TextStyle(
@@ -138,46 +158,53 @@ class CommissionBoard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              SizedBox(
-                width: 72,
-                height: 72,
-                child: CustomPaint(
-                  painter: _CommissionArt(session.art, q.site.artIndex),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      past ? '과거의 기록' : '미래의 신호',
-                      style: const TextStyle(
-                        color: gold,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: SizedBox(
+              height: 104,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  CustomPaint(
+                    painter: _CommissionArt(session.art, past ? 0 : 1),
+                  ),
+                  const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xdd0d2523), Color(0x220d2523)],
+                        stops: [0, .8],
                       ),
                     ),
-                    const SizedBox(height: 5),
-                    Text(
-                      q.title,
-                      style: const TextStyle(color: cream, fontSize: 14),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          past ? '과거의 기록' : '미래의 신호',
+                          style: TextStyle(
+                            color: past ? gold : const Color(0xffa1e4ef),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          past ? '고대 왕국으로' : '사이버펑크 도시로',
+                          style: const TextStyle(
+                            color: cream,
+                            fontSize: 14,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      past ? '제3-1장 · 고대 왕국으로' : '제3-2장 · 사이버펑크 도시로',
-                      style: const TextStyle(
-                        color: Color(0xffb9cec1),
-                        fontSize: 12,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
           const SizedBox(height: 10),
           GameAction(
@@ -373,13 +400,24 @@ class _CommissionArt extends CustomPainter {
   final GameArt art;
   final int index;
   @override
-  void paint(Canvas canvas, Size size) => art.landmark(
-    canvas,
-    index,
-    Offset(size.width / 2, size.height * .94),
-    size.width,
-    themed: true,
-  );
+  void paint(Canvas canvas, Size size) {
+    final image = art.images['time-paths'];
+    if (image == null || size.isEmpty) return;
+    final source = Rect.fromLTWH(
+      0,
+      index * image.height / 2,
+      image.width.toDouble(),
+      image.height / 2,
+    );
+    final fitted = applyBoxFit(BoxFit.cover, source.size, size);
+    canvas.drawImageRect(
+      image,
+      Alignment.center.inscribe(fitted.source, source),
+      Alignment.center.inscribe(fitted.destination, Offset.zero & size),
+      Paint()..filterQuality = FilterQuality.medium,
+    );
+  }
+
   @override
   bool shouldRepaint(covariant _CommissionArt oldDelegate) =>
       oldDelegate.art != art || oldDelegate.index != index;

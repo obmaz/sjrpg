@@ -53,6 +53,10 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
         fs.readFileSync(path.join(target, 'retained.webp'), 'utf8'),
         'unrelated prepared asset',
     );
+    assert.equal(
+        fs.readFileSync(path.join(target, 'time-paths.webp'), 'utf8'),
+        'source picture time-paths.webp',
+    );
     const metadata = JSON.parse(
         fs.readFileSync(path.join(root, 'flutter_game/assets/art.json'), 'utf8'),
     );

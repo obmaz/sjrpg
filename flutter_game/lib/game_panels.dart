@@ -71,6 +71,10 @@ class _AdventurePanelState extends State<AdventurePanel> {
     if (name == 'skills') {
       return SkillsPanel(session: s, onClose: widget.onClose);
     }
+    final choosingTimePath =
+        (name == 'journal' || name == 'talk') &&
+        s.world.stage == WorldStage.sands &&
+        s.timePath == null;
     final result = name == 'victory' || name == 'defeat';
     final canAdvance =
         name == 'victory' &&
@@ -112,6 +116,9 @@ class _AdventurePanelState extends State<AdventurePanel> {
           onCommit: () {
             widget.onCheckpoint?.call();
             setState(() {});
+            if (choosingTimePath && panelScroll.hasClients) {
+              panelScroll.jumpTo(0);
+            }
           },
         ),
       ];
@@ -323,7 +330,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
             padding: const EdgeInsets.all(12),
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                maxWidth: 500,
+                maxWidth: choosingTimePath ? 720 : 500,
                 maxHeight: media.size.height - media.padding.vertical - 24,
               ),
               child: FramedSurface(

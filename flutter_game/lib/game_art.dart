@@ -38,6 +38,7 @@ class GameArt {
         'actors-vehicles',
         'quest-sites',
         'time-sites',
+        'time-paths',
         'stage-materials',
         'actors-cyber',
         'actors-gunner',

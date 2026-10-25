@@ -39,6 +39,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'passive-icons',
         'quest-sites',
         'time-sites',
+        'time-paths',
         'stage-materials',
         'terrain-materials',
         'actors-cyber',

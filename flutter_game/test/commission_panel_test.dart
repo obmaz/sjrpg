@@ -49,6 +49,15 @@ void main() {
         }
         await tester.tap(find.text('아직 오지 않은 신호 수락'));
         await tester.pumpAndSettle();
+        expect(
+          tester
+              .state<ScrollableState>(find.byType(Scrollable).first)
+              .position
+              .pixels,
+          0,
+          reason:
+              'the newly accepted first commission starts at the top after leaving the choices',
+        );
         expect(s.timePath, TimePath.future);
         expect(s.acceptedCommission, 'future-1');
         expect(commits, 1);
