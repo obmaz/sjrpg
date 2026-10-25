@@ -458,6 +458,22 @@ class Adventure extends ChangeNotifier {
   }
 
   bool buyHeal() => progress.buy(20, () => progress.healingPotions += 2);
+  Gear? buyGear(GearDef def) {
+    if (disposed ||
+        defeated ||
+        !gearCatalog.contains(def) ||
+        !def.usable(progress.heroClass) ||
+        progress.inventory.length >= Progress.capacity) {
+      return null;
+    }
+    Gear? bought;
+    progress.buy(def.value, () {
+      bought = progress.createGear(def);
+      progress.inventory.add(bought!);
+    });
+    return bought;
+  }
+
   bool buyEnergy() => progress.buy(18, () => progress.energyPotions += 2);
   bool buySword() => progress.buy(45, () => progress.swordDamage += 5);
   bool buyVitality() => progress.buy(60, () {

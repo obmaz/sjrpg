@@ -6,6 +6,7 @@ import 'rpg_model.dart';
 import 'rpg_widgets.dart';
 import 'device_controls.dart';
 import 'world_map.dart';
+import 'equipment_panel.dart';
 
 class AdventurePanel extends StatefulWidget {
   const AdventurePanel({
@@ -25,15 +26,23 @@ class AdventurePanel extends StatefulWidget {
 }
 
 class _AdventurePanelState extends State<AdventurePanel> {
-  String message = '';
+  final panelScroll = ScrollController();
   bool showMap = false;
   @override
   void didUpdateWidget(covariant AdventurePanel oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.name != widget.name) {
-      message = '';
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && panelScroll.hasClients) panelScroll.jumpTo(0);
+      });
       showMap = false;
     }
+  }
+
+  @override
+  void dispose() {
+    panelScroll.dispose();
+    super.dispose();
   }
 
   @override
@@ -44,6 +53,14 @@ class _AdventurePanelState extends State<AdventurePanel> {
         media = MediaQuery.of(context);
     if (name == 'map') {
       return ExpandedWorldMap(session: s, onClose: widget.onClose);
+    }
+    if (name == 'bag' || name == 'shop') {
+      return EquipmentPanel(
+        key: ValueKey(name),
+        session: s,
+        startInShop: name == 'shop',
+        onClose: widget.onClose,
+      );
     }
     final result = name == 'victory' || name == 'defeat';
     final title =
@@ -62,86 +79,8 @@ class _AdventurePanelState extends State<AdventurePanel> {
         }[name] ??
         '모험';
     List<Widget> body;
-    if (name == 'bag') {
-      body = [InventoryView(s)];
-    } else if (name == 'skills') {
+    if (name == 'skills') {
       body = [SkillsView(s)];
-    } else if (name == 'shop') {
-      void buy(bool Function() action) {
-        setState(
-          () => message = action()
-              ? '구매했습니다. 가방과 물약 칸을 확인하세요.'
-              : '골드 또는 가방 공간이 부족합니다.',
-        );
-        s.refresh();
-      }
-
-      final stock = p.heroClass == HeroClass.warrior
-          ? ['longsword', 'axe', 'spear', 'leather', 'chainmail', 'amber']
-          : [
-              'oakstaff',
-              'frostwand',
-              'stormrod',
-              'silkrobe',
-              'leather',
-              'sapphire',
-            ];
-      body = [
-        _line(Icons.monetization_on_outlined, '보유 골드', '${p.gold} G'),
-        const Text(
-          '전리품을 모아 장비를 바꾸고, 물약을 보충하세요. 장비는 가방에서 직접 장착합니다.',
-          style: TextStyle(fontSize: 14, height: 1.7, color: cream),
-        ),
-        const SizedBox(height: 16),
-        _shop(
-          Icons.science,
-          '치유 물약 ×2',
-          '사용하면 생명 55 회복 · 보유 ${p.healingPotions}개',
-          20,
-          () => buy(s.buyHeal),
-        ),
-        _shop(
-          Icons.science,
-          '${p.heroClass.resource} 물약 ×2',
-          '사용하면 ${p.heroClass.resource} 60 회복 · 보유 ${p.energyPotions}개',
-          18,
-          () => buy(s.buyEnergy),
-        ),
-        if (message.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Text(
-              message,
-              style: const TextStyle(color: gold, fontSize: 14, height: 1.6),
-            ),
-          ),
-        const SizedBox(height: 10),
-        const Text(
-          '장비 상인',
-          style: TextStyle(
-            color: gold,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        for (final id in stock) _gearShop(gearById(id), buy),
-        const SizedBox(height: 8),
-        _shop(
-          Icons.auto_fix_high,
-          '무기 강화',
-          '현재 직업 공격력 +5',
-          45,
-          () => buy(s.buySword),
-        ),
-        _shop(
-          Icons.favorite_border,
-          '생명 축복',
-          '최대 생명 +20 · 생명 회복',
-          60,
-          () => buy(s.buyVitality),
-        ),
-      ];
     } else if (name == 'journal' || name == 'talk' || name == 'map') {
       body = [
         if (name == 'talk') ...[
@@ -404,62 +343,41 @@ class _AdventurePanelState extends State<AdventurePanel> {
                       ),
                     ),
                     const Divider(height: 1, color: Color(0x557b8c62)),
-                    if (name == 'shop')
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(22, 10, 22, 0),
-                        child: Text(
-                          '${p.gold} G · ${p.heroClass.title}',
-                          style: const TextStyle(
-                            color: gold,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
                     Flexible(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: body,
+                      child: Scrollbar(
+                        controller: panelScroll,
+                        thumbVisibility: true,
+                        thickness: 3,
+                        child: SingleChildScrollView(
+                          controller: panelScroll,
+                          physics: const ClampingScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: body,
+                          ),
                         ),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(22, 8, 22, 18),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xff70cdb0),
-                            foregroundColor: ink,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          onPressed: name == 'defeat'
-                              ? widget.onRetryCheckpoint ?? widget.onRestart
-                              : name == 'victory'
-                              ? () {
-                                  s.continueExploring();
-                                  widget.onClose();
-                                }
-                              : widget.onClose,
-                          child: Text(
-                            name == 'defeat'
-                                ? widget.onRetryCheckpoint != null
-                                      ? '체크포인트 재도전'
-                                      : '새로운 모험'
-                                : name == 'victory'
-                                ? '계속 탐험하기'
-                                : '모험 계속하기',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+                      child: GameAction(
+                        name == 'defeat'
+                            ? widget.onRetryCheckpoint != null
+                                  ? '체크포인트 재도전'
+                                  : '새로운 모험'
+                            : name == 'victory'
+                            ? '계속 탐험하기'
+                            : '모험 계속하기',
+                        primary: true,
+                        onTap: name == 'defeat'
+                            ? widget.onRetryCheckpoint ?? widget.onRestart
+                            : name == 'victory'
+                            ? () {
+                                s.continueExploring();
+                                widget.onClose();
+                              }
+                            : widget.onClose,
                       ),
                     ),
                   ],
@@ -468,65 +386,6 @@ class _AdventurePanelState extends State<AdventurePanel> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _gearShop(GearDef def, void Function(bool Function()) buy) {
-    final p = widget.session.progress, price = def.value;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xd9143532),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xff50634d)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              SizedBox(
-                width: 46,
-                height: 52,
-                child: CustomPaint(
-                  painter: GearGlyph(Gear(0, def), widget.session.art),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      def.name,
-                      style: const TextStyle(color: cream, fontSize: 16),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      Gear(0, def).stats,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        height: 1.5,
-                        color: Color(0xffbbcebc),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          FilledButton(
-            onPressed: () => buy(
-              () =>
-                  p.inventory.length < Progress.capacity &&
-                  p.buy(price, () => p.inventory.add(p.createGear(def))),
-            ),
-            child: Text('$price 골드 · 구매'),
-          ),
-        ],
       ),
     );
   }
@@ -551,49 +410,6 @@ class _AdventurePanelState extends State<AdventurePanel> {
             fontWeight: FontWeight.bold,
           ),
         ),
-      ],
-    ),
-  );
-  Widget _shop(
-    IconData icon,
-    String title,
-    String description,
-    int price,
-    VoidCallback buy,
-  ) => Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: const Color(0xd9143532),
-      border: Border.all(color: const Color(0xff52684b)),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Icon(icon, color: gold, size: 22),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(fontSize: 17, color: cream),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 7),
-        Text(
-          description,
-          style: const TextStyle(
-            fontSize: 14,
-            height: 1.6,
-            color: Color(0xffb4c9b7),
-          ),
-        ),
-        const SizedBox(height: 10),
-        FilledButton(onPressed: buy, child: Text('$price 골드 · 구매')),
       ],
     ),
   );
