@@ -459,12 +459,20 @@ class EffectIconPainter extends CustomPainter {
   final int index;
   @override
   void paint(Canvas canvas, Size size) {
-    final image = art.images['combat-fx'];
+    final passive = index >= 8;
+    final image = art.images[passive ? 'passive-icons' : 'combat-fx'];
     if (image == null) return;
-    final cell = image.width / 4;
+    final columns = passive ? 3 : 4;
+    final localIndex = passive ? index - 8 : index;
+    final cell = image.width / columns;
     canvas.drawImageRect(
       image,
-      Rect.fromLTWH((index % 4) * cell, (index ~/ 4) * cell, cell, cell),
+      Rect.fromLTWH(
+        (localIndex % columns) * cell,
+        (localIndex ~/ columns) * cell,
+        cell,
+        cell,
+      ).deflate(1),
       Offset.zero & size,
       Paint()..filterQuality = FilterQuality.medium,
     );

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'game_art.dart';
 import 'game_ui.dart';
 import 'rpg_model.dart';
+import 'panel_controls.dart';
 
 class ClassSelection extends StatefulWidget {
   const ClassSelection({
@@ -80,10 +81,11 @@ class _ClassSelectionState extends State<ClassSelection> {
                         ),
                         if (widget.onContinue != null) ...[
                           const SizedBox(height: 16),
-                          FilledButton.icon(
-                            onPressed: widget.onContinue,
-                            icon: const Icon(Icons.play_arrow),
-                            label: const Text('모험 이어하기'),
+                          GameAction(
+                            '모험 이어하기',
+                            primary: true,
+                            icon: Icons.play_arrow_rounded,
+                            onTap: widget.onContinue,
                           ),
                           const SizedBox(height: 6),
                           Text(
@@ -139,25 +141,13 @@ class _ClassSelectionState extends State<ClassSelection> {
                         SizedBox(height: compact ? 10 : 22),
                         SizedBox(
                           width: double.infinity,
-                          height: compact ? 48 : 56,
-                          child: FilledButton(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: gold,
-                              foregroundColor: ink,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            onPressed: () => widget.onBegin(selected),
-                            child: Text(
-                              widget.onContinue != null
-                                  ? '${selected.title}로 새 모험'
-                                  : '${selected.title}로 모험 시작',
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                          child: GameAction(
+                            widget.onContinue != null
+                                ? '${selected.title}로 새 모험'
+                                : '${selected.title}로 모험 시작',
+                            primary: widget.onContinue == null,
+                            icon: Icons.play_arrow_rounded,
+                            onTap: () => widget.onBegin(selected),
                           ),
                         ),
                         if (!compact) const SizedBox(height: 14),

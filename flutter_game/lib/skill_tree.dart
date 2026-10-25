@@ -25,7 +25,6 @@ class SkillTree extends StatelessWidget {
     final p = session.progress;
     final skills = p.skills.where((skill) => skill.branch == branch).toList();
     final short = MediaQuery.sizeOf(context).height < 520;
-    final nodeHeight = short ? 88.0 : 106.0, step = nodeHeight + 30;
     final depths = <String, int>{};
     int depth(SkillDef skill) => depths.putIfAbsent(skill.id, () {
       final parents = skills.where(
@@ -39,6 +38,9 @@ class SkillTree extends StatelessWidget {
     }
     return LayoutBuilder(
       builder: (context, box) {
+        final dense = short && box.maxHeight < 90;
+        final nodeHeight = short ? (dense ? 76.0 : 88.0) : 106.0;
+        final step = nodeHeight + 30;
         final width = box.maxWidth, rects = <String, Rect>{};
         final nodeWidth = math.min(132.0, (width - 28) / 2);
         for (final layer in layers.entries) {
@@ -53,6 +55,20 @@ class SkillTree extends StatelessWidget {
           }
         }
         final height = 32 + (layers.length - 1) * step + nodeHeight;
+        void select(SkillDef skill) {
+          onFocus(skill);
+          if (!controller.hasClients) return;
+          final target = (rects[skill.id]!.center.dy - box.maxHeight / 2).clamp(
+            0.0,
+            controller.position.maxScrollExtent,
+          );
+          controller.animateTo(
+            target,
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+          );
+        }
+
         return Scrollbar(
           controller: controller,
           thumbVisibility: true,
@@ -70,7 +86,11 @@ class SkillTree extends StatelessWidget {
                     for (final skill in skills)
                       Positioned.fromRect(
                         rect: rects[skill.id]!,
-                        child: _node(skill, short: short),
+                        child: _node(
+                          skill,
+                          iconSize: short ? (dense ? 24 : 30) : 44,
+                          onTap: () => select(skill),
+                        ),
                       ),
                   ],
                 ),
@@ -82,7 +102,11 @@ class SkillTree extends StatelessWidget {
     );
   }
 
-  Widget _node(SkillDef skill, {required bool short}) {
+  Widget _node(
+    SkillDef skill, {
+    required double iconSize,
+    required VoidCallback onTap,
+  }) {
     final p = session.progress,
         rank = p.rank(skill.id),
         chosen = focused?.id == skill.id;
@@ -96,15 +120,15 @@ class SkillTree extends StatelessWidget {
       selected: chosen,
       label: '스킬 보기 · ${skill.name} · $rank 등급',
       excludeSemantics: true,
-      onTap: () => onFocus(skill),
+      onTap: onTap,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => onFocus(skill),
+          onTap: onTap,
           borderRadius: BorderRadius.circular(13),
           child: Container(
             key: ValueKey('skill-node-${skill.id}'),
-            padding: const EdgeInsets.all(6),
+            padding: EdgeInsets.all(iconSize < 30 ? 4 : 6),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(13),
               gradient: LinearGradient(
@@ -140,7 +164,7 @@ class SkillTree extends StatelessWidget {
                     Opacity(
                       opacity: locked ? .35 : 1,
                       child: SizedBox.square(
-                        dimension: short ? 30 : 44,
+                        dimension: iconSize,
                         child: CustomPaint(
                           painter: EffectIconPainter(
                             session.art,

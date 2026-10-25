@@ -81,9 +81,11 @@ class _EntryPageState extends State<EntryPage> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 20),
-                  FilledButton(
-                    onPressed: () => setState(() => loading = GameArt.load()),
-                    child: const Text('다시 불러오기'),
+                  GameAction(
+                    '다시 불러오기',
+                    primary: true,
+                    icon: Icons.refresh,
+                    onTap: () => setState(() => loading = GameArt.load()),
                   ),
                 ],
               ),

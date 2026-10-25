@@ -29,6 +29,8 @@ void main() {
     (const Size(320, 640), HeroClass.mage),
     (const Size(320, 420), HeroClass.warrior),
     (const Size(844, 390), HeroClass.mage),
+    (const Size(667, 375), HeroClass.mage),
+    (const Size(600, 320), HeroClass.warrior),
   ]) {
     testWidgets('mobile tree investment, loadout and fixed actions at $size', (
       tester,

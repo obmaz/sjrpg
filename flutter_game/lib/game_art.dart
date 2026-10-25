@@ -22,6 +22,7 @@ class GameArt {
         'actors-mage',
         'gear-icons',
         'combat-fx',
+        'passive-icons',
         'fx-meteor',
         'fx-ice-nova',
         'fx-whirlwind',

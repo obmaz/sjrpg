@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'adventure.dart';
 import 'game_ui.dart';
 import 'world_model.dart';
+import 'panel_controls.dart';
 
 class ExpandedWorldMap extends StatefulWidget {
   const ExpandedWorldMap({
@@ -133,39 +134,34 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
               style: TextStyle(color: Color(0xffa9c5b9), fontSize: 13),
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextButton.icon(
-                onPressed: () => center(),
-                icon: const Icon(Icons.my_location),
-                label: const Text('내 위치'),
-              ),
-              TextButton.icon(
-                onPressed: () => center(overview: true),
-                icon: const Icon(Icons.public),
-                label: const Text('전체 지도'),
-              ),
-              IconButton(
-                tooltip: '지도 축소',
-                onPressed: () => zoom(1 / 1.5),
-                icon: const Icon(Icons.remove),
-              ),
-              IconButton(
-                tooltip: '지도 확대하기',
-                onPressed: () => zoom(1.5),
-                icon: const Icon(Icons.add),
-              ),
-            ],
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                Expanded(child: GameAction('내 위치', onTap: () => center())),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: GameAction(
+                    '전체 지도',
+                    onTap: () => center(overview: true),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                _zoomButton(Icons.remove, '지도 축소', () => zoom(1 / 1.5)),
+                const SizedBox(width: 6),
+                _zoomButton(Icons.add, '지도 확대하기', () => zoom(1.5)),
+              ],
+            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
             child: SizedBox(
               width: double.infinity,
-              height: 46,
-              child: FilledButton(
-                onPressed: widget.onClose,
-                child: const Text('모험 계속하기'),
+              child: GameAction(
+                '모험 계속하기',
+                primary: true,
+                icon: Icons.play_arrow_rounded,
+                onTap: widget.onClose,
               ),
             ),
           ),
@@ -173,4 +169,35 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
       ),
     ),
   );
+  Widget _zoomButton(IconData icon, String label, VoidCallback action) =>
+      SizedBox(
+        width: 48,
+        height: 50,
+        child: Semantics(
+          container: true,
+          button: true,
+          label: label,
+          onTap: action,
+          excludeSemantics: true,
+          child: Tooltip(
+            message: label,
+            excludeFromSemantics: true,
+            child: Material(
+              color: Colors.transparent,
+              child: Ink(
+                decoration: BoxDecoration(
+                  color: const Color(0xff153a33),
+                  borderRadius: BorderRadius.circular(7),
+                  border: Border.all(color: gold.withValues(alpha: .5)),
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(7),
+                  onTap: action,
+                  child: Center(child: Icon(icon, color: gold, size: 21)),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
 }

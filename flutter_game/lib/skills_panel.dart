@@ -168,6 +168,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
     final short = media.size.height < 500;
+    final tight = media.size.height < 360 && media.size.width >= 600;
     return ColoredBox(
       color: const Color(0xcc040d10),
       child: SafeArea(
@@ -188,12 +189,17 @@ class _SkillsPanelState extends State<SkillsPanel> {
                         child: Column(
                           children: [
                             Padding(
-                              padding: const EdgeInsets.fromLTRB(14, 8, 6, 8),
+                              padding: EdgeInsets.fromLTRB(
+                                14,
+                                tight ? 4 : 8,
+                                6,
+                                tight ? 4 : 8,
+                              ),
                               child: Row(
                                 children: [
                                   SizedBox(
                                     width: 40,
-                                    height: 48,
+                                    height: tight ? 32 : 48,
                                     child:
                                         s.art.images.containsKey('actors-hero')
                                         ? CustomPaint(
@@ -225,13 +231,14 @@ class _SkillsPanelState extends State<SkillsPanel> {
                                             ),
                                           ),
                                         ),
-                                        Text(
-                                          'Lv.${p.level} ${p.heroClass.title}',
-                                          style: const TextStyle(
-                                            color: _dim,
-                                            fontSize: 12,
+                                        if (!tight)
+                                          Text(
+                                            'Lv.${p.level} ${p.heroClass.title}',
+                                            style: const TextStyle(
+                                              color: _dim,
+                                              fontSize: 12,
+                                            ),
                                           ),
-                                        ),
                                       ],
                                     ),
                                   ),
@@ -305,35 +312,17 @@ class _SkillsPanelState extends State<SkillsPanel> {
                                     setState(() => focused = skill),
                               ),
                             ),
-                            _investmentBar(short: short),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
-                              child: Row(
+                            if (short && media.size.width >= 600)
+                              Row(
                                 children: [
-                                  IconButton(
-                                    tooltip: '스킬 초기화',
-                                    onPressed: p.investedSkillPoints > 0
-                                        ? confirmReset
-                                        : null,
-                                    icon: Icon(
-                                      Icons.restart_alt_rounded,
-                                      color: p.investedSkillPoints > 0
-                                          ? gold
-                                          : _dim,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: GameAction(
-                                      '모험 계속하기',
-                                      primary: true,
-                                      icon: Icons.play_arrow_rounded,
-                                      onTap: widget.onClose,
-                                    ),
-                                  ),
+                                  Expanded(child: _investmentBar(short: true)),
+                                  SizedBox(width: 236, child: _footer()),
                                 ],
-                              ),
-                            ),
+                              )
+                            else ...[
+                              _investmentBar(short: short),
+                              _footer(),
+                            ],
                           ],
                         ),
                       ),
@@ -371,6 +360,31 @@ class _SkillsPanelState extends State<SkillsPanel> {
       ),
     );
   }
+
+  Widget _footer() => Padding(
+    padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
+    child: Row(
+      children: [
+        IconButton(
+          tooltip: '스킬 초기화',
+          onPressed: p.investedSkillPoints > 0 ? confirmReset : null,
+          icon: Icon(
+            Icons.restart_alt_rounded,
+            color: p.investedSkillPoints > 0 ? gold : _dim,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: GameAction(
+            '모험 계속하기',
+            primary: true,
+            icon: Icons.play_arrow_rounded,
+            onTap: widget.onClose,
+          ),
+        ),
+      ],
+    ),
+  );
 
   String prerequisitesText(SkillDef skill) => skill.requires.isEmpty
       ? '계열의 시작 기술'

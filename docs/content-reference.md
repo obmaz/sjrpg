@@ -86,3 +86,5 @@ Flutter 전용 `actors-roll.png`는 전사·마법사의 웅크리기·구르기
 전투 애니메이션 `flutter_game/art/fx-meteor.webp`·`fx-ice-nova.webp`는 이 게임을 위해 생성한 각 16프레임 4×4 효과 시트입니다. 원본은 각각 `/workspace/generated_images/exec-d4379692-c85e-4a0a-b1ee-2286206e6830.png`·`/workspace/generated_images/exec-525696d9-0f57-4f62-8779-1bc33fd12720.png`이며, 투명도를 보존해 1024×1024 WebP로 준비했습니다. 운석의 비행·폭발과 얼음의 성장·파쇄를 서로 다른 실제 그림 프레임으로 재생하고, 충돌·중력 파편·파동·갑옷 결정은 코드로 결합합니다.
 
 `flutter_game/art/fx-whirlwind.webp`는 비어 있는 중앙 주위로 베기·바람·먼지가 모였다가 흩어지는 16프레임 소용돌이 시트입니다. 생성 원본은 `/workspace/generated_images/exec-4e38067a-cf06-457d-a966-05e0d667192d.png`이며 투명도를 보존해 1024×1024 WebP로 준비했습니다.
+
+`flutter_game/art/passive-icons.webp`는 전투 집중·전장의 맹세·고양의 울림·온기·냉기 숙련·번개 숙련의 전용 그림 6종을 담은 3×2 아틀라스입니다. 생성 원본은 `/workspace/generated_images/exec-8f84cf7a-27a5-4a77-8a5b-fef1e2ce266a.png`이며 투명도를 보존해 768×512 WebP로 준비했습니다. 트리와 설명 창은 같은 그림을 사용하고 기존 전투 효과와는 별도 텍스처로 읽습니다.
