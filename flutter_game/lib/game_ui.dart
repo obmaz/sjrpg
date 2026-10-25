@@ -354,6 +354,15 @@ class MapPainter extends CustomPainter {
         ][session.world.stage.index],
     );
     for (final wood in session.world.woods) {
+      if (!round) {
+        c.drawPath(
+          wood.path,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 100
+            ..color = const Color(0xff506d48),
+        );
+      }
       c.drawPath(wood.path, Paint()..color = const Color(0xff315947));
     }
     for (final clearing in session.world.clearings) {
@@ -363,6 +372,22 @@ class MapPainter extends CustomPainter {
       c.drawPath(sand.path, Paint()..color = const Color(0xffc7b579));
     }
     for (final lake in [...session.world.lakes, session.world.river]) {
+      if (!round) {
+        c.drawPath(
+          lake.path,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 140
+            ..color = const Color(0xffd5c99a),
+        );
+        c.drawPath(
+          lake.path,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 55
+            ..color = const Color(0xff29636d),
+        );
+      }
       c.drawPath(lake.path, Paint()..color = const Color(0xff3b91a0));
     }
     for (final trail in session.world.trails) {
@@ -401,6 +426,46 @@ class MapPainter extends CustomPainter {
       (at.dx - view.left) / view.width * s.width,
       (at.dy - view.top) / view.height * s.height,
     );
+    if (!round) {
+      // Decorations stay fixed in screen pixels while the actual map scales.
+      final unit = markerScale;
+      c.drawRect(
+        rect.deflate(3 * unit),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2 * unit
+          ..color = gold.withValues(alpha: .6),
+      );
+      final north = Offset(s.width - 35 * unit, 35 * unit);
+      c.drawCircle(north, 18 * unit, Paint()..color = const Color(0xdd102a29));
+      c.drawPath(
+        Path()
+          ..moveTo(north.dx, north.dy - 13 * unit)
+          ..lineTo(north.dx - 5 * unit, north.dy + 8 * unit)
+          ..lineTo(north.dx, north.dy + 4 * unit)
+          ..lineTo(north.dx + 5 * unit, north.dy + 8 * unit)
+          ..close(),
+        Paint()..color = gold,
+      );
+      final scaleStart = Offset(25 * unit, s.height - 25 * unit);
+      final scaleEnd = scaleStart + Offset(s.width * 1000 / worldSize.width, 0);
+      c.drawLine(
+        scaleStart,
+        scaleEnd,
+        Paint()
+          ..color = cream
+          ..strokeWidth = 2 * unit,
+      );
+      for (final point in [scaleStart, scaleEnd]) {
+        c.drawLine(
+          point - Offset(0, 4 * unit),
+          point + Offset(0, 4 * unit),
+          Paint()
+            ..color = cream
+            ..strokeWidth = unit,
+        );
+      }
+    }
     final heroPoint = project(session.hero.body.center);
     final shopPoint = project(session.world.merchantAt),
         healPoint = project(session.world.healAt);
@@ -600,10 +665,23 @@ class EffectIconPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final passive = index >= 8;
-    final image = art.images[passive ? 'passive-icons' : 'combat-fx'];
+    final image =
+        art.images[index >= 14
+            ? 'skill-perks'
+            : passive
+            ? 'passive-icons'
+            : 'combat-fx'];
     if (image == null) return;
-    final columns = passive ? 3 : 4;
-    final localIndex = passive ? index - 8 : index;
+    final columns = index >= 14
+        ? 4
+        : passive
+        ? 3
+        : 4;
+    final localIndex = index >= 14
+        ? index - 14
+        : passive
+        ? index - 8
+        : index;
     final cell = image.width / columns;
     canvas.drawImageRect(
       image,

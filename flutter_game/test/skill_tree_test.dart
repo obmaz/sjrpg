@@ -12,11 +12,9 @@ void main() {
       () {
         final p = Progress(heroClass: hero);
         expect(p.skillBranches.length, 3);
+        expect(p.skills.length, 18);
         for (final branch in p.skillBranches) {
-          expect(
-            p.skills.where((s) => s.branch == branch).length,
-            greaterThanOrEqualTo(3),
-          );
+          expect(p.skills.where((s) => s.branch == branch).length, 6);
         }
         final ids = p.skills.map((s) => s.id).toSet();
         expect(ids.length, p.skills.length);

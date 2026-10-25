@@ -24,6 +24,7 @@ class GameArt {
         'gear-icons',
         'combat-fx',
         'passive-icons',
+        'skill-perks',
         'fx-meteor',
         'fx-ice-nova',
         'fx-whirlwind',
@@ -45,6 +46,7 @@ class GameArt {
         'actors-sand-warden',
         'actors-ancient-king',
         'actors-cyber-core',
+        'actors-bicycle',
         'cyber-props',
         'ruin-props',
         'village-scene',
@@ -255,7 +257,7 @@ class GameArt {
       'merchant': ('villagers', 0, 8),
       'villager': ('villagers', 1, 8),
       'horse': ('vehicles', 0, 8),
-      'bicycle': ('vehicles', 1, 8),
+      'bicycle': ('bicycle', 0, 8),
       'motor': ('vehicles', 2, 8),
       'boat': ('vehicles', 3, 8),
     };
@@ -269,6 +271,7 @@ class GameArt {
           'sand-warden',
           'ancient-king',
           'cyber-core',
+          'bicycle',
         }.contains(key)
         ? facingFrame(angle, 8) * 2 + phase % 2
         : count == 16
@@ -281,9 +284,17 @@ class GameArt {
     final maxH = (record['sizes'][definition.$2][1] as num).toDouble(),
         scale = height / maxH;
     final src = ui.Rect.fromLTWH(frame[0], frame[1], frame[2], frame[3]);
+    final anchors = record['feet'] as List?;
+    final anchor = anchors == null ? null : anchors[index] as List;
+    final anchorX = anchor == null
+        ? src.width / 2
+        : (anchor[0] as num).toDouble() - src.left;
+    final anchorY = anchor == null
+        ? src.height
+        : (anchor[1] as num).toDouble() - src.top;
     final dst = ui.Rect.fromLTWH(
-      feet.dx - src.width * scale / 2,
-      feet.dy - src.height * scale,
+      feet.dx - anchorX * scale,
+      feet.dy - anchorY * scale,
       src.width * scale,
       src.height * scale,
     );

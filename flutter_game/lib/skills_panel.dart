@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'adventure.dart';
-import 'class_selection.dart';
 import 'game_ui.dart';
 import 'panel_controls.dart';
 import 'rpg_model.dart';
@@ -70,16 +69,9 @@ class _SkillsPanelState extends State<SkillsPanel> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 20, 20, 12),
-                  child: Text(
-                    '스킬 초기화',
-                    style: TextStyle(
-                      color: gold,
-                      fontSize: 21,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                GamePanelHeader(
+                  title: '스킬 초기화',
+                  onClose: () => Navigator.of(dialogContext).pop(false),
                 ),
                 Flexible(
                   child: SingleChildScrollView(
@@ -186,91 +178,33 @@ class _SkillsPanelState extends State<SkillsPanel> {
                         excluding: selected != null,
                         child: Column(
                           children: [
-                            Padding(
-                              padding: EdgeInsets.fromLTRB(
-                                14,
-                                tight ? 4 : 8,
-                                6,
-                                tight ? 4 : 8,
-                              ),
-                              child: Row(
-                                children: [
-                                  SizedBox(
-                                    width: 40,
-                                    height: tight ? 32 : 48,
-                                    child:
-                                        s.art.images.containsKey('actors-hero')
-                                        ? CustomPaint(
-                                            painter: ClassFigure(
-                                              s.art,
-                                              p.heroClass,
-                                            ),
-                                          )
-                                        : const Icon(
-                                            Icons.auto_awesome,
-                                            color: gold,
-                                          ),
+                            GamePanelHeader(
+                              title: '스킬 트리',
+                              subtitle: tight
+                                  ? null
+                                  : 'Lv.${p.level} ${p.heroClass.title}',
+                              dense: tight,
+                              onClose: widget.onClose,
+                              trailing: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 7,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xff394634),
+                                  border: Border.all(
+                                    color: gold.withValues(alpha: .55),
                                   ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Semantics(
-                                          container: true,
-                                          header: true,
-                                          child: const Text(
-                                            '스킬 트리',
-                                            style: TextStyle(
-                                              color: cream,
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                        if (!tight)
-                                          Text(
-                                            'Lv.${p.level} ${p.heroClass.title}',
-                                            style: const TextStyle(
-                                              color: _dim,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '${p.skillPoints} P',
+                                  style: const TextStyle(
+                                    color: gold,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 7,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xff394634),
-                                      border: Border.all(
-                                        color: gold.withValues(alpha: .55),
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      '${p.skillPoints} P',
-                                      style: const TextStyle(
-                                        color: gold,
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    tooltip: '닫기',
-                                    onPressed: widget.onClose,
-                                    icon: const Icon(
-                                      Icons.close,
-                                      color: _dim,
-                                      size: 21,
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
                             ),
                             Padding(
@@ -351,13 +285,10 @@ class _SkillsPanelState extends State<SkillsPanel> {
     padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
     child: Row(
       children: [
-        IconButton(
-          tooltip: '스킬 초기화',
-          onPressed: p.investedSkillPoints > 0 ? confirmReset : null,
-          icon: Icon(
-            Icons.restart_alt_rounded,
-            color: p.investedSkillPoints > 0 ? gold : _dim,
-          ),
+        GameIconButton(
+          label: '스킬 초기화',
+          onTap: p.investedSkillPoints > 0 ? confirmReset : null,
+          icon: Icons.restart_alt_rounded,
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -428,10 +359,10 @@ class _SkillsPanelState extends State<SkillsPanel> {
                   : null,
             ),
           ),
-          IconButton(
-            tooltip: '스킬 설명과 배치',
-            onPressed: () => inspect(focused),
-            icon: const Icon(Icons.info_outline, color: gold, size: 22),
+          GameIconButton(
+            label: '스킬 설명과 배치',
+            onTap: () => inspect(focused),
+            icon: Icons.info_outline,
           ),
         ],
       ),
@@ -525,27 +456,11 @@ class _SkillsPanelState extends State<SkillsPanel> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 6, 4, 6),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    skill.passive ? '지속 효과' : skill.branch,
-                    style: TextStyle(
-                      color: color,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  tooltip: '스킬 상세 닫기',
-                  onPressed: () => setState(() => selected = null),
-                  icon: const Icon(Icons.close, color: _dim, size: 21),
-                ),
-              ],
-            ),
+          GamePanelHeader(
+            title: skill.passive ? '지속 효과' : skill.branch,
+            dense: true,
+            closeLabel: '스킬 상세 닫기',
+            onClose: () => setState(() => selected = null),
           ),
           const Divider(height: 1, color: Color(0xff3b584c)),
           Flexible(

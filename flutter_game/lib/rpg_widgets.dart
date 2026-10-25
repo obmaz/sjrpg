@@ -11,6 +11,24 @@ IconData elementIcon(String element) => element == 'ice'
     ? Icons.bolt
     : Icons.local_fire_department;
 int skillEffect(String id) => switch (id) {
+  'rendingEdge' => 14,
+  'stormOfSteel' => 15,
+  'weaponTempo' => 16,
+  'veteranGuard' => 17,
+  'secondWind' => 18,
+  'resoundingCry' => 19,
+  'warDrums' => 20,
+  'unyieldingOath' => 21,
+  'emberFocus' => 22,
+  'cinderReach' => 23,
+  'phoenixHeart' => 24,
+  'deepFreeze' => 25,
+  'frozenAegis' => 26,
+  'glacialReserve' => 27,
+  'conductivity' => 28,
+  'forkedStorm' => 29,
+  'arcaneEconomy' => 30,
+
   'battleFocus' => 8,
   'battleVigor' => 9,
   'rallyingVoice' => 10,

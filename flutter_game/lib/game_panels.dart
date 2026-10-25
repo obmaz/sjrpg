@@ -158,11 +158,6 @@ class _AdventurePanelState extends State<AdventurePanel> {
               : '필수 성소·처치 목표 완료 후 등장',
         ),
         const SizedBox(height: 18),
-        const Text(
-          '마을 남쪽에서 말·자전거·오토바이를, 큰 호숫가에서 배를 찾을 수 있습니다. 가까이 가서 타기를 누르세요.',
-          style: TextStyle(color: cream, fontSize: 14, height: 1.6),
-        ),
-        const SizedBox(height: 18),
         _quest(
           '숲의 기억 · 선택 여정',
           '서쪽·북쪽·동쪽 길의 상자에서 기억 3개를 모으세요. 완성 보상: 스킬 포인트 +1.',
@@ -340,40 +335,9 @@ class _AdventurePanelState extends State<AdventurePanel> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const SizedBox(height: 10),
-                    Container(
-                      width: 38,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: const Color(0xff75958b),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(22, 12, 10, 12),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Semantics(
-                              header: true,
-                              child: Text(
-                                title,
-                                style: const TextStyle(
-                                  fontSize: 21,
-                                  color: cream,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          if (!result)
-                            IconButton(
-                              tooltip: '닫기',
-                              onPressed: widget.onClose,
-                              icon: const Icon(Icons.close, color: gold),
-                            ),
-                        ],
-                      ),
+                    GamePanelHeader(
+                      title: title,
+                      onClose: result ? null : widget.onClose,
                     ),
                     const Divider(height: 1, color: Color(0x557b8c62)),
                     Flexible(

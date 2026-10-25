@@ -134,44 +134,14 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
     );
   }
 
-  Widget _header() => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 10, 6, 10),
-    child: Row(
+  Widget _header() => GamePanelHeader(
+    title: shopping ? '상점' : '장비 가방',
+    subtitle:
+        '${shopping ? p.heroClass.title : '보관함'} · ${p.inventory.length}/${Progress.capacity}',
+    onClose: widget.onClose,
+    trailing: Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: const Color(0xff0d2625),
-            border: Border.all(color: gold.withValues(alpha: .6)),
-          ),
-          child: Icon(
-            shopping ? Icons.storefront : Icons.shield_outlined,
-            color: gold,
-            size: 23,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                shopping ? '상점' : '장비 가방',
-                style: const TextStyle(
-                  color: cream,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                '${shopping ? p.heroClass.title : '보관함'} · ${p.inventory.length}/${Progress.capacity}',
-                style: const TextStyle(fontSize: 12, color: _muted),
-              ),
-            ],
-          ),
-        ),
         const Icon(Icons.monetization_on_rounded, size: 17, color: gold),
         const SizedBox(width: 4),
         Text(
@@ -181,11 +151,6 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
-        ),
-        IconButton(
-          tooltip: '닫기',
-          onPressed: widget.onClose,
-          icon: const Icon(Icons.close, size: 21, color: _muted),
         ),
       ],
     ),
@@ -861,10 +826,10 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
               ),
             Align(
               alignment: Alignment.center,
-              child: IconButton(
-                tooltip: '옵션 접기',
-                onPressed: select,
-                icon: const Icon(Icons.expand_less, color: _muted),
+              child: GameIconButton(
+                label: '옵션 접기',
+                onTap: select,
+                icon: Icons.expand_less,
               ),
             ),
           ],

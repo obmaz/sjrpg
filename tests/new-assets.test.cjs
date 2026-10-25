@@ -30,7 +30,7 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
     fs.writeFileSync(path.join(root, 'package.json'), '{"type":"module"}');
     fs.writeFileSync(
         path.join(root, 'src/data/actor-bounds.js'),
-        'export const ACTOR_BOUNDS = { hero: { frames: [[1, 2, 3, 4]] } };',
+        'export const ACTOR_BOUNDS = { shared: { frames: [[1, 2, 3, 4]] } };',
     );
     fs.writeFileSync(
         path.join(root, 'src/data/ui-art.js'),
@@ -60,7 +60,15 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
     const metadata = JSON.parse(
         fs.readFileSync(path.join(root, 'flutter_game/assets/art.json'), 'utf8'),
     );
-    assert.deepEqual(metadata.actors.hero.frames, [[1, 2, 3, 4]]);
+    assert.deepEqual(metadata.actors.shared.frames, [[1, 2, 3, 4]]);
+    for (const [actor, count] of [
+        ['hero', 32],
+        ['hero-attack', 32],
+        ['bicycle', 16],
+    ]) {
+        assert.equal(metadata.actors[actor].frames.length, count);
+    }
+    assert.equal(metadata.actors.hero.feet.length, 32);
     assert.deepEqual(metadata.controls.attack, [1, 2, 3, 4]);
     assert.equal(metadata.actors.gunner.frames.length, 16);
     assert.equal(metadata.actors.cyber.frames.length, 16);

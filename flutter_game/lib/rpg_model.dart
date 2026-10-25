@@ -491,6 +491,94 @@ const warriorSkills = [
     passive: true,
     requires: {'battleVigor': 2, 'frenzy': 1},
   ),
+  SkillDef(
+    'rendingEdge',
+    '예리한 칼날',
+    '전투 기술',
+    '등급마다 기본 공격 피해 +5%.',
+    9,
+    0,
+    0,
+    passive: true,
+    requires: {'seismicSlam': 1, 'mastery': 2},
+  ),
+  SkillDef(
+    'stormOfSteel',
+    '강철 폭풍',
+    '전투 기술',
+    '2등급마다 소용돌이·대지 강타의 최대 대상 +1명. 최대 2명 추가.',
+    16,
+    0,
+    0,
+    passive: true,
+    requires: {'rendingEdge': 2, 'battleFocus': 1},
+  ),
+  SkillDef(
+    'weaponTempo',
+    '무기의 리듬',
+    '전투 숙련',
+    '등급마다 기본 공격 간격 1.5% 감소.',
+    6,
+    0,
+    0,
+    passive: true,
+    requires: {'mastery': 1, 'cleave': 2},
+  ),
+  SkillDef(
+    'veteranGuard',
+    '노련한 수호',
+    '전투 숙련',
+    '등급마다 방어 +2.',
+    9,
+    0,
+    0,
+    passive: true,
+    requires: {'ironSkin': 2, 'warcry': 2},
+  ),
+  SkillDef(
+    'secondWind',
+    '두 번째 숨결',
+    '전투 숙련',
+    '등급마다 최대 생명 +10.',
+    12,
+    0,
+    0,
+    passive: true,
+    requires: {'veteranGuard': 1, 'battleVigor': 1},
+  ),
+  SkillDef(
+    'resoundingCry',
+    '공명의 함성',
+    '함성',
+    '등급마다 전장의 함성 피해 +6%.',
+    6,
+    0,
+    0,
+    passive: true,
+    requires: {'warcry': 2, 'mastery': 1},
+  ),
+  SkillDef(
+    'warDrums',
+    '전쟁의 북소리',
+    '함성',
+    '함성 보호 중 실제 적중 시 등급마다 분노 +0.5.',
+    9,
+    0,
+    0,
+    passive: true,
+    requires: {'resoundingCry': 1, 'battleVigor': 1},
+  ),
+  SkillDef(
+    'unyieldingOath',
+    '불굴의 맹세',
+    '함성',
+    '등급마다 전장의 함성 피해 감소 +2%p.',
+    16,
+    0,
+    0,
+    passive: true,
+    requires: {'warDrums': 2, 'ironSkin': 2},
+  ),
 ];
 const mageSkills = [
   SkillDef(
@@ -584,6 +672,105 @@ const mageSkills = [
     0,
     passive: true,
     requires: {'chainLightning': 1, 'coldMastery': 1},
+  ),
+  SkillDef(
+    'emberFocus',
+    '잿불 집중',
+    '화염',
+    '등급마다 화염 무기·유성 피해 +5%.',
+    6,
+    0,
+    0,
+    passive: true,
+    requires: {'firebolt': 2},
+  ),
+  SkillDef(
+    'cinderReach',
+    '화염 확산',
+    '화염',
+    '2등급마다 유성의 최대 대상 +1명. 최대 2명 추가.',
+    10,
+    0,
+    0,
+    passive: true,
+    requires: {'emberFocus': 1, 'frostNova': 1},
+  ),
+  SkillDef(
+    'phoenixHeart',
+    '불사조의 심장',
+    '화염',
+    '등급마다 최대 생명 +8.',
+    13,
+    0,
+    0,
+    passive: true,
+    requires: {'meteor': 1, 'iceArmor': 1},
+  ),
+  SkillDef(
+    'deepFreeze',
+    '심연의 냉기',
+    '냉기',
+    '등급마다 냉기 무기·서릿발 피해 +5%.',
+    6,
+    0,
+    0,
+    passive: true,
+    requires: {'frostNova': 2, 'warmth': 1},
+  ),
+  SkillDef(
+    'frozenAegis',
+    '빙하의 방벽',
+    '냉기',
+    '등급마다 얼음 갑옷 피해 감소 +2%p.',
+    10,
+    0,
+    0,
+    passive: true,
+    requires: {'iceArmor': 2, 'deepFreeze': 1},
+  ),
+  SkillDef(
+    'glacialReserve',
+    '빙하의 샘',
+    '냉기',
+    '등급마다 최대 마나 +6.',
+    13,
+    0,
+    0,
+    passive: true,
+    requires: {'coldMastery': 1, 'frozenAegis': 2},
+  ),
+  SkillDef(
+    'conductivity',
+    '마력 전도',
+    '번개',
+    '등급마다 번개 무기·연쇄 번개 피해 +5%.',
+    6,
+    0,
+    0,
+    passive: true,
+    requires: {'arcaneMastery': 2, 'frostNova': 1},
+  ),
+  SkillDef(
+    'forkedStorm',
+    '갈래 번개',
+    '번개',
+    '2등급마다 연쇄 번개의 최대 대상 +1명. 최대 2명 추가.',
+    10,
+    0,
+    0,
+    passive: true,
+    requires: {'chainLightning': 2, 'conductivity': 1},
+  ),
+  SkillDef(
+    'arcaneEconomy',
+    '비전 순환',
+    '번개',
+    '등급마다 최대 마나 +4, 초당 마나 회복 +0.5.',
+    16,
+    0,
+    0,
+    passive: true,
+    requires: {'lightningMastery': 1, 'phoenixHeart': 1},
   ),
 ];
 
@@ -853,14 +1040,20 @@ class Progress {
       bonusHealth +
       equipped.values.fold(0.0, (v, g) => v + g.health) +
       rank('ironSkin') * 8 +
-      rank('battleVigor') * 8;
+      rank('battleVigor') * 8 +
+      rank('secondWind') * 10 +
+      rank('phoenixHeart') * 8;
   set maxHp(double value) => bonusHealth += value - maxHp;
   double get maxEnergy =>
       (heroClass == HeroClass.warrior ? 100 : 90) +
       equipped.values.fold(0.0, (v, g) => v + g.mana) +
-      rank('arcaneMastery') * 8;
+      rank('arcaneMastery') * 8 +
+      rank('glacialReserve') * 6 +
+      rank('arcaneEconomy') * 4;
   double get armor =>
-      equipped.values.fold(0.0, (v, g) => v + g.armor) + rank('ironSkin') * 5;
+      equipped.values.fold(0.0, (v, g) => v + g.armor) +
+      rank('ironSkin') * 5 +
+      rank('veteranGuard') * 2;
   double get swordDamage =>
       (bonusAttack +
           (level - 1) * 2 +
@@ -872,9 +1065,13 @@ class Progress {
   List<String> get skillBranches => heroClass == HeroClass.warrior
       ? const ['전투 기술', '전투 숙련', '함성']
       : const ['화염', '냉기', '번개'];
-  double get manaRecovery => 9 + rank('warmth') * 1.5;
-  double get coldDamageMultiplier => 1 + rank('coldMastery') * .08;
-  double get lightningDamageMultiplier => 1 + rank('lightningMastery') * .08;
+  double get manaRecovery =>
+      9 + rank('warmth') * 1.5 + rank('arcaneEconomy') * .5;
+  double get fireDamageMultiplier => 1 + rank('emberFocus') * .05;
+  double get coldDamageMultiplier =>
+      1 + rank('coldMastery') * .08 + rank('deepFreeze') * .05;
+  double get lightningDamageMultiplier =>
+      1 + rank('lightningMastery') * .08 + rank('conductivity') * .05;
   int get basicTargetLimit => basicTargetLimitForRank(
     rank(heroClass == HeroClass.warrior ? 'cleave' : 'firebolt'),
   );
@@ -887,9 +1084,12 @@ class Progress {
     final r = (atRank ?? rank(skill.id)).clamp(0, SkillDef.maxRank);
     if (r == 0 || !skills.contains(skill)) return 0;
     return switch (skill.id) {
-      'warcry' || 'whirlwind' || 'frostNova' || 'chainLightning' => 3 + r - 1,
+      'whirlwind' => 3 + r - 1 + rank('stormOfSteel') ~/ 2,
+      'chainLightning' => 3 + r - 1 + rank('forkedStorm') ~/ 2,
+      'warcry' || 'frostNova' => 3 + r - 1,
       'frenzy' => 3 + (r - 1) ~/ 2,
-      'seismicSlam' || 'meteor' => 3 + (r - 1) * 2,
+      'seismicSlam' => 3 + (r - 1) * 2 + rank('stormOfSteel') ~/ 2,
+      'meteor' => 3 + (r - 1) * 2 + rank('cinderReach') ~/ 2,
       _ => 0,
     };
   }
@@ -921,27 +1121,40 @@ class Progress {
               (skill.id == 'firebolt' && weapon.base.style == 'lightning')
         ? lightningDamageMultiplier
         : 1;
-    return swordDamage * factor * element;
+    final fire =
+        skill.id == 'meteor' ||
+        (skill.id == 'firebolt' && weapon.base.style == 'fire');
+    final specialization = skill.id == 'cleave'
+        ? 1 + rank('rendingEdge') * .05
+        : skill.id == 'warcry'
+        ? 1 + rank('resoundingCry') * .06
+        : 1;
+    return swordDamage *
+        factor *
+        element *
+        (fire ? fireDamageMultiplier : 1) *
+        specialization;
   }
 
   double skillProtection(String id, {int? atRank}) {
     final r = (atRank ?? rank(id)).clamp(0, SkillDef.maxRank);
     return id == 'warcry'
-        ? .25 + r * .025
+        ? .25 + r * .025 + rank('unyieldingOath') * .02
         : id == 'iceArmor'
-        ? .25 + r * .05
+        ? .25 + r * .05 + rank('frozenAegis') * .02
         : 0;
   }
 
   double get warcryDuration => 6 + rank('battleVigor') * .4;
   double rageOnHit({required bool protected}) =>
-      3.0 + (protected ? rank('rallyingVoice') : 0);
+      3.0 + (protected ? rank('rallyingVoice') + rank('warDrums') * .5 : 0);
 
   double get attackInterval => math.max(
     .16,
     weapon.base.tempo *
         (1 - equipped.values.fold(0.0, (v, g) => v + g.base.haste)) *
-        (1 - rank('battleFocus') * .025),
+        (1 - rank('battleFocus') * .025) *
+        (1 - rank('weaponTempo') * .015),
   );
   double get basicDps => basicDamage / attackInterval;
   BasicAttackStats? previewBasicAttack(Gear gear) {

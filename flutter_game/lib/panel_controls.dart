@@ -3,6 +3,129 @@ import 'game_ui.dart';
 
 const _muted = Color(0xffa4bcb6);
 
+DecorationImage gameButtonImage({bool enabled = true, bool primary = false}) =>
+    DecorationImage(
+      image: ExactAssetImage(
+        'assets/images/ui-button-${!enabled
+            ? 'disabled'
+            : primary
+            ? 'primary'
+            : 'secondary'}.webp',
+        scale: 3,
+      ),
+      centerSlice: const Rect.fromLTRB(12, 10, 244, 32.6666667),
+      fit: BoxFit.fill,
+      filterQuality: FilterQuality.medium,
+    );
+
+class GameIconButton extends StatelessWidget {
+  const GameIconButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+    this.size = 44,
+    super.key,
+  });
+  final String label;
+  final IconData icon;
+  final VoidCallback? onTap;
+  final double size;
+  @override
+  Widget build(BuildContext context) => Semantics(
+    container: true,
+    button: true,
+    enabled: onTap != null,
+    label: label,
+    onTap: onTap,
+    excludeSemantics: true,
+    child: Tooltip(
+      message: label,
+      excludeFromSemantics: true,
+      child: SizedBox.square(
+        dimension: size,
+        child: Material(
+          color: Colors.transparent,
+          child: Ink(
+            decoration: BoxDecoration(
+              image: gameButtonImage(enabled: onTap != null),
+            ),
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(7),
+              child: Icon(
+                icon,
+                size: 20,
+                color: onTap == null ? _muted : cream,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class GamePanelHeader extends StatelessWidget {
+  const GamePanelHeader({
+    required this.title,
+    this.subtitle,
+    this.trailing,
+    this.onClose,
+    this.closeLabel = '닫기',
+    this.dense = false,
+    super.key,
+  });
+  final String title, closeLabel;
+  final String? subtitle;
+  final Widget? trailing;
+  final VoidCallback? onClose;
+  final bool dense;
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: EdgeInsets.fromLTRB(16, dense ? 4 : 10, 10, dense ? 4 : 10),
+    child: Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Semantics(
+                header: true,
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: cream,
+                    fontSize: dense ? 18 : 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              if (subtitle != null)
+                Text(
+                  subtitle!,
+                  style: const TextStyle(
+                    color: _muted,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        if (trailing != null) ...[const SizedBox(width: 8), trailing!],
+        if (onClose != null) ...[
+          const SizedBox(width: 8),
+          GameIconButton(
+            label: closeLabel,
+            icon: Icons.close_rounded,
+            onTap: onClose,
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
 class GameAction extends StatelessWidget {
   const GameAction(
     this.label, {
@@ -40,17 +163,8 @@ class GameAction extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: Ink(
-            decoration: ShapeDecoration(
-              shape: shape,
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: !enabled
-                    ? [const Color(0xff203a36), const Color(0xff162d2a)]
-                    : primary
-                    ? [const Color(0xffe5c881), const Color(0xffac7d3f)]
-                    : [const Color(0xff214d45), const Color(0xff102d2a)],
-              ),
+            decoration: BoxDecoration(
+              image: gameButtonImage(enabled: enabled, primary: primary),
             ),
             child: InkWell(
               customBorder: shape,
@@ -78,7 +192,7 @@ class GameAction extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: !enabled
                               ? _muted
@@ -123,15 +237,7 @@ class GameTabs extends StatelessWidget {
                   height: 48,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: selected == i
-                        ? const Color(0xff24483e)
-                        : Colors.transparent,
-                    border: Border(
-                      bottom: BorderSide(
-                        color: selected == i ? gold : const Color(0xff35554b),
-                        width: selected == i ? 2 : 1,
-                      ),
-                    ),
+                    image: gameButtonImage(primary: selected == i),
                   ),
                   child: Text(
                     labels[i],

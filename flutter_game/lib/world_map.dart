@@ -4,6 +4,7 @@ import 'adventure.dart';
 import 'game_ui.dart';
 import 'world_model.dart';
 import 'panel_controls.dart';
+import 'rpg_widgets.dart';
 
 class ExpandedWorldMap extends StatefulWidget {
   const ExpandedWorldMap({
@@ -22,23 +23,13 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
   Size viewport = Size.zero;
   static const canvas = Size(1200, 900);
   @override
-  void initState() {
-    super.initState();
-    transform.addListener(_viewChanged);
-  }
-
-  void _viewChanged() {
-    if (mounted) setState(() {});
-  }
-
-  @override
   void dispose() {
     transform.dispose();
     super.dispose();
   }
 
-  void center({bool overview = false}) {
-    final hero = widget.session.hero.body.center;
+  void center({bool overview = false, Offset? at}) {
+    final hero = at ?? widget.session.hero.body.center;
     final scale = overview
         ? math.min(
                 viewport.width / canvas.width,
@@ -63,7 +54,7 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
   }
 
   void zoom(double factor) {
-    final old = transform.value, current = old.getMaxScaleOnAxis();
+    final old = transform.value, current = old.storage[0].abs();
     final next = (current * factor).clamp(.15, 6.0), ratio = next / current;
     transform.value = Matrix4.identity()
       ..translateByDouble(
@@ -76,38 +67,18 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
   }
 
   @override
-  Widget build(BuildContext context) => ColoredBox(
-    color: const Color(0xff0b2022),
+  Widget build(BuildContext context) => FramedSurface(
+    art: widget.session.art,
+    compact: true,
     child: SafeArea(
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 8, 8),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    '모험 지도',
-                    style: TextStyle(
-                      color: cream,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  tooltip: '지도 닫기',
-                  onPressed: widget.onClose,
-                  icon: const Icon(Icons.close, color: cream),
-                ),
-              ],
-            ),
+          GamePanelHeader(
+            title: '모험 지도',
+            subtitle: widget.session.world.stage.title,
+            closeLabel: '지도 닫기',
+            onClose: widget.onClose,
           ),
-          Text(
-            widget.session.region,
-            style: const TextStyle(color: gold, fontSize: 15),
-          ),
-          const SizedBox(height: 8),
           Expanded(
             child: LayoutBuilder(
               builder: (context, box) {
@@ -122,17 +93,20 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
                   child: InteractiveViewer(
                     transformationController: transform,
                     constrained: false,
-                    boundaryMargin: const EdgeInsets.all(1200),
+                    boundaryMargin: const EdgeInsets.all(180),
                     minScale: .15,
                     maxScale: 6,
                     child: SizedBox(
                       width: canvas.width,
                       height: canvas.height,
-                      child: CustomPaint(
-                        painter: MapPainter(
-                          widget.session,
-                          round: false,
-                          markerScale: 1 / transform.value.getMaxScaleOnAxis(),
+                      child: ValueListenableBuilder<Matrix4>(
+                        valueListenable: transform,
+                        builder: (context, matrix, _) => CustomPaint(
+                          painter: MapPainter(
+                            widget.session,
+                            round: false,
+                            markerScale: 1 / matrix.storage[0].abs(),
+                          ),
                         ),
                       ),
                     ),
@@ -141,10 +115,36 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
               },
             ),
           ),
+          if (widget.session.visibleSites.isNotEmpty)
+            SizedBox(
+              height: 46,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 3,
+                ),
+                itemCount: widget.session.visibleSites.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 6),
+                itemBuilder: (context, index) {
+                  final site = widget.session.visibleSites[index];
+                  final done = widget.session.cleansedSites.contains(site.id);
+                  return SizedBox(
+                    width: 130,
+                    child: GameAction(
+                      '${done ? '✓' : '◆'} ${site.name}',
+                      semanticLabel: '지도 목표 · ${site.name}',
+                      onTap: () => center(at: site.at),
+                    ),
+                  );
+                },
+              ),
+            ),
           const Padding(
             padding: EdgeInsets.all(8),
             child: Text(
-              '두 손가락으로 확대 · 드래그로 이동',
+              '◆ 필수 의뢰   ⌂ 거점   ● 내 위치\n두 손가락으로 확대 · 드래그로 이동',
+              textAlign: TextAlign.center,
               style: TextStyle(color: Color(0xffa9c5b9), fontSize: 13),
             ),
           ),
@@ -184,34 +184,5 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
     ),
   );
   Widget _zoomButton(IconData icon, String label, VoidCallback action) =>
-      SizedBox(
-        width: 48,
-        height: 50,
-        child: Semantics(
-          container: true,
-          button: true,
-          label: label,
-          onTap: action,
-          excludeSemantics: true,
-          child: Tooltip(
-            message: label,
-            excludeFromSemantics: true,
-            child: Material(
-              color: Colors.transparent,
-              child: Ink(
-                decoration: BoxDecoration(
-                  color: const Color(0xff153a33),
-                  borderRadius: BorderRadius.circular(7),
-                  border: Border.all(color: gold.withValues(alpha: .5)),
-                ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(7),
-                  onTap: action,
-                  child: Center(child: Icon(icon, color: gold, size: 21)),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
+      GameIconButton(label: label, icon: icon, onTap: action, size: 48);
 }

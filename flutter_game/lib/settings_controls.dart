@@ -145,36 +145,18 @@ class GameNoticeDialog extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: const Color(0xff102d2a),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: gold.withValues(alpha: .65)),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xff577d72)),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-              child: Row(
-                children: [
-                  Icon(icon, color: gold, size: 26),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Semantics(
-                      container: true,
-                      header: true,
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          color: gold,
-                          fontSize: 19,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            GamePanelHeader(
+              title: title,
+              trailing: Icon(icon, color: gold),
+              onClose: () => Navigator.pop(context),
             ),
             const Divider(height: 1, color: Color(0xff3b584c)),
             Flexible(

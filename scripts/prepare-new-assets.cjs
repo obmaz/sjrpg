@@ -32,6 +32,12 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
             path.join(destination, `images/${name}.png`),
         );
     for (const name of [
+        'actors-bicycle',
+        'skill-perks',
+        'skill-tablet',
+        'ui-button-primary',
+        'ui-button-secondary',
+        'ui-button-disabled',
         'fx-meteor',
         'fx-ice-nova',
         'fx-whirlwind',
@@ -54,6 +60,26 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
             path.join(root, `flutter_game/art/${name}.webp`),
             path.join(destination, `images/${name}.webp`),
         );
+    for (const [source, target] of [
+        ['hero-clean', 'actors-hero'],
+        ['hero-attack-clean', 'actors-hero-attack'],
+    ])
+        fs.copyFileSync(
+            path.join(root, `flutter_game/art/${source}.webp`),
+            path.join(destination, `images/${target}.webp`),
+        );
+    const repaired = Object.fromEntries(
+        [
+            ['hero', 'hero-clean'],
+            ['hero-attack', 'hero-attack-clean'],
+            ['bicycle', 'actors-bicycle'],
+        ].map(([key, source]) => [
+            key,
+            JSON.parse(
+                fs.readFileSync(path.join(root, `flutter_game/art/${source}-bounds.json`), 'utf8'),
+            ),
+        ]),
+    );
     // Remove superseded generated output when upgrading an existing asset cache.
     fs.rmSync(path.join(destination, 'images/terrain-materials.png'), { force: true });
     const mage = JSON.parse(
@@ -86,6 +112,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         JSON.stringify({
             actors: {
                 ...ACTOR_BOUNDS,
+                ...repaired,
                 mage,
                 roll,
                 cyber,
