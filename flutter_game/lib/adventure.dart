@@ -9,6 +9,8 @@ import 'battle_effects.dart';
 import 'device_settings.dart';
 import 'skill_aim.dart';
 
+enum NearbyAction { chest, exit, shop, talk }
+
 class Adventure extends ChangeNotifier {
   Adventure(
     this.art, {
@@ -58,6 +60,17 @@ class Adventure extends ChangeNotifier {
   final random = math.Random(52);
   bool get active => ready && !disposed && !paused && !defeated && !won;
   String get region => world.areaName(hero.position.toOffset());
+  NearbyAction? get nearbyAction {
+    if (nearbyChest != null) return NearbyAction.chest;
+    if (nearbyExit != null) return NearbyAction.exit;
+    final at = hero.position.toOffset();
+    final shop = (at - const ui.Offset(3952, 2984)).distance;
+    final talk = (at - const ui.Offset(3660, 2952)).distance;
+    if (talk < 135 && (shop >= 165 || talk < shop)) return NearbyAction.talk;
+    if (shop < 165) return NearbyAction.shop;
+    return null;
+  }
+
   StageExit? get nearbyExit {
     for (final exit in stageExits) {
       if ((hero.body.center - ui.Offset(exit.x, exit.y)).distance < 115) {
@@ -470,6 +483,7 @@ class Adventure extends ChangeNotifier {
     progress.buy(def.value, () {
       bought = progress.createGear(def);
       progress.inventory.add(bought!);
+      progress.unseenGear.add(bought!.serial);
     });
     return bought;
   }

@@ -557,6 +557,7 @@ class Progress {
 
   final Map<String, int> ranks = {};
   final List<Gear> inventory = [];
+  final Set<int> unseenGear = {};
   final Map<GearSlot, Gear> equipped = {};
   Map<String, dynamic> toSave() => {
     'heroClass': heroClass.name,
@@ -579,6 +580,7 @@ class Progress {
     'quaternarySkill': quaternarySkill,
     'ranks': Map<String, int>.of(ranks),
     'inventory': inventory.map((g) => g.toSave()).toList(),
+    'unseenGear': unseenGear.toList(),
     'equipped': equipped.map((slot, gear) => MapEntry(slot.name, gear.serial)),
   };
   static Progress? fromSave(dynamic value) {
@@ -627,6 +629,14 @@ class Progress {
         p.inventory.add(gear);
       }
       p.equipped.clear();
+      final unseen = data['unseenGear'] ?? const <dynamic>[];
+      if (unseen is! List ||
+          unseen.length > capacity ||
+          unseen.toSet().length != unseen.length ||
+          unseen.any((id) => id is! int || !identities.contains(id))) {
+        return null;
+      }
+      p.unseenGear.addAll(unseen.cast<int>());
       for (final entry in (data['equipped'] as Map).entries) {
         final slot = GearSlot.values.firstWhere((s) => s.name == entry.key);
         final item = p.inventory.firstWhere((g) => g.serial == entry.value);
@@ -804,6 +814,7 @@ class Progress {
   bool equip(Gear item) {
     if (!inventory.contains(item) || !item.base.usable(heroClass)) return false;
     equipped[item.base.slot] = item;
+    unseenGear.remove(item.serial);
     hp = math.min(hp, maxHp);
     energy = math.min(energy, maxEnergy);
     return true;
@@ -812,6 +823,7 @@ class Progress {
   bool isEquipped(Gear item) => equipped[item.base.slot] == item;
   bool sell(Gear item) {
     if (isEquipped(item) || !inventory.remove(item)) return false;
+    unseenGear.remove(item.serial);
     gold += item.saleValue;
     return true;
   }
@@ -875,6 +887,7 @@ class Progress {
     }
     if (inventory.length >= capacity) return false;
     inventory.add(item);
+    unseenGear.add(item.serial);
     return true;
   }
 

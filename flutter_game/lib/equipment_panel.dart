@@ -187,6 +187,8 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
   }
 
   void inspect(Gear gear) => setState(() {
+    p.unseenGear.remove(gear.serial);
+    s.refresh();
     detail = gear;
     offer = null;
     message = '';
@@ -227,7 +229,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                         _Tabs(
                           shopping
                               ? ['장비', '물약', '축복']
-                              : ['전체', '무기', '방어구', '부적'],
+                              : ['전체', '신규', '무기', '방어구', '부적'],
                           shopping ? shopTab : bagTab,
                           tab,
                         ),
@@ -369,7 +371,13 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
 
   Widget _inventory() {
     final items = p.inventory
-        .where((g) => bagTab == 0 || g.base.slot.index == bagTab - 1)
+        .where(
+          (g) =>
+              bagTab == 0 ||
+              (bagTab == 1
+                  ? p.unseenGear.contains(g.serial)
+                  : g.base.slot.index == bagTab - 2),
+        )
         .toList();
     final count = bagTab == 0
         ? Progress.capacity
@@ -381,6 +389,17 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
         key: const PageStorageKey('equipment-grid'),
         physics: const ClampingScrollPhysics(),
         slivers: [
+          if (bagTab == 1 && items.isEmpty)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.all(18),
+                child: Text(
+                  '확인하지 않은 새 장비가 없습니다',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: _muted, fontSize: 14),
+                ),
+              ),
+            ),
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
             sliver: SliverToBoxAdapter(
@@ -486,7 +505,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
       button: gear != null,
       label: gear == null
           ? '빈 장비 칸'
-          : '${equippedSlot != null ? '착용 ${_slotName(equippedSlot)} · ' : '보관 장비 · '}${gear.name}${active ? ' · 장착 중' : ''}',
+          : '${equippedSlot != null ? '착용 ${_slotName(equippedSlot)} · ' : '보관 장비 · '}${gear.name}${active ? ' · 장착 중' : ''}${p.unseenGear.contains(gear.serial) ? ' · 신규' : ''}',
       excludeSemantics: true,
       onTap: gear == null ? null : () => inspect(gear),
       child: Material(
@@ -548,6 +567,20 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                     right: 3,
                     top: 3,
                     child: Icon(Icons.check_circle, color: _mint, size: 14),
+                  ),
+                if (gear != null &&
+                    !active &&
+                    p.unseenGear.contains(gear.serial))
+                  const Positioned(
+                    right: 4,
+                    top: 4,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Color(0xffe6b75a),
+                        shape: BoxShape.circle,
+                      ),
+                      child: SizedBox(width: 8, height: 8),
+                    ),
                   ),
                 if (gear != null && !active && _improvement(gear) > 0)
                   const Positioned(
@@ -981,6 +1014,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
     setState(() {
       message = '구매 완료 · ${entry.title}';
       if (bought != null) {
+        p.unseenGear.remove(bought.serial);
         detail = bought;
         offer = null;
       }

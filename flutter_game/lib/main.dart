@@ -1,6 +1,5 @@
 import 'dart:async' as async;
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
 import 'adventure.dart';
@@ -11,6 +10,7 @@ import 'world_model.dart';
 import 'class_selection.dart';
 import 'battle_effects.dart';
 import 'rpg_widgets.dart';
+import 'equipment_panel.dart';
 import 'game_checkpoint.dart';
 import 'save_bridge.dart' as storage;
 
@@ -301,7 +301,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
             : adventure.won
             ? 'victory'
             : panel;
-        final p = adventure.progress;
+        final p = adventure.progress, interaction = adventure.nearbyAction;
         final layouts = short && width < 360
             ? [
                 (18.0, 156.0, 52.0),
@@ -434,35 +434,37 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   onTap: adventure.hero.dodge,
                 ),
               ),
-              if ((adventure.hero.position.toOffset() -
-                          const ui.Offset(3952, 2984))
-                      .distance <
-                  165)
+              if (interaction != null)
                 Positioned(
-                  left: short && width > 500 ? 148 : 24,
+                  left: short && width > 500 ? 148 : 12,
                   bottom: bottom + stick + 12,
-                  child: FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: ink.withValues(alpha: .9),
-                      foregroundColor: cream,
-                      side: const BorderSide(color: gold),
-                    ),
-                    onPressed: () => open('shop'),
-                    icon: const Icon(Icons.storefront, size: 20),
-                    label: const Text('상점'),
-                  ),
-                ),
-              if ((adventure.hero.position.toOffset() -
-                          const ui.Offset(3660, 2952))
-                      .distance <
-                  135)
-                Positioned(
-                  left: short && width > 500 ? 148 : 24,
-                  bottom: bottom + stick + 12,
-                  child: FilledButton.icon(
-                    onPressed: () => open('talk'),
-                    icon: const Icon(Icons.chat_bubble_outline, size: 18),
-                    label: const Text('대화'),
+                  width: 120,
+                  child: GameAction(
+                    switch (interaction) {
+                      NearbyAction.shop => '상점',
+                      NearbyAction.talk => '대화',
+                      NearbyAction.chest => '상자 열기',
+                      NearbyAction.exit => '출구 확인',
+                    },
+                    icon: switch (interaction) {
+                      NearbyAction.shop => Icons.storefront,
+                      NearbyAction.talk => Icons.chat_bubble_outline,
+                      NearbyAction.chest => Icons.inventory_2_outlined,
+                      NearbyAction.exit => Icons.door_front_door_outlined,
+                    },
+                    onTap: () {
+                      switch (interaction) {
+                        case NearbyAction.shop:
+                          open('shop');
+                        case NearbyAction.talk:
+                          open('talk');
+                        case NearbyAction.chest:
+                          adventure.openChest();
+                          gameFocus.requestFocus();
+                        case NearbyAction.exit:
+                          open('exit');
+                      }
+                    },
                   ),
                 ),
               Positioned(
@@ -495,34 +497,6 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                           height: 1.4,
                         ),
                       ),
-                    ),
-                  ),
-                ),
-              if (adventure.nearbyChest != null || adventure.nearbyExit != null)
-                Positioned(
-                  right: 18,
-                  bottom: bottom + (short ? 105 : 138) + 93,
-                  child: FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: ink,
-                      foregroundColor: gold,
-                      side: const BorderSide(color: gold),
-                    ),
-                    onPressed: () {
-                      if (adventure.nearbyChest != null) {
-                        adventure.openChest();
-                      } else {
-                        open('exit');
-                      }
-                    },
-                    icon: Icon(
-                      adventure.nearbyChest != null
-                          ? Icons.inventory_2_outlined
-                          : Icons.door_front_door_outlined,
-                      size: 20,
-                    ),
-                    label: Text(
-                      adventure.nearbyChest != null ? '상자 열기' : '출구 확인',
                     ),
                   ),
                 ),
@@ -566,7 +540,11 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     art: widget.art,
     sprite: sprite,
     label: label,
-    badge: target == 'skills' ? adventure.progress.skillPoints : 0,
+    badge: target == 'skills'
+        ? adventure.progress.skillPoints
+        : target == 'bag'
+        ? adventure.progress.unseenGear.length
+        : 0,
     onTap: () => open(target),
   );
 }
