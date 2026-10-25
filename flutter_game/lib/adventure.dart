@@ -715,6 +715,7 @@ class Adventure extends ChangeNotifier {
     progress.hp = math.max(0, progress.hp - damage);
     hero.life.remove(damage);
     hero.invulnerable = .65;
+    hero.hurtFlash = .12;
     bubble(
       '-${damage.toInt()}',
       hero.position.toOffset() - const ui.Offset(0, 65),
@@ -960,7 +961,8 @@ class Guardian extends Player with WithCollision {
       spin = 0,
       dodgeClock = 0,
       dashing = 0,
-      invulnerable = 0;
+      invulnerable = 0,
+      hurtFlash = 0;
   final cooldowns = <String, double>{};
   double armorTime = 0, frenzyTime = 0;
   double impactHold = 0;
@@ -1086,6 +1088,7 @@ class Guardian extends Player with WithCollision {
     frenzyTime = math.max(0, frenzyTime - dt);
     dodgeClock = math.max(0, dodgeClock - dt);
     invulnerable = math.max(0, invulnerable - dt);
+    hurtFlash = math.max(0, hurtFlash - dt);
     if (session.attackSources.isNotEmpty && attackClock <= 0) slash();
   }
 
@@ -1386,6 +1389,36 @@ class Guardian extends Player with WithCollision {
         ..strokeWidth = 1.5
         ..color = const ui.Color(0xaaafffe3),
     );
+    if (invulnerable > 0) {
+      final pulse = .5 + .5 * math.sin(invulnerable * math.pi * 2 / .65);
+      final guard = ui.Rect.fromCenter(
+        center: feet - const ui.Offset(0, 2),
+        width: 40 + pulse * 3,
+        height: 16 + pulse * 2,
+      );
+      canvas.drawOval(
+        guard,
+        ui.Paint()
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..color = const ui.Color(
+            0xffb5fff0,
+          ).withValues(alpha: .3 + pulse * .35),
+      );
+      canvas.drawArc(
+        guard,
+        session.elapsed * 4,
+        math.pi * .65,
+        false,
+        ui.Paint()
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 2.5
+          ..color = const ui.Color(
+            0xffe6fff7,
+          ).withValues(alpha: .55 + pulse * .25),
+      );
+    }
+    final damageFlash = (hurtFlash / .12).clamp(0.0, 1.0) * .65;
     final mount = session.riding;
     if (mount != null) {
       session.art.actor(
@@ -1413,6 +1446,7 @@ class Guardian extends Player with WithCollision {
         mount.bearing,
         0,
         46,
+        flash: damageFlash,
       );
       canvas.restore();
     } else if (dashing > 0) {
@@ -1432,9 +1466,7 @@ class Guardian extends Player with WithCollision {
         swing > 0 ? (swing > .17 ? 0 : 1) : (animationTime / .13).floor() % 2,
         60,
         attack: swing > 0,
-        opacity: invulnerable > 0 && ((invulnerable * 18).floor() % 2 == 0)
-            ? .58
-            : 1,
+        flash: damageFlash,
       );
     }
     if (swing > 0 && session.progress.heroClass == HeroClass.warrior) {
