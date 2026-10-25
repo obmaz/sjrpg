@@ -60,6 +60,13 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
     assert.deepEqual(metadata.controls.attack, [1, 2, 3, 4]);
     assert.equal(metadata.actors.gunner.frames.length, 16);
     assert.equal(metadata.actors.cyber.frames.length, 16);
+    for (const actor of ['sand-warden', 'ancient-king']) {
+        assert.equal(metadata.actors[actor].frames.length, 16);
+        assert.equal(
+            fs.readFileSync(path.join(target, `actors-${actor}.webp`), 'utf8'),
+            `source picture actors-${actor}.webp`,
+        );
+    }
     await prepareNewAssets(root);
     assert.equal(fs.existsSync(path.join(target, 'terrain-materials.png')), false);
     assert.equal(

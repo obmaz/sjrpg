@@ -41,6 +41,8 @@ class GameArt {
         'stage-materials',
         'actors-cyber',
         'actors-gunner',
+        'actors-sand-warden',
+        'actors-ancient-king',
         'cyber-props',
         'ruin-props',
         'village-scene',
@@ -241,6 +243,8 @@ class GameArt {
       'troll': ('creatures-b', 0, 8),
       'cyber': ('cyber', 0, 8),
       'gunner': ('gunner', 0, 8),
+      'sand-warden': ('sand-warden', 0, 8),
+      'ancient-king': ('ancient-king', 0, 8),
       'merchant': ('villagers', 0, 8),
       'villager': ('villagers', 1, 8),
       'horse': ('vehicles', 0, 8),
@@ -251,7 +255,8 @@ class GameArt {
     final definition = definitions[key]!;
     final sheet = attack && key == 'hero' ? 'hero-attack' : definition.$1,
         count = definition.$3;
-    final index = key == 'cyber' || key == 'gunner'
+    final index =
+        const {'cyber', 'gunner', 'sand-warden', 'ancient-king'}.contains(key)
         ? facingFrame(angle, 8) * 2 + phase % 2
         : count == 16
         ? facingFrame(angle, count) + (phase % 2) * 16

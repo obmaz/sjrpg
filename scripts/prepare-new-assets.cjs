@@ -43,6 +43,8 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'terrain-materials',
         'actors-cyber',
         'actors-gunner',
+        'actors-sand-warden',
+        'actors-ancient-king',
         'cyber-props',
         'ruin-props',
     ])
@@ -64,6 +66,12 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
     const gunner = JSON.parse(
         fs.readFileSync(path.join(root, 'flutter_game/art/gunner-bounds.json'), 'utf8'),
     );
+    const sandWarden = JSON.parse(
+        fs.readFileSync(path.join(root, 'flutter_game/art/sand-warden-bounds.json'), 'utf8'),
+    );
+    const ancientKing = JSON.parse(
+        fs.readFileSync(path.join(root, 'flutter_game/art/ancient-king-bounds.json'), 'utf8'),
+    );
     const { ACTOR_BOUNDS } = await import(
         pathToFileURL(path.join(root, 'src/data/actor-bounds.js'))
     );
@@ -71,7 +79,15 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
     fs.writeFileSync(
         path.join(destination, 'art.json'),
         JSON.stringify({
-            actors: { ...ACTOR_BOUNDS, mage, roll, cyber, gunner },
+            actors: {
+                ...ACTOR_BOUNDS,
+                mage,
+                roll,
+                cyber,
+                gunner,
+                'sand-warden': sandWarden,
+                'ancient-king': ancientKing,
+            },
             controls: CONTROL_SPRITES,
         }),
     );

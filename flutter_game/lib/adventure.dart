@@ -2207,7 +2207,7 @@ class HuntEnemy extends Enemy with WithCollision {
     }
     session.art.actor(
       canvas,
-      boss && session.world.stage == WorldStage.future ? 'cyber' : kind,
+      boss ? session.world.stage.bossActor : kind,
       feet -
           ui.Offset(
             0,
