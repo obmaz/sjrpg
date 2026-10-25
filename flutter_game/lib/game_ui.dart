@@ -159,7 +159,6 @@ class GameHud extends StatelessWidget {
               runSpacing: 6,
               children: [
                 _stat(Icons.monetization_on_outlined, '${p.gold}', gold),
-                _stat(Icons.bolt, '${p.kills}', cream),
                 if (width >= 360)
                   _stat(
                     Icons.wb_sunny_outlined,
@@ -211,12 +210,7 @@ class GameHud extends StatelessWidget {
   }
 
   Widget _stat(IconData icon, String value, Color color) => Semantics(
-    label:
-        '${icon == Icons.monetization_on_outlined
-            ? '골드'
-            : icon == Icons.bolt
-            ? '처치'
-            : '모험 시간'} $value',
+    label: '${icon == Icons.monetization_on_outlined ? '골드' : '모험 시간'} $value',
     excludeSemantics: true,
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
@@ -387,14 +381,12 @@ class MapPainter extends CustomPainter {
 
     if (round) {
       for (final mob in session.mobs) {
-        if (!mob.combatReady || mob.isDead || mob.isRemoving) continue;
+        if (!mob.combatReady || mob.isDead || mob.isRemoving || mob.boss) {
+          continue;
+        }
         c.drawCircle(
           mob.body.center,
-          mob.boss
-              ? 65
-              : mob.isElite
-              ? 42
-              : 30,
+          mob.isElite ? 42 : 30,
           Paint()
             ..color = mob.isElite ? mob.trait.color : const Color(0xffef785e),
         );
@@ -525,6 +517,39 @@ class MapPainter extends CustomPainter {
           point - Offset(0, 23 * markerScale),
           size: 14 * markerScale,
           color: done ? const Color(0xff85d6aa) : gold,
+        );
+      }
+    }
+    for (final boss in session.mobs.where(
+      (m) => m.boss && m.combatReady && !m.isDead && !m.isRemoving,
+    )) {
+      var point = project(boss.body.center);
+      if (round) {
+        final delta = point - rect.center;
+        final edge = s.shortestSide / 2 - 10;
+        if (delta.distance > edge) {
+          point = rect.center + delta / delta.distance * edge;
+        }
+      }
+      final radius = (round ? 5.0 : 9.0) * markerScale;
+      final diamond = Path()
+        ..moveTo(point.dx, point.dy - radius)
+        ..lineTo(point.dx + radius, point.dy)
+        ..lineTo(point.dx, point.dy + radius)
+        ..lineTo(point.dx - radius, point.dy)
+        ..close();
+      c.drawCircle(point, radius + 2 * markerScale, Paint()..color = ink);
+      c.drawPath(diamond, Paint()..color = const Color(0xffef6455));
+      c.drawCircle(point, radius * .3, Paint()..color = cream);
+      if (!round &&
+          markerScale <= 2.5 &&
+          (point - heroPoint).distance > 35 * markerScale) {
+        session.art.text(
+          c,
+          session.world.stage.bossName,
+          point - Offset(0, 23 * markerScale),
+          size: 14 * markerScale,
+          color: const Color(0xffffa195),
         );
       }
     }

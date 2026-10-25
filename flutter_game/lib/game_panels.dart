@@ -72,6 +72,22 @@ class _AdventurePanelState extends State<AdventurePanel> {
       return SkillsPanel(session: s, onClose: widget.onClose);
     }
     final result = name == 'victory' || name == 'defeat';
+    final canAdvance =
+        name == 'victory' &&
+        s.stageCleared &&
+        widget.onAdvance != null &&
+        (s.world.stage == WorldStage.forest ||
+            s.world.stage == WorldStage.sands);
+    final advanceLabel = s.world.stage == WorldStage.forest
+        ? '제2장 의뢰 받기'
+        : s.timePath == TimePath.past
+        ? '태초의 왕국으로'
+        : '네온의 심연으로';
+    void continueExploring() {
+      s.continueExploring();
+      widget.onClose();
+    }
+
     final title =
         {
           'bag': '모험가의 가방',
@@ -249,19 +265,11 @@ class _AdventurePanelState extends State<AdventurePanel> {
             onTap: widget.onRestart,
             icon: Icons.refresh,
           ),
-        if (name == 'victory' &&
-            widget.onAdvance != null &&
-            (s.world.stage == WorldStage.forest ||
-                s.world.stage == WorldStage.sands))
+        if (canAdvance)
           GameAction(
-            s.world.stage == WorldStage.forest
-                ? '제2장 의뢰 받기'
-                : s.timePath == TimePath.past
-                ? '태초의 왕국으로'
-                : '네온의 심연으로',
-            primary: true,
-            icon: Icons.explore_rounded,
-            onTap: widget.onAdvance,
+            '계속 탐험하기',
+            icon: Icons.explore_outlined,
+            onTap: continueExploring,
           ),
         if (name == 'victory')
           GameAction(
@@ -384,16 +392,17 @@ class _AdventurePanelState extends State<AdventurePanel> {
                                   ? '체크포인트 재도전'
                                   : '새로운 모험'
                             : name == 'victory'
-                            ? '계속 탐험하기'
+                            ? canAdvance
+                                  ? advanceLabel
+                                  : '계속 탐험하기'
                             : '모험 계속하기',
                         primary: true,
                         onTap: name == 'defeat'
                             ? widget.onRetryCheckpoint ?? widget.onRestart
                             : name == 'victory'
-                            ? () {
-                                s.continueExploring();
-                                widget.onClose();
-                              }
+                            ? canAdvance
+                                  ? widget.onAdvance
+                                  : continueExploring
                             : widget.onClose,
                       ),
                     ),
