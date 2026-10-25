@@ -344,7 +344,7 @@ class Gear {
     if (attack > 0) '공격 +${attack.round()}',
     if (armor > 0) '방어 +${armor.round()}',
     if (health > 0) '생명 +${health.round()}',
-    if (mana > 0) '마나 +${mana.round()}',
+    if (mana > 0) '자원 +${mana.round()}',
     if (base.haste > 0) '공격속도 +${(base.haste * 100).round()}%',
     if (gift != null) '${gift!.title} · ${gift!.description}',
   ].join(' · ');

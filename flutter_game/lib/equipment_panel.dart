@@ -4,6 +4,7 @@ import 'game_ui.dart';
 import 'rpg_model.dart';
 import 'rpg_widgets.dart';
 import 'panel_controls.dart';
+import 'shop_content.dart';
 
 const _muted = Color(0xffa4bcb6);
 const _mint = Color(0xff8ce6c5);
@@ -455,36 +456,45 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
         ),
       ];
     }
-    final stock = p.shopGear.where(
-      (gear) => gear.slot == GearSlot.values[shopTab],
+    final stock = s.shopGearOffers.where(
+      (offer) => offer.base.slot == GearSlot.values[shopTab],
     );
     return [
-      for (final gear in stock)
-        _Offer(gear.id, gear.name, Gear(0, gear).stats, gear.value, gear: gear),
+      for (final offer in stock)
+        _Offer(
+          offer.base.id,
+          offer.preview.name,
+          offer.preview.stats,
+          offer.price,
+          gear: offer,
+        ),
     ];
   }
 
-  Widget _store() => _scroller(
-    shopScroll,
-    ListView.builder(
-      controller: shopScroll,
-      key: const PageStorageKey('merchant-list'),
-      physics: const ClampingScrollPhysics(),
-      padding: const EdgeInsets.all(8),
-      itemCount: offers.length,
-      itemBuilder: (context, i) {
-        final entry = offers[i];
-        return entry.gear == null
-            ? _consumableRow(entry)
-            : _gearRow(Gear(0, entry.gear!), entry: entry);
-      },
-    ),
-  );
+  Widget _store() {
+    final entries = offers;
+    return _scroller(
+      shopScroll,
+      ListView.builder(
+        controller: shopScroll,
+        key: const PageStorageKey('merchant-list'),
+        physics: const ClampingScrollPhysics(),
+        padding: const EdgeInsets.all(8),
+        itemCount: entries.length,
+        itemBuilder: (context, i) {
+          final entry = entries[i];
+          return entry.gear == null
+              ? _consumableRow(entry)
+              : _gearRow(entry.gear!.preview, entry: entry);
+        },
+      ),
+    );
+  }
 
   Widget _offerArt(_Offer entry) => entry.gear != null
       ? CustomPaint(
           size: const Size.square(100),
-          painter: GearGlyph(Gear(0, entry.gear!), s.art),
+          painter: GearGlyph(entry.gear!.preview, s.art),
         )
       : entry.id == 'heal' || entry.id == 'energy'
       ? Padding(
@@ -500,13 +510,9 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
         );
 
   bool _sameEquippedOffer(_Offer entry) {
-    final current = entry.gear == null ? null : p.equipped[entry.gear!.slot];
-    return current != null &&
-        current.base.id == entry.gear!.id &&
-        current.rarity == Rarity.common &&
-        current.power == 0 &&
-        current.vitality == 0 &&
-        current.focus == 0;
+    final offer = entry.gear;
+    final current = offer == null ? null : p.equipped[offer.base.slot];
+    return current != null && offer!.matches(current);
   }
 
   Widget _gearRow(Gear gear, {_Offer? entry}) {
@@ -695,7 +701,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                                     ),
                                     _quickStat(
                                       gear.mana > 0 || (current?.mana ?? 0) > 0
-                                          ? '마나'
+                                          ? p.heroClass.resource
                                           : '방어',
                                       gear.mana > 0 || (current?.mana ?? 0) > 0
                                           ? gear.mana
@@ -791,7 +797,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
             _stat('공격', gear.attack, current?.attack, active),
             _stat('방어', gear.armor, current?.armor, active),
             _stat('생명', gear.health, current?.health, active),
-            _stat('마나', gear.mana, current?.mana, active),
+            _stat(p.heroClass.resource, gear.mana, current?.mana, active),
             if (gear.base.haste > 0 || (current?.base.haste ?? 0) > 0)
               _stat(
                 '공격속도 %',
@@ -1017,7 +1023,8 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
     if (equip && _sameEquippedOffer(entry)) return;
     Gear? bought;
     final success = entry.gear != null
-        ? (bought = s.buyGear(entry.gear!)) != null
+        ? (bought = s.buyGear(entry.gear!.base, expectedPrice: entry.price)) !=
+              null
         : switch (entry.id) {
             'heal' => s.buyHeal(),
             'energy' => s.buyEnergy(),
@@ -1042,5 +1049,5 @@ class _Offer {
   const _Offer(this.id, this.title, this.description, this.price, {this.gear});
   final String id, title, description;
   final int price;
-  final GearDef? gear;
+  final ShopGearOffer? gear;
 }

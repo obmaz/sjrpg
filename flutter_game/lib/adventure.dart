@@ -9,6 +9,7 @@ import 'battle_effects.dart';
 import 'device_settings.dart';
 import 'skill_aim.dart';
 import 'spell_vfx.dart';
+import 'shop_content.dart';
 
 enum NearbyAction { chest, shrine, mount, dismount, shop, talk }
 
@@ -827,16 +828,21 @@ class Adventure extends ChangeNotifier {
   bool get canTrade => ready && !disposed && !defeated && progress.hp > 0;
   bool buyHeal() =>
       canTrade && progress.buy(20, () => progress.healingPotions += 2);
-  Gear? buyGear(GearDef def) {
+  ShopGearOffer gearOffer(GearDef def) => ShopGearOffer(def, world.stage);
+  Iterable<ShopGearOffer> get shopGearOffers =>
+      progress.shopGear.map(gearOffer);
+  Gear? buyGear(GearDef def, {int? expectedPrice}) {
     if (!canTrade ||
         !progress.shopGear.contains(def) ||
         !def.usable(progress.heroClass) ||
         progress.inventory.length >= Progress.capacity) {
       return null;
     }
+    final offer = gearOffer(def);
+    if (expectedPrice != null && expectedPrice != offer.price) return null;
     Gear? bought;
-    progress.buy(def.value, () {
-      bought = progress.createGear(def);
+    progress.buy(offer.price, () {
+      bought = offer.create(progress);
       progress.inventory.add(bought!);
       progress.unseenGear.add(bought!.serial);
     });

@@ -222,7 +222,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
         const SizedBox(height: 18),
         Text(
           name == 'victory'
-              ? '${s.world.stage.title}의 의뢰를 해결했습니다.\n${s.world.stage == WorldStage.forest
+              ? '의뢰를 해결했습니다.\n${s.world.stage == WorldStage.forest
                     ? '사막 유적에서 새로운 의뢰가 기다립니다.'
                     : s.world.stage == WorldStage.sands
                     ? '선택한 시대의 문이 열렸습니다.'
