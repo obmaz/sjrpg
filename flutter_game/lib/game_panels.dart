@@ -7,6 +7,8 @@ import 'rpg_widgets.dart';
 import 'device_controls.dart';
 import 'world_map.dart';
 import 'equipment_panel.dart';
+import 'panel_controls.dart';
+import 'skills_panel.dart';
 
 class AdventurePanel extends StatefulWidget {
   const AdventurePanel({
@@ -62,6 +64,9 @@ class _AdventurePanelState extends State<AdventurePanel> {
         onClose: widget.onClose,
       );
     }
+    if (name == 'skills') {
+      return SkillsPanel(session: s, onClose: widget.onClose);
+    }
     final result = name == 'victory' || name == 'defeat';
     final title =
         {
@@ -79,9 +84,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
         }[name] ??
         '모험';
     List<Widget> body;
-    if (name == 'skills') {
-      body = [SkillsView(s)];
-    } else if (name == 'journal' || name == 'talk' || name == 'map') {
+    if (name == 'journal' || name == 'talk' || name == 'map') {
       body = [
         if (name == 'talk') ...[
           const Text(

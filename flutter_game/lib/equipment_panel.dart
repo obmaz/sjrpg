@@ -4,154 +4,11 @@ import 'adventure.dart';
 import 'game_ui.dart';
 import 'rpg_model.dart';
 import 'rpg_widgets.dart';
+import 'panel_controls.dart';
 
 const _muted = Color(0xffa4bcb6);
 const _mint = Color(0xff8ce6c5);
 String _slotName(GearSlot slot) => ['무기', '방어구', '부적'][slot.index];
-
-class GameAction extends StatelessWidget {
-  const GameAction(
-    this.label, {
-    required this.onTap,
-    this.primary = false,
-    this.icon,
-    super.key,
-  });
-  final String label;
-  final VoidCallback? onTap;
-  final bool primary;
-  final IconData? icon;
-  @override
-  Widget build(BuildContext context) {
-    final enabled = onTap != null;
-    final shape = BeveledRectangleBorder(
-      borderRadius: BorderRadius.circular(7),
-      side: BorderSide(
-        color: enabled
-            ? (primary ? gold : const Color(0xff608b7c))
-            : const Color(0xff37524c),
-      ),
-    );
-    return Semantics(
-      button: true,
-      enabled: enabled,
-      label: label,
-      onTap: onTap,
-      excludeSemantics: true,
-      child: SizedBox(
-        height: 50,
-        child: Material(
-          color: Colors.transparent,
-          child: Ink(
-            decoration: ShapeDecoration(
-              shape: shape,
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: !enabled
-                    ? [const Color(0xff203a36), const Color(0xff162d2a)]
-                    : primary
-                    ? [const Color(0xffe5c881), const Color(0xffac7d3f)]
-                    : [const Color(0xff214d45), const Color(0xff102d2a)],
-              ),
-            ),
-            child: InkWell(
-              customBorder: shape,
-              onTap: onTap,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (icon != null) ...[
-                      Icon(
-                        icon,
-                        size: 17,
-                        color: primary && enabled
-                            ? ink
-                            : enabled
-                            ? cream
-                            : _muted,
-                      ),
-                      const SizedBox(width: 6),
-                    ],
-                    Flexible(
-                      child: Text(
-                        label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: !enabled
-                              ? _muted
-                              : primary
-                              ? ink
-                              : cream,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Tabs extends StatelessWidget {
-  const _Tabs(this.labels, this.selected, this.onChange);
-  final List<String> labels;
-  final int selected;
-  final ValueChanged<int> onChange;
-  @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      for (var i = 0; i < labels.length; i++)
-        Expanded(
-          child: Semantics(
-            button: true,
-            selected: selected == i,
-            label: labels[i],
-            excludeSemantics: true,
-            onTap: () => onChange(i),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => onChange(i),
-                child: Container(
-                  height: 48,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: selected == i
-                        ? const Color(0xff24483e)
-                        : Colors.transparent,
-                    border: Border(
-                      bottom: BorderSide(
-                        color: selected == i ? gold : const Color(0xff35554b),
-                        width: selected == i ? 2 : 1,
-                      ),
-                    ),
-                  ),
-                  child: Text(
-                    labels[i],
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: selected == i ? gold : _muted,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-    ],
-  );
-}
 
 class EquipmentPanel extends StatefulWidget {
   const EquipmentPanel({
@@ -226,7 +83,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                     Column(
                       children: [
                         _header(),
-                        _Tabs(
+                        GameTabs(
                           shopping
                               ? ['장비', '물약', '축복']
                               : ['전체', '신규', '무기', '방어구', '부적'],

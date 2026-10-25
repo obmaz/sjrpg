@@ -10,7 +10,7 @@ import 'world_model.dart';
 import 'class_selection.dart';
 import 'battle_effects.dart';
 import 'rpg_widgets.dart';
-import 'equipment_panel.dart';
+import 'panel_controls.dart';
 import 'game_checkpoint.dart';
 import 'save_bridge.dart' as storage;
 
