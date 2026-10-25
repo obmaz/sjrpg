@@ -91,6 +91,56 @@ class GameArt {
       );
       // The shader retains the underlying texture for the game session.
     }
+    // Bake the edge mask once. Gameplay draws this texture without per-frame layers.
+    final village = art.images['village-scene']!,
+        rec = ui.PictureRecorder(),
+        canvas = ui.Canvas(rec);
+    const target = ui.Rect.fromLTWH(0, 0, 640, 960),
+        clear = ui.Color(0x00ffffff),
+        full = ui.Color(0xffffffff);
+    canvas.drawImageRect(
+      village,
+      ui.Rect.fromLTWH(
+        0,
+        0,
+        village.width.toDouble(),
+        village.height.toDouble(),
+      ),
+      target,
+      ui.Paint()..filterQuality = ui.FilterQuality.medium,
+    );
+    for (final mask in [
+      (
+        const ui.Rect.fromLTWH(0, 0, 64, 960),
+        const ui.Offset(0, 0),
+        const ui.Offset(64, 0),
+      ),
+      (
+        const ui.Rect.fromLTWH(576, 0, 64, 960),
+        const ui.Offset(640, 0),
+        const ui.Offset(576, 0),
+      ),
+      (
+        const ui.Rect.fromLTWH(0, 0, 640, 64),
+        const ui.Offset(0, 0),
+        const ui.Offset(0, 64),
+      ),
+      (
+        const ui.Rect.fromLTWH(0, 896, 640, 64),
+        const ui.Offset(0, 960),
+        const ui.Offset(0, 896),
+      ),
+    ]) {
+      canvas.drawRect(
+        mask.$1,
+        ui.Paint()
+          ..blendMode = ui.BlendMode.dstIn
+          ..shader = ui.Gradient.linear(mask.$2, mask.$3, [clear, full]),
+      );
+    }
+    final picture = rec.endRecording();
+    art.images['village-blended'] = await picture.toImage(640, 960);
+    picture.dispose();
     return art;
   }
 
@@ -281,16 +331,17 @@ class TerrainArt {
       ui.Paint(),
     );
     if (town.inflate(30).overlaps(area)) {
+      final village = art.images['village-blended']!;
       c.drawImageRect(
-        art.images['village-scene']!,
+        village,
         ui.Rect.fromLTWH(
           0,
           0,
-          art.images['village-scene']!.width.toDouble(),
-          art.images['village-scene']!.height.toDouble(),
+          village.width.toDouble(),
+          village.height.toDouble(),
         ),
         town,
-        ui.Paint(),
+        ui.Paint()..filterQuality = ui.FilterQuality.medium,
       );
     }
     // Deterministic dappled light is presentation-only and never consumes gameplay RNG.
