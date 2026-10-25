@@ -331,4 +331,20 @@ void main() {
     text.update(.5);
     expect(text.remaining, remaining);
   });
+  test('a disposed adventure rejects late input and simulation callbacks', () {
+    final s = Adventure(GameArt());
+    s.start(TestGame());
+    final enemy = s.mobs.first;
+    s.dispose();
+    s.holdAttack('touch', true);
+    s.hero.slash();
+    s.hero.skill();
+    s.hit(enemy, 99999, Offset.zero);
+    s.tick(.05);
+    expect(s.active, false);
+    expect(s.attackSources, isEmpty);
+    expect(s.hero.strikes, 0);
+    expect(s.progress.kills, 0);
+    expect(s.elapsed, 0);
+  });
 }

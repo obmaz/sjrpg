@@ -42,7 +42,7 @@ class Adventure extends ChangeNotifier {
   ui.Offset lastPack = arrival;
   int combo = 0;
   final random = math.Random(52);
-  bool get active => ready && !paused && !defeated && !won;
+  bool get active => ready && !disposed && !paused && !defeated && !won;
   String get region => world.areaName(hero.position.toOffset());
   StageExit? get nearbyExit {
     for (final exit in stageExits) {
