@@ -290,7 +290,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
           name == 'victory'
               ? '십자로의 숲을 정화했습니다.\n파수꾼의 유산과 남은 보물을 챙겨 보세요.'
               : widget.onRetryCheckpoint != null
-              ? '마지막 저장 지점에서 다시 도전할 수 있습니다.\n장비와 스킬 성장은 유지됩니다.'
+              ? '마지막 저장 지점에서 다시 도전하세요.\n장비와 스킬 성장은 유지됩니다.'
               : '힘을 키우고 다시 도전하세요.\n장비와 스킬 조합에 따라 전투가 달라집니다.',
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 17, height: 1.8, color: cream),

@@ -242,6 +242,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final size = MediaQuery.sizeOf(context);
+    adventure.viewportSize = size;
     adventure.cameraOffsetY = size.width < 400 && size.height < 520 ? 36 : 0;
   }
 
@@ -349,6 +350,15 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
               remaining: remaining,
               total: skill.cooldown,
               onTap: () => adventure.hero.skill(slot: slot),
+              onAimStart: skill.id == 'meteor' || skill.id == 'seismicSlam'
+                  ? () => adventure.hero.beginAim(slot)
+                  : null,
+              onAimMove: skill.id == 'meteor' || skill.id == 'seismicSlam'
+                  ? adventure.hero.moveAim
+                  : null,
+              onAimEnd: skill.id == 'meteor' || skill.id == 'seismicSlam'
+                  ? adventure.hero.finishAim
+                  : null,
             ),
           );
         }

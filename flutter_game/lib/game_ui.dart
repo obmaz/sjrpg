@@ -458,6 +458,9 @@ class ActionButton extends StatefulWidget {
     required this.size,
     required this.onTap,
     this.onHold,
+    this.onAimStart,
+    this.onAimMove,
+    this.onAimEnd,
     this.icon,
     this.effect,
     this.artwork,
@@ -471,6 +474,9 @@ class ActionButton extends StatefulWidget {
   final double size, remaining, total;
   final VoidCallback onTap;
   final ValueChanged<bool>? onHold;
+  final VoidCallback? onAimStart;
+  final ValueChanged<Offset>? onAimMove;
+  final ValueChanged<bool>? onAimEnd;
   final IconData? icon;
   final int? effect;
   final Widget? artwork;
@@ -482,7 +488,9 @@ class ActionButton extends StatefulWidget {
 class _ActionButtonState extends State<ActionButton> {
   int? pointer;
   bool pressed = false;
-  void release() {
+  Offset origin = Offset.zero, aimDelta = Offset.zero;
+  void release({bool cancelled = false}) {
+    if (pointer != null) widget.onAimEnd?.call(cancelled);
     pointer = null;
     if (pressed) {
       widget.onHold?.call(false);
@@ -492,6 +500,7 @@ class _ActionButtonState extends State<ActionButton> {
 
   @override
   void dispose() {
+    if (pointer != null) widget.onAimEnd?.call(true);
     widget.onHold?.call(false);
     super.dispose();
   }
@@ -506,15 +515,26 @@ class _ActionButtonState extends State<ActionButton> {
       onPointerDown: (event) {
         if (pointer != null) return;
         pointer = event.pointer;
+        origin = event.position;
+        aimDelta = Offset.zero;
         setState(() => pressed = true);
-        widget.onHold?.call(true);
-        widget.onTap();
+        if (widget.onAimStart != null) {
+          widget.onAimStart!();
+        } else {
+          widget.onHold?.call(true);
+          widget.onTap();
+        }
+      },
+      onPointerMove: (event) {
+        if (pointer != event.pointer || widget.onAimMove == null) return;
+        setState(() => aimDelta = event.position - origin);
+        widget.onAimMove!(aimDelta);
       },
       onPointerUp: (event) {
         if (pointer == event.pointer) release();
       },
       onPointerCancel: (event) {
-        if (pointer == event.pointer) release();
+        if (pointer == event.pointer) release(cancelled: true);
       },
       child: SizedBox(
         width: widget.size,
@@ -545,6 +565,36 @@ class _ActionButtonState extends State<ActionButton> {
                       )
                     else if (widget.icon != null)
                       Icon(widget.icon, size: widget.size * .43, color: cream),
+                    if (pressed && widget.onAimStart != null)
+                      Positioned.fill(
+                        child: ColoredBox(
+                          color: aimDelta.distance > 156
+                              ? const Color(0x99a12929)
+                              : const Color(0x334bd8c2),
+                          child: aimDelta.distance > 156
+                              ? const Icon(Icons.close, color: Colors.white)
+                              : Center(
+                                  child: Transform.translate(
+                                    offset:
+                                        aimDelta.distance > widget.size * .28
+                                        ? aimDelta /
+                                              aimDelta.distance *
+                                              widget.size *
+                                              .28
+                                        : aimDelta,
+                                    child: Container(
+                                      width: 16,
+                                      height: 16,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: const Color(0xaa9deee4),
+                                        border: Border.all(color: Colors.white),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                        ),
+                      ),
                     if (widget.remaining > 0)
                       CustomPaint(
                         size: Size.square(widget.size),

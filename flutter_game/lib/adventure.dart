@@ -7,6 +7,7 @@ import 'game_art.dart';
 import 'world_model.dart';
 import 'battle_effects.dart';
 import 'device_settings.dart';
+import 'skill_aim.dart';
 
 class Adventure extends ChangeNotifier {
   Adventure(
@@ -48,6 +49,7 @@ class Adventure extends ChangeNotifier {
       bossSummoned = false,
       disposed = false;
   double cameraOffsetY = 0;
+  ui.Size? viewportSize;
   Vector2 get cameraFocus =>
       hero.position + hero.size / 2 + Vector2(0, cameraOffsetY);
   double elapsed = 0, waveTime = 0, notifyTime = 0;
@@ -197,6 +199,7 @@ class Adventure extends ChangeNotifier {
   }
 
   void releaseInput() {
+    hero.aim = null;
     attackSources.clear();
     hero.onJoystickChangeDirectional(
       JoystickDirectionalEvent(directional: JoystickMoveDirectional.IDLE),
@@ -486,6 +489,57 @@ class Guardian extends Player with WithCollision {
     );
   }
   final Adventure session;
+  SkillAim? aim;
+  void beginAim(int slot) {
+    final def = session.progress.skillAt(slot);
+    if (!session.active ||
+        dashing > 0 ||
+        def == null ||
+        (cooldowns[def.id] ?? 0) > 0) {
+      return;
+    }
+    aim = SkillAim(slot, def.id, bearing);
+  }
+
+  void moveAim(ui.Offset delta) {
+    if (!session.active) {
+      aim = null;
+      return;
+    }
+    aim?.delta = delta;
+  }
+
+  void finishAim(bool cancelled) {
+    final current = aim;
+    aim = null;
+    if (current == null ||
+        cancelled ||
+        current.cancelled ||
+        session.progress.skillAt(current.slot)?.id != current.id) {
+      return;
+    }
+    skill(slot: current.slot, manualAim: current.dragged ? current : null);
+  }
+
+  ui.Offset aimedImpact(double angle, double distance) =>
+      session.world.move(
+        body.center - const ui.Offset(3, 3),
+        ui.Offset(math.cos(angle), math.sin(angle)) * distance,
+        const ui.Size(6, 6),
+      ) +
+      const ui.Offset(3, 3);
+  ui.Offset meteorAimImpact(SkillAim current) => aimedImpact(
+    current.angle,
+    current.distanceWithin(
+      session.viewportSize,
+      cameraOffsetY: session.cameraOffsetY,
+      screenOrigin: hasGameRef
+          ? gameRef.camera
+                .worldToScreen(Vector2(body.center.dx, body.center.dy))
+                .toOffset()
+          : null,
+    ),
+  );
   double rollBearing = math.pi / 2;
   double bearing = math.pi / 2,
       animationTime = 0,
@@ -678,7 +732,7 @@ class Guardian extends Player with WithCollision {
     }
   }
 
-  void skill({bool secondary = false, int? slot}) {
+  void skill({bool secondary = false, int? slot, SkillAim? manualAim}) {
     if (dashing > 0) return;
     final p = session.progress;
     final def = p.skillAt(slot ?? (secondary ? 1 : 0));
@@ -733,7 +787,7 @@ class Guardian extends Player with WithCollision {
           ),
         );
       case 'seismicSlam':
-        var angle = bearing;
+        var angle = manualAim?.angle ?? bearing;
         final targets =
             session.mobs
                 .where(
@@ -754,7 +808,7 @@ class Guardian extends Player with WithCollision {
                   (b.body.center - body.center).distance,
                 ),
               );
-        if (velocity.length < 5 && targets.isNotEmpty) {
+        if (manualAim == null && velocity.length < 5 && targets.isNotEmpty) {
           final toward = targets.first.body.center - body.center;
           angle = math.atan2(toward.dy, toward.dx);
           bearing = angle;
@@ -762,13 +816,7 @@ class Guardian extends Player with WithCollision {
         attackBearing = angle;
         swing = .23;
         attackClock = math.max(attackClock, .35);
-        final impact =
-            session.world.move(
-              body.center - const ui.Offset(3, 3),
-              ui.Offset(math.cos(angle), math.sin(angle)) * 100,
-              const ui.Size(6, 6),
-            ) +
-            const ui.Offset(3, 3);
+        final impact = aimedImpact(angle, 100);
         areaStrike(
           session,
           impact,
@@ -826,7 +874,11 @@ class Guardian extends Player with WithCollision {
                   (b.body.center - body.center).distance,
                 ),
               );
-        if (near.isNotEmpty) target = near.first.body.center;
+        if (manualAim != null) {
+          target = meteorAimImpact(manualAim);
+        } else if (near.isNotEmpty) {
+          target = near.first.body.center;
+        }
         session.game?.add(
           MeteorFall(
             session,
@@ -841,6 +893,7 @@ class Guardian extends Player with WithCollision {
 
   void dodge() {
     if (!session.active || dodgeClock > 0) return;
+    aim = null;
     session.device.pulse(FeedbackKind.dodge);
     rollBearing = bearing;
     swing = 0;
@@ -1025,6 +1078,57 @@ class Guardian extends Player with WithCollision {
             ..style = ui.PaintingStyle.stroke
             ..strokeWidth = 6
             ..color = ui.Color.fromRGBO(122, 237, 219, 1 - phase),
+        );
+      }
+    }
+    final currentAim = aim;
+    if (currentAim != null) {
+      final origin = body.center - position.toOffset();
+      final target =
+          (currentAim.id == 'meteor'
+              ? meteorAimImpact(currentAim)
+              : aimedImpact(currentAim.angle, 100)) -
+          position.toOffset();
+      final color = currentAim.cancelled
+          ? const ui.Color(0xffff817e)
+          : const ui.Color(0xff9deee4);
+      final radius = currentAim.dragged
+          ? currentAim.id == 'meteor'
+                ? 175.0
+                : 125.0 + session.progress.rank('seismicSlam') * 6
+          : 55.0;
+      final at = currentAim.dragged ? target : origin;
+      if (currentAim.dragged) {
+        canvas.drawLine(
+          origin,
+          target,
+          ui.Paint()
+            ..color = color.withValues(alpha: .7)
+            ..strokeWidth = 2,
+        );
+      }
+      canvas.drawCircle(
+        at,
+        radius,
+        ui.Paint()..color = color.withValues(alpha: .10),
+      );
+      canvas.drawCircle(
+        at,
+        radius,
+        ui.Paint()
+          ..color = color.withValues(alpha: .85)
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+      for (var i = 0; i < 4; i++) {
+        final angle = i * math.pi / 2;
+        final vector = ui.Offset(math.cos(angle), math.sin(angle));
+        canvas.drawLine(
+          at + vector * (radius - 9),
+          at + vector * (radius + 7),
+          ui.Paint()
+            ..color = color
+            ..strokeWidth = 3,
         );
       }
     }
