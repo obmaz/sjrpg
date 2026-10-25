@@ -29,6 +29,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'actors-mage',
         'gear-icons',
         'combat-fx',
+        'dodge-icon',
         'actors-roll',
         'terrain-materials',
     ])

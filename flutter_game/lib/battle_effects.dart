@@ -81,6 +81,52 @@ class ContactSpark extends GameComponent {
   }
 }
 
+class EnemySwipe extends GameComponent {
+  EnemySwipe(this.session, ui.Offset at, this.strikeAngle) {
+    position = Vector2(at.dx, at.dy);
+    size = Vector2.all(1);
+  }
+  final Adventure session;
+  final double strikeAngle;
+  double age = 0;
+  @override
+  int get priority => 99999;
+  @override
+  bool get isVisible => true;
+  @override
+  void update(double dt) {
+    if (!session.active) return;
+    age += math.min(.05, dt);
+    if (age >= .22) removeFromParent();
+    super.update(dt);
+  }
+
+  @override
+  void render(ui.Canvas canvas) {
+    super.render(canvas);
+    final t = (age / .22).clamp(0.0, 1.0);
+    canvas.drawArc(
+      ui.Rect.fromCircle(center: ui.Offset.zero, radius: 80),
+      strikeAngle - .85 + t * .8,
+      1.2,
+      false,
+      ui.Paint()
+        ..color = ui.Color.fromRGBO(255, 200, 158, 1 - t)
+        ..strokeWidth = 6 * (1 - t) + 1
+        ..strokeCap = ui.StrokeCap.round
+        ..style = ui.PaintingStyle.stroke,
+    );
+    paintCombatEffect(
+      session,
+      canvas,
+      ui.Offset(math.cos(strikeAngle), math.sin(strikeAngle)) * 66,
+      7,
+      const ui.Size.square(52),
+      opacity: 1 - t,
+    );
+  }
+}
+
 class ShadowBolt extends GameComponent {
   ShadowBolt(this.session, ui.Offset at, double angle, {this.damage = 8})
     : direction = ui.Offset(math.cos(angle), math.sin(angle)) {

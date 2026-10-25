@@ -1196,6 +1196,8 @@ class HuntEnemy extends Enemy with WithCollision {
       slow = 0;
   List<ui.Offset> route = [];
   double slamClock = 4, windup = 0;
+  double pounceRemaining = 0, pounceDuration = 0, pounceBearing = 0;
+  ui.Offset? pounceGoal;
   ui.Offset? slamTarget;
   ui.Offset? routeGoal;
   ui.Offset? lastClearPosition;
@@ -1237,12 +1239,60 @@ class HuntEnemy extends Enemy with WithCollision {
       return;
     }
     if (stun > 0) {
+      if (pounceRemaining > 0) finishPounce();
       if (windup > 0) {
         windup = 0;
         slamTarget = null;
+        pounceGoal = null;
         slamClock = 4;
+        if (kind == 'wolf' || kind == 'skeleton') {
+          attackClock = math.max(attackClock, 1.2);
+        }
       }
       stop();
+      super.update(dt);
+      return;
+    }
+    if (kind == 'wolf' && pounceRemaining > 0) {
+      updatePounce(dt);
+      return;
+    }
+    if (kind == 'wolf' && windup > 0) {
+      stop();
+      windup -= dt;
+      if (windup <= 0 && pounceGoal != null) {
+        final d = pounceGoal! - body.center;
+        pounceBearing = math.atan2(d.dy, d.dx);
+        bearing = pounceBearing;
+        pounceDuration = math.min(240, d.distance) / 520;
+        pounceRemaining = pounceDuration;
+        slamTarget = null;
+      }
+      super.update(dt);
+      return;
+    }
+    if (kind == 'skeleton' && windup > 0) {
+      stop();
+      windup -= dt;
+      if (windup <= 0) {
+        final angle = math.atan2(target.dy, target.dx);
+        final difference = math.atan2(
+          math.sin(angle - bearing),
+          math.cos(angle - bearing),
+        );
+        if (target.distance < 100 &&
+            difference.abs() < .85 &&
+            session.world.clearLine(
+              body.center,
+              session.hero.body.center,
+              const ui.Size(3, 3),
+            )) {
+          session.hurtHero(8);
+        }
+        session.game?.add(EnemySwipe(session, body.center, bearing));
+        slamTarget = null;
+        attackClock = 1.8;
+      }
       super.update(dt);
       return;
     }
@@ -1287,6 +1337,25 @@ class HuntEnemy extends Enemy with WithCollision {
       super.update(dt);
       return;
     }
+    if (kind == 'wolf' &&
+        attackClock <= 0 &&
+        target.distance > 75 &&
+        target.distance < 250 &&
+        session.world.clearLine(
+          position.toOffset(),
+          session.hero.position.toOffset(),
+          body.size,
+        )) {
+      bearing = math.atan2(target.dy, target.dx);
+      pounceGoal =
+          body.center +
+          target / target.distance * math.min(240, target.distance);
+      slamTarget = session.hero.body.center;
+      windup = .42;
+      stop();
+      super.update(dt);
+      return;
+    }
     if (boss &&
         slamClock <= 0 &&
         target.distance < 340 &&
@@ -1306,6 +1375,8 @@ class HuntEnemy extends Enemy with WithCollision {
                 ? 64
                 : kind == 'cultist'
                 ? 280
+                : kind == 'skeleton'
+                ? 82
                 : 42) &&
         session.world.clearLine(
           body.center,
@@ -1314,7 +1385,11 @@ class HuntEnemy extends Enemy with WithCollision {
         )) {
       stop();
       if (attackClock <= 0) {
-        if (kind == 'cultist') {
+        if (kind == 'skeleton') {
+          bearing = math.atan2(target.dy, target.dx);
+          slamTarget = session.hero.body.center;
+          windup = .5;
+        } else if (kind == 'cultist') {
           bearing = math.atan2(target.dy, target.dx);
           slamTarget = session.hero.body.center;
           windup = .65;
@@ -1384,6 +1459,59 @@ class HuntEnemy extends Enemy with WithCollision {
     lastClearPosition = next;
   }
 
+  void finishPounce() {
+    pounceRemaining = 0;
+    pounceGoal = null;
+    attackClock = math.max(attackClock, 3.2);
+    stop();
+  }
+
+  void updatePounce(double dt) {
+    stop();
+    final used = math.min(dt, pounceRemaining);
+    pounceRemaining -= used;
+    final distance = 520 * used * (slow > 0 ? .45 : 1);
+    final steps = math.max(1, (distance / 6).ceil());
+    final step =
+        ui.Offset(math.cos(pounceBearing), math.sin(pounceBearing)) *
+        (distance / steps);
+    for (var i = 0; i < steps; i++) {
+      final from = position.toOffset();
+      final at = session.world.move(from, step, body.size);
+      if ((at - from).distance < step.distance * .5) {
+        finishPounce();
+        break;
+      }
+      final candidate = ui.Rect.fromLTWH(at.dx, at.dy, size.x, size.y);
+      if (candidate.overlaps(session.hero.body) &&
+          session.world.clearLine(
+            body.center,
+            session.hero.body.center,
+            const ui.Size(3, 3),
+          )) {
+        session.hurtHero(8);
+        finishPounce();
+        break;
+      }
+      if (session.mobs.any(
+        (other) =>
+            other != this &&
+            other.combatReady &&
+            !other.isDead &&
+            !other.isRemoving &&
+            candidate.overlaps(other.body),
+      )) {
+        finishPounce();
+        break;
+      }
+      position.setValues(at.dx, at.dy);
+    }
+    anim += used * 2.5;
+    lastClearPosition = position.toOffset();
+    if (pounceRemaining <= 0) finishPounce();
+    super.update(dt);
+  }
+
   @override
   void onRemove() {
     combatReady = false;
@@ -1403,6 +1531,56 @@ class HuntEnemy extends Enemy with WithCollision {
       ),
       ui.Paint()..color = const ui.Color(0x550d241b),
     );
+    if (kind == 'wolf' && windup > 0 && pounceGoal != null) {
+      final from = body.center - position.toOffset(),
+          to = pounceGoal! - position.toOffset();
+      final direction = to - from;
+      final side = direction.distance > 0
+          ? ui.Offset(-direction.dy, direction.dx) / direction.distance * 13
+          : const ui.Offset(0, 13);
+      final path = ui.Path()
+        ..moveTo((from - side).dx, (from - side).dy)
+        ..lineTo((to - side).dx, (to - side).dy)
+        ..lineTo((to + side).dx, (to + side).dy)
+        ..lineTo((from + side).dx, (from + side).dy)
+        ..close();
+      canvas.drawPath(path, ui.Paint()..color = const ui.Color(0x44ef8b62));
+      canvas.drawPath(
+        path,
+        ui.Paint()
+          ..color = const ui.Color(0xffefab78)
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      );
+      canvas.drawLine(
+        from,
+        from + direction * (1 - windup / .42).clamp(0, 1),
+        ui.Paint()
+          ..color = const ui.Color(0xffffc38c)
+          ..strokeWidth = 4
+          ..strokeCap = ui.StrokeCap.round,
+      );
+    }
+    if (kind == 'skeleton' && windup > 0) {
+      final center = body.center - position.toOffset();
+      final path = ui.Path()
+        ..moveTo(center.dx, center.dy)
+        ..arcTo(
+          ui.Rect.fromCircle(center: center, radius: 100),
+          bearing - .85,
+          1.7,
+          false,
+        )
+        ..close();
+      canvas.drawPath(path, ui.Paint()..color = const ui.Color(0x33f78669));
+      canvas.drawPath(
+        path,
+        ui.Paint()
+          ..color = const ui.Color(0xffeaa085)
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      );
+    }
     if (kind == 'cultist' && windup > 0) {
       canvas.drawOval(
         ui.Rect.fromCenter(center: feet, width: 58, height: 22),
@@ -1471,7 +1649,14 @@ class HuntEnemy extends Enemy with WithCollision {
     session.art.actor(
       canvas,
       kind,
-      feet,
+      feet -
+          ui.Offset(
+            0,
+            pounceRemaining > 0 && pounceDuration > 0
+                ? math.sin(math.pi * (1 - pounceRemaining / pounceDuration)) *
+                      15
+                : 0,
+          ),
       bearing,
       (anim / .15).floor() % 2,
       boss

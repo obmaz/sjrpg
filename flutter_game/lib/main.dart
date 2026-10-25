@@ -425,7 +425,10 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 child: ActionButton(
                   art: widget.art,
                   sprite: 'roundEmpty',
-                  icon: Icons.air_rounded,
+                  artwork: CustomPaint(
+                    size: Size.square((width < 360 ? 56 : 64) * .78),
+                    painter: AbilityPicturePainter(widget.art, 'dodge-icon'),
+                  ),
                   label: '회피',
                   semanticLabel: '회피',
                   size: width < 360 ? 56 : 64,

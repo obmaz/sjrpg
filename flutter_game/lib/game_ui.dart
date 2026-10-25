@@ -311,6 +311,27 @@ class ControlPainter extends CustomPainter {
       oldDelegate.sprite != sprite;
 }
 
+class AbilityPicturePainter extends CustomPainter {
+  AbilityPicturePainter(this.art, this.name);
+  final GameArt art;
+  final String name;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final picture = art.images[name];
+    if (picture == null) return;
+    canvas.drawImageRect(
+      picture,
+      Rect.fromLTWH(0, 0, picture.width.toDouble(), picture.height.toDouble()),
+      Offset.zero & size,
+      Paint()..filterQuality = FilterQuality.medium,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant AbilityPicturePainter old) =>
+      old.art != art || old.name != name;
+}
+
 class MapPainter extends CustomPainter {
   MapPainter(this.session, {this.round = true});
   final Adventure session;

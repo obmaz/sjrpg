@@ -78,3 +78,5 @@ Flutter 전용 `actors-roll.png`는 전사·마법사의 웅크리기·구르기
 앱 설치 아이콘 `flutter_game/web/icons/guardian.png`는 청록 방패·금빛 잎 문양으로 생성한 독자 아이콘입니다. 원본은 `/workspace/generated_images/exec-dcade548-2fd8-4ed2-b363-793b12fe23a4.png`입니다.
 
 새 모험의 광신도(`cultist`)는 기존 생성형 8방향 그림을 사용하며 D&D 계열 이름을 참고한 독자 전투 패턴입니다. 시전 예고·목표 고정·직선 투사체·기절 중단을 적용하고 생명·피해·주기는 모바일 전투에 맞춰 조정했습니다.
+
+`flutter_game/art/dodge-icon.png`는 가죽 장화와 청록 잔상을 생성한 회피 버튼 그림입니다. 투명 원본 `/workspace/generated_images/exec-bfece1ee-3409-4b43-a45e-97d4d647083f.png`를 보존하고 배포용은 256px로 준비합니다. 실제 구르기·방향·무적 판정은 캐릭터 코드가 담당합니다.
