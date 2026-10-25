@@ -8,7 +8,8 @@ enum SpellClip {
   meteorFlight('fx-meteor', 0, 8, .65, ui.Offset(.28, .75)),
   meteorImpact('fx-meteor', 8, 8, .56, ui.Offset(.5, .7)),
   iceNova('fx-ice-nova', 0, 16, .72, ui.Offset(.5, .64)),
-  whirlwind('fx-whirlwind', 0, 16, .5, ui.Offset(.5, .6));
+  whirlwind('fx-whirlwind', 0, 16, .5, ui.Offset(.5, .6)),
+  warcry('fx-warcry', 0, 16, .64, ui.Offset(.5, .59));
 
   const SpellClip(
     this.asset,
@@ -83,7 +84,8 @@ class SpellBurst extends GameComponent {
   @override
   void update(double dt) {
     if (finished) return;
-    if (clip == SpellClip.whirlwind && buildRevision != session.buildRevision) {
+    if ((clip == SpellClip.whirlwind || clip == SpellClip.warcry) &&
+        buildRevision != session.buildRevision) {
       finished = true;
       removeFromParent();
       return;
@@ -135,7 +137,7 @@ class SpellBurst extends GameComponent {
       clip,
       age,
       ui.Offset.zero,
-      radius * 2.1,
+      radius * (clip == SpellClip.warcry ? 2.4 : 2.1),
       opacity: ((1 - t) / .22).clamp(0, .95),
     );
     // Debris has independent radial velocity and gravity, beyond the atlas shape changes.

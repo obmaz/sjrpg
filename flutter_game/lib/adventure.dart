@@ -868,9 +868,6 @@ class Guardian extends Player with WithCollision {
     session.device.pulse(FeedbackKind.skill);
     p.energy -= def.cost;
     cooldowns[def.id] = def.cooldown;
-    final color = p.heroClass == HeroClass.warrior
-        ? const ui.Color(0xffffcf81)
-        : const ui.Color(0xff99e4ff);
     switch (def.id) {
       case 'warcry':
         armorTime = p.warcryDuration;
@@ -881,7 +878,14 @@ class Guardian extends Player with WithCollision {
           p.skillDamage(def),
           stun: 2,
         );
-        session.game?.add(RuneBurst(session, body.center, color, radius: 190));
+        session.game?.add(
+          SpellBurst(
+            session,
+            SpellClip.warcry,
+            body.center,
+            radius: 170 + rank * 8,
+          ),
+        );
       case 'whirlwind':
         spin = .5;
         session.game?.add(

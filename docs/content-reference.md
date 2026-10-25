@@ -88,3 +88,5 @@ Flutter 전용 `actors-roll.png`는 전사·마법사의 웅크리기·구르기
 `flutter_game/art/fx-whirlwind.webp`는 비어 있는 중앙 주위로 베기·바람·먼지가 모였다가 흩어지는 16프레임 소용돌이 시트입니다. 생성 원본은 `/workspace/generated_images/exec-4e38067a-cf06-457d-a966-05e0d667192d.png`이며 투명도를 보존해 1024×1024 WebP로 준비했습니다.
 
 `flutter_game/art/passive-icons.webp`는 전투 집중·전장의 맹세·고양의 울림·온기·냉기 숙련·번개 숙련의 전용 그림 6종을 담은 3×2 아틀라스입니다. 생성 원본은 `/workspace/generated_images/exec-8f84cf7a-27a5-4a77-8a5b-fef1e2ce266a.png`이며 투명도를 보존해 768×512 WebP로 준비했습니다. 트리와 설명 창은 같은 그림을 사용하고 기존 전투 효과와는 별도 텍스처로 읽습니다.
+
+`flutter_game/art/fx-warcry.webp`는 금빛 함성 충격파가 생겨 퍼지고 파편으로 흩어지는 16프레임 시트입니다. 생성 원본은 `/workspace/generated_images/exec-c249e696-e899-4b9d-a011-bf8a32a9ef02.png`입니다. 원본의 4×4 셀을 각각 224px로 준비해 16px 투명 여백과 함께 1024×1024 WebP로 배치하므로 인접 프레임을 샘플링하지 않습니다. 지면 효과는 시전 위치에 머물고 캐릭터 아래에서 0.64초간 재생합니다.

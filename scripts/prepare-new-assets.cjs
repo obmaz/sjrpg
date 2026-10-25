@@ -37,7 +37,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
             path.join(root, `flutter_game/art/${name}.png`),
             path.join(destination, `images/${name}.png`),
         );
-    for (const name of ['fx-meteor', 'fx-ice-nova', 'fx-whirlwind', 'passive-icons'])
+    for (const name of ['fx-meteor', 'fx-ice-nova', 'fx-whirlwind', 'fx-warcry', 'passive-icons'])
         fs.copyFileSync(
             path.join(root, `flutter_game/art/${name}.webp`),
             path.join(destination, `images/${name}.webp`),

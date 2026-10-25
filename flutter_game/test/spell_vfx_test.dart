@@ -55,6 +55,44 @@ void main() {
     effect.update(.05);
     expect(effect.age, SpellClip.iceNova.duration);
   });
+  test(
+    'warcry frames are grounded, pause, reset, and never deal a second hit',
+    () {
+      final s = Adventure(GameArt()), game = TestGame();
+      s.start(game);
+      addTearDown(s.dispose);
+      s.mobs.clear();
+      s.hero.position.setValues(6000, 4200);
+      s.progress.energy = 100;
+      s.progress.gold = 100;
+      expect(s.learn(s.progress.skills.first), true);
+      final mob = s.spawnEnemy('goblin', const ui.Offset(6100, 4200))!;
+      final before = mob.life.value;
+      final skill = warriorSkills.firstWhere((s) => s.id == 'warcry');
+      final damage = s.progress.skillDamage(skill);
+      s.hero.skill();
+      expect(mob.life.value, closeTo(before - damage, .0001));
+      expect(mob.stun, 2);
+      final effect = game.added.whereType<SpellBurst>().single;
+      expect(effect.clip, SpellClip.warcry);
+      expect(effect.priority, lessThan(s.hero.priority));
+      final origin = effect.position.clone();
+      s.hero.position.x += 70;
+      effect.update(.05);
+      expect(effect.position, origin);
+      s.pause();
+      effect.update(.05);
+      expect(effect.age, .05);
+      s.resume();
+      effect.update(.05);
+      expect(mob.life.value, closeTo(before - damage, .0001));
+      expect(s.resetSkills(), true);
+      effect.update(.05);
+      expect(effect.finished, true);
+      expect(s.hero.armorTime, 0);
+      expect(mob.life.value, closeTo(before - damage, .0001));
+    },
+  );
   test('a meteor has one impact and one damage event after its warning', () {
     final s = Adventure(GameArt()), game = TestGame();
     s.start(game);
