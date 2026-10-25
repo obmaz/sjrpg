@@ -105,6 +105,28 @@ void main() {
     );
   }
 
+  testWidgets('landscape storefront keeps product prices above the footer', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(844, 390);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: EquipmentPanel(session: s, startInShop: true, onClose: () {}),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester.getRect(find.bySemanticsLabel('기병의 장검 · 50 골드')).bottom,
+      lessThan(tester.getRect(find.bySemanticsLabel('모험 계속하기')).top),
+    );
+    expect(tester.takeException(), null);
+    semantics.dispose();
+  });
+
   testWidgets(
     'merchant purchase can equip immediately and potion totals stay current',
     (tester) async {

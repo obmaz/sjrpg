@@ -59,21 +59,21 @@ class GameAction extends StatelessWidget {
               customBorder: shape,
               onTap: onTap,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (icon != null) ...[
                       Icon(
                         icon,
-                        size: 19,
+                        size: 17,
                         color: primary && enabled
                             ? ink
                             : enabled
                             ? cream
                             : _muted,
                       ),
-                      const SizedBox(width: 7),
+                      const SizedBox(width: 6),
                     ],
                     Flexible(
                       child: Text(
@@ -625,11 +625,15 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
       physics: const ClampingScrollPhysics(),
       padding: const EdgeInsets.all(14),
       itemCount: offers.length,
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: 220,
         mainAxisSpacing: 10,
         crossAxisSpacing: 10,
-        childAspectRatio: .85,
+        childAspectRatio:
+            MediaQuery.sizeOf(context).width > 600 &&
+                MediaQuery.sizeOf(context).height < 500
+            ? 1.65
+            : .85,
       ),
       itemBuilder: (context, i) {
         final entry = offers[i];
