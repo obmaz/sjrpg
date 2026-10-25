@@ -389,8 +389,13 @@ class MapPainter extends CustomPainter {
         if (!mob.combatReady || mob.isDead || mob.isRemoving) continue;
         c.drawCircle(
           mob.body.center,
-          mob.boss ? 65 : 30,
-          Paint()..color = const Color(0xffef785e),
+          mob.boss
+              ? 65
+              : mob.isElite
+              ? 42
+              : 30,
+          Paint()
+            ..color = mob.isElite ? mob.trait.color : const Color(0xffef785e),
         );
       }
       for (var i = 0; i < Adventure.chestLocations.length; i++) {

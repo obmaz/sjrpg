@@ -11,6 +11,16 @@ import 'skill_aim.dart';
 
 enum NearbyAction { chest, exit, shop, talk }
 
+enum EnemyTrait {
+  none(1, 1, ui.Color(0xffe87753)),
+  armored(1.8, 1, ui.Color(0xffffca78)),
+  swift(1.35, 1.2, ui.Color(0xffb3a0ff));
+
+  const EnemyTrait(this.healthScale, this.speedScale, this.color);
+  final double healthScale, speedScale;
+  final ui.Color color;
+}
+
 class Adventure extends ChangeNotifier {
   Adventure(
     this.art, {
@@ -58,6 +68,7 @@ class Adventure extends ChangeNotifier {
   ui.Offset lastPack = arrival;
   int combo = 0, rageStrike = -1;
   int buildRevision = 0;
+  int _successfulPacks = 0;
   final random = math.Random(52);
   bool get active => ready && !disposed && !paused && !defeated && !won;
   String get region => world.areaName(hero.position.toOffset());
@@ -334,6 +345,13 @@ class Adventure extends ChangeNotifier {
     final at = hero.position.toOffset();
     if (town.contains(at) && at.dy < 3025 && !initial) return;
     final count = math.min(living < 8 ? 5 : 4, 22 - living);
+    final elitePack =
+        !initial &&
+        progress.kills >= 18 &&
+        progress.level >= 3 &&
+        _successfulPacks % 3 == 0 &&
+        !mobs.any((m) => m.isElite && !m.isDead && !m.isRemoving);
+    final eliteSlot = (_successfulPacks ~/ 3) % count;
     var added = 0;
     for (var i = 0; i < 18 && added < count; i++) {
       final angle = hero.bearing + (i < 3 ? [0.0, 1.0, -1.0][i] : i * 2.4),
@@ -346,11 +364,22 @@ class Adventure extends ChangeNotifier {
               (i == 0 || world.isSand(at) && i == 2)
           ? 'cultist'
           : ['goblin', 'wolf', 'skeleton'][(i + progress.level - 1) % 3];
-      if (spawnEnemy(kind, desired) != null) added++;
+      final trait = elitePack && added == eliteSlot
+          ? ((_successfulPacks ~/ 3).isEven
+                ? EnemyTrait.armored
+                : EnemyTrait.swift)
+          : EnemyTrait.none;
+      if (spawnEnemy(kind, desired, trait: trait) != null) added++;
     }
+    if (added > 0) _successfulPacks++;
   }
 
-  HuntEnemy? spawnEnemy(String kind, ui.Offset desired, {bool boss = false}) {
+  HuntEnemy? spawnEnemy(
+    String kind,
+    ui.Offset desired, {
+    bool boss = false,
+    EnemyTrait trait = EnemyTrait.none,
+  }) {
     final size = boss ? const ui.Size(48, 40) : const ui.Size(24, 22);
     final p = world.spawnNear(desired, size);
     if (p == null) return null;
@@ -363,7 +392,13 @@ class Adventure extends ChangeNotifier {
     )) {
       return null;
     }
-    final enemy = HuntEnemy(this, kind, p, boss: boss);
+    final enemy = HuntEnemy(
+      this,
+      kind,
+      p,
+      boss: boss,
+      trait: boss ? EnemyTrait.none : trait,
+    );
     enemy.life.initial(
       enemy.life.max * (1 + (progress.level - 1) * (boss ? .15 : .08)),
     );
@@ -443,8 +478,8 @@ class Adventure extends ChangeNotifier {
     );
     if (mob.isDead && !mob.rewarded) {
       mob.rewarded = true;
-      final level = progress.level;
-      progress.reward(boss: mob.boss);
+      final level = progress.level, goldBefore = progress.gold;
+      progress.reward(boss: mob.boss, elite: mob.isElite);
       syncLife();
       if (progress.level > level) {
         bubble(
@@ -461,13 +496,16 @@ class Adventure extends ChangeNotifier {
           ),
         );
       }
-      if (mob.boss || progress.kills % 3 == 0) {
-        dropGear(progress.rollLoot(random, boss: mob.boss), mob.body.center);
+      if (mob.boss || mob.isElite || progress.kills % 3 == 0) {
+        dropGear(
+          progress.rollLoot(random, boss: mob.boss, elite: mob.isElite),
+          mob.body.center,
+        );
       }
       if (!mob.boss && progress.kills % 12 == 0) progress.healingPotions++;
       if (!mob.boss && progress.kills % 14 == 0) progress.energyPotions++;
       bubble(
-        '+${mob.boss ? 100 : 8} 골드',
+        '+${progress.gold - goldBefore} 골드',
         mob.position.toOffset() - const ui.Offset(0, 34),
         const ui.Color(0xffffd774),
       );
@@ -1177,26 +1215,37 @@ class Guardian extends Player with WithCollision {
 }
 
 class HuntEnemy extends Enemy with WithCollision {
-  HuntEnemy(this.session, this.kind, ui.Offset at, {this.boss = false})
-    : super(
-        position: Vector2(at.dx, at.dy),
-        size: boss ? Vector2(48, 40) : Vector2(24, 22),
-        life: boss
-            ? 1800
-            : kind == 'goblin'
-            ? 28
-            : kind == 'wolf'
-            ? 38
-            : 52,
-        speed: boss
-            ? 90
-            : kind == 'wolf'
-            ? 135
-            : 105,
-      );
+  HuntEnemy(
+    this.session,
+    this.kind,
+    ui.Offset at, {
+    this.boss = false,
+    this.trait = EnemyTrait.none,
+  }) : super(
+         position: Vector2(at.dx, at.dy),
+         size: boss ? Vector2(48, 40) : Vector2(24, 22),
+         life:
+             (boss
+                 ? 1800
+                 : kind == 'goblin'
+                 ? 28
+                 : kind == 'wolf'
+                 ? 38
+                 : 52) *
+             (boss ? 1 : trait.healthScale),
+         speed:
+             (boss
+                 ? 90
+                 : kind == 'wolf'
+                 ? 135
+                 : 105) *
+             (boss ? 1 : trait.speedScale),
+       );
   final Adventure session;
   final String kind;
   final bool boss;
+  final EnemyTrait trait;
+  bool get isElite => !boss && trait != EnemyTrait.none;
   bool rewarded = false, combatReady = false;
   double bearing = math.pi / 2,
       anim = 0,
@@ -1542,6 +1591,19 @@ class HuntEnemy extends Enemy with WithCollision {
       ),
       ui.Paint()..color = const ui.Color(0x550d241b),
     );
+    if (isElite) {
+      canvas.drawOval(
+        ui.Rect.fromCenter(center: feet, width: 46, height: 17),
+        ui.Paint()..color = trait.color.withValues(alpha: .16),
+      );
+      canvas.drawOval(
+        ui.Rect.fromCenter(center: feet, width: 46, height: 17),
+        ui.Paint()
+          ..color = trait.color.withValues(alpha: .8)
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      );
+    }
     if (kind == 'wolf' && windup > 0 && pounceGoal != null) {
       final from = body.center - position.toOffset(),
           to = pounceGoal! - position.toOffset();
@@ -1677,8 +1739,13 @@ class HuntEnemy extends Enemy with WithCollision {
           : 62,
       opacity: hurt > 0 ? .7 : 1,
     );
-    if (life.value < life.max || boss) {
-      final width = boss ? 100.0 : 36.0, y = boss ? -100.0 : -48.0;
+    if (life.value < life.max || boss || isElite) {
+      final width = boss
+              ? 100.0
+              : isElite
+              ? 44.0
+              : 36.0,
+          y = boss ? -100.0 : -48.0;
       canvas.drawRRect(
         ui.RRect.fromRectAndRadius(
           ui.Rect.fromLTWH(size.x / 2 - width / 2, y, width, 6),
@@ -1696,8 +1763,38 @@ class HuntEnemy extends Enemy with WithCollision {
           ),
           const ui.Radius.circular(2),
         ),
-        ui.Paint()..color = const ui.Color(0xffe87753),
+        ui.Paint()..color = isElite ? trait.color : const ui.Color(0xffe87753),
       );
+      if (isElite) {
+        final at = ui.Offset(size.x / 2 - width / 2 - 8, y + 3);
+        canvas.save();
+        canvas.translate(at.dx, at.dy);
+        if (trait == EnemyTrait.armored) {
+          final shield = ui.Path()
+            ..moveTo(-4, -5)
+            ..lineTo(4, -5)
+            ..lineTo(4, 0)
+            ..quadraticBezierTo(4, 3, 0, 6)
+            ..quadraticBezierTo(-4, 3, -4, 0)
+            ..close();
+          canvas.drawPath(shield, ui.Paint()..color = trait.color);
+        } else {
+          final paint = ui.Paint()
+            ..color = trait.color
+            ..style = ui.PaintingStyle.stroke
+            ..strokeWidth = 2
+            ..strokeCap = ui.StrokeCap.round;
+          for (final y in [-3.0, 3.0]) {
+            canvas.drawLine(
+              ui.Offset(-4, y + 2),
+              ui.Offset.zero + ui.Offset(0, y - 2),
+              paint,
+            );
+            canvas.drawLine(ui.Offset(0, y - 2), ui.Offset(4, y + 2), paint);
+          }
+        }
+        canvas.restore();
+      }
       if (boss) {
         session.art.text(
           canvas,

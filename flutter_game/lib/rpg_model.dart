@@ -761,11 +761,21 @@ class Progress {
   );
   double mitigate(double damage, {double protection = 0}) =>
       damage * 100 / (100 + armor * 3) * (1 - protection.clamp(0, .75));
-  void reward({bool boss = false}) {
+  void reward({bool boss = false, bool elite = false}) {
     kills++;
-    gold += boss ? 100 : 8;
+    gold += boss
+        ? 100
+        : elite
+        ? 20
+        : 8;
     bossDefeated |= boss;
-    gainXp(boss ? 100 : 18);
+    gainXp(
+      boss
+          ? 100
+          : elite
+          ? 30
+          : 18,
+    );
   }
 
   void gainXp(int amount) {
@@ -889,7 +899,12 @@ class Progress {
     vitality: vitality,
     focus: focus,
   );
-  Gear rollLoot(math.Random random, {bool boss = false, bool chest = false}) {
+  Gear rollLoot(
+    math.Random random, {
+    bool boss = false,
+    bool chest = false,
+    bool elite = false,
+  }) {
     if (boss) {
       return createGear(
         gearById('sentinel'),
@@ -905,9 +920,9 @@ class Progress {
         .toList();
     final def = pool[random.nextInt(pool.length)];
     final roll = random.nextDouble();
-    final rarity = roll < (chest ? .25 : .12)
+    final rarity = roll < (chest || elite ? .25 : .12)
         ? Rarity.rare
-        : roll < .68
+        : roll < .68 || elite
         ? Rarity.magic
         : Rarity.common;
     return createGear(
