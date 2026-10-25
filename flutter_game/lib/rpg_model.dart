@@ -827,20 +827,49 @@ class Progress {
   double get manaRecovery => 9 + rank('warmth') * 1.5;
   double get coldDamageMultiplier => 1 + rank('coldMastery') * .08;
   double get lightningDamageMultiplier => 1 + rank('lightningMastery') * .08;
-  double get basicDamage =>
-      swordDamage *
-      (1 +
-          math.max(
-                0,
-                rank(heroClass == HeroClass.warrior ? 'cleave' : 'firebolt') -
-                    1,
-              ) *
-              (heroClass == HeroClass.warrior ? .15 : .18)) *
-      (heroClass == HeroClass.mage && weapon.base.style == 'ice'
-          ? coldDamageMultiplier
-          : heroClass == HeroClass.mage && weapon.base.style == 'lightning'
-          ? lightningDamageMultiplier
-          : 1);
+  double get basicDamage => skillDamage(skills.first);
+  double skillDamage(SkillDef skill, {int? atRank}) {
+    final r = (atRank ?? rank(skill.id)).clamp(0, SkillDef.maxRank);
+    if (!skills.contains(skill) ||
+        (r == 0 && skill.id != 'cleave' && skill.id != 'firebolt')) {
+      return 0;
+    }
+    final factor = switch (skill.id) {
+      'cleave' => 1 + math.max(0, r - 1) * .15,
+      'firebolt' => 1 + math.max(0, r - 1) * .18,
+      'warcry' => 1 + r * .25,
+      'whirlwind' => 1.1 + r * .24,
+      'frenzy' => 1.2 + r * .2,
+      'seismicSlam' => 1.8 + r * .32,
+      'frostNova' => 1.1 + r * .3,
+      'chainLightning' => 1.5 + r * .35,
+      'meteor' => 3 + r * .6,
+      _ => 0.0,
+    };
+    final element =
+        skill.id == 'frostNova' ||
+            (skill.id == 'firebolt' && weapon.base.style == 'ice')
+        ? coldDamageMultiplier
+        : skill.id == 'chainLightning' ||
+              (skill.id == 'firebolt' && weapon.base.style == 'lightning')
+        ? lightningDamageMultiplier
+        : 1;
+    return swordDamage * factor * element;
+  }
+
+  double skillProtection(String id, {int? atRank}) {
+    final r = (atRank ?? rank(id)).clamp(0, SkillDef.maxRank);
+    return id == 'warcry'
+        ? .25 + r * .025
+        : id == 'iceArmor'
+        ? .25 + r * .05
+        : 0;
+  }
+
+  double get warcryDuration => 6 + rank('battleVigor') * .4;
+  double rageOnHit({required bool protected}) =>
+      3.0 + (protected ? rank('rallyingVoice') : 0);
+
   double get attackInterval => math.max(
     .16,
     weapon.base.tempo *

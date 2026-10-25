@@ -6,6 +6,7 @@ import 'panel_controls.dart';
 import 'rpg_model.dart';
 import 'rpg_widgets.dart';
 import 'skill_tree.dart';
+import 'skill_preview.dart';
 
 const _dim = Color(0xffa4bcb6);
 
@@ -609,6 +610,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
                         height: compact ? 1.5 : 1.65,
                       ),
                     ),
+                    SkillRankPreview(p, skill),
                     SizedBox(height: compact ? 6 : 10),
                     Text(
                       skill.passive

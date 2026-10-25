@@ -496,9 +496,7 @@ class Adventure extends ChangeNotifier {
       );
       progress.energy = math.min(
         progress.maxEnergy,
-        progress.energy +
-            3 +
-            (hero.armorTime > 0 ? progress.rank('rallyingVoice') : 0),
+        progress.energy + progress.rageOnHit(protected: hero.armorTime > 0),
       );
     }
     device.pulse(mob.isDead ? FeedbackKind.kill : FeedbackKind.hit);
@@ -671,9 +669,11 @@ class Guardian extends Player with WithCollision {
   set skillClock(double value) =>
       cooldowns[session.progress.selectedSkill] = value;
   double get protection => armorTime > 0
-      ? (session.progress.heroClass == HeroClass.warrior
-            ? .25 + session.progress.rank('warcry') * .025
-            : .25 + session.progress.rank('iceArmor') * .05)
+      ? session.progress.skillProtection(
+          session.progress.heroClass == HeroClass.warrior
+              ? 'warcry'
+              : 'iceArmor',
+        )
       : 0;
   int strikes = 0;
   double attackBearing = math.pi / 2;
@@ -873,12 +873,12 @@ class Guardian extends Player with WithCollision {
         : const ui.Color(0xff99e4ff);
     switch (def.id) {
       case 'warcry':
-        armorTime = 6 + p.rank('battleVigor') * .4;
+        armorTime = p.warcryDuration;
         areaStrike(
           session,
           body.center,
           170 + rank * 8,
-          p.swordDamage * (1.0 + rank * .25),
+          p.skillDamage(def),
           stun: 2,
         );
         session.game?.add(RuneBurst(session, body.center, color, radius: 190));
@@ -888,17 +888,10 @@ class Guardian extends Player with WithCollision {
           SpellBurst(session, SpellClip.whirlwind, body.center, radius: 175),
         );
         invulnerable = math.max(invulnerable, .35);
-        session.game?.add(
-          WhirlwindPulse(session, this, p.swordDamage * (1.1 + rank * .24)),
-        );
+        session.game?.add(WhirlwindPulse(session, this, p.skillDamage(def)));
       case 'frenzy':
         frenzyTime = 7;
-        areaStrike(
-          session,
-          body.center,
-          145,
-          p.swordDamage * (1.2 + rank * .2),
-        );
+        areaStrike(session, body.center, 145, p.skillDamage(def));
         session.game?.add(
           RuneBurst(
             session,
@@ -942,7 +935,7 @@ class Guardian extends Player with WithCollision {
           session,
           impact,
           125 + rank * 6,
-          p.swordDamage * (1.8 + rank * .32),
+          p.skillDamage(def),
           stun: .65 + rank * .08,
           slow: 1.5,
         );
@@ -955,7 +948,7 @@ class Guardian extends Player with WithCollision {
           session,
           body.center,
           radius,
-          p.swordDamage * (1.1 + rank * .3) * p.coldDamageMultiplier,
+          p.skillDamage(def),
           stun: 2,
           slow: 3,
         );
@@ -968,12 +961,7 @@ class Guardian extends Player with WithCollision {
           SpellBurst(session, SpellClip.iceNova, body.center, radius: 70),
         );
       case 'chainLightning':
-        chainLightning(
-          session,
-          body.center,
-          p.swordDamage * (1.5 + rank * .35) * p.lightningDamageMultiplier,
-          3 + rank,
-        );
+        chainLightning(session, body.center, p.skillDamage(def), 3 + rank);
       case 'meteor':
         var target =
             body.center + ui.Offset(math.cos(bearing), math.sin(bearing)) * 190;
@@ -1001,12 +989,7 @@ class Guardian extends Player with WithCollision {
           target = near.first.body.center;
         }
         session.game?.add(
-          MeteorFall(
-            session,
-            body.center,
-            target,
-            p.swordDamage * (3 + rank * .6),
-          ),
+          MeteorFall(session, body.center, target, p.skillDamage(def)),
         );
     }
     session.refresh();
