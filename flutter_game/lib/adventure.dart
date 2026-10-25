@@ -2224,7 +2224,7 @@ class HuntEnemy extends Enemy with WithCollision {
         ),
         ui.Paint()..color = color.withValues(alpha: .35),
       );
-      final mark = ui.Offset(size.x / 2, boss ? -112 : -58);
+      final mark = ui.Offset(size.x / 2, boss ? -140 : -58);
       for (var i = 0; i < 6; i++) {
         final a = i * math.pi / 3;
         canvas.drawLine(
@@ -2317,6 +2317,18 @@ class HuntEnemy extends Enemy with WithCollision {
         canvas.restore();
       }
       if (boss) {
+        final plate = ui.RRect.fromRectAndRadius(
+          ui.Rect.fromLTWH(size.x / 2 - 74, y - 27, 148, 24),
+          const ui.Radius.circular(6),
+        );
+        canvas.drawRRect(plate, ui.Paint()..color = const ui.Color(0xe810201f));
+        canvas.drawRRect(
+          plate,
+          ui.Paint()
+            ..style = ui.PaintingStyle.stroke
+            ..strokeWidth = 1
+            ..color = const ui.Color(0x888eab71),
+        );
         session.art.text(
           canvas,
           session.world.stage.bossName,

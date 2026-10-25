@@ -14,7 +14,7 @@ extension WorldStageInfo on WorldStage {
   String get theme => ['숲과 초원', '사막과 폐허', '고대 왕국', '사이버펑크'][index];
   String get bossName => ['숲의 파수꾼', '모래시계 감시자', '태초의 석상왕', '중앙 방어 코어'][index];
   String get bossActor =>
-      ['golem', 'sand-warden', 'ancient-king', 'cyber'][index];
+      ['golem', 'sand-warden', 'ancient-king', 'cyber-core'][index];
   int get killGoal => [120, 160, 180, 180][index];
   Offset get spawn => [
     const Offset(3840, 3055),

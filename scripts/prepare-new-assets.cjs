@@ -45,6 +45,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'actors-gunner',
         'actors-sand-warden',
         'actors-ancient-king',
+        'actors-cyber-core',
         'cyber-props',
         'ruin-props',
     ])
@@ -72,6 +73,9 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
     const ancientKing = JSON.parse(
         fs.readFileSync(path.join(root, 'flutter_game/art/ancient-king-bounds.json'), 'utf8'),
     );
+    const cyberCore = JSON.parse(
+        fs.readFileSync(path.join(root, 'flutter_game/art/cyber-core-bounds.json'), 'utf8'),
+    );
     const { ACTOR_BOUNDS } = await import(
         pathToFileURL(path.join(root, 'src/data/actor-bounds.js'))
     );
@@ -87,6 +91,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
                 gunner,
                 'sand-warden': sandWarden,
                 'ancient-king': ancientKing,
+                'cyber-core': cyberCore,
             },
             controls: CONTROL_SPRITES,
         }),

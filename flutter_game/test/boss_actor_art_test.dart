@@ -16,7 +16,7 @@ void main() {
       expect(WorldStage.forest.bossActor, 'golem');
       expect(WorldStage.sands.bossActor, 'sand-warden');
       expect(WorldStage.past.bossActor, 'ancient-king');
-      expect(WorldStage.future.bossActor, 'cyber');
+      expect(WorldStage.future.bossActor, 'cyber-core');
     },
   );
   test(
@@ -31,7 +31,7 @@ void main() {
           image.dispose();
         }
       });
-      for (final kind in ['sand-warden', 'ancient-king']) {
+      for (final kind in ['sand-warden', 'ancient-king', 'cyber-core']) {
         final frames = art.actors[kind]['frames'] as List;
         expect(frames.length, 16);
         final unique = <int>{};
