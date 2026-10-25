@@ -63,33 +63,29 @@ class GameArt {
     for (var i = 0; i < 12; i++) {
       final source = i < 6 ? atlas : art.images['stage-materials']!;
       final cell = i % 6;
+      final tileSize = i < 6 ? 384 : 192;
       final recorder = ui.PictureRecorder();
       // A separate recorder per material keeps shaders small and shared by every sector.
       final c = ui.Canvas(recorder);
       c.drawImageRect(
         source,
-        // Ancient ground samples exclude the decorative column fragments at cell edges.
-        i == 7
-            ? const ui.Rect.fromLTWH(560, 80, 360, 360)
-            : i == 10
-            ? const ui.Rect.fromLTWH(560, 600, 340, 340)
-            : ui.Rect.fromLTWH(
-                (cell % 3) * source.width / 3 + 12,
-                (cell ~/ 3) * source.height / 2 + 12,
-                source.width / 3 - 24,
-                source.height / 2 - 24,
-              ),
-        const ui.Rect.fromLTWH(0, 0, 384, 384),
+        ui.Rect.fromLTWH(
+          (cell % 3) * source.width / 3 + 12,
+          (cell ~/ 3) * source.height / 2 + 12,
+          source.width / 3 - 24,
+          source.height / 2 - 24,
+        ),
+        ui.Rect.fromLTWH(0, 0, tileSize.toDouble(), tileSize.toDouble()),
         ui.Paint(),
       );
       final picture = recorder.endRecording(),
-          image = await picture.toImage(384, 384);
+          image = await picture.toImage(tileSize, tileSize);
       picture.dispose();
       art.materials.add(
         ui.ImageShader(
           image,
-          ui.TileMode.mirror,
-          ui.TileMode.mirror,
+          i < 6 ? ui.TileMode.mirror : ui.TileMode.repeated,
+          i < 6 ? ui.TileMode.mirror : ui.TileMode.repeated,
           Float64List.fromList([
             1,
             0,
