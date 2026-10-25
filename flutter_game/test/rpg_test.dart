@@ -272,6 +272,111 @@ void main() {
     },
   );
   test(
+    'four learned skills fill combat slots, swap uniquely and keep their cooldowns',
+    () {
+      final s = Adventure(GameArt(), heroClass: HeroClass.mage);
+      s.start(TestGame());
+      addTearDown(s.dispose);
+      final p = s.progress;
+      p.gainXp(1000);
+      for (final id in ['iceArmor', 'chainLightning', 'meteor']) {
+        expect(p.learn(p.skills.firstWhere((skill) => skill.id == id)), true);
+      }
+      expect(p.skillSlots, [
+        'frostNova',
+        'iceArmor',
+        'chainLightning',
+        'meteor',
+      ]);
+      for (var slot = 0; slot < 4; slot++) {
+        p.energy = p.maxEnergy;
+        s.hero.skill(slot: slot);
+        expect(s.hero.cooldowns[p.skillSlots[slot]], greaterThan(0));
+      }
+      final cooldowns = Map<String, double>.of(s.hero.cooldowns),
+          energy = p.energy;
+      expect(p.selectSkill('meteor', slot: 0), true);
+      expect(p.skillSlots, [
+        'meteor',
+        'iceArmor',
+        'chainLightning',
+        'frostNova',
+      ]);
+      s.hero.skill();
+      s.hero.skill(slot: 3);
+      expect(s.hero.cooldowns, cooldowns);
+      expect(p.energy, energy);
+      expect(p.selectSkill('meteor', slot: 4), false);
+      expect(Progress.fromSave(p.toSave())!.skillSlots, p.skillSlots);
+      final older = p.toSave()
+        ..remove('tertiarySkill')
+        ..remove('quaternarySkill');
+      final migrated = Progress.fromSave(older)!;
+      expect(migrated.selectedSkill, p.selectedSkill);
+      expect(migrated.secondarySkill, p.secondarySkill);
+      expect(migrated.skillSlots.toSet().length, 4);
+      final duplicate = p.toSave();
+      duplicate['tertiarySkill'] = p.selectedSkill;
+      expect(Progress.fromSave(duplicate), null);
+    },
+  );
+  test(
+    'warrior ground slam fills the fourth slot and strikes the reachable front',
+    () {
+      final s = Adventure(GameArt());
+      s.start(TestGame());
+      addTearDown(s.dispose);
+      final p = s.progress;
+      p.gainXp(1000);
+      for (final id in ['whirlwind', 'frenzy', 'seismicSlam']) {
+        expect(p.learn(p.skills.firstWhere((skill) => skill.id == id)), true);
+      }
+      expect(p.skillSlots, ['warcry', 'whirlwind', 'frenzy', 'seismicSlam']);
+      s.mobs.clear();
+      s.hero.position.setValues(6000, 4200);
+      s.hero.bearing = 0;
+      final enemy = s.spawnEnemy('skeleton', const Offset(6150, 4200))!;
+      final life = enemy.life.value;
+      p.energy = 100;
+      s.hero.skill(slot: 3);
+      expect(enemy.life.value, lessThan(life));
+      expect(enemy.stun, greaterThan(0));
+      expect(p.energy, 76);
+      expect(s.hero.cooldowns['seismicSlam'], 8);
+    },
+  );
+  test('ground slam cannot put its impact beyond a blocking tree', () {
+    final s = Adventure(GameArt());
+    s.start(TestGame());
+    addTearDown(s.dispose);
+    s.progress.gainXp(1000);
+    s.progress.learn(
+      s.progress.skills.firstWhere((skill) => skill.id == 'seismicSlam'),
+    );
+    s.progress.selectSkill('seismicSlam');
+    s.progress.energy = 100;
+    final tree = s.world.props.firstWhere(
+      (p) =>
+          p.kind == 'tree' &&
+          !s.world.blocked(
+            Rect.fromLTWH(p.body.left - 70, p.body.center.dy - 11, 24, 22),
+          ) &&
+          !s.world.blocked(
+            Rect.fromLTWH(p.body.right + 30, p.body.center.dy - 11, 24, 22),
+          ),
+    );
+    s.mobs.clear();
+    s.hero.position.setValues(tree.body.left - 70, tree.body.center.dy - 11);
+    s.hero.bearing = 0;
+    final enemy = s.spawnEnemy(
+      'goblin',
+      Offset(tree.body.right + 30, tree.body.center.dy - 11),
+    )!;
+    final before = enemy.life.value;
+    s.hero.skill();
+    expect(enemy.life.value, before);
+  });
+  test(
     'boss slam locks its warning area, can be evaded and is interrupted by a stun',
     () {
       final s = Adventure(GameArt());

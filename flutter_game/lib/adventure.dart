@@ -47,6 +47,9 @@ class Adventure extends ChangeNotifier {
       won = false,
       bossSummoned = false,
       disposed = false;
+  double cameraOffsetY = 0;
+  Vector2 get cameraFocus =>
+      hero.position + hero.size / 2 + Vector2(0, cameraOffsetY);
   double elapsed = 0, waveTime = 0, notifyTime = 0;
   ui.Offset lastPack = arrival;
   int combo = 0, rageStrike = -1;
@@ -502,7 +505,7 @@ class Guardian extends Player with WithCollision {
         final safe = lastClearPosition;
         if (safe != null) position.setValues(safe.dx, safe.dy);
       }
-      if (hasGameRef) gameRef.camera.position = position + size / 2;
+      if (hasGameRef) gameRef.camera.position = session.cameraFocus;
     });
   }
 
@@ -530,6 +533,8 @@ class Guardian extends Player with WithCollision {
       skill();
     }
     if (held && event.id == LogicalKeyboardKey.keyL) skill(secondary: true);
+    if (held && event.id == LogicalKeyboardKey.keyO) skill(slot: 2);
+    if (held && event.id == LogicalKeyboardKey.keyP) skill(slot: 3);
     if (held && event.id == LogicalKeyboardKey.shiftLeft) dodge();
     if (held && event.id == LogicalKeyboardKey.digit1) session.potion();
     if (held && event.id == LogicalKeyboardKey.digit2) {
@@ -561,7 +566,7 @@ class Guardian extends Player with WithCollision {
     position.setValues(p.dx, p.dy);
     lastClearPosition = p;
     // Follow the resolved body directly. Bonfire's smoothed follower can overshoot a dash.
-    if (hasGameRef) gameRef.camera.position = position + size / 2;
+    if (hasGameRef) gameRef.camera.position = session.cameraFocus;
     if (delta.distance > .1) animationTime += dt;
     attackClock = math.max(0, attackClock - dt);
     swing = math.max(0, swing - dt);
@@ -658,10 +663,10 @@ class Guardian extends Player with WithCollision {
     }
   }
 
-  void skill({bool secondary = false}) {
+  void skill({bool secondary = false, int? slot}) {
     if (dashing > 0) return;
     final p = session.progress;
-    final def = secondary ? p.secondarySkillDef : p.activeSkill;
+    final def = p.skillAt(slot ?? (secondary ? 1 : 0));
     if (def == null) return;
     final rank = p.rank(def.id);
     if (!session.active || (cooldowns[def.id] ?? 0) > 0 || rank == 0) return;
@@ -707,6 +712,54 @@ class Guardian extends Player with WithCollision {
             const ui.Color(0xffffa15e),
             radius: 145,
           ),
+        );
+      case 'seismicSlam':
+        var angle = bearing;
+        final targets =
+            session.mobs
+                .where(
+                  (m) =>
+                      m.combatReady &&
+                      !m.isDead &&
+                      !m.isRemoving &&
+                      (m.body.center - body.center).distance < 260 &&
+                      session.world.clearLine(
+                        body.center,
+                        m.body.center,
+                        const ui.Size(3, 3),
+                      ),
+                )
+                .toList()
+              ..sort(
+                (a, b) => (a.body.center - body.center).distance.compareTo(
+                  (b.body.center - body.center).distance,
+                ),
+              );
+        if (velocity.length < 5 && targets.isNotEmpty) {
+          final toward = targets.first.body.center - body.center;
+          angle = math.atan2(toward.dy, toward.dx);
+          bearing = angle;
+        }
+        attackBearing = angle;
+        swing = .23;
+        attackClock = math.max(attackClock, .35);
+        final impact =
+            session.world.move(
+              body.center - const ui.Offset(3, 3),
+              ui.Offset(math.cos(angle), math.sin(angle)) * 100,
+              const ui.Size(6, 6),
+            ) +
+            const ui.Offset(3, 3);
+        areaStrike(
+          session,
+          impact,
+          125 + rank * 6,
+          p.swordDamage * (1.8 + rank * .32),
+          stun: .65 + rank * .08,
+          slow: 1.5,
+        );
+        session.game?.add(
+          RuneBurst(session, impact, const ui.Color(0xfff2cc8a), radius: 140),
         );
       case 'frostNova':
         final radius = 155.0 + rank * 15;

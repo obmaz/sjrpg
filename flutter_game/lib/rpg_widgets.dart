@@ -231,7 +231,7 @@ class _SkillsViewState extends State<SkillsView> {
         ),
         const SizedBox(height: 12),
         const Text(
-          '레벨마다 1포인트 · 각 스킬 최대 5등급\n배운 사용 스킬 2개를 주·보조 버튼에 지정하세요.',
+          '레벨마다 1포인트 · 각 스킬 최대 5등급\n배운 사용 스킬 4개를 전투 버튼에 지정하세요.',
           style: TextStyle(fontSize: 13, height: 1.7, color: Color(0xffbbccbd)),
         ),
         const SizedBox(height: 18),
@@ -244,8 +244,15 @@ class _SkillsViewState extends State<SkillsView> {
     final p = widget.session.progress,
         rank = p.rank(skill.id),
         color = skillColor(skill),
-        selected = p.selectedSkill == skill.id,
-        secondary = p.secondarySkill == skill.id;
+        currentSlot = p.skillSlots.indexOf(skill.id),
+        selected = currentSlot >= 0;
+    final action = rank == 5
+        ? '최대 등급'
+        : p.level < skill.requiredLevel
+        ? 'Lv.${skill.requiredLevel} 필요'
+        : rank == 0
+        ? '습득 · 1P'
+        : '강화 · 1P';
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
@@ -328,43 +335,44 @@ class _SkillsViewState extends State<SkillsView> {
                 onPressed: p.canLearn(skill)
                     ? () => setState(() => widget.session.learn(skill))
                     : null,
-                child: Text(
-                  rank == 5
-                      ? '최대 등급'
-                      : p.level < skill.requiredLevel
-                      ? 'Lv.${skill.requiredLevel} 필요'
-                      : rank == 0
-                      ? '습득 · 1P'
-                      : '강화 · 1P',
-                ),
+                child: Text(action, semanticsLabel: '${skill.name} $action'),
               ),
               if (!skill.passive && rank > 0)
-                OutlinedButton(
-                  onPressed: () => setState(() {
-                    p.selectSkill(skill.id);
+                PopupMenuButton<int>(
+                  tooltip: '${skill.name} 전투 슬롯 지정',
+                  onSelected: (slot) => setState(() {
+                    p.selectSkill(skill.id, slot: slot);
                     widget.session.refresh();
                   }),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: selected ? gold : cream,
-                    side: BorderSide(
-                      color: selected ? gold : const Color(0xff78917b),
+                  itemBuilder: (context) => [
+                    for (var slot = 0; slot < 4; slot++)
+                      PopupMenuItem(
+                        value: slot,
+                        child: Text(
+                          '스킬 ${slot + 1}${p.skillSlots[slot] == skill.id ? ' · 사용 중' : ''}',
+                        ),
+                      ),
+                  ],
+                  child: Container(
+                    constraints: const BoxConstraints(minHeight: 48),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: selected ? gold : const Color(0xff78917b),
+                      ),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          selected ? '스킬 ${currentSlot + 1}' : '슬롯 지정',
+                          style: const TextStyle(color: cream),
+                        ),
+                        const Icon(Icons.expand_more, color: gold, size: 20),
+                      ],
                     ),
                   ),
-                  child: Text(selected ? '주 스킬' : '주 슬롯 지정'),
-                ),
-              if (!skill.passive && rank > 0)
-                OutlinedButton(
-                  onPressed: () => setState(() {
-                    p.selectSkill(skill.id, slot: 1);
-                    widget.session.refresh();
-                  }),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: secondary ? gold : cream,
-                    side: BorderSide(
-                      color: secondary ? gold : const Color(0xff78917b),
-                    ),
-                  ),
-                  child: Text(secondary ? '보조 스킬' : '보조 슬롯 지정'),
                 ),
             ],
           ),

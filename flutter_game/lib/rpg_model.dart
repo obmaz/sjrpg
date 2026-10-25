@@ -339,6 +339,7 @@ class SkillDef {
         'warcry': '함성',
         'whirlwind': '소용돌이',
         'frenzy': '격노',
+        'seismicSlam': '강타',
         'iceArmor': '얼음 갑옷',
         'chainLightning': '번개',
         'meteor': '유성',
@@ -403,6 +404,15 @@ const warriorSkills = [
     4,
     28,
     12,
+  ),
+  SkillDef(
+    'seismicSlam',
+    '대지 강타',
+    '전투 기술',
+    '전방의 지면을 내리쳐 피해를 주고 잠시 기절시킵니다. 장애물 너머에는 피해를 주지 않습니다.',
+    5,
+    24,
+    8,
   ),
 ];
 const mageSkills = [
@@ -532,7 +542,19 @@ class Progress {
   double hp = 100, energy = 0, bonusAttack = 0, bonusHealth = 0;
   bool bossDefeated = false;
   String selectedSkill = '';
-  String? secondarySkill;
+  String? secondarySkill, tertiarySkill, quaternarySkill;
+  List<String?> get skillSlots => [
+    selectedSkill,
+    secondarySkill,
+    tertiarySkill,
+    quaternarySkill,
+  ];
+  SkillDef? skillAt(int slot) {
+    if (slot < 0 || slot >= 4) return null;
+    final id = skillSlots[slot];
+    return id == null ? null : skills.firstWhere((skill) => skill.id == id);
+  }
+
   final Map<String, int> ranks = {};
   final List<Gear> inventory = [];
   final Map<GearSlot, Gear> equipped = {};
@@ -553,6 +575,8 @@ class Progress {
     'bossDefeated': bossDefeated,
     'selectedSkill': selectedSkill,
     'secondarySkill': secondarySkill,
+    'tertiarySkill': tertiarySkill,
+    'quaternarySkill': quaternarySkill,
     'ranks': Map<String, int>.of(ranks),
     'inventory': inventory.map((g) => g.toSave()).toList(),
     'equipped': equipped.map((slot, gear) => MapEntry(slot.name, gear.serial)),
@@ -638,6 +662,29 @@ class Progress {
         if (secondary.passive ||
             p.rank(secondary.id) == 0 ||
             secondary.id == active.id) {
+          return null;
+        }
+      }
+      p.tertiarySkill = data['tertiarySkill'] as String?;
+      p.quaternarySkill = data['quaternarySkill'] as String?;
+      if (!data.containsKey('tertiarySkill')) {
+        final extras = p.skills
+            .where(
+              (s) =>
+                  !s.passive &&
+                  p.rank(s.id) > 0 &&
+                  s.id != p.selectedSkill &&
+                  s.id != p.secondarySkill,
+            )
+            .toList();
+        if (extras.isNotEmpty) p.tertiarySkill = extras.first.id;
+        if (extras.length > 1) p.quaternarySkill = extras[1].id;
+      }
+      final assigned = <String>{};
+      for (var slot = 0; slot < 4; slot++) {
+        final skill = p.skillAt(slot);
+        if (skill == null) continue;
+        if (skill.passive || p.rank(skill.id) == 0 || !assigned.add(skill.id)) {
           return null;
         }
       }
@@ -727,8 +774,14 @@ class Progress {
     if (!canLearn(skill)) return false;
     skillPoints--;
     ranks[skill.id] = rank(skill.id) + 1;
-    if (!skill.passive && skill.id != selectedSkill && secondarySkill == null) {
-      secondarySkill = skill.id;
+    if (!skill.passive && !skillSlots.contains(skill.id)) {
+      if (secondarySkill == null) {
+        secondarySkill = skill.id;
+      } else if (tertiarySkill == null) {
+        tertiarySkill = skill.id;
+      } else {
+        quaternarySkill ??= skill.id;
+      }
     }
     hp = math.min(hp, maxHp);
     return true;
@@ -736,17 +789,15 @@ class Progress {
 
   bool selectSkill(String id, {int slot = 0}) {
     final found = skills.where((s) => s.id == id && !s.passive && rank(id) > 0);
-    if (found.isEmpty || (slot != 0 && slot != 1)) return false;
-    if (slot == 1) {
-      if (id == selectedSkill) {
-        if (secondarySkill == null) return false;
-        selectedSkill = secondarySkill!;
-      }
-      secondarySkill = id;
-    } else {
-      if (id == secondarySkill) secondarySkill = selectedSkill;
-      selectedSkill = id;
-    }
+    if (found.isEmpty || slot < 0 || slot > 3) return false;
+    final values = skillSlots, previous = skillSlots.indexOf(id);
+    if (previous >= 0 && previous != slot) values[previous] = values[slot];
+    values[slot] = id;
+    if (values[0] == null) return false;
+    selectedSkill = values[0]!;
+    secondarySkill = values[1];
+    tertiarySkill = values[2];
+    quaternarySkill = values[3];
     return true;
   }
 

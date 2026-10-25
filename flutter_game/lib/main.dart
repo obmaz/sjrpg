@@ -34,6 +34,15 @@ class GuardianApp extends StatelessWidget {
         brightness: Brightness.dark,
         surface: ink,
       ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(minimumSize: const Size(48, 48)),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48)),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+      ),
       scaffoldBackgroundColor: ink,
     ),
     home: const EntryPage(),
@@ -210,10 +219,18 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
       focusNode: gameFocus,
       onReady: (game) {
         game.camera.updateBoundsAndZoomFit(moveOnlyMapArea: true);
+        game.camera.position = adventure.cameraFocus;
         adventure.start(game);
         saveNow();
       },
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final size = MediaQuery.sizeOf(context);
+    adventure.cameraOffsetY = size.width < 400 && size.height < 520 ? 36 : 0;
   }
 
   @override
@@ -257,7 +274,9 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         final media = MediaQuery.of(context),
             width = media.size.width,
             short = media.size.height < 500;
-        final stick = width < 360
+        final stick = short && width < 400
+                ? 102.0
+                : width < 360
                 ? 122.0
                 : short
                 ? 112.0
@@ -269,9 +288,59 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
             : adventure.won
             ? 'victory'
             : panel;
-        final p = adventure.progress,
-            skill = p.activeSkill,
-            secondary = p.secondarySkillDef;
+        final p = adventure.progress;
+        final layouts = short && width < 360
+            ? [
+                (18.0, 156.0, 52.0),
+                (66.0, 200.0, 48.0),
+                (96.0, 156.0, 48.0),
+                (120.0, 102.0, 48.0),
+              ]
+            : short
+            ? [
+                (18.0, 132.0, 60.0),
+                (90.0, 142.0, 52.0),
+                (154.0, 114.0, 52.0),
+                (206.0, 66.0, 48.0),
+              ]
+            : width < 360
+            ? [
+                (18.0, 152.0, 56.0),
+                (66.0, 204.0, 48.0),
+                (96.0, 166.0, 48.0),
+                (120.0, 112.0, 48.0),
+              ]
+            : [
+                (18.0, 152.0, 64.0),
+                (84.0, 192.0, 56.0),
+                (148.0, 166.0, 52.0),
+                (160.0, 112.0, 48.0),
+              ];
+        Widget skillButton(int slot) {
+          final skill = p.skillAt(slot)!, layout = layouts[slot];
+          final remaining = adventure.hero.cooldowns[skill.id] ?? 0;
+          return Positioned(
+            right: layout.$1,
+            bottom: bottom + layout.$2,
+            child: ActionButton(
+              art: widget.art,
+              sprite: 'roundEmpty',
+              effect: skillEffect(skill.id),
+              showLabel: false,
+              label: skill.shortName,
+              semanticLabel: slot == 0
+                  ? skill.name
+                  : slot == 1
+                  ? '보조 ${skill.name}'
+                  : '스킬 ${slot + 1} ${skill.name}',
+              size: layout.$3,
+              remaining: remaining,
+              total: skill.cooldown,
+              onTap: () => adventure.hero.skill(slot: slot),
+            ),
+          );
+        }
+
         return Stack(
           fit: StackFit.expand,
           children: [
@@ -312,12 +381,11 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 bottom: bottom,
                 child: ActionButton(
                   art: widget.art,
-                  sprite: p.heroClass == HeroClass.mage
-                      ? 'roundEmpty'
-                      : 'touchAttack',
-                  icon: p.heroClass == HeroClass.mage
-                      ? elementIcon(p.weapon.base.style)
-                      : null,
+                  sprite: 'roundEmpty',
+                  artwork: CustomPaint(
+                    size: Size.square(attack * .75),
+                    painter: GearGlyph(p.weapon, widget.art),
+                  ),
                   label: '공격',
                   semanticLabel: '공격',
                   size: attack,
@@ -327,41 +395,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   onTap: adventure.hero.slash,
                 ),
               ),
-              Positioned(
-                right: width < 360 ? 24 : 32,
-                bottom: bottom + (short ? 108 : 136),
-                child: ActionButton(
-                  art: widget.art,
-                  sprite: 'roundEmpty',
-                  effect: skillEffect(skill.id),
-                  label: adventure.hero.skillClock > 0
-                      ? '${adventure.hero.skillClock.ceil()}초'
-                      : skill.shortName,
-                  semanticLabel: skill.name,
-                  size: short ? 62 : 72,
-                  remaining: adventure.hero.skillClock,
-                  total: skill.cooldown,
-                  onTap: adventure.hero.skill,
-                ),
-              ),
-              if (secondary != null)
-                Positioned(
-                  right: width < 360 ? 107 : 124,
-                  bottom: bottom + (short ? 104 : 130),
-                  child: ActionButton(
-                    art: widget.art,
-                    sprite: 'roundEmpty',
-                    effect: skillEffect(secondary.id),
-                    label: (adventure.hero.cooldowns[secondary.id] ?? 0) > 0
-                        ? '${adventure.hero.cooldowns[secondary.id]!.ceil()}초'
-                        : secondary.shortName,
-                    semanticLabel: '보조 ${secondary.name}',
-                    size: short ? 54 : 60,
-                    remaining: adventure.hero.cooldowns[secondary.id] ?? 0,
-                    total: secondary.cooldown,
-                    onTap: () => adventure.hero.skill(secondary: true),
-                  ),
-                ),
+              for (var slot = 0; slot < 4; slot++)
+                if (p.skillAt(slot) != null) skillButton(slot),
               Positioned(
                 right: width < 360 ? 112 : 134,
                 bottom: bottom + 20,
@@ -382,7 +417,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                       .distance <
                   165)
                 Positioned(
-                  left: 24,
+                  left: short && width > 500 ? 148 : 24,
                   bottom: bottom + stick + 12,
                   child: FilledButton.icon(
                     style: FilledButton.styleFrom(
@@ -400,7 +435,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                       .distance <
                   135)
                 Positioned(
-                  left: 24,
+                  left: short && width > 500 ? 148 : 24,
                   bottom: bottom + stick + 12,
                   child: FilledButton.icon(
                     onPressed: () => open('talk'),

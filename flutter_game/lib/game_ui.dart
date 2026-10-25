@@ -17,6 +17,9 @@ class GameHud extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = session.progress;
+    final width = MediaQuery.sizeOf(context).width;
+    final short = MediaQuery.sizeOf(context).height < 520;
+    final statusRight = math.max(104.0, width - 360);
     return SizedBox(
       height: 130,
       child: Stack(
@@ -24,7 +27,7 @@ class GameHud extends StatelessWidget {
           Positioned(
             top: 17,
             left: 57,
-            right: 104,
+            right: statusRight,
             child: ClipPath(
               clipper: _BarClipper(),
               child: Container(
@@ -64,7 +67,7 @@ class GameHud extends StatelessWidget {
           ),
           Positioned(
             left: 77,
-            right: 110,
+            right: statusRight + 6,
             top: 52,
             child: Semantics(
               label:
@@ -101,7 +104,7 @@ class GameHud extends StatelessWidget {
           ),
           Positioned(
             left: 77,
-            right: 110,
+            right: statusRight + 6,
             top: 65,
             child: LinearProgressIndicator(
               value: p.xp / p.nextLevelXp,
@@ -150,18 +153,19 @@ class GameHud extends StatelessWidget {
           Positioned(
             left: 84,
             top: 72,
-            right: 104,
+            right: statusRight,
             child: Wrap(
               spacing: 12,
               runSpacing: 6,
               children: [
                 _stat(Icons.monetization_on_outlined, '${p.gold}', gold),
                 _stat(Icons.bolt, '${p.kills}', cream),
-                _stat(
-                  Icons.wb_sunny_outlined,
-                  gameTime(session.elapsed),
-                  const Color(0xffdfce94),
-                ),
+                if (width >= 360)
+                  _stat(
+                    Icons.wb_sunny_outlined,
+                    gameTime(session.elapsed),
+                    const Color(0xffdfce94),
+                  ),
               ],
             ),
           ),
@@ -182,21 +186,25 @@ class GameHud extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
-            right: 10,
-            top: 98,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: ink.withValues(alpha: .8),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                session.region,
-                style: const TextStyle(color: cream, fontSize: 12),
+          if (!short)
+            Positioned(
+              right: 10,
+              top: 98,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: ink.withValues(alpha: .8),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  session.region,
+                  style: const TextStyle(color: cream, fontSize: 12),
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -452,6 +460,8 @@ class ActionButton extends StatefulWidget {
     this.onHold,
     this.icon,
     this.effect,
+    this.artwork,
+    this.showLabel = true,
     this.remaining = 0,
     this.total = 1,
     super.key,
@@ -463,6 +473,8 @@ class ActionButton extends StatefulWidget {
   final ValueChanged<bool>? onHold;
   final IconData? icon;
   final int? effect;
+  final Widget? artwork;
+  final bool showLabel;
   @override
   State<ActionButton> createState() => _ActionButtonState();
 }
@@ -506,51 +518,66 @@ class _ActionButtonState extends State<ActionButton> {
       },
       child: SizedBox(
         width: widget.size,
-        height: widget.size + 22,
+        height: widget.size + (widget.showLabel ? 22 : 0),
         child: Column(
           children: [
             SizedBox(
               width: widget.size,
               height: widget.size,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  AnimatedScale(
-                    scale: pressed ? .94 : 1,
-                    duration: const Duration(milliseconds: 70),
-                    child: CustomPaint(
-                      size: Size.square(widget.size),
-                      painter: ControlPainter(widget.art, widget.sprite),
-                    ),
-                  ),
-                  if (widget.effect != null)
-                    CustomPaint(
-                      size: Size.square(widget.size * .74),
-                      painter: EffectIconPainter(widget.art, widget.effect!),
-                    )
-                  else if (widget.icon != null)
-                    Icon(widget.icon, size: widget.size * .43, color: cream),
-                  if (widget.remaining > 0)
-                    CustomPaint(
-                      size: Size.square(widget.size),
-                      painter: _CooldownPainter(
-                        widget.remaining / widget.total,
+              child: ClipOval(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    AnimatedScale(
+                      scale: pressed ? .94 : 1,
+                      duration: const Duration(milliseconds: 70),
+                      child: CustomPaint(
+                        size: Size.square(widget.size),
+                        painter: ControlPainter(widget.art, widget.sprite),
                       ),
                     ),
-                ],
+                    if (widget.artwork != null)
+                      widget.artwork!
+                    else if (widget.effect != null)
+                      CustomPaint(
+                        size: Size.square(widget.size * .74),
+                        painter: EffectIconPainter(widget.art, widget.effect!),
+                      )
+                    else if (widget.icon != null)
+                      Icon(widget.icon, size: widget.size * .43, color: cream),
+                    if (widget.remaining > 0)
+                      CustomPaint(
+                        size: Size.square(widget.size),
+                        painter: _CooldownPainter(
+                          widget.remaining / widget.total,
+                        ),
+                      ),
+                    if (!widget.showLabel && widget.remaining > 0)
+                      Text(
+                        '${widget.remaining.ceil()}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          shadows: [Shadow(color: Colors.black, blurRadius: 5)],
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
-            Text(
-              widget.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: cream,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                shadows: [Shadow(color: Colors.black, blurRadius: 3)],
+            if (widget.showLabel)
+              Text(
+                widget.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: cream,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  shadows: [Shadow(color: Colors.black, blurRadius: 3)],
+                ),
               ),
-            ),
           ],
         ),
       ),
