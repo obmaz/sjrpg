@@ -32,7 +32,12 @@ class CommissionBoard extends StatelessWidget {
             builder: (context, constraints) {
               final choices = [
                 for (final path in TimePath.values)
-                  _choice(timeCommissions.firstWhere((q) => q.path == path)),
+                  _choice(
+                    timeCommissions.firstWhere((q) => q.path == path),
+                    bannerHeight: MediaQuery.sizeOf(context).height < 500
+                        ? 80
+                        : 104,
+                  ),
               ];
               if (constraints.maxWidth >= 560) {
                 return Row(
@@ -140,7 +145,7 @@ class CommissionBoard extends StatelessWidget {
     );
   }
 
-  Widget _choice(CommissionDef q) {
+  Widget _choice(CommissionDef q, {required double bannerHeight}) {
     final past = q.path == TimePath.past;
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -161,7 +166,7 @@ class CommissionBoard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: SizedBox(
-              height: 104,
+              height: bannerHeight,
               child: Stack(
                 fit: StackFit.expand,
                 children: [

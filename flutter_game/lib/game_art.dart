@@ -117,8 +117,12 @@ class GameArt {
           ]),
         ),
       );
-      // The shader retains the underlying texture for the game session.
+      // CanvasKit can rebuild a shader for another paint quality; retain its small image.
+      art.images['ground-$i'] = image;
     }
+    // Ground draws the baked shader textures, so the two full source atlases can be released.
+    art.images.remove('terrain-materials')!.dispose();
+    art.images.remove('stage-materials')!.dispose();
     // Bake the edge mask once. Gameplay draws this texture without per-frame layers.
     final village = art.images['village-scene']!,
         rec = ui.PictureRecorder(),
