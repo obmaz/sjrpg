@@ -1,7 +1,8 @@
 import 'dart:math' as math;
 import 'dart:ui';
-import 'rpg_model.dart';
 export 'rpg_model.dart';
+import 'stage_content.dart';
+export 'stage_content.dart';
 
 const worldSize = Size(46080, 34560);
 const town = Rect.fromLTWH(3520, 2624, 640, 960);
@@ -86,15 +87,6 @@ class TravelMount {
   double bearing = 1.5707963267948966;
 }
 
-class QuestSite {
-  const QuestSite(this.id, this.name, this.hint, this.at, this.color);
-  final String id, name, hint;
-  final Offset at;
-  final Color color;
-  Rect get body =>
-      Rect.fromCenter(center: at - const Offset(0, 42), width: 60, height: 42);
-}
-
 const questSites = [
   QuestSite(
     'roots',
@@ -109,6 +101,7 @@ const questSites = [
     '북동쪽 호수 앞의 푸른 샘',
     Offset(4620, 1800),
     Color(0xff9cdbf2),
+    artIndex: 1,
   ),
   QuestSite(
     'sun',
@@ -116,8 +109,16 @@ const questSites = [
     '동쪽 사막 입구의 황금 제단',
     Offset(6900, 5200),
     Color(0xffffd581),
+    artIndex: 2,
   ),
 ];
+
+List<QuestSite> sitesForStage(WorldStage stage) => switch (stage) {
+  WorldStage.forest => questSites,
+  WorldStage.sands => timeCommissions.map((q) => q.site).toList(),
+  WorldStage.past => ancientSites,
+  WorldStage.future => neonSites,
+};
 
 Rect localMapBounds(Offset focus, {double span = 2100}) =>
     Rect.fromCenter(center: focus, width: span, height: span);
@@ -202,7 +203,11 @@ class Trail {
 }
 
 class AdventureWorld {
-  AdventureWorld({this.seed = 7829}) {
+  AdventureWorld({this.seed = 7829, this.stage = WorldStage.forest}) {
+    if (stage != WorldStage.forest) {
+      _buildThemed();
+      return;
+    }
     final random = math.Random(seed);
     RegionShape oval(Offset c, double rx, double ry) => RegionShape(
       List.generate(96, (i) {
@@ -496,7 +501,6 @@ class AdventureWorld {
           y + random.nextDouble() * 70,
         );
         if (town.inflate(150).contains(p) ||
-            stageExits.any((e) => (Offset(e.x, e.y) - p).distance < 160) ||
             questSites.any((q) => (q.at - p).distance < 180) ||
             stageChests.any((c) => (c - p).distance < 100)) {
           continue;
@@ -550,7 +554,256 @@ class AdventureWorld {
       }
     }
   }
+  void _buildThemed() {
+    final random = math.Random(seed + stage.index * 7381);
+    RegionShape oval(Offset c, double rx, double ry) => RegionShape(
+      List.generate(64, (i) {
+        final a = i * math.pi * 2 / 64,
+            r = 1 + .06 * math.sin(a * 5 + stage.index);
+        return Offset(c.dx + math.cos(a) * rx * r, c.dy + math.sin(a) * ry * r);
+      }),
+    );
+    river = RegionShape([
+      const Offset(-200, -200),
+      const Offset(-100, -200),
+      const Offset(-100, -100),
+    ]);
+    bridge = const Rect.fromLTWH(-200, -200, 10, 10);
+    bridges = [];
+    woods = stage == WorldStage.past
+        ? [
+            oval(const Offset(11000, 8000), 4500, 3500),
+            oval(const Offset(32000, 24000), 5500, 4500),
+            oval(const Offset(15000, 26000), 3500, 2000),
+          ]
+        : [];
+    clearings = [oval(spawn, 650, 550)];
+    sandFields = stage == WorldStage.sands
+        ? [oval(const Offset(23000, 17000), 32000, 25000)]
+        : [];
+    lakes = switch (stage) {
+      WorldStage.sands => [
+        oval(const Offset(17000, 6500), 1800, 1200),
+        oval(const Offset(28000, 22000), 3200, 2000),
+        oval(const Offset(4000, 25000), 1800, 2800),
+      ],
+      WorldStage.past => [
+        oval(const Offset(7000, 19000), 2200, 5200),
+        oval(const Offset(35000, 11000), 4800, 2200),
+        oval(const Offset(24000, 29000), 3000, 1800),
+      ],
+      _ => [
+        oval(const Offset(24000, 8000), 1400, 5000),
+        oval(const Offset(34000, 26000), 4500, 1600),
+        oval(const Offset(6000, 29000), 1900, 1800),
+      ],
+    };
+    final spines = switch (stage) {
+      WorldStage.sands => <List<Offset>>[
+        [
+          const Offset(2000, 15000),
+          const Offset(3200, 12000),
+          spawn,
+          const Offset(10600, 8200),
+          const Offset(14500, 3600),
+          const Offset(24000, 4300),
+          const Offset(31000, 7000),
+          const Offset(43000, 5000),
+        ],
+        [
+          spawn,
+          const Offset(11000, 16000),
+          const Offset(18500, 19000),
+          const Offset(21000, 26500),
+          const Offset(34000, 31000),
+          const Offset(44000, 24000),
+        ],
+        [
+          const Offset(3000, 32000),
+          const Offset(12000, 29000),
+          const Offset(18500, 19000),
+          const Offset(30000, 13000),
+          const Offset(42000, 15000),
+        ],
+      ],
+      WorldStage.past => <List<Offset>>[
+        [
+          const Offset(2000, 7000),
+          const Offset(12000, 4000),
+          const Offset(19000, 10000),
+          spawn,
+          const Offset(30000, 18000),
+          const Offset(43000, 21000),
+        ],
+        [
+          const Offset(4000, 30000),
+          const Offset(12000, 32000),
+          const Offset(19000, 25000),
+          spawn,
+          const Offset(28000, 6500),
+          const Offset(40000, 4000),
+        ],
+        [
+          const Offset(15000, 18000),
+          spawn,
+          const Offset(32000, 32000),
+          const Offset(43000, 30000),
+        ],
+      ],
+      _ => <List<Offset>>[
+        [
+          const Offset(3000, 24000),
+          spawn,
+          const Offset(20000, 24000),
+          const Offset(20000, 15000),
+          const Offset(31000, 15000),
+          const Offset(41000, 12000),
+        ],
+        [
+          const Offset(4500, 4000),
+          const Offset(12000, 7500),
+          const Offset(12000, 15000),
+          spawn,
+          const Offset(18000, 31000),
+          const Offset(29000, 32000),
+          const Offset(42000, 32000),
+        ],
+        [
+          const Offset(32000, 4000),
+          const Offset(37000, 9000),
+          const Offset(31000, 15000),
+          const Offset(27000, 20000),
+          const Offset(43000, 21000),
+        ],
+      ],
+    };
+    trails = [
+      for (final points in spines)
+        Trail(
+          stage == WorldStage.future ? points : _curve(points),
+          stage == WorldStage.future ? 260 : 220,
+        ),
+    ];
+    // Every quest gets an open approach below its visible solid structure.
+    for (final site in sites) {
+      final approach = site.at + const Offset(0, 200);
+      trails.add(Trail([spawn, approach, site.at], 190));
+      _indexSolid(site.body);
+    }
+    if (stage == WorldStage.future) {
+      _indexSolid(
+        Rect.fromCenter(
+          center: merchantAt + const Offset(0, -70),
+          width: 90,
+          height: 46,
+        ),
+      );
+      _indexSolid(
+        Rect.fromCenter(
+          center: spawn + const Offset(-280, -100),
+          width: 44,
+          height: 30,
+        ),
+      );
+    }
+    // Small, scattered obstacles leave broad navigable spaces between roads.
+    for (var y = 180.0; y < worldSize.height - 180; y += 280) {
+      for (var x = 180.0; x < worldSize.width - 180; x += 280) {
+        final p = Offset(
+          x + random.nextDouble() * 100,
+          y + random.nextDouble() * 100,
+        );
+        if (settlement.inflate(240).contains(p) ||
+            sites.any((s) => (s.at - p).distance < 240) ||
+            chests.any((c) => (c - p).distance < 130) ||
+            trails.any((t) => t.near(p, 170)) ||
+            isWater(p)) {
+          continue;
+        }
+        if (random.nextDouble() > (isWooded(p) ? .55 : .11)) continue;
+        final kind = stage == WorldStage.future
+            ? 'city-${random.nextInt(4)}'
+            : isWooded(p)
+            ? 'tree'
+            : stage == WorldStage.sands && random.nextBool()
+            ? 'cactus'
+            : 'ruin';
+        final body = Rect.fromCenter(
+          center: p,
+          width: kind == 'tree' ? 28 : 56,
+          height: 38,
+        );
+        final prop = WorldProp(
+          body,
+          kind,
+          kind == 'tree' ? const Size(165, 220) : const Size(110, 124),
+        );
+        props.add(prop);
+        _indexSolid(body);
+        for (
+          var by = (body.top - prop.drawSize.height) ~/ 256;
+          by <= (body.bottom + 50) ~/ 256;
+          by++
+        ) {
+          for (
+            var bx = (body.left - prop.drawSize.width) ~/ 256;
+            bx <= (body.right + prop.drawSize.width) ~/ 256;
+            bx++
+          ) {
+            propBuckets.putIfAbsent('$bx:$by', () => []).add(prop);
+          }
+        }
+      }
+    }
+  }
+
   final int seed;
+  final WorldStage stage;
+  Offset get spawn => stage.spawn;
+  Rect get settlement => stage == WorldStage.forest
+      ? town
+      : Rect.fromCenter(center: spawn, width: 640, height: 500);
+  Offset get healAt => stage == WorldStage.future
+      ? spawn + const Offset(-280, -100)
+      : spawn - const Offset(0, 55);
+  Offset get merchantAt => stage == WorldStage.forest
+      ? const Offset(3952, 2984)
+      : spawn + const Offset(120, -70);
+  Offset get elderAt => stage == WorldStage.forest
+      ? const Offset(3660, 2952)
+      : spawn + const Offset(-160, -70);
+  late final List<QuestSite> sites = sitesForStage(stage);
+  late final List<Offset> chests = stage == WorldStage.forest
+      ? stageChests
+      : [
+          spawn + const Offset(0, 180),
+          ...sites.map((s) => s.at + const Offset(130, 60)),
+          for (final t in trails.skip(2)) t.points.last + const Offset(60, 70),
+          for (final trail in trails.take(3)) ..._roadTreasures(trail),
+        ];
+
+  List<Offset> _roadTreasures(Trail trail) {
+    final lengths = [
+      for (var i = 1; i < trail.points.length; i++)
+        (trail.points[i] - trail.points[i - 1]).distance,
+    ];
+    final total = lengths.fold(0.0, (sum, length) => sum + length);
+    return List.generate(8, (i) {
+      var distance = total * (i + 1) / 9;
+      for (var segment = 0; segment < lengths.length; segment++) {
+        if (distance <= lengths[segment]) {
+          return Offset.lerp(
+            trail.points[segment],
+            trail.points[segment + 1],
+            distance / lengths[segment],
+          )!;
+        }
+        distance -= lengths[segment];
+      }
+      return trail.points.last;
+    });
+  }
+
   late final List<RegionShape> woods, lakes, sandFields, clearings;
   late final RegionShape river;
   RegionShape get sand => sandFields.first;
@@ -775,6 +1028,13 @@ class AdventureWorld {
   }
 
   String areaName(Offset p) {
+    if (stage != WorldStage.forest) {
+      if (settlement.contains(p)) {
+        return stage == WorldStage.future ? '저항군 거점' : '시간 연구단 야영지';
+      }
+      if (isWater(p)) return stage == WorldStage.future ? '냉각 수로' : '잊힌 오아시스';
+      return stage.theme;
+    }
     if (town.contains(p)) return '분수 마을';
     if (isSand(p)) return p.dx > 12000 ? '태양의 사구' : '황금 모래벌판';
     if (lakes.any((l) => l.bounds.inflate(220).contains(p))) return '푸른 호숫가';

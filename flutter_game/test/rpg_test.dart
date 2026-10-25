@@ -19,8 +19,6 @@ void main() {
     expect(mage.rank('firebolt'), 1);
     expect(warrior.energy, 25);
     expect(mage.energy, mage.maxEnergy);
-    expect(warrior.stage, 1);
-    expect(mage.stage, 1);
   });
   test(
     'XP unlocks skills, each investment spends one point and rank is bounded',
@@ -31,7 +29,7 @@ void main() {
       expect(p.skillPoints, 1);
       p.gainXp(140);
       expect(p.level, 3);
-      expect(p.stage, 1);
+
       expect(p.skillPoints, 3);
       expect(p.learn(warriorSkills.firstWhere((s) => s.id == 'mastery')), true);
       expect(p.learn(whirlwind), true);
@@ -216,31 +214,23 @@ void main() {
       s.spawnPack();
       s.tick(.05);
       expect(s.mobs.length, before);
-      final e = stageExits.first;
-      s.hero.position.setValues(e.x, e.y);
-      expect(s.nearbyExit, e);
-      expect(s.progress.stage, 1);
+      s.hero.position.setValues(4650, 360);
+      expect(s.nearbyAction, null);
     },
   );
-  test(
-    'all four exits and treasure approaches admit a ground body for multiple seeds',
-    () {
-      for (final seed in [1, 7829, 18344]) {
-        final w = AdventureWorld(seed: seed);
-        for (final p in [
-          ...stageChests,
-          ...stageExits.map((e) => Offset(e.x, e.y)),
-        ]) {
-          expect(
-            w.blocked(Rect.fromCenter(center: p, width: 24, height: 22)),
-            false,
-            reason: 'landmark $p seed $seed',
-          );
-          expect(w.spawnNear(p, const Size(48, 40)), isNotNull);
-        }
+  test('forest treasure approaches admit a ground body for multiple seeds', () {
+    for (final seed in [1, 7829, 18344]) {
+      final w = AdventureWorld(seed: seed);
+      for (final p in [...stageChests]) {
+        expect(
+          w.blocked(Rect.fromCenter(center: p, width: 24, height: 22)),
+          false,
+          reason: 'landmark $p seed $seed',
+        );
+        expect(w.spawnNear(p, const Size(48, 40)), isNotNull);
       }
-    },
-  );
+    }
+  });
   test(
     'a pending enemy cannot be killed until its collision lifecycle has mounted',
     () {

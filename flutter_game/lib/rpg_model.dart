@@ -587,44 +587,25 @@ const mageSkills = [
   ),
 ];
 
-class StageExit {
-  const StageExit(
-    this.direction,
-    this.destination,
-    this.x,
-    this.y,
-    this.description,
-  );
-  final String direction, destination, description;
-  final double x, y;
-}
-
-const stageExits = [
-  StageExit('북', '잊힌 대성당', 4650, 360, '지하로 내려가는 돌계단 · 다음 스테이지'),
-  StageExit('동', '침수된 회랑', 7000, 4780, '무너진 수로 너머의 유적 · 다음 스테이지'),
-  StageExit('남', '잿빛 탑', 3000, 5380, '층마다 시련이 이어지는 탑 · 다음 스테이지'),
-  StageExit('서', '가시덤불 묘지', 420, 4640, '버려진 묘지와 지하 납골당 · 다음 스테이지'),
-];
 const stageMemories = [
   (
     chest: 1,
     title: '끊어진 맹세',
     hint: '서쪽 숲길의 상자',
-    story: '파수꾼은 한때 네 갈래 길을 지키던 수호자였다. 마을의 종이 멎은 밤, 그가 지키던 맹세도 함께 깨졌다.',
+    story: '파수꾼은 한때 숲의 뿌리를 지키던 수호자였다. 마을의 종이 멎은 밤, 그가 지키던 맹세도 함께 깨졌다.',
   ),
   (
     chest: 2,
     title: '마지막 종소리',
     hint: '마을 북쪽 길의 상자',
-    story:
-        '대성당의 종은 지하의 어둠을 잠재우고 있었다. 마지막 종지기는 북쪽 계단 아래로 사라졌고, 그날부터 숲에 망자들이 나타났다.',
+    story: '옛 기록에는 숲보다 오래된 모래시계의 유적이 나온다. 파수꾼이 잠든 뒤 유적의 시간도 깨지기 시작했다.',
   ),
   (
     chest: 3,
     title: '물 아래의 문',
     hint: '동쪽 목교 앞 숲길의 상자',
     story:
-        '회랑에 물이 차오르자 잊힌 문이 열렸다. 서쪽 묘지와 남쪽 탑에서도 같은 문장이 발견되었다. 네 길의 어둠은 하나로 이어져 있다.',
+        '수면 아래 수정에서 낯선 푸른 신호가 흐른다. 아직 세워지지 않은 도시가 도움을 청하고 있다. 유적의 균열은 과거와 미래를 함께 가리킨다.',
   ),
 ];
 const stageKillGoal = 120;
@@ -821,7 +802,6 @@ class Progress {
   }
 
   static const capacity = 24;
-  int get stage => 1;
   List<SkillDef> get skills =>
       heroClass == HeroClass.warrior ? warriorSkills : mageSkills;
   SkillDef? get secondarySkillDef => secondarySkill == null

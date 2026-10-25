@@ -2,8 +2,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'adventure.dart';
 import 'game_ui.dart';
-import 'rpg_model.dart';
-import 'world_model.dart' show questSites;
+import 'world_model.dart';
+import 'commission_board.dart';
 import 'rpg_widgets.dart';
 import 'device_controls.dart';
 import 'world_map.dart';
@@ -18,12 +18,15 @@ class AdventurePanel extends StatefulWidget {
     required this.onClose,
     required this.onRestart,
     this.onRetryCheckpoint,
+    this.onAdvance,
+    this.onCheckpoint,
     super.key,
   });
   final Adventure session;
   final String name;
   final VoidCallback onClose, onRestart;
   final VoidCallback? onRetryCheckpoint;
+  final VoidCallback? onAdvance, onCheckpoint;
   @override
   State<AdventurePanel> createState() => _AdventurePanelState();
 }
@@ -73,23 +76,34 @@ class _AdventurePanelState extends State<AdventurePanel> {
         {
           'bag': '모험가의 가방',
           'skills': '스킬과 성장',
-          'journal': '제1장 · 십자로의 숲',
+          'journal': s.world.stage.title,
           'map': '모험 지도',
           'settings': '모험 설정',
           'shop': '숲길 상점',
-          'talk': '숲의 현자',
+          'talk': s.world.stage == WorldStage.forest ? '숲의 현자' : '의뢰 게시판',
           'pause': '잠시 쉬어가기',
           'defeat': '쓰러진 수호자',
-          'victory': '첫 스테이지 정화',
-          'exit': '다음 스테이지',
+          'victory': s.world.stage == WorldStage.forest ? '첫 스테이지 정화' : '의뢰 해결',
         }[name] ??
         '모험';
     List<Widget> body;
-    if (name == 'journal' || name == 'talk' || name == 'map') {
+    if ((name == 'journal' || name == 'talk') &&
+        s.world.stage != WorldStage.forest) {
+      body = [
+        CommissionBoard(
+          session: s,
+          onAdvance: widget.onAdvance,
+          onCommit: () {
+            widget.onCheckpoint?.call();
+            setState(() {});
+          },
+        ),
+      ];
+    } else if (name == 'journal' || name == 'talk' || name == 'map') {
       body = [
         if (name == 'talk') ...[
           const Text(
-            '“네 갈래 길 아래에 오래된 어둠이 잠들어 있네. 뿌리 우물·달빛 샘·태양 제단부터 정화해 주게. 세 성소와 숲길을 정화하면 파수꾼이 깨어날 걸세. 상자와 전리품을 모으고, 얻은 힘을 스스로 선택하게나. 전투를 벗어나 분수 곁에서 쉬면 생명이 회복된다네.”',
+            '“숲의 뿌리에 오래된 어둠이 잠들어 있네. 뿌리 우물·달빛 샘·태양 제단부터 정화해 주게. 세 성소와 숲길을 정화하면 파수꾼이 깨어날 걸세. 상자와 전리품을 모으고, 얻은 힘을 스스로 선택하게나. 전투를 벗어나 분수 곁에서 쉬면 생명이 회복된다네.”',
             style: TextStyle(fontSize: 16, height: 1.8, color: cream),
           ),
           const SizedBox(height: 22),
@@ -190,50 +204,13 @@ class _AdventurePanelState extends State<AdventurePanel> {
           ),
         ],
         const SizedBox(height: 18),
-        const Text(
-          '네 갈래의 다음 여정',
-          style: TextStyle(
-            color: gold,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+        if (s.stageCleared && widget.onAdvance != null)
+          GameAction(
+            '제2장 의뢰 받기',
+            primary: true,
+            icon: Icons.explore_rounded,
+            onTap: widget.onAdvance,
           ),
-        ),
-        const SizedBox(height: 10),
-        for (final exit in stageExits) _exit(exit, s.stageCleared),
-        const SizedBox(height: 12),
-        const Text(
-          '이번 버전은 제1장만 플레이할 수 있습니다. 네 출구는 서로 다른 다음 스테이지로 이어질 예정입니다.',
-          style: TextStyle(color: Color(0xffbacdbe), fontSize: 13, height: 1.7),
-        ),
-      ];
-    } else if (name == 'exit') {
-      final exit = s.nearbyExit;
-      body = [
-        Icon(
-          s.stageCleared ? Icons.door_front_door_outlined : Icons.lock_outline,
-          size: 58,
-          color: gold,
-        ),
-        const SizedBox(height: 18),
-        Text(
-          exit == null ? '십자로의 숲' : '${exit.direction}쪽 · ${exit.destination}',
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: gold, fontSize: 23),
-        ),
-        const SizedBox(height: 14),
-        Text(
-          exit?.description ?? '네 갈래의 다음 여정',
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 15, height: 1.7),
-        ),
-        const SizedBox(height: 20),
-        Text(
-          s.stageCleared
-              ? '숲의 봉인을 해제했습니다.\n다음 스테이지는 아직 준비 중입니다.\n현재는 제1장의 남은 보물을 탐험할 수 있습니다.'
-              : '숲의 파수꾼이 길을 봉인하고 있습니다.\n성소 3곳을 정화하고 몬스터 $stageKillGoal마리와 파수꾼을 물리치세요.',
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 15, height: 1.8, color: cream),
-        ),
       ];
     } else if (result) {
       body = [
@@ -245,7 +222,11 @@ class _AdventurePanelState extends State<AdventurePanel> {
         const SizedBox(height: 18),
         Text(
           name == 'victory'
-              ? '십자로의 숲을 정화했습니다.\n파수꾼의 유산과 남은 보물을 챙겨 보세요.'
+              ? '${s.world.stage.title}의 의뢰를 해결했습니다.\n${s.world.stage == WorldStage.forest
+                    ? '사막 유적에서 새로운 의뢰가 기다립니다.'
+                    : s.world.stage == WorldStage.sands
+                    ? '선택한 시대의 문이 열렸습니다.'
+                    : '시간의 균열을 봉인했습니다. 남은 보물을 탐험하세요.'}'
               : widget.onRetryCheckpoint != null
               ? '마지막 저장 지점에서 다시 도전하세요.\n장비와 스킬 성장은 유지됩니다.'
               : '힘을 키우고 다시 도전하세요.\n장비와 스킬 조합에 따라 전투가 달라집니다.',
@@ -267,6 +248,20 @@ class _AdventurePanelState extends State<AdventurePanel> {
             '직업을 바꿔 새 모험',
             onTap: widget.onRestart,
             icon: Icons.refresh,
+          ),
+        if (name == 'victory' &&
+            widget.onAdvance != null &&
+            (s.world.stage == WorldStage.forest ||
+                s.world.stage == WorldStage.sands))
+          GameAction(
+            s.world.stage == WorldStage.forest
+                ? '제2장 의뢰 받기'
+                : s.timePath == TimePath.past
+                ? '태초의 왕국으로'
+                : '네온의 심연으로',
+            primary: true,
+            icon: Icons.explore_rounded,
+            onTap: widget.onAdvance,
           ),
         if (name == 'victory')
           GameAction(
@@ -343,12 +338,15 @@ class _AdventurePanelState extends State<AdventurePanel> {
                       child: Row(
                         children: [
                           Expanded(
-                            child: Text(
-                              title,
-                              style: const TextStyle(
-                                fontSize: 21,
-                                color: cream,
-                                fontWeight: FontWeight.bold,
+                            child: Semantics(
+                              header: true,
+                              child: Text(
+                                title,
+                                style: const TextStyle(
+                                  fontSize: 21,
+                                  color: cream,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
@@ -476,52 +474,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
       ],
     ),
   );
-  Widget _exit(StageExit exit, bool cleared) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 9),
-    child: Row(
-      children: [
-        Container(
-          width: 34,
-          height: 34,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: const Color(0xff29483d),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: gold.withValues(alpha: .5)),
-          ),
-          child: Text(
-            exit.direction,
-            style: const TextStyle(color: gold, fontSize: 15),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                exit.destination,
-                style: const TextStyle(fontSize: 16, color: cream),
-              ),
-              Text(
-                cleared ? '봉인 해제 · 다음 지역 준비 중' : '파수꾼이 길을 봉인했습니다',
-                style: const TextStyle(
-                  fontSize: 12,
-                  height: 1.7,
-                  color: Color(0xffa9bfae),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Icon(
-          cleared ? Icons.door_front_door_outlined : Icons.lock_outline,
-          size: 18,
-          color: gold,
-        ),
-      ],
-    ),
-  );
+
   Widget _info(IconData icon, String title, String text) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [

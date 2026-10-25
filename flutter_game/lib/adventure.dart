@@ -10,7 +10,7 @@ import 'device_settings.dart';
 import 'skill_aim.dart';
 import 'spell_vfx.dart';
 
-enum NearbyAction { chest, exit, shrine, mount, dismount, shop, talk }
+enum NearbyAction { chest, shrine, mount, dismount, shop, talk }
 
 enum EnemyTrait {
   none(1, 1, ui.Color(0xffe87753)),
@@ -26,16 +26,30 @@ class Adventure extends ChangeNotifier {
   Adventure(
     this.art, {
     int seed = 7829,
+    WorldStage stage = WorldStage.forest,
     HeroClass heroClass = HeroClass.warrior,
     Progress? restoredProgress,
     DeviceSettings? device,
-  }) : world = AdventureWorld(seed: seed),
+  }) : world = AdventureWorld(seed: seed, stage: stage),
        progress = restoredProgress ?? Progress(heroClass: heroClass),
        device = device ?? DeviceSettings.shared {
+    if (stage == WorldStage.past) timePath = TimePath.past;
+    if (stage == WorldStage.future) timePath = TimePath.future;
     hero = Guardian(this);
     terrain = TerrainArt(world, art);
     for (var i = 0; i < travelMountDefs.length; i++) {
-      final def = travelMountDefs[i], desired = initialMountPositions[i];
+      final def = travelMountDefs[i];
+      if (world.stage != WorldStage.forest &&
+          def.waterOnly &&
+          i - 3 >= world.lakes.length) {
+        continue;
+      }
+      final desired = world.stage == WorldStage.forest
+          ? initialMountPositions[i]
+          : def.waterOnly
+          ? world.lakes[(i - 3) % world.lakes.length].bounds.center
+          : world.spawn + ui.Offset(-220 + i * 160, 280);
+
       if (def.waterOnly && !world.largeWater(desired)) continue;
       final topLeft = world.spawnNear(
         desired - ui.Offset(def.bodySize.width / 2, def.bodySize.height / 2),
@@ -64,14 +78,18 @@ class Adventure extends ChangeNotifier {
   final mounts = <TravelMount>[];
   TravelMount? riding;
   TravelMount? get nearbyMount {
+    TravelMount? nearest;
+    var best = double.infinity;
     for (final mount in mounts) {
-      if ((hero.body.center - mount.at).distance <
-              (mount.def.waterOnly ? 230 : 120) &&
+      final distance = (hero.body.center - mount.at).distance;
+      if (distance < (mount.def.waterOnly ? 230 : 120) &&
+          distance < best &&
           world.clearBoardingLine(hero.body.center, mount.at)) {
-        return mount;
+        nearest = mount;
+        best = distance;
       }
     }
-    return null;
+    return nearest;
   }
 
   bool boardNearbyMount() {
@@ -145,11 +163,58 @@ class Adventure extends ChangeNotifier {
 
   final openedChests = <int>{};
   final cleansedSites = <String>{};
-  bool get mandatoryQuestsComplete =>
-      questSites.every((q) => cleansedSites.contains(q.id));
+  int stageStartKills = 0, commissionStartKills = 0;
+  TimePath? timePath;
+  String? acceptedCommission;
+  int get stageKills => math.max(0, progress.kills - stageStartKills);
+  List<QuestSite> get visibleSites => world.stage == WorldStage.sands
+      ? timeCommissions
+            .where((q) => timePath == null ? q.step == 0 : q.path == timePath)
+            .map((q) => q.site)
+            .toList()
+      : world.sites;
+  CommissionDef? get currentCommission {
+    for (final q in timeCommissions) {
+      if (q.id == acceptedCommission) return q;
+    }
+    return null;
+  }
+
+  bool canAcceptCommission(CommissionDef q) =>
+      !disposed &&
+      !defeated &&
+      world.stage == WorldStage.sands &&
+      acceptedCommission == null &&
+      (timePath == null ? q.step == 0 : q.path == timePath) &&
+      !cleansedSites.contains(q.id) &&
+      (q.step == 0 ||
+          timeCommissions.any(
+            (previous) =>
+                previous.path == q.path &&
+                previous.step == q.step - 1 &&
+                cleansedSites.contains(previous.id),
+          ));
+  bool acceptCommission(CommissionDef q) {
+    if (!timeCommissions.contains(q) || !canAcceptCommission(q)) return false;
+    timePath = q.path;
+    acceptedCommission = q.id;
+    commissionStartKills = progress.kills;
+    refresh();
+    return true;
+  }
+
+  bool get mandatoryQuestsComplete => world.stage == WorldStage.sands
+      ? timePath != null &&
+            timeCommissions
+                .where((q) => q.path == timePath)
+                .every((q) => cleansedSites.contains(q.id))
+      : world.sites.every((q) => cleansedSites.contains(q.id));
   bool get stageCleared => progress.bossDefeated && mandatoryQuestsComplete;
   QuestSite? get nearbySite {
-    for (final site in questSites) {
+    for (final site in visibleSites) {
+      if (world.stage == WorldStage.sands && site.id != acceptedCommission) {
+        continue;
+      }
       if (!cleansedSites.contains(site.id) &&
           (hero.body.center - site.at).distance < 115 &&
           world.clearLine(hero.body.center, site.at, const ui.Size(3, 3))) {
@@ -173,7 +238,20 @@ class Adventure extends ChangeNotifier {
       announce('주변의 적을 먼저 물리치세요');
       return false;
     }
+    final commission = currentCommission;
+    if (commission != null &&
+        progress.kills - commissionStartKills < commission.goal) {
+      announce(
+        '주변 위협 ${math.min(commission.goal, progress.kills - commissionStartKills)} / ${commission.goal}',
+      );
+      return false;
+    }
     cleansedSites.add(site.id);
+    if (commission != null) {
+      acceptedCommission = null;
+      progress.gainXp(80 + commission.step * 30);
+      syncLife();
+    }
     progress.gold += 40;
     progress.healingPotions++;
     bubble(
@@ -195,13 +273,16 @@ class Adventure extends ChangeNotifier {
   }
 
   bool memoryRewarded = false;
-  int get recoveredMemories => stageMemories
-      .where((memory) => openedChests.contains(memory.chest))
-      .length;
+  int get recoveredMemories => world.stage != WorldStage.forest
+      ? 0
+      : stageMemories
+            .where((memory) => openedChests.contains(memory.chest))
+            .length;
   String notice = "";
   double noticeTime = 0, combatTime = 0;
   int get skillPoints => progress.skillPoints;
   static const chestLocations = stageChests;
+  List<ui.Offset> get stageChestLocations => world.chests;
   final mobs = <HuntEnemy>[];
   final attackSources = <String>{};
   BonfireGameInterface? game;
@@ -244,32 +325,22 @@ class Adventure extends ChangeNotifier {
     if (riding != null) return NearbyAction.dismount;
     if (nearbySite != null) return NearbyAction.shrine;
     if (nearbyChest != null) return NearbyAction.chest;
-    if (nearbyExit != null) return NearbyAction.exit;
     if (nearbyMount != null) return NearbyAction.mount;
     final at = hero.position.toOffset();
-    final shop = (at - const ui.Offset(3952, 2984)).distance;
-    final talk = (at - const ui.Offset(3660, 2952)).distance;
+    final shop = (at - world.merchantAt).distance;
+    final talk = (at - world.elderAt).distance;
     if (talk < 135 && (shop >= 165 || talk < shop)) return NearbyAction.talk;
     if (shop < 165) return NearbyAction.shop;
     return null;
   }
 
-  StageExit? get nearbyExit {
-    for (final exit in stageExits) {
-      if ((hero.body.center - ui.Offset(exit.x, exit.y)).distance < 115) {
-        return exit;
-      }
-    }
-    return null;
-  }
-
   int? get nearbyChest {
-    for (var i = 0; i < chestLocations.length; i++) {
+    for (var i = 0; i < stageChestLocations.length; i++) {
       if (!openedChests.contains(i) &&
-          (hero.body.center - chestLocations[i]).distance < 110 &&
+          (hero.body.center - stageChestLocations[i]).distance < 110 &&
           world.clearLine(
             hero.body.center,
-            chestLocations[i],
+            stageChestLocations[i],
             const ui.Size(3, 3),
           )) {
         return i;
@@ -288,7 +359,7 @@ class Adventure extends ChangeNotifier {
     if (!won || defeated) return;
     won = false;
     resume();
-    announce('첫 스테이지 정화 완료 · 네 방향의 출구를 둘러보세요');
+    announce('의뢰 완료 · 여정에서 다음 의뢰를 확인하세요');
   }
 
   void openChest() {
@@ -298,10 +369,13 @@ class Adventure extends ChangeNotifier {
     openedChests.add(index);
     progress.gold += 18;
     progress.healingPotions++;
-    dropGear(progress.rollLoot(random, chest: true), chestLocations[index]);
+    dropGear(
+      progress.rollLoot(random, chest: true),
+      stageChestLocations[index],
+    );
     bubble(
       '+18 골드 · 물약 +1',
-      chestLocations[index] - const ui.Offset(0, 55),
+      stageChestLocations[index] - const ui.Offset(0, 55),
       const ui.Color(0xffffd774),
     );
     if (!memoryRewarded && recoveredMemories == stageMemories.length) {
@@ -444,7 +518,7 @@ class Adventure extends ChangeNotifier {
       ref.add(item);
     }
     waveTime = 10;
-    spawnPack(initial: (hero.position.toOffset() - arrival).distance < 220);
+    spawnPack(initial: (hero.position.toOffset() - world.spawn).distance < 220);
     refresh();
   }
 
@@ -489,7 +563,7 @@ class Adventure extends ChangeNotifier {
       spawnPack();
       waveTime = 10;
     }
-    if (progress.kills >= stageKillGoal &&
+    if (stageKills >= world.stage.killGoal &&
         mandatoryQuestsComplete &&
         !bossSummoned &&
         !progress.bossDefeated) {
@@ -501,7 +575,7 @@ class Adventure extends ChangeNotifier {
       if (boss != null) bossSummoned = true;
       if (boss != null) {
         bubble(
-          '숲의 파수꾼이 깨어났습니다',
+          '${world.stage.bossName} 출현',
           hero.position.toOffset() - const ui.Offset(0, 85),
           const ui.Color(0xffffd176),
         );
@@ -510,8 +584,7 @@ class Adventure extends ChangeNotifier {
     // The fountain sanctuary heals gradually, never after a fatal hit.
     if (progress.hp > 0 &&
         combatTime <= 0 &&
-        (hero.position.toOffset() - const ui.Offset(3840, 3000)).distance <
-            150) {
+        (hero.position.toOffset() - world.healAt).distance < 150) {
       progress.hp = math.min(progress.maxHp, progress.hp + dt * 4);
       hero.life.update(progress.hp);
     }
@@ -520,7 +593,11 @@ class Adventure extends ChangeNotifier {
   void spawnPack({bool initial = false}) {
     if (!active || living >= 40 || progress.bossDefeated) return;
     final at = hero.position.toOffset();
-    if (town.contains(at) && at.dy < 3025 && !initial) return;
+    if (world.settlement.contains(at) &&
+        at.dy < world.spawn.dy - 30 &&
+        !initial) {
+      return;
+    }
     final count = math.min(
       initial
           ? 6
@@ -543,11 +620,16 @@ class Adventure extends ChangeNotifier {
       final angle = hero.bearing + (i < 3 ? [0.0, 1.0, -1.0][i] : i * 2.4),
           r = 280.0 + (i % 5) * 38;
       final desired = initial
-          ? ui.Offset(3780 + (i % 3) * 62, 3220 + (i % 2) * 50)
+          ? world.spawn + ui.Offset(-60 + (i % 3) * 62, 165 + (i % 2) * 50)
           : at + ui.Offset(math.cos(angle) * r, math.sin(angle) * r);
-      final kind =
-          (progress.level >= 3 || world.isSand(at)) &&
-              (i == 0 || world.isSand(at) && i == 2)
+      final kind = world.stage == WorldStage.future
+          ? 'cyber'
+          : world.stage == WorldStage.sands
+          ? ['scorpion', 'mummy', 'cultist'][(i + progress.level) % 3]
+          : world.stage == WorldStage.past
+          ? ['skeleton', 'troll', 'cultist'][(i + progress.level) % 3]
+          : (progress.level >= 3 || world.isSand(at)) &&
+                (i == 0 || world.isSand(at) && i == 2)
           ? 'cultist'
           : ['goblin', 'wolf', 'skeleton'][(i + progress.level - 1) % 3];
       final trait = elitePack && added == eliteSlot
@@ -765,7 +847,7 @@ class Adventure extends ChangeNotifier {
 class Guardian extends Player with WithCollision {
   Guardian(this.session)
     : super(
-        position: Vector2(arrival.dx, arrival.dy),
+        position: Vector2(session.world.spawn.dx, session.world.spawn.dy),
         size: Vector2(24, 22),
         speed: 270,
         life: session.progress.maxHp,
@@ -1982,7 +2064,7 @@ class HuntEnemy extends Enemy with WithCollision {
     }
     session.art.actor(
       canvas,
-      kind,
+      boss && session.world.stage == WorldStage.future ? 'cyber' : kind,
       feet -
           ui.Offset(
             0,
@@ -1995,6 +2077,10 @@ class HuntEnemy extends Enemy with WithCollision {
       hurt > .08 ? impactPose : (anim / .15).floor() % 2,
       boss
           ? 125
+          : isElite
+          ? 76
+          : kind == 'troll'
+          ? 80
           : kind == 'wolf'
           ? 55
           : 62,
@@ -2059,7 +2145,7 @@ class HuntEnemy extends Enemy with WithCollision {
       if (boss) {
         session.art.text(
           canvas,
-          '숲의 파수꾼',
+          session.world.stage.bossName,
           ui.Offset(size.x / 2, y - 23),
           size: 14,
         );
@@ -2166,7 +2252,8 @@ class WorldDirector extends GameComponent {
 
 class VillagePerson extends GameComponent {
   VillagePerson(this.session, this.merchant) {
-    position = merchant ? Vector2(3952, 2984) : Vector2(3660, 2952);
+    final at = merchant ? session.world.merchantAt : session.world.elderAt;
+    position = Vector2(at.dx, at.dy);
     size = Vector2(28, 24);
   }
   final Adventure session;
@@ -2174,10 +2261,10 @@ class VillagePerson extends GameComponent {
   @override
   void render(ui.Canvas canvas) {
     super.render(canvas);
-    if (!merchant) {
+    if (!merchant || session.world.stage != WorldStage.forest) {
       session.art.actor(
         canvas,
-        'villager',
+        merchant ? 'merchant' : 'villager',
         const ui.Offset(14, 24),
         math.pi / 2,
         0,

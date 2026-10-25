@@ -23,9 +23,8 @@ void main() {
     expect(s.nearbyAction, NearbyAction.chest);
     s.openChest();
     expect(s.nearbyAction, isNot(NearbyAction.chest));
-    final exit = stageExits.first;
-    s.hero.position.setValues(exit.x - 12, exit.y - 11);
-    expect(s.nearbyAction, NearbyAction.exit);
+    s.hero.position.setValues(4638, 349);
+    expect(s.nearbyAction, null);
     s.hero.position.setValues(6000, 4200);
     expect(s.nearbyAction, null);
   });

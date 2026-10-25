@@ -120,7 +120,6 @@ void main() {
       for (var i = 0; i < 8; i++) {
         p.reward();
       }
-      expect(p.stage, 1);
       expect(p.level, 3);
       expect(p.gold, 64);
       expect(p.swordDamage, 19);

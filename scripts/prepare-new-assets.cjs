@@ -45,6 +45,10 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'fx-warcry',
         'passive-icons',
         'quest-sites',
+        'time-sites',
+        'stage-materials',
+        'actors-cyber',
+        'cyber-props',
     ])
         fs.copyFileSync(
             path.join(root, `flutter_game/art/${name}.webp`),
@@ -56,13 +60,19 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
     const roll = JSON.parse(
         fs.readFileSync(path.join(root, 'flutter_game/art/roll-bounds.json'), 'utf8'),
     );
+    const cyber = JSON.parse(
+        fs.readFileSync(path.join(root, 'flutter_game/art/cyber-bounds.json'), 'utf8'),
+    );
     const { ACTOR_BOUNDS } = await import(
         pathToFileURL(path.join(root, 'src/data/actor-bounds.js'))
     );
     const { CONTROL_SPRITES } = await import(pathToFileURL(path.join(root, 'src/data/ui-art.js')));
     fs.writeFileSync(
         path.join(destination, 'art.json'),
-        JSON.stringify({ actors: { ...ACTOR_BOUNDS, mage, roll }, controls: CONTROL_SPRITES }),
+        JSON.stringify({
+            actors: { ...ACTOR_BOUNDS, mage, roll, cyber },
+            controls: CONTROL_SPRITES,
+        }),
     );
     console.log(
         `Prepared ${images.length} shared pictures and measured sprite bounds for Flutter.`,

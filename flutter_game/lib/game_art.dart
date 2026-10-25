@@ -36,6 +36,10 @@ class GameArt {
         'actors-villagers',
         'actors-vehicles',
         'quest-sites',
+        'time-sites',
+        'stage-materials',
+        'actors-cyber',
+        'cyber-props',
         'village-scene',
         'landscape-bridge',
         'world-forest',
@@ -55,18 +59,25 @@ class GameArt {
       }),
     );
     final atlas = art.images['terrain-materials']!;
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < 12; i++) {
+      final source = i < 6 ? atlas : art.images['stage-materials']!;
+      final cell = i % 6;
       final recorder = ui.PictureRecorder();
       // A separate recorder per material keeps shaders small and shared by every sector.
       final c = ui.Canvas(recorder);
       c.drawImageRect(
-        atlas,
-        ui.Rect.fromLTWH(
-          (i % 3) * atlas.width / 3,
-          (i ~/ 3) * atlas.height / 2,
-          atlas.width / 3,
-          atlas.height / 2,
-        ),
+        source,
+        // Ancient ground samples exclude the decorative column fragments at cell edges.
+        i == 7
+            ? const ui.Rect.fromLTWH(560, 80, 360, 360)
+            : i == 10
+            ? const ui.Rect.fromLTWH(560, 600, 340, 340)
+            : ui.Rect.fromLTWH(
+                (cell % 3) * source.width / 3 + 12,
+                (cell ~/ 3) * source.height / 2 + 12,
+                source.width / 3 - 24,
+                source.height / 2 - 24,
+              ),
         const ui.Rect.fromLTWH(0, 0, 384, 384),
         ui.Paint(),
       );
@@ -153,19 +164,52 @@ class GameArt {
     return art;
   }
 
-  void landmark(ui.Canvas canvas, int index, ui.Offset feet, double side) {
-    final image = images['quest-sites'];
+  void landmark(
+    ui.Canvas canvas,
+    int index,
+    ui.Offset feet,
+    double side, {
+    bool themed = false,
+    double opacity = 1,
+  }) {
+    final image = images[themed ? 'time-sites' : 'quest-sites'];
     if (image == null) return;
     canvas.drawImageRect(
       image,
       ui.Rect.fromLTWH(
-        index * image.width / 3,
-        0,
-        image.width / 3,
-        image.height.toDouble(),
+        themed ? index % 4 * image.width / 4 : index * image.width / 3,
+        themed ? index ~/ 4 * image.height / 2 : 0,
+        image.width / (themed ? 4 : 3),
+        image.height / (themed ? 2 : 1),
       ),
       ui.Rect.fromLTWH(feet.dx - side / 2, feet.dy - side * .9375, side, side),
-      ui.Paint()..filterQuality = ui.FilterQuality.medium,
+      ui.Paint()
+        ..color = ui.Color.fromRGBO(255, 255, 255, opacity)
+        ..filterQuality = ui.FilterQuality.medium,
+    );
+  }
+
+  void cityProp(
+    ui.Canvas canvas,
+    int index,
+    ui.Offset feet,
+    double side, {
+    double opacity = 1,
+  }) {
+    final image = images['cyber-props'];
+    if (image == null) return;
+    canvas.drawImageRect(
+      image,
+      ui.Rect.fromLTWH(
+        index % 4 * image.width / 4,
+        index ~/ 4 * image.height / 2,
+        image.width / 4,
+        image.height / 2,
+      ),
+      ui.Rect.fromLTWH(feet.dx - side / 2, feet.dy - side * .9375, side, side),
+      ui.Paint()
+        ..color = ui.Color.fromRGBO(255, 255, 255, opacity)
+        ..filterQuality = ui.FilterQuality.medium,
     );
   }
 
@@ -188,6 +232,10 @@ class GameArt {
       'skeleton': ('creatures-a', 2, 8),
       'cultist': ('creatures-a', 3, 8),
       'golem': ('creatures-b', 1, 8),
+      'scorpion': ('creatures-b', 2, 8),
+      'mummy': ('creatures-b', 3, 8),
+      'troll': ('creatures-b', 0, 8),
+      'cyber': ('cyber', 0, 8),
       'merchant': ('villagers', 0, 8),
       'villager': ('villagers', 1, 8),
       'horse': ('vehicles', 0, 8),
@@ -198,7 +246,9 @@ class GameArt {
     final definition = definitions[key]!;
     final sheet = attack && key == 'hero' ? 'hero-attack' : definition.$1,
         count = definition.$3;
-    final index = count == 16
+    final index = key == 'cyber'
+        ? facingFrame(angle, 8) * 2 + phase % 2
+        : count == 16
         ? facingFrame(angle, count) + (phase % 2) * 16
         : definition.$2 * 8 + facingFrame(angle, count) + (phase % 2) * 32;
     final record = actors[sheet] as Map<String, dynamic>;
@@ -261,6 +311,28 @@ class GameArt {
   }
 
   void prop(ui.Canvas canvas, WorldProp prop, {double opacity = 1}) {
+    if (prop.kind.startsWith('city-')) {
+      cityProp(
+        canvas,
+        int.parse(prop.kind.substring(5)),
+        prop.body.bottomCenter,
+        prop.drawSize.height,
+        opacity: opacity,
+      );
+      return;
+    }
+    if (prop.kind == 'ruin' || prop.kind == 'relay') {
+      landmark(
+        canvas,
+        prop.kind == 'relay' ? 5 : 1,
+        prop.body.bottomCenter,
+        prop.drawSize.height,
+        themed: true,
+        opacity: opacity,
+      );
+      return;
+    }
+
     final image =
             images[prop.kind == 'cactus' ? 'world-desert' : 'world-forest']!,
         cell = image.width / 4;
@@ -335,7 +407,9 @@ class TerrainArt {
         c = ui.Canvas(recorder),
         area = ui.Rect.fromLTWH(col * 512.0, row * 512.0, 512, 512);
     c.clipRect(area);
-    c.drawRect(area, ui.Paint()..shader = art.materials[0]);
+    final base = world.stage == WorldStage.forest ? 0 : 5 + world.stage.index;
+    final road = world.stage == WorldStage.forest ? 5 : 8 + world.stage.index;
+    c.drawRect(area, ui.Paint()..shader = art.materials[base]);
     for (final wood in world.woods) {
       if (!wood.bounds.overlaps(area.inflate(80))) continue;
       c.drawPath(wood.path, ui.Paint()..shader = art.materials[1]);
@@ -349,12 +423,16 @@ class TerrainArt {
     }
     for (final clearing in world.clearings) {
       if (clearing.bounds.overlaps(area)) {
-        c.drawPath(clearing.path, ui.Paint()..shader = art.materials[0]);
+        c.drawPath(clearing.path, ui.Paint()..shader = art.materials[base]);
       }
     }
     for (final sand in world.sandFields) {
       if (sand.bounds.overlaps(area)) {
-        c.drawPath(sand.path, ui.Paint()..shader = art.materials[2]);
+        c.drawPath(
+          sand.path,
+          ui.Paint()
+            ..shader = art.materials[world.stage == WorldStage.sands ? 6 : 2],
+        );
       }
     }
     for (final lake in [...world.lakes, world.river]) {
@@ -396,7 +474,7 @@ class TerrainArt {
           ..strokeCap = ui.StrokeCap.round
           ..strokeJoin = ui.StrokeJoin.round
           ..strokeWidth = t.width
-          ..shader = art.materials[5],
+          ..shader = art.materials[road],
       );
     }
     for (final bridge in world.bridges) {
@@ -408,7 +486,7 @@ class TerrainArt {
         ui.Paint(),
       );
     }
-    if (town.inflate(30).overlaps(area)) {
+    if (world.stage == WorldStage.forest && town.inflate(30).overlaps(area)) {
       final village = art.images['village-blended']!;
       c.drawImageRect(
         village,

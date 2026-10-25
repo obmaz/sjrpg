@@ -763,6 +763,16 @@ class StageLandmarks extends GameComponent {
     super.render(canvas);
     final c = canvas;
     final view = gameRef.camera.visibleWorldRect.inflate(120);
+    if (session.world.stage == WorldStage.future) {
+      final merchant = session.world.merchantAt + const ui.Offset(0, -48);
+      if (view.inflate(180).contains(merchant)) {
+        session.art.cityProp(c, 4, merchant, 172);
+      }
+      final healer = session.world.healAt + const ui.Offset(0, 20);
+      if (view.inflate(120).contains(healer)) {
+        session.art.cityProp(c, 5, healer, 100);
+      }
+    }
     for (final mount in session.mounts) {
       if (identical(mount, session.riding) || !view.contains(mount.at)) {
         continue;
@@ -776,10 +786,26 @@ class StageLandmarks extends GameComponent {
         mount.def.waterOnly ? 48 : 62,
       );
     }
-    for (var i = 0; i < questSites.length; i++) {
-      final site = questSites[i];
+    final marked = session.visibleSites.map((site) => site.id).toSet();
+    for (final site in session.world.sites) {
       if (!view.inflate(100).contains(site.at)) continue;
-      session.art.landmark(c, i, site.at - const ui.Offset(0, 18), 144);
+      if (session.world.stage == WorldStage.future) {
+        session.art.cityProp(
+          c,
+          site.artIndex,
+          site.at - const ui.Offset(0, 18),
+          156,
+        );
+      } else {
+        session.art.landmark(
+          c,
+          site.artIndex,
+          site.at - const ui.Offset(0, 18),
+          144,
+          themed: session.world.stage != WorldStage.forest,
+        );
+      }
+      if (!marked.contains(site.id)) continue;
       final done = session.cleansedSites.contains(site.id);
       c.drawOval(
         ui.Rect.fromCenter(
@@ -794,66 +820,20 @@ class StageLandmarks extends GameComponent {
       );
       session.art.text(
         c,
-        done ? '✓' : '!',
+        done
+            ? '✓'
+            : session.world.stage == WorldStage.sands &&
+                  session.acceptedCommission != site.id
+            ? '?'
+            : '!',
         site.at - const ui.Offset(0, 148),
         size: 21,
         color: site.color,
       );
     }
-    for (final exit in stageExits) {
-      final at = ui.Offset(exit.x, exit.y);
-      if (!view.contains(at)) continue;
-      c.save();
-      c.translate(at.dx, at.dy);
-      final color = session.stageCleared
-          ? const ui.Color(0xffa4e8ea)
-          : const ui.Color(0xffb4a68b);
-      c.drawOval(
-        const ui.Rect.fromLTWH(-42, -14, 84, 28),
-        ui.Paint()..color = const ui.Color(0xff384e48),
-      );
-      c.drawOval(
-        const ui.Rect.fromLTWH(-30, -76, 60, 80),
-        ui.Paint()
-          ..shader = ui.Gradient.radial(const ui.Offset(0, -34), 44, [
-            color.withValues(alpha: .5),
-            const ui.Color(0x003b7878),
-          ]),
-      );
-      c.drawArc(
-        const ui.Rect.fromLTWH(-34, -80, 68, 86),
-        math.pi,
-        math.pi,
-        false,
-        ui.Paint()
-          ..color = color
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 9,
-      );
-      c.drawLine(
-        const ui.Offset(-34, -38),
-        const ui.Offset(-34, 0),
-        ui.Paint()
-          ..color = color
-          ..strokeWidth = 9,
-      );
-      c.drawLine(
-        const ui.Offset(34, -38),
-        const ui.Offset(34, 0),
-        ui.Paint()
-          ..color = color
-          ..strokeWidth = 9,
-      );
-      session.art.text(
-        c,
-        '${exit.direction} · ${exit.destination}',
-        const ui.Offset(0, -110),
-        size: 14,
-      );
-      c.restore();
-    }
-    for (var i = 0; i < Adventure.chestLocations.length; i++) {
-      final at = Adventure.chestLocations[i];
+
+    for (var i = 0; i < session.stageChestLocations.length; i++) {
+      final at = session.stageChestLocations[i];
       if (!view.contains(at)) continue;
       final opened = session.openedChests.contains(i);
       c.save();

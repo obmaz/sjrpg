@@ -114,6 +114,12 @@ class _EntryPageState extends State<EntryPage> {
           art: art,
           heroClass: chosen,
           checkpoint: resuming ? savedAdventure : null,
+          onAdvance: (checkpoint) => setState(() {
+            run++;
+            savedAdventure = checkpoint;
+            resuming = true;
+            started = true;
+          }),
           onRetryCheckpoint: () {
             final checkpoint = GameCheckpoint.decode(storage.readCheckpoint());
             setState(() {
@@ -159,6 +165,7 @@ class GamePage extends StatefulWidget {
     this.heroClass = HeroClass.warrior,
     this.checkpoint,
     this.onRetryCheckpoint,
+    this.onAdvance,
     super.key,
   });
   final GameCheckpoint? checkpoint;
@@ -166,6 +173,7 @@ class GamePage extends StatefulWidget {
   final GameArt art;
   final VoidCallback onRestart;
   final VoidCallback? onRetryCheckpoint;
+  final ValueChanged<GameCheckpoint>? onAdvance;
   @override
   State<GamePage> createState() => _GamePageState();
 }
@@ -181,6 +189,14 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     if (!keepSave) return;
     final checkpoint = GameCheckpoint.capture(adventure);
     if (checkpoint != null) storage.writeCheckpoint(checkpoint.encode());
+  }
+
+  void advanceStage() {
+    final next = GameCheckpoint.advance(adventure);
+    if (next == null || widget.onAdvance == null) return;
+    keepSave = false;
+    storage.writeCheckpoint(next.encode());
+    widget.onAdvance!(next);
   }
 
   void abandon() {
@@ -223,7 +239,10 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
       ],
       cameraConfig: CameraConfig(
         moveOnlyMapArea: false,
-        initPosition: Vector2(arrival.dx + 12, arrival.dy + 11),
+        initPosition: Vector2(
+          adventure.world.spawn.dx + 12,
+          adventure.world.spawn.dy + 11,
+        ),
         startFollowPlayer: false,
         movementWindow: Vector2.zero(),
         zoom: 1,
@@ -236,6 +255,12 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         game.camera.position = adventure.cameraFocus;
         adventure.start(game);
         saveNow();
+        if (adventure.world.stage == WorldStage.sands &&
+            adventure.timePath == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) open('journal');
+          });
+        }
       },
     );
   }
@@ -462,13 +487,13 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   width: 120,
                   child: GameAction(
                     switch (interaction) {
-                      NearbyAction.shrine => '정화',
+                      NearbyAction.shrine =>
+                        adventure.world.stage == WorldStage.sands ? '조사' : '정화',
                       NearbyAction.mount => '타기',
                       NearbyAction.dismount => '내리기',
                       NearbyAction.shop => '상점',
                       NearbyAction.talk => '대화',
                       NearbyAction.chest => '상자 열기',
-                      NearbyAction.exit => '출구 확인',
                     },
                     icon: switch (interaction) {
                       NearbyAction.shrine => Icons.water_drop_outlined,
@@ -477,7 +502,6 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                       NearbyAction.shop => Icons.storefront,
                       NearbyAction.talk => Icons.chat_bubble_outline,
                       NearbyAction.chest => Icons.inventory_2_outlined,
-                      NearbyAction.exit => Icons.door_front_door_outlined,
                     },
                     onTap: () {
                       switch (interaction) {
@@ -494,8 +518,6 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                         case NearbyAction.chest:
                           adventure.openChest();
                           gameFocus.requestFocus();
-                        case NearbyAction.exit:
-                          open('exit');
                       }
                     },
                   ),
@@ -555,6 +577,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   name: modal,
                   onClose: close,
                   onRestart: abandon,
+                  onCheckpoint: saveNow,
+                  onAdvance: widget.onAdvance == null ? null : advanceStage,
                   onRetryCheckpoint:
                       adventure.defeated &&
                           widget.onRetryCheckpoint != null &&
@@ -576,9 +600,13 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     badge: target == 'skills'
         ? adventure.progress.skillPoints
         : target == 'journal'
-        ? (questSites.length -
-              adventure.cleansedSites.length +
-              (adventure.progress.bossDefeated ? 0 : 1))
+        ? (adventure.world.stage == WorldStage.sands
+              ? (4 -
+                    adventure.cleansedSites.length +
+                    (adventure.progress.bossDefeated ? 0 : 1))
+              : (adventure.world.sites.length -
+                    adventure.cleansedSites.length +
+                    (adventure.progress.bossDefeated ? 0 : 1)))
         : target == 'bag'
         ? adventure.progress.unseenGear.length
         : 0,

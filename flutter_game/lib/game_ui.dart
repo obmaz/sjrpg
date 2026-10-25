@@ -351,7 +351,13 @@ class MapPainter extends CustomPainter {
     c.translate(-view.left, -view.top);
     c.drawRect(
       Offset.zero & worldSize,
-      Paint()..color = const Color(0xff7d9656),
+      Paint()
+        ..color = [
+          const Color(0xff7d9656),
+          const Color(0xffb59059),
+          const Color(0xffa2aa87),
+          const Color(0xff253748),
+        ][session.world.stage.index],
     );
     for (final wood in session.world.woods) {
       c.drawPath(wood.path, Paint()..color = const Color(0xff315947));
@@ -374,17 +380,11 @@ class MapPainter extends CustomPainter {
           ..color = const Color(0xffdac489),
       );
     }
-    c.drawRect(town, Paint()..color = const Color(0xffe3d29a));
-    for (final exit in stageExits) {
-      c.drawCircle(
-        Offset(exit.x, exit.y),
-        round ? 100 : 65,
-        Paint()
-          ..color = session.stageCleared
-              ? const Color(0xff82dfe0)
-              : const Color(0xff594234),
-      );
-    }
+    c.drawRect(
+      session.world.settlement,
+      Paint()..color = const Color(0xffe3d29a),
+    );
+
     if (round) {
       for (final mob in session.mobs) {
         if (!mob.combatReady || mob.isDead || mob.isRemoving) continue;
@@ -399,13 +399,13 @@ class MapPainter extends CustomPainter {
             ..color = mob.isElite ? mob.trait.color : const Color(0xffef785e),
         );
       }
-      for (var i = 0; i < Adventure.chestLocations.length; i++) {
+      for (var i = 0; i < session.stageChestLocations.length; i++) {
         if (session.openedChests.contains(i)) continue;
-        c.drawCircle(Adventure.chestLocations[i], 42, Paint()..color = gold);
+        c.drawCircle(session.stageChestLocations[i], 42, Paint()..color = gold);
       }
     }
     c.restore();
-    for (final site in questSites) {
+    for (final site in session.visibleSites) {
       final done = session.cleansedSites.contains(site.id);
       var point = Offset(
         (site.at.dx - view.left) / view.width * s.width,
@@ -453,24 +453,7 @@ class MapPainter extends CustomPainter {
         ..strokeWidth = 1
         ..color = Colors.white,
     );
-    if (!round) {
-      for (final exit in stageExits) {
-        final x = (exit.x / worldSize.width * s.width).clamp(
-              27.0,
-              s.width - 27,
-            ),
-            y = (exit.y / worldSize.height * s.height).clamp(
-              15.0,
-              s.height - 15,
-            );
-        session.art.text(
-          c,
-          exit.direction,
-          Offset(x, y - 9 * markerScale),
-          size: 13 * markerScale,
-        );
-      }
-    }
+    if (!round) {}
     c.restore();
     if (round) {
       c.drawOval(

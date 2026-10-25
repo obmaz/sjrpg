@@ -10,7 +10,7 @@ class GameCheckpoint {
   final Map<String, dynamic> data;
   final Progress progress;
   String get summary =>
-      'Lv.${progress.level} ${progress.heroClass.title} · ${progress.kills} 처치';
+      '${WorldStage.values.firstWhere((s) => s.name == data['stage']).title} · Lv.${progress.level} ${progress.heroClass.title}';
   String encode() => jsonEncode(data);
   static GameCheckpoint? capture(Adventure session) {
     if (!session.ready || session.disposed || session.progress.hp <= 0) {
@@ -32,6 +32,11 @@ class GameCheckpoint {
               },
         'version': 1,
         'balance': 2,
+        'stage': session.world.stage.name,
+        'stageStartKills': session.stageStartKills,
+        'commissionStartKills': session.commissionStartKills,
+        'timePath': session.timePath?.name,
+        'commission': session.acceptedCommission,
         'sites': session.cleansedSites.toList(),
         'mounts': session.mounts
             .map(
@@ -69,6 +74,52 @@ class GameCheckpoint {
     );
   }
 
+  static GameCheckpoint? advance(Adventure session) {
+    if (!session.stageCleared || session.defeated || session.disposed) {
+      return null;
+    }
+    final next = switch (session.world.stage) {
+      WorldStage.forest => WorldStage.sands,
+      WorldStage.sands =>
+        session.timePath == TimePath.past ? WorldStage.past : WorldStage.future,
+      _ => null,
+    };
+    if (next == null) return null;
+    final checkpoint = capture(session);
+    if (checkpoint == null) return null;
+    final data = checkpoint.data;
+    final p = Progress.fromSave(session.progress.toSave())!
+      ..bossDefeated = false;
+    p.hp = p.maxHp;
+    p.energy = p.maxEnergy;
+    data.addAll({
+      'stage': next.name,
+      'stageStartKills': p.kills,
+      'commissionStartKills': p.kills,
+      'timePath': next == WorldStage.sands ? null : session.timePath?.name,
+      'commission': null,
+      'sites': <String>[],
+      'chests': <int>[],
+      'memoryRewarded': false,
+      'progress': p.toSave(),
+      'x': next.spawn.dx,
+      'y': next.spawn.dy,
+      'mounts': <dynamic>[],
+      'riding': null,
+      'boss': null,
+      'cooldowns': <String, double>{},
+      'armor': 0,
+      'frenzy': 0,
+    });
+    final ground = data['loot'] as List;
+    for (var i = 0; i < ground.length; i++) {
+      ground[i]['x'] = next.spawn.dx + 100 + i % 5 * 24;
+      ground[i]['y'] = next.spawn.dy + 180 + i ~/ 5 * 24;
+      ground[i]['age'] = 0;
+    }
+    return decode(jsonEncode(data));
+  }
+
   static GameCheckpoint? decode(String? text) {
     if (text == null || text.length > 100000) return null;
     try {
@@ -76,6 +127,40 @@ class GameCheckpoint {
       if (data['version'] != 1) return null;
       final progress = Progress.fromSave(data['progress']);
       if (progress == null || progress.hp <= 0) return null;
+      final stage = WorldStage.values.firstWhere(
+        (s) => s.name == (data['stage'] ?? 'forest'),
+      );
+      data['stage'] = stage.name;
+      final availableSites = sitesForStage(stage);
+      final stageStart = data['stageStartKills'] ?? 0;
+      final commissionStart = data['commissionStartKills'] ?? stageStart;
+      if (stageStart is! int ||
+          stageStart < 0 ||
+          stageStart > progress.kills ||
+          commissionStart is! int ||
+          commissionStart < stageStart ||
+          commissionStart > progress.kills) {
+        return null;
+      }
+      data['stageStartKills'] = stageStart;
+      data['commissionStartKills'] = commissionStart;
+      final pathName = data['timePath'];
+      final path = pathName == null
+          ? null
+          : TimePath.values.firstWhere((p) => p.name == pathName);
+      if (stage == WorldStage.forest && path != null ||
+          stage == WorldStage.past && path != TimePath.past ||
+          stage == WorldStage.future && path != TimePath.future) {
+        return null;
+      }
+      final commission = data['commission'];
+      if (commission != null &&
+          (stage != WorldStage.sands ||
+              !timeCommissions.any(
+                (q) => q.id == commission && q.path == path,
+              ))) {
+        return null;
+      }
       final seed = data['seed'];
       if (seed is! int || seed < 0 || seed > 1000000000) return null;
       bool number(dynamic value, double max) =>
@@ -88,9 +173,12 @@ class GameCheckpoint {
         return null;
       }
       final chests = data['chests'] as List;
-      if (chests.length > stageChests.length ||
+      final chestCount = stage == WorldStage.forest
+          ? stageChests.length
+          : 26 + 2 * availableSites.length;
+      if (chests.length > chestCount ||
           chests.toSet().length != chests.length ||
-          chests.any((c) => c is! int || c < 0 || c >= stageChests.length)) {
+          chests.any((c) => c is! int || c < 0 || c >= chestCount)) {
         return null;
       }
       if (data['memoryRewarded'] is! bool ||
@@ -105,13 +193,25 @@ class GameCheckpoint {
       final sites =
           data['sites'] ??
           (progress.bossDefeated
-              ? questSites.map((q) => q.id).toList()
+              ? availableSites.map((q) => q.id).toList()
               : <String>[]);
       if (sites is! List ||
-          sites.length > questSites.length ||
+          sites.length > availableSites.length ||
           sites.toSet().length != sites.length ||
-          sites.any((id) => !questSites.any((q) => q.id == id))) {
+          sites.any((id) => !availableSites.any((q) => q.id == id))) {
         return null;
+      }
+      if (stage == WorldStage.sands) {
+        final branch = timeCommissions.where((q) => q.path == path).toList();
+        if (sites.any((id) => !branch.any((q) => q.id == id))) return null;
+        for (var i = 0; i < branch.length; i++) {
+          if (sites.contains(branch[i].id) != (i < sites.length)) return null;
+        }
+        if (commission != null &&
+            (sites.length >= branch.length ||
+                branch[sites.length].id != commission)) {
+          return null;
+        }
       }
       data['sites'] = sites;
       final mounts = data['mounts'] ?? <dynamic>[];
@@ -181,8 +281,15 @@ class GameCheckpoint {
     final session = Adventure(
       art,
       seed: data['seed'] as int,
+      stage: WorldStage.values.firstWhere((s) => s.name == data['stage']),
       restoredProgress: Progress.fromSave(progress.toSave())!,
     );
+    session.stageStartKills = data['stageStartKills'] as int;
+    session.commissionStartKills = data['commissionStartKills'] as int;
+    session.timePath = data['timePath'] == null
+        ? null
+        : TimePath.values.firstWhere((p) => p.name == data['timePath']);
+    session.acceptedCommission = data['commission'] as String?;
     for (final entry in data['mounts'] as List) {
       final existing = session.mounts.where((m) => m.def.id == entry['id']);
       if (existing.isEmpty) continue;
@@ -215,12 +322,12 @@ class GameCheckpoint {
       session.hero.body.size,
       waterOnly: session.riding?.def.waterOnly ?? false,
     );
-    final safe = at ?? arrival;
+    final safe = at ?? session.world.spawn;
     if (at == null) {
       session.riding = null;
       session.hero.resizeBody(
         const Size(28, 24),
-        arrival + const Offset(14, 12),
+        session.world.spawn + const Offset(14, 12),
       );
     }
     session.hero.position.setValues(safe.dx, safe.dy);
