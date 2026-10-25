@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <link rel="icon" href="data:,">
+  <meta name="theme-color" content="#102c29">
+  <meta name="description" content="자연의 수호자 — 새로운 핵앤슬래시 모험">
+  <title>자연의 수호자 · 새로운 모험</title>
+  <style>
+    html,body{margin:0;background:#102c29;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;touch-action:none}
+    #flutter-host{position:fixed;left:0;top:0;width:100%;height:100%}
+    #loading{position:fixed;inset:0;display:grid;place-content:center;text-align:center;color:#ecdfb5;font:16px system-ui,sans-serif;background:radial-gradient(ellipse at center,#234a3d,#0b211f);padding:24px}
+    #loading strong{font:700 28px system-ui,sans-serif;letter-spacing:2px;margin-bottom:20px}
+    #loading p{color:#a8bfb0;line-height:1.8}
+    #loading a{color:#e9c778;margin-top:20px}
+    .spark{font-size:42px;color:#d4b15d;animation:pulse 1.5s ease-in-out infinite}
+    @keyframes pulse{50%{opacity:.4;transform:scale(.9)}}
+  </style>
+</head>
+<body>
+  <div id="flutter-host"></div>
+  <div id="loading" role="status"><div class="spark">✦</div><strong>자연의 수호자</strong><p>새로운 모험을 준비하고 있어요.<br>처음에는 그림과 게임 엔진을 불러옵니다.</p><a href="/sjrpg/legacy/">기존 모험 플레이</a></div>
+  <script>
+    // Capture a touch device's entry height once, independent of its address bar.
+    if (matchMedia('(pointer: coarse)').matches) document.getElementById('flutter-host').style.height = innerHeight + 'px';
+    document.addEventListener('dblclick', event => event.preventDefault(), {passive:false});
+    document.addEventListener('visibilitychange', () => {if(document.hidden)window.dispatchEvent(new Event('blur'));});
+    window.addEventListener('flutter-first-frame', () => document.getElementById('loading')?.remove());
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

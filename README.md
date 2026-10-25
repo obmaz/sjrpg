@@ -1,7 +1,37 @@
 # 자연의 수호자
 
-그림으로 구성한 고정 마을과 숲길에서 검을 연속으로 휘두르는 핵앤슬래시 전투와 퀘스트를 진행하고 사막으로 이동해 파라오를 토벌하는 싱글 플레이 브라우저 RPG입니다.
-Canvas 2D와 순수 JavaScript로 구현했으며 데스크톱 키보드와 모바일 터치로 조작합니다.
+핵앤슬래시 모험 게임을 두 버전으로 제공합니다. 새 버전은 Flutter·Bonfire 4로 다시 만든 독립 게임이며, 기존 JavaScript 게임은 그대로 보존합니다. 두 버전 모두 키보드와 모바일 터치로 플레이합니다.
+
+- **[새로운 모험 · Flutter / Bonfire](https://obmaz.github.io/sjrpg/new/)**: 연속 검 공격·회전 베기·회피, 16방향 주인공·8방향 적, 넓은 초원·숲·강·호수·모래벌판, 상점 강화와 골렘 보스 토벌을 갖춘 첫 플레이 버전입니다. 기존의 모든 아이템·퀘스트·탈것·사막 원정을 포팅한 버전은 아닙니다.
+- **[기존 모험 · Legacy](https://obmaz.github.io/sjrpg/legacy/)**: 이전 장비·퀘스트·사막 원정·탈것을 유지하는 Canvas 2D·JavaScript 게임입니다.
+
+## 새 버전 개발
+
+Flutter **3.47.8**과 Node.js 24 이상이 필요합니다. 공유 그림은 기존 원본을 유지하며 준비 스크립트로 복사합니다.
+
+```sh
+npm ci
+npm run prepare:new
+cd flutter_game
+flutter pub get --enforce-lockfile
+flutter analyze
+flutter test
+flutter run -d chrome
+```
+
+배포용 웹 빌드 후 저장소 루트에서 두 게임을 합칩니다.
+
+```sh
+cd flutter_game
+flutter build web --release --base-href /sjrpg/new/ --no-web-resources-cdn
+cd ..
+npm run check
+npm run build
+```
+
+결과는 `dist/index.html`(선택 화면), `dist/legacy/`(기존 게임), `dist/new/`(Flutter 게임)입니다. 새 버전은 자산·엔진을 같은 서버에 포함하고 버전별 경로에 보관합니다. 두 게임의 진행은 별개이며 새로고침하면 초기화됩니다. 새 버전의 키보드 조작은 WASD/방향키 이동, Space/J 연속 공격, N/K 회전 베기, 왼쪽 Shift 회피입니다. 24마리 처치 후 등장하는 숲의 파수꾼을 쓰러뜨리는 것이 목표입니다.
+
+아래 안내는 **기존 버전**의 전체 기능과 로컬 실행 방법입니다.
 
 **[GitHub Pages에서 게임 시작](https://obmaz.github.io/sjrpg/)**
 

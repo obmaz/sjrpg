@@ -18,6 +18,22 @@ jobs:
                   node-version: '24'
                   cache: npm
             - run: npm ci
+            - name: Install Flutter 3.47.8
+              run: |
+                  git clone --depth 1 --branch 3.47.8 https://github.com/flutter/flutter.git "$RUNNER_TEMP/guardian-flutter"
+                  echo "$RUNNER_TEMP/guardian-flutter/bin" >> "$GITHUB_PATH"
+                  "$RUNNER_TEMP/guardian-flutter/bin/flutter" config --no-analytics
+            - run: npm run prepare:new
+            - run: flutter pub get --enforce-lockfile
+              working-directory: flutter_game
+            - run: dart format --output=none --set-exit-if-changed lib test
+              working-directory: flutter_game
+            - run: flutter analyze
+              working-directory: flutter_game
+            - run: flutter test
+              working-directory: flutter_game
+            - run: flutter build web --release --base-href /sjrpg/new/ --no-web-resources-cdn
+              working-directory: flutter_game
             - run: npm run check
             - run: npm run build
             - uses: actions/upload-pages-artifact@v5.0.0

@@ -49,7 +49,7 @@ function buildSite(
 }
 
 if (require.main === module) {
-    const result = buildSite();
+    const result = buildSite(undefined, path.resolve(__dirname, '../dist/legacy'));
     console.log(
         `Built ${result.files.length} static files under ${result.assetRoot} with relative module paths.`,
     );

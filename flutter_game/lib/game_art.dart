@@ -1,0 +1,337 @@
+import 'dart:convert';
+import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:flutter/services.dart';
+import 'world_model.dart';
+
+class GameArt {
+  final images = <String, ui.Image>{};
+  late final Map<String, dynamic> actors, controls;
+  final materials = <ui.Shader>[];
+  static Future<GameArt> load() async {
+    final art = GameArt();
+    final data =
+        jsonDecode(await rootBundle.loadString('assets/art.json'))
+            as Map<String, dynamic>;
+    art.actors = data['actors'];
+    art.controls = data['controls'];
+    await Future.wait(
+      [
+        'actors-hero',
+        'actors-hero-attack',
+        'actors-creatures-a',
+        'actors-creatures-b',
+        'actors-villagers',
+        'village-scene',
+        'landscape-materials',
+        'landscape-bridge',
+        'world-forest',
+        'world-desert',
+        'controls',
+        'ui-reference',
+      ].map((name) async {
+        final bytes = await rootBundle.load('assets/images/$name.webp');
+        final codec = await ui.instantiateImageCodec(
+          bytes.buffer.asUint8List(),
+        );
+        art.images[name] = (await codec.getNextFrame()).image;
+        codec.dispose();
+      }),
+    );
+    final atlas = art.images['landscape-materials']!;
+    for (var i = 0; i < 6; i++) {
+      final recorder = ui.PictureRecorder();
+      // A separate recorder per material keeps shaders small and shared by every sector.
+      final c = ui.Canvas(recorder);
+      c.drawImageRect(
+        atlas,
+        ui.Rect.fromLTWH(
+          (i % 3) * atlas.width / 3,
+          (i ~/ 3) * atlas.height / 2,
+          atlas.width / 3,
+          atlas.height / 2,
+        ),
+        const ui.Rect.fromLTWH(0, 0, 384, 384),
+        ui.Paint(),
+      );
+      final picture = recorder.endRecording(),
+          image = await picture.toImage(384, 384);
+      picture.dispose();
+      art.materials.add(
+        ui.ImageShader(
+          image,
+          ui.TileMode.mirror,
+          ui.TileMode.mirror,
+          Float64List.fromList([
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+          ]),
+        ),
+      );
+      // The shader retains the underlying texture for the game session.
+    }
+    return art;
+  }
+
+  void actor(
+    ui.Canvas canvas,
+    String key,
+    ui.Offset feet,
+    double angle,
+    int phase,
+    double height, {
+    bool attack = false,
+    double opacity = 1,
+  }) {
+    const definitions = {
+      'hero': ('hero', 0, 16),
+      'goblin': ('creatures-a', 0, 8),
+      'wolf': ('creatures-a', 1, 8),
+      'skeleton': ('creatures-a', 2, 8),
+      'cultist': ('creatures-a', 3, 8),
+      'golem': ('creatures-b', 1, 8),
+      'merchant': ('villagers', 0, 8),
+      'villager': ('villagers', 1, 8),
+    };
+    final definition = definitions[key]!;
+    final sheet = attack && key == 'hero' ? 'hero-attack' : definition.$1,
+        count = definition.$3;
+    final index = count == 16
+        ? facingFrame(angle, count) + (phase % 2) * 16
+        : definition.$2 * 8 + facingFrame(angle, count) + (phase % 2) * 32;
+    final record = actors[sheet] as Map<String, dynamic>;
+    final frame = (record['frames'][index] as List)
+        .map((v) => (v as num).toDouble())
+        .toList();
+    final maxH = (record['sizes'][definition.$2][1] as num).toDouble(),
+        scale = height / maxH;
+    final src = ui.Rect.fromLTWH(frame[0], frame[1], frame[2], frame[3]);
+    final dst = ui.Rect.fromLTWH(
+      feet.dx - src.width * scale / 2,
+      feet.dy - src.height * scale,
+      src.width * scale,
+      src.height * scale,
+    );
+    canvas.drawImageRect(
+      images['actors-$sheet']!,
+      src,
+      dst,
+      ui.Paint()
+        ..color = ui.Color.fromRGBO(255, 255, 255, opacity)
+        ..filterQuality = ui.FilterQuality.low,
+    );
+  }
+
+  void prop(ui.Canvas canvas, WorldProp prop, {double opacity = 1}) {
+    final image =
+            images[prop.kind == 'cactus' ? 'world-desert' : 'world-forest']!,
+        cell = image.width / 4;
+    final index = prop.kind == 'tree'
+        ? 8
+        : prop.kind == 'cactus'
+        ? 1
+        : 10;
+    final feet = prop.body.bottomCenter;
+    canvas.drawImageRect(
+      image,
+      ui.Rect.fromLTWH((index % 4) * cell, (index ~/ 4) * cell, cell, cell),
+      ui.Rect.fromLTWH(
+        feet.dx - prop.drawSize.width / 2,
+        feet.dy - prop.drawSize.height * .88,
+        prop.drawSize.width,
+        prop.drawSize.height,
+      ),
+      ui.Paint()..color = ui.Color.fromRGBO(255, 255, 255, opacity),
+    );
+  }
+
+  void control(ui.Canvas canvas, String key, ui.Rect destination) {
+    final v = controls[key] as List;
+    canvas.drawImageRect(
+      images['controls']!,
+      ui.Rect.fromLTWH(
+        (v[0] as num).toDouble(),
+        (v[1] as num).toDouble(),
+        (v[2] as num).toDouble(),
+        (v[3] as num).toDouble(),
+      ),
+      destination,
+      ui.Paint()..filterQuality = ui.FilterQuality.medium,
+    );
+  }
+
+  void text(
+    ui.Canvas canvas,
+    String value,
+    ui.Offset at, {
+    double size = 16,
+    ui.Color color = const ui.Color(0xffffedbb),
+  }) {
+    final builder =
+        ui.ParagraphBuilder(
+            ui.ParagraphStyle(
+              fontFamily: 'Guardian',
+              fontSize: size,
+              textAlign: ui.TextAlign.center,
+            ),
+          )
+          ..pushStyle(
+            ui.TextStyle(color: color, fontWeight: ui.FontWeight.bold),
+          )
+          ..addText(value);
+    final p = builder.build()
+      ..layout(const ui.ParagraphConstraints(width: 160));
+    canvas.drawParagraph(p, at - ui.Offset(80, 0));
+  }
+}
+
+class TerrainArt {
+  TerrainArt(this.world, this.art);
+  final AdventureWorld world;
+  final GameArt art;
+  final cache = <String, ui.Picture>{};
+  ui.Picture sector(int col, int row) {
+    final key = '$col:$row';
+    if (cache.containsKey(key)) return cache[key]!;
+    final recorder = ui.PictureRecorder(),
+        c = ui.Canvas(recorder),
+        area = ui.Rect.fromLTWH(col * 512.0, row * 512.0, 512, 512);
+    c.clipRect(area);
+    c.drawRect(area, ui.Paint()..shader = art.materials[0]);
+    for (final wood in world.woods) {
+      if (!wood.bounds.overlaps(area.inflate(80))) continue;
+      c.drawPath(wood.path, ui.Paint()..shader = art.materials[1]);
+      c.drawPath(
+        wood.path,
+        ui.Paint()
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 50
+          ..color = const ui.Color(0x22335336),
+      );
+    }
+    if (world.sand.bounds.overlaps(area)) {
+      c.drawPath(world.sand.path, ui.Paint()..shader = art.materials[2]);
+    }
+    for (final lake in [...world.lakes, world.river]) {
+      if (!lake.bounds.overlaps(area.inflate(40))) continue;
+      c.drawPath(
+        lake.path,
+        ui.Paint()
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 42
+          ..shader = art.materials[3],
+      );
+      c.drawPath(lake.path, ui.Paint()..shader = art.materials[4]);
+      c.drawPath(
+        lake.path,
+        ui.Paint()
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 6
+          ..color = const ui.Color(0x999ce0c4),
+      );
+    }
+    for (final t in world.trails) {
+      c.drawPath(
+        t.path,
+        ui.Paint()
+          ..style = ui.PaintingStyle.stroke
+          ..strokeCap = ui.StrokeCap.round
+          ..strokeJoin = ui.StrokeJoin.round
+          ..strokeWidth = t.width + 26
+          ..color = const ui.Color(0x55917d50),
+      );
+    }
+    for (final t in world.trails) {
+      c.drawPath(
+        t.path,
+        ui.Paint()
+          ..style = ui.PaintingStyle.stroke
+          ..strokeCap = ui.StrokeCap.round
+          ..strokeJoin = ui.StrokeJoin.round
+          ..strokeWidth = t.width
+          ..shader = art.materials[5],
+      );
+    }
+    c.drawImageRect(
+      art.images['landscape-bridge']!,
+      const ui.Rect.fromLTWH(50, 112, 1880, 540),
+      world.bridge,
+      ui.Paint(),
+    );
+    if (town.inflate(30).overlaps(area)) {
+      c.drawImageRect(
+        art.images['village-scene']!,
+        ui.Rect.fromLTWH(
+          0,
+          0,
+          art.images['village-scene']!.width.toDouble(),
+          art.images['village-scene']!.height.toDouble(),
+        ),
+        town,
+        ui.Paint(),
+      );
+    }
+    // Deterministic dappled light is presentation-only and never consumes gameplay RNG.
+    final random = math.Random(col * 739 + row * 838 + world.seed);
+    for (var i = 0; i < 5; i++) {
+      final p = ui.Offset(
+        area.left + random.nextDouble() * 512,
+        area.top + random.nextDouble() * 512,
+      );
+      c.drawCircle(
+        p,
+        100,
+        ui.Paint()
+          ..shader = ui.Gradient.radial(p, 100, [
+            const ui.Color(0x0ff1d393),
+            const ui.Color(0x00f1d393),
+          ]),
+      );
+    }
+    final picture = recorder.endRecording();
+    cache[key] = picture;
+    if (cache.length > 24) {
+      final old = cache.keys.first;
+      cache.remove(old)?.dispose();
+    }
+    return picture;
+  }
+
+  void render(ui.Canvas canvas, ui.Rect view) {
+    for (
+      var y = (view.top / 512).floor();
+      y <= (view.bottom / 512).floor();
+      y++
+    ) {
+      for (
+        var x = (view.left / 512).floor();
+        x <= (view.right / 512).floor();
+        x++
+      ) {
+        canvas.drawPicture(sector(x, y));
+      }
+    }
+  }
+
+  void dispose() {
+    for (final picture in cache.values) {
+      picture.dispose();
+    }
+    cache.clear();
+  }
+}

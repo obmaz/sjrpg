@@ -1,3 +1,25 @@
+# 두 버전의 개발·배포
+
+`flutter_game/`는 Flutter 3.47.8·Bonfire 4의 새 게임입니다. 루트 `src/`와 `index.html`은 기존 JavaScript 게임으로 유지합니다. 배포 시 루트는 선택 화면, `/sjrpg/legacy/`는 기존 게임, `/sjrpg/new/`는 새 게임입니다. 아래 JavaScript 구조·동작 계약은 기존 버전에 적용합니다.
+
+## Flutter 게임
+
+- `lib/world_model.dart`: 연속 지형 윤곽·수목 몸체·안전 스폰·최대 6px 이동 스윕·제한된 지역 경로 탐색·성장 수치입니다. 주인공·적이 같은 모델을 사용하며 비행·통과 능력을 임의로 부여하지 않습니다.
+- `lib/game_art.dart`: 공유 생성 이미지·측정 프레임을 읽어 16/8방향 캐릭터·바닥 재질·목교·마을을 표시합니다. 512px 지형 명령 캐시는 최대 24개입니다. 그림과 충돌이 같은 월드 데이터에서 나옵니다.
+- `lib/adventure.dart`: Bonfire `Player`·`Enemy`·`GameComponent`와 충돌·카메라·키보드 이벤트를 사용합니다. 전체 몸체 지형 스윕은 자연형 맵 모델로 처리하고, Bonfire 충돌이 캐릭터 간 겹침을 해결합니다. 카메라는 판정이 끝난 주인공 좌표를 직접 따라가며 시작의 0초 프레임·회피 중에도 유한 좌표와 화면 중심을 유지합니다. 주변 일반 적 무리는 12마리 이내로 관리하고 보스는 별도 생성하며, 먼 일반 적은 보상 없이 정리합니다. 경로는 현재 몸체가 실제로 도달할 수 있는 시작점을 고르고, 모퉁이 노드에 도착한 뒤 방향을 바꿉니다. 유효한 경로는 목표가 이동하거나 다음 구간이 막힐 때까지 유지해 느린 적도 앞으로 나아갑니다. 연속 베기·회전 공격·회피·피격·성장·보스 결과는 시뮬레이션 시간으로 처리합니다. 렌더링은 피해·스폰·게임 난수를 변경하지 않습니다.
+- `lib/main.dart`·`game_ui.dart`·`game_panels.dart`: 360도 조이스틱·두 손가락 조작·컨텍스트 상점 버튼·HUD·가방·일지·지도·설정·결과 창입니다. 패널·포커스 이탈 시 입력을 해제하고 게임을 멈춥니다. 최초 모바일 높이를 유지하며 게임 영역은 연속 탭 확대를 허용하지 않습니다.
+- `scripts/prepare-new-assets.cjs`: 원본 WebP와 측정된 프레임 메타데이터를 `flutter_game/assets/`에 준비합니다. 이 생성 폴더와 Flutter 빌드 산출물은 Git에 추가하지 않습니다. 한글 글꼴은 로컬로 포함한 Nanum Gothic(OFL)입니다.
+
+Flutter 변경은 `dart format --output=none --set-exit-if-changed lib test`, `flutter analyze`, `flutter test`, 실제 브라우저의 입력·팝업·전투로 확인합니다. 테스트의 모델·대체 엔진 검사를 실제 웹 렌더링 검증으로 보고하지 않습니다. 현재 새 버전은 검 전투·성장·상점 강화·24마리 처치 후 보스 토벌 범위이며 기존 기능의 완전 포팅은 요구하지 않습니다.
+
+## 배포 조립
+
+`npm run build:legacy`는 기존 게임만 `dist/legacy/`에 만듭니다. `npm run build`는 미리 컴파일된 `flutter_game/build/web/`와 기존 게임을 합쳐 `dist/`를 만듭니다. Flutter는 `--base-href /sjrpg/new/ --no-web-resources-cdn`으로 빌드합니다. 조립기는 Flutter 산출물의 콘텐츠 해시를 구해 `new/releases/<해시>/`에 보관하고 `new/index.html`의 base를 이 경로로 설정합니다. URL은 `/sjrpg/new/`를 유지하며 코드·그림·엔진 캐시가 버전 사이에 섞이지 않습니다. 기존 게임은 자체 해시를 그대로 유지합니다. Flutter 부트스트랩은 서비스 워커를 등록하지 않습니다.
+
+GitHub Actions의 **Check and deploy**는 두 버전의 검사·테스트·빌드 후 같은 Pages 아티팩트를 배포합니다. 완료 보고 전 해당 커밋의 실행 성공, 공개 선택 화면과 두 하위 경로의 플레이·자산 로드를 확인합니다.
+
+---
+
 # 개발 참고
 
 후속 AI 개발을 위한 현재 구조와 동작 계약입니다. 작업 지침은 [AGENTS.md](../AGENTS.md)를 먼저 읽고, 문서의 설명은 실제 코드와 대조합니다.

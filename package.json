@@ -6,12 +6,14 @@
         "node": ">=24"
     },
     "scripts": {
-        "build": "node scripts/build.cjs",
+        "build": "node scripts/build-all.cjs",
         "test": "node --experimental-vm-modules --test tests/*.test.cjs",
         "lint": "node scripts/check.cjs && eslint tests scripts eslint.config.mjs",
-        "format": "prettier --write src tests scripts docs index.html style.css package.json README.md AGENTS.md eslint.config.mjs .prettierrc.json",
-        "format:check": "prettier --check src tests scripts docs index.html style.css package.json README.md AGENTS.md eslint.config.mjs .prettierrc.json",
-        "check": "npm run lint && npm run format:check && npm test"
+        "format": "prettier --write src tests scripts docs site index.html style.css package.json README.md AGENTS.md eslint.config.mjs .prettierrc.json",
+        "format:check": "prettier --check src tests scripts docs site index.html style.css package.json README.md AGENTS.md eslint.config.mjs .prettierrc.json",
+        "check": "npm run lint && npm run format:check && npm test",
+        "build:legacy": "node scripts/build.cjs",
+        "prepare:new": "node scripts/prepare-new-assets.cjs"
     },
     "devDependencies": {
         "eslint": "10.12.0",
