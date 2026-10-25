@@ -711,7 +711,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
               ),
               const SizedBox(width: 8),
               SizedBox(
-                  width: 76,
+                width: 76,
                 child: Column(
                   children: [
                     GameAction(
