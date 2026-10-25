@@ -367,11 +367,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 Positioned(
                   left: 55,
                   right: 55,
-                  top:
-                      media.padding.top +
-                      (adventure.nearbyBoss != null
-                          ? (short ? 170 : 225)
-                          : 160),
+                  top: media.padding.top + 160,
                   child: IgnorePointer(
                     child: Container(
                       padding: const EdgeInsets.symmetric(

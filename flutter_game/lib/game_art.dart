@@ -282,8 +282,15 @@ class TerrainArt {
           ..color = const ui.Color(0x22335336),
       );
     }
-    if (world.sand.bounds.overlaps(area)) {
-      c.drawPath(world.sand.path, ui.Paint()..shader = art.materials[2]);
+    for (final clearing in world.clearings) {
+      if (clearing.bounds.overlaps(area)) {
+        c.drawPath(clearing.path, ui.Paint()..shader = art.materials[0]);
+      }
+    }
+    for (final sand in world.sandFields) {
+      if (sand.bounds.overlaps(area)) {
+        c.drawPath(sand.path, ui.Paint()..shader = art.materials[2]);
+      }
     }
     for (final lake in [...world.lakes, world.river]) {
       if (!lake.bounds.overlaps(area.inflate(40))) continue;

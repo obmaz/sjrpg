@@ -13,7 +13,30 @@ const stageChests = [
   Offset(4620, 4200),
   Offset(6200, 4200),
   Offset(3900, 4550),
+  Offset(10000, 4200),
+  Offset(13000, 6500),
+  Offset(15500, 6800),
+  Offset(18000, 4200),
+  Offset(20000, 2300),
+  Offset(22000, 9000),
+  Offset(8000, 9000),
+  Offset(13000, 12000),
+  Offset(17000, 16000),
+  Offset(22000, 14000),
+  Offset(3800, 8500),
+  Offset(3600, 16500),
 ];
+
+Rect localMapBounds(Offset focus, {double span = 2100}) {
+  final width = math.min(span, worldSize.width),
+      height = math.min(span, worldSize.height);
+  return Rect.fromLTWH(
+    (focus.dx - width / 2).clamp(0.0, worldSize.width - width),
+    (focus.dy - height / 2).clamp(0.0, worldSize.height - height),
+    width,
+    height,
+  );
+}
 
 int facingFrame(double angle, int count) =>
     (((angle - math.pi / 2) * count / (math.pi * 2)).round() % count + count) %
@@ -108,7 +131,16 @@ class AdventureWorld {
       oval(const Offset(3000, 12000), 1600, 2800),
       oval(const Offset(14500, 2500), 3000, 1600),
     ];
-    sand = oval(const Offset(6600, 5200), 1500, 850);
+    sandFields = [
+      oval(const Offset(6600, 5200), 1500, 850),
+      oval(const Offset(15500, 5000), 3400, 2300),
+      oval(const Offset(21000, 14500), 1800, 1700),
+    ];
+    clearings = [
+      oval(const Offset(10500, 7200), 1000, 750),
+      oval(const Offset(18500, 12200), 1200, 1000),
+      oval(const Offset(3300, 12000), 600, 1300),
+    ];
     lakes = [
       oval(const Offset(5680, 1700), 820, 620),
       oval(const Offset(1750, 1100), 650, 430),
@@ -174,6 +206,26 @@ class AdventureWorld {
     trails.addAll([
       Trail(
         _curve([
+          const Offset(13000, 6500),
+          const Offset(15500, 6800),
+          const Offset(16700, 5900),
+          const Offset(15000, 4400),
+          const Offset(13500, 5100),
+          const Offset(13000, 6500),
+        ]),
+        160,
+      ),
+      Trail(
+        _curve([
+          const Offset(18000, 4200),
+          const Offset(20000, 2300),
+          const Offset(22200, 3200),
+          const Offset(22000, 9000),
+        ]),
+        145,
+      ),
+      Trail(
+        _curve([
           const Offset(7000, 4780),
           const Offset(10000, 4200),
           const Offset(13000, 6500),
@@ -234,7 +286,7 @@ class AdventureWorld {
             stageChests.any((c) => (c - p).distance < 100)) {
           continue;
         }
-        final wooded = woods.any((s) => s.contains(p));
+        final wooded = isWooded(p);
         final roll = random.nextDouble();
         if (roll > (wooded ? .68 : .04) ||
             trails.any((t) => t.distance(p) < t.width / 2 + 125) ||
@@ -245,9 +297,9 @@ class AdventureWorld {
             river.bounds.contains(p) && isWater(p + const Offset(75, 0))) {
           continue;
         }
-        final kind = sand.contains(p)
+        final kind = isSand(p)
             ? (roll < .015 ? 'cactus' : 'rock')
-            : wooded || roll < .015
+            : wooded || roll < .015 && !clearings.any((c) => c.contains(p))
             ? 'tree'
             : 'rock';
         final body = Rect.fromCenter(
@@ -284,8 +336,14 @@ class AdventureWorld {
     }
   }
   final int seed;
-  late final List<RegionShape> woods, lakes;
-  late final RegionShape river, sand;
+  late final List<RegionShape> woods, lakes, sandFields, clearings;
+  late final RegionShape river;
+  RegionShape get sand => sandFields.first;
+  bool isSand(Offset p) => sandFields.any((field) => field.contains(p));
+  bool isWooded(Offset p) =>
+      !isSand(p) &&
+      !clearings.any((clearing) => clearing.contains(p)) &&
+      woods.any((wood) => wood.contains(p));
   late final Rect bridge;
   late final List<Trail> trails;
   final List<WorldProp> props = [];
@@ -451,10 +509,11 @@ class AdventureWorld {
 
   String areaName(Offset p) {
     if (town.contains(p)) return '분수 마을';
-    if (sand.contains(p)) return '황금 모래벌판';
+    if (isSand(p)) return p.dx > 12000 ? '태양의 사구' : '황금 모래벌판';
     if (lakes.any((l) => l.bounds.inflate(220).contains(p))) return '푸른 호숫가';
     if ((p.dx - 5300).abs() < 550) return '달빛 강변';
-    if (woods.any((w) => w.contains(p))) return '이끼 숲';
+    if (clearings.any((c) => c.contains(p))) return '바람꽃 초원';
+    if (isWooded(p)) return '이끼 숲';
     return '햇살 초원';
   }
 

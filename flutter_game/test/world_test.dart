@@ -19,6 +19,34 @@ void main() {
       expect(facingFrame(0, 16), 12);
     },
   );
+  test(
+    'local minimap follows the hero and stays within the expanded world',
+    () {
+      expect(worldSize, const Size(23040, 17280));
+      final view = localMapBounds(const Offset(14000, 12000));
+      expect(view.center, const Offset(14000, 12000));
+      expect(view.size, const Size(2100, 2100));
+      expect(localMapBounds(Offset.zero).topLeft, Offset.zero);
+      expect(
+        localMapBounds(const Offset(30000, 20000)).bottomRight,
+        const Offset(23040, 17280),
+      );
+    },
+  );
+  test('large biomes include open clearings and distinct sand regions', () {
+    final world = AdventureWorld();
+    expect(world.sandFields.length, 3);
+    expect(world.isSand(const Offset(15500, 5000)), true);
+    expect(world.areaName(const Offset(15500, 5000)), '태양의 사구');
+    expect(world.isWooded(const Offset(10500, 7200)), false);
+    expect(world.areaName(const Offset(10500, 7200)), '바람꽃 초원');
+    expect(
+      world.props
+          .where((p) => p.kind == 'tree')
+          .any((p) => world.clearings.any((c) => c.contains(p.body.center))),
+      false,
+    );
+  });
   test('opening and every major trail are traversable with a full body', () {
     final world = AdventureWorld();
     const size = Size(24, 22);

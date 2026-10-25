@@ -305,14 +305,20 @@ class MapPainter extends CustomPainter {
     if (round) c.clipPath(Path()..addOval(rect.deflate(3)));
     c.drawRect(rect, Paint()..color = const Color(0xff7d9656));
     c.save();
-    c.scale(s.width / worldSize.width, s.height / worldSize.height);
+    final view = round
+        ? localMapBounds(session.hero.body.center)
+        : Offset.zero & worldSize;
+    c.scale(s.width / view.width, s.height / view.height);
+    c.translate(-view.left, -view.top);
     for (final wood in session.world.woods) {
       c.drawPath(wood.path, Paint()..color = const Color(0xff315947));
     }
-    c.drawPath(
-      session.world.sand.path,
-      Paint()..color = const Color(0xffc7b579),
-    );
+    for (final clearing in session.world.clearings) {
+      c.drawPath(clearing.path, Paint()..color = const Color(0xff8ca564));
+    }
+    for (final sand in session.world.sandFields) {
+      c.drawPath(sand.path, Paint()..color = const Color(0xffc7b579));
+    }
     for (final lake in [...session.world.lakes, session.world.river]) {
       c.drawPath(lake.path, Paint()..color = const Color(0xff3b91a0));
     }
@@ -321,7 +327,7 @@ class MapPainter extends CustomPainter {
         trail.path,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 100
+          ..strokeWidth = trail.width
           ..color = const Color(0xffdac489),
       );
     }
@@ -336,10 +342,24 @@ class MapPainter extends CustomPainter {
               : const Color(0xff594234),
       );
     }
+    if (round) {
+      for (final mob in session.mobs) {
+        if (!mob.combatReady || mob.isDead || mob.isRemoving) continue;
+        c.drawCircle(
+          mob.body.center,
+          mob.boss ? 65 : 30,
+          Paint()..color = const Color(0xffef785e),
+        );
+      }
+      for (var i = 0; i < Adventure.chestLocations.length; i++) {
+        if (session.openedChests.contains(i)) continue;
+        c.drawCircle(Adventure.chestLocations[i], 42, Paint()..color = gold);
+      }
+    }
     c.restore();
     final hero = Offset(
-      session.hero.position.x / worldSize.width * s.width,
-      session.hero.position.y / worldSize.height * s.height,
+      (session.hero.body.center.dx - view.left) / view.width * s.width,
+      (session.hero.body.center.dy - view.top) / view.height * s.height,
     );
     c.drawCircle(hero, round ? 3 : 5, Paint()..color = const Color(0xff9df3ee));
     c.drawCircle(

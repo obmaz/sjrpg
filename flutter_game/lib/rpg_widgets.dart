@@ -34,14 +34,40 @@ Color skillColor(SkillDef s) => s.branch == '냉기'
     : gold;
 
 class FramedSurface extends StatelessWidget {
-  const FramedSurface({required this.art, required this.child, super.key});
+  const FramedSurface({
+    required this.art,
+    required this.child,
+    this.compact = false,
+    super.key,
+  });
   final GameArt art;
   final Widget child;
+  final bool compact;
   @override
-  Widget build(BuildContext context) => CustomPaint(
-    painter: _FramePainter(art),
-    child: Padding(padding: const EdgeInsets.all(10), child: child),
-  );
+  Widget build(BuildContext context) {
+    if (compact) {
+      return Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xff173d39), Color(0xff0b2225)],
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xff577d72)),
+          boxShadow: const [
+            BoxShadow(color: Color(0x88000b0c), blurRadius: 24),
+          ],
+        ),
+        child: child,
+      );
+    }
+    return CustomPaint(
+      painter: _FramePainter(art),
+      child: Padding(padding: const EdgeInsets.all(10), child: child),
+    );
+  }
 }
 
 class _FramePainter extends CustomPainter {

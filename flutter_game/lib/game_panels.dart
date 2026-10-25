@@ -302,7 +302,10 @@ class _AdventurePanelState extends State<AdventurePanel> {
     return ColoredBox(
       color: const Color(0xbb071918),
       child: SafeArea(
-        child: Center(
+        child: Align(
+          alignment: media.size.width < 600 && media.size.height > 600
+              ? Alignment.bottomCenter
+              : Alignment.center,
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: ConstrainedBox(
@@ -312,11 +315,21 @@ class _AdventurePanelState extends State<AdventurePanel> {
               ),
               child: FramedSurface(
                 art: s.art,
+                compact: true,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    const SizedBox(height: 10),
+                    Container(
+                      width: 38,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0xff75958b),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 14, 8, 10),
+                      padding: const EdgeInsets.fromLTRB(22, 12, 10, 12),
                       child: Row(
                         children: [
                           Expanded(
@@ -367,8 +380,11 @@ class _AdventurePanelState extends State<AdventurePanel> {
                         height: 48,
                         child: FilledButton(
                           style: FilledButton.styleFrom(
-                            backgroundColor: gold,
+                            backgroundColor: const Color(0xff70cdb0),
                             foregroundColor: ink,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
                           onPressed: name == 'defeat'
                               ? widget.onRestart
