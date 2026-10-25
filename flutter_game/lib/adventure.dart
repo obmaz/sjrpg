@@ -8,6 +8,7 @@ import 'world_model.dart';
 import 'battle_effects.dart';
 import 'device_settings.dart';
 import 'skill_aim.dart';
+import 'spell_vfx.dart';
 
 enum NearbyAction { chest, exit, shop, talk }
 
@@ -63,7 +64,23 @@ class Adventure extends ChangeNotifier {
   double cameraOffsetY = 0;
   ui.Size? viewportSize;
   Vector2 get cameraFocus =>
-      hero.position + hero.size / 2 + Vector2(0, cameraOffsetY);
+      hero.position + hero.size / 2 + Vector2(0, cameraOffsetY) + cameraImpact;
+  double impactTime = 0, impactStrength = 0;
+  Vector2 get cameraImpact {
+    final fade = (impactTime / .14).clamp(0.0, 1.0);
+    final phase = (.14 - impactTime) * 110;
+    return Vector2(
+      math.sin(phase) * impactStrength * fade,
+      math.cos(phase * 1.3) * impactStrength * fade * .6,
+    );
+  }
+
+  void kickCamera(double strength) {
+    if (!active) return;
+    impactStrength = math.max(impactStrength, strength.clamp(0, 1.5));
+    impactTime = .14;
+  }
+
   double elapsed = 0, waveTime = 0, notifyTime = 0;
   ui.Offset lastPack = arrival;
   int combo = 0, rageStrike = -1;
@@ -172,6 +189,7 @@ class Adventure extends ChangeNotifier {
     buildRevision++;
     releaseInput();
     hero.armorTime = hero.frenzyTime = hero.spin = 0;
+    hero.impactHold = 0;
     syncLife();
     refresh();
     return true;
@@ -278,6 +296,8 @@ class Adventure extends ChangeNotifier {
 
   void tick(double dt) {
     if (!active) return;
+    impactTime = math.max(0, impactTime - dt);
+    if (impactTime == 0) impactStrength = 0;
     elapsed += dt;
     noticeTime = math.max(0, noticeTime - dt);
     combatTime = math.max(0, combatTime - dt);
@@ -463,10 +483,21 @@ class Adventure extends ChangeNotifier {
         progress.heroClass == HeroClass.warrior &&
         rageStrike != hero.strikes) {
       rageStrike = hero.strikes;
-      game?.add(ContactSpark(this, mob.body.center - const ui.Offset(0, 28)));
+      final heavy = progress.weapon.base.style == 'hammer' || combo == 0;
+      hero.impactHold = heavy ? .045 : .03;
+      hero.swing = math.min(hero.swing, .16);
+      kickCamera(heavy ? 1.1 : .55);
+      game?.add(
+        ContactSpark(
+          this,
+          mob.body.center - const ui.Offset(0, 28),
+          heavy: heavy,
+        ),
+      );
       progress.energy = math.min(progress.maxEnergy, progress.energy + 3);
     }
     device.pulse(mob.isDead ? FeedbackKind.kill : FeedbackKind.hit);
+    mob.impactPose = (mob.anim / .15).floor() % 2;
     mob.hurt = .14;
     final old = mob.position.toOffset(),
         p = world.move(old, impulse, mob.body.size);
@@ -630,6 +661,7 @@ class Guardian extends Player with WithCollision {
       invulnerable = 0;
   final cooldowns = <String, double>{};
   double armorTime = 0, frenzyTime = 0;
+  double impactHold = 0;
   double get skillClock => cooldowns[session.progress.selectedSkill] ?? 0;
   set skillClock(double value) =>
       cooldowns[session.progress.selectedSkill] = value;
@@ -717,7 +749,9 @@ class Guardian extends Player with WithCollision {
     if (hasGameRef) gameRef.camera.position = session.cameraFocus;
     if (delta.distance > .1) animationTime += dt;
     attackClock = math.max(0, attackClock - dt);
-    swing = math.max(0, swing - dt);
+    final held = math.min(dt, impactHold);
+    impactHold = math.max(0, impactHold - dt);
+    swing = math.max(0, swing - (dt - held));
     spin = math.max(0, spin - dt);
     for (final id in cooldowns.keys.toList()) {
       cooldowns[id] = math.max(0, cooldowns[id]! - dt);
@@ -918,12 +952,12 @@ class Guardian extends Player with WithCollision {
           slow: 3,
         );
         session.game?.add(
-          RuneBurst(session, body.center, color, radius: radius, icy: true),
+          SpellBurst(session, SpellClip.iceNova, body.center, radius: radius),
         );
       case 'iceArmor':
         armorTime = 12;
         session.game?.add(
-          RuneBurst(session, body.center, color, radius: 70, icy: true),
+          SpellBurst(session, SpellClip.iceNova, body.center, radius: 70),
         );
       case 'chainLightning':
         chainLightning(
@@ -975,6 +1009,7 @@ class Guardian extends Player with WithCollision {
     aim = null;
     session.device.pulse(FeedbackKind.dodge);
     rollBearing = bearing;
+    impactHold = 0;
     swing = 0;
     dashing = .32;
     dodgeClock = 1.5;
@@ -1104,21 +1139,12 @@ class Guardian extends Player with WithCollision {
         );
       }
     }
-    if ((armorTime > 0 || frenzyTime > 0) &&
-        session.art.images['combat-fx'] != null) {
-      final image = session.art.images['combat-fx']!,
-          cell = image.width / 4,
-          index = frenzyTime > 0
-              ? 5
-              : session.progress.heroClass == HeroClass.mage
-              ? 6
-              : 0;
-      canvas.drawImageRect(
-        image,
-        ui.Rect.fromLTWH((index % 4) * cell, (index ~/ 4) * cell, cell, cell),
-        ui.Rect.fromCenter(center: center, width: 110, height: 110),
-        ui.Paint()..color = const ui.Color(0x99ffffff),
-      );
+    if (session.progress.heroClass == HeroClass.warrior &&
+        (armorTime > 0 || frenzyTime > 0)) {
+      paintBattleAura(canvas, center, session.elapsed, frenzy: frenzyTime > 0);
+    }
+    if (armorTime > 0 && session.progress.heroClass == HeroClass.mage) {
+      paintIceShield(canvas, center - const ui.Offset(0, 22), session.elapsed);
     }
     if (armorTime > 0 || frenzyTime > 0) {
       canvas.drawOval(
@@ -1135,31 +1161,7 @@ class Guardian extends Player with WithCollision {
               : const ui.Color(0x99ffce83),
       );
     }
-    if (spin > 0 && session.art.images['combat-fx'] != null) {
-      final image = session.art.images['combat-fx']!, cell = image.width / 4;
-      canvas.drawImageRect(
-        image,
-        ui.Rect.fromLTWH(cell, 0, cell, cell),
-        ui.Rect.fromCenter(center: center, width: 330, height: 280),
-        ui.Paint()
-          ..color = ui.Color.fromRGBO(255, 255, 255, (spin / .5).clamp(0, 1)),
-      );
-    }
-    if (spin > 0) {
-      final phase = 1 - spin / .5;
-      for (var i = 0; i < 3; i++) {
-        canvas.drawArc(
-          ui.Rect.fromCircle(center: center, radius: 70 + phase * 90),
-          i * math.pi * 2 / 3 + phase * 6,
-          1.45,
-          false,
-          ui.Paint()
-            ..style = ui.PaintingStyle.stroke
-            ..strokeWidth = 6
-            ..color = ui.Color.fromRGBO(122, 237, 219, 1 - phase),
-        );
-      }
-    }
+    if (spin > 0) paintWhirlwind(canvas, center, 1 - spin / .5);
     final currentAim = aim;
     if (currentAim != null) {
       final origin = body.center - position.toOffset();
@@ -1246,6 +1248,7 @@ class HuntEnemy extends Enemy with WithCollision {
   final bool boss;
   final EnemyTrait trait;
   bool get isElite => !boss && trait != EnemyTrait.none;
+  int impactPose = 0;
   bool rewarded = false, combatReady = false;
   double bearing = math.pi / 2,
       anim = 0,
@@ -1731,13 +1734,13 @@ class HuntEnemy extends Enemy with WithCollision {
                 : 0,
           ),
       bearing,
-      (anim / .15).floor() % 2,
+      hurt > .08 ? impactPose : (anim / .15).floor() % 2,
       boss
           ? 125
           : kind == 'wolf'
           ? 55
           : 62,
-      opacity: hurt > 0 ? .7 : 1,
+      flash: hurt > .08 ? .75 : 0,
     );
     if (life.value < life.max || boss || isElite) {
       final width = boss

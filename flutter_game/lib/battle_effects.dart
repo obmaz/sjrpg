@@ -3,6 +3,8 @@ import 'dart:ui' as ui;
 import 'package:bonfire/bonfire.dart';
 import 'adventure.dart';
 import 'world_model.dart';
+import 'spell_vfx.dart';
+import 'device_settings.dart';
 
 void areaStrike(
   Adventure s,
@@ -48,11 +50,12 @@ void paintCombatEffect(
 }
 
 class ContactSpark extends GameComponent {
-  ContactSpark(this.session, ui.Offset at) {
+  ContactSpark(this.session, ui.Offset at, {this.heavy = false}) {
     position = Vector2(at.dx, at.dy);
     size = Vector2.all(1);
   }
   final Adventure session;
+  final bool heavy;
   double age = 0;
   @override
   bool get isVisible => true;
@@ -69,14 +72,28 @@ class ContactSpark extends GameComponent {
   @override
   void render(ui.Canvas canvas) {
     super.render(canvas);
-    final t = (age / .18).clamp(0.0, 1.0), side = 42 + t * 18;
-    paintCombatEffect(
-      session,
-      canvas,
+    final t = (age / .18).clamp(0.0, 1.0), reach = (heavy ? 38 : 26) * t;
+    for (var i = 0; i < 8; i++) {
+      final a = i * math.pi / 4 + .2;
+      final axis = ui.Offset(math.cos(a), math.sin(a) * .75);
+      canvas.drawLine(
+        axis * reach * .45,
+        axis * (reach + (1 - t) * 10),
+        ui.Paint()
+          ..color = ui.Color.fromRGBO(255, 228, 165, 1 - t)
+          ..strokeWidth = (heavy ? 3 : 2) * (1 - t) + .5
+          ..strokeCap = ui.StrokeCap.round,
+      );
+      canvas.drawCircle(
+        axis * (reach * 1.2) + ui.Offset(0, 12 * t * t),
+        1.5 * (1 - t),
+        ui.Paint()..color = ui.Color.fromRGBO(255, 247, 217, 1 - t),
+      );
+    }
+    canvas.drawCircle(
       ui.Offset.zero,
-      7,
-      ui.Size.square(side),
-      opacity: 1 - t,
+      (heavy ? 7 : 4) * (1 - t),
+      ui.Paint()..color = ui.Color.fromRGBO(255, 251, 226, 1 - t),
     );
   }
 }
@@ -253,13 +270,16 @@ class ArcaneBolt extends GameComponent {
           if (element == 'ice') mob.slow = math.max(mob.slow, 1.5);
           if (explosive) areaStrike(session, at, 85, damage * .35);
           session.game?.add(
-            RuneBurst(
-              session,
-              at,
-              color,
-              radius: explosive ? 85 : 27,
-              icy: element == 'ice',
-            ),
+            element == 'lightning'
+                ? RuneBurst(session, at, color, radius: explosive ? 85 : 27)
+                : SpellBurst(
+                    session,
+                    element == 'ice'
+                        ? SpellClip.iceNova
+                        : SpellClip.meteorImpact,
+                    at,
+                    radius: explosive ? 85 : 30,
+                  ),
           );
           finish();
           return;
@@ -292,35 +312,75 @@ class ArcaneBolt extends GameComponent {
         ..strokeCap = ui.StrokeCap.round,
     );
     c.drawCircle(tip, 3, ui.Paint()..color = const ui.Color(0xfffff5d5));
-    paintCombatEffect(
-      session,
-      c,
-      tip,
-      element == 'ice'
-          ? 2
-          : element == 'lightning'
-          ? 3
-          : 4,
-      const ui.Size.square(42),
-    );
+    final age = .88 - remaining;
+    c.save();
+    c.translate(tip.dx, tip.dy);
+    if (element == 'fire') {
+      c.rotate(math.atan2(direction.dy, direction.dx) - math.pi * .75);
+      paintSpellFrame(
+        session.art,
+        c,
+        SpellClip.meteorFlight,
+        age % .65,
+        ui.Offset.zero,
+        72,
+      );
+    } else if (element == 'ice') {
+      c.rotate(math.atan2(direction.dy, direction.dx));
+      final shard = ui.Path()
+        ..moveTo(13, 0)
+        ..lineTo(-5, -6)
+        ..lineTo(-10, 0)
+        ..lineTo(-5, 6)
+        ..close();
+      c.drawPath(
+        shard,
+        ui.Paint()
+          ..shader = ui.Gradient.linear(
+            const ui.Offset(-10, -5),
+            const ui.Offset(12, 5),
+            [
+              const ui.Color(0xff4eafd3),
+              ui.Color.fromRGBO(227, 255, 255, .8 + math.sin(age * 35) * .15),
+            ],
+          ),
+      );
+      for (var i = 0; i < 3; i++) {
+        final x = -10.0 - i * 8;
+        c.drawCircle(
+          ui.Offset(x, math.sin(age * 35 - i) * (4 + i)),
+          1.6,
+          ui.Paint()..color = color,
+        );
+      }
+    } else {
+      final path = ui.Path()..moveTo(-direction.dx * 28, -direction.dy * 28);
+      final side = ui.Offset(-direction.dy, direction.dx);
+      for (var i = 1; i <= 5; i++) {
+        final at =
+            direction * (-28 + i * 7) + side * math.sin(age * 90 + i * 2) * 6;
+        path.lineTo(at.dx, at.dy);
+      }
+      c.drawPath(
+        path,
+        ui.Paint()
+          ..color = color
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+    }
+    c.restore();
   }
 }
 
 class RuneBurst extends GameComponent {
-  RuneBurst(
-    this.session,
-    ui.Offset at,
-    this.color, {
-    this.radius = 160,
-    this.icy = false,
-  }) {
+  RuneBurst(this.session, ui.Offset at, this.color, {this.radius = 160}) {
     position = Vector2(at.dx, at.dy);
     size = Vector2.all(1);
   }
   final Adventure session;
   final ui.Color color;
   final double radius;
-  final bool icy;
   double age = 0;
   @override
   void update(double dt) {
@@ -333,58 +393,7 @@ class RuneBurst extends GameComponent {
   @override
   void render(ui.Canvas canvas) {
     super.render(canvas);
-    final c = canvas;
-    final t = (age / .55).clamp(0.0, 1.0), r = radius * (.2 + .8 * t);
-    final texture = session.art.images['combat-fx'];
-    if (texture != null) {
-      final cell = texture.width / 4,
-          index = icy
-              ? 2
-              : color == const ui.Color(0xffdbb4ff)
-              ? 3
-              : color == const ui.Color(0xffffcf81)
-              ? 0
-              : color == const ui.Color(0xffff9952) ||
-                    color == const ui.Color(0xffffad6b) ||
-                    color == const ui.Color(0xffffb659)
-              ? 4
-              : 7;
-      c.drawImageRect(
-        texture,
-        ui.Rect.fromLTWH((index % 4) * cell, (index ~/ 4) * cell, cell, cell),
-        ui.Rect.fromCenter(
-          center: ui.Offset.zero,
-          width: r * 2.4,
-          height: r * 2.0,
-        ),
-        ui.Paint()
-          ..color = ui.Color.fromRGBO(255, 255, 255, (1 - t).clamp(0, 1))
-          ..filterQuality = ui.FilterQuality.medium,
-      );
-    }
-
-    c.drawOval(
-      ui.Rect.fromCenter(
-        center: ui.Offset.zero,
-        width: r * 2,
-        height: r * 1.35,
-      ),
-      ui.Paint()
-        ..color = color.withValues(alpha: (1 - t) * .7)
-        ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = 6 * (1 - t) + 1,
-    );
-    for (var i = 0; i < 12; i++) {
-      final angle = i * math.pi / 6,
-          p = ui.Offset(math.cos(angle) * r, math.sin(angle) * r * .675);
-      c.drawLine(
-        p * (icy ? .6 : .86),
-        p,
-        ui.Paint()
-          ..color = color.withValues(alpha: 1 - t)
-          ..strokeWidth = icy ? 3 : 2,
-      );
-    }
+    paintRuneWave(canvas, (age / .55).clamp(0.0, 1.0), radius, color);
   }
 }
 
@@ -546,9 +555,11 @@ class MeteorFall extends GameComponent {
     if (age >= .65 && !struck) {
       struck = true;
       if (session.world.clearLine(origin, target, const ui.Size(3, 3))) {
+        session.kickCamera(1.5);
+        session.device.pulse(FeedbackKind.skill);
         areaStrike(session, target, 175, damage);
         session.game?.add(
-          RuneBurst(session, target, const ui.Color(0xffff9952), radius: 175),
+          SpellBurst(session, SpellClip.meteorImpact, target, radius: 175),
         );
       }
       removeFromParent();
@@ -567,17 +578,42 @@ class MeteorFall extends GameComponent {
         ..strokeWidth = 2
         ..color = const ui.Color(0xaaffab59),
     );
-    final p = target + ui.Offset(70 * (1 - age / .65), -330 * (1 - age / .65));
-    c.drawLine(
-      p - const ui.Offset(-24, 90),
-      p,
-      ui.Paint()
-        ..strokeWidth = 23
-        ..strokeCap = ui.StrokeCap.round
-        ..color = const ui.Color(0x88ff973d),
+    final t = (age / .65).clamp(0.0, 1.0), fall = t * t;
+    final p = target + ui.Offset(110 * (1 - fall), -360 * (1 - fall));
+    c.drawOval(
+      ui.Rect.fromCenter(
+        center: target,
+        width: 35 + t * 65,
+        height: 18 + t * 30,
+      ),
+      ui.Paint()..color = ui.Color.fromRGBO(255, 160, 70, .1 + t * .25),
     );
-    paintCombatEffect(session, c, p, 4, const ui.Size(130, 150));
-    c.drawCircle(p, 7, ui.Paint()..color = const ui.Color(0xffffe7ba));
+    for (var i = 0; i < 7; i++) {
+      final lag = (age * 2.6 + i * .13) % 1;
+      final at =
+          p +
+          ui.Offset(
+            20 + lag * 65,
+            -35 - lag * 135 + math.sin(age * 40 + i) * 7,
+          );
+      c.drawCircle(
+        at,
+        1 + (1 - lag) * 2,
+        ui.Paint()..color = ui.Color.fromRGBO(255, 195, 101, (1 - lag) * .7),
+      );
+    }
+    c.save();
+    c.translate(p.dx, p.dy);
+    c.rotate(-.49);
+    paintSpellFrame(
+      session.art,
+      c,
+      SpellClip.meteorFlight,
+      age,
+      ui.Offset.zero,
+      170,
+    );
+    c.restore();
   }
 }
 

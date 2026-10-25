@@ -37,6 +37,11 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
             path.join(root, `flutter_game/art/${name}.png`),
             path.join(destination, `images/${name}.png`),
         );
+    for (const name of ['fx-meteor', 'fx-ice-nova'])
+        fs.copyFileSync(
+            path.join(root, `flutter_game/art/${name}.webp`),
+            path.join(destination, `images/${name}.webp`),
+        );
     const mage = JSON.parse(
         fs.readFileSync(path.join(root, 'flutter_game/art/mage-bounds.json'), 'utf8'),
     );

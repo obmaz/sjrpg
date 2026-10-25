@@ -22,6 +22,8 @@ class GameArt {
         'actors-mage',
         'gear-icons',
         'combat-fx',
+        'fx-meteor',
+        'fx-ice-nova',
         'dodge-icon',
         'actors-roll',
         'terrain-materials',
@@ -155,6 +157,7 @@ class GameArt {
     double height, {
     bool attack = false,
     double opacity = 1,
+    double flash = 0,
   }) {
     const definitions = {
       'hero': ('hero', 0, 16),
@@ -192,6 +195,12 @@ class GameArt {
       dst,
       ui.Paint()
         ..color = ui.Color.fromRGBO(255, 255, 255, opacity)
+        ..colorFilter = flash > 0
+            ? ui.ColorFilter.mode(
+                ui.Color.fromRGBO(255, 249, 220, flash.clamp(0, 1)),
+                ui.BlendMode.srcATop,
+              )
+            : null
         ..filterQuality = ui.FilterQuality.low,
     );
   }
