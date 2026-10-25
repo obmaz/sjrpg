@@ -252,6 +252,14 @@ const gearCatalog = <GearDef>[
 ];
 GearDef gearById(String id) => gearCatalog.firstWhere((g) => g.id == id);
 
+enum WeaponGift { frost, guardian, renewal }
+
+extension WeaponGiftInfo on WeaponGift {
+  String get title => ['서리의 낙인', '수호의 맹세', '생명의 수확'][index];
+  String get description =>
+      ['적중한 대상 둔화 0.8초', '받는 피해 8% 감소', '처치 시 생명 4 회복'][index];
+}
+
 class Gear {
   Gear(
     this.serial,
@@ -261,12 +269,18 @@ class Gear {
     this.vitality = 0,
     this.focus = 0,
     this.locked = false,
-  });
+    WeaponGift? gift,
+  }) : gift =
+           gift ??
+           (rarity == Rarity.rare && base.slot == GearSlot.weapon
+               ? WeaponGift.values[serial % WeaponGift.values.length]
+               : null);
   final int serial;
   final GearDef base;
   final Rarity rarity;
   final int power, vitality, focus;
   bool locked;
+  final WeaponGift? gift;
   Map<String, dynamic> toSave() => {
     'serial': serial,
     'base': base.id,
@@ -275,6 +289,7 @@ class Gear {
     'vitality': vitality,
     'focus': focus,
     'locked': locked,
+    'gift': gift?.name,
   };
   factory Gear.fromSave(Map<String, dynamic> data) {
     int stat(String key) {
@@ -289,6 +304,15 @@ class Gear {
     if (serial == 0) throw const FormatException('Invalid equipment identity');
     final locked = data['locked'] ?? false;
     if (locked is! bool) throw const FormatException('Invalid equipment lock');
+    final giftName = data['gift'];
+    final gift = giftName == null
+        ? null
+        : WeaponGift.values.firstWhere((g) => g.name == giftName);
+    if (gift != null &&
+        (data['rarity'] != 'rare' ||
+            gearById(data['base'] as String).slot != GearSlot.weapon)) {
+      throw const FormatException('Invalid weapon gift');
+    }
     return Gear(
       serial,
       gearById(data['base'] as String),
@@ -297,6 +321,7 @@ class Gear {
       vitality: stat('vitality'),
       focus: stat('focus'),
       locked: locked,
+      gift: gift,
     );
   }
   String get name => rarity == Rarity.unique
@@ -321,6 +346,7 @@ class Gear {
     if (health > 0) '생명 +${health.round()}',
     if (mana > 0) '마나 +${mana.round()}',
     if (base.haste > 0) '공격속도 +${(base.haste * 100).round()}%',
+    if (gift != null) '${gift!.title} · ${gift!.description}',
   ].join(' · ');
 }
 
@@ -410,7 +436,7 @@ const warriorSkills = [
     3,
     30,
     5,
-    requires: {'cleave': 1},
+    requires: {'cleave': 1, 'mastery': 1},
   ),
   SkillDef(
     'frenzy',
@@ -420,7 +446,7 @@ const warriorSkills = [
     4,
     28,
     12,
-    requires: {'whirlwind': 1},
+    requires: {'cleave': 2, 'warcry': 1},
   ),
   SkillDef(
     'seismicSlam',
@@ -430,7 +456,7 @@ const warriorSkills = [
     5,
     24,
     8,
-    requires: {'whirlwind': 1},
+    requires: {'whirlwind': 1, 'frenzy': 1},
   ),
   SkillDef(
     'battleFocus',
@@ -441,7 +467,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'mastery': 1},
+    requires: {'mastery': 2, 'ironSkin': 1},
   ),
   SkillDef(
     'battleVigor',
@@ -463,7 +489,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'battleVigor': 1},
+    requires: {'battleVigor': 2, 'frenzy': 1},
   ),
 ];
 const mageSkills = [
@@ -510,11 +536,11 @@ const mageSkills = [
     'chainLightning',
     '연쇄 번개',
     '번개',
-    '가까운 적 사이를 최대 5회 튕기는 번개. 장애물 너머로는 전이되지 않습니다.',
+    '가까운 적 사이를 등급에 따라 3~7명까지 잇는 번개. 장애물 너머로는 전이되지 않습니다.',
     3,
     28,
     5,
-    requires: {'arcaneMastery': 1},
+    requires: {'arcaneMastery': 1, 'warmth': 1},
   ),
   SkillDef(
     'meteor',
@@ -524,7 +550,7 @@ const mageSkills = [
     4,
     38,
     9,
-    requires: {'warmth': 1},
+    requires: {'warmth': 2, 'chainLightning': 1},
   ),
   SkillDef(
     'warmth',
@@ -546,7 +572,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'iceArmor': 1},
+    requires: {'iceArmor': 1, 'arcaneMastery': 1},
   ),
   SkillDef(
     'lightningMastery',
@@ -557,7 +583,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'chainLightning': 1},
+    requires: {'chainLightning': 1, 'coldMastery': 1},
   ),
 ];
 
@@ -1068,24 +1094,19 @@ class Progress {
     bool chest = false,
     bool elite = false,
   }) {
-    if (boss) {
-      return createGear(
-        gearById('sentinel'),
-        rarity: Rarity.unique,
-        power: 3,
-        vitality: 10,
-      );
-    }
     final pool = gearCatalog
         .where(
-          (g) => g.usable(heroClass) && g.id != 'sentinel' && g.id != 'linen',
+          (g) =>
+              g.usable(heroClass) &&
+              g.id != 'sentinel' &&
+              g.id != 'linen' &&
+              (!(boss || elite) || g.slot == GearSlot.weapon),
         )
         .toList();
     final def = pool[random.nextInt(pool.length)];
-    final roll = random.nextDouble();
-    final rarity = roll < (chest || elite ? .25 : .12)
+    final rarity = boss || elite
         ? Rarity.rare
-        : roll < .68 || elite
+        : random.nextDouble() < (chest ? .45 : .2)
         ? Rarity.magic
         : Rarity.common;
     return createGear(

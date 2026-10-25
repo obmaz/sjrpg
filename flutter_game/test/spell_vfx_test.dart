@@ -178,6 +178,7 @@ void main() {
       s.hero.position.setValues(6000, 4200);
       final p = s.progress;
       p.gainXp(1000);
+      expect(p.learn(p.skills.firstWhere((d) => d.id == 'mastery')), true);
       p.gold = 200;
       p.energy = p.maxEnergy;
       expect(

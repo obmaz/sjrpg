@@ -20,7 +20,6 @@ class SkillsPanel extends StatefulWidget {
 
 class _SkillsPanelState extends State<SkillsPanel> {
   final treeScroll = ScrollController(), detailScroll = ScrollController();
-  int filter = 0;
   SkillDef? selected;
   late SkillDef focused = p.skills.first;
   Adventure get s => widget.session;
@@ -35,7 +34,6 @@ class _SkillsPanelState extends State<SkillsPanel> {
   void inspect(SkillDef skill) => setState(() {
     selected = skill;
     focused = skill;
-    filter = p.skillBranches.indexOf(skill.branch);
     if (detailScroll.hasClients) detailScroll.jumpTo(0);
   });
   String actionFor(SkillDef skill) => p.rank(skill.id) >= SkillDef.maxRank
@@ -159,7 +157,6 @@ class _SkillsPanelState extends State<SkillsPanel> {
     if (approved != true || !mounted || !s.resetSkills()) return;
     setState(() {
       selected = null;
-      filter = 0;
       focused = p.skills.first;
       if (treeScroll.hasClients) treeScroll.jumpTo(0);
     });
@@ -292,21 +289,9 @@ class _SkillsPanelState extends State<SkillsPanel> {
                                 ],
                               ),
                             ),
-                            GameTabs(
-                              p.skillBranches,
-                              filter,
-                              (i) => setState(() {
-                                filter = i;
-                                focused = p.skills.firstWhere(
-                                  (skill) => skill.branch == p.skillBranches[i],
-                                );
-                                if (treeScroll.hasClients) treeScroll.jumpTo(0);
-                              }),
-                            ),
                             Expanded(
                               child: SkillTree(
                                 session: s,
-                                branch: p.skillBranches[filter],
                                 controller: treeScroll,
                                 focused: focused,
                                 onFocus: (skill) =>
@@ -389,7 +374,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
 
   String prerequisitesText(SkillDef skill) => skill.requires.isEmpty
       ? '계열의 시작 기술'
-      : '선행 · ${skill.requires.entries.map((entry) => '${p.skills.firstWhere((skill) => skill.id == entry.key).name} ${entry.value}등급').join(' · ')}';
+      : '모두 필요 · ${skill.requires.entries.map((entry) => '${p.skills.firstWhere((skill) => skill.id == entry.key).name} ${entry.value}등급').join(' · ')}';
 
   Widget _investmentBar({required bool short}) {
     final action = actionFor(focused);

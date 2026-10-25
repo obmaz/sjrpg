@@ -44,7 +44,12 @@ void main() {
       s.pause();
       addTearDown(s.dispose);
       final p = s.progress;
-      p.gainXp(1000);
+      p.gainXp(4000);
+      p.skillPoints = 30;
+      for (final id
+          in (hero == HeroClass.warrior ? ['mastery', 'cleave'] : ['warmth'])) {
+        expect(p.learn(p.skills.firstWhere((skill) => skill.id == id)), true);
+      }
       if (hero == HeroClass.mage) {
         for (final id in ['arcaneMastery', 'warmth']) {
           expect(p.learn(p.skills.firstWhere((skill) => skill.id == id)), true);
@@ -64,8 +69,6 @@ void main() {
           : ['iceArmor', 'chainLightning', 'meteor'];
       for (final id in ids) {
         final skill = p.skills.firstWhere((v) => v.id == id);
-        await tester.tap(find.bySemanticsLabel(skill.branch));
-        await tester.pumpAndSettle();
         final node = find.bySemanticsLabel('스킬 보기 · ${skill.name} · 0 등급');
         await reveal(tester, node);
         await tester.tap(node);
@@ -141,7 +144,9 @@ void main() {
       );
       expect(s.progress.skillPoints, 1);
       expect(s.progress.rank('meteor'), 0);
-      await tester.tap(find.bySemanticsLabel('화염'));
+      final base = find.bySemanticsLabel('스킬 보기 · 화염탄 · 1 등급');
+      await reveal(tester, base);
+      await tester.tap(base);
       await tester.pumpAndSettle();
       await tester.tap(find.bySemanticsLabel('화염탄 강화 · 1P'));
       await tester.pumpAndSettle();

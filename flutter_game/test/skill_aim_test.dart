@@ -23,14 +23,18 @@ void main() {
     game = TestGame();
     s.start(game);
     s.progress.gainXp(1000);
-    expect(
-      s.progress.learn(s.progress.skills.firstWhere((d) => d.id == 'warmth')),
-      true,
-    );
-    expect(
-      s.progress.learn(s.progress.skills.firstWhere((d) => d.id == 'meteor')),
-      true,
-    );
+    for (final id in [
+      'warmth',
+      'warmth',
+      'arcaneMastery',
+      'chainLightning',
+      'meteor',
+    ]) {
+      expect(
+        s.progress.learn(s.progress.skills.firstWhere((d) => d.id == id)),
+        true,
+      );
+    }
     s.progress.selectSkill('meteor');
     s.hero.position.setValues(6000, 4200);
     s.mobs.clear();
@@ -104,6 +108,14 @@ void main() {
       warrior.start(TestGame());
       addTearDown(warrior.dispose);
       warrior.progress.gainXp(1000);
+      for (final id in ['mastery', 'cleave', 'frenzy']) {
+        expect(
+          warrior.progress.learn(
+            warrior.progress.skills.firstWhere((d) => d.id == id),
+          ),
+          true,
+        );
+      }
       expect(
         warrior.progress.learn(
           warrior.progress.skills.firstWhere((d) => d.id == 'whirlwind'),

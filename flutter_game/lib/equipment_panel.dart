@@ -562,6 +562,14 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (gear.gift != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                '${gear.gift!.title} · ${gear.gift!.description}',
+                style: const TextStyle(color: gold, fontSize: 12, height: 1.35),
+              ),
+            ),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [

@@ -8,7 +8,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   for (final hero in HeroClass.values) {
     test(
-      '$hero has three populated acyclic trees with valid rank requirements',
+      '$hero has one acyclic graph with three schools with valid rank requirements',
       () {
         final p = Progress(heroClass: hero);
         expect(p.skillBranches.length, 3);
@@ -30,7 +30,6 @@ void main() {
               parent.requiredLevel,
               lessThanOrEqualTo(skill.requiredLevel),
             );
-            expect(parent.branch, skill.branch);
             visit(parent, {...path, skill.id});
           }
         }
@@ -51,10 +50,12 @@ void main() {
       expect(p.learn(skill('chainLightning')), false);
       expect(p.skillPoints, points);
       expect(p.learn(skill('warmth')), true);
-      expect(p.learn(skill('meteor')), true);
+      expect(p.learn(skill('meteor')), false);
+      expect(p.learn(skill('warmth')), true);
       expect(p.learn(skill('arcaneMastery')), true);
       expect(p.learn(skill('chainLightning')), true);
-      expect(p.skillPoints, points - 4);
+      expect(p.learn(skill('meteor')), true);
+      expect(p.skillPoints, points - 5);
       expect(Progress.fromSave(p.toSave())!.toSave(), p.toSave());
     },
   );
@@ -85,18 +86,23 @@ void main() {
       s.mobs.clear();
       s.hero.position.setValues(6000, 4200);
       s.hero.bearing = 0;
-      final p = s.progress..gainXp(1000);
+      final p = s.progress..gainXp(4000);
       final interval = p.attackInterval, hp = p.maxHp;
       for (final id in [
         'mastery',
+        'mastery',
+        'ironSkin',
+        'cleave',
+        'frenzy',
         'battleFocus',
+        'battleVigor',
         'battleVigor',
         'rallyingVoice',
       ]) {
         expect(s.learn(p.skills.firstWhere((skill) => skill.id == id)), true);
       }
       expect(p.attackInterval, lessThan(interval));
-      expect(p.maxHp, hp + 8);
+      expect(p.maxHp, hp + 24);
       p.energy = 0;
       final mob = s.spawnEnemy('golem', const Offset(6050, 4200), boss: true)!;
       s.hero.slash();
@@ -122,11 +128,11 @@ void main() {
     p.inventory.add(ice);
     p.equip(ice);
     final iceDamage = p.basicDamage;
-    for (final id in ['warmth', 'iceArmor', 'coldMastery']) {
+    for (final id in ['warmth', 'iceArmor', 'arcaneMastery', 'coldMastery']) {
       expect(p.learn(p.skills.firstWhere((s) => s.id == id)), true);
     }
     expect(p.manaRecovery, 10.5);
-    expect(p.basicDamage, closeTo(iceDamage * 1.08, .001));
+    expect(p.basicDamage, closeTo(iceDamage * 1.09 * 1.08, .001));
     p.equip(fire);
     final fireDamage = p.basicDamage;
     expect(p.learn(p.skills.firstWhere((s) => s.id == 'coldMastery')), true);

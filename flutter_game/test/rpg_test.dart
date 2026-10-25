@@ -33,6 +33,7 @@ void main() {
       expect(p.level, 3);
       expect(p.stage, 1);
       expect(p.skillPoints, 3);
+      expect(p.learn(warriorSkills.firstWhere((s) => s.id == 'mastery')), true);
       expect(p.learn(whirlwind), true);
       expect(p.selectSkill('whirlwind'), true);
       expect(p.learn(mageSkills.first), false);
@@ -175,6 +176,7 @@ void main() {
         ),
         true,
       );
+      s.progress.learn(mageSkills.firstWhere((s) => s.id == 'warmth'));
       s.progress.learn(mageSkills.firstWhere((s) => s.id == 'chainLightning'));
       s.progress.selectSkill('chainLightning');
       s.hero.skill();
@@ -207,7 +209,7 @@ void main() {
       s.hit(boss, 99999, Offset.zero);
       expect(s.won, true);
       expect(s.progress.bossDefeated, true);
-      expect(s.loot.where((l) => l.item.rarity == Rarity.unique).length, 1);
+      expect(s.loot.where((l) => l.item.rarity == Rarity.rare).length, 1);
       s.continueExploring();
       expect(s.active, true);
       final before = s.mobs.length;
@@ -268,6 +270,7 @@ void main() {
         ),
         true,
       );
+      s.progress.learn(mageSkills.firstWhere((s) => s.id == 'warmth'));
       s.progress.learn(mageSkills.firstWhere((d) => d.id == 'chainLightning'));
       expect(s.progress.secondarySkill, 'chainLightning');
       s.progress.energy = 90;
@@ -294,6 +297,7 @@ void main() {
       p.gainXp(1000);
       for (final id in [
         'arcaneMastery',
+        'warmth',
         'warmth',
         'iceArmor',
         'chainLightning',
@@ -347,7 +351,13 @@ void main() {
       addTearDown(s.dispose);
       final p = s.progress;
       p.gainXp(1000);
-      for (final id in ['whirlwind', 'frenzy', 'seismicSlam']) {
+      for (final id in [
+        'mastery',
+        'cleave',
+        'whirlwind',
+        'frenzy',
+        'seismicSlam',
+      ]) {
         expect(p.learn(p.skills.firstWhere((skill) => skill.id == id)), true);
       }
       expect(p.skillSlots, ['warcry', 'whirlwind', 'frenzy', 'seismicSlam']);
@@ -369,6 +379,14 @@ void main() {
     s.start(TestGame());
     addTearDown(s.dispose);
     s.progress.gainXp(1000);
+    for (final id in ['mastery', 'cleave', 'frenzy']) {
+      expect(
+        s.progress.learn(
+          s.progress.skills.firstWhere((skill) => skill.id == id),
+        ),
+        true,
+      );
+    }
     expect(
       s.progress.learn(
         s.progress.skills.firstWhere((skill) => skill.id == 'whirlwind'),

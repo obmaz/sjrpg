@@ -612,6 +612,7 @@ class Adventure extends ChangeNotifier {
     if (!active || hero.invulnerable > 0) return;
     combatTime = 5;
     damage = progress.mitigate(damage, protection: hero.protection);
+    if (progress.weapon.gift == WeaponGift.guardian) damage *= .92;
     if (hero.armorTime > 0 && progress.heroClass == HeroClass.mage) {
       for (final mob in mobs.where(
         (m) => (m.body.center - hero.body.center).distance < 85,
@@ -648,6 +649,9 @@ class Adventure extends ChangeNotifier {
     if (!active || !mob.combatReady || mob.isDead || mob.isRemoving) return;
     combatTime = 5;
     mob.life.remove(damage);
+    if (progress.weapon.gift == WeaponGift.frost && !mob.isDead) {
+      mob.slow = math.max(mob.slow, .8);
+    }
     if (generateRage &&
         progress.heroClass == HeroClass.warrior &&
         rageStrike != hero.strikes) {
@@ -683,6 +687,9 @@ class Adventure extends ChangeNotifier {
       mob.rewarded = true;
       final level = progress.level, goldBefore = progress.gold;
       progress.reward(boss: mob.boss, elite: mob.isElite);
+      if (progress.weapon.gift == WeaponGift.renewal && progress.hp > 0) {
+        progress.hp = math.min(progress.maxHp, progress.hp + 4);
+      }
       syncLife();
       if (progress.level > level) {
         bubble(
@@ -699,7 +706,7 @@ class Adventure extends ChangeNotifier {
           ),
         );
       }
-      if (mob.boss || mob.isElite || progress.kills % 3 == 0) {
+      if (mob.boss || mob.isElite || progress.kills % 20 == 0) {
         dropGear(
           progress.rollLoot(random, boss: mob.boss, elite: mob.isElite),
           mob.body.center,

@@ -109,7 +109,7 @@ void main() {
         expect(session.progress.gold, gold + 20);
         expect(session.progress.xp, xp + 30);
         expect(session.loot.length, 1);
-        expect(session.loot.single.item.rarity, isNot(Rarity.common));
+        expect(session.loot.single.item.rarity, Rarity.rare);
         session.hit(elite, 100000, Offset.zero);
         expect(session.progress.kills, 3);
         expect(session.progress.gold, gold + 20);
@@ -122,7 +122,7 @@ void main() {
         }
         expect(
           p.rollLoot(math.Random(1), boss: true, elite: true).rarity,
-          Rarity.unique,
+          Rarity.rare,
         );
       },
     );

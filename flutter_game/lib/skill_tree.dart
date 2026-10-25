@@ -8,14 +8,12 @@ import 'rpg_widgets.dart';
 class SkillTree extends StatelessWidget {
   const SkillTree({
     required this.session,
-    required this.branch,
     required this.controller,
     required this.focused,
     required this.onFocus,
     super.key,
   });
   final Adventure session;
-  final String branch;
   final ScrollController controller;
   final SkillDef? focused;
   final ValueChanged<SkillDef> onFocus;
@@ -23,7 +21,7 @@ class SkillTree extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = session.progress;
-    final skills = p.skills.where((skill) => skill.branch == branch).toList();
+    final skills = p.skills;
     final short = MediaQuery.sizeOf(context).height < 520;
     final depths = <String, int>{};
     int depth(SkillDef skill) => depths.putIfAbsent(skill.id, () {
@@ -42,7 +40,8 @@ class SkillTree extends StatelessWidget {
         final nodeHeight = short ? (dense ? 76.0 : 88.0) : 106.0;
         final step = nodeHeight + 30;
         final width = box.maxWidth, rects = <String, Rect>{};
-        final nodeWidth = math.min(132.0, (width - 28) / 2);
+        final columns = layers.values.map((row) => row.length).reduce(math.max);
+        final nodeWidth = math.min(132.0, width / columns - 6);
         for (final layer in layers.entries) {
           for (var i = 0; i < layer.value.length; i++) {
             final x = width * (i + .5) / layer.value.length;
@@ -88,7 +87,7 @@ class SkillTree extends StatelessWidget {
                         rect: rects[skill.id]!,
                         child: _node(
                           skill,
-                          iconSize: short ? (dense ? 24 : 30) : 44,
+                          iconSize: short ? (dense ? 18 : 24) : 32,
                           onTap: () => select(skill),
                         ),
                       ),
@@ -205,16 +204,18 @@ class SkillTree extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 3),
-                Text(
-                  skill.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: locked ? const Color(0xffa4bcb6) : cream,
-                    fontSize: 14,
-                    height: 1.1,
-                    fontWeight: FontWeight.bold,
+                Flexible(
+                  child: Text(
+                    skill.shortName,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: locked ? const Color(0xffa4bcb6) : cream,
+                      fontSize: iconSize < 24 ? 12 : 13,
+                      height: 1.0,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 2),

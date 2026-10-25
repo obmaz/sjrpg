@@ -20,14 +20,20 @@ void main() {
         final basic = hero == HeroClass.warrior ? 'cleave' : 'firebolt';
         final starter = hero == HeroClass.warrior ? 'warcry' : 'frostNova';
         final active = hero == HeroClass.warrior ? 'whirlwind' : 'iceArmor';
-        for (final id in [basic, starter, active]) {
+        final investment = hero == HeroClass.warrior ? 4 : 3;
+        for (final id in [
+          basic,
+          starter,
+          if (hero == HeroClass.warrior) 'mastery',
+          active,
+        ]) {
           expect(p.learn(p.skills.firstWhere((s) => s.id == id)), true);
         }
         p.selectSkill(active);
         final points = p.skillPoints, weapon = p.weapon, kills = p.kills;
-        expect(p.investedSkillPoints, 3);
+        expect(p.investedSkillPoints, investment);
         expect(p.resetSkills(), true);
-        expect(p.skillPoints, points + 3);
+        expect(p.skillPoints, points + investment);
         expect(p.gold, 150);
         expect(p.ranks, {basic: 1, starter: 1});
         expect(p.skillSlots, [starter, null, null, null]);
@@ -35,7 +41,7 @@ void main() {
         expect(p.kills, kills);
         expect(p.resetSkills(), false);
         expect(p.gold, 150);
-        expect(p.skillPoints, points + 3);
+        expect(p.skillPoints, points + investment);
         expect(Progress.fromSave(p.toSave())!.toSave(), p.toSave());
       },
     );
@@ -72,6 +78,10 @@ void main() {
       s.progress.gainXp(1000);
       s.progress.gold = 200;
       s.progress.energy = 100;
+      expect(
+        s.learn(s.progress.skills.firstWhere((d) => d.id == 'mastery')),
+        true,
+      );
       final skill = s.progress.skills.firstWhere((d) => d.id == 'whirlwind');
       s.learn(skill);
       s.progress.selectSkill(skill.id);
@@ -96,7 +106,11 @@ void main() {
         pulse.update(.05);
       }
       expect(enemy.life.value, hp);
-      s.learn(skill);
+      expect(
+        s.learn(s.progress.skills.firstWhere((d) => d.id == 'mastery')),
+        true,
+      );
+      expect(s.learn(skill), true);
       s.progress.selectSkill(skill.id);
       final energy = s.progress.energy;
       s.hero.skill();
