@@ -1135,9 +1135,19 @@ class AdventureWorld {
   String areaName(Offset p) {
     if (stage != WorldStage.forest) {
       if (settlement.contains(p)) {
-        return stage == WorldStage.future ? '저항군 거점' : '시간 연구단 야영지';
+        return switch (stage) {
+          WorldStage.past => '왕국 야영지',
+          WorldStage.future => '저항군 거점',
+          _ => '시간 연구단 야영지',
+        };
       }
-      if (isWater(p)) return stage == WorldStage.future ? '냉각 수로' : '잊힌 오아시스';
+      if (isWater(p)) {
+        return switch (stage) {
+          WorldStage.past => '고대 수로',
+          WorldStage.future => '냉각 수로',
+          _ => '잊힌 오아시스',
+        };
+      }
       return stage.theme;
     }
     if (town.contains(p)) return '분수 마을';

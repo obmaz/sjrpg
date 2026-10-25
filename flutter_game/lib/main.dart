@@ -63,7 +63,7 @@ class _EntryPageState extends State<EntryPage> {
   GameCheckpoint? savedAdventure = GameCheckpoint.decode(
     storage.readCheckpoint(),
   );
-  bool resuming = false;
+  bool resuming = false, enteringStage = false;
   @override
   Widget build(BuildContext context) => FutureBuilder<GameArt>(
     future: loading,
@@ -113,10 +113,12 @@ class _EntryPageState extends State<EntryPage> {
           key: ValueKey(run),
           art: art,
           heroClass: chosen,
+          showStageBriefing: enteringStage,
           checkpoint: resuming ? savedAdventure : null,
           onAdvance: (checkpoint) => setState(() {
             run++;
             savedAdventure = checkpoint;
+            enteringStage = true;
             resuming = true;
             started = true;
           }),
@@ -125,6 +127,7 @@ class _EntryPageState extends State<EntryPage> {
             setState(() {
               run++;
               savedAdventure = checkpoint;
+              enteringStage = false;
               resuming = checkpoint != null;
               started = checkpoint != null;
               if (checkpoint != null) chosen = checkpoint.progress.heroClass;
@@ -135,6 +138,7 @@ class _EntryPageState extends State<EntryPage> {
             started = false;
             savedAdventure = null;
             resuming = false;
+            enteringStage = false;
           }),
         );
       }
@@ -146,11 +150,13 @@ class _EntryPageState extends State<EntryPage> {
             : () => setState(() {
                 chosen = savedAdventure!.progress.heroClass;
                 resuming = true;
+                enteringStage = false;
                 started = true;
               }),
         onBegin: (value) => setState(() {
           chosen = value;
           resuming = false;
+          enteringStage = false;
           started = true;
         }),
       );
@@ -164,11 +170,13 @@ class GamePage extends StatefulWidget {
     required this.onRestart,
     this.heroClass = HeroClass.warrior,
     this.checkpoint,
+    this.showStageBriefing = false,
     this.onRetryCheckpoint,
     this.onAdvance,
     super.key,
   });
   final GameCheckpoint? checkpoint;
+  final bool showStageBriefing;
   final HeroClass heroClass;
   final GameArt art;
   final VoidCallback onRestart;
@@ -255,8 +263,9 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         game.camera.position = adventure.cameraFocus;
         adventure.start(game);
         saveNow();
-        if (adventure.world.stage == WorldStage.sands &&
-            adventure.timePath == null) {
+        if (widget.showStageBriefing ||
+            adventure.world.stage == WorldStage.sands &&
+                adventure.timePath == null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) open('journal');
           });
