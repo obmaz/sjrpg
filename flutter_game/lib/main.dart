@@ -7,6 +7,9 @@ import 'game_art.dart';
 import 'game_ui.dart';
 import 'game_panels.dart';
 import 'world_model.dart';
+import 'class_selection.dart';
+import 'battle_effects.dart';
+import 'rpg_widgets.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +47,7 @@ class _EntryPageState extends State<EntryPage> {
   late Future<GameArt> loading = GameArt.load();
   bool started = false;
   int run = 0;
+  HeroClass chosen = HeroClass.warrior;
   @override
   Widget build(BuildContext context) => FutureBuilder<GameArt>(
     future: loading,
@@ -90,110 +94,32 @@ class _EntryPageState extends State<EntryPage> {
         return GamePage(
           key: ValueKey(run),
           art: art,
-          onRestart: () => setState(() => run++),
+          heroClass: chosen,
+          onRestart: () => setState(() {
+            run++;
+            started = false;
+          }),
         );
       }
-      return Scaffold(
-        body: Stack(
-          fit: StackFit.expand,
-          children: [
-            RawImage(image: art.images['village-scene'], fit: BoxFit.cover),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    ink.withValues(alpha: .1),
-                    ink.withValues(alpha: .45),
-                    ink,
-                  ],
-                ),
-              ),
-            ),
-            SafeArea(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(28),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 430),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        const Text(
-                          'GUARDIAN OF NATURE',
-                          style: TextStyle(
-                            color: gold,
-                            fontSize: 12,
-                            letterSpacing: 3,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        const Text(
-                          '자연의 수호자',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                            color: cream,
-                            shadows: [
-                              Shadow(blurRadius: 20, color: Colors.black),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          '새로운 숲, 다시 시작하는 모험',
-                          style: TextStyle(color: cream, fontSize: 16),
-                        ),
-                        const SizedBox(height: 28),
-                        const Text(
-                          '길을 따라 전진하고, 검을 멈추지 마세요.\n연속 베기 · 회전 공격 · 회피',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            height: 1.8,
-                            color: Color(0xffbed2bf),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 58,
-                          child: FilledButton(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: gold,
-                              foregroundColor: ink,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            onPressed: () => setState(() => started = true),
-                            child: const Text(
-                              '모험 시작',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 28),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+      return ClassSelection(
+        art: art,
+        onBegin: (value) => setState(() {
+          chosen = value;
+          started = true;
+        }),
       );
     },
   );
 }
 
 class GamePage extends StatefulWidget {
-  const GamePage({required this.art, required this.onRestart, super.key});
+  const GamePage({
+    required this.art,
+    required this.onRestart,
+    this.heroClass = HeroClass.warrior,
+    super.key,
+  });
+  final HeroClass heroClass;
   final GameArt art;
   final VoidCallback onRestart;
   @override
@@ -201,7 +127,10 @@ class GamePage extends StatefulWidget {
 }
 
 class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
-  late final Adventure adventure = Adventure(widget.art);
+  late final Adventure adventure = Adventure(
+    widget.art,
+    heroClass: widget.heroClass,
+  );
   late final Widget game;
   String? panel;
   final gameFocus = FocusNode();
@@ -225,6 +154,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
       components: [
         LandscapeLayer(adventure),
         WorldDirector(adventure),
+        StageLandmarks(adventure),
         VillagePerson(adventure, true),
         VillagePerson(adventure, false),
       ],
@@ -292,6 +222,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
             : adventure.won
             ? 'victory'
             : panel;
+        final p = adventure.progress, skill = p.activeSkill;
         return Stack(
           fit: StackFit.expand,
           children: [
@@ -329,12 +260,17 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 bottom: bottom,
                 child: ActionButton(
                   art: widget.art,
-                  sprite: 'touchAttack',
+                  sprite: p.heroClass == HeroClass.mage
+                      ? 'roundEmpty'
+                      : 'touchAttack',
+                  icon: p.heroClass == HeroClass.mage
+                      ? elementIcon(p.weapon.base.style)
+                      : null,
                   label: '공격',
                   semanticLabel: '공격',
                   size: attack,
                   remaining: adventure.hero.attackClock,
-                  total: .32,
+                  total: p.attackInterval,
                   onHold: (held) => adventure.holdAttack('touch', held),
                   onTap: adventure.hero.slash,
                 ),
@@ -344,14 +280,15 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 bottom: bottom + (short ? 108 : 136),
                 child: ActionButton(
                   art: widget.art,
-                  sprite: 'auxEmpty',
+                  sprite: 'roundEmpty',
+                  icon: skillIcon(skill.id),
                   label: adventure.hero.skillClock > 0
                       ? '${adventure.hero.skillClock.ceil()}초'
-                      : '회전',
-                  semanticLabel: '회전 공격',
+                      : skill.shortName,
+                  semanticLabel: skill.name,
                   size: short ? 62 : 72,
                   remaining: adventure.hero.skillClock,
-                  total: 5,
+                  total: skill.cooldown,
                   onTap: adventure.hero.skill,
                 ),
               ),
@@ -402,6 +339,67 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   ),
                 ),
               Positioned(
+                left: 14,
+                top: media.padding.top + 110,
+                child: PotionBelt(adventure),
+              ),
+              if (adventure.noticeTime > 0)
+                Positioned(
+                  left: 55,
+                  right: 55,
+                  top: media.padding.top + 143,
+                  child: IgnorePointer(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: ink.withValues(alpha: .94),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: gold.withValues(alpha: .6)),
+                      ),
+                      child: Text(
+                        adventure.notice,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: cream,
+                          fontSize: 14,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              if (adventure.nearbyChest != null || adventure.nearbyExit != null)
+                Positioned(
+                  right: 18,
+                  bottom: bottom + (short ? 105 : 138) + 93,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: ink,
+                      foregroundColor: gold,
+                      side: const BorderSide(color: gold),
+                    ),
+                    onPressed: () {
+                      if (adventure.nearbyChest != null) {
+                        adventure.openChest();
+                      } else {
+                        open('exit');
+                      }
+                    },
+                    icon: Icon(
+                      adventure.nearbyChest != null
+                          ? Icons.inventory_2_outlined
+                          : Icons.door_front_door_outlined,
+                      size: 20,
+                    ),
+                    label: Text(
+                      adventure.nearbyChest != null ? '상자 열기' : '출구 확인',
+                    ),
+                  ),
+                ),
+              Positioned(
                 left: 0,
                 right: 0,
                 bottom: math.max(8, media.padding.bottom),
@@ -409,8 +407,12 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     _menu('touchInventory', '가방', 'bag'),
-                    _menu('touchQuests', '일지', 'journal'),
-                    _menu('touchCompendium', '지도', 'map'),
+                    _menu(
+                      'touchQuests',
+                      p.skillPoints > 0 ? '스킬 +${p.skillPoints}' : '스킬',
+                      'skills',
+                    ),
+                    _menu('touchCompendium', '여정', 'journal'),
                     _menu('touchSettings', '설정', 'settings'),
                   ],
                 ),

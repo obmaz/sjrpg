@@ -62,6 +62,54 @@ class GameHud extends StatelessWidget {
             ),
           ),
           Positioned(
+            left: 77,
+            right: 110,
+            top: 52,
+            child: Semantics(
+              label:
+                  '${p.heroClass.resource} ${p.energy.floor()} / ${p.maxEnergy.round()}',
+              child: SizedBox(
+                height: 12,
+                child: Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: p.energy / p.maxEnergy,
+                        minHeight: 12,
+                        color: p.heroClass == HeroClass.mage
+                            ? const Color(0xff529bdf)
+                            : const Color(0xffd49d40),
+                        backgroundColor: const Color(0xdd102425),
+                      ),
+                    ),
+                    Center(
+                      child: Text(
+                        '${p.heroClass.resource} ${p.energy.floor()}',
+                        style: const TextStyle(
+                          color: cream,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 77,
+            right: 110,
+            top: 65,
+            child: LinearProgressIndicator(
+              value: p.xp / p.nextLevelXp,
+              minHeight: 3,
+              color: gold,
+              backgroundColor: const Color(0x99102425),
+            ),
+          ),
+          Positioned(
             left: 10,
             top: 7,
             child: Container(
@@ -74,7 +122,9 @@ class GameHud extends StatelessWidget {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(32),
-                child: CustomPaint(painter: _PortraitPainter(session.art)),
+                child: CustomPaint(
+                  painter: _PortraitPainter(session.art, p.heroClass),
+                ),
               ),
             ),
           ),
@@ -91,14 +141,14 @@ class GameHud extends StatelessWidget {
                 border: Border.all(color: gold, width: 1.5),
               ),
               child: Text(
-                '${p.stage}',
+                '${p.level}',
                 style: const TextStyle(color: cream, fontSize: 14),
               ),
             ),
           ),
           Positioned(
             left: 84,
-            top: 60,
+            top: 72,
             right: 104,
             child: Wrap(
               spacing: 12,
@@ -189,10 +239,28 @@ class _BarClipper extends CustomClipper<Path> {
 }
 
 class _PortraitPainter extends CustomPainter {
-  _PortraitPainter(this.art);
+  _PortraitPainter(this.art, this.heroClass);
   final GameArt art;
+  final HeroClass heroClass;
   @override
   void paint(Canvas c, Size s) {
+    if (heroClass == HeroClass.mage) {
+      final image = art.images['actors-mage']!,
+          frame = art.actors['mage']['frames'][0] as List;
+      final w = (frame[2] as num).toDouble(), h = (frame[3] as num).toDouble();
+      c.drawImageRect(
+        image,
+        Rect.fromLTWH(
+          (frame[0] as num).toDouble() + w * .18,
+          (frame[1] as num).toDouble(),
+          w * .65,
+          h * .52,
+        ),
+        Offset.zero & s,
+        Paint()..filterQuality = FilterQuality.medium,
+      );
+      return;
+    }
     final image = art.images['ui-reference']!, cell = image.width / 4;
     c.drawImageRect(
       image,
@@ -203,7 +271,8 @@ class _PortraitPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _PortraitPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _PortraitPainter oldDelegate) =>
+      oldDelegate.heroClass != heroClass;
 }
 
 class ControlPainter extends CustomPainter {
@@ -250,6 +319,16 @@ class MapPainter extends CustomPainter {
       );
     }
     c.drawRect(town, Paint()..color = const Color(0xffe3d29a));
+    for (final exit in stageExits) {
+      c.drawCircle(
+        Offset(exit.x, exit.y),
+        round ? 100 : 65,
+        Paint()
+          ..color = session.progress.bossDefeated
+              ? const Color(0xff82dfe0)
+              : const Color(0xff594234),
+      );
+    }
     c.restore();
     final hero = Offset(
       session.hero.position.x / worldSize.width * s.width,
@@ -264,6 +343,19 @@ class MapPainter extends CustomPainter {
         ..strokeWidth = 1
         ..color = Colors.white,
     );
+    if (!round) {
+      for (final exit in stageExits) {
+        final x = (exit.x / worldSize.width * s.width).clamp(
+              27.0,
+              s.width - 27,
+            ),
+            y = (exit.y / worldSize.height * s.height).clamp(
+              15.0,
+              s.height - 15,
+            );
+        session.art.text(c, exit.direction, Offset(x, y - 9), size: 13);
+      }
+    }
     c.restore();
     if (round) {
       c.drawOval(
@@ -381,6 +473,8 @@ class _ActionButtonState extends State<ActionButton> {
             ),
             Text(
               widget.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: cream,
                 fontSize: 13,

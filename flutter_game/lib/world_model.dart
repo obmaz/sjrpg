@@ -1,9 +1,19 @@
 import 'dart:math' as math;
 import 'dart:ui';
+import 'rpg_model.dart';
+export 'rpg_model.dart';
 
 const worldSize = Size(7680, 5760);
 const town = Rect.fromLTWH(3520, 2624, 640, 960);
 const arrival = Offset(3840, 3055);
+const stageChests = [
+  Offset(3840, 3415),
+  Offset(3150, 3250),
+  Offset(4000, 2240),
+  Offset(4620, 4200),
+  Offset(6200, 4200),
+  Offset(3900, 4550),
+];
 
 int facingFrame(double angle, int count) =>
     (((angle - math.pi / 2) * count / (math.pi * 2)).round() % count + count) %
@@ -182,7 +192,11 @@ class AdventureWorld {
           x + random.nextDouble() * 70,
           y + random.nextDouble() * 70,
         );
-        if (town.inflate(150).contains(p)) continue;
+        if (town.inflate(150).contains(p) ||
+            stageExits.any((e) => (Offset(e.x, e.y) - p).distance < 160) ||
+            stageChests.any((c) => (c - p).distance < 100)) {
+          continue;
+        }
         final wooded = woods.any((s) => s.contains(p));
         final roll = random.nextDouble();
         if (roll > (wooded ? .68 : .04) ||
@@ -489,29 +503,4 @@ class _Node {
   const _Node(this.point, this.cost, this.score);
   final math.Point<int> point;
   final double cost, score;
-}
-
-class Progress {
-  int kills = 0, gold = 0, stage = 1;
-  double hp = 100, maxHp = 100;
-  double swordDamage = 15;
-  bool bossDefeated = false;
-  void reward({bool boss = false}) {
-    kills++;
-    gold += boss ? 100 : 8;
-    bossDefeated |= boss;
-    final next = 1 + kills ~/ 8;
-    if (next > stage) {
-      stage = next;
-      hp = maxHp;
-      swordDamage += 2;
-    }
-  }
-
-  bool buy(int price, void Function() apply) {
-    if (gold < price) return false;
-    gold -= price;
-    apply();
-    return true;
-  }
 }

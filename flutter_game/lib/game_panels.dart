@@ -2,6 +2,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'adventure.dart';
 import 'game_ui.dart';
+import 'rpg_model.dart';
+import 'rpg_widgets.dart';
 
 class AdventurePanel extends StatefulWidget {
   const AdventurePanel({
@@ -20,6 +22,16 @@ class AdventurePanel extends StatefulWidget {
 
 class _AdventurePanelState extends State<AdventurePanel> {
   String message = '';
+  bool showMap = false;
+  @override
+  void didUpdateWidget(covariant AdventurePanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.name != widget.name) {
+      message = '';
+      showMap = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = widget.session,
@@ -27,187 +39,289 @@ class _AdventurePanelState extends State<AdventurePanel> {
         name = widget.name,
         media = MediaQuery.of(context);
     final result = name == 'victory' || name == 'defeat';
-    final title = {
-      'bag': '모험가의 가방',
-      'journal': '모험 일지',
-      'map': '모험 지도',
-      'settings': '모험 설정',
-      'shop': '숲길 상점',
-      'talk': '숲의 현자',
-      'pause': '잠시 쉬어가기',
-      'defeat': '다시 일어설 시간',
-      'victory': '숲의 수호자',
-    }[name]!;
+    final title =
+        {
+          'bag': '모험가의 가방',
+          'skills': '스킬과 성장',
+          'journal': '제1장 · 십자로의 숲',
+          'map': '모험 지도',
+          'settings': '모험 설정',
+          'shop': '숲길 상점',
+          'talk': '숲의 현자',
+          'pause': '잠시 쉬어가기',
+          'defeat': '쓰러진 수호자',
+          'victory': '첫 스테이지 정화',
+          'exit': '다음 스테이지',
+        }[name] ??
+        '모험';
     List<Widget> body;
-    if (name == 'shop') {
-      void buy(bool Function() purchase) {
+    if (name == 'bag') {
+      body = [InventoryView(s)];
+    } else if (name == 'skills') {
+      body = [SkillsView(s)];
+    } else if (name == 'shop') {
+      void buy(bool Function() action) {
         setState(
-          () => message = purchase() ? '구매했습니다. 모험을 계속하세요.' : '골드가 부족합니다.',
+          () => message = action()
+              ? '구매했습니다. 가방과 물약 칸을 확인하세요.'
+              : '골드 또는 가방 공간이 부족합니다.',
         );
         s.refresh();
       }
 
+      final stock = p.heroClass == HeroClass.warrior
+          ? ['longsword', 'axe', 'spear', 'leather', 'chainmail', 'amber']
+          : [
+              'oakstaff',
+              'frostwand',
+              'stormrod',
+              'silkrobe',
+              'leather',
+              'sapphire',
+            ];
       body = [
-        _line(Icons.monetization_on, '보유 골드', '${p.gold}'),
+        _line(Icons.monetization_on_outlined, '보유 골드', '${p.gold} G'),
+        const Text(
+          '전리품을 모아 장비를 바꾸고, 물약을 보충하세요. 장비는 가방에서 직접 장착합니다.',
+          style: TextStyle(fontSize: 14, height: 1.7, color: cream),
+        ),
         const SizedBox(height: 16),
-        _shop('치유의 물약', '체력을 50 회복합니다.', '20 골드', () => buy(s.buyHeal)),
-        _shop('검 연마', '검 공격력 +5', '45 골드', () => buy(s.buySword)),
-        _shop('생명의 부적', '최대 체력 +20 · 체력 회복', '60 골드', () => buy(s.buyVitality)),
+        _shop(
+          Icons.science,
+          '치유 물약 ×2',
+          '사용하면 생명 55 회복 · 보유 ${p.healingPotions}개',
+          20,
+          () => buy(s.buyHeal),
+        ),
+        _shop(
+          Icons.science,
+          '${p.heroClass.resource} 물약 ×2',
+          '사용하면 ${p.heroClass.resource} 60 회복 · 보유 ${p.energyPotions}개',
+          18,
+          () => buy(s.buyEnergy),
+        ),
         if (message.isNotEmpty)
-          Text(
-            message,
-            style: const TextStyle(color: gold, fontSize: 14, height: 1.6),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              message,
+              style: const TextStyle(color: gold, fontSize: 14, height: 1.6),
+            ),
           ),
-      ];
-    } else if (name == 'bag') {
-      body = [
-        const Text('롱소드', style: TextStyle(fontSize: 23, color: gold)),
         const SizedBox(height: 10),
-        Text(
-          '공격력 ${p.swordDamage.round()} · 세 번째 베기 강화',
-          style: const TextStyle(fontSize: 15, height: 1.7),
+        const Text(
+          '장비 상인',
+          style: TextStyle(
+            color: gold,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        const SizedBox(height: 22),
-        const _Info(
-          icon: Icons.auto_awesome,
-          title: '회전 베기',
-          text: '주변 적을 밀어내며 강하게 벱니다.\n재사용 5초',
+        const SizedBox(height: 12),
+        for (final id in stock) _gearShop(gearById(id), buy),
+        const SizedBox(height: 8),
+        _shop(
+          Icons.auto_fix_high,
+          '무기 강화',
+          '현재 직업 공격력 +5',
+          45,
+          () => buy(s.buySword),
         ),
-        const SizedBox(height: 18),
-        const _Info(
-          icon: Icons.air,
-          title: '빠른 회피',
-          text: '바라보는 방향으로 짧게 이동합니다.\n회피 중 잠깐 무적 · 재사용 1.5초',
+        _shop(
+          Icons.favorite_border,
+          '생명 축복',
+          '최대 생명 +20 · 생명 회복',
+          60,
+          () => buy(s.buyVitality),
         ),
-        const SizedBox(height: 20),
-        _line(Icons.monetization_on, '골드', '${p.gold}'),
       ];
-    } else if (name == 'journal' || name == 'talk') {
+    } else if (name == 'journal' || name == 'talk' || name == 'map') {
       body = [
         if (name == 'talk') ...[
           const Text(
-            '“숲길에 모여든 적들을 물리쳐 주게.\n숲의 파수꾼도 잠에서 깨어나고 있네.”',
+            '“네 갈래 길 아래에 오래된 어둠이 잠들어 있네. 먼저 이 숲의 파수꾼을 정화해 주게. 상자와 전리품을 모으고, 얻은 힘을 스스로 선택하게나.”',
             style: TextStyle(fontSize: 16, height: 1.8, color: cream),
           ),
           const SizedBox(height: 22),
         ],
         _quest(
-          '숲길의 위협',
-          '몬스터를 24마리 물리치세요.',
+          '숲길 정화',
+          '몬스터를 처치해 숲의 파수꾼을 깨우세요.',
           math.min(24, p.kills) / 24,
           '${math.min(24, p.kills)} / 24',
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         _quest(
-          '숲의 파수꾼',
-          '골렘을 쓰러뜨리고 마을을 지키세요.',
+          '첫 파수꾼',
+          '파수꾼을 쓰러뜨리면 제1장을 정화합니다.',
           p.bossDefeated ? 1 : 0,
           p.bossDefeated
-              ? '완료'
+              ? '정화 완료'
               : s.bossSummoned
-              ? '토벌 중'
+              ? '파수꾼 출현'
               : '숲길 정화 후 등장',
         ),
         const SizedBox(height: 18),
+        _line(
+          Icons.inventory_2_outlined,
+          '발견한 상자',
+          '${s.openedChests.length} / ${Adventure.chestLocations.length}',
+        ),
+        _line(Icons.military_tech, '모험가', 'Lv.${p.level} ${p.heroClass.title}'),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: () => setState(() => showMap = !showMap),
+          icon: Icon(showMap ? Icons.expand_less : Icons.map_outlined),
+          label: Text(showMap ? '지도 접기' : '스테이지 지도 보기'),
+        ),
+        if (showMap || name == 'map') ...[
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 240,
+            child: CustomPaint(painter: MapPainter(s, round: false)),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '현재 위치 · ${s.region}',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: gold, fontSize: 14),
+          ),
+        ],
+        const SizedBox(height: 18),
         const Text(
-          '주변 적을 쓰러뜨리면 골드를 얻습니다.\n분수 주변에서 체력을 회복하고, 상점에서 장비를 강화하세요.',
-          style: TextStyle(fontSize: 14, height: 1.8, color: Color(0xffbed0bd)),
+          '네 갈래의 다음 여정',
+          style: TextStyle(
+            color: gold,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 10),
+        for (final exit in stageExits) _exit(exit, p.bossDefeated),
+        const SizedBox(height: 12),
+        const Text(
+          '이번 버전은 제1장만 플레이할 수 있습니다. 네 출구는 서로 다른 다음 스테이지로 이어질 예정입니다.',
+          style: TextStyle(color: Color(0xffbacdbe), fontSize: 13, height: 1.7),
         ),
       ];
-    } else if (name == 'map') {
+    } else if (name == 'exit') {
+      final exit = s.nearbyExit;
       body = [
-        SizedBox(
-          height: 260,
-          child: CustomPaint(painter: MapPainter(s, round: false)),
+        Icon(
+          p.bossDefeated ? Icons.door_front_door_outlined : Icons.lock_outline,
+          size: 58,
+          color: gold,
         ),
         const SizedBox(height: 18),
         Text(
-          '현재 위치 · ${s.region}',
+          exit == null ? '십자로의 숲' : '${exit.direction}쪽 · ${exit.destination}',
           textAlign: TextAlign.center,
-          style: const TextStyle(color: gold, fontSize: 16),
+          style: const TextStyle(color: gold, fontSize: 23),
         ),
         const SizedBox(height: 14),
-        const Text(
-          '중앙의 분수 마을에서 출발합니다.\n서쪽에는 깊은 숲, 동쪽에는 호수와 강,\n남동쪽에는 넓은 모래벌판이 있습니다.\n강은 남쪽 목교를 통해 건너세요.',
+        Text(
+          exit?.description ?? '네 갈래의 다음 여정',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 14, height: 1.9),
+          style: const TextStyle(fontSize: 15, height: 1.7),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          p.bossDefeated
+              ? '숲의 봉인을 해제했습니다.\n다음 스테이지는 아직 준비 중입니다.\n현재는 제1장의 남은 보물을 탐험할 수 있습니다.'
+              : '숲의 파수꾼이 길을 봉인하고 있습니다.\n먼저 몬스터 24마리와 파수꾼을 물리치세요.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 15, height: 1.8, color: cream),
         ),
       ];
     } else if (result) {
       body = [
         Icon(
-          name == 'victory' ? Icons.eco : Icons.shield_outlined,
+          name == 'victory' ? Icons.workspace_premium : Icons.shield_outlined,
           color: gold,
           size: 64,
         ),
         const SizedBox(height: 18),
         Text(
           name == 'victory'
-              ? '파수꾼을 쓰러뜨렸습니다.\n숲에 다시 평화가 찾아왔습니다.'
-              : '모험은 여기서 끝나지 않습니다.\n다시 도전해 숲을 지켜주세요.',
+              ? '십자로의 숲을 정화했습니다.\n파수꾼의 유산과 남은 보물을 챙겨 보세요.'
+              : '힘을 키우고 다시 도전하세요.\n장비와 스킬 조합에 따라 전투가 달라집니다.',
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 17, height: 1.8),
+          style: const TextStyle(fontSize: 17, height: 1.8, color: cream),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
+        _line(
+          Icons.person_outline,
+          '모험가',
+          'Lv.${p.level} ${p.heroClass.title}',
+        ),
         _line(Icons.bolt, '물리친 적', '${p.kills}'),
-        _line(Icons.monetization_on, '획득 골드', '${p.gold}'),
+        _line(Icons.monetization_on_outlined, '보유 골드', '${p.gold} G'),
         _line(Icons.timer_outlined, '모험 시간', gameTime(s.elapsed)),
+        const SizedBox(height: 12),
+        if (name == 'victory')
+          OutlinedButton.icon(
+            onPressed: widget.onRestart,
+            icon: const Icon(Icons.refresh),
+            label: const Text('다른 직업으로 새 모험'),
+          ),
       ];
     } else {
       body = [
-        const _Info(
-          icon: Icons.touch_app_outlined,
-          title: '모바일 조작',
-          text:
-              '왼쪽 조이스틱으로 이동합니다.\n공격을 누르고 있으면 연속으로 벱니다.\n회전 · 회피 버튼도 함께 사용할 수 있습니다.',
+        _info(
+          Icons.touch_app_outlined,
+          '모바일 조작',
+          '왼쪽 조이스틱으로 이동합니다. 공격을 누르면 연속 공격하며, 지정한 스킬과 회피를 동시에 사용할 수 있습니다. 위쪽 물약은 터치하면 사용합니다.',
         ),
         const SizedBox(height: 18),
-        const _Info(
-          icon: Icons.keyboard_outlined,
-          title: '키보드 조작',
-          text:
-              'WASD / 방향키 — 이동\nSpace / J — 연속 공격\nN / K — 회전 베기\n왼쪽 Shift — 회피',
+        _info(
+          Icons.auto_awesome,
+          '장비와 스킬',
+          '가방에서 장비를 비교·장착·판매하세요. 레벨이 오르면 스킬 포인트를 1개 얻습니다. 스킬 화면에서 배우고 전투에 지정하세요.',
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 18),
+        _info(
+          Icons.keyboard_outlined,
+          '키보드 조작',
+          'WASD / 방향키 — 이동\nSpace / J — 연속 공격\nN / K — 지정 스킬\n왼쪽 Shift — 회피\n1 / 2 — 생명 / 자원 물약',
+        ),
+        const SizedBox(height: 18),
+        const Text(
+          '진행은 현재 모험 동안 유지됩니다. 새 모험이나 새로고침을 하면 초기화됩니다.',
+          style: TextStyle(color: Color(0xffbacdbe), fontSize: 13, height: 1.7),
+        ),
+        const SizedBox(height: 16),
         OutlinedButton.icon(
           onPressed: widget.onRestart,
           icon: const Icon(Icons.refresh),
-          label: const Text('처음부터 다시 시작'),
+          label: const Text('직업을 다시 선택해 새 모험'),
         ),
       ];
     }
     return ColoredBox(
-      color: const Color(0xb9081816),
+      color: const Color(0xbb071918),
       child: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(12),
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                maxWidth: 460,
-                maxHeight: media.size.height - media.padding.vertical - 36,
+                maxWidth: 500,
+                maxHeight: media.size.height - media.padding.vertical - 24,
               ),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: ink,
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: gold, width: 2),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black54, blurRadius: 30),
-                  ],
-                ),
+              child: FramedSurface(
+                art: s.art,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(22, 12, 10, 10),
+                      padding: const EdgeInsets.fromLTRB(18, 14, 8, 10),
                       child: Row(
                         children: [
                           Expanded(
                             child: Text(
                               title,
                               style: const TextStyle(
-                                fontSize: 22,
+                                fontSize: 21,
                                 color: cream,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -222,10 +336,22 @@ class _AdventurePanelState extends State<AdventurePanel> {
                         ],
                       ),
                     ),
-                    const Divider(height: 1, color: Color(0x556f805a)),
+                    const Divider(height: 1, color: Color(0x557b8c62)),
+                    if (name == 'shop')
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(22, 10, 22, 0),
+                        child: Text(
+                          '${p.gold} G · ${p.heroClass.title}',
+                          style: const TextStyle(
+                            color: gold,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     Flexible(
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(22),
+                        padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: body,
@@ -233,7 +359,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(22, 10, 22, 20),
+                      padding: const EdgeInsets.fromLTRB(22, 8, 22, 18),
                       child: SizedBox(
                         width: double.infinity,
                         height: 48,
@@ -242,9 +368,20 @@ class _AdventurePanelState extends State<AdventurePanel> {
                             backgroundColor: gold,
                             foregroundColor: ink,
                           ),
-                          onPressed: result ? widget.onRestart : widget.onClose,
+                          onPressed: name == 'defeat'
+                              ? widget.onRestart
+                              : name == 'victory'
+                              ? () {
+                                  s.continueExploring();
+                                  widget.onClose();
+                                }
+                              : widget.onClose,
                           child: Text(
-                            result ? '새로운 모험' : '모험 계속하기',
+                            name == 'defeat'
+                                ? '새로운 모험'
+                                : name == 'victory'
+                                ? '계속 탐험하기'
+                                : '모험 계속하기',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -263,17 +400,81 @@ class _AdventurePanelState extends State<AdventurePanel> {
     );
   }
 
+  Widget _gearShop(GearDef def, void Function(bool Function()) buy) {
+    final p = widget.session.progress, price = def.value;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xd9143532),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xff50634d)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              SizedBox(
+                width: 46,
+                height: 52,
+                child: CustomPaint(
+                  painter: GearGlyph(Gear(0, def), widget.session.art),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      def.name,
+                      style: const TextStyle(color: cream, fontSize: 16),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      Gear(0, def).stats,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        height: 1.5,
+                        color: Color(0xffbbcebc),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          FilledButton(
+            onPressed: () => buy(
+              () =>
+                  p.inventory.length < Progress.capacity &&
+                  p.buy(price, () => p.inventory.add(p.createGear(def))),
+            ),
+            child: Text('$price 골드 · 구매'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _line(IconData icon, String label, String value) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 8),
     child: Row(
       children: [
         Icon(icon, color: gold, size: 20),
         const SizedBox(width: 9),
-        Expanded(child: Text(label, style: const TextStyle(fontSize: 14))),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 14, color: cream),
+          ),
+        ),
         Text(
           value,
           style: const TextStyle(
-            fontSize: 17,
+            fontSize: 16,
             color: gold,
             fontWeight: FontWeight.bold,
           ),
@@ -282,38 +483,46 @@ class _AdventurePanelState extends State<AdventurePanel> {
     ),
   );
   Widget _shop(
+    IconData icon,
     String title,
     String description,
-    String price,
+    int price,
     VoidCallback buy,
-  ) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: DecoratedBox(
-      decoration: BoxDecoration(
-        color: const Color(0xff1a3e36),
-        border: Border.all(color: const Color(0xff52684b)),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+  ) => Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: const Color(0xd9143532),
+      border: Border.all(color: const Color(0xff52684b)),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
           children: [
-            Text(title, style: const TextStyle(fontSize: 17, color: cream)),
-            const SizedBox(height: 6),
-            Text(
-              description,
-              style: const TextStyle(
-                fontSize: 14,
-                height: 1.5,
-                color: Color(0xffb4c9b7),
+            Icon(icon, color: gold, size: 22),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(fontSize: 17, color: cream),
               ),
             ),
-            const SizedBox(height: 10),
-            FilledButton(onPressed: buy, child: Text('$price · 구매')),
           ],
         ),
-      ),
+        const SizedBox(height: 7),
+        Text(
+          description,
+          style: const TextStyle(
+            fontSize: 14,
+            height: 1.6,
+            color: Color(0xffb4c9b7),
+          ),
+        ),
+        const SizedBox(height: 10),
+        FilledButton(onPressed: buy, child: Text('$price 골드 · 구매')),
+      ],
     ),
   );
   Widget _quest(
@@ -321,55 +530,92 @@ class _AdventurePanelState extends State<AdventurePanel> {
     String description,
     double progress,
     String status,
-  ) => DecoratedBox(
+  ) => Container(
+    padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
       color: const Color(0xffe4d5ad),
       borderRadius: BorderRadius.circular(12),
     ),
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: ink,
-            ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: ink,
           ),
-          const SizedBox(height: 9),
-          Text(
-            description,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xff405246),
-              height: 1.6,
-            ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          description,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Color(0xff405246),
+            height: 1.6,
           ),
-          const SizedBox(height: 14),
-          LinearProgressIndicator(
-            value: progress,
-            color: const Color(0xff3b7860),
-            backgroundColor: const Color(0xffc6bc9a),
-            minHeight: 6,
-            borderRadius: BorderRadius.circular(3),
-          ),
-          const SizedBox(height: 8),
-          Text(status, style: const TextStyle(fontSize: 13, color: ink)),
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+        LinearProgressIndicator(
+          value: progress,
+          color: const Color(0xff3b7860),
+          backgroundColor: const Color(0xffc6bc9a),
+          minHeight: 6,
+          borderRadius: BorderRadius.circular(3),
+        ),
+        const SizedBox(height: 8),
+        Text(status, style: const TextStyle(fontSize: 13, color: ink)),
+      ],
     ),
   );
-}
-
-class _Info extends StatelessWidget {
-  const _Info({required this.icon, required this.title, required this.text});
-  final IconData icon;
-  final String title, text;
-  @override
-  Widget build(BuildContext context) => Row(
+  Widget _exit(StageExit exit, bool cleared) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 9),
+    child: Row(
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: const Color(0xff29483d),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: gold.withValues(alpha: .5)),
+          ),
+          child: Text(
+            exit.direction,
+            style: const TextStyle(color: gold, fontSize: 15),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                exit.destination,
+                style: const TextStyle(fontSize: 16, color: cream),
+              ),
+              Text(
+                cleared ? '봉인 해제 · 다음 지역 준비 중' : '파수꾼이 길을 봉인했습니다',
+                style: const TextStyle(
+                  fontSize: 12,
+                  height: 1.7,
+                  color: Color(0xffa9bfae),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Icon(
+          cleared ? Icons.door_front_door_outlined : Icons.lock_outline,
+          size: 18,
+          color: gold,
+        ),
+      ],
+    ),
+  );
+  Widget _info(IconData icon, String title, String text) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Icon(icon, color: gold),

@@ -17,19 +17,29 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'world-desert',
         'controls',
         'ui-reference',
+        'popup-frame',
+        'atlas',
     ];
     for (const image of images)
         fs.copyFileSync(
             path.join(root, `assets/${image}.webp`),
             path.join(destination, `images/${image}.webp`),
         );
+    for (const name of ['actors-mage', 'gear-icons'])
+        fs.copyFileSync(
+            path.join(root, `flutter_game/art/${name}.png`),
+            path.join(destination, `images/${name}.png`),
+        );
+    const mage = JSON.parse(
+        fs.readFileSync(path.join(root, 'flutter_game/art/mage-bounds.json'), 'utf8'),
+    );
     const { ACTOR_BOUNDS } = await import(
         pathToFileURL(path.join(root, 'src/data/actor-bounds.js'))
     );
     const { CONTROL_SPRITES } = await import(pathToFileURL(path.join(root, 'src/data/ui-art.js')));
     fs.writeFileSync(
         path.join(destination, 'art.json'),
-        JSON.stringify({ actors: ACTOR_BOUNDS, controls: CONTROL_SPRITES }),
+        JSON.stringify({ actors: { ...ACTOR_BOUNDS, mage }, controls: CONTROL_SPRITES }),
     );
     console.log(
         `Prepared ${images.length} shared pictures and measured sprite bounds for Flutter.`,

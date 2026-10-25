@@ -19,6 +19,8 @@ class GameArt {
     await Future.wait(
       [
         'actors-hero',
+        'actors-mage',
+        'gear-icons',
         'actors-hero-attack',
         'actors-creatures-a',
         'actors-creatures-b',
@@ -30,8 +32,12 @@ class GameArt {
         'world-desert',
         'controls',
         'ui-reference',
+        'popup-frame',
+        'atlas',
       ].map((name) async {
-        final bytes = await rootBundle.load('assets/images/$name.webp');
+        final bytes = await rootBundle.load(
+          'assets/images/$name.${['actors-mage', 'gear-icons'].contains(name) ? 'png' : 'webp'}',
+        );
         final codec = await ui.instantiateImageCodec(
           bytes.buffer.asUint8List(),
         );
@@ -100,6 +106,7 @@ class GameArt {
   }) {
     const definitions = {
       'hero': ('hero', 0, 16),
+      'mage': ('mage', 0, 16),
       'goblin': ('creatures-a', 0, 8),
       'wolf': ('creatures-a', 1, 8),
       'skeleton': ('creatures-a', 2, 8),

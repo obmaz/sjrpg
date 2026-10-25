@@ -5,9 +5,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'game_art.dart';
 import 'world_model.dart';
+import 'battle_effects.dart';
 
 class Adventure extends ChangeNotifier {
-  Adventure(this.art, {int seed = 7829}) : world = AdventureWorld(seed: seed) {
+  Adventure(
+    this.art, {
+    int seed = 7829,
+    HeroClass heroClass = HeroClass.warrior,
+  }) : world = AdventureWorld(seed: seed),
+       progress = Progress(heroClass: heroClass) {
     hero = Guardian(this);
     terrain = TerrainArt(world, art);
   }
@@ -15,7 +21,13 @@ class Adventure extends ChangeNotifier {
   final AdventureWorld world;
   late final Guardian hero;
   late final TerrainArt terrain;
-  final progress = Progress();
+  final Progress progress;
+  final loot = <GroundLoot>[];
+  final openedChests = <int>{};
+  String notice = "";
+  double noticeTime = 0, combatTime = 0;
+  int get skillPoints => progress.skillPoints;
+  static const chestLocations = stageChests;
   final mobs = <HuntEnemy>[];
   final attackSources = <String>{};
   BonfireGameInterface? game;
@@ -31,6 +43,101 @@ class Adventure extends ChangeNotifier {
   final random = math.Random(52);
   bool get active => ready && !paused && !defeated && !won;
   String get region => world.areaName(hero.position.toOffset());
+  StageExit? get nearbyExit {
+    for (final exit in stageExits) {
+      if ((hero.body.center - ui.Offset(exit.x, exit.y)).distance < 115) {
+        return exit;
+      }
+    }
+    return null;
+  }
+
+  int? get nearbyChest {
+    for (var i = 0; i < chestLocations.length; i++) {
+      if (!openedChests.contains(i) &&
+          (hero.body.center - chestLocations[i]).distance < 110 &&
+          world.clearLine(
+            hero.body.center,
+            chestLocations[i],
+            const ui.Size(3, 3),
+          )) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  void announce(String value) {
+    notice = value;
+    noticeTime = 3.5;
+    refresh();
+  }
+
+  void continueExploring() {
+    if (!won || defeated) return;
+    won = false;
+    resume();
+    announce('첫 스테이지 정화 완료 · 네 방향의 출구를 둘러보세요');
+  }
+
+  void openChest() {
+    final index = nearbyChest;
+    if (!active || index == null) return;
+    openedChests.add(index);
+    progress.gold += 18;
+    progress.healingPotions++;
+    dropGear(progress.rollLoot(random, chest: true), chestLocations[index]);
+    announce('보물 상자 · +18 골드 · 치유 물약 +1');
+  }
+
+  void dropGear(Gear gear, ui.Offset at) {
+    final item = GroundLoot(this, gear, at);
+    if (loot.length >= 32) {
+      loot.first.removeFromParent();
+      loot.removeAt(0);
+    }
+    loot.add(item);
+    game?.add(item);
+  }
+
+  void syncLife() {
+    hero.life.initial(progress.maxHp);
+    hero.life.update(progress.hp);
+  }
+
+  bool learn(SkillDef skill) {
+    if (!progress.learn(skill)) return false;
+    syncLife();
+    refresh();
+    return true;
+  }
+
+  bool equip(Gear item) {
+    if (!progress.equip(item)) return false;
+    syncLife();
+    refresh();
+    return true;
+  }
+
+  void potion({bool energy = false}) {
+    if (!active) return;
+    if (energy) {
+      if (progress.energyPotions <= 0 ||
+          progress.energy >= progress.maxEnergy) {
+        return;
+      }
+      progress.energyPotions--;
+      progress.energy = math.min(progress.maxEnergy, progress.energy + 60);
+      announce('${progress.heroClass.resource} +60');
+    } else {
+      if (progress.healingPotions <= 0 || progress.hp >= progress.maxHp) return;
+      progress.healingPotions--;
+      progress.hp = math.min(progress.maxHp, progress.hp + 55);
+      syncLife();
+      announce('생명 +55');
+    }
+  }
+
   int get living => mobs.where((m) => !m.isDead && !m.isRemoving).length;
   void holdAttack(String source, bool held) {
     if (held && active) {
@@ -77,6 +184,20 @@ class Adventure extends ChangeNotifier {
   void tick(double dt) {
     if (!active) return;
     elapsed += dt;
+    noticeTime = math.max(0, noticeTime - dt);
+    combatTime = math.max(0, combatTime - dt);
+    progress.energy =
+        (progress.energy +
+                dt *
+                    (progress.heroClass == HeroClass.mage
+                        ? 9
+                        : combatTime > 0
+                        ? 0
+                        : -1))
+            .clamp(0, progress.maxEnergy);
+    for (final item in List<GroundLoot>.of(loot)) {
+      item.tryCollect();
+    }
     waveTime -= dt;
     notifyTime -= dt;
     if (notifyTime <= 0) {
@@ -98,17 +219,19 @@ class Adventure extends ChangeNotifier {
       waveTime = 7;
     }
     if (progress.kills >= 24 && !bossSummoned) {
-      bossSummoned = true;
-      spawnEnemy(
+      final boss = spawnEnemy(
         'golem',
         hero.position.toOffset() + const ui.Offset(0, -310),
         boss: true,
       );
-      bubble(
-        '숲의 파수꾼이 깨어났습니다',
-        hero.position.toOffset() - const ui.Offset(0, 85),
-        const ui.Color(0xffffd176),
-      );
+      if (boss != null) bossSummoned = true;
+      if (boss != null) {
+        bubble(
+          '숲의 파수꾼이 깨어났습니다',
+          hero.position.toOffset() - const ui.Offset(0, 85),
+          const ui.Color(0xffffd176),
+        );
+      }
     }
     // The fountain sanctuary heals gradually, never after a fatal hit.
     if (progress.hp > 0 &&
@@ -120,7 +243,7 @@ class Adventure extends ChangeNotifier {
   }
 
   void spawnPack({bool initial = false}) {
-    if (!active || living >= 12) return;
+    if (!active || living >= 12 || progress.bossDefeated) return;
     final at = hero.position.toOffset();
     if (town.contains(at) && at.dy < 3025 && !initial) return;
     final count = math.min(living < 4 ? 3 : 2, 12 - living);
@@ -131,7 +254,7 @@ class Adventure extends ChangeNotifier {
       final desired = initial
           ? ui.Offset(3780 + (i % 3) * 62, 3220 + (i % 2) * 50)
           : at + ui.Offset(math.cos(angle) * r, math.sin(angle) * r);
-      final kind = ['goblin', 'wolf', 'skeleton'][(i + progress.stage - 1) % 3];
+      final kind = ['goblin', 'wolf', 'skeleton'][(i + progress.level - 1) % 3];
       if (spawnEnemy(kind, desired) != null) added++;
     }
   }
@@ -161,6 +284,18 @@ class Adventure extends ChangeNotifier {
 
   void hurtHero(double damage) {
     if (!active || hero.invulnerable > 0) return;
+    combatTime = 5;
+    damage = progress.mitigate(damage, protection: hero.protection);
+    if (hero.armorTime > 0 && progress.heroClass == HeroClass.mage) {
+      for (final mob in mobs.where(
+        (m) => (m.body.center - hero.body.center).distance < 85,
+      )) {
+        mob.slow = math.max(mob.slow, 2);
+      }
+    }
+    if (progress.heroClass == HeroClass.warrior) {
+      progress.energy = math.min(progress.maxEnergy, progress.energy + 7);
+    }
     progress.hp = math.max(0, progress.hp - damage);
     hero.life.remove(damage);
     hero.invulnerable = .65;
@@ -179,6 +314,7 @@ class Adventure extends ChangeNotifier {
 
   void hit(HuntEnemy mob, double damage, ui.Offset impulse) {
     if (!active || mob.isDead || mob.isRemoving) return;
+    combatTime = 5;
     mob.life.remove(damage);
     mob.hurt = .14;
     final old = mob.position.toOffset(),
@@ -191,8 +327,17 @@ class Adventure extends ChangeNotifier {
     );
     if (mob.isDead && !mob.rewarded) {
       mob.rewarded = true;
+      final level = progress.level;
       progress.reward(boss: mob.boss);
-      hero.life.update(progress.hp);
+      syncLife();
+      if (progress.level > level) {
+        announce('레벨 ${progress.level} · 스킬 포인트 +${progress.level - level}');
+      }
+      if (mob.boss || progress.kills % 3 == 0) {
+        dropGear(progress.rollLoot(random, boss: mob.boss), mob.body.center);
+      }
+      if (!mob.boss && progress.kills % 5 == 0) progress.healingPotions++;
+      if (!mob.boss && progress.kills % 7 == 0) progress.energyPotions++;
       bubble(
         '+${mob.boss ? 100 : 8} 골드',
         mob.position.toOffset() - const ui.Offset(0, 34),
@@ -208,15 +353,13 @@ class Adventure extends ChangeNotifier {
     }
   }
 
-  bool buyHeal() => progress.buy(20, () {
-    progress.hp = math.min(progress.maxHp, progress.hp + 50);
-    hero.life.update(progress.hp);
-  });
+  bool buyHeal() => progress.buy(20, () => progress.healingPotions += 2);
+  bool buyEnergy() => progress.buy(18, () => progress.energyPotions += 2);
   bool buySword() => progress.buy(45, () => progress.swordDamage += 5);
   bool buyVitality() => progress.buy(60, () {
     progress.maxHp += 20;
     progress.hp = progress.maxHp;
-    hero.life.initial(progress.maxHp);
+    syncLife();
   });
   @override
   void dispose() {
@@ -233,7 +376,7 @@ class Guardian extends Player with WithCollision {
         position: Vector2(arrival.dx, arrival.dy),
         size: Vector2(24, 22),
         speed: 270,
-        life: 100,
+        life: session.progress.maxHp,
       ) {
     setupMovementByJoystick(
       moveType: MovementByJoystickType.angle,
@@ -245,11 +388,20 @@ class Guardian extends Player with WithCollision {
       animationTime = 0,
       attackClock = 0,
       swing = 0,
-      skillClock = 0,
       spin = 0,
       dodgeClock = 0,
       dashing = 0,
       invulnerable = 0;
+  final cooldowns = <String, double>{};
+  double armorTime = 0, frenzyTime = 0;
+  double get skillClock => cooldowns[session.progress.selectedSkill] ?? 0;
+  set skillClock(double value) =>
+      cooldowns[session.progress.selectedSkill] = value;
+  double get protection => armorTime > 0
+      ? (session.progress.heroClass == HeroClass.warrior
+            ? .25 + session.progress.rank('warcry') * .025
+            : .25 + session.progress.rank('iceArmor') * .05)
+      : 0;
   int strikes = 0;
   double attackBearing = math.pi / 2;
   ui.Offset? lastClearPosition;
@@ -292,6 +444,10 @@ class Guardian extends Player with WithCollision {
       skill();
     }
     if (held && event.id == LogicalKeyboardKey.shiftLeft) dodge();
+    if (held && event.id == LogicalKeyboardKey.digit1) session.potion();
+    if (held && event.id == LogicalKeyboardKey.digit2) {
+      session.potion(energy: true);
+    }
     super.onJoystickAction(event);
   }
 
@@ -302,6 +458,7 @@ class Guardian extends Player with WithCollision {
       stop();
       return;
     }
+    speed = frenzyTime > 0 ? 310 : 270;
     final before = position.toOffset();
     super.update(dt);
     var delta = position.toOffset() - before;
@@ -319,7 +476,11 @@ class Guardian extends Player with WithCollision {
     attackClock = math.max(0, attackClock - dt);
     swing = math.max(0, swing - dt);
     spin = math.max(0, spin - dt);
-    skillClock = math.max(0, skillClock - dt);
+    for (final id in cooldowns.keys.toList()) {
+      cooldowns[id] = math.max(0, cooldowns[id]! - dt);
+    }
+    armorTime = math.max(0, armorTime - dt);
+    frenzyTime = math.max(0, frenzyTime - dt);
     dodgeClock = math.max(0, dodgeClock - dt);
     invulnerable = math.max(0, invulnerable - dt);
     if (session.attackSources.isNotEmpty && attackClock <= 0) slash();
@@ -331,7 +492,18 @@ class Guardian extends Player with WithCollision {
     final candidates =
         session.mobs
             .where(
-              (e) => !e.isDead && (e.body.center - body.center).distance < 145,
+              (e) =>
+                  !e.isDead &&
+                  !e.isRemoving &&
+                  (e.body.center - body.center).distance <
+                      (session.progress.heroClass == HeroClass.mage
+                          ? 540
+                          : 165) &&
+                  session.world.clearLine(
+                    body.center,
+                    e.body.center,
+                    const ui.Size(3, 3),
+                  ),
             )
             .toList()
           ..sort(
@@ -347,15 +519,30 @@ class Guardian extends Player with WithCollision {
     attackBearing = angle;
     strikes++;
     session.combo = (session.combo + 1) % 3;
-    attackClock = .32;
+    attackClock = session.progress.attackInterval * (frenzyTime > 0 ? .6 : 1);
     swing = .23;
+    final p = session.progress;
+    if (p.heroClass == HeroClass.mage) {
+      session.game?.add(
+        ArcaneBolt(
+          session,
+          body.center,
+          angle,
+          p.basicDamage,
+          element: p.weapon.base.style,
+          explosive: p.rank('firebolt') >= 3,
+        ),
+      );
+      return;
+    }
+    p.energy = math.min(p.maxEnergy, p.energy + 4);
     for (final mob in List<HuntEnemy>.of(session.mobs)) {
       final d = mob.body.center - body.center,
           diff = math.atan2(
             math.sin(math.atan2(d.dy, d.dx) - angle),
             math.cos(math.atan2(d.dy, d.dx) - angle),
           );
-      if (d.distance < 112 + mob.size.x / 2 &&
+      if (d.distance < p.weapon.base.range + mob.size.x / 2 &&
           diff.abs() < 1.25 &&
           session.world.clearLine(
             position.toOffset(),
@@ -365,34 +552,111 @@ class Guardian extends Player with WithCollision {
         final push = d.distance > 0
             ? d / d.distance * 23
             : const ui.Offset(0, 23);
-        session.hit(
-          mob,
-          session.progress.swordDamage * (session.combo == 0 ? 1.6 : 1),
-          push,
-        );
+        session.hit(mob, p.basicDamage * (session.combo == 0 ? 1.6 : 1), push);
       }
     }
   }
 
   void skill() {
-    if (!session.active || skillClock > 0) return;
-    skillClock = 5;
-    spin = .5;
-    invulnerable = math.max(invulnerable, .25);
-    for (final mob in List<HuntEnemy>.of(session.mobs)) {
-      final d = mob.body.center - body.center;
-      if (d.distance < 165 &&
-          session.world.clearLine(
-            position.toOffset(),
-            mob.position.toOffset(),
-            const ui.Size(3, 3),
-          )) {
-        session.hit(
-          mob,
-          session.progress.swordDamage * 2.6,
-          d.distance > 0 ? d / d.distance * 45 : const ui.Offset(0, 45),
+    final p = session.progress, def = p.activeSkill, rank = p.rank(def.id);
+    if (!session.active || skillClock > 0 || rank == 0) return;
+    if (p.energy < def.cost) {
+      session.announce('${p.heroClass.resource}가 부족합니다');
+      return;
+    }
+    p.energy -= def.cost;
+    skillClock = def.cooldown;
+    final color = p.heroClass == HeroClass.warrior
+        ? const ui.Color(0xffffcf81)
+        : const ui.Color(0xff99e4ff);
+    switch (def.id) {
+      case 'warcry':
+        armorTime = 6;
+        areaStrike(
+          session,
+          body.center,
+          170 + rank * 8,
+          p.swordDamage * (1.0 + rank * .25),
+          stun: 2,
         );
-      }
+        session.game?.add(RuneBurst(session, body.center, color, radius: 190));
+      case 'whirlwind':
+        spin = .5;
+        invulnerable = math.max(invulnerable, .35);
+        session.game?.add(
+          WhirlwindPulse(session, this, p.swordDamage * (1.1 + rank * .24)),
+        );
+      case 'frenzy':
+        frenzyTime = 7;
+        areaStrike(
+          session,
+          body.center,
+          145,
+          p.swordDamage * (1.2 + rank * .2),
+        );
+        session.game?.add(
+          RuneBurst(
+            session,
+            body.center,
+            const ui.Color(0xffffa15e),
+            radius: 145,
+          ),
+        );
+      case 'frostNova':
+        final radius = 155.0 + rank * 15;
+        areaStrike(
+          session,
+          body.center,
+          radius,
+          p.swordDamage * (1.1 + rank * .3),
+          stun: 2,
+          slow: 3,
+        );
+        session.game?.add(
+          RuneBurst(session, body.center, color, radius: radius, icy: true),
+        );
+      case 'iceArmor':
+        armorTime = 12;
+        session.game?.add(
+          RuneBurst(session, body.center, color, radius: 70, icy: true),
+        );
+      case 'chainLightning':
+        chainLightning(
+          session,
+          body.center,
+          p.swordDamage * (1.5 + rank * .35),
+          3 + rank,
+        );
+      case 'meteor':
+        var target =
+            body.center + ui.Offset(math.cos(bearing), math.sin(bearing)) * 190;
+        final near =
+            session.mobs
+                .where(
+                  (m) =>
+                      !m.isDead &&
+                      (m.body.center - body.center).distance < 450 &&
+                      session.world.clearLine(
+                        body.center,
+                        m.body.center,
+                        const ui.Size(3, 3),
+                      ),
+                )
+                .toList()
+              ..sort(
+                (a, b) => (a.body.center - body.center).distance.compareTo(
+                  (b.body.center - body.center).distance,
+                ),
+              );
+        if (near.isNotEmpty) target = near.first.body.center;
+        session.game?.add(
+          MeteorFall(
+            session,
+            body.center,
+            target,
+            p.swordDamage * (3 + rank * .6),
+          ),
+        );
     }
     session.refresh();
   }
@@ -423,7 +687,7 @@ class Guardian extends Player with WithCollision {
     );
     session.art.actor(
       canvas,
-      'hero',
+      session.progress.heroClass == HeroClass.mage ? 'mage' : 'hero',
       feet,
       swing > 0 ? attackBearing : bearing,
       swing > 0 ? (swing > .17 ? 0 : 1) : (animationTime / .13).floor() % 2,
@@ -433,9 +697,12 @@ class Guardian extends Player with WithCollision {
           ? .58
           : 1,
     );
-    if (swing > 0) {
+    if (swing > 0 && session.progress.heroClass == HeroClass.warrior) {
       final phase = 1 - swing / .23,
-          rect = ui.Rect.fromCircle(center: center, radius: 68);
+          rect = ui.Rect.fromCircle(
+            center: center,
+            radius: session.progress.weapon.base.range * .58,
+          );
       canvas.drawArc(
         rect,
         attackBearing - 1.2 + phase * .9,
@@ -445,7 +712,13 @@ class Guardian extends Player with WithCollision {
           ..style = ui.PaintingStyle.stroke
           ..strokeWidth = 7 * (1 - phase) + 1
           ..strokeCap = ui.StrokeCap.round
-          ..color = ui.Color.fromRGBO(203, 248, 255, (1 - phase) * .9),
+          ..color =
+              (session.progress.weapon.base.style == 'hammer'
+                      ? const ui.Color(0xffffbd6c)
+                      : session.progress.weapon.base.style == 'axe'
+                      ? const ui.Color(0xffffdfa3)
+                      : const ui.Color(0xffcbf8ff))
+                  .withValues(alpha: (1 - phase) * .9),
       );
       canvas.drawArc(
         rect.deflate(5),
@@ -456,6 +729,21 @@ class Guardian extends Player with WithCollision {
           ..style = ui.PaintingStyle.stroke
           ..strokeWidth = 2
           ..color = ui.Color.fromRGBO(255, 249, 213, 1 - phase),
+      );
+    }
+    if (armorTime > 0 || frenzyTime > 0) {
+      canvas.drawOval(
+        ui.Rect.fromCenter(
+          center: feet - const ui.Offset(0, 22),
+          width: 54,
+          height: 72,
+        ),
+        ui.Paint()
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..color = session.progress.heroClass == HeroClass.mage
+              ? const ui.Color(0x9979dfff)
+              : const ui.Color(0x99ffce83),
       );
     }
     if (spin > 0) {
@@ -498,7 +786,13 @@ class HuntEnemy extends Enemy with WithCollision {
   final String kind;
   final bool boss;
   bool rewarded = false;
-  double bearing = math.pi / 2, anim = 0, hurt = 0, attackClock = 1, replan = 0;
+  double bearing = math.pi / 2,
+      anim = 0,
+      hurt = 0,
+      attackClock = 1,
+      replan = 0,
+      stun = 0,
+      slow = 0;
   List<ui.Offset> route = [];
   ui.Offset? routeGoal;
   ui.Offset? lastClearPosition;
@@ -523,13 +817,25 @@ class HuntEnemy extends Enemy with WithCollision {
     var before = position.toOffset();
     final target = session.hero.body.center - body.center;
     hurt = math.max(0, hurt - dt);
+    stun = math.max(0, stun - dt);
+    slow = math.max(0, slow - dt);
     attackClock -= dt;
     replan -= dt;
     if (target.distance > 950) {
       stop();
       return;
     }
-    if (target.distance < (boss ? 64 : 42)) {
+    if (stun > 0) {
+      stop();
+      super.update(dt);
+      return;
+    }
+    if (target.distance < (boss ? 64 : 42) &&
+        session.world.clearLine(
+          body.center,
+          session.hero.body.center,
+          const ui.Size(3, 3),
+        )) {
       stop();
       if (attackClock <= 0) {
         attackClock = boss ? 1.05 : 1.3;
@@ -577,7 +883,10 @@ class HuntEnemy extends Enemy with WithCollision {
       bearing = math.atan2(delta.dy, delta.dx);
       moveByAngle(
         bearing,
-        speed: math.min(speed, delta.distance / math.max(.001, dt)),
+        speed: math.min(
+          speed * (slow > 0 ? .45 : 1),
+          delta.distance / math.max(.001, dt),
+        ),
       );
       anim += dt;
     } else {
