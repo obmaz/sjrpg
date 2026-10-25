@@ -780,6 +780,39 @@ class Progress {
       level >= s.requiredLevel &&
       skillPoints > 0 &&
       rank(s.id) < SkillDef.maxRank;
+  static const skillResetPrice = 50;
+  int get investedSkillPoints {
+    final basic = heroClass == HeroClass.warrior ? 'cleave' : 'firebolt';
+    final starter = heroClass == HeroClass.warrior ? 'warcry' : 'frostNova';
+    return ranks.entries.fold(
+      0,
+      (sum, entry) =>
+          sum +
+          math.max(
+            0,
+            entry.value - (entry.key == basic || entry.key == starter ? 1 : 0),
+          ),
+    );
+  }
+
+  bool resetSkills() {
+    final refund = investedSkillPoints;
+    if (refund == 0 || gold < skillResetPrice) return false;
+    gold -= skillResetPrice;
+    skillPoints += refund;
+    final basic = heroClass == HeroClass.warrior ? 'cleave' : 'firebolt';
+    final starter = heroClass == HeroClass.warrior ? 'warcry' : 'frostNova';
+    ranks
+      ..clear()
+      ..[basic] = 1
+      ..[starter] = 1;
+    selectedSkill = starter;
+    secondarySkill = tertiarySkill = quaternarySkill = null;
+    hp = math.min(hp, maxHp);
+    energy = math.min(energy, maxEnergy);
+    return true;
+  }
+
   bool learn(SkillDef skill) {
     if (!canLearn(skill)) return false;
     skillPoints--;

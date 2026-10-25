@@ -202,7 +202,8 @@ class ArcaneBolt extends GameComponent {
     this.damage, {
     this.element = 'fire',
     this.explosive = false,
-  }) : direction = ui.Offset(math.cos(angle), math.sin(angle)) {
+  }) : direction = ui.Offset(math.cos(angle), math.sin(angle)),
+       buildRevision = session.buildRevision {
     position = Vector2(at.dx, at.dy);
     size = Vector2.all(12);
   }
@@ -211,6 +212,7 @@ class ArcaneBolt extends GameComponent {
   final double damage;
   final String element;
   final bool explosive;
+  final int buildRevision;
   double remaining = .88;
   bool resolved = false;
   void finish() {
@@ -225,6 +227,10 @@ class ArcaneBolt extends GameComponent {
       : const ui.Color(0xffffb659);
   @override
   void update(double dt) {
+    if (buildRevision != session.buildRevision) {
+      finish();
+      return;
+    }
     if (!session.active || resolved) return;
     dt = math.min(dt, math.min(.05, remaining));
     remaining -= dt;
@@ -383,16 +389,22 @@ class RuneBurst extends GameComponent {
 }
 
 class WhirlwindPulse extends GameComponent {
-  WhirlwindPulse(this.session, this.hero, this.damage);
+  WhirlwindPulse(this.session, this.hero, this.damage)
+    : buildRevision = session.buildRevision;
   final Adventure session;
   final Guardian hero;
   final double damage;
+  final int buildRevision;
   double age = 0;
   int pulses = 0;
   @override
   bool get isVisible => true;
   @override
   void update(double dt) {
+    if (buildRevision != session.buildRevision) {
+      removeFromParent();
+      return;
+    }
     if (!session.active) return;
     age += math.min(.05, dt);
     if (age >= pulses * .16 && pulses < 3) {
@@ -510,10 +522,12 @@ class LightningTrace extends GameComponent {
 }
 
 class MeteorFall extends GameComponent {
-  MeteorFall(this.session, this.origin, this.target, this.damage);
+  MeteorFall(this.session, this.origin, this.target, this.damage)
+    : buildRevision = session.buildRevision;
   final Adventure session;
   final ui.Offset origin, target;
   final double damage;
+  final int buildRevision;
   double age = 0;
   bool struck = false;
   @override
@@ -522,6 +536,11 @@ class MeteorFall extends GameComponent {
   int get priority => 9999;
   @override
   void update(double dt) {
+    if (buildRevision != session.buildRevision) {
+      struck = true;
+      removeFromParent();
+      return;
+    }
     if (!session.active) return;
     age += math.min(.05, dt);
     if (age >= .65 && !struck) {

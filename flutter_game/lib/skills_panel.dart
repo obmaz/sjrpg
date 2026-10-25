@@ -43,6 +43,120 @@ class _SkillsPanelState extends State<SkillsPanel> {
       ? '습득 · 1P'
       : '강화 · 1P';
 
+  Future<void> confirmReset() async {
+    final refund = p.investedSkillPoints;
+    if (refund == 0) return;
+    final approved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(16),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: 380,
+            maxHeight:
+                MediaQuery.sizeOf(dialogContext).height -
+                MediaQuery.paddingOf(dialogContext).vertical -
+                40,
+          ),
+          child: FramedSurface(
+            art: s.art,
+            compact: true,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(20, 20, 20, 12),
+                  child: Text(
+                    '스킬 초기화',
+                    style: TextStyle(
+                      color: gold,
+                      fontSize: 21,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Flexible(
+                  child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          '투자한 $refund 포인트를 돌려받습니다.',
+                          style: const TextStyle(
+                            color: cream,
+                            fontSize: 16,
+                            height: 1.6,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          '기본 공격과 시작 기술은 1등급으로 남습니다. 진행 중인 기술 효과는 종료되며 재사용 대기시간은 유지됩니다.',
+                          style: TextStyle(
+                            color: _dim,
+                            fontSize: 14,
+                            height: 1.6,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          '비용 ${Progress.skillResetPrice} G · 보유 ${p.gold} G',
+                          style: const TextStyle(color: gold, fontSize: 15),
+                        ),
+                        if (p.gold < Progress.skillResetPrice)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8),
+                            child: Text(
+                              '골드가 부족합니다',
+                              style: TextStyle(
+                                color: Color(0xffffa493),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GameAction(
+                          '취소',
+                          onTap: () => Navigator.of(dialogContext).pop(false),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: GameAction(
+                          '${Progress.skillResetPrice} G · 초기화',
+                          primary: true,
+                          onTap: p.gold < Progress.skillResetPrice
+                              ? null
+                              : () => Navigator.of(dialogContext).pop(true),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    if (approved != true || !mounted || !s.resetSkills()) return;
+    setState(() {
+      selected = null;
+      filter = 0;
+      if (gridScroll.hasClients) gridScroll.jumpTo(0);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
@@ -188,11 +302,30 @@ class _SkillsPanelState extends State<SkillsPanel> {
                         ),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
-                          child: GameAction(
-                            '모험 계속하기',
-                            primary: true,
-                            icon: Icons.play_arrow_rounded,
-                            onTap: widget.onClose,
+                          child: Row(
+                            children: [
+                              IconButton(
+                                tooltip: '스킬 초기화',
+                                onPressed: p.investedSkillPoints > 0
+                                    ? confirmReset
+                                    : null,
+                                icon: Icon(
+                                  Icons.restart_alt_rounded,
+                                  color: p.investedSkillPoints > 0
+                                      ? gold
+                                      : _dim,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: GameAction(
+                                  '모험 계속하기',
+                                  primary: true,
+                                  icon: Icons.play_arrow_rounded,
+                                  onTap: widget.onClose,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],

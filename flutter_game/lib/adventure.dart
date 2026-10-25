@@ -57,6 +57,7 @@ class Adventure extends ChangeNotifier {
   double elapsed = 0, waveTime = 0, notifyTime = 0;
   ui.Offset lastPack = arrival;
   int combo = 0, rageStrike = -1;
+  int buildRevision = 0;
   final random = math.Random(52);
   bool get active => ready && !disposed && !paused && !defeated && !won;
   String get region => world.areaName(hero.position.toOffset());
@@ -150,6 +151,16 @@ class Adventure extends ChangeNotifier {
 
   bool learn(SkillDef skill) {
     if (defeated || disposed || !progress.learn(skill)) return false;
+    syncLife();
+    refresh();
+    return true;
+  }
+
+  bool resetSkills() {
+    if (defeated || disposed || !progress.resetSkills()) return false;
+    buildRevision++;
+    releaseInput();
+    hero.armorTime = hero.frenzyTime = hero.spin = 0;
     syncLife();
     refresh();
     return true;
