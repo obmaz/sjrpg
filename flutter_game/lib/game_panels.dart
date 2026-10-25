@@ -116,7 +116,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
           onCommit: () {
             widget.onCheckpoint?.call();
             setState(() {});
-            if (choosingTimePath && panelScroll.hasClients) {
+            if (s.world.stage == WorldStage.sands && panelScroll.hasClients) {
               panelScroll.jumpTo(0);
             }
           },

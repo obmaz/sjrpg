@@ -73,4 +73,63 @@ void main() {
       },
     );
   }
+  for (final size in const [Size(320, 420), Size(390, 844), Size(844, 390)]) {
+    for (final path in TimePath.values) {
+      testWidgets('$path keeps the next commission above history at $size', (
+        tester,
+      ) async {
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final s = Adventure(GameArt(), stage: WorldStage.sands)
+          ..start(TestGame());
+        s.pause();
+        s.timePath = path;
+        addTearDown(s.dispose);
+        final quests = timeCommissions.where((q) => q.path == path).toList();
+        s.cleansedSites.add(quests.first.id);
+        for (var step = 1; step < 4; step++) {
+          final quest = quests[step];
+          await tester.pumpWidget(
+            MaterialApp(
+              home: AdventurePanel(
+                key: ValueKey('$path-$step'),
+                session: s,
+                name: 'journal',
+                onClose: () {},
+                onRestart: () {},
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          final accept = find.text('${quest.title} 수락');
+          final footer = tester.getRect(find.text('모험 계속하기'));
+          expect(tester.getRect(accept).top, greaterThan(0));
+          expect(tester.getRect(accept).bottom, lessThan(footer.top));
+          expect(
+            tester.getRect(find.text('${step + 1}. ${quest.title}')).top,
+            lessThan(tester.getRect(find.text('1. ${quests.first.title}')).top),
+          );
+          final semantics = tester.ensureSemantics();
+          await tester.tap(accept);
+          await tester.pumpAndSettle();
+          expect(s.acceptedCommission, quest.id);
+          expect(find.text('진행 중 의뢰'), findsOneWidget);
+          final history = find.text('1. ${quests.first.title}');
+          await tester.ensureVisible(history);
+          await tester.pumpAndSettle();
+          if (find.text(quests.first.story).evaluate().isEmpty) {
+            await tester.tap(history);
+            await tester.pumpAndSettle();
+          }
+          expect(find.text(quests.first.story), findsOneWidget);
+          expect(tester.takeException(), null);
+          semantics.dispose();
+          s.cleansedSites.add(quest.id);
+          s.acceptedCommission = null;
+        }
+      });
+    }
+  }
 }
