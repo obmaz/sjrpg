@@ -5,6 +5,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <link rel="icon" href="data:,">
+  <link rel="manifest" href="/sjrpg/new/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/sjrpg/new/icons/guardian.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#102c29">
   <meta name="description" content="자연의 수호자 — 새로운 핵앤슬래시 모험">
   <title>자연의 수호자 · 새로운 모험</title>
@@ -34,6 +37,7 @@
     document.addEventListener('visibilitychange', () => {if(document.hidden)window.dispatchEvent(new Event('blur'));});
     window.addEventListener('flutter-first-frame', () => document.getElementById('loading')?.remove());
   </script>
+  <script src="install.js"></script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

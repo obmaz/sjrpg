@@ -1,0 +1,26 @@
+{
+  "id": "/sjrpg/new/",
+  "name": "자연의 수호자",
+  "short_name": "수호자",
+  "description": "전사와 마법사의 핵앤슬래시 모험",
+  "start_url": "/sjrpg/new/",
+  "scope": "/sjrpg/new/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#102c29",
+  "theme_color": "#102c29",
+  "icons": [
+    {
+      "src": "icons/guardian-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/guardian.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

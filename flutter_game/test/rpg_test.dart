@@ -347,6 +347,27 @@ void main() {
     expect(s.progress.kills, 0);
     expect(s.elapsed, 0);
   });
+  test('three story chests grant one optional skill point only once', () {
+    final s = Adventure(GameArt());
+    s.start(TestGame());
+    addTearDown(s.dispose);
+    final before = s.progress.skillPoints;
+    for (final memory in stageMemories) {
+      final at = stageChests[memory.chest];
+      s.hero.position.setValues(at.dx, at.dy);
+      s.openChest();
+    }
+    expect(s.recoveredMemories, 3);
+    expect(s.memoryRewarded, true);
+    expect(s.progress.skillPoints, before + 1);
+    final at = stageChests[4];
+    s.hero.position.setValues(at.dx, at.dy);
+    s.openChest();
+    s.openChest();
+    expect(s.progress.skillPoints, before + 1);
+    expect(s.openedChests.length, 4);
+    expect(s.noticeTime, 0);
+  });
   test('level ups restore a limited portion of life', () {
     final p = Progress();
     p.hp = 10;

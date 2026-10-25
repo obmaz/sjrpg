@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'device_settings.dart';
 import 'game_ui.dart';
+import 'install_controls.dart';
 
 class DeviceControls extends StatefulWidget {
   const DeviceControls(this.settings, {super.key});
@@ -88,6 +89,7 @@ class _DeviceControlsState extends State<DeviceControls> {
             ),
           ),
           const SizedBox(height: 22),
+          const InstallControls(),
           const Divider(color: Color(0x557b8c62)),
           const SizedBox(height: 18),
         ],

@@ -74,3 +74,5 @@ and available at https://www.dndbeyond.com/srd. The SRD 5.1 is licensed under th
 이름은 한국어로 옮겼으며 실시간 전투 수치·능력·지역 보상 및 시각 디자인은 이 게임에 맞게 변경했습니다.
 
 Flutter 전용 `actors-roll.png`는 전사·마법사의 웅크리기·구르기·회복 포즈를 생성한 그림이며, `roll-bounds.json`은 원본의 실제 프레임 경계를 기록합니다. 이동은 연속 방향이며 구르기는 8방향·4포즈를 사용합니다. `terrain-materials.png`는 초원·숲 바닥·모래·물가·수면·흙길의 작은 질감으로 생성했습니다. 두 원본은 `/workspace/generated_images/exec-b36bab82-79de-4211-ba99-b6755a0b19f3.png`, `/workspace/generated_images/exec-1bb1282c-1e9d-4f8b-8d26-52143c977a9e.png`입니다.
+
+앱 설치 아이콘 `flutter_game/web/icons/guardian.png`는 청록 방패·금빛 잎 문양으로 생성한 독자 아이콘입니다. 원본은 `/workspace/generated_images/exec-dcade548-2fd8-4ed2-b363-793b12fe23a4.png`입니다.

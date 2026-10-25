@@ -5,6 +5,7 @@ import 'game_ui.dart';
 import 'rpg_model.dart';
 import 'rpg_widgets.dart';
 import 'device_controls.dart';
+import 'world_map.dart';
 
 class AdventurePanel extends StatefulWidget {
   const AdventurePanel({
@@ -39,6 +40,9 @@ class _AdventurePanelState extends State<AdventurePanel> {
         p = s.progress,
         name = widget.name,
         media = MediaQuery.of(context);
+    if (name == 'map') {
+      return ExpandedWorldMap(session: s, onClose: widget.onClose);
+    }
     final result = name == 'victory' || name == 'defeat';
     final title =
         {
@@ -163,6 +167,44 @@ class _AdventurePanelState extends State<AdventurePanel> {
               : '숲길 정화 후 등장',
         ),
         const SizedBox(height: 18),
+        _quest(
+          '숲의 기억 · 선택 여정',
+          '서쪽·북쪽·동쪽 길의 상자에서 기억 3개를 모으세요. 완성 보상: 스킬 포인트 +1.',
+          s.recoveredMemories / stageMemories.length,
+          s.memoryRewarded
+              ? '보상 획득'
+              : '${s.recoveredMemories} / ${stageMemories.length}',
+        ),
+        for (final memory in stageMemories)
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            leading: Icon(
+              s.openedChests.contains(memory.chest)
+                  ? Icons.auto_stories
+                  : Icons.lock_outline,
+              color: s.openedChests.contains(memory.chest)
+                  ? gold
+                  : const Color(0xff7d9c90),
+            ),
+            title: Text(
+              s.openedChests.contains(memory.chest) ? memory.title : '찾지 못한 기억',
+              style: const TextStyle(fontSize: 15, color: cream),
+            ),
+            subtitle: Text(
+              memory.hint,
+              style: const TextStyle(fontSize: 13, color: Color(0xffa9c5b9)),
+            ),
+            childrenPadding: const EdgeInsets.only(bottom: 16),
+            children: [
+              Text(
+                s.openedChests.contains(memory.chest)
+                    ? memory.story
+                    : '이 길의 상자에 숲의 과거가 남아 있습니다.',
+                style: const TextStyle(fontSize: 15, height: 1.7, color: cream),
+              ),
+            ],
+          ),
+        const SizedBox(height: 16),
         _line(
           Icons.inventory_2_outlined,
           '발견한 상자',

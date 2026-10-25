@@ -27,16 +27,8 @@ const stageChests = [
   Offset(3600, 16500),
 ];
 
-Rect localMapBounds(Offset focus, {double span = 2100}) {
-  final width = math.min(span, worldSize.width),
-      height = math.min(span, worldSize.height);
-  return Rect.fromLTWH(
-    (focus.dx - width / 2).clamp(0.0, worldSize.width - width),
-    (focus.dy - height / 2).clamp(0.0, worldSize.height - height),
-    width,
-    height,
-  );
-}
+Rect localMapBounds(Offset focus, {double span = 2100}) =>
+    Rect.fromCenter(center: focus, width: span, height: span);
 
 int facingFrame(double angle, int count) =>
     (((angle - math.pi / 2) * count / (math.pi * 2)).round() % count + count) %

@@ -233,7 +233,10 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
               bottom: false,
               child: Align(
                 alignment: Alignment.topCenter,
-                child: GameHud(adventure),
+                child: GameHud(
+                  adventure,
+                  onMap: modal == null ? () => open('map') : null,
+                ),
               ),
             ),
             if (!adventure.ready)

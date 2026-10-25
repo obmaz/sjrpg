@@ -29,6 +29,10 @@ class Adventure extends ChangeNotifier {
   final loot = <GroundLoot>[];
   final texts = <BattleText>[];
   final openedChests = <int>{};
+  bool memoryRewarded = false;
+  int get recoveredMemories => stageMemories
+      .where((memory) => openedChests.contains(memory.chest))
+      .length;
   String notice = "";
   double noticeTime = 0, combatTime = 0;
   int get skillPoints => progress.skillPoints;
@@ -98,6 +102,15 @@ class Adventure extends ChangeNotifier {
       chestLocations[index] - const ui.Offset(0, 55),
       const ui.Color(0xffffd774),
     );
+    if (!memoryRewarded && recoveredMemories == stageMemories.length) {
+      memoryRewarded = true;
+      progress.skillPoints++;
+      bubble(
+        '숲의 기억 · 스킬 포인트 +1',
+        hero.body.center - const ui.Offset(0, 80),
+        const ui.Color(0xffa8f2d2),
+      );
+    }
     refresh();
   }
 
@@ -381,7 +394,19 @@ class Adventure extends ChangeNotifier {
       progress.reward(boss: mob.boss);
       syncLife();
       if (progress.level > level) {
-        announce('레벨 ${progress.level} · 스킬 포인트 +${progress.level - level}');
+        bubble(
+          'Lv.${progress.level}',
+          hero.body.center - const ui.Offset(0, 85),
+          const ui.Color(0xffffe4a1),
+        );
+        game?.add(
+          RuneBurst(
+            this,
+            hero.body.center,
+            const ui.Color(0xffffcf81),
+            radius: 65,
+          ),
+        );
       }
       if (mob.boss || progress.kills % 3 == 0) {
         dropGear(progress.rollLoot(random, boss: mob.boss), mob.body.center);
@@ -521,7 +546,7 @@ class Guardian extends Player with WithCollision {
           ui.Offset(math.cos(rollBearing), math.sin(rollBearing)) *
           speed *
           1.9 *
-          dt;
+          math.min(dt, dashing);
       dashing -= dt;
     }
     final p = session.world.move(before, delta, ui.Size(size.x, size.y));

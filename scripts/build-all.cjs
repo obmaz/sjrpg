@@ -46,6 +46,10 @@ function buildAll(
         .readFileSync(path.join(flutterOutput, 'index.html'), 'utf8')
         .replace(/<base href="[^"]*">/, `<base href="/sjrpg/new/releases/${version}/">`);
     fs.writeFileSync(path.join(newRoot, 'index.html'), index);
+    for (const file of ['manifest.webmanifest', 'sw.js', 'icons']) {
+        const source = path.join(flutterOutput, file);
+        if (fs.existsSync(source)) fs.cpSync(source, path.join(newRoot, file), { recursive: true });
+    }
     const portal = fs
         .readFileSync(path.join(root, 'site/index.html'), 'utf8')
         .replaceAll('{{legacyAssets}}', `legacy/${legacy.assetRoot}/assets`)

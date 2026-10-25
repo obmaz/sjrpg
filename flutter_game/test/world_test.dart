@@ -19,20 +19,17 @@ void main() {
       expect(facingFrame(0, 16), 12);
     },
   );
-  test(
-    'local minimap follows the hero and stays within the expanded world',
-    () {
-      expect(worldSize, const Size(23040, 17280));
-      final view = localMapBounds(const Offset(14000, 12000));
-      expect(view.center, const Offset(14000, 12000));
-      expect(view.size, const Size(2100, 2100));
-      expect(localMapBounds(Offset.zero).topLeft, Offset.zero);
-      expect(
-        localMapBounds(const Offset(30000, 20000)).bottomRight,
-        const Offset(23040, 17280),
-      );
-    },
-  );
+  test('local minimap keeps the hero centered even at world boundaries', () {
+    expect(worldSize, const Size(23040, 17280));
+    final view = localMapBounds(const Offset(14000, 12000));
+    expect(view.center, const Offset(14000, 12000));
+    expect(view.size, const Size(2100, 2100));
+    expect(localMapBounds(Offset.zero).center, Offset.zero);
+    expect(
+      localMapBounds(const Offset(23040, 17280)).center,
+      const Offset(23040, 17280),
+    );
+  });
   test('large biomes include open clearings and distinct sand regions', () {
     final world = AdventureWorld();
     expect(world.sandFields.length, 3);

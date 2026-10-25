@@ -11,8 +11,9 @@ String gameTime(double seconds) =>
     '${seconds ~/ 60}:${(seconds.toInt() % 60).toString().padLeft(2, '0')}';
 
 class GameHud extends StatelessWidget {
-  const GameHud(this.session, {super.key});
+  const GameHud(this.session, {this.onMap, super.key});
   final Adventure session;
+  final VoidCallback? onMap;
   @override
   Widget build(BuildContext context) {
     final p = session.progress;
@@ -170,7 +171,15 @@ class GameHud extends StatelessWidget {
             child: SizedBox(
               width: 85,
               height: 85,
-              child: CustomPaint(painter: MapPainter(session)),
+              child: Semantics(
+                button: true,
+                label: '지도 확대',
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onMap,
+                  child: CustomPaint(painter: MapPainter(session)),
+                ),
+              ),
             ),
           ),
           Positioned(
@@ -303,13 +312,17 @@ class MapPainter extends CustomPainter {
     final rect = Offset.zero & s;
     c.save();
     if (round) c.clipPath(Path()..addOval(rect.deflate(3)));
-    c.drawRect(rect, Paint()..color = const Color(0xff7d9656));
+    c.drawRect(rect, Paint()..color = const Color(0xff102a29));
     c.save();
     final view = round
         ? localMapBounds(session.hero.body.center)
         : Offset.zero & worldSize;
     c.scale(s.width / view.width, s.height / view.height);
     c.translate(-view.left, -view.top);
+    c.drawRect(
+      Offset.zero & worldSize,
+      Paint()..color = const Color(0xff7d9656),
+    );
     for (final wood in session.world.woods) {
       c.drawPath(wood.path, Paint()..color = const Color(0xff315947));
     }

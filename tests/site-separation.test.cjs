@@ -22,6 +22,10 @@ test('both games deploy independently and Flutter assets use a versioned base be
     buildSite(path.resolve(__dirname, '..'), legacyCache);
     fs.writeFileSync(path.join(compiled, 'flutter_bootstrap.js'), 'bootstrap');
     fs.writeFileSync(path.join(compiled, 'assets', 'art.json'), '{}');
+    fs.writeFileSync(path.join(compiled, 'manifest.webmanifest'), '{"start_url":"/sjrpg/new/"}');
+    fs.writeFileSync(path.join(compiled, 'sw.js'), 'network only worker');
+    fs.mkdirSync(path.join(compiled, 'icons'));
+    fs.writeFileSync(path.join(compiled, 'icons/guardian.png'), 'app icon');
     const first = buildAll(path.resolve(__dirname, '..'), output, compiled, legacyCache);
     assert.match(fs.readFileSync(path.join(output, 'index.html'), 'utf8'), /href="legacy\/"/);
     assert.match(
@@ -42,6 +46,12 @@ test('both games deploy independently and Flutter assets use a versioned base be
     fs.writeFileSync(path.join(compiled, 'main.dart.wasm'), 'wasm engine update');
     const second = buildAll(path.resolve(__dirname, '..'), output, compiled, legacyCache);
     assert.notEqual(first.version, second.version);
+    assert.equal(
+        fs.readFileSync(path.join(output, 'new/manifest.webmanifest'), 'utf8'),
+        '{"start_url":"/sjrpg/new/"}',
+    );
+    assert.equal(fs.readFileSync(path.join(output, 'new/sw.js'), 'utf8'), 'network only worker');
+    assert.equal(fs.readFileSync(path.join(output, 'new/icons/guardian.png'), 'utf8'), 'app icon');
     assert.ok(
         fs
             .readFileSync(path.join(output, 'index.html'), 'utf8')

@@ -29,12 +29,10 @@ class GameArt {
         'actors-creatures-b',
         'actors-villagers',
         'village-scene',
-        'landscape-materials',
         'landscape-bridge',
         'world-forest',
         'world-desert',
         'controls',
-        'ui-reference',
         'popup-frame',
         'atlas',
       ].map((name) async {
@@ -129,9 +127,9 @@ class GameArt {
         const ui.Offset(0, 64),
       ),
       (
-        const ui.Rect.fromLTWH(0, 896, 640, 64),
+        const ui.Rect.fromLTWH(0, 832, 640, 128),
         const ui.Offset(0, 960),
-        const ui.Offset(0, 896),
+        const ui.Offset(0, 832),
       ),
     ]) {
       canvas.drawRect(
