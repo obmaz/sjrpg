@@ -24,7 +24,10 @@ test('both games deploy independently and Flutter assets use a versioned base be
     fs.writeFileSync(path.join(compiled, 'assets', 'art.json'), '{}');
     const first = buildAll(path.resolve(__dirname, '..'), output, compiled, legacyCache);
     assert.match(fs.readFileSync(path.join(output, 'index.html'), 'utf8'), /href="legacy\/"/);
-    assert.match(fs.readFileSync(path.join(output, 'index.html'), 'utf8'), /href="new\/"/);
+    assert.match(
+        fs.readFileSync(path.join(output, 'index.html'), 'utf8'),
+        /href="new\/\?v=[a-f0-9]+"/,
+    );
     const legacy = fs.readFileSync(path.join(output, 'legacy/index.html'), 'utf8');
     assert.ok(legacy.includes(`${first.legacy.assetRoot}/src/game.js`));
     const current = fs.readFileSync(path.join(output, 'new/index.html'), 'utf8');
@@ -39,6 +42,11 @@ test('both games deploy independently and Flutter assets use a versioned base be
     fs.writeFileSync(path.join(compiled, 'main.dart.wasm'), 'wasm engine update');
     const second = buildAll(path.resolve(__dirname, '..'), output, compiled, legacyCache);
     assert.notEqual(first.version, second.version);
+    assert.ok(
+        fs
+            .readFileSync(path.join(output, 'index.html'), 'utf8')
+            .includes(`new/?v=${second.version}`),
+    );
     assert.equal(
         fs.readFileSync(
             path.join(output, 'new/releases', second.version, 'main.dart.wasm'),

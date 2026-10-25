@@ -48,7 +48,8 @@ function buildAll(
     fs.writeFileSync(path.join(newRoot, 'index.html'), index);
     const portal = fs
         .readFileSync(path.join(root, 'site/index.html'), 'utf8')
-        .replaceAll('{{legacyAssets}}', `legacy/${legacy.assetRoot}/assets`);
+        .replaceAll('{{legacyAssets}}', `legacy/${legacy.assetRoot}/assets`)
+        .replaceAll('{{newVersion}}', version);
     fs.writeFileSync(path.join(destination, 'index.html'), portal);
     fs.writeFileSync(path.join(destination, '.nojekyll'), '');
     return { legacy, version, files: filesUnder(destination).length };

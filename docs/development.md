@@ -21,7 +21,7 @@ Flutter 변경은 `dart format --output=none --set-exit-if-changed lib test`, `f
 
 Flutter는 `flutter build web --wasm --release --base-href /sjrpg/new/ --no-web-resources-cdn`으로 독립 빌드합니다. GitHub Pages의 헤더 제약에 맞춰 `forceSingleThreadedSkwasm`을 사용합니다. 지원 브라우저는 `main.dart.wasm`·Skwasm을 로드하고 미지원 브라우저는 Flutter가 함께 만든 JS/CanvasKit 빌드로 실행합니다. `dart:html`을 쓰지 않고 `dart.library.js_interop` 조건부 구현과 `package:web`을 사용합니다. 모바일 진입 높이는 고정하되 실제 `fullscreenchange` 동안만 100dvh를 적용하고 종료 시 원래 높이를 복원합니다.
 
-`npm run build`는 이미 준비된 `flutter_game/build/web/`와 `.build-cache/legacy/`를 복사해 `dist/`를 조립하며 두 게임을 컴파일하지 않습니다. WASM/MJS/JS 산출물이나 Legacy 진입점이 없으면 거부합니다. Flutter 산출물 해시로 `new/releases/<해시>/`를 만들고 `new/index.html`의 base를 설정합니다. 기존 게임은 자체 해시를 유지합니다. 서비스 워커를 등록하지 않습니다. `site/index.html`은 두 개의 짧은 링크만 배치한 스크롤 없는 버전 선택 화면입니다.
+`npm run build`는 이미 준비된 `flutter_game/build/web/`와 `.build-cache/legacy/`를 복사해 `dist/`를 조립하며 두 게임을 컴파일하지 않습니다. WASM/MJS/JS 산출물이나 Legacy 진입점이 없으면 거부합니다. Flutter 산출물 해시로 `new/releases/<해시>/`를 만들고 `new/index.html`의 base를 설정합니다. 기존 게임은 자체 해시를 유지합니다. 서비스 워커를 등록하지 않습니다. `site/index.html`은 두 개의 짧은 링크만 배치한 스크롤 없는 버전 선택 화면입니다. 새 게임 링크에는 해당 Flutter 산출물의 버전 쿼리를 넣어 이전 진입 HTML 캐시를 피합니다.
 
 GitHub Actions의 **Check and deploy**는 `legacy`·`flutter` 작업을 분리하고 각각 콘텐츠 키로 캐시합니다. Flutter만 바뀌면 Legacy를 다시 빌드하지 않으며, 선택 화면만 바뀌면 두 게임의 빌드 캐시를 재사용합니다. `assemble` 작업은 두 산출물을 받아 Pages 파일로 묶습니다. 완료 보고 전 해당 커밋의 배포 성공과 공개 페이지에서 WASM 리소스·전체화면·진동 API·두 하위 경로 로드를 확인합니다. 진동 API 호출 검증을 실물 기기 진동 검증으로 보고하지 않습니다.
 
