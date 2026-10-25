@@ -435,6 +435,7 @@ class Guardian extends Player with WithCollision {
     );
   }
   final Adventure session;
+  double rollBearing = math.pi / 2;
   double bearing = math.pi / 2,
       animationTime = 0,
       attackClock = 0,
@@ -517,7 +518,10 @@ class Guardian extends Player with WithCollision {
     var delta = position.toOffset() - before;
     if (dashing > 0) {
       delta =
-          ui.Offset(math.cos(bearing), math.sin(bearing)) * speed * 1.9 * dt;
+          ui.Offset(math.cos(rollBearing), math.sin(rollBearing)) *
+          speed *
+          1.9 *
+          dt;
       dashing -= dt;
     }
     final p = session.world.move(before, delta, ui.Size(size.x, size.y));
@@ -540,7 +544,7 @@ class Guardian extends Player with WithCollision {
   }
 
   void slash() {
-    if (!session.active || attackClock > 0) return;
+    if (!session.active || attackClock > 0 || dashing > 0) return;
     var angle = bearing;
     final candidates =
         session.mobs
@@ -622,6 +626,7 @@ class Guardian extends Player with WithCollision {
   }
 
   void skill({bool secondary = false}) {
+    if (dashing > 0) return;
     final p = session.progress;
     final def = secondary ? p.secondarySkillDef : p.activeSkill;
     if (def == null) return;
@@ -732,6 +737,8 @@ class Guardian extends Player with WithCollision {
   void dodge() {
     if (!session.active || dodgeClock > 0) return;
     session.device.pulse(FeedbackKind.dodge);
+    rollBearing = bearing;
+    swing = 0;
     dashing = .32;
     dodgeClock = 1.5;
     invulnerable = .32;
@@ -754,28 +761,28 @@ class Guardian extends Player with WithCollision {
         ..strokeWidth = 1.5
         ..color = const ui.Color(0xaaafffe3),
     );
-    canvas.save();
     if (dashing > 0) {
-      canvas.translate(feet.dx, feet.dy - 18);
-      canvas.rotate(
-        (1 - dashing / .32) * math.pi * 2 * (math.cos(bearing) >= 0 ? 1 : -1),
+      session.art.roll(
+        canvas,
+        feet,
+        rollBearing,
+        ((1 - dashing / .32) * 4).floor(),
+        mage: session.progress.heroClass == HeroClass.mage,
       );
-      canvas.scale(1, .76);
-      canvas.translate(-feet.dx, -feet.dy + 18);
+    } else {
+      session.art.actor(
+        canvas,
+        session.progress.heroClass == HeroClass.mage ? 'mage' : 'hero',
+        feet,
+        swing > 0 ? attackBearing : bearing,
+        swing > 0 ? (swing > .17 ? 0 : 1) : (animationTime / .13).floor() % 2,
+        60,
+        attack: swing > 0,
+        opacity: invulnerable > 0 && ((invulnerable * 18).floor() % 2 == 0)
+            ? .58
+            : 1,
+      );
     }
-    session.art.actor(
-      canvas,
-      session.progress.heroClass == HeroClass.mage ? 'mage' : 'hero',
-      feet,
-      swing > 0 ? attackBearing : bearing,
-      swing > 0 ? (swing > .17 ? 0 : 1) : (animationTime / .13).floor() % 2,
-      60,
-      attack: swing > 0,
-      opacity: invulnerable > 0 && ((invulnerable * 18).floor() % 2 == 0)
-          ? .58
-          : 1,
-    );
-    canvas.restore();
     if (swing > 0 && session.progress.heroClass == HeroClass.warrior) {
       final phase = 1 - swing / .23,
           rect = ui.Rect.fromCircle(

@@ -50,6 +50,34 @@ void main() {
     },
   );
   test(
+    'rolling locks its direction and resumes held attacks after landing',
+    () {
+      final hero = session.hero;
+      hero.position.setValues(3840, 3400);
+      final before = hero.position.clone(), direction = hero.bearing;
+      final energy = session.progress.energy;
+      session.holdAttack('touch', true);
+      hero.dodge();
+      hero.bearing = 0;
+      hero.slash();
+      hero.skill();
+      expect(hero.strikes, 0);
+      expect(hero.skillClock, 0);
+      expect(session.progress.energy, energy);
+      for (var i = 0; i < 4; i++) {
+        hero.update(.05);
+      }
+      expect(hero.rollBearing, direction);
+      expect(hero.position.x, closeTo(before.x, .001));
+      expect(hero.position.y, greaterThan(before.y));
+      expect(hero.strikes, 0);
+      for (var i = 0; i < 3; i++) {
+        hero.update(.05);
+      }
+      expect(hero.strikes, greaterThan(0));
+    },
+  );
+  test(
     'a fatal hit takes priority over the sanctuary heal and further rewards',
     () {
       session.progress.hp = 1;

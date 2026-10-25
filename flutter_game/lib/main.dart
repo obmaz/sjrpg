@@ -283,7 +283,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 child: ActionButton(
                   art: widget.art,
                   sprite: 'roundEmpty',
-                  icon: skillIcon(skill.id),
+                  effect: skillEffect(skill.id),
                   label: adventure.hero.skillClock > 0
                       ? '${adventure.hero.skillClock.ceil()}초'
                       : skill.shortName,
@@ -301,7 +301,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   child: ActionButton(
                     art: widget.art,
                     sprite: 'roundEmpty',
-                    icon: skillIcon(secondary.id),
+                    effect: skillEffect(secondary.id),
                     label: (adventure.hero.cooldowns[secondary.id] ?? 0) > 0
                         ? '${adventure.hero.cooldowns[secondary.id]!.ceil()}초'
                         : secondary.shortName,

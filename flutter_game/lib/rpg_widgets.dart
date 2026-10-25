@@ -11,6 +11,16 @@ IconData elementIcon(String element) => element == 'ice'
     : element == 'lightning'
     ? Icons.bolt
     : Icons.local_fire_department;
+int skillEffect(String id) => switch (id) {
+  'warcry' || 'ironSkin' => 0,
+  'whirlwind' => 1,
+  'frostNova' => 2,
+  'chainLightning' => 3,
+  'meteor' || 'firebolt' => 4,
+  'frenzy' => 5,
+  'iceArmor' => 6,
+  _ => 7,
+};
 IconData skillIcon(String id) => switch (id) {
   'warcry' => Icons.campaign,
   'whirlwind' => Icons.cyclone,
@@ -260,7 +270,13 @@ class _SkillsViewState extends State<SkillsView> {
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: color.withValues(alpha: .45)),
                 ),
-                child: Icon(skillIcon(skill.id), color: color, size: 27),
+                child: CustomPaint(
+                  size: const Size.square(43),
+                  painter: EffectIconPainter(
+                    widget.session.art,
+                    skillEffect(skill.id),
+                  ),
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(

@@ -406,6 +406,28 @@ class MapPainter extends CustomPainter {
   bool shouldRepaint(covariant MapPainter oldDelegate) => true;
 }
 
+class EffectIconPainter extends CustomPainter {
+  EffectIconPainter(this.art, this.index);
+  final GameArt art;
+  final int index;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final image = art.images['combat-fx'];
+    if (image == null) return;
+    final cell = image.width / 4;
+    canvas.drawImageRect(
+      image,
+      Rect.fromLTWH((index % 4) * cell, (index ~/ 4) * cell, cell, cell),
+      Offset.zero & size,
+      Paint()..filterQuality = FilterQuality.medium,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant EffectIconPainter oldDelegate) =>
+      oldDelegate.index != index || oldDelegate.art != art;
+}
+
 class ActionButton extends StatefulWidget {
   const ActionButton({
     required this.art,
@@ -416,6 +438,7 @@ class ActionButton extends StatefulWidget {
     required this.onTap,
     this.onHold,
     this.icon,
+    this.effect,
     this.remaining = 0,
     this.total = 1,
     super.key,
@@ -426,6 +449,7 @@ class ActionButton extends StatefulWidget {
   final VoidCallback onTap;
   final ValueChanged<bool>? onHold;
   final IconData? icon;
+  final int? effect;
   @override
   State<ActionButton> createState() => _ActionButtonState();
 }
@@ -486,7 +510,12 @@ class _ActionButtonState extends State<ActionButton> {
                       painter: ControlPainter(widget.art, widget.sprite),
                     ),
                   ),
-                  if (widget.icon != null)
+                  if (widget.effect != null)
+                    CustomPaint(
+                      size: Size.square(widget.size * .74),
+                      painter: EffectIconPainter(widget.art, widget.effect!),
+                    )
+                  else if (widget.icon != null)
                     Icon(widget.icon, size: widget.size * .43, color: cream),
                   if (widget.remaining > 0)
                     CustomPaint(

@@ -22,6 +22,8 @@ class GameArt {
         'actors-mage',
         'gear-icons',
         'combat-fx',
+        'actors-roll',
+        'terrain-materials',
         'actors-hero-attack',
         'actors-creatures-a',
         'actors-creatures-b',
@@ -37,7 +39,7 @@ class GameArt {
         'atlas',
       ].map((name) async {
         final bytes = await rootBundle.load(
-          'assets/images/$name.${['actors-mage', 'gear-icons', 'combat-fx'].contains(name) ? 'png' : 'webp'}',
+          'assets/images/$name.${['actors-mage', 'gear-icons', 'combat-fx', 'actors-roll', 'terrain-materials'].contains(name) ? 'png' : 'webp'}',
         );
         final codec = await ui.instantiateImageCodec(
           bytes.buffer.asUint8List(),
@@ -46,7 +48,7 @@ class GameArt {
         codec.dispose();
       }),
     );
-    final atlas = art.images['landscape-materials']!;
+    final atlas = art.images['terrain-materials']!;
     for (var i = 0; i < 6; i++) {
       final recorder = ui.PictureRecorder();
       // A separate recorder per material keeps shaders small and shared by every sector.
@@ -192,6 +194,36 @@ class GameArt {
       ui.Paint()
         ..color = ui.Color.fromRGBO(255, 255, 255, opacity)
         ..filterQuality = ui.FilterQuality.low,
+    );
+  }
+
+  void roll(
+    ui.Canvas canvas,
+    ui.Offset feet,
+    double angle,
+    int phase, {
+    required bool mage,
+  }) {
+    final record = actors['roll'] as Map<String, dynamic>;
+    final index =
+        (mage ? 32 : 0) + (phase.clamp(0, 3) * 8) + facingFrame(angle, 8);
+    final frame = (record['frames'][index] as List).cast<num>();
+    final scale = 43 / (record['sizes'][mage ? 1 : 0][1] as num);
+    canvas.drawImageRect(
+      images['actors-roll']!,
+      ui.Rect.fromLTWH(
+        frame[0].toDouble(),
+        frame[1].toDouble(),
+        frame[2].toDouble(),
+        frame[3].toDouble(),
+      ),
+      ui.Rect.fromLTWH(
+        feet.dx - frame[2] * scale / 2,
+        feet.dy - frame[3] * scale,
+        frame[2] * scale,
+        frame[3] * scale,
+      ),
+      ui.Paint()..filterQuality = ui.FilterQuality.medium,
     );
   }
 
