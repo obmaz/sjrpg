@@ -9,7 +9,7 @@ permissions:
     contents: read
 
 jobs:
-    check:
+    legacy:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v7.0.1
@@ -18,23 +18,81 @@ jobs:
                   node-version: '24'
                   cache: npm
             - run: npm ci
+            - run: npm run check
+            - uses: actions/cache@v4
+              with:
+                  path: .build-cache/legacy
+                  key: legacy-v1-${{ hashFiles('index.html', 'style.css', 'playful-pixels.mp3', 'src/**', 'assets/*.webp', 'scripts/build.cjs', 'scripts/page-sources.cjs', 'scripts/prepare-legacy.cjs') }}
+            - name: Reuse verified Legacy snapshot or build changed Legacy
+              run: npm run prepare:legacy
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: legacy-site
+                  path: .build-cache/legacy
+                  include-hidden-files: true
+
+    flutter:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7.0.1
+            - uses: actions/cache@v4
+              id: flutter-cache
+              with:
+                  path: flutter_game/build/web
+                  key: flutter-wasm-3.47.8-v1-${{ hashFiles('flutter_game/lib/**', 'flutter_game/test/**', 'flutter_game/web/**', 'flutter_game/art/**', 'flutter_game/assets-fonts/**', 'flutter_game/pubspec.yaml', 'flutter_game/pubspec.lock', 'flutter_game/analysis_options.yaml', 'assets/actors-hero*.webp', 'assets/actors-creatures-a.webp', 'assets/actors-creatures-b.webp', 'assets/actors-villagers.webp', 'assets/village-scene.webp', 'assets/landscape*.webp', 'assets/world-forest.webp', 'assets/world-desert.webp', 'assets/controls.webp', 'assets/ui-reference.webp', 'assets/popup-frame.webp', 'assets/atlas.webp', 'src/data/actor-bounds.js', 'src/data/ui-art.js', 'scripts/prepare-new-assets.cjs', '.github/workflows/check.yml') }}
+            - uses: actions/setup-node@v7.1.0
+              if: steps.flutter-cache.outputs.cache-hit != 'true'
+              with:
+                  node-version: '24'
+                  cache: npm
+            - run: npm ci
+              if: steps.flutter-cache.outputs.cache-hit != 'true'
             - name: Install Flutter 3.47.8
+              if: steps.flutter-cache.outputs.cache-hit != 'true'
               run: |
                   git clone --depth 1 --branch 3.47.8 https://github.com/flutter/flutter.git "$RUNNER_TEMP/guardian-flutter"
                   echo "$RUNNER_TEMP/guardian-flutter/bin" >> "$GITHUB_PATH"
                   "$RUNNER_TEMP/guardian-flutter/bin/flutter" config --no-analytics
             - run: npm run prepare:new
+              if: steps.flutter-cache.outputs.cache-hit != 'true'
             - run: flutter pub get --enforce-lockfile
+              if: steps.flutter-cache.outputs.cache-hit != 'true'
               working-directory: flutter_game
             - run: dart format --output=none --set-exit-if-changed lib test
+              if: steps.flutter-cache.outputs.cache-hit != 'true'
               working-directory: flutter_game
             - run: flutter analyze
+              if: steps.flutter-cache.outputs.cache-hit != 'true'
               working-directory: flutter_game
             - run: flutter test
+              if: steps.flutter-cache.outputs.cache-hit != 'true'
               working-directory: flutter_game
-            - run: flutter build web --release --base-href /sjrpg/new/ --no-web-resources-cdn
+            - name: Build Flutter WASM
+              if: steps.flutter-cache.outputs.cache-hit != 'true'
+              run: flutter build web --wasm --release --base-href /sjrpg/new/ --no-web-resources-cdn
               working-directory: flutter_game
-            - run: npm run check
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: flutter-site
+                  path: flutter_game/build/web
+                  include-hidden-files: true
+
+    assemble:
+        needs: [legacy, flutter]
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7.0.1
+            - uses: actions/setup-node@v7.1.0
+              with:
+                  node-version: '24'
+            - uses: actions/download-artifact@v4
+              with:
+                  name: legacy-site
+                  path: .build-cache/legacy
+            - uses: actions/download-artifact@v4
+              with:
+                  name: flutter-site
+                  path: flutter_game/build/web
             - run: npm run build
             - uses: actions/upload-pages-artifact@v5.0.0
               if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
@@ -44,7 +102,7 @@ jobs:
 
     deploy:
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        needs: check
+        needs: assemble
         runs-on: ubuntu-latest
         permissions:
             contents: read

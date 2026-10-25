@@ -4,6 +4,7 @@ import 'adventure.dart';
 import 'game_ui.dart';
 import 'rpg_model.dart';
 import 'rpg_widgets.dart';
+import 'device_controls.dart';
 
 class AdventurePanel extends StatefulWidget {
   const AdventurePanel({
@@ -267,6 +268,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
       ];
     } else {
       body = [
+        DeviceControls(s.device),
         _info(
           Icons.touch_app_outlined,
           '모바일 조작',

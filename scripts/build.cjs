@@ -3,10 +3,7 @@ const path = require('node:path');
 const { createHash } = require('node:crypto');
 const { readPageSources } = require('./page-sources.cjs');
 
-function buildSite(
-    projectRoot = path.resolve(__dirname, '..'),
-    destination = path.join(projectRoot, 'dist'),
-) {
+function describeSite(projectRoot = path.resolve(__dirname, '..')) {
     const { sources } = readPageSources(projectRoot);
     const files = [
         'index.html',
@@ -24,34 +21,44 @@ function buildSite(
     const hash = createHash('sha256');
     for (const [file, content] of contents) hash.update(file).update('\0').update(content);
     const assetRoot = `assets/${hash.digest('hex').slice(0, 20)}`;
-    fs.rmSync(destination, { recursive: true, force: true });
-    for (const file of files) {
-        const target = path.join(
-            destination,
+    const rendered = new Map(
+        files.map((file) => [
             file === 'index.html' ? file : `${assetRoot}/${file}`,
-        );
-        fs.mkdirSync(path.dirname(target), { recursive: true });
-        const content =
             file === 'index.html'
-                ? contents
-                      .get(file)
-                      .toString()
-                      .replace(/\b(src|href)="([^"]+)"/g, (match, attribute, resource) =>
-                          contents.has(resource)
-                              ? `${attribute}="${assetRoot}/${resource}"`
-                              : match,
-                      )
-                : contents.get(file);
+                ? Buffer.from(
+                      contents
+                          .get(file)
+                          .toString()
+                          .replace(/\b(src|href)="([^"]+)"/g, (match, attribute, resource) =>
+                              contents.has(resource)
+                                  ? `${attribute}="${assetRoot}/${resource}"`
+                                  : match,
+                          ),
+                  )
+                : contents.get(file),
+        ]),
+    );
+    rendered.set('.nojekyll', Buffer.from(''));
+    return { assetRoot, files, rendered };
+}
+function buildSite(
+    projectRoot = path.resolve(__dirname, '..'),
+    destination = path.join(projectRoot, 'dist'),
+) {
+    const { assetRoot, files, rendered } = describeSite(projectRoot);
+    fs.rmSync(destination, { recursive: true, force: true });
+    for (const [file, content] of rendered) {
+        const target = path.join(destination, file);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
         fs.writeFileSync(target, content);
     }
-    fs.writeFileSync(path.join(destination, '.nojekyll'), '');
     return { assetRoot, files };
 }
 
 if (require.main === module) {
-    const result = buildSite(undefined, path.resolve(__dirname, '../dist/legacy'));
+    const result = buildSite(undefined, path.resolve(__dirname, '../.build-cache/legacy'));
     console.log(
         `Built ${result.files.length} static files under ${result.assetRoot} with relative module paths.`,
     );
 }
-module.exports = { buildSite };
+module.exports = { buildSite, describeSite };

@@ -8,8 +8,8 @@
 
 - 기존 JavaScript 게임은 루트 `src/`·`index.html`에서 유지하며 `/sjrpg/legacy/`에 배포합니다.
 - 새 게임은 `flutter_game/`의 Flutter·Bonfire 앱이며 `/sjrpg/new/`에 배포합니다. 이 폴더는 Dart의 snake_case 파일명과 `dart format`을 따릅니다.
-- `site/index.html`은 두 버전을 고르는 진입 화면입니다. `scripts/build-all.cjs`가 두 게임을 `dist/`에 합칩니다.
-- 새 버전 변경 후에는 `flutter analyze`·`flutter test`·Flutter 릴리스 빌드도 실행합니다. 레거시를 보존하고 완전 포팅으로 범위를 확장하지 않습니다.
+- `site/index.html`은 두 버전을 고르는 진입 화면입니다. `scripts/build-all.cjs`는 준비된 두 게임을 컴파일 없이 `dist/`에 합칩니다. `npm run prepare:legacy`는 변경 없는 Legacy 배포본/캐시를 검증해 재사용합니다.
+- 새 버전 변경 후에는 `flutter analyze`·`flutter test`·`--wasm` Flutter 릴리스 빌드도 실행합니다. 레거시를 보존하고 완전 포팅으로 범위를 확장하지 않습니다.
 
 ## 코드 변경
 

@@ -10,144 +10,121 @@
             * {
                 box-sizing: border-box;
             }
-            html {
-                min-height: 100%;
-                background: #0c2423;
-            }
+            html,
             body {
                 margin: 0;
-                min-height: 100svh;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+            body {
                 display: grid;
                 place-items: center;
-                padding: 36px 22px;
+                padding: max(18px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right))
+                    max(18px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
                 font-family: system-ui, sans-serif;
-                color: #eee4c9;
+                color: #f0e5c8;
                 background:
-                    linear-gradient(180deg, #0b252538, #0b2525da 65%, #0b2525),
-                    url('{{legacyAssets}}/village-scene.webp') center 38% / cover fixed;
+                    linear-gradient(#102c2980, #0a2424ed),
+                    url('{{legacyAssets}}/village-scene.webp') center / cover;
             }
             main {
-                width: min(760px, 100%);
+                width: min(420px, 100%);
                 text-align: center;
             }
-            .eyebrow {
-                color: #e2c475;
-                font-size: 11px;
-                letter-spacing: 4px;
-                text-shadow: 0 2px 8px #000;
-            }
             h1 {
-                margin: 18px 0 12px;
-                font-size: clamp(32px, 6vw, 52px);
-                text-shadow: 0 3px 20px #0008;
+                margin: 0;
+                font-size: clamp(25px, 6vw, 34px);
+                text-shadow: 0 3px 16px #0008;
             }
-            .intro {
-                margin: 0 0 36px;
-                line-height: 1.8;
-                color: #d7e1cc;
+            p {
+                margin: 10px 0 24px;
+                color: #bed0bd;
+                font-size: 14px;
             }
-            .versions {
+            nav {
                 display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 18px;
+                gap: 12px;
+            }
+            a {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                min-height: 80px;
+                padding: 15px 22px;
+                color: #f0e5c8;
+                text-decoration: none;
                 text-align: left;
+                background: #12352ff2;
+                border: 1px solid #8a8863;
+                border-radius: 14px;
+                box-shadow: 0 8px 24px #0004;
             }
-            article {
-                padding: 26px;
-                border: 1px solid #9f935c;
-                border-radius: 20px;
-                background: #10352fef;
-                box-shadow: 0 12px 36px #0005;
+            a:first-child {
+                background: linear-gradient(120deg, #355c45f2, #173a32f2);
+                border: 2px solid #d5b772;
             }
-            article:first-child {
-                border: 2px solid #dfbf75;
-                background: linear-gradient(140deg, #234c3df7, #123730f7);
+            strong {
+                display: block;
+                font-size: 22px;
+            }
+            small {
+                display: block;
+                margin-top: 3px;
+                font-size: 12px;
+                color: #bfcebb;
             }
             .tag {
-                color: #dec582;
+                color: #e3c77f;
                 font-size: 12px;
                 letter-spacing: 1px;
             }
-            h2 {
-                margin: 12px 0;
-                font-size: 26px;
-            }
-            article p {
-                min-height: 84px;
-                font-size: 15px;
-                line-height: 1.8;
-                color: #c8d8c7;
-            }
-            a {
-                display: block;
-                text-align: center;
-                padding: 17px 12px;
-                text-decoration: none;
-                font-size: 16px;
-                font-weight: 700;
-                border-radius: 10px;
-                color: #17372c;
-                background: #ddc27c;
-            }
-            article:last-child a {
-                color: #eadfbd;
-                border: 1px solid #ad9d6b;
-                background: #1e453a;
-            }
             a:hover {
-                filter: brightness(1.1);
+                filter: brightness(1.12);
             }
             a:focus-visible {
                 outline: 3px solid #a5f7df;
                 outline-offset: 4px;
             }
-            footer {
-                margin-top: 24px;
-                font-size: 13px;
-                color: #b6c9b8;
-            }
-            @media (max-width: 560px) {
-                .versions {
-                    grid-template-columns: 1fr;
+            @media (max-height: 360px) {
+                main {
+                    width: min(560px, 100%);
                 }
-                article {
-                    padding: 22px;
+                nav {
+                    grid-template-columns: 1fr 1fr;
                 }
-                article p {
-                    min-height: auto;
+                p {
+                    margin: 7px 0 16px;
                 }
-                .intro {
-                    margin-bottom: 24px;
+                a {
+                    min-height: 74px;
+                    padding: 12px;
+                    gap: 6px;
+                }
+                strong {
+                    font-size: 19px;
+                }
+                .tag {
+                    font-size: 10px;
                 }
             }
         </style>
     </head>
     <body>
         <main>
-            <div class="eyebrow">GUARDIAN OF NATURE</div>
             <h1>자연의 수호자</h1>
-            <p class="intro">푸른 숲으로 떠나는 두 가지 모험.<br />플레이할 버전을 선택하세요.</p>
-            <div class="versions">
-                <article>
-                    <span class="tag">새로운 모험 · FLUTTER / BONFIRE</span>
-                    <h2>다시, 숲으로</h2>
-                    <p>
-                        전사와 마법사의 핵앤슬래시.<br />장비와 스킬을 키우며 십자로의 숲을 탐험하고
-                        첫 파수꾼에게 도전하세요.
-                    </p>
-                    <a href="new/">새로운 모험 시작</a>
-                </article>
-                <article>
-                    <span class="tag">기존 모험 · LEGACY</span>
-                    <h2>익숙한 숲길</h2>
-                    <p>
-                        기존 장비·퀘스트·사막 원정이 있는 모험입니다. 이전 버전을 그대로 플레이할 수
-                        있습니다.
-                    </p>
-                    <a href="legacy/">기존 모험 플레이</a>
-                </article>
-            </div>
-            <footer>키보드와 모바일 터치로 플레이할 수 있습니다.</footer>
+            <p>플레이할 버전을 선택하세요</p>
+            <nav aria-label="게임 버전">
+                <a href="new/" aria-label="새로운 모험 시작">
+                    <span><strong>새로운 모험</strong><small>전사 · 마법사</small></span>
+                    <span class="tag">NEW ›</span>
+                </a>
+                <a href="legacy/" aria-label="기존 모험 플레이">
+                    <span><strong>기존 모험</strong><small>이전 버전</small></span>
+                    <span class="tag">LEGACY ›</span>
+                </a>
+            </nav>
         </main>
     </body>
 </html>

@@ -19,17 +19,24 @@ flutter test
 flutter run -d chrome
 ```
 
-배포용 웹 빌드 후 저장소 루트에서 두 게임을 합칩니다.
+두 버전의 빌드는 분리되어 있습니다. Flutter는 WASM으로 빌드하며, Legacy는 동일한 배포본 또는 검증된 캐시를 재사용합니다. 마지막 조립 단계에서 두 경로를 같은 GitHub Pages 배포 파일에 넣습니다.
 
 ```sh
 cd flutter_game
-flutter build web --release --base-href /sjrpg/new/ --no-web-resources-cdn
+flutter build web --wasm --release --base-href /sjrpg/new/ --no-web-resources-cdn
 cd ..
 npm run check
+npm run prepare:legacy
 npm run build
 ```
 
+`npm run build`는 준비된 두 산출물을 복사하는 조립 명령입니다. Legacy 소스가 바뀌었거나 기존 배포본을 복원할 수 없을 때만 `prepare:legacy`가 Legacy를 빌드합니다. Legacy만 직접 빌드하려면 `npm run build:legacy`, Flutter만 빌드하려면 `npm run build:new`를 사용합니다. CI는 두 버전의 입력을 각각 캐시하고 독립 작업으로 준비합니다.
+
 결과는 `dist/index.html`(선택 화면), `dist/legacy/`(기존 게임), `dist/new/`(Flutter 게임)입니다. 새 버전은 자산·엔진을 같은 서버에 포함하고 버전별 경로에 보관합니다. 두 게임의 진행은 별개이며 새로고침하면 초기화됩니다. 새 버전의 키보드 조작은 WASD/방향키 이동, Space/J 연속 공격, N/K 주 스킬, L 보조 스킬, 왼쪽 Shift 회피, 1/2 생명·자원 물약입니다. 모바일에서는 조이스틱·공격·스킬·회피·물약을 동시에 사용할 수 있습니다.
+
+새 버전 설정의 **전체화면 켜기/끄기**로 화면을 전환할 수 있습니다. 전체화면에 들어가면 화면 크기에 맞추고, 나가면 진입 시 모바일 높이를 복원합니다. **타격 진동**은 적중·피격·스킬마다 다르게 동작하며 설정에서 켜고 끄거나 확인할 수 있습니다. 설정은 브라우저에 저장됩니다. 전체화면·진동은 지원되는 기기/브라우저에서 사용할 수 있습니다.
+
+지원 브라우저는 Dart WASM과 Skwasm을 사용하며 미지원 브라우저는 JavaScript/CanvasKit 호환 빌드로 실행합니다. GitHub Pages에서는 단일 스레드 Skwasm을 사용합니다. 처음의 버전 선택 화면은 짧은 두 버튼으로 구성해 모바일 세로·가로 화면에서 스크롤 없이 고를 수 있습니다.
 
 전사는 근접 무기로 분노를 모아 함성·소용돌이·격노를 사용합니다. 마법사는 무기 원소에 맞는 원거리 탄과 서릿발·얼음 갑옷·연쇄 번개·유성을 사용합니다. 기본 공격은 자원이 없어도 사용할 수 있습니다. 레벨마다 스킬 포인트 1개를 얻으며 스킬을 최대 5등급까지 강화하고 사용 스킬 두 개를 주·보조 전투 버튼에 지정합니다. 새 사용 스킬을 배우면 비어 있는 보조 슬롯에 자동으로 지정됩니다. 스킬을 서로 바꿔도 각 스킬의 대기시간은 유지됩니다. 파수꾼의 강타는 바닥에 미리 표시되므로 회피로 벗어나거나 기절로 끊을 수 있습니다.
 

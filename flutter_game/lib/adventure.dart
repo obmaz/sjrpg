@@ -6,18 +6,22 @@ import 'package:flutter/services.dart';
 import 'game_art.dart';
 import 'world_model.dart';
 import 'battle_effects.dart';
+import 'device_settings.dart';
 
 class Adventure extends ChangeNotifier {
   Adventure(
     this.art, {
     int seed = 7829,
     HeroClass heroClass = HeroClass.warrior,
+    DeviceSettings? device,
   }) : world = AdventureWorld(seed: seed),
-       progress = Progress(heroClass: heroClass) {
+       progress = Progress(heroClass: heroClass),
+       device = device ?? DeviceSettings.shared {
     hero = Guardian(this);
     terrain = TerrainArt(world, art);
   }
   final GameArt art;
+  final DeviceSettings device;
   final AdventureWorld world;
   late final Guardian hero;
   late final TerrainArt terrain;
@@ -84,6 +88,7 @@ class Adventure extends ChangeNotifier {
   void openChest() {
     final index = nearbyChest;
     if (!active || index == null) return;
+    device.pulse(FeedbackKind.loot);
     openedChests.add(index);
     progress.gold += 18;
     progress.healingPotions++;
@@ -169,6 +174,7 @@ class Adventure extends ChangeNotifier {
   }
 
   void pause() {
+    device.cancel();
     releaseInput();
     paused = true;
     game?.pauseEngine();
@@ -319,6 +325,7 @@ class Adventure extends ChangeNotifier {
     if (progress.heroClass == HeroClass.warrior) {
       progress.energy = math.min(progress.maxEnergy, progress.energy + 7);
     }
+    device.pulse(FeedbackKind.hurt);
     progress.hp = math.max(0, progress.hp - damage);
     hero.life.remove(damage);
     hero.invulnerable = .65;
@@ -339,6 +346,7 @@ class Adventure extends ChangeNotifier {
     if (!active || !mob.combatReady || mob.isDead || mob.isRemoving) return;
     combatTime = 5;
     mob.life.remove(damage);
+    device.pulse(mob.isDead ? FeedbackKind.kill : FeedbackKind.hit);
     mob.hurt = .14;
     final old = mob.position.toOffset(),
         p = world.move(old, impulse, mob.body.size);
@@ -387,6 +395,7 @@ class Adventure extends ChangeNotifier {
   @override
   void dispose() {
     disposed = true;
+    device.cancel();
     releaseInput();
     terrain.dispose();
     super.dispose();
@@ -598,6 +607,7 @@ class Guardian extends Player with WithCollision {
       session.announce('${p.heroClass.resource}가 부족합니다');
       return;
     }
+    session.device.pulse(FeedbackKind.skill);
     p.energy -= def.cost;
     cooldowns[def.id] = def.cooldown;
     final color = p.heroClass == HeroClass.warrior
@@ -697,6 +707,7 @@ class Guardian extends Player with WithCollision {
 
   void dodge() {
     if (!session.active || dodgeClock > 0) return;
+    session.device.pulse(FeedbackKind.dodge);
     dashing = .16;
     dodgeClock = 1.5;
     invulnerable = .32;

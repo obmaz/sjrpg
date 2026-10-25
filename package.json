@@ -13,7 +13,9 @@
         "format:check": "prettier --check src tests scripts docs site index.html style.css package.json README.md AGENTS.md eslint.config.mjs .prettierrc.json",
         "check": "npm run lint && npm run format:check && npm test",
         "build:legacy": "node scripts/build.cjs",
-        "prepare:new": "node scripts/prepare-new-assets.cjs"
+        "prepare:new": "node scripts/prepare-new-assets.cjs",
+        "prepare:legacy": "node --use-env-proxy scripts/prepare-legacy.cjs",
+        "build:new": "cd flutter_game && flutter build web --wasm --release --base-href /sjrpg/new/ --no-web-resources-cdn"
     },
     "devDependencies": {
         "eslint": "10.12.0",
