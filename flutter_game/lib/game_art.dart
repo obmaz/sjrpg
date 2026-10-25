@@ -40,6 +40,7 @@ class GameArt {
         'time-sites',
         'stage-materials',
         'actors-cyber',
+        'actors-gunner',
         'cyber-props',
         'ruin-props',
         'village-scene',
@@ -239,6 +240,7 @@ class GameArt {
       'mummy': ('creatures-b', 3, 8),
       'troll': ('creatures-b', 0, 8),
       'cyber': ('cyber', 0, 8),
+      'gunner': ('gunner', 0, 8),
       'merchant': ('villagers', 0, 8),
       'villager': ('villagers', 1, 8),
       'horse': ('vehicles', 0, 8),
@@ -249,7 +251,7 @@ class GameArt {
     final definition = definitions[key]!;
     final sheet = attack && key == 'hero' ? 'hero-attack' : definition.$1,
         count = definition.$3;
-    final index = key == 'cyber'
+    final index = key == 'cyber' || key == 'gunner'
         ? facingFrame(angle, 8) * 2 + phase % 2
         : count == 16
         ? facingFrame(angle, count) + (phase % 2) * 16

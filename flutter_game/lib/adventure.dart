@@ -628,7 +628,7 @@ class Adventure extends ChangeNotifier {
           ? world.spawn + ui.Offset(-60 + (i % 3) * 62, 165 + (i % 2) * 50)
           : at + ui.Offset(math.cos(angle) * r, math.sin(angle) * r);
       final kind = world.stage == WorldStage.future
-          ? 'cyber'
+          ? (i % 3 == 0 ? 'cyber' : 'gunner')
           : world.stage == WorldStage.sands
           ? ['scorpion', 'mummy', 'cultist'][(i + progress.level) % 3]
           : world.stage == WorldStage.past
@@ -1630,16 +1630,39 @@ class HuntEnemy extends Enemy with WithCollision {
   final EnemyTrait trait;
   bool get isElite => !boss && trait != EnemyTrait.none;
   bool get usesPounce => !boss && (kind == 'wolf' || kind == 'scorpion');
-  bool get usesSweep => !boss && (kind == 'skeleton' || kind == 'troll');
-  bool get usesBolt => !boss && (kind == 'cultist' || kind == 'cyber');
+  bool get usesSweep =>
+      !boss && (kind == 'skeleton' || kind == 'troll' || kind == 'cyber');
+  bool get usesBolt => !boss && (kind == 'cultist' || kind == 'gunner');
   double get pounceWarning => kind == 'scorpion' ? .58 : .42;
   double get pounceSpeed => kind == 'scorpion' ? 440 : 520;
   double get pounceRange => kind == 'scorpion' ? 200 : 240;
-  double get sweepRange => kind == 'troll' ? 120 : 100;
-  double get sweepAngle => kind == 'troll' ? 1.05 : .85;
-  double get sweepWarning => kind == 'troll' ? .85 : .5;
-  double get boltWarning => kind == 'cyber' ? .8 : .65;
-  ui.Color get attackColor => kind == 'cyber'
+  double get sweepRange => kind == 'troll'
+      ? 120
+      : kind == 'cyber'
+      ? 110
+      : 100;
+  double get sweepAngle => kind == 'troll'
+      ? 1.05
+      : kind == 'cyber'
+      ? .95
+      : .85;
+  double get sweepWarning => kind == 'troll'
+      ? .85
+      : kind == 'cyber'
+      ? .65
+      : .5;
+  double get sweepDamage => kind == 'troll'
+      ? 14
+      : kind == 'cyber'
+      ? 10
+      : 8;
+  double get sweepRecovery => kind == 'troll'
+      ? 2.6
+      : kind == 'cyber'
+      ? 2.1
+      : 1.8;
+  double get boltWarning => kind == 'gunner' ? .8 : .65;
+  ui.Color get attackColor => kind == 'gunner'
       ? const ui.Color(0xff7feafa)
       : kind == 'scorpion'
       ? const ui.Color(0xffbcda75)
@@ -1744,7 +1767,7 @@ class HuntEnemy extends Enemy with WithCollision {
               session.hero.body.center,
               const ui.Size(3, 3),
             )) {
-          session.hurtHero(kind == 'troll' ? 14 : 8);
+          session.hurtHero(sweepDamage);
         }
         session.game?.add(
           EnemySwipe(
@@ -1756,7 +1779,7 @@ class HuntEnemy extends Enemy with WithCollision {
           ),
         );
         slamTarget = null;
-        attackClock = kind == 'troll' ? 2.6 : 1.8;
+        attackClock = sweepRecovery;
       }
       super.update(dt);
       return;
@@ -1773,13 +1796,13 @@ class HuntEnemy extends Enemy with WithCollision {
               session,
               body.center,
               math.atan2(toward.dy, toward.dx),
-              technological: kind == 'cyber',
-              damage: kind == 'cyber' ? 10 : 8,
+              technological: kind == 'gunner',
+              damage: kind == 'gunner' ? 10 : 8,
             ),
           );
         }
         slamTarget = null;
-        attackClock = kind == 'cyber' ? 3.2 : 2.8;
+        attackClock = kind == 'gunner' ? 3.2 : 2.8;
       }
       super.update(dt);
       return;
@@ -1845,7 +1868,7 @@ class HuntEnemy extends Enemy with WithCollision {
             (boss
                 ? 64
                 : usesBolt
-                ? (kind == 'cyber' ? 350 : 280)
+                ? (kind == 'gunner' ? 350 : 280)
                 : usesSweep
                 ? sweepRange - 18
                 : 42) &&
@@ -2072,12 +2095,13 @@ class HuntEnemy extends Enemy with WithCollision {
       canvas.drawOval(
         ui.Rect.fromCenter(center: feet, width: 58, height: 22),
         ui.Paint()
-          ..color = (kind == 'cyber' ? attackColor : const ui.Color(0xffd567b6))
-              .withValues(alpha: .6)
+          ..color =
+              (kind == 'gunner' ? attackColor : const ui.Color(0xffd567b6))
+                  .withValues(alpha: .6)
           ..style = ui.PaintingStyle.stroke
           ..strokeWidth = 2,
       );
-      if (kind == 'cyber') {
+      if (kind == 'gunner') {
         final charge = (1 - windup / boltWarning).clamp(0.0, 1.0);
         final origin = body.center - position.toOffset();
         final aim = ui.Offset(math.cos(bearing), math.sin(bearing));

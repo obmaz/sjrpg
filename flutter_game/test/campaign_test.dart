@@ -119,6 +119,9 @@ void main() {
       s.spawnPack(initial: true);
       final kinds = s.mobs.map((m) => m.kind).toSet();
       expect(kinds, isNotEmpty);
+      if (stage == WorldStage.future) {
+        expect(kinds, containsAll(['cyber', 'gunner']));
+      }
       expect(
         kinds,
         everyElement(
@@ -127,7 +130,7 @@ void main() {
                 ? ['scorpion', 'mummy', 'cultist']
                 : stage == WorldStage.past
                 ? ['skeleton', 'troll', 'cultist']
-                : ['cyber'],
+                : ['cyber', 'gunner'],
           ),
         ),
       );

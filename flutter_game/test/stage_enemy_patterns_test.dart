@@ -95,9 +95,9 @@ void main() {
     },
   );
   test(
-    'cyber guard locks a charged shot, pauses and lets a sidestep escape',
+    'pulse rifle guard locks a charged shot, pauses and lets a sidestep escape',
     () {
-      final enemy = s.spawnEnemy('cyber', const Offset(6300, 4200))!
+      final enemy = s.spawnEnemy('gunner', const Offset(6300, 4200))!
         ..attackClock = 0;
       enemy.update(.05);
       expect(enemy.windup, closeTo(.8, .001));
@@ -122,7 +122,46 @@ void main() {
       expect(bolt.resolved, true);
     },
   );
-  for (final kind in ['scorpion', 'troll', 'cyber']) {
+  test(
+    'cyber sword guard warns before a fixed sweep and never fires a rifle projectile',
+    () {
+      final enemy = s.spawnEnemy('cyber', const Offset(6070, 4200))!
+        ..attackClock = 0;
+      enemy.update(.05);
+      expect(enemy.windup, closeTo(.65, .001));
+      final hp = s.progress.hp;
+      for (var i = 0; i < 10; i++) {
+        enemy.update(.05);
+      }
+      expect(s.progress.hp, hp);
+      final warning = enemy.windup;
+      s.pause();
+      enemy.update(.5);
+      expect(enemy.windup, warning);
+      s.resume();
+      s.hero.position.y += 130;
+      for (var i = 0; i < 5; i++) {
+        enemy.update(.05);
+      }
+      expect(s.progress.hp, hp);
+      expect(game.added.whereType<EnemySwipe>().length, 1);
+      s.hero.position.setValues(6000, 4200);
+      enemy.position.setValues(6070, 4200);
+      enemy.attackClock = 0;
+      for (var i = 0; i < 16; i++) {
+        enemy.update(.05);
+      }
+      expect(s.progress.hp, lessThan(hp));
+      final after = s.progress.hp;
+      for (var i = 0; i < 15; i++) {
+        enemy.update(.05);
+      }
+      expect(s.progress.hp, after);
+      expect(game.added.whereType<EnemySwipe>().length, 2);
+      expect(game.added.whereType<ShadowBolt>(), isEmpty);
+    },
+  );
+  for (final kind in ['scorpion', 'troll', 'cyber', 'gunner']) {
     test('$kind stun cancels its warning and gives a recovery window', () {
       final enemy = s.spawnEnemy(kind, const Offset(6080, 4200))!
         ..attackClock = 0;

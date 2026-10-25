@@ -42,6 +42,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'stage-materials',
         'terrain-materials',
         'actors-cyber',
+        'actors-gunner',
         'cyber-props',
         'ruin-props',
     ])
@@ -60,6 +61,9 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
     const cyber = JSON.parse(
         fs.readFileSync(path.join(root, 'flutter_game/art/cyber-bounds.json'), 'utf8'),
     );
+    const gunner = JSON.parse(
+        fs.readFileSync(path.join(root, 'flutter_game/art/gunner-bounds.json'), 'utf8'),
+    );
     const { ACTOR_BOUNDS } = await import(
         pathToFileURL(path.join(root, 'src/data/actor-bounds.js'))
     );
@@ -67,7 +71,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
     fs.writeFileSync(
         path.join(destination, 'art.json'),
         JSON.stringify({
-            actors: { ...ACTOR_BOUNDS, mage, roll, cyber },
+            actors: { ...ACTOR_BOUNDS, mage, roll, cyber, gunner },
             controls: CONTROL_SPRITES,
         }),
     );
