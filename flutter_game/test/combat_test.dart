@@ -1,4 +1,5 @@
 import 'support/test_game.dart';
+import 'package:guardian_new/rpg_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/game_art.dart';
@@ -76,13 +77,13 @@ void main() {
       for (var i = 0; i < 15; i++) {
         session.spawnPack();
       }
-      expect(session.living, lessThanOrEqualTo(12));
+      expect(session.living, lessThanOrEqualTo(22));
     },
   );
   test(
     'the first boss is summoned once and its defeat ends the adventure once',
     () {
-      session.progress.kills = 24;
+      session.progress.kills = stageKillGoal;
       session.tick(.05);
       session.tick(.05);
       final bosses = session.mobs.where((m) => m.boss).toList();

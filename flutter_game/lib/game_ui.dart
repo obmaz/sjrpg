@@ -261,12 +261,19 @@ class _PortraitPainter extends CustomPainter {
       );
       return;
     }
-    final image = art.images['ui-reference']!, cell = image.width / 4;
+    final record = art.actors['hero']['frames'][0] as List;
+    final image = art.images['actors-hero']!;
+    final w = (record[2] as num).toDouble(), h = (record[3] as num).toDouble();
     c.drawImageRect(
       image,
-      Rect.fromLTWH(0, 0, cell, cell),
+      Rect.fromLTWH(
+        (record[0] as num).toDouble() + w * .2,
+        (record[1] as num).toDouble(),
+        w * .6,
+        h * .48,
+      ),
       Offset.zero & s,
-      Paint(),
+      Paint()..filterQuality = FilterQuality.medium,
     );
   }
 
@@ -602,8 +609,10 @@ class MenuButton extends StatelessWidget {
     required this.sprite,
     required this.label,
     required this.onTap,
+    this.badge = 0,
     super.key,
   });
+  final int badge;
   final GameArt art;
   final String sprite, label;
   final VoidCallback onTap;
@@ -617,24 +626,43 @@ class MenuButton extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 55,
-              height: 53,
-              child: CustomPaint(painter: ControlPainter(art, sprite)),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                color: cream,
-                shadows: [Shadow(blurRadius: 3, color: Colors.black)],
+        child: SizedBox(
+          width: 58,
+          height: 58,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(
+                child: CustomPaint(painter: ControlPainter(art, sprite)),
               ),
-            ),
-          ],
+              if (badge > 0)
+                Positioned(
+                  right: -4,
+                  top: -5,
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      minWidth: 23,
+                      minHeight: 23,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 5),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: const Color(0xffc74c35),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: gold, width: 1.5),
+                    ),
+                    child: Text(
+                      '$badge',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     ),

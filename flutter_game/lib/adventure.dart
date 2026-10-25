@@ -44,7 +44,7 @@ class Adventure extends ChangeNotifier {
       disposed = false;
   double elapsed = 0, waveTime = 0, notifyTime = 0;
   ui.Offset lastPack = arrival;
-  int combo = 0;
+  int combo = 0, rageStrike = -1;
   final random = math.Random(52);
   bool get active => ready && !disposed && !paused && !defeated && !won;
   String get region => world.areaName(hero.position.toOffset());
@@ -93,7 +93,12 @@ class Adventure extends ChangeNotifier {
     progress.gold += 18;
     progress.healingPotions++;
     dropGear(progress.rollLoot(random, chest: true), chestLocations[index]);
-    announce('보물 상자 · +18 골드 · 치유 물약 +1');
+    bubble(
+      '+18 골드 · 물약 +1',
+      chestLocations[index] - const ui.Offset(0, 55),
+      const ui.Color(0xffffd774),
+    );
+    refresh();
   }
 
   void dropGear(Gear gear, ui.Offset at) {
@@ -195,7 +200,7 @@ class Adventure extends ChangeNotifier {
   void start(BonfireGameInterface ref) {
     game = ref;
     ready = true;
-    waveTime = 7;
+    waveTime = 4.5;
     spawnPack(initial: true);
     refresh();
   }
@@ -237,9 +242,9 @@ class Adventure extends ChangeNotifier {
     }
     if (waveTime <= 0) {
       spawnPack();
-      waveTime = 7;
+      waveTime = 4.5;
     }
-    if (progress.kills >= 24 && !bossSummoned) {
+    if (progress.kills >= stageKillGoal && !bossSummoned) {
       final boss = spawnEnemy(
         'golem',
         hero.position.toOffset() + const ui.Offset(0, -310),
@@ -264,10 +269,10 @@ class Adventure extends ChangeNotifier {
   }
 
   void spawnPack({bool initial = false}) {
-    if (!active || living >= 12 || progress.bossDefeated) return;
+    if (!active || living >= 22 || progress.bossDefeated) return;
     final at = hero.position.toOffset();
     if (town.contains(at) && at.dy < 3025 && !initial) return;
-    final count = math.min(living < 4 ? 3 : 2, 12 - living);
+    final count = math.min(living < 8 ? 5 : 4, 22 - living);
     var added = 0;
     for (var i = 0; i < 18 && added < count; i++) {
       final angle = hero.bearing + (i < 3 ? [0.0, 1.0, -1.0][i] : i * 2.4),
@@ -294,6 +299,9 @@ class Adventure extends ChangeNotifier {
       return null;
     }
     final enemy = HuntEnemy(this, kind, p, boss: boss);
+    enemy.life.initial(
+      enemy.life.max * (1 + (progress.level - 1) * (boss ? .15 : .08)),
+    );
     mobs.add(enemy);
     game?.add(enemy);
     return enemy;
@@ -342,10 +350,21 @@ class Adventure extends ChangeNotifier {
     refresh();
   }
 
-  void hit(HuntEnemy mob, double damage, ui.Offset impulse) {
+  void hit(
+    HuntEnemy mob,
+    double damage,
+    ui.Offset impulse, {
+    bool generateRage = false,
+  }) {
     if (!active || !mob.combatReady || mob.isDead || mob.isRemoving) return;
     combatTime = 5;
     mob.life.remove(damage);
+    if (generateRage &&
+        progress.heroClass == HeroClass.warrior &&
+        rageStrike != hero.strikes) {
+      rageStrike = hero.strikes;
+      progress.energy = math.min(progress.maxEnergy, progress.energy + 3);
+    }
     device.pulse(mob.isDead ? FeedbackKind.kill : FeedbackKind.hit);
     mob.hurt = .14;
     final old = mob.position.toOffset(),
@@ -498,7 +517,7 @@ class Guardian extends Player with WithCollision {
     var delta = position.toOffset() - before;
     if (dashing > 0) {
       delta =
-          ui.Offset(math.cos(bearing), math.sin(bearing)) * speed * 3.2 * dt;
+          ui.Offset(math.cos(bearing), math.sin(bearing)) * speed * 1.9 * dt;
       dashing -= dt;
     }
     final p = session.world.move(before, delta, ui.Size(size.x, size.y));
@@ -570,7 +589,7 @@ class Guardian extends Player with WithCollision {
       );
       return;
     }
-    p.energy = math.min(p.maxEnergy, p.energy + 4);
+
     for (final mob in List<HuntEnemy>.of(session.mobs)) {
       final d = mob.body.center - body.center,
           diff = math.atan2(
@@ -592,7 +611,12 @@ class Guardian extends Player with WithCollision {
         final push = d.distance > 0
             ? d / d.distance * (p.weapon.base.style == 'hammer' ? 42 : 23)
             : const ui.Offset(0, 23);
-        session.hit(mob, p.basicDamage * (session.combo == 0 ? 1.6 : 1), push);
+        session.hit(
+          mob,
+          p.basicDamage * (session.combo == 0 ? 1.6 : 1),
+          push,
+          generateRage: true,
+        );
       }
     }
   }
@@ -708,7 +732,7 @@ class Guardian extends Player with WithCollision {
   void dodge() {
     if (!session.active || dodgeClock > 0) return;
     session.device.pulse(FeedbackKind.dodge);
-    dashing = .16;
+    dashing = .32;
     dodgeClock = 1.5;
     invulnerable = .32;
     session.refresh();
@@ -730,6 +754,15 @@ class Guardian extends Player with WithCollision {
         ..strokeWidth = 1.5
         ..color = const ui.Color(0xaaafffe3),
     );
+    canvas.save();
+    if (dashing > 0) {
+      canvas.translate(feet.dx, feet.dy - 18);
+      canvas.rotate(
+        (1 - dashing / .32) * math.pi * 2 * (math.cos(bearing) >= 0 ? 1 : -1),
+      );
+      canvas.scale(1, .76);
+      canvas.translate(-feet.dx, -feet.dy + 18);
+    }
     session.art.actor(
       canvas,
       session.progress.heroClass == HeroClass.mage ? 'mage' : 'hero',
@@ -742,6 +775,7 @@ class Guardian extends Player with WithCollision {
           ? .58
           : 1,
     );
+    canvas.restore();
     if (swing > 0 && session.progress.heroClass == HeroClass.warrior) {
       final phase = 1 - swing / .23,
           rect = ui.Rect.fromCircle(
@@ -826,6 +860,22 @@ class Guardian extends Player with WithCollision {
         );
       }
     }
+    if ((armorTime > 0 || frenzyTime > 0) &&
+        session.art.images['combat-fx'] != null) {
+      final image = session.art.images['combat-fx']!,
+          cell = image.width / 4,
+          index = frenzyTime > 0
+              ? 5
+              : session.progress.heroClass == HeroClass.mage
+              ? 6
+              : 0;
+      canvas.drawImageRect(
+        image,
+        ui.Rect.fromLTWH((index % 4) * cell, (index ~/ 4) * cell, cell, cell),
+        ui.Rect.fromCenter(center: center, width: 110, height: 110),
+        ui.Paint()..color = const ui.Color(0x99ffffff),
+      );
+    }
     if (armorTime > 0 || frenzyTime > 0) {
       canvas.drawOval(
         ui.Rect.fromCenter(
@@ -839,6 +889,16 @@ class Guardian extends Player with WithCollision {
           ..color = session.progress.heroClass == HeroClass.mage
               ? const ui.Color(0x9979dfff)
               : const ui.Color(0x99ffce83),
+      );
+    }
+    if (spin > 0 && session.art.images['combat-fx'] != null) {
+      final image = session.art.images['combat-fx']!, cell = image.width / 4;
+      canvas.drawImageRect(
+        image,
+        ui.Rect.fromLTWH(cell, 0, cell, cell),
+        ui.Rect.fromCenter(center: center, width: 330, height: 280),
+        ui.Paint()
+          ..color = ui.Color.fromRGBO(255, 255, 255, (spin / .5).clamp(0, 1)),
       );
     }
     if (spin > 0) {
@@ -865,7 +925,7 @@ class HuntEnemy extends Enemy with WithCollision {
         position: Vector2(at.dx, at.dy),
         size: boss ? Vector2(48, 40) : Vector2(24, 22),
         life: boss
-            ? 420
+            ? 1800
             : kind == 'goblin'
             ? 28
             : kind == 'wolf'

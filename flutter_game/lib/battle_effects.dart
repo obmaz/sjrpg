@@ -144,6 +144,32 @@ class RuneBurst extends GameComponent {
     super.render(canvas);
     final c = canvas;
     final t = (age / .55).clamp(0.0, 1.0), r = radius * (.2 + .8 * t);
+    final texture = session.art.images['combat-fx'];
+    if (texture != null) {
+      final cell = texture.width / 4,
+          index = icy
+              ? 2
+              : color == const ui.Color(0xffffcf81)
+              ? 0
+              : color == const ui.Color(0xffff9952) ||
+                    color == const ui.Color(0xffffad6b) ||
+                    color == const ui.Color(0xffffb659)
+              ? 4
+              : 7;
+      c.drawImageRect(
+        texture,
+        ui.Rect.fromLTWH((index % 4) * cell, (index ~/ 4) * cell, cell, cell),
+        ui.Rect.fromCenter(
+          center: ui.Offset.zero,
+          width: r * 2.4,
+          height: r * 2.0,
+        ),
+        ui.Paint()
+          ..color = ui.Color.fromRGBO(255, 255, 255, (1 - t).clamp(0, 1))
+          ..filterQuality = ui.FilterQuality.medium,
+      );
+    }
+
     c.drawOval(
       ui.Rect.fromCenter(
         center: ui.Offset.zero,
@@ -243,6 +269,26 @@ class LightningTrace extends GameComponent {
     super.render(canvas);
     final c = canvas;
     for (var i = 1; i < points.length; i++) {
+      final texture = session.art.images['combat-fx'];
+      if (texture != null) {
+        final cell = texture.width / 4;
+        c.drawImageRect(
+          texture,
+          ui.Rect.fromLTWH(cell * 3, 0, cell, cell),
+          ui.Rect.fromCenter(
+            center: points[i] - const ui.Offset(0, 35),
+            width: 125,
+            height: 125,
+          ),
+          ui.Paint()
+            ..color = ui.Color.fromRGBO(
+              255,
+              255,
+              255,
+              (1 - age / .3).clamp(0, 1),
+            ),
+        );
+      }
       final a = points[i - 1] - const ui.Offset(0, 20),
           b = points[i] - const ui.Offset(0, 20),
           d = b - a,
@@ -486,34 +532,22 @@ class StageLandmarks extends GameComponent {
         const ui.Rect.fromLTWH(-25, 3, 50, 14),
         ui.Paint()..color = const ui.Color(0x550a201a),
       );
-      c.drawRRect(
-        ui.RRect.fromRectAndRadius(
-          const ui.Rect.fromLTWH(-21, -25, 42, 35),
-          const ui.Radius.circular(5),
-        ),
+      final image = session.art.images['world-forest']!, cell = image.width / 4;
+      c.drawImageRect(
+        image,
+        ui.Rect.fromLTWH(cell * 3, cell * 2, cell, cell),
+        const ui.Rect.fromLTWH(-38, -58, 76, 76),
         ui.Paint()
           ..color = opened
-              ? const ui.Color(0xff504332)
-              : const ui.Color(0xff704a2a),
+              ? const ui.Color(0xff8b8b8b)
+              : const ui.Color(0xffffffff),
       );
-      c.drawRRect(
-        ui.RRect.fromRectAndRadius(
-          ui.Rect.fromLTWH(-21, opened ? -43 : -30, 42, opened ? 12 : 20),
-          const ui.Radius.circular(5),
-        ),
-        ui.Paint()
-          ..color = const ui.Color(0xffa67c3e)
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 3,
-      );
-      c.drawLine(
-        const ui.Offset(0, -25),
-        const ui.Offset(0, 8),
-        ui.Paint()
-          ..color = const ui.Color(0xffd4b36d)
-          ..strokeWidth = 5,
-      );
-      if (!opened) session.art.text(c, '✦', const ui.Offset(0, -51), size: 18);
+      if (opened) {
+        c.drawOval(
+          const ui.Rect.fromLTWH(-19, -30, 38, 12),
+          ui.Paint()..color = const ui.Color(0xaa1b241b),
+        );
+      }
       c.restore();
     }
   }

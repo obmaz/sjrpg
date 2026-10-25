@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'rpg_model.dart';
 export 'rpg_model.dart';
 
-const worldSize = Size(7680, 5760);
+const worldSize = Size(23040, 17280);
 const town = Rect.fromLTWH(3520, 2624, 640, 960);
 const arrival = Offset(3840, 3055);
 const stageChests = [
@@ -103,11 +103,17 @@ class AdventureWorld {
       oval(const Offset(1950, 2800), 1500, 1750),
       oval(const Offset(3900, 850), 1800, 1000),
       oval(const Offset(6650, 3500), 800, 1400),
+      oval(const Offset(10800, 7000), 2200, 1800),
+      oval(const Offset(18500, 12000), 2500, 2800),
+      oval(const Offset(3000, 12000), 1600, 2800),
+      oval(const Offset(14500, 2500), 3000, 1600),
     ];
     sand = oval(const Offset(6600, 5200), 1500, 850);
     lakes = [
       oval(const Offset(5680, 1700), 820, 620),
       oval(const Offset(1750, 1100), 650, 430),
+      oval(const Offset(17000, 9000), 1800, 1100),
+      oval(const Offset(11500, 15500), 1400, 850),
     ];
     double rx(double y) => 5300 + math.sin(y / 620) * 230;
     final left = <Offset>[], right = <Offset>[];
@@ -165,6 +171,37 @@ class AdventureWorld {
         140,
       ),
     ];
+    trails.addAll([
+      Trail(
+        _curve([
+          const Offset(7000, 4780),
+          const Offset(10000, 4200),
+          const Offset(13000, 6500),
+          const Offset(18000, 4200),
+          const Offset(22000, 9000),
+        ]),
+        210,
+      ),
+      Trail(
+        _curve([
+          const Offset(6200, 4200),
+          const Offset(8000, 9000),
+          const Offset(13000, 12000),
+          const Offset(17000, 16000),
+          const Offset(22000, 14000),
+        ]),
+        185,
+      ),
+      Trail(
+        _curve([
+          const Offset(3000, 5500),
+          const Offset(3800, 8500),
+          const Offset(2200, 12000),
+          const Offset(3600, 16500),
+        ]),
+        190,
+      ),
+    ]);
     for (var y = 0; y < 30; y++) {
       for (var x = 0; x < 20; x++) {
         final u = (x + .5) / 20, v = (y + .5) / 30;
@@ -186,8 +223,8 @@ class AdventureWorld {
         }
       }
     }
-    for (var y = 100.0; y < worldSize.height - 100; y += 100) {
-      for (var x = 100.0; x < worldSize.width - 100; x += 100) {
+    for (var y = 100.0; y < worldSize.height - 100; y += 150) {
+      for (var x = 100.0; x < worldSize.width - 100; x += 150) {
         final p = Offset(
           x + random.nextDouble() * 70,
           y + random.nextDouble() * 70,

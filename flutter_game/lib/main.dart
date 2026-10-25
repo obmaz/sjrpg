@@ -363,13 +363,6 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 top: media.padding.top + 110,
                 child: PotionBelt(adventure),
               ),
-              if (adventure.nearbyBoss != null)
-                Positioned(
-                  top: media.padding.top + (short ? 110 : 165),
-                  left: 0,
-                  right: 0,
-                  child: Center(child: BossHealth(adventure.nearbyBoss!)),
-                ),
               if (adventure.noticeTime > 0)
                 Positioned(
                   left: 55,
@@ -438,11 +431,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     _menu('touchInventory', '가방', 'bag'),
-                    _menu(
-                      'touchQuests',
-                      p.skillPoints > 0 ? '스킬 +${p.skillPoints}' : '스킬',
-                      'skills',
-                    ),
+                    _menu('touchQuests', '스킬', 'skills'),
                     _menu('touchCompendium', '여정', 'journal'),
                     _menu('touchSettings', '설정', 'settings'),
                   ],
@@ -467,6 +456,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     art: widget.art,
     sprite: sprite,
     label: label,
+    badge: target == 'skills' ? adventure.progress.skillPoints : 0,
     onTap: () => open(target),
   );
 }

@@ -21,6 +21,7 @@ class GameArt {
         'actors-hero',
         'actors-mage',
         'gear-icons',
+        'combat-fx',
         'actors-hero-attack',
         'actors-creatures-a',
         'actors-creatures-b',
@@ -36,7 +37,7 @@ class GameArt {
         'atlas',
       ].map((name) async {
         final bytes = await rootBundle.load(
-          'assets/images/$name.${['actors-mage', 'gear-icons'].contains(name) ? 'png' : 'webp'}',
+          'assets/images/$name.${['actors-mage', 'gear-icons', 'combat-fx'].contains(name) ? 'png' : 'webp'}',
         );
         final codec = await ui.instantiateImageCodec(
           bytes.buffer.asUint8List(),

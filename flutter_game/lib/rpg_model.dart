@@ -454,6 +454,7 @@ const stageExits = [
   StageExit('남', '잿빛 탑', 3000, 5380, '층마다 시련이 이어지는 탑 · 다음 스테이지'),
   StageExit('서', '가시덤불 묘지', 420, 4640, '버려진 묘지와 지하 납골당 · 다음 스테이지'),
 ];
+const stageKillGoal = 120;
 const startingStageName = '십자로의 숲';
 
 class Progress {
@@ -546,7 +547,7 @@ class Progress {
       xp -= nextLevelXp;
       level++;
       skillPoints++;
-      hp = maxHp;
+      hp = math.min(maxHp, hp + maxHp * .2);
       energy = heroClass == HeroClass.mage
           ? maxEnergy
           : math.min(maxEnergy, energy + 20);

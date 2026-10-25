@@ -194,7 +194,7 @@ void main() {
       expect(s.openedChests.length, 1);
       expect(s.progress.gold, 18);
       expect(s.loot.length, 1);
-      s.progress.kills = 24;
+      s.progress.kills = stageKillGoal;
       s.tick(.05);
       final boss = s.mobs.firstWhere((m) => m.boss);
       s.hit(boss, 99999, Offset.zero);
@@ -346,5 +346,33 @@ void main() {
     expect(s.hero.strikes, 0);
     expect(s.progress.kills, 0);
     expect(s.elapsed, 0);
+  });
+  test('level ups restore a limited portion of life', () {
+    final p = Progress();
+    p.hp = 10;
+    p.gainXp(p.nextLevelXp);
+    expect(p.level, 2);
+    expect(p.hp, 10 + p.maxHp * .2);
+    expect(p.hp, lessThan(p.maxHp));
+  });
+  test('warrior rage requires a real hit rather than empty swings', () {
+    final s = Adventure(GameArt());
+    s.start(TestGame());
+    addTearDown(s.dispose);
+    final enemy = s.mobs.first;
+    s.mobs.clear();
+    final before = s.progress.energy;
+    for (var i = 0; i < 20; i++) {
+      s.hero.attackClock = 0;
+      s.hero.slash();
+    }
+    expect(s.progress.energy, before);
+    s.hit(enemy, 1, Offset.zero, generateRage: true);
+    expect(s.progress.energy, before + 3);
+    s.hit(enemy, 1, Offset.zero, generateRage: true);
+    expect(s.progress.energy, before + 3);
+    s.pause();
+    s.hit(enemy, 1, Offset.zero, generateRage: true);
+    expect(s.progress.energy, before + 3);
   });
 }

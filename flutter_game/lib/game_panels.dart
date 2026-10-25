@@ -148,8 +148,8 @@ class _AdventurePanelState extends State<AdventurePanel> {
         _quest(
           '숲길 정화',
           '몬스터를 처치해 숲의 파수꾼을 깨우세요.',
-          math.min(24, p.kills) / 24,
-          '${math.min(24, p.kills)} / 24',
+          math.min(stageKillGoal, p.kills) / stageKillGoal,
+          '${math.min(stageKillGoal, p.kills)} / $stageKillGoal',
         ),
         const SizedBox(height: 12),
         _quest(
@@ -229,7 +229,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
         Text(
           p.bossDefeated
               ? '숲의 봉인을 해제했습니다.\n다음 스테이지는 아직 준비 중입니다.\n현재는 제1장의 남은 보물을 탐험할 수 있습니다.'
-              : '숲의 파수꾼이 길을 봉인하고 있습니다.\n먼저 몬스터 24마리와 파수꾼을 물리치세요.',
+              : '숲의 파수꾼이 길을 봉인하고 있습니다.\n먼저 몬스터 $stageKillGoal마리와 파수꾼을 물리치세요.',
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 15, height: 1.8, color: cream),
         ),
