@@ -41,7 +41,7 @@ void main() {
     )!;
     expect(boss.isElite, false);
     expect(boss.trait, EnemyTrait.none);
-    expect(boss.life.max, 1800);
+    expect(boss.life.max, 3600);
     expect(boss.speed, 90);
     expect(s.world.blocked(boss.body), false);
   });

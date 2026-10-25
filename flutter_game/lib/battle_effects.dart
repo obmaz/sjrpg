@@ -13,18 +13,41 @@ void areaStrike(
   double damage, {
   double stun = 0,
   double slow = 0,
+  int maxTargets = 3,
+  Set<HuntEnemy>? castTargets,
+  Set<HuntEnemy> excluded = const {},
 }) {
-  for (final mob in List<HuntEnemy>.of(s.mobs)) {
-    final d = mob.body.center - center;
-    if (mob.combatReady &&
-        !mob.isDead &&
-        !mob.isRemoving &&
-        d.distance < radius &&
-        s.world.clearLine(center, mob.body.center, const ui.Size(3, 3))) {
-      s.hit(mob, damage, d.distance > 0 ? d / d.distance * 16 : ui.Offset.zero);
-      mob.stun = math.max(mob.stun, stun * (mob.boss ? .35 : 1));
-      mob.slow = math.max(mob.slow, slow);
+  if (maxTargets <= 0) return;
+  final targets = castTargets ?? <HuntEnemy>{};
+  final candidates =
+      s.mobs
+          .where(
+            (mob) =>
+                mob.combatReady &&
+                !mob.isDead &&
+                !mob.isRemoving &&
+                !excluded.contains(mob) &&
+                (mob.body.center - center).distance < radius &&
+                s.world.clearLine(center, mob.body.center, const ui.Size(3, 3)),
+          )
+          .toList()
+        ..sort((a, b) {
+          final order = (a.body.center - center).distance.compareTo(
+            (b.body.center - center).distance,
+          );
+          return order != 0
+              ? order
+              : s.mobs.indexOf(a).compareTo(s.mobs.indexOf(b));
+        });
+  for (final mob in candidates) {
+    if (!targets.contains(mob)) {
+      if (targets.length >= maxTargets) continue;
+      targets.add(mob);
     }
+    final d = mob.body.center - center;
+    s.hit(mob, damage, d.distance > 0 ? d / d.distance * 16 : ui.Offset.zero);
+    mob.stun = math.max(mob.stun, stun * (mob.boss ? .35 : 1));
+    mob.slow = math.max(mob.slow, slow);
   }
 }
 
@@ -219,7 +242,9 @@ class ArcaneBolt extends GameComponent {
     this.damage, {
     this.element = 'fire',
     this.explosive = false,
-  }) : direction = ui.Offset(math.cos(angle), math.sin(angle)),
+    int? targetLimit,
+  }) : targetLimit = targetLimit ?? (explosive ? 3 : 1),
+       direction = ui.Offset(math.cos(angle), math.sin(angle)),
        buildRevision = session.buildRevision {
     position = Vector2(at.dx, at.dy);
     size = Vector2.all(12);
@@ -229,6 +254,7 @@ class ArcaneBolt extends GameComponent {
   final double damage;
   final String element;
   final bool explosive;
+  final int targetLimit;
   final int buildRevision;
   double remaining = .88;
   bool resolved = false;
@@ -268,7 +294,16 @@ class ArcaneBolt extends GameComponent {
             mob.body.inflate(7).contains(at)) {
           session.hit(mob, damage, direction * 12);
           if (element == 'ice') mob.slow = math.max(mob.slow, 1.5);
-          if (explosive) areaStrike(session, at, 85, damage * .35);
+          if (explosive) {
+            areaStrike(
+              session,
+              at,
+              85,
+              damage * .35,
+              maxTargets: targetLimit - 1,
+              excluded: {mob},
+            );
+          }
           session.game?.add(
             element == 'lightning'
                 ? RuneBurst(session, at, color, radius: explosive ? 85 : 27)
@@ -398,11 +433,13 @@ class RuneBurst extends GameComponent {
 }
 
 class WhirlwindPulse extends GameComponent {
-  WhirlwindPulse(this.session, this.hero, this.damage)
+  WhirlwindPulse(this.session, this.hero, this.damage, {this.targetLimit = 3})
     : buildRevision = session.buildRevision;
   final Adventure session;
   final Guardian hero;
   final double damage;
+  final int targetLimit;
+  final targets = <HuntEnemy>{};
   final int buildRevision;
   double age = 0;
   int pulses = 0;
@@ -418,7 +455,14 @@ class WhirlwindPulse extends GameComponent {
     age += math.min(.05, dt);
     if (age >= pulses * .16 && pulses < 3) {
       pulses++;
-      areaStrike(session, hero.body.center, 175, damage);
+      areaStrike(
+        session,
+        hero.body.center,
+        175,
+        damage,
+        maxTargets: targetLimit,
+        castTargets: targets,
+      );
     }
     if (pulses == 3) removeFromParent();
     super.update(dt);
@@ -427,7 +471,7 @@ class WhirlwindPulse extends GameComponent {
 
 void chainLightning(Adventure s, ui.Offset from, double damage, int count) {
   final points = <ui.Offset>[from], visited = <HuntEnemy>{};
-  for (var i = 0; i < math.min(5, count); i++) {
+  for (var i = 0; i < count.clamp(0, 32); i++) {
     final at = points.last;
     final candidates =
         s.mobs
@@ -531,11 +575,17 @@ class LightningTrace extends GameComponent {
 }
 
 class MeteorFall extends GameComponent {
-  MeteorFall(this.session, this.origin, this.target, this.damage)
-    : buildRevision = session.buildRevision;
+  MeteorFall(
+    this.session,
+    this.origin,
+    this.target,
+    this.damage, {
+    this.targetLimit = 3,
+  }) : buildRevision = session.buildRevision;
   final Adventure session;
   final ui.Offset origin, target;
   final double damage;
+  final int targetLimit;
   final int buildRevision;
   double age = 0;
   bool struck = false;
@@ -557,7 +607,7 @@ class MeteorFall extends GameComponent {
       if (session.world.clearLine(origin, target, const ui.Size(3, 3))) {
         session.kickCamera(1.5);
         session.device.pulse(FeedbackKind.skill);
-        areaStrike(session, target, 175, damage);
+        areaStrike(session, target, 175, damage, maxTargets: targetLimit);
         session.game?.add(
           SpellBurst(session, SpellClip.meteorImpact, target, radius: 175),
         );
@@ -713,12 +763,49 @@ class StageLandmarks extends GameComponent {
     super.render(canvas);
     final c = canvas;
     final view = gameRef.camera.visibleWorldRect.inflate(120);
+    for (final mount in session.mounts) {
+      if (identical(mount, session.riding) || !view.contains(mount.at)) {
+        continue;
+      }
+      session.art.actor(
+        c,
+        mount.def.artKey,
+        mount.at + ui.Offset(0, mount.def.bodySize.height / 2),
+        mount.bearing,
+        0,
+        mount.def.waterOnly ? 48 : 62,
+      );
+    }
+    for (var i = 0; i < questSites.length; i++) {
+      final site = questSites[i];
+      if (!view.inflate(100).contains(site.at)) continue;
+      session.art.landmark(c, i, site.at - const ui.Offset(0, 18), 144);
+      final done = session.cleansedSites.contains(site.id);
+      c.drawOval(
+        ui.Rect.fromCenter(
+          center: site.at - const ui.Offset(0, 2),
+          width: 72,
+          height: 28,
+        ),
+        ui.Paint()
+          ..color = site.color.withValues(alpha: done ? .5 : .18)
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+      session.art.text(
+        c,
+        done ? '✓' : '!',
+        site.at - const ui.Offset(0, 148),
+        size: 21,
+        color: site.color,
+      );
+    }
     for (final exit in stageExits) {
       final at = ui.Offset(exit.x, exit.y);
       if (!view.contains(at)) continue;
       c.save();
       c.translate(at.dx, at.dy);
-      final color = session.progress.bossDefeated
+      final color = session.stageCleared
           ? const ui.Color(0xffa4e8ea)
           : const ui.Color(0xffb4a68b);
       c.drawOval(

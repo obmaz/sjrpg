@@ -34,6 +34,8 @@ class GameArt {
         'actors-creatures-a',
         'actors-creatures-b',
         'actors-villagers',
+        'actors-vehicles',
+        'quest-sites',
         'village-scene',
         'landscape-bridge',
         'world-forest',
@@ -151,6 +153,22 @@ class GameArt {
     return art;
   }
 
+  void landmark(ui.Canvas canvas, int index, ui.Offset feet, double side) {
+    final image = images['quest-sites'];
+    if (image == null) return;
+    canvas.drawImageRect(
+      image,
+      ui.Rect.fromLTWH(
+        index * image.width / 3,
+        0,
+        image.width / 3,
+        image.height.toDouble(),
+      ),
+      ui.Rect.fromLTWH(feet.dx - side / 2, feet.dy - side * .9375, side, side),
+      ui.Paint()..filterQuality = ui.FilterQuality.medium,
+    );
+  }
+
   void actor(
     ui.Canvas canvas,
     String key,
@@ -172,6 +190,10 @@ class GameArt {
       'golem': ('creatures-b', 1, 8),
       'merchant': ('villagers', 0, 8),
       'villager': ('villagers', 1, 8),
+      'horse': ('vehicles', 0, 8),
+      'bicycle': ('vehicles', 1, 8),
+      'motor': ('vehicles', 2, 8),
+      'boat': ('vehicles', 3, 8),
     };
     final definition = definitions[key]!;
     final sheet = attack && key == 'hero' ? 'hero-attack' : definition.$1,
@@ -354,6 +376,7 @@ class TerrainArt {
       );
     }
     for (final t in world.trails) {
+      if (!t.bounds.inflate(t.width / 2 + 2).overlaps(area)) continue;
       c.drawPath(
         t.path,
         ui.Paint()
@@ -365,6 +388,7 @@ class TerrainArt {
       );
     }
     for (final t in world.trails) {
+      if (!t.bounds.inflate(t.width / 2 + 2).overlaps(area)) continue;
       c.drawPath(
         t.path,
         ui.Paint()
@@ -375,12 +399,15 @@ class TerrainArt {
           ..shader = art.materials[5],
       );
     }
-    c.drawImageRect(
-      art.images['landscape-bridge']!,
-      const ui.Rect.fromLTWH(50, 112, 1880, 540),
-      world.bridge,
-      ui.Paint(),
-    );
+    for (final bridge in world.bridges) {
+      if (!bridge.overlaps(area)) continue;
+      c.drawImageRect(
+        art.images['landscape-bridge']!,
+        const ui.Rect.fromLTWH(50, 112, 1880, 540),
+        bridge,
+        ui.Paint(),
+      );
+    }
     if (town.inflate(30).overlaps(area)) {
       final village = art.images['village-blended']!;
       c.drawImageRect(

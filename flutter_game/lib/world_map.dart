@@ -22,6 +22,16 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
   Size viewport = Size.zero;
   static const canvas = Size(1200, 900);
   @override
+  void initState() {
+    super.initState();
+    transform.addListener(_viewChanged);
+  }
+
+  void _viewChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   void dispose() {
     transform.dispose();
     super.dispose();
@@ -119,7 +129,11 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
                       width: canvas.width,
                       height: canvas.height,
                       child: CustomPaint(
-                        painter: MapPainter(widget.session, round: false),
+                        painter: MapPainter(
+                          widget.session,
+                          round: false,
+                          markerScale: 1 / transform.value.getMaxScaleOnAxis(),
+                        ),
                       ),
                     ),
                   ),

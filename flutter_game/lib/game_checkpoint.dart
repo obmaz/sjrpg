@@ -31,6 +31,19 @@ class GameCheckpoint {
                 'maxHp': boss.life.max,
               },
         'version': 1,
+        'balance': 2,
+        'sites': session.cleansedSites.toList(),
+        'mounts': session.mounts
+            .map(
+              (m) => {
+                'id': m.def.id,
+                'x': m.at.dx,
+                'y': m.at.dy,
+                'angle': m.bearing,
+              },
+            )
+            .toList(),
+        'riding': session.riding?.def.id,
         'progress': session.progress.toSave(),
         'seed': session.world.seed,
         'x': session.hero.position.x,
@@ -89,6 +102,42 @@ class GameCheckpoint {
         final skill = progress.skills.firstWhere((s) => s.id == entry.key);
         if (skill.passive || !number(entry.value, skill.cooldown)) return null;
       }
+      final sites =
+          data['sites'] ??
+          (progress.bossDefeated
+              ? questSites.map((q) => q.id).toList()
+              : <String>[]);
+      if (sites is! List ||
+          sites.length > questSites.length ||
+          sites.toSet().length != sites.length ||
+          sites.any((id) => !questSites.any((q) => q.id == id))) {
+        return null;
+      }
+      data['sites'] = sites;
+      final mounts = data['mounts'] ?? <dynamic>[];
+      if (mounts is! List || mounts.length > travelMountDefs.length) {
+        return null;
+      }
+      final ids = <String>{};
+      for (final mount in mounts) {
+        if (mount is! Map ||
+            !travelMountDefs.any((d) => d.id == mount['id']) ||
+            !ids.add(mount['id'] as String) ||
+            !number(mount['x'], worldSize.width) ||
+            !number(mount['y'], worldSize.height) ||
+            mount['angle'] is! num ||
+            !(mount['angle'] as num).isFinite ||
+            (mount['angle'] as num).abs() > 100000) {
+          return null;
+        }
+      }
+      final riding = data['riding'];
+      if (riding != null && (riding is! String || !ids.contains(riding))) {
+        return null;
+      }
+      data['mounts'] = mounts;
+      final balance = data['balance'] ?? 1;
+      if (balance is! int || balance < 1 || balance > 2) return null;
       final boss = data['boss'];
       if (boss != null) {
         if (boss is! Map ||
@@ -117,6 +166,11 @@ class GameCheckpoint {
           return null;
         }
       }
+      if (balance < 2 && boss != null) {
+        boss['hp'] = (boss['hp'] as num) * 2;
+        boss['maxHp'] = (boss['maxHp'] as num) * 2;
+      }
+      data['balance'] = 2;
       return GameCheckpoint._(data, progress);
     } catch (_) {
       return null;
@@ -129,18 +183,53 @@ class GameCheckpoint {
       seed: data['seed'] as int,
       restoredProgress: Progress.fromSave(progress.toSave())!,
     );
+    for (final entry in data['mounts'] as List) {
+      final existing = session.mounts.where((m) => m.def.id == entry['id']);
+      if (existing.isEmpty) continue;
+      final mount = existing.first;
+      final at = Offset(
+        (entry['x'] as num).toDouble(),
+        (entry['y'] as num).toDouble(),
+      );
+      final body = Rect.fromCenter(
+        center: at,
+        width: mount.def.bodySize.width,
+        height: mount.def.bodySize.height,
+      );
+      if (!session.world.blocked(body, waterOnly: mount.def.waterOnly)) {
+        mount.at = at;
+        mount.bearing = (entry['angle'] as num).toDouble();
+      }
+    }
+    final riding = session.mounts.where((m) => m.def.id == data['riding']);
+    if (riding.isNotEmpty) {
+      session.riding = riding.first;
+      session.hero.resizeBody(riding.first.def.bodySize, riding.first.at);
+    }
     final desired = Offset(
       (data['x'] as num).toDouble(),
       (data['y'] as num).toDouble(),
     );
-    final at =
-        session.world.spawnNear(desired, session.hero.body.size) ?? arrival;
-    session.hero.position.setValues(at.dx, at.dy);
-    session.hero.lastClearPosition = at;
+    final at = session.world.spawnNear(
+      desired,
+      session.hero.body.size,
+      waterOnly: session.riding?.def.waterOnly ?? false,
+    );
+    final safe = at ?? arrival;
+    if (at == null) {
+      session.riding = null;
+      session.hero.resizeBody(
+        const Size(28, 24),
+        arrival + const Offset(14, 12),
+      );
+    }
+    session.hero.position.setValues(safe.dx, safe.dy);
+    session.hero.lastClearPosition = safe;
     session.hero.invulnerable = .75;
     session.elapsed = (data['elapsed'] as num).toDouble();
     session.openedChests.addAll((data['chests'] as List).cast<int>());
     session.memoryRewarded = data['memoryRewarded'] as bool;
+    session.cleansedSites.addAll((data['sites'] as List).cast<String>());
     session.bossSummoned = session.progress.bossDefeated;
     final savedBoss = data['boss'];
     if (savedBoss != null) {

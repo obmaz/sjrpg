@@ -10,6 +10,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'actors-creatures-a',
         'actors-creatures-b',
         'actors-villagers',
+        'actors-vehicles',
         'village-scene',
         'landscape-materials',
         'landscape-bridge',
@@ -37,7 +38,14 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
             path.join(root, `flutter_game/art/${name}.png`),
             path.join(destination, `images/${name}.png`),
         );
-    for (const name of ['fx-meteor', 'fx-ice-nova', 'fx-whirlwind', 'fx-warcry', 'passive-icons'])
+    for (const name of [
+        'fx-meteor',
+        'fx-ice-nova',
+        'fx-whirlwind',
+        'fx-warcry',
+        'passive-icons',
+        'quest-sites',
+    ])
         fs.copyFileSync(
             path.join(root, `flutter_game/art/${name}.webp`),
             path.join(destination, `images/${name}.webp`),

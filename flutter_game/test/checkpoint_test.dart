@@ -72,6 +72,7 @@ void main() {
     final s = Adventure(GameArt());
     s.start(TestGame());
     addTearDown(s.dispose);
+    s.cleansedSites.addAll(questSites.map((q) => q.id));
     s.progress.kills = stageKillGoal;
     s.tick(.05);
     final boss = s.mobs.firstWhere((m) => m.boss);

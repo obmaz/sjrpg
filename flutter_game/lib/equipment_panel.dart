@@ -521,6 +521,9 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
     final poor = !owned && p.gold < entry.price;
     final already = !owned && _sameEquippedOffer(entry);
     final usable = gear.base.usable(p.heroClass);
+    final attack = usable && gear.base.slot == GearSlot.weapon
+        ? p.previewBasicAttack(gear)
+        : null;
     final label = owned
         ? '보관 장비 · ${gear.name}${active ? ' · 장착 중' : ''}${gear.locked ? ' · 잠금' : ''}${p.unseenGear.contains(gear.serial) ? ' · 신규' : ''}'
         : '${entry.title} · ${entry.price} 골드';
@@ -656,15 +659,14 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                                       current?.attack,
                                       active,
                                     ),
-                                    _quickStat(
-                                      '초당',
-                                      gear.attack / gear.base.tempo,
-                                      current == null
-                                          ? null
-                                          : current.attack / current.base.tempo,
-                                      active,
-                                      decimal: true,
-                                    ),
+                                    if (attack != null)
+                                      _quickStat(
+                                        '초당',
+                                        attack.dps,
+                                        p.basicDps,
+                                        active,
+                                        decimal: true,
+                                      ),
                                   ] else if (gear.base.slot ==
                                       GearSlot.armor) ...[
                                     _quickStat(
@@ -796,8 +798,16 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Text(
-                  '공격 주기 ${gear.base.tempo.toStringAsFixed(2)}초 · 사거리 ${gear.base.range.round()}',
+                  '공격 주기 ${(attack?.interval ?? gear.base.tempo).toStringAsFixed(2)}초 · 사거리 ${gear.base.range.round()}',
                   style: const TextStyle(color: _muted, fontSize: 13),
+                ),
+              ),
+            if (attack != null)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 10),
+                child: Text(
+                  '초당 피해는 현재 장비·레벨·스킬의 기본 1타 기준입니다.',
+                  style: TextStyle(color: _muted, fontSize: 13, height: 1.5),
                 ),
               ),
             if (owned)

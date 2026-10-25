@@ -462,12 +462,18 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   width: 120,
                   child: GameAction(
                     switch (interaction) {
+                      NearbyAction.shrine => '정화',
+                      NearbyAction.mount => '타기',
+                      NearbyAction.dismount => '내리기',
                       NearbyAction.shop => '상점',
                       NearbyAction.talk => '대화',
                       NearbyAction.chest => '상자 열기',
                       NearbyAction.exit => '출구 확인',
                     },
                     icon: switch (interaction) {
+                      NearbyAction.shrine => Icons.water_drop_outlined,
+                      NearbyAction.mount => Icons.pets_outlined,
+                      NearbyAction.dismount => Icons.south_west,
                       NearbyAction.shop => Icons.storefront,
                       NearbyAction.talk => Icons.chat_bubble_outline,
                       NearbyAction.chest => Icons.inventory_2_outlined,
@@ -475,6 +481,12 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                     },
                     onTap: () {
                       switch (interaction) {
+                        case NearbyAction.mount:
+                          if (adventure.boardNearbyMount()) saveNow();
+                        case NearbyAction.dismount:
+                          if (adventure.dismount()) saveNow();
+                        case NearbyAction.shrine:
+                          if (adventure.cleanseNearbySite()) saveNow();
                         case NearbyAction.shop:
                           open('shop');
                         case NearbyAction.talk:
@@ -563,6 +575,10 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     label: label,
     badge: target == 'skills'
         ? adventure.progress.skillPoints
+        : target == 'journal'
+        ? (questSites.length -
+              adventure.cleansedSites.length +
+              (adventure.progress.bossDefeated ? 0 : 1))
         : target == 'bag'
         ? adventure.progress.unseenGear.length
         : 0,

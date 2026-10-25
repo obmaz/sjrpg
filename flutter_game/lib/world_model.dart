@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'rpg_model.dart';
 export 'rpg_model.dart';
 
-const worldSize = Size(23040, 17280);
+const worldSize = Size(46080, 34560);
 const town = Rect.fromLTWH(3520, 2624, 640, 960);
 const arrival = Offset(3840, 3055);
 const stageChests = [
@@ -25,6 +25,98 @@ const stageChests = [
   Offset(22000, 14000),
   Offset(3800, 8500),
   Offset(3600, 16500),
+  Offset(26000, 6000),
+  Offset(32000, 7500),
+  Offset(38500, 4000),
+  Offset(44500, 6500),
+  Offset(36000, 13000),
+  Offset(36500, 18000),
+  Offset(35000, 22000),
+  Offset(34000, 30000),
+  Offset(42000, 33000),
+  Offset(23000, 23000),
+  Offset(11200, 24000),
+  Offset(8200, 28000),
+  Offset(3300, 32500),
+];
+
+class TravelMountDef {
+  const TravelMountDef(
+    this.id,
+    this.name,
+    this.speed, {
+    this.waterOnly = false,
+  });
+  final String id, name;
+  final double speed;
+  final bool waterOnly;
+  String get artKey => waterOnly ? 'boat' : id;
+  Size get bodySize => waterOnly ? const Size(46, 34) : const Size(40, 32);
+}
+
+const travelMountDefs = [
+  TravelMountDef('horse', '말', 520),
+  TravelMountDef('bicycle', '자전거', 460),
+  TravelMountDef('motor', '오토바이', 620),
+  TravelMountDef('boat', '배', 340, waterOnly: true),
+  TravelMountDef('boat-west', '배', 340, waterOnly: true),
+  TravelMountDef('boat-ruins', '배', 340, waterOnly: true),
+  TravelMountDef('boat-marsh', '배', 340, waterOnly: true),
+  TravelMountDef('boat-east', '배', 340, waterOnly: true),
+  TravelMountDef('boat-south', '배', 340, waterOnly: true),
+  TravelMountDef('boat-coast', '배', 340, waterOnly: true),
+];
+const initialMountPositions = [
+  Offset(4000, 3440),
+  Offset(3600, 3500),
+  Offset(4160, 3800),
+  Offset(5015, 1700),
+  Offset(1200, 1100),
+  Offset(15400, 9000),
+  Offset(10300, 15500),
+  Offset(25800, 13800),
+  Offset(12600, 27800),
+  Offset(37400, 30300),
+];
+
+class TravelMount {
+  TravelMount(this.def, this.at);
+  final TravelMountDef def;
+  Offset at;
+  double bearing = 1.5707963267948966;
+}
+
+class QuestSite {
+  const QuestSite(this.id, this.name, this.hint, this.at, this.color);
+  final String id, name, hint;
+  final Offset at;
+  final Color color;
+  Rect get body =>
+      Rect.fromCenter(center: at - const Offset(0, 42), width: 60, height: 42);
+}
+
+const questSites = [
+  QuestSite(
+    'roots',
+    '뿌리 우물',
+    '서쪽 숲길의 오래된 우물',
+    Offset(2900, 4100),
+    Color(0xff94db9c),
+  ),
+  QuestSite(
+    'moon',
+    '달빛 샘',
+    '북동쪽 호수 앞의 푸른 샘',
+    Offset(4620, 1800),
+    Color(0xff9cdbf2),
+  ),
+  QuestSite(
+    'sun',
+    '태양 제단',
+    '동쪽 사막 입구의 황금 제단',
+    Offset(6900, 5200),
+    Color(0xffffd581),
+  ),
 ];
 
 Rect localMapBounds(Offset focus, {double span = 2100}) =>
@@ -91,6 +183,10 @@ class Trail {
   final List<Offset> points;
   final double width;
   final Path path = Path();
+  late final Rect bounds = RegionShape._bounds(points);
+  bool near(Offset p, double margin) =>
+      bounds.inflate(width / 2 + margin).contains(p) &&
+      distance(p) < width / 2 + margin;
   double distance(Offset p) {
     var best = double.infinity;
     for (var i = 1; i < points.length; i++) {
@@ -139,6 +235,28 @@ class AdventureWorld {
       oval(const Offset(17000, 9000), 1800, 1100),
       oval(const Offset(11500, 15500), 1400, 850),
     ];
+    woods.addAll([
+      oval(const Offset(28200, 6200), 3400, 2300),
+      oval(const Offset(36500, 12500), 3000, 2500),
+      oval(const Offset(9600, 23800), 4200, 3200),
+      oval(const Offset(31500, 27800), 4400, 3000),
+      oval(const Offset(42500, 31000), 2100, 1700),
+    ]);
+    sandFields.addAll([
+      oval(const Offset(39200, 5800), 4400, 3200),
+      oval(const Offset(24500, 21800), 5100, 3800),
+      oval(const Offset(42900, 21800), 2300, 4800),
+    ]);
+    clearings.addAll([
+      oval(const Offset(28100, 6400), 1300, 1100),
+      oval(const Offset(9700, 23900), 1600, 1000),
+      oval(const Offset(33200, 29300), 2200, 1400),
+    ]);
+    lakes.addAll([
+      oval(const Offset(29700, 13800), 4200, 2600),
+      oval(const Offset(15500, 27800), 3100, 2000),
+      oval(const Offset(38800, 30300), 1600, 1300),
+    ]);
     double rx(double y) => 5300 + math.sin(y / 620) * 230;
     final left = <Offset>[], right = <Offset>[];
     for (var y = -100.0; y < worldSize.height + 200; y += 64) {
@@ -151,6 +269,19 @@ class AdventureWorld {
       width: 660,
       height: 176,
     );
+    bridges = [
+      bridge,
+      Rect.fromCenter(
+        center: Offset(rx(18000), 18000),
+        width: 660,
+        height: 176,
+      ),
+      Rect.fromCenter(
+        center: Offset(rx(29000), 29000),
+        width: 660,
+        height: 176,
+      ),
+    ];
     trails = [
       Trail(
         _curve([
@@ -246,6 +377,97 @@ class AdventureWorld {
         190,
       ),
     ]);
+    trails.addAll([
+      Trail(
+        _curve([
+          const Offset(3100, 3270),
+          const Offset(2700, 3800),
+          const Offset(2700, 4500),
+          const Offset(3000, 5500),
+        ]),
+        150,
+      ),
+      Trail([const Offset(2700, 4200), questSites[0].at], 140),
+      Trail(_curve([const Offset(4000, 2230), questSites[1].at]), 150),
+      Trail(
+        _curve([
+          const Offset(7000, 4780),
+          const Offset(7300, 5000),
+          const Offset(7300, 5500),
+          const Offset(6900, 5500),
+          questSites[2].at,
+        ]),
+        160,
+      ),
+      Trail(
+        _curve([
+          const Offset(22000, 9000),
+          const Offset(26000, 6000),
+          const Offset(32000, 7500),
+          const Offset(38500, 4000),
+          const Offset(45000, 6500),
+        ]),
+        195,
+      ),
+      Trail(
+        _curve([
+          const Offset(22000, 14000),
+          const Offset(24500, 17500),
+          const Offset(23000, 23000),
+          const Offset(29000, 26000),
+          const Offset(34000, 30000),
+          const Offset(36000, 32500),
+          const Offset(42000, 33000),
+          const Offset(44500, 32500),
+        ]),
+        205,
+      ),
+      Trail(
+        _curve([
+          const Offset(3600, 16500),
+          const Offset(4000, 17300),
+          const Offset(4700, 18000),
+        ]),
+        185,
+      ),
+      Trail([const Offset(4700, 18000), const Offset(5700, 18000)], 160),
+      Trail(
+        _curve([
+          const Offset(5700, 18000),
+          const Offset(9300, 21200),
+          const Offset(11200, 24000),
+          const Offset(8200, 28000),
+          const Offset(5700, 29000),
+        ]),
+        185,
+      ),
+      Trail([const Offset(5700, 29000), const Offset(4700, 29000)], 160),
+      Trail(
+        _curve([const Offset(4700, 29000), const Offset(3300, 32500)]),
+        185,
+      ),
+      Trail(
+        _curve([
+          const Offset(11200, 24000),
+          const Offset(18000, 21500),
+          const Offset(23000, 23000),
+        ]),
+        180,
+      ),
+      Trail(
+        _curve([
+          const Offset(34000, 30000),
+          const Offset(35000, 22000),
+          const Offset(36500, 18000),
+          const Offset(36000, 13000),
+          const Offset(32000, 7500),
+        ]),
+        180,
+      ),
+    ]);
+    for (final site in questSites) {
+      _indexSolid(site.body);
+    }
     for (var y = 0; y < 30; y++) {
       for (var x = 0; x < 20; x++) {
         final u = (x + .5) / 20, v = (y + .5) / 30;
@@ -275,13 +497,14 @@ class AdventureWorld {
         );
         if (town.inflate(150).contains(p) ||
             stageExits.any((e) => (Offset(e.x, e.y) - p).distance < 160) ||
+            questSites.any((q) => (q.at - p).distance < 180) ||
             stageChests.any((c) => (c - p).distance < 100)) {
           continue;
         }
         final wooded = isWooded(p);
         final roll = random.nextDouble();
         if (roll > (wooded ? .68 : .04) ||
-            trails.any((t) => t.distance(p) < t.width / 2 + 125) ||
+            trails.any((t) => t.near(p, 125)) ||
             isWater(p)) {
           continue;
         }
@@ -337,6 +560,12 @@ class AdventureWorld {
       !clearings.any((clearing) => clearing.contains(p)) &&
       woods.any((wood) => wood.contains(p));
   late final Rect bridge;
+  late final List<Rect> bridges;
+  bool onBridge(Rect body) => bridges.any(
+    (b) =>
+        b.deflate(3).contains(body.topLeft) &&
+        b.deflate(3).contains(body.bottomRight),
+  );
   late final List<Trail> trails;
   final List<WorldProp> props = [];
   final Map<String, List<WorldProp>> propBuckets = {};
@@ -351,8 +580,8 @@ class AdventureWorld {
 
   bool isWater(Offset p) =>
       (river.contains(p) || lakes.any((s) => s.contains(p))) &&
-      !bridge.contains(p);
-  bool blocked(Rect body) {
+      !bridges.any((b) => b.contains(p));
+  bool blocked(Rect body, {bool waterOnly = false, bool ignoreWater = false}) {
     if (body.left < 0 ||
         body.top < 0 ||
         body.right > worldSize.width ||
@@ -366,12 +595,53 @@ class AdventureWorld {
         }
       }
     }
+    if (ignoreWater) return false;
+    if (waterOnly) {
+      for (var iy = 0; iy <= 2; iy++) {
+        for (var ix = 0; ix <= 2; ix++) {
+          if (!isWater(
+            Offset(
+              body.left + body.width * ix / 2,
+              body.top + body.height * iy / 2,
+            ),
+          )) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
     if (lakes.any((l) => l.overlaps(body))) return true;
-    if (!bridge.deflate(3).contains(body.topLeft) ||
-        !bridge.deflate(3).contains(body.bottomRight)) {
+    if (!onBridge(body)) {
       if (river.overlaps(body)) return true;
     }
     return false;
+  }
+
+  bool largeWater(Offset at) {
+    for (var y = -1; y <= 1; y++) {
+      for (var x = -1; x <= 1; x++) {
+        if (!isWater(at + Offset(x * 65, y * 65))) return false;
+      }
+    }
+    return true;
+  }
+
+  bool clearBoardingLine(Offset from, Offset to) {
+    final steps = math.max(1, ((to - from).distance / 5).ceil());
+    for (var i = 0; i <= steps; i++) {
+      if (blocked(
+        Rect.fromCenter(
+          center: Offset.lerp(from, to, i / steps)!,
+          width: 4,
+          height: 4,
+        ),
+        ignoreWater: true,
+      )) {
+        return false;
+      }
+    }
+    return true;
   }
 
   bool clearLine(Offset from, Offset to, Size size) {
@@ -420,9 +690,7 @@ class AdventureWorld {
         final at = Offset.lerp(from, to, i / n)!;
         final body = Rect.fromLTWH(at.dx, at.dy, size.width, size.height);
         if (lakes.any((l) => l.overlaps(body))) return false;
-        if (!(bridge.deflate(3).contains(body.topLeft) &&
-                bridge.deflate(3).contains(body.bottomRight)) &&
-            river.overlaps(body)) {
+        if (!onBridge(body) && river.overlaps(body)) {
           return false;
         }
       }
@@ -449,7 +717,7 @@ class AdventureWorld {
     return exit > 0 && enter < 1 && enter < exit;
   }
 
-  Offset move(Offset from, Offset delta, Size size) {
+  Offset move(Offset from, Offset delta, Size size, {bool waterOnly = false}) {
     var p = from;
     final n = math.max(
       1,
@@ -459,17 +727,20 @@ class AdventureWorld {
     for (var i = 0; i < n; i++) {
       if (!blocked(
         Rect.fromLTWH(p.dx + step.dx, p.dy + step.dy, size.width, size.height),
+        waterOnly: waterOnly,
       )) {
         p += step;
         continue;
       }
       if (!blocked(
         Rect.fromLTWH(p.dx + step.dx, p.dy, size.width, size.height),
+        waterOnly: waterOnly,
       )) {
         p += Offset(step.dx, 0);
       }
       if (!blocked(
         Rect.fromLTWH(p.dx, p.dy + step.dy, size.width, size.height),
+        waterOnly: waterOnly,
       )) {
         p += Offset(0, step.dy);
       }
@@ -477,9 +748,10 @@ class AdventureWorld {
     return p;
   }
 
-  Offset? spawnNear(Offset desired, Size body) {
+  Offset? spawnNear(Offset desired, Size body, {bool waterOnly = false}) {
     if (!blocked(
       Rect.fromLTWH(desired.dx, desired.dy, body.width, body.height),
+      waterOnly: waterOnly,
     )) {
       return desired;
     }
@@ -491,7 +763,10 @@ class AdventureWorld {
               math.cos(i * math.pi / 6) * radius,
               math.sin(i * math.pi / 6) * radius,
             );
-        if (!blocked(Rect.fromLTWH(p.dx, p.dy, body.width, body.height))) {
+        if (!blocked(
+          Rect.fromLTWH(p.dx, p.dy, body.width, body.height),
+          waterOnly: waterOnly,
+        )) {
           return p;
         }
       }

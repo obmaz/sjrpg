@@ -98,7 +98,7 @@ void main() {
       for (var i = 0; i < 20; i++) {
         s.spawnPack();
       }
-      expect(s.living, lessThanOrEqualTo(22));
+      expect(s.living, lessThanOrEqualTo(40));
     },
   );
   test(

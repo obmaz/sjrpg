@@ -32,7 +32,7 @@ void main() {
     final meteor = p.skills.firstWhere((s) => s.id == 'meteor');
     final points = p.skillPoints;
     expect(p.canLearn(meteor), false);
-    final row = previewSkill(p, meteor).single;
+    final row = previewSkill(p, meteor).first;
     expect(row.current, 0);
     expect(row.next, greaterThan(0));
     expect(p.rank('meteor'), 0);
@@ -58,10 +58,10 @@ void main() {
     expect(p.equip(ice), true);
     p.ranks['coldMastery'] = 2;
     final nova = p.skills.firstWhere((s) => s.id == 'frostNova');
-    final before = previewSkill(p, nova).single;
+    final before = previewSkill(p, nova).first;
     expect(before.current, p.skillDamage(nova));
     expect(before.current, greaterThan(p.swordDamage * 1.4));
-    expect(previewSkill(p, p.skills.first).single.current, p.basicDamage);
+    expect(previewSkill(p, p.skills.first).first.current, p.basicDamage);
     expect(p.learn(nova), true);
     expect(p.skillDamage(nova), before.next);
     final warrior = Progress();

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'adventure.dart';
 import 'game_ui.dart';
 import 'rpg_model.dart';
+import 'world_model.dart' show questSites;
 import 'rpg_widgets.dart';
 import 'device_controls.dart';
 import 'world_map.dart';
@@ -88,27 +89,41 @@ class _AdventurePanelState extends State<AdventurePanel> {
       body = [
         if (name == 'talk') ...[
           const Text(
-            '“네 갈래 길 아래에 오래된 어둠이 잠들어 있네. 먼저 이 숲의 파수꾼을 정화해 주게. 상자와 전리품을 모으고, 얻은 힘을 스스로 선택하게나. 전투를 벗어나 분수 곁에서 쉬면 생명이 회복된다네.”',
+            '“네 갈래 길 아래에 오래된 어둠이 잠들어 있네. 뿌리 우물·달빛 샘·태양 제단부터 정화해 주게. 세 성소와 숲길을 정화하면 파수꾼이 깨어날 걸세. 상자와 전리품을 모으고, 얻은 힘을 스스로 선택하게나. 전투를 벗어나 분수 곁에서 쉬면 생명이 회복된다네.”',
             style: TextStyle(fontSize: 16, height: 1.8, color: cream),
           ),
           const SizedBox(height: 22),
         ],
+        for (final site in questSites) ...[
+          _quest(
+            '${site.name} · 필수',
+            site.hint,
+            s.cleansedSites.contains(site.id) ? 1 : 0,
+            s.cleansedSites.contains(site.id) ? '정화 완료' : '찾아가 정화하세요',
+          ),
+          const SizedBox(height: 12),
+        ],
         _quest(
           '숲길 정화',
-          '몬스터를 처치해 숲의 파수꾼을 깨우세요.',
+          '필수 성소 3곳과 몬스터 처치 목표를 완수해 파수꾼을 깨우세요.',
           math.min(stageKillGoal, p.kills) / stageKillGoal,
           '${math.min(stageKillGoal, p.kills)} / $stageKillGoal',
         ),
         const SizedBox(height: 12),
         _quest(
           '첫 파수꾼',
-          '파수꾼을 쓰러뜨리면 제1장을 정화합니다.',
+          '성소 3곳을 정화하고 파수꾼을 쓰러뜨리면 제1장을 완료합니다.',
           p.bossDefeated ? 1 : 0,
-          p.bossDefeated
+          s.stageCleared
               ? '정화 완료'
               : s.bossSummoned
               ? '파수꾼 출현'
-              : '숲길 정화 후 등장',
+              : '필수 성소·처치 목표 완료 후 등장',
+        ),
+        const SizedBox(height: 18),
+        const Text(
+          '마을 남쪽에서 말·자전거·오토바이를, 큰 호숫가에서 배를 찾을 수 있습니다. 가까이 가서 타기를 누르세요.',
+          style: TextStyle(color: cream, fontSize: 14, height: 1.6),
         ),
         const SizedBox(height: 18),
         _quest(
@@ -184,7 +199,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
           ),
         ),
         const SizedBox(height: 10),
-        for (final exit in stageExits) _exit(exit, p.bossDefeated),
+        for (final exit in stageExits) _exit(exit, s.stageCleared),
         const SizedBox(height: 12),
         const Text(
           '이번 버전은 제1장만 플레이할 수 있습니다. 네 출구는 서로 다른 다음 스테이지로 이어질 예정입니다.',
@@ -195,7 +210,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
       final exit = s.nearbyExit;
       body = [
         Icon(
-          p.bossDefeated ? Icons.door_front_door_outlined : Icons.lock_outline,
+          s.stageCleared ? Icons.door_front_door_outlined : Icons.lock_outline,
           size: 58,
           color: gold,
         ),
@@ -213,9 +228,9 @@ class _AdventurePanelState extends State<AdventurePanel> {
         ),
         const SizedBox(height: 20),
         Text(
-          p.bossDefeated
+          s.stageCleared
               ? '숲의 봉인을 해제했습니다.\n다음 스테이지는 아직 준비 중입니다.\n현재는 제1장의 남은 보물을 탐험할 수 있습니다.'
-              : '숲의 파수꾼이 길을 봉인하고 있습니다.\n먼저 몬스터 $stageKillGoal마리와 파수꾼을 물리치세요.',
+              : '숲의 파수꾼이 길을 봉인하고 있습니다.\n성소 3곳을 정화하고 몬스터 $stageKillGoal마리와 파수꾼을 물리치세요.',
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 15, height: 1.8, color: cream),
         ),

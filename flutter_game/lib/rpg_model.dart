@@ -324,6 +324,12 @@ class Gear {
   ].join(' · ');
 }
 
+class BasicAttackStats {
+  const BasicAttackStats(this.damage, this.interval);
+  final double damage, interval;
+  double get dps => damage / interval;
+}
+
 class SkillDef {
   const SkillDef(
     this.id,
@@ -360,7 +366,7 @@ const warriorSkills = [
     'cleave',
     '연속 베기',
     '전투 기술',
-    '기본 공격 피해가 등급마다 15% 증가합니다. 세 번째 공격은 강타합니다.',
+    '기본 공격은 1명을 벱니다. 등급마다 피해 +15%, 최대 대상 +1명으로 5명까지 증가합니다. 세 번째 공격은 강타합니다.',
     1,
     0,
     0,
@@ -827,6 +833,25 @@ class Progress {
   double get manaRecovery => 9 + rank('warmth') * 1.5;
   double get coldDamageMultiplier => 1 + rank('coldMastery') * .08;
   double get lightningDamageMultiplier => 1 + rank('lightningMastery') * .08;
+  int get basicTargetLimit => basicTargetLimitForRank(
+    rank(heroClass == HeroClass.warrior ? 'cleave' : 'firebolt'),
+  );
+  int basicTargetLimitForRank(int rank) => heroClass == HeroClass.warrior
+      ? rank.clamp(1, SkillDef.maxRank)
+      : rank >= 3
+      ? rank.clamp(3, 5)
+      : 1;
+  int skillTargetLimit(SkillDef skill, {int? atRank}) {
+    final r = (atRank ?? rank(skill.id)).clamp(0, SkillDef.maxRank);
+    if (r == 0 || !skills.contains(skill)) return 0;
+    return switch (skill.id) {
+      'warcry' || 'whirlwind' || 'frostNova' || 'chainLightning' => 3 + r - 1,
+      'frenzy' => 3 + (r - 1) ~/ 2,
+      'seismicSlam' || 'meteor' => 3 + (r - 1) * 2,
+      _ => 0,
+    };
+  }
+
   double get basicDamage => skillDamage(skills.first);
   double skillDamage(SkillDef skill, {int? atRank}) {
     final r = (atRank ?? rank(skill.id)).clamp(0, SkillDef.maxRank);
@@ -876,6 +901,24 @@ class Progress {
         (1 - equipped.values.fold(0.0, (v, g) => v + g.base.haste)) *
         (1 - rank('battleFocus') * .025),
   );
+  double get basicDps => basicDamage / attackInterval;
+  BasicAttackStats? previewBasicAttack(Gear gear) {
+    if (!gear.base.usable(heroClass)) return null;
+    if (isEquipped(gear)) return BasicAttackStats(basicDamage, attackInterval);
+    final next = Progress(heroClass: heroClass)
+      ..level = level
+      ..bonusAttack = bonusAttack
+      ..bonusHealth = bonusHealth;
+    next.ranks
+      ..clear()
+      ..addAll(ranks);
+    next.equipped
+      ..clear()
+      ..addAll(equipped)
+      ..[gear.base.slot] = gear;
+    return BasicAttackStats(next.basicDamage, next.attackInterval);
+  }
+
   double mitigate(double damage, {double protection = 0}) =>
       damage * 100 / (100 + armor * 3) * (1 - protection.clamp(0, .75));
   void reward({bool boss = false, bool elite = false}) {

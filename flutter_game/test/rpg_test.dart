@@ -200,6 +200,7 @@ void main() {
       expect(s.openedChests.length, 1);
       expect(s.progress.gold, 18);
       expect(s.loot.length, 1);
+      s.cleansedSites.addAll(questSites.map((q) => q.id));
       s.progress.kills = stageKillGoal;
       s.tick(.05);
       final boss = s.mobs.firstWhere((m) => m.boss);

@@ -333,9 +333,10 @@ class AbilityPicturePainter extends CustomPainter {
 }
 
 class MapPainter extends CustomPainter {
-  MapPainter(this.session, {this.round = true});
+  MapPainter(this.session, {this.round = true, this.markerScale = 1});
   final Adventure session;
   final bool round;
+  final double markerScale;
   @override
   void paint(Canvas c, Size s) {
     final rect = Offset.zero & s;
@@ -379,7 +380,7 @@ class MapPainter extends CustomPainter {
         Offset(exit.x, exit.y),
         round ? 100 : 65,
         Paint()
-          ..color = session.progress.bossDefeated
+          ..color = session.stageCleared
               ? const Color(0xff82dfe0)
               : const Color(0xff594234),
       );
@@ -404,14 +405,49 @@ class MapPainter extends CustomPainter {
       }
     }
     c.restore();
+    for (final site in questSites) {
+      final done = session.cleansedSites.contains(site.id);
+      var point = Offset(
+        (site.at.dx - view.left) / view.width * s.width,
+        (site.at.dy - view.top) / view.height * s.height,
+      );
+      if (round) {
+        final d = point - rect.center;
+        if (d.distance > s.shortestSide / 2 - 9) {
+          if (done) continue;
+          point = rect.center + d / d.distance * (s.shortestSide / 2 - 9);
+        }
+      }
+      final r = (round ? 4.0 : 8.0) * markerScale;
+      c.drawCircle(point, r + 1.5 * markerScale, Paint()..color = ink);
+      c.drawCircle(
+        point,
+        r,
+        Paint()..color = done ? const Color(0xff85d6aa) : gold,
+      );
+      c.drawCircle(point, r * .45, Paint()..color = const Color(0xff164d55));
+      if (!round && markerScale <= 2.5) {
+        session.art.text(
+          c,
+          '${site.name}${done ? ' ✓' : ''}',
+          point - Offset(0, 23 * markerScale),
+          size: 14 * markerScale,
+          color: done ? const Color(0xff85d6aa) : gold,
+        );
+      }
+    }
     final hero = Offset(
       (session.hero.body.center.dx - view.left) / view.width * s.width,
       (session.hero.body.center.dy - view.top) / view.height * s.height,
     );
-    c.drawCircle(hero, round ? 3 : 5, Paint()..color = const Color(0xff9df3ee));
     c.drawCircle(
       hero,
-      round ? 3 : 5,
+      round ? 3 : 5 * markerScale,
+      Paint()..color = const Color(0xff9df3ee),
+    );
+    c.drawCircle(
+      hero,
+      round ? 3 : 5 * markerScale,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1
@@ -427,7 +463,12 @@ class MapPainter extends CustomPainter {
               15.0,
               s.height - 15,
             );
-        session.art.text(c, exit.direction, Offset(x, y - 9), size: 13);
+        session.art.text(
+          c,
+          exit.direction,
+          Offset(x, y - 9 * markerScale),
+          size: 13 * markerScale,
+        );
       }
     }
     c.restore();

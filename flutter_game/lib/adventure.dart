@@ -10,7 +10,7 @@ import 'device_settings.dart';
 import 'skill_aim.dart';
 import 'spell_vfx.dart';
 
-enum NearbyAction { chest, exit, shop, talk }
+enum NearbyAction { chest, exit, shrine, mount, dismount, shop, talk }
 
 enum EnemyTrait {
   none(1, 1, ui.Color(0xffe87753)),
@@ -34,6 +34,24 @@ class Adventure extends ChangeNotifier {
        device = device ?? DeviceSettings.shared {
     hero = Guardian(this);
     terrain = TerrainArt(world, art);
+    for (var i = 0; i < travelMountDefs.length; i++) {
+      final def = travelMountDefs[i], desired = initialMountPositions[i];
+      if (def.waterOnly && !world.largeWater(desired)) continue;
+      final topLeft = world.spawnNear(
+        desired - ui.Offset(def.bodySize.width / 2, def.bodySize.height / 2),
+        def.bodySize,
+        waterOnly: def.waterOnly,
+      );
+      if (topLeft != null) {
+        mounts.add(
+          TravelMount(
+            def,
+            topLeft +
+                ui.Offset(def.bodySize.width / 2, def.bodySize.height / 2),
+          ),
+        );
+      }
+    }
   }
   final GameArt art;
   final DeviceSettings device;
@@ -43,7 +61,139 @@ class Adventure extends ChangeNotifier {
   final Progress progress;
   final loot = <GroundLoot>[];
   final texts = <BattleText>[];
+  final mounts = <TravelMount>[];
+  TravelMount? riding;
+  TravelMount? get nearbyMount {
+    for (final mount in mounts) {
+      if ((hero.body.center - mount.at).distance <
+              (mount.def.waterOnly ? 230 : 120) &&
+          world.clearBoardingLine(hero.body.center, mount.at)) {
+        return mount;
+      }
+    }
+    return null;
+  }
+
+  bool boardNearbyMount() {
+    if (!active || riding != null || hero.dashing > 0) return false;
+    final mount = nearbyMount;
+    if (mount == null) return false;
+    final body = ui.Rect.fromCenter(
+      center: mount.at,
+      width: mount.def.bodySize.width,
+      height: mount.def.bodySize.height,
+    );
+    if (world.blocked(body, waterOnly: mount.def.waterOnly) ||
+        mobs.any((m) => !m.isDead && !m.isRemoving && m.body.overlaps(body))) {
+      return false;
+    }
+    releaseInput();
+    riding = mount;
+    hero.resizeBody(mount.def.bodySize, mount.at);
+    hero.bearing = mount.bearing;
+    hero.swing = hero.spin = 0;
+    refresh();
+    return true;
+  }
+
+  bool dismount({bool keepInput = false}) {
+    final mount = riding;
+    if (mount == null) return true;
+    if (!active) return false;
+    const size = ui.Size(28, 24);
+    final center = hero.body.center;
+    ui.Offset? at;
+    for (var radius = 0.0; radius <= 220 && at == null; radius += 20) {
+      for (var i = 0; i < (radius == 0 ? 1 : 16); i++) {
+        final a = hero.bearing + i * math.pi / 8;
+        final p = center + ui.Offset(math.cos(a), math.sin(a)) * radius;
+        final body = ui.Rect.fromCenter(
+          center: p,
+          width: size.width,
+          height: size.height,
+        );
+        final hull = ui.Rect.fromCenter(
+          center: center,
+          width: mount.def.bodySize.width,
+          height: mount.def.bodySize.height,
+        );
+        if (!body.overlaps(hull) &&
+            !world.blocked(body) &&
+            world.clearBoardingLine(center, p) &&
+            !mobs.any(
+              (m) => !m.isDead && !m.isRemoving && m.body.overlaps(body),
+            )) {
+          at = p;
+          break;
+        }
+      }
+    }
+    if (at == null) {
+      releaseInput();
+      announce(mount.def.waterOnly ? '물가에서 내려 주세요' : '내릴 공간이 부족합니다');
+      return false;
+    }
+    mount.at = center;
+    if (!keepInput) releaseInput();
+    riding = null;
+    hero.resizeBody(size, at);
+    refresh();
+    return true;
+  }
+
+  bool ensureOnFoot() => riding == null || dismount(keepInput: true);
+
   final openedChests = <int>{};
+  final cleansedSites = <String>{};
+  bool get mandatoryQuestsComplete =>
+      questSites.every((q) => cleansedSites.contains(q.id));
+  bool get stageCleared => progress.bossDefeated && mandatoryQuestsComplete;
+  QuestSite? get nearbySite {
+    for (final site in questSites) {
+      if (!cleansedSites.contains(site.id) &&
+          (hero.body.center - site.at).distance < 115 &&
+          world.clearLine(hero.body.center, site.at, const ui.Size(3, 3))) {
+        return site;
+      }
+    }
+    return null;
+  }
+
+  bool cleanseNearbySite() {
+    if (!active || riding != null) return false;
+    final site = nearbySite;
+    if (site == null) return false;
+    if (mobs.any(
+      (m) =>
+          m.combatReady &&
+          !m.isDead &&
+          !m.isRemoving &&
+          (m.body.center - site.at).distance < 155,
+    )) {
+      announce('주변의 적을 먼저 물리치세요');
+      return false;
+    }
+    cleansedSites.add(site.id);
+    progress.gold += 40;
+    progress.healingPotions++;
+    bubble(
+      '${site.name} 정화 · +40 골드',
+      site.at - const ui.Offset(0, 80),
+      site.color,
+    );
+    game?.add(RuneBurst(this, site.at, site.color, radius: 85));
+    completeStageIfReady();
+    refresh();
+    return true;
+  }
+
+  void completeStageIfReady() {
+    if (!stageCleared || won) return;
+    won = true;
+    releaseInput();
+    game?.pauseEngine();
+  }
+
   bool memoryRewarded = false;
   int get recoveredMemories => stageMemories
       .where((memory) => openedChests.contains(memory.chest))
@@ -82,6 +232,7 @@ class Adventure extends ChangeNotifier {
   }
 
   double elapsed = 0, waveTime = 0, notifyTime = 0;
+  double lastPackSpawn = -10;
   ui.Offset lastPack = arrival;
   int combo = 0, rageStrike = -1;
   int buildRevision = 0;
@@ -90,8 +241,11 @@ class Adventure extends ChangeNotifier {
   bool get active => ready && !disposed && !paused && !defeated && !won;
   String get region => world.areaName(hero.position.toOffset());
   NearbyAction? get nearbyAction {
+    if (riding != null) return NearbyAction.dismount;
+    if (nearbySite != null) return NearbyAction.shrine;
     if (nearbyChest != null) return NearbyAction.chest;
     if (nearbyExit != null) return NearbyAction.exit;
+    if (nearbyMount != null) return NearbyAction.mount;
     final at = hero.position.toOffset();
     final shop = (at - const ui.Offset(3952, 2984)).distance;
     final talk = (at - const ui.Offset(3660, 2952)).distance;
@@ -289,7 +443,7 @@ class Adventure extends ChangeNotifier {
     for (final item in List<GroundLoot>.of(loot)) {
       ref.add(item);
     }
-    waveTime = 4.5;
+    waveTime = 10;
     spawnPack(initial: (hero.position.toOffset() - arrival).distance < 220);
     refresh();
   }
@@ -328,14 +482,17 @@ class Adventure extends ChangeNotifier {
       }
     }
     if ((hero.position.toOffset() - lastPack).distance > 540) {
-      waveTime = 0;
+      waveTime = math.min(waveTime, 3);
       lastPack = hero.position.toOffset();
     }
-    if (waveTime <= 0) {
+    if (waveTime <= 0 && elapsed - lastPackSpawn >= 8) {
       spawnPack();
-      waveTime = 4.5;
+      waveTime = 10;
     }
-    if (progress.kills >= stageKillGoal && !bossSummoned) {
+    if (progress.kills >= stageKillGoal &&
+        mandatoryQuestsComplete &&
+        !bossSummoned &&
+        !progress.bossDefeated) {
       final boss = spawnEnemy(
         'golem',
         hero.position.toOffset() + const ui.Offset(0, -310),
@@ -361,10 +518,19 @@ class Adventure extends ChangeNotifier {
   }
 
   void spawnPack({bool initial = false}) {
-    if (!active || living >= 22 || progress.bossDefeated) return;
+    if (!active || living >= 40 || progress.bossDefeated) return;
     final at = hero.position.toOffset();
     if (town.contains(at) && at.dy < 3025 && !initial) return;
-    final count = math.min(living < 8 ? 5 : 4, 22 - living);
+    final count = math.min(
+      initial
+          ? 6
+          : progress.level < 3
+          ? 8
+          : living < 12
+          ? 12
+          : 10,
+      40 - living,
+    );
     final elitePack =
         !initial &&
         progress.kills >= 18 &&
@@ -373,9 +539,9 @@ class Adventure extends ChangeNotifier {
         !mobs.any((m) => m.isElite && !m.isDead && !m.isRemoving);
     final eliteSlot = (_successfulPacks ~/ 3) % count;
     var added = 0;
-    for (var i = 0; i < 18 && added < count; i++) {
+    for (var i = 0; i < 48 && added < count; i++) {
       final angle = hero.bearing + (i < 3 ? [0.0, 1.0, -1.0][i] : i * 2.4),
-          r = 240.0 + (i % 3) * 55;
+          r = 280.0 + (i % 5) * 38;
       final desired = initial
           ? ui.Offset(3780 + (i % 3) * 62, 3220 + (i % 2) * 50)
           : at + ui.Offset(math.cos(angle) * r, math.sin(angle) * r);
@@ -391,7 +557,10 @@ class Adventure extends ChangeNotifier {
           : EnemyTrait.none;
       if (spawnEnemy(kind, desired, trait: trait) != null) added++;
     }
-    if (added > 0) _successfulPacks++;
+    if (added > 0) {
+      _successfulPacks++;
+      lastPackSpawn = elapsed;
+    }
   }
 
   HuntEnemy? spawnEnemy(
@@ -420,7 +589,7 @@ class Adventure extends ChangeNotifier {
       trait: boss ? EnemyTrait.none : trait,
     );
     enemy.life.initial(
-      enemy.life.max * (1 + (progress.level - 1) * (boss ? .15 : .08)),
+      enemy.life.max * 2 * (1 + (progress.level - 1) * (boss ? .15 : .08)),
     );
     mobs.add(enemy);
     game?.add(enemy);
@@ -545,9 +714,7 @@ class Adventure extends ChangeNotifier {
       );
       mob.removeFromParent();
       if (mob.boss) {
-        won = true;
-        releaseInput();
-        game?.pauseEngine();
+        completeStageIfReady();
       }
       refresh();
     }
@@ -611,6 +778,7 @@ class Guardian extends Player with WithCollision {
         (cooldowns[def.id] ?? 0) > 0) {
       return;
     }
+    if (!session.ensureOnFoot()) return;
     aim = SkillAim(slot, def.id, bearing);
   }
 
@@ -679,6 +847,16 @@ class Guardian extends Player with WithCollision {
   double attackBearing = math.pi / 2;
   ui.Offset? lastClearPosition;
   ui.Rect get body => ui.Rect.fromLTWH(position.x, position.y, size.x, size.y);
+  void resizeBody(ui.Size next, ui.Offset center) {
+    size.setValues(next.width, next.height);
+    position.setValues(center.dx - next.width / 2, center.dy - next.height / 2);
+    for (final box in children.whereType<RectangleHitbox>()) {
+      box.size.setFrom(size);
+    }
+    lastClearPosition = position.toOffset();
+    if (hasGameRef) gameRef.camera.position = session.cameraFocus;
+  }
+
   @override
   Future<void> onLoad() async {
     await super.onLoad();
@@ -686,7 +864,10 @@ class Guardian extends Player with WithCollision {
     await add(RectangleHitbox(size: size));
     lastClearPosition = position.toOffset();
     collision.onMovementBlockedListener((other, data) {
-      if (session.world.blocked(body)) {
+      if (session.world.blocked(
+        body,
+        waterOnly: session.riding?.def.waterOnly ?? false,
+      )) {
         final safe = lastClearPosition;
         if (safe != null) position.setValues(safe.dx, safe.dy);
       }
@@ -735,7 +916,7 @@ class Guardian extends Player with WithCollision {
       stop();
       return;
     }
-    speed = frenzyTime > 0 ? 310 : 270;
+    speed = session.riding?.def.speed ?? (frenzyTime > 0 ? 310 : 270);
     final before = position.toOffset();
     super.update(dt);
     var delta = position.toOffset() - before;
@@ -747,12 +928,21 @@ class Guardian extends Player with WithCollision {
           math.min(dt, dashing);
       dashing -= dt;
     }
-    final p = session.world.move(before, delta, ui.Size(size.x, size.y));
+    final p = session.world.move(
+      before,
+      delta,
+      ui.Size(size.x, size.y),
+      waterOnly: session.riding?.def.waterOnly ?? false,
+    );
     position.setValues(p.dx, p.dy);
     lastClearPosition = p;
     // Follow the resolved body directly. Bonfire's smoothed follower can overshoot a dash.
     if (hasGameRef) gameRef.camera.position = session.cameraFocus;
-    if (delta.distance > .1) animationTime += dt;
+    if (delta.distance > .1) {
+      animationTime += dt;
+      session.riding?.bearing = math.atan2(delta.dy, delta.dx);
+    }
+    session.riding?.at = body.center;
     attackClock = math.max(0, attackClock - dt);
     final held = math.min(dt, impactHold);
     impactHold = math.max(0, impactHold - dt);
@@ -770,6 +960,7 @@ class Guardian extends Player with WithCollision {
 
   void slash() {
     if (!session.active || attackClock > 0 || dashing > 0) return;
+    if (!session.ensureOnFoot()) return;
     var angle = bearing;
     final candidates =
         session.mobs
@@ -814,44 +1005,53 @@ class Guardian extends Player with WithCollision {
           p.basicDamage,
           element: p.weapon.base.style,
           explosive: p.rank('firebolt') >= 3,
+          targetLimit: p.basicTargetLimit,
         ),
       );
       return;
     }
 
-    for (final mob in List<HuntEnemy>.of(session.mobs)) {
-      final d = mob.body.center - body.center,
-          diff = math.atan2(
+    final melee =
+        session.mobs.where((mob) {
+          if (!mob.combatReady || mob.isDead || mob.isRemoving) return false;
+          final d = mob.body.center - body.center;
+          final diff = math.atan2(
             math.sin(math.atan2(d.dy, d.dx) - angle),
             math.cos(math.atan2(d.dy, d.dx) - angle),
           );
-      if (d.distance < p.weapon.base.range + mob.size.x / 2 &&
-          diff.abs() <
-              (p.weapon.base.style == 'spear'
-                  ? .5
-                  : p.weapon.base.style == 'axe'
-                  ? 1.5
-                  : 1.25) &&
-          session.world.clearLine(
-            body.center,
-            mob.body.center,
-            const ui.Size(3, 3),
-          )) {
-        final push = d.distance > 0
-            ? d / d.distance * (p.weapon.base.style == 'hammer' ? 42 : 23)
-            : const ui.Offset(0, 23);
-        session.hit(
-          mob,
-          p.basicDamage * (session.combo == 0 ? 1.6 : 1),
-          push,
-          generateRage: true,
+          return d.distance < p.weapon.base.range + mob.size.x / 2 &&
+              diff.abs() <
+                  (p.weapon.base.style == 'spear'
+                      ? .5
+                      : p.weapon.base.style == 'axe'
+                      ? 1.5
+                      : 1.25) &&
+              session.world.clearLine(
+                body.center,
+                mob.body.center,
+                const ui.Size(3, 3),
+              );
+        }).toList()..sort(
+          (a, b) => (a.body.center - body.center).distance.compareTo(
+            (b.body.center - body.center).distance,
+          ),
         );
-      }
+    for (final mob in melee.take(p.basicTargetLimit)) {
+      final d = mob.body.center - body.center;
+      final push = d.distance > 0
+          ? d / d.distance * (p.weapon.base.style == 'hammer' ? 42 : 23)
+          : const ui.Offset(0, 23);
+      session.hit(
+        mob,
+        p.basicDamage * (session.combo == 0 ? 1.6 : 1),
+        push,
+        generateRage: true,
+      );
     }
   }
 
   void skill({bool secondary = false, int? slot, SkillAim? manualAim}) {
-    if (dashing > 0) return;
+    if (!session.active || dashing > 0 || !session.ensureOnFoot()) return;
     final p = session.progress;
     final def = p.skillAt(slot ?? (secondary ? 1 : 0));
     if (def == null) return;
@@ -877,6 +1077,7 @@ class Guardian extends Player with WithCollision {
           170 + rank * 8,
           p.skillDamage(def),
           stun: 2,
+          maxTargets: p.skillTargetLimit(def),
         );
         session.game?.add(
           SpellBurst(
@@ -892,10 +1093,23 @@ class Guardian extends Player with WithCollision {
           SpellBurst(session, SpellClip.whirlwind, body.center, radius: 175),
         );
         invulnerable = math.max(invulnerable, .35);
-        session.game?.add(WhirlwindPulse(session, this, p.skillDamage(def)));
+        session.game?.add(
+          WhirlwindPulse(
+            session,
+            this,
+            p.skillDamage(def),
+            targetLimit: p.skillTargetLimit(def),
+          ),
+        );
       case 'frenzy':
         frenzyTime = 7;
-        areaStrike(session, body.center, 145, p.skillDamage(def));
+        areaStrike(
+          session,
+          body.center,
+          145,
+          p.skillDamage(def),
+          maxTargets: p.skillTargetLimit(def),
+        );
         session.game?.add(
           RuneBurst(
             session,
@@ -942,6 +1156,7 @@ class Guardian extends Player with WithCollision {
           p.skillDamage(def),
           stun: .65 + rank * .08,
           slow: 1.5,
+          maxTargets: p.skillTargetLimit(def),
         );
         session.game?.add(
           RuneBurst(session, impact, const ui.Color(0xfff2cc8a), radius: 140),
@@ -955,6 +1170,7 @@ class Guardian extends Player with WithCollision {
           p.skillDamage(def),
           stun: 2,
           slow: 3,
+          maxTargets: p.skillTargetLimit(def),
         );
         session.game?.add(
           SpellBurst(session, SpellClip.iceNova, body.center, radius: radius),
@@ -965,7 +1181,12 @@ class Guardian extends Player with WithCollision {
           SpellBurst(session, SpellClip.iceNova, body.center, radius: 70),
         );
       case 'chainLightning':
-        chainLightning(session, body.center, p.skillDamage(def), 3 + rank);
+        chainLightning(
+          session,
+          body.center,
+          p.skillDamage(def),
+          p.skillTargetLimit(def),
+        );
       case 'meteor':
         var target =
             body.center + ui.Offset(math.cos(bearing), math.sin(bearing)) * 190;
@@ -993,14 +1214,20 @@ class Guardian extends Player with WithCollision {
           target = near.first.body.center;
         }
         session.game?.add(
-          MeteorFall(session, body.center, target, p.skillDamage(def)),
+          MeteorFall(
+            session,
+            body.center,
+            target,
+            p.skillDamage(def),
+            targetLimit: p.skillTargetLimit(def),
+          ),
         );
     }
     session.refresh();
   }
 
   void dodge() {
-    if (!session.active || dodgeClock > 0) return;
+    if (!session.active || dodgeClock > 0 || !session.ensureOnFoot()) return;
     aim = null;
     session.device.pulse(FeedbackKind.dodge);
     rollBearing = bearing;
@@ -1028,7 +1255,36 @@ class Guardian extends Player with WithCollision {
         ..strokeWidth = 1.5
         ..color = const ui.Color(0xaaafffe3),
     );
-    if (dashing > 0) {
+    final mount = session.riding;
+    if (mount != null) {
+      session.art.actor(
+        canvas,
+        mount.def.artKey,
+        feet,
+        mount.bearing,
+        (animationTime / .13).floor() % 2,
+        mount.def.waterOnly ? 48 : 62,
+      );
+      canvas.save();
+      final lift = mount.def.waterOnly ? 8.0 : 20.0;
+      canvas.clipRect(
+        ui.Rect.fromLTRB(
+          feet.dx - 36,
+          feet.dy - 90,
+          feet.dx + 36,
+          feet.dy - lift - 14,
+        ),
+      );
+      session.art.actor(
+        canvas,
+        session.progress.heroClass == HeroClass.mage ? 'mage' : 'hero',
+        feet - ui.Offset(0, lift),
+        mount.bearing,
+        0,
+        46,
+      );
+      canvas.restore();
+    } else if (dashing > 0) {
       session.art.roll(
         canvas,
         feet,

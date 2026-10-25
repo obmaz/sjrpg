@@ -20,7 +20,7 @@ void main() {
     },
   );
   test('local minimap keeps the hero centered even at world boundaries', () {
-    expect(worldSize, const Size(23040, 17280));
+    expect(worldSize, const Size(46080, 34560));
     final view = localMapBounds(const Offset(14000, 12000));
     expect(view.center, const Offset(14000, 12000));
     expect(view.size, const Size(2100, 2100));
@@ -32,7 +32,7 @@ void main() {
   });
   test('large biomes include open clearings and distinct sand regions', () {
     final world = AdventureWorld();
-    expect(world.sandFields.length, 3);
+    expect(world.sandFields.length, 6);
     expect(world.isSand(const Offset(15500, 5000)), true);
     expect(world.areaName(const Offset(15500, 5000)), '태양의 사구');
     expect(world.isWooded(const Offset(10500, 7200)), false);
@@ -44,26 +44,31 @@ void main() {
       false,
     );
   });
-  test('opening and every major trail are traversable with a full body', () {
+  test('opening and every major trail admit walkers and ground mounts', () {
     final world = AdventureWorld();
-    const size = Size(24, 22);
-    expect(
-      world.blocked(
-        Rect.fromLTWH(arrival.dx, arrival.dy, size.width, size.height),
-      ),
-      false,
-    );
-    for (final trail in world.trails) {
-      var p = trail.points.first - const Offset(12, 11);
-      expect(world.blocked(Rect.fromLTWH(p.dx, p.dy, 24, 22)), false);
-      for (final point in trail.points.skip(1)) {
-        final destination = point - const Offset(12, 11);
-        p = world.move(p, destination - p, size);
+    for (final size in const [Size(24, 22), Size(40, 32)]) {
+      final half = Offset(size.width / 2, size.height / 2);
+      expect(
+        world.blocked(
+          Rect.fromLTWH(arrival.dx, arrival.dy, size.width, size.height),
+        ),
+        false,
+      );
+      for (final trail in world.trails) {
+        var p = trail.points.first - half;
         expect(
-          (p - destination).distance,
-          lessThan(2),
-          reason: 'trail at $point',
+          world.blocked(Rect.fromLTWH(p.dx, p.dy, size.width, size.height)),
+          false,
         );
+        for (final point in trail.points.skip(1)) {
+          final destination = point - half;
+          p = world.move(p, destination - p, size);
+          expect(
+            (p - destination).distance,
+            lessThan(2),
+            reason: 'trail at $point, body $size',
+          );
+        }
       }
     }
   });

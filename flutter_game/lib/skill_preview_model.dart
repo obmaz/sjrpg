@@ -14,7 +14,7 @@ class SkillPreviewValue {
   String format(double value) => '${value.toStringAsFixed(digits)}$suffix';
 }
 
-List<SkillPreviewValue> previewSkill(Progress p, SkillDef skill) {
+List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
   if (!p.skills.contains(skill)) return const [];
   final rank = p.rank(skill.id);
   final next = Progress(heroClass: p.heroClass)
@@ -102,4 +102,26 @@ List<SkillPreviewValue> previewSkill(Progress p, SkillDef skill) {
     default:
       return [damage];
   }
+}
+
+List<SkillPreviewValue> previewSkill(Progress p, SkillDef skill) {
+  final rows = _previewStats(p, skill);
+  if (rows.isEmpty) return rows;
+  final basic = skill.id == 'cleave' || skill.id == 'firebolt';
+  if (basic || !skill.passive && skill.id != 'iceArmor') {
+    final r = p.rank(skill.id), next = (r + 1).clamp(1, SkillDef.maxRank);
+    rows.add(
+      SkillPreviewValue(
+        '최대 대상',
+        (basic ? p.basicTargetLimitForRank(r) : p.skillTargetLimit(skill))
+            .toDouble(),
+        (basic
+                ? p.basicTargetLimitForRank(next)
+                : p.skillTargetLimit(skill, atRank: next))
+            .toDouble(),
+        suffix: '명',
+      ),
+    );
+  }
+  return rows;
 }

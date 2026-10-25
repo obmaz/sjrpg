@@ -2,6 +2,7 @@ import 'support/test_game.dart';
 import 'package:guardian_new/rpg_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/world_model.dart' show questSites;
 import 'package:guardian_new/game_art.dart';
 
 void main() {
@@ -95,7 +96,9 @@ void main() {
     'exploration replenishes a new area and the encounter cap remains bounded',
     () {
       session.hero.position.setValues(6800, 4700);
-      session.tick(.05);
+      for (var i = 0; i < 170; i++) {
+        session.tick(.05);
+      }
       expect(
         session.mobs.where(
           (e) => (e.position - session.hero.position).length < 650,
@@ -105,12 +108,13 @@ void main() {
       for (var i = 0; i < 15; i++) {
         session.spawnPack();
       }
-      expect(session.living, lessThanOrEqualTo(22));
+      expect(session.living, lessThanOrEqualTo(40));
     },
   );
   test(
     'the first boss is summoned once and its defeat ends the adventure once',
     () {
+      session.cleansedSites.addAll(questSites.map((q) => q.id));
       session.progress.kills = stageKillGoal;
       session.tick(.05);
       session.tick(.05);
