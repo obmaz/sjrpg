@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'world_model.dart';
+import 'ground_texture.dart';
 
 class GameArt {
   final images = <String, ui.Image>{};
@@ -50,7 +51,7 @@ class GameArt {
         'atlas',
       ].map((name) async {
         final bytes = await rootBundle.load(
-          'assets/images/$name.${['actors-mage', 'gear-icons', 'combat-fx', 'dodge-icon', 'actors-roll', 'terrain-materials'].contains(name) ? 'png' : 'webp'}',
+          'assets/images/$name.${['actors-mage', 'gear-icons', 'combat-fx', 'dodge-icon', 'actors-roll'].contains(name) ? 'png' : 'webp'}',
         );
         final codec = await ui.instantiateImageCodec(
           bytes.buffer.asUint8List(),
@@ -63,29 +64,34 @@ class GameArt {
     for (var i = 0; i < 12; i++) {
       final source = i < 6 ? atlas : art.images['stage-materials']!;
       final cell = i % 6;
-      final tileSize = i < 6 ? 384 : 192;
+      const tileSize = 192;
       final recorder = ui.PictureRecorder();
       // A separate recorder per material keeps shaders small and shared by every sector.
       final c = ui.Canvas(recorder);
-      c.drawImageRect(
-        source,
-        ui.Rect.fromLTWH(
-          (cell % 3) * source.width / 3 + 12,
-          (cell ~/ 3) * source.height / 2 + 12,
-          source.width / 3 - 24,
-          source.height / 2 - 24,
-        ),
-        ui.Rect.fromLTWH(0, 0, tileSize.toDouble(), tileSize.toDouble()),
-        ui.Paint(),
+      final crop = ui.Rect.fromLTWH(
+        (cell % 3) * source.width / 3 + 12,
+        (cell ~/ 3) * source.height / 2 + 12,
+        source.width / 3 - 24,
+        source.height / 2 - 24,
       );
+      if (i < 6) {
+        paintSeamlessGround(c, source, crop, tileSize.toDouble());
+      } else {
+        c.drawImageRect(
+          source,
+          crop,
+          ui.Rect.fromLTWH(0, 0, tileSize.toDouble(), tileSize.toDouble()),
+          ui.Paint(),
+        );
+      }
       final picture = recorder.endRecording(),
           image = await picture.toImage(tileSize, tileSize);
       picture.dispose();
       art.materials.add(
         ui.ImageShader(
           image,
-          i < 6 ? ui.TileMode.mirror : ui.TileMode.repeated,
-          i < 6 ? ui.TileMode.mirror : ui.TileMode.repeated,
+          ui.TileMode.repeated,
+          ui.TileMode.repeated,
           Float64List.fromList([
             1,
             0,

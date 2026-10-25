@@ -26,14 +26,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
             path.join(root, `assets/${image}.webp`),
             path.join(destination, `images/${image}.webp`),
         );
-    for (const name of [
-        'actors-mage',
-        'gear-icons',
-        'combat-fx',
-        'dodge-icon',
-        'actors-roll',
-        'terrain-materials',
-    ])
+    for (const name of ['actors-mage', 'gear-icons', 'combat-fx', 'dodge-icon', 'actors-roll'])
         fs.copyFileSync(
             path.join(root, `flutter_game/art/${name}.png`),
             path.join(destination, `images/${name}.png`),
@@ -47,6 +40,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'quest-sites',
         'time-sites',
         'stage-materials',
+        'terrain-materials',
         'actors-cyber',
         'cyber-props',
         'ruin-props',
@@ -55,6 +49,8 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
             path.join(root, `flutter_game/art/${name}.webp`),
             path.join(destination, `images/${name}.webp`),
         );
+    // Remove superseded generated output when upgrading an existing asset cache.
+    fs.rmSync(path.join(destination, 'images/terrain-materials.png'), { force: true });
     const mage = JSON.parse(
         fs.readFileSync(path.join(root, 'flutter_game/art/mage-bounds.json'), 'utf8'),
     );
