@@ -1623,6 +1623,21 @@ class HuntEnemy extends Enemy with WithCollision {
   final bool boss;
   final EnemyTrait trait;
   bool get isElite => !boss && trait != EnemyTrait.none;
+  bool get usesPounce => !boss && (kind == 'wolf' || kind == 'scorpion');
+  bool get usesSweep => !boss && (kind == 'skeleton' || kind == 'troll');
+  bool get usesBolt => !boss && (kind == 'cultist' || kind == 'cyber');
+  double get pounceWarning => kind == 'scorpion' ? .58 : .42;
+  double get pounceSpeed => kind == 'scorpion' ? 440 : 520;
+  double get pounceRange => kind == 'scorpion' ? 200 : 240;
+  double get sweepRange => kind == 'troll' ? 120 : 100;
+  double get sweepAngle => kind == 'troll' ? 1.05 : .85;
+  double get sweepWarning => kind == 'troll' ? .85 : .5;
+  double get boltWarning => kind == 'cyber' ? .8 : .65;
+  ui.Color get attackColor => kind == 'cyber'
+      ? const ui.Color(0xff7feafa)
+      : kind == 'scorpion'
+      ? const ui.Color(0xffbcda75)
+      : const ui.Color(0xffefab78);
   int impactPose = 0;
   bool rewarded = false, combatReady = false;
   double bearing = math.pi / 2,
@@ -1683,33 +1698,31 @@ class HuntEnemy extends Enemy with WithCollision {
         slamTarget = null;
         pounceGoal = null;
         slamClock = 4;
-        if (kind == 'wolf' || kind == 'skeleton') {
-          attackClock = math.max(attackClock, 1.2);
-        }
+        attackClock = math.max(attackClock, 1.2);
       }
       stop();
       super.update(dt);
       return;
     }
-    if (kind == 'wolf' && pounceRemaining > 0) {
+    if (usesPounce && pounceRemaining > 0) {
       updatePounce(dt);
       return;
     }
-    if (kind == 'wolf' && windup > 0) {
+    if (usesPounce && windup > 0) {
       stop();
       windup -= dt;
       if (windup <= 0 && pounceGoal != null) {
         final d = pounceGoal! - body.center;
         pounceBearing = math.atan2(d.dy, d.dx);
         bearing = pounceBearing;
-        pounceDuration = math.min(240, d.distance) / 520;
+        pounceDuration = math.min(pounceRange, d.distance) / pounceSpeed;
         pounceRemaining = pounceDuration;
         slamTarget = null;
       }
       super.update(dt);
       return;
     }
-    if (kind == 'skeleton' && windup > 0) {
+    if (usesSweep && windup > 0) {
       stop();
       windup -= dt;
       if (windup <= 0) {
@@ -1718,23 +1731,31 @@ class HuntEnemy extends Enemy with WithCollision {
           math.sin(angle - bearing),
           math.cos(angle - bearing),
         );
-        if (target.distance < 100 &&
-            difference.abs() < .85 &&
+        if (target.distance < sweepRange &&
+            difference.abs() < sweepAngle &&
             session.world.clearLine(
               body.center,
               session.hero.body.center,
               const ui.Size(3, 3),
             )) {
-          session.hurtHero(8);
+          session.hurtHero(kind == 'troll' ? 14 : 8);
         }
-        session.game?.add(EnemySwipe(session, body.center, bearing));
+        session.game?.add(
+          EnemySwipe(
+            session,
+            body.center,
+            bearing,
+            radius: sweepRange * .8,
+            halfAngle: sweepAngle,
+          ),
+        );
         slamTarget = null;
-        attackClock = 1.8;
+        attackClock = kind == 'troll' ? 2.6 : 1.8;
       }
       super.update(dt);
       return;
     }
-    if (kind == 'cultist' && windup > 0) {
+    if (usesBolt && windup > 0) {
       stop();
       windup -= dt;
       if (windup <= 0) {
@@ -1742,11 +1763,17 @@ class HuntEnemy extends Enemy with WithCollision {
         if (locked != null) {
           final toward = locked - body.center;
           session.game?.add(
-            ShadowBolt(session, body.center, math.atan2(toward.dy, toward.dx)),
+            ShadowBolt(
+              session,
+              body.center,
+              math.atan2(toward.dy, toward.dx),
+              technological: kind == 'cyber',
+              damage: kind == 'cyber' ? 10 : 8,
+            ),
           );
         }
         slamTarget = null;
-        attackClock = 2.8;
+        attackClock = kind == 'cyber' ? 3.2 : 2.8;
       }
       super.update(dt);
       return;
@@ -1775,10 +1802,10 @@ class HuntEnemy extends Enemy with WithCollision {
       super.update(dt);
       return;
     }
-    if (kind == 'wolf' &&
+    if (usesPounce &&
         attackClock <= 0 &&
         target.distance > 75 &&
-        target.distance < 250 &&
+        target.distance < pounceRange + 10 &&
         session.world.clearLine(
           position.toOffset(),
           session.hero.position.toOffset(),
@@ -1787,9 +1814,9 @@ class HuntEnemy extends Enemy with WithCollision {
       bearing = math.atan2(target.dy, target.dx);
       pounceGoal =
           body.center +
-          target / target.distance * math.min(240, target.distance);
+          target / target.distance * math.min(pounceRange, target.distance);
       slamTarget = session.hero.body.center;
-      windup = .42;
+      windup = pounceWarning;
       stop();
       super.update(dt);
       return;
@@ -1811,10 +1838,10 @@ class HuntEnemy extends Enemy with WithCollision {
     if (target.distance <
             (boss
                 ? 64
-                : kind == 'cultist'
-                ? 280
-                : kind == 'skeleton'
-                ? 82
+                : usesBolt
+                ? (kind == 'cyber' ? 350 : 280)
+                : usesSweep
+                ? sweepRange - 18
                 : 42) &&
         session.world.clearLine(
           body.center,
@@ -1823,14 +1850,14 @@ class HuntEnemy extends Enemy with WithCollision {
         )) {
       stop();
       if (attackClock <= 0) {
-        if (kind == 'skeleton') {
+        if (usesSweep) {
           bearing = math.atan2(target.dy, target.dx);
           slamTarget = session.hero.body.center;
-          windup = .5;
-        } else if (kind == 'cultist') {
+          windup = sweepWarning;
+        } else if (usesBolt) {
           bearing = math.atan2(target.dy, target.dx);
           slamTarget = session.hero.body.center;
-          windup = .65;
+          windup = boltWarning;
         } else {
           attackClock = boss ? 1.05 : 1.3;
           session.hurtHero(
@@ -1908,7 +1935,7 @@ class HuntEnemy extends Enemy with WithCollision {
     stop();
     final used = math.min(dt, pounceRemaining);
     pounceRemaining -= used;
-    final distance = 520 * used * (slow > 0 ? .45 : 1);
+    final distance = pounceSpeed * used * (slow > 0 ? .45 : 1);
     final steps = math.max(1, (distance / 6).ceil());
     final step =
         ui.Offset(math.cos(pounceBearing), math.sin(pounceBearing)) *
@@ -1927,7 +1954,7 @@ class HuntEnemy extends Enemy with WithCollision {
             session.hero.body.center,
             const ui.Size(3, 3),
           )) {
-        session.hurtHero(8);
+        session.hurtHero(kind == 'scorpion' ? 10 : 8);
         finishPounce();
         break;
       }
@@ -1982,7 +2009,7 @@ class HuntEnemy extends Enemy with WithCollision {
           ..strokeWidth = 1.5,
       );
     }
-    if (kind == 'wolf' && windup > 0 && pounceGoal != null) {
+    if (usesPounce && windup > 0 && pounceGoal != null) {
       final from = body.center - position.toOffset(),
           to = pounceGoal! - position.toOffset();
       final direction = to - from;
@@ -1995,31 +2022,34 @@ class HuntEnemy extends Enemy with WithCollision {
         ..lineTo((to + side).dx, (to + side).dy)
         ..lineTo((from + side).dx, (from + side).dy)
         ..close();
-      canvas.drawPath(path, ui.Paint()..color = const ui.Color(0x44ef8b62));
+      canvas.drawPath(
+        path,
+        ui.Paint()..color = attackColor.withValues(alpha: .26),
+      );
       canvas.drawPath(
         path,
         ui.Paint()
-          ..color = const ui.Color(0xffefab78)
+          ..color = attackColor
           ..style = ui.PaintingStyle.stroke
           ..strokeWidth = 1.5,
       );
       canvas.drawLine(
         from,
-        from + direction * (1 - windup / .42).clamp(0, 1),
+        from + direction * (1 - windup / pounceWarning).clamp(0, 1),
         ui.Paint()
           ..color = const ui.Color(0xffffc38c)
           ..strokeWidth = 4
           ..strokeCap = ui.StrokeCap.round,
       );
     }
-    if (kind == 'skeleton' && windup > 0) {
+    if (usesSweep && windup > 0) {
       final center = body.center - position.toOffset();
       final path = ui.Path()
         ..moveTo(center.dx, center.dy)
         ..arcTo(
-          ui.Rect.fromCircle(center: center, radius: 100),
-          bearing - .85,
-          1.7,
+          ui.Rect.fromCircle(center: center, radius: sweepRange),
+          bearing - sweepAngle,
+          sweepAngle * 2,
           false,
         )
         ..close();
@@ -2032,22 +2062,41 @@ class HuntEnemy extends Enemy with WithCollision {
           ..strokeWidth = 1.5,
       );
     }
-    if (kind == 'cultist' && windup > 0) {
+    if (usesBolt && windup > 0) {
       canvas.drawOval(
         ui.Rect.fromCenter(center: feet, width: 58, height: 22),
         ui.Paint()
-          ..color = const ui.Color(0x99d567b6)
+          ..color = (kind == 'cyber' ? attackColor : const ui.Color(0xffd567b6))
+              .withValues(alpha: .6)
           ..style = ui.PaintingStyle.stroke
           ..strokeWidth = 2,
       );
-      paintCombatEffect(
-        session,
-        canvas,
-        feet - const ui.Offset(0, 26),
-        3,
-        const ui.Size.square(76),
-        opacity: .4 + .6 * (1 - windup / .65),
-      );
+      if (kind == 'cyber') {
+        final charge = (1 - windup / boltWarning).clamp(0.0, 1.0);
+        final origin = body.center - position.toOffset();
+        final aim = ui.Offset(math.cos(bearing), math.sin(bearing));
+        canvas.drawLine(
+          origin,
+          origin + aim * (80 + charge * 180),
+          ui.Paint()
+            ..color = attackColor.withValues(alpha: .25 + charge * .4)
+            ..strokeWidth = 1 + charge * 2,
+        );
+        canvas.drawCircle(
+          feet - const ui.Offset(0, 26),
+          5 + charge * 9,
+          ui.Paint()..color = attackColor.withValues(alpha: .3 + charge * .5),
+        );
+      } else {
+        paintCombatEffect(
+          session,
+          canvas,
+          feet - const ui.Offset(0, 26),
+          3,
+          const ui.Size.square(76),
+          opacity: .4 + .6 * (1 - windup / boltWarning),
+        );
+      }
     }
     if (boss && windup > 0 && slamTarget != null) {
       final center = slamTarget! - position.toOffset(),

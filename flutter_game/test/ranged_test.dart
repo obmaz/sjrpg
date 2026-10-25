@@ -53,41 +53,55 @@ void main() {
       expect(game.added.whereType<ShadowBolt>().length, 1);
     },
   );
-  test('a hostile projectile hits once and cannot tunnel through a tree', () {
-    s.hero.position.setValues(6000, 4200);
-    final shot = ShadowBolt(s, s.hero.body.center - const Offset(140, 0), 0);
-    final hp = s.progress.hp;
-    for (var i = 0; i < 20; i++) {
-      shot.update(.05);
-    }
-    expect(shot.resolved, true);
-    expect(s.progress.hp, lessThan(hp));
-    final after = s.progress.hp;
-    s.hero.invulnerable = 0;
-    shot.update(.05);
-    expect(s.progress.hp, after);
-    final tree = s.world.props.firstWhere(
-      (p) =>
-          p.kind == 'tree' &&
-          !s.world.blocked(
-            Rect.fromLTWH(p.body.left - 70, p.body.center.dy - 11, 24, 22),
-          ) &&
-          !s.world.blocked(
-            Rect.fromLTWH(p.body.right + 30, p.body.center.dy - 11, 24, 22),
-          ),
+  for (final technological in [false, true]) {
+    test(
+      'hostile projectile $technological hits once and cannot tunnel through a tree',
+      () {
+        s.hero.position.setValues(6000, 4200);
+        final shot = ShadowBolt(
+          s,
+          s.hero.body.center - const Offset(140, 0),
+          0,
+          technological: technological,
+        );
+        final hp = s.progress.hp;
+        for (var i = 0; i < 20; i++) {
+          shot.update(.05);
+        }
+        expect(shot.resolved, true);
+        expect(s.progress.hp, lessThan(hp));
+        final after = s.progress.hp;
+        s.hero.invulnerable = 0;
+        shot.update(.05);
+        expect(s.progress.hp, after);
+        final tree = s.world.props.firstWhere(
+          (p) =>
+              p.kind == 'tree' &&
+              !s.world.blocked(
+                Rect.fromLTWH(p.body.left - 70, p.body.center.dy - 11, 24, 22),
+              ) &&
+              !s.world.blocked(
+                Rect.fromLTWH(p.body.right + 30, p.body.center.dy - 11, 24, 22),
+              ),
+        );
+        s.hero.position.setValues(
+          tree.body.right + 30,
+          tree.body.center.dy - 11,
+        );
+        final blocked = ShadowBolt(
+          s,
+          Offset(tree.body.left - 40, tree.body.center.dy),
+          0,
+          technological: technological,
+        );
+        for (var i = 0; i < 40; i++) {
+          blocked.update(.05);
+        }
+        expect(blocked.resolved, true);
+        expect(s.progress.hp, after);
+      },
     );
-    s.hero.position.setValues(tree.body.right + 30, tree.body.center.dy - 11);
-    final blocked = ShadowBolt(
-      s,
-      Offset(tree.body.left - 40, tree.body.center.dy),
-      0,
-    );
-    for (var i = 0; i < 40; i++) {
-      blocked.update(.05);
-    }
-    expect(blocked.resolved, true);
-    expect(s.progress.hp, after);
-  });
+  }
   test(
     'packs add ranged attackers after early levels while preserving the encounter cap',
     () {

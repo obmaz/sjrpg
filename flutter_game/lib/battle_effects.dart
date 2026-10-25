@@ -122,12 +122,18 @@ class ContactSpark extends GameComponent {
 }
 
 class EnemySwipe extends GameComponent {
-  EnemySwipe(this.session, ui.Offset at, this.strikeAngle) {
+  EnemySwipe(
+    this.session,
+    ui.Offset at,
+    this.strikeAngle, {
+    this.radius = 80,
+    this.halfAngle = .85,
+  }) {
     position = Vector2(at.dx, at.dy);
     size = Vector2.all(1);
   }
   final Adventure session;
-  final double strikeAngle;
+  final double strikeAngle, radius, halfAngle;
   double age = 0;
   @override
   int get priority => 99999;
@@ -146,9 +152,9 @@ class EnemySwipe extends GameComponent {
     super.render(canvas);
     final t = (age / .22).clamp(0.0, 1.0);
     canvas.drawArc(
-      ui.Rect.fromCircle(center: ui.Offset.zero, radius: 80),
-      strikeAngle - .85 + t * .8,
-      1.2,
+      ui.Rect.fromCircle(center: ui.Offset.zero, radius: radius),
+      strikeAngle - halfAngle + t * .8,
+      halfAngle * 1.4,
       false,
       ui.Paint()
         ..color = ui.Color.fromRGBO(255, 200, 158, 1 - t)
@@ -159,7 +165,7 @@ class EnemySwipe extends GameComponent {
     paintCombatEffect(
       session,
       canvas,
-      ui.Offset(math.cos(strikeAngle), math.sin(strikeAngle)) * 66,
+      ui.Offset(math.cos(strikeAngle), math.sin(strikeAngle)) * (radius * .825),
       7,
       const ui.Size.square(52),
       opacity: 1 - t,
@@ -168,14 +174,20 @@ class EnemySwipe extends GameComponent {
 }
 
 class ShadowBolt extends GameComponent {
-  ShadowBolt(this.session, ui.Offset at, double angle, {this.damage = 8})
-    : direction = ui.Offset(math.cos(angle), math.sin(angle)) {
+  ShadowBolt(
+    this.session,
+    ui.Offset at,
+    double angle, {
+    this.damage = 8,
+    this.technological = false,
+  }) : direction = ui.Offset(math.cos(angle), math.sin(angle)) {
     position = Vector2(at.dx, at.dy);
     size = Vector2.all(12);
   }
   final Adventure session;
   final ui.Offset direction;
   final double damage;
+  final bool technological;
   double remaining = 2;
   bool resolved = false;
   @override
@@ -190,7 +202,8 @@ class ShadowBolt extends GameComponent {
     if (!session.active || resolved) return;
     dt = math.min(dt, math.min(.05, remaining));
     remaining -= dt;
-    final distance = dt * 280, steps = math.max(1, (distance / 5).ceil());
+    final distance = dt * (technological ? 320 : 280),
+        steps = math.max(1, (distance / 5).ceil());
     for (var i = 0; i < steps; i++) {
       final at = position.toOffset() + direction * (distance / steps);
       if (session.world.blocked(
@@ -214,6 +227,27 @@ class ShadowBolt extends GameComponent {
   void render(ui.Canvas canvas) {
     super.render(canvas);
     const tip = ui.Offset(0, -14);
+    if (technological) {
+      final pulse = .7 + .3 * math.sin(remaining * 40);
+      canvas.drawLine(
+        tip - direction * 32,
+        tip,
+        ui.Paint()
+          ..color = const ui.Color(0xff45cde0).withValues(alpha: .45 * pulse)
+          ..strokeWidth = 12
+          ..strokeCap = ui.StrokeCap.round,
+      );
+      canvas.drawLine(
+        tip - direction * 24,
+        tip,
+        ui.Paint()
+          ..color = const ui.Color(0xffcefcff)
+          ..strokeWidth = 3
+          ..strokeCap = ui.StrokeCap.round,
+      );
+      canvas.drawCircle(tip, 4, ui.Paint()..color = const ui.Color(0xffecffff));
+      return;
+    }
     canvas.drawLine(
       tip - direction * 23,
       tip,
