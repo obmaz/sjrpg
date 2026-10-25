@@ -5,6 +5,7 @@ import 'game_ui.dart';
 import 'panel_controls.dart';
 import 'rpg_model.dart';
 import 'rpg_widgets.dart';
+import 'skill_tree.dart';
 
 const _dim = Color(0xffa4bcb6);
 
@@ -17,28 +18,33 @@ class SkillsPanel extends StatefulWidget {
 }
 
 class _SkillsPanelState extends State<SkillsPanel> {
-  final gridScroll = ScrollController(), detailScroll = ScrollController();
+  final treeScroll = ScrollController(), detailScroll = ScrollController();
   int filter = 0;
   SkillDef? selected;
+  late SkillDef focused = p.skills.first;
   Adventure get s => widget.session;
   Progress get p => s.progress;
   @override
   void dispose() {
-    gridScroll.dispose();
+    treeScroll.dispose();
     detailScroll.dispose();
     super.dispose();
   }
 
   void inspect(SkillDef skill) => setState(() {
     selected = skill;
+    focused = skill;
+    filter = p.skillBranches.indexOf(skill.branch);
     if (detailScroll.hasClients) detailScroll.jumpTo(0);
   });
   String actionFor(SkillDef skill) => p.rank(skill.id) >= SkillDef.maxRank
       ? '최대 등급'
       : p.level < skill.requiredLevel
       ? 'Lv.${skill.requiredLevel} 필요'
+      : p.rank(skill.id) == 0 && !p.prerequisitesMet(skill)
+      ? '선행 필요'
       : p.skillPoints <= 0
-      ? '포인트가 없습니다'
+      ? '포인트 없음'
       : p.rank(skill.id) == 0
       ? '습득 · 1P'
       : '강화 · 1P';
@@ -153,7 +159,8 @@ class _SkillsPanelState extends State<SkillsPanel> {
     setState(() {
       selected = null;
       filter = 0;
-      if (gridScroll.hasClients) gridScroll.jumpTo(0);
+      focused = p.skills.first;
+      if (treeScroll.hasClients) treeScroll.jumpTo(0);
     });
   }
 
@@ -174,161 +181,162 @@ class _SkillsPanelState extends State<SkillsPanel> {
                 compact: true,
                 child: Stack(
                   children: [
-                    Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(14, 8, 6, 8),
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                width: 40,
-                                height: 48,
-                                child: s.art.images.containsKey('actors-hero')
-                                    ? CustomPaint(
-                                        painter: ClassFigure(
-                                          s.art,
-                                          p.heroClass,
+                    ExcludeSemantics(
+                      excluding: selected != null,
+                      child: ExcludeFocus(
+                        excluding: selected != null,
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(14, 8, 6, 8),
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                    width: 40,
+                                    height: 48,
+                                    child:
+                                        s.art.images.containsKey('actors-hero')
+                                        ? CustomPaint(
+                                            painter: ClassFigure(
+                                              s.art,
+                                              p.heroClass,
+                                            ),
+                                          )
+                                        : const Icon(
+                                            Icons.auto_awesome,
+                                            color: gold,
+                                          ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Semantics(
+                                          container: true,
+                                          header: true,
+                                          child: const Text(
+                                            '스킬 트리',
+                                            style: TextStyle(
+                                              color: cream,
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
                                         ),
-                                      )
-                                    : const Icon(
-                                        Icons.auto_awesome,
-                                        color: gold,
+                                        Text(
+                                          'Lv.${p.level} ${p.heroClass.title}',
+                                          style: const TextStyle(
+                                            color: _dim,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 7,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xff394634),
+                                      border: Border.all(
+                                        color: gold.withValues(alpha: .55),
                                       ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      '스킬과 성장',
-                                      style: TextStyle(
-                                        color: cream,
-                                        fontSize: 20,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      '${p.skillPoints} P',
+                                      style: const TextStyle(
+                                        color: gold,
+                                        fontSize: 17,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    Text(
-                                      'Lv.${p.level} ${p.heroClass.title}',
-                                      style: const TextStyle(
-                                        color: _dim,
-                                        fontSize: 12,
+                                  ),
+                                  IconButton(
+                                    tooltip: '닫기',
+                                    onPressed: widget.onClose,
+                                    icon: const Icon(
+                                      Icons.close,
+                                      color: _dim,
+                                      size: 21,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+                              child: Row(
+                                children: [
+                                  for (var i = 0; i < 4; i++)
+                                    Expanded(
+                                      child: Padding(
+                                        padding: EdgeInsets.only(
+                                          right: i == 3 ? 0 : 8,
+                                        ),
+                                        child: _slot(i, compact: short),
                                       ),
                                     ),
-                                  ],
-                                ),
+                                ],
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 7,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xff394634),
-                                  border: Border.all(
-                                    color: gold.withValues(alpha: .55),
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  '${p.skillPoints} P',
-                                  style: const TextStyle(
-                                    color: gold,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              IconButton(
-                                tooltip: '닫기',
-                                onPressed: widget.onClose,
-                                icon: const Icon(
-                                  Icons.close,
-                                  color: _dim,
-                                  size: 21,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-                          child: Row(
-                            children: [
-                              for (var i = 0; i < 4; i++)
-                                Expanded(
-                                  child: Padding(
-                                    padding: EdgeInsets.only(
-                                      right: i == 3 ? 0 : 8,
-                                    ),
-                                    child: _slot(i, compact: short),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        GameTabs(
-                          const ['전체', '사용 기술', '지속 효과'],
-                          filter,
-                          (i) => setState(() {
-                            filter = i;
-                            if (gridScroll.hasClients) gridScroll.jumpTo(0);
-                          }),
-                        ),
-                        Expanded(
-                          child: Scrollbar(
-                            controller: gridScroll,
-                            thumbVisibility: true,
-                            thickness: 3,
-                            child: GridView.builder(
-                              controller: gridScroll,
-                              key: const PageStorageKey('skill-grid'),
-                              physics: const ClampingScrollPhysics(),
-                              padding: const EdgeInsets.all(14),
-                              gridDelegate:
-                                  SliverGridDelegateWithMaxCrossAxisExtent(
-                                    maxCrossAxisExtent: 230,
-                                    crossAxisSpacing: 10,
-                                    mainAxisSpacing: 10,
-                                    childAspectRatio: short
-                                        ? (media.size.width > 600 ? 2.3 : 1.15)
-                                        : 1,
-                                  ),
-                              itemCount: visible.length,
-                              itemBuilder: (context, index) =>
-                                  _card(visible[index]),
                             ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
-                          child: Row(
-                            children: [
-                              IconButton(
-                                tooltip: '스킬 초기화',
-                                onPressed: p.investedSkillPoints > 0
-                                    ? confirmReset
-                                    : null,
-                                icon: Icon(
-                                  Icons.restart_alt_rounded,
-                                  color: p.investedSkillPoints > 0
-                                      ? gold
-                                      : _dim,
-                                ),
+                            GameTabs(
+                              p.skillBranches,
+                              filter,
+                              (i) => setState(() {
+                                filter = i;
+                                focused = p.skills.firstWhere(
+                                  (skill) => skill.branch == p.skillBranches[i],
+                                );
+                                if (treeScroll.hasClients) treeScroll.jumpTo(0);
+                              }),
+                            ),
+                            Expanded(
+                              child: SkillTree(
+                                session: s,
+                                branch: p.skillBranches[filter],
+                                controller: treeScroll,
+                                focused: focused,
+                                onFocus: (skill) =>
+                                    setState(() => focused = skill),
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: GameAction(
-                                  '모험 계속하기',
-                                  primary: true,
-                                  icon: Icons.play_arrow_rounded,
-                                  onTap: widget.onClose,
-                                ),
+                            ),
+                            _investmentBar(short: short),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
+                              child: Row(
+                                children: [
+                                  IconButton(
+                                    tooltip: '스킬 초기화',
+                                    onPressed: p.investedSkillPoints > 0
+                                        ? confirmReset
+                                        : null,
+                                    icon: Icon(
+                                      Icons.restart_alt_rounded,
+                                      color: p.investedSkillPoints > 0
+                                          ? gold
+                                          : _dim,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: GameAction(
+                                      '모험 계속하기',
+                                      primary: true,
+                                      icon: Icons.play_arrow_rounded,
+                                      onTap: widget.onClose,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                     if (selected != null) ...[
                       Positioned.fill(
@@ -364,12 +372,72 @@ class _SkillsPanelState extends State<SkillsPanel> {
     );
   }
 
-  List<SkillDef> get visible => p.skills
-      .where(
-        (skill) =>
-            filter == 0 || (filter == 1 ? !skill.passive : skill.passive),
-      )
-      .toList();
+  String prerequisitesText(SkillDef skill) => skill.requires.isEmpty
+      ? '계열의 시작 기술'
+      : '선행 · ${skill.requires.entries.map((entry) => '${p.skills.firstWhere((skill) => skill.id == entry.key).name} ${entry.value}등급').join(' · ')}';
+
+  Widget _investmentBar({required bool short}) {
+    final action = actionFor(focused);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 8, 6, 6),
+      decoration: const BoxDecoration(
+        color: Color(0xff102d29),
+        border: Border(top: BorderSide(color: Color(0xff37574b))),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  focused.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: cream,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (!short)
+                  Text(
+                    prerequisitesText(focused),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: _dim,
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: short ? 110 : 122,
+            child: GameAction(
+              action,
+              primary: true,
+              semanticLabel: '${focused.name} $action',
+              onTap: p.canLearn(focused)
+                  ? () => setState(() {
+                      s.learn(focused);
+                    })
+                  : null,
+            ),
+          ),
+          IconButton(
+            tooltip: '스킬 설명과 배치',
+            onPressed: () => inspect(focused),
+            icon: const Icon(Icons.info_outline, color: gold, size: 22),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _art(SkillDef skill, double side) => FittedBox(
     fit: BoxFit.contain,
     child: SizedBox.square(
@@ -439,111 +507,6 @@ class _SkillsPanelState extends State<SkillsPanel> {
         ),
     ],
   );
-
-  Widget _card(SkillDef skill) {
-    final rank = p.rank(skill.id),
-        slot = p.skillSlots.indexOf(skill.id),
-        color = skillColor(skill),
-        locked = p.level < skill.requiredLevel;
-    return Semantics(
-      button: true,
-      label: '스킬 보기 · ${skill.name} · $rank 등급',
-      excludeSemantics: true,
-      onTap: () => inspect(skill),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => inspect(skill),
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: const Alignment(0, -.3),
-                radius: 1,
-                colors: [
-                  color.withValues(alpha: locked ? .05 : .18),
-                  const Color(0xff0e2927),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: slot >= 0
-                    ? gold.withValues(alpha: .75)
-                    : const Color(0xff46644f),
-              ),
-            ),
-            child: Column(
-              children: [
-                Expanded(
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Opacity(
-                        opacity: locked ? .35 : 1,
-                        child: _art(skill, 70),
-                      ),
-                      if (locked)
-                        const Icon(Icons.lock_outline, color: _dim, size: 23),
-                      if (slot >= 0)
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          child: Container(
-                            width: 20,
-                            height: 20,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: gold,
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            child: Text(
-                              '${slot + 1}',
-                              style: const TextStyle(
-                                color: ink,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  skill.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: locked ? _dim : cream,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                if (locked)
-                  Text(
-                    'Lv.${skill.requiredLevel}',
-                    style: const TextStyle(color: _dim, fontSize: 12),
-                  )
-                else if (rank == 0)
-                  Text(
-                    p.skillPoints > 0 ? '습득 가능' : '미습득',
-                    style: TextStyle(
-                      color: p.skillPoints > 0 ? gold : _dim,
-                      fontSize: 12,
-                    ),
-                  )
-                else
-                  _pips(rank),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _details(SkillDef skill) {
     final compact = MediaQuery.sizeOf(context).height < 500;
@@ -641,6 +604,21 @@ class _SkillsPanelState extends State<SkillsPanel> {
                         color: _dim,
                         fontSize: 13,
                         height: 1.5,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        prerequisitesText(skill),
+                        style: TextStyle(
+                          color:
+                              p.rank(skill.id) == 0 &&
+                                  !p.prerequisitesMet(skill)
+                              ? const Color(0xffffbb88)
+                              : _dim,
+                          fontSize: 14,
+                          height: 1.5,
+                        ),
                       ),
                     ),
                     if (!skill.passive && rank == 0)

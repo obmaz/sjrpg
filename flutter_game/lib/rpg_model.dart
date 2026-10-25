@@ -334,11 +334,13 @@ class SkillDef {
     this.cost,
     this.cooldown, {
     this.passive = false,
+    this.requires = const {},
   });
   final String id, name, branch, description;
   final int requiredLevel;
   final double cost, cooldown;
   final bool passive;
+  final Map<String, int> requires;
   static const maxRank = 5;
   String get shortName =>
       {
@@ -376,7 +378,7 @@ const warriorSkills = [
   SkillDef(
     'mastery',
     '무기 숙련',
-    '무기 숙련',
+    '전투 숙련',
     '등급마다 모든 무기 피해 +8%.',
     2,
     0,
@@ -386,12 +388,13 @@ const warriorSkills = [
   SkillDef(
     'ironSkin',
     '강철 피부',
-    '무기 숙련',
+    '전투 숙련',
     '등급마다 방어 +5, 최대 생명 +8.',
     2,
     0,
     0,
     passive: true,
+    requires: {'mastery': 1},
   ),
   SkillDef(
     'whirlwind',
@@ -401,15 +404,17 @@ const warriorSkills = [
     3,
     30,
     5,
+    requires: {'cleave': 1},
   ),
   SkillDef(
     'frenzy',
     '광전사의 격노',
-    '함성',
+    '전투 기술',
     '7초간 공격속도와 이동속도가 증가합니다. 발동 시 주변 적을 벱니다.',
     4,
     28,
     12,
+    requires: {'whirlwind': 1},
   ),
   SkillDef(
     'seismicSlam',
@@ -419,6 +424,40 @@ const warriorSkills = [
     5,
     24,
     8,
+    requires: {'whirlwind': 1},
+  ),
+  SkillDef(
+    'battleFocus',
+    '전투 집중',
+    '전투 숙련',
+    '등급마다 기본 공격 간격이 2.5% 줄어듭니다.',
+    5,
+    0,
+    0,
+    passive: true,
+    requires: {'mastery': 1},
+  ),
+  SkillDef(
+    'battleVigor',
+    '전장의 맹세',
+    '함성',
+    '등급마다 최대 생명 +8, 전장의 함성 보호 지속시간 +0.4초.',
+    3,
+    0,
+    0,
+    passive: true,
+    requires: {'warcry': 1},
+  ),
+  SkillDef(
+    'rallyingVoice',
+    '고양의 울림',
+    '함성',
+    '전장의 함성으로 보호받는 동안, 실제 기본 공격 적중 시 등급만큼 분노를 추가로 얻습니다. 빗맞힌 공격에는 적용되지 않습니다.',
+    6,
+    0,
+    0,
+    passive: true,
+    requires: {'battleVigor': 1},
   ),
 ];
 const mageSkills = [
@@ -459,6 +498,7 @@ const mageSkills = [
     2,
     20,
     15,
+    requires: {'frostNova': 1},
   ),
   SkillDef(
     'chainLightning',
@@ -468,6 +508,7 @@ const mageSkills = [
     3,
     28,
     5,
+    requires: {'arcaneMastery': 1},
   ),
   SkillDef(
     'meteor',
@@ -477,6 +518,40 @@ const mageSkills = [
     4,
     38,
     9,
+    requires: {'warmth': 1},
+  ),
+  SkillDef(
+    'warmth',
+    '온기',
+    '화염',
+    '등급마다 초당 마나 회복 +1.5.',
+    2,
+    0,
+    0,
+    passive: true,
+    requires: {'firebolt': 1},
+  ),
+  SkillDef(
+    'coldMastery',
+    '냉기 숙련',
+    '냉기',
+    '등급마다 냉기 무기와 서릿발 피해 +8%.',
+    5,
+    0,
+    0,
+    passive: true,
+    requires: {'iceArmor': 1},
+  ),
+  SkillDef(
+    'lightningMastery',
+    '번개 숙련',
+    '번개',
+    '등급마다 번개 무기와 연쇄 번개 피해 +8%.',
+    6,
+    0,
+    0,
+    passive: true,
+    requires: {'chainLightning': 1},
   ),
 ];
 
@@ -729,7 +804,8 @@ class Progress {
       (level - 1) * 10 +
       bonusHealth +
       equipped.values.fold(0.0, (v, g) => v + g.health) +
-      rank('ironSkin') * 8;
+      rank('ironSkin') * 8 +
+      rank('battleVigor') * 8;
   set maxHp(double value) => bonusHealth += value - maxHp;
   double get maxEnergy =>
       (heroClass == HeroClass.warrior ? 100 : 90) +
@@ -745,6 +821,12 @@ class Progress {
   set swordDamage(double value) => bonusAttack +=
       (value - swordDamage) /
       (1 + rank('mastery') * .08 + rank('arcaneMastery') * .09);
+  List<String> get skillBranches => heroClass == HeroClass.warrior
+      ? const ['전투 기술', '전투 숙련', '함성']
+      : const ['화염', '냉기', '번개'];
+  double get manaRecovery => 9 + rank('warmth') * 1.5;
+  double get coldDamageMultiplier => 1 + rank('coldMastery') * .08;
+  double get lightningDamageMultiplier => 1 + rank('lightningMastery') * .08;
   double get basicDamage =>
       swordDamage *
       (1 +
@@ -753,11 +835,17 @@ class Progress {
                 rank(heroClass == HeroClass.warrior ? 'cleave' : 'firebolt') -
                     1,
               ) *
-              (heroClass == HeroClass.warrior ? .15 : .18));
+              (heroClass == HeroClass.warrior ? .15 : .18)) *
+      (heroClass == HeroClass.mage && weapon.base.style == 'ice'
+          ? coldDamageMultiplier
+          : heroClass == HeroClass.mage && weapon.base.style == 'lightning'
+          ? lightningDamageMultiplier
+          : 1);
   double get attackInterval => math.max(
     .16,
     weapon.base.tempo *
-        (1 - equipped.values.fold(0.0, (v, g) => v + g.base.haste)),
+        (1 - equipped.values.fold(0.0, (v, g) => v + g.base.haste)) *
+        (1 - rank('battleFocus') * .025),
   );
   double mitigate(double damage, {double protection = 0}) =>
       damage * 100 / (100 + armor * 3) * (1 - protection.clamp(0, .75));
@@ -791,11 +879,14 @@ class Progress {
     }
   }
 
+  bool prerequisitesMet(SkillDef skill) =>
+      skill.requires.entries.every((entry) => rank(entry.key) >= entry.value);
   bool canLearn(SkillDef s) =>
       skills.contains(s) &&
       level >= s.requiredLevel &&
       skillPoints > 0 &&
-      rank(s.id) < SkillDef.maxRank;
+      rank(s.id) < SkillDef.maxRank &&
+      (rank(s.id) > 0 || prerequisitesMet(s));
   static const skillResetPrice = 50;
   int get investedSkillPoints {
     final basic = heroClass == HeroClass.warrior ? 'cleave' : 'firebolt';

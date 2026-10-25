@@ -1,5 +1,6 @@
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/game_art.dart';
@@ -82,6 +83,26 @@ void main() {
           );
           expect(hero.session.world.blocked(hero.body), false);
         }
+        await tester.tap(
+          find.byWidgetPredicate((w) => w is MenuButton && w.label == '설정'),
+        );
+        await tester.pump(const Duration(milliseconds: 16));
+        expect(widget.focusNode!.hasFocus, false);
+        final pausedStrikes = hero.strikes;
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.space);
+        await tester.pump(const Duration(milliseconds: 100));
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.space);
+        expect(hero.strikes, pausedStrikes);
+        await tester.tap(find.text('모험 계속하기'));
+        await tester.pump(const Duration(milliseconds: 16));
+        await tester.pump(const Duration(milliseconds: 16));
+        expect(widget.focusNode!.hasFocus, true);
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.space);
+        for (var i = 0; i < 20; i++) {
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.space);
+        expect(hero.strikes, greaterThan(pausedStrikes));
         // A spell must not remove a queued actor while its hitbox is still loading.
         final pending = hero.session.spawnEnemy(
           'goblin',

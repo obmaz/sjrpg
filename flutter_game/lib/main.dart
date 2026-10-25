@@ -264,7 +264,11 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     saveNow();
     setState(() => panel = null);
     adventure.resume();
-    gameFocus.requestFocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && panel == null && !adventure.defeated && !adventure.won) {
+        gameFocus.requestFocus();
+      }
+    });
   }
 
   @override
@@ -366,14 +370,26 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         return Stack(
           fit: StackFit.expand,
           children: [
-            child!,
+            ExcludeSemantics(
+              excluding: modal != null,
+              child: ExcludeFocus(
+                excluding: modal != null,
+                child: IgnorePointer(ignoring: modal != null, child: child!),
+              ),
+            ),
             SafeArea(
               bottom: false,
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: GameHud(
-                  adventure,
-                  onMap: modal == null ? () => open('map') : null,
+              child: ExcludeSemantics(
+                excluding: modal != null,
+                child: IgnorePointer(
+                  ignoring: modal != null,
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: GameHud(
+                      adventure,
+                      onMap: modal == null ? () => open('map') : null,
+                    ),
+                  ),
                 ),
               ),
             ),

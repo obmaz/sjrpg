@@ -11,6 +11,13 @@ IconData elementIcon(String element) => element == 'ice'
     ? Icons.bolt
     : Icons.local_fire_department;
 int skillEffect(String id) => switch (id) {
+  'warmth' => 4,
+  'coldMastery' => 2,
+  'lightningMastery' => 3,
+  'battleFocus' => 7,
+  'battleVigor' => 0,
+  'rallyingVoice' => 5,
+
   'warcry' || 'ironSkin' => 0,
   'whirlwind' => 1,
   'frostNova' => 2,
@@ -21,6 +28,12 @@ int skillEffect(String id) => switch (id) {
   _ => 7,
 };
 IconData skillIcon(String id) => switch (id) {
+  'warmth' => Icons.local_fire_department,
+  'coldMastery' => Icons.ac_unit,
+  'lightningMastery' => Icons.bolt,
+  'battleFocus' => Icons.track_changes,
+  'battleVigor' => Icons.favorite,
+  'rallyingVoice' => Icons.campaign,
   'warcry' => Icons.campaign,
   'whirlwind' => Icons.cyclone,
   'frenzy' => Icons.flash_on,

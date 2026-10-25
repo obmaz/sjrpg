@@ -169,6 +169,12 @@ void main() {
       expect(s.progress.energy, 72);
       final rank = s.progress.rank('frostNova');
       s.progress.gainXp(140);
+      expect(
+        s.progress.learn(
+          mageSkills.firstWhere((skill) => skill.id == 'arcaneMastery'),
+        ),
+        true,
+      );
       s.progress.learn(mageSkills.firstWhere((s) => s.id == 'chainLightning'));
       s.progress.selectSkill('chainLightning');
       s.hero.skill();
@@ -255,6 +261,12 @@ void main() {
       s.start(TestGame());
       addTearDown(s.dispose);
       s.progress.gainXp(140);
+      expect(
+        s.progress.learn(
+          mageSkills.firstWhere((skill) => skill.id == 'arcaneMastery'),
+        ),
+        true,
+      );
       s.progress.learn(mageSkills.firstWhere((d) => d.id == 'chainLightning'));
       expect(s.progress.secondarySkill, 'chainLightning');
       s.progress.energy = 90;
@@ -279,7 +291,13 @@ void main() {
       addTearDown(s.dispose);
       final p = s.progress;
       p.gainXp(1000);
-      for (final id in ['iceArmor', 'chainLightning', 'meteor']) {
+      for (final id in [
+        'arcaneMastery',
+        'warmth',
+        'iceArmor',
+        'chainLightning',
+        'meteor',
+      ]) {
         expect(p.learn(p.skills.firstWhere((skill) => skill.id == id)), true);
       }
       expect(p.skillSlots, [
@@ -350,6 +368,12 @@ void main() {
     s.start(TestGame());
     addTearDown(s.dispose);
     s.progress.gainXp(1000);
+    expect(
+      s.progress.learn(
+        s.progress.skills.firstWhere((skill) => skill.id == 'whirlwind'),
+      ),
+      true,
+    );
     s.progress.learn(
       s.progress.skills.firstWhere((skill) => skill.id == 'seismicSlam'),
     );

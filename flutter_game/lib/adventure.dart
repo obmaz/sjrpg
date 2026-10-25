@@ -305,7 +305,7 @@ class Adventure extends ChangeNotifier {
         (progress.energy +
                 dt *
                     (progress.heroClass == HeroClass.mage
-                        ? 9
+                        ? progress.manaRecovery
                         : combatTime > 0
                         ? 0
                         : -1))
@@ -494,7 +494,12 @@ class Adventure extends ChangeNotifier {
           heavy: heavy,
         ),
       );
-      progress.energy = math.min(progress.maxEnergy, progress.energy + 3);
+      progress.energy = math.min(
+        progress.maxEnergy,
+        progress.energy +
+            3 +
+            (hero.armorTime > 0 ? progress.rank('rallyingVoice') : 0),
+      );
     }
     device.pulse(mob.isDead ? FeedbackKind.kill : FeedbackKind.hit);
     mob.impactPose = (mob.anim / .15).floor() % 2;
@@ -868,7 +873,7 @@ class Guardian extends Player with WithCollision {
         : const ui.Color(0xff99e4ff);
     switch (def.id) {
       case 'warcry':
-        armorTime = 6;
+        armorTime = 6 + p.rank('battleVigor') * .4;
         areaStrike(
           session,
           body.center,
@@ -950,7 +955,7 @@ class Guardian extends Player with WithCollision {
           session,
           body.center,
           radius,
-          p.swordDamage * (1.1 + rank * .3),
+          p.swordDamage * (1.1 + rank * .3) * p.coldDamageMultiplier,
           stun: 2,
           slow: 3,
         );
@@ -966,7 +971,7 @@ class Guardian extends Player with WithCollision {
         chainLightning(
           session,
           body.center,
-          p.swordDamage * (1.5 + rank * .35),
+          p.swordDamage * (1.5 + rank * .35) * p.lightningDamageMultiplier,
           3 + rank,
         );
       case 'meteor':
