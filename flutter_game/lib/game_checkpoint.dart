@@ -170,10 +170,22 @@ class GameCheckpoint {
 
   static GameCheckpoint? decode(String? text) => _decode(text);
 
-  static GameCheckpoint? _decode(String? text, {bool includeTravel = true}) {
+  static GameCheckpoint? _decode(String? text) {
     if (text == null || text.length > _maximumEncodedLength) return null;
     try {
-      final data = Map<String, dynamic>.from(jsonDecode(text) as Map);
+      return _decodeData(Map<String, dynamic>.from(jsonDecode(text) as Map));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // These maps belong to the detached JSON snapshot, never the live session.
+  // Inactive scenes need the same validation without another JSON roundtrip.
+  static GameCheckpoint? _decodeData(
+    Map<String, dynamic> data, {
+    bool includeTravel = true,
+  }) {
+    try {
       if (data['version'] != 1) return null;
       final mapVersion = data['mapVersion'] ?? 1;
       if (mapVersion != 1 && mapVersion != 2) return null;
@@ -526,8 +538,8 @@ class GameCheckpoint {
             raw['bossDefeated'] is! bool) {
           throw const FormatException('Invalid archived scene');
         }
-        final decoded = _decode(
-          jsonEncode(_enterScene(data, raw)),
+        final decoded = _decodeData(
+          _enterScene(data, raw),
           includeTravel: false,
         );
         if (decoded == null) {
@@ -683,7 +695,7 @@ class GameCheckpoint {
     if (at == null) {
       session.riding = null;
       session.hero.resizeBody(
-        const Size(28, 24),
+        Guardian.onFootSize,
         session.world.spawn + const Offset(14, 12),
       );
     }

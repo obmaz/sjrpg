@@ -340,6 +340,82 @@ void main() {
   );
 
   test(
+    'captured and restored inactive scenes remain detached from live mutations',
+    () {
+      final forest = start();
+      visit(forest, 'hub');
+      finishForest(forest);
+      forest.dormantEnemies.add({
+        'kind': 'goblin',
+        'trait': 'none',
+        'area': null,
+        'x': 6000,
+        'y': 4200,
+        'hp': 37,
+        'maxHp': 100,
+      });
+      final sands = start(GameCheckpoint.advance(forest)!);
+      final liveArchive = sands.travelJournal.archives[WorldStage.forest]!;
+      final liveMount = (liveArchive['mounts'] as List).first as Map;
+      liveMount.remove('durability');
+      final saved = GameCheckpoint.capture(sands)!;
+      final savedArchive = saved.data['travel']['archives']['forest'] as Map;
+      expect(
+        liveMount.containsKey('durability'),
+        false,
+        reason:
+            'archive defaults are applied inside the detached snapshot only',
+      );
+      expect((savedArchive['mounts'] as List).first['durability'], 100);
+      final liveEnemy = (liveArchive['enemies'] as List).single as Map;
+      final savedEnemy = (savedArchive['enemies'] as List).single as Map;
+      liveEnemy['hp'] = 29;
+      (liveArchive['sites'] as List).clear();
+      expect(savedEnemy['hp'], 37);
+      expect((savedArchive['sites'] as List).length, forest.world.sites.length);
+      final restored = start(saved);
+      savedEnemy['hp'] = 11;
+      (savedArchive['sites'] as List).clear();
+      final restoredArchive =
+          restored.travelJournal.archives[WorldStage.forest]!;
+      expect((restoredArchive['enemies'] as List).single['hp'], 37);
+      expect(
+        (restoredArchive['sites'] as List).length,
+        forest.world.sites.length,
+      );
+      expect(liveEnemy['hp'], 29);
+    },
+  );
+
+  test(
+    'each capture still rejects changed invalid runtime archive contents',
+    () {
+      final forest = start();
+      visit(forest, 'hub');
+      finishForest(forest);
+      forest.dormantEnemies.add({
+        'kind': 'goblin',
+        'trait': 'none',
+        'area': null,
+        'x': 6000,
+        'y': 4200,
+        'hp': 37,
+        'maxHp': 100,
+      });
+      final sands = start(GameCheckpoint.advance(forest)!);
+      expect(GameCheckpoint.capture(sands), isNotNull);
+      final archive = sands.travelJournal.archives[WorldStage.forest]!;
+      final enemy = (archive['enemies'] as List).single as Map;
+      enemy['hp'] = 101;
+      expect(GameCheckpoint.capture(sands), null);
+      enemy['hp'] = 37;
+      expect(GameCheckpoint.capture(sands), isNotNull);
+      enemy['kind'] = 'unknown';
+      expect(GameCheckpoint.capture(sands), null);
+    },
+  );
+
+  test(
     'invalid archive graphs, duplicated loot and unknown wells are rejected',
     () {
       final forest = start();

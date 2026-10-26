@@ -144,8 +144,9 @@ class _FramePainter extends CustomPainter {
 }
 
 class PotionBelt extends StatelessWidget {
-  const PotionBelt(this.session, {super.key});
+  const PotionBelt(this.session, {this.onUse, super.key});
   final Adventure session;
+  final VoidCallback? onUse;
   @override
   Widget build(BuildContext context) => Row(
     mainAxisSize: MainAxisSize.min,
@@ -178,7 +179,10 @@ class PotionBelt extends StatelessWidget {
     label: '$label $count개',
     excludeSemantics: true,
     child: InkWell(
-      onTap: action,
+      onTap: () {
+        action();
+        onUse?.call();
+      },
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: 50,

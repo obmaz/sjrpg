@@ -144,7 +144,7 @@ class Adventure extends ChangeNotifier {
     final mount = riding;
     if (mount == null) return true;
     if (!active) return false;
-    const size = ui.Size(28, 24);
+    const size = Guardian.onFootSize;
     final center = hero.body.center;
     ui.Offset? at;
     for (var radius = 0.0; radius <= 220 && at == null; radius += 20) {
@@ -1380,10 +1380,11 @@ class Adventure extends ChangeNotifier {
 }
 
 class Guardian extends Player with WithCollision {
+  static const onFootSize = ui.Size(28, 24);
   Guardian(this.session)
     : super(
         position: Vector2(session.world.spawn.dx, session.world.spawn.dy),
-        size: Vector2(24, 22),
+        size: Vector2(onFootSize.width, onFootSize.height),
         speed: 270,
         life: session.progress.maxHp,
       ) {
@@ -1456,6 +1457,7 @@ class Guardian extends Player with WithCollision {
   );
   double rollBearing = math.pi / 2;
   final runMotion = RunMotion();
+  bool movingThisFrame = false;
   double bearing = math.pi / 2,
       animationTime = 0,
       attackClock = 0,
@@ -1725,9 +1727,11 @@ class Guardian extends Player with WithCollision {
     // Follow the resolved body directly. Bonfire's smoothed follower can overshoot a dash.
     if (hasGameRef) gameRef.camera.position = session.cameraFocus;
     final travelled = p - before;
-    if (travelled.distance > .1) {
-      runMotion.advance(travelled.distance);
-      animationTime += travelled.distance / math.max(1, speed);
+    final distance = travelled.distance;
+    movingThisFrame = distance > .1;
+    if (movingThisFrame) {
+      runMotion.advance(distance);
+      animationTime += distance / math.max(1, speed);
       session.riding?.bearing = math.atan2(travelled.dy, travelled.dx);
     }
     session.riding?.at = body.center;
@@ -2264,7 +2268,7 @@ class Guardian extends Player with WithCollision {
         mount.def.artKey,
         feet,
         mount.bearing,
-        (animationTime / .13).floor() % 2,
+        movingThisFrame ? (animationTime / .13).floor() % 2 : 0,
         mount.def.waterOnly ? 48 : 62,
       );
       canvas.save();
@@ -2311,7 +2315,9 @@ class Guardian extends Player with WithCollision {
             ? 0
             : swing > 0
             ? (swing > swingDuration * .58 ? 0 : 1)
-            : runMotion.phase,
+            : movingThisFrame
+            ? runMotion.phase
+            : 0,
         60,
         attack: swing > 0 || spin > 0 || aim?.id == 'crushingBlow',
         comboPose: spin > 0 ? 1 : strikePose,

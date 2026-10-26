@@ -321,6 +321,10 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     open('warp');
   }
 
+  void restoreGameFocus() {
+    if (mounted && adventure.active && panel == null) gameFocus.requestFocus();
+  }
+
   NearbyControl nearbyControl(NearbyAction action) => NearbyControl(
     label: switch (action) {
       NearbyAction.shrine =>
@@ -358,6 +362,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         case NearbyAction.talk:
           open('talk');
       }
+      restoreGameFocus();
     },
   );
 
@@ -771,7 +776,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 top:
                     media.padding.top +
                     (guide != null ? (short && width < 500 ? 188 : 198) : 110),
-                child: PotionBelt(adventure),
+                child: PotionBelt(adventure, onUse: restoreGameFocus),
               ),
               if (guide != null)
                 Positioned(
@@ -801,6 +806,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                         case QuestGuideAction.dismount:
                           if (adventure.dismount()) saveNow();
                       }
+                      restoreGameFocus();
                     },
                   ),
                 ),

@@ -99,6 +99,7 @@ void main() {
     () {
       final enemy = s.spawnEnemy('gunner', const Offset(6300, 4200))!
         ..attackClock = 0;
+      enemy.position.y = s.hero.body.center.dy - enemy.size.y / 2;
       enemy.update(.05);
       expect(enemy.windup, closeTo(.8, .001));
       final warning = enemy.windup;

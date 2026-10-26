@@ -22,6 +22,7 @@ void main() {
       s.mobs.clear();
       s.hero.position.setValues(6000, 4200);
       final caster = s.spawnEnemy('cultist', const Offset(6220, 4200))!;
+      caster.position.y = s.hero.body.center.dy - caster.size.y / 2;
       for (var i = 0; i < 30 && caster.windup == 0; i++) {
         caster.update(.05);
       }
