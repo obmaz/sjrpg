@@ -376,6 +376,23 @@ class SkillDef {
   static const maxRank = 5;
   String get shortName =>
       {
+        'rendingEdge': '칼날 강화',
+        'stormOfSteel': '강철 폭풍',
+        'weaponTempo': '무기 리듬',
+        'veteranGuard': '수호 숙련',
+        'secondWind': '두번째 숨',
+        'resoundingCry': '공명 함성',
+        'warDrums': '전쟁 북',
+        'unyieldingOath': '불굴 맹세',
+        'emberFocus': '잿불 집중',
+        'cinderReach': '화염 확산',
+        'phoenixHeart': '불사조',
+        'deepFreeze': '심연 냉기',
+        'frozenAegis': '빙하 방벽',
+        'glacialReserve': '빙하 샘',
+        'conductivity': '마력 전도',
+        'forkedStorm': '갈래 번개',
+        'arcaneEconomy': '비전 순환',
         'warcry': '함성',
         'whirlwind': '소용돌이',
         'frenzy': '격노',

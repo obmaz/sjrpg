@@ -5,6 +5,7 @@ import 'game_ui.dart';
 import 'game_art.dart';
 import 'panel_controls.dart';
 import 'world_model.dart';
+import 'quest_cards.dart';
 
 class CommissionBoard extends StatelessWidget {
   const CommissionBoard({
@@ -416,45 +417,15 @@ class CommissionBoard extends StatelessWidget {
 
   Widget _site(QuestSite site) => Padding(
     padding: const EdgeInsets.only(bottom: 12),
-    child: _progress(
-      site.name,
-      session.cleansedSites.contains(site.id) ? '복구 완료' : site.hint,
-      session.cleansedSites.contains(site.id) ? 1 : 0,
+    child: QuestSiteCard(
+      art: session.art,
+      site: site,
+      done: session.cleansedSites.contains(site.id),
+      stage: session.world.stage,
     ),
   );
-  Widget _progress(String title, String subtitle, double value) => Container(
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: const Color(0xff102d29),
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: const Color(0xff37554b)),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            color: cream,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 7),
-        Text(
-          subtitle,
-          style: const TextStyle(color: gold, fontSize: 13, height: 1.5),
-        ),
-        const SizedBox(height: 10),
-        LinearProgressIndicator(
-          value: value.clamp(0, 1),
-          color: gold,
-          backgroundColor: const Color(0xff081f1d),
-          minHeight: 4,
-        ),
-      ],
-    ),
-  );
+  Widget _progress(String title, String subtitle, double value) =>
+      QuestProgressCard(title: title, status: subtitle, progress: value);
 }
 
 class _CommissionArt extends CustomPainter {

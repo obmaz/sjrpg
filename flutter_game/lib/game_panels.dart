@@ -10,6 +10,7 @@ import 'world_map.dart';
 import 'equipment_panel.dart';
 import 'panel_controls.dart';
 import 'skills_panel.dart';
+import 'quest_cards.dart';
 
 class AdventurePanel extends StatefulWidget {
   const AdventurePanel({
@@ -132,11 +133,11 @@ class _AdventurePanelState extends State<AdventurePanel> {
           const SizedBox(height: 22),
         ],
         for (final site in questSites) ...[
-          _quest(
-            '${site.name} · 필수',
-            site.hint,
-            s.cleansedSites.contains(site.id) ? 1 : 0,
-            s.cleansedSites.contains(site.id) ? '정화 완료' : '찾아가 정화하세요',
+          QuestSiteCard(
+            art: s.art,
+            site: site,
+            done: s.cleansedSites.contains(site.id),
+            stage: s.world.stage,
           ),
           const SizedBox(height: 12),
         ],
@@ -416,44 +417,11 @@ class _AdventurePanelState extends State<AdventurePanel> {
     String description,
     double progress,
     String status,
-  ) => Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: const Color(0xffe4d5ad),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: ink,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          description,
-          style: const TextStyle(
-            fontSize: 14,
-            color: Color(0xff405246),
-            height: 1.6,
-          ),
-        ),
-        const SizedBox(height: 12),
-        LinearProgressIndicator(
-          value: progress,
-          color: const Color(0xff3b7860),
-          backgroundColor: const Color(0xffc6bc9a),
-          minHeight: 6,
-          borderRadius: BorderRadius.circular(3),
-        ),
-        const SizedBox(height: 8),
-        Text(status, style: const TextStyle(fontSize: 13, color: ink)),
-      ],
-    ),
+  ) => QuestProgressCard(
+    title: title,
+    description: description,
+    progress: progress,
+    status: status,
   );
 
   Widget _info(IconData icon, String title, String text) => Row(
