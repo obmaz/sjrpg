@@ -291,6 +291,8 @@ class ArcaneBolt extends GameComponent {
     this.damage, {
     this.element = 'fire',
     this.explosive = false,
+    this.launchDelay = 0,
+    this.caster,
     int? targetLimit,
   }) : targetLimit = targetLimit ?? (explosive ? 3 : 1),
        direction = ui.Offset(math.cos(angle), math.sin(angle)),
@@ -303,6 +305,8 @@ class ArcaneBolt extends GameComponent {
   final double damage;
   final String element;
   final bool explosive;
+  final Guardian? caster;
+  double launchDelay;
   final int targetLimit;
   final int buildRevision;
   double remaining = .88;
@@ -324,7 +328,21 @@ class ArcaneBolt extends GameComponent {
       return;
     }
     if (!session.active || resolved) return;
-    dt = math.min(dt, math.min(.05, remaining));
+    dt = math.min(dt, .05);
+    if (launchDelay > 0) {
+      if (caster != null && (caster!.dashing > 0 || session.riding != null)) {
+        finish();
+        return;
+      }
+      if (caster != null) {
+        position.setValues(caster!.body.center.dx, caster!.body.center.dy);
+      }
+      final waiting = math.min(dt, launchDelay);
+      launchDelay -= waiting;
+      dt -= waiting;
+      if (dt <= 0) return;
+    }
+    dt = math.min(dt, remaining);
     remaining -= dt;
     final distance = dt * 620, n = math.max(1, (distance / 5).ceil());
     for (var i = 0; i < n; i++) {
@@ -376,6 +394,7 @@ class ArcaneBolt extends GameComponent {
 
   @override
   void render(ui.Canvas canvas) {
+    if (launchDelay > 0 || resolved) return;
     super.render(canvas);
     final c = canvas;
     const tip = ui.Offset(0, -14);

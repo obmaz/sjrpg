@@ -589,6 +589,7 @@ class Adventure extends ChangeNotifier {
 
   void releaseInput() {
     hero.aim = null;
+    hero.queuedCast = null;
     attackSources.clear();
     hero.onJoystickChangeDirectional(
       JoystickDirectionalEvent(directional: JoystickMoveDirectional.IDLE),
@@ -1047,6 +1048,7 @@ class Guardian extends Player with WithCollision {
   }
   final Adventure session;
   SkillAim? aim;
+  ({int slot, String id, SkillAim? aim})? queuedCast;
   void beginAim(int slot) {
     final def = session.progress.skillAt(slot);
     if (!session.active ||
@@ -1057,6 +1059,7 @@ class Guardian extends Player with WithCollision {
       return;
     }
     if (!session.ensureOnFoot()) return;
+    queuedCast = null;
     aim = SkillAim(slot, def.id, bearing);
   }
 
@@ -1359,6 +1362,13 @@ class Guardian extends Player with WithCollision {
     dodgeClock = math.max(0, dodgeClock - dt);
     invulnerable = math.max(0, invulnerable - dt);
     hurtFlash = math.max(0, hurtFlash - dt);
+    final queued = queuedCast;
+    if (queued != null && castLock <= 0 && dashing <= 0 && !physicalAction) {
+      queuedCast = null;
+      if (session.progress.skillAt(queued.slot)?.id == queued.id) {
+        skill(slot: queued.slot, manualAim: queued.aim);
+      }
+    }
     if (session.attackSources.isNotEmpty && attackClock <= 0) slash();
   }
 
@@ -1440,6 +1450,8 @@ class Guardian extends Player with WithCollision {
           angle,
           p.basicDamage,
           element: p.weapon.base.style,
+          launchDelay: .13,
+          caster: this,
           explosive: p.rank('firebolt') >= 3,
           targetLimit: p.basicTargetLimit,
         ),
@@ -1489,13 +1501,13 @@ class Guardian extends Player with WithCollision {
   void skill({bool secondary = false, int? slot, SkillAim? manualAim}) {
     if (!session.active ||
         dashing > 0 ||
-        castLock > 0 ||
         physicalAction ||
         !session.ensureOnFoot()) {
       return;
     }
     final p = session.progress;
-    final def = p.skillAt(slot ?? (secondary ? 1 : 0));
+    final slotIndex = slot ?? (secondary ? 1 : 0);
+    final def = p.skillAt(slotIndex);
     if (def == null) return;
     final rank = p.rank(def.id);
     if (!session.active || (cooldowns[def.id] ?? 0) > 0 || rank == 0) return;
@@ -1507,6 +1519,11 @@ class Guardian extends Player with WithCollision {
       );
       return;
     }
+    if (castLock > 0) {
+      queuedCast = (slot: slotIndex, id: def.id, aim: manualAim);
+      return;
+    }
+    queuedCast = null;
     session.audio.play(switch (def.id) {
       'warcry' || 'frenzy' => EffectSound.warcry,
       'frostNova' || 'iceArmor' => EffectSound.ice,
@@ -1711,6 +1728,7 @@ class Guardian extends Player with WithCollision {
       return;
     }
     aim = null;
+    queuedCast = null;
     session.audio.play(EffectSound.dodge);
     session.device.pulse(FeedbackKind.dodge);
     rollBearing = bearing;
