@@ -6,6 +6,7 @@ import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_ui.dart';
 import 'package:guardian_new/main.dart';
+import 'support/test_game.dart';
 
 void main() {
   for (final viewport in const [Size(390, 844), Size(320, 420)]) {
@@ -42,6 +43,10 @@ void main() {
           false,
         );
         expect(find.text('공격'), findsOneWidget);
+        expect(hero.session.sheltered, true);
+        hero.slash();
+        expect(hero.strikes, 0);
+        inCombatField(hero.session);
         final before = hero.position.clone(), strikes = hero.strikes;
         final stick = await tester.startGesture(
           tester.getCenter(find.byType(GameStick)),

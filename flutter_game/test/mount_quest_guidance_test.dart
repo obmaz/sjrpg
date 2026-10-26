@@ -168,7 +168,10 @@ void main() {
           s.hero.position.setValues(site.at.dx - 14, site.at.dy + 45);
       stand(q.site);
       expect(s.nearbyQuestGuide!.title, contains('의뢰 필요'));
+      final giver = timeQuestGivers.first;
+      s.hero.position.setValues(giver.at.dx - 14, giver.at.dy - 12);
       expect(s.acceptCommission(q), true);
+      stand(q.site);
       expect(s.nearbyQuestGuide!.message, contains('24마리'));
       stand(timeCommissions.firstWhere((q) => q.path == TimePath.future).site);
       expect(s.nearbyQuestGuide!.title, contains('잠김'));

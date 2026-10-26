@@ -28,9 +28,7 @@ void areaStrike(
       s.mobs
           .where(
             (mob) =>
-                mob.combatReady &&
-                !mob.isDead &&
-                !mob.isRemoving &&
+                s.canHitEnemy(mob, origin: center) &&
                 !excluded.contains(mob) &&
                 (mob.body.center - center).distance < radius &&
                 s.world.clearLine(center, mob.body.center, const ui.Size(3, 3)),
@@ -50,7 +48,14 @@ void areaStrike(
       targets.add(mob);
     }
     final d = mob.body.center - center;
-    s.hit(mob, damage, d.distance > 0 ? d / d.distance * 16 : ui.Offset.zero);
+    if (!s.hit(
+      mob,
+      damage,
+      d.distance > 0 ? d / d.distance * 16 : ui.Offset.zero,
+      origin: center,
+    )) {
+      continue;
+    }
     mob.stun = math.max(mob.stun, stun * (mob.boss ? .35 : 1));
     mob.slow = math.max(mob.slow, slow);
   }
@@ -244,13 +249,14 @@ class ShadowBolt extends GameComponent {
       final at = position.toOffset() + direction * (distance / steps);
       if (session.world.blocked(
         ui.Rect.fromCenter(center: at, width: 6, height: 6),
+        avoidSanctuary: true,
       )) {
         finish();
         return;
       }
       position.setValues(at.dx, at.dy);
       if (session.hero.body.inflate(7).contains(at)) {
-        session.hurtHero(damage);
+        session.hurtHero(damage, origin: at);
         finish();
         return;
       }
@@ -383,6 +389,7 @@ class ArcaneBolt extends GameComponent {
       final at = position.toOffset() + direction * (distance / n);
       if (session.world.blocked(
         ui.Rect.fromCenter(center: at, width: 8, height: 8),
+        avoidSanctuary: true,
       )) {
         finish();
         return;
@@ -393,7 +400,10 @@ class ArcaneBolt extends GameComponent {
             !mob.isDead &&
             !mob.isRemoving &&
             mob.body.inflate(7).contains(at)) {
-          session.hit(mob, damage, direction * 12);
+          if (!session.hit(mob, damage, direction * 12, origin: at)) {
+            finish();
+            return;
+          }
           if (element == 'ice') mob.slow = math.max(mob.slow, 1.5);
           if (explosive) {
             areaStrike(
@@ -639,9 +649,7 @@ void chainLightning(
         s.mobs
             .where(
               (e) =>
-                  e.combatReady &&
-                  !e.isDead &&
-                  !e.isRemoving &&
+                  s.canHitEnemy(e, origin: at) &&
                   !visited.contains(e) &&
                   (e.body.center - at).distance < (i == 0 ? 470 : 260) &&
                   s.world.clearLine(at, e.body.center, const ui.Size(3, 3)),
@@ -656,7 +664,9 @@ void chainLightning(
     final target = candidates.first;
     visited.add(target);
     points.add(target.body.center);
-    s.hit(target, damage * math.pow(.9, i), ui.Offset.zero);
+    if (!s.hit(target, damage * math.pow(.9, i), ui.Offset.zero, origin: at)) {
+      break;
+    }
   }
   s.game?.add(LightningTrace(s, points, rank: rank));
 }

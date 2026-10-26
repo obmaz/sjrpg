@@ -100,7 +100,7 @@ void main() {
     },
   );
   test('a full bag leaves loot on the ground until room is made', () {
-    final s = Adventure(GameArt());
+    final s = inCombatField(Adventure(GameArt()));
     s.start(TestGame());
     addTearDown(s.dispose);
     while (s.progress.inventory.length < Progress.capacity) {
@@ -126,7 +126,7 @@ void main() {
   test(
     'an arcane bolt sweeps to the first enemy and stops before a solid obstacle',
     () {
-      final s = Adventure(GameArt(), heroClass: HeroClass.mage);
+      final s = inCombatField(Adventure(GameArt(), heroClass: HeroClass.mage));
       s.start(TestGame());
       addTearDown(s.dispose);
       s.mobs.clear();
@@ -152,7 +152,7 @@ void main() {
     'free mage attacks cannot soft lock at zero mana; skills and cooldowns cannot be bypassed',
     () {
       final game = TestGame(),
-          s = Adventure(GameArt(), heroClass: HeroClass.mage);
+          s = inCombatField(Adventure(GameArt(), heroClass: HeroClass.mage));
       s.start(game);
       addTearDown(s.dispose);
       s.progress.energy = 0;
@@ -199,7 +199,7 @@ void main() {
   test(
     'chests reward once and stage clearance resumes exploration without resummoning',
     () {
-      final s = Adventure(GameArt());
+      final s = inCombatField(Adventure(GameArt()));
       s.start(TestGame());
       addTearDown(s.dispose);
       s.hero.position.setValues(stageChests.first.dx, stageChests.first.dy);
@@ -245,7 +245,7 @@ void main() {
     'a pending enemy cannot be killed until its collision lifecycle has mounted',
     () {
       final game = TestGame()..mountEnemies = false;
-      final s = Adventure(GameArt(), heroClass: HeroClass.mage);
+      final s = inCombatField(Adventure(GameArt(), heroClass: HeroClass.mage));
       s.start(game);
       addTearDown(s.dispose);
       final enemy = s.mobs.first, hp = enemy.life.value;
@@ -260,7 +260,7 @@ void main() {
   test(
     'two skill slots stay distinct and swapping cannot reset either cooldown',
     () {
-      final s = Adventure(GameArt(), heroClass: HeroClass.mage);
+      final s = inCombatField(Adventure(GameArt(), heroClass: HeroClass.mage));
       s.start(TestGame());
       addTearDown(s.dispose);
       s.progress.gainXp(140);
@@ -296,7 +296,7 @@ void main() {
   test(
     'four learned skills fill combat slots, swap uniquely and keep their cooldowns',
     () {
-      final s = Adventure(GameArt(), heroClass: HeroClass.mage);
+      final s = inCombatField(Adventure(GameArt(), heroClass: HeroClass.mage));
       s.start(TestGame());
       addTearDown(s.dispose);
       final p = s.progress;
@@ -355,7 +355,7 @@ void main() {
   test(
     'warrior ground slam fills the fourth slot and strikes the reachable front',
     () {
-      final s = Adventure(GameArt());
+      final s = inCombatField(Adventure(GameArt()));
       s.start(TestGame());
       addTearDown(s.dispose);
       final p = s.progress;
@@ -384,7 +384,7 @@ void main() {
     },
   );
   test('ground slam cannot put its impact beyond a blocking tree', () {
-    final s = Adventure(GameArt());
+    final s = inCombatField(Adventure(GameArt()));
     s.start(TestGame());
     addTearDown(s.dispose);
     s.progress.gainXp(1000);
@@ -431,7 +431,7 @@ void main() {
   test(
     'boss slam locks its warning area, can be evaded and is interrupted by a stun',
     () {
-      final s = Adventure(GameArt());
+      final s = inCombatField(Adventure(GameArt()));
       s.start(TestGame());
       addTearDown(s.dispose);
       s.mobs.clear();
@@ -474,7 +474,7 @@ void main() {
     },
   );
   test('battle feedback remains bounded and freezes with the simulation', () {
-    final s = Adventure(GameArt());
+    final s = inCombatField(Adventure(GameArt()));
     s.start(TestGame());
     addTearDown(s.dispose);
     for (var i = 0; i < 40; i++) {
@@ -489,7 +489,7 @@ void main() {
     expect(text.remaining, remaining);
   });
   test('a disposed adventure rejects late input and simulation callbacks', () {
-    final s = Adventure(GameArt());
+    final s = inCombatField(Adventure(GameArt()));
     s.start(TestGame());
     final enemy = s.mobs.first;
     s.dispose();
@@ -505,7 +505,7 @@ void main() {
     expect(s.elapsed, 0);
   });
   test('three story chests grant one optional skill point only once', () {
-    final s = Adventure(GameArt());
+    final s = inCombatField(Adventure(GameArt()));
     s.start(TestGame());
     addTearDown(s.dispose);
     final before = s.progress.skillPoints;
@@ -534,7 +534,7 @@ void main() {
     expect(p.hp, lessThan(p.maxHp));
   });
   test('warrior rage requires a real hit rather than empty swings', () {
-    final s = Adventure(GameArt());
+    final s = inCombatField(Adventure(GameArt()));
     s.start(TestGame());
     addTearDown(s.dispose);
     final enemy = s.mobs.first;

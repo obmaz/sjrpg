@@ -4,7 +4,7 @@ import 'adventure.dart';
 import 'game_ui.dart';
 import 'world_model.dart';
 
-enum QuestGuideAction { journal, cleanse, dismount }
+enum QuestGuideAction { journal, talk, cleanse, dismount }
 
 class QuestGuide {
   const QuestGuide(this.title, this.message, this.action, this.button);
@@ -29,7 +29,7 @@ extension QuestGuidance on Adventure {
       final q = currentCommission;
       if (q == null) {
         return timePath == null
-            ? '여정에서 과거·미래 중 의뢰 하나를 선택하세요. 선택한 줄기만 진행할 수 있습니다.'
+            ? '야영지 서쪽 기록관 또는 동쪽 통신관에게 첫 의뢰를 받으세요. 받은 의뢰에 따라 다음 시대가 정해집니다.'
             : '여정에서 다음 의뢰를 수락하세요. 처치 수는 수락한 뒤부터 집계됩니다.';
       }
       final left = math.max(
@@ -129,6 +129,20 @@ extension QuestGuidance on Adventure {
     }
     // An NPC hint must not replace a closer shop, chest or mount control.
     if (nearbyAction != null && nearbyAction != NearbyAction.talk) return null;
+    final giver = nearbyTimeGiver;
+    if (giver != null) {
+      return note(
+        '${giver.name} · 의뢰 안내',
+        timePath == null
+            ? '첫 의뢰를 받으면 ${giver.destination}으로 이어집니다.'
+            : timePath == giver.path
+            ? mainQuestNext
+            : '이미 다른 의뢰인의 여정을 시작했습니다.',
+        QuestGuideAction.talk,
+        '대화하기',
+      );
+    }
+    if (world.stage == WorldStage.sands) return null;
     if ((hero.body.center - world.elderAt).distance < 190) {
       return note(
         world.stage == WorldStage.forest ? '숲의 현자 · 의뢰 안내' : '연락책 · 의뢰 안내',

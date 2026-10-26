@@ -6,6 +6,21 @@ enum WorldStage { forest, sands, past, future }
 
 enum TimePath { past, future }
 
+class TimeQuestGiver {
+  const TimeQuestGiver(this.path, this.name, this.actor, this.offset);
+  final TimePath path;
+  final String name, actor;
+  final Offset offset;
+  Offset get at => WorldStage.sands.spawn + offset;
+  String get destination =>
+      path == TimePath.past ? '제3-1장 고대 왕국' : '제3-2장 사이버펑크';
+}
+
+const timeQuestGivers = [
+  TimeQuestGiver(TimePath.past, '기록관', 'villager', Offset(-180, -50)),
+  TimeQuestGiver(TimePath.future, '통신관', 'gunner', Offset(180, -50)),
+];
+
 extension WorldStageInfo on WorldStage {
   bool get hasNextStage =>
       this == WorldStage.forest || this == WorldStage.sands;
@@ -16,6 +31,12 @@ extension WorldStageInfo on WorldStage {
     '제3-2장 · 네온의 심연',
   ][index];
   String get theme => ['숲과 초원', '사막과 폐허', '고대 왕국', '사이버펑크'][index];
+  Color get sanctuaryColor => const [
+    Color(0xffa9d5ae),
+    Color(0xffedc98e),
+    Color(0xffd3d5bc),
+    Color(0xff7fe5ea),
+  ][index];
   String get bossName => ['숲의 파수꾼', '모래시계 감시자', '태초의 석상왕', '중앙 방어 코어'][index];
   String get bossActor =>
       ['golem', 'sand-warden', 'ancient-king', 'cyber-core'][index];

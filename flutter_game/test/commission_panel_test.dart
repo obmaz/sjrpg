@@ -10,79 +10,101 @@ import 'support/test_game.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   for (final size in const [Size(320, 420), Size(390, 844), Size(844, 390)]) {
-    testWidgets(
-      'both initial commissions can be reached and choice persists at $size',
-      (tester) async {
-        tester.view.physicalSize = size;
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
-        final s = Adventure(GameArt(), stage: WorldStage.sands);
-        s.start(TestGame());
-        s.pause();
-        addTearDown(s.dispose);
-        var commits = 0;
-        await tester.pumpWidget(
-          MaterialApp(
-            home: AdventurePanel(
-              session: s,
-              name: 'journal',
-              onClose: () {},
-              onRestart: () {},
-              onCheckpoint: () => commits++,
+    for (final path in TimePath.values) {
+      testWidgets(
+        '$path starts through its nearby NPC, not the journal, at $size',
+        (tester) async {
+          tester.view.physicalSize = size;
+          tester.view.devicePixelRatio = 1;
+          addTearDown(tester.view.resetPhysicalSize);
+          addTearDown(tester.view.resetDevicePixelRatio);
+          final s = Adventure(GameArt(), stage: WorldStage.sands)
+            ..start(TestGame());
+          s.pause();
+          addTearDown(s.dispose);
+          var commits = 0;
+          await tester.pumpWidget(
+            MaterialApp(
+              home: AdventurePanel(
+                key: const ValueKey('journal'),
+                session: s,
+                name: 'journal',
+                onClose: () {},
+                onRestart: () {},
+                onCheckpoint: () => commits++,
+              ),
             ),
-          ),
-        );
-        await tester.pumpAndSettle();
-        expect(find.textContaining('제2장은 사막 유적입니다.'), findsOneWidget);
-        expect(find.text('제3-2장 · 사이버펑크'), findsOneWidget);
-        final close = find.text('모험 계속하기');
-        final closeRect = tester.getRect(close);
-        for (final name in ['모래에 묻힌 어제 수락', '아직 오지 않은 신호 수락']) {
-          final target = find.text(name);
+          );
+          await tester.pumpAndSettle();
+          for (final q in timeCommissions.where((q) => q.step == 0)) {
+            expect(find.text('${q.title} 수락'), findsNothing);
+          }
+          expect(find.textContaining('의뢰인을 찾아 대화하세요'), findsOneWidget);
+          expect(s.timePath, null);
+          final giver = timeQuestGivers.firstWhere((g) => g.path == path);
+          s.hero.position.setValues(giver.at.dx - 14, giver.at.dy - 12);
+          await tester.pumpWidget(
+            MaterialApp(
+              home: AdventurePanel(
+                key: ValueKey(path),
+                session: s,
+                name: 'talk',
+                offeredPath: path,
+                onClose: () {},
+                onRestart: () {},
+                onCheckpoint: () => commits++,
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          final own = timeCommissions.firstWhere((q) => q.path == path);
+          final other = timeCommissions.firstWhere((q) => q.path != path);
+          expect(find.text('${other.title} 수락'), findsNothing);
+          final accept = find.text('${own.title} 수락');
+          final footer = tester.getRect(find.text('모험 계속하기'));
           await tester.scrollUntilVisible(
-            target,
-            100,
+            accept,
+            80,
             scrollable: find.byType(Scrollable).first,
           );
           await tester.pumpAndSettle();
-          expect(tester.getRect(target).bottom, lessThan(closeRect.top));
-          expect(tester.getRect(close), closeRect);
-        }
-        await tester.tap(find.text('아직 오지 않은 신호 수락'));
-        await tester.pumpAndSettle();
-        expect(
-          tester
-              .state<ScrollableState>(find.byType(Scrollable).first)
-              .position
-              .pixels,
-          0,
-          reason:
-              'the newly accepted first commission starts at the top after leaving the choices',
-        );
-        expect(s.timePath, TimePath.future);
-        expect(s.world.stage, WorldStage.sands);
-        expect(s.acceptedCommission, 'future-1');
-        expect(find.textContaining('현재 · 제2장 사막 유적'), findsOneWidget);
-        expect(find.text('완료 후 · 제3-2장 사이버펑크'), findsOneWidget);
-        expect(commits, 1);
-        expect(find.text('모래에 묻힌 어제 수락'), findsNothing);
-        expect(s.acceptCommission(timeCommissions.first), false);
-        expect(
-          GameCheckpoint.decode(
+          expect(tester.getRect(accept).bottom, lessThan(footer.top));
+          await tester.tap(accept);
+          await tester.pumpAndSettle();
+          expect(s.timePath, path);
+          expect(s.world.stage, WorldStage.sands);
+          expect(s.acceptedCommission, own.id);
+          expect(commits, 1);
+          final saved = GameCheckpoint.decode(
             GameCheckpoint.capture(s)!.encode(),
-          )!.data['timePath'],
-          'future',
-        );
-        expect(tester.takeException(), null);
-        expect(
-          GameCheckpoint.decode(
-            GameCheckpoint.capture(s)!.encode(),
-          )!.data['stage'],
-          'sands',
-        );
-      },
-    );
+          )!;
+          expect(saved.data['timePath'], path.name);
+          expect(saved.data['stage'], 'sands');
+          final wrong = timeQuestGivers.firstWhere((g) => g.path != path);
+          s.hero.position.setValues(wrong.at.dx - 14, wrong.at.dy - 12);
+          await tester.pumpWidget(
+            MaterialApp(
+              home: AdventurePanel(
+                key: const ValueKey('wrong'),
+                session: s,
+                name: 'talk',
+                offeredPath: wrong.path,
+                onClose: () {},
+                onRestart: () {},
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(
+            find.textContaining('이미 ${giver.name}의 의뢰를 시작했습니다'),
+            findsOneWidget,
+          );
+          expect(find.text('${other.title} 수락'), findsNothing);
+          expect(s.acceptCommission(other), false);
+          expect(tester.takeException(), null);
+        },
+      );
+    }
   }
   for (final size in const [Size(320, 420), Size(390, 844), Size(844, 390)]) {
     for (final path in TimePath.values) {

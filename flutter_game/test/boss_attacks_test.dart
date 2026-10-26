@@ -59,12 +59,12 @@ void main() {
     test(
       '$stage warning freezes, locks aim and lets the player leave its danger shape',
       () {
-        final s = Adventure(GameArt(), stage: stage);
+        final s = inCombatField(Adventure(GameArt(), stage: stage));
         final game = TestGame();
         s.start(game);
         addTearDown(s.dispose);
         s.mobs.clear();
-        final base = stage == WorldStage.forest ? origin : s.world.spawn;
+        final base = stage == WorldStage.forest ? origin : s.hero.body.topLeft;
         s.hero.position.setValues(base.dx + 200, base.dy);
         final boss = s.spawnEnemy('golem', base, boss: true)!
           ..slamClock = 0
@@ -104,12 +104,12 @@ void main() {
     test(
       '$stage resolves one damage event and a new phase cannot change a warning already shown',
       () {
-        final s = Adventure(GameArt(), stage: stage);
+        final s = inCombatField(Adventure(GameArt(), stage: stage));
         final game = TestGame();
         s.start(game);
         addTearDown(s.dispose);
         s.mobs.clear();
-        final base = stage == WorldStage.forest ? origin : s.world.spawn;
+        final base = stage == WorldStage.forest ? origin : s.hero.body.topLeft;
         s.hero.position.setValues(base.dx + 200, base.dy);
         final boss = s.spawnEnemy('golem', base, boss: true)!
           ..slamClock = 0
@@ -141,7 +141,7 @@ void main() {
     );
   }
   test('stun and death invalidate the warning without a delayed strike', () {
-    final s = Adventure(GameArt());
+    final s = inCombatField(Adventure(GameArt()));
     final game = TestGame();
     s.start(game);
     addTearDown(s.dispose);
@@ -170,7 +170,7 @@ void main() {
     expect(s.progress.hp, rewardedHp);
   });
   test('a prestarted ground attack cannot damage through a solid tree', () {
-    final s = Adventure(GameArt());
+    final s = inCombatField(Adventure(GameArt()));
     s.start(TestGame());
     addTearDown(s.dispose);
     s.mobs.clear();

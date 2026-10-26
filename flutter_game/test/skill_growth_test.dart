@@ -56,7 +56,8 @@ void main() {
     test(
       '$hero simulation uses the displayed cooldown at every rank and saves it',
       () {
-        final s = Adventure(GameArt(), heroClass: hero)..start(TestGame());
+        final s = inCombatField(Adventure(GameArt(), heroClass: hero))
+          ..start(TestGame());
         addTearDown(s.dispose);
         s.mobs.clear();
         s.progress.gainXp(50000);

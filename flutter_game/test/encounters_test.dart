@@ -9,7 +9,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Adventure s;
   setUp(() {
-    s = Adventure(GameArt())..start(TestGame());
+    s = inCombatField(Adventure(GameArt()))..start(TestGame());
   });
   tearDown(() => s.dispose());
   void clear() {
@@ -100,12 +100,13 @@ void main() {
   );
   test('far enemies become dormant and wake without new budget or rewards', () {
     final count = s.living;
-    s.hero.position.setValues(6800, 4700);
+    final original = s.hero.position.clone();
+    s.hero.position.setValues(original.x + 3000, original.y + 3000);
     s.tick(.05);
     expect(s.dormantEnemies.length, count);
     expect(s.living, 0);
     final area = s.encounterAreas.values.single;
-    s.hero.position.setValues(area.stone.dx - 12, area.stone.dy - 11);
+    s.hero.position.setFrom(original);
     s.tick(.05);
     expect(s.dormantEnemies, isEmpty);
     expect(s.living, count);

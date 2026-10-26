@@ -14,8 +14,10 @@ import 'game_checkpoint.dart';
 import 'game_panels.dart';
 import 'game_ui.dart';
 import 'panel_controls.dart';
+import 'quest_giver.dart';
 import 'quest_guide.dart';
 import 'rpg_widgets.dart';
+import 'sanctuary_fence.dart';
 import 'save_bridge.dart' as storage;
 import 'world_model.dart';
 
@@ -286,6 +288,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
 
   late final Widget game;
   String? panel;
+  TimePath? offeredPath;
   final gameFocus = FocusNode();
   @override
   void initState() {
@@ -325,8 +328,13 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         LandscapeLayer(adventure),
         WorldDirector(adventure),
         StageLandmarks(adventure),
+        for (final section in adventure.world.sanctuaryFences)
+          SanctuaryFence(section, adventure.world.stage),
         VillagePerson(adventure, true),
-        VillagePerson(adventure, false),
+        if (adventure.world.stage == WorldStage.sands)
+          for (final giver in timeQuestGivers) QuestGiver(adventure, giver)
+        else
+          VillagePerson(adventure, false),
       ],
       cameraConfig: CameraConfig(
         moveOnlyMapArea: false,
@@ -380,7 +388,10 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   void open(String name) {
     saveNow();
     adventure.pause();
-    setState(() => panel = name);
+    setState(() {
+      panel = name;
+      offeredPath = name == 'talk' ? adventure.nearbyTimeGiver?.path : null;
+    });
   }
 
   void close() {
@@ -552,9 +563,28 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 child: ActionButton(
                   art: widget.art,
                   sprite: 'roundEmpty',
-                  artwork: CustomPaint(
-                    size: Size.square(attack * .75),
-                    painter: GearGlyph(p.weapon, widget.art),
+                  artwork: SizedBox.square(
+                    dimension: attack * .75,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Opacity(
+                          opacity: adventure.sheltered ? .45 : 1,
+                          child: CustomPaint(
+                            painter: GearGlyph(p.weapon, widget.art),
+                          ),
+                        ),
+                        if (adventure.sheltered)
+                          const Align(
+                            alignment: Alignment.topRight,
+                            child: Icon(
+                              Icons.shield_rounded,
+                              color: gold,
+                              size: 22,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                   label: '공격',
                   semanticLabel: '공격',
@@ -609,7 +639,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                                   : '타기',
                             NearbyAction.dismount => '내리기',
                             NearbyAction.shop => '상점',
-                            NearbyAction.talk => '대화',
+                            NearbyAction.talk =>
+                              adventure.nearbyTimeGiver?.name ?? '대화',
                             NearbyAction.chest => '상자 열기',
                           },
                           icon: switch (interaction) {
@@ -695,6 +726,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                       switch (guide.action) {
                         case QuestGuideAction.journal:
                           open('journal');
+                        case QuestGuideAction.talk:
+                          open('talk');
                         case QuestGuideAction.cleanse:
                           if (adventure.cleanseNearbySite()) saveNow();
                         case QuestGuideAction.dismount:
@@ -752,6 +785,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   backActions: widget.backActions,
                   session: adventure,
                   name: modal,
+                  offeredPath: offeredPath,
                   onClose: close,
                   onRestart: abandon,
                   onCheckpoint: saveNow,

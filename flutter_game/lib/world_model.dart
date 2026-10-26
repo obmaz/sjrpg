@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'sanctuary.dart';
 import 'stage_content.dart';
 
 export 'rpg_model.dart';
@@ -251,6 +252,7 @@ class AdventureWorld {
     if (stage != WorldStage.forest) {
       _buildThemed();
       _compact();
+      _buildSanctuaryBoundary();
       return;
     }
     final random = math.Random(seed);
@@ -611,6 +613,7 @@ class AdventureWorld {
       }
     }
     _compact();
+    _buildSanctuaryBoundary();
   }
   // A visibility graph keeps roads clear of water, quest structures and the fountain.
   List<Offset> _dryRoad(List<Offset> authored, double width) {
@@ -1091,6 +1094,61 @@ class AdventureWorld {
         ? stage.authoredSpawn - const Offset(0, 55)
         : stage.authoredSpawn + const Offset(-280, -100),
   );
+  late final sanctuary = Sanctuary(
+    stage == WorldStage.forest
+        ? Offset(town.center.dx, town.top + town.height * .245)
+        : stage.spawn,
+    stage == WorldStage.forest ? 360 : 440,
+  );
+  final sanctuaryFences = <SanctuaryFenceSection>[];
+  void _buildSanctuaryBoundary() {
+    final ward = sanctuary;
+    final gateAngles = stage == WorldStage.forest
+        ? [
+                Offset(town.right, town.top + town.height * .52),
+                Offset(town.left, town.top + town.height * .36),
+                Offset(town.center.dx, town.top),
+                Offset(town.center.dx, town.bottom),
+              ]
+              .map(
+                (p) => math.atan2(p.dy - ward.center.dy, p.dx - ward.center.dx),
+              )
+              .toList()
+        : [0.0, math.pi / 2, math.pi, -math.pi / 2];
+    for (var i = 0; i < 48; i++) {
+      final angle = (i + .5) * math.pi / 24;
+      final middle =
+          ward.center + Offset(math.cos(angle), math.sin(angle)) * ward.radius;
+      if (gateAngles.any(
+            (gate) =>
+                math
+                    .atan2(math.sin(angle - gate), math.cos(angle - gate))
+                    .abs() <
+                .29,
+          ) ||
+          trails.any(
+            (trail) => trail.distance(middle) < trail.width / 2 + 48,
+          )) {
+        continue;
+      }
+      Offset point(int index) =>
+          ward.center +
+          Offset(
+                math.cos(index * math.pi / 24),
+                math.sin(index * math.pi / 24),
+              ) *
+              ward.radius;
+      final section = SanctuaryFenceSection(point(i), point(i + 1));
+      if (section.collisionBodies.any((body) => blocked(body.inflate(4)))) {
+        continue;
+      }
+      sanctuaryFences.add(section);
+    }
+    for (final section in sanctuaryFences) {
+      section.collisionBodies.forEach(_indexSolid);
+    }
+  }
+
   Offset get merchantAt => _at(_authoredMerchant);
   late final Offset _authoredMerchant = stage == WorldStage.forest
       ? const Offset(3952, 2984)
@@ -1193,13 +1251,19 @@ class AdventureWorld {
   bool isWater(Offset p) =>
       (river.contains(p) || lakes.any((s) => s.contains(p))) &&
       !bridges.any((b) => b.contains(p));
-  bool blocked(Rect body, {bool waterOnly = false, bool ignoreWater = false}) {
+  bool blocked(
+    Rect body, {
+    bool waterOnly = false,
+    bool ignoreWater = false,
+    bool avoidSanctuary = false,
+  }) {
     if (body.left < 0 ||
         body.top < 0 ||
         body.right > (_authoring ? authoredWorldSize : worldSize).width ||
         body.bottom > (_authoring ? authoredWorldSize : worldSize).height) {
       return true;
     }
+    if (avoidSanctuary && sanctuary.protects(body)) return true;
     for (var y = body.top ~/ 128; y <= body.bottom ~/ 128; y++) {
       for (var x = body.left ~/ 128; x <= body.right ~/ 128; x++) {
         if ((_solids['$x:$y'] ?? const <Rect>[]).any((s) => s.overlaps(body))) {
@@ -1256,7 +1320,22 @@ class AdventureWorld {
     return true;
   }
 
-  bool clearLine(Offset from, Offset to, Size size) {
+  bool clearLine(
+    Offset from,
+    Offset to,
+    Size size, {
+    bool avoidSanctuary = false,
+  }) {
+    if (avoidSanctuary &&
+        sanctuary.blocksRay(
+          from + Offset(size.width / 2, size.height / 2),
+          to + Offset(size.width / 2, size.height / 2),
+          padding:
+              math.sqrt(size.width * size.width + size.height * size.height) /
+              2,
+        )) {
+      return false;
+    }
     final sweep = Rect.fromLTRB(
       math.min(from.dx, to.dx),
       math.min(from.dy, to.dy),
@@ -1329,7 +1408,13 @@ class AdventureWorld {
     return exit > 0 && enter < 1 && enter < exit;
   }
 
-  Offset move(Offset from, Offset delta, Size size, {bool waterOnly = false}) {
+  Offset move(
+    Offset from,
+    Offset delta,
+    Size size, {
+    bool waterOnly = false,
+    bool avoidSanctuary = false,
+  }) {
     var p = from;
     final n = math.max(
       1,
@@ -1340,6 +1425,7 @@ class AdventureWorld {
       if (!blocked(
         Rect.fromLTWH(p.dx + step.dx, p.dy + step.dy, size.width, size.height),
         waterOnly: waterOnly,
+        avoidSanctuary: avoidSanctuary,
       )) {
         p += step;
         continue;
@@ -1347,12 +1433,14 @@ class AdventureWorld {
       if (!blocked(
         Rect.fromLTWH(p.dx + step.dx, p.dy, size.width, size.height),
         waterOnly: waterOnly,
+        avoidSanctuary: avoidSanctuary,
       )) {
         p += Offset(step.dx, 0);
       }
       if (!blocked(
         Rect.fromLTWH(p.dx, p.dy + step.dy, size.width, size.height),
         waterOnly: waterOnly,
+        avoidSanctuary: avoidSanctuary,
       )) {
         p += Offset(0, step.dy);
       }
@@ -1360,11 +1448,25 @@ class AdventureWorld {
     return p;
   }
 
-  Offset? spawnNear(Offset desired, Size body, {bool waterOnly = false}) {
-    if (!blocked(
-      Rect.fromLTWH(desired.dx, desired.dy, body.width, body.height),
-      waterOnly: waterOnly,
-    )) {
+  Offset? spawnNear(
+    Offset desired,
+    Size body, {
+    bool waterOnly = false,
+    bool avoidSanctuary = false,
+    bool Function(Rect)? occupied,
+  }) {
+    if (avoidSanctuary) desired = sanctuary.outside(desired, body);
+    bool available(Offset at) {
+      final candidate = at & body;
+      return !blocked(
+            candidate,
+            waterOnly: waterOnly,
+            avoidSanctuary: avoidSanctuary,
+          ) &&
+          !(occupied?.call(candidate) ?? false);
+    }
+
+    if (available(desired)) {
       return desired;
     }
     for (var radius = 24.0; radius < 200; radius += 24) {
@@ -1375,16 +1477,21 @@ class AdventureWorld {
               math.cos(i * math.pi / 6) * radius,
               math.sin(i * math.pi / 6) * radius,
             );
-        if (!blocked(
-          Rect.fromLTWH(p.dx, p.dy, body.width, body.height),
-          waterOnly: waterOnly,
-        )) {
+        if (available(p)) {
           return p;
         }
       }
     }
     return null;
   }
+
+  Offset moveEnemy(Offset from, Offset delta, Size size) =>
+      move(from, delta, size, avoidSanctuary: true);
+  bool clearEnemyLine(Offset from, Offset to, Size size) =>
+      clearLine(from, to, size, avoidSanctuary: true);
+  List<Offset> routeEnemy(Offset from, Offset to, Size size) =>
+      route(from, to, size, avoidSanctuary: true);
+  bool blocksEnemy(Rect body) => blocked(body, avoidSanctuary: true);
 
   String areaName(Offset p) {
     if (stage != WorldStage.forest) {
@@ -1413,7 +1520,12 @@ class AdventureWorld {
     return '햇살 초원';
   }
 
-  List<Offset> route(Offset from, Offset to, Size size) {
+  List<Offset> route(
+    Offset from,
+    Offset to,
+    Size size, {
+    bool avoidSanctuary = false,
+  }) {
     const grid = 32.0 * worldScale;
     final sx = (from.dx / grid).floor(), sy = (from.dy / grid).floor();
     Offset position(math.Point<int> p) => Offset(p.x * grid, p.y * grid);
@@ -1421,7 +1533,14 @@ class AdventureWorld {
     for (var dy = -1; dy <= 1; dy++) {
       for (var dx = -1; dx <= 1; dx++) {
         final point = math.Point(sx + dx, sy + dy);
-        if (clearLine(from, position(point), size)) anchors.add(point);
+        if (clearLine(
+          from,
+          position(point),
+          size,
+          avoidSanctuary: avoidSanctuary,
+        )) {
+          anchors.add(point);
+        }
       }
     }
     if (anchors.isEmpty) return [];
@@ -1459,7 +1578,9 @@ class AdventureWorld {
         final next = math.Point(p.x + d.x, p.y + d.y), g = current.cost + 1;
         if (g >= (costs[next] ?? double.infinity)) continue;
         final dest = position(next);
-        if (!clearLine(at, dest, size)) continue;
+        if (!clearLine(at, dest, size, avoidSanctuary: avoidSanctuary)) {
+          continue;
+        }
         costs[next] = g;
         parents[next] = p;
         front.add(_Node(next, g, g + (dest - to).distance / grid));

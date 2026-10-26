@@ -11,7 +11,8 @@ import 'support/test_game.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   Adventure session({HeroClass hero = HeroClass.warrior}) {
-    final s = Adventure(GameArt(), heroClass: hero)..start(TestGame());
+    final s = inCombatField(Adventure(GameArt(), heroClass: hero))
+      ..start(TestGame());
     addTearDown(s.dispose);
     s.mobs.clear();
     s.hero.position.setValues(6000, 4200);

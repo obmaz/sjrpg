@@ -44,7 +44,7 @@ void main() {
     test(
       '$heroClass stays fully visible during protection and flashes without losing body coverage',
       () async {
-        final s = Adventure(art, heroClass: heroClass);
+        final s = inCombatField(Adventure(art, heroClass: heroClass));
         s.start(TestGame());
         addTearDown(s.dispose);
         s.hero.invulnerable = 0;
@@ -64,7 +64,7 @@ void main() {
   test(
     'damage flash respects pause and ignored hits do not restart it or change health',
     () {
-      final s = Adventure(art);
+      final s = inCombatField(Adventure(art));
       s.start(TestGame());
       addTearDown(s.dispose);
       s.hurtHero(10);

@@ -14,7 +14,7 @@ void main() {
     test(
       '$hero shop stock grows at level five and locked purchases spend nothing',
       () {
-        final s = Adventure(GameArt(), heroClass: hero);
+        final s = inCombatField(Adventure(GameArt(), heroClass: hero));
         s.start(TestGame());
         addTearDown(s.dispose);
         final p = s.progress..gold = 500;
@@ -47,7 +47,7 @@ void main() {
   test(
     'training costs grow, stale prices cannot charge and levels bound repeated upgrades',
     () {
-      final s = Adventure(GameArt());
+      final s = inCombatField(Adventure(GameArt()));
       s.start(TestGame());
       addTearDown(s.dispose);
       final p = s.progress
@@ -84,7 +84,7 @@ void main() {
   test(
     'death and disposal reject every merchant purchase without changing the checkpoint',
     () {
-      final s = Adventure(GameArt());
+      final s = inCombatField(Adventure(GameArt()));
       s.start(TestGame());
       s.progress.gold = 500;
       for (final dead in [true, false]) {
@@ -107,7 +107,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      final s = Adventure(GameArt());
+      final s = inCombatField(Adventure(GameArt()));
       s.start(TestGame());
       s.pause();
       addTearDown(s.dispose);
@@ -145,7 +145,7 @@ void main() {
   test(
     'the first boss awards a rare weapon and its unique relic once, and both can travel',
     () {
-      final s = Adventure(GameArt());
+      final s = inCombatField(Adventure(GameArt()));
       s.start(TestGame());
       addTearDown(s.dispose);
       s.mobs.clear();
@@ -177,7 +177,7 @@ void main() {
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
-        final s = Adventure(GameArt());
+        final s = inCombatField(Adventure(GameArt()));
         s.start(TestGame());
         s.pause();
         addTearDown(s.dispose);

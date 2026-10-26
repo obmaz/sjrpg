@@ -254,7 +254,7 @@ class Adventure extends ChangeNotifier {
   int get stageKills => math.max(0, progress.kills - stageStartKills);
   List<QuestSite> get visibleSites => world.stage == WorldStage.sands
       ? timeCommissions
-            .where((q) => timePath == null ? q.step == 0 : q.path == timePath)
+            .where((q) => timePath != null && q.path == timePath)
             .map((q) => q.site)
             .toList()
       : world.sites;
@@ -279,8 +279,24 @@ class Adventure extends ChangeNotifier {
                 previous.step == q.step - 1 &&
                 cleansedSites.contains(previous.id),
           ));
+  TimeQuestGiver? get nearbyTimeGiver {
+    if (world.stage != WorldStage.sands) return null;
+    TimeQuestGiver? nearest;
+    var distance = 135.0;
+    for (final giver in timeQuestGivers) {
+      final d = (hero.body.center - giver.at).distance;
+      if (d < distance &&
+          world.clearLine(hero.body.center, giver.at, const ui.Size(3, 3))) {
+        distance = d;
+        nearest = giver;
+      }
+    }
+    return nearest;
+  }
+
   bool acceptCommission(CommissionDef q) {
     if (!timeCommissions.contains(q) || !canAcceptCommission(q)) return false;
+    if (timePath == null && nearbyTimeGiver?.path != q.path) return false;
     timePath = q.path;
     acceptedCommission = q.id;
     commissionStartKills = progress.kills;
@@ -500,6 +516,8 @@ class Adventure extends ChangeNotifier {
 
   final random = math.Random(52);
   bool get active => ready && !disposed && !paused && !defeated && !won;
+  bool get sheltered => world.sanctuary.protects(hero.body);
+  bool get combatAllowed => active && !sheltered;
   String get region => world.areaName(hero.position.toOffset());
   NearbyAction? get nearbyAction {
     if (riding != null) return NearbyAction.dismount;
@@ -508,7 +526,11 @@ class Adventure extends ChangeNotifier {
     if (nearbyMount != null) return NearbyAction.mount;
     final at = hero.position.toOffset();
     final shop = (at - world.merchantAt).distance;
-    final talk = (at - world.elderAt).distance;
+    final talk = world.stage == WorldStage.sands
+        ? nearbyTimeGiver == null
+              ? double.infinity
+              : (at - nearbyTimeGiver!.at).distance
+        : (at - world.elderAt).distance;
     if (talk < 135 && (shop >= 165 || talk < shop)) return NearbyAction.talk;
     if (shop < 165) return NearbyAction.shop;
     return null;
@@ -716,7 +738,7 @@ class Adventure extends ChangeNotifier {
       ref.add(EncounterStone(this, area));
     }
     wakeEnemies();
-    waveTime = 10;
+    waveTime = sheltered ? 0 : 10;
     if (!restoredEncounters) {
       spawnPack(
         initial: (hero.position.toOffset() - world.spawn).distance < 220,
@@ -745,6 +767,7 @@ class Adventure extends ChangeNotifier {
       item.tryCollect();
     }
     waveTime -= dt;
+    if (sheltered) waveTime = 0;
     notifyTime -= dt;
     if (notifyTime <= 0) {
       notifyTime = .1;
@@ -769,7 +792,7 @@ class Adventure extends ChangeNotifier {
       waveTime = math.min(waveTime, 3);
       lastPack = hero.position.toOffset();
     }
-    if (waveTime <= 0 && elapsed - lastPackSpawn >= 8) {
+    if (!sheltered && waveTime <= 0 && elapsed - lastPackSpawn >= 8) {
       spawnPack();
       waveTime = 10;
     }
@@ -803,9 +826,14 @@ class Adventure extends ChangeNotifier {
   }
 
   void spawnPack({bool initial = false}) {
-    if (!active || living >= 40 || riding?.def.waterOnly == true) {
+    if (!combatAllowed || living >= 40 || riding?.def.waterOnly == true) {
       return;
     }
+    initial =
+        initial ||
+        (_successfulPacks == 0 &&
+            progress.kills == 0 &&
+            world.stage == WorldStage.forest);
     final at = hero.position.toOffset();
     final key = encounterKey;
     final existingArea = encounterAreas[key];
@@ -850,7 +878,12 @@ class Adventure extends ChangeNotifier {
       final angle = hero.bearing + (i < 3 ? [0.0, 1.0, -1.0][i] : i * 2.4),
           r = 280.0 + (i % 5) * 38;
       final desired = initial
-          ? world.spawn + ui.Offset(-60 + (i % 3) * 62, 165 + (i % 2) * 50)
+          ? at +
+                ui.Offset(
+                      math.cos(hero.bearing + const [-.55, 0.0, .55][i % 3]),
+                      math.sin(hero.bearing + const [-.55, 0.0, .55][i % 3]),
+                    ) *
+                    (190 + (i % 2) * 55)
           : at + ui.Offset(math.cos(angle) * r, math.sin(angle) * r);
       final kind = initial && world.stage == WorldStage.forest
           ? ['goblin', 'wolf', 'goblin'][i % 3]
@@ -885,19 +918,21 @@ class Adventure extends ChangeNotifier {
     EnemyTrait trait = EnemyTrait.none,
   }) {
     final size = boss ? const ui.Size(48, 40) : const ui.Size(24, 22);
-    final p = world.spawnNear(desired, size);
-    if (p == null) return null;
-    if (mobs.any(
-      (e) =>
-          !e.isDead &&
-          !e.isRemoving &&
-          !e.encounterDormant &&
-          e.body.overlaps(
-            ui.Rect.fromLTWH(p.dx, p.dy, size.width, size.height),
+    final p = world.spawnNear(
+      desired,
+      size,
+      avoidSanctuary: true,
+      occupied: (body) =>
+          body.overlaps(hero.body) ||
+          mobs.any(
+            (enemy) =>
+                !enemy.isDead &&
+                !enemy.isRemoving &&
+                !enemy.encounterDormant &&
+                enemy.body.overlaps(body),
           ),
-    )) {
-      return null;
-    }
+    );
+    if (p == null) return null;
     final enemy = HuntEnemy(
       this,
       kind,
@@ -934,8 +969,12 @@ class Adventure extends ChangeNotifier {
     game?.add(next);
   }
 
-  void hurtHero(double damage) {
-    if (!active || hero.invulnerable > 0) return;
+  void hurtHero(double damage, {ui.Offset? origin}) {
+    if (!combatAllowed ||
+        hero.invulnerable > 0 ||
+        origin != null && world.sanctuary.blocksRay(origin, hero.body.center)) {
+      return;
+    }
     combatTime = 5;
     damage = progress.mitigate(damage, protection: hero.protection);
     if (progress.weapon.gift == WeaponGift.guardian) damage *= .92;
@@ -970,13 +1009,23 @@ class Adventure extends ChangeNotifier {
     refresh();
   }
 
-  void hit(
+  bool canHitEnemy(HuntEnemy mob, {ui.Offset? origin}) =>
+      combatAllowed &&
+      mob.combatReady &&
+      !mob.isDead &&
+      !mob.isRemoving &&
+      !world.sanctuary.protects(mob.body) &&
+      !world.sanctuary.blocksRay(hero.body.center, mob.body.center) &&
+      !world.sanctuary.blocksRay(origin ?? hero.body.center, mob.body.center);
+
+  bool hit(
     HuntEnemy mob,
     double damage,
     ui.Offset impulse, {
     bool generateRage = false,
+    ui.Offset? origin,
   }) {
-    if (!active || !mob.combatReady || mob.isDead || mob.isRemoving) return;
+    if (!canHitEnemy(mob, origin: origin)) return false;
     combatTime = 5;
     final healthBefore = mob.life.value / mob.life.max;
     mob.life.remove(damage);
@@ -1070,6 +1119,7 @@ class Adventure extends ChangeNotifier {
       }
       refresh();
     }
+    return true;
   }
 
   bool get canTrade => ready && !disposed && !defeated && progress.hp > 0;
@@ -1157,7 +1207,7 @@ class Guardian extends Player with WithCollision {
   ({int slot, String id, SkillAim? aim})? queuedCast;
   void beginAim(int slot) {
     final def = session.progress.skillAt(slot);
-    if (!session.active ||
+    if (!session.combatAllowed ||
         dashing > 0 ||
         physicalAction ||
         def == null ||
@@ -1199,6 +1249,7 @@ class Guardian extends Player with WithCollision {
         body.center - const ui.Offset(3, 3),
         ui.Offset(math.cos(angle), math.sin(angle)) * distance,
         const ui.Size(6, 6),
+        avoidSanctuary: true,
       ) +
       const ui.Offset(3, 3);
   ui.Offset meteorAimImpact(SkillAim current) => aimedImpact(
@@ -1242,9 +1293,7 @@ class Guardian extends Player with WithCollision {
     final enemies =
         session.mobs.where((m) {
           final d = m.body.center - body.center;
-          return m.combatReady &&
-              !m.isDead &&
-              !m.isRemoving &&
+          return session.canHitEnemy(m) &&
               d.distance < 185 &&
               math
                       .atan2(
@@ -1264,6 +1313,7 @@ class Guardian extends Player with WithCollision {
           ),
         );
     for (final mob in enemies.take(session.progress.skillTargetLimit(def))) {
+      if (!session.canHitEnemy(mob)) continue;
       session.hit(
         mob,
         heavyPower,
@@ -1423,10 +1473,7 @@ class Guardian extends Player with WithCollision {
           chargeTime = 0;
           break;
         }
-        if (!mob.combatReady ||
-            mob.isDead ||
-            mob.isRemoving ||
-            chargeVictims.contains(mob)) {
+        if (!session.canHitEnemy(mob) || chargeVictims.contains(mob)) {
           continue;
         }
         final swept = ui.Rect.fromPoints(before, p).inflate(42);
@@ -1437,11 +1484,13 @@ class Guardian extends Player with WithCollision {
               const ui.Size(3, 3),
             )) {
           chargeVictims.add(mob);
-          session.hit(
+          if (!session.hit(
             mob,
             chargeDamage,
             ui.Offset(math.cos(chargeAngle), math.sin(chargeAngle)) * 45,
-          );
+          )) {
+            continue;
+          }
           mob.stun = math.max(mob.stun, .4);
           session.game?.add(
             ContactSpark(
@@ -1498,7 +1547,7 @@ class Guardian extends Player with WithCollision {
   }
 
   void slash() {
-    if (!session.active ||
+    if (!session.combatAllowed ||
         attackClock > 0 ||
         castLock > 0 ||
         dashing > 0 ||
@@ -1512,9 +1561,7 @@ class Guardian extends Player with WithCollision {
         session.mobs
             .where(
               (e) =>
-                  !e.isDead &&
-                  e.combatReady &&
-                  !e.isRemoving &&
+                  session.canHitEnemy(e) &&
                   (e.body.center - body.center).distance <
                       (session.progress.heroClass == HeroClass.mage
                           ? 540
@@ -1591,7 +1638,7 @@ class Guardian extends Player with WithCollision {
 
     final melee =
         session.mobs.where((mob) {
-          if (!mob.combatReady || mob.isDead || mob.isRemoving) return false;
+          if (!session.canHitEnemy(mob)) return false;
           final d = mob.body.center - body.center;
           final diff = math.atan2(
             math.sin(math.atan2(d.dy, d.dx) - angle),
@@ -1629,7 +1676,7 @@ class Guardian extends Player with WithCollision {
   }
 
   void skill({bool secondary = false, int? slot, SkillAim? manualAim}) {
-    if (!session.active ||
+    if (!session.combatAllowed ||
         dashing > 0 ||
         physicalAction ||
         !session.ensureOnFoot()) {
@@ -1759,9 +1806,7 @@ class Guardian extends Player with WithCollision {
             session.mobs
                 .where(
                   (m) =>
-                      m.combatReady &&
-                      !m.isDead &&
-                      !m.isRemoving &&
+                      session.canHitEnemy(m) &&
                       (m.body.center - body.center).distance < 260 &&
                       session.world.clearLine(
                         body.center,
@@ -2324,7 +2369,7 @@ class HuntEnemy extends Enemy with WithCollision {
         ? _knockback
         : _knockback * (1 - math.exp(-30 * dt));
     _knockback -= step;
-    final at = session.world.move(position.toOffset(), step, body.size);
+    final at = session.world.moveEnemy(position.toOffset(), step, body.size);
     position.setValues(at.dx, at.dy);
     lastClearPosition = at;
   }
@@ -2358,7 +2403,7 @@ class HuntEnemy extends Enemy with WithCollision {
     await add(RectangleHitbox(size: size));
     lastClearPosition = position.toOffset();
     collision.onMovementBlockedListener((other, data) {
-      if (session.world.blocked(body)) {
+      if (session.world.blocksEnemy(body)) {
         final safe = lastClearPosition;
         if (safe != null) position.setValues(safe.dx, safe.dy);
       }
@@ -2389,6 +2434,18 @@ class HuntEnemy extends Enemy with WithCollision {
     attackClock -= dt;
     replan -= dt;
     slamClock -= dt;
+    if (session.sheltered) {
+      stop();
+      if (pounceRemaining > 0) finishPounce();
+      windup = 0;
+      slamTarget = null;
+      bossAttack = null;
+      route.clear();
+      routeGoal = null;
+      attackClock = math.max(attackClock, .35);
+      slamClock = math.max(slamClock, 1);
+      return;
+    }
     if (target.distance > 950 && !(boss && windup > 0)) {
       stop();
       return;
@@ -2436,7 +2493,7 @@ class HuntEnemy extends Enemy with WithCollision {
         );
         if (target.distance < sweepRange &&
             difference.abs() < sweepAngle &&
-            session.world.clearLine(
+            session.world.clearEnemyLine(
               body.center,
               session.hero.body.center,
               const ui.Size(3, 3),
@@ -2492,13 +2549,13 @@ class HuntEnemy extends Enemy with WithCollision {
           if (attack.zones.any(
                 (zone) =>
                     zone.contains(hero) &&
-                    session.world.clearLine(
+                    session.world.clearEnemyLine(
                       zone.center,
                       hero,
                       const ui.Size(3, 3),
                     ),
               ) &&
-              session.world.clearLine(
+              session.world.clearEnemyLine(
                 attack.origin,
                 hero,
                 const ui.Size(3, 3),
@@ -2520,7 +2577,7 @@ class HuntEnemy extends Enemy with WithCollision {
         attackClock <= 0 &&
         target.distance > 75 &&
         target.distance < pounceRange + 10 &&
-        session.world.clearLine(
+        session.world.clearEnemyLine(
           position.toOffset(),
           session.hero.position.toOffset(),
           body.size,
@@ -2539,7 +2596,7 @@ class HuntEnemy extends Enemy with WithCollision {
         slamClock <= 0 &&
         target.distance <
             (session.world.stage == WorldStage.past ? 260 : 340) &&
-        session.world.clearLine(
+        session.world.clearEnemyLine(
           body.center,
           session.hero.body.center,
           const ui.Size(3, 3),
@@ -2566,7 +2623,7 @@ class HuntEnemy extends Enemy with WithCollision {
                 : usesSweep
                 ? sweepRange - 18
                 : 42) &&
-        session.world.clearLine(
+        session.world.clearEnemyLine(
           body.center,
           session.hero.body.center,
           const ui.Size(3, 3),
@@ -2594,21 +2651,21 @@ class HuntEnemy extends Enemy with WithCollision {
       }
     } else if (hurt <= 0) {
       var toward = session.hero.position.toOffset();
-      final direct = session.world.clearLine(before, toward, body.size);
+      final direct = session.world.clearEnemyLine(before, toward, body.size);
       if (!direct) {
         final targetMoved =
             routeGoal == null || (toward - routeGoal!).distance > 24;
         final blockedStep =
             route.isNotEmpty &&
-            !session.world.clearLine(before, route.first, body.size);
+            !session.world.clearEnemyLine(before, route.first, body.size);
         if ((replan <= 0 && (route.isEmpty || targetMoved)) || blockedStep) {
-          route = session.world.route(before, toward, body.size);
+          route = session.world.routeEnemy(before, toward, body.size);
           routeGoal = toward;
           replan = route.isEmpty ? 1.2 : .6;
         }
         while (route.isNotEmpty &&
             (route.first - before).distance < .05 &&
-            session.world.clearLine(before, route.first, body.size)) {
+            session.world.clearEnemyLine(before, route.first, body.size)) {
           before = route.removeAt(0);
           position.setValues(before.dx, before.dy);
         }
@@ -2637,7 +2694,7 @@ class HuntEnemy extends Enemy with WithCollision {
       stop();
     }
     super.update(dt);
-    final next = session.world.move(
+    final next = session.world.moveEnemy(
       before,
       position.toOffset() - before,
       body.size,
@@ -2664,14 +2721,14 @@ class HuntEnemy extends Enemy with WithCollision {
         (distance / steps);
     for (var i = 0; i < steps; i++) {
       final from = position.toOffset();
-      final at = session.world.move(from, step, body.size);
+      final at = session.world.moveEnemy(from, step, body.size);
       if ((at - from).distance < step.distance * .5) {
         finishPounce();
         break;
       }
       final candidate = ui.Rect.fromLTWH(at.dx, at.dy, size.x, size.y);
       if (candidate.overlaps(session.hero.body) &&
-          session.world.clearLine(
+          session.world.clearEnemyLine(
             body.center,
             session.hero.body.center,
             const ui.Size(3, 3),

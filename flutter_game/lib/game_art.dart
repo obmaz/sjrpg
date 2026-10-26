@@ -633,6 +633,23 @@ class TerrainArt {
         ui.Paint()..filterQuality = ui.FilterQuality.medium,
       );
     }
+    final sanctuary = world.sanctuary;
+    if (sanctuary.protects(area.inflate(4))) {
+      final color = world.stage.sanctuaryColor;
+      c.drawCircle(
+        sanctuary.center,
+        sanctuary.radius,
+        ui.Paint()..color = color.withValues(alpha: .035),
+      );
+      c.drawCircle(
+        sanctuary.center,
+        sanctuary.radius,
+        ui.Paint()
+          ..color = color.withValues(alpha: .45)
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 2.5,
+      );
+    }
     // Deterministic dappled light is presentation-only and never consumes gameplay RNG.
     final random = math.Random(col * 739 + row * 838 + world.seed);
     for (var i = 0; i < 5; i++) {

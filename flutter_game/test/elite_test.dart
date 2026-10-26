@@ -9,7 +9,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Adventure s;
   setUp(() {
-    s = Adventure(GameArt());
+    s = inCombatField(Adventure(GameArt()));
     s.start(TestGame());
     s.mobs.clear();
     s.hero.position.setValues(6000, 4200);
@@ -107,7 +107,7 @@ void main() {
     test(
       'elite reward grants one magic-or-better drop and one kill for $hero',
       () {
-        final session = Adventure(GameArt(), heroClass: hero);
+        final session = inCombatField(Adventure(GameArt(), heroClass: hero));
         session.start(TestGame());
         addTearDown(session.dispose);
         session.mobs.clear();

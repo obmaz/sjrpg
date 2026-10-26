@@ -202,7 +202,7 @@ class GameHud extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  session.region,
+                  session.sheltered ? '안전 구역' : session.region,
                   style: const TextStyle(color: cream, fontSize: 12),
                 ),
               ),
@@ -478,6 +478,21 @@ class MapPainter extends CustomPainter {
       _terrain(c, Path()..addRect(bridge), road, const Color(0xffdac489));
     }
 
+    final sanctuary = session.world.sanctuary;
+    c.drawCircle(
+      sanctuary.center,
+      sanctuary.radius,
+      Paint()
+        ..color = session.world.stage.sanctuaryColor.withValues(alpha: .08),
+    );
+    c.drawCircle(
+      sanctuary.center,
+      sanctuary.radius,
+      Paint()
+        ..color = session.world.stage.sanctuaryColor.withValues(alpha: .65)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = (round ? 10 : 30 * markerScale),
+    );
     if (round) {
       for (final mob in session.mobs) {
         if (!mob.combatReady || mob.isDead || mob.isRemoving || mob.boss) {
@@ -544,17 +559,33 @@ class MapPainter extends CustomPainter {
     final shopPoint = project(session.world.merchantAt),
         healPoint = project(session.world.healAt);
     final groupServices = (shopPoint - healPoint).distance < 40 * markerScale;
-    final services = groupServices
-        ? [(project(session.world.spawn), '거점', Icons.cottage_rounded, gold)]
-        : [
-            (shopPoint, '상점', Icons.storefront_rounded, gold),
-            (
-              healPoint,
-              '회복',
-              Icons.water_drop_rounded,
-              const Color(0xff8ce6bd),
-            ),
-          ];
+    final services = [
+      ...(groupServices
+          ? [(project(session.world.spawn), '거점', Icons.cottage_rounded, gold)]
+          : [
+              (shopPoint, '상점', Icons.storefront_rounded, gold),
+              (
+                healPoint,
+                '회복',
+                Icons.water_drop_rounded,
+                const Color(0xff8ce6bd),
+              ),
+            ]),
+      if (session.world.stage == WorldStage.sands)
+        for (final giver in timeQuestGivers)
+          (
+            project(giver.at),
+            giver.name,
+            giver.path == TimePath.past
+                ? Icons.auto_stories_rounded
+                : Icons.cell_tower_rounded,
+            session.timePath != null && session.timePath != giver.path
+                ? const Color(0xff8faaa3)
+                : giver.path == TimePath.past
+                ? gold
+                : const Color(0xff92e7f2),
+          ),
+    ];
     final occupied = <Offset>[heroPoint];
     for (final (anchor, label, icon, color) in services) {
       final radius = (round ? 7.0 : 10.0) * markerScale;

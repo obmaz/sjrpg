@@ -11,7 +11,7 @@ void main() {
   late Adventure s;
   late TestGame game;
   setUp(() {
-    s = Adventure(GameArt());
+    s = inCombatField(Adventure(GameArt()));
     game = TestGame();
     s.start(game);
   });
@@ -121,24 +121,37 @@ void main() {
     () {
       s.progress.hp = 80;
       s.syncLife();
+      s.hero.position.setValues(s.world.healAt.dx, s.world.healAt.dy + 60);
       s.tick(1);
       expect(s.progress.hp, 84);
+      inCombatField(s);
       s.hurtHero(20);
       final hurt = s.progress.hp;
+      s.hero.position.setValues(s.world.healAt.dx, s.world.healAt.dy + 60);
       s.tick(1);
       expect(s.progress.hp, hurt);
+      inCombatField(s);
+      s.wakeEnemies();
       s.progress.kills = 35;
-      s.hit(s.mobs.firstWhere((m) => !m.isDead), 99999, Offset.zero);
+      s.hit(
+        s.mobs.firstWhere((m) => m.combatReady && !m.isDead),
+        99999,
+        Offset.zero,
+      );
       expect(s.progress.healingPotions, 4);
       expect(s.progress.energyPotions, 2);
       s.progress.kills = 47;
-      s.hit(s.mobs.firstWhere((m) => !m.isDead), 99999, Offset.zero);
+      s.hit(
+        s.mobs.firstWhere((m) => m.combatReady && !m.isDead),
+        99999,
+        Offset.zero,
+      );
       expect(s.progress.healingPotions, 4);
       expect(s.progress.energyPotions, 3);
     },
   );
   test('moving aim assistance does not steer the joystick direction', () {
-    final mage = Adventure(GameArt(), heroClass: HeroClass.mage);
+    final mage = inCombatField(Adventure(GameArt(), heroClass: HeroClass.mage));
     mage.start(TestGame());
     addTearDown(mage.dispose);
     mage.mobs.clear();

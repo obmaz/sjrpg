@@ -5,6 +5,7 @@ import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/back_actions.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/main.dart';
+import 'support/test_game.dart';
 
 void main() {
   testWidgets(
@@ -34,6 +35,7 @@ void main() {
             tester.widget<BonfireWidget>(find.byType(BonfireWidget)).player!
                 as Guardian;
         expect(hero.session.ready, true);
+        inCombatField(hero.session);
         hero.invulnerable = 0;
         hero.session.hurtHero(100000);
         await tester.pump();

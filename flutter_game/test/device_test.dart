@@ -133,7 +133,7 @@ void main() {
       var time = Duration.zero;
       final settings = DeviceSettings(bridge: bridge, now: () => time);
       addTearDown(settings.dispose);
-      final s = Adventure(GameArt(), device: settings);
+      final s = inCombatField(Adventure(GameArt(), device: settings));
       s.start(TestGame());
       s.hit(s.mobs.first, 5, const Offset(0, 0));
       expect(bridge.patterns, [
@@ -164,7 +164,7 @@ void main() {
     final bridge = FakeDevice()..failVibration = true;
     final settings = DeviceSettings(bridge: bridge);
     addTearDown(settings.dispose);
-    final s = Adventure(GameArt(), device: settings);
+    final s = inCombatField(Adventure(GameArt(), device: settings));
     s.start(TestGame());
     addTearDown(s.dispose);
     s.hit(s.mobs.first, 99999, const Offset(0, 0));

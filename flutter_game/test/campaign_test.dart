@@ -116,6 +116,15 @@ void main() {
     expect(worlds.map((w) => w.trails.first.points.first).toSet().length, 4);
     for (final stage in WorldStage.values.skip(1)) {
       final s = session(stage);
+      final field = s.world.trails.first.points.firstWhere(
+        (point) =>
+            (point - s.world.sanctuary.center).distance >
+                s.world.sanctuary.radius + 900 &&
+            !s.world.blocked(
+              Rect.fromCenter(center: point, width: 28, height: 24),
+            ),
+      );
+      s.hero.position.setValues(field.dx - 14, field.dy - 12);
       s.spawnPack(initial: true);
       final kinds = s.mobs.map((m) => m.kind).toSet();
       expect(kinds, isNotEmpty);
@@ -150,6 +159,10 @@ void main() {
         expect(timeCommissions.where(s.canAcceptCommission).length, 2);
         expect(s.acceptCommission(branch.last), false);
         for (final q in branch) {
+          if (q.step == 0) {
+            final giver = timeQuestGivers.firstWhere((g) => g.path == path);
+            s.hero.position.setValues(giver.at.dx - 14, giver.at.dy - 12);
+          }
           expect(s.acceptCommission(q), true);
           expect(s.acceptCommission(other.first), false);
           expect(s.acceptCommission(q), false);
@@ -223,6 +236,8 @@ void main() {
     'unknown stages, cross-branch completions and skipped quest chains are rejected',
     () {
       final s = session(WorldStage.sands);
+      final giver = timeQuestGivers.first;
+      s.hero.position.setValues(giver.at.dx - 14, giver.at.dy - 12);
       expect(s.acceptCommission(timeCommissions.first), true);
       final source = GameCheckpoint.capture(s)!.data;
       for (final patch in [

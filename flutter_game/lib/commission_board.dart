@@ -7,6 +7,7 @@ import 'game_art.dart';
 import 'game_ui.dart';
 import 'panel_controls.dart';
 import 'quest_cards.dart';
+import 'quest_guide.dart';
 import 'world_model.dart';
 
 class CommissionBoard extends StatelessWidget {
@@ -14,49 +15,37 @@ class CommissionBoard extends StatelessWidget {
     required this.session,
     required this.onCommit,
     this.onAdvance,
+    this.offeredPath,
     super.key,
   });
   final Adventure session;
   final VoidCallback onCommit;
   final VoidCallback? onAdvance;
+  final TimePath? offeredPath;
   @override
   Widget build(BuildContext context) {
     final stage = session.world.stage;
     if (stage == WorldStage.sands && session.timePath == null) {
+      final giver = timeQuestGivers
+          .where((g) => g.path == offeredPath)
+          .firstOrNull;
+      if (giver == null) {
+        return const Text(
+          '야영지의 의뢰인을 찾아 대화하세요.\n서쪽 기록관의 의뢰는 제3-1장 고대 왕국으로, 동쪽 통신관의 의뢰는 제3-2장 사이버펑크로 이어집니다.\n\n첫 의뢰를 받은 줄기만 진행할 수 있습니다. 제2장 사막에서 네 의뢰와 지역 정화·감시자 토벌을 마치면 다음 시대로 이동합니다.',
+          style: TextStyle(color: cream, fontSize: 15, height: 1.6),
+        );
+      }
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            '제2장은 사막 유적입니다. 의뢰 4개·지역 정화·감시자 토벌을 마치면 선택한 제3장으로 이동합니다.',
-            style: TextStyle(color: cream, fontSize: 15, height: 1.5),
+          Text(
+            '${giver.name}의 첫 의뢰입니다. 제2장 사막의 네 의뢰와 지역 정화·감시자 토벌을 마치면 ${giver.destination}으로 이동합니다.',
+            style: const TextStyle(color: cream, fontSize: 15, height: 1.5),
           ),
           const SizedBox(height: 14),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final choices = [
-                for (final path in TimePath.values)
-                  _choice(
-                    timeCommissions.firstWhere((q) => q.path == path),
-                    bannerHeight: MediaQuery.sizeOf(context).height < 500
-                        ? 80
-                        : 104,
-                  ),
-              ];
-              if (constraints.maxWidth >= 560) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: choices[0]),
-                    const SizedBox(width: 14),
-                    Expanded(child: choices[1]),
-                  ],
-                );
-              }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: choices,
-              );
-            },
+          _choice(
+            timeCommissions.firstWhere((q) => q.path == giver.path),
+            bannerHeight: MediaQuery.sizeOf(context).height < 500 ? 80 : 104,
           ),
           const Text(
             '선택한 줄기에서 의뢰 네 개가 이어집니다. 다른 시간축은 잠깁니다.',
@@ -67,6 +56,18 @@ class CommissionBoard extends StatelessWidget {
             ),
           ),
         ],
+      );
+    }
+
+    if (stage == WorldStage.sands &&
+        offeredPath != null &&
+        offeredPath != session.timePath) {
+      final owner = timeQuestGivers.firstWhere(
+        (g) => g.path == session.timePath,
+      );
+      return Text(
+        '이미 ${owner.name}의 의뢰를 시작했습니다. 다른 시대의 의뢰를 함께 받을 수 없습니다.\n\n${session.mainQuestNext}',
+        style: const TextStyle(color: cream, fontSize: 15, height: 1.6),
       );
     }
 

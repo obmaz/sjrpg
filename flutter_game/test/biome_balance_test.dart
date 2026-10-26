@@ -56,7 +56,7 @@ void main() {
       );
       expect(biomeEnemies(WorldStage.past), contains('wraith'));
       expect(biomeEnemies(WorldStage.future), contains('drone'));
-      final s = Adventure(GameArt())..start(TestGame());
+      final s = inCombatField(Adventure(GameArt()))..start(TestGame());
       addTearDown(s.dispose);
       s.mobs.clear();
       for (final (i, kind) in ['boar', 'basilisk', 'wraith', 'drone'].indexed) {
@@ -84,7 +84,7 @@ void main() {
     },
   );
   test('potions drop at the reduced kill intervals, not every short pack', () {
-    final s = Adventure(GameArt())..start(TestGame());
+    final s = inCombatField(Adventure(GameArt()))..start(TestGame());
     addTearDown(s.dispose);
     s.mobs.clear();
     final health = s.progress.healingPotions, mana = s.progress.energyPotions;

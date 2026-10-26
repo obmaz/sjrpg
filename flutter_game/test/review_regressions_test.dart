@@ -11,7 +11,7 @@ import 'support/test_game.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   Adventure session() {
-    final s = Adventure(GameArt())..start(TestGame());
+    final s = inCombatField(Adventure(GameArt()))..start(TestGame());
     addTearDown(s.dispose);
     return s;
   }
@@ -45,7 +45,7 @@ void main() {
       s.riding = s.mounts.first;
       expect(s.nearbyQuestGuide, null);
       expect(s.nearbyAction, NearbyAction.dismount);
-      final sands = Adventure(GameArt(), stage: WorldStage.sands)
+      final sands = inCombatField(Adventure(GameArt(), stage: WorldStage.sands))
         ..start(TestGame());
       addTearDown(sands.dispose);
       final q = timeCommissions.first;

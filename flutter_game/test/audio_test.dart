@@ -109,7 +109,8 @@ void main() {
       final bridge = FakeAudio();
       final audio = AudioSettings(bridge: bridge, now: () => time);
       addTearDown(audio.dispose);
-      final s = Adventure(GameArt(), audio: audio)..start(TestGame());
+      final s = inCombatField(Adventure(GameArt(), audio: audio))
+        ..start(TestGame());
       s.hero.slash();
       s.hero.slash();
       expect(bridge.sounds, [EffectSound.slash]);
@@ -151,8 +152,9 @@ void main() {
     var time = Duration.zero;
     final audio = AudioSettings(bridge: bridge, now: () => time);
     addTearDown(audio.dispose);
-    final s = Adventure(GameArt(), heroClass: HeroClass.mage, audio: audio)
-      ..start(TestGame());
+    final s = inCombatField(
+      Adventure(GameArt(), heroClass: HeroClass.mage, audio: audio),
+    )..start(TestGame());
     addTearDown(s.dispose);
     for (final (id, sound) in [
       ('wand', EffectSound.fire),

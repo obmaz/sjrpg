@@ -28,7 +28,7 @@ void main() {
   test(
     'blocked boss spawns retry at most once per simulated second and preserve clearance',
     () {
-      final s = CountingAdventure()..start(TestGame());
+      final s = inCombatField(CountingAdventure())..start(TestGame());
       addTearDown(s.dispose);
       s.mobs.clear();
       s.hero.position.setValues(6000, 4200);

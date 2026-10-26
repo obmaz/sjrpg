@@ -47,9 +47,13 @@ void main() {
       final s = session(WorldStage.sands),
           past = timeCommissions.first,
           future = timeCommissions.firstWhere((q) => q.path == TimePath.future);
-      expect(s.toggleTrackedSite(past.site), true);
+      expect(s.toggleTrackedSite(past.site), false);
       expect(s.timePath, null);
       expect(s.acceptedCommission, null);
+      final giver = timeQuestGivers.firstWhere(
+        (g) => g.path == TimePath.future,
+      );
+      s.hero.position.setValues(giver.at.dx - 14, giver.at.dy - 12);
       expect(s.acceptCommission(future), true);
       expect(s.trackedSite, null);
       final next = timeCommissions.firstWhere(

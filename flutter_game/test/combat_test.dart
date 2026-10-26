@@ -11,7 +11,7 @@ void main() {
   late Adventure session;
   late TestGame game;
   setUp(() {
-    session = Adventure(GameArt());
+    session = inCombatField(Adventure(GameArt()));
     game = TestGame();
     session.start(game);
   });
@@ -131,24 +131,43 @@ void main() {
     },
   );
   test(
-    'large enemies can round the fountain without stalling at a narrow corner',
+    'large enemies wait outside the sanctuary and pursue an exposed hero again',
     () {
-      session.hero.invulnerable = 999;
       for (final from in const [
         Offset(3664, 2820),
         Offset(3664, 2890),
         Offset(3940, 2810),
       ]) {
         session.mobs.clear();
+        session.hero.position.setValues(
+          session.world.spawn.dx,
+          session.world.spawn.dy,
+        );
+        session.hero.invulnerable = 0;
+        final hp = session.progress.hp;
         final enemy = session.spawnEnemy(
           'golem',
           from * worldScale,
           boss: true,
         )!;
         if (from.dx > 3900) enemy.speed = 12;
-        for (var i = 0; i < 3600; i++) {
+        for (var i = 0; i < 120; i++) {
           enemy.update(.05);
-          expect(session.world.blocked(enemy.body), false);
+          expect(session.world.blocksEnemy(enemy.body), false);
+        }
+        expect(session.progress.hp, hp);
+        expect(enemy.windup, 0);
+        final outside = session.world.spawnNear(
+          enemy.body.topLeft + const Offset(80, 0),
+          session.hero.body.size,
+          avoidSanctuary: true,
+          occupied: (body) => body.overlaps(enemy.body),
+        )!;
+        session.hero.position.setValues(outside.dx, outside.dy);
+        session.hero.invulnerable = 999;
+        for (var i = 0; i < 300; i++) {
+          enemy.update(.05);
+          expect(session.world.blocksEnemy(enemy.body), false);
           if ((enemy.body.center - session.hero.body.center).distance < 64) {
             break;
           }
@@ -156,7 +175,6 @@ void main() {
         expect(
           (enemy.body.center - session.hero.body.center).distance,
           lessThan(64),
-          reason: 'boss from $from stopped at ${enemy.position}',
         );
       }
     },

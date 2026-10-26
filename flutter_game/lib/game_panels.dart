@@ -27,6 +27,7 @@ class AdventurePanel extends StatefulWidget {
     this.onAdvance,
     this.onCheckpoint,
     this.backActions,
+    this.offeredPath,
     super.key,
   });
   final Adventure session;
@@ -35,6 +36,7 @@ class AdventurePanel extends StatefulWidget {
   final VoidCallback? onRetryCheckpoint;
   final VoidCallback? onAdvance, onCheckpoint;
   final BackActions? backActions;
+  final TimePath? offeredPath;
   @override
   State<AdventurePanel> createState() => _AdventurePanelState();
 }
@@ -45,7 +47,8 @@ class _AdventurePanelState extends State<AdventurePanel> {
   @override
   void didUpdateWidget(covariant AdventurePanel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.name != widget.name) {
+    if (oldWidget.name != widget.name ||
+        oldWidget.offeredPath != widget.offeredPath) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && panelScroll.hasClients) panelScroll.jumpTo(0);
       });
@@ -83,10 +86,6 @@ class _AdventurePanelState extends State<AdventurePanel> {
         backActions: widget.backActions,
       );
     }
-    final choosingTimePath =
-        (name == 'journal' || name == 'talk') &&
-        s.world.stage == WorldStage.sands &&
-        s.timePath == null;
     final result = name == 'victory' || name == 'defeat';
     final canAdvance =
         (name == 'victory' || name == 'journal' || name == 'talk') &&
@@ -111,7 +110,13 @@ class _AdventurePanelState extends State<AdventurePanel> {
           'map': '모험 지도',
           'settings': '모험 설정',
           'shop': '상점',
-          'talk': s.world.stage == WorldStage.forest ? '숲의 현자' : '의뢰 게시판',
+          'talk': s.world.stage == WorldStage.forest
+              ? '숲의 현자'
+              : s.world.stage == WorldStage.sands && widget.offeredPath != null
+              ? timeQuestGivers
+                    .firstWhere((g) => g.path == widget.offeredPath)
+                    .name
+              : '의뢰 게시판',
           'pause': '잠시 쉬어가기',
           'defeat': '쓰러진 수호자',
           'victory': s.world.stage == WorldStage.forest ? '첫 스테이지 정화' : '의뢰 해결',
@@ -123,6 +128,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
       body = [
         CommissionBoard(
           session: s,
+          offeredPath: name == 'talk' ? widget.offeredPath : null,
           onAdvance: canAdvance ? null : widget.onAdvance,
           onCommit: () {
             widget.onCheckpoint?.call();
@@ -376,7 +382,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
             padding: const EdgeInsets.all(12),
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                maxWidth: choosingTimePath ? 720 : 500,
+                maxWidth: 500,
                 maxHeight: media.size.height - media.padding.vertical - 24,
               ),
               child: FramedSurface(

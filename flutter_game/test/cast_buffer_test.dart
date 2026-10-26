@@ -9,7 +9,8 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Adventure s;
   setUp(() {
-    s = Adventure(GameArt(), heroClass: HeroClass.mage)..start(TestGame());
+    s = inCombatField(Adventure(GameArt(), heroClass: HeroClass.mage))
+      ..start(TestGame());
     s.mobs.clear();
     s.progress.gainXp(1000);
     for (final id in [
@@ -102,7 +103,9 @@ void main() {
     'basic bolt waits for the release pose, follows the casting origin and pauses with the hero',
     () {
       final game = TestGame();
-      final mage = Adventure(GameArt(), heroClass: HeroClass.mage)..start(game);
+      final mage = inCombatField(
+        Adventure(GameArt(), heroClass: HeroClass.mage),
+      )..start(game);
       addTearDown(mage.dispose);
       mage.mobs.clear();
       mage.hero.position.setValues(6000, 4200);
@@ -130,7 +133,8 @@ void main() {
   );
   test('rolling cancels an unreleased basic bolt', () {
     final game = TestGame();
-    final mage = Adventure(GameArt(), heroClass: HeroClass.mage)..start(game);
+    final mage = inCombatField(Adventure(GameArt(), heroClass: HeroClass.mage))
+      ..start(game);
     addTearDown(mage.dispose);
     mage.mobs.clear();
     mage.hero.slash();
