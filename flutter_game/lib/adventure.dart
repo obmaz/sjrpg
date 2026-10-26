@@ -11,6 +11,8 @@ import 'battle_effects.dart';
 import 'boss_attacks.dart';
 import 'destructible_chest.dart';
 import 'device_settings.dart';
+import 'effect_visibility.dart';
+import 'encounter_beacon_art.dart';
 import 'encounters.dart';
 import 'enemy_catalog.dart';
 import 'enemy_motion.dart';
@@ -436,6 +438,7 @@ class Adventure extends ChangeNotifier {
   int buildRevision = 0;
   int _successfulPacks = 0;
   final encounterAreas = <String, EncounterArea>{};
+  final _encounterStones = <EncounterStone>{};
   final dormantEnemies = <Map<String, dynamic>>[];
   bool restoredEncounters = false;
   double lastEnemyWake = -1;
@@ -1371,6 +1374,10 @@ class Adventure extends ChangeNotifier {
     for (final text in texts) {
       text.releaseText();
     }
+    for (final stone in _encounterStones) {
+      stone.releaseHint();
+    }
+    _encounterStones.clear();
     audio.stop();
     device.cancel();
     releaseInput();
@@ -3578,32 +3585,102 @@ class BattleText extends GameComponent {
   }
 }
 
-class EncounterStone extends GameComponent {
+class EncounterStone extends GameComponent with EffectVisibility {
   EncounterStone(this.session, this.area) {
+    session._encounterStones.add(this);
     position = Vector2(area.stone.dx - 22, area.stone.dy - 48);
     size = Vector2(44, 48);
   }
   final Adventure session;
   final EncounterArea area;
+  final _spritePaint = ui.Paint();
+  final _shadowPaint = ui.Paint()..color = const ui.Color(0x40000000);
+  final _dotPaint = ui.Paint();
+  final _hintBackingPaint = ui.Paint()..color = const ui.Color(0xa6000000);
+  ui.Paragraph? _hint;
+  ui.RRect? _hintBacking;
+  int? _hintHits;
+
   @override
   int get priority => area.stone.dy.toInt();
   @override
+  bool get isVisible => true;
+  @override
+  ui.Rect get effectBounds => EncounterBeaconArt.visualBounds.shift(area.stone);
+
+  void releaseHint() {
+    _hint?.dispose();
+    _hint = null;
+    _hintBacking = null;
+    _hintHits = null;
+  }
+
+  @override
+  void onRemove() {
+    releaseHint();
+    session._encounterStones.remove(this);
+    super.onRemove();
+  }
+
+  @override
   void render(ui.Canvas canvas) {
-    if (area.waves < EncounterArea.waveLimit) return;
+    if (session.disposed || area.waves < EncounterArea.waveLimit) return;
     final ready = !session.areaHasEnemies(area.key);
+    canvas.save();
+    canvas.translate(22, 48);
     if (ready && (session.hero.body.center - area.stone).distance < 220) {
-      session.art.text(
+      if (_hint == null || _hintHits != area.stoneHits) {
+        _hint?.dispose();
+        _hint = session.art.layoutText(
+          '공격해 재소환 · ${area.stoneHits}/3',
+          size: 11,
+          color: const ui.Color(0xffb9e9d9),
+        );
+        _hintBacking = ui.RRect.fromRectAndRadius(
+          ui.Rect.fromLTWH(
+            -_hint!.longestLine / 2 - 6,
+            EncounterBeaconArt.hintTextOrigin.dy - 2,
+            _hint!.longestLine + 12,
+            _hint!.height + 4,
+          ),
+          const ui.Radius.circular(4),
+        );
+        _hintHits = area.stoneHits;
+      }
+      canvas.drawRRect(_hintBacking!, _hintBackingPaint);
+      canvas.drawParagraph(_hint!, EncounterBeaconArt.hintTextOrigin);
+    }
+    canvas.drawOval(EncounterBeaconArt.shadowBounds, _shadowPaint);
+    final image = session.art.images['encounter-beacons'];
+    if (image != null) {
+      EncounterBeaconArt.draw(
         canvas,
-        '공격해 재소환 · ${area.stoneHits}/3',
-        const ui.Offset(22, -14),
-        size: 11,
-        color: const ui.Color(0xffb9e9d9),
+        image,
+        session.world.stage,
+        ready: ready,
+        paint: _spritePaint,
+      );
+    } else {
+      canvas.save();
+      canvas.translate(-22, -48);
+      _renderFallback(canvas, ready);
+      canvas.restore();
+    }
+    final glow = ready
+        ? const ui.Color(0xff9debd8)
+        : const ui.Color(0xff52635e);
+    for (var i = 0; i < 3; i++) {
+      canvas.drawCircle(
+        ui.Offset(-9 + i * 9, 3),
+        2,
+        _dotPaint
+          ..color = i < area.stoneHits ? glow : const ui.Color(0xff344b45),
       );
     }
-    canvas.drawOval(
-      const ui.Rect.fromLTWH(-6, 34, 56, 18),
-      ui.Paint()..color = const ui.Color(0x55000000),
-    );
+    canvas.restore();
+  }
+
+  void _renderFallback(ui.Canvas canvas, bool ready) {
     final shape = ui.Path()
       ..moveTo(6, 44)
       ..lineTo(9, 8)
@@ -3619,9 +3696,6 @@ class EncounterStone extends GameComponent {
         ..style = ui.PaintingStyle.stroke
         ..strokeWidth = 2,
     );
-    final glow = ready
-        ? const ui.Color(0xff9debd8)
-        : const ui.Color(0xff52635e);
     canvas.drawPath(
       ui.Path()
         ..moveTo(23, 10)
@@ -3630,17 +3704,11 @@ class EncounterStone extends GameComponent {
         ..lineTo(30, 23)
         ..close(),
       ui.Paint()
-        ..color = glow
+        ..color = ready
+            ? const ui.Color(0xff9debd8)
+            : const ui.Color(0xff52635e)
         ..style = ui.PaintingStyle.stroke
         ..strokeWidth = 2.5,
     );
-    for (var i = 0; i < 3; i++) {
-      canvas.drawCircle(
-        ui.Offset(14 + i * 9, 40),
-        2,
-        ui.Paint()
-          ..color = i < area.stoneHits ? glow : const ui.Color(0xff344b45),
-      );
-    }
   }
 }

@@ -52,6 +52,7 @@ class GameArt {
             'fx-steel-whirlwind',
             'victory-crest',
             'well-portal',
+            'encounter-beacons',
             'fx-warcry',
             'dodge-icon',
             'actors-roll',

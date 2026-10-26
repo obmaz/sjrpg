@@ -61,6 +61,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'fx-steel-whirlwind',
         'victory-crest',
         'well-portal',
+        'encounter-beacons',
         'fx-warcry',
         'passive-icons',
         'quest-sites',
