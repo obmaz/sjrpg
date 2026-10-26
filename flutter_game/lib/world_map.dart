@@ -67,119 +67,137 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
   }
 
   @override
-  Widget build(BuildContext context) => FramedSurface(
-    art: widget.session.art,
-    compact: true,
+  Widget build(BuildContext context) => ColoredBox(
+    color: const Color(0xcc040d10),
     child: SafeArea(
-      child: Column(
-        children: [
-          GamePanelHeader(
-            title: '모험 지도',
-            subtitle: widget.session.world.stage.title,
-            closeLabel: '지도 닫기',
-            onClose: widget.onClose,
-          ),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, box) {
-                final size = Size(box.maxWidth, box.maxHeight);
-                if (viewport != size) {
-                  viewport = size;
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) center();
-                  });
-                }
-                return ClipRect(
-                  child: InteractiveViewer(
-                    transformationController: transform,
-                    constrained: false,
-                    boundaryMargin: const EdgeInsets.all(180),
-                    minScale: .15,
-                    maxScale: 6,
-                    child: SizedBox(
-                      width: canvas.width,
-                      height: canvas.height,
-                      child: ValueListenableBuilder<Matrix4>(
-                        valueListenable: transform,
-                        builder: (context, matrix, _) => CustomPaint(
-                          painter: MapPainter(
-                            widget.session,
-                            round: false,
-                            markerScale: 1 / matrix.storage[0].abs(),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 680),
+            child: FramedSurface(
+              art: widget.session.art,
+              compact: true,
+              child: Column(
+                children: [
+                  GamePanelHeader(
+                    title: '모험 지도',
+                    subtitle: widget.session.world.stage.title,
+                    closeLabel: '지도 닫기',
+                    onClose: widget.onClose,
+                  ),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, box) {
+                        final size = Size(box.maxWidth, box.maxHeight);
+                        if (viewport != size) {
+                          viewport = size;
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (mounted) center(overview: true);
+                          });
+                        }
+                        return ClipRect(
+                          child: InteractiveViewer(
+                            transformationController: transform,
+                            constrained: false,
+                            boundaryMargin: const EdgeInsets.all(
+                              double.infinity,
+                            ),
+                            alignment: Alignment.topLeft,
+                            minScale: .15,
+                            maxScale: 6,
+                            child: SizedBox(
+                              width: canvas.width,
+                              height: canvas.height,
+                              child: ValueListenableBuilder<Matrix4>(
+                                valueListenable: transform,
+                                builder: (context, matrix, _) => CustomPaint(
+                                  painter: MapPainter(
+                                    widget.session,
+                                    round: false,
+                                    markerScale: 1 / matrix.storage[0].abs(),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  if (widget.session.visibleSites.isNotEmpty)
+                    SizedBox(
+                      height: 46,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 3,
+                        ),
+                        itemCount: widget.session.visibleSites.length,
+                        separatorBuilder: (_, _) => const SizedBox(width: 6),
+                        itemBuilder: (context, index) {
+                          final site = widget.session.visibleSites[index];
+                          final done = widget.session.cleansedSites.contains(
+                            site.id,
+                          );
+                          return SizedBox(
+                            width: 120,
+                            child: GameAction(
+                              '${done ? '✓' : '◆'} ${site.name}',
+                              semanticLabel: '지도 목표 · ${site.name}',
+                              onTap: () => center(at: site.at),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 5, horizontal: 12),
+                    child: Text(
+                      '◆ 의뢰   ⌂ 거점   ● 내 위치 · 끌어서 이동',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Color(0xffa9c5b9), fontSize: 13),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GameAction('내 위치', onTap: () => center()),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: GameAction(
+                            '전체 지도',
+                            onTap: () => center(overview: true),
                           ),
                         ),
+                        const SizedBox(width: 6),
+                        _zoomButton(Icons.remove, '지도 축소', () => zoom(1 / 1.5)),
+                        const SizedBox(width: 6),
+                        _zoomButton(Icons.add, '지도 확대하기', () => zoom(1.5)),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: GameAction(
+                        '모험 계속하기',
+                        primary: true,
+                        icon: Icons.play_arrow_rounded,
+                        onTap: widget.onClose,
                       ),
                     ),
                   ),
-                );
-              },
-            ),
-          ),
-          if (widget.session.visibleSites.isNotEmpty)
-            SizedBox(
-              height: 46,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 3,
-                ),
-                itemCount: widget.session.visibleSites.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 6),
-                itemBuilder: (context, index) {
-                  final site = widget.session.visibleSites[index];
-                  final done = widget.session.cleansedSites.contains(site.id);
-                  return SizedBox(
-                    width: 130,
-                    child: GameAction(
-                      '${done ? '✓' : '◆'} ${site.name}',
-                      semanticLabel: '지도 목표 · ${site.name}',
-                      onTap: () => center(at: site.at),
-                    ),
-                  );
-                },
-              ),
-            ),
-          const Padding(
-            padding: EdgeInsets.all(8),
-            child: Text(
-              '◆ 필수 의뢰   ⌂ 거점   ● 내 위치\n두 손가락으로 확대 · 드래그로 이동',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Color(0xffa9c5b9), fontSize: 13),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Row(
-              children: [
-                Expanded(child: GameAction('내 위치', onTap: () => center())),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: GameAction(
-                    '전체 지도',
-                    onTap: () => center(overview: true),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                _zoomButton(Icons.remove, '지도 축소', () => zoom(1 / 1.5)),
-                const SizedBox(width: 6),
-                _zoomButton(Icons.add, '지도 확대하기', () => zoom(1.5)),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-            child: SizedBox(
-              width: double.infinity,
-              child: GameAction(
-                '모험 계속하기',
-                primary: true,
-                icon: Icons.play_arrow_rounded,
-                onTap: widget.onClose,
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     ),
   );

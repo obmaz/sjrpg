@@ -17,7 +17,14 @@ void main() {
           image.dispose();
         }
       });
-      for (final key in ['hero', 'hero-attack', 'bicycle']) {
+      for (final key in [
+        'hero',
+        'hero-attack',
+        'hero-backhand',
+        'hero-cleave',
+        'mage-cast',
+        'bicycle',
+      ]) {
         final count = key == 'bicycle' ? 8 : 16;
         final data = art.actors[key];
         expect(data['frames'].length, count * 2);
@@ -28,12 +35,21 @@ void main() {
             final rec = ui.PictureRecorder();
             art.actor(
               ui.Canvas(rec),
-              key == 'hero-attack' ? 'hero' : key,
+              key.startsWith('hero-')
+                  ? 'hero'
+                  : key == 'mage-cast'
+                  ? 'mage'
+                  : key,
               const ui.Offset(100, 150),
               math.pi / 2 + direction * math.pi * 2 / count,
               phase,
               100,
-              attack: key == 'hero-attack',
+              attack: key.startsWith('hero-') || key == 'mage-cast',
+              comboPose: key == 'hero-backhand'
+                  ? 1
+                  : key == 'hero-cleave'
+                  ? 2
+                  : 0,
             );
             final picture = rec.endRecording();
             final image = await picture.toImage(200, 180);

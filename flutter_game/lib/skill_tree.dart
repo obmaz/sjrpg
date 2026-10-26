@@ -5,45 +5,45 @@ import 'game_ui.dart';
 import 'rpg_model.dart';
 import 'rpg_widgets.dart';
 import 'panel_controls.dart';
+import 'interface_art.dart';
 
-// Within each family the branches split and rejoin. Row numbers are a minimum:
-// a cross-family prerequisite always pushes its child below every parent.
+// Each family has a local fork and merge; no cross-family rails obscure nodes.
 const _positions = <String, (int, double)>{
   'cleave': (0, 0),
   'whirlwind': (1, -.24),
   'frenzy': (1, .24),
   'seismicSlam': (2, 0),
-  'rendingEdge': (3, -.24),
+  'rendingEdge': (3, 0),
   'stormOfSteel': (4, 0),
   'mastery': (0, 0),
   'ironSkin': (1, -.24),
   'weaponTempo': (1, .24),
-  'veteranGuard': (2, -.24),
-  'battleFocus': (2, .24),
-  'secondWind': (3, 0),
+  'veteranGuard': (3, 0),
+  'battleFocus': (2, -0.24),
+  'secondWind': (4, 0),
   'warcry': (0, 0),
   'battleVigor': (1, -.24),
   'resoundingCry': (1, .24),
-  'warDrums': (2, -.24),
-  'rallyingVoice': (2, .24),
-  'unyieldingOath': (3, 0),
+  'warDrums': (3, 0),
+  'rallyingVoice': (2, 0),
+  'unyieldingOath': (4, 0),
   'firebolt': (0, 0),
   'warmth': (1, -.24),
   'emberFocus': (1, .24),
-  'cinderReach': (2, -.24),
-  'meteor': (2, .24),
-  'phoenixHeart': (3, 0),
+  'cinderReach': (3, 0),
+  'meteor': (2, -0.24),
+  'phoenixHeart': (4, 0),
   'frostNova': (0, 0),
   'iceArmor': (1, -.24),
-  'deepFreeze': (2, -.24),
-  'coldMastery': (2, .24),
-  'frozenAegis': (3, -.24),
+  'deepFreeze': (1, 0.24),
+  'coldMastery': (2, -0.24),
+  'frozenAegis': (3, 0),
   'glacialReserve': (4, 0),
   'arcaneMastery': (0, 0),
   'conductivity': (1, .24),
-  'chainLightning': (2, -.24),
-  'forkedStorm': (3, -.24),
-  'lightningMastery': (3, .24),
+  'chainLightning': (1, -0.24),
+  'forkedStorm': (3, 0),
+  'lightningMastery': (2, -0.24),
   'arcaneEconomy': (4, 0),
 };
 
@@ -127,8 +127,8 @@ class SkillTree extends StatelessWidget {
                 children: [
                   Positioned.fill(
                     child: ExcludeSemantics(
-                      child: Image.asset(
-                        'assets/images/skill-tablet.webp',
+                      child: Image(
+                        image: skillTabletArtwork,
                         fit: BoxFit.fill,
                         filterQuality: FilterQuality.medium,
                       ),

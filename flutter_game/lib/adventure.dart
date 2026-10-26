@@ -12,6 +12,7 @@ import 'spell_vfx.dart';
 import 'shop_content.dart';
 import 'boss_attacks.dart';
 import 'audio_settings.dart';
+import 'encounters.dart';
 
 enum NearbyAction { chest, shrine, mount, dismount, shop, talk }
 
@@ -329,6 +330,92 @@ class Adventure extends ChangeNotifier {
   int combo = 0, rageStrike = -1;
   int buildRevision = 0;
   int _successfulPacks = 0;
+  final encounterAreas = <String, EncounterArea>{};
+  final dormantEnemies = <Map<String, dynamic>>[];
+  bool restoredEncounters = false;
+  double lastEnemyWake = -1;
+  ui.Offset lastEnemyWakeAt = ui.Offset.zero;
+  String get encounterKey => EncounterArea.keyAt(hero.body.center);
+  bool areaHasEnemies(String key) =>
+      mobs.any(
+        (m) =>
+            !m.boss &&
+            !m.isDead &&
+            !m.isRemoving &&
+            !m.encounterDormant &&
+            m.encounterKey == key,
+      ) ||
+      dormantEnemies.any((m) => m['area'] == key);
+  Iterable<EncounterArea> get exhaustedAreas =>
+      encounterAreas.values.where((a) => a.waves >= EncounterArea.waveLimit);
+  Map<String, dynamic> saveEnemy(HuntEnemy m) => {
+    'kind': m.kind,
+    'trait': m.trait.name,
+    'area': m.encounterKey,
+    'x': m.position.x,
+    'y': m.position.y,
+    'hp': m.life.value,
+    'maxHp': m.life.max,
+  };
+  void wakeEnemies() {
+    if (elapsed - lastEnemyWake < .5 &&
+        (hero.body.center - lastEnemyWakeAt).distance < 240) {
+      return;
+    }
+    lastEnemyWake = elapsed;
+    lastEnemyWakeAt = hero.body.center;
+    for (final raw in List<Map<String, dynamic>>.of(dormantEnemies)) {
+      final at = ui.Offset(
+        (raw['x'] as num).toDouble(),
+        (raw['y'] as num).toDouble(),
+      );
+      if (living >= 40 || (at - hero.body.center).distance > 1100) continue;
+      final mob = spawnEnemy(
+        raw['kind'] as String,
+        at,
+        trait: EnemyTrait.values.firstWhere((t) => t.name == raw['trait']),
+      );
+      if (mob == null) continue;
+      mob.encounterKey = raw['area'] as String?;
+      mob.life.initial((raw['maxHp'] as num).toDouble());
+      mob.life.update((raw['hp'] as num).toDouble());
+      dormantEnemies.remove(raw);
+    }
+  }
+
+  bool strikeEncounterStone(double range) {
+    if (!active || riding != null) return false;
+    for (final area in exhaustedAreas) {
+      if (areaHasEnemies(area.key) ||
+          (area.stone - hero.body.center).distance > range + 20 ||
+          !world.clearLine(hero.body.center, area.stone, const ui.Size(3, 3))) {
+        continue;
+      }
+      hero.attackBearing = math.atan2(
+        area.stone.dy - hero.body.center.dy,
+        area.stone.dx - hero.body.center.dx,
+      );
+      area.stoneHits++;
+      audio.play(EffectSound.impact);
+      device.pulse(FeedbackKind.hit);
+      kickCamera(.5);
+      if (area.stoneHits >= 3) {
+        area.waves = 0;
+        area.stoneHits = 0;
+        waveTime = 0;
+        lastPackSpawn = elapsed - 10;
+        bubble(
+          '새로운 적의 기척',
+          area.stone - const ui.Offset(0, 55),
+          const ui.Color(0xffb4eee0),
+        );
+      }
+      refresh();
+      return true;
+    }
+    return false;
+  }
+
   final random = math.Random(52);
   bool get active => ready && !disposed && !paused && !defeated && !won;
   String get region => world.areaName(hero.position.toOffset());
@@ -482,7 +569,9 @@ class Adventure extends ChangeNotifier {
     return null;
   }
 
-  int get living => mobs.where((m) => !m.isDead && !m.isRemoving).length;
+  int get living => mobs
+      .where((m) => !m.isDead && !m.isRemoving && !m.encounterDormant)
+      .length;
   void holdAttack(String source, bool held) {
     if (held && active) {
       attackSources.add(source);
@@ -530,8 +619,16 @@ class Adventure extends ChangeNotifier {
     for (final item in List<GroundLoot>.of(loot)) {
       ref.add(item);
     }
+    for (final area in encounterAreas.values) {
+      ref.add(EncounterStone(this, area));
+    }
+    wakeEnemies();
     waveTime = 10;
-    spawnPack(initial: (hero.position.toOffset() - world.spawn).distance < 220);
+    if (!restoredEncounters) {
+      spawnPack(
+        initial: (hero.position.toOffset() - world.spawn).distance < 220,
+      );
+    }
     refresh();
   }
 
@@ -565,9 +662,13 @@ class Adventure extends ChangeNotifier {
       if (mob.combatReady &&
           !mob.boss &&
           (mob.position - hero.position).length > 1500) {
+        dormantEnemies.add(saveEnemy(mob));
+        mob.combatReady = false;
+        mob.encounterDormant = true;
         mob.removeFromParent();
       }
     }
+    wakeEnemies();
     if ((hero.position.toOffset() - lastPack).distance > 540) {
       waveTime = math.min(waveTime, 3);
       lastPack = hero.position.toOffset();
@@ -604,8 +705,20 @@ class Adventure extends ChangeNotifier {
   }
 
   void spawnPack({bool initial = false}) {
-    if (!active || living >= 40 || progress.bossDefeated) return;
+    if (!active ||
+        living >= 40 ||
+        progress.bossDefeated ||
+        riding?.def.waterOnly == true) {
+      return;
+    }
     final at = hero.position.toOffset();
+    final key = encounterKey;
+    final existingArea = encounterAreas[key];
+    if (existingArea != null && existingArea.waves >= EncounterArea.waveLimit) {
+      return;
+    }
+    // Wake existing packs before spending another wave in this region.
+    if (dormantEnemies.any((e) => e['area'] == key)) return;
     if (world.settlement.contains(at) &&
         at.dy < world.spawn.dy - 30 &&
         !initial) {
@@ -650,9 +763,19 @@ class Adventure extends ChangeNotifier {
                 ? EnemyTrait.armored
                 : EnemyTrait.swift)
           : EnemyTrait.none;
-      if (spawnEnemy(kind, desired, trait: trait) != null) added++;
+      final mob = spawnEnemy(kind, desired, trait: trait);
+      if (mob != null) {
+        mob.encounterKey = key;
+        added++;
+      }
     }
     if (added > 0) {
+      final area = existingArea ?? EncounterArea(key, hero.body.center);
+      if (existingArea == null) {
+        encounterAreas[key] = area;
+        game?.add(EncounterStone(this, area));
+      }
+      area.waves++;
       _successfulPacks++;
       lastPackSpawn = elapsed;
     }
@@ -670,6 +793,8 @@ class Adventure extends ChangeNotifier {
     if (mobs.any(
       (e) =>
           !e.isDead &&
+          !e.isRemoving &&
+          !e.encounterDormant &&
           e.body.overlaps(
             ui.Rect.fromLTWH(p.dx, p.dy, size.width, size.height),
           ),
@@ -977,6 +1102,8 @@ class Guardian extends Player with WithCollision {
   final cooldowns = <String, double>{};
   double armorTime = 0, frenzyTime = 0;
   double impactHold = 0;
+  double swingDuration = .23, castLock = 0, comboGrace = 0;
+  int strikePose = 0;
   double get skillClock => cooldowns[session.progress.selectedSkill] ?? 0;
   set skillClock(double value) =>
       cooldowns[session.progress.selectedSkill] = value;
@@ -1061,6 +1188,7 @@ class Guardian extends Player with WithCollision {
       return;
     }
     speed = session.riding?.def.speed ?? (frenzyTime > 0 ? 310 : 270);
+    if (castLock > 0) speed *= .4;
     final before = position.toOffset();
     super.update(dt);
     var delta = position.toOffset() - before;
@@ -1088,6 +1216,8 @@ class Guardian extends Player with WithCollision {
     }
     session.riding?.at = body.center;
     attackClock = math.max(0, attackClock - dt);
+    castLock = math.max(0, castLock - dt);
+    comboGrace = math.max(0, comboGrace - dt);
     final held = math.min(dt, impactHold);
     impactHold = math.max(0, impactHold - dt);
     swing = math.max(0, swing - (dt - held));
@@ -1104,7 +1234,9 @@ class Guardian extends Player with WithCollision {
   }
 
   void slash() {
-    if (!session.active || attackClock > 0 || dashing > 0) return;
+    if (!session.active || attackClock > 0 || castLock > 0 || dashing > 0) {
+      return;
+    }
     if (!session.ensureOnFoot()) return;
     var angle = bearing;
     final candidates =
@@ -1137,10 +1269,24 @@ class Guardian extends Player with WithCollision {
     }
     attackBearing = angle;
     strikes++;
+    if (comboGrace <= 0) session.combo = 0;
+    strikePose = session.combo;
     session.combo = (session.combo + 1) % 3;
+    comboGrace = 1.2;
     attackClock = session.progress.attackInterval * (frenzyTime > 0 ? .6 : 1);
-    swing = .23;
+    swingDuration = strikePose == 2 ? .32 : .26;
+    swing = swingDuration;
     final p = session.progress;
+    if (p.heroClass == HeroClass.mage) {
+      castLock = .26;
+      swingDuration = swing = .32;
+    }
+    if (candidates.isEmpty &&
+        session.strikeEncounterStone(
+          p.heroClass == HeroClass.mage ? 300 : p.weapon.base.range,
+        )) {
+      return;
+    }
     session.audio.play(
       p.heroClass == HeroClass.warrior
           ? (p.weapon.base.style == 'hammer'
@@ -1207,7 +1353,12 @@ class Guardian extends Player with WithCollision {
   }
 
   void skill({bool secondary = false, int? slot, SkillAim? manualAim}) {
-    if (!session.active || dashing > 0 || !session.ensureOnFoot()) return;
+    if (!session.active ||
+        dashing > 0 ||
+        castLock > 0 ||
+        !session.ensureOnFoot()) {
+      return;
+    }
     final p = session.progress;
     final def = p.skillAt(slot ?? (secondary ? 1 : 0));
     if (def == null) return;
@@ -1232,6 +1383,12 @@ class Guardian extends Player with WithCollision {
     session.device.pulse(FeedbackKind.skill);
     p.energy -= def.cost;
     cooldowns[def.id] = def.cooldown;
+    if (p.heroClass == HeroClass.mage) {
+      castLock = .48;
+      attackClock = math.max(attackClock, castLock);
+      swingDuration = swing = .48;
+      attackBearing = manualAim?.angle ?? bearing;
+    }
     switch (def.id) {
       case 'warcry':
         armorTime = p.warcryDuration;
@@ -1494,14 +1651,17 @@ class Guardian extends Player with WithCollision {
         session.progress.heroClass == HeroClass.mage ? 'mage' : 'hero',
         feet,
         swing > 0 ? attackBearing : bearing,
-        swing > 0 ? (swing > .17 ? 0 : 1) : (animationTime / .13).floor() % 2,
+        swing > 0
+            ? (swing > swingDuration * .58 ? 0 : 1)
+            : (animationTime / .13).floor() % 2,
         60,
         attack: swing > 0,
+        comboPose: strikePose,
         flash: damageFlash,
       );
     }
     if (swing > 0 && session.progress.heroClass == HeroClass.warrior) {
-      final phase = 1 - swing / .23,
+      final phase = 1 - swing / swingDuration,
           rect = ui.Rect.fromCircle(
             center: center,
             radius: session.progress.weapon.base.range * .58,
@@ -1557,7 +1717,8 @@ class Guardian extends Player with WithCollision {
       } else {
         canvas.drawArc(
           rect,
-          attackBearing - 1.2 + phase * .9,
+          attackBearing +
+              (strikePose == 1 ? 1.2 - phase * 2.1 : -1.2 + phase * .9),
           1.6,
           false,
           ui.Paint()
@@ -1574,7 +1735,8 @@ class Guardian extends Player with WithCollision {
         );
         canvas.drawArc(
           rect.deflate(5),
-          attackBearing - 1.1 + phase * .9,
+          attackBearing +
+              (strikePose == 1 ? 1.1 - phase * 2.1 : -1.1 + phase * .9),
           1.3,
           false,
           ui.Paint()
@@ -1690,6 +1852,7 @@ class HuntEnemy extends Enemy with WithCollision {
        );
   final Adventure session;
   final String kind;
+  String? encounterKey;
   final bool boss;
   final EnemyTrait trait;
   bool get isElite => !boss && trait != EnemyTrait.none;
@@ -1732,7 +1895,7 @@ class HuntEnemy extends Enemy with WithCollision {
       ? const ui.Color(0xffbcda75)
       : const ui.Color(0xffefab78);
   int impactPose = 0;
-  bool rewarded = false, combatReady = false;
+  bool rewarded = false, combatReady = false, encounterDormant = false;
   double bearing = math.pi / 2,
       anim = 0,
       hurt = 0,
@@ -2517,5 +2680,72 @@ class BattleText extends GameComponent {
       size: label.startsWith('+') ? 13 : 18,
       color: color.withValues(alpha: (remaining / .3).clamp(0, 1)),
     );
+  }
+}
+
+class EncounterStone extends GameComponent {
+  EncounterStone(this.session, this.area) {
+    position = Vector2(area.stone.dx - 22, area.stone.dy - 48);
+    size = Vector2(44, 48);
+  }
+  final Adventure session;
+  final EncounterArea area;
+  @override
+  int get priority => area.stone.dy.toInt();
+  @override
+  void render(ui.Canvas canvas) {
+    if (area.waves < EncounterArea.waveLimit) return;
+    final ready = !session.areaHasEnemies(area.key);
+    if (ready && (session.hero.body.center - area.stone).distance < 220) {
+      session.art.text(
+        canvas,
+        '공격해 재소환 · ${area.stoneHits}/3',
+        const ui.Offset(22, -14),
+        size: 11,
+        color: const ui.Color(0xffb9e9d9),
+      );
+    }
+    canvas.drawOval(
+      const ui.Rect.fromLTWH(-6, 34, 56, 18),
+      ui.Paint()..color = const ui.Color(0x55000000),
+    );
+    final shape = ui.Path()
+      ..moveTo(6, 44)
+      ..lineTo(9, 8)
+      ..lineTo(16, 0)
+      ..lineTo(32, 2)
+      ..lineTo(38, 44)
+      ..close();
+    canvas.drawPath(shape, ui.Paint()..color = const ui.Color(0xff677572));
+    canvas.drawPath(
+      shape,
+      ui.Paint()
+        ..color = const ui.Color(0xffa4b3a2)
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+    final glow = ready
+        ? const ui.Color(0xff9debd8)
+        : const ui.Color(0xff52635e);
+    canvas.drawPath(
+      ui.Path()
+        ..moveTo(23, 10)
+        ..lineTo(16, 23)
+        ..lineTo(23, 34)
+        ..lineTo(30, 23)
+        ..close(),
+      ui.Paint()
+        ..color = glow
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = 2.5,
+    );
+    for (var i = 0; i < 3; i++) {
+      canvas.drawCircle(
+        ui.Offset(14 + i * 9, 40),
+        2,
+        ui.Paint()
+          ..color = i < area.stoneHits ? glow : const ui.Color(0xff344b45),
+      );
+    }
   }
 }

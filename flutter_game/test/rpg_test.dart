@@ -162,6 +162,11 @@ void main() {
       expect(s.hero.skillClock, 0);
       s.progress.energy = 90;
       s.hero.skill();
+      expect(s.progress.energy, 90, reason: 'the basic cast must finish first');
+      for (var i = 0; i < 6; i++) {
+        s.hero.update(.05);
+      }
+      s.hero.skill();
       expect(s.progress.energy, 72);
       expect(s.hero.skillClock, 6);
       s.hero.skill();
@@ -177,10 +182,13 @@ void main() {
       s.progress.learn(mageSkills.firstWhere((s) => s.id == 'warmth'));
       s.progress.learn(mageSkills.firstWhere((s) => s.id == 'chainLightning'));
       s.progress.selectSkill('chainLightning');
+      for (var i = 0; i < 10; i++) {
+        s.hero.update(.05);
+      }
       s.hero.skill();
       expect(s.hero.skillClock, 5);
       s.progress.selectSkill('frostNova');
-      expect(s.hero.skillClock, 6);
+      expect(s.hero.skillClock, closeTo(5.5, .001));
       expect(s.progress.rank('frostNova'), rank);
       s.pause();
       final energy = s.progress.energy;
@@ -266,7 +274,13 @@ void main() {
       s.progress.energy = 90;
       s.hero.skill();
       s.hero.skill(secondary: true);
-      expect(s.hero.cooldowns['frostNova'], 6);
+      expect(s.hero.cooldowns['chainLightning'], isNull);
+      expect(s.progress.energy, 72);
+      for (var i = 0; i < 10; i++) {
+        s.hero.update(.05);
+      }
+      s.hero.skill(secondary: true);
+      expect(s.hero.cooldowns['frostNova'], closeTo(5.5, .001));
       expect(s.hero.cooldowns['chainLightning'], 5);
       expect(s.progress.energy, 44);
       s.progress.selectSkill('chainLightning');
@@ -303,6 +317,9 @@ void main() {
       ]);
       for (var slot = 0; slot < 4; slot++) {
         p.energy = p.maxEnergy;
+        for (var i = 0; i < 10; i++) {
+          s.hero.update(.05);
+        }
         s.hero.skill(slot: slot);
         expect(s.hero.cooldowns[p.skillSlots[slot]], greaterThan(0));
       }

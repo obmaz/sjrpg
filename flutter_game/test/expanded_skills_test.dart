@@ -76,12 +76,12 @@ void main() {
   }
   test('new mage convergence needs every parent at its stated rank', () {
     final p = Progress(heroClass: HeroClass.mage)..gainXp(20000);
-    final skill = p.skills.firstWhere((s) => s.id == 'arcaneEconomy');
+    final skill = p.skills.firstWhere((s) => s.id == 'forkedStorm');
     p.ranks['lightningMastery'] = 1;
     final points = p.skillPoints;
     expect(p.learn(skill), false);
     expect(p.skillPoints, points);
-    p.ranks['phoenixHeart'] = 1;
+    p.ranks['conductivity'] = 1;
     expect(p.learn(skill), true);
   });
   for (final (hero, perkId, affected) in [

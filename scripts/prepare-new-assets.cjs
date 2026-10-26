@@ -34,6 +34,9 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
     for (const name of [
         'actors-bicycle',
         'skill-perks',
+        'actors-hero-backhand',
+        'actors-hero-cleave',
+        'actors-mage-cast',
         'skill-tablet',
         'ui-button-primary',
         'ui-button-secondary',
@@ -73,6 +76,9 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
             ['hero', 'hero-clean'],
             ['hero-attack', 'hero-attack-clean'],
             ['bicycle', 'actors-bicycle'],
+            ['hero-backhand', 'actors-hero-backhand'],
+            ['hero-cleave', 'actors-hero-cleave'],
+            ['mage-cast', 'actors-mage-cast'],
         ].map(([key, source]) => [
             key,
             JSON.parse(

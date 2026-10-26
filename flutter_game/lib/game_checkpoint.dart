@@ -4,6 +4,7 @@ import 'adventure.dart';
 import 'battle_effects.dart';
 import 'game_art.dart';
 import 'world_model.dart';
+import 'encounters.dart';
 
 class GameCheckpoint {
   GameCheckpoint._(this.data, this.progress);
@@ -30,6 +31,22 @@ class GameCheckpoint {
                 'hp': boss.life.value,
                 'maxHp': boss.life.max,
               },
+        'encounterVersion': 1,
+        'encounters': session.encounterAreas.values
+            .map((a) => a.toSave())
+            .toList(),
+        'enemies': [
+          ...session.dormantEnemies,
+          ...session.mobs
+              .where(
+                (m) =>
+                    !m.boss &&
+                    !m.isDead &&
+                    !m.isRemoving &&
+                    !m.encounterDormant,
+              )
+              .map(session.saveEnemy),
+        ],
         'version': 1,
         'balance': 2,
         'stage': session.world.stage.name,
@@ -107,6 +124,8 @@ class GameCheckpoint {
       'mounts': <dynamic>[],
       'riding': null,
       'boss': null,
+      'encounters': <dynamic>[],
+      'enemies': <dynamic>[],
       'cooldowns': <String, double>{},
       'armor': 0,
       'frenzy': 0,
@@ -121,7 +140,7 @@ class GameCheckpoint {
   }
 
   static GameCheckpoint? decode(String? text) {
-    if (text == null || text.length > 100000) return null;
+    if (text == null || text.length > 2000000) return null;
     try {
       final data = Map<String, dynamic>.from(jsonDecode(text) as Map);
       if (data['version'] != 1) return null;
@@ -270,6 +289,46 @@ class GameCheckpoint {
         boss['hp'] = (boss['hp'] as num) * 2;
         boss['maxHp'] = (boss['maxHp'] as num) * 2;
       }
+      final areas = data['encounters'] ?? <dynamic>[];
+      final enemies = data['enemies'] ?? <dynamic>[];
+      if (areas is! List ||
+          areas.length > 120 ||
+          enemies is! List ||
+          enemies.length > 5000) {
+        return null;
+      }
+      final keys = <String>{};
+      for (final raw in areas) {
+        final area = EncounterArea.fromSave(raw as Map);
+        if (!keys.add(area.key)) return null;
+      }
+      const kinds = {
+        'goblin',
+        'wolf',
+        'skeleton',
+        'cultist',
+        'scorpion',
+        'mummy',
+        'troll',
+        'cyber',
+        'gunner',
+      };
+      for (final raw in enemies) {
+        if (raw is! Map ||
+            !kinds.contains(raw['kind']) ||
+            !EnemyTrait.values.any((t) => t.name == raw['trait']) ||
+            raw['area'] != null && !keys.contains(raw['area']) ||
+            !number(raw['x'], worldSize.width) ||
+            !number(raw['y'], worldSize.height) ||
+            !number(raw['maxHp'], 10000000) ||
+            !number(raw['hp'], 10000000) ||
+            raw['hp'] <= 0 ||
+            raw['hp'] > raw['maxHp']) {
+          return null;
+        }
+      }
+      data['encounters'] = areas;
+      data['enemies'] = enemies;
       data['balance'] = 2;
       return GameCheckpoint._(data, progress);
     } catch (_) {
@@ -283,6 +342,14 @@ class GameCheckpoint {
       seed: data['seed'] as int,
       stage: WorldStage.values.firstWhere((s) => s.name == data['stage']),
       restoredProgress: Progress.fromSave(progress.toSave())!,
+    );
+    session.restoredEncounters = data['encounterVersion'] == 1;
+    for (final raw in data['encounters'] as List) {
+      final area = EncounterArea.fromSave(raw as Map);
+      session.encounterAreas[area.key] = area;
+    }
+    session.dormantEnemies.addAll(
+      (data['enemies'] as List).map((r) => Map<String, dynamic>.from(r as Map)),
     );
     session.stageStartKills = data['stageStartKills'] as int;
     session.commissionStartKills = data['commissionStartKills'] as int;

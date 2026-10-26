@@ -94,7 +94,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                     ),
                     Expanded(child: shopping ? _store() : _inventory()),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
                       child: Row(
                         children: [
                           if (widget.startInShop) ...[
@@ -190,7 +190,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
         physics: const ClampingScrollPhysics(),
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
             sliver: SliverToBoxAdapter(
               child: Column(
                 children: [
@@ -276,7 +276,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
               ),
             ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
             sliver: SliverList.builder(
               itemCount: items.length,
               itemBuilder: (context, i) => _gearRow(items[i]),

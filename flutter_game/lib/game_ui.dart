@@ -331,6 +331,42 @@ class MapPainter extends CustomPainter {
   final Adventure session;
   final bool round;
   final double markerScale;
+  static const _textureScale = 16.0;
+  static final _textureTransform = Matrix4.diagonal3Values(
+    1 / _textureScale,
+    1 / _textureScale,
+    1,
+  ).storage;
+  void _terrain(
+    Canvas canvas,
+    Path path,
+    int material,
+    Color color, {
+    double? width,
+  }) {
+    final solid = Paint()..color = color;
+    if (width != null) {
+      solid
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = width;
+    }
+    canvas.drawPath(path, solid);
+    if (round || session.art.materials.length <= material) return;
+    canvas.save();
+    canvas.scale(_textureScale);
+    final texture = Paint()
+      ..shader = session.art.materials[material]
+      ..color = const Color(0xaaffffff)
+      ..filterQuality = FilterQuality.medium;
+    if (width != null) {
+      texture
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = width / _textureScale;
+    }
+    canvas.drawPath(path.transform(_textureTransform), texture);
+    canvas.restore();
+  }
+
   @override
   void paint(Canvas c, Size s) {
     final rect = Offset.zero & s;
@@ -338,20 +374,29 @@ class MapPainter extends CustomPainter {
     if (round) c.clipPath(Path()..addOval(rect.deflate(3)));
     c.drawRect(rect, Paint()..color = const Color(0xff102a29));
     c.save();
+    c.clipRect(rect);
     final view = round
         ? localMapBounds(session.hero.body.center)
         : Offset.zero & worldSize;
     c.scale(s.width / view.width, s.height / view.height);
     c.translate(-view.left, -view.top);
-    c.drawRect(
-      Offset.zero & worldSize,
-      Paint()
-        ..color = [
-          const Color(0xff7d9656),
-          const Color(0xffb59059),
-          const Color(0xffa2aa87),
-          const Color(0xff253748),
-        ][session.world.stage.index],
+    c.clipRect(Offset.zero & worldSize);
+    final base = session.world.stage == WorldStage.forest
+        ? 0
+        : 5 + session.world.stage.index;
+    final road = session.world.stage == WorldStage.forest
+        ? 5
+        : 8 + session.world.stage.index;
+    _terrain(
+      c,
+      Path()..addRect(Offset.zero & worldSize),
+      base,
+      [
+        const Color(0xff7d9656),
+        const Color(0xffb59059),
+        const Color(0xffa2aa87),
+        const Color(0xff253748),
+      ][session.world.stage.index],
     );
     for (final wood in session.world.woods) {
       if (!round) {
@@ -363,13 +408,23 @@ class MapPainter extends CustomPainter {
             ..color = const Color(0xff506d48),
         );
       }
-      c.drawPath(wood.path, Paint()..color = const Color(0xff315947));
+      _terrain(c, wood.path, 1, const Color(0xff315947));
     }
     for (final clearing in session.world.clearings) {
-      c.drawPath(clearing.path, Paint()..color = const Color(0xff8ca564));
+      _terrain(
+        c,
+        clearing.path,
+        base,
+        [
+          const Color(0xff8ca564),
+          const Color(0xffc4a773),
+          const Color(0xffc3bd9c),
+          const Color(0xff34495d),
+        ][session.world.stage.index],
+      );
     }
     for (final sand in session.world.sandFields) {
-      c.drawPath(sand.path, Paint()..color = const Color(0xffc7b579));
+      _terrain(c, sand.path, 2, const Color(0xffc7b579));
     }
     for (final lake in [...session.world.lakes, session.world.river]) {
       if (!round) {
@@ -388,20 +443,31 @@ class MapPainter extends CustomPainter {
             ..color = const Color(0xff29636d),
         );
       }
-      c.drawPath(lake.path, Paint()..color = const Color(0xff3b91a0));
+      _terrain(c, lake.path, 4, const Color(0xff3b91a0));
     }
     for (final trail in session.world.trails) {
-      c.drawPath(
+      if (!round) {
+        c.drawPath(
+          trail.path,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = trail.width + 90
+            ..color = const Color(0xff4a5540),
+        );
+      }
+      _terrain(
+        c,
         trail.path,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = trail.width
-          ..color = const Color(0xffdac489),
+        road,
+        const Color(0xffdac489),
+        width: trail.width,
       );
     }
-    c.drawRect(
-      session.world.settlement,
-      Paint()..color = const Color(0xffe3d29a),
+    _terrain(
+      c,
+      Path()..addRect(session.world.settlement),
+      road,
+      const Color(0xffe3d29a),
     );
 
     if (round) {
@@ -584,6 +650,20 @@ class MapPainter extends CustomPainter {
           color: done ? const Color(0xff85d6aa) : gold,
         );
       }
+    }
+    for (final area in session.exhaustedAreas) {
+      final point = project(area.stone);
+      if (round && (point - rect.center).distance > s.shortestSide / 2 - 10) {
+        continue;
+      }
+      final r = (round ? 3.0 : 5.0) * markerScale;
+      c.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(center: point, width: r * 1.5, height: r * 2),
+          Radius.circular(r * .4),
+        ),
+        Paint()..color = const Color(0xffa9d6d0),
+      );
     }
     for (final boss in session.mobs.where(
       (m) => m.boss && m.combatReady && !m.isDead && !m.isRemoving,

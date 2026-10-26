@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'world_model.dart';
 import 'ground_texture.dart';
+import 'interface_art.dart';
 
 class GameArt {
   final images = <String, ui.Image>{};
@@ -19,53 +20,58 @@ class GameArt {
     art.controls = data['controls'];
     await Future.wait(
       [
-        'actors-hero',
-        'actors-mage',
-        'gear-icons',
-        'combat-fx',
-        'passive-icons',
-        'skill-perks',
-        'fx-meteor',
-        'fx-ice-nova',
-        'fx-whirlwind',
-        'fx-warcry',
-        'dodge-icon',
-        'actors-roll',
-        'terrain-materials',
-        'actors-hero-attack',
-        'actors-creatures-a',
-        'actors-creatures-b',
-        'actors-villagers',
-        'actors-vehicles',
-        'quest-sites',
-        'time-sites',
-        'time-paths',
-        'stage-materials',
-        'actors-cyber',
-        'actors-gunner',
-        'actors-sand-warden',
-        'actors-ancient-king',
-        'actors-cyber-core',
-        'actors-bicycle',
-        'cyber-props',
-        'ruin-props',
-        'village-scene',
-        'landscape-bridge',
-        'world-forest',
-        'world-desert',
-        'controls',
-        'popup-frame',
-        'atlas',
-      ].map((name) async {
-        final bytes = await rootBundle.load(
-          'assets/images/$name.${['actors-mage', 'gear-icons', 'combat-fx', 'dodge-icon', 'actors-roll'].contains(name) ? 'png' : 'webp'}',
-        );
-        final codec = await ui.instantiateImageCodec(
-          bytes.buffer.asUint8List(),
-        );
-        art.images[name] = (await codec.getNextFrame()).image;
-        codec.dispose();
-      }),
+            'actors-hero',
+            'actors-mage',
+            'gear-icons',
+            'combat-fx',
+            'passive-icons',
+            'skill-perks',
+            'fx-meteor',
+            'fx-ice-nova',
+            'fx-whirlwind',
+            'fx-warcry',
+            'dodge-icon',
+            'actors-roll',
+            'terrain-materials',
+            'actors-hero-attack',
+            'actors-hero-backhand',
+            'actors-hero-cleave',
+            'actors-mage-cast',
+            'actors-creatures-a',
+            'actors-creatures-b',
+            'actors-villagers',
+            'actors-vehicles',
+            'quest-sites',
+            'time-sites',
+            'time-paths',
+            'stage-materials',
+            'actors-cyber',
+            'actors-gunner',
+            'actors-sand-warden',
+            'actors-ancient-king',
+            'actors-cyber-core',
+            'actors-bicycle',
+            'cyber-props',
+            'ruin-props',
+            'village-scene',
+            'landscape-bridge',
+            'world-forest',
+            'world-desert',
+            'controls',
+            'popup-frame',
+            'atlas',
+          ]
+          .map<Future<void>>((name) async {
+            final bytes = await rootBundle.load(
+              'assets/images/$name.${['actors-mage', 'gear-icons', 'combat-fx', 'dodge-icon', 'actors-roll'].contains(name) ? 'png' : 'webp'}',
+            );
+            final codec = await ui.instantiateImageCodec(
+              bytes.buffer.asUint8List(),
+            );
+            art.images[name] = (await codec.getNextFrame()).image;
+            codec.dispose();
+          })
+          .followedBy([prepareInterfaceArtwork()]),
     );
     final atlas = art.images['terrain-materials']!;
     for (var i = 0; i < 12; i++) {
@@ -235,6 +241,7 @@ class GameArt {
     int phase,
     double height, {
     bool attack = false,
+    int comboPose = 0,
     double opacity = 1,
     double flash = 0,
   }) {
@@ -262,7 +269,14 @@ class GameArt {
       'boat': ('vehicles', 3, 8),
     };
     final definition = definitions[key]!;
-    final sheet = attack && key == 'hero' ? 'hero-attack' : definition.$1,
+    final sheet = attack && key == 'hero'
+            ? ['hero-attack', 'hero-backhand', 'hero-cleave'][comboPose.clamp(
+                0,
+                2,
+              )]
+            : attack && key == 'mage'
+            ? 'mage-cast'
+            : definition.$1,
         count = definition.$3;
     final index =
         const {

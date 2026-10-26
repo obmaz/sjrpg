@@ -162,6 +162,9 @@ void main() {
       final item = s.progress.createGear(gearById(id));
       s.progress.inventory.add(item);
       expect(s.progress.equip(item), true);
+      for (var i = 0; i < 6; i++) {
+        s.hero.update(.05);
+      }
       s.hero.attackClock = 0;
       s.hero.slash();
       expect(bridge.sounds.last, sound);

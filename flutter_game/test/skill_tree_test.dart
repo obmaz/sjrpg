@@ -22,6 +22,10 @@ void main() {
           expect(path.contains(skill.id), false);
           for (final requirement in skill.requires.entries) {
             expect(ids.contains(requirement.key), true);
+            expect(
+              p.skills.firstWhere((s) => s.id == requirement.key).branch,
+              skill.branch,
+            );
             expect(requirement.value, inInclusiveRange(1, SkillDef.maxRank));
             final parent = p.skills.firstWhere((s) => s.id == requirement.key);
             expect(
@@ -95,6 +99,8 @@ void main() {
         'battleFocus',
         'battleVigor',
         'battleVigor',
+        'warcry',
+        'resoundingCry',
         'rallyingVoice',
       ]) {
         expect(s.learn(p.skills.firstWhere((skill) => skill.id == id)), true);

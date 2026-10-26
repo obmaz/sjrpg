@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
 import 'game_ui.dart';
+import 'interface_art.dart';
 
 const _muted = Color(0xffa4bcb6);
 
 DecorationImage gameButtonImage({bool enabled = true, bool primary = false}) =>
     DecorationImage(
-      image: ExactAssetImage(
-        'assets/images/ui-button-${!enabled
-            ? 'disabled'
-            : primary
-            ? 'primary'
-            : 'secondary'}.webp',
-        scale: 3,
-      ),
+      image: buttonArtwork(enabled: enabled, primary: primary),
       centerSlice: const Rect.fromLTRB(12, 10, 244, 32.6666667),
       fit: BoxFit.fill,
       filterQuality: FilterQuality.medium,
@@ -82,7 +76,7 @@ class GamePanelHeader extends StatelessWidget {
   final bool dense;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: EdgeInsets.fromLTRB(16, dense ? 4 : 10, 10, dense ? 4 : 10),
+    padding: EdgeInsets.fromLTRB(12, dense ? 4 : 10, 12, dense ? 4 : 10),
     child: Row(
       children: [
         Expanded(
@@ -219,39 +213,44 @@ class GameTabs extends StatelessWidget {
   final int selected;
   final ValueChanged<int> onChange;
   @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      for (var i = 0; i < labels.length; i++)
-        Expanded(
-          child: Semantics(
-            button: true,
-            selected: selected == i,
-            label: labels[i],
-            excludeSemantics: true,
-            onTap: () => onChange(i),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => onChange(i),
-                child: Container(
-                  height: 48,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    image: gameButtonImage(primary: selected == i),
-                  ),
-                  child: Text(
-                    labels[i],
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: selected == i ? gold : _muted,
-                      fontWeight: FontWeight.bold,
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 12),
+    child: Row(
+      children: [
+        for (var i = 0; i < labels.length; i++) ...[
+          if (i > 0) const SizedBox(width: 4),
+          Expanded(
+            child: Semantics(
+              button: true,
+              selected: selected == i,
+              label: labels[i],
+              excludeSemantics: true,
+              onTap: () => onChange(i),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => onChange(i),
+                  child: Container(
+                    height: 48,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      image: gameButtonImage(primary: selected == i),
+                    ),
+                    child: Text(
+                      labels[i],
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: selected == i ? const Color(0xff18342e) : _muted,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-    ],
+        ],
+      ],
+    ),
   );
 }

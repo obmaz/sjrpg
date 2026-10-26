@@ -453,7 +453,7 @@ const warriorSkills = [
     3,
     30,
     5,
-    requires: {'cleave': 1, 'mastery': 1},
+    requires: {'cleave': 1},
   ),
   SkillDef(
     'frenzy',
@@ -463,7 +463,7 @@ const warriorSkills = [
     4,
     28,
     12,
-    requires: {'cleave': 2, 'warcry': 1},
+    requires: {'cleave': 2},
   ),
   SkillDef(
     'seismicSlam',
@@ -484,7 +484,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'mastery': 2, 'ironSkin': 1},
+    requires: {'ironSkin': 1},
   ),
   SkillDef(
     'battleVigor',
@@ -506,7 +506,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'battleVigor': 2, 'frenzy': 1},
+    requires: {'battleVigor': 1, 'resoundingCry': 1},
   ),
   SkillDef(
     'rendingEdge',
@@ -517,7 +517,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'seismicSlam': 1, 'mastery': 2},
+    requires: {'seismicSlam': 1},
   ),
   SkillDef(
     'stormOfSteel',
@@ -528,7 +528,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'rendingEdge': 2, 'battleFocus': 1},
+    requires: {'rendingEdge': 2},
   ),
   SkillDef(
     'weaponTempo',
@@ -539,7 +539,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'mastery': 1, 'cleave': 2},
+    requires: {'mastery': 2},
   ),
   SkillDef(
     'veteranGuard',
@@ -550,7 +550,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'ironSkin': 2, 'warcry': 2},
+    requires: {'battleFocus': 1, 'weaponTempo': 1},
   ),
   SkillDef(
     'secondWind',
@@ -561,7 +561,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'veteranGuard': 1, 'battleVigor': 1},
+    requires: {'veteranGuard': 1},
   ),
   SkillDef(
     'resoundingCry',
@@ -572,7 +572,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'warcry': 2, 'mastery': 1},
+    requires: {'warcry': 2},
   ),
   SkillDef(
     'warDrums',
@@ -583,7 +583,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'resoundingCry': 1, 'battleVigor': 1},
+    requires: {'rallyingVoice': 1},
   ),
   SkillDef(
     'unyieldingOath',
@@ -594,7 +594,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'warDrums': 2, 'ironSkin': 2},
+    requires: {'warDrums': 2},
   ),
 ];
 const mageSkills = [
@@ -645,7 +645,7 @@ const mageSkills = [
     3,
     28,
     5,
-    requires: {'arcaneMastery': 1, 'warmth': 1},
+    requires: {'arcaneMastery': 1},
   ),
   SkillDef(
     'meteor',
@@ -655,7 +655,7 @@ const mageSkills = [
     4,
     38,
     9,
-    requires: {'warmth': 2, 'chainLightning': 1},
+    requires: {'warmth': 2},
   ),
   SkillDef(
     'warmth',
@@ -677,7 +677,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'iceArmor': 1, 'arcaneMastery': 1},
+    requires: {'iceArmor': 1},
   ),
   SkillDef(
     'lightningMastery',
@@ -688,7 +688,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'chainLightning': 1, 'coldMastery': 1},
+    requires: {'chainLightning': 1},
   ),
   SkillDef(
     'emberFocus',
@@ -710,7 +710,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'emberFocus': 1, 'frostNova': 1},
+    requires: {'meteor': 1, 'emberFocus': 1},
   ),
   SkillDef(
     'phoenixHeart',
@@ -721,7 +721,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'meteor': 1, 'iceArmor': 1},
+    requires: {'cinderReach': 1},
   ),
   SkillDef(
     'deepFreeze',
@@ -732,7 +732,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'frostNova': 2, 'warmth': 1},
+    requires: {'frostNova': 2},
   ),
   SkillDef(
     'frozenAegis',
@@ -743,7 +743,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'iceArmor': 2, 'deepFreeze': 1},
+    requires: {'coldMastery': 1, 'deepFreeze': 1},
   ),
   SkillDef(
     'glacialReserve',
@@ -754,7 +754,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'coldMastery': 1, 'frozenAegis': 2},
+    requires: {'frozenAegis': 2},
   ),
   SkillDef(
     'conductivity',
@@ -765,7 +765,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'arcaneMastery': 2, 'frostNova': 1},
+    requires: {'arcaneMastery': 2},
   ),
   SkillDef(
     'forkedStorm',
@@ -776,7 +776,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'chainLightning': 2, 'conductivity': 1},
+    requires: {'lightningMastery': 1, 'conductivity': 1},
   ),
   SkillDef(
     'arcaneEconomy',
@@ -787,7 +787,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'lightningMastery': 1, 'phoenixHeart': 1},
+    requires: {'forkedStorm': 2},
   ),
 ];
 

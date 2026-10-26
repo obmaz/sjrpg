@@ -51,6 +51,13 @@ void main() {
       expect(s.mobs.any((m) => m.isElite), false);
       s.mobs.clear();
     }
+    final opening = s.encounterAreas[s.encounterKey];
+    if (opening != null && opening.waves >= 3) {
+      s.hero.position.setValues(opening.stone.dx - 12, opening.stone.dy - 11);
+      for (var hit = 0; hit < 3; hit++) {
+        s.strikeEncounterStone(100);
+      }
+    }
     s.progress.kills = 18;
     s.progress.level = 3;
     s.spawnPack(initial: true);
@@ -58,6 +65,13 @@ void main() {
     s.mobs.clear();
     final found = <EnemyTrait>[];
     for (var i = 0; i < 12; i++) {
+      final area = s.encounterAreas[s.encounterKey];
+      if (area != null && area.waves >= 3) {
+        s.hero.position.setValues(area.stone.dx - 12, area.stone.dy - 11);
+        for (var hit = 0; hit < 3; hit++) {
+          expect(s.strikeEncounterStone(100), true);
+        }
+      }
       s.spawnPack();
       final elites = s.mobs.where((m) => m.isElite).toList();
       expect(elites.length, lessThanOrEqualTo(1));
