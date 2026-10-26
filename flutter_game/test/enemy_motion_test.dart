@@ -54,7 +54,7 @@ void main() {
       s.hero.position.setValues(6000, 4200);
       final mob = s.spawnEnemy('goblin', const Offset(6180, 4200))!;
       mob.update(.05);
-      s.hit(mob, 1, const Offset(10, 0));
+      s.hit(mob, 1, Offset.zero);
       final body = mob.body, phase = mob.motion.stride;
       s.pause();
       mob.update(.5);

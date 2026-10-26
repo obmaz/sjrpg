@@ -610,6 +610,10 @@ class WhirlwindPulse extends GameComponent {
               mob.body.center - const ui.Offset(0, 25),
               rank: rank,
               heavy: rank >= 3,
+              bearing: math.atan2(
+                mob.body.center.dy - hero.body.center.dy,
+                mob.body.center.dx - hero.body.center.dx,
+              ),
             ),
           );
         }

@@ -13,6 +13,7 @@ import 'encounters.dart';
 import 'enemy_catalog.dart';
 import 'enemy_motion.dart';
 import 'game_art.dart';
+import 'health_feedback.dart';
 import 'ranked_vfx.dart';
 import 'shop_content.dart';
 import 'skill_aim.dart';
@@ -968,7 +969,9 @@ class Adventure extends ChangeNotifier {
   }) {
     if (!active || !mob.combatReady || mob.isDead || mob.isRemoving) return;
     combatTime = 5;
+    final healthBefore = mob.life.value / mob.life.max;
     mob.life.remove(damage);
+    mob.damageTrail.damage(healthBefore, mob.life.value / mob.life.max);
     if (progress.weapon.gift == WeaponGift.frost && !mob.isDead) {
       mob.slow = math.max(mob.slow, .8);
     }
@@ -999,9 +1002,7 @@ class Adventure extends ChangeNotifier {
     mob.impactPose = mob.motion.phase;
     mob.motion.hit(impulse);
     mob.hurt = .14;
-    final old = mob.position.toOffset(),
-        p = world.move(old, impulse, mob.body.size);
-    mob.position.setValues(p.dx, p.dy);
+    mob.push(impulse);
     bubble(
       '${damage.round()}',
       mob.position.toOffset() - ui.Offset(0, mob.boss ? 125 : 70),
@@ -1436,6 +1437,7 @@ class Guardian extends Player with WithCollision {
               mob.body.center - const ui.Offset(0, 22),
               heavy: true,
               rank: session.progress.rank('charge'),
+              bearing: chargeAngle,
             ),
           );
           session.kickCamera(.9);
@@ -2291,6 +2293,29 @@ class HuntEnemy extends Enemy with WithCollision {
       : const ui.Color(0xffefab78);
   int impactPose = 0;
   final motion = EnemyMotion();
+  final damageTrail = DamageTrail();
+  ui.Offset _knockback = ui.Offset.zero;
+  double _knockbackTime = 0;
+
+  void push(ui.Offset impulse) {
+    if (impulse == ui.Offset.zero) return;
+    final next = _knockback + impulse;
+    _knockback = next.distance > 80 ? next / next.distance * 80 : next;
+    _knockbackTime = .16;
+  }
+
+  void _updateKnockback(double dt) {
+    if (_knockbackTime <= 0) return;
+    _knockbackTime = math.max(0, _knockbackTime - dt);
+    final step = _knockbackTime == 0
+        ? _knockback
+        : _knockback * (1 - math.exp(-30 * dt));
+    _knockback -= step;
+    final at = session.world.move(position.toOffset(), step, body.size);
+    position.setValues(at.dx, at.dy);
+    lastClearPosition = at;
+  }
+
   bool rewarded = false, combatReady = false, encounterDormant = false;
   double bearing = math.pi / 2,
       hurt = 0,
@@ -2331,8 +2356,10 @@ class HuntEnemy extends Enemy with WithCollision {
   void update(double dt) {
     if (!session.active || !combatReady || isDead || isRemoving) return;
     dt = math.min(dt, .05);
+    _updateKnockback(dt);
     final before = position.toOffset();
     _updateBehavior(dt);
+    damageTrail.update(dt, life.value / life.max);
     motion.update(
       dt,
       distance: (position.toOffset() - before).distance,
@@ -2846,6 +2873,18 @@ class HuntEnemy extends Enemy with WithCollision {
           const ui.Radius.circular(3),
         ),
         ui.Paint()..color = const ui.Color(0xcc241c18),
+      );
+      canvas.drawRRect(
+        ui.RRect.fromRectAndRadius(
+          ui.Rect.fromLTWH(
+            size.x / 2 - width / 2 + 1,
+            y + 1,
+            (width - 2) * damageTrail.value,
+            4,
+          ),
+          const ui.Radius.circular(2),
+        ),
+        ui.Paint()..color = const ui.Color(0xffffd895),
       );
       canvas.drawRRect(
         ui.RRect.fromRectAndRadius(
