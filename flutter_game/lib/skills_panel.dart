@@ -515,7 +515,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
                     Text(
                       skill.passive
                           ? '지속 효과 · 필요 레벨 ${skill.requiredLevel}'
-                          : '${p.heroClass.resource} ${skill.cost.round()} · 재사용 ${skill.cooldown.round()}초 · 필요 레벨 ${skill.requiredLevel}',
+                          : '${p.heroClass.resource} ${skill.cost.round()} · 재사용 ${p.skillCooldown(skill, atRank: p.rank(skill.id).clamp(1, 5)).toStringAsFixed(1)}초 · 필요 레벨 ${skill.requiredLevel}',
                       style: const TextStyle(
                         color: _dim,
                         fontSize: 13,

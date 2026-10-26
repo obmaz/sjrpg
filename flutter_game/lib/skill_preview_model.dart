@@ -7,15 +7,18 @@ class SkillPreviewValue {
     this.next, {
     this.suffix = '',
     this.digits = 0,
+    this.zeroAsDash = false,
   });
   final String label, suffix;
   final double current, next;
   final int digits;
-  String format(double value) => '${value.toStringAsFixed(digits)}$suffix';
+  final bool zeroAsDash;
+  String format(double value) => zeroAsDash && value == 0
+      ? '—'
+      : '${value.toStringAsFixed(digits)}$suffix';
 }
 
-List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
-  if (!p.skills.contains(skill)) return const [];
+Progress _nextRank(Progress p, SkillDef skill) {
   final rank = p.rank(skill.id);
   final next = Progress(heroClass: p.heroClass)
     ..level = p.level
@@ -28,6 +31,12 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
     ..clear()
     ..addAll(p.ranks)
     ..[skill.id] = (rank + 1).clamp(1, SkillDef.maxRank);
+  return next;
+}
+
+List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
+  if (!p.skills.contains(skill)) return const [];
+  final next = _nextRank(p, skill);
   SkillPreviewValue value(
     String label,
     double Function(Progress) read, {
@@ -77,6 +86,16 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
                 )
                 .toDouble(),
             suffix: '명',
+          ),
+        for (final id in ids)
+          value(
+            '${p.skills.firstWhere((s) => s.id == id).shortName} 재사용',
+            (p) => p.skillCooldown(
+              p.skills.firstWhere((s) => s.id == id),
+              atRank: p.rank(id).clamp(1, 5),
+            ),
+            suffix: '초',
+            digits: 2,
           ),
         for (final id in ids)
           value(
@@ -147,23 +166,11 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
         value('마나 회복', (p) => p.manaRecovery, suffix: '/초', digits: 1),
       ];
     case 'charge':
-      return [
-        damage,
-        value(
-          '최대 대상',
-          (p) => p.skillTargetLimit(skill).toDouble(),
-          suffix: '명',
-        ),
-      ];
+      return [damage];
     case 'crushingBlow':
       return [
         damage,
         value('최대 충전 피해', (p) => p.skillDamage(skill) * 1.8, digits: 1),
-        value(
-          '최대 대상',
-          (p) => p.skillTargetLimit(skill).toDouble(),
-          suffix: '명',
-        ),
       ];
     case 'warcry':
       return [
@@ -172,7 +179,15 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
         value('보호 지속', (p) => p.warcryDuration, suffix: '초', digits: 1),
       ];
     case 'iceArmor':
-      return [protection()];
+      return [
+        protection(),
+        value('보호 지속', (p) => p.iceArmorDuration, suffix: '초', digits: 1),
+      ];
+    case 'frostNova':
+      return [
+        damage,
+        value('감속 지속', (p) => p.novaSlowDuration, suffix: '초', digits: 1),
+      ];
     case 'mastery':
     case 'arcaneMastery':
       return [
@@ -214,10 +229,63 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
 List<SkillPreviewValue> previewSkill(Progress p, SkillDef skill) {
   final rows = _previewStats(p, skill);
   if (rows.isEmpty) return rows;
+  final upgraded = _nextRank(p, skill), r = p.rank(skill.id);
+  final next = (r + 1).clamp(1, SkillDef.maxRank);
   final basic = skill.id == 'cleave' || skill.id == 'firebolt';
+  final priority = <SkillPreviewValue>[];
+  if (basic) {
+    priority.add(
+      SkillPreviewValue(
+        '기본 공격 간격',
+        p.attackInterval,
+        upgraded.attackInterval,
+        suffix: '초',
+        digits: 3,
+      ),
+    );
+  } else if (!skill.passive) {
+    priority.add(
+      SkillPreviewValue(
+        '재사용 대기',
+        p.skillCooldown(skill),
+        upgraded.skillCooldown(skill),
+        suffix: '초',
+        digits: 2,
+        zeroAsDash: true,
+      ),
+    );
+    priority.add(
+      SkillPreviewValue(
+        skill.id == 'frenzy' ? '공격 속도' : '동작 속도',
+        r == 0
+            ? 0
+            : (skill.id == 'frenzy'
+                      ? p.frenzyAttackTempo
+                      : p.skillTempo(skill)) *
+                  100,
+        (skill.id == 'frenzy'
+                ? upgraded.frenzyAttackTempo
+                : upgraded.skillTempo(skill)) *
+            100,
+        suffix: '%',
+        zeroAsDash: true,
+      ),
+    );
+    if (skill.id == 'crushingBlow') {
+      priority.add(
+        SkillPreviewValue(
+          '완전 충전',
+          r == 0 ? 0 : p.heavyChargeTime,
+          upgraded.heavyChargeTime,
+          suffix: '초',
+          digits: 2,
+          zeroAsDash: true,
+        ),
+      );
+    }
+  }
   if (basic || !skill.passive && skill.id != 'iceArmor') {
-    final r = p.rank(skill.id), next = (r + 1).clamp(1, SkillDef.maxRank);
-    rows.add(
+    priority.add(
       SkillPreviewValue(
         '최대 대상',
         (basic ? p.basicTargetLimitForRank(r) : p.skillTargetLimit(skill))
@@ -230,5 +298,5 @@ List<SkillPreviewValue> previewSkill(Progress p, SkillDef skill) {
       ),
     );
   }
-  return rows;
+  return [...priority, ...rows];
 }

@@ -3,6 +3,8 @@ import 'dart:ui' as ui;
 import 'package:bonfire/bonfire.dart';
 import 'adventure.dart';
 import 'game_art.dart';
+import 'skill_growth.dart';
+import 'ranked_vfx.dart';
 
 enum SpellClip {
   meteorFlight('fx-meteor', 0, 8, .65, ui.Offset(.28, .75)),
@@ -65,15 +67,22 @@ bool paintSpellFrame(
 }
 
 class SpellBurst extends GameComponent {
-  SpellBurst(this.session, this.clip, ui.Offset at, {required this.radius})
-    : buildRevision = session.buildRevision {
+  SpellBurst(
+    this.session,
+    this.clip,
+    ui.Offset at, {
+    required this.radius,
+    this.rank = 1,
+    this.tempo = 1,
+  }) : buildRevision = session.buildRevision {
     assert(clip != SpellClip.meteorFlight);
     position = Vector2(at.dx, at.dy);
     size = Vector2.all(1);
   }
   final Adventure session;
   final SpellClip clip;
-  final double radius;
+  final double radius, tempo;
+  final int rank;
   final int buildRevision;
   double age = 0;
   bool finished = false;
@@ -95,7 +104,7 @@ class SpellBurst extends GameComponent {
       final center = session.hero.body.center;
       position.setValues(center.dx, center.dy);
     }
-    age = math.min(clip.duration, age + math.min(.05, dt));
+    age = math.min(clip.duration, age + math.min(.05, dt) * tempo);
     if (age >= clip.duration) {
       finished = true;
       removeFromParent();
@@ -141,7 +150,22 @@ class SpellBurst extends GameComponent {
       opacity: ((1 - t) / .22).clamp(0, .95),
     );
     // Debris has independent radial velocity and gravity, beyond the atlas shape changes.
-    for (var i = 0; i < 12; i++) {
+    paintRankImpact(canvas, ui.Offset.zero, t, rank, color, radius: radius);
+    for (var layer = 1; layer < SkillGrowth.layers(rank); layer++) {
+      final f = front * (1 - layer * .1);
+      canvas.drawOval(
+        ui.Rect.fromCenter(
+          center: ui.Offset.zero,
+          width: f * 2,
+          height: f * 1.3,
+        ),
+        ui.Paint()
+          ..color = color.withValues(alpha: (1 - t) * (.2 + rank * .045))
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 1 + rank * .45,
+      );
+    }
+    for (var i = 0; i < SkillGrowth.particles(rank); i++) {
       final a = i * 2.39996, speed = radius * (.5 + (i % 4) * .16);
       final at = ui.Offset(
         math.cos(a) * speed * t,
@@ -168,7 +192,28 @@ class SpellBurst extends GameComponent {
   }
 }
 
-void paintIceShield(ui.Canvas canvas, ui.Offset center, double time) {
+void paintIceShield(
+  ui.Canvas canvas,
+  ui.Offset center,
+  double time, {
+  int rank = 1,
+}) {
+  for (var layer = 1; layer < SkillGrowth.layers(rank); layer++) {
+    canvas.drawArc(
+      ui.Rect.fromCenter(
+        center: center,
+        width: 72 + layer * 8,
+        height: 35 + layer * 5,
+      ),
+      -time * (1.4 + layer * .3),
+      math.pi * (1.1 + rank * .1),
+      false,
+      ui.Paint()
+        ..color = const ui.Color(0xffc3f8ff).withValues(alpha: .2 + rank * .055)
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = 1 + rank * .25,
+    );
+  }
   final ring = ui.Rect.fromCenter(center: center, width: 72, height: 35);
   canvas.drawArc(
     ring,
@@ -180,8 +225,8 @@ void paintIceShield(ui.Canvas canvas, ui.Offset center, double time) {
       ..strokeWidth = 1.5
       ..color = const ui.Color(0x7789eaff),
   );
-  for (var i = 0; i < 7; i++) {
-    final a = time * 1.7 + i * math.pi * 2 / 7;
+  for (var i = 0; i < 5 + rank * 2; i++) {
+    final a = time * 1.7 + i * math.pi * 2 / (5 + rank * 2);
     final at =
         center +
         ui.Offset(
@@ -221,7 +266,14 @@ void paintIceShield(ui.Canvas canvas, ui.Offset center, double time) {
   }
 }
 
-void paintRuneWave(ui.Canvas canvas, double t, double radius, ui.Color color) {
+void paintRuneWave(
+  ui.Canvas canvas,
+  double t,
+  double radius,
+  ui.Color color, {
+  int rank = 1,
+}) {
+  paintRankImpact(canvas, ui.Offset.zero, t, rank, color, radius: radius);
   for (var wave = 0; wave < 3; wave++) {
     final life = (t - wave * .13) / (1 - wave * .13);
     if (life < 0 || life >= 1) continue;
@@ -330,6 +382,7 @@ void paintBattleAura(
   ui.Offset center,
   double time, {
   bool frenzy = false,
+  int rank = 1,
 }) {
   final color = frenzy
       ? const ui.Color(0xffff9b65)
@@ -342,8 +395,8 @@ void paintBattleAura(
       ..strokeWidth = 1.5
       ..color = color.withValues(alpha: .35 + .15 * math.sin(time * 5)),
   );
-  for (var i = 0; i < 8; i++) {
-    final a = time * 1.9 + i * math.pi / 4;
+  for (var i = 0; i < 6 + rank * 2; i++) {
+    final a = time * 1.9 + i * math.pi * 2 / (6 + rank * 2);
     final rise = (.5 + .5 * math.sin(time * 5 + i)) * (frenzy ? 17 : 9);
     final at = feet + ui.Offset(math.cos(a) * 31, math.sin(a) * 10);
     final rune = ui.Path()
@@ -359,7 +412,7 @@ void paintBattleAura(
     );
   }
   if (frenzy) {
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < 2 + rank; i++) {
       final y = -8.0 - i * 14;
       final x = math.sin(time * 7 + i * 2) * 22;
       canvas.drawLine(

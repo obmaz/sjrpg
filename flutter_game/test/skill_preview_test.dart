@@ -58,10 +58,19 @@ void main() {
     expect(p.equip(ice), true);
     p.ranks['coldMastery'] = 2;
     final nova = p.skills.firstWhere((s) => s.id == 'frostNova');
-    final before = previewSkill(p, nova).first;
+    final before = previewSkill(
+      p,
+      nova,
+    ).firstWhere((row) => row.label == '기술 피해');
     expect(before.current, p.skillDamage(nova));
     expect(before.current, greaterThan(p.swordDamage * 1.4));
-    expect(previewSkill(p, p.skills.first).first.current, p.basicDamage);
+    expect(
+      previewSkill(
+        p,
+        p.skills.first,
+      ).firstWhere((row) => row.label == '기본 1타 피해').current,
+      p.basicDamage,
+    );
     expect(p.learn(nova), true);
     expect(p.skillDamage(nova), before.next);
     final warrior = Progress();

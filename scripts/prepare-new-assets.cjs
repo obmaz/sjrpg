@@ -49,6 +49,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'fx-meteor',
         'fx-ice-nova',
         'fx-whirlwind',
+        'fx-steel-whirlwind',
         'fx-warcry',
         'passive-icons',
         'quest-sites',

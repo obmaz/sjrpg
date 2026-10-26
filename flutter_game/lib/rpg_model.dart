@@ -1,3 +1,4 @@
+import 'skill_growth.dart';
 import 'dart:math' as math;
 
 enum HeroClass { warrior, mage }
@@ -411,7 +412,7 @@ const warriorSkills = [
     'cleave',
     '연속 베기',
     '전투 기술',
-    '기본 공격은 1명을 벱니다. 등급마다 피해 +15%, 최대 대상 +1명으로 5명까지 증가합니다. 세 번째 공격은 강타합니다.',
+    '기본 공격은 1명을 벱니다. 등급마다 공격 속도가 빨라지고 최대 대상 +1명으로 5명까지 증가합니다. 피해는 조금씩 증가합니다. 세 번째 공격은 강타합니다.',
     1,
     0,
     0,
@@ -421,7 +422,7 @@ const warriorSkills = [
     'warcry',
     '전장의 함성',
     '함성',
-    '주변 적에게 피해를 주고 2초간 기절시킵니다. 6초간 받는 피해도 줄어듭니다.',
+    '주변 적을 함성으로 기절시키고 잠시 피해를 줄입니다. 등급마다 대상 수·보호 시간·파동 속도가 늘고 재사용이 빨라집니다.',
     1,
     18,
     7,
@@ -451,7 +452,7 @@ const warriorSkills = [
     'whirlwind',
     '소용돌이',
     '전투 기술',
-    '넓은 범위를 세 차례 베고 적을 밀어냅니다. 등급마다 피해가 증가합니다.',
+    '무기를 들고 직접 회전하며 세 차례 벱니다. 등급마다 회전·베기 속도와 대상 수가 늘고 재사용이 빨라지며 검 궤적과 파편이 화려해집니다.',
     3,
     30,
     5,
@@ -461,7 +462,7 @@ const warriorSkills = [
     'frenzy',
     '광전사의 격노',
     '전투 기술',
-    '7초간 공격속도와 이동속도가 증가합니다. 발동 시 주변 적을 벱니다.',
+    '공격·이동 속도가 증가하고 발동 시 주변 적을 벱니다. 등급마다 공격 속도와 지속 시간이 늘고 재사용이 빨라집니다.',
     4,
     28,
     12,
@@ -471,7 +472,7 @@ const warriorSkills = [
     'seismicSlam',
     '대지 강타',
     '전투 기술',
-    '전방의 지면을 내리쳐 피해를 주고 잠시 기절시킵니다. 장애물 너머에는 피해를 주지 않습니다.',
+    '전방의 지면을 내리쳐 적을 잠시 기절시킵니다. 등급마다 동작과 재사용이 빨라지고 대상 수와 파편이 늘어납니다. 장애물 너머는 타격하지 않습니다.',
     5,
     24,
     8,
@@ -602,7 +603,7 @@ const warriorSkills = [
     'charge',
     '맹렬한 돌진',
     '전투 기술',
-    '바라보는 방향으로 몸을 던져 적을 밀칩니다. 벽에서 멈추며 3명부터 최대 5명에게 한 번씩 피해를 줍니다. 끌어서 방향을 정할 수 있습니다.',
+    '끌어서 방향을 정한 뒤 몸을 던져 적을 밀칩니다. 벽에서 멈춥니다. 등급마다 돌진·재사용이 빨라지고 대상 수와 궤적이 늘어납니다.',
     6,
     16,
     5,
@@ -612,7 +613,7 @@ const warriorSkills = [
     'crushingBlow',
     '집중 강타',
     '전투 기술',
-    '검을 들어 힘을 모은 뒤 전방을 내려칩니다. 버튼을 길게 눌렀다 놓으면 최대 1.2초까지 모아 피해가 80% 증가합니다. 3명부터 최대 7명을 타격합니다.',
+    '길게 눌러 힘을 모은 뒤 놓으면 전방을 내려칩니다. 등급마다 충전·동작·재사용이 빨라지고 대상 수와 충격 파편이 늘어납니다. 완전 충전은 피해 +80%입니다.',
     7,
     22,
     6,
@@ -624,7 +625,7 @@ const mageSkills = [
     'firebolt',
     '화염탄',
     '화염',
-    '기본 원거리 공격. 등급마다 피해 +18%, 3등급부터 적중 시 폭발합니다.',
+    '기본 원거리 공격. 등급마다 공격과 발사가 빨라집니다. 3등급부터 적중 시 폭발하고 대상이 증가합니다.',
     1,
     0,
     0,
@@ -634,7 +635,7 @@ const mageSkills = [
     'frostNova',
     '서릿발',
     '냉기',
-    '주변 적에게 냉기 피해를 주고 2초간 빙결시킵니다. 등급마다 범위가 증가합니다.',
+    '주변 적을 냉기로 얼립니다. 등급마다 시전·재사용이 빨라지고 대상 수·감속 시간·얼음 결정이 늘어납니다.',
     1,
     18,
     6,
@@ -653,7 +654,7 @@ const mageSkills = [
     'iceArmor',
     '얼음 갑옷',
     '냉기',
-    '12초간 피해를 줄이고 근접 공격자를 둔화합니다. 등급마다 방어가 증가합니다.',
+    '얼음으로 몸을 보호하고 근접 공격자를 둔화합니다. 등급마다 보호 시간·감소율·결정 수가 늘고 시전과 재사용이 빨라집니다.',
     2,
     20,
     15,
@@ -663,7 +664,7 @@ const mageSkills = [
     'chainLightning',
     '연쇄 번개',
     '번개',
-    '가까운 적 사이를 등급에 따라 3~7명까지 잇는 번개. 장애물 너머로는 전이되지 않습니다.',
+    '가까운 적들을 잇는 번개입니다. 등급마다 시전·재사용이 빨라지고 대상 수와 전류 갈래가 늘어납니다. 장애물 너머로는 전이하지 않습니다.',
     3,
     28,
     5,
@@ -673,7 +674,7 @@ const mageSkills = [
     'meteor',
     '유성 낙하',
     '화염',
-    '바라보는 방향의 적에게 유성을 떨어뜨려 넓은 화염 피해를 줍니다.',
+    '목표에 유성을 소환합니다. 등급마다 시전·낙하·재사용이 빨라지고 대상 수·불꽃·파편이 늘어납니다.',
     4,
     38,
     9,
@@ -1134,6 +1135,44 @@ class Progress {
     };
   }
 
+  double skillCooldown(SkillDef skill, {int? atRank}) {
+    final r = atRank ?? rank(skill.id);
+    if (skill.passive || r <= 0 || !skills.contains(skill)) return 0;
+    final specialty = switch (skill.id) {
+      'whirlwind' || 'seismicSlam' => rank('stormOfSteel'),
+      'meteor' => rank('cinderReach'),
+      'chainLightning' => rank('forkedStorm'),
+      _ => 0,
+    };
+    return skill.cooldown * SkillGrowth.cooldown(r) * (1 - specialty * .02);
+  }
+
+  double skillTempo(SkillDef skill, {int? atRank}) =>
+      SkillGrowth.tempo(atRank ?? rank(skill.id));
+  double skillMotionTime(SkillDef skill, {int? atRank}) {
+    final base = heroClass == HeroClass.mage
+        ? .48
+        : switch (skill.id) {
+            'charge' => .36,
+            'crushingBlow' => .42,
+            'whirlwind' => .5,
+            'seismicSlam' => .23,
+            _ => .2,
+          };
+    return base / skillTempo(skill, atRank: atRank);
+  }
+
+  double get basicTempo => SkillGrowth.tempo(
+    rank(heroClass == HeroClass.warrior ? 'cleave' : 'firebolt'),
+  );
+  double get heavyChargeTime => 1.2 / SkillGrowth.tempo(rank('crushingBlow'));
+  double get frenzyAttackTempo => 1.65 + math.max(0, rank('frenzy') - 1) * .08;
+  double get frenzyMoveSpeed => 310 + math.max(0, rank('frenzy') - 1) * 8;
+  double get frenzyDuration => 7 + math.max(0, rank('frenzy') - 1) * .5;
+  double get iceArmorDuration => 12 + math.max(0, rank('iceArmor') - 1) * 1.25;
+  double get novaSlowDuration => 3 + math.max(0, rank('frostNova') - 1) * .2;
+  double get warcryStun => 2 + math.max(0, rank('warcry') - 1) * .1;
+
   double get basicDamage => skillDamage(skills.first);
   double skillDamage(SkillDef skill, {int? atRank}) {
     final r = (atRank ?? rank(skill.id)).clamp(0, SkillDef.maxRank);
@@ -1142,17 +1181,17 @@ class Progress {
       return 0;
     }
     final factor = switch (skill.id) {
-      'cleave' => 1 + math.max(0, r - 1) * .15,
-      'firebolt' => 1 + math.max(0, r - 1) * .18,
-      'warcry' => 1 + r * .25,
-      'whirlwind' => 1.1 + r * .24,
-      'frenzy' => 1.2 + r * .2,
-      'charge' => 1.4 + r * .25,
-      'crushingBlow' => 2.2 + r * .4,
-      'seismicSlam' => 1.8 + r * .32,
-      'frostNova' => 1.1 + r * .3,
-      'chainLightning' => 1.5 + r * .35,
-      'meteor' => 3 + r * .6,
+      'cleave' => 1 + math.max(0, r - 1) * .04,
+      'firebolt' => 1 + math.max(0, r - 1) * .04,
+      'warcry' => 1.25 + math.max(0, r - 1) * .04,
+      'whirlwind' => 1.34 + math.max(0, r - 1) * .05,
+      'frenzy' => 1.4 + math.max(0, r - 1) * .05,
+      'charge' => 1.65 + math.max(0, r - 1) * .05,
+      'crushingBlow' => 2.6 + math.max(0, r - 1) * .1,
+      'seismicSlam' => 2.12 + math.max(0, r - 1) * .1,
+      'frostNova' => 1.4 + math.max(0, r - 1) * .05,
+      'chainLightning' => 1.85 + math.max(0, r - 1) * .1,
+      'meteor' => 3.6 + math.max(0, r - 1) * .15,
       _ => 0.0,
     };
     final element =
@@ -1190,13 +1229,15 @@ class Progress {
         : 0;
   }
 
-  double get warcryDuration => 6 + rank('battleVigor') * .4;
+  double get warcryDuration =>
+      6 + math.max(0, rank('warcry') - 1) * .35 + rank('battleVigor') * .4;
   double rageOnHit({required bool protected}) =>
       3.0 + (protected ? rank('rallyingVoice') + rank('warDrums') * .5 : 0);
 
   double get attackInterval => math.max(
     .16,
-    weapon.base.tempo *
+    weapon.base.tempo /
+        basicTempo *
         (1 - equipped.values.fold(0.0, (v, g) => v + g.base.haste)) *
         (1 - rank('battleFocus') * .025) *
         (1 - rank('weaponTempo') * .015),

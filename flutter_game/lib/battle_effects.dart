@@ -4,6 +4,7 @@ import 'package:bonfire/bonfire.dart';
 import 'adventure.dart';
 import 'world_model.dart';
 import 'spell_vfx.dart';
+import 'ranked_vfx.dart';
 import 'device_settings.dart';
 import 'boss_attacks.dart';
 import 'audio_settings.dart';
@@ -75,12 +76,18 @@ void paintCombatEffect(
 }
 
 class ContactSpark extends GameComponent {
-  ContactSpark(this.session, ui.Offset at, {this.heavy = false}) {
+  ContactSpark(
+    this.session,
+    ui.Offset at, {
+    this.heavy = false,
+    this.rank = 1,
+  }) {
     position = Vector2(at.dx, at.dy);
     size = Vector2.all(1);
   }
   final Adventure session;
   final bool heavy;
+  final int rank;
   double age = 0;
   @override
   bool get isVisible => true;
@@ -98,6 +105,14 @@ class ContactSpark extends GameComponent {
   void render(ui.Canvas canvas) {
     super.render(canvas);
     final t = (age / .18).clamp(0.0, 1.0), reach = (heavy ? 38 : 26) * t;
+    paintRankImpact(
+      canvas,
+      ui.Offset.zero,
+      t,
+      rank,
+      const ui.Color(0xffffdca1),
+      radius: heavy ? 65 : 40,
+    );
     for (var i = 0; i < 8; i++) {
       final a = i * math.pi / 4 + .2;
       final axis = ui.Offset(math.cos(a), math.sin(a) * .75);
@@ -293,6 +308,7 @@ class ArcaneBolt extends GameComponent {
     this.explosive = false,
     this.launchDelay = 0,
     this.caster,
+    this.rank = 1,
     int? targetLimit,
   }) : targetLimit = targetLimit ?? (explosive ? 3 : 1),
        direction = ui.Offset(math.cos(angle), math.sin(angle)),
@@ -307,7 +323,7 @@ class ArcaneBolt extends GameComponent {
   final bool explosive;
   final Guardian? caster;
   double launchDelay;
-  final int targetLimit;
+  final int targetLimit, rank;
   final int buildRevision;
   double remaining = .88;
   bool resolved = false;
@@ -373,7 +389,13 @@ class ArcaneBolt extends GameComponent {
           }
           session.game?.add(
             element == 'lightning'
-                ? RuneBurst(session, at, color, radius: explosive ? 85 : 27)
+                ? RuneBurst(
+                    session,
+                    at,
+                    color,
+                    radius: explosive ? 85 : 27,
+                    rank: rank,
+                  )
                 : SpellBurst(
                     session,
                     element == 'ice'
@@ -381,6 +403,7 @@ class ArcaneBolt extends GameComponent {
                         : SpellClip.meteorImpact,
                     at,
                     radius: explosive ? 85 : 30,
+                    rank: rank,
                   ),
           );
           finish();
@@ -398,6 +421,14 @@ class ArcaneBolt extends GameComponent {
     super.render(canvas);
     final c = canvas;
     const tip = ui.Offset(0, -14);
+    paintRankImpact(
+      c,
+      tip,
+      ((.88 - remaining) * 6) % 1,
+      rank,
+      color,
+      radius: 16 + rank * 2,
+    );
     c.drawLine(
       tip - direction * 26,
       tip,
@@ -477,18 +508,26 @@ class ArcaneBolt extends GameComponent {
 }
 
 class RuneBurst extends GameComponent {
-  RuneBurst(this.session, ui.Offset at, this.color, {this.radius = 160}) {
+  RuneBurst(
+    this.session,
+    ui.Offset at,
+    this.color, {
+    this.radius = 160,
+    this.rank = 1,
+    this.tempo = 1,
+  }) {
     position = Vector2(at.dx, at.dy);
     size = Vector2.all(1);
   }
   final Adventure session;
   final ui.Color color;
-  final double radius;
+  final double radius, tempo;
+  final int rank;
   double age = 0;
   @override
   void update(double dt) {
     if (!session.active) return;
-    age += math.min(.05, dt);
+    age += math.min(.05, dt) * tempo;
     if (age >= .55) removeFromParent();
     super.update(dt);
   }
@@ -496,17 +535,30 @@ class RuneBurst extends GameComponent {
   @override
   void render(ui.Canvas canvas) {
     super.render(canvas);
-    paintRuneWave(canvas, (age / .55).clamp(0.0, 1.0), radius, color);
+    paintRuneWave(
+      canvas,
+      (age / .55).clamp(0.0, 1.0),
+      radius,
+      color,
+      rank: rank,
+    );
   }
 }
 
 class WhirlwindPulse extends GameComponent {
-  WhirlwindPulse(this.session, this.hero, this.damage, {this.targetLimit = 3})
-    : buildRevision = session.buildRevision;
+  WhirlwindPulse(
+    this.session,
+    this.hero,
+    this.damage, {
+    this.targetLimit = 3,
+    this.duration = .5,
+    this.rank = 1,
+  }) : buildRevision = session.buildRevision;
   final Adventure session;
   final Guardian hero;
   final double damage;
-  final int targetLimit;
+  final int targetLimit, rank;
+  final double duration;
   final targets = <HuntEnemy>{};
   final int buildRevision;
   double age = 0;
@@ -521,7 +573,7 @@ class WhirlwindPulse extends GameComponent {
     }
     if (!session.active) return;
     age += math.min(.05, dt);
-    if (age >= pulses * .16 && pulses < 3) {
+    if (age >= pulses * duration / 3 && pulses < 3) {
       pulses++;
       areaStrike(
         session,
@@ -531,13 +583,33 @@ class WhirlwindPulse extends GameComponent {
         maxTargets: targetLimit,
         castTargets: targets,
       );
+      for (final mob in targets) {
+        if (!mob.isDead &&
+            (mob.body.center - hero.body.center).distance < 180) {
+          session.game?.add(
+            ContactSpark(
+              session,
+              mob.body.center - const ui.Offset(0, 25),
+              rank: rank,
+              heavy: rank >= 3,
+            ),
+          );
+        }
+      }
+      if (targets.isNotEmpty) session.kickCamera(.35 + rank * .08);
     }
     if (pulses == 3) removeFromParent();
     super.update(dt);
   }
 }
 
-void chainLightning(Adventure s, ui.Offset from, double damage, int count) {
+void chainLightning(
+  Adventure s,
+  ui.Offset from,
+  double damage,
+  int count, {
+  int rank = 1,
+}) {
   final points = <ui.Offset>[from], visited = <HuntEnemy>{};
   for (var i = 0; i < count.clamp(0, 32); i++) {
     final at = points.last;
@@ -564,13 +636,14 @@ void chainLightning(Adventure s, ui.Offset from, double damage, int count) {
     points.add(target.body.center);
     s.hit(target, damage * math.pow(.9, i), ui.Offset.zero);
   }
-  s.game?.add(LightningTrace(s, points));
+  s.game?.add(LightningTrace(s, points, rank: rank));
 }
 
 class LightningTrace extends GameComponent {
-  LightningTrace(this.session, this.points);
+  LightningTrace(this.session, this.points, {this.rank = 1});
   final Adventure session;
   final List<ui.Offset> points;
+  final int rank;
   double age = 0;
   @override
   bool get isVisible => true;
@@ -589,26 +662,14 @@ class LightningTrace extends GameComponent {
     super.render(canvas);
     final c = canvas;
     for (var i = 1; i < points.length; i++) {
-      final texture = session.art.images['combat-fx'];
-      if (texture != null) {
-        final cell = texture.width / 4;
-        c.drawImageRect(
-          texture,
-          ui.Rect.fromLTWH(cell * 3, 0, cell, cell),
-          ui.Rect.fromCenter(
-            center: points[i] - const ui.Offset(0, 35),
-            width: 125,
-            height: 125,
-          ),
-          ui.Paint()
-            ..color = ui.Color.fromRGBO(
-              255,
-              255,
-              255,
-              (1 - age / .3).clamp(0, 1),
-            ),
-        );
-      }
+      paintRankImpact(
+        c,
+        points[i] - const ui.Offset(0, 20),
+        age / .3,
+        rank,
+        const ui.Color(0xffb1dfff),
+        radius: 35 + rank * 3,
+      );
       final a = points[i - 1] - const ui.Offset(0, 20),
           b = points[i] - const ui.Offset(0, 20),
           d = b - a,
@@ -620,23 +681,42 @@ class LightningTrace extends GameComponent {
                 ? ui.Offset.zero
                 : ui.Offset(-d.dy, d.dx) /
                       math.max(1, d.distance) *
-                      math.sin(j * 7.0 + i) *
+                      math.sin(j * 7.0 + i + age * 90) *
                       13);
         path.lineTo(p.dx, p.dy);
+      }
+      for (var branch = 0; branch < rank - 1; branch++) {
+        final mid = ui.Offset.lerp(a, b, .5 + branch * .09)!;
+        final end =
+            mid +
+            ui.Offset(
+                  math.cos(age * 65 + branch * 2.4),
+                  math.sin(age * 65 + branch * 2.4),
+                ) *
+                (12 + rank * 4);
+        c.drawLine(
+          mid,
+          end,
+          ui.Paint()
+            ..color = const ui.Color(
+              0xffb9dbff,
+            ).withValues(alpha: (1 - age / .3).clamp(0, 1))
+            ..strokeWidth = 1.2 + rank * .2,
+        );
       }
       c.drawPath(
         path,
         ui.Paint()
           ..color = const ui.Color(0x88ad9bff)
           ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 8,
+          ..strokeWidth = 7 + rank * 1.2,
       );
       c.drawPath(
         path,
         ui.Paint()
           ..color = const ui.Color(0xffe5f6ff)
           ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 2,
+          ..strokeWidth = 1.8 + rank * .25,
       );
     }
   }
@@ -649,11 +729,14 @@ class MeteorFall extends GameComponent {
     this.target,
     this.damage, {
     this.targetLimit = 3,
+    this.rank = 1,
+    this.tempo = 1,
   }) : buildRevision = session.buildRevision;
   final Adventure session;
   final ui.Offset origin, target;
   final double damage;
-  final int targetLimit;
+  final int targetLimit, rank;
+  final double tempo;
   final int buildRevision;
   double age = 0;
   bool struck = false;
@@ -670,7 +753,7 @@ class MeteorFall extends GameComponent {
     }
     if (!session.active) return;
     age += math.min(.05, dt);
-    if (age >= .65 && !struck) {
+    if (age >= .65 / tempo && !struck) {
       struck = true;
       if (session.world.clearLine(origin, target, const ui.Size(3, 3))) {
         session.kickCamera(1.5);
@@ -678,7 +761,14 @@ class MeteorFall extends GameComponent {
         session.device.pulse(FeedbackKind.skill);
         areaStrike(session, target, 175, damage, maxTargets: targetLimit);
         session.game?.add(
-          SpellBurst(session, SpellClip.meteorImpact, target, radius: 175),
+          SpellBurst(
+            session,
+            SpellClip.meteorImpact,
+            target,
+            radius: 175,
+            rank: rank,
+            tempo: tempo,
+          ),
         );
       }
       removeFromParent();
@@ -697,7 +787,8 @@ class MeteorFall extends GameComponent {
         ..strokeWidth = 2
         ..color = const ui.Color(0xaaffab59),
     );
-    final t = (age / .65).clamp(0.0, 1.0), fall = t * t;
+    final t = (age * tempo / .65).clamp(0.0, 1.0), fall = t * t;
+    paintRankImpact(c, target, t, rank, const ui.Color(0xffffc578), radius: 85);
     final p = target + ui.Offset(110 * (1 - fall), -360 * (1 - fall));
     c.drawOval(
       ui.Rect.fromCenter(
@@ -707,7 +798,7 @@ class MeteorFall extends GameComponent {
       ),
       ui.Paint()..color = ui.Color.fromRGBO(255, 160, 70, .1 + t * .25),
     );
-    for (var i = 0; i < 7; i++) {
+    for (var i = 0; i < 7 + (rank - 1) * 2; i++) {
       final lag = (age * 2.6 + i * .13) % 1;
       final at =
           p +
@@ -728,9 +819,9 @@ class MeteorFall extends GameComponent {
       session.art,
       c,
       SpellClip.meteorFlight,
-      age,
+      age * tempo,
       ui.Offset.zero,
-      170,
+      170 + (rank - 1) * 8,
     );
     c.restore();
   }

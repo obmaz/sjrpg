@@ -372,6 +372,12 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         Widget skillButton(int slot) {
           final skill = p.skillAt(slot)!, layout = layouts[slot];
           final remaining = adventure.hero.cooldowns[skill.id] ?? 0;
+          final aimed = const {
+            'meteor',
+            'seismicSlam',
+            'charge',
+            'crushingBlow',
+          }.contains(skill.id);
           return Positioned(
             right: layout.$1,
             bottom: bottom + layout.$2,
@@ -388,17 +394,11 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   : '스킬 ${slot + 1} ${skill.name}',
               size: layout.$3,
               remaining: remaining,
-              total: skill.cooldown,
+              total: p.skillCooldown(skill),
               onTap: () => adventure.hero.skill(slot: slot),
-              onAimStart: skill.id == 'meteor' || skill.id == 'seismicSlam'
-                  ? () => adventure.hero.beginAim(slot)
-                  : null,
-              onAimMove: skill.id == 'meteor' || skill.id == 'seismicSlam'
-                  ? adventure.hero.moveAim
-                  : null,
-              onAimEnd: skill.id == 'meteor' || skill.id == 'seismicSlam'
-                  ? adventure.hero.finishAim
-                  : null,
+              onAimStart: aimed ? () => adventure.hero.beginAim(slot) : null,
+              onAimMove: aimed ? adventure.hero.moveAim : null,
+              onAimEnd: aimed ? adventure.hero.finishAim : null,
             ),
           );
         }

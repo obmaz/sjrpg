@@ -30,6 +30,7 @@ class GameArt {
             'fx-meteor',
             'fx-ice-nova',
             'fx-whirlwind',
+            'fx-steel-whirlwind',
             'fx-warcry',
             'dodge-icon',
             'actors-roll',

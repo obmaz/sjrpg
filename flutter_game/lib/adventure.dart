@@ -14,6 +14,7 @@ import 'boss_attacks.dart';
 import 'audio_settings.dart';
 import 'encounters.dart';
 import 'enemy_catalog.dart';
+import 'ranked_vfx.dart';
 
 enum NearbyAction { chest, shrine, mount, dismount, shop, talk }
 
@@ -898,6 +899,7 @@ class Adventure extends ChangeNotifier {
           this,
           mob.body.center - const ui.Offset(0, 28),
           heavy: heavy,
+          rank: progress.rank('cleave'),
         ),
       );
       progress.energy = math.min(
@@ -1122,7 +1124,8 @@ class Guardian extends Player with WithCollision {
   double impactHold = 0;
   double swingDuration = .23, castLock = 0, comboGrace = 0;
   int strikePose = 0;
-  double chargeTime = 0, chargeAngle = 0, chargeDamage = 0;
+  double chargeTime = 0, chargeAngle = 0, chargeDamage = 0, chargeSpeed = 900;
+  double spinDuration = .5;
   int chargeCap = 0;
   final chargeVictims = <HuntEnemy>{};
   double heavyWindup = 0, heavyPower = 0, heavyAngle = 0;
@@ -1168,16 +1171,28 @@ class Guardian extends Player with WithCollision {
           session,
           mob.body.center - const ui.Offset(0, 25),
           heavy: true,
+          rank: session.progress.rank('crushingBlow'),
         ),
       );
     }
+    session.game?.add(
+      GroundStrike(
+        session,
+        body.center +
+            ui.Offset(math.cos(heavyAngle), math.sin(heavyAngle)) * 80,
+        rank: session.progress.rank('crushingBlow'),
+        tempo: session.progress.skillTempo(def),
+        bearing: heavyAngle,
+        directional: true,
+      ),
+    );
     session.audio.play(EffectSound.impact);
     session.device.pulse(FeedbackKind.hit);
     session.kickCamera(enemies.isEmpty ? .3 : 1.4);
     attackBearing = heavyAngle;
     strikePose = 2;
-    swingDuration = .36;
-    swing = .18;
+    swingDuration = .36 / session.progress.skillTempo(def);
+    swing = .18 / session.progress.skillTempo(def);
     impactHold = enemies.isEmpty ? 0 : .06;
   }
 
@@ -1265,7 +1280,9 @@ class Guardian extends Player with WithCollision {
       return;
     }
     if (aim != null) aim!.heldFor += dt;
-    speed = session.riding?.def.speed ?? (frenzyTime > 0 ? 310 : 270);
+    speed =
+        session.riding?.def.speed ??
+        (frenzyTime > 0 ? session.progress.frenzyMoveSpeed : 270);
     if (castLock > 0) speed *= .4;
     final before = position.toOffset();
     super.update(dt);
@@ -1274,7 +1291,7 @@ class Guardian extends Player with WithCollision {
     if (chargeTime > 0) {
       delta =
           ui.Offset(math.cos(chargeAngle), math.sin(chargeAngle)) *
-          900 *
+          chargeSpeed *
           math.min(dt, chargeTime);
     }
     if (dashing > 0) {
@@ -1325,6 +1342,7 @@ class Guardian extends Player with WithCollision {
               session,
               mob.body.center - const ui.Offset(0, 22),
               heavy: true,
+              rank: session.progress.rank('charge'),
             ),
           );
           session.kickCamera(.9);
@@ -1417,13 +1435,17 @@ class Guardian extends Player with WithCollision {
     strikePose = session.combo;
     session.combo = (session.combo + 1) % 3;
     comboGrace = 1.2;
-    attackClock = session.progress.attackInterval * (frenzyTime > 0 ? .6 : 1);
-    swingDuration = strikePose == 2 ? .32 : .26;
+    attackClock = math.max(
+      .12,
+      session.progress.attackInterval /
+          (frenzyTime > 0 ? session.progress.frenzyAttackTempo : 1),
+    );
+    swingDuration = (strikePose == 2 ? .32 : .26) / session.progress.basicTempo;
     swing = swingDuration;
     final p = session.progress;
     if (p.heroClass == HeroClass.mage) {
-      castLock = .26;
-      swingDuration = swing = .32;
+      castLock = .26 / p.basicTempo;
+      swingDuration = swing = .32 / p.basicTempo;
     }
     if (candidates.isEmpty &&
         session.strikeEncounterStone(
@@ -1450,7 +1472,8 @@ class Guardian extends Player with WithCollision {
           angle,
           p.basicDamage,
           element: p.weapon.base.style,
-          launchDelay: .13,
+          launchDelay: .13 / p.basicTempo,
+          rank: p.rank('firebolt'),
           caster: this,
           explosive: p.rank('firebolt') >= 3,
           targetLimit: p.basicTargetLimit,
@@ -1534,11 +1557,11 @@ class Guardian extends Player with WithCollision {
     });
     session.device.pulse(FeedbackKind.skill);
     p.energy -= def.cost;
-    cooldowns[def.id] = def.cooldown;
+    cooldowns[def.id] = p.skillCooldown(def);
     if (p.heroClass == HeroClass.mage) {
-      castLock = .48;
+      castLock = p.skillMotionTime(def);
       attackClock = math.max(attackClock, castLock);
-      swingDuration = swing = .48;
+      swingDuration = swing = castLock;
       attackBearing = manualAim?.angle ?? bearing;
     }
     switch (def.id) {
@@ -1547,16 +1570,22 @@ class Guardian extends Player with WithCollision {
         chargeDamage = p.skillDamage(def);
         chargeCap = p.skillTargetLimit(def);
         chargeVictims.clear();
-        chargeTime = .36;
-        attackClock = math.max(attackClock, .42);
+        chargeTime = p.skillMotionTime(def);
+        chargeSpeed = 324 / chargeTime;
+        attackClock = math.max(attackClock, chargeTime + .06);
       case 'crushingBlow':
         heavyAngle = manualAim?.angle ?? bearing;
         heavyPower =
             p.skillDamage(def) *
-            (1 + .8 * ((manualAim?.heldFor ?? 0) / 1.2).clamp(0, 1));
+            (1 +
+                .8 *
+                    ((manualAim?.heldFor ?? 0) / p.heavyChargeTime).clamp(
+                      0,
+                      1,
+                    ));
         heavySkill = def;
-        heavyWindup = .42;
-        attackClock = math.max(attackClock, .72);
+        heavyWindup = p.skillMotionTime(def);
+        attackClock = math.max(attackClock, heavyWindup + .3);
         attackBearing = heavyAngle;
         strikePose = 2;
         swingDuration = swing = .66;
@@ -1567,7 +1596,7 @@ class Guardian extends Player with WithCollision {
           body.center,
           170 + rank * 8,
           p.skillDamage(def),
-          stun: 2,
+          stun: p.warcryStun,
           maxTargets: p.skillTargetLimit(def),
         );
         session.game?.add(
@@ -1576,23 +1605,30 @@ class Guardian extends Player with WithCollision {
             SpellClip.warcry,
             body.center,
             radius: 170 + rank * 8,
+            rank: rank,
+            tempo: p.skillTempo(def),
           ),
         );
       case 'whirlwind':
-        spin = .5;
-        // The hero rotates with the weapon; no detached magical vortex.
-        attackClock = math.max(attackClock, .5);
-        invulnerable = math.max(invulnerable, .35);
+        spinDuration = p.skillMotionTime(def);
+        spin = spinDuration;
+        session.game?.add(
+          SteelWhirlwind(session, this, rank: rank, duration: spinDuration),
+        );
+        attackClock = math.max(attackClock, spinDuration);
+        invulnerable = math.max(invulnerable, spinDuration * .7);
         session.game?.add(
           WhirlwindPulse(
             session,
             this,
             p.skillDamage(def),
             targetLimit: p.skillTargetLimit(def),
+            rank: rank,
+            duration: spinDuration,
           ),
         );
       case 'frenzy':
-        frenzyTime = 7;
+        frenzyTime = p.frenzyDuration;
         areaStrike(
           session,
           body.center,
@@ -1606,6 +1642,8 @@ class Guardian extends Player with WithCollision {
             body.center,
             const ui.Color(0xffffa15e),
             radius: 145,
+            rank: rank,
+            tempo: p.skillTempo(def),
           ),
         );
       case 'seismicSlam':
@@ -1636,8 +1674,10 @@ class Guardian extends Player with WithCollision {
           bearing = angle;
         }
         attackBearing = angle;
-        swing = .23;
-        attackClock = math.max(attackClock, .35);
+        strikePose = 2;
+        swingDuration = p.skillMotionTime(def);
+        swing = swingDuration * .55;
+        attackClock = math.max(attackClock, p.skillMotionTime(def) + .12);
         final impact = aimedImpact(angle, 100);
         areaStrike(
           session,
@@ -1649,7 +1689,13 @@ class Guardian extends Player with WithCollision {
           maxTargets: p.skillTargetLimit(def),
         );
         session.game?.add(
-          RuneBurst(session, impact, const ui.Color(0xfff2cc8a), radius: 140),
+          GroundStrike(
+            session,
+            impact,
+            rank: rank,
+            tempo: p.skillTempo(def),
+            bearing: angle,
+          ),
         );
       case 'frostNova':
         final radius = 155.0 + rank * 15;
@@ -1659,16 +1705,30 @@ class Guardian extends Player with WithCollision {
           radius,
           p.skillDamage(def),
           stun: 2,
-          slow: 3,
+          slow: p.novaSlowDuration,
           maxTargets: p.skillTargetLimit(def),
         );
         session.game?.add(
-          SpellBurst(session, SpellClip.iceNova, body.center, radius: radius),
+          SpellBurst(
+            session,
+            SpellClip.iceNova,
+            body.center,
+            radius: radius,
+            rank: rank,
+            tempo: p.skillTempo(def),
+          ),
         );
       case 'iceArmor':
-        armorTime = 12;
+        armorTime = p.iceArmorDuration;
         session.game?.add(
-          SpellBurst(session, SpellClip.iceNova, body.center, radius: 70),
+          SpellBurst(
+            session,
+            SpellClip.iceNova,
+            body.center,
+            radius: 70,
+            rank: rank,
+            tempo: p.skillTempo(def),
+          ),
         );
       case 'chainLightning':
         chainLightning(
@@ -1676,6 +1736,7 @@ class Guardian extends Player with WithCollision {
           body.center,
           p.skillDamage(def),
           p.skillTargetLimit(def),
+          rank: rank,
         );
       case 'meteor':
         var target =
@@ -1714,6 +1775,8 @@ class Guardian extends Player with WithCollision {
             target,
             p.skillDamage(def),
             targetLimit: p.skillTargetLimit(def),
+            rank: rank,
+            tempo: p.skillTempo(def),
           ),
         );
     }
@@ -1830,7 +1893,7 @@ class Guardian extends Player with WithCollision {
         session.progress.heroClass == HeroClass.mage ? 'mage' : 'hero',
         feet,
         spin > 0
-            ? bearing + (1 - spin / .5) * math.pi * 4
+            ? bearing + (1 - spin / spinDuration) * math.pi * 4
             : swing > 0
             ? attackBearing
             : bearing,
@@ -1913,7 +1976,10 @@ class Guardian extends Player with WithCollision {
           false,
           ui.Paint()
             ..style = ui.PaintingStyle.stroke
-            ..strokeWidth = 7 * (1 - phase) + 1
+            ..strokeWidth =
+                (7 + math.max(0, session.progress.rank('cleave') - 1) * 1.3) *
+                    (1 - phase) +
+                1
             ..strokeCap = ui.StrokeCap.round
             ..color =
                 (session.progress.weapon.base.style == 'hammer'
@@ -1938,10 +2004,21 @@ class Guardian extends Player with WithCollision {
     }
     if (session.progress.heroClass == HeroClass.warrior &&
         (armorTime > 0 || frenzyTime > 0)) {
-      paintBattleAura(canvas, center, session.elapsed, frenzy: frenzyTime > 0);
+      paintBattleAura(
+        canvas,
+        center,
+        session.elapsed,
+        frenzy: frenzyTime > 0,
+        rank: session.progress.rank(frenzyTime > 0 ? 'frenzy' : 'warcry'),
+      );
     }
     if (armorTime > 0 && session.progress.heroClass == HeroClass.mage) {
-      paintIceShield(canvas, center - const ui.Offset(0, 22), session.elapsed);
+      paintIceShield(
+        canvas,
+        center - const ui.Offset(0, 22),
+        session.elapsed,
+        rank: session.progress.rank('iceArmor'),
+      );
     }
     if (armorTime > 0 || frenzyTime > 0) {
       canvas.drawOval(
@@ -1959,7 +2036,7 @@ class Guardian extends Player with WithCollision {
       );
     }
     if (spin > 0) {
-      final angle = bearing + (1 - spin / .5) * math.pi * 4;
+      final angle = bearing + (1 - spin / spinDuration) * math.pi * 4;
       canvas.drawArc(
         ui.Rect.fromCircle(center: center, radius: 49),
         angle - 1.6,
@@ -1972,12 +2049,30 @@ class Guardian extends Player with WithCollision {
           ..strokeCap = ui.StrokeCap.round,
       );
     }
+    if (chargeTime > 0) {
+      paintRankImpact(
+        canvas,
+        center,
+        (session.elapsed * 7) % 1,
+        session.progress.rank('charge'),
+        const ui.Color(0xffffd9a0),
+        radius: 36,
+      );
+    }
     if (aim?.id == 'crushingBlow' || heavyWindup > 0) {
-      final held = aim?.heldFor ?? 1.2;
+      paintRankImpact(
+        canvas,
+        center,
+        (session.elapsed * 3) % 1,
+        session.progress.rank('crushingBlow'),
+        const ui.Color(0xffffe0a4),
+        radius: 28,
+      );
+      final held = aim?.heldFor ?? session.progress.heavyChargeTime;
       canvas.drawArc(
         ui.Rect.fromCenter(center: feet, width: 44, height: 18),
         -math.pi / 2,
-        math.pi * 2 * (held / 1.2).clamp(0, 1),
+        math.pi * 2 * (held / session.progress.heavyChargeTime).clamp(0, 1),
         false,
         ui.Paint()
           ..color = const ui.Color(0xffffd893)
