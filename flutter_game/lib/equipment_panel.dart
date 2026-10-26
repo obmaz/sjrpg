@@ -38,6 +38,21 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
   Adventure get s => widget.session;
   Progress get p => s.progress;
   @override
+  void initState() {
+    super.initState();
+    if (!shopping) _showNewGear();
+  }
+
+  void _showNewGear() {
+    if (p.unseenGear.isEmpty) return;
+    bagTab = 1;
+    newTabItems = {...p.unseenGear};
+    detail = null;
+    pinnedGear = null;
+    if (bagScroll.hasClients) bagScroll.jumpTo(0);
+  }
+
+  @override
   void dispose() {
     bagScroll.dispose();
     shopScroll.dispose();
@@ -107,6 +122,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                                     : Icons.storefront,
                                 onTap: () => setState(() {
                                   shopping = !shopping;
+                                  if (!shopping) _showNewGear();
                                   message = '';
                                 }),
                               ),
@@ -190,76 +206,79 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
         key: const PageStorageKey('equipment-list'),
         physics: const ClampingScrollPhysics(),
         slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-            sliver: SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      for (final slot in GearSlot.values)
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  width: 48,
-                                  height: 58,
-                                  child: _gearCell(
-                                    p.equipped[slot],
-                                    equippedSlot: slot,
-                                  ),
-                                ),
-                                const SizedBox(width: 5),
-                                Expanded(
-                                  child: Text(
-                                    _slotName(slot),
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: _muted,
+          if (bagTab != 1)
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        for (final slot in GearSlot.values)
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                    width: 48,
+                                    height: 58,
+                                    child: _gearCell(
+                                      p.equipped[slot],
+                                      equippedSlot: slot,
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      for (final pair in [
-                        ('공격', p.swordDamage),
-                        ('방어', p.armor),
-                        ('생명', p.maxHp),
-                      ])
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            margin: const EdgeInsets.symmetric(horizontal: 3),
-                            decoration: BoxDecoration(
-                              color: const Color(0xff102d29),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              '${pair.$1} ${pair.$2.round()}',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: cream,
-                                fontSize: 13,
+                                  const SizedBox(width: 5),
+                                  Expanded(
+                                    child: Text(
+                                      _slotName(slot),
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: _muted,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                ],
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        for (final pair in [
+                          ('공격', p.swordDamage),
+                          ('방어', p.armor),
+                          ('생명', p.maxHp),
+                        ])
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              margin: const EdgeInsets.symmetric(horizontal: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xff102d29),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                '${pair.$1} ${pair.$2.round()}',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: cream,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
               ),
             ),
-          ),
 
           if (items.isEmpty)
             SliverToBoxAdapter(
@@ -288,6 +307,15 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
     );
   }
 
+  String _gearAccessibilityStats(Gear gear) {
+    final current = p.equipped[gear.base.slot];
+    if (gear.base.slot == GearSlot.weapon) {
+      final attack = p.previewBasicAttack(gear);
+      return '공격 ${gear.attack.round()} · 초당 피해 ${attack?.dps.toStringAsFixed(1) ?? '직업 제한'} · 현재 초당 피해 ${p.basicDps.toStringAsFixed(1)}';
+    }
+    return '방어 ${gear.armor.round()} · 생명 ${gear.health.round()} · ${p.heroClass.resource} ${gear.mana.round()} · 현재 방어 ${current?.armor.round() ?? 0} · 현재 생명 ${current?.health.round() ?? 0}';
+  }
+
   Widget _gearCell(Gear? gear, {GearSlot? equippedSlot}) {
     final active = gear != null && p.isEquipped(gear),
         color = gear == null
@@ -296,6 +324,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
     return Semantics(
       container: true,
       button: gear != null,
+      hint: gear == null ? null : _gearAccessibilityStats(gear),
       label: gear == null
           ? '빈 장비 칸'
           : '${equippedSlot != null ? '착용 ${_slotName(equippedSlot)} · ' : '보관 장비 · '}${gear.name}${active ? ' · 장착 중' : ''}${gear.locked ? ' · 잠금' : ''}${p.unseenGear.contains(gear.serial) ? ' · 신규' : ''}',
@@ -411,7 +440,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
         _Offer(
           'power',
           '무기 강화',
-          '직업 공격력 +5 · 수련 ${p.attackTrainingRank}/${p.maxTrainingRank}',
+          '공격력 +${p.attackTrainingGain.toStringAsFixed(2)} · 수련 ${p.attackTrainingRank}/${p.maxTrainingRank}',
           p.attackTrainingCost,
         ),
         _Offer(
@@ -547,6 +576,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                   container: true,
                   button: true,
                   label: label,
+                  hint: _gearAccessibilityStats(gear),
                   onTap: select,
                   excludeSemantics: true,
                   child: Material(
@@ -901,12 +931,17 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                       ),
                     ),
                     const SizedBox(height: 5),
-                    Text(
-                      entry.description,
-                      style: const TextStyle(
-                        color: _muted,
-                        fontSize: 14,
-                        height: 1.4,
+                    Semantics(
+                      container: true,
+                      label: entry.description,
+                      excludeSemantics: true,
+                      child: Text(
+                        entry.description,
+                        style: const TextStyle(
+                          color: _muted,
+                          fontSize: 14,
+                          height: 1.4,
+                        ),
                       ),
                     ),
                   ],

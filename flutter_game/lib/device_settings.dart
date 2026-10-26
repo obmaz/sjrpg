@@ -24,6 +24,7 @@ class DeviceSettings extends ChangeNotifier {
   bool get fullscreen => bridge.fullscreen;
   bool get vibrationSupported => bridge.vibrationSupported;
   void setHaptics(bool enabled) {
+    if (_disposed) return;
     hapticsEnabled = enabled;
     bridge.writePreference(preferenceKey, '$enabled');
     if (!enabled) cancel();

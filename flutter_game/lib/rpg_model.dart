@@ -878,7 +878,9 @@ class Progress {
   }
 
   int get maxTrainingRank => 1 + (level - 1) ~/ 3;
-  int get attackTrainingRank => (bonusAttack / 5).floor();
+  static const attackTrainingPower = 5.0;
+  int get attackTrainingRank => (bonusAttack / attackTrainingPower).floor();
+  double get attackTrainingGain => attackTrainingPower * attackMultiplier;
   int get vitalityTrainingRank => (bonusHealth / 20).floor();
   bool get canTrainAttack => attackTrainingRank < maxTrainingRank;
   bool get canTrainVitality => vitalityTrainingRank < maxTrainingRank;
@@ -1096,16 +1098,16 @@ class Progress {
       rank('ironSkin') * 5 +
       rank('veteranGuard') * 2;
   static const playerDamageScale = .75;
+  double get attackMultiplier =>
+      (1 + rank('mastery') * .08 + rank('arcaneMastery') * .09) *
+      playerDamageScale;
   double get swordDamage =>
       (bonusAttack +
           (level - 1) * 2 +
           equipped.values.fold(0.0, (v, g) => v + g.attack)) *
-      (1 + rank('mastery') * .08 + rank('arcaneMastery') * .09) *
-      playerDamageScale;
-  set swordDamage(double value) => bonusAttack +=
-      (value - swordDamage) /
-      ((1 + rank('mastery') * .08 + rank('arcaneMastery') * .09) *
-          playerDamageScale);
+      attackMultiplier;
+  set swordDamage(double value) =>
+      bonusAttack += (value - swordDamage) / attackMultiplier;
   List<String> get skillBranches => heroClass == HeroClass.warrior
       ? const ['전투 기술', '전투 숙련', '함성']
       : const ['화염', '냉기', '번개'];

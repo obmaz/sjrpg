@@ -215,6 +215,7 @@ class Adventure extends ChangeNotifier {
   int stageStartKills = 0, commissionStartKills = 0;
   TimePath? timePath;
   String? acceptedCommission;
+  double _nextBossSpawn = 0;
   int get stageKills => math.max(0, progress.kills - stageStartKills);
   List<QuestSite> get visibleSites => world.stage == WorldStage.sands
       ? timeCommissions
@@ -728,7 +729,9 @@ class Adventure extends ChangeNotifier {
     if (stageKills >= world.stage.killGoal &&
         mandatoryQuestsComplete &&
         !bossSummoned &&
-        !progress.bossDefeated) {
+        !progress.bossDefeated &&
+        elapsed >= _nextBossSpawn) {
+      _nextBossSpawn = elapsed + 1;
       final boss = spawnEnemy(
         'golem',
         hero.position.toOffset() + const ui.Offset(0, -310),
@@ -1047,7 +1050,10 @@ class Adventure extends ChangeNotifier {
         expectedPrice != null && expectedPrice != cost) {
       return false;
     }
-    return progress.buy(cost, () => progress.bonusAttack += 5);
+    return progress.buy(
+      cost,
+      () => progress.bonusAttack += Progress.attackTrainingPower,
+    );
   }
 
   bool buyVitality({int? expectedPrice}) {
