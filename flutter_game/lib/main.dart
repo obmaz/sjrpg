@@ -5,6 +5,8 @@ import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
 
 import 'adventure.dart';
+import 'back_actions.dart';
+import 'back_bridge.dart' as history;
 import 'battle_effects.dart';
 import 'class_selection.dart';
 import 'game_art.dart';
@@ -59,6 +61,30 @@ class EntryPage extends StatefulWidget {
 }
 
 class _EntryPageState extends State<EntryPage> {
+  final backActions = BackActions();
+  void Function()? stopBackListener;
+  @override
+  void initState() {
+    super.initState();
+    stopBackListener = history.listenForBack(handleBack);
+  }
+
+  void handleBack() {
+    if (!mounted) return;
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.maybePop();
+    } else {
+      backActions.dispatch();
+    }
+  }
+
+  @override
+  void dispose() {
+    stopBackListener?.call();
+    super.dispose();
+  }
+
   late Future<GameArt> loading = GameArt.load();
   bool started = false;
   int run = 0;
@@ -68,102 +94,111 @@ class _EntryPageState extends State<EntryPage> {
   );
   bool resuming = false, enteringStage = false;
   @override
-  Widget build(BuildContext context) => FutureBuilder<GameArt>(
-    future: loading,
-    builder: (context, snapshot) {
-      if (snapshot.hasError) {
-        return Scaffold(
-          body: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
+  Widget build(BuildContext context) => PopScope<Object?>(
+    canPop: false,
+    onPopInvokedWithResult: (didPop, _) {
+      if (!didPop) handleBack();
+    },
+    child: FutureBuilder<GameArt>(
+      future: loading,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Scaffold(
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      '그림을 불러오지 못했습니다. 연결을 확인하고 다시 시도해 주세요.',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    GameAction(
+                      '다시 불러오기',
+                      primary: true,
+                      icon: Icons.refresh,
+                      onTap: () => setState(() => loading = GameArt.load()),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+        if (!snapshot.hasData) {
+          return const Scaffold(
+            body: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    '그림을 불러오지 못했습니다. 연결을 확인하고 다시 시도해 주세요.',
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  GameAction(
-                    '다시 불러오기',
-                    primary: true,
-                    icon: Icons.refresh,
-                    onTap: () => setState(() => loading = GameArt.load()),
-                  ),
+                  CircularProgressIndicator(color: gold),
+                  SizedBox(height: 24),
+                  Text('모험의 풍경을 불러오고 있어요', style: TextStyle(color: cream)),
                 ],
               ),
             ),
-          ),
-        );
-      }
-      if (!snapshot.hasData) {
-        return const Scaffold(
-          body: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(color: gold),
-                SizedBox(height: 24),
-                Text('모험의 풍경을 불러오고 있어요', style: TextStyle(color: cream)),
-              ],
-            ),
-          ),
-        );
-      }
-      final art = snapshot.data!;
-      if (started) {
-        return GamePage(
-          key: ValueKey(run),
-          art: art,
-          heroClass: chosen,
-          showStageBriefing: enteringStage,
-          checkpoint: resuming ? savedAdventure : null,
-          onAdvance: (checkpoint) => setState(() {
-            run++;
-            savedAdventure = checkpoint;
-            enteringStage = true;
-            resuming = true;
-            started = true;
-          }),
-          onRetryCheckpoint: () {
-            final checkpoint = GameCheckpoint.decode(storage.readCheckpoint());
-            setState(() {
+          );
+        }
+        final art = snapshot.data!;
+        if (started) {
+          return GamePage(
+            key: ValueKey(run),
+            backActions: backActions,
+            art: art,
+            heroClass: chosen,
+            showStageBriefing: enteringStage,
+            checkpoint: resuming ? savedAdventure : null,
+            onAdvance: (checkpoint) => setState(() {
               run++;
               savedAdventure = checkpoint;
+              enteringStage = true;
+              resuming = true;
+              started = true;
+            }),
+            onRetryCheckpoint: () {
+              final checkpoint = GameCheckpoint.decode(
+                storage.readCheckpoint(),
+              );
+              setState(() {
+                run++;
+                savedAdventure = checkpoint;
+                enteringStage = false;
+                resuming = checkpoint != null;
+                started = checkpoint != null;
+                if (checkpoint != null) chosen = checkpoint.progress.heroClass;
+              });
+            },
+            onRestart: () => setState(() {
+              run++;
+              started = false;
+              savedAdventure = null;
+              resuming = false;
               enteringStage = false;
-              resuming = checkpoint != null;
-              started = checkpoint != null;
-              if (checkpoint != null) chosen = checkpoint.progress.heroClass;
-            });
-          },
-          onRestart: () => setState(() {
-            run++;
-            started = false;
-            savedAdventure = null;
+            }),
+          );
+        }
+        return ClassSelection(
+          art: art,
+          continueSummary: savedAdventure?.summary,
+          onContinue: savedAdventure == null
+              ? null
+              : () => setState(() {
+                  chosen = savedAdventure!.progress.heroClass;
+                  resuming = true;
+                  enteringStage = false;
+                  started = true;
+                }),
+          onBegin: (value) => setState(() {
+            chosen = value;
             resuming = false;
             enteringStage = false;
+            started = true;
           }),
         );
-      }
-      return ClassSelection(
-        art: art,
-        continueSummary: savedAdventure?.summary,
-        onContinue: savedAdventure == null
-            ? null
-            : () => setState(() {
-                chosen = savedAdventure!.progress.heroClass;
-                resuming = true;
-                enteringStage = false;
-                started = true;
-              }),
-        onBegin: (value) => setState(() {
-          chosen = value;
-          resuming = false;
-          enteringStage = false;
-          started = true;
-        }),
-      );
-    },
+      },
+    ),
   );
 }
 
@@ -176,6 +211,7 @@ class GamePage extends StatefulWidget {
     this.showStageBriefing = false,
     this.onRetryCheckpoint,
     this.onAdvance,
+    this.backActions,
     super.key,
   });
   final GameCheckpoint? checkpoint;
@@ -185,6 +221,7 @@ class GamePage extends StatefulWidget {
   final VoidCallback onRestart;
   final VoidCallback? onRetryCheckpoint;
   final ValueChanged<GameCheckpoint>? onAdvance;
+  final BackActions? backActions;
   @override
   State<GamePage> createState() => _GamePageState();
 }
@@ -195,6 +232,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
       Adventure(widget.art, heroClass: widget.heroClass);
   async.Timer? saveTimer;
   void Function()? stopSaveListener;
+  void Function()? stopBackAction;
   bool keepSave = true;
   void saveNow({bool notify = true}) {
     if (!keepSave) return;
@@ -230,6 +268,16 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    stopBackAction = widget.backActions?.register(() {
+      if (adventure.won) {
+        adventure.continueExploring();
+        close();
+      } else if (panel != null) {
+        close();
+      } else if (!adventure.defeated && !adventure.won) {
+        open('pause');
+      }
+    });
     WidgetsBinding.instance.addObserver(this);
     saveTimer = async.Timer.periodic(
       const Duration(seconds: 5),
@@ -326,6 +374,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   void dispose() {
     saveTimer?.cancel();
     stopSaveListener?.call();
+    stopBackAction?.call();
     saveNow(notify: false);
     WidgetsBinding.instance.removeObserver(this);
     adventure.dispose();
@@ -676,6 +725,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
             if (modal != null)
               Positioned.fill(
                 child: AdventurePanel(
+                  backActions: widget.backActions,
                   session: adventure,
                   name: modal,
                   onClose: close,

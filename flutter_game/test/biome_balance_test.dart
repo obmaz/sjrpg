@@ -62,7 +62,10 @@ void main() {
       for (final (i, kind) in ['boar', 'basilisk', 'wraith', 'drone'].indexed) {
         final m = s.spawnEnemy(kind, Offset(6000 + i * 80, 4200))!;
         expect(m.usesPounce || m.usesSweep || m.usesBolt, true);
-        expect(m.life.max, enemyCatalog[kind]!.health * 2);
+        expect(
+          m.life.max,
+          closeTo(enemyCatalog[kind]!.health * 2 * .8, .000001),
+        );
       }
       expect(GameCheckpoint.capture(s)!.data['enemies'].length, 4);
     },

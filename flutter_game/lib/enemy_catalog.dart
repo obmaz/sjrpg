@@ -1,5 +1,7 @@
 import 'stage_content.dart';
 
+const monsterHealthScale = .8;
+
 class EnemyDef {
   const EnemyDef(this.name, this.health, this.speed, this.pattern);
   final String name, pattern;

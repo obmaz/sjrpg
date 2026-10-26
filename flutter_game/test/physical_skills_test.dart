@@ -53,10 +53,10 @@ void main() {
       for (final m in s.hero.chargeVictims) {
         expect(m.life.value, closeTo(500 - damage, .001));
       }
-      expect(s.hero.cooldowns['charge'], greaterThan(4));
+      expect(s.hero.cooldowns['charge'], greaterThan(2.8));
       expect(
         GameCheckpoint.capture(s)!.data['cooldowns']['charge'],
-        greaterThan(4),
+        greaterThan(2.8),
       );
     },
   );
@@ -144,7 +144,7 @@ void main() {
       expect(s.resetSkills(), true);
       expect(s.hero.heavyWindup, 0);
       expect(s.hero.heavySkill, null);
-      expect(s.hero.cooldowns['crushingBlow'], 6);
+      expect(s.hero.cooldowns['crushingBlow'], closeTo(4.2, .000001));
       step(20);
       expect(s.hero.heavySkill, null);
     },

@@ -1098,6 +1098,7 @@ class Progress {
       rank('ironSkin') * 5 +
       rank('veteranGuard') * 2;
   static const playerDamageScale = .75;
+  static const skillCooldownScale = .7;
   double get attackMultiplier =>
       (1 + rank('mastery') * .08 + rank('arcaneMastery') * .09) *
       playerDamageScale;
@@ -1150,7 +1151,10 @@ class Progress {
       'chainLightning' => rank('forkedStorm'),
       _ => 0,
     };
-    return skill.cooldown * SkillGrowth.cooldown(r) * (1 - specialty * .02);
+    return skill.cooldown *
+        skillCooldownScale *
+        SkillGrowth.cooldown(r) *
+        (1 - specialty * .02);
   }
 
   double skillTempo(SkillDef skill, {int? atRank}) =>

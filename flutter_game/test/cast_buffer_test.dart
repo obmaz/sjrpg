@@ -45,7 +45,7 @@ void main() {
       expect(s.hero.cooldowns['frostNova'], isNull);
       expect(s.progress.energy, energy);
       step(6);
-      expect(s.hero.cooldowns['frostNova'], 6);
+      expect(s.hero.cooldowns['frostNova'], closeTo(4.2, .000001));
       expect(s.progress.energy, energy - 18);
       final cooldown = s.hero.cooldowns['frostNova']!;
       step(3);
@@ -62,7 +62,7 @@ void main() {
       s.hero.skill(slot: 1);
       step(6);
       expect(s.hero.cooldowns['frostNova'], isNull);
-      expect(s.hero.cooldowns['chainLightning'], 5);
+      expect(s.hero.cooldowns['chainLightning'], 3.5);
       expect(s.progress.energy, energy - 28);
     },
   );

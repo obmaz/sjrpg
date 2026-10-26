@@ -120,11 +120,20 @@ void main() {
     expect(mobs.where((m) => m.life.value < 500).length, 3);
     expect(mobs.first.life.value, 488);
   });
-  test('normal, elite and boss life all use the doubled baseline', () {
+  test('normal, elite and boss life use the current reduced baseline', () {
     final s = session();
-    expect(s.spawnEnemy('goblin', const Offset(6050, 4200))!.life.max, 56);
-    expect(s.spawnEnemy('wolf', const Offset(6100, 4200))!.life.max, 76);
-    expect(s.spawnEnemy('skeleton', const Offset(6150, 4200))!.life.max, 104);
+    expect(
+      s.spawnEnemy('goblin', const Offset(6050, 4200))!.life.max,
+      closeTo(44.8, .000001),
+    );
+    expect(
+      s.spawnEnemy('wolf', const Offset(6100, 4200))!.life.max,
+      closeTo(60.8, .000001),
+    );
+    expect(
+      s.spawnEnemy('skeleton', const Offset(6150, 4200))!.life.max,
+      closeTo(83.2, .000001),
+    );
     expect(
       s
           .spawnEnemy(
@@ -134,11 +143,11 @@ void main() {
           )!
           .life
           .max,
-      closeTo(56 * 1.8, .001),
+      closeTo(44.8 * 1.8, .001),
     );
     expect(
       s.spawnEnemy('golem', const Offset(6300, 4200), boss: true)!.life.max,
-      3600,
+      2880,
     );
   });
   test(
@@ -262,8 +271,8 @@ void main() {
       data.remove('riding');
       data['boss'] = {'x': 6100.0, 'y': 4200.0, 'hp': 900.0, 'maxHp': 1800.0};
       final migrated = GameCheckpoint.decode(jsonEncode(data))!;
-      expect(migrated.data['boss']['hp'], 1800);
-      expect(migrated.data['boss']['maxHp'], 3600);
+      expect(migrated.data['boss']['hp'], 1440);
+      expect(migrated.data['boss']['maxHp'], 2880);
       expect(
         GameCheckpoint.decode(migrated.encode())!.data['boss'],
         migrated.data['boss'],

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'adventure.dart';
+import 'back_actions.dart';
 import 'commission_board.dart';
 import 'device_controls.dart';
 import 'equipment_panel.dart';
@@ -25,6 +26,7 @@ class AdventurePanel extends StatefulWidget {
     this.onRetryCheckpoint,
     this.onAdvance,
     this.onCheckpoint,
+    this.backActions,
     super.key,
   });
   final Adventure session;
@@ -32,6 +34,7 @@ class AdventurePanel extends StatefulWidget {
   final VoidCallback onClose, onRestart;
   final VoidCallback? onRetryCheckpoint;
   final VoidCallback? onAdvance, onCheckpoint;
+  final BackActions? backActions;
   @override
   State<AdventurePanel> createState() => _AdventurePanelState();
 }
@@ -74,7 +77,11 @@ class _AdventurePanelState extends State<AdventurePanel> {
       );
     }
     if (name == 'skills') {
-      return SkillsPanel(session: s, onClose: widget.onClose);
+      return SkillsPanel(
+        session: s,
+        onClose: widget.onClose,
+        backActions: widget.backActions,
+      );
     }
     final choosingTimePath =
         (name == 'journal' || name == 'talk') &&

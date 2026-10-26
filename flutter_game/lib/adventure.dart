@@ -918,8 +918,17 @@ class Adventure extends ChangeNotifier {
     final same = texts.where((t) => t.isReward == next.isReward).toList();
     final limit = next.isReward ? 2 : 14;
     if (same.length >= limit) {
+      same.first.releaseText();
       same.first.removeFromParent();
       texts.remove(same.first);
+    }
+    if (!next.isReward) {
+      while (!next.placeWithoutOverlap(at, texts)) {
+        final oldest = texts.firstWhere((t) => !t.isReward);
+        oldest.releaseText();
+        oldest.removeFromParent();
+        texts.remove(oldest);
+      }
     }
     texts.add(next);
     game?.add(next);
@@ -1119,6 +1128,9 @@ class Adventure extends ChangeNotifier {
   @override
   void dispose() {
     disposed = true;
+    for (final text in texts) {
+      text.releaseText();
+    }
     audio.stop();
     device.cancel();
     releaseInput();
@@ -2241,7 +2253,8 @@ class HuntEnemy extends Enemy with WithCollision {
          size: boss ? Vector2(48, 40) : Vector2(24, 22),
          life:
              (boss ? 1800 : (enemyCatalog[kind]?.health ?? 52)) *
-             (boss ? 1 : trait.healthScale),
+             (boss ? 1 : trait.healthScale) *
+             monsterHealthScale,
          speed:
              (boss ? 90 : (enemyCatalog[kind]?.speed ?? 105)) *
              (boss ? 1 : trait.speedScale),
@@ -3100,6 +3113,44 @@ class BattleText extends GameComponent {
   final bool isReward;
   final ui.Color color;
   double remaining = .9;
+  ui.Paragraph? _paragraph;
+  ui.Color? _paintedColor;
+  double get textSize => label.startsWith('+') ? 13 : 18;
+  ui.Rect get combatBounds => ui.Rect.fromLTWH(
+    position.x - combatWidth / 2,
+    position.y,
+    combatWidth,
+    24,
+  );
+  double get combatWidth => math.min(148, label.length * 12.0 + 6);
+
+  bool placeWithoutOverlap(ui.Offset origin, List<BattleText> others) {
+    final offset = combatWidth + 6;
+    final occupied = others
+        .where((t) => !t.isReward && !t.isRemoving && t.remaining > 0)
+        .map((t) => t.combatBounds.inflate(2))
+        .toList();
+    final columns = combatWidth <= 66
+        ? [0.0, -offset, offset]
+        : [-offset / 2, offset / 2, 0.0];
+    for (var row = 0; row < 6; row++) {
+      for (final x in columns) {
+        position.setValues(origin.dx + x, origin.dy - row * 28);
+        final bounds = combatBounds.inflate(2);
+        if (!occupied.any(bounds.overlaps)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  void releaseText() {
+    _paragraph?.dispose();
+    _paragraph = null;
+    _paintedColor = null;
+  }
+
   @override
   int get priority => 100000;
   @override
@@ -3115,6 +3166,7 @@ class BattleText extends GameComponent {
 
   @override
   void onRemove() {
+    releaseText();
     session.texts.remove(this);
     super.onRemove();
   }
@@ -3122,13 +3174,18 @@ class BattleText extends GameComponent {
   @override
   void render(ui.Canvas canvas) {
     super.render(canvas);
-    session.art.text(
-      canvas,
-      label,
-      ui.Offset.zero,
-      size: label.startsWith('+') ? 13 : 18,
-      color: color.withValues(alpha: (remaining / .3).clamp(0, 1)),
-    );
+    if (session.disposed || remaining <= 0 || isRemoving) return;
+    final paintedColor = color.withValues(alpha: (remaining / .3).clamp(0, 1));
+    if (_paragraph == null || _paintedColor != paintedColor) {
+      releaseText();
+      _paragraph = session.art.layoutText(
+        label,
+        size: textSize,
+        color: paintedColor,
+      );
+      _paintedColor = paintedColor;
+    }
+    canvas.drawParagraph(_paragraph!, const ui.Offset(-80, 0));
   }
 }
 

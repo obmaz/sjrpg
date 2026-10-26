@@ -51,7 +51,7 @@ class GameCheckpoint {
         ],
         'version': 1,
         'mapVersion': 2,
-        'balance': 2,
+        'balance': 3,
         'stage': session.world.stage.name,
         'stageStartKills': session.stageStartKills,
         'commissionStartKills': session.commissionStartKills,
@@ -191,6 +191,8 @@ class GameCheckpoint {
       data['mapVersion'] = 2;
       final progress = Progress.fromSave(data['progress']);
       if (progress == null || progress.hp <= 0) return null;
+      final balance = data['balance'] ?? 1;
+      if (balance is! int || balance < 1 || balance > 3) return null;
       final stage = WorldStage.values.firstWhere(
         (s) => s.name == (data['stage'] ?? 'forest'),
       );
@@ -252,7 +254,9 @@ class GameCheckpoint {
       }
       for (final entry in (data['cooldowns'] as Map).entries) {
         final skill = progress.skills.firstWhere((s) => s.id == entry.key);
-        if (skill.passive || !number(entry.value, skill.cooldown)) return null;
+        final maximum =
+            skill.cooldown * (balance >= 3 ? Progress.skillCooldownScale : 1);
+        if (skill.passive || !number(entry.value, maximum)) return null;
       }
       final sites =
           data['sites'] ??
@@ -310,8 +314,6 @@ class GameCheckpoint {
         return null;
       }
       data['mounts'] = mounts;
-      final balance = data['balance'] ?? 1;
-      if (balance is! int || balance < 1 || balance > 2) return null;
       final boss = data['boss'];
       if (boss != null) {
         if (boss is! Map ||
@@ -373,7 +375,17 @@ class GameCheckpoint {
       }
       data['encounters'] = areas;
       data['enemies'] = enemies;
-      data['balance'] = 2;
+      if (balance < 3) {
+        for (final raw in [...enemies, ?boss]) {
+          raw['hp'] = (raw['hp'] as num) * monsterHealthScale;
+          raw['maxHp'] = (raw['maxHp'] as num) * monsterHealthScale;
+        }
+        final cooldowns = data['cooldowns'] as Map;
+        for (final id in cooldowns.keys.toList()) {
+          cooldowns[id] = (cooldowns[id] as num) * Progress.skillCooldownScale;
+        }
+      }
+      data['balance'] = 3;
       return GameCheckpoint._(data, progress);
     } catch (_) {
       return null;

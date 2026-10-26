@@ -26,7 +26,14 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
             path.join(root, `assets/${image}.webp`),
             path.join(destination, `images/${image}.webp`),
         );
-    for (const name of ['actors-mage', 'gear-icons', 'combat-fx', 'dodge-icon', 'actors-roll'])
+    for (const name of [
+        'actors-mage',
+        'actors-motor',
+        'gear-icons',
+        'combat-fx',
+        'dodge-icon',
+        'actors-roll',
+    ])
         fs.copyFileSync(
             path.join(root, `flutter_game/art/${name}.png`),
             path.join(destination, `images/${name}.png`),
@@ -83,6 +90,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
             ['hero', 'hero-clean'],
             ['hero-attack', 'hero-attack-clean'],
             ['bicycle', 'actors-bicycle'],
+            ['motor', 'actors-motor'],
             ['hero-backhand', 'actors-hero-backhand'],
             ['hero-cleave', 'actors-hero-cleave'],
             ['mage-cast', 'actors-mage-cast'],

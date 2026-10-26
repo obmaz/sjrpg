@@ -56,6 +56,7 @@ class GameArt {
             'actors-ancient-king',
             'actors-cyber-core',
             'actors-bicycle',
+            'actors-motor',
             'actors-boar',
             'actors-basilisk',
             'actors-wraith',
@@ -72,7 +73,7 @@ class GameArt {
           ]
           .map<Future<void>>((name) async {
             final bytes = await rootBundle.load(
-              'assets/images/$name.${['actors-mage', 'gear-icons', 'combat-fx', 'dodge-icon', 'actors-roll'].contains(name) ? 'png' : 'webp'}',
+              'assets/images/$name.${['actors-mage', 'actors-motor', 'gear-icons', 'combat-fx', 'dodge-icon', 'actors-roll'].contains(name) ? 'png' : 'webp'}',
             );
             final codec = await ui.instantiateImageCodec(
               bytes.buffer.asUint8List(),
@@ -278,7 +279,7 @@ class GameArt {
       'villager': ('villagers', 1, 8),
       'horse': ('vehicles', 0, 8),
       'bicycle': ('bicycle', 0, 8),
-      'motor': ('vehicles', 2, 8),
+      'motor': ('motor', 0, 8),
       'boat': ('vehicles', 3, 8),
     };
     final definition = definitions[key]!;
@@ -299,6 +300,7 @@ class GameArt {
           'ancient-king',
           'cyber-core',
           'bicycle',
+          'motor',
           'boar',
           'basilisk',
           'wraith',
@@ -329,6 +331,13 @@ class GameArt {
       src.width * scale,
       src.height * scale,
     );
+    final mirror = (record['mirrors'] as List?)?[index] == true;
+    if (mirror) {
+      canvas.save();
+      canvas.translate(feet.dx, 0);
+      canvas.scale(-1, 1);
+      canvas.translate(-feet.dx, 0);
+    }
     canvas.drawImageRect(
       images['actors-$sheet']!,
       src,
@@ -343,6 +352,7 @@ class GameArt {
             : null
         ..filterQuality = ui.FilterQuality.low,
     );
+    if (mirror) canvas.restore();
   }
 
   void roll(
@@ -468,6 +478,16 @@ class GameArt {
     double size = 16,
     ui.Color color = const ui.Color(0xffffedbb),
   }) {
+    final paragraph = layoutText(value, size: size, color: color);
+    canvas.drawParagraph(paragraph, at - const ui.Offset(80, 0));
+    paragraph.dispose();
+  }
+
+  ui.Paragraph layoutText(
+    String value, {
+    double size = 16,
+    ui.Color color = const ui.Color(0xffffedbb),
+  }) {
     final builder =
         ui.ParagraphBuilder(
             ui.ParagraphStyle(
@@ -480,9 +500,7 @@ class GameArt {
             ui.TextStyle(color: color, fontWeight: ui.FontWeight.bold),
           )
           ..addText(value);
-    final p = builder.build()
-      ..layout(const ui.ParagraphConstraints(width: 160));
-    canvas.drawParagraph(p, at - ui.Offset(80, 0));
+    return builder.build()..layout(const ui.ParagraphConstraints(width: 160));
   }
 }
 

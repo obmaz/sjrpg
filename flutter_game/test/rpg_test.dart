@@ -168,7 +168,7 @@ void main() {
       }
       s.hero.skill();
       expect(s.progress.energy, 72);
-      expect(s.hero.skillClock, 6);
+      expect(s.hero.skillClock, closeTo(4.2, .000001));
       s.hero.skill();
       expect(s.progress.energy, 72);
       final rank = s.progress.rank('frostNova');
@@ -186,9 +186,9 @@ void main() {
         s.hero.update(.05);
       }
       s.hero.skill();
-      expect(s.hero.skillClock, 5);
+      expect(s.hero.skillClock, 3.5);
       s.progress.selectSkill('frostNova');
-      expect(s.hero.skillClock, closeTo(5.5, .001));
+      expect(s.hero.skillClock, closeTo(3.7, .001));
       expect(s.progress.rank('frostNova'), rank);
       s.pause();
       final energy = s.progress.energy;
@@ -282,8 +282,8 @@ void main() {
         s.hero.update(.05);
       }
       s.hero.skill(secondary: true);
-      expect(s.hero.cooldowns['frostNova'], closeTo(5.5, .001));
-      expect(s.hero.cooldowns['chainLightning'], 5);
+      expect(s.hero.cooldowns['frostNova'], closeTo(3.7, .001));
+      expect(s.hero.cooldowns['chainLightning'], 3.5);
       expect(s.progress.energy, 44);
       s.progress.selectSkill('chainLightning');
       expect(s.progress.secondarySkill, 'frostNova');
@@ -380,7 +380,7 @@ void main() {
       expect(enemy.life.value, lessThan(life));
       expect(enemy.stun, greaterThan(0));
       expect(p.energy, 76);
-      expect(s.hero.cooldowns['seismicSlam'], 8);
+      expect(s.hero.cooldowns['seismicSlam'], closeTo(5.6, .000001));
     },
   );
   test('ground slam cannot put its impact beyond a blocking tree', () {

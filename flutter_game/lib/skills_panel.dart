@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'adventure.dart';
+import 'back_actions.dart';
 import 'game_ui.dart';
 import 'panel_controls.dart';
 import 'rpg_model.dart';
@@ -11,9 +12,15 @@ import 'skill_tree.dart';
 const _dim = Color(0xffa4bcb6);
 
 class SkillsPanel extends StatefulWidget {
-  const SkillsPanel({required this.session, required this.onClose, super.key});
+  const SkillsPanel({
+    required this.session,
+    required this.onClose,
+    this.backActions,
+    super.key,
+  });
   final Adventure session;
   final VoidCallback onClose;
+  final BackActions? backActions;
   @override
   State<SkillsPanel> createState() => _SkillsPanelState();
 }
@@ -24,8 +31,22 @@ class _SkillsPanelState extends State<SkillsPanel> {
   late SkillDef focused = p.skills.first;
   Adventure get s => widget.session;
   Progress get p => s.progress;
+  void Function()? stopBackAction;
+  @override
+  void initState() {
+    super.initState();
+    stopBackAction = widget.backActions?.register(() {
+      if (selected != null) {
+        setState(() => selected = null);
+      } else {
+        widget.onClose();
+      }
+    });
+  }
+
   @override
   void dispose() {
+    stopBackAction?.call();
     treeScroll.dispose();
     detailScroll.dispose();
     super.dispose();
