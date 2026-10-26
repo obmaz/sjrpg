@@ -25,10 +25,6 @@ void main() {
           expect(path.contains(skill.id), false);
           for (final requirement in skill.requires.entries) {
             expect(ids.contains(requirement.key), true);
-            expect(
-              p.skills.firstWhere((s) => s.id == requirement.key).branch,
-              skill.branch,
-            );
             expect(requirement.value, inInclusiveRange(1, SkillDef.maxRank));
             final parent = p.skills.firstWhere((s) => s.id == requirement.key);
             expect(
@@ -59,8 +55,10 @@ void main() {
       expect(p.learn(skill('warmth')), true);
       expect(p.learn(skill('arcaneMastery')), true);
       expect(p.learn(skill('chainLightning')), true);
+      expect(p.learn(skill('meteor')), false);
+      expect(p.learn(skill('iceArmor')), true);
       expect(p.learn(skill('meteor')), true);
-      expect(p.skillPoints, points - 5);
+      expect(p.skillPoints, points - 6);
       expect(Progress.fromSave(p.toSave())!.toSave(), p.toSave());
     },
   );
@@ -99,6 +97,8 @@ void main() {
         'ironSkin',
         'cleave',
         'frenzy',
+        'whirlwind',
+        'weaponTempo',
         'battleFocus',
         'battleVigor',
         'battleVigor',
@@ -144,7 +144,13 @@ void main() {
     final fireDamage = p.basicDamage;
     expect(p.learn(p.skills.firstWhere((s) => s.id == 'coldMastery')), true);
     expect(p.basicDamage, fireDamage);
-    for (final id in ['arcaneMastery', 'chainLightning', 'lightningMastery']) {
+    for (final id in [
+      'arcaneMastery',
+      'chainLightning',
+      'frostNova',
+      'deepFreeze',
+      'lightningMastery',
+    ]) {
       expect(p.learn(p.skills.firstWhere((s) => s.id == id)), true);
     }
     expect(p.lightningDamageMultiplier, 1.08);

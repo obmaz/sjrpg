@@ -7,7 +7,7 @@ import 'rpg_widgets.dart';
 import 'panel_controls.dart';
 import 'interface_art.dart';
 
-// Each family has a local fork and merge; no cross-family rails obscure nodes.
+// Keep three readable schools with a few shared, adjacent-school milestones.
 const _positions = <String, (int, double)>{
   'cleave': (0, 0),
   'whirlwind': (1, -.24),
@@ -21,7 +21,7 @@ const _positions = <String, (int, double)>{
   'ironSkin': (1, -.24),
   'weaponTempo': (1, .24),
   'veteranGuard': (3, 0),
-  'battleFocus': (2, -0.24),
+  'battleFocus': (2, -.12),
   'secondWind': (4, 0),
   'warcry': (0, 0),
   'battleVigor': (1, -.24),
@@ -33,7 +33,7 @@ const _positions = <String, (int, double)>{
   'warmth': (1, -.24),
   'emberFocus': (1, .24),
   'cinderReach': (3, 0),
-  'meteor': (2, -0.24),
+  'meteor': (2, -.12),
   'phoenixHeart': (4, 0),
   'frostNova': (0, 0),
   'iceArmor': (1, -.24),
@@ -45,7 +45,7 @@ const _positions = <String, (int, double)>{
   'conductivity': (1, .24),
   'chainLightning': (1, -0.24),
   'forkedStorm': (3, 0),
-  'lightningMastery': (2, -0.24),
+  'lightningMastery': (2, -.12),
   'arcaneEconomy': (4, 0),
 };
 
@@ -344,12 +344,11 @@ class _Connections extends CustomPainter {
         final parentLane = (a.dx / lane).floor(),
             childLane = (b.dx / lane).floor();
         if (parentLane != childLane) {
-          final rail = (math.min(parentLane, childLane) + 1) * lane;
+          // Cross only the empty row gap, never a vertical rail through nodes.
+          final bridgeY = a.dy + (b.dy - a.dy) * .5;
           path
-            ..lineTo(a.dx, a.dy + 12)
-            ..lineTo(rail, a.dy + 12)
-            ..lineTo(rail, b.dy - 12)
-            ..lineTo(b.dx, b.dy - 12);
+            ..lineTo(a.dx, bridgeY)
+            ..lineTo(b.dx, bridgeY);
         } else {
           path
             ..lineTo(a.dx, a.dy + 12)

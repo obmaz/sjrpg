@@ -65,7 +65,7 @@ void main() {
       p.equip(other);
       expect(p.maxHp, 100);
       expect(p.hp, 33);
-      expect(p.swordDamage, 18);
+      expect(p.swordDamage, 18 * .75);
       expect(p.sell(charm), true);
       expect(p.inventory.contains(charm), false);
       final foreign = p.createGear(gearById('wand'));

@@ -1,0 +1,85 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:guardian_new/rpg_model.dart';
+
+void main() {
+  for (final hero in HeroClass.values) {
+    test(
+      '$hero shared milestones require every school and remain attainable',
+      () {
+        final p = Progress(heroClass: hero)..gainXp(20000);
+        final shared = p.skills
+            .where(
+              (s) => s.requires.keys.any(
+                (id) =>
+                    p.skills.firstWhere((v) => v.id == id).branch != s.branch,
+              ),
+            )
+            .toList();
+        expect(shared.length, 4);
+        for (final skill in shared) {
+          p.ranks
+            ..clear()
+            ..addAll(Progress(heroClass: hero).ranks);
+          p.secondarySkill = p.tertiarySkill = p.quaternarySkill = null;
+          p.skillPoints = 50;
+          for (final requirement in skill.requires.entries) {
+            p.ranks[requirement.key] = requirement.value;
+          }
+          expect(p.canLearn(skill), true);
+          for (final requirement in skill.requires.entries) {
+            p.ranks[requirement.key] = requirement.value - 1;
+            final points = p.skillPoints;
+            expect(
+              p.learn(skill),
+              false,
+              reason: '${skill.id} missing ${requirement.key}',
+            );
+            expect(p.skillPoints, points);
+            p.ranks[requirement.key] = requirement.value;
+          }
+          expect(p.learn(skill), true);
+          expect(Progress.fromSave(p.toSave())!.rank(skill.id), 1);
+        }
+        // Buy the full graph from its roots without special grants or cycles.
+        final fresh = Progress(heroClass: hero)
+          ..gainXp(50000)
+          ..skillPoints = 500;
+        var changed = true;
+        while (changed) {
+          changed = false;
+          for (final s in fresh.skills) {
+            if (fresh.rank(s.id) < 2 && fresh.learn(s)) changed = true;
+          }
+        }
+        expect(fresh.skills.every((s) => fresh.rank(s.id) >= 2), true);
+      },
+    );
+    test(
+      '$hero outgoing damage is reduced once at every progression tier without rewriting saves',
+      () {
+        for (final xp in [0, 1000, 20000]) {
+          final p = Progress(heroClass: hero)..gainXp(xp);
+          for (final s in p.skills.where((s) => s.requiredLevel <= p.level)) {
+            p.ranks[s.id] = 3;
+          }
+          final raw =
+              (p.bonusAttack +
+                  (p.level - 1) * 2 +
+                  p.equipped.values.fold(0.0, (v, g) => v + g.attack)) *
+              (1 + p.rank('mastery') * .08 + p.rank('arcaneMastery') * .09);
+          expect(p.swordDamage, closeTo(raw * .75, .00001));
+          expect(p.basicDps, closeTo(p.basicDamage / p.attackInterval, .00001));
+          final saved = p.toSave(), restored = Progress.fromSave(saved)!;
+          expect(restored.toSave(), saved);
+          for (final s in p.skills.where((s) => !s.passive)) {
+            expect(restored.skillDamage(s), p.skillDamage(s));
+          }
+          expect(restored.basicDamage, p.basicDamage);
+          final before = p.swordDamage;
+          p.swordDamage += 5;
+          expect(p.swordDamage, closeTo(before + 5, .00001));
+        }
+      },
+    );
+  }
+}

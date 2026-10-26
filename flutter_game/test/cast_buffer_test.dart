@@ -17,6 +17,7 @@ void main() {
       'chainLightning',
       'warmth',
       'warmth',
+      'iceArmor',
       'meteor',
     ]) {
       expect(

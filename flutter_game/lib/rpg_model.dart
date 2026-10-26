@@ -487,7 +487,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'ironSkin': 1},
+    requires: {'ironSkin': 1, 'whirlwind': 1},
   ),
   SkillDef(
     'battleVigor',
@@ -509,7 +509,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'battleVigor': 1, 'resoundingCry': 1},
+    requires: {'battleVigor': 1, 'resoundingCry': 1, 'weaponTempo': 1},
   ),
   SkillDef(
     'rendingEdge',
@@ -520,7 +520,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'seismicSlam': 1},
+    requires: {'seismicSlam': 1, 'battleFocus': 1},
   ),
   SkillDef(
     'stormOfSteel',
@@ -597,7 +597,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'warDrums': 2},
+    requires: {'warDrums': 2, 'veteranGuard': 1},
   ),
   SkillDef(
     'charge',
@@ -678,7 +678,7 @@ const mageSkills = [
     4,
     38,
     9,
-    requires: {'warmth': 2},
+    requires: {'warmth': 2, 'iceArmor': 1},
   ),
   SkillDef(
     'warmth',
@@ -711,7 +711,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'chainLightning': 1},
+    requires: {'chainLightning': 1, 'deepFreeze': 1},
   ),
   SkillDef(
     'emberFocus',
@@ -744,7 +744,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'cinderReach': 1},
+    requires: {'cinderReach': 1, 'frozenAegis': 1},
   ),
   SkillDef(
     'deepFreeze',
@@ -766,7 +766,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'coldMastery': 1, 'deepFreeze': 1},
+    requires: {'coldMastery': 1, 'deepFreeze': 1, 'meteor': 1},
   ),
   SkillDef(
     'glacialReserve',
@@ -1094,14 +1094,17 @@ class Progress {
       equipped.values.fold(0.0, (v, g) => v + g.armor) +
       rank('ironSkin') * 5 +
       rank('veteranGuard') * 2;
+  static const playerDamageScale = .75;
   double get swordDamage =>
       (bonusAttack +
           (level - 1) * 2 +
           equipped.values.fold(0.0, (v, g) => v + g.attack)) *
-      (1 + rank('mastery') * .08 + rank('arcaneMastery') * .09);
+      (1 + rank('mastery') * .08 + rank('arcaneMastery') * .09) *
+      playerDamageScale;
   set swordDamage(double value) => bonusAttack +=
       (value - swordDamage) /
-      (1 + rank('mastery') * .08 + rank('arcaneMastery') * .09);
+      ((1 + rank('mastery') * .08 + rank('arcaneMastery') * .09) *
+          playerDamageScale);
   List<String> get skillBranches => heroClass == HeroClass.warrior
       ? const ['전투 기술', '전투 숙련', '함성']
       : const ['화염', '냉기', '번개'];

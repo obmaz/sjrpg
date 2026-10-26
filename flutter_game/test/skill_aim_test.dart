@@ -28,6 +28,7 @@ void main() {
       'warmth',
       'arcaneMastery',
       'chainLightning',
+      'iceArmor',
       'meteor',
     ]) {
       expect(

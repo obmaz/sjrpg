@@ -128,10 +128,10 @@ void main() {
       }
       expect(p.level, 2);
       expect(p.gold, 64);
-      expect(p.swordDamage, 17);
+      expect(p.swordDamage, 17 * .75);
       expect(p.buy(45, () => p.swordDamage += 5), true);
       expect(p.gold, 19);
-      expect(p.swordDamage, 22);
+      expect(p.swordDamage, closeTo(17 * .75 + 5, .00001));
       p.reward(boss: true);
       expect(p.bossDefeated, true);
       expect(p.gold, 119);
