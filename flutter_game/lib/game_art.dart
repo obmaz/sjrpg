@@ -45,7 +45,6 @@ class GameArt {
             'actors-creatures-a',
             'actors-creatures-b',
             'actors-villagers',
-            'actors-vehicles',
             'quest-sites',
             'time-sites',
             'time-paths',
@@ -57,6 +56,8 @@ class GameArt {
             'actors-cyber-core',
             'actors-bicycle',
             'actors-motor',
+            'actors-horse',
+            'actors-boat',
             'actors-boar',
             'actors-basilisk',
             'actors-wraith',
@@ -72,8 +73,21 @@ class GameArt {
             'atlas',
           ]
           .map<Future<void>>((name) async {
+            final extension =
+                const {
+                  'actors-mage',
+                  'actors-motor',
+                  'actors-horse',
+                  'actors-boat',
+                  'gear-icons',
+                  'combat-fx',
+                  'dodge-icon',
+                  'actors-roll',
+                }.contains(name)
+                ? 'png'
+                : 'webp';
             final bytes = await rootBundle.load(
-              'assets/images/$name.${['actors-mage', 'actors-motor', 'gear-icons', 'combat-fx', 'dodge-icon', 'actors-roll'].contains(name) ? 'png' : 'webp'}',
+              'assets/images/$name.$extension',
             );
             final codec = await ui.instantiateImageCodec(
               bytes.buffer.asUint8List(),
@@ -277,10 +291,10 @@ class GameArt {
       'cyber-core': ('cyber-core', 0, 8),
       'merchant': ('villagers', 0, 8),
       'villager': ('villagers', 1, 8),
-      'horse': ('vehicles', 0, 8),
+      'horse': ('horse', 0, 8),
       'bicycle': ('bicycle', 0, 8),
       'motor': ('motor', 0, 8),
-      'boat': ('vehicles', 3, 8),
+      'boat': ('boat', 0, 8),
     };
     final definition = definitions[key]!;
     final sheet = attack && key == 'hero'
@@ -301,6 +315,8 @@ class GameArt {
           'cyber-core',
           'bicycle',
           'motor',
+          'horse',
+          'boat',
           'boar',
           'basilisk',
           'wraith',

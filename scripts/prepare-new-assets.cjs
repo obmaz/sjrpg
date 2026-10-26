@@ -29,6 +29,8 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
     for (const name of [
         'actors-mage',
         'actors-motor',
+        'actors-horse',
+        'actors-boat',
         'gear-icons',
         'combat-fx',
         'dodge-icon',
@@ -91,6 +93,8 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
             ['hero-attack', 'hero-attack-clean'],
             ['bicycle', 'actors-bicycle'],
             ['motor', 'actors-motor'],
+            ['horse', 'actors-horse'],
+            ['boat', 'actors-boat'],
             ['hero-backhand', 'actors-hero-backhand'],
             ['hero-cleave', 'actors-hero-cleave'],
             ['mage-cast', 'actors-mage-cast'],
