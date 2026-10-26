@@ -78,6 +78,15 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
                 .toDouble(),
             suffix: '명',
           ),
+        for (final id in ids)
+          value(
+            '${p.skills.firstWhere((s) => s.id == id).name} 피해${p.rank(id) == 0 ? ' · 1등급' : ''}',
+            (p) => p.skillDamage(
+              p.skills.firstWhere((s) => s.id == id),
+              atRank: p.rank(id).clamp(1, SkillDef.maxRank),
+            ),
+            digits: 1,
+          ),
       ];
     case 'weaponTempo':
       return [

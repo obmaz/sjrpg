@@ -523,7 +523,7 @@ const warriorSkills = [
     'stormOfSteel',
     '강철 폭풍',
     '전투 기술',
-    '2등급마다 소용돌이·대지 강타의 최대 대상 +1명. 최대 2명 추가.',
+    '등급마다 소용돌이·대지 강타 피해 +2%. 2등급마다 최대 대상 +1명, 최대 2명 추가.',
     16,
     0,
     0,
@@ -705,7 +705,7 @@ const mageSkills = [
     'cinderReach',
     '화염 확산',
     '화염',
-    '2등급마다 유성의 최대 대상 +1명. 최대 2명 추가.',
+    '등급마다 유성 피해 +2%. 2등급마다 최대 대상 +1명, 최대 2명 추가.',
     10,
     0,
     0,
@@ -771,7 +771,7 @@ const mageSkills = [
     'forkedStorm',
     '갈래 번개',
     '번개',
-    '2등급마다 연쇄 번개의 최대 대상 +1명. 최대 2명 추가.',
+    '등급마다 연쇄 번개 피해 +2%. 2등급마다 최대 대상 +1명, 최대 2명 추가.',
     10,
     0,
     0,
@@ -1141,11 +1141,14 @@ class Progress {
     final fire =
         skill.id == 'meteor' ||
         (skill.id == 'firebolt' && weapon.base.style == 'fire');
-    final specialization = skill.id == 'cleave'
-        ? 1 + rank('rendingEdge') * .05
-        : skill.id == 'warcry'
-        ? 1 + rank('resoundingCry') * .06
-        : 1;
+    final specialization = switch (skill.id) {
+      'cleave' => 1 + rank('rendingEdge') * .05,
+      'warcry' => 1 + rank('resoundingCry') * .06,
+      'whirlwind' || 'seismicSlam' => 1 + rank('stormOfSteel') * .02,
+      'meteor' => 1 + rank('cinderReach') * .02,
+      'chainLightning' => 1 + rank('forkedStorm') * .02,
+      _ => 1.0,
+    };
     return swordDamage *
         factor *
         element *

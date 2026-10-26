@@ -51,9 +51,10 @@ void main() {
           expect(after.map((s) => s.current), before.map((s) => s.next));
           // Target-cap perks increase every two ranks, avoiding a free extra victim.
           if (['stormOfSteel', 'cinderReach', 'forkedStorm'].contains(id)) {
+            expect(after.first.current, before.first.current);
             expect(p.learn(skill), true);
             final cap = previewSkill(p, skill);
-            expect(cap.any((s) => s.current > before.first.current), true);
+            expect(cap.first.current, before.first.current + 1);
           } else {
             expect(after.any((s) => s.current != before.first.current), true);
           }
@@ -83,4 +84,70 @@ void main() {
     p.ranks['phoenixHeart'] = 1;
     expect(p.learn(skill), true);
   });
+  for (final (hero, perkId, affected) in [
+    (HeroClass.warrior, 'stormOfSteel', ['whirlwind', 'seismicSlam']),
+    (HeroClass.mage, 'cinderReach', ['meteor']),
+    (HeroClass.mage, 'forkedStorm', ['chainLightning']),
+  ]) {
+    test(
+      '$perkId gives real damage on its first point and bounded area growth',
+      () {
+        final p = Progress(heroClass: hero)..gainXp(20000);
+        for (final skill in p.skills) {
+          p.ranks[skill.id] = 2;
+        }
+        p.ranks[perkId] = 0;
+        final perk = p.skills.firstWhere((s) => s.id == perkId);
+        final damage = {
+          for (final s in p.skills.where((s) => !s.passive))
+            s.id: p.skillDamage(s),
+        };
+        final caps = {
+          for (final id in affected)
+            id: p.skillTargetLimit(p.skills.firstWhere((s) => s.id == id)),
+        };
+        final points = p.skillPoints,
+            basic = p.basicDamage,
+            basicTargets = p.basicTargetLimit;
+        expect(p.learn(perk), true);
+        expect(p.basicDamage, basic);
+        expect(p.basicTargetLimit, basicTargets);
+        expect(p.skillPoints, points - 1);
+        for (final skill in p.skills.where((s) => !s.passive)) {
+          expect(
+            p.skillDamage(skill),
+            closeTo(
+              damage[skill.id]! * (affected.contains(skill.id) ? 1.02 : 1),
+              .00001,
+            ),
+          );
+        }
+        for (final id in affected) {
+          expect(
+            p.skillTargetLimit(p.skills.firstWhere((s) => s.id == id)),
+            caps[id],
+          );
+        }
+        expect(
+          previewSkill(p, perk)
+              .where((r) => r.label.contains('피해'))
+              .every((r) => r.next > r.current),
+          true,
+        );
+        final restored = Progress.fromSave(p.toSave())!;
+        for (final id in affected) {
+          final skill = p.skills.firstWhere((s) => s.id == id);
+          expect(restored.skillDamage(skill), p.skillDamage(skill));
+        }
+        while (p.rank(perkId) < SkillDef.maxRank) {
+          expect(p.learn(perk), true);
+        }
+        for (final id in affected) {
+          final skill = p.skills.firstWhere((s) => s.id == id);
+          expect(p.skillDamage(skill), closeTo(damage[id]! * 1.1, .00001));
+          expect(p.skillTargetLimit(skill), caps[id]! + 2);
+        }
+      },
+    );
+  }
 }
