@@ -80,7 +80,7 @@ void main() {
           projected,
         );
         final viewport = tester.getSize(find.byType(InteractiveViewer));
-        expect((result - viewport.center(Offset.zero)).distance, lessThan(1));
+        expect((Offset.zero & viewport).deflate(8).contains(result), true);
         await tester.tap(find.bySemanticsLabel('지도 목표 · ${site.name}'));
         await tester.pumpAndSettle();
         expect(s.trackedSite, null);

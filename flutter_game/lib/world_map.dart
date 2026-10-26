@@ -27,8 +27,32 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
   String get trackingLabel =>
       trackingMessage ?? '◆ 의뢰   ⌂ 거점   ● 내 위치 · 목표 선택: 방향 추적';
   static const canvas = Size(1200, 900);
+  bool constraining = false;
+  @override
+  void initState() {
+    super.initState();
+    transform.addListener(constrain);
+  }
+
+  void constrain() {
+    if (constraining || viewport.isEmpty) return;
+    final matrix = transform.value, scale = matrix.storage[0].abs();
+    double axis(double offset, double content, double extent) =>
+        content <= extent
+        ? (extent - content) / 2
+        : offset.clamp(extent - content - 12, 12).toDouble();
+    final x = axis(matrix.storage[12], canvas.width * scale, viewport.width),
+        y = axis(matrix.storage[13], canvas.height * scale, viewport.height);
+    if (x == matrix.storage[12] && y == matrix.storage[13]) return;
+    constraining = true;
+    transform.value = Matrix4.copy(matrix)
+      ..setTranslationRaw(x, y, matrix.storage[14]);
+    constraining = false;
+  }
+
   @override
   void dispose() {
+    transform.removeListener(constrain);
     transform.dispose();
     super.dispose();
   }

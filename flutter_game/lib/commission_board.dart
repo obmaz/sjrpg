@@ -27,7 +27,7 @@ class CommissionBoard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(
-            '시간의 균열은 두 시대를 가리킵니다. 한쪽의 의뢰를 선택하세요.',
+            '제2장은 사막 유적입니다. 의뢰 4개·지역 정화·감시자 토벌을 마치면 선택한 제3장으로 이동합니다.',
             style: TextStyle(color: cream, fontSize: 15, height: 1.5),
           ),
           const SizedBox(height: 14),
@@ -87,7 +87,7 @@ class CommissionBoard extends StatelessWidget {
           _pathHeader(session.timePath!),
           const SizedBox(height: 8),
           Text(
-            '필수 의뢰 ${journey.where((q) => session.cleansedSites.contains(q.id)).length} / 4 · 반대 시간축 잠금',
+            '현재 · 제2장 사막 유적\n필수 의뢰 ${journey.where((q) => session.cleansedSites.contains(q.id)).length} / 4 · 반대 시간축 잠금',
             style: const TextStyle(
               color: Color(0xffabc3b8),
               fontSize: 13,
@@ -209,7 +209,7 @@ class CommissionBoard extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          past ? '고대 왕국으로' : '사이버펑크 도시로',
+                          past ? '제3-1장 · 고대 왕국' : '제3-2장 · 사이버펑크',
                           style: const TextStyle(
                             color: cream,
                             fontSize: 14,
@@ -253,7 +253,7 @@ class CommissionBoard extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: Text(
-            path == TimePath.past ? '과거의 기록 → 제3-1장' : '미래의 신호 → 제3-2장',
+            path == TimePath.past ? '완료 후 · 제3-1장 고대 왕국' : '완료 후 · 제3-2장 사이버펑크',
             style: TextStyle(
               color: locked ? Colors.grey : gold,
               fontSize: 17,

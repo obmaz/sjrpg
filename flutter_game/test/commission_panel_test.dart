@@ -34,6 +34,8 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
+        expect(find.textContaining('제2장은 사막 유적입니다.'), findsOneWidget);
+        expect(find.text('제3-2장 · 사이버펑크'), findsOneWidget);
         final close = find.text('모험 계속하기');
         final closeRect = tester.getRect(close);
         for (final name in ['모래에 묻힌 어제 수락', '아직 오지 않은 신호 수락']) {
@@ -59,7 +61,10 @@ void main() {
               'the newly accepted first commission starts at the top after leaving the choices',
         );
         expect(s.timePath, TimePath.future);
+        expect(s.world.stage, WorldStage.sands);
         expect(s.acceptedCommission, 'future-1');
+        expect(find.textContaining('현재 · 제2장 사막 유적'), findsOneWidget);
+        expect(find.text('완료 후 · 제3-2장 사이버펑크'), findsOneWidget);
         expect(commits, 1);
         expect(find.text('모래에 묻힌 어제 수락'), findsNothing);
         expect(s.acceptCommission(timeCommissions.first), false);
@@ -70,6 +75,12 @@ void main() {
           'future',
         );
         expect(tester.takeException(), null);
+        expect(
+          GameCheckpoint.decode(
+            GameCheckpoint.capture(s)!.encode(),
+          )!.data['stage'],
+          'sands',
+        );
       },
     );
   }
