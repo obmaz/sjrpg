@@ -639,6 +639,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   ? '보조 ${skill.name}'
                   : '스킬 ${slot + 1} ${skill.name}',
               size: layout.$3,
+              insufficientResource: p.energy < skill.cost,
               remaining: remaining,
               total: p.skillCooldown(skill),
               onTap: () => adventure.hero.skill(slot: slot),

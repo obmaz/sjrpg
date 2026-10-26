@@ -8,12 +8,7 @@ class EffectAtlas {
   final _paint = ui.Paint()..filterQuality = ui.FilterQuality.medium;
 
   void warm() {
-    for (final asset in [
-      'fx-meteor',
-      'fx-ice-nova',
-      'fx-whirlwind',
-      'fx-warcry',
-    ]) {
+    for (final asset in ['fx-meteor', 'fx-ice-nova', 'fx-warcry']) {
       _grid(asset, 4, 4, 1);
     }
     _grid('fx-steel-whirlwind', 4, 9, 1);

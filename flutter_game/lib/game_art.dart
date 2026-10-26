@@ -48,7 +48,6 @@ class GameArt {
             'physical-icons',
             'fx-meteor',
             'fx-ice-nova',
-            'fx-whirlwind',
             'fx-steel-whirlwind',
             'victory-crest',
             'well-portal',
@@ -88,7 +87,6 @@ class GameArt {
             'world-forest',
             'world-desert',
             'controls',
-            'popup-frame',
             'atlas',
           ]
           .map<Future<void>>((name) async {

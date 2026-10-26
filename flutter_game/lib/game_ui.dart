@@ -879,6 +879,7 @@ class ActionButton extends StatefulWidget {
     this.effect,
     this.artwork,
     this.showLabel = true,
+    this.insufficientResource = false,
     this.remaining = 0,
     this.total = 1,
     super.key,
@@ -894,7 +895,7 @@ class ActionButton extends StatefulWidget {
   final IconData? icon;
   final int? effect;
   final Widget? artwork;
-  final bool showLabel;
+  final bool showLabel, insufficientResource;
   @override
   State<ActionButton> createState() => _ActionButtonState();
 }
@@ -979,6 +980,10 @@ class _ActionButtonState extends State<ActionButton> {
                       )
                     else if (widget.icon != null)
                       Icon(widget.icon, size: widget.size * .43, color: cream),
+                    if (widget.insufficientResource)
+                      const Positioned.fill(
+                        child: ColoredBox(color: Color(0x66000000)),
+                      ),
                     if (pressed && widget.onAimStart != null)
                       Positioned.fill(
                         child: ColoredBox(
