@@ -185,14 +185,16 @@ class PotionBelt extends StatelessWidget {
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        width: 50,
+        constraints: const BoxConstraints(minWidth: 50, maxWidth: 72),
         height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
           color: ink.withValues(alpha: .88),
           border: Border.all(color: gold.withValues(alpha: .55)),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(
@@ -205,7 +207,14 @@ class PotionBelt extends StatelessWidget {
                 ),
               ),
             ),
-            Text('$count', style: const TextStyle(color: cream, fontSize: 13)),
+            Flexible(
+              child: Text(
+                '$count',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: cream, fontSize: 13),
+              ),
+            ),
           ],
         ),
       ),

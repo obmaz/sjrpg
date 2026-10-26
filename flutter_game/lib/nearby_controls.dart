@@ -16,7 +16,7 @@ class NearbyControl {
 }
 
 /// The compact action row and its guide occupy separate touch targets.
-class NearbyControls extends StatelessWidget {
+class NearbyControls extends StatefulWidget {
   const NearbyControls({
     required this.actions,
     this.horizontal = false,
@@ -24,10 +24,22 @@ class NearbyControls extends StatelessWidget {
   });
   final List<NearbyControl> actions;
   final bool horizontal;
+  @override
+  State<NearbyControls> createState() => _NearbyControlsState();
+}
+
+class _NearbyControlsState extends State<NearbyControls> {
+  final scroll = ScrollController();
+  @override
+  void dispose() {
+    scroll.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
+      final actions = widget.actions, horizontal = widget.horizontal;
       if (actions.isEmpty) return const SizedBox.shrink();
       final iconsOnly =
           horizontal && constraints.maxWidth / actions.length < 88;
@@ -64,6 +76,30 @@ class NearbyControls extends StatelessWidget {
         ),
       );
       if (horizontal) {
+        if (actions.length * 44 + (actions.length - 1) * 4 >
+            constraints.maxWidth) {
+          return SizedBox(
+            height: 44,
+            child: Scrollbar(
+              controller: scroll,
+              thumbVisibility: true,
+              thickness: 2,
+              child: SingleChildScrollView(
+                controller: scroll,
+                scrollDirection: Axis.horizontal,
+                physics: const ClampingScrollPhysics(),
+                child: Row(
+                  children: [
+                    for (var i = 0; i < actions.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 4),
+                      SizedBox(width: 44, child: button(actions[i])),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
         return Row(
           children: [
             for (var i = 0; i < actions.length; i++) ...[

@@ -1038,6 +1038,7 @@ class _ActionButtonState extends State<ActionButton> {
                 style: const TextStyle(
                   color: cream,
                   fontSize: 13,
+                  height: 1.1,
                   fontWeight: FontWeight.bold,
                   shadows: [Shadow(color: Colors.black, blurRadius: 3)],
                 ),

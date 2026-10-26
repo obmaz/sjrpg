@@ -189,9 +189,10 @@ class NearbyQuestCard extends StatelessWidget {
                 guide.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   color: gold,
                   fontSize: 12,
+                  height: compact ? 1.1 : null,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -211,9 +212,10 @@ class NearbyQuestCard extends StatelessWidget {
                 ),
               Text(
                 '${guide.button} ›',
-                style: const TextStyle(
+                style: TextStyle(
                   color: gold,
                   fontSize: 12,
+                  height: compact ? 1.1 : null,
                   fontWeight: FontWeight.bold,
                 ),
               ),

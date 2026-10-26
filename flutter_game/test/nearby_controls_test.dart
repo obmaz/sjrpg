@@ -1,5 +1,6 @@
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/game_art.dart';
@@ -24,6 +25,12 @@ void besideWell(Adventure session) {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  var fontLoaded = false;
+  Finder control(String label) => find.byWidgetPredicate(
+    (widget) =>
+        widget is GameAction && widget.label == label ||
+        widget is GameIconButton && widget.label == label,
+  );
   test('a well offers its quest and adjacent mount independently', () {
     final session = Adventure(GameArt())..start(TestGame());
     addTearDown(session.dispose);
@@ -43,17 +50,35 @@ void main() {
     const Size(320, 420),
     const Size(390, 844),
     const Size(844, 390),
+    const Size(390, 420),
+    const Size(568, 320),
   ]) {
     testWidgets(
-      'well guide, boarding and warp have separate touch areas at $size',
+      'scaled well guide and nearby actions preserve battle touch areas at $size',
       (tester) async {
         tester.view.physicalSize = size;
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
         final art = await tester.runAsync(GameArt.load);
+        if (!fontLoaded) {
+          await tester.runAsync(() async {
+            final font = FontLoader(
+              'Guardian',
+            )..addFont(rootBundle.load('assets-fonts/NanumGothic-Regular.ttf'));
+            await font.load();
+          });
+          fontLoaded = true;
+        }
         await tester.pumpWidget(
           MaterialApp(
+            theme: ThemeData(fontFamily: 'Guardian'),
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(1.3)),
+              child: child!,
+            ),
             home: GamePage(art: art!, onRestart: () {}, onTravel: (_) {}),
           ),
         );
@@ -67,12 +92,19 @@ void main() {
             tester.widget<BonfireWidget>(find.byType(BonfireWidget)).player!
                 as Guardian;
         final session = hero.session;
+        session.progress.gainXp(8000);
+        const skills = ['whirlwind', 'frenzy', 'warcry', 'seismicSlam'];
+        session.progress.ranks.addAll({for (final id in skills) id: 1});
+        for (var slot = 0; slot < skills.length; slot++) {
+          expect(session.progress.selectSkill(skills[slot], slot: slot), true);
+        }
+        session.progress.healingPotions = session.progress.energyPotions = 128;
         besideWell(session);
         await tester.pump();
         final guide = find.byType(NearbyQuestCard);
         final controls = find.byType(NearbyControls);
-        final mount = find.widgetWithText(GameAction, '타기');
-        final warp = find.widgetWithText(GameAction, '워프');
+        final mount = control('타기');
+        final warp = control('워프');
         expect(guide, findsOneWidget);
         expect(mount, findsOneWidget);
         expect(warp, findsOneWidget);
@@ -83,6 +115,44 @@ void main() {
               .overlaps(tester.getRect(find.byType(PotionBelt))),
           false,
         );
+        final nearbyButtons = find.descendant(
+          of: controls,
+          matching: find.byWidgetPredicate(
+            (w) => w is GameAction || w is GameIconButton,
+          ),
+        );
+        final potions = find.descendant(
+          of: find.byType(PotionBelt),
+          matching: find.byType(InkWell),
+        );
+        final targets = [
+          tester.getRect(guide),
+          for (var i = 0; i < nearbyButtons.evaluate().length; i++)
+            tester
+                .getRect(nearbyButtons.at(i))
+                .intersect(tester.getRect(controls)),
+          for (var i = 0; i < potions.evaluate().length; i++)
+            tester.getRect(potions.at(i)),
+        ];
+        final battle = find.byType(ActionButton);
+        for (var i = 0; i < battle.evaluate().length; i++) {
+          final button = tester.widget<ActionButton>(battle.at(i));
+          final center =
+              tester.getRect(battle.at(i)).topLeft +
+              Offset(button.size / 2, button.size / 2);
+          for (final target in targets.where((r) => !r.isEmpty)) {
+            final closest = Offset(
+              center.dx.clamp(target.left, target.right),
+              center.dy.clamp(target.top, target.bottom),
+            );
+            expect(
+              (closest - center).distance,
+              greaterThanOrEqualTo(button.size / 2),
+              reason:
+                  '${button.semanticLabel} is covered by another touch target',
+            );
+          }
+        }
         expect(
           tester
               .getRect(controls)
@@ -93,7 +163,7 @@ void main() {
         await tester.tap(mount);
         await tester.pump();
         expect(session.riding?.def.id, session.mounts.first.def.id);
-        expect(find.text('워프'), findsNothing);
+        expect(control('워프'), findsNothing);
         await tester.tap(find.byType(NearbyQuestCard));
         await tester.pump();
         expect(session.riding, isNull);

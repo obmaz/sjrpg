@@ -535,8 +535,11 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         final media = MediaQuery.of(context),
             width = media.size.width,
             short = media.size.height < 500;
-        final stick = short && width < 400
-                ? 102.0
+        final landscapeControls = short && width >= 500;
+        final tightLandscape = landscapeControls && width < 600;
+        final sideGuide = landscapeControls || width >= 600;
+        final stick = short && width < 500
+                ? math.min(112.0, math.max(44.0, media.size.height - 318))
                 : width < 360
                 ? 122.0
                 : short
@@ -585,26 +588,19 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   p.heroClass == HeroClass.mage ? 540 : p.weapon.base.range,
                 )
                 .isEmpty;
-        final layouts = short && width < 360
+        final layouts = short && width < 500
             ? [
                 (14.0, 128.0, 52.0),
                 (18.0, 188.0, 48.0),
                 (94.0, 168.0, 48.0),
                 (94.0, 112.0, 48.0),
               ]
-            : short && width >= 500
+            : short
             ? [
                 (258.0, 80.0, 48.0),
                 (202.0, 80.0, 48.0),
                 (258.0, 24.0, 48.0),
                 (202.0, 24.0, 48.0),
-              ]
-            : short
-            ? [
-                (18.0, 132.0, 60.0),
-                (90.0, 142.0, 52.0),
-                (154.0, 114.0, 52.0),
-                (206.0, 66.0, 48.0),
               ]
             : width < 360
             ? [
@@ -767,8 +763,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   bottom: short ? null : bottom + stick + 12,
                   width: short
                       ? width >= 500
-                            ? (width - 440).clamp(140, 320).toDouble()
-                            : width - 24
+                            ? (width - 450).clamp(100, 320).toDouble()
+                            : (width - 174).clamp(44, width - 24).toDouble()
                       : 120,
                   child: NearbyControls(
                     actions: contextActions,
@@ -777,17 +773,23 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 ),
               Positioned(
                 left: short && width >= 500 ? 136 : 14,
-                top:
-                    media.padding.top +
-                    (guide != null ? (short && width < 500 ? 188 : 198) : 110),
+                top: tightLandscape
+                    ? null
+                    : media.padding.top +
+                          (guide != null
+                              ? (short && width < 500 ? 188 : 198)
+                              : 110),
+                bottom: tightLandscape
+                    ? math.max(8, media.padding.bottom) + 58
+                    : null,
                 child: PotionBelt(adventure, onUse: restoreGameFocus),
               ),
               if (guide != null)
                 Positioned(
-                  left: width >= 600 ? 136 : 12,
+                  left: sideGuide ? 136 : 12,
                   top: media.padding.top + 100,
-                  width: width >= 600
-                      ? (width - 450).clamp(140, 280).toDouble()
+                  width: sideGuide
+                      ? (width - 450).clamp(100, 280).toDouble()
                       : (width - (short ? 164 : 150))
                             .clamp(148, 250)
                             .toDouble(),

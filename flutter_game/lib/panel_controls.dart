@@ -217,42 +217,49 @@ class GameTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(horizontal: 12),
-    child: Row(
-      children: [
-        for (var i = 0; i < labels.length; i++) ...[
-          if (i > 0) const SizedBox(width: 4),
-          Expanded(
-            child: Semantics(
-              button: true,
-              selected: selected == i,
-              label: labels[i],
-              excludeSemantics: true,
-              onTap: () => onChange(i),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => onChange(i),
-                  child: Container(
-                    height: 48,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      image: gameButtonImage(primary: selected == i),
-                    ),
-                    child: Text(
-                      labels[i],
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: selected == i ? const Color(0xff18342e) : _muted,
-                        fontWeight: FontWeight.bold,
+    child: IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < labels.length; i++) ...[
+            if (i > 0) const SizedBox(width: 4),
+            Expanded(
+              child: Semantics(
+                button: true,
+                selected: selected == i,
+                label: labels[i],
+                excludeSemantics: true,
+                onTap: () => onChange(i),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => onChange(i),
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        image: gameButtonImage(primary: selected == i),
+                      ),
+                      child: Text(
+                        labels[i],
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: selected == i
+                              ? const Color(0xff18342e)
+                              : _muted,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
+          ],
         ],
-      ],
+      ),
     ),
   );
 }
