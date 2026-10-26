@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'adventure.dart';
 import 'game_art.dart';
 import 'game_ui.dart';
+import 'gear_icon_art.dart';
 import 'rpg_model.dart';
 
 IconData elementIcon(String element) => element == 'ice'
@@ -230,12 +231,12 @@ class GearGlyph extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final image = art.images['gear-icons'];
     if (image == null) return;
-    final index = gearCatalog.indexOf(item.base), cell = image.width / 6;
-    if (index < 0) return;
+    final source = GearIconArt.source(image, item.base);
+    if (source == null) return;
     final side = math.min(size.width, size.height);
     canvas.drawImageRect(
       image,
-      Rect.fromLTWH((index % 6) * cell, (index ~/ 6) * cell, cell, cell),
+      source,
       Rect.fromCenter(
         center: size.center(Offset.zero),
         width: side,

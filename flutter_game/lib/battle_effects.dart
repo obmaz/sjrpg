@@ -9,6 +9,7 @@ import 'boss_attacks.dart';
 import 'device_settings.dart';
 import 'effect_visibility.dart';
 import 'fire_plume.dart';
+import 'gear_icon_art.dart';
 import 'ranked_vfx.dart';
 import 'spell_vfx.dart';
 import 'world_model.dart';
@@ -964,15 +965,44 @@ class MeteorFall extends GameComponent with EffectVisibility {
   }
 }
 
-class GroundLoot extends GameComponent {
+class GroundLoot extends GameComponent with EffectVisibility {
   GroundLoot(this.session, this.item, ui.Offset at) {
     position = Vector2(at.dx, at.dy);
     size = Vector2.all(20);
   }
   final Adventure session;
   final Gear item;
+  final _spritePaint = ui.Paint()..filterQuality = ui.FilterQuality.medium;
+  final _shadowPaint = ui.Paint()..color = const ui.Color(0x66000000);
+  final _lightPaint = ui.Paint();
+  final _glintPaint = ui.Paint()
+    ..strokeWidth = 1
+    ..strokeCap = ui.StrokeCap.round;
+  // Vector light has no native shader or picture to retain across sessions.
+  // These small, immutable paths are shared for the app's lifetime.
+  static final _beams = [
+    for (final height in [48.0, 37.0, 26.0])
+      ui.Path()
+        ..moveTo(-.5, -height)
+        ..lineTo(.5, -height)
+        ..lineTo(3, 1)
+        ..lineTo(-3, 1)
+        ..close(),
+  ];
+  static const _iconBounds = ui.Rect.fromLTWH(-16, -26, 32, 32);
+  static const _visualBounds = ui.Rect.fromLTRB(-18, -49, 18, 8);
+  ui.Image? _iconSheet;
+  ui.Rect? _iconSource;
   double age = 0;
   bool collected = false, warned = false;
+
+  @override
+  int get priority => 29; // Ground light and equipment stay below actors.
+  @override
+  bool get isVisible => true; // Full visual bounds are culled in renderTree.
+  @override
+  ui.Rect get effectBounds => _visualBounds.shift(position.toOffset());
+
   void tryCollect() {
     if (collected ||
         isRemoving ||
@@ -1021,31 +1051,56 @@ class GroundLoot extends GameComponent {
 
   @override
   void render(ui.Canvas canvas) {
+    if (session.disposed || collected || isRemoving) return;
     super.render(canvas);
-    final c = canvas;
     final color = ui.Color(item.rarity.color);
-    c.drawOval(
-      const ui.Rect.fromLTWH(-12, -3, 24, 10),
-      ui.Paint()..color = color.withValues(alpha: .3),
+    final pulse = .5 + .5 * math.sin(age * 2.1 + item.serial * 1.7);
+    canvas.drawOval(const ui.Rect.fromLTWH(-13, -2, 26, 8), _shadowPaint);
+    _lightPaint.color = color.withValues(
+      alpha: item.rarity == Rarity.common ? .13 : .28 + pulse * .08,
     );
+    canvas.drawOval(const ui.Rect.fromLTWH(-15, -3, 30, 9), _lightPaint);
     if (item.rarity != Rarity.common) {
-      c.drawRect(
-        const ui.Rect.fromLTWH(-3, -46, 6, 46),
-        ui.Paint()
-          ..shader = ui.Gradient.linear(
-            const ui.Offset(0, -46),
-            ui.Offset.zero,
-            [color.withValues(alpha: 0), color.withValues(alpha: .6)],
-          ),
+      final strength = item.rarity == Rarity.magic ? .75 : 1.0;
+      _lightPaint.color = color.withValues(
+        alpha: (.035 + pulse * .018) * strength,
+      );
+      for (final beam in _beams) {
+        canvas.drawPath(beam, _lightPaint);
+      }
+    }
+    final image = session.art.images['gear-icons'];
+    if (image != null) {
+      if (!identical(image, _iconSheet)) {
+        _iconSheet = image;
+        _iconSource = GearIconArt.source(image, item.base);
+      }
+      final source = _iconSource;
+      if (source != null) {
+        canvas.drawImageRect(image, source, _iconBounds, _spritePaint);
+      }
+    } else {
+      // Headless/early-loading fallback; never draw over loaded equipment art.
+      _lightPaint.color = color;
+      canvas.save();
+      canvas.rotate(math.pi / 4);
+      canvas.drawRect(const ui.Rect.fromLTWH(-5, -5, 10, 10), _lightPaint);
+      canvas.restore();
+    }
+    if (item.rarity != Rarity.common) {
+      final at = ui.Offset(9, -20 - pulse * 2);
+      _glintPaint.color = color.withValues(alpha: .18 + pulse * .38);
+      canvas.drawLine(
+        at - const ui.Offset(2, 0),
+        at + const ui.Offset(2, 0),
+        _glintPaint,
+      );
+      canvas.drawLine(
+        at - const ui.Offset(0, 3),
+        at + const ui.Offset(0, 3),
+        _glintPaint,
       );
     }
-    c.save();
-    c.rotate(math.pi / 4);
-    c.drawRect(
-      const ui.Rect.fromLTWH(-5, -5, 10, 10),
-      ui.Paint()..color = color,
-    );
-    c.restore();
   }
 }
 
