@@ -1,17 +1,19 @@
-import 'quest_guide.dart';
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
 import 'adventure.dart';
-import 'game_ui.dart';
-import 'world_model.dart';
 import 'commission_board.dart';
-import 'rpg_widgets.dart';
 import 'device_controls.dart';
-import 'world_map.dart';
 import 'equipment_panel.dart';
+import 'game_ui.dart';
 import 'panel_controls.dart';
-import 'skills_panel.dart';
 import 'quest_cards.dart';
+import 'quest_guide.dart';
+import 'rpg_widgets.dart';
+import 'skills_panel.dart';
+import 'world_map.dart';
+import 'world_model.dart';
 
 class AdventurePanel extends StatefulWidget {
   const AdventurePanel({
@@ -287,6 +289,14 @@ class _AdventurePanelState extends State<AdventurePanel> {
       ];
     } else {
       body = [
+        if (s.saveFailed) ...[
+          _info(
+            Icons.cloud_off_outlined,
+            '자동 저장 실패',
+            '저장 공간·사이트 저장 권한을 확인하세요. 5초마다 다시 시도합니다. 복구되기 전에는 이 창을 닫지 마세요.',
+          ),
+          const SizedBox(height: 14),
+        ],
         if (s.serviceMount != null) ...[
           _quest(
             '${s.serviceMount!.def.name} · 내구도 ${s.serviceMount!.condition}%',
@@ -331,10 +341,15 @@ class _AdventurePanelState extends State<AdventurePanel> {
           'WASD / 방향키 — 이동\nSpace / J — 연속 공격\nN / K — 스킬 1\nL / O / P — 스킬 2 / 3 / 4\n왼쪽 Shift — 회피\n1 / 2 — 생명 / 자원 물약',
         ),
         const SizedBox(height: 18),
-        const Text(
-          '5초마다 이 브라우저에 자동 저장합니다. 다음에 모험 이어하기로 돌아올 수 있습니다. 새 모험을 시작하면 이전 진행을 덮어씁니다.',
-          style: TextStyle(color: Color(0xffbacdbe), fontSize: 13, height: 1.7),
-        ),
+        if (!s.saveFailed)
+          const Text(
+            '5초마다 이 브라우저에 자동 저장합니다. 다음에 모험 이어하기로 돌아올 수 있습니다. 새 모험을 시작하면 이전 진행을 덮어씁니다.',
+            style: TextStyle(
+              color: Color(0xffbacdbe),
+              fontSize: 13,
+              height: 1.7,
+            ),
+          ),
         const SizedBox(height: 16),
         GameAction(
           '직업 선택 · 새 모험',

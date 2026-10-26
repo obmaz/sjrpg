@@ -1,4 +1,4 @@
 String? readCheckpoint() => null;
-void writeCheckpoint(String value) {}
+bool writeCheckpoint(String value) => true;
 void clearCheckpoint() {}
 void Function() listenForExit(void Function() save) => () {};

@@ -1,10 +1,12 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
 import 'adventure.dart';
 import 'game_ui.dart';
-import 'world_model.dart';
 import 'panel_controls.dart';
 import 'rpg_widgets.dart';
+import 'world_model.dart';
 
 class ExpandedWorldMap extends StatefulWidget {
   const ExpandedWorldMap({
@@ -28,15 +30,13 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
     super.dispose();
   }
 
+  double get overviewScale =>
+      math.min(viewport.width / canvas.width, viewport.height / canvas.height) *
+      .95;
+  double get minimumScale => math.min(.15, overviewScale).clamp(.001, .15);
   void center({bool overview = false, Offset? at}) {
     final hero = at ?? widget.session.hero.body.center;
-    final scale = overview
-        ? math.min(
-                viewport.width / canvas.width,
-                viewport.height / canvas.height,
-              ) *
-              .95
-        : 1.1;
+    final scale = overview ? overviewScale : 1.1;
     final focus = overview
         ? canvas.center(Offset.zero)
         : Offset(
@@ -55,7 +55,8 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
 
   void zoom(double factor) {
     final old = transform.value, current = old.storage[0].abs();
-    final next = (current * factor).clamp(.15, 6.0), ratio = next / current;
+    final next = (current * factor).clamp(minimumScale, 6.0),
+        ratio = next / current;
     transform.value = Matrix4.identity()
       ..translateByDouble(
         viewport.width / 2 - (viewport.width / 2 - old.storage[12]) * ratio,
@@ -104,7 +105,7 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
                               double.infinity,
                             ),
                             alignment: Alignment.topLeft,
-                            minScale: .15,
+                            minScale: minimumScale,
                             maxScale: 6,
                             child: SizedBox(
                               width: canvas.width,

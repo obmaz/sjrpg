@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'device_settings.dart';
+
 import 'audio_settings.dart';
+import 'device_settings.dart';
 import 'game_ui.dart';
 import 'install_controls.dart';
 import 'panel_controls.dart';

@@ -1,13 +1,15 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+
 import 'package:bonfire/bonfire.dart';
+
 import 'adventure.dart';
-import 'world_model.dart';
-import 'spell_vfx.dart';
-import 'ranked_vfx.dart';
-import 'device_settings.dart';
-import 'boss_attacks.dart';
 import 'audio_settings.dart';
+import 'boss_attacks.dart';
+import 'device_settings.dart';
+import 'ranked_vfx.dart';
+import 'spell_vfx.dart';
+import 'world_model.dart';
 
 void areaStrike(
   Adventure s,

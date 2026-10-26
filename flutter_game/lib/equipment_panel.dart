@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+
 import 'adventure.dart';
 import 'game_ui.dart';
+import 'panel_controls.dart';
 import 'rpg_model.dart';
 import 'rpg_widgets.dart';
-import 'panel_controls.dart';
 import 'shop_content.dart';
 
 const _muted = Color(0xffa4bcb6);

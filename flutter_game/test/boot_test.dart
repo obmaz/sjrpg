@@ -4,8 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/game_art.dart';
-import 'package:guardian_new/main.dart';
 import 'package:guardian_new/game_ui.dart';
+import 'package:guardian_new/main.dart';
 
 void main() {
   for (final viewport in const [Size(390, 844), Size(320, 420)]) {

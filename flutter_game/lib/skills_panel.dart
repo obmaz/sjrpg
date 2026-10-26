@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+
 import 'adventure.dart';
 import 'game_ui.dart';
 import 'panel_controls.dart';
 import 'rpg_model.dart';
 import 'rpg_widgets.dart';
-import 'skill_tree.dart';
 import 'skill_preview.dart';
+import 'skill_tree.dart';
 
 const _dim = Color(0xffa4bcb6);
 

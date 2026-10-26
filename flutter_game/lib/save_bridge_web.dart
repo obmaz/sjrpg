@@ -10,11 +10,12 @@ String? readCheckpoint() {
   }
 }
 
-void writeCheckpoint(String value) {
+bool writeCheckpoint(String value) {
   try {
     web.window.localStorage.setItem(_key, value);
+    return true;
   } catch (_) {
-    /* Storage may be full or blocked. */
+    return false;
   }
 }
 

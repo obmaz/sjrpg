@@ -58,6 +58,12 @@ extension QuestGuidance on Adventure {
       String button = '여정 보기',
     ]) => QuestGuide(title, text, action, button);
     if (site != null) {
+      // A journal-only hint must never replace the rider's exit control.
+      if (riding != null &&
+          (cleansedSites.contains(site.id) ||
+              world.stage == WorldStage.sands)) {
+        return null;
+      }
       final title = site.name;
       if (cleansedSites.contains(site.id)) {
         return note('$title · 완료', mainQuestNext);

@@ -1,9 +1,10 @@
-import 'support/test_game.dart';
-import 'package:guardian_new/rpg_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
-import 'package:guardian_new/world_model.dart' show questSites, worldScale;
 import 'package:guardian_new/game_art.dart';
+import 'package:guardian_new/rpg_model.dart';
+import 'package:guardian_new/world_model.dart' show questSites, worldScale;
+
+import 'support/test_game.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

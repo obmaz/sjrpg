@@ -1,9 +1,11 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
 import 'game_art.dart';
 import 'game_ui.dart';
-import 'rpg_model.dart';
 import 'panel_controls.dart';
+import 'rpg_model.dart';
 
 class ClassSelection extends StatefulWidget {
   const ClassSelection({

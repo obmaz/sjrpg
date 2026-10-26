@@ -1,20 +1,22 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'game_art.dart';
-import 'world_model.dart';
-import 'battle_effects.dart';
-import 'device_settings.dart';
-import 'skill_aim.dart';
-import 'spell_vfx.dart';
-import 'shop_content.dart';
-import 'boss_attacks.dart';
+
 import 'audio_settings.dart';
+import 'battle_effects.dart';
+import 'boss_attacks.dart';
+import 'device_settings.dart';
 import 'encounters.dart';
 import 'enemy_catalog.dart';
+import 'game_art.dart';
 import 'ranked_vfx.dart';
+import 'shop_content.dart';
+import 'skill_aim.dart';
+import 'spell_vfx.dart';
+import 'world_model.dart';
 
 enum NearbyAction { chest, shrine, mount, dismount, shop, talk }
 
@@ -82,6 +84,7 @@ class Adventure extends ChangeNotifier {
   late final Guardian hero;
   late final TerrainArt terrain;
   final Progress progress;
+  bool saveFailed = false;
   final loot = <GroundLoot>[];
   final texts = <BattleText>[];
   final mounts = <TravelMount>[];
@@ -575,20 +578,22 @@ class Adventure extends ChangeNotifier {
           progress.energy >= progress.maxEnergy) {
         return;
       }
+      final restored = math.min(60.0, progress.maxEnergy - progress.energy);
       progress.energyPotions--;
       progress.energy = math.min(progress.maxEnergy, progress.energy + 60);
       bubble(
-        '+60 ${progress.heroClass.resource}',
+        '+${restored.ceil()} ${progress.heroClass.resource}',
         hero.body.center - const ui.Offset(0, 80),
         const ui.Color(0xff9fdfff),
       );
     } else {
       if (progress.healingPotions <= 0 || progress.hp >= progress.maxHp) return;
+      final restored = math.min(55.0, progress.maxHp - progress.hp);
       progress.healingPotions--;
       progress.hp = math.min(progress.maxHp, progress.hp + 55);
       syncLife();
       bubble(
-        '+55 생명',
+        '+${restored.ceil()} 생명',
         hero.body.center - const ui.Offset(0, 80),
         const ui.Color(0xffffb6a0),
       );
@@ -700,6 +705,9 @@ class Adventure extends ChangeNotifier {
     // Exploration packs are recycled without rewards; bosses remain until defeated.
     for (final mob in List<HuntEnemy>.of(mobs)) {
       if (mob.combatReady &&
+          !mob.isDead &&
+          !mob.isRemoving &&
+          !mob.encounterDormant &&
           !mob.boss &&
           (mob.position - hero.position).length > 1500) {
         dormantEnemies.add(saveEnemy(mob));

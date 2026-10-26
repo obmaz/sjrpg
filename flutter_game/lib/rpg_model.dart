@@ -1,5 +1,6 @@
-import 'skill_growth.dart';
 import 'dart:math' as math;
+
+import 'skill_growth.dart';
 
 enum HeroClass { warrior, mage }
 

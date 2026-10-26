@@ -1,7 +1,7 @@
-import 'audio_profile.dart';
 import 'audio_bridge_stub.dart'
     if (dart.library.js_interop) 'audio_bridge_web.dart'
     as implementation;
+import 'audio_profile.dart';
 
 abstract class AudioBridge {
   bool get supported;

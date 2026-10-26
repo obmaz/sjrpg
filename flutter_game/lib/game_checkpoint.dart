@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'dart:ui';
+
 import 'adventure.dart';
 import 'battle_effects.dart';
-import 'game_art.dart';
-import 'world_model.dart';
 import 'encounters.dart';
 import 'enemy_catalog.dart';
+import 'game_art.dart';
+import 'world_model.dart';
 
 class GameCheckpoint {
   GameCheckpoint._(this.data, this.progress);

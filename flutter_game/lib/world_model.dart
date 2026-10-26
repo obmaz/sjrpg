@@ -1,14 +1,21 @@
 import 'dart:math' as math;
 import 'dart:ui';
-export 'rpg_model.dart';
+
 import 'stage_content.dart';
+
+export 'rpg_model.dart';
 export 'stage_content.dart';
 
 const authoredWorldSize = Size(46080, 34560);
-const worldSize = Size(34560, 25920);
+const worldSize = Size(46080 * worldScale, 34560 * worldScale);
 const authoredTown = Rect.fromLTWH(3520, 2624, 640, 960);
-const town = Rect.fromLTWH(2640, 1968, 480, 720);
-const arrival = Offset(2880, 2291.25);
+const town = Rect.fromLTWH(
+  3520 * worldScale,
+  2624 * worldScale,
+  640 * worldScale,
+  960 * worldScale,
+);
+const arrival = Offset(3840 * worldScale, 3055 * worldScale);
 const authoredStageChests = [
   Offset(3840, 3415),
   Offset(3150, 3250),

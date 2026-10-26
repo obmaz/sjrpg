@@ -1,11 +1,13 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
 import 'adventure.dart';
 import 'game_ui.dart';
+import 'interface_art.dart';
+import 'panel_controls.dart';
 import 'rpg_model.dart';
 import 'rpg_widgets.dart';
-import 'panel_controls.dart';
-import 'interface_art.dart';
 
 // Keep three readable schools with a few shared, adjacent-school milestones.
 const _positions = <String, (int, double)>{

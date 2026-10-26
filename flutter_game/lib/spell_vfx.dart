@@ -1,10 +1,12 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+
 import 'package:bonfire/bonfire.dart';
+
 import 'adventure.dart';
 import 'game_art.dart';
-import 'skill_growth.dart';
 import 'ranked_vfx.dart';
+import 'skill_growth.dart';
 
 enum SpellClip {
   meteorFlight('fx-meteor', 0, 8, .65, ui.Offset(.28, .75)),

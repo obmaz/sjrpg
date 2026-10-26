@@ -1,19 +1,21 @@
-import 'quest_guide.dart';
 import 'dart:async' as async;
 import 'dart:math' as math;
+
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
+
 import 'adventure.dart';
-import 'game_art.dart';
-import 'game_ui.dart';
-import 'game_panels.dart';
-import 'world_model.dart';
-import 'class_selection.dart';
 import 'battle_effects.dart';
-import 'rpg_widgets.dart';
-import 'panel_controls.dart';
+import 'class_selection.dart';
+import 'game_art.dart';
 import 'game_checkpoint.dart';
+import 'game_panels.dart';
+import 'game_ui.dart';
+import 'panel_controls.dart';
+import 'quest_guide.dart';
+import 'rpg_widgets.dart';
 import 'save_bridge.dart' as storage;
+import 'world_model.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -194,10 +196,18 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   async.Timer? saveTimer;
   void Function()? stopSaveListener;
   bool keepSave = true;
-  void saveNow() {
+  void saveNow({bool notify = true}) {
     if (!keepSave) return;
     final checkpoint = GameCheckpoint.capture(adventure);
-    if (checkpoint != null) storage.writeCheckpoint(checkpoint.encode());
+    if (checkpoint == null) return;
+    final failed = !storage.writeCheckpoint(checkpoint.encode());
+    final changed = failed != adventure.saveFailed;
+    adventure.saveFailed = failed;
+    if (changed && notify && mounted && !adventure.disposed) {
+      adventure.announce(
+        failed ? '저장하지 못했습니다 · 설정에서 저장 상태를 확인하세요' : '자동 저장이 다시 작동합니다',
+      );
+    }
   }
 
   void advanceStage() {
@@ -286,8 +296,12 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed && adventure.ready && mounted) {
-      saveNow();
-      open('pause');
+      if (panel == null) {
+        open('pause');
+      } else {
+        adventure.pause();
+        saveNow();
+      }
     }
   }
 
@@ -312,7 +326,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   void dispose() {
     saveTimer?.cancel();
     stopSaveListener?.call();
-    saveNow();
+    saveNow(notify: false);
     WidgetsBinding.instance.removeObserver(this);
     adventure.dispose();
     gameFocus.dispose();

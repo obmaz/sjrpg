@@ -1,8 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/device_bridge.dart';
 import 'package:guardian_new/device_settings.dart';
-import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/game_art.dart';
+
 import 'support/test_game.dart';
 
 class FakeDevice implements DeviceBridge {
