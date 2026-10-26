@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart';
 
+import 'actor_atlas.dart';
 import 'ground_texture.dart';
 import 'interface_art.dart';
 import 'world_model.dart';
@@ -13,6 +14,17 @@ class GameArt {
   final images = <String, ui.Image>{};
   late final Map<String, dynamic> actors, controls;
   final materials = <ui.Shader>[];
+  final _actorAtlases = <String, ActorAtlas>{};
+  late final _actorPaint = ui.Paint()..filterQuality = ui.FilterQuality.low;
+  late final _rollPaint = ui.Paint()..filterQuality = ui.FilterQuality.medium;
+  ActorAtlas _atlas(String sheet) {
+    final cached = _actorAtlases[sheet];
+    if (cached != null) return cached;
+    final atlas = ActorAtlas.fromJson(actors[sheet] as Map<String, dynamic>);
+    _actorAtlases[sheet] = atlas;
+    return atlas;
+  }
+
   static Future<GameArt> load() async {
     final art = GameArt();
     final data =
@@ -20,6 +32,9 @@ class GameArt {
             as Map<String, dynamic>;
     art.actors = data['actors'];
     art.controls = data['controls'];
+    for (final sheet in art.actors.keys) {
+      art._atlas(sheet);
+    }
     await Future.wait(
       [
             'actors-hero',
@@ -298,10 +313,8 @@ class GameArt {
     };
     final definition = definitions[key]!;
     final sheet = attack && key == 'hero'
-            ? ['hero-attack', 'hero-backhand', 'hero-cleave'][comboPose.clamp(
-                0,
-                2,
-              )]
+            ? const ['hero-attack', 'hero-backhand', 'hero-cleave'][comboPose
+                  .clamp(0, 2)]
             : attack && key == 'mage'
             ? 'mage-cast'
             : definition.$1,
@@ -326,28 +339,15 @@ class GameArt {
         : count == 16
         ? facingFrame(angle, count) + (phase % 2) * 16
         : definition.$2 * 8 + facingFrame(angle, count) + (phase % 2) * 32;
-    final record = actors[sheet] as Map<String, dynamic>;
-    final frame = (record['frames'][index] as List)
-        .map((v) => (v as num).toDouble())
-        .toList();
-    final maxH = (record['sizes'][definition.$2][1] as num).toDouble(),
-        scale = height / maxH;
-    final src = ui.Rect.fromLTWH(frame[0], frame[1], frame[2], frame[3]);
-    final anchors = record['feet'] as List?;
-    final anchor = anchors == null ? null : anchors[index] as List;
-    final anchorX = anchor == null
-        ? src.width / 2
-        : (anchor[0] as num).toDouble() - src.left;
-    final anchorY = anchor == null
-        ? src.height
-        : (anchor[1] as num).toDouble() - src.top;
+    final atlas = _atlas(sheet), frame = atlas.frames[index];
+    final scale = height / atlas.heights[definition.$2], src = frame.source;
     final dst = ui.Rect.fromLTWH(
-      feet.dx - anchorX * scale,
-      feet.dy - anchorY * scale,
+      feet.dx - frame.anchor.dx * scale,
+      feet.dy - frame.anchor.dy * scale,
       src.width * scale,
       src.height * scale,
     );
-    final mirror = (record['mirrors'] as List?)?[index] == true;
+    final mirror = frame.mirrored;
     if (mirror) {
       canvas.save();
       canvas.translate(feet.dx, 0);
@@ -358,15 +358,14 @@ class GameArt {
       images['actors-$sheet']!,
       src,
       dst,
-      ui.Paint()
+      _actorPaint
         ..color = ui.Color.fromRGBO(255, 255, 255, opacity)
         ..colorFilter = flash > 0
             ? ui.ColorFilter.mode(
                 ui.Color.fromRGBO(255, 249, 220, flash.clamp(0, 1)),
                 ui.BlendMode.srcATop,
               )
-            : null
-        ..filterQuality = ui.FilterQuality.low,
+            : null,
     );
     if (mirror) canvas.restore();
   }
@@ -378,26 +377,21 @@ class GameArt {
     int phase, {
     required bool mage,
   }) {
-    final record = actors['roll'] as Map<String, dynamic>;
+    final atlas = _atlas('roll');
     final index =
         (mage ? 32 : 0) + (phase.clamp(0, 3) * 8) + facingFrame(angle, 8);
-    final frame = (record['frames'][index] as List).cast<num>();
-    final scale = 43 / (record['sizes'][mage ? 1 : 0][1] as num);
+    final src = atlas.frames[index].source;
+    final scale = 43 / atlas.heights[mage ? 1 : 0];
     canvas.drawImageRect(
       images['actors-roll']!,
+      src,
       ui.Rect.fromLTWH(
-        frame[0].toDouble(),
-        frame[1].toDouble(),
-        frame[2].toDouble(),
-        frame[3].toDouble(),
+        feet.dx - src.width * scale / 2,
+        feet.dy - src.height * scale,
+        src.width * scale,
+        src.height * scale,
       ),
-      ui.Rect.fromLTWH(
-        feet.dx - frame[2] * scale / 2,
-        feet.dy - frame[3] * scale,
-        frame[2] * scale,
-        frame[3] * scale,
-      ),
-      ui.Paint()..filterQuality = ui.FilterQuality.medium,
+      _rollPaint,
     );
   }
 
