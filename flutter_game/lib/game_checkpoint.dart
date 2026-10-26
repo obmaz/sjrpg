@@ -414,6 +414,9 @@ class GameCheckpoint {
         : TimePath.values.firstWhere((p) => p.name == data['timePath']);
     session.acceptedCommission = data['commission'] as String?;
     session.trackedSiteId = data['trackedSite'] as String?;
+    // Broken chests must stop blocking before saved mounts and hero positions
+    // are validated; the hero may have walked through the remains before saving.
+    session.openedChests.addAll((data['chests'] as List).cast<int>());
     for (final entry in data['mounts'] as List) {
       final existing = session.mounts.where((m) => m.def.id == entry['id']);
       if (existing.isEmpty) continue;
@@ -460,7 +463,6 @@ class GameCheckpoint {
     session.hero.lastClearPosition = safe;
     session.hero.invulnerable = .75;
     session.elapsed = (data['elapsed'] as num).toDouble();
-    session.openedChests.addAll((data['chests'] as List).cast<int>());
     session.memoryRewarded = data['memoryRewarded'] as bool;
     session.cleansedSites.addAll((data['sites'] as List).cast<String>());
     session.bossSummoned = session.progress.bossDefeated;

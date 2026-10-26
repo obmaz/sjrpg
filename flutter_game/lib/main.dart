@@ -9,6 +9,7 @@ import 'back_actions.dart';
 import 'back_bridge.dart' as history;
 import 'battle_effects.dart';
 import 'class_selection.dart';
+import 'destructible_chest.dart';
 import 'game_art.dart';
 import 'game_checkpoint.dart';
 import 'game_panels.dart';
@@ -328,6 +329,12 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         LandscapeLayer(adventure),
         WorldDirector(adventure),
         StageLandmarks(adventure),
+        for (
+          var index = 0;
+          index < adventure.stageChestLocations.length;
+          index++
+        )
+          DestructibleChest(adventure, index),
         for (final section in adventure.world.sanctuaryFences)
           SanctuaryFence(section, adventure.world.stage),
         VillagePerson(adventure, true),
@@ -442,6 +449,14 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
             : panel;
         final p = adventure.progress, interaction = adventure.nearbyAction;
         final guide = adventure.nearbyQuestGuide;
+        final peacefulAttack =
+            adventure.sheltered &&
+            adventure
+                .attackableChests(
+                  adventure.hero.body.center,
+                  p.heroClass == HeroClass.mage ? 540 : p.weapon.base.range,
+                )
+                .isEmpty;
         final layouts = short && width < 360
             ? [
                 (14.0, 128.0, 52.0),
@@ -569,12 +584,12 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                       fit: StackFit.expand,
                       children: [
                         Opacity(
-                          opacity: adventure.sheltered ? .45 : 1,
+                          opacity: peacefulAttack ? .45 : 1,
                           child: CustomPaint(
                             painter: GearGlyph(p.weapon, widget.art),
                           ),
                         ),
-                        if (adventure.sheltered)
+                        if (peacefulAttack)
                           const Align(
                             alignment: Alignment.topRight,
                             child: Icon(
@@ -641,7 +656,6 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                             NearbyAction.shop => '상점',
                             NearbyAction.talk =>
                               adventure.nearbyTimeGiver?.name ?? '대화',
-                            NearbyAction.chest => '상자 열기',
                           },
                           icon: switch (interaction) {
                             NearbyAction.shrine => Icons.water_drop_outlined,
@@ -649,7 +663,6 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                             NearbyAction.dismount => Icons.south_west,
                             NearbyAction.shop => Icons.storefront,
                             NearbyAction.talk => Icons.chat_bubble_outline,
-                            NearbyAction.chest => Icons.inventory_2_outlined,
                           },
                           onTap: () {
                             switch (interaction) {
@@ -667,9 +680,6 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                                 open('shop');
                               case NearbyAction.talk:
                                 open('talk');
-                              case NearbyAction.chest:
-                                adventure.openChest();
-                                gameFocus.requestFocus();
                             }
                           },
                         ),

@@ -44,8 +44,9 @@ void main() {
       false,
     );
   });
-  test('opening and every major trail admit walkers and ground mounts', () {
+  test('cleared opening and major trails admit walkers and ground mounts', () {
     final world = AdventureWorld();
+    world.openedChests.addAll(List.generate(world.chests.length, (i) => i));
     for (final size in const [Size(24, 22), Size(40, 32)]) {
       final half = Offset(size.width / 2, size.height / 2);
       expect(

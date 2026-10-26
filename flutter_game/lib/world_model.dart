@@ -1197,6 +1197,96 @@ class AdventureWorld {
   late final List<Offset> chests = _authoredChests
       .map((p) => p * worldScale)
       .toList();
+  final openedChests = <int>{};
+  Rect chestBody(int index) => Rect.fromCenter(
+    center: chests[index] - const Offset(0, 2),
+    width: 50,
+    height: 28,
+  );
+  late final Map<String, List<int>> _chestBuckets = () {
+    final buckets = <String, List<int>>{};
+    for (var i = 0; i < chests.length; i++) {
+      final body = chestBody(i);
+      for (var y = body.top ~/ 128; y <= body.bottom ~/ 128; y++) {
+        for (var x = body.left ~/ 128; x <= body.right ~/ 128; x++) {
+          buckets.putIfAbsent('$x:$y', () => []).add(i);
+        }
+      }
+    }
+    return buckets;
+  }();
+  Iterable<int> closedChestsNear(Rect bounds) sync* {
+    if (_authoring) return;
+    final seen = <int>{};
+    for (var y = bounds.top ~/ 128; y <= bounds.bottom ~/ 128; y++) {
+      for (var x = bounds.left ~/ 128; x <= bounds.right ~/ 128; x++) {
+        for (final index in _chestBuckets['$x:$y'] ?? const <int>[]) {
+          if (!openedChests.contains(index) && seen.add(index)) yield index;
+        }
+      }
+    }
+  }
+
+  bool _closedChestOverlaps(Rect body) {
+    if (_authoring) return false;
+    for (var y = body.top ~/ 128; y <= body.bottom ~/ 128; y++) {
+      for (var x = body.left ~/ 128; x <= body.right ~/ 128; x++) {
+        for (final index in _chestBuckets['$x:$y'] ?? const <int>[]) {
+          if (!openedChests.contains(index) &&
+              chestBody(index).overlaps(body)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  Offset chestApproach(int index, Offset from) {
+    final face = chestBody(index).inflate(5);
+    return Offset(
+      from.dx.clamp(face.left, face.right),
+      from.dy.clamp(face.top, face.bottom),
+    );
+  }
+
+  ({int index, Offset at, double fraction})? firstChestOnSegment(
+    Offset from,
+    Offset to, {
+    double padding = 0,
+  }) {
+    ({int index, Offset at, double fraction})? first;
+    final delta = to - from;
+    for (final index in closedChestsNear(
+      Rect.fromPoints(from, to).inflate(padding + 1),
+    )) {
+      final body = chestBody(index).inflate(padding);
+      var enter = 0.0, exit = 1.0;
+      for (final axis in [
+        (from.dx, delta.dx, body.left, body.right),
+        (from.dy, delta.dy, body.top, body.bottom),
+      ]) {
+        if (axis.$2.abs() < 1e-12) {
+          if (axis.$1 < axis.$3 || axis.$1 > axis.$4) {
+            exit = -1;
+            break;
+          }
+        } else {
+          final a = (axis.$3 - axis.$1) / axis.$2,
+              b = (axis.$4 - axis.$1) / axis.$2;
+          enter = math.max(enter, math.min(a, b));
+          exit = math.min(exit, math.max(a, b));
+        }
+      }
+      if (enter > exit ||
+          exit < 0 ||
+          first != null && enter >= first.fraction) {
+        continue;
+      }
+      first = (index: index, at: from + delta * enter, fraction: enter);
+    }
+    return first;
+  }
 
   List<Offset> _roadTreasures(Trail trail) {
     final lengths = [
@@ -1264,6 +1354,7 @@ class AdventureWorld {
       return true;
     }
     if (avoidSanctuary && sanctuary.protects(body)) return true;
+    if (_closedChestOverlaps(body)) return true;
     for (var y = body.top ~/ 128; y <= body.bottom ~/ 128; y++) {
       for (var x = body.left ~/ 128; x <= body.right ~/ 128; x++) {
         if ((_solids['$x:$y'] ?? const <Rect>[]).any((s) => s.overlaps(body))) {
@@ -1350,6 +1441,7 @@ class AdventureWorld {
     }
     if (from.dx == to.dx || from.dy == to.dy) return !blocked(sweep);
     final obstacles = <Rect>{};
+    obstacles.addAll(closedChestsNear(sweep).map(chestBody));
     for (
       var y = (sweep.top / 128).floor();
       y <= (sweep.bottom / 128).floor();

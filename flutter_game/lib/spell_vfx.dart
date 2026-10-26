@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 import 'package:bonfire/bonfire.dart';
 
 import 'adventure.dart';
+import 'effect_visibility.dart';
+import 'fire_plume.dart';
 import 'game_art.dart';
 import 'ranked_vfx.dart';
 import 'skill_growth.dart';
@@ -50,25 +52,21 @@ bool paintSpellFrame(
   double side, {
   double opacity = 1,
 }) {
-  final image = art.images[clip.asset];
-  if (image == null) return false;
-  canvas.drawImageRect(
-    image,
-    clip.source(image.width, image.height, age),
+  return art.effects.draw(
+    canvas,
+    clip.asset,
+    clip.frameAt(age),
     ui.Rect.fromLTWH(
       at.dx - side * clip.anchor.dx,
       at.dy - side * clip.anchor.dy,
       side,
       side,
     ),
-    ui.Paint()
-      ..filterQuality = ui.FilterQuality.medium
-      ..color = ui.Color.fromRGBO(255, 255, 255, opacity.clamp(0, 1)),
+    opacity: opacity,
   );
-  return true;
 }
 
-class SpellBurst extends GameComponent {
+class SpellBurst extends GameComponent with EffectVisibility {
   SpellBurst(
     this.session,
     this.clip,
@@ -88,6 +86,13 @@ class SpellBurst extends GameComponent {
   final int buildRevision;
   double age = 0;
   bool finished = false;
+  late final _flame = FirePlume();
+  @override
+  ui.Rect get effectBounds => ui.Rect.fromCenter(
+    center: position.toOffset(),
+    width: radius * 3,
+    height: radius * 3.8 + 96,
+  );
   @override
   bool get isVisible => true;
   @override
@@ -142,6 +147,9 @@ class SpellBurst extends GameComponent {
         ..style = ui.PaintingStyle.stroke
         ..strokeWidth = 2 + (1 - t) * 3,
     );
+    if (clip == SpellClip.meteorImpact) {
+      _flame.impact(canvas, ui.Offset.zero, t, radius);
+    }
     paintSpellFrame(
       session.art,
       canvas,

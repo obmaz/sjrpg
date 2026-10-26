@@ -231,13 +231,29 @@ void main() {
   test('forest treasure approaches admit a ground body for multiple seeds', () {
     for (final seed in [1, 7829, 18344]) {
       final w = AdventureWorld(seed: seed);
-      for (final p in [...stageChests]) {
+      for (final (index, p) in w.chests.indexed) {
+        expect(w.blocked(w.chestBody(index)), true);
+        final approaches = [
+          for (final radius in [70.0, 110.0, 150.0])
+            for (var direction = 0; direction < 16; direction++)
+              p +
+                  Offset(
+                        math.cos(direction * math.pi / 8),
+                        math.sin(direction * math.pi / 8),
+                      ) *
+                      radius,
+        ];
         expect(
-          w.blocked(Rect.fromCenter(center: p, width: 24, height: 22)),
-          false,
-          reason: 'landmark $p seed $seed',
+          approaches.any(
+            (at) =>
+                !w.blocked(
+                  Rect.fromCenter(center: at, width: 48, height: 40),
+                ) &&
+                w.clearLine(at, w.chestApproach(index, at), const Size(3, 3)),
+          ),
+          true,
+          reason: 'a whole ground body can approach chest $index, seed $seed',
         );
-        expect(w.spawnNear(p, const Size(48, 40)), isNotNull);
       }
     }
   });

@@ -59,6 +59,10 @@ void main() {
           isEmpty,
           reason: 'peaceful starts do not spend encounter packs',
         );
+        // Protected prop strikes have separate coverage; this scene has no props to hit.
+        session.openedChests.addAll(
+          List.generate(session.stageChestLocations.length, (index) => index),
+        );
         final mob = session.spawnEnemy('goblin', ward.center)!;
         expect(ward.protects(mob.body), false);
         final health = mob.life.value,

@@ -8,7 +8,7 @@ import 'support/test_game.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  test('nearby actions prioritize chests and choose one closest villager', () {
+  test('nearby services remain available beside attackable chests', () {
     final s = Adventure(GameArt());
     s.start(TestGame());
     addTearDown(s.dispose);
@@ -20,9 +20,9 @@ void main() {
       stageChests.first.dx - 12,
       stageChests.first.dy - 11,
     );
-    expect(s.nearbyAction, NearbyAction.chest);
+    expect(s.nearbyChest, 0);
     s.openChest();
-    expect(s.nearbyAction, isNot(NearbyAction.chest));
+    expect(s.nearbyChest, isNot(0));
     s.hero.position.setValues(4638, 349);
     expect(s.nearbyAction, null);
     s.hero.position.setValues(6000, 4200);

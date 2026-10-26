@@ -64,6 +64,16 @@ Map<String, List<Offset>> questRoutes(AdventureWorld world, Size size) {
       }
     }
   }
+  // Breakable chests occupy the road center. Sample their open perimeter at
+  // half the road spacing so a mount can take a real, swept-clear sidestep.
+  for (final center in world.chests) {
+    if (!bounds.contains(center)) continue;
+    for (var y = -144; y <= 144; y += 24) {
+      for (var x = -144; x <= 144; x += 24) {
+        add(center + Offset(x.toDouble(), y.toDouble()));
+      }
+    }
+  }
   final queue = <int>[0], parent = <int, int>{0: -1};
   for (var head = 0; head < queue.length; head++) {
     final id = queue[head],

@@ -19,7 +19,7 @@ void main() {
 
   for (final stage in WorldStage.values.skip(1)) {
     test(
-      '${stage.name} has its own full-sized layout and all visible roads admit full bodies',
+      '${stage.name} roads admit full bodies after breakable chests are cleared',
       () {
         final world = AdventureWorld(stage: stage);
         expect(worldSize, const Size(34560, 25920));
@@ -27,6 +27,7 @@ void main() {
           world.blocked(Rect.fromLTWH(world.spawn.dx, world.spawn.dy, 40, 32)),
           false,
         );
+        world.openedChests.addAll(List.generate(world.chests.length, (i) => i));
         for (final size in const [Size(24, 22), Size(40, 32)]) {
           final half = Offset(size.width / 2, size.height / 2);
           for (final trail in world.trails) {

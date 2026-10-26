@@ -6,12 +6,14 @@ import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 
 import 'actor_atlas.dart';
+import 'effect_atlas.dart';
 import 'ground_texture.dart';
 import 'interface_art.dart';
 import 'world_model.dart';
 
 class GameArt {
   final images = <String, ui.Image>{};
+  late final effects = EffectAtlas(images);
   late final Map<String, dynamic> actors, controls;
   final materials = <ui.Shader>[];
   final _actorAtlases = <String, ActorAtlas>{};
@@ -112,6 +114,7 @@ class GameArt {
           })
           .followedBy([prepareInterfaceArtwork()]),
     );
+    art.effects.warm();
     final atlas = art.images['terrain-materials']!;
     for (var i = 0; i < 12; i++) {
       final source = i < 6 ? atlas : art.images['stage-materials']!;

@@ -7,6 +7,8 @@ import 'adventure.dart';
 import 'audio_settings.dart';
 import 'boss_attacks.dart';
 import 'device_settings.dart';
+import 'effect_visibility.dart';
+import 'fire_plume.dart';
 import 'ranked_vfx.dart';
 import 'spell_vfx.dart';
 import 'world_model.dart';
@@ -20,9 +22,10 @@ void areaStrike(
   double slow = 0,
   int maxTargets = 3,
   Set<HuntEnemy>? castTargets,
+  Set<int>? castChests,
   Set<HuntEnemy> excluded = const {},
 }) {
-  if (maxTargets <= 0) return;
+  if (maxTargets <= 0 || !s.combatAllowed) return;
   final targets = castTargets ?? <HuntEnemy>{};
   final candidates =
       s.mobs
@@ -44,7 +47,7 @@ void areaStrike(
         });
   for (final mob in candidates) {
     if (!targets.contains(mob)) {
-      if (targets.length >= maxTargets) continue;
+      if (targets.length + (castChests?.length ?? 0) >= maxTargets) continue;
       targets.add(mob);
     }
     final d = mob.body.center - center;
@@ -59,6 +62,14 @@ void areaStrike(
     mob.stun = math.max(mob.stun, stun * (mob.boss ? .35 : 1));
     mob.slow = math.max(mob.slow, slow);
   }
+  var remaining = maxTargets - targets.length - (castChests?.length ?? 0);
+  for (final index in s.attackableChests(center, radius)) {
+    if (remaining <= 0) break;
+    if (s.breakChest(index)) {
+      castChests?.add(index);
+      remaining--;
+    }
+  }
 }
 
 void paintCombatEffect(
@@ -69,20 +80,17 @@ void paintCombatEffect(
   ui.Size size, {
   double opacity = 1,
 }) {
-  final image = session.art.images['combat-fx'];
-  if (image == null) return;
-  final cell = image.width / 4;
-  canvas.drawImageRect(
-    image,
-    ui.Rect.fromLTWH((index % 4) * cell, (index ~/ 4) * cell, cell, cell),
+  session.art.effects.draw(
+    canvas,
+    'combat-fx',
+    index,
     ui.Rect.fromCenter(center: center, width: size.width, height: size.height),
-    ui.Paint()
-      ..color = ui.Color.fromRGBO(255, 255, 255, opacity.clamp(0, 1))
-      ..filterQuality = ui.FilterQuality.medium,
+    inset: 0,
+    opacity: opacity,
   );
 }
 
-class ContactSpark extends GameComponent {
+class ContactSpark extends GameComponent with EffectVisibility {
   ContactSpark(
     this.session,
     ui.Offset at, {
@@ -98,6 +106,9 @@ class ContactSpark extends GameComponent {
   final int rank;
   final double bearing;
   double age = 0;
+  @override
+  ui.Rect get effectBounds =>
+      ui.Rect.fromCircle(center: position.toOffset(), radius: 90);
   @override
   bool get isVisible => true;
   @override
@@ -161,7 +172,7 @@ class ContactSpark extends GameComponent {
   }
 }
 
-class EnemySwipe extends GameComponent {
+class EnemySwipe extends GameComponent with EffectVisibility {
   EnemySwipe(
     this.session,
     ui.Offset at,
@@ -175,6 +186,9 @@ class EnemySwipe extends GameComponent {
   final Adventure session;
   final double strikeAngle, radius, halfAngle;
   double age = 0;
+  @override
+  ui.Rect get effectBounds =>
+      ui.Rect.fromCircle(center: position.toOffset(), radius: radius + 30);
   @override
   int get priority => 99999;
   @override
@@ -213,7 +227,7 @@ class EnemySwipe extends GameComponent {
   }
 }
 
-class ShadowBolt extends GameComponent {
+class ShadowBolt extends GameComponent with EffectVisibility {
   ShadowBolt(
     this.session,
     ui.Offset at,
@@ -231,6 +245,9 @@ class ShadowBolt extends GameComponent {
   final bool technological, venomous;
   double remaining = 2;
   bool resolved = false;
+  @override
+  ui.Rect get effectBounds =>
+      ui.Rect.fromCircle(center: position.toOffset(), radius: 75);
   @override
   bool get isVisible => true;
   void finish() {
@@ -322,7 +339,7 @@ class ShadowBolt extends GameComponent {
   }
 }
 
-class ArcaneBolt extends GameComponent {
+class ArcaneBolt extends GameComponent with EffectVisibility {
   ArcaneBolt(
     this.session,
     ui.Offset at,
@@ -330,6 +347,7 @@ class ArcaneBolt extends GameComponent {
     this.damage, {
     this.element = 'fire',
     this.explosive = false,
+    this.propOnly = false,
     this.launchDelay = 0,
     this.caster,
     this.rank = 1,
@@ -344,13 +362,17 @@ class ArcaneBolt extends GameComponent {
   final ui.Offset direction;
   final double damage;
   final String element;
-  final bool explosive;
+  final bool explosive, propOnly;
   final Guardian? caster;
   double launchDelay;
   final int targetLimit, rank;
   final int buildRevision;
   double remaining = .88;
   bool resolved = false;
+  late final _flame = FirePlume();
+  @override
+  ui.Rect get effectBounds =>
+      ui.Rect.fromCircle(center: position.toOffset(), radius: 100);
   void finish() {
     resolved = true;
     removeFromParent();
@@ -385,17 +407,54 @@ class ArcaneBolt extends GameComponent {
     dt = math.min(dt, remaining);
     remaining -= dt;
     final distance = dt * 620, n = math.max(1, (distance / 5).ceil());
+    // A hit can schedule removals. Keep one stable snapshot for this movement,
+    // rather than copying every enemy at each five-pixel collision step.
+    final candidates = propOnly
+        ? const <HuntEnemy>[]
+        : List<HuntEnemy>.of(session.mobs);
     for (var i = 0; i < n; i++) {
-      final at = position.toOffset() + direction * (distance / n);
+      final from = position.toOffset();
+      final at = from + direction * (distance / n);
+      final chest = session.world.firstChestOnSegment(from, at, padding: 4);
+      if (chest != null) {
+        final beforeContact = chest.at - direction * .5;
+        if (!session.world.blocked(
+              ui.Rect.fromCenter(center: beforeContact, width: 8, height: 8),
+              avoidSanctuary: !propOnly,
+            ) &&
+            session.breakChest(chest.index)) {
+          if (explosive && !propOnly) {
+            areaStrike(
+              session,
+              chest.at,
+              85,
+              damage * .35,
+              maxTargets: targetLimit - 1,
+            );
+          }
+          session.game?.add(
+            SpellBurst(
+              session,
+              element == 'ice' ? SpellClip.iceNova : SpellClip.meteorImpact,
+              chest.at,
+              radius: explosive ? 85 : 30,
+              rank: rank,
+            ),
+          );
+        }
+        finish();
+        return;
+      }
       if (session.world.blocked(
         ui.Rect.fromCenter(center: at, width: 8, height: 8),
-        avoidSanctuary: true,
+        avoidSanctuary: !propOnly,
       )) {
         finish();
         return;
       }
       position.setValues(at.dx, at.dy);
-      for (final mob in List<HuntEnemy>.of(session.mobs)) {
+      if (propOnly) continue;
+      for (final mob in candidates) {
         if (mob.combatReady &&
             !mob.isDead &&
             !mob.isRemoving &&
@@ -475,6 +534,15 @@ class ArcaneBolt extends GameComponent {
     );
     c.drawCircle(tip, 3, ui.Paint()..color = const ui.Color(0xfffff5d5));
     final age = .88 - remaining;
+    if (element == 'fire') {
+      _flame.flight(
+        c,
+        tip,
+        math.atan2(direction.dy, direction.dx),
+        age,
+        radius: 23,
+      );
+    }
     c.save();
     c.translate(tip.dx, tip.dy);
     if (element == 'fire') {
@@ -535,7 +603,7 @@ class ArcaneBolt extends GameComponent {
   }
 }
 
-class RuneBurst extends GameComponent {
+class RuneBurst extends GameComponent with EffectVisibility {
   RuneBurst(
     this.session,
     ui.Offset at,
@@ -552,6 +620,11 @@ class RuneBurst extends GameComponent {
   final double radius, tempo;
   final int rank;
   double age = 0;
+  @override
+  ui.Rect get effectBounds => ui.Rect.fromCircle(
+    center: position.toOffset(),
+    radius: radius * 1.3 + 50,
+  );
   @override
   void update(double dt) {
     if (!session.active) return;
@@ -588,6 +661,7 @@ class WhirlwindPulse extends GameComponent {
   final int targetLimit, rank;
   final double duration;
   final targets = <HuntEnemy>{};
+  final chests = <int>{};
   final int buildRevision;
   double age = 0;
   int pulses = 0;
@@ -610,6 +684,7 @@ class WhirlwindPulse extends GameComponent {
         damage,
         maxTargets: targetLimit,
         castTargets: targets,
+        castChests: chests,
       );
       for (final mob in targets) {
         if (!mob.isDead &&
@@ -660,6 +735,15 @@ void chainLightning(
               (b.body.center - at).distance,
             ),
           );
+    final props = s.attackableChests(at, i == 0 ? 470 : 260);
+    if (props.isNotEmpty &&
+        (candidates.isEmpty ||
+            (s.stageChestLocations[props.first] - at).distanceSquared <
+                (candidates.first.body.center - at).distanceSquared)) {
+      if (!s.breakChest(props.first)) break;
+      points.add(s.stageChestLocations[props.first]);
+      continue;
+    }
     if (candidates.isEmpty) break;
     final target = candidates.first;
     visited.add(target);
@@ -671,12 +755,24 @@ void chainLightning(
   s.game?.add(LightningTrace(s, points, rank: rank));
 }
 
-class LightningTrace extends GameComponent {
+class LightningTrace extends GameComponent with EffectVisibility {
   LightningTrace(this.session, this.points, {this.rank = 1});
   final Adventure session;
   final List<ui.Offset> points;
   final int rank;
   double age = 0;
+  @override
+  late final ui.Rect effectBounds = points.isEmpty
+      ? ui.Rect.zero
+      : points
+            .skip(1)
+            .fold(
+              ui.Rect.fromCircle(center: points.first, radius: 1),
+              (bounds, point) => bounds.expandToInclude(
+                ui.Rect.fromCircle(center: point, radius: 1),
+              ),
+            )
+            .inflate(90);
   @override
   bool get isVisible => true;
   @override
@@ -754,7 +850,7 @@ class LightningTrace extends GameComponent {
   }
 }
 
-class MeteorFall extends GameComponent {
+class MeteorFall extends GameComponent with EffectVisibility {
   MeteorFall(
     this.session,
     this.origin,
@@ -772,6 +868,14 @@ class MeteorFall extends GameComponent {
   final int buildRevision;
   double age = 0;
   bool struck = false;
+  late final _flame = FirePlume();
+  @override
+  ui.Rect get effectBounds => ui.Rect.fromLTRB(
+    target.dx - 220,
+    target.dy - 570,
+    target.dx + 340,
+    target.dy + 220,
+  );
   @override
   bool get isVisible => true;
   @override
@@ -822,6 +926,7 @@ class MeteorFall extends GameComponent {
     final t = (age * tempo / .65).clamp(0.0, 1.0), fall = t * t;
     paintRankImpact(c, target, t, rank, const ui.Color(0xffffc578), radius: 85);
     final p = target + ui.Offset(110 * (1 - fall), -360 * (1 - fall));
+    _flame.flight(c, p, math.atan2(360, -110), age * tempo, radius: 65);
     c.drawOval(
       ui.Rect.fromCenter(
         center: target,
@@ -1014,39 +1119,10 @@ class StageLandmarks extends GameComponent {
         color: site.color,
       );
     }
-
-    for (var i = 0; i < session.stageChestLocations.length; i++) {
-      final at = session.stageChestLocations[i];
-      if (!view.contains(at)) continue;
-      final opened = session.openedChests.contains(i);
-      c.save();
-      c.translate(at.dx, at.dy);
-      c.drawOval(
-        const ui.Rect.fromLTWH(-25, 3, 50, 14),
-        ui.Paint()..color = const ui.Color(0x550a201a),
-      );
-      final image = session.art.images['world-forest']!, cell = image.width / 4;
-      c.drawImageRect(
-        image,
-        ui.Rect.fromLTWH(cell * 3, cell * 2, cell, cell),
-        const ui.Rect.fromLTWH(-38, -58, 76, 76),
-        ui.Paint()
-          ..color = opened
-              ? const ui.Color(0xff8b8b8b)
-              : const ui.Color(0xffffffff),
-      );
-      if (opened) {
-        c.drawOval(
-          const ui.Rect.fromLTWH(-19, -30, 38, 12),
-          ui.Paint()..color = const ui.Color(0xaa1b241b),
-        );
-      }
-      c.restore();
-    }
   }
 }
 
-class BossAttackVisual extends GameComponent {
+class BossAttackVisual extends GameComponent with EffectVisibility {
   BossAttackVisual(
     this.session,
     this.source,
@@ -1061,6 +1137,11 @@ class BossAttackVisual extends GameComponent {
   final BossAttack pattern;
   final bool impact;
   double age = 0;
+  @override
+  late final ui.Rect effectBounds = pattern.zones
+      .map((zone) => zone.path.getBounds())
+      .reduce((bounds, zone) => bounds.expandToInclude(zone))
+      .inflate(90);
   bool get validWarning =>
       !source.isDead &&
       !source.isRemoving &&

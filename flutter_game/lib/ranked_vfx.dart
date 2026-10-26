@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:bonfire/bonfire.dart';
 import 'adventure.dart';
+import 'effect_visibility.dart';
 import 'game_art.dart';
 import 'skill_growth.dart';
 
@@ -62,22 +63,17 @@ void paintSteelWhirlwind(
   double phase,
   int rank,
 ) {
-  final r = SkillGrowth.level(rank), image = art.images['fx-steel-whirlwind'];
+  final r = SkillGrowth.level(rank);
   final angle = phase * math.pi * 4;
-  if (image != null) {
-    final frame = steelWhirlwindFrame(r, phase),
-        w = image.width / 4,
-        h = image.height / 9;
-    final side = 300.0 + r * 8;
-    canvas.drawImageRect(
-      image,
-      ui.Rect.fromLTWH(frame % 4 * w + 1, frame ~/ 4 * h + 1, w - 2, h - 2),
-      ui.Rect.fromCenter(center: center, width: side, height: side * .65),
-      ui.Paint()
-        ..filterQuality = ui.FilterQuality.medium
-        ..color = ui.Color.fromRGBO(255, 255, 255, .7 + r * .05),
-    );
-  }
+  final side = 300.0 + r * 8;
+  art.effects.draw(
+    canvas,
+    'fx-steel-whirlwind',
+    steelWhirlwindFrame(r, phase),
+    ui.Rect.fromCenter(center: center, width: side, height: side * .65),
+    rows: 9,
+    opacity: .7 + r * .05,
+  );
   for (var i = 0; i < SkillGrowth.layers(r); i++) {
     final radius = 78.0 + i * 12;
     canvas.drawArc(
@@ -108,7 +104,7 @@ void paintSteelWhirlwind(
   );
 }
 
-class SteelWhirlwind extends GameComponent {
+class SteelWhirlwind extends GameComponent with EffectVisibility {
   SteelWhirlwind(
     this.session,
     this.hero, {
@@ -124,6 +120,9 @@ class SteelWhirlwind extends GameComponent {
   final double duration;
   double age = 0;
   bool finished = false;
+  @override
+  ui.Rect get effectBounds =>
+      ui.Rect.fromCircle(center: hero.body.center, radius: 220);
   @override
   bool get isVisible => true;
   @override
@@ -215,7 +214,7 @@ void paintGroundStrike(
   );
 }
 
-class GroundStrike extends GameComponent {
+class GroundStrike extends GameComponent with EffectVisibility {
   GroundStrike(
     this.session,
     ui.Offset at, {
@@ -233,6 +232,9 @@ class GroundStrike extends GameComponent {
   final bool directional;
   double age = 0;
   bool finished = false;
+  @override
+  ui.Rect get effectBounds =>
+      ui.Rect.fromCircle(center: position.toOffset(), radius: 170);
   @override
   int get priority => 29;
   @override

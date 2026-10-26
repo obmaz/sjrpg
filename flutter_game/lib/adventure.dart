@@ -5,13 +5,16 @@ import 'package:bonfire/bonfire.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import 'actor_motion.dart';
 import 'audio_settings.dart';
 import 'battle_effects.dart';
 import 'boss_attacks.dart';
+import 'destructible_chest.dart';
 import 'device_settings.dart';
 import 'encounters.dart';
 import 'enemy_catalog.dart';
 import 'enemy_motion.dart';
+import 'enemy_spacing.dart';
 import 'game_art.dart';
 import 'health_feedback.dart';
 import 'ranked_vfx.dart';
@@ -20,7 +23,7 @@ import 'skill_aim.dart';
 import 'spell_vfx.dart';
 import 'world_model.dart';
 
-enum NearbyAction { chest, shrine, mount, dismount, shop, talk }
+enum NearbyAction { shrine, mount, dismount, shop, talk }
 
 enum EnemyTrait {
   none(1, 1, ui.Color(0xffe87753)),
@@ -212,7 +215,7 @@ class Adventure extends ChangeNotifier {
 
   bool ensureOnFoot() => riding == null || dismount(keepInput: true);
 
-  final openedChests = <int>{};
+  Set<int> get openedChests => world.openedChests;
   final cleansedSites = <String>{};
   String? trackedSiteId;
   QuestSite? get trackedSite {
@@ -462,18 +465,29 @@ class Adventure extends ChangeNotifier {
     }
     lastEnemyWake = elapsed;
     lastEnemyWakeAt = hero.body.center;
+    var capacity = 40 - living;
+    if (capacity <= 0 || dormantEnemies.isEmpty) return;
+    var attempts = 0;
     for (final raw in List<Map<String, dynamic>>.of(dormantEnemies)) {
+      if (capacity <= 0 || attempts >= 16) break;
       final at = ui.Offset(
         (raw['x'] as num).toDouble(),
         (raw['y'] as num).toDouble(),
       );
-      if (living >= 40 || (at - hero.body.center).distance > 1100) continue;
+      if ((at - hero.body.center).distanceSquared > 1100 * 1100) continue;
+      attempts++;
       final mob = spawnEnemy(
         raw['kind'] as String,
         at,
         trait: EnemyTrait.values.firstWhere((t) => t.name == raw['trait']),
       );
-      if (mob == null) continue;
+      if (mob == null) {
+        // Retry other survivors first if terrain or a crowd blocks this body.
+        dormantEnemies.remove(raw);
+        dormantEnemies.add(raw);
+        continue;
+      }
+      capacity--;
       mob.encounterKey = raw['area'] as String?;
       mob.life.initial((raw['maxHp'] as num).toDouble());
       mob.life.update((raw['hp'] as num).toDouble());
@@ -522,7 +536,6 @@ class Adventure extends ChangeNotifier {
   NearbyAction? get nearbyAction {
     if (riding != null) return NearbyAction.dismount;
     if (nearbySite != null) return NearbyAction.shrine;
-    if (nearbyChest != null) return NearbyAction.chest;
     if (nearbyMount != null) return NearbyAction.mount;
     final at = hero.position.toOffset();
     final shop = (at - world.merchantAt).distance;
@@ -537,18 +550,8 @@ class Adventure extends ChangeNotifier {
   }
 
   int? get nearbyChest {
-    for (var i = 0; i < stageChestLocations.length; i++) {
-      if (!openedChests.contains(i) &&
-          (hero.body.center - stageChestLocations[i]).distance < 110 &&
-          world.clearLine(
-            hero.body.center,
-            stageChestLocations[i],
-            const ui.Size(3, 3),
-          )) {
-        return i;
-      }
-    }
-    return null;
+    final candidates = attackableChests(hero.body.center, 110);
+    return candidates.isEmpty ? null : candidates.first;
   }
 
   void announce(String value) {
@@ -570,10 +573,19 @@ class Adventure extends ChangeNotifier {
 
   void openChest() {
     final index = nearbyChest;
-    if (!active || index == null) return;
+    if (index != null) breakChest(index);
+  }
+
+  bool breakChest(int index) {
+    if (!active ||
+        index < 0 ||
+        index >= stageChestLocations.length ||
+        !openedChests.add(index)) {
+      return false;
+    }
     audio.play(EffectSound.loot);
     device.pulse(FeedbackKind.loot);
-    openedChests.add(index);
+    game?.add(ChestFragments(this, stageChestLocations[index]));
     progress.gold += 18;
     final potionFound = openedChests.length % 4 == 1;
     if (potionFound) progress.healingPotions++;
@@ -596,6 +608,73 @@ class Adventure extends ChangeNotifier {
       );
     }
     refresh();
+    return true;
+  }
+
+  List<int> attackableChests(
+    ui.Offset origin,
+    double range, {
+    double? bearing,
+    double halfAngle = math.pi,
+  }) {
+    final candidates =
+        world
+            .closedChestsNear(
+              ui.Rect.fromCircle(center: origin, radius: range + 30),
+            )
+            .where((index) {
+              final toward = stageChestLocations[index] - origin;
+              if ((world.chestApproach(index, origin) - origin).distance >
+                  range) {
+                return false;
+              }
+              if (bearing != null &&
+                  math
+                          .atan2(
+                            math.sin(
+                              math.atan2(toward.dy, toward.dx) - bearing,
+                            ),
+                            math.cos(
+                              math.atan2(toward.dy, toward.dx) - bearing,
+                            ),
+                          )
+                          .abs() >
+                      halfAngle) {
+                return false;
+              }
+              if (world.chestBody(index).contains(origin)) return true;
+              return world.clearLine(
+                origin,
+                world.chestApproach(index, origin),
+                const ui.Size(3, 3),
+              );
+            })
+            .toList()
+          ..sort(
+            (a, b) => (stageChestLocations[a] - origin).distanceSquared
+                .compareTo((stageChestLocations[b] - origin).distanceSquared),
+          );
+    return candidates;
+  }
+
+  int strikeChests(
+    ui.Offset origin,
+    double range, {
+    double? bearing,
+    double halfAngle = math.pi,
+    int maxTargets = 1,
+  }) {
+    if (!active || maxTargets <= 0) return 0;
+    var broken = 0;
+    for (final index in attackableChests(
+      origin,
+      range,
+      bearing: bearing,
+      halfAngle: halfAngle,
+    ).take(maxTargets)) {
+      if (breakChest(index)) broken++;
+    }
+    return broken;
   }
 
   void dropGear(Gear gear, ui.Offset at) {
@@ -909,6 +988,107 @@ class Adventure extends ChangeNotifier {
       _successfulPacks++;
       lastPackSpawn = elapsed;
     }
+  }
+
+  final enemySpacing = EnemySpacing<HuntEnemy>();
+  double _enemySpacingTime = -1;
+  int _enemySpacingCount = -1;
+
+  void _syncEnemySpacing(HuntEnemy mover) {
+    if (_enemySpacingTime == elapsed &&
+        _enemySpacingCount == mobs.length &&
+        enemySpacing.contains(mover)) {
+      return;
+    }
+    enemySpacing.clear();
+    for (final enemy in mobs) {
+      if (!enemy.isDead && !enemy.isRemoving && !enemy.encounterDormant) {
+        enemySpacing.update(enemy, enemy.body);
+      }
+    }
+    _enemySpacingTime = elapsed;
+    _enemySpacingCount = mobs.length;
+  }
+
+  void updateEnemySpacing(HuntEnemy enemy) {
+    if (enemy.isDead || enemy.isRemoving || enemy.encounterDormant) {
+      enemySpacing.remove(enemy);
+    } else {
+      enemySpacing.update(enemy, enemy.body);
+    }
+  }
+
+  ui.Offset moveEnemyBody(
+    HuntEnemy mover,
+    ui.Offset from,
+    ui.Offset delta, {
+    bool steer = false,
+  }) {
+    if (delta.distanceSquared < .000001) return from;
+    _syncEnemySpacing(mover);
+    final size = mover.body.size, original = from & size;
+    final search = original.expandToInclude(original.shift(delta)).inflate(40);
+    final neighbors = enemySpacing
+        .query(search)
+        .where(
+          (other) =>
+              other != mover &&
+              !other.isDead &&
+              !other.isRemoving &&
+              !other.encounterDormant,
+        )
+        .toList(growable: false);
+    if (neighbors.isEmpty) return world.moveEnemy(from, delta, size);
+    if (steer) delta = enemySpacing.steer(mover, original, delta, neighbors);
+    final steps = math.max(1, (delta.distance / 6).ceil());
+    final step = delta / steps.toDouble();
+    var at = from;
+    bool permits(ui.Offset before, ui.Offset after) {
+      final beforeBody = before & size, afterBody = after & size;
+      for (final other in neighbors) {
+        if (!EnemySpacing.permits(
+          beforeBody,
+          afterBody,
+          enemySpacing.bodyOf(other),
+        )) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    for (var i = 0; i < steps; i++) {
+      final next = world.moveEnemy(at, step, size);
+      if (permits(at, next)) {
+        at = next;
+        continue;
+      }
+      final before = at;
+      if (step.dx.abs() > .0001) {
+        final horizontal = world.moveEnemy(at, ui.Offset(step.dx, 0), size);
+        if (permits(at, horizontal)) at = horizontal;
+      }
+      if (step.dy.abs() > .0001) {
+        final vertical = world.moveEnemy(at, ui.Offset(0, step.dy), size);
+        if (permits(at, vertical)) at = vertical;
+      }
+      if (steer && (at - before).distanceSquared < .0001) {
+        final side = identityHashCode(mover).isEven ? 1.0 : -1.0;
+        for (var turn = 0; turn < 2; turn++) {
+          final sign = turn == 0 ? side : -side;
+          final flank =
+              ui.Offset(step.dx - step.dy * sign, step.dy + step.dx * sign) *
+              .7071067811865476;
+          final alternative = world.moveEnemy(at, flank, size);
+          if ((alternative - at).distanceSquared > .0001 &&
+              permits(at, alternative)) {
+            at = alternative;
+            break;
+          }
+        }
+      }
+    }
+    return at;
   }
 
   HuntEnemy? spawnEnemy(
@@ -1265,6 +1445,7 @@ class Guardian extends Player with WithCollision {
     ),
   );
   double rollBearing = math.pi / 2;
+  final runMotion = RunMotion();
   double bearing = math.pi / 2,
       animationTime = 0,
       attackClock = 0,
@@ -1283,6 +1464,7 @@ class Guardian extends Player with WithCollision {
   double spinDuration = .5;
   int chargeCap = 0;
   final chargeVictims = <HuntEnemy>{};
+  final chargeChests = <int>{};
   double heavyWindup = 0, heavyPower = 0, heavyAngle = 0;
   SkillDef? heavySkill;
   bool get physicalAction => chargeTime > 0 || heavyWindup > 0 || spin > 0;
@@ -1330,6 +1512,13 @@ class Guardian extends Player with WithCollision {
         ),
       );
     }
+    session.strikeChests(
+      body.center,
+      185,
+      bearing: heavyAngle,
+      halfAngle: 1.05,
+      maxTargets: session.progress.skillTargetLimit(def) - enemies.length,
+    );
     session.game?.add(
       GroundStrike(
         session,
@@ -1468,8 +1657,17 @@ class Guardian extends Player with WithCollision {
     if (chargeTime > 0) {
       chargeTime = math.max(0, chargeTime - dt);
       if ((p - before).distance < delta.distance * .25) chargeTime = 0;
+      for (final index in session.attackableChests(
+        body.center,
+        72,
+        bearing: chargeAngle,
+        halfAngle: .85,
+      )) {
+        if (chargeVictims.length + chargeChests.length >= chargeCap) break;
+        if (session.breakChest(index)) chargeChests.add(index);
+      }
       for (final mob in session.mobs.toList()) {
-        if (chargeVictims.length >= chargeCap) {
+        if (chargeVictims.length + chargeChests.length >= chargeCap) {
           chargeTime = 0;
           break;
         }
@@ -1516,9 +1714,11 @@ class Guardian extends Player with WithCollision {
     lastClearPosition = p;
     // Follow the resolved body directly. Bonfire's smoothed follower can overshoot a dash.
     if (hasGameRef) gameRef.camera.position = session.cameraFocus;
-    if (delta.distance > .1) {
-      animationTime += dt;
-      session.riding?.bearing = math.atan2(delta.dy, delta.dx);
+    final travelled = p - before;
+    if (travelled.distance > .1) {
+      runMotion.advance(travelled.distance);
+      animationTime += travelled.distance / math.max(1, speed);
+      session.riding?.bearing = math.atan2(travelled.dy, travelled.dx);
     }
     session.riding?.at = body.center;
     attackClock = math.max(0, attackClock - dt);
@@ -1547,7 +1747,12 @@ class Guardian extends Player with WithCollision {
   }
 
   void slash() {
-    if (!session.combatAllowed ||
+    final propRange = session.progress.heroClass == HeroClass.mage
+        ? 540.0
+        : session.progress.weapon.base.range;
+    final props = session.attackableChests(body.center, propRange);
+    if (!session.active ||
+        !session.combatAllowed && props.isEmpty ||
         attackClock > 0 ||
         castLock > 0 ||
         dashing > 0 ||
@@ -1583,6 +1788,15 @@ class Guardian extends Player with WithCollision {
       angle = math.atan2(d.dy, d.dx);
       if (velocity.length < 5) bearing = angle;
     }
+    if (props.isNotEmpty &&
+        (candidates.isEmpty ||
+            (session.stageChestLocations[props.first] - body.center)
+                    .distanceSquared <
+                (candidates.first.body.center - body.center).distanceSquared)) {
+      final d = session.stageChestLocations[props.first] - body.center;
+      angle = math.atan2(d.dy, d.dx);
+      if (velocity.length < 5) bearing = angle;
+    }
     attackBearing = angle;
     strikes++;
     if (comboGrace <= 0) session.combo = 0;
@@ -1602,6 +1816,7 @@ class Guardian extends Player with WithCollision {
       swingDuration = swing = .32 / p.basicTempo;
     }
     if (candidates.isEmpty &&
+        props.isEmpty &&
         session.strikeEncounterStone(
           p.heroClass == HeroClass.mage ? 300 : p.weapon.base.range,
         )) {
@@ -1631,6 +1846,7 @@ class Guardian extends Player with WithCollision {
           caster: this,
           explosive: p.rank('firebolt') >= 3,
           targetLimit: p.basicTargetLimit,
+          propOnly: session.sheltered,
         ),
       );
       return;
@@ -1661,7 +1877,36 @@ class Guardian extends Player with WithCollision {
             (b.body.center - body.center).distance,
           ),
         );
-    for (final mob in melee.take(p.basicTargetLimit)) {
+    final targets = <({HuntEnemy? mob, int? chest, double distance})>[
+      for (final mob in melee)
+        (
+          mob: mob,
+          chest: null,
+          distance: (mob.body.center - body.center).distanceSquared,
+        ),
+      for (final index in session.attackableChests(
+        body.center,
+        p.weapon.base.range,
+        bearing: angle,
+        halfAngle: p.weapon.base.style == 'spear'
+            ? .5
+            : p.weapon.base.style == 'axe'
+            ? 1.5
+            : 1.25,
+      ))
+        (
+          mob: null,
+          chest: index,
+          distance: (session.stageChestLocations[index] - body.center)
+              .distanceSquared,
+        ),
+    ]..sort((a, b) => a.distance.compareTo(b.distance));
+    for (final target in targets.take(p.basicTargetLimit)) {
+      final mob = target.mob;
+      if (mob == null) {
+        session.breakChest(target.chest!);
+        continue;
+      }
       final d = mob.body.center - body.center;
       final push = d.distance > 0
           ? d / d.distance * (p.weapon.base.style == 'hammer' ? 42 : 23)
@@ -1724,6 +1969,7 @@ class Guardian extends Player with WithCollision {
         chargeDamage = p.skillDamage(def);
         chargeCap = p.skillTargetLimit(def);
         chargeVictims.clear();
+        chargeChests.clear();
         chargeTime = p.skillMotionTime(def);
         chargeSpeed = 324 / chargeTime;
         attackClock = math.max(attackClock, chargeTime + .06);
@@ -2055,7 +2301,7 @@ class Guardian extends Player with WithCollision {
             ? 0
             : swing > 0
             ? (swing > swingDuration * .58 ? 0 : 1)
-            : (animationTime / .13).floor() % 2,
+            : runMotion.phase,
         60,
         attack: swing > 0 || spin > 0 || aim?.id == 'crushingBlow',
         comboPose: spin > 0 ? 1 : strikePose,
@@ -2351,6 +2597,24 @@ class HuntEnemy extends Enemy with WithCollision {
       : const ui.Color(0xffefab78);
   int impactPose = 0;
   final motion = EnemyMotion();
+  final attackMotion = EnemyAttackMotion();
+  double meleeWindup = 0;
+  double get meleeWarning => boss ? .26 : .2;
+  double get meleeReach => boss ? 64 : 42;
+  double get anticipation {
+    if (meleeWindup > 0) return 1 - meleeWindup / meleeWarning;
+    if (windup <= 0) return 0;
+    final duration = usesPounce
+        ? pounceWarning
+        : usesSweep
+        ? sweepWarning
+        : usesBolt
+        ? boltWarning
+        : bossAttack?.warningTime ?? 1;
+    return (1 - windup / duration).clamp(0.0, 1.0);
+  }
+
+  bool get preparingAttack => meleeWindup > 0 || windup > 0;
   final damageTrail = DamageTrail();
   ui.Offset _knockback = ui.Offset.zero;
   double _knockbackTime = 0;
@@ -2369,8 +2633,9 @@ class HuntEnemy extends Enemy with WithCollision {
         ? _knockback
         : _knockback * (1 - math.exp(-30 * dt));
     _knockback -= step;
-    final at = session.world.moveEnemy(position.toOffset(), step, body.size);
+    final at = session.moveEnemyBody(this, position.toOffset(), step);
     position.setValues(at.dx, at.dy);
+    session.updateEnemySpacing(this);
     lastClearPosition = at;
   }
 
@@ -2407,6 +2672,7 @@ class HuntEnemy extends Enemy with WithCollision {
         final safe = lastClearPosition;
         if (safe != null) position.setValues(safe.dx, safe.dy);
       }
+      session.updateEnemySpacing(this);
     });
   }
 
@@ -2414,6 +2680,7 @@ class HuntEnemy extends Enemy with WithCollision {
   void update(double dt) {
     if (!session.active || !combatReady || isDead || isRemoving) return;
     dt = math.min(dt, .05);
+    attackMotion.update(dt);
     _updateKnockback(dt);
     final before = position.toOffset();
     _updateBehavior(dt);
@@ -2436,6 +2703,8 @@ class HuntEnemy extends Enemy with WithCollision {
     slamClock -= dt;
     if (session.sheltered) {
       stop();
+      meleeWindup = 0;
+      attackMotion.cancel();
       if (pounceRemaining > 0) finishPounce();
       windup = 0;
       slamTarget = null;
@@ -2448,9 +2717,12 @@ class HuntEnemy extends Enemy with WithCollision {
     }
     if (target.distance > 950 && !(boss && windup > 0)) {
       stop();
+      meleeWindup = 0;
       return;
     }
     if (stun > 0) {
+      meleeWindup = 0;
+      attackMotion.cancel();
       if (pounceRemaining > 0) finishPounce();
       if (windup > 0) {
         windup = 0;
@@ -2461,6 +2733,36 @@ class HuntEnemy extends Enemy with WithCollision {
         attackClock = math.max(attackClock, 1.2);
       }
       stop();
+      super.update(dt);
+      return;
+    }
+    if (meleeWindup > 0) {
+      stop();
+      meleeWindup = math.max(0, meleeWindup - dt);
+      if (meleeWindup == 0) {
+        attackMotion.strike(EnemyAttackPose.melee, bearing);
+        final angle = math.atan2(target.dy, target.dx);
+        final difference = math.atan2(
+          math.sin(angle - bearing),
+          math.cos(angle - bearing),
+        );
+        if (target.distance < meleeReach &&
+            difference.abs() < math.pi / 2 &&
+            session.world.clearEnemyLine(
+              body.center,
+              session.hero.body.center,
+              const ui.Size(3, 3),
+            )) {
+          session.hurtHero(
+            boss
+                ? 15
+                : kind == 'wolf'
+                ? 6
+                : 4,
+            origin: body.center,
+          );
+        }
+      }
       super.update(dt);
       return;
     }
@@ -2477,6 +2779,7 @@ class HuntEnemy extends Enemy with WithCollision {
         bearing = pounceBearing;
         pounceDuration = math.min(pounceRange, d.distance) / pounceSpeed;
         pounceRemaining = pounceDuration;
+        attackMotion.strike(EnemyAttackPose.pounce, bearing);
         slamTarget = null;
       }
       super.update(dt);
@@ -2486,6 +2789,7 @@ class HuntEnemy extends Enemy with WithCollision {
       stop();
       windup -= dt;
       if (windup <= 0) {
+        attackMotion.strike(EnemyAttackPose.sweep, bearing);
         final angle = math.atan2(target.dy, target.dx);
         final difference = math.atan2(
           math.sin(angle - bearing),
@@ -2519,6 +2823,7 @@ class HuntEnemy extends Enemy with WithCollision {
       stop();
       windup -= dt;
       if (windup <= 0) {
+        attackMotion.strike(EnemyAttackPose.bolt, bearing);
         final locked = slamTarget;
         if (locked != null) {
           final toward = locked - body.center;
@@ -2543,6 +2848,7 @@ class HuntEnemy extends Enemy with WithCollision {
       stop();
       windup -= dt;
       if (windup <= 0) {
+        attackMotion.strike(EnemyAttackPose.slam, bearing);
         final attack = bossAttack;
         if (attack != null) {
           final hero = session.hero.body.center;
@@ -2601,6 +2907,7 @@ class HuntEnemy extends Enemy with WithCollision {
           session.hero.body.center,
           const ui.Size(3, 3),
         )) {
+      bearing = math.atan2(target.dy, target.dx);
       slamTarget = session.hero.body.center;
       final attack = BossAttack.forStage(
         session.world.stage,
@@ -2640,13 +2947,8 @@ class HuntEnemy extends Enemy with WithCollision {
           windup = boltWarning;
         } else {
           attackClock = boss ? 1.05 : 1.3;
-          session.hurtHero(
-            boss
-                ? 15
-                : kind == 'wolf'
-                ? 6
-                : 4,
-          );
+          bearing = math.atan2(target.dy, target.dx);
+          meleeWindup = meleeWarning;
         }
       }
     } else if (hurt <= 0) {
@@ -2694,12 +2996,14 @@ class HuntEnemy extends Enemy with WithCollision {
       stop();
     }
     super.update(dt);
-    final next = session.world.moveEnemy(
+    final next = session.moveEnemyBody(
+      this,
       before,
       position.toOffset() - before,
-      body.size,
+      steer: hurt <= 0 && !velocity.isZero(),
     );
     position.setValues(next.dx, next.dy);
+    session.updateEnemySpacing(this);
     lastClearPosition = next;
   }
 
@@ -2721,7 +3025,7 @@ class HuntEnemy extends Enemy with WithCollision {
         (distance / steps);
     for (var i = 0; i < steps; i++) {
       final from = position.toOffset();
-      final at = session.world.moveEnemy(from, step, body.size);
+      final at = session.moveEnemyBody(this, from, step);
       if ((at - from).distance < step.distance * .5) {
         finishPounce();
         break;
@@ -2737,18 +3041,8 @@ class HuntEnemy extends Enemy with WithCollision {
         finishPounce();
         break;
       }
-      if (session.mobs.any(
-        (other) =>
-            other != this &&
-            other.combatReady &&
-            !other.isDead &&
-            !other.isRemoving &&
-            candidate.overlaps(other.body),
-      )) {
-        finishPounce();
-        break;
-      }
       position.setValues(at.dx, at.dy);
+      session.updateEnemySpacing(this);
     }
     lastClearPosition = position.toOffset();
     if (pounceRemaining <= 0) finishPounce();
@@ -2759,6 +3053,7 @@ class HuntEnemy extends Enemy with WithCollision {
   void onRemove() {
     combatReady = false;
     session.mobs.remove(this);
+    session.enemySpacing.remove(this);
     super.onRemove();
   }
 
@@ -2900,6 +3195,9 @@ class HuntEnemy extends Enemy with WithCollision {
         );
       }
     }
+    final anticipationOffset = preparingAttack
+        ? ui.Offset(math.cos(bearing), math.sin(bearing)) * (-3 * anticipation)
+        : attackMotion.offset;
     canvas.save();
     canvas.translate(feet.dx, feet.dy);
     canvas.rotate(motion.lean);
@@ -2908,7 +3206,8 @@ class HuntEnemy extends Enemy with WithCollision {
     session.art.actor(
       canvas,
       boss ? session.world.stage.bossActor : kind,
-      feet -
+      feet +
+          anticipationOffset -
           ui.Offset(
             0,
             pounceRemaining > 0 && pounceDuration > 0
@@ -2916,8 +3215,18 @@ class HuntEnemy extends Enemy with WithCollision {
                       15
                 : motion.lift,
           ),
-      windup > 0 || pounceRemaining > 0 ? bearing : motion.facing,
-      hurt > .08 ? impactPose : motion.phase,
+      preparingAttack || pounceRemaining > 0
+          ? bearing
+          : attackMotion.active
+          ? attackMotion.bearing
+          : motion.facing,
+      hurt > .08
+          ? impactPose
+          : preparingAttack
+          ? 0
+          : attackMotion.active
+          ? 1
+          : motion.phase,
       boss
           ? 125
           : isElite
@@ -2930,6 +3239,13 @@ class HuntEnemy extends Enemy with WithCollision {
       flash: hurt > .08 ? .75 : 0,
     );
     canvas.restore();
+    attackMotion.paintMeleeTrace(
+      canvas,
+      feet - const ui.Offset(0, 19),
+      attackColor,
+      claws: const {'mummy', 'wolf', 'boar', 'scorpion'}.contains(kind),
+      large: boss,
+    );
     if (life.value < life.max || boss || isElite) {
       final width = boss
               ? 100.0
