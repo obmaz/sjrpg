@@ -6,6 +6,7 @@ import 'battle_effects.dart';
 import 'encounters.dart';
 import 'enemy_catalog.dart';
 import 'game_art.dart';
+import 'travel_journal.dart';
 import 'world_model.dart';
 
 class GameCheckpoint {
@@ -15,6 +16,8 @@ class GameCheckpoint {
   String get summary =>
       '${WorldStage.values.firstWhere((s) => s.name == data['stage']).title} · Lv.${progress.level} ${progress.heroClass.title}';
   String encode() => jsonEncode(data);
+  // One active scene and at most three inactive scenes, each with its own budget.
+  static const _maximumEncodedLength = 8000000;
   static GameCheckpoint? capture(Adventure session) {
     if (!session.ready || session.disposed || session.progress.hp <= 0) {
       return null;
@@ -73,12 +76,16 @@ class GameCheckpoint {
         'riding': session.riding?.def.id,
         'progress': session.progress.toSave(),
         'seed': session.world.seed,
+        'hubOrigin': [session.world.spawn.dx, session.world.spawn.dy],
+        'travel': session.travelJournal.toSave(),
         'x': session.hero.position.x,
         'y': session.hero.position.y,
         'elapsed': session.elapsed,
         'chests': session.openedChests.toList(),
         'memoryRewarded': session.memoryRewarded,
         'cooldowns': Map<String, double>.of(session.hero.cooldowns),
+        'attackClock': session.hero.attackClock,
+        'dodgeClock': session.hero.dodgeClock,
         'armor': session.hero.armorTime,
         'frenzy': session.hero.frenzyTime,
         'loot': session.loot
@@ -110,12 +117,26 @@ class GameCheckpoint {
     final checkpoint = capture(session);
     if (checkpoint == null) return null;
     final data = checkpoint.data;
+    final journal = _readTravel(data, checkpoint.progress);
+    final archivedNext = journal.archives.remove(next);
+    final source = TravelJournal.copyScene(_scene(data));
+    if (archivedNext != null) {
+      journal.archives[session.world.stage] = source;
+      final restored = _enterScene(data, archivedNext)
+        ..['travel'] = journal.toSave();
+      return decode(jsonEncode(restored));
+    }
+    // The original chapter transition carries ground loot forward exactly once.
+    source['loot'] = <dynamic>[];
+    journal.archives[session.world.stage] = source;
     final p = Progress.fromSave(session.progress.toSave())!
       ..bossDefeated = false;
     p.hp = p.maxHp;
     p.energy = p.maxEnergy;
     data.addAll({
       'stage': next.name,
+      'hubOrigin': [next.arrival.dx, next.arrival.dy],
+      'travel': journal.toSave(),
       'stageStartKills': p.kills,
       'commissionStartKills': p.kills,
       'timePath': next == WorldStage.sands ? null : session.timePath?.name,
@@ -125,28 +146,32 @@ class GameCheckpoint {
       'chests': <int>[],
       'memoryRewarded': false,
       'progress': p.toSave(),
-      'x': next.spawn.dx,
-      'y': next.spawn.dy,
+      'x': next.arrival.dx,
+      'y': next.arrival.dy,
       'mounts': <dynamic>[],
       'riding': null,
       'boss': null,
       'encounters': <dynamic>[],
       'enemies': <dynamic>[],
       'cooldowns': <String, double>{},
+      'attackClock': 0,
+      'dodgeClock': 0,
       'armor': 0,
       'frenzy': 0,
     });
     final ground = data['loot'] as List;
     for (var i = 0; i < ground.length; i++) {
-      ground[i]['x'] = next.spawn.dx + 100 + i % 5 * 24;
-      ground[i]['y'] = next.spawn.dy + 180 + i ~/ 5 * 24;
+      ground[i]['x'] = next.arrival.dx + 100 + i % 5 * 24;
+      ground[i]['y'] = next.arrival.dy + 180 + i ~/ 5 * 24;
       ground[i]['age'] = 0;
     }
     return decode(jsonEncode(data));
   }
 
-  static GameCheckpoint? decode(String? text) {
-    if (text == null || text.length > 2000000) return null;
+  static GameCheckpoint? decode(String? text) => _decode(text);
+
+  static GameCheckpoint? _decode(String? text, {bool includeTravel = true}) {
+    if (text == null || text.length > _maximumEncodedLength) return null;
     try {
       final data = Map<String, dynamic>.from(jsonDecode(text) as Map);
       if (data['version'] != 1) return null;
@@ -197,6 +222,25 @@ class GameCheckpoint {
         (s) => s.name == (data['stage'] ?? 'forest'),
       );
       data['stage'] = stage.name;
+      final origin = data['hubOrigin'] ?? legacyHubOrigins[stage.index];
+      if (origin is! List ||
+          origin.length != 2 ||
+          origin[0] is! num ||
+          origin[1] is! num ||
+          !(origin[0] as num).isFinite ||
+          !(origin[1] as num).isFinite ||
+          origin[0] < 0 ||
+          origin[1] < 0 ||
+          origin[0] > worldSize.width ||
+          origin[1] > worldSize.height) {
+        return null;
+      }
+      final hubOrigin = Offset(
+        (origin[0] as num).toDouble(),
+        (origin[1] as num).toDouble(),
+      );
+      if (!stage.supportsHubOrigin(hubOrigin)) return null;
+      data['hubOrigin'] = List<num>.from(origin);
       final availableSites = sitesForStage(stage);
       final stageStart = data['stageStartKills'] ?? 0;
       final commissionStart = data['commissionStartKills'] ?? stageStart;
@@ -236,6 +280,12 @@ class GameCheckpoint {
           !number(data['elapsed'], 100000000) ||
           !number(data['armor'], 60) ||
           !number(data['frenzy'], 60)) {
+        return null;
+      }
+      data['attackClock'] ??= 0;
+      data['dodgeClock'] ??= 0;
+      if (!number(data['attackClock'], 60) ||
+          !number(data['dodgeClock'], 1.5)) {
         return null;
       }
       final chests = data['chests'] as List;
@@ -386,10 +436,184 @@ class GameCheckpoint {
         }
       }
       data['balance'] = 3;
+      if (includeTravel) {
+        data['travel'] = _readTravel(data, progress).toSave();
+      } else {
+        data.remove('travel');
+      }
       return GameCheckpoint._(data, progress);
     } catch (_) {
       return null;
     }
+  }
+
+  static const _sceneKeys = {
+    'stage',
+    'seed',
+    'hubOrigin',
+    'x',
+    'y',
+    'timePath',
+    'commission',
+    'sites',
+    'trackedSite',
+    'mounts',
+    'riding',
+    'chests',
+    'memoryRewarded',
+    'boss',
+    'encounterVersion',
+    'encounters',
+    'enemies',
+    'loot',
+  };
+
+  static Map<String, dynamic> _scene(Map<String, dynamic> data) => {
+    for (final key in _sceneKeys)
+      if (data.containsKey(key)) key: data[key],
+    'bossDefeated': (data['progress'] as Map)['bossDefeated'],
+    'stageKills': (data['progress'] as Map)['kills'] - data['stageStartKills'],
+    'commissionKills':
+        (data['progress'] as Map)['kills'] - data['commissionStartKills'],
+  };
+
+  static Map<String, dynamic> _enterScene(
+    Map<String, dynamic> current,
+    Map<String, dynamic> scene,
+  ) {
+    final progress = Map<String, dynamic>.from(current['progress'] as Map)
+      ..['bossDefeated'] = scene['bossDefeated'];
+    return {
+      for (final entry in current.entries)
+        if (entry.key != 'travel') entry.key: entry.value,
+      if (!scene.containsKey('hubOrigin'))
+        'hubOrigin':
+            legacyHubOrigins[WorldStage.values
+                .firstWhere((stage) => stage.name == scene['stage'])
+                .index],
+      for (final key in _sceneKeys)
+        if (scene.containsKey(key)) key: scene[key],
+      'progress': progress,
+      'stageStartKills': progress['kills'] - scene['stageKills'],
+      'commissionStartKills': progress['kills'] - scene['commissionKills'],
+    };
+  }
+
+  static TravelJournal _readTravel(
+    Map<String, dynamic> data,
+    Progress progress,
+  ) {
+    final active = WorldStage.values.firstWhere((s) => s.name == data['stage']);
+    final journal = TravelJournal.fromSave(
+      data['travel'],
+      activeStage: active,
+      validateScene: (stage, raw) {
+        if (_sceneKeys
+                .where((key) => key != 'hubOrigin')
+                .any((key) => !raw.containsKey(key)) ||
+            raw.keys.any(
+              (key) =>
+                  !_sceneKeys.contains(key) &&
+                  !const {
+                    'bossDefeated',
+                    'stageKills',
+                    'commissionKills',
+                  }.contains(key),
+            ) ||
+            raw['stage'] != stage.name ||
+            raw['stageKills'] is! int ||
+            raw['commissionKills'] is! int ||
+            raw['bossDefeated'] is! bool) {
+          throw const FormatException('Invalid archived scene');
+        }
+        final decoded = _decode(
+          jsonEncode(_enterScene(data, raw)),
+          includeTravel: false,
+        );
+        if (decoded == null) {
+          throw const FormatException('Invalid archived scene');
+        }
+        return _scene(decoded.data);
+      },
+    );
+    if (data['travel'] == null) {
+      // Every older chapter started at its hub before discovery was recorded.
+      journal.discover(active, 'hub');
+      for (final id in data['sites'] as List) {
+        journal.discover(active, id as String);
+      }
+    }
+    final scenes = [data, ...journal.archives.values];
+    final paths = scenes.map((s) => s['timePath']).whereType<String>().toSet();
+    if (paths.length > 1) {
+      throw const FormatException(
+        'Visited stages disagree about the chosen era',
+      );
+    }
+    final identities = progress.inventory.map((g) => g.serial).toSet();
+    var groundItems = 0;
+    for (final scene in scenes) {
+      for (final raw in scene['loot'] as List) {
+        final serial = ((raw as Map)['item'] as Map)['serial'];
+        if (serial is! int || !identities.add(serial)) {
+          throw const FormatException(
+            'Duplicated equipment across visited stages',
+          );
+        }
+        groundItems++;
+      }
+    }
+    if (groundItems > 128) {
+      throw const FormatException('Visited scene budget exceeded');
+    }
+    return journal;
+  }
+
+  static GameCheckpoint? warp(
+    Adventure session,
+    WorldStage destination,
+    String wellId,
+  ) {
+    if (!session.ready ||
+        session.disposed ||
+        session.defeated ||
+        session.won ||
+        session.riding != null ||
+        !session.travelJournal.hasDiscovered(destination, wellId)) {
+      return null;
+    }
+    if (session.travelJournal.nearbyWell(
+          session.world,
+          session.hero.body.center,
+        ) ==
+        null) {
+      return null;
+    }
+    final saved = capture(session);
+    if (saved == null) return null;
+    final journal = _readTravel(saved.data, saved.progress);
+    final current = session.world.stage;
+    final targetScene = destination == current
+        ? _scene(saved.data)
+        : journal.archives[destination];
+    if (targetScene == null) return null;
+    final source = TravelJournal.copyScene(_scene(saved.data));
+    final scene = TravelJournal.copyScene(targetScene);
+    journal.archives.remove(destination);
+    if (destination != current) journal.archives[current] = source;
+    final data = _enterScene(saved.data, scene);
+    final hub = scene['hubOrigin'] as List;
+    final well = wellSitesForStage(
+      destination,
+      hubOrigin: Offset((hub[0] as num).toDouble(), (hub[1] as num).toDouble()),
+    ).firstWhere((site) => site.id == wellId);
+    data.addAll({
+      'x': well.at.dx - 14,
+      'y': well.at.dy + 65,
+      'riding': null,
+      'travel': journal.toSave(),
+    });
+    return decode(jsonEncode(data));
   }
 
   Adventure restore(GameArt art) {
@@ -398,7 +622,12 @@ class GameCheckpoint {
       seed: data['seed'] as int,
       stage: WorldStage.values.firstWhere((s) => s.name == data['stage']),
       restoredProgress: Progress.fromSave(progress.toSave())!,
+      hubOrigin: Offset(
+        (data['hubOrigin'][0] as num).toDouble(),
+        (data['hubOrigin'][1] as num).toDouble(),
+      ),
     );
+    session.travelJournal.replaceWith(_readTravel(data, progress));
     session.restoredEncounters = data['encounterVersion'] == 1;
     for (final raw in data['encounters'] as List) {
       final area = EncounterArea.fromSave(raw as Map);
@@ -486,6 +715,8 @@ class GameCheckpoint {
       session.hero.cooldowns[entry.key as String] = (entry.value as num)
           .toDouble();
     }
+    session.hero.attackClock = (data['attackClock'] as num).toDouble();
+    session.hero.dodgeClock = (data['dodgeClock'] as num).toDouble();
     session.hero.armorTime = (data['armor'] as num).toDouble();
     session.hero.frenzyTime = (data['frenzy'] as num).toDouble();
     for (final raw in data['loot'] as List) {

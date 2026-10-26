@@ -14,12 +14,14 @@ import 'game_art.dart';
 import 'game_checkpoint.dart';
 import 'game_panels.dart';
 import 'game_ui.dart';
+import 'nearby_controls.dart';
 import 'panel_controls.dart';
 import 'quest_giver.dart';
 import 'quest_guide.dart';
 import 'rpg_widgets.dart';
 import 'sanctuary_fence.dart';
 import 'save_bridge.dart' as storage;
+import 'well_portal.dart';
 import 'world_model.dart';
 
 void main() {
@@ -89,6 +91,7 @@ class _EntryPageState extends State<EntryPage> {
       started = false;
       resuming = false;
       enteringStage = false;
+      arrivingByWell = false;
       savedAdventure = checkpoint;
       if (checkpoint != null) chosen = checkpoint.progress.heroClass;
     });
@@ -107,7 +110,7 @@ class _EntryPageState extends State<EntryPage> {
   GameCheckpoint? savedAdventure = GameCheckpoint.decode(
     storage.readCheckpoint(),
   );
-  bool resuming = false, enteringStage = false;
+  bool resuming = false, enteringStage = false, arrivingByWell = false;
   @override
   Widget build(BuildContext context) => PopScope<Object?>(
     canPop: false,
@@ -165,11 +168,21 @@ class _EntryPageState extends State<EntryPage> {
             art: art,
             heroClass: chosen,
             showStageBriefing: enteringStage,
+            arrivingByWell: arrivingByWell,
             checkpoint: resuming ? savedAdventure : null,
             onAdvance: (checkpoint) => setState(() {
               run++;
               savedAdventure = checkpoint;
               enteringStage = true;
+              arrivingByWell = false;
+              resuming = true;
+              started = true;
+            }),
+            onTravel: (checkpoint) => setState(() {
+              run++;
+              savedAdventure = checkpoint;
+              enteringStage = false;
+              arrivingByWell = true;
               resuming = true;
               started = true;
             }),
@@ -181,6 +194,7 @@ class _EntryPageState extends State<EntryPage> {
                 run++;
                 savedAdventure = checkpoint;
                 enteringStage = false;
+                arrivingByWell = false;
                 resuming = checkpoint != null;
                 started = checkpoint != null;
                 if (checkpoint != null) chosen = checkpoint.progress.heroClass;
@@ -192,6 +206,7 @@ class _EntryPageState extends State<EntryPage> {
               savedAdventure = null;
               resuming = false;
               enteringStage = false;
+              arrivingByWell = false;
             }),
           );
         }
@@ -204,12 +219,14 @@ class _EntryPageState extends State<EntryPage> {
                   chosen = savedAdventure!.progress.heroClass;
                   resuming = true;
                   enteringStage = false;
+                  arrivingByWell = false;
                   started = true;
                 }),
           onBegin: (value) => setState(() {
             chosen = value;
             resuming = false;
             enteringStage = false;
+            arrivingByWell = false;
             started = true;
           }),
         );
@@ -225,19 +242,23 @@ class GamePage extends StatefulWidget {
     this.heroClass = HeroClass.warrior,
     this.checkpoint,
     this.showStageBriefing = false,
+    this.arrivingByWell = false,
     this.onRetryCheckpoint,
     this.onAdvance,
+    this.onTravel,
     this.backActions,
     this.onReturnToMenu,
     super.key,
   });
   final GameCheckpoint? checkpoint;
   final bool showStageBriefing;
+  final bool arrivingByWell;
   final HeroClass heroClass;
   final GameArt art;
   final VoidCallback onRestart;
   final VoidCallback? onRetryCheckpoint;
   final ValueChanged<GameCheckpoint>? onAdvance;
+  final ValueChanged<GameCheckpoint>? onTravel;
   final BackActions? backActions;
   final VoidCallback? onReturnToMenu;
   @override
@@ -273,6 +294,72 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     storage.writeCheckpoint(next.encode());
     widget.onAdvance!(next);
   }
+
+  void travelTo(WorldStage stage, String wellId) {
+    if (widget.onTravel == null) return;
+    final next = GameCheckpoint.warp(adventure, stage, wellId);
+    if (next == null) return;
+    if (!storage.writeCheckpoint(next.encode())) {
+      adventure.saveFailed = true;
+      adventure.refresh();
+      return;
+    }
+    keepSave = false;
+    widget.onTravel!(next);
+  }
+
+  void openWarp() {
+    if (!adventure.active ||
+        adventure.riding != null ||
+        adventure.travelJournal.nearbyWell(
+              adventure.world,
+              adventure.hero.body.center,
+            ) ==
+            null) {
+      return;
+    }
+    open('warp');
+  }
+
+  NearbyControl nearbyControl(NearbyAction action) => NearbyControl(
+    label: switch (action) {
+      NearbyAction.shrine =>
+        adventure.world.stage == WorldStage.sands ? '조사' : '정화',
+      NearbyAction.mount =>
+        adventure.nearbyMount?.durability == 0 ? '보수하기' : '타기',
+      NearbyAction.dismount => '내리기',
+      NearbyAction.shop => '상점',
+      NearbyAction.talk => adventure.nearbyTimeGiver?.name ?? '대화',
+    },
+    icon: switch (action) {
+      NearbyAction.shrine => Icons.water_drop_outlined,
+      NearbyAction.mount => Icons.pets_outlined,
+      NearbyAction.dismount => Icons.south_west,
+      NearbyAction.shop => Icons.storefront,
+      NearbyAction.talk => Icons.chat_bubble_outline,
+    },
+    condition: action == NearbyAction.mount || action == NearbyAction.dismount
+        ? (adventure.serviceMount?.durability ?? 100) / 100
+        : null,
+    onTap: () {
+      switch (action) {
+        case NearbyAction.mount:
+          if (adventure.nearbyMount?.durability == 0) {
+            open('settings');
+          } else if (adventure.boardNearbyMount()) {
+            saveNow();
+          }
+        case NearbyAction.dismount:
+          if (adventure.dismount()) saveNow();
+        case NearbyAction.shrine:
+          if (adventure.cleanseNearbySite()) saveNow();
+        case NearbyAction.shop:
+          open('shop');
+        case NearbyAction.talk:
+          open('talk');
+      }
+    },
+  );
 
   void abandon() {
     keepSave = false;
@@ -328,6 +415,11 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
       components: [
         LandscapeLayer(adventure),
         WorldDirector(adventure),
+        WellDiscoveryDirector(
+          adventure,
+          onOpen: openWarp,
+          onDiscovered: saveNow,
+        ),
         StageLandmarks(adventure),
         for (
           var index = 0;
@@ -361,9 +453,10 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         game.camera.position = adventure.cameraFocus;
         adventure.start(game);
         saveNow();
-        if (widget.showStageBriefing ||
-            adventure.world.stage == WorldStage.sands &&
-                adventure.timePath == null) {
+        if (!widget.arrivingByWell &&
+            (widget.showStageBriefing ||
+                adventure.world.stage == WorldStage.sands &&
+                    adventure.timePath == null)) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) open('journal');
           });
@@ -447,8 +540,34 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
             : adventure.won
             ? 'victory'
             : panel;
-        final p = adventure.progress, interaction = adventure.nearbyAction;
+        final p = adventure.progress;
         final guide = adventure.nearbyQuestGuide;
+        final contextActions = [
+          for (final action in adventure.nearbyActions)
+            if (switch (action) {
+              NearbyAction.shrine => guide == null,
+              NearbyAction.talk => guide?.action != QuestGuideAction.talk,
+              NearbyAction.dismount =>
+                guide?.action != QuestGuideAction.dismount,
+              _ => true,
+            })
+              nearbyControl(action),
+          if (widget.onTravel != null &&
+              adventure.riding == null &&
+              adventure.travelJournal.nearbyWell(
+                    adventure.world,
+                    adventure.hero.body.center,
+                  ) !=
+                  null)
+            NearbyControl(
+              label: '워프',
+              icon: Icons.blur_circular,
+              onTap: openWarp,
+            ),
+        ];
+        final compactGuide =
+            short && contextActions.isNotEmpty && guide != null;
+
         final peacefulAttack =
             adventure.sheltered &&
             adventure
@@ -630,87 +749,21 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   onTap: adventure.hero.dodge,
                 ),
               ),
-              if (interaction != null && guide == null)
+              if (contextActions.isNotEmpty)
                 Positioned(
                   left: short && width >= 500 ? 136 : 12,
-                  bottom: short && width >= 500
-                      ? media.size.height - 216
-                      : bottom + stick + 12,
-                  width: 120,
-                  child: SizedBox(
-                    height: 50,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        GameAction(
-                          switch (interaction) {
-                            NearbyAction.shrine =>
-                              adventure.world.stage == WorldStage.sands
-                                  ? '조사'
-                                  : '정화',
-                            NearbyAction.mount =>
-                              adventure.nearbyMount?.durability == 0
-                                  ? '보수하기'
-                                  : '타기',
-                            NearbyAction.dismount => '내리기',
-                            NearbyAction.shop => '상점',
-                            NearbyAction.talk =>
-                              adventure.nearbyTimeGiver?.name ?? '대화',
-                          },
-                          icon: switch (interaction) {
-                            NearbyAction.shrine => Icons.water_drop_outlined,
-                            NearbyAction.mount => Icons.pets_outlined,
-                            NearbyAction.dismount => Icons.south_west,
-                            NearbyAction.shop => Icons.storefront,
-                            NearbyAction.talk => Icons.chat_bubble_outline,
-                          },
-                          onTap: () {
-                            switch (interaction) {
-                              case NearbyAction.mount:
-                                if (adventure.nearbyMount?.durability == 0) {
-                                  open('settings');
-                                } else if (adventure.boardNearbyMount()) {
-                                  saveNow();
-                                }
-                              case NearbyAction.dismount:
-                                if (adventure.dismount()) saveNow();
-                              case NearbyAction.shrine:
-                                if (adventure.cleanseNearbySite()) saveNow();
-                              case NearbyAction.shop:
-                                open('shop');
-                              case NearbyAction.talk:
-                                open('talk');
-                            }
-                          },
-                        ),
-                        if (interaction == NearbyAction.mount ||
-                            interaction == NearbyAction.dismount)
-                          Positioned(
-                            left: 18,
-                            right: 18,
-                            bottom: 6,
-                            child: IgnorePointer(
-                              child: LinearProgressIndicator(
-                                value:
-                                    (adventure.serviceMount?.durability ??
-                                        100) /
-                                    100,
-                                minHeight: 2,
-                                backgroundColor: ink,
-                                color:
-                                    (adventure.serviceMount?.condition ??
-                                            100) <=
-                                        20
-                                    ? gold
-                                    : const Color(0xff8bd4b3),
-                                semanticsLabel: '탈것 내구도',
-                                semanticsValue:
-                                    '${adventure.serviceMount?.condition ?? 100}%',
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
+                  top: short
+                      ? media.padding.top + (guide == null ? 164 : 144)
+                      : null,
+                  bottom: short ? null : bottom + stick + 12,
+                  width: short
+                      ? width >= 500
+                            ? (width - 440).clamp(140, 320).toDouble()
+                            : width - 24
+                      : 120,
+                  child: NearbyControls(
+                    actions: contextActions,
+                    horizontal: short,
                   ),
                 ),
               Positioned(
@@ -729,9 +782,14 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                       : (width - (short ? 164 : 150))
                             .clamp(148, 250)
                             .toDouble(),
-                  height: short && width < 600 ? 84 : 92,
+                  height: compactGuide
+                      ? 44
+                      : short && width < 600
+                      ? 84
+                      : 92,
                   child: NearbyQuestCard(
                     guide,
+                    compact: compactGuide,
                     onTap: () {
                       switch (guide.action) {
                         case QuestGuideAction.journal:
@@ -800,6 +858,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   onRestart: abandon,
                   onCheckpoint: saveNow,
                   onAdvance: widget.onAdvance == null ? null : advanceStage,
+                  onTravel: widget.onTravel == null ? null : travelTo,
                   onRetryCheckpoint:
                       adventure.defeated &&
                           widget.onRetryCheckpoint != null &&

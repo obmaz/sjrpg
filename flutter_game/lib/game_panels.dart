@@ -14,6 +14,7 @@ import 'quest_guide.dart';
 import 'rpg_widgets.dart';
 import 'skills_panel.dart';
 import 'stage_completion_banner.dart';
+import 'travel_panel.dart';
 import 'world_map.dart';
 import 'world_model.dart';
 
@@ -25,6 +26,7 @@ class AdventurePanel extends StatefulWidget {
     required this.onRestart,
     this.onRetryCheckpoint,
     this.onAdvance,
+    this.onTravel,
     this.onCheckpoint,
     this.backActions,
     this.offeredPath,
@@ -35,6 +37,7 @@ class AdventurePanel extends StatefulWidget {
   final VoidCallback onClose, onRestart;
   final VoidCallback? onRetryCheckpoint;
   final VoidCallback? onAdvance, onCheckpoint;
+  final void Function(WorldStage stage, String wellId)? onTravel;
   final BackActions? backActions;
   final TimePath? offeredPath;
   @override
@@ -70,6 +73,13 @@ class _AdventurePanelState extends State<AdventurePanel> {
         media = MediaQuery.of(context);
     if (name == 'map') {
       return ExpandedWorldMap(session: s, onClose: widget.onClose);
+    }
+    if (name == 'warp') {
+      return TravelPanel(
+        session: s,
+        onClose: widget.onClose,
+        onTravel: widget.onTravel,
+      );
     }
     if (name == 'bag' || name == 'shop') {
       return EquipmentPanel(

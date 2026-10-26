@@ -21,6 +21,7 @@ import 'ranked_vfx.dart';
 import 'shop_content.dart';
 import 'skill_aim.dart';
 import 'spell_vfx.dart';
+import 'travel_journal.dart';
 import 'world_model.dart';
 
 enum NearbyAction { shrine, mount, dismount, shop, talk }
@@ -40,11 +41,12 @@ class Adventure extends ChangeNotifier {
     this.art, {
     int seed = 7829,
     WorldStage stage = WorldStage.forest,
+    ui.Offset? hubOrigin,
     HeroClass heroClass = HeroClass.warrior,
     Progress? restoredProgress,
     DeviceSettings? device,
     AudioSettings? audio,
-  }) : world = AdventureWorld(seed: seed, stage: stage),
+  }) : world = AdventureWorld(seed: seed, stage: stage, hubOrigin: hubOrigin),
        progress = restoredProgress ?? Progress(heroClass: heroClass),
        device = device ?? DeviceSettings.shared,
        audio = audio ?? AudioSettings.shared {
@@ -89,6 +91,7 @@ class Adventure extends ChangeNotifier {
   late final Guardian hero;
   late final TerrainArt terrain;
   final Progress progress;
+  final travelJournal = TravelJournal();
   bool saveFailed = false;
   final loot = <GroundLoot>[];
   final texts = <BattleText>[];
@@ -287,9 +290,10 @@ class Adventure extends ChangeNotifier {
     TimeQuestGiver? nearest;
     var distance = 135.0;
     for (final giver in timeQuestGivers) {
-      final d = (hero.body.center - giver.at).distance;
+      final at = giver.atOrigin(world.spawn);
+      final d = (hero.body.center - at).distance;
       if (d < distance &&
-          world.clearLine(hero.body.center, giver.at, const ui.Size(3, 3))) {
+          world.clearLine(hero.body.center, at, const ui.Size(3, 3))) {
         distance = d;
         nearest = giver;
       }
@@ -533,20 +537,26 @@ class Adventure extends ChangeNotifier {
   bool get sheltered => world.sanctuary.protects(hero.body);
   bool get combatAllowed => active && !sheltered;
   String get region => world.areaName(hero.position.toOffset());
-  NearbyAction? get nearbyAction {
-    if (riding != null) return NearbyAction.dismount;
-    if (nearbySite != null) return NearbyAction.shrine;
-    if (nearbyMount != null) return NearbyAction.mount;
+  NearbyAction? get nearbyAction => nearbyActions.firstOrNull;
+  List<NearbyAction> get nearbyActions {
+    if (riding != null) return [NearbyAction.dismount];
+    final actions = <NearbyAction>[
+      if (nearbyMount != null) NearbyAction.mount,
+      if (nearbySite != null) NearbyAction.shrine,
+    ];
     final at = hero.position.toOffset();
     final shop = (at - world.merchantAt).distance;
     final talk = world.stage == WorldStage.sands
         ? nearbyTimeGiver == null
               ? double.infinity
-              : (at - nearbyTimeGiver!.at).distance
+              : (at - nearbyTimeGiver!.atOrigin(world.spawn)).distance
         : (at - world.elderAt).distance;
-    if (talk < 135 && (shop >= 165 || talk < shop)) return NearbyAction.talk;
-    if (shop < 165) return NearbyAction.shop;
-    return null;
+    if (talk < 135 && (shop >= 165 || talk < shop)) {
+      actions.add(NearbyAction.talk);
+    } else if (shop < 165) {
+      actions.add(NearbyAction.shop);
+    }
+    return actions;
   }
 
   int? get nearbyChest {

@@ -154,9 +154,15 @@ extension QuestGuidance on Adventure {
 }
 
 class NearbyQuestCard extends StatelessWidget {
-  const NearbyQuestCard(this.guide, {required this.onTap, super.key});
+  const NearbyQuestCard(
+    this.guide, {
+    required this.onTap,
+    this.compact = false,
+    super.key,
+  });
   final QuestGuide guide;
   final VoidCallback onTap;
+  final bool compact;
   @override
   Widget build(BuildContext context) => Semantics(
     button: true,
@@ -172,7 +178,10 @@ class NearbyQuestCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          padding: EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: compact ? 4 : 7,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -186,19 +195,20 @@ class NearbyQuestCard extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 3),
-              Expanded(
-                child: Text(
-                  guide.message,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: cream,
-                    fontSize: 12,
-                    height: 1.25,
+              if (!compact) const SizedBox(height: 3),
+              if (!compact)
+                Expanded(
+                  child: Text(
+                    guide.message,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: cream,
+                      fontSize: 12,
+                      height: 1.25,
+                    ),
                   ),
                 ),
-              ),
               Text(
                 '${guide.button} ›',
                 style: const TextStyle(

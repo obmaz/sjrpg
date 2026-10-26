@@ -8,15 +8,16 @@ import 'world_model.dart';
 
 class QuestGiver extends GameComponent {
   QuestGiver(this.session, this.giver) {
-    position = Vector2(giver.at.dx - 14, giver.at.dy - 12);
+    position = Vector2(at.dx - 14, at.dy - 12);
     size = Vector2(28, 24);
   }
   final Adventure session;
   final TimeQuestGiver giver;
+  ui.Offset get at => giver.atOrigin(session.world.spawn);
   @override
   void render(ui.Canvas canvas) {
     super.render(canvas);
-    final toward = session.hero.body.center - giver.at;
+    final toward = session.hero.body.center - at;
     final locked = session.timePath != null && session.timePath != giver.path;
     final color = locked
         ? const ui.Color(0xff9aaea6)

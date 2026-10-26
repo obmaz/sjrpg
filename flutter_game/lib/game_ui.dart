@@ -574,7 +574,7 @@ class MapPainter extends CustomPainter {
       if (session.world.stage == WorldStage.sands)
         for (final giver in timeQuestGivers)
           (
-            project(giver.at),
+            project(giver.atOrigin(session.world.spawn)),
             giver.name,
             giver.path == TimePath.past
                 ? Icons.auto_stories_rounded

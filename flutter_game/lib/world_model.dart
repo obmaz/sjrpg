@@ -246,7 +246,11 @@ class Trail {
 }
 
 class AdventureWorld {
-  AdventureWorld({this.seed = 7829, this.stage = WorldStage.forest}) {
+  AdventureWorld({
+    this.seed = 7829,
+    this.stage = WorldStage.forest,
+    Offset? hubOrigin,
+  }) : hubOrigin = _validatedHubOrigin(stage, hubOrigin) {
     const worldSize = authoredWorldSize, town = authoredTown;
     const questSites = authoredQuestSites, stageChests = authoredStageChests;
     if (stage != WorldStage.forest) {
@@ -1079,8 +1083,18 @@ class AdventureWorld {
 
   final int seed;
   final WorldStage stage;
+  final Offset hubOrigin;
+  static Offset _validatedHubOrigin(WorldStage stage, Offset? requested) {
+    final origin = requested ?? stage.spawn;
+    if (!stage.supportsHubOrigin(origin)) {
+      throw ArgumentError.value(requested, 'hubOrigin', 'Unknown stage hub');
+    }
+    return origin;
+  }
+
   bool _authoring = true;
-  Offset get spawn => _authoring ? stage.authoredSpawn : stage.spawn;
+  Offset get _authoredHubOrigin => hubOrigin / worldScale;
+  Offset get spawn => _authoring ? _authoredHubOrigin : hubOrigin;
   Offset _at(Offset raw) => _authoring ? raw : raw * worldScale;
   Rect get settlement => stage == WorldStage.forest
       ? (_authoring ? authoredTown : town)
@@ -1091,13 +1105,13 @@ class AdventureWorld {
         );
   Offset get healAt => _at(
     stage == WorldStage.forest
-        ? stage.authoredSpawn - const Offset(0, 55)
-        : stage.authoredSpawn + const Offset(-280, -100),
+        ? _authoredHubOrigin - const Offset(0, 55)
+        : _authoredHubOrigin + const Offset(-280, -100),
   );
   late final sanctuary = Sanctuary(
     stage == WorldStage.forest
         ? Offset(town.center.dx, town.top + town.height * .245)
-        : stage.spawn,
+        : hubOrigin,
     stage == WorldStage.forest ? 360 : 440,
   );
   final sanctuaryFences = <SanctuaryFenceSection>[];
@@ -1153,10 +1167,13 @@ class AdventureWorld {
   late final Offset _authoredMerchant = stage == WorldStage.forest
       ? const Offset(3952, 2984)
       : stage == WorldStage.future
-      ? stage.authoredSpawn + const Offset(120, -70)
+      ? _authoredHubOrigin + const Offset(120, -70)
       : _merchantAnchor();
   Offset _merchantAnchor() {
     final preferred = spawn + const Offset(250, 280);
+    // New hubs reserve their merchant before the final roads route around camp.
+    // Searching every outgoing quest road first can move the shop outside its ward.
+    if (hubOrigin != stage.spawn) return preferred;
     for (var radius = 0.0; radius <= 900; radius += 40) {
       for (var i = 0; i < (radius == 0 ? 1 : 32); i++) {
         final angle = i * math.pi / 16;
@@ -1181,11 +1198,11 @@ class AdventureWorld {
   Offset get elderAt => _at(
     stage == WorldStage.forest
         ? const Offset(3660, 2952)
-        : stage.authoredSpawn + const Offset(-160, -70),
+        : _authoredHubOrigin + const Offset(-160, -70),
   );
   late final _authoredSites = authoredSitesForStage(stage);
-  List<QuestSite> get sites =>
-      _authoring ? _authoredSites : sitesForStage(stage);
+  late final _sites = sitesForStage(stage);
+  List<QuestSite> get sites => _authoring ? _authoredSites : _sites;
   late final List<Offset> _authoredChests = stage == WorldStage.forest
       ? authoredStageChests
       : [

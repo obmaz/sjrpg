@@ -12,6 +12,7 @@ class TimeQuestGiver {
   final String name, actor;
   final Offset offset;
   Offset get at => WorldStage.sands.spawn + offset;
+  Offset atOrigin(Offset hubOrigin) => hubOrigin + offset;
   String get destination =>
       path == TimePath.past ? '제3-1장 고대 왕국' : '제3-2장 사이버펑크';
 }
@@ -42,6 +43,14 @@ extension WorldStageInfo on WorldStage {
       ['golem', 'sand-warden', 'ancient-king', 'cyber-core'][index];
   int get killGoal => [120, 160, 180, 180][index];
   Offset get spawn => authoredSpawn * worldScale;
+
+  /// New chapters enter from different parts of the map; old hubs stay valid.
+  Offset get arrival => switch (this) {
+    WorldStage.sands => const Offset(5400, 12960),
+    WorldStage.future => const Offset(27300, 5400),
+    _ => spawn,
+  };
+  bool supportsHubOrigin(Offset origin) => origin == spawn || origin == arrival;
   Offset get authoredSpawn => [
     const Offset(3840, 3055),
     const Offset(7200, 8600),
