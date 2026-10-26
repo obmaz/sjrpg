@@ -87,6 +87,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
   });
   @override
   Widget build(BuildContext context) {
+    final shortScreen = MediaQuery.sizeOf(context).height < 500;
     return ColoredBox(
       color: const Color(0xcc040d10),
       child: SafeArea(
@@ -100,23 +101,30 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                 compact: true,
                 child: Column(
                   children: [
-                    _header(),
+                    _header(dense: shortScreen),
                     GameTabs(
                       shopping
                           ? ['무기', '방어구', '부적', '물약', '축복']
                           : ['전체', '신규', '무기', '방어구', '부적', '잠금'],
                       shopping ? shopTab : bagTab,
                       tab,
+                      flat: true,
                     ),
                     Expanded(child: shopping ? _store() : _inventory()),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                      padding: EdgeInsets.fromLTRB(
+                        12,
+                        shortScreen ? 4 : 8,
+                        12,
+                        8,
+                      ),
                       child: Row(
                         children: [
                           if (widget.startInShop) ...[
                             Expanded(
                               child: GameAction(
                                 shopping ? '가방' : '상점',
+                                minHeight: shortScreen ? 44 : 50,
                                 icon: shopping
                                     ? Icons.backpack_outlined
                                     : Icons.storefront,
@@ -133,6 +141,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                             flex: 2,
                             child: GameAction(
                               '모험 계속하기',
+                              minHeight: shortScreen ? 44 : 50,
                               primary: true,
                               icon: Icons.play_arrow_rounded,
                               onTap: widget.onClose,
@@ -151,7 +160,8 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
     );
   }
 
-  Widget _header() => GamePanelHeader(
+  Widget _header({bool dense = false}) => GamePanelHeader(
+    dense: dense,
     title: shopping ? '상점' : '장비 가방',
     subtitle:
         '${shopping ? p.heroClass.title : '보관함'} · ${p.inventory.length}/${Progress.capacity}',
@@ -208,76 +218,8 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
         slivers: [
           if (bagTab != 1)
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-              sliver: SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        for (final slot in GearSlot.values)
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                              ),
-                              child: Row(
-                                children: [
-                                  SizedBox(
-                                    width: 48,
-                                    height: 58,
-                                    child: _gearCell(
-                                      p.equipped[slot],
-                                      equippedSlot: slot,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Expanded(
-                                    child: Text(
-                                      _slotName(slot),
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: _muted,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        for (final pair in [
-                          ('공격', p.swordDamage),
-                          ('방어', p.armor),
-                          ('생명', p.maxHp),
-                        ])
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              margin: const EdgeInsets.symmetric(horizontal: 3),
-                              decoration: BoxDecoration(
-                                color: const Color(0xff102d29),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                '${pair.$1} ${pair.$2.round()}',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: cream,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                ),
-              ),
+              padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
+              sliver: SliverToBoxAdapter(child: _equipmentOverview()),
             ),
 
           if (items.isEmpty)
@@ -307,6 +249,50 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
     );
   }
 
+  Widget _equipmentOverview() => ConstrainedBox(
+    key: const ValueKey('equipment-overview'),
+    constraints: const BoxConstraints(minHeight: 56),
+    child: Row(
+      children: [
+        for (final slot in GearSlot.values) ...[
+          SizedBox.square(
+            key: ValueKey('equipped-slot-${slot.name}'),
+            dimension: 44,
+            child: Tooltip(
+              message:
+                  '${_slotName(slot)} · ${p.equipped[slot]?.name ?? '비어 있음'}',
+              excludeFromSemantics: true,
+              child: _gearCell(p.equipped[slot], equippedSlot: slot),
+            ),
+          ),
+          const SizedBox(width: 4),
+        ],
+        const SizedBox(width: 4),
+        Expanded(
+          child: Wrap(
+            spacing: 10,
+            runSpacing: 2,
+            children: [
+              for (final pair in [
+                ('공격', p.swordDamage),
+                ('방어', p.armor),
+                ('생명', p.maxHp),
+              ])
+                Text(
+                  '${pair.$1} ${pair.$2.round()}',
+                  style: const TextStyle(
+                    color: cream,
+                    fontSize: 13,
+                    height: 1.25,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+
   String _gearAccessibilityStats(Gear gear) {
     final current = p.equipped[gear.base.slot];
     if (gear.base.slot == GearSlot.weapon) {
@@ -326,7 +312,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
       button: gear != null,
       hint: gear == null ? null : _gearAccessibilityStats(gear),
       label: gear == null
-          ? '빈 장비 칸'
+          ? '빈 ${equippedSlot == null ? '' : '${_slotName(equippedSlot)} '}장비 칸'
           : '${equippedSlot != null ? '착용 ${_slotName(equippedSlot)} · ' : '보관 장비 · '}${gear.name}${active ? ' · 장착 중' : ''}${gear.locked ? ' · 잠금' : ''}${p.unseenGear.contains(gear.serial) ? ' · 신규' : ''}',
       excludeSemantics: true,
       onTap: gear == null
@@ -368,6 +354,8 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                         ? Icon(
                             equippedSlot == null
                                 ? Icons.add
+                                : equippedSlot == GearSlot.charm
+                                ? Icons.diamond_outlined
                                 : Icons.shield_outlined,
                             size: 16,
                             color: const Color(0xff35544c),
@@ -540,8 +528,8 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
       key: owned
           ? ValueKey('gear-row-${gear.serial}')
           : ValueKey('offer-${entry.id}'),
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(10),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -589,8 +577,8 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                         child: Row(
                           children: [
                             Container(
-                              width: 60,
-                              height: 74,
+                              width: 48,
+                              height: 58,
                               decoration: BoxDecoration(
                                 color: color.withValues(alpha: .1),
                                 borderRadius: BorderRadius.circular(9),
@@ -634,7 +622,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            const SizedBox(width: 8),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,

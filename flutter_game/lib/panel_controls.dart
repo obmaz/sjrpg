@@ -128,11 +128,13 @@ class GameAction extends StatelessWidget {
     this.icon,
     this.semanticLabel,
     this.fontSize = 16,
+    this.minHeight = 50,
     super.key,
   });
   final String label;
   final String? semanticLabel;
   final double fontSize;
+  final double minHeight;
   final VoidCallback? onTap;
   final bool primary;
   final IconData? icon;
@@ -154,8 +156,8 @@ class GameAction extends StatelessWidget {
       label: semanticLabel ?? label,
       onTap: onTap,
       excludeSemantics: true,
-      child: SizedBox(
-        height: 50,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: minHeight),
         child: Material(
           color: Colors.transparent,
           child: Ink(
@@ -210,10 +212,17 @@ class GameAction extends StatelessWidget {
 }
 
 class GameTabs extends StatelessWidget {
-  const GameTabs(this.labels, this.selected, this.onChange, {super.key});
+  const GameTabs(
+    this.labels,
+    this.selected,
+    this.onChange, {
+    this.flat = false,
+    super.key,
+  });
   final List<String> labels;
   final int selected;
   final ValueChanged<int> onChange;
+  final bool flat;
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -238,18 +247,43 @@ class GameTabs extends StatelessWidget {
                       constraints: const BoxConstraints(minHeight: 48),
                       padding: const EdgeInsets.symmetric(vertical: 6),
                       alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        image: gameButtonImage(primary: selected == i),
-                      ),
-                      child: Text(
-                        labels[i],
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: selected == i
-                              ? const Color(0xff18342e)
-                              : _muted,
-                          fontWeight: FontWeight.bold,
+                      decoration: flat
+                          ? null
+                          : BoxDecoration(
+                              image: gameButtonImage(primary: selected == i),
+                            ),
+                      foregroundDecoration: flat
+                          ? BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: selected == i
+                                      ? gold
+                                      : Colors.transparent,
+                                  width: 3,
+                                ),
+                              ),
+                            )
+                          : null,
+                      child: Ink(
+                        decoration: flat
+                            ? BoxDecoration(
+                                color: selected == i
+                                    ? gold.withValues(alpha: .08)
+                                    : Colors.transparent,
+                              )
+                            : null,
+                        child: Text(
+                          labels[i],
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: selected == i
+                                ? flat
+                                      ? gold
+                                      : const Color(0xff18342e)
+                                : _muted,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
