@@ -429,25 +429,26 @@ class MapPainter extends CustomPainter {
     for (final sand in session.world.sandFields) {
       _terrain(c, sand.path, 2, const Color(0xffc7b579));
     }
-    for (final lake in [...session.world.lakes, session.world.river]) {
-      if (!round) {
-        c.drawPath(
-          lake.path,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 140
-            ..color = const Color(0xffd5c99a),
-        );
-        c.drawPath(
-          lake.path,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 55
-            ..color = const Color(0xff29636d),
-        );
-      }
-      _terrain(c, lake.path, 4, const Color(0xff3b91a0));
+    final water = session.terrain.waterPath;
+    if (!round) {
+      c.drawPath(
+        water,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 140
+          ..color = const Color(0xffd5c99a),
+      );
+      c.drawPath(
+        water,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 55
+          ..color = const Color(0xff29636d),
+      );
     }
+    _terrain(c, water, 4, const Color(0xff3b91a0));
+    c.save();
+    c.clipPath(session.terrain.dryGroundPath, doAntiAlias: false);
     for (final trail in session.world.trails) {
       if (!round) {
         c.drawPath(
@@ -472,6 +473,10 @@ class MapPainter extends CustomPainter {
       road,
       const Color(0xffe3d29a),
     );
+    c.restore();
+    for (final bridge in session.world.bridges) {
+      _terrain(c, Path()..addRect(bridge), road, const Color(0xffdac489));
+    }
 
     if (round) {
       for (final mob in session.mobs) {

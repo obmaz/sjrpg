@@ -79,6 +79,18 @@ class _EntryPageState extends State<EntryPage> {
     }
   }
 
+  void returnToMenu() {
+    final checkpoint = GameCheckpoint.decode(storage.readCheckpoint());
+    setState(() {
+      run++;
+      started = false;
+      resuming = false;
+      enteringStage = false;
+      savedAdventure = checkpoint;
+      if (checkpoint != null) chosen = checkpoint.progress.heroClass;
+    });
+  }
+
   @override
   void dispose() {
     stopBackListener?.call();
@@ -146,6 +158,7 @@ class _EntryPageState extends State<EntryPage> {
           return GamePage(
             key: ValueKey(run),
             backActions: backActions,
+            onReturnToMenu: returnToMenu,
             art: art,
             heroClass: chosen,
             showStageBriefing: enteringStage,
@@ -212,6 +225,7 @@ class GamePage extends StatefulWidget {
     this.onRetryCheckpoint,
     this.onAdvance,
     this.backActions,
+    this.onReturnToMenu,
     super.key,
   });
   final GameCheckpoint? checkpoint;
@@ -222,6 +236,7 @@ class GamePage extends StatefulWidget {
   final VoidCallback? onRetryCheckpoint;
   final ValueChanged<GameCheckpoint>? onAdvance;
   final BackActions? backActions;
+  final VoidCallback? onReturnToMenu;
   @override
   State<GamePage> createState() => _GamePageState();
 }
@@ -262,6 +277,13 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     widget.onRestart();
   }
 
+  void returnToMenu() {
+    if (widget.onReturnToMenu == null) return;
+    saveNow();
+    keepSave = false;
+    widget.onReturnToMenu!();
+  }
+
   late final Widget game;
   String? panel;
   final gameFocus = FocusNode();
@@ -269,7 +291,9 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     stopBackAction = widget.backActions?.register(() {
-      if (adventure.won) {
+      if (adventure.defeated) {
+        returnToMenu();
+      } else if (adventure.won) {
         adventure.continueExploring();
         close();
       } else if (panel != null) {

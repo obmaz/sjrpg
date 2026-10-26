@@ -525,6 +525,14 @@ class TerrainArt {
   final AdventureWorld world;
   final GameArt art;
   final cache = <String, ui.Picture>{};
+  late final ui.Path waterPath = [...world.lakes, world.river]
+      .map((region) => region.path)
+      .reduce((a, b) => ui.Path.combine(ui.PathOperation.union, a, b));
+  late final ui.Path dryGroundPath = ui.Path.combine(
+    ui.PathOperation.difference,
+    ui.Path()..addRect(ui.Offset.zero & worldSize),
+    waterPath,
+  );
   ui.Picture sector(int col, int row) {
     final key = '$col:$row';
     if (cache.containsKey(key)) return cache[key]!;
@@ -560,24 +568,29 @@ class TerrainArt {
         );
       }
     }
-    for (final lake in [...world.lakes, world.river]) {
-      if (!lake.bounds.overlaps(area.inflate(40))) continue;
+    final nearWater = [
+      ...world.lakes,
+      world.river,
+    ].any((region) => region.bounds.overlaps(area.inflate(40)));
+    if (nearWater) {
       c.drawPath(
-        lake.path,
+        waterPath,
         ui.Paint()
           ..style = ui.PaintingStyle.stroke
           ..strokeWidth = 42
           ..shader = art.materials[3],
       );
-      c.drawPath(lake.path, ui.Paint()..shader = art.materials[4]);
+      c.drawPath(waterPath, ui.Paint()..shader = art.materials[4]);
       c.drawPath(
-        lake.path,
+        waterPath,
         ui.Paint()
           ..style = ui.PaintingStyle.stroke
           ..strokeWidth = 6
           ..color = const ui.Color(0x999ce0c4),
       );
     }
+    c.save();
+    if (nearWater) c.clipPath(dryGroundPath, doAntiAlias: false);
     for (final t in world.trails) {
       if (!t.bounds.inflate(t.width / 2 + 2).overlaps(area)) continue;
       c.drawPath(
@@ -602,6 +615,7 @@ class TerrainArt {
           ..shader = art.materials[road],
       );
     }
+    c.restore();
     for (final bridge in world.bridges) {
       if (!bridge.overlaps(area)) continue;
       c.drawImageRect(
