@@ -12,7 +12,7 @@ class EffectAtlas {
       _grid(asset, 4, 4, 1);
     }
     _grid('fx-steel-whirlwind', 4, 9, 1);
-    _grid('combat-fx', 4, 4, 0);
+    _grid('combat-fx', 4, 2, 0);
   }
 
   _EffectGrid? _grid(String asset, int columns, int rows, double inset) {

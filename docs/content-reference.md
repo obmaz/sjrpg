@@ -48,7 +48,7 @@ Flutter 버전의 전사·마법사는 근접 연타·함성·소용돌이와 �
 
 `flutter_game/art/encounter-beacons.webp`는 숲·사막·고대·미래의 재소환 표식을 위해 생성한 투명 그림입니다. 각 지역의 대기·준비 모습을 측정한 영역으로 잘라 같은 끝점에 맞춥니다. 그림에 바닥이나 그림자를 굽지 않고 비고체 투영 아래의 그림자와 적중 표시는 코드로 그립니다.
 
-`flutter_game/art/actors-mage.png`는 기존 모험가 그림을 참조해 생성한 마법사 전용 16방향 × 두 걸음 투명 시트입니다. `mage-bounds.json`은 각 셀의 알파 경계를 측정한 표시 데이터입니다. 원본 생성 PNG를 보존하며 게임에서 방향별로 잘라 표시합니다. `flutter_game/art/gear-icons.png`는 장비 24종을 6×4로 생성한 인벤토리 전용 그림입니다. 스킬 효과·스테이지 출구는 코드로 그립니다. 팝업은 기존 `assets/popup-frame.webp`를 공유합니다.
+`flutter_game/art/actors-mage.png`는 기존 모험가 그림을 참조해 생성한 마법사 전용 16방향 × 두 걸음 투명 시트입니다. `mage-bounds.json`은 각 셀의 알파 경계를 측정한 표시 데이터입니다. 원본 생성 PNG를 보존하며 게임에서 방향별로 잘라 표시합니다. `flutter_game/art/gear-icons.png`는 장비 24종을 6×4로 생성한 인벤토리 전용 그림입니다. 스킬 효과는 생성형 아틀라스와 코드 연출을 결합하며, 팝업은 Flutter 위젯으로 구성합니다. 기존 `assets/popup-frame.webp`는 Legacy에서 사용하고 Flutter에서는 디코딩하지 않습니다.
 
 `assets/landscape-materials.webp`는 연속 초원·숲 이끼·사구·자갈 평원·청록 물·흙길을 위해 생성한 3×2 바닥 재질 시트입니다. `assets/landscape-bridge.webp`는 같은 그림체로 생성한 투명 가로 목교입니다. 지형 윤곽·길·수역과 충돌은 코드의 공통 데이터로 구성하며, 생성 그림에 인물·UI·가짜 길을 포함하지 않습니다.
 
@@ -87,13 +87,13 @@ Flutter 전용 `actors-roll.png`는 전사·마법사의 웅크리기·구르기
 
 전투 애니메이션 `flutter_game/art/fx-meteor.webp`·`fx-ice-nova.webp`는 이 게임을 위해 생성한 각 16프레임 4×4 효과 시트입니다. 원본은 각각 `/workspace/generated_images/exec-d4379692-c85e-4a0a-b1ee-2286206e6830.png`·`/workspace/generated_images/exec-525696d9-0f57-4f62-8779-1bc33fd12720.png`이며, 투명도를 보존해 1024×1024 WebP로 준비했습니다. 운석의 비행·폭발과 얼음의 성장·파쇄를 서로 다른 실제 그림 프레임으로 재생하고, 충돌·중력 파편·파동·갑옷 결정은 코드로 결합합니다.
 
-`flutter_game/art/fx-whirlwind.webp`는 비어 있는 중앙 주위로 베기·바람·먼지가 모였다가 흩어지는 16프레임 소용돌이 시트입니다. 생성 원본은 `/workspace/generated_images/exec-4e38067a-cf06-457d-a966-05e0d667192d.png`이며 투명도를 보존해 1024×1024 WebP로 준비했습니다.
+`flutter_game/art/fx-whirlwind.webp`는 비어 있는 중앙 주위로 베기·바람·먼지가 모였다가 흩어지는 16프레임 소용돌이 시트입니다. 생성 원본은 `/workspace/generated_images/exec-4e38067a-cf06-457d-a966-05e0d667192d.png`이며 투명도를 보존해 1024×1024 WebP로 준비했습니다. 이 이전 시트와 `SpellClip.whirlwind` 정의는 보존하지만 현재 Flutter 전투에서는 디코딩·재생하지 않습니다. 실제 소용돌이는 `flutter_game/art/fx-steel-whirlwind.webp`의 4×9 아틀라스에서 은빛/금빛 3단계×12프레임을 `SteelWhirlwind`로 재생하며, 본체 회전과 연속 벡터 궤적·파편을 결합합니다.
 
 `flutter_game/art/passive-icons.webp`는 전투 집중·전장의 맹세·고양의 울림·온기·냉기 숙련·번개 숙련의 전용 그림 6종을 담은 3×2 아틀라스입니다. 생성 원본은 `/workspace/generated_images/exec-8f84cf7a-27a5-4a77-8a5b-fef1e2ce266a.png`이며 투명도를 보존해 768×512 WebP로 준비했습니다. 트리와 설명 창은 같은 그림을 사용하고 기존 전투 효과와는 별도 텍스처로 읽습니다.
 
-`flutter_game/art/fx-warcry.webp`는 금빛 함성 충격파가 생겨 퍼지고 파편으로 흩어지는 16프레임 시트입니다. 생성 원본은 `/workspace/generated_images/exec-c249e696-e899-4b9d-a011-bf8a32a9ef02.png`입니다. 원본의 4×4 셀을 각각 224px로 준비해 16px 투명 여백과 함께 1024×1024 WebP로 배치하므로 인접 프레임을 샘플링하지 않습니다. 지면 효과는 시전 위치에 머물고 캐릭터 아래에서 0.64초간 재생합니다.
+`flutter_game/art/fx-warcry.webp`는 금빛 함성 충격파가 생겨 퍼지고 파편으로 흩어지는 16프레임 시트입니다. 생성 원본은 `/workspace/generated_images/exec-c249e696-e899-4b9d-a011-bf8a32a9ef02.png`입니다. 원본의 4×4 셀을 각각 224px로 준비해 16px 투명 여백과 함께 1024×1024 WebP로 배치하므로 인접 프레임을 샘플링하지 않습니다. 지면 효과는 시전 위치에 머물고 캐릭터 아래에서 1등급 기준 0.64초간 재생하며 등급별 동작 배율에 따라 짧아집니다.
 
-`flutter_game/art/quest-sites.webp`는 필수 퀘스트의 뿌리 우물·달빛 샘·태양 제단을 각각 다른 형태로 생성한 3열 아틀라스입니다. 원본 `/workspace/generated_images/exec-06c4015c-de0b-42ba-a057-70a059b3dc37.png`의 각 물체를 투명 여백·일관된 바닥 기준으로 512px 셀에 준비했습니다. 탈것은 기존 `assets/actors-vehicles.webp`와 측정한 방향/동작 경계를 공유하며 새 디자인을 복제하지 않습니다.
+`flutter_game/art/quest-sites.webp`는 필수 퀘스트의 뿌리 우물·달빛 샘·태양 제단을 각각 다른 형태로 생성한 3열 아틀라스입니다. 원본 `/workspace/generated_images/exec-06c4015c-de0b-42ba-a057-70a059b3dc37.png`의 각 물체를 투명 여백·일관된 바닥 기준으로 512px 셀에 준비했습니다. 기존 `assets/actors-vehicles.webp` 원본은 보존하며, Flutter 탈것은 종류별 `actors-bicycle.webp`·`actors-motor.png`·`actors-horse.png`·`actors-boat.png`와 측정한 방향/동작 경계를 사용합니다. 이전 공용 시트는 Flutter에서 디코딩하지 않습니다.
 
 Flutter 후속 지도·의뢰는 `stage_content.dart`와 `AdventureWorld`의 지역별 지형에서 관리합니다. 제2장 의뢰는 두 시간축에 네 개씩이며 선행 의뢰·처치 목표·고유 성소·도착 스테이지가 연결됩니다. 새 지역은 `WorldStage`와 체크포인트 검증, 실제 렌더링·충돌·도로 접근 검사도 함께 연결해야 합니다.
 

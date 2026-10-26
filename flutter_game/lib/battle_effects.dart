@@ -86,6 +86,7 @@ void paintCombatEffect(
     'combat-fx',
     index,
     ui.Rect.fromCenter(center: center, width: size.width, height: size.height),
+    rows: 2,
     inset: 0,
     opacity: opacity,
   );
