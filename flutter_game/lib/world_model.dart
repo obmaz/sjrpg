@@ -157,6 +157,26 @@ List<QuestSite> sitesForStage(WorldStage stage) => switch (stage) {
   WorldStage.future => neonSites,
 };
 
+QuestSite? nearestIncompleteSite(
+  WorldStage stage,
+  Offset from, {
+  Set<String> cleansedSites = const {},
+}) {
+  // Desert commissions need explicit acceptance before automatic guidance.
+  if (stage == WorldStage.sands) return null;
+  QuestSite? nearest;
+  var distance = double.infinity;
+  for (final site in sitesForStage(stage)) {
+    if (cleansedSites.contains(site.id)) continue;
+    final d = (site.at - from).distanceSquared;
+    if (d < distance) {
+      nearest = site;
+      distance = d;
+    }
+  }
+  return nearest;
+}
+
 Rect localMapBounds(Offset focus, {double span = 2100}) =>
     Rect.fromCenter(center: focus, width: span, height: span);
 

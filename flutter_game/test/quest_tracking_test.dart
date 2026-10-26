@@ -17,10 +17,10 @@ void main() {
   }
 
   test(
-    'tracking persists, toggles off, never moves the hero, and clears on purification',
+    'manual tracking persists, toggles off, and advances after purification',
     () {
       final s = session(),
-          site = s.world.sites.first,
+          site = s.world.sites.last,
           at = s.hero.position.clone();
       s.pause();
       expect(s.toggleTrackedSite(site), true);
@@ -37,7 +37,7 @@ void main() {
       s.mobs.clear();
       s.hero.position.setValues(site.at.dx - 14, site.at.dy + 45);
       expect(s.cleanseNearbySite(), true);
-      expect(s.trackedSiteId, null);
+      expect(s.trackedSiteId, 'moon');
       expect(s.toggleTrackedSite(site), false);
     },
   );
@@ -55,11 +55,13 @@ void main() {
       );
       s.hero.position.setValues(giver.at.dx - 14, giver.at.dy - 12);
       expect(s.acceptCommission(future), true);
-      expect(s.trackedSite, null);
+      expect(s.trackedSite?.id, future.id);
       final next = timeCommissions.firstWhere(
         (q) => q.path == TimePath.future && q.step == 1,
       );
       expect(s.toggleTrackedSite(next.site), false);
+      expect(s.toggleTrackedSite(future.site), true);
+      expect(s.trackedSite, null);
       expect(s.toggleTrackedSite(future.site), true);
       s.mobs.clear();
       s.progress.kills = future.goal;

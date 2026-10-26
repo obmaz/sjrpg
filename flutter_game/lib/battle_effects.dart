@@ -1063,7 +1063,7 @@ class GroundLoot extends GameComponent with EffectVisibility {
     if (item.rarity != Rarity.common) {
       final strength = item.rarity == Rarity.magic ? .75 : 1.0;
       _lightPaint.color = color.withValues(
-        alpha: (.035 + pulse * .018) * strength,
+        alpha: (.12 + pulse * .06) * strength,
       );
       for (final beam in _beams) {
         canvas.drawPath(beam, _lightPaint);
@@ -1089,7 +1089,7 @@ class GroundLoot extends GameComponent with EffectVisibility {
     }
     if (item.rarity != Rarity.common) {
       final at = ui.Offset(9, -20 - pulse * 2);
-      _glintPaint.color = color.withValues(alpha: .18 + pulse * .38);
+      _glintPaint.color = color.withValues(alpha: .24 + pulse * .44);
       canvas.drawLine(
         at - const ui.Offset(2, 0),
         at + const ui.Offset(2, 0),

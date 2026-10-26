@@ -55,6 +55,7 @@ class Adventure extends ChangeNotifier {
     if (stage == WorldStage.past) timePath = TimePath.past;
     if (stage == WorldStage.future) timePath = TimePath.future;
     hero = Guardian(this);
+    trackedSiteId = nearestIncompleteSite(stage, hero.body.center)?.id;
     terrain = TerrainArt(world, art);
     for (var i = 0; i < travelMountDefs.length; i++) {
       final def = travelMountDefs[i];
@@ -308,6 +309,7 @@ class Adventure extends ChangeNotifier {
     if (timePath == null && nearbyTimeGiver?.path != q.path) return false;
     timePath = q.path;
     acceptedCommission = q.id;
+    trackedSiteId = q.id;
     commissionStartKills = progress.kills;
     refresh();
     return true;
@@ -357,7 +359,13 @@ class Adventure extends ChangeNotifier {
       return false;
     }
     cleansedSites.add(site.id);
-    if (trackedSiteId == site.id) trackedSiteId = null;
+    if (trackedSiteId == site.id) {
+      trackedSiteId = nearestIncompleteSite(
+        world.stage,
+        hero.body.center,
+        cleansedSites: cleansedSites,
+      )?.id;
+    }
     if (commission != null) {
       acceptedCommission = null;
       progress.gainXp(50 + commission.step * 20);

@@ -142,7 +142,14 @@ class GameCheckpoint {
       'timePath': next == WorldStage.sands ? null : session.timePath?.name,
       'commission': null,
       'sites': <String>[],
-      'trackedSite': null,
+      'trackedSite': nearestIncompleteSite(
+        next,
+        next.arrival +
+            Offset(
+              Guardian.onFootSize.width / 2,
+              Guardian.onFootSize.height / 2,
+            ),
+      )?.id,
       'chests': <int>[],
       'memoryRewarded': false,
       'progress': p.toSave(),
@@ -654,6 +661,7 @@ class GameCheckpoint {
         ? null
         : TimePath.values.firstWhere((p) => p.name == data['timePath']);
     session.acceptedCommission = data['commission'] as String?;
+    // Saved null also means tracking is off; override the fresh default on every restore.
     session.trackedSiteId = data['trackedSite'] as String?;
     // Broken chests must stop blocking before saved mounts and hero positions
     // are validated; the hero may have walked through the remains before saving.

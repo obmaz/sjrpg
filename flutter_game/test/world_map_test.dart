@@ -58,7 +58,9 @@ void main() {
           );
         }
         final semantics = tester.ensureSemantics();
-        final site = s.visibleSites.first;
+        final site = s.visibleSites.firstWhere(
+          (site) => site.id != s.trackedSite?.id,
+        );
         final before = s.hero.position.clone();
         await tester.tap(find.bySemanticsLabel('지도 목표 · ${site.name}'));
         await tester.pumpAndSettle();
