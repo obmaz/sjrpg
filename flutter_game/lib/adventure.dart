@@ -1728,7 +1728,7 @@ class Guardian extends Player with WithCollision {
     if (hasGameRef) gameRef.camera.position = session.cameraFocus;
     final travelled = p - before;
     final distance = travelled.distance;
-    movingThisFrame = distance > .1;
+    movingThisFrame = distance > 1e-6;
     if (movingThisFrame) {
       runMotion.advance(distance);
       animationTime += distance / math.max(1, speed);

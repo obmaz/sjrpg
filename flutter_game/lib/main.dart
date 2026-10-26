@@ -290,8 +290,12 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   void advanceStage() {
     final next = GameCheckpoint.advance(adventure);
     if (next == null || widget.onAdvance == null) return;
+    if (!storage.writeCheckpoint(next.encode())) {
+      adventure.saveFailed = true;
+      adventure.refresh();
+      return;
+    }
     keepSave = false;
-    storage.writeCheckpoint(next.encode());
     widget.onAdvance!(next);
   }
 

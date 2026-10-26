@@ -473,6 +473,9 @@ class _SkillsPanelState extends State<SkillsPanel> {
         color = skillColor(skill),
         current = p.skillSlots.indexOf(skill.id),
         action = actionFor(skill);
+    final mustKeepPrimary =
+        current == 0 &&
+        [1, 2, 3].any((slot) => !p.canSelectSkill(skill.id, slot: slot));
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -587,6 +590,19 @@ class _SkillsPanelState extends State<SkillsPanel> {
               padding: const EdgeInsets.fromLTRB(14, 4, 14, 0),
               child: Column(
                 children: [
+                  if (mustKeepPrimary)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        '1번 슬롯은 비울 수 없습니다. 다른 기술과 자리를 바꿀 수 있어요.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: _dim,
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
                   const Text(
                     '전투 슬롯',
                     style: TextStyle(color: _dim, fontSize: 12),
@@ -601,12 +617,18 @@ class _SkillsPanelState extends State<SkillsPanel> {
                             child: GameAction(
                               '${i + 1}',
                               semanticLabel:
-                                  '${skill.name} · 슬롯 ${i + 1} 지정${current == i ? ' · 사용 중' : ''}',
+                                  '${skill.name} · 슬롯 ${i + 1} 지정${current == i
+                                      ? ' · 사용 중'
+                                      : !p.canSelectSkill(skill.id, slot: i)
+                                      ? ' · 1번 슬롯 유지 필요'
+                                      : ''}',
                               primary: current == i,
-                              onTap: () => setState(() {
-                                p.selectSkill(skill.id, slot: i);
-                                s.refresh();
-                              }),
+                              onTap: !p.canSelectSkill(skill.id, slot: i)
+                                  ? null
+                                  : () => setState(() {
+                                      p.selectSkill(skill.id, slot: i);
+                                      s.refresh();
+                                    }),
                             ),
                           ),
                         ),

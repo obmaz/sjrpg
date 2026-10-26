@@ -422,6 +422,21 @@ class _AdventurePanelState extends State<AdventurePanel> {
                         ),
                       ),
                     ),
+                    if (canAdvance && s.saveFailed)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(22, 10, 22, 0),
+                        child: Semantics(
+                          liveRegion: true,
+                          child: const Text(
+                            '진행을 저장하지 못했습니다. 공간을 확인한 뒤 다시 눌러 주세요.',
+                            style: TextStyle(
+                              color: Color(0xffffaa8b),
+                              fontSize: 14,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(22, 8, 22, 18),
                       child: GameAction(

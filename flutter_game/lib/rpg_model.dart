@@ -1360,13 +1360,21 @@ class Progress {
     return true;
   }
 
+  bool canSelectSkill(String id, {int slot = 0}) {
+    if (slot < 0 ||
+        slot > 3 ||
+        !skills.any((s) => s.id == id && !s.passive && rank(id) > 0)) {
+      return false;
+    }
+    final values = skillSlots;
+    return values[0] != id || slot == 0 || values[slot] != null;
+  }
+
   bool selectSkill(String id, {int slot = 0}) {
-    final found = skills.where((s) => s.id == id && !s.passive && rank(id) > 0);
-    if (found.isEmpty || slot < 0 || slot > 3) return false;
+    if (!canSelectSkill(id, slot: slot)) return false;
     final values = skillSlots, previous = skillSlots.indexOf(id);
     if (previous >= 0 && previous != slot) values[previous] = values[slot];
     values[slot] = id;
-    if (values[0] == null) return false;
     selectedSkill = values[0]!;
     secondarySkill = values[1];
     tertiarySkill = values[2];
