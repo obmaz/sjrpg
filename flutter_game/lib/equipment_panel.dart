@@ -274,7 +274,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
             runSpacing: 2,
             children: [
               for (final pair in [
-                ('공격', p.swordDamage),
+                ('공격력', p.swordDamage),
                 ('방어', p.armor),
                 ('생명', p.maxHp),
               ])
@@ -297,7 +297,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
     final current = p.equipped[gear.base.slot];
     if (gear.base.slot == GearSlot.weapon) {
       final attack = p.previewBasicAttack(gear);
-      return '공격 ${gear.attack.round()} · 초당 피해 ${attack?.dps.toStringAsFixed(1) ?? '직업 제한'} · 현재 초당 피해 ${p.basicDps.toStringAsFixed(1)}';
+      return '무기 공격 ${gear.attack.round()} · 초당 피해 ${attack?.dps.toStringAsFixed(1) ?? '직업 제한'} · 현재 초당 피해 ${p.basicDps.toStringAsFixed(1)}';
     }
     return '방어 ${gear.armor.round()} · 생명 ${gear.health.round()} · ${p.heroClass.resource} ${gear.mana.round()} · 현재 방어 ${current?.armor.round() ?? 0} · 현재 생명 ${current?.health.round() ?? 0}';
   }
@@ -649,14 +649,14 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                                   const SizedBox(height: 5),
                                   if (gear.base.slot == GearSlot.weapon) ...[
                                     _quickStat(
-                                      '공격',
+                                      '무기 공격',
                                       gear.attack,
                                       current?.attack,
                                       active,
                                     ),
                                     if (attack != null)
                                       _quickStat(
-                                        '초당',
+                                        '초당 피해',
                                         attack.dps,
                                         p.basicDps,
                                         active,
@@ -778,7 +778,12 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            _stat('공격', gear.attack, current?.attack, active),
+            _stat(
+              gear.base.slot == GearSlot.weapon ? '무기 공격' : '장비 공격',
+              gear.attack,
+              current?.attack,
+              active,
+            ),
             _stat('방어', gear.armor, current?.armor, active),
             _stat('생명', gear.health, current?.health, active),
             _stat(p.heroClass.resource, gear.mana, current?.mana, active),
@@ -801,7 +806,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
               const Padding(
                 padding: EdgeInsets.only(bottom: 10),
                 child: Text(
-                  '초당 피해는 현재 장비·레벨·스킬의 기본 1타 기준입니다.',
+                  '공격력은 장비·레벨·숙련을 반영합니다. 초당 피해는 기본 1타 기준입니다.',
                   style: TextStyle(color: _muted, fontSize: 13, height: 1.5),
                 ),
               ),
