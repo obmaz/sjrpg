@@ -643,8 +643,13 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
               total: p.skillCooldown(skill),
               onTap: () => adventure.hero.skill(slot: slot),
               onAimStart: aimed ? () => adventure.hero.beginAim(slot) : null,
-              onAimMove: aimed ? adventure.hero.moveAim : null,
-              onAimEnd: aimed ? adventure.hero.finishAim : null,
+              onAimMove: aimed
+                  ? (delta) => adventure.hero.moveAim(delta, ownerSlot: slot)
+                  : null,
+              onAimEnd: aimed
+                  ? (cancelled) =>
+                        adventure.hero.finishAim(cancelled, ownerSlot: slot)
+                  : null,
             ),
           );
         }

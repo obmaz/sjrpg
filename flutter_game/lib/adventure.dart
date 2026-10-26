@@ -1409,15 +1409,17 @@ class Guardian extends Player with WithCollision {
         dashing > 0 ||
         physicalAction ||
         def == null ||
+        session.progress.rank(def.id) == 0 ||
         (cooldowns[def.id] ?? 0) > 0) {
       return;
     }
-    if (!session.ensureOnFoot()) return;
+    if (!_hasSkillResource(def) || !session.ensureOnFoot()) return;
     queuedCast = null;
     aim = SkillAim(slot, def.id, bearing);
   }
 
-  void moveAim(ui.Offset delta) {
+  void moveAim(ui.Offset delta, {int? ownerSlot}) {
+    if (ownerSlot != null && aim?.slot != ownerSlot) return;
     if (!session.active) {
       aim = null;
       return;
@@ -1425,7 +1427,8 @@ class Guardian extends Player with WithCollision {
     aim?.delta = delta;
   }
 
-  void finishAim(bool cancelled) {
+  void finishAim(bool cancelled, {int? ownerSlot}) {
+    if (ownerSlot != null && aim?.slot != ownerSlot) return;
     final current = aim;
     aim = null;
     if (current == null ||
@@ -1941,11 +1944,18 @@ class Guardian extends Player with WithCollision {
     }
   }
 
+  bool _hasSkillResource(SkillDef def) {
+    if (session.progress.energy >= def.cost) return true;
+    session.bubble(
+      '${session.progress.heroClass.resource} 부족',
+      body.center - const ui.Offset(0, 75),
+      const ui.Color(0xffffc08d),
+    );
+    return false;
+  }
+
   void skill({bool secondary = false, int? slot, SkillAim? manualAim}) {
-    if (!session.combatAllowed ||
-        dashing > 0 ||
-        physicalAction ||
-        !session.ensureOnFoot()) {
+    if (!session.combatAllowed || dashing > 0 || physicalAction) {
       return;
     }
     final p = session.progress;
@@ -1954,14 +1964,7 @@ class Guardian extends Player with WithCollision {
     if (def == null) return;
     final rank = p.rank(def.id);
     if (!session.active || (cooldowns[def.id] ?? 0) > 0 || rank == 0) return;
-    if (p.energy < def.cost) {
-      session.bubble(
-        '${p.heroClass.resource} 부족',
-        body.center - const ui.Offset(0, 75),
-        const ui.Color(0xffffc08d),
-      );
-      return;
-    }
+    if (!_hasSkillResource(def) || !session.ensureOnFoot()) return;
     if (castLock > 0) {
       queuedCast = (slot: slotIndex, id: def.id, aim: manualAim);
       return;
