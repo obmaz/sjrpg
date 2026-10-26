@@ -127,10 +127,12 @@ class GameAction extends StatelessWidget {
     this.primary = false,
     this.icon,
     this.semanticLabel,
+    this.fontSize = 16,
     super.key,
   });
   final String label;
   final String? semanticLabel;
+  final double fontSize;
   final VoidCallback? onTap;
   final bool primary;
   final IconData? icon;
@@ -186,7 +188,7 @@ class GameAction extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: fontSize,
                           fontWeight: FontWeight.bold,
                           color: !enabled
                               ? _muted

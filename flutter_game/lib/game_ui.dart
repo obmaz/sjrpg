@@ -746,18 +746,24 @@ class EffectIconPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final passive = index >= 8;
     final image =
-        art.images[index >= 14
+        art.images[index >= 34
+            ? 'physical-icons'
+            : index >= 14
             ? 'skill-perks'
             : passive
             ? 'passive-icons'
             : 'combat-fx'];
     if (image == null) return;
-    final columns = index >= 14
+    final columns = index >= 34
+        ? 2
+        : index >= 14
         ? 4
         : passive
         ? 3
         : 4;
-    final localIndex = index >= 14
+    final localIndex = index >= 34
+        ? index - 34
+        : index >= 14
         ? index - 14
         : passive
         ? index - 8

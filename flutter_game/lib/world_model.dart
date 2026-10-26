@@ -91,23 +91,23 @@ const questSites = [
   QuestSite(
     'roots',
     '뿌리 우물',
-    '서쪽 숲길의 오래된 우물',
-    Offset(2900, 4100),
+    '서부 초원과 숲이 만나는 오래된 우물',
+    Offset(10000, 11000),
     Color(0xff94db9c),
   ),
   QuestSite(
     'moon',
     '달빛 샘',
-    '북동쪽 호수 앞의 푸른 샘',
-    Offset(4620, 1800),
+    '북동쪽 숲길 끝의 푸른 샘',
+    Offset(34500, 8500),
     Color(0xff9cdbf2),
     artIndex: 1,
   ),
   QuestSite(
     'sun',
     '태양 제단',
-    '동쪽 사막 입구의 황금 제단',
-    Offset(6900, 5200),
+    '남동쪽 고목 숲의 황금 제단',
+    Offset(31000, 28000),
     Color(0xffffd581),
     artIndex: 2,
   ),
@@ -398,18 +398,6 @@ class AdventureWorld {
         ]),
         150,
       ),
-      Trail([const Offset(2700, 4200), questSites[0].at], 140),
-      Trail(_curve([const Offset(4000, 2230), questSites[1].at]), 150),
-      Trail(
-        _curve([
-          const Offset(7000, 4780),
-          const Offset(7300, 5000),
-          const Offset(7300, 5500),
-          const Offset(6900, 5500),
-          questSites[2].at,
-        ]),
-        160,
-      ),
       Trail(
         _curve([
           const Offset(22000, 9000),
@@ -476,7 +464,31 @@ class AdventureWorld {
         180,
       ),
     ]);
+    trails.addAll([
+      Trail(
+        _curve([
+          const Offset(8000, 9000),
+          questSites[0].at + const Offset(0, 200),
+        ]),
+        190,
+      ),
+      Trail(
+        _curve([
+          const Offset(32000, 7500),
+          questSites[1].at + const Offset(0, 200),
+        ]),
+        190,
+      ),
+      Trail(
+        _curve([
+          const Offset(29000, 26000),
+          questSites[2].at + const Offset(0, 200),
+        ]),
+        190,
+      ),
+    ]);
     for (final site in questSites) {
+      clearings.add(oval(site.at, 360, 300));
       _indexSolid(site.body);
     }
     for (var y = 0; y < 30; y++) {
@@ -560,6 +572,79 @@ class AdventureWorld {
       }
     }
   }
+  // A visibility graph keeps roads clear of water, quest structures and the fountain.
+  List<Offset> _dryRoad(List<Offset> authored, double width) {
+    final obstacles = [
+      ...lakes.map((l) => l.bounds.inflate(width / 2 + 32)),
+      ...sites.map((s) => s.body.inflate(width / 2 + 32)),
+      Rect.fromCenter(
+        center: healAt,
+        width: 80,
+        height: 90,
+      ).inflate(width / 2 + 32),
+    ];
+    bool open(Offset a, Offset b) =>
+        !obstacles.any((r) => _segmentHitsRect(a, b, r));
+    final route = <Offset>[authored.first];
+    for (final goal in authored.skip(1)) {
+      final from = route.last;
+      if (open(from, goal)) {
+        route.add(goal);
+        continue;
+      }
+      final nodes = [
+        from,
+        goal,
+        for (final r in obstacles) ...[
+          r.topLeft - const Offset(2, 2),
+          r.topRight + const Offset(2, -2),
+          r.bottomLeft + const Offset(-2, 2),
+          r.bottomRight + const Offset(2, 2),
+        ],
+      ];
+      final distance = List<double>.filled(nodes.length, double.infinity)
+        ..[0] = 0;
+      final parent = List<int>.filled(nodes.length, -1), visited = <int>{};
+      while (!visited.contains(1)) {
+        var current = -1;
+        for (var i = 0; i < nodes.length; i++) {
+          if (!visited.contains(i) &&
+              distance[i].isFinite &&
+              (current < 0 || distance[i] < distance[current])) {
+            current = i;
+          }
+        }
+        if (current < 0) {
+          throw StateError(
+            'Authored road endpoint lies inside an obstacle: $goal',
+          );
+        }
+        visited.add(current);
+        for (var i = 0; i < nodes.length; i++) {
+          if (visited.contains(i) || !open(nodes[current], nodes[i])) continue;
+          final cost = distance[current] + (nodes[current] - nodes[i]).distance;
+          if (cost < distance[i]) {
+            distance[i] = cost;
+            parent[i] = current;
+          }
+        }
+      }
+      final section = <Offset>[];
+      for (var i = 1; i != 0; i = parent[i]) {
+        section.add(nodes[i]);
+      }
+      route.addAll(section.reversed);
+    }
+    if (stage == WorldStage.future) return route;
+    final curved = _curve(route);
+    return List.generate(
+          curved.length - 1,
+          (i) => i,
+        ).every((i) => open(curved[i], curved[i + 1]))
+        ? curved
+        : route;
+  }
+
   void _buildThemed() {
     final random = math.Random(seed + stage.index * 7381);
     RegionShape oval(Offset c, double rx, double ry) => RegionShape(
@@ -686,14 +771,20 @@ class AdventureWorld {
     trails = [
       for (final points in spines)
         Trail(
-          stage == WorldStage.future ? points : _curve(points),
+          _dryRoad(points, stage == WorldStage.future ? 260 : 220),
           stage == WorldStage.future ? 260 : 220,
         ),
     ];
     // Every quest gets an open approach below its visible solid structure.
     for (final site in sites) {
       final approach = site.at + const Offset(0, 200);
-      trails.add(Trail([spawn, approach, site.at], 190));
+      trails.add(
+        Trail([
+          ..._dryRoad([spawn, approach], 190),
+          site.at,
+        ], 190),
+      );
+      clearings.add(oval(site.at, 360, 300));
       _indexSolid(site.body);
     }
     if (stage == WorldStage.future) {

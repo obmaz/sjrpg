@@ -182,6 +182,7 @@ class ShadowBolt extends GameComponent {
     double angle, {
     this.damage = 8,
     this.technological = false,
+    this.venomous = false,
   }) : direction = ui.Offset(math.cos(angle), math.sin(angle)) {
     position = Vector2(at.dx, at.dy);
     size = Vector2.all(12);
@@ -189,7 +190,7 @@ class ShadowBolt extends GameComponent {
   final Adventure session;
   final ui.Offset direction;
   final double damage;
-  final bool technological;
+  final bool technological, venomous;
   double remaining = 2;
   bool resolved = false;
   @override
@@ -229,6 +230,18 @@ class ShadowBolt extends GameComponent {
   void render(ui.Canvas canvas) {
     super.render(canvas);
     const tip = ui.Offset(0, -14);
+    if (venomous) {
+      canvas.drawLine(
+        tip - direction * 28,
+        tip,
+        ui.Paint()
+          ..color = const ui.Color(0x88acd959)
+          ..strokeWidth = 9
+          ..strokeCap = ui.StrokeCap.round,
+      );
+      canvas.drawCircle(tip, 5, ui.Paint()..color = const ui.Color(0xffd0f48a));
+      return;
+    }
     if (technological) {
       final pulse = .7 + .3 * math.sin(remaining * 40);
       canvas.drawLine(

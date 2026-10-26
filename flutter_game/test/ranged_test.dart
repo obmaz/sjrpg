@@ -103,10 +103,11 @@ void main() {
     );
   }
   test(
-    'packs add ranged attackers after early levels while preserving the encounter cap',
+    'ruins add their ranged population while the forest opening stays ordinary',
     () {
       expect(s.mobs.any((m) => m.kind == 'cultist'), false);
       s.progress.gainXp(140);
+      s.hero.position.setValues(10500, 7200);
       s.spawnPack();
       expect(s.mobs.any((m) => m.kind == 'cultist'), true);
       for (var i = 0; i < 20; i++) {
@@ -126,11 +127,11 @@ void main() {
       final hurt = s.progress.hp;
       s.tick(1);
       expect(s.progress.hp, hurt);
-      s.progress.kills = 11;
+      s.progress.kills = 35;
       s.hit(s.mobs.firstWhere((m) => !m.isDead), 99999, Offset.zero);
       expect(s.progress.healingPotions, 4);
       expect(s.progress.energyPotions, 2);
-      s.progress.kills = 13;
+      s.progress.kills = 47;
       s.hit(s.mobs.firstWhere((m) => !m.isDead), 99999, Offset.zero);
       expect(s.progress.healingPotions, 4);
       expect(s.progress.energyPotions, 3);

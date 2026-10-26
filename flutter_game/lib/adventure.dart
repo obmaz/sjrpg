@@ -13,6 +13,7 @@ import 'shop_content.dart';
 import 'boss_attacks.dart';
 import 'audio_settings.dart';
 import 'encounters.dart';
+import 'enemy_catalog.dart';
 
 enum NearbyAction { chest, shrine, mount, dismount, shop, talk }
 
@@ -100,7 +101,9 @@ class Adventure extends ChangeNotifier {
   }
 
   bool boardNearbyMount() {
-    if (!active || riding != null || hero.dashing > 0) return false;
+    if (!active || riding != null || hero.dashing > 0 || hero.physicalAction) {
+      return false;
+    }
     final mount = nearbyMount;
     if (mount == null) return false;
     final body = ui.Rect.fromCenter(
@@ -260,7 +263,7 @@ class Adventure extends ChangeNotifier {
     cleansedSites.add(site.id);
     if (commission != null) {
       acceptedCommission = null;
-      progress.gainXp(80 + commission.step * 30);
+      progress.gainXp(50 + commission.step * 20);
       syncLife();
     }
     progress.gold += 40;
@@ -467,13 +470,14 @@ class Adventure extends ChangeNotifier {
     device.pulse(FeedbackKind.loot);
     openedChests.add(index);
     progress.gold += 18;
-    progress.healingPotions++;
+    final potionFound = openedChests.length % 4 == 1;
+    if (potionFound) progress.healingPotions++;
     dropGear(
       progress.rollLoot(random, chest: true),
       stageChestLocations[index],
     );
     bubble(
-      '+18 골드 · 물약 +1',
+      potionFound ? '+18 골드 · 물약 +1' : '+18 골드',
       stageChestLocations[index] - const ui.Offset(0, 55),
       const ui.Color(0xffffd774),
     );
@@ -517,6 +521,9 @@ class Adventure extends ChangeNotifier {
     releaseInput();
     hero.armorTime = hero.frenzyTime = hero.spin = 0;
     hero.impactHold = 0;
+    hero.chargeTime = hero.heavyWindup = hero.swing = 0;
+    hero.heavySkill = null;
+    hero.chargeVictims.clear();
     syncLife();
     refresh();
     return true;
@@ -741,6 +748,15 @@ class Adventure extends ChangeNotifier {
         _successfulPacks % 3 == 0 &&
         !mobs.any((m) => m.isElite && !m.isDead && !m.isRemoving);
     final eliteSlot = (_successfulPacks ~/ 3) % count;
+    final population = biomeEnemies(
+      world.stage,
+      sand: world.isSand(at),
+      wooded: world.isWooded(at),
+      ruins: world.stage == WorldStage.sands
+          ? world.sites.any((q) => (q.at - at).distance < 1300)
+          : (at - world.spawn).distance > 900 &&
+                world.clearings.any((c) => c.contains(at)),
+    );
     var added = 0;
     for (var i = 0; i < 48 && added < count; i++) {
       final angle = hero.bearing + (i < 3 ? [0.0, 1.0, -1.0][i] : i * 2.4),
@@ -748,16 +764,9 @@ class Adventure extends ChangeNotifier {
       final desired = initial
           ? world.spawn + ui.Offset(-60 + (i % 3) * 62, 165 + (i % 2) * 50)
           : at + ui.Offset(math.cos(angle) * r, math.sin(angle) * r);
-      final kind = world.stage == WorldStage.future
-          ? (i % 3 == 0 ? 'cyber' : 'gunner')
-          : world.stage == WorldStage.sands
-          ? ['scorpion', 'mummy', 'cultist'][(i + progress.level) % 3]
-          : world.stage == WorldStage.past
-          ? ['skeleton', 'troll', 'cultist'][(i + progress.level) % 3]
-          : (progress.level >= 3 || world.isSand(at)) &&
-                (i == 0 || world.isSand(at) && i == 2)
-          ? 'cultist'
-          : ['goblin', 'wolf', 'skeleton'][(i + progress.level - 1) % 3];
+      final kind = initial && world.stage == WorldStage.forest
+          ? ['goblin', 'wolf', 'goblin'][i % 3]
+          : population[(i + progress.level) % population.length];
       final trait = elitePack && added == eliteSlot
           ? ((_successfulPacks ~/ 3).isEven
                 ? EnemyTrait.armored
@@ -947,8 +956,8 @@ class Adventure extends ChangeNotifier {
           mob.body.center + const ui.Offset(28, 12),
         );
       }
-      if (!mob.boss && progress.kills % 12 == 0) progress.healingPotions++;
-      if (!mob.boss && progress.kills % 14 == 0) progress.energyPotions++;
+      if (!mob.boss && progress.kills % 36 == 0) progress.healingPotions++;
+      if (!mob.boss && progress.kills % 48 == 0) progress.energyPotions++;
       bubble(
         '+${progress.gold - goldBefore} 골드',
         mob.position.toOffset() - const ui.Offset(0, 34),
@@ -1042,6 +1051,7 @@ class Guardian extends Player with WithCollision {
     final def = session.progress.skillAt(slot);
     if (!session.active ||
         dashing > 0 ||
+        physicalAction ||
         def == null ||
         (cooldowns[def.id] ?? 0) > 0) {
       return;
@@ -1067,7 +1077,12 @@ class Guardian extends Player with WithCollision {
         session.progress.skillAt(current.slot)?.id != current.id) {
       return;
     }
-    skill(slot: current.slot, manualAim: current.dragged ? current : null);
+    skill(
+      slot: current.slot,
+      manualAim: current.dragged || current.id == 'crushingBlow'
+          ? current
+          : null,
+    );
   }
 
   ui.Offset aimedImpact(double angle, double distance) =>
@@ -1104,6 +1119,65 @@ class Guardian extends Player with WithCollision {
   double impactHold = 0;
   double swingDuration = .23, castLock = 0, comboGrace = 0;
   int strikePose = 0;
+  double chargeTime = 0, chargeAngle = 0, chargeDamage = 0;
+  int chargeCap = 0;
+  final chargeVictims = <HuntEnemy>{};
+  double heavyWindup = 0, heavyPower = 0, heavyAngle = 0;
+  SkillDef? heavySkill;
+  bool get physicalAction => chargeTime > 0 || heavyWindup > 0 || spin > 0;
+  void heavyImpact() {
+    final def = heavySkill;
+    heavySkill = null;
+    if (def == null || !session.active) return;
+    final enemies =
+        session.mobs.where((m) {
+          final d = m.body.center - body.center;
+          return m.combatReady &&
+              !m.isDead &&
+              !m.isRemoving &&
+              d.distance < 185 &&
+              math
+                      .atan2(
+                        math.sin(math.atan2(d.dy, d.dx) - heavyAngle),
+                        math.cos(math.atan2(d.dy, d.dx) - heavyAngle),
+                      )
+                      .abs() <
+                  1.05 &&
+              session.world.clearLine(
+                body.center,
+                m.body.center,
+                const ui.Size(3, 3),
+              );
+        }).toList()..sort(
+          (a, b) => (a.body.center - body.center).distance.compareTo(
+            (b.body.center - body.center).distance,
+          ),
+        );
+    for (final mob in enemies.take(session.progress.skillTargetLimit(def))) {
+      session.hit(
+        mob,
+        heavyPower,
+        ui.Offset(math.cos(heavyAngle), math.sin(heavyAngle)) * 48,
+      );
+      mob.stun = math.max(mob.stun, .55);
+      session.game?.add(
+        ContactSpark(
+          session,
+          mob.body.center - const ui.Offset(0, 25),
+          heavy: true,
+        ),
+      );
+    }
+    session.audio.play(EffectSound.impact);
+    session.device.pulse(FeedbackKind.hit);
+    session.kickCamera(enemies.isEmpty ? .3 : 1.4);
+    attackBearing = heavyAngle;
+    strikePose = 2;
+    swingDuration = .36;
+    swing = .18;
+    impactHold = enemies.isEmpty ? 0 : .06;
+  }
+
   double get skillClock => cooldowns[session.progress.selectedSkill] ?? 0;
   set skillClock(double value) =>
       cooldowns[session.progress.selectedSkill] = value;
@@ -1187,11 +1261,19 @@ class Guardian extends Player with WithCollision {
       stop();
       return;
     }
+    if (aim != null) aim!.heldFor += dt;
     speed = session.riding?.def.speed ?? (frenzyTime > 0 ? 310 : 270);
     if (castLock > 0) speed *= .4;
     final before = position.toOffset();
     super.update(dt);
     var delta = position.toOffset() - before;
+    if (heavyWindup > 0) delta = ui.Offset.zero;
+    if (chargeTime > 0) {
+      delta =
+          ui.Offset(math.cos(chargeAngle), math.sin(chargeAngle)) *
+          900 *
+          math.min(dt, chargeTime);
+    }
     if (dashing > 0) {
       delta =
           ui.Offset(math.cos(rollBearing), math.sin(rollBearing)) *
@@ -1207,6 +1289,53 @@ class Guardian extends Player with WithCollision {
       waterOnly: session.riding?.def.waterOnly ?? false,
     );
     position.setValues(p.dx, p.dy);
+    if (chargeTime > 0) {
+      chargeTime = math.max(0, chargeTime - dt);
+      if ((p - before).distance < delta.distance * .25) chargeTime = 0;
+      for (final mob in session.mobs.toList()) {
+        if (chargeVictims.length >= chargeCap) {
+          chargeTime = 0;
+          break;
+        }
+        if (!mob.combatReady ||
+            mob.isDead ||
+            mob.isRemoving ||
+            chargeVictims.contains(mob)) {
+          continue;
+        }
+        final swept = ui.Rect.fromPoints(before, p).inflate(42);
+        if (swept.overlaps(mob.body) &&
+            session.world.clearLine(
+              body.center,
+              mob.body.center,
+              const ui.Size(3, 3),
+            )) {
+          chargeVictims.add(mob);
+          session.hit(
+            mob,
+            chargeDamage,
+            ui.Offset(math.cos(chargeAngle), math.sin(chargeAngle)) * 45,
+          );
+          mob.stun = math.max(mob.stun, .4);
+          session.game?.add(
+            ContactSpark(
+              session,
+              mob.body.center - const ui.Offset(0, 22),
+              heavy: true,
+            ),
+          );
+          session.kickCamera(.9);
+        }
+      }
+      attackBearing = bearing = chargeAngle;
+      strikePose = 1;
+      swingDuration = .36;
+      swing = .16;
+    }
+    if (heavyWindup > 0) {
+      heavyWindup = math.max(0, heavyWindup - dt);
+      if (heavyWindup == 0) heavyImpact();
+    }
     lastClearPosition = p;
     // Follow the resolved body directly. Bonfire's smoothed follower can overshoot a dash.
     if (hasGameRef) gameRef.camera.position = session.cameraFocus;
@@ -1234,7 +1363,12 @@ class Guardian extends Player with WithCollision {
   }
 
   void slash() {
-    if (!session.active || attackClock > 0 || castLock > 0 || dashing > 0) {
+    if (!session.active ||
+        attackClock > 0 ||
+        castLock > 0 ||
+        dashing > 0 ||
+        physicalAction ||
+        aim?.id == 'crushingBlow') {
       return;
     }
     if (!session.ensureOnFoot()) return;
@@ -1356,6 +1490,7 @@ class Guardian extends Player with WithCollision {
     if (!session.active ||
         dashing > 0 ||
         castLock > 0 ||
+        physicalAction ||
         !session.ensureOnFoot()) {
       return;
     }
@@ -1390,6 +1525,24 @@ class Guardian extends Player with WithCollision {
       attackBearing = manualAim?.angle ?? bearing;
     }
     switch (def.id) {
+      case 'charge':
+        chargeAngle = manualAim?.angle ?? bearing;
+        chargeDamage = p.skillDamage(def);
+        chargeCap = p.skillTargetLimit(def);
+        chargeVictims.clear();
+        chargeTime = .36;
+        attackClock = math.max(attackClock, .42);
+      case 'crushingBlow':
+        heavyAngle = manualAim?.angle ?? bearing;
+        heavyPower =
+            p.skillDamage(def) *
+            (1 + .8 * ((manualAim?.heldFor ?? 0) / 1.2).clamp(0, 1));
+        heavySkill = def;
+        heavyWindup = .42;
+        attackClock = math.max(attackClock, .72);
+        attackBearing = heavyAngle;
+        strikePose = 2;
+        swingDuration = swing = .66;
       case 'warcry':
         armorTime = p.warcryDuration;
         areaStrike(
@@ -1410,9 +1563,8 @@ class Guardian extends Player with WithCollision {
         );
       case 'whirlwind':
         spin = .5;
-        session.game?.add(
-          SpellBurst(session, SpellClip.whirlwind, body.center, radius: 175),
-        );
+        // The hero rotates with the weapon; no detached magical vortex.
+        attackClock = math.max(attackClock, .5);
         invulnerable = math.max(invulnerable, .35);
         session.game?.add(
           WhirlwindPulse(
@@ -1534,6 +1686,10 @@ class Guardian extends Player with WithCollision {
         } else if (near.isNotEmpty) {
           target = near.first.body.center;
         }
+        attackBearing = math.atan2(
+          target.dy - body.center.dy,
+          target.dx - body.center.dx,
+        );
         session.game?.add(
           MeteorFall(
             session,
@@ -1548,7 +1704,12 @@ class Guardian extends Player with WithCollision {
   }
 
   void dodge() {
-    if (!session.active || dodgeClock > 0 || !session.ensureOnFoot()) return;
+    if (!session.active ||
+        dodgeClock > 0 ||
+        physicalAction ||
+        !session.ensureOnFoot()) {
+      return;
+    }
     aim = null;
     session.audio.play(EffectSound.dodge);
     session.device.pulse(FeedbackKind.dodge);
@@ -1650,17 +1811,28 @@ class Guardian extends Player with WithCollision {
         canvas,
         session.progress.heroClass == HeroClass.mage ? 'mage' : 'hero',
         feet,
-        swing > 0 ? attackBearing : bearing,
-        swing > 0
+        spin > 0
+            ? bearing + (1 - spin / .5) * math.pi * 4
+            : swing > 0
+            ? attackBearing
+            : bearing,
+        spin > 0
+            ? 1
+            : heavyWindup > 0 || aim?.id == 'crushingBlow'
+            ? 0
+            : swing > 0
             ? (swing > swingDuration * .58 ? 0 : 1)
             : (animationTime / .13).floor() % 2,
         60,
-        attack: swing > 0,
-        comboPose: strikePose,
+        attack: swing > 0 || spin > 0 || aim?.id == 'crushingBlow',
+        comboPose: spin > 0 ? 1 : strikePose,
         flash: damageFlash,
       );
     }
-    if (swing > 0 && session.progress.heroClass == HeroClass.warrior) {
+    if (swing > 0 &&
+        heavyWindup <= 0 &&
+        spin <= 0 &&
+        session.progress.heroClass == HeroClass.warrior) {
       final phase = 1 - swing / swingDuration,
           rect = ui.Rect.fromCircle(
             center: center,
@@ -1768,7 +1940,33 @@ class Guardian extends Player with WithCollision {
               : const ui.Color(0x99ffce83),
       );
     }
-    if (spin > 0) paintWhirlwind(canvas, center, 1 - spin / .5);
+    if (spin > 0) {
+      final angle = bearing + (1 - spin / .5) * math.pi * 4;
+      canvas.drawArc(
+        ui.Rect.fromCircle(center: center, radius: 49),
+        angle - 1.6,
+        1.5,
+        false,
+        ui.Paint()
+          ..color = const ui.Color(0xffe8f5ee)
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 4
+          ..strokeCap = ui.StrokeCap.round,
+      );
+    }
+    if (aim?.id == 'crushingBlow' || heavyWindup > 0) {
+      final held = aim?.heldFor ?? 1.2;
+      canvas.drawArc(
+        ui.Rect.fromCenter(center: feet, width: 44, height: 18),
+        -math.pi / 2,
+        math.pi * 2 * (held / 1.2).clamp(0, 1),
+        false,
+        ui.Paint()
+          ..color = const ui.Color(0xffffd893)
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 3,
+      );
+    }
     final currentAim = aim;
     if (currentAim != null) {
       final origin = body.center - position.toOffset();
@@ -1834,20 +2032,10 @@ class HuntEnemy extends Enemy with WithCollision {
          position: Vector2(at.dx, at.dy),
          size: boss ? Vector2(48, 40) : Vector2(24, 22),
          life:
-             (boss
-                 ? 1800
-                 : kind == 'goblin'
-                 ? 28
-                 : kind == 'wolf'
-                 ? 38
-                 : 52) *
+             (boss ? 1800 : (enemyCatalog[kind]?.health ?? 52)) *
              (boss ? 1 : trait.healthScale),
          speed:
-             (boss
-                 ? 90
-                 : kind == 'wolf'
-                 ? 135
-                 : 105) *
+             (boss ? 90 : (enemyCatalog[kind]?.speed ?? 105)) *
              (boss ? 1 : trait.speedScale),
        );
   final Adventure session;
@@ -1856,10 +2044,9 @@ class HuntEnemy extends Enemy with WithCollision {
   final bool boss;
   final EnemyTrait trait;
   bool get isElite => !boss && trait != EnemyTrait.none;
-  bool get usesPounce => !boss && (kind == 'wolf' || kind == 'scorpion');
-  bool get usesSweep =>
-      !boss && (kind == 'skeleton' || kind == 'troll' || kind == 'cyber');
-  bool get usesBolt => !boss && (kind == 'cultist' || kind == 'gunner');
+  bool get usesPounce => !boss && enemyCatalog[kind]?.pattern == 'pounce';
+  bool get usesSweep => !boss && enemyCatalog[kind]?.pattern == 'sweep';
+  bool get usesBolt => !boss && enemyCatalog[kind]?.pattern == 'bolt';
   double get pounceWarning => kind == 'scorpion' ? .58 : .42;
   double get pounceSpeed => kind == 'scorpion' ? 440 : 520;
   double get pounceRange => kind == 'scorpion' ? 200 : 240;
@@ -1889,7 +2076,9 @@ class HuntEnemy extends Enemy with WithCollision {
       ? 2.1
       : 1.8;
   double get boltWarning => kind == 'gunner' ? .8 : .65;
-  ui.Color get attackColor => kind == 'gunner'
+  ui.Color get attackColor => kind == 'basilisk'
+      ? const ui.Color(0xffb2df73)
+      : kind == 'gunner' || kind == 'drone'
       ? const ui.Color(0xff7feafa)
       : kind == 'scorpion'
       ? const ui.Color(0xffbcda75)
@@ -2025,7 +2214,8 @@ class HuntEnemy extends Enemy with WithCollision {
               session,
               body.center,
               math.atan2(toward.dy, toward.dx),
-              technological: kind == 'gunner',
+              technological: kind == 'gunner' || kind == 'drone',
+              venomous: kind == 'basilisk',
               damage: kind == 'gunner' ? 10 : 8,
             ),
           );

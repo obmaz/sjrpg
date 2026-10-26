@@ -120,12 +120,12 @@ void main() {
       for (var i = 0; i < 8; i++) {
         p.reward();
       }
-      expect(p.level, 3);
+      expect(p.level, 2);
       expect(p.gold, 64);
-      expect(p.swordDamage, 19);
+      expect(p.swordDamage, 17);
       expect(p.buy(45, () => p.swordDamage += 5), true);
       expect(p.gold, 19);
-      expect(p.swordDamage, 24);
+      expect(p.swordDamage, 22);
       p.reward(boss: true);
       expect(p.bossDefeated, true);
       expect(p.gold, 119);

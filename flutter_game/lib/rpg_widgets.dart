@@ -42,6 +42,8 @@ int skillEffect(String id) => switch (id) {
   'chainLightning' => 3,
   'meteor' || 'firebolt' => 4,
   'frenzy' => 5,
+  'charge' => 34,
+  'crushingBlow' => 35,
   'iceArmor' => 6,
   _ => 7,
 };
@@ -55,6 +57,8 @@ IconData skillIcon(String id) => switch (id) {
   'warcry' => Icons.campaign,
   'whirlwind' => Icons.cyclone,
   'frenzy' => Icons.flash_on,
+  'charge' => Icons.double_arrow,
+  'crushingBlow' => Icons.sports_martial_arts,
   'ironSkin' => Icons.shield,
   'mastery' => Icons.military_tech,
   'frostNova' => Icons.ac_unit,

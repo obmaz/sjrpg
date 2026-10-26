@@ -5,6 +5,7 @@ import 'battle_effects.dart';
 import 'game_art.dart';
 import 'world_model.dart';
 import 'encounters.dart';
+import 'enemy_catalog.dart';
 
 class GameCheckpoint {
   GameCheckpoint._(this.data, this.progress);
@@ -302,20 +303,9 @@ class GameCheckpoint {
         final area = EncounterArea.fromSave(raw as Map);
         if (!keys.add(area.key)) return null;
       }
-      const kinds = {
-        'goblin',
-        'wolf',
-        'skeleton',
-        'cultist',
-        'scorpion',
-        'mummy',
-        'troll',
-        'cyber',
-        'gunner',
-      };
       for (final raw in enemies) {
         if (raw is! Map ||
-            !kinds.contains(raw['kind']) ||
+            !enemyCatalog.containsKey(raw['kind']) ||
             !EnemyTrait.values.any((t) => t.name == raw['trait']) ||
             raw['area'] != null && !keys.contains(raw['area']) ||
             !number(raw['x'], worldSize.width) ||

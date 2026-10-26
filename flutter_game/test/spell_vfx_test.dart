@@ -169,7 +169,7 @@ void main() {
     },
   );
   test(
-    'whirlwind frames follow the hero while preserving three pulses and reset cancellation',
+    'physical whirlwind follows the hero while preserving three pulses and reset cancellation',
     () {
       final s = Adventure(GameArt()), game = TestGame();
       s.start(game);
@@ -192,19 +192,13 @@ void main() {
       )!;
       final life = mob.life.value;
       s.hero.skill(secondary: true);
-      final effect = game.added.whereType<SpellBurst>().single;
+      expect(game.added.whereType<SpellBurst>(), isEmpty);
       final pulse = game.added.whereType<WhirlwindPulse>().single;
-      expect(effect.clip, SpellClip.whirlwind);
+      expect(s.hero.spin, .5);
       s.hero.position.x += 40;
-      effect.update(.05);
-      expect(
-        (ui.Offset(effect.position.x, effect.position.y) - s.hero.body.center)
-            .distance,
-        lessThan(.01),
-      );
       s.pause();
-      effect.update(.05);
-      expect(effect.age, .05);
+      s.hero.update(.05);
+      expect(s.hero.spin, .5);
       s.resume();
       for (var i = 0; i < 10; i++) {
         pulse.update(.05);
@@ -212,8 +206,10 @@ void main() {
       expect(pulse.pulses, 3);
       expect(mob.life.value, closeTo(life - pulse.damage * 3, .001));
       expect(s.resetSkills(), true);
-      effect.update(.01);
-      expect(effect.finished, true);
+      expect(s.hero.spin, 0);
+      final pulses = pulse.pulses;
+      pulse.update(.01);
+      expect(pulse.pulses, pulses);
     },
   );
   for (final asset in ['fx-meteor', 'fx-ice-nova', 'fx-whirlwind']) {

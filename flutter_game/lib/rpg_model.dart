@@ -397,6 +397,8 @@ class SkillDef {
         'whirlwind': '소용돌이',
         'frenzy': '격노',
         'seismicSlam': '강타',
+        'charge': '돌진',
+        'crushingBlow': '집중 강타',
         'iceArmor': '얼음 갑옷',
         'chainLightning': '번개',
         'meteor': '유성',
@@ -595,6 +597,26 @@ const warriorSkills = [
     0,
     passive: true,
     requires: {'warDrums': 2},
+  ),
+  SkillDef(
+    'charge',
+    '맹렬한 돌진',
+    '전투 기술',
+    '바라보는 방향으로 몸을 던져 적을 밀칩니다. 벽에서 멈추며 3명부터 최대 5명에게 한 번씩 피해를 줍니다. 끌어서 방향을 정할 수 있습니다.',
+    6,
+    16,
+    5,
+    requires: {'seismicSlam': 1},
+  ),
+  SkillDef(
+    'crushingBlow',
+    '집중 강타',
+    '전투 기술',
+    '검을 들어 힘을 모은 뒤 전방을 내려칩니다. 버튼을 길게 눌렀다 놓으면 최대 1.2초까지 모아 피해가 80% 증가합니다. 3명부터 최대 7명을 타격합니다.',
+    7,
+    22,
+    6,
+    requires: {'charge': 1},
   ),
 ];
 const mageSkills = [
@@ -1104,7 +1126,8 @@ class Progress {
       'whirlwind' => 3 + r - 1 + rank('stormOfSteel') ~/ 2,
       'chainLightning' => 3 + r - 1 + rank('forkedStorm') ~/ 2,
       'warcry' || 'frostNova' => 3 + r - 1,
-      'frenzy' => 3 + (r - 1) ~/ 2,
+      'frenzy' || 'charge' => 3 + (r - 1) ~/ 2,
+      'crushingBlow' => 3 + r - 1,
       'seismicSlam' => 3 + (r - 1) * 2 + rank('stormOfSteel') ~/ 2,
       'meteor' => 3 + (r - 1) * 2 + rank('cinderReach') ~/ 2,
       _ => 0,
@@ -1124,6 +1147,8 @@ class Progress {
       'warcry' => 1 + r * .25,
       'whirlwind' => 1.1 + r * .24,
       'frenzy' => 1.2 + r * .2,
+      'charge' => 1.4 + r * .25,
+      'crushingBlow' => 2.2 + r * .4,
       'seismicSlam' => 1.8 + r * .32,
       'frostNova' => 1.1 + r * .3,
       'chainLightning' => 1.5 + r * .35,
@@ -1206,10 +1231,10 @@ class Progress {
     bossDefeated |= boss;
     gainXp(
       boss
-          ? 100
+          ? 80
           : elite
-          ? 30
-          : 18,
+          ? 18
+          : 8,
     );
   }
 

@@ -146,6 +146,25 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
         value('최대 마나', (p) => p.maxEnergy),
         value('마나 회복', (p) => p.manaRecovery, suffix: '/초', digits: 1),
       ];
+    case 'charge':
+      return [
+        damage,
+        value(
+          '최대 대상',
+          (p) => p.skillTargetLimit(skill).toDouble(),
+          suffix: '명',
+        ),
+      ];
+    case 'crushingBlow':
+      return [
+        damage,
+        value('최대 충전 피해', (p) => p.skillDamage(skill) * 1.8, digits: 1),
+        value(
+          '최대 대상',
+          (p) => p.skillTargetLimit(skill).toDouble(),
+          suffix: '명',
+        ),
+      ];
     case 'warcry':
       return [
         damage,

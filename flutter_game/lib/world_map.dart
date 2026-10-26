@@ -128,28 +128,41 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
                   if (widget.session.visibleSites.isNotEmpty)
                     SizedBox(
                       height: 46,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 3,
+                      child: LayoutBuilder(
+                        builder: (context, box) => ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 3,
+                          ),
+                          itemCount: widget.session.visibleSites.length,
+                          separatorBuilder: (_, _) => const SizedBox(width: 6),
+                          itemBuilder: (context, index) {
+                            final site = widget.session.visibleSites[index];
+                            final done = widget.session.cleansedSites.contains(
+                              site.id,
+                            );
+                            return SizedBox(
+                              width: widget.session.visibleSites.length <= 3
+                                  ? (box.maxWidth -
+                                            24 -
+                                            (widget
+                                                        .session
+                                                        .visibleSites
+                                                        .length -
+                                                    1) *
+                                                6) /
+                                        widget.session.visibleSites.length
+                                  : 120,
+                              child: GameAction(
+                                '${done ? '✓ ' : ''}${site.name}',
+                                fontSize: box.maxWidth < 340 ? 13 : 14,
+                                semanticLabel: '지도 목표 · ${site.name}',
+                                onTap: () => center(at: site.at),
+                              ),
+                            );
+                          },
                         ),
-                        itemCount: widget.session.visibleSites.length,
-                        separatorBuilder: (_, _) => const SizedBox(width: 6),
-                        itemBuilder: (context, index) {
-                          final site = widget.session.visibleSites[index];
-                          final done = widget.session.cleansedSites.contains(
-                            site.id,
-                          );
-                          return SizedBox(
-                            width: 120,
-                            child: GameAction(
-                              '${done ? '✓' : '◆'} ${site.name}',
-                              semanticLabel: '지도 목표 · ${site.name}',
-                              onTap: () => center(at: site.at),
-                            ),
-                          );
-                        },
                       ),
                     ),
                   const Padding(

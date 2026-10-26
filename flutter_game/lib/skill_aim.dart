@@ -7,6 +7,7 @@ class SkillAim {
   final String id;
   final double initialBearing;
   Offset delta = Offset.zero;
+  double heldFor = 0;
   bool get dragged => delta.distance >= 10;
   bool get cancelled => delta.distance > 156;
   double get angle => dragged ? math.atan2(delta.dy, delta.dx) : initialBearing;

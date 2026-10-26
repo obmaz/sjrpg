@@ -127,10 +127,10 @@ void main() {
         everyElement(
           isIn(
             stage == WorldStage.sands
-                ? ['scorpion', 'mummy', 'cultist']
+                ? ['scorpion', 'mummy', 'cultist', 'basilisk']
                 : stage == WorldStage.past
-                ? ['skeleton', 'troll', 'cultist']
-                : ['cyber', 'gunner'],
+                ? ['skeleton', 'troll', 'cultist', 'wraith']
+                : ['cyber', 'gunner', 'drone'],
           ),
         ),
       );
