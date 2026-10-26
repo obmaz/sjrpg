@@ -2,7 +2,7 @@ import 'support/test_game.dart';
 import 'package:guardian_new/rpg_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
-import 'package:guardian_new/world_model.dart' show questSites;
+import 'package:guardian_new/world_model.dart' show questSites, worldScale;
 import 'package:guardian_new/game_art.dart';
 
 void main() {
@@ -139,7 +139,11 @@ void main() {
         Offset(3940, 2810),
       ]) {
         session.mobs.clear();
-        final enemy = session.spawnEnemy('golem', from, boss: true)!;
+        final enemy = session.spawnEnemy(
+          'golem',
+          from * worldScale,
+          boss: true,
+        )!;
         if (from.dx > 3900) enemy.speed = 12;
         for (var i = 0; i < 3600; i++) {
           enemy.update(.05);

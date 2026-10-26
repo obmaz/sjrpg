@@ -241,7 +241,7 @@ void main() {
     );
     expect(s.world.blocked(body, waterOnly: true), false);
     expect(s.world.blocked(body), true);
-    s.hero.resizeBody(boat.def.bodySize, const Offset(5680, 1700));
+    s.hero.resizeBody(boat.def.bodySize, const Offset(5680, 1700) * worldScale);
     boat.at = s.hero.body.center;
     expect(s.dismount(), false);
     expect(s.riding, boat);

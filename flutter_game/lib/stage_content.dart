@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+const worldScale = .75;
+
 enum WorldStage { forest, sands, past, future }
 
 enum TimePath { past, future }
@@ -16,7 +18,8 @@ extension WorldStageInfo on WorldStage {
   String get bossActor =>
       ['golem', 'sand-warden', 'ancient-king', 'cyber-core'][index];
   int get killGoal => [120, 160, 180, 180][index];
-  Offset get spawn => [
+  Offset get spawn => authoredSpawn * worldScale;
+  Offset get authoredSpawn => [
     const Offset(3840, 3055),
     const Offset(7200, 8600),
     const Offset(22800, 17200),
@@ -43,6 +46,8 @@ class QuestSite {
   final Offset at;
   final Color color;
   final int artIndex;
+  QuestSite scaled() =>
+      QuestSite(id, name, hint, at * worldScale, color, artIndex: artIndex);
   Rect get body =>
       Rect.fromCenter(center: at - const Offset(0, 42), width: 60, height: 42);
 }
@@ -63,7 +68,7 @@ class CommissionDef {
   final QuestSite site;
 }
 
-const timeCommissions = [
+const authoredTimeCommissions = [
   CommissionDef(
     'past-1',
     TimePath.past,
@@ -194,7 +199,7 @@ const timeCommissions = [
   ),
 ];
 
-const ancientSites = [
+const authoredAncientSites = [
   QuestSite(
     'crown',
     '왕관의 성소',
@@ -220,7 +225,7 @@ const ancientSites = [
     artIndex: 3,
   ),
 ];
-const neonSites = [
+const authoredNeonSites = [
   QuestSite(
     'uplink',
     '업링크',
@@ -246,3 +251,23 @@ const neonSites = [
     artIndex: 7,
   ),
 ];
+
+final timeCommissions = List<CommissionDef>.unmodifiable(
+  authoredTimeCommissions.map(
+    (q) => CommissionDef(
+      q.id,
+      q.path,
+      q.step,
+      q.title,
+      q.story,
+      q.goal,
+      q.site.scaled(),
+    ),
+  ),
+);
+final ancientSites = List<QuestSite>.unmodifiable(
+  authoredAncientSites.map((s) => s.scaled()),
+);
+final neonSites = List<QuestSite>.unmodifiable(
+  authoredNeonSites.map((s) => s.scaled()),
+);

@@ -49,6 +49,7 @@ class GameCheckpoint {
               .map(session.saveEnemy),
         ],
         'version': 1,
+        'mapVersion': 2,
         'balance': 2,
         'stage': session.world.stage.name,
         'stageStartKills': session.stageStartKills,
@@ -63,6 +64,7 @@ class GameCheckpoint {
                 'x': m.at.dx,
                 'y': m.at.dy,
                 'angle': m.bearing,
+                'durability': m.durability,
               },
             )
             .toList(),
@@ -145,6 +147,45 @@ class GameCheckpoint {
     try {
       final data = Map<String, dynamic>.from(jsonDecode(text) as Map);
       if (data['version'] != 1) return null;
+      final mapVersion = data['mapVersion'] ?? 1;
+      if (mapVersion != 1 && mapVersion != 2) return null;
+      if (mapVersion == 1) {
+        void scale(Map raw) {
+          for (final key in ['x', 'y']) {
+            final value = raw[key];
+            if (value is num) raw[key] = value * worldScale;
+          }
+        }
+
+        scale(data);
+        for (final key in ['mounts', 'enemies', 'encounters', 'loot']) {
+          final list = data[key];
+          if (list is List) {
+            for (final raw in list) {
+              if (raw is Map) scale(raw);
+            }
+          }
+        }
+        if (data['boss'] is Map) scale(data['boss'] as Map);
+        final mounts = data['mounts'];
+        if (data['riding'] != null && mounts is List) {
+          for (final raw in mounts) {
+            if (raw is Map &&
+                raw['id'] == data['riding'] &&
+                raw['x'] is num &&
+                raw['y'] is num) {
+              final def = travelMountDefs
+                  .where((d) => d.id == raw['id'])
+                  .firstOrNull;
+              if (def != null) {
+                data['x'] = (raw['x'] as num) - def.bodySize.width / 2;
+                data['y'] = (raw['y'] as num) - def.bodySize.height / 2;
+              }
+            }
+          }
+        }
+      }
+      data['mapVersion'] = 2;
       final progress = Progress.fromSave(data['progress']);
       if (progress == null || progress.hp <= 0) return null;
       final stage = WorldStage.values.firstWhere(
@@ -240,9 +281,11 @@ class GameCheckpoint {
       }
       final ids = <String>{};
       for (final mount in mounts) {
+        if (mount is Map) mount['durability'] ??= 100;
         if (mount is! Map ||
             !travelMountDefs.any((d) => d.id == mount['id']) ||
             !ids.add(mount['id'] as String) ||
+            !number(mount['durability'], 100) ||
             !number(mount['x'], worldSize.width) ||
             !number(mount['y'], worldSize.height) ||
             mount['angle'] is! num ||
@@ -351,6 +394,7 @@ class GameCheckpoint {
       final existing = session.mounts.where((m) => m.def.id == entry['id']);
       if (existing.isEmpty) continue;
       final mount = existing.first;
+      mount.durability = (entry['durability'] as num).toDouble();
       final at = Offset(
         (entry['x'] as num).toDouble(),
         (entry['y'] as num).toDouble(),
@@ -388,6 +432,7 @@ class GameCheckpoint {
       );
     }
     session.hero.position.setValues(safe.dx, safe.dy);
+    session.riding?.at = session.hero.body.center;
     session.hero.lastClearPosition = safe;
     session.hero.invulnerable = .75;
     session.elapsed = (data['elapsed'] as num).toDouble();

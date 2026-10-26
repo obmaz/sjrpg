@@ -20,7 +20,7 @@ void main() {
     },
   );
   test('local minimap keeps the hero centered even at world boundaries', () {
-    expect(worldSize, const Size(46080, 34560));
+    expect(worldSize, const Size(34560, 25920));
     final view = localMapBounds(const Offset(14000, 12000));
     expect(view.center, const Offset(14000, 12000));
     expect(view.size, const Size(2100, 2100));
@@ -33,10 +33,10 @@ void main() {
   test('large biomes include open clearings and distinct sand regions', () {
     final world = AdventureWorld();
     expect(world.sandFields.length, 6);
-    expect(world.isSand(const Offset(15500, 5000)), true);
-    expect(world.areaName(const Offset(15500, 5000)), '태양의 사구');
-    expect(world.isWooded(const Offset(10500, 7200)), false);
-    expect(world.areaName(const Offset(10500, 7200)), '바람꽃 초원');
+    expect(world.isSand(const Offset(15500, 5000) * worldScale), true);
+    expect(world.areaName(const Offset(15500, 5000) * worldScale), '태양의 사구');
+    expect(world.isWooded(const Offset(10500, 7200) * worldScale), false);
+    expect(world.areaName(const Offset(10500, 7200) * worldScale), '바람꽃 초원');
     expect(
       world.props
           .where((p) => p.kind == 'tree')
@@ -59,6 +59,7 @@ void main() {
         expect(
           world.blocked(Rect.fromLTWH(p.dx, p.dy, size.width, size.height)),
           false,
+          reason: 'start ${trail.points.first} size $size',
         );
         for (final point in trail.points.skip(1)) {
           final destination = point - half;
@@ -80,11 +81,16 @@ void main() {
       final from = prop.body.topLeft - const Offset(100, 0);
       final end = world.move(from, const Offset(300, 0), const Size(24, 22));
       expect(end.dx + 24, lessThanOrEqualTo(prop.body.left + .001));
-      expect(world.blocked(Rect.fromLTWH(5680, 1700, 24, 22)), true);
+      expect(
+        world.blocked(
+          Rect.fromLTWH(5680 * worldScale, 1700 * worldScale, 24, 22),
+        ),
+        true,
+      );
       expect(
         world.clearLine(
-          const Offset(4800, 1700),
-          const Offset(6550, 1700),
+          const Offset(4800, 1700) * worldScale,
+          const Offset(6550, 1700) * worldScale,
           const Size(3, 3),
         ),
         false,

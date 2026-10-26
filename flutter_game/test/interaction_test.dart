@@ -12,9 +12,9 @@ void main() {
     final s = Adventure(GameArt());
     s.start(TestGame());
     addTearDown(s.dispose);
-    s.hero.position.setValues(3790, 2965);
+    s.hero.position.setValues(3790 * worldScale, 2965 * worldScale);
     expect(s.nearbyAction, NearbyAction.talk);
-    s.hero.position.setValues(3950, 2984);
+    s.hero.position.setValues(3950 * worldScale, 2984 * worldScale);
     expect(s.nearbyAction, NearbyAction.shop);
     s.hero.position.setValues(
       stageChests.first.dx - 12,

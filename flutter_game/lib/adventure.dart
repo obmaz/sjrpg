@@ -106,7 +106,7 @@ class Adventure extends ChangeNotifier {
       return false;
     }
     final mount = nearbyMount;
-    if (mount == null) return false;
+    if (mount == null || mount.durability <= 0) return false;
     final body = ui.Rect.fromCenter(
       center: mount.at,
       width: mount.def.bodySize.width,
@@ -172,6 +172,37 @@ class Adventure extends ChangeNotifier {
     hero.resizeBody(size, at);
     refresh();
     return true;
+  }
+
+  TravelMount? get serviceMount => riding ?? nearbyMount;
+  bool repairMount() {
+    final mount = serviceMount;
+    if (disposed ||
+        defeated ||
+        mount == null ||
+        mount.repairCost <= 0 ||
+        progress.gold < mount.repairCost) {
+      return false;
+    }
+    progress.gold -= mount.repairCost;
+    mount.durability = 100;
+    refresh();
+    return true;
+  }
+
+  void wearMount(double amount) {
+    if (!active) return;
+    final mount = riding;
+    if (mount == null) return;
+    final before = mount.durability;
+    mount.wear(amount);
+    if (before > 0 && mount.durability <= 0) {
+      announce('탈것 내구도 소진 · 저속 이동 가능 · 설정에서 보수');
+      refresh();
+    } else if (before > 20 && mount.durability <= 20) {
+      announce('탈것 내구도 부족 · 설정에서 보수하세요');
+      refresh();
+    }
   }
 
   bool ensureOnFoot() => riding == null || dismount(keepInput: true);
@@ -297,7 +328,7 @@ class Adventure extends ChangeNotifier {
   String notice = "";
   double noticeTime = 0, combatTime = 0;
   int get skillPoints => progress.skillPoints;
-  static const chestLocations = stageChests;
+  static final chestLocations = stageChests;
   List<ui.Offset> get stageChestLocations => world.chests;
   final mobs = <HuntEnemy>[];
   final attackSources = <String>{};
@@ -856,6 +887,7 @@ class Adventure extends ChangeNotifier {
     }
     audio.play(EffectSound.hurt);
     device.pulse(FeedbackKind.hurt);
+    wearMount(math.max(1, damage * .6));
     progress.hp = math.max(0, progress.hp - damage);
     hero.life.remove(damage);
     hero.invulnerable = .65;
@@ -1281,7 +1313,7 @@ class Guardian extends Player with WithCollision {
     }
     if (aim != null) aim!.heldFor += dt;
     speed =
-        session.riding?.def.speed ??
+        session.riding?.speed ??
         (frenzyTime > 0 ? session.progress.frenzyMoveSpeed : 270);
     if (castLock > 0) speed *= .4;
     final before = position.toOffset();
@@ -1309,6 +1341,7 @@ class Guardian extends Player with WithCollision {
       waterOnly: session.riding?.def.waterOnly ?? false,
     );
     position.setValues(p.dx, p.dy);
+    session.wearMount((p - before).distance / 350);
     if (chargeTime > 0) {
       chargeTime = math.max(0, chargeTime - dt);
       if ((p - before).distance < delta.distance * .25) chargeTime = 0;

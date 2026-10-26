@@ -32,7 +32,7 @@ void main() {
         source.progress.energy = source.progress.maxEnergy;
         source.encounterAreas
           ..clear()
-          ..['1:1'] = EncounterArea('1:1', const Offset(7000, 4200), waves: 3);
+          ..['1:1'] = EncounterArea('1:1', const Offset(6100, 5000), waves: 3);
         final cp = GameCheckpoint.capture(source)!;
         source.dispose();
         await tester.pumpWidget(

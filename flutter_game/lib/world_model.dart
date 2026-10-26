@@ -4,10 +4,12 @@ export 'rpg_model.dart';
 import 'stage_content.dart';
 export 'stage_content.dart';
 
-const worldSize = Size(46080, 34560);
-const town = Rect.fromLTWH(3520, 2624, 640, 960);
-const arrival = Offset(3840, 3055);
-const stageChests = [
+const authoredWorldSize = Size(46080, 34560);
+const worldSize = Size(34560, 25920);
+const authoredTown = Rect.fromLTWH(3520, 2624, 640, 960);
+const town = Rect.fromLTWH(2640, 1968, 480, 720);
+const arrival = Offset(2880, 2291.25);
+const authoredStageChests = [
   Offset(3840, 3415),
   Offset(3150, 3250),
   Offset(4000, 2240),
@@ -67,7 +69,7 @@ const travelMountDefs = [
   TravelMountDef('boat-south', '배', 340, waterOnly: true),
   TravelMountDef('boat-coast', '배', 340, waterOnly: true),
 ];
-const initialMountPositions = [
+const authoredInitialMountPositions = [
   Offset(4000, 3440),
   Offset(3600, 3500),
   Offset(4160, 3800),
@@ -85,9 +87,20 @@ class TravelMount {
   final TravelMountDef def;
   Offset at;
   double bearing = 1.5707963267948966;
+  double durability = 100;
+  int get condition => durability.ceil().clamp(0, 100);
+  int get repairCost => ((100 - durability) * .6).ceil();
+  double get speed => durability <= 0
+      ? (def.waterOnly ? 100 : 140)
+      : def.speed * (durability <= 20 ? .75 : 1);
+  void wear(double amount) {
+    if (amount.isFinite && amount > 0) {
+      durability = (durability - amount).clamp(0, 100);
+    }
+  }
 }
 
-const questSites = [
+const authoredQuestSites = [
   QuestSite(
     'roots',
     '뿌리 우물',
@@ -112,6 +125,22 @@ const questSites = [
     artIndex: 2,
   ),
 ];
+
+final stageChests = List<Offset>.unmodifiable(
+  authoredStageChests.map((p) => p * worldScale),
+);
+final initialMountPositions = List<Offset>.unmodifiable(
+  authoredInitialMountPositions.map((p) => p * worldScale),
+);
+final questSites = List<QuestSite>.unmodifiable(
+  authoredQuestSites.map((s) => s.scaled()),
+);
+List<QuestSite> authoredSitesForStage(WorldStage stage) => switch (stage) {
+  WorldStage.forest => authoredQuestSites,
+  WorldStage.sands => authoredTimeCommissions.map((q) => q.site).toList(),
+  WorldStage.past => authoredAncientSites,
+  WorldStage.future => authoredNeonSites,
+};
 
 List<QuestSite> sitesForStage(WorldStage stage) => switch (stage) {
   WorldStage.forest => questSites,
@@ -210,8 +239,11 @@ class Trail {
 
 class AdventureWorld {
   AdventureWorld({this.seed = 7829, this.stage = WorldStage.forest}) {
+    const worldSize = authoredWorldSize, town = authoredTown;
+    const questSites = authoredQuestSites, stageChests = authoredStageChests;
     if (stage != WorldStage.forest) {
       _buildThemed();
+      _compact();
       return;
     }
     final random = math.Random(seed);
@@ -308,8 +340,8 @@ class AdventureWorld {
       ),
       Trail(
         _curve([
-          const Offset(3570, 2992),
-          const Offset(3410, 2992),
+          const Offset(3570, 2984),
+          const Offset(3410, 2984),
           const Offset(3100, 3270),
           const Offset(2500, 3850),
           const Offset(1500, 4050),
@@ -571,11 +603,14 @@ class AdventureWorld {
         }
       }
     }
+    _compact();
   }
   // A visibility graph keeps roads clear of water, quest structures and the fountain.
   List<Offset> _dryRoad(List<Offset> authored, double width) {
     final obstacles = [
       ...lakes.map((l) => l.bounds.inflate(width / 2 + 32)),
+      if (!_authoring)
+        ...campProps.expand((p) => p.collisionBodies).map((r) => r.inflate(32)),
       ...sites.map((s) => s.body.inflate(width / 2 + 32)),
       Rect.fromCenter(
         center: healAt,
@@ -646,6 +681,7 @@ class AdventureWorld {
   }
 
   void _buildThemed() {
+    const worldSize = authoredWorldSize;
     final random = math.Random(seed + stage.index * 7381);
     RegionShape oval(Offset c, double rx, double ry) => RegionShape(
       List.generate(64, (i) {
@@ -768,6 +804,7 @@ class AdventureWorld {
         ],
       ],
     };
+    _themedSpines = spines;
     trails = [
       for (final points in spines)
         Trail(
@@ -927,19 +964,131 @@ class AdventureWorld {
     }
   }
 
+  List<List<Offset>> _themedSpines = [];
+  void _compact() {
+    // Freeze lazy authored anchors before replacing the geometry.
+    final _ = (_authoredMerchant, _authoredChests);
+    Rect scaledRect(Rect r) => Rect.fromLTRB(
+      r.left * worldScale,
+      r.top * worldScale,
+      r.right * worldScale,
+      r.bottom * worldScale,
+    );
+    RegionShape shape(RegionShape s) =>
+        RegionShape(s.points.map((p) => p * worldScale).toList());
+    final propSolids = {
+      for (final p in [...props, ...campProps]) ...p.collisionBodies,
+    };
+    final siteSolids = _authoredSites.map((s) => s.body).toSet();
+    final staticSolids = _solids.values
+        .expand((s) => s)
+        .toSet()
+        .where((r) => !propSolids.contains(r) && !siteSolids.contains(r))
+        .toList();
+    woods = woods.map(shape).toList();
+    lakes = lakes.map(shape).toList();
+    sandFields = sandFields.map(shape).toList();
+    clearings = clearings.map(shape).toList();
+    river = shape(river);
+    bridge = scaledRect(bridge);
+    bridges = bridges.map(scaledRect).toList();
+    trails = trails
+        .map(
+          (t) => Trail(t.points.map((p) => p * worldScale).toList(), t.width),
+        )
+        .toList();
+    for (final list in [props, campProps]) {
+      final next = list
+          .map(
+            (p) => WorldProp(
+              Rect.fromCenter(
+                center: p.body.center * worldScale,
+                width: p.body.width,
+                height: p.body.height,
+              ),
+              p.kind,
+              p.drawSize,
+            ),
+          )
+          .toList();
+      list
+        ..clear()
+        ..addAll(next);
+    }
+    _authoring = false;
+    if (stage != WorldStage.forest) {
+      final width = stage == WorldStage.future ? 260.0 : 220.0;
+      trails = [
+        for (final points in _themedSpines)
+          Trail(
+            _dryRoad(points.map((p) => p * worldScale).toList(), width),
+            width,
+          ),
+        for (final site in sites)
+          Trail([
+            ..._dryRoad([spawn, site.at + const Offset(0, 150)], 190),
+            site.at,
+          ], 190),
+      ];
+    }
+    props.removeWhere(
+      (p) => trails.any(
+        (t) => t.near(
+          p.body.center,
+          math.max(p.body.width, p.body.height) / 2 + 20,
+        ),
+      ),
+    );
+    _solids.clear();
+    propBuckets.clear();
+    for (final r in staticSolids) {
+      _indexSolid(scaledRect(r));
+    }
+    for (final s in sites) {
+      _indexSolid(s.body);
+    }
+    for (final p in [...props, ...campProps]) {
+      for (final r in p.collisionBodies) {
+        _indexSolid(r);
+      }
+      for (
+        var by = (p.body.top - p.drawSize.height) ~/ 256;
+        by <= (p.body.bottom + 50) ~/ 256;
+        by++
+      ) {
+        for (
+          var bx = (p.body.left - p.drawSize.width) ~/ 256;
+          bx <= (p.body.right + p.drawSize.width) ~/ 256;
+          bx++
+        ) {
+          propBuckets.putIfAbsent('$bx:$by', () => []).add(p);
+        }
+      }
+    }
+  }
+
   final int seed;
   final WorldStage stage;
-  Offset get spawn => stage.spawn;
+  bool _authoring = true;
+  Offset get spawn => _authoring ? stage.authoredSpawn : stage.spawn;
+  Offset _at(Offset raw) => _authoring ? raw : raw * worldScale;
   Rect get settlement => stage == WorldStage.forest
-      ? town
-      : Rect.fromCenter(center: spawn, width: 900, height: 900);
-  Offset get healAt => stage == WorldStage.forest
-      ? spawn - const Offset(0, 55)
-      : spawn + const Offset(-280, -100);
-  late final Offset merchantAt = stage == WorldStage.forest
+      ? (_authoring ? authoredTown : town)
+      : Rect.fromCenter(
+          center: spawn,
+          width: 900 * (_authoring ? 1 : worldScale),
+          height: 900 * (_authoring ? 1 : worldScale),
+        );
+  Offset get healAt => _at(
+    stage == WorldStage.forest
+        ? stage.authoredSpawn - const Offset(0, 55)
+        : stage.authoredSpawn + const Offset(-280, -100),
+  );
+  Offset get merchantAt => _at(_authoredMerchant);
+  late final Offset _authoredMerchant = stage == WorldStage.forest
       ? const Offset(3952, 2984)
       : stage == WorldStage.future
-      ? spawn + const Offset(120, -70)
+      ? stage.authoredSpawn + const Offset(120, -70)
       : _merchantAnchor();
   Offset _merchantAnchor() {
     final preferred = spawn + const Offset(250, 280);
@@ -964,18 +1113,25 @@ class AdventureWorld {
     throw StateError('The authored camp has no accessible merchant site');
   }
 
-  Offset get elderAt => stage == WorldStage.forest
-      ? const Offset(3660, 2952)
-      : spawn + const Offset(-160, -70);
-  late final List<QuestSite> sites = sitesForStage(stage);
-  late final List<Offset> chests = stage == WorldStage.forest
-      ? stageChests
+  Offset get elderAt => _at(
+    stage == WorldStage.forest
+        ? const Offset(3660, 2952)
+        : stage.authoredSpawn + const Offset(-160, -70),
+  );
+  late final _authoredSites = authoredSitesForStage(stage);
+  List<QuestSite> get sites =>
+      _authoring ? _authoredSites : sitesForStage(stage);
+  late final List<Offset> _authoredChests = stage == WorldStage.forest
+      ? authoredStageChests
       : [
           spawn + const Offset(0, 180),
           ...sites.map((s) => s.at + const Offset(130, 60)),
           for (final t in trails.skip(2)) t.points.last + const Offset(60, 70),
           for (final trail in trails.take(3)) ..._roadTreasures(trail),
         ];
+  late final List<Offset> chests = _authoredChests
+      .map((p) => p * worldScale)
+      .toList();
 
   List<Offset> _roadTreasures(Trail trail) {
     final lengths = [
@@ -999,22 +1155,22 @@ class AdventureWorld {
     });
   }
 
-  late final List<RegionShape> woods, lakes, sandFields, clearings;
-  late final RegionShape river;
+  late List<RegionShape> woods, lakes, sandFields, clearings;
+  late RegionShape river;
   RegionShape get sand => sandFields.first;
   bool isSand(Offset p) => sandFields.any((field) => field.contains(p));
   bool isWooded(Offset p) =>
       !isSand(p) &&
       !clearings.any((clearing) => clearing.contains(p)) &&
       woods.any((wood) => wood.contains(p));
-  late final Rect bridge;
-  late final List<Rect> bridges;
+  late Rect bridge;
+  late List<Rect> bridges;
   bool onBridge(Rect body) => bridges.any(
     (b) =>
         b.deflate(3).contains(body.topLeft) &&
         b.deflate(3).contains(body.bottomRight),
   );
-  late final List<Trail> trails;
+  late List<Trail> trails;
   final List<WorldProp> props = [];
   final List<WorldProp> campProps = [];
   final Map<String, List<WorldProp>> propBuckets = {};
@@ -1033,8 +1189,8 @@ class AdventureWorld {
   bool blocked(Rect body, {bool waterOnly = false, bool ignoreWater = false}) {
     if (body.left < 0 ||
         body.top < 0 ||
-        body.right > worldSize.width ||
-        body.bottom > worldSize.height) {
+        body.right > (_authoring ? authoredWorldSize : worldSize).width ||
+        body.bottom > (_authoring ? authoredWorldSize : worldSize).height) {
       return true;
     }
     for (var y = body.top ~/ 128; y <= body.bottom ~/ 128; y++) {
@@ -1102,8 +1258,8 @@ class AdventureWorld {
     );
     if (sweep.left < 0 ||
         sweep.top < 0 ||
-        sweep.right > worldSize.width ||
-        sweep.bottom > worldSize.height) {
+        sweep.right > (_authoring ? authoredWorldSize : worldSize).width ||
+        sweep.bottom > (_authoring ? authoredWorldSize : worldSize).height) {
       return false;
     }
     if (from.dx == to.dx || from.dy == to.dy) return !blocked(sweep);
@@ -1242,16 +1398,16 @@ class AdventureWorld {
       return stage.theme;
     }
     if (town.contains(p)) return '분수 마을';
-    if (isSand(p)) return p.dx > 12000 ? '태양의 사구' : '황금 모래벌판';
+    if (isSand(p)) return p.dx > 12000 * worldScale ? '태양의 사구' : '황금 모래벌판';
     if (lakes.any((l) => l.bounds.inflate(220).contains(p))) return '푸른 호숫가';
-    if ((p.dx - 5300).abs() < 550) return '달빛 강변';
+    if ((p.dx - 5300 * worldScale).abs() < 550 * worldScale) return '달빛 강변';
     if (clearings.any((c) => c.contains(p))) return '바람꽃 초원';
     if (isWooded(p)) return '이끼 숲';
     return '햇살 초원';
   }
 
   List<Offset> route(Offset from, Offset to, Size size) {
-    const grid = 32.0;
+    const grid = 32.0 * worldScale;
     final sx = (from.dx / grid).floor(), sy = (from.dy / grid).floor();
     Offset position(math.Point<int> p) => Offset(p.x * grid, p.y * grid);
     final anchors = <math.Point<int>>[];

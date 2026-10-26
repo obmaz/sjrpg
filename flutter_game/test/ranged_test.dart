@@ -107,7 +107,7 @@ void main() {
     () {
       expect(s.mobs.any((m) => m.kind == 'cultist'), false);
       s.progress.gainXp(140);
-      s.hero.position.setValues(10500, 7200);
+      s.hero.position.setValues(10500 * worldScale, 7200 * worldScale);
       s.spawnPack();
       expect(s.mobs.any((m) => m.kind == 'cultist'), true);
       for (var i = 0; i < 20; i++) {

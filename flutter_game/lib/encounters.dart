@@ -4,7 +4,7 @@ import 'world_model.dart';
 /// Finite encounters belong to a fixed area, even when enemies chase the hero.
 class EncounterArea {
   EncounterArea(this.key, this.stone, {this.waves = 0});
-  static const span = 4096.0, waveLimit = 3;
+  static const span = 4096.0 * worldScale, waveLimit = 3;
   final String key;
   final Offset stone;
   int waves;

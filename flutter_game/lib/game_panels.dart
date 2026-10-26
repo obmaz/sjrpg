@@ -1,3 +1,4 @@
+import 'quest_guide.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'adventure.dart';
@@ -125,6 +126,8 @@ class _AdventurePanelState extends State<AdventurePanel> {
       ];
     } else if (name == 'journal' || name == 'talk' || name == 'map') {
       body = [
+        _info(Icons.flag_outlined, '지금 할 일', s.mainQuestNext),
+        const SizedBox(height: 14),
         if (name == 'talk') ...[
           const Text(
             '“숲의 뿌리에 오래된 어둠이 잠들어 있네. 뿌리 우물·달빛 샘·태양 제단부터 정화해 주게. 세 성소와 숲길을 정화하면 파수꾼이 깨어날 걸세. 상자와 전리품을 모으고, 얻은 힘을 스스로 선택하게나. 전투를 벗어나 분수 곁에서 쉬면 생명이 회복된다네.”',
@@ -144,8 +147,8 @@ class _AdventurePanelState extends State<AdventurePanel> {
         _quest(
           '숲길 정화',
           '필수 성소 3곳과 몬스터 처치 목표를 완수해 파수꾼을 깨우세요.',
-          math.min(stageKillGoal, p.kills) / stageKillGoal,
-          '${math.min(stageKillGoal, p.kills)} / $stageKillGoal',
+          math.min(stageKillGoal, s.stageKills) / stageKillGoal,
+          '${math.min(stageKillGoal, s.stageKills)} / $stageKillGoal',
         ),
         const SizedBox(height: 12),
         _quest(
@@ -284,6 +287,31 @@ class _AdventurePanelState extends State<AdventurePanel> {
       ];
     } else {
       body = [
+        if (s.serviceMount != null) ...[
+          _quest(
+            '${s.serviceMount!.def.name} · 내구도 ${s.serviceMount!.condition}%',
+            '이동·피격 시 소모됩니다. 20% 이하는 감속, 0%는 저속으로 이동합니다.',
+            s.serviceMount!.durability / 100,
+            '보수 비용 ${s.serviceMount!.repairCost} 골드',
+          ),
+          const SizedBox(height: 8),
+          GameAction(
+            '탈것 보수 · ${s.serviceMount!.repairCost}G',
+            onTap:
+                s.serviceMount!.repairCost > 0 &&
+                    p.gold >= s.serviceMount!.repairCost
+                ? () {
+                    if (s.repairMount()) {
+                      widget.onCheckpoint?.call();
+                      setState(() {});
+                    }
+                  }
+                : null,
+          ),
+          if (s.serviceMount!.repairCost > p.gold)
+            const Text('보수할 골드가 부족합니다.', style: TextStyle(color: gold)),
+          const SizedBox(height: 18),
+        ],
         DeviceControls(s.device),
         _info(
           Icons.touch_app_outlined,

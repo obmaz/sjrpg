@@ -1,3 +1,4 @@
+import 'quest_guide.dart';
 import 'dart:async' as async;
 import 'dart:math' as math;
 import 'package:bonfire/bonfire.dart';
@@ -342,12 +343,20 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
             ? 'victory'
             : panel;
         final p = adventure.progress, interaction = adventure.nearbyAction;
+        final guide = adventure.nearbyQuestGuide;
         final layouts = short && width < 360
             ? [
-                (18.0, 156.0, 52.0),
-                (66.0, 200.0, 48.0),
-                (96.0, 156.0, 48.0),
-                (120.0, 102.0, 48.0),
+                (14.0, 128.0, 52.0),
+                (18.0, 188.0, 48.0),
+                (94.0, 168.0, 48.0),
+                (94.0, 112.0, 48.0),
+              ]
+            : short && width >= 500
+            ? [
+                (258.0, 80.0, 48.0),
+                (202.0, 80.0, 48.0),
+                (258.0, 24.0, 48.0),
+                (202.0, 24.0, 48.0),
               ]
             : short
             ? [
@@ -489,53 +498,124 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   onTap: adventure.hero.dodge,
                 ),
               ),
-              if (interaction != null)
+              if (interaction != null && guide == null)
                 Positioned(
-                  left: short && width > 500 ? 148 : 12,
-                  bottom: bottom + stick + 12,
+                  left: short && width >= 500 ? 136 : 12,
+                  bottom: short && width >= 500
+                      ? media.size.height - 216
+                      : bottom + stick + 12,
                   width: 120,
-                  child: GameAction(
-                    switch (interaction) {
-                      NearbyAction.shrine =>
-                        adventure.world.stage == WorldStage.sands ? '조사' : '정화',
-                      NearbyAction.mount => '타기',
-                      NearbyAction.dismount => '내리기',
-                      NearbyAction.shop => '상점',
-                      NearbyAction.talk => '대화',
-                      NearbyAction.chest => '상자 열기',
-                    },
-                    icon: switch (interaction) {
-                      NearbyAction.shrine => Icons.water_drop_outlined,
-                      NearbyAction.mount => Icons.pets_outlined,
-                      NearbyAction.dismount => Icons.south_west,
-                      NearbyAction.shop => Icons.storefront,
-                      NearbyAction.talk => Icons.chat_bubble_outline,
-                      NearbyAction.chest => Icons.inventory_2_outlined,
-                    },
+                  child: SizedBox(
+                    height: 50,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        GameAction(
+                          switch (interaction) {
+                            NearbyAction.shrine =>
+                              adventure.world.stage == WorldStage.sands
+                                  ? '조사'
+                                  : '정화',
+                            NearbyAction.mount =>
+                              adventure.nearbyMount?.durability == 0
+                                  ? '보수하기'
+                                  : '타기',
+                            NearbyAction.dismount => '내리기',
+                            NearbyAction.shop => '상점',
+                            NearbyAction.talk => '대화',
+                            NearbyAction.chest => '상자 열기',
+                          },
+                          icon: switch (interaction) {
+                            NearbyAction.shrine => Icons.water_drop_outlined,
+                            NearbyAction.mount => Icons.pets_outlined,
+                            NearbyAction.dismount => Icons.south_west,
+                            NearbyAction.shop => Icons.storefront,
+                            NearbyAction.talk => Icons.chat_bubble_outline,
+                            NearbyAction.chest => Icons.inventory_2_outlined,
+                          },
+                          onTap: () {
+                            switch (interaction) {
+                              case NearbyAction.mount:
+                                if (adventure.nearbyMount?.durability == 0) {
+                                  open('settings');
+                                } else if (adventure.boardNearbyMount()) {
+                                  saveNow();
+                                }
+                              case NearbyAction.dismount:
+                                if (adventure.dismount()) saveNow();
+                              case NearbyAction.shrine:
+                                if (adventure.cleanseNearbySite()) saveNow();
+                              case NearbyAction.shop:
+                                open('shop');
+                              case NearbyAction.talk:
+                                open('talk');
+                              case NearbyAction.chest:
+                                adventure.openChest();
+                                gameFocus.requestFocus();
+                            }
+                          },
+                        ),
+                        if (interaction == NearbyAction.mount ||
+                            interaction == NearbyAction.dismount)
+                          Positioned(
+                            left: 18,
+                            right: 18,
+                            bottom: 6,
+                            child: IgnorePointer(
+                              child: LinearProgressIndicator(
+                                value:
+                                    (adventure.serviceMount?.durability ??
+                                        100) /
+                                    100,
+                                minHeight: 2,
+                                backgroundColor: ink,
+                                color:
+                                    (adventure.serviceMount?.condition ??
+                                            100) <=
+                                        20
+                                    ? gold
+                                    : const Color(0xff8bd4b3),
+                                semanticsLabel: '탈것 내구도',
+                                semanticsValue:
+                                    '${adventure.serviceMount?.condition ?? 100}%',
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              Positioned(
+                left: short && width >= 500 ? 136 : 14,
+                top:
+                    media.padding.top +
+                    (guide != null ? (short && width < 500 ? 188 : 198) : 110),
+                child: PotionBelt(adventure),
+              ),
+              if (guide != null)
+                Positioned(
+                  left: width >= 600 ? 136 : 12,
+                  top: media.padding.top + 100,
+                  width: width >= 600
+                      ? (width - 450).clamp(140, 280).toDouble()
+                      : (width - (short ? 164 : 150))
+                            .clamp(148, 250)
+                            .toDouble(),
+                  height: short && width < 600 ? 84 : 92,
+                  child: NearbyQuestCard(
+                    guide,
                     onTap: () {
-                      switch (interaction) {
-                        case NearbyAction.mount:
-                          if (adventure.boardNearbyMount()) saveNow();
-                        case NearbyAction.dismount:
-                          if (adventure.dismount()) saveNow();
-                        case NearbyAction.shrine:
+                      switch (guide.action) {
+                        case QuestGuideAction.journal:
+                          open('journal');
+                        case QuestGuideAction.cleanse:
                           if (adventure.cleanseNearbySite()) saveNow();
-                        case NearbyAction.shop:
-                          open('shop');
-                        case NearbyAction.talk:
-                          open('talk');
-                        case NearbyAction.chest:
-                          adventure.openChest();
-                          gameFocus.requestFocus();
+                        case QuestGuideAction.dismount:
+                          if (adventure.dismount()) saveNow();
                       }
                     },
                   ),
                 ),
-              Positioned(
-                left: 14,
-                top: media.padding.top + 110,
-                child: PotionBelt(adventure),
-              ),
               if (adventure.noticeTime > 0)
                 Positioned(
                   left: 55,

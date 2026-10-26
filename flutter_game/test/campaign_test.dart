@@ -22,7 +22,7 @@ void main() {
       '${stage.name} has its own full-sized layout and all visible roads admit full bodies',
       () {
         final world = AdventureWorld(stage: stage);
-        expect(worldSize, const Size(46080, 34560));
+        expect(worldSize, const Size(34560, 25920));
         expect(
           world.blocked(Rect.fromLTWH(world.spawn.dx, world.spawn.dy, 40, 32)),
           false,
