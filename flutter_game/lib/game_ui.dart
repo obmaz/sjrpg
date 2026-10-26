@@ -177,6 +177,9 @@ class GameHud extends StatelessWidget {
               child: Semantics(
                 button: true,
                 label: '지도 확대',
+                hint: session.trackedSite == null
+                    ? '목표를 선택하면 미니맵에 방향을 표시합니다'
+                    : '추적 목표 ${session.trackedSite!.name}. 금색 화살표는 직선 방향 안내입니다',
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: onMap,
@@ -620,20 +623,57 @@ class MapPainter extends CustomPainter {
         );
       }
     }
-    for (final site in session.visibleSites) {
+    final trackedSite = session.trackedSite;
+    final orderedSites = [
+      ...session.visibleSites.where((s) => s.id != trackedSite?.id),
+      ?trackedSite,
+    ];
+    for (final site in orderedSites) {
+      final tracked = site.id == trackedSite?.id;
       final done = session.cleansedSites.contains(site.id);
       var point = Offset(
         (site.at.dx - view.left) / view.width * s.width,
         (site.at.dy - view.top) / view.height * s.height,
       );
+      var outside = false;
+      final direction = point - rect.center;
       if (round) {
-        final d = point - rect.center;
-        if (d.distance > s.shortestSide / 2 - 9) {
+        final d = direction;
+        final edge = s.shortestSide / 2 - (tracked ? 12 : 9);
+        if (d.distance > edge) {
+          outside = true;
           if (done) continue;
-          point = rect.center + d / d.distance * (s.shortestSide / 2 - 9);
+          point = rect.center + d / d.distance * edge;
         }
       }
       final r = (round ? 4.0 : 8.0) * markerScale;
+      if (tracked) {
+        c.drawCircle(point, r + 4 * markerScale, Paint()..color = ink);
+        c.drawCircle(
+          point,
+          r + 3 * markerScale,
+          Paint()
+            ..color = gold
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.5 * markerScale,
+        );
+      }
+      if (tracked && round && outside) {
+        c.save();
+        c.translate(point.dx, point.dy);
+        c.rotate(math.atan2(direction.dy, direction.dx));
+        c.drawPath(
+          Path()
+            ..moveTo(5, 0)
+            ..lineTo(-3, -4)
+            ..lineTo(-1, 0)
+            ..lineTo(-3, 4)
+            ..close(),
+          Paint()..color = gold,
+        );
+        c.restore();
+        continue;
+      }
       c.drawCircle(point, r + 1.5 * markerScale, Paint()..color = ink);
       c.drawCircle(
         point,

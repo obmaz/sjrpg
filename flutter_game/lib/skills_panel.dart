@@ -209,7 +209,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+                              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                               child: Row(
                                 children: [
                                   for (var i = 0; i < 4; i++)
@@ -225,12 +225,17 @@ class _SkillsPanelState extends State<SkillsPanel> {
                               ),
                             ),
                             Expanded(
-                              child: SkillTree(
-                                session: s,
-                                controller: treeScroll,
-                                focused: focused,
-                                onFocus: (skill) =>
-                                    setState(() => focused = skill),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                child: SkillTree(
+                                  session: s,
+                                  controller: treeScroll,
+                                  focused: focused,
+                                  onFocus: (skill) =>
+                                      setState(() => focused = skill),
+                                ),
                               ),
                             ),
                             if (short && media.size.width >= 600)
@@ -283,7 +288,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
   }
 
   Widget _footer() => Padding(
-    padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
+    padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
     child: Row(
       children: [
         GameIconButton(
@@ -311,7 +316,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
   Widget _investmentBar({required bool short}) {
     final action = actionFor(focused);
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 8, 6, 6),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
       decoration: const BoxDecoration(
         color: Color(0xff102d29),
         border: Border(top: BorderSide(color: Color(0xff37574b))),
@@ -348,7 +353,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
           ),
           const SizedBox(width: 8),
           SizedBox(
-            width: short ? 110 : 122,
+            width: short || MediaQuery.sizeOf(context).width < 360 ? 104 : 122,
             child: GameAction(
               action,
               primary: true,
@@ -360,6 +365,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
                   : null,
             ),
           ),
+          const SizedBox(width: 8),
           GameIconButton(
             label: '스킬 설명과 배치',
             onTap: () => inspect(focused),
@@ -392,7 +398,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
           onTap: skill == null ? null : () => inspect(skill),
           borderRadius: BorderRadius.circular(8),
           child: Container(
-            height: compact ? 48 : 68,
+            height: compact ? 44 : 60,
             padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
               color: const Color(0xff102b29),

@@ -58,6 +58,7 @@ class GameCheckpoint {
         'timePath': session.timePath?.name,
         'commission': session.acceptedCommission,
         'sites': session.cleansedSites.toList(),
+        'trackedSite': session.trackedSite?.id,
         'mounts': session.mounts
             .map(
               (m) => {
@@ -120,6 +121,7 @@ class GameCheckpoint {
       'timePath': next == WorldStage.sands ? null : session.timePath?.name,
       'commission': null,
       'sites': <String>[],
+      'trackedSite': null,
       'chests': <int>[],
       'memoryRewarded': false,
       'progress': p.toSave(),
@@ -276,6 +278,14 @@ class GameCheckpoint {
         }
       }
       data['sites'] = sites;
+      final tracked = data['trackedSite'];
+      // Navigation is cosmetic: stale targets never invalidate an otherwise valid save.
+      data['trackedSite'] =
+          tracked is String &&
+              availableSites.any((s) => s.id == tracked) &&
+              !sites.contains(tracked)
+          ? tracked
+          : null;
       final mounts = data['mounts'] ?? <dynamic>[];
       if (mounts is! List || mounts.length > travelMountDefs.length) {
         return null;
@@ -391,6 +401,7 @@ class GameCheckpoint {
         ? null
         : TimePath.values.firstWhere((p) => p.name == data['timePath']);
     session.acceptedCommission = data['commission'] as String?;
+    session.trackedSiteId = data['trackedSite'] as String?;
     for (final entry in data['mounts'] as List) {
       final existing = session.mounts.where((m) => m.def.id == entry['id']);
       if (existing.isEmpty) continue;

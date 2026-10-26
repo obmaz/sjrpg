@@ -11,6 +11,7 @@ import 'boss_attacks.dart';
 import 'device_settings.dart';
 import 'encounters.dart';
 import 'enemy_catalog.dart';
+import 'enemy_motion.dart';
 import 'game_art.dart';
 import 'ranked_vfx.dart';
 import 'shop_content.dart';
@@ -212,6 +213,39 @@ class Adventure extends ChangeNotifier {
 
   final openedChests = <int>{};
   final cleansedSites = <String>{};
+  String? trackedSiteId;
+  QuestSite? get trackedSite {
+    for (final site in visibleSites) {
+      if (site.id == trackedSiteId && canTrackSite(site)) return site;
+    }
+    return null;
+  }
+
+  bool canTrackSite(QuestSite site) {
+    if (disposed ||
+        defeated ||
+        cleansedSites.contains(site.id) ||
+        !visibleSites.any((s) => s.id == site.id)) {
+      return false;
+    }
+    if (world.stage != WorldStage.sands) return true;
+    final q = timeCommissions.firstWhere((q) => q.id == site.id);
+    return acceptedCommission == site.id || canAcceptCommission(q);
+  }
+
+  bool toggleTrackedSite(QuestSite site) {
+    if (disposed || defeated) return false;
+    if (trackedSite?.id == site.id) {
+      trackedSiteId = null;
+      refresh();
+      return true;
+    }
+    if (!canTrackSite(site)) return false;
+    trackedSiteId = site.id;
+    refresh();
+    return true;
+  }
+
   int stageStartKills = 0, commissionStartKills = 0;
   TimePath? timePath;
   String? acceptedCommission;
@@ -297,6 +331,7 @@ class Adventure extends ChangeNotifier {
       return false;
     }
     cleansedSites.add(site.id);
+    if (trackedSiteId == site.id) trackedSiteId = null;
     if (commission != null) {
       acceptedCommission = null;
       progress.gainXp(50 + commission.step * 20);
@@ -349,6 +384,13 @@ class Adventure extends ChangeNotifier {
       hero.position + hero.size / 2 + Vector2(0, cameraOffsetY) + cameraImpact;
   double impactTime = 0, impactStrength = 0;
   Vector2 get cameraImpact {
+    if (ui
+        .PlatformDispatcher
+        .instance
+        .accessibilityFeatures
+        .disableAnimations) {
+      return Vector2.zero();
+    }
     final fade = (impactTime / .14).clamp(0.0, 1.0);
     final phase = (.14 - impactTime) * 110;
     return Vector2(
@@ -359,7 +401,7 @@ class Adventure extends ChangeNotifier {
 
   void kickCamera(double strength) {
     if (!active) return;
-    impactStrength = math.max(impactStrength, strength.clamp(0, 1.5));
+    impactStrength = math.max(impactStrength, strength.clamp(0, 2.4));
     impactTime = .14;
   }
 
@@ -935,15 +977,16 @@ class Adventure extends ChangeNotifier {
         rageStrike != hero.strikes) {
       rageStrike = hero.strikes;
       final heavy = progress.weapon.base.style == 'hammer' || combo == 0;
-      hero.impactHold = heavy ? .045 : .03;
+      hero.impactHold = heavy ? .055 : .035;
       hero.swing = math.min(hero.swing, .16);
-      kickCamera(heavy ? 1.1 : .55);
+      kickCamera(heavy ? 2.1 : .95);
       game?.add(
         ContactSpark(
           this,
           mob.body.center - const ui.Offset(0, 28),
           heavy: heavy,
           rank: progress.rank('cleave'),
+          bearing: math.atan2(impulse.dy, impulse.dx),
         ),
       );
       progress.energy = math.min(
@@ -953,7 +996,8 @@ class Adventure extends ChangeNotifier {
     }
     audio.play(EffectSound.impact);
     device.pulse(mob.isDead ? FeedbackKind.kill : FeedbackKind.hit);
-    mob.impactPose = (mob.anim / .15).floor() % 2;
+    mob.impactPose = mob.motion.phase;
+    mob.motion.hit(impulse);
     mob.hurt = .14;
     final old = mob.position.toOffset(),
         p = world.move(old, impulse, mob.body.size);
@@ -1219,6 +1263,7 @@ class Guardian extends Player with WithCollision {
           mob.body.center - const ui.Offset(0, 25),
           heavy: true,
           rank: session.progress.rank('crushingBlow'),
+          bearing: heavyAngle,
         ),
       );
     }
@@ -1235,7 +1280,7 @@ class Guardian extends Player with WithCollision {
     );
     session.audio.play(EffectSound.impact);
     session.device.pulse(FeedbackKind.hit);
-    session.kickCamera(enemies.isEmpty ? .3 : 1.4);
+    session.kickCamera(enemies.isEmpty ? .3 : 2.4);
     attackBearing = heavyAngle;
     strikePose = 2;
     swingDuration = .36 / session.progress.skillTempo(def);
@@ -2245,9 +2290,9 @@ class HuntEnemy extends Enemy with WithCollision {
       ? const ui.Color(0xffbcda75)
       : const ui.Color(0xffefab78);
   int impactPose = 0;
+  final motion = EnemyMotion();
   bool rewarded = false, combatReady = false, encounterDormant = false;
   double bearing = math.pi / 2,
-      anim = 0,
       hurt = 0,
       attackClock = 1,
       replan = 0,
@@ -2286,6 +2331,16 @@ class HuntEnemy extends Enemy with WithCollision {
   void update(double dt) {
     if (!session.active || !combatReady || isDead || isRemoving) return;
     dt = math.min(dt, .05);
+    final before = position.toOffset();
+    _updateBehavior(dt);
+    motion.update(
+      dt,
+      distance: (position.toOffset() - before).distance,
+      bearing: bearing,
+    );
+  }
+
+  void _updateBehavior(double dt) {
     var before = position.toOffset();
     final target = session.hero.body.center - body.center;
     hurt = math.max(0, hurt - dt);
@@ -2538,7 +2593,6 @@ class HuntEnemy extends Enemy with WithCollision {
           delta.distance / math.max(.001, dt),
         ),
       );
-      anim += dt;
     } else {
       stop();
     }
@@ -2599,7 +2653,6 @@ class HuntEnemy extends Enemy with WithCollision {
       }
       position.setValues(at.dx, at.dy);
     }
-    anim += used * 2.5;
     lastClearPosition = position.toOffset();
     if (pounceRemaining <= 0) finishPounce();
     super.update(dt);
@@ -2750,6 +2803,11 @@ class HuntEnemy extends Enemy with WithCollision {
         );
       }
     }
+    canvas.save();
+    canvas.translate(feet.dx, feet.dy);
+    canvas.rotate(motion.lean);
+    canvas.scale(motion.scaleX, motion.scaleY);
+    canvas.translate(-feet.dx, -feet.dy);
     session.art.actor(
       canvas,
       boss ? session.world.stage.bossActor : kind,
@@ -2759,10 +2817,10 @@ class HuntEnemy extends Enemy with WithCollision {
             pounceRemaining > 0 && pounceDuration > 0
                 ? math.sin(math.pi * (1 - pounceRemaining / pounceDuration)) *
                       15
-                : 0,
+                : motion.lift,
           ),
-      bearing,
-      hurt > .08 ? impactPose : (anim / .15).floor() % 2,
+      windup > 0 || pounceRemaining > 0 ? bearing : motion.facing,
+      hurt > .08 ? impactPose : motion.phase,
       boss
           ? 125
           : isElite
@@ -2774,6 +2832,7 @@ class HuntEnemy extends Enemy with WithCollision {
           : 62,
       flash: hurt > .08 ? .75 : 0,
     );
+    canvas.restore();
     if (life.value < life.max || boss || isElite) {
       final width = boss
               ? 100.0

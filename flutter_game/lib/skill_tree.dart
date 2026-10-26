@@ -12,42 +12,42 @@ import 'rpg_widgets.dart';
 // Keep three readable schools with a few shared, adjacent-school milestones.
 const _positions = <String, (int, double)>{
   'cleave': (0, 0),
-  'whirlwind': (1, -.24),
-  'frenzy': (1, .24),
+  'whirlwind': (1, -.25),
+  'frenzy': (1, .25),
   'seismicSlam': (2, 0),
-  'charge': (3, -.24),
-  'crushingBlow': (4, -.24),
-  'rendingEdge': (3, .24),
-  'stormOfSteel': (4, .24),
+  'charge': (3, -.25),
+  'crushingBlow': (4, -.25),
+  'rendingEdge': (3, .25),
+  'stormOfSteel': (4, .25),
   'mastery': (0, 0),
-  'ironSkin': (1, -.24),
-  'weaponTempo': (1, .24),
+  'ironSkin': (1, -.25),
+  'weaponTempo': (1, .25),
   'veteranGuard': (3, 0),
-  'battleFocus': (2, -.12),
+  'battleFocus': (2, 0),
   'secondWind': (4, 0),
   'warcry': (0, 0),
-  'battleVigor': (1, -.24),
-  'resoundingCry': (1, .24),
+  'battleVigor': (1, -.25),
+  'resoundingCry': (1, .25),
   'warDrums': (3, 0),
   'rallyingVoice': (2, 0),
   'unyieldingOath': (4, 0),
   'firebolt': (0, 0),
-  'warmth': (1, -.24),
-  'emberFocus': (1, .24),
+  'warmth': (1, -.25),
+  'emberFocus': (1, .25),
   'cinderReach': (3, 0),
-  'meteor': (2, -.12),
+  'meteor': (2, 0),
   'phoenixHeart': (4, 0),
   'frostNova': (0, 0),
-  'iceArmor': (1, -.24),
-  'deepFreeze': (1, 0.24),
-  'coldMastery': (2, -0.24),
+  'iceArmor': (1, -.25),
+  'deepFreeze': (1, 0.25),
+  'coldMastery': (2, -0.25),
   'frozenAegis': (3, 0),
   'glacialReserve': (4, 0),
   'arcaneMastery': (0, 0),
-  'conductivity': (1, .24),
-  'chainLightning': (1, -0.24),
+  'conductivity': (1, .25),
+  'chainLightning': (1, -0.25),
   'forkedStorm': (3, 0),
-  'lightningMastery': (2, -.12),
+  'lightningMastery': (2, 0),
   'arcaneEconomy': (4, 0),
 };
 
@@ -88,28 +88,26 @@ class SkillTree extends StatelessWidget {
               offset = _positions[skill.id]?.$2 ?? 0;
           final width = math.min(
             offset == 0 ? 120.0 : 96.0,
-            offset == 0 ? lane - 8 : lane / 2 - 4,
+            offset == 0 ? lane - 8 : math.max(44.0, lane / 2 - 2),
           );
           final x = lane * (family + .5 + offset);
           rects[skill.id] = Rect.fromLTWH(
             x - width / 2,
-            header + 8 + row(skill) * (nodeHeight + gap),
+            8 + row(skill) * (nodeHeight + gap),
             width,
             nodeHeight,
           );
         }
         final height =
-            header +
-            16 +
-            (rows.values.reduce(math.max) + 1) * (nodeHeight + gap) -
-            gap;
+            16 + (rows.values.reduce(math.max) + 1) * (nodeHeight + gap) - gap;
         void select(SkillDef skill) {
           onFocus(skill);
           if (!controller.hasClients) return;
-          final target = (rects[skill.id]!.center.dy - box.maxHeight / 2).clamp(
-            0.0,
-            controller.position.maxScrollExtent,
-          );
+          final target =
+              (rects[skill.id]!.center.dy - (box.maxHeight - header) / 2).clamp(
+                0.0,
+                controller.position.maxScrollExtent,
+              );
           controller.animateTo(
             target,
             duration: const Duration(milliseconds: 180),
@@ -117,63 +115,86 @@ class SkillTree extends StatelessWidget {
           );
         }
 
-        return Scrollbar(
-          controller: controller,
-          thumbVisibility: true,
-          thickness: 3,
-          child: SingleChildScrollView(
-            controller: controller,
-            physics: const ClampingScrollPhysics(),
-            child: SizedBox(
-              width: box.maxWidth,
-              height: height,
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: ExcludeSemantics(
-                      child: Image(
-                        image: skillTabletArtwork,
-                        fit: BoxFit.fill,
-                        filterQuality: FilterQuality.medium,
-                      ),
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: ColoredBox(color: const Color(0x33030c0c)),
-                  ),
-                  if (!dense)
-                    for (var i = 0; i < 3; i++)
-                      Positioned(
-                        left: i * lane,
-                        top: 7,
-                        width: lane,
-                        height: 22,
-                        child: Text(
-                          p.skillBranches[i],
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: gold,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                          ),
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Column(
+            children: [
+              if (!dense)
+                SizedBox(
+                  key: const ValueKey('skill-school-header'),
+                  height: header,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: _TabletSection(
+                          width: box.maxWidth,
+                          height: header,
+                          heading: true,
                         ),
                       ),
-                  Positioned.fill(
-                    child: CustomPaint(painter: _Connections(p, skills, rects)),
+                      Row(
+                        children: [
+                          for (final branch in p.skillBranches)
+                            Expanded(
+                              child: Text(
+                                branch,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: gold,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
                   ),
-                  for (final skill in skills)
-                    Positioned.fromRect(
-                      rect: rects[skill.id]!,
-                      child: _node(
-                        skill,
-                        rects[skill.id]!.width,
-                        dense,
-                        () => select(skill),
+                ),
+              Expanded(
+                child: Scrollbar(
+                  controller: controller,
+                  thumbVisibility: true,
+                  thickness: 3,
+                  child: SingleChildScrollView(
+                    controller: controller,
+                    physics: const ClampingScrollPhysics(),
+                    child: SizedBox(
+                      width: box.maxWidth,
+                      height: height,
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: _TabletSection(
+                              width: box.maxWidth,
+                              height: height,
+                            ),
+                          ),
+                          const Positioned.fill(
+                            child: ColoredBox(color: Color(0x33030c0c)),
+                          ),
+                          Positioned.fill(
+                            child: CustomPaint(
+                              painter: _Connections(p, skills, rects),
+                            ),
+                          ),
+                          for (final skill in skills)
+                            Positioned.fromRect(
+                              rect: rects[skill.id]!,
+                              child: _node(
+                                skill,
+                                rects[skill.id]!.width,
+                                dense,
+                                () => select(skill),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                ],
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         );
       },
@@ -229,7 +250,7 @@ class SkillTree extends StatelessWidget {
                         boxShadow: chosen || canLearn
                             ? [
                                 BoxShadow(
-                                  color: gold.withValues(alpha: .24),
+                                  color: gold.withValues(alpha: .25),
                                   blurRadius: 8,
                                 ),
                               ]
@@ -317,6 +338,43 @@ class SkillTree extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Split the existing artwork at its title band instead of squeezing the full
+// tablet into a short viewport. Both sections share the decoded image cache.
+class _TabletSection extends StatelessWidget {
+  const _TabletSection({
+    required this.width,
+    required this.height,
+    this.heading = false,
+  });
+  final double width, height;
+  final bool heading;
+  static const headingFraction = 92 / 1152;
+
+  @override
+  Widget build(BuildContext context) {
+    final imageHeight =
+        height / (heading ? headingFraction : 1 - headingFraction);
+    return ExcludeSemantics(
+      child: ClipRect(
+        child: OverflowBox(
+          alignment: heading ? Alignment.topCenter : Alignment.bottomCenter,
+          minWidth: width,
+          maxWidth: width,
+          minHeight: imageHeight,
+          maxHeight: imageHeight,
+          child: Image(
+            image: skillTabletArtwork,
+            width: width,
+            height: imageHeight,
+            fit: BoxFit.fill,
+            filterQuality: FilterQuality.medium,
           ),
         ),
       ),

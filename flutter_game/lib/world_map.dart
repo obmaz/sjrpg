@@ -23,6 +23,9 @@ class ExpandedWorldMap extends StatefulWidget {
 class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
   final transform = TransformationController();
   Size viewport = Size.zero;
+  String? trackingMessage;
+  String get trackingLabel =>
+      trackingMessage ?? '◆ 의뢰   ⌂ 거점   ● 내 위치 · 목표 선택: 방향 추적';
   static const canvas = Size(1200, 900);
   @override
   void dispose() {
@@ -65,6 +68,23 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
         1,
       )
       ..scaleByDouble(next, next, 1, 1);
+  }
+
+  void selectGoal(QuestSite site) {
+    final session = widget.session;
+    final changed = session.toggleTrackedSite(site);
+    setState(() {
+      if (!changed) {
+        trackingMessage = session.cleansedSites.contains(site.id)
+            ? '이미 완료한 의뢰입니다'
+            : '먼저 현재 의뢰를 진행하세요';
+      } else if (session.trackedSite == null) {
+        trackingMessage = '목표 추적 해제';
+      } else {
+        trackingMessage = '${site.name} 추적 · 다시 누르면 해제';
+      }
+    });
+    center(at: site.at);
   }
 
   @override
@@ -140,38 +160,52 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
                           separatorBuilder: (_, _) => const SizedBox(width: 6),
                           itemBuilder: (context, index) {
                             final site = widget.session.visibleSites[index];
+                            final tracked =
+                                widget.session.trackedSite?.id == site.id;
                             final done = widget.session.cleansedSites.contains(
                               site.id,
                             );
+                            final count = widget.session.visibleSites.length;
                             return SizedBox(
-                              width: widget.session.visibleSites.length <= 3
-                                  ? (box.maxWidth -
-                                            24 -
-                                            (widget
-                                                        .session
-                                                        .visibleSites
-                                                        .length -
-                                                    1) *
-                                                6) /
-                                        widget.session.visibleSites.length
+                              width: count <= 3
+                                  ? (box.maxWidth - 24 - (count - 1) * 6) /
+                                        count
                                   : 120,
-                              child: GameAction(
-                                '${done ? '✓ ' : ''}${site.name}',
-                                fontSize: box.maxWidth < 340 ? 13 : 14,
-                                semanticLabel: '지도 목표 · ${site.name}',
-                                onTap: () => center(at: site.at),
+                              child: Semantics(
+                                selected: tracked,
+                                child: GameAction(
+                                  '${done ? '✓ ' : ''}${site.name}',
+                                  primary: tracked,
+                                  fontSize: box.maxWidth < 340 ? 13 : 14,
+                                  semanticLabel: '지도 목표 · ${site.name}',
+                                  onTap: () => selectGoal(site),
+                                ),
                               ),
                             );
                           },
                         ),
                       ),
                     ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 5, horizontal: 12),
-                    child: Text(
-                      '◆ 의뢰   ⌂ 거점   ● 내 위치 · 끌어서 이동',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Color(0xffa9c5b9), fontSize: 13),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 5,
+                      horizontal: 12,
+                    ),
+                    child: Semantics(
+                      container: true,
+                      liveRegion: true,
+                      label: trackingLabel,
+                      excludeSemantics: true,
+                      child: Text(
+                        trackingLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xffa9c5b9),
+                          fontSize: 13,
+                        ),
+                      ),
                     ),
                   ),
                   Padding(

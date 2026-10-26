@@ -59,8 +59,18 @@ void main() {
         }
         final semantics = tester.ensureSemantics();
         final site = s.visibleSites.first;
+        final before = s.hero.position.clone();
         await tester.tap(find.bySemanticsLabel('지도 목표 · ${site.name}'));
         await tester.pumpAndSettle();
+        expect(s.trackedSite?.id, site.id);
+        expect(s.hero.position, before);
+        expect(
+          tester
+              .widgetList<Semantics>(find.byType(Semantics))
+              .where((w) => w.properties.selected == true)
+              .length,
+          1,
+        );
         final projected = Offset(
           site.at.dx / worldSize.width * 1200,
           site.at.dy / worldSize.height * 900,
@@ -71,6 +81,9 @@ void main() {
         );
         final viewport = tester.getSize(find.byType(InteractiveViewer));
         expect((result - viewport.center(Offset.zero)).distance, lessThan(1));
+        await tester.tap(find.bySemanticsLabel('지도 목표 · ${site.name}'));
+        await tester.pumpAndSettle();
+        expect(s.trackedSite, null);
         expect(tester.takeException(), null);
         semantics.dispose();
       },

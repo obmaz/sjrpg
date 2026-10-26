@@ -64,6 +64,22 @@ void main() {
       await tester.pumpAndSettle();
       final footer = find.bySemanticsLabel('모험 계속하기');
       final footerRect = tester.getRect(footer);
+      final treeRect = tester.getRect(find.byType(SkillTree));
+      final firstSlot = tester.getRect(
+        find.bySemanticsLabel(RegExp('전투 슬롯 1 ·')),
+      );
+      final resetRect = tester.getRect(find.byTooltip('스킬 초기화'));
+      final infoRect = tester.getRect(find.byTooltip('스킬 설명과 배치'));
+      expect(firstSlot.left, closeTo(treeRect.left, .01));
+      expect(footerRect.right, closeTo(treeRect.right, .01));
+      if (size.height >= 500 || size.width < 600) {
+        expect(resetRect.left, closeTo(treeRect.left, .01));
+        expect(infoRect.right, closeTo(treeRect.right, .01));
+      }
+      final schoolHeader = find.byKey(const ValueKey('skill-school-header'));
+      final schoolRect = schoolHeader.evaluate().isEmpty
+          ? null
+          : tester.getRect(schoolHeader);
       final ids = hero == HeroClass.warrior
           ? ['whirlwind', 'frenzy', 'seismicSlam']
           : ['iceArmor', 'chainLightning', 'meteor'];
@@ -71,6 +87,9 @@ void main() {
         final skill = p.skills.firstWhere((v) => v.id == id);
         final node = find.bySemanticsLabel('스킬 보기 · ${skill.name} · 0 등급');
         await reveal(tester, node);
+        if (schoolRect != null) {
+          expect(tester.getRect(schoolHeader), schoolRect);
+        }
         await tester.tap(node);
         await tester.pumpAndSettle();
         final learn = find.bySemanticsLabel('${skill.name} 습득 · 1P');

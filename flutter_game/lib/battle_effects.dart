@@ -83,6 +83,7 @@ class ContactSpark extends GameComponent {
     ui.Offset at, {
     this.heavy = false,
     this.rank = 1,
+    this.bearing = 0,
   }) {
     position = Vector2(at.dx, at.dy);
     size = Vector2.all(1);
@@ -90,6 +91,7 @@ class ContactSpark extends GameComponent {
   final Adventure session;
   final bool heavy;
   final int rank;
+  final double bearing;
   double age = 0;
   @override
   bool get isVisible => true;
@@ -116,7 +118,7 @@ class ContactSpark extends GameComponent {
       radius: heavy ? 65 : 40,
     );
     for (var i = 0; i < 8; i++) {
-      final a = i * math.pi / 4 + .2;
+      final a = bearing + (i < 5 ? (i - 2) * .48 : i * math.pi / 4);
       final axis = ui.Offset(math.cos(a), math.sin(a) * .75);
       canvas.drawLine(
         axis * reach * .45,
@@ -137,6 +139,20 @@ class ContactSpark extends GameComponent {
       (heavy ? 7 : 4) * (1 - t),
       ui.Paint()..color = ui.Color.fromRGBO(255, 251, 226, 1 - t),
     );
+    if (t < .3) {
+      final flash = 1 - t / .3;
+      for (final angle in [bearing + .65, bearing - .65]) {
+        final axis = ui.Offset(math.cos(angle), math.sin(angle));
+        canvas.drawLine(
+          -axis * (heavy ? 16 : 10) * flash,
+          axis * (heavy ? 16 : 10) * flash,
+          ui.Paint()
+            ..color = ui.Color.fromRGBO(255, 255, 240, flash)
+            ..strokeWidth = heavy ? 3 : 2
+            ..strokeCap = ui.StrokeCap.round,
+        );
+      }
+    }
   }
 }
 
