@@ -7,6 +7,8 @@ enum WorldStage { forest, sands, past, future }
 enum TimePath { past, future }
 
 extension WorldStageInfo on WorldStage {
+  bool get hasNextStage =>
+      this == WorldStage.forest || this == WorldStage.sands;
   String get title => [
     '제1장 · 십자로의 숲',
     '제2장 · 모래시계의 유적',

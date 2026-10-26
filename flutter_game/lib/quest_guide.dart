@@ -14,7 +14,11 @@ class QuestGuide {
 
 extension QuestGuidance on Adventure {
   String get mainQuestNext {
-    if (stageCleared) return '의뢰 완료! 여정에서 다음 모험을 선택하세요.';
+    if (stageCleared) {
+      return world.stage.hasNextStage
+          ? '의뢰 완료! 여정에서 다음 모험을 선택하세요.'
+          : '균열을 봉인했습니다. 남은 보물과 전투를 탐험하세요.';
+    }
     if (mandatoryQuestsComplete) {
       final remaining = math.max(0, world.stage.killGoal - stageKills);
       return remaining > 0

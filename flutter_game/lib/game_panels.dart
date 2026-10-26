@@ -12,6 +12,7 @@ import 'quest_cards.dart';
 import 'quest_guide.dart';
 import 'rpg_widgets.dart';
 import 'skills_panel.dart';
+import 'stage_completion_banner.dart';
 import 'world_map.dart';
 import 'world_model.dart';
 
@@ -84,8 +85,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
         (name == 'victory' || name == 'journal' || name == 'talk') &&
         s.stageCleared &&
         widget.onAdvance != null &&
-        (s.world.stage == WorldStage.forest ||
-            s.world.stage == WorldStage.sands);
+        s.world.stage.hasNextStage;
     final advanceLabel = s.world.stage == WorldStage.forest
         ? '제2장 의뢰 받기'
         : s.timePath == TimePath.past
@@ -239,11 +239,10 @@ class _AdventurePanelState extends State<AdventurePanel> {
       ];
     } else if (result) {
       body = [
-        Icon(
-          name == 'victory' ? Icons.workspace_premium : Icons.shield_outlined,
-          color: gold,
-          size: 64,
-        ),
+        if (name == 'victory')
+          StageCompletionBanner(s)
+        else
+          const Icon(Icons.shield_outlined, color: gold, size: 64),
         const SizedBox(height: 18),
         Text(
           name == 'victory'
@@ -264,7 +263,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
           '모험가',
           'Lv.${p.level} ${p.heroClass.title}',
         ),
-        _line(Icons.bolt, '물리친 적', '${p.kills}'),
+        _line(Icons.bolt, '이번 의뢰 처치', '${s.stageKills}'),
         _line(Icons.monetization_on_outlined, '보유 골드', '${p.gold} G'),
         _line(Icons.timer_outlined, '모험 시간', gameTime(s.elapsed)),
         const SizedBox(height: 12),

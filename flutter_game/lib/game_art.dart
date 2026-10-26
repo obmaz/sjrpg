@@ -33,6 +33,7 @@ class GameArt {
             'fx-ice-nova',
             'fx-whirlwind',
             'fx-steel-whirlwind',
+            'victory-crest',
             'fx-warcry',
             'dodge-icon',
             'actors-roll',

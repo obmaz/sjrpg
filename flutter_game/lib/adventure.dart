@@ -496,7 +496,11 @@ class Adventure extends ChangeNotifier {
     if (!won || defeated) return;
     won = false;
     resume();
-    announce('의뢰 완료 · 여정에서 다음 의뢰를 확인하세요');
+    announce(
+      world.stage.hasNextStage
+          ? '의뢰 완료 · 여정에서 다음 의뢰를 확인하세요'
+          : '균열 봉인 완료 · 남은 보물과 전투를 탐험하세요',
+    );
   }
 
   void openChest() {
@@ -756,10 +760,7 @@ class Adventure extends ChangeNotifier {
   }
 
   void spawnPack({bool initial = false}) {
-    if (!active ||
-        living >= 40 ||
-        progress.bossDefeated ||
-        riding?.def.waterOnly == true) {
+    if (!active || living >= 40 || riding?.def.waterOnly == true) {
       return;
     }
     final at = hero.position.toOffset();

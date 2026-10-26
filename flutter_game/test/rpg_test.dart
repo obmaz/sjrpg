@@ -218,10 +218,12 @@ void main() {
       expect(s.loot.where((l) => l.item.rarity == Rarity.rare).length, 1);
       s.continueExploring();
       expect(s.active, true);
-      final before = s.mobs.length;
+      final before = s.mobs.where((m) => m.boss).length;
       s.spawnPack();
       s.tick(.05);
-      expect(s.mobs.length, before);
+      expect(s.mobs.where((m) => m.boss).length, before);
+      expect(s.living, lessThanOrEqualTo(40));
+      expect(s.won, false);
       s.hero.position.setValues(4650, 360);
       expect(s.nearbyAction, null);
     },
