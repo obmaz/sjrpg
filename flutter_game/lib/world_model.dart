@@ -1473,7 +1473,13 @@ class AdventureWorld {
               ) *
               ward.radius;
       final section = SanctuaryFenceSection(point(i), point(i + 1));
-      if (section.collisionBodies.any((body) => blocked(body.inflate(4)))) {
+      // A shallow/near-tangent road needs more clearance than its angular
+      // crossing suggests. Keep the actual painted road and a rider's body free.
+      if (section.collisionBodies.any(
+        (body) =>
+            blocked(body.inflate(4)) ||
+            trails.any((trail) => trail.near(body.center, 28)),
+      )) {
         continue;
       }
       sanctuaryFences.add(section);
