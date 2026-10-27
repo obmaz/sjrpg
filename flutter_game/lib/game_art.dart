@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import 'actor_atlas.dart';
 import 'effect_atlas.dart';
+import 'enemy_catalog.dart';
 import 'ground_texture.dart';
 import 'interface_art.dart';
 import 'world_model.dart';
@@ -27,102 +28,309 @@ class GameArt {
     return atlas;
   }
 
-  static Future<GameArt> load() async {
-    final art = GameArt();
-    final data =
-        jsonDecode(await rootBundle.loadString('assets/art.json'))
-            as Map<String, dynamic>;
-    art.actors = data['actors'];
-    art.controls = data['controls'];
-    for (final sheet in art.actors.keys) {
-      art._atlas(sheet);
+  static const _menuImages = ['actors-hero', 'actors-mage', 'village-scene'];
+  static const _pngImages = {
+    'actors-mage',
+    'actors-motor',
+    'actors-horse',
+    'actors-boat',
+    'gear-icons',
+    'combat-fx',
+    'dodge-icon',
+    'actors-roll',
+  };
+  static const _allImages = [
+    'actors-hero',
+    'actors-mage',
+    'gear-icons',
+    'combat-fx',
+    'passive-icons',
+    'skill-perks',
+    'physical-icons',
+    'fx-meteor',
+    'fx-ice-nova',
+    'fx-steel-whirlwind',
+    'victory-crest',
+    'well-portal',
+    'encounter-beacons',
+    'fx-warcry',
+    'fx-crushing-blow',
+    'dodge-icon',
+    'actors-roll',
+    'terrain-materials',
+    'actors-hero-attack',
+    'actors-hero-backhand',
+    'actors-hero-cleave',
+    'actors-mage-cast',
+    'actors-creatures-a',
+    'actors-creatures-b',
+    'actors-villagers',
+    'quest-sites',
+    'time-sites',
+    'time-paths',
+    'stage-materials',
+    'actors-cyber',
+    'actors-gunner',
+    'actors-sand-warden',
+    'actors-ancient-king',
+    'actors-cyber-core',
+    'actors-bicycle',
+    'actors-motor',
+    'actors-horse',
+    'actors-boat',
+    'actors-boar',
+    'actors-basilisk',
+    'actors-wraith',
+    'actors-drone',
+    'actors-viper',
+    'actors-bonehound',
+    'actors-clockwork-spider',
+    'actors-crystal-beetle',
+    'cyber-props',
+    'ruin-props',
+    'village-scene',
+    'landscape-bridge',
+    'world-forest',
+    'world-desert',
+    'controls',
+    'atlas',
+  ];
+  // Stable saved stage IDs keep later chapters compatible with their art family.
+  static const _sceneryImages = <String, Set<String>>{
+    'forest': {'world-desert', 'landscape-bridge'},
+    'sands': {'world-desert', 'ruin-props'},
+    'past': {'ruin-props'},
+    'future': {'cyber-props'},
+    'tombs': {'ruin-props'},
+    'foundry': {'cyber-props'},
+    'convergence': {'ruin-props'},
+  };
+  static const _sharedActors = {
+    'actors-hero',
+    'actors-mage',
+    'actors-roll',
+    'actors-villagers',
+    'actors-bicycle',
+    'actors-motor',
+    'actors-horse',
+    'actors-boat',
+  };
+  AssetBundle _bundle = rootBundle;
+  final _sourceBytes = <String, ByteData>{};
+  bool _sourcesReady = false;
+  bool _staged = false;
+  Future<void> _preparation = Future<void>.value();
+
+  static Future<GameArt> load() => _load(staged: false);
+  static Future<GameArt> loadMenu({AssetBundle? bundle}) =>
+      _load(staged: true, bundle: bundle);
+
+  static Future<GameArt> _load({
+    required bool staged,
+    AssetBundle? bundle,
+  }) async {
+    final art = GameArt()
+      .._staged = staged
+      .._bundle = bundle ?? rootBundle;
+    try {
+      final data =
+          jsonDecode(await art._bundle.loadString('assets/art.json'))
+              as Map<String, dynamic>;
+      art.actors = data['actors'];
+      art.controls = data['controls'];
+      for (final sheet in art.actors.keys) {
+        art._atlas(sheet);
+      }
+      await Future.wait([
+        art._ensureImages(
+          staged ? _menuImages : _allImages,
+          ground: !staged,
+          village: !staged,
+        ),
+        prepareInterfaceArtwork(),
+      ]);
+      return art;
+    } catch (_) {
+      art.dispose();
+      rethrow;
     }
-    await Future.wait(
-      [
-            'actors-hero',
-            'actors-mage',
-            'gear-icons',
-            'combat-fx',
-            'passive-icons',
-            'skill-perks',
-            'physical-icons',
-            'fx-meteor',
-            'fx-ice-nova',
-            'fx-steel-whirlwind',
-            'victory-crest',
-            'well-portal',
-            'encounter-beacons',
-            'fx-warcry',
-            'fx-crushing-blow',
-            'dodge-icon',
-            'actors-roll',
-            'terrain-materials',
-            'actors-hero-attack',
-            'actors-hero-backhand',
-            'actors-hero-cleave',
-            'actors-mage-cast',
-            'actors-creatures-a',
-            'actors-creatures-b',
-            'actors-villagers',
-            'quest-sites',
-            'time-sites',
-            'time-paths',
-            'stage-materials',
-            'actors-cyber',
-            'actors-gunner',
-            'actors-sand-warden',
-            'actors-ancient-king',
-            'actors-cyber-core',
-            'actors-bicycle',
-            'actors-motor',
-            'actors-horse',
-            'actors-boat',
-            'actors-boar',
-            'actors-basilisk',
-            'actors-wraith',
-            'actors-drone',
-            'actors-viper',
-            'actors-bonehound',
-            'actors-clockwork-spider',
-            'actors-crystal-beetle',
-            'cyber-props',
-            'ruin-props',
-            'village-scene',
-            'landscape-bridge',
-            'world-forest',
-            'world-desert',
-            'controls',
-            'atlas',
-          ]
-          .map<Future<void>>((name) async {
-            final extension =
-                const {
-                  'actors-mage',
-                  'actors-motor',
-                  'actors-horse',
-                  'actors-boat',
-                  'gear-icons',
-                  'combat-fx',
-                  'dodge-icon',
-                  'actors-roll',
-                }.contains(name)
-                ? 'png'
-                : 'webp';
-            final bytes = await rootBundle.load(
-              'assets/images/$name.$extension',
-            );
-            final codec = await ui.instantiateImageCodec(
-              bytes.buffer.asUint8List(),
-            );
-            art.images[name] = (await codec.getNextFrame()).image;
-            codec.dispose();
-          })
-          .followedBy([prepareInterfaceArtwork()]),
+  }
+
+  Future<void> ensureStage(
+    WorldStage stage, {
+    required HeroClass heroClass,
+    Iterable<String> enemyKinds = const [],
+  }) {
+    if (!_staged) return Future<void>.value();
+    final kinds = enemyKinds.toList();
+    final ready = _preparation.then(
+      (_) => _ensureStage(stage, heroClass, kinds),
     );
-    art.effects.warm();
-    final atlas = art.images['terrain-materials']!;
+    // A failed request must leave subsequent retry requests usable.
+    _preparation = ready.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace _) {},
+    );
+    return ready;
+  }
+
+  Future<void> _ensureStage(
+    WorldStage stage,
+    HeroClass heroClass,
+    Iterable<String> savedKinds,
+  ) async {
+    await _prefetchSources();
+    final scenery = _sceneryImages[stage.name];
+    if (scenery == null) {
+      await _ensureImages(_allImages, ground: true, village: true);
+      return;
+    }
+    final exclusiveScenery = _sceneryImages.values
+        .expand((names) => names)
+        .toSet();
+    final names = <String>{
+      for (final name in _allImages)
+        if ((!name.startsWith('actors-') || _sharedActors.contains(name)) &&
+            !exclusiveScenery.contains(name))
+          name,
+      ...scenery,
+      if (heroClass == HeroClass.warrior) ...[
+        'actors-hero-attack',
+        'actors-hero-backhand',
+        'actors-hero-cleave',
+      ] else
+        'actors-mage-cast',
+    };
+    final actorKeys = <String>{
+      stage.bossActor,
+      // Chests can release these even when the local encounter pool cannot.
+      stage.usesCityArt ? 'drone' : 'viper',
+      ...savedKinds,
+      for (final path in TimePath.values)
+        if (chapterContract(stage, path) case final contract?) contract.actor,
+    };
+    for (final sand in [false, true]) {
+      for (final wooded in [false, true]) {
+        for (final ruins in [false, true]) {
+          actorKeys.addAll(
+            biomeEnemies(stage, sand: sand, wooded: wooded, ruins: ruins),
+          );
+        }
+      }
+    }
+    if (stage == WorldStage.sands) {
+      actorKeys.addAll(timeQuestGivers.map((giver) => giver.actor));
+    }
+    names.addAll(
+      actorKeys.map((key) => 'actors-${_actorDefinitions[key]!.$1}'),
+    );
+    await _ensureImages(names, ground: true, village: stage.name == 'forest');
+  }
+
+  String _imagePath(String name) =>
+      'assets/images/$name.${_pngImages.contains(name) ? 'png' : 'webp'}';
+
+  Future<void> _prefetchSources() async {
+    if (_sourcesReady) return;
+    final incoming = <String, ByteData>{};
+    // A published release can disappear while its page remains open. Keep
+    // deferred sources locally before starting play, then drop each compressed
+    // source when its decoded image or baked replacement becomes resident.
+    await Future.wait([
+      for (final name in _allImages)
+        if (!images.containsKey(name))
+          _bundle.load(_imagePath(name)).then((bytes) {
+            incoming[name] = bytes;
+          }),
+    ]);
+    _sourceBytes.addAll(incoming);
+    _sourcesReady = true;
+  }
+
+  Future<Map<String, ui.Image>> _decodeMissing(Iterable<String> names) async {
+    final decoded = <String, ui.Image>{};
+    try {
+      await Future.wait(
+        names.toSet().where((name) => !images.containsKey(name)).map((
+          name,
+        ) async {
+          final cached = _sourceBytes[name];
+          if (_staged && _sourcesReady && cached == null) {
+            throw StateError('A stage requested an unprepared image: $name');
+          }
+          final data = cached ?? await _bundle.load(_imagePath(name));
+          final codec = await ui.instantiateImageCodec(
+            data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+          );
+          try {
+            decoded[name] = (await codec.getNextFrame()).image;
+          } finally {
+            codec.dispose();
+          }
+        }),
+      );
+      return decoded;
+    } catch (_) {
+      for (final image in decoded.values) {
+        image.dispose();
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> _ensureImages(
+    Iterable<String> names, {
+    bool ground = false,
+    bool village = false,
+  }) async {
+    final buildGround = ground && materials.isEmpty;
+    final buildVillage = village && !images.containsKey('village-blended');
+    final requested = names
+        .where(
+          (name) => name != 'terrain-materials' && name != 'stage-materials',
+        )
+        .toSet();
+    if (buildGround) requested.addAll(['terrain-materials', 'stage-materials']);
+    final decoded = await _decodeMissing(requested);
+    final consumedSources = decoded.keys.toList();
+    final sourceImages = {...images, ...decoded};
+    final baked = <String, ui.Image>{};
+    final shaders = <ui.Shader>[];
+    try {
+      if (buildGround) {
+        await _bakeGround(sourceImages, shaders, baked);
+        for (final name in ['terrain-materials', 'stage-materials']) {
+          sourceImages.remove(name);
+          decoded.remove(name)!.dispose();
+        }
+      }
+      if (buildVillage) await _bakeVillage(sourceImages, baked);
+    } catch (_) {
+      for (final shader in shaders) {
+        shader.dispose();
+      }
+      for (final image in [...decoded.values, ...baked.values]) {
+        image.dispose();
+      }
+      rethrow;
+    }
+    images.addAll(decoded);
+    images.addAll(baked);
+    materials.addAll(shaders);
+    for (final name in consumedSources) {
+      _sourceBytes.remove(name);
+    }
+    effects.warm();
+  }
+
+  Future<void> _bakeGround(
+    Map<String, ui.Image> sourceImages,
+    List<ui.Shader> shaders,
+    Map<String, ui.Image> baked,
+  ) async {
+    final atlas = sourceImages['terrain-materials']!;
     for (var i = 0; i < 12; i++) {
-      final source = i < 6 ? atlas : art.images['stage-materials']!;
+      final source = i < 6 ? atlas : sourceImages['stage-materials']!;
       final cell = i % 6;
       const tileSize = 192;
       final recorder = ui.PictureRecorder();
@@ -144,10 +352,17 @@ class GameArt {
           ui.Paint(),
         );
       }
-      final picture = recorder.endRecording(),
-          image = await picture.toImage(tileSize, tileSize);
-      picture.dispose();
-      art.materials.add(
+      final picture = recorder.endRecording();
+      late final ui.Image image;
+      try {
+        image = await picture.toImage(tileSize, tileSize);
+      } finally {
+        picture.dispose();
+      }
+      // CanvasKit can rebuild a shader for another paint quality. Retain the
+      // small image, owning it early enough to release it if construction fails.
+      baked['ground-$i'] = image;
+      shaders.add(
         ui.ImageShader(
           image,
           ui.TileMode.repeated,
@@ -172,14 +387,14 @@ class GameArt {
           ]),
         ),
       );
-      // CanvasKit can rebuild a shader for another paint quality; retain its small image.
-      art.images['ground-$i'] = image;
     }
-    // Ground draws the baked shader textures, so the two full source atlases can be released.
-    art.images.remove('terrain-materials')!.dispose();
-    art.images.remove('stage-materials')!.dispose();
-    // Bake the edge mask once. Gameplay draws this texture without per-frame layers.
-    final village = art.images['village-scene']!,
+  }
+
+  Future<void> _bakeVillage(
+    Map<String, ui.Image> sourceImages,
+    Map<String, ui.Image> baked,
+  ) async {
+    final village = sourceImages['village-scene']!,
         rec = ui.PictureRecorder(),
         canvas = ui.Canvas(rec);
     const target = ui.Rect.fromLTWH(0, 0, 640, 960),
@@ -226,10 +441,56 @@ class GameArt {
       );
     }
     final picture = rec.endRecording();
-    art.images['village-blended'] = await picture.toImage(640, 960);
-    picture.dispose();
-    return art;
+    try {
+      baked['village-blended'] = await picture.toImage(640, 960);
+    } finally {
+      picture.dispose();
+    }
   }
+
+  void dispose() {
+    for (final shader in materials) {
+      shader.dispose();
+    }
+    for (final image in images.values) {
+      image.dispose();
+    }
+    materials.clear();
+    images.clear();
+    _sourceBytes.clear();
+  }
+
+  static const _actorDefinitions = {
+    'hero': ('hero', 0, 16),
+    'mage': ('mage', 0, 16),
+    'goblin': ('creatures-a', 0, 8),
+    'boar': ('boar', 0, 8),
+    'basilisk': ('basilisk', 0, 8),
+    'wraith': ('wraith', 0, 8),
+    'drone': ('drone', 0, 8),
+    'viper': ('viper', 0, 8),
+    'bonehound': ('bonehound', 0, 8),
+    'clockwork-spider': ('clockwork-spider', 0, 8),
+    'crystal-beetle': ('crystal-beetle', 0, 8),
+    'wolf': ('creatures-a', 1, 8),
+    'skeleton': ('creatures-a', 2, 8),
+    'cultist': ('creatures-a', 3, 8),
+    'golem': ('creatures-b', 1, 8),
+    'scorpion': ('creatures-b', 2, 8),
+    'mummy': ('creatures-b', 3, 8),
+    'troll': ('creatures-b', 0, 8),
+    'cyber': ('cyber', 0, 8),
+    'gunner': ('gunner', 0, 8),
+    'sand-warden': ('sand-warden', 0, 8),
+    'ancient-king': ('ancient-king', 0, 8),
+    'cyber-core': ('cyber-core', 0, 8),
+    'merchant': ('villagers', 0, 8),
+    'villager': ('villagers', 1, 8),
+    'horse': ('horse', 0, 8),
+    'bicycle': ('bicycle', 0, 8),
+    'motor': ('motor', 0, 8),
+    'boat': ('boat', 0, 8),
+  };
 
   void landmark(
     ui.Canvas canvas,
@@ -292,38 +553,7 @@ class GameArt {
     double opacity = 1,
     double flash = 0,
   }) {
-    const definitions = {
-      'hero': ('hero', 0, 16),
-      'mage': ('mage', 0, 16),
-      'goblin': ('creatures-a', 0, 8),
-      'boar': ('boar', 0, 8),
-      'basilisk': ('basilisk', 0, 8),
-      'wraith': ('wraith', 0, 8),
-      'drone': ('drone', 0, 8),
-      'viper': ('viper', 0, 8),
-      'bonehound': ('bonehound', 0, 8),
-      'clockwork-spider': ('clockwork-spider', 0, 8),
-      'crystal-beetle': ('crystal-beetle', 0, 8),
-      'wolf': ('creatures-a', 1, 8),
-      'skeleton': ('creatures-a', 2, 8),
-      'cultist': ('creatures-a', 3, 8),
-      'golem': ('creatures-b', 1, 8),
-      'scorpion': ('creatures-b', 2, 8),
-      'mummy': ('creatures-b', 3, 8),
-      'troll': ('creatures-b', 0, 8),
-      'cyber': ('cyber', 0, 8),
-      'gunner': ('gunner', 0, 8),
-      'sand-warden': ('sand-warden', 0, 8),
-      'ancient-king': ('ancient-king', 0, 8),
-      'cyber-core': ('cyber-core', 0, 8),
-      'merchant': ('villagers', 0, 8),
-      'villager': ('villagers', 1, 8),
-      'horse': ('horse', 0, 8),
-      'bicycle': ('bicycle', 0, 8),
-      'motor': ('motor', 0, 8),
-      'boat': ('boat', 0, 8),
-    };
-    final definition = definitions[key]!;
+    final definition = _actorDefinitions[key]!;
     final sheet = attack && key == 'hero'
             ? const ['hero-attack', 'hero-backhand', 'hero-cleave'][comboPose
                   .clamp(0, 2)]

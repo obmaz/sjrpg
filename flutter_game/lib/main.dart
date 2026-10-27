@@ -20,15 +20,76 @@ import 'panel_controls.dart';
 import 'player_afflictions.dart';
 import 'quest_giver.dart';
 import 'quest_guide.dart';
+import 'reload_bridge.dart' as app_reload;
 import 'rpg_widgets.dart';
 import 'sanctuary_fence.dart';
 import 'save_bridge.dart' as storage;
 import 'well_portal.dart';
 import 'world_model.dart';
 
+bool get _isForeground =>
+    WidgetsBinding.instance.lifecycleState == null ||
+    WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const GuardianApp());
+}
+
+Future<void> _prepareCheckpointArtwork(
+  GameArt art,
+  GameCheckpoint checkpoint,
+) => art.ensureStage(
+  WorldStage.values.firstWhere(
+    (stage) => stage.name == checkpoint.data['stage'],
+  ),
+  heroClass: checkpoint.progress.heroClass,
+  enemyKinds: (checkpoint.data['enemies'] as List).map(
+    (enemy) => (enemy as Map)['kind'] as String,
+  ),
+);
+
+class _ArtworkPreparation extends StatelessWidget {
+  const _ArtworkPreparation({required this.busy, required this.child});
+  final bool busy;
+  final Widget child;
+  @override
+  Widget build(BuildContext context) => Stack(
+    children: [
+      ExcludeSemantics(
+        excluding: busy,
+        child: ExcludeFocus(
+          excluding: busy,
+          child: AbsorbPointer(absorbing: busy, child: child),
+        ),
+      ),
+      if (busy) ...[
+        const Positioned.fill(
+          child: ModalBarrier(dismissible: false, color: Color(0xbb071d1c)),
+        ),
+        const Positioned.fill(
+          child: Center(
+            child: CircularProgressIndicator(
+              color: gold,
+              semanticsLabel: '모험 준비 중',
+            ),
+          ),
+        ),
+      ],
+    ],
+  );
+}
+
+void _showPreparationFailure(
+  BuildContext context, {
+  required VoidCallback onReload,
+}) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: const Text('모험을 준비하지 못했습니다. 다시 시도하거나 새로 열어 주세요.'),
+      action: SnackBarAction(label: '새로 열기', onPressed: onReload),
+    ),
+  );
 }
 
 class GuardianApp extends StatelessWidget {
@@ -62,22 +123,34 @@ class GuardianApp extends StatelessWidget {
 }
 
 class EntryPage extends StatefulWidget {
-  const EntryPage({super.key});
+  const EntryPage({
+    this.loadArt = GameArt.loadMenu,
+    this.reloadApplication = app_reload.reloadApplication,
+    this.readCheckpoint = storage.readCheckpoint,
+    this.writeCheckpoint = storage.writeCheckpoint,
+    super.key,
+  });
+  final Future<GameArt> Function() loadArt;
+  final VoidCallback reloadApplication;
+  final String? Function() readCheckpoint;
+  final bool Function(String) writeCheckpoint;
   @override
   State<EntryPage> createState() => _EntryPageState();
 }
 
-class _EntryPageState extends State<EntryPage> {
+class _EntryPageState extends State<EntryPage> with WidgetsBindingObserver {
   final backActions = BackActions();
   void Function()? stopBackListener;
   @override
   void initState() {
     super.initState();
     stopBackListener = history.listenForBack(handleBack);
+    WidgetsBinding.instance.addObserver(this);
   }
 
   void handleBack() {
     if (!mounted) return;
+    if (preparingSession) return;
     final navigator = Navigator.of(context);
     if (navigator.canPop()) {
       navigator.maybePop();
@@ -87,7 +160,7 @@ class _EntryPageState extends State<EntryPage> {
   }
 
   void returnToMenu() {
-    final checkpoint = GameCheckpoint.decode(storage.readCheckpoint());
+    final checkpoint = GameCheckpoint.decode(widget.readCheckpoint());
     setState(() {
       run++;
       started = false;
@@ -102,17 +175,64 @@ class _EntryPageState extends State<EntryPage> {
   @override
   void dispose() {
     stopBackListener?.call();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
-  late Future<GameArt> loading = GameArt.load();
+  late Future<GameArt> loading = widget.loadArt();
   bool started = false;
   int run = 0;
   HeroClass chosen = HeroClass.warrior;
-  GameCheckpoint? savedAdventure = GameCheckpoint.decode(
-    storage.readCheckpoint(),
+  late GameCheckpoint? savedAdventure = GameCheckpoint.decode(
+    widget.readCheckpoint(),
   );
   bool resuming = false, enteringStage = false, arrivingByWell = false;
+  bool preparingSession = false, startPaused = false;
+  bool preparationInterrupted = false;
+
+  void beginPreparation() => preparationInterrupted = !_isForeground;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed && (preparingSession || started)) {
+      preparationInterrupted = true;
+    }
+  }
+
+  Future<void> startSession(
+    GameArt art,
+    HeroClass heroClass, {
+    GameCheckpoint? checkpoint,
+  }) async {
+    if (preparingSession) return;
+    beginPreparation();
+    setState(() => preparingSession = true);
+    try {
+      if (checkpoint == null) {
+        await art.ensureStage(WorldStage.forest, heroClass: heroClass);
+      } else {
+        await _prepareCheckpointArtwork(art, checkpoint);
+      }
+      if (!mounted) return;
+      setState(() {
+        run++;
+        chosen = heroClass;
+        if (checkpoint != null) savedAdventure = checkpoint;
+        resuming = checkpoint != null;
+        enteringStage = false;
+        arrivingByWell = false;
+        started = true;
+        startPaused = preparationInterrupted || !_isForeground;
+      });
+    } catch (_) {
+      if (mounted) {
+        _showPreparationFailure(context, onReload: widget.reloadApplication);
+      }
+    } finally {
+      if (mounted) setState(() => preparingSession = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) => PopScope<Object?>(
     canPop: false,
@@ -139,7 +259,7 @@ class _EntryPageState extends State<EntryPage> {
                       '다시 불러오기',
                       primary: true,
                       icon: Icons.refresh,
-                      onTap: () => setState(() => loading = GameArt.load()),
+                      onTap: () => setState(() => loading = widget.loadArt()),
                     ),
                   ],
                 ),
@@ -163,74 +283,79 @@ class _EntryPageState extends State<EntryPage> {
         }
         final art = snapshot.data!;
         if (started) {
-          return GamePage(
-            key: ValueKey(run),
-            backActions: backActions,
-            onReturnToMenu: returnToMenu,
-            art: art,
-            heroClass: chosen,
-            showStageBriefing: enteringStage,
-            arrivingByWell: arrivingByWell,
-            checkpoint: resuming ? savedAdventure : null,
-            onAdvance: (checkpoint) => setState(() {
-              run++;
-              savedAdventure = checkpoint;
-              enteringStage = true;
-              arrivingByWell = false;
-              resuming = true;
-              started = true;
-            }),
-            onTravel: (checkpoint) => setState(() {
-              run++;
-              savedAdventure = checkpoint;
-              enteringStage = false;
-              arrivingByWell = true;
-              resuming = true;
-              started = true;
-            }),
-            onRetryCheckpoint: () {
-              final checkpoint = GameCheckpoint.decode(
-                storage.readCheckpoint(),
-              )?.forRevival();
-              setState(() {
+          return _ArtworkPreparation(
+            busy: preparingSession,
+            child: GamePage(
+              key: ValueKey(run),
+              backActions: backActions,
+              onReturnToMenu: returnToMenu,
+              art: art,
+              readCheckpoint: widget.readCheckpoint,
+              writeCheckpoint: widget.writeCheckpoint,
+              reloadApplication: widget.reloadApplication,
+              onPreparationStarted: beginPreparation,
+              startPaused: startPaused,
+              heroClass: chosen,
+              showStageBriefing: enteringStage,
+              arrivingByWell: arrivingByWell,
+              checkpoint: resuming ? savedAdventure : null,
+              onAdvance: (checkpoint) => setState(() {
+                run++;
+                savedAdventure = checkpoint;
+                enteringStage = true;
+                arrivingByWell = false;
+                resuming = true;
+                started = true;
+                startPaused = preparationInterrupted || !_isForeground;
+              }),
+              onTravel: (checkpoint) => setState(() {
                 run++;
                 savedAdventure = checkpoint;
                 enteringStage = false;
+                arrivingByWell = true;
+                resuming = true;
+                started = true;
+                startPaused = preparationInterrupted || !_isForeground;
+              }),
+              onRetryCheckpoint: () {
+                final checkpoint = GameCheckpoint.decode(
+                  widget.readCheckpoint(),
+                )?.forRevival();
+                if (checkpoint != null) {
+                  startSession(
+                    art,
+                    checkpoint.progress.heroClass,
+                    checkpoint: checkpoint,
+                  );
+                } else {
+                  returnToMenu();
+                }
+              },
+              onRestart: () => setState(() {
+                run++;
+                started = false;
+                savedAdventure = null;
+                resuming = false;
+                enteringStage = false;
                 arrivingByWell = false;
-                resuming = checkpoint != null;
-                started = checkpoint != null;
-                if (checkpoint != null) chosen = checkpoint.progress.heroClass;
-              });
-            },
-            onRestart: () => setState(() {
-              run++;
-              started = false;
-              savedAdventure = null;
-              resuming = false;
-              enteringStage = false;
-              arrivingByWell = false;
-            }),
+              }),
+            ),
           );
         }
-        return ClassSelection(
-          art: art,
-          continueSummary: savedAdventure?.summary,
-          onContinue: savedAdventure == null
-              ? null
-              : () => setState(() {
-                  chosen = savedAdventure!.progress.heroClass;
-                  resuming = true;
-                  enteringStage = false;
-                  arrivingByWell = false;
-                  started = true;
-                }),
-          onBegin: (value) => setState(() {
-            chosen = value;
-            resuming = false;
-            enteringStage = false;
-            arrivingByWell = false;
-            started = true;
-          }),
+        return _ArtworkPreparation(
+          busy: preparingSession,
+          child: ClassSelection(
+            art: art,
+            continueSummary: savedAdventure?.summary,
+            onContinue: savedAdventure == null
+                ? null
+                : () => startSession(
+                    art,
+                    savedAdventure!.progress.heroClass,
+                    checkpoint: savedAdventure,
+                  ),
+            onBegin: (value) => startSession(art, value),
+          ),
         );
       },
     ),
@@ -241,6 +366,9 @@ class GamePage extends StatefulWidget {
   const GamePage({
     required this.art,
     required this.onRestart,
+    this.reloadApplication = app_reload.reloadApplication,
+    this.readCheckpoint = storage.readCheckpoint,
+    this.writeCheckpoint = storage.writeCheckpoint,
     this.heroClass = HeroClass.warrior,
     this.checkpoint,
     this.showStageBriefing = false,
@@ -250,9 +378,14 @@ class GamePage extends StatefulWidget {
     this.onTravel,
     this.backActions,
     this.onReturnToMenu,
+    this.onPreparationStarted,
+    this.startPaused = false,
     super.key,
   });
   final GameCheckpoint? checkpoint;
+  final VoidCallback reloadApplication;
+  final String? Function() readCheckpoint;
+  final bool Function(String) writeCheckpoint;
   final bool showStageBriefing;
   final bool arrivingByWell;
   final HeroClass heroClass;
@@ -263,6 +396,8 @@ class GamePage extends StatefulWidget {
   final ValueChanged<GameCheckpoint>? onTravel;
   final BackActions? backActions;
   final VoidCallback? onReturnToMenu;
+  final VoidCallback? onPreparationStarted;
+  final bool startPaused;
   @override
   State<GamePage> createState() => _GamePageState();
 }
@@ -274,12 +409,12 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   async.Timer? saveTimer;
   void Function()? stopSaveListener;
   void Function()? stopBackAction;
-  bool keepSave = true;
+  bool keepSave = true, interruptedBeforeReady = false;
   void saveNow({bool notify = true}) {
     if (!keepSave) return;
     final checkpoint = GameCheckpoint.capture(adventure);
     if (checkpoint == null) return;
-    final failed = !storage.writeCheckpoint(checkpoint.encode());
+    final failed = !widget.writeCheckpoint(checkpoint.encode());
     final changed = failed != adventure.saveFailed;
     adventure.saveFailed = failed;
     if (changed && notify && mounted && !adventure.disposed) {
@@ -289,29 +424,61 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     }
   }
 
-  void advanceStage() {
+  bool preparingTransition = false, preparationInterrupted = false;
+
+  Future<void> advanceStage() async {
+    if (preparingTransition) return;
     final next = GameCheckpoint.advance(adventure);
     if (next == null || widget.onAdvance == null) return;
-    if (!storage.writeCheckpoint(next.encode())) {
-      adventure.saveFailed = true;
-      adventure.refresh();
-      return;
-    }
-    keepSave = false;
-    widget.onAdvance!(next);
+    await commitTransition(next, widget.onAdvance!);
   }
 
-  void travelTo(WorldStage stage, String wellId) {
-    if (widget.onTravel == null) return;
+  Future<void> travelTo(WorldStage stage, String wellId) async {
+    if (preparingTransition || widget.onTravel == null) return;
     final next = GameCheckpoint.warp(adventure, stage, wellId);
     if (next == null) return;
-    if (!storage.writeCheckpoint(next.encode())) {
-      adventure.saveFailed = true;
-      adventure.refresh();
-      return;
+    await commitTransition(next, widget.onTravel!);
+  }
+
+  Future<void> commitTransition(
+    GameCheckpoint next,
+    ValueChanged<GameCheckpoint> commit,
+  ) async {
+    final wasActive = adventure.active;
+    preparationInterrupted = !_isForeground;
+    widget.onPreparationStarted?.call();
+    adventure.pause();
+    setState(() => preparingTransition = true);
+    try {
+      await _prepareCheckpointArtwork(widget.art, next);
+      if (!mounted || adventure.disposed) return;
+      // No await separates the target save from the session swap. Exit and
+      // periodic saves continue to own the old paused session until this point.
+      if (!widget.writeCheckpoint(next.encode())) {
+        adventure.saveFailed = true;
+        adventure.refresh();
+        return;
+      }
+      keepSave = false;
+      commit(next);
+    } catch (_) {
+      if (mounted) {
+        _showPreparationFailure(context, onReload: reloadAfterFailure);
+      }
+    } finally {
+      if (mounted && !adventure.disposed) {
+        setState(() => preparingTransition = false);
+        if (wasActive && keepSave && !preparationInterrupted && _isForeground) {
+          adventure.resume();
+        }
+      }
     }
-    keepSave = false;
-    widget.onTravel!(next);
+  }
+
+  void reloadAfterFailure() {
+    if (!mounted || adventure.disposed) return;
+    saveNow(notify: false);
+    if (!adventure.saveFailed) widget.reloadApplication();
   }
 
   void openWarp() {
@@ -393,6 +560,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     stopBackAction = widget.backActions?.register(() {
+      if (preparingTransition) return;
       if (adventure.defeated) {
         returnToMenu();
       } else if (adventure.won) {
@@ -464,6 +632,13 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         game.camera.position = adventure.cameraFocus;
         adventure.start(game);
         saveNow();
+        if (widget.startPaused || interruptedBeforeReady || !_isForeground) {
+          adventure.pause();
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && panel == null) open('pause');
+          });
+          return;
+        }
         if (!widget.arrivingByWell &&
             (widget.showStageBriefing ||
                 adventure.world.stage == WorldStage.sands &&
@@ -486,6 +661,12 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed && !adventure.ready) {
+      interruptedBeforeReady = true;
+    }
+    if (state != AppLifecycleState.resumed && preparingTransition) {
+      preparationInterrupted = true;
+    }
     if (state != AppLifecycleState.resumed && adventure.ready && mounted) {
       if (panel == null) {
         open('pause');
@@ -529,7 +710,10 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) =>
+      _ArtworkPreparation(busy: preparingTransition, child: buildGame(context));
+
+  Widget buildGame(BuildContext context) => Scaffold(
     body: AnimatedBuilder(
       animation: adventure,
       child: game,
@@ -888,8 +1072,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   onRetryCheckpoint:
                       adventure.defeated &&
                           widget.onRetryCheckpoint != null &&
-                          GameCheckpoint.decode(storage.readCheckpoint()) !=
-                              null
+                          GameCheckpoint.decode(widget.readCheckpoint()) != null
                       ? widget.onRetryCheckpoint
                       : null,
                 ),
