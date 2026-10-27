@@ -16,7 +16,7 @@ class GameCheckpoint {
   String get summary =>
       '${WorldStage.values.firstWhere((s) => s.name == data['stage']).title} · Lv.${progress.level} ${progress.heroClass.title}';
   String encode() => jsonEncode(data);
-  // One active scene and at most three inactive scenes, each with its own budget.
+  // Each authored stage has an independent scene budget; only visited scenes are saved.
   static const _maximumEncodedLength = 8000000;
   static GameCheckpoint? capture(Adventure session) {
     if (!session.ready || session.disposed || session.progress.hp <= 0) {
@@ -107,12 +107,7 @@ class GameCheckpoint {
     if (!session.stageCleared || session.defeated || session.disposed) {
       return null;
     }
-    final next = switch (session.world.stage) {
-      WorldStage.forest => WorldStage.sands,
-      WorldStage.sands =>
-        session.timePath == TimePath.past ? WorldStage.past : WorldStage.future,
-      _ => null,
-    };
+    final next = session.world.stage.nextStage(session.timePath);
     if (next == null) return null;
     final checkpoint = capture(session);
     if (checkpoint == null) return null;
@@ -142,14 +137,16 @@ class GameCheckpoint {
       'timePath': next == WorldStage.sands ? null : session.timePath?.name,
       'commission': null,
       'sites': <String>[],
-      'trackedSite': nearestIncompleteSite(
-        next,
-        next.arrival +
-            Offset(
-              Guardian.onFootSize.width / 2,
-              Guardian.onFootSize.height / 2,
-            ),
-      )?.id,
+      'trackedSite': next.requiresContract
+          ? null
+          : nearestIncompleteSite(
+              next,
+              next.arrival +
+                  Offset(
+                    Guardian.onFootSize.width / 2,
+                    Guardian.onFootSize.height / 2,
+                  ),
+            )?.id,
       'chests': <int>[],
       'memoryRewarded': false,
       'progress': p.toSave(),
@@ -278,16 +275,16 @@ class GameCheckpoint {
           ? null
           : TimePath.values.firstWhere((p) => p.name == pathName);
       if (stage == WorldStage.forest && path != null ||
-          stage == WorldStage.past && path != TimePath.past ||
-          stage == WorldStage.future && path != TimePath.future) {
+          stage.requiredPath != null && path != stage.requiredPath ||
+          stage == WorldStage.convergence && path == null) {
         return null;
       }
       final commission = data['commission'];
+      final contract = chapterContract(stage, path);
       if (commission != null &&
-          (stage != WorldStage.sands ||
-              !timeCommissions.any(
-                (q) => q.id == commission && q.path == path,
-              ))) {
+          !(stage == WorldStage.sands
+              ? timeCommissions.any((q) => q.id == commission && q.path == path)
+              : contract?.id == commission)) {
         return null;
       }
       final seed = data['seed'];
@@ -349,6 +346,11 @@ class GameCheckpoint {
                 branch[sites.length].id != commission)) {
           return null;
         }
+      }
+      if (stage.requiresContract &&
+          sites.isNotEmpty &&
+          commission != contract?.id) {
+        return null;
       }
       data['sites'] = sites;
       final tracked = data['trackedSite'];
@@ -582,7 +584,7 @@ class GameCheckpoint {
         groundItems++;
       }
     }
-    if (groundItems > 128) {
+    if (groundItems > WorldStage.values.length * 32) {
       throw const FormatException('Visited scene budget exceeded');
     }
     return journal;

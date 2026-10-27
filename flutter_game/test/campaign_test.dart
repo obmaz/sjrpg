@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:ui' show Size, Rect;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/world_model.dart';
+
 import 'support/test_game.dart';
 
 void main() {
@@ -113,8 +115,11 @@ void main() {
     final worlds = [
       for (final stage in WorldStage.values) AdventureWorld(stage: stage),
     ];
-    expect(worlds.map((w) => w.spawn).toSet().length, 4);
-    expect(worlds.map((w) => w.trails.first.points.first).toSet().length, 4);
+    expect(worlds.map((w) => w.spawn).toSet().length, WorldStage.values.length);
+    expect(
+      worlds.map((w) => w.trails.first.points.first).toSet().length,
+      WorldStage.values.length,
+    );
     for (final stage in WorldStage.values.skip(1)) {
       final s = session(stage);
       final field = s.world.trails.first.points.firstWhere(
@@ -137,9 +142,20 @@ void main() {
         everyElement(
           isIn(
             stage == WorldStage.sands
-                ? ['scorpion', 'mummy', 'cultist', 'basilisk']
-                : stage == WorldStage.past
-                ? ['skeleton', 'troll', 'cultist', 'wraith']
+                ? ['scorpion', 'mummy', 'cultist', 'basilisk', 'viper']
+                : stage == WorldStage.past || stage == WorldStage.tombs
+                ? ['skeleton', 'troll', 'cultist', 'wraith', 'viper']
+                : stage == WorldStage.convergence
+                ? [
+                    'wolf',
+                    'wraith',
+                    'boar',
+                    'skeleton',
+                    'cyber',
+                    'cultist',
+                    'drone',
+                    'goblin',
+                  ]
                 : ['cyber', 'gunner', 'drone'],
           ),
         ),
@@ -263,9 +279,14 @@ void main() {
     },
   );
   test('final stage quests gate completion and no next stage is invented', () {
-    for (final stage in [WorldStage.past, WorldStage.future]) {
-      final s = session(stage);
-      s.timePath = stage == WorldStage.past ? TimePath.past : TimePath.future;
+    for (final path in TimePath.values) {
+      final s = session(WorldStage.convergence);
+      s.timePath = path;
+      s.hero.position.setValues(
+        s.world.elderAt.dx - 14,
+        s.world.elderAt.dy - 12,
+      );
+      expect(s.acceptChapterContract(), true);
       s.progress.bossDefeated = true;
       expect(s.stageCleared, false);
       for (final q in s.world.sites) {

@@ -148,6 +148,12 @@ class PotionBelt extends StatelessWidget {
   const PotionBelt(this.session, {this.onUse, super.key});
   final Adventure session;
   final VoidCallback? onUse;
+
+  void _use(VoidCallback action) {
+    action();
+    onUse?.call();
+  }
+
   @override
   Widget build(BuildContext context) => Row(
     mainAxisSize: MainAxisSize.min,
@@ -179,11 +185,9 @@ class PotionBelt extends StatelessWidget {
     button: true,
     label: '$label $count개',
     excludeSemantics: true,
+    onTap: () => _use(action),
     child: InkWell(
-      onTap: () {
-        action();
-        onUse?.call();
-      },
+      onTap: () => _use(action),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         constraints: const BoxConstraints(minWidth: 50, maxWidth: 72),

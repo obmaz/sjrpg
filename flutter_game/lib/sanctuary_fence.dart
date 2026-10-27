@@ -25,6 +25,18 @@ void paintSanctuaryFence(
       const ui.Color(0xff1a313d),
       const ui.Color(0xff759ba8),
     ),
+    WorldStage.tombs => (
+      const ui.Color(0xff4b3d3a),
+      const ui.Color(0xffc5ab8e),
+    ),
+    WorldStage.foundry => (
+      const ui.Color(0xff233448),
+      const ui.Color(0xff7fa7ce),
+    ),
+    WorldStage.convergence => (
+      const ui.Color(0xff334234),
+      const ui.Color(0xffb7c9a2),
+    ),
   };
   final color = stage.sanctuaryColor;
   canvas.drawLine(
@@ -36,11 +48,12 @@ void paintSanctuaryFence(
       ..strokeCap = ui.StrokeCap.round,
   );
   for (final height
-      in stage == WorldStage.forest || stage == WorldStage.past
+      in stage.visualStage == WorldStage.forest ||
+              stage.visualStage == WorldStage.past
           ? [8.0, 18.0]
           : [13.0]) {
     final from = a - ui.Offset(0, height), to = b - ui.Offset(0, height);
-    if (stage == WorldStage.future) {
+    if (stage.usesCityArt) {
       canvas.drawLine(
         from,
         to,
@@ -98,7 +111,7 @@ void paintSanctuaryFence(
       ),
       ui.Paint()..color = light,
     );
-    if (stage == WorldStage.future) {
+    if (stage.usesCityArt) {
       canvas.drawLine(
         at - const ui.Offset(0, 21),
         at - const ui.Offset(0, 5),
@@ -128,7 +141,8 @@ void paintSanctuaryFence(
           );
         }
       }
-      if (stage == WorldStage.forest || stage == WorldStage.past) {
+      if (stage.visualStage == WorldStage.forest ||
+          stage.visualStage == WorldStage.past) {
         canvas.drawOval(
           ui.Rect.fromLTWH(at.dx - 7, at.dy - 1, 9, 4),
           ui.Paint()..color = const ui.Color(0xff6f8852),

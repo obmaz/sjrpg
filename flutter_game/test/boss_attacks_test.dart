@@ -77,13 +77,15 @@ void main() {
         boss.update(.5);
         expect(boss.windup, time);
         s.resume();
-        final safe = stage == WorldStage.forest
-            ? attack.target + const Offset(0, 150)
-            : stage == WorldStage.sands
-            ? attack.target + const Offset(0, 90)
-            : stage == WorldStage.past
-            ? attack.origin + const Offset(0, 220)
-            : attack.target + const Offset(80, 80);
+        final safe = switch (stage) {
+          WorldStage.forest => attack.target + const Offset(0, 150),
+          WorldStage.sands => attack.target + const Offset(0, 90),
+          WorldStage.past ||
+          WorldStage.tombs => attack.origin + const Offset(0, 220),
+          WorldStage.future => attack.target + const Offset(80, 80),
+          WorldStage.foundry => attack.target + const Offset(0, 240),
+          WorldStage.convergence => attack.target + const Offset(0, 300),
+        };
         s.hero.position.setValues(safe.dx - 12, safe.dy - 11);
         final hp = s.progress.hp;
         for (var i = 0; i < 30 && boss.bossAttack != null; i++) {

@@ -133,7 +133,7 @@ void main() {
       expect(s.progress.hp, hurt);
       inCombatField(s);
       s.wakeEnemies();
-      s.progress.kills = 35;
+      s.progress.kills = 51;
       s.hit(
         s.mobs.firstWhere((m) => m.combatReady && !m.isDead),
         99999,
@@ -141,7 +141,7 @@ void main() {
       );
       expect(s.progress.healingPotions, 4);
       expect(s.progress.energyPotions, 2);
-      s.progress.kills = 47;
+      s.progress.kills = 68;
       s.hit(
         s.mobs.firstWhere((m) => m.combatReady && !m.isDead),
         99999,

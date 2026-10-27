@@ -181,6 +181,7 @@ class _ClassSelectionState extends State<ClassSelection> {
       selected: active,
       label: '${c.title} 선택',
       excludeSemantics: true,
+      onTap: () => setState(() => selected = c),
       child: InkWell(
         onTap: () => setState(() => selected = c),
         borderRadius: BorderRadius.circular(18),

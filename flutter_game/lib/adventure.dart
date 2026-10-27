@@ -9,6 +9,7 @@ import 'actor_motion.dart';
 import 'audio_settings.dart';
 import 'battle_effects.dart';
 import 'boss_attacks.dart';
+import 'crushing_blow_vfx.dart';
 import 'destructible_chest.dart';
 import 'device_settings.dart';
 import 'effect_visibility.dart';
@@ -19,6 +20,8 @@ import 'enemy_motion.dart';
 import 'enemy_spacing.dart';
 import 'game_art.dart';
 import 'health_feedback.dart';
+import 'loot_policy.dart';
+import 'physical_aim_preview.dart';
 import 'ranked_vfx.dart';
 import 'shop_content.dart';
 import 'skill_aim.dart';
@@ -52,10 +55,13 @@ class Adventure extends ChangeNotifier {
        progress = restoredProgress ?? Progress(heroClass: heroClass),
        device = device ?? DeviceSettings.shared,
        audio = audio ?? AudioSettings.shared {
-    if (stage == WorldStage.past) timePath = TimePath.past;
-    if (stage == WorldStage.future) timePath = TimePath.future;
+    timePath =
+        stage.requiredPath ??
+        (stage == WorldStage.convergence ? TimePath.past : null);
     hero = Guardian(this);
-    trackedSiteId = nearestIncompleteSite(stage, hero.body.center)?.id;
+    trackedSiteId = stage.requiresContract
+        ? null
+        : nearestIncompleteSite(stage, hero.body.center)?.id;
     terrain = TerrainArt(world, art);
     for (var i = 0; i < travelMountDefs.length; i++) {
       final def = travelMountDefs[i];
@@ -234,6 +240,31 @@ class Adventure extends ChangeNotifier {
     return null;
   }
 
+  ChapterContract? get stageContract => chapterContract(world.stage, timePath);
+  bool get chapterContractAccepted =>
+      !world.stage.requiresContract ||
+      stageContract != null && acceptedCommission == stageContract!.id;
+  bool get canAcceptChapterContract =>
+      world.stage.requiresContract &&
+      !disposed &&
+      !defeated &&
+      !chapterContractAccepted &&
+      stageContract != null &&
+      (hero.body.center - world.elderAt).distance < 150 &&
+      world.clearLine(hero.body.center, world.elderAt, const ui.Size(3, 3));
+  bool acceptChapterContract() {
+    if (!canAcceptChapterContract) return false;
+    acceptedCommission = stageContract!.id;
+    trackedSiteId = nearestIncompleteSite(
+      world.stage,
+      hero.body.center,
+      cleansedSites: cleansedSites,
+    )?.id;
+    commissionStartKills = progress.kills;
+    refresh();
+    return true;
+  }
+
   bool canTrackSite(QuestSite site) {
     if (disposed ||
         defeated ||
@@ -241,6 +272,7 @@ class Adventure extends ChangeNotifier {
         !visibleSites.any((s) => s.id == site.id)) {
       return false;
     }
+    if (!chapterContractAccepted) return false;
     if (world.stage != WorldStage.sands) return true;
     final q = timeCommissions.firstWhere((q) => q.id == site.id);
     return acceptedCommission == site.id || canAcceptCommission(q);
@@ -323,9 +355,11 @@ class Adventure extends ChangeNotifier {
             timeCommissions
                 .where((q) => q.path == timePath)
                 .every((q) => cleansedSites.contains(q.id))
-      : world.sites.every((q) => cleansedSites.contains(q.id));
+      : chapterContractAccepted &&
+            world.sites.every((q) => cleansedSites.contains(q.id));
   bool get stageCleared => progress.bossDefeated && mandatoryQuestsComplete;
   QuestSite? get nearbySite {
+    if (!chapterContractAccepted) return null;
     for (final site in visibleSites) {
       if (world.stage == WorldStage.sands && site.id != acceptedCommission) {
         continue;
@@ -610,17 +644,35 @@ class Adventure extends ChangeNotifier {
     audio.play(EffectSound.loot);
     device.pulse(FeedbackKind.loot);
     game?.add(ChestFragments(this, stageChestLocations[index]));
-    progress.gold += 18;
-    final potionFound = openedChests.length % 4 == 1;
+    final at = stageChestLocations[index];
+    var content = chestContent(world.stage, index);
+    // A safe settlement must never release enemies behind its fence.
+    if (content == ChestContent.ambush &&
+        world.sanctuary.protects(world.chestBody(index))) {
+      content = ChestContent.coins;
+    }
+    final ambushed = content == ChestContent.ambush && _chestAmbush(at) > 0;
+    final goldFound = content == ChestContent.ambush && !ambushed
+        ? 6
+        : content.gold;
+    progress.gold += goldFound;
+    final potionFound =
+        content == ChestContent.supplies ||
+        world.stage == WorldStage.forest && index == 0;
     if (potionFound) progress.healingPotions++;
-    dropGear(
-      progress.rollLoot(random, chest: true),
-      stageChestLocations[index],
-    );
+    if (content == ChestContent.gear) {
+      dropGear(progress.rollLoot(random, chest: true), at);
+    }
     bubble(
-      potionFound ? '+18 골드 · 물약 +1' : '+18 골드',
-      stageChestLocations[index] - const ui.Offset(0, 55),
-      const ui.Color(0xffffd774),
+      ambushed
+          ? world.stage.usesCityArt
+                ? '경비 드론 매복!'
+                : '독사 매복!'
+          : potionFound
+          ? '+$goldFound 골드 · 물약 +1'
+          : '+$goldFound 골드',
+      at - const ui.Offset(0, 55),
+      ambushed ? const ui.Color(0xffc5e894) : const ui.Color(0xffffd774),
     );
     if (!memoryRewarded && recoveredMemories == stageMemories.length) {
       memoryRewarded = true;
@@ -633,6 +685,53 @@ class Adventure extends ChangeNotifier {
     }
     refresh();
     return true;
+  }
+
+  int _chestAmbush(ui.Offset at) {
+    const size = ui.Size(24, 22), half = ui.Offset(12, 11);
+    final away = at - hero.body.center;
+    final bearing = math.atan2(away.dy, away.dx);
+    var added = 0;
+    for (final turn in [-.75, .75]) {
+      if (living >= 40) break;
+      final desired =
+          at +
+          ui.Offset(math.cos(bearing + turn), math.sin(bearing + turn)) * 100 -
+          half;
+      final safe = world.spawnNear(
+        desired,
+        size,
+        avoidSanctuary: true,
+        occupied: (body) =>
+            (body.center - hero.body.center).distanceSquared < 90 * 90 ||
+            (body.center - at).distanceSquared > 240 * 240 ||
+            !world.clearEnemyLine(body.center, at, const ui.Size(3, 3)) ||
+            mobs.any(
+              (m) =>
+                  !m.isDead &&
+                  !m.isRemoving &&
+                  !m.encounterDormant &&
+                  m.body.overlaps(body),
+            ),
+      );
+      if (safe == null) continue;
+      final enemy = spawnEnemy(
+        world.stage.usesCityArt ? 'drone' : 'viper',
+        safe,
+      );
+      if (enemy == null) continue;
+      final key = EncounterArea.keyAt(at);
+      if (!encounterAreas.containsKey(key)) {
+        final area = EncounterArea(key, at);
+        encounterAreas[key] = area;
+        game?.add(EncounterStone(this, area));
+      }
+      enemy.encounterKey = key;
+      // Even an adjacent chest gives time to read the emerging threat.
+      enemy.attackClock = 1.2;
+      added++;
+    }
+    return added;
   }
 
   List<int> attackableChests(
@@ -1293,7 +1392,9 @@ class Adventure extends ChangeNotifier {
           ),
         );
       }
-      if (mob.boss || mob.isElite || progress.kills % 20 == 0) {
+      if (mob.boss ||
+          mob.isElite ||
+          progress.kills % ordinaryGearInterval == 0) {
         dropGear(
           progress.rollLoot(random, boss: mob.boss, elite: mob.isElite),
           mob.body.center,
@@ -1310,8 +1411,12 @@ class Adventure extends ChangeNotifier {
           mob.body.center + const ui.Offset(28, 12),
         );
       }
-      if (!mob.boss && progress.kills % 36 == 0) progress.healingPotions++;
-      if (!mob.boss && progress.kills % 48 == 0) progress.energyPotions++;
+      if (!mob.boss && progress.kills % healingDropInterval == 0) {
+        progress.healingPotions++;
+      }
+      if (!mob.boss && progress.kills % energyDropInterval == 0) {
+        progress.energyPotions++;
+      }
       bubble(
         '+${progress.gold - goldBefore} 골드',
         mob.position.toOffset() - const ui.Offset(0, 34),
@@ -1502,7 +1607,8 @@ class Guardian extends Player with WithCollision {
   int chargeCap = 0;
   final chargeVictims = <HuntEnemy>{};
   final chargeChests = <int>{};
-  double heavyWindup = 0, heavyPower = 0, heavyAngle = 0;
+  double heavyWindup = 0, heavyPower = 0, heavyAngle = 0, heavyCharge = 0;
+  final _heavyChargeArt = CrushingChargeArt();
   SkillDef? heavySkill;
   bool get physicalAction => chargeTime > 0 || heavyWindup > 0 || spin > 0;
   void heavyImpact() {
@@ -1513,14 +1619,14 @@ class Guardian extends Player with WithCollision {
         session.mobs.where((m) {
           final d = m.body.center - body.center;
           return session.canHitEnemy(m) &&
-              d.distance < 185 &&
+              d.distance < crushingBlowRange &&
               math
                       .atan2(
                         math.sin(math.atan2(d.dy, d.dx) - heavyAngle),
                         math.cos(math.atan2(d.dy, d.dx) - heavyAngle),
                       )
                       .abs() <
-                  1.05 &&
+                  crushingBlowHalfAngle &&
               session.world.clearLine(
                 body.center,
                 m.body.center,
@@ -1551,20 +1657,19 @@ class Guardian extends Player with WithCollision {
     }
     session.strikeChests(
       body.center,
-      185,
+      crushingBlowRange,
       bearing: heavyAngle,
-      halfAngle: 1.05,
+      halfAngle: crushingBlowHalfAngle,
       maxTargets: session.progress.skillTargetLimit(def) - enemies.length,
     );
     session.game?.add(
-      GroundStrike(
+      CrushingBlowVisual(
         session,
-        body.center +
-            ui.Offset(math.cos(heavyAngle), math.sin(heavyAngle)) * 80,
+        body.center,
         rank: session.progress.rank('crushingBlow'),
+        charge: heavyCharge,
         tempo: session.progress.skillTempo(def),
         bearing: heavyAngle,
-        directional: true,
       ),
     );
     session.audio.play(EffectSound.impact);
@@ -2014,16 +2119,23 @@ class Guardian extends Player with WithCollision {
         attackClock = math.max(attackClock, chargeTime + .06);
       case 'crushingBlow':
         heavyAngle = manualAim?.angle ?? bearing;
-        heavyPower =
-            p.skillDamage(def) *
-            (1 +
-                .8 *
-                    ((manualAim?.heldFor ?? 0) / p.heavyChargeTime).clamp(
-                      0,
-                      1,
-                    ));
+        heavyCharge = ((manualAim?.heldFor ?? 0) / p.heavyChargeTime).clamp(
+          0,
+          1,
+        );
+        heavyPower = p.skillDamage(def) * (1 + .8 * heavyCharge);
         heavySkill = def;
         heavyWindup = p.skillMotionTime(def);
+        session.game?.add(
+          CrushingBlowWindup(
+            session,
+            this,
+            rank: rank,
+            charge: heavyCharge,
+            bearing: heavyAngle,
+            duration: heavyWindup,
+          ),
+        );
         attackClock = math.max(attackClock, heavyWindup + .3);
         attackBearing = heavyAngle;
         strikePose = 2;
@@ -2245,6 +2357,7 @@ class Guardian extends Player with WithCollision {
     super.render(canvas);
     final feet = ui.Offset(size.x / 2, size.y),
         center = ui.Offset(size.x / 2, size.y - 8);
+    final crushingAim = aim?.id == 'crushingBlow' ? aim : null;
     canvas.drawOval(
       ui.Rect.fromCenter(center: feet - ui.Offset(0, 2), width: 36, height: 13),
       ui.Paint()..color = const ui.Color(0x6642c8ba),
@@ -2331,6 +2444,8 @@ class Guardian extends Player with WithCollision {
         feet,
         spin > 0
             ? bearing + (1 - spin / spinDuration) * math.pi * 4
+            : crushingAim != null
+            ? crushingAim.angle
             : swing > 0
             ? attackBearing
             : bearing,
@@ -2345,7 +2460,11 @@ class Guardian extends Player with WithCollision {
             : 0,
         60,
         attack: swing > 0 || spin > 0 || aim?.id == 'crushingBlow',
-        comboPose: spin > 0 ? 1 : strikePose,
+        comboPose: spin > 0
+            ? 1
+            : crushingAim != null
+            ? 2
+            : strikePose,
         flash: damageFlash,
       );
     }
@@ -2499,19 +2618,24 @@ class Guardian extends Player with WithCollision {
       );
     }
     if (aim?.id == 'crushingBlow' || heavyWindup > 0) {
-      paintRankImpact(
+      final charge = crushingAim == null
+          ? heavyCharge
+          : (crushingAim.heldFor / session.progress.heavyChargeTime).clamp(
+              0.0,
+              1.0,
+            );
+      _heavyChargeArt.paint(
         canvas,
         center,
-        (session.elapsed * 3) % 1,
-        session.progress.rank('crushingBlow'),
-        const ui.Color(0xffffe0a4),
-        radius: 28,
+        bearing: crushingAim?.angle ?? heavyAngle,
+        charge: charge,
+        time: session.elapsed,
+        rank: session.progress.rank('crushingBlow'),
       );
-      final held = aim?.heldFor ?? session.progress.heavyChargeTime;
       canvas.drawArc(
         ui.Rect.fromCenter(center: feet, width: 44, height: 18),
         -math.pi / 2,
-        math.pi * 2 * (held / session.progress.heavyChargeTime).clamp(0, 1),
+        math.pi * 2 * charge,
         false,
         ui.Paint()
           ..color = const ui.Color(0xffffd893)
@@ -2520,7 +2644,16 @@ class Guardian extends Player with WithCollision {
       );
     }
     final currentAim = aim;
-    if (currentAim != null) {
+    if (currentAim?.id == 'crushingBlow' || currentAim?.id == 'charge') {
+      paintPhysicalAimPreview(
+        canvas,
+        body.center - position.toOffset(),
+        currentAim!,
+        bearing: currentAim.id == 'charge' && !currentAim.dragged
+            ? bearing
+            : currentAim.angle,
+      );
+    } else if (currentAim != null) {
       final origin = body.center - position.toOffset();
       final target =
           (currentAim.id == 'meteor'
@@ -2573,7 +2706,7 @@ class Guardian extends Player with WithCollision {
   }
 }
 
-class HuntEnemy extends Enemy with WithCollision {
+class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
   HuntEnemy(
     this.session,
     this.kind,
@@ -2600,9 +2733,21 @@ class HuntEnemy extends Enemy with WithCollision {
   bool get usesPounce => !boss && enemyCatalog[kind]?.pattern == 'pounce';
   bool get usesSweep => !boss && enemyCatalog[kind]?.pattern == 'sweep';
   bool get usesBolt => !boss && enemyCatalog[kind]?.pattern == 'bolt';
-  double get pounceWarning => kind == 'scorpion' ? .58 : .42;
-  double get pounceSpeed => kind == 'scorpion' ? 440 : 520;
-  double get pounceRange => kind == 'scorpion' ? 200 : 240;
+  double get pounceWarning => switch (kind) {
+    'scorpion' => .58,
+    'viper' => .55,
+    _ => .42,
+  };
+  double get pounceSpeed => switch (kind) {
+    'scorpion' => 440,
+    'viper' => 420,
+    _ => 520,
+  };
+  double get pounceRange => switch (kind) {
+    'scorpion' => 200,
+    'viper' => 170,
+    _ => 240,
+  };
   double get sweepRange => kind == 'troll'
       ? 120
       : kind == 'cyber'
@@ -2629,7 +2774,7 @@ class HuntEnemy extends Enemy with WithCollision {
       ? 2.1
       : 1.8;
   double get boltWarning => kind == 'gunner' ? .8 : .65;
-  ui.Color get attackColor => kind == 'basilisk'
+  ui.Color get attackColor => kind == 'basilisk' || kind == 'viper'
       ? const ui.Color(0xffb2df73)
       : kind == 'gunner' || kind == 'drone'
       ? const ui.Color(0xff7feafa)
@@ -2696,6 +2841,39 @@ class HuntEnemy extends Enemy with WithCollision {
   ui.Offset? routeGoal;
   ui.Offset? lastClearPosition;
   ui.Rect get body => ui.Rect.fromLTWH(position.x, position.y, size.x, size.y);
+  @override
+  ui.Rect get effectBounds {
+    // Include the tallest sprite, recoil, status marks and boss name plate.
+    var bounds = body.inflate(boss ? 180 : 130);
+    if (windup > 0) {
+      if (usesPounce && pounceGoal != null) {
+        bounds = bounds.expandToInclude(
+          ui.Rect.fromPoints(body.center, pounceGoal!).inflate(16),
+        );
+      }
+      if (usesSweep) {
+        bounds = bounds.expandToInclude(
+          ui.Rect.fromCircle(center: body.center, radius: sweepRange + 3),
+        );
+      }
+      if (kind == 'gunner') {
+        final tip =
+            body.center + ui.Offset(math.cos(bearing), math.sin(bearing)) * 260;
+        bounds = bounds.expandToInclude(
+          ui.Rect.fromPoints(body.center, tip).inflate(3),
+        );
+      }
+    }
+    return bounds;
+  }
+
+  @override
+  void renderCulled(ui.Canvas canvas) {
+    // Enemy's base render refreshes Bonfire's cached isVisible value. Keep its
+    // normal transform as well, for the engine's optional vision debugging.
+    decorator.applyChain(super.render, canvas);
+  }
+
   @override
   void onMount() {
     super.onMount();
@@ -3078,7 +3256,13 @@ class HuntEnemy extends Enemy with WithCollision {
             session.hero.body.center,
             const ui.Size(3, 3),
           )) {
-        session.hurtHero(kind == 'scorpion' ? 10 : 8);
+        session.hurtHero(
+          kind == 'scorpion'
+              ? 10
+              : kind == 'viper'
+              ? 6
+              : 8,
+        );
         finishPounce();
         break;
       }
@@ -3101,7 +3285,7 @@ class HuntEnemy extends Enemy with WithCollision {
   @override
   void render(ui.Canvas canvas) {
     super.render(canvas);
-    final feet = ui.Offset(size.x / 2, size.y);
+    final feet = ui.Offset(size.x / 2, kind == 'viper' ? size.y / 2 : size.y);
     canvas.drawOval(
       ui.Rect.fromCenter(
         center: feet,
@@ -3151,7 +3335,7 @@ class HuntEnemy extends Enemy with WithCollision {
         from,
         from + direction * (1 - windup / pounceWarning).clamp(0, 1),
         ui.Paint()
-          ..color = const ui.Color(0xffffc38c)
+          ..color = kind == 'viper' ? attackColor : const ui.Color(0xffffc38c)
           ..strokeWidth = 4
           ..strokeCap = ui.StrokeCap.round,
       );
@@ -3242,7 +3426,10 @@ class HuntEnemy extends Enemy with WithCollision {
     canvas.save();
     canvas.translate(feet.dx, feet.dy);
     canvas.rotate(motion.lean);
-    canvas.scale(motion.scaleX, motion.scaleY);
+    canvas.scale(
+      kind == 'viper' ? 1 + motion.recoil * .035 : motion.scaleX,
+      kind == 'viper' ? 1 - motion.recoil * .04 : motion.scaleY,
+    );
     canvas.translate(-feet.dx, -feet.dy);
     session.art.actor(
       canvas,
@@ -3251,7 +3438,9 @@ class HuntEnemy extends Enemy with WithCollision {
           anticipationOffset -
           ui.Offset(
             0,
-            pounceRemaining > 0 && pounceDuration > 0
+            kind == 'viper'
+                ? 0
+                : pounceRemaining > 0 && pounceDuration > 0
                 ? math.sin(math.pi * (1 - pounceRemaining / pounceDuration)) *
                       15
                 : motion.lift,
@@ -3274,6 +3463,8 @@ class HuntEnemy extends Enemy with WithCollision {
           ? 76
           : kind == 'troll'
           ? 80
+          : kind == 'viper'
+          ? 44
           : kind == 'wolf'
           ? 55
           : 62,
@@ -3402,13 +3593,26 @@ class LandscapeLayer extends GameComponent {
   }
 }
 
-class WoodlandProp extends GameComponent {
+class WoodlandProp extends GameComponent with EffectVisibility {
   WoodlandProp(this.session, this.prop) {
     position = Vector2(prop.body.left, prop.body.top);
     size = Vector2(prop.body.width, prop.body.height);
   }
   final Adventure session;
   final WorldProp prop;
+  @override
+  ui.Rect get effectBounds {
+    final feet = prop.body.bottomCenter;
+    // Ruins and city props use square crops; natural props use drawSize.width.
+    final width = math.max(prop.drawSize.width, prop.drawSize.height);
+    return ui.Rect.fromLTWH(
+      feet.dx - width / 2,
+      feet.dy - prop.drawSize.height,
+      width,
+      prop.drawSize.height * 1.2,
+    ).inflate(2);
+  }
+
   @override
   void render(ui.Canvas canvas) {
     super.render(canvas);
@@ -3499,7 +3703,7 @@ class VillagePerson extends GameComponent {
     if (!merchant || session.world.stage != WorldStage.forest) {
       session.art.actor(
         canvas,
-        merchant ? 'merchant' : 'villager',
+        merchant ? 'merchant' : (session.stageContract?.actor ?? 'villager'),
         const ui.Offset(14, 24),
         math.pi / 2,
         0,

@@ -16,6 +16,10 @@ void main() {
       (WorldStage.sands, TimePath.future),
       (WorldStage.past, TimePath.past),
       (WorldStage.future, TimePath.future),
+      (WorldStage.tombs, TimePath.past),
+      (WorldStage.foundry, TimePath.future),
+      (WorldStage.convergence, TimePath.past),
+      (WorldStage.convergence, TimePath.future),
     ]) {
       testWidgets(
         'resumed cleared ${stage.name} $path keeps the correct footer pinned at $size',
@@ -24,12 +28,18 @@ void main() {
           tester.view.devicePixelRatio = 1;
           addTearDown(tester.view.resetPhysicalSize);
           addTearDown(tester.view.resetDevicePixelRatio);
-          final canAdvance =
-              stage == WorldStage.forest || stage == WorldStage.sands;
+          final canAdvance = stage.hasNextStage;
           final completed = Adventure(GameArt(), stage: stage)
             ..start(TestGame());
           addTearDown(completed.dispose);
           completed.timePath = path;
+          if (stage.requiresContract) {
+            completed.hero.position.setValues(
+              completed.world.elderAt.dx - 14,
+              completed.world.elderAt.dy - 12,
+            );
+            expect(completed.acceptChapterContract(), true);
+          }
           completed.cleansedSites.addAll(
             stage == WorldStage.sands
                 ? timeCommissions.where((q) => q.path == path).map((q) => q.id)
@@ -71,13 +81,7 @@ void main() {
           );
           await tester.pumpAndSettle();
           final target = find.text(
-            !canAdvance
-                ? '모험 계속하기'
-                : path == null
-                ? '제2장 의뢰 받기'
-                : path == TimePath.past
-                ? '태초의 왕국으로'
-                : '네온의 심연으로',
+            canAdvance ? stage.advanceLabel(path) : '모험 계속하기',
           );
           expect(
             target,
@@ -103,7 +107,7 @@ void main() {
           await tester.tap(target);
           await tester.pumpAndSettle();
           if (canAdvance) {
-            expect(next!.data['stage'], path == null ? 'sands' : path.name);
+            expect(next!.data['stage'], stage.nextStage(path)!.name);
             expect(advanced, 1);
             expect(closed, 1);
           } else {

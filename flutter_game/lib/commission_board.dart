@@ -111,11 +111,40 @@ class CommissionBoard extends StatelessWidget {
           for (final q in journey)
             if (q != current) _record(q),
         ] else ...[
+          if (session.stageContract != null) ...[
+            Text(
+              '${session.stageContract!.giver} · ${session.stageContract!.title}',
+              style: const TextStyle(
+                color: gold,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
           Text(
-            stage.commission,
+            session.stageContract?.story ?? stage.commission,
             style: const TextStyle(color: cream, fontSize: 16, height: 1.6),
           ),
           const SizedBox(height: 18),
+          if (!session.chapterContractAccepted) ...[
+            Text(
+              '거점의 ${session.stageContract!.giver}에게 가까이 가서 의뢰를 받으세요.',
+              style: const TextStyle(color: cream, fontSize: 14, height: 1.5),
+            ),
+            const SizedBox(height: 10),
+            GameAction(
+              '${session.stageContract!.title} 수락',
+              primary: true,
+              icon: Icons.assignment_turned_in_outlined,
+              onTap: session.canAcceptChapterContract
+                  ? () {
+                      if (session.acceptChapterContract()) onCommit();
+                    }
+                  : null,
+            ),
+            const SizedBox(height: 16),
+          ],
           for (final site in session.world.sites) _site(site),
         ],
         const SizedBox(height: 8),
@@ -136,14 +165,10 @@ class CommissionBoard extends StatelessWidget {
         ),
         if (session.stageCleared &&
             onAdvance != null &&
-            (stage == WorldStage.forest || stage == WorldStage.sands)) ...[
+            stage.hasNextStage) ...[
           const SizedBox(height: 16),
           GameAction(
-            stage == WorldStage.forest
-                ? '제2장 의뢰 받기'
-                : session.timePath == TimePath.past
-                ? '태초의 왕국으로'
-                : '네온의 심연으로',
+            stage.advanceLabel(session.timePath),
             primary: true,
             icon: Icons.explore_rounded,
             onTap: onAdvance,
@@ -178,25 +203,30 @@ class CommissionBoard extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: SizedBox(
-              height: bannerHeight,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: bannerHeight),
               child: Stack(
-                fit: StackFit.expand,
+                alignment: Alignment.centerLeft,
                 children: [
-                  CustomPaint(
-                    painter: _CommissionArt(session.art, past ? 0 : 1),
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: _CommissionArt(session.art, past ? 0 : 1),
+                    ),
                   ),
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xdd0d2523), Color(0x220d2523)],
-                        stops: [0, .8],
+                  const Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xdd0d2523), Color(0x220d2523)],
+                          stops: [0, .8],
+                        ),
                       ),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(12),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

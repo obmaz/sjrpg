@@ -23,7 +23,11 @@ void main() {
             ? 0
             : stage == WorldStage.sands
             ? 1
-            : 2;
+            : stage == WorldStage.past || stage == WorldStage.future
+            ? 2
+            : stage == WorldStage.convergence
+            ? 4
+            : 3;
         for (var i = 0; i < 10; i++) {
           for (final offer in s.shopGearOffers) {
             expect(offer.preview.gift, null);

@@ -36,6 +36,11 @@ Map<String, List<Offset>> questRoutes(AdventureWorld world, Size size) {
       Rect.fromCircle(center: site.at, radius: 1),
     );
   }
+  // Authored loop roads may deliberately travel beyond the quest rectangle.
+  // Include those real detours instead of silently cutting the graph in half.
+  for (final trail in world.trails) {
+    bounds = bounds.expandToInclude(trail.bounds);
+  }
   bounds = bounds.inflate(500);
   for (final trail in world.trails) {
     for (var i = 1; i < trail.points.length; i++) {

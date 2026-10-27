@@ -53,6 +53,7 @@ class GameArt {
             'well-portal',
             'encounter-beacons',
             'fx-warcry',
+            'fx-crushing-blow',
             'dodge-icon',
             'actors-roll',
             'terrain-materials',
@@ -80,6 +81,7 @@ class GameArt {
             'actors-basilisk',
             'actors-wraith',
             'actors-drone',
+            'actors-viper',
             'cyber-props',
             'ruin-props',
             'village-scene',
@@ -295,6 +297,7 @@ class GameArt {
       'basilisk': ('basilisk', 0, 8),
       'wraith': ('wraith', 0, 8),
       'drone': ('drone', 0, 8),
+      'viper': ('viper', 0, 8),
       'wolf': ('creatures-a', 1, 8),
       'skeleton': ('creatures-a', 2, 8),
       'cultist': ('creatures-a', 3, 8),
@@ -337,6 +340,7 @@ class GameArt {
           'basilisk',
           'wraith',
           'drone',
+          'viper',
         }.contains(key)
         ? facingFrame(angle, 8) * 2 + phase % 2
         : count == 16
@@ -537,9 +541,12 @@ class TerrainArt {
         c = ui.Canvas(recorder),
         area = ui.Rect.fromLTWH(col * 512.0, row * 512.0, 512, 512);
     c.clipRect(area);
-    final base = world.stage == WorldStage.forest ? 0 : 5 + world.stage.index;
-    final road = world.stage == WorldStage.forest ? 5 : 8 + world.stage.index;
+    final base = world.stage.baseMaterial;
+    final road = world.stage.roadMaterial;
     c.drawRect(area, ui.Paint()..shader = art.materials[base]);
+    if (world.stage.groundTint.a > 0) {
+      c.drawRect(area, ui.Paint()..color = world.stage.groundTint);
+    }
     for (final wood in world.woods) {
       if (!wood.bounds.overlaps(area.inflate(80))) continue;
       c.drawPath(wood.path, ui.Paint()..shader = art.materials[1]);
@@ -561,7 +568,12 @@ class TerrainArt {
         c.drawPath(
           sand.path,
           ui.Paint()
-            ..shader = art.materials[world.stage == WorldStage.sands ? 6 : 2],
+            ..shader =
+                art.materials[world.stage == WorldStage.tombs
+                    ? 3
+                    : world.stage == WorldStage.sands
+                    ? 6
+                    : 2],
         );
       }
     }

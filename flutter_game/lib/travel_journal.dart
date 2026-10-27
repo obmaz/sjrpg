@@ -92,7 +92,9 @@ class TravelJournal {
       throw const FormatException('Invalid travel journal');
     }
     final archived = value['archives'], found = value['discovered'];
-    if (archived is! Map || archived.length > 3 || found is! Map) {
+    if (archived is! Map ||
+        archived.length >= WorldStage.values.length ||
+        found is! Map) {
       throw const FormatException('Invalid visited stages');
     }
     for (final entry in archived.entries) {
@@ -150,6 +152,9 @@ List<QuestSite> wellSitesForStage(WorldStage stage, {Offset? hubOrigin}) => [
       WorldStage.sands => '야영지 우물',
       WorldStage.past => '왕국의 샘',
       WorldStage.future => '중앙 회복정',
+      WorldStage.tombs => '황혼의 우물',
+      WorldStage.foundry => '정비소 회복정',
+      WorldStage.convergence => '시간의 샘',
     },
     '모험의 거점',
     (hubOrigin ?? stage.spawn) +
@@ -168,4 +173,7 @@ const legacyHubOrigins = <List<double>>[
   [5400, 6450],
   [17100, 12900],
   [9300, 18150],
+  [27750, 20250],
+  [5250, 10500],
+  [15750, 12375],
 ];

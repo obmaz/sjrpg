@@ -82,14 +82,21 @@ void main() {
       );
     }
   }
-  for (final stage in [WorldStage.past, WorldStage.future]) {
+  for (final path in TimePath.values) {
+    const stage = WorldStage.convergence;
     testWidgets(
-      '$stage ending keeps exploration and does not offer a nonexistent chapter',
+      '$stage $path ending keeps exploration and does not offer a nonexistent chapter',
       (tester) async {
         final s = Adventure(GameArt(), stage: stage);
         s.start(TestGame());
         s.pause();
         addTearDown(s.dispose);
+        s.timePath = path;
+        s.hero.position.setValues(
+          s.world.elderAt.dx - 14,
+          s.world.elderAt.dy - 12,
+        );
+        expect(s.acceptChapterContract(), true);
         s.cleansedSites.addAll(s.world.sites.map((q) => q.id));
         s.progress.bossDefeated = true;
         s.won = true;

@@ -48,6 +48,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'actors-basilisk',
         'actors-wraith',
         'actors-drone',
+        'actors-viper',
         'actors-hero-backhand',
         'actors-hero-cleave',
         'actors-mage-cast',
@@ -63,6 +64,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'well-portal',
         'encounter-beacons',
         'fx-warcry',
+        'fx-crushing-blow',
         'passive-icons',
         'quest-sites',
         'time-sites',
@@ -100,7 +102,10 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
             ['hero-backhand', 'actors-hero-backhand'],
             ['hero-cleave', 'actors-hero-cleave'],
             ['mage-cast', 'actors-mage-cast'],
-            ...['boar', 'basilisk', 'wraith', 'drone'].map((key) => [key, `actors-${key}`]),
+            ...['boar', 'basilisk', 'wraith', 'drone', 'viper'].map((key) => [
+                key,
+                `actors-${key}`,
+            ]),
         ].map(([key, source]) => [
             key,
             JSON.parse(

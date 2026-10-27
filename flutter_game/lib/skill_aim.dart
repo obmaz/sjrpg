@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+const crushingBlowRange = 185.0, crushingBlowHalfAngle = 1.05;
+
 class SkillAim {
   SkillAim(this.slot, this.id, this.initialBearing);
   final int slot;

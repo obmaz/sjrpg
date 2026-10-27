@@ -22,6 +22,7 @@ const enemyCatalog = {
   'basilisk': EnemyDef('바실리스크', 70, 92, 'bolt'),
   'wraith': EnemyDef('왕국의 망령', 58, 115, 'sweep'),
   'drone': EnemyDef('정찰 드론', 44, 125, 'bolt'),
+  'viper': EnemyDef('독사', 34, 116, 'pounce'),
 };
 
 List<String> biomeEnemies(
@@ -31,20 +32,28 @@ List<String> biomeEnemies(
   bool ruins = false,
 }) => switch (stage) {
   WorldStage.future => const ['cyber', 'gunner', 'drone'],
+  WorldStage.foundry => const ['gunner', 'drone', 'cyber', 'drone'],
+  WorldStage.tombs => const ['wraith', 'skeleton', 'cultist', 'troll'],
+  WorldStage.convergence =>
+    wooded
+        ? const ['wolf', 'wraith', 'boar']
+        : ruins
+        ? const ['skeleton', 'cyber', 'cultist']
+        : const ['wraith', 'drone', 'goblin'],
   WorldStage.past =>
     wooded
-        ? const ['wraith', 'skeleton', 'troll']
+        ? const ['wraith', 'skeleton', 'viper', 'troll']
         : const ['skeleton', 'wraith', 'cultist'],
   WorldStage.sands =>
     ruins
-        ? const ['mummy', 'cultist', 'basilisk']
-        : const ['scorpion', 'basilisk', 'scorpion'],
+        ? const ['mummy', 'cultist', 'basilisk', 'viper']
+        : const ['scorpion', 'viper', 'basilisk', 'scorpion'],
   WorldStage.forest =>
     sand
-        ? const ['scorpion', 'basilisk']
+        ? const ['scorpion', 'basilisk', 'viper']
         : ruins
         ? const ['skeleton', 'cultist']
         : wooded
-        ? const ['boar', 'wolf', 'goblin']
+        ? const ['boar', 'wolf', 'viper', 'goblin']
         : const ['goblin', 'boar', 'wolf'],
 };

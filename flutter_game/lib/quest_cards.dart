@@ -176,7 +176,7 @@ class _SiteArt extends CustomPainter {
       size.width / 2,
       (size.height - side) / 2 + side * .9375,
     );
-    if (stage == WorldStage.future) {
+    if (stage.usesCityArt) {
       art.cityProp(canvas, index, feet, side);
     } else {
       art.landmark(

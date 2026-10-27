@@ -69,7 +69,7 @@ void main() {
     }
   }
 
-  test('four boundary themes render distinct complete low fences', () async {
+  test('all boundary themes render distinct complete low fences', () async {
     final renders = <int>{};
     for (final stage in WorldStage.values) {
       final recorder = ui.PictureRecorder();
@@ -96,6 +96,6 @@ void main() {
       );
       image.dispose();
     }
-    expect(renders.length, 4);
+    expect(renders.length, WorldStage.values.length);
   });
 }

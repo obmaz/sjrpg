@@ -73,7 +73,7 @@ abstract final class EncounterBeaconArt {
   ];
 
   static EncounterBeaconFrame frame(WorldStage stage, {required bool ready}) =>
-      _frames[stage.index * 2 + (ready ? 1 : 0)];
+      _frames[stage.visualStage.index * 2 + (ready ? 1 : 0)];
 
   static void draw(
     ui.Canvas canvas,

@@ -1133,7 +1133,7 @@ class StageLandmarks extends GameComponent {
     final marked = session.visibleSites.map((site) => site.id).toSet();
     for (final site in session.world.sites) {
       if (!view.inflate(100).contains(site.at)) continue;
-      if (session.world.stage == WorldStage.future) {
+      if (session.world.stage.usesCityArt) {
         session.art.cityProp(
           c,
           site.artIndex,

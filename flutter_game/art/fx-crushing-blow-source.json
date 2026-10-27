@@ -1,0 +1,31 @@
+{
+    "source": "/workspace/generated_images/exec-88fcbeae-1cd0-43b3-a505-625dc64a37c9.png",
+    "sourceSize": [1536, 1024],
+    "sourceGrid": [4, 4],
+    "sourceCellSize": [384, 256],
+    "sourceContactAnchors": [
+        [227, 208],
+        [213, 208],
+        [203, 212],
+        [203, 212],
+        [203, 206],
+        [197, 207],
+        [199, 208],
+        [200, 209],
+        [199, 212],
+        [199, 212],
+        [201, 212],
+        [200, 213],
+        [198, 215],
+        [198, 215],
+        [200, 215],
+        [199, 216]
+    ],
+    "playbackSourceCells": [0, 1, 4, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    "preparedSize": [1024, 1024],
+    "preparedCellSize": [256, 256],
+    "preparedContactAnchor": [128, 180],
+    "scale": 0.55,
+    "transparentNoiseAlphaMax": 2,
+    "discardLeadingPaddingPixelsAfterFirstRow": 24
+}

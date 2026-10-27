@@ -19,6 +19,9 @@ extension QuestGuidance on Adventure {
           ? '의뢰 완료! 여정에서 다음 모험을 선택하세요.'
           : '균열을 봉인했습니다. 남은 보물과 전투를 탐험하세요.';
     }
+    if (!chapterContractAccepted) {
+      return '거점의 ${stageContract!.giver}에게 ${stageContract!.title} 의뢰를 받으세요.';
+    }
     if (mandatoryQuestsComplete) {
       final remaining = math.max(0, world.stage.killGoal - stageKills);
       return remaining > 0
@@ -69,6 +72,9 @@ extension QuestGuidance on Adventure {
         return null;
       }
       final title = site.name;
+      if (!chapterContractAccepted) {
+        return note('$title · 의뢰 필요', mainQuestNext);
+      }
       if (cleansedSites.contains(site.id)) {
         return note('$title · 완료', mainQuestNext);
       }
@@ -145,7 +151,9 @@ extension QuestGuidance on Adventure {
     if (world.stage == WorldStage.sands) return null;
     if ((hero.body.center - world.elderAt).distance < 190) {
       return note(
-        world.stage == WorldStage.forest ? '숲의 현자 · 의뢰 안내' : '연락책 · 의뢰 안내',
+        world.stage == WorldStage.forest
+            ? '숲의 현자 · 의뢰 안내'
+            : '${stageContract?.giver ?? '연락책'} · 의뢰 안내',
         mainQuestNext,
       );
     }
@@ -168,6 +176,7 @@ class NearbyQuestCard extends StatelessWidget {
     button: true,
     label: '${guide.title}. ${guide.message} ${guide.button}',
     excludeSemantics: true,
+    onTap: onTap,
     child: Material(
       color: ink.withValues(alpha: .94),
       shape: RoundedRectangleBorder(

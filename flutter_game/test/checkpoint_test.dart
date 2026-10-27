@@ -51,7 +51,17 @@ void main() {
       expect(restored.elapsed, 68.25);
       expect(restored.hero.cooldowns['frostNova'], 3);
       expect(restored.hero.armorTime, 5);
-      expect(restored.loot.length, 3);
+      expect(s.loot, isNotEmpty);
+      expect(
+        restored.loot.map((loot) => loot.item.toSave()).toList(),
+        s.loot.map((loot) => loot.item.toSave()).toList(),
+      );
+      expect(
+        restored.loot
+            .map((loot) => (loot.position.x, loot.position.y))
+            .toList(),
+        s.loot.map((loot) => (loot.position.x, loot.position.y)).toList(),
+      );
       expect(restored.hero.position.x, s.hero.position.x);
       expect(restored.hero.position.y, s.hero.position.y);
       expect(restored.world.blocked(restored.hero.body), false);

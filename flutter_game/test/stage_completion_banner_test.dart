@@ -22,11 +22,7 @@ void main() {
       image.dispose();
     }
   });
-  for (final stage in [
-    WorldStage.forest,
-    WorldStage.sands,
-    WorldStage.future,
-  ]) {
+  for (final stage in WorldStage.values) {
     for (final size in const [Size(320, 420), Size(844, 390)]) {
       testWidgets(
         '$stage completion crest and real objectives preserve the next action at $size',
@@ -38,6 +34,13 @@ void main() {
           final s = Adventure(art, stage: stage)..start(TestGame());
           addTearDown(s.dispose);
           if (stage == WorldStage.sands) s.timePath = TimePath.past;
+          if (stage.requiresContract) {
+            s.hero.position.setValues(
+              s.world.elderAt.dx - 14,
+              s.world.elderAt.dy - 12,
+            );
+            expect(s.acceptChapterContract(), true);
+          }
           s.cleansedSites.addAll(s.visibleSites.map((q) => q.id));
           s.progress.kills = stage.killGoal;
           s.progress.bossDefeated = true;
@@ -65,11 +68,7 @@ void main() {
           );
           expect(find.bySemanticsLabel('보스 토벌 · 완료'), findsOneWidget);
           final action = find.bySemanticsLabel(
-            stage == WorldStage.forest
-                ? '제2장 의뢰 받기'
-                : stage == WorldStage.sands
-                ? '태초의 왕국으로'
-                : '계속 탐험하기',
+            stage.hasNextStage ? stage.advanceLabel(s.timePath) : '계속 탐험하기',
           );
           final rect = tester.getRect(action);
           expect(rect.bottom, lessThanOrEqualTo(size.height));

@@ -102,11 +102,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
         s.stageCleared &&
         widget.onAdvance != null &&
         s.world.stage.hasNextStage;
-    final advanceLabel = s.world.stage == WorldStage.forest
-        ? '제2장 의뢰 받기'
-        : s.timePath == TimePath.past
-        ? '태초의 왕국으로'
-        : '네온의 심연으로';
+    final advanceLabel = s.world.stage.advanceLabel(s.timePath);
     void continueExploring() {
       s.continueExploring();
       widget.onClose();
@@ -126,7 +122,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
               ? timeQuestGivers
                     .firstWhere((g) => g.path == widget.offeredPath)
                     .name
-              : '의뢰 게시판',
+              : s.stageContract?.giver ?? '의뢰 게시판',
           'pause': '잠시 쉬어가기',
           'defeat': '쓰러진 수호자',
           'victory': s.world.stage == WorldStage.forest ? '첫 스테이지 정화' : '의뢰 해결',
@@ -273,7 +269,9 @@ class _AdventurePanelState extends State<AdventurePanel> {
                     ? '사막 유적에서 새로운 의뢰가 기다립니다.'
                     : s.world.stage == WorldStage.sands
                     ? '선택한 시대의 문이 열렸습니다.'
-                    : '시간의 균열을 봉인했습니다. 남은 보물을 탐험하세요.'}'
+                    : s.world.stage.hasNextStage
+                    ? '다음 의뢰를 받아 시간의 흔적을 계속 추적하세요.'
+                    : '두 시대의 시간을 되찾았습니다. 남은 보물을 탐험하세요.'}'
               : widget.onRetryCheckpoint != null
               ? '마지막 저장 지점에서 다시 도전하세요.\n장비와 스킬 성장은 유지됩니다.'
               : '힘을 키우고 다시 도전하세요.\n장비와 스킬 조합에 따라 전투가 달라집니다.',

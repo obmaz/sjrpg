@@ -86,8 +86,23 @@ class BossAttack {
     late ui.Color color;
     switch (stage) {
       case WorldStage.forest:
+      case WorldStage.convergence:
         zones.add(BossDanger(BossDangerShape.circle, target, radius: 105));
-        warning = .85;
+        if (stage == WorldStage.convergence) {
+          zones.addAll([
+            BossDanger(BossDangerShape.circle, target + side * 150, radius: 70),
+            BossDanger(BossDangerShape.circle, target - side * 150, radius: 70),
+            if (enraged)
+              BossDanger(
+                BossDangerShape.fan,
+                origin,
+                radius: 230,
+                angle: angle,
+                halfAngle: .7,
+              ),
+          ]);
+        }
+        warning = stage == WorldStage.convergence ? 1.1 : .85;
         recovery = 5.5;
         damage = 24;
         color = const ui.Color(0xffffad6b);
@@ -112,6 +127,7 @@ class BossAttack {
         damage = 22;
         color = const ui.Color(0xffffd176);
       case WorldStage.past:
+      case WorldStage.tombs:
         zones.add(
           BossDanger(
             BossDangerShape.fan,
@@ -121,14 +137,30 @@ class BossAttack {
             halfAngle: enraged ? 1.05 : .8,
           ),
         );
-        warning = 1.05;
+        if (stage == WorldStage.tombs) {
+          zones.add(
+            BossDanger(
+              BossDangerShape.circle,
+              target + forward * 110,
+              radius: enraged ? 100 : 75,
+            ),
+          );
+        }
+        warning = stage == WorldStage.tombs ? 1.15 : 1.05;
         recovery = enraged ? 5 : 6.2;
         damage = 26;
         color = const ui.Color(0xffffdf87);
       case WorldStage.future:
+      case WorldStage.foundry:
         for (final bearing in [
-          0.0,
-          math.pi / 2,
+          if (stage == WorldStage.foundry) ...[
+            angle,
+            angle + math.pi / 3,
+            angle - math.pi / 3,
+          ] else ...[
+            0.0,
+            math.pi / 2,
+          ],
           if (enraged) math.pi / 4,
           if (enraged) math.pi * 3 / 4,
         ]) {

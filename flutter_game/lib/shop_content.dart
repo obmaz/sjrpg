@@ -7,6 +7,8 @@ class ShopGearOffer {
         WorldStage.forest => 0,
         WorldStage.sands => 1,
         WorldStage.past || WorldStage.future => 2,
+        WorldStage.tombs || WorldStage.foundry => 3,
+        WorldStage.convergence => 4,
       };
   final GearDef base;
   final int tier;

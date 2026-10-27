@@ -93,8 +93,12 @@ Flutter 전용 `actors-roll.png`는 전사·마법사의 웅크리기·구르기
 
 `flutter_game/art/fx-warcry.webp`는 금빛 함성 충격파가 생겨 퍼지고 파편으로 흩어지는 16프레임 시트입니다. 생성 원본은 `/workspace/generated_images/exec-c249e696-e899-4b9d-a011-bf8a32a9ef02.png`입니다. 원본의 4×4 셀을 각각 224px로 준비해 16px 투명 여백과 함께 1024×1024 WebP로 배치하므로 인접 프레임을 샘플링하지 않습니다. 지면 효과는 시전 위치에 머물고 캐릭터 아래에서 1등급 기준 0.64초간 재생하며 등급별 동작 배율에 따라 짧아집니다.
 
+`flutter_game/art/fx-crushing-blow.webp`는 집중 강타의 내려베기·금빛 접촉·돌 파편·먼지 정착을 위해 생성한 16프레임 4×4 시트입니다. 원본 `/workspace/generated_images/exec-88fcbeae-1cd0-43b3-a505-625dc64a37c9.png`의 각 장면을 측정한 접촉점에 맞춰 256px 셀의 `(128, 180)`에 고정했고, 모든 셀에 최소 16px 투명 여백을 둡니다. 정렬·원본 장면 순서·준비 수치는 `fx-crushing-blow-source.json`에 보존합니다. 앞 두 프레임은 실제 준비 동작의 마지막에, 나머지 14프레임은 피해가 발생하는 순간부터 재생합니다. 등급과 실제 충전량에 따라 그림 크기와 코드로 날리는 흙빛 파편을 더하며, 마법진 없이 캐릭터 아래의 지면 효과로 그립니다.
+
 `flutter_game/art/quest-sites.webp`는 필수 퀘스트의 뿌리 우물·달빛 샘·태양 제단을 각각 다른 형태로 생성한 3열 아틀라스입니다. 원본 `/workspace/generated_images/exec-06c4015c-de0b-42ba-a057-70a059b3dc37.png`의 각 물체를 투명 여백·일관된 바닥 기준으로 512px 셀에 준비했습니다. 기존 `assets/actors-vehicles.webp` 원본은 보존하며, Flutter 탈것은 종류별 `actors-bicycle.webp`·`actors-motor.png`·`actors-horse.png`·`actors-boat.png`와 측정한 방향/동작 경계를 사용합니다. 이전 공용 시트는 Flutter에서 디코딩하지 않습니다.
 
 Flutter 후속 지도·의뢰는 `stage_content.dart`와 `AdventureWorld`의 지역별 지형에서 관리합니다. 제2장 의뢰는 두 시간축에 네 개씩이며 선행 의뢰·처치 목표·고유 성소·도착 스테이지가 연결됩니다. 새 지역은 `WorldStage`와 체크포인트 검증, 실제 렌더링·충돌·도로 접근 검사도 함께 연결해야 합니다.
 
 Flutter 상점 재고는 `Progress.shopGear`가 정의하며 UI와 실제 구매가 함께 사용합니다. 신규 판매 장비를 추가할 때 직업·레벨·실제 정의·구매 가격·카테고리를 연결해야 합니다. 고유 `sentinel` 부적은 숲 보스의 추가 보상이며, 희귀 무기 보상과 별도로 한 번 지급합니다.
+
+`flutter_game/art/actors-viper.webp`는 독사의 여덟 방향·두 S자 보행 자세를 위해 생성한 투명 아틀라스입니다. 생성 원본은 `/workspace/generated_images/exec-52d1d81e-8ee8-4844-b198-9a81f45c1720.png`이며, 전체 꼬리를 보존해 960×640 무손실 WebP로 준비했습니다. `actors-viper-bounds.json`은 방향별 몸체 그림의 알파 경계와 지면 중심 기준점을 기록합니다.

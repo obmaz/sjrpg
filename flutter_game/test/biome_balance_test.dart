@@ -88,11 +88,18 @@ void main() {
     addTearDown(s.dispose);
     s.mobs.clear();
     final health = s.progress.healingPotions, mana = s.progress.energyPotions;
-    for (var i = 0; i < 48; i++) {
+    for (var i = 0; i < 69; i++) {
       final m = s.spawnEnemy('goblin', const Offset(6000, 4200))!;
       s.hit(m, 100000, Offset.zero);
       if (i == 11) expect(s.progress.healingPotions, health);
       if (i == 13) expect(s.progress.energyPotions, mana);
+      if (i == 47) {
+        expect(s.progress.healingPotions, health);
+        expect(s.progress.energyPotions, mana);
+      }
+      if (i == 50) expect(s.progress.healingPotions, health);
+      if (i == 51) expect(s.progress.healingPotions, health + 1);
+      if (i == 67) expect(s.progress.energyPotions, mana);
     }
     expect(s.progress.healingPotions, health + 1);
     expect(s.progress.energyPotions, mana + 1);

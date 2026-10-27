@@ -384,22 +384,13 @@ class MapPainter extends CustomPainter {
     c.scale(s.width / view.width, s.height / view.height);
     c.translate(-view.left, -view.top);
     c.clipRect(Offset.zero & worldSize);
-    final base = session.world.stage == WorldStage.forest
-        ? 0
-        : 5 + session.world.stage.index;
-    final road = session.world.stage == WorldStage.forest
-        ? 5
-        : 8 + session.world.stage.index;
+    final base = session.world.stage.baseMaterial;
+    final road = session.world.stage.roadMaterial;
     _terrain(
       c,
       Path()..addRect(Offset.zero & worldSize),
       base,
-      [
-        const Color(0xff7d9656),
-        const Color(0xffb59059),
-        const Color(0xffa2aa87),
-        const Color(0xff253748),
-      ][session.world.stage.index],
+      session.world.stage.mapColor,
     );
     for (final wood in session.world.woods) {
       if (!round) {
@@ -414,20 +405,17 @@ class MapPainter extends CustomPainter {
       _terrain(c, wood.path, 1, const Color(0xff315947));
     }
     for (final clearing in session.world.clearings) {
-      _terrain(
-        c,
-        clearing.path,
-        base,
-        [
-          const Color(0xff8ca564),
-          const Color(0xffc4a773),
-          const Color(0xffc3bd9c),
-          const Color(0xff34495d),
-        ][session.world.stage.index],
-      );
+      _terrain(c, clearing.path, base, session.world.stage.clearingColor);
     }
     for (final sand in session.world.sandFields) {
-      _terrain(c, sand.path, 2, const Color(0xffc7b579));
+      _terrain(
+        c,
+        sand.path,
+        session.world.stage == WorldStage.tombs ? 3 : 2,
+        session.world.stage == WorldStage.tombs
+            ? const Color(0xff9e967f)
+            : const Color(0xffc7b579),
+      );
     }
     final water = session.terrain.waterPath;
     if (!round) {
@@ -1182,6 +1170,7 @@ class MenuButton extends StatelessWidget {
       button: true,
       label: label,
       excludeSemantics: true,
+      onTap: onTap,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),

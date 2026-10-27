@@ -6,6 +6,9 @@ import 'package:bonfire/bonfire.dart';
 mixin EffectVisibility on GameComponent {
   ui.Rect get effectBounds;
 
+  /// Optional base-render bookkeeping, without the component's drawing/children.
+  void renderCulled(ui.Canvas canvas) {}
+
   @override
   void renderTree(ui.Canvas canvas) {
     if (hasGameRef) {
@@ -13,6 +16,7 @@ mixin EffectVisibility on GameComponent {
       if (viewport.isFinite &&
           !viewport.isEmpty &&
           !viewport.overlaps(effectBounds)) {
+        renderCulled(canvas);
         return;
       }
     }

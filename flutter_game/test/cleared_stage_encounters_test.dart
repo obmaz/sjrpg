@@ -52,16 +52,26 @@ void main() {
       expect(restored.won, false);
     },
   );
-  for (final stage in [WorldStage.past, WorldStage.future]) {
-    test('$stage ending does not promise a nonexistent next chapter', () {
-      final s = Adventure(GameArt(), stage: stage)..start(TestGame());
-      addTearDown(s.dispose);
-      s.cleansedSites.addAll(s.world.sites.map((q) => q.id));
-      s.progress.bossDefeated = true;
-      s.won = true;
-      expect(s.mainQuestNext, isNot(contains('다음 모험')));
-      s.continueExploring();
-      expect(s.notice, isNot(contains('다음 의뢰')));
-    });
+  for (final path in TimePath.values) {
+    test(
+      'convergence $path ending does not promise a nonexistent next chapter',
+      () {
+        final s = Adventure(GameArt(), stage: WorldStage.convergence)
+          ..start(TestGame());
+        addTearDown(s.dispose);
+        s.timePath = path;
+        s.hero.position.setValues(
+          s.world.elderAt.dx - 14,
+          s.world.elderAt.dy - 12,
+        );
+        expect(s.acceptChapterContract(), true);
+        s.cleansedSites.addAll(s.world.sites.map((q) => q.id));
+        s.progress.bossDefeated = true;
+        s.won = true;
+        expect(s.mainQuestNext, isNot(contains('다음 모험')));
+        s.continueExploring();
+        expect(s.notice, isNot(contains('다음 의뢰')));
+      },
+    );
   }
 }
