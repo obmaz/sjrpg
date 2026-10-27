@@ -89,6 +89,7 @@ class GameArt {
     'cyber-props',
     'ruin-props',
     'village-scene',
+    'blacksmith-forge',
     'landscape-bridge',
     'world-forest',
     'world-desert',
@@ -97,7 +98,7 @@ class GameArt {
   ];
   // Stable saved stage IDs keep later chapters compatible with their art family.
   static const _sceneryImages = <String, Set<String>>{
-    'forest': {'world-desert', 'landscape-bridge'},
+    'forest': {'world-desert', 'landscape-bridge', 'blacksmith-forge'},
     'sands': {'world-desert', 'ruin-props'},
     'past': {'ruin-props'},
     'future': {'cyber-props'},
@@ -642,6 +643,25 @@ class GameArt {
   }
 
   void prop(ui.Canvas canvas, WorldProp prop, {double opacity = 1}) {
+    if (prop.kind == 'blacksmith-forge') {
+      final image = images['blacksmith-forge'];
+      if (image == null) return;
+      final feet = prop.body.bottomCenter;
+      canvas.drawImageRect(
+        image,
+        ui.Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+        ui.Rect.fromLTWH(
+          feet.dx - prop.drawSize.width / 2,
+          feet.dy - prop.drawSize.height,
+          prop.drawSize.width,
+          prop.drawSize.height,
+        ),
+        ui.Paint()
+          ..color = ui.Color.fromRGBO(255, 255, 255, opacity)
+          ..filterQuality = ui.FilterQuality.medium,
+      );
+      return;
+    }
     if (prop.kind.startsWith('ruin-')) {
       final image = images['ruin-props'];
       if (image == null) return;

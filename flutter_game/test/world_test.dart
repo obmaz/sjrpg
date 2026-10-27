@@ -114,9 +114,43 @@ void main() {
       ),
       true,
     );
+    for (final size in [const Size(24, 22), const Size(44, 32)]) {
+      final from = Offset(center.dx - 500, center.dy - size.height / 2);
+      final to = from + const Offset(1000, 0);
+      expect(
+        world.clearLine(from, to, size),
+        true,
+        reason: 'shore-to-shore clearance must agree with the visible bridge',
+      );
+      expect(world.clearLine(to, from, size), true);
+    }
     var p = Offset(center.dx - 500, center.dy - 11);
     p = world.move(p, const Offset(1000, 0), const Size(24, 22));
     expect(p.dx, closeTo(center.dx + 500, .01));
+  });
+  test('the enlarged village east road crosses a visible full-body bridge', () {
+    final world = AdventureWorld();
+    final east = world.bridges.last;
+    expect(
+      east,
+      isNot(world.bridge),
+      reason: 'the old bridge anchor stays intact',
+    );
+    expect(east.center.dy, lessThan(world.bridge.center.dy));
+    for (final size in [
+      const Size(28, 24),
+      const Size(44, 32),
+      const Size(48, 40),
+    ]) {
+      final from = Offset(east.left - 100, east.center.dy - size.height / 2);
+      final to = Offset(east.right + 100, from.dy);
+      expect(world.clearLine(from, to, size), true);
+      expect(world.clearLine(to, from, size), true);
+      final end = world.move(from, to - from, size);
+      expect((end - to).distance, lessThan(.01));
+      final back = world.move(to, from - to, size);
+      expect((back - from).distance, lessThan(.01));
+    }
   });
   test(
     'rewards progress once per caller and upgrades cannot overspend gold',
@@ -127,12 +161,17 @@ void main() {
       for (var i = 0; i < 8; i++) {
         p.reward();
       }
-      expect(p.level, 2);
+      expect(p.level, 1);
+      expect(p.xp, 64);
       expect(p.gold, 64);
-      expect(p.swordDamage, 17 * .75);
+      p.gainXp(p.nextLevelXp - p.xp);
+      expect(p.level, 2);
+      expect(p.xp, 0);
+      expect(p.gold, 64, reason: 'experience alone must not create gold');
+      expect(p.swordDamage, closeTo(17 * .75 * .85, .00001));
       expect(p.buy(45, () => p.swordDamage += 5), true);
       expect(p.gold, 19);
-      expect(p.swordDamage, closeTo(17 * .75 + 5, .00001));
+      expect(p.swordDamage, closeTo(17 * .75 * .85 + 5, .00001));
       p.reward(boss: true);
       expect(p.bossDefeated, true);
       expect(p.gold, 119);

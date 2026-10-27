@@ -119,9 +119,18 @@ void main() {
         s.afflictions.apply(PlayerStatus.root);
         s.afflictions.apply(PlayerStatus.poison);
         s.afflictions.apply(PlayerStatus.blind);
+        s.afflictions.apply(PlayerStatus.attackSlow);
+        s.afflictions.apply(PlayerStatus.moveSlow);
         s.refresh();
         await tester.pump();
-        final dark = await capture('net-poison-blind');
+        final dark = await capture('five-statuses');
+        final statusBounds = tester.getRect(find.byType(AfflictionIcons));
+        expect(statusBounds.width, lessThanOrEqualTo(80));
+        expect(statusBounds.height, 16);
+        expect(
+          statusBounds.overlaps(tester.getRect(find.byType(PotionBelt))),
+          false,
+        );
         expect(find.byType(NarrowVisionCurtain), findsOneWidget);
         // Transparent button corners correctly show the darkened world. Check
         // fully opaque foreground ink, rather than comparing those corners.
@@ -162,6 +171,8 @@ void main() {
         expect(find.bySemanticsLabel('속박 2초'), findsOneWidget);
         expect(find.bySemanticsLabel('중독 4초'), findsOneWidget);
         expect(find.bySemanticsLabel('시야 제한 3초'), findsOneWidget);
+        expect(find.bySemanticsLabel('공격 둔화 3초'), findsOneWidget);
+        expect(find.bySemanticsLabel('이동 둔화 3초'), findsOneWidget);
         semantics.dispose();
         // A held joystick still receives cancellation during root, so it cannot
         // silently resume a released input when the timer ends.

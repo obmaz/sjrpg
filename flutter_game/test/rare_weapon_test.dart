@@ -11,7 +11,7 @@ void main() {
     'all parents are required at their exact ranks and failures spend nothing',
     () {
       for (final hero in HeroClass.values) {
-        final p = Progress(heroClass: hero)..gainXp(5000);
+        final p = Progress(heroClass: hero)..gainXp(7500);
         for (final child in p.skills.where((s) => s.requires.length > 1)) {
           p.ranks.clear();
           for (final requirement in child.requires.entries) {

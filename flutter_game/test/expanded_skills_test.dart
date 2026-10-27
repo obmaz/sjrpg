@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/rpg_model.dart';
 import 'package:guardian_new/skill_preview_model.dart';
+import 'package:guardian_new/stage_content.dart';
 
 void main() {
   for (final (hero, ids) in [
@@ -64,9 +65,10 @@ void main() {
             previewSkill(restored, skill).map((s) => s.current),
             previewSkill(p, skill).map((s) => s.current),
           );
-          restored.gold = 10000;
+
           final refund = restored.investedSkillPoints;
           final remaining = restored.skillPoints;
+          restored.awardSkillResetTicket(WorldStage.forest);
           expect(restored.resetSkills(), true);
           expect(restored.rank(id), 0);
           expect(restored.skillPoints, remaining + refund);

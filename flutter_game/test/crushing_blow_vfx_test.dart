@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/crushing_blow_vfx.dart';
 import 'package:guardian_new/game_art.dart';
+import 'package:guardian_new/stage_content.dart';
 
 import 'support/test_game.dart';
 
@@ -179,7 +180,8 @@ void main() {
       expect(fast.finished, true);
       expect(s.progress.kills, 0);
       final reset = visual();
-      s.progress.gold = 10000;
+
+      s.progress.awardSkillResetTicket(WorldStage.forest);
       expect(s.resetSkills(), true);
       reset.update(.05);
       expect(reset.finished, true);
@@ -211,7 +213,8 @@ void main() {
     final reset = (s.game! as TestGame).added
         .whereType<CrushingBlowWindup>()
         .last;
-    s.progress.gold = 10000;
+
+    s.progress.awardSkillResetTicket(WorldStage.forest);
     expect(s.resetSkills(), true);
     reset.update(.05);
     expect(reset.finished, true);

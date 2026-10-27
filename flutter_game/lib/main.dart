@@ -9,6 +9,7 @@ import 'affliction_widgets.dart';
 import 'back_actions.dart';
 import 'back_bridge.dart' as history;
 import 'battle_effects.dart';
+import 'blacksmith_workshop.dart';
 import 'class_selection.dart';
 import 'destructible_chest.dart';
 import 'game_art.dart';
@@ -32,6 +33,7 @@ bool get _isForeground =>
     WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
 
 void main() {
+  history.configureBrowserBack();
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const GuardianApp());
 }
@@ -506,6 +508,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         adventure.nearbyMount?.durability == 0 ? '보수하기' : '타기',
       NearbyAction.dismount => '내리기',
       NearbyAction.shop => '상점',
+      NearbyAction.smith => '대장간',
       NearbyAction.talk => adventure.nearbyTimeGiver?.name ?? '대화',
     },
     icon: switch (action) {
@@ -513,6 +516,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
       NearbyAction.mount => Icons.pets_outlined,
       NearbyAction.dismount => Icons.south_west,
       NearbyAction.shop => Icons.storefront,
+      NearbyAction.smith => Icons.hardware_rounded,
       NearbyAction.talk => Icons.chat_bubble_outline,
     },
     condition: action == NearbyAction.mount || action == NearbyAction.dismount
@@ -532,6 +536,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
           if (adventure.cleanseNearbySite()) saveNow();
         case NearbyAction.shop:
           open('shop');
+        case NearbyAction.smith:
+          open('smith');
         case NearbyAction.talk:
           open('talk');
       }
@@ -609,6 +615,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         for (final section in adventure.world.sanctuaryFences)
           SanctuaryFence(section, adventure.world.stage),
         VillagePerson(adventure, true),
+        if (adventure.world.stage == WorldStage.forest)
+          BlacksmithWorkshop(adventure),
         if (adventure.world.stage == WorldStage.sands)
           for (final giver in timeQuestGivers) QuestGiver(adventure, giver)
         else
@@ -907,9 +915,24 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                       children: [
                         Opacity(
                           opacity: peacefulAttack ? .45 : 1,
-                          child: CustomPaint(
-                            painter: GearGlyph(p.weapon, widget.art),
-                          ),
+                          child: p.selectedBasic != p.defaultBasicId
+                              ? CustomPaint(
+                                  painter: EffectIconPainter(
+                                    widget.art,
+                                    skillEffect(p.selectedBasic),
+                                  ),
+                                )
+                              : p.usingFallbackWeapon
+                              ? Icon(
+                                  p.heroClass == HeroClass.warrior
+                                      ? Icons.front_hand_rounded
+                                      : Icons.auto_fix_high_rounded,
+                                  color: cream,
+                                  size: attack * .46,
+                                )
+                              : CustomPaint(
+                                  painter: GearGlyph(p.weapon, widget.art),
+                                ),
                         ),
                         if (peacefulAttack)
                           const Align(
@@ -925,6 +948,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   ),
                   label: '공격',
                   semanticLabel: '공격',
+                  semanticHint:
+                      '기본 공격 · ${p.basicSkill.name} · ${p.rank(p.selectedBasic)}등급',
                   size: attack,
                   remaining: adventure.hero.attackClock,
                   total: p.attackInterval,

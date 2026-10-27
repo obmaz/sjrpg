@@ -14,7 +14,7 @@ void main() {
   }
 
   test(
-    'ordinary equipment and potions arrive about thirty percent less often',
+    'ordinary equipment keeps its reduced interval while kills give no potions',
     () {
       final s = session();
       final healing = s.progress.healingPotions,
@@ -25,12 +25,12 @@ void main() {
         expect(s.loot.length, kill ~/ 29, reason: 'equipment after kill $kill');
         expect(
           s.progress.healingPotions - healing,
-          kill ~/ 52,
+          0,
           reason: 'healing after kill $kill',
         );
         expect(
           s.progress.energyPotions - energy,
-          kill ~/ 69,
+          0,
           reason: 'resource after kill $kill',
         );
       }

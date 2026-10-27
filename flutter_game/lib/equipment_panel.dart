@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'adventure.dart';
+import 'combat_balance.dart';
 import 'game_ui.dart';
 import 'panel_controls.dart';
 import 'rpg_model.dart';
@@ -297,7 +298,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
     final current = p.equipped[gear.base.slot];
     if (gear.base.slot == GearSlot.weapon) {
       final attack = p.previewBasicAttack(gear);
-      return '무기 공격 ${gear.attack.round()} · 초당 피해 ${attack?.dps.toStringAsFixed(1) ?? '직업 제한'} · 현재 초당 피해 ${p.basicDps.toStringAsFixed(1)}';
+      return '무기 레벨 ${gear.weaponLevel} · 무기 공격 ${gear.attack.round()} · 초당 피해 ${attack?.dps.toStringAsFixed(1) ?? '직업 제한'} · 현재 초당 피해 ${p.basicDps.toStringAsFixed(1)}';
     }
     return '방어 ${gear.armor.round()} · 생명 ${gear.health.round()} · ${p.heroClass.resource} ${gear.mana.round()} · 현재 방어 ${current?.armor.round() ?? 0} · 현재 생명 ${current?.health.round() ?? 0}';
   }
@@ -376,6 +377,22 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                       style: const TextStyle(fontSize: 11, color: cream),
                     ),
                   ),
+                if (gear?.weaponLevel != null)
+                  Positioned(
+                    left: 4,
+                    top: 4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 3,
+                        vertical: 1,
+                      ),
+                      color: const Color(0xdd0b2525),
+                      child: Text(
+                        'Lv.${gear!.weaponLevel}',
+                        style: const TextStyle(color: cream, fontSize: 10),
+                      ),
+                    ),
+                  ),
                 if (active || gear?.locked == true)
                   Positioned(
                     right: 3,
@@ -414,12 +431,17 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
   List<_Offer> get offers {
     if (shopTab == 3) {
       return [
-        _Offer('heal', '치유 물약 ×2', '생명 55 회복 · 보유 ${p.healingPotions}개', 20),
+        _Offer(
+          'heal',
+          '치유 물약 ×${CombatBalance.potionBundleSize}',
+          '생명 ${CombatBalance.potionHealing.round()} 회복 · 보유 ${p.healingPotions}개',
+          CombatBalance.healingPotionPrice,
+        ),
         _Offer(
           'energy',
-          '${p.heroClass.resource} 물약 ×2',
-          '${p.heroClass.resource} 60 회복 · 보유 ${p.energyPotions}개',
-          18,
+          '${p.heroClass.resource} 물약 ×${CombatBalance.potionBundleSize}',
+          '${p.heroClass.resource} ${CombatBalance.potionEnergy.round()} 회복 · 보유 ${p.energyPotions}개',
+          CombatBalance.resourcePotionPrice,
         ),
       ];
     }
@@ -640,7 +662,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                                   ),
                                   const SizedBox(height: 3),
                                   Text(
-                                    '${gear.rarity.title} · ${_slotName(gear.base.slot)}',
+                                    '${gear.rarity.title} · ${_slotName(gear.base.slot)}${gear.weaponLevel == null ? '' : ' · Lv.${gear.weaponLevel}'}',
                                     style: const TextStyle(
                                       color: _muted,
                                       fontSize: 13,

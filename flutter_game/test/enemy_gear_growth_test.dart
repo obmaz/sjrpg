@@ -80,7 +80,7 @@ void main() {
     expect(enemy.power, same(power));
     expect(
       enemy.outgoingDamage(10),
-      closeTo(10 * power.damageMultiplier, .00001),
+      closeTo(10 * power.damageMultiplier * 1.2, .00001),
     );
   });
 

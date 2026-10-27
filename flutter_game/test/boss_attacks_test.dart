@@ -135,10 +135,13 @@ void main() {
         boss.slamClock = 0;
         boss.update(.05);
         expect(boss.bossAttack!.enraged, true);
-        if (stage == WorldStage.sands) expect(boss.bossAttack!.zones.length, 5);
-        if (stage == WorldStage.future) {
-          expect(boss.bossAttack!.zones.length, 4);
-        }
+        expect(boss.bossAttack!.power, BossPower.root);
+        expect(
+          boss.bossAttack!.zones.any(
+            (zone) => zone.contains(s.hero.body.center),
+          ),
+          true,
+        );
       },
     );
   }

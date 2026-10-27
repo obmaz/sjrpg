@@ -3,6 +3,7 @@ import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/world_model.dart';
+
 import 'support/test_game.dart';
 
 void main() {
@@ -36,6 +37,15 @@ void main() {
     }
   }
 
+  void resolvePendingCast() {
+    expect(s.hero.queuedCast, isNotNull);
+    final maximumSteps = (s.hero.castLock / .05).ceil() + 1;
+    for (var i = 0; i < maximumSteps && s.hero.queuedCast != null; i++) {
+      step(1);
+    }
+    expect(s.hero.queuedCast, isNull);
+  }
+
   test(
     'a skill tapped during a basic cast fires once before the next held attack',
     () {
@@ -45,8 +55,16 @@ void main() {
       s.hero.skill();
       expect(s.hero.cooldowns['frostNova'], isNull);
       expect(s.progress.energy, energy);
-      step(6);
-      expect(s.hero.cooldowns['frostNova'], closeTo(4.2, .000001));
+      resolvePendingCast();
+      expect(
+        s.hero.cooldowns['frostNova'],
+        s.progress.skillCooldown(s.progress.activeSkill),
+      );
+      expect(
+        s.hero.strikes,
+        1,
+        reason: 'the queued spell precedes a second held basic',
+      );
       expect(s.progress.energy, energy - 18);
       final cooldown = s.hero.cooldowns['frostNova']!;
       step(3);
@@ -61,9 +79,12 @@ void main() {
       s.hero.slash();
       s.hero.skill(slot: 0);
       s.hero.skill(slot: 1);
-      step(6);
+      resolvePendingCast();
       expect(s.hero.cooldowns['frostNova'], isNull);
-      expect(s.hero.cooldowns['chainLightning'], 3.5);
+      expect(
+        s.hero.cooldowns['chainLightning'],
+        s.progress.skillCooldown(s.progress.skillAt(1)!),
+      );
       expect(s.progress.energy, energy - 28);
     },
   );
@@ -80,7 +101,7 @@ void main() {
         case 'roll':
           s.hero.dodge();
         case 'reset':
-          s.progress.gold = 10000;
+          s.progress.awardSkillResetTicket(WorldStage.forest);
           expect(s.resetSkills(), true);
         case 'slot':
           s.progress.selectSkill('meteor');
@@ -95,7 +116,7 @@ void main() {
     s.hero.slash();
     s.hero.skill();
     s.progress.energy = 0;
-    step(6);
+    resolvePendingCast();
     expect(s.hero.cooldowns['frostNova'], isNull);
     expect(s.progress.energy, 0);
   });
@@ -112,20 +133,24 @@ void main() {
       mage.hero.slash();
       final bolt = game.added.whereType<ArcaneBolt>().single;
       final origin = bolt.position.clone();
+      final releaseDelay = .13 / mage.hero.effectiveBasicTempo;
+      expect(bolt.launchDelay, releaseDelay);
       mage.hero.update(.05);
       bolt.update(.05);
       expect(bolt.position, origin);
       expect(bolt.remaining, .88);
       mage.pause();
       bolt.update(.5);
-      expect(bolt.launchDelay, closeTo(.08, .001));
+      expect(bolt.launchDelay, closeTo(releaseDelay - .05, .001));
       mage.resume();
       mage.hero.position.x += 20;
-      for (var i = 0; i < 2; i++) {
+      final releaseFrames = (bolt.launchDelay / .05).ceil();
+      for (var i = 0; i < releaseFrames; i++) {
         mage.hero.update(.05);
         bolt.update(.05);
       }
       expect(bolt.launchDelay, 0);
+      expect(bolt.remaining, lessThan(.88));
       expect(bolt.position.x, closeTo(mage.hero.body.center.dx, .001));
       expect(bolt.position.y, greaterThan(mage.hero.body.center.dy));
       expect(mage.hero.swing, lessThan(mage.hero.swingDuration * .58));

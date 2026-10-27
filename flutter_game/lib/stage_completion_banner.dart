@@ -133,6 +133,15 @@ class StageCompletionBanner extends StatelessWidget {
                 ),
               ],
             ),
+            if (session.progress.claimedResetStages.contains(
+              session.world.stage,
+            )) ...[
+              const SizedBox(height: 8),
+              const Text(
+                '첫 완료 보상 · 초기화권 1장',
+                style: TextStyle(color: gold, fontSize: 13),
+              ),
+            ],
           ],
         ),
       ),

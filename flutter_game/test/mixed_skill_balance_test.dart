@@ -4,7 +4,7 @@ import 'package:guardian_new/rpg_model.dart';
 void main() {
   for (final hero in HeroClass.values) {
     test(
-      '$hero shared milestones require every school and remain attainable',
+      '$hero cross-school milestones require every parent and remain attainable',
       () {
         final p = Progress(heroClass: hero)..gainXp(20000);
         final shared = p.skills
@@ -15,7 +15,25 @@ void main() {
               ),
             )
             .toList();
-        expect(shared.length, 4);
+        expect(
+          shared.map((skill) => skill.id).toSet(),
+          hero == HeroClass.warrior
+              ? {
+                  'battleFocus',
+                  'rallyingVoice',
+                  'rendingEdge',
+                  'unyieldingOath',
+                  'heavyStrike',
+                }
+              : {
+                  'meteor',
+                  'lightningMastery',
+                  'phoenixHeart',
+                  'frozenAegis',
+                  'iceShard',
+                  'sparkBolt',
+                },
+        );
         for (final skill in shared) {
           p.ranks
             ..clear()
@@ -66,8 +84,8 @@ void main() {
               (p.bonusAttack +
                   (p.level - 1) * 2 +
                   p.equipped.values.fold(0.0, (v, g) => v + g.attack)) *
-              (1 + p.rank('mastery') * .08 + p.rank('arcaneMastery') * .09);
-          expect(p.swordDamage, closeTo(raw * .75, .00001));
+              (1 + p.rank('mastery') * .06 + p.rank('arcaneMastery') * .07);
+          expect(p.swordDamage, closeTo(raw * .75 * .85, .00001));
           expect(p.basicDps, closeTo(p.basicDamage / p.attackInterval, .00001));
           final saved = p.toSave(), restored = Progress.fromSave(saved)!;
           expect(restored.toSave(), saved);

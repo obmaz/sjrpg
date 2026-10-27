@@ -126,24 +126,27 @@ void main() {
     );
   }
 
-  test('a committed viper bite has one six-damage contact and a recovery', () {
-    final s = inCombatField(session());
-    final enemy = s.spawnEnemy('viper', const Offset(6160, 4200))!
-      ..attackClock = 0;
-    final hp = s.progress.hp;
-    for (var i = 0; i < 26; i++) {
-      enemy.update(.05);
-    }
-    expect(s.progress.hp, closeTo(hp - s.progress.mitigate(6), .001));
-    expect(enemy.body.overlaps(s.hero.body), false);
-    expect(enemy.pounceRemaining, 0);
-    expect(enemy.attackClock, greaterThan(2));
-    final after = s.progress.hp;
-    for (var i = 0; i < 20; i++) {
-      enemy.update(.05);
-    }
-    expect(s.progress.hp, after);
-  });
+  test(
+    'a committed viper bite has one strengthened contact and a recovery',
+    () {
+      final s = inCombatField(session());
+      final enemy = s.spawnEnemy('viper', const Offset(6160, 4200))!
+        ..attackClock = 0;
+      final hp = s.progress.hp;
+      for (var i = 0; i < 26; i++) {
+        enemy.update(.05);
+      }
+      expect(s.progress.hp, closeTo(hp - s.progress.mitigate(7.2), .001));
+      expect(enemy.body.overlaps(s.hero.body), false);
+      expect(enemy.pounceRemaining, 0);
+      expect(enemy.attackClock, greaterThan(2));
+      final after = s.progress.hp;
+      for (var i = 0; i < 20; i++) {
+        enemy.update(.05);
+      }
+      expect(s.progress.hp, after);
+    },
+  );
 
   test(
     'a protected futuristic chest cannot release enemies across the fence',

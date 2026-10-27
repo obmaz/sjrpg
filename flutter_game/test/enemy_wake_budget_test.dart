@@ -95,8 +95,8 @@ void main() {
         s.elapsed += .6;
         s.wakeEnemies();
       }
-      expect(s.living, 40);
-      expect(s.dormantEnemies, hasLength(20));
+      expect(s.living, 28);
+      expect(s.dormantEnemies, hasLength(32));
       expect(s.mobs.every((m) => m.life.value == 11 && m.life.max == 37), true);
       s.attempts = s.populationReads = 0;
       s.elapsed += .6;

@@ -33,6 +33,7 @@ class ShopGearOffer {
     vitality: vitality,
     focus: focus,
     acquiredLevel: acquiredLevel,
+    weaponLevel: base.slot == GearSlot.weapon ? acquiredLevel : null,
   );
   Gear create(Progress progress) => progress.createGear(
     base,
@@ -48,5 +49,7 @@ class ShopGearOffer {
       item.power == power &&
       item.vitality == vitality &&
       item.focus == focus &&
+      item.weaponLevel ==
+          (base.slot == GearSlot.weapon ? acquiredLevel : null) &&
       item.gifts.isEmpty;
 }

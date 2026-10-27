@@ -42,7 +42,9 @@ void main() {
         );
         await tester.pumpAndSettle();
         final bounds = {
-          for (final skill in s.progress.skills)
+          for (final skill in s.progress.skills.where(
+            (def) => !def.basic || def.id == s.progress.defaultBasicId,
+          ))
             skill.id: tester.getRect(
               find.byKey(ValueKey('skill-node-${skill.id}')),
             ),

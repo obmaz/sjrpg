@@ -107,18 +107,18 @@ void main() {
     'ruins add their ranged population while the forest opening stays ordinary',
     () {
       expect(s.mobs.any((m) => m.kind == 'cultist'), false);
-      s.progress.gainXp(140);
+      s.progress.gainXp(211);
       s.hero.position.setValues(10500 * worldScale, 7200 * worldScale);
       s.spawnPack();
       expect(s.mobs.any((m) => m.kind == 'cultist'), true);
       for (var i = 0; i < 20; i++) {
         s.spawnPack();
       }
-      expect(s.living, lessThanOrEqualTo(40));
+      expect(s.living, lessThanOrEqualTo(28));
     },
   );
   test(
-    'the fountain heals after combat and potion rewards do not flood each wave',
+    'the fountain heals after combat while monster kills give no potions',
     () {
       s.progress.hp = 80;
       s.syncLife();
@@ -139,7 +139,7 @@ void main() {
         99999,
         Offset.zero,
       );
-      expect(s.progress.healingPotions, 4);
+      expect(s.progress.healingPotions, 3);
       expect(s.progress.energyPotions, 2);
       s.progress.kills = 68;
       s.hit(
@@ -147,8 +147,8 @@ void main() {
         99999,
         Offset.zero,
       );
-      expect(s.progress.healingPotions, 4);
-      expect(s.progress.energyPotions, 3);
+      expect(s.progress.healingPotions, 3);
+      expect(s.progress.energyPotions, 2);
     },
   );
   test('moving aim assistance does not steer the joystick direction', () {

@@ -31,4 +31,33 @@ void main() {
       expect(s.world.spawnNear(desired, size, occupied: (_) => true), null);
     },
   );
+  test(
+    'an inside-ward spawn can use another clear edge when its preferred side is occupied',
+    () {
+      final s = Adventure(GameArt())..start(TestGame());
+      addTearDown(s.dispose);
+      const size = Size(48, 40);
+      final center = s.world.sanctuary.center;
+      final desired = center - const Offset(24, 20);
+      final at = s.world.spawnNear(
+        desired,
+        size,
+        avoidSanctuary: true,
+        occupied: (body) => body.center.dx > center.dx - 100,
+      );
+      expect(at, isNotNull);
+      expect(s.world.sanctuary.protects(at! & size), false);
+      expect(s.world.blocked(at & size), false);
+      expect((at & size).center.dx, lessThanOrEqualTo(center.dx - 100));
+      expect(
+        s.world.spawnNear(
+          desired,
+          size,
+          avoidSanctuary: true,
+          occupied: (_) => true,
+        ),
+        isNull,
+      );
+    },
+  );
 }

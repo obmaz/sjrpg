@@ -27,7 +27,7 @@ void main() {
       final whirlwind = warriorSkills.firstWhere((s) => s.id == 'whirlwind');
       expect(p.learn(whirlwind), false);
       expect(p.skillPoints, 1);
-      p.gainXp(140);
+      p.gainXp(211);
       expect(p.level, 3);
 
       expect(p.skillPoints, 3);
@@ -65,7 +65,7 @@ void main() {
       p.equip(other);
       expect(p.maxHp, 100);
       expect(p.hp, 33);
-      expect(p.swordDamage, 18 * .75);
+      expect(p.swordDamage, 18 * Progress.playerDamageScale);
       expect(p.sell(charm), true);
       expect(p.inventory.contains(charm), false);
       final foreign = p.createGear(gearById('wand'));
@@ -163,7 +163,7 @@ void main() {
       s.progress.energy = 90;
       s.hero.skill();
       expect(s.progress.energy, 90, reason: 'the basic cast must finish first');
-      for (var i = 0; i < 6; i++) {
+      for (var i = 0; i < 7; i++) {
         s.hero.update(.05);
       }
       s.hero.skill();
@@ -172,7 +172,7 @@ void main() {
       s.hero.skill();
       expect(s.progress.energy, 72);
       final rank = s.progress.rank('frostNova');
-      s.progress.gainXp(140);
+      s.progress.gainXp(211);
       expect(
         s.progress.learn(
           mageSkills.firstWhere((skill) => skill.id == 'arcaneMastery'),
@@ -208,6 +208,8 @@ void main() {
       expect(s.openedChests.length, 1);
       expect(s.progress.gold, 18);
       expect(s.loot.length, 1);
+      // The enlarged village protects this starter chest; fight outside it.
+      inCombatField(s);
       s.cleansedSites.addAll(questSites.map((q) => q.id));
       s.progress.kills = stageKillGoal;
       s.tick(.05);
@@ -222,7 +224,7 @@ void main() {
       s.spawnPack();
       s.tick(.05);
       expect(s.mobs.where((m) => m.boss).length, before);
-      expect(s.living, lessThanOrEqualTo(40));
+      expect(s.living, lessThanOrEqualTo(28));
       expect(s.won, false);
       s.hero.position.setValues(4650, 360);
       expect(s.nearbyAction, null);
@@ -279,7 +281,7 @@ void main() {
       final s = inCombatField(Adventure(GameArt(), heroClass: HeroClass.mage));
       s.start(TestGame());
       addTearDown(s.dispose);
-      s.progress.gainXp(140);
+      s.progress.gainXp(211);
       expect(
         s.progress.learn(
           mageSkills.firstWhere((skill) => skill.id == 'arcaneMastery'),
@@ -473,6 +475,8 @@ void main() {
       }
       expect(s.progress.hp, s.progress.maxHp);
       s.hero.position.setValues(center.dx - 100, center.dy - 11);
+      // Replay the same basic slam; the normal next cast is now a root net.
+      boss.bossSequence = 0;
       boss.slamClock = 0;
       boss.update(.05);
       for (var i = 0; i < 19; i++) {
@@ -480,7 +484,10 @@ void main() {
       }
       expect(
         s.progress.hp,
-        closeTo(s.progress.maxHp - s.progress.mitigate(24), .001),
+        closeTo(
+          s.progress.maxHp - s.progress.mitigate(boss.outgoingDamage(24)),
+          .001,
+        ),
       );
       boss.windup = .5;
       boss.stun = 1;
@@ -562,11 +569,11 @@ void main() {
     }
     expect(s.progress.energy, before);
     s.hit(enemy, 1, Offset.zero, generateRage: true);
-    expect(s.progress.energy, before + 3);
+    expect(s.progress.energy, closeTo(before + 2.1, .000001));
     s.hit(enemy, 1, Offset.zero, generateRage: true);
-    expect(s.progress.energy, before + 3);
+    expect(s.progress.energy, closeTo(before + 2.1, .000001));
     s.pause();
     s.hit(enemy, 1, Offset.zero, generateRage: true);
-    expect(s.progress.energy, before + 3);
+    expect(s.progress.energy, closeTo(before + 2.1, .000001));
   });
 }

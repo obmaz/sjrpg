@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:collection/collection.dart';
+
 import 'sanctuary.dart';
 import 'stage_content.dart';
 
@@ -16,6 +18,11 @@ const town = Rect.fromLTWH(
   640 * worldScale,
   960 * worldScale,
 );
+// The original fountain scene stays at its saved coordinates; a new eastern
+// workshop courtyard expands the village without moving its old landmarks.
+const authoredBlacksmithAnnex = Rect.fromLTWH(4080, 2680, 800, 1000);
+const blacksmithAnnex = Rect.fromLTWH(3060, 2010, 600, 750);
+const blacksmithPosition = Offset(3330, 2460);
 const arrival = Offset(3840 * worldScale, 3055 * worldScale);
 const authoredStageChests = [
   Offset(3840, 3415),
@@ -239,6 +246,16 @@ class WorldProp {
       ? [
           Rect.fromLTWH(body.left, body.top, 26, body.height),
           Rect.fromLTWH(body.right - 26, body.top, 26, body.height),
+        ]
+      : kind == 'blacksmith-forge'
+      ? [
+          // These small footprints match the visible bench, hearth, anvil and
+          // posts; the open front-left area below the awning stays walkable.
+          Rect.fromLTWH(body.left + 20, body.top + 60, 130, 30),
+          Rect.fromLTWH(body.left + 200, body.top + 5, 115, 78),
+          Rect.fromLTWH(body.left + 230, body.top + 130, 62, 40),
+          Rect.fromLTWH(body.left + 35, body.top + 70, 22, 32),
+          Rect.fromLTWH(body.left + 360, body.top + 80, 20, 43),
         ]
       : [body];
 }
@@ -642,9 +659,90 @@ class AdventureWorld {
         }
       }
     }
+    _buildForestAnnex();
     _compact();
     _buildSanctuaryBoundary();
   }
+
+  void _buildForestAnnex() {
+    // Generate the original forest first so adding the village does not consume
+    // a different random stream or rearrange remote trees and rocks.
+    final removed = props
+        .where((p) => authoredBlacksmithAnnex.inflate(75).overlaps(p.body))
+        .toSet();
+    final removedBodies = removed.expand((p) => p.collisionBodies).toSet();
+    props.removeWhere(removed.contains);
+    for (final bucket in _solids.values) {
+      bucket.removeWhere(removedBodies.contains);
+    }
+    clearings.add(
+      RegionShape([
+        const Offset(4080, 2680),
+        const Offset(4840, 2680),
+        const Offset(4910, 3150),
+        const Offset(4780, 3680),
+        const Offset(4140, 3680),
+        const Offset(4040, 3230),
+      ]),
+    );
+    trails.addAll([
+      Trail(const [Offset(4290, 3130), Offset(4740, 3130)], 300),
+      Trail(const [
+        Offset(4080, 3180),
+        // Clear the whole old gate before turning around its stone corner.
+        Offset(4240, 3180),
+        Offset(4260, 3260),
+        Offset(4440, 3390),
+        Offset(4740, 3390),
+      ], 150),
+      Trail(const [
+        Offset(4440, 3390),
+        Offset(4440, 3580),
+        Offset(4240, 3660),
+        Offset(3980, 3700),
+        Offset(3884, 3580),
+      ], 105),
+    ]);
+    // The larger ward reaches the river. Its east gate continues across a
+    // painted bridge instead of pointing the player into blocked water.
+    bridges.add(const Rect.fromLTWH(4800, 3060, 640, 200));
+    trails.add(Trail(const [Offset(4740, 3123.2), Offset(5500, 3123.2)], 150));
+    campProps.add(
+      WorldProp(
+        Rect.fromCenter(
+          center: const Offset(4640, 3006.6666666667),
+          width: 380,
+          height: 200,
+        ),
+        'blacksmith-forge',
+        const Size(400, 350),
+      ),
+    );
+    for (final body in campProps.last.collisionBodies) {
+      _indexSolid(body);
+    }
+    campProps.addAll([
+      WorldProp(
+        Rect.fromCenter(
+          center: const Offset(4266.6666666667, 2773.3333333333),
+          width: 28,
+          height: 28,
+        ),
+        'tree',
+        const Size(170, 220),
+      ),
+      WorldProp(
+        Rect.fromCenter(
+          center: const Offset(4826.6666666667, 3506.6666666667),
+          width: 28,
+          height: 28,
+        ),
+        'tree',
+        const Size(160, 210),
+      ),
+    ]);
+  }
+
   // A visibility graph keeps roads clear of water, quest structures and the fountain.
   List<Offset> _dryRoad(List<Offset> authored, double width) {
     final obstacles = [
@@ -1279,7 +1377,9 @@ class AdventureWorld {
   Offset get spawn => _authoring ? _authoredHubOrigin : hubOrigin;
   Offset _at(Offset raw) => _authoring ? raw : raw * worldScale;
   Rect get settlement => stage == WorldStage.forest
-      ? (_authoring ? authoredTown : town)
+      ? (_authoring
+            ? authoredTown.expandToInclude(authoredBlacksmithAnnex)
+            : town.expandToInclude(blacksmithAnnex))
       : Rect.fromCenter(
           center: spawn,
           width: 900 * (_authoring ? 1 : worldScale),
@@ -1291,10 +1391,8 @@ class AdventureWorld {
         : _authoredHubOrigin + const Offset(-280, -100),
   );
   late final sanctuary = Sanctuary(
-    stage == WorldStage.forest
-        ? Offset(town.center.dx, town.top + town.height * .245)
-        : hubOrigin,
-    stage == WorldStage.forest ? 360 : 440,
+    stage == WorldStage.forest ? const Offset(3030, 2205) : hubOrigin,
+    stage == WorldStage.forest ? 700 : 440,
   );
   final sanctuaryFences = <SanctuaryFenceSection>[];
   void _buildSanctuaryBoundary() {
@@ -1345,6 +1443,8 @@ class AdventureWorld {
     }
   }
 
+  Offset get blacksmithAt =>
+      _authoring ? blacksmithPosition / worldScale : blacksmithPosition;
   Offset get merchantAt => _at(_authoredMerchant);
   late final Offset _authoredMerchant = stage == WorldStage.forest
       ? const Offset(3952, 2984)
@@ -1638,7 +1738,20 @@ class AdventureWorld {
         sweep.bottom > (_authoring ? authoredWorldSize : worldSize).height) {
       return false;
     }
-    if (from.dx == to.dx || from.dy == to.dy) return !blocked(sweep);
+    if (from.dx == to.dx || from.dy == to.dy) {
+      if (!blocked(sweep)) return true;
+      // A blocked dry/body sweep stays blocked. Only a bridge can make a
+      // water-crossing sweep valid, keeping ordinary failed A* edges cheap.
+      if (!bridges.any((bridge) => bridge.overlaps(sweep))) return false;
+      if (blocked(sweep, ignoreWater: true) ||
+          blocked(from & size) ||
+          blocked(to & size)) {
+        return false;
+      }
+      // A land→bridge sweep need not fit inside the bridge as one giant body.
+      // Check its actual moving body just as physical movement does instead.
+      return _clearWaterLine(from, to, size, sweep);
+    }
     final obstacles = <Rect>{};
     obstacles.addAll(closedChestsNear(sweep).map(chestBody));
     for (
@@ -1665,6 +1778,10 @@ class AdventureWorld {
       );
       if (_segmentHitsRect(from, to, expanded)) return false;
     }
+    return _clearWaterLine(from, to, size, sweep);
+  }
+
+  bool _clearWaterLine(Offset from, Offset to, Size size, Rect sweep) {
     if (lakes.any((l) => l.bounds.overlaps(sweep)) ||
         river.bounds.overlaps(sweep)) {
       final n = math.max(1, ((to - from).distance / 6).ceil());
@@ -1746,6 +1863,8 @@ class AdventureWorld {
     bool avoidSanctuary = false,
     bool Function(Rect)? occupied,
   }) {
+    final leaveWard = avoidSanctuary && sanctuary.protects(desired & body);
+    final requestedCenter = (desired & body).center;
     if (avoidSanctuary) desired = sanctuary.outside(desired, body);
     bool available(Offset at) {
       final candidate = at & body;
@@ -1771,6 +1890,27 @@ class AdventureWorld {
         if (available(p)) {
           return p;
         }
+      }
+    }
+    if (leaveWard) {
+      // The nearest boundary can be water or occupied. For an inside request
+      // only, try the remaining boundary directions with the same guards.
+      final from = requestedCenter - sanctuary.center;
+      final bearing = from.distanceSquared == 0
+          ? 0.0
+          : math.atan2(from.dy, from.dx);
+      final clearance =
+          math.sqrt(body.width * body.width + body.height * body.height) / 2;
+      final distance = sanctuary.radius + clearance + 12;
+      final half = Offset(body.width / 2, body.height / 2);
+      for (var i = 1; i < 24; i++) {
+        final turn = (i + 1) ~/ 2;
+        final angle = bearing + (i.isOdd ? turn : -turn) * math.pi / 12;
+        final candidate =
+            sanctuary.center +
+            Offset(math.cos(angle), math.sin(angle)) * distance -
+            half;
+        if (available(candidate)) return candidate;
       }
     }
     return null;
@@ -1808,7 +1948,7 @@ class AdventureWorld {
       }
       return stage.theme;
     }
-    if (town.contains(p)) return '분수 마을';
+    if (settlement.contains(p)) return '분수 마을';
     if (isSand(p)) return p.dx > 12000 * worldScale ? '태양의 사구' : '황금 모래벌판';
     if (lakes.any((l) => l.bounds.inflate(220).contains(p))) return '푸른 호숫가';
     if ((p.dx - 5300 * worldScale).abs() < 550 * worldScale) return '달빛 강변';
@@ -1847,15 +1987,18 @@ class AdventureWorld {
       ),
     );
     final start = anchors.first;
-    final front = <_Node>[
-      _Node(start, 0, (to - position(start)).distance / grid),
-    ];
+    var sequence = 0;
+    final front = HeapPriorityQueue<_Node>(
+      (a, b) {
+        final score = a.score.compareTo(b.score);
+        return score != 0 ? score : a.sequence.compareTo(b.sequence);
+      },
+    )..add(_Node(start, 0, (to - position(start)).distance / grid, sequence++));
     final costs = <math.Point<int>, double>{start: 0};
     final parents = <math.Point<int>, math.Point<int>>{};
     var visited = 0;
     while (front.isNotEmpty && visited++ < 700) {
-      front.sort((a, b) => b.score.compareTo(a.score));
-      final current = front.removeLast();
+      final current = front.removeFirst();
       final p = current.point, at = position(p);
       if ((at - to).distance < 42) {
         final path = <Offset>[];
@@ -1880,7 +2023,7 @@ class AdventureWorld {
         }
         costs[next] = g;
         parents[next] = p;
-        front.add(_Node(next, g, g + (dest - to).distance / grid));
+        front.add(_Node(next, g, g + (dest - to).distance / grid, sequence++));
       }
     }
     return [];
@@ -1910,7 +2053,8 @@ class AdventureWorld {
 }
 
 class _Node {
-  const _Node(this.point, this.cost, this.score);
+  const _Node(this.point, this.cost, this.score, this.sequence);
   final math.Point<int> point;
   final double cost, score;
+  final int sequence;
 }

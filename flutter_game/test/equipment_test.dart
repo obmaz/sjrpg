@@ -149,12 +149,12 @@ void main() {
       await tester.tap(find.bySemanticsLabel('물약'));
       await tester.pumpAndSettle();
       final potions = s.progress.healingPotions;
-      final healing = find.bySemanticsLabel('치유 물약 ×2 구매 · 20 골드');
+      final healing = find.bySemanticsLabel('치유 물약 ×2 구매 · 80 골드');
       await reveal(tester, healing);
       await tester.tap(healing);
       await tester.pumpAndSettle();
       expect(s.progress.healingPotions, potions + 2);
-      expect(s.progress.gold, 80);
+      expect(s.progress.gold, 20);
       expect(find.text('생명 55 회복 · 보유 ${potions + 2}개'), findsOneWidget);
       expect(tester.takeException(), null);
       semantics.dispose();

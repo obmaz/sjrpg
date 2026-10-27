@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
+import 'combat_balance.dart';
 import 'skill_growth.dart';
+import 'stage_content.dart';
 
 enum HeroClass { warrior, mage }
 
@@ -279,14 +281,18 @@ class Gear {
     this.affixVersion = 1,
     WeaponGift? gift,
     List<WeaponGift>? gifts,
-  }) : gifts = List<WeaponGift>.unmodifiable(
+    int? weaponLevel,
+  }) : weaponLevel = base.slot == GearSlot.weapon ? (weaponLevel ?? 1) : null,
+       gifts = List<WeaponGift>.unmodifiable(
          gifts ??
              (gift != null
                  ? [gift]
                  : _defaultGifts(serial, base, rarity, affixVersion)),
        ) {
     final expected = _giftCount(base, rarity, affixVersion);
-    if (acquiredLevel < 1 ||
+    if (base.slot != GearSlot.weapon && weaponLevel != null ||
+        this.weaponLevel != null && this.weaponLevel! < 1 ||
+        acquiredLevel < 1 ||
         acquiredLevel > 10000 ||
         affixVersion < 0 ||
         affixVersion > 1 ||
@@ -300,6 +306,8 @@ class Gear {
   final GearDef base;
   final Rarity rarity;
   final int power, vitality, focus, acquiredLevel, affixVersion;
+  final int? weaponLevel;
+  static const weaponAttackPerLevel = 2.0;
   bool locked;
   final List<WeaponGift> gifts;
   // Keep the old single-gift accessor for existing callers and save compatibility.
@@ -338,6 +346,7 @@ class Gear {
     'gifts': gifts.map((ability) => ability.name).toList(),
     'acquiredLevel': acquiredLevel,
     'affixVersion': affixVersion,
+    'weaponLevel': weaponLevel,
   };
   factory Gear.fromSave(Map<String, dynamic> data) {
     int stat(String key) {
@@ -385,6 +394,13 @@ class Gear {
         (rarity != Rarity.rare || base.slot != GearSlot.weapon)) {
       throw const FormatException('Invalid legacy weapon gift');
     }
+    final savedLevel = data['weaponLevel'];
+    if (savedLevel != null &&
+        (base.slot != GearSlot.weapon ||
+            savedLevel is! int ||
+            savedLevel < 1)) {
+      throw const FormatException('Invalid weapon level');
+    }
     final count = _giftCount(base, rarity, version);
     final raw = data['gifts'];
     late final List<WeaponGift> abilities;
@@ -414,8 +430,23 @@ class Gear {
       acquiredLevel: acquiredLevel,
       affixVersion: version,
       gifts: abilities,
+      // Existing equipment starts at level one without changing its old attack.
+      weaponLevel: savedLevel as int?,
     );
   }
+  Gear withWeaponLevel(int level) => Gear(
+    serial,
+    base,
+    rarity: rarity,
+    power: power,
+    vitality: vitality,
+    focus: focus,
+    locked: locked,
+    acquiredLevel: acquiredLevel,
+    affixVersion: affixVersion,
+    gifts: gifts,
+    weaponLevel: level,
+  );
   String get name => rarity == Rarity.unique
       ? '${base.id == 'sentinel' ? '파수꾼' : '균열'}의 유산 · ${base.name}'
       : rarity == Rarity.common
@@ -425,7 +456,8 @@ class Gear {
             : vitality > 0
             ? '생명'
             : '집중'}의 ${base.name}';
-  double get attack => base.attack + power;
+  double get attack =>
+      base.attack + power + ((weaponLevel ?? 1) - 1) * weaponAttackPerLevel;
   double get armor =>
       base.armor + (base.slot == GearSlot.armor ? rarity.index * 2 : 0);
   double get health => base.health + vitality;
@@ -433,6 +465,7 @@ class Gear {
   int get saleValue =>
       math.max(5, (base.value * (1 + rarity.index * .6) / 3).round());
   String get stats => [
+    if (weaponLevel != null) '무기 Lv.$weaponLevel',
     if (attack > 0) '공격 +${attack.round()}',
     if (armor > 0) '방어 +${armor.round()}',
     if (health > 0) '생명 +${health.round()}',
@@ -441,6 +474,59 @@ class Gear {
     for (final ability in gifts) '${ability.title} · ${ability.description}',
   ].join(' · ');
 }
+
+/// One immutable quotation owns the item identity and player-level context.
+class SmithQuote {
+  SmithQuote._(this._item, this.heroLevel)
+    : serial = _item.serial,
+      weaponLevel = _item.weaponLevel!,
+      price = (25 + _item.weaponLevel! * 12.0 + _item.rarity.index * 15).ceil(),
+      successChance = chance(_item.weaponLevel!, heroLevel),
+      currentAttack = _item.attack,
+      nextAttack = _item.attack + Gear.weaponAttackPerLevel;
+  final Gear _item;
+  final int serial, weaponLevel, heroLevel, price;
+  final double successChance, currentAttack, nextAttack;
+
+  static double chance(int weaponLevel, int heroLevel) =>
+      switch (weaponLevel - heroLevel) {
+        < 0 => .9,
+        0 => .7,
+        1 => .6,
+        2 => .5,
+        3 => .4,
+        _ => .3,
+      };
+}
+
+class SmithResult {
+  const SmithResult({required this.succeeded, this.weapon});
+  final bool succeeded;
+  final Gear? weapon;
+  bool get destroyed => !succeeded;
+}
+
+const _unarmedDef = GearDef(
+  'unarmed',
+  '맨손 전투',
+  GearSlot.weapon,
+  heroClass: HeroClass.warrior,
+  attack: 4,
+  range: 68,
+  tempo: .4,
+  value: 0,
+);
+const _innateMagicDef = GearDef(
+  'innate-magic',
+  '기초 마법',
+  GearSlot.weapon,
+  heroClass: HeroClass.mage,
+  attack: 3,
+  range: 420,
+  tempo: .5,
+  style: 'fire',
+  value: 0,
+);
 
 class BasicAttackStats {
   const BasicAttackStats(this.damage, this.interval);
@@ -458,12 +544,16 @@ class SkillDef {
     this.cost,
     this.cooldown, {
     this.passive = false,
+    this.basic = false,
+    this.basicDamageScale = 1,
+    this.basicTempoScale = 1,
     this.requires = const {},
   });
   final String id, name, branch, description;
   final int requiredLevel;
   final double cost, cooldown;
-  final bool passive;
+  final bool passive, basic;
+  final double basicDamageScale, basicTempoScale;
   final Map<String, int> requires;
   static const maxRank = 5;
   String get shortName =>
@@ -508,6 +598,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
+    basic: true,
   ),
   SkillDef(
     'warcry',
@@ -522,7 +613,7 @@ const warriorSkills = [
     'mastery',
     '무기 숙련',
     '전투 숙련',
-    '등급마다 모든 무기 피해 +8%.',
+    '등급마다 모든 무기 피해 +6%.',
     2,
     0,
     0,
@@ -595,7 +686,7 @@ const warriorSkills = [
     'rallyingVoice',
     '고양의 울림',
     '함성',
-    '전장의 함성으로 보호받는 동안, 실제 기본 공격 적중 시 등급만큼 분노를 추가로 얻습니다. 빗맞힌 공격에는 적용되지 않습니다.',
+    '전장의 함성으로 보호받는 동안, 실제 기본 공격 적중 시 등급마다 분노 0.7을 추가로 얻습니다. 빗맞힌 공격에는 적용되지 않습니다.',
     6,
     0,
     0,
@@ -672,7 +763,7 @@ const warriorSkills = [
     'warDrums',
     '전쟁의 북소리',
     '함성',
-    '함성 보호 중 실제 적중 시 등급마다 분노 +0.5.',
+    '함성 보호 중 실제 적중 시 등급마다 분노 +0.35.',
     9,
     0,
     0,
@@ -710,17 +801,46 @@ const warriorSkills = [
     6,
     requires: {'charge': 1},
   ),
+  SkillDef(
+    'quickCut',
+    '속사 베기',
+    '전투 기술',
+    '빠른 두 자세로 한 명을 연속 공격합니다. 한 타격은 약하지만 동작이 짧습니다. 자원을 쓰지 않으며 등급마다 공격이 빨라집니다.',
+    2,
+    0,
+    0,
+    passive: true,
+    basic: true,
+    basicDamageScale: .76,
+    basicTempoScale: 1.18,
+    requires: {'cleave': 1},
+  ),
+  SkillDef(
+    'heavyStrike',
+    '무거운 일격',
+    '전투 숙련',
+    '한 명을 느리고 강하게 내려칩니다. 적중하면 짧게 기절시키며 큰 적에게는 짧게 적용됩니다. 자원을 쓰지 않으며 등급마다 공격과 타격감이 성장합니다.',
+    3,
+    0,
+    0,
+    passive: true,
+    basic: true,
+    basicDamageScale: 1.45,
+    basicTempoScale: .72,
+    requires: {'cleave': 2, 'mastery': 1},
+  ),
 ];
 const mageSkills = [
   SkillDef(
     'firebolt',
-    '화염탄',
+    '마력탄',
     '화염',
-    '기본 원거리 공격. 등급마다 공격과 발사가 빨라집니다. 3등급부터 적중 시 폭발하고 대상이 증가합니다.',
+    '장착한 무기의 원소로 공격하는 기본 탄환입니다. 등급마다 공격과 발사가 빨라집니다. 3등급부터 적중 시 폭발하고 대상이 증가합니다.',
     1,
     0,
     0,
     passive: true,
+    basic: true,
   ),
   SkillDef(
     'frostNova',
@@ -735,7 +855,7 @@ const mageSkills = [
     'arcaneMastery',
     '원소 숙련',
     '번개',
-    '등급마다 원소 피해 +9%, 최대 마나 +8.',
+    '등급마다 원소 피해 +7%, 최대 마나 +8.',
     2,
     0,
     0,
@@ -775,7 +895,7 @@ const mageSkills = [
     'warmth',
     '온기',
     '화염',
-    '등급마다 초당 마나 회복 +1.5.',
+    '등급마다 초당 마나 회복 +1.05.',
     2,
     0,
     0,
@@ -896,12 +1016,40 @@ const mageSkills = [
     'arcaneEconomy',
     '비전 순환',
     '번개',
-    '등급마다 최대 마나 +4, 초당 마나 회복 +0.5.',
+    '등급마다 최대 마나 +4, 초당 마나 회복 +0.35.',
     16,
     0,
     0,
     passive: true,
     requires: {'forkedStorm': 2},
+  ),
+  SkillDef(
+    'iceShard',
+    '서리 창',
+    '냉기',
+    '무기와 관계없이 냉기 결정창으로 한 명을 공격하고 느려지게 합니다. 한 타격이 강한 대신 발사가 느립니다. 자원을 쓰지 않으며 등급마다 공격과 결정이 성장합니다.',
+    2,
+    0,
+    0,
+    passive: true,
+    basic: true,
+    basicDamageScale: 1.1,
+    basicTempoScale: .86,
+    requires: {'firebolt': 1, 'frostNova': 1},
+  ),
+  SkillDef(
+    'sparkBolt',
+    '전격 탄',
+    '번개',
+    '무기와 관계없이 빠른 전격을 발사합니다. 한 타격은 약하며 3등급부터 가까운 적 한 명에게 약한 방전이 퍼집니다. 기본 대상은 한 명, 최대 두 명이며 자원을 쓰지 않습니다.',
+    3,
+    0,
+    0,
+    passive: true,
+    basic: true,
+    basicDamageScale: .84,
+    basicTempoScale: 1.12,
+    requires: {'firebolt': 2, 'arcaneMastery': 1},
   ),
 ];
 
@@ -943,6 +1091,7 @@ class Progress {
     }
     ranks[heroClass == HeroClass.warrior ? 'cleave' : 'firebolt'] = 1;
     ranks[heroClass == HeroClass.warrior ? 'warcry' : 'frostNova'] = 1;
+    selectedBasic = defaultBasicId;
     selectedSkill = heroClass == HeroClass.warrior ? 'warcry' : 'frostNova';
     hp = maxHp;
     energy = heroClass == HeroClass.warrior ? 25 : maxEnergy;
@@ -953,6 +1102,32 @@ class Progress {
   int _serial = 1;
   double hp = 100, energy = 0, bonusAttack = 0, bonusHealth = 0;
   bool bossDefeated = false;
+  final _claimedResetStages = <WorldStage>{};
+  int _spentSkillResets = 0;
+  int get skillResetTickets => _claimedResetStages.length - _spentSkillResets;
+  Set<WorldStage> get claimedResetStages =>
+      Set.unmodifiable(_claimedResetStages);
+  bool awardSkillResetTicket(WorldStage stage) =>
+      _claimedResetStages.add(stage);
+  String selectedBasic = '';
+  String get defaultBasicId =>
+      heroClass == HeroClass.warrior ? 'cleave' : 'firebolt';
+  Iterable<SkillDef> get basicSkills => skills.where((s) => s.basic);
+  SkillDef get basicSkill => skills.firstWhere((s) => s.id == selectedBasic);
+  bool canSelectBasic(String id) =>
+      skills.any((s) => s.id == id && s.basic && rank(id) > 0);
+  bool selectBasic(String id) {
+    if (!canSelectBasic(id)) return false;
+    selectedBasic = id;
+    return true;
+  }
+
+  String basicElementFor(SkillDef skill) => switch (skill.id) {
+    'iceShard' => 'ice',
+    'sparkBolt' => 'lightning',
+    _ => weapon.base.style,
+  };
+  String get basicElement => basicElementFor(basicSkill);
   String selectedSkill = '';
   String? secondarySkill, tertiarySkill, quaternarySkill;
   List<String?> get skillSlots => [
@@ -1024,6 +1199,15 @@ class Progress {
     'bonusAttack': bonusAttack,
     'bonusHealth': bonusHealth,
     'bossDefeated': bossDefeated,
+    'skillResetRewards': {
+      'version': 1,
+      'claimed': [
+        for (final stage in WorldStage.values)
+          if (_claimedResetStages.contains(stage)) stage.name,
+      ],
+      'spent': _spentSkillResets,
+    },
+    'selectedBasic': selectedBasic,
     'selectedSkill': selectedSkill,
     'secondarySkill': secondarySkill,
     'tertiarySkill': tertiarySkill,
@@ -1032,6 +1216,7 @@ class Progress {
     'inventory': inventory.map((g) => g.toSave()).toList(),
     'unseenGear': unseenGear.toList(),
     'equipped': equipped.map((slot, gear) => MapEntry(slot.name, gear.serial)),
+    'weaponFallback': usingFallbackWeapon,
   };
   static Progress? fromSave(dynamic value) {
     try {
@@ -1069,8 +1254,32 @@ class Progress {
       p.bonusAttack = decimal('bonusAttack');
       p.bonusHealth = decimal('bonusHealth');
       p.bossDefeated = data['bossDefeated'] as bool;
+      if (data.containsKey('skillResetRewards')) {
+        final rewards = data['skillResetRewards'];
+        if (rewards is! Map || rewards['version'] != 1) return null;
+        final claimed = rewards['claimed'], spent = rewards['spent'];
+        if (claimed is! List ||
+            claimed.length > WorldStage.values.length ||
+            spent is! int ||
+            spent < 0 ||
+            spent > claimed.length) {
+          return null;
+        }
+        for (final name in claimed) {
+          final stage = WorldStage.values
+              .where((s) => s.name == name)
+              .firstOrNull;
+          if (stage == null || !p._claimedResetStages.add(stage)) return null;
+        }
+        p._spentSkillResets = spent;
+      }
       final items = data['inventory'] as List;
-      if (items.isEmpty || items.length > capacity) return null;
+      final fallback = data['weaponFallback'] ?? false;
+      if (fallback is! bool ||
+          items.isEmpty && !fallback ||
+          items.length > capacity) {
+        return null;
+      }
       p.inventory.clear();
       final identities = <int>{};
       for (final item in items) {
@@ -1096,7 +1305,15 @@ class Progress {
         }
         p.equipped[slot] = item;
       }
-      if (!p.equipped.containsKey(GearSlot.weapon)) return null;
+      if (fallback == p.equipped.containsKey(GearSlot.weapon) ||
+          fallback &&
+              p.inventory.any(
+                (g) =>
+                    g.base.slot == GearSlot.weapon &&
+                    g.base.usable(p.heroClass),
+              )) {
+        return null;
+      }
       p.ranks.clear();
       for (final entry in (data['ranks'] as Map).entries) {
         final skill = p.skills.firstWhere((s) => s.id == entry.key);
@@ -1113,6 +1330,9 @@ class Progress {
           0) {
         return null;
       }
+      final basic = data['selectedBasic'] ?? p.defaultBasicId;
+      if (basic is! String || !p.canSelectBasic(basic)) return null;
+      p.selectedBasic = basic;
       p.selectedSkill = data['selectedSkill'] as String;
       final active = p.skills.firstWhere((s) => s.id == p.selectedSkill);
       if (active.passive || p.rank(active.id) == 0) return null;
@@ -1148,7 +1368,7 @@ class Progress {
           return null;
         }
       }
-      p._serial = math.max(integer('serial'), identities.reduce(math.max) + 1);
+      p._serial = math.max(integer('serial'), identities.fold(0, math.max) + 1);
       p.hp = decimal('hp').clamp(0, p.maxHp);
       p.energy = decimal('energy').clamp(0, p.maxEnergy);
       return p;
@@ -1165,8 +1385,14 @@ class Progress {
       : skills.firstWhere((s) => s.id == secondarySkill);
   SkillDef get activeSkill => skills.firstWhere((s) => s.id == selectedSkill);
   int rank(String id) => ranks[id] ?? 0;
-  int get nextLevelXp => 55 + (level - 1) * 30;
-  Gear get weapon => equipped[GearSlot.weapon]!;
+  int get nextLevelXp => CombatBalance.experienceForLevel(level);
+  late final _fallbackWeapon = Gear(
+    0,
+    heroClass == HeroClass.warrior ? _unarmedDef : _innateMagicDef,
+    locked: true,
+  );
+  bool get usingFallbackWeapon => !equipped.containsKey(GearSlot.weapon);
+  Gear get weapon => equipped[GearSlot.weapon] ?? _fallbackWeapon;
   double get maxHp =>
       (heroClass == HeroClass.warrior ? 100 : 80) +
       (level - 1) * 10 +
@@ -1187,15 +1413,18 @@ class Progress {
       equipped.values.fold(0.0, (v, g) => v + g.armor) +
       rank('ironSkin') * 5 +
       rank('veteranGuard') * 2;
-  static const playerDamageScale = .75;
+  static const playerDamageScale = .75 * CombatBalance.heroDamageScale;
   static const skillCooldownScale = .7;
   double get attackMultiplier =>
-      (1 + rank('mastery') * .08 + rank('arcaneMastery') * .09) *
+      (1 +
+          rank('mastery') * CombatBalance.physicalMasteryGrowth +
+          rank('arcaneMastery') * CombatBalance.arcaneMasteryGrowth) *
       playerDamageScale;
   double get swordDamage =>
       (bonusAttack +
           (level - 1) * 2 +
-          equipped.values.fold(0.0, (v, g) => v + g.attack)) *
+          equipped.values.fold(0.0, (v, g) => v + g.attack) +
+          (usingFallbackWeapon ? weapon.attack : 0)) *
       attackMultiplier;
   set swordDamage(double value) =>
       bonusAttack += (value - swordDamage) / attackMultiplier;
@@ -1203,23 +1432,29 @@ class Progress {
       ? const ['전투 기술', '전투 숙련', '함성']
       : const ['화염', '냉기', '번개'];
   double get manaRecovery =>
-      9 + rank('warmth') * 1.5 + rank('arcaneEconomy') * .5;
+      (9 + rank('warmth') * 1.5 + rank('arcaneEconomy') * .5) *
+      CombatBalance.resourceGainScale;
   double get fireDamageMultiplier => 1 + rank('emberFocus') * .05;
   double get coldDamageMultiplier =>
       1 + rank('coldMastery') * .08 + rank('deepFreeze') * .05;
   double get lightningDamageMultiplier =>
       1 + rank('lightningMastery') * .08 + rank('conductivity') * .05;
-  int get basicTargetLimit => basicTargetLimitForRank(
-    rank(heroClass == HeroClass.warrior ? 'cleave' : 'firebolt'),
-  );
-  int basicTargetLimitForRank(int rank) => heroClass == HeroClass.warrior
-      ? rank.clamp(1, SkillDef.maxRank)
-      : rank >= 3
-      ? rank.clamp(3, 5)
-      : 1;
+  int get basicTargetLimit => basicTargetLimitForRank(rank(selectedBasic));
+  int basicTargetLimitForRank(int rank, {SkillDef? basic}) {
+    final skill = basic ?? basicSkill;
+    if (rank <= 0) return 0;
+    return switch (skill.id) {
+      'cleave' => rank.clamp(1, SkillDef.maxRank),
+      'firebolt' => rank >= 3 ? rank.clamp(3, 5) : 1,
+      'sparkBolt' => rank >= 3 ? 2 : 1,
+      _ => 1,
+    };
+  }
+
   int skillTargetLimit(SkillDef skill, {int? atRank}) {
     final r = (atRank ?? rank(skill.id)).clamp(0, SkillDef.maxRank);
     if (r == 0 || !skills.contains(skill)) return 0;
+    if (skill.basic) return basicTargetLimitForRank(r, basic: skill);
     return switch (skill.id) {
       'whirlwind' => 3 + r - 1 + rank('stormOfSteel') ~/ 2,
       'chainLightning' => 3 + r - 1 + rank('forkedStorm') ~/ 2,
@@ -1262,9 +1497,10 @@ class Progress {
     return base / skillTempo(skill, atRank: atRank);
   }
 
-  double get basicTempo => SkillGrowth.tempo(
-    rank(heroClass == HeroClass.warrior ? 'cleave' : 'firebolt'),
-  );
+  double basicTempoFor(SkillDef skill, {int? atRank}) =>
+      CombatBalance.basicTempo(atRank ?? rank(skill.id)) *
+      skill.basicTempoScale;
+  double get basicTempo => basicTempoFor(basicSkill);
   double get heavyChargeTime => 1.2 / SkillGrowth.tempo(rank('crushingBlow'));
   double get frenzyAttackTempo => 1.65 + math.max(0, rank('frenzy') - 1) * .08;
   double get frenzyMoveSpeed => 310 + math.max(0, rank('frenzy') - 1) * 8;
@@ -1294,7 +1530,7 @@ class Progress {
   double get warcryStun =>
       limitedSkillDuration('warcry', 2 + math.max(0, rank('warcry') - 1) * .1);
 
-  double get basicDamage => skillDamage(skills.first);
+  double get basicDamage => skillDamage(basicSkill);
   double skillDamage(SkillDef skill, {int? atRank}) {
     final r = (atRank ?? rank(skill.id)).clamp(0, SkillDef.maxRank);
     if (!skills.contains(skill) ||
@@ -1302,8 +1538,12 @@ class Progress {
       return 0;
     }
     final factor = switch (skill.id) {
-      'cleave' => 1 + math.max(0, r - 1) * .04,
-      'firebolt' => 1 + math.max(0, r - 1) * .04,
+      'cleave' ||
+      'firebolt' ||
+      'quickCut' ||
+      'heavyStrike' ||
+      'iceShard' ||
+      'sparkBolt' => (1 + math.max(0, r - 1) * .04) * skill.basicDamageScale,
       'warcry' => 1.25 + math.max(0, r - 1) * .04,
       'whirlwind' => 1.34 + math.max(0, r - 1) * .05,
       'frenzy' => 1.4 + math.max(0, r - 1) * .05,
@@ -1317,17 +1557,17 @@ class Progress {
     };
     final element =
         skill.id == 'frostNova' ||
-            (skill.id == 'firebolt' && weapon.base.style == 'ice')
+            (skill.basic && basicElementFor(skill) == 'ice')
         ? coldDamageMultiplier
         : skill.id == 'chainLightning' ||
-              (skill.id == 'firebolt' && weapon.base.style == 'lightning')
+              (skill.basic && basicElementFor(skill) == 'lightning')
         ? lightningDamageMultiplier
         : 1;
     final fire =
         skill.id == 'meteor' ||
-        (skill.id == 'firebolt' && weapon.base.style == 'fire');
+        (skill.basic && basicElementFor(skill) == 'fire');
     final specialization = switch (skill.id) {
-      'cleave' => 1 + rank('rendingEdge') * .05,
+      'cleave' || 'quickCut' || 'heavyStrike' => 1 + rank('rendingEdge') * .05,
       'warcry' => 1 + rank('resoundingCry') * .06,
       'whirlwind' || 'seismicSlam' => 1 + rank('stormOfSteel') * .02,
       'meteor' => 1 + rank('cinderReach') * .02,
@@ -1356,16 +1596,18 @@ class Progress {
   double get warcryDuration =>
       limitedSkillDuration('warcry', 6 + math.max(0, rank('warcry') - 1) * .35);
   double rageOnHit({required bool protected}) =>
-      3.0 + (protected ? rank('rallyingVoice') + rank('warDrums') * .5 : 0);
+      (3.0 + (protected ? rank('rallyingVoice') + rank('warDrums') * .5 : 0)) *
+      CombatBalance.resourceGainScale;
 
-  double get attackInterval => math.max(
-    .16,
+  double attackIntervalFor(SkillDef skill, {int? atRank}) => math.max(
+    CombatBalance.minimumBasicInterval,
     weapon.base.tempo /
-        basicTempo *
+        basicTempoFor(skill, atRank: atRank) *
         (1 - equipped.values.fold(0.0, (v, g) => v + g.base.haste)) *
         (1 - rank('battleFocus') * .025) *
         (1 - rank('weaponTempo') * .015),
   );
+  double get attackInterval => attackIntervalFor(basicSkill);
   double get basicDps => basicDamage / attackInterval;
   BasicAttackStats? previewBasicAttack(Gear gear) {
     if (!gear.base.usable(heroClass)) return null;
@@ -1373,7 +1615,8 @@ class Progress {
     final next = Progress(heroClass: heroClass)
       ..level = level
       ..bonusAttack = bonusAttack
-      ..bonusHealth = bonusHealth;
+      ..bonusHealth = bonusHealth
+      ..selectedBasic = selectedBasic;
     next.ranks
       ..clear()
       ..addAll(ranks);
@@ -1414,9 +1657,13 @@ class Progress {
       level++;
       skillPoints++;
       hp = math.min(maxHp, hp + maxHp * .2);
-      energy = heroClass == HeroClass.mage
-          ? maxEnergy
-          : math.min(maxEnergy, energy + 20);
+      energy = math.min(
+        maxEnergy,
+        energy +
+            (heroClass == HeroClass.mage
+                ? maxEnergy * CombatBalance.levelManaFraction
+                : CombatBalance.levelRageGain),
+      );
     }
   }
 
@@ -1428,7 +1675,6 @@ class Progress {
       skillPoints > 0 &&
       rank(s.id) < SkillDef.maxRank &&
       (rank(s.id) > 0 || prerequisitesMet(s));
-  static const skillResetPrice = 50;
   int get investedSkillPoints {
     final basic = heroClass == HeroClass.warrior ? 'cleave' : 'firebolt';
     final starter = heroClass == HeroClass.warrior ? 'warcry' : 'frostNova';
@@ -1443,13 +1689,17 @@ class Progress {
     );
   }
 
+  bool get canResetSkills =>
+      hp > 0 && investedSkillPoints > 0 && skillResetTickets > 0;
+
   bool resetSkills() {
     final refund = investedSkillPoints;
-    if (refund == 0 || gold < skillResetPrice) return false;
-    gold -= skillResetPrice;
+    if (!canResetSkills) return false;
+    _spentSkillResets++;
     skillPoints += refund;
     final basic = heroClass == HeroClass.warrior ? 'cleave' : 'firebolt';
     final starter = heroClass == HeroClass.warrior ? 'warcry' : 'frostNova';
+    selectedBasic = basic;
     ranks
       ..clear()
       ..[basic] = 1
@@ -1463,8 +1713,10 @@ class Progress {
 
   bool learn(SkillDef skill) {
     if (!canLearn(skill)) return false;
+    final previousRank = rank(skill.id);
     skillPoints--;
-    ranks[skill.id] = rank(skill.id) + 1;
+    ranks[skill.id] = previousRank + 1;
+    if (skill.basic && previousRank == 0) selectedBasic = skill.id;
     if (!skill.passive && !skillSlots.contains(skill.id)) {
       if (secondarySkill == null) {
         secondarySkill = skill.id;
@@ -1536,7 +1788,11 @@ class Progress {
     int focus = 0,
     int? acquiredLevel,
     List<WeaponGift>? gifts,
+    int? weaponLevel,
   }) {
+    if (!gearCatalog.contains(def)) {
+      throw ArgumentError('Only real equipment can enter the inventory');
+    }
     final acquisition = acquiredLevel ?? level;
     if (acquisition < 1 || acquisition > 10000) {
       throw RangeError.range(acquisition, 1, 10000, 'acquiredLevel');
@@ -1550,6 +1806,9 @@ class Progress {
       focus: gearAffixForLevel(focus, acquisition),
       acquiredLevel: acquisition,
       gifts: gifts,
+      weaponLevel: def.slot == GearSlot.weapon
+          ? (weaponLevel ?? acquisition)
+          : weaponLevel,
     );
   }
 
@@ -1589,20 +1848,105 @@ class Progress {
       focus: heroClass == HeroClass.mage && rarity.index > 0
           ? 3 + random.nextInt(5) * rarity.index
           : 0,
+      weaponLevel: def.slot == GearSlot.weapon
+          ? math.max(1, level + random.nextInt(5) - 2)
+          : null,
     );
   }
 
-  // Common copies become gold; rolled gear keeps its own identity and options.
+  bool _canOwn(Gear item) =>
+      item.serial > 0 &&
+      gearCatalog.contains(item.base) &&
+      !inventory.any((owned) => owned.serial == item.serial);
+
+  bool addOwnedGear(Gear item) {
+    if (!_canOwn(item) || inventory.length >= capacity) return false;
+    inventory.add(item);
+    _serial = math.max(_serial, item.serial + 1);
+    unseenGear.add(item.serial);
+    if (usingFallbackWeapon &&
+        item.base.slot == GearSlot.weapon &&
+        item.base.usable(heroClass)) {
+      equip(item);
+    }
+    return true;
+  }
+
+  // Only common copies already outclassed by owned gear become gold.
   bool collect(Gear item) {
+    if (!_canOwn(item)) return false;
     if (item.rarity == Rarity.common &&
-        inventory.any((g) => g.base.id == item.base.id)) {
+        inventory.any(
+          (g) =>
+              g.base.id == item.base.id &&
+              (g.weaponLevel ?? 0) >= (item.weaponLevel ?? 0) &&
+              g.attack >= item.attack &&
+              g.armor >= item.armor &&
+              g.health >= item.health &&
+              g.mana >= item.mana,
+        )) {
       gold += item.saleValue;
       return false;
     }
-    if (inventory.length >= capacity) return false;
-    inventory.add(item);
-    unseenGear.add(item.serial);
-    return true;
+    return addOwnedGear(item);
+  }
+
+  SmithQuote? smithQuote(Gear item) {
+    if (hp <= 0 ||
+        !inventory.contains(item) ||
+        item.base.slot != GearSlot.weapon ||
+        !item.base.usable(heroClass) ||
+        item.locked ||
+        item.weaponLevel! + 1 <= item.weaponLevel!) {
+      return null;
+    }
+    return SmithQuote._(item, level);
+  }
+
+  SmithResult? enhanceWeapon(SmithQuote quote, math.Random random) {
+    final current = smithQuote(quote._item);
+    if (current == null ||
+        current.heroLevel != quote.heroLevel ||
+        current.weaponLevel != quote.weaponLevel ||
+        current.price != quote.price ||
+        current.successChance != quote.successChance ||
+        gold < current.price) {
+      return null;
+    }
+    final item = quote._item;
+    final succeeded = random.nextDouble() < current.successChance;
+    gold -= current.price;
+    unseenGear.remove(item.serial);
+    Gear? enhanced;
+    if (succeeded) {
+      enhanced = item.withWeaponLevel(item.weaponLevel! + 1);
+      inventory[inventory.indexOf(item)] = enhanced;
+      if (isEquipped(item)) equipped[GearSlot.weapon] = enhanced;
+    } else {
+      inventory.remove(item);
+      if (isEquipped(item)) {
+        equipped.remove(GearSlot.weapon);
+        final alternatives =
+            inventory
+                .where(
+                  (g) =>
+                      g.base.slot == GearSlot.weapon &&
+                      g.base.usable(heroClass),
+                )
+                .toList()
+              ..sort((a, b) {
+                final strength = b.attack.compareTo(a.attack);
+                return strength == 0 ? a.serial.compareTo(b.serial) : strength;
+              });
+        if (alternatives.isNotEmpty) {
+          equipped[GearSlot.weapon] = alternatives.first;
+          unseenGear.remove(alternatives.first.serial);
+        }
+      }
+    }
+    hp = math.min(hp, maxHp);
+    energy = math.min(energy, maxEnergy);
+    return SmithResult(succeeded: succeeded, weapon: enhanced);
   }
 
   bool buy(int price, void Function() apply) {

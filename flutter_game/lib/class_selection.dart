@@ -132,7 +132,7 @@ class _ClassSelectionState extends State<ClassSelection> {
                             child: Text(
                               selected == HeroClass.warrior
                                   ? '연속 베기로 분노를 모으고 함성으로 적을 제압하세요. 성장하면 소용돌이와 광전사의 격노를 배울 수 있습니다.'
-                                  : '화염탄으로 거리를 유지하고 서릿발로 적을 얼리세요. 성장하면 연쇄 번개와 유성을 배울 수 있습니다.',
+                                  : '마력탄으로 거리를 유지하고 서릿발로 적을 얼리세요. 성장하면 연쇄 번개와 유성을 배울 수 있습니다.',
                               style: const TextStyle(
                                 fontSize: 14,
                                 height: 1.7,

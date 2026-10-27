@@ -11,6 +11,7 @@ import 'device_settings.dart';
 import 'effect_visibility.dart';
 import 'fire_plume.dart';
 import 'gear_icon_art.dart';
+import 'mage_combat_art.dart';
 import 'player_afflictions.dart';
 import 'ranked_vfx.dart';
 import 'spell_vfx.dart';
@@ -77,7 +78,7 @@ void _damageAreaTargets(
     )) {
       continue;
     }
-    mob.stun = math.max(mob.stun, stun * (mob.boss ? .35 : 1));
+    mob.applyStun(stun);
     mob.slow = math.max(mob.slow, slow);
   }
 }
@@ -488,6 +489,7 @@ class ArcaneBolt extends GameComponent with EffectVisibility {
     int? targetLimit,
   }) : targetLimit = targetLimit ?? (explosive ? 3 : 1),
        direction = ui.Offset(math.cos(angle), math.sin(angle)),
+       chargeDuration = launchDelay,
        buildRevision = session.buildRevision {
     position = Vector2(at.dx, at.dy);
     size = Vector2.all(12);
@@ -499,14 +501,33 @@ class ArcaneBolt extends GameComponent with EffectVisibility {
   final bool explosive, propOnly;
   final Guardian? caster;
   double launchDelay;
+  final double chargeDuration;
   final int targetLimit, rank;
   final int buildRevision;
   double remaining = .88;
   bool resolved = false;
-  late final _flame = FirePlume();
+  final _art = MageCombatArt();
+  MageElement get _element => MageElement.fromStyle(element);
   @override
   ui.Rect get effectBounds =>
-      ui.Rect.fromCircle(center: position.toOffset(), radius: 100);
+      ui.Rect.fromCircle(center: position.toOffset(), radius: 140);
+
+  void _contact(ui.Offset at, {bool terrain = false}) {
+    session.game?.add(
+      MageContact(
+        session,
+        at,
+        element: _element,
+        radius: terrain
+            ? 18
+            : explosive
+            ? 85
+            : 34,
+        rank: rank,
+      ),
+    );
+  }
+
   void finish() {
     resolved = true;
     removeFromParent();
@@ -526,7 +547,10 @@ class ArcaneBolt extends GameComponent with EffectVisibility {
     if (!session.active || resolved) return;
     dt = math.min(dt, .05);
     if (launchDelay > 0) {
-      if (caster != null && (caster!.dashing > 0 || session.riding != null)) {
+      if (caster != null &&
+          (caster!.dashing > 0 ||
+              session.riding != null ||
+              session.afflictions.frozen)) {
         finish();
         return;
       }
@@ -566,15 +590,7 @@ class ArcaneBolt extends GameComponent with EffectVisibility {
               maxTargets: targetLimit - 1,
             );
           }
-          session.game?.add(
-            SpellBurst(
-              session,
-              element == 'ice' ? SpellClip.iceNova : SpellClip.meteorImpact,
-              chest.at,
-              radius: explosive ? 85 : 30,
-              rank: rank,
-            ),
-          );
+          _contact(chest.at);
         }
         finish();
         return;
@@ -583,6 +599,7 @@ class ArcaneBolt extends GameComponent with EffectVisibility {
         ui.Rect.fromCenter(center: at, width: 8, height: 8),
         avoidSanctuary: !propOnly,
       )) {
+        _contact(at, terrain: true);
         finish();
         return;
       }
@@ -627,25 +644,8 @@ class ArcaneBolt extends GameComponent with EffectVisibility {
             );
             _areaChests(session, at, 85, targetLimit - 1 - splash.length);
           }
-          session.game?.add(
-            element == 'lightning'
-                ? RuneBurst(
-                    session,
-                    at,
-                    color,
-                    radius: explosive ? 85 : 27,
-                    rank: rank,
-                  )
-                : SpellBurst(
-                    session,
-                    element == 'ice'
-                        ? SpellClip.iceNova
-                        : SpellClip.meteorImpact,
-                    at,
-                    radius: explosive ? 85 : 30,
-                    rank: rank,
-                  ),
-          );
+          _contact(at);
+          session.kickCamera(element == 'lightning' ? .55 : .35);
           finish();
           return;
         }
@@ -657,102 +657,105 @@ class ArcaneBolt extends GameComponent with EffectVisibility {
 
   @override
   void render(ui.Canvas canvas) {
-    if (launchDelay > 0 || resolved) return;
+    if (resolved) return;
     super.render(canvas);
-    final c = canvas;
     const tip = ui.Offset(0, -14);
-    paintRankImpact(
-      c,
-      tip,
-      ((.88 - remaining) * 6) % 1,
-      rank,
-      color,
-      radius: 16 + rank * 2,
-    );
-    c.drawLine(
-      tip - direction * 26,
-      tip,
-      ui.Paint()
-        ..color = color.withValues(alpha: .3)
-        ..strokeWidth = 13
-        ..strokeCap = ui.StrokeCap.round,
-    );
-    c.drawLine(
-      tip - direction * 14,
-      tip,
-      ui.Paint()
-        ..color = color
-        ..strokeWidth = 7
-        ..strokeCap = ui.StrokeCap.round,
-    );
-    c.drawCircle(tip, 3, ui.Paint()..color = const ui.Color(0xfffff5d5));
-    final age = .88 - remaining;
-    if (element == 'fire') {
-      _flame.flight(
-        c,
-        tip,
-        math.atan2(direction.dy, direction.dx),
-        age,
-        radius: 23,
+    if (launchDelay > 0) {
+      _art.charge(
+        canvas,
+        tip + direction * 18,
+        _element,
+        chargeDuration <= 0 ? 1 : 1 - launchDelay / chargeDuration,
+        rank,
       );
+      return;
     }
-    c.save();
-    c.translate(tip.dx, tip.dy);
+    _art.projectile(
+      canvas,
+      tip,
+      math.atan2(direction.dy, direction.dx),
+      .88 - remaining,
+      _element,
+      rank,
+    );
     if (element == 'fire') {
-      c.rotate(math.atan2(direction.dy, direction.dx) - math.pi * .75);
+      canvas.save();
+      canvas.translate(tip.dx, tip.dy);
+      canvas.rotate(math.atan2(direction.dy, direction.dx) - math.pi * .75);
       paintSpellFrame(
         session.art,
-        c,
+        canvas,
         SpellClip.meteorFlight,
-        age % .65,
+        (.88 - remaining) % .65,
         ui.Offset.zero,
-        72,
+        64,
       );
-    } else if (element == 'ice') {
-      c.rotate(math.atan2(direction.dy, direction.dx));
-      final shard = ui.Path()
-        ..moveTo(13, 0)
-        ..lineTo(-5, -6)
-        ..lineTo(-10, 0)
-        ..lineTo(-5, 6)
-        ..close();
-      c.drawPath(
-        shard,
-        ui.Paint()
-          ..shader = ui.Gradient.linear(
-            const ui.Offset(-10, -5),
-            const ui.Offset(12, 5),
-            [
-              const ui.Color(0xff4eafd3),
-              ui.Color.fromRGBO(227, 255, 255, .8 + math.sin(age * 35) * .15),
-            ],
-          ),
-      );
-      for (var i = 0; i < 3; i++) {
-        final x = -10.0 - i * 8;
-        c.drawCircle(
-          ui.Offset(x, math.sin(age * 35 - i) * (4 + i)),
-          1.6,
-          ui.Paint()..color = color,
-        );
-      }
-    } else {
-      final path = ui.Path()..moveTo(-direction.dx * 28, -direction.dy * 28);
-      final side = ui.Offset(-direction.dy, direction.dx);
-      for (var i = 1; i <= 5; i++) {
-        final at =
-            direction * (-28 + i * 7) + side * math.sin(age * 90 + i * 2) * 6;
-        path.lineTo(at.dx, at.dy);
-      }
-      c.drawPath(
-        path,
-        ui.Paint()
-          ..color = color
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 2,
+      canvas.restore();
+    }
+  }
+}
+
+/// Contact animation only: projectile collision already resolved its one hit.
+class MageContact extends GameComponent with EffectVisibility {
+  MageContact(
+    this.session,
+    ui.Offset at, {
+    required this.element,
+    required this.radius,
+    this.rank = 1,
+  }) : buildRevision = session.buildRevision {
+    position = Vector2(at.dx, at.dy);
+    size = Vector2.all(1);
+  }
+  static const duration = .48;
+  final Adventure session;
+  final MageElement element;
+  final double radius;
+  final int rank, buildRevision;
+  final _art = MageCombatArt();
+  double age = 0;
+  bool finished = false;
+  @override
+  ui.Rect get effectBounds =>
+      MageCombatArt.impactBounds(position.toOffset(), radius);
+  @override
+  int get priority => 9999;
+  @override
+  void update(double dt) {
+    if (finished) return;
+    if (buildRevision != session.buildRevision) {
+      finished = true;
+      removeFromParent();
+      return;
+    }
+    if (!session.active) return;
+    age = math.min(duration, age + math.min(.05, dt));
+    if (age >= duration) {
+      finished = true;
+      removeFromParent();
+    }
+    super.update(dt);
+  }
+
+  @override
+  void render(ui.Canvas canvas) {
+    if (finished) return;
+    super.render(canvas);
+    _art.impact(canvas, ui.Offset.zero, age / duration, radius, element, rank);
+    if (element != MageElement.lightning) {
+      final clip = element == MageElement.ice
+          ? SpellClip.iceNova
+          : SpellClip.meteorImpact;
+      paintSpellFrame(
+        session.art,
+        canvas,
+        clip,
+        age / duration * clip.duration,
+        ui.Offset.zero,
+        radius * 1.6,
+        opacity: (1 - age / duration).clamp(0, .95),
       );
     }
-    c.restore();
   }
 }
 
@@ -920,9 +923,15 @@ void chainLightning(
 
 class LightningTrace extends GameComponent with EffectVisibility {
   LightningTrace(this.session, this.points, {this.rank = 1});
+  static const duration = .48;
   final Adventure session;
   final List<ui.Offset> points;
   final int rank;
+  final _art = MageCombatArt();
+  late final _arcs = List.generate(
+    math.max(0, points.length - 1),
+    (_) => ElectricArcArt(),
+  );
   double age = 0;
   @override
   late final ui.Rect effectBounds = points.isEmpty
@@ -935,7 +944,7 @@ class LightningTrace extends GameComponent with EffectVisibility {
                 ui.Rect.fromCircle(center: point, radius: 1),
               ),
             )
-            .inflate(90);
+            .inflate(112);
   @override
   bool get isVisible => true;
   @override
@@ -944,70 +953,46 @@ class LightningTrace extends GameComponent with EffectVisibility {
   void update(double dt) {
     if (!session.active) return;
     age += math.min(.05, dt);
-    if (age > .3) removeFromParent();
+    if (age >= duration) removeFromParent();
     super.update(dt);
   }
 
   @override
   void render(ui.Canvas canvas) {
+    if (age >= duration) return;
     super.render(canvas);
-    final c = canvas;
+    final t = (age / duration).clamp(0.0, 1.0);
     for (var i = 1; i < points.length; i++) {
-      paintRankImpact(
-        c,
-        points[i] - const ui.Offset(0, 20),
-        age / .3,
-        rank,
-        const ui.Color(0xffb1dfff),
-        radius: 35 + rank * 3,
-      );
       final a = points[i - 1] - const ui.Offset(0, 20),
-          b = points[i] - const ui.Offset(0, 20),
-          d = b - a,
-          path = ui.Path()..moveTo(a.dx, a.dy);
-      for (var j = 1; j <= 8; j++) {
-        final p =
-            ui.Offset.lerp(a, b, j / 8)! +
-            (j == 8
-                ? ui.Offset.zero
-                : ui.Offset(-d.dy, d.dx) /
-                      math.max(1, d.distance) *
-                      math.sin(j * 7.0 + i + age * 90) *
-                      13);
-        path.lineTo(p.dx, p.dy);
-      }
-      for (var branch = 0; branch < rank - 1; branch++) {
-        final mid = ui.Offset.lerp(a, b, .5 + branch * .09)!;
-        final end =
-            mid +
-            ui.Offset(
-                  math.cos(age * 65 + branch * 2.4),
-                  math.sin(age * 65 + branch * 2.4),
-                ) *
-                (12 + rank * 4);
-        c.drawLine(
-          mid,
-          end,
-          ui.Paint()
-            ..color = const ui.Color(
-              0xffb9dbff,
-            ).withValues(alpha: (1 - age / .3).clamp(0, 1))
-            ..strokeWidth = 1.2 + rank * .2,
-        );
-      }
-      c.drawPath(
-        path,
-        ui.Paint()
-          ..color = const ui.Color(0x88ad9bff)
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 7 + rank * 1.2,
+          b = points[i] - const ui.Offset(0, 20);
+      // Brief, staggered leaders with a shared instant contact; no delayed hit.
+      final pulse = (.72 + .28 * math.cos(age * 48 - i * 1.7)).clamp(0.0, 1.0);
+      _arcs[i - 1].paint(
+        canvas,
+        a,
+        b,
+        age,
+        rank: rank,
+        opacity: (1 - t) * pulse,
+        seed: i,
+        branches: 1 + rank ~/ 2,
       );
-      c.drawPath(
-        path,
-        ui.Paint()
-          ..color = const ui.Color(0xffe5f6ff)
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 1.8 + rank * .25,
+      _art.impact(
+        canvas,
+        points[i] + const ui.Offset(0, 8),
+        t,
+        28 + rank * 3,
+        MageElement.lightning,
+        rank,
+      );
+    }
+    if (points.length > 1 && t < .35) {
+      _art.charge(
+        canvas,
+        points.first - const ui.Offset(0, 20),
+        MageElement.lightning,
+        1 - t / .35,
+        rank,
       );
     }
   }
@@ -1032,6 +1017,7 @@ class MeteorFall extends GameComponent with EffectVisibility {
   double age = 0;
   bool struck = false;
   late final _flame = FirePlume();
+  final _art = MageCombatArt();
   @override
   ui.Rect get effectBounds => ui.Rect.fromLTRB(
     target.dx - 220,
@@ -1087,6 +1073,7 @@ class MeteorFall extends GameComponent with EffectVisibility {
         ..color = const ui.Color(0xaaffab59),
     );
     final t = (age * tempo / .65).clamp(0.0, 1.0), fall = t * t;
+    _art.meteorPressure(c, target, t, rank);
     paintRankImpact(c, target, t, rank, const ui.Color(0xffffc578), radius: 85);
     final p = target + ui.Offset(110 * (1 - fall), -360 * (1 - fall));
     _flame.flight(c, p, math.atan2(360, -110), age * tempo, radius: 65);
@@ -1179,6 +1166,7 @@ class GroundLoot extends GameComponent with EffectVisibility {
     }
     final p = session.progress, goldBefore = p.gold;
     final added = p.collect(item);
+    if (added && p.isEquipped(item)) session.syncLife();
     if (!added && p.gold == goldBefore) {
       if (!warned) {
         warned = true;
@@ -1348,7 +1336,27 @@ class BossAttackVisual extends GameComponent with EffectVisibility {
   }) {
     position = Vector2.zero();
     size = Vector2(worldSize.width, worldSize.height);
+    if (!impact && pattern.power != BossPower.impact) {
+      _label =
+          (ui.ParagraphBuilder(
+                  ui.ParagraphStyle(
+                    fontFamily: 'Guardian',
+                    fontSize: 13,
+                    textAlign: ui.TextAlign.center,
+                  ),
+                )
+                ..pushStyle(
+                  ui.TextStyle(
+                    color: pattern.color,
+                    fontWeight: ui.FontWeight.bold,
+                  ),
+                )
+                ..addText(pattern.power.label))
+              .build()
+            ..layout(const ui.ParagraphConstraints(width: 160));
+    }
   }
+  ui.Paragraph? _label;
   final Adventure session;
   final HuntEnemy source;
   final BossAttack pattern;
@@ -1358,7 +1366,14 @@ class BossAttackVisual extends GameComponent with EffectVisibility {
   late final ui.Rect effectBounds = pattern.zones
       .map((zone) => zone.path.getBounds())
       .reduce((bounds, zone) => bounds.expandToInclude(zone))
-      .inflate(90);
+      .inflate(90)
+      .expandToInclude(
+        ui.Rect.fromCenter(
+          center: pattern.target - const ui.Offset(0, 120),
+          width: 170,
+          height: 28,
+        ),
+      );
   bool get validWarning =>
       !source.isDead &&
       !source.isRemoving &&
@@ -1389,6 +1404,29 @@ class BossAttackVisual extends GameComponent with EffectVisibility {
       pattern.paintImpact(canvas, age / .5);
     } else if (validWarning) {
       pattern.paintWarning(canvas, 1 - source.windup / pattern.warningTime);
+      if (_label case final label?) {
+        final at =
+            pattern.target +
+            ui.Offset(
+              -80,
+              (session.viewportSize?.height ?? 640) < 520 ? 25 : -132,
+            );
+        canvas.drawRRect(
+          ui.RRect.fromRectAndRadius(
+            ui.Rect.fromLTWH(at.dx, at.dy, 160, 24),
+            const ui.Radius.circular(6),
+          ),
+          ui.Paint()..color = const ui.Color(0xe610252d),
+        );
+        canvas.drawParagraph(label, at + const ui.Offset(0, 3));
+      }
     }
+  }
+
+  @override
+  void onRemove() {
+    _label?.dispose();
+    _label = null;
+    super.onRemove();
   }
 }

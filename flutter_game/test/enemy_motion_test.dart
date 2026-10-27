@@ -95,7 +95,7 @@ void main() {
       expect(game.added.whereType<ContactSpark>().length, 1);
       expect(
         s.progress.energy - energy,
-        s.progress.rageOnHit(protected: false),
+        closeTo(s.progress.rageOnHit(protected: false), 1e-9),
       );
       expect(s.hero.impactHold, greaterThan(0));
       expect(s.impactStrength, inInclusiveRange(.95, 2.4));

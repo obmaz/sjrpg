@@ -529,3 +529,24 @@ final foundrySites = List<QuestSite>.unmodifiable(
 final convergenceSites = List<QuestSite>.unmodifiable(
   authoredConvergenceSites.map((s) => s.scaled()),
 );
+
+/// Shared by live completion and migration of validated active/archived scenes.
+bool mandatoryStageObjectivesComplete(
+  WorldStage stage, {
+  required TimePath? path,
+  required String? commission,
+  required Set<String> cleansedSites,
+  required Iterable<String> requiredSiteIds,
+}) {
+  if (stage == WorldStage.sands) {
+    return path != null &&
+        timeCommissions
+            .where((q) => q.path == path)
+            .every((q) => cleansedSites.contains(q.id));
+  }
+  if (stage.requiresContract) {
+    final contract = chapterContract(stage, path);
+    if (contract == null || commission != contract.id) return false;
+  }
+  return requiredSiteIds.every(cleansedSites.contains);
+}

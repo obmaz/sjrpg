@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-enum PlayerStatus { root, freeze, poison, blind }
+enum PlayerStatus { root, freeze, poison, blind, attackSlow, moveSlow }
 
 extension PlayerStatusInfo on PlayerStatus {
   double get duration => switch (this) {
@@ -8,12 +8,15 @@ extension PlayerStatusInfo on PlayerStatus {
     PlayerStatus.freeze => .75,
     PlayerStatus.poison => 3.6,
     PlayerStatus.blind => 2.8,
+    PlayerStatus.attackSlow || PlayerStatus.moveSlow => 2.6,
   };
   String get label => switch (this) {
     PlayerStatus.root => '속박',
     PlayerStatus.freeze => '빙결',
     PlayerStatus.poison => '중독',
     PlayerStatus.blind => '시야 제한',
+    PlayerStatus.attackSlow => '공격 둔화',
+    PlayerStatus.moveSlow => '이동 둔화',
   };
 }
 
@@ -21,6 +24,9 @@ extension PlayerStatusInfo on PlayerStatus {
 class PlayerAfflictions {
   final _remaining = {for (final status in PlayerStatus.values) status: 0.0};
   double controlGrace = 0, visionGrace = 0, poisonTick = .9, poisonPotency = 1;
+  double attackGrace = 0, moveGrace = 0;
+  double get attackTempo => remaining(PlayerStatus.attackSlow) > 0 ? .72 : 1;
+  double get movementScale => remaining(PlayerStatus.moveSlow) > 0 ? .7 : 1;
   double remaining(PlayerStatus status) => _remaining[status]!;
   bool get frozen => remaining(PlayerStatus.freeze) > 0;
   bool get movementBlocked => frozen || remaining(PlayerStatus.root) > 0;
@@ -36,6 +42,14 @@ class PlayerAfflictions {
     if (status == PlayerStatus.blind) {
       if (visionGrace > 0) return false;
       visionGrace = status.duration + 1.5;
+    }
+    if (status == PlayerStatus.attackSlow) {
+      if (attackGrace > 0) return false;
+      attackGrace = status.duration + .9;
+    }
+    if (status == PlayerStatus.moveSlow) {
+      if (moveGrace > 0) return false;
+      moveGrace = status.duration + .9;
     }
     if (status == PlayerStatus.poison) {
       poisonTick = .9;
@@ -63,6 +77,8 @@ class PlayerAfflictions {
     }
     controlGrace = math.max(0, controlGrace - dt);
     visionGrace = math.max(0, visionGrace - dt);
+    attackGrace = math.max(0, attackGrace - dt);
+    moveGrace = math.max(0, moveGrace - dt);
     return ticks;
   }
 
@@ -70,7 +86,7 @@ class PlayerAfflictions {
     for (final status in PlayerStatus.values) {
       _remaining[status] = 0;
     }
-    controlGrace = visionGrace = 0;
+    controlGrace = visionGrace = attackGrace = moveGrace = 0;
     poisonTick = .9;
     poisonPotency = 1;
   }
@@ -79,6 +95,8 @@ class PlayerAfflictions {
     for (final status in PlayerStatus.values) status.name: remaining(status),
     'controlGrace': controlGrace,
     'visionGrace': visionGrace,
+    'attackGrace': attackGrace,
+    'moveGrace': moveGrace,
     'poisonTick': poisonTick,
     'poisonPotency': poisonPotency,
   };
@@ -89,6 +107,8 @@ class PlayerAfflictions {
     const extras = {
       'controlGrace',
       'visionGrace',
+      'attackGrace',
+      'moveGrace',
       'poisonTick',
       'poisonPotency',
     };
@@ -113,6 +133,8 @@ class PlayerAfflictions {
     }
     result.controlGrace = read('controlGrace', 2.9);
     result.visionGrace = read('visionGrace', 4.3);
+    result.attackGrace = read('attackGrace', 3.5);
+    result.moveGrace = read('moveGrace', 3.5);
     result.poisonTick = read('poisonTick', .9, .9);
     result.poisonPotency = read('poisonPotency', 1.5, 1);
     if (result.poisonPotency < 1) {

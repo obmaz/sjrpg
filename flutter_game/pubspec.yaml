@@ -8,6 +8,7 @@ dependencies:
   flutter:
     sdk: flutter
   bonfire: 4.0.0
+  collection: 1.19.1
   web: 1.1.2
 dev_dependencies:
   flutter_test:

@@ -23,7 +23,8 @@ Progress _nextRank(Progress p, SkillDef skill) {
   final next = Progress(heroClass: p.heroClass)
     ..level = p.level
     ..bonusAttack = p.bonusAttack
-    ..bonusHealth = p.bonusHealth;
+    ..bonusHealth = p.bonusHealth
+    ..selectedBasic = p.selectedBasic;
   next.equipped
     ..clear()
     ..addAll(p.equipped);
@@ -54,7 +55,7 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
         ? '회전 1회 피해'
         : skill.id == 'chainLightning'
         ? '첫 대상 피해'
-        : skill.id == 'cleave' || skill.id == 'firebolt'
+        : skill.basic
         ? '기본 1타 피해'
         : '기술 피해',
     (p) => p.skillDamage(skill),
@@ -216,7 +217,9 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
         ),
       ];
     case 'rallyingVoice':
-      return [value('보호 중 적중 분노', (p) => p.rageOnHit(protected: true))];
+      return [
+        value('보호 중 적중 분노', (p) => p.rageOnHit(protected: true), digits: 1),
+      ];
     case 'warmth':
       return [value('마나 회복', (p) => p.manaRecovery, suffix: '/초', digits: 1)];
     case 'coldMastery':
@@ -241,16 +244,17 @@ List<SkillPreviewValue> previewSkill(Progress p, SkillDef skill) {
   if (rows.isEmpty) return rows;
   final upgraded = _nextRank(p, skill), r = p.rank(skill.id);
   final next = (r + 1).clamp(1, SkillDef.maxRank);
-  final basic = skill.id == 'cleave' || skill.id == 'firebolt';
+  final basic = skill.basic;
   final priority = <SkillPreviewValue>[];
   if (basic) {
     priority.add(
       SkillPreviewValue(
         '기본 공격 간격',
-        p.attackInterval,
-        upgraded.attackInterval,
+        r == 0 ? 0 : p.attackIntervalFor(skill),
+        upgraded.attackIntervalFor(skill),
         suffix: '초',
         digits: 3,
+        zeroAsDash: true,
       ),
     );
   } else if (!skill.passive) {
@@ -298,10 +302,12 @@ List<SkillPreviewValue> previewSkill(Progress p, SkillDef skill) {
     priority.add(
       SkillPreviewValue(
         '최대 대상',
-        (basic ? p.basicTargetLimitForRank(r) : p.skillTargetLimit(skill))
+        (basic
+                ? p.basicTargetLimitForRank(r, basic: skill)
+                : p.skillTargetLimit(skill))
             .toDouble(),
         (basic
-                ? p.basicTargetLimitForRank(next)
+                ? p.basicTargetLimitForRank(next, basic: skill)
                 : p.skillTargetLimit(skill, atRank: next))
             .toDouble(),
         suffix: '명',

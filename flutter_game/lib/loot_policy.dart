@@ -1,9 +1,8 @@
 import 'stage_content.dart';
 
-// Preserve cumulative kill milestones while reducing ordinary drops by ~30%.
-const ordinaryGearInterval = 29,
-    healingDropInterval = 52,
-    energyDropInterval = 69;
+// Equipment keeps cumulative kill milestones. Potions only come from chests
+// or a purchase; kills and shrine rewards never mint them.
+const ordinaryGearInterval = 29;
 
 enum ChestContent {
   gear(18),

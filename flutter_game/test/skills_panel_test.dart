@@ -163,11 +163,11 @@ void main() {
       );
       expect(s.progress.skillPoints, 1);
       expect(s.progress.rank('meteor'), 0);
-      final base = find.bySemanticsLabel('스킬 보기 · 화염탄 · 1 등급');
+      final base = find.bySemanticsLabel('스킬 보기 · 마력탄 · 1 등급');
       await reveal(tester, base);
       await tester.tap(base);
       await tester.pumpAndSettle();
-      await tester.tap(find.bySemanticsLabel('화염탄 강화 · 1P'));
+      await tester.tap(find.bySemanticsLabel('마력탄 강화 · 1P'));
       await tester.pumpAndSettle();
       expect(s.progress.skillPoints, 0);
       expect(s.progress.rank('firebolt'), 2);

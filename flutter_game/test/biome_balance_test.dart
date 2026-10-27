@@ -71,10 +71,10 @@ void main() {
     },
   );
   test(
-    'ordinary leveling takes seven kills and earned levels are preserved on load',
+    'ordinary leveling takes eleven kills and earned levels are preserved on load',
     () {
       final p = Progress();
-      for (var i = 0; i < 6; i++) {
+      for (var i = 0; i < 10; i++) {
         p.reward();
       }
       expect(p.level, 1);
@@ -83,7 +83,7 @@ void main() {
       expect(Progress.fromSave(p.toSave())!.level, 2);
     },
   );
-  test('potions drop at the reduced kill intervals, not every short pack', () {
+  test('ordinary kills do not grant healing or resource potions', () {
     final s = inCombatField(Adventure(GameArt()))..start(TestGame());
     addTearDown(s.dispose);
     s.mobs.clear();
@@ -98,10 +98,10 @@ void main() {
         expect(s.progress.energyPotions, mana);
       }
       if (i == 50) expect(s.progress.healingPotions, health);
-      if (i == 51) expect(s.progress.healingPotions, health + 1);
+      if (i == 51) expect(s.progress.healingPotions, health);
       if (i == 67) expect(s.progress.energyPotions, mana);
     }
-    expect(s.progress.healingPotions, health + 1);
-    expect(s.progress.energyPotions, mana + 1);
+    expect(s.progress.healingPotions, health);
+    expect(s.progress.energyPotions, mana);
   });
 }

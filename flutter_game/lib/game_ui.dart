@@ -137,7 +137,7 @@ class GameHud extends StatelessWidget {
           ),
           Positioned(
             left: 3,
-            top: 8,
+            top: 91,
             child: AfflictionIcons(session.afflictions),
           ),
           Positioned(
@@ -567,6 +567,13 @@ class MapPainter extends CustomPainter {
                 const Color(0xff8ce6bd),
               ),
             ]),
+      if (session.world.stage == WorldStage.forest)
+        (
+          project(session.world.blacksmithAt),
+          '대장간',
+          Icons.hardware_rounded,
+          gold,
+        ),
       if (session.world.stage == WorldStage.sands)
         for (final giver in timeQuestGivers)
           (
@@ -865,6 +872,7 @@ class ActionButton extends StatefulWidget {
     required this.sprite,
     required this.label,
     required this.semanticLabel,
+    this.semanticHint,
     required this.size,
     required this.onTap,
     this.onHold,
@@ -882,6 +890,7 @@ class ActionButton extends StatefulWidget {
   });
   final GameArt art;
   final String sprite, label, semanticLabel;
+  final String? semanticHint;
   final double size, remaining, total;
   final VoidCallback onTap;
   final ValueChanged<bool>? onHold;
@@ -920,6 +929,7 @@ class _ActionButtonState extends State<ActionButton> {
   Widget build(BuildContext context) => Semantics(
     button: true,
     label: widget.semanticLabel,
+    hint: widget.semanticHint,
     onTap: widget.onTap,
     excludeSemantics: true,
     child: Listener(

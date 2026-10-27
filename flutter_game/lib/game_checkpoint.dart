@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'adventure.dart';
 import 'battle_effects.dart';
+import 'boss_attacks.dart';
 import 'encounters.dart';
 import 'enemy_catalog.dart';
 import 'enemy_difficulty.dart';
@@ -38,6 +39,8 @@ class GameCheckpoint {
                 'y': boss.position.y,
                 'hp': boss.life.value,
                 'maxHp': boss.life.max,
+                'sequence': boss.bossSequence,
+                'controlGuard': boss.bossControlGuard,
                 'power': boss.power.toSave(),
               },
         'encounterVersion': 1,
@@ -243,7 +246,10 @@ class GameCheckpoint {
         }
       }
       data['mapVersion'] = 2;
-      final progress = Progress.fromSave(data['progress']);
+      final rawProgress = data['progress'];
+      final migrateResetTickets =
+          rawProgress is Map && !rawProgress.containsKey('skillResetRewards');
+      final progress = Progress.fromSave(rawProgress);
       if (progress == null || progress.hp <= 0) return null;
       final balance = data['balance'] ?? 1;
       if (balance is! int || balance < 1 || balance > 3) return null;
@@ -407,7 +413,11 @@ class GameCheckpoint {
             !number(boss['hp'], 10000000) ||
             !number(boss['maxHp'], 10000000) ||
             boss['hp'] <= 0 ||
-            boss['hp'] > boss['maxHp']) {
+            boss['hp'] > boss['maxHp'] ||
+            !((boss['sequence'] ?? 0) is int &&
+                (boss['sequence'] ?? 0) >= 0 &&
+                (boss['sequence'] ?? 0) < BossPower.values.length) ||
+            !number(boss['controlGuard'] ?? 0, 9)) {
           return null;
         }
       }
@@ -541,14 +551,55 @@ class GameCheckpoint {
       );
       data['balance'] = 3;
       if (includeTravel) {
-        data['travel'] = _readTravel(data, progress).toSave();
+        final journal = _readTravel(data, progress);
+        data['travel'] = journal.toSave();
+        if (migrateResetTickets) {
+          if (_completedScene(data, bossDefeated: progress.bossDefeated)) {
+            progress.awardSkillResetTicket(stage);
+          }
+          for (final scene in journal.archives.values) {
+            if (_completedScene(
+              scene,
+              bossDefeated: scene['bossDefeated'] == true,
+            )) {
+              progress.awardSkillResetTicket(
+                WorldStage.values.firstWhere(
+                  (stage) => stage.name == scene['stage'],
+                ),
+              );
+            }
+          }
+        }
       } else {
         data.remove('travel');
       }
+      // Persist even an empty migrated ledger, so future reads cannot re-mint
+      // spent rewards from the same completed scene or an older archive.
+      data['progress'] = progress.toSave();
       return GameCheckpoint._(data, progress);
     } catch (_) {
       return null;
     }
+  }
+
+  static bool _completedScene(
+    Map<String, dynamic> scene, {
+    required bool bossDefeated,
+  }) {
+    if (!bossDefeated) return false;
+    final stage = WorldStage.values.firstWhere(
+      (stage) => stage.name == scene['stage'],
+    );
+    final path = scene['timePath'] == null
+        ? null
+        : TimePath.values.firstWhere((path) => path.name == scene['timePath']);
+    return mandatoryStageObjectivesComplete(
+      stage,
+      path: path,
+      commission: scene['commission'] as String?,
+      cleansedSites: (scene['sites'] as List).cast<String>().toSet(),
+      requiredSiteIds: sitesForStage(stage).map((site) => site.id),
+    );
   }
 
   static const _sceneKeys = {
@@ -814,6 +865,9 @@ class GameCheckpoint {
       if (boss != null) {
         boss.life.initial((savedBoss['maxHp'] as num).toDouble());
         boss.life.update((savedBoss['hp'] as num).toDouble());
+        boss.bossSequence = (savedBoss['sequence'] as int?) ?? 0;
+        boss.bossControlGuard =
+            (savedBoss['controlGuard'] as num?)?.toDouble() ?? 0;
         session.bossSummoned = true;
       }
     }
@@ -827,13 +881,25 @@ class GameCheckpoint {
     session.hero.frenzyTime = (data['frenzy'] as num).toDouble();
     for (final raw in data['loot'] as List) {
       final ground = raw as Map;
+      var at = Offset(
+        (ground['x'] as num).toDouble(),
+        (ground['y'] as num).toDouble(),
+      );
+      // The new workshop occupies previously walkable ground. Old rare loot
+      // must remain collectible when that scene is restored after an upgrade.
+      if (session.world.stage == WorldStage.forest &&
+          session.world.campProps
+              .where((p) => p.kind == 'blacksmith-forge')
+              .expand((p) => p.collisionBodies)
+              .any((body) => body.contains(at))) {
+        at =
+            session.world.spawnNear(at, Guardian.onFootSize) ??
+            Offset(session.hero.position.x, session.hero.position.y);
+      }
       final item = GroundLoot(
         session,
         Gear.fromSave(Map<String, dynamic>.from(ground['item'] as Map)),
-        Offset(
-          (ground['x'] as num).toDouble(),
-          (ground['y'] as num).toDouble(),
-        ),
+        at,
       )..age = (ground['age'] as num).toDouble();
       session.loot.add(item);
     }

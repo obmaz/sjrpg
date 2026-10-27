@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'adventure.dart';
 import 'back_actions.dart';
+import 'blacksmith_panel.dart';
 import 'commission_board.dart';
 import 'device_controls.dart';
 import 'equipment_panel.dart';
@@ -71,6 +72,13 @@ class _AdventurePanelState extends State<AdventurePanel> {
         p = s.progress,
         name = widget.name,
         media = MediaQuery.of(context);
+    if (name == 'smith') {
+      return BlacksmithPanel(
+        session: s,
+        onClose: widget.onClose,
+        onCheckpoint: widget.onCheckpoint,
+      );
+    }
     if (name == 'map') {
       return ExpandedWorldMap(session: s, onClose: widget.onClose);
     }

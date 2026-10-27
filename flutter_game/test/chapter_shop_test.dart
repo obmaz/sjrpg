@@ -61,7 +61,11 @@ void main() {
           expect(bought.gift, null);
           expect(s.equip(bought), true);
           if (def.slot == GearSlot.weapon) {
-            expect(bought.attack, def.attack + tier * 3);
+            expect(bought.weaponLevel, p.level);
+            expect(
+              bought.attack,
+              def.attack + tier * 3 + (p.level - 1) * Gear.weaponAttackPerLevel,
+            );
           }
           if (def.slot == GearSlot.armor) {
             expect(bought.health, def.health + tier * 10);

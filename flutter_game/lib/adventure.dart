@@ -10,6 +10,7 @@ import 'area_damage.dart';
 import 'audio_settings.dart';
 import 'battle_effects.dart';
 import 'boss_attacks.dart';
+import 'combat_balance.dart';
 import 'crushing_blow_vfx.dart';
 import 'destructible_chest.dart';
 import 'device_settings.dart';
@@ -33,7 +34,7 @@ import 'spell_vfx.dart';
 import 'travel_journal.dart';
 import 'world_model.dart';
 
-enum NearbyAction { shrine, mount, dismount, shop, talk }
+enum NearbyAction { shrine, mount, dismount, shop, talk, smith }
 
 enum EnemyTrait {
   none(1, 1, ui.Color(0xffe87753)),
@@ -359,13 +360,13 @@ class Adventure extends ChangeNotifier {
     return true;
   }
 
-  bool get mandatoryQuestsComplete => world.stage == WorldStage.sands
-      ? timePath != null &&
-            timeCommissions
-                .where((q) => q.path == timePath)
-                .every((q) => cleansedSites.contains(q.id))
-      : chapterContractAccepted &&
-            world.sites.every((q) => cleansedSites.contains(q.id));
+  bool get mandatoryQuestsComplete => mandatoryStageObjectivesComplete(
+    world.stage,
+    path: timePath,
+    commission: acceptedCommission,
+    cleansedSites: cleansedSites,
+    requiredSiteIds: world.sites.map((site) => site.id),
+  );
   bool get stageCleared => progress.bossDefeated && mandatoryQuestsComplete;
   QuestSite? get nearbySite {
     if (!chapterContractAccepted) return null;
@@ -418,7 +419,6 @@ class Adventure extends ChangeNotifier {
       syncLife();
     }
     progress.gold += 40;
-    progress.healingPotions++;
     bubble(
       '${site.name} 정화 · +40 골드',
       site.at - const ui.Offset(0, 80),
@@ -431,7 +431,9 @@ class Adventure extends ChangeNotifier {
   }
 
   void completeStageIfReady() {
-    if (!stageCleared || won) return;
+    if (disposed || defeated || progress.hp <= 0 || !stageCleared) return;
+    progress.awardSkillResetTicket(world.stage);
+    if (won) return;
     won = true;
     audio.stop();
     releaseInput();
@@ -529,7 +531,7 @@ class Adventure extends ChangeNotifier {
     }
     lastEnemyWake = elapsed;
     lastEnemyWakeAt = hero.body.center;
-    var capacity = 40 - living;
+    var capacity = CombatBalance.maxActiveEnemies - living;
     if (capacity <= 0 || dormantEnemies.isEmpty) return;
     var attempts = 0;
     for (final raw in List<Map<String, dynamic>>.of(dormantEnemies)) {
@@ -600,10 +602,19 @@ class Adventure extends ChangeNotifier {
   bool get sheltered => world.sanctuary.protects(hero.body);
   bool get combatAllowed => active && !sheltered;
   String get region => world.areaName(hero.position.toOffset());
+  bool get nearbyBlacksmith =>
+      world.stage == WorldStage.forest &&
+      (hero.body.center - world.blacksmithAt).distance < 155 &&
+      world.clearLine(
+        hero.body.center,
+        world.blacksmithAt,
+        const ui.Size(3, 3),
+      );
   NearbyAction? get nearbyAction => nearbyActions.firstOrNull;
   List<NearbyAction> get nearbyActions {
     if (riding != null) return [NearbyAction.dismount];
     final actions = <NearbyAction>[
+      if (nearbyBlacksmith) NearbyAction.smith,
       if (nearbyMount != null) NearbyAction.mount,
       if (nearbySite != null) NearbyAction.shrine,
     ];
@@ -674,7 +685,10 @@ class Adventure extends ChangeNotifier {
     final potionFound =
         content == ChestContent.supplies ||
         world.stage == WorldStage.forest && index == 0;
-    if (potionFound) progress.healingPotions++;
+    if (potionFound) {
+      progress.healingPotions++;
+      progress.energyPotions++;
+    }
     if (content == ChestContent.gear) {
       dropGear(progress.rollLoot(random, chest: true), at);
     }
@@ -684,7 +698,7 @@ class Adventure extends ChangeNotifier {
                 ? '경비 드론 매복!'
                 : '독사 매복!'
           : potionFound
-          ? '+$goldFound 골드 · 물약 +1'
+          ? '+$goldFound 골드 · 물약 +2'
           : '+$goldFound 골드',
       at - const ui.Offset(0, 55),
       ambushed ? const ui.Color(0xffc5e894) : const ui.Color(0xffffd774),
@@ -708,7 +722,7 @@ class Adventure extends ChangeNotifier {
     final bearing = math.atan2(away.dy, away.dx);
     var added = 0;
     for (final turn in [-.75, .75]) {
-      if (living >= 40) break;
+      if (living >= CombatBalance.maxActiveEnemies) break;
       final desired =
           at +
           ui.Offset(math.cos(bearing + turn), math.sin(bearing + turn)) * 100 -
@@ -838,7 +852,7 @@ class Adventure extends ChangeNotifier {
   }
 
   bool resetSkills() {
-    if (defeated || disposed || !progress.resetSkills()) return false;
+    if (!ready || defeated || disposed || !progress.resetSkills()) return false;
     buildRevision++;
     releaseInput();
     hero.armorTime = hero.frenzyTime = hero.spin = 0;
@@ -865,9 +879,15 @@ class Adventure extends ChangeNotifier {
           progress.energy >= progress.maxEnergy) {
         return;
       }
-      final restored = math.min(60.0, progress.maxEnergy - progress.energy);
+      final restored = math.min(
+        CombatBalance.potionEnergy,
+        progress.maxEnergy - progress.energy,
+      );
       progress.energyPotions--;
-      progress.energy = math.min(progress.maxEnergy, progress.energy + 60);
+      progress.energy = math.min(
+        progress.maxEnergy,
+        progress.energy + CombatBalance.potionEnergy,
+      );
       bubble(
         '+${restored.ceil()} ${progress.heroClass.resource}',
         hero.body.center - const ui.Offset(0, 80),
@@ -875,9 +895,15 @@ class Adventure extends ChangeNotifier {
       );
     } else {
       if (progress.healingPotions <= 0 || progress.hp >= progress.maxHp) return;
-      final restored = math.min(55.0, progress.maxHp - progress.hp);
+      final restored = math.min(
+        CombatBalance.potionHealing,
+        progress.maxHp - progress.hp,
+      );
       progress.healingPotions--;
-      progress.hp = math.min(progress.maxHp, progress.hp + 55);
+      progress.hp = math.min(
+        progress.maxHp,
+        progress.hp + CombatBalance.potionHealing,
+      );
       syncLife();
       bubble(
         '+${restored.ceil()} 생명',
@@ -1050,7 +1076,9 @@ class Adventure extends ChangeNotifier {
   }
 
   void spawnPack({bool initial = false}) {
-    if (!combatAllowed || living >= 40 || riding?.def.waterOnly == true) {
+    if (!combatAllowed ||
+        living >= CombatBalance.maxActiveEnemies ||
+        riding?.def.waterOnly == true) {
       return;
     }
     initial =
@@ -1072,14 +1100,12 @@ class Adventure extends ChangeNotifier {
       return;
     }
     final count = math.min(
-      initial
-          ? 6
-          : progress.level < 3
-          ? 8
-          : living < 12
-          ? 12
-          : 10,
-      40 - living,
+      CombatBalance.packSize(
+        initial: initial,
+        playerLevel: progress.level,
+        living: living,
+      ),
+      CombatBalance.maxActiveEnemies - living,
     );
     final elitePack =
         !initial &&
@@ -1158,7 +1184,11 @@ class Adventure extends ChangeNotifier {
     enemySpacing.clear();
     for (final enemy in mobs) {
       if (!enemy.isDead && !enemy.isRemoving && !enemy.encounterDormant) {
-        enemySpacing.update(enemy, enemy.body);
+        enemySpacing.update(
+          enemy,
+          enemy.body,
+          personalSpace: enemy.personalSpace,
+        );
       }
     }
     _enemySpacingTime = elapsed;
@@ -1169,7 +1199,11 @@ class Adventure extends ChangeNotifier {
     if (enemy.isDead || enemy.isRemoving || enemy.encounterDormant) {
       enemySpacing.remove(enemy);
     } else {
-      enemySpacing.update(enemy, enemy.body);
+      enemySpacing.update(
+        enemy,
+        enemy.body,
+        personalSpace: enemy.personalSpace,
+      );
     }
   }
 
@@ -1178,11 +1212,13 @@ class Adventure extends ChangeNotifier {
     ui.Offset from,
     ui.Offset delta, {
     bool steer = false,
+    bool avoidHero = true,
+    bool personalSpace = false,
   }) {
     if (delta.distanceSquared < .000001) return from;
     _syncEnemySpacing(mover);
     final size = mover.body.size, original = from & size;
-    final search = original.expandToInclude(original.shift(delta)).inflate(40);
+    final search = original.expandToInclude(original.shift(delta)).inflate(64);
     final neighbors = enemySpacing
         .query(search)
         .where(
@@ -1193,19 +1229,37 @@ class Adventure extends ChangeNotifier {
               !other.encounterDormant,
         )
         .toList(growable: false);
-    if (neighbors.isEmpty) return world.moveEnemy(from, delta, size);
+    final hasOverlap = neighbors.any(
+      (other) => original.overlaps(enemySpacing.bodyOf(other)),
+    );
+    final enforceSpace = (steer || personalSpace) && !hasOverlap;
+    final heroBody = hero.body;
+    final heroInWay = avoidHero && search.overlaps(heroBody);
+    if (neighbors.isEmpty && !heroInWay) {
+      return world.moveEnemy(from, delta, size);
+    }
     if (steer) delta = enemySpacing.steer(mover, original, delta, neighbors);
     final steps = math.max(1, (delta.distance / 6).ceil());
     final step = delta / steps.toDouble();
     var at = from;
     bool permits(ui.Offset before, ui.Offset after) {
       final beforeBody = before & size, afterBody = after & size;
+      if (heroInWay && !EnemySpacing.permits(beforeBody, afterBody, heroBody)) {
+        return false;
+      }
       for (final other in neighbors) {
         if (!EnemySpacing.permits(
-          beforeBody,
-          afterBody,
-          enemySpacing.bodyOf(other),
-        )) {
+              beforeBody,
+              afterBody,
+              enemySpacing.bodyOf(other),
+            ) ||
+            enforceSpace &&
+                !enemySpacing.permitsPersonalSpace(
+                  mover,
+                  beforeBody,
+                  afterBody,
+                  other,
+                )) {
           return false;
         }
       }
@@ -1228,12 +1282,13 @@ class Adventure extends ChangeNotifier {
         if (permits(at, vertical)) at = vertical;
       }
       if (steer && (at - before).distanceSquared < .0001) {
-        final side = identityHashCode(mover).isEven ? 1.0 : -1.0;
-        for (var turn = 0; turn < 2; turn++) {
-          final sign = turn == 0 ? side : -side;
-          final flank =
-              ui.Offset(step.dx - step.dy * sign, step.dy + step.dx * sign) *
-              .7071067811865476;
+        final side = enemySpacing.preferredSide(mover);
+        for (var turn = 0; turn < 4; turn++) {
+          final sign = turn.isEven ? side : -side;
+          final flank = turn < 2
+              ? ui.Offset(step.dx - step.dy * sign, step.dy + step.dx * sign) *
+                    .7071067811865476
+              : ui.Offset(-step.dy * sign, step.dx * sign);
           final alternative = world.moveEnemy(at, flank, size);
           if ((alternative - at).distanceSquared > .0001 &&
               permits(at, alternative)) {
@@ -1244,6 +1299,50 @@ class Adventure extends ChangeNotifier {
       }
     }
     return at;
+  }
+
+  void settleEnemy(HuntEnemy mover, double dt) {
+    _syncEnemySpacing(mover);
+    final from = mover.body.topLeft;
+    final neighbors = enemySpacing
+        .query(mover.body.inflate(64))
+        .where(
+          (other) =>
+              other != mover &&
+              !other.isDead &&
+              !other.isRemoving &&
+              !other.encounterDormant,
+        )
+        .toList(growable: false);
+    final hasOverlap = neighbors.any(
+      (other) => mover.body.overlaps(enemySpacing.bodyOf(other)),
+    );
+    var nudge = enemySpacing.separation(mover, mover.body, neighbors, 46 * dt);
+    final away = mover.body.center - hero.body.center;
+    if (mover.body.overlaps(hero.body)) {
+      final direction = away.distanceSquared > .001
+          ? away / away.distance
+          : ui.Offset(0, enemySpacing.preferredSide(mover));
+      nudge += direction * (46 * dt);
+    } else if (!hasOverlap &&
+        nudge.distanceSquared > .000001 &&
+        away.distanceSquared > 1 &&
+        away.distance <= mover.idleRange) {
+      // Attacking rows spread around the hero instead of repeatedly stepping
+      // out of range and lunging inward again.
+      final tangent = ui.Offset(-away.dy, away.dx) / away.distance;
+      var along = nudge.dx * tangent.dx + nudge.dy * tangent.dy;
+      if (along.abs() < nudge.distance * .15) {
+        along = nudge.distance * enemySpacing.preferredSide(mover);
+      }
+      final relative = away + tangent * along;
+      nudge = relative / relative.distance * away.distance - away;
+    }
+    if (nudge.distanceSquared < .000001) return;
+    final at = moveEnemyBody(mover, from, nudge, personalSpace: true);
+    mover.position.setValues(at.dx, at.dy);
+    updateEnemySpacing(mover);
+    mover.lastClearPosition = at;
   }
 
   HuntEnemy? spawnEnemy(
@@ -1317,6 +1416,7 @@ class Adventure extends ChangeNotifier {
     PlayerStatus? status,
     double statusPotency = 1,
     bool periodic = false,
+    bool dispel = false,
   }) {
     if (!combatAllowed ||
         !periodic && hero.invulnerable > 0 ||
@@ -1336,7 +1436,10 @@ class Adventure extends ChangeNotifier {
       }
     }
     if (!periodic && progress.heroClass == HeroClass.warrior) {
-      progress.energy = math.min(progress.maxEnergy, progress.energy + 7);
+      progress.energy = math.min(
+        progress.maxEnergy,
+        progress.energy + CombatBalance.rageOnDamage,
+      );
     }
     if (!periodic) {
       audio.play(EffectSound.hurt);
@@ -1345,6 +1448,16 @@ class Adventure extends ChangeNotifier {
     }
     progress.hp = math.max(0, progress.hp - damage);
     hero.life.remove(damage);
+    if (progress.hp > 0 &&
+        dispel &&
+        (hero.armorTime > 0 || hero.frenzyTime > 0)) {
+      hero.armorTime = hero.frenzyTime = 0;
+      bubble(
+        '강화 해제',
+        hero.body.center - const ui.Offset(0, 90),
+        const ui.Color(0xffef92d8),
+      );
+    }
     if (!periodic) {
       hero.invulnerable = .65;
       hero.hurtFlash = .12;
@@ -1397,7 +1510,10 @@ class Adventure extends ChangeNotifier {
         progress.heroClass == HeroClass.warrior &&
         rageStrike != hero.strikes) {
       rageStrike = hero.strikes;
-      final heavy = progress.weapon.base.style == 'hammer' || combo == 0;
+      final heavy =
+          progress.weapon.base.style == 'hammer' ||
+          combo == 0 ||
+          progress.selectedBasic == 'heavyStrike';
       hero.impactHold = heavy ? .055 : .035;
       hero.swing = math.min(hero.swing, .16);
       kickCamera(heavy ? 2.1 : .95);
@@ -1406,7 +1522,7 @@ class Adventure extends ChangeNotifier {
           this,
           mob.body.center - const ui.Offset(0, 28),
           heavy: heavy,
-          rank: progress.rank('cleave'),
+          rank: progress.rank(progress.selectedBasic),
           bearing: math.atan2(impulse.dy, impulse.dx),
         ),
       );
@@ -1473,12 +1589,6 @@ class Adventure extends ChangeNotifier {
           mob.body.center + const ui.Offset(28, 12),
         );
       }
-      if (!mob.boss && progress.kills % healingDropInterval == 0) {
-        progress.healingPotions++;
-      }
-      if (!mob.boss && progress.kills % energyDropInterval == 0) {
-        progress.energyPotions++;
-      }
       bubble(
         '+${progress.gold - goldBefore} 골드',
         mob.position.toOffset() - const ui.Offset(0, 34),
@@ -1494,8 +1604,25 @@ class Adventure extends ChangeNotifier {
   }
 
   bool get canTrade => ready && !disposed && !defeated && progress.hp > 0;
+  bool get canSmith => canTrade && nearbyBlacksmith;
+  SmithQuote? smithQuote(Gear item) =>
+      canSmith ? progress.smithQuote(item) : null;
+  SmithResult? enhanceWeapon(SmithQuote quote) {
+    if (!canSmith) return null;
+    final result = progress.enhanceWeapon(quote, random);
+    if (result != null) {
+      syncLife();
+      refresh();
+    }
+    return result;
+  }
+
   bool buyHeal() =>
-      canTrade && progress.buy(20, () => progress.healingPotions += 2);
+      canTrade &&
+      progress.buy(
+        CombatBalance.healingPotionPrice,
+        () => progress.healingPotions += CombatBalance.potionBundleSize,
+      );
   ShopGearOffer gearOffer(GearDef def) =>
       ShopGearOffer(def, world.stage, acquiredLevel: progress.level);
   Iterable<ShopGearOffer> get shopGearOffers =>
@@ -1512,14 +1639,18 @@ class Adventure extends ChangeNotifier {
     Gear? bought;
     progress.buy(offer.price, () {
       bought = offer.create(progress);
-      progress.inventory.add(bought!);
-      progress.unseenGear.add(bought!.serial);
+      progress.addOwnedGear(bought!);
+      if (progress.isEquipped(bought!)) syncLife();
     });
     return bought;
   }
 
   bool buyEnergy() =>
-      canTrade && progress.buy(18, () => progress.energyPotions += 2);
+      canTrade &&
+      progress.buy(
+        CombatBalance.resourcePotionPrice,
+        () => progress.energyPotions += CombatBalance.potionBundleSize,
+      );
   bool buySword({int? expectedPrice}) {
     final cost = progress.attackTrainingCost;
     if (!canTrade ||
@@ -1725,7 +1856,7 @@ class Guardian extends Player with WithCollision {
         heavyPower * multiplier,
         ui.Offset(math.cos(heavyAngle), math.sin(heavyAngle)) * 48,
       );
-      mob.stun = math.max(mob.stun, .55);
+      mob.applyStun(.55);
       session.game?.add(
         ContactSpark(
           session,
@@ -1762,6 +1893,9 @@ class Guardian extends Player with WithCollision {
     swing = .18 / session.progress.skillTempo(def);
     impactHold = enemies.isEmpty ? 0 : .06;
   }
+
+  double get effectiveBasicTempo =>
+      session.progress.basicTempo * session.afflictions.attackTempo;
 
   double get skillClock => cooldowns[session.progress.selectedSkill] ?? 0;
   set skillClock(double value) =>
@@ -1847,10 +1981,11 @@ class Guardian extends Player with WithCollision {
       return;
     }
     if (aim != null) aim!.heldFor += dt;
-    speed =
+    var unhinderedSpeed =
         session.riding?.speed ??
-        (frenzyTime > 0 ? session.progress.frenzyMoveSpeed : 270);
-    if (castLock > 0) speed *= .4;
+        (frenzyTime > 0 ? session.progress.frenzyMoveSpeed : 270.0);
+    if (castLock > 0) unhinderedSpeed *= .4;
+    speed = unhinderedSpeed * session.afflictions.movementScale;
     final before = position.toOffset();
     super.update(dt);
     var delta = position.toOffset() - before;
@@ -1864,7 +1999,7 @@ class Guardian extends Player with WithCollision {
     if (dashing > 0) {
       delta =
           ui.Offset(math.cos(rollBearing), math.sin(rollBearing)) *
-          speed *
+          unhinderedSpeed *
           1.9 *
           math.min(dt, dashing);
       dashing -= dt;
@@ -1919,7 +2054,7 @@ class Guardian extends Player with WithCollision {
         )) {
           continue;
         }
-        mob.stun = math.max(mob.stun, .4);
+        mob.applyStun(.4);
         session.game?.add(
           ContactSpark(
             session,
@@ -1981,6 +2116,8 @@ class Guardian extends Player with WithCollision {
   }
 
   void slash() {
+    final p = session.progress;
+    final basic = p.basicSkill;
     final propRange = session.progress.heroClass == HeroClass.mage
         ? 540.0
         : session.progress.weapon.base.range;
@@ -2035,20 +2172,27 @@ class Guardian extends Player with WithCollision {
     attackBearing = angle;
     strikes++;
     if (comboGrace <= 0) session.combo = 0;
-    strikePose = session.combo;
-    session.combo = (session.combo + 1) % 3;
+    strikePose = basic.id == 'heavyStrike'
+        ? 2
+        : basic.id == 'quickCut'
+        ? strikes % 2
+        : session.combo;
+    session.combo = basic.id == 'cleave' || p.heroClass == HeroClass.mage
+        ? (session.combo + 1) % 3
+        : 1;
     comboGrace = 1.2;
-    attackClock = math.max(
-      .12,
-      session.progress.attackInterval /
-          (frenzyTime > 0 ? session.progress.frenzyAttackTempo : 1),
-    );
-    swingDuration = (strikePose == 2 ? .32 : .26) / session.progress.basicTempo;
+    attackClock =
+        math.max(
+          CombatBalance.minimumStrikeInterval,
+          session.progress.attackInterval /
+              (frenzyTime > 0 ? session.progress.frenzyAttackTempo : 1),
+        ) /
+        session.afflictions.attackTempo;
+    swingDuration = (strikePose == 2 ? .32 : .26) / effectiveBasicTempo;
     swing = swingDuration;
-    final p = session.progress;
     if (p.heroClass == HeroClass.mage) {
-      castLock = .26 / p.basicTempo;
-      swingDuration = swing = .32 / p.basicTempo;
+      castLock = .26 / effectiveBasicTempo;
+      swingDuration = swing = .32 / effectiveBasicTempo;
     }
     if (candidates.isEmpty &&
         props.isEmpty &&
@@ -2062,7 +2206,7 @@ class Guardian extends Player with WithCollision {
           ? (p.weapon.base.style == 'hammer'
                 ? EffectSound.impact
                 : EffectSound.slash)
-          : switch (p.weapon.base.style) {
+          : switch (p.basicElement) {
               'ice' => EffectSound.ice,
               'lightning' => EffectSound.lightning,
               _ => EffectSound.fire,
@@ -2075,11 +2219,11 @@ class Guardian extends Player with WithCollision {
           body.center,
           angle,
           p.basicDamage,
-          element: p.weapon.base.style,
-          launchDelay: .13 / p.basicTempo,
-          rank: p.rank('firebolt'),
+          element: p.basicElement,
+          launchDelay: .13 / effectiveBasicTempo,
+          rank: p.rank(basic.id),
           caster: this,
-          explosive: p.rank('firebolt') >= 3,
+          explosive: p.basicTargetLimit > 1,
           targetLimit: p.basicTargetLimit,
           propOnly: session.sheltered,
         ),
@@ -2142,7 +2286,10 @@ class Guardian extends Player with WithCollision {
           .where((t) => t.mob != null && session.canHitEnemy(t.mob!))
           .length,
     );
-    final damage = p.basicDamage * (session.combo == 0 ? 1.6 : 1) * multiplier;
+    final damage =
+        p.basicDamage *
+        (basic.id == 'cleave' && session.combo == 0 ? 1.6 : 1) *
+        multiplier;
     for (final target in selected) {
       final mob = target.mob;
       if (mob == null) {
@@ -2151,9 +2298,21 @@ class Guardian extends Player with WithCollision {
       }
       final d = mob.body.center - body.center;
       final push = d.distance > 0
-          ? d / d.distance * (p.weapon.base.style == 'hammer' ? 42 : 23)
+          ? d /
+                d.distance *
+                (basic.id == 'heavyStrike'
+                    ? 38
+                    : basic.id == 'quickCut'
+                    ? 14
+                    : p.weapon.base.style == 'hammer'
+                    ? 42
+                    : 23)
           : const ui.Offset(0, 23);
-      session.hit(mob, damage, push, generateRage: true);
+      if (session.hit(mob, damage, push, generateRage: true) &&
+          basic.id == 'heavyStrike' &&
+          !mob.isDead) {
+        mob.applyStun(.12 + p.rank(basic.id) * .025);
+      }
     }
   }
 
@@ -2850,7 +3009,8 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
   final EnemyTrait trait;
   final EnemyTier tier;
   late final EnemyPower power;
-  double outgoingDamage(double base) => base * power.damageMultiplier;
+  double outgoingDamage(double base) =>
+      base * power.damageMultiplier * CombatBalance.enemyDamageScale;
   bool get isElite => !boss && tier != EnemyTier.normal;
   bool get isUnique => !boss && tier == EnemyTier.unique;
   ui.Color get tierColor => isUnique ? const ui.Color(0xffd3a1ff) : trait.color;
@@ -2929,7 +3089,43 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
           ? const ui.Color(0xffbcda75)
           : const ui.Color(0xffefab78));
   int impactPose = 0;
-  final motion = EnemyMotion();
+  ui.Size get personalSpace => boss
+      ? const ui.Size(78, 58)
+      : kind == 'troll'
+      ? const ui.Size(58, 42)
+      : lowProfile
+      ? const ui.Size(50, 32)
+      : isElite
+      ? const ui.Size(48, 38)
+      : const ui.Size(44, 34);
+  double get idleRange => boss
+      ? 64
+      : usesBolt
+      ? (definition?.attackRange ?? (kind == 'gunner' ? 350 : 280))
+      : usesSweep
+      ? sweepRange - 18
+      : 42;
+  double get mass =>
+      (boss
+          ? 2.6
+          : kind == 'troll'
+          ? 1.9
+          : kind == 'mummy'
+          ? 1.4
+          : kind == 'boar'
+          ? 1.35
+          : kind == 'cyber'
+          ? 1.3
+          : kind == 'crystal-beetle'
+          ? 1.5
+          : 1.0) *
+      (isUnique
+          ? 1.25
+          : isElite
+          ? 1.12
+          : 1.0);
+  late final motion = EnemyMotion(mass: mass);
+  late final inertia = EnemyInertia(mass: mass);
   final attackMotion = EnemyAttackMotion();
   double meleeWindup = 0;
   double get meleeWarning => boss ? .26 : .2;
@@ -2954,9 +3150,10 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
 
   void push(ui.Offset impulse) {
     if (impulse == ui.Offset.zero) return;
-    final next = _knockback + impulse;
-    _knockback = next.distance > 80 ? next / next.distance * 80 : next;
-    _knockbackTime = .16;
+    final next = _knockback + impulse / mass;
+    final limit = 80 / mass;
+    _knockback = next.distance > limit ? next / next.distance * limit : next;
+    _knockbackTime = .16 * math.sqrt(mass);
   }
 
   void _updateKnockback(double dt) {
@@ -2964,7 +3161,7 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
     _knockbackTime = math.max(0, _knockbackTime - dt);
     final step = _knockbackTime == 0
         ? _knockback
-        : _knockback * (1 - math.exp(-30 * dt));
+        : _knockback * (1 - math.exp(-30 / math.sqrt(mass) * dt));
     _knockback -= step;
     final at = session.moveEnemyBody(this, position.toOffset(), step);
     position.setValues(at.dx, at.dy);
@@ -2981,6 +3178,21 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
       slow = 0;
   List<ui.Offset> route = [];
   double slamClock = 4, windup = 0;
+  int bossSequence = 0;
+  double bossControlGuard = 0;
+  bool applyStun(double baseDuration) {
+    if (!baseDuration.isFinite ||
+        baseDuration <= 0 ||
+        !session.canHitEnemy(this) ||
+        boss && bossControlGuard > 0) {
+      return false;
+    }
+    final duration = boss ? math.min(.7, baseDuration * .35) : baseDuration;
+    stun = math.max(stun, duration);
+    if (boss) bossControlGuard = duration + 8;
+    return true;
+  }
+
   double pounceRemaining = 0, pounceDuration = 0, pounceBearing = 0;
   ui.Offset? pounceGoal;
   ui.Offset? slamTarget;
@@ -3051,6 +3263,18 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
     _updateKnockback(dt);
     final before = position.toOffset();
     _updateBehavior(dt);
+    if (velocity.isZero()) inertia.stop();
+    if ((velocity.isZero() ||
+            (position.toOffset() - before).distanceSquared < .0001) &&
+        !preparingAttack &&
+        pounceRemaining <= 0 &&
+        hurt <= 0 &&
+        _knockbackTime <= 0 &&
+        stun <= 0 &&
+        !session.sheltered &&
+        (body.center - session.hero.body.center).distanceSquared < 950 * 950) {
+      session.settleEnemy(this, dt);
+    }
     damageTrail.update(dt, life.value / life.max);
     motion.update(
       dt,
@@ -3064,6 +3288,7 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
     final target = session.hero.body.center - body.center;
     hurt = math.max(0, hurt - dt);
     stun = math.max(0, stun - dt);
+    bossControlGuard = math.max(0, bossControlGuard - dt);
     slow = math.max(0, slow - dt);
     attackClock -= dt;
     replan -= dt;
@@ -3247,7 +3472,12 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
                 hero,
                 const ui.Size(3, 3),
               )) {
-            session.hurtHero(outgoingDamage(attack.damage));
+            session.hurtHero(
+              outgoingDamage(attack.damage),
+              origin: attack.origin,
+              status: attack.power.status,
+              dispel: attack.power == BossPower.dispel,
+            );
           }
           session.game?.add(
             BossAttackVisual(session, this, attack, impact: true),
@@ -3281,8 +3511,7 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
     }
     if (boss &&
         slamClock <= 0 &&
-        target.distance <
-            (session.world.stage == WorldStage.past ? 260 : 340) &&
+        target.distance < 620 &&
         session.world.clearEnemyLine(
           body.center,
           session.hero.body.center,
@@ -3290,11 +3519,18 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
         )) {
       bearing = math.atan2(target.dy, target.dx);
       slamTarget = session.hero.body.center;
+      // Ranged heroes must still face an aimed attack outside the old melee
+      // strike's reach. Skip only that short strike; do not idle on it forever.
+      final sequence = bossSequence == 0 && target.distance > 300
+          ? 1
+          : bossSequence;
+      bossSequence = (sequence + 1) % BossPower.values.length;
       final attack = BossAttack.forStage(
         session.world.stage,
         body.center,
         slamTarget!,
         enraged: life.value < life.max * .5,
+        sequence: sequence,
       );
       bossAttack = attack;
       windup = attack.warningTime;
@@ -3332,7 +3568,7 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
           meleeWindup = meleeWarning;
         }
       }
-    } else if (hurt <= 0) {
+    } else if (hurt <= 0 && _knockbackTime <= 0) {
       var toward = session.hero.position.toOffset();
       final direct = session.world.clearEnemyLine(before, toward, body.size);
       if (!direct) {
@@ -3366,12 +3602,17 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
       }
       final delta = toward - before;
       bearing = math.atan2(delta.dy, delta.dx);
+      final pace = math.min(
+        speed * (slow > 0 ? .45 : 1),
+        delta.distance / math.max(.001, dt),
+      );
+      final step = inertia.advance(
+        delta.distance > .001 ? delta / delta.distance * pace : ui.Offset.zero,
+        dt,
+      );
       moveByAngle(
-        bearing,
-        speed: math.min(
-          speed * (slow > 0 ? .45 : 1),
-          delta.distance / math.max(.001, dt),
-        ),
+        math.atan2(step.dy, step.dx),
+        speed: step.distance / math.max(.001, dt),
       );
     } else {
       stop();
@@ -3383,6 +3624,7 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
       position.toOffset() - before,
       steer: hurt <= 0 && !velocity.isZero(),
     );
+    if ((next - before).distanceSquared < .0001) inertia.stop();
     position.setValues(next.dx, next.dy);
     session.updateEnemySpacing(this);
     lastClearPosition = next;
@@ -3406,7 +3648,7 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
         (distance / steps);
     for (var i = 0; i < steps; i++) {
       final from = position.toOffset();
-      final at = session.moveEnemyBody(this, from, step);
+      final at = session.moveEnemyBody(this, from, step, avoidHero: false);
       if ((at - from).distance < step.distance * .5) {
         finishPounce();
         break;
@@ -3826,7 +4068,8 @@ class WoodlandProp extends GameComponent with EffectVisibility {
     final covers =
         (prop.kind == 'tree' ||
             prop.kind.startsWith('city-') ||
-            prop.kind.startsWith('ruin-')) &&
+            prop.kind.startsWith('ruin-') ||
+            prop.kind == 'blacksmith-forge') &&
         prop.body.bottom > hero.bottom &&
         prop.body.bottom - prop.drawSize.height < hero.bottom &&
         (prop.body.center.dx - hero.center.dx).abs() <

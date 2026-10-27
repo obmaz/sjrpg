@@ -9,7 +9,7 @@ class AfflictionIcons extends StatelessWidget {
   final PlayerAfflictions state;
   @override
   Widget build(BuildContext context) => IgnorePointer(
-    child: Column(
+    child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         for (final status in state.active)
@@ -17,9 +17,8 @@ class AfflictionIcons extends StatelessWidget {
             label: '${status.label} ${state.remaining(status).ceil()}초',
             excludeSemantics: true,
             child: Container(
-              width: 18,
+              width: 16,
               height: 16,
-              margin: const EdgeInsets.only(bottom: 2),
               decoration: BoxDecoration(
                 color: const Color(0xee102f2d),
                 borderRadius: BorderRadius.circular(4),
@@ -30,6 +29,8 @@ class AfflictionIcons extends StatelessWidget {
                   PlayerStatus.freeze => Icons.ac_unit,
                   PlayerStatus.poison => Icons.science_outlined,
                   PlayerStatus.blind => Icons.visibility_off_outlined,
+                  PlayerStatus.attackSlow => Icons.hourglass_bottom,
+                  PlayerStatus.moveSlow => Icons.keyboard_double_arrow_down,
                 },
                 size: 14,
                 color: switch (status) {
@@ -37,6 +38,8 @@ class AfflictionIcons extends StatelessWidget {
                   PlayerStatus.freeze => const Color(0xff9cdeff),
                   PlayerStatus.poison => const Color(0xffb7e67c),
                   PlayerStatus.blind => const Color(0xffc9b6ff),
+                  PlayerStatus.attackSlow => const Color(0xffc9a4ff),
+                  PlayerStatus.moveSlow => const Color(0xffe3bb74),
                 },
               ),
             ),

@@ -51,7 +51,8 @@ void main() {
       final basic = p.skills.first;
       final interval = p.attackInterval;
       p.ranks[basic.id] = 5;
-      expect(p.attackInterval, lessThan(interval * .8));
+      expect(p.attackInterval, closeTo(interval / 1.2, .000001));
+      expect(p.attackInterval, lessThan(interval));
     });
     test(
       '$hero simulation uses the displayed cooldown at every rank and saves it',

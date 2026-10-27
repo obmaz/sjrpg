@@ -104,3 +104,5 @@ Flutter 상점 재고는 `Progress.shopGear`가 정의하며 UI와 실제 구매
 `flutter_game/art/actors-viper.webp`는 독사의 여덟 방향·두 S자 보행 자세를 위해 생성한 투명 아틀라스입니다. 생성 원본은 `/workspace/generated_images/exec-52d1d81e-8ee8-4844-b198-9a81f45c1720.png`이며, 전체 꼬리를 보존해 960×640 무손실 WebP로 준비했습니다. `actors-viper-bounds.json`은 방향별 몸체 그림의 알파 경계와 지면 중심 기준점을 기록합니다.
 
 제4·5장 전용 `actors-bonehound.webp`·`actors-clockwork-spider.webp`·`actors-crystal-beetle.webp`는 각각 뼈 사냥개·태엽 거미·수정 갑충의 여덟 방향×두 보행 자세를 생성한 투명 그림입니다. 원본은 `/workspace/generated_images/exec-4784e935-556e-4828-a06f-e7047cf1e125.png`·`/workspace/generated_images/exec-8ca85511-6e4e-412e-8321-d7d754a9e5be.png`·`/workspace/generated_images/exec-ab86afa6-f48a-414b-8c9a-48a96f066961.png`입니다. 원본에서 분리된 16개 몸체를 꼬리·다리·뿔까지 측정하고 종마다 같은 배율로 768×640 무손실 WebP에 여백을 두어 준비했습니다. 각각의 `-bounds.json`은 실제 그림 경계와 지면 기준점을 기록합니다.
+
+Flutter 대장간의 투명 그림 `flutter_game/art/blacksmith-forge.webp`는 숲 마을의 청록 천막·목재·석조 화로·금속 모루 스타일로 생성한 원본 `exec-592b7727-a1c6-4ad0-904d-4b9a01cb2a44.png`를 512×458 WebP로 준비합니다. 배경을 합성한 타일이 아닌 고체 작업장 물체로 사용하며 열린 바닥과 실제 기구의 충돌 범위를 분리합니다.

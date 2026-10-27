@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
@@ -6,6 +7,8 @@ import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/rpg_model.dart';
 import 'package:guardian_new/spell_vfx.dart';
+import 'package:guardian_new/stage_content.dart';
+
 import 'support/test_game.dart';
 
 void main() {
@@ -64,7 +67,7 @@ void main() {
       s.mobs.clear();
       s.hero.position.setValues(6000, 4200);
       s.progress.energy = 100;
-      s.progress.gold = 100;
+
       expect(s.learn(s.progress.skills.first), true);
       final mob = s.spawnEnemy('goblin', const ui.Offset(6100, 4200))!;
       final before = mob.life.value;
@@ -86,6 +89,7 @@ void main() {
       s.resume();
       effect.update(.05);
       expect(mob.life.value, closeTo(before - damage, .0001));
+      s.progress.awardSkillResetTicket(WorldStage.forest);
       expect(s.resetSkills(), true);
       effect.update(.05);
       expect(effect.finished, true);
@@ -179,7 +183,7 @@ void main() {
       final p = s.progress;
       p.gainXp(1000);
       expect(p.learn(p.skills.firstWhere((d) => d.id == 'mastery')), true);
-      p.gold = 200;
+
       p.energy = p.maxEnergy;
       expect(
         s.learn(p.skills.firstWhere((skill) => skill.id == 'whirlwind')),
@@ -205,6 +209,7 @@ void main() {
       }
       expect(pulse.pulses, 3);
       expect(mob.life.value, closeTo(life - pulse.damage * 3, .001));
+      s.progress.awardSkillResetTicket(WorldStage.forest);
       expect(s.resetSkills(), true);
       expect(s.hero.spin, 0);
       final pulses = pulse.pulses;

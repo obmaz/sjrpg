@@ -8,7 +8,7 @@ void main() {
     test('$hero previews never spend and match subsequently learned ranks', () {
       for (final skill
           in hero == HeroClass.warrior ? warriorSkills : mageSkills) {
-        final p = Progress(heroClass: hero)..gainXp(5000);
+        final p = Progress(heroClass: hero)..gainXp(7500);
         for (final entry in p.skills) {
           p.ranks[entry.id] = 1;
         }
@@ -52,7 +52,7 @@ void main() {
     expect(p.skillPoints, points);
   });
   test('damage predictions include equipped gear and elemental mastery', () {
-    final p = Progress(heroClass: HeroClass.mage)..gainXp(5000);
+    final p = Progress(heroClass: HeroClass.mage)..gainXp(7500);
     final ice = Gear(20, gearById('frostwand'), rarity: Rarity.rare, power: 7);
     p.inventory.add(ice);
     expect(p.equip(ice), true);

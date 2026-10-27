@@ -62,4 +62,37 @@ void paintPlayerAfflictions(
       );
     }
   }
+  if (state.remaining(PlayerStatus.moveSlow) > 0) {
+    final paint = ui.Paint()
+      ..color = const ui.Color(0xffe3bb74)
+      ..style = ui.PaintingStyle.stroke
+      ..strokeWidth = 2;
+    for (final x in [-15.0, 15.0]) {
+      canvas.drawArc(
+        ui.Rect.fromCenter(
+          center: feet + ui.Offset(x, 1),
+          width: 20,
+          height: 10,
+        ),
+        0,
+        math.pi * 1.7,
+        false,
+        paint,
+      );
+    }
+  }
+  if (state.remaining(PlayerStatus.attackSlow) > 0) {
+    final at = feet - const ui.Offset(0, 54),
+        paint = ui.Paint()
+          ..color = const ui.Color(0xffc9a4ff)
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 2;
+    canvas.drawCircle(at, 8, paint);
+    canvas.drawLine(at, at + const ui.Offset(0, -5), paint);
+    canvas.drawLine(
+      at,
+      at + ui.Offset(math.cos(time) * 5, math.sin(time) * 5),
+      paint,
+    );
+  }
 }

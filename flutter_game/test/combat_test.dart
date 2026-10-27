@@ -109,7 +109,7 @@ void main() {
       for (var i = 0; i < 15; i++) {
         session.spawnPack();
       }
-      expect(session.living, lessThanOrEqualTo(40));
+      expect(session.living, lessThanOrEqualTo(28));
     },
   );
   test(

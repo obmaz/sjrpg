@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/rpg_model.dart';
+import 'package:guardian_new/stage_content.dart';
+
 import 'support/test_game.dart';
 
 void main() {
@@ -12,10 +14,16 @@ void main() {
       () {
         final p = Progress(heroClass: hero);
         expect(p.skillBranches.length, 3);
-        expect(p.skills.length, hero == HeroClass.warrior ? 20 : 18);
+        expect(p.skills.length, hero == HeroClass.warrior ? 22 : 20);
         for (final branch in p.skillBranches) {
           expect(
-            p.skills.where((s) => s.branch == branch).length,
+            p.skills
+                .where(
+                  (s) =>
+                      s.branch == branch &&
+                      (!s.basic || s.id == p.defaultBasicId),
+                )
+                .length,
             branch == '전투 기술' ? 8 : 6,
           );
         }
@@ -75,7 +83,8 @@ void main() {
       expect(restored.canLearn(meteor), true);
       expect(restored.learn(meteor), true);
       expect(restored.rank('meteor'), 2);
-      restored.gold = 100;
+
+      restored.awardSkillResetTicket(WorldStage.forest);
       expect(restored.resetSkills(), true);
       expect(restored.canLearn(meteor), false);
     },
@@ -113,16 +122,17 @@ void main() {
       p.energy = 0;
       final mob = s.spawnEnemy('golem', const Offset(6050, 4200), boss: true)!;
       s.hero.slash();
-      expect(p.energy, 3);
+      expect(p.energy, closeTo(2.1, .000001));
       s.hero.armorTime = 6;
       s.hero.attackClock = 0;
       s.hero.slash();
-      expect(p.energy, 7);
+      expect(p.energy, closeTo(4.9, .000001));
       mob.position.setValues(7000, 4200);
       s.hero.attackClock = 0;
       s.hero.slash();
-      expect(p.energy, 7);
-      p.gold = 100;
+      expect(p.energy, closeTo(4.9, .000001));
+      s.progress.awardSkillResetTicket(WorldStage.forest);
+
       expect(s.resetSkills(), true);
       expect(p.attackInterval, interval);
       expect(p.maxHp, hp);
@@ -138,8 +148,8 @@ void main() {
     for (final id in ['warmth', 'iceArmor', 'arcaneMastery', 'coldMastery']) {
       expect(p.learn(p.skills.firstWhere((s) => s.id == id)), true);
     }
-    expect(p.manaRecovery, 10.5);
-    expect(p.basicDamage, closeTo(iceDamage * 1.09 * 1.08, .001));
+    expect(p.manaRecovery, closeTo(7.35, .000001));
+    expect(p.basicDamage, closeTo(iceDamage * 1.07 * 1.08, .001));
     p.equip(fire);
     final fireDamage = p.basicDamage;
     expect(p.learn(p.skills.firstWhere((s) => s.id == 'coldMastery')), true);

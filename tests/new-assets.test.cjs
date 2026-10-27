@@ -50,6 +50,10 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
         'source picture village-scene.webp',
     );
     assert.equal(
+        fs.readFileSync(path.join(target, 'blacksmith-forge.webp'), 'utf8'),
+        'source picture blacksmith-forge.webp',
+    );
+    assert.equal(
         fs.readFileSync(path.join(target, 'retained.webp'), 'utf8'),
         'unrelated prepared asset',
     );

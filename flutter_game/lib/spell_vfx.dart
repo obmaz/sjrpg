@@ -5,8 +5,8 @@ import 'package:bonfire/bonfire.dart';
 
 import 'adventure.dart';
 import 'effect_visibility.dart';
-import 'fire_plume.dart';
 import 'game_art.dart';
+import 'mage_combat_art.dart';
 import 'ranked_vfx.dart';
 import 'skill_growth.dart';
 
@@ -86,7 +86,7 @@ class SpellBurst extends GameComponent with EffectVisibility {
   final int buildRevision;
   double age = 0;
   bool finished = false;
-  late final _flame = FirePlume();
+  final _mageArt = MageCombatArt();
   @override
   ui.Rect get effectBounds => ui.Rect.fromCenter(
     center: position.toOffset(),
@@ -147,8 +147,16 @@ class SpellBurst extends GameComponent with EffectVisibility {
         ..style = ui.PaintingStyle.stroke
         ..strokeWidth = 2 + (1 - t) * 3,
     );
-    if (clip == SpellClip.meteorImpact) {
-      _flame.impact(canvas, ui.Offset.zero, t, radius);
+    final mageContact = icy || clip == SpellClip.meteorImpact;
+    if (mageContact) {
+      _mageArt.impact(
+        canvas,
+        ui.Offset.zero,
+        t,
+        radius,
+        icy ? MageElement.ice : MageElement.fire,
+        rank,
+      );
     }
     paintSpellFrame(
       session.art,
@@ -159,6 +167,10 @@ class SpellBurst extends GameComponent with EffectVisibility {
       radius * (clip == SpellClip.warcry ? 2.4 : 2.1),
       opacity: ((1 - t) / .22).clamp(0, .95),
     );
+    if (mageContact) {
+      canvas.restore();
+      return;
+    }
     // Debris has independent radial velocity and gravity, beyond the atlas shape changes.
     paintRankImpact(canvas, ui.Offset.zero, t, rank, color, radius: radius);
     for (var layer = 1; layer < SkillGrowth.layers(rank); layer++) {
@@ -208,6 +220,27 @@ void paintIceShield(
   double time, {
   int rank = 1,
 }) {
+  final shell = ui.Path()
+    ..moveTo(center.dx - 31, center.dy + 12)
+    ..lineTo(center.dx - 39, center.dy - 10)
+    ..lineTo(center.dx - 23, center.dy - 32)
+    ..lineTo(center.dx, center.dy - 39)
+    ..lineTo(center.dx + 23, center.dy - 32)
+    ..lineTo(center.dx + 39, center.dy - 10)
+    ..lineTo(center.dx + 31, center.dy + 12);
+  canvas.drawPath(
+    shell,
+    ui.Paint()
+      ..color = const ui.Color(0xff8edff4).withValues(alpha: .08 + rank * .014)
+      ..style = ui.PaintingStyle.fill,
+  );
+  canvas.drawPath(
+    shell,
+    ui.Paint()
+      ..color = const ui.Color(0xffdbfaff).withValues(alpha: .23 + rank * .045)
+      ..style = ui.PaintingStyle.stroke
+      ..strokeWidth = 1 + rank * .18,
+  );
   for (var layer = 1; layer < SkillGrowth.layers(rank); layer++) {
     canvas.drawArc(
       ui.Rect.fromCenter(

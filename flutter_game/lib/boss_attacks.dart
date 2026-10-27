@@ -1,6 +1,28 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+
+import 'player_afflictions.dart';
 import 'stage_content.dart';
+
+enum BossPower { impact, root, dispel, freeze, attackSlow, moveSlow }
+
+extension BossPowerInfo on BossPower {
+  PlayerStatus? get status => switch (this) {
+    BossPower.root => PlayerStatus.root,
+    BossPower.freeze => PlayerStatus.freeze,
+    BossPower.attackSlow => PlayerStatus.attackSlow,
+    BossPower.moveSlow => PlayerStatus.moveSlow,
+    _ => null,
+  };
+  String get label => switch (this) {
+    BossPower.impact => '강타',
+    BossPower.root => '구속 그물',
+    BossPower.dispel => '강화 해제',
+    BossPower.freeze => '빙결 파동',
+    BossPower.attackSlow => '쇠약의 칼날',
+    BossPower.moveSlow => '무거운 발걸음',
+  };
+}
 
 enum BossDangerShape { circle, fan, beam }
 
@@ -70,14 +92,20 @@ class BossAttack {
     this.recovery,
     this.damage,
     this.color,
-    this.enraged,
-  );
+    this.enraged, [
+    this.power = BossPower.impact,
+  ]);
   factory BossAttack.forStage(
     WorldStage stage,
     ui.Offset origin,
     ui.Offset target, {
     bool enraged = false,
+    int sequence = 0,
   }) {
+    final power = BossPower.values[sequence % BossPower.values.length];
+    if (power != BossPower.impact) {
+      return BossAttack._control(stage, origin, target, power, enraged);
+    }
     final delta = target - origin, angle = math.atan2(delta.dy, delta.dx);
     final forward = ui.Offset(math.cos(angle), math.sin(angle)),
         side = ui.Offset(-forward.dy, forward.dx);
@@ -191,6 +219,116 @@ class BossAttack {
       enraged,
     );
   }
+  static BossAttack _control(
+    WorldStage stage,
+    ui.Offset origin,
+    ui.Offset target,
+    BossPower power,
+    bool enraged,
+  ) {
+    final delta = target - origin, angle = math.atan2(delta.dy, delta.dx);
+    final side = ui.Offset(-math.sin(angle), math.cos(angle));
+    final zones = <BossDanger>[];
+    switch (power) {
+      case BossPower.root:
+        zones.add(BossDanger(BossDangerShape.circle, target, radius: 85));
+        if (stage == WorldStage.sands || enraged) {
+          for (final sign in [-1, 1]) {
+            zones.add(
+              BossDanger(
+                BossDangerShape.circle,
+                target + side * (130.0 * sign),
+                radius: 52,
+              ),
+            );
+          }
+        }
+      case BossPower.freeze:
+        zones.add(
+          BossDanger(
+            BossDangerShape.beam,
+            target,
+            angle: angle,
+            halfLength: 150,
+            halfWidth: 25,
+          ),
+        );
+        if (stage.usesCityArt && enraged) {
+          zones.add(
+            BossDanger(
+              BossDangerShape.beam,
+              target,
+              angle: angle + math.pi / 2,
+              halfLength: 150,
+              halfWidth: 20,
+            ),
+          );
+        }
+      case BossPower.dispel:
+        zones.add(BossDanger(BossDangerShape.circle, target, radius: 115));
+      case BossPower.attackSlow:
+        zones.add(
+          BossDanger(
+            BossDangerShape.fan,
+            origin,
+            radius: 630,
+            angle: angle,
+            halfAngle: enraged ? .37 : .28,
+          ),
+        );
+      case BossPower.moveSlow:
+        for (final bearing in [angle - .65, angle + .65]) {
+          zones.add(
+            BossDanger(
+              BossDangerShape.beam,
+              target,
+              angle: bearing,
+              halfLength: 155,
+              halfWidth: 18,
+            ),
+          );
+        }
+      case BossPower.impact:
+        throw StateError('The basic strike has its own stage pattern');
+    }
+    final warning = switch (power) {
+      BossPower.freeze => 1.15,
+      BossPower.dispel => 1.2,
+      _ => 1.05,
+    };
+    final recovery = switch (power) {
+      BossPower.dispel => 5.2,
+      BossPower.freeze || BossPower.attackSlow => 5.0,
+      _ => 4.6,
+    };
+    final tint = switch (stage.visualStage) {
+      WorldStage.forest => const ui.Color(0xff9edb85),
+      WorldStage.sands => const ui.Color(0xffe8bd7e),
+      WorldStage.past => const ui.Color(0xffd7c0f0),
+      _ => const ui.Color(0xff7feafa),
+    };
+    final color = switch (power) {
+      BossPower.freeze => const ui.Color(0xffa2dfff),
+      BossPower.dispel => const ui.Color(0xffef92d8),
+      BossPower.attackSlow => const ui.Color(0xffc9a4ff),
+      BossPower.moveSlow => const ui.Color(0xffe3bb74),
+      _ => tint,
+    };
+    return BossAttack._(
+      stage,
+      origin,
+      target,
+      List.unmodifiable(zones),
+      warning,
+      recovery * (enraged ? .9 : 1),
+      power == BossPower.dispel || power == BossPower.moveSlow ? 20 : 18,
+      color,
+      enraged,
+      power,
+    );
+  }
+
+  final BossPower power;
   final WorldStage stage;
   final ui.Offset origin, target;
   final List<BossDanger> zones;
@@ -249,6 +387,78 @@ class BossAttack {
         }
       }
     }
+    if (power != BossPower.impact) _paintSymbol(canvas, target, .8 + .2 * t);
+  }
+
+  void _paintSymbol(
+    ui.Canvas canvas,
+    ui.Offset at,
+    double scale, {
+    double opacity = 1,
+  }) {
+    canvas.save();
+    canvas.translate(at.dx, at.dy);
+    canvas.scale(scale);
+    final stroke = ui.Paint()
+      ..color = color.withValues(alpha: opacity)
+      ..style = ui.PaintingStyle.stroke
+      ..strokeWidth = 2.5;
+    switch (power) {
+      case BossPower.root:
+        for (var i = -2; i <= 2; i++) {
+          canvas.drawLine(ui.Offset(i * 6, -17), ui.Offset(i * 6, 17), stroke);
+          canvas.drawLine(ui.Offset(-17, i * 6), ui.Offset(17, i * 6), stroke);
+        }
+      case BossPower.freeze:
+        for (var i = 0; i < 6; i++) {
+          final a = i * math.pi / 3, d = ui.Offset(math.cos(a), math.sin(a));
+          canvas.drawLine(ui.Offset.zero, d * 22, stroke);
+          for (final sign in [-1, 1]) {
+            canvas.drawLine(
+              d * 13,
+              d * 18 + ui.Offset(-d.dy, d.dx) * (sign * 6),
+              stroke,
+            );
+          }
+        }
+      case BossPower.dispel:
+        canvas.drawArc(
+          ui.Rect.fromCircle(center: ui.Offset.zero, radius: 20),
+          .3,
+          math.pi - .6,
+          false,
+          stroke,
+        );
+        canvas.drawArc(
+          ui.Rect.fromCircle(center: ui.Offset.zero, radius: 20),
+          math.pi + .3,
+          math.pi - .6,
+          false,
+          stroke,
+        );
+        canvas.drawLine(
+          const ui.Offset(-18, 18),
+          const ui.Offset(18, -18),
+          stroke,
+        );
+      case BossPower.attackSlow:
+        canvas.drawCircle(ui.Offset.zero, 20, stroke);
+        canvas.drawLine(const ui.Offset(0, -13), ui.Offset.zero, stroke);
+        canvas.drawLine(ui.Offset.zero, const ui.Offset(11, 7), stroke);
+      case BossPower.moveSlow:
+        for (final y in [-8.0, 5.0]) {
+          canvas.drawPath(
+            ui.Path()
+              ..moveTo(-14, y)
+              ..lineTo(0, y + 11)
+              ..lineTo(14, y),
+            stroke,
+          );
+        }
+      case BossPower.impact:
+        break;
+    }
+    canvas.restore();
   }
 
   void paintImpact(ui.Canvas canvas, double progress) {
@@ -323,6 +533,14 @@ class BossAttack {
             ..color = const ui.Color(0xffefffff).withValues(alpha: fade),
         );
       }
+    }
+    if (power != BossPower.impact && t < .9) {
+      _paintSymbol(
+        canvas,
+        target,
+        power == BossPower.root ? 1 - t * .6 : 1 + t,
+        opacity: fade,
+      );
     }
   }
 }

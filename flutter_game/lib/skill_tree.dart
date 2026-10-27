@@ -65,7 +65,11 @@ class SkillTree extends StatelessWidget {
   final ValueChanged<SkillDef> onFocus;
   @override
   Widget build(BuildContext context) {
-    final p = session.progress, skills = p.skills, rows = <String, int>{};
+    final p = session.progress,
+        skills = p.skills
+            .where((s) => !s.basic || s.id == p.defaultBasicId)
+            .toList(),
+        rows = <String, int>{};
     int row(SkillDef skill) => rows.putIfAbsent(skill.id, () {
       final parents = skills.where((s) => skill.requires.containsKey(s.id));
       return math.max(

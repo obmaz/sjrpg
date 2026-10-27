@@ -1,8 +1,11 @@
 import 'dart:math' as math;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
+import 'package:guardian_new/stage_content.dart';
+
 import 'support/test_game.dart';
 
 void main() {
@@ -141,7 +144,8 @@ void main() {
     () {
       s.progress.selectSkill('crushingBlow');
       s.hero.skill();
-      s.progress.gold = 10000;
+
+      s.progress.awardSkillResetTicket(WorldStage.forest);
       expect(s.resetSkills(), true);
       expect(s.hero.heavyWindup, 0);
       expect(s.hero.heavySkill, null);

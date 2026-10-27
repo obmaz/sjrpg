@@ -35,6 +35,29 @@ void main() {
     () {
       final s = session();
       final motor = s.mounts.firstWhere((m) => m.def.id == 'motor');
+      // The expanded starter ward protects the parked town motor. Exercise an
+      // actually contested mount on clear ground in the combat fixture instead.
+      motor.at = const Offset(6100, 4200);
+      expect(
+        s.world.blocked(
+          Rect.fromCenter(
+            center: motor.at,
+            width: motor.def.bodySize.width,
+            height: motor.def.bodySize.height,
+          ),
+        ),
+        false,
+      );
+      expect(
+        s.world.sanctuary.protects(
+          Rect.fromCenter(
+            center: motor.at,
+            width: motor.def.bodySize.width,
+            height: motor.def.bodySize.height,
+          ),
+        ),
+        false,
+      );
       s.hero.position.setValues(motor.at.dx - 12, motor.at.dy + 55);
       final enemy = s.spawnEnemy('goblin', motor.at - const Offset(12, 11))!;
       final progress = s.progress.toSave();

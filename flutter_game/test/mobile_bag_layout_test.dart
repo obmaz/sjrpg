@@ -97,7 +97,7 @@ void main() {
       p.ranks.addAll({'cleave': 3, 'rendingEdge': 2});
       final weapon = p.weapon;
       expect(weapon.attack, 15);
-      expect(p.swordDamage, 12.75);
+      expect(p.swordDamage, closeTo(10.8375, 1e-9));
       expect(p.basicDamage, isNot(closeTo(p.swordDamage, .01)));
       await tester.runAsync(() async {
         final bytes = await rootBundle.load('assets/images/gear-icons.png');
@@ -111,7 +111,7 @@ void main() {
       await showBag(tester, s, const Size(320, 420), 1.3);
       final summary = find.byKey(const ValueKey('equipment-overview'));
       expect(
-        find.descendant(of: summary, matching: find.text('공격력 13')),
+        find.descendant(of: summary, matching: find.text('공격력 11')),
         findsOneWidget,
       );
       await saveProof(tester, 'attack-overview-320x420-1.3');
@@ -138,7 +138,7 @@ void main() {
       final accessible = find.bySemanticsLabel('보관 장비 · ${weapon.name} · 장착 중');
       expect(
         tester.widget<Semantics>(accessible).properties.hint,
-        '무기 공격 15 · 초당 피해 ${p.basicDps.toStringAsFixed(1)} · 현재 초당 피해 ${p.basicDps.toStringAsFixed(1)}',
+        '무기 레벨 ${weapon.weaponLevel} · 무기 공격 15 · 초당 피해 ${p.basicDps.toStringAsFixed(1)} · 현재 초당 피해 ${p.basicDps.toStringAsFixed(1)}',
       );
       for (final element in comparisons.evaluate()) {
         final paragraph = element.renderObject! as RenderParagraph;

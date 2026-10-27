@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'adventure.dart';
 import 'back_actions.dart';
+import 'basic_attack_strip.dart';
 import 'game_ui.dart';
 import 'panel_controls.dart';
 import 'rpg_model.dart';
@@ -28,7 +29,7 @@ class SkillsPanel extends StatefulWidget {
 class _SkillsPanelState extends State<SkillsPanel> {
   final treeScroll = ScrollController(), detailScroll = ScrollController();
   SkillDef? selected;
-  late SkillDef focused = p.skills.first;
+  late SkillDef focused = p.basicSkill;
   Adventure get s => widget.session;
   Progress get p => s.progress;
   void Function()? stopBackAction;
@@ -121,14 +122,25 @@ class _SkillsPanelState extends State<SkillsPanel> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          '비용 ${Progress.skillResetPrice} G · 보유 ${p.gold} G',
+                          '초기화권 1장 사용 · 보유 ${p.skillResetTickets}장',
                           style: const TextStyle(color: gold, fontSize: 15),
                         ),
-                        if (p.gold < Progress.skillResetPrice)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8),
+                          child: Text(
+                            '각 스테이지를 처음 완료하면 초기화권 1장을 받습니다. 골드는 사용하지 않습니다.',
+                            style: TextStyle(
+                              color: _dim,
+                              fontSize: 13,
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                        if (p.skillResetTickets == 0)
                           const Padding(
                             padding: EdgeInsets.only(top: 8),
                             child: Text(
-                              '골드가 부족합니다',
+                              '초기화권이 없습니다',
                               style: TextStyle(
                                 color: Color(0xffffa493),
                                 fontSize: 14,
@@ -152,9 +164,9 @@ class _SkillsPanelState extends State<SkillsPanel> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: GameAction(
-                          '${Progress.skillResetPrice} G · 초기화',
+                          '초기화권 1장 · 초기화',
                           primary: true,
-                          onTap: p.gold < Progress.skillResetPrice
+                          onTap: !p.canResetSkills
                               ? null
                               : () => Navigator.of(dialogContext).pop(true),
                         ),
@@ -245,6 +257,12 @@ class _SkillsPanelState extends State<SkillsPanel> {
                                 ],
                               ),
                             ),
+                            BasicAttackStrip(
+                              session: s,
+                              compact: short,
+                              onFocus: (skill) =>
+                                  setState(() => focused = skill),
+                            ),
                             Expanded(
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
@@ -312,10 +330,44 @@ class _SkillsPanelState extends State<SkillsPanel> {
     padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
     child: Row(
       children: [
-        GameIconButton(
-          label: '스킬 초기화',
-          onTap: p.investedSkillPoints > 0 ? confirmReset : null,
-          icon: Icons.restart_alt_rounded,
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            GameIconButton(
+              label: '스킬 초기화',
+              onTap: p.investedSkillPoints > 0 ? confirmReset : null,
+              icon: Icons.restart_alt_rounded,
+            ),
+            Positioned(
+              right: -2,
+              top: -3,
+              child: IgnorePointer(
+                child: Semantics(
+                  label: '초기화권 ${p.skillResetTickets}장',
+                  excludeSemantics: true,
+                  child: Container(
+                    width: 19,
+                    height: 19,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: p.skillResetTickets > 0
+                          ? gold
+                          : const Color(0xff314d49),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${p.skillResetTickets}',
+                      style: TextStyle(
+                        color: p.skillResetTickets > 0 ? ink : _dim,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -488,7 +540,11 @@ class _SkillsPanelState extends State<SkillsPanel> {
         mainAxisSize: MainAxisSize.min,
         children: [
           GamePanelHeader(
-            title: skill.passive ? '지속 효과' : skill.branch,
+            title: skill.basic
+                ? '기본 공격'
+                : skill.passive
+                ? '지속 효과'
+                : skill.branch,
             dense: true,
             closeLabel: '스킬 상세 닫기',
             onClose: () => setState(() => selected = null),
@@ -544,7 +600,9 @@ class _SkillsPanelState extends State<SkillsPanel> {
                     SkillRankPreview(p, skill),
                     SizedBox(height: compact ? 6 : 10),
                     Text(
-                      skill.passive
+                      skill.basic
+                          ? '기본 공격 · 자원 소모 없음 · 필요 레벨 ${skill.requiredLevel}'
+                          : skill.passive
                           ? '지속 효과 · 필요 레벨 ${skill.requiredLevel}'
                           : '${p.heroClass.resource} ${skill.cost.round()} · 재사용 ${p.skillCooldown(skill, atRank: p.rank(skill.id).clamp(1, 5)).toStringAsFixed(1)}초 · 필요 레벨 ${skill.requiredLevel}',
                       style: const TextStyle(
@@ -585,6 +643,19 @@ class _SkillsPanelState extends State<SkillsPanel> {
               ),
             ),
           ),
+          if (skill.basic && rank > 0)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 4, 14, 0),
+              child: GameAction(
+                p.selectedBasic == skill.id ? '기본 공격 사용 중' : '기본 공격으로 사용',
+                semanticLabel: '${skill.name} 기본 공격으로 사용',
+                primary: p.selectedBasic == skill.id,
+                onTap: () => setState(() {
+                  p.selectBasic(skill.id);
+                  s.refresh();
+                }),
+              ),
+            ),
           if (!skill.passive && rank > 0)
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 4, 14, 0),
