@@ -547,6 +547,13 @@ class GameArt {
     );
   }
 
+  /// Existing and unloaded atlases retain the original two-phase gait.
+  int runFrameCount(String key) {
+    final sheet = _actorDefinitions[key]!.$1;
+    if (!images.containsKey('actors-$sheet')) return 2;
+    return _atlas(sheet).motion?.framesPerDirection ?? 2;
+  }
+
   void actor(
     ui.Canvas canvas,
     String key,
@@ -555,6 +562,7 @@ class GameArt {
     int phase,
     double height, {
     bool attack = false,
+    bool moving = false,
     int comboPose = 0,
     double opacity = 1,
     double flash = 0,
@@ -567,31 +575,40 @@ class GameArt {
             ? 'mage-cast'
             : definition.$1,
         count = definition.$3;
-    final index =
-        const {
-          'cyber',
-          'gunner',
-          'sand-warden',
-          'ancient-king',
-          'cyber-core',
-          'bicycle',
-          'motor',
-          'horse',
-          'boat',
-          'boar',
-          'basilisk',
-          'wraith',
-          'drone',
-          'viper',
-          'bonehound',
-          'clockwork-spider',
-          'crystal-beetle',
-        }.contains(key)
+    final atlas = _atlas(sheet);
+    final motion = !attack && (key == 'hero' || key == 'mage')
+        ? atlas.motion
+        : null;
+    final index = motion != null
+        ? motion.frameIndex(
+            facingFrame(angle, ActorRunClip.directions),
+            phase,
+            moving: moving,
+          )
+        : const {
+            'cyber',
+            'gunner',
+            'sand-warden',
+            'ancient-king',
+            'cyber-core',
+            'bicycle',
+            'motor',
+            'horse',
+            'boat',
+            'boar',
+            'basilisk',
+            'wraith',
+            'drone',
+            'viper',
+            'bonehound',
+            'clockwork-spider',
+            'crystal-beetle',
+          }.contains(key)
         ? facingFrame(angle, 8) * 2 + phase % 2
         : count == 16
         ? facingFrame(angle, count) + (phase % 2) * 16
         : definition.$2 * 8 + facingFrame(angle, count) + (phase % 2) * 32;
-    final atlas = _atlas(sheet), frame = atlas.frames[index];
+    final frame = atlas.frames[index];
     final scale = height / atlas.heights[definition.$2], src = frame.source;
     final dst = ui.Rect.fromLTWH(
       feet.dx - frame.anchor.dx * scale,
@@ -632,14 +649,17 @@ class GameArt {
     final atlas = _atlas('roll');
     final index =
         (mage ? 32 : 0) + (phase.clamp(0, 3) * 8) + facingFrame(angle, 8);
-    final src = atlas.frames[index].source;
+    final frame = atlas.frames[index], src = frame.source;
+    final anchor = atlas.projectedOrigin
+        ? frame.anchor
+        : ui.Offset(src.width / 2, src.height);
     final scale = 43 / atlas.heights[mage ? 1 : 0];
     canvas.drawImageRect(
       images['actors-roll']!,
       src,
       ui.Rect.fromLTWH(
-        feet.dx - src.width * scale / 2,
-        feet.dy - src.height * scale,
+        feet.dx - anchor.dx * scale,
+        feet.dy - anchor.dy * scale,
         src.width * scale,
         src.height * scale,
       ),

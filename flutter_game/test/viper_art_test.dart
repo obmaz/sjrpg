@@ -22,6 +22,7 @@ class _FeetArt extends GameArt {
     int phase,
     double height, {
     bool attack = false,
+    bool moving = false,
     int comboPose = 0,
     double opacity = 1,
     double flash = 0,

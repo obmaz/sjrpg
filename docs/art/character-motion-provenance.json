@@ -1,0 +1,324 @@
+{
+    "version": 1,
+    "creator": "Quaternius",
+    "sourceLicense": "CC0 1.0 Universal",
+    "sources": [
+        {
+            "pack": "Modular Character Outfits - Fantasy Standard",
+            "url": "https://quaternius.com/packs/modularcharacteroutfitsfantasy.html",
+            "itchUploadID": "16289385"
+        },
+        {
+            "pack": "Universal Base Characters Standard",
+            "url": "https://quaternius.com/packs/universalbasecharacters.html",
+            "itchUploadID": "15861669"
+        },
+        {
+            "pack": "Universal Animation Library Standard",
+            "url": "https://quaternius.com/packs/universalanimationlibrary.html",
+            "itchUploadID": "17958403"
+        },
+        {
+            "pack": "Universal Animation Library 2 Standard",
+            "url": "https://quaternius.com/packs/universalanimationlibrary2.html",
+            "itchUploadID": "17958478"
+        }
+    ],
+    "sourceFiles": {
+        "adult-source/Animation-License.txt": {
+            "bytes": 332,
+            "sha256": "6d01f55c6e4c49a2c9963e147e561945ae2c83958c8ca667d90a6bffdbfac061"
+        },
+        "adult-source/Animation-README.txt": {
+            "bytes": 702,
+            "sha256": "ccd02718886b5a57f10f0a8911a38cfe10c36880e1d6dfa3445923fba32d2a72"
+        },
+        "adult-source/License_Standard.txt": {
+            "bytes": 728,
+            "sha256": "2202cc2f608c4210790b112e5f121bc2e7f8dced7b5b1c7f4be6203461bdebbb"
+        },
+        "adult-source/Male_Ranger.bin": {
+            "bytes": 1746884,
+            "sha256": "5bbb0d42cb324c6c27ce00417e68a876d92978f07d161f83590f0d7c0570eff6"
+        },
+        "adult-source/Male_Ranger.gltf": {
+            "bytes": 41447,
+            "sha256": "e1033a212332d84d98c19bc4927c621635478d0aa15d13c79da68d3ba9e0196f"
+        },
+        "adult-source/Readme.txt": {
+            "bytes": 311,
+            "sha256": "2f87579c277cde1e1ddbd4b8d823bed618728781cb6597b4dee3978c589ff5c4"
+        },
+        "adult-source/T_Ranger_BaseColor.png": {
+            "bytes": 6630927,
+            "sha256": "846ef2170b04ee584ad83bb8a1e86dab57a9a43b1193204505912c274d949925"
+        },
+        "adult-source/T_Regular_Male_Dark_BaseColor.png": {
+            "bytes": 1316151,
+            "sha256": "b4dcc0f4139aab548d7c070c4655bd2080ef16caeaaabee6c4aeb693c524e802"
+        },
+        "adult-source/UAL1_Standard.glb": {
+            "bytes": 7618436,
+            "sha256": "69591853d817488edaa8fd9bf8fc1d821eaeaf789f8627b3cd23b41c4ed67997"
+        },
+        "adult-source/UAL2-License.txt": {
+            "bytes": 332,
+            "sha256": "6d01f55c6e4c49a2c9963e147e561945ae2c83958c8ca667d90a6bffdbfac061"
+        },
+        "adult-source/UAL2_Standard.glb": {
+            "bytes": 8091444,
+            "sha256": "8cee20ab1bc55130092447e810e26df22dd2803eccc54f52137a7d54d7ab88a8"
+        },
+        "adult-source/base/License_Standard.txt": {
+            "bytes": 806,
+            "sha256": "0f4beaf0fe360a7732e58bbe3dbf60a2422367fbea60cb9ea4add968f383268e"
+        },
+        "adult-source/base/Superhero_Male_FullBody.bin": {
+            "bytes": 720076,
+            "sha256": "459003f9745853ae562a85506a2b94dd56515c1f37728f9fa3d2ce1a3e4cd92f"
+        },
+        "adult-source/base/Superhero_Male_FullBody.gltf": {
+            "bytes": 30989,
+            "sha256": "e7fcea214ecf8855afbf910b50de6f9c7d1decfb71ca28bad8a4481452dafeb4"
+        },
+        "adult-source/base/T_Eye_Brown.png": {
+            "bytes": 35958,
+            "sha256": "d08e3356a83211bc6ca21fe3a8e39f4b5c1a3b8f85457fc2c0fb57be09935025"
+        },
+        "adult-source/base/T_Hair_1_BaseColor.png": {
+            "bytes": 1570376,
+            "sha256": "bc7aa863bd22ab0a995cd838cceb4d3a5186ee54ee2fb0108fad85d20c057e6e"
+        },
+        "adult-source/base/T_Superhero_Male_Dark.png": {
+            "bytes": 1384380,
+            "sha256": "df680cbc1967a61e85998bfafb8f7bc0a36dd604bb3266486c4b06b1a184bb45"
+        },
+        "adult-source/mage/Male_Peasant.bin": {
+            "bytes": 674764,
+            "sha256": "e46bde795f7b69b351d322d7a5628e07131cfb48ed0afe366293f1b3f530433c"
+        },
+        "adult-source/mage/Male_Peasant.gltf": {
+            "bytes": 32681,
+            "sha256": "8f5a6cf6c1cf96e0a0f8e1a861b4245d42b7f88d44e5076da3d48f3fc52f4e76"
+        },
+        "adult-source/mage/T_Peasant_BaseColor.png": {
+            "bytes": 5055760,
+            "sha256": "a43635628d95571cd62fd4db0cc3a6ea32778b2bc02f242dda224c89d07f1ade"
+        },
+        "adult-source/mage/T_Regular_Male_Dark_BaseColor.png": {
+            "bytes": 1316151,
+            "sha256": "b4dcc0f4139aab548d7c070c4655bd2080ef16caeaaabee6c4aeb693c524e802"
+        }
+    },
+    "runtimeRoles": {
+        "hero": {
+            "image": "flutter_game/art/hero-clean.webp",
+            "metadata": "flutter_game/art/hero-clean-bounds.json",
+            "frameCount": 144,
+            "decodedRGBABytes": 4194304,
+            "compressedBytes": 380450,
+            "sha256": "ff9f3e3ca11bb5229c5239f0a62cd44ce7b6e13d8e5522c48267a6c1eb25ca65"
+        },
+        "hero-attack": {
+            "image": "flutter_game/art/hero-attack-clean.webp",
+            "metadata": "flutter_game/art/hero-attack-clean-bounds.json",
+            "frameCount": 32,
+            "decodedRGBABytes": 1048576,
+            "compressedBytes": 90422,
+            "sha256": "42d457b0345ec950398ef43a81d1bdd2f399a991fe71cbf516279a4bba90989f"
+        },
+        "hero-backhand": {
+            "image": "flutter_game/art/actors-hero-backhand.webp",
+            "metadata": "flutter_game/art/actors-hero-backhand-bounds.json",
+            "frameCount": 32,
+            "decodedRGBABytes": 1048576,
+            "compressedBytes": 92108,
+            "sha256": "287e50b1643040659a1df06e67f85a5bc4d06f4fdd2ae96245db283059f4ada0"
+        },
+        "hero-cleave": {
+            "image": "flutter_game/art/actors-hero-cleave.webp",
+            "metadata": "flutter_game/art/actors-hero-cleave-bounds.json",
+            "frameCount": 32,
+            "decodedRGBABytes": 1048576,
+            "compressedBytes": 95804,
+            "sha256": "a8043dcfd569358f5dab35606fbb0c09ad89a5bcf869f546caaf7623f932a012"
+        },
+        "mage": {
+            "image": "flutter_game/art/actors-mage.png",
+            "metadata": "flutter_game/art/mage-bounds.json",
+            "frameCount": 144,
+            "decodedRGBABytes": 4194304,
+            "compressedBytes": 495005,
+            "sha256": "bafed70c9d3c0404ef73f93907875fa7eecc2c0576de8e4b66bb5ef66aab934e"
+        },
+        "mage-cast": {
+            "image": "flutter_game/art/actors-mage-cast.webp",
+            "metadata": "flutter_game/art/actors-mage-cast-bounds.json",
+            "frameCount": 32,
+            "decodedRGBABytes": 1048576,
+            "compressedBytes": 94026,
+            "sha256": "1082abebb55b289eb559b01b89beb016aeb51b3a5b6bc228f66d639fbc913e72"
+        },
+        "roll": {
+            "image": "flutter_game/art/actors-roll.png",
+            "metadata": "flutter_game/art/roll-bounds.json",
+            "frameCount": 64,
+            "decodedRGBABytes": 1048576,
+            "compressedBytes": 210240,
+            "sha256": "6dc26be09cc0430a4da7c3c45cf0df7f4f7c82a8727921b08d9d876ab6791ccc"
+        }
+    },
+    "runtimeFrameCount": 480,
+    "runtimeDecodedRGBAUnionBytes": 13631488,
+    "runtimeCompressedBytes": 1458055,
+    "camera": {
+        "workingCanvas": [256, 256],
+        "exportCanvas": [128, 128],
+        "location": [0.0, -6.0, 5.099999904632568],
+        "target": [0, 0, 0.9],
+        "orthographicScale": 3.5999999046325684,
+        "projectedWorldOriginRaw": [128.0, 180.43079376220703],
+        "actorReferenceHeight128": 65.44444444444444,
+        "rollReferenceHeight128": 46.901851851851845,
+        "transparentCropPadding": 6,
+        "feetFormula": "packedOrigin + projectedWorldOrigin128 - cropOrigin128",
+        "perPoseScaleOrAlphaBottomNormalization": false
+    },
+    "directionOrder": [
+        "S",
+        "SSW",
+        "SW",
+        "WSW",
+        "W",
+        "WNW",
+        "NW",
+        "NNW",
+        "N",
+        "NNE",
+        "NE",
+        "ENE",
+        "E",
+        "ESE",
+        "SE",
+        "SSE"
+    ],
+    "modelYawDegrees": [
+        -0.0, -22.5, -45.0, -67.5, -90.0, -112.5, -135.0, -157.5, -180.0, -202.5, -225.0, -247.5,
+        -270.0, -292.5, -315.0, -337.5
+    ],
+    "sourceImportFPS": 30,
+    "clips": {
+        "warrior": {
+            "Idle_Loop_Armature": {
+                "actualActionName": "Idle_Loop_Armature.001",
+                "frameRange": [0.0, 75.0],
+                "sourceSeconds": 2.5
+            },
+            "Sprint_Loop_Armature": {
+                "actualActionName": "Sprint_Loop_Armature.001",
+                "frameRange": [0.0, 20.0],
+                "sourceSeconds": 0.6666666666666666
+            },
+            "Sword_Regular_A_Armature": {
+                "actualActionName": "Sword_Regular_A_Armature.002",
+                "frameRange": [0.0, 13.0],
+                "sourceSeconds": 0.43333333333333335
+            },
+            "Sword_Regular_B_Armature": {
+                "actualActionName": "Sword_Regular_B_Armature.002",
+                "frameRange": [0.0, 16.0],
+                "sourceSeconds": 0.5333333333333333
+            },
+            "Sword_Regular_C_Armature": {
+                "actualActionName": "Sword_Regular_C_Armature.002",
+                "frameRange": [0.0, 60.0],
+                "sourceSeconds": 2.0
+            },
+            "Roll_Armature": {
+                "actualActionName": "Roll_Armature.001",
+                "frameRange": [0.0, 44.0],
+                "sourceSeconds": 1.4666666666666666
+            }
+        },
+        "mage": {
+            "Idle_Loop_Armature": {
+                "actualActionName": "Idle_Loop_Armature.002",
+                "frameRange": [0.0, 75.0],
+                "sourceSeconds": 2.5
+            },
+            "Sprint_Loop_Armature": {
+                "actualActionName": "Sprint_Loop_Armature.002",
+                "frameRange": [0.0, 20.0],
+                "sourceSeconds": 0.6666666666666666
+            },
+            "Spell_Simple_Enter_Armature": {
+                "actualActionName": "Spell_Simple_Enter_Armature.002",
+                "frameRange": [0.0, 16.0],
+                "sourceSeconds": 0.5333333333333333
+            },
+            "Spell_Simple_Shoot_Armature": {
+                "actualActionName": "Spell_Simple_Shoot_Armature.002",
+                "frameRange": [0.0, 15.0],
+                "sourceSeconds": 0.5
+            },
+            "Roll_Armature": {
+                "actualActionName": "Roll_Armature.002",
+                "frameRange": [0.0, 44.0],
+                "sourceSeconds": 1.4666666666666666
+            }
+        }
+    },
+    "clipSamples": {
+        "idle": {
+            "action": "Idle_Loop",
+            "normalized": [0]
+        },
+        "run": {
+            "action": "Sprint_Loop",
+            "normalized": [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875]
+        },
+        "hero-attack": {
+            "action": "Sword_Regular_A",
+            "normalized": [0.125, 0.5]
+        },
+        "hero-backhand": {
+            "action": "Sword_Regular_B",
+            "normalized": [0, 0.5]
+        },
+        "hero-cleave": {
+            "action": "Sword_Regular_C",
+            "normalized": [0.125, 0.375]
+        },
+        "mage-cast": [
+            {
+                "action": "Spell_Simple_Enter",
+                "normalized": 0.25
+            },
+            {
+                "action": "Spell_Simple_Shoot",
+                "normalized": 0.5
+            }
+        ],
+        "roll": {
+            "action": "Roll",
+            "normalized": [0, 0.25, 0.5, 0.75]
+        }
+    },
+    "physics": "Offline poses only. Existing84units of resolved movement per run cycle, attack/cast/dodge timing, collisions, damage and checkpoint data are unchanged. No runtime3D assets or engine.",
+    "assembly": {
+        "warrior": "Male_Ranger outfit + official male base head; original sword, matte deepteal hood/brownleather",
+        "mage": "Male_Peasant outfit + Ranger hood + same official male base head; navycloth, original wand and skinned split robe panels",
+        "head": "Rest-space head trim/map once and rigidHead binding, no per-frame changes",
+        "roll": "Both classes same camera/worldpixel scale via43/rollRef=60/actorRef"
+    },
+    "verification": {
+        "frames": 480,
+        "rootPlanarDrift": 0,
+        "anatomicalFootLeadSwapsPerRunCycle": 2,
+        "all16HeadGazeVerified": true,
+        "allSourceEdgesClear": true,
+        "noMirrorsOrAliasedRects": true,
+        "allRecordsProjectedOrigin": true
+    },
+    "previewNotice": "The320ms GIF is a phase inspection at60px worldheight, not browserFPS measurement. Actual run phase follows resolved movement distance."
+}

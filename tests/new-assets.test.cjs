@@ -83,8 +83,13 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
     );
     assert.deepEqual(metadata.actors.shared.frames, [[1, 2, 3, 4]]);
     for (const [actor, count] of [
-        ['hero', 32],
+        ['hero', 144],
+        ['mage', 144],
         ['hero-attack', 32],
+        ['hero-backhand', 32],
+        ['hero-cleave', 32],
+        ['mage-cast', 32],
+        ['roll', 64],
         ['bicycle', 16],
         ['viper', 16],
         ['bonehound', 16],
@@ -93,7 +98,31 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
     ]) {
         assert.equal(metadata.actors[actor].frames.length, count);
     }
-    assert.equal(metadata.actors.hero.feet.length, 32);
+    for (const [actor, source] of [
+        ['hero', 'hero-clean'],
+        ['mage', 'mage'],
+        ['hero-attack', 'hero-attack-clean'],
+        ['hero-backhand', 'actors-hero-backhand'],
+        ['hero-cleave', 'actors-hero-cleave'],
+        ['mage-cast', 'actors-mage-cast'],
+        ['roll', 'roll'],
+    ]) {
+        const original = JSON.parse(
+            fs.readFileSync(path.join(root, `flutter_game/art/${source}-bounds.json`), 'utf8'),
+        );
+        assert.deepEqual(metadata.actors[actor], original, `${actor} retains projected anchors`);
+        assert.equal(metadata.actors[actor].anchorMode, 'projected-origin');
+        assert.equal(metadata.actors[actor].feet.length, metadata.actors[actor].frames.length);
+    }
+    for (const actor of ['hero', 'mage']) {
+        assert.deepEqual(metadata.actors[actor].motion, {
+            directions: 16,
+            runFrames: 8,
+            idleOffset: 0,
+            runOffset: 16,
+            layout: 'phase-major',
+        });
+    }
     assert.deepEqual(metadata.controls.attack, [1, 2, 3, 4]);
     assert.equal(metadata.actors.gunner.frames.length, 16);
     assert.equal(metadata.actors.cyber.frames.length, 16);

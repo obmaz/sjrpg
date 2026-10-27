@@ -11,7 +11,12 @@ class RunMotion {
     cycle = (cycle + distance / strideLength) % 1;
   }
 
-  int get phase => (cycle * 2).floor();
+  int phaseFor(int frameCount) {
+    if (frameCount <= 0) throw ArgumentError.value(frameCount, 'frameCount');
+    return (cycle * frameCount).floor() % frameCount;
+  }
+
+  int get phase => phaseFor(2);
 }
 
 enum EnemyAttackPose { melee, sweep, bolt, pounce, slam }

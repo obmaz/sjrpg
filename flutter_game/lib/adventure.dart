@@ -2743,9 +2743,16 @@ class Guardian extends Player with WithCollision {
             : swing > 0
             ? (swing > swingDuration * .58 ? 0 : 1)
             : movingThisFrame
-            ? runMotion.phase
+            ? runMotion.phaseFor(
+                session.art.runFrameCount(
+                  session.progress.heroClass == HeroClass.mage
+                      ? 'mage'
+                      : 'hero',
+                ),
+              )
             : 0,
         60,
+        moving: movingThisFrame,
         attack: swing > 0 || spin > 0 || aim?.id == 'crushingBlow',
         comboPose: spin > 0
             ? 1

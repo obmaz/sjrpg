@@ -6,7 +6,7 @@ import 'package:guardian_new/game_art.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test(
-    'repaired hero swings and complete bicycle wheels render every direction and phase',
+    'hero idle, eight run poses, swings and complete bicycle wheels render every direction',
     () async {
       final art = await GameArt.load();
       addTearDown(() {
@@ -26,12 +26,21 @@ void main() {
         'bicycle',
       ]) {
         final count = key == 'bicycle' ? 8 : 16;
+        final movement = key == 'hero';
+        final phases = movement ? 9 : 2;
         final data = art.actors[key];
-        expect(data['frames'].length, count * 2);
-        expect(data['feet'].length, count * 2);
+        expect(data['frames'].length, count * phases);
+        expect(data['feet'].length, count * phases);
+        if (movement) {
+          expect(data['motion']['runFrames'], 8);
+          expect(data['motion']['idleOffset'], 0);
+          expect(data['motion']['runOffset'], 16);
+        }
         final hashes = <int>{};
+        // Keep the 100px body scale and room for swords extending beyond it.
+        const width = 320, height = 280;
         for (var direction = 0; direction < count; direction++) {
-          for (var phase = 0; phase < 2; phase++) {
+          for (var phase = 0; phase < phases; phase++) {
             final rec = ui.PictureRecorder();
             art.actor(
               ui.Canvas(rec),
@@ -40,10 +49,11 @@ void main() {
                   : key == 'mage-cast'
                   ? 'mage'
                   : key,
-              const ui.Offset(100, 150),
+              const ui.Offset(160, 240),
               math.pi / 2 + direction * math.pi * 2 / count,
-              phase,
+              movement ? math.max(0, phase - 1) : phase,
               100,
+              moving: movement && phase > 0,
               attack: key.startsWith('hero-') || key == 'mage-cast',
               comboPose: key == 'hero-backhand'
                   ? 1
@@ -52,19 +62,19 @@ void main() {
                   : 0,
             );
             final picture = rec.endRecording();
-            final image = await picture.toImage(200, 180);
+            final image = await picture.toImage(width, height);
             picture.dispose();
             final bytes = (await image.toByteData(
               format: ui.ImageByteFormat.rawRgba,
             ))!.buffer.asUint8List();
             var opaque = 0;
-            for (var y = 0; y < 180; y++) {
-              for (var x = 0; x < 200; x++) {
-                final alpha = bytes[(y * 200 + x) * 4 + 3];
+            for (var y = 0; y < height; y++) {
+              for (var x = 0; x < width; x++) {
+                final alpha = bytes[(y * width + x) * 4 + 3];
                 if (alpha > 20) {
                   opaque++;
-                  expect(x, inInclusiveRange(2, 197));
-                  expect(y, inInclusiveRange(2, 177));
+                  expect(x, inInclusiveRange(2, width - 3));
+                  expect(y, inInclusiveRange(2, height - 3));
                 }
               }
             }
@@ -73,7 +83,7 @@ void main() {
             image.dispose();
           }
         }
-        expect(hashes.length, count * 2);
+        expect(hashes.length, count * phases);
       }
     },
   );
