@@ -5,6 +5,7 @@ import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
 
 import 'adventure.dart';
+import 'affliction_widgets.dart';
 import 'back_actions.dart';
 import 'back_bridge.dart' as history;
 import 'battle_effects.dart';
@@ -16,6 +17,7 @@ import 'game_panels.dart';
 import 'game_ui.dart';
 import 'nearby_controls.dart';
 import 'panel_controls.dart';
+import 'player_afflictions.dart';
 import 'quest_giver.dart';
 import 'quest_guide.dart';
 import 'rpg_widgets.dart';
@@ -189,7 +191,7 @@ class _EntryPageState extends State<EntryPage> {
             onRetryCheckpoint: () {
               final checkpoint = GameCheckpoint.decode(
                 storage.readCheckpoint(),
-              );
+              )?.forRevival();
               setState(() {
                 run++;
                 savedAdventure = checkpoint;
@@ -665,6 +667,12 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 child: IgnorePointer(ignoring: modal != null, child: child!),
               ),
             ),
+            if (adventure.afflictions.remaining(PlayerStatus.blind) > 0)
+              Positioned.fill(
+                child: NarrowVisionCurtain(
+                  cameraOffsetY: adventure.cameraOffsetY,
+                ),
+              ),
             SafeArea(
               bottom: false,
               child: ExcludeSemantics(

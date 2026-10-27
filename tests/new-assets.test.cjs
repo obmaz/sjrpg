@@ -70,6 +70,9 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
         ['hero-attack', 32],
         ['bicycle', 16],
         ['viper', 16],
+        ['bonehound', 16],
+        ['clockwork-spider', 16],
+        ['crystal-beetle', 16],
     ]) {
         assert.equal(metadata.actors[actor].frames.length, count);
     }
@@ -78,6 +81,13 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
     assert.equal(metadata.actors.gunner.frames.length, 16);
     assert.equal(metadata.actors.cyber.frames.length, 16);
     assert.equal(metadata.actors.viper.feet.length, 16);
+    for (const actor of ['bonehound', 'clockwork-spider', 'crystal-beetle']) {
+        assert.equal(metadata.actors[actor].feet.length, 16);
+        assert.equal(
+            fs.readFileSync(path.join(target, `actors-${actor}.webp`), 'utf8'),
+            `source picture actors-${actor}.webp`,
+        );
+    }
     assert.equal(
         fs.readFileSync(path.join(target, 'actors-viper.webp'), 'utf8'),
         'source picture actors-viper.webp',

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/game_art.dart';
+import 'package:guardian_new/player_afflictions.dart';
 import 'support/test_game.dart';
 
 void main() {
@@ -101,7 +102,7 @@ void main() {
         ..attackClock = 0;
       enemy.position.y = s.hero.body.center.dy - enemy.size.y / 2;
       enemy.update(.05);
-      expect(enemy.windup, closeTo(.8, .001));
+      expect(enemy.windup, closeTo(.9, .001));
       final warning = enemy.windup;
       s.pause();
       enemy.update(.5);
@@ -113,6 +114,7 @@ void main() {
       }
       final bolt = game.added.whereType<ShadowBolt>().single;
       expect(bolt.technological, true);
+      expect(bolt.status, PlayerStatus.blind);
       expect(bolt.direction.dx, closeTo(-1, .001));
       expect(bolt.direction.dy, closeTo(0, .001));
       final hp = s.progress.hp;
@@ -121,6 +123,7 @@ void main() {
       }
       expect(s.progress.hp, hp);
       expect(bolt.resolved, true);
+      expect(s.afflictions.remaining(PlayerStatus.blind), 0);
     },
   );
   test(

@@ -548,11 +548,11 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (gear.gift != null)
+          for (final ability in gear.gifts)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(
-                '${gear.gift!.title} · ${gear.gift!.description}',
+                '${ability.title} · ${ability.description}',
                 style: const TextStyle(color: gold, fontSize: 12, height: 1.35),
               ),
             ),

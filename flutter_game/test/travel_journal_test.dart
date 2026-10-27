@@ -80,14 +80,17 @@ void main() {
       final session = start();
       session.travelJournal.discover(WorldStage.forest, 'roots');
       visit(session, 'hub');
+      session.progress.gainXp(8000);
+      session.progress.ranks['frenzy'] = 1;
       session.progress.hp = 55;
       session.progress.energy = 12;
       session.hero.cooldowns['warcry'] = 1.25;
+      session.hero.cooldowns['frenzy'] = 4;
       session.hero.attackClock = .25;
       session.hero.dodgeClock = .8;
       session.hero.dashing = .1;
       session.pause();
-      session.hero.armorTime = 2;
+      session.hero.armorTime = 1;
       session.hero.frenzyTime = 3;
       session.openedChests.add(0);
       final before = GameCheckpoint.capture(session)!.encode();
@@ -105,7 +108,7 @@ void main() {
       expect(restored.hero.dodgeClock, .8);
       expect(restored.hero.dashing, 0);
       expect(session.paused, true);
-      expect(restored.hero.armorTime, 2);
+      expect(restored.hero.armorTime, 1);
       expect(restored.hero.frenzyTime, 3);
       expect(restored.openedChests, {0});
       expect(restored.travelJournal.archives, isEmpty);

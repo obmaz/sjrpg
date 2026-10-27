@@ -119,7 +119,7 @@ void main() {
     }
     expect(bolt.resolved, true);
     expect(mobs.where((m) => m.life.value < 500).length, 3);
-    expect(mobs.first.life.value, 488);
+    expect(mobs.first.life.value, closeTo(500 - 12 * .7, .000001));
   });
   test('normal, elite and boss life use the current reduced baseline', () {
     final s = session();

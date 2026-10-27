@@ -262,6 +262,10 @@ extension WeaponGiftInfo on WeaponGift {
       ['적중한 대상 둔화 0.8초', '받는 피해 8% 감소', '처치 시 생명 4 회복'][index];
 }
 
+// Options are fixed when acquired; levelling never rewrites owned equipment.
+int gearAffixForLevel(int value, int acquiredLevel) =>
+    value <= 0 ? value : value + (math.min(acquiredLevel, 81) - 1) ~/ 10;
+
 class Gear {
   Gear(
     this.serial,
@@ -271,18 +275,55 @@ class Gear {
     this.vitality = 0,
     this.focus = 0,
     this.locked = false,
+    this.acquiredLevel = 1,
+    this.affixVersion = 1,
     WeaponGift? gift,
-  }) : gift =
-           gift ??
-           (rarity == Rarity.rare && base.slot == GearSlot.weapon
-               ? WeaponGift.values[serial % WeaponGift.values.length]
-               : null);
+    List<WeaponGift>? gifts,
+  }) : gifts = List<WeaponGift>.unmodifiable(
+         gifts ??
+             (gift != null
+                 ? [gift]
+                 : _defaultGifts(serial, base, rarity, affixVersion)),
+       ) {
+    final expected = _giftCount(base, rarity, affixVersion);
+    if (acquiredLevel < 1 ||
+        acquiredLevel > 10000 ||
+        affixVersion < 0 ||
+        affixVersion > 1 ||
+        this.gifts.length != expected ||
+        this.gifts.toSet().length != this.gifts.length ||
+        gift != null && this.gifts.firstOrNull != gift) {
+      throw ArgumentError('Invalid equipment abilities');
+    }
+  }
   final int serial;
   final GearDef base;
   final Rarity rarity;
-  final int power, vitality, focus;
+  final int power, vitality, focus, acquiredLevel, affixVersion;
   bool locked;
-  final WeaponGift? gift;
+  final List<WeaponGift> gifts;
+  // Keep the old single-gift accessor for existing callers and save compatibility.
+  WeaponGift? get gift => gifts.isEmpty ? null : gifts.first;
+  bool hasGift(WeaponGift ability) => gifts.contains(ability);
+  static int _giftCount(GearDef base, Rarity rarity, int version) =>
+      version == 0
+      ? rarity == Rarity.rare && base.slot == GearSlot.weapon
+            ? 1
+            : 0
+      : rarity == Rarity.unique
+      ? 2
+      : rarity == Rarity.rare
+      ? 1
+      : 0;
+  static List<WeaponGift> _defaultGifts(
+    int serial,
+    GearDef base,
+    Rarity rarity,
+    int version,
+  ) => [
+    for (var i = 0; i < _giftCount(base, rarity, version); i++)
+      WeaponGift.values[(serial + i) % WeaponGift.values.length],
+  ];
   Map<String, dynamic> toSave() => {
     'serial': serial,
     'base': base.id,
@@ -291,7 +332,12 @@ class Gear {
     'vitality': vitality,
     'focus': focus,
     'locked': locked,
-    'gift': gift?.name,
+    'gift': rarity == Rarity.rare && base.slot == GearSlot.weapon
+        ? gift?.name
+        : null,
+    'gifts': gifts.map((ability) => ability.name).toList(),
+    'acquiredLevel': acquiredLevel,
+    'affixVersion': affixVersion,
   };
   factory Gear.fromSave(Map<String, dynamic> data) {
     int stat(String key) {
@@ -304,30 +350,74 @@ class Gear {
 
     final serial = stat('serial');
     if (serial == 0) throw const FormatException('Invalid equipment identity');
+    final base = gearCatalog.where((g) => g.id == data['base']).firstOrNull;
+    final rarity = Rarity.values
+        .where((r) => r.name == data['rarity'])
+        .firstOrNull;
+    if (base == null || rarity == null) {
+      throw const FormatException('Invalid equipment kind');
+    }
     final locked = data['locked'] ?? false;
     if (locked is! bool) throw const FormatException('Invalid equipment lock');
-    final giftName = data['gift'];
-    final gift = giftName == null
-        ? null
-        : WeaponGift.values.firstWhere((g) => g.name == giftName);
-    if (gift != null &&
-        (data['rarity'] != 'rare' ||
-            gearById(data['base'] as String).slot != GearSlot.weapon)) {
-      throw const FormatException('Invalid weapon gift');
+    final version = data['affixVersion'] ?? 0,
+        acquiredLevel = data['acquiredLevel'] ?? 1;
+    if (version is! int ||
+        version < 0 ||
+        version > 1 ||
+        acquiredLevel is! int ||
+        acquiredLevel < 1 ||
+        acquiredLevel > 10000) {
+      throw const FormatException('Invalid equipment acquisition');
+    }
+    WeaponGift readGift(dynamic name) {
+      final ability = WeaponGift.values
+          .where((g) => g.name == name)
+          .firstOrNull;
+      if (name is! String || ability == null) {
+        throw const FormatException('Invalid equipment ability');
+      }
+      return ability;
+    }
+
+    final legacyName = data['gift'];
+    final legacyGift = legacyName == null ? null : readGift(legacyName);
+    if (legacyGift != null &&
+        (rarity != Rarity.rare || base.slot != GearSlot.weapon)) {
+      throw const FormatException('Invalid legacy weapon gift');
+    }
+    final count = _giftCount(base, rarity, version);
+    final raw = data['gifts'];
+    late final List<WeaponGift> abilities;
+    if (raw == null && version == 0) {
+      abilities = legacyGift != null
+          ? [legacyGift]
+          : _defaultGifts(serial, base, rarity, 0);
+    } else {
+      if (raw is! List || raw.length != count) {
+        throw const FormatException('Invalid equipment ability count');
+      }
+      abilities = raw.map(readGift).toList();
+      if (abilities.toSet().length != count ||
+          legacyGift != null &&
+              (abilities.isEmpty || abilities.first != legacyGift)) {
+        throw const FormatException('Conflicting equipment abilities');
+      }
     }
     return Gear(
       serial,
-      gearById(data['base'] as String),
-      rarity: Rarity.values.firstWhere((v) => v.name == data['rarity']),
+      base,
+      rarity: rarity,
       power: stat('power'),
       vitality: stat('vitality'),
       focus: stat('focus'),
       locked: locked,
-      gift: gift,
+      acquiredLevel: acquiredLevel,
+      affixVersion: version,
+      gifts: abilities,
     );
   }
   String get name => rarity == Rarity.unique
-      ? '파수꾼의 유산 · ${base.name}'
+      ? '${base.id == 'sentinel' ? '파수꾼' : '균열'}의 유산 · ${base.name}'
       : rarity == Rarity.common
       ? base.name
       : '${power > 0
@@ -348,7 +438,7 @@ class Gear {
     if (health > 0) '생명 +${health.round()}',
     if (mana > 0) '자원 +${mana.round()}',
     if (base.haste > 0) '공격속도 +${(base.haste * 100).round()}%',
-    if (gift != null) '${gift!.title} · ${gift!.description}',
+    for (final ability in gifts) '${ability.title} · ${ability.description}',
   ].join(' · ');
 }
 
@@ -423,7 +513,7 @@ const warriorSkills = [
     'warcry',
     '전장의 함성',
     '함성',
-    '주변 적을 함성으로 기절시키고 잠시 피해를 줄입니다. 등급마다 대상 수·보호 시간·파동 속도가 늘고 재사용이 빨라집니다.',
+    '주변 적을 함성으로 기절시키고 잠시 피해를 줄입니다. 등급마다 대상 수·보호율·파동 속도가 늘고 재사용이 빨라집니다. 보호는 재사용 시간의 90% 안에서 끝납니다.',
     1,
     18,
     7,
@@ -463,7 +553,7 @@ const warriorSkills = [
     'frenzy',
     '광전사의 격노',
     '전투 기술',
-    '공격·이동 속도가 증가하고 발동 시 주변 적을 벱니다. 등급마다 공격 속도와 지속 시간이 늘고 재사용이 빨라집니다.',
+    '공격·이동 속도가 증가하고 발동 시 주변 적을 벱니다. 등급마다 공격 속도가 늘고 재사용이 빨라집니다. 강화는 재사용 시간의 90% 안에서 끝납니다.',
     4,
     28,
     12,
@@ -494,7 +584,7 @@ const warriorSkills = [
     'battleVigor',
     '전장의 맹세',
     '함성',
-    '등급마다 최대 생명 +8, 전장의 함성 보호 지속시간 +0.4초.',
+    '등급마다 최대 생명 +8, 전장의 함성 보호 중 피해 감소 +1%p.',
     3,
     0,
     0,
@@ -636,7 +726,7 @@ const mageSkills = [
     'frostNova',
     '서릿발',
     '냉기',
-    '주변 적을 냉기로 얼립니다. 등급마다 시전·재사용이 빨라지고 대상 수·감속 시간·얼음 결정이 늘어납니다.',
+    '주변 적을 냉기로 얼립니다. 등급마다 시전·재사용이 빨라지고 대상 수·얼음 결정이 늘어납니다. 감속은 재사용 시간의 90% 안에서 끝납니다.',
     1,
     18,
     6,
@@ -655,7 +745,7 @@ const mageSkills = [
     'iceArmor',
     '얼음 갑옷',
     '냉기',
-    '얼음으로 몸을 보호하고 근접 공격자를 둔화합니다. 등급마다 보호 시간·감소율·결정 수가 늘고 시전과 재사용이 빨라집니다.',
+    '얼음으로 몸을 보호하고 근접 공격자를 둔화합니다. 등급마다 감소율·결정 수가 늘고 시전과 재사용이 빨라집니다. 보호는 재사용 시간의 90% 안에서 끝납니다.',
     2,
     20,
     15,
@@ -1178,10 +1268,31 @@ class Progress {
   double get heavyChargeTime => 1.2 / SkillGrowth.tempo(rank('crushingBlow'));
   double get frenzyAttackTempo => 1.65 + math.max(0, rank('frenzy') - 1) * .08;
   double get frenzyMoveSpeed => 310 + math.max(0, rank('frenzy') - 1) * 8;
-  double get frenzyDuration => 7 + math.max(0, rank('frenzy') - 1) * .5;
-  double get iceArmorDuration => 12 + math.max(0, rank('iceArmor') - 1) * 1.25;
-  double get novaSlowDuration => 3 + math.max(0, rank('frostNova') - 1) * .2;
-  double get warcryStun => 2 + math.max(0, rank('warcry') - 1) * .1;
+  // Every temporary skill effect leaves at least ten percent of its actual
+  // rank/perk-adjusted cooldown without that effect.
+  static const skillEffectUptime = .9;
+  double limitedSkillDuration(String id, double nominal, {int? atRank}) {
+    final skill = skills.where((s) => s.id == id).firstOrNull;
+    final r = atRank ?? rank(id);
+    if (skill == null || skill.passive || r <= 0) return 0;
+    return math.min(
+      nominal,
+      skillCooldown(skill, atRank: r) * skillEffectUptime,
+    );
+  }
+
+  double get frenzyDuration =>
+      limitedSkillDuration('frenzy', 7 + math.max(0, rank('frenzy') - 1) * .5);
+  double get iceArmorDuration => limitedSkillDuration(
+    'iceArmor',
+    12 + math.max(0, rank('iceArmor') - 1) * 1.25,
+  );
+  double get novaSlowDuration => limitedSkillDuration(
+    'frostNova',
+    3 + math.max(0, rank('frostNova') - 1) * .2,
+  );
+  double get warcryStun =>
+      limitedSkillDuration('warcry', 2 + math.max(0, rank('warcry') - 1) * .1);
 
   double get basicDamage => skillDamage(skills.first);
   double skillDamage(SkillDef skill, {int? atRank}) {
@@ -1233,14 +1344,17 @@ class Progress {
   double skillProtection(String id, {int? atRank}) {
     final r = (atRank ?? rank(id)).clamp(0, SkillDef.maxRank);
     return id == 'warcry'
-        ? .25 + r * .025 + rank('unyieldingOath') * .02
+        ? .25 +
+              r * .025 +
+              rank('unyieldingOath') * .02 +
+              rank('battleVigor') * .01
         : id == 'iceArmor'
         ? .25 + r * .05 + rank('frozenAegis') * .02
         : 0;
   }
 
   double get warcryDuration =>
-      6 + math.max(0, rank('warcry') - 1) * .35 + rank('battleVigor') * .4;
+      limitedSkillDuration('warcry', 6 + math.max(0, rank('warcry') - 1) * .35);
   double rageOnHit({required bool protected}) =>
       3.0 + (protected ? rank('rallyingVoice') + rank('warDrums') * .5 : 0);
 
@@ -1272,10 +1386,12 @@ class Progress {
 
   double mitigate(double damage, {double protection = 0}) =>
       damage * 100 / (100 + armor * 3) * (1 - protection.clamp(0, .75));
-  void reward({bool boss = false, bool elite = false}) {
+  void reward({bool boss = false, bool elite = false, bool unique = false}) {
     kills++;
     gold += boss
         ? 100
+        : unique
+        ? 35
         : elite
         ? 20
         : 8;
@@ -1283,6 +1399,8 @@ class Progress {
     gainXp(
       boss
           ? 80
+          : unique
+          ? 26
           : elite
           ? 18
           : 8,
@@ -1382,6 +1500,9 @@ class Progress {
     return true;
   }
 
+  bool hasGift(WeaponGift ability) =>
+      equipped.values.any((gear) => gear.hasGift(ability));
+
   bool equip(Gear item) {
     if (!inventory.contains(item) || !item.base.usable(heroClass)) return false;
     equipped[item.base.slot] = item;
@@ -1413,19 +1534,31 @@ class Progress {
     int power = 0,
     int vitality = 0,
     int focus = 0,
-  }) => Gear(
-    _serial++,
-    def,
-    rarity: rarity,
-    power: power,
-    vitality: vitality,
-    focus: focus,
-  );
+    int? acquiredLevel,
+    List<WeaponGift>? gifts,
+  }) {
+    final acquisition = acquiredLevel ?? level;
+    if (acquisition < 1 || acquisition > 10000) {
+      throw RangeError.range(acquisition, 1, 10000, 'acquiredLevel');
+    }
+    return Gear(
+      _serial++,
+      def,
+      rarity: rarity,
+      power: gearAffixForLevel(power, acquisition),
+      vitality: gearAffixForLevel(vitality, acquisition),
+      focus: gearAffixForLevel(focus, acquisition),
+      acquiredLevel: acquisition,
+      gifts: gifts,
+    );
+  }
+
   Gear rollLoot(
     math.Random random, {
     bool boss = false,
     bool chest = false,
     bool elite = false,
+    bool unique = false,
   }) {
     final pool = gearCatalog
         .where(
@@ -1433,11 +1566,13 @@ class Progress {
               g.usable(heroClass) &&
               g.id != 'sentinel' &&
               g.id != 'linen' &&
-              (!(boss || elite) || g.slot == GearSlot.weapon),
+              (!(boss || elite || unique) || g.slot == GearSlot.weapon),
         )
         .toList();
     final def = pool[random.nextInt(pool.length)];
-    final rarity = boss || elite
+    final rarity = unique
+        ? Rarity.unique
+        : boss || elite
         ? Rarity.rare
         : random.nextDouble() < (chest ? .45 : .2)
         ? Rarity.magic

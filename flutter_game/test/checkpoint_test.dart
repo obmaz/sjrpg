@@ -31,7 +31,10 @@ void main() {
       s.progress.collect(gear);
       s.progress.equip(gear);
       s.hero.cooldowns['frostNova'] = 3;
-      s.hero.armorTime = 5;
+      s.hero.cooldowns['iceArmor'] = s.progress.skillCooldown(
+        mageSkills.firstWhere((skill) => skill.id == 'iceArmor'),
+      );
+      s.hero.armorTime = s.progress.iceArmorDuration;
       for (final memory in stageMemories) {
         final at = stageChests[memory.chest];
         s.hero.position.setValues(at.dx, at.dy);
@@ -50,7 +53,7 @@ void main() {
       expect(restored.memoryRewarded, true);
       expect(restored.elapsed, 68.25);
       expect(restored.hero.cooldowns['frostNova'], 3);
-      expect(restored.hero.armorTime, 5);
+      expect(restored.hero.armorTime, s.progress.iceArmorDuration);
       expect(s.loot, isNotEmpty);
       expect(
         restored.loot.map((loot) => loot.item.toSave()).toList(),

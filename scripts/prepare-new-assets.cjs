@@ -49,6 +49,9 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'actors-wraith',
         'actors-drone',
         'actors-viper',
+        'actors-bonehound',
+        'actors-clockwork-spider',
+        'actors-crystal-beetle',
         'actors-hero-backhand',
         'actors-hero-cleave',
         'actors-mage-cast',
@@ -102,10 +105,16 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
             ['hero-backhand', 'actors-hero-backhand'],
             ['hero-cleave', 'actors-hero-cleave'],
             ['mage-cast', 'actors-mage-cast'],
-            ...['boar', 'basilisk', 'wraith', 'drone', 'viper'].map((key) => [
-                key,
-                `actors-${key}`,
-            ]),
+            ...[
+                'boar',
+                'basilisk',
+                'wraith',
+                'drone',
+                'viper',
+                'bonehound',
+                'clockwork-spider',
+                'crystal-beetle',
+            ].map((key) => [key, `actors-${key}`]),
         ].map(([key, source]) => [
             key,
             JSON.parse(

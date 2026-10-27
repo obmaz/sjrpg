@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/enemy_difficulty.dart';
 import 'package:guardian_new/game_art.dart';
 
 import 'support/test_game.dart';
@@ -21,17 +22,29 @@ class WakeBudgetAdventure extends Adventure {
     Offset desired, {
     bool boss = false,
     EnemyTrait trait = EnemyTrait.none,
+    EnemyTier? tier,
+    EnemyPower? power,
   }) {
     attempts++;
     return rejectSpawns
         ? null
-        : super.spawnEnemy(kind, desired, boss: boss, trait: trait);
+        : super.spawnEnemy(
+            kind,
+            desired,
+            boss: boss,
+            trait: trait,
+            tier: tier,
+            power: power,
+          );
   }
 }
 
 Map<String, dynamic> dormantAt(Offset at) => {
   'kind': 'goblin',
   'trait': 'none',
+  'tier': 'normal',
+  'power': const EnemyPower(0, 1, 1).toSave(),
+  'wardPhase': 0.0,
   'area': null,
   'x': at.dx,
   'y': at.dy,

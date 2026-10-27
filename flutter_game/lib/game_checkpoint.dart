@@ -1,11 +1,14 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'adventure.dart';
 import 'battle_effects.dart';
 import 'encounters.dart';
 import 'enemy_catalog.dart';
+import 'enemy_difficulty.dart';
 import 'game_art.dart';
+import 'player_afflictions.dart';
 import 'travel_journal.dart';
 import 'world_model.dart';
 
@@ -35,6 +38,7 @@ class GameCheckpoint {
                 'y': boss.position.y,
                 'hp': boss.life.value,
                 'maxHp': boss.life.max,
+                'power': boss.power.toSave(),
               },
         'encounterVersion': 1,
         'encounters': session.encounterAreas.values
@@ -88,6 +92,7 @@ class GameCheckpoint {
         'dodgeClock': session.hero.dodgeClock,
         'armor': session.hero.armorTime,
         'frenzy': session.hero.frenzyTime,
+        'afflictions': session.afflictions.toSave(),
         'loot': session.loot
             .where((g) => !g.collected && !g.isRemoving)
             .map(
@@ -174,6 +179,11 @@ class GameCheckpoint {
 
   static GameCheckpoint? decode(String? text) => _decode(text);
 
+  /// Explicit death retry cleanses the rollback snapshot, never a normal resume.
+  GameCheckpoint forRevival() => decode(
+    jsonEncode({...data, 'afflictions': PlayerAfflictions().toSave()}),
+  )!;
+
   static GameCheckpoint? _decode(String? text) {
     if (text == null || text.length > _maximumEncodedLength) return null;
     try {
@@ -191,6 +201,9 @@ class GameCheckpoint {
   }) {
     try {
       if (data['version'] != 1) return null;
+      data['afflictions'] = PlayerAfflictions.fromSave(
+        data['afflictions'],
+      ).toSave();
       final mapVersion = data['mapVersion'] ?? 1;
       if (mapVersion != 1 && mapVersion != 2) return null;
       if (mapVersion == 1) {
@@ -456,6 +469,76 @@ class GameCheckpoint {
           cooldowns[id] = (cooldowns[id] as num) * Progress.skillCooldownScale;
         }
       }
+      // Older survivors gain regional strength once, retaining every wound.
+      // The snapshot travels with each enemy, including archived stage scenes.
+      for (final raw in [...enemies, ?boss]) {
+        final isBoss = identical(raw, boss);
+        final legacy = raw['power'] == null;
+        final oldTrait = isBoss
+            ? EnemyTrait.none
+            : EnemyTrait.values.firstWhere((t) => t.name == raw['trait']);
+        final tierName =
+            raw['tier'] ?? (oldTrait == EnemyTrait.none ? 'normal' : 'elite');
+        final tier = EnemyTier.values
+            .where((t) => t.name == tierName)
+            .firstOrNull;
+        if (tier == null ||
+            isBoss && tier != EnemyTier.normal ||
+            !isBoss &&
+                tier == EnemyTier.normal &&
+                oldTrait != EnemyTrait.none) {
+          return null;
+        }
+        final power = legacy
+            ? EnemyPower.forSpawn(
+                stage: stage,
+                origin: hubOrigin,
+                at: Offset(
+                  (raw['x'] as num).toDouble(),
+                  (raw['y'] as num).toDouble(),
+                ),
+                tier: tier,
+                boss: isBoss,
+              )
+            : EnemyPowerSave.fromSave(raw['power']);
+        if (legacy) {
+          raw['hp'] = (raw['hp'] as num) * power.healthMultiplier;
+          raw['maxHp'] = (raw['maxHp'] as num) * power.healthMultiplier;
+        }
+        raw['power'] = power.toSave();
+        if (!isBoss) {
+          raw['tier'] = tier.name;
+          raw['wardPhase'] ??= 0.0;
+          if (!number(raw['wardPhase'], 8) || raw['wardPhase'] == 8) {
+            return null;
+          }
+        }
+      }
+      // Older saves could retain protection after its skill became ready.
+      // Keep the same progress/cooldowns, but trim effects to their own window.
+      final cooldowns = data['cooldowns'] as Map;
+      final protectionId = progress.heroClass == HeroClass.warrior
+          ? 'warcry'
+          : 'iceArmor';
+      final protectionDuration = progress.heroClass == HeroClass.warrior
+          ? progress.warcryDuration
+          : progress.iceArmorDuration;
+      data['armor'] = math.min(
+        (data['armor'] as num).toDouble(),
+        math.min(
+          protectionDuration,
+          ((cooldowns[protectionId] as num?)?.toDouble() ?? 0) *
+              Progress.skillEffectUptime,
+        ),
+      );
+      data['frenzy'] = math.min(
+        (data['frenzy'] as num).toDouble(),
+        math.min(
+          progress.frenzyDuration,
+          ((cooldowns['frenzy'] as num?)?.toDouble() ?? 0) *
+              Progress.skillEffectUptime,
+        ),
+      );
       data['balance'] = 3;
       if (includeTravel) {
         data['travel'] = _readTravel(data, progress).toSave();
@@ -726,6 +809,7 @@ class GameCheckpoint {
           (savedBoss['y'] as num).toDouble(),
         ),
         boss: true,
+        power: EnemyPowerSave.fromSave(savedBoss['power']),
       );
       if (boss != null) {
         boss.life.initial((savedBoss['maxHp'] as num).toDouble());
@@ -753,6 +837,7 @@ class GameCheckpoint {
       )..age = (ground['age'] as num).toDouble();
       session.loot.add(item);
     }
+    session.afflictions = PlayerAfflictions.fromSave(data['afflictions']);
     session.syncLife();
     return session;
   }

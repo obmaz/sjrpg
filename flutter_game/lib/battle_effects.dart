@@ -4,29 +4,28 @@ import 'dart:ui' as ui;
 import 'package:bonfire/bonfire.dart';
 
 import 'adventure.dart';
+import 'area_damage.dart';
 import 'audio_settings.dart';
 import 'boss_attacks.dart';
 import 'device_settings.dart';
 import 'effect_visibility.dart';
 import 'fire_plume.dart';
 import 'gear_icon_art.dart';
+import 'player_afflictions.dart';
 import 'ranked_vfx.dart';
 import 'spell_vfx.dart';
 import 'world_model.dart';
 
-void areaStrike(
+List<HuntEnemy> _areaTargets(
   Adventure s,
   ui.Offset center,
-  double radius,
-  double damage, {
-  double stun = 0,
-  double slow = 0,
-  int maxTargets = 3,
+  double radius, {
+  required int maxTargets,
   Set<HuntEnemy>? castTargets,
   Set<int>? castChests,
   Set<HuntEnemy> excluded = const {},
 }) {
-  if (maxTargets <= 0 || !s.combatAllowed) return;
+  if (maxTargets <= 0 || !s.combatAllowed) return [];
   final targets = castTargets ?? <HuntEnemy>{};
   final candidates =
       s.mobs
@@ -46,15 +45,33 @@ void areaStrike(
               ? order
               : s.mobs.indexOf(a).compareTo(s.mobs.indexOf(b));
         });
+  final selected = <HuntEnemy>[];
   for (final mob in candidates) {
     if (!targets.contains(mob)) {
       if (targets.length + (castChests?.length ?? 0) >= maxTargets) continue;
       targets.add(mob);
     }
+    selected.add(mob);
+  }
+  return selected;
+}
+
+// The caller chooses a whole eligible group before applying one shared scale.
+// In particular, projectile direct hits and their splash share this multiplier.
+void _damageAreaTargets(
+  Adventure s,
+  List<HuntEnemy> targets,
+  ui.Offset center,
+  double damage, {
+  required double multiplier,
+  double stun = 0,
+  double slow = 0,
+}) {
+  for (final mob in targets) {
     final d = mob.body.center - center;
     if (!s.hit(
       mob,
-      damage,
+      damage * multiplier,
       d.distance > 0 ? d / d.distance * 16 : ui.Offset.zero,
       origin: center,
     )) {
@@ -63,7 +80,15 @@ void areaStrike(
     mob.stun = math.max(mob.stun, stun * (mob.boss ? .35 : 1));
     mob.slow = math.max(mob.slow, slow);
   }
-  var remaining = maxTargets - targets.length - (castChests?.length ?? 0);
+}
+
+void _areaChests(
+  Adventure s,
+  ui.Offset center,
+  double radius,
+  int remaining, {
+  Set<int>? castChests,
+}) {
   for (final index in s.attackableChests(center, radius)) {
     if (remaining <= 0) break;
     if (s.breakChest(index)) {
@@ -71,6 +96,47 @@ void areaStrike(
       remaining--;
     }
   }
+}
+
+void areaStrike(
+  Adventure s,
+  ui.Offset center,
+  double radius,
+  double damage, {
+  double stun = 0,
+  double slow = 0,
+  int maxTargets = 3,
+  Set<HuntEnemy>? castTargets,
+  Set<int>? castChests,
+  Set<HuntEnemy> excluded = const {},
+}) {
+  if (maxTargets <= 0 || !s.combatAllowed) return;
+  final targets = castTargets ?? <HuntEnemy>{};
+  final selected = _areaTargets(
+    s,
+    center,
+    radius,
+    maxTargets: maxTargets,
+    castTargets: targets,
+    castChests: castChests,
+    excluded: excluded,
+  );
+  _damageAreaTargets(
+    s,
+    selected,
+    center,
+    damage,
+    multiplier: enemyGroupDamageScale(selected.length),
+    stun: stun,
+    slow: slow,
+  );
+  _areaChests(
+    s,
+    center,
+    radius,
+    maxTargets - targets.length - (castChests?.length ?? 0),
+    castChests: castChests,
+  );
 }
 
 void paintCombatEffect(
@@ -237,6 +303,8 @@ class ShadowBolt extends GameComponent with EffectVisibility {
     this.damage = 8,
     this.technological = false,
     this.venomous = false,
+    this.status,
+    this.statusPotency = 1,
   }) : direction = ui.Offset(math.cos(angle), math.sin(angle)) {
     position = Vector2(at.dx, at.dy);
     size = Vector2.all(12);
@@ -245,6 +313,8 @@ class ShadowBolt extends GameComponent with EffectVisibility {
   final ui.Offset direction;
   final double damage;
   final bool technological, venomous;
+  final PlayerStatus? status;
+  final double statusPotency;
   double remaining = 2;
   bool resolved = false;
   @override
@@ -262,7 +332,13 @@ class ShadowBolt extends GameComponent with EffectVisibility {
     if (!session.active || resolved) return;
     dt = math.min(dt, math.min(.05, remaining));
     remaining -= dt;
-    final distance = dt * (technological ? 320 : 280),
+    final distance =
+            dt *
+            (status == PlayerStatus.root
+                ? 240
+                : technological
+                ? 320
+                : 280),
         steps = math.max(1, (distance / 5).ceil());
     for (var i = 0; i < steps; i++) {
       final at = position.toOffset() + direction * (distance / steps);
@@ -275,7 +351,12 @@ class ShadowBolt extends GameComponent with EffectVisibility {
       }
       position.setValues(at.dx, at.dy);
       if (session.hero.body.inflate(7).contains(at)) {
-        session.hurtHero(damage, origin: at);
+        session.hurtHero(
+          damage,
+          origin: at,
+          status: status,
+          statusPotency: statusPotency,
+        );
         finish();
         return;
       }
@@ -288,6 +369,57 @@ class ShadowBolt extends GameComponent with EffectVisibility {
   void render(ui.Canvas canvas) {
     super.render(canvas);
     const tip = ui.Offset(0, -14);
+    if (status == PlayerStatus.root) {
+      final axis = ui.Offset(-direction.dy, direction.dx);
+      final net = tip - direction * 8;
+      final paint = ui.Paint()
+        ..color = const ui.Color(0xffbca37c)
+        ..strokeWidth = 1.5;
+      for (var i = -2; i <= 2; i++) {
+        canvas.drawLine(
+          net + direction * (i * 5) - axis * 11,
+          net + direction * (i * 5) + axis * 11,
+          paint,
+        );
+        canvas.drawLine(
+          net + axis * (i * 5) - direction * 11,
+          net + axis * (i * 5) + direction * 11,
+          paint,
+        );
+      }
+      canvas.drawCircle(
+        net,
+        15,
+        ui.Paint()
+          ..color = const ui.Color(0xff7feafa)
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+      return;
+    }
+    if (status == PlayerStatus.blind) {
+      canvas.drawCircle(
+        tip,
+        10,
+        ui.Paint()..color = const ui.Color(0xff192f4a),
+      );
+      canvas.drawCircle(
+        tip,
+        8,
+        ui.Paint()
+          ..color = const ui.Color(0xffc9b6ff)
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+      canvas.drawLine(
+        tip - direction * 20,
+        tip,
+        ui.Paint()
+          ..color = const ui.Color(0xff8de7f4)
+          ..strokeWidth = 3,
+      );
+      return;
+    }
     if (venomous) {
       canvas.drawLine(
         tip - direction * 28,
@@ -461,20 +593,39 @@ class ArcaneBolt extends GameComponent with EffectVisibility {
             !mob.isDead &&
             !mob.isRemoving &&
             mob.body.inflate(7).contains(at)) {
-          if (!session.hit(mob, damage, direction * 12, origin: at)) {
+          if (!session.canHitEnemy(mob, origin: at)) {
+            finish();
+            return;
+          }
+          final splash = explosive
+              ? _areaTargets(
+                  session,
+                  at,
+                  85,
+                  maxTargets: targetLimit - 1,
+                  excluded: {mob},
+                )
+              : <HuntEnemy>[];
+          final multiplier = enemyGroupDamageScale(1 + splash.length);
+          if (!session.hit(
+            mob,
+            damage * multiplier,
+            direction * 12,
+            origin: at,
+          )) {
             finish();
             return;
           }
           if (element == 'ice') mob.slow = math.max(mob.slow, 1.5);
           if (explosive) {
-            areaStrike(
+            _damageAreaTargets(
               session,
+              splash,
               at,
-              85,
               damage * .35,
-              maxTargets: targetLimit - 1,
-              excluded: {mob},
+              multiplier: multiplier,
             );
+            _areaChests(session, at, 85, targetLimit - 1 - splash.length);
           }
           session.game?.add(
             element == 'lightning'
@@ -720,6 +871,7 @@ void chainLightning(
   int rank = 1,
 }) {
   final points = <ui.Offset>[from], visited = <HuntEnemy>{};
+  final hits = <({HuntEnemy enemy, ui.Offset origin, double damage})>[];
   for (var i = 0; i < count.clamp(0, 32); i++) {
     final at = points.last;
     final candidates =
@@ -750,7 +902,16 @@ void chainLightning(
     final target = candidates.first;
     visited.add(target);
     points.add(target.body.center);
-    if (!s.hit(target, damage * math.pow(.9, i), ui.Offset.zero, origin: at)) {
+    hits.add((enemy: target, origin: at, damage: damage * math.pow(.9, i)));
+  }
+  final multiplier = enemyGroupDamageScale(hits.length);
+  for (final hit in hits) {
+    if (!s.hit(
+      hit.enemy,
+      hit.damage * multiplier,
+      ui.Offset.zero,
+      origin: hit.origin,
+    )) {
       break;
     }
   }

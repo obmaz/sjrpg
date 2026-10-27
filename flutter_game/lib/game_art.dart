@@ -82,6 +82,9 @@ class GameArt {
             'actors-wraith',
             'actors-drone',
             'actors-viper',
+            'actors-bonehound',
+            'actors-clockwork-spider',
+            'actors-crystal-beetle',
             'cyber-props',
             'ruin-props',
             'village-scene',
@@ -298,6 +301,9 @@ class GameArt {
       'wraith': ('wraith', 0, 8),
       'drone': ('drone', 0, 8),
       'viper': ('viper', 0, 8),
+      'bonehound': ('bonehound', 0, 8),
+      'clockwork-spider': ('clockwork-spider', 0, 8),
+      'crystal-beetle': ('crystal-beetle', 0, 8),
       'wolf': ('creatures-a', 1, 8),
       'skeleton': ('creatures-a', 2, 8),
       'cultist': ('creatures-a', 3, 8),
@@ -341,6 +347,9 @@ class GameArt {
           'wraith',
           'drone',
           'viper',
+          'bonehound',
+          'clockwork-spider',
+          'crystal-beetle',
         }.contains(key)
         ? facingFrame(angle, 8) * 2 + phase % 2
         : count == 16

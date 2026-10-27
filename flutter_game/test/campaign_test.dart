@@ -144,9 +144,17 @@ void main() {
             stage == WorldStage.sands
                 ? ['scorpion', 'mummy', 'cultist', 'basilisk', 'viper']
                 : stage == WorldStage.past || stage == WorldStage.tombs
-                ? ['skeleton', 'troll', 'cultist', 'wraith', 'viper']
+                ? [
+                    'skeleton',
+                    'troll',
+                    'cultist',
+                    'wraith',
+                    'viper',
+                    'bonehound',
+                  ]
                 : stage == WorldStage.convergence
                 ? [
+                    'crystal-beetle',
                     'wolf',
                     'wraith',
                     'boar',
@@ -156,7 +164,7 @@ void main() {
                     'drone',
                     'goblin',
                   ]
-                : ['cyber', 'gunner', 'drone'],
+                : ['cyber', 'gunner', 'drone', 'clockwork-spider'],
           ),
         ),
       );

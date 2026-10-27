@@ -1,6 +1,9 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
 import 'adventure.dart';
+import 'affliction_widgets.dart';
 import 'game_art.dart';
 import 'world_model.dart';
 
@@ -131,6 +134,11 @@ class GameHud extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+          Positioned(
+            left: 3,
+            top: 8,
+            child: AfflictionIcons(session.afflictions),
           ),
           Positioned(
             top: 60,
@@ -490,7 +498,7 @@ class MapPainter extends CustomPainter {
           mob.body.center,
           mob.isElite ? 42 : 30,
           Paint()
-            ..color = mob.isElite ? mob.trait.color : const Color(0xffef785e),
+            ..color = mob.isElite ? mob.tierColor : const Color(0xffef785e),
         );
       }
       for (var i = 0; i < session.stageChestLocations.length; i++) {

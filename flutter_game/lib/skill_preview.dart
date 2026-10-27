@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'game_ui.dart';
 import 'rpg_model.dart';
 import 'skill_preview_model.dart';
@@ -71,7 +72,7 @@ class SkillRankPreview extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.only(top: 4),
               child: Text(
-                '피해는 적의 방어 적용 전입니다',
+                '피해는 대상 1명·방어 적용 전입니다. 여럿을 함께 맞히면 1명당 피해가 줄어듭니다',
                 style: TextStyle(color: Color(0xffa4bcb6), fontSize: 12),
               ),
             ),

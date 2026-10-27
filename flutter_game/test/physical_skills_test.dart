@@ -107,7 +107,8 @@ void main() {
           s.progress.skillDamage(
             s.progress.skills.firstWhere((d) => d.id == 'crushingBlow'),
           ) *
-          1.8;
+          1.8 *
+          .7;
       expect(targets.where((m) => m.life.value < 500).length, 3);
       for (final m in targets.where((m) => m.life.value < 500)) {
         expect(m.life.value, closeTo(500 - damage, .001));

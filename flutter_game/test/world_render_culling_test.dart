@@ -208,15 +208,6 @@ void main() {
       pouncer,
       const ui.Rect.fromLTWH(6230, 4195, 35, 35),
     );
-    final gunner = _Enemy(s, 'gunner', const ui.Offset(6000, 4200))
-      ..gameRef = game
-      ..windup = .001
-      ..bearing = 0;
-    await expectSameVisiblePixels(
-      game,
-      gunner,
-      const ui.Rect.fromLTWH(6240, 4200, 40, 25),
-    );
     final troll = _Enemy(s, 'troll', const ui.Offset(6000, 4200))
       ..gameRef = game
       ..windup = .2
@@ -238,6 +229,24 @@ void main() {
       const ui.Rect.fromLTWH(5960, 4140, 90, 30),
     );
   });
+
+  for (final kind in ['gunner', 'drone', 'clockwork-spider']) {
+    test(
+      '$kind aiming beam remains visible beyond an offscreen body',
+      () async {
+        final game = _Game(), s = session(game);
+        final enemy = _Enemy(s, kind, const ui.Offset(6000, 4200))
+          ..gameRef = game
+          ..windup = .001
+          ..bearing = 0;
+        await expectSameVisiblePixels(
+          game,
+          enemy,
+          const ui.Rect.fromLTWH(6240, 4200, 40, 25),
+        );
+      },
+    );
+  }
 
   for (final kind in ['tree', 'rock', 'cactus', 'ruin-0', 'city-0', 'relay']) {
     test('$kind crown remains visible above an offscreen prop body', () async {

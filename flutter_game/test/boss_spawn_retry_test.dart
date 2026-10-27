@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/enemy_difficulty.dart';
 import 'package:guardian_new/game_art.dart';
 
 import 'support/test_game.dart';
@@ -14,12 +15,21 @@ class CountingAdventure extends Adventure {
     Offset desired, {
     bool boss = false,
     EnemyTrait trait = EnemyTrait.none,
+    EnemyTier? tier,
+    EnemyPower? power,
   }) {
     if (boss) {
       attempts++;
       if (!allowBoss) return null;
     }
-    return super.spawnEnemy(kind, desired, boss: boss, trait: trait);
+    return super.spawnEnemy(
+      kind,
+      desired,
+      boss: boss,
+      trait: trait,
+      tier: tier,
+      power: power,
+    );
   }
 }
 

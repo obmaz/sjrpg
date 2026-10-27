@@ -176,17 +176,22 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
       return [
         damage,
         protection(),
-        value('보호 지속', (p) => p.warcryDuration, suffix: '초', digits: 1),
+        value('보호 지속', (p) => p.warcryDuration, suffix: '초', digits: 2),
+      ];
+    case 'frenzy':
+      return [
+        damage,
+        value('강화 지속', (p) => p.frenzyDuration, suffix: '초', digits: 2),
       ];
     case 'iceArmor':
       return [
         protection(),
-        value('보호 지속', (p) => p.iceArmorDuration, suffix: '초', digits: 1),
+        value('보호 지속', (p) => p.iceArmorDuration, suffix: '초', digits: 2),
       ];
     case 'frostNova':
       return [
         damage,
-        value('감속 지속', (p) => p.novaSlowDuration, suffix: '초', digits: 1),
+        value('감속 지속', (p) => p.novaSlowDuration, suffix: '초', digits: 2),
       ];
     case 'mastery':
     case 'arcaneMastery':
@@ -203,7 +208,12 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
     case 'battleVigor':
       return [
         value('최대 생명', (p) => p.maxHp),
-        value('함성 지속', (p) => p.warcryDuration, suffix: '초', digits: 1),
+        value(
+          '함성 피해 감소',
+          (p) => p.rank('warcry') == 0 ? 0 : p.skillProtection('warcry') * 100,
+          suffix: '%',
+          digits: 1,
+        ),
       ];
     case 'rallyingVoice':
       return [value('보호 중 적중 분노', (p) => p.rageOnHit(protected: true))];

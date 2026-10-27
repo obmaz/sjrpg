@@ -57,7 +57,7 @@ void main() {
         }
         final bad = p.rollLoot(Random(1), elite: true).toSave()
           ..['gift'] = 'unknown';
-        expect(() => Gear.fromSave(bad), throwsStateError);
+        expect(() => Gear.fromSave(bad), throwsFormatException);
       }
     },
   );
