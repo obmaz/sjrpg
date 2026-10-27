@@ -1964,6 +1964,25 @@ class AdventureWorld {
     bool avoidSanctuary = false,
   }) {
     const grid = 32.0 * worldScale;
+    const goalRadius = 42.0;
+    if (blocked(to & size, avoidSanctuary: avoidSanctuary)) {
+      // A* can stop short of a blocked target, including just off a bank.
+      // Reject only when none of its exact lattice goals fits the whole body.
+      final gx = (to.dx / grid).floor(), gy = (to.dy / grid).floor();
+      final reach = (goalRadius / grid).ceil();
+      var hasGoal = false;
+      for (var y = gy - reach; y <= gy + reach && !hasGoal; y++) {
+        for (var x = gx - reach; x <= gx + reach; x++) {
+          final goal = Offset(x * grid, y * grid);
+          if ((goal - to).distance < goalRadius &&
+              !blocked(goal & size, avoidSanctuary: avoidSanctuary)) {
+            hasGoal = true;
+            break;
+          }
+        }
+      }
+      if (!hasGoal) return [];
+    }
     final sx = (from.dx / grid).floor(), sy = (from.dy / grid).floor();
     Offset position(math.Point<int> p) => Offset(p.x * grid, p.y * grid);
     final anchors = <math.Point<int>>[];
@@ -2000,7 +2019,7 @@ class AdventureWorld {
     while (front.isNotEmpty && visited++ < 700) {
       final current = front.removeFirst();
       final p = current.point, at = position(p);
-      if ((at - to).distance < 42) {
+      if ((at - to).distance < goalRadius) {
         final path = <Offset>[];
         var c = p;
         while (parents.containsKey(c)) {
