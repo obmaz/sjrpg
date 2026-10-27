@@ -1251,15 +1251,26 @@ class Adventure extends ChangeNotifier {
     final enforceSpace = (steer || personalSpace) && !hasOverlap;
     final heroBody = hero.body;
     final heroInWay = avoidHero && search.overlaps(heroBody);
+    final storedPosition = Vector2.zero();
+    ui.Offset stored(ui.Offset at) {
+      // Validate Bonfire's actual Float32 endpoint while preserving the double
+      // accumulator between geometric substeps. Only the final result is stored.
+      storedPosition.setValues(at.dx, at.dy);
+      return storedPosition.toOffset();
+    }
+
     if (neighbors.isEmpty && !heroInWay) {
-      return world.moveEnemy(from, delta, size);
+      final next = stored(world.moveEnemy(from, delta, size));
+      if (!world.blocksEnemy(next & size)) return next;
     }
     if (steer) delta = enemySpacing.steer(mover, original, delta, neighbors);
     final steps = math.max(1, (delta.distance / 6).ceil());
     final step = delta / steps.toDouble();
     var at = from;
     bool permits(ui.Offset before, ui.Offset after) {
-      final beforeBody = before & size, afterBody = after & size;
+      final beforeBody = stored(before) & size,
+          afterBody = stored(after) & size;
+      if (world.blocksEnemy(afterBody)) return false;
       if (heroInWay && !EnemySpacing.permits(beforeBody, afterBody, heroBody)) {
         return false;
       }
@@ -1314,7 +1325,7 @@ class Adventure extends ChangeNotifier {
         }
       }
     }
-    return at;
+    return stored(at);
   }
 
   void settleEnemy(HuntEnemy mover, double dt) {
@@ -1370,19 +1381,29 @@ class Adventure extends ChangeNotifier {
     EnemyPower? power,
   }) {
     final size = boss ? const ui.Size(48, 40) : const ui.Size(24, 22);
+    final storedPosition = Vector2.zero();
     final p = world.spawnNear(
       desired,
       size,
       avoidSanctuary: true,
-      occupied: (body) =>
-          body.overlaps(hero.body) ||
-          mobs.any(
-            (enemy) =>
-                !enemy.isDead &&
-                !enemy.isRemoving &&
-                !enemy.encounterDormant &&
-                enemy.body.overlaps(body),
-          ),
+      occupied: (body) {
+        storedPosition.setValues(body.left, body.top);
+        final storedBody = ui.Rect.fromLTWH(
+          storedPosition.x,
+          storedPosition.y,
+          body.width,
+          body.height,
+        );
+        return world.blocksEnemy(storedBody) ||
+            storedBody.overlaps(hero.body) ||
+            mobs.any(
+              (enemy) =>
+                  !enemy.isDead &&
+                  !enemy.isRemoving &&
+                  !enemy.encounterDormant &&
+                  enemy.body.overlaps(storedBody),
+            );
+      },
     );
     if (p == null) return null;
     final enemy = HuntEnemy(
