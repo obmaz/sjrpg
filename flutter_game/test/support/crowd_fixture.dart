@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
@@ -8,7 +11,7 @@ import 'test_game.dart';
 
 class CrowdProbeWorld extends AdventureWorld {
   CrowdProbeWorld({super.stage});
-  bool recording = false;
+  bool recording = false, heroSheltered = false;
   Offset heroGoal = Offset.zero;
   int frame = 0;
   final cornerSearchFrames = <int>{};
@@ -17,7 +20,9 @@ class CrowdProbeWorld extends AdventureWorld {
   bool clearEnemyLine(Offset from, Offset to, Size size) {
     // Normal pursuit checks the hero or24px terrain lattice nodes. Fractional
     // local-corner queries identify bounded searches without runtime hooks.
+    // Sheltered patrols also check fractional goals, but cannot pursue at all.
     if (recording &&
+        !heroSheltered &&
         size == const Size(24, 22) &&
         to != heroGoal &&
         (to.dx % 24 != 0 || to.dy % 24 != 0)) {
@@ -32,6 +37,8 @@ class CrowdFixture extends Adventure {
     : observed = CrowdProbeWorld(stage: stage),
       super(GameArt());
   final CrowdProbeWorld observed;
+  bool historicalCrowd = false;
+  int birthCursor = 0;
   @override
   AdventureWorld get world => observed;
 }
@@ -47,6 +54,7 @@ CrowdFixture sandsCrowd() {
   expect(s.sheltered, false);
   expect(s.world.blocked(s.hero.body), false);
   s.observed.recording = true;
+  s.historicalCrowd = true;
   return s;
 }
 
@@ -63,10 +71,45 @@ void assertCrowdBodies(Adventure s) {
   }
 }
 
+// Keep the original dense geometry independent of future production pack sizes.
+// This is a frozen stress fixture, not a second implementation of spawning.
+final _historicalBirths =
+    (jsonDecode(
+              File(
+                'test/fixtures/crowd_mobile70_births.json',
+              ).readAsStringSync(),
+            )
+            as Map<String, dynamic>)['births']
+        as List;
+
 void stepCrowd(CrowdFixture s, double dt) {
   if (dt > 0) s.observed.frame++;
   s.observed.heroGoal = s.hero.position.toOffset();
+  if (s.historicalCrowd) s.waveTime = 10000;
   s.tick(dt);
+  s.observed.heroSheltered = s.sheltered;
+  if (s.historicalCrowd && dt > 0) {
+    while (s.birthCursor < _historicalBirths.length) {
+      final birth = _historicalBirths[s.birthCursor] as Map;
+      final frame = birth['frame'] as int;
+      final time = frame == 0 ? 0.0 : (frame + 1) / 30;
+      if (s.elapsed + 1e-8 < time) break;
+      final enemy = birth['enemy'] as Map;
+      final at = Offset(
+        (enemy['x'] as num).toDouble(),
+        (enemy['y'] as num).toDouble(),
+      );
+      final mob = s.spawnEnemy(enemy['kind'] as String, at)!;
+      expect(
+        mob.body.topLeft,
+        at,
+        reason: 'historic stress births must remain walkable',
+      );
+      expect(mob.life.max, enemy['maxHp']);
+      mob.encounterKey = enemy['area'] as String;
+      s.birthCursor++;
+    }
+  }
   for (final m in s.mobs.toList()) {
     m.update(dt);
     assertCrowdBodies(s);

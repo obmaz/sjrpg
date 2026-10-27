@@ -69,7 +69,7 @@ void main() {
           expect(enemy.lastClearPosition, enemy.body.topLeft);
         }
       }
-      expect(session.mobs.length, 6);
+      expect(session.mobs.length, 4);
       expect(session.mobs[3].kind, 'scorpion');
       expect(session.progress.hp, greaterThan(0));
     },

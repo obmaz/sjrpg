@@ -38,6 +38,8 @@ void main() {
       Size(320, 600),
       Size(844, 390),
       Size(915, 412),
+      Size(756, 506),
+      Size(1024, 768),
     ]) {
       testWidgets('$type learned mobility fits full controls at $size text1.3', (
         tester,
@@ -120,6 +122,9 @@ void main() {
           for (var i = 0; i < targets.evaluate().length; i++)
             tester.getRect(targets.at(i)),
         ];
+        for (final element in find.byType(MenuButton).evaluate()) {
+          rects.add(tester.getRect(find.byWidget(element.widget)));
+        }
         final viewport = Offset.zero & size;
         final stick = tester.getRect(find.byType(GameStick));
         for (var i = 0; i < rects.length; i++) {

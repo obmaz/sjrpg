@@ -199,7 +199,7 @@ void main() {
     );
   });
   test(
-    'moving cannot bypass the slower spawn interval and packs are larger',
+    'moving cannot bypass the slower spawn interval or reduced pack cap',
     () {
       final s = session();
       s.waveTime = 0;
@@ -210,11 +210,11 @@ void main() {
       for (var i = 0; i < 20; i++) {
         s.tick(.05);
       }
-      expect(s.living, greaterThanOrEqualTo(6));
+      expect(s.living, 4);
       for (var i = 0; i < 8; i++) {
         s.spawnPack();
       }
-      expect(s.living, lessThanOrEqualTo(40));
+      expect(s.living, lessThanOrEqualTo(20));
     },
   );
   test('all mandatory sites gate the boss, reward once, and persist', () {

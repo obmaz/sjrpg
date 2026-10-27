@@ -166,16 +166,16 @@ void main() {
     () {
       final s = field();
       s.spawnPack(initial: true);
-      expect(s.living, 4);
+      expect(s.living, 3);
       s.mobs.clear();
       s.encounterAreas.clear();
       s.spawnPack();
-      expect(s.living, 6);
+      expect(s.living, 4);
       s.progress.level = 5;
       s.mobs.clear();
       s.encounterAreas.clear();
       s.spawnPack();
-      expect(s.living, 8);
+      expect(s.living, 5);
       final area = s.encounterAreas[s.encounterKey]!;
       expect(area.waves, 1);
       while (s.living < CombatBalance.maxActiveEnemies) {
@@ -184,10 +184,10 @@ void main() {
         s.spawnPack();
         expect(s.living, greaterThan(before));
       }
-      expect(s.living, 28);
+      expect(s.living, 20);
       final spent = area.waves;
       s.spawnPack();
-      expect(s.living, 28);
+      expect(s.living, 20);
       expect(area.waves, spent);
     },
   );
@@ -214,8 +214,8 @@ void main() {
         restored.elapsed += .6;
         restored.wakeEnemies();
       }
-      expect(restored.living, 28);
-      expect(restored.dormantEnemies, hasLength(12));
+      expect(restored.living, 20);
+      expect(restored.dormantEnemies, hasLength(20));
       final saved = GameCheckpoint.capture(restored)!;
       expect(saved.data['enemies'].length, 40);
       for (final enemy in saved.data['enemies']) {

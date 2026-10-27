@@ -957,6 +957,28 @@ class TerrainArt {
       );
     }
     c.restore();
+    // The entire settlement shares one ground material. Paint after biome
+    // patches and trails so the workshop does not become an isolated grass lot;
+    // retain visible water and render the authored fountain scene above it.
+    final sanctuary = world.sanctuary;
+    if (sanctuary.protects(area)) {
+      c.save();
+      c.clipPath(dryGroundPath, doAntiAlias: false);
+      c.drawCircle(
+        sanctuary.center,
+        sanctuary.radius,
+        ui.Paint()..shader = art.materials[world.stage.settlementMaterial],
+      );
+      c.drawCircle(
+        sanctuary.center,
+        sanctuary.radius - 6,
+        ui.Paint()
+          ..color = world.stage.sanctuaryColor.withValues(alpha: .32)
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 12,
+      );
+      c.restore();
+    }
     for (final bridge in world.bridges) {
       if (!bridge.overlaps(area)) continue;
       c.drawImageRect(
@@ -980,7 +1002,6 @@ class TerrainArt {
         ui.Paint()..filterQuality = ui.FilterQuality.medium,
       );
     }
-    final sanctuary = world.sanctuary;
     if (sanctuary.protects(area.inflate(4))) {
       final color = world.stage.sanctuaryColor;
       c.drawCircle(

@@ -23,8 +23,10 @@ class GameHud extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = session.progress;
     final width = MediaQuery.sizeOf(context).width;
-    final short = MediaQuery.sizeOf(context).height < 520;
-    final statusRight = math.max(104.0, width - 360);
+    final height = MediaQuery.sizeOf(context).height;
+    final landscape = width > height && width >= 500;
+    final short = height < 520 || landscape;
+    final statusRight = math.max(104.0, width - (landscape ? 280 : 360));
     final resourceHeight = math.max(
       22.0,
       ResourceMeter.minimumHeight(MediaQuery.textScalerOf(context)),
@@ -102,7 +104,7 @@ class GameHud extends StatelessWidget {
           Positioned(
             left: 104,
             top: statTop,
-            right: statusRight,
+            right: landscape ? math.max(104.0, width - 320) : statusRight,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

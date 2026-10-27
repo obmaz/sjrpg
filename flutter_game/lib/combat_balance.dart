@@ -19,7 +19,7 @@ abstract final class CombatBalance {
   static const levelRageGain = 10.0;
   static const levelManaFraction = .35;
   static const enemyDamageScale = 1.2;
-  static const maxActiveEnemies = 28;
+  static const maxActiveEnemies = 20;
   static const potionBundleSize = 2;
   static const healingPotionPrice = 80;
   static const resourcePotionPrice = 72;
@@ -37,10 +37,10 @@ abstract final class CombatBalance {
     required int playerLevel,
     required int living,
   }) => initial
-      ? 4
+      ? 3
       : playerLevel < 3
-      ? 6
-      : living < 8
-      ? 8
-      : 7;
+      ? 4
+      : living < 6
+      ? 5
+      : 4;
 }

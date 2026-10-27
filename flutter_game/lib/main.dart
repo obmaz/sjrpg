@@ -729,9 +729,10 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
       builder: (context, child) {
         final media = MediaQuery.of(context),
             width = media.size.width,
-            short = media.size.height < 500;
-        final landscapeControls = short && width >= 500;
-        final tightLandscape = landscapeControls && width < 600;
+            landscape = width > media.size.height && width >= 500,
+            short = media.size.height < 500 || landscape;
+        final landscapeControls = landscape;
+        final tightLandscape = landscapeControls && width < 700;
         final sideGuide = landscapeControls || width >= 600;
         final stick = short && width < 500
                 ? math.min(112.0, math.max(44.0, media.size.height - 318))
@@ -741,7 +742,11 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 ? 112.0
                 : 142.0,
             attack = width < 360 ? 90.0 : 104.0,
-            bottom = short ? 86.0 : 112.0;
+            bottom = landscape && width >= 700
+                ? 28.0
+                : short
+                ? 86.0
+                : 112.0;
         final modal = adventure.defeated
             ? 'defeat'
             : adventure.won
@@ -801,6 +806,13 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                       (94.0, 168.0, 48.0),
                       (94.0, 112.0, 48.0),
                     ]
+            : landscape && width >= 700
+            ? [
+                (258.0, 136.0, 48.0),
+                (202.0, 136.0, 48.0),
+                (258.0, 80.0, 48.0),
+                (202.0, 80.0, 48.0),
+              ]
             : short
             ? [
                 (258.0, 80.0, 48.0),
@@ -1023,12 +1035,19 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 Positioned(
                   left: short && width >= 500 ? 136 : 12,
                   top: short
-                      ? media.padding.top + (guide == null ? 164 : 144)
+                      ? media.padding.top +
+                            (landscape
+                                ? guide == null
+                                      ? 116
+                                      : 164
+                                : guide == null
+                                ? 164
+                                : 144)
                       : null,
                   bottom: short ? null : bottom + stick + 12,
                   width: short
                       ? width >= 500
-                            ? (width - 450).clamp(100, 320).toDouble()
+                            ? (width - 450).clamp(100, 220).toDouble()
                             : (width -
                                       (hasMobility
                                           ? (width < 360 ? 184 : 206)
@@ -1042,11 +1061,17 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   ),
                 ),
               Positioned(
-                left: short && width >= 500 ? 136 : 14,
+                left: landscape && width >= 700
+                    ? 14
+                    : short && width >= 500
+                    ? 136
+                    : 14,
                 top: tightLandscape
                     ? null
                     : media.padding.top +
-                          (guide != null
+                          (landscape && width >= 700
+                              ? 110
+                              : guide != null
                               ? (short && width < 500 ? 188 : 198)
                               : 110),
                 bottom: tightLandscape
@@ -1057,9 +1082,9 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
               if (guide != null)
                 Positioned(
                   left: sideGuide ? 136 : 12,
-                  top: media.padding.top + 100,
+                  top: media.padding.top + (landscape ? 116 : 100),
                   width: sideGuide
-                      ? (width - 450).clamp(100, 280).toDouble()
+                      ? (width - 450).clamp(100, 220).toDouble()
                       : (width - (short ? 164 : 150))
                             .clamp(148, 250)
                             .toDouble(),

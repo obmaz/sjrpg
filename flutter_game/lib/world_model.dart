@@ -1397,32 +1397,72 @@ class AdventureWorld {
   final sanctuaryFences = <SanctuaryFenceSection>[];
   void _buildSanctuaryBoundary() {
     final ward = sanctuary;
-    final gateAngles = stage == WorldStage.forest
-        ? [
-                Offset(town.right, town.top + town.height * .52),
-                Offset(town.left, town.top + town.height * .36),
-                Offset(town.center.dx, town.top),
-                Offset(town.center.dx, town.bottom),
-              ]
-              .map(
-                (p) => math.atan2(p.dy - ward.center.dy, p.dx - ward.center.dx),
-              )
-              .toList()
-        : [0.0, math.pi / 2, math.pi, -math.pi / 2];
+    // Project each authored village exit onto the outer ward. Angles from
+    // the old town rectangle alone close the straight southern exit once the
+    // larger workshop ward is enclosed more tightly.
+    double gateAngle(double u, double v, Offset direction) {
+      final start = Offset(
+        town.left + town.width * u,
+        town.top + town.height * v,
+      );
+      final relative = start - ward.center;
+      final dot = relative.dx * direction.dx + relative.dy * direction.dy;
+      final distance =
+          -dot +
+          math.sqrt(
+            dot * dot + ward.radius * ward.radius - relative.distanceSquared,
+          );
+      final exit = start + direction * distance - ward.center;
+      return math.atan2(exit.dy, exit.dx);
+    }
+
+    final gates = <(double, double)>[
+      if (stage == WorldStage.forest) ...[
+        (gateAngle(.73, .52, const Offset(1, 0)), .14),
+        (gateAngle(.15, .34, const Offset(-1, 0)), .14),
+        (gateAngle(.48, .07, const Offset(0, -1)), .14),
+        (gateAngle(.57, .88, const Offset(0, 1)), .14),
+      ],
+    ];
+    // Gates follow actual road crossings, including diagonal approaches. A
+    // wide road beside the ward must not erase unrelated boundary sections.
+    for (final trail in trails) {
+      for (var i = 1; i < trail.points.length; i++) {
+        final from = trail.points[i - 1] - ward.center;
+        final direction = trail.points[i] - trail.points[i - 1];
+        final length = direction.distanceSquared;
+        if (length == 0) continue;
+        final dot = from.dx * direction.dx + from.dy * direction.dy;
+        final discriminant =
+            dot * dot -
+            length * (from.distanceSquared - ward.radius * ward.radius);
+        if (discriminant < 0) continue;
+        final root = math.sqrt(discriminant);
+        for (final t in [(-dot - root) / length, (-dot + root) / length]) {
+          if (t < 0 || t > 1) continue;
+          final exit = from + direction * t;
+          gates.add((
+            math.atan2(exit.dy, exit.dx),
+            math.asin(((trail.width / 2 + 24) / ward.radius).clamp(0.0, 1.0)) +
+                math.pi / 48,
+          ));
+        }
+      }
+    }
+    if (gates.isEmpty) {
+      for (final angle in [0.0, math.pi / 2, math.pi, -math.pi / 2]) {
+        gates.add((angle, .14));
+      }
+    }
     for (var i = 0; i < 48; i++) {
       final angle = (i + .5) * math.pi / 24;
-      final middle =
-          ward.center + Offset(math.cos(angle), math.sin(angle)) * ward.radius;
-      if (gateAngles.any(
-            (gate) =>
-                math
-                    .atan2(math.sin(angle - gate), math.cos(angle - gate))
-                    .abs() <
-                .29,
-          ) ||
-          trails.any(
-            (trail) => trail.distance(middle) < trail.width / 2 + 48,
-          )) {
+      if (gates.any(
+        (gate) =>
+            math
+                .atan2(math.sin(angle - gate.$1), math.cos(angle - gate.$1))
+                .abs() <
+            gate.$2,
+      )) {
         continue;
       }
       Offset point(int index) =>

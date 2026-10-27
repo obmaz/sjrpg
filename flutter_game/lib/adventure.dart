@@ -3819,8 +3819,7 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
     attackClock -= dt;
     replan -= dt;
     slamClock -= dt;
-    if (session.sheltered) {
-      stop();
+    if (session.sheltered || target.distance > 950 && !(boss && windup > 0)) {
       meleeWindup = 0;
       attackMotion.cancel();
       if (pounceRemaining > 0) finishPounce();
@@ -3831,13 +3830,12 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
       routeGoal = null;
       attackClock = math.max(attackClock, .35);
       slamClock = math.max(slamClock, 1);
+      _patrol(dt);
       return;
     }
-    if (target.distance > 950 && !(boss && windup > 0)) {
-      stop();
-      meleeWindup = 0;
-      return;
-    }
+    _patrolOrigin = null;
+    _patrolGoal = null;
+    _patrolClock = 0;
     if (stun > 0) {
       meleeWindup = 0;
       attackMotion.cancel();
@@ -4161,6 +4159,58 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
     if (ordinaryPursuit && intentEligible) {
       _localIntent.observe(this, dt, before, intendedStep, next);
     }
+  }
+
+  ui.Offset? _patrolOrigin, _patrolGoal;
+  double _patrolClock = 0;
+  int _patrolStep = 0;
+
+  // Unaware enemies keep a bounded local patrol, without following the hero
+  // through the ward or running a path search every frame.
+  void _patrol(double dt) {
+    stop();
+    if (stun > 0 || hurt > 0 || _knockbackTime > 0) {
+      inertia.stop();
+      return;
+    }
+    final from = position.toOffset();
+    final origin = _patrolOrigin ??= from;
+    _patrolClock -= dt;
+    if (_patrolClock <= 0) {
+      _patrolGoal = null;
+      _patrolClock = 2.5;
+      final phase = origin.dx * .013 + origin.dy * .017 + _patrolStep++ * 2.4;
+      for (var i = 0; i < 8; i++) {
+        final angle = phase + i * math.pi / 4;
+        final goal = origin + ui.Offset(math.cos(angle), math.sin(angle)) * 110;
+        if ((goal - from).distance > 24 &&
+            session.world.clearEnemyLine(from, goal, body.size)) {
+          _patrolGoal = goal;
+          break;
+        }
+      }
+    }
+    final goal = _patrolGoal;
+    if (goal == null || (goal - from).distance < 6) {
+      inertia.stop();
+      return;
+    }
+    final delta = goal - from;
+    final pace = math.min(
+      speed * .38 * (slow > 0 ? .45 : 1),
+      delta.distance / dt,
+    );
+    final step = inertia.advance(delta / delta.distance * pace, dt);
+    bearing = math.atan2(step.dy, step.dx);
+    final next = session.moveEnemyBody(this, from, step);
+    velocity.setValues((next.dx - from.dx) / dt, (next.dy - from.dy) / dt);
+    position.setValues(next.dx, next.dy);
+    if ((next - from).distanceSquared < .0001) {
+      inertia.stop();
+      _patrolGoal = null;
+    }
+    session.updateEnemySpacing(this);
+    lastClearPosition = next;
   }
 
   void finishPounce() {

@@ -20,26 +20,29 @@ void main() {
     return s;
   }
 
-  test('normal spawned melee mob escapes ranged crowd within6sim seconds', () {
-    final s = sandsCrowd();
-    addTearDown(s.dispose);
-    for (var frame = 0; frame <= 350; frame++) {
-      stepCrowd(s, 1 / 30);
-    }
-    final m = s.mobs[9], stalled = heroDistance(s, s.mobs[9]);
-    expect(m.kind, 'scorpion');
-    expect(stalled, greaterThan(m.idleRange + 80));
-    var nearest = stalled;
-    for (var frame = 0; frame < 180; frame++) {
-      stepCrowd(s, 1 / 30);
-      nearest = math.min(nearest, heroDistance(s, m));
-    }
-    expect(nearest, lessThan(stalled - 80));
-    expect(s.progress.hp, greaterThan(0));
-    expect(s.observed.cornerSearchFrames.length, 1);
-  });
+  test(
+    'historical dense melee mob escapes ranged crowd within6sim seconds',
+    () {
+      final s = sandsCrowd();
+      addTearDown(s.dispose);
+      for (var frame = 0; frame <= 350; frame++) {
+        stepCrowd(s, 1 / 30);
+      }
+      final m = s.mobs[9], stalled = heroDistance(s, s.mobs[9]);
+      expect(m.kind, 'scorpion');
+      expect(stalled, greaterThan(m.idleRange + 80));
+      var nearest = stalled;
+      for (var frame = 0; frame < 180; frame++) {
+        stepCrowd(s, 1 / 30);
+        nearest = math.min(nearest, heroDistance(s, m));
+      }
+      expect(nearest, lessThan(stalled - 80));
+      expect(s.progress.hp, greaterThan(0));
+      expect(s.observed.cornerSearchFrames.length, 1);
+    },
+  );
 
-  test('normal60Hz waves also escape without repeated corner searches', () {
+  test('historical60Hz waves also escape without repeated corner searches', () {
     final s = sandsCrowd();
     addTearDown(s.dispose);
     var nearest = double.infinity;
@@ -54,7 +57,7 @@ void main() {
     expect(s.progress.hp, greaterThan(0));
   });
 
-  test('isolated actual spawned pursuer uses ordinary chase', () {
+  test('isolated historical pursuer uses ordinary chase', () {
     final s = sandsCrowd();
     addTearDown(s.dispose);
     for (var frame = 0; frame <= 301; frame++) {
@@ -160,12 +163,21 @@ void main() {
         for (var frame = 0; frame < 6; frame++) {
           stepCrowd(s, 1 / 30);
         }
-        expect(
-          m.position.toOffset(),
-          origin,
-          reason:
-              '$mode must release the committed retreat before ordinary pursuit can retry',
-        );
+        if (mode == 'heroMove') {
+          expect(
+            (m.position.toOffset() - origin).distance,
+            lessThan(1),
+            reason:
+                'entering the ward cancels the retreat; only brief patrol inertia remains',
+          );
+        } else {
+          expect(
+            m.position.toOffset(),
+            origin,
+            reason:
+                '$mode must release the committed retreat before ordinary pursuit can retry',
+          );
+        }
         expect(s.observed.cornerSearchFrames.length, searches);
       }
       s.dispose();

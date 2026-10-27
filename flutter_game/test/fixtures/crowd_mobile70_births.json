@@ -1,0 +1,239 @@
+{
+  "source": "mobile70-nerf-browser native snapshot, pre-reduction 6-enemy pacing",
+  "purpose": "Historical dense crowd stress case. Exact natural birth frames and positions before reduced spawn sizes; no production pacing override.",
+  "births": [
+    {
+      "frame": 0,
+      "enemy": {
+        "kind": "viper",
+        "trait": "none",
+        "tier": "normal",
+        "power": {
+          "distance": 696.0625138359414,
+          "health": 1.18,
+          "damage": 1.045
+        },
+        "wardPhase": 0.0,
+        "area": "1:2",
+        "x": 5716.6240234375,
+        "y": 7052.603515625,
+        "hp": 64.19200000000001,
+        "maxHp": 64.19200000000001
+      }
+    },
+    {
+      "frame": 0,
+      "enemy": {
+        "kind": "basilisk",
+        "trait": "none",
+        "tier": "normal",
+        "power": {
+          "distance": 509.091556955065,
+          "health": 1.18,
+          "damage": 1.045
+        },
+        "wardPhase": 0.0,
+        "area": "1:2",
+        "x": 5449.0361328125,
+        "y": 6944.41943359375,
+        "hp": 132.16,
+        "maxHp": 132.16
+      }
+    },
+    {
+      "frame": 0,
+      "enemy": {
+        "kind": "scorpion",
+        "trait": "none",
+        "tier": "normal",
+        "power": {
+          "distance": 819.2949226944689,
+          "health": 1.18,
+          "damage": 1.045
+        },
+        "wardPhase": 0.0,
+        "area": "1:2",
+        "x": 6016.1875,
+        "y": 6964.951171875,
+        "hp": 98.176,
+        "maxHp": 98.176
+      }
+    },
+    {
+      "frame": 0,
+      "enemy": {
+        "kind": "scorpion",
+        "trait": "none",
+        "tier": "normal",
+        "power": {
+          "distance": 573.5149174623396,
+          "health": 1.18,
+          "damage": 1.045
+        },
+        "wardPhase": 0.0,
+        "area": "1:2",
+        "x": 5403.9189453125,
+        "y": 7012.2939453125,
+        "hp": 98.176,
+        "maxHp": 98.176
+      }
+    },
+    {
+      "frame": 0,
+      "enemy": {
+        "kind": "viper",
+        "trait": "none",
+        "tier": "normal",
+        "power": {
+          "distance": 468.2786616078509,
+          "health": 1.18,
+          "damage": 1.045
+        },
+        "wardPhase": 0.0,
+        "area": "1:2",
+        "x": 5844.63916015625,
+        "y": 6335.24267578125,
+        "hp": 64.19200000000001,
+        "maxHp": 64.19200000000001
+      }
+    },
+    {
+      "frame": 0,
+      "enemy": {
+        "kind": "basilisk",
+        "trait": "none",
+        "tier": "normal",
+        "power": {
+          "distance": 744.3637534117487,
+          "health": 1.18,
+          "damage": 1.045
+        },
+        "wardPhase": 0.0,
+        "area": "1:2",
+        "x": 5866.8642578125,
+        "y": 7008.8828125,
+        "hp": 132.16,
+        "maxHp": 132.16
+      }
+    },
+    {
+      "frame": 301,
+      "enemy": {
+        "kind": "viper",
+        "trait": "none",
+        "tier": "normal",
+        "power": {
+          "distance": 696.0625138359414,
+          "health": 1.18,
+          "damage": 1.045
+        },
+        "wardPhase": 0.0,
+        "area": "1:2",
+        "x": 5716.6240234375,
+        "y": 7052.603515625,
+        "hp": 64.19200000000001,
+        "maxHp": 64.19200000000001
+      }
+    },
+    {
+      "frame": 301,
+      "enemy": {
+        "kind": "basilisk",
+        "trait": "none",
+        "tier": "normal",
+        "power": {
+          "distance": 509.091556955065,
+          "health": 1.18,
+          "damage": 1.045
+        },
+        "wardPhase": 0.0,
+        "area": "1:2",
+        "x": 5449.0361328125,
+        "y": 6944.41943359375,
+        "hp": 132.16,
+        "maxHp": 132.16
+      }
+    },
+    {
+      "frame": 301,
+      "enemy": {
+        "kind": "scorpion",
+        "trait": "none",
+        "tier": "normal",
+        "power": {
+          "distance": 819.2949226944689,
+          "health": 1.18,
+          "damage": 1.045
+        },
+        "wardPhase": 0.0,
+        "area": "1:2",
+        "x": 6016.1875,
+        "y": 6964.951171875,
+        "hp": 98.176,
+        "maxHp": 98.176
+      }
+    },
+    {
+      "frame": 301,
+      "enemy": {
+        "kind": "scorpion",
+        "trait": "none",
+        "tier": "normal",
+        "power": {
+          "distance": 573.5149174623396,
+          "health": 1.18,
+          "damage": 1.045
+        },
+        "wardPhase": 0.0,
+        "area": "1:2",
+        "x": 5403.9189453125,
+        "y": 7012.2939453125,
+        "hp": 98.176,
+        "maxHp": 98.176
+      }
+    },
+    {
+      "frame": 301,
+      "enemy": {
+        "kind": "viper",
+        "trait": "none",
+        "tier": "normal",
+        "power": {
+          "distance": 468.2786616078509,
+          "health": 1.18,
+          "damage": 1.045
+        },
+        "wardPhase": 0.0,
+        "area": "1:2",
+        "x": 5844.63916015625,
+        "y": 6335.24267578125,
+        "hp": 64.19200000000001,
+        "maxHp": 64.19200000000001
+      }
+    },
+    {
+      "frame": 301,
+      "enemy": {
+        "kind": "basilisk",
+        "trait": "none",
+        "tier": "normal",
+        "power": {
+          "distance": 760.0255796802016,
+          "health": 1.18,
+          "damage": 1.045
+        },
+        "wardPhase": 0.0,
+        "area": "1:2",
+        "x": 5890.8642578125,
+        "y": 7008.8828125,
+        "hp": 132.16,
+        "maxHp": 132.16
+      }
+    }
+  ],
+  "sourceFiles": {
+    "lib/adventure.dart": "4cfa1ca533243de0ee61b2e563971e57057449d7abdc8efe30d07db210c2b4b2",
+    "lib/combat_balance.dart": "aa95268c744058a8262a82a5be5119af1c9ecc2feed527bd3d7806e01913877a",
+    "lib/world_model.dart": "98dc30af087cb951736742817b92ce994df2504e40a4053809dbe21aef81a1e5"
+  }
+}

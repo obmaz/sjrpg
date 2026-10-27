@@ -57,6 +57,8 @@ extension WorldStageInfo on WorldStage {
       visualStage == WorldStage.forest ? 0 : 5 + visualStage.index;
   int get roadMaterial =>
       visualStage == WorldStage.forest ? 5 : 8 + visualStage.index;
+  int get settlementMaterial =>
+      visualStage == WorldStage.forest ? 10 : roadMaterial;
   Color get groundTint => switch (this) {
     WorldStage.tombs => const Color(0x337e655b),
     WorldStage.foundry => const Color(0x222d649a),
