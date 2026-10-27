@@ -335,15 +335,25 @@ class BossAttack {
   final double warningTime, recovery, damage;
   final ui.Color color;
   final bool enraged;
+  // Both factories own unmodifiable zone snapshots. Keep mutable ui.Paths
+  // private and reuse them for this attack's warning, impact and culling only.
+  late final _zonePaths = List<ui.Path>.unmodifiable(
+    zones.map((zone) => zone.path),
+  );
+  late final ui.Rect dangerBounds = _zonePaths
+      .map((path) => path.getBounds())
+      .reduce((bounds, zone) => bounds.expandToInclude(zone));
+
   void paintWarning(ui.Canvas canvas, double progress) {
     final t = progress.clamp(0.0, 1.0);
-    for (final zone in zones) {
+    for (var i = 0; i < zones.length; i++) {
+      final zone = zones[i], path = _zonePaths[i];
       canvas.drawPath(
-        zone.path,
+        path,
         ui.Paint()..color = color.withValues(alpha: .1 + t * .14),
       );
       canvas.drawPath(
-        zone.path,
+        path,
         ui.Paint()
           ..style = ui.PaintingStyle.stroke
           ..strokeWidth = 1.5
@@ -463,9 +473,10 @@ class BossAttack {
 
   void paintImpact(ui.Canvas canvas, double progress) {
     final t = progress.clamp(0.0, 1.0), fade = 1 - t;
-    for (final zone in zones) {
+    for (var i = 0; i < zones.length; i++) {
+      final zone = zones[i], path = _zonePaths[i];
       canvas.drawPath(
-        zone.path,
+        path,
         ui.Paint()..color = color.withValues(alpha: .25 * fade),
       );
       if (zone.shape == BossDangerShape.circle) {

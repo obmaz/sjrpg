@@ -41,13 +41,15 @@ void main() {
     ),
   );
 
-  for (final hz in [60, 120, 144]) {
+  for (final hz in [30, 60, 120, 144]) {
     test('$hz Hz slow analog movement advances and renders the gait', () {
       final art = RecordingArt();
       final s = inCombatField(Adventure(art))..start(TestGame());
       addTearDown(s.dispose);
       walk(s.hero);
-      s.hero.update(0); // Bonfire first applies the new joystick velocity.
+      s.hero.update(
+        1 / hz,
+      ); // A positive frame applies the new joystick velocity.
       final before = s.hero.position.clone();
       expect(s.hero.velocity.x, closeTo(270 * intensity, .00001));
       for (var i = 0; i < hz * 5; i++) {
@@ -92,7 +94,7 @@ void main() {
       );
       final before = s.hero.position.clone();
       walk(s.hero);
-      s.hero.update(0);
+      s.hero.update(1 / 144);
       for (var i = 0; i < 144; i++) {
         s.hero.update(1 / 144);
       }

@@ -257,7 +257,7 @@ class ShadowBolt extends GameComponent with EffectVisibility {
 
   @override
   void update(double dt) {
-    if (!session.active || resolved) return;
+    if (!session.active || resolved || dt <= 0) return;
     dt = math.min(dt, math.min(.05, remaining));
     remaining -= dt;
     final distance =
@@ -471,7 +471,7 @@ class ArcaneBolt extends GameComponent with EffectVisibility {
       finish();
       return;
     }
-    if (!session.active || resolved) return;
+    if (!session.active || resolved || dt <= 0) return;
     dt = math.min(dt, .05);
     if (launchDelay > 0) {
       if (caster != null &&
@@ -1288,9 +1288,7 @@ class BossAttackVisual extends GameComponent with EffectVisibility {
   final bool impact;
   double age = 0;
   @override
-  late final ui.Rect effectBounds = pattern.zones
-      .map((zone) => zone.path.getBounds())
-      .reduce((bounds, zone) => bounds.expandToInclude(zone))
+  late final ui.Rect effectBounds = pattern.dangerBounds
       .inflate(90)
       .expandToInclude(
         ui.Rect.fromCenter(

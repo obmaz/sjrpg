@@ -1007,7 +1007,7 @@ class Adventure extends ChangeNotifier {
   }
 
   void tick(double dt) {
-    if (!active) return;
+    if (!active || dt <= 0) return;
     // Wards cleanse afflictions; elsewhere poison resolves before any healing.
     if (sheltered) afflictions.clear();
     final poisonTicks = afflictions.update(dt);
@@ -1968,6 +1968,10 @@ class Guardian extends Player with WithCollision {
     }
     if (event.directional != JoystickMoveDirectional.IDLE) {
       bearing = event.isKeyboard ? event.directional.radAngle : event.radAngle;
+    } else {
+      // Bonfire consumes directional input after integrating old velocity.
+      // Release it now even when hitstop prevents a zero-dt input update.
+      stop();
     }
     super.onJoystickChangeDirectional(event);
   }
@@ -2002,6 +2006,7 @@ class Guardian extends Player with WithCollision {
       stop();
       return;
     }
+    if (dt <= 0) return;
     if (aim != null) aim!.heldFor += dt;
     var unhinderedSpeed =
         session.riding?.speed ??
@@ -3279,7 +3284,9 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
 
   @override
   void update(double dt) {
-    if (!session.active || !combatReady || isDead || isRemoving) return;
+    if (!session.active || !combatReady || isDead || isRemoving || dt <= 0) {
+      return;
+    }
     dt = math.min(dt, .05);
     wardPhase = (wardPhase + dt) % 8;
     attackMotion.update(dt);

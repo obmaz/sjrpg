@@ -214,6 +214,14 @@ class SpellBurst extends GameComponent with EffectVisibility {
   }
 }
 
+// Drawing only transforms this local geometry; no caller receives or mutates it.
+final _iceShieldShard = ui.Path()
+  ..moveTo(0, -10)
+  ..lineTo(4, -2)
+  ..lineTo(1, 8)
+  ..lineTo(-4, 1)
+  ..close();
+
 void paintIceShield(
   ui.Canvas canvas,
   ui.Offset center,
@@ -280,14 +288,8 @@ void paintIceShield(
     canvas.save();
     canvas.translate(at.dx, at.dy);
     canvas.rotate(math.sin(a) * .28);
-    final shard = ui.Path()
-      ..moveTo(0, -10)
-      ..lineTo(4, -2)
-      ..lineTo(1, 8)
-      ..lineTo(-4, 1)
-      ..close();
     canvas.drawPath(
-      shard,
+      _iceShieldShard,
       ui.Paint()
         ..shader = ui.Gradient.linear(
           const ui.Offset(-4, -7),
