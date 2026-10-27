@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'adventure.dart';
 import 'affliction_widgets.dart';
 import 'game_art.dart';
+import 'health_widgets.dart';
+import 'resource_meter.dart';
 import 'world_model.dart';
 
 const gold = Color(0xffd5b772),
@@ -23,6 +25,11 @@ class GameHud extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
     final short = MediaQuery.sizeOf(context).height < 520;
     final statusRight = math.max(104.0, width - 360);
+    final resourceHeight = math.max(
+      22.0,
+      ResourceMeter.minimumHeight(MediaQuery.textScalerOf(context)),
+    );
+    final statTop = 52 + resourceHeight + 10;
     return SizedBox(
       height: 130,
       child: Stack(
@@ -31,84 +38,18 @@ class GameHud extends StatelessWidget {
             top: 17,
             left: 57,
             right: statusRight,
-            child: ClipPath(
-              clipper: _BarClipper(),
-              child: Container(
-                height: 33,
-                decoration: BoxDecoration(
-                  color: const Color(0xff351b1c),
-                  border: Border.all(color: gold, width: 2),
-                ),
-                child: Stack(
-                  children: [
-                    FractionallySizedBox(
-                      widthFactor: (p.hp / p.maxHp).clamp(0, 1),
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [Color(0xffe66545), Color(0xffa62b28)],
-                          ),
-                        ),
-                      ),
-                    ),
-                    Center(
-                      child: Text(
-                        '${p.hp.ceil()} / ${p.maxHp.ceil()}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            child: HealthMeter(session),
           ),
           Positioned(
             left: 77,
             right: statusRight + 6,
             top: 52,
-            child: Semantics(
-              label:
-                  '${p.heroClass.resource} ${p.energy.floor()} / ${p.maxEnergy.round()}',
-              child: SizedBox(
-                height: 15,
-                child: Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: p.energy / p.maxEnergy,
-                        minHeight: 15,
-                        color: p.heroClass == HeroClass.mage
-                            ? const Color(0xff529bdf)
-                            : const Color(0xffd49d40),
-                        backgroundColor: const Color(0xdd102425),
-                      ),
-                    ),
-                    Center(
-                      child: Text(
-                        '${p.heroClass.resource} ${p.energy.floor()}',
-                        style: const TextStyle(
-                          color: cream,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            child: ResourceMeter(session, height: resourceHeight),
           ),
           Positioned(
             left: 77,
             right: statusRight + 6,
-            top: 69,
+            top: 52 + resourceHeight + 3,
             child: LinearProgressIndicator(
               value: p.xp / p.nextLevelXp,
               minHeight: 3,
@@ -159,20 +100,30 @@ class GameHud extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: 84,
-            top: 72,
+            left: 104,
+            top: statTop,
             right: statusRight,
-            child: Wrap(
-              spacing: 12,
-              runSpacing: 6,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                _stat(Icons.monetization_on_outlined, '${p.gold}', gold),
-                if (width >= 360)
-                  _stat(
-                    Icons.wb_sunny_outlined,
-                    gameTime(session.elapsed),
-                    const Color(0xffdfce94),
+                Flexible(
+                  child: _stat(
+                    Icons.monetization_on_outlined,
+                    _compactGold(p.gold),
+                    gold,
+                    semanticValue: '${p.gold}',
                   ),
+                ),
+                if (width >= 360) ...[
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: _stat(
+                      Icons.wb_sunny_outlined,
+                      gameTime(session.elapsed),
+                      const Color(0xffdfce94),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -220,8 +171,14 @@ class GameHud extends StatelessWidget {
     );
   }
 
-  Widget _stat(IconData icon, String value, Color color) => Semantics(
-    label: '${icon == Icons.monetization_on_outlined ? '골드' : '모험 시간'} $value',
+  Widget _stat(
+    IconData icon,
+    String value,
+    Color color, {
+    String? semanticValue,
+  }) => Semantics(
+    label:
+        '${icon == Icons.monetization_on_outlined ? '골드' : '모험 시간'} ${semanticValue ?? value}',
     excludeSemantics: true,
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
@@ -234,12 +191,16 @@ class GameHud extends StatelessWidget {
         children: [
           Icon(icon, size: 16, color: color),
           const SizedBox(width: 3),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 13,
-              color: color,
-              fontWeight: FontWeight.bold,
+          Flexible(
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 13,
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -248,17 +209,11 @@ class GameHud extends StatelessWidget {
   );
 }
 
-class _BarClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size s) => Path()
-    ..lineTo(s.width - 17, 0)
-    ..lineTo(s.width, s.height / 2)
-    ..lineTo(s.width - 17, s.height)
-    ..lineTo(0, s.height)
-    ..close();
-  @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
-}
+String _compactGold(int value) => value >= 100000000
+    ? '${value ~/ 100000000}억'
+    : value >= 10000
+    ? '${value ~/ 10000}만'
+    : '$value';
 
 class _PortraitPainter extends CustomPainter {
   _PortraitPainter(this.art, this.heroClass);

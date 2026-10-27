@@ -17,6 +17,7 @@ import 'game_art.dart';
 import 'game_checkpoint.dart';
 import 'game_panels.dart';
 import 'game_ui.dart';
+import 'health_widgets.dart';
 import 'nearby_controls.dart';
 import 'panel_controls.dart';
 import 'player_afflictions.dart';
@@ -715,7 +716,10 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   Widget build(BuildContext context) => _ArtworkPreparation(
     art: widget.art,
     busy: preparingTransition,
-    child: buildGame(context),
+    child: PlayerHealthFeedbackScope(
+      session: adventure,
+      child: buildGame(context),
+    ),
   );
 
   Widget buildGame(BuildContext context) => Scaffold(
@@ -862,6 +866,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   cameraOffsetY: adventure.cameraOffsetY,
                 ),
               ),
+            Positioned.fill(child: HealthDangerVignette(adventure)),
             SafeArea(
               bottom: false,
               child: ExcludeSemantics(

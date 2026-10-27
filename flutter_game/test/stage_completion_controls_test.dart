@@ -126,40 +126,48 @@ void main() {
   testWidgets(
     'large currency and timer fit one HUD row without a resource-like kill number',
     (tester) async {
-      tester.view.physicalSize = const Size(390, 844);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      final art = await tester.runAsync(() async {
-        final loader = FontLoader('Guardian')
-          ..addFont(rootBundle.load('assets-fonts/NanumGothic-Regular.ttf'));
-        await loader.load();
-        return GameArt.load();
-      });
-      final s = Adventure(art!);
-      s.start(TestGame());
-      addTearDown(s.dispose);
-      s.progress.level = 31;
-      s.progress.gold = 1234567;
-      s.progress.kills = 820;
-      s.elapsed = 59999;
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData(fontFamily: 'Guardian'),
-          home: Scaffold(body: GameHud(s)),
-        ),
-      );
-      await tester.pumpAndSettle();
-      final gold = find.text('1234567'), time = find.text('999:59');
-      expect(gold, findsOneWidget);
-      expect(time, findsOneWidget);
-      expect(
-        tester.getRect(gold).center.dy,
-        closeTo(tester.getRect(time).center.dy, .01),
-      );
-      expect(tester.getRect(time).bottom, lessThan(105));
-      expect(find.text('820'), findsNothing);
-      expect(tester.takeException(), null);
+      final semantics = tester.ensureSemantics();
+      try {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final art = await tester.runAsync(() async {
+          final loader = FontLoader('Guardian')
+            ..addFont(rootBundle.load('assets-fonts/NanumGothic-Regular.ttf'));
+          await loader.load();
+          return GameArt.load();
+        });
+        final s = Adventure(art!);
+        s.start(TestGame());
+        addTearDown(s.dispose);
+        s.progress.level = 31;
+        s.progress.gold = 1234567;
+        s.progress.kills = 820;
+        s.elapsed = 59999;
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: ThemeData(fontFamily: 'Guardian'),
+            home: Scaffold(body: GameHud(s)),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 100));
+        final gold = find.text('123만'), time = find.text('999:59');
+        expect(gold, findsOneWidget);
+        expect(find.bySemanticsLabel('골드 1234567'), findsOneWidget);
+        expect(time, findsOneWidget);
+        expect(
+          tester.getRect(gold).center.dy,
+          closeTo(tester.getRect(time).center.dy, .01),
+        );
+        // The taller resource vessel still leaves the potion row at y=110 clear.
+        expect(tester.getRect(time).bottom, lessThan(110));
+        expect(find.text('820'), findsNothing);
+        expect(tester.takeException(), null);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        semantics.dispose();
+      }
     },
   );
 }

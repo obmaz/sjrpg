@@ -129,7 +129,9 @@ void main() {
             'classes-warrior-${size.width.toInt()}x${size.height.toInt()}-$scale',
           );
           await tester.ensureVisible(mage);
-          await tester.tap(mage);
+          await tester.tapAt(
+            tester.getBottomRight(mage) - const Offset(12, 12),
+          );
           await tester.pumpAndSettle();
           expect(tester.widget<Semantics>(mage).properties.selected, true);
           final start = find.text('마법사로 모험 시작');
@@ -140,7 +142,14 @@ void main() {
             tester,
             'classes-${size.width.toInt()}x${size.height.toInt()}-$scale',
           );
-          await tester.tap(start);
+          final startAction = find.ancestor(
+            of: start,
+            matching: find.byType(EntryAction),
+          );
+          final startBounds = tester.getRect(startAction);
+          await tester.tapAt(
+            Offset(startBounds.left + 16, startBounds.center.dy),
+          );
           expect(began, HeroClass.mage);
           expect(tester.takeException(), isNull);
           semantics.dispose();
@@ -171,7 +180,12 @@ void main() {
       await tester.ensureVisible(
         find.ancestor(of: resume, matching: find.byType(EntryAction)),
       );
-      await tester.tap(resume);
+      final resumeBounds = tester.getRect(
+        find.ancestor(of: resume, matching: find.byType(EntryAction)),
+      );
+      await tester.tapAt(
+        Offset(resumeBounds.right - 16, resumeBounds.center.dy),
+      );
       expect(continued, true);
       expect(began, isNull);
       final fresh = find.text('전사로 새 모험');
@@ -327,7 +341,8 @@ void main() {
           1,
           Scaffold(body: GameHud(session)),
         );
-        await tester.pumpAndSettle();
+        // The live resource vessel intentionally keeps a presentation ticker.
+        await tester.pump(const Duration(milliseconds: 100));
         await proof(tester, 'male-hud-${heroClass.name}');
         expect(tester.takeException(), isNull);
         expect(art.images.keys, isNot(contains('actors-mage')));

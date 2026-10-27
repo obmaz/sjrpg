@@ -47,27 +47,32 @@ class _ClassSelectionState extends State<ClassSelection> {
                   : compact
                   ? 54.0
                   : 68.0;
-              final skillsHeight = tightContinue
-                  ? 44.0
-                  : compact
-                  ? 49.0
-                  : 65.0;
               final continueHeight = widget.onContinue == null
                   ? 0.0
                   : tightContinue
                   ? 72.0
                   : 80.0;
+              final contentWidth = math.min(530.0, box.maxWidth - 24);
+              final cardWidth = (contentWidth - 10) / 2;
+              final portraits = widget.art.images['class-selection'];
+              final portraitAspect = portraits == null
+                  ? .75
+                  : portraits.width / 2 / portraits.height;
+              final sideName = compact && cardWidth >= 200;
+              final portraitWidth = cardWidth * (sideName ? .46 : 1) - 16;
+              // Match the painted face and weapon composition while leaving
+              // breathing room around the controls.
+              final preferredCardHeight = portraitWidth / portraitAspect + 16;
               final cardHeight = math.max(
                 112.0,
                 math.min(
-                  (math.min(530.0, box.maxWidth - 24) - 10) / 1.2,
+                  preferredCardHeight,
                   box.maxHeight -
                       24 -
                       brandHeight -
                       actionHeight -
-                      skillsHeight -
                       continueHeight -
-                      24,
+                      12,
                 ),
               );
               return SingleChildScrollView(
@@ -167,11 +172,6 @@ class _ClassSelectionState extends State<ClassSelection> {
                             ),
                           ),
                           const SizedBox(height: 6),
-                          SizedBox(
-                            height: skillsHeight,
-                            child: _startingSkills(),
-                          ),
-                          const SizedBox(height: 6),
                           EntryAction(
                             widget.onContinue != null
                                 ? '${selected.title}로 새 모험'
@@ -192,53 +192,6 @@ class _ClassSelectionState extends State<ClassSelection> {
       ],
     ),
   );
-
-  Widget _startingSkills() {
-    final mage = selected == HeroClass.mage;
-    final skills = [
-      (
-        mage ? Icons.auto_fix_high : Icons.sports_martial_arts,
-        mage ? '마력탄' : '연속 베기',
-      ),
-      (mage ? Icons.ac_unit : Icons.campaign, mage ? '서릿발' : '함성'),
-      (Icons.directions_run, '구르기'),
-    ];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final (icon, label) in skills)
-          Expanded(
-            child: Semantics(
-              label: '시작 기술 $label',
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
-                child: CustomPaint(
-                  painter: EntryChrome(widget.art, EntryPiece.nameplate),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(icon, size: 17, color: entryBrass),
-                      const SizedBox(width: 5),
-                      Flexible(
-                        child: Text(
-                          label,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: entryCream,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
 
   Widget _card(HeroClass heroClass) {
     final active = selected == heroClass;
