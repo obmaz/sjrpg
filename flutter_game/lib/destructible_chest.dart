@@ -11,6 +11,7 @@ class DestructibleChest extends GameComponent {
     final body = session.world.chestBody(index);
     position = Vector2(body.left, body.top);
     size = Vector2(body.width, body.height);
+    session.registerChest(this);
   }
   final Adventure session;
   final int index;
@@ -92,7 +93,7 @@ class DestructibleChest extends GameComponent {
 
   @override
   void render(ui.Canvas canvas) {
-    if (!isVisible) return;
+    if (session.disposed || isRemoving || !isVisible) return;
     super.render(canvas);
     if (broken) {
       canvas.drawPicture(_brokenPicture ??= _record(true));
@@ -101,10 +102,17 @@ class DestructibleChest extends GameComponent {
     }
   }
 
-  @override
-  void onRemove() {
+  void releasePictures() {
     _closedPicture?.dispose();
     _brokenPicture?.dispose();
+    _closedPicture = null;
+    _brokenPicture = null;
+  }
+
+  @override
+  void onRemove() {
+    releasePictures();
+    session.unregisterChest(this);
     super.onRemove();
   }
 }

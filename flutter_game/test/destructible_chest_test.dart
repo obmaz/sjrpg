@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,6 +23,52 @@ void main() {
     addTearDown(s.dispose);
     return s;
   }
+
+  test('session teardown releases cached chest pictures before removal', () {
+    final s = Adventure(GameArt())..start(TestGame());
+    final removed = DestructibleChest(s, 0);
+    final retained = DestructibleChest(s, 1);
+    final pictures = <ui.Picture>[];
+    final oldOnCreate = ui.Picture.onCreate;
+    ui.Picture.onCreate = (picture) {
+      pictures.add(picture);
+      oldOnCreate?.call(picture);
+    };
+    final recorder = ui.PictureRecorder(), canvas = ui.Canvas(recorder);
+    try {
+      removed.render(canvas);
+      retained.render(canvas);
+      s.openedChests.addAll([0, 1]);
+      removed.render(canvas);
+      retained.render(canvas);
+      expect(pictures, hasLength(4));
+      expect(pictures.map((p) => p.debugDisposed), [
+        false,
+        false,
+        false,
+        false,
+      ]);
+      removed.onRemove();
+      expect(pictures.map((p) => p.debugDisposed), [true, false, true, false]);
+      s.dispose();
+      expect(pictures.map((p) => p.debugDisposed), [true, true, true, true]);
+      retained.render(canvas);
+      expect(
+        pictures,
+        hasLength(4),
+        reason: 'ended sessions cannot recreate caches',
+      );
+      retained.onRemove();
+      removed.onRemove();
+    } finally {
+      ui.Picture.onCreate = oldOnCreate;
+      recorder.endRecording().dispose();
+      if (!s.disposed) s.dispose();
+      for (final picture in pictures) {
+        if (!picture.debugDisposed) picture.dispose();
+      }
+    }
+  });
 
   for (final stage in WorldStage.values) {
     test('$stage closed chest blocks a complete body until broken', () {

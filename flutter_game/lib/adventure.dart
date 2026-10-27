@@ -222,6 +222,9 @@ class Adventure extends ChangeNotifier {
   bool ensureOnFoot() => riding == null || dismount(keepInput: true);
 
   Set<int> get openedChests => world.openedChests;
+  final _chests = <DestructibleChest>{};
+  void registerChest(DestructibleChest chest) => _chests.add(chest);
+  void unregisterChest(DestructibleChest chest) => _chests.remove(chest);
   final cleansedSites = <String>{};
   String? trackedSiteId;
   QuestSite? get trackedSite {
@@ -1386,6 +1389,10 @@ class Adventure extends ChangeNotifier {
       stone.releaseHint();
     }
     _encounterStones.clear();
+    for (final chest in _chests) {
+      chest.releasePictures();
+    }
+    _chests.clear();
     audio.stop();
     device.cancel();
     releaseInput();
