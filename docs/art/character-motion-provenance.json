@@ -122,26 +122,26 @@
         "hero-attack": {
             "image": "flutter_game/art/hero-attack-clean.webp",
             "metadata": "flutter_game/art/hero-attack-clean-bounds.json",
-            "frameCount": 32,
-            "decodedRGBABytes": 1048576,
-            "compressedBytes": 90422,
-            "sha256": "42d457b0345ec950398ef43a81d1bdd2f399a991fe71cbf516279a4bba90989f"
+            "frameCount": 128,
+            "decodedRGBABytes": 4194304,
+            "compressedBytes": 365008,
+            "sha256": "64f1fcfab9db9dd721fb15dc7dda762034625b04050363868b220b82f5f88931"
         },
         "hero-backhand": {
             "image": "flutter_game/art/actors-hero-backhand.webp",
             "metadata": "flutter_game/art/actors-hero-backhand-bounds.json",
-            "frameCount": 32,
-            "decodedRGBABytes": 1048576,
-            "compressedBytes": 92108,
-            "sha256": "287e50b1643040659a1df06e67f85a5bc4d06f4fdd2ae96245db283059f4ada0"
+            "frameCount": 128,
+            "decodedRGBABytes": 4194304,
+            "compressedBytes": 353854,
+            "sha256": "91d182d08a286a093db59b0cb2fddfd3d5825b02d11f069cadc70b25e0c2dae0"
         },
         "hero-cleave": {
             "image": "flutter_game/art/actors-hero-cleave.webp",
             "metadata": "flutter_game/art/actors-hero-cleave-bounds.json",
-            "frameCount": 32,
-            "decodedRGBABytes": 1048576,
-            "compressedBytes": 95804,
-            "sha256": "a8043dcfd569358f5dab35606fbb0c09ad89a5bcf869f546caaf7623f932a012"
+            "frameCount": 128,
+            "decodedRGBABytes": 4194304,
+            "compressedBytes": 370700,
+            "sha256": "2786b19b1dc91bac3ba8cbe11c856fb02ee16157943c4b9e8b3938795574f303"
         },
         "mage": {
             "image": "flutter_game/art/actors-mage.png",
@@ -154,10 +154,10 @@
         "mage-cast": {
             "image": "flutter_game/art/actors-mage-cast.webp",
             "metadata": "flutter_game/art/actors-mage-cast-bounds.json",
-            "frameCount": 32,
-            "decodedRGBABytes": 1048576,
-            "compressedBytes": 94026,
-            "sha256": "1082abebb55b289eb559b01b89beb016aeb51b3a5b6bc228f66d639fbc913e72"
+            "frameCount": 128,
+            "decodedRGBABytes": 4194304,
+            "compressedBytes": 368524,
+            "sha256": "b18e4e01247ea607f530291534377786c4b341d8659fd5304cb70bd4ed3e7c46"
         },
         "roll": {
             "image": "flutter_game/art/actors-roll.png",
@@ -168,9 +168,9 @@
             "sha256": "6dc26be09cc0430a4da7c3c45cf0df7f4f7c82a8727921b08d9d876ab6791ccc"
         }
     },
-    "runtimeFrameCount": 480,
-    "runtimeDecodedRGBAUnionBytes": 13631488,
-    "runtimeCompressedBytes": 1458055,
+    "runtimeFrameCount": 864,
+    "runtimeDecodedRGBAUnionBytes": 26214400,
+    "runtimeCompressedBytes": 2543781,
     "camera": {
         "workingCanvas": [256, 256],
         "exportCanvas": [128, 128],
@@ -238,6 +238,16 @@
                 "actualActionName": "Roll_Armature.001",
                 "frameRange": [0.0, 44.0],
                 "sourceSeconds": 1.4666666666666666
+            },
+            "Sword_Regular_A_Rec_Armature": {
+                "actualActionName": "Sword_Regular_A_Rec_Armature.002",
+                "frameRange": [0.0, 29.0],
+                "sourceSeconds": 0.9666666666666667
+            },
+            "Sword_Regular_B_Rec_Armature": {
+                "actualActionName": "Sword_Regular_B_Rec_Armature.002",
+                "frameRange": [0.0, 31.0],
+                "sourceSeconds": 1.0333333333333334
             }
         },
         "mage": {
@@ -265,6 +275,11 @@
                 "actualActionName": "Roll_Armature.002",
                 "frameRange": [0.0, 44.0],
                 "sourceSeconds": 1.4666666666666666
+            },
+            "Spell_Simple_Exit_Armature": {
+                "actualActionName": "Spell_Simple_Exit_Armature.002",
+                "frameRange": [0.0, 13.0],
+                "sourceSeconds": 0.43333333333333335
             }
         }
     },
@@ -277,26 +292,42 @@
             "action": "Sprint_Loop",
             "normalized": [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875]
         },
-        "hero-attack": {
-            "action": "Sword_Regular_A",
-            "normalized": [0.125, 0.5]
-        },
-        "hero-backhand": {
-            "action": "Sword_Regular_B",
-            "normalized": [0, 0.5]
-        },
+        "hero-attack": [
+            {
+                "action": "Sword_Regular_A",
+                "normalized": [0, 0.2, 0.4, 0.6, 0.8]
+            },
+            {
+                "action": "Sword_Regular_A_Rec",
+                "normalized": [0.25, 0.6, 0.9]
+            }
+        ],
+        "hero-backhand": [
+            {
+                "action": "Sword_Regular_B",
+                "normalized": [0, 0.2, 0.4, 0.6, 0.8]
+            },
+            {
+                "action": "Sword_Regular_B_Rec",
+                "normalized": [0.25, 0.6, 0.9]
+            }
+        ],
         "hero-cleave": {
             "action": "Sword_Regular_C",
-            "normalized": [0.125, 0.375]
+            "normalized": [0, 0.12, 0.24, 0.36, 0.48, 0.63, 0.8, 0.96]
         },
         "mage-cast": [
             {
                 "action": "Spell_Simple_Enter",
-                "normalized": 0.25
+                "normalized": [0.05, 0.38, 0.78]
             },
             {
                 "action": "Spell_Simple_Shoot",
-                "normalized": 0.5
+                "normalized": [0.12, 0.48, 0.82]
+            },
+            {
+                "action": "Spell_Simple_Exit",
+                "normalized": [0.42, 0.88]
             }
         ],
         "roll": {
@@ -304,7 +335,7 @@
             "normalized": [0, 0.25, 0.5, 0.75]
         }
     },
-    "physics": "Offline poses only. Existing84units of resolved movement per run cycle, attack/cast/dodge timing, collisions, damage and checkpoint data are unchanged. No runtime3D assets or engine.",
+    "physics": "Artwork-only changes. Run phase follows the existing84 units of resolved movement per cycle and action progress follows actual simulation timers. Body widening keeps the projected origin and changes no hitbox/damage/locks; separate balance/mobility changes are outside this art provenance.",
     "assembly": {
         "warrior": "Male_Ranger outfit + official male base head; original sword, matte deepteal hood/brownleather",
         "mage": "Male_Peasant outfit + Ranger hood + same official male base head; navycloth, original wand and skinned split robe panels",
@@ -312,7 +343,7 @@
         "roll": "Both classes same camera/worldpixel scale via43/rollRef=60/actorRef"
     },
     "verification": {
-        "frames": 480,
+        "frames": 864,
         "rootPlanarDrift": 0,
         "anatomicalFootLeadSwapsPerRunCycle": 2,
         "all16HeadGazeVerified": true,
@@ -320,5 +351,11 @@
         "noMirrorsOrAliasedRects": true,
         "allRecordsProjectedOrigin": true
     },
-    "previewNotice": "The320ms GIF is a phase inspection at60px worldheight, not browserFPS measurement. Actual run phase follows resolved movement distance."
+    "previewNotice": "The320ms GIF is a phase inspection at60px worldheight, not browserFPS measurement. Actual run phase follows resolved movement distance.",
+    "runtimeBodyScale": {
+        "width": 1.2,
+        "height": 1.02,
+        "pivot": "projected world origin",
+        "applies": ["idle", "run", "attack", "cast", "roll", "rider"]
+    }
 }

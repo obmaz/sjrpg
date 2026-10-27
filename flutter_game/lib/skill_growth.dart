@@ -1,8 +1,8 @@
 /// Shared rank scaling for simulation, previews and the HUD.
 class SkillGrowth {
   static int level(int rank) => rank.clamp(1, 5);
-  static double tempo(int rank) => 1 + (level(rank) - 1) * .08;
-  static double cooldown(int rank) => 1 - (level(rank) - 1) * .07;
+  static double tempo(int rank) => .75 * (1 + (level(rank) - 1) * .035);
+  static double cooldown(int rank) => 1 - (level(rank) - 1) * .02;
   static int tier(int rank) => rank >= 5
       ? 2
       : rank >= 3

@@ -28,6 +28,7 @@ void main() {
                   'unyieldingOath',
                   'charge',
                   'heavyStrike',
+                  'battleSprint',
                 }
               : {
                   'meteor',
@@ -92,7 +93,7 @@ void main() {
               (p.bonusAttack +
                   (p.level - 1) * 2 +
                   p.equipped.values.fold(0.0, (v, g) => v + g.attack)) *
-              (1 + p.rank('mastery') * .06 + p.rank('arcaneMastery') * .07);
+              (1 + p.rank('mastery') * .02 + p.rank('arcaneMastery') * .025);
           expect(p.swordDamage, closeTo(raw * .75 * .85, .00001));
           expect(p.basicDps, closeTo(p.basicDamage / p.attackInterval, .00001));
           final saved = p.toSave(), restored = Progress.fromSave(saved)!;

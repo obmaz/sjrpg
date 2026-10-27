@@ -1,3 +1,4 @@
+import hashlib
 import json
 import math
 import os
@@ -219,7 +220,12 @@ m = {
     "globalMaterialTreatment": "source baseColor, constant roughness.95/metal0, headhood muted teal multiply.72; smooth source normals",
     "originalSword": "procedurally authored blade/guard/grip parented to hand_r, single fixed bind offset, .6m blade",
 }
-(OUT / "frames").mkdir(exist_ok=True)
+# A new pose/material contract must never reuse older two-pose PNGs.
+source_contract = json.loads((Path(__file__).resolve().parents[2] / "docs/art/character-motion-provenance.json").read_text())["sourceFiles"]
+bake_key = hashlib.sha256(Path(__file__).read_bytes() + json.dumps(source_contract, sort_keys=True).encode()).hexdigest()[:16]
+FRAME_DIR = OUT / "frames" / bake_key
+FRAME_DIR.mkdir(parents=True, exist_ok=True)
+m["bakeContract"] = bake_key
 
 # All slots are separate real rendered directions. S0,W4,N8,E12.
 labels = [
@@ -264,12 +270,13 @@ for d in range(16):
 for p in range(8):
     for d in range(16):
         jobs.append(("hero", "run", d, p, "Sprint_Loop_Armature", p / 8))
-for sheet, action, norms in [
-    ("hero-attack", "Sword_Regular_A_Armature", [0.125, 0.5]),
-    ("hero-backhand", "Sword_Regular_B_Armature", [0, 0.5]),
-    ("hero-cleave", "Sword_Regular_C_Armature", [0.125, 0.375]),
+for sheet, primary, recovery in [
+    ("hero-attack", "Sword_Regular_A_Armature", "Sword_Regular_A_Rec_Armature"),
+    ("hero-backhand", "Sword_Regular_B_Armature", "Sword_Regular_B_Rec_Armature"),
+    ("hero-cleave", "Sword_Regular_C_Armature", None),
 ]:
-    for p, norm in enumerate(norms):
+    samples = ([(primary, n) for n in [0, .2, .4, .6, .8]] + [(recovery, n) for n in [.25, .6, .9]]) if recovery else [(primary, n) for n in [0, .12, .24, .36, .48, .63, .80, .96]]
+    for p, (action, norm) in enumerate(samples):
         for d in range(16):
             jobs.append((sheet, "attack", d, p, action, norm))
 for p in range(4):
@@ -319,7 +326,7 @@ for jobIndex, (sheet, kind, d, phase, actionName, norm) in enumerate(jobs):
         "tipWorld": list(tip),
         "pixelDelta": [(tipPx.x - gripPx.x) * 256, (gripPx.y - tipPx.y) * 256],
     }
-    path = OUT / "frames" / f"{sheet}-{kind}-d{d:02d}-p{phase}.png"
+    path = FRAME_DIR / f"{sheet}-{kind}-d{d:02d}-p{phase}.png"
     scene.render.filepath = str(path)
     if not path.exists():
         bpy.ops.render.render(write_still=True)

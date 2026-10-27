@@ -31,6 +31,9 @@ void main() {
     'charge moves the body, hits each victim once, respects its cap and keeps its cooldown',
     () {
       s.progress.selectSkill('charge');
+      final skill = s.progress.skills.firstWhere((d) => d.id == 'charge');
+      final duration = s.progress.skillMotionTime(skill);
+      final scheduledCooldown = s.progress.skillCooldown(skill);
       final targets = [
         for (var i = 0; i < 4; i++)
           s.spawnEnemy('goblin', Offset(6050 + i * 60, 4200))!
@@ -40,13 +43,17 @@ void main() {
       s.hero.skill();
       s.hero.skill();
       expect(s.progress.energy, energy - 16);
-      expect(s.hero.chargeTime, .36);
+      expect(s.hero.chargeTime, duration);
+      expect(s.hero.cooldowns['charge'], scheduledCooldown);
       expect(s.boardNearbyMount(), false);
       s.pause();
       step(10);
       expect(s.hero.position.x, 6000);
+      expect(s.hero.chargeTime, duration);
+      expect(s.hero.cooldowns['charge'], scheduledCooldown);
       s.resume();
-      step(10);
+      final movementFrames = (duration / .05).ceil() + 1;
+      step(movementFrames);
       expect(s.hero.position.x, greaterThan(6100));
       expect(s.hero.chargeVictims.length, 3);
       expect(targets.where((m) => m.life.value < 500).length, 3);
@@ -56,10 +63,14 @@ void main() {
       for (final m in s.hero.chargeVictims) {
         expect(m.life.value, closeTo(500 - damage, .001));
       }
-      expect(s.hero.cooldowns['charge'], greaterThan(2.8));
+      final remainingCooldown = math.max(
+        0,
+        scheduledCooldown - movementFrames * .05,
+      );
+      expect(s.hero.cooldowns['charge'], closeTo(remainingCooldown, .000001));
       expect(
         GameCheckpoint.capture(s)!.data['cooldowns']['charge'],
-        greaterThan(2.8),
+        closeTo(remainingCooldown, .000001),
       );
     },
   );
@@ -93,19 +104,33 @@ void main() {
           s.spawnEnemy('goblin', at)!..life.initial(500),
       ];
       final energy = s.progress.energy;
+      final skill = s.progress.skills.firstWhere((d) => d.id == 'crushingBlow');
       s.hero.beginAim(0);
-      step(24);
+      step((s.progress.heavyChargeTime / .05).ceil() + 1);
       expect(s.progress.energy, energy);
       s.hero.finishAim(false);
       expect(s.progress.energy, energy - 22);
       expect(targets.every((m) => m.life.value == 500), true);
-      step(8);
+      final windup = s.progress.skillMotionTime(skill);
+      expect(s.hero.heavyWindup, windup);
+      step(math.max(0, (windup / .05).ceil() - 1));
+      expect(s.hero.heavyWindup, greaterThan(0));
       expect(targets.every((m) => m.life.value == 500), true);
+      final pausedWindup = s.hero.heavyWindup;
       s.pause();
       step(20);
       expect(targets.every((m) => m.life.value == 500), true);
+      expect(s.hero.heavyWindup, pausedWindup);
       s.resume();
-      step(1);
+      final impactFrames = (pausedWindup / .05).ceil() + 1;
+      for (
+        var frame = 0;
+        frame < impactFrames && s.hero.heavyWindup > 0;
+        frame++
+      ) {
+        step(1);
+      }
+      expect(s.hero.heavyWindup, 0);
       final damage =
           s.progress.skillDamage(
             s.progress.skills.firstWhere((d) => d.id == 'crushingBlow'),
@@ -143,15 +168,26 @@ void main() {
     'reset cancels pending physical motion while retaining spent cooldowns',
     () {
       s.progress.selectSkill('crushingBlow');
+      final skill = s.progress.skills.firstWhere((d) => d.id == 'crushingBlow');
+      final scheduledCooldown = s.progress.skillCooldown(skill);
+      final target = s.spawnEnemy('goblin', const Offset(6050, 4200))!
+        ..life.initial(500);
       s.hero.skill();
+      final spentCooldown = s.hero.cooldowns['crushingBlow'];
+      expect(spentCooldown, scheduledCooldown);
 
       s.progress.awardSkillResetTicket(WorldStage.forest);
       expect(s.resetSkills(), true);
       expect(s.hero.heavyWindup, 0);
       expect(s.hero.heavySkill, null);
-      expect(s.hero.cooldowns['crushingBlow'], closeTo(4.2, .000001));
+      expect(s.hero.cooldowns['crushingBlow'], spentCooldown);
       step(20);
       expect(s.hero.heavySkill, null);
+      expect(
+        target.life.value,
+        500,
+        reason: 'reset must cancel the scheduled hit',
+      );
     },
   );
 }

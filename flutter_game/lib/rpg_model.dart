@@ -545,6 +545,7 @@ class SkillDef {
     this.cooldown, {
     this.passive = false,
     this.basic = false,
+    this.mobility = false,
     this.basicDamageScale = 1,
     this.basicTempoScale = 1,
     this.requires = const {},
@@ -552,7 +553,7 @@ class SkillDef {
   final String id, name, branch, description;
   final int requiredLevel;
   final double cost, cooldown;
-  final bool passive, basic;
+  final bool passive, basic, mobility;
   final double basicDamageScale, basicTempoScale;
   final Map<String, int> requires;
   static const maxRank = 5;
@@ -584,6 +585,8 @@ class SkillDef {
         'iceArmor': '얼음 갑옷',
         'chainLightning': '번개',
         'meteor': '유성',
+        'battleSprint': '질주',
+        'blink': '순간이동',
       }[id] ??
       name;
 }
@@ -593,7 +596,7 @@ const warriorSkills = [
     'cleave',
     '연속 베기',
     '전투 기술',
-    '기본 공격은 1명을 벱니다. 등급마다 공격 속도가 빨라지고 최대 대상 +1명으로 5명까지 증가합니다. 피해는 조금씩 증가합니다. 세 번째 공격은 강타합니다.',
+    '기본 공격은 1명을 벱니다. 3·5등급에서 대상이 1명씩 늘어 최대 3명을 공격합니다. 등급마다 피해와 속도가 조금씩 증가하며 세 번째 공격은 강타합니다.',
     1,
     0,
     0,
@@ -604,7 +607,7 @@ const warriorSkills = [
     'warcry',
     '전장의 함성',
     '함성',
-    '주변 적을 함성으로 기절시키고 잠시 피해를 줄입니다. 등급마다 대상 수·보호율·파동 속도가 늘고 재사용이 빨라집니다. 보호는 재사용 시간의 90% 안에서 끝납니다.',
+    '주변 적을 함성으로 잠시 기절시키고 받는 피해를 줄입니다. 3·5등급에서 대상이 1명씩 늘고 나머지 성능은 조금씩 성장합니다. 보호는 재사용 시간보다 먼저 끝납니다.',
     1,
     18,
     7,
@@ -613,7 +616,7 @@ const warriorSkills = [
     'mastery',
     '무기 숙련',
     '전투 숙련',
-    '등급마다 모든 무기 피해 +6%.',
+    '등급마다 모든 무기 피해 +2%. 숙련 피해 보너스는 최대 15%입니다.',
     2,
     0,
     0,
@@ -634,7 +637,7 @@ const warriorSkills = [
     'whirlwind',
     '소용돌이',
     '전투 기술',
-    '무기를 들고 직접 회전하며 세 차례 벱니다. 등급마다 회전·베기 속도와 대상 수가 늘고 재사용이 빨라지며 검 궤적과 파편이 화려해집니다.',
+    '무기를 들고 직접 회전하며 세 차례 벱니다. 3·5등급에서 대상이 1명씩 늘고 피해·속도·재사용은 조금씩 성장합니다. 검 궤적과 파편도 화려해집니다.',
     3,
     30,
     5,
@@ -644,7 +647,7 @@ const warriorSkills = [
     'frenzy',
     '광전사의 격노',
     '전투 기술',
-    '공격·이동 속도가 증가하고 발동 시 주변 적을 벱니다. 등급마다 공격 속도가 늘고 재사용이 빨라집니다. 강화는 재사용 시간의 90% 안에서 끝납니다.',
+    '짧은 시간 공격 속도가 10~18% 증가하고 조금 빠르게 움직입니다. 발동 시 주변 적을 베며 3·5등급에서 대상이 1명씩 늘어납니다. 강화는 재사용 시간보다 먼저 끝납니다.',
     4,
     28,
     12,
@@ -654,7 +657,7 @@ const warriorSkills = [
     'seismicSlam',
     '대지 강타',
     '전투 기술',
-    '전방의 지면을 내리쳐 적을 잠시 기절시킵니다. 등급마다 동작과 재사용이 빨라지고 대상 수와 파편이 늘어납니다. 장애물 너머는 타격하지 않습니다.',
+    '전방의 지면을 내리쳐 적을 잠시 기절시킵니다. 3·5등급에서 대상이 1명씩 늘고 동작·재사용은 조금씩 빨라집니다. 파편은 화려해지며 장애물 너머는 타격하지 않습니다.',
     5,
     24,
     8,
@@ -664,7 +667,7 @@ const warriorSkills = [
     'battleFocus',
     '전투 집중',
     '전투 숙련',
-    '등급마다 기본 공격 간격이 2.5% 줄어듭니다.',
+    '등급마다 기본 공격 가속 +0.6%p. 장비·숙련의 합산 가속은 최대 15%입니다.',
     5,
     0,
     0,
@@ -675,7 +678,7 @@ const warriorSkills = [
     'battleVigor',
     '전장의 맹세',
     '함성',
-    '등급마다 최대 생명 +8, 전장의 함성 보호 중 피해 감소 +1%p.',
+    '등급마다 최대 생명 +8, 전장의 함성 보호 중 피해 감소 +0.5%p.',
     3,
     0,
     0,
@@ -686,7 +689,7 @@ const warriorSkills = [
     'rallyingVoice',
     '고양의 울림',
     '함성',
-    '전장의 함성으로 보호받는 동안, 실제 기본 공격 적중 시 등급마다 분노 0.7을 추가로 얻습니다. 빗맞힌 공격에는 적용되지 않습니다.',
+    '전장의 함성으로 보호받는 동안, 실제 기본 공격 적중 시 등급마다 분노 0.21을 추가로 얻습니다. 빗맞힌 공격에는 적용되지 않습니다.',
     6,
     0,
     0,
@@ -697,7 +700,7 @@ const warriorSkills = [
     'rendingEdge',
     '예리한 칼날',
     '전투 기술',
-    '등급마다 기본 공격 피해 +5%.',
+    '등급마다 기본 공격 피해 +1.5%.',
     7,
     0,
     0,
@@ -708,7 +711,7 @@ const warriorSkills = [
     'stormOfSteel',
     '강철 폭풍',
     '전투 기술',
-    '등급마다 소용돌이·대지 강타 피해 +2%. 2등급마다 최대 대상 +1명, 최대 2명 추가.',
+    '등급마다 소용돌이·대지 강타 피해 +0.5%. 3·5등급에서 최대 대상 +1명씩, 최대 2명 추가.',
     16,
     0,
     0,
@@ -719,7 +722,7 @@ const warriorSkills = [
     'weaponTempo',
     '무기의 리듬',
     '전투 숙련',
-    '등급마다 기본 공격 간격 1.5% 감소.',
+    '등급마다 기본 공격 가속 +0.4%p. 장비·숙련의 합산 가속은 최대 15%입니다.',
     6,
     0,
     0,
@@ -752,7 +755,7 @@ const warriorSkills = [
     'resoundingCry',
     '공명의 함성',
     '함성',
-    '등급마다 전장의 함성 피해 +6%.',
+    '등급마다 전장의 함성 피해 +2%.',
     6,
     0,
     0,
@@ -763,7 +766,7 @@ const warriorSkills = [
     'warDrums',
     '전쟁의 북소리',
     '함성',
-    '함성 보호 중 실제 적중 시 등급마다 분노 +0.35.',
+    '함성 보호 중 실제 적중 시 등급마다 분노 +0.105.',
     9,
     0,
     0,
@@ -774,7 +777,7 @@ const warriorSkills = [
     'unyieldingOath',
     '불굴의 맹세',
     '함성',
-    '등급마다 전장의 함성 피해 감소 +2%p.',
+    '등급마다 전장의 함성 피해 감소 +0.5%p.',
     16,
     0,
     0,
@@ -785,7 +788,7 @@ const warriorSkills = [
     'charge',
     '맹렬한 돌진',
     '전투 기술',
-    '끌어서 방향을 정한 뒤 몸을 던져 적을 밀칩니다. 벽에서 멈춥니다. 등급마다 돌진·재사용이 빨라지고 대상 수와 궤적이 늘어납니다.',
+    '끌어서 방향을 정한 뒤 몸을 던져 적을 밀칩니다. 벽에서 멈춥니다. 3·5등급에서 대상이 1명씩 늘고 돌진·재사용은 조금씩 빨라지며 궤적이 화려해집니다.',
     6,
     16,
     5,
@@ -795,11 +798,22 @@ const warriorSkills = [
     'crushingBlow',
     '집중 강타',
     '전투 기술',
-    '길게 눌러 힘을 모은 뒤 놓으면 전방을 내려칩니다. 등급마다 충전·동작·재사용이 빨라지고 대상 수와 충격 파편이 늘어납니다. 완전 충전은 피해 +80%입니다.',
+    '길게 눌러 힘을 모은 뒤 놓으면 전방을 내려칩니다. 3·5등급에서 대상이 1명씩 늘고 충전·동작·재사용은 조금씩 빨라집니다. 충격 파편이 화려해지며 완전 충전은 피해 +80%입니다.',
     7,
     22,
     6,
     requires: {'charge': 1, 'rendingEdge': 2},
+  ),
+  SkillDef(
+    'battleSprint',
+    '전투 질주',
+    '전투 숙련',
+    '짧은 시간 평소의 두 배 속도로 달립니다. 회피 옆의 전용 버튼으로 사용하며 자원은 소모하지 않습니다. 등급마다 지속 시간이 0.1초 늘고 재사용이 조금 빨라집니다.',
+    8,
+    0,
+    15,
+    mobility: true,
+    requires: {'resoundingCry': 1},
   ),
   SkillDef(
     'quickCut',
@@ -835,7 +849,7 @@ const mageSkills = [
     'firebolt',
     '마력탄',
     '화염',
-    '장착한 무기의 원소로 공격하는 기본 탄환입니다. 등급마다 공격과 발사가 빨라집니다. 3등급부터 적중 시 폭발하고 대상이 증가합니다.',
+    '장착한 무기의 원소로 공격하는 기본 탄환입니다. 등급마다 피해와 발사가 조금씩 성장하며 3등급부터 폭발합니다. 3·5등급에서 대상이 1명씩 늘어 최대 3명을 공격합니다.',
     1,
     0,
     0,
@@ -846,7 +860,7 @@ const mageSkills = [
     'frostNova',
     '서릿발',
     '냉기',
-    '주변 적을 냉기로 얼립니다. 등급마다 시전·재사용이 빨라지고 대상 수·얼음 결정이 늘어납니다. 감속은 재사용 시간의 90% 안에서 끝납니다.',
+    '주변 적을 냉기로 얼립니다. 3·5등급에서 대상이 1명씩 늘고 시전·재사용은 조금씩 빨라집니다. 얼음 결정은 화려해지고 감속은 재사용 시간보다 먼저 끝납니다.',
     1,
     18,
     6,
@@ -855,7 +869,7 @@ const mageSkills = [
     'arcaneMastery',
     '원소 숙련',
     '번개',
-    '등급마다 원소 피해 +7%, 최대 마나 +8.',
+    '등급마다 원소 피해 +2.5%, 최대 마나 +4. 숙련 피해 보너스는 최대 15%입니다.',
     2,
     0,
     0,
@@ -875,7 +889,7 @@ const mageSkills = [
     'chainLightning',
     '연쇄 번개',
     '번개',
-    '가까운 적들을 잇는 번개입니다. 등급마다 시전·재사용이 빨라지고 대상 수와 전류 갈래가 늘어납니다. 장애물 너머로는 전이하지 않습니다.',
+    '가까운 적들을 잇는 번개입니다. 3·5등급에서 대상이 1명씩 늘고 시전·재사용은 조금씩 빨라집니다. 전류 갈래는 화려해지며 장애물 너머로는 전이하지 않습니다.',
     3,
     28,
     5,
@@ -885,7 +899,7 @@ const mageSkills = [
     'meteor',
     '유성 낙하',
     '화염',
-    '목표에 유성을 소환합니다. 등급마다 시전·낙하·재사용이 빨라지고 대상 수·불꽃·파편이 늘어납니다.',
+    '목표에 유성을 소환합니다. 3·5등급에서 대상이 1명씩 늘고 시전·낙하·재사용은 조금씩 빨라집니다. 불꽃과 파편은 화려해집니다.',
     4,
     38,
     9,
@@ -895,7 +909,7 @@ const mageSkills = [
     'warmth',
     '온기',
     '화염',
-    '등급마다 초당 마나 회복 +1.05.',
+    '등급마다 초당 마나 회복 +0.315.',
     2,
     0,
     0,
@@ -906,7 +920,7 @@ const mageSkills = [
     'coldMastery',
     '냉기 숙련',
     '냉기',
-    '등급마다 냉기 무기와 서릿발 피해 +8%.',
+    '등급마다 냉기 무기와 서릿발 피해 +2.5%.',
     5,
     0,
     0,
@@ -917,7 +931,7 @@ const mageSkills = [
     'lightningMastery',
     '번개 숙련',
     '번개',
-    '등급마다 번개 무기와 연쇄 번개 피해 +8%.',
+    '등급마다 번개 무기와 연쇄 번개 피해 +2.5%.',
     6,
     0,
     0,
@@ -928,7 +942,7 @@ const mageSkills = [
     'emberFocus',
     '잿불 집중',
     '화염',
-    '등급마다 화염 무기·유성 피해 +5%.',
+    '등급마다 화염 무기·유성 피해 +2%.',
     4,
     0,
     0,
@@ -939,7 +953,7 @@ const mageSkills = [
     'cinderReach',
     '화염 확산',
     '화염',
-    '등급마다 유성 피해 +2%. 2등급마다 최대 대상 +1명, 최대 2명 추가.',
+    '등급마다 유성 피해 +0.5%. 3·5등급에서 최대 대상 +1명씩, 최대 2명 추가.',
     10,
     0,
     0,
@@ -961,7 +975,7 @@ const mageSkills = [
     'deepFreeze',
     '심연의 냉기',
     '냉기',
-    '등급마다 냉기 무기·서릿발 피해 +5%.',
+    '등급마다 냉기 무기·서릿발 피해 +1.5%.',
     5,
     0,
     0,
@@ -972,7 +986,7 @@ const mageSkills = [
     'frozenAegis',
     '빙하의 방벽',
     '냉기',
-    '등급마다 얼음 갑옷 피해 감소 +2%p.',
+    '등급마다 얼음 갑옷 피해 감소 +0.5%p.',
     10,
     0,
     0,
@@ -983,7 +997,7 @@ const mageSkills = [
     'glacialReserve',
     '빙하의 샘',
     '냉기',
-    '등급마다 최대 마나 +6.',
+    '등급마다 최대 마나 +3.',
     13,
     0,
     0,
@@ -994,7 +1008,7 @@ const mageSkills = [
     'conductivity',
     '마력 전도',
     '번개',
-    '등급마다 번개 무기·연쇄 번개 피해 +5%.',
+    '등급마다 번개 무기·연쇄 번개 피해 +1.5%.',
     6,
     0,
     0,
@@ -1005,7 +1019,7 @@ const mageSkills = [
     'forkedStorm',
     '갈래 번개',
     '번개',
-    '등급마다 연쇄 번개 피해 +2%. 2등급마다 최대 대상 +1명, 최대 2명 추가.',
+    '등급마다 연쇄 번개 피해 +0.5%. 3·5등급에서 최대 대상 +1명씩, 최대 2명 추가.',
     10,
     0,
     0,
@@ -1016,12 +1030,23 @@ const mageSkills = [
     'arcaneEconomy',
     '비전 순환',
     '번개',
-    '등급마다 최대 마나 +4, 초당 마나 회복 +0.35.',
+    '등급마다 최대 마나 +2, 초당 마나 회복 +0.105.',
     16,
     0,
     0,
     passive: true,
     requires: {'frozenAegis': 1, 'forkedStorm': 2},
+  ),
+  SkillDef(
+    'blink',
+    '순간이동',
+    '번개',
+    '적을 가로질러 먼 지점으로 순간이동합니다. 지형과 장애물을 통과하지 않으며 회피 옆의 전용 버튼으로 사용합니다. 자원은 소모하지 않습니다. 등급마다 거리 +10, 재사용이 조금 빨라집니다.',
+    8,
+    0,
+    10,
+    mobility: true,
+    requires: {'conductivity': 1},
   ),
   SkillDef(
     'iceShard',
@@ -1335,11 +1360,14 @@ class Progress {
       p.selectedBasic = basic;
       p.selectedSkill = data['selectedSkill'] as String;
       final active = p.skills.firstWhere((s) => s.id == p.selectedSkill);
-      if (active.passive || p.rank(active.id) == 0) return null;
+      if (active.passive || active.mobility || p.rank(active.id) == 0) {
+        return null;
+      }
       p.secondarySkill = data['secondarySkill'] as String?;
       if (p.secondarySkill != null) {
         final secondary = p.skills.firstWhere((s) => s.id == p.secondarySkill);
         if (secondary.passive ||
+            secondary.mobility ||
             p.rank(secondary.id) == 0 ||
             secondary.id == active.id) {
           return null;
@@ -1352,6 +1380,7 @@ class Progress {
             .where(
               (s) =>
                   !s.passive &&
+                  !s.mobility &&
                   p.rank(s.id) > 0 &&
                   s.id != p.selectedSkill &&
                   s.id != p.secondarySkill,
@@ -1364,7 +1393,10 @@ class Progress {
       for (var slot = 0; slot < 4; slot++) {
         final skill = p.skillAt(slot);
         if (skill == null) continue;
-        if (skill.passive || p.rank(skill.id) == 0 || !assigned.add(skill.id)) {
+        if (skill.passive ||
+            skill.mobility ||
+            p.rank(skill.id) == 0 ||
+            !assigned.add(skill.id)) {
           return null;
         }
       }
@@ -1380,6 +1412,17 @@ class Progress {
   static const capacity = 24;
   List<SkillDef> get skills =>
       heroClass == HeroClass.warrior ? warriorSkills : mageSkills;
+  SkillDef get mobilitySkill => skills.firstWhere((s) => s.mobility);
+  double get mobilityCooldown => skillCooldown(mobilitySkill);
+  double get mobilityDuration => heroClass == HeroClass.warrior
+      ? limitedSkillDuration(
+          'battleSprint',
+          2.4 + math.max(0, rank('battleSprint') - 1) * .1,
+        )
+      : 0;
+  double get mobilityRange => heroClass == HeroClass.mage && rank('blink') > 0
+      ? 340 + math.max(0, rank('blink') - 1) * 10.0
+      : 0;
   SkillDef? get secondarySkillDef => secondarySkill == null
       ? null
       : skills.firstWhere((s) => s.id == secondarySkill);
@@ -1406,19 +1449,20 @@ class Progress {
   double get maxEnergy =>
       (heroClass == HeroClass.warrior ? 100 : 90) +
       equipped.values.fold(0.0, (v, g) => v + g.mana) +
-      rank('arcaneMastery') * 8 +
-      rank('glacialReserve') * 6 +
-      rank('arcaneEconomy') * 4;
+      rank('arcaneMastery') * 4 +
+      rank('glacialReserve') * 3 +
+      rank('arcaneEconomy') * 2;
   double get armor =>
       equipped.values.fold(0.0, (v, g) => v + g.armor) +
       rank('ironSkin') * 5 +
       rank('veteranGuard') * 2;
   static const playerDamageScale = .75 * CombatBalance.heroDamageScale;
-  static const skillCooldownScale = .7;
+  static const skillCooldownScale = .9;
   double get attackMultiplier =>
       (1 +
-          rank('mastery') * CombatBalance.physicalMasteryGrowth +
-          rank('arcaneMastery') * CombatBalance.arcaneMasteryGrowth) *
+              rank('mastery') * CombatBalance.physicalMasteryGrowth +
+              rank('arcaneMastery') * CombatBalance.arcaneMasteryGrowth)
+          .clamp(1.0, CombatBalance.maximumMasteryMultiplier) *
       playerDamageScale;
   double get swordDamage =>
       (bonusAttack +
@@ -1432,20 +1476,19 @@ class Progress {
       ? const ['전투 기술', '전투 숙련', '함성']
       : const ['화염', '냉기', '번개'];
   double get manaRecovery =>
-      (9 + rank('warmth') * 1.5 + rank('arcaneEconomy') * .5) *
+      (9 + rank('warmth') * .45 + rank('arcaneEconomy') * .15) *
       CombatBalance.resourceGainScale;
-  double get fireDamageMultiplier => 1 + rank('emberFocus') * .05;
+  double get fireDamageMultiplier => 1 + rank('emberFocus') * .02;
   double get coldDamageMultiplier =>
-      1 + rank('coldMastery') * .08 + rank('deepFreeze') * .05;
+      1 + rank('coldMastery') * .025 + rank('deepFreeze') * .015;
   double get lightningDamageMultiplier =>
-      1 + rank('lightningMastery') * .08 + rank('conductivity') * .05;
+      1 + rank('lightningMastery') * .025 + rank('conductivity') * .015;
   int get basicTargetLimit => basicTargetLimitForRank(rank(selectedBasic));
   int basicTargetLimitForRank(int rank, {SkillDef? basic}) {
     final skill = basic ?? basicSkill;
     if (rank <= 0) return 0;
     return switch (skill.id) {
-      'cleave' => rank.clamp(1, SkillDef.maxRank),
-      'firebolt' => rank >= 3 ? rank.clamp(3, 5) : 1,
+      'cleave' || 'firebolt' => 1 + SkillGrowth.tier(rank),
       'sparkBolt' => rank >= 3 ? 2 : 1,
       _ => 1,
     };
@@ -1456,13 +1499,17 @@ class Progress {
     if (r == 0 || !skills.contains(skill)) return 0;
     if (skill.basic) return basicTargetLimitForRank(r, basic: skill);
     return switch (skill.id) {
-      'whirlwind' => 3 + r - 1 + rank('stormOfSteel') ~/ 2,
-      'chainLightning' => 3 + r - 1 + rank('forkedStorm') ~/ 2,
-      'warcry' || 'frostNova' => 3 + r - 1,
-      'frenzy' || 'charge' => 3 + (r - 1) ~/ 2,
-      'crushingBlow' => 3 + r - 1,
-      'seismicSlam' => 3 + (r - 1) * 2 + rank('stormOfSteel') ~/ 2,
-      'meteor' => 3 + (r - 1) * 2 + rank('cinderReach') ~/ 2,
+      'whirlwind' || 'seismicSlam' =>
+        3 + SkillGrowth.tier(r) + SkillGrowth.tier(rank('stormOfSteel')),
+      'chainLightning' =>
+        3 + SkillGrowth.tier(r) + SkillGrowth.tier(rank('forkedStorm')),
+      'meteor' =>
+        3 + SkillGrowth.tier(r) + SkillGrowth.tier(rank('cinderReach')),
+      'warcry' ||
+      'frostNova' ||
+      'frenzy' ||
+      'charge' ||
+      'crushingBlow' => 3 + SkillGrowth.tier(r),
       _ => 0,
     };
   }
@@ -1479,7 +1526,7 @@ class Progress {
     return skill.cooldown *
         skillCooldownScale *
         SkillGrowth.cooldown(r) *
-        (1 - specialty * .02);
+        (1 - specialty * .005);
   }
 
   double skillTempo(SkillDef skill, {int? atRank}) =>
@@ -1502,8 +1549,8 @@ class Progress {
       skill.basicTempoScale;
   double get basicTempo => basicTempoFor(basicSkill);
   double get heavyChargeTime => 1.2 / SkillGrowth.tempo(rank('crushingBlow'));
-  double get frenzyAttackTempo => 1.65 + math.max(0, rank('frenzy') - 1) * .08;
-  double get frenzyMoveSpeed => 310 + math.max(0, rank('frenzy') - 1) * 8;
+  double get frenzyAttackTempo => 1.10 + math.max(0, rank('frenzy') - 1) * .02;
+  double get frenzyMoveSpeed => 145 + math.max(0, rank('frenzy') - 1) * 1.25;
   // Every temporary skill effect leaves at least ten percent of its actual
   // rank/perk-adjusted cooldown without that effect.
   static const skillEffectUptime = .9;
@@ -1517,18 +1564,20 @@ class Progress {
     );
   }
 
-  double get frenzyDuration =>
-      limitedSkillDuration('frenzy', 7 + math.max(0, rank('frenzy') - 1) * .5);
+  double get frenzyDuration => limitedSkillDuration(
+    'frenzy',
+    3.2 + math.max(0, rank('frenzy') - 1) * .15,
+  );
   double get iceArmorDuration => limitedSkillDuration(
     'iceArmor',
-    12 + math.max(0, rank('iceArmor') - 1) * 1.25,
+    5 + math.max(0, rank('iceArmor') - 1) * .3,
   );
   double get novaSlowDuration => limitedSkillDuration(
     'frostNova',
-    3 + math.max(0, rank('frostNova') - 1) * .2,
+    2 + math.max(0, rank('frostNova') - 1) * .1,
   );
   double get warcryStun =>
-      limitedSkillDuration('warcry', 2 + math.max(0, rank('warcry') - 1) * .1);
+      limitedSkillDuration('warcry', 1 + math.max(0, rank('warcry') - 1) * .05);
 
   double get basicDamage => skillDamage(basicSkill);
   double skillDamage(SkillDef skill, {int? atRank}) {
@@ -1543,16 +1592,16 @@ class Progress {
       'quickCut' ||
       'heavyStrike' ||
       'iceShard' ||
-      'sparkBolt' => (1 + math.max(0, r - 1) * .04) * skill.basicDamageScale,
-      'warcry' => 1.25 + math.max(0, r - 1) * .04,
-      'whirlwind' => 1.34 + math.max(0, r - 1) * .05,
-      'frenzy' => 1.4 + math.max(0, r - 1) * .05,
-      'charge' => 1.65 + math.max(0, r - 1) * .05,
-      'crushingBlow' => 2.6 + math.max(0, r - 1) * .1,
-      'seismicSlam' => 2.12 + math.max(0, r - 1) * .1,
-      'frostNova' => 1.4 + math.max(0, r - 1) * .05,
-      'chainLightning' => 1.85 + math.max(0, r - 1) * .1,
-      'meteor' => 3.6 + math.max(0, r - 1) * .15,
+      'sparkBolt' => (1 + math.max(0, r - 1) * .01) * skill.basicDamageScale,
+      'warcry' => 1.25 + math.max(0, r - 1) * .01,
+      'whirlwind' => 1.34 + math.max(0, r - 1) * .015,
+      'frenzy' => 1.4 + math.max(0, r - 1) * .015,
+      'charge' => 1.65 + math.max(0, r - 1) * .015,
+      'crushingBlow' => 2.6 + math.max(0, r - 1) * .025,
+      'seismicSlam' => 2.12 + math.max(0, r - 1) * .025,
+      'frostNova' => 1.4 + math.max(0, r - 1) * .015,
+      'chainLightning' => 1.85 + math.max(0, r - 1) * .025,
+      'meteor' => 3.6 + math.max(0, r - 1) * .04,
       _ => 0.0,
     };
     final element =
@@ -1567,45 +1616,53 @@ class Progress {
         skill.id == 'meteor' ||
         (skill.basic && basicElementFor(skill) == 'fire');
     final specialization = switch (skill.id) {
-      'cleave' || 'quickCut' || 'heavyStrike' => 1 + rank('rendingEdge') * .05,
-      'warcry' => 1 + rank('resoundingCry') * .06,
-      'whirlwind' || 'seismicSlam' => 1 + rank('stormOfSteel') * .02,
-      'meteor' => 1 + rank('cinderReach') * .02,
-      'chainLightning' => 1 + rank('forkedStorm') * .02,
+      'cleave' || 'quickCut' || 'heavyStrike' => 1 + rank('rendingEdge') * .015,
+      'warcry' => 1 + rank('resoundingCry') * .02,
+      'whirlwind' || 'seismicSlam' => 1 + rank('stormOfSteel') * .005,
+      'meteor' => 1 + rank('cinderReach') * .005,
+      'chainLightning' => 1 + rank('forkedStorm') * .005,
       _ => 1.0,
     };
-    return swordDamage *
-        factor *
-        element *
-        (fire ? fireDamageMultiplier : 1) *
-        specialization;
+    final bonus = (element * (fire ? fireDamageMultiplier : 1) * specialization)
+        .clamp(1.0, CombatBalance.maximumSkillDamageMultiplier);
+    return swordDamage * factor * bonus * CombatBalance.skillDamageScale;
   }
 
   double skillProtection(String id, {int? atRank}) {
     final r = (atRank ?? rank(id)).clamp(0, SkillDef.maxRank);
     return id == 'warcry'
-        ? .25 +
-              r * .025 +
-              rank('unyieldingOath') * .02 +
-              rank('battleVigor') * .01
+        ? (.12 +
+                  r * .01 +
+                  rank('unyieldingOath') * .005 +
+                  rank('battleVigor') * .005)
+              .clamp(0.0, .25)
         : id == 'iceArmor'
-        ? .25 + r * .05 + rank('frozenAegis') * .02
+        ? (.15 + r * .015 + rank('frozenAegis') * .005).clamp(0.0, .30)
         : 0;
   }
 
-  double get warcryDuration =>
-      limitedSkillDuration('warcry', 6 + math.max(0, rank('warcry') - 1) * .35);
+  double get warcryDuration => limitedSkillDuration(
+    'warcry',
+    2.6 + math.max(0, rank('warcry') - 1) * .1,
+  );
   double rageOnHit({required bool protected}) =>
-      (3.0 + (protected ? rank('rallyingVoice') + rank('warDrums') * .5 : 0)) *
+      (3.0 +
+          (protected
+              ? rank('rallyingVoice') * .3 + rank('warDrums') * .15
+              : 0)) *
       CombatBalance.resourceGainScale;
+
+  double get attackHaste =>
+      (equipped.values.fold(0.0, (v, g) => v + g.base.haste) +
+              rank('battleFocus') * .006 +
+              rank('weaponTempo') * .004)
+          .clamp(0.0, CombatBalance.maximumAttackHaste);
 
   double attackIntervalFor(SkillDef skill, {int? atRank}) => math.max(
     CombatBalance.minimumBasicInterval,
     weapon.base.tempo /
         basicTempoFor(skill, atRank: atRank) *
-        (1 - equipped.values.fold(0.0, (v, g) => v + g.base.haste)) *
-        (1 - rank('battleFocus') * .025) *
-        (1 - rank('weaponTempo') * .015),
+        (1 - attackHaste),
   );
   double get attackInterval => attackIntervalFor(basicSkill);
   double get basicDps => basicDamage / attackInterval;
@@ -1717,7 +1774,7 @@ class Progress {
     skillPoints--;
     ranks[skill.id] = previousRank + 1;
     if (skill.basic && previousRank == 0) selectedBasic = skill.id;
-    if (!skill.passive && !skillSlots.contains(skill.id)) {
+    if (!skill.passive && !skill.mobility && !skillSlots.contains(skill.id)) {
       if (secondarySkill == null) {
         secondarySkill = skill.id;
       } else if (tertiarySkill == null) {
@@ -1733,7 +1790,9 @@ class Progress {
   bool canSelectSkill(String id, {int slot = 0}) {
     if (slot < 0 ||
         slot > 3 ||
-        !skills.any((s) => s.id == id && !s.passive && rank(id) > 0)) {
+        !skills.any(
+          (s) => s.id == id && !s.passive && !s.mobility && rank(id) > 0,
+        )) {
       return false;
     }
     final values = skillSlots;

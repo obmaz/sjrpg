@@ -14,7 +14,7 @@ void main() {
       () {
         final p = Progress(heroClass: hero);
         expect(p.skillBranches.length, 3);
-        expect(p.skills.length, hero == HeroClass.warrior ? 22 : 20);
+        expect(p.skills.length, hero == HeroClass.warrior ? 23 : 21);
         for (final branch in p.skillBranches) {
           expect(
             p.skills
@@ -24,7 +24,8 @@ void main() {
                       (!s.basic || s.id == p.defaultBasicId),
                 )
                 .length,
-            branch == '전투 기술' ? 8 : 6,
+            (branch == '전투 기술' ? 8 : 6) +
+                (branch == p.mobilitySkill.branch ? 1 : 0),
           );
         }
         final ids = p.skills.map((s) => s.id).toSet();
@@ -127,11 +128,11 @@ void main() {
       s.hero.armorTime = 6;
       s.hero.attackClock = 0;
       s.hero.slash();
-      expect(p.energy, closeTo(4.9, .000001));
+      expect(p.energy, closeTo(4.41, .000001));
       mob.position.setValues(7000, 4200);
       s.hero.attackClock = 0;
       s.hero.slash();
-      expect(p.energy, closeTo(4.9, .000001));
+      expect(p.energy, closeTo(4.41, .000001));
       s.progress.awardSkillResetTicket(WorldStage.forest);
 
       expect(s.resetSkills(), true);
@@ -158,9 +159,9 @@ void main() {
     for (final id in ['coldMastery']) {
       expect(p.learn(p.skills.firstWhere((s) => s.id == id)), true);
     }
-    expect(p.manaRecovery, closeTo(7.35, .000001));
-    expect(p.coldDamageMultiplier, closeTo(1.13, .000001));
-    expect(p.basicDamage, closeTo(iceDamage * 1.13 / 1.05, .001));
+    expect(p.manaRecovery, closeTo(6.615, .000001));
+    expect(p.coldDamageMultiplier, closeTo(1.04, .000001));
+    expect(p.basicDamage, closeTo(iceDamage * 1.04 / 1.015, .001));
     p.equip(fire);
     final fireDamage = p.basicDamage;
     expect(p.learn(p.skills.firstWhere((s) => s.id == 'coldMastery')), true);
@@ -168,7 +169,7 @@ void main() {
     for (final id in ['arcaneMastery', 'chainLightning', 'lightningMastery']) {
       expect(p.learn(p.skills.firstWhere((s) => s.id == id)), true);
     }
-    expect(p.lightningDamageMultiplier, 1.08);
+    expect(p.lightningDamageMultiplier, 1.025);
     expect(Progress.fromSave(p.toSave())!.toSave(), p.toSave());
   });
 }

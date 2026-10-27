@@ -13,6 +13,7 @@ class ActorAtlas {
     this.heights,
     this.motion,
     this.projectedOrigin,
+    this.action,
   );
   factory ActorAtlas.fromJson(Map<String, dynamic> record) {
     final anchors = record['feet'] as List?,
@@ -22,7 +23,8 @@ class ActorAtlas {
       throw const FormatException('Unknown actor anchor mode');
     }
     final projected = mode == 'projected-origin';
-    final opted = projected || record['motion'] != null;
+    final opted =
+        projected || record['motion'] != null || record['action'] != null;
     if (opted &&
         (anchors == null ||
             anchors.length != (record['frames'] as List).length)) {
@@ -75,6 +77,12 @@ class ActorAtlas {
               frames,
             ),
       projected,
+      record['action'] == null
+          ? null
+          : ActorActionClip.fromJson(
+              record['action'] as Map<String, dynamic>,
+              frames,
+            ),
     );
   }
 
@@ -101,6 +109,7 @@ class ActorAtlas {
   final List<double> heights;
   final ActorRunClip? motion;
   final bool projectedOrigin;
+  final ActorActionClip? action;
 }
 
 enum ActorRunLayout { phaseMajor, directionMajor }
@@ -179,5 +188,54 @@ class ActorRunClip {
         (layout == ActorRunLayout.phaseMajor
             ? wrapped * directions + direction
             : direction * framesPerDirection + wrapped);
+  }
+}
+
+/// Real action poses use simulation progress independently of the run gait.
+class ActorActionClip {
+  const ActorActionClip._(this.framesPerDirection, this.layout);
+  factory ActorActionClip.fromJson(
+    Map<String, dynamic> record,
+    List<ActorFrame> frames,
+  ) {
+    final count = record['frames'];
+    final layout = switch (record['layout']) {
+      'phase-major' => ActorRunLayout.phaseMajor,
+      'direction-major' => ActorRunLayout.directionMajor,
+      _ => null,
+    };
+    if (record['directions'] != 16 ||
+        count is! int ||
+        count < 6 ||
+        count > 8 ||
+        layout == null ||
+        frames.length != count * 16) {
+      throw const FormatException(
+        'Action clips require16 directions and6–8 complete phases',
+      );
+    }
+    final sources = <Rect>{};
+    if (frames.any((frame) => frame.mirrored || !sources.add(frame.source))) {
+      throw const FormatException(
+        'Action poses cannot alias or mirror another frame',
+      );
+    }
+    return ActorActionClip._(count, layout);
+  }
+  final int framesPerDirection;
+  final ActorRunLayout layout;
+
+  int frameIndex(int direction, double progress) {
+    if (direction < 0 || direction >= 16) {
+      throw RangeError.range(direction, 0, 15, 'direction');
+    }
+    final safe = progress.isFinite ? progress.clamp(0.0, 1.0) : 0.0;
+    final phase = (safe * framesPerDirection).floor().clamp(
+      0,
+      framesPerDirection - 1,
+    );
+    return layout == ActorRunLayout.phaseMajor
+        ? phase * 16 + direction
+        : direction * framesPerDirection + phase;
   }
 }

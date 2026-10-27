@@ -19,6 +19,8 @@ class PoseArt extends GameArt {
     bool attack = false,
     bool moving = false,
     int comboPose = 0,
+    double? actionProgress,
+    Object? bossPose,
     double opacity = 1,
     double flash = 0,
   }) {
@@ -41,7 +43,8 @@ void main() {
         recorder.endRecording().dispose();
       }
 
-      for (var i = 0; i < 5; i++) {
+      // Half-speed walking takes twice as long to pass the middle of a stride.
+      for (var i = 0; i < 10; i++) {
         hero.moveRight();
         hero.update(.05);
       }

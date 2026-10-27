@@ -1,3 +1,4 @@
+import hashlib
 import json
 import math
 import os
@@ -269,7 +270,12 @@ m = {
     "globalMaterialTreatment": "source baseColor, constant roughness.95/metal0, headhood muted teal multiply.72; smooth source normals",
     "originalSword": "procedural .45m wooden wand/quietblue crystal; splitnavyrobe sidepanels skinnedto pelvis/thighs, no paidoutfit",
 }
-(OUT / "frames").mkdir(exist_ok=True)
+# A new pose/material contract must never reuse older two-pose PNGs.
+source_contract = json.loads((Path(__file__).resolve().parents[2] / "docs/art/character-motion-provenance.json").read_text())["sourceFiles"]
+bake_key = hashlib.sha256(Path(__file__).read_bytes() + json.dumps(source_contract, sort_keys=True).encode()).hexdigest()[:16]
+FRAME_DIR = OUT / "frames" / bake_key
+FRAME_DIR.mkdir(parents=True, exist_ok=True)
+m["bakeContract"] = bake_key
 
 
 labels = [
@@ -314,9 +320,8 @@ for d in range(16):
 for p in range(8):
     for d in range(16):
         jobs.append(("mage", "run", d, p, "Sprint_Loop_Armature", p / 8))
-for p, (action, norm) in enumerate(
-    [("Spell_Simple_Enter_Armature", 0.25), ("Spell_Simple_Shoot_Armature", 0.5)]
-):
+samples = [("Spell_Simple_Enter_Armature", n) for n in [.05, .38, .78]] + [("Spell_Simple_Shoot_Armature", n) for n in [.12, .48, .82]] + [("Spell_Simple_Exit_Armature", n) for n in [.42, .88]]
+for p, (action, norm) in enumerate(samples):
     for d in range(16):
         jobs.append(("mage-cast", "cast", d, p, action, norm))
 for p in range(4):
@@ -357,7 +362,7 @@ for jobIndex, (sheet, kind, d, phase, actionName, norm) in enumerate(jobs):
             ((1 - gazePoint.y) * 256) - bones["Head"]["pixel"][1],
         ],
     }
-    path = OUT / "frames" / f"{sheet}-{kind}-d{d:02d}-p{phase}.png"
+    path = FRAME_DIR / f"{sheet}-{kind}-d{d:02d}-p{phase}.png"
     scene.render.filepath = str(path)
     if not path.exists():
         bpy.ops.render.render(write_still=True)

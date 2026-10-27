@@ -33,7 +33,11 @@ void main() {
               expect(skill.requires, isEmpty);
               continue;
             }
-            expect(skill.requires.length, row == 1 ? 1 : 2, reason: slot.id);
+            expect(
+              skill.requires.length,
+              row == 1 || skill.mobility ? 1 : 2,
+              reason: slot.id,
+            );
             final previous = rows[row - 1].map((s) => s.id).toList();
             final parentIndices = <int>[];
             for (final parentId in skill.requires.keys) {

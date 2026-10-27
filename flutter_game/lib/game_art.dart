@@ -6,6 +6,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 
 import 'actor_atlas.dart';
+import 'boss_sprite_mesh.dart';
 import 'effect_atlas.dart';
 import 'enemy_catalog.dart';
 import 'ground_texture.dart';
@@ -18,6 +19,8 @@ class GameArt {
   late final Map<String, dynamic> actors, controls;
   final materials = <ui.Shader>[];
   final _actorAtlases = <String, ActorAtlas>{};
+  final _bossMesh = BossSpriteMeshPainter();
+  static const heroWidthScale = 1.20, heroHeightScale = 1.02;
   late final _actorPaint = ui.Paint()..filterQuality = ui.FilterQuality.low;
   late final _rollPaint = ui.Paint()..filterQuality = ui.FilterQuality.medium;
   ActorAtlas _atlas(String sheet) {
@@ -326,6 +329,7 @@ class GameArt {
     for (final name in consumedSources) {
       _sourceBytes.remove(name);
     }
+    _bossMesh.trim(images.values);
     effects.warm();
   }
 
@@ -455,6 +459,7 @@ class GameArt {
   }
 
   void dispose() {
+    _bossMesh.dispose();
     for (final shader in materials) {
       shader.dispose();
     }
@@ -564,6 +569,8 @@ class GameArt {
     bool attack = false,
     bool moving = false,
     int comboPose = 0,
+    double? actionProgress,
+    BossVisualPose? bossPose,
     double opacity = 1,
     double flash = 0,
   }) {
@@ -579,7 +586,14 @@ class GameArt {
     final motion = !attack && (key == 'hero' || key == 'mage')
         ? atlas.motion
         : null;
-    final index = motion != null
+    final action = attack ? atlas.action : null;
+    final selectedPhase = bossPose == null ? phase : 0;
+    final index = action != null
+        ? action.frameIndex(
+            facingFrame(angle, 16),
+            actionProgress ?? (phase.isEven ? 0.0 : .5),
+          )
+        : motion != null
         ? motion.frameIndex(
             facingFrame(angle, ActorRunClip.directions),
             phase,
@@ -604,17 +618,22 @@ class GameArt {
             'clockwork-spider',
             'crystal-beetle',
           }.contains(key)
-        ? facingFrame(angle, 8) * 2 + phase % 2
+        ? facingFrame(angle, 8) * 2 + selectedPhase % 2
         : count == 16
-        ? facingFrame(angle, count) + (phase % 2) * 16
-        : definition.$2 * 8 + facingFrame(angle, count) + (phase % 2) * 32;
+        ? facingFrame(angle, count) + (selectedPhase % 2) * 16
+        : definition.$2 * 8 +
+              facingFrame(angle, count) +
+              (selectedPhase % 2) * 32;
     final frame = atlas.frames[index];
     final scale = height / atlas.heights[definition.$2], src = frame.source;
+    final hero = key == 'hero' || key == 'mage';
+    final scaleX = scale * (hero ? heroWidthScale : 1);
+    final scaleY = scale * (hero ? heroHeightScale : 1);
     final dst = ui.Rect.fromLTWH(
-      feet.dx - frame.anchor.dx * scale,
-      feet.dy - frame.anchor.dy * scale,
-      src.width * scale,
-      src.height * scale,
+      feet.dx - frame.anchor.dx * scaleX,
+      feet.dy - frame.anchor.dy * scaleY,
+      src.width * scaleX,
+      src.height * scaleY,
     );
     final mirror = frame.mirrored;
     if (mirror) {
@@ -623,19 +642,27 @@ class GameArt {
       canvas.scale(-1, 1);
       canvas.translate(-feet.dx, 0);
     }
-    canvas.drawImageRect(
-      images['actors-$sheet']!,
-      src,
-      dst,
-      _actorPaint
-        ..color = ui.Color.fromRGBO(255, 255, 255, opacity)
-        ..colorFilter = flash > 0
-            ? ui.ColorFilter.mode(
-                ui.Color.fromRGBO(255, 249, 220, flash.clamp(0, 1)),
-                ui.BlendMode.srcATop,
-              )
-            : null,
-    );
+    _actorPaint
+      ..color = ui.Color.fromRGBO(255, 255, 255, opacity)
+      ..colorFilter = flash > 0
+          ? ui.ColorFilter.mode(
+              ui.Color.fromRGBO(255, 249, 220, flash.clamp(0, 1)),
+              ui.BlendMode.srcATop,
+            )
+          : null;
+    if (bossPose == null) {
+      canvas.drawImageRect(images['actors-$sheet']!, src, dst, _actorPaint);
+    } else {
+      _bossMesh.paint(
+        canvas,
+        images['actors-$sheet']!,
+        src,
+        dst,
+        _actorPaint,
+        bossPose,
+        groundOrigin: feet,
+      );
+    }
     if (mirror) canvas.restore();
   }
 
@@ -658,10 +685,10 @@ class GameArt {
       images['actors-roll']!,
       src,
       ui.Rect.fromLTWH(
-        feet.dx - anchor.dx * scale,
-        feet.dy - anchor.dy * scale,
-        src.width * scale,
-        src.height * scale,
+        feet.dx - anchor.dx * scale * heroWidthScale,
+        feet.dy - anchor.dy * scale * heroHeightScale,
+        src.width * scale * heroWidthScale,
+        src.height * scale * heroHeightScale,
       ),
       _rollPaint,
     );

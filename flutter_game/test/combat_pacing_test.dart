@@ -27,7 +27,7 @@ void main() {
   }
 
   test(
-    'default basic cadence halves again without a second damage reduction',
+    'default basic cadence and damage reflect the deliberate combat reduction',
     () {
       // Measured at the previous production source: same starting weapon/rank.
       for (final (hero, oldDps, oldInterval) in [
@@ -35,13 +35,13 @@ void main() {
         (HeroClass.mage, 25.0, .42),
       ]) {
         final p = Progress(heroClass: hero);
-        expect(p.basicDps / oldDps, closeTo(.3485, .000001));
-        expect(p.attackInterval / oldInterval, closeTo(1 / .41, .000001));
-        expect(p.basicDps / oldDps, greaterThan(.34));
+        expect(p.basicDps / oldDps, closeTo(.153, .000001));
+        expect(p.attackInterval / oldInterval, closeTo(1 / .30, .000001));
+        expect(p.basicDps / oldDps, greaterThan(.15));
         final basic = hero == HeroClass.warrior ? 'cleave' : 'firebolt';
         final first = p.basicTempo;
         p.ranks[basic] = 5;
-        expect(p.basicTempo / first, closeTo(1.2, .000001));
+        expect(p.basicTempo / first, closeTo(1.06, .000001));
         expect(p.basicTempo / first, lessThan(1.32));
       }
     },
@@ -82,8 +82,8 @@ void main() {
       p.ranks['rallyingVoice'] = 2;
       final skill = p.skills.firstWhere((s) => s.id == 'rallyingVoice');
       final row = previewSkill(p, skill).single;
-      expect(row.format(row.current), '3.5');
-      expect(row.format(row.next), '4.2');
+      expect(row.format(row.current), '2.5');
+      expect(row.format(row.next), '2.7');
       expect(p.learn(skill), true);
       final learned = previewSkill(p, skill).single;
       expect(learned.format(learned.current), row.format(row.next));

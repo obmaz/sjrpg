@@ -27,7 +27,12 @@ void main() {
       ]) {
         final count = key == 'bicycle' ? 8 : 16;
         final movement = key == 'hero';
-        final phases = movement ? 9 : 2;
+        final action = !movement && key != 'bicycle';
+        final phases = movement
+            ? 9
+            : action
+            ? 8
+            : 2;
         final data = art.actors[key];
         expect(data['frames'].length, count * phases);
         expect(data['feet'].length, count * phases);
@@ -35,6 +40,10 @@ void main() {
           expect(data['motion']['runFrames'], 8);
           expect(data['motion']['idleOffset'], 0);
           expect(data['motion']['runOffset'], 16);
+        }
+        if (action) {
+          expect(data['action']['frames'], 8);
+          expect(data['action']['directions'], 16);
         }
         final hashes = <int>{};
         // Keep the 100px body scale and room for swords extending beyond it.
@@ -54,7 +63,8 @@ void main() {
               movement ? math.max(0, phase - 1) : phase,
               100,
               moving: movement && phase > 0,
-              attack: key.startsWith('hero-') || key == 'mage-cast',
+              attack: action,
+              actionProgress: action ? phase / (phases - 1) : null,
               comboPose: key == 'hero-backhand'
                   ? 1
                   : key == 'hero-cleave'

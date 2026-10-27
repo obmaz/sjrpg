@@ -11,24 +11,24 @@ import 'support/test_game.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  test(
-    'each class and rank gets 30 percent less cooldown without changing tempo',
-    () {
-      for (final hero in HeroClass.values) {
-        final p = Progress(heroClass: hero)..gainXp(100000);
-        for (final skill in p.skills.where((s) => !s.passive)) {
-          for (var rank = 1; rank <= 5; rank++) {
-            p.ranks[skill.id] = rank;
-            expect(
-              p.skillCooldown(skill),
-              closeTo(skill.cooldown * .7 * (1 - (rank - 1) * .07), .000001),
-            );
-            expect(p.skillTempo(skill), closeTo(1 + (rank - 1) * .08, .000001));
-          }
+  test('each class and rank uses restrained cooldown and motion growth', () {
+    for (final hero in HeroClass.values) {
+      final p = Progress(heroClass: hero)..gainXp(100000);
+      for (final skill in p.skills.where((s) => !s.passive)) {
+        for (var rank = 1; rank <= 5; rank++) {
+          p.ranks[skill.id] = rank;
+          expect(
+            p.skillCooldown(skill),
+            closeTo(skill.cooldown * .9 * (1 - (rank - 1) * .02), .000001),
+          );
+          expect(
+            p.skillTempo(skill),
+            closeTo(.75 * (1 + (rank - 1) * .035), .000001),
+          );
         }
       }
-    },
-  );
+    }
+  });
   test('ordinary, elite and boss health is 80 percent of the old formula', () {
     for (final level in [1, 20]) {
       final s = Adventure(GameArt())..start(TestGame());
@@ -77,7 +77,7 @@ void main() {
       expect(decoded.data['enemies'][0]['maxHp'], closeTo(44.8, .000001));
       expect(decoded.data['boss']['hp'], 1440);
       expect(decoded.data['boss']['maxHp'], 2880);
-      expect(decoded.data['cooldowns']['warcry'], 3.5);
+      expect(decoded.data['cooldowns']['warcry'], 4.5);
       expect(GameCheckpoint.decode(decoded.encode())!.data, decoded.data);
     });
   }

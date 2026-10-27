@@ -810,6 +810,7 @@ class ActionButton extends StatefulWidget {
     this.effect,
     this.artwork,
     this.showLabel = true,
+    this.enabled = true,
     this.insufficientResource = false,
     this.remaining = 0,
     this.total = 1,
@@ -827,7 +828,7 @@ class ActionButton extends StatefulWidget {
   final IconData? icon;
   final int? effect;
   final Widget? artwork;
-  final bool showLabel, insufficientResource;
+  final bool showLabel, insufficientResource, enabled;
   @override
   State<ActionButton> createState() => _ActionButtonState();
 }
@@ -855,13 +856,14 @@ class _ActionButtonState extends State<ActionButton> {
   @override
   Widget build(BuildContext context) => Semantics(
     button: true,
+    enabled: widget.enabled,
     label: widget.semanticLabel,
     hint: widget.semanticHint,
-    onTap: widget.onTap,
+    onTap: widget.enabled ? widget.onTap : null,
     excludeSemantics: true,
     child: Listener(
       onPointerDown: (event) {
-        if (pointer != null) return;
+        if (pointer != null || !widget.enabled) return;
         pointer = event.pointer;
         origin = event.position;
         aimDelta = Offset.zero;
@@ -946,6 +948,10 @@ class _ActionButtonState extends State<ActionButton> {
                                   ),
                                 ),
                         ),
+                      ),
+                    if (!widget.enabled && widget.remaining <= 0)
+                      const Positioned.fill(
+                        child: ColoredBox(color: Color(0x66000204)),
                       ),
                     if (widget.remaining > 0)
                       CustomPaint(

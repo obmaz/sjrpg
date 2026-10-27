@@ -1,3 +1,4 @@
+import 'combat_balance.dart';
 import 'rpg_model.dart';
 
 class SkillPreviewValue {
@@ -59,7 +60,7 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
         ? '기본 1타 피해'
         : '기술 피해',
     (p) => p.skillDamage(skill),
-    digits: 1,
+    digits: 2,
   );
   SkillPreviewValue protection() => value(
     '피해 감소',
@@ -68,8 +69,30 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
     digits: 1,
   );
   switch (skill.id) {
+    case 'battleSprint':
+      return [
+        value(
+          '질주 지속',
+          (p) => p.rank(skill.id) == 0 ? 0 : p.mobilityDuration,
+          suffix: '초',
+          digits: 1,
+        ),
+        value(
+          '이동 속도',
+          (p) => p.rank(skill.id) == 0 ? 0 : CombatBalance.sprintMoveSpeed,
+          suffix: 'px/초',
+        ),
+      ];
+    case 'blink':
+      return [
+        value(
+          '이동 거리',
+          (p) => p.rank(skill.id) == 0 ? 0 : p.mobilityRange,
+          suffix: 'px',
+        ),
+      ];
     case 'rendingEdge':
-      return [value('기본 1타 피해', (p) => p.basicDamage, digits: 1)];
+      return [value('기본 1타 피해', (p) => p.basicDamage, digits: 2)];
     case 'stormOfSteel':
     case 'cinderReach':
     case 'forkedStorm':
@@ -105,7 +128,7 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
               p.skills.firstWhere((s) => s.id == id),
               atRank: p.rank(id).clamp(1, SkillDef.maxRank),
             ),
-            digits: 1,
+            digits: 2,
           ),
       ];
     case 'weaponTempo':
@@ -125,7 +148,7 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
             p.skills.firstWhere((s) => s.id == 'warcry'),
             atRank: p.rank('warcry').clamp(1, 5),
           ),
-          digits: 1,
+          digits: 2,
         ),
       ];
     case 'warDrums':
@@ -171,7 +194,7 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
     case 'crushingBlow':
       return [
         damage,
-        value('최대 충전 피해', (p) => p.skillDamage(skill) * 1.8, digits: 1),
+        value('최대 충전 피해', (p) => p.skillDamage(skill) * 1.8, digits: 2),
       ];
     case 'warcry':
       return [
@@ -197,7 +220,7 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
     case 'mastery':
     case 'arcaneMastery':
       return [
-        value('기초 공격력', (p) => p.swordDamage, digits: 1),
+        value('기초 공격력', (p) => p.swordDamage, digits: 2),
         if (skill.id == 'arcaneMastery') value('최대 마나', (p) => p.maxEnergy),
       ];
     case 'ironSkin':
@@ -257,6 +280,17 @@ List<SkillPreviewValue> previewSkill(Progress p, SkillDef skill) {
         zeroAsDash: true,
       ),
     );
+  } else if (skill.mobility) {
+    priority.add(
+      SkillPreviewValue(
+        '재사용 대기',
+        p.mobilityCooldown,
+        upgraded.mobilityCooldown,
+        suffix: '초',
+        digits: 2,
+        zeroAsDash: true,
+      ),
+    );
   } else if (!skill.passive) {
     priority.add(
       SkillPreviewValue(
@@ -298,7 +332,7 @@ List<SkillPreviewValue> previewSkill(Progress p, SkillDef skill) {
       );
     }
   }
-  if (basic || !skill.passive && skill.id != 'iceArmor') {
+  if (basic || !skill.passive && !skill.mobility && skill.id != 'iceArmor') {
     priority.add(
       SkillPreviewValue(
         '최대 대상',

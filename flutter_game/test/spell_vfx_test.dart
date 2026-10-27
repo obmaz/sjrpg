@@ -75,7 +75,7 @@ void main() {
       final damage = s.progress.skillDamage(skill);
       s.hero.skill();
       expect(mob.life.value, closeTo(before - damage, .0001));
-      expect(mob.stun, 2);
+      expect(mob.stun, s.progress.warcryStun);
       final effect = game.added.whereType<SpellBurst>().single;
       expect(effect.clip, SpellClip.warcry);
       expect(effect.priority, lessThan(s.hero.priority));
@@ -83,9 +83,11 @@ void main() {
       s.hero.position.x += 70;
       effect.update(.05);
       expect(effect.position, origin);
+      final age = .05 * s.progress.skillTempo(skill);
+      expect(effect.age, closeTo(age, .000001));
       s.pause();
       effect.update(.05);
-      expect(effect.age, .05);
+      expect(effect.age, closeTo(age, .000001));
       s.resume();
       effect.update(.05);
       expect(mob.life.value, closeTo(before - damage, .0001));
@@ -135,7 +137,7 @@ void main() {
       s.hero.skill();
       expect(mob.life.value, lessThan(life));
       expect(mob.stun, 2);
-      expect(mob.slow, 3);
+      expect(mob.slow, s.progress.novaSlowDuration);
       expect(game.added.whereType<SpellBurst>().single.clip, SpellClip.iceNova);
       expect(s.hero.skillClock, greaterThan(0));
     },
@@ -198,11 +200,15 @@ void main() {
       s.hero.skill(secondary: true);
       expect(game.added.whereType<SpellBurst>(), isEmpty);
       final pulse = game.added.whereType<WhirlwindPulse>().single;
-      expect(s.hero.spin, .5);
+      final duration = p.skillMotionTime(
+        p.skills.firstWhere((skill) => skill.id == 'whirlwind'),
+      );
+      expect(s.hero.spin, duration);
+      expect(pulse.duration, duration);
       s.hero.position.x += 40;
       s.pause();
       s.hero.update(.05);
-      expect(s.hero.spin, .5);
+      expect(s.hero.spin, duration);
       s.resume();
       for (var i = 0; i < 10; i++) {
         pulse.update(.05);

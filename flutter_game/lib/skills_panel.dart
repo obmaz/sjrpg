@@ -626,7 +626,19 @@ class _SkillsPanelState extends State<SkillsPanel> {
                         ),
                       ),
                     ),
-                    if (!skill.passive && rank == 0)
+                    if (skill.mobility)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 10),
+                        child: Text(
+                          '이동 전용 · 습득하면 회피 옆에 표시됩니다 · M',
+                          style: TextStyle(
+                            color: gold,
+                            fontSize: 13,
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    if (!skill.passive && !skill.mobility && rank == 0)
                       const Padding(
                         padding: EdgeInsets.only(top: 10),
                         child: Text(
@@ -656,7 +668,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
                 }),
               ),
             ),
-          if (!skill.passive && rank > 0)
+          if (!skill.passive && !skill.mobility && rank > 0)
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 4, 14, 0),
               child: Column(

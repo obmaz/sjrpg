@@ -1,10 +1,12 @@
 import 'dart:math' as math;
+
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/world_model.dart';
+
 import 'support/test_game.dart';
 
 void main() {
@@ -329,12 +331,27 @@ void main() {
       s.hero.skill(secondary: true);
       expect(s.hero.cooldowns['chainLightning'], isNull);
       expect(s.progress.energy, 72);
-      for (var i = 0; i < 10; i++) {
-        s.hero.update(.05);
+      final nova = s.progress.skills.firstWhere((s) => s.id == 'frostNova'),
+          chain = s.progress.skills.firstWhere((s) => s.id == 'chainLightning');
+      final initialNova = s.hero.cooldowns[nova.id]!;
+      expect(initialNova, s.progress.skillCooldown(nova));
+      final maximumSteps = (s.hero.castLock / .05).ceil() + 1;
+      var elapsed = 0.0;
+      for (
+        var i = 0;
+        i < maximumSteps && s.hero.cooldowns[chain.id] == null;
+        i++
+      ) {
+        final dt = math.min(.05, s.hero.castLock);
+        s.hero.update(dt);
+        elapsed += dt;
       }
-      s.hero.skill(secondary: true);
-      expect(s.hero.cooldowns['frostNova'], closeTo(3.7, .001));
-      expect(s.hero.cooldowns['chainLightning'], 3.5);
+      expect(s.hero.queuedCast, isNull);
+      expect(
+        s.hero.cooldowns[nova.id],
+        closeTo(initialNova - elapsed, .000001),
+      );
+      expect(s.hero.cooldowns[chain.id], s.progress.skillCooldown(chain));
       expect(s.progress.energy, 44);
       s.progress.selectSkill('chainLightning');
       expect(s.progress.secondarySkill, 'frostNova');
@@ -369,12 +386,17 @@ void main() {
         'meteor',
       ]);
       for (var slot = 0; slot < 4; slot++) {
-        p.energy = p.maxEnergy;
-        for (var i = 0; i < 10; i++) {
-          s.hero.update(.05);
+        final maximumSteps = (s.hero.castLock / .05).ceil() + 1;
+        for (var i = 0; i < maximumSteps && s.hero.castLock > 0; i++) {
+          s.hero.update(math.min(.05, s.hero.castLock));
         }
+        expect(s.hero.castLock, 0);
+        expect(s.hero.queuedCast, isNull);
+        p.energy = p.maxEnergy;
+        final skill = p.skillAt(slot)!, energy = p.energy;
         s.hero.skill(slot: slot);
-        expect(s.hero.cooldowns[p.skillSlots[slot]], greaterThan(0));
+        expect(s.hero.cooldowns[skill.id], p.skillCooldown(skill));
+        expect(p.energy, energy - skill.cost);
       }
       final cooldowns = Map<String, double>.of(s.hero.cooldowns),
           energy = p.energy;
@@ -431,7 +453,7 @@ void main() {
       expect(enemy.life.value, lessThan(life));
       expect(enemy.stun, greaterThan(0));
       expect(p.energy, 76);
-      expect(s.hero.cooldowns['seismicSlam'], closeTo(5.6, .000001));
+      expect(s.hero.cooldowns['seismicSlam'], p.skillCooldown(p.skillAt(3)!));
     },
   );
   test('ground slam cannot put its impact beyond a blocking tree', () {

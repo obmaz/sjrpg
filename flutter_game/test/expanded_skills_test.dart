@@ -50,9 +50,11 @@ void main() {
           expect(p.skillPoints, points - 1);
           final after = previewSkill(p, skill);
           expect(after.map((s) => s.current), before.map((s) => s.next));
-          // Target-cap perks increase every two ranks, avoiding a free extra victim.
+          // Target-cap perks grow at3/5, avoiding a free extra victim at1/2.
           if (['stormOfSteel', 'cinderReach', 'forkedStorm'].contains(id)) {
             expect(after.first.current, before.first.current);
+            expect(p.learn(skill), true);
+            expect(previewSkill(p, skill).first.current, before.first.current);
             expect(p.learn(skill), true);
             final cap = previewSkill(p, skill);
             expect(cap.first.current, before.first.current + 1);
@@ -131,7 +133,7 @@ void main() {
           expect(
             p.skillDamage(skill),
             closeTo(
-              damage[skill.id]! * (affected.contains(skill.id) ? 1.02 : 1),
+              damage[skill.id]! * (affected.contains(skill.id) ? 1.005 : 1),
               .00001,
             ),
           );
@@ -158,7 +160,7 @@ void main() {
         }
         for (final id in affected) {
           final skill = p.skills.firstWhere((s) => s.id == id);
-          expect(p.skillDamage(skill), closeTo(damage[id]! * 1.1, .00001));
+          expect(p.skillDamage(skill), closeTo(damage[id]! * 1.025, .00001));
           expect(p.skillTargetLimit(skill), caps[id]! + 2);
         }
       },

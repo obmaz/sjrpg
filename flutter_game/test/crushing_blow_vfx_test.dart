@@ -129,29 +129,49 @@ void main() {
   }
 
   test('physical strike captures real charge and only draws after impact', () {
-    for (final heldFrames in [0, 12, 24]) {
+    for (final fraction in [0.0, .5, 1.0]) {
       final s = session();
       s.hero.beginAim(0);
-      for (var i = 0; i < heldFrames; i++) {
-        s.hero.update(.05);
+      final holdDuration = fraction * s.progress.heavyChargeTime;
+      var held = 0.0;
+      while (held < holdDuration) {
+        final dt = math.min(.05, holdDuration - held);
+        s.hero.update(dt);
+        held += dt;
       }
       s.hero.finishAim(false);
-      final charge = (heldFrames * .05 / s.progress.heavyChargeTime).clamp(
-        0.0,
-        1.0,
-      );
+      final charge = (held / s.progress.heavyChargeTime).clamp(0.0, 1.0);
       expect(s.hero.heavyCharge, closeTo(charge, .000001));
       final game = s.game! as TestGame;
       expect(game.added.whereType<CrushingBlowVisual>(), isEmpty);
-      for (var i = 0; i < 9; i++) {
+      final windup = s.hero.heavyWindup;
+      expect(windup, greaterThan(0));
+      for (var i = 0; i < math.max(0, (windup / .05).ceil() - 1); i++) {
         s.hero.update(.05);
       }
+      expect(s.hero.heavyWindup, greaterThan(0));
+      expect(game.added.whereType<CrushingBlowVisual>(), isEmpty);
+      final remaining = s.hero.heavyWindup;
+      for (
+        var i = 0;
+        i < (remaining / .05).ceil() + 1 && s.hero.heavyWindup > 0;
+        i++
+      ) {
+        s.hero.update(.05);
+      }
+      expect(s.hero.heavyWindup, 0);
       final v = game.added.whereType<CrushingBlowVisual>().single;
       expect(v.charge, closeTo(charge, .000001));
       expect(v.bearing, 0);
       expect(ui.Offset(v.position.x, v.position.y), s.hero.body.center);
       expect(v.priority, 29, reason: 'ground impact stays below the actor');
       expect(v.rank, 1);
+      s.hero.update(.05);
+      expect(
+        game.added.whereType<CrushingBlowVisual>().length,
+        1,
+        reason: 'the committed strike emits exactly one impact visual',
+      );
     }
   });
 

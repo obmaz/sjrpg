@@ -192,7 +192,7 @@ void main() {
       expect(warrior.basicTargetLimit, 1);
       expect(warrior.attackInterval, greaterThan(ordinary));
       warrior.selectBasic('cleave');
-      expect(warrior.basicTargetLimit, 5);
+      expect(warrior.basicTargetLimit, 3);
     },
   );
   test('chosen ice and electricity override a different weapon element', () {

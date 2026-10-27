@@ -354,7 +354,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
         _info(
           Icons.touch_app_outlined,
           '모바일 조작',
-          '왼쪽 조이스틱으로 이동합니다. 공격을 누르면 연속 공격하며, 사용 스킬 4개와 회피를 동시에 사용할 수 있습니다. 위쪽 물약은 터치하면 사용합니다.',
+          '왼쪽 조이스틱으로 이동합니다. 공격을 누르면 연속 공격하며, 사용 스킬 4개와 회피를 동시에 사용할 수 있습니다. 8레벨부터 이동 기술을 배우면 회피 옆에 전용 버튼이 나타납니다. 위쪽 물약은 터치하면 사용합니다.',
         ),
         const SizedBox(height: 18),
         _info(
@@ -366,7 +366,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
         _info(
           Icons.keyboard_outlined,
           '키보드 조작',
-          'WASD / 방향키 — 이동\nSpace / J — 연속 공격\nN / K — 스킬 1\nL / O / P — 스킬 2 / 3 / 4\n왼쪽 Shift — 회피\n1 / 2 — 생명 / 자원 물약',
+          'WASD / 방향키 — 이동\nSpace / J — 연속 공격\nN / K — 스킬 1\nL / O / P — 스킬 2 / 3 / 4\n왼쪽 Shift — 회피\nM — 배운 이동 기술\n1 / 2 — 생명 / 자원 물약',
         ),
         const SizedBox(height: 18),
         if (!s.saveFailed)

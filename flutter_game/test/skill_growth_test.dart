@@ -11,7 +11,7 @@ void main() {
   for (final hero in HeroClass.values) {
     test('$hero ranks prioritize cooldown, speed and targets over damage', () {
       final p = Progress(heroClass: hero);
-      for (final skill in p.skills.where((v) => !v.passive)) {
+      for (final skill in p.skills.where((v) => !v.passive && !v.mobility)) {
         final first = p.skillDamage(skill, atRank: 1),
             last = p.skillDamage(skill, atRank: 5);
         if (first > 0) {
@@ -51,7 +51,7 @@ void main() {
       final basic = p.skills.first;
       final interval = p.attackInterval;
       p.ranks[basic.id] = 5;
-      expect(p.attackInterval, closeTo(interval / 1.2, .000001));
+      expect(p.attackInterval, closeTo(interval / 1.06, .000001));
       expect(p.attackInterval, lessThan(interval));
     });
     test(
@@ -62,7 +62,9 @@ void main() {
         addTearDown(s.dispose);
         s.mobs.clear();
         s.progress.gainXp(50000);
-        for (final skill in s.progress.skills.where((v) => !v.passive)) {
+        for (final skill in s.progress.skills.where(
+          (v) => !v.passive && !v.mobility,
+        )) {
           for (var r = 1; r <= 5; r++) {
             s.progress.ranks[skill.id] = r;
             s.progress.selectSkill(skill.id);

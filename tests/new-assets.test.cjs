@@ -85,10 +85,10 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
     for (const [actor, count] of [
         ['hero', 144],
         ['mage', 144],
-        ['hero-attack', 32],
-        ['hero-backhand', 32],
-        ['hero-cleave', 32],
-        ['mage-cast', 32],
+        ['hero-attack', 128],
+        ['hero-backhand', 128],
+        ['hero-cleave', 128],
+        ['mage-cast', 128],
         ['roll', 64],
         ['bicycle', 16],
         ['viper', 16],
@@ -124,6 +124,17 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
         });
     }
     assert.deepEqual(metadata.controls.attack, [1, 2, 3, 4]);
+    for (const actor of ['hero-attack', 'hero-backhand', 'hero-cleave', 'mage-cast']) {
+        assert.deepEqual(metadata.actors[actor].action, {
+            directions: 16,
+            frames: 8,
+            layout: 'phase-major',
+        });
+        assert.equal(
+            new Set(metadata.actors[actor].frames.map((frame) => JSON.stringify(frame))).size,
+            128,
+        );
+    }
     assert.equal(metadata.actors.gunner.frames.length, 16);
     assert.equal(metadata.actors.cyber.frames.length, 16);
     assert.equal(metadata.actors.viper.feet.length, 16);

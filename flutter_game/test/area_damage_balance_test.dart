@@ -80,7 +80,8 @@ void main() {
     );
   });
   test('basic cleave applies one shared factor to each selected victim', () {
-    s.progress.ranks['cleave'] = 3;
+    s.progress.ranks['cleave'] = 5;
+    expect(s.progress.basicTargetLimit, 3);
     final mobs = [enemy(6050), enemy(6075), enemy(6055, 4232)];
     final damage = s.progress.basicDamage;
     s.hero.bearing = 0;

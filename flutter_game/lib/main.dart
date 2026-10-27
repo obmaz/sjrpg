@@ -748,6 +748,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
             ? 'victory'
             : panel;
         final p = adventure.progress;
+        final mobility = p.mobilitySkill;
+        final hasMobility = p.rank(mobility.id) > 0;
         final guide = adventure.nearbyQuestGuide;
         final contextActions = [
           for (final action in adventure.nearbyActions)
@@ -783,13 +785,22 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   p.heroClass == HeroClass.mage ? 540 : p.weapon.base.range,
                 )
                 .isEmpty;
-        final layouts = short && width < 500
-            ? [
-                (14.0, 128.0, 52.0),
-                (18.0, 188.0, 48.0),
-                (94.0, 168.0, 48.0),
-                (94.0, 112.0, 48.0),
-              ]
+        final compactBattle =
+            width < 500 && (short || hasMobility && media.size.height < 650);
+        final layouts = compactBattle
+            ? hasMobility
+                  ? [
+                      (14.0, 128.0, 48.0),
+                      (14.0, 184.0, 48.0),
+                      (70.0, 184.0, 48.0),
+                      (70.0, 128.0, 48.0),
+                    ]
+                  : [
+                      (14.0, 128.0, 52.0),
+                      (18.0, 188.0, 48.0),
+                      (94.0, 168.0, 48.0),
+                      (94.0, 112.0, 48.0),
+                    ]
             : short
             ? [
                 (258.0, 80.0, 48.0),
@@ -801,14 +812,14 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
             ? [
                 (18.0, 152.0, 56.0),
                 (66.0, 204.0, 48.0),
-                (96.0, 166.0, 48.0),
-                (120.0, 112.0, 48.0),
+                (96.0, hasMobility ? 174.0 : 166.0, 48.0),
+                (hasMobility ? 18.0 : 120.0, hasMobility ? 258.0 : 112.0, 48.0),
               ]
             : [
                 (18.0, 152.0, 64.0),
                 (84.0, 192.0, 56.0),
-                (148.0, 166.0, 52.0),
-                (160.0, 112.0, 48.0),
+                (148.0, hasMobility ? 174.0 : 166.0, 52.0),
+                (hasMobility ? 84.0 : 160.0, hasMobility ? 252.0 : 112.0, 48.0),
               ];
         Widget skillButton(int slot) {
           final skill = p.skillAt(slot)!, layout = layouts[slot];
@@ -979,6 +990,35 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   onTap: adventure.hero.dodge,
                 ),
               ),
+              if (hasMobility)
+                Positioned(
+                  right: width < 360 ? (compactBattle ? 120 : 112) : 134,
+                  bottom: bottom + 112,
+                  child: ActionButton(
+                    art: widget.art,
+                    sprite: 'roundEmpty',
+                    icon: skillIcon(mobility.id),
+                    label: mobility.shortName,
+                    semanticLabel: mobility.name,
+                    semanticHint: adventure.afflictions.movementBlocked
+                        ? '이동 불가 상태'
+                        : adventure.hero.physicalAction
+                        ? '기술 동작 중'
+                        : adventure.hero.mobilityClock > 0
+                        ? '재사용 ${adventure.hero.mobilityClock.ceil()}초'
+                        : '이동 기술 · M',
+                    showLabel: false,
+                    size: width < 360 ? 48 : 56,
+                    enabled:
+                        adventure.active &&
+                        !adventure.afflictions.movementBlocked &&
+                        !adventure.hero.physicalAction &&
+                        adventure.hero.mobilityClock <= 0,
+                    remaining: adventure.hero.mobilityClock,
+                    total: p.mobilityCooldown,
+                    onTap: () => adventure.hero.useMobility(),
+                  ),
+                ),
               if (contextActions.isNotEmpty)
                 Positioned(
                   left: short && width >= 500 ? 136 : 12,
@@ -989,7 +1029,12 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   width: short
                       ? width >= 500
                             ? (width - 450).clamp(100, 320).toDouble()
-                            : (width - 174).clamp(44, width - 24).toDouble()
+                            : (width -
+                                      (hasMobility
+                                          ? (width < 360 ? 184 : 206)
+                                          : 174))
+                                  .clamp(44, width - 24)
+                                  .toDouble()
                       : 120,
                   child: NearbyControls(
                     actions: contextActions,

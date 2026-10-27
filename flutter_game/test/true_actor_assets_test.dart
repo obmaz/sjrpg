@@ -75,7 +75,7 @@ void main() {
           'hero-backhand',
           'hero-cleave',
         });
-        expect(warBytes, 12 * 1024 * 1024);
+        expect(warBytes, 21 * 1024 * 1024);
         // Reuse the already decoded shared textures, with explicit ownership.
         // This admits a fresh staged Mage target, not a second cold decode.
         final mage = await GameArt.loadMenu();
@@ -100,7 +100,7 @@ void main() {
               .toList();
           expect(mageNames.toSet(), {'hero', 'mage', 'roll', 'mage-cast'});
           final mageBytes = resident(mage);
-          expect(mageBytes, 10 * 1024 * 1024);
+          expect(mageBytes, 13 * 1024 * 1024);
           art.images['actors-mage-cast'] = mage.images['actors-mage-cast']!;
           borrowed.add(art.images['actors-mage-cast']!);
           stagedAdmission = {
@@ -274,7 +274,23 @@ void main() {
           final attackAtlas = ActorAtlas.fromJson(
             records[attack] as Map<String, dynamic>,
           );
-          expect(attackAtlas.frames.length, 32);
+          expect(attackAtlas.frames.length, 128);
+          final action = attackAtlas.action!;
+          expect(action.framesPerDirection, 8);
+          final image = art.images['actors-$attack']!;
+          final pixels = (await image.toByteData(
+            format: ui.ImageByteFormat.rawRgba,
+          ))!.buffer.asUint8List();
+          for (var d = 0; d < 16; d++) {
+            expect({
+              for (var p = 0; p < 8; p++)
+                hashFrame(
+                  pixels,
+                  image.width,
+                  attackAtlas.frames[action.frameIndex(d, (p + .1) / 8)].source,
+                ),
+            }, hasLength(8));
+          }
           expect(
             attackAtlas.heights.single,
             closeTo(atlas.heights.single, .00001),
@@ -320,8 +336,8 @@ void main() {
           }
         });
         for (var combo = 0; combo < attacks.length; combo++) {
-          await save('${attacks[combo]}-16x2', 16 * 128, 2 * 110, (canvas) {
-            for (var phase = 0; phase < 2; phase++) {
+          await save('${attacks[combo]}-16x8', 16 * 128, 8 * 110, (canvas) {
+            for (var phase = 0; phase < 8; phase++) {
               for (var direction = 0; direction < 16; direction++) {
                 final feet = ui.Offset(direction * 128 + 64, phase * 110 + 88);
                 anchor(canvas, feet);
@@ -333,6 +349,7 @@ void main() {
                   phase,
                   60,
                   attack: true,
+                  actionProgress: (phase + .1) / 8,
                   comboPose: combo,
                 );
               }

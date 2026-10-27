@@ -52,6 +52,11 @@ void main() {
     final s = session(HeroClass.warrior);
     s.progress.selectSkill('warcry');
     double incoming(int rank, {required bool protected}) {
+      // Each probe starts after the preceding real Warcry gesture, so the
+      // next cast is accepted rather than queued behind its cast lock.
+      while (s.hero.castLock > 0) {
+        s.hero.update(.05);
+      }
       s.progress.ranks['battleVigor'] = rank;
       s.hero.armorTime = 0;
       s.hero.invulnerable = 0;
@@ -74,7 +79,7 @@ void main() {
       expect(incoming(rank, protected: false), closeTo(ordinary, .000001));
       expect(
         incoming(rank, protected: true),
-        closeTo(warcry - ordinary * .01 * rank, .000001),
+        closeTo(warcry - ordinary * .005 * rank, .000001),
       );
     }
     for (var t = 0.0; t <= s.progress.warcryDuration; t += .05) {
@@ -105,11 +110,11 @@ void main() {
         expect(health.next, hp + (rank + 1) * 8);
         expect(
           guard.current,
-          closeTo((protection + rank * .01) * 100, .000001),
+          closeTo((protection + rank * .005) * 100, .000001),
         );
         expect(
           guard.next,
-          closeTo((protection + (rank + 1) * .01) * 100, .000001),
+          closeTo((protection + (rank + 1) * .005) * 100, .000001),
         );
         final points = p.skillPoints;
         expect(p.learn(def), true);
@@ -130,14 +135,14 @@ void main() {
     p.selectSkill('warcry');
     p.energy = p.maxEnergy;
     s.hero.skill();
-    expect(s.hero.protection, closeTo(.525, .000001));
+    expect(s.hero.protection, closeTo(.22, .000001));
     final ordinary = p.mitigate(100);
     s.hero.invulnerable = 0;
     p.hp = p.maxHp;
     s.syncLife();
     final hp = p.hp;
     s.hurtHero(100);
-    expect(hp - p.hp, closeTo(ordinary * .475, .000001));
+    expect(hp - p.hp, closeTo(ordinary * .78, .000001));
     expect(p.mitigate(100, protection: 10), closeTo(ordinary * .25, .000001));
   });
   test('frost nova slow ends before the rank-five cooldown', () {
@@ -223,7 +228,7 @@ void main() {
     data['cooldowns']['iceArmor'] = 1.0;
     data['armor'] = 20.0;
     final migrated = GameCheckpoint.decode(jsonEncode(data))!;
-    expect(migrated.data['cooldowns']['iceArmor'], closeTo(.7, .000001));
-    expect(migrated.data['armor'], closeTo(.63, .000001));
+    expect(migrated.data['cooldowns']['iceArmor'], closeTo(.9, .000001));
+    expect(migrated.data['armor'], closeTo(.81, .000001));
   });
 }

@@ -10,8 +10,8 @@ spec.loader.exec_module(pack)
 ROOT = pack.ROOT
 pack.OUT = ROOT / "runtime-final"
 pack.OUT.mkdir(exist_ok=True)
-war = pack.load("warrior", "warrior-final", 272)
-mage = pack.load("mage", "mage-full", 208)
+war = pack.load("warrior", "warrior-final", 560)
+mage = pack.load("mage", "mage-full", 304)
 manifest = {}
 for m, roles in [
     (war, ["hero", "hero-attack", "hero-backhand", "hero-cleave"]),
@@ -29,6 +29,9 @@ for m, roles in [
             motion=m["motion"] if role in ["hero", "mage"] else None,
             anchored=True,
         )
+        if role not in ["hero", "mage"]:
+            manifest[role]["record"]["action"] = {"directions": 16, "frames": 8, "layout": "phase-major"}
+            (pack.OUT / (role + "-bounds.json")).write_text(json.dumps(manifest[role]["record"], separators=(",", ":")) + "\n")
         if role == "mage":
             manifest[role]["image"] = manifest[role]["pngAlternative"]
             manifest[role]["compressedBytes"] = (
@@ -53,10 +56,10 @@ manifest["roll"]["compressedBytes"] = Path(manifest["roll"]["image"]).stat().st_
 manifest["_status"] = {
     "complete": True,
     "completedClasses": ["warrior", "mage"],
-    "totalRealRenderedFrames": 480,
+    "totalRealRenderedFrames": 864,
     "movement": "each16idle+16directions*8realrun",
-    "warAttacks": "3realSwordA/B/Cactions*2poses*16directions",
-    "mageCast": "earlyEnter.25charge+Shoot.5release*16directions",
+    "warAttacks": "3realSwordA/B/Cactions*8poses*16directions",
+    "mageCast": "Enter3+Shoot3+Exit2realposes*16directions",
     "roll": "each4poses*8directions; Warfirst32, Magesecond32; projected-origin",
     "materialStatus": "FINALdeeptealWar+navyrobeMage, sameapprovedadultmalehead/coherentbody",
     "reviews": {
@@ -78,7 +81,7 @@ for className, m in [("warrior-final", war), ("mage-full", mage)]:
     (ROOT / className / "validated-render-metadata.json").write_text(
         json.dumps(m, indent=2) + "\n"
     )
-print("ALL480FRAMEQUALITYASSERTIONSPASS")
+print("ALL864FRAMEQUALITYASSERTIONSPASS")
 for k, v in manifest.items():
     if not k.startswith("_"):
         print(k, v["decodedRGBABytes"], v["compressedBytes"], v["image"])

@@ -84,29 +84,53 @@ void main() {
       s.progress.ranks['cleave'] = 3;
       s.hero.attackClock = 0;
       s.hero.slash();
+      expect(mobs.where((m) => m.life.value < 500).length, 2);
+      for (final m in mobs) {
+        m.life.initial(500);
+      }
+      s.progress.ranks['cleave'] = 5;
+      s.hero.attackClock = 0;
+      s.hero.slash();
       expect(mobs.where((m) => m.life.value < 500).length, 3);
     },
   );
   test(
-    'every offensive skill starts at three and has a bounded growth curve',
+    'offensive skills gain targets at3/5 and specialties add at most two',
     () {
-      final tops = <int>{};
       for (final hero in HeroClass.values) {
         final p = Progress(heroClass: hero);
         for (final skill in p.skills.where(
-          (s) => !s.passive && s.id != 'iceArmor',
+          (s) => !s.passive && !s.mobility && s.id != 'iceArmor',
         )) {
-          expect(p.skillTargetLimit(skill, atRank: 1), 3, reason: skill.id);
-          var previous = 3;
-          for (var rank = 2; rank <= 5; rank++) {
-            final cap = p.skillTargetLimit(skill, atRank: rank);
-            expect(cap, inInclusiveRange(previous, 11));
-            previous = cap;
+          expect(
+            [
+              for (var rank = 1; rank <= 5; rank++)
+                p.skillTargetLimit(skill, atRank: rank),
+            ],
+            [3, 3, 4, 4, 5],
+            reason: skill.id,
+          );
+        }
+        final specialties = hero == HeroClass.warrior
+            ? {
+                'stormOfSteel': ['whirlwind', 'seismicSlam'],
+              }
+            : {
+                'cinderReach': ['meteor'],
+                'forkedStorm': ['chainLightning'],
+              };
+        for (final entry in specialties.entries) {
+          for (final id in entry.value) {
+            final skill = p.skills.firstWhere((skill) => skill.id == id);
+            final caps = <int>[];
+            for (var rank = 0; rank <= 5; rank++) {
+              p.ranks[entry.key] = rank;
+              caps.add(p.skillTargetLimit(skill, atRank: 5));
+            }
+            expect(caps, [5, 5, 5, 6, 6, 7], reason: '$id ${entry.key}');
           }
-          tops.add(previous);
         }
       }
-      expect(tops.length, greaterThanOrEqualTo(3));
     },
   );
   test('whirlwind cannot select additional victims across later pulses', () {

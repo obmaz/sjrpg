@@ -93,6 +93,8 @@ class GameCheckpoint {
         'cooldowns': Map<String, double>.of(session.hero.cooldowns),
         'attackClock': session.hero.attackClock,
         'dodgeClock': session.hero.dodgeClock,
+        'mobilityClock': session.hero.mobilityClock,
+        'sprintTime': session.hero.sprintTime,
         'armor': session.hero.armorTime,
         'frenzy': session.hero.frenzyTime,
         'afflictions': session.afflictions.toSave(),
@@ -168,6 +170,7 @@ class GameCheckpoint {
       'cooldowns': <String, double>{},
       'attackClock': 0,
       'dodgeClock': 0,
+      'sprintTime': 0,
       'armor': 0,
       'frenzy': 0,
     });
@@ -184,7 +187,11 @@ class GameCheckpoint {
 
   /// Explicit death retry cleanses the rollback snapshot, never a normal resume.
   GameCheckpoint forRevival() => decode(
-    jsonEncode({...data, 'afflictions': PlayerAfflictions().toSave()}),
+    jsonEncode({
+      ...data,
+      'afflictions': PlayerAfflictions().toSave(),
+      'sprintTime': 0,
+    }),
   )!;
 
   static GameCheckpoint? _decode(String? text) {
@@ -319,8 +326,12 @@ class GameCheckpoint {
       }
       data['attackClock'] ??= 0;
       data['dodgeClock'] ??= 0;
+      data['mobilityClock'] ??= 0;
+      data['sprintTime'] ??= 0;
       if (!number(data['attackClock'], 60) ||
-          !number(data['dodgeClock'], 1.5)) {
+          !number(data['dodgeClock'], 1.5) ||
+          !number(data['mobilityClock'], 60) ||
+          !number(data['sprintTime'], 60)) {
         return null;
       }
       final chests = data['chests'] as List;
@@ -341,7 +352,9 @@ class GameCheckpoint {
         final skill = progress.skills.firstWhere((s) => s.id == entry.key);
         final maximum =
             skill.cooldown * (balance >= 3 ? Progress.skillCooldownScale : 1);
-        if (skill.passive || !number(entry.value, maximum)) return null;
+        if (skill.passive || skill.mobility || !number(entry.value, maximum)) {
+          return null;
+        }
       }
       final sites =
           data['sites'] ??
@@ -549,6 +562,25 @@ class GameCheckpoint {
               Progress.skillEffectUptime,
         ),
       );
+      // Mobility is global across scene travel. Preserve a legitimate remaining
+      // cooldown even after a refund; an unlearned or mounted hero has no buff.
+      data['mobilityClock'] = math.min(
+        (data['mobilityClock'] as num).toDouble(),
+        progress.skillCooldown(progress.mobilitySkill, atRank: 1),
+      );
+      data['sprintTime'] =
+          progress.heroClass == HeroClass.warrior &&
+              progress.rank(progress.mobilitySkill.id) > 0 &&
+              data['riding'] == null &&
+              !PlayerAfflictions.fromSave(data['afflictions']).movementBlocked
+          ? math.min(
+              (data['sprintTime'] as num).toDouble(),
+              math.min(
+                progress.mobilityDuration,
+                (data['mobilityClock'] as num).toDouble(),
+              ),
+            )
+          : 0.0;
       data['balance'] = 3;
       if (includeTravel) {
         final journal = _readTravel(data, progress);
@@ -649,6 +681,7 @@ class GameCheckpoint {
       for (final key in _sceneKeys)
         if (scene.containsKey(key)) key: scene[key],
       'progress': progress,
+      'sprintTime': 0,
       'stageStartKills': progress['kills'] - scene['stageKills'],
       'commissionStartKills': progress['kills'] - scene['commissionKills'],
     };
@@ -904,6 +937,10 @@ class GameCheckpoint {
       session.loot.add(item);
     }
     session.afflictions = PlayerAfflictions.fromSave(data['afflictions']);
+    session.hero.restoreMobility(
+      (data['mobilityClock'] as num).toDouble(),
+      (data['sprintTime'] as num).toDouble(),
+    );
     session.syncLife();
     return session;
   }

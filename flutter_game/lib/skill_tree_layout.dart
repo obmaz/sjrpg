@@ -22,9 +22,10 @@ const _warriorRows = <List<SkillTreeSlot>>[
     (id: 'resoundingCry', column: 5),
   ],
   [
-    (id: 'seismicSlam', column: .5),
-    (id: 'battleFocus', column: 2.5),
-    (id: 'rallyingVoice', column: 4.5),
+    (id: 'seismicSlam', column: 0),
+    (id: 'battleFocus', column: 2),
+    (id: 'rallyingVoice', column: 3.5),
+    (id: 'battleSprint', column: 5),
   ],
   [
     (id: 'charge', column: 0),
@@ -54,9 +55,10 @@ const _mageRows = <List<SkillTreeSlot>>[
     (id: 'conductivity', column: 5),
   ],
   [
-    (id: 'meteor', column: .5),
-    (id: 'coldMastery', column: 2.5),
-    (id: 'lightningMastery', column: 4.5),
+    (id: 'meteor', column: 0),
+    (id: 'coldMastery', column: 2),
+    (id: 'lightningMastery', column: 3.5),
+    (id: 'blink', column: 5),
   ],
   [
     (id: 'cinderReach', column: .5),
@@ -89,11 +91,17 @@ class SkillTreeLayout {
     rowGap = dense ? 48 : 64;
     final unit = width / 6;
     for (var row = 0; row < rows.length; row++) {
+      final mobilityRow = rows[row].any(
+        (slot) => slot.id == progress.mobilitySkill.id,
+      );
       for (final slot in rows[row]) {
-        final split = rows[row].any(
-          (other) =>
-              other.id != slot.id && (other.column - slot.column).abs() < 1.5,
-        );
+        final split =
+            mobilityRow ||
+            rows[row].any(
+              (other) =>
+                  other.id != slot.id &&
+                  (other.column - slot.column).abs() <= 1.5,
+            );
         final nodeWidth = math.min(
           split ? 96.0 : 120.0,
           split ? math.max(44.0, unit - 2) : width / 3 - 8,

@@ -170,6 +170,9 @@ void main() {
         visual.onRemove();
       }
     },
+    // This checks 168 software-rasterized images and every outer-margin pixel.
+    // Keep that coverage when other render suites share the native graphics worker.
+    timeout: const Timeout(Duration(seconds: 90)),
   );
 
   test(

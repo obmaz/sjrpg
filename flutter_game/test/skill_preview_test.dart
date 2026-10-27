@@ -53,17 +53,24 @@ void main() {
   });
   test('damage predictions include equipped gear and elemental mastery', () {
     final p = Progress(heroClass: HeroClass.mage)..gainXp(7500);
+    final nova = p.skills.firstWhere((s) => s.id == 'frostNova');
+    final starterDamage = p.skillDamage(nova);
     final ice = Gear(20, gearById('frostwand'), rarity: Rarity.rare, power: 7);
     p.inventory.add(ice);
     expect(p.equip(ice), true);
+    final unmasteredDamage = p.skillDamage(nova);
+    expect(unmasteredDamage, greaterThan(starterDamage));
     p.ranks['coldMastery'] = 2;
-    final nova = p.skills.firstWhere((s) => s.id == 'frostNova');
     final before = previewSkill(
       p,
       nova,
     ).firstWhere((row) => row.label == '기술 피해');
     expect(before.current, p.skillDamage(nova));
-    expect(before.current, greaterThan(p.swordDamage * 1.4));
+    expect(before.current, greaterThan(unmasteredDamage));
+    expect(
+      before.current,
+      closeTo(unmasteredDamage * p.coldDamageMultiplier, .000001),
+    );
     expect(
       previewSkill(
         p,

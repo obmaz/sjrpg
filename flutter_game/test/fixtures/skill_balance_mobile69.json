@@ -1,0 +1,334 @@
+{
+  "source": "8a47931257521bf69a3f33f4252d460509a3775c",
+  "setup": "Progress level30, initial equipment; rank1/3/5 offensive skills, no passives; stacked means all class skills rank5",
+  "warrior": {
+    "1": {
+      "cleave": {
+        "damage": 46.537499999999994,
+        "tempo": 0.41,
+        "cooldown": 0.0,
+        "targets": 1
+      },
+      "warcry": {
+        "damage": 58.17187499999999,
+        "tempo": 1.0,
+        "cooldown": 4.8999999999999995,
+        "targets": 3
+      },
+      "whirlwind": {
+        "damage": 62.36024999999999,
+        "tempo": 1.0,
+        "cooldown": 3.5,
+        "targets": 3
+      },
+      "frenzy": {
+        "damage": 65.15249999999999,
+        "tempo": 1.0,
+        "cooldown": 8.399999999999999,
+        "targets": 3
+      },
+      "seismicSlam": {
+        "damage": 98.6595,
+        "tempo": 1.0,
+        "cooldown": 5.6,
+        "targets": 3
+      },
+      "charge": {
+        "damage": 76.78687499999998,
+        "tempo": 1.0,
+        "cooldown": 3.5,
+        "targets": 3
+      },
+      "crushingBlow": {
+        "damage": 120.99749999999999,
+        "tempo": 1.0,
+        "cooldown": 4.199999999999999,
+        "targets": 3
+      },
+      "quickCut": {
+        "damage": 35.3685,
+        "tempo": 0.48379999999999995,
+        "cooldown": 0.0,
+        "targets": 1
+      },
+      "heavyStrike": {
+        "damage": 67.47937499999999,
+        "tempo": 0.29519999999999996,
+        "cooldown": 0.0,
+        "targets": 1
+      }
+    },
+    "3": {
+      "cleave": {
+        "damage": 50.2605,
+        "tempo": 0.451,
+        "cooldown": 0.0,
+        "targets": 3
+      },
+      "warcry": {
+        "damage": 61.894875,
+        "tempo": 1.16,
+        "cooldown": 4.2139999999999995,
+        "targets": 5
+      },
+      "whirlwind": {
+        "damage": 67.014,
+        "tempo": 1.16,
+        "cooldown": 3.01,
+        "targets": 5
+      },
+      "frenzy": {
+        "damage": 69.80624999999999,
+        "tempo": 1.16,
+        "cooldown": 7.223999999999998,
+        "targets": 4
+      },
+      "seismicSlam": {
+        "damage": 107.967,
+        "tempo": 1.16,
+        "cooldown": 4.816,
+        "targets": 7
+      },
+      "charge": {
+        "damage": 81.44062499999998,
+        "tempo": 1.16,
+        "cooldown": 3.01,
+        "targets": 4
+      },
+      "crushingBlow": {
+        "damage": 130.305,
+        "tempo": 1.16,
+        "cooldown": 3.611999999999999,
+        "targets": 5
+      },
+      "quickCut": {
+        "damage": 38.19798,
+        "tempo": 0.53218,
+        "cooldown": 0.0,
+        "targets": 1
+      },
+      "heavyStrike": {
+        "damage": 72.877725,
+        "tempo": 0.32472,
+        "cooldown": 0.0,
+        "targets": 1
+      }
+    },
+    "5": {
+      "cleave": {
+        "damage": 53.98349999999999,
+        "tempo": 0.49199999999999994,
+        "cooldown": 0.0,
+        "targets": 5
+      },
+      "warcry": {
+        "damage": 65.61787499999998,
+        "tempo": 1.32,
+        "cooldown": 3.5279999999999996,
+        "targets": 7
+      },
+      "whirlwind": {
+        "damage": 71.66775,
+        "tempo": 1.32,
+        "cooldown": 2.52,
+        "targets": 7
+      },
+      "frenzy": {
+        "damage": 74.45999999999998,
+        "tempo": 1.32,
+        "cooldown": 6.047999999999999,
+        "targets": 5
+      },
+      "seismicSlam": {
+        "damage": 117.27449999999999,
+        "tempo": 1.32,
+        "cooldown": 4.032,
+        "targets": 11
+      },
+      "charge": {
+        "damage": 86.09437499999999,
+        "tempo": 1.32,
+        "cooldown": 2.52,
+        "targets": 5
+      },
+      "crushingBlow": {
+        "damage": 139.61249999999998,
+        "tempo": 1.32,
+        "cooldown": 3.0239999999999996,
+        "targets": 7
+      },
+      "quickCut": {
+        "damage": 41.02745999999999,
+        "tempo": 0.5805599999999999,
+        "cooldown": 0.0,
+        "targets": 1
+      },
+      "heavyStrike": {
+        "damage": 78.27607499999999,
+        "tempo": 0.35423999999999994,
+        "cooldown": 0.0,
+        "targets": 1
+      }
+    },
+    "stacked": {
+      "basicDamage": 87.7231875,
+      "basicInterval": 0.55932418699187,
+      "frenzyTempo": 1.97,
+      "buffedDps": 308.97051011583005,
+      "manaRecovery": 6.3,
+      "protectedRage": 7.35,
+      "frenzyDuration": 5.443199999999999,
+      "warcryDuration": 3.1752,
+      "iceArmorDuration": 0.0,
+      "novaSlowDuration": 0.0,
+      "warcryStun": 2.4
+    }
+  },
+  "mage": {
+    "1": {
+      "firebolt": {
+        "damage": 45.9,
+        "tempo": 0.41,
+        "cooldown": 0.0,
+        "targets": 1
+      },
+      "frostNova": {
+        "damage": 64.25999999999999,
+        "tempo": 1.0,
+        "cooldown": 4.199999999999999,
+        "targets": 3
+      },
+      "iceArmor": {
+        "damage": 0.0,
+        "tempo": 1.0,
+        "cooldown": 10.5,
+        "targets": 0
+      },
+      "chainLightning": {
+        "damage": 84.915,
+        "tempo": 1.0,
+        "cooldown": 3.5,
+        "targets": 3
+      },
+      "meteor": {
+        "damage": 165.24,
+        "tempo": 1.0,
+        "cooldown": 6.3,
+        "targets": 3
+      },
+      "iceShard": {
+        "damage": 50.49,
+        "tempo": 0.35259999999999997,
+        "cooldown": 0.0,
+        "targets": 1
+      },
+      "sparkBolt": {
+        "damage": 38.556,
+        "tempo": 0.4592,
+        "cooldown": 0.0,
+        "targets": 1
+      }
+    },
+    "3": {
+      "firebolt": {
+        "damage": 49.572,
+        "tempo": 0.451,
+        "cooldown": 0.0,
+        "targets": 3
+      },
+      "frostNova": {
+        "damage": 68.85,
+        "tempo": 1.16,
+        "cooldown": 3.611999999999999,
+        "targets": 5
+      },
+      "iceArmor": {
+        "damage": 0.0,
+        "tempo": 1.16,
+        "cooldown": 9.03,
+        "targets": 0
+      },
+      "chainLightning": {
+        "damage": 94.09500000000001,
+        "tempo": 1.16,
+        "cooldown": 3.01,
+        "targets": 5
+      },
+      "meteor": {
+        "damage": 179.01,
+        "tempo": 1.16,
+        "cooldown": 5.418,
+        "targets": 7
+      },
+      "iceShard": {
+        "damage": 54.5292,
+        "tempo": 0.38786,
+        "cooldown": 0.0,
+        "targets": 1
+      },
+      "sparkBolt": {
+        "damage": 41.64048,
+        "tempo": 0.50512,
+        "cooldown": 0.0,
+        "targets": 2
+      }
+    },
+    "5": {
+      "firebolt": {
+        "damage": 53.24399999999999,
+        "tempo": 0.49199999999999994,
+        "cooldown": 0.0,
+        "targets": 5
+      },
+      "frostNova": {
+        "damage": 73.44,
+        "tempo": 1.32,
+        "cooldown": 3.0239999999999996,
+        "targets": 7
+      },
+      "iceArmor": {
+        "damage": 0.0,
+        "tempo": 1.32,
+        "cooldown": 7.56,
+        "targets": 0
+      },
+      "chainLightning": {
+        "damage": 103.27499999999999,
+        "tempo": 1.32,
+        "cooldown": 2.52,
+        "targets": 7
+      },
+      "meteor": {
+        "damage": 192.78,
+        "tempo": 1.32,
+        "cooldown": 4.536,
+        "targets": 11
+      },
+      "iceShard": {
+        "damage": 58.5684,
+        "tempo": 0.42311999999999994,
+        "cooldown": 0.0,
+        "targets": 1
+      },
+      "sparkBolt": {
+        "damage": 44.724959999999996,
+        "tempo": 0.55104,
+        "cooldown": 0.0,
+        "targets": 2
+      }
+    },
+    "stacked": {
+      "basicDamage": 89.84924999999998,
+      "basicInterval": 0.853658536585366,
+      "frenzyTempo": 1.65,
+      "buffedDps": 105.25197857142854,
+      "manaRecovery": 13.299999999999999,
+      "protectedRage": 2.0999999999999996,
+      "frenzyDuration": 0.0,
+      "warcryDuration": 0.0,
+      "iceArmorDuration": 6.803999999999999,
+      "novaSlowDuration": 2.7215999999999996,
+      "warcryStun": 0.0
+    }
+  }
+}

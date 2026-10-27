@@ -77,7 +77,8 @@ void main() {
   });
   test('canonical cleave keeps actual three-target damage splitting', () {
     final s = field(HeroClass.warrior), p = s.progress;
-    train(p, 'cleave', 3);
+    train(p, 'cleave', 5);
+    expect(p.basicTargetLimit, 3);
     p.selectBasic('cleave');
     final mobs = pack(s), power = p.basicDamage;
     s.hero.slash();

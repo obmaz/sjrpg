@@ -177,11 +177,11 @@ def review(m, role, folderName=None):
 
     def cell(f, label):
         im = Image.open(f["path"]).convert("RGBA")
-        sz = (round(256 * scale), round(256 * scale))
+        sz = (round(256 * scale * 1.20), round(256 * scale * 1.02))
         im = im.convert("RGBa").resize(sz, Image.Resampling.LANCZOS).convert("RGBA")
         c = Image.new("RGBA", (96, 110), BG)
         c.alpha_composite(
-            im, (round(48 - anchor[0] * scale), round(90 - anchor[1] * scale))
+            im, (round(48 - anchor[0] * scale * 1.20), round(90 - anchor[1] * scale * 1.02))
         )
         ImageDraw.Draw(c).text((3, 2), label, font=FONT, fill="#e5dfcf")
         return c

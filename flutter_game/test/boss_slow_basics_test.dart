@@ -65,22 +65,39 @@ void main() {
     );
   }
   test(
-    'attack slow still applies after the minimum interval on a fast frenzied build',
+    'capped rank5 frenzy preserves attack slow on scheduled basic attacks',
     () {
       Adventure make() {
         final s = inCombatField(Adventure(GameArt()))..start(TestGame());
         s.mobs.clear();
         s.waveTime = 10000;
+        while (s.progress.level < 30) {
+          s.progress.gainXp(s.progress.nextLevelXp - s.progress.xp);
+        }
         final weapon = s.progress.createGear(gearById('twinaxes'));
         s.progress.inventory.add(weapon);
         expect(s.progress.equip(weapon), true);
-        s.progress.ranks.addAll({
-          'cleave': 5,
-          'battleFocus': 5,
-          'weaponTempo': 5,
-          'frenzy': 5,
-        });
-        s.hero.frenzyTime = 8;
+        void train(String id, int rank) {
+          final skill = s.progress.skills.firstWhere((skill) => skill.id == id);
+          for (final parent in skill.requires.entries) {
+            train(parent.key, parent.value);
+          }
+          while (s.progress.rank(id) < rank) {
+            expect(s.progress.learn(skill), true, reason: id);
+          }
+        }
+
+        for (final id in ['cleave', 'battleFocus', 'weaponTempo', 'frenzy']) {
+          train(id, 5);
+        }
+        expect(s.progress.selectSkill('frenzy'), true);
+        s.progress.energy = s.progress.maxEnergy;
+        s.hero.skill();
+        expect(s.hero.frenzyTime, s.progress.frenzyDuration);
+        while (s.hero.castLock > 0) {
+          s.tick(.01);
+          s.hero.update(.01);
+        }
         addTearDown(s.dispose);
         return s;
       }
@@ -89,14 +106,37 @@ void main() {
       slowed.afflictions.apply(PlayerStatus.attackSlow);
       normal.hero.slash();
       slowed.hero.slash();
-      expect(
-        normal.hero.attackClock,
-        closeTo(CombatBalance.minimumStrikeInterval, .001),
-      );
+      final expected =
+          normal.progress.attackInterval / normal.progress.frenzyAttackTempo;
+      // The reduced haste and frenzy caps no longer let a legal build reach
+      // the strike floor. The debuff must still follow the whole interval.
+      expect(expected, greaterThan(CombatBalance.minimumStrikeInterval));
+      expect(normal.hero.attackClock, closeTo(expected, .000001));
       expect(
         slowed.hero.attackClock / normal.hero.attackClock,
         closeTo(1 / .72, .001),
       );
+      for (final s in [normal, slowed]) {
+        final strikes = s.hero.strikes;
+        s.hero.slash();
+        expect(s.hero.strikes, strikes, reason: 'no cooldown bypass');
+      }
+      double untilNextAttack(Adventure s) {
+        final strikes = s.hero.strikes;
+        var elapsed = 0.0;
+        s.holdAttack('cadence-test', true);
+        while (s.hero.strikes == strikes && elapsed < 2) {
+          s.tick(.005);
+          s.hero.update(.005);
+          elapsed += .005;
+        }
+        s.holdAttack('cadence-test', false);
+        expect(s.hero.strikes, strikes + 1);
+        return elapsed;
+      }
+
+      expect(untilNextAttack(normal), closeTo(expected, .005001));
+      expect(untilNextAttack(slowed), closeTo(expected / .72, .005001));
     },
   );
 }

@@ -24,6 +24,8 @@ class _FeetArt extends GameArt {
     bool attack = false,
     bool moving = false,
     int comboPose = 0,
+    double? actionProgress,
+    Object? bossPose,
     double opacity = 1,
     double flash = 0,
   }) => feet.add(at);

@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/actor_motion.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/combat_balance.dart';
 import 'package:guardian_new/game_art.dart';
 
 import 'support/test_game.dart';
@@ -46,7 +47,7 @@ void main() {
     );
     final start = s.hero.position.clone();
     for (var i = 0; i < 20; i++) {
-      s.hero.moveByAngle(0, speed: 270);
+      s.hero.moveByAngle(0);
       s.hero.update(.05);
     }
     final distance = (s.hero.position - start).length;
@@ -55,7 +56,10 @@ void main() {
       s.hero.runMotion.cycle,
       closeTo(distance / RunMotion.strideLength, .0001),
     );
-    expect(s.hero.animationTime, closeTo(distance / 270, .0001));
+    expect(
+      s.hero.animationTime,
+      closeTo(distance / CombatBalance.normalMoveSpeed, .0001),
+    );
     final cycle = s.hero.runMotion.cycle;
     s.pause();
     s.hero.update(.5);

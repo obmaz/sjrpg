@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/actor_atlas.dart';
 import 'package:guardian_new/actor_motion.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/combat_balance.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/world_model.dart';
 
@@ -94,12 +95,12 @@ void expectSlot(List<int> bytes, int index) {
     (c.b * 255).round(),
     255,
   ]);
-  expect(bytes.sublist(left, left + 4), [
-    255,
-    0,
-    0,
-    255,
-  ], reason: 'asymmetric left edge must not mirror');
+  final edge = bytes.sublist(left, left + 4);
+  // The wider hero puts this one-pixel marker on a fractional sample. Its
+  // red contribution must remain on the left rather than moving on a mirror.
+  expect(edge[0], greaterThan((c.r * 255).round() + 10));
+  expect(edge[1], lessThan((c.g * 255).round()));
+  expect(edge[3], 255);
 }
 
 class VariableArt extends GameArt {
@@ -119,6 +120,8 @@ class VariableArt extends GameArt {
     bool attack = false,
     bool moving = false,
     int comboPose = 0,
+    double? actionProgress,
+    Object? bossPose,
     double opacity = 1,
     double flash = 0,
   }) {
@@ -352,8 +355,8 @@ void main() {
           for (var phase = 0; phase < 4; phase++) {
             final bytes = await rasterRoll(art, angle, phase, mage);
             final bounds = projected
-                ? const ui.Rect.fromLTWH(47, 54, 8, 12)
-                : const ui.Rect.fromLTWH(46, 58, 8, 12);
+                ? const ui.Rect.fromLTRB(46, 53, 56, 66)
+                : const ui.Rect.fromLTRB(45, 57, 55, 70);
             expect(
               alphaBounds(bytes),
               bounds,
@@ -537,7 +540,11 @@ void main() {
         addTearDown(s.dispose);
         final phases = <int>{};
         final start = s.hero.position.clone();
-        for (var i = 0; i < (hz * .45).ceil(); i++) {
+        // Observe more than one physical gait cycle at the current normal
+        // movement speed, rather than relying on the former270px/s fixture.
+        final duration =
+            RunMotion.strideLength / CombatBalance.normalMoveSpeed * 1.25;
+        for (var i = 0; i < (hz * duration).ceil(); i++) {
           s.hero.moveRight();
           s.hero.update(1 / hz);
           final r = ui.PictureRecorder();
@@ -546,6 +553,10 @@ void main() {
           if (s.hero.movingThisFrame) phases.add(art.seenPhase!);
         }
         expect(phases, {0, 1, 2, 3, 4, 5, 6, 7});
+        expect(
+          (s.hero.position - start).length,
+          greaterThanOrEqualTo(RunMotion.strideLength),
+        );
         expect(
           s.hero.runMotion.cycle,
           closeTo(

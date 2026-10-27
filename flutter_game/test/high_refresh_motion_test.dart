@@ -2,7 +2,9 @@ import 'dart:ui' as ui;
 
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guardian_new/actor_motion.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/combat_balance.dart';
 import 'package:guardian_new/game_art.dart';
 
 import 'support/test_game.dart';
@@ -21,6 +23,8 @@ class RecordingArt extends GameArt {
     bool attack = false,
     bool moving = false,
     int comboPose = 0,
+    double? actionProgress,
+    Object? bossPose,
     double opacity = 1,
     double flash = 0,
   }) {
@@ -52,21 +56,39 @@ void main() {
         1 / hz,
       ); // A positive frame applies the new joystick velocity.
       final before = s.hero.position.clone();
-      expect(s.hero.velocity.x, closeTo(270 * intensity, .00001));
+      expect(
+        s.hero.velocity.x,
+        closeTo(CombatBalance.normalMoveSpeed * intensity, .00001),
+      );
       for (var i = 0; i < hz * 5; i++) {
         s.hero.update(1 / hz);
       }
       final travelled = (s.hero.position - before).length;
       // Bonfire positions use Float32 storage: subpixel rounding over many
       // small steps is normal, and must not hide real movement from animation.
-      expect(travelled, closeTo(270 * intensity * 5, .1));
+      // At x6000 a Float32 ULP is1/2048px. Bound accumulated rounding
+      // by half an ULP per integration step;135px/s changes that rounding.
+      final quantizationBudget = hz * 5 / 4096 + .001;
+      expect(
+        travelled,
+        closeTo(
+          CombatBalance.normalMoveSpeed * intensity * 5,
+          quantizationBudget,
+        ),
+      );
       expect(s.hero.movingThisFrame, true);
-      expect(s.hero.runMotion.phase, 1);
+      expect(
+        s.hero.runMotion.cycle,
+        closeTo(travelled / RunMotion.strideLength, .00001),
+      );
       expect(s.hero.animationTime, greaterThan(0));
       final recorder = ui.PictureRecorder();
       s.hero.render(ui.Canvas(recorder));
       recorder.endRecording().dispose();
-      expect(art.lastHeroPhase, 1);
+      expect(
+        art.lastHeroPhase,
+        s.hero.runMotion.phaseFor(art.runFrameCount('hero')),
+      );
     });
   }
 

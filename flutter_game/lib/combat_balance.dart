@@ -1,14 +1,19 @@
 /// Shared pacing values used by simulation, offers and their previews.
 abstract final class CombatBalance {
-  // Combine damage and rate: default sustained basic DPS becomes ~34.85%.
-  // Basic intervals are twice the previous .82-rate release; damage is unchanged.
+  // Apply the outgoing skill reduction once, after weapon/rank calculations.
   static const heroDamageScale = .85;
-  static const basicAttackRate = .41;
-  static const basicRankTempoGrowth = .05;
+  static const skillDamageScale = .60;
+  static const basicAttackRate = .30;
+  static const basicRankTempoGrowth = .015;
   static const minimumBasicInterval = .16 / basicAttackRate;
   static const minimumStrikeInterval = .12 / basicAttackRate;
-  static const physicalMasteryGrowth = .06;
-  static const arcaneMasteryGrowth = .07;
+  static const physicalMasteryGrowth = .02;
+  static const arcaneMasteryGrowth = .025;
+  static const maximumMasteryMultiplier = 1.15;
+  static const maximumSkillDamageMultiplier = 1.25;
+  static const maximumAttackHaste = .15;
+  static const normalMoveSpeed = 135.0;
+  static const sprintMoveSpeed = 270.0;
   static const resourceGainScale = .7;
   static const rageOnDamage = 7 * resourceGainScale;
   static const levelRageGain = 10.0;

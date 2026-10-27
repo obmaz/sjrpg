@@ -78,11 +78,11 @@ void main() {
         );
       });
       expect(pixel(bytes, 36, 28), [255, 0, 0, 255]);
-      expect(pixel(bytes, 44, 28), [0, 0, 255, 255]);
-      expect(pixel(bytes, 96, 28), [0, 0, 255, 255]);
+      expect(pixel(bytes, 46, 28), [0, 0, 255, 255]);
+      expect(pixel(bytes, 94, 28), [0, 0, 255, 255]);
       expect(pixel(bytes, 104, 28), [255, 0, 0, 255]);
       expect(pixel(bytes, 30, 28).last, 0);
-      expect(pixel(bytes, 52, 28).last, 0);
+      expect(pixel(bytes, 54, 28).last, 0);
     },
   );
 
@@ -112,7 +112,7 @@ void main() {
     });
     expect(pixel(bytes, 36, 28).last, closeTo(64, 1));
     expect(pixel(bytes, 36, 28)[2], greaterThan(40));
-    expect(pixel(bytes, 96, 28), [255, 0, 0, 255]);
+    expect(pixel(bytes, 94, 28), [255, 0, 0, 255]);
     expect(pixel(bytes, 104, 28), [0, 0, 255, 255]);
     expect(pixel(bytes, 156, 28).last, 0);
     expect(pixel(bytes, 216, 28), [255, 0, 0, 255]);

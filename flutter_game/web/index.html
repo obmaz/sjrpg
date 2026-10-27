@@ -38,13 +38,26 @@
     <a href="/sjrpg/legacy/">기존 모험 플레이</a>
   </div>
   <script>
-    // Capture a touch device's entry height once, independent of its address bar.
+    // Keep address-bar height changes stable, but rebase after a width change.
     const host = document.getElementById('flutter-host');
-    const entryHeight = matchMedia('(pointer: coarse)').matches ? innerHeight + 'px' : '100%';
+    const coarse = matchMedia('(pointer: coarse)').matches;
+    let entryWidth = innerWidth;
+    let entryHeight = coarse ? innerHeight + 'px' : '100%';
     host.style.height = entryHeight;
-    document.addEventListener('fullscreenchange', () => {
-      host.style.height = document.fullscreenElement ? '100dvh' : entryHeight;
-    });
+    function refreshHost() {
+      if (document.fullscreenElement) {
+        host.style.height = '100dvh';
+        return;
+      }
+      if (coarse && innerWidth !== entryWidth) {
+        entryWidth = innerWidth;
+        entryHeight = innerHeight + 'px';
+      }
+      host.style.height = entryHeight;
+    }
+    document.addEventListener('fullscreenchange', refreshHost);
+    window.addEventListener('resize', refreshHost);
+    screen.orientation?.addEventListener('change', () => requestAnimationFrame(refreshHost));
     document.addEventListener('dblclick', event => event.preventDefault(), {passive:false});
     document.addEventListener('visibilitychange', () => {if(document.hidden)window.dispatchEvent(new Event('blur'));});
     window.addEventListener('flutter-first-frame', () => document.getElementById('loading')?.remove());

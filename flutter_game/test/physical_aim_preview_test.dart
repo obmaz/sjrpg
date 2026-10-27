@@ -26,6 +26,8 @@ class _PoseArt extends GameArt {
     bool attack = false,
     bool moving = false,
     int comboPose = 0,
+    double? actionProgress,
+    Object? bossPose,
     double opacity = 1,
     double flash = 0,
   }) {
@@ -154,9 +156,22 @@ void main() {
       s.hero.beginAim(0);
       s.hero.moveAim(const ui.Offset(50, 0));
       s.hero.finishAim(false);
-      for (var i = 0; i < 9; i++) {
+      final windup = s.hero.heavyWindup;
+      expect(windup, greaterThan(0));
+      for (var i = 0; i < math.max(0, (windup / .05).ceil() - 1); i++) {
         s.hero.update(.05);
       }
+      expect(s.hero.heavyWindup, greaterThan(0));
+      expect(enemies.every((enemy) => enemy.life.value == 500), true);
+      final remaining = s.hero.heavyWindup;
+      for (
+        var i = 0;
+        i < (remaining / .05).ceil() + 1 && s.hero.heavyWindup > 0;
+        i++
+      ) {
+        s.hero.update(.05);
+      }
+      expect(s.hero.heavyWindup, 0);
       for (var i = 0; i < enemies.length; i++) {
         expect(enemies[i].life.value < 500, expected[i]);
       }
