@@ -7,6 +7,7 @@ import 'adventure.dart';
 import 'area_damage.dart';
 import 'audio_settings.dart';
 import 'boss_attacks.dart';
+import 'combat_feedback.dart';
 import 'device_settings.dart';
 import 'effect_visibility.dart';
 import 'fire_plume.dart';
@@ -65,6 +66,8 @@ void _damageAreaTargets(
   ui.Offset center,
   double damage, {
   required double multiplier,
+  ImpactKind? impactKind,
+  int impactRank = 1,
   double stun = 0,
   double slow = 0,
 }) {
@@ -75,6 +78,8 @@ void _damageAreaTargets(
       damage * multiplier,
       d.distance > 0 ? d / d.distance * 16 : ui.Offset.zero,
       origin: center,
+      impactKind: impactKind,
+      impactRank: impactRank,
     )) {
       continue;
     }
@@ -110,6 +115,8 @@ void areaStrike(
   Set<HuntEnemy>? castTargets,
   Set<int>? castChests,
   Set<HuntEnemy> excluded = const {},
+  ImpactKind? impactKind,
+  int impactRank = 1,
 }) {
   if (maxTargets <= 0 || !s.combatAllowed) return;
   final targets = castTargets ?? <HuntEnemy>{};
@@ -128,6 +135,8 @@ void areaStrike(
     center,
     damage,
     multiplier: enemyGroupDamageScale(selected.length),
+    impactKind: impactKind,
+    impactRank: impactRank,
     stun: stun,
     slow: slow,
   );
@@ -157,88 +166,6 @@ void paintCombatEffect(
     inset: 0,
     opacity: opacity,
   );
-}
-
-class ContactSpark extends GameComponent with EffectVisibility {
-  ContactSpark(
-    this.session,
-    ui.Offset at, {
-    this.heavy = false,
-    this.rank = 1,
-    this.bearing = 0,
-  }) {
-    position = Vector2(at.dx, at.dy);
-    size = Vector2.all(1);
-  }
-  final Adventure session;
-  final bool heavy;
-  final int rank;
-  final double bearing;
-  double age = 0;
-  @override
-  ui.Rect get effectBounds =>
-      ui.Rect.fromCircle(center: position.toOffset(), radius: 90);
-  @override
-  bool get isVisible => true;
-  @override
-  int get priority => 99999;
-  @override
-  void update(double dt) {
-    if (!session.active) return;
-    age += math.min(.05, dt);
-    if (age >= .18) removeFromParent();
-    super.update(dt);
-  }
-
-  @override
-  void render(ui.Canvas canvas) {
-    super.render(canvas);
-    final t = (age / .18).clamp(0.0, 1.0), reach = (heavy ? 38 : 26) * t;
-    paintRankImpact(
-      canvas,
-      ui.Offset.zero,
-      t,
-      rank,
-      const ui.Color(0xffffdca1),
-      radius: heavy ? 65 : 40,
-    );
-    for (var i = 0; i < 8; i++) {
-      final a = bearing + (i < 5 ? (i - 2) * .48 : i * math.pi / 4);
-      final axis = ui.Offset(math.cos(a), math.sin(a) * .75);
-      canvas.drawLine(
-        axis * reach * .45,
-        axis * (reach + (1 - t) * 10),
-        ui.Paint()
-          ..color = ui.Color.fromRGBO(255, 228, 165, 1 - t)
-          ..strokeWidth = (heavy ? 3 : 2) * (1 - t) + .5
-          ..strokeCap = ui.StrokeCap.round,
-      );
-      canvas.drawCircle(
-        axis * (reach * 1.2) + ui.Offset(0, 12 * t * t),
-        1.5 * (1 - t),
-        ui.Paint()..color = ui.Color.fromRGBO(255, 247, 217, 1 - t),
-      );
-    }
-    canvas.drawCircle(
-      ui.Offset.zero,
-      (heavy ? 7 : 4) * (1 - t),
-      ui.Paint()..color = ui.Color.fromRGBO(255, 251, 226, 1 - t),
-    );
-    if (t < .3) {
-      final flash = 1 - t / .3;
-      for (final angle in [bearing + .65, bearing - .65]) {
-        final axis = ui.Offset(math.cos(angle), math.sin(angle));
-        canvas.drawLine(
-          -axis * (heavy ? 16 : 10) * flash,
-          axis * (heavy ? 16 : 10) * flash,
-          ui.Paint()
-            ..color = ui.Color.fromRGBO(255, 255, 240, flash)
-            ..strokeWidth = heavy ? 3 : 2
-            ..strokeCap = ui.StrokeCap.round,
-        );
-      }
-    }
-  }
 }
 
 class EnemySwipe extends GameComponent with EffectVisibility {
@@ -629,6 +556,8 @@ class ArcaneBolt extends GameComponent with EffectVisibility {
             damage * multiplier,
             direction * 12,
             origin: at,
+            impactKind: ImpactKind.forElement(element),
+            impactRank: rank,
           )) {
             finish();
             return;
@@ -641,6 +570,8 @@ class ArcaneBolt extends GameComponent with EffectVisibility {
               at,
               damage * .35,
               multiplier: multiplier,
+              impactKind: ImpactKind.forElement(element),
+              impactRank: rank,
             );
             _areaChests(session, at, 85, targetLimit - 1 - splash.length);
           }
@@ -841,24 +772,8 @@ class WhirlwindPulse extends GameComponent {
         maxTargets: targetLimit,
         castTargets: targets,
         castChests: chests,
+        impactRank: rank,
       );
-      for (final mob in targets) {
-        if (!mob.isDead &&
-            (mob.body.center - hero.body.center).distance < 180) {
-          session.game?.add(
-            ContactSpark(
-              session,
-              mob.body.center - const ui.Offset(0, 25),
-              rank: rank,
-              heavy: rank >= 3,
-              bearing: math.atan2(
-                mob.body.center.dy - hero.body.center.dy,
-                mob.body.center.dx - hero.body.center.dx,
-              ),
-            ),
-          );
-        }
-      }
       if (targets.isNotEmpty) session.kickCamera(.35 + rank * .08);
     }
     if (pulses == 3) removeFromParent();
@@ -914,6 +829,8 @@ void chainLightning(
       hit.damage * multiplier,
       ui.Offset.zero,
       origin: hit.origin,
+      impactKind: ImpactKind.lightning,
+      impactRank: rank,
     )) {
       break;
     }
@@ -1044,7 +961,15 @@ class MeteorFall extends GameComponent with EffectVisibility {
         session.kickCamera(1.5);
         session.audio.play(EffectSound.fire);
         session.device.pulse(FeedbackKind.skill);
-        areaStrike(session, target, 175, damage, maxTargets: targetLimit);
+        areaStrike(
+          session,
+          target,
+          175,
+          damage,
+          maxTargets: targetLimit,
+          impactKind: ImpactKind.fire,
+          impactRank: rank,
+        );
         session.game?.add(
           SpellBurst(
             session,

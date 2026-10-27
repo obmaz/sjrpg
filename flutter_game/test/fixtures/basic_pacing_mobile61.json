@@ -1,0 +1,135 @@
+{
+    "source": "74de867; genuine Progress snapshots with starting class gear before the .82 to .41 rate change",
+    "rows": [
+        {
+            "hero": "warrior",
+            "mode": "cleave",
+            "rank": 1,
+            "interval": 0.41463414634146345,
+            "damage": 9.5625,
+            "tempo": 0.82
+        },
+        {
+            "hero": "warrior",
+            "mode": "cleave",
+            "rank": 5,
+            "interval": 0.3455284552845529,
+            "damage": 11.0925,
+            "tempo": 0.9839999999999999
+        },
+        {
+            "hero": "warrior",
+            "mode": "quickCut",
+            "rank": 1,
+            "interval": 0.3513848697809013,
+            "damage": 7.2675,
+            "tempo": 0.9675999999999999
+        },
+        {
+            "hero": "warrior",
+            "mode": "quickCut",
+            "rank": 5,
+            "interval": 0.2928207248174178,
+            "damage": 8.430299999999999,
+            "tempo": 1.1611199999999997
+        },
+        {
+            "hero": "warrior",
+            "mode": "heavyStrike",
+            "rank": 1,
+            "interval": 0.5758807588075882,
+            "damage": 13.865625,
+            "tempo": 0.5903999999999999
+        },
+        {
+            "hero": "warrior",
+            "mode": "heavyStrike",
+            "rank": 5,
+            "interval": 0.47990063233965685,
+            "damage": 16.084125,
+            "tempo": 0.7084799999999999
+        },
+        {
+            "hero": "mage",
+            "mode": "firebolt",
+            "rank": 1,
+            "interval": 0.5121951219512195,
+            "damage": 8.924999999999999,
+            "tempo": 0.82
+        },
+        {
+            "hero": "mage",
+            "mode": "firebolt",
+            "rank": 5,
+            "interval": 0.426829268292683,
+            "damage": 10.352999999999998,
+            "tempo": 0.9839999999999999
+        },
+        {
+            "hero": "mage",
+            "mode": "iceShard",
+            "rank": 1,
+            "interval": 0.5955757231990925,
+            "damage": 9.817499999999999,
+            "tempo": 0.7051999999999999
+        },
+        {
+            "hero": "mage",
+            "mode": "iceShard",
+            "rank": 5,
+            "interval": 0.49631310266591044,
+            "damage": 11.3883,
+            "tempo": 0.8462399999999999
+        },
+        {
+            "hero": "mage",
+            "mode": "sparkBolt",
+            "rank": 1,
+            "interval": 0.45731707317073167,
+            "damage": 7.496999999999999,
+            "tempo": 0.9184
+        },
+        {
+            "hero": "mage",
+            "mode": "sparkBolt",
+            "rank": 5,
+            "interval": 0.38109756097560976,
+            "damage": 8.696519999999998,
+            "tempo": 1.10208
+        }
+    ],
+    "actives": {
+        "warrior": {
+            "cooldowns": {
+                "warcry": 4.8999999999999995,
+                "whirlwind": 3.5,
+                "frenzy": 8.399999999999999,
+                "seismicSlam": 5.6,
+                "charge": 3.5,
+                "crushingBlow": 4.199999999999999
+            },
+            "costs": {
+                "warcry": 18.0,
+                "whirlwind": 30.0,
+                "frenzy": 28.0,
+                "seismicSlam": 24.0,
+                "charge": 16.0,
+                "crushingBlow": 22.0
+            }
+        },
+        "mage": {
+            "cooldowns": {
+                "frostNova": 4.199999999999999,
+                "iceArmor": 10.5,
+                "chainLightning": 3.5,
+                "meteor": 6.3
+            },
+            "costs": {
+                "frostNova": 18.0,
+                "iceArmor": 20.0,
+                "chainLightning": 28.0,
+                "meteor": 38.0
+            }
+        }
+    }
+}

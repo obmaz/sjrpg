@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/battle_effects.dart';
+import 'package:guardian_new/combat_feedback.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/player_afflictions.dart';
 import 'package:guardian_new/rpg_model.dart';
@@ -130,18 +131,19 @@ void main() {
   for (final mode in ['quickCut', 'heavyStrike']) {
     test(
       '$mode contact VFX use the selected rank instead of canonical cleave rank',
-      () {
+      () async {
         final s = field(HeroClass.warrior), p = s.progress;
         train(p, 'cleave', 2);
         train(p, mode, 5);
         expect(p.rank('cleave'), 2);
         pack(s);
         s.hero.slash();
+        await Future<void>.delayed(Duration.zero);
         final spark = (s.game! as TestGame).added
-            .whereType<ContactSpark>()
+            .whereType<ImpactParticles>()
             .single;
-        expect(spark.rank, 5);
-        expect(spark.heavy, mode == 'heavyStrike');
+        expect(spark.impact.rank, 5);
+        expect(spark.impact.kind == ImpactKind.heavy, mode == 'heavyStrike');
       },
     );
   }

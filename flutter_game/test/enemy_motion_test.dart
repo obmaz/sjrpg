@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
-import 'package:guardian_new/battle_effects.dart';
+import 'package:guardian_new/combat_feedback.dart';
 import 'package:guardian_new/enemy_motion.dart';
 import 'package:guardian_new/game_art.dart';
 
@@ -73,8 +73,8 @@ void main() {
     },
   );
   test(
-    'a cleave shares one impact; a miss never generates contact feedback',
-    () {
+    'a cleave batches contact particles; a miss never generates contact feedback',
+    () async {
       final game = TestGame(), s = Adventure(GameArt());
       s.start(game);
       addTearDown(s.dispose);
@@ -83,7 +83,7 @@ void main() {
       s.hero.bearing = 0;
       s.hero.slash();
       expect(s.impactTime, 0);
-      expect(game.added.whereType<ContactSpark>(), isEmpty);
+      expect(game.added.whereType<ImpactParticles>(), isEmpty);
       for (var i = 0; i < 3; i++) {
         s.spawnEnemy('goblin', Offset(6040, 4180 + i * 30))!.life.initial(1000);
       }
@@ -92,12 +92,14 @@ void main() {
       final energy = s.progress.energy;
       s.hero.slash();
       expect(s.mobs.where((m) => m.life.value < 1000).length, 3);
-      expect(game.added.whereType<ContactSpark>().length, 1);
+      await Future<void>.delayed(Duration.zero);
+      expect(game.added.whereType<ImpactParticles>().length, 2);
       expect(
         s.progress.energy - energy,
         closeTo(s.progress.rageOnHit(protected: false), 1e-9),
       );
-      expect(s.hero.impactHold, greaterThan(0));
+      expect(s.hero.impactHold, 0);
+      expect(game.timeScale, 0);
       expect(s.impactStrength, inInclusiveRange(.95, 2.4));
     },
   );

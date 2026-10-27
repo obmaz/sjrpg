@@ -79,12 +79,24 @@ void main() {
   test('new mage convergence needs every parent at its stated rank', () {
     final p = Progress(heroClass: HeroClass.mage)..gainXp(20000);
     final skill = p.skills.firstWhere((s) => s.id == 'forkedStorm');
+    expect(skill.requires, {'coldMastery': 1, 'lightningMastery': 1});
     p.ranks['lightningMastery'] = 1;
     final points = p.skillPoints;
     expect(p.learn(skill), false);
     expect(p.skillPoints, points);
+    // An old same-school parent cannot replace the adjacent cold mastery.
     p.ranks['conductivity'] = 1;
+    expect(p.learn(skill), false);
+    expect(p.skillPoints, points);
+    p.ranks['coldMastery'] = 1;
+    p.ranks.remove('lightningMastery');
+    expect(p.learn(skill), false);
+    expect(p.skillPoints, points);
+    expect(p.rank(skill.id), 0);
+    p.ranks['lightningMastery'] = 1;
     expect(p.learn(skill), true);
+    expect(p.skillPoints, points - 1);
+    expect(p.rank(skill.id), 1);
   });
   for (final (hero, perkId, affected) in [
     (HeroClass.warrior, 'stormOfSteel', ['whirlwind', 'seismicSlam']),

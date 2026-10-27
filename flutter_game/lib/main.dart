@@ -12,6 +12,7 @@ import 'battle_effects.dart';
 import 'blacksmith_workshop.dart';
 import 'class_selection.dart';
 import 'destructible_chest.dart';
+import 'entry_loading.dart';
 import 'game_art.dart';
 import 'game_checkpoint.dart';
 import 'game_panels.dart';
@@ -52,7 +53,12 @@ Future<void> _prepareCheckpointArtwork(
 );
 
 class _ArtworkPreparation extends StatelessWidget {
-  const _ArtworkPreparation({required this.busy, required this.child});
+  const _ArtworkPreparation({
+    required this.busy,
+    required this.child,
+    required this.art,
+  });
+  final GameArt art;
   final bool busy;
   final Widget child;
   @override
@@ -69,12 +75,9 @@ class _ArtworkPreparation extends StatelessWidget {
         const Positioned.fill(
           child: ModalBarrier(dismissible: false, color: Color(0xbb071d1c)),
         ),
-        const Positioned.fill(
-          child: Center(
-            child: CircularProgressIndicator(
-              color: gold,
-              semanticsLabel: '모험 준비 중',
-            ),
+        Positioned.fill(
+          child: SafeArea(
+            child: Center(child: EntryPreparationPanel(art: art)),
           ),
         ),
       ],
@@ -270,22 +273,12 @@ class _EntryPageState extends State<EntryPage> with WidgetsBindingObserver {
           );
         }
         if (!snapshot.hasData) {
-          return const Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(color: gold),
-                  SizedBox(height: 24),
-                  Text('모험의 풍경을 불러오고 있어요', style: TextStyle(color: cream)),
-                ],
-              ),
-            ),
-          );
+          return const EntryLoading();
         }
         final art = snapshot.data!;
         if (started) {
           return _ArtworkPreparation(
+            art: art,
             busy: preparingSession,
             child: GamePage(
               key: ValueKey(run),
@@ -345,6 +338,7 @@ class _EntryPageState extends State<EntryPage> with WidgetsBindingObserver {
           );
         }
         return _ArtworkPreparation(
+          art: art,
           busy: preparingSession,
           child: ClassSelection(
             art: art,
@@ -718,8 +712,11 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      _ArtworkPreparation(busy: preparingTransition, child: buildGame(context));
+  Widget build(BuildContext context) => _ArtworkPreparation(
+    art: widget.art,
+    busy: preparingTransition,
+    child: buildGame(context),
+  );
 
   Widget buildGame(BuildContext context) => Scaffold(
     body: AnimatedBuilder(

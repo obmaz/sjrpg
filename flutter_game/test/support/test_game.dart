@@ -36,6 +36,8 @@ T inCombatField<T extends Adventure>(T session) {
 
 class TestGame implements BonfireGameInterface {
   @override
+  double timeScale = 1;
+  @override
   bool paused = false;
   final added = <Component>[];
   bool mountEnemies = true;

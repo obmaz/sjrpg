@@ -266,42 +266,14 @@ class _PortraitPainter extends CustomPainter {
   final HeroClass heroClass;
   @override
   void paint(Canvas c, Size s) {
-    if (heroClass == HeroClass.mage) {
-      final image = art.images['actors-mage']!,
-          frame = art.actors['mage']['frames'][0] as List;
-      final w = (frame[2] as num).toDouble(), h = (frame[3] as num).toDouble();
-      c.drawImageRect(
-        image,
-        Rect.fromLTWH(
-          (frame[0] as num).toDouble() + w * .18,
-          (frame[1] as num).toDouble(),
-          w * .65,
-          h * .52,
-        ),
-        Offset.zero & s,
-        Paint()..filterQuality = FilterQuality.medium,
-      );
-      return;
+    if (!art.face(c, heroClass, Offset.zero & s)) {
+      c.drawOval(Offset.zero & s, Paint()..color = ink);
     }
-    final record = art.actors['hero']['frames'][0] as List;
-    final image = art.images['actors-hero']!;
-    final w = (record[2] as num).toDouble(), h = (record[3] as num).toDouble();
-    c.drawImageRect(
-      image,
-      Rect.fromLTWH(
-        (record[0] as num).toDouble() + w * .2,
-        (record[1] as num).toDouble(),
-        w * .6,
-        h * .48,
-      ),
-      Offset.zero & s,
-      Paint()..filterQuality = FilterQuality.medium,
-    );
   }
 
   @override
   bool shouldRepaint(covariant _PortraitPainter oldDelegate) =>
-      oldDelegate.heroClass != heroClass;
+      oldDelegate.heroClass != heroClass || oldDelegate.art != art;
 }
 
 class ControlPainter extends CustomPainter {

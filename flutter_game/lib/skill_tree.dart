@@ -8,48 +8,7 @@ import 'interface_art.dart';
 import 'panel_controls.dart';
 import 'rpg_model.dart';
 import 'rpg_widgets.dart';
-
-// Keep three readable schools with a few shared, adjacent-school milestones.
-const _positions = <String, (int, double)>{
-  'cleave': (0, 0),
-  'whirlwind': (1, -.25),
-  'frenzy': (1, .25),
-  'seismicSlam': (2, 0),
-  'charge': (3, -.25),
-  'crushingBlow': (4, -.25),
-  'rendingEdge': (3, .25),
-  'stormOfSteel': (4, .25),
-  'mastery': (0, 0),
-  'ironSkin': (1, -.25),
-  'weaponTempo': (1, .25),
-  'veteranGuard': (3, 0),
-  'battleFocus': (2, 0),
-  'secondWind': (4, 0),
-  'warcry': (0, 0),
-  'battleVigor': (1, -.25),
-  'resoundingCry': (1, .25),
-  'warDrums': (3, 0),
-  'rallyingVoice': (2, 0),
-  'unyieldingOath': (4, 0),
-  'firebolt': (0, 0),
-  'warmth': (1, -.25),
-  'emberFocus': (1, .25),
-  'cinderReach': (3, 0),
-  'meteor': (2, 0),
-  'phoenixHeart': (4, 0),
-  'frostNova': (0, 0),
-  'iceArmor': (1, -.25),
-  'deepFreeze': (1, 0.25),
-  'coldMastery': (2, -0.25),
-  'frozenAegis': (3, 0),
-  'glacialReserve': (4, 0),
-  'arcaneMastery': (0, 0),
-  'conductivity': (1, .25),
-  'chainLightning': (1, -0.25),
-  'forkedStorm': (3, 0),
-  'lightningMastery': (2, 0),
-  'arcaneEconomy': (4, 0),
-};
+import 'skill_tree_layout.dart';
 
 class SkillTree extends StatelessWidget {
   const SkillTree({
@@ -68,42 +27,19 @@ class SkillTree extends StatelessWidget {
     final p = session.progress,
         skills = p.skills
             .where((s) => !s.basic || s.id == p.defaultBasicId)
-            .toList(),
-        rows = <String, int>{};
-    int row(SkillDef skill) => rows.putIfAbsent(skill.id, () {
-      final parents = skills.where((s) => skill.requires.containsKey(s.id));
-      return math.max(
-        _positions[skill.id]?.$1 ?? 0,
-        parents.isEmpty ? 0 : 1 + parents.map(row).reduce(math.max),
-      );
-    });
-    for (final skill in skills) {
-      row(skill);
-    }
+            .toList();
     return LayoutBuilder(
       builder: (context, box) {
-        final dense = box.maxHeight < 110, lane = box.maxWidth / 3;
-        final nodeHeight = dense ? 62.0 : 88.0,
-            gap = dense ? 24.0 : 30.0,
-            header = dense ? 0.0 : 30.0;
-        final rects = <String, Rect>{};
-        for (final skill in skills) {
-          final family = p.skillBranches.indexOf(skill.branch),
-              offset = _positions[skill.id]?.$2 ?? 0;
-          final width = math.min(
-            offset == 0 ? 120.0 : 96.0,
-            offset == 0 ? lane - 8 : math.max(44.0, lane / 2 - 2),
-          );
-          final x = lane * (family + .5 + offset);
-          rects[skill.id] = Rect.fromLTWH(
-            x - width / 2,
-            8 + row(skill) * (nodeHeight + gap),
-            width,
-            nodeHeight,
-          );
-        }
-        final height =
-            16 + (rows.values.reduce(math.max) + 1) * (nodeHeight + gap) - gap;
+        final dense = box.maxHeight < 110,
+            header = dense ? 0.0 : 32.0,
+            layout = SkillTreeLayout(
+              p,
+              box.maxWidth,
+              dense: dense,
+              textScale: MediaQuery.textScalerOf(context).scale(12) / 12,
+            ),
+            rects = layout.rects,
+            height = layout.height;
         void select(SkillDef skill) {
           onFocus(skill);
           if (!controller.hasClients) return;
@@ -334,7 +270,7 @@ class SkillTree extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: locked ? const Color(0xffa7b4ab) : cream,
-                      fontSize: dense ? 10 : 12,
+                      fontSize: dense ? 11 : 12,
                       height: 1.1,
                       fontWeight: FontWeight.bold,
                     ),
@@ -393,57 +329,118 @@ class _Connections extends CustomPainter {
   final Map<String, Rect> rects;
   @override
   void paint(Canvas canvas, Size size) {
-    final lane = size.width / 3;
+    final groups = <String, List<SkillDef>>{};
     for (final skill in skills) {
-      for (final requirement in skill.requires.entries) {
-        final parent = rects[requirement.key], child = rects[skill.id];
-        if (parent == null || child == null) continue;
-        final a = parent.bottomCenter,
-            b = child.topCenter,
-            ready = progress.rank(requirement.key) >= requirement.value;
-        final color = ready
-            ? (progress.rank(skill.id) > 0 ? const Color(0xff8ee3c3) : gold)
-            : const Color(0xff778276);
-        final path = Path()..moveTo(a.dx, a.dy);
-        final parentLane = (a.dx / lane).floor(),
-            childLane = (b.dx / lane).floor();
-        if (parentLane != childLane) {
-          // Cross only the empty row gap, never a vertical rail through nodes.
-          final bridgeY = a.dy + (b.dy - a.dy) * .5;
-          path
-            ..lineTo(a.dx, bridgeY)
-            ..lineTo(b.dx, bridgeY);
-        } else {
-          path
-            ..lineTo(a.dx, a.dy + 12)
-            ..lineTo(b.dx, b.dy - 12);
-        }
-        path.lineTo(b.dx, b.dy - 4);
-        canvas.drawPath(
-          path,
-          Paint()
-            ..color = const Color(0xbb020807)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 5
-            ..strokeJoin = StrokeJoin.round,
+      if (skill.requires.isEmpty) continue;
+      final entries = skill.requires.entries.toList()
+        ..sort(
+          (a, b) => rects[a.key]!.center.dx.compareTo(rects[b.key]!.center.dx),
         );
-        canvas.drawPath(
-          path,
-          Paint()
-            ..color = color
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = ready ? 2.5 : 1.7
-            ..strokeJoin = StrokeJoin.round,
+      final key =
+          '${rects[skill.id]!.top}|${entries.map((e) => e.key).join(',')}';
+      (groups[key] ??= []).add(skill);
+    }
+    Color tint(bool ready, bool learned) => ready
+        ? (learned ? const Color(0xff8ee3c3) : gold)
+        : const Color(0xff778276);
+    void line(Path path, Color color, bool ready) {
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = const Color(0xdd020807)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 5.5
+          ..strokeJoin = StrokeJoin.round
+          ..strokeCap = StrokeCap.round,
+      );
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = ready ? 2.5 : 1.8
+          ..strokeJoin = StrokeJoin.round
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+
+    for (final children in groups.values) {
+      final requirements = children.first.requires.entries.toList()
+        ..sort(
+          (a, b) => rects[a.key]!.center.dx.compareTo(rects[b.key]!.center.dx),
         );
+      final parents = requirements.map((e) => rects[e.key]!).toList();
+      final top = parents.first.bottom, bottom = rects[children.first.id]!.top;
+      final parentX =
+          parents.map((r) => r.center.dx).reduce((a, b) => a + b) /
+          parents.length;
+      final childX =
+          children.map((s) => rects[s.id]!.center.dx).reduce((a, b) => a + b) /
+          children.length;
+      final hub = Offset((parentX + childX) / 2, top + (bottom - top) * .5);
+      final anyReady = children.any(progress.prerequisitesMet);
+      for (final requirement in requirements) {
+        final parent = rects[requirement.key]!;
+        final a = parent.bottomCenter + const Offset(0, 3);
+        // Shared trunks indicate a usable path to at least one child. Each
+        // child arrow separately checks all of that child's required ranks.
+        final met = children.any(
+          (child) =>
+              progress.rank(requirement.key) >=
+              child.requires[requirement.key]!,
+        );
+        final path = Path()
+          ..moveTo(a.dx, a.dy)
+          ..cubicTo(
+            a.dx,
+            a.dy + (hub.dy - a.dy) * .65,
+            hub.dx,
+            hub.dy - (hub.dy - a.dy) * .25,
+            hub.dx,
+            hub.dy,
+          );
+        line(
+          path,
+          tint(met, children.every((s) => progress.rank(s.id) > 0)),
+          met,
+        );
+      }
+      for (final child in children) {
+        final b = rects[child.id]!.topCenter;
+        final end = b - const Offset(0, 12);
+        final ready = progress.prerequisitesMet(child);
+        final color = tint(ready, progress.rank(child.id) > 0);
+        final path = Path()
+          ..moveTo(hub.dx, hub.dy)
+          ..cubicTo(
+            hub.dx,
+            hub.dy + (end.dy - hub.dy) * .35,
+            end.dx,
+            end.dy - (end.dy - hub.dy) * .25,
+            end.dx,
+            end.dy,
+          )
+          ..lineTo(b.dx, b.dy - 7);
+        line(path, color, ready);
         canvas.drawPath(
           Path()
-            ..moveTo(b.dx - 4, b.dy - 8)
-            ..lineTo(b.dx, b.dy - 2)
-            ..lineTo(b.dx + 4, b.dy - 8)
+            ..moveTo(b.dx - 4, b.dy - 11)
+            ..lineTo(b.dx, b.dy - 3)
+            ..lineTo(b.dx + 4, b.dy - 11)
             ..close(),
           Paint()..color = color,
         );
       }
+      canvas.drawCircle(hub, 3, Paint()..color = const Color(0xff061410));
+      canvas.drawCircle(
+        hub,
+        1.8,
+        Paint()
+          ..color = tint(
+            anyReady,
+            children.every((s) => progress.rank(s.id) > 0),
+          ),
+      );
     }
   }
 

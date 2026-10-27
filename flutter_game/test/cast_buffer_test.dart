@@ -17,8 +17,8 @@ void main() {
     for (final id in [
       'arcaneMastery',
       'chainLightning',
-      'warmth',
-      'warmth',
+      'firebolt',
+      'emberFocus',
       'iceArmor',
       'meteor',
     ]) {

@@ -158,19 +158,40 @@ void main() {
       s.progress.energy = 0;
       s.hero.slash();
       expect(game.added.whereType<ArcaneBolt>().length, 1);
+      expect(s.progress.energy, 0, reason: 'a basic projectile is free');
       s.hero.skill();
       expect(s.hero.skillClock, 0);
+      expect(
+        s.hero.queuedCast,
+        isNull,
+        reason: 'zero mana cannot reserve a skill',
+      );
       s.progress.energy = 90;
       s.hero.skill();
       expect(s.progress.energy, 90, reason: 'the basic cast must finish first');
-      for (var i = 0; i < 7; i++) {
+      expect(s.hero.queuedCast, isNotNull);
+      final maximumSteps = (s.hero.castLock / .05).ceil() + 1;
+      for (var i = 0; i < maximumSteps && s.hero.queuedCast != null; i++) {
         s.hero.update(.05);
       }
+      expect(s.hero.queuedCast, isNull);
+      expect(
+        s.hero.strikes,
+        1,
+        reason: 'the queued skill does not repeat the basic',
+      );
+      final nova = s.progress.skills.firstWhere(
+        (skill) => skill.id == 'frostNova',
+      );
+      final novaCooldown = s.progress.skillCooldown(nova);
+      expect(s.progress.energy, 90 - nova.cost);
+      expect(s.hero.skillClock, closeTo(novaCooldown, .000001));
       s.hero.skill();
-      expect(s.progress.energy, 72);
-      expect(s.hero.skillClock, closeTo(4.2, .000001));
-      s.hero.skill();
-      expect(s.progress.energy, 72);
+      expect(
+        s.progress.energy,
+        90 - nova.cost,
+        reason: 'cooldown blocks a second cost',
+      );
       final rank = s.progress.rank('frostNova');
       s.progress.gainXp(211);
       expect(
@@ -181,14 +202,26 @@ void main() {
       );
       s.progress.learn(mageSkills.firstWhere((s) => s.id == 'warmth'));
       s.progress.learn(mageSkills.firstWhere((s) => s.id == 'chainLightning'));
-      s.progress.selectSkill('chainLightning');
-      for (var i = 0; i < 10; i++) {
-        s.hero.update(.05);
+      expect(s.progress.selectSkill('chainLightning'), true);
+      var motionElapsed = 0.0;
+      while (s.hero.castLock > 0) {
+        final dt = math.min(.05, s.hero.castLock);
+        s.hero.update(dt);
+        motionElapsed += dt;
       }
+      final chain = s.progress.activeSkill, beforeChain = s.progress.energy;
       s.hero.skill();
-      expect(s.hero.skillClock, 3.5);
-      s.progress.selectSkill('frostNova');
-      expect(s.hero.skillClock, closeTo(3.7, .001));
+      expect(s.hero.skillClock, s.progress.skillCooldown(chain));
+      expect(s.progress.energy, beforeChain - chain.cost);
+      expect(s.progress.selectSkill('frostNova'), true);
+      expect(s.hero.skillClock, closeTo(novaCooldown - motionElapsed, .000001));
+      final beforeBlocked = s.progress.energy;
+      s.hero.skill();
+      expect(
+        s.progress.energy,
+        beforeBlocked,
+        reason: 'switching slots cannot reset cooldown',
+      );
       expect(s.progress.rank('frostNova'), rank);
       s.pause();
       final energy = s.progress.energy;
@@ -321,8 +354,8 @@ void main() {
       p.gainXp(1000);
       for (final id in [
         'arcaneMastery',
-        'warmth',
-        'warmth',
+        'firebolt',
+        'emberFocus',
         'iceArmor',
         'chainLightning',
         'meteor',

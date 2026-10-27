@@ -52,7 +52,7 @@ void main() {
   test(
     'a fresh mage must unlock predecessors; failures never spend points',
     () {
-      final p = Progress(heroClass: HeroClass.mage)..gainXp(1000);
+      final p = Progress(heroClass: HeroClass.mage)..gainXp(2000);
       SkillDef skill(String id) => p.skills.firstWhere((s) => s.id == id);
       final points = p.skillPoints;
       expect(p.learn(skill('meteor')), false);
@@ -60,13 +60,14 @@ void main() {
       expect(p.skillPoints, points);
       expect(p.learn(skill('warmth')), true);
       expect(p.learn(skill('meteor')), false);
-      expect(p.learn(skill('warmth')), true);
+      expect(p.learn(skill('firebolt')), true);
+      expect(p.learn(skill('emberFocus')), true);
       expect(p.learn(skill('arcaneMastery')), true);
       expect(p.learn(skill('chainLightning')), true);
       expect(p.learn(skill('meteor')), false);
       expect(p.learn(skill('iceArmor')), true);
       expect(p.learn(skill('meteor')), true);
-      expect(p.skillPoints, points - 6);
+      expect(p.skillPoints, points - 7);
       expect(Progress.fromSave(p.toSave())!.toSave(), p.toSave());
     },
   );
@@ -144,23 +145,27 @@ void main() {
     final ice = p.createGear(gearById('frostwand'));
     p.inventory.add(ice);
     p.equip(ice);
+    for (final id in [
+      'warmth',
+      'iceArmor',
+      'arcaneMastery',
+      'frostNova',
+      'deepFreeze',
+    ]) {
+      expect(p.learn(p.skills.firstWhere((s) => s.id == id)), true);
+    }
     final iceDamage = p.basicDamage;
-    for (final id in ['warmth', 'iceArmor', 'arcaneMastery', 'coldMastery']) {
+    for (final id in ['coldMastery']) {
       expect(p.learn(p.skills.firstWhere((s) => s.id == id)), true);
     }
     expect(p.manaRecovery, closeTo(7.35, .000001));
-    expect(p.basicDamage, closeTo(iceDamage * 1.07 * 1.08, .001));
+    expect(p.coldDamageMultiplier, closeTo(1.13, .000001));
+    expect(p.basicDamage, closeTo(iceDamage * 1.13 / 1.05, .001));
     p.equip(fire);
     final fireDamage = p.basicDamage;
     expect(p.learn(p.skills.firstWhere((s) => s.id == 'coldMastery')), true);
     expect(p.basicDamage, fireDamage);
-    for (final id in [
-      'arcaneMastery',
-      'chainLightning',
-      'frostNova',
-      'deepFreeze',
-      'lightningMastery',
-    ]) {
+    for (final id in ['arcaneMastery', 'chainLightning', 'lightningMastery']) {
       expect(p.learn(p.skills.firstWhere((s) => s.id == id)), true);
     }
     expect(p.lightningDamageMultiplier, 1.08);

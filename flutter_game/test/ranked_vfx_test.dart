@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/battle_effects.dart';
+import 'package:guardian_new/combat_feedback.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/ranked_vfx.dart';
 import 'package:guardian_new/spell_vfx.dart';
@@ -77,14 +78,13 @@ void main() {
               )..age = .35;
               v.render(canvas);
             case 'charge':
-              final v = ContactSpark(
-                rendered,
-                ui.Offset.zero,
-                heavy: false,
-                rank: rank,
-              )..age = .08;
+              final v = ImpactParticles(
+                AcceptedImpact(ui.Offset.zero, 0, ImpactKind.heavy, rank: rank),
+                onFinished: () {},
+              );
+              v.particles.update(.08);
               canvas.translate(at.dx, at.dy);
-              v.render(canvas);
+              v.particles.render(canvas);
             case 'crushingBlow':
             case 'seismicSlam':
               canvas.translate(at.dx, at.dy);

@@ -2,9 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'entry_art_widgets.dart';
 import 'game_art.dart';
-import 'game_ui.dart';
-import 'panel_controls.dart';
 import 'rpg_model.dart';
 
 class ClassSelection extends StatefulWidget {
@@ -25,232 +24,297 @@ class ClassSelection extends StatefulWidget {
 
 class _ClassSelectionState extends State<ClassSelection> {
   HeroClass selected = HeroClass.warrior;
-  bool get compact => MediaQuery.sizeOf(context).height < 520;
   @override
   Widget build(BuildContext context) => Scaffold(
     body: Stack(
       fit: StackFit.expand,
       children: [
-        RawImage(image: widget.art.images['village-scene'], fit: BoxFit.cover),
-        const DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0x550c2423), Color(0xee102f2d), ink],
-            ),
-          ),
-        ),
+        RawImage(image: widget.art.images['entry-scene'], fit: BoxFit.cover),
+        const ColoredBox(color: Color(0xa610211f)),
         SafeArea(
           child: LayoutBuilder(
-            builder: (context, box) => SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: 22,
-                vertical: compact ? 12 : 24,
-              ),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: math.max(0, box.maxHeight - (compact ? 24 : 48)),
+            builder: (context, box) {
+              final compact = box.maxHeight < 600;
+              final tightContinue =
+                  compact && box.maxWidth >= 600 && widget.onContinue != null;
+              final brandHeight = tightContinue
+                  ? 70.0
+                  : compact
+                  ? 78.0
+                  : 111.0;
+              final actionHeight = tightContinue
+                  ? 50.0
+                  : compact
+                  ? 54.0
+                  : 68.0;
+              final skillsHeight = tightContinue
+                  ? 44.0
+                  : compact
+                  ? 49.0
+                  : 65.0;
+              final continueHeight = widget.onContinue == null
+                  ? 0.0
+                  : tightContinue
+                  ? 72.0
+                  : 80.0;
+              final cardHeight = math.max(
+                112.0,
+                math.min(
+                  (math.min(530.0, box.maxWidth - 24) - 10) / 1.2,
+                  box.maxHeight -
+                      24 -
+                      brandHeight -
+                      actionHeight -
+                      skillsHeight -
+                      continueHeight -
+                      24,
                 ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 510),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (!compact)
-                          const Text(
-                            'GUARDIAN OF NATURE',
-                            style: TextStyle(
-                              color: gold,
-                              fontSize: 11,
-                              letterSpacing: 3,
+              );
+              return SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: math.max(0, box.maxHeight - 24),
+                  ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 530),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            height: brandHeight,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: compact ? 43 : 65,
+                                  height: compact ? 52 : 78,
+                                  child: CustomPaint(
+                                    painter: EntryChrome(
+                                      widget.art,
+                                      EntryPiece.crest,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Flexible(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        '자연의 수호자',
+                                        style: TextStyle(
+                                          color: entryCream,
+                                          fontSize: tightContinue
+                                              ? 22
+                                              : compact
+                                              ? 24
+                                              : 29,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      const Text(
+                                        '제1장 · 십자로의 숲',
+                                        style: TextStyle(
+                                          color: entryBrass,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        if (!compact) const SizedBox(height: 12),
-                        Text(
-                          '자연의 수호자',
-                          style: TextStyle(
-                            fontSize: compact ? 26 : 32,
-                            fontWeight: FontWeight.bold,
-                            color: cream,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          '제1장 · 십자로의 숲',
-                          style: TextStyle(color: cream, fontSize: 16),
-                        ),
-                        if (widget.onContinue != null) ...[
-                          const SizedBox(height: 16),
-                          GameAction(
-                            '모험 이어하기',
-                            primary: true,
-                            icon: Icons.play_arrow_rounded,
-                            onTap: widget.onContinue,
+                          if (widget.onContinue != null)
+                            SizedBox(
+                              height: continueHeight,
+                              child: Column(
+                                children: [
+                                  EntryAction(
+                                    '모험 이어하기',
+                                    art: widget.art,
+                                    onTap: widget.onContinue!,
+                                    height: 47,
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    widget.continueSummary ?? '',
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    style: const TextStyle(
+                                      color: entryCream,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          const SizedBox(height: 6),
+                          SizedBox(
+                            height: cardHeight,
+                            child: Row(
+                              children: [
+                                Expanded(child: _card(HeroClass.warrior)),
+                                const SizedBox(width: 10),
+                                Expanded(child: _card(HeroClass.mage)),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 6),
-                          Text(
-                            widget.continueSummary ?? '',
-                            style: const TextStyle(color: cream, fontSize: 14),
+                          SizedBox(
+                            height: skillsHeight,
+                            child: _startingSkills(),
                           ),
-                        ],
-                        SizedBox(height: compact ? 10 : 30),
-                        if (!compact)
-                          const Text(
-                            '어떤 힘으로 어둠에 맞서겠습니까?',
-                            style: TextStyle(color: cream, fontSize: 15),
-                          ),
-                        SizedBox(height: compact ? 10 : 18),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            for (final c in HeroClass.values)
-                              Expanded(
-                                child: Padding(
-                                  padding: EdgeInsets.only(
-                                    right: c == HeroClass.warrior ? 6 : 0,
-                                    left: c == HeroClass.mage ? 6 : 0,
-                                  ),
-                                  child: _card(c),
-                                ),
-                              ),
-                          ],
-                        ),
-                        SizedBox(height: compact ? 10 : 18),
-                        if (!compact)
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: ink.withValues(alpha: .88),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: gold.withValues(alpha: .35),
-                              ),
-                            ),
-                            child: Text(
-                              selected == HeroClass.warrior
-                                  ? '연속 베기로 분노를 모으고 함성으로 적을 제압하세요. 성장하면 소용돌이와 광전사의 격노를 배울 수 있습니다.'
-                                  : '마력탄으로 거리를 유지하고 서릿발로 적을 얼리세요. 성장하면 연쇄 번개와 유성을 배울 수 있습니다.',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                height: 1.7,
-                                color: cream,
-                              ),
-                            ),
-                          ),
-                        SizedBox(height: compact ? 10 : 22),
-                        SizedBox(
-                          width: double.infinity,
-                          child: GameAction(
+                          const SizedBox(height: 6),
+                          EntryAction(
                             widget.onContinue != null
                                 ? '${selected.title}로 새 모험'
                                 : '${selected.title}로 모험 시작',
-                            primary: widget.onContinue == null,
-                            icon: Icons.play_arrow_rounded,
+                            art: widget.art,
+                            height: actionHeight,
                             onTap: () => widget.onBegin(selected),
                           ),
-                        ),
-                        if (!compact) const SizedBox(height: 14),
-                        if (!compact)
-                          const Text(
-                            '장비를 모으고, 스킬을 키워 첫 파수꾼을 쓰러뜨리세요.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Color(0xffb5c6b5),
-                              fontSize: 12,
-                              height: 1.6,
-                            ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
       ],
     ),
   );
-  Widget _card(HeroClass c) {
-    final active = selected == c;
+
+  Widget _startingSkills() {
+    final mage = selected == HeroClass.mage;
+    final skills = [
+      (
+        mage ? Icons.auto_fix_high : Icons.sports_martial_arts,
+        mage ? '마력탄' : '연속 베기',
+      ),
+      (mage ? Icons.ac_unit : Icons.campaign, mage ? '서릿발' : '함성'),
+      (Icons.directions_run, '구르기'),
+    ];
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (icon, label) in skills)
+          Expanded(
+            child: Semantics(
+              label: '시작 기술 $label',
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+                child: CustomPaint(
+                  painter: EntryChrome(widget.art, EntryPiece.nameplate),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(icon, size: 17, color: entryBrass),
+                      const SizedBox(width: 5),
+                      Flexible(
+                        child: Text(
+                          label,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: entryCream,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _card(HeroClass heroClass) {
+    final active = selected == heroClass;
+    void choose() => setState(() => selected = heroClass);
     return Semantics(
       button: true,
       selected: active,
-      label: '${c.title} 선택',
+      label: '${heroClass.title} 선택',
       excludeSemantics: true,
-      onTap: () => setState(() => selected = c),
-      child: InkWell(
-        onTap: () => setState(() => selected = c),
-        borderRadius: BorderRadius.circular(18),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: EdgeInsets.fromLTRB(
-            10,
-            compact ? 8 : 12,
-            10,
-            compact ? 10 : 16,
-          ),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: active
-                  ? [const Color(0xff31554b), const Color(0xff122d2d)]
-                  : [const Color(0xff203b38), const Color(0xff102825)],
-            ),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: active ? gold : const Color(0xff527268),
-              width: active ? 2 : 1,
-            ),
-            boxShadow: active
-                ? [const BoxShadow(color: Color(0x33d5b772), blurRadius: 20)]
-                : [],
-          ),
-          child: Column(
-            children: [
-              SizedBox(
-                height: compact ? 70 : 138,
-                width: 140,
-                child: CustomPaint(painter: ClassFigure(widget.art, c)),
-              ),
-              Text(
-                c.title,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: cream,
-                ),
-              ),
-              const SizedBox(height: 7),
-              Text(
-                c.subtitle,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 12, color: gold),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+      onTap: choose,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: choose,
+          child: LayoutBuilder(
+            builder: (context, box) {
+              final wide =
+                  box.maxWidth >= 200 && box.maxWidth > box.maxHeight * 1.25;
+              return Stack(
+                fit: StackFit.expand,
                 children: [
-                  Icon(
-                    active ? Icons.check_circle : Icons.circle_outlined,
-                    size: 17,
-                    color: active ? gold : const Color(0xff6e8b80),
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    active ? '선택됨' : '선택',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: active ? gold : cream,
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      8,
+                      8,
+                      wide ? box.maxWidth * .54 : 8,
+                      8,
+                    ),
+                    child: ClipRect(
+                      child: Opacity(
+                        opacity: active ? 1 : .72,
+                        child: CustomPaint(
+                          painter: ClassPortrait(widget.art, heroClass),
+                        ),
+                      ),
                     ),
                   ),
+                  CustomPaint(
+                    painter: EntryChrome(widget.art, EntryPiece.frame),
+                  ),
+                  Positioned(
+                    left: wide ? box.maxWidth * .45 : 6,
+                    right: 6,
+                    bottom: wide ? (box.maxHeight - 42) / 2 : 6,
+                    child: SizedBox(
+                      height: 42,
+                      child: CustomPaint(
+                        painter: EntryChrome(widget.art, EntryPiece.nameplate),
+                        child: Center(
+                          child: Text(
+                            heroClass.title,
+                            style: TextStyle(
+                              color: active ? entryCream : entryBrass,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (active)
+                    Positioned(
+                      top: 7,
+                      right: 7,
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CustomPaint(
+                          painter: EntryChrome(widget.art, EntryPiece.selected),
+                        ),
+                      ),
+                    ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),
@@ -258,31 +322,32 @@ class _ClassSelectionState extends State<ClassSelection> {
   }
 }
 
-class ClassFigure extends CustomPainter {
-  ClassFigure(this.art, this.heroClass);
+/// One shared decoded painting supplies both independently tappable class cards.
+class ClassPortrait extends CustomPainter {
+  ClassPortrait(this.art, this.heroClass);
   final GameArt art;
   final HeroClass heroClass;
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(size.width / 2, size.height - 10),
-        width: 90,
-        height: 24,
-      ),
-      Paint()..color = const Color(0x66071618),
-    );
-    art.actor(
-      canvas,
-      heroClass == HeroClass.mage ? 'mage' : 'hero',
-      Offset(size.width / 2, size.height - 8),
-      math.pi / 2,
+    final image = art.images['class-selection'];
+    if (image == null) return;
+    final half = image.width / 2;
+    final source = Rect.fromLTWH(
+      heroClass == HeroClass.warrior ? 0 : half,
       0,
-      size.height - 12,
+      half,
+      image.height.toDouble(),
+    );
+    final fitted = applyBoxFit(BoxFit.cover, source.size, size);
+    canvas.drawImageRect(
+      image,
+      Alignment.topCenter.inscribe(fitted.source, source),
+      Alignment.center.inscribe(fitted.destination, Offset.zero & size),
+      Paint()..filterQuality = FilterQuality.medium,
     );
   }
 
   @override
-  bool shouldRepaint(covariant ClassFigure oldDelegate) =>
+  bool shouldRepaint(covariant ClassPortrait oldDelegate) =>
       oldDelegate.heroClass != heroClass || oldDelegate.art != art;
 }

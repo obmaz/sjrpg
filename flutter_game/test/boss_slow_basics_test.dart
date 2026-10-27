@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/battle_effects.dart';
+import 'package:guardian_new/combat_balance.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/player_afflictions.dart';
 import 'package:guardian_new/rpg_model.dart';
@@ -88,7 +89,10 @@ void main() {
       slowed.afflictions.apply(PlayerStatus.attackSlow);
       normal.hero.slash();
       slowed.hero.slash();
-      expect(normal.hero.attackClock, lessThan(.18));
+      expect(
+        normal.hero.attackClock,
+        closeTo(CombatBalance.minimumStrikeInterval, .001),
+      );
       expect(
         slowed.hero.attackClock / normal.hero.attackClock,
         closeTo(1 / .72, .001),

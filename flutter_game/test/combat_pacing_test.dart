@@ -27,7 +27,7 @@ void main() {
   }
 
   test(
-    'actual default class DPS is about thirty percent lower, not halved',
+    'default basic cadence halves again without a second damage reduction',
     () {
       // Measured at the previous production source: same starting weapon/rank.
       for (final (hero, oldDps, oldInterval) in [
@@ -35,9 +35,9 @@ void main() {
         (HeroClass.mage, 25.0, .42),
       ]) {
         final p = Progress(heroClass: hero);
-        expect(p.basicDps / oldDps, closeTo(.697, .000001));
-        expect(p.attackInterval / oldInterval, closeTo(1 / .82, .000001));
-        expect(p.basicDps / oldDps, greaterThan(.65));
+        expect(p.basicDps / oldDps, closeTo(.3485, .000001));
+        expect(p.attackInterval / oldInterval, closeTo(1 / .41, .000001));
+        expect(p.basicDps / oldDps, greaterThan(.34));
         final basic = hero == HeroClass.warrior ? 'cleave' : 'firebolt';
         final first = p.basicTempo;
         p.ranks[basic] = 5;

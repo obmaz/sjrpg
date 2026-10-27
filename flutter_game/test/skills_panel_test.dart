@@ -51,7 +51,7 @@ void main() {
         expect(p.learn(p.skills.firstWhere((skill) => skill.id == id)), true);
       }
       if (hero == HeroClass.mage) {
-        for (final id in ['arcaneMastery', 'warmth']) {
+        for (final id in ['arcaneMastery', 'firebolt', 'emberFocus']) {
           expect(p.learn(p.skills.firstWhere((skill) => skill.id == id)), true);
         }
       }

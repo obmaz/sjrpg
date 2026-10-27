@@ -28,7 +28,9 @@ class GameArt {
     return atlas;
   }
 
-  static const _menuImages = ['actors-hero', 'actors-mage', 'village-scene'];
+  // Class portraits replace the large gameplay atlases on the menu. Those
+  // atlases still join the stage's transactional preparation before play.
+  static const _menuImages = ['entry-scene', 'class-selection', 'entry-ui'];
   static const _pngImages = {
     'actors-mage',
     'actors-motor',
@@ -40,6 +42,9 @@ class GameArt {
     'actors-roll',
   };
   static const _allImages = [
+    'entry-scene',
+    'class-selection',
+    'entry-ui',
     'actors-hero',
     'actors-mage',
     'gear-icons',
@@ -730,6 +735,27 @@ class GameArt {
       ),
       ui.Paint()..color = ui.Color.fromRGBO(255, 255, 255, opacity),
     );
+  }
+
+  bool face(ui.Canvas canvas, HeroClass heroClass, ui.Rect destination) {
+    final image = images['class-selection'];
+    if (image == null) return false;
+    final ratio = image.width / 1536;
+    final source = heroClass == HeroClass.warrior
+        ? const ui.Rect.fromLTWH(285, 20, 330, 380)
+        : const ui.Rect.fromLTWH(945, 30, 330, 380);
+    canvas.drawImageRect(
+      image,
+      ui.Rect.fromLTRB(
+        source.left * ratio,
+        source.top * ratio,
+        source.right * ratio,
+        source.bottom * ratio,
+      ),
+      destination,
+      ui.Paint()..filterQuality = ui.FilterQuality.medium,
+    );
+    return true;
   }
 
   void control(ui.Canvas canvas, String key, ui.Rect destination) {

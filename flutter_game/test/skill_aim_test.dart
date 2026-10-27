@@ -24,8 +24,8 @@ void main() {
     s.start(game);
     s.progress.gainXp(1000);
     for (final id in [
-      'warmth',
-      'warmth',
+      'firebolt',
+      'emberFocus',
       'arcaneMastery',
       'chainLightning',
       'iceArmor',

@@ -43,12 +43,43 @@ void main() {
       session.hit(mob, 999, Offset.zero);
       expect(session.progress.kills, kills + 1);
       expect(session.progress.gold, 8);
-      session.holdAttack('touch', true);
-      for (var i = 0; i < 30; i++) {
-        session.hero.update(.05);
+      void stepHero(double seconds) {
+        while (seconds > 0) {
+          final dt = seconds > .05 ? .05 : seconds;
+          session.hero.update(dt);
+          seconds -= dt;
+        }
       }
-      expect(session.hero.strikes, greaterThanOrEqualTo(4));
-      expect(session.hero.strikes, lessThanOrEqualTo(5));
+
+      final interval = session.progress.attackInterval;
+      session.holdAttack('touch', true);
+      session.hero.update(.01);
+      expect(session.hero.strikes, 1);
+      expect(session.hero.attackClock, closeTo(interval, .000001));
+      for (var expected = 2; expected <= 4; expected++) {
+        stepHero(session.hero.attackClock - .01);
+        expect(session.hero.strikes, expected - 1);
+        session.hero.slash();
+        expect(
+          session.hero.strikes,
+          expected - 1,
+          reason: 'taps cannot bypass the live gate',
+        );
+        stepHero(.02);
+        expect(
+          session.hero.strikes,
+          expected,
+          reason: 'held input repeats when the actual interval expires',
+        );
+        expect(session.hero.attackClock, closeTo(interval, .000001));
+      }
+      session.holdAttack('touch', false);
+      stepHero(interval * 1.2);
+      expect(
+        session.hero.strikes,
+        4,
+        reason: 'releasing the input stops repetition',
+      );
     },
   );
   test(

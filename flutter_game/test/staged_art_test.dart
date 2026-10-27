@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/class_selection.dart';
 import 'package:guardian_new/enemy_difficulty.dart';
+import 'package:guardian_new/entry_loading.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/game_ui.dart';
@@ -275,11 +276,11 @@ void main() {
       await tester.tap(find.text('전사로 모험 시작'));
       await tester.pump();
       expect(find.byType(GamePage), findsNothing);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(EntryPreparationPanel), findsOneWidget);
       bundle.gate!.complete();
       await _until(
         tester,
-        () => find.byType(CircularProgressIndicator).evaluate().isEmpty,
+        () => find.byType(EntryPreparationPanel).evaluate().isEmpty,
       );
       expect(find.byType(GamePage), findsNothing);
       expect(art.materials, isEmpty);
@@ -336,7 +337,7 @@ void main() {
       await tester.tap(find.text('모험 이어하기'));
       await _until(
         tester,
-        () => find.byType(CircularProgressIndicator).evaluate().isEmpty,
+        () => find.byType(EntryPreparationPanel).evaluate().isEmpty,
       );
       expect(find.byType(GamePage), findsNothing);
       expect(writes, 0);
@@ -425,7 +426,7 @@ void main() {
         tester,
         () =>
             source.saveFailed &&
-            find.byType(CircularProgressIndicator).evaluate().isEmpty,
+            find.byType(EntryPreparationPanel).evaluate().isEmpty,
       );
       expect(_session(tester), same(source));
       expect(source.disposed, isFalse);
@@ -523,7 +524,7 @@ void main() {
         await tester.tap(find.text('제2장 의뢰 받기'));
         await _until(
           tester,
-          () => find.byType(CircularProgressIndicator).evaluate().isEmpty,
+          () => find.byType(EntryPreparationPanel).evaluate().isEmpty,
         );
         expect(_session(tester), same(source));
         expect(source.active, isFalse);

@@ -141,7 +141,7 @@ void main() {
     },
   );
   test(
-    'connected melee holds only the strike pose; clocks and dodge remain responsive',
+    'connected melee leaves pose-only hold unused; explicit dodge remains responsive',
     () {
       final s = Adventure(GameArt());
       s.start(TestGame());
@@ -154,12 +154,12 @@ void main() {
       s.hero.attackClock = 0;
       final mob = s.spawnEnemy('goblin', const ui.Offset(6050, 4200))!;
       s.hero.slash();
-      expect(s.hero.impactHold, greaterThan(0));
+      expect(s.hero.impactHold, 0);
       expect(mob.hurt, .14);
       final pose = s.hero.swing, attack = s.hero.attackClock;
       s.hero.cooldowns['warcry'] = 3;
       s.hero.update(.01);
-      expect(s.hero.swing, pose);
+      expect(s.hero.swing, closeTo(pose - .01, .0001));
       expect(s.hero.attackClock, closeTo(attack - .01, .0001));
       expect(s.hero.cooldowns['warcry'], closeTo(2.99, .0001));
       s.hero.dodge();

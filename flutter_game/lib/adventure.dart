@@ -11,6 +11,7 @@ import 'audio_settings.dart';
 import 'battle_effects.dart';
 import 'boss_attacks.dart';
 import 'combat_balance.dart';
+import 'combat_feedback.dart';
 import 'crushing_blow_vfx.dart';
 import 'destructible_chest.dart';
 import 'device_settings.dart';
@@ -434,6 +435,7 @@ class Adventure extends ChangeNotifier {
     if (disposed || defeated || progress.hp <= 0 || !stageCleared) return;
     progress.awardSkillResetTicket(world.stage);
     if (won) return;
+    combatFeedback.finish();
     won = true;
     audio.stop();
     releaseInput();
@@ -464,6 +466,19 @@ class Adventure extends ChangeNotifier {
   ui.Size? viewportSize;
   Vector2 get cameraFocus =>
       hero.position + hero.size / 2 + Vector2(0, cameraOffsetY) + cameraImpact;
+  late final combatFeedback = CombatFeedback(
+    game: () => game,
+    active: () => active,
+    visible: (at) {
+      final view = viewportSize;
+      if (view == null) return (at - hero.body.center).distance <= 750;
+      return ui.Rect.fromCenter(
+        center: cameraFocus.toOffset(),
+        width: view.width,
+        height: view.height,
+      ).inflate(70).contains(at);
+    },
+  );
   double impactTime = 0, impactStrength = 0;
   Vector2 get cameraImpact {
     if (ui
@@ -948,6 +963,7 @@ class Adventure extends ChangeNotifier {
   }
 
   void pause() {
+    combatFeedback.cancel();
     audio.stop();
     device.cancel();
     releaseInput();
@@ -1474,6 +1490,7 @@ class Adventure extends ChangeNotifier {
     );
     if (progress.hp <= 0) {
       defeated = true;
+      combatFeedback.cancel();
       audio.stop();
       releaseInput();
       game?.pauseEngine();
@@ -1496,13 +1513,36 @@ class Adventure extends ChangeNotifier {
     ui.Offset impulse, {
     bool generateRage = false,
     ui.Offset? origin,
+    ImpactKind? impactKind,
+    int? impactRank,
   }) {
-    if (!canHitEnemy(mob, origin: origin)) return false;
+    if (!damage.isFinite || damage <= 0 || !canHitEnemy(mob, origin: origin)) {
+      return false;
+    }
     combatTime = 5;
     damage *= mob.wardActive ? .65 : 1;
     final healthBefore = mob.life.value / mob.life.max;
     mob.life.remove(damage);
     mob.damageTrail.damage(healthBefore, mob.life.value / mob.life.max);
+    final heavy =
+        progress.weapon.base.style == 'hammer' ||
+        combo == 0 ||
+        progress.selectedBasic == 'heavyStrike';
+    combatFeedback.accepted(
+      AcceptedImpact(
+        mob.body.center - const ui.Offset(0, 28),
+        math.atan2(impulse.dy, impulse.dx),
+        impactKind ??
+            (progress.heroClass == HeroClass.mage
+                ? ImpactKind.magic
+                : generateRage && heavy
+                ? ImpactKind.heavy
+                : ImpactKind.melee),
+        rank:
+            impactRank ??
+            (generateRage ? progress.rank(progress.selectedBasic) : 1),
+      ),
+    );
     if (progress.hasGift(WeaponGift.frost) && !mob.isDead) {
       mob.slow = math.max(mob.slow, .8);
     }
@@ -1510,22 +1550,10 @@ class Adventure extends ChangeNotifier {
         progress.heroClass == HeroClass.warrior &&
         rageStrike != hero.strikes) {
       rageStrike = hero.strikes;
-      final heavy =
-          progress.weapon.base.style == 'hammer' ||
-          combo == 0 ||
-          progress.selectedBasic == 'heavyStrike';
-      hero.impactHold = heavy ? .055 : .035;
-      hero.swing = math.min(hero.swing, .16);
+      // Pin the contact phase, not a fixed remaining duration: slow/heavy
+      // attacks must keep the same follow-through when their tempo changes.
+      hero.swing = math.min(hero.swing, hero.swingDuration * .5);
       kickCamera(heavy ? 2.1 : .95);
-      game?.add(
-        ContactSpark(
-          this,
-          mob.body.center - const ui.Offset(0, 28),
-          heavy: heavy,
-          rank: progress.rank(progress.selectedBasic),
-          bearing: math.atan2(impulse.dy, impulse.dx),
-        ),
-      );
       progress.energy = math.min(
         progress.maxEnergy,
         progress.energy + progress.rageOnHit(protected: hero.armorTime > 0),
@@ -1680,6 +1708,7 @@ class Adventure extends ChangeNotifier {
 
   @override
   void dispose() {
+    combatFeedback.dispose();
     disposed = true;
     for (final text in texts) {
       text.releaseText();
@@ -1855,17 +1884,10 @@ class Guardian extends Player with WithCollision {
         mob,
         heavyPower * multiplier,
         ui.Offset(math.cos(heavyAngle), math.sin(heavyAngle)) * 48,
+        impactKind: ImpactKind.heavy,
+        impactRank: session.progress.rank('crushingBlow'),
       );
       mob.applyStun(.55);
-      session.game?.add(
-        ContactSpark(
-          session,
-          mob.body.center - const ui.Offset(0, 25),
-          heavy: true,
-          rank: session.progress.rank('crushingBlow'),
-          bearing: heavyAngle,
-        ),
-      );
     }
     session.strikeChests(
       body.center,
@@ -2051,19 +2073,12 @@ class Guardian extends Player with WithCollision {
           mob,
           chargeDamage * multiplier,
           ui.Offset(math.cos(chargeAngle), math.sin(chargeAngle)) * 45,
+          impactKind: ImpactKind.heavy,
+          impactRank: session.progress.rank('charge'),
         )) {
           continue;
         }
         mob.applyStun(.4);
-        session.game?.add(
-          ContactSpark(
-            session,
-            mob.body.center - const ui.Offset(0, 22),
-            heavy: true,
-            rank: session.progress.rank('charge'),
-            bearing: chargeAngle,
-          ),
-        );
         session.kickCamera(.9);
       }
       if (chargeVictims.length + chargeChests.length >= chargeCap) {
@@ -2180,7 +2195,6 @@ class Guardian extends Player with WithCollision {
     session.combo = basic.id == 'cleave' || p.heroClass == HeroClass.mage
         ? (session.combo + 1) % 3
         : 1;
-    comboGrace = 1.2;
     attackClock =
         math.max(
           CombatBalance.minimumStrikeInterval,
@@ -2188,6 +2202,9 @@ class Guardian extends Player with WithCollision {
               (frenzyTime > 0 ? session.progress.frenzyAttackTempo : 1),
         ) /
         session.afflictions.attackTempo;
+    // Slow weapons and attack debuffs must still reach the next combo strike.
+    // Once this scheduled attack becomes ready, only a short idle margin remains.
+    comboGrace = math.max(1.2, attackClock + .25);
     swingDuration = (strikePose == 2 ? .32 : .26) / effectiveBasicTempo;
     swing = swingDuration;
     if (p.heroClass == HeroClass.mage) {
@@ -2407,6 +2424,7 @@ class Guardian extends Player with WithCollision {
           p.skillDamage(def),
           stun: p.warcryStun,
           maxTargets: p.skillTargetLimit(def),
+          impactRank: rank,
         );
         session.game?.add(
           SpellBurst(
@@ -2444,6 +2462,7 @@ class Guardian extends Player with WithCollision {
           145,
           p.skillDamage(def),
           maxTargets: p.skillTargetLimit(def),
+          impactRank: rank,
         );
         session.game?.add(
           RuneBurst(
@@ -2491,9 +2510,11 @@ class Guardian extends Player with WithCollision {
           impact,
           125 + rank * 6,
           p.skillDamage(def),
+          impactKind: ImpactKind.heavy,
           stun: .65 + rank * .08,
           slow: 1.5,
           maxTargets: p.skillTargetLimit(def),
+          impactRank: rank,
         );
         session.game?.add(
           GroundStrike(
@@ -2512,8 +2533,10 @@ class Guardian extends Player with WithCollision {
           radius,
           p.skillDamage(def),
           stun: 2,
+          impactKind: ImpactKind.ice,
           slow: p.novaSlowDuration,
           maxTargets: p.skillTargetLimit(def),
+          impactRank: rank,
         );
         session.game?.add(
           SpellBurst(

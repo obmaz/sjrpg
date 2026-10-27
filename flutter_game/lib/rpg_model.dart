@@ -669,7 +669,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'ironSkin': 1, 'whirlwind': 1},
+    requires: {'frenzy': 1, 'ironSkin': 1},
   ),
   SkillDef(
     'battleVigor',
@@ -691,14 +691,14 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'battleVigor': 1, 'resoundingCry': 1, 'weaponTempo': 1},
+    requires: {'weaponTempo': 1, 'battleVigor': 1},
   ),
   SkillDef(
     'rendingEdge',
     '예리한 칼날',
     '전투 기술',
     '등급마다 기본 공격 피해 +5%.',
-    9,
+    7,
     0,
     0,
     passive: true,
@@ -713,7 +713,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'rendingEdge': 2},
+    requires: {'charge': 1, 'rendingEdge': 2},
   ),
   SkillDef(
     'weaponTempo',
@@ -735,7 +735,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'battleFocus': 1, 'weaponTempo': 1},
+    requires: {'battleFocus': 1, 'rallyingVoice': 1},
   ),
   SkillDef(
     'secondWind',
@@ -746,7 +746,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'veteranGuard': 1},
+    requires: {'rendingEdge': 1, 'veteranGuard': 1},
   ),
   SkillDef(
     'resoundingCry',
@@ -768,7 +768,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'rallyingVoice': 1},
+    requires: {'battleFocus': 1, 'rallyingVoice': 1},
   ),
   SkillDef(
     'unyieldingOath',
@@ -779,7 +779,7 @@ const warriorSkills = [
     0,
     0,
     passive: true,
-    requires: {'warDrums': 2, 'veteranGuard': 1},
+    requires: {'veteranGuard': 1, 'warDrums': 2},
   ),
   SkillDef(
     'charge',
@@ -789,7 +789,7 @@ const warriorSkills = [
     6,
     16,
     5,
-    requires: {'seismicSlam': 1},
+    requires: {'seismicSlam': 1, 'battleFocus': 1},
   ),
   SkillDef(
     'crushingBlow',
@@ -799,7 +799,7 @@ const warriorSkills = [
     7,
     22,
     6,
-    requires: {'charge': 1},
+    requires: {'charge': 1, 'rendingEdge': 2},
   ),
   SkillDef(
     'quickCut',
@@ -889,7 +889,7 @@ const mageSkills = [
     4,
     38,
     9,
-    requires: {'warmth': 2, 'iceArmor': 1},
+    requires: {'emberFocus': 1, 'iceArmor': 1},
   ),
   SkillDef(
     'warmth',
@@ -911,7 +911,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'iceArmor': 1},
+    requires: {'iceArmor': 1, 'deepFreeze': 1},
   ),
   SkillDef(
     'lightningMastery',
@@ -929,7 +929,7 @@ const mageSkills = [
     '잿불 집중',
     '화염',
     '등급마다 화염 무기·유성 피해 +5%.',
-    6,
+    4,
     0,
     0,
     passive: true,
@@ -944,7 +944,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'meteor': 1, 'emberFocus': 1},
+    requires: {'meteor': 1, 'coldMastery': 1},
   ),
   SkillDef(
     'phoenixHeart',
@@ -962,7 +962,7 @@ const mageSkills = [
     '심연의 냉기',
     '냉기',
     '등급마다 냉기 무기·서릿발 피해 +5%.',
-    6,
+    5,
     0,
     0,
     passive: true,
@@ -977,7 +977,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'coldMastery': 1, 'deepFreeze': 1, 'meteor': 1},
+    requires: {'coldMastery': 1, 'lightningMastery': 1},
   ),
   SkillDef(
     'glacialReserve',
@@ -988,7 +988,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'frozenAegis': 2},
+    requires: {'cinderReach': 1, 'frozenAegis': 2},
   ),
   SkillDef(
     'conductivity',
@@ -1010,7 +1010,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'lightningMastery': 1, 'conductivity': 1},
+    requires: {'coldMastery': 1, 'lightningMastery': 1},
   ),
   SkillDef(
     'arcaneEconomy',
@@ -1021,7 +1021,7 @@ const mageSkills = [
     0,
     0,
     passive: true,
-    requires: {'forkedStorm': 2},
+    requires: {'frozenAegis': 1, 'forkedStorm': 2},
   ),
   SkillDef(
     'iceShard',
@@ -1049,7 +1049,7 @@ const mageSkills = [
     basic: true,
     basicDamageScale: .84,
     basicTempoScale: 1.12,
-    requires: {'firebolt': 2, 'arcaneMastery': 1},
+    requires: {'frostNova': 2, 'arcaneMastery': 1},
   ),
 ];
 

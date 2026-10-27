@@ -1,8 +1,9 @@
 /// Shared pacing values used by simulation, offers and their previews.
 abstract final class CombatBalance {
-  // Combine damage and rate: default sustained basic DPS becomes ~69.7%.
+  // Combine damage and rate: default sustained basic DPS becomes ~34.85%.
+  // Basic intervals are twice the previous .82-rate release; damage is unchanged.
   static const heroDamageScale = .85;
-  static const basicAttackRate = .82;
+  static const basicAttackRate = .41;
   static const basicRankTempoGrowth = .05;
   static const minimumBasicInterval = .16 / basicAttackRate;
   static const minimumStrikeInterval = .12 / basicAttackRate;

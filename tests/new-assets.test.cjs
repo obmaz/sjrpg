@@ -49,6 +49,19 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
         fs.readFileSync(path.join(target, 'village-scene.webp'), 'utf8'),
         'source picture village-scene.webp',
     );
+    for (const name of [
+        'entry-scene',
+        'entry-splash',
+        'class-selection',
+        'entry-ui',
+        'entry-crest',
+        'entry-loading-bar',
+    ]) {
+        assert.equal(
+            fs.readFileSync(path.join(target, `${name}.webp`), 'utf8'),
+            `source picture ${name}.webp`,
+        );
+    }
     assert.equal(
         fs.readFileSync(path.join(target, 'blacksmith-forge.webp'), 'utf8'),
         'source picture blacksmith-forge.webp',
