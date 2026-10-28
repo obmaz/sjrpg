@@ -233,19 +233,22 @@ class BarbarianVfxArt {
             BarbarianVfxKind.doubleSwing,
           }.contains(kind)) {
             _blades(canvas, t, r, weight);
-            _pressure.paintStrike(
-              canvas,
-              progress: t,
-              radius: r,
-              rank: rank,
-              heavy:
-                  kind == BarbarianVfxKind.bash ||
-                  kind == BarbarianVfxKind.concentrate,
-              fierce: kind == BarbarianVfxKind.berserk,
-              dual:
-                  kind == BarbarianVfxKind.frenzy ||
-                  kind == BarbarianVfxKind.doubleSwing,
-            );
+            // Bash is a forward single-target blow, never a sweeping arc.
+            if (kind != BarbarianVfxKind.bash) {
+              _pressure.paintStrike(
+                canvas,
+                progress: t,
+                radius: r,
+                rank: rank,
+                heavy:
+                    kind == BarbarianVfxKind.bash ||
+                    kind == BarbarianVfxKind.concentrate,
+                fierce: kind == BarbarianVfxKind.berserk,
+                dual:
+                    kind == BarbarianVfxKind.frenzy ||
+                    kind == BarbarianVfxKind.doubleSwing,
+              );
+            }
           } else {
             _blades(canvas, t, r, weight);
           }

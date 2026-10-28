@@ -29,6 +29,44 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test(
+    'bash draws only a forward strike rather than a surrounding sweep',
+    () async {
+      final result = await _raster(
+        (c) => BarbarianVfxArt(BarbarianVfxKind.bash).paint(
+          c,
+          center: _center,
+          progress: .35,
+          radius: 92,
+          rank: 20,
+          bearing: 0,
+        ),
+      );
+      try {
+        var forward = 0;
+        for (var y = 0; y < _side; y++) {
+          for (var x = 0; x < _side; x++) {
+            if (result.bytes[(y * _side + x) * 4 + 3] == 0) continue;
+            expect(
+              x,
+              greaterThan(_center.dx),
+              reason: 'no ring behind the attacker',
+            );
+            expect(
+              (y - _center.dy).abs(),
+              lessThan(24),
+              reason: 'a narrow direct impact',
+            );
+            forward++;
+          }
+        }
+        expect(forward, greaterThan(20));
+      } finally {
+        result.image.dispose();
+      }
+    },
+  );
+
+  test(
     'every moving skill stays inside cull bounds and leaves the torso clear',
     () async {
       for (final kind in BarbarianVfxKind.values) {
