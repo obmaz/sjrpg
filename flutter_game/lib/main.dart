@@ -428,7 +428,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   }
 
   void saveNow({bool notify = true}) {
-    if (!keepSave) return;
+    if (!keepSave || adventure.defeated && _deathCommitted) return;
     final checkpoint = adventure.defeated
         ? (_deathCheckpoint ??= GameCheckpoint.capture(
             adventure,

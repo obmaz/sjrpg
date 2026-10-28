@@ -17,7 +17,7 @@ void main() {
         addTearDown(() => tester.binding.setSurfaceSize(null));
         final art = (await tester.runAsync(GameArt.load))!;
         String? saved;
-        var failing = false, retries = 0, menus = 0;
+        var failing = false, retries = 0, menus = 0, deathWrites = 0;
         final back = BackActions();
         await tester.pumpWidget(
           MaterialApp(
@@ -35,6 +35,9 @@ void main() {
               onRetryCheckpoint: () => retries++,
               readCheckpoint: () => saved,
               writeCheckpoint: (value) {
+                if (GameCheckpoint.decode(value)?.revival == true) {
+                  deathWrites++;
+                }
                 if (failing) return false;
                 saved = value;
                 return true;
@@ -85,6 +88,18 @@ void main() {
           s.refresh();
           await tester.pump();
           expect(s.progress.gold, gold);
+          expect(find.text('체크포인트 재도전'), findsOneWidget);
+          final committedWrites = deathWrites;
+          failing = true;
+          await tester.pump(const Duration(seconds: 6));
+          await tester.pump();
+          expect(
+            deathWrites,
+            committedWrites,
+            reason:
+                'a durable death receipt must not be overwritten by a later failing write',
+          );
+          expect(s.saveFailed, false);
           expect(find.text('체크포인트 재도전'), findsOneWidget);
           await tester.tap(find.text('체크포인트 재도전'));
           await tester.pump();

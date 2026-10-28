@@ -356,16 +356,16 @@ class _AdventurePanelState extends State<AdventurePanel> {
         if (s.serviceMount != null) ...[
           _quest(
             '${s.serviceMount!.def.name} · 내구도 ${s.serviceMount!.condition}%',
-            '이동·피격 시 소모됩니다. 20% 이하는 감속, 0%는 저속으로 이동합니다.',
+            s.mountRepairRequiresMerchant
+                ? '말의 피격 회복·쓰러짐 보수는 탈것 상인에게 맡기세요.'
+                : '이동·피격 시 소모됩니다. 20% 이하는 감속, 0%는 저속으로 이동합니다.',
             s.serviceMount!.durability / 100,
             '보수 비용 ${s.serviceMount!.repairCost} 골드',
           ),
           const SizedBox(height: 8),
           GameAction(
             '탈것 보수 · ${s.serviceMount!.repairCost}G',
-            onTap:
-                s.serviceMount!.repairCost > 0 &&
-                    p.gold >= s.serviceMount!.repairCost
+            onTap: s.canRepairMount
                 ? () {
                     if (s.repairMount()) {
                       widget.onCheckpoint?.call();

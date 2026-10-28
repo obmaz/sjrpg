@@ -323,7 +323,8 @@ class MountPortraitPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1,
     );
-    if (art.images.containsKey('actors-vehicles')) {
+    final hasPortrait = art.images.containsKey('actors-${def.artKey}');
+    if (hasPortrait) {
       art.actor(
         canvas,
         def.artKey,
@@ -333,7 +334,7 @@ class MountPortraitPainter extends CustomPainter {
         66,
       );
     }
-    if (!art.images.keys.any((key) => key.startsWith('actors-vehicles'))) {
+    if (!hasPortrait) {
       canvas.save();
       canvas.translate(size.width * .2, size.height * .15);
       MountSkillIconPainter(

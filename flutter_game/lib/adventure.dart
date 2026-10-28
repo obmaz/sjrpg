@@ -512,20 +512,31 @@ class Adventure extends ChangeNotifier {
   }
 
   TravelMount? get serviceMount => riding ?? nearbyMount;
-  bool repairMount() {
+  bool get mountRepairRequiresMerchant {
     final mount = serviceMount;
-    if (mount?.def.artKey == 'horse' && mount!.hits > 0 && !nearMountMerchant) {
-      announce('말의 피격 회복은 탈것 상인에게 맡기세요');
+    return mount != null &&
+        (mount.fallen || mount.def.artKey == 'horse' && mount.hits > 0);
+  }
+
+  bool get canRepairMount {
+    final mount = serviceMount;
+    return ready &&
+        !disposed &&
+        !defeated &&
+        mount != null &&
+        (!mountRepairRequiresMerchant || nearMountMerchant) &&
+        mount.repairCost > 0 &&
+        progress.gold >= mount.repairCost;
+  }
+
+  bool repairMount() {
+    if (!canRepairMount) {
+      if (mountRepairRequiresMerchant && !nearMountMerchant) {
+        announce('말의 피격 회복은 탈것 상인에게 맡기세요');
+      }
       return false;
     }
-    if (disposed ||
-        defeated ||
-        mount == null ||
-        mount.fallen && !nearMountMerchant ||
-        mount.repairCost <= 0 ||
-        progress.gold < mount.repairCost) {
-      return false;
-    }
+    final mount = serviceMount!;
     progress.gold -= mount.repairCost;
     mount.durability = 100;
     mount.state.hits = 0;
