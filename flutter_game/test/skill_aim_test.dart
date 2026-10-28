@@ -1,13 +1,17 @@
 import 'dart:ui' as ui;
+
+import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/barbarian_combat.dart';
-import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_ui.dart';
 import 'package:guardian_new/skill_aim.dart';
+import 'package:guardian_new/sorceress_combat.dart';
 import 'package:guardian_new/world_model.dart';
+
+import 'support/sorceress_fixture.dart';
 import 'support/test_game.dart';
 
 class ControlArt extends GameArt {
@@ -23,20 +27,10 @@ void main() {
     s = Adventure(GameArt(), heroClass: HeroClass.mage);
     game = TestGame();
     s.start(game);
-    s.progress.gainXp(1000);
-    for (final id in [
-      'firebolt',
-      'emberFocus',
-      'arcaneMastery',
-      'chainLightning',
-      'iceArmor',
-      'meteor',
-    ]) {
-      expect(
-        s.progress.learn(s.progress.skills.firstWhere((d) => d.id == id)),
-        true,
-      );
-    }
+    s.progress.level = 100;
+    s.progress.skillPoints = 1000;
+    trainSkill(s.progress, 'meteor');
+    s.progress.energy = s.progress.maxEnergy;
     s.progress.selectSkill('meteor');
     s.hero.position.setValues(6000, 4200);
     s.mobs.clear();
@@ -71,15 +65,18 @@ void main() {
       s.hero.beginAim(0);
       s.hero.moveAim(const Offset(74, 0));
       expect(s.progress.energy, energy);
-      expect(game.added.whereType<MeteorFall>(), isEmpty);
+      expect(game.added.whereType<SorceressMeteor>(), isEmpty);
       s.hero.finishAim(false);
-      final meteor = game.added.whereType<MeteorFall>().single;
-      expect(meteor.target.dx, greaterThan(s.hero.body.center.dx));
-      expect(meteor.target.dy, s.hero.body.center.dy);
-      expect(s.progress.energy, energy - 38);
+      final meteor = game.added.whereType<SorceressMeteor>().single;
+      expect(meteor.position.x, greaterThan(s.hero.body.center.dx));
+      expect(meteor.position.y, s.hero.body.center.dy);
+      expect(
+        s.progress.energy,
+        energy - s.progress.skillCost(s.progress.activeSkill),
+      );
       expect(s.hero.aim, null);
       s.hero.finishAim(false);
-      expect(game.added.whereType<MeteorFall>().length, 1);
+      expect(game.added.whereType<SorceressMeteor>().length, 1);
     },
   );
 
@@ -95,12 +92,15 @@ void main() {
     s.pause();
     s.hero.finishAim(false);
     expect(s.progress.energy, energy);
-    expect(game.added.whereType<MeteorFall>(), isEmpty);
+    expect(game.added.whereType<SorceressMeteor>(), isEmpty);
     s.resume();
     s.hero.beginAim(0);
     s.hero.moveAim(const Offset(3, 2));
     s.hero.finishAim(false);
-    expect(game.added.whereType<MeteorFall>().single.target, enemy.body.center);
+    expect(
+      game.added.whereType<SorceressMeteor>().single.position.toOffset(),
+      enemy.body.center,
+    );
   });
 
   test(

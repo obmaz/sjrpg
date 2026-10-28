@@ -8,6 +8,7 @@ import 'game_art.dart';
 import 'game_ui.dart';
 import 'gear_icon_art.dart';
 import 'rpg_model.dart';
+import 'sorceress_icon_art.dart';
 
 IconData elementIcon(String element) => element == 'ice'
     ? Icons.ac_unit
@@ -15,6 +16,7 @@ IconData elementIcon(String element) => element == 'ice'
     ? Icons.bolt
     : Icons.local_fire_department;
 int skillEffect(String id) =>
+    SorceressIconArt.effectFor(id) ??
     BarbarianIconArt.effectFor(id) ??
     switch (id) {
       'rendingEdge' => 14,
@@ -61,6 +63,7 @@ int skillEffect(String id) =>
       _ => 7,
     };
 IconData skillIcon(String id) =>
+    SorceressIconArt.fallbackFor(id) ??
     BarbarianIconArt.fallbackFor(id) ??
     switch (id) {
       'warmth' => Icons.local_fire_department,
@@ -87,7 +90,11 @@ IconData skillIcon(String id) =>
       'firebolt' => Icons.local_fire_department,
       _ => Icons.sports_martial_arts,
     };
-Color skillColor(SkillDef s) => BarbarianIconArt.effectFor(s.id) != null
+Color skillColor(SkillDef s) => SorceressIconArt.effectFor(s.id) != null
+    ? SorceressIconArt.color(
+        SorceressIconArt.effectFor(s.id)! - SorceressIconArt.firstEffect,
+      )
+    : BarbarianIconArt.effectFor(s.id) != null
     ? BarbarianIconArt.color(
         BarbarianIconArt.effectFor(s.id)! - BarbarianIconArt.firstEffect,
       )

@@ -11,32 +11,49 @@ import 'support/test_game.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  test('each class and rank uses restrained cooldown and motion growth', () {
-    for (final hero in HeroClass.values) {
-      final p = Progress(heroClass: hero)..gainXp(100000);
-      for (final skill in p.skills.where((s) => !s.passive)) {
-        for (var rank = 1; rank <= skill.rankLimit; rank++) {
-          p.ranks[skill.id] = rank;
-          expect(
-            p.skillCooldown(skill),
-            closeTo(
-              skill.cooldown *
-                  .9 *
-                  (skill.rankLimit == 20 ? 1 : (1 - (rank - 1) * .02)),
-              .000001,
-            ),
-          );
-          expect(
-            p.skillTempo(skill),
-            closeTo(
-              .75 * (1 + (rank - 1) * (skill.rankLimit == 20 ? .005 : .035)),
-              .000001,
-            ),
-          );
+  test(
+    'each class keeps its original cooldown and rank-specific motion rules',
+    () {
+      for (final hero in HeroClass.values) {
+        final p = Progress(heroClass: hero)..gainXp(100000);
+        for (final skill in p.skills.where((s) => !s.passive)) {
+          for (var rank = 1; rank <= skill.rankLimit; rank++) {
+            p.ranks[skill.id] = rank;
+            expect(
+              p.skillCooldown(skill),
+              closeTo(
+                hero == HeroClass.mage
+                    ? skill.cooldown
+                    : skill.cooldown *
+                          .9 *
+                          (skill.rankLimit == 20 ? 1 : (1 - (rank - 1) * .02)),
+                .000001,
+              ),
+            );
+            expect(
+              p.skillTempo(skill),
+              closeTo(
+                hero == HeroClass.mage
+                    ? 1 + p.attackHaste
+                    : .75 *
+                          (1 +
+                              (rank - 1) *
+                                  (skill.rankLimit == 20 ? .005 : .035)),
+                .000001,
+              ),
+            );
+            if (hero == HeroClass.mage) {
+              final frames =
+                  const {'lightning', 'chainLightning'}.contains(skill.id)
+                  ? 19
+                  : 13;
+              expect(p.skillMotionTime(skill), closeTo(frames / 25, .000001));
+            }
+          }
         }
       }
-    }
-  });
+    },
+  );
   test('ordinary, elite and boss health is 80 percent of the old formula', () {
     for (final level in [1, 20]) {
       final s = Adventure(GameArt())..start(TestGame());

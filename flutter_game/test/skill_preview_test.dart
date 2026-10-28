@@ -57,41 +57,61 @@ void main() {
       expect(jsonEncode(maxed.toSave()), before);
     }
     p.ranks['meteor'] = meteor.rankLimit;
-    expect(p.skillDamage(meteor, atRank: 99), p.skillDamage(meteor, atRank: 5));
+    expect(
+      p.skillDamage(meteor, atRank: 99),
+      p.skillDamage(meteor, atRank: 20),
+    );
     expect(p.skillDamage(meteor, atRank: -1), 0);
     expect(p.skillPoints, points);
   });
-  test('damage predictions include equipped gear and elemental mastery', () {
-    final p = Progress(heroClass: HeroClass.mage)..gainXp(7500);
-    final nova = p.skills.firstWhere((s) => s.id == 'frostNova');
-    final starterDamage = p.skillDamage(nova);
-    final ice = Gear(20, gearById('frostwand'), rarity: Rarity.rare, power: 7);
-    p.inventory.add(ice);
-    expect(p.equip(ice), true);
-    final unmasteredDamage = p.skillDamage(nova);
-    expect(unmasteredDamage, greaterThan(starterDamage));
-    p.ranks['coldMastery'] = 2;
-    final before = previewSkill(
-      p,
-      nova,
-    ).firstWhere((row) => row.label == '기술 피해');
-    expect(before.current, p.skillDamage(nova));
-    expect(before.current, greaterThan(unmasteredDamage));
-    expect(
-      before.current,
-      closeTo(unmasteredDamage * p.coldDamageMultiplier, .000001),
-    );
-    expect(
-      previewSkill(
-        p,
-        p.skills.first,
-      ).firstWhere((row) => row.label == '기본 1타 피해').current,
-      p.basicDamage,
-    );
-    expect(p.learn(nova), true);
-    expect(p.skillDamage(nova), before.next);
-    final warrior = Progress();
-    expect(previewSkill(warrior, nova), isEmpty);
-    expect(warrior.skillDamage(nova), 0);
-  });
+  test(
+    'spell previews use original spell damage, while gear improves the weapon attack',
+    () {
+      final p = Progress(heroClass: HeroClass.mage);
+      while (p.level < 100) {
+        p.gainXp(p.nextLevelXp - p.xp);
+      }
+      for (final skill in mageSkills) {
+        p.ranks[skill.id] = 1;
+      }
+      final fireball = mageSkills.firstWhere((s) => s.id == 'fireball');
+      final staff = sorceressExtraSkills.single;
+      final spellDamage = p.skillDamage(fireball);
+      final staffDamage = p.skillDamage(staff);
+      final weapon = Gear(
+        20,
+        gearById('frostwand'),
+        rarity: Rarity.rare,
+        power: 7,
+      );
+      p.inventory.add(weapon);
+      expect(p.equip(weapon), true);
+      expect(p.skillDamage(fireball), spellDamage);
+      expect(p.skillDamage(staff), greaterThan(staffDamage));
+      p.ranks['fireMastery'] = 2;
+      final stats = p.sorceressSpell(fireball);
+      final before = previewSkill(p, fireball);
+      expect(
+        before.firstWhere((r) => r.label == '1회 최소 피해').current,
+        stats.minDamage,
+      );
+      expect(
+        before.firstWhere((r) => r.label == '1회 최대 피해').current,
+        stats.maxDamage,
+      );
+      expect(p.skillDamage(fireball), greaterThan(spellDamage));
+      expect(
+        previewSkill(p, staff).firstWhere((r) => r.label == '기본 1타 피해').current,
+        p.skillDamage(staff),
+      );
+      expect(p.learn(fireball), true);
+      expect(
+        previewSkill(p, fireball).map((r) => r.current),
+        before.map((r) => r.next),
+      );
+      final warrior = Progress();
+      expect(previewSkill(warrior, fireball), isEmpty);
+      expect(warrior.skillDamage(fireball), 0);
+    },
+  );
 }

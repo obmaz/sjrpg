@@ -1,5 +1,6 @@
 import 'combat_balance.dart';
 import 'rpg_model.dart';
+import 'sorceress_rules.dart';
 
 class SkillPreviewValue {
   const SkillPreviewValue(
@@ -38,7 +39,8 @@ Progress _nextRank(Progress p, SkillDef skill) {
     ..activeResourceMultiplier = p.activeResourceMultiplier
     ..activeArmorMultiplier = p.activeArmorMultiplier
     ..concentrateArmorMultiplier = p.concentrateArmorMultiplier
-    ..berserkActive = p.berserkActive;
+    ..berserkActive = p.berserkActive
+    ..sorceressArmorMultiplier = p.sorceressArmorMultiplier;
   next.equipped
     ..clear()
     ..addAll(p.equipped);
@@ -237,8 +239,218 @@ List<SkillPreviewValue> _barbarianStats(Progress p, SkillDef skill) {
   return result;
 }
 
+List<SkillPreviewValue> _sorceressStats(Progress p, SkillDef skill) {
+  final next = _nextRank(p, skill), id = skill.id;
+  final current = p.sorceressSpell(skill),
+      upgraded = next.sorceressSpell(skill);
+  SkillPreviewValue stat(
+    String label,
+    double Function(SorceressSpellStats) read, {
+    String suffix = '',
+    int digits = 2,
+    bool zeroAsDash = false,
+  }) => SkillPreviewValue(
+    label,
+    read(current),
+    read(upgraded),
+    suffix: suffix,
+    digits: digits,
+    zeroAsDash: zeroAsDash,
+  );
+  SkillPreviewValue passive(
+    String label,
+    double Function(Progress) read, {
+    String suffix = '%',
+    int digits = 1,
+  }) => SkillPreviewValue(
+    label,
+    read(p),
+    read(next),
+    suffix: suffix,
+    digits: digits,
+  );
+  switch (id) {
+    case 'warmth':
+      return [
+        passive(
+          '마나 회복 증가',
+          (q) =>
+              (SorceressRules.warmthMultiplier(q.effectiveRank(id)) - 1) * 100,
+        ),
+        passive('마나 회복', (q) => q.manaRecovery, suffix: '/초', digits: 2),
+      ];
+    case 'fireMastery':
+      return [passive('화염 피해 증가', (q) => (q.fireDamageMultiplier - 1) * 100)];
+    case 'lightningMastery':
+      return [
+        passive('번개 피해 증가', (q) => (q.lightningDamageMultiplier - 1) * 100),
+      ];
+    case 'coldMastery':
+      return [passive('냉기 저항 관통', (q) => q.sorceressColdPierce * 100)];
+  }
+  final rows = <SkillPreviewValue>[
+    stat('마나 소모', (s) => s.manaCost),
+    if (current.manaPerSecond > 0 || upgraded.manaPerSecond > 0) ...[
+      stat('유지 마나', (s) => s.manaPerSecond, suffix: '/초'),
+      stat('시작에 필요한 마나', (s) => s.minimumStartMana),
+    ],
+    stat('공통 시전 지연', (s) => s.castDelay, suffix: '초', zeroAsDash: true),
+    SkillPreviewValue(
+      '시전 동작',
+      current.rank == 0 ? 0 : p.skillMotionTime(skill),
+      next.skillMotionTime(skill),
+      suffix: '초',
+      digits: 3,
+    ),
+  ];
+  if (current.maxDamage > 0 || upgraded.maxDamage > 0) {
+    final prefix = id == 'enchant'
+        ? '추가 화염'
+        : const {'frozenArmor', 'shiverArmor', 'chillingArmor'}.contains(id)
+        ? '반격'
+        : '1회';
+    rows.addAll([
+      stat('$prefix 최소 피해', (s) => s.minDamage),
+      stat('$prefix 최대 피해', (s) => s.maxDamage),
+    ]);
+  }
+  if (skill.basic) {
+    rows.addAll([
+      stat(
+        '발사 투사체',
+        (s) => s.projectileCount.toDouble(),
+        suffix: '개',
+        digits: 0,
+      ),
+      SkillPreviewValue(
+        '투사체 1개 초당 피해',
+        current.rank == 0 ? 0 : current.meanDamage / p.attackIntervalFor(skill),
+        upgraded.meanDamage / next.attackIntervalFor(skill),
+        suffix: '/초',
+        digits: 2,
+      ),
+    ]);
+  } else if (id == 'hydra' || id == 'frozenOrb') {
+    rows.add(
+      stat(
+        id == 'hydra' ? '불뱀 머리' : '얼음 파편',
+        (s) => s.projectileCount.toDouble(),
+        suffix: '개',
+        digits: 0,
+      ),
+    );
+  }
+  if (current.maxDamagePerSecond > 0 || upgraded.maxDamagePerSecond > 0) {
+    rows.addAll([
+      stat('최소 지속 피해', (s) => s.minDamagePerSecond, suffix: '/초'),
+      stat('최대 지속 피해', (s) => s.maxDamagePerSecond, suffix: '/초'),
+    ]);
+  }
+  if (id == 'staticField') {
+    rows.addAll([
+      stat('현재 생명 피해', (s) => s.currentHpFraction * 100, suffix: '%'),
+      stat(
+        '보스 최소 남은 생명',
+        (s) => s.rank == 0 ? 0 : s.staticBossFloor * 100,
+        suffix: '%',
+      ),
+    ]);
+  }
+  if (current.lightningBounces > 0 || upgraded.lightningBounces > 0) {
+    rows.add(
+      stat(
+        '연쇄 적중',
+        (s) => s.lightningBounces.toDouble(),
+        suffix: '명',
+        digits: 0,
+      ),
+    );
+  }
+  if (current.maxTargets > 0 || upgraded.maxTargets > 0) {
+    rows.add(
+      stat(
+        id == 'hydra' ? '한 차례 최대 대상' : '최대 대상',
+        (s) =>
+            (id == 'hydra' && s.projectileCount < s.maxTargets
+                    ? s.projectileCount
+                    : s.maxTargets)
+                .toDouble(),
+        suffix: '명',
+        digits: 0,
+      ),
+    );
+  }
+  if (id == 'blink' ||
+      const {
+        'firebolt',
+        'chargedBolt',
+        'iceBolt',
+        'iceBlast',
+        'glacialSpike',
+        'fireball',
+        'frozenOrb',
+        'hydra',
+        'telekinesis',
+        'lightning',
+        'chainLightning',
+        'inferno',
+        'meteor',
+        'blizzard',
+        'firewall',
+        'thunderStorm',
+      }.contains(id)) {
+    rows.add(
+      stat(
+        id == 'blink' ? '순간이동 거리' : '사거리',
+        (s) => s.rank == 0 ? 0 : s.range,
+        suffix: 'px',
+        digits: 0,
+      ),
+    );
+  }
+  if ((current.radius > 0 || upgraded.radius > 0) && id != 'thunderStorm') {
+    rows.add(stat('효과 반경', (s) => s.radius, suffix: 'px', digits: 0));
+  }
+  if (id != 'inferno' && (current.duration > 0 || upgraded.duration > 0)) {
+    rows.add(stat('효과 지속', (s) => s.duration, suffix: '초'));
+  }
+  if (current.groundDuration > 0 || upgraded.groundDuration > 0) {
+    rows.add(stat('바닥 불길 지속', (s) => s.groundDuration, suffix: '초'));
+  }
+  if (const {'inferno', 'blizzard', 'hydra', 'thunderStorm'}.contains(id)) {
+    rows.add(
+      stat(
+        id == 'hydra' || id == 'thunderStorm' ? '공격 간격' : '피해 판정 간격',
+        (s) => s.rank == 0 ? 0 : s.interval,
+        suffix: '초',
+        digits: 3,
+      ),
+    );
+  }
+  if (current.freezeDuration > 0 || upgraded.freezeDuration > 0) {
+    rows.add(stat('빙결 시간', (s) => s.freezeDuration, suffix: '초'));
+  }
+  if (current.chillDuration > 0 || upgraded.chillDuration > 0) {
+    rows.add(stat('냉기 감속 시간', (s) => s.chillDuration, suffix: '초'));
+  }
+  if (current.slowFraction > 0 || upgraded.slowFraction > 0) {
+    rows.add(stat('냉기 감속', (s) => s.slowFraction * 100, suffix: '%'));
+  }
+  if (current.armorMultiplier > 1 || upgraded.armorMultiplier > 1) {
+    rows.add(stat('방어력 증가', (s) => (s.armorMultiplier - 1) * 100, suffix: '%'));
+  }
+  if (id == 'energyShield') {
+    rows.addAll([
+      stat('피해 흡수율', (s) => s.damageAbsorb * 100, suffix: '%'),
+      stat('피해 1당 마나', (s) => s.rank == 0 ? 0 : s.shieldManaPerDamage),
+    ]);
+  }
+  return rows;
+}
+
 List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
   if (!p.skills.contains(skill)) return const [];
+  if (p.isSorceressSpell(skill)) return _sorceressStats(p, skill);
   if (p.heroClass == HeroClass.warrior && skill.rankLimit == 20) {
     return _barbarianStats(p, skill);
   }
@@ -254,23 +466,6 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
     read(next),
     suffix: suffix,
     digits: digits,
-  );
-  final damage = value(
-    skill.id == 'whirlwind'
-        ? '회전 1회 피해'
-        : skill.id == 'chainLightning'
-        ? '첫 대상 피해'
-        : skill.basic
-        ? '기본 1타 피해'
-        : '기술 피해',
-    (p) => p.skillDamage(skill),
-    digits: 2,
-  );
-  SkillPreviewValue protection() => value(
-    '피해 감소',
-    (p) => p.rank(skill.id) == 0 ? 0 : p.skillProtection(skill.id) * 100,
-    suffix: '%',
-    digits: 1,
   );
   switch (skill.id) {
     case 'shadowAssault':
@@ -309,188 +504,14 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
           suffix: 'px/초',
         ),
       ];
-    case 'blink':
-      return [
-        value(
-          '이동 거리',
-          (p) => p.rank(skill.id) == 0 ? 0 : p.mobilityRange,
-          suffix: 'px',
-        ),
-      ];
-    case 'rendingEdge':
-      return [value('기본 1타 피해', (p) => p.basicDamage, digits: 2)];
-    case 'stormOfSteel':
-    case 'cinderReach':
-    case 'forkedStorm':
-      final ids = skill.id == 'stormOfSteel'
-          ? ['whirlwind', 'seismicSlam']
-          : [skill.id == 'cinderReach' ? 'meteor' : 'chainLightning'];
-      return [
-        for (final id in ids)
-          value(
-            '${p.skills.firstWhere((s) => s.id == id).name} 대상',
-            (p) => p
-                .skillTargetLimit(
-                  p.skills.firstWhere((s) => s.id == id),
-                  atRank: p.rank(id).clamp(1, 5),
-                )
-                .toDouble(),
-            suffix: '명',
-          ),
-        for (final id in ids)
-          value(
-            '${p.skills.firstWhere((s) => s.id == id).shortName} 재사용',
-            (p) => p.skillCooldown(
-              p.skills.firstWhere((s) => s.id == id),
-              atRank: p.rank(id).clamp(1, 5),
-            ),
-            suffix: '초',
-            digits: 2,
-          ),
-        for (final id in ids)
-          value(
-            '${p.skills.firstWhere((s) => s.id == id).name} 피해${p.rank(id) == 0 ? ' · 1등급' : ''}',
-            (p) => p.skillDamage(
-              p.skills.firstWhere((s) => s.id == id),
-              atRank: p.rank(id).clamp(1, SkillDef.maxRank),
-            ),
-            digits: 2,
-          ),
-      ];
-    case 'weaponTempo':
-      return [
-        value('기본 공격 간격', (p) => p.attackInterval, suffix: '초', digits: 3),
-      ];
-    case 'veteranGuard':
-      return [value('방어력', (p) => p.armor)];
-    case 'secondWind':
-    case 'phoenixHeart':
-      return [value('최대 생명', (p) => p.maxHp)];
-    case 'resoundingCry':
-      return [
-        value(
-          '함성 피해',
-          (p) => p.skillDamage(
-            p.skills.firstWhere((s) => s.id == 'warcry'),
-            atRank: p.rank('warcry').clamp(1, 5),
-          ),
-          digits: 2,
-        ),
-      ];
-    case 'warDrums':
-      return [
-        value('보호 중 적중 분노', (p) => p.rageOnHit(protected: true), digits: 1),
-      ];
-    case 'unyieldingOath':
-    case 'frozenAegis':
-      final id = skill.id == 'unyieldingOath' ? 'warcry' : 'iceArmor';
-      return [
-        value(
-          '피해 감소',
-          (p) => p.skillProtection(id, atRank: p.rank(id).clamp(1, 5)) * 100,
-          suffix: '%',
-          digits: 1,
-        ),
-      ];
-    case 'emberFocus':
-      return [
-        value('화염 피해 배율', (p) => p.fireDamageMultiplier * 100, suffix: '%'),
-      ];
-    case 'deepFreeze':
-      return [
-        value('냉기 피해 배율', (p) => p.coldDamageMultiplier * 100, suffix: '%'),
-      ];
-    case 'conductivity':
-      return [
-        value(
-          '번개 피해 배율',
-          (p) => p.lightningDamageMultiplier * 100,
-          suffix: '%',
-        ),
-      ];
-    case 'glacialReserve':
-      return [value('최대 마나', (p) => p.maxEnergy)];
-    case 'arcaneEconomy':
-      return [
-        value('최대 마나', (p) => p.maxEnergy),
-        value('마나 회복', (p) => p.manaRecovery, suffix: '/초', digits: 1),
-      ];
-    case 'charge':
-      return [damage];
-    case 'crushingBlow':
-      return [
-        damage,
-        value('최대 충전 피해', (p) => p.skillDamage(skill) * 1.8, digits: 2),
-      ];
-    case 'warcry':
-      return [
-        damage,
-        protection(),
-        value('보호 지속', (p) => p.warcryDuration, suffix: '초', digits: 2),
-      ];
-    case 'frenzy':
-      return [
-        damage,
-        value('강화 지속', (p) => p.frenzyDuration, suffix: '초', digits: 2),
-      ];
-    case 'iceArmor':
-      return [
-        protection(),
-        value('보호 지속', (p) => p.iceArmorDuration, suffix: '초', digits: 2),
-      ];
-    case 'frostNova':
-      return [
-        damage,
-        value('감속 지속', (p) => p.novaSlowDuration, suffix: '초', digits: 2),
-      ];
-    case 'mastery':
-    case 'arcaneMastery':
-      return [
-        value('기초 공격력', (p) => p.swordDamage, digits: 2),
-        if (skill.id == 'arcaneMastery') value('최대 마나', (p) => p.maxEnergy),
-      ];
-    case 'ironSkin':
-      return [value('방어력', (p) => p.armor), value('최대 생명', (p) => p.maxHp)];
-    case 'battleFocus':
-      return [
-        value('기본 공격 간격', (p) => p.attackInterval, suffix: '초', digits: 3),
-      ];
-    case 'battleVigor':
-      return [
-        value('최대 생명', (p) => p.maxHp),
-        value(
-          '함성 피해 감소',
-          (p) => p.rank('warcry') == 0 ? 0 : p.skillProtection('warcry') * 100,
-          suffix: '%',
-          digits: 1,
-        ),
-      ];
-    case 'rallyingVoice':
-      return [
-        value('보호 중 적중 분노', (p) => p.rageOnHit(protected: true), digits: 1),
-      ];
-    case 'warmth':
-      return [value('마나 회복', (p) => p.manaRecovery, suffix: '/초', digits: 1)];
-    case 'coldMastery':
-      return [
-        value('냉기 피해 배율', (p) => p.coldDamageMultiplier * 100, suffix: '%'),
-      ];
-    case 'lightningMastery':
-      return [
-        value(
-          '번개 피해 배율',
-          (p) => p.lightningDamageMultiplier * 100,
-          suffix: '%',
-        ),
-      ];
     default:
-      return [damage];
+      return [value('기본 1타 피해', (p) => p.skillDamage(skill), digits: 2)];
   }
 }
 
 List<SkillPreviewValue> previewSkill(Progress p, SkillDef skill) {
   final rows = _previewStats(p, skill);
-  if (rows.isEmpty) return rows;
+  if (rows.isEmpty || p.isSorceressSpell(skill)) return rows;
   final upgraded = _nextRank(p, skill), r = p.rank(skill.id);
   final next = (r + 1).clamp(1, skill.rankLimit);
   final basic = skill.basic;
@@ -571,7 +592,6 @@ List<SkillPreviewValue> previewSkill(Progress p, SkillDef skill) {
   if (basic ||
       !skill.passive &&
           !skill.mobility &&
-          skill.id != 'iceArmor' &&
           !const {
             'shout',
             'battleOrders',

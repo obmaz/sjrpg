@@ -134,6 +134,7 @@ class GameArt {
     'quest-root-garden',
     'action-glyphs',
     'barbarian-skills',
+    'sorceress-skills',
     'landscape-bridge',
     'world-forest',
     'world-desert',
@@ -257,6 +258,7 @@ class GameArt {
                   'hero-helmeted-portrait',
                 }.contains(name) ||
                 heroClass == HeroClass.warrior) &&
+            (name != 'sorceress-skills' || heroClass == HeroClass.mage) &&
             (!name.startsWith('actors-') || _sharedActors.contains(name)) &&
             !exclusiveScenery.contains(name))
           name,

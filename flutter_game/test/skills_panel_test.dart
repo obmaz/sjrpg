@@ -20,6 +20,7 @@ void main() {
     (const Size(390, 844), HeroClass.warrior),
     (const Size(320, 640), HeroClass.mage),
     (const Size(320, 420), HeroClass.warrior),
+    (const Size(320, 420), HeroClass.mage),
     (const Size(844, 390), HeroClass.mage),
     (const Size(667, 375), HeroClass.mage),
     (const Size(600, 320), HeroClass.warrior),
@@ -37,16 +38,11 @@ void main() {
       addTearDown(s.dispose);
       final p = s.progress;
       p.gainXp(4000);
-      if (hero == HeroClass.warrior) p.level = 40;
+      p.level = 40;
       p.skillPoints = 30;
       for (final id
           in (hero == HeroClass.warrior ? ['swordMastery'] : ['warmth'])) {
         expect(p.learn(p.skills.firstWhere((skill) => skill.id == id)), true);
-      }
-      if (hero == HeroClass.mage) {
-        for (final id in ['arcaneMastery', 'firebolt', 'emberFocus']) {
-          expect(p.learn(p.skills.firstWhere((skill) => skill.id == id)), true);
-        }
       }
       final semantics = tester.ensureSemantics();
       await tester.pumpWidget(
@@ -58,12 +54,15 @@ void main() {
       final footer = find.bySemanticsLabel('모험 계속하기');
       final footerRect = tester.getRect(footer);
       final treeRect = tester.getRect(find.byType(SkillTree));
-      final firstSlot = tester.getRect(
-        find.bySemanticsLabel(RegExp('전투 슬롯 1 ·')),
-      );
+      final slotFinder = find.bySemanticsLabel(RegExp('전투 슬롯 1 ·'));
+      final firstSlot = slotFinder.evaluate().isEmpty
+          ? null
+          : tester.getRect(slotFinder);
       final resetRect = tester.getRect(find.byTooltip('스킬 초기화'));
       final infoRect = tester.getRect(find.byTooltip('스킬 설명과 배치'));
-      expect(firstSlot.left, closeTo(treeRect.left, .01));
+      if (firstSlot != null) {
+        expect(firstSlot.left, closeTo(treeRect.left, .01));
+      }
       expect(footerRect.right, closeTo(treeRect.right, .01));
       if (size.height >= 500 || size.width < 600) {
         expect(resetRect.left, closeTo(treeRect.left, .01));
@@ -75,7 +74,7 @@ void main() {
           : tester.getRect(schoolHeader);
       final ids = hero == HeroClass.warrior
           ? ['bash', 'doubleSwing', 'stun']
-          : ['iceArmor', 'chainLightning', 'meteor'];
+          : ['inferno', 'blaze', 'firewall'];
       for (final id in ids) {
         final skill = p.skills.firstWhere((v) => v.id == id);
         await tester.tap(
@@ -129,9 +128,15 @@ void main() {
       }
       for (var slot = 0; slot < 4; slot++) {
         final name = p.skillAt(slot)!.name;
-        final rect = tester.getRect(
-          find.bySemanticsLabel('전투 슬롯 ${slot + 1} · $name'),
-        );
+        final slotButton = find.bySemanticsLabel('전투 슬롯 ${slot + 1} · $name');
+        if (firstSlot == null) {
+          // The short portrait layout exposes assignments in the detail panel,
+          // which was exercised through real node/info taps above.
+          expect(slotButton, findsNothing);
+          expect(p.skillAt(slot), isNotNull);
+          continue;
+        }
+        final rect = tester.getRect(slotButton);
         expect(rect.top, greaterThanOrEqualTo(0));
         expect(rect.bottom, lessThan(size.height));
       }
@@ -145,6 +150,7 @@ void main() {
       final s = Adventure(GameArt(), heroClass: HeroClass.mage);
       s.start(TestGame());
       s.progress.skillPoints = 1;
+      s.progress.level = 3;
       s.pause();
       addTearDown(s.dispose);
       final semantics = tester.ensureSemantics();
@@ -154,23 +160,31 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final meteor = find.bySemanticsLabel('스킬 보기 · 유성 낙하 · 0 등급');
+      await tester.tap(find.byKey(const ValueKey('skill-school-tab-2')));
+      await tester.pumpAndSettle();
+      final meteorSkill = s.progress.skills.firstWhere(
+        (skill) => skill.id == 'meteor',
+      );
+      final meteor = find.bySemanticsLabel(
+        '스킬 보기 · ${meteorSkill.name} · 0 등급',
+      );
       await reveal(tester, meteor);
       await tester.tap(meteor);
       await tester.pumpAndSettle();
       expect(
         tester
-            .widget<GameAction>(find.widgetWithText(GameAction, 'Lv.4 필요'))
+            .widget<GameAction>(find.widgetWithText(GameAction, 'Lv.24 필요'))
             .onTap,
         null,
       );
       expect(s.progress.skillPoints, 1);
       expect(s.progress.rank('meteor'), 0);
-      final base = find.bySemanticsLabel('스킬 보기 · 마력탄 · 1 등급');
+      final baseSkill = s.progress.basicSkill;
+      final base = find.bySemanticsLabel('스킬 보기 · ${baseSkill.name} · 1 등급');
       await reveal(tester, base);
       await tester.tap(base);
       await tester.pumpAndSettle();
-      await tester.tap(find.bySemanticsLabel('마력탄 강화 · 1P'));
+      await tester.tap(find.bySemanticsLabel('${baseSkill.name} 강화 · 1P'));
       await tester.pumpAndSettle();
       expect(s.progress.skillPoints, 0);
       expect(s.progress.rank('firebolt'), 2);

@@ -73,13 +73,20 @@ void main() {
         ..pause();
       addTearDown(s.dispose);
       s.progress.gainXp(8000);
-      s.progress.ranks[hero == HeroClass.warrior
-              ? 'swordMastery'
-              : 'arcaneMastery'] =
-          2;
+      final mastery = s.progress.skills.firstWhere(
+        (skill) =>
+            skill.id ==
+            (hero == HeroClass.warrior ? 'swordMastery' : 'fireMastery'),
+      );
+      while (s.progress.level < mastery.requiredLevelForRank(2)) {
+        s.progress.gainXp(s.progress.nextLevelXp - s.progress.xp);
+      }
+      expect(s.progress.learn(mastery), true);
+      expect(s.progress.learn(mastery), true);
       s.progress.gold = 1000;
       final quoted = s.progress.attackTrainingGain,
-          before = s.progress.swordDamage;
+          before = s.progress.swordDamage,
+          spellBefore = s.progress.basicDamage;
       await tester.pumpWidget(
         MaterialApp(
           home: EquipmentPanel(session: s, startInShop: true, onClose: () {}),
@@ -97,6 +104,14 @@ void main() {
       await tester.tap(find.bySemanticsLabel('무기 강화 구매 · 45 골드'));
       await tester.pumpAndSettle();
       expect(s.progress.swordDamage - before, closeTo(quoted, .000001));
+      if (hero == HeroClass.mage) {
+        expect(
+          s.progress.basicDamage,
+          spellBefore,
+          reason:
+              'weapon training improves normal staff contact, not original elemental spell damage',
+        );
+      }
       expect(
         Progress.fromSave(s.progress.toSave())!.swordDamage,
         s.progress.swordDamage,

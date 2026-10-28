@@ -891,6 +891,20 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
               ? 0.0
               : adventure.hero.cooldowns[skill.id] ?? 0;
           final aimed = const {
+            'inferno',
+            'firebolt',
+            'iceBolt',
+            'chargedBolt',
+            'iceBlast',
+            'glacialSpike',
+            'lightning',
+            'chainLightning',
+            'fireball',
+            'firewall',
+            'blizzard',
+            'frozenOrb',
+            'hydra',
+            'telekinesis',
             'meteor',
             'seismicSlam',
             'charge',
@@ -915,7 +929,11 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   : '스킬 ${slot + 1} ${skill.name}',
               size: layout.$3,
               insufficientResource:
-                  !continuing && p.energy < p.skillCost(skill),
+                  !continuing &&
+                  p.energy <
+                      (p.heroClass == HeroClass.mage
+                          ? p.sorceressSpell(skill).minimumStartMana
+                          : p.skillCost(skill)),
               remaining: remaining,
               total: p.skillCooldown(skill),
               onTap: () => adventure.hero.skill(slot: slot),
@@ -1016,6 +1034,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                                   painter: EffectIconPainter(
                                     widget.art,
                                     skillEffect(p.selectedBasic),
+                                    framed: false,
                                   ),
                                 )
                               : p.usingFallbackWeapon
@@ -1141,6 +1160,11 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                     semanticLabel: mobility.name,
                     semanticHint: adventure.afflictions.movementBlocked
                         ? '이동 불가 상태'
+                        : mobility.id == 'blink' && adventure.hero.castLock > 0
+                        ? '시전 중'
+                        : mobility.id == 'blink' &&
+                              p.energy < p.skillCost(mobility)
+                        ? '마나 부족'
                         : adventure.hero.physicalAction
                         ? '기술 동작 중'
                         : adventure.hero.mobilityClock > 0
@@ -1152,7 +1176,14 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                         adventure.active &&
                         !adventure.afflictions.movementBlocked &&
                         !adventure.hero.physicalAction &&
-                        adventure.hero.mobilityClock <= 0,
+                        adventure.hero.mobilityClock <= 0 &&
+                        (mobility.id != 'blink' ||
+                            adventure.hero.castLock <= 0 &&
+                                adventure.hero.dashing <= 0 &&
+                                p.energy >= p.skillCost(mobility) &&
+                                adventure.hero.sorceressCombat.canActivate(
+                                  mobility,
+                                )),
                     remaining: adventure.hero.mobilityClock,
                     total: p.mobilityCooldown,
                     onTap: () => adventure.hero.useMobility(),

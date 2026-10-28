@@ -12,6 +12,8 @@ import 'package:guardian_new/game_ui.dart';
 import 'package:guardian_new/main.dart';
 import 'package:guardian_new/rpg_model.dart';
 
+import 'support/sorceress_fixture.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   GameArt? artwork;
@@ -84,13 +86,12 @@ void main() {
           findsNothing,
           reason: 'unlearned movement has no phantom control',
         );
-        s.progress.level = 30;
+        s.progress.level = 100;
         s.progress.skillPoints = 400;
-        for (var pass = 0; pass < 30; pass++) {
-          for (final skill in s.progress.skills) {
-            if (s.progress.rank(skill.id) < 5) s.progress.learn(skill);
-          }
+        for (final skill in s.progress.skills) {
+          trainSkill(s.progress, skill.id, skill.rankLimit.clamp(1, 5));
         }
+        s.progress.energy = s.progress.maxEnergy;
         final choices = s.progress.skills
             .where((skill) => !skill.passive && !skill.mobility)
             .take(4)
@@ -171,19 +172,48 @@ void main() {
             image.dispose();
           });
         }
+        final beforePosition = s.hero.position.toOffset(),
+            mana = s.progress.energy;
         await tester.tap(button());
         await tester.pump();
-        expect(s.hero.mobilityClock, greaterThan(0));
-        expect(tester.widget<ActionButton>(button()).enabled, false);
-        final cooldown = s.hero.mobilityClock;
-        await tester.tap(button());
-        await tester.pump();
-        expect(
-          s.hero.mobilityClock,
-          lessThanOrEqualTo(cooldown),
-          reason:
-              'a disabled movement button cannot restart or consume a cooldown',
-        );
+        if (type == HeroClass.mage) {
+          expect(
+            (s.hero.position.toOffset() - beforePosition).distance,
+            greaterThan(0),
+          );
+          expect(s.progress.energy, lessThan(mana));
+          expect(
+            s.hero.mobilityClock,
+            0,
+            reason: 'D2 Teleport uses cast frames rather than a skill cooldown',
+          );
+          expect(s.hero.castLock, greaterThan(0));
+          expect(tester.widget<ActionButton>(button()).enabled, false);
+          final afterPosition = s.hero.position.toOffset(),
+              afterMana = s.progress.energy;
+          final lock = s.hero.castLock;
+          await tester.tap(button());
+          await tester.pump();
+          expect(s.hero.position.toOffset(), afterPosition);
+          expect(s.progress.energy, afterMana);
+          expect(
+            s.hero.castLock,
+            lessThanOrEqualTo(lock),
+            reason: 'a disabled teleport cannot restart its cast or spend mana',
+          );
+        } else {
+          expect(s.hero.mobilityClock, greaterThan(0));
+          expect(tester.widget<ActionButton>(button()).enabled, false);
+          final cooldown = s.hero.mobilityClock;
+          await tester.tap(button());
+          await tester.pump();
+          expect(
+            s.hero.mobilityClock,
+            lessThanOrEqualTo(cooldown),
+            reason:
+                'a disabled movement button cannot restart or consume a cooldown',
+          );
+        }
         expect(tester.takeException(), null);
         await tester.pumpWidget(const SizedBox.shrink());
         await tester.pump();

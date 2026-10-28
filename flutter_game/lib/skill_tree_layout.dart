@@ -51,7 +51,8 @@ const _warriorRows = <List<SkillTreeSlot>>[
     (id: 'berserk', column: 7),
   ],
 ];
-const warriorSkillTiers = [1, 6, 12, 18, 24, 30];
+const skillTreeTiers = [1, 6, 12, 18, 24, 30];
+const warriorSkillTiers = skillTreeTiers;
 const warriorSchoolLabels = ['함성', '전투 숙련', '전투 기술'];
 final warriorTreeIds = Set<String>.unmodifiable(
   _warriorRows.expand((row) => row.map((slot) => slot.id)),
@@ -62,39 +63,58 @@ bool skillTreeSkillVisible(Progress progress, SkillDef skill) =>
     ? warriorTreeIds.contains(skill.id) ||
           skill.id == 'shadowAssault' ||
           skill.id == 'battleSprint'
-    : !skill.basic || skill.id == progress.defaultBasicId;
+    : mageTreeIds.contains(skill.id);
 
+// Original Sorceress SkillDesc.txt coordinates, with school blocks reordered
+// Cold / Lightning / Fire to match the reference tabs. Columns stay unchanged.
+const mageSchoolLabels = ['냉기 주문', '번개 주문', '화염 주문'];
 const _mageRows = <List<SkillTreeSlot>>[
   [
-    (id: 'firebolt', column: .5),
-    (id: 'frostNova', column: 2.5),
-    (id: 'arcaneMastery', column: 4.5),
+    (id: 'iceBolt', column: 1),
+    (id: 'frozenArmor', column: 2),
+    (id: 'chargedBolt', column: 4),
+    (id: 'firebolt', column: 7),
+    (id: 'warmth', column: 8),
   ],
   [
-    (id: 'warmth', column: 0),
-    (id: 'emberFocus', column: 1),
-    (id: 'iceArmor', column: 2),
-    (id: 'deepFreeze', column: 3),
+    (id: 'frostNova', column: 0),
+    (id: 'iceBlast', column: 1),
+    (id: 'staticField', column: 3),
+    (id: 'telekinesis', column: 5),
+    (id: 'inferno', column: 6),
+  ],
+  [
+    (id: 'shiverArmor', column: 2),
+    (id: 'nova', column: 3),
+    (id: 'lightning', column: 4),
+    (id: 'blaze', column: 6),
+    (id: 'fireball', column: 7),
+  ],
+  [
+    (id: 'glacialSpike', column: 1),
     (id: 'chainLightning', column: 4),
-    (id: 'conductivity', column: 5),
-  ],
-  [
-    (id: 'meteor', column: 0),
-    (id: 'coldMastery', column: 2),
-    (id: 'lightningMastery', column: 3.5),
     (id: 'blink', column: 5),
+    (id: 'firewall', column: 6),
+    (id: 'enchant', column: 8),
   ],
   [
-    (id: 'cinderReach', column: .5),
-    (id: 'frozenAegis', column: 2.5),
-    (id: 'forkedStorm', column: 4.5),
+    (id: 'blizzard', column: 0),
+    (id: 'chillingArmor', column: 2),
+    (id: 'thunderStorm', column: 3),
+    (id: 'energyShield', column: 5),
+    (id: 'meteor', column: 7),
   ],
   [
-    (id: 'phoenixHeart', column: .5),
-    (id: 'glacialReserve', column: 2.5),
-    (id: 'arcaneEconomy', column: 4.5),
+    (id: 'frozenOrb', column: 0),
+    (id: 'coldMastery', column: 1),
+    (id: 'lightningMastery', column: 4),
+    (id: 'fireMastery', column: 7),
+    (id: 'hydra', column: 8),
   ],
 ];
+final mageTreeIds = Set<String>.unmodifiable(
+  _mageRows.expand((row) => row.map((slot) => slot.id)),
+);
 
 List<List<SkillTreeSlot>> skillTreeRows(HeroClass heroClass) =>
     heroClass == HeroClass.warrior ? _warriorRows : _mageRows;
@@ -114,48 +134,11 @@ class SkillTreeLayout implements SkillNodeGeometry {
     required bool dense,
     required double textScale,
   }) {
-    columns = progress.heroClass == HeroClass.warrior ? 9 : 6;
-    final rows = skillTreeRows(progress.heroClass);
-    contentWidth = progress.heroClass == HeroClass.warrior
-        ? math.max(900.0, width)
-        : width;
-    if (progress.heroClass == HeroClass.warrior) {
-      _warrior(progress, dense: dense, textScale: textScale);
-      return;
-    }
-    final label = (dense ? 11.0 : 12.0) * textScale * 1.1;
-    nodeHeight = math
-        .max(dense ? 70.0 : 94.0, (dense ? 36.0 : 52.0) + 4 + label * 2 + 8)
-        .ceilToDouble();
-    rowGap = dense ? 48 : 64;
-    final unit = width / 6;
-    for (var row = 0; row < rows.length; row++) {
-      final mobilityRow = rows[row].any(
-        (slot) => slot.id == progress.mobilitySkill.id,
-      );
-      for (final slot in rows[row]) {
-        final split =
-            mobilityRow ||
-            rows[row].any(
-              (other) =>
-                  other.id != slot.id &&
-                  (other.column - slot.column).abs() <= 1.5,
-            );
-        final nodeWidth = math.min(
-          split ? 96.0 : 120.0,
-          split ? math.max(44.0, unit - 2) : width / 3 - 8,
-        );
-        rects[slot.id] = Rect.fromLTWH(
-          (slot.column + .5) * unit - nodeWidth / 2,
-          10 + row * (nodeHeight + rowGap),
-          nodeWidth,
-          nodeHeight,
-        );
-      }
-    }
-    height = 20 + rows.length * nodeHeight + (rows.length - 1) * rowGap;
+    columns = 9;
+    contentWidth = math.max(900.0, width);
+    _canonical(progress, dense: dense, textScale: textScale);
   }
-  void _warrior(
+  void _canonical(
     Progress progress, {
     required bool dense,
     required double textScale,
@@ -166,8 +149,8 @@ class SkillTreeLayout implements SkillNodeGeometry {
         .ceilToDouble();
     rowGap = 64;
     final unit = contentWidth / 9;
-    for (var row = 0; row < _warriorRows.length; row++) {
-      for (final slot in _warriorRows[row]) {
+    for (var row = 0; row < skillTreeRows(progress.heroClass).length; row++) {
+      for (final slot in skillTreeRows(progress.heroClass)[row]) {
         rects[slot.id] = Rect.fromLTWH(
           (slot.column + .5) * unit - 42,
           (dense ? 10 : 34) + row * (nodeHeight + rowGap),
@@ -175,6 +158,10 @@ class SkillTreeLayout implements SkillNodeGeometry {
           nodeHeight,
         );
       }
+    }
+    if (progress.heroClass == HeroClass.mage) {
+      height = 50 + 6 * nodeHeight + 5 * rowGap;
+      return;
     }
     bonusTop = 50 + 6 * nodeHeight + 5 * rowGap;
     final extras = progress.skills
@@ -262,21 +249,15 @@ List<Offset> skillTreeConnectionPoints(
 List<String> skillTreeSchoolLabels(Progress progress) =>
     progress.heroClass == HeroClass.warrior
     ? [...warriorSchoolLabels, '특수']
-    : progress.skillBranches;
+    : mageSchoolLabels;
 
 int skillTreeSchoolIndex(Progress progress, String id) {
-  if (progress.heroClass == HeroClass.warrior) {
-    for (final row in _warriorRows) {
-      for (final slot in row) {
-        if (slot.id == id) return slot.column ~/ 3;
-      }
+  for (final row in skillTreeRows(progress.heroClass)) {
+    for (final slot in row) {
+      if (slot.id == id) return slot.column ~/ 3;
     }
-    return 3;
   }
-  final skill = progress.skills.where((skill) => skill.id == id).firstOrNull;
-  return skill == null
-      ? 0
-      : progress.skillBranches.indexOf(skill.branch).clamp(0, 2);
+  return progress.heroClass == HeroClass.warrior ? 3 : 0;
 }
 
 /// One selected school uses the complete viewport. Reference D2 cells remain
@@ -321,13 +302,7 @@ class SkillSchoolLayout implements SkillNodeGeometry {
     for (var row = 0; row < rows.length; row++) {
       for (final slot in rows[row]) {
         if (!skills.any((skill) => skill.id == slot.id)) continue;
-        final localColumn = progress.heroClass == HeroClass.warrior
-            ? slot.column % 3
-            : switch (slot.id) {
-                'lightningMastery' => 0.0,
-                'blink' => 2.0,
-                _ => (slot.column - school * 2) * 2,
-              };
+        final localColumn = slot.column % 3;
         final unit = contentWidth / 3, nodeWidth = math.min(100.0, unit - 8);
         rects[slot.id] = Rect.fromLTWH(
           (localColumn + .5) * unit - nodeWidth / 2,

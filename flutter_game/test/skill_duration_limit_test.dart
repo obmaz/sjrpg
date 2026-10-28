@@ -44,26 +44,41 @@ void main() {
     }
   }
 
-  for (var rank = 1; rank <= 5; rank++) {
-    test('iceArmor rank$rank expires before its assigned cooldown', () {
-      final s = session(HeroClass.mage);
-      train(s, 'iceArmor', rank);
-      s.progress.selectSkill('iceArmor');
-      s.progress.energy = s.progress.maxEnergy;
-      final def = s.progress.activeSkill;
-      s.hero.skill();
-      final duration = s.hero.armorTime, cooldown = s.hero.cooldowns[def.id]!;
-      expect(duration, greaterThan(0));
-      expect(duration, lessThanOrEqualTo(cooldown * .9 + .000001));
-      expect(cooldown, s.progress.skillCooldown(def));
-      s.pause();
-      advance(s, .1);
-      expect(s.hero.armorTime, duration);
-      s.resume();
-      advance(s, duration + .01);
-      expect(s.hero.armorTime, 0);
-      expect(s.hero.cooldowns[def.id], greaterThan(0));
-    });
+  for (final id in [
+    'frozenArmor',
+    'shiverArmor',
+    'chillingArmor',
+    'energyShield',
+  ]) {
+    for (final rank in [1, 20]) {
+      test(
+        'D2 $id rank$rank keeps its source lifetime beyond zero cooldown and pauses',
+        () {
+          final s = session(HeroClass.mage), p = s.progress;
+          train(s, id, rank);
+          expect(p.selectSkill(id), true);
+          p.energy = p.maxEnergy;
+          final def = p.activeSkill, stats = p.sorceressSpell(def);
+          s.hero.skill();
+          final defenses = s.hero.sorceressCombat.defenses;
+          double remaining() => id == 'energyShield'
+              ? defenses.energyShieldTime
+              : defenses.armorTime;
+          expect(remaining(), stats.duration);
+          expect(remaining(), greaterThan(100));
+          expect(s.hero.cooldowns[id] ?? 0, 0);
+          s.pause();
+          advance(s, .1);
+          expect(remaining(), stats.duration);
+          s.resume();
+          advance(s, .5);
+          expect(remaining(), closeTo(stats.duration - .5, .000001));
+          advance(s, remaining() + .1);
+          expect(remaining(), 0);
+          if (id != 'energyShield') expect(p.sorceressArmorMultiplier, 1);
+        },
+      );
+    }
   }
   for (final id in ['shout', 'battleOrders', 'battleCommand']) {
     test(
@@ -121,77 +136,89 @@ void main() {
     expect(p.mitigate(100, protection: 10), 25);
   });
   test(
-    'Mage duration preview matches actual current and next casts without spend',
+    'Mage source-duration preview matches actual current and next casts without spend',
     () {
       final s = session(HeroClass.mage), p = s.progress;
-      train(s, 'iceArmor', 2);
-      p.selectSkill('iceArmor');
+      train(s, 'frozenArmor', 2);
+      p.selectSkill('frozenArmor');
       final def = p.activeSkill, before = jsonEncode(p.toSave());
-      final row = previewSkill(p, def).firstWhere((r) => r.label == '보호 지속');
+      final row = previewSkill(p, def).firstWhere((r) => r.label == '효과 지속');
       expect(jsonEncode(p.toSave()), before);
       p.energy = p.maxEnergy;
       s.hero.skill();
-      expect(s.hero.armorTime, row.current);
+      expect(s.hero.sorceressCombat.defenses.armorTime, row.current);
       expect(p.learn(def), true);
-      s.hero.cooldowns.clear();
-      s.hero.castLock = 0;
+      advance(s, p.skillMotionTime(def) + .1);
       p.energy = p.maxEnergy;
       s.hero.skill();
-      expect(s.hero.armorTime, row.next);
+      expect(s.hero.sorceressCombat.defenses.armorTime, row.next);
     },
   );
+
   test(
-    'Mage oversized saved armor is limited by remaining cooldown idempotently',
+    'saved long armor and shield preserve remaining lifetimes, not a cooldown clamp',
     () {
-      final s = session(HeroClass.mage);
-      train(s, 'iceArmor', 5);
-      s.progress.selectSkill('iceArmor');
-      s.hero.cooldowns['iceArmor'] = 1;
-      s.hero.armorTime = 60;
-      final save = GameCheckpoint.capture(s)!;
-      final read = GameCheckpoint.decode(save.encode())!;
+      final s = session(HeroClass.mage), p = s.progress;
+      train(s, 'frozenArmor', 3);
+      train(s, 'energyShield', 2);
+      for (final id in ['frozenArmor', 'energyShield']) {
+        expect(p.selectSkill(id), true);
+        p.energy = p.maxEnergy;
+        s.hero.skill();
+        advance(s, p.skillMotionTime(p.activeSkill) + .1);
+      }
+      final defenses = s.hero.sorceressCombat.defenses;
+      final armor = defenses.armorTime, shield = defenses.energyShieldTime;
+      expect(armor, greaterThan(100));
+      expect(shield, greaterThan(100));
+      final cp = GameCheckpoint.capture(s)!;
+      final read = GameCheckpoint.decode(cp.encode())!;
       final restored = read.restore(GameArt());
       addTearDown(restored.dispose);
-      expect(restored.hero.armorTime, .9);
-      expect(restored.hero.cooldowns, s.hero.cooldowns);
+      expect(restored.hero.sorceressCombat.defenses.armorTime, armor);
+      expect(restored.hero.sorceressCombat.defenses.energyShieldTime, shield);
       expect(GameCheckpoint.decode(read.encode())!.encode(), read.encode());
-      final ready = Map<String, dynamic>.from(save.data)
-        ..['cooldowns'] = <String, double>{};
-      expect(GameCheckpoint.decode(jsonEncode(ready))!.data['armor'], 0);
+      final invalid = jsonDecode(cp.encode()) as Map<String, dynamic>;
+      final buffs = invalid['sorceress']['defenses']['buffs'] as List;
+      final buff = buffs.first as Map;
+      buff['remaining'] =
+          p
+              .sorceressSpell(p.skills.firstWhere((d) => d.id == buff['id']))
+              .duration +
+          1;
+      expect(GameCheckpoint.decode(jsonEncode(invalid)), isNull);
     },
   );
-  test('frost nova slow ends before the rank-five cooldown', () {
-    final s = session(HeroClass.mage);
-    s.progress.ranks['frostNova'] = 5;
-    s.progress.selectSkill('frostNova');
-    s.progress.energy = s.progress.maxEnergy;
-    final mob = s.spawnEnemy('goblin', const Offset(6050, 4200))!
-      ..life.initial(1000);
-    s.hero.skill();
-    expect(mob.slow, greaterThan(0));
-    expect(mob.slow, lessThan(s.hero.cooldowns['frostNova']!));
-    expect(mob.slow, closeTo(s.progress.novaSlowDuration, .000001));
-  });
-  test('valid elapsed buffs survive save and legacy cooldown conversion', () {
-    final s = session(HeroClass.mage);
-    s.progress.ranks['iceArmor'] = 3;
-    s.progress.selectSkill('iceArmor');
-    s.progress.energy = s.progress.maxEnergy;
-    s.hero.skill();
-    for (var i = 0; i < 20; i++) {
-      s.hero.update(.05);
-    }
-    final save = GameCheckpoint.capture(s)!;
-    expect(
-      GameCheckpoint.decode(save.encode())!.data['armor'],
-      s.hero.armorTime,
-    );
-    final data = jsonDecode(save.encode()) as Map<String, dynamic>;
-    data['balance'] = 2;
-    data['cooldowns']['iceArmor'] = 1.0;
-    data['armor'] = 20.0;
-    final migrated = GameCheckpoint.decode(jsonEncode(data))!;
-    expect(migrated.data['cooldowns']['iceArmor'], closeTo(.9, .000001));
-    expect(migrated.data['armor'], closeTo(.81, .000001));
-  });
+
+  test(
+    'Frost Nova source chill duration survives its original zero cast delay',
+    () {
+      final s = session(HeroClass.mage);
+      train(s, 'frostNova', 20);
+      s.progress.selectSkill('frostNova');
+      s.progress.energy = s.progress.maxEnergy;
+      final mob = s.spawnEnemy(
+        'goblin',
+        s.hero.body.center + const Offset(60, 0),
+      )!..life.initial(1000);
+      s.hero.skill();
+      expect(mob.slow, closeTo(s.progress.novaSlowDuration, .000001));
+      expect(mob.slow, 27);
+      expect(s.hero.cooldowns['frostNova'] ?? 0, 0);
+    },
+  );
+
+  test(
+    'a pre-Sorceress-tree Mage save is rejected instead of converting removed armor',
+    () {
+      final s = session(HeroClass.mage);
+      final data =
+          jsonDecode(GameCheckpoint.capture(s)!.encode())
+              as Map<String, dynamic>;
+      (data['progress'] as Map).remove('sorceressTreeVersion');
+      data['cooldowns'] = {'iceArmor': 1.0};
+      data['armor'] = 20.0;
+      expect(GameCheckpoint.decode(jsonEncode(data)), isNull);
+    },
+  );
 }

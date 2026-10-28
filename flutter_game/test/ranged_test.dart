@@ -1,9 +1,13 @@
+import 'dart:math' as math;
 import 'dart:ui' show Rect;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/game_art.dart';
+import 'package:guardian_new/sorceress_combat.dart';
 import 'package:guardian_new/world_model.dart';
+
 import 'support/test_game.dart';
 
 void main() {
@@ -157,12 +161,19 @@ void main() {
     addTearDown(mage.dispose);
     mage.mobs.clear();
     mage.hero.position.setValues(6000, 4200);
-    mage.spawnEnemy('skeleton', const Offset(5880, 4200));
+    final target = mage.spawnEnemy('skeleton', const Offset(5880, 4200))!;
+    final hp = target.life.value;
     mage.hero.bearing = 0;
     mage.hero.velocity.setValues(270, 0);
     mage.hero.slash();
-    final shot = (mage.game as TestGame).added.whereType<ArcaneBolt>().single;
-    expect(shot.direction.dx, closeTo(-1, .001));
+    final shot = (mage.game as TestGame).added
+        .whereType<SorceressProjectile>()
+        .single;
+    expect(math.cos(shot.bearing), closeTo(-1, .001));
+    for (var i = 0; i < 30; i++) {
+      shot.update(1 / 30);
+    }
+    expect(target.life.value, lessThan(hp));
     expect(mage.hero.bearing, 0);
     expect(mage.hero.velocity.x, 270);
   });

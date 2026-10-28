@@ -634,7 +634,14 @@ class _SkillsPanelState extends State<SkillsPanel> {
                     SkillRankPreview(p, skill),
                     SizedBox(height: compact ? 6 : 10),
                     Text(
-                      skill.basic
+                      skill.basic &&
+                              p.skillCost(
+                                    skill,
+                                    atRank: p
+                                        .rank(skill.id)
+                                        .clamp(1, skill.rankLimit),
+                                  ) ==
+                                  0
                           ? '기본 공격 · 자원 소모 없음 · 필요 레벨 ${skill.requiredLevel}'
                           : skill.passive
                           ? '지속 효과 · 필요 레벨 ${skill.requiredLevel}'

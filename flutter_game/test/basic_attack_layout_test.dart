@@ -4,10 +4,11 @@ import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/basic_attack_strip.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/rpg_model.dart';
+import 'package:guardian_new/rpg_widgets.dart';
 import 'package:guardian_new/skill_tree.dart';
 import 'package:guardian_new/skills_panel.dart';
 
-import 'basic_selection_test.dart' show train;
+import 'support/sorceress_fixture.dart';
 import 'support/test_game.dart';
 
 void main() {
@@ -32,7 +33,7 @@ void main() {
             addTearDown(s.dispose);
             final p = s.progress;
             for (final basic in p.basicSkills) {
-              train(p, basic.id);
+              trainSkill(p, basic.id);
             }
             p.selectBasic(p.defaultBasicId);
             final slots = p.skillSlots.toList(), points = p.skillPoints;
@@ -77,6 +78,15 @@ void main() {
               semantics.dispose();
               return;
             }
+            final weaponGlyph = find.byWidgetPredicate(
+              (widget) => widget is CustomPaint && widget.painter is GearGlyph,
+            );
+            expect(weaponGlyph, findsOneWidget);
+            expect(
+              (tester.widget<CustomPaint>(weaponGlyph).painter as GearGlyph)
+                  .item,
+              p.weapon,
+            );
             final bounds = <Rect>[];
             for (final basic in p.basicSkills) {
               final target = find.bySemanticsLabel('기본 공격 ${basic.name} 선택'),
@@ -137,17 +147,18 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.bySemanticsLabel('기본 공격 서리 창 살펴보기'));
+      await tester.tap(find.bySemanticsLabel('기본 공격 얼음살 살펴보기'));
       await tester.pumpAndSettle();
       expect(p.selectedBasic, p.defaultBasicId);
       expect(p.skillPoints, points);
-      await tester.tap(find.bySemanticsLabel('서리 창 습득 · 1P'));
+      await tester.tap(find.bySemanticsLabel('얼음살 습득 · 1P'));
       await tester.pumpAndSettle();
-      expect(p.selectedBasic, 'iceShard');
-      expect(p.rank('iceShard'), 1);
+      expect(p.selectedBasic, 'iceBolt');
+      expect(p.rank('iceBolt'), 1);
       expect(p.skillPoints, points - 1);
-      expect(p.skillSlots, slots);
-      expect(find.bySemanticsLabel('기본 공격 서리 창 선택'), findsOneWidget);
+      expect(p.skillSlots.first, slots.first);
+      expect(p.skillSlots[1], 'iceBolt');
+      expect(find.bySemanticsLabel('기본 공격 얼음살 선택'), findsOneWidget);
       expect(tester.takeException(), null);
       semantics.dispose();
     },

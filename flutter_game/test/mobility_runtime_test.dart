@@ -6,9 +6,9 @@ import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
-import 'package:guardian_new/mobility_motion.dart';
 import 'package:guardian_new/player_afflictions.dart';
 import 'package:guardian_new/skill_aim.dart';
+import 'package:guardian_new/sorceress_combat.dart';
 import 'package:guardian_new/world_model.dart';
 import 'support/test_game.dart';
 
@@ -21,7 +21,8 @@ void main() {
     s.mobs.clear();
     s.dormantEnemies.clear();
     s.waveTime = 10000;
-    while (s.progress.level < 8) {
+    final required = type == HeroClass.mage ? 18 : 8;
+    while (s.progress.level < required) {
       s.progress.gainXp(s.progress.nextLevelXp - s.progress.xp);
     }
     void learn(SkillDef def, int rank) {
@@ -129,13 +130,16 @@ void main() {
     s.afflictions.apply(PlayerStatus.freeze);
     expect(s.hero.useMobility(), false);
   });
-  test('blink crosses live enemies but lands outside each body', () {
+  test('D2 blink crosses live enemies and validates its terrain landing', () {
     final s = field(HeroClass.mage), from = openField(s);
     s.hero.bearing = 0;
     final blockers = [
       for (final x in [120.0, 200.0, s.progress.mobilityRange])
         s.spawnEnemy('goblin', from + Offset(x, 0))!,
     ];
+    final mana = s.progress.energy,
+        cost = s.progress.skillCost(s.progress.mobilitySkill);
+    expect(cost, 24);
     expect(s.hero.useMobility(), true);
     final landed = s.hero.position.toOffset();
     expect((landed - from).distance, greaterThan(164.16));
@@ -143,61 +147,75 @@ void main() {
       (landed - from).distance,
       lessThanOrEqualTo(s.progress.mobilityRange),
     );
-    for (final e in blockers) {
-      expect(s.hero.body.overlaps(e.body), false);
-    }
+    expect(
+      (landed - from).distance,
+      greaterThan((blockers[1].body.topLeft - from).distance),
+      reason: 'a live creature in the corridor does not stop Teleport',
+    );
+    expect(s.progress.energy, mana - cost);
     expect(s.world.blocked(s.hero.body), false);
     expect(s.hero.lastClearPosition, landed);
-    expect(s.hero.mobilityClock, greaterThan(0));
-    expect(s.hero.useMobility(), false);
+    expect(
+      s.hero.mobilityClock,
+      0,
+      reason: 'D2 Teleport has no synthetic cooldown',
+    );
+    expect(s.hero.castLock, greaterThan(0));
+    expect(
+      s.hero.useMobility(),
+      false,
+      reason: 'the casting animation prevents instant repeat',
+    );
   });
   test(
-    'blink stops before an authored solid obstacle and cannot land in occupied space',
+    'D2 Teleport crosses an intermediate wall but moves a blocked endpoint back onto valid terrain',
     () {
-      final s = field(HeroClass.mage);
-      ({Offset from, Rect obstacle})? fixture;
+      final s = field(HeroClass.mage), size = s.hero.body.size;
+      final range = s.progress.mobilityRange;
+      ({Offset from, Rect obstacle})? crossing;
       for (final prop in s.world.props) {
-        final at = Offset(
-          prop.body.left - s.hero.body.width - 36,
-          prop.body.center.dy - s.hero.body.height / 2,
-        );
-        if (s.world.blocked(at & s.hero.body.size) ||
-            !s.world.blocked(prop.body)) {
-          continue;
-        }
-        if (s.world.clearLine(at, at + const Offset(18, 0), s.hero.body.size)) {
-          fixture = (from: at, obstacle: prop.body);
+        final from = prop.body.center - Offset(range / 2, size.height / 2);
+        final target = from + Offset(range, 0);
+        if (!s.world.blocked(from & size) &&
+            !s.world.blocked(target & size) &&
+            !s.world.clearLine(from, target, size)) {
+          crossing = (from: from, obstacle: prop.body);
           break;
         }
       }
-      expect(fixture, isNotNull);
-      final f = fixture!;
-      final end = blinkLanding(
-        s.world,
-        f.from,
-        s.hero.body.size,
-        0,
-        340,
-        occupied: (_) => false,
-      );
-      if (end != null) {
-        expect(
-          (end & s.hero.body.size).right,
-          lessThanOrEqualTo(f.obstacle.left),
-        );
-        expect(s.world.blocked(end & s.hero.body.size), false);
-      }
+      expect(crossing, isNotNull);
+      final original = crossing!.from;
+      s.hero.position.setValues(original.dx, original.dy);
+      s.hero.bearing = 0;
+      final mana = s.progress.energy;
+      expect(s.hero.useMobility(), true);
       expect(
-        blinkLanding(
-          s.world,
-          f.from,
-          s.hero.body.size,
-          0,
-          340,
-          occupied: (_) => true,
-        ),
-        isNull,
+        (s.hero.position.toOffset() - original).distance,
+        closeTo(range, .001),
       );
+      expect(s.world.blocked(s.hero.body), false);
+      expect(
+        s.progress.energy,
+        mana - s.progress.skillCost(s.progress.mobilitySkill),
+      );
+      ({Offset from, Offset blocked})? endpoint;
+      for (final prop in s.world.props) {
+        final blocked =
+                prop.body.center - Offset(size.width / 2, size.height / 2),
+            from = blocked - Offset(range, 0);
+        if (!s.world.blocked(from & size) && s.world.blocked(blocked & size)) {
+          endpoint = (from: from, blocked: blocked);
+          break;
+        }
+      }
+      expect(endpoint, isNotNull);
+      s.hero.position.setValues(endpoint!.from.dx, endpoint.from.dy);
+      final spec = s.progress.sorceressSpell(s.progress.mobilitySkill);
+      final landing = s.hero.sorceressCombat.teleportLanding(spec, null);
+      expect(landing, isNotNull);
+      expect(s.world.blocked(landing! & size), false);
+      expect(landing.dx, lessThan(endpoint.blocked.dx));
+      expect((landing - endpoint.from).distance, lessThanOrEqualTo(range));
     },
   );
   test('mobility rejects a real whirlwind channel without ghost pulses', () {
@@ -243,7 +261,7 @@ void main() {
     expect(s.hero.useMobility(), true);
   });
   test(
-    'mobility rejects charge and heavy windup but can replace a nonphysical cast',
+    'mobility rejects physical windup and Teleport respects an unfinished casting animation',
     () {
       final warrior = field(HeroClass.warrior);
       warrior.hero.chargeTime = .4;
@@ -265,11 +283,23 @@ void main() {
         id: mage.progress.selectedSkill,
         aim: null,
       );
+      final mana = mage.progress.energy;
+      expect(mage.hero.useMobility(), false);
+      expect(mage.progress.energy, mana);
+      expect(mage.hero.castLock, .5);
+      mage.hero.aim = null;
+      mage.hero.queuedCast = null;
+      for (var i = 0; i < 10; i++) {
+        mage.hero.update(.05);
+      }
+      mage.hero.castLock = 0;
       expect(mage.hero.useMobility(), true);
       expect(mage.hero.physicalAction, false);
-      expect(mage.hero.castLock, 0);
-      expect(mage.hero.aim, isNull);
-      expect(mage.hero.queuedCast, isNull);
+      expect(mage.hero.castLock, greaterThan(0));
+      expect(
+        mage.progress.energy,
+        mana - mage.progress.skillCost(mage.progress.mobilitySkill),
+      );
     },
   );
   test(
@@ -360,7 +390,8 @@ void main() {
         s.progress.skillMotionTime(s.progress.mobilitySkill),
       );
       final effect = (s.game as TestGame).added
-          .whereType<MobilityVisual>()
+          .whereType<SorceressFlash>()
+          .where((effect) => effect.spec.id == 'blink' && effect.mode == 'cast')
           .single;
       Future<List<int>> pixels() async {
         final recorder = ui.PictureRecorder(),

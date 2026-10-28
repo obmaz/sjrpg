@@ -2,18 +2,23 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/combat_balance.dart';
 import 'package:guardian_new/rpg_model.dart';
+import 'support/sorceress_fixture.dart';
 
 void main() {
   for (final hero in HeroClass.values) {
     test(
       '$hero equipment projections preserve inventory and match real equip',
       () {
-        final p = Progress(heroClass: hero)..gainXp(1000);
-        p.ranks.addAll(
-          hero == HeroClass.warrior
-              ? {'mastery': 2, 'battleFocus': 3, 'cleave': 3}
-              : {'arcaneMastery': 2, 'coldMastery': 4, 'firebolt': 3},
-        );
+        final p = Progress(heroClass: hero)
+          ..level = 100
+          ..skillPoints = 1000;
+        for (final entry
+            in (hero == HeroClass.warrior
+                    ? {'swordMastery': 2, 'ironSkin': 3, 'cleave': 3}
+                    : {'fireMastery': 2, 'coldMastery': 4, 'firebolt': 3})
+                .entries) {
+          trainSkill(p, entry.key, entry.value);
+        }
         final charm = p.createGear(gearById('fang'));
         p.inventory.add(charm);
         expect(p.equip(charm), true);
@@ -38,16 +43,29 @@ void main() {
     );
   }
   test(
-    'elemental specialization changes weapon ordering and class locks apply',
+    'spell projections preserve elemental identity while weapon attacks retain gear ordering and class locks',
     () {
-      final p = Progress(heroClass: HeroClass.mage)..gainXp(1000);
+      final p = trainedSorceress();
       final ice = p.createGear(gearById('frostwand'));
       final lightning = p.createGear(gearById('stormrod'));
       expect(
         p.previewBasicAttack(ice)!.dps,
-        lessThan(p.previewBasicAttack(lightning)!.dps),
+        p.previewBasicAttack(lightning)!.dps,
+        reason:
+            'spell base damage comes from its skill rather than weapon attack',
       );
-      p.ranks['coldMastery'] = 5;
+      trainSkill(p, 'iceBolt');
+      trainSkill(p, 'coldMastery', 5);
+      p.selectBasic('iceBolt');
+      expect(p.basicElement, 'ice');
+      expect(p.sorceressColdPierce, greaterThan(0));
+      expect(
+        p.previewBasicAttack(ice)!.dps,
+        p.previewBasicAttack(lightning)!.dps,
+        reason:
+            'Cold Mastery affects enemy resistance, not a weapon-style raw DPS multiplier',
+      );
+      p.selectBasic('sorceressAttack');
       expect(
         p.previewBasicAttack(ice)!.dps,
         greaterThan(p.previewBasicAttack(lightning)!.dps),

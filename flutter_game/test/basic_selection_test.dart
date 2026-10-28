@@ -5,32 +5,30 @@ import 'package:guardian_new/rpg_model.dart';
 import 'package:guardian_new/skill_preview_model.dart';
 import 'package:guardian_new/stage_content.dart';
 
-void train(Progress p, String id, [int target = 1]) {
-  final def = p.skills.firstWhere((s) => s.id == id);
-  for (final need in def.requires.entries) {
-    train(p, need.key, need.value);
-  }
-  while (p.rank(id) < target) {
-    expect(p.learn(def), true, reason: 'learn $id rank $target');
-  }
-}
+import 'support/sorceress_fixture.dart';
+
+void train(Progress p, String id, [int target = 1]) =>
+    trainSkill(p, id, target);
 
 void main() {
   for (final heroClass in [HeroClass.mage]) {
-    Progress fresh() => Progress(heroClass: heroClass)..gainXp(50000);
-    final alternatives = ['iceShard', 'sparkBolt'];
+    Progress fresh() => trainedSorceress();
+    final alternatives = ['iceBolt', 'chargedBolt'];
     test(
-      '$heroClass has three selectable basic attacks and an independent active starter',
+      '$heroClass has three mana spells plus one free weapon basic and a firebolt primary',
       () {
         final p = Progress(heroClass: heroClass);
-        expect(p.basicSkills.length, 3);
+        expect(p.basicSkills.length, 4);
         expect(p.selectedBasic, p.defaultBasicId);
         expect(p.basicSkill.basic, true);
         expect(p.basicTargetLimit, 1);
-        expect(p.skillAt(0)!.basic, false);
+        expect(p.skillAt(0)!.id, 'firebolt');
         for (final basic in p.basicSkills) {
-          expect(basic.cost, 0);
-          expect(p.canSelectSkill(basic.id), false);
+          expect(
+            basic.cost,
+            basic.id == 'sorceressAttack' ? 0 : greaterThan(0),
+          );
+          expect(p.canSelectSkill(basic.id), basic.id == 'firebolt');
         }
       },
     );
@@ -38,7 +36,7 @@ void main() {
       '$heroClass learning a basic keeps all four active slots and upgrades cost one point',
       () {
         final p = fresh();
-        for (final id in ['iceArmor', 'chainLightning', 'meteor']) {
+        for (final id in ['frozenArmor', 'inferno', 'firewall']) {
           train(p, id);
         }
         expect(p.skillSlots.whereType<String>().length, 4);
@@ -75,7 +73,7 @@ void main() {
           (before.$1, before.$2, before.$3),
         );
         expect(p.skillSlots, before.$4);
-        expect(p.selectBasic(p.activeSkill.id), false);
+        expect(p.selectBasic('frozenArmor'), false);
         expect(p.selectBasic('not-a-skill'), false);
         expect(p.selectBasic('bash'), false);
       },
@@ -93,7 +91,7 @@ void main() {
         expect(Progress.fromSave(legacy)!.selectedBasic, p.defaultBasicId);
         for (final invalid in [
           alternatives.last,
-          p.activeSkill.id,
+          'frozenArmor',
           'unknown',
           42,
         ]) {
@@ -133,23 +131,33 @@ void main() {
         final before = jsonEncode(p.toSave());
         final rows = previewSkill(p, inspected);
         expect(jsonEncode(p.toSave()), before);
+        final stats = p.sorceressSpell(inspected);
         expect(
-          rows.firstWhere((r) => r.label == '기본 공격 간격').current,
-          p.attackIntervalFor(inspected),
+          rows.firstWhere((r) => r.label == '시전 동작').current,
+          p.skillMotionTime(inspected),
         );
         expect(
-          rows.firstWhere((r) => r.label == '기본 1타 피해').current,
-          p.skillDamage(inspected),
+          rows.firstWhere((r) => r.label == '1회 최소 피해').current,
+          stats.minDamage,
+        );
+        expect(
+          rows.firstWhere((r) => r.label == '투사체 1개 초당 피해').current,
+          stats.meanDamage / p.attackIntervalFor(inspected),
         );
         final learned = Progress.fromSave(p.toSave())!;
         expect(learned.learn(inspected), true);
+        final nextStats = learned.sorceressSpell(inspected);
         expect(
-          rows.firstWhere((r) => r.label == '기본 공격 간격').next,
-          learned.attackIntervalFor(inspected),
+          rows.firstWhere((r) => r.label == '시전 동작').next,
+          learned.skillMotionTime(inspected),
         );
         expect(
-          rows.firstWhere((r) => r.label == '기본 1타 피해').next,
-          learned.skillDamage(inspected),
+          rows.firstWhere((r) => r.label == '1회 최소 피해').next,
+          nextStats.minDamage,
+        );
+        expect(
+          rows.firstWhere((r) => r.label == '투사체 1개 초당 피해').next,
+          nextStats.meanDamage / learned.attackIntervalFor(inspected),
         );
         expect(learned.selectedBasic, alternatives.last);
       },
@@ -304,16 +312,16 @@ void main() {
     );
   });
   test('chosen ice and electricity override a different weapon element', () {
-    final p = Progress(heroClass: HeroClass.mage)..gainXp(50000);
+    final p = trainedSorceress();
     expect(p.weapon.base.style, 'fire');
-    train(p, 'iceShard', 5);
+    train(p, 'iceBolt', 5);
     expect(p.basicElement, 'ice');
     expect(p.basicTargetLimit, 1);
-    train(p, 'sparkBolt', 2);
+    train(p, 'chargedBolt', 2);
     expect(p.basicElement, 'lightning');
-    expect(p.basicTargetLimit, 2);
-    train(p, 'sparkBolt', 3);
-    expect(p.basicTargetLimit, 3);
+    expect(p.basicTargetLimit, 4);
+    train(p, 'chargedBolt', 3);
+    expect(p.basicTargetLimit, 5);
     p.selectBasic('firebolt');
     expect(p.basicElement, 'fire');
   });

@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
-import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/combat_balance.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/player_afflictions.dart';
 import 'package:guardian_new/rpg_model.dart';
+import 'package:guardian_new/sorceress_combat.dart';
 
 import 'support/test_game.dart';
 
@@ -41,13 +41,20 @@ void main() {
             slowed.hero.castLock / normal.hero.castLock,
             closeTo(1 / .72, .001),
           );
+          expect(normal.hero.castLock, closeTo(.52, .000001));
+          expect(slowed.hero.castLock, closeTo(.52 / .72, .000001));
           final a = (normal.game! as TestGame).added
-              .whereType<ArcaneBolt>()
+              .whereType<SorceressProjectile>()
               .single;
           final b = (slowed.game! as TestGame).added
-              .whereType<ArcaneBolt>()
+              .whereType<SorceressProjectile>()
               .single;
-          expect(b.launchDelay / a.launchDelay, closeTo(1 / .72, .001));
+          expect(
+            b.spec.boltSpeed,
+            a.spec.boltSpeed,
+            reason:
+                'cast slow changes the hand motion, not an already emitted projectile',
+          );
         }
         // Cast a real starter/combat skill rather than an empty-target Howl.
         if (heroClass == HeroClass.warrior) {
@@ -66,7 +73,7 @@ void main() {
             beforeB = slowed.progress.energy;
         normal.hero.skill();
         slowed.hero.skill();
-        final activeId = heroClass == HeroClass.warrior ? 'bash' : 'frostNova';
+        final activeId = heroClass == HeroClass.warrior ? 'bash' : 'firebolt';
         expect(normal.hero.cooldowns, contains(activeId));
         expect(beforeA - normal.progress.energy, greaterThan(0));
         expect(slowed.hero.cooldowns, normal.hero.cooldowns);

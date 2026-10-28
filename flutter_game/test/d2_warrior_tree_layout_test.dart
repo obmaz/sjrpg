@@ -164,17 +164,42 @@ void main() {
       }
     }
   });
-  test('mage retains its five-row layout at the viewport width', () {
-    final p = Progress(heroClass: HeroClass.mage),
-        layout = SkillTreeLayout(
-          Progress(heroClass: HeroClass.mage),
+  test(
+    'Sorceress keeps six original tiers in nine canonical columns and three local columns',
+    () {
+      final p = Progress(heroClass: HeroClass.mage),
+          layout = SkillTreeLayout(
+            Progress(heroClass: HeroClass.mage),
+            320,
+            dense: false,
+            textScale: 1,
+          );
+      expect(layout.contentWidth, 900);
+      expect(layout.bonusTop, null);
+      expect(skillTreeRows(p.heroClass).length, 6);
+      expect(layout.columns, 9);
+      expect(layout.rects.length, 30);
+      expect(layout.rects['firebolt']!.center.dx, 750);
+      for (var school = 0; school < 3; school++) {
+        final local = SkillSchoolLayout(
+          p,
+          school,
           320,
           dense: false,
           textScale: 1,
         );
-    expect(layout.contentWidth, 320);
-    expect(layout.bonusTop, null);
-    expect(skillTreeRows(p.heroClass).length, 5);
-    expect(layout.rects['firebolt']!.center.dx, 320 / 6);
-  });
+        expect(local.columns, 3);
+        expect(local.contentWidth, 320);
+        expect(local.skills.length, 10);
+        for (final skill in local.skills) {
+          final canonicalColumn = (layout.rects[skill.id]!.center.dx / 100)
+              .floor();
+          expect(
+            local.rects[skill.id]!.center.dx,
+            closeTo((canonicalColumn % 3 + .5) * 320 / 3, .000001),
+          );
+        }
+      }
+    },
+  );
 }

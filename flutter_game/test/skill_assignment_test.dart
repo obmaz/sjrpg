@@ -23,14 +23,19 @@ void main() {
           expect(p.selectSkill(primary, slot: slot), false);
           expect(p.toSave(), before);
         }
-        expect(p.canSelectSkill(p.skills.first.id), false);
+        expect(
+          p.canSelectSkill(
+            hero == HeroClass.warrior ? 'cleave' : 'sorceressAttack',
+          ),
+          false,
+        );
         expect(p.canSelectSkill('missing'), false);
         expect(p.canSelectSkill(primary, slot: -1), false);
         expect(p.canSelectSkill(primary, slot: 4), false);
 
         p.gainXp(4000);
         p.skillPoints = 10;
-        final extraId = hero == HeroClass.warrior ? 'bash' : 'iceArmor';
+        final extraId = hero == HeroClass.warrior ? 'bash' : 'frozenArmor';
         expect(p.learn(p.skills.firstWhere((s) => s.id == extraId)), true);
         expect(p.skillAt(1)?.id, extraId);
         expect(p.canSelectSkill(primary, slot: 1), true);

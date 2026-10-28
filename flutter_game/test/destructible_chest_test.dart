@@ -8,6 +8,7 @@ import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/destructible_chest.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
+import 'package:guardian_new/sorceress_combat.dart';
 import 'package:guardian_new/world_model.dart';
 
 import 'support/test_game.dart';
@@ -102,15 +103,24 @@ void main() {
         final gold = s.progress.gold;
         s.hero.slash();
         if (heroClass == HeroClass.mage) {
-          final bolt = game.added.whereType<ArcaneBolt>().single;
-          expect(bolt.propOnly, true);
+          final bolt = game.added.whereType<SorceressProjectile>().single;
+          expect(bolt.spec.id, 'firebolt');
+          expect(
+            bolt.propOnly,
+            true,
+            reason:
+                'a spell launched in the peaceful village cannot later hit enemies',
+          );
           for (var i = 0; i < 30; i++) {
             bolt.update(1 / 30);
           }
         }
         expect(s.openedChests, contains(0));
         expect(s.progress.gold, gold + 18);
-        expect(s.progress.energy, energy);
+        final cost = heroClass == HeroClass.mage
+            ? s.progress.skillCost(s.progress.basicSkill)
+            : 0;
+        expect(s.progress.energy, energy - cost);
         expect(s.progress.hp, hp);
         expect(s.hero.cooldowns, isEmpty);
         expect(s.progress.kills, 0);

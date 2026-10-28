@@ -1,9 +1,11 @@
+import 'package:bonfire/bonfire.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
-import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/game_art.dart';
+import 'package:guardian_new/sorceress_combat.dart';
 import 'package:guardian_new/world_model.dart';
 
+import 'support/sorceress_fixture.dart';
 import 'support/test_game.dart';
 
 void main() {
@@ -13,21 +15,20 @@ void main() {
     s = inCombatField(Adventure(GameArt(), heroClass: HeroClass.mage))
       ..start(TestGame());
     s.mobs.clear();
-    s.progress.gainXp(1000);
-    for (final id in [
-      'arcaneMastery',
-      'chainLightning',
-      'firebolt',
-      'emberFocus',
-      'iceArmor',
-      'meteor',
-    ]) {
-      expect(
-        s.progress.learn(s.progress.skills.firstWhere((v) => v.id == id)),
-        true,
-      );
+    s.progress.level = 100;
+    s.progress.skillPoints = 1000;
+    for (final id in ['frostNova', 'chainLightning', 'frozenArmor', 'meteor']) {
+      trainSkill(s.progress, id);
     }
-    s.progress.selectSkill('frostNova');
+    s.progress.selectBasic('firebolt');
+    for (final entry in [
+      'frostNova',
+      'chainLightning',
+      'frozenArmor',
+      'meteor',
+    ].asMap().entries) {
+      expect(s.progress.selectSkill(entry.value, slot: entry.key), true);
+    }
     s.progress.energy = s.progress.maxEnergy;
   });
   tearDown(() => s.dispose());
@@ -49,8 +50,9 @@ void main() {
   test(
     'a skill tapped during a basic cast fires once before the next held attack',
     () {
-      final energy = s.progress.energy;
       s.hero.slash();
+      final energy = s.progress.energy;
+      final cost = s.progress.skillCost(s.progress.activeSkill);
       s.holdAttack('test', true);
       s.hero.skill();
       expect(s.hero.cooldowns['frostNova'], isNull);
@@ -65,18 +67,25 @@ void main() {
         1,
         reason: 'the queued spell precedes a second held basic',
       );
-      expect(s.progress.energy, energy - 18);
-      final cooldown = s.hero.cooldowns['frostNova']!;
+      expect(s.progress.energy, energy - cost);
+      final lock = s.hero.castLock;
+      expect(
+        s.hero.cooldowns['frostNova'],
+        0,
+        reason:
+            'D2 Frost Nova is limited by cast animation, not a synthetic cooldown',
+      );
       step(3);
-      expect(s.hero.cooldowns['frostNova'], lessThan(cooldown));
-      expect(s.progress.energy, energy - 18);
+      expect(s.hero.castLock, lessThan(lock));
+      expect(s.progress.energy, energy - cost);
     },
   );
   test(
     'rapid taps retain only the last valid spell and keep individual cooldowns',
     () {
-      final energy = s.progress.energy;
       s.hero.slash();
+      final energy = s.progress.energy;
+      final cost = s.progress.skillCost(s.progress.skillAt(1)!);
       s.hero.skill(slot: 0);
       s.hero.skill(slot: 1);
       resolvePendingCast();
@@ -85,14 +94,14 @@ void main() {
         s.hero.cooldowns['chainLightning'],
         s.progress.skillCooldown(s.progress.skillAt(1)!),
       );
-      expect(s.progress.energy, energy - 28);
+      expect(s.progress.energy, energy - cost);
     },
   );
   for (final action in ['pause', 'roll', 'reset', 'slot']) {
     test('$action cancels a pending cast without spending its resource', () {
       s.progress.energy = 60;
-      final energy = s.progress.energy;
       s.hero.slash();
+      final energy = s.progress.energy;
       s.hero.skill();
       switch (action) {
         case 'pause':
@@ -121,57 +130,57 @@ void main() {
     expect(s.progress.energy, 0);
   });
   test(
-    'basic bolt waits for the release pose, follows the casting origin and pauses with the hero',
+    'paid basic projectile flies from its casting origin and freezes with pause',
     () {
-      final game = TestGame();
-      final mage = inCombatField(
-        Adventure(GameArt(), heroClass: HeroClass.mage),
-      )..start(game);
+      final game = TestGame(),
+          mage = inCombatField(Adventure(GameArt(), heroClass: HeroClass.mage))
+            ..start(game);
       addTearDown(mage.dispose);
       mage.mobs.clear();
-      mage.hero.position.setValues(6000, 4200);
+      final mana = mage.progress.energy, skill = mage.progress.basicSkill;
       mage.hero.slash();
-      final bolt = game.added.whereType<ArcaneBolt>().single;
+      final bolt = game.added.whereType<SorceressProjectile>().single;
+      expect(bolt.position.toOffset(), mage.hero.body.center);
+      expect(mage.progress.energy, mana - mage.progress.skillCost(skill));
+      expect(mage.hero.castLock, greaterThan(0));
       final origin = bolt.position.clone();
-      final releaseDelay = .13 / mage.hero.effectiveBasicTempo;
-      expect(bolt.launchDelay, releaseDelay);
-      mage.hero.update(.05);
-      bolt.update(.05);
-      expect(bolt.position, origin);
-      expect(
-        bolt.remaining,
-        mage.progress.weapon.base.range / ArcaneBolt.speed,
-      );
       mage.pause();
       bolt.update(.5);
-      expect(bolt.launchDelay, closeTo(releaseDelay - .05, .001));
+      expect(bolt.position, origin);
+      expect(bolt.age, 0);
       mage.resume();
       mage.hero.position.x += 20;
-      final releaseFrames = (bolt.launchDelay / .05).ceil();
-      for (var i = 0; i < releaseFrames; i++) {
-        mage.hero.update(.05);
-        bolt.update(.05);
-      }
-      expect(bolt.launchDelay, 0);
+      bolt.update(.05);
       expect(
-        bolt.remaining,
-        lessThan(mage.progress.weapon.base.range / ArcaneBolt.speed),
+        (bolt.position - origin).length,
+        closeTo(bolt.spec.boltSpeed * .05, .001),
       );
-      expect(bolt.position.x, closeTo(mage.hero.body.center.dx, .001));
-      expect(bolt.position.y, greaterThan(mage.hero.body.center.dy));
-      expect(mage.hero.swing, lessThan(mage.hero.swingDuration * .58));
+      expect(bolt.travelled, greaterThan(0));
+      expect(
+        mage.hero.castLock,
+        greaterThan(0),
+        reason: 'the launched missile does not erase the release animation',
+      );
     },
   );
-  test('rolling cancels an unreleased basic bolt', () {
-    final game = TestGame();
-    final mage = inCombatField(Adventure(GameArt(), heroClass: HeroClass.mage))
-      ..start(game);
-    addTearDown(mage.dispose);
-    mage.mobs.clear();
-    mage.hero.slash();
-    final bolt = game.added.whereType<ArcaneBolt>().single;
-    mage.hero.dodge();
-    bolt.update(.05);
-    expect(bolt.resolved, true);
-  });
+  test(
+    'rolling cancels buffered input while already launched spells remain physical',
+    () {
+      final game = TestGame(),
+          mage = inCombatField(Adventure(GameArt(), heroClass: HeroClass.mage))
+            ..start(game);
+      addTearDown(mage.dispose);
+      mage.mobs.clear();
+      mage.hero.slash();
+      final bolt = game.added.whereType<SorceressProjectile>().single;
+      mage.hero.skill();
+      expect(mage.hero.queuedCast, isNotNull);
+      final mana = mage.progress.energy;
+      mage.hero.dodge();
+      expect(mage.hero.queuedCast, isNull);
+      bolt.update(.05);
+      expect(bolt.travelled, greaterThan(0));
+      expect(mage.progress.energy, mana);
+    },
+  );
 }

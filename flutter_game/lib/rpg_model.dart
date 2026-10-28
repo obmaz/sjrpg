@@ -3,10 +3,12 @@ import 'dart:math' as math;
 import 'combat_balance.dart';
 import 'mount_progress.dart';
 import 'skill_growth.dart';
+import 'sorceress_rules.dart';
 import 'stage_content.dart';
 import 'weapon_profiles.dart';
 
 part 'barbarian_catalog.dart';
+part 'sorceress_catalog.dart';
 
 enum HeroClass { warrior, mage }
 
@@ -773,247 +775,11 @@ class SkillDef {
         'crushingBlow': '집중 강타',
         'shadowAssault': '분신 연격',
         'iceArmor': '얼음 갑옷',
-        'chainLightning': '번개',
-        'meteor': '유성',
         'battleSprint': '질주',
         'blink': '순간이동',
       }[id] ??
       name;
 }
-
-const mageSkills = [
-  SkillDef(
-    'firebolt',
-    '마력탄',
-    '화염',
-    '장착한 무기의 원소로 공격하는 기본 탄환입니다. 등급마다 피해와 발사가 조금씩 성장하며 3등급부터 폭발합니다. 3·5등급에서 대상이 1명씩 늘어 최대 3명을 공격합니다.',
-    1,
-    0,
-    0,
-    passive: true,
-    basic: true,
-  ),
-  SkillDef(
-    'frostNova',
-    '서릿발',
-    '냉기',
-    '주변 적을 냉기로 얼립니다. 3·5등급에서 대상이 1명씩 늘고 시전·재사용은 조금씩 빨라집니다. 얼음 결정은 화려해지고 감속은 재사용 시간보다 먼저 끝납니다.',
-    1,
-    18,
-    6,
-  ),
-  SkillDef(
-    'arcaneMastery',
-    '원소 숙련',
-    '번개',
-    '등급마다 원소 피해 +2.5%, 최대 마나 +4. 숙련 피해 보너스는 최대 15%입니다.',
-    2,
-    0,
-    0,
-    passive: true,
-  ),
-  SkillDef(
-    'iceArmor',
-    '얼음 갑옷',
-    '냉기',
-    '얼음으로 몸을 보호하고 근접 공격자를 둔화합니다. 등급마다 감소율·결정 수가 늘고 시전과 재사용이 빨라집니다. 보호는 재사용 시간의 90% 안에서 끝납니다.',
-    2,
-    20,
-    15,
-    requires: {'frostNova': 1},
-  ),
-  SkillDef(
-    'chainLightning',
-    '연쇄 번개',
-    '번개',
-    '가까운 적들을 잇는 번개입니다. 3·5등급에서 대상이 1명씩 늘고 시전·재사용은 조금씩 빨라집니다. 전류 갈래는 화려해지며 장애물 너머로는 전이하지 않습니다.',
-    3,
-    28,
-    5,
-    requires: {'arcaneMastery': 1},
-  ),
-  SkillDef(
-    'meteor',
-    '유성 낙하',
-    '화염',
-    '목표에 유성을 소환합니다. 3·5등급에서 대상이 1명씩 늘고 시전·낙하·재사용은 조금씩 빨라집니다. 불꽃과 파편은 화려해집니다.',
-    4,
-    38,
-    9,
-    requires: {'emberFocus': 1, 'iceArmor': 1},
-  ),
-  SkillDef(
-    'warmth',
-    '온기',
-    '화염',
-    '등급마다 마나 회복 속도가 증가합니다.',
-    2,
-    0,
-    0,
-    passive: true,
-    requires: {'firebolt': 1},
-  ),
-  SkillDef(
-    'coldMastery',
-    '냉기 숙련',
-    '냉기',
-    '등급마다 냉기 무기와 서릿발 피해 +2.5%.',
-    5,
-    0,
-    0,
-    passive: true,
-    requires: {'iceArmor': 1, 'deepFreeze': 1},
-  ),
-  SkillDef(
-    'lightningMastery',
-    '번개 숙련',
-    '번개',
-    '등급마다 번개 무기와 연쇄 번개 피해 +2.5%.',
-    6,
-    0,
-    0,
-    passive: true,
-    requires: {'chainLightning': 1, 'deepFreeze': 1},
-  ),
-  SkillDef(
-    'emberFocus',
-    '잿불 집중',
-    '화염',
-    '등급마다 화염 무기·유성 피해 +2%.',
-    4,
-    0,
-    0,
-    passive: true,
-    requires: {'firebolt': 2},
-  ),
-  SkillDef(
-    'cinderReach',
-    '화염 확산',
-    '화염',
-    '등급마다 유성 피해 +0.5%. 3·5등급에서 최대 대상 +1명씩, 최대 2명 추가.',
-    10,
-    0,
-    0,
-    passive: true,
-    requires: {'meteor': 1, 'coldMastery': 1},
-  ),
-  SkillDef(
-    'phoenixHeart',
-    '불사조의 심장',
-    '화염',
-    '등급마다 최대 생명 +8.',
-    13,
-    0,
-    0,
-    passive: true,
-    requires: {'cinderReach': 1, 'frozenAegis': 1},
-  ),
-  SkillDef(
-    'deepFreeze',
-    '심연의 냉기',
-    '냉기',
-    '등급마다 냉기 무기·서릿발 피해 +1.5%.',
-    5,
-    0,
-    0,
-    passive: true,
-    requires: {'frostNova': 2},
-  ),
-  SkillDef(
-    'frozenAegis',
-    '빙하의 방벽',
-    '냉기',
-    '등급마다 얼음 갑옷 피해 감소 +0.5%p.',
-    10,
-    0,
-    0,
-    passive: true,
-    requires: {'coldMastery': 1, 'lightningMastery': 1},
-  ),
-  SkillDef(
-    'glacialReserve',
-    '빙하의 샘',
-    '냉기',
-    '등급마다 최대 마나 +3.',
-    13,
-    0,
-    0,
-    passive: true,
-    requires: {'cinderReach': 1, 'frozenAegis': 2},
-  ),
-  SkillDef(
-    'conductivity',
-    '마력 전도',
-    '번개',
-    '등급마다 번개 무기·연쇄 번개 피해 +1.5%.',
-    6,
-    0,
-    0,
-    passive: true,
-    requires: {'arcaneMastery': 2},
-  ),
-  SkillDef(
-    'forkedStorm',
-    '갈래 번개',
-    '번개',
-    '등급마다 연쇄 번개 피해 +0.5%. 3·5등급에서 최대 대상 +1명씩, 최대 2명 추가.',
-    10,
-    0,
-    0,
-    passive: true,
-    requires: {'coldMastery': 1, 'lightningMastery': 1},
-  ),
-  SkillDef(
-    'arcaneEconomy',
-    '비전 순환',
-    '번개',
-    '등급마다 최대 마나 +2, 마나 회복 속도가 증가합니다.',
-    16,
-    0,
-    0,
-    passive: true,
-    requires: {'frozenAegis': 1, 'forkedStorm': 2},
-  ),
-  SkillDef(
-    'blink',
-    '순간이동',
-    '번개',
-    '적을 가로질러 먼 지점으로 순간이동합니다. 지형과 장애물을 통과하지 않으며 회피 옆의 전용 버튼으로 사용합니다. 자원은 소모하지 않습니다. 등급마다 거리 +10, 재사용이 조금 빨라집니다.',
-    8,
-    0,
-    10,
-    mobility: true,
-    requires: {'conductivity': 1},
-  ),
-  SkillDef(
-    'iceShard',
-    '서리 창',
-    '냉기',
-    '무기와 관계없이 냉기 결정창으로 한 명을 공격하고 느려지게 합니다. 한 타격이 강한 대신 발사가 느립니다. 자원을 쓰지 않으며 등급마다 공격과 결정이 성장합니다.',
-    2,
-    0,
-    0,
-    passive: true,
-    basic: true,
-    basicDamageScale: 1.1,
-    basicTempoScale: .86,
-    requires: {'firebolt': 1, 'frostNova': 1},
-  ),
-  SkillDef(
-    'sparkBolt',
-    '전격 탄',
-    '번개',
-    '무기와 관계없이 빠른 전격을 발사합니다. 한 타격은 약하며 3등급부터 가까운 적 한 명에게 약한 방전이 퍼집니다. 기본 대상은 한 명, 최대 두 명이며 자원을 쓰지 않습니다.',
-    3,
-    0,
-    0,
-    passive: true,
-    basic: true,
-    basicDamageScale: .84,
-    basicTempoScale: 1.12,
-    requires: {'frostNova': 2, 'arcaneMastery': 1},
-  ),
-];
 
 const stageMemories = [
   (
@@ -1052,9 +818,9 @@ class Progress {
       equipped[item.base.slot] = item;
     }
     ranks[heroClass == HeroClass.warrior ? 'cleave' : 'firebolt'] = 1;
-    ranks[heroClass == HeroClass.warrior ? 'howl' : 'frostNova'] = 1;
+    ranks[heroClass == HeroClass.warrior ? 'howl' : 'sorceressAttack'] = 1;
     selectedBasic = defaultBasicId;
-    selectedSkill = heroClass == HeroClass.warrior ? 'howl' : 'frostNova';
+    selectedSkill = heroClass == HeroClass.warrior ? 'howl' : 'firebolt';
     hp = maxHp;
     energy = heroClass == HeroClass.warrior ? 25 : maxEnergy;
   }
@@ -1065,6 +831,7 @@ class Progress {
       activeArmorMultiplier = 1,
       concentrateArmorMultiplier = 1;
   bool berserkActive = false;
+  double sorceressArmorMultiplier = 1;
   MountProgress mountProgress = MountProgress();
   int kills = 0, gold = 0, level = 1, xp = 0, skillPoints = 2;
   int healingPotions = 3, energyPotions = 2;
@@ -1092,9 +859,10 @@ class Progress {
   }
 
   String basicElementFor(SkillDef skill) => switch (skill.id) {
-    'iceShard' => 'ice',
-    'sparkBolt' => 'lightning',
-    _ => weapon.base.style,
+    'iceBolt' => 'ice',
+    'chargedBolt' => 'lightning',
+    'sorceressAttack' => 'physical',
+    _ => heroClass == HeroClass.mage ? 'fire' : weapon.base.style,
   };
   String get basicElement => basicElementFor(basicSkill);
   String selectedSkill = '';
@@ -1190,6 +958,7 @@ class Progress {
       'spent': _spentSkillResets,
     },
     if (heroClass == HeroClass.warrior) 'barbarianTreeVersion': 1,
+    if (heroClass == HeroClass.mage) 'sorceressTreeVersion': 1,
     'selectedBasic': selectedBasic,
     'selectedSkill': selectedSkill,
     'secondarySkill': secondarySkill,
@@ -1227,6 +996,9 @@ class Progress {
       );
       if (p.heroClass == HeroClass.warrior &&
           data['barbarianTreeVersion'] != 1) {
+        return null;
+      }
+      if (p.heroClass == HeroClass.mage && data['sorceressTreeVersion'] != 1) {
         return null;
       }
       p.level = integer('level', max: 10000);
@@ -1319,8 +1091,10 @@ class Progress {
         return null;
       }
       if (p.heroClass == HeroClass.warrior && p.rank('howl') == 0) return null;
-      if (p.heroClass == HeroClass.warrior &&
-          p.skills.any((s) => p.rank(s.id) > 0 && !p.prerequisitesMet(s))) {
+      if (p.heroClass == HeroClass.mage && p.rank('sorceressAttack') != 1) {
+        return null;
+      }
+      if (p.skills.any((s) => p.rank(s.id) > 0 && !p.prerequisitesMet(s))) {
         return null;
       }
       final basic = data['selectedBasic'] ?? p.defaultBasicId;
@@ -1379,7 +1153,7 @@ class Progress {
 
   static const capacity = 24;
   List<SkillDef> get skills =>
-      heroClass == HeroClass.warrior ? allWarriorSkills : mageSkills;
+      heroClass == HeroClass.warrior ? allWarriorSkills : allSorceressSkills;
   SkillDef get mobilitySkill => skills.firstWhere((s) => s.mobility);
   double get mobilityCooldown => skillCooldown(mobilitySkill);
   double get mobilityDuration => heroClass == HeroClass.warrior
@@ -1390,7 +1164,7 @@ class Progress {
         )
       : 0;
   double get mobilityRange => heroClass == HeroClass.mage && rank('blink') > 0
-      ? 340 + math.max(0, rank('blink') - 1) * 10.0
+      ? sorceressSpell(mobilitySkill).range
       : 0;
   SkillDef? get secondarySkillDef => secondarySkill == null
       ? null
@@ -1445,7 +1219,9 @@ class Progress {
       effectiveRank('naturalResistance') == 0
       ? 0
       : (.08 + effectiveRank('naturalResistance') * .012).clamp(0.0, .35);
-  double skillCost(SkillDef skill, {int? atRank}) => skill.id == 'doubleSwing'
+  double skillCost(SkillDef skill, {int? atRank}) => isSorceressSpell(skill)
+      ? sorceressSpell(skill, atRank: atRank).manaCost
+      : skill.id == 'doubleSwing'
       ? math.max(
           0.0,
           skill.cost -
@@ -1453,6 +1229,10 @@ class Progress {
         )
       : skill.cost;
   double skillRange(SkillDef skill, {int? atRank}) {
+    if (isSorceressSpell(skill)) {
+      return sorceressSpell(skill, atRank: atRank).range;
+    }
+    if (skill.id == 'sorceressAttack') return 100;
     final r = effectiveRank(skill.id, atRank: atRank);
     return switch (skill.id) {
       'leap' => 120.0 + r * 8,
@@ -1538,8 +1318,7 @@ class Progress {
       (heroClass == HeroClass.warrior ? 100 : 80) +
       (level - 1) * 10 +
       bonusHealth +
-      equipped.values.fold(0.0, (v, g) => v + g.health) +
-      rank('phoenixHeart') * 8;
+      equipped.values.fold(0.0, (v, g) => v + g.health);
   double get maxHp =>
       baseMaxHp *
       (heroClass == HeroClass.warrior
@@ -1552,10 +1331,7 @@ class Progress {
           : 1);
   double get baseMaxEnergy =>
       (heroClass == HeroClass.warrior ? 100 : 90) +
-      equipped.values.fold(0.0, (v, g) => v + g.mana) +
-      rank('arcaneMastery') * 4 +
-      rank('glacialReserve') * 3 +
-      rank('arcaneEconomy') * 2;
+      equipped.values.fold(0.0, (v, g) => v + g.mana);
   double get maxEnergy =>
       baseMaxEnergy *
       (heroClass == HeroClass.warrior
@@ -1563,7 +1339,9 @@ class Progress {
           : 1);
   double get armor {
     final gearArmor = equipped.values.fold(0.0, (v, g) => v + g.armor);
-    if (heroClass != HeroClass.warrior) return gearArmor;
+    if (heroClass != HeroClass.warrior) {
+      return gearArmor * _statMultiplier(sorceressArmorMultiplier);
+    }
     if (berserkActive) return 0;
     final r = effectiveRank('ironSkin');
     return gearArmor *
@@ -1575,10 +1353,7 @@ class Progress {
   static const playerDamageScale = .75 * CombatBalance.heroDamageScale;
   static const skillCooldownScale = .9;
   double get attackMultiplier =>
-      (heroClass == HeroClass.warrior
-          ? weaponMasteryDamageMultiplier
-          : (1 + rank('arcaneMastery') * CombatBalance.arcaneMasteryGrowth)
-                .clamp(1.0, CombatBalance.maximumMasteryMultiplier)) *
+      (heroClass == HeroClass.warrior ? weaponMasteryDamageMultiplier : 1.0) *
       playerDamageScale;
   double get swordDamage =>
       (bonusAttack +
@@ -1590,19 +1365,38 @@ class Progress {
       bonusAttack += (value - swordDamage) / attackMultiplier;
   List<String> get skillBranches => heroClass == HeroClass.warrior
       ? const ['전투 기술', '전투 숙련', '함성']
-      : const ['화염', '냉기', '번개'];
+      : const ['냉기', '번개', '화염'];
   double get manaRecovery =>
-      (9 + rank('warmth') * .45 + rank('arcaneEconomy') * .15) *
-      CombatBalance.resourceGainScale;
-  double get fireDamageMultiplier => 1 + rank('emberFocus') * .02;
-  double get coldDamageMultiplier =>
-      1 + rank('coldMastery') * .025 + rank('deepFreeze') * .015;
+      9 *
+      CombatBalance.resourceGainScale *
+      SorceressRules.warmthMultiplier(effectiveRank('warmth'));
+  double get fireDamageMultiplier =>
+      SorceressRules.fireMastery(effectiveRank('fireMastery'));
+  double get coldDamageMultiplier => 1;
   double get lightningDamageMultiplier =>
-      1 + rank('lightningMastery') * .025 + rank('conductivity') * .015;
+      SorceressRules.lightningMastery(effectiveRank('lightningMastery'));
+  double get sorceressColdPierce =>
+      SorceressRules.coldPierce(effectiveRank('coldMastery'));
+
+  bool isSorceressSpell(SkillDef skill) =>
+      heroClass == HeroClass.mage && mageSkills.contains(skill);
+  SorceressSpellStats sorceressSpell(SkillDef skill, {int? atRank}) =>
+      SorceressRules.evaluate(
+        skill.id,
+        rank: isSorceressSpell(skill)
+            ? effectiveRank(skill.id, atRank: atRank)
+            : 0,
+        hardRanks: ranks,
+        damageScale: playerDamageScale * CombatBalance.skillDamageScale,
+      );
   int get basicTargetLimit => basicTargetLimitForRank(rank(selectedBasic));
   int basicTargetLimitForRank(int rank, {SkillDef? basic}) {
     final skill = basic ?? basicSkill;
     if (rank <= 0) return 0;
+    if (isSorceressSpell(skill)) {
+      return sorceressSpell(skill, atRank: rank).maxTargets;
+    }
+    if (skill.id == 'sorceressAttack') return 1;
     if (heroClass == HeroClass.warrior && weapon.base.isThrowingWeapon) {
       return 1;
     }
@@ -1615,6 +1409,9 @@ class Progress {
   int skillTargetLimit(SkillDef skill, {int? atRank}) {
     final r = effectiveRank(skill.id, atRank: atRank);
     if (r == 0 || !skills.contains(skill)) return 0;
+    if (isSorceressSpell(skill)) {
+      return sorceressSpell(skill, atRank: atRank).maxTargets;
+    }
     if (skill.basic) return basicTargetLimitForRank(r, basic: skill);
     if (heroClass == HeroClass.warrior && skill.rankLimit == 20) {
       return switch (skill.id) {
@@ -1650,6 +1447,9 @@ class Progress {
 
   double skillCooldown(SkillDef skill, {int? atRank}) {
     final r = atRank ?? rank(skill.id);
+    if (isSorceressSpell(skill)) {
+      return sorceressSpell(skill, atRank: atRank).castDelay;
+    }
     if (skill.passive || r <= 0 || !skills.contains(skill)) return 0;
     if (skill.rankLimit == 20) return skill.cooldown * skillCooldownScale;
     final specialty = switch (skill.id) {
@@ -1664,12 +1464,18 @@ class Progress {
         (1 - specialty * .005);
   }
 
-  double skillTempo(SkillDef skill, {int? atRank}) => skill.rankLimit == 20
+  double skillTempo(SkillDef skill, {int? atRank}) => isSorceressSpell(skill)
+      ? 1 + attackHaste
+      : skill.rankLimit == 20
       ? .75 *
             (1 +
                 math.max(0, effectiveRank(skill.id, atRank: atRank) - 1) * .005)
       : SkillGrowth.tempo(atRank ?? rank(skill.id));
   double skillMotionTime(SkillDef skill, {int? atRank}) {
+    if (isSorceressSpell(skill)) {
+      return sorceressSpell(skill, atRank: atRank).motionTime /
+          skillTempo(skill, atRank: atRank);
+    }
     final base = heroClass == HeroClass.mage
         ? .48
         : switch (skill.id) {
@@ -1713,15 +1519,23 @@ class Progress {
     'iceArmor',
     5 + math.max(0, rank('iceArmor') - 1) * .3,
   );
-  double get novaSlowDuration => limitedSkillDuration(
-    'frostNova',
-    2 + math.max(0, rank('frostNova') - 1) * .1,
-  );
+  double get novaSlowDuration => sorceressSpell(
+    mageSkills.firstWhere((s) => s.id == 'frostNova'),
+  ).chillDuration;
   double get warcryStun =>
       limitedSkillDuration('warcry', 1 + math.max(0, rank('warcry') - 1) * .05);
 
   double get basicDamage => skillDamage(basicSkill);
   double skillDamage(SkillDef skill, {int? atRank}) {
+    if (isSorceressSpell(skill)) {
+      final stats = sorceressSpell(skill, atRank: atRank);
+      return stats.meanDamage > 0
+          ? stats.meanDamage
+          : stats.damagePerSecond * stats.interval;
+    }
+    if (heroClass == HeroClass.mage && skill.id == 'sorceressAttack') {
+      return swordDamage * CombatBalance.skillDamageScale;
+    }
     final r = effectiveRank(skill.id, atRank: atRank);
     if (!skills.contains(skill) ||
         (r == 0 && skill.id != 'cleave' && skill.id != 'firebolt')) {
@@ -1812,12 +1626,15 @@ class Progress {
               rank('weaponTempo') * .004)
           .clamp(0.0, CombatBalance.maximumAttackHaste);
 
-  double attackIntervalFor(SkillDef skill, {int? atRank}) => math.max(
-    CombatBalance.minimumBasicInterval,
-    weapon.base.tempo /
-        basicTempoFor(skill, atRank: atRank) *
-        (1 - attackHaste),
-  );
+  double attackIntervalFor(SkillDef skill, {int? atRank}) =>
+      isSorceressSpell(skill)
+      ? skillMotionTime(skill, atRank: atRank)
+      : math.max(
+          CombatBalance.minimumBasicInterval,
+          weapon.base.tempo /
+              basicTempoFor(skill, atRank: atRank) *
+              (1 - attackHaste),
+        );
   double get attackInterval => attackIntervalFor(basicSkill);
 
   /// Single-hit cadence shared by combat and equipment comparisons. Combo
@@ -1829,6 +1646,9 @@ class Progress {
         !attackTempo.isFinite ||
         attackTempo <= 0) {
       throw ArgumentError('Attack tempo must be positive and finite');
+    }
+    if (isSorceressSpell(basicSkill)) {
+      return skillMotionTime(basicSkill) / attackTempo;
     }
     final recovery =
         math.max(
@@ -1875,7 +1695,8 @@ class Progress {
       ..activeResourceMultiplier = activeResourceMultiplier
       ..activeArmorMultiplier = activeArmorMultiplier
       ..concentrateArmorMultiplier = concentrateArmorMultiplier
-      ..berserkActive = berserkActive;
+      ..berserkActive = berserkActive
+      ..sorceressArmorMultiplier = sorceressArmorMultiplier;
     next.ranks
       ..clear()
       ..addAll(ranks);
@@ -1941,7 +1762,7 @@ class Progress {
       (rank(s.id) > 0 || prerequisitesMet(s));
   int get investedSkillPoints {
     final basic = heroClass == HeroClass.warrior ? 'cleave' : 'firebolt';
-    final starter = heroClass == HeroClass.warrior ? 'howl' : 'frostNova';
+    final starter = heroClass == HeroClass.warrior ? 'howl' : 'sorceressAttack';
     return ranks.entries.fold(
       0,
       (sum, entry) =>
@@ -1962,13 +1783,13 @@ class Progress {
     _spentSkillResets++;
     skillPoints += refund;
     final basic = heroClass == HeroClass.warrior ? 'cleave' : 'firebolt';
-    final starter = heroClass == HeroClass.warrior ? 'howl' : 'frostNova';
+    final starter = heroClass == HeroClass.warrior ? 'howl' : 'sorceressAttack';
     selectedBasic = basic;
     ranks
       ..clear()
       ..[basic] = 1
       ..[starter] = 1;
-    selectedSkill = starter;
+    selectedSkill = heroClass == HeroClass.warrior ? starter : basic;
     secondarySkill = tertiarySkill = quaternarySkill = null;
     hp = math.min(hp, maxHp);
     energy = math.min(energy, maxEnergy);

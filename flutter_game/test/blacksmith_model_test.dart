@@ -3,10 +3,10 @@ import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
-import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/shop_content.dart';
+import 'package:guardian_new/sorceress_combat.dart';
 import 'package:guardian_new/world_model.dart';
 
 import 'support/test_game.dart';
@@ -247,15 +247,18 @@ void main() {
         expect(restored.riding?.def.id, mount.def.id);
         expect(restored.progress.usingFallbackWeapon, isTrue);
         final strikes = restored.hero.strikes;
+        final mana = restored.progress.energy;
         restored.hero.slash();
         expect(restored.hero.strikes, greaterThan(strikes));
         restored.hero.update(.05);
         expect(restored.progress.basicDamage.isFinite, isTrue);
         if (heroClass == HeroClass.mage) {
-          expect(
-            (restored.game! as TestGame).added.whereType<ArcaneBolt>(),
-            isNotEmpty,
-          );
+          final bolts = (restored.game! as TestGame).added
+              .whereType<SorceressProjectile>();
+          expect(bolts, isNotEmpty);
+          expect(bolts.single.spec.id, 'firebolt');
+          expect(bolts.single.damageAmount, greaterThan(0));
+          expect(restored.progress.energy, lessThan(mana));
         }
         expect(GameCheckpoint.capture(restored), isNotNull);
       },

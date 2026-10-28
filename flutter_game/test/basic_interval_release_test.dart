@@ -3,18 +3,18 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
-import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/combat_balance.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/rpg_model.dart';
+import 'package:guardian_new/sorceress_combat.dart';
 
 import 'basic_selection_test.dart' show train;
 import 'support/test_game.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  // Preserve historical cadence comparisons for the supported canonical basic
-  // and all three mage basics. Original Barbarian actions are paid skills below.
+  // Keep the historical Barbarian cadence proof; Sorceress spells now use
+  // original paid casts, tested independently below.
   final originalCases =
       jsonDecode(
             File('test/fixtures/basic_pacing_mobile61.json').readAsStringSync(),
@@ -30,7 +30,7 @@ void main() {
   for (final row in originalCases['rows'] as List) {
     final heroClass = HeroClass.values.byName(row['hero'] as String);
     final mode = row['mode'] as String, rank = row['rank'] as int;
-    if (heroClass == HeroClass.warrior && mode != 'cleave') continue;
+    if (heroClass != HeroClass.warrior || mode != 'cleave') continue;
     test('$mode rank $rank uses slower actual cadence and weaker hits', () {
       final s = inCombatField(Adventure(GameArt(), heroClass: heroClass))
         ..start(TestGame());
@@ -56,24 +56,6 @@ void main() {
         p.basicDamage / (old['damage'] as num),
         inInclusiveRange(.50, .600001),
       );
-      final oldActive = originalCases['actives'][heroClass.name];
-      for (final def in p.skills.where(
-        (s) =>
-            heroClass == HeroClass.mage &&
-            !s.basic &&
-            !s.passive &&
-            !s.mobility &&
-            (oldActive['costs'] as Map).containsKey(s.id),
-      )) {
-        expect(
-          p.skillCooldown(def, atRank: 1),
-          closeTo(
-            baseline[heroClass.name]['1'][def.id]['cooldown'] * 9 / 7,
-            .000001,
-          ),
-        );
-        expect(def.cost, oldActive['costs'][def.id]);
-      }
       final energy = p.energy, slots = p.skillSlots.toList();
       s.hero.slash();
       expect(s.hero.attackClock, closeTo(interval, .000001));
@@ -90,32 +72,6 @@ void main() {
       // The real gate cannot be bypassed by calling slash a second time.
       s.hero.slash();
       expect(s.hero.strikes, 1);
-      if (heroClass == HeroClass.mage) {
-        expect(s.hero.castLock, closeTo(.26 / tempo, .000001));
-        final bolt = (s.game! as TestGame).added.whereType<ArcaneBolt>().single;
-        final releaseDelay = .13 / tempo;
-        expect(bolt.launchDelay, closeTo(releaseDelay, .000001));
-        expect(bolt.damage, p.basicDamage);
-        // Hand release follows the new cadence; projectile travel still
-        // starts only after its complete, positive simulation delay.
-        void stepBolt(double seconds) {
-          while (seconds > 0) {
-            final dt = seconds > .02 ? .02 : seconds;
-            bolt.update(dt);
-            seconds -= dt;
-          }
-        }
-
-        stepBolt(releaseDelay * .75);
-        expect(bolt.launchDelay, greaterThan(0));
-        expect(bolt.remaining, p.weapon.base.range / ArcaneBolt.speed);
-        stepBolt(releaseDelay * .35);
-        expect(bolt.launchDelay, 0);
-        expect(
-          bolt.remaining,
-          lessThan(p.weapon.base.range / ArcaneBolt.speed),
-        );
-      }
       void stepHero(double seconds) {
         while (seconds > 0) {
           final dt = seconds > .02 ? .02 : seconds;
@@ -136,6 +92,89 @@ void main() {
       expect(s.hero.strikes, 2, reason: 'the actual new gate reopens normally');
     });
   }
+  for (final id in ['firebolt', 'iceBolt', 'chargedBolt']) {
+    for (final rank in [1, 5, 20]) {
+      for (final fasterCast in [false, true]) {
+        test(
+          '$id rank$rank paid source casting and DPS remain exact with FCR$fasterCast',
+          () {
+            final s = inCombatField(
+              Adventure(GameArt(), heroClass: HeroClass.mage),
+            )..start(TestGame());
+            addTearDown(s.dispose);
+            s.mobs.clear();
+            s.waveTime = 10000;
+            final p = s.progress
+              ..level = 100
+              ..skillPoints = 1000;
+            train(p, id, rank);
+            p.selectBasic(id);
+            if (fasterCast) {
+              final charm = p.createGear(gearById('fang'));
+              p.inventory.add(charm);
+              expect(p.equip(charm), true);
+            }
+            p.energy = p.maxEnergy;
+            final spec = p.sorceressSpell(p.basicSkill);
+            final interval = .52 / (1 + p.attackHaste);
+            final stats = p.basicAttackStats();
+            expect(p.attackInterval, closeTo(interval, .000001));
+            expect(stats.damage, spec.meanDamage);
+            expect(
+              stats.dps,
+              closeTo(
+                spec.meanDamage / interval * CombatBalance.gameSpeed,
+                .000001,
+              ),
+            );
+            final energy = p.energy, slots = p.skillSlots.toList();
+            s.hero.slash();
+            expect(energy - p.energy, closeTo(spec.manaCost, .000001));
+            expect(spec.manaCost, greaterThan(0));
+            expect(s.hero.attackClock, closeTo(interval, .000001));
+            expect(s.hero.castLock, closeTo(interval, .000001));
+            expect(s.hero.swingDuration, closeTo(interval, .000001));
+            expect(p.skillSlots, slots);
+            final projectiles = (s.game! as TestGame).added
+                .whereType<SorceressProjectile>()
+                .toList();
+            expect(projectiles.length, spec.projectileCount);
+            for (final bolt in projectiles) {
+              expect(
+                bolt.damageAmount,
+                inInclusiveRange(spec.minDamage, spec.maxDamage),
+              );
+              expect(bolt.spec.rank, rank);
+            }
+            s.hero.slash();
+            expect(s.hero.strikes, 1);
+            expect(p.energy, closeTo(energy - spec.manaCost, .000001));
+            void advance(double seconds) {
+              while (seconds > .000001) {
+                final dt = seconds > .01 ? .01 : seconds;
+                s.hero.update(dt);
+                seconds -= dt;
+              }
+            }
+
+            advance(interval - .01);
+            s.hero.slash();
+            expect(
+              s.hero.strikes,
+              1,
+              reason: 'a paid spell cannot bypass its actual hand motion',
+            );
+            advance(.011);
+            final beforeSecond = p.energy;
+            s.hero.slash();
+            expect(s.hero.strikes, 2);
+            expect(beforeSecond - p.energy, closeTo(spec.manaCost, .000001));
+          },
+        );
+      }
+    }
+  }
+
   for (final id in ['bash', 'stun']) {
     for (final rank in [1, 5]) {
       test(

@@ -8,7 +8,7 @@ import 'support/test_game.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  for (final hero in HeroClass.values) {
+  for (final hero in const [HeroClass.warrior]) {
     test(
       hero == HeroClass.warrior
           ? '$hero canonical ranks preserve fixed cooldowns and single-target roles'
@@ -154,4 +154,129 @@ void main() {
       },
     );
   }
+
+  test(
+    'Sorceress rank20 growth follows original damage and quantities without invented haste or cooldown perks',
+    () {
+      final p = Progress(heroClass: HeroClass.mage)
+        ..level = 100
+        ..skillPoints = 1000;
+      for (final def in mageSkills) {
+        var damage = 0.0, targets = 0;
+        for (var rank = 1; rank <= 20; rank++) {
+          final stats = p.sorceressSpell(def, atRank: rank);
+          expect(
+            p.skillCooldown(def, atRank: rank),
+            def.cooldown,
+            reason: def.id,
+          );
+          expect(p.skillTempo(def, atRank: rank), 1);
+          expect(p.skillMotionTime(def, atRank: rank), stats.motionTime);
+          expect(
+            p.skillDamage(def, atRank: rank),
+            greaterThanOrEqualTo(damage),
+            reason: def.id,
+          );
+          expect(
+            p.skillTargetLimit(def, atRank: rank),
+            greaterThanOrEqualTo(targets),
+            reason: def.id,
+          );
+          damage = p.skillDamage(def, atRank: rank);
+          targets = p.skillTargetLimit(def, atRank: rank);
+        }
+        if (const {
+          'firebolt',
+          'iceBolt',
+          'iceBlast',
+          'telekinesis',
+          'thunderStorm',
+        }.contains(def.id)) {
+          expect(targets, 1);
+        }
+        if (def.id == 'chargedBolt') expect(targets, 22);
+        if (def.id == 'chainLightning') expect(targets, 9);
+      }
+      final interval = p.attackInterval;
+      p.ranks['firebolt'] = 20;
+      expect(
+        p.attackInterval,
+        interval,
+        reason: 'spell rank does not invent a faster casting animation',
+      );
+      expect(
+        p.basicDamage,
+        greaterThan(Progress(heroClass: HeroClass.mage).basicDamage),
+      );
+    },
+  );
+
+  test(
+    'Sorceress actual casts debit source mana and assign source shared delays at every invested rank',
+    () {
+      final s = inCombatField(Adventure(GameArt(), heroClass: HeroClass.mage))
+        ..start(TestGame());
+      addTearDown(s.dispose);
+      s.mobs.clear();
+      s.waveTime = 10000;
+      final p = s.progress
+        ..level = 100
+        ..skillPoints = 1000;
+      void train(String id, int rank) {
+        final def = p.skills.firstWhere((d) => d.id == id);
+        for (final parent in def.requires.entries) {
+          if (p.rank(parent.key) < parent.value) {
+            train(parent.key, parent.value);
+          }
+        }
+        while (p.rank(id) < rank) {
+          expect(p.learn(def), true);
+        }
+      }
+
+      for (final def in mageSkills) {
+        train(def.id, 20);
+      }
+      for (final def in mageSkills.where((d) => !d.passive && !d.mobility)) {
+        for (var rank = 1; rank <= 20; rank++) {
+          s.hero.sorceressCombat.clear();
+          s.hero.cooldowns.clear();
+          s.hero.castLock = s.hero.attackClock = 0;
+          s.hero.queuedCast = null;
+          p.ranks[def.id] = rank;
+          expect(p.selectSkill(def.id), true);
+          p.energy = p.maxEnergy;
+          final before = p.energy, stats = p.sorceressSpell(def);
+          s.hero.skill();
+          final cost = def.id == 'inferno'
+              ? stats.manaPerSecond * stats.interval
+              : stats.manaCost;
+          expect(
+            before - p.energy,
+            closeTo(cost, .000001),
+            reason: '${def.id} rank$rank',
+          );
+          expect(
+            s.hero.cooldowns[def.id] ?? 0,
+            stats.castDelay,
+            reason: '${def.id} rank$rank',
+          );
+          expect(s.hero.sorceressCombat.sharedDelay, stats.castDelay);
+          final preview = previewSkill(
+            p,
+            def,
+          ).firstWhere((r) => r.label == '공통 시전 지연');
+          expect(preview.current, stats.castDelay);
+        }
+      }
+      final cp = GameCheckpoint.capture(s)!;
+      final restored = cp.restore(GameArt());
+      addTearDown(restored.dispose);
+      expect(restored.hero.cooldowns, s.hero.cooldowns);
+      expect(
+        restored.hero.sorceressCombat.sharedDelay,
+        s.hero.sorceressCombat.sharedDelay,
+      );
+    },
+  );
 }

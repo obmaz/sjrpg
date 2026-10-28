@@ -186,19 +186,22 @@ void main() {
   );
 
   test(
-    'mage ranks remain capped at five without requiring the warrior marker',
+    'mage ranks reach twenty with their own marker and no warrior marker',
     () {
       final p = Progress(heroClass: HeroClass.mage)
         ..level = 100
         ..skillPoints = 1000;
       final basic = p.skills.firstWhere((skill) => skill.id == 'firebolt');
-      while (p.rank(basic.id) < 5) {
+      while (p.rank(basic.id) < 20) {
         expect(p.learn(basic), true);
       }
       expect(p.learn(basic), false);
       final saved = detached(p)..remove('barbarianTreeVersion');
       expect(Progress.fromSave(saved), isNotNull);
-      (saved['ranks'] as Map)['firebolt'] = 6;
+      expect(saved['sorceressTreeVersion'], 1);
+      final oldMage = {...saved}..remove('sorceressTreeVersion');
+      expect(Progress.fromSave(oldMage), isNull);
+      (saved['ranks'] as Map)['firebolt'] = 21;
       expect(Progress.fromSave(saved), isNull);
     },
   );

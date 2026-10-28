@@ -5,6 +5,7 @@ import 'package:guardian_new/rpg_model.dart';
 import 'package:guardian_new/skill_tree_layout.dart';
 import 'package:guardian_new/stage_content.dart';
 
+import 'support/sorceress_fixture.dart';
 import 'support/test_game.dart';
 
 void main() {
@@ -15,7 +16,7 @@ void main() {
       () {
         final p = Progress(heroClass: hero);
         expect(p.skillBranches.length, 3);
-        expect(p.skills.length, hero == HeroClass.warrior ? 33 : 21);
+        expect(p.skills.length, hero == HeroClass.warrior ? 33 : 31);
         for (final branch in p.skillBranches) {
           expect(
             p.skills
@@ -24,13 +25,10 @@ void main() {
                       s.branch == branch &&
                       (hero == HeroClass.warrior
                           ? warriorTreeIds.contains(s.id)
-                          : !s.basic || s.id == p.defaultBasicId),
+                          : mageTreeIds.contains(s.id)),
                 )
                 .length,
-            hero == HeroClass.warrior
-                ? 10
-                : (branch == '전투 기술' ? 8 : 6) +
-                      (branch == p.mobilitySkill.branch ? 1 : 0),
+            10,
           );
         }
         final ids = p.skills.map((s) => s.id).toSet();
@@ -56,43 +54,53 @@ void main() {
     );
   }
   test(
-    'a fresh mage must unlock predecessors; failures never spend points',
+    'a new Sorceress must learn original direct predecessors without spending on failures',
     () {
-      final p = Progress(heroClass: HeroClass.mage)..gainXp(2000);
+      final p = trainedSorceress();
       SkillDef skill(String id) => p.skills.firstWhere((s) => s.id == id);
       final points = p.skillPoints;
       expect(p.learn(skill('meteor')), false);
       expect(p.learn(skill('chainLightning')), false);
       expect(p.skillPoints, points);
-      expect(p.learn(skill('warmth')), true);
+      for (final id in ['warmth', 'fireball']) {
+        expect(p.learn(skill(id)), true);
+      }
       expect(p.learn(skill('meteor')), false);
-      expect(p.learn(skill('firebolt')), true);
-      expect(p.learn(skill('emberFocus')), true);
-      expect(p.learn(skill('arcaneMastery')), true);
-      expect(p.learn(skill('chainLightning')), true);
-      expect(p.learn(skill('meteor')), false);
-      expect(p.learn(skill('iceArmor')), true);
+      for (final id in ['inferno', 'blaze', 'firewall']) {
+        expect(p.learn(skill(id)), true);
+      }
       expect(p.learn(skill('meteor')), true);
-      expect(p.skillPoints, points - 7);
+      expect(p.learn(skill('chainLightning')), false);
+      for (final id in ['chargedBolt', 'lightning', 'chainLightning']) {
+        expect(p.learn(skill(id)), true);
+      }
+      expect(p.skillPoints, points - 9);
       expect(Progress.fromSave(p.toSave())!.toSave(), p.toSave());
     },
   );
+
   test(
-    'existing saved skills remain usable and upgradable without newly added parents',
+    'current Sorceress saves require every parent and reject the ignored old skill tree',
     () {
-      final p = Progress(heroClass: HeroClass.mage)..gainXp(1000);
-      p.ranks['meteor'] = 1;
-      p.skillPoints--;
+      final p = trainedSorceress();
+      trainSkill(p, 'meteor');
       p.selectSkill('meteor');
-      final restored = Progress.fromSave(p.toSave())!;
+      final saved = p.toSave(), restored = Progress.fromSave(p.toSave())!;
       final meteor = restored.skills.firstWhere((s) => s.id == 'meteor');
-      expect(restored.prerequisitesMet(meteor), false);
-      expect(restored.canLearn(meteor), true);
+      expect(restored.prerequisitesMet(meteor), true);
       expect(restored.learn(meteor), true);
       expect(restored.rank('meteor'), 2);
-
+      final legacy = Map<String, dynamic>.from(saved)
+        ..remove('sorceressTreeVersion');
+      expect(Progress.fromSave(legacy), isNull);
+      final orphaned = {
+        ...saved,
+        'ranks': {...p.ranks}..remove('firewall'),
+      };
+      expect(Progress.fromSave(orphaned), isNull);
       restored.awardSkillResetTicket(WorldStage.forest);
       expect(restored.resetSkills(), true);
+      expect(restored.ranks, {'firebolt': 1, 'sorceressAttack': 1});
       expect(restored.canLearn(meteor), false);
     },
   );
@@ -133,36 +141,46 @@ void main() {
       expect(p.armor, defense);
     },
   );
-  test('elemental mastery and warmth change the actual mage combat values', () {
-    final p = Progress(heroClass: HeroClass.mage)..gainXp(4000);
-    final fire = p.weapon;
-    final ice = p.createGear(gearById('frostwand'));
-    p.inventory.add(ice);
-    p.equip(ice);
-    for (final id in [
-      'warmth',
-      'iceArmor',
-      'arcaneMastery',
-      'frostNova',
-      'deepFreeze',
-    ]) {
-      expect(p.learn(p.skills.firstWhere((s) => s.id == id)), true);
-    }
-    final iceDamage = p.basicDamage;
-    for (final id in ['coldMastery']) {
-      expect(p.learn(p.skills.firstWhere((s) => s.id == id)), true);
-    }
-    expect(p.manaRecovery, closeTo(6.615, .000001));
-    expect(p.coldDamageMultiplier, closeTo(1.04, .000001));
-    expect(p.basicDamage, closeTo(iceDamage * 1.04 / 1.015, .001));
-    p.equip(fire);
-    final fireDamage = p.basicDamage;
-    expect(p.learn(p.skills.firstWhere((s) => s.id == 'coldMastery')), true);
-    expect(p.basicDamage, fireDamage);
-    for (final id in ['arcaneMastery', 'chainLightning', 'lightningMastery']) {
-      expect(p.learn(p.skills.firstWhere((s) => s.id == id)), true);
-    }
-    expect(p.lightningDamageMultiplier, 1.025);
-    expect(Progress.fromSave(p.toSave())!.toSave(), p.toSave());
-  });
+  test(
+    'original masteries amplify their spell families while Warmth regenerates mana',
+    () {
+      final p = trainedSorceress();
+      final fire = p.weapon, ice = p.createGear(gearById('frostwand'));
+      p.inventory.add(ice);
+      final originalFire = p.basicDamage;
+      p.equip(ice);
+      expect(
+        p.basicDamage,
+        originalFire,
+        reason: 'staff art does not change the selected spell element',
+      );
+      trainSkill(p, 'warmth');
+      expect(p.manaRecovery, closeTo(9 * .7 * 1.3, .000001));
+      trainSkill(p, 'iceBolt');
+      p.selectBasic('iceBolt');
+      final iceDamage = p.basicDamage;
+      trainSkill(p, 'coldMastery');
+      expect(p.coldDamageMultiplier, 1);
+      expect(p.sorceressColdPierce, .2);
+      expect(
+        p.basicDamage,
+        iceDamage,
+        reason:
+            'Cold Mastery is target resistance penetration, not base damage',
+      );
+      p.equip(fire);
+      expect(p.basicDamage, iceDamage);
+      trainSkill(p, 'fireMastery');
+      expect(p.basicDamage, iceDamage);
+      p.selectBasic('firebolt');
+      expect(p.basicDamage, closeTo(originalFire * 1.3, .000001));
+      trainSkill(p, 'chargedBolt');
+      p.selectBasic('chargedBolt');
+      final lightningDamage = p.basicDamage;
+      trainSkill(p, 'lightningMastery');
+      expect(p.lightningDamageMultiplier, 1.5);
+      expect(p.basicDamage, closeTo(lightningDamage * 1.5, .000001));
+      expect(Progress.fromSave(p.toSave())!.toSave(), p.toSave());
+    },
+  );
 }

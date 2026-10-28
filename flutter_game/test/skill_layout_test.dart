@@ -49,6 +49,25 @@ void main() {
           ) {
             await tester.tap(find.byKey(ValueKey('skill-school-tab-$school')));
             await tester.pumpAndSettle();
+            if (hero == HeroClass.mage) {
+              final count = s.progress.skills
+                  .where(
+                    (skill) =>
+                        skillTreeSkillVisible(s.progress, skill) &&
+                        skillTreeSchoolIndex(s.progress, skill.id) == school,
+                  )
+                  .fold<int>(
+                    0,
+                    (sum, skill) => sum + s.progress.rank(skill.id),
+                  );
+              expect(
+                find.descendant(
+                  of: find.byKey(ValueKey('skill-school-ranks-$school')),
+                  matching: find.text('$count'),
+                ),
+                findsOneWidget,
+              );
+            }
             final bounds = {
               for (final skill in s.progress.skills.where(
                 (skill) =>

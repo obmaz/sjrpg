@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/rpg_model.dart';
 import 'package:guardian_new/skill_preview_model.dart';
 import 'package:guardian_new/stage_content.dart';
+import 'support/sorceress_fixture.dart';
 
 void main() {
   for (final (hero, ids) in [
@@ -22,17 +23,7 @@ void main() {
     ),
     (
       HeroClass.mage,
-      [
-        'emberFocus',
-        'cinderReach',
-        'phoenixHeart',
-        'deepFreeze',
-        'frozenAegis',
-        'glacialReserve',
-        'conductivity',
-        'forkedStorm',
-        'arcaneEconomy',
-      ],
+      ['warmth', 'fireMastery', 'lightningMastery', 'coldMastery'],
     ),
   ]) {
     for (final id in ids) {
@@ -43,7 +34,7 @@ void main() {
             ..level = 100
             ..skillPoints = 1000;
           for (final skill in p.skills) {
-            p.ranks[skill.id] = 2;
+            p.ranks[skill.id] = 2.clamp(1, skill.rankLimit);
           }
           p.ranks[id] = 0;
           p.skillPoints = 20;
@@ -54,26 +45,13 @@ void main() {
           expect(p.skillPoints, points - 1);
           final after = previewSkill(p, skill);
           expect(after.map((s) => s.current), before.map((s) => s.next));
-          // Every specialty point adds one victim to its linked area skills.
-          if (['cinderReach', 'forkedStorm'].contains(id)) {
-            expect(after.first.current, before.first.current + 1);
-            expect(p.learn(skill), true);
-            expect(
-              previewSkill(p, skill).first.current,
-              before.first.current + 2,
-            );
-            expect(p.learn(skill), true);
-            final cap = previewSkill(p, skill);
-            expect(cap.first.current, before.first.current + 3);
-          } else {
-            expect(
-              List.generate(
-                after.length,
-                (index) => after[index].current != before[index].current,
-              ).any((changed) => changed),
-              true,
-            );
-          }
+          expect(
+            List.generate(
+              after.length,
+              (index) => after[index].current != before[index].current,
+            ).any((changed) => changed),
+            true,
+          );
           final restored = Progress.fromSave(p.toSave())!;
           expect(restored.rank(id), p.rank(id));
           expect(
@@ -144,92 +122,101 @@ void main() {
       expect(p.throwingCriticalChance, greaterThan(0));
     },
   );
-  test('new mage convergence needs every parent at its stated rank', () {
-    final p = Progress(heroClass: HeroClass.mage)..gainXp(20000);
-    final skill = p.skills.firstWhere((s) => s.id == 'forkedStorm');
-    expect(skill.requires, {'coldMastery': 1, 'lightningMastery': 1});
-    p.ranks['lightningMastery'] = 1;
+  test('Meteor needs both original fire parents at their stated rank', () {
+    final p = trainedSorceress(),
+        skill = p.skills.firstWhere((skill) => skill.id == 'meteor');
+    expect(skill.requires, {'fireball': 1, 'firewall': 1});
+    trainSkill(p, 'fireball');
     final points = p.skillPoints;
     expect(p.learn(skill), false);
     expect(p.skillPoints, points);
-    // An old same-school parent cannot replace the adjacent cold mastery.
-    p.ranks['conductivity'] = 1;
-    expect(p.learn(skill), false);
-    expect(p.skillPoints, points);
-    p.ranks['coldMastery'] = 1;
-    p.ranks.remove('lightningMastery');
-    expect(p.learn(skill), false);
-    expect(p.skillPoints, points);
-    expect(p.rank(skill.id), 0);
-    p.ranks['lightningMastery'] = 1;
+    trainSkill(p, 'firewall');
     expect(p.learn(skill), true);
-    expect(p.skillPoints, points - 1);
-    expect(p.rank(skill.id), 1);
+    expect(p.rank('meteor'), 1);
   });
-  for (final (hero, perkId, affected) in [
-    (HeroClass.mage, 'cinderReach', ['meteor']),
-    (HeroClass.mage, 'forkedStorm', ['chainLightning']),
+  for (final (mastery, spell, multiplier) in [
+    ('fireMastery', 'firebolt', 1.3),
+    ('lightningMastery', 'chargedBolt', 1.5),
   ]) {
     test(
-      '$perkId gives real damage on its first point and bounded area growth',
+      '$mastery increases only its own element and keeps original target geometry',
       () {
-        final p = Progress(heroClass: hero)
-          ..level = 100
-          ..skillPoints = 1000;
-        for (final skill in p.skills) {
-          p.ranks[skill.id] = 2;
-        }
-        p.ranks[perkId] = 0;
-        final perk = p.skills.firstWhere((s) => s.id == perkId);
-        final damage = {
-          for (final s in p.skills.where((s) => !s.passive))
-            s.id: p.skillDamage(s),
-        };
-        final caps = {
-          for (final id in affected)
-            id: p.skillTargetLimit(p.skills.firstWhere((s) => s.id == id)),
-        };
-        final points = p.skillPoints,
-            basic = p.basicDamage,
-            basicTargets = p.basicTargetLimit;
-        expect(p.learn(perk), true);
-        expect(p.basicDamage, basic);
-        expect(p.basicTargetLimit, basicTargets);
+        final p = trainedSorceress();
+        trainSkill(p, spell);
+        trainSkill(p, 'iceBolt');
+        final skill = p.skills.firstWhere((s) => s.id == spell),
+            cold = p.skills.firstWhere((s) => s.id == 'iceBolt');
+        final before = p.skillDamage(skill),
+            coldBefore = p.skillDamage(cold),
+            targets = p.skillTargetLimit(skill);
+        final points = p.skillPoints;
+        trainSkill(p, mastery);
         expect(p.skillPoints, points - 1);
-        for (final skill in p.skills.where((s) => !s.passive)) {
-          expect(
-            p.skillDamage(skill),
-            closeTo(
-              damage[skill.id]! * (affected.contains(skill.id) ? 1.005 : 1),
-              .00001,
-            ),
-          );
-        }
-        for (final id in affected) {
-          expect(
-            p.skillTargetLimit(p.skills.firstWhere((s) => s.id == id)),
-            caps[id]! + 1,
-          );
-        }
+        expect(p.skillDamage(skill), closeTo(before * multiplier, .00001));
+        expect(p.skillDamage(cold), coldBefore);
+        expect(p.skillTargetLimit(skill), targets);
         expect(
-          previewSkill(p, perk)
-              .where((r) => r.label.contains('피해'))
-              .every((r) => r.next > r.current),
-          true,
+          Progress.fromSave(p.toSave())!.skillDamage(skill),
+          p.skillDamage(skill),
+        );
+        trainSkill(p, mastery, 20);
+        final expected = mastery == 'fireMastery' ? 2.63 : 3.78;
+        expect(p.skillDamage(skill), closeTo(before * expected, .00001));
+      },
+    );
+  }
+  test(
+    'Cold Mastery penetrates resistance rather than inflating raw damage or area',
+    () {
+      final p = trainedSorceress();
+      trainSkill(p, 'iceBolt');
+      final ice = p.skills.firstWhere((s) => s.id == 'iceBolt');
+      final damage = p.skillDamage(ice), targets = p.skillTargetLimit(ice);
+      trainSkill(p, 'coldMastery');
+      expect(p.sorceressColdPierce, .20);
+      expect(p.skillDamage(ice), damage);
+      expect(p.skillTargetLimit(ice), targets);
+      trainSkill(p, 'coldMastery', 20);
+      expect(p.sorceressColdPierce, closeTo(1.15, .000001));
+      final restored = Progress.fromSave(p.toSave())!;
+      expect(restored.sorceressColdPierce, p.sorceressColdPierce);
+    },
+  );
+  for (final id in [
+    'meteor',
+    'frozenOrb',
+    'energyShield',
+    'blizzard',
+    'hydra',
+  ]) {
+    test(
+      '$id original twenty-point ceiling preserves previews, points and save/refund identity',
+      () {
+        final p = trainedSorceress();
+        trainSkill(p, id, 20);
+        final skill = p.skills.firstWhere((skill) => skill.id == id),
+            points = p.skillPoints;
+        expect(p.rank(id), 20);
+        expect(skill.rankLimit, 20);
+        expect(p.learn(skill), false);
+        expect(p.skillPoints, points);
+        final preview = previewSkill(p, skill);
+        expect(
+          preview.map((row) => row.next),
+          preview.map((row) => row.current),
         );
         final restored = Progress.fromSave(p.toSave())!;
-        for (final id in affected) {
-          final skill = p.skills.firstWhere((s) => s.id == id);
-          expect(restored.skillDamage(skill), p.skillDamage(skill));
-        }
-        while (p.rank(perkId) < perk.rankLimit) {
-          expect(p.learn(perk), true);
-        }
-        for (final id in affected) {
-          final skill = p.skills.firstWhere((s) => s.id == id);
-          expect(p.skillDamage(skill), closeTo(damage[id]! * 1.025, .00001));
-          expect(p.skillTargetLimit(skill), caps[id]! + perk.rankLimit);
-        }
+        expect(restored.rank(id), 20);
+        expect(
+          previewSkill(restored, skill).map((row) => row.current),
+          preview.map((row) => row.current),
+        );
+        final refund = restored.investedSkillPoints,
+            remaining = restored.skillPoints;
+        restored.awardSkillResetTicket(WorldStage.forest);
+        expect(restored.resetSkills(), true);
+        expect(restored.rank(id), 0);
+        expect(restored.skillPoints, remaining + refund);
       },
     );
   }

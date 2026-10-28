@@ -5,8 +5,10 @@ import 'package:guardian_new/combat_feedback.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/player_afflictions.dart';
 import 'package:guardian_new/rpg_model.dart';
+import 'package:guardian_new/sorceress_combat.dart';
 
 import 'basic_selection_test.dart' show train;
+import 'support/sorceress_fixture.dart';
 import 'support/test_game.dart';
 
 void main() {
@@ -86,16 +88,24 @@ void main() {
     'switching learned mage basics cannot reset an in-progress attack clock',
     () {
       final s = field(HeroClass.mage), p = s.progress;
-      train(p, 'iceShard');
-      train(p, 'sparkBolt');
+      trainSkill(p, 'iceBolt');
+      trainSkill(p, 'chargedBolt');
       final mob = pack(s).first;
       s.hero.slash();
       final hp = mob.life.value, clock = s.hero.attackClock;
-      expect(p.selectBasic('iceShard'), true);
+      final bolts = (s.game! as TestGame).added
+          .whereType<SorceressProjectile>()
+          .length;
+      final mana = p.energy;
+      expect(p.selectBasic('iceBolt'), true);
       s.hero.slash();
       expect(s.hero.attackClock, clock);
       expect(mob.life.value, hp);
-      expect((s.game! as TestGame).added.whereType<ArcaneBolt>(), hasLength(1));
+      expect(
+        (s.game! as TestGame).added.whereType<SorceressProjectile>(),
+        hasLength(bolts),
+      );
+      expect(p.energy, mana);
     },
   );
   test('canonical cleave keeps actual three-target damage splitting', () {
@@ -109,12 +119,17 @@ void main() {
       expect(mob.life.value, closeTo(10000 - power * .7, .00001));
     }
   });
-  for (final mode in ['iceShard', 'sparkBolt']) {
+  for (final mode in ['iceBolt', 'chargedBolt']) {
     test(
-      '$mode fires its selected element with free basic resource and actual capped splash',
+      '$mode selected basic pays D2 mana and resolves individual projectile contacts',
       () {
         final s = field(HeroClass.mage), p = s.progress;
-        train(p, mode, 3);
+        p.level = 100;
+        p.skillPoints = 1000;
+        trainSkill(p, mode, 3);
+        expect(p.selectBasic(mode), true);
+        final skill = p.skills.firstWhere((skill) => skill.id == mode),
+            spec = p.sorceressSpell(skill);
         final mobs = [
           for (final at in [
             const Offset(6100, 4200),
@@ -123,34 +138,36 @@ void main() {
           ])
             s.spawnEnemy('goblin', at)!..life.initial(10000),
         ];
-        final energy = p.energy,
-            slots = p.skillSlots.toList(),
-            damage = p.basicDamage;
+        final energy = p.energy, slots = p.skillSlots.toList();
         s.hero.slash();
-        final bolt = (s.game! as TestGame).added.whereType<ArcaneBolt>().single;
-        expect(bolt.element, mode == 'iceShard' ? 'ice' : 'lightning');
-        expect(bolt.rank, 3);
-        for (var i = 0; i < 30; i++) {
-          bolt.update(.05);
+        final bolts = (s.game! as TestGame).added
+            .whereType<SorceressProjectile>()
+            .toList();
+        expect(bolts, hasLength(spec.projectileCount));
+        expect(
+          bolts.every((bolt) => bolt.spec.id == mode && bolt.spec.rank == 3),
+          true,
+        );
+        expect(p.energy, closeTo(energy - spec.manaCost, .00001));
+        for (var frame = 0; frame < 45; frame++) {
+          for (final bolt in bolts) {
+            bolt.update(1 / 30);
+          }
         }
-        expect(p.energy, energy);
         expect(p.skillSlots, slots);
-        expect(s.hero.cooldowns, isEmpty);
-        if (mode == 'iceShard') {
-          expect(mobs[0].life.value, closeTo(10000 - damage, .00001));
-          expect(mobs[0].slow, 1.5);
-          expect(mobs[1].life.value, 10000);
-          expect(mobs[2].life.value, 10000);
-        } else {
-          expect(mobs[0].life.value, closeTo(10000 - damage * .7, .00001));
-          expect(
-            mobs[1].life.value,
-            closeTo(10000 - damage * .35 * .7, .00001),
-          );
-          expect(
-            mobs[2].life.value,
-            closeTo(10000 - damage * .35 * .7, .00001),
-          );
+        expect(
+          bolts.every((bolt) => bolt.struck.length <= 1),
+          true,
+          reason:
+              'each original bolt has a single contact, not a free chain splash',
+        );
+        final victims = mobs.where((mob) => mob.life.value < 10000).toList();
+        expect(victims, isNotEmpty);
+        expect(victims.length, lessThanOrEqualTo(spec.projectileCount));
+        if (mode == 'iceBolt') {
+          expect(victims, hasLength(1));
+          expect(victims.single.slow, greaterThan(0));
+          expect(mobs.skip(1).every((mob) => mob.life.value == 10000), true);
         }
       },
     );
@@ -175,27 +192,36 @@ void main() {
       },
     );
   }
-  test('freeze cancels only a still-preparing basic projectile', () {
-    final s = field(HeroClass.mage),
-        mob = s.spawnEnemy('goblin', const Offset(6120, 4200))!
-          ..life.initial(10000);
-    final preparing = ArcaneBolt(
-      s,
-      s.hero.body.center,
-      0,
-      100,
-      launchDelay: .13,
-      caster: s.hero,
-    );
-    expect(s.afflictions.apply(PlayerStatus.freeze), true);
-    preparing.update(.05);
-    expect(preparing.resolved, true);
-    expect(mob.life.value, 10000);
-    final launched = ArcaneBolt(s, s.hero.body.center, 0, 100, caster: s.hero);
-    for (var i = 0; i < 20; i++) {
-      launched.update(.05);
-    }
-    expect(launched.resolved, true);
-    expect(mob.life.value, 9900);
-  });
+  test(
+    'shared proxy projectile preparation cancels on freeze while launched bolts remain physical',
+    () {
+      final s = field(HeroClass.mage),
+          mob = s.spawnEnemy('goblin', const Offset(6120, 4200))!
+            ..life.initial(10000);
+      final preparing = ArcaneBolt(
+        s,
+        s.hero.body.center,
+        0,
+        100,
+        launchDelay: .13,
+        caster: s.hero,
+      );
+      expect(s.afflictions.apply(PlayerStatus.freeze), true);
+      preparing.update(.05);
+      expect(preparing.resolved, true);
+      expect(mob.life.value, 10000);
+      final launched = ArcaneBolt(
+        s,
+        s.hero.body.center,
+        0,
+        100,
+        caster: s.hero,
+      );
+      for (var i = 0; i < 20; i++) {
+        launched.update(.05);
+      }
+      expect(launched.resolved, true);
+      expect(mob.life.value, 9900);
+    },
+  );
 }

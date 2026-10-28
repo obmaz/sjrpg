@@ -89,7 +89,7 @@ void main() {
     }
   });
   test(
-    'each point adds a victim to area skills while original precision attacks keep fixed caps',
+    'original class-specific quantities preserve Barbarian per-point growth and Sorceress source caps',
     () {
       for (final (heroClass, ids) in [
         (
@@ -107,7 +107,26 @@ void main() {
         ),
         (
           HeroClass.mage,
-          ['firebolt', 'sparkBolt', 'frostNova', 'meteor', 'chainLightning'],
+          [
+            'firebolt',
+            'iceBolt',
+            'iceBlast',
+            'telekinesis',
+            'thunderStorm',
+            'chargedBolt',
+            'chainLightning',
+            'frostNova',
+            'nova',
+            'staticField',
+            'fireball',
+            'blizzard',
+            'frozenOrb',
+            'hydra',
+            'inferno',
+            'blaze',
+            'firewall',
+            'meteor',
+          ],
         ),
       ]) {
         final p = Progress(heroClass: heroClass);
@@ -117,7 +136,19 @@ void main() {
           expect(old, greaterThan(0), reason: id);
           for (var rank = 2; rank <= skill.rankLimit; rank++) {
             final next = p.skillTargetLimit(skill, atRank: rank);
-            expect(next, old + 1, reason: '$id rank$rank');
+            final expected = heroClass == HeroClass.warrior
+                ? old + 1
+                : switch (id) {
+                    'chargedBolt' => 3 + rank - 1,
+                    'chainLightning' => (26 + rank - 1) ~/ 5,
+                    'firebolt' ||
+                    'iceBolt' ||
+                    'iceBlast' ||
+                    'telekinesis' ||
+                    'thunderStorm' => 1,
+                    _ => CombatBalance.maxActiveEnemies,
+                  };
+            expect(next, expected, reason: '$id rank$rank');
             old = next;
           }
         }

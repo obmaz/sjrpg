@@ -1,17 +1,19 @@
 import 'dart:ui' as ui;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
-import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/combat_feedback.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/ranked_vfx.dart';
+import 'package:guardian_new/sorceress_vfx.dart';
 import 'package:guardian_new/spell_vfx.dart';
+
 import 'support/test_game.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test(
-    'each point changes the rendered effect for the ten major skills',
+    'original rank milestones change the rendered budget for ten major skills',
     () async {
       final art = await GameArt.load(),
           s = Adventure(GameArt())..start(TestGame());
@@ -30,7 +32,7 @@ void main() {
         'whirlwind',
         'warcry',
         'frostNova',
-        'iceArmor',
+        'frozenArmor',
         'frenzy',
         'chainLightning',
         'meteor',
@@ -40,14 +42,21 @@ void main() {
       ]) {
         final hashes = <int>{};
         final brightness = <int>[];
-        for (var rank = 1; rank <= 5; rank++) {
+        for (final rank
+            in ([
+                  'frostNova',
+                  'frozenArmor',
+                  'chainLightning',
+                  'meteor',
+                ].contains(id)
+                ? [1, 5, 10, 15, 20]
+                : [1, 2, 3, 4, 5])) {
           final rec = ui.PictureRecorder(), canvas = ui.Canvas(rec);
           const at = ui.Offset(210, 270);
           switch (id) {
             case 'whirlwind':
               paintSteelWhirlwind(art, canvas, at, .22, rank);
             case 'warcry':
-            case 'frostNova':
               final v = SpellBurst(
                 rendered,
                 id == 'warcry' ? SpellClip.warcry : SpellClip.iceNova,
@@ -57,26 +66,41 @@ void main() {
               )..age = .23;
               canvas.translate(at.dx, at.dy);
               v.render(canvas);
-            case 'iceArmor':
-              paintIceShield(canvas, at, .42, rank: rank);
+            case 'frostNova':
+              SorceressVfx.ground(
+                canvas,
+                id,
+                at,
+                time: .42,
+                progress: .42,
+                radius: 90,
+                rank: rank,
+              );
+            case 'frozenArmor':
+              SorceressVfx.buff(canvas, id, at, time: .42, rank: rank);
             case 'frenzy':
               paintBattleAura(canvas, at, .42, frenzy: true, rank: rank);
             case 'chainLightning':
-              final v = LightningTrace(rendered, [
-                const ui.Offset(90, 250),
-                const ui.Offset(180, 220),
-                const ui.Offset(300, 270),
-              ], rank: rank)..age = .12;
-              v.render(canvas);
-            case 'meteor':
-              final v = MeteorFall(
-                rendered,
-                const ui.Offset(210, 270),
-                at,
-                1,
+              SorceressVfx.beam(
+                canvas,
+                id,
+                [
+                  const ui.Offset(90, 250),
+                  const ui.Offset(180, 220),
+                  const ui.Offset(300, 270),
+                ],
+                time: .12,
                 rank: rank,
-              )..age = .35;
-              v.render(canvas);
+              );
+            case 'meteor':
+              SorceressVfx.impact(
+                canvas,
+                id,
+                at,
+                progress: .35,
+                radius: 100,
+                rank: rank,
+              );
             case 'charge':
               final v = ImpactParticles(
                 AcceptedImpact(ui.Offset.zero, 0, ImpactKind.heavy, rank: rank),
@@ -108,11 +132,15 @@ void main() {
           );
           image.dispose();
         }
-        expect(hashes.length, 5, reason: '$id must change at every point');
+        expect(
+          hashes.length,
+          5,
+          reason: '$id must change across invested rank milestones',
+        );
         expect(
           brightness.last,
           greaterThan(brightness.first),
-          reason: '$id rank5 should be visibly stronger',
+          reason: '$id final rank should have a stronger bounded visual budget',
         );
       }
       for (final rank in [1, 3, 5]) {

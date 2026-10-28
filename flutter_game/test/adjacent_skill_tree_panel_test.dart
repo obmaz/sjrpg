@@ -17,20 +17,22 @@ import 'support/test_game.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   GameArt? artwork;
-  Future<GameArt> art(WidgetTester tester) async =>
-      artwork ??= (await tester.runAsync(() async {
-        final font = FontLoader('Guardian')
-          ..addFont(rootBundle.load('assets-fonts/NanumGothic-Regular.ttf'));
-        final icons = FontLoader('MaterialIcons')
-          ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
-        await Future.wait([font.load(), icons.load()]);
-        final result = await GameArt.loadMenu();
-        await result.ensureStage(
-          WorldStage.forest,
-          heroClass: HeroClass.warrior,
-        );
-        return result;
-      }))!;
+  Future<GameArt> art(WidgetTester tester, HeroClass hero) async {
+    artwork ??= (await tester.runAsync(() async {
+      final font = FontLoader('Guardian')
+        ..addFont(rootBundle.load('assets-fonts/NanumGothic-Regular.ttf'));
+      final icons = FontLoader('MaterialIcons')
+        ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
+      await Future.wait([font.load(), icons.load()]);
+      final result = await GameArt.loadMenu();
+      return result;
+    }))!;
+    await tester.runAsync(
+      () => artwork!.ensureStage(WorldStage.forest, heroClass: hero),
+    );
+    return artwork!;
+  }
+
   tearDownAll(() => artwork?.dispose());
   Future<void> proof(WidgetTester tester, String name) async {
     final directory = Platform.environment['SJRPG_TREE_PROOF_DIR'];
@@ -63,6 +65,7 @@ void main() {
 
   for (final hero in HeroClass.values) {
     for (final size in [
+      const Size(320, 420),
       const Size(320, 640),
       const Size(390, 844),
       const Size(844, 390),
@@ -74,7 +77,7 @@ void main() {
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
-        final s = Adventure(await art(tester), heroClass: hero)
+        final s = Adventure(await art(tester, hero), heroClass: hero)
           ..start(TestGame());
         s.pause();
         s.progress.level = 30;
@@ -115,7 +118,7 @@ void main() {
           );
           await proof(
             tester,
-            '${hero.name}-${size.width.toInt()}-school$school-top',
+            '${hero.name}-${size.width.toInt()}x${size.height.toInt()}-school$school-top',
           );
           final last = geometry.rects.entries.reduce(
             (a, b) => a.value.top > b.value.top ? a : b,
@@ -130,7 +133,7 @@ void main() {
           expect(tester.takeException(), null);
           await proof(
             tester,
-            '${hero.name}-${size.width.toInt()}-school$school-bottom',
+            '${hero.name}-${size.width.toInt()}x${size.height.toInt()}-school$school-bottom',
           );
         }
       });
@@ -138,7 +141,7 @@ void main() {
     testWidgets(
       '$hero complete selected school has no partial neighboring panel',
       (tester) async {
-        final s = Adventure(await art(tester), heroClass: hero)
+        final s = Adventure(await art(tester, hero), heroClass: hero)
           ..start(TestGame());
         s.pause();
         s.progress.level = 30;

@@ -4,6 +4,8 @@ import 'package:guardian_new/audio_bridge.dart';
 import 'package:guardian_new/audio_settings.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/world_model.dart';
+
+import 'support/sorceress_fixture.dart';
 import 'support/test_game.dart';
 
 class FakeAudio implements AudioBridge {
@@ -150,31 +152,40 @@ void main() {
       expect(bridge.sounds.length, count + 1);
     },
   );
-  test('mage basic attacks follow the equipped weapon element', () {
-    final bridge = FakeAudio();
-    var time = Duration.zero;
-    final audio = AudioSettings(bridge: bridge, now: () => time);
-    addTearDown(audio.dispose);
-    final s = inCombatField(
-      Adventure(GameArt(), heroClass: HeroClass.mage, audio: audio),
-    )..start(TestGame());
-    addTearDown(s.dispose);
-    for (final (id, sound) in [
-      ('wand', EffectSound.fire),
-      ('frostwand', EffectSound.ice),
-      ('stormrod', EffectSound.lightning),
-    ]) {
-      final item = s.progress.createGear(gearById(id));
-      s.progress.inventory.add(item);
-      expect(s.progress.equip(item), true);
-      for (var i = 0; i < 20 && s.hero.castLock > 0; i++) {
-        s.hero.update(.05);
+  test(
+    'mage attack sounds follow the canonical selected spell across equipped staves',
+    () {
+      final bridge = FakeAudio();
+      var time = Duration.zero;
+      final audio = AudioSettings(bridge: bridge, now: () => time);
+      addTearDown(audio.dispose);
+      final s = inCombatField(
+        Adventure(GameArt(), heroClass: HeroClass.mage, audio: audio),
+      )..start(TestGame());
+      addTearDown(s.dispose);
+      s.progress.level = 100;
+      s.progress.skillPoints = 1000;
+      trainSkill(s.progress, 'iceBolt');
+      trainSkill(s.progress, 'chargedBolt');
+      for (final (id, spell, sound) in [
+        ('frostwand', 'firebolt', EffectSound.fire),
+        ('wand', 'iceBolt', EffectSound.ice),
+        ('frostwand', 'chargedBolt', EffectSound.lightning),
+        ('stormrod', 'sorceressAttack', EffectSound.slash),
+      ]) {
+        expect(s.progress.selectBasic(spell), true);
+        final item = s.progress.createGear(gearById(id));
+        s.progress.inventory.add(item);
+        expect(s.progress.equip(item), true);
+        for (var i = 0; i < 20 && s.hero.castLock > 0; i++) {
+          s.hero.update(.05);
+        }
+        expect(s.hero.castLock, 0);
+        s.hero.attackClock = 0;
+        s.hero.slash();
+        expect(bridge.sounds.last, sound);
+        time += const Duration(seconds: 1);
       }
-      expect(s.hero.castLock, 0);
-      s.hero.attackClock = 0;
-      s.hero.slash();
-      expect(bridge.sounds.last, sound);
-      time += const Duration(seconds: 1);
-    }
-  });
+    },
+  );
 }

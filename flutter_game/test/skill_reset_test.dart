@@ -30,8 +30,8 @@ void main() {
         p.awardSkillResetTicket(WorldStage.forest);
         p.gainXp(1000);
         final basic = hero == HeroClass.warrior ? 'cleave' : 'firebolt';
-        final starter = hero == HeroClass.warrior ? 'howl' : 'frostNova';
-        final active = hero == HeroClass.warrior ? 'bash' : 'iceArmor';
+        final starter = hero == HeroClass.warrior ? 'howl' : 'firebolt';
+        final active = hero == HeroClass.warrior ? 'bash' : 'frozenArmor';
         final investment = hero == HeroClass.warrior ? 4 : 3;
         for (final id in [
           basic,
@@ -47,7 +47,12 @@ void main() {
         expect(p.resetSkills(), true);
         expect(p.skillPoints, points + investment);
         expect(p.gold, 200);
-        expect(p.ranks, {basic: 1, starter: 1});
+        expect(
+          p.ranks,
+          hero == HeroClass.warrior
+              ? {basic: 1, starter: 1}
+              : {'firebolt': 1, 'sorceressAttack': 1},
+        );
         expect(p.skillSlots, [starter, null, null, null]);
         expect(p.weapon, weapon);
         expect(p.kills, kills);

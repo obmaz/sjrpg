@@ -1,0 +1,205 @@
+{
+    "generator": "image_gen",
+    "source": "docs/art/sorceress-skills-original.png",
+    "generatedSource": "/workspace/generated_images/exec-bdda4611-4598-4fb5-8782-159c229851d0.png",
+    "sourceSha256": "559f50f6e84c8781829bee2fbe07fab4b9f098c97b6ecb0c3b1223fadc57d30b",
+    "sourceSize": [1536, 1024],
+    "runtime": "flutter_game/art/sorceress-skills.webp",
+    "runtimeSize": [1344, 1120],
+    "runtimeSha256": "6605f2fd401d3a3343e729dbcb6c3fdddb22389afa5bbd3c7f84488703a7c37d",
+    "webpQuality": 94,
+    "grid": [6, 5],
+    "tileSize": [224, 224],
+    "packing": "Measured individual source alpha bounds above16, padded1pixel, uniformly fitted within208x208 then centered in224px square; no icon repainting. Source retained unmodified. Runtime alpha bounds measured above16.",
+    "design": "Original painted bronze fantasy plaques; cold/lightning/fire canonical order. No proprietary source icons. Square tree plate and cropped circular battle use share one decode.",
+    "rawRgbaBytes": 6021120,
+    "icons": [
+        {
+            "id": "iceBolt",
+            "effect": 200,
+            "sourceBounds": [50, 8, 259, 203],
+            "runtimeBounds": [9, 16, 215, 208]
+        },
+        {
+            "id": "frozenArmor",
+            "effect": 201,
+            "sourceBounds": [294, 7, 505, 203],
+            "runtimeBounds": [233, 16, 439, 207]
+        },
+        {
+            "id": "frostNova",
+            "effect": 202,
+            "sourceBounds": [537, 7, 747, 203],
+            "runtimeBounds": [457, 16, 663, 208]
+        },
+        {
+            "id": "iceBlast",
+            "effect": 203,
+            "sourceBounds": [782, 7, 994, 203],
+            "runtimeBounds": [681, 17, 887, 207]
+        },
+        {
+            "id": "shiverArmor",
+            "effect": 204,
+            "sourceBounds": [1030, 7, 1241, 203],
+            "runtimeBounds": [905, 16, 1111, 207]
+        },
+        {
+            "id": "glacialSpike",
+            "effect": 205,
+            "sourceBounds": [1277, 7, 1487, 203],
+            "runtimeBounds": [1129, 16, 1335, 208]
+        },
+        {
+            "id": "blizzard",
+            "effect": 206,
+            "sourceBounds": [50, 209, 260, 406],
+            "runtimeBounds": [9, 239, 215, 432]
+        },
+        {
+            "id": "chillingArmor",
+            "effect": 207,
+            "sourceBounds": [294, 208, 505, 406],
+            "runtimeBounds": [233, 239, 439, 432]
+        },
+        {
+            "id": "frozenOrb",
+            "effect": 208,
+            "sourceBounds": [537, 209, 747, 406],
+            "runtimeBounds": [457, 239, 663, 432]
+        },
+        {
+            "id": "coldMastery",
+            "effect": 209,
+            "sourceBounds": [782, 209, 994, 406],
+            "runtimeBounds": [681, 240, 887, 432]
+        },
+        {
+            "id": "chargedBolt",
+            "effect": 210,
+            "sourceBounds": [1030, 209, 1241, 406],
+            "runtimeBounds": [905, 240, 1111, 432]
+        },
+        {
+            "id": "staticField",
+            "effect": 211,
+            "sourceBounds": [1277, 209, 1487, 406],
+            "runtimeBounds": [1129, 239, 1335, 432]
+        },
+        {
+            "id": "telekinesis",
+            "effect": 212,
+            "sourceBounds": [50, 414, 259, 610],
+            "runtimeBounds": [9, 463, 215, 656]
+        },
+        {
+            "id": "nova",
+            "effect": 213,
+            "sourceBounds": [294, 414, 505, 610],
+            "runtimeBounds": [233, 464, 439, 655]
+        },
+        {
+            "id": "lightning",
+            "effect": 214,
+            "sourceBounds": [537, 414, 748, 610],
+            "runtimeBounds": [457, 464, 663, 655]
+        },
+        {
+            "id": "chainLightning",
+            "effect": 215,
+            "sourceBounds": [783, 414, 993, 610],
+            "runtimeBounds": [681, 464, 887, 656]
+        },
+        {
+            "id": "blink",
+            "effect": 216,
+            "sourceBounds": [1031, 414, 1241, 610],
+            "runtimeBounds": [905, 464, 1111, 656]
+        },
+        {
+            "id": "thunderStorm",
+            "effect": 217,
+            "sourceBounds": [1277, 414, 1488, 610],
+            "runtimeBounds": [1129, 464, 1335, 655]
+        },
+        {
+            "id": "energyShield",
+            "effect": 218,
+            "sourceBounds": [49, 618, 258, 807],
+            "runtimeBounds": [9, 691, 215, 877]
+        },
+        {
+            "id": "lightningMastery",
+            "effect": 219,
+            "sourceBounds": [294, 617, 505, 807],
+            "runtimeBounds": [233, 691, 439, 876]
+        },
+        {
+            "id": "firebolt",
+            "effect": 220,
+            "sourceBounds": [538, 618, 746, 807],
+            "runtimeBounds": [457, 690, 663, 877]
+        },
+        {
+            "id": "warmth",
+            "effect": 221,
+            "sourceBounds": [783, 617, 994, 807],
+            "runtimeBounds": [681, 691, 887, 876]
+        },
+        {
+            "id": "inferno",
+            "effect": 222,
+            "sourceBounds": [1031, 617, 1242, 807],
+            "runtimeBounds": [905, 691, 1111, 876]
+        },
+        {
+            "id": "blaze",
+            "effect": 223,
+            "sourceBounds": [1278, 617, 1488, 807],
+            "runtimeBounds": [1129, 691, 1335, 877]
+        },
+        {
+            "id": "fireball",
+            "effect": 224,
+            "sourceBounds": [49, 813, 258, 1006],
+            "runtimeBounds": [9, 912, 215, 1103]
+        },
+        {
+            "id": "firewall",
+            "effect": 225,
+            "sourceBounds": [294, 813, 504, 1006],
+            "runtimeBounds": [233, 912, 439, 1102]
+        },
+        {
+            "id": "enchant",
+            "effect": 226,
+            "sourceBounds": [539, 813, 745, 1006],
+            "runtimeBounds": [458, 912, 662, 1103]
+        },
+        {
+            "id": "meteor",
+            "effect": 227,
+            "sourceBounds": [782, 813, 993, 1006],
+            "runtimeBounds": [681, 914, 887, 1102]
+        },
+        {
+            "id": "hydra",
+            "effect": 228,
+            "sourceBounds": [1032, 813, 1242, 1006],
+            "runtimeBounds": [904, 913, 1111, 1102]
+        },
+        {
+            "id": "fireMastery",
+            "effect": 229,
+            "sourceBounds": [1278, 813, 1488, 1006],
+            "runtimeBounds": [1129, 912, 1335, 1102]
+        }
+    ],
+    "generatedAtUtc": "2026-10-28",
+    "runtimeCompressedBytes": 701268,
+    "loading": "Decoded by ensureStage only for HeroClass.mage; menu and warrior stages omit it. Full GameArt.load compatibility mode includes every atlas. Compressed source prefetch follows existing release-lifetime policy.",
+    "nativeProofs": [
+        "/workspace/artifacts/mobile88/sorceress-icons/tree-all30.png",
+        "/workspace/artifacts/mobile88/sorceress-icons/battle-all30.png"
+    ]
+}

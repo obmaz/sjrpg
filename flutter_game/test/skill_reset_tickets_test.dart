@@ -27,6 +27,11 @@ void main() {
     return s;
   }
 
+  SkillDef refundable(Progress p) => p.skills.firstWhere(
+    (skill) =>
+        skill.id == (p.heroClass == HeroClass.warrior ? 'bash' : 'warmth'),
+  );
+
   void finish(Adventure s, TimePath path) {
     if (s.world.stage == WorldStage.sands) {
       s.timePath = path;
@@ -101,7 +106,7 @@ void main() {
           s.continueExploring();
           s.pause();
           p.gold = 0;
-          expect(s.learn(p.skills.first), isTrue);
+          expect(s.learn(refundable(p)), isTrue);
           final before = p.skillPoints, refund = p.investedSkillPoints;
           expect(s.resetSkills(), isTrue);
           expect(p.skillPoints, before + refund);
@@ -141,7 +146,7 @@ void main() {
     );
 
     test(
-      '$path historical Mage completed scenes receive retroactive tickets exactly once',
+      '$path current Sorceress completed scenes retain earned tickets exactly once',
       () {
         var s = start(heroClass: HeroClass.mage);
         var completed = 0;
@@ -152,21 +157,21 @@ void main() {
           if (!s.world.stage.hasNextStage) break;
           s = start(saved: GameCheckpoint.advance(s)!);
         }
-        final legacy =
+        final current =
             jsonDecode(GameCheckpoint.capture(s)!.encode())
                 as Map<String, dynamic>;
-        (legacy['progress'] as Map).remove('skillResetRewards');
-        final migrated = GameCheckpoint.decode(jsonEncode(legacy))!;
+        expect((current['progress'] as Map)['sorceressTreeVersion'], 1);
+        final loaded = GameCheckpoint.decode(jsonEncode(current))!;
         expect(completed, 5);
-        expect(migrated.progress.skillResetTickets, completed);
-        expect(migrated.progress.claimedResetStages.length, completed);
+        expect(loaded.progress.skillResetTickets, completed);
+        expect(loaded.progress.claimedResetStages.length, completed);
         expect(
-          GameCheckpoint.decode(migrated.encode())!.progress.skillResetTickets,
+          GameCheckpoint.decode(loaded.encode())!.progress.skillResetTickets,
           completed,
         );
-        final revived = start(saved: migrated);
+        final revived = start(saved: loaded);
         revived.progress.gold = 0;
-        revived.learn(revived.progress.skills.first);
+        expect(revived.learn(refundable(revived.progress)), isTrue);
         expect(revived.resetSkills(), isTrue);
         expect(revived.progress.skillResetTickets, 4);
         visitHub(revived);
@@ -186,25 +191,25 @@ void main() {
   }
 
   test(
-    'historical Mage boss-only proof gets an empty ledger before real completion',
+    'current Sorceress boss-only proof keeps an empty ledger before real completion',
     () {
       final s = start(heroClass: HeroClass.mage);
       s.progress.bossDefeated = true;
-      final legacy =
+      final current =
           jsonDecode(GameCheckpoint.capture(s)!.encode())
               as Map<String, dynamic>;
-      (legacy['progress'] as Map).remove('skillResetRewards');
-      final migrated = GameCheckpoint.decode(jsonEncode(legacy))!;
-      expect(migrated.progress.skillResetTickets, 0);
+      expect((current['progress'] as Map)['sorceressTreeVersion'], 1);
+      final loaded = GameCheckpoint.decode(jsonEncode(current))!;
+      expect(loaded.progress.skillResetTickets, 0);
       expect(
-        (migrated.data['progress'] as Map).containsKey('skillResetRewards'),
+        (loaded.data['progress'] as Map).containsKey('skillResetRewards'),
         isTrue,
       );
       expect(
-        GameCheckpoint.decode(migrated.encode())!.progress.skillResetTickets,
+        GameCheckpoint.decode(loaded.encode())!.progress.skillResetTickets,
         0,
       );
-      final restored = start(saved: migrated);
+      final restored = start(saved: loaded);
       restored.cleansedSites.addAll(
         restored.world.sites.map((site) => site.id),
       );
@@ -219,7 +224,7 @@ void main() {
       final p = Progress();
       p.awardSkillResetTicket(WorldStage.forest);
       expect(p.awardSkillResetTicket(WorldStage.forest), isFalse);
-      p.learn(p.skills.first);
+      p.learn(refundable(p));
       expect(p.resetSkills(), isTrue);
       final saved = p.toSave();
       final restored = Progress.fromSave(saved)!;
@@ -274,7 +279,7 @@ void main() {
         final s = start()..pause();
         final p = s.progress..gold = 0;
         p.awardSkillResetTicket(WorldStage.forest);
-        p.learn(p.skills.first);
+        p.learn(refundable(p));
         final semantics = tester.ensureSemantics();
         await tester.pumpWidget(
           MaterialApp(
@@ -299,7 +304,7 @@ void main() {
         expect(p.skillResetTickets, 0);
         expect(p.gold, 0);
         expect(find.bySemanticsLabel('초기화권 0장'), findsOneWidget);
-        expect(s.learn(p.skills.first), isTrue);
+        expect(s.learn(refundable(p)), isTrue);
         await tester.pumpWidget(const SizedBox.shrink());
         await tester.pumpWidget(
           MaterialApp(

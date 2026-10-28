@@ -50,6 +50,13 @@ class _SkillTreeState extends State<SkillTree> {
     final p = session.progress;
     _school ??= focused == null ? 0 : skillTreeSchoolIndex(p, focused!.id);
     final labels = skillTreeSchoolLabels(p);
+    int schoolRanks(int index) => p.skills
+        .where(
+          (skill) =>
+              skillTreeSchoolIndex(p, skill.id) == index &&
+              skillTreeSkillVisible(p, skill),
+        )
+        .fold<int>(0, (sum, skill) => sum + p.rank(skill.id));
     return LayoutBuilder(
       builder: (context, box) {
         final dense = box.maxHeight < 180;
@@ -92,6 +99,7 @@ class _SkillTreeState extends State<SkillTree> {
               key: const ValueKey('skill-school-header'),
               height: 44,
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   for (final (index, label) in labels.indexed)
                     Expanded(
@@ -102,7 +110,7 @@ class _SkillTreeState extends State<SkillTree> {
                         child: Semantics(
                           button: true,
                           selected: _school == index,
-                          label: '$label 계열',
+                          label: '$label 계열 · 투자 ${schoolRanks(index)}점',
                           child: Material(
                             color: _school == index
                                 ? const Color(0xff35554e)
@@ -112,20 +120,66 @@ class _SkillTreeState extends State<SkillTree> {
                               key: ValueKey('skill-school-tab-$index'),
                               borderRadius: BorderRadius.circular(8),
                               onTap: () => changeSchool(index),
-                              child: Center(
-                                child: Text(
-                                  p.heroClass == HeroClass.warrior &&
-                                          box.maxWidth < 310
-                                      ? const ['함성', '숙련', '전투', '특수'][index]
-                                      : label,
-                                  maxLines: 1,
-                                  style: TextStyle(
-                                    color: _school == index
-                                        ? mobileText
-                                        : const Color(0xffa1b2b6),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        box.maxWidth < 310
+                                            ? (p.heroClass == HeroClass.warrior
+                                                  ? const [
+                                                      '함성',
+                                                      '숙련',
+                                                      '전투',
+                                                      '특수',
+                                                    ][index]
+                                                  : const [
+                                                      '냉기',
+                                                      '번개',
+                                                      '화염',
+                                                    ][index])
+                                            : label,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: _school == index
+                                              ? mobileText
+                                              : const Color(0xffa1b2b6),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    if (p.heroClass == HeroClass.mage) ...[
+                                      const SizedBox(width: 4),
+                                      Container(
+                                        key: ValueKey(
+                                          'skill-school-ranks-$index',
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xff16272a),
+                                          borderRadius: BorderRadius.circular(
+                                            5,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '${schoolRanks(index)}',
+                                          style: const TextStyle(
+                                            fontSize: 10,
+                                            color: mobileText,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                               ),
                             ),
@@ -163,11 +217,10 @@ class _SkillTreeState extends State<SkillTree> {
                         height: layout.height,
                         child: Stack(
                           children: [
-                            if (p.heroClass == HeroClass.warrior &&
-                                _school! < 3)
+                            if (_school! < 3)
                               for (
                                 var tier = 0;
-                                tier < warriorSkillTiers.length;
+                                tier < skillTreeTiers.length;
                                 tier++
                               )
                                 Positioned(
@@ -176,7 +229,7 @@ class _SkillTreeState extends State<SkillTree> {
                                       tier *
                                       (layout.nodeHeight + layout.rowGap),
                                   child: Text(
-                                    'Lv. ${warriorSkillTiers[tier]}',
+                                    'Lv. ${skillTreeTiers[tier]}',
                                     style: const TextStyle(
                                       color: Color(0xff9cafaf),
                                       fontSize: 10,
@@ -225,14 +278,7 @@ class _SkillTreeState extends State<SkillTree> {
         (p.level < skill.requiredLevel || !p.prerequisitesMet(skill));
     final canLearn = p.canLearn(skill),
         color = skillColor(skill),
-        core = math.min(
-          dense
-              ? 36.0
-              : p.heroClass == HeroClass.warrior
-              ? 60.0
-              : 52.0,
-          width - 4,
-        );
+        core = math.min(dense ? 36.0 : 60.0, width - 4);
     return Semantics(
       container: true,
       button: true,

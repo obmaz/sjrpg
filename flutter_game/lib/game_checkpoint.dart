@@ -11,6 +11,7 @@ import 'enemy_catalog.dart';
 import 'enemy_difficulty.dart';
 import 'game_art.dart';
 import 'player_afflictions.dart';
+import 'sorceress_defenses.dart';
 import 'travel_journal.dart';
 import 'world_model.dart';
 
@@ -102,13 +103,20 @@ class GameCheckpoint {
         'memoryRewarded': session.memoryRewarded,
         'cooldowns': Map<String, double>.of(session.hero.cooldowns),
         'attackClock': session.hero.attackClock,
+        'castLock': forDefeat ? 0 : session.hero.castLock,
         'dodgeClock': session.hero.dodgeClock,
         'mobilityClock': session.hero.mobilityClock,
         'mountSkillClock': session.mountSkillClock,
         'mountBoostTime': forDefeat ? 0 : session.mountBoostTime,
         'motorRecoilTime': forDefeat ? 0 : session.motorRecoilTime,
         'sprintTime': forDefeat ? 0 : session.hero.sprintTime,
-        'armor': forDefeat ? 0 : session.hero.armorTime,
+        'armor': forDefeat || session.progress.heroClass == HeroClass.mage
+            ? 0
+            : session.hero.armorTime,
+        if (session.progress.heroClass == HeroClass.mage)
+          'sorceress': forDefeat
+              ? {'sharedDelay': 0.0, 'defenses': null}
+              : session.hero.sorceressCombat.captureState(),
         'frenzy': forDefeat ? 0 : session.hero.frenzyTime,
         'afflictions': forDefeat
             ? PlayerAfflictions().toSave()
@@ -184,6 +192,7 @@ class GameCheckpoint {
       'enemies': <dynamic>[],
       'cooldowns': <String, double>{},
       'attackClock': 0,
+      'castLock': 0,
       'dodgeClock': 0,
       'sprintTime': 0,
       'mountBoostTime': 0,
@@ -355,6 +364,8 @@ class GameCheckpoint {
         return null;
       }
       data['attackClock'] ??= 0;
+      data['castLock'] ??= 0;
+      if (!number(data['castLock'], 5)) return null;
       data['dodgeClock'] ??= 0;
       data['mobilityClock'] ??= 0;
       data['sprintTime'] ??= 0;
@@ -388,12 +399,22 @@ class GameCheckpoint {
       }
       for (final entry in (data['cooldowns'] as Map).entries) {
         final skill = progress.skills.firstWhere((s) => s.id == entry.key);
-        final maximum =
-            skill.cooldown * (balance >= 3 ? Progress.skillCooldownScale : 1);
+        final maximum = progress.heroClass == HeroClass.mage
+            ? (progress.sorceressSpell(skill, atRank: 1).timerGroup.isNotEmpty
+                  ? 1.8
+                  : progress.skillCooldown(skill))
+            : skill.cooldown * (balance >= 3 ? Progress.skillCooldownScale : 1);
         if (skill.passive || skill.mobility || !number(entry.value, maximum)) {
           return null;
         }
       }
+      final sorceress = _sorceressState(
+        data['sorceress'],
+        progress,
+        data['cooldowns'] as Map,
+      );
+      if (sorceress == null) return null;
+      data['sorceress'] = sorceress;
       final sites =
           data['sites'] ??
           (progress.bossDefeated
@@ -674,6 +695,61 @@ class GameCheckpoint {
       cleansedSites: (scene['sites'] as List).cast<String>().toSet(),
       requiredSiteIds: sitesForStage(stage).map((site) => site.id),
     );
+  }
+
+  static Map<String, dynamic>? _sorceressState(
+    dynamic raw,
+    Progress progress,
+    Map cooldowns,
+  ) {
+    if (raw != null && raw is! Map) return null;
+    final delay = raw is Map ? raw['sharedDelay'] ?? 0 : 0;
+    if (delay is! num ||
+        !delay.isFinite ||
+        delay < 0 ||
+        delay > 1.8 ||
+        progress.heroClass != HeroClass.mage && delay != 0) {
+      return null;
+    }
+    final defenses = SorceressDefenses.validateState(
+      raw is Map ? raw['defenses'] : null,
+      progress,
+    );
+    if (defenses == null) return null;
+    var shared = delay.toDouble();
+    if (progress.heroClass == HeroClass.mage) {
+      // A shared timer cannot be bypassed by deleting its dedicated field.
+      for (final entry in cooldowns.entries) {
+        final skill = progress.skills.firstWhere((s) => s.id == entry.key);
+        if (progress.sorceressSpell(skill, atRank: 1).timerGroup.isNotEmpty) {
+          shared = math.max(shared, (entry.value as num).toDouble());
+        }
+      }
+    }
+    final blazeTime = raw is Map ? raw['blazeTime'] ?? 0 : 0;
+    final blazeRank = raw is Map ? raw['blazeRank'] ?? 0 : 0;
+    if (blazeTime is! num ||
+        !blazeTime.isFinite ||
+        blazeTime < 0 ||
+        blazeRank is! int ||
+        blazeRank < 0 ||
+        blazeRank > progress.rank('blaze')) {
+      return null;
+    }
+    if (blazeTime > 0) {
+      if (progress.heroClass != HeroClass.mage || blazeRank == 0) return null;
+      final blaze = progress.skills.firstWhere((s) => s.id == 'blaze');
+      if (blazeTime >
+          progress.sorceressSpell(blaze, atRank: blazeRank).duration + .0001) {
+        return null;
+      }
+    }
+    return {
+      'sharedDelay': shared,
+      'defenses': defenses,
+      'blazeTime': blazeTime.toDouble(),
+      'blazeRank': blazeTime > 0 ? blazeRank : 0,
+    };
   }
 
   static const _sceneKeys = {
@@ -961,6 +1037,7 @@ class GameCheckpoint {
           .toDouble();
     }
     session.hero.attackClock = (data['attackClock'] as num).toDouble();
+    session.hero.castLock = (data['castLock'] as num).toDouble();
     session.hero.dodgeClock = (data['dodgeClock'] as num).toDouble();
     session.mountSkillClock = (data['mountSkillClock'] as num).toDouble();
     if (session.riding != null) {
@@ -969,6 +1046,11 @@ class GameCheckpoint {
     }
     session.hero.armorTime = (data['armor'] as num).toDouble();
     session.hero.frenzyTime = (data['frenzy'] as num).toDouble();
+    if (session.progress.heroClass == HeroClass.mage) {
+      session.hero.sorceressCombat.restoreState(
+        Map<String, dynamic>.from(data['sorceress'] as Map),
+      );
+    }
     for (final raw in data['loot'] as List) {
       final ground = raw as Map;
       var at = Offset(

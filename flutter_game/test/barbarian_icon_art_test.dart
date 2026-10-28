@@ -19,7 +19,7 @@ void main() {
         List.generate(30, (i) => 100 + i),
       );
       expect(BarbarianIconArt.ids.map(skillIcon).toSet().length, 30);
-      expect(skillEffect('meteor'), 4);
+      expect(skillEffect('meteor'), 227);
       expect(skillEffect('shadowAssault'), 36);
       expect(BarbarianIconArt.effectFor('battleSprint'), null);
       expect(BarbarianIconArt.containsEffect(130), false);

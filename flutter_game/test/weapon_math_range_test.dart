@@ -6,12 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/area_damage.dart';
-import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/combat_balance.dart';
 import 'package:guardian_new/equipment_panel.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/player_afflictions.dart';
 import 'package:guardian_new/rpg_model.dart';
+import 'package:guardian_new/sorceress_combat.dart';
 
 import 'support/test_game.dart';
 
@@ -53,8 +53,18 @@ void main() {
       expect(p.basicDps, closeTo(6.075, 1e-10));
       final mage = Progress(heroClass: HeroClass.mage);
       expect(mage.weapon.attack, 14);
-      expect(mage.basicDamage, closeTo(5.355, 1e-10));
-      expect(mage.basicDps, closeTo(4.59, 1e-10));
+      expect(
+        mage.basicDamage,
+        closeTo(
+          4.5 * Progress.playerDamageScale * CombatBalance.skillDamageScale,
+          1e-10,
+        ),
+      );
+      expect(mage.attackInterval, .52);
+      expect(
+        mage.basicDps,
+        closeTo(mage.basicDamage / .52 * CombatBalance.gameSpeed, 1e-10),
+      );
     },
   );
 
@@ -69,16 +79,17 @@ void main() {
           train(p, 'swordMastery', 5);
           train(p, 'frenzy', 5);
         } else {
-          train(p, 'arcaneMastery', 5);
+          train(p, 'fireMastery', 5);
         }
         for (final basic in p.skills.where((skill) => skill.basic)) {
-          train(p, basic.id, 5);
+          train(p, basic.id, math.min(5, basic.rankLimit));
           expect(p.selectBasic(basic.id), true);
           for (final state in ['normal', 'frenzy', 'slow', 'both']) {
             final frenzy =
                 hero == HeroClass.warrior &&
                 (state == 'frenzy' || state == 'both');
             final slowed = state == 'slow' || state == 'both';
+            p.energy = p.maxEnergy;
             s.afflictions.clear();
             if (slowed) s.afflictions.apply(PlayerStatus.attackSlow);
             s.hero
@@ -93,7 +104,10 @@ void main() {
               attackTempo: s.afflictions.attackTempo,
             );
             final expected =
-                math.max(.4, p.attackInterval / tempo) / (slowed ? .72 : 1);
+                (p.isSorceressSpell(basic)
+                    ? p.skillMotionTime(basic)
+                    : math.max(.4, p.attackInterval / tempo)) /
+                (slowed ? .72 : 1);
             s.hero.slash();
             expect(
               stats.interval,
@@ -222,30 +236,46 @@ void main() {
     },
   );
 
-  test('each mage weapon supplies its actual projectile travel limit', () {
-    final ranges = <double>{};
-    for (final def in gearCatalog.where(
-      (g) => g.slot == GearSlot.weapon && g.heroClass == HeroClass.mage,
-    )) {
-      final s = field(HeroClass.mage, def.id), game = s.game! as TestGame;
-      s.hero.slash();
-      final bolt = game.added.whereType<ArcaneBolt>().single;
-      expect(bolt.maxRange, def.range);
-      expect(bolt.remaining, closeTo(def.range / ArcaneBolt.speed, 1e-10));
-      ranges.add(def.range);
-    }
-    expect(ranges.length, 6);
-    final s = field(HeroClass.mage), from = s.hero.body.center;
-    final bolt = ArcaneBolt(s, from, 0, 1, maxRange: 180);
-    for (var i = 0; i < 20 && !bolt.resolved; i++) {
-      bolt.update(.05);
-    }
-    expect(bolt.resolved, true);
-    expect(
-      (ui.Offset(bolt.position.x, bolt.position.y) - from).distance,
-      closeTo(180, .01),
-    );
-  });
+  test(
+    'Sorceress spell range is intrinsic and remains independent of equipped staff statistics',
+    () {
+      final ranges = <double>{}, attacks = <double>{};
+      for (final def in gearCatalog.where(
+        (g) => g.slot == GearSlot.weapon && g.heroClass == HeroClass.mage,
+      )) {
+        final s = field(HeroClass.mage, def.id), game = s.game! as TestGame;
+        s.hero.slash();
+        final bolt = game.added.whereType<SorceressProjectile>().single;
+        expect(
+          bolt.range,
+          s.progress.sorceressSpell(s.progress.basicSkill).range,
+        );
+        expect(bolt.range, 600);
+        ranges.add(bolt.range);
+        attacks.add(s.progress.weapon.attack);
+      }
+      expect(ranges, {600});
+      expect(attacks.length, greaterThan(1));
+      final s = field(HeroClass.mage), from = s.hero.body.center;
+      final bolt = SorceressProjectile(
+        s.hero.sorceressCombat,
+        s.progress.sorceressSpell(s.progress.basicSkill),
+        from,
+        bearing: 0,
+        damageAmount: 1,
+        rangeOverride: 180,
+      );
+      for (var i = 0; i < 20 && !bolt.finished; i++) {
+        bolt.update(.05);
+      }
+      expect(bolt.finished, true);
+      expect(bolt.travelled, closeTo(180, .01));
+      expect(
+        (ui.Offset(bolt.position.x, bolt.position.y) - from).distance,
+        closeTo(180, .01),
+      );
+    },
+  );
 
   test(
     'area growth is sublinear and preserves the requested 100/80/70 values',

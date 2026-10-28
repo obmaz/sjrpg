@@ -29,21 +29,39 @@ void main() {
   test(
     'default basic cadence and damage reflect the deliberate combat reduction',
     () {
-      // Measured at the previous production source: same starting weapon/rank.
-      for (final (hero, oldDps, oldInterval) in [
-        (HeroClass.warrior, 33.088235294117645, .34),
-        (HeroClass.mage, 25.0, .42),
-      ]) {
-        final p = Progress(heroClass: hero);
-        expect(p.basicDps / oldDps, closeTo(.1836, .000001));
-        expect(p.attackInterval / oldInterval, closeTo(1 / .30, .000001));
-        expect(p.basicDps / oldDps, greaterThan(.15));
-        final basic = hero == HeroClass.warrior ? 'cleave' : 'firebolt';
-        final first = p.basicTempo;
-        p.ranks[basic] = 5;
-        expect(p.basicTempo / first, closeTo(1.06, .000001));
-        expect(p.basicTempo / first, lessThan(1.32));
-      }
+      // The physical starting weapon keeps the established global reduction.
+      final warrior = Progress();
+      expect(warrior.basicDps / 33.088235294117645, closeTo(.1836, .000001));
+      expect(warrior.attackInterval / .34, closeTo(1 / .30, .000001));
+      final tempo = warrior.basicTempo;
+      warrior.ranks['cleave'] = 5;
+      expect(warrior.basicTempo / tempo, closeTo(1.06, .000001));
+      expect(warrior.basicTempo / tempo, lessThan(1.32));
+      // Sorceress uses a paid 13/25-second spell animation, not staff swing cadence.
+      final mage = Progress(heroClass: HeroClass.mage),
+          first = mage.sorceressSpell(mage.basicSkill);
+      expect(mage.selectedBasic, 'firebolt');
+      expect(first.manaCost, greaterThan(0));
+      expect(mage.actualBasicInterval(), 13 / 25);
+      expect(
+        mage.basicDps,
+        closeTo(first.meanDamage / CombatBalance.realSeconds(13 / 25), .000001),
+      );
+      mage.ranks['firebolt'] = 20;
+      expect(
+        mage.actualBasicInterval(),
+        13 / 25,
+        reason:
+            'hard spell points increase source damage without shortening the cast animation',
+      );
+      expect(mage.basicDamage, greaterThan(first.meanDamage));
+      final s = field(hero: HeroClass.mage);
+      s.hero.slash();
+      expect(s.hero.castLock, 13 / 25);
+      final mana = s.progress.energy, clock = s.hero.attackClock;
+      s.hero.slash();
+      expect(s.progress.energy, mana);
+      expect(s.hero.attackClock, clock);
     },
   );
 

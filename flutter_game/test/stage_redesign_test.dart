@@ -1,11 +1,16 @@
 import 'dart:convert';
 import 'dart:ui';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/area_damage.dart';
 import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
+import 'package:guardian_new/sorceress_combat.dart';
 import 'package:guardian_new/world_model.dart';
+
+import 'support/sorceress_fixture.dart';
 import 'support/test_game.dart';
 
 void main() {
@@ -105,10 +110,11 @@ void main() {
       expect(mobs.where((m) => m.life.value < 500).length, 5);
     },
   );
-  test('offensive skills and specialties gain a target for every point', () {
-    for (final hero in HeroClass.values) {
-      final p = Progress(heroClass: hero);
-      for (final skill in p.skills.where(
+  test(
+    'warrior area ranks retain one target per point while mage uses original spell geometry',
+    () {
+      final warrior = Progress();
+      for (final skill in warrior.skills.where(
         (s) => const {
           'leap',
           'howl',
@@ -116,39 +122,43 @@ void main() {
           'battleCry',
           'grimWard',
           'whirlwind',
-          'frostNova',
-          'chainLightning',
-          'meteor',
         }.contains(s.id),
       )) {
         expect(
           [
             for (var rank = 1; rank <= 5; rank++)
-              p.skillTargetLimit(skill, atRank: rank),
+              warrior.skillTargetLimit(skill, atRank: rank),
           ],
           [3, 4, 5, 6, 7],
           reason: skill.id,
         );
       }
-      final specialties = hero == HeroClass.warrior
-          ? <String, List<String>>{}
-          : {
-              'cinderReach': ['meteor'],
-              'forkedStorm': ['chainLightning'],
-            };
-      for (final entry in specialties.entries) {
-        for (final id in entry.value) {
-          final skill = p.skills.firstWhere((skill) => skill.id == id);
-          final caps = <int>[];
-          for (var rank = 0; rank <= 5; rank++) {
-            p.ranks[entry.key] = rank;
-            caps.add(p.skillTargetLimit(skill, atRank: 5));
-          }
-          expect(caps, [7, 8, 9, 10, 11, 12], reason: '$id ${entry.key}');
-        }
-      }
-    }
-  });
+      final mage = Progress(heroClass: HeroClass.mage);
+      final ice = mage.skills.firstWhere((skill) => skill.id == 'iceBolt');
+      expect(
+        [
+          for (var rank = 1; rank <= 20; rank++)
+            mage.skillTargetLimit(ice, atRank: rank),
+        ],
+        everyElement(1),
+        reason: 'Ice Bolt stays a single physical missile',
+      );
+      final charged = mage.skills.firstWhere(
+        (skill) => skill.id == 'chargedBolt',
+      );
+      expect(
+        mage.sorceressSpell(charged, atRank: 20).projectileCount,
+        greaterThan(mage.sorceressSpell(charged, atRank: 1).projectileCount),
+      );
+      final meteor = mage.skills.firstWhere((skill) => skill.id == 'meteor');
+      expect(mage.sorceressSpell(meteor, atRank: 1).castDelay, 1.2);
+      expect(SorceressMeteor.fallTime, 2.4);
+      expect(
+        mage.sorceressSpell(meteor, atRank: 20).radius,
+        mage.sorceressSpell(meteor, atRank: 1).radius,
+      );
+    },
+  );
   test('whirlwind cannot select additional victims across later pulses', () {
     final s = session(), mobs = crowd(s);
     final spin = WhirlwindPulse(s, s.hero, 5);
@@ -167,23 +177,41 @@ void main() {
       true,
     );
   });
-  test('explosive basic projectiles count the direct victim once', () {
-    final s = session(hero: HeroClass.mage), mobs = crowd(s);
-    final bolt = ArcaneBolt(
-      s,
-      s.hero.body.center,
-      0,
-      12,
-      explosive: true,
-      targetLimit: 3,
-    );
-    for (var i = 0; i < 10; i++) {
-      bolt.update(.05);
-    }
-    expect(bolt.resolved, true);
-    expect(mobs.where((m) => m.life.value < 500).length, 3);
-    expect(mobs.first.life.value, closeTo(500 - 12 * .7, .000001));
-  });
+  test(
+    'a paid Fire Ball counts its direct contact once in the original area explosion',
+    () {
+      final s = session(hero: HeroClass.mage), mobs = crowd(s), p = s.progress;
+      p.level = 100;
+      p.skillPoints = 1000;
+      trainSkill(p, 'fireball');
+      p.selectSkill('fireball');
+      p.energy = p.maxEnergy;
+      final mana = p.energy, skill = p.activeSkill;
+      s.hero.skill();
+      final bolt = (s.game! as TestGame).added
+          .whereType<SorceressProjectile>()
+          .single;
+      for (var i = 0; i < 40; i++) {
+        bolt.update(.05);
+      }
+      expect(bolt.finished, true);
+      expect(p.energy, mana - p.skillCost(skill));
+      final victims = mobs.where((mob) => mob.life.value < 500).toList();
+      expect(victims.length, greaterThan(1));
+      expect(
+        mobs.first.life.value,
+        closeTo(
+          500 - bolt.damageAmount * enemyGroupDamageScale(victims.length),
+          .000001,
+        ),
+      );
+      expect(
+        bolt.struck,
+        hasLength(1),
+        reason: 'the direct hit is not applied again after the radial blast',
+      );
+    },
+  );
   test('normal, elite and boss life use the current reduced baseline', () {
     final s = session();
     expect(

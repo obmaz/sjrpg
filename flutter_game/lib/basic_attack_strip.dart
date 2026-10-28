@@ -96,10 +96,12 @@ class BasicAttackStrip extends StatelessWidget {
                         child: SizedBox.square(
                           dimension: 22,
                           child: CustomPaint(
-                            painter: EffectIconPainter(
-                              session.art,
-                              skillEffect(skill.id),
-                            ),
+                            painter: skill.id == 'sorceressAttack'
+                                ? GearGlyph(p.weapon, session.art)
+                                : EffectIconPainter(
+                                    session.art,
+                                    skillEffect(skill.id),
+                                  ),
                           ),
                         ),
                       ),

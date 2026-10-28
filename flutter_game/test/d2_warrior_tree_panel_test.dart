@@ -45,53 +45,62 @@ void main() {
       expect(tester.takeException(), null);
     },
   );
-  testWidgets('mage tabs preserve prerequisites from another school', (
-    tester,
-  ) async {
-    final s = Adventure(GameArt(), heroClass: HeroClass.mage)
-      ..start(TestGame());
-    s.pause();
-    addTearDown(s.dispose);
-    final p = s.progress;
-    p.level = 20;
-    p.skillPoints = 40;
-    for (final id in ['firebolt', 'warmth', 'emberFocus']) {
-      expect(p.learn(p.skills.firstWhere((skill) => skill.id == id)), true);
-    }
-    await tester.pumpWidget(
-      MaterialApp(
-        home: SkillsPanel(session: s, onClose: () {}),
-      ),
-    );
-    await tester.pumpAndSettle();
-    final meteor = find.byKey(const ValueKey('skill-node-meteor'));
-    await Scrollable.ensureVisible(tester.element(meteor));
-    await tester.pumpAndSettle();
-    await tester.tap(meteor);
-    await tester.pumpAndSettle();
-    expect(find.bySemanticsLabel('유성 낙하 선행 필요'), findsOneWidget);
-    expect(p.rank('meteor'), 0);
-    await tester.tap(find.byKey(const ValueKey('skill-school-tab-1')));
-    await tester.pumpAndSettle();
-    final armor = find.byKey(const ValueKey('skill-node-iceArmor'));
-    await Scrollable.ensureVisible(tester.element(armor));
-    await tester.pumpAndSettle();
-    await tester.tap(armor);
-    await tester.pumpAndSettle();
-    await tester.tap(find.bySemanticsLabel('얼음 갑옷 습득 · 1P'));
-    await tester.pumpAndSettle();
-    expect(p.rank('iceArmor'), 1);
-    await tester.tap(find.byKey(const ValueKey('skill-school-tab-0')));
-    await tester.pumpAndSettle();
-    await Scrollable.ensureVisible(tester.element(meteor));
-    await tester.pumpAndSettle();
-    await tester.tap(meteor);
-    await tester.pumpAndSettle();
-    await tester.tap(find.bySemanticsLabel('유성 낙하 습득 · 1P'));
-    await tester.pumpAndSettle();
-    expect(p.rank('meteor'), 1);
-    expect(tester.takeException(), null);
-  });
+  testWidgets(
+    'mage tab navigation preserves both original Meteor prerequisites',
+    (tester) async {
+      final session = Adventure(GameArt(), heroClass: HeroClass.mage)
+        ..start(TestGame());
+      session.pause();
+      addTearDown(session.dispose);
+      final p = session.progress
+        ..level = 40
+        ..skillPoints = 40;
+      for (final id in ['fireball', 'inferno', 'blaze']) {
+        expect(p.learn(p.skills.firstWhere((s) => s.id == id)), isTrue);
+      }
+      final meteorSkill = p.skills.firstWhere((s) => s.id == 'meteor');
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SkillsPanel(session: session, onClose: () {}),
+        ),
+      );
+      await tester.pumpAndSettle();
+      Future<void> selectNode(int school, String id) async {
+        await tester.tap(find.byKey(ValueKey('skill-school-tab-$school')));
+        await tester.pumpAndSettle();
+        final target = find.byKey(ValueKey('skill-node-$id'));
+        await Scrollable.ensureVisible(tester.element(target), alignment: .5);
+        await tester.pumpAndSettle();
+        await tester.tap(target);
+        await tester.pumpAndSettle();
+      }
+
+      await selectNode(2, 'meteor');
+      expect(
+        find.bySemanticsLabel('${meteorSkill.name} 선행 필요'),
+        findsOneWidget,
+      );
+      expect(p.rank('meteor'), 0);
+      await selectNode(0, 'frozenArmor');
+      final armor = p.skills.firstWhere((s) => s.id == 'frozenArmor');
+      await tester.tap(find.bySemanticsLabel('${armor.name} 습득 · 1P'));
+      await tester.pumpAndSettle();
+      await selectNode(2, 'meteor');
+      expect(
+        find.bySemanticsLabel('${meteorSkill.name} 선행 필요'),
+        findsOneWidget,
+      );
+      await selectNode(2, 'firewall');
+      final wall = p.skills.firstWhere((s) => s.id == 'firewall');
+      await tester.tap(find.bySemanticsLabel('${wall.name} 습득 · 1P'));
+      await tester.pumpAndSettle();
+      await selectNode(2, 'meteor');
+      await tester.tap(find.bySemanticsLabel('${meteorSkill.name} 습득 · 1P'));
+      await tester.pumpAndSettle();
+      expect(p.rank('meteor'), 1);
+      expect(tester.takeException(), isNull);
+    },
+  );
   for (final size in [const Size(320, 640), const Size(844, 390)]) {
     testWidgets(
       'warrior school tabs replace horizontal panning and preserve the header at $size',

@@ -11,6 +11,7 @@ import 'field_palettes.dart';
 import 'game_art.dart';
 import 'health_widgets.dart';
 import 'resource_meter.dart';
+import 'sorceress_icon_art.dart';
 import 'world_model.dart';
 
 const gold = Color(0xffd5b772),
@@ -873,6 +874,16 @@ class EffectIconPainter extends CustomPainter {
   }
 
   void _paint(Canvas canvas, Size size) {
+    if (SorceressIconArt.containsEffect(index)) {
+      SorceressIconArt.draw(
+        canvas,
+        art.images[SorceressIconArt.imageKey],
+        index - SorceressIconArt.firstEffect,
+        Offset.zero & size,
+        framed: framed,
+      );
+      return;
+    }
     if (BarbarianIconArt.containsEffect(index)) {
       BarbarianIconArt.draw(
         canvas,
@@ -1444,8 +1455,11 @@ class _ActionButtonState extends State<ActionButton> {
     if (effect != null &&
         (effect == 36 ||
             BarbarianIconArt.containsEffect(effect) ||
+            SorceressIconArt.containsEffect(effect) ||
             widget.art.images.containsKey(
-              BarbarianIconArt.containsEffect(effect)
+              SorceressIconArt.containsEffect(effect)
+                  ? SorceressIconArt.imageKey
+                  : BarbarianIconArt.containsEffect(effect)
                   ? BarbarianIconArt.imageKey
                   : effect >= 34
                   ? 'physical-icons'

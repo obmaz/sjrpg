@@ -43,6 +43,7 @@ import 'ranked_vfx.dart';
 import 'shadow_assault_effect.dart';
 import 'shop_content.dart';
 import 'skill_aim.dart';
+import 'sorceress_combat.dart';
 import 'spell_vfx.dart';
 import 'travel_journal.dart';
 import 'weapon_profiles.dart';
@@ -1214,6 +1215,7 @@ class Adventure extends ChangeNotifier {
     barbarianUtilities.clear();
     hero.barbarianCombat.cancelActions();
     hero.barbarianCombat.clearBuffs();
+    hero.sorceressCombat.clear();
     syncBarbarianBuffs();
     releaseInput();
     hero.armorTime = hero.frenzyTime = hero.spin = hero.comboGuardTime = 0;
@@ -1305,6 +1307,7 @@ class Adventure extends ChangeNotifier {
   void releaseInput() {
     hero.aim = null;
     hero.queuedCast = null;
+    hero.sorceressCombat.endChannel();
     hero.resetCombo();
     attackSources.clear();
     hero.onJoystickChangeDirectional(
@@ -1828,6 +1831,32 @@ class Adventure extends ChangeNotifier {
     bool periodic = false,
     bool dispel = false,
   }) {
+    if (combatAllowed &&
+        !periodic &&
+        origin != null &&
+        progress.heroClass == HeroClass.mage &&
+        !world.sanctuary.blocksRay(origin, hero.body.center)) {
+      final attempts =
+          mobs
+              .where(
+                (enemy) =>
+                    !enemy.isDead &&
+                    !enemy.isRemoving &&
+                    !enemy.usesBolt &&
+                    (enemy.body.center - origin).distance < 90 &&
+                    distanceToTargetBody(hero.body.center, enemy.body) <=
+                        enemy.meleeReach + 24,
+              )
+              .toList()
+            ..sort(
+              (a, b) => (a.body.center - origin).distanceSquared.compareTo(
+                (b.body.center - origin).distanceSquared,
+              ),
+            );
+      if (attempts.isNotEmpty) {
+        hero.sorceressCombat.defenses.onMeleeAttempt(attempts.first);
+      }
+    }
     if (!combatAllowed ||
         hero.revivalProtection > 0 ||
         !periodic && hero.invulnerable > 0 ||
@@ -1841,18 +1870,41 @@ class Adventure extends ChangeNotifier {
         status == PlayerStatus.blind) {
       damage *= 1 - progress.barbarianStatusResistance;
     }
+    if (progress.heroClass == HeroClass.mage) {
+      damage = hero.sorceressCombat.defenses.modifyIncomingDamage(
+        damage,
+        periodic: periodic,
+      );
+    }
     damage = progress.mitigate(damage, protection: hero.protection);
     if (hero.comboGuardTime > 0) {
       damage *= 1 - WeaponGiftInfo.comboGuardReduction;
     }
     if (progress.hasGift(WeaponGift.guardian)) damage *= .92;
-    if (!periodic &&
-        hero.armorTime > 0 &&
-        progress.heroClass == HeroClass.mage) {
-      for (final mob in mobs.where(
-        (m) => (m.body.center - hero.body.center).distance < 85,
-      )) {
-        mob.slow = math.max(mob.slow, 2);
+    if (!periodic && progress.heroClass == HeroClass.mage && origin != null) {
+      final attackers =
+          mobs
+              .where(
+                (enemy) =>
+                    !enemy.isDead &&
+                    !enemy.isRemoving &&
+                    (enemy.body.center - origin).distance < 90,
+              )
+              .toList()
+            ..sort(
+              (a, b) => (a.body.center - origin).distanceSquared.compareTo(
+                (b.body.center - origin).distanceSquared,
+              ),
+            );
+      if (attackers.isNotEmpty) {
+        final attacker = attackers.first;
+        hero.sorceressCombat.defenses.onHit(
+          attacker,
+          melee:
+              !attacker.usesBolt &&
+              distanceToTargetBody(hero.body.center, attacker.body) <=
+                  attacker.meleeReach + 24,
+        );
       }
     }
     if (!periodic && progress.heroClass == HeroClass.warrior) {
@@ -1877,9 +1929,12 @@ class Adventure extends ChangeNotifier {
             barbarianUtilities.lifeMultiplier > 1 ||
             hero.armorTime > 0 ||
             hero.frenzyTime > 0 ||
-            hero.comboGuardTime > 0)) {
+            hero.comboGuardTime > 0 ||
+            progress.heroClass == HeroClass.mage &&
+                hero.sorceressCombat.defenses.hasBuffs)) {
       hero.armorTime = hero.frenzyTime = hero.comboGuardTime = 0;
       hero.barbarianCombat.dispelBuffs();
+      hero.sorceressCombat.defenses.clear();
       barbarianUtilities.dispelBuffs();
       syncBarbarianBuffs();
       bubble(
@@ -1903,6 +1958,7 @@ class Adventure extends ChangeNotifier {
       const ui.Color(0xffff8a72),
     );
     if (progress.hp <= 0) {
+      hero.sorceressCombat.clear();
       deathLoss ??= DeathLoss.apply(progress, random);
       defeated = true;
       combatFeedback.cancel();
@@ -2135,6 +2191,7 @@ class Adventure extends ChangeNotifier {
   void dispose() {
     combatFeedback.dispose();
     barbarianUtilities.clear();
+    hero.sorceressCombat.clear();
     disposed = true;
     for (final text in texts) {
       text.releaseText();
@@ -2182,6 +2239,7 @@ class Guardian extends Player with WithCollision {
 
   SkillAim? aim;
   late final barbarianCombat = BarbarianCombat(this);
+  late final sorceressCombat = SorceressCombat(this);
   ({int slot, String id, SkillAim? aim})? queuedCast;
   void beginAim(int slot) {
     if (session.afflictions.frozen) return;
@@ -2198,9 +2256,14 @@ class Guardian extends Player with WithCollision {
         session.afflictions.movementBlocked) {
       return;
     }
+    if (session.progress.heroClass == HeroClass.mage &&
+        !sorceressCombat.canActivate(def)) {
+      return;
+    }
     if (!_hasSkillResource(def) || !session.ensureOnFoot()) return;
     queuedCast = null;
     aim = SkillAim(slot, def.id, bearing);
+    if (def.id == 'inferno') skill(slot: slot);
   }
 
   void moveAim(ui.Offset delta, {int? ownerSlot}) {
@@ -2216,6 +2279,10 @@ class Guardian extends Player with WithCollision {
     if (ownerSlot != null && aim?.slot != ownerSlot) return;
     final current = aim;
     aim = null;
+    if (current?.id == 'inferno') {
+      sorceressCombat.endChannel();
+      return;
+    }
     if (current == null ||
         cancelled ||
         current.cancelled ||
@@ -2260,6 +2327,7 @@ class Guardian extends Player with WithCollision {
     if (status == PlayerStatus.freeze) {
       aim = null;
       queuedCast = null;
+      sorceressCombat.endChannel();
       heavyWindup = swing = 0;
       heavySkill = null;
     }
@@ -2305,6 +2373,23 @@ class Guardian extends Player with WithCollision {
 
   bool useMobility() {
     final p = session.progress, def = session.progress.mobilitySkill;
+    if (p.heroClass == HeroClass.mage) {
+      if (!session.active ||
+          session.afflictions.movementBlocked ||
+          p.rank(def.id) <= 0 ||
+          castLock > 0 ||
+          dashing > 0 ||
+          !sorceressCombat.canActivate(def) ||
+          !_hasSkillResource(def) ||
+          !session.ensureOnFoot()) {
+        return false;
+      }
+      p.energy -= p.skillCost(def);
+      sorceressCombat.activate(def);
+      session.refresh();
+      return true;
+    }
+
     if (!session.active ||
         session.afflictions.movementBlocked ||
         p.level < def.requiredLevel ||
@@ -2553,6 +2638,9 @@ class Guardian extends Player with WithCollision {
     }
     if (dt <= 0) return;
     barbarianCombat.update(dt);
+    if (session.progress.heroClass == HeroClass.mage) {
+      sorceressCombat.update(dt);
+    }
     if (aim != null) aim!.heldFor += dt;
     final ordinarySpeed = frenzyTime > 0
         ? session.progress.frenzyMoveSpeed
@@ -2823,6 +2911,9 @@ class Guardian extends Player with WithCollision {
   }
 
   void slash({bool automatic = false}) {
+    if (session.progress.heroClass == HeroClass.mage) {
+      sorceressCombat.endChannel();
+    }
     resetCombo();
     if (_basicAvailable()) _performSlash();
   }
@@ -3065,8 +3156,16 @@ class Guardian extends Player with WithCollision {
 
   void _performSlash() {
     final p = session.progress;
-    final basic = p.basicSkill;
-    final propRange = p.weapon.base.range;
+    var basic = p.basicSkill;
+    if (p.heroClass == HeroClass.mage &&
+        p.isSorceressSpell(basic) &&
+        p.energy < p.skillCost(basic)) {
+      basic = p.skills.firstWhere((skill) => skill.id == 'sorceressAttack');
+    }
+    final staff = basic.id == 'sorceressAttack';
+    final propRange = p.heroClass == HeroClass.mage
+        ? p.skillRange(basic)
+        : p.weapon.base.range;
     final props = session.attackableChests(body.center, propRange);
     if (!session.active ||
         session.afflictions.frozen ||
@@ -3085,8 +3184,7 @@ class Guardian extends Player with WithCollision {
             .where(
               (e) =>
                   session.canHitEnemy(e) &&
-                  distanceToTargetBody(body.center, e.body) <
-                      p.weapon.base.range &&
+                  distanceToTargetBody(body.center, e.body) < propRange &&
                   session.world.clearLine(
                     body.center,
                     e.body.center,
@@ -3122,26 +3220,32 @@ class Guardian extends Player with WithCollision {
         ? strikes % 2
         : strikes % 3;
     session.combo = (session.combo + 1) % 3;
-    attackClock = p.actualBasicInterval(
-      frenzyTempo: frenzyTime > 0 ? p.frenzyAttackTempo : 1,
-      attackTempo: session.afflictions.attackTempo,
-    );
+    attackClock = staff
+        ? math.max(
+                CombatBalance.minimumStrikeInterval,
+                p.attackIntervalFor(basic),
+              ) /
+              session.afflictions.attackTempo
+        : p.actualBasicInterval(
+            frenzyTempo: frenzyTime > 0 ? p.frenzyAttackTempo : 1,
+            attackTempo: session.afflictions.attackTempo,
+          );
     // Slow weapons and attack debuffs must still reach the next combo strike.
     // Once this scheduled attack becomes ready, only a short idle margin remains.
     comboGrace = math.max(1.2, attackClock + .25);
     swingDuration = (strikePose == 2 ? .32 : .26) / effectiveBasicTempo;
     swing = swingDuration;
-    if (p.heroClass == HeroClass.mage) {
-      castLock = .26 / effectiveBasicTempo;
-      swingDuration = swing = .32 / effectiveBasicTempo;
+    if (p.heroClass == HeroClass.mage && !staff) {
+      castLock = p.skillMotionTime(basic) / session.afflictions.attackTempo;
+      swingDuration = swing = castLock;
     }
     if (candidates.isEmpty &&
         props.isEmpty &&
-        session.strikeEncounterStone(p.weapon.base.range)) {
+        session.strikeEncounterStone(propRange)) {
       return;
     }
     session.audio.play(
-      p.heroClass == HeroClass.warrior
+      (p.heroClass == HeroClass.warrior || staff)
           ? (p.weapon.base.style == 'hammer'
                 ? EffectSound.impact
                 : EffectSound.slash)
@@ -3151,23 +3255,12 @@ class Guardian extends Player with WithCollision {
               _ => EffectSound.fire,
             },
     );
-    if (p.heroClass == HeroClass.mage) {
-      session.game?.add(
-        ArcaneBolt(
-          session,
-          body.center,
-          angle,
-          p.basicDamage,
-          element: p.basicElement,
-          launchDelay: .13 / effectiveBasicTempo,
-          rank: p.rank(basic.id),
-          caster: this,
-          maxRange: p.weapon.base.range,
-          explosive: p.basicTargetLimit > 1,
-          targetLimit: p.basicTargetLimit,
-          propOnly: session.sheltered,
-        ),
-      );
+    if (p.heroClass == HeroClass.mage && !staff) {
+      if (p.energy >= p.skillCost(basic) &&
+          sorceressCombat.canActivate(basic)) {
+        p.energy -= p.skillCost(basic);
+        sorceressCombat.activate(basic, propOnly: session.sheltered);
+      }
       return;
     }
 
@@ -3181,7 +3274,7 @@ class Guardian extends Player with WithCollision {
           body.center,
           angle,
           p.basicDamage * (critical ? 2 : 1),
-          range: p.weapon.base.range,
+          range: propRange,
           rank: p.rank(basic.id),
           critical: critical,
           profile: p.weapon.base.throwingProfile,
@@ -3200,8 +3293,7 @@ class Guardian extends Player with WithCollision {
             math.sin(math.atan2(d.dy, d.dx) - angle),
             math.cos(math.atan2(d.dy, d.dx) - angle),
           );
-          return distanceToTargetBody(body.center, mob.body) <
-                  p.weapon.base.range &&
+          return distanceToTargetBody(body.center, mob.body) < propRange &&
               diff.abs() < p.weapon.base.meleeHalfAngle &&
               session.world.clearLine(
                 body.center,
@@ -3222,7 +3314,7 @@ class Guardian extends Player with WithCollision {
         ),
       for (final index in session.attackableChests(
         body.center,
-        p.weapon.base.range,
+        propRange,
         bearing: angle,
         halfAngle: p.weapon.base.meleeHalfAngle,
       ))
@@ -3233,7 +3325,7 @@ class Guardian extends Player with WithCollision {
               .distanceSquared,
         ),
     ]..sort((a, b) => a.distance.compareTo(b.distance));
-    final selected = targets.take(p.basicTargetLimit).toList();
+    final selected = targets.take(staff ? 1 : p.basicTargetLimit).toList();
     final multiplier = enemyGroupDamageScale(
       selected
           .where((t) => t.mob != null && session.canHitEnemy(t.mob!))
@@ -3242,7 +3334,16 @@ class Guardian extends Player with WithCollision {
     final critical =
         p.weaponCriticalChance > 0 &&
         session.random.nextDouble() < p.weaponCriticalChance;
-    final damage = p.basicDamage * multiplier * (critical ? 2 : 1);
+    final damage =
+        (p.skillDamage(basic) +
+            (staff
+                ? sorceressCombat.defenses.enchantMinDamage +
+                      session.random.nextDouble() *
+                          (sorceressCombat.defenses.enchantMaxDamage -
+                              sorceressCombat.defenses.enchantMinDamage)
+                : 0)) *
+        multiplier *
+        (critical ? 2 : 1);
     for (final target in selected) {
       final mob = target.mob;
       if (mob == null) {
@@ -3285,7 +3386,7 @@ class Guardian extends Player with WithCollision {
   }
 
   void skill({bool secondary = false, int? slot, SkillAim? manualAim}) {
-    if (!session.combatAllowed ||
+    if (!session.active ||
         session.afflictions.frozen ||
         dashing > 0 ||
         physicalAction) {
@@ -3296,6 +3397,11 @@ class Guardian extends Player with WithCollision {
     final def = p.skillAt(slotIndex);
     if (def == null ||
         def.id == 'charge' && session.afflictions.movementBlocked) {
+      return;
+    }
+    if (!session.combatAllowed &&
+        !(p.heroClass == HeroClass.mage &&
+            SorceressCombat.defensiveIds.contains(def.id))) {
       return;
     }
     if (def.id == 'shadowAssault' && shadowAssaultActive) {
@@ -3317,7 +3423,14 @@ class Guardian extends Player with WithCollision {
         !barbarianCombat.canActivate(def, aim: manualAim)) {
       return;
     }
+    if (p.heroClass == HeroClass.mage &&
+        !sorceressCombat.canActivate(def, aim: manualAim)) {
+      return;
+    }
     if (!_hasSkillResource(def) || !session.ensureOnFoot()) return;
+    if (p.heroClass == HeroClass.mage && def.id != 'inferno') {
+      sorceressCombat.endChannel();
+    }
     if (castLock > 0) {
       queuedCast = (slot: slotIndex, id: def.id, aim: manualAim);
       return;
@@ -3344,6 +3457,11 @@ class Guardian extends Player with WithCollision {
     session.device.pulse(FeedbackKind.skill);
     p.energy -= p.skillCost(def);
     cooldowns[def.id] = p.skillCooldown(def);
+    if (p.heroClass == HeroClass.mage) {
+      sorceressCombat.activate(def, aim: manualAim);
+      session.refresh();
+      return;
+    }
     if (BarbarianUtilities.skillIds.contains(def.id)) {
       session.barbarianUtilities.activate(def);
       session.syncBarbarianBuffs();
@@ -3521,90 +3639,6 @@ class Guardian extends Player with WithCollision {
             bearing: angle,
           ),
         );
-      case 'frostNova':
-        final radius = 155.0 + rank * 15;
-        areaStrike(
-          session,
-          body.center,
-          radius,
-          p.skillDamage(def),
-          stun: 2,
-          impactKind: ImpactKind.ice,
-          slow: p.novaSlowDuration,
-          maxTargets: p.skillTargetLimit(def),
-          impactRank: rank,
-        );
-        session.game?.add(
-          SpellBurst(
-            session,
-            SpellClip.iceNova,
-            body.center,
-            radius: radius,
-            rank: rank,
-            tempo: p.skillTempo(def),
-          ),
-        );
-      case 'iceArmor':
-        armorTime = p.iceArmorDuration;
-        session.game?.add(
-          SpellBurst(
-            session,
-            SpellClip.iceNova,
-            body.center,
-            radius: 70,
-            rank: rank,
-            tempo: p.skillTempo(def),
-          ),
-        );
-      case 'chainLightning':
-        chainLightning(
-          session,
-          body.center,
-          p.skillDamage(def),
-          p.skillTargetLimit(def),
-          rank: rank,
-        );
-      case 'meteor':
-        var target =
-            body.center + ui.Offset(math.cos(bearing), math.sin(bearing)) * 190;
-        final near =
-            session.mobs
-                .where(
-                  (m) =>
-                      !m.isDead &&
-                      (m.body.center - body.center).distance < 450 &&
-                      session.world.clearLine(
-                        body.center,
-                        m.body.center,
-                        const ui.Size(3, 3),
-                      ),
-                )
-                .toList()
-              ..sort(
-                (a, b) => (a.body.center - body.center).distance.compareTo(
-                  (b.body.center - body.center).distance,
-                ),
-              );
-        if (manualAim != null) {
-          target = meteorAimImpact(manualAim);
-        } else if (near.isNotEmpty) {
-          target = near.first.body.center;
-        }
-        attackBearing = math.atan2(
-          target.dy - body.center.dy,
-          target.dx - body.center.dx,
-        );
-        session.game?.add(
-          MeteorFall(
-            session,
-            body.center,
-            target,
-            p.skillDamage(def),
-            targetLimit: p.skillTargetLimit(def),
-            rank: rank,
-            tempo: p.skillTempo(def),
-          ),
-        );
     }
     session.refresh();
   }
@@ -3619,6 +3653,7 @@ class Guardian extends Player with WithCollision {
     }
     aim = null;
     queuedCast = null;
+    sorceressCombat.endChannel();
     resetCombo();
     session.audio.play(EffectSound.dodge);
     session.device.pulse(FeedbackKind.dodge);
@@ -3924,13 +3959,8 @@ class Guardian extends Player with WithCollision {
         rank: session.progress.rank(frenzyTime > 0 ? 'frenzy' : 'warcry'),
       );
     }
-    if (armorTime > 0 && session.progress.heroClass == HeroClass.mage) {
-      paintIceShield(
-        canvas,
-        center - const ui.Offset(0, 22),
-        session.elapsed,
-        rank: session.progress.rank('iceArmor'),
-      );
+    if (session.progress.heroClass == HeroClass.mage) {
+      sorceressCombat.defenses.drawBuff(canvas, center);
     }
     if (armorTime > 0 || frenzyTime > 0) {
       canvas.drawOval(
@@ -4011,6 +4041,9 @@ class Guardian extends Player with WithCollision {
             ? bearing
             : currentAim.angle,
       );
+    } else if (currentAim != null &&
+        session.progress.heroClass == HeroClass.mage) {
+      sorceressCombat.paintAim(canvas, currentAim);
     } else if (currentAim != null) {
       final origin = body.center - position.toOffset();
       final target =

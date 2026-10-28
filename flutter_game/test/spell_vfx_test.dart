@@ -8,9 +8,11 @@ import 'package:guardian_new/barbarian_vfx.dart';
 import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/rpg_model.dart';
+import 'package:guardian_new/sorceress_combat.dart';
 import 'package:guardian_new/spell_vfx.dart';
 import 'package:guardian_new/stage_content.dart';
 
+import 'support/sorceress_fixture.dart';
 import 'support/test_game.dart';
 
 void main() {
@@ -132,7 +134,7 @@ void main() {
     expect(s.cameraImpact.length, lessThan(1.8));
   });
   test(
-    'frost nova keeps immediate damage and control while playing ice frames',
+    'original Frost Nova applies immediate cold damage and chill while its visual remains non-damaging',
     () {
       final s = Adventure(GameArt(), heroClass: HeroClass.mage),
           game = TestGame();
@@ -140,14 +142,50 @@ void main() {
       addTearDown(s.dispose);
       s.mobs.clear();
       s.hero.position.setValues(6000, 4200);
-      final mob = s.spawnEnemy('skeleton', const ui.Offset(6100, 4200))!;
-      final life = mob.life.value;
+      s.progress.level = 100;
+      s.progress.skillPoints = 1000;
+      trainSkill(s.progress, 'frostNova');
+      expect(s.progress.selectSkill('frostNova'), true);
+      final skill = s.progress.activeSkill,
+          spec = s.progress.sorceressSpell(skill);
+      final mob = s.spawnEnemy('skeleton', const ui.Offset(6100, 4200))!
+        ..life.initial(1000);
+      final life = mob.life.value, mana = s.progress.energy;
       s.hero.skill();
       expect(mob.life.value, lessThan(life));
-      expect(mob.stun, 2);
-      expect(mob.slow, s.progress.novaSlowDuration);
-      expect(game.added.whereType<SpellBurst>().single.clip, SpellClip.iceNova);
-      expect(s.hero.skillClock, greaterThan(0));
+      expect(
+        mob.stun,
+        0,
+        reason:
+            'Frost Nova chills; freezing belongs to Ice Blast and Glacial Spike',
+      );
+      expect(mob.slow, spec.chillDuration);
+      expect(s.progress.energy, mana - spec.manaCost);
+      final effect = game.added
+          .whereType<SorceressFlash>()
+          .where(
+            (effect) =>
+                effect.spec.id == 'frostNova' && effect.mode == 'ground',
+          )
+          .single;
+      expect(effect.radius, spec.radius);
+      expect(s.hero.castLock, greaterThan(0));
+      expect(
+        s.hero.skillClock,
+        0,
+        reason:
+            'an untimed original spell keeps its casting lock without an invented cooldown',
+      );
+      final after = mob.life.value;
+      for (var frame = 0; frame < 20; frame++) {
+        effect.update(.05);
+      }
+      expect(effect.finished, true);
+      expect(
+        mob.life.value,
+        after,
+        reason: 'the animated ring cannot apply a second combat hit',
+      );
     },
   );
   test(

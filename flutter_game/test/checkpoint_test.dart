@@ -4,6 +4,8 @@ import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/world_model.dart';
+
+import 'support/sorceress_fixture.dart';
 import 'support/test_game.dart';
 
 void main() {
@@ -18,9 +20,10 @@ void main() {
       s.syncLife();
       s.progress.hp = 37;
       s.progress.gold = 345;
-      s.progress.learn(
-        mageSkills.firstWhere((skill) => skill.id == 'iceArmor'),
-      );
+      s.progress.level = 30;
+      s.progress.skillPoints = 100;
+      trainSkill(s.progress, 'frozenArmor');
+      trainSkill(s.progress, 'meteor');
       final gear = s.progress.createGear(
         gearById('frostwand'),
         rarity: Rarity.rare,
@@ -30,11 +33,24 @@ void main() {
       );
       s.progress.collect(gear);
       s.progress.equip(gear);
-      s.hero.cooldowns['frostNova'] = 3;
-      s.hero.cooldowns['iceArmor'] = s.progress.skillCooldown(
-        mageSkills.firstWhere((skill) => skill.id == 'iceArmor'),
+      const sharedDelay = .4;
+      s.hero.sorceressCombat.sharedDelay = sharedDelay;
+      for (final skill in s.progress.skills) {
+        if (s.progress.sorceressSpell(skill).timerGroup.isNotEmpty) {
+          s.hero.cooldowns[skill.id] = sharedDelay;
+        }
+      }
+      final armor = s.progress.skills.firstWhere(
+        (skill) => skill.id == 'frozenArmor',
       );
-      s.hero.armorTime = s.progress.iceArmorDuration;
+      expect(
+        s.hero.sorceressCombat.defenses.activate(
+          'frozenArmor',
+          s.progress.sorceressSpell(armor),
+        ),
+        isTrue,
+      );
+      final armorTime = s.hero.sorceressCombat.defenses.armorTime;
       for (final memory in stageMemories) {
         expect(s.breakChest(memory.chest), isTrue);
       }
@@ -51,8 +67,10 @@ void main() {
       expect(restored.openedChests, s.openedChests);
       expect(restored.memoryRewarded, true);
       expect(restored.elapsed, 68.25);
-      expect(restored.hero.cooldowns['frostNova'], 3);
-      expect(restored.hero.armorTime, s.progress.iceArmorDuration);
+      expect(restored.hero.cooldowns['meteor'], sharedDelay);
+      expect(restored.hero.sorceressCombat.sharedDelay, sharedDelay);
+      expect(restored.hero.sorceressCombat.defenses.armorId, 'frozenArmor');
+      expect(restored.hero.sorceressCombat.defenses.armorTime, armorTime);
       expect(s.loot, isNotEmpty);
       expect(
         restored.loot.map((loot) => loot.item.toSave()).toList(),
