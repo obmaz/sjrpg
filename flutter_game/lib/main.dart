@@ -1038,12 +1038,17 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                                   ),
                                 )
                               : p.usingFallbackWeapon
-                              ? Icon(
-                                  p.heroClass == HeroClass.warrior
-                                      ? Icons.front_hand_rounded
-                                      : Icons.auto_fix_high_rounded,
-                                  color: cream,
-                                  size: attack * .46,
+                              ? CustomPaint(
+                                  painter: p.heroClass == HeroClass.warrior
+                                      ? ActionIllustrationPainter(
+                                          widget.art,
+                                          fist: true,
+                                        )
+                                      : EffectIconPainter(
+                                          widget.art,
+                                          skillEffect('firebolt'),
+                                          framed: false,
+                                        ),
                                 )
                               : CustomPaint(
                                   painter: GearGlyph(p.weapon, widget.art),

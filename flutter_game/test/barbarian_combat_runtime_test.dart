@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/barbarian_combat.dart';
+import 'package:guardian_new/combat_balance.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/rpg_model.dart';
 
@@ -66,6 +67,42 @@ void main() {
       expect(s.hero.cooldowns[id], greaterThan(0));
     });
   }
+
+  test(
+    'bash damage follows the equipped weapon and impacts only the hit target',
+    () {
+      final s = field('bash'), first = enemy(s);
+      final second = enemy(s, distance: 115);
+      final p = s.progress, bash = skill(s);
+      final before = p.skillDamage(bash);
+      p.equipped[GearSlot.weapon] = Gear(9001, p.weapon.base, power: 100);
+      final after = p.skillDamage(bash);
+      expect(after, greaterThan(before));
+      expect(
+        after / p.swordDamage,
+        closeTo(1.5 * CombatBalance.skillDamageScale, 1e-9),
+      );
+      s.hero.skill();
+      expect(first.life.value, closeTo(100000 - after, .01));
+      expect(second.life.value, 100000);
+      final effects = (s.game as TestGame).added
+          .whereType<BarbarianCombatVisual>();
+      final impact = effects.singleWhere((e) => e.contactImpact);
+      expect(Offset(impact.position.x, impact.position.y), first.body.center);
+      expect(impact.radius, 24);
+    },
+  );
+
+  test(
+    'a missed bash has a weapon motion without a false contact explosion',
+    () {
+      final s = field('bash');
+      s.hero.skill();
+      final effects = (s.game as TestGame).added
+          .whereType<BarbarianCombatVisual>();
+      expect(effects.where((e) => e.contactImpact), isEmpty);
+    },
+  );
 
   test('double swing pays once and performs its second physical hit later', () {
     final s = field('doubleSwing'), m = enemy(s);

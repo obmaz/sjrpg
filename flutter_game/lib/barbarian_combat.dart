@@ -246,6 +246,19 @@ class BarbarianCombat {
       impactRank: progress.effectiveRank(skill.id),
       critical: critical,
     )) {
+      if (skill.id == 'bash') {
+        session.game?.add(
+          BarbarianCombatVisual(
+            session,
+            BarbarianVfxKind.bash,
+            enemy.body.center,
+            bearing: _bearing,
+            rank: progress.effectiveRank(skill.id),
+            radius: 24,
+            contactImpact: true,
+          ),
+        );
+      }
       if (skill.id == 'stun') {
         enemy.applyStun(progress.barbarianEffectDuration(skill.id));
       }
@@ -412,6 +425,7 @@ class BarbarianCombatVisual extends GameComponent with EffectVisibility {
     required this.rank,
     this.radius = 72,
     this.axeImpact = false,
+    this.contactImpact = false,
   }) : art = BarbarianVfxArt(kind),
        revision = session.buildRevision {
     position = Vector2(at.dx, at.dy);
@@ -420,7 +434,7 @@ class BarbarianCombatVisual extends GameComponent with EffectVisibility {
   final BarbarianVfxArt art;
   final int rank, revision;
   final double bearing, radius;
-  final bool axeImpact;
+  final bool axeImpact, contactImpact;
   double remaining = .32;
   @override
   ui.Rect get effectBounds => art.bounds(position.toOffset(), radius);
@@ -440,6 +454,16 @@ class BarbarianCombatVisual extends GameComponent with EffectVisibility {
   void render(ui.Canvas canvas) {
     super.render(canvas);
     if (remaining > 0) {
+      if (contactImpact) {
+        IllustratedCombatArt.contact(
+          session.art.effects,
+          canvas,
+          ui.Offset.zero,
+          1 - remaining / .32,
+          radius: radius,
+        );
+        return;
+      }
       if (axeImpact) {
         art.paintAxeImpact(
           canvas,
@@ -466,13 +490,9 @@ class BarbarianCombatVisual extends GameComponent with EffectVisibility {
         radius: radius,
         rank: rank,
       );
-      if (const {
-        BarbarianVfxKind.bash,
-        BarbarianVfxKind.doubleSwing,
-        BarbarianVfxKind.concentrate,
-        BarbarianVfxKind.berserk,
-        BarbarianVfxKind.frenzy,
-      }.contains(art.kind)) {
+      // A broad magical crescent only belongs to Berserk. Physical single
+      // strikes keep their directional authored blade and local hit spark.
+      if (art.kind == BarbarianVfxKind.berserk) {
         IllustratedCombatArt.sequence(
           session.art.effects,
           canvas,

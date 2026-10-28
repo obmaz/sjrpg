@@ -10,7 +10,6 @@ import 'combat_balance.dart';
 import 'field_palettes.dart';
 import 'game_art.dart';
 import 'health_widgets.dart';
-import 'illustrated_combat_art.dart';
 import 'resource_meter.dart';
 import 'sorceress_icon_art.dart';
 import 'world_model.dart';
@@ -45,7 +44,6 @@ class GameHud extends StatelessWidget {
       17.0,
       ResourceMeter.minimumHeight(MediaQuery.textScalerOf(context)),
     );
-    final statTop = 42 + resourceHeight + 6;
     return SizedBox(
       height: 130,
       child: Stack(
@@ -111,34 +109,6 @@ class GameHud extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: 104,
-            top: statTop,
-            right: landscape ? math.max(104.0, width - 320) : statusRight,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: _stat(
-                    Icons.monetization_on_outlined,
-                    _compactGold(p.gold),
-                    gold,
-                    semanticValue: '${p.gold}',
-                  ),
-                ),
-                if (width >= 360) ...[
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: _stat(
-                      Icons.wb_sunny_outlined,
-                      gameTime(session.elapsed),
-                      const Color(0xffdfce94),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          Positioned(
             right: 10,
             top: 7,
             child: SizedBox(
@@ -181,50 +151,41 @@ class GameHud extends StatelessWidget {
       ),
     );
   }
-
-  Widget _stat(
-    IconData icon,
-    String value,
-    Color color, {
-    String? semanticValue,
-  }) => Semantics(
-    label:
-        '${icon == Icons.monetization_on_outlined ? '골드' : '모험 시간'} ${semanticValue ?? value}',
-    excludeSemantics: true,
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-      decoration: BoxDecoration(
-        color: ink.withValues(alpha: .82),
-        borderRadius: BorderRadius.circular(7),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 3),
-          Flexible(
-            child: Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 13,
-                color: color,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
 }
 
-String _compactGold(int value) => value >= 100000000
-    ? '${value ~/ 100000000}억'
-    : value >= 10000
-    ? '${value ~/ 10000}만'
-    : '$value';
+/// Shared generated medallions use the same circular face as learned skills.
+class ActionIllustrationPainter extends CustomPainter {
+  ActionIllustrationPainter(this.art, {this.fist = false});
+  static const imageKey = 'combat-actions';
+  final GameArt art;
+  final bool fist;
+  static bool draw(GameArt art, Canvas canvas, Size size, {bool fist = false}) {
+    final image = art.images[imageKey];
+    if (image == null) return false;
+    canvas.save();
+    canvas.clipPath(Path()..addOval(Offset.zero & size));
+    final drawn = art.effects.draw(
+      canvas,
+      imageKey,
+      fist ? 1 : 0,
+      Offset.zero & size,
+      columns: 2,
+      rows: 1,
+      inset: image.height * .12,
+    );
+    canvas.restore();
+    return drawn;
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    draw(art, canvas, size, fist: fist);
+  }
+
+  @override
+  bool shouldRepaint(covariant ActionIllustrationPainter old) =>
+      old.art != art || old.fist != fist;
+}
 
 class _PortraitPainter extends CustomPainter {
   _PortraitPainter(this.art, this.heroClass);
@@ -875,8 +836,7 @@ class EffectIconPainter extends CustomPainter {
   }
 
   void _paint(Canvas canvas, Size size) {
-    if (index == 34 &&
-        IllustratedCombatArt.sprint(art.effects, canvas, Offset.zero & size)) {
+    if (index == 34 && ActionIllustrationPainter.draw(art, canvas, size)) {
       return;
     }
     if (SorceressIconArt.containsEffect(index)) {
@@ -1460,7 +1420,9 @@ class _ActionButtonState extends State<ActionButton> {
     if (effect != null &&
         (effect == 36 ||
             (effect == 34 &&
-                widget.art.images.containsKey(IllustratedCombatArt.imageKey)) ||
+                widget.art.images.containsKey(
+                  ActionIllustrationPainter.imageKey,
+                )) ||
             BarbarianIconArt.containsEffect(effect) ||
             SorceressIconArt.containsEffect(effect) ||
             widget.art.images.containsKey(
@@ -1477,7 +1439,7 @@ class _ActionButtonState extends State<ActionButton> {
                   : 'combat-fx',
             ))) {
       return CustomPaint(
-        size: Size.square(widget.size * .80),
+        size: Size.square(widget.size * .86),
         painter: EffectIconPainter(widget.art, effect, framed: false),
       );
     }

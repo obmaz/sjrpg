@@ -1,0 +1,13 @@
+{
+    "generator": "image_gen",
+    "packer": "tools/prepare-combat-actions.py",
+    "original": "docs/art/combat-actions-original.png",
+    "originalSha256": "d1c8cc8846d4924dd45b3b0b16a51f7bb040e0e0f3436de46529842b1ae9bed6",
+    "runtime": "flutter_game/art/combat-actions.webp",
+    "runtimeSha256": "07a95e31f4a934e03977ec46367005dc3275909c03129b8a68843d50d004e07e",
+    "size": [512, 256],
+    "decodedRGBABytes": 524288,
+    "columns": 2,
+    "rows": 1,
+    "icons": ["armoredSprintBoot", "armoredUnarmedFist"]
+}

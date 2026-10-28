@@ -7,9 +7,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_ui.dart';
+import 'package:guardian_new/health_widgets.dart';
 import 'package:guardian_new/nearby_controls.dart';
 import 'package:guardian_new/panel_controls.dart';
 import 'package:guardian_new/quest_guide.dart';
+import 'package:guardian_new/resource_meter.dart';
 import 'package:guardian_new/rpg_widgets.dart';
 
 import 'support/test_game.dart';
@@ -30,6 +32,23 @@ void main() {
       child: child!,
     ),
     home: Scaffold(body: Center(child: child)),
+  );
+
+  testWidgets(
+    'battle HUD hides elapsed time and gold without hiding resources',
+    (tester) async {
+      final session = Adventure(GameArt())..start(TestGame());
+      addTearDown(session.dispose);
+      session.progress.gold = 123456;
+      session.elapsed = 79;
+      await tester.pumpWidget(scaled(GameHud(session)));
+      expect(find.byIcon(Icons.monetization_on_outlined), findsNothing);
+      expect(find.byIcon(Icons.wb_sunny_outlined), findsNothing);
+      expect(find.text('1:19'), findsNothing);
+      expect(find.text('123456'), findsNothing);
+      expect(find.byType(HealthMeter), findsWidgets);
+      expect(find.byType(ResourceMeter), findsWidgets);
+    },
   );
 
   testWidgets('attack captions preserve font scaling inside their touch area', (

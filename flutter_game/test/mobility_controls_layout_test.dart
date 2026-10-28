@@ -77,6 +77,22 @@ void main() {
                     as Guardian)
                 .session;
         expect(s.ready, true);
+        if (type == HeroClass.warrior) {
+          s.progress.equipped.remove(GearSlot.weapon);
+          s.refresh();
+          await tester.pump();
+          expect(s.progress.usingFallbackWeapon, true);
+          expect(
+            find.byWidgetPredicate(
+              (w) =>
+                  w is CustomPaint &&
+                  w.painter is ActionIllustrationPainter &&
+                  (w.painter! as ActionIllustrationPainter).fist,
+            ),
+            findsOneWidget,
+          );
+          expect(find.byIcon(Icons.front_hand_rounded), findsNothing);
+        }
         final mobility = s.progress.mobilitySkill;
         Finder button() => find.byWidgetPredicate(
           (w) => w is ActionButton && w.semanticLabel == mobility.name,

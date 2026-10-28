@@ -79,6 +79,7 @@ class GameArt {
     'skill-perks',
     'physical-icons',
     'combat-illustrations',
+    'combat-actions',
     'fx-meteor',
     'fx-ice-nova',
     'fx-steel-whirlwind',

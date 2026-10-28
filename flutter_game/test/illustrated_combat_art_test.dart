@@ -28,7 +28,7 @@ Future<({ui.Image image, Uint8List pixels})> _render(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  late ui.Image image;
+  late ui.Image image, actionImage;
   late EffectAtlas atlas;
   setUpAll(() async {
     final codec = await ui.instantiateImageCodec(
@@ -37,8 +37,16 @@ void main() {
     image = (await codec.getNextFrame()).image;
     codec.dispose();
     atlas = EffectAtlas({IllustratedCombatArt.imageKey: image});
+    final actions = await ui.instantiateImageCodec(
+      await File('art/combat-actions.webp').readAsBytes(),
+    );
+    actionImage = (await actions.getNextFrame()).image;
+    actions.dispose();
   });
-  tearDownAll(() => image.dispose());
+  tearDownAll(() {
+    image.dispose();
+    actionImage.dispose();
+  });
 
   test(
     'all16 generated cells have real transparent gutters within4MiB',
@@ -118,7 +126,9 @@ void main() {
   test(
     'a steel effect cannot desaturate the next generated sprint icon',
     () async {
-      final art = GameArt()..images[IllustratedCombatArt.imageKey] = image;
+      final art = GameArt()
+        ..images[IllustratedCombatArt.imageKey] = image
+        ..images[ActionIllustrationPainter.imageKey] = actionImage;
       final clean = await _render(
         (c) => EffectIconPainter(
           art,
@@ -143,6 +153,16 @@ void main() {
       });
       expect(after.pixels, clean.pixels);
       expect(after.pixels.where((v) => v > 0).length, greaterThan(1500));
+      final fist = await _render(
+        (c) => ActionIllustrationPainter(
+          art,
+          fist: true,
+        ).paint(c, const ui.Size(96, 96)),
+      );
+      expect(fist.pixels.where((v) => v > 0).length, greaterThan(1500));
+      expect(fist.pixels, isNot(clean.pixels));
+      expect(actionImage.width * actionImage.height * 4, 524288);
+      fist.image.dispose();
       clean.image.dispose();
       after.image.dispose();
     },

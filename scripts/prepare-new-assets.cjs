@@ -70,6 +70,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'skill-perks',
         'physical-icons',
         'combat-illustrations',
+        'combat-actions',
         'actors-boar',
         'actors-basilisk',
         'actors-wraith',
