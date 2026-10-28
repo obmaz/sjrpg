@@ -1053,7 +1053,16 @@ class TerrainArt {
     if (cache.containsKey(key)) return cache[key]!;
     final recorder = ui.PictureRecorder(),
         c = ui.Canvas(recorder),
-        area = ui.Rect.fromLTWH(col * 512.0, row * 512.0, 512, 512);
+        // Record a complete opaque surface beyond the logical cell. Skwasm
+        // can round adjacent Picture clips apart at fractional camera offsets.
+        // Replaying the full ground stack in this guard band replaces the
+        // previous surface, so translucent tints are not accumulated twice.
+        area = ui.Rect.fromLTWH(
+          col * 512.0,
+          row * 512.0,
+          512,
+          512,
+        ).inflate(2);
     c.clipRect(area, doAntiAlias: false);
     final base = world.stage.baseMaterial;
     final road = world.stage.roadMaterial;
