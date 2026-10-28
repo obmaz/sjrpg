@@ -85,7 +85,7 @@ void main() {
     const Size(390, 844),
     const Size(844, 390),
   ]) {
-    for (final hp in [100.0, 30.0, 15.0]) {
+    for (final hp in [100.0, 30.0, 10.0, 9.0]) {
       testWidgets('male HUD health $hp stays legible at $size and font1.3', (
         tester,
       ) async {
@@ -129,7 +129,7 @@ void main() {
         final health = tester.getRect(find.byType(HealthMeter));
         final resource = tester.getRect(find.byType(ResourceMeter));
         expect(health.bottom, lessThanOrEqualTo(resource.top));
-        expect(resource.height, greaterThanOrEqualTo(22));
+        expect(resource.height, greaterThanOrEqualTo(18));
         final hpText = tester.getRect(find.text('${hp.ceil()} / 100'));
         expect(health.contains(hpText.topLeft), true);
         expect(health.contains(hpText.bottomRight), true);
@@ -181,7 +181,7 @@ void main() {
         Adventure(artwork, heroClass: HeroClass.mage)..start(TestGame()),
       );
       addTearDown(s.dispose);
-      s.progress.hp = 12;
+      s.progress.hp = 7;
       PlayerHealthFeedback? feedback;
       await show(
         tester,
@@ -213,8 +213,8 @@ void main() {
         await tester.pump(const Duration(milliseconds: 34));
       }
       expect(feedback!.dangerOpacity, greaterThan(minimum));
-      expect(feedback!.dangerOpacity, lessThanOrEqualTo(.18));
-      expect(find.text('12 / 80'), findsOneWidget);
+      expect(feedback!.dangerOpacity, lessThanOrEqualTo(.26));
+      expect(find.text('7 / 80'), findsOneWidget);
       expect(find.text('마나 90'), findsOneWidget);
       await proof(tester, 'mage-critical-pulse-peak');
       expect(tester.takeException(), isNull);
@@ -288,7 +288,7 @@ void main() {
     (tester) async {
       final s = inCombatField(Adventure(GameArt())..start(TestGame()));
       addTearDown(s.dispose);
-      s.progress.hp = 15;
+      s.progress.hp = 9;
       PlayerHealthFeedback? f;
       var builds = 0;
       await show(
@@ -338,7 +338,7 @@ void main() {
   testWidgets('restored critical health paints when the engine becomes ready', (
     tester,
   ) async {
-    final s = Adventure(GameArt())..progress.hp = 15;
+    final s = Adventure(GameArt())..progress.hp = 9;
     addTearDown(s.dispose);
     PlayerHealthFeedback? feedback;
     final paintKey = GlobalKey();
@@ -393,7 +393,7 @@ void main() {
       final b = inCombatField(Adventure(GameArt())..start(TestGame()));
       addTearDown(a.dispose);
       addTearDown(b.dispose);
-      a.progress.hp = 15;
+      a.progress.hp = 9;
       PlayerHealthFeedback? f;
       Widget page(Adventure s) => PlayerHealthFeedbackScope(
         session: s,

@@ -31,7 +31,7 @@ void main() {
       final s = session(hp: 30), f = watch(s);
       expect(f.reading.value.danger, HealthDanger.low);
       expect(f.damageRemaining, 0);
-      s.progress.hp = 15;
+      s.progress.hp = 9;
       f.sample();
       expect(f.reading.value.danger, HealthDanger.critical);
       s.progress.hp = 30.01;
@@ -42,6 +42,26 @@ void main() {
         0,
         reason: 'healing clears the previous hit cue',
       );
+    },
+  );
+
+  test(
+    'critical starts below ten percent; poison warns at full health and clears',
+    () {
+      expect(const HealthReading(10, 100).danger, HealthDanger.low);
+      expect(const HealthReading(9.99, 100).danger, HealthDanger.critical);
+      final s = session(), f = watch(s);
+      s.afflictions.apply(PlayerStatus.poison);
+      f.sample();
+      expect(f.reading.value.poisoned, true);
+      expect(f.reading.value.danger, HealthDanger.critical);
+      expect(f.reading.value.label, contains('중독'));
+      expect(f.damageRemaining, 0);
+      expect(f.dangerOpacity, greaterThan(0));
+      s.afflictions.clear();
+      f.sample();
+      expect(f.reading.value.poisoned, false);
+      expect(f.dangerOpacity, 0);
     },
   );
 
@@ -126,7 +146,7 @@ void main() {
   test(
     'simulation clock caps paints and freezes pause, direct engine pause and hitstop',
     () {
-      final s = session(hp: 15), f = watch(s);
+      final s = session(hp: 9), f = watch(s);
       s.tick(.04);
       f.sample();
       expect(f.phase, greaterThan(0));
@@ -174,7 +194,7 @@ void main() {
   test(
     'hidden changes and reduced motion remain static without wall-time catchup',
     () {
-      final s = session(hp: 15), f = watch(s);
+      final s = session(hp: 9), f = watch(s);
       s.tick(.1);
       f.sample();
       final before = f.phase;
@@ -202,14 +222,14 @@ void main() {
   );
 
   test('death and victory hide the warning and stop all feedback motion', () {
-    final s = session(hp: 15), f = watch(s);
+    final s = session(hp: 9), f = watch(s);
     s.hurtHero(1000);
     f.sample();
     expect(s.defeated, true);
     expect(f.dangerOpacity, 0);
     expect(f.damageRemaining, 0);
     expect(f.needsFrames, false);
-    final winning = session(hp: 15), winFeedback = watch(winning);
+    final winning = session(hp: 9), winFeedback = watch(winning);
     winning.won = true;
     winFeedback.sample();
     expect(winFeedback.dangerOpacity, 0);
@@ -217,9 +237,9 @@ void main() {
   });
 
   test(
-    'edge shader is transparent at center and never exceeds its one-pass opacity',
+    'critical shader adds a restrained full-screen tint without corner overdraw',
     () async {
-      final s = session(hp: 15), f = watch(s);
+      final s = session(hp: 9), f = watch(s);
       s.tick(.1);
       f.sample();
       final recorder = ui.PictureRecorder();
@@ -232,10 +252,11 @@ void main() {
           format: ui.ImageByteFormat.rawRgba,
         ))!.buffer.asUint8List();
         int alpha(int x, int y) => bytes[(y * 320 + x) * 4 + 3];
-        expect(alpha(160, 210), 0);
+        expect(alpha(160, 210), greaterThan(0));
+        expect(alpha(160, 210), lessThan(12));
         expect(alpha(0, 0), greaterThan(0));
-        expect(alpha(0, 0), lessThanOrEqualTo((.18 * 255).ceil()));
-        expect(alpha(160, 0), lessThanOrEqualTo((.18 * 255).ceil()));
+        expect(alpha(0, 0), lessThanOrEqualTo((.26 * 255).ceil()));
+        expect(alpha(160, 0), lessThanOrEqualTo((.26 * 255).ceil()));
       } finally {
         image.dispose();
         picture.dispose();

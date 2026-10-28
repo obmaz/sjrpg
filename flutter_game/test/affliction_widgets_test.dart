@@ -11,8 +11,10 @@ import 'package:guardian_new/affliction_widgets.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/game_ui.dart';
+import 'package:guardian_new/health_widgets.dart';
 import 'package:guardian_new/main.dart';
 import 'package:guardian_new/player_afflictions.dart';
+import 'package:guardian_new/resource_meter.dart';
 import 'package:guardian_new/rpg_widgets.dart';
 
 import 'support/test_game.dart';
@@ -115,6 +117,8 @@ void main() {
           for (final node in find.byType(ActionButton).evaluate())
             tester.getRect(find.byWidget(node.widget)),
           tester.getRect(find.byType(PotionBelt)),
+          tester.getRect(find.byType(HealthMeter)),
+          tester.getRect(find.byType(ResourceMeter)),
         ];
         s.afflictions.apply(PlayerStatus.root);
         s.afflictions.apply(PlayerStatus.poison);
@@ -139,7 +143,8 @@ void main() {
           final a = crop(before, rect), b = crop(dark, rect);
           for (var i = 0; i < a.length; i += 3) {
             if ((a[i] == 240 && a[i + 1] == 229 && a[i + 2] == 200) ||
-                (a[i] == 255 && a[i + 1] == 255 && a[i + 2] == 255)) {
+                (a[i] == 255 && a[i + 1] == 255 && a[i + 2] == 255) ||
+                (a[i] == 255 && a[i + 1] == 240 && a[i + 2] == 222)) {
               expect(b.sublist(i, i + 3), a.sublist(i, i + 3));
               foreground++;
             }

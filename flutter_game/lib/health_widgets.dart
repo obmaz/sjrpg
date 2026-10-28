@@ -155,7 +155,7 @@ class _HealthSurfaceState extends State<_HealthSurface> {
 }
 
 class HealthMeter extends StatelessWidget {
-  const HealthMeter(this.session, {this.height = 33, super.key});
+  const HealthMeter(this.session, {this.height = 25, super.key});
   final Adventure session;
   final double height;
   @override
@@ -179,7 +179,7 @@ class HealthMeter extends StatelessWidget {
             children: [
               _HealthSurface(feedback: feedback, danger: false),
               Padding(
-                padding: const EdgeInsets.fromLTRB(18, 4, 17, 4),
+                padding: const EdgeInsets.fromLTRB(18, 2, 17, 2),
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
@@ -188,7 +188,7 @@ class HealthMeter extends StatelessWidget {
                     style: const TextStyle(
                       color: Color(0xfffff0de),
                       fontWeight: FontWeight.bold,
-                      fontSize: 15,
+                      fontSize: 14,
                       height: 1,
                       shadows: [
                         Shadow(color: Color(0xff351719), blurRadius: 2),
@@ -254,6 +254,13 @@ class HealthMeterPainter extends CustomPainter {
       ).createShader(bounds);
     }
     canvas.drawRect(fill, Paint()..shader = _fillShader);
+    if (critical) {
+      canvas.drawRect(
+        fill,
+        Paint()
+          ..color = Color.fromRGBO(255, 66, 54, .08 + .32 * feedback.pulse),
+      );
+    }
     canvas.drawLine(
       const Offset(3, 3),
       Offset(math.max(3, fill.right - 5), 3),
@@ -262,19 +269,47 @@ class HealthMeterPainter extends CustomPainter {
         ..strokeWidth = 1,
     );
     canvas.restore();
+    canvas.drawPath(
+      shape,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.2
+        ..color = const Color(0xff3d3020),
+    );
     final warning = feedback.reading.value.danger != HealthDanger.none;
     canvas.drawPath(
       shape,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.4
+        ..strokeWidth = 1.8
         ..color = warning
             ? Color.lerp(
                 const Color(0xffad6b54),
                 const Color(0xffe0a177),
                 feedback.pulse,
               )!
-            : const Color(0xffb5a17b),
+            : const Color(0xffe0c58c),
+    );
+    final ornament = Paint()
+      ..color = const Color(0xffe6ce94)
+      ..strokeWidth = 1;
+    canvas.drawLine(
+      const Offset(4, 3),
+      Offset(size.width - edge - 4, 3),
+      ornament,
+    );
+    canvas.drawLine(
+      Offset(4, size.height - 3),
+      Offset(size.width - edge - 4, size.height - 3),
+      ornament..color = const Color(0xff8b6639),
+    );
+    final jewel = Offset(size.width - edge - 4, size.height / 2);
+    canvas.drawCircle(jewel, 3.3, Paint()..color = const Color(0xff3a2720));
+    canvas.drawCircle(
+      jewel,
+      1.9,
+      Paint()
+        ..color = warning ? const Color(0xffff7154) : const Color(0xffffd887),
     );
   }
 
@@ -320,7 +355,7 @@ class HealthDangerPainter extends CustomPainter {
     if (alpha <= 0 || size.isEmpty) return;
     _shader ??= const RadialGradient(
       radius: .5,
-      colors: [Color(0x00b52b36), Color(0x59b52b36), Color(0xffb52b36)],
+      colors: [Color(0x20b52b36), Color(0x59b52b36), Color(0xffb52b36)],
       stops: [.56, .82, 1],
     ).createShader(const Rect.fromLTWH(0, 0, 1, 1));
     _paint

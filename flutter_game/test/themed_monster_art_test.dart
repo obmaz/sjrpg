@@ -29,6 +29,7 @@ class _GroundArt extends GameArt {
     int comboPose = 0,
     double? actionProgress,
     Object? bossPose,
+    Object? mountPose,
     double opacity = 1,
     double flash = 0,
   }) => lastFeet = feet;

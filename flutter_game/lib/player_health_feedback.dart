@@ -5,36 +5,45 @@ import 'package:flutter/foundation.dart';
 import 'adventure.dart';
 import 'health_feedback.dart';
 import 'hud_motion_clock.dart';
+import 'player_afflictions.dart';
 
 enum HealthDanger { none, low, critical }
 
 @immutable
 class HealthReading {
-  const HealthReading(this.hp, this.maximum);
+  const HealthReading(this.hp, this.maximum, {this.poisoned = false});
+  final bool poisoned;
   final double hp, maximum;
   factory HealthReading.of(Adventure session) {
     final maximum = session.progress.maxHp;
     final safeMax = maximum.isFinite && maximum > 0 ? maximum : 1.0;
     final hp = session.progress.hp;
-    return HealthReading(hp.isFinite ? hp.clamp(0, safeMax) : 0, safeMax);
+    return HealthReading(
+      hp.isFinite ? hp.clamp(0, safeMax) : 0,
+      safeMax,
+      poisoned: session.afflictions.remaining(PlayerStatus.poison) > 0,
+    );
   }
   double get ratio => hp / maximum;
-  HealthDanger get danger => hp <= 0 || ratio > .30
+  HealthDanger get danger => hp <= 0 || ratio > .30 && !poisoned
       ? HealthDanger.none
-      : ratio <= .15
+      : ratio < .10 || poisoned
       ? HealthDanger.critical
       : HealthDanger.low;
   String get label =>
-      '생명 ${hp.ceil()} / ${maximum.ceil()}${switch (danger) {
+      '생명 ${hp.ceil()} / ${maximum.ceil()}${poisoned ? ' · 중독' : ''}${switch (danger) {
         HealthDanger.none => '',
         HealthDanger.low => ' · 체력 낮음',
         HealthDanger.critical => ' · 위험',
       }}';
   @override
   bool operator ==(Object other) =>
-      other is HealthReading && other.hp == hp && other.maximum == maximum;
+      other is HealthReading &&
+      other.hp == hp &&
+      other.maximum == maximum &&
+      other.poisoned == poisoned;
   @override
-  int get hashCode => Object.hash(hp, maximum);
+  int get hashCode => Object.hash(hp, maximum, poisoned);
 }
 
 /// Presentation only. Actual simulation time owns all motion; this never writes HP.
@@ -77,12 +86,12 @@ class PlayerHealthFeedback extends ChangeNotifier {
     final low = switch (reading.value.danger) {
       HealthDanger.none => 0.0,
       HealthDanger.low => _reduced ? .065 : .055 + .045 * pulse,
-      HealthDanger.critical => _reduced ? .11 : .085 + .075 * pulse,
+      HealthDanger.critical => _reduced ? .11 : .10 + .13 * pulse,
     };
     final damage = damageRemaining <= 0
         ? 0.0
         : _damageStrength * (_reduced ? 1 : damageRemaining / damageDuration);
-    return math.max(low, damage).clamp(0, .18);
+    return math.max(low, damage).clamp(0, .26);
   }
 
   /// Called by session notifications and a local ticker; notification is paint-only.

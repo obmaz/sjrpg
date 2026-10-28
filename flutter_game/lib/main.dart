@@ -735,7 +735,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         final tightLandscape = landscapeControls && width < 700;
         final sideGuide = landscapeControls || width >= 600;
         final stick = short && width < 500
-                ? math.min(112.0, math.max(44.0, media.size.height - 318))
+                ? math.min(112.0, math.max(44.0, media.size.height - 330))
                 : width < 360
                 ? 122.0
                 : short
@@ -779,8 +779,6 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
               onTap: openWarp,
             ),
         ];
-        final compactGuide =
-            short && contextActions.isNotEmpty && guide != null;
 
         final peacefulAttack =
             adventure.sheltered &&
@@ -972,6 +970,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                     ),
                   ),
                   label: '공격',
+                  showLabel: false,
                   semanticLabel: '공격',
                   semanticHint:
                       '기본 공격 · ${p.basicSkill.name} · ${p.rank(p.selectedBasic)}등급',
@@ -995,6 +994,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                     painter: AbilityPicturePainter(widget.art, 'dodge-icon'),
                   ),
                   label: '회피',
+                  showLabel: false,
                   semanticLabel: '회피',
                   size: width < 360 ? 56 : 64,
                   remaining: adventure.hero.dodgeClock,
@@ -1042,7 +1042,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                                       : 164
                                 : guide == null
                                 ? 164
-                                : 144)
+                                : 156)
                       : null,
                   bottom: short ? null : bottom + stick + 12,
                   width: short
@@ -1072,7 +1072,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                           (landscape && width >= 700
                               ? 110
                               : guide != null
-                              ? (short && width < 500 ? 188 : 198)
+                              ? (short && width < 500 ? 200 : 164)
                               : 110),
                 bottom: tightLandscape
                     ? math.max(8, media.padding.bottom) + 58
@@ -1082,20 +1082,22 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
               if (guide != null)
                 Positioned(
                   left: sideGuide ? 136 : 12,
-                  top: media.padding.top + (landscape ? 116 : 100),
+                  top:
+                      media.padding.top +
+                      (landscape
+                          ? 116
+                          : short
+                          ? 108
+                          : 112),
                   width: sideGuide
                       ? (width - 450).clamp(100, 220).toDouble()
                       : (width - (short ? 164 : 150))
                             .clamp(148, 250)
                             .toDouble(),
-                  height: compactGuide
-                      ? 44
-                      : short && width < 600
-                      ? 84
-                      : 92,
+                  height: 44,
                   child: NearbyQuestCard(
                     guide,
-                    compact: compactGuide,
+                    compact: true,
                     onTap: () {
                       switch (guide.action) {
                         case QuestGuideAction.journal:

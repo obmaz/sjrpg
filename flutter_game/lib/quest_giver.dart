@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:bonfire/bonfire.dart';
 
 import 'adventure.dart';
+import 'quest_marker.dart';
 import 'world_model.dart';
 
 class QuestGiver extends GameComponent {
@@ -36,12 +37,11 @@ class QuestGiver extends GameComponent {
       0,
       64,
     );
-    session.art.text(
+    paintQuestMarker(
       canvas,
-      locked ? '×' : '!',
-      const ui.Offset(14, -52),
-      size: 18,
+      const ui.Offset(14, -64),
       color: color,
+      locked: locked,
     );
   }
 }

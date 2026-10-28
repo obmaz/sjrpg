@@ -188,48 +188,81 @@ class NearbyQuestCard extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: 10,
+            horizontal: compact ? 8 : 10,
             vertical: compact ? 4 : 7,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                guide.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: gold,
-                  fontSize: 12,
-                  height: compact ? 1.1 : null,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              if (!compact) const SizedBox(height: 3),
-              if (!compact)
-                Expanded(
-                  child: Text(
-                    guide.message,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: cream,
-                      fontSize: 12,
-                      height: 1.25,
+          child: compact
+              ? Row(
+                  children: [
+                    const Icon(
+                      Icons.priority_high_rounded,
+                      color: gold,
+                      size: 21,
                     ),
-                  ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        switch (guide.action) {
+                          QuestGuideAction.journal => '의뢰',
+                          QuestGuideAction.talk => '대화',
+                          QuestGuideAction.cleanse => '정화',
+                          QuestGuideAction.dismount => '내리기',
+                        },
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: cream,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: gold,
+                      size: 14,
+                    ),
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      guide.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: gold,
+                        fontSize: 12,
+                        height: compact ? 1.1 : null,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (!compact) const SizedBox(height: 3),
+                    if (!compact)
+                      Expanded(
+                        child: Text(
+                          guide.message,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: cream,
+                            fontSize: 12,
+                            height: 1.25,
+                          ),
+                        ),
+                      ),
+                    Text(
+                      '${guide.button} ›',
+                      style: TextStyle(
+                        color: gold,
+                        fontSize: 12,
+                        height: compact ? 1.1 : null,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
-              Text(
-                '${guide.button} ›',
-                style: TextStyle(
-                  color: gold,
-                  fontSize: 12,
-                  height: compact ? 1.1 : null,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     ),

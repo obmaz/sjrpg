@@ -42,7 +42,14 @@ void main() {
               .any((m) => hero.session.world.blocked(m.body)),
           false,
         );
-        expect(find.text('공격'), findsOneWidget);
+        expect(find.text('공격'), findsNothing);
+        expect(find.text('회피'), findsNothing);
+        expect(
+          find.byWidgetPredicate(
+            (w) => w is ActionButton && w.semanticLabel == '공격',
+          ),
+          findsOneWidget,
+        );
         expect(hero.session.sheltered, true);
         hero.slash();
         expect(hero.strikes, 0);

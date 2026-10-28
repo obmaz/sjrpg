@@ -48,6 +48,8 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'entry-splash',
         'class-selection',
         'blacksmith-forge',
+        'village-gardens',
+        'village-cottage',
         'actors-bicycle',
         'skill-perks',
         'physical-icons',

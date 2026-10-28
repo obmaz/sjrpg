@@ -69,7 +69,7 @@ void main() {
   });
 
   testWidgets(
-    'compact well guidance retains two readable lines at font scale 1.3',
+    'compact quest action hides automatic descriptions and stays legible at font scale 1.3',
     (tester) async {
       var cleanses = 0;
       await tester.pumpWidget(
@@ -94,10 +94,9 @@ void main() {
       expect(tester.takeException(), null);
       final card = tester.getRect(find.byType(NearbyQuestCard));
       expect(card.height, 44);
-      expect(
-        card.contains(tester.getRect(find.text('정화하기 ›')).bottomRight),
-        true,
-      );
+      expect(find.text('주변이 안전합니다.'), findsNothing);
+      expect(find.text('뿌리 우물 · 준비 완료'), findsNothing);
+      expect(card.contains(tester.getRect(find.text('정화')).bottomRight), true);
       await tester.tap(find.byType(NearbyQuestCard));
       expect(cleanses, 1);
     },

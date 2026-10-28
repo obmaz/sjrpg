@@ -28,10 +28,10 @@ class GameHud extends StatelessWidget {
     final short = height < 520 || landscape;
     final statusRight = math.max(104.0, width - (landscape ? 280 : 360));
     final resourceHeight = math.max(
-      22.0,
+      18.0,
       ResourceMeter.minimumHeight(MediaQuery.textScalerOf(context)),
     );
-    final statTop = 52 + resourceHeight + 10;
+    final statTop = 46 + resourceHeight + 10;
     return SizedBox(
       height: 130,
       child: Stack(
@@ -40,18 +40,18 @@ class GameHud extends StatelessWidget {
             top: 17,
             left: 57,
             right: statusRight,
-            child: HealthMeter(session),
+            child: HealthMeter(session, height: 25),
           ),
           Positioned(
             left: 77,
             right: statusRight + 6,
-            top: 52,
+            top: 46,
             child: ResourceMeter(session, height: resourceHeight),
           ),
           Positioned(
             left: 77,
             right: statusRight + 6,
-            top: 52 + resourceHeight + 3,
+            top: 46 + resourceHeight + 3,
             child: LinearProgressIndicator(
               value: p.xp / p.nextLevelXp,
               minHeight: 3,
@@ -518,7 +518,7 @@ class MapPainter extends CustomPainter {
                 : const Color(0xff92e7f2),
           ),
     ];
-    final occupied = <Offset>[heroPoint];
+    final occupied = <Offset>[];
     for (final (anchor, label, icon, color) in services) {
       final radius = (round ? 7.0 : 10.0) * markerScale;
       if (round &&
@@ -526,15 +526,6 @@ class MapPainter extends CustomPainter {
         continue;
       }
       var point = anchor;
-      if ((point - heroPoint).distance < 23 * markerScale) {
-        final delta = point - heroPoint;
-        point =
-            heroPoint +
-            (delta.distance < markerScale
-                    ? const Offset(0, -1)
-                    : delta / delta.distance) *
-                (23 * markerScale);
-      }
       if (!round) {
         for (
           var shift = 0;

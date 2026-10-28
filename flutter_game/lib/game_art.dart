@@ -11,6 +11,7 @@ import 'effect_atlas.dart';
 import 'enemy_catalog.dart';
 import 'ground_texture.dart';
 import 'interface_art.dart';
+import 'mount_sprite_mesh.dart';
 import 'world_model.dart';
 
 class GameArt {
@@ -20,6 +21,7 @@ class GameArt {
   final materials = <ui.Shader>[];
   final _actorAtlases = <String, ActorAtlas>{};
   final _bossMesh = BossSpriteMeshPainter();
+  final _mountMesh = MountSpriteMeshPainter();
   static const heroWidthScale = 1.20, heroHeightScale = 1.02;
   late final _actorPaint = ui.Paint()..filterQuality = ui.FilterQuality.low;
   late final _rollPaint = ui.Paint()..filterQuality = ui.FilterQuality.medium;
@@ -98,6 +100,8 @@ class GameArt {
     'ruin-props',
     'village-scene',
     'blacksmith-forge',
+    'village-gardens',
+    'village-cottage',
     'landscape-bridge',
     'world-forest',
     'world-desert',
@@ -106,7 +110,13 @@ class GameArt {
   ];
   // Stable saved stage IDs keep later chapters compatible with their art family.
   static const _sceneryImages = <String, Set<String>>{
-    'forest': {'world-desert', 'landscape-bridge', 'blacksmith-forge'},
+    'forest': {
+      'world-desert',
+      'landscape-bridge',
+      'blacksmith-forge',
+      'village-gardens',
+      'village-cottage',
+    },
     'sands': {'world-desert', 'ruin-props'},
     'past': {'ruin-props'},
     'future': {'cyber-props'},
@@ -330,6 +340,7 @@ class GameArt {
       _sourceBytes.remove(name);
     }
     _bossMesh.trim(images.values);
+    _mountMesh.trim(images.values);
     effects.warm();
   }
 
@@ -460,6 +471,7 @@ class GameArt {
 
   void dispose() {
     _bossMesh.dispose();
+    _mountMesh.dispose();
     for (final shader in materials) {
       shader.dispose();
     }
@@ -571,6 +583,7 @@ class GameArt {
     int comboPose = 0,
     double? actionProgress,
     BossVisualPose? bossPose,
+    MountVisualPose? mountPose,
     double opacity = 1,
     double flash = 0,
   }) {
@@ -650,7 +663,17 @@ class GameArt {
               ui.BlendMode.srcATop,
             )
           : null;
-    if (bossPose == null) {
+    if (mountPose != null) {
+      _mountMesh.paint(
+        canvas,
+        images['actors-$sheet']!,
+        src,
+        dst,
+        _actorPaint,
+        mountPose,
+        groundOrigin: feet,
+      );
+    } else if (bossPose == null) {
       canvas.drawImageRect(images['actors-$sheet']!, src, dst, _actorPaint);
     } else {
       _bossMesh.paint(
@@ -695,8 +718,8 @@ class GameArt {
   }
 
   void prop(ui.Canvas canvas, WorldProp prop, {double opacity = 1}) {
-    if (prop.kind == 'blacksmith-forge') {
-      final image = images['blacksmith-forge'];
+    if (prop.kind == 'blacksmith-forge' || prop.kind == 'village-cottage') {
+      final image = images[prop.kind];
       if (image == null) return;
       final feet = prop.body.bottomCenter;
       canvas.drawImageRect(
@@ -961,7 +984,26 @@ class TerrainArt {
     // patches and trails so the workshop does not become an isolated grass lot;
     // retain visible water and render the authored fountain scene above it.
     final sanctuary = world.sanctuary;
-    if (sanctuary.protects(area)) {
+    if (world.stage == WorldStage.forest) {
+      final gardens = art.images['village-gardens'];
+      const gardenBounds = ui.Rect.fromLTWH(2250, 1450, 1560, 1560);
+      if (gardens != null && gardenBounds.overlaps(area)) {
+        c.save();
+        c.clipPath(dryGroundPath, doAntiAlias: false);
+        c.drawImageRect(
+          gardens,
+          ui.Rect.fromLTWH(
+            0,
+            0,
+            gardens.width.toDouble(),
+            gardens.height.toDouble(),
+          ),
+          gardenBounds,
+          ui.Paint()..filterQuality = ui.FilterQuality.medium,
+        );
+        c.restore();
+      }
+    } else if (sanctuary.protects(area)) {
       c.save();
       c.clipPath(dryGroundPath, doAntiAlias: false);
       c.drawCircle(
@@ -1002,7 +1044,8 @@ class TerrainArt {
         ui.Paint()..filterQuality = ui.FilterQuality.medium,
       );
     }
-    if (sanctuary.protects(area.inflate(4))) {
+    if (world.stage != WorldStage.forest &&
+        sanctuary.protects(area.inflate(4))) {
       final color = world.stage.sanctuaryColor;
       c.drawCircle(
         sanctuary.center,
@@ -1019,21 +1062,32 @@ class TerrainArt {
       );
     }
     // Deterministic dappled light is presentation-only and never consumes gameplay RNG.
-    final random = math.Random(col * 739 + row * 838 + world.seed);
-    for (var i = 0; i < 5; i++) {
-      final p = ui.Offset(
-        area.left + random.nextDouble() * 512,
-        area.top + random.nextDouble() * 512,
-      );
-      c.drawCircle(
-        p,
-        100,
-        ui.Paint()
-          ..shader = ui.Gradient.radial(p, 100, [
-            const ui.Color(0x0ff1d393),
-            const ui.Color(0x00f1d393),
-          ]),
-      );
+    // Regenerate neighboring lights in the same world coordinates, so sector
+    // clipping cannot cut a warm patch off at a 512px cache boundary.
+    for (var lightRow = row - 1; lightRow <= row + 1; lightRow++) {
+      for (var lightCol = col - 1; lightCol <= col + 1; lightCol++) {
+        final random = math.Random(
+          lightCol * 739 + lightRow * 838 + world.seed,
+        );
+        for (var i = 0; i < 5; i++) {
+          final p = ui.Offset(
+            lightCol * 512 + random.nextDouble() * 512,
+            lightRow * 512 + random.nextDouble() * 512,
+          );
+          if (!ui.Rect.fromCircle(center: p, radius: 100).overlaps(area)) {
+            continue;
+          }
+          c.drawCircle(
+            p,
+            100,
+            ui.Paint()
+              ..shader = ui.Gradient.radial(p, 100, [
+                const ui.Color(0x0ff1d393),
+                const ui.Color(0x00f1d393),
+              ]),
+          );
+        }
+      }
     }
     final picture = recorder.endRecording();
     cache[key] = picture;

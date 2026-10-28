@@ -249,8 +249,9 @@ class WorldProp {
         ]
       : kind == 'blacksmith-forge'
       ? [
-          // These small footprints match the visible bench, hearth, anvil and
+          // The closed back wall joins the visible bench, hearth, anvil and
           // posts; the open front-left area below the awning stays walkable.
+          Rect.fromLTWH(body.left + 10, body.top - 95, body.width - 20, 125),
           Rect.fromLTWH(body.left + 20, body.top + 60, 130, 30),
           Rect.fromLTWH(body.left + 200, body.top + 5, 115, 78),
           Rect.fromLTWH(body.left + 230, body.top + 130, 62, 40),
@@ -586,8 +587,8 @@ class AdventureWorld {
             ((u - .5) / .19) * ((u - .5) / .19) +
                     ((v - .245) / .115) * ((v - .245) / .115) <
                 1 ||
-            (u > .74 && v > .15 && v < .36) ||
-            (u < .25 && v > .4 && v < .67) ||
+            (u > .71 && v > .15 && v < .36) ||
+            (u < .32 && v > .43 && v < .67) ||
             (u > .77 && v > .64) ||
             (u < .19 && !(v > .32 && v < .43)) ||
             (u > .88 && v < .64 && !(v > .44 && v < .62)) ||
@@ -667,8 +668,32 @@ class AdventureWorld {
   void _buildForestAnnex() {
     // Generate the original forest first so adding the village does not consume
     // a different random stream or rearrange remote trees and rocks.
+    final cottages = [
+      WorldProp(
+        Rect.fromCenter(
+          center: const Offset(2510 / worldScale, 1775 / worldScale),
+          width: 220,
+          height: 190,
+        ),
+        'village-cottage',
+        const Size(280, 270),
+      ),
+      WorldProp(
+        Rect.fromCenter(
+          center: const Offset(3440 / worldScale, 1830 / worldScale),
+          width: 220,
+          height: 160,
+        ),
+        'village-cottage',
+        const Size(260, 250),
+      ),
+    ];
     final removed = props
-        .where((p) => authoredBlacksmithAnnex.inflate(75).overlaps(p.body))
+        .where(
+          (p) =>
+              authoredBlacksmithAnnex.inflate(75).overlaps(p.body) ||
+              cottages.any((c) => c.body.inflate(100).overlaps(p.body)),
+        )
         .toSet();
     final removedBodies = removed.expand((p) => p.collisionBodies).toSet();
     props.removeWhere(removed.contains);
@@ -720,6 +745,28 @@ class AdventureWorld {
     );
     for (final body in campProps.last.collisionBodies) {
       _indexSolid(body);
+    }
+    for (final cottage in cottages) {
+      campProps.add(cottage);
+      cottage.collisionBodies.forEach(_indexSolid);
+    }
+    for (final point in const [
+      Offset(2616, 2036),
+      Offset(2580, 2150),
+      Offset(2570, 2470),
+      Offset(2610, 2640),
+      Offset(3150, 2020),
+      Offset(3140, 2650),
+      Offset(2770, 1940),
+      Offset(3050, 1915),
+    ]) {
+      final tree = WorldProp(
+        Rect.fromCenter(center: point / worldScale, width: 28, height: 28),
+        'tree',
+        const Size(160, 205),
+      );
+      campProps.add(tree);
+      tree.collisionBodies.forEach(_indexSolid);
     }
     campProps.addAll([
       WorldProp(

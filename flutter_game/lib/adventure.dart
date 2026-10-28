@@ -27,9 +27,11 @@ import 'game_art.dart';
 import 'health_feedback.dart';
 import 'loot_policy.dart';
 import 'mobility_motion.dart';
+import 'mount_sprite_mesh.dart';
 import 'physical_aim_preview.dart';
 import 'player_affliction_art.dart';
 import 'player_afflictions.dart';
+import 'quest_marker.dart';
 import 'ranked_vfx.dart';
 import 'shop_content.dart';
 import 'skill_aim.dart';
@@ -1851,6 +1853,7 @@ class Guardian extends Player with WithCollision {
 
   double rollBearing = math.pi / 2;
   final runMotion = RunMotion();
+  final mountMotion = MountMotion();
   bool movingThisFrame = false;
   double bearing = math.pi / 2,
       animationTime = 0,
@@ -2229,6 +2232,11 @@ class Guardian extends Player with WithCollision {
     final travelled = p - before;
     final distance = travelled.distance;
     movingThisFrame = distance > 1e-6;
+    if (session.riding case final mount?) {
+      mountMotion.advance(distance, dt, waterOnly: mount.def.waterOnly);
+    } else {
+      mountMotion.reset();
+    }
     if (movingThisFrame) {
       runMotion.advance(distance);
       animationTime += distance / math.max(1, speed);
@@ -2834,11 +2842,14 @@ class Guardian extends Player with WithCollision {
         mount.def.artKey,
         feet,
         mount.bearing,
-        movingThisFrame ? (animationTime / .13).floor() % 2 : 0,
+        0,
         mount.def.waterOnly ? 48 : 62,
+        mountPose: mountMotion.pose(mount.def.artKey),
       );
       canvas.save();
-      final lift = mount.def.waterOnly ? 8.0 : 20.0;
+      final lift =
+          (mount.def.waterOnly ? 8.0 : 20.0) +
+          math.sin(mountMotion.cycle * math.pi * 4) * mountMotion.weight * .75;
       canvas.clipRect(
         ui.Rect.fromLTRB(
           feet.dx - 36,
@@ -4771,13 +4782,7 @@ class VillagePerson extends GameComponent {
         0,
         64,
       );
-      session.art.text(
-        canvas,
-        '!',
-        const ui.Offset(14, -60),
-        size: 22,
-        color: const ui.Color(0xffffd371),
-      );
+      if (!merchant) paintQuestMarker(canvas, const ui.Offset(14, -64));
     }
   }
 }

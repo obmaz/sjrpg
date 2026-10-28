@@ -1,0 +1,19 @@
+{
+  "generator": "image_gen",
+  "style": "hand-painted fantasy village, transparent terrain and standalone cottage",
+  "terrainWorldRect": [
+    2250,
+    1450,
+    1560,
+    1560
+  ],
+  "assets": {
+    "village-gardens.webp": {
+      "sha256": "07e8b34abe3a5810e3faecb2652823d08192b85d7f7ba7e64894150716a8ebd8"
+    },
+    "village-cottage.webp": {
+      "sha256": "14f3667f98085c9fa92816e4841f1d36183d4443280982a543460359445748f2"
+    }
+  },
+  "collision": "Ground is decorative; cottages and workshop walls use WorldProp.collisionBodies."
+}
