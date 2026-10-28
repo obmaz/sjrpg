@@ -22,17 +22,17 @@ void main() {
       expect(world.blocked(s.hero.body), false);
       expect(world.isWater(s.hero.body.center), false);
       expect(world.sanctuary.protects(s.hero.body), true);
-      expect(world.sanctuaryFences, isNotEmpty);
+      expect(world.settlementCollision, isNotEmpty);
       if (stage != WorldStage.forest) {
-        expect(world.sanctuary.center, stage.arrival);
-        expect(world.chests.first, stage.arrival + const Offset(0, 135));
+        expect(world.sanctuary.center, world.settlement.center);
+        expect(world.settlement.contains(world.chests.first), true);
       }
       const size = Size(28, 24);
       for (final service in [
         world.healAt + const Offset(0, 77),
         world.merchantAt,
         if (stage == WorldStage.sands)
-          ...timeQuestGivers.map((giver) => giver.atOrigin(world.spawn))
+          ...timeQuestGivers.map((giver) => world.questGiverAt(giver.path))
         else
           world.elderAt,
       ]) {
@@ -80,11 +80,13 @@ void main() {
       )..start(TestGame());
       addTearDown(s.dispose);
       final giver = timeQuestGivers.firstWhere((giver) => giver.path == path);
-      final at = giver.atOrigin(s.world.spawn);
+      final at = s.world.questGiverAt(giver.path);
       final component = QuestGiver(s, giver);
       expect(
-        Offset(component.position.x, component.position.y),
-        at - const Offset(14, 12),
+        (Offset(component.position.x, component.position.y) -
+                (at - const Offset(14, 12)))
+            .distance,
+        lessThan(.001),
       );
       s.hero.position.setValues(giver.at.dx - 14, giver.at.dy - 12);
       expect(s.nearbyTimeGiver, null);

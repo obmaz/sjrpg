@@ -135,6 +135,12 @@ void main() {
       addTearDown(settings.dispose);
       final s = inCombatField(Adventure(GameArt(), device: settings));
       s.start(TestGame());
+      while (s.progress.level < 6) {
+        s.progress.gainXp(s.progress.nextLevelXp);
+      }
+      s.progress.ranks['shout'] = 1;
+      expect(s.progress.selectSkill('shout'), isTrue);
+      s.progress.energy = s.progress.maxEnergy;
       s.hit(s.mobs.first, 5, const Offset(0, 0));
       expect(bridge.patterns, [
         [12],

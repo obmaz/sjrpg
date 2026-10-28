@@ -8,17 +8,29 @@ import 'support/test_game.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  test('nearby services remain available beside attackable chests', () {
+  test('nearby authored services retain priority beside attackable chests', () {
     final s = Adventure(GameArt());
     s.start(TestGame());
     addTearDown(s.dispose);
-    s.hero.position.setValues(3790 * worldScale, 2965 * worldScale);
+    final nearbyChest = List.generate(s.stageChestLocations.length, (i) => i)
+      ..sort(
+        (a, b) => (s.stageChestLocations[a] - s.world.elderAt).distance
+            .compareTo((s.stageChestLocations[b] - s.world.elderAt).distance),
+      );
+    final chestIndex = nearbyChest.first;
+    final sharedApproach =
+        (s.world.elderAt + s.stageChestLocations[chestIndex]) / 2;
+    s.hero.position.setValues(sharedApproach.dx - 14, sharedApproach.dy - 12);
+    expect(s.nearbyChest, chestIndex);
     expect(s.nearbyAction, NearbyAction.talk);
-    s.hero.position.setValues(3950 * worldScale, 2984 * worldScale);
+    s.hero.position.setValues(
+      s.world.merchantAt.dx - 14,
+      s.world.merchantAt.dy - 12,
+    );
     expect(s.nearbyAction, NearbyAction.shop);
     s.hero.position.setValues(
-      stageChests.first.dx - 12,
-      stageChests.first.dy - 11,
+      s.stageChestLocations.first.dx - 12,
+      s.stageChestLocations.first.dy - 11,
     );
     expect(s.nearbyChest, 0);
     s.openChest();

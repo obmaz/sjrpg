@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ui';
 
+import 'authored_settlement.dart';
 import 'world_model.dart';
 
 /// Visited wells and inactive scenes, without copies of the hero's progression.
@@ -35,11 +36,7 @@ class TravelJournal {
       final next = (well.at - center).distance;
       if (next < distance &&
           hasDiscovered(world.stage, well.id) &&
-          world.clearLine(
-            center,
-            well.at + const Offset(0, 77),
-            const Size(3, 3),
-          )) {
+          world.clearLine(center, world.wellApproach(well), const Size(3, 3))) {
         nearest = well;
         distance = next;
       }
@@ -157,15 +154,20 @@ List<QuestSite> wellSitesForStage(WorldStage stage, {Offset? hubOrigin}) => [
       WorldStage.convergence => '시간의 샘',
     },
     '모험의 거점',
-    (hubOrigin ?? stage.spawn) +
-        (stage == WorldStage.forest
-                ? const Offset(0, -55)
-                : const Offset(-280, -100)) *
-            worldScale,
+    AuthoredSettlement(stage, hubOrigin ?? stage.spawn).well,
     stage.sanctuaryColor,
   ),
   ...sitesForStage(stage),
 ];
+
+/// Standing center used by discovery, portals and cross-stage warp arrivals.
+Offset wellApproachForSite(
+  WorldStage stage,
+  QuestSite well, {
+  Offset? hubOrigin,
+}) => well.id == 'hub'
+    ? AuthoredSettlement(stage, hubOrigin ?? stage.spawn).wellApproach
+    : well.at + const Offset(0, 77);
 
 // Fixed origins of saves created before explicit layout metadata was recorded.
 const legacyHubOrigins = <List<double>>[

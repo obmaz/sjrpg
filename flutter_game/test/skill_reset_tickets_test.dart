@@ -17,8 +17,11 @@ void main() {
   Adventure start({
     GameCheckpoint? saved,
     WorldStage stage = WorldStage.forest,
+    HeroClass heroClass = HeroClass.warrior,
   }) {
-    final s = saved?.restore(GameArt()) ?? Adventure(GameArt(), stage: stage);
+    final s =
+        saved?.restore(GameArt()) ??
+        Adventure(GameArt(), stage: stage, heroClass: heroClass);
     s.start(TestGame());
     addTearDown(s.dispose);
     return s;
@@ -54,8 +57,13 @@ void main() {
       hubOrigin: s.world.spawn,
     ).firstWhere((w) => w.id == 'hub');
     s.travelJournal.discover(s.world.stage, 'hub');
-    s.hero.position.setValues(well.at.dx - 14, well.at.dy + 65);
+    final approach = s.world.wellApproach(well);
+    s.hero.position.setValues(
+      approach.dx - s.hero.body.width / 2,
+      approach.dy - s.hero.body.height / 2,
+    );
     s.hero.lastClearPosition = Offset(s.hero.position.x, s.hero.position.y);
+    expect(s.travelJournal.nearbyWell(s.world, s.hero.body.center)?.id, 'hub');
   }
 
   test(
@@ -133,9 +141,9 @@ void main() {
     );
 
     test(
-      '$path legacy active and archived completed scenes receive retroactive tickets exactly once',
+      '$path historical Mage completed scenes receive retroactive tickets exactly once',
       () {
-        var s = start();
+        var s = start(heroClass: HeroClass.mage);
         var completed = 0;
         while (true) {
           finish(s, path);
@@ -178,9 +186,9 @@ void main() {
   }
 
   test(
-    'legacy boss-only proof gets an empty persisted ledger, then real completion earns one',
+    'historical Mage boss-only proof gets an empty ledger before real completion',
     () {
-      final s = start();
+      final s = start(heroClass: HeroClass.mage);
       s.progress.bossDefeated = true;
       final legacy =
           jsonDecode(GameCheckpoint.capture(s)!.encode())

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'action_glyph_art.dart';
 import 'adventure.dart';
 import 'affliction_widgets.dart';
+import 'barbarian_icon_art.dart';
 import 'combat_balance.dart';
 import 'game_art.dart';
 import 'health_widgets.dart';
@@ -19,6 +20,9 @@ const mobileSurface = Color(0xd915232c),
     mobileBorder = Color(0x557a949b),
     mobileAccent = Color(0xff8fd4d1),
     mobileText = Color(0xffe8f0f2);
+const gameMetal = Color(0xffb3a079),
+    gameMetalDark = Color(0xff5b5645),
+    gameTeal = Color(0xff173b3e);
 String gameTime(double seconds) =>
     '${seconds ~/ 60}:${(seconds.toInt() % 60).toString().padLeft(2, '0')}';
 
@@ -54,17 +58,6 @@ class GameHud extends StatelessWidget {
             right: statusRight + 6,
             top: 46,
             child: ResourceMeter(session, height: resourceHeight),
-          ),
-          Positioned(
-            left: 77,
-            right: statusRight + 6,
-            top: 46 + resourceHeight + 3,
-            child: LinearProgressIndicator(
-              value: p.xp / p.nextLevelXp,
-              minHeight: 3,
-              color: gold,
-              backgroundColor: const Color(0x99102425),
-            ),
           ),
           Positioned(
             left: 10,
@@ -256,35 +249,62 @@ class ControlPainter extends CustomPainter {
       center,
       radius,
       Paint()
-        ..color = thumb ? const Color(0xbbaabdc4) : const Color(0x5515232c),
+        ..color = thumb ? const Color(0xdd3b5755) : const Color(0x77263d37),
     );
     canvas.drawCircle(
       center,
       radius,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2
-        ..color = thumb ? const Color(0xbbe3edf0) : mobileBorder,
+        ..strokeWidth = thumb ? 1.8 : 2.2
+        ..color = gameMetal.withValues(alpha: thumb ? .9 : .72),
+    );
+    canvas.drawCircle(
+      center,
+      radius - 2.8,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = .7
+        ..color = const Color(0x775e9186),
+    );
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius - .8),
+      -math.pi + .25,
+      2.3,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = .7
+        ..color = const Color(0x99e2d3a9),
     );
     if (!thumb) {
-      final line = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5
-        ..strokeCap = StrokeCap.round
-        ..color = const Color(0x779fb7bf);
+      final mark = Paint()..color = const Color(0xbcc2c39f);
+      final tip = radius * .76, half = math.max(4.0, radius * .085);
       for (var i = 0; i < 4; i++) {
         canvas.save();
         canvas.translate(center.dx, center.dy);
         canvas.rotate(i * math.pi / 2);
         canvas.drawPath(
           Path()
-            ..moveTo(-3, -radius * .76 + 3)
-            ..lineTo(0, -radius * .76)
-            ..lineTo(3, -radius * .76 + 3),
-          line,
+            ..moveTo(0, -tip - half * .6)
+            ..lineTo(-half, -tip + half * .6)
+            ..lineTo(half, -tip + half * .6)
+            ..close(),
+          mark,
         );
         canvas.restore();
       }
+    } else {
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius * .58),
+        -2.7,
+        1.8,
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.2
+          ..color = const Color(0x669fbaa8),
+      );
     }
   }
 
@@ -556,7 +576,7 @@ class MapPainter extends CustomPainter {
       if (session.world.stage == WorldStage.sands)
         for (final giver in timeQuestGivers)
           (
-            project(giver.atOrigin(session.world.spawn)),
+            project(session.world.questGiverAt(giver.path)),
             giver.name,
             giver.path == TimePath.past
                 ? Icons.auto_stories_rounded
@@ -793,6 +813,23 @@ class EffectIconPainter extends CustomPainter {
   final int index;
   @override
   void paint(Canvas canvas, Size size) {
+    if (BarbarianIconArt.containsEffect(index)) {
+      BarbarianIconArt.draw(
+        canvas,
+        art.images[BarbarianIconArt.imageKey],
+        index - BarbarianIconArt.firstEffect,
+        Offset.zero & size,
+      );
+      return;
+    }
+    if (index == 36) {
+      MobileActionGlyphPainter(
+        art,
+        MobileGlyph.shadow,
+        color: const Color(0xffbdcbdc),
+      ).paint(canvas, size);
+      return;
+    }
     final passive = index >= 8;
     final image =
         art.images[index >= 34
@@ -854,7 +891,8 @@ abstract final class MobileGlyph {
       heavy = 14,
       fist = 15,
       motor = 16,
-      blink = 17;
+      blink = 17,
+      shadow = 18;
 }
 
 class MobileActionGlyphPainter extends CustomPainter {
@@ -1142,6 +1180,19 @@ class MobileActionGlyphPainter extends CustomPainter {
         ], closed: true);
         path(const [Offset(11, 7), Offset(5, 16), Offset(11, 25)]);
         canvas.drawLine(const Offset(1, 16), const Offset(10, 16), line);
+      case MobileGlyph.shadow:
+        for (final x in [10.0, 22.0]) {
+          canvas.drawCircle(Offset(x, 8), 3, solid);
+          path([
+            Offset(x - 5, 25),
+            Offset(x - 4, 15),
+            Offset(x, 12),
+            Offset(x + 4, 15),
+            Offset(x + 5, 25),
+          ], closed: true);
+        }
+        canvas.drawLine(const Offset(5, 29), const Offset(18, 17), line);
+        canvas.drawLine(const Offset(20, 29), const Offset(29, 18), line);
       default:
         sword();
     }
@@ -1166,19 +1217,64 @@ class _BattleSurfacePainter extends CustomPainter {
   @override
   void paint(Canvas c, Size s) {
     final center = s.center(Offset.zero), radius = s.shortestSide / 2 - 2;
+    final rim = primary ? 3.6 : 2.8;
+    final bounds = Rect.fromCircle(center: center, radius: radius);
     c.drawCircle(
-      center,
+      center + const Offset(0, 2),
       radius,
-      Paint()..color = pressed ? const Color(0xee29414a) : mobileSurface,
+      Paint()..color = const Color(0x99000000),
     );
+    c.drawCircle(center, radius, Paint()..color = const Color(0xff221b15));
+    final metal = const LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        Color(0xffc4a779),
+        Color(0xff776048),
+        Color(0xff352a20),
+        Color(0xffa08760),
+      ],
+      stops: [0, .35, .70, 1],
+    ).createShader(bounds);
+    c.drawCircle(center, radius - 1, Paint()..shader = metal);
+    metal.dispose();
+    final face = RadialGradient(
+      center: const Alignment(-.3, -.4),
+      radius: 1.1,
+      colors: pressed
+          ? const [Color(0xff4a3930), Color(0xff161719)]
+          : const [Color(0xff303032), Color(0xff101416)],
+    ).createShader(bounds);
+    c.drawCircle(center, radius - rim, Paint()..shader = face);
+    face.dispose();
     c.drawCircle(
       center,
-      radius,
+      radius - rim - .6,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = (primary ? 1.6 : 1.1)
-        ..color = accent.withValues(alpha: primary ? 0.85 : 0.5),
+        ..strokeWidth = .8
+        ..color = const Color(0xff554b3a),
     );
+    c.drawArc(
+      bounds.deflate(1.6),
+      -math.pi + .2,
+      2.5,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = .8
+        ..color = const Color(0xffd0b68c),
+    );
+    if (pressed) {
+      c.drawCircle(
+        center,
+        radius - rim - 2,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..color = accent.withValues(alpha: .35),
+      );
+    }
   }
 
   @override
@@ -1261,8 +1357,64 @@ class _ActionButtonState extends State<ActionButton> {
         6 => MobileGlyph.shield,
         34 => MobileGlyph.sprint,
         35 => MobileGlyph.heavy,
+        36 => MobileGlyph.shadow,
         _ => MobileGlyph.attack,
       };
+  int? get _illustratedEffect =>
+      widget.effect ??
+      switch (widget.glyphIndex) {
+        MobileGlyph.warcry => 0,
+        MobileGlyph.whirl => 1,
+        MobileGlyph.ice => 2,
+        MobileGlyph.lightning => 3,
+        MobileGlyph.fire => 4,
+        MobileGlyph.slash => 7,
+        MobileGlyph.shield => 6,
+        MobileGlyph.sprint => 34,
+        MobileGlyph.heavy => 35,
+        MobileGlyph.shadow => 36,
+        _ => null,
+      };
+
+  Widget get _symbol {
+    final effect = _illustratedEffect;
+    if (effect != null &&
+        (effect == 36 ||
+            BarbarianIconArt.containsEffect(effect) ||
+            widget.art.images.containsKey(
+              BarbarianIconArt.containsEffect(effect)
+                  ? BarbarianIconArt.imageKey
+                  : effect >= 34
+                  ? 'physical-icons'
+                  : effect >= 14
+                  ? 'skill-perks'
+                  : effect >= 8
+                  ? 'passive-icons'
+                  : 'combat-fx',
+            ))) {
+      return CustomPaint(
+        size: Size.square(widget.size * .58),
+        painter: EffectIconPainter(widget.art, effect),
+      );
+    }
+    if (widget.glyphIndex == MobileGlyph.dodge &&
+        widget.art.images.containsKey('dodge-icon')) {
+      return CustomPaint(
+        size: Size.square(widget.size * .60),
+        painter: AbilityPicturePainter(widget.art, 'dodge-icon'),
+      );
+    }
+    if (widget.glyphIndex == null &&
+        widget.effect == null &&
+        widget.icon != null) {
+      return Icon(widget.icon, size: widget.size * .5, color: _accent);
+    }
+    return CustomPaint(
+      size: Size.square(widget.size * .5),
+      painter: MobileActionGlyphPainter(widget.art, _glyph, color: _accent),
+    );
+  }
+
   Color get _accent => switch (_glyph) {
     8 => const Color(0xffe6ad80),
     9 => const Color(0xffa3d9ed),
@@ -1337,23 +1489,7 @@ class _ActionButtonState extends State<ActionButton> {
                             : widget.enabled
                             ? 1
                             : .35,
-                        child:
-                            widget.glyphIndex == null &&
-                                widget.effect == null &&
-                                widget.icon != null
-                            ? Icon(
-                                widget.icon,
-                                size: widget.size * .5,
-                                color: _accent,
-                              )
-                            : CustomPaint(
-                                size: Size.square(widget.size * .5),
-                                painter: MobileActionGlyphPainter(
-                                  widget.art,
-                                  _glyph,
-                                  color: _accent,
-                                ),
-                              ),
+                        child: _symbol,
                       ),
                     if (widget.insufficientResource)
                       const Positioned.fill(
@@ -1541,6 +1677,52 @@ class _GameStickState extends State<GameStick> {
   );
 }
 
+class IllustratedMenuPainter extends CustomPainter {
+  const IllustratedMenuPainter(this.art, this.sprite);
+  final GameArt art;
+  final String sprite;
+  @override
+  void paint(Canvas canvas, Size size) {
+    const _BattleSurfacePainter(Color(0xffcbb591)).paint(canvas, size);
+    final destination = (Offset.zero & size).deflate(size.shortestSide * .19);
+    if (art.images['controls'] case final image?) {
+      final cell = art.controls[sprite] as List;
+      final source = Rect.fromLTWH(
+        (cell[0] as num).toDouble(),
+        (cell[1] as num).toDouble(),
+        (cell[2] as num).toDouble(),
+        (cell[3] as num).toDouble(),
+      );
+      // Retain the painted equipment/map icon, with its old square frame
+      // cropped away so the new round bronze bezel remains the only border.
+      canvas.save();
+      canvas.clipPath(Path()..addOval(destination));
+      canvas.drawImageRect(
+        image,
+        source.deflate(source.shortestSide * .19),
+        destination,
+        Paint()..filterQuality = FilterQuality.medium,
+      );
+      canvas.restore();
+      return;
+    }
+    canvas.save();
+    canvas.translate(destination.left, destination.top);
+    MobileActionGlyphPainter(art, switch (sprite) {
+      'touchInventory' => MobileGlyph.bag,
+      'touchQuests' => MobileGlyph.skills,
+      'touchCompendium' => MobileGlyph.map,
+      'touchSettings' => MobileGlyph.settings,
+      _ => MobileGlyph.map,
+    }, color: const Color(0xffcbb591)).paint(canvas, destination.size);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant IllustratedMenuPainter oldDelegate) =>
+      oldDelegate.art != art || oldDelegate.sprite != sprite;
+}
+
 class MenuButton extends StatelessWidget {
   const MenuButton({
     required this.art,
@@ -1564,7 +1746,7 @@ class MenuButton extends StatelessWidget {
       onTap: onTap,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(29),
         child: SizedBox(
           width: 58,
           height: 58,
@@ -1572,24 +1754,8 @@ class MenuButton extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: mobileSurface,
-                    borderRadius: BorderRadius.circular(13),
-                    border: Border.all(color: mobileBorder),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: CustomPaint(
-                      painter: MobileActionGlyphPainter(art, switch (sprite) {
-                        'touchInventory' => 2,
-                        'touchQuests' => 3,
-                        'touchCompendium' => 4,
-                        'touchSettings' => 5,
-                        _ => 4,
-                      }),
-                    ),
-                  ),
+                child: CustomPaint(
+                  painter: IllustratedMenuPainter(art, sprite),
                 ),
               ),
               if (badge > 0)

@@ -14,6 +14,7 @@ import 'interface_art.dart';
 import 'mount_sprite_mesh.dart';
 import 'prop_grounding.dart';
 import 'quest_scenery.dart';
+import 'village_scene_blend.dart';
 import 'world_model.dart';
 
 class GameArt {
@@ -101,11 +102,20 @@ class GameArt {
     'cyber-props',
     'ruin-props',
     'village-scene',
+    'settlement-forest',
+    'settlement-sands',
+    'settlement-past',
+    'settlement-future',
+    'settlement-tombs',
+    'settlement-foundry',
+    'settlement-convergence',
+
     'blacksmith-forge',
     'village-gardens',
     'village-cottage',
     'quest-root-garden',
     'action-glyphs',
+    'barbarian-skills',
     'landscape-bridge',
     'world-forest',
     'world-desert',
@@ -115,23 +125,28 @@ class GameArt {
   // Stable saved stage IDs keep later chapters compatible with their art family.
   static const _sceneryImages = <String, Set<String>>{
     'forest': {
+      'settlement-forest',
       'world-desert',
       'landscape-bridge',
-      'blacksmith-forge',
-      'village-gardens',
-      'village-cottage',
       'quest-root-garden',
     },
-    'sands': {'world-desert', 'ruin-props'},
-    'past': {'ruin-props'},
-    'future': {'cyber-props'},
-    'tombs': {'ruin-props'},
-    'foundry': {'cyber-props'},
-    'convergence': {'ruin-props'},
+    'sands': {'settlement-sands', 'world-desert', 'ruin-props'},
+    'past': {'settlement-past', 'ruin-props'},
+    'future': {'settlement-future', 'cyber-props'},
+    'tombs': {'settlement-tombs', 'ruin-props'},
+    'foundry': {'settlement-foundry', 'cyber-props'},
+    'convergence': {'settlement-convergence', 'ruin-props'},
   };
   // Simplified runtime effects no longer draw these large decorative atlases.
   // Keep the original sources available to the full loader and art tooling.
-  static const _stagedRetiredVfx = {'fx-steel-whirlwind', 'fx-warcry'};
+  static const _stagedRetiredVfx = {
+    'fx-steel-whirlwind',
+    'fx-warcry',
+    'village-scene',
+    'village-gardens',
+    'village-cottage',
+    'blacksmith-forge',
+  };
 
   static const _sharedActors = {
     'actors-hero',
@@ -219,6 +234,7 @@ class GameArt {
     final names = <String>{
       for (final name in _allImages)
         if (!_stagedRetiredVfx.contains(name) &&
+            (name != 'barbarian-skills' || heroClass == HeroClass.warrior) &&
             (!name.startsWith('actors-') || _sharedActors.contains(name)) &&
             !exclusiveScenery.contains(name))
           name,
@@ -253,7 +269,7 @@ class GameArt {
     names.addAll(
       actorKeys.map((key) => 'actors-${_actorDefinitions[key]!.$1}'),
     );
-    await _ensureImages(names, ground: true, village: stage.name == 'forest');
+    await _ensureImages(names, ground: true, village: false);
   }
 
   String _imagePath(String name) =>
@@ -321,6 +337,12 @@ class GameArt {
         .toSet();
     if (buildGround) requested.addAll(['terrain-materials', 'stage-materials']);
     final decoded = await _decodeMissing(requested);
+    for (final name in decoded.keys.toList()) {
+      if (!name.startsWith('settlement-')) continue;
+      final source = decoded[name]!;
+      decoded[name] = await _featherSettlement(source);
+      source.dispose();
+    }
     final consumedSources = decoded.keys.toList();
     final sourceImages = {...images, ...decoded};
     final baked = <String, ui.Image>{};
@@ -421,6 +443,61 @@ class GameArt {
     }
   }
 
+  Future<ui.Image> _featherSettlement(ui.Image source) async {
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder);
+    final bounds = ui.Rect.fromLTWH(
+      0,
+      0,
+      source.width.toDouble(),
+      source.height.toDouble(),
+    );
+    canvas.saveLayer(bounds, ui.Paint());
+    canvas.drawImage(source, ui.Offset.zero, ui.Paint());
+    final edge = source.width * .035;
+    for (final side in [
+      (
+        ui.Offset.zero,
+        ui.Offset(edge, 0),
+        ui.Rect.fromLTWH(0, 0, edge, bounds.height),
+      ),
+      (
+        ui.Offset(bounds.width, 0),
+        ui.Offset(bounds.width - edge, 0),
+        ui.Rect.fromLTWH(bounds.width - edge, 0, edge, bounds.height),
+      ),
+      (
+        ui.Offset.zero,
+        ui.Offset(0, edge),
+        ui.Rect.fromLTWH(0, 0, bounds.width, edge),
+      ),
+      (
+        ui.Offset(0, bounds.height),
+        ui.Offset(0, bounds.height - edge),
+        ui.Rect.fromLTWH(0, bounds.height - edge, bounds.width, edge),
+      ),
+    ]) {
+      final shader = ui.Gradient.linear(side.$1, side.$2, [
+        const ui.Color(0x00ffffff),
+        const ui.Color(0xffffffff),
+      ]);
+      canvas.drawRect(
+        side.$3,
+        ui.Paint()
+          ..blendMode = ui.BlendMode.dstIn
+          ..shader = shader,
+      );
+      shader.dispose();
+    }
+    canvas.restore();
+    final picture = recorder.endRecording();
+    try {
+      return await picture.toImage(source.width, source.height);
+    } finally {
+      picture.dispose();
+    }
+  }
+
   Future<void> _bakeVillage(
     Map<String, ui.Image> sourceImages,
     Map<String, ui.Image> baked,
@@ -428,49 +505,11 @@ class GameArt {
     final village = sourceImages['village-scene']!,
         rec = ui.PictureRecorder(),
         canvas = ui.Canvas(rec);
-    const target = ui.Rect.fromLTWH(0, 0, 640, 960),
-        clear = ui.Color(0x00ffffff),
-        full = ui.Color(0xffffffff);
-    canvas.drawImageRect(
+    paintVillageSceneBlend(
+      canvas,
       village,
-      ui.Rect.fromLTWH(
-        0,
-        0,
-        village.width.toDouble(),
-        village.height.toDouble(),
-      ),
-      target,
-      ui.Paint()..filterQuality = ui.FilterQuality.medium,
+      const ui.Rect.fromLTWH(0, 0, 640, 960),
     );
-    for (final mask in [
-      (
-        const ui.Rect.fromLTWH(0, 0, 64, 960),
-        const ui.Offset(0, 0),
-        const ui.Offset(64, 0),
-      ),
-      (
-        const ui.Rect.fromLTWH(576, 0, 64, 960),
-        const ui.Offset(640, 0),
-        const ui.Offset(576, 0),
-      ),
-      (
-        const ui.Rect.fromLTWH(0, 0, 640, 64),
-        const ui.Offset(0, 0),
-        const ui.Offset(0, 64),
-      ),
-      (
-        const ui.Rect.fromLTWH(0, 832, 640, 128),
-        const ui.Offset(0, 960),
-        const ui.Offset(0, 832),
-      ),
-    ]) {
-      canvas.drawRect(
-        mask.$1,
-        ui.Paint()
-          ..blendMode = ui.BlendMode.dstIn
-          ..shader = ui.Gradient.linear(mask.$2, mask.$3, [clear, full]),
-      );
-    }
     final picture = rec.endRecording();
     try {
       baked['village-blended'] = await picture.toImage(640, 960);
@@ -893,9 +932,13 @@ class TerrainArt {
   final cache = <String, ui.Picture>{};
   late final questScenery = QuestScenery(world);
   late final propGrounding = PropGrounding(world.propBuckets);
-  late final ui.Path waterPath = [...world.lakes, world.river]
-      .map((region) => region.path)
-      .reduce((a, b) => ui.Path.combine(ui.PathOperation.union, a, b));
+  late final ui.Path waterPath = ui.Path.combine(
+    ui.PathOperation.difference,
+    [...world.lakes, world.river]
+        .map((region) => region.path)
+        .reduce((a, b) => ui.Path.combine(ui.PathOperation.union, a, b)),
+    ui.Path()..addRect(world.settlement),
+  );
   late final ui.Path dryGroundPath = ui.Path.combine(
     ui.PathOperation.difference,
     ui.Path()..addRect(ui.Offset.zero & worldSize),
@@ -1018,47 +1061,6 @@ class TerrainArt {
       questScenery.paintDedicated(c, rootGarden, area);
       c.restore();
     }
-    // The entire settlement shares one ground material. Paint after biome
-    // patches and trails so the workshop does not become an isolated grass lot;
-    // retain visible water and render the authored fountain scene above it.
-    final sanctuary = world.sanctuary;
-    if (world.stage == WorldStage.forest) {
-      final gardens = art.images['village-gardens'];
-      const gardenBounds = ui.Rect.fromLTWH(2250, 1450, 1560, 1560);
-      if (gardens != null && gardenBounds.overlaps(area)) {
-        c.save();
-        c.clipPath(dryGroundPath, doAntiAlias: false);
-        c.drawImageRect(
-          gardens,
-          ui.Rect.fromLTWH(
-            0,
-            0,
-            gardens.width.toDouble(),
-            gardens.height.toDouble(),
-          ),
-          gardenBounds,
-          ui.Paint()..filterQuality = ui.FilterQuality.medium,
-        );
-        c.restore();
-      }
-    } else if (sanctuary.protects(area)) {
-      c.save();
-      c.clipPath(dryGroundPath, doAntiAlias: false);
-      c.drawCircle(
-        sanctuary.center,
-        sanctuary.radius,
-        ui.Paint()..shader = art.materials[world.stage.settlementMaterial],
-      );
-      c.drawCircle(
-        sanctuary.center,
-        sanctuary.radius - 6,
-        ui.Paint()
-          ..color = world.stage.sanctuaryColor.withValues(alpha: .32)
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 12,
-      );
-      c.restore();
-    }
     for (final bridge in world.bridges) {
       if (!bridge.overlaps(area)) continue;
       c.drawImageRect(
@@ -1068,35 +1070,18 @@ class TerrainArt {
         ui.Paint(),
       );
     }
-    if (world.stage == WorldStage.forest && town.inflate(30).overlaps(area)) {
-      final village = art.images['village-blended']!;
+    final settlement = art.images[world.authoredSettlement.imageKey];
+    if (settlement != null && world.settlement.overlaps(area)) {
       c.drawImageRect(
-        village,
+        settlement,
         ui.Rect.fromLTWH(
           0,
           0,
-          village.width.toDouble(),
-          village.height.toDouble(),
+          settlement.width.toDouble(),
+          settlement.height.toDouble(),
         ),
-        town,
+        world.settlement,
         ui.Paint()..filterQuality = ui.FilterQuality.medium,
-      );
-    }
-    if (world.stage != WorldStage.forest &&
-        sanctuary.protects(area.inflate(4))) {
-      final color = world.stage.sanctuaryColor;
-      c.drawCircle(
-        sanctuary.center,
-        sanctuary.radius,
-        ui.Paint()..color = color.withValues(alpha: .035),
-      );
-      c.drawCircle(
-        sanctuary.center,
-        sanctuary.radius,
-        ui.Paint()
-          ..color = color.withValues(alpha: .45)
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 2.5,
       );
     }
     // Ground-plane shading stays below every depth-sorted actor and prop.

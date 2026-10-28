@@ -6,15 +6,11 @@ import 'package:guardian_new/world_model.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final world = AdventureWorld();
-  Offset at(double u, double v) =>
-      Offset(town.left + town.width * u, town.top + town.height * v);
   for (final size in [const Size(28, 24), const Size(44, 32)]) {
-    for (final (name, start, end) in [
-      ('east', at(.73, .52), at(1.18, .52)),
-      ('west', at(.15, .34), at(-.18, .34)),
-      ('north', at(.48, .07), at(.48, -.13)),
-      ('south', at(.57, .88), at(.57, 1.15)),
-    ]) {
+    for (final entry in world.authoredSettlement.gatePaths.asMap().entries) {
+      final name = 'gate-${entry.key}';
+      final half = Offset(size.width / 2, size.height / 2);
+      final start = entry.value.first - half, end = entry.value.last - half;
       test('$name village gate admits a complete $size body', () {
         expect(world.clearLine(start, end, size), true);
         var current = start;
@@ -28,15 +24,12 @@ void main() {
       });
     }
   }
-  test('fountain, shop and fences beside the east gate remain solid', () {
-    for (final point in [
-      at(.5, .245),
-      at(.85, .25),
-      at(.95, .4),
-      at(.9, .72),
-    ]) {
+  test('fountain and building silhouettes stay solid beside open gates', () {
+    for (final polygon in world.settlementCollision.take(5)) {
       expect(
-        world.blocked(Rect.fromCenter(center: point, width: 12, height: 12)),
+        world.blocked(
+          Rect.fromCenter(center: polygon.bounds.center, width: 12, height: 12),
+        ),
         true,
       );
     }

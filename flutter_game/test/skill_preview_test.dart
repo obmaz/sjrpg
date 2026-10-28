@@ -7,8 +7,11 @@ void main() {
   for (final hero in HeroClass.values) {
     test('$hero previews never spend and match subsequently learned ranks', () {
       for (final skill
-          in hero == HeroClass.warrior ? warriorSkills : mageSkills) {
-        final p = Progress(heroClass: hero)..gainXp(7500);
+          in hero == HeroClass.warrior ? allWarriorSkills : mageSkills) {
+        final p = Progress(heroClass: hero);
+        while (p.level < 100) {
+          p.gainXp(p.nextLevelXp - p.xp);
+        }
         for (final entry in p.skills) {
           p.ranks[entry.id] = 1;
         }
@@ -37,16 +40,23 @@ void main() {
     expect(row.next, greaterThan(0));
     expect(p.rank('meteor'), 0);
     expect(p.skillPoints, points);
-    for (final skill in p.skills) {
-      p.ranks[skill.id] = SkillDef.maxRank;
+    for (final hero in HeroClass.values) {
+      final maxed = Progress(heroClass: hero)..level = 100;
+      for (final skill in maxed.skills) {
+        maxed.ranks[skill.id] = skill.rankLimit;
+      }
+      final before = jsonEncode(maxed.toSave());
+      for (final skill in maxed.skills) {
+        expect(
+          previewSkill(maxed, skill).every((row) => row.current == row.next),
+          true,
+          reason: skill.id,
+        );
+        expect(maxed.canLearn(skill), false);
+      }
+      expect(jsonEncode(maxed.toSave()), before);
     }
-    for (final skill in p.skills) {
-      expect(
-        previewSkill(p, skill).every((row) => row.current == row.next),
-        true,
-        reason: skill.id,
-      );
-    }
+    p.ranks['meteor'] = meteor.rankLimit;
     expect(p.skillDamage(meteor, atRank: 99), p.skillDamage(meteor, atRank: 5));
     expect(p.skillDamage(meteor, atRank: -1), 0);
     expect(p.skillPoints, points);

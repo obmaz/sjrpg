@@ -74,7 +74,7 @@ void main() {
       addTearDown(s.dispose);
       s.progress.gainXp(8000);
       s.progress.ranks[hero == HeroClass.warrior
-              ? 'mastery'
+              ? 'swordMastery'
               : 'arcaneMastery'] =
           2;
       s.progress.gold = 1000;

@@ -69,6 +69,15 @@ Map<String, List<Offset>> questRoutes(AdventureWorld world, Size size) {
       }
     }
   }
+  // Complete settlement illustrations span more than the old camp patch.
+  // Sample the actual open courts and gate approaches; all graph edges below
+  // still use full-body sweeps, so this never joins through painted buildings.
+  final village = world.authoredSettlement.bounds.inflate(240);
+  for (var y = village.top; y <= village.bottom; y += 48) {
+    for (var x = village.left; x <= village.right; x += 48) {
+      add(Offset(x, y));
+    }
+  }
   // Breakable chests occupy the road center. Sample their open perimeter at
   // half the road spacing so a mount can take a real, swept-clear sidestep.
   for (final center in world.chests) {
@@ -143,12 +152,13 @@ void main() {
             var position = world.spawn;
             for (final center in route.skip(1)) {
               final target = center - half;
+              final from = position;
               position = world.move(position, target - position, size);
               expect(
                 (position - target).distance,
                 lessThan(.05),
                 reason:
-                    '${site.id}: full movement reaches each swept-clear route segment',
+                    '${site.id}: full movement reaches each swept-clear route segment; from/target/actual ${[from.dx, from.dy, target.dx, target.dy, position.dx, position.dy]}',
               );
             }
             expect((position + half - site.at).distance, lessThan(115));

@@ -30,8 +30,8 @@ void main() {
           ..start(TestGame())
           ..pause();
         addTearDown(s.dispose);
-        final giver = timeQuestGivers.firstWhere((giver) => giver.path == path);
-        s.hero.position.setValues(giver.at.dx - 14, giver.at.dy - 12);
+        final at = s.world.questGiverAt(path);
+        s.hero.position.setValues(at.dx - 14, at.dy - 12);
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData(fontFamily: 'Guardian'),

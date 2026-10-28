@@ -4,6 +4,7 @@ import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/rpg_model.dart';
 import 'package:guardian_new/skill_tree.dart';
+import 'package:guardian_new/skill_tree_layout.dart';
 import 'support/test_game.dart';
 
 void main() {
@@ -43,7 +44,7 @@ void main() {
         await tester.pumpAndSettle();
         final bounds = {
           for (final skill in s.progress.skills.where(
-            (def) => !def.basic || def.id == s.progress.defaultBasicId,
+            (def) => skillTreeSkillVisible(s.progress, def),
           ))
             skill.id: tester.getRect(
               find.byKey(ValueKey('skill-node-${skill.id}')),

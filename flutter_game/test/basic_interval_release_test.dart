@@ -8,12 +8,13 @@ import 'package:guardian_new/combat_balance.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/rpg_model.dart';
 
+import 'basic_selection_test.dart' show train;
 import 'support/test_game.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  // Keep the same twelve basic/rank cases and unchanged costs from the earlier
-  // release, but compare damage/rate with actual pre-nerf mobile69 snapshots.
+  // Preserve historical cadence comparisons for the supported canonical basic
+  // and all three mage basics. Original Barbarian actions are paid skills below.
   final originalCases =
       jsonDecode(
             File('test/fixtures/basic_pacing_mobile61.json').readAsStringSync(),
@@ -29,6 +30,7 @@ void main() {
   for (final row in originalCases['rows'] as List) {
     final heroClass = HeroClass.values.byName(row['hero'] as String);
     final mode = row['mode'] as String, rank = row['rank'] as int;
+    if (heroClass == HeroClass.warrior && mode != 'cleave') continue;
     test('$mode rank $rank uses slower actual cadence and weaker hits', () {
       final s = inCombatField(Adventure(GameArt(), heroClass: heroClass))
         ..start(TestGame());
@@ -56,7 +58,12 @@ void main() {
       );
       final oldActive = originalCases['actives'][heroClass.name];
       for (final def in p.skills.where(
-        (s) => !s.basic && !s.passive && !s.mobility,
+        (s) =>
+            heroClass == HeroClass.mage &&
+            !s.basic &&
+            !s.passive &&
+            !s.mobility &&
+            (oldActive['costs'] as Map).containsKey(s.id),
       )) {
         expect(
           p.skillCooldown(def, atRank: 1),
@@ -128,5 +135,42 @@ void main() {
       s.hero.slash();
       expect(s.hero.strikes, 2, reason: 'the actual new gate reopens normally');
     });
+  }
+  for (final id in ['bash', 'stun']) {
+    for (final rank in [1, 5]) {
+      test(
+        '$id rank$rank has a paid active cadence independent of the canonical basic',
+        () {
+          final session = inCombatField(Adventure(GameArt()))
+            ..start(TestGame());
+          addTearDown(session.dispose);
+          session.mobs.clear();
+          final p = session.progress
+            ..level = 100
+            ..skillPoints = 1000;
+          train(p, id, rank);
+          expect(p.selectSkill(id), true);
+          p.energy = p.maxEnergy;
+          final skill = p.skills.firstWhere((skill) => skill.id == id);
+          final target = session.spawnEnemy(
+            'goblin',
+            session.hero.body.center + const Offset(50, 0),
+          )!..life.initial(10000);
+          final energy = p.energy, points = p.skillPoints;
+          final damage = p.skillDamage(skill), cost = p.skillCost(skill);
+          session.hero.skill();
+          expect(target.life.value, closeTo(10000 - damage, .00001));
+          expect(session.hero.cooldowns[id], p.skillCooldown(skill));
+          expect(p.energy, closeTo(energy - cost, .00001));
+          expect(p.skillPoints, points);
+          expect(p.selectedBasic, 'cleave');
+          final hp = target.life.value, cooldown = session.hero.cooldowns[id];
+          session.hero.skill();
+          expect(target.life.value, hp);
+          expect(p.energy, closeTo(energy - cost, .00001));
+          expect(session.hero.cooldowns[id], cooldown);
+        },
+      );
+    }
   }
 }

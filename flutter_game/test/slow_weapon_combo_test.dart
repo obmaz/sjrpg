@@ -40,7 +40,7 @@ void main() {
           health = target.life.value;
         }
         s.holdAttack('touch:combo', false);
-        expect(poses, [0, 0, 0]);
+        expect(poses, [1, 2, 0]);
         expect(damage.length, 3);
         expect(damage[0], closeTo(p.basicDamage, .000001));
         expect(damage[1], closeTo(p.basicDamage, .000001));
@@ -56,7 +56,7 @@ void main() {
         }
         final before = target.life.value;
         s.hero.slash();
-        expect(s.hero.strikePose, 0);
+        expect(s.hero.strikePose, 1);
         expect(target.life.value, closeTo(before - p.basicDamage, .000001));
       },
     );

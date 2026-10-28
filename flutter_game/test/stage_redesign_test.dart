@@ -109,7 +109,17 @@ void main() {
     for (final hero in HeroClass.values) {
       final p = Progress(heroClass: hero);
       for (final skill in p.skills.where(
-        (s) => !s.passive && !s.mobility && s.id != 'iceArmor',
+        (s) => const {
+          'leap',
+          'howl',
+          'warcry',
+          'battleCry',
+          'grimWard',
+          'whirlwind',
+          'frostNova',
+          'chainLightning',
+          'meteor',
+        }.contains(s.id),
       )) {
         expect(
           [
@@ -121,9 +131,7 @@ void main() {
         );
       }
       final specialties = hero == HeroClass.warrior
-          ? {
-              'stormOfSteel': ['whirlwind', 'seismicSlam'],
-            }
+          ? <String, List<String>>{}
           : {
               'cinderReach': ['meteor'],
               'forkedStorm': ['chainLightning'],

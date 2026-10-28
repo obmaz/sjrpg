@@ -1,0 +1,12 @@
+{
+  "source": "/workspace/generated_images/exec-bac06812-a934-4449-a2bf-12aa7bb9b4ff.png",
+  "sha256": "1b8c36c15959872a5a759b8b37edca50c6530f430f6e0a3cd40b4fa58d97cbf3",
+  "generator": "image_gen",
+  "size": [
+    1254,
+    1254
+  ],
+  "camera": "fixed elevated orthographic three-quarter",
+  "lighting": "soft upper-left",
+  "theme": "tombs"
+}

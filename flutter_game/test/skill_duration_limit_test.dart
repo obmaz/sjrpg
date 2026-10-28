@@ -9,142 +9,157 @@ import 'support/test_game.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  Adventure session(HeroClass heroClass) {
-    final s = Adventure(GameArt(), heroClass: heroClass)..start(TestGame());
+  Adventure session(HeroClass hero) {
+    final s = inCombatField(Adventure(GameArt(), heroClass: hero))
+      ..start(TestGame());
     addTearDown(s.dispose);
     s.mobs.clear();
-    s.hero.position.setValues(6000, 4200);
-    s.progress.gainXp(8000);
+    s.waveTime = 10000;
+    while (s.progress.level < 100) {
+      s.progress.gainXp(s.progress.nextLevelXp - s.progress.xp);
+    }
+    s.syncLife();
     return s;
   }
 
-  for (final id in ['warcry', 'frenzy', 'iceArmor']) {
-    for (var rank = 1; rank <= 5; rank++) {
-      test('$id rank $rank expires before its actual assigned cooldown', () {
-        final s = session(
-          id == 'iceArmor' ? HeroClass.mage : HeroClass.warrior,
-        );
-        s.progress.ranks[id] = rank;
-        if (id == 'warcry') s.progress.ranks['battleVigor'] = 5;
-        s.progress.selectSkill(id);
-        s.progress.energy = s.progress.maxEnergy;
-        final def = s.progress.skills.firstWhere((skill) => skill.id == id);
-        s.hero.skill();
-        final duration = id == 'frenzy' ? s.hero.frenzyTime : s.hero.armorTime;
-        final cooldown = s.hero.cooldowns[id]!;
-        expect(duration, greaterThan(0));
-        expect(duration, lessThan(cooldown));
-        expect(duration, lessThanOrEqualTo(cooldown * .9 + .000001));
-        expect(cooldown, s.progress.skillCooldown(def));
-        s.pause();
-        s.hero.update(.05);
-        expect(id == 'frenzy' ? s.hero.frenzyTime : s.hero.armorTime, duration);
-        s.resume();
-        for (var t = 0.0; t <= duration; t += .05) {
-          s.hero.update(.05);
-        }
-        expect(id == 'frenzy' ? s.hero.frenzyTime : s.hero.armorTime, 0);
-        expect(s.hero.cooldowns[id], greaterThan(0));
-      });
+  void train(Adventure s, String id, [int rank = 1]) {
+    final def = s.progress.skills.firstWhere((d) => d.id == id);
+    for (final parent in def.requires.entries) {
+      if (s.progress.rank(parent.key) < parent.value) {
+        train(s, parent.key, parent.value);
+      }
+    }
+    while (s.progress.rank(id) < rank) {
+      expect(s.learn(def), true, reason: id);
     }
   }
-  test('BattleVigor reduces real incoming damage only during warcry', () {
-    final s = session(HeroClass.warrior);
-    s.progress.selectSkill('warcry');
-    double incoming(int rank, {required bool protected}) {
-      // Each probe starts after the preceding real Warcry gesture, so the
-      // next cast is accepted rather than queued behind its cast lock.
-      while (s.hero.castLock > 0) {
-        s.hero.update(.05);
-      }
-      s.progress.ranks['battleVigor'] = rank;
-      s.hero.armorTime = 0;
-      s.hero.invulnerable = 0;
-      s.progress.hp = s.progress.maxHp;
-      s.syncLife();
-      if (protected) {
-        s.hero.cooldowns.remove('warcry');
-        s.progress.energy = s.progress.maxEnergy;
-        s.hero.skill();
-        expect(s.hero.armorTime, greaterThan(0));
-      }
-      final hp = s.progress.hp;
-      s.hurtHero(100);
-      return hp - s.progress.hp;
-    }
 
-    final ordinary = incoming(0, protected: false);
-    final warcry = incoming(0, protected: true);
-    for (var rank = 1; rank <= 5; rank++) {
-      expect(incoming(rank, protected: false), closeTo(ordinary, .000001));
-      expect(
-        incoming(rank, protected: true),
-        closeTo(warcry - ordinary * .005 * rank, .000001),
-      );
+  void advance(Adventure s, double time) {
+    var left = time;
+    while (left > .000001) {
+      final dt = left < .05 ? left : .05;
+      s.tick(dt);
+      s.hero.update(dt);
+      left -= dt;
     }
-    for (var t = 0.0; t <= s.progress.warcryDuration; t += .05) {
-      s.hero.update(.05);
-    }
-    expect(s.hero.armorTime, 0);
+  }
+
+  for (var rank = 1; rank <= 5; rank++) {
+    test('iceArmor rank$rank expires before its assigned cooldown', () {
+      final s = session(HeroClass.mage);
+      train(s, 'iceArmor', rank);
+      s.progress.selectSkill('iceArmor');
+      s.progress.energy = s.progress.maxEnergy;
+      final def = s.progress.activeSkill;
+      s.hero.skill();
+      final duration = s.hero.armorTime, cooldown = s.hero.cooldowns[def.id]!;
+      expect(duration, greaterThan(0));
+      expect(duration, lessThanOrEqualTo(cooldown * .9 + .000001));
+      expect(cooldown, s.progress.skillCooldown(def));
+      s.pause();
+      advance(s, .1);
+      expect(s.hero.armorTime, duration);
+      s.resume();
+      advance(s, duration + .01);
+      expect(s.hero.armorTime, 0);
+      expect(s.hero.cooldowns[def.id], greaterThan(0));
+    });
+  }
+  for (final id in ['shout', 'battleOrders', 'battleCommand']) {
+    test(
+      'D2 $id is a refreshable source-duration buff beyond its cooldown',
+      () {
+        final s = session(HeroClass.warrior), p = s.progress;
+        train(s, id);
+        expect(p.selectSkill(id), true);
+        p.energy = p.maxEnergy;
+        final def = p.activeSkill, duration = p.barbarianBuffDuration(id);
+        final before = jsonEncode(p.toSave());
+        final preview = previewSkill(
+          p,
+          def,
+        ).firstWhere((r) => r.label == '지속 시간');
+        expect(preview.current, duration);
+        expect(jsonEncode(p.toSave()), before);
+        s.hero.skill();
+        final cooldown = s.hero.cooldowns[id]!;
+        expect(duration, greaterThan(cooldown));
+        bool active() => id == 'shout'
+            ? p.activeArmorMultiplier > 1
+            : id == 'battleOrders'
+            ? p.activeLifeMultiplier > 1
+            : p.activeSkillBonus == 1;
+        expect(active(), true);
+        s.pause();
+        advance(s, .1);
+        expect(active(), true);
+        s.resume();
+        advance(s, cooldown + .01);
+        expect(active(), true);
+        expect(s.hero.cooldowns[id], 0);
+        advance(s, duration - cooldown + .1);
+        expect(active(), false);
+      },
+    );
+  }
+  test('shout changes real armor mitigation and Berserk removes defense', () {
+    final s = session(HeroClass.warrior), p = s.progress;
+    train(s, 'shout');
+    p.selectSkill('shout');
+    p.energy = p.maxEnergy;
+    final ordinary = p.mitigate(100), baseArmor = p.armor;
+    s.hero.skill();
+    expect(p.armor, greaterThan(baseArmor));
     s.hero.invulnerable = 0;
-    final hp = s.progress.hp;
+    final before = p.hp;
     s.hurtHero(100);
-    expect(hp - s.progress.hp, closeTo(ordinary, .000001));
+    expect(before - p.hp, closeTo(p.mitigate(100), .000001));
+    expect(before - p.hp, lessThan(ordinary));
+    p.berserkActive = true;
+    expect(p.armor, 0);
+    expect(p.mitigate(100), 100);
+    expect(p.mitigate(100, protection: 10), 25);
   });
   test(
-    'BattleVigor preview and learned ranks share HP and protection benefits',
+    'Mage duration preview matches actual current and next casts without spend',
     () {
-      final s = session(HeroClass.warrior), p = s.progress;
-      final def = p.skills.firstWhere((d) => d.id == 'battleVigor');
-      final hp = p.maxHp;
-      final duration = p.warcryDuration;
-      final cooldown = p.skillCooldown(p.activeSkill);
-      final protection = p.skillProtection('warcry');
-      for (var rank = 0; rank < 5; rank++) {
-        final before = jsonEncode(p.toSave());
-        final preview = previewSkill(p, def);
-        expect(jsonEncode(p.toSave()), before);
-        final health = preview.firstWhere((row) => row.label == '최대 생명');
-        final guard = preview.firstWhere((row) => row.label == '함성 피해 감소');
-        expect(health.current, hp + rank * 8);
-        expect(health.next, hp + (rank + 1) * 8);
-        expect(
-          guard.current,
-          closeTo((protection + rank * .005) * 100, .000001),
-        );
-        expect(
-          guard.next,
-          closeTo((protection + (rank + 1) * .005) * 100, .000001),
-        );
-        final points = p.skillPoints;
-        expect(p.learn(def), true);
-        expect(p.skillPoints, points - 1);
-        expect(p.maxHp, health.next);
-        expect(p.skillProtection('warcry') * 100, closeTo(guard.next, .000001));
-        expect(p.warcryDuration, duration);
-        expect(p.skillCooldown(p.activeSkill), cooldown);
-      }
-      final restored = Progress.fromSave(p.toSave())!;
-      expect(restored.skillProtection('warcry'), p.skillProtection('warcry'));
-      expect(restored.maxHp, p.maxHp);
+      final s = session(HeroClass.mage), p = s.progress;
+      train(s, 'iceArmor', 2);
+      p.selectSkill('iceArmor');
+      final def = p.activeSkill, before = jsonEncode(p.toSave());
+      final row = previewSkill(p, def).firstWhere((r) => r.label == '보호 지속');
+      expect(jsonEncode(p.toSave()), before);
+      p.energy = p.maxEnergy;
+      s.hero.skill();
+      expect(s.hero.armorTime, row.current);
+      expect(p.learn(def), true);
+      s.hero.cooldowns.clear();
+      s.hero.castLock = 0;
+      p.energy = p.maxEnergy;
+      s.hero.skill();
+      expect(s.hero.armorTime, row.next);
     },
   );
-  test('maximum protection still respects the existing mitigation cap', () {
-    final s = session(HeroClass.warrior), p = s.progress;
-    p.ranks.addAll({'warcry': 5, 'battleVigor': 5, 'unyieldingOath': 5});
-    p.selectSkill('warcry');
-    p.energy = p.maxEnergy;
-    s.hero.skill();
-    expect(s.hero.protection, closeTo(.22, .000001));
-    final ordinary = p.mitigate(100);
-    s.hero.invulnerable = 0;
-    p.hp = p.maxHp;
-    s.syncLife();
-    final hp = p.hp;
-    s.hurtHero(100);
-    expect(hp - p.hp, closeTo(ordinary * .78, .000001));
-    expect(p.mitigate(100, protection: 10), closeTo(ordinary * .25, .000001));
-  });
+  test(
+    'Mage oversized saved armor is limited by remaining cooldown idempotently',
+    () {
+      final s = session(HeroClass.mage);
+      train(s, 'iceArmor', 5);
+      s.progress.selectSkill('iceArmor');
+      s.hero.cooldowns['iceArmor'] = 1;
+      s.hero.armorTime = 60;
+      final save = GameCheckpoint.capture(s)!;
+      final read = GameCheckpoint.decode(save.encode())!;
+      final restored = read.restore(GameArt());
+      addTearDown(restored.dispose);
+      expect(restored.hero.armorTime, .9);
+      expect(restored.hero.cooldowns, s.hero.cooldowns);
+      expect(GameCheckpoint.decode(read.encode())!.encode(), read.encode());
+      final ready = Map<String, dynamic>.from(save.data)
+        ..['cooldowns'] = <String, double>{};
+      expect(GameCheckpoint.decode(jsonEncode(ready))!.data['armor'], 0);
+    },
+  );
   test('frost nova slow ends before the rank-five cooldown', () {
     final s = session(HeroClass.mage);
     s.progress.ranks['frostNova'] = 5;
@@ -156,58 +171,6 @@ void main() {
     expect(mob.slow, greaterThan(0));
     expect(mob.slow, lessThan(s.hero.cooldowns['frostNova']!));
     expect(mob.slow, closeTo(s.progress.novaSlowDuration, .000001));
-  });
-  test(
-    'duration preview matches actual current and next casts without spending',
-    () {
-      for (final id in ['warcry', 'frenzy', 'iceArmor']) {
-        final s = session(
-          id == 'iceArmor' ? HeroClass.mage : HeroClass.warrior,
-        );
-        s.progress.ranks[id] = 2;
-        s.progress.selectSkill(id);
-        final def = s.progress.skills.firstWhere((skill) => skill.id == id);
-        final before = jsonEncode(s.progress.toSave());
-        final row = previewSkill(
-          s.progress,
-          def,
-        ).firstWhere((r) => r.suffix == '초' && r.label.contains('지속'));
-        expect(jsonEncode(s.progress.toSave()), before);
-        s.progress.energy = s.progress.maxEnergy;
-        s.hero.skill();
-        expect(
-          row.current,
-          id == 'frenzy' ? s.hero.frenzyTime : s.hero.armorTime,
-        );
-        s.progress.ranks[id] = 3;
-        s.hero.cooldowns.clear();
-        s.hero.castLock = 0;
-        s.progress.energy = s.progress.maxEnergy;
-        s.hero.skill();
-        expect(row.next, id == 'frenzy' ? s.hero.frenzyTime : s.hero.armorTime);
-      }
-    },
-  );
-  test('old save effects are limited by their own remaining cooldown', () {
-    final s = session(HeroClass.warrior);
-    s.progress.ranks.addAll({'warcry': 5, 'frenzy': 5});
-    s.hero.cooldowns.addAll({'warcry': 1, 'frenzy': 2});
-    s.hero.armorTime = 60;
-    s.hero.frenzyTime = 60;
-    final save = GameCheckpoint.capture(s)!;
-    final read = GameCheckpoint.decode(save.encode())!;
-    final restored = read.restore(GameArt());
-    addTearDown(restored.dispose);
-    expect(restored.hero.armorTime, .9);
-    expect(restored.hero.frenzyTime, 1.8);
-    expect(restored.progress.toSave(), s.progress.toSave());
-    expect(restored.hero.cooldowns, s.hero.cooldowns);
-    expect(GameCheckpoint.decode(read.encode())!.encode(), read.encode());
-    final ready = Map<String, dynamic>.from(save.data)
-      ..['cooldowns'] = <String, double>{};
-    final normalized = GameCheckpoint.decode(jsonEncode(ready))!;
-    expect(normalized.data['armor'], 0);
-    expect(normalized.data['frenzy'], 0);
   });
   test('valid elapsed buffs survive save and legacy cooldown conversion', () {
     final s = session(HeroClass.mage);

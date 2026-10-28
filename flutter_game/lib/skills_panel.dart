@@ -30,7 +30,9 @@ class SkillsPanel extends StatefulWidget {
 class _SkillsPanelState extends State<SkillsPanel> {
   final treeScroll = ScrollController(), detailScroll = ScrollController();
   SkillDef? selected;
-  late SkillDef focused = p.basicSkill;
+  late SkillDef focused = p.heroClass == HeroClass.warrior
+      ? p.skills.firstWhere((skill) => skill.id == 'howl')
+      : p.basicSkill;
   Adventure get s => widget.session;
   Progress get p => s.progress;
   void Function()? stopBackAction;
@@ -59,10 +61,10 @@ class _SkillsPanelState extends State<SkillsPanel> {
     focused = skill;
     if (detailScroll.hasClients) detailScroll.jumpTo(0);
   });
-  String actionFor(SkillDef skill) => p.rank(skill.id) >= SkillDef.maxRank
+  String actionFor(SkillDef skill) => p.rank(skill.id) >= skill.rankLimit
       ? '최대 등급'
-      : p.level < skill.requiredLevel
-      ? 'Lv.${skill.requiredLevel} 필요'
+      : p.level < skill.requiredLevelForRank(p.rank(skill.id) + 1)
+      ? 'Lv.${skill.requiredLevelForRank(p.rank(skill.id) + 1)} 필요'
       : p.rank(skill.id) == 0 && !p.prerequisitesMet(skill)
       ? '선행 필요'
       : p.skillPoints <= 0
@@ -483,35 +485,54 @@ class _SkillsPanelState extends State<SkillsPanel> {
               ),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Column(
-              children: [
-                Expanded(
-                  child: skill == null
-                      ? const Icon(Icons.add, color: _dim, size: 18)
-                      : _art(skill, 40),
-                ),
-                Text(
-                  compact ? '${slot + 1}' : skill?.shortName ?? '${slot + 1}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: cream, fontSize: 11),
-                ),
-              ],
-            ),
+            child: compact
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: SizedBox.square(
+                          dimension: 28,
+                          child: skill == null
+                              ? const Icon(Icons.add, color: _dim, size: 18)
+                              : _art(skill, 28),
+                        ),
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        '${slot + 1}',
+                        style: const TextStyle(color: cream, fontSize: 11),
+                      ),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      Expanded(
+                        child: skill == null
+                            ? const Icon(Icons.add, color: _dim, size: 18)
+                            : _art(skill, 40),
+                      ),
+                      Text(
+                        skill?.shortName ?? '${slot + 1}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: cream, fontSize: 11),
+                      ),
+                    ],
+                  ),
           ),
         ),
       ),
     );
   }
 
-  Widget _pips(int rank) => Row(
+  Widget _pips(int rank, int limit) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      for (var i = 0; i < SkillDef.maxRank; i++)
+      for (var i = 0; i < limit; i++)
         Container(
-          width: 9,
+          width: limit > 10 ? 3 : 9,
           height: 4,
-          margin: const EdgeInsets.symmetric(horizontal: 2),
+          margin: EdgeInsets.symmetric(horizontal: limit > 10 ? 1 : 2),
           decoration: BoxDecoration(
             color: i < rank ? gold : const Color(0xff3b564d),
             borderRadius: BorderRadius.circular(2),
@@ -581,10 +602,10 @@ class _SkillsPanelState extends State<SkillsPanel> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _pips(rank),
+                        _pips(rank, skill.rankLimit),
                         const SizedBox(width: 8),
                         Text(
-                          '$rank / ${SkillDef.maxRank}',
+                          '$rank / ${skill.rankLimit}',
                           style: const TextStyle(color: gold, fontSize: 13),
                         ),
                       ],
@@ -605,7 +626,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
                           ? '기본 공격 · 자원 소모 없음 · 필요 레벨 ${skill.requiredLevel}'
                           : skill.passive
                           ? '지속 효과 · 필요 레벨 ${skill.requiredLevel}'
-                          : '${p.heroClass.resource} ${skill.cost.round()} · 재사용 ${CombatBalance.realSeconds(p.skillCooldown(skill, atRank: p.rank(skill.id).clamp(1, 5))).toStringAsFixed(1)}초 · 필요 레벨 ${skill.requiredLevel}',
+                          : '${p.heroClass.resource} ${p.skillCost(skill, atRank: p.rank(skill.id).clamp(1, skill.rankLimit)).round()} · 재사용 ${CombatBalance.realSeconds(p.skillCooldown(skill, atRank: p.rank(skill.id).clamp(1, skill.rankLimit))).toStringAsFixed(1)}초 · 필요 레벨 ${skill.requiredLevel}',
                       style: const TextStyle(
                         color: _dim,
                         fontSize: 13,

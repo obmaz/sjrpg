@@ -11,7 +11,7 @@ class SkillRankPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rank = progress.rank(skill.id), rows = previewSkill(progress, skill);
-    final canUpgrade = rank < SkillDef.maxRank;
+    final canUpgrade = rank < skill.rankLimit;
     Widget cell(String text, {bool highlight = false}) => Expanded(
       flex: 3,
       child: Text(

@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:collection/collection.dart';
 
+import 'authored_settlement.dart';
 import 'mount_progress.dart';
 import 'sanctuary.dart';
 import 'stage_content.dart';
@@ -336,7 +337,7 @@ class AdventureWorld {
     if (stage != WorldStage.forest) {
       _buildThemed();
       _compact();
-      _buildSanctuaryBoundary();
+      _applyAuthoredSettlement();
       return;
     }
     final random = math.Random(seed);
@@ -616,27 +617,6 @@ class AdventureWorld {
       clearings.add(oval(site.at, 360, 300));
       _indexSolid(site.body);
     }
-    for (var y = 0; y < 30; y++) {
-      for (var x = 0; x < 20; x++) {
-        final u = (x + .5) / 20, v = (y + .5) / 30;
-        final solid =
-            ((u - .5) / .19) * ((u - .5) / .19) +
-                    ((v - .245) / .115) * ((v - .245) / .115) <
-                1 ||
-            (u > .71 && v > .15 && v < .36) ||
-            (u < .32 && v > .43 && v < .67) ||
-            (u > .77 && v > .64) ||
-            (u < .19 && !(v > .32 && v < .43)) ||
-            (u > .88 && v < .64 && !(v > .44 && v < .62)) ||
-            (v > .91 && u < .46) ||
-            (v < .08 && (u < .39 || u > .61));
-        if (solid) {
-          _indexSolid(
-            Rect.fromLTWH(town.left + x * 32, town.top + y * 32, 32, 32),
-          );
-        }
-      }
-    }
     for (var y = 100.0; y < worldSize.height - 100; y += 150) {
       for (var x = 100.0; x < worldSize.width - 100; x += 150) {
         final p = Offset(
@@ -696,148 +676,22 @@ class AdventureWorld {
         }
       }
     }
-    _buildForestAnnex();
     _compact();
-    _buildSanctuaryBoundary();
+    _applyAuthoredSettlement();
   }
 
-  void _buildForestAnnex() {
-    // Generate the original forest first so adding the village does not consume
-    // a different random stream or rearrange remote trees and rocks.
-    final cottages = [
-      WorldProp(
-        Rect.fromCenter(
-          center: const Offset(2510 / worldScale, 1775 / worldScale),
-          width: 220,
-          height: 190,
-        ),
-        'village-cottage',
-        const Size(280, 270),
-      ),
-      WorldProp(
-        Rect.fromCenter(
-          center: const Offset(3440 / worldScale, 1830 / worldScale),
-          width: 220,
-          height: 160,
-        ),
-        'village-cottage',
-        const Size(260, 250),
-      ),
-    ];
-    final removed = props
-        .where(
-          (p) =>
-              authoredBlacksmithAnnex.inflate(75).overlaps(p.body) ||
-              cottages.any((c) => c.body.inflate(100).overlaps(p.body)),
-        )
-        .toSet();
-    final removedBodies = removed.expand((p) => p.collisionBodies).toSet();
-    props.removeWhere(removed.contains);
-    for (final bucket in _solids.values) {
-      bucket.removeWhere(removedBodies.contains);
-    }
-    clearings.add(
-      RegionShape([
-        const Offset(4080, 2680),
-        const Offset(4840, 2680),
-        const Offset(4910, 3150),
-        const Offset(4780, 3680),
-        const Offset(4140, 3680),
-        const Offset(4040, 3230),
-      ]),
-    );
-    trails.addAll([
-      Trail(const [Offset(4290, 3130), Offset(4740, 3130)], 300),
-      Trail(const [
-        Offset(4080, 3180),
-        // Clear the whole old gate before turning around its stone corner.
-        Offset(4240, 3180),
-        Offset(4260, 3260),
-        Offset(4440, 3390),
-        Offset(4740, 3390),
-      ], 150),
-      Trail(const [
-        Offset(4440, 3390),
-        Offset(4440, 3580),
-        Offset(4240, 3660),
-        Offset(3980, 3700),
-        Offset(3884, 3580),
-      ], 105),
-    ]);
-    // The larger ward reaches the river. Its east gate continues across a
-    // painted bridge instead of pointing the player into blocked water.
-    bridges.add(const Rect.fromLTWH(4800, 3060, 640, 200));
-    trails.add(Trail(const [Offset(4740, 3123.2), Offset(5500, 3123.2)], 150));
-    campProps.add(
-      WorldProp(
-        Rect.fromCenter(
-          center: const Offset(4640, 3006.6666666667),
-          width: 380,
-          height: 200,
-        ),
-        'blacksmith-forge',
-        const Size(400, 350),
-      ),
-    );
-    for (final body in campProps.last.collisionBodies) {
-      _indexSolid(body);
-    }
-    for (final cottage in cottages) {
-      campProps.add(cottage);
-      cottage.collisionBodies.forEach(_indexSolid);
-    }
-    for (final point in const [
-      Offset(2616, 2036),
-      Offset(2580, 2150),
-      Offset(2570, 2470),
-      Offset(2610, 2640),
-      Offset(3150, 2020),
-      Offset(3140, 2650),
-      Offset(2770, 1940),
-      Offset(3050, 1915),
-    ]) {
-      final tree = WorldProp(
-        Rect.fromCenter(center: point / worldScale, width: 28, height: 28),
-        'tree',
-        const Size(160, 205),
-      );
-      campProps.add(tree);
-      tree.collisionBodies.forEach(_indexSolid);
-    }
-    campProps.addAll([
-      WorldProp(
-        Rect.fromCenter(
-          center: const Offset(4266.6666666667, 2773.3333333333),
-          width: 28,
-          height: 28,
-        ),
-        'tree',
-        const Size(170, 220),
-      ),
-      WorldProp(
-        Rect.fromCenter(
-          center: const Offset(4826.6666666667, 3506.6666666667),
-          width: 28,
-          height: 28,
-        ),
-        'tree',
-        const Size(160, 210),
-      ),
-    ]);
-  }
-
-  // A visibility graph keeps roads clear of water, quest structures and the fountain.
   List<Offset> _dryRoad(List<Offset> authored, double width) {
     final obstacles = [
       ...lakes.map((l) => l.bounds.inflate(width / 2 + 32)),
       if (!_authoring)
         ...campProps.expand((p) => p.collisionBodies).map((r) => r.inflate(32)),
       ...sites.map((s) => s.body.inflate(width / 2 + 32)),
-      Rect.fromCenter(
-        center: healAt,
-        width: 80,
-        height: 90,
-      ).inflate(width / 2 + 32),
+      if (_authoring)
+        Rect.fromCenter(
+          center: healAt,
+          width: 80,
+          height: 90,
+        ).inflate(width / 2 + 32),
     ];
     bool open(Offset a, Offset b) =>
         !obstacles.any((r) => _segmentHitsRect(a, b, r));
@@ -1444,6 +1298,103 @@ class AdventureWorld {
     }
   }
 
+  void _applyAuthoredSettlement() {
+    final area = authoredSettlement.bounds;
+    final oldPropSolids = {
+      for (final p in [...props, ...campProps]) ...p.collisionBodies,
+    };
+    final retainedStatic = _solids.values
+        .expand((s) => s)
+        .toSet()
+        .where((r) => !oldPropSolids.contains(r) && !r.overlaps(area))
+        .toList();
+    final gates = authoredSettlement.gatePaths
+        .map((p) => Trail(p, 105))
+        .toList();
+    for (final list in [props, campProps]) {
+      list.removeWhere(
+        (p) =>
+            Rect.fromCenter(
+              center: p.body.center - Offset(0, p.drawSize.height / 2 - 15),
+              width: p.drawSize.width,
+              height: p.drawSize.height,
+            ).overlaps(area.inflate(24)) ||
+            gates.any((t) => t.near(p.body.center, p.drawSize.width / 2 + 20)),
+      );
+    }
+    // Old roads inside the replaced illustration must not promise a route
+    // through a newly painted building. Retain their exterior approaches.
+    final exterior = <Trail>[];
+    for (final trail in trails) {
+      var run = <Offset>[];
+      void flush() {
+        if (run.length > 1) exterior.add(Trail(run, trail.width));
+        run = <Offset>[];
+      }
+
+      final cut = area.inflate(30);
+      for (var i = 1; i < trail.points.length; i++) {
+        final a = trail.points[i - 1], b = trail.points[i], delta = b - a;
+        final cuts = <double>[0, 1];
+        if (delta.dx != 0) {
+          for (final x in [cut.left, cut.right]) {
+            final t = (x - a.dx) / delta.dx;
+            if (t > 0 && t < 1) cuts.add(t);
+          }
+        }
+        if (delta.dy != 0) {
+          for (final y in [cut.top, cut.bottom]) {
+            final t = (y - a.dy) / delta.dy;
+            if (t > 0 && t < 1) cuts.add(t);
+          }
+        }
+        cuts.sort();
+        for (var j = 1; j < cuts.length; j++) {
+          final start = Offset.lerp(a, b, cuts[j - 1])!;
+          final end = Offset.lerp(a, b, cuts[j])!;
+          if (cut.contains(Offset.lerp(start, end, .5)!)) {
+            flush();
+          } else {
+            if (run.isEmpty || run.last != start) run.add(start);
+            run.add(end);
+          }
+        }
+      }
+      flush();
+    }
+    trails = [...exterior, ...gates];
+    // The eastern forest road crosses the old river just outside the new gate.
+    if (stage == WorldStage.forest) {
+      final east = gates.last.points.last;
+      final crossing = Rect.fromCenter(center: east, width: 700, height: 150);
+      if (river.overlaps(crossing)) bridges.add(crossing);
+    }
+    final spots = authoredSettlement.chestSpots;
+    var index = 0;
+    for (var i = 0; i < chests.length; i++) {
+      if (area.contains(chests[i])) chests[i] = spots[index++ % spots.length];
+    }
+    _solids.clear();
+    propBuckets.clear();
+    retainedStatic.forEach(_indexSolid);
+    for (final p in [...props, ...campProps]) {
+      p.collisionBodies.forEach(_indexSolid);
+      for (
+        var y = (p.body.top - p.drawSize.height) ~/ 256;
+        y <= (p.body.bottom + 50) ~/ 256;
+        y++
+      ) {
+        for (
+          var x = (p.body.left - p.drawSize.width) ~/ 256;
+          x <= (p.body.right + p.drawSize.width) ~/ 256;
+          x++
+        ) {
+          propBuckets.putIfAbsent('$x:$y', () => []).add(p);
+        }
+      }
+    }
+  }
+
   final int seed;
   final WorldStage stage;
   final Offset hubOrigin;
@@ -1458,123 +1409,37 @@ class AdventureWorld {
   bool _authoring = true;
   Offset get _authoredHubOrigin => hubOrigin / worldScale;
   Offset get spawn => _authoring ? _authoredHubOrigin : hubOrigin;
-  Offset _at(Offset raw) => _authoring ? raw : raw * worldScale;
-  Rect get settlement => stage == WorldStage.forest
-      ? (_authoring
-            ? authoredTown.expandToInclude(authoredBlacksmithAnnex)
-            : town.expandToInclude(blacksmithAnnex))
-      : Rect.fromCenter(
-          center: spawn,
-          width: 900 * (_authoring ? 1 : worldScale),
-          height: 900 * (_authoring ? 1 : worldScale),
-        );
-  Offset get healAt => _at(
-    stage == WorldStage.forest
-        ? _authoredHubOrigin - const Offset(0, 55)
-        : _authoredHubOrigin + const Offset(-280, -100),
-  );
+  late final authoredSettlement = AuthoredSettlement(stage, hubOrigin);
+  late final settlementCollision = authoredSettlement.collisionPolygons
+      .map(RegionShape.new)
+      .toList();
+  Rect get settlement => _authoring
+      ? Rect.fromCenter(center: spawn, width: 900, height: 900)
+      : authoredSettlement.bounds;
+  Offset get healAt => _authoring
+      ? _authoredHubOrigin + const Offset(-280, -100)
+      : authoredSettlement.well;
   late final sanctuary = Sanctuary(
-    stage == WorldStage.forest ? const Offset(3030, 2205) : hubOrigin,
-    stage == WorldStage.forest ? 700 : 440,
+    authoredSettlement.bounds.center,
+    // The circular combat ward encloses the complete painted perimeter. An
+    // exposed pocket between a corner fence and the ward traps pursuit routes.
+    settlementCollision
+            .expand((shape) => shape.points)
+            .map((point) => (point - authoredSettlement.bounds.center).distance)
+            .reduce(math.max) +
+        48,
   );
   final sanctuaryFences = <SanctuaryFenceSection>[];
-  void _buildSanctuaryBoundary() {
-    final ward = sanctuary;
-    // Project each authored village exit onto the outer ward. Angles from
-    // the old town rectangle alone close the straight southern exit once the
-    // larger workshop ward is enclosed more tightly.
-    double gateAngle(double u, double v, Offset direction) {
-      final start = Offset(
-        town.left + town.width * u,
-        town.top + town.height * v,
-      );
-      final relative = start - ward.center;
-      final dot = relative.dx * direction.dx + relative.dy * direction.dy;
-      final distance =
-          -dot +
-          math.sqrt(
-            dot * dot + ward.radius * ward.radius - relative.distanceSquared,
-          );
-      final exit = start + direction * distance - ward.center;
-      return math.atan2(exit.dy, exit.dx);
-    }
-
-    final gates = <(double, double)>[
-      if (stage == WorldStage.forest) ...[
-        (gateAngle(.73, .52, const Offset(1, 0)), .14),
-        (gateAngle(.15, .34, const Offset(-1, 0)), .14),
-        (gateAngle(.48, .07, const Offset(0, -1)), .14),
-        (gateAngle(.57, .88, const Offset(0, 1)), .14),
-      ],
-    ];
-    // Gates follow actual road crossings, including diagonal approaches. A
-    // wide road beside the ward must not erase unrelated boundary sections.
-    for (final trail in trails) {
-      for (var i = 1; i < trail.points.length; i++) {
-        final from = trail.points[i - 1] - ward.center;
-        final direction = trail.points[i] - trail.points[i - 1];
-        final length = direction.distanceSquared;
-        if (length == 0) continue;
-        final dot = from.dx * direction.dx + from.dy * direction.dy;
-        final discriminant =
-            dot * dot -
-            length * (from.distanceSquared - ward.radius * ward.radius);
-        if (discriminant < 0) continue;
-        final root = math.sqrt(discriminant);
-        for (final t in [(-dot - root) / length, (-dot + root) / length]) {
-          if (t < 0 || t > 1) continue;
-          final exit = from + direction * t;
-          gates.add((
-            math.atan2(exit.dy, exit.dx),
-            math.asin(((trail.width / 2 + 24) / ward.radius).clamp(0.0, 1.0)) +
-                math.pi / 48,
-          ));
-        }
-      }
-    }
-    if (gates.isEmpty) {
-      for (final angle in [0.0, math.pi / 2, math.pi, -math.pi / 2]) {
-        gates.add((angle, .14));
-      }
-    }
-    for (var i = 0; i < 48; i++) {
-      final angle = (i + .5) * math.pi / 24;
-      if (gates.any(
-        (gate) =>
-            math
-                .atan2(math.sin(angle - gate.$1), math.cos(angle - gate.$1))
-                .abs() <
-            gate.$2,
-      )) {
-        continue;
-      }
-      Offset point(int index) =>
-          ward.center +
-          Offset(
-                math.cos(index * math.pi / 24),
-                math.sin(index * math.pi / 24),
-              ) *
-              ward.radius;
-      final section = SanctuaryFenceSection(point(i), point(i + 1));
-      // A shallow/near-tangent road needs more clearance than its angular
-      // crossing suggests. Keep the actual painted road and a rider's body free.
-      if (section.collisionBodies.any(
-        (body) =>
-            blocked(body.inflate(4)) ||
-            trails.any((trail) => trail.near(body.center, 28)),
-      )) {
-        continue;
-      }
-      sanctuaryFences.add(section);
-    }
-    for (final section in sanctuaryFences) {
-      section.collisionBodies.forEach(_indexSolid);
-    }
-  }
-
-  Offset get blacksmithAt =>
-      _authoring ? blacksmithPosition / worldScale : blacksmithPosition;
-  Offset get merchantAt => _at(_authoredMerchant);
+  Offset wellApproach(QuestSite well) => well.id == 'hub'
+      ? authoredSettlement.wellApproach
+      : well.at + const Offset(0, 77);
+  Offset get mountMerchantAt => authoredSettlement.stable;
+  Offset questGiverAt(TimePath path) => authoredSettlement.questGiver(path);
+  Offset get blacksmithAt => _authoring
+      ? blacksmithPosition / worldScale
+      : authoredSettlement.blacksmith;
+  Offset get merchantAt =>
+      _authoring ? _authoredMerchant : authoredSettlement.merchant;
   late final Offset _authoredMerchant = stage == WorldStage.forest
       ? const Offset(3952, 2984)
       : stage.usesCityArt
@@ -1606,11 +1471,9 @@ class AdventureWorld {
     throw StateError('The authored camp has no accessible merchant site');
   }
 
-  Offset get elderAt => _at(
-    stage == WorldStage.forest
-        ? const Offset(3660, 2952)
-        : _authoredHubOrigin + const Offset(-160, -70),
-  );
+  Offset get elderAt => _authoring
+      ? _authoredHubOrigin + const Offset(-160, -70)
+      : authoredSettlement.elder;
   late final _authoredSites = authoredSitesForStage(stage);
   late final _sites = sitesForStage(stage);
   List<QuestSite> get sites => _authoring ? _authoredSites : _sites;
@@ -1767,6 +1630,7 @@ class AdventureWorld {
   }
 
   bool isWater(Offset p) =>
+      (_authoring || !settlement.contains(p)) &&
       (river.contains(p) || lakes.any((s) => s.contains(p))) &&
       !bridges.any((b) => b.contains(p));
   bool blocked(
@@ -1783,6 +1647,10 @@ class AdventureWorld {
     }
     if (avoidSanctuary && sanctuary.protects(body)) return true;
     if (_closedChestOverlaps(body)) return true;
+    if (!_authoring &&
+        settlementCollision.any((shape) => shape.overlaps(body))) {
+      return true;
+    }
     for (var y = body.top ~/ 128; y <= body.bottom ~/ 128; y++) {
       for (var x = body.left ~/ 128; x <= body.right ~/ 128; x++) {
         if ((_solids['$x:$y'] ?? const <Rect>[]).any((s) => s.overlaps(body))) {
@@ -1804,6 +1672,11 @@ class AdventureWorld {
           }
         }
       }
+      return false;
+    }
+    if (!_authoring &&
+        settlement.contains(body.topLeft) &&
+        settlement.contains(body.bottomRight)) {
       return false;
     }
     if (lakes.any((l) => l.overlaps(body))) return true;
@@ -1867,6 +1740,34 @@ class AdventureWorld {
         sweep.bottom > (_authoring ? authoredWorldSize : worldSize).height) {
       return false;
     }
+    if (!_authoring && settlement.overlaps(sweep)) {
+      final candidates = settlementCollision
+          .where((shape) => shape.bounds.overlaps(sweep))
+          .toList();
+      if (candidates.isNotEmpty) {
+        // Exact swept rectangle hull catches diagonal corner crossings even
+        // when a short intersection falls between physical movement substeps.
+        final swept = _sweptBody(from, to, size);
+        for (final shape in candidates) {
+          if (shape.points.any(swept.contains) ||
+              swept.points.any(shape.contains)) {
+            return false;
+          }
+          for (var i = 0; i < shape.points.length; i++) {
+            for (var j = 0; j < swept.points.length; j++) {
+              if (RegionShape._crosses(
+                shape.points[i],
+                shape.points[(i + 1) % shape.points.length],
+                swept.points[j],
+                swept.points[(j + 1) % swept.points.length],
+              )) {
+                return false;
+              }
+            }
+          }
+        }
+      }
+    }
     if (from.dx == to.dx || from.dy == to.dy) {
       if (!blocked(sweep)) return true;
       // A blocked dry/body sweep stays blocked. Only a bridge can make a
@@ -1905,9 +1806,42 @@ class AdventureWorld {
         obstacle.right,
         obstacle.bottom,
       );
-      if (_segmentHitsRect(from, to, expanded)) return false;
+      if (_segmentHitsRect(from, to, expanded.inflate(.02))) return false;
     }
     return _clearWaterLine(from, to, size, sweep);
+  }
+
+  static RegionShape _sweptBody(Offset from, Offset to, Size size) {
+    final first = (from & size).inflate(.02), last = (to & size).inflate(.02);
+    final points =
+        [
+          first.topLeft,
+          first.topRight,
+          first.bottomLeft,
+          first.bottomRight,
+          last.topLeft,
+          last.topRight,
+          last.bottomLeft,
+          last.bottomRight,
+        ]..sort((a, b) {
+          final x = a.dx.compareTo(b.dx);
+          return x == 0 ? a.dy.compareTo(b.dy) : x;
+        });
+    double cross(Offset a, Offset b, Offset c) =>
+        (b.dx - a.dx) * (c.dy - a.dy) - (b.dy - a.dy) * (c.dx - a.dx);
+    List<Offset> half(Iterable<Offset> ordered) {
+      final hull = <Offset>[];
+      for (final point in ordered) {
+        while (hull.length >= 2 &&
+            cross(hull[hull.length - 2], hull.last, point) <= 0) {
+          hull.removeLast();
+        }
+        hull.add(point);
+      }
+      return hull..removeLast();
+    }
+
+    return RegionShape([...half(points), ...half(points.reversed)]);
   }
 
   bool _clearWaterLine(Offset from, Offset to, Size size, Rect sweep) {
@@ -1917,6 +1851,11 @@ class AdventureWorld {
       for (var i = 0; i <= n; i++) {
         final at = Offset.lerp(from, to, i / n)!;
         final body = Rect.fromLTWH(at.dx, at.dy, size.width, size.height);
+        if (!_authoring &&
+            settlement.contains(body.topLeft) &&
+            settlement.contains(body.bottomRight)) {
+          continue;
+        }
         if (lakes.any((l) => l.overlaps(body))) return false;
         if (!onBridge(body) && river.overlaps(body)) {
           return false;

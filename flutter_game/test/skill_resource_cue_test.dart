@@ -41,6 +41,8 @@ void main() {
       });
       final source = inCombatField(Adventure(GameArt()))..start(TestGame());
       source.mobs.clear();
+      source.progress.ranks['bash'] = 1;
+      expect(source.progress.selectSkill('bash'), true);
       source.progress.energy = 60;
       source.encounterAreas
         ..clear()
@@ -70,6 +72,7 @@ void main() {
       expect(s.ready, true);
       s.combatTime = 20;
       final skill = s.progress.skillAt(0)!;
+      final cost = s.progress.skillCost(skill);
       final action = find.byWidgetPredicate(
         (w) => w is ActionButton && w.semanticLabel == skill.name,
       );
@@ -118,7 +121,7 @@ void main() {
 
         final ready = await capture('ready');
         expect(tester.widget<ActionButton>(action).insufficientResource, false);
-        s.progress.energy = skill.cost - 1;
+        s.progress.energy = cost - 1;
         s.refresh();
         await tester.pump(const Duration(milliseconds: 16));
         final short = await capture('short');
@@ -135,7 +138,7 @@ void main() {
 
         await tester.tap(action);
         await tester.pump(const Duration(milliseconds: 90));
-        expect(s.progress.energy, skill.cost - 1);
+        expect(s.progress.energy, cost - 1);
         expect(hero.cooldowns[skill.id], isNull);
         expect(s.texts.any((text) => text.label == '분노 부족'), true);
 
@@ -143,7 +146,7 @@ void main() {
         await tester.tap(find.bySemanticsLabel('분노 물약 $potions개'));
         await tester.pump(const Duration(milliseconds: 90));
         expect(s.progress.energyPotions, potions - 1);
-        expect(s.progress.energy, greaterThanOrEqualTo(skill.cost));
+        expect(s.progress.energy, greaterThanOrEqualTo(cost));
         expect(tester.widget<ActionButton>(action).insufficientResource, false);
         final restored = await capture('restored');
         expect(pixels(restored, action), readyPixels);
@@ -151,7 +154,7 @@ void main() {
         final energy = s.progress.energy;
         await tester.tap(action);
         await tester.pump(const Duration(milliseconds: 16));
-        expect(s.progress.energy, energy - skill.cost);
+        expect(s.progress.energy, energy - cost);
         expect(hero.cooldowns[skill.id], greaterThan(0));
         expect(tester.takeException(), null);
       } finally {

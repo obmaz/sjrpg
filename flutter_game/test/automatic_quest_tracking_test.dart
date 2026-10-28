@@ -170,10 +170,13 @@ void main() {
       final quests = timeCommissions.where((q) => q.path == path).toList();
       expect(s.trackedSiteId, null);
       expect(s.timePath, null);
+      // Authored arrivals may be beside an NPC. Exercise rejection from a
+      // genuine field position rather than assuming the hub is out of range.
+      inCombatField(s);
+      expect(s.nearbyTimeGiver, isNull);
       expect(s.acceptCommission(quests.first), false);
       expect(s.trackedSiteId, null);
-      final giver = timeQuestGivers.firstWhere((giver) => giver.path == path);
-      final at = giver.atOrigin(s.world.spawn);
+      final at = s.world.questGiverAt(path);
       s.hero.position.setValues(at.dx - 14, at.dy - 12);
       expect(s.acceptCommission(quests.first), true);
       expect(s.timePath, path);

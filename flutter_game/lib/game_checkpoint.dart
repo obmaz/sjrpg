@@ -839,9 +839,14 @@ class GameCheckpoint {
       destination,
       hubOrigin: Offset((hub[0] as num).toDouble(), (hub[1] as num).toDouble()),
     ).firstWhere((site) => site.id == wellId);
+    final approach = wellApproachForSite(
+      destination,
+      well,
+      hubOrigin: Offset((hub[0] as num).toDouble(), (hub[1] as num).toDouble()),
+    );
     data.addAll({
-      'x': well.at.dx - 14,
-      'y': well.at.dy + 65,
+      'x': approach.dx - 14,
+      'y': approach.dy - 12,
       'riding': null,
       'travel': journal.toSave(),
     });
@@ -970,13 +975,9 @@ class GameCheckpoint {
         (ground['x'] as num).toDouble(),
         (ground['y'] as num).toDouble(),
       );
-      // The new workshop occupies previously walkable ground. Old rare loot
-      // must remain collectible when that scene is restored after an upgrade.
-      if (session.world.stage == WorldStage.forest &&
-          session.world.campProps
-              .where((p) => p.kind == 'blacksmith-forge')
-              .expand((p) => p.collisionBodies)
-              .any((body) => body.contains(at))) {
+      // Authored buildings can cover old saved loot in any chapter. Preserve
+      // the item and age, relocating only its blocked collection footprint.
+      if (session.world.blocked(at & Guardian.onFootSize)) {
         at =
             session.world.spawnNear(at, Guardian.onFootSize) ??
             Offset(session.hero.position.x, session.hero.position.y);

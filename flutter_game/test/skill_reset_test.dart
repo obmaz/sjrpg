@@ -12,6 +12,16 @@ import 'support/test_game.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  void train(Adventure s, String id) {
+    final skill = s.progress.skills.firstWhere((d) => d.id == id);
+    for (final parent in skill.requires.entries) {
+      while (s.progress.rank(parent.key) < parent.value) {
+        train(s, parent.key);
+      }
+    }
+    expect(s.learn(skill), true, reason: id);
+  }
+
   for (final hero in HeroClass.values) {
     test(
       'reset refunds only investments once for $hero and preserves equipment',
@@ -20,13 +30,13 @@ void main() {
         p.awardSkillResetTicket(WorldStage.forest);
         p.gainXp(1000);
         final basic = hero == HeroClass.warrior ? 'cleave' : 'firebolt';
-        final starter = hero == HeroClass.warrior ? 'warcry' : 'frostNova';
-        final active = hero == HeroClass.warrior ? 'whirlwind' : 'iceArmor';
+        final starter = hero == HeroClass.warrior ? 'howl' : 'frostNova';
+        final active = hero == HeroClass.warrior ? 'bash' : 'iceArmor';
         final investment = hero == HeroClass.warrior ? 4 : 3;
         for (final id in [
           basic,
           starter,
-          if (hero == HeroClass.warrior) 'mastery',
+          if (hero == HeroClass.warrior) 'swordMastery',
           active,
         ]) {
           expect(p.learn(p.skills.firstWhere((s) => s.id == id)), true);
@@ -88,16 +98,15 @@ void main() {
       final game = TestGame();
       s.start(game);
       addTearDown(s.dispose);
-      s.progress.gainXp(1000);
+      while (s.progress.level < 50) {
+        s.progress.gainXp(s.progress.nextLevelXp - s.progress.xp);
+      }
       s.progress.gold = 200;
       s.progress.awardSkillResetTicket(WorldStage.forest);
       s.progress.energy = 100;
-      expect(
-        s.learn(s.progress.skills.firstWhere((d) => d.id == 'mastery')),
-        true,
-      );
+      train(s, 'swordMastery');
       final skill = s.progress.skills.firstWhere((d) => d.id == 'whirlwind');
-      s.learn(skill);
+      train(s, skill.id);
       s.progress.selectSkill(skill.id);
       s.hero.position.setValues(6000, 4200);
       s.mobs.clear();
@@ -120,11 +129,8 @@ void main() {
         pulse.update(.05);
       }
       expect(enemy.life.value, hp);
-      expect(
-        s.learn(s.progress.skills.firstWhere((d) => d.id == 'mastery')),
-        true,
-      );
-      expect(s.learn(skill), true);
+      train(s, 'swordMastery');
+      train(s, skill.id);
       s.progress.selectSkill(skill.id);
       final energy = s.progress.energy;
       s.hero.skill();
@@ -236,7 +242,8 @@ void main() {
       );
       expect(action.onTap, null);
       expect(s.progress.gold, 1000000);
-      expect(s.progress.rank('cleave'), 2);
+      expect(s.progress.rank('cleave'), 1);
+      expect(s.progress.rank('bash'), 1);
       await tester.tap(find.bySemanticsLabel('취소'));
       await tester.pumpAndSettle();
       semantics.dispose();

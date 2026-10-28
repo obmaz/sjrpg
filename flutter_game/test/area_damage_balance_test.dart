@@ -108,21 +108,111 @@ void main() {
     expect(mobs[1].life.value, closeTo(975.5, .000001));
     expect(mobs[2].life.value, closeTo(975.5, .000001));
   });
-  test('seismic cast uses its actual capped impact group', () {
-    s.progress.gainXp(8000);
-    s.progress.ranks['seismicSlam'] = 1;
-    s.progress.selectSkill('seismicSlam');
-    s.progress.energy = s.progress.maxEnergy;
-    final mobs = [enemy(6050), enemy(6090), enemy(6110), enemy(6220)];
-    final damage = s.progress.skillDamage(
-      s.progress.skills.firstWhere((d) => d.id == 'seismicSlam'),
+  for (final count in [1, 2, 3]) {
+    test(
+      'war cry shares damage across $count eligible targets before its cap',
+      () {
+        final p = s.progress;
+        final skill = p.skills.firstWhere((d) => d.id == 'warcry');
+        while (p.level < skill.requiredLevelForRank(1)) {
+          p.gainXp(p.nextLevelXp);
+        }
+        p.ranks[skill.id] = 1;
+        expect(p.selectSkill(skill.id), isTrue);
+        p.energy = p.maxEnergy;
+        expect(p.skillTargetLimit(skill), 3);
+        final unready = enemy(6050)..combatReady = false;
+        final mobs = [for (var i = 0; i < count; i++) enemy(6080 + i * 30.0)];
+        final capped = count == 3 ? enemy(6170) : null;
+        final damage = p.skillDamage(skill);
+        expect(damage, greaterThan(0));
+        s.hero.skill();
+        final share = [1.0, .8, .7][count - 1];
+        for (final mob in mobs) {
+          expect(mob.life.value, closeTo(1000 - damage * share, .000001));
+          expect(mob.stun, greaterThan(0));
+        }
+        expect(unready.life.value, 1000);
+        if (capped != null) expect(capped.life.value, 1000);
+        expect(
+          s.hero.armorTime,
+          0,
+          reason: 'war cry damages/stuns; shout grants defense',
+        );
+      },
     );
-    s.hero.skill();
-    for (final mob in mobs.take(3)) {
-      expect(mob.life.value, closeTo(1000 - damage * .7, .000001));
+  }
+  test('war cry excludes occluded enemies before sharing its damage', () {
+    final p = s.progress;
+    final skill = p.skills.firstWhere((d) => d.id == 'warcry');
+    while (p.level < skill.requiredLevelForRank(1)) {
+      p.gainXp(p.nextLevelXp);
     }
-    expect(mobs.last.life.value, 1000);
+    p.ranks[skill.id] = 1;
+    expect(p.selectSkill(skill.id), isTrue);
+    p.energy = p.maxEnergy;
+    final chest = s.stageChestLocations.firstWhere(
+      (at) =>
+          (at - s.world.sanctuary.center).distance >
+          s.world.sanctuary.radius + 300,
+    );
+    s.hero.position.setValues(chest.dx - 14, chest.dy + 90);
+    final blocked = enemy(chest.dx - 14, chest.dy - 70);
+    final visible = enemy(chest.dx + 90, chest.dy + 90);
+    expect(
+      s.world.clearLine(
+        s.hero.body.center,
+        blocked.body.center,
+        const Size(3, 3),
+      ),
+      isFalse,
+    );
+    expect(
+      s.world.clearLine(
+        s.hero.body.center,
+        visible.body.center,
+        const Size(3, 3),
+      ),
+      isTrue,
+    );
+    final damage = p.skillDamage(skill);
+    expect(damage, greaterThan(0));
+    s.hero.skill();
+    expect(blocked.life.value, 1000);
+    expect(visible.life.value, closeTo(1000 - damage, .000001));
+    expect(visible.stun, greaterThan(0));
   });
+  test(
+    'grim ward fears only its capped nearest eligible enemies per pulse',
+    () {
+      final p = s.progress;
+      final skill = p.skills.firstWhere((d) => d.id == 'grimWard');
+      while (p.level < skill.requiredLevelForRank(1)) {
+        p.gainXp(p.nextLevelXp);
+      }
+      p.ranks[skill.id] = 1;
+      expect(p.selectSkill(skill.id), isTrue);
+      p.energy = p.maxEnergy;
+      final body = enemy(6050);
+      expect(s.hit(body, 1001, Offset.zero), isTrue);
+      final mobs = [for (var i = 0; i < 5; i++) enemy(6080 + i * 30.0)];
+      expect(p.skillTargetLimit(skill), 3);
+      s.hero.skill();
+      expect(s.barbarianUtilities.wardCount, 1);
+      for (var i = 0; i < mobs.length; i++) {
+        expect(
+          s.barbarianUtilities.fearedFrom(mobs[i]),
+          i < 3 ? isNotNull : isNull,
+        );
+        expect(mobs[i].life.value, 1000);
+      }
+      s.barbarianUtilities.update(.6);
+      expect(
+        mobs.where((m) => s.barbarianUtilities.fearedFrom(m) != null),
+        hasLength(3),
+      );
+    },
+  );
   test(
     'meteor computes its damage group at impact and freezes while paused',
     () {
@@ -186,28 +276,32 @@ void main() {
     },
   );
   test(
-    'charge groups same-step contacts without changing later contact damage',
+    'concentrate hits one nearby target and grants armor only during its strike',
     () {
-      s.progress.gainXp(8000);
-      s.progress.ranks['charge'] = 1;
-      s.progress.selectSkill('charge');
-      s.progress.energy = s.progress.maxEnergy;
-      s.hero.bearing = 0;
-      final pair = [enemy(6050), enemy(6050, 4232)];
-      final later = enemy(6170);
-      s.hero.skill();
-      final damage = s.hero.chargeDamage;
-      s.hero.update(.05);
-      for (final mob in pair) {
-        expect(mob.life.value, closeTo(1000 - damage * .8, .000001));
+      final p = s.progress;
+      final skill = p.skills.firstWhere((d) => d.id == 'concentrate');
+      while (p.level < skill.requiredLevelForRank(1)) {
+        p.gainXp(p.nextLevelXp);
       }
-      for (var i = 0; i < 9; i++) {
+      p.ranks[skill.id] = 1;
+      expect(p.selectSkill(skill.id), isTrue);
+      p.energy = p.maxEnergy;
+      s.hero.bearing = 0;
+      final mobs = [enemy(6050), enemy(6050, 4232), enemy(6170)];
+      final damage = p.skillDamage(skill), armor = p.armor;
+      expect(damage, greaterThan(0));
+      expect(p.skillTargetLimit(skill), 1);
+      s.hero.skill();
+      expect(mobs[0].life.value, closeTo(1000 - damage, .000001));
+      expect(mobs[1].life.value, 1000);
+      expect(mobs[2].life.value, 1000);
+      expect(p.armor, greaterThan(armor));
+      for (var i = 0; i < 30; i++) {
         s.hero.update(.05);
       }
-      expect(later.life.value, closeTo(1000 - damage, .000001));
-      for (final mob in pair) {
-        expect(mob.life.value, closeTo(1000 - damage * .8, .000001));
-      }
+      expect(p.armor, armor);
+      expect(mobs[0].life.value, closeTo(1000 - damage, .000001));
+      expect(mobs[1].life.value, 1000);
     },
   );
 }

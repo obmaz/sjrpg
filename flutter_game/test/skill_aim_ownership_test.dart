@@ -21,10 +21,11 @@ void main() {
     final s = inCombatField(Adventure(GameArt()))..start(TestGame());
     addTearDown(s.dispose);
     s.mobs.clear();
-    s.progress.ranks.addAll({'charge': 1, 'crushingBlow': 1});
-    expect(s.progress.selectSkill('charge'), true);
-    expect(s.progress.selectSkill('crushingBlow', slot: 1), true);
-    if (secondCoolingDown) s.hero.cooldowns['crushingBlow'] = 2;
+    s.progress.level = 100;
+    s.progress.ranks.addAll({'leap': 1, 'leapAttack': 1});
+    expect(s.progress.selectSkill('leap'), true);
+    expect(s.progress.selectSkill('leapAttack', slot: 1), true);
+    if (secondCoolingDown) s.hero.cooldowns['leapAttack'] = 2;
 
     Widget button(int slot) => ActionButton(
       key: ValueKey(slot),
@@ -67,9 +68,9 @@ void main() {
         final s = await showControls(tester, secondCoolingDown: true);
         final energy = s.progress.energy;
         final first = await press(tester, 0);
-        expect(s.hero.aim?.id, 'charge');
+        expect(s.hero.aim?.id, 'leap');
         final second = await press(tester, 1);
-        expect(s.hero.aim?.id, 'charge');
+        expect(s.hero.aim?.id, 'leap');
         await second.moveBy(const Offset(30, 40));
         expect(s.hero.aim?.delta, Offset.zero);
 
@@ -80,8 +81,8 @@ void main() {
         }
 
         expect(s.progress.energy, energy);
-        expect(s.hero.cooldowns['charge'], isNull);
-        expect(s.hero.aim?.id, 'charge');
+        expect(s.hero.cooldowns['leap'], isNull);
+        expect(s.hero.aim?.id, 'leap');
         await first.moveBy(const Offset(50, 0));
         expect(s.hero.aim?.delta, const Offset(50, 0));
         await first.cancel();
@@ -96,9 +97,9 @@ void main() {
         final s = await showControls(tester);
         final energy = s.progress.energy;
         final first = await press(tester, 0);
-        expect(s.hero.aim?.id, 'charge');
+        expect(s.hero.aim?.id, 'leap');
         final second = await press(tester, 1);
-        expect(s.hero.aim?.id, 'crushingBlow');
+        expect(s.hero.aim?.id, 'leapAttack');
         await first.moveBy(const Offset(50, 0));
         expect(s.hero.aim?.delta, Offset.zero);
 
@@ -108,17 +109,17 @@ void main() {
           await first.up();
         }
 
-        expect(s.hero.aim?.id, 'crushingBlow');
-        expect(s.hero.cooldowns['crushingBlow'], isNull);
+        expect(s.hero.aim?.id, 'leapAttack');
+        expect(s.hero.cooldowns['leapAttack'], isNull);
         expect(s.progress.energy, energy);
         await second.moveBy(const Offset(0, -40));
         expect(s.hero.aim?.delta, const Offset(0, -40));
         await second.up();
         expect(s.hero.aim, isNull);
-        expect(s.hero.cooldowns['charge'], isNull);
-        expect(s.hero.cooldowns['crushingBlow'], greaterThan(0));
-        expect(s.hero.heavyWindup, greaterThan(0));
-        expect(s.progress.energy, energy - 22);
+        expect(s.hero.cooldowns['leap'], isNull);
+        expect(s.hero.cooldowns['leapAttack'], greaterThan(0));
+        expect(s.hero.barbarianCombat.airborne, true);
+        expect(s.progress.energy, energy - 12);
       },
     );
   }

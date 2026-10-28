@@ -22,6 +22,40 @@ void main() {
     return s;
   }
 
+  for (final id in ['leap', 'leapAttack']) {
+    for (final blocked in ['root', 'freeze', 'paused']) {
+      test(
+        '$id aim and activation preserve a mounted rider while $blocked',
+        () {
+          final s = field();
+          s.progress.level = 100;
+          s.progress.ranks.addAll({'leap': 1, 'leapAttack': 1});
+          expect(s.progress.selectSkill(id), true);
+          final mount = withOwnedMounts(s).mounts.first
+            ..at = s.hero.body.center + const Offset(40, 0);
+          expect(s.boardNearbyMount(), true);
+          if (blocked == 'paused') {
+            s.pause();
+          } else {
+            s.afflictions.apply(
+              blocked == 'root' ? PlayerStatus.root : PlayerStatus.freeze,
+            );
+          }
+          final energy = s.progress.energy, body = s.hero.body;
+          s.hero.beginAim(0);
+          s.hero.skill();
+          s.hero.dodge();
+          expect(s.hero.aim, isNull);
+          expect(s.riding, same(mount));
+          expect(s.hero.body, body);
+          expect(s.hero.barbarianCombat.airborne, false);
+          expect(s.hero.cooldowns[id], isNull);
+          expect(s.progress.energy, energy);
+        },
+      );
+    }
+  }
+
   test(
     'crowds cannot refresh, alternate or permanently chain movement locks',
     () {
@@ -144,8 +178,8 @@ void main() {
       final potions = s.progress.healingPotions;
       s.potion();
       expect(s.progress.healingPotions, potions - 1);
-      s.progress.ranks['charge'] = 1;
-      s.progress.selectSkill('charge');
+      s.progress.ranks['leap'] = 1;
+      s.progress.selectSkill('leap');
       final energy = s.progress.energy;
       s.hero.beginAim(0);
       s.hero.skill();
@@ -153,7 +187,7 @@ void main() {
       expect(s.hero.aim, isNull);
       expect(s.hero.chargeTime, 0);
       expect(s.hero.dashing, 0);
-      expect(s.hero.cooldowns['charge'], isNull);
+      expect(s.hero.cooldowns['leap'], isNull);
       expect(s.progress.energy, energy);
       s.tick(1.41);
       s.hero.update(.05);
@@ -163,27 +197,28 @@ void main() {
   );
 
   test(
-    'freeze interrupts windup and aiming without pausing enemies or spending rejected skills',
+    'freeze interrupts a paid follow-up and aiming without pausing enemies or spending rejected skills',
     () {
       final s = field();
       s.progress.gainXp(8000);
-      s.progress.ranks['crushingBlow'] = 1;
-      s.progress.selectSkill('crushingBlow');
+      s.progress.level = 100;
+      s.progress.ranks.addAll({'bash': 1, 'doubleSwing': 1});
+      s.progress.selectSkill('doubleSwing');
       s.progress.energy = 100;
       s.hero.skill();
-      expect(s.hero.heavyWindup, greaterThan(0));
-      final cooldown = s.hero.cooldowns['crushingBlow'];
+      expect(s.hero.barbarianCombat.busy, true);
+      final cooldown = s.hero.cooldowns['doubleSwing'];
       s.hurtHero(1, status: PlayerStatus.freeze);
       final energy = s.progress.energy;
       expect(s.active, true);
-      expect(s.hero.heavyWindup, 0);
-      expect(s.hero.heavySkill, isNull);
+      expect(s.hero.barbarianCombat.busy, false);
+      expect(s.hero.queuedCast, isNull);
       s.hero.skill();
       s.hero.beginAim(0);
       s.hero.slash();
       s.hero.dodge();
       expect(s.progress.energy, energy);
-      expect(s.hero.cooldowns['crushingBlow'], cooldown);
+      expect(s.hero.cooldowns['doubleSwing'], cooldown);
       expect(s.hero.aim, isNull);
       final enemy = s.spawnEnemy('goblin', const Offset(6200, 4200))!;
       final before = enemy.position.clone();
@@ -218,18 +253,19 @@ void main() {
       s.hero.update(.05);
       expect(s.hero.body, body);
       s.progress.gainXp(8000);
-      s.progress.ranks['charge'] = 1;
-      s.progress.selectSkill('charge');
+      s.progress.ranks['leap'] = 1;
+      s.progress.selectSkill('leap');
       final energy = s.progress.energy;
       s.hero.skill();
       s.hero.dodge();
       s.hero.beginAim(0);
       expect(s.riding, mount);
       expect(s.progress.energy, energy);
-      s.progress.selectSkill('warcry');
+      s.progress.ranks['shout'] = 1;
+      expect(s.progress.selectSkill('shout'), true);
       s.hero.skill();
       expect(s.riding, isNull);
-      expect(s.hero.armorTime, greaterThan(0));
+      expect(s.progress.activeArmorMultiplier, greaterThan(1));
       expect(s.afflictions.movementBlocked, true);
       expect(s.world.blocked(s.hero.body), false);
       final other = field();

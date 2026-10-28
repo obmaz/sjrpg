@@ -1,0 +1,12 @@
+{
+  "source": "/workspace/generated_images/exec-22121886-f3f5-4487-837e-e215abd6bf3b.png",
+  "sha256": "7e61bd6364ee4375f59de4a2afa8a88a21459da817ebba19e19a9f0eeedcb51a",
+  "generator": "image_gen",
+  "size": [
+    1254,
+    1254
+  ],
+  "camera": "fixed elevated orthographic three-quarter",
+  "lighting": "soft upper-left",
+  "theme": "foundry"
+}

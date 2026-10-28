@@ -25,12 +25,23 @@ void main() {
       session.world.stage,
       hubOrigin: session.world.spawn,
     ).firstWhere((site) => site.id == id);
-    session.hero.position.setValues(site.at.dx - 14, site.at.dy + 65);
+    final approach = session.world.wellApproach(site);
+    session.hero.position.setValues(approach.dx - 14, approach.dy - 12);
     session.hero.lastClearPosition = Offset(
       session.hero.position.x,
       session.hero.position.y,
     );
     session.travelJournal.discover(session.world.stage, id);
+  }
+
+  void train(Progress p, String id, [int rank = 1]) {
+    final skill = p.skills.firstWhere((skill) => skill.id == id);
+    for (final need in skill.requires.entries) {
+      train(p, need.key, need.value);
+    }
+    while (p.rank(id) < rank) {
+      expect(p.learn(skill), true, reason: '$id rank$rank');
+    }
   }
 
   void finishForest(Adventure session) {
@@ -74,48 +85,69 @@ void main() {
     },
   );
 
-  test(
-    'same-chapter well travel preserves resources, cooldowns and rewards',
-    () {
-      final session = start();
-      session.travelJournal.discover(WorldStage.forest, 'roots');
-      visit(session, 'hub');
-      session.progress.gainXp(8000);
-      session.progress.ranks['frenzy'] = 1;
-      session.progress.hp = 55;
-      session.progress.energy = 12;
-      session.hero.cooldowns['warcry'] = 1.25;
-      session.hero.cooldowns['frenzy'] = 4;
-      session.hero.attackClock = .25;
-      session.hero.dodgeClock = .8;
-      session.hero.dashing = .1;
-      session.pause();
-      session.hero.armorTime = 1;
-      session.hero.frenzyTime = 3;
-      session.openedChests.add(0);
-      final before = GameCheckpoint.capture(session)!.encode();
-      final saved = GameCheckpoint.warp(session, WorldStage.forest, 'roots')!;
-      expect(
-        GameCheckpoint.capture(session)!.encode(),
-        before,
-        reason: 'building a travel checkpoint does not mutate the active game',
-      );
-      final restored = start(saved);
-      expect(restored.progress.hp, 55);
-      expect(restored.progress.energy, 12);
-      expect(restored.hero.cooldowns['warcry'], 1.25);
-      expect(restored.hero.attackClock, .25);
-      expect(restored.hero.dodgeClock, .8);
-      expect(restored.hero.dashing, 0);
-      expect(session.paused, true);
-      expect(restored.hero.armorTime, 1);
-      expect(restored.hero.frenzyTime, 3);
-      expect(restored.openedChests, {0});
-      expect(restored.travelJournal.archives, isEmpty);
-      final well = restored.world.sites.firstWhere((s) => s.id == 'roots');
-      expect((restored.hero.body.center - well.at).distance, lessThan(220));
-    },
-  );
+  test('same-chapter well travel preserves resources, cooldowns and rewards', () {
+    final session = start();
+    session.travelJournal.discover(WorldStage.forest, 'roots');
+    visit(session, 'hub');
+    session.progress
+      ..level = 100
+      ..skillPoints = 1000;
+    train(session.progress, 'warcry');
+    train(session.progress, 'frenzy');
+    final shout = session.progress.skills.firstWhere(
+      (skill) => skill.id == 'shout',
+    );
+    expect(session.progress.selectSkill(shout.id), true);
+    inCombatField(session);
+    session.hero.skill();
+    visit(session, 'hub');
+    expect(session.progress.activeArmorMultiplier, greaterThan(1));
+    final shoutCooldown = session.progress.skillCooldown(shout);
+    expect(session.hero.cooldowns[shout.id], shoutCooldown);
+    session.progress.hp = 55;
+    session.progress.energy = 12;
+    session.hero.cooldowns['warcry'] = 1.25;
+    final frenzyCooldown =
+        session.progress.skillCooldown(
+          session.progress.skills.firstWhere((skill) => skill.id == 'frenzy'),
+        ) *
+        .5;
+    session.hero.cooldowns['frenzy'] = frenzyCooldown;
+    session.hero.attackClock = .25;
+    session.hero.dodgeClock = .8;
+    session.hero.dashing = .1;
+    session.pause();
+    session.openedChests.add(0);
+    final before = GameCheckpoint.capture(session)!.encode();
+    final saved = GameCheckpoint.warp(session, WorldStage.forest, 'roots')!;
+    expect(
+      GameCheckpoint.capture(session)!.encode(),
+      before,
+      reason: 'building a travel checkpoint does not mutate the active game',
+    );
+    final restored = start(saved);
+    expect(restored.progress.hp, 55);
+    expect(restored.progress.energy, 12);
+    expect(restored.hero.cooldowns['warcry'], 1.25);
+    expect(restored.hero.attackClock, .25);
+    expect(restored.hero.dodgeClock, .8);
+    expect(restored.hero.dashing, 0);
+    expect(session.paused, true);
+    expect(restored.hero.cooldowns['frenzy'], frenzyCooldown);
+    expect(restored.hero.cooldowns[shout.id], shoutCooldown);
+    expect(
+      restored.progress.activeArmorMultiplier,
+      1,
+      reason:
+          'transient Barbarian shouts are omitted while their cooldowns persist',
+    );
+    expect(restored.hero.armorTime, 0);
+    expect(restored.hero.frenzyTime, 0);
+    expect(restored.openedChests, {0});
+    expect(restored.travelJournal.archives, isEmpty);
+    final well = restored.world.sites.firstWhere((s) => s.id == 'roots');
+    expect((restored.hero.body.center - well.at).distance, lessThan(220));
+  });
 
   test(
     'travel requires a discovered source, known destination and visiting that stage',
@@ -151,8 +183,9 @@ void main() {
       expect(sands.progress.bossDefeated, false);
       visit(sands, 'hub');
       final giver = timeQuestGivers.first;
-      final giverAt = giver.atOrigin(sands.world.spawn);
+      final giverAt = sands.world.questGiverAt(giver.path);
       sands.hero.position.setValues(giverAt.dx - 14, giverAt.dy - 12);
+      expect(sands.nearbyTimeGiver, giver);
       expect(sands.acceptCommission(timeCommissions.first), true);
       sands.progress.kills += 7;
       sands.progress.hp = 43;

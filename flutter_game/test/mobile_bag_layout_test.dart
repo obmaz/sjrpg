@@ -94,10 +94,10 @@ void main() {
       final s = session();
       final p = s.progress;
       p.level = 2;
-      p.ranks.addAll({'cleave': 3, 'rendingEdge': 2});
+      p.ranks.addAll({'cleave': 3, 'swordMastery': 2});
       final weapon = p.weapon;
       expect(weapon.attack, 15);
-      expect(p.swordDamage, closeTo(10.8375, 1e-9));
+      expect(p.swordDamage, closeTo(11.271, 1e-9));
       expect(p.basicDamage, isNot(closeTo(p.swordDamage, .01)));
       await tester.runAsync(() async {
         final bytes = await rootBundle.load('assets/images/gear-icons.png');
@@ -138,7 +138,7 @@ void main() {
       final accessible = find.bySemanticsLabel('보관 장비 · ${weapon.name} · 장착 중');
       expect(
         tester.widget<Semantics>(accessible).properties.hint,
-        '타이밍 연계 ${weapon.base.comboProfile!.chainLabel} · 무기 레벨 ${weapon.weaponLevel} · 무기 공격 15 · 초당 피해 ${p.basicDps.toStringAsFixed(1)} · 현재 초당 피해 ${p.basicDps.toStringAsFixed(1)}',
+        '무기 레벨 ${weapon.weaponLevel} · 무기 공격 15 · 초당 피해 ${p.basicDps.toStringAsFixed(1)} · 현재 초당 피해 ${p.basicDps.toStringAsFixed(1)}',
       );
       for (final element in comparisons.evaluate()) {
         final paragraph = element.renderObject! as RenderParagraph;

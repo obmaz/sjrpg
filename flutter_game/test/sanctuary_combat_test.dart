@@ -18,19 +18,21 @@ void main() {
       final s = Adventure(GameArt(), stage: stage)..start(TestGame());
       addTearDown(s.dispose);
       final ward = s.world.sanctuary;
-      final angle = stage == WorldStage.forest
-          ? math.atan2(
-              town.top + town.height * .52 - ward.center.dy,
-              town.right - ward.center.dx,
-            )
-          : 0.0;
+      // This assertion concerns hostile targets. Chest attacks are explicitly
+      // allowed inside a village, so remove them from this combat fixture.
+      s.world.openedChests.addAll(
+        List.generate(s.world.chests.length, (i) => i),
+      );
+      final gate = s.world.authoredSettlement.gatePaths.last.last;
+      final gateOffset = gate - ward.center;
+      final angle = math.atan2(gateOffset.dy, gateOffset.dx);
       final direction = Offset(math.cos(angle), math.sin(angle));
       final inside =
-          ward.center + direction * (ward.radius - 30) - const Offset(14, 12);
+          ward.center + direction * (ward.radius - 10) - const Offset(14, 12);
       s.hero.position.setValues(inside.dx, inside.dy);
       expect(s.world.blocked(s.hero.body), false);
       final enemyAt =
-          ward.center + direction * (ward.radius + 32) - const Offset(12, 11);
+          ward.center + direction * (ward.radius + 20) - const Offset(12, 11);
       final mob = s.spawnEnemy('goblin', enemyAt)!;
       expect(
         (mob.body.center - s.hero.body.center).distance,
@@ -41,7 +43,7 @@ void main() {
       expect(mob.life.value, health);
       expect(s.hero.attackClock, 0);
       final outside =
-          ward.center + direction * (ward.radius + 96) - const Offset(14, 12);
+          ward.center + direction * (ward.radius + 50) - const Offset(14, 12);
       s.hero.position.setValues(outside.dx, outside.dy);
       expect(s.sheltered, false);
       s.hero.slash();

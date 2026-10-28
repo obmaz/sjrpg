@@ -14,7 +14,7 @@ class QuestGiver extends GameComponent {
   }
   final Adventure session;
   final TimeQuestGiver giver;
-  ui.Offset get at => giver.atOrigin(session.world.spawn);
+  ui.Offset get at => session.world.questGiverAt(giver.path);
   @override
   void render(ui.Canvas canvas) {
     super.render(canvas);

@@ -30,51 +30,74 @@ void main() {
     ])
       s.spawnEnemy('goblin', at)!..life.initial(10000),
   ];
-  for (final mode in ['quickCut', 'heavyStrike']) {
+  for (final mode in ['bash', 'stun']) {
     test(
-      '$mode hits only one enemy even when canonical cleave knows five targets',
+      '$mode hits one victim and pays its own cost while cleave knows five targets',
       () {
         final s = field(HeroClass.warrior), p = s.progress;
         train(p, 'cleave', 5);
         train(p, mode, 5);
+        expect(p.selectSkill(mode), true);
+        final skill = p.skills.firstWhere((skill) => skill.id == mode);
         final mobs = pack(s),
-            power = p.basicDamage,
+            power = p.skillDamage(skill),
             slots = p.skillSlots.toList(),
-            points = p.skillPoints;
-        s.hero.slash();
+            points = p.skillPoints,
+            energy = p.energy;
+        s.hero.skill();
         expect(mobs[0].life.value, closeTo(10000 - power, .00001));
         expect(mobs[1].life.value, 10000);
         expect(mobs[2].life.value, 10000);
+        expect(p.basicTargetLimit, 5);
+        expect(p.selectedBasic, 'cleave');
         expect(p.skillSlots, slots);
         expect(p.skillPoints, points);
-        expect(s.hero.cooldowns, isEmpty);
+        expect(p.energy, closeTo(energy - p.skillCost(skill), .00001));
+        expect(s.hero.cooldowns[mode], p.skillCooldown(skill));
         expect(s.hero.queuedCast, isNull);
-        if (mode == 'heavyStrike') {
+        if (mode == 'bash') {
           expect(s.hero.strikePose, 2);
-          expect(mobs[0].stun, greaterThan(0));
         } else {
-          final pose = s.hero.strikePose;
-          while (s.hero.attackClock > 0) {
-            s.hero.update(.05);
-          }
-          s.hero.slash();
-          expect(s.hero.strikePose, isNot(pose));
+          expect(mobs[0].stun, greaterThan(0));
         }
       },
     );
   }
-  test('switching modes cannot reset an in-progress basic attack clock', () {
+  test('double swing alternates poses on one victim and pays only once', () {
     final s = field(HeroClass.warrior), p = s.progress;
-    train(p, 'quickCut');
-    train(p, 'heavyStrike');
-    final mob = pack(s).first;
-    s.hero.slash();
-    final hp = mob.life.value, clock = s.hero.attackClock;
-    p.selectBasic('quickCut');
-    s.hero.slash();
-    expect(s.hero.attackClock, clock);
-    expect(mob.life.value, hp);
+    train(p, 'doubleSwing', 5);
+    expect(p.selectSkill('doubleSwing'), true);
+    final skill = p.skills.firstWhere((skill) => skill.id == 'doubleSwing');
+    final mobs = pack(s), damage = p.skillDamage(skill), energy = p.energy;
+    s.hero.skill();
+    final pose = s.hero.strikePose;
+    expect(mobs[0].life.value, closeTo(10000 - damage, .00001));
+    for (var frame = 0; frame < 8; frame++) {
+      s.hero.update(.05);
+    }
+    expect(s.hero.strikePose, isNot(pose));
+    expect(mobs[0].life.value, closeTo(10000 - damage * 2, .00001));
+    expect(mobs[1].life.value, 10000);
+    expect(mobs[2].life.value, 10000);
+    expect(p.energy, closeTo(energy - p.skillCost(skill), .00001));
+    expect(p.selectedBasic, 'cleave');
   });
+  test(
+    'switching learned mage basics cannot reset an in-progress attack clock',
+    () {
+      final s = field(HeroClass.mage), p = s.progress;
+      train(p, 'iceShard');
+      train(p, 'sparkBolt');
+      final mob = pack(s).first;
+      s.hero.slash();
+      final hp = mob.life.value, clock = s.hero.attackClock;
+      expect(p.selectBasic('iceShard'), true);
+      s.hero.slash();
+      expect(s.hero.attackClock, clock);
+      expect(mob.life.value, hp);
+      expect((s.game! as TestGame).added.whereType<ArcaneBolt>(), hasLength(1));
+    },
+  );
   test('canonical cleave keeps actual three-target damage splitting', () {
     final s = field(HeroClass.warrior), p = s.progress;
     train(p, 'cleave', 5);
@@ -132,22 +155,23 @@ void main() {
       },
     );
   }
-  for (final mode in ['quickCut', 'heavyStrike']) {
+  for (final mode in ['bash', 'stun']) {
     test(
-      '$mode contact VFX use the selected rank instead of canonical cleave rank',
+      '$mode contact VFX uses its own rank independently of the free basic',
       () async {
         final s = field(HeroClass.warrior), p = s.progress;
         train(p, 'cleave', 2);
         train(p, mode, 5);
         expect(p.rank('cleave'), 2);
+        expect(p.selectSkill(mode), true);
         pack(s);
-        s.hero.slash();
+        s.hero.skill();
         await Future<void>.delayed(Duration.zero);
         final spark = (s.game! as TestGame).added
             .whereType<ImpactParticles>()
             .single;
         expect(spark.impact.rank, 5);
-        expect(spark.impact.kind == ImpactKind.heavy, mode == 'heavyStrike');
+        expect(spark.impact.kind, ImpactKind.heavy);
       },
     );
   }

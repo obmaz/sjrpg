@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
@@ -6,7 +8,7 @@ import 'package:guardian_new/skill_tree_layout.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  for (final hero in HeroClass.values) {
+  for (final hero in const [HeroClass.mage]) {
     test(
       '$hero prerequisites match adjacent nodes in the immediately preceding visual row',
       () {
@@ -165,18 +167,76 @@ void main() {
   }
 
   test(
-    'frenzy and iron skin unlock focus; nonadjacent whirlwind and iron skin do not',
+    'Barbarian matches the original six-tier catalogue and direct prerequisites',
     () {
-      final p = Progress()..gainXp(10000);
-      final focus = p.skills.firstWhere((s) => s.id == 'battleFocus');
-      p.ranks.addAll({'whirlwind': 1, 'ironSkin': 1});
-      final points = p.skillPoints;
-      expect(p.learn(focus), false);
-      expect(p.skillPoints, points);
-      p.ranks['frenzy'] = 1;
-      expect(p.learn(focus), true);
-      final slam = p.skills.firstWhere((s) => s.id == 'seismicSlam');
-      expect(p.learn(slam), true);
+      final fixture =
+          jsonDecode(
+                File(
+                  'test/fixtures/diablo2_barbarian_113.json',
+                ).readAsStringSync(),
+              )
+              as Map;
+      final expected = fixture['skills'] as Map;
+      final rows = skillTreeRows(HeroClass.warrior);
+      expect(rows.length, 6);
+      expect(warriorSkills.map((s) => s.id).toSet(), expected.keys.toSet());
+      expect(
+        rows.expand((row) => row.map((s) => s.id)).toSet(),
+        expected.keys.toSet(),
+      );
+      for (var row = 0; row < rows.length; row++) {
+        for (final slot in rows[row]) {
+          final data = expected[slot.id] as Map;
+          final skill = warriorSkills.firstWhere((s) => s.id == slot.id);
+          // Keep the source fixture in combat/masteries/warcries order;
+          // the reference screen displays those three school blocks reversed.
+          final sourceColumn = data['column'] as int;
+          final displayColumn = (2 - sourceColumn ~/ 3) * 3 + sourceColumn % 3;
+          expect(row, data['row'], reason: skill.id);
+          expect(slot.column, displayColumn, reason: skill.id);
+          expect(skill.requiredLevel, data['level'], reason: skill.id);
+          expect(skill.requires, data['requires'], reason: skill.id);
+          expect(skill.rankLimit, 20);
+        }
+      }
+      final p = Progress()
+        ..level = 100
+        ..skillPoints = 1000;
+      for (final row in rows) {
+        for (final slot in row) {
+          final skill = p.skills.firstWhere((s) => s.id == slot.id);
+          if (p.rank(skill.id) == 0) {
+            expect(p.learn(skill), true, reason: skill.id);
+          }
+        }
+      }
+      expect(Progress.fromSave(p.toSave()), isNotNull);
+    },
+  );
+
+  test(
+    'both original parents and the next-rank level gate remain mandatory',
+    () {
+      for (final id in ['whirlwind', 'warcry']) {
+        final p = Progress()
+          ..level = 30
+          ..skillPoints = 20;
+        final skill = p.skills.firstWhere((s) => s.id == id);
+        final parents = skill.requires.keys.toList();
+        expect(parents.length, 2);
+        p.ranks[parents.first] = 1;
+        expect(p.canLearn(skill), false);
+        p.ranks[parents.last] = 1;
+        expect(p.learn(skill), true);
+        expect(p.rank(id), 1);
+        expect(p.canLearn(skill), false, reason: 'rank2 requires level31');
+        final points = p.skillPoints;
+        expect(p.learn(skill), false);
+        expect(p.skillPoints, points);
+        p.level = 31;
+        expect(p.learn(skill), true);
+        expect(p.rank(id), 2);
+      }
     },
   );
 
@@ -195,30 +255,27 @@ void main() {
     expect(p.learn(reserve), true);
   });
 
-  test(
-    'older learned ranks, basic choice and active slots survive the new graph',
-    () {
-      for (final hero in HeroClass.values) {
-        final p = Progress(heroClass: hero)..gainXp(10000);
-        final id = hero == HeroClass.warrior ? 'crushingBlow' : 'meteor';
-        final alternative = hero == HeroClass.warrior ? 'quickCut' : 'iceShard';
-        p.ranks[id] = 1;
-        p.ranks[alternative] = 1;
-        p.selectedBasic = alternative;
-        p.selectedSkill = id;
-        final saved = p.toSave();
-        final restored = Progress.fromSave(saved)!;
-        expect(restored.ranks, p.ranks);
-        expect(restored.selectedBasic, alternative);
-        expect(restored.skillSlots, p.skillSlots);
-        final skill = restored.skills.firstWhere((s) => s.id == id);
-        expect(restored.prerequisitesMet(skill), false);
-        expect(
-          restored.learn(skill),
-          true,
-          reason: 'old learned skills stay upgradeable',
-        );
-      }
-    },
-  );
+  test('older Mage ranks, basic choice and active slots survive unchanged', () {
+    for (final hero in const [HeroClass.mage]) {
+      final p = Progress(heroClass: hero)..gainXp(10000);
+      final id = hero == HeroClass.warrior ? 'crushingBlow' : 'meteor';
+      final alternative = hero == HeroClass.warrior ? 'quickCut' : 'iceShard';
+      p.ranks[id] = 1;
+      p.ranks[alternative] = 1;
+      p.selectedBasic = alternative;
+      p.selectedSkill = id;
+      final saved = p.toSave();
+      final restored = Progress.fromSave(saved)!;
+      expect(restored.ranks, p.ranks);
+      expect(restored.selectedBasic, alternative);
+      expect(restored.skillSlots, p.skillSlots);
+      final skill = restored.skills.firstWhere((s) => s.id == id);
+      expect(restored.prerequisitesMet(skill), false);
+      expect(
+        restored.learn(skill),
+        true,
+        reason: 'old learned skills stay upgradeable',
+      );
+    }
+  });
 }

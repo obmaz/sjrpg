@@ -11,16 +11,7 @@ import 'support/test_game.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   Future<void> reveal(WidgetTester tester, Finder target) async {
-    await tester.scrollUntilVisible(
-      target,
-      90,
-      scrollable: find
-          .descendant(
-            of: find.byType(SkillTree),
-            matching: find.byType(Scrollable),
-          )
-          .first,
-    );
+    await Scrollable.ensureVisible(tester.element(target), alignment: .5);
     await tester.pumpAndSettle();
   }
 
@@ -45,9 +36,10 @@ void main() {
       addTearDown(s.dispose);
       final p = s.progress;
       p.gainXp(4000);
+      if (hero == HeroClass.warrior) p.level = 40;
       p.skillPoints = 30;
       for (final id
-          in (hero == HeroClass.warrior ? ['mastery', 'cleave'] : ['warmth'])) {
+          in (hero == HeroClass.warrior ? ['swordMastery'] : ['warmth'])) {
         expect(p.learn(p.skills.firstWhere((skill) => skill.id == id)), true);
       }
       if (hero == HeroClass.mage) {
@@ -81,14 +73,17 @@ void main() {
           ? null
           : tester.getRect(schoolHeader);
       final ids = hero == HeroClass.warrior
-          ? ['whirlwind', 'frenzy', 'seismicSlam']
+          ? ['bash', 'doubleSwing', 'stun']
           : ['iceArmor', 'chainLightning', 'meteor'];
       for (final id in ids) {
         final skill = p.skills.firstWhere((v) => v.id == id);
         final node = find.bySemanticsLabel('스킬 보기 · ${skill.name} · 0 등급');
         await reveal(tester, node);
         if (schoolRect != null) {
-          expect(tester.getRect(schoolHeader), schoolRect);
+          final nextHeader = tester.getRect(schoolHeader);
+          expect(nextHeader.top, schoolRect.top);
+          expect(nextHeader.height, schoolRect.height);
+          if (hero == HeroClass.mage) expect(nextHeader, schoolRect);
         }
         await tester.tap(node);
         await tester.pumpAndSettle();

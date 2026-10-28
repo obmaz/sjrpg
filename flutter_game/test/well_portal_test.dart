@@ -27,11 +27,7 @@ void main() {
             false,
           );
           expect(
-            s.world.clearLine(
-              well.at + const Offset(0, 77),
-              at,
-              const Size(3, 3),
-            ),
+            s.world.clearLine(s.world.wellApproach(well), at, const Size(3, 3)),
             true,
           );
         }

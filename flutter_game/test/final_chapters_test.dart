@@ -10,6 +10,7 @@ import 'package:guardian_new/quest_guide.dart';
 import 'package:guardian_new/travel_journal.dart';
 import 'package:guardian_new/world_model.dart';
 
+import 'quest_routes_test.dart' show questRoutes;
 import 'support/test_game.dart';
 
 void main() {
@@ -46,7 +47,8 @@ void main() {
       s.world.stage,
       hubOrigin: s.world.spawn,
     ).firstWhere((well) => well.id == id);
-    s.hero.position.setValues(well.at.dx - 14, well.at.dy + 65);
+    final approach = s.world.wellApproach(well);
+    s.hero.position.setValues(approach.dx - 14, approach.dy - 12);
     s.hero.lastClearPosition = Offset(s.hero.position.x, s.hero.position.y);
     s.travelJournal.discover(s.world.stage, id);
   }
@@ -155,8 +157,9 @@ void main() {
         final desert = resume(GameCheckpoint.advance(forest)!);
         visit(desert, 'hub');
         final giver = timeQuestGivers.firstWhere((giver) => giver.path == path);
-        final at = giver.atOrigin(desert.world.spawn);
+        final at = desert.world.questGiverAt(giver.path);
         desert.hero.position.setValues(at.dx - 14, at.dy - 12);
+        expect(desert.nearbyTimeGiver, giver);
         for (final quest in timeCommissions.where(
           (quest) => quest.path == path,
         )) {
@@ -298,7 +301,25 @@ void main() {
         final s = start(stage), w = s.world;
         expect(w.blocked(s.hero.body), false);
         expect(w.sanctuary.protects(s.hero.body), true);
-        expect(w.sanctuaryFences, isNotEmpty);
+        expect(w.settlementCollision, isNotEmpty);
+        for (final uv in const [
+          Offset(.09, .19),
+          Offset(.80, .135),
+          Offset(.045, .72),
+          Offset(.95, .70),
+        ]) {
+          expect(
+            w.blocked(
+              Rect.fromCenter(
+                center: w.authoredSettlement.point(uv),
+                width: 28,
+                height: 24,
+              ),
+            ),
+            true,
+            reason: '$stage painted perimeter must remain solid',
+          );
+        }
         expect(
           w.sites.map((s) => s.at.dx).reduce((a, b) => a < b ? a : b),
           lessThan(worldSize.width * .4),
@@ -315,7 +336,12 @@ void main() {
         for (final at in [
           w.elderAt,
           w.merchantAt,
-          w.healAt + const Offset(0, 77),
+          w.wellApproach(
+            wellSitesForStage(
+              stage,
+              hubOrigin: w.spawn,
+            ).firstWhere((well) => well.id == 'hub'),
+          ),
         ]) {
           final safe = w.spawnNear(at, const Size(28, 24));
           expect(safe, isNotNull);
@@ -323,21 +349,25 @@ void main() {
           expect(w.sanctuary.protects(safe & const Size(28, 24)), true);
         }
         w.openedChests.addAll(List.generate(w.chests.length, (i) => i));
-        for (var siteIndex = 0; siteIndex < w.sites.length; siteIndex++) {
-          final road = w.trails[3 + siteIndex];
-          expect(road.points.last, w.sites[siteIndex].at);
-          for (var point = 1; point < road.points.length; point++) {
+        final routes = questRoutes(w, const Size(28, 24));
+        expect(routes.keys, containsAll(w.sites.map((site) => site.id)));
+        for (final site in w.sites) {
+          var from = w.spawn;
+          for (final center in routes[site.id]!.skip(1)) {
+            final target = center - const Offset(14, 12);
+            final moved = w.move(from, target - from, const Size(28, 24));
             expect(
-              w.clearLine(
-                road.points[point - 1],
-                road.points[point],
-                const Size(28, 24),
-              ),
-              true,
+              (moved - target).distance,
+              lessThan(.05),
               reason:
-                  '$stage quest ${w.sites[siteIndex].id} full body road segment $point',
+                  '$stage quest ${site.id} follows actual connected full-body approaches',
             );
+            from = moved;
           }
+          expect(
+            (from + const Offset(14, 12) - site.at).distance,
+            lessThan(115),
+          );
         }
         for (final site in w.sites) {
           expect(

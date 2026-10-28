@@ -13,54 +13,25 @@ import 'support/test_game.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('village grows east while its original saved landmarks remain fixed', () {
-    final world = AdventureWorld();
-    expect(world.spawn, arrival);
-    expect(world.chests, stageChests);
-    expect(world.merchantAt, const Offset(2964, 2238));
-    expect(world.healAt, const Offset(2880, 2250));
-    expect(world.settlement.width, greaterThan(town.width * 2));
-    expect(world.settlement.contains(world.blacksmithAt), true);
-    expect(
-      world.sanctuary.protects(world.blacksmithAt & const Size(28, 24)),
-      true,
-    );
-    final forge = world.campProps.singleWhere(
-      (p) => p.kind == 'blacksmith-forge',
-    );
-    final drawing = Rect.fromLTWH(
-      forge.body.bottomCenter.dx - forge.drawSize.width / 2,
-      forge.body.bottom - forge.drawSize.height,
-      forge.drawSize.width,
-      forge.drawSize.height,
-    );
-    for (final point in [
-      drawing.topLeft,
-      drawing.topRight,
-      drawing.bottomLeft,
-      drawing.bottomRight,
-    ]) {
-      expect(
-        world.sanctuary.protects(point & const Size(1, 1)),
-        true,
-        reason: 'the boundary must not cut through the workshop artwork',
-      );
-    }
-
-    // Every point protected by the old circle remains protected after expansion.
-    const oldCenter = Offset(2880, 2144.4);
-    for (final edge in [
-      Offset(-360, 0),
-      Offset(360, 0),
-      Offset(0, -360),
-      Offset(0, 360),
-    ]) {
-      expect(
-        world.sanctuary.protects((oldCenter + edge) & const Size(1, 1)),
-        true,
-      );
-    }
-  });
+  test(
+    'complete village keeps services aligned with the protected illustration',
+    () {
+      final world = AdventureWorld();
+      expect(world.spawn, arrival);
+      expect(world.settlement.contains(world.chests.first), true);
+      expect(world.merchantAt, world.authoredSettlement.merchant);
+      expect(world.healAt, world.authoredSettlement.well);
+      expect(world.settlement.width, greaterThan(town.width * 2));
+      expect(world.settlement.contains(world.blacksmithAt), true);
+      for (final point in world.settlementCollision[1].points) {
+        expect(
+          world.sanctuary.protects(point & const Size(1, 1)),
+          true,
+          reason: 'the ward must cover the complete painted forge',
+        );
+      }
+    },
+  );
 
   test(
     'on-foot and mounted bodies can reach the workshop from the old village',
@@ -80,16 +51,19 @@ void main() {
         }
         expect((route.last - to).distance, lessThan(42));
       }
-      final forge = world.campProps.singleWhere(
-        (p) => p.kind == 'blacksmith-forge',
-      );
-      for (final solid in forge.collisionBodies) {
-        expect(world.blocked(solid.deflate(1)), true);
-      }
+      final forge = world.settlementCollision[1];
       expect(
-        world.blocked(const Rect.fromLTWH(3330, 2380, 28, 24)),
+        world.blocked(
+          Rect.fromCenter(center: forge.bounds.center, width: 12, height: 12),
+        ),
+        true,
+      );
+      expect(
+        world.blocked(
+          Rect.fromCenter(center: world.blacksmithAt, width: 28, height: 24),
+        ),
         false,
-        reason: 'the visible open left approach must stay walkable',
+        reason: 'the painted front approach remains walkable',
       );
     },
   );
@@ -125,10 +99,7 @@ void main() {
     () {
       final s = Adventure(GameArt())..start(TestGame());
       addTearDown(s.dispose);
-      final forge = s.world.campProps.singleWhere(
-        (p) => p.kind == 'blacksmith-forge',
-      );
-      final covered = forge.collisionBodies.first.center;
+      final covered = s.world.settlementCollision[1].bounds.center;
       final item = s.progress.createGear(
         gearById('longsword'),
         rarity: Rarity.rare,

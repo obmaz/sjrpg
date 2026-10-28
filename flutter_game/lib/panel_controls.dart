@@ -8,20 +8,34 @@ BoxDecoration gameButtonDecoration({
   bool primary = false,
   double radius = 12,
 }) => BoxDecoration(
-  color: !enabled
-      ? const Color(0xff18242b)
-      : primary
-      ? const Color(0xf02b4c56)
-      : mobileSurface,
+  color: !enabled ? const Color(0xff1a292c) : null,
+  gradient: enabled
+      ? LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: primary
+              ? const [Color(0xff345b58), Color(0xff183c3e)]
+              : const [Color(0xff284b4b), Color(0xff132e34)],
+        )
+      : null,
   borderRadius: BorderRadius.circular(radius),
   border: Border.all(
     color: !enabled
-        ? const Color(0xff30414a)
+        ? const Color(0xff46564f)
         : primary
-        ? mobileAccent.withValues(alpha: .75)
-        : mobileBorder,
-    width: 1,
+        ? gameMetal
+        : gameMetal.withValues(alpha: .72),
+    width: primary ? 1.5 : 1.1,
   ),
+  boxShadow: enabled
+      ? const [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 2,
+            offset: Offset(0, 2),
+          ),
+        ]
+      : null,
 );
 
 class GameIconButton extends StatelessWidget {

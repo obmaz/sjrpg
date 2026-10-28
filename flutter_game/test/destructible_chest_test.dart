@@ -75,18 +75,18 @@ void main() {
       final s = session(stage: stage);
       final index = stage == WorldStage.forest ? 4 : 0;
       final body = s.world.chestBody(index);
-      final from = Offset(body.center.dx - 100, body.center.dy - 12);
+      final from = Offset(body.center.dx - 14, body.center.dy - 100);
       const size = Size(28, 24);
       expect(s.world.blocked(body), true);
-      final stopped = s.world.move(from, const Offset(200, 0), size);
+      final stopped = s.world.move(from, const Offset(0, 200), size);
       expect((stopped & size).overlaps(body), false);
-      expect(stopped.dx, lessThan(body.left));
-      expect(s.world.clearLine(from, from + const Offset(200, 0), size), false);
+      expect(stopped.dy, lessThan(body.top));
+      expect(s.world.clearLine(from, from + const Offset(0, 200), size), false);
       expect(s.breakChest(index), true);
       expect(s.world.blocked(body), false);
-      expect(s.world.clearLine(from, from + const Offset(200, 0), size), true);
-      final passed = s.world.move(from, const Offset(200, 0), size);
-      expect((passed - from - const Offset(200, 0)).distance, lessThan(.001));
+      expect(s.world.clearLine(from, from + const Offset(0, 200), size), true);
+      final passed = s.world.move(from, const Offset(0, 200), size);
+      expect((passed - from - const Offset(0, 200)).distance, lessThan(.001));
     });
   }
 

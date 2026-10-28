@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
+import 'package:guardian_new/travel_journal.dart';
 import 'package:guardian_new/world_model.dart';
 
 import 'support/test_game.dart';
@@ -60,27 +61,22 @@ void main() {
   test('camp services and ruined arch openings stay physically accessible', () {
     for (final stage in WorldStage.values.skip(1)) {
       final world = AdventureWorld(stage: stage);
-      expect(
-        world.blocked(
-          Rect.fromCenter(
-            center: world.merchantAt + const Offset(14, 24),
-            width: 28,
-            height: 24,
-          ),
-        ),
-        false,
-      );
-      expect(
-        world.blocked(
-          Rect.fromCenter(
-            center: world.healAt + const Offset(0, 60),
-            width: 28,
-            height: 24,
-          ),
-        ),
-        false,
-      );
-      expect(world.campProps.length, 2);
+      final well = wellSitesForStage(
+        stage,
+        hubOrigin: world.spawn,
+      ).firstWhere((well) => well.id == 'hub');
+      for (final (name, at) in [
+        ('merchant', world.merchantAt),
+        ('well approach', world.wellApproach(well)),
+      ]) {
+        expect(
+          world.blocked(Rect.fromCenter(center: at, width: 28, height: 24)),
+          false,
+          reason: '${stage.name} $name uses the actual illustration anchor',
+        );
+      }
+      expect(world.authoredSettlement.imageKey, 'settlement-${stage.name}');
+      expect(world.settlementCollision, isNotEmpty);
     }
     final world = AdventureWorld(stage: WorldStage.past);
     final arches = world.props.where((p) => p.kind == 'ruin-4');
@@ -186,7 +182,9 @@ void main() {
         for (final q in branch) {
           if (q.step == 0) {
             final giver = timeQuestGivers.firstWhere((g) => g.path == path);
-            s.hero.position.setValues(giver.at.dx - 14, giver.at.dy - 12);
+            final at = s.world.questGiverAt(giver.path);
+            s.hero.position.setValues(at.dx - 14, at.dy - 12);
+            expect(s.nearbyTimeGiver, giver);
           }
           expect(s.acceptCommission(q), true);
           expect(s.acceptCommission(other.first), false);
@@ -262,7 +260,9 @@ void main() {
     () {
       final s = session(WorldStage.sands);
       final giver = timeQuestGivers.first;
-      s.hero.position.setValues(giver.at.dx - 14, giver.at.dy - 12);
+      final at = s.world.questGiverAt(giver.path);
+      s.hero.position.setValues(at.dx - 14, at.dy - 12);
+      expect(s.nearbyTimeGiver, giver);
       expect(s.acceptCommission(timeCommissions.first), true);
       final source = GameCheckpoint.capture(s)!.data;
       for (final patch in [

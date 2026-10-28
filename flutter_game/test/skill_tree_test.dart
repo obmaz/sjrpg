@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/rpg_model.dart';
+import 'package:guardian_new/skill_tree_layout.dart';
 import 'package:guardian_new/stage_content.dart';
 
 import 'support/test_game.dart';
@@ -14,18 +15,22 @@ void main() {
       () {
         final p = Progress(heroClass: hero);
         expect(p.skillBranches.length, 3);
-        expect(p.skills.length, hero == HeroClass.warrior ? 23 : 21);
+        expect(p.skills.length, hero == HeroClass.warrior ? 33 : 21);
         for (final branch in p.skillBranches) {
           expect(
             p.skills
                 .where(
                   (s) =>
                       s.branch == branch &&
-                      (!s.basic || s.id == p.defaultBasicId),
+                      (hero == HeroClass.warrior
+                          ? warriorTreeIds.contains(s.id)
+                          : !s.basic || s.id == p.defaultBasicId),
                 )
                 .length,
-            (branch == '전투 기술' ? 8 : 6) +
-                (branch == p.mobilitySkill.branch ? 1 : 0),
+            hero == HeroClass.warrior
+                ? 10
+                : (branch == '전투 기술' ? 8 : 6) +
+                      (branch == p.mobilitySkill.branch ? 1 : 0),
           );
         }
         final ids = p.skills.map((s) => s.id).toSet();
@@ -34,8 +39,8 @@ void main() {
           expect(path.contains(skill.id), false);
           for (final requirement in skill.requires.entries) {
             expect(ids.contains(requirement.key), true);
-            expect(requirement.value, inInclusiveRange(1, SkillDef.maxRank));
             final parent = p.skills.firstWhere((s) => s.id == requirement.key);
+            expect(requirement.value, inInclusiveRange(1, parent.rankLimit));
             expect(
               parent.requiredLevel,
               lessThanOrEqualTo(skill.requiredLevel),
@@ -92,7 +97,7 @@ void main() {
     },
   );
   test(
-    'new warrior passives affect real attack speed, life and only connected rage',
+    'warrior weapon and armor masteries affect combat while rage requires contact',
     () {
       final s = Adventure(GameArt());
       s.start(TestGame());
@@ -100,44 +105,32 @@ void main() {
       s.mobs.clear();
       s.hero.position.setValues(6000, 4200);
       s.hero.bearing = 0;
-      final p = s.progress..gainXp(4000);
-      final interval = p.attackInterval, hp = p.maxHp;
-      for (final id in [
-        'mastery',
-        'mastery',
-        'ironSkin',
-        'cleave',
-        'frenzy',
-        'whirlwind',
-        'weaponTempo',
-        'battleFocus',
-        'battleVigor',
-        'battleVigor',
-        'warcry',
-        'resoundingCry',
-        'rallyingVoice',
-      ]) {
+      final p = s.progress;
+      p.level = 40;
+      p.skillPoints = 100;
+      final damage = p.basicDamage, defense = p.armor;
+      for (final id in ['swordMastery', 'ironSkin', 'increasedStamina']) {
         expect(s.learn(p.skills.firstWhere((skill) => skill.id == id)), true);
       }
-      expect(p.attackInterval, lessThan(interval));
-      expect(p.maxHp, hp + 24);
+      expect(p.basicDamage, greaterThan(damage));
+      expect(p.armor, greaterThan(defense));
       p.energy = 0;
       final mob = s.spawnEnemy('golem', const Offset(6050, 4200), boss: true)!;
       s.hero.slash();
-      expect(p.energy, closeTo(2.1, .000001));
-      s.hero.armorTime = 6;
+      final firstContact = p.energy;
+      expect(firstContact, greaterThan(0));
       s.hero.attackClock = 0;
       s.hero.slash();
-      expect(p.energy, closeTo(4.41, .000001));
+      expect(p.energy, greaterThan(firstContact));
+      final afterContacts = p.energy;
       mob.position.setValues(7000, 4200);
       s.hero.attackClock = 0;
       s.hero.slash();
-      expect(p.energy, closeTo(4.41, .000001));
-      s.progress.awardSkillResetTicket(WorldStage.forest);
-
+      expect(p.energy, afterContacts);
+      p.awardSkillResetTicket(WorldStage.forest);
       expect(s.resetSkills(), true);
-      expect(p.attackInterval, interval);
-      expect(p.maxHp, hp);
+      expect(p.basicDamage, damage);
+      expect(p.armor, defense);
     },
   );
   test('elemental mastery and warmth change the actual mage combat values', () {

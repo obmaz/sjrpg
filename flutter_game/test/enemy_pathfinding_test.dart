@@ -5,7 +5,8 @@ import 'package:guardian_new/world_model.dart';
 
 // Existing route costs across authored chest, ruin, bridge and shore geometry.
 // The large body also records narrow passages that must stay impassable.
-// The first two chests now sit inside the expanded, enemy-free forge village.
+// Local camp chests now sit inside the complete, enemy-free settlements.
+// Remote props and narrow corridors retain their recorded route costs.
 const _cases = [
   (
     WorldStage.forest,
@@ -51,10 +52,10 @@ const _cases = [
   ),
   (
     WorldStage.sands,
-    'chest',
+    'warded-chest',
     Offset(5094.143200474463, 6803.600103115019),
     Offset(5716.624193128285, 6772.603347569622),
-    (36, 0),
+    (0, 0),
   ),
   (
     WorldStage.sands,
@@ -86,10 +87,10 @@ const _cases = [
   ),
   (
     WorldStage.past,
-    'chest',
+    'warded-chest',
     Offset(16794.143200474464, 13253.600103115019),
     Offset(17416.624193128286, 13222.603347569622),
-    (36, 0),
+    (0, 0),
   ),
   (
     WorldStage.past,
@@ -121,10 +122,10 @@ const _cases = [
   ),
   (
     WorldStage.future,
-    'chest',
+    'warded-chest',
     Offset(8994.143200474462, 18503.60010311502),
     Offset(9616.624193128284, 18472.60334756962),
-    (34, 0),
+    (0, 0),
   ),
   (
     WorldStage.future,
@@ -156,10 +157,10 @@ const _cases = [
   ),
   (
     WorldStage.tombs,
-    'chest',
+    'warded-chest',
     Offset(27444.143200474464, 20603.60010311502),
     Offset(28066.624193128286, 20572.60334756962),
-    (37, 0),
+    (0, 0),
   ),
   (
     WorldStage.tombs,
@@ -191,10 +192,10 @@ const _cases = [
   ),
   (
     WorldStage.foundry,
-    'chest',
+    'warded-chest',
     Offset(4944.143200474463, 10853.600103115019),
     Offset(5566.624193128285, 10822.603347569622),
-    (36, 0),
+    (0, 0),
   ),
   (
     WorldStage.foundry,
@@ -226,10 +227,10 @@ const _cases = [
   ),
   (
     WorldStage.convergence,
-    'chest',
+    'warded-chest',
     Offset(15444.143200474462, 12728.600103115019),
     Offset(16066.624193128284, 12697.603347569622),
-    (36, 0),
+    (0, 0),
   ),
   (
     WorldStage.convergence,

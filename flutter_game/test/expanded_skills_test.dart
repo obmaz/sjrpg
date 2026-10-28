@@ -8,14 +8,16 @@ void main() {
     (
       HeroClass.warrior,
       [
-        'rendingEdge',
-        'stormOfSteel',
-        'weaponTempo',
-        'veteranGuard',
-        'secondWind',
-        'resoundingCry',
-        'warDrums',
-        'unyieldingOath',
+        'swordMastery',
+        'axeMastery',
+        'maceMastery',
+        'polearmMastery',
+        'throwingMastery',
+        'spearMastery',
+        'increasedStamina',
+        'ironSkin',
+        'increasedSpeed',
+        'naturalResistance',
       ],
     ),
     (
@@ -37,7 +39,9 @@ void main() {
       test(
         '$id changes real preview stats, saves and resets without losing points',
         () {
-          final p = Progress(heroClass: hero)..gainXp(20000);
+          final p = Progress(heroClass: hero)
+            ..level = 100
+            ..skillPoints = 1000;
           for (final skill in p.skills) {
             p.ranks[skill.id] = 2;
           }
@@ -51,7 +55,7 @@ void main() {
           final after = previewSkill(p, skill);
           expect(after.map((s) => s.current), before.map((s) => s.next));
           // Every specialty point adds one victim to its linked area skills.
-          if (['stormOfSteel', 'cinderReach', 'forkedStorm'].contains(id)) {
+          if (['cinderReach', 'forkedStorm'].contains(id)) {
             expect(after.first.current, before.first.current + 1);
             expect(p.learn(skill), true);
             expect(
@@ -62,7 +66,13 @@ void main() {
             final cap = previewSkill(p, skill);
             expect(cap.first.current, before.first.current + 3);
           } else {
-            expect(after.any((s) => s.current != before.first.current), true);
+            expect(
+              List.generate(
+                after.length,
+                (index) => after[index].current != before[index].current,
+              ).any((changed) => changed),
+              true,
+            );
           }
           final restored = Progress.fromSave(p.toSave())!;
           expect(restored.rank(id), p.rank(id));
@@ -81,6 +91,59 @@ void main() {
       );
     }
   }
+  for (final (id, weaponId) in [
+    ('swordMastery', 'shortsword'),
+    ('axeMastery', 'axe'),
+    ('maceMastery', 'mace'),
+    ('polearmMastery', 'halberd'),
+    ('spearMastery', 'spear'),
+  ]) {
+    test(
+      '$id affects its matching weapon without granting every weapon mastery at once',
+      () {
+        final p = Progress()
+          ..level = 100
+          ..skillPoints = 1000;
+        final gear = p.createGear(gearById(weaponId));
+        p.addOwnedGear(gear);
+        expect(p.equip(gear), true);
+        expect(p.weaponMasteryId, id);
+        final skill = p.skills.firstWhere((skill) => skill.id == id);
+        final before = p.basicDamage;
+        expect(p.learn(skill), true);
+        expect(p.basicDamage, closeTo(before * 1.02, .00001));
+        final after = p.basicDamage;
+        final foreign = p.skills.firstWhere(
+          (skill) =>
+              skill.id ==
+              (id == 'swordMastery' ? 'axeMastery' : 'swordMastery'),
+        );
+        expect(p.learn(foreign), true);
+        expect(p.basicDamage, after);
+        final restored = Progress.fromSave(p.toSave())!;
+        expect(restored.basicDamage, p.basicDamage);
+        expect(restored.weaponCriticalChance, p.weaponCriticalChance);
+      },
+    );
+  }
+  test(
+    'throwing mastery scales the original thrown attack while leaving the free basic alone',
+    () {
+      final p = Progress()
+        ..level = 100
+        ..skillPoints = 1000;
+      p.ranks['doubleThrow'] = 1;
+      final skill = p.skills.firstWhere((skill) => skill.id == 'doubleThrow');
+      final mastery = p.skills.firstWhere(
+        (skill) => skill.id == 'throwingMastery',
+      );
+      final basic = p.basicDamage, thrown = p.skillDamage(skill);
+      expect(p.learn(mastery), true);
+      expect(p.basicDamage, basic);
+      expect(p.skillDamage(skill), closeTo(thrown * 1.02, .00001));
+      expect(p.throwingCriticalChance, greaterThan(0));
+    },
+  );
   test('new mage convergence needs every parent at its stated rank', () {
     final p = Progress(heroClass: HeroClass.mage)..gainXp(20000);
     final skill = p.skills.firstWhere((s) => s.id == 'forkedStorm');
@@ -104,14 +167,15 @@ void main() {
     expect(p.rank(skill.id), 1);
   });
   for (final (hero, perkId, affected) in [
-    (HeroClass.warrior, 'stormOfSteel', ['whirlwind', 'seismicSlam']),
     (HeroClass.mage, 'cinderReach', ['meteor']),
     (HeroClass.mage, 'forkedStorm', ['chainLightning']),
   ]) {
     test(
       '$perkId gives real damage on its first point and bounded area growth',
       () {
-        final p = Progress(heroClass: hero)..gainXp(20000);
+        final p = Progress(heroClass: hero)
+          ..level = 100
+          ..skillPoints = 1000;
         for (final skill in p.skills) {
           p.ranks[skill.id] = 2;
         }
@@ -158,13 +222,13 @@ void main() {
           final skill = p.skills.firstWhere((s) => s.id == id);
           expect(restored.skillDamage(skill), p.skillDamage(skill));
         }
-        while (p.rank(perkId) < SkillDef.maxRank) {
+        while (p.rank(perkId) < perk.rankLimit) {
           expect(p.learn(perk), true);
         }
         for (final id in affected) {
           final skill = p.skills.firstWhere((s) => s.id == id);
           expect(p.skillDamage(skill), closeTo(damage[id]! * 1.025, .00001));
-          expect(p.skillTargetLimit(skill), caps[id]! + SkillDef.maxRank);
+          expect(p.skillTargetLimit(skill), caps[id]! + perk.rankLimit);
         }
       },
     );

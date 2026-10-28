@@ -1,0 +1,12 @@
+{
+  "source": "/workspace/generated_images/exec-65ed4a93-d392-40e3-a92b-d1b70d753bbb.png",
+  "sha256": "535348a764be76eee08a66e415f7256e4df643579fcbbdf0eceed87fa10754c2",
+  "generator": "image_gen",
+  "size": [
+    1254,
+    1254
+  ],
+  "camera": "fixed elevated orthographic three-quarter",
+  "lighting": "soft upper-left",
+  "theme": "past"
+}

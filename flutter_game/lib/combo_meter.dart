@@ -91,17 +91,17 @@ class ComboMeter extends StatelessWidget {
       : state.finisher
       ? '마무리 일격'
       : state.nextFinisher
-      ? '다음 마무리 · 금색에서 공격'
+      ? '다음 마무리'
       : state.traitProc
       ? '연계 특성'
       : state.queued
       ? '연계 성공'
       : state.flow
-      ? '연속 공격'
+      ? '분신 연격'
       : '';
   String get _count => state.endless
-      ? '${state.count} COMBO ∞'
-      : '${state.count} / ${state.chainLength} COMBO';
+      ? '분신 연격 ${state.count}'
+      : '분신 연격 ${state.count} / ${state.chainLength}';
 
   Widget get _pips {
     final finite = !state.endless;
@@ -136,7 +136,7 @@ class ComboMeter extends StatelessWidget {
   }
 
   String get _heading => state.nextFinisher
-      ? '마무리 · 금색 공격'
+      ? '분신 연격 · 마무리'
       : !state.endless && (state.finisher || state.missed)
       ? _status
       : _count;
@@ -173,7 +173,7 @@ class ComboMeter extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Semantics(
     label:
-        '${state.endless ? '${state.count}회 무한 연계' : '${state.chainLength}회 중 ${state.count}회 연계'}${_status.isEmpty ? '' : ', $_status'}${state.nextFinisher ? '. 커서가 금색 구간에 올 때 공격 버튼을 다시 누르면 마무리 일격이 나갑니다' : ''}',
+        '분신 연격, ${state.endless ? '${state.count}회 연계' : '${state.chainLength}회 중 ${state.count}회 연계'}${_status.isEmpty ? '' : ', $_status'}',
     excludeSemantics: true,
     child: compact
         ? LayoutBuilder(

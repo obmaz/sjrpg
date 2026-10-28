@@ -885,12 +885,19 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
               ];
         Widget skillButton(int slot) {
           final skill = p.skillAt(slot)!, layout = layouts[slot];
-          final remaining = adventure.hero.cooldowns[skill.id] ?? 0;
+          final continuing =
+              skill.id == 'shadowAssault' && adventure.hero.shadowAssaultActive;
+          final remaining = continuing
+              ? 0.0
+              : adventure.hero.cooldowns[skill.id] ?? 0;
           final aimed = const {
             'meteor',
             'seismicSlam',
             'charge',
             'crushingBlow',
+            'leap',
+            'leapAttack',
+            'doubleThrow',
           }.contains(skill.id);
           return Positioned(
             right: layout.$1,
@@ -907,7 +914,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   ? '보조 ${skill.name}'
                   : '스킬 ${slot + 1} ${skill.name}',
               size: layout.$3,
-              insufficientResource: p.energy < skill.cost,
+              insufficientResource:
+                  !continuing && p.energy < p.skillCost(skill),
               remaining: remaining,
               total: p.skillCooldown(skill),
               onTap: () => adventure.hero.skill(slot: slot),
@@ -1260,6 +1268,21 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                     ),
                   ),
                 ),
+              Positioned(
+                left: 12,
+                right: 12,
+                bottom: math.max(1, media.padding.bottom + 1),
+                child: Semantics(
+                  label: '경험치',
+                  value: '${p.xp} / ${p.nextLevelXp}',
+                  child: LinearProgressIndicator(
+                    value: (p.xp / p.nextLevelXp).clamp(0.0, 1.0),
+                    minHeight: 3,
+                    color: gold,
+                    backgroundColor: const Color(0xbb0c1a1b),
+                  ),
+                ),
+              ),
               Positioned(
                 left: 0,
                 right: 0,

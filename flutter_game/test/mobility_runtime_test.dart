@@ -202,6 +202,8 @@ void main() {
   );
   test('mobility rejects a real whirlwind channel without ghost pulses', () {
     final s = field(HeroClass.warrior);
+    s.progress.level = 100;
+    s.progress.skillPoints = 100;
     final origin = openField(s);
     final def = s.progress.skills.firstWhere((d) => d.id == 'whirlwind');
     void learn(SkillDef skill, int rank) {

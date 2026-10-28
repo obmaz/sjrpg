@@ -8,6 +8,8 @@ import 'package:flutter/services.dart';
 import 'actor_motion.dart';
 import 'area_damage.dart';
 import 'audio_settings.dart';
+import 'barbarian_combat.dart';
+import 'barbarian_utilities.dart';
 import 'battle_effects.dart';
 import 'boss_attacks.dart';
 import 'boss_sprite_mesh.dart';
@@ -37,6 +39,7 @@ import 'player_affliction_art.dart';
 import 'player_afflictions.dart';
 import 'quest_marker.dart';
 import 'ranked_vfx.dart';
+import 'shadow_assault_effect.dart';
 import 'shop_content.dart';
 import 'skill_aim.dart';
 import 'spell_vfx.dart';
@@ -89,6 +92,20 @@ class Adventure extends ChangeNotifier {
   final Progress progress;
   PlayerAfflictions afflictions = PlayerAfflictions();
   final travelJournal = TravelJournal();
+  late final barbarianUtilities = BarbarianUtilities(this);
+
+  void syncBarbarianBuffs() {
+    progress.activeArmorMultiplier = barbarianUtilities.armorMultiplier;
+    progress.activeLifeMultiplier = barbarianUtilities.lifeMultiplier;
+    progress.activeResourceMultiplier = barbarianUtilities.resourceMultiplier;
+    progress.activeSkillBonus = barbarianUtilities.skillBonus;
+    progress.hp = math.min(progress.hp, progress.maxHp);
+    progress.energy = math.min(progress.energy, progress.maxEnergy);
+    if (hero.life.max != progress.maxHp || hero.life.value != progress.hp) {
+      syncLife();
+    }
+  }
+
   bool saveFailed = false;
   DeathLoss? deathLoss;
   final loot = <GroundLoot>[];
@@ -112,7 +129,7 @@ class Adventure extends ChangeNotifier {
 
   late final ui.Offset mountMerchantAt = () {
     const size = ui.Size(24, 24);
-    final desired = world.merchantAt + const ui.Offset(-80, 100);
+    final desired = world.mountMerchantAt;
     final at = world.spawnNear(desired - const ui.Offset(12, 12), size);
     if (at == null) {
       throw StateError('The stable needs an accessible camp site');
@@ -663,7 +680,7 @@ class Adventure extends ChangeNotifier {
     TimeQuestGiver? nearest;
     var distance = 135.0;
     for (final giver in timeQuestGivers) {
-      final at = giver.atOrigin(world.spawn);
+      final at = world.questGiverAt(giver.path);
       final d = (hero.body.center - at).distance;
       if (d < distance &&
           world.clearLine(hero.body.center, at, const ui.Size(3, 3))) {
@@ -962,7 +979,7 @@ class Adventure extends ChangeNotifier {
     final talk = world.stage == WorldStage.sands
         ? nearbyTimeGiver == null
               ? double.infinity
-              : (at - nearbyTimeGiver!.atOrigin(world.spawn)).distance
+              : (at - world.questGiverAt(nearbyTimeGiver!.path)).distance
         : (at - world.elderAt).distance;
     if (talk < 135 && (shop >= 165 || talk < shop)) {
       actions.add(NearbyAction.talk);
@@ -1193,6 +1210,10 @@ class Adventure extends ChangeNotifier {
   bool resetSkills() {
     if (!ready || defeated || disposed || !progress.resetSkills()) return false;
     buildRevision++;
+    barbarianUtilities.clear();
+    hero.barbarianCombat.cancelActions();
+    hero.barbarianCombat.clearBuffs();
+    syncBarbarianBuffs();
     releaseInput();
     hero.armorTime = hero.frenzyTime = hero.spin = hero.comboGuardTime = 0;
     hero.resetCombo();
@@ -1208,6 +1229,7 @@ class Adventure extends ChangeNotifier {
 
   bool equip(Gear item) {
     if (defeated || disposed || !progress.equip(item)) return false;
+    hero.barbarianCombat.cancelActions();
     hero.resetCombo();
     syncLife();
     refresh();
@@ -1336,6 +1358,8 @@ class Adventure extends ChangeNotifier {
 
   void tick(double dt) {
     if (!active || dt <= 0) return;
+    barbarianUtilities.update(dt);
+    syncBarbarianBuffs();
     mountSkillClock = math.max(0, mountSkillClock - dt);
     mountBoostTime = math.max(0, mountBoostTime - dt);
     motorRecoilTime = math.max(0, motorRecoilTime - dt);
@@ -1769,8 +1793,13 @@ class Adventure extends ChangeNotifier {
     return enemy;
   }
 
-  void bubble(String text, ui.Offset at, ui.Color color) {
-    final next = BattleText(this, text, at, color);
+  void bubble(
+    String text,
+    ui.Offset at,
+    ui.Color color, {
+    bool critical = false,
+  }) {
+    final next = BattleText(this, text, at, color, critical: critical);
     final same = texts.where((t) => t.isReward == next.isReward).toList();
     final limit = next.isReward ? 2 : 14;
     if (same.length >= limit) {
@@ -1805,6 +1834,12 @@ class Adventure extends ChangeNotifier {
       return;
     }
     combatTime = 5;
+    if (periodic ||
+        status == PlayerStatus.freeze ||
+        status == PlayerStatus.poison ||
+        status == PlayerStatus.blind) {
+      damage *= 1 - progress.barbarianStatusResistance;
+    }
     damage = progress.mitigate(damage, protection: hero.protection);
     if (hero.comboGuardTime > 0) {
       damage *= 1 - WeaponGiftInfo.comboGuardReduction;
@@ -1836,10 +1871,16 @@ class Adventure extends ChangeNotifier {
     hero.life.remove(damage);
     if (progress.hp > 0 &&
         dispel &&
-        (hero.armorTime > 0 ||
+        (barbarianUtilities.skillBonus > 0 ||
+            barbarianUtilities.armorMultiplier > 1 ||
+            barbarianUtilities.lifeMultiplier > 1 ||
+            hero.armorTime > 0 ||
             hero.frenzyTime > 0 ||
             hero.comboGuardTime > 0)) {
       hero.armorTime = hero.frenzyTime = hero.comboGuardTime = 0;
+      hero.barbarianCombat.dispelBuffs();
+      barbarianUtilities.dispelBuffs();
+      syncBarbarianBuffs();
       bubble(
         '강화 해제',
         hero.body.center - const ui.Offset(0, 90),
@@ -1886,6 +1927,7 @@ class Adventure extends ChangeNotifier {
     ui.Offset impulse, {
     bool generateRage = false,
     bool hitStop = true,
+    bool critical = false,
     ui.Offset? origin,
     ImpactKind? impactKind,
     int? impactRank,
@@ -1894,7 +1936,9 @@ class Adventure extends ChangeNotifier {
       return false;
     }
     combatTime = 5;
-    damage *= mob.wardActive ? .65 : 1;
+    damage *=
+        (mob.wardActive ? .65 : 1) *
+        barbarianUtilities.incomingDamageMultiplier(mob);
     final healthBefore = mob.life.value / mob.life.max;
     mob.life.remove(damage);
     mob.damageTrail.damage(healthBefore, mob.life.value / mob.life.max);
@@ -1944,9 +1988,11 @@ class Adventure extends ChangeNotifier {
       '${damage.round()}',
       mob.position.toOffset() - ui.Offset(0, mob.boss ? 125 : 70),
       const ui.Color(0xffffedb4),
+      critical: critical,
     );
     if (mob.isDead && !mob.rewarded) {
       mob.rewarded = true;
+      barbarianUtilities.recordCorpse(mob);
       final level = progress.level, goldBefore = progress.gold;
       progress.reward(boss: mob.boss, elite: mob.isElite, unique: mob.isUnique);
       if (progress.hasGift(WeaponGift.renewal) && progress.hp > 0) {
@@ -2084,6 +2130,7 @@ class Adventure extends ChangeNotifier {
   @override
   void dispose() {
     combatFeedback.dispose();
+    barbarianUtilities.clear();
     disposed = true;
     for (final text in texts) {
       text.releaseText();
@@ -2121,6 +2168,7 @@ class Guardian extends Player with WithCollision {
   }
   final Adventure session;
   SkillAim? aim;
+  late final barbarianCombat = BarbarianCombat(this);
   ({int slot, String id, SkillAim? aim})? queuedCast;
   void beginAim(int slot) {
     if (session.afflictions.frozen) return;
@@ -2133,7 +2181,10 @@ class Guardian extends Player with WithCollision {
         (cooldowns[def.id] ?? 0) > 0) {
       return;
     }
-    if (def.id == 'charge' && session.afflictions.movementBlocked) return;
+    if (const {'charge', 'leap', 'leapAttack'}.contains(def.id) &&
+        session.afflictions.movementBlocked) {
+      return;
+    }
     if (!_hasSkillResource(def) || !session.ensureOnFoot()) return;
     queuedCast = null;
     aim = SkillAim(slot, def.id, bearing);
@@ -2188,6 +2239,8 @@ class Guardian extends Player with WithCollision {
   );
   void interruptFor(PlayerStatus status) {
     if (status == PlayerStatus.root || status == PlayerStatus.freeze) {
+      barbarianCombat.cancelActions();
+      resetCombo();
       chargeTime = dashing = 0;
       cancelSprint();
     }
@@ -2311,7 +2364,8 @@ class Guardian extends Player with WithCollision {
   double heavyWindup = 0, heavyPower = 0, heavyAngle = 0, heavyCharge = 0;
   final _heavyChargeArt = CrushingChargeArt();
   SkillDef? heavySkill;
-  bool get physicalAction => chargeTime > 0 || heavyWindup > 0 || spin > 0;
+  bool get physicalAction =>
+      chargeTime > 0 || heavyWindup > 0 || spin > 0 || barbarianCombat.busy;
   void heavyImpact() {
     final def = heavySkill;
     heavySkill = null;
@@ -2413,6 +2467,9 @@ class Guardian extends Player with WithCollision {
     if (session.disposed || !hasGameRef || isRemoving) return;
     await add(RectangleHitbox(size: size));
     lastClearPosition = position.toOffset();
+    collision.onBlockMovementListener(
+      (points, other) => !barbarianCombat.airborne,
+    );
     collision.onMovementBlockedListener((other, data) {
       if (session.world.blocked(
         body,
@@ -2482,10 +2539,12 @@ class Guardian extends Player with WithCollision {
       return;
     }
     if (dt <= 0) return;
+    barbarianCombat.update(dt);
     if (aim != null) aim!.heldFor += dt;
     final ordinarySpeed = frenzyTime > 0
-        ? math.min(session.progress.frenzyMoveSpeed, 155.0)
-        : CombatBalance.normalMoveSpeed;
+        ? session.progress.frenzyMoveSpeed
+        : CombatBalance.normalMoveSpeed *
+              session.progress.increasedSpeedMultiplier;
     final sprintFraction = math.min(dt, sprintTime) / dt;
     var unhinderedSpeed =
         session.riding?.speed ??
@@ -2509,6 +2568,7 @@ class Guardian extends Player with WithCollision {
     final before = position.toOffset();
     super.update(dt);
     var delta = position.toOffset() - before;
+    delta = barbarianCombat.leapDelta(before, dt) ?? delta;
     if (heavyWindup > 0) delta = ui.Offset.zero;
     if (chargeTime > 0) {
       delta =
@@ -2525,13 +2585,15 @@ class Guardian extends Player with WithCollision {
       dashing -= dt;
     }
     if (session.afflictions.movementBlocked) delta = ui.Offset.zero;
-    final p = session.world.move(
+    var p = session.world.move(
       before,
       delta,
       ui.Size(size.x, size.y),
       waterOnly: session.riding?.def.waterOnly ?? false,
     );
     position.setValues(p.dx, p.dy);
+    barbarianCombat.finishMovement();
+    p = position.toOffset();
     session.wearMount((p - before).distance / 350);
     if (chargeTime > 0) {
       chargeTime = math.max(0, chargeTime - dt);
@@ -2646,44 +2708,25 @@ class Guardian extends Player with WithCollision {
 
   final timedCombo = TimedWeaponCombo();
   final comboHud = ValueNotifier<ComboHudState>(const ComboHudState());
-  ComboPressResult? _queuedCombo;
+  WeaponComboProfile? _shadowProfile;
+  final _shadowVictims = <HuntEnemy>{};
   (int, String)? _comboIdentity;
   double _comboFeedback = 0, comboGuardTime = 0;
-  double _flowClock = 0, _lastBasicInterval = 1;
   bool comboFlow = false;
   int _comboCount = 0;
   bool comboFinisher = false, _comboMissed = false, _comboProc = false;
   bool _comboDisposed = false;
 
-  WeaponComboProfile? get _comboProfile =>
-      session.progress.heroClass == HeroClass.warrior
-      ? session.progress.weapon.base.comboProfile
-      : null;
-
-  double get _flowInterval {
-    final cycle = math.min(
-      _comboProfile?.barDuration ?? _lastBasicInterval,
-      _lastBasicInterval,
-    );
-    return math.max(
-      .12,
-      math.min(
-        _lastBasicInterval * WeaponComboProfile.flowIntervalScale,
-        cycle * .6,
-      ),
-    );
-  }
-
-  double get _flowDamageScale => math.min(
-    WeaponComboProfile.flowDamageScale,
-    .7 * _flowInterval / _lastBasicInterval,
-  );
+  /// Only this active skill owns timing input; ordinary attacks never do.
+  bool get shadowAssaultActive => _shadowProfile != null && timedCombo.active;
+  int get shadowAssaultTargetsHit => _shadowVictims.length;
 
   void resetCombo() {
     timedCombo.reset();
-    _queuedCombo = null;
+    _shadowProfile = null;
+    _shadowVictims.clear();
     _comboIdentity = null;
-    _flowClock = _comboFeedback = 0;
+    _comboFeedback = 0;
     comboFlow = false;
     _comboCount = 0;
     comboFinisher = _comboMissed = _comboProc = false;
@@ -2699,22 +2742,18 @@ class Guardian extends Player with WithCollision {
 
   void _publishCombo() {
     if (_comboDisposed) return;
-    final profile = _comboProfile;
     final window = timedCombo.window;
     final state = ComboHudState(
       active:
-          profile != null &&
-          (timedCombo.active || _queuedCombo != null || _comboFeedback > 0),
+          _shadowProfile != null && (timedCombo.active || _comboFeedback > 0),
       count: _comboCount,
-      chainLength: profile?.chainLength,
+      chainLength: _shadowProfile?.chainLength,
       progress: timedCombo.progress,
       windowStart: window?.start ?? 0,
       windowEnd: window?.end ?? 0,
-      queued: _queuedCombo != null,
       finisher: comboFinisher && _comboFeedback > 0,
       missed: _comboMissed && _comboFeedback > 0,
       traitProc: _comboProc && _comboFeedback > 0,
-      flow: comboFlow,
     );
     if (comboHud.value != state) comboHud.value = state;
   }
@@ -2738,134 +2777,251 @@ class Guardian extends Player with WithCollision {
   void _advanceCombo(double dt) {
     comboGuardTime = math.max(0, comboGuardTime - dt);
     _comboFeedback = math.max(0, _comboFeedback - dt);
-    _flowClock = math.max(0, _flowClock - dt);
+    if (_shadowProfile == null) return;
     final identity = (
       session.progress.weapon.serial,
       session.progress.selectedBasic,
     );
-    if (_comboIdentity != null &&
-        (_comboIdentity != identity ||
-            session.riding != null && !session.mountedBasicAllowed ||
-            session.sheltered && (comboFlow || _queuedCombo != null) ||
-            session.afflictions.frozen ||
-            physicalAction)) {
+    if (_comboIdentity != identity ||
+        session.riding != null ||
+        session.sheltered ||
+        session.afflictions.movementBlocked ||
+        physicalAction ||
+        session.progress.rank('shadowAssault') <= 0) {
       resetCombo();
       return;
     }
-    if (_queuedCombo == null && timedCombo.active) {
-      final previous = timedCombo.count;
-      final timingScale = math.max(
-        1.0,
-        (_comboProfile?.barDuration ?? 0) / _lastBasicInterval,
-      );
-      timedCombo.advance(dt * timingScale);
+    if (timedCombo.active) {
+      timedCombo.advance(dt);
       if (!timedCombo.active) {
-        _comboCount = previous;
-        comboFlow = false;
-        _flowClock = 0;
-        _comboMissed = true;
-        _comboFeedback = .45;
+        _endShadowAssault(missed: true);
+      } else if (!session.mobs.any(
+        (enemy) =>
+            !_shadowVictims.contains(enemy) &&
+            session.canHitEnemy(enemy) &&
+            (enemy.body.center - body.center).distanceSquared <= 360 * 360,
+      )) {
+        _endShadowAssault();
       }
-    }
-    if (_queuedCombo case final result?) {
-      if (attackClock <= 0) {
-        if (_basicAvailable()) {
-          _queuedCombo = null;
-          _executeCombo(result);
-        } else {
-          resetCombo();
-        }
-      }
-    }
-    if (comboFlow &&
-        (timedCombo.active || _queuedCombo != null) &&
-        _flowClock <= 0 &&
-        _basicAvailable(recovery: false)) {
-      _performSlash(flow: true);
-      _flowClock = _flowInterval;
+    } else if (_comboFeedback <= 0) {
+      _shadowProfile = null;
     }
     _publishCombo();
   }
 
   void slash({bool automatic = false}) {
-    if (!_basicAvailable(recovery: false)) return;
-    final profile = _comboProfile;
-    if (profile == null) {
-      if (attackClock <= 0) _performSlash();
-      return;
-    }
-    if (_comboIdentity !=
-        (session.progress.weapon.serial, session.progress.selectedBasic)) {
-      resetCombo();
-    }
-    if (automatic) {
-      if (attackClock > 0 || _queuedCombo != null || comboFlow) return;
-      // Holding remains useful for ordinary attacks, but never earns a link.
-      resetCombo();
-    } else if (_queuedCombo != null) {
-      return;
-    }
-    if (!timedCombo.active && attackClock > 0) return;
-    final result = timedCombo.press(
-      profile,
-      hasTripletTrait: session.progress.weapon.gifts.any(
-        (gift) => gift.isCombo,
-      ),
-    );
-    if (result.kind == ComboPress.missed) {
-      timedCombo.reset();
-      comboFlow = false;
-      _flowClock = 0;
-      _comboCount = 0;
-      _comboMissed = true;
-      comboFinisher = _comboProc = false;
-      _comboFeedback = .45;
-      if (attackClock <= 0) {
-        final restart = timedCombo.press(profile);
-        _comboIdentity = (
-          session.progress.weapon.serial,
-          session.progress.selectedBasic,
-        );
-        _executeCombo(restart);
-        _comboMissed = true;
-        _comboFeedback = .45;
+    resetCombo();
+    if (_basicAvailable()) _performSlash();
+  }
+
+  ({HuntEnemy enemy, ui.Offset landing})? _nextShadowTarget({
+    bool fresh = false,
+  }) {
+    final origin = body.center;
+    final candidates =
+        session.mobs
+            .where(
+              (enemy) =>
+                  (fresh || !_shadowVictims.contains(enemy)) &&
+                  session.canHitEnemy(enemy) &&
+                  (enemy.body.center - origin).distanceSquared <= 360 * 360,
+            )
+            .toList()
+          ..sort(
+            (a, b) => (a.body.center - origin).distanceSquared.compareTo(
+              (b.body.center - origin).distanceSquared,
+            ),
+          );
+    for (final enemy in candidates) {
+      if (!session.world.clearEnemyLine(
+        origin,
+        enemy.body.center,
+        const ui.Size(3, 3),
+      )) {
+        continue;
       }
-      _publishCombo();
-      return;
+      final direction = origin - enemy.body.center;
+      final angle = math.atan2(direction.dy, direction.dx);
+      final radius = (enemy.body.longestSide + body.longestSide) / 2 + 12;
+      for (var i = 0; i < 16; i++) {
+        final turn = i == 0 ? 0 : (i.isOdd ? (i + 1) ~/ 2 : -i ~/ 2);
+        final bearing = angle + turn * math.pi / 8;
+        final center =
+            enemy.body.center +
+            ui.Offset(math.cos(bearing), math.sin(bearing)) * radius;
+        final at = Vector2(
+          center.dx - size.x / 2,
+          center.dy - size.y / 2,
+        ).toOffset();
+        final landing = at & body.size;
+        if (session.world.blocksEnemy(landing) ||
+            session.mobs.any(
+              (other) =>
+                  !other.isDead &&
+                  !other.isRemoving &&
+                  !other.encounterDormant &&
+                  other.body.overlaps(landing),
+            ) ||
+            !session.world.clearEnemyLine(position.toOffset(), at, body.size) ||
+            !session.world.clearEnemyLine(
+              landing.center,
+              enemy.body.center,
+              const ui.Size(3, 3),
+            )) {
+          continue;
+        }
+        return (enemy: enemy, landing: at);
+      }
     }
+    return null;
+  }
+
+  void _startShadowAssault(SkillDef skill) {
+    final rank = session.progress.rank(skill.id).clamp(1, 5);
+    _shadowProfile = WeaponComboProfile(
+      'shadowAssault',
+      'shadow-cut',
+      chainLength: rank,
+      barDuration: .9,
+      windowWidth: .30,
+    );
     _comboIdentity = (
       session.progress.weapon.serial,
       session.progress.selectedBasic,
     );
-    if (result.kind != ComboPress.started) {
-      if (!comboFlow) {
-        comboFlow = true;
-        _flowClock = _flowInterval;
-      }
-      // A successful rhythm accelerates the remaining recovery, not the basic
-      // attack cadence for arbitrary taps or held input.
-      attackClock *= WeaponComboProfile.successRecoveryScale;
-    }
-    if (attackClock > 0) {
-      _queuedCombo = result;
-      _publishCombo();
-    } else {
-      _executeCombo(result);
-    }
+    session.attackSources.clear();
+    final result = timedCombo.press(_shadowProfile!);
+    _strikeShadowTarget(result);
   }
 
-  void _executeCombo(ComboPressResult result) {
-    if (!_basicAvailable()) {
+  /// Re-enter through the same skill button, bypassing only its already-paid
+  /// cooldown/resource gate. An early/late press ends the committed chain.
+  bool continueShadowAssault() {
+    if (!shadowAssaultActive) return false;
+    if (!session.active ||
+        !session.combatAllowed ||
+        session.afflictions.movementBlocked ||
+        session.riding != null ||
+        dashing > 0 ||
+        physicalAction ||
+        session.progress.rank('shadowAssault') <= 0 ||
+        !session.progress.skillSlots.contains('shadowAssault') ||
+        _comboIdentity !=
+            (session.progress.weapon.serial, session.progress.selectedBasic)) {
       resetCombo();
-      return;
+      return false;
+    }
+    final result = timedCombo.press(
+      _shadowProfile!,
+      hasTripletTrait: session.progress.weapon.gifts.any(
+        (gift) => gift.isCombo,
+      ),
+    );
+    if (!result.successful) {
+      _endShadowAssault(missed: true);
+      return false;
+    }
+    return _strikeShadowTarget(result);
+  }
+
+  bool _strikeShadowTarget(ComboPressResult result) {
+    final target = _nextShadowTarget();
+    if (target == null) {
+      _endShadowAssault();
+      return false;
+    }
+    final from = body.bottomCenter;
+    position.setValues(target.landing.dx, target.landing.dy);
+    lastClearPosition = target.landing;
+    stop();
+    final delta = target.enemy.body.center - body.center;
+    bearing = attackBearing = math.atan2(delta.dy, delta.dx);
+    strikes++;
+    strikePose = (result.count - 1) % 3;
+    swingDuration = swing = .28;
+    attackClock = math.max(attackClock, .2);
+    final p = session.progress;
+    final skill = p.skills.firstWhere((skill) => skill.id == 'shadowAssault');
+    final splash = session.mobs
+        .where(
+          (other) =>
+              other != target.enemy &&
+              session.canHitEnemy(other) &&
+              (other.body.center - target.enemy.body.center).distanceSquared <=
+                  68 * 68 &&
+              session.world.clearEnemyLine(
+                body.center,
+                other.body.center,
+                const ui.Size(3, 3),
+              ),
+        )
+        .take(2)
+        .toList();
+    final critical =
+        p.weaponCriticalChance > 0 &&
+        session.random.nextDouble() < p.weaponCriticalChance;
+    final damage =
+        p.skillDamage(skill) *
+        p.shadowAssaultStrikeScale(result.count) *
+        (critical ? 2 : 1);
+    final shared = enemyGroupDamageScale(1 + splash.length);
+    final accepted = session.hit(
+      target.enemy,
+      damage * shared,
+      ui.Offset.zero,
+      origin: body.center,
+      impactKind: ImpactKind.heavy,
+      impactRank: p.rank(skill.id),
+      critical: critical,
+    );
+    if (!accepted) {
+      _endShadowAssault();
+      return false;
+    }
+    _shadowVictims.add(target.enemy);
+    for (final other in splash) {
+      session.hit(
+        other,
+        damage * .2 / splash.length * shared,
+        ui.Offset.zero,
+        origin: body.center,
+        hitStop: false,
+        impactKind: ImpactKind.melee,
+        impactRank: p.rank(skill.id),
+        critical: critical,
+      );
+    }
+    for (var echo = 0; echo < 2; echo++) {
+      session.game?.add(
+        ShadowAssaultEcho(
+          session,
+          ui.Offset.lerp(from, body.bottomCenter, echo * .45)!,
+          bearing: bearing,
+          pose: strikePose,
+          duration: .18 + echo * .08,
+        ),
+      );
     }
     _comboCount = result.count;
-    comboFinisher = result.kind == ComboPress.finisher;
     _comboMissed = _comboProc = false;
-    _comboFeedback = comboFinisher ? .7 : 0;
-    _performSlash(chain: result);
-    comboFlow = result.kind == ComboPress.linked;
-    _flowClock = comboFlow ? _flowInterval : 0;
+    comboFinisher = result.count >= _shadowProfile!.chainLength!;
+    _procComboTraits(result);
+    session.audio.play(EffectSound.slash);
+    session.device.pulse(FeedbackKind.skill);
+    if (comboFinisher) {
+      _endShadowAssault();
+    } else {
+      _publishCombo();
+    }
+    if (hasGameRef) gameRef.camera.position = session.cameraFocus;
+    return true;
+  }
+
+  void _endShadowAssault({bool missed = false}) {
+    timedCombo.reset();
+    _comboMissed = missed;
+    comboFinisher = !missed && _comboCount > 0;
+    _comboFeedback = .55;
     _publishCombo();
   }
 
@@ -2884,7 +3040,7 @@ class Guardian extends Player with WithCollision {
     _publishCombo();
   }
 
-  void _performSlash({ComboPressResult? chain, bool flow = false}) {
+  void _performSlash() {
     final p = session.progress;
     final basic = p.basicSkill;
     final propRange = p.weapon.base.range;
@@ -2892,7 +3048,7 @@ class Guardian extends Player with WithCollision {
     if (!session.active ||
         session.afflictions.frozen ||
         !session.combatAllowed && props.isEmpty ||
-        !flow && attackClock > 0 ||
+        attackClock > 0 ||
         castLock > 0 ||
         dashing > 0 ||
         physicalAction ||
@@ -2937,34 +3093,20 @@ class Guardian extends Player with WithCollision {
     attackBearing = angle;
     strikes++;
     if (comboGrace <= 0) session.combo = 0;
-    strikePose = flow
-        ? strikes % 3
-        : basic.id == 'heavyStrike'
+    strikePose = basic.id == 'heavyStrike'
         ? 2
         : basic.id == 'quickCut'
         ? strikes % 2
-        : chain != null
-        ? (chain.kind == ComboPress.finisher ? 2 : (chain.count - 1) % 3)
-        : session.combo;
-    session.combo = flow
-        ? _comboCount
-        : chain != null
-        ? (chain.kind == ComboPress.finisher ? 0 : chain.count)
-        : basic.id == 'cleave' || p.heroClass == HeroClass.mage
-        ? (session.combo + 1) % 3
-        : 1;
-    if (!flow) {
-      attackClock = p.actualBasicInterval(
-        frenzyTempo: frenzyTime > 0 ? p.frenzyAttackTempo : 1,
-        attackTempo: session.afflictions.attackTempo,
-      );
-      _lastBasicInterval = attackClock;
-    }
+        : strikes % 3;
+    session.combo = (session.combo + 1) % 3;
+    attackClock = p.actualBasicInterval(
+      frenzyTempo: frenzyTime > 0 ? p.frenzyAttackTempo : 1,
+      attackTempo: session.afflictions.attackTempo,
+    );
     // Slow weapons and attack debuffs must still reach the next combo strike.
     // Once this scheduled attack becomes ready, only a short idle margin remains.
     comboGrace = math.max(1.2, attackClock + .25);
-    swingDuration =
-        (strikePose == 2 ? .32 : .26) / effectiveBasicTempo * (flow ? .4 : 1);
+    swingDuration = (strikePose == 2 ? .32 : .26) / effectiveBasicTempo;
     swing = swingDuration;
     if (p.heroClass == HeroClass.mage) {
       castLock = .26 / effectiveBasicTempo;
@@ -3053,14 +3195,10 @@ class Guardian extends Player with WithCollision {
           .where((t) => t.mob != null && session.canHitEnemy(t.mob!))
           .length,
     );
-    final damage =
-        p.basicDamage *
-        (chain?.kind == ComboPress.finisher
-            ? p.weapon.base.comboProfile!.finisherScale
-            : 1) *
-        multiplier *
-        (flow ? _flowDamageScale : 1);
-    var landed = false;
+    final critical =
+        p.weaponCriticalChance > 0 &&
+        session.random.nextDouble() < p.weaponCriticalChance;
+    final damage = p.basicDamage * multiplier * (critical ? 2 : 1);
     for (final target in selected) {
       final mob = target.mob;
       if (mob == null) {
@@ -3079,25 +3217,21 @@ class Guardian extends Player with WithCollision {
                     ? 42
                     : 23)
           : const ui.Offset(0, 23);
-      final impulse = flow ? push * .45 : push;
       final accepted = session.hit(
         mob,
         damage,
-        impulse,
-        generateRage: !flow,
-        hitStop: !flow,
-        impactKind: flow ? ImpactKind.melee : null,
+        push,
+        generateRage: true,
+        critical: critical,
       );
-      landed |= accepted;
-      if (accepted && !flow && basic.id == 'heavyStrike' && !mob.isDead) {
+      if (accepted && basic.id == 'heavyStrike' && !mob.isDead) {
         mob.applyStun(.12 + p.rank(basic.id) * .025);
       }
     }
-    if (landed) _procComboTraits(chain);
   }
 
   bool _hasSkillResource(SkillDef def) {
-    if (session.progress.energy >= def.cost) return true;
+    if (session.progress.energy >= session.progress.skillCost(def)) return true;
     session.bubble(
       '${session.progress.heroClass.resource} 부족',
       body.center - const ui.Offset(0, 75),
@@ -3120,8 +3254,25 @@ class Guardian extends Player with WithCollision {
         def.id == 'charge' && session.afflictions.movementBlocked) {
       return;
     }
+    if (def.id == 'shadowAssault' && shadowAssaultActive) {
+      continueShadowAssault();
+      return;
+    }
     final rank = p.rank(def.id);
+    if (def.id == 'shadowAssault' &&
+        (session.afflictions.movementBlocked ||
+            _nextShadowTarget(fresh: true) == null)) {
+      return;
+    }
     if (!session.active || (cooldowns[def.id] ?? 0) > 0 || rank == 0) return;
+    if (BarbarianUtilities.skillIds.contains(def.id) &&
+        !session.barbarianUtilities.canActivate(def.id)) {
+      return;
+    }
+    if (BarbarianCombat.skillIds.contains(def.id) &&
+        !barbarianCombat.canActivate(def, aim: manualAim)) {
+      return;
+    }
     if (!_hasSkillResource(def) || !session.ensureOnFoot()) return;
     if (castLock > 0) {
       queuedCast = (slot: slotIndex, id: def.id, aim: manualAim);
@@ -3130,7 +3281,16 @@ class Guardian extends Player with WithCollision {
     queuedCast = null;
     resetCombo();
     session.audio.play(switch (def.id) {
-      'warcry' || 'frenzy' => EffectSound.warcry,
+      'howl' ||
+      'taunt' ||
+      'shout' ||
+      'battleCry' ||
+      'battleOrders' ||
+      'battleCommand' ||
+      'warcry' ||
+      'grimWard' => EffectSound.warcry,
+      'findPotion' || 'findItem' => EffectSound.loot,
+      'leap' || 'leapAttack' => EffectSound.dodge,
       'frostNova' || 'iceArmor' => EffectSound.ice,
       'chainLightning' => EffectSound.lightning,
       'meteor' => EffectSound.fire,
@@ -3138,8 +3298,23 @@ class Guardian extends Player with WithCollision {
       _ => EffectSound.slash,
     });
     session.device.pulse(FeedbackKind.skill);
-    p.energy -= def.cost;
+    p.energy -= p.skillCost(def);
     cooldowns[def.id] = p.skillCooldown(def);
+    if (BarbarianUtilities.skillIds.contains(def.id)) {
+      session.barbarianUtilities.activate(def);
+      session.syncBarbarianBuffs();
+      attackBearing = bearing;
+      strikePose = 2;
+      swingDuration = swing = p.skillMotionTime(def);
+      castLock = swing;
+      session.refresh();
+      return;
+    }
+    if (BarbarianCombat.skillIds.contains(def.id)) {
+      barbarianCombat.activate(def, aim: manualAim);
+      session.refresh();
+      return;
+    }
     if (p.heroClass == HeroClass.mage) {
       castLock = p.skillMotionTime(def);
       attackClock = math.max(attackClock, castLock);
@@ -3153,6 +3328,8 @@ class Guardian extends Player with WithCollision {
       strikePose = 2;
     }
     switch (def.id) {
+      case 'shadowAssault':
+        _startShadowAssault(def);
       case 'charge':
         chargeAngle = manualAim?.angle ?? bearing;
         attackBearing = chargeAngle;
@@ -3416,23 +3593,41 @@ class Guardian extends Player with WithCollision {
     final feet = ui.Offset(size.x / 2, size.y),
         center = ui.Offset(size.x / 2, size.y - 8);
     final crushingAim = aim?.id == 'crushingBlow' ? aim : null;
+    final barbarianAim = aim != null && isBarbarianPhysicalAim(aim!.id)
+        ? aim
+        : null;
+    final barbarianAimSkill = barbarianAim == null
+        ? null
+        : session.progress.skills.firstWhere(
+            (skill) => skill.id == barbarianAim.id,
+          );
+    final barbarianAimBearing = barbarianAimSkill == null
+        ? bearing
+        : barbarianCombat.previewBearing(
+            barbarianAimSkill,
+            aim: barbarianAim!.dragged ? barbarianAim : null,
+          );
     // A quiet contact shadow anchors the feet to the same ground plane as props.
-    canvas.drawOval(
-      ui.Rect.fromCenter(
-        center: feet + const ui.Offset(5, -1),
-        width: 38,
-        height: 12,
-      ),
-      ui.Paint()..color = const ui.Color(0x28101919),
-    );
-    canvas.drawOval(
-      ui.Rect.fromCenter(
-        center: feet - const ui.Offset(0, 1),
-        width: 25,
-        height: 8,
-      ),
-      ui.Paint()..color = const ui.Color(0x48101919),
-    );
+    if (barbarianCombat.airborne) {
+      barbarianCombat.paintAirborneShadow(canvas, feet);
+    } else {
+      canvas.drawOval(
+        ui.Rect.fromCenter(
+          center: feet + const ui.Offset(5, -1),
+          width: 38,
+          height: 12,
+        ),
+        ui.Paint()..color = const ui.Color(0x28101919),
+      );
+      canvas.drawOval(
+        ui.Rect.fromCenter(
+          center: feet - const ui.Offset(0, 1),
+          width: 25,
+          height: 8,
+        ),
+        ui.Paint()..color = const ui.Color(0x48101919),
+      );
+    }
     final footMark = ui.Rect.fromCenter(
       center: feet - const ui.Offset(0, 2),
       width: 36,
@@ -3589,15 +3784,19 @@ class Guardian extends Player with WithCollision {
                   0.0,
                   1.0,
                 )
+          : barbarianAim != null
+          ? .18
           : swing > 0 && swingDuration > 0
           ? 1 - swing / swingDuration
           : 0.0;
       session.art.actor(
         canvas,
         session.progress.heroClass == HeroClass.mage ? 'mage' : 'hero',
-        feet,
+        feet - ui.Offset(0, barbarianCombat.airborneHeight),
         spin > 0
             ? bearing + (1 - spin / spinDuration) * math.pi * 4
+            : barbarianAim != null
+            ? barbarianAimBearing
             : crushingAim != null
             ? crushingAim.angle
             : swing > 0
@@ -3605,7 +3804,9 @@ class Guardian extends Player with WithCollision {
             : bearing,
         spin > 0
             ? 1
-            : heavyWindup > 0 || aim?.id == 'crushingBlow'
+            : heavyWindup > 0 ||
+                  aim?.id == 'crushingBlow' ||
+                  barbarianAim != null
             ? 0
             : swing > 0
             ? (swing > swingDuration * .58 ? 0 : 1)
@@ -3620,8 +3821,16 @@ class Guardian extends Player with WithCollision {
             : 0,
         60,
         moving: movingThisFrame,
-        attack: swing > 0 || spin > 0 || aim?.id == 'crushingBlow',
-        comboPose: spin > 0
+        attack:
+            swing > 0 ||
+            spin > 0 ||
+            aim?.id == 'crushingBlow' ||
+            barbarianAim != null,
+        comboPose: barbarianAim != null
+            ? barbarianAim.id == 'doubleThrow'
+                  ? 0
+                  : 1
+            : spin > 0
             ? 1
             : crushingAim != null
             ? 2
@@ -3746,7 +3955,24 @@ class Guardian extends Player with WithCollision {
     }
     paintPlayerAfflictions(canvas, feet, session.afflictions, session.elapsed);
     final currentAim = aim;
-    if (currentAim?.id == 'crushingBlow' || currentAim?.id == 'charge') {
+    if (barbarianAim != null && barbarianAimSkill != null) {
+      final landing = barbarianAim.id == 'doubleThrow'
+          ? null
+          : barbarianCombat.previewLanding(
+              barbarianAimSkill,
+              aim: barbarianAim.dragged ? barbarianAim : null,
+            );
+      paintBarbarianAimPreview(
+        canvas,
+        body.center - position.toOffset(),
+        barbarianAim,
+        range: session.progress.skillRange(barbarianAimSkill),
+        bearing: barbarianAimBearing,
+        landing: landing == null
+            ? null
+            : landing + ui.Offset(size.x / 2, size.y / 2) - position.toOffset(),
+      );
+    } else if (currentAim?.id == 'crushingBlow' || currentAim?.id == 'charge') {
       paintPhysicalAimPreview(
         canvas,
         body.center - position.toOffset(),
@@ -4146,7 +4372,10 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
   final EnemyTier tier;
   late final EnemyPower power;
   double outgoingDamage(double base) =>
-      base * power.damageMultiplier * CombatBalance.enemyDamageScale;
+      base *
+      power.damageMultiplier *
+      CombatBalance.enemyDamageScale *
+      session.barbarianUtilities.outgoingDamageMultiplier(this);
   bool get isElite => !boss && tier != EnemyTier.normal;
   bool get isUnique => !boss && tier == EnemyTier.unique;
   ui.Color get tierColor => isUnique ? const ui.Color(0xffd3a1ff) : trait.color;
@@ -4158,7 +4387,10 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
   bool get technological => definition?.technological ?? false;
   bool get usesPounce => !boss && definition?.pattern == 'pounce';
   bool get usesSweep => !boss && definition?.pattern == 'sweep';
-  bool get usesBolt => !boss && definition?.pattern == 'bolt';
+  bool get usesBolt =>
+      !boss &&
+      definition?.pattern == 'bolt' &&
+      !session.barbarianUtilities.taunted(this);
   double get pounceWarning =>
       definition?.attackWarning ??
       switch (kind) {
@@ -4490,6 +4722,38 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
       }
       stop();
       super.update(dt);
+      return;
+    }
+    final taunted = session.barbarianUtilities.taunted(this);
+    if (taunted && definition?.pattern == 'bolt' && windup > 0) {
+      windup = 0;
+      slamTarget = null;
+      attackMotion.cancel();
+    }
+    final fearedFrom = session.barbarianUtilities.fearedFrom(this);
+    if (fearedFrom != null && hurt <= 0 && _knockbackTime <= 0) {
+      _localIntent.reset(this);
+      meleeWindup = windup = 0;
+      pounceRemaining = 0;
+      attackMotion.cancel();
+      route.clear();
+      routeGoal = null;
+      final away = body.center - fearedFrom;
+      final direction = away.distanceSquared > .001
+          ? away / away.distance
+          : const ui.Offset(1, 0);
+      final desired = inertia.advance(direction * speed * .8, dt);
+      stop();
+      super.update(dt);
+      final next = session.moveEnemyBody(this, before, desired, steer: true);
+      position.setValues(next.dx, next.dy);
+      velocity.setValues(
+        (next.dx - before.dx) / dt,
+        (next.dy - before.dy) / dt,
+      );
+      bearing = math.atan2(direction.dy, direction.dx);
+      session.updateEnemySpacing(this);
+      lastClearPosition = next;
       return;
     }
     if (meleeWindup > 0) {
@@ -5424,26 +5688,38 @@ class VillagePerson extends GameComponent {
 }
 
 class BattleText extends GameComponent {
-  BattleText(this.session, this.label, ui.Offset at, this.color)
-    : isReward = !RegExp(r'^-?\d+$').hasMatch(label) {
+  BattleText(
+    this.session,
+    this.label,
+    ui.Offset at,
+    this.color, {
+    this.critical = false,
+  }) : isReward = !critical && !RegExp(r'^-?\d+$').hasMatch(label) {
     position = Vector2(at.dx, at.dy);
-    size = Vector2(160, 35);
+    size = Vector2(160, critical ? 44 : 35);
   }
   final Adventure session;
   final String label;
-  final bool isReward;
+  final bool isReward, critical;
   final ui.Color color;
   double remaining = .9;
   ui.Paragraph? _paragraph;
   ui.Color? _paintedColor;
-  double get textSize => label.startsWith('+') ? 13 : 18;
+  double get textSize => critical
+      ? 22
+      : label.startsWith('+')
+      ? 13
+      : 18;
   ui.Rect get combatBounds => ui.Rect.fromLTWH(
     position.x - combatWidth / 2,
     position.y,
     combatWidth,
-    24,
+    critical ? 42 : 24,
   );
-  double get combatWidth => math.min(148, label.length * 12.0 + 6);
+  double get combatWidth => math.min(
+    148,
+    math.max(critical ? 64 : 0, label.length * (critical ? 15.0 : 12.0) + 6),
+  );
 
   bool placeWithoutOverlap(ui.Offset origin, List<BattleText> others) {
     final offset = combatWidth + 6;
@@ -5456,7 +5732,10 @@ class BattleText extends GameComponent {
         : [-offset / 2, offset / 2, 0.0];
     for (var row = 0; row < 6; row++) {
       for (final x in columns) {
-        position.setValues(origin.dx + x, origin.dy - row * 28);
+        position.setValues(
+          origin.dx + x,
+          origin.dy - row * (critical ? 44 : 28),
+        );
         final bounds = combatBounds.inflate(2);
         if (!occupied.any(bounds.overlaps)) {
           return true;
@@ -5496,14 +5775,46 @@ class BattleText extends GameComponent {
   void render(ui.Canvas canvas) {
     super.render(canvas);
     if (session.disposed || remaining <= 0 || isRemoving) return;
-    final paintedColor = color.withValues(alpha: (remaining / .3).clamp(0, 1));
+    final paintedColor = (critical ? const ui.Color(0xffffbc58) : color)
+        .withValues(alpha: (remaining / .3).clamp(0, 1));
     if (_paragraph == null || _paintedColor != paintedColor) {
       releaseText();
-      _paragraph = session.art.layoutText(
-        label,
-        size: textSize,
-        color: paintedColor,
-      );
+      if (!critical) {
+        _paragraph = session.art.layoutText(
+          label,
+          size: textSize,
+          color: paintedColor,
+        );
+      } else {
+        final builder =
+            ui.ParagraphBuilder(
+              ui.ParagraphStyle(
+                fontFamily: 'Guardian',
+                fontSize: textSize,
+                textAlign: ui.TextAlign.center,
+              ),
+            )..pushStyle(
+              ui.TextStyle(
+                color: paintedColor,
+                fontWeight: ui.FontWeight.bold,
+                shadows: const [
+                  ui.Shadow(
+                    color: ui.Color(0xdd101010),
+                    offset: ui.Offset(0, 1),
+                    blurRadius: 2,
+                  ),
+                ],
+              ),
+            );
+        if (critical) {
+          builder.pushStyle(ui.TextStyle(fontSize: 11, color: paintedColor));
+          builder.addText('치명타\n');
+          builder.pop();
+        }
+        builder.addText(label);
+        _paragraph = builder.build()
+          ..layout(const ui.ParagraphConstraints(width: 160));
+      }
       _paintedColor = paintedColor;
     }
     canvas.drawParagraph(_paragraph!, const ui.Offset(-80, 0));

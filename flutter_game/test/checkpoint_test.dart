@@ -36,10 +36,9 @@ void main() {
       );
       s.hero.armorTime = s.progress.iceArmorDuration;
       for (final memory in stageMemories) {
-        final at = stageChests[memory.chest];
-        s.hero.position.setValues(at.dx, at.dy);
-        s.openChest();
+        expect(s.breakChest(memory.chest), isTrue);
       }
+      expect(s.memoryRewarded, isTrue);
       s.elapsed = 68.25;
       final snapshot = GameCheckpoint.capture(s)!;
       final restored = GameCheckpoint.decode(
@@ -81,6 +80,26 @@ void main() {
       expect(s.progress.gold, isNot(1));
     },
   );
+  test('new Barbarian checkpoints require their current tree version', () {
+    final s = Adventure(GameArt());
+    s.start(TestGame());
+    addTearDown(s.dispose);
+    final checkpoint = GameCheckpoint.capture(s)!;
+    final restored = GameCheckpoint.decode(checkpoint.encode())!;
+    expect(restored.progress.rank('cleave'), 1);
+    expect(restored.progress.rank('howl'), 1);
+    expect(restored.progress.selectedSkill, 'howl');
+    for (final version in [null, 0, 2]) {
+      final data = jsonDecode(checkpoint.encode()) as Map<String, dynamic>;
+      final progress = data['progress'] as Map;
+      if (version == null) {
+        progress.remove('barbarianTreeVersion');
+      } else {
+        progress['barbarianTreeVersion'] = version;
+      }
+      expect(GameCheckpoint.decode(jsonEncode(data)), isNull);
+    }
+  });
   test('a wounded boss resumes with the same health without a duplicate', () {
     final s = Adventure(GameArt());
     s.start(TestGame());

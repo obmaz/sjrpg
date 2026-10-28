@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
@@ -17,6 +19,33 @@ void main() {
 
   Offset stored(Offset at) => Vector2(at.dx, at.dy).toOffset();
 
+  ({Offset desired, Offset from}) wardContact(Adventure session) {
+    final ward = session.world.sanctuary;
+    const size = Size(24, 22);
+    for (var angle = .08; angle < math.pi / 2; angle += .017) {
+      final y = stored(
+        ward.center + Offset(0, math.sin(angle) * ward.radius),
+      ).dy;
+      final dy = y - ward.center.dy;
+      final x = ward.center.dx + math.sqrt(ward.radius * ward.radius - dy * dy);
+      final desired = Offset(x + .0000001, y);
+      final from = stored(desired + const Offset(2, 0));
+      if (session.world.blocksEnemy(desired & size) ||
+          !session.world.blocksEnemy(stored(desired) & size) ||
+          session.world.blocksEnemy(from & size)) {
+        continue;
+      }
+      final geometric = session.world.moveEnemy(from, desired - from, size);
+      if (!session.world.blocksEnemy(geometric & size) &&
+          session.world.blocksEnemy(stored(geometric) & size)) {
+        return (desired: desired, from: from);
+      }
+    }
+    throw StateError(
+      'current ward must expose a legal double/blocked Float32 contact',
+    );
+  }
+
   double openRow(Adventure session) {
     for (var y = 2000.0; y < 16000; y += 64) {
       if (!session.world.blocksEnemy(Rect.fromLTWH(8170, y - 20, 130, 80))) {
@@ -28,7 +57,7 @@ void main() {
 
   test('spawn rejects a legal double whose stored body enters the ward', () {
     final s = session(stage: WorldStage.sands);
-    const desired = Offset(5680.823880304127, 6788.72998046875);
+    final desired = wardContact(s).desired;
     const size = Size(24, 22);
     expect(s.mobs, isEmpty);
     expect(s.sheltered, true);

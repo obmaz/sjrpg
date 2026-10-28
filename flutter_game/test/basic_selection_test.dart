@@ -16,11 +16,9 @@ void train(Progress p, String id, [int target = 1]) {
 }
 
 void main() {
-  for (final heroClass in HeroClass.values) {
+  for (final heroClass in [HeroClass.mage]) {
     Progress fresh() => Progress(heroClass: heroClass)..gainXp(50000);
-    final alternatives = heroClass == HeroClass.warrior
-        ? ['quickCut', 'heavyStrike']
-        : ['iceShard', 'sparkBolt'];
+    final alternatives = ['iceShard', 'sparkBolt'];
     test(
       '$heroClass has three selectable basic attacks and an independent active starter',
       () {
@@ -40,10 +38,7 @@ void main() {
       '$heroClass learning a basic keeps all four active slots and upgrades cost one point',
       () {
         final p = fresh();
-        for (final id
-            in heroClass == HeroClass.warrior
-                ? ['whirlwind', 'seismicSlam', 'charge']
-                : ['iceArmor', 'chainLightning', 'meteor']) {
+        for (final id in ['iceArmor', 'chainLightning', 'meteor']) {
           train(p, id);
         }
         expect(p.skillSlots.whereType<String>().length, 4);
@@ -82,12 +77,7 @@ void main() {
         expect(p.skillSlots, before.$4);
         expect(p.selectBasic(p.activeSkill.id), false);
         expect(p.selectBasic('not-a-skill'), false);
-        expect(
-          p.selectBasic(
-            heroClass == HeroClass.warrior ? 'iceShard' : 'quickCut',
-          ),
-          false,
-        );
+        expect(p.selectBasic('bash'), false);
       },
     );
     test(
@@ -167,9 +157,7 @@ void main() {
     test('$heroClass equipment comparison retains the selected basic mode', () {
       final p = fresh();
       train(p, alternatives.last);
-      final gear = p.createGear(
-        gearById(heroClass == HeroClass.warrior ? 'longsword' : 'stormrod'),
-      );
+      final gear = p.createGear(gearById('stormrod'));
       final before = jsonEncode(p.toSave()),
           preview = p.previewBasicAttack(gear)!;
       expect(jsonEncode(p.toSave()), before);
@@ -179,22 +167,142 @@ void main() {
       expect(preview.interval, changed.basicAttackStats().interval);
     });
   }
-  test(
-    'precision and broad attacks retain different caps and meaningful speeds',
-    () {
-      final warrior = Progress()..gainXp(50000);
-      train(warrior, 'cleave', 5);
-      final ordinary = warrior.attackInterval;
-      train(warrior, 'quickCut', 5);
-      expect(warrior.basicTargetLimit, 1);
-      expect(warrior.attackInterval, lessThan(ordinary));
-      train(warrior, 'heavyStrike', 5);
-      expect(warrior.basicTargetLimit, 1);
-      expect(warrior.attackInterval, greaterThan(ordinary));
-      warrior.selectBasic('cleave');
-      expect(warrior.basicTargetLimit, 5);
-    },
-  );
+  group('Barbarian canonical basic and original combat actions', () {
+    Progress fresh() => Progress()
+      ..level = 100
+      ..skillPoints = 1000;
+    test('one free basic remains separate from the starter howl', () {
+      final p = Progress();
+      expect(p.basicSkills.map((skill) => skill.id), ['cleave']);
+      expect(p.selectedBasic, 'cleave');
+      expect(p.skillAt(0)!.id, 'howl');
+      expect(p.basicSkill.cost, 0);
+      expect(p.basicTargetLimit, 1);
+      expect(p.canSelectSkill('cleave'), false);
+    });
+    test(
+      'upgrading the basic never replaces the four assigned active actions',
+      () {
+        final p = fresh();
+        for (final id in ['bash', 'leap', 'doubleSwing']) {
+          train(p, id);
+        }
+        expect(p.skillSlots.whereType<String>(), hasLength(4));
+        final slots = p.skillSlots.toList(), points = p.skillPoints;
+        final basic = p.basicSkill;
+        expect(p.learn(basic), true);
+        expect(p.skillPoints, points - 1);
+        expect(p.selectedBasic, 'cleave');
+        expect(p.rank('cleave'), 2);
+        expect(p.skillSlots, slots);
+      },
+    );
+    test('learned active or passive skills cannot become the free basic', () {
+      final p = fresh();
+      train(p, 'bash');
+      train(p, 'swordMastery');
+      final before = jsonEncode(p.toSave());
+      expect(p.selectBasic('cleave'), true);
+      for (final id in ['bash', 'swordMastery', 'firebolt', 'missing']) {
+        expect(p.selectBasic(id), false);
+      }
+      expect(jsonEncode(p.toSave()), before);
+    });
+    test(
+      'canonical selection roundtrips while invalid active selections reject',
+      () {
+        final p = fresh();
+        train(p, 'bash');
+        expect(Progress.fromSave(p.toSave())!.selectedBasic, 'cleave');
+        final withoutBasic = p.toSave()..remove('selectedBasic');
+        expect(Progress.fromSave(withoutBasic)!.selectedBasic, 'cleave');
+        for (final invalid in ['bash', 'howl', 'firebolt', 'unknown', 42]) {
+          expect(
+            Progress.fromSave(p.toSave()..['selectedBasic'] = invalid),
+            isNull,
+          );
+        }
+      },
+    );
+    test(
+      'reset refunds basic and active ranks and returns both free starters',
+      () {
+        final p = fresh()..awardSkillResetTicket(WorldStage.forest);
+        train(p, 'cleave', 4);
+        train(p, 'bash', 8);
+        p.selectSkill('bash');
+        final points = p.skillPoints, invested = p.investedSkillPoints;
+        expect(p.resetSkills(), true);
+        expect(p.skillPoints, points + invested);
+        expect(p.ranks, {'cleave': 1, 'howl': 1});
+        expect(p.selectedBasic, 'cleave');
+        expect(p.skillSlots, ['howl', null, null, null]);
+        expect(Progress.fromSave(p.toSave()), isNotNull);
+      },
+    );
+    test(
+      'basic preview agrees with the upgrade while the selected active stays independent',
+      () {
+        final p = fresh();
+        train(p, 'bash');
+        p.selectSkill('bash');
+        train(p, 'cleave', 2);
+        final basic = p.basicSkill, before = jsonEncode(p.toSave());
+        final rows = previewSkill(p, basic);
+        expect(jsonEncode(p.toSave()), before);
+        expect(
+          rows.firstWhere((r) => r.label == '기본 공격 간격').current,
+          p.attackIntervalFor(basic),
+        );
+        expect(
+          rows.firstWhere((r) => r.label == '기본 1타 피해').current,
+          p.skillDamage(basic),
+        );
+        final learned = Progress.fromSave(p.toSave())!;
+        expect(learned.learn(basic), true);
+        expect(
+          rows.firstWhere((r) => r.label == '기본 공격 간격').next,
+          learned.attackIntervalFor(basic),
+        );
+        expect(
+          rows.firstWhere((r) => r.label == '기본 1타 피해').next,
+          learned.skillDamage(basic),
+        );
+        expect(learned.selectedBasic, 'cleave');
+        expect(learned.selectedSkill, 'bash');
+      },
+    );
+    test(
+      'equipment comparison uses the canonical basic even with an active strike selected',
+      () {
+        final p = fresh();
+        train(p, 'bash');
+        p.selectSkill('bash');
+        final gear = p.createGear(gearById('longsword'));
+        final before = jsonEncode(p.toSave()),
+            preview = p.previewBasicAttack(gear)!;
+        expect(jsonEncode(p.toSave()), before);
+        final changed = Progress.fromSave(p.toSave())!
+          ..equipped[GearSlot.weapon] = gear;
+        expect(preview.damage, changed.basicDamage);
+        expect(preview.interval, changed.basicAttackStats().interval);
+        expect(changed.selectedSkill, 'bash');
+      },
+    );
+    test(
+      'twenty-rank precision actions retain one victim while the basic gains area targets',
+      () {
+        final p = fresh();
+        train(p, 'cleave', 5);
+        train(p, 'bash', 20);
+        final bash = p.skills.firstWhere((skill) => skill.id == 'bash');
+        expect(p.skillTargetLimit(bash), 1);
+        expect(p.basicTargetLimit, 5);
+        expect(p.selectedBasic, 'cleave');
+        expect(p.skillDamage(bash), greaterThan(0));
+      },
+    );
+  });
   test('chosen ice and electricity override a different weapon element', () {
     final p = Progress(heroClass: HeroClass.mage)..gainXp(50000);
     expect(p.weapon.base.style, 'fire');

@@ -69,6 +69,7 @@ void _damageAreaTargets(
   double stun = 0,
   double slow = 0,
   bool hitStop = true,
+  bool critical = false,
 }) {
   for (final mob in targets) {
     final d = mob.body.center - center;
@@ -80,6 +81,7 @@ void _damageAreaTargets(
       impactKind: impactKind,
       impactRank: impactRank,
       hitStop: hitStop,
+      critical: critical,
     )) {
       continue;
     }
@@ -118,6 +120,7 @@ void areaStrike(
   ImpactKind? impactKind,
   int impactRank = 1,
   bool hitStop = true,
+  bool critical = false,
 }) {
   if (maxTargets <= 0 || !s.combatAllowed) return;
   final targets = castTargets ?? <HuntEnemy>{};
@@ -139,6 +142,7 @@ void areaStrike(
     impactKind: impactKind,
     impactRank: impactRank,
     hitStop: hitStop,
+    critical: critical,
     stun: stun,
     slow: slow,
   );
@@ -722,11 +726,13 @@ class WhirlwindPulse extends GameComponent {
     this.targetLimit = 3,
     this.duration = .5,
     this.rank = 1,
-  }) : buildRevision = session.buildRevision;
+  }) : buildRevision = session.buildRevision,
+       criticalChance = session.progress.weaponCriticalChance;
   final Adventure session;
   final Guardian hero;
   final double damage;
   final int targetLimit, rank;
+  final double criticalChance;
   final double duration;
   final targets = <HuntEnemy>{};
   final chests = <int>{};
@@ -745,16 +751,19 @@ class WhirlwindPulse extends GameComponent {
     age += math.min(.05, dt);
     if (age >= pulses * duration / 3 && pulses < 3) {
       pulses++;
+      final critical =
+          criticalChance > 0 && session.random.nextDouble() < criticalChance;
       areaStrike(
         session,
         hero.body.center,
         175,
-        damage,
+        damage * (critical ? 2 : 1),
         maxTargets: targetLimit,
         castTargets: targets,
         castChests: chests,
         impactRank: rank,
         hitStop: pulses == 1,
+        critical: critical,
       );
       if (targets.isNotEmpty) session.kickCamera(.35 + rank * .08);
     }
@@ -1027,17 +1036,26 @@ class GroundLoot extends GameComponent with EffectVisibility {
     ..strokeCap = ui.StrokeCap.round;
   // Vector light has no native shader or picture to retain across sessions.
   // These small, immutable paths are shared for the app's lifetime.
-  static final _beams = [
-    for (final height in [48.0, 37.0, 26.0])
-      ui.Path()
-        ..moveTo(-.5, -height)
-        ..lineTo(.5, -height)
-        ..lineTo(3, 1)
-        ..lineTo(-3, 1)
-        ..close(),
-  ];
+  static final _beams = {
+    for (final tier in [Rarity.magic, Rarity.rare, Rarity.unique])
+      tier: [
+        for (final scale in [1.0, .76, .52])
+          ui.Path()
+            ..moveTo(-.5, -_beamHeight(tier) * scale)
+            ..lineTo(.5, -_beamHeight(tier) * scale)
+            ..lineTo(2.5, 1)
+            ..lineTo(-2.5, 1)
+            ..close(),
+      ],
+  };
+  static double _beamHeight(Rarity rarity) => switch (rarity) {
+    Rarity.unique => 88,
+    Rarity.rare => 72,
+    _ => 48,
+  };
   static const _iconBounds = ui.Rect.fromLTWH(-16, -26, 32, 32);
-  static const _visualBounds = ui.Rect.fromLTRB(-18, -49, 18, 8);
+  ui.Rect get _visualBounds =>
+      ui.Rect.fromLTRB(-18, -_beamHeight(item.rarity) - 1, 18, 8);
   ui.Image? _iconSheet;
   ui.Rect? _iconSource;
   double age = 0;
@@ -1113,7 +1131,7 @@ class GroundLoot extends GameComponent with EffectVisibility {
       _lightPaint.color = color.withValues(
         alpha: (.12 + pulse * .06) * strength,
       );
-      for (final beam in _beams) {
+      for (final beam in _beams[item.rarity]!) {
         canvas.drawPath(beam, _lightPaint);
       }
     }

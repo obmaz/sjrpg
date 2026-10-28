@@ -111,6 +111,9 @@ void main() {
       addTearDown(audio.dispose);
       final s = inCombatField(Adventure(GameArt(), audio: audio))
         ..start(TestGame());
+      s.progress.level = 6;
+      s.progress.ranks['shout'] = 1;
+      s.progress.selectedSkill = 'shout';
       s.hero.slash();
       s.hero.slash();
       expect(bridge.sounds, [EffectSound.slash]);

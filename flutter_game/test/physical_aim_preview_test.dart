@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/barbarian_combat.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/physical_aim_preview.dart';
 import 'package:guardian_new/skill_aim.dart';
@@ -51,13 +52,16 @@ void main() {
     }
   });
 
+  final games = Expando<TestGame>();
   Adventure session(GameArt art, String skill) {
-    final s = inCombatField(Adventure(art))..start(TestGame());
+    final game = TestGame();
+    final s = inCombatField(Adventure(art))..start(game);
+    games[s] = game;
     addTearDown(s.dispose);
     s.mobs.clear();
-    s.progress.gainXp(8000);
+    s.progress.level = 40;
     s.progress.ranks[skill] = 1;
-    s.progress.selectSkill(skill);
+    expect(s.progress.selectSkill(skill), true);
     s.progress.energy = s.progress.maxEnergy;
     s.hero.bearing = 0;
     return s;
@@ -68,10 +72,10 @@ void main() {
     String? name,
   ]) async {
     final recorder = ui.PictureRecorder();
-    final canvas = ui.Canvas(recorder)..translate(256, 256);
+    final canvas = ui.Canvas(recorder)..translate(512, 512);
     paint(canvas);
     final picture = recorder.endRecording();
-    final image = await picture.toImage(512, 512);
+    final image = await picture.toImage(1024, 1024);
     picture.dispose();
     final raw = (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
     final result = Uint8List.fromList(raw.buffer.asUint8List());
@@ -86,30 +90,33 @@ void main() {
   }
 
   int alphaAt(Uint8List pixels, ui.Offset point) =>
-      pixels[((point.dy + 256).round() * 512 + (point.dx + 256).round()) * 4 +
+      pixels[((point.dy + 512).round() * 1024 + (point.dx + 512).round()) * 4 +
           3];
 
-  test('held heavy attack uses its raised weapon pose and manual facing', () {
-    final poseArt = _PoseArt(), s = session(poseArt, 'crushingBlow');
-    s.hero.strikePose = 0;
-    s.hero.beginAim(0);
-    s.hero.moveAim(const ui.Offset(0, -40));
-    final recorder = ui.PictureRecorder();
-    s.hero.render(ui.Canvas(recorder));
-    recorder.endRecording().dispose();
-    expect(poseArt.attacking, true);
-    expect(poseArt.pose, 2);
-    expect(poseArt.angle, closeTo(-math.pi / 2, .00001));
-    expect(
-      s.hero.heavyWindup,
-      0,
-      reason: 'holding has not committed the skill',
-    );
-  });
+  test(
+    'held leap attack stays uncommitted and releases its weapon pose in the manual direction',
+    () {
+      final poseArt = _PoseArt(), s = session(poseArt, 'leapAttack');
+      final energy = s.progress.energy;
+      s.hero.beginAim(0);
+      s.hero.moveAim(const ui.Offset(0, -40));
+      expect(s.hero.aim, isNotNull);
+      expect(s.hero.barbarianCombat.airborne, false);
+      expect(s.progress.energy, energy);
+      s.hero.finishAim(false);
+      expect(s.hero.barbarianCombat.airborne, true);
+      final recorder = ui.PictureRecorder();
+      s.hero.render(ui.Canvas(recorder));
+      recorder.endRecording().dispose();
+      expect(poseArt.attacking, true);
+      expect(poseArt.pose, 1);
+      expect(poseArt.angle, closeTo(-math.pi / 2, .00001));
+    },
+  );
 
-  for (final skill in ['crushingBlow', 'charge']) {
+  for (final skill in ['leap', 'leapAttack', 'doubleThrow']) {
     test(
-      '$skill native aim pixels do not depend on seismic slam rank',
+      '$skill native aim pixels are independent of unrelated Warcry ranks',
       () async {
         final s = session(art, skill);
         s.hero.beginAim(0);
@@ -120,102 +127,126 @@ void main() {
         }
 
         final before = await raster(paint, 'aim-$skill');
-        s.progress.ranks['seismicSlam'] = 5;
+        s.progress.ranks['warcry'] = 20;
         expect(await raster(paint), orderedEquals(before));
       },
     );
   }
 
   test(
-    'heavy preview contains exactly the tested front cone hit positions',
+    'double throw preview and live projectiles agree on spread, direction and finite range',
     () async {
-      final s = session(art, 'crushingBlow');
-      final center = s.hero.body.center;
+      final s = session(art, 'doubleThrow'), skill = s.progress.skillAt(0)!;
+      final origin = s.hero.body.center, range = s.progress.skillRange(skill);
       final points = [
-        const ui.Offset(120, 50),
-        const ui.Offset(200, 0),
+        const ui.Offset(120, 0),
+        const ui.Offset(200, 80),
         const ui.Offset(-80, 0),
-        const ui.Offset(30, 110),
+        ui.Offset(range + 45, 0),
       ];
       final enemies = [
         for (final point in points)
-          s.spawnEnemy('goblin', center + point - const ui.Offset(12, 11))!
+          s.spawnEnemy('goblin', origin + point - const ui.Offset(12, 11))!
             ..life.initial(500),
       ];
-      final aim = SkillAim(0, 'crushingBlow', 0)
-        ..delta = const ui.Offset(50, 0);
-      final pixels = await raster(
-        (canvas) => paintPhysicalAimPreview(canvas, ui.Offset.zero, aim),
+      final aim = SkillAim(0, 'doubleThrow', 0)..delta = const ui.Offset(50, 0);
+      final bytes = await raster(
+        (c) => paintBarbarianAimPreview(c, ui.Offset.zero, aim, range: range),
+        'double-throw-range',
       );
-      final expected = [true, false, false, false];
-      for (var i = 0; i < points.length; i++) {
-        expect(
-          alphaAt(pixels, enemies[i].body.center - center) > 0,
-          expected[i],
-        );
-      }
+      final firstLine = ui.Offset(
+        math.cos(barbarianDoubleThrowHalfSpread) * 120,
+        math.sin(barbarianDoubleThrowHalfSpread) * 120,
+      );
+      expect(alphaAt(bytes, firstLine), greaterThan(0));
+      expect(alphaAt(bytes, const ui.Offset(100, 80)), 0);
+      expect(alphaAt(bytes, const ui.Offset(-80, 0)), 0);
+      expect(alphaAt(bytes, ui.Offset(range + 20, 0)), 0);
       s.hero.beginAim(0);
       s.hero.moveAim(const ui.Offset(50, 0));
       s.hero.finishAim(false);
-      final windup = s.hero.heavyWindup;
-      expect(windup, greaterThan(0));
-      for (var i = 0; i < math.max(0, (windup / .05).ceil() - 1); i++) {
+      for (var tick = 0; tick < 24; tick++) {
         s.hero.update(.05);
+        for (final axe
+            in games[s]!.added.whereType<BarbarianThrownAxe>().toList()) {
+          axe.update(.05);
+        }
       }
-      expect(s.hero.heavyWindup, greaterThan(0));
-      expect(enemies.every((enemy) => enemy.life.value == 500), true);
-      final remaining = s.hero.heavyWindup;
-      for (
-        var i = 0;
-        i < (remaining / .05).ceil() + 1 && s.hero.heavyWindup > 0;
-        i++
-      ) {
-        s.hero.update(.05);
-      }
-      expect(s.hero.heavyWindup, 0);
-      for (var i = 0; i < enemies.length; i++) {
-        expect(enemies[i].life.value < 500, expected[i]);
+      expect(enemies.first.life.value, lessThan(500));
+      for (final enemy in enemies.skip(1)) {
+        expect(enemy.life.value, 500);
       }
     },
   );
 
   test(
-    'charge shows direction without a remote damage circle and cancellation stays red',
+    'invalid leap landing is red and never draws an eligible footprint',
     () async {
-      final s = session(art, 'charge');
-      s.hero.beginAim(0);
-      s.hero.moveAim(const ui.Offset(50, 0));
-      final aim = s.hero.aim!;
-      final pixels = await raster(
-        (canvas) => paintPhysicalAimPreview(canvas, ui.Offset.zero, aim),
+      final aim = SkillAim(0, 'leap', 0)..delta = const ui.Offset(40, 0);
+      final bytes = await raster(
+        (c) => paintBarbarianAimPreview(c, ui.Offset.zero, aim, range: 300),
+        'blocked-leap',
       );
-      expect(alphaAt(pixels, const ui.Offset(60, 0)), greaterThan(0));
-      expect(alphaAt(pixels, const ui.Offset(100, 80)), 0);
-      final energy = s.progress.energy;
-      s.hero.moveAim(const ui.Offset(160, 0));
-      final cancelled = await raster(
-        (canvas) => paintPhysicalAimPreview(canvas, ui.Offset.zero, aim),
+      final distance = math.min(300.0, aim.distance),
+          at = (512 * 1024 + (512 + distance).round()) * 4;
+      expect(bytes[at], greaterThan(bytes[at + 1]));
+      expect(alphaAt(bytes, ui.Offset(distance + 14, 12)), 0);
+      final valid = await raster(
+        (c) => paintBarbarianAimPreview(
+          c,
+          ui.Offset.zero,
+          aim,
+          range: 300,
+          landing: const ui.Offset(180, 0),
+        ),
       );
-      final at = (256 * 512 + 316) * 4;
-      expect(cancelled[at], greaterThan(cancelled[at + 1]));
-      s.hero.finishAim(false);
-      expect(s.progress.energy, energy);
-      expect(s.hero.chargeTime, 0);
-      expect(s.hero.cooldowns['charge'], isNull);
+      expect(alphaAt(valid, const ui.Offset(166, -12)), greaterThan(0));
+      expect(alphaAt(valid, const ui.Offset(194, 12)), greaterThan(0));
+      expect(alphaAt(valid, const ui.Offset(180, 40)), 0);
     },
   );
 
-  test('undragged charge arrow follows the facing used on release', () async {
-    final s = session(art, 'charge');
-    s.hero.beginAim(0);
-    s.hero.bearing = math.pi;
-    final pixels = await raster(s.hero.render);
-    final origin =
-        s.hero.body.center - ui.Offset(s.hero.position.x, s.hero.position.y);
-    expect(alphaAt(pixels, origin + const ui.Offset(-60, 0)), greaterThan(0));
-    expect(alphaAt(pixels, origin + const ui.Offset(60, 0)), 0);
-    s.hero.finishAim(false);
-    expect(s.hero.chargeAngle, math.pi);
-    expect(s.hero.chargeTime, greaterThan(0));
-  });
+  test(
+    'cancelling a double throw keeps resources and creates no projectiles',
+    () async {
+      final s = session(art, 'doubleThrow');
+      s.hero.beginAim(0);
+      s.hero.moveAim(const ui.Offset(160, 0));
+      final aim = s.hero.aim!, energy = s.progress.energy;
+      final bytes = await raster(
+        (c) => paintBarbarianAimPreview(c, ui.Offset.zero, aim, range: 420),
+      );
+      final at = ((512 + 2) * 1024 + 572) * 4;
+      expect(bytes[at], greaterThan(bytes[at + 1]));
+      s.hero.finishAim(false);
+      expect(s.progress.energy, energy);
+      expect(s.hero.cooldowns['doubleThrow'], isNull);
+      expect(games[s]!.added.whereType<BarbarianThrownAxe>(), isEmpty);
+    },
+  );
+
+  test(
+    'undragged leap guide follows the same current facing as release',
+    () async {
+      final s = session(art, 'leap');
+      s.hero.beginAim(0);
+      s.hero.bearing = math.pi;
+      final def = s.progress.skillAt(0)!, before = s.hero.body.topLeft;
+      final landing = s.hero.barbarianCombat.previewLanding(
+        def,
+        aim: s.hero.aim,
+      );
+      expect(landing, isNotNull);
+      expect(landing!.dx, lessThan(before.dx));
+      final bytes = await raster(s.hero.render);
+      final origin =
+          s.hero.body.center - ui.Offset(s.hero.position.x, s.hero.position.y);
+      expect(alphaAt(bytes, origin + const ui.Offset(-60, 0)), greaterThan(0));
+      expect(alphaAt(bytes, origin + const ui.Offset(60, 0)), 0);
+      s.hero.finishAim(false);
+      expect(s.hero.barbarianCombat.airborne, true);
+      s.hero.update(.05);
+      expect(s.hero.position.x, lessThan(before.dx));
+    },
+  );
 }

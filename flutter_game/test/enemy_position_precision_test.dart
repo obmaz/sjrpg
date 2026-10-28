@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
@@ -36,6 +38,33 @@ void main() {
     return enemy;
   }
 
+  ({Offset desired, Offset from}) wardContact(Adventure session) {
+    final ward = session.world.sanctuary;
+    const size = Size(24, 22);
+    for (var angle = .08; angle < math.pi / 2; angle += .017) {
+      final y = stored(
+        ward.center + Offset(0, math.sin(angle) * ward.radius),
+      ).dy;
+      final dy = y - ward.center.dy;
+      final x = ward.center.dx + math.sqrt(ward.radius * ward.radius - dy * dy);
+      final desired = Offset(x + .0000001, y);
+      final from = stored(desired + const Offset(2, 0));
+      if (session.world.blocksEnemy(desired & size) ||
+          !session.world.blocksEnemy(stored(desired) & size) ||
+          session.world.blocksEnemy(from & size)) {
+        continue;
+      }
+      final geometric = session.world.moveEnemy(from, desired - from, size);
+      if (!session.world.blocksEnemy(geometric & size) &&
+          session.world.blocksEnemy(stored(geometric) & size)) {
+        return (desired: desired, from: from);
+      }
+    }
+    throw StateError(
+      'current ward must expose a legal double/blocked Float32 contact',
+    );
+  }
+
   double openRow(Adventure session) {
     for (var y = 2000.0; y < 16000; y += 64) {
       if (!session.world.blocksEnemy(Rect.fromLTWH(8170, y - 20, 100, 80))) {
@@ -51,12 +80,20 @@ void main() {
       final session = Adventure(GameArt(), stage: WorldStage.sands)
         ..start(TestGame());
       addTearDown(session.dispose);
-      session.hero.position.setValues(5716.6240234375, 6772.603515625);
+      final ward = session.world.sanctuary;
+      final at =
+          ward.center + const Offset(.7, .714142842854285) * (ward.radius + 12);
+      session.hero.position.setValues(at.dx, at.dy);
       session.hero.lastClearPosition = session.hero.position.toOffset();
       session.progress.bonusHealth = 2000;
       session.progress.hp = session.progress.maxHp;
       session.syncLife();
       expect(session.sheltered, false);
+      expect(session.world.blocked(session.hero.body), isFalse);
+      final scorpion = session.spawnEnemy(
+        'scorpion',
+        session.hero.body.center + const Offset(0, 280),
+      )!;
       for (var frame = 0; frame <= 111; frame++) {
         session.tick(1 / 30);
         for (final enemy in session.mobs.toList()) {
@@ -69,16 +106,16 @@ void main() {
           expect(enemy.lastClearPosition, enemy.body.topLeft);
         }
       }
-      expect(session.mobs.length, 6);
-      expect(session.mobs[3].kind, 'scorpion');
+      expect(session.mobs, contains(scorpion));
+      expect(scorpion.kind, 'scorpion');
       expect(session.progress.hp, greaterThan(0));
     },
   );
 
   test('invalid rounded fast-path ward slide falls through safely', () {
     final session = field(stage: WorldStage.sands);
-    const from = Offset(5681.04833984375, 6788.72998046875);
-    const nudge = Offset(-0.22445953962343168, -0.5699846612574166);
+    final contact = wardContact(session);
+    final from = contact.from, nudge = contact.desired - contact.from;
     final enemy = spawn(session, from);
     final geometric = session.world.moveEnemy(from, nudge, enemy.body.size);
     expect(session.world.blocksEnemy(geometric & enemy.body.size), false);

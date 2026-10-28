@@ -49,6 +49,16 @@ void main() {
               .single;
           expect(b.launchDelay / a.launchDelay, closeTo(1 / .72, .001));
         }
+        // Cast a real starter/combat skill rather than an empty-target Howl.
+        if (heroClass == HeroClass.warrior) {
+          for (final session in [normal, slowed]) {
+            final bash = session.progress.skills.firstWhere(
+              (skill) => skill.id == 'bash',
+            );
+            expect(session.progress.learn(bash), true);
+            expect(session.progress.selectSkill('bash'), true);
+          }
+        }
         // Clear the already-started basic animation, not its active debuff.
         normal.hero.castLock = slowed.hero.castLock = 0;
         normal.hero.swing = slowed.hero.swing = 0;
@@ -56,6 +66,9 @@ void main() {
             beforeB = slowed.progress.energy;
         normal.hero.skill();
         slowed.hero.skill();
+        final activeId = heroClass == HeroClass.warrior ? 'bash' : 'frostNova';
+        expect(normal.hero.cooldowns, contains(activeId));
+        expect(beforeA - normal.progress.energy, greaterThan(0));
         expect(slowed.hero.cooldowns, normal.hero.cooldowns);
         expect(
           beforeB - slowed.progress.energy,
@@ -65,7 +78,7 @@ void main() {
     );
   }
   test(
-    'capped rank5 frenzy preserves attack slow on scheduled basic attacks',
+    'original rank5 Frenzy preserves attack slow on scheduled basic attacks',
     () {
       Adventure make() {
         final s = inCombatField(Adventure(GameArt()))..start(TestGame());
@@ -87,17 +100,27 @@ void main() {
           }
         }
 
-        for (final id in ['cleave', 'battleFocus', 'weaponTempo', 'frenzy']) {
+        for (final id in ['cleave', 'frenzy']) {
           train(id, 5);
         }
         expect(s.progress.selectSkill('frenzy'), true);
         s.progress.energy = s.progress.maxEnergy;
+        final target = s.spawnEnemy(
+          'goblin',
+          s.hero.body.center + const Offset(55, 0),
+        )!..life.initial(10000);
         s.hero.skill();
         expect(s.hero.frenzyTime, s.progress.frenzyDuration);
-        while (s.hero.castLock > 0) {
+        expect(s.progress.frenzyStacks, 1);
+        while (s.hero.barbarianCombat.busy ||
+            s.hero.castLock > 0 ||
+            s.hero.attackClock > 0) {
           s.tick(.01);
           s.hero.update(.01);
         }
+        expect(s.progress.frenzyStacks, 2);
+        expect(target.life.value, lessThan(target.life.max));
+        s.mobs.clear();
         addTearDown(s.dispose);
         return s;
       }

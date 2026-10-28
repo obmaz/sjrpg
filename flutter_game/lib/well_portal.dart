@@ -89,7 +89,7 @@ class WellPortal extends GameComponent with TapGesture {
 }
 
 ui.Offset? wellPortalPosition(Adventure session, QuestSite well) {
-  final approach = well.at + const ui.Offset(0, 77);
+  final approach = session.world.wellApproach(well);
   bool available(ui.Offset at) =>
       !session.world.blocked(
         ui.Rect.fromCenter(center: at, width: 44, height: 36),
@@ -152,7 +152,7 @@ class WellDiscoveryDirector extends GameComponent {
       if ((well.at - session.hero.body.center).distance < 240 &&
           session.world.clearLine(
             session.hero.body.center,
-            well.at + const ui.Offset(0, 77),
+            session.world.wellApproach(well),
             const ui.Size(3, 3),
           )) {
         found = session.travelJournal.discover(stage, well.id) || found;

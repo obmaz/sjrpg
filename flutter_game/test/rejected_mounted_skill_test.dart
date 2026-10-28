@@ -11,9 +11,13 @@ void main() {
     final s = inCombatField(Adventure(GameArt()))..start(TestGame());
     addTearDown(s.dispose);
     s.mobs.clear();
+    s.progress.level = 100;
     if (aimed) {
-      s.progress.ranks['charge'] = 1;
-      expect(s.progress.selectSkill('charge'), true);
+      s.progress.ranks['leap'] = 1;
+      expect(s.progress.selectSkill('leap'), true);
+    } else {
+      s.progress.ranks['shout'] = 1;
+      expect(s.progress.selectSkill('shout'), true);
     }
     final horse = withOwnedMounts(
       s,

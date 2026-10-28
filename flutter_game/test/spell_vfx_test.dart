@@ -3,6 +3,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/barbarian_utilities.dart';
+import 'package:guardian_new/barbarian_vfx.dart';
 import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/rpg_model.dart';
@@ -68,22 +70,28 @@ void main() {
       s.hero.position.setValues(6000, 4200);
       s.progress.energy = 100;
 
-      expect(s.learn(s.progress.skills.first), true);
-      final mob = s.spawnEnemy('goblin', const ui.Offset(6100, 4200))!;
+      while (s.progress.level < 30) {
+        s.progress.gainXp(s.progress.nextLevelXp);
+      }
+      s.progress.ranks['warcry'] = 1;
+      expect(s.progress.selectSkill('warcry'), isTrue);
+      s.progress.energy = s.progress.maxEnergy;
+      final mob = s.spawnEnemy('goblin', const ui.Offset(6100, 4200))!
+        ..life.initial(1000);
       final before = mob.life.value;
       final skill = warriorSkills.firstWhere((s) => s.id == 'warcry');
       final damage = s.progress.skillDamage(skill);
       s.hero.skill();
       expect(mob.life.value, closeTo(before - damage, .0001));
-      expect(mob.stun, s.progress.warcryStun);
-      final effect = game.added.whereType<SpellBurst>().single;
-      expect(effect.clip, SpellClip.warcry);
+      expect(mob.stun, s.progress.barbarianEffectDuration('warcry'));
+      final effect = game.added.whereType<BarbarianUtilityVisual>().single;
+      expect(effect.art.kind, BarbarianVfxKind.warCry);
       expect(effect.priority, lessThan(s.hero.priority));
       final origin = effect.position.clone();
       s.hero.position.x += 70;
       effect.update(.05);
       expect(effect.position, origin);
-      final age = .05 * s.progress.skillTempo(skill);
+      const age = .05;
       expect(effect.age, closeTo(age, .000001));
       s.pause();
       effect.update(.05);
@@ -183,21 +191,20 @@ void main() {
       s.mobs.clear();
       s.hero.position.setValues(6000, 4200);
       final p = s.progress;
-      p.gainXp(1000);
-      expect(p.learn(p.skills.firstWhere((d) => d.id == 'mastery')), true);
+      while (p.level < 30) {
+        p.gainXp(p.nextLevelXp);
+      }
+      p.ranks['whirlwind'] = 1;
+      expect(p.selectSkill('whirlwind'), isTrue);
 
       p.energy = p.maxEnergy;
-      expect(
-        s.learn(p.skills.firstWhere((skill) => skill.id == 'whirlwind')),
-        true,
-      );
       final mob = s.spawnEnemy(
         'golem',
         const ui.Offset(6100, 4200),
         boss: true,
       )!;
       final life = mob.life.value;
-      s.hero.skill(secondary: true);
+      s.hero.skill();
       expect(game.added.whereType<SpellBurst>(), isEmpty);
       final pulse = game.added.whereType<WhirlwindPulse>().single;
       final duration = p.skillMotionTime(

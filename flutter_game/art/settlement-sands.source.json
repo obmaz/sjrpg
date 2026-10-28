@@ -1,0 +1,12 @@
+{
+  "source": "/workspace/generated_images/exec-9476cd05-ed89-4a52-afff-433d941b76de.png",
+  "sha256": "4c112d112b0a59ff8f747947579b5e94494a42396f143fdf7096e4935cb62871",
+  "generator": "image_gen",
+  "size": [
+    1254,
+    1254
+  ],
+  "camera": "fixed elevated orthographic three-quarter",
+  "lighting": "soft upper-left",
+  "theme": "sands"
+}

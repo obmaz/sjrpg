@@ -429,7 +429,8 @@ void main() {
       bundle.failure = null;
       await art.ensureStage(WorldStage.forest, heroClass: HeroClass.warrior);
       expect(art.images['actors-hero'], isNotNull);
-      expect(art.images['village-blended'], isNotNull);
+      expect(art.images['settlement-forest'], isNotNull);
+      expect(art.images['village-blended'], isNull);
       final reads = bundle.reads.length;
       bundle.failure = '*';
       await art.ensureStage(WorldStage.future, heroClass: HeroClass.mage);

@@ -74,19 +74,28 @@ void main() {
   );
 
   test(
-    'fractional rage upgrades show their real benefit before spending points',
+    'fractional mastery previews match actual learned damage and critical chance',
     () {
       final p = Progress()
-        ..level = 20
+        ..level = 100
         ..skillPoints = 20;
-      p.ranks['rallyingVoice'] = 2;
-      final skill = p.skills.firstWhere((s) => s.id == 'rallyingVoice');
-      final row = previewSkill(p, skill).single;
-      expect(row.format(row.current), '2.5');
-      expect(row.format(row.next), '2.7');
+      final skill = p.skills.firstWhere((s) => s.id == 'swordMastery');
       expect(p.learn(skill), true);
-      final learned = previewSkill(p, skill).single;
-      expect(learned.format(learned.current), row.format(row.next));
+      expect(p.learn(skill), true);
+      final before = p.toSave();
+      final preview = previewSkill(p, skill);
+      final row = preview.firstWhere((r) => r.label == '해당 무기 치명타');
+      expect(row.format(row.current), '3.8%');
+      expect(row.format(row.next), '4.2%');
+      expect(p.toSave(), before);
+      final damage = p.basicDamage;
+      expect(p.learn(skill), true);
+      expect(p.basicDamage, greaterThan(damage));
+      expect(p.weaponCriticalChance * 100, closeTo(row.next, .000001));
+      expect(
+        previewSkill(p, skill).firstWhere((r) => r.label == row.label).current,
+        row.next,
+      );
     },
   );
 

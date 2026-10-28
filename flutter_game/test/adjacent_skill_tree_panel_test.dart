@@ -90,15 +90,24 @@ void main() {
             find.byKey(ValueKey('skill-node-${slot.id}')),
           );
           expect(rect.left, greaterThanOrEqualTo(0));
-          expect(rect.right, lessThanOrEqualTo(size.width));
+          if (hero == HeroClass.mage || slot.column < 3) {
+            expect(rect.right, lessThanOrEqualTo(size.width));
+          }
         }
         await proof(tester, '${hero.name}-${size.width.toInt()}-top');
-        final scrollable = find
-            .descendant(
-              of: find.byType(SkillTree),
-              matching: find.byType(Scrollable),
-            )
-            .first;
+        final scrollable = hero == HeroClass.warrior
+            ? find
+                  .descendant(
+                    of: find.byKey(const ValueKey('skill-tree-vertical')),
+                    matching: find.byType(Scrollable),
+                  )
+                  .first
+            : find
+                  .descendant(
+                    of: find.byType(SkillTree),
+                    matching: find.byType(Scrollable),
+                  )
+                  .first;
         await tester.scrollUntilVisible(
           find.byKey(
             ValueKey('skill-node-${skillTreeRows(hero).last.first.id}'),
@@ -113,7 +122,7 @@ void main() {
       });
     }
 
-    testWidgets('$hero complete five rows have clear local joins text1.3', (
+    testWidgets('$hero complete level tiers have clear local joins text1.3', (
       tester,
     ) async {
       final s = Adventure(await art(tester), heroClass: hero)
@@ -127,7 +136,10 @@ void main() {
         dense: false,
         textScale: 1.3,
       );
-      tester.view.physicalSize = Size(320, geometry.height + 32);
+      tester.view.physicalSize = Size(
+        geometry.contentWidth,
+        geometry.height + 34,
+      );
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);

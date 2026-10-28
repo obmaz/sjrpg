@@ -2,6 +2,7 @@ import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/barbarian_combat.dart';
 import 'package:guardian_new/encounters.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
@@ -12,7 +13,7 @@ import 'support/test_game.dart';
 void main() {
   for (final size in [const Size(390, 844), const Size(320, 420)]) {
     testWidgets(
-      'real game buttons charge heavy attacks and aim dashes at $size',
+      'real game buttons hold leap aim and cancel manual throwing at $size',
       (tester) async {
         tester.view.physicalSize = size;
         tester.view.devicePixelRatio = 1;
@@ -22,13 +23,23 @@ void main() {
         final source = Adventure(GameArt())..start(TestGame());
         source.mobs.clear();
         source.hero.position.setValues(6000, 4200);
-        source.progress.gainXp(8000);
-        source.progress.ranks.addAll({
-          'charge': 1,
-          'crushingBlow': size.width < 360 ? 5 : 3,
-        });
-        source.progress.selectSkill('crushingBlow');
-        source.progress.selectSkill('charge', slot: 1);
+        source.progress.level = 100;
+        source.progress.skillPoints = 100;
+        void learn(String id, int rank) {
+          final def = source.progress.skills.firstWhere((v) => v.id == id);
+          for (final requirement in def.requires.entries) {
+            learn(requirement.key, requirement.value);
+          }
+          while (source.progress.rank(id) < rank) {
+            expect(source.progress.learn(def), true);
+          }
+        }
+
+        learn('leapAttack', size.width < 360 ? 5 : 3);
+        learn('doubleThrow', 1);
+        source.progress.selectSkill('leapAttack');
+        source.progress.selectSkill('doubleThrow', slot: 1);
+        source.hero.bearing = 0;
         source.progress.energy = source.progress.maxEnergy;
         source.encounterAreas
           ..clear()
@@ -57,46 +68,49 @@ void main() {
         );
         final energy = s.progress.energy;
         final hold = await tester.startGesture(
-          tester.getCenter(action('집중 강타')),
+          tester.getCenter(action('도약 공격')),
         );
         for (var i = 0; i < 40; i++) {
           await tester.pump(const Duration(milliseconds: 16));
         }
-        expect(hero.aim?.id, 'crushingBlow');
+        expect(hero.aim?.id, 'leapAttack');
         expect(hero.aim!.heldFor, greaterThan(.5));
-        expect(hero.cooldowns['crushingBlow'], isNull);
+        expect(hero.cooldowns['leapAttack'], isNull);
         expect(s.progress.energy, energy);
         await hold.up();
         await tester.pump(const Duration(milliseconds: 16));
-        expect(
-          hero.heavyPower,
-          greaterThan(
-            s.progress.skillDamage(
-                  s.progress.skills.firstWhere((d) => d.id == 'crushingBlow'),
-                ) *
-                1.3,
-          ),
-        );
-        expect(hero.cooldowns['crushingBlow'], greaterThan(0));
-        expect(s.progress.energy, energy - 22);
+        expect(hero.barbarianCombat.airborne, true);
+        expect(hero.cooldowns['leapAttack'], greaterThan(0));
+        expect(s.progress.energy, energy - 12);
         for (var i = 0; i < 50; i++) {
           await tester.pump(const Duration(milliseconds: 16));
         }
-        final charge = action('보조 맹렬한 돌진'), before = hero.position.clone();
-        final cancel = await tester.startGesture(tester.getCenter(charge));
+        final throwing = action('보조 이중 투척'), before = hero.position.clone();
+        final cancel = await tester.startGesture(tester.getCenter(throwing));
         await cancel.moveBy(const Offset(35, 0));
         await cancel.cancel();
         await tester.pump();
-        expect(hero.chargeTime, 0);
-        expect(hero.cooldowns['charge'], isNull);
-        final dash = await tester.startGesture(tester.getCenter(charge));
-        await dash.moveBy(const Offset(35, 0));
-        await dash.up();
+        expect(hero.barbarianCombat.busy, false);
+        expect(hero.cooldowns['doubleThrow'], isNull);
+        expect(hero.gameRef.query<BarbarianThrownAxe>(), isEmpty);
+        final throwGesture = await tester.startGesture(
+          tester.getCenter(throwing),
+        );
+        await throwGesture.moveBy(const Offset(35, 0));
+        await throwGesture.up();
+        var furthest = before.x;
         for (var i = 0; i < 35; i++) {
           await tester.pump(const Duration(milliseconds: 16));
+          final axes = hero.gameRef.query<BarbarianThrownAxe>().toList();
+          expect(axes.length, lessThanOrEqualTo(2));
+          for (final axe in axes) {
+            expect(axe.direction.dx, greaterThan(.99));
+            if (axe.position.x > furthest) furthest = axe.position.x;
+          }
         }
-        expect(hero.position.x - before.x, greaterThan(300));
-        expect((hero.position.y - before.y).abs(), lessThan(2));
+        expect(furthest - before.x, greaterThan(100));
+        expect((hero.position.x - before.x).abs(), lessThan(1));
+        expect((hero.position.y - before.y).abs(), lessThan(1));
         expect(s.world.blocked(hero.body), false);
         expect(tester.takeException(), null);
         await tester.pumpWidget(const SizedBox.shrink());

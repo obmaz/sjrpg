@@ -42,7 +42,8 @@ void main() {
           expect(find.textContaining('의뢰인을 찾아 대화하세요'), findsOneWidget);
           expect(s.timePath, null);
           final giver = timeQuestGivers.firstWhere((g) => g.path == path);
-          s.hero.position.setValues(giver.at.dx - 14, giver.at.dy - 12);
+          final giverAt = s.world.questGiverAt(path);
+          s.hero.position.setValues(giverAt.dx - 14, giverAt.dy - 12);
           await tester.pumpWidget(
             MaterialApp(
               home: AdventurePanel(
@@ -81,7 +82,8 @@ void main() {
           expect(saved.data['timePath'], path.name);
           expect(saved.data['stage'], 'sands');
           final wrong = timeQuestGivers.firstWhere((g) => g.path != path);
-          s.hero.position.setValues(wrong.at.dx - 14, wrong.at.dy - 12);
+          final wrongAt = s.world.questGiverAt(wrong.path);
+          s.hero.position.setValues(wrongAt.dx - 14, wrongAt.dy - 12);
           await tester.pumpWidget(
             MaterialApp(
               home: AdventurePanel(

@@ -20,6 +20,7 @@ class BasicAttackStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = session.progress, basics = p.basicSkills.toList(growable: false);
+    if (basics.length <= 1) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
       child: Row(

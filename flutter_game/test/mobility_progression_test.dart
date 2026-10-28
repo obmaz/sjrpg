@@ -1,12 +1,17 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/combat_balance.dart';
+import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/rpg_model.dart';
 import 'package:guardian_new/skill_tree_layout.dart';
 import 'package:guardian_new/stage_content.dart';
 
+import 'support/test_game.dart';
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   void train(Progress p, String id, int rank) {
     final skill = p.skills.firstWhere((s) => s.id == id);
     for (final entry in skill.requires.entries) {
@@ -45,16 +50,26 @@ void main() {
         );
         expect(p.mobilityDuration, hero == HeroClass.warrior ? 2.8 : 0);
         expect(p.mobilityRange, hero == HeroClass.mage ? 380 : 0);
-        final node = skillTreeRows(
-          hero,
-        )[2].firstWhere((slot) => slot.id == skill.id);
-        expect(node.column, 5);
-        expect(skillTreeRows(hero)[2].last.id, skill.id);
+        if (hero == HeroClass.mage) {
+          final node = skillTreeRows(
+            hero,
+          )[2].firstWhere((slot) => slot.id == skill.id);
+          expect(node.column, 5);
+          expect(skillTreeRows(hero)[2].last.id, skill.id);
+        } else {
+          final layout = SkillTreeLayout(p, 390, dense: true, textScale: 1);
+          expect(layout.rects, contains(skill.id));
+          expect(layout.rects[skill.id]!.top, greaterThan(layout.bonusTop!));
+          expect(
+            warriorTreeIds,
+            isNot(contains(skill.id)),
+            reason:
+                'mobility is an extra below the unchanged thirty-skill tree',
+          );
+        }
         expect(
           skill.requires,
-          hero == HeroClass.warrior
-              ? {'resoundingCry': 1}
-              : {'conductivity': 1},
+          hero == HeroClass.warrior ? {'shout': 1} : {'conductivity': 1},
         );
         final restored = Progress.fromSave(jsonDecode(jsonEncode(p.toSave())))!;
         expect(restored.rank(skill.id), 5);
@@ -79,6 +94,37 @@ void main() {
       },
     );
   }
+  test(
+    'increased speed applies once to real Frenzy movement and once after it expires',
+    () {
+      final session = inCombatField(Adventure(GameArt()))..start(TestGame());
+      addTearDown(session.dispose);
+      final p = session.progress
+        ..level = 100
+        ..skillPoints = 1000;
+      train(p, 'increasedSpeed', 20);
+      train(p, 'frenzy', 5);
+      p.frenzyStacks = 6;
+      session.hero.frenzyTime = 10;
+      final expected =
+          CombatBalance.normalMoveSpeed *
+          p.increasedSpeedMultiplier *
+          (1 + 6 * (.025 + p.effectiveRank('frenzy') * .001));
+      session.hero.update(.05);
+      expect(p.frenzyMoveSpeed, closeTo(expected, .00001));
+      expect(session.hero.speed, closeTo(expected, .00001));
+      session.hero.frenzyTime = 0;
+      session.hero.update(.05);
+      expect(p.frenzyStacks, 0);
+      expect(
+        session.hero.speed,
+        closeTo(
+          CombatBalance.normalMoveSpeed * p.increasedSpeedMultiplier,
+          .00001,
+        ),
+      );
+    },
+  );
   test('normal and sprint speed remain explicit and distinct', () {
     expect(CombatBalance.normalMoveSpeed, 135);
     expect(CombatBalance.sprintMoveSpeed, 270);

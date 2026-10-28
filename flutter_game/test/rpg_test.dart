@@ -15,7 +15,7 @@ void main() {
     final warrior = Progress(), mage = Progress(heroClass: HeroClass.mage);
     expect(warrior.weapon.base.heroClass, HeroClass.warrior);
     expect(mage.weapon.base.heroClass, HeroClass.mage);
-    expect(warrior.selectedSkill, 'warcry');
+    expect(warrior.selectedSkill, 'howl');
     expect(mage.selectedSkill, 'frostNova');
     expect(warrior.rank('cleave'), 1);
     expect(mage.rank('firebolt'), 1);
@@ -33,18 +33,22 @@ void main() {
       expect(p.level, 3);
 
       expect(p.skillPoints, 4);
-      expect(p.learn(warriorSkills.firstWhere((s) => s.id == 'mastery')), true);
-      expect(p.learn(whirlwind), true);
-      expect(p.selectSkill('whirlwind'), true);
+      final bash = p.skills.firstWhere((s) => s.id == 'bash');
+      final doubleSwing = p.skills.firstWhere((s) => s.id == 'doubleSwing');
+      expect(p.learn(bash), true);
+      expect(p.learn(doubleSwing), false, reason: 'requires level six');
+      expect(p.selectSkill('bash'), true);
       expect(p.learn(mageSkills.first), false);
       expect(p.selectSkill('cleave'), false);
-      p.skillPoints = 20;
-      for (var i = 0; i < 12; i++) {
-        p.learn(whirlwind);
+      p.level = 100;
+      expect(p.learn(doubleSwing), true);
+      p.skillPoints = 100;
+      for (var i = 0; i < 24; i++) {
+        p.learn(bash);
       }
-      expect(p.rank('whirlwind'), 5);
-      expect(p.skillPoints, 16);
-      expect(p.learn(whirlwind), false);
+      expect(p.rank('bash'), 20);
+      expect(p.skillPoints, 81);
+      expect(p.learn(bash), false);
     },
   );
   test(
@@ -237,7 +241,10 @@ void main() {
       final s = inCombatField(Adventure(GameArt()));
       s.start(TestGame());
       addTearDown(s.dispose);
-      s.hero.position.setValues(stageChests.first.dx, stageChests.first.dy);
+      s.hero.position.setValues(
+        s.stageChestLocations.first.dx,
+        s.stageChestLocations.first.dy,
+      );
       s.openChest();
       s.openChest();
       expect(s.openedChests.length, 1);
@@ -426,23 +433,18 @@ void main() {
     },
   );
   test(
-    'warrior ground slam fills the fourth slot and strikes the reachable front',
+    'warrior leap attack fills the fourth slot and strikes after landing',
     () {
-      final s = inCombatField(Adventure(GameArt()));
-      s.start(TestGame());
+      final s = inCombatField(Adventure(GameArt()))..start(TestGame());
       addTearDown(s.dispose);
       final p = s.progress;
-      p.gainXp(1000);
-      for (final id in [
-        'mastery',
-        'cleave',
-        'whirlwind',
-        'frenzy',
-        'seismicSlam',
-      ]) {
-        expect(p.learn(p.skills.firstWhere((skill) => skill.id == id)), true);
-      }
-      expect(p.skillSlots, ['warcry', 'whirlwind', 'frenzy', 'seismicSlam']);
+      p.level = 100;
+      p.skillPoints = 100;
+      p.ranks.addAll({'bash': 1, 'doubleSwing': 1, 'leap': 1, 'leapAttack': 1});
+      p.selectSkill('bash', slot: 1);
+      p.selectSkill('doubleSwing', slot: 2);
+      p.selectSkill('leapAttack', slot: 3);
+      expect(p.skillSlots, ['howl', 'bash', 'doubleSwing', 'leapAttack']);
       s.mobs.clear();
       s.hero.position.setValues(6000, 4200);
       s.hero.bearing = 0;
@@ -450,48 +452,38 @@ void main() {
       final life = enemy.life.value;
       p.energy = 100;
       s.hero.skill(slot: 3);
+      expect(enemy.life.value, life);
+      for (var i = 0; i < 20; i++) {
+        s.hero.update(.05);
+      }
       expect(enemy.life.value, lessThan(life));
-      expect(enemy.stun, greaterThan(0));
-      expect(p.energy, 76);
-      expect(s.hero.cooldowns['seismicSlam'], p.skillCooldown(p.skillAt(3)!));
+      expect(s.hero.barbarianCombat.airborne, false);
+      expect(p.energy, 88);
+      expect(
+        s.hero.cooldowns['leapAttack'],
+        lessThan(p.skillCooldown(p.skillAt(3)!)),
+      );
     },
   );
-  test('ground slam cannot put its impact beyond a blocking tree', () {
-    final s = inCombatField(Adventure(GameArt()));
-    s.start(TestGame());
+  test('leap attack cannot cross or strike through a blocking tree', () {
+    final s = inCombatField(Adventure(GameArt()))..start(TestGame());
     addTearDown(s.dispose);
-    s.progress.gainXp(1000);
-    for (final id in ['mastery', 'cleave', 'frenzy']) {
-      expect(
-        s.progress.learn(
-          s.progress.skills.firstWhere((skill) => skill.id == id),
-        ),
-        true,
-      );
-    }
-    expect(
-      s.progress.learn(
-        s.progress.skills.firstWhere((skill) => skill.id == 'whirlwind'),
-      ),
-      true,
-    );
-    s.progress.learn(
-      s.progress.skills.firstWhere((skill) => skill.id == 'seismicSlam'),
-    );
-    s.progress.selectSkill('seismicSlam');
+    s.progress.level = 100;
+    s.progress.ranks.addAll({'leap': 1, 'leapAttack': 1});
+    s.progress.selectSkill('leapAttack');
     s.progress.energy = 100;
     final tree = s.world.props.firstWhere(
       (p) =>
           p.kind == 'tree' &&
           !s.world.blocked(
-            Rect.fromLTWH(p.body.left - 70, p.body.center.dy - 11, 24, 22),
+            Rect.fromLTWH(p.body.left - 70, p.body.center.dy - 12, 28, 24),
           ) &&
           !s.world.blocked(
             Rect.fromLTWH(p.body.right + 30, p.body.center.dy - 11, 24, 22),
           ),
     );
     s.mobs.clear();
-    s.hero.position.setValues(tree.body.left - 70, tree.body.center.dy - 11);
+    s.hero.position.setValues(tree.body.left - 70, tree.body.center.dy - 12);
     s.hero.bearing = 0;
     final enemy = s.spawnEnemy(
       'goblin',
@@ -499,7 +491,11 @@ void main() {
     )!;
     final before = enemy.life.value;
     s.hero.skill();
+    for (var i = 0; i < 20; i++) {
+      s.hero.update(.05);
+    }
     expect(enemy.life.value, before);
+    expect(s.hero.body.right, lessThanOrEqualTo(tree.body.left));
   });
   test(
     'boss slam locks its warning area, can be evaded and is interrupted by a stun',
@@ -588,14 +584,14 @@ void main() {
     addTearDown(s.dispose);
     final before = s.progress.skillPoints;
     for (final memory in stageMemories) {
-      final at = stageChests[memory.chest];
+      final at = s.stageChestLocations[memory.chest];
       s.hero.position.setValues(at.dx, at.dy);
       s.openChest();
     }
     expect(s.recoveredMemories, 3);
     expect(s.memoryRewarded, true);
     expect(s.progress.skillPoints, before + 1);
-    final at = stageChests[4];
+    final at = s.stageChestLocations[4];
     s.hero.position.setValues(at.dx, at.dy);
     s.openChest();
     s.openChest();

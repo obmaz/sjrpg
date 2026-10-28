@@ -13,6 +13,9 @@ void main() {
       for (final hero in HeroClass.values) {
         final p = Progress(heroClass: hero)..gainXp(7500);
         for (final child in p.skills.where((s) => s.requires.length > 1)) {
+          while (p.level < child.requiredLevelForRank(1)) {
+            p.gainXp(p.nextLevelXp);
+          }
           p.ranks.clear();
           for (final requirement in child.requires.entries) {
             p.ranks[requirement.key] = requirement.value;

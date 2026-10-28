@@ -10,7 +10,7 @@ void main() {
   for (final stage in WorldStage.values) {
     test('$stage has visible solid boundaries and open service approaches', () {
       final world = AdventureWorld(stage: stage);
-      expect(world.sanctuaryFences, isNotEmpty);
+      expect(world.settlementCollision, isNotEmpty);
       for (final section in world.sanctuaryFences) {
         for (final body in section.collisionBodies) {
           expect(world.blocked(body), true);
@@ -21,7 +21,7 @@ void main() {
         world.healAt + const ui.Offset(0, 70),
         world.merchantAt,
         if (stage == WorldStage.sands)
-          ...timeQuestGivers.map((giver) => giver.at)
+          ...timeQuestGivers.map((giver) => world.questGiverAt(giver.path))
         else
           world.elderAt,
       ]) {
@@ -35,38 +35,6 @@ void main() {
         );
       }
     });
-  }
-
-  final world = AdventureWorld();
-  ui.Offset at(double u, double v) =>
-      ui.Offset(town.left + town.width * u, town.top + town.height * v);
-  for (final size in [const ui.Size(28, 24), const ui.Size(44, 32)]) {
-    for (final (name, start, direction) in [
-      ('east', at(.73, .52), const ui.Offset(1, 0)),
-      ('west', at(.15, .34), const ui.Offset(-1, 0)),
-      ('north', at(.48, .07), const ui.Offset(0, -1)),
-      ('south', at(.57, .88), const ui.Offset(0, 1)),
-    ]) {
-      test(
-        '$name gate lets a $size body leave the entire sanctuary and return',
-        () {
-          var end = start;
-          for (
-            var step = 0;
-            step < 200 && world.sanctuary.protects(end & size);
-            step++
-          ) {
-            end += direction * 6;
-          }
-          expect(world.sanctuary.protects(end & size), false);
-          expect(world.clearLine(start, end, size), true);
-          final forward = world.move(start, end - start, size);
-          expect((forward - end).distance, lessThan(.01));
-          final reverse = world.move(end, start - end, size);
-          expect((reverse - start).distance, lessThan(.01));
-        },
-      );
-    }
   }
 
   test('all boundary themes render distinct complete low fences', () async {

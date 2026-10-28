@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/barbarian_combat.dart';
 import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_ui.dart';
@@ -103,30 +104,17 @@ void main() {
   });
 
   test(
-    'manual slam strikes the aimed side while retaining movement direction',
+    'manual axes strike the aimed side while retaining movement direction',
     () {
-      final warrior = Adventure(GameArt());
-      warrior.start(TestGame());
+      final warrior = inCombatField(Adventure(GameArt()))..start(TestGame());
       addTearDown(warrior.dispose);
-      warrior.progress.gainXp(1000);
-      for (final id in ['mastery', 'cleave', 'frenzy']) {
-        expect(
-          warrior.progress.learn(
-            warrior.progress.skills.firstWhere((d) => d.id == id),
-          ),
-          true,
-        );
-      }
-      expect(
-        warrior.progress.learn(
-          warrior.progress.skills.firstWhere((d) => d.id == 'whirlwind'),
-        ),
-        true,
-      );
-      warrior.progress.learn(
-        warrior.progress.skills.firstWhere((d) => d.id == 'seismicSlam'),
-      );
-      warrior.progress.selectSkill('seismicSlam');
+      warrior.progress.level = 100;
+      warrior.progress.ranks.addAll({
+        'bash': 1,
+        'doubleSwing': 1,
+        'doubleThrow': 1,
+      });
+      warrior.progress.selectSkill('doubleThrow');
       warrior.progress.energy = 100;
       warrior.hero.position.setValues(6000, 4200);
       warrior.hero.bearing = 3.14;
@@ -138,6 +126,12 @@ void main() {
       warrior.hero.beginAim(0);
       warrior.hero.moveAim(const Offset(60, 0));
       warrior.hero.finishAim(false);
+      final axe = (warrior.game as TestGame).added
+          .whereType<BarbarianThrownAxe>()
+          .single;
+      for (var frame = 0; frame < 30; frame++) {
+        axe.update(1 / 30);
+      }
       expect(right.life.value, lessThan(rightHp));
       expect(left.life.value, leftHp);
       expect(warrior.hero.bearing, 3.14);

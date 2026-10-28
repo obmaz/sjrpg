@@ -4,6 +4,7 @@ import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/basic_attack_strip.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/rpg_model.dart';
+import 'package:guardian_new/skill_tree.dart';
 import 'package:guardian_new/skills_panel.dart';
 
 import 'basic_selection_test.dart' show train;
@@ -49,6 +50,29 @@ void main() {
             );
             await tester.pumpAndSettle();
             expect(find.byType(BasicAttackStrip), findsOneWidget);
+            if (heroClass == HeroClass.warrior) {
+              expect(p.basicSkills.map((skill) => skill.id), ['cleave']);
+              expect(find.bySemanticsLabel('기본 공격 일반 공격 선택'), findsNothing);
+              final target = find.byKey(const ValueKey('skill-node-bash'));
+              await Scrollable.ensureVisible(
+                tester.element(target),
+                alignment: .5,
+              );
+              await tester.pumpAndSettle();
+              final visible = tester
+                  .getRect(target)
+                  .intersect(tester.getRect(find.byType(SkillTree)));
+              expect(visible.width, greaterThanOrEqualTo(44));
+              expect(visible.height, greaterThanOrEqualTo(44));
+              await tester.tap(target);
+              await tester.pumpAndSettle();
+              expect(p.selectedBasic, 'cleave');
+              expect(p.skillPoints, points);
+              expect(p.skillSlots, slots);
+              expect(tester.takeException(), null);
+              semantics.dispose();
+              return;
+            }
             final bounds = <Rect>[];
             for (final basic in p.basicSkills) {
               final target = find.bySemanticsLabel('기본 공격 ${basic.name} 선택'),
@@ -94,7 +118,8 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      final s = Adventure(GameArt())..start(TestGame());
+      final s = Adventure(GameArt(), heroClass: HeroClass.mage)
+        ..start(TestGame());
       s.pause();
       s.progress.gainXp(1000);
       addTearDown(s.dispose);
@@ -108,17 +133,17 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.bySemanticsLabel('기본 공격 속사 베기 살펴보기'));
+      await tester.tap(find.bySemanticsLabel('기본 공격 서리 창 살펴보기'));
       await tester.pumpAndSettle();
-      expect(p.selectedBasic, 'cleave');
+      expect(p.selectedBasic, p.defaultBasicId);
       expect(p.skillPoints, points);
-      await tester.tap(find.bySemanticsLabel('속사 베기 습득 · 1P'));
+      await tester.tap(find.bySemanticsLabel('서리 창 습득 · 1P'));
       await tester.pumpAndSettle();
-      expect(p.selectedBasic, 'quickCut');
-      expect(p.rank('quickCut'), 1);
+      expect(p.selectedBasic, 'iceShard');
+      expect(p.rank('iceShard'), 1);
       expect(p.skillPoints, points - 1);
       expect(p.skillSlots, slots);
-      expect(find.bySemanticsLabel('기본 공격 속사 베기 선택'), findsOneWidget);
+      expect(find.bySemanticsLabel('기본 공격 서리 창 선택'), findsOneWidget);
       expect(tester.takeException(), null);
       semantics.dispose();
     },

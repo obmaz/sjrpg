@@ -1,6 +1,9 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
 import 'adventure.dart';
+import 'barbarian_icon_art.dart';
 import 'game_art.dart';
 import 'game_ui.dart';
 import 'gear_icon_art.dart';
@@ -11,74 +14,84 @@ IconData elementIcon(String element) => element == 'ice'
     : element == 'lightning'
     ? Icons.bolt
     : Icons.local_fire_department;
-int skillEffect(String id) => switch (id) {
-  'rendingEdge' => 14,
-  'stormOfSteel' => 15,
-  'weaponTempo' => 16,
-  'veteranGuard' => 17,
-  'secondWind' => 18,
-  'resoundingCry' => 19,
-  'warDrums' => 20,
-  'unyieldingOath' => 21,
-  'emberFocus' => 22,
-  'cinderReach' => 23,
-  'phoenixHeart' => 24,
-  'deepFreeze' => 25,
-  'frozenAegis' => 26,
-  'glacialReserve' => 27,
-  'conductivity' => 28,
-  'forkedStorm' => 29,
-  'arcaneEconomy' => 30,
+int skillEffect(String id) =>
+    BarbarianIconArt.effectFor(id) ??
+    switch (id) {
+      'rendingEdge' => 14,
+      'stormOfSteel' => 15,
+      'weaponTempo' => 16,
+      'veteranGuard' => 17,
+      'secondWind' => 18,
+      'resoundingCry' => 19,
+      'warDrums' => 20,
+      'unyieldingOath' => 21,
+      'emberFocus' => 22,
+      'cinderReach' => 23,
+      'phoenixHeart' => 24,
+      'deepFreeze' => 25,
+      'frozenAegis' => 26,
+      'glacialReserve' => 27,
+      'conductivity' => 28,
+      'forkedStorm' => 29,
+      'arcaneEconomy' => 30,
 
-  'battleFocus' => 8,
-  'battleVigor' => 9,
-  'rallyingVoice' => 10,
-  'warmth' => 11,
-  'coldMastery' => 12,
-  'lightningMastery' => 13,
+      'battleFocus' => 8,
+      'battleVigor' => 9,
+      'rallyingVoice' => 10,
+      'warmth' => 11,
+      'coldMastery' => 12,
+      'lightningMastery' => 13,
 
-  'warcry' || 'ironSkin' => 0,
-  'whirlwind' => 1,
-  'frostNova' => 2,
-  'chainLightning' => 3,
-  'meteor' || 'firebolt' => 4,
-  'quickCut' => 7,
-  'heavyStrike' => 35,
-  'iceShard' => 2,
-  'sparkBolt' => 3,
-  'frenzy' => 5,
-  'charge' => 34,
-  'battleSprint' => 34,
-  'blink' => 3,
-  'crushingBlow' => 35,
-  'iceArmor' => 6,
-  _ => 7,
-};
-IconData skillIcon(String id) => switch (id) {
-  'warmth' => Icons.local_fire_department,
-  'coldMastery' => Icons.ac_unit,
-  'lightningMastery' => Icons.bolt,
-  'battleFocus' => Icons.track_changes,
-  'battleVigor' => Icons.favorite,
-  'rallyingVoice' => Icons.campaign,
-  'warcry' => Icons.campaign,
-  'whirlwind' => Icons.cyclone,
-  'frenzy' => Icons.flash_on,
-  'charge' => Icons.double_arrow,
-  'battleSprint' => Icons.directions_run_rounded,
-  'blink' => Icons.blur_on_rounded,
-  'crushingBlow' => Icons.sports_martial_arts,
-  'ironSkin' => Icons.shield,
-  'mastery' => Icons.military_tech,
-  'frostNova' => Icons.ac_unit,
-  'iceArmor' => Icons.security,
-  'chainLightning' => Icons.bolt,
-  'meteor' => Icons.whatshot,
-  'arcaneMastery' => Icons.auto_awesome,
-  'firebolt' => Icons.local_fire_department,
-  _ => Icons.sports_martial_arts,
-};
-Color skillColor(SkillDef s) => s.branch == '냉기'
+      'warcry' || 'ironSkin' => 0,
+      'whirlwind' => 1,
+      'frostNova' => 2,
+      'chainLightning' => 3,
+      'meteor' || 'firebolt' => 4,
+      'quickCut' => 7,
+      'heavyStrike' => 35,
+      'iceShard' => 2,
+      'sparkBolt' => 3,
+      'frenzy' => 5,
+      'charge' => 34,
+      'battleSprint' => 34,
+      'blink' => 3,
+      'crushingBlow' => 35,
+      'shadowAssault' => 36,
+      'iceArmor' => 6,
+      _ => 7,
+    };
+IconData skillIcon(String id) =>
+    BarbarianIconArt.fallbackFor(id) ??
+    switch (id) {
+      'warmth' => Icons.local_fire_department,
+      'coldMastery' => Icons.ac_unit,
+      'lightningMastery' => Icons.bolt,
+      'battleFocus' => Icons.track_changes,
+      'battleVigor' => Icons.favorite,
+      'rallyingVoice' => Icons.campaign,
+      'warcry' => Icons.campaign,
+      'whirlwind' => Icons.cyclone,
+      'frenzy' => Icons.flash_on,
+      'charge' => Icons.double_arrow,
+      'battleSprint' => Icons.directions_run_rounded,
+      'blink' => Icons.blur_on_rounded,
+      'crushingBlow' => Icons.sports_martial_arts,
+      'shadowAssault' => Icons.people_alt_rounded,
+      'ironSkin' => Icons.shield,
+      'mastery' => Icons.military_tech,
+      'frostNova' => Icons.ac_unit,
+      'iceArmor' => Icons.security,
+      'chainLightning' => Icons.bolt,
+      'meteor' => Icons.whatshot,
+      'arcaneMastery' => Icons.auto_awesome,
+      'firebolt' => Icons.local_fire_department,
+      _ => Icons.sports_martial_arts,
+    };
+Color skillColor(SkillDef s) => BarbarianIconArt.effectFor(s.id) != null
+    ? BarbarianIconArt.color(
+        BarbarianIconArt.effectFor(s.id)! - BarbarianIconArt.firstEffect,
+      )
+    : s.branch == '냉기'
     ? const Color(0xffa8e4f0)
     : s.branch == '화염'
     ? const Color(0xfff4ab6f)
@@ -98,23 +111,12 @@ class FramedSurface extends StatelessWidget {
   final bool compact;
   @override
   Widget build(BuildContext context) {
-    if (compact) {
-      return Container(
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: const Color(0xf016242c),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: mobileBorder),
-          boxShadow: const [
-            BoxShadow(color: Color(0x55000000), blurRadius: 14),
-          ],
-        ),
-        child: child,
-      );
-    }
-    return CustomPaint(
-      painter: _FramePainter(art),
-      child: Padding(padding: const EdgeInsets.all(10), child: child),
+    final body = compact
+        ? child
+        : Padding(padding: const EdgeInsets.all(10), child: child);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: CustomPaint(painter: _FramePainter(art), child: body),
     );
   }
 }
@@ -124,15 +126,29 @@ class _FramePainter extends CustomPainter {
   final GameArt art;
   @override
   void paint(Canvas canvas, Size size) {
-    final bounds = (Offset.zero & size).deflate(.5);
+    final bounds = (Offset.zero & size).deflate(1.2);
     final shape = RRect.fromRectAndRadius(bounds, const Radius.circular(18));
-    canvas.drawRRect(shape, Paint()..color = const Color(0xf016242c));
+    canvas.drawRRect(shape, Paint()..color = const Color(0xf5103032));
     canvas.drawRRect(
       shape,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1
-        ..color = mobileBorder,
+        ..strokeWidth = 2
+        ..color = gameMetal.withValues(alpha: .9),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(bounds.deflate(3), const Radius.circular(15)),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = .7
+        ..color = const Color(0x88679b8d),
+    );
+    canvas.drawLine(
+      Offset(23, 5),
+      Offset(math.max(23, size.width - 23), 5),
+      Paint()
+        ..strokeWidth = .8
+        ..color = const Color(0x99d6c59e),
     );
   }
 

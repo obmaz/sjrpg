@@ -6,6 +6,8 @@ import 'skill_growth.dart';
 import 'stage_content.dart';
 import 'weapon_profiles.dart';
 
+part 'barbarian_catalog.dart';
+
 enum HeroClass { warrior, mage }
 
 extension HeroClassInfo on HeroClass {
@@ -384,9 +386,9 @@ extension WeaponGiftInfo on WeaponGift {
       '적중한 대상 둔화 ${CombatBalance.realSeconds(.8).toStringAsFixed(2)}초',
     WeaponGift.guardian => '받는 피해 8% 감소',
     WeaponGift.renewal => '처치 시 생명 4 회복',
-    WeaponGift.comboFury => '타이밍 3연계마다 분노 6 회복',
+    WeaponGift.comboFury => '분신 연격 3연계마다 분노 6 회복',
     WeaponGift.comboGuard =>
-      '타이밍 3연계마다 ${CombatBalance.realSeconds(WeaponGiftInfo.comboGuardDuration).toStringAsFixed(2)}초간 받는 피해 25% 감소',
+      '분신 연격 3연계마다 ${CombatBalance.realSeconds(WeaponGiftInfo.comboGuardDuration).toStringAsFixed(2)}초간 받는 피해 25% 감소',
   };
   bool get isCombo =>
       this == WeaponGift.comboFury || this == WeaponGift.comboGuard;
@@ -624,7 +626,6 @@ class Gear {
     if (health > 0) '생명 +${health.round()}',
     if (mana > 0) '자원 +${mana.round()}',
     if (base.haste > 0) '공격속도 +${(base.haste * 100).round()}%',
-    if (base.comboProfile case final profile?) '타이밍 연계 · ${profile.chainLabel}',
     for (final ability in gifts) '${ability.title} · ${ability.description}',
   ].join(' · ');
 }
@@ -683,11 +684,11 @@ const _innateMagicDef = GearDef(
 );
 
 class BasicAttackStats {
-  const BasicAttackStats(this.damage, this.interval);
+  const BasicAttackStats(this.damage, this.interval, {this.criticalChance = 0});
 
   /// Damage per hit and recovery in real seconds at the shared game speed.
-  final double damage, interval;
-  double get dps => damage / interval;
+  final double damage, interval, criticalChance;
+  double get dps => damage * (1 + criticalChance) / interval;
 }
 
 class SkillDef {
@@ -702,17 +703,22 @@ class SkillDef {
     this.passive = false,
     this.basic = false,
     this.mobility = false,
+    this.rankLimit = 5,
     this.basicDamageScale = 1,
     this.basicTempoScale = 1,
     this.requires = const {},
   });
   final String id, name, branch, description;
   final int requiredLevel;
+  final int rankLimit;
   final double cost, cooldown;
   final bool passive, basic, mobility;
   final double basicDamageScale, basicTempoScale;
   final Map<String, int> requires;
   static const maxRank = 5;
+  int requiredLevelForRank(int desiredRank) =>
+      requiredLevel +
+      (rankLimit == 20 ? (desiredRank - 1).clamp(0, rankLimit - 1) : 0);
   String get shortName =>
       {
         'rendingEdge': '칼날 강화',
@@ -734,10 +740,11 @@ class SkillDef {
         'arcaneEconomy': '비전 순환',
         'warcry': '함성',
         'whirlwind': '소용돌이',
-        'frenzy': '격노',
+        'frenzy': '광분',
         'seismicSlam': '강타',
         'charge': '돌진',
         'crushingBlow': '집중 강타',
+        'shadowAssault': '분신 연격',
         'iceArmor': '얼음 갑옷',
         'chainLightning': '번개',
         'meteor': '유성',
@@ -747,259 +754,6 @@ class SkillDef {
       name;
 }
 
-const warriorSkills = [
-  SkillDef(
-    'cleave',
-    '연속 베기',
-    '전투 기술',
-    '기본 공격은 1명을 벱니다. 3·5등급에서 대상이 1명씩 늘어 최대 3명을 공격합니다. 등급마다 피해와 속도가 조금씩 증가하며 세 번째 공격은 강타합니다.',
-    1,
-    0,
-    0,
-    passive: true,
-    basic: true,
-  ),
-  SkillDef(
-    'warcry',
-    '전장의 함성',
-    '함성',
-    '주변 적을 함성으로 잠시 기절시키고 받는 피해를 줄입니다. 3·5등급에서 대상이 1명씩 늘고 나머지 성능은 조금씩 성장합니다. 보호는 재사용 시간보다 먼저 끝납니다.',
-    1,
-    18,
-    7,
-  ),
-  SkillDef(
-    'mastery',
-    '무기 숙련',
-    '전투 숙련',
-    '등급마다 모든 무기 피해 +2%. 숙련 피해 보너스는 최대 15%입니다.',
-    2,
-    0,
-    0,
-    passive: true,
-  ),
-  SkillDef(
-    'ironSkin',
-    '강철 피부',
-    '전투 숙련',
-    '등급마다 방어 +5, 최대 생명 +8.',
-    2,
-    0,
-    0,
-    passive: true,
-    requires: {'mastery': 1},
-  ),
-  SkillDef(
-    'whirlwind',
-    '소용돌이',
-    '전투 기술',
-    '무기를 들고 직접 회전하며 세 차례 벱니다. 3·5등급에서 대상이 1명씩 늘고 피해·속도·재사용은 조금씩 성장합니다. 검 궤적과 파편도 화려해집니다.',
-    3,
-    30,
-    5,
-    requires: {'cleave': 1},
-  ),
-  SkillDef(
-    'frenzy',
-    '광전사의 격노',
-    '전투 기술',
-    '짧은 시간 공격 속도가 10~18% 증가하고 조금 빠르게 움직입니다. 발동 시 주변 적을 베며 3·5등급에서 대상이 1명씩 늘어납니다. 강화는 재사용 시간보다 먼저 끝납니다.',
-    4,
-    28,
-    12,
-    requires: {'cleave': 2},
-  ),
-  SkillDef(
-    'seismicSlam',
-    '대지 강타',
-    '전투 기술',
-    '전방의 지면을 내리쳐 적을 잠시 기절시킵니다. 3·5등급에서 대상이 1명씩 늘고 동작·재사용은 조금씩 빨라집니다. 파편은 화려해지며 장애물 너머는 타격하지 않습니다.',
-    5,
-    24,
-    8,
-    requires: {'whirlwind': 1, 'frenzy': 1},
-  ),
-  SkillDef(
-    'battleFocus',
-    '전투 집중',
-    '전투 숙련',
-    '등급마다 기본 공격 가속 +0.6%p. 장비·숙련의 합산 가속은 최대 15%입니다.',
-    5,
-    0,
-    0,
-    passive: true,
-    requires: {'frenzy': 1, 'ironSkin': 1},
-  ),
-  SkillDef(
-    'battleVigor',
-    '전장의 맹세',
-    '함성',
-    '등급마다 최대 생명 +8, 전장의 함성 보호 중 피해 감소 +0.5%p.',
-    3,
-    0,
-    0,
-    passive: true,
-    requires: {'warcry': 1},
-  ),
-  SkillDef(
-    'rallyingVoice',
-    '고양의 울림',
-    '함성',
-    '전장의 함성으로 보호받는 동안, 실제 기본 공격 적중 시 등급마다 분노 0.21을 추가로 얻습니다. 빗맞힌 공격에는 적용되지 않습니다.',
-    6,
-    0,
-    0,
-    passive: true,
-    requires: {'weaponTempo': 1, 'battleVigor': 1},
-  ),
-  SkillDef(
-    'rendingEdge',
-    '예리한 칼날',
-    '전투 기술',
-    '등급마다 기본 공격 피해 +1.5%.',
-    7,
-    0,
-    0,
-    passive: true,
-    requires: {'seismicSlam': 1, 'battleFocus': 1},
-  ),
-  SkillDef(
-    'stormOfSteel',
-    '강철 폭풍',
-    '전투 기술',
-    '등급마다 소용돌이·대지 강타 피해 +0.5%. 3·5등급에서 최대 대상 +1명씩, 최대 2명 추가.',
-    16,
-    0,
-    0,
-    passive: true,
-    requires: {'charge': 1, 'rendingEdge': 2},
-  ),
-  SkillDef(
-    'weaponTempo',
-    '무기의 리듬',
-    '전투 숙련',
-    '등급마다 기본 공격 가속 +0.4%p. 장비·숙련의 합산 가속은 최대 15%입니다.',
-    6,
-    0,
-    0,
-    passive: true,
-    requires: {'mastery': 2},
-  ),
-  SkillDef(
-    'veteranGuard',
-    '노련한 수호',
-    '전투 숙련',
-    '등급마다 방어 +2.',
-    9,
-    0,
-    0,
-    passive: true,
-    requires: {'battleFocus': 1, 'rallyingVoice': 1},
-  ),
-  SkillDef(
-    'secondWind',
-    '두 번째 숨결',
-    '전투 숙련',
-    '등급마다 최대 생명 +10.',
-    12,
-    0,
-    0,
-    passive: true,
-    requires: {'rendingEdge': 1, 'veteranGuard': 1},
-  ),
-  SkillDef(
-    'resoundingCry',
-    '공명의 함성',
-    '함성',
-    '등급마다 전장의 함성 피해 +2%.',
-    6,
-    0,
-    0,
-    passive: true,
-    requires: {'warcry': 2},
-  ),
-  SkillDef(
-    'warDrums',
-    '전쟁의 북소리',
-    '함성',
-    '함성 보호 중 실제 적중 시 등급마다 분노 +0.105.',
-    9,
-    0,
-    0,
-    passive: true,
-    requires: {'battleFocus': 1, 'rallyingVoice': 1},
-  ),
-  SkillDef(
-    'unyieldingOath',
-    '불굴의 맹세',
-    '함성',
-    '등급마다 전장의 함성 피해 감소 +0.5%p.',
-    16,
-    0,
-    0,
-    passive: true,
-    requires: {'veteranGuard': 1, 'warDrums': 2},
-  ),
-  SkillDef(
-    'charge',
-    '맹렬한 돌진',
-    '전투 기술',
-    '끌어서 방향을 정한 뒤 몸을 던져 적을 밀칩니다. 벽에서 멈춥니다. 3·5등급에서 대상이 1명씩 늘고 돌진·재사용은 조금씩 빨라지며 궤적이 화려해집니다.',
-    6,
-    16,
-    5,
-    requires: {'seismicSlam': 1, 'battleFocus': 1},
-  ),
-  SkillDef(
-    'crushingBlow',
-    '집중 강타',
-    '전투 기술',
-    '길게 눌러 힘을 모은 뒤 놓으면 전방을 내려칩니다. 3·5등급에서 대상이 1명씩 늘고 충전·동작·재사용은 조금씩 빨라집니다. 충격 파편이 화려해지며 완전 충전은 피해 +80%입니다.',
-    7,
-    22,
-    6,
-    requires: {'charge': 1, 'rendingEdge': 2},
-  ),
-  SkillDef(
-    'battleSprint',
-    '전투 질주',
-    '전투 숙련',
-    '짧은 시간 평소의 두 배 속도로 달립니다. 회피 옆의 전용 버튼으로 사용하며 자원은 소모하지 않습니다. 등급마다 지속 시간이 조금 늘고 재사용이 빨라집니다.',
-    8,
-    0,
-    15,
-    mobility: true,
-    requires: {'resoundingCry': 1},
-  ),
-  SkillDef(
-    'quickCut',
-    '속사 베기',
-    '전투 기술',
-    '빠른 두 자세로 한 명을 연속 공격합니다. 한 타격은 약하지만 동작이 짧습니다. 자원을 쓰지 않으며 등급마다 공격이 빨라집니다.',
-    2,
-    0,
-    0,
-    passive: true,
-    basic: true,
-    basicDamageScale: .76,
-    basicTempoScale: 1.18,
-    requires: {'cleave': 1},
-  ),
-  SkillDef(
-    'heavyStrike',
-    '무거운 일격',
-    '전투 숙련',
-    '한 명을 느리고 강하게 내려칩니다. 적중하면 짧게 기절시키며 큰 적에게는 짧게 적용됩니다. 자원을 쓰지 않으며 등급마다 공격과 타격감이 성장합니다.',
-    3,
-    0,
-    0,
-    passive: true,
-    basic: true,
-    basicDamageScale: 1.45,
-    basicTempoScale: .72,
-    requires: {'cleave': 2, 'mastery': 1},
-  ),
-];
 const mageSkills = [
   SkillDef(
     'firebolt',
@@ -1271,13 +1025,19 @@ class Progress {
       equipped[item.base.slot] = item;
     }
     ranks[heroClass == HeroClass.warrior ? 'cleave' : 'firebolt'] = 1;
-    ranks[heroClass == HeroClass.warrior ? 'warcry' : 'frostNova'] = 1;
+    ranks[heroClass == HeroClass.warrior ? 'howl' : 'frostNova'] = 1;
     selectedBasic = defaultBasicId;
-    selectedSkill = heroClass == HeroClass.warrior ? 'warcry' : 'frostNova';
+    selectedSkill = heroClass == HeroClass.warrior ? 'howl' : 'frostNova';
     hp = maxHp;
     energy = heroClass == HeroClass.warrior ? 25 : maxEnergy;
   }
   final HeroClass heroClass;
+  int activeSkillBonus = 0, frenzyStacks = 0;
+  double activeLifeMultiplier = 1,
+      activeResourceMultiplier = 1,
+      activeArmorMultiplier = 1,
+      concentrateArmorMultiplier = 1;
+  bool berserkActive = false;
   MountProgress mountProgress = MountProgress();
   int kills = 0, gold = 0, level = 1, xp = 0, skillPoints = 2;
   int healingPotions = 3, energyPotions = 2;
@@ -1381,8 +1141,14 @@ class Progress {
     'healingPotions': healingPotions,
     'energyPotions': energyPotions,
     'serial': _serial,
-    'hp': hp,
-    'energy': energy,
+    // Long warcries are transient. Save their fill ratio against the unbuffed
+    // maxima so restoring without a buff neither grants healing nor loses it.
+    'hp': heroClass == HeroClass.warrior
+        ? (hp * (baseMaxHp / maxHp)).clamp(0.0, baseMaxHp)
+        : hp,
+    'energy': heroClass == HeroClass.warrior
+        ? (energy * (baseMaxEnergy / maxEnergy)).clamp(0.0, baseMaxEnergy)
+        : energy,
     'bonusAttack': bonusAttack,
     'bonusHealth': bonusHealth,
     'bossDefeated': bossDefeated,
@@ -1394,6 +1160,7 @@ class Progress {
       ],
       'spent': _spentSkillResets,
     },
+    if (heroClass == HeroClass.warrior) 'barbarianTreeVersion': 1,
     'selectedBasic': selectedBasic,
     'selectedSkill': selectedSkill,
     'secondarySkill': secondarySkill,
@@ -1429,6 +1196,10 @@ class Progress {
           (c) => c.name == data['heroClass'],
         ),
       );
+      if (p.heroClass == HeroClass.warrior &&
+          data['barbarianTreeVersion'] != 1) {
+        return null;
+      }
       p.level = integer('level', max: 10000);
       if (p.level == 0) return null;
       p.kills = integer('kills');
@@ -1508,14 +1279,19 @@ class Progress {
         final rank = entry.value;
         if (rank is! int ||
             rank < 1 ||
-            rank > 5 ||
-            skill.requiredLevel > p.level) {
+            rank > skill.rankLimit ||
+            skill.requiredLevelForRank(rank) > p.level) {
           return null;
         }
         p.ranks[skill.id] = rank;
       }
       if (p.rank(p.heroClass == HeroClass.warrior ? 'cleave' : 'firebolt') ==
           0) {
+        return null;
+      }
+      if (p.heroClass == HeroClass.warrior && p.rank('howl') == 0) return null;
+      if (p.heroClass == HeroClass.warrior &&
+          p.skills.any((s) => p.rank(s.id) > 0 && !p.prerequisitesMet(s))) {
         return null;
       }
       final basic = data['selectedBasic'] ?? p.defaultBasicId;
@@ -1574,13 +1350,14 @@ class Progress {
 
   static const capacity = 24;
   List<SkillDef> get skills =>
-      heroClass == HeroClass.warrior ? warriorSkills : mageSkills;
+      heroClass == HeroClass.warrior ? allWarriorSkills : mageSkills;
   SkillDef get mobilitySkill => skills.firstWhere((s) => s.mobility);
   double get mobilityCooldown => skillCooldown(mobilitySkill);
   double get mobilityDuration => heroClass == HeroClass.warrior
       ? limitedSkillDuration(
           'battleSprint',
-          2.4 + math.max(0, rank('battleSprint') - 1) * .1,
+          (2.4 + math.max(0, rank('battleSprint') - 1) * .1) *
+              staminaDurationMultiplier,
         )
       : 0;
   double get mobilityRange => heroClass == HeroClass.mage && rank('blink') > 0
@@ -1591,6 +1368,134 @@ class Progress {
       : skills.firstWhere((s) => s.id == secondarySkill);
   SkillDef get activeSkill => skills.firstWhere((s) => s.id == selectedSkill);
   int rank(String id) => ranks[id] ?? 0;
+
+  /// atRank always denotes invested points, before Battle Command.
+  int effectiveRank(String id, {int? atRank}) {
+    final def = skills.where((s) => s.id == id).firstOrNull;
+    if (def == null) return 0;
+    final invested = (atRank ?? rank(id)).clamp(0, def.rankLimit);
+    return invested == 0
+        ? 0
+        : invested +
+              (heroClass == HeroClass.warrior
+                  ? activeSkillBonus.clamp(0, 1)
+                  : 0);
+  }
+
+  static double _statMultiplier(double v) => v.isFinite ? v.clamp(1.0, 3.0) : 1;
+  String get weaponMasteryId => usingFallbackWeapon
+      ? ''
+      : switch (weapon.base.id) {
+          'halberd' || 'glaive' => 'polearmMastery',
+          _ => switch (weapon.base.style) {
+            'axe' => 'axeMastery',
+            'hammer' => 'maceMastery',
+            'spear' => 'spearMastery',
+            _ => 'swordMastery',
+          },
+        };
+  double get weaponMasteryDamageMultiplier => heroClass == HeroClass.warrior
+      ? 1 + effectiveRank(weaponMasteryId) * .02
+      : 1;
+  double get throwingMasteryDamageMultiplier =>
+      1 + effectiveRank('throwingMastery') * .02;
+  double get weaponCriticalChance =>
+      _masteryCritical(effectiveRank(weaponMasteryId));
+  double get throwingCriticalChance =>
+      _masteryCritical(effectiveRank('throwingMastery'));
+  static double _masteryCritical(int r) =>
+      r == 0 ? 0 : (.03 + r * .004).clamp(0.0, .15);
+  double get increasedSpeedMultiplier =>
+      heroClass == HeroClass.warrior && effectiveRank('increasedSpeed') > 0
+      ? 1.05 + effectiveRank('increasedSpeed') * .01
+      : 1;
+  double get staminaDurationMultiplier =>
+      1 + effectiveRank('increasedStamina') * .04;
+  double get barbarianStatusResistance =>
+      effectiveRank('naturalResistance') == 0
+      ? 0
+      : (.08 + effectiveRank('naturalResistance') * .012).clamp(0.0, .35);
+  double skillCost(SkillDef skill, {int? atRank}) => skill.id == 'doubleSwing'
+      ? math.max(
+          0.0,
+          skill.cost -
+              math.max(0, effectiveRank(skill.id, atRank: atRank) - 1) * .25,
+        )
+      : skill.cost;
+  double skillRange(SkillDef skill, {int? atRank}) {
+    final r = effectiveRank(skill.id, atRank: atRank);
+    return switch (skill.id) {
+      'leap' => 120.0 + r * 8,
+      'leapAttack' => 180.0 + r * 8,
+      'doubleThrow' => 420.0,
+      _ => weapon.base.range,
+    };
+  }
+
+  double barbarianRadius(String id, {int? atRank}) {
+    final r = effectiveRank(id, atRank: atRank);
+    return switch (id) {
+      'leap' => 70.0 + r * 3,
+      'howl' => 140.0 + r * 5,
+      'taunt' => 280.0,
+      'grimWard' => 160.0 + r * 4,
+      'findPotion' || 'findItem' => 180.0,
+      _ => 180.0 + r * 3,
+    };
+  }
+
+  double barbarianBuffDuration(String id, {int? atRank}) {
+    final r = effectiveRank(id, atRank: atRank);
+    if (r == 0) return 0;
+    final synergy = switch (id) {
+      'shout' => rank('battleOrders') + rank('battleCommand'),
+      'battleOrders' => rank('shout') + rank('battleCommand'),
+      'battleCommand' => rank('shout') + rank('battleOrders'),
+      _ => 0,
+    };
+    // Original long warcries are refreshable buffs, not cooldown-limited bursts.
+    if (id == 'shout') return 20.0 + (r - 1) * 10 + synergy * 5;
+    if (id == 'battleOrders') return 30.0 + (r - 1) * 10 + synergy * 5;
+    if (id == 'battleCommand') return 5.0 + (r - 1) * 10 + synergy * 5;
+    if (id == 'grimWard') return 40;
+    // Frenzy refreshes on melee hits, allowing consecutive attacks to build stacks.
+    if (id == 'frenzy') return 6;
+    return limitedSkillDuration(id, 3.0 + r * .06, atRank: atRank);
+  }
+
+  double barbarianEffectDuration(String id, {int? atRank}) {
+    final r = effectiveRank(id, atRank: atRank);
+    final nominal = switch (id) {
+      'berserk' => 1.5,
+      'stun' => .6 + r * .025,
+      'warcry' => .8 + r * .035,
+      'battleCry' => 4.0 + r * .06,
+      _ => 2.0 + r * .06,
+    };
+    return limitedSkillDuration(id, nominal, atRank: atRank);
+  }
+
+  double barbarianFindChance(String id, {int? atRank}) {
+    final r = effectiveRank(id, atRank: atRank);
+    return r == 0
+        ? 0
+        : (id == 'findPotion' ? .25 + r * .015 : .15 + r * .012).clamp(
+            0.0,
+            .65,
+          );
+  }
+
+  double shoutArmorMultiplier({int? atRank}) =>
+      1.25 + effectiveRank('shout', atRank: atRank) * .025;
+  double battleOrdersMultiplier({int? atRank}) =>
+      1.08 + effectiveRank('battleOrders', atRank: atRank) * .008;
+  double battleCryOutgoingMultiplier({int? atRank}) =>
+      .88 - effectiveRank('battleCry', atRank: atRank) * .008;
+  double battleCryIncomingMultiplier({int? atRank}) =>
+      1.06 + effectiveRank('battleCry', atRank: atRank) * .008;
+  double concentrateDefenseMultiplier({int? atRank}) =>
+      1.5 + effectiveRank('concentrate', atRank: atRank) * .1;
+
   int get nextLevelXp => CombatBalance.experienceForLevel(level);
   late final _fallbackWeapon = Gear(
     0,
@@ -1599,33 +1504,51 @@ class Progress {
   );
   bool get usingFallbackWeapon => !equipped.containsKey(GearSlot.weapon);
   Gear get weapon => equipped[GearSlot.weapon] ?? _fallbackWeapon;
-  double get maxHp =>
+  double get baseMaxHp =>
       (heroClass == HeroClass.warrior ? 100 : 80) +
       (level - 1) * 10 +
       bonusHealth +
       equipped.values.fold(0.0, (v, g) => v + g.health) +
-      rank('ironSkin') * 8 +
-      rank('battleVigor') * 8 +
-      rank('secondWind') * 10 +
       rank('phoenixHeart') * 8;
-  set maxHp(double value) => bonusHealth += value - maxHp;
-  double get maxEnergy =>
+  double get maxHp =>
+      baseMaxHp *
+      (heroClass == HeroClass.warrior
+          ? _statMultiplier(activeLifeMultiplier)
+          : 1);
+  set maxHp(double value) => bonusHealth +=
+      (value - maxHp) /
+      (heroClass == HeroClass.warrior
+          ? _statMultiplier(activeLifeMultiplier)
+          : 1);
+  double get baseMaxEnergy =>
       (heroClass == HeroClass.warrior ? 100 : 90) +
       equipped.values.fold(0.0, (v, g) => v + g.mana) +
       rank('arcaneMastery') * 4 +
       rank('glacialReserve') * 3 +
       rank('arcaneEconomy') * 2;
-  double get armor =>
-      equipped.values.fold(0.0, (v, g) => v + g.armor) +
-      rank('ironSkin') * 5 +
-      rank('veteranGuard') * 2;
+  double get maxEnergy =>
+      baseMaxEnergy *
+      (heroClass == HeroClass.warrior
+          ? _statMultiplier(activeResourceMultiplier)
+          : 1);
+  double get armor {
+    final gearArmor = equipped.values.fold(0.0, (v, g) => v + g.armor);
+    if (heroClass != HeroClass.warrior) return gearArmor;
+    if (berserkActive) return 0;
+    final r = effectiveRank('ironSkin');
+    return gearArmor *
+        (r == 0 ? 1 : 1.25 + r * .05) *
+        _statMultiplier(activeArmorMultiplier) *
+        _statMultiplier(concentrateArmorMultiplier);
+  }
+
   static const playerDamageScale = .75 * CombatBalance.heroDamageScale;
   static const skillCooldownScale = .9;
   double get attackMultiplier =>
-      (1 +
-              rank('mastery') * CombatBalance.physicalMasteryGrowth +
-              rank('arcaneMastery') * CombatBalance.arcaneMasteryGrowth)
-          .clamp(1.0, CombatBalance.maximumMasteryMultiplier) *
+      (heroClass == HeroClass.warrior
+          ? weaponMasteryDamageMultiplier
+          : (1 + rank('arcaneMastery') * CombatBalance.arcaneMasteryGrowth)
+                .clamp(1.0, CombatBalance.maximumMasteryMultiplier)) *
       playerDamageScale;
   double get swordDamage =>
       (bonusAttack +
@@ -1657,10 +1580,29 @@ class Progress {
   }
 
   int skillTargetLimit(SkillDef skill, {int? atRank}) {
-    final r = (atRank ?? rank(skill.id)).clamp(0, SkillDef.maxRank);
+    final r = effectiveRank(skill.id, atRank: atRank);
     if (r == 0 || !skills.contains(skill)) return 0;
     if (skill.basic) return basicTargetLimitForRank(r, basic: skill);
+    if (heroClass == HeroClass.warrior && skill.rankLimit == 20) {
+      return switch (skill.id) {
+        'leap' || 'howl' || 'warcry' || 'battleCry' || 'grimWard' => 3 + r - 1,
+        'doubleThrow' => 2,
+        'bash' ||
+        'doubleSwing' ||
+        'stun' ||
+        'leapAttack' ||
+        'concentrate' ||
+        'frenzy' ||
+        'berserk' ||
+        'taunt' ||
+        'findPotion' ||
+        'findItem' => 1,
+        'whirlwind' => 3 + r - 1,
+        _ => 0,
+      };
+    }
     return switch (skill.id) {
+      'shadowAssault' => r,
       'whirlwind' || 'seismicSlam' => 2 + r + rank('stormOfSteel'),
       'chainLightning' => 2 + r + rank('forkedStorm'),
       'meteor' => 2 + r + rank('cinderReach'),
@@ -1676,6 +1618,7 @@ class Progress {
   double skillCooldown(SkillDef skill, {int? atRank}) {
     final r = atRank ?? rank(skill.id);
     if (skill.passive || r <= 0 || !skills.contains(skill)) return 0;
+    if (skill.rankLimit == 20) return skill.cooldown * skillCooldownScale;
     final specialty = switch (skill.id) {
       'whirlwind' || 'seismicSlam' => rank('stormOfSteel'),
       'meteor' => rank('cinderReach'),
@@ -1688,12 +1631,16 @@ class Progress {
         (1 - specialty * .005);
   }
 
-  double skillTempo(SkillDef skill, {int? atRank}) =>
-      SkillGrowth.tempo(atRank ?? rank(skill.id));
+  double skillTempo(SkillDef skill, {int? atRank}) => skill.rankLimit == 20
+      ? .75 *
+            (1 +
+                math.max(0, effectiveRank(skill.id, atRank: atRank) - 1) * .005)
+      : SkillGrowth.tempo(atRank ?? rank(skill.id));
   double skillMotionTime(SkillDef skill, {int? atRank}) {
     final base = heroClass == HeroClass.mage
         ? .48
         : switch (skill.id) {
+            'leap' || 'leapAttack' => .54,
             'charge' => .36,
             'crushingBlow' => .42,
             'whirlwind' => .5,
@@ -1708,8 +1655,13 @@ class Progress {
       skill.basicTempoScale;
   double get basicTempo => basicTempoFor(basicSkill);
   double get heavyChargeTime => 1.2 / SkillGrowth.tempo(rank('crushingBlow'));
-  double get frenzyAttackTempo => 1.10 + math.max(0, rank('frenzy') - 1) * .02;
-  double get frenzyMoveSpeed => 145 + math.max(0, rank('frenzy') - 1) * 1.25;
+  double shadowAssaultStrikeScale(int strike) => 1.1 + strike.clamp(1, 5) * .1;
+  double get frenzyAttackTempo =>
+      1 + frenzyStacks.clamp(0, 6) * (.02 + effectiveRank('frenzy') * .001);
+  double get frenzyMoveSpeed =>
+      CombatBalance.normalMoveSpeed *
+      increasedSpeedMultiplier *
+      (1 + frenzyStacks.clamp(0, 6) * (.025 + effectiveRank('frenzy') * .001));
   // Every temporary skill effect leaves at least ten percent of its actual
   // rank/perk-adjusted cooldown without that effect.
   static const skillEffectUptime = .9;
@@ -1723,10 +1675,7 @@ class Progress {
     );
   }
 
-  double get frenzyDuration => limitedSkillDuration(
-    'frenzy',
-    3.2 + math.max(0, rank('frenzy') - 1) * .15,
-  );
+  double get frenzyDuration => barbarianBuffDuration('frenzy');
   double get iceArmorDuration => limitedSkillDuration(
     'iceArmor',
     5 + math.max(0, rank('iceArmor') - 1) * .3,
@@ -1740,7 +1689,7 @@ class Progress {
 
   double get basicDamage => skillDamage(basicSkill);
   double skillDamage(SkillDef skill, {int? atRank}) {
-    final r = (atRank ?? rank(skill.id)).clamp(0, SkillDef.maxRank);
+    final r = effectiveRank(skill.id, atRank: atRank);
     if (!skills.contains(skill) ||
         (r == 0 && skill.id != 'cleave' && skill.id != 'firebolt')) {
       return 0;
@@ -1752,11 +1701,21 @@ class Progress {
       'heavyStrike' ||
       'iceShard' ||
       'sparkBolt' => (1 + math.max(0, r - 1) * .01) * skill.basicDamageScale,
-      'warcry' => 1.25 + math.max(0, r - 1) * .01,
+      'warcry' => 1.25 + math.max(0, r - 1) * .02,
+      'bash' => 1.5 + math.max(0, r - 1) * .04,
+      'doubleSwing' => .62 + math.max(0, r - 1) * .015,
+      'stun' => 1.0 + math.max(0, r - 1) * .02,
+      'doubleThrow' =>
+        (.65 + math.max(0, r - 1) * .02) *
+            throwingMasteryDamageMultiplier /
+            weaponMasteryDamageMultiplier,
+      'leapAttack' || 'berserk' => 2.0 + math.max(0, r - 1) * .05,
+      'concentrate' => 1.6 + math.max(0, r - 1) * .035,
       'whirlwind' => 1.34 + math.max(0, r - 1) * .015,
-      'frenzy' => 1.4 + math.max(0, r - 1) * .015,
+      'frenzy' => .8 + math.max(0, r - 1) * .02,
       'charge' => 1.65 + math.max(0, r - 1) * .015,
       'crushingBlow' => 2.6 + math.max(0, r - 1) * .025,
+      'shadowAssault' => 1.0,
       'seismicSlam' => 2.12 + math.max(0, r - 1) * .025,
       'frostNova' => 1.4 + math.max(0, r - 1) * .015,
       'chainLightning' => 1.85 + math.max(0, r - 1) * .025,
@@ -1784,7 +1743,10 @@ class Progress {
     };
     final bonus = (element * (fire ? fireDamageMultiplier : 1) * specialization)
         .clamp(1.0, CombatBalance.maximumSkillDamageMultiplier);
-    return swordDamage * factor * bonus * CombatBalance.skillDamageScale;
+    final source = skill.id == 'warcry'
+        ? swordDamage / weaponMasteryDamageMultiplier
+        : swordDamage;
+    return source * factor * bonus * CombatBalance.skillDamageScale;
   }
 
   double skillProtection(String id, {int? atRank}) {
@@ -1854,6 +1816,7 @@ class Progress {
     CombatBalance.realSeconds(
       actualBasicInterval(frenzyTempo: frenzyTempo, attackTempo: attackTempo),
     ),
+    criticalChance: heroClass == HeroClass.warrior ? weaponCriticalChance : 0,
   );
   double get basicDps => basicAttackStats().dps;
   BasicAttackStats? previewBasicAttack(
@@ -1872,7 +1835,14 @@ class Progress {
       ..level = level
       ..bonusAttack = bonusAttack
       ..bonusHealth = bonusHealth
-      ..selectedBasic = selectedBasic;
+      ..selectedBasic = selectedBasic
+      ..activeSkillBonus = activeSkillBonus
+      ..frenzyStacks = frenzyStacks
+      ..activeLifeMultiplier = activeLifeMultiplier
+      ..activeResourceMultiplier = activeResourceMultiplier
+      ..activeArmorMultiplier = activeArmorMultiplier
+      ..concentrateArmorMultiplier = concentrateArmorMultiplier
+      ..berserkActive = berserkActive;
     next.ranks
       ..clear()
       ..addAll(ranks);
@@ -1932,13 +1902,13 @@ class Progress {
       skill.requires.entries.every((entry) => rank(entry.key) >= entry.value);
   bool canLearn(SkillDef s) =>
       skills.contains(s) &&
-      level >= s.requiredLevel &&
+      level >= s.requiredLevelForRank(rank(s.id) + 1) &&
       skillPoints > 0 &&
-      rank(s.id) < SkillDef.maxRank &&
+      rank(s.id) < s.rankLimit &&
       (rank(s.id) > 0 || prerequisitesMet(s));
   int get investedSkillPoints {
     final basic = heroClass == HeroClass.warrior ? 'cleave' : 'firebolt';
-    final starter = heroClass == HeroClass.warrior ? 'warcry' : 'frostNova';
+    final starter = heroClass == HeroClass.warrior ? 'howl' : 'frostNova';
     return ranks.entries.fold(
       0,
       (sum, entry) =>
@@ -1959,7 +1929,7 @@ class Progress {
     _spentSkillResets++;
     skillPoints += refund;
     final basic = heroClass == HeroClass.warrior ? 'cleave' : 'firebolt';
-    final starter = heroClass == HeroClass.warrior ? 'warcry' : 'frostNova';
+    final starter = heroClass == HeroClass.warrior ? 'howl' : 'frostNova';
     selectedBasic = basic;
     ranks
       ..clear()

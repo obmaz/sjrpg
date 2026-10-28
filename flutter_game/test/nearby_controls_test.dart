@@ -93,7 +93,7 @@ void main() {
                 as Guardian;
         final session = hero.session;
         session.progress.gainXp(8000);
-        const skills = ['whirlwind', 'frenzy', 'warcry', 'seismicSlam'];
+        const skills = ['whirlwind', 'frenzy', 'warcry', 'bash'];
         session.progress.ranks.addAll({for (final id in skills) id: 1});
         for (var slot = 0; slot < skills.length; slot++) {
           expect(session.progress.selectSkill(skills[slot], slot: slot), true);

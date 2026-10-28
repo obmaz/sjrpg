@@ -48,7 +48,7 @@ void main() {
     addTearDown(s.dispose);
     s.waveTime = 10000;
     s.progress
-      ..level = 20
+      ..level = 100
       ..skillPoints = 100
       ..energy = 100;
     for (var y = 4000.0; y < 8000; y += 80) {
@@ -82,7 +82,7 @@ void main() {
     recorder.endRecording().dispose();
   }
 
-  for (final id in ['warcry', 'frenzy']) {
+  for (final id in ['shout', 'battleOrders']) {
     test(
       '$id gesture advances through every action frame before basic attack',
       () {
@@ -115,14 +115,14 @@ void main() {
     );
   }
 
-  test('actual charge ends without rewinding into a middle attack pose', () {
+  test('actual leap ends without rewinding into a middle attack pose', () {
     final art = TimelineArt(), s = field(art);
-    learn(s, 'charge');
-    expect(s.progress.selectSkill('charge'), true);
+    learn(s, 'leap');
+    expect(s.progress.selectSkill('leap'), true);
     s.hero.bearing = 0;
     s.hero.skill();
     var previous = -1.0, frames = 0;
-    while (s.hero.chargeTime > 0 && frames++ < 100) {
+    while (s.hero.barbarianCombat.airborne && frames++ < 100) {
       render(s.hero.render);
       final pose = art.heroPose!;
       expect(pose.attacking, true);

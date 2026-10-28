@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -46,7 +47,21 @@ class CrowdFixture extends Adventure {
 CrowdFixture sandsCrowd() {
   final s = CrowdFixture(stage: WorldStage.sands)..start(TestGame());
   expect(s.mobs, isEmpty);
-  s.hero.position.setValues(5716.6240234375, 6772.603515625);
+  final ward = s.world.sanctuary;
+  final angle = (_historicalData['wardAngle'] as num).toDouble();
+  final at =
+      ward.center +
+      Offset(math.cos(angle), math.sin(angle)) * (ward.radius + 12);
+  s.hero.position.setValues(at.dx, at.dy);
+  final expectedHero = _historicalData['hero'] as Map;
+  expect(
+    s.hero.position.toOffset(),
+    Offset(
+      (expectedHero['x'] as num).toDouble(),
+      (expectedHero['y'] as num).toDouble(),
+    ),
+    reason: 'current ward and frozen dense crowd must use the same origin',
+  );
   s.hero.lastClearPosition = s.hero.position.toOffset();
   s.progress.bonusHealth = 2000; // Keep the stationary diagnostic hero alive.
   s.progress.hp = s.progress.maxHp;
@@ -71,16 +86,14 @@ void assertCrowdBodies(Adventure s) {
   }
 }
 
-// Keep the original dense geometry independent of future production pack sizes.
-// This is a frozen stress fixture, not a second implementation of spawning.
-final _historicalBirths =
-    (jsonDecode(
-              File(
-                'test/fixtures/crowd_mobile70_births.json',
-              ).readAsStringSync(),
-            )
-            as Map<String, dynamic>)['births']
-        as List;
+// Keep historical birth timing and kinds independent of future pack sizes.
+// Positions were captured through spawnEnemy beside the complete settlement ward.
+final _historicalData =
+    jsonDecode(
+          File('test/fixtures/crowd_mobile70_births.json').readAsStringSync(),
+        )
+        as Map<String, dynamic>;
+final _historicalBirths = _historicalData['births'] as List;
 
 void stepCrowd(CrowdFixture s, double dt) {
   if (dt > 0) s.observed.frame++;

@@ -163,6 +163,10 @@ void main() {
   );
   test('NPC guidance never hides a closer shop, chest or dismount control', () {
     final s = session();
+    s.hero.position.setValues(
+      s.world.merchantAt.dx - 14,
+      s.world.merchantAt.dy - 12,
+    );
     expect(s.nearbyAction, NearbyAction.shop);
     expect(s.nearbyQuestGuide, null);
     s.hero.position.setValues(s.world.elderAt.dx + 50, s.world.elderAt.dy + 20);
@@ -180,7 +184,8 @@ void main() {
       stand(q.site);
       expect(s.nearbyQuestGuide!.title, contains('의뢰 필요'));
       final giver = timeQuestGivers.first;
-      s.hero.position.setValues(giver.at.dx - 14, giver.at.dy - 12);
+      final giverAt = s.world.questGiverAt(giver.path);
+      s.hero.position.setValues(giverAt.dx - 14, giverAt.dy - 12);
       expect(s.acceptCommission(q), true);
       stand(q.site);
       expect(s.nearbyQuestGuide!.message, contains('24마리'));

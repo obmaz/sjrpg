@@ -4,11 +4,15 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/combat_balance.dart';
 import 'package:guardian_new/game_art.dart';
+import 'package:guardian_new/game_panels.dart';
 import 'package:guardian_new/game_ui.dart';
 import 'package:guardian_new/panel_controls.dart';
 import 'package:guardian_new/rpg_widgets.dart';
+
+import 'support/test_game.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -18,7 +22,7 @@ void main() {
       final art = GameArt();
       addTearDown(art.dispose);
       final frames = <String>{};
-      for (var index = 0; index < 18; index++) {
+      for (var index = 0; index < 19; index++) {
         final recorder = ui.PictureRecorder(), canvas = ui.Canvas(recorder);
         canvas.translate(16, 16);
         MobileActionGlyphPainter(art, index).paint(canvas, const Size(64, 64));
@@ -52,7 +56,7 @@ void main() {
           reason: 'glyph $index cannot disappear when art is unavailable',
         );
       }
-      expect(frames, hasLength(18));
+      expect(frames, hasLength(19));
     },
   );
 
@@ -195,7 +199,7 @@ void main() {
   );
 
   testWidgets(
-    'the same flat panel surrounds common actions without loading ornate button images',
+    'restrained framed panels preserve actions without ornate full-width image fills',
     (tester) async {
       final art = GameArt();
       addTearDown(art.dispose);
@@ -227,8 +231,42 @@ void main() {
         expect(tester.takeException(), isNull);
       }
       expect(gameButtonDecoration(primary: true).image, isNull);
-      expect(gameButtonDecoration(primary: true).gradient, isNull);
+      expect(gameButtonDecoration(primary: true).gradient, isNotNull);
       expect(gameButtonDecoration(primary: true).border, isNotNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+  testWidgets(
+    'settings keeps device and save controls without gameplay instructions',
+    (tester) async {
+      final s = Adventure(GameArt())..start(TestGame());
+      addTearDown(s.dispose);
+      s.pause();
+      for (final failed in [false, true]) {
+        s.saveFailed = failed;
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: AdventurePanel(
+                key: ValueKey(failed),
+                session: s,
+                name: 'settings',
+                onClose: () {},
+                onRestart: () {},
+              ),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 100));
+        for (final label in ['모바일 조작', '키보드 조작', '장비와 스킬']) {
+          expect(find.text(label), findsNothing);
+        }
+        expect(find.text('전체화면 켜기'), findsOneWidget);
+        expect(find.text('타격 진동'), findsOneWidget);
+        expect(find.text('앱 설치'), findsOneWidget);
+        expect(find.text('자동 저장 실패'), failed ? findsOneWidget : findsNothing);
+        expect(tester.takeException(), isNull);
+      }
       await tester.pumpWidget(const SizedBox());
     },
   );

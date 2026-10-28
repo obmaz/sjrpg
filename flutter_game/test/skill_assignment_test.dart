@@ -28,7 +28,7 @@ void main() {
 
         p.gainXp(4000);
         p.skillPoints = 10;
-        final extraId = hero == HeroClass.warrior ? 'whirlwind' : 'iceArmor';
+        final extraId = hero == HeroClass.warrior ? 'bash' : 'iceArmor';
         expect(p.learn(p.skills.firstWhere((s) => s.id == extraId)), true);
         expect(p.skillAt(1)?.id, extraId);
         expect(p.canSelectSkill(primary, slot: 1), true);

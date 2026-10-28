@@ -59,7 +59,7 @@ void main() {
       expect(saved.gifts, item.gifts);
       expect(saved.withWeaponLevel(9).gifts, item.gifts);
       expect(saved.base.comboProfile!.endless, true);
-      expect(saved.stats, contains('무한 콤보'));
+      expect(saved.stats, contains('분신 연격 3연계'));
       expect(gearById('longsword').comboProfile!.chainLabel, '6연격');
     },
   );

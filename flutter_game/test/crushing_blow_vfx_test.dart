@@ -6,6 +6,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/barbarian_combat.dart';
+import 'package:guardian_new/barbarian_vfx.dart';
 import 'package:guardian_new/crushing_blow_vfx.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/stage_content.dart';
@@ -121,59 +123,43 @@ void main() {
     });
     s.hero.position.setValues(6000, 4200);
     s.hero.bearing = 0;
-    s.progress.gainXp(8000);
-    s.progress.ranks['crushingBlow'] = 1;
-    s.progress.selectSkill('crushingBlow');
+    while (s.progress.level < 30) {
+      s.progress.gainXp(s.progress.nextLevelXp);
+    }
+    s.progress.ranks['berserk'] = 1;
+    expect(s.progress.selectSkill('berserk'), isTrue);
     s.progress.energy = s.progress.maxEnergy;
     return s;
   }
 
-  test('physical strike captures real charge and only draws after impact', () {
-    for (final fraction in [0.0, .5, 1.0]) {
+  test(
+    'berserk emits one physical blade visual at its committed magic hit',
+    () {
       final s = session();
-      s.hero.beginAim(0);
-      final holdDuration = fraction * s.progress.heavyChargeTime;
-      var held = 0.0;
-      while (held < holdDuration) {
-        final dt = math.min(.05, holdDuration - held);
-        s.hero.update(dt);
-        held += dt;
-      }
-      s.hero.finishAim(false);
-      final charge = (held / s.progress.heavyChargeTime).clamp(0.0, 1.0);
-      expect(s.hero.heavyCharge, closeTo(charge, .000001));
+      final victim = s.spawnEnemy('goblin', const ui.Offset(6050, 4200))!
+        ..life.initial(1000);
+      final damage = s.progress.skillDamage(s.progress.activeSkill);
+      expect(damage, greaterThan(0));
+      s.hero.skill();
+      expect(victim.life.value, closeTo(1000 - damage, .000001));
+      expect(s.progress.berserkActive, isTrue);
+      expect(s.progress.armor, 0);
       final game = s.game! as TestGame;
-      expect(game.added.whereType<CrushingBlowVisual>(), isEmpty);
-      final windup = s.hero.heavyWindup;
-      expect(windup, greaterThan(0));
-      for (var i = 0; i < math.max(0, (windup / .05).ceil() - 1); i++) {
-        s.hero.update(.05);
-      }
-      expect(s.hero.heavyWindup, greaterThan(0));
-      expect(game.added.whereType<CrushingBlowVisual>(), isEmpty);
-      final remaining = s.hero.heavyWindup;
-      for (
-        var i = 0;
-        i < (remaining / .05).ceil() + 1 && s.hero.heavyWindup > 0;
-        i++
-      ) {
-        s.hero.update(.05);
-      }
-      expect(s.hero.heavyWindup, 0);
-      final v = game.added.whereType<CrushingBlowVisual>().single;
-      expect(v.charge, closeTo(charge, .000001));
-      expect(v.bearing, 0);
-      expect(ui.Offset(v.position.x, v.position.y), s.hero.body.center);
-      expect(v.priority, 29, reason: 'ground impact stays below the actor');
-      expect(v.rank, 1);
-      s.hero.update(.05);
+      final visual = game.added.whereType<BarbarianCombatVisual>().single;
+      expect(visual.art.kind, BarbarianVfxKind.berserk);
+      expect(visual.bearing, s.hero.attackBearing);
       expect(
-        game.added.whereType<CrushingBlowVisual>().length,
-        1,
-        reason: 'the committed strike emits exactly one impact visual',
+        ui.Offset(visual.position.x, visual.position.y),
+        s.hero.body.center,
       );
-    }
-  });
+      expect(visual.priority, lessThan(s.hero.priority));
+      expect(visual.rank, 1);
+      visual.update(.05);
+      s.hero.update(.05);
+      expect(victim.life.value, closeTo(1000 - damage, .000001));
+      expect(game.added.whereType<BarbarianCombatVisual>(), hasLength(1));
+    },
+  );
 
   test(
     'visual pauses, expires with tempo and cancels on reset or teardown',
@@ -212,33 +198,47 @@ void main() {
     },
   );
 
-  test('windup anticipates contact but cannot survive impact or reset', () {
-    final s = session();
-    s.hero.skill();
-    final windup = (s.game! as TestGame).added
-        .whereType<CrushingBlowWindup>()
-        .single;
-    final time = s.hero.heavyWindup;
-    s.pause();
-    windup.update(.05);
-    expect(windup.finished, false);
-    expect(s.hero.heavyWindup, time);
-    s.resume();
-    s.hero.heavyWindup = 0;
-    windup.update(.05);
-    expect(windup.finished, true);
-    s.hero.cooldowns.clear();
-    s.hero.attackClock = 0;
-    s.hero.skill();
-    final reset = (s.game! as TestGame).added
-        .whereType<CrushingBlowWindup>()
-        .last;
-
-    s.progress.awardSkillResetTicket(WorldStage.forest);
-    expect(s.resetSkills(), true);
-    reset.update(.05);
-    expect(reset.finished, true);
-  });
+  test(
+    'leap attack waits for grounded contact and reset cancels its pending hit',
+    () {
+      final s = session();
+      s.mobs.clear();
+      s.progress.ranks['leapAttack'] = 1;
+      expect(s.progress.selectSkill('leapAttack'), isTrue);
+      final victim = s.spawnEnemy('goblin', const ui.Offset(6130, 4200))!
+        ..life.initial(1000);
+      final damage = s.progress.skillDamage(s.progress.activeSkill);
+      final game = s.game! as TestGame;
+      s.hero.skill();
+      expect(s.hero.barbarianCombat.airborne, isTrue);
+      expect(victim.life.value, 1000);
+      expect(game.added.whereType<BarbarianCombatVisual>(), isEmpty);
+      s.pause();
+      s.hero.update(.05);
+      expect(s.hero.barbarianCombat.airborneHeight, 0);
+      expect(victim.life.value, 1000);
+      s.resume();
+      for (var i = 0; i < 30 && s.hero.barbarianCombat.airborne; i++) {
+        s.hero.update(.05);
+      }
+      expect(s.hero.barbarianCombat.airborne, isFalse);
+      expect(victim.life.value, closeTo(1000 - damage, .000001));
+      expect(game.added.whereType<BarbarianCombatVisual>(), hasLength(1));
+      s.hero.cooldowns.clear();
+      s.hero.castLock = 0;
+      s.hero.attackClock = 0;
+      s.progress.energy = s.progress.maxEnergy;
+      s.hero.bearing = 0;
+      s.hero.skill();
+      expect(s.hero.barbarianCombat.airborne, isTrue);
+      s.progress.awardSkillResetTicket(WorldStage.forest);
+      expect(s.resetSkills(), isTrue);
+      expect(s.hero.barbarianCombat.airborne, isFalse);
+      s.hero.update(.05);
+      expect(victim.life.value, closeTo(1000 - damage, .000001));
+      expect(game.added.whereType<BarbarianCombatVisual>(), hasLength(1));
+    },
+  );
 
   test(
     'all painted cells have fully transparent padding before their neighbors',

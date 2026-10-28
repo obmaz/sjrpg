@@ -16,7 +16,9 @@ void main() {
       s.pause();
       addTearDown(s.dispose);
       s.progress.gainXp(4000);
-      s.progress.learn(s.progress.skills.firstWhere((d) => d.id == 'mastery'));
+      s.progress.learn(
+        s.progress.skills.firstWhere((d) => d.id == 'swordMastery'),
+      );
       var closed = 0, fallback = 0;
       actions.register(() => fallback++);
       await tester.pumpWidget(

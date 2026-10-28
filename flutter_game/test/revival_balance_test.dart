@@ -89,24 +89,66 @@ void main() {
     }
   });
   test(
-    'each invested point increases every learned area target cap by one',
+    'each point adds a victim to area skills while original precision attacks keep fixed caps',
     () {
-      for (final heroClass in HeroClass.values) {
+      for (final (heroClass, ids) in [
+        (
+          HeroClass.warrior,
+          [
+            'cleave',
+            'leap',
+            'howl',
+            'warcry',
+            'battleCry',
+            'grimWard',
+            'whirlwind',
+            'shadowAssault',
+          ],
+        ),
+        (
+          HeroClass.mage,
+          ['firebolt', 'sparkBolt', 'frostNova', 'meteor', 'chainLightning'],
+        ),
+      ]) {
         final p = Progress(heroClass: heroClass);
-        for (final skill in p.skills.where((skill) => !skill.passive)) {
+        for (final id in ids) {
+          final skill = p.skills.firstWhere((skill) => skill.id == id);
           var old = p.skillTargetLimit(skill, atRank: 1);
-          if (old == 0 ||
-              skill.id == 'quickCut' ||
-              skill.id == 'heavyStrike' ||
-              skill.id == 'iceShard') {
-            continue;
-          }
-          for (var rank = 2; rank <= 5; rank++) {
+          expect(old, greaterThan(0), reason: id);
+          for (var rank = 2; rank <= skill.rankLimit; rank++) {
             final next = p.skillTargetLimit(skill, atRank: rank);
-            expect(next, old + 1, reason: '${skill.id} rank$rank');
+            expect(next, old + 1, reason: '$id rank$rank');
             old = next;
           }
         }
+      }
+      final p = Progress();
+      for (final id in [
+        'bash',
+        'doubleSwing',
+        'stun',
+        'leapAttack',
+        'concentrate',
+        'frenzy',
+        'berserk',
+        'taunt',
+        'findPotion',
+        'findItem',
+      ]) {
+        final skill = p.skills.firstWhere((skill) => skill.id == id);
+        for (var rank = 1; rank <= skill.rankLimit; rank++) {
+          expect(
+            p.skillTargetLimit(skill, atRank: rank),
+            1,
+            reason: '$id rank$rank',
+          );
+        }
+      }
+      final doubleThrow = p.skills.firstWhere(
+        (skill) => skill.id == 'doubleThrow',
+      );
+      for (var rank = 1; rank <= doubleThrow.rankLimit; rank++) {
+        expect(p.skillTargetLimit(doubleThrow, atRank: rank), 2);
       }
     },
   );

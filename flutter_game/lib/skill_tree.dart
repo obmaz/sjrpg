@@ -8,7 +8,7 @@ import 'rpg_model.dart';
 import 'rpg_widgets.dart';
 import 'skill_tree_layout.dart';
 
-class SkillTree extends StatelessWidget {
+class SkillTree extends StatefulWidget {
   const SkillTree({
     required this.session,
     required this.controller,
@@ -21,11 +21,25 @@ class SkillTree extends StatelessWidget {
   final SkillDef? focused;
   final ValueChanged<SkillDef> onFocus;
   @override
+  State<SkillTree> createState() => _SkillTreeState();
+}
+
+class _SkillTreeState extends State<SkillTree> {
+  final _horizontal = ScrollController();
+  Adventure get session => widget.session;
+  ScrollController get controller => widget.controller;
+  SkillDef? get focused => widget.focused;
+  ValueChanged<SkillDef> get onFocus => widget.onFocus;
+  @override
+  void dispose() {
+    _horizontal.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final p = session.progress,
-        skills = p.skills
-            .where((s) => !s.basic || s.id == p.defaultBasicId)
-            .toList();
+        skills = p.skills.where((s) => skillTreeSkillVisible(p, s)).toList();
     return LayoutBuilder(
       builder: (context, box) {
         final dense = box.maxHeight < 110,
@@ -53,6 +67,9 @@ class SkillTree extends StatelessWidget {
           );
         }
 
+        if (p.heroClass == HeroClass.warrior) {
+          return _warriorCanvas(box, layout, skills, dense, select);
+        }
         return ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: Column(
@@ -139,6 +156,172 @@ class SkillTree extends StatelessWidget {
     );
   }
 
+  Widget _warriorCanvas(
+    BoxConstraints box,
+    SkillTreeLayout layout,
+    List<SkillDef> skills,
+    bool dense,
+    ValueChanged<SkillDef> select,
+  ) {
+    final width = layout.contentWidth, p = session.progress;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Scrollbar(
+        controller: controller,
+        thumbVisibility: true,
+        thickness: 3,
+        notificationPredicate: (notification) =>
+            notification.metrics.axis == Axis.vertical,
+        child: Scrollbar(
+          controller: _horizontal,
+          thumbVisibility: width > box.maxWidth,
+          scrollbarOrientation: ScrollbarOrientation.bottom,
+          notificationPredicate: (notification) =>
+              notification.metrics.axis == Axis.horizontal,
+          child: SingleChildScrollView(
+            key: const ValueKey('skill-tree-horizontal'),
+            controller: _horizontal,
+            scrollDirection: Axis.horizontal,
+            physics: const ClampingScrollPhysics(),
+            child: SizedBox(
+              width: width,
+              height: box.maxHeight,
+              child: Column(
+                children: [
+                  if (!dense)
+                    SizedBox(
+                      key: const ValueKey('skill-school-header'),
+                      height: 34,
+                      child: Row(
+                        children: [
+                          for (final (index, branch)
+                              in warriorSchoolLabels.indexed)
+                            SizedBox(
+                              width: width / 3,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: mobileRaisedSurface,
+                                  border: Border(
+                                    right: BorderSide(
+                                      color: index < 2
+                                          ? mobileBorder
+                                          : Colors.transparent,
+                                    ),
+                                    bottom: const BorderSide(
+                                      color: mobileBorder,
+                                    ),
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    branch,
+                                    style: const TextStyle(
+                                      color: mobileText,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      key: const ValueKey('skill-tree-vertical'),
+                      controller: controller,
+                      physics: const ClampingScrollPhysics(),
+                      child: SizedBox(
+                        width: width,
+                        height: layout.height,
+                        child: Stack(
+                          children: [
+                            const Positioned.fill(
+                              child: ColoredBox(color: Color(0xff111e26)),
+                            ),
+                            for (var school = 1; school < 3; school++)
+                              Positioned(
+                                left: school * width / 3,
+                                top: 0,
+                                height: layout.bonusTop,
+                                width: 1,
+                                child: const ColoredBox(color: mobileBorder),
+                              ),
+                            for (
+                              var tier = 0;
+                              tier < warriorSkillTiers.length;
+                              tier++
+                            )
+                              for (var school = 0; school < 3; school++)
+                                Positioned(
+                                  left: school * width / 3 + 12,
+                                  top:
+                                      (dense ? 0 : 7) +
+                                      tier *
+                                          (layout.nodeHeight + layout.rowGap),
+                                  child: Text(
+                                    'Lv. ${warriorSkillTiers[tier]}',
+                                    style: const TextStyle(
+                                      color: Color(0xff9cafaf),
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ),
+                            Positioned.fill(
+                              child: CustomPaint(
+                                painter: _WarriorConnections(p, skills, layout),
+                              ),
+                            ),
+                            if (layout.bonusTop != null)
+                              Positioned(
+                                left: 12,
+                                right: 12,
+                                top: layout.bonusTop!,
+                                height: 30,
+                                child: const DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      top: BorderSide(color: mobileBorder),
+                                    ),
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.only(top: 9),
+                                    child: Text(
+                                      '추가 전투 기술',
+                                      style: TextStyle(
+                                        color: Color(0xff9cafaf),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            for (final skill in skills)
+                              Positioned.fromRect(
+                                rect: layout.rects[skill.id]!,
+                                child: _node(
+                                  skill,
+                                  layout.rects[skill.id]!.width,
+                                  dense,
+                                  () => select(skill),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (width > box.maxWidth) const SizedBox(height: 7),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _node(SkillDef skill, double width, bool dense, VoidCallback onTap) {
     final p = session.progress,
         rank = p.rank(skill.id),
@@ -148,7 +331,14 @@ class SkillTree extends StatelessWidget {
         (p.level < skill.requiredLevel || !p.prerequisitesMet(skill));
     final canLearn = p.canLearn(skill),
         color = skillColor(skill),
-        core = math.min(dense ? 36.0 : 52.0, width - 4);
+        core = math.min(
+          dense
+              ? 36.0
+              : p.heroClass == HeroClass.warrior
+              ? 60.0
+              : 52.0,
+          width - 4,
+        );
     return Semantics(
       container: true,
       button: true,
@@ -434,4 +624,54 @@ class _Connections extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _Connections oldDelegate) => true;
+}
+
+class _WarriorConnections extends CustomPainter {
+  _WarriorConnections(this.progress, this.skills, this.layout);
+  final Progress progress;
+  final List<SkillDef> skills;
+  final SkillTreeLayout layout;
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final child in skills) {
+      // Extra abilities are separate from the original thirty-node schools.
+      if (!warriorTreeIds.contains(child.id)) continue;
+      for (final parent in child.requires.entries) {
+        if (!layout.rects.containsKey(parent.key)) continue;
+        final points = skillTreeConnectionPoints(layout, parent.key, child.id);
+        final ready = progress.rank(parent.key) >= parent.value;
+        final color = ready ? const Color(0xffbbccb4) : const Color(0xff64716f);
+        final path = Path()..moveTo(points.first.dx, points.first.dy);
+        for (final point in points.skip(1)) {
+          path.lineTo(point.dx, point.dy);
+        }
+        canvas.drawPath(
+          path,
+          Paint()
+            ..color = const Color(0xcc08100f)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 4,
+        );
+        canvas.drawPath(
+          path,
+          Paint()
+            ..color = color
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = ready ? 2 : 1.5,
+        );
+        final end = points.last;
+        canvas.drawPath(
+          Path()
+            ..moveTo(end.dx - 4, end.dy - 5)
+            ..lineTo(end.dx, end.dy + 3)
+            ..lineTo(end.dx + 4, end.dy - 5)
+            ..close(),
+          Paint()..color = color,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _WarriorConnections oldDelegate) => true;
 }

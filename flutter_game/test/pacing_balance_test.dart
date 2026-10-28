@@ -15,15 +15,23 @@ void main() {
     for (final hero in HeroClass.values) {
       final p = Progress(heroClass: hero)..gainXp(100000);
       for (final skill in p.skills.where((s) => !s.passive)) {
-        for (var rank = 1; rank <= 5; rank++) {
+        for (var rank = 1; rank <= skill.rankLimit; rank++) {
           p.ranks[skill.id] = rank;
           expect(
             p.skillCooldown(skill),
-            closeTo(skill.cooldown * .9 * (1 - (rank - 1) * .02), .000001),
+            closeTo(
+              skill.cooldown *
+                  .9 *
+                  (skill.rankLimit == 20 ? 1 : (1 - (rank - 1) * .02)),
+              .000001,
+            ),
           );
           expect(
             p.skillTempo(skill),
-            closeTo(.75 * (1 + (rank - 1) * .035), .000001),
+            closeTo(
+              .75 * (1 + (rank - 1) * (skill.rankLimit == 20 ? .005 : .035)),
+              .000001,
+            ),
           );
         }
       }

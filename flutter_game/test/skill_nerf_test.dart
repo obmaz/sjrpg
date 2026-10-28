@@ -26,7 +26,7 @@ void main() {
     return p;
   }
 
-  for (final hero in HeroClass.values) {
+  for (final hero in const [HeroClass.mage]) {
     test(
       '$hero every basic and damaging skill is materially weaker at1/3/5',
       () {
@@ -34,7 +34,8 @@ void main() {
           final p = ranked(hero, rank);
           final old = (baseline[hero.name] as Map)['$rank'] as Map;
           for (final s in p.skills.where(
-            (s) => s.basic || !s.passive && !s.mobility,
+            (s) =>
+                (s.basic || !s.passive && !s.mobility) && old.containsKey(s.id),
           )) {
             final previous = old[s.id] as Map;
             final oldDamage = (previous['damage'] as num).toDouble();
@@ -81,7 +82,9 @@ void main() {
             for (var rank = 1; rank <= 5; rank++)
               p.skillTargetLimit(s, atRank: rank),
           ];
-          if (s.id == 'iceArmor') {
+          if (s.id == 'shadowAssault') {
+            expect(caps, [1, 2, 3, 4, 5]);
+          } else if (s.id == 'iceArmor') {
             expect(caps, [0, 0, 0, 0, 0]);
           } else if (['quickCut', 'heavyStrike', 'iceShard'].contains(s.id)) {
             expect(caps, [1, 1, 1, 1, 1]);
@@ -135,27 +138,62 @@ void main() {
   }
 
   test(
-    'rank5 frenzy plus all haste cannot multiply attack rate without bound',
+    'D2 ranks preserve the shared damage scale and bounded weapon haste',
     () {
-      final p = ranked(HeroClass.warrior, 5, stacked: true);
+      final p = Progress()..level = 100;
+      for (final skill in p.skills) {
+        p.ranks[skill.id] = skill.rankLimit;
+      }
+      final bash = p.skills.firstWhere((s) => s.id == 'bash');
+      expect(
+        p.skillDamage(bash, atRank: 1),
+        closeTo(p.swordDamage * 1.5 * CombatBalance.skillDamageScale, .000001),
+      );
+      expect(
+        p.skillDamage(bash, atRank: 20),
+        closeTo(p.swordDamage * 2.26 * CombatBalance.skillDamageScale, .000001),
+      );
       p.equipped[GearSlot.charm] = Gear(
         999,
         const GearDef('haste-stress', '가속', GearSlot.charm, haste: .9),
       );
+      p.frenzyStacks = 6;
       expect(p.attackHaste, .15);
-      expect(p.frenzyAttackTempo, closeTo(1.18, .000001));
-      final baselineInterval =
-          p.weapon.base.tempo / CombatBalance.basicAttackRate;
-      final buffedInterval = p.attackInterval / p.frenzyAttackTempo;
-      expect(baselineInterval / buffedInterval, lessThan(1.5));
-      expect(p.frenzyMoveSpeed, 150);
-      expect(p.frenzyMoveSpeed, lessThan(CombatBalance.sprintMoveSpeed));
+      expect(p.frenzyAttackTempo, closeTo(1.24, .000001));
+      expect(p.weaponCriticalChance, lessThanOrEqualTo(.15));
+      expect(
+        p.actualBasicInterval(frenzyTempo: p.frenzyAttackTempo),
+        greaterThan(0),
+      );
+      final whirlwind = p.skills.firstWhere((s) => s.id == 'whirlwind');
+      expect(
+        [
+          for (var r = 1; r <= 20; r++)
+            p.skillTargetLimit(whirlwind, atRank: r),
+        ],
+        [for (var r = 1; r <= 20; r++) r + 2],
+      );
+      final damage = p.skillDamage(whirlwind);
+      expect(
+        damage * enemyGroupDamageScale(22),
+        lessThan(damage * enemyGroupDamageScale(3)),
+      );
+      for (final id in ['bash', 'stun', 'concentrate', 'berserk']) {
+        expect(p.skillTargetLimit(p.skills.firstWhere((s) => s.id == id)), 1);
+      }
+      expect(
+        p.skillTargetLimit(p.skills.firstWhere((s) => s.id == 'doubleThrow')),
+        2,
+      );
+      expect(
+        p.skillTargetLimit(p.skills.firstWhere((s) => s.id == 'shadowAssault')),
+        5,
+      );
     },
   );
 
   test('each target perk rank adds one victim and damage still divides', () {
     for (final (hero, id, affected) in [
-      (HeroClass.warrior, 'stormOfSteel', 'whirlwind'),
       (HeroClass.mage, 'cinderReach', 'meteor'),
       (HeroClass.mage, 'forkedStorm', 'chainLightning'),
     ]) {
@@ -178,7 +216,7 @@ void main() {
   test(
     'saved ranks survive the nerf and previews use the same new derived values',
     () {
-      for (final hero in HeroClass.values) {
+      for (final hero in const [HeroClass.mage]) {
         final p = ranked(hero, 5, stacked: true)..energy = 999;
         final ranks = Map<String, int>.of(p.ranks),
             gear = p.inventory.map((g) => g.toSave()).toList();

@@ -32,6 +32,16 @@ void main() {
     return s;
   }
 
+  void train(Progress p, String id, [int rank = 1]) {
+    final skill = p.skills.firstWhere((skill) => skill.id == id);
+    for (final need in skill.requires.entries) {
+      train(p, need.key, need.value);
+    }
+    while (p.rank(id) < rank) {
+      expect(p.learn(skill), true, reason: '$id rank$rank');
+    }
+  }
+
   test(
     'raw weapon attack, mastery-adjusted attack, hit and base DPS are distinct and exact',
     () {
@@ -49,14 +59,20 @@ void main() {
   );
 
   test(
-    'real attack cooldowns match reported single-hit DPS for every basic mode and tempo state',
+    'real attack cooldowns and expected critical DPS match every basic mode and tempo state',
     () {
       for (final hero in HeroClass.values) {
         final s = field(hero), p = s.progress;
-        p.level = 30;
-        p.ranks.addAll({'battleFocus': 5, 'weaponTempo': 5, 'frenzy': 5});
+        p.level = 100;
+        p.skillPoints = 1000;
+        if (hero == HeroClass.warrior) {
+          train(p, 'swordMastery', 5);
+          train(p, 'frenzy', 5);
+        } else {
+          train(p, 'arcaneMastery', 5);
+        }
         for (final basic in p.skills.where((skill) => skill.basic)) {
-          p.ranks[basic.id] = 5;
+          train(p, basic.id, 5);
           expect(p.selectBasic(basic.id), true);
           for (final state in ['normal', 'frenzy', 'slow', 'both']) {
             final frenzy =
@@ -70,6 +86,7 @@ void main() {
               ..attackClock = 0
               ..castLock = 0
               ..frenzyTime = frenzy ? 10 : 0;
+            p.frenzyStacks = frenzy ? 6 : 0;
             final tempo = frenzy ? p.frenzyAttackTempo : 1.0;
             final stats = p.basicAttackStats(
               frenzyTempo: tempo,
@@ -85,9 +102,20 @@ void main() {
             );
             expect(s.hero.attackClock, closeTo(expected, 1e-9));
             expect(s.hero.castLock, lessThanOrEqualTo(expected));
+            final criticalChance = hero == HeroClass.warrior
+                ? p.weaponCriticalChance
+                : 0.0;
+            expect(stats.damage, p.basicDamage);
+            expect(stats.criticalChance, criticalChance);
             expect(
               stats.dps,
-              closeTo(p.basicDamage / expected * CombatBalance.gameSpeed, 1e-9),
+              closeTo(
+                p.basicDamage *
+                    (1 + criticalChance) /
+                    expected *
+                    CombatBalance.gameSpeed,
+                1e-9,
+              ),
             );
           }
         }
@@ -98,14 +126,15 @@ void main() {
   test(
     'candidate DPS includes buffs, selected basic and all other gear without mutating progress',
     () {
-      final p = Progress()..level = 10;
-      p.ranks.addAll({
-        'cleave': 3,
-        'mastery': 2,
-        'heavyStrike': 3,
-        'battleFocus': 4,
-      });
-      expect(p.selectBasic('heavyStrike'), true);
+      final p = Progress()
+        ..level = 100
+        ..skillPoints = 1000;
+      train(p, 'cleave', 3);
+      train(p, 'bash');
+      train(p, 'swordMastery', 2);
+      train(p, 'spearMastery', 4);
+      expect(p.selectBasic('cleave'), true);
+      expect(p.selectSkill('bash'), true);
       final candidate = p.createGear(
         gearById('spear'),
         rarity: Rarity.magic,
@@ -240,7 +269,10 @@ void main() {
   ) async {
     final s = field(HeroClass.warrior), p = s.progress;
     s.pause();
-    p.ranks['frenzy'] = 5;
+    p.level = 100;
+    p.skillPoints = 1000;
+    train(p, 'frenzy', 5);
+    p.frenzyStacks = 6;
     s.hero.frenzyTime = 10;
     s.afflictions.apply(PlayerStatus.attackSlow);
     final semantics = tester.ensureSemantics();

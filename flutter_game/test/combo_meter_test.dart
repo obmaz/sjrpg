@@ -54,7 +54,7 @@ void main() {
         windowEnd: .8,
       );
       await tester.pump();
-      expect(find.text('2 / 4 COMBO'), findsOneWidget);
+      expect(find.text('분신 연격 2 / 4'), findsOneWidget);
       await tester.tapAt(tester.getCenter(find.byType(ComboMeter)));
       await tester.pump(const Duration(seconds: 1));
       expect(taps, 1);
@@ -72,7 +72,7 @@ void main() {
         traitProc: true,
       );
       await tester.pump();
-      expect(find.text('7 COMBO ∞'), findsOneWidget);
+      expect(find.text('분신 연격 7'), findsOneWidget);
       expect(find.text('연계 특성'), findsOneWidget);
       expect(tester.takeException(), isNull);
       state.value = const ComboHudState();
@@ -144,70 +144,71 @@ void main() {
     },
   );
 
-  testWidgets('finisher tells the next input method before the final attack', (
-    tester,
-  ) async {
-    final semantics = tester.ensureSemantics();
-    try {
-      const ready = ComboHudState(
-        active: true,
-        count: 2,
-        chainLength: 3,
-        progress: .2,
-        windowStart: .6,
-        windowEnd: .8,
-      );
-      Future<void> show(ComboHudState state, {bool compact = false}) =>
-          tester.pumpWidget(
-            MaterialApp(
-              home: Center(
-                child: SizedBox(
-                  width: compact ? 164 : 176,
-                  height: compact ? 18 : 38,
-                  child: ComboMeter(state: state, compact: compact),
-                ),
-              ),
-            ),
-          );
-      await show(ready);
-      expect(find.text('마무리 · 금색 공격'), findsOneWidget);
-      expect(
-        find.bySemanticsLabel(RegExp('커서가 금색 구간에 올 때 공격 버튼을 다시 누르면')),
-        findsOneWidget,
-      );
-      expect(
-        find.text('마무리 일격'),
-        findsNothing,
-        reason: 'do not announce completion before input',
-      );
-      await show(ready, compact: true);
-      expect(find.text('마무리'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-      await show(
-        const ComboHudState(
+  testWidgets(
+    'skill chain marks the finisher without displaying control instructions',
+    (tester) async {
+      final semantics = tester.ensureSemantics();
+      try {
+        const ready = ComboHudState(
           active: true,
-          queued: true,
           count: 2,
           chainLength: 3,
+          progress: .2,
           windowStart: .6,
           windowEnd: .8,
-        ),
-      );
-      expect(find.text('마무리 · 금색 공격'), findsNothing);
-      await show(
-        const ComboHudState(
-          active: true,
-          finisher: true,
-          count: 3,
-          chainLength: 3,
-        ),
-      );
-      expect(find.text('마무리 일격'), findsOneWidget);
-      expect(find.text('마무리 · 금색 공격'), findsNothing);
-    } finally {
-      semantics.dispose();
-    }
-  });
+        );
+        Future<void> show(ComboHudState state, {bool compact = false}) =>
+            tester.pumpWidget(
+              MaterialApp(
+                home: Center(
+                  child: SizedBox(
+                    width: compact ? 164 : 176,
+                    height: compact ? 18 : 38,
+                    child: ComboMeter(state: state, compact: compact),
+                  ),
+                ),
+              ),
+            );
+        await show(ready);
+        expect(find.text('분신 연격 · 마무리'), findsOneWidget);
+        expect(
+          find.bySemanticsLabel(RegExp('분신 연격, 3회 중 2회 연계, 다음 마무리')),
+          findsOneWidget,
+        );
+        expect(
+          find.text('마무리 일격'),
+          findsNothing,
+          reason: 'do not announce completion before input',
+        );
+        await show(ready, compact: true);
+        expect(find.text('마무리'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await show(
+          const ComboHudState(
+            active: true,
+            queued: true,
+            count: 2,
+            chainLength: 3,
+            windowStart: .6,
+            windowEnd: .8,
+          ),
+        );
+        expect(find.text('분신 연격 · 마무리'), findsNothing);
+        await show(
+          const ComboHudState(
+            active: true,
+            finisher: true,
+            count: 3,
+            chainLength: 3,
+          ),
+        );
+        expect(find.text('마무리 일격'), findsOneWidget);
+        expect(find.text('분신 연격 · 마무리'), findsNothing);
+      } finally {
+        semantics.dispose();
+      }
+    },
+  );
 
   testWidgets(
     'finite pips show the actual four-to-eight hit chain; only endless keeps three',
@@ -409,7 +410,7 @@ void main() {
       expect(s.ready, true);
       s.progress.gainXp(8000);
       s.progress.healingPotions = s.progress.energyPotions = 128;
-      const ids = ['whirlwind', 'frenzy', 'warcry', 'seismicSlam'];
+      const ids = ['whirlwind', 'frenzy', 'warcry', 'bash'];
       s.progress.ranks.addAll({
         for (final id in ids) id: 1,
         s.progress.mobilitySkill.id: 1,

@@ -1,0 +1,253 @@
+{
+  "source": "https://github.com/fabd/diablo2/tree/master/code/d2_113_data",
+  "skills": {
+    "bash": {
+      "originalName": "Bash",
+      "level": 1,
+      "row": 0,
+      "column": 1,
+      "requires": {}
+    },
+    "swordMastery": {
+      "originalName": "Sword Mastery",
+      "level": 1,
+      "row": 0,
+      "column": 3,
+      "requires": {}
+    },
+    "axeMastery": {
+      "originalName": "Axe Mastery",
+      "level": 1,
+      "row": 0,
+      "column": 4,
+      "requires": {}
+    },
+    "maceMastery": {
+      "originalName": "Mace Mastery",
+      "level": 1,
+      "row": 0,
+      "column": 5,
+      "requires": {}
+    },
+    "howl": {
+      "originalName": "Howl",
+      "level": 1,
+      "row": 0,
+      "column": 6,
+      "requires": {}
+    },
+    "findPotion": {
+      "originalName": "Find Potion",
+      "level": 1,
+      "row": 0,
+      "column": 8,
+      "requires": {}
+    },
+    "leap": {
+      "originalName": "Leap",
+      "level": 6,
+      "row": 1,
+      "column": 0,
+      "requires": {}
+    },
+    "doubleSwing": {
+      "originalName": "Double Swing",
+      "level": 6,
+      "row": 1,
+      "column": 2,
+      "requires": {
+        "bash": 1
+      }
+    },
+    "polearmMastery": {
+      "originalName": "Pole Arm Mastery",
+      "level": 6,
+      "row": 1,
+      "column": 3,
+      "requires": {}
+    },
+    "throwingMastery": {
+      "originalName": "Throwing Mastery",
+      "level": 6,
+      "row": 1,
+      "column": 4,
+      "requires": {}
+    },
+    "spearMastery": {
+      "originalName": "Spear Mastery",
+      "level": 6,
+      "row": 1,
+      "column": 5,
+      "requires": {}
+    },
+    "taunt": {
+      "originalName": "Taunt",
+      "level": 6,
+      "row": 1,
+      "column": 6,
+      "requires": {
+        "howl": 1
+      }
+    },
+    "shout": {
+      "originalName": "Shout",
+      "level": 6,
+      "row": 1,
+      "column": 7,
+      "requires": {
+        "howl": 1
+      }
+    },
+    "stun": {
+      "originalName": "Stun",
+      "level": 12,
+      "row": 2,
+      "column": 1,
+      "requires": {
+        "bash": 1
+      }
+    },
+    "doubleThrow": {
+      "originalName": "Double Throw",
+      "level": 12,
+      "row": 2,
+      "column": 2,
+      "requires": {
+        "doubleSwing": 1
+      }
+    },
+    "increasedStamina": {
+      "originalName": "Increased Stamina",
+      "level": 12,
+      "row": 2,
+      "column": 3,
+      "requires": {}
+    },
+    "findItem": {
+      "originalName": "Find Item",
+      "level": 12,
+      "row": 2,
+      "column": 8,
+      "requires": {
+        "findPotion": 1
+      }
+    },
+    "leapAttack": {
+      "originalName": "Leap Attack",
+      "level": 18,
+      "row": 3,
+      "column": 0,
+      "requires": {
+        "leap": 1
+      }
+    },
+    "concentrate": {
+      "originalName": "Concentrate",
+      "level": 18,
+      "row": 3,
+      "column": 1,
+      "requires": {
+        "stun": 1
+      }
+    },
+    "ironSkin": {
+      "originalName": "Iron Skin",
+      "level": 18,
+      "row": 3,
+      "column": 5,
+      "requires": {}
+    },
+    "battleCry": {
+      "originalName": "Battle Cry",
+      "level": 18,
+      "row": 3,
+      "column": 6,
+      "requires": {
+        "taunt": 1
+      }
+    },
+    "frenzy": {
+      "originalName": "Frenzy",
+      "level": 24,
+      "row": 4,
+      "column": 2,
+      "requires": {
+        "doubleThrow": 1
+      }
+    },
+    "increasedSpeed": {
+      "originalName": "Increased Speed",
+      "level": 24,
+      "row": 4,
+      "column": 3,
+      "requires": {
+        "increasedStamina": 1
+      }
+    },
+    "battleOrders": {
+      "originalName": "Battle Orders",
+      "level": 24,
+      "row": 4,
+      "column": 7,
+      "requires": {
+        "shout": 1
+      }
+    },
+    "grimWard": {
+      "originalName": "Grim Ward",
+      "level": 24,
+      "row": 4,
+      "column": 8,
+      "requires": {
+        "findItem": 1
+      }
+    },
+    "whirlwind": {
+      "originalName": "Whirlwind",
+      "level": 30,
+      "row": 5,
+      "column": 0,
+      "requires": {
+        "leapAttack": 1,
+        "concentrate": 1
+      }
+    },
+    "berserk": {
+      "originalName": "Berserk",
+      "level": 30,
+      "row": 5,
+      "column": 1,
+      "requires": {
+        "concentrate": 1
+      }
+    },
+    "naturalResistance": {
+      "originalName": "Natural Resistance",
+      "level": 30,
+      "row": 5,
+      "column": 5,
+      "requires": {
+        "ironSkin": 1
+      }
+    },
+    "warcry": {
+      "originalName": "War Cry",
+      "level": 30,
+      "row": 5,
+      "column": 6,
+      "requires": {
+        "battleCry": 1,
+        "battleOrders": 1
+      }
+    },
+    "battleCommand": {
+      "originalName": "Battle Command",
+      "level": 30,
+      "row": 5,
+      "column": 7,
+      "requires": {
+        "battleOrders": 1
+      }
+    }
+  }
+}

@@ -19,18 +19,7 @@ void main() {
         expect(
           shared.map((skill) => skill.id).toSet(),
           hero == HeroClass.warrior
-              ? {
-                  'battleFocus',
-                  'rallyingVoice',
-                  'rendingEdge',
-                  'veteranGuard',
-                  'secondWind',
-                  'warDrums',
-                  'unyieldingOath',
-                  'charge',
-                  'heavyStrike',
-                  'battleSprint',
-                }
+              ? {'shadowAssault', 'battleSprint'}
               : {
                   'meteor',
                   'lightningMastery',
@@ -88,18 +77,32 @@ void main() {
         for (final xp in [0, 1000, 20000]) {
           final p = Progress(heroClass: hero)..gainXp(xp);
           for (final s in p.skills.where((s) => s.requiredLevel <= p.level)) {
-            p.ranks[s.id] = 3;
+            var rank = 3;
+            while (rank > 1 && s.requiredLevelForRank(rank) > p.level) {
+              rank--;
+            }
+            p.ranks[s.id] = rank;
           }
           final raw =
               (p.bonusAttack +
                   (p.level - 1) * 2 +
-                  p.equipped.values.fold(0.0, (v, g) => v + g.attack)) *
-              (1 + p.rank('mastery') * .02 + p.rank('arcaneMastery') * .025);
+                  p.equipped.values.fold(0.0, (v, g) => v + g.attack) +
+                  (p.usingFallbackWeapon ? p.weapon.attack : 0)) *
+              (hero == HeroClass.warrior
+                  ? 1 + p.rank(p.weaponMasteryId) * .02
+                  : 1 + p.rank('arcaneMastery') * .025);
           expect(p.swordDamage, closeTo(raw * .75 * .85, .00001));
+          final mastery = p.rank(p.weaponMasteryId);
+          final criticalChance = hero == HeroClass.warrior && mastery > 0
+              ? .03 + mastery * .004
+              : 0;
           expect(
             p.basicDps,
             closeTo(
-              p.basicDamage / p.attackInterval * CombatBalance.gameSpeed,
+              p.basicDamage *
+                  (1 + criticalChance) /
+                  p.attackInterval *
+                  CombatBalance.gameSpeed,
               .00001,
             ),
           );

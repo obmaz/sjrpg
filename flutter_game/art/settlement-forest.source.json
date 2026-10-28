@@ -1,0 +1,12 @@
+{
+  "source": "/workspace/generated_images/mobile81-cohesive-village-original.png",
+  "sha256": "450fd907378d633a3822ae007c75bd674f7940b148d9b4c4f2502c3cbfdf7159",
+  "generator": "image_gen",
+  "size": [
+    1254,
+    1254
+  ],
+  "camera": "fixed elevated orthographic three-quarter",
+  "lighting": "soft upper-left",
+  "theme": "forest"
+}

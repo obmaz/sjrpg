@@ -1,6 +1,6 @@
 {
-  "source": "mobile70-nerf-browser native snapshot, pre-reduction 6-enemy pacing",
-  "purpose": "Historical dense crowd stress case. Exact natural birth frames and positions before reduced spawn sizes; no production pacing override.",
+  "source": "mobile83 complete-settlement ward, replay of mobile70 birth timing and kinds",
+  "purpose": "Frozen 6-enemy stress births at mobile70 timing/order, relocated through actual spawnEnemy outside the mobile83 complete-settlement ward. Full-body collision and dense corner detours remain under test.",
   "births": [
     {
       "frame": 0,
@@ -9,14 +9,14 @@
         "trait": "none",
         "tier": "normal",
         "power": {
-          "distance": 696.0625138359414,
+          "distance": 1135.4614837857034,
           "health": 1.18,
           "damage": 1.045
         },
         "wardPhase": 0.0,
         "area": "1:2",
-        "x": 5716.6240234375,
-        "y": 7052.603515625,
+        "x": 6011.98291015625,
+        "y": 7387.64013671875,
         "hp": 64.19200000000001,
         "maxHp": 64.19200000000001
       }
@@ -28,14 +28,14 @@
         "trait": "none",
         "tier": "normal",
         "power": {
-          "distance": 509.091556955065,
+          "distance": 912.8985649060678,
           "health": 1.18,
           "damage": 1.045
         },
         "wardPhase": 0.0,
         "area": "1:2",
-        "x": 5449.0361328125,
-        "y": 6944.41943359375,
+        "x": 5744.39501953125,
+        "y": 7279.4560546875,
         "hp": 132.16,
         "maxHp": 132.16
       }
@@ -47,14 +47,14 @@
         "trait": "none",
         "tier": "normal",
         "power": {
-          "distance": 819.2949226944689,
+          "distance": 1262.6313428956444,
           "health": 1.18,
           "damage": 1.045
         },
         "wardPhase": 0.0,
-        "area": "1:2",
-        "x": 6016.1875,
-        "y": 6964.951171875,
+        "area": "2:2",
+        "x": 6311.54638671875,
+        "y": 7299.98779296875,
         "hp": 98.176,
         "maxHp": 98.176
       }
@@ -66,14 +66,14 @@
         "trait": "none",
         "tier": "normal",
         "power": {
-          "distance": 573.5149174623396,
+          "distance": 960.1865998762813,
           "health": 1.18,
           "damage": 1.045
         },
         "wardPhase": 0.0,
         "area": "1:2",
-        "x": 5403.9189453125,
-        "y": 7012.2939453125,
+        "x": 5699.27783203125,
+        "y": 7347.33056640625,
         "hp": 98.176,
         "maxHp": 98.176
       }
@@ -85,14 +85,14 @@
         "trait": "none",
         "tier": "normal",
         "power": {
-          "distance": 468.2786616078509,
+          "distance": 931.0822455056336,
           "health": 1.18,
           "damage": 1.045
         },
         "wardPhase": 0.0,
-        "area": "1:2",
-        "x": 5844.63916015625,
-        "y": 6335.24267578125,
+        "area": "2:2",
+        "x": 6275.939453125,
+        "y": 6719.138671875,
         "hp": 64.19200000000001,
         "maxHp": 64.19200000000001
       }
@@ -104,14 +104,14 @@
         "trait": "none",
         "tier": "normal",
         "power": {
-          "distance": 744.3637534117487,
+          "distance": 1190.924287611723,
           "health": 1.18,
           "damage": 1.045
         },
         "wardPhase": 0.0,
-        "area": "1:2",
-        "x": 5866.8642578125,
-        "y": 7008.8828125,
+        "area": "2:2",
+        "x": 6162.22314453125,
+        "y": 7343.91943359375,
         "hp": 132.16,
         "maxHp": 132.16
       }
@@ -123,14 +123,14 @@
         "trait": "none",
         "tier": "normal",
         "power": {
-          "distance": 696.0625138359414,
+          "distance": 1135.4614837857034,
           "health": 1.18,
           "damage": 1.045
         },
         "wardPhase": 0.0,
         "area": "1:2",
-        "x": 5716.6240234375,
-        "y": 7052.603515625,
+        "x": 6011.98291015625,
+        "y": 7387.64013671875,
         "hp": 64.19200000000001,
         "maxHp": 64.19200000000001
       }
@@ -142,14 +142,14 @@
         "trait": "none",
         "tier": "normal",
         "power": {
-          "distance": 509.091556955065,
+          "distance": 912.8985649060678,
           "health": 1.18,
           "damage": 1.045
         },
         "wardPhase": 0.0,
         "area": "1:2",
-        "x": 5449.0361328125,
-        "y": 6944.41943359375,
+        "x": 5744.39501953125,
+        "y": 7279.4560546875,
         "hp": 132.16,
         "maxHp": 132.16
       }
@@ -161,14 +161,14 @@
         "trait": "none",
         "tier": "normal",
         "power": {
-          "distance": 819.2949226944689,
+          "distance": 1262.6313428956444,
           "health": 1.18,
           "damage": 1.045
         },
         "wardPhase": 0.0,
-        "area": "1:2",
-        "x": 6016.1875,
-        "y": 6964.951171875,
+        "area": "2:2",
+        "x": 6311.54638671875,
+        "y": 7299.98779296875,
         "hp": 98.176,
         "maxHp": 98.176
       }
@@ -180,14 +180,14 @@
         "trait": "none",
         "tier": "normal",
         "power": {
-          "distance": 573.5149174623396,
+          "distance": 960.1865998762813,
           "health": 1.18,
           "damage": 1.045
         },
         "wardPhase": 0.0,
         "area": "1:2",
-        "x": 5403.9189453125,
-        "y": 7012.2939453125,
+        "x": 5699.27783203125,
+        "y": 7347.33056640625,
         "hp": 98.176,
         "maxHp": 98.176
       }
@@ -199,14 +199,14 @@
         "trait": "none",
         "tier": "normal",
         "power": {
-          "distance": 468.2786616078509,
+          "distance": 953.9975061004159,
           "health": 1.18,
           "damage": 1.045
         },
         "wardPhase": 0.0,
-        "area": "1:2",
-        "x": 5844.63916015625,
-        "y": 6335.24267578125,
+        "area": "2:2",
+        "x": 6299.939453125,
+        "y": 6719.138671875,
         "hp": 64.19200000000001,
         "maxHp": 64.19200000000001
       }
@@ -218,22 +218,27 @@
         "trait": "none",
         "tier": "normal",
         "power": {
-          "distance": 760.0255796802016,
+          "distance": 1206.6645638954474,
           "health": 1.18,
           "damage": 1.045
         },
         "wardPhase": 0.0,
-        "area": "1:2",
-        "x": 5890.8642578125,
-        "y": 7008.8828125,
+        "area": "2:2",
+        "x": 6186.22314453125,
+        "y": 7343.91943359375,
         "hp": 132.16,
         "maxHp": 132.16
       }
     }
   ],
   "sourceFiles": {
-    "lib/adventure.dart": "4cfa1ca533243de0ee61b2e563971e57057449d7abdc8efe30d07db210c2b4b2",
-    "lib/combat_balance.dart": "aa95268c744058a8262a82a5be5119af1c9ecc2feed527bd3d7806e01913877a",
-    "lib/world_model.dart": "98dc30af087cb951736742817b92ce994df2504e40a4053809dbe21aef81a1e5"
-  }
+    "lib/adventure.dart": "744b792b85972eea77c0565fc7b36267f0f8d27b4b317800bbb78cdd1d51474a",
+    "lib/combat_balance.dart": "1745f6147a793bad0bc675329519bff0fd6899dc1a52cb2cb4d0c3a11b25bceb",
+    "lib/world_model.dart": "446734ec3a3ab3807ed362ffbbe6a6a817ed1990a2558e8d6b5c091477726ea6"
+  },
+  "hero": {
+    "x": 6011.98291015625,
+    "y": 7107.64013671875
+  },
+  "wardAngle": 0.85
 }
