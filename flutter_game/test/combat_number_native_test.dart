@@ -49,14 +49,15 @@ void main() {
         final raw = (await image.toByteData())!.buffer.asUint8List().toList();
         expect(raw.take(4), [255, 255, 255, 255]);
         frames.add(raw);
-        final png = (await image.toByteData(format: ui.ImageByteFormat.png))!;
-        final file = File(
-          '/workspace/artifacts/mobile89/combat-numbers/$remaining.png',
-        );
-        await file.parent.create(recursive: true);
-        await file.writeAsBytes(
-          png.buffer.asUint8List(png.offsetInBytes, png.lengthInBytes),
-        );
+        final proof = Platform.environment['COMBAT_NUMBER_PROOF_DIR'];
+        if (proof != null) {
+          final png = (await image.toByteData(format: ui.ImageByteFormat.png))!;
+          final file = File('$proof/$remaining.png');
+          await file.parent.create(recursive: true);
+          await file.writeAsBytes(
+            png.buffer.asUint8List(png.offsetInBytes, png.lengthInBytes),
+          );
+        }
         image.dispose();
       }
       expect(frames[0], isNot(frames[1]));

@@ -3,10 +3,16 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/effect_atlas.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_ui.dart';
 import 'package:guardian_new/illustrated_combat_art.dart';
+import 'package:guardian_new/rpg_model.dart';
+import 'package:guardian_new/sorceress_combat.dart';
+
+import 'support/sorceress_fixture.dart';
+import 'support/test_game.dart';
 
 Future<({ui.Image image, Uint8List pixels})> _render(
   void Function(ui.Canvas) draw,
@@ -139,6 +145,70 @@ void main() {
       expect(after.pixels.where((v) => v > 0).length, greaterThan(1500));
       clean.image.dispose();
       after.image.dispose();
+    },
+  );
+
+  test(
+    'actual Nova and Frost Nova enrich the full wave, preserving the torso',
+    () async {
+      for (final id in ['nova', 'frostNova']) {
+        final art = GameArt(), game = TestGame();
+        final s = inCombatField(Adventure(art, heroClass: HeroClass.mage))
+          ..start(game);
+        addTearDown(s.dispose);
+        s.progress.level = 100;
+        s.progress.skillPoints = 1000;
+        trainSkill(s.progress, id, 5);
+        expect(s.progress.selectSkill(id), true);
+        s.progress.energy = s.progress.maxEnergy;
+        s.hero.skill();
+        final wave = game.added.whereType<SorceressFlash>().firstWhere(
+          (v) => v.mode == 'ground',
+        );
+        for (var i = 0; i < 3; i++) {
+          wave.update(.05);
+        }
+        Future<({ui.Image image, Uint8List pixels})> draw() => _render((c) {
+          c.translate(128, 140);
+          wave.render(c);
+        });
+        final before = await draw();
+        art.images[IllustratedCombatArt.imageKey] = image;
+        final after = await draw();
+        try {
+          int outside(Uint8List bytes) {
+            var count = 0;
+            for (var y = 0; y < 256; y++) {
+              for (var x = 0; x < 256; x++) {
+                if ((x - 128) * (x - 128) + (y - 140) * (y - 140) > 60 * 60 &&
+                    bytes[(y * 256 + x) * 4 + 3] > 20) {
+                  count++;
+                }
+              }
+            }
+            return count;
+          }
+
+          expect(
+            outside(after.pixels),
+            greaterThan(outside(before.pixels) + 800),
+            reason: id,
+          );
+          for (var y = 90; y < 120; y++) {
+            for (var x = 124; x < 132; x++) {
+              final index = (y * 256 + x) * 4;
+              expect(
+                after.pixels.sublist(index, index + 4),
+                before.pixels.sublist(index, index + 4),
+              );
+            }
+          }
+        } finally {
+          before.image.dispose();
+          after.image.dispose();
+          art.images.clear();
+        }
+      }
     },
   );
 

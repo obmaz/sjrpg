@@ -1205,7 +1205,7 @@ class SorceressFlash extends SorceressEffect {
         opacity: .78,
       );
     } else if (mode == 'impact' ||
-        (mode == 'cast' &&
+        ((mode == 'cast' || mode == 'ground') &&
             const {'frostNova', 'nova', 'staticField'}.contains(spec.id))) {
       IllustratedCombatArt.sequence(
         session.art.effects,
@@ -1215,7 +1215,7 @@ class SorceressFlash extends SorceressEffect {
         progress: t,
         radius: math.min(128, radius),
         bearing: bearing,
-        protectBody: mode == 'cast',
+        protectBody: mode == 'cast' || mode == 'ground',
       );
     } else if (mode == 'ground' && spec.id == 'inferno') {
       IllustratedCombatArt.sequence(
