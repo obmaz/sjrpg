@@ -160,6 +160,10 @@ void main() {
         greaterThan(0),
         reason: 'normal continue must preserve poison',
       );
+      final paidInventory = fallen.progress.inventory
+          .map((g) => g.toSave())
+          .toList();
+      expect(paidInventory.length, inventory.length - 1);
       final reads = bundle.reads.length;
       bundle.failure = '*';
       await tester.tap(find.text('체크포인트 재도전'));
@@ -174,7 +178,15 @@ void main() {
       expect(revived.progress.hp, greaterThan(0));
       expect(
         revived.progress.inventory.map((g) => g.toSave()).toList(),
-        inventory,
+        paidInventory,
+      );
+      // Death now returns to camp; field survivors stay dormant at that distance.
+      expect(revived.hero.revivalProtection, greaterThan(0));
+      inCombatField(revived);
+      revived.wakeEnemies();
+      await _until(
+        tester,
+        () => revived.mobs.any((mob) => mob.kind == 'troll'),
       );
       final enemyAgain = revived.mobs.singleWhere((mob) => mob.kind == 'troll');
       expect(enemyAgain.isUnique, isTrue);

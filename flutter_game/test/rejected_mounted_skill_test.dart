@@ -15,7 +15,9 @@ void main() {
       s.progress.ranks['charge'] = 1;
       expect(s.progress.selectSkill('charge'), true);
     }
-    final horse = s.mounts.firstWhere((m) => m.def.id == 'horse');
+    final horse = withOwnedMounts(
+      s,
+    ).mounts.firstWhere((m) => m.def.id == 'horse');
     horse.at = const Offset(6000, 4200);
     s.hero.position.setValues(5990, 4250);
     expect(s.boardNearbyMount(), true);

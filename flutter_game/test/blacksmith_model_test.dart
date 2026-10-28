@@ -215,7 +215,7 @@ void main() {
         inCombatField(s);
         final p = s.progress..gold = 1000;
         final target = p.weapon;
-        final mount = s.mounts.first
+        final mount = withOwnedMounts(s).mounts.first
           ..at = s.hero.body.center + const Offset(40, 0);
         expect(s.boardNearbyMount(), isTrue);
         final result = p.enhanceWeapon(p.smithQuote(target)!, _Roll(1))!;

@@ -485,6 +485,8 @@ class MapPainter extends CustomPainter {
         healPoint = project(session.world.healAt);
     final groupServices = (shopPoint - healPoint).distance < 40 * markerScale;
     final services = [
+      if (!round)
+        (project(session.mountMerchantAt), '탈것', Icons.pets_rounded, gold),
       ...(groupServices
           ? [(project(session.world.spawn), '거점', Icons.cottage_rounded, gold)]
           : [

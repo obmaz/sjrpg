@@ -73,7 +73,7 @@ void main() {
       portal.onTap();
       expect(opens, 1);
       s.resume();
-      s.riding = s.mounts.first;
+      s.riding = withOwnedMounts(s).mounts.first;
       portal.onTap();
       expect(opens, 1);
       s.riding = null;

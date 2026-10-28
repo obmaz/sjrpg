@@ -23,7 +23,7 @@ void main() {
     final art = (await tester.runAsync(GameArt.load))!;
     final seed = inCombatField(Adventure(art))..start(TestGame());
     seed.mobs.clear();
-    seed.mounts.first.at = const Offset(6050, 4212);
+    withOwnedMounts(seed).mounts.first.at = const Offset(6050, 4212);
     final saved = GameCheckpoint.capture(seed)!;
     seed.dispose();
     await tester.pumpWidget(

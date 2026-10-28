@@ -17,9 +17,9 @@ void main() {
           s.mobs.clear();
           addTearDown(s.dispose);
           if (mounted) {
-            final mount = s.mounts.firstWhere(
-              (mount) => mount.def.id == 'horse',
-            );
+            final mount = withOwnedMounts(
+              s,
+            ).mounts.firstWhere((mount) => mount.def.id == 'horse');
             mount.at = s.hero.body.center;
             expect(s.boardNearbyMount(), true);
           }

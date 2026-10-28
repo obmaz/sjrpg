@@ -128,7 +128,7 @@ void main() {
       visit(session, 'hub');
       expect(GameCheckpoint.warp(session, WorldStage.future, 'hub'), null);
       expect(GameCheckpoint.warp(session, WorldStage.forest, 'unknown'), null);
-      session.riding = session.mounts.first;
+      session.riding = withOwnedMounts(session).mounts.first;
       expect(GameCheckpoint.warp(session, WorldStage.forest, 'roots'), null);
     },
   );
@@ -345,7 +345,7 @@ void main() {
   test(
     'captured and restored inactive scenes remain detached from live mutations',
     () {
-      final forest = start();
+      final forest = withOwnedMounts(start());
       visit(forest, 'hub');
       finishForest(forest);
       forest.dormantEnemies.add({

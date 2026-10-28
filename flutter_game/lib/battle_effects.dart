@@ -414,7 +414,10 @@ class ArcaneBolt extends GameComponent with EffectVisibility {
     this.caster,
     this.rank = 1,
     int? targetLimit,
+    double? maxRange,
   }) : targetLimit = targetLimit ?? (explosive ? 3 : 1),
+       maxRange = maxRange ?? speed * .88,
+       remaining = maxRange == null ? .88 : maxRange / speed,
        direction = ui.Offset(math.cos(angle), math.sin(angle)),
        chargeDuration = launchDelay,
        buildRevision = session.buildRevision {
@@ -424,6 +427,8 @@ class ArcaneBolt extends GameComponent with EffectVisibility {
   final Adventure session;
   final ui.Offset direction;
   final double damage;
+  static const speed = 620.0;
+  final double maxRange;
   final String element;
   final bool explosive, propOnly;
   final Guardian? caster;
@@ -431,7 +436,7 @@ class ArcaneBolt extends GameComponent with EffectVisibility {
   final double chargeDuration;
   final int targetLimit, rank;
   final int buildRevision;
-  double remaining = .88;
+  double remaining;
   bool resolved = false;
   final _art = MageCombatArt();
   MageElement get _element => MageElement.fromStyle(element);
@@ -476,7 +481,7 @@ class ArcaneBolt extends GameComponent with EffectVisibility {
     if (launchDelay > 0) {
       if (caster != null &&
           (caster!.dashing > 0 ||
-              session.riding != null ||
+              session.riding != null && !session.mountedBasicAllowed ||
               session.afflictions.frozen)) {
         finish();
         return;
@@ -491,7 +496,7 @@ class ArcaneBolt extends GameComponent with EffectVisibility {
     }
     dt = math.min(dt, remaining);
     remaining -= dt;
-    final distance = dt * 620, n = math.max(1, (distance / 5).ceil());
+    final distance = dt * speed, n = math.max(1, (distance / 5).ceil());
     // A hit can schedule removals. Keep one stable snapshot for this movement,
     // rather than copying every enemy at each five-pixel collision step.
     final candidates = propOnly

@@ -9,6 +9,7 @@ import 'commission_board.dart';
 import 'device_controls.dart';
 import 'equipment_panel.dart';
 import 'game_ui.dart';
+import 'mount_panel.dart';
 import 'panel_controls.dart';
 import 'quest_cards.dart';
 import 'quest_guide.dart';
@@ -72,6 +73,13 @@ class _AdventurePanelState extends State<AdventurePanel> {
         p = s.progress,
         name = widget.name,
         media = MediaQuery.of(context);
+    if (name == 'mounts') {
+      return MountPanel(
+        session: s,
+        onClose: widget.onClose,
+        onCheckpoint: widget.onCheckpoint,
+      );
+    }
     if (name == 'smith') {
       return BlacksmithPanel(
         session: s,
@@ -281,7 +289,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
                     ? '다음 의뢰를 받아 시간의 흔적을 계속 추적하세요.'
                     : '두 시대의 시간을 되찾았습니다. 남은 보물을 탐험하세요.'}'
               : widget.onRetryCheckpoint != null
-              ? '마지막 저장 지점에서 다시 도전하세요.\n장비와 스킬 성장은 유지됩니다.'
+              ? '사망 손실이 적용됐습니다.\n거점에서 다시 일어날 수 있습니다.'
               : '힘을 키우고 다시 도전하세요.\n장비와 스킬 조합에 따라 전투가 달라집니다.',
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 17, height: 1.8, color: cream),
@@ -294,6 +302,26 @@ class _AdventurePanelState extends State<AdventurePanel> {
         ),
         _line(Icons.bolt, '이번 의뢰 처치', '${s.stageKills}'),
         _line(Icons.monetization_on_outlined, '보유 골드', '${p.gold} G'),
+        if (name == 'defeat' && s.deathLoss != null) ...[
+          _line(
+            Icons.broken_image_outlined,
+            '무기 파괴',
+            s.deathLoss!.weaponName ?? '보유 무기 없음',
+          ),
+          _line(
+            Icons.money_off_rounded,
+            '사망 손실',
+            '-${s.deathLoss!.goldLost} G · ${s.deathLoss!.goldPercent}%',
+          ),
+          if (s.saveFailed)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                '손실 기록을 저장하지 못했습니다. 저장이 복구되면 재도전할 수 있습니다.',
+                style: TextStyle(color: Color(0xffefa17e)),
+              ),
+            ),
+        ],
         _line(Icons.timer_outlined, '모험 시간', gameTime(s.elapsed)),
         const SizedBox(height: 12),
         if (name == 'defeat' && widget.onRetryCheckpoint != null)
@@ -482,17 +510,24 @@ class _AdventurePanelState extends State<AdventurePanel> {
         Icon(icon, color: gold, size: 20),
         const SizedBox(width: 9),
         Expanded(
+          flex: 2,
           child: Text(
             label,
             style: const TextStyle(fontSize: 14, color: cream),
           ),
         ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            color: gold,
-            fontWeight: FontWeight.bold,
+        Flexible(
+          flex: 3,
+          child: Text(
+            value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              fontSize: 16,
+              color: gold,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ],

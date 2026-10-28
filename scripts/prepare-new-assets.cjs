@@ -50,6 +50,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'blacksmith-forge',
         'village-gardens',
         'village-cottage',
+        'quest-landscapes',
         'actors-bicycle',
         'skill-perks',
         'physical-icons',

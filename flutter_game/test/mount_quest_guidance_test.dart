@@ -20,7 +20,8 @@ void main() {
   test(
     'mount wear uses actual movement, stops when idle or paused, and persists',
     () {
-      final s = session(), m = s.mounts.firstWhere((m) => m.def.id == 'horse');
+      final s = session(),
+          m = withOwnedMounts(s).mounts.firstWhere((m) => m.def.id == 'horse');
       m.at = const Offset(6000, 4200);
       s.hero.position.setValues(5990, 4250);
       expect(s.boardNearbyMount(), true);
@@ -30,7 +31,11 @@ void main() {
         s.hero.update(.05);
       }
       final moved = s.hero.position.x - at.x;
-      expect(moved, greaterThan(400));
+      expect(
+        moved,
+        closeTo(m.def.speed, 1),
+        reason: 'one second at the purchased horse speed',
+      );
       expect(m.durability, closeTo(100 - moved / 350, .001));
       s.hero.stop();
       final condition = m.durability;
@@ -54,6 +59,10 @@ void main() {
       expect(s.repairMount(), false);
       expect(m.durability, lessThan(100));
       s.progress.gold = price + 7;
+      final stableAt = s.world.spawnNear(s.mountMerchantAt, m.def.bodySize)!;
+      s.hero.position.setValues(stableAt.dx, stableAt.dy);
+      m.at = s.hero.body.center;
+      expect(s.nearMountMerchant, true);
       s.pause();
       expect(s.repairMount(), true);
       expect(m.durability, 100);
@@ -63,7 +72,8 @@ void main() {
   test(
     'broken boats paddle safely and cannot be boarded again until repaired',
     () {
-      final s = session(), m = s.mounts.firstWhere((m) => m.def.waterOnly);
+      final s = session(),
+          m = withOwnedMounts(s).mounts.firstWhere((m) => m.def.waterOnly);
       m.at = s.world.lakes.first.bounds.center;
       s.riding = m;
       s.hero.resizeBody(m.def.bodySize, m.at);
@@ -87,7 +97,8 @@ void main() {
   test(
     'older map coordinates migrate once with enemies, loot, stones and riding body',
     () {
-      final s = session(), m = s.mounts.firstWhere((m) => m.def.id == 'horse');
+      final s = session(),
+          m = withOwnedMounts(s).mounts.firstWhere((m) => m.def.id == 'horse');
       s.hero.position.setValues(m.at.dx - 14, m.at.dy - 12);
       expect(s.boardNearbyMount(), true);
       final original = GameCheckpoint.capture(s)!;
@@ -156,7 +167,7 @@ void main() {
     expect(s.nearbyQuestGuide, null);
     s.hero.position.setValues(s.world.elderAt.dx + 50, s.world.elderAt.dy + 20);
     expect(s.nearbyQuestGuide, isNotNull);
-    s.riding = s.mounts.first;
+    s.riding = withOwnedMounts(s).mounts.first;
     expect(s.nearbyAction, NearbyAction.dismount);
     expect(s.nearbyQuestGuide, null);
   });

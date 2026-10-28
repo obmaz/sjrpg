@@ -15,6 +15,7 @@ import 'combat_balance.dart';
 import 'combat_feedback.dart';
 import 'combo_feedback.dart';
 import 'crushing_blow_vfx.dart';
+import 'death_penalty.dart';
 import 'destructible_chest.dart';
 import 'device_settings.dart';
 import 'effect_visibility.dart';
@@ -29,6 +30,7 @@ import 'health_feedback.dart';
 import 'loot_policy.dart';
 import 'melee_weapon_art.dart';
 import 'mobility_motion.dart';
+import 'mount_projectile.dart';
 import 'mount_sprite_mesh.dart';
 import 'physical_aim_preview.dart';
 import 'player_affliction_art.dart';
@@ -76,35 +78,7 @@ class Adventure extends ChangeNotifier {
         ? null
         : nearestIncompleteSite(stage, hero.body.center)?.id;
     terrain = TerrainArt(world, art);
-    for (var i = 0; i < travelMountDefs.length; i++) {
-      final def = travelMountDefs[i];
-      if (world.stage != WorldStage.forest &&
-          def.waterOnly &&
-          i - 3 >= world.lakes.length) {
-        continue;
-      }
-      final desired = world.stage == WorldStage.forest
-          ? initialMountPositions[i]
-          : def.waterOnly
-          ? world.lakes[(i - 3) % world.lakes.length].bounds.center
-          : world.spawn + ui.Offset(-220 + i * 160, 280);
-
-      if (def.waterOnly && !world.largeWater(desired)) continue;
-      final topLeft = world.spawnNear(
-        desired - ui.Offset(def.bodySize.width / 2, def.bodySize.height / 2),
-        def.bodySize,
-        waterOnly: def.waterOnly,
-      );
-      if (topLeft != null) {
-        mounts.add(
-          TravelMount(
-            def,
-            topLeft +
-                ui.Offset(def.bodySize.width / 2, def.bodySize.height / 2),
-          ),
-        );
-      }
-    }
+    spawnOwnedMounts();
   }
   final GameArt art;
   final DeviceSettings device;
@@ -116,6 +90,7 @@ class Adventure extends ChangeNotifier {
   PlayerAfflictions afflictions = PlayerAfflictions();
   final travelJournal = TravelJournal();
   bool saveFailed = false;
+  DeathLoss? deathLoss;
   final loot = <GroundLoot>[];
   final texts = <BattleText>[];
   final mounts = <TravelMount>[];
@@ -135,6 +110,322 @@ class Adventure extends ChangeNotifier {
     return nearest;
   }
 
+  late final ui.Offset mountMerchantAt = () {
+    const size = ui.Size(24, 24);
+    final desired = world.merchantAt + const ui.Offset(-80, 100);
+    final at = world.spawnNear(desired - const ui.Offset(12, 12), size);
+    if (at == null) {
+      throw StateError('The stable needs an accessible camp site');
+    }
+    return at + const ui.Offset(12, 12);
+  }();
+  bool get nearMountMerchant =>
+      (hero.body.center - mountMerchantAt).distance < 175 &&
+      world.clearLine(hero.body.center, mountMerchantAt, const ui.Size(4, 4));
+  bool get _canTradeMount =>
+      ready && !disposed && !defeated && !won && nearMountMerchant;
+  double mountSkillClock = 0, mountBoostTime = 0, motorRecoilTime = 0;
+  double get mountSkillTotal => riding?.def.skillCooldown ?? 1;
+  int get motorUpgradeCost => 180 + progress.mountProgress.motorLevel * 140;
+  static const motorAmmoPrice = 24;
+  static const motorGunRange = 520.0;
+  double get motorGunDamage =>
+      8 + progress.mountProgress.motorLevel * 4 + progress.level * .25;
+  double get motorGunDps => motorGunDamage / 2.8;
+  bool get mountedBasicAllowed =>
+      riding?.def.artKey == 'horse' && !riding!.fallen;
+  bool ensureBasicAttackMount() =>
+      riding == null || mountedBasicAllowed || dismount(keepInput: true);
+
+  ui.Offset? _ownedMountPoint(TravelMountDef def, ui.Offset preferred) {
+    if (!def.waterOnly) {
+      final desired =
+          preferred +
+          ui.Offset(
+            def.artKey == 'horse'
+                ? -80
+                : def.artKey == 'bicycle'
+                ? 0
+                : 80,
+            85,
+          );
+      final at = world.spawnNear(
+        desired - ui.Offset(def.bodySize.width / 2, def.bodySize.height / 2),
+        def.bodySize,
+        occupied: (body) =>
+            body.overlaps(hero.body) ||
+            mobs.any(
+              (m) => !m.isDead && !m.isRemoving && body.overlaps(m.body),
+            ) ||
+            mounts.any(
+              (m) =>
+                  m.def.artKey != def.artKey &&
+                  body.overlaps(
+                    ui.Rect.fromCenter(
+                      center: m.at,
+                      width: m.def.bodySize.width,
+                      height: m.def.bodySize.height,
+                    ),
+                  ),
+            ),
+      );
+      return at == null
+          ? null
+          : at + ui.Offset(def.bodySize.width / 2, def.bodySize.height / 2);
+    }
+    final lakes = world.lakes.toList()
+      ..sort(
+        (a, b) => (a.bounds.center - preferred).distanceSquared.compareTo(
+          (b.bounds.center - preferred).distanceSquared,
+        ),
+      );
+    for (final lake in lakes) {
+      for (final fraction in [.44, .40, .36, .30, .2]) {
+        for (var i = 0; i < 32; i++) {
+          final angle = i * math.pi / 16;
+          final direction = ui.Offset(math.cos(angle), math.sin(angle));
+          final at =
+              lake.bounds.center +
+              ui.Offset(
+                direction.dx * lake.bounds.width * fraction,
+                direction.dy * lake.bounds.height * fraction,
+              );
+          if (!world.largeWater(at) ||
+              world.blocked(
+                ui.Rect.fromCenter(
+                  center: at,
+                  width: def.bodySize.width,
+                  height: def.bodySize.height,
+                ),
+                waterOnly: true,
+              )) {
+            continue;
+          }
+          final landing = world.spawnNear(
+            at + direction * 150 - const ui.Offset(14, 12),
+            Guardian.onFootSize,
+          );
+          if (landing == null) continue;
+          final landCenter = landing + const ui.Offset(14, 12);
+          if ((landCenter - at).distance <= 215 &&
+              world.clearBoardingLine(at, landCenter)) {
+            return at;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  /// Existing saves and new stage sessions only instantiate purchased types.
+  void spawnOwnedMounts() {
+    if (riding != null) return;
+    mounts.clear();
+    for (final def in travelMountDefs.take(4)) {
+      if (!progress.mountProgress.owns(def.artKey)) continue;
+      final at = _ownedMountPoint(def, mountMerchantAt);
+      if (at != null) {
+        mounts.add(
+          TravelMount(
+            def,
+            at,
+            condition: progress.mountProgress.stateFor(def.artKey),
+          ),
+        );
+      }
+    }
+  }
+
+  bool buyMount(String id) {
+    final defs = travelMountDefs.take(4).where((d) => d.id == id);
+    if (!_canTradeMount ||
+        defs.isEmpty ||
+        progress.mountProgress.owns(id) ||
+        riding != null) {
+      return false;
+    }
+    final def = defs.first;
+    if (progress.gold < def.price) return false;
+    final at = _ownedMountPoint(def, mountMerchantAt);
+    if (at == null) {
+      announce(def.waterOnly ? '넓은 물과 안전한 선착장이 필요해요' : '탈것을 둘 공간이 필요해요');
+      return false;
+    }
+    progress.gold -= def.price;
+    progress.mountProgress.ownedIds.add(def.artKey);
+    if (def.artKey == 'motor') progress.mountProgress.motorAmmo = 12;
+    mounts.add(
+      TravelMount(
+        def,
+        at,
+        condition: progress.mountProgress.stateFor(def.artKey),
+      ),
+    );
+    refresh();
+    return true;
+  }
+
+  bool summonMount(String id) {
+    if (disposed ||
+        defeated ||
+        won ||
+        !ready ||
+        riding != null ||
+        (!active && !nearMountMerchant) ||
+        !progress.mountProgress.owns(id)) {
+      return false;
+    }
+    final defs = travelMountDefs.take(4).where((d) => d.id == id);
+    if (defs.isEmpty) return false;
+    final def = defs.first, at = _ownedMountPoint(def, hero.body.center);
+    if (at == null) return false;
+    mounts.removeWhere((m) => m.def.artKey == def.artKey);
+    mounts.add(
+      TravelMount(
+        def,
+        at,
+        condition: progress.mountProgress.stateFor(def.artKey),
+      ),
+    );
+    refresh();
+    return true;
+  }
+
+  bool upgradeMotor() {
+    final p = progress.mountProgress;
+    if (!_canTradeMount ||
+        !p.owns('motor') ||
+        p.motorLevel >= 3 ||
+        progress.gold < motorUpgradeCost) {
+      return false;
+    }
+    progress.gold -= motorUpgradeCost;
+    p.motorLevel++;
+    refresh();
+    return true;
+  }
+
+  bool buyMotorAmmo() {
+    final p = progress.mountProgress;
+    if (!_canTradeMount ||
+        !p.owns('motor') ||
+        p.motorAmmo >= 12 ||
+        progress.gold < motorAmmoPrice) {
+      return false;
+    }
+    progress.gold -= motorAmmoPrice;
+    p.motorAmmo = 12;
+    refresh();
+    return true;
+  }
+
+  bool repairOwnedMount(String id) {
+    if (!_canTradeMount || !progress.mountProgress.owns(id)) return false;
+    final state = progress.mountProgress.stateFor(id);
+    final cost = state.fallen ? 40 : ((100 - state.durability) * .6).ceil();
+    if (cost <= 0 || progress.gold < cost) return false;
+    progress.gold -= cost;
+    state.durability = 100;
+    state.hits = 0;
+    state.fallen = false;
+    refresh();
+    return true;
+  }
+
+  bool useMountSkill() {
+    final mount = riding;
+    if (!active ||
+        mount == null ||
+        mount.fallen ||
+        mount.durability <= 0 ||
+        mountSkillClock > 0 ||
+        afflictions.frozen) {
+      return false;
+    }
+    if (mount.def.artKey == 'motor') {
+      if (!combatAllowed &&
+          attackableChests(hero.body.center, motorGunRange).isEmpty) {
+        return false;
+      }
+      final p = progress.mountProgress;
+      if (p.motorAmmo <= 0) {
+        announce('탄약 부족 · 탈것 상인에게 보급받으세요');
+        return false;
+      }
+      final enemies =
+          mobs
+              .where(
+                (m) =>
+                    canHitEnemy(m) &&
+                    (m.body.center - hero.body.center).distance < 520 &&
+                    world.clearLine(
+                      hero.body.center,
+                      m.body.center,
+                      const ui.Size(3, 3),
+                    ),
+              )
+              .toList()
+            ..sort(
+              (a, b) =>
+                  (a.body.center - hero.body.center).distanceSquared.compareTo(
+                    (b.body.center - hero.body.center).distanceSquared,
+                  ),
+            );
+      var bearing = hero.bearing;
+      if (enemies.isNotEmpty) {
+        final d = enemies.first.body.center - hero.body.center;
+        bearing = math.atan2(d.dy, d.dx);
+      }
+      p.motorAmmo--;
+      motorRecoilTime = .5;
+      hero.attackBearing = bearing;
+      hero.swingDuration = hero.swing = .25;
+      hero.strikePose = 1;
+      game?.add(
+        MountedGunBolt(
+          this,
+          hero.body.center,
+          bearing,
+          motorGunDamage,
+          rank: p.motorLevel + 1,
+          propOnly: sheltered,
+        ),
+      );
+      audio.play(EffectSound.lightning);
+    } else {
+      mountBoostTime = mount.def.artKey == 'horse' ? 3 : 2;
+      if (mount.def.artKey == 'bicycle') {
+        afflictions = PlayerAfflictions.fromSave({
+          ...afflictions.toSave(),
+          'root': 0.0,
+          'moveSlow': 0.0,
+        });
+      }
+      audio.play(EffectSound.dodge);
+    }
+    mountSkillClock = mount.def.skillCooldown;
+    device.pulse(FeedbackKind.skill);
+    refresh();
+    return true;
+  }
+
+  void _mountedHit() {
+    final mount = riding;
+    if (mount == null || mount.def.artKey != 'horse') return;
+    mount.state.hits = (mount.state.hits + 1).clamp(0, 3);
+    if (mount.hits < 3) return;
+    mount.state.fallen = true;
+    mount.durability = 0;
+    mountBoostTime = 0;
+    hero.resetCombo();
+    final center = hero.body.center;
+    // The old larger hull was clear, so its centered smaller rider body is clear.
+    riding = null;
+    hero.resizeBody(Guardian.onFootSize, center);
+    announce('말이 쓰러졌습니다 · 상인에게 회복시키세요');
+    refresh();
+  }
+
   bool boardNearbyMount() {
     if (!active ||
         afflictions.movementBlocked ||
@@ -144,7 +435,12 @@ class Adventure extends ChangeNotifier {
       return false;
     }
     final mount = nearbyMount;
-    if (mount == null || mount.durability <= 0) return false;
+    if (mount == null ||
+        mount.durability <= 0 ||
+        mount.fallen ||
+        !progress.mountProgress.owns(mount.def.artKey)) {
+      return false;
+    }
     final body = ui.Rect.fromCenter(
       center: mount.at,
       width: mount.def.bodySize.width,
@@ -160,6 +456,7 @@ class Adventure extends ChangeNotifier {
     }
     releaseInput();
     riding = mount;
+    mountBoostTime = motorRecoilTime = 0;
     hero.cancelSprint();
     hero.resizeBody(mount.def.bodySize, mount.at);
     hero.bearing = mount.bearing;
@@ -208,6 +505,7 @@ class Adventure extends ChangeNotifier {
     mount.at = center;
     if (!keepInput) releaseInput();
     riding = null;
+    mountBoostTime = motorRecoilTime = 0;
     hero.resizeBody(size, at);
     refresh();
     return true;
@@ -216,15 +514,22 @@ class Adventure extends ChangeNotifier {
   TravelMount? get serviceMount => riding ?? nearbyMount;
   bool repairMount() {
     final mount = serviceMount;
+    if (mount?.def.artKey == 'horse' && mount!.hits > 0 && !nearMountMerchant) {
+      announce('말의 피격 회복은 탈것 상인에게 맡기세요');
+      return false;
+    }
     if (disposed ||
         defeated ||
         mount == null ||
+        mount.fallen && !nearMountMerchant ||
         mount.repairCost <= 0 ||
         progress.gold < mount.repairCost) {
       return false;
     }
     progress.gold -= mount.repairCost;
     mount.durability = 100;
+    mount.state.hits = 0;
+    mount.state.fallen = false;
     refresh();
     return true;
   }
@@ -1020,6 +1325,9 @@ class Adventure extends ChangeNotifier {
 
   void tick(double dt) {
     if (!active || dt <= 0) return;
+    mountSkillClock = math.max(0, mountSkillClock - dt);
+    mountBoostTime = math.max(0, mountBoostTime - dt);
+    motorRecoilTime = math.max(0, motorRecoilTime - dt);
     // Wards cleanse afflictions; elsewhere poison resolves before any healing.
     if (sheltered) afflictions.clear();
     final poisonTicks = afflictions.update(dt);
@@ -1498,6 +1806,7 @@ class Adventure extends ChangeNotifier {
       audio.play(EffectSound.hurt);
       device.pulse(FeedbackKind.hurt);
       wearMount(math.max(1, damage * .6));
+      if (damage > 0) _mountedHit();
     }
     progress.hp = math.max(0, progress.hp - damage);
     if (damage > 0 && (!periodic || progress.hp <= 0)) hero.cancelSprint();
@@ -1529,6 +1838,7 @@ class Adventure extends ChangeNotifier {
       const ui.Color(0xffff8a72),
     );
     if (progress.hp <= 0) {
+      deathLoss ??= DeathLoss.apply(progress, random);
       defeated = true;
       combatFeedback.cancel();
       audio.stop();
@@ -2113,7 +2423,13 @@ class Guardian extends Player with WithCollision {
       final source = 'key:${event.id}';
       final fresh = held && !session.attackSources.contains(source);
       session.holdAttack(source, held);
-      if (fresh) slash();
+      if (fresh) {
+        if (session.riding?.def.artKey == 'motor') {
+          session.useMountSkill();
+        } else {
+          slash();
+        }
+      }
     }
     if (held &&
         (event.id == LogicalKeyboardKey.keyK ||
@@ -2125,6 +2441,7 @@ class Guardian extends Player with WithCollision {
     if (held && event.id == LogicalKeyboardKey.keyP) skill(slot: 3);
     if (held && event.id == LogicalKeyboardKey.shiftLeft) dodge();
     if (held && event.id == LogicalKeyboardKey.keyM) useMobility();
+    if (held && event.id == LogicalKeyboardKey.keyV) session.useMountSkill();
     if (held && event.id == LogicalKeyboardKey.digit1) session.potion();
     if (held && event.id == LogicalKeyboardKey.digit2) {
       session.potion(energy: true);
@@ -2149,7 +2466,13 @@ class Guardian extends Player with WithCollision {
         session.riding?.speed ??
         ordinarySpeed +
             (CombatBalance.sprintMoveSpeed - ordinarySpeed) * sprintFraction;
-    if (castLock > 0) unhinderedSpeed *= .4;
+    if (session.riding != null) {
+      if (session.mountBoostTime > 0) {
+        unhinderedSpeed *= session.riding!.def.waterOnly ? 1.8 : 1.6;
+      }
+      if (session.motorRecoilTime > 0) unhinderedSpeed *= .55;
+    }
+    if (castLock > 0 && session.riding == null) unhinderedSpeed *= .4;
     final previousSpeed = speed;
     speed = unhinderedSpeed * session.afflictions.movementScale;
     // Bonfire integrates old velocity before reading the held joystick again.
@@ -2289,7 +2612,9 @@ class Guardian extends Player with WithCollision {
       }
     }
     _advanceCombo(dt);
-    if (session.attackSources.isNotEmpty && attackClock <= 0) {
+    if (session.attackSources.isNotEmpty &&
+        attackClock <= 0 &&
+        session.riding?.def.artKey != 'motor') {
       slash(automatic: true);
     }
   }
@@ -2383,12 +2708,7 @@ class Guardian extends Player with WithCollision {
     }
     return session.combatAllowed ||
         session
-            .attackableChests(
-              body.center,
-              session.progress.heroClass == HeroClass.mage
-                  ? 540
-                  : session.progress.weapon.base.range,
-            )
+            .attackableChests(body.center, session.progress.weapon.base.range)
             .isNotEmpty;
   }
 
@@ -2402,7 +2722,7 @@ class Guardian extends Player with WithCollision {
     );
     if (_comboIdentity != null &&
         (_comboIdentity != identity ||
-            session.riding != null ||
+            session.riding != null && !session.mountedBasicAllowed ||
             session.sheltered && (comboFlow || _queuedCombo != null) ||
             session.afflictions.frozen ||
             physicalAction)) {
@@ -2544,9 +2864,7 @@ class Guardian extends Player with WithCollision {
   void _performSlash({ComboPressResult? chain, bool flow = false}) {
     final p = session.progress;
     final basic = p.basicSkill;
-    final propRange = session.progress.heroClass == HeroClass.mage
-        ? 540.0
-        : session.progress.weapon.base.range;
+    final propRange = p.weapon.base.range;
     final props = session.attackableChests(body.center, propRange);
     if (!session.active ||
         session.afflictions.frozen ||
@@ -2558,17 +2876,15 @@ class Guardian extends Player with WithCollision {
         aim?.id == 'crushingBlow') {
       return;
     }
-    if (!session.ensureOnFoot()) return;
+    if (!session.ensureBasicAttackMount()) return;
     var angle = bearing;
     final candidates =
         session.mobs
             .where(
               (e) =>
                   session.canHitEnemy(e) &&
-                  (e.body.center - body.center).distance <
-                      (session.progress.heroClass == HeroClass.mage
-                          ? 540
-                          : 165) &&
+                  distanceToTargetBody(body.center, e.body) <
+                      p.weapon.base.range &&
                   session.world.clearLine(
                     body.center,
                     e.body.center,
@@ -2615,13 +2931,10 @@ class Guardian extends Player with WithCollision {
         ? (session.combo + 1) % 3
         : 1;
     if (!flow) {
-      attackClock =
-          math.max(
-            CombatBalance.minimumStrikeInterval,
-            session.progress.attackInterval /
-                (frenzyTime > 0 ? session.progress.frenzyAttackTempo : 1),
-          ) /
-          session.afflictions.attackTempo;
+      attackClock = p.actualBasicInterval(
+        frenzyTempo: frenzyTime > 0 ? p.frenzyAttackTempo : 1,
+        attackTempo: session.afflictions.attackTempo,
+      );
       _lastBasicInterval = attackClock;
     }
     // Slow weapons and attack debuffs must still reach the next combo strike.
@@ -2636,9 +2949,7 @@ class Guardian extends Player with WithCollision {
     }
     if (candidates.isEmpty &&
         props.isEmpty &&
-        session.strikeEncounterStone(
-          p.heroClass == HeroClass.mage ? 300 : p.weapon.base.range,
-        )) {
+        session.strikeEncounterStone(p.weapon.base.range)) {
       return;
     }
     session.audio.play(
@@ -2663,6 +2974,7 @@ class Guardian extends Player with WithCollision {
           launchDelay: .13 / effectiveBasicTempo,
           rank: p.rank(basic.id),
           caster: this,
+          maxRange: p.weapon.base.range,
           explosive: p.basicTargetLimit > 1,
           targetLimit: p.basicTargetLimit,
           propOnly: session.sheltered,
@@ -2679,13 +2991,9 @@ class Guardian extends Player with WithCollision {
             math.sin(math.atan2(d.dy, d.dx) - angle),
             math.cos(math.atan2(d.dy, d.dx) - angle),
           );
-          return d.distance < p.weapon.base.range + mob.size.x / 2 &&
-              diff.abs() <
-                  (p.weapon.base.style == 'spear'
-                      ? .5
-                      : p.weapon.base.style == 'axe'
-                      ? 1.5
-                      : 1.25) &&
+          return distanceToTargetBody(body.center, mob.body) <
+                  p.weapon.base.range &&
+              diff.abs() < p.weapon.base.meleeHalfAngle &&
               session.world.clearLine(
                 body.center,
                 mob.body.center,
@@ -2707,11 +3015,7 @@ class Guardian extends Player with WithCollision {
         body.center,
         p.weapon.base.range,
         bearing: angle,
-        halfAngle: p.weapon.base.style == 'spear'
-            ? .5
-            : p.weapon.base.style == 'axe'
-            ? 1.5
-            : 1.25,
+        halfAngle: p.weapon.base.meleeHalfAngle,
       ))
         (
           mob: null,
@@ -3141,6 +3445,67 @@ class Guardian extends Player with WithCollision {
         mount.def.waterOnly ? 48 : 62,
         mountPose: mountMotion.pose(mount.def.artKey),
       );
+      if (mount.def.artKey == 'motor') {
+        final direction = ui.Offset(
+          math.cos(mount.bearing),
+          math.sin(mount.bearing),
+        );
+        final turret = feet - const ui.Offset(0, 22) + direction * 10;
+        canvas.drawLine(
+          turret,
+          turret + direction * 21,
+          ui.Paint()
+            ..color = const ui.Color(0xff778184)
+            ..strokeWidth = 4
+            ..strokeCap = ui.StrokeCap.round,
+        );
+        canvas.drawCircle(
+          turret,
+          4,
+          ui.Paint()..color = const ui.Color(0xffd6b875),
+        );
+        if (session.motorRecoilTime > .35) {
+          canvas.drawCircle(
+            turret + direction * 23,
+            3 + session.progress.mountProgress.motorLevel.toDouble(),
+            ui.Paint()..color = const ui.Color(0xffffdf83),
+          );
+        }
+      }
+      if (session.mountBoostTime > 0) {
+        final trailColor = mount.def.waterOnly
+            ? const ui.Color(0xff94dbf4)
+            : mount.def.artKey == 'bicycle'
+            ? const ui.Color(0xff94e5c8)
+            : const ui.Color(0xffe8c58c);
+        final direction = ui.Offset(
+          math.cos(mount.bearing),
+          math.sin(mount.bearing),
+        );
+        final back = feet - direction * 20;
+        if (mount.def.waterOnly) {
+          canvas.drawArc(
+            ui.Rect.fromCenter(center: feet, width: 76, height: 26),
+            .1,
+            math.pi * .8,
+            false,
+            ui.Paint()
+              ..color = trailColor
+              ..style = ui.PaintingStyle.stroke
+              ..strokeWidth = 2,
+          );
+        } else {
+          for (var i = 0; i < 3; i++) {
+            final at =
+                back - direction * (i * 9 + ((session.elapsed * 40) % 9));
+            canvas.drawCircle(
+              at,
+              mount.def.artKey == 'horse' ? 2.5 : 1.5,
+              ui.Paint()..color = trailColor.withValues(alpha: .6 - i * .15),
+            );
+          }
+        }
+      }
       canvas.save();
       final lift =
           (mount.def.waterOnly ? 8.0 : 20.0) +
@@ -3157,9 +3522,14 @@ class Guardian extends Player with WithCollision {
         canvas,
         session.progress.heroClass == HeroClass.mage ? 'mage' : 'hero',
         feet - ui.Offset(0, lift),
-        mount.bearing,
+        swing > 0 ? attackBearing : mount.bearing,
         0,
         46,
+        attack: swing > 0,
+        comboPose: strikePose,
+        actionProgress: swing > 0 && swingDuration > 0
+            ? (1 - swing / swingDuration).clamp(0.0, 1.0)
+            : null,
         flash: damageFlash,
       );
       canvas.restore();

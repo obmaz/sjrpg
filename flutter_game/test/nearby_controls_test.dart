@@ -16,7 +16,7 @@ import 'support/test_game.dart';
 void besideWell(Adventure session) {
   final site = session.world.sites.first;
   session.hero.position.setValues(site.at.dx - 14, site.at.dy + 45);
-  session.mounts.first.at = site.at + const Offset(65, 55);
+  withOwnedMounts(session).mounts.first.at = site.at + const Offset(65, 55);
   session.travelJournal.discover(session.world.stage, site.id);
   session.waveTime = 1000;
   session.lastPackSpawn = session.elapsed;
@@ -162,7 +162,10 @@ void main() {
         expect(tester.takeException(), isNull);
         await tester.tap(mount);
         await tester.pump();
-        expect(session.riding?.def.id, session.mounts.first.def.id);
+        expect(
+          session.riding?.def.id,
+          withOwnedMounts(session).mounts.first.def.id,
+        );
         expect(control('워프'), findsNothing);
         await tester.tap(find.byType(NearbyQuestCard));
         await tester.pump();

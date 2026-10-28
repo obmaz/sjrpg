@@ -138,7 +138,10 @@ void main() {
       mage.hero.update(.05);
       bolt.update(.05);
       expect(bolt.position, origin);
-      expect(bolt.remaining, .88);
+      expect(
+        bolt.remaining,
+        mage.progress.weapon.base.range / ArcaneBolt.speed,
+      );
       mage.pause();
       bolt.update(.5);
       expect(bolt.launchDelay, closeTo(releaseDelay - .05, .001));
@@ -150,7 +153,10 @@ void main() {
         bolt.update(.05);
       }
       expect(bolt.launchDelay, 0);
-      expect(bolt.remaining, lessThan(.88));
+      expect(
+        bolt.remaining,
+        lessThan(mage.progress.weapon.base.range / ArcaneBolt.speed),
+      );
       expect(bolt.position.x, closeTo(mage.hero.body.center.dx, .001));
       expect(bolt.position.y, greaterThan(mage.hero.body.center.dy));
       expect(mage.hero.swing, lessThan(mage.hero.swingDuration * .58));

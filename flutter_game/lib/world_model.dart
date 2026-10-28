@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:collection/collection.dart';
 
+import 'mount_progress.dart';
 import 'sanctuary.dart';
 import 'stage_content.dart';
 
@@ -69,20 +70,50 @@ class TravelMountDef {
   final double speed;
   final bool waterOnly;
   String get artKey => waterOnly ? 'boat' : id;
-  Size get bodySize => waterOnly ? const Size(46, 34) : const Size(40, 32);
+  Size get bodySize => waterOnly
+      ? const Size(46, 34)
+      : switch (id) {
+          'bicycle' => const Size(34, 28),
+          'motor' => const Size(46, 34),
+          _ => const Size(42, 36),
+        };
+  int get price => switch (artKey) {
+    'horse' => 90,
+    'bicycle' => 110,
+    'motor' => 420,
+    _ => 180,
+  };
+  String get skillName => switch (artKey) {
+    'horse' => '박차',
+    'bicycle' => '가속 페달',
+    'motor' => '기관포',
+    _ => '물살 타기',
+  };
+  double get skillCooldown => switch (artKey) {
+    'horse' => 14,
+    'bicycle' => 10,
+    'motor' => 2.8,
+    _ => 10,
+  };
+  String get description => switch (artKey) {
+    'horse' => '기본 공격 가능 · 적에게 3회 피격 시 쓰러짐',
+    'bicycle' => '가벼운 차체 · 피격으로 넘어지지 않음 · 전투 시 하차',
+    'motor' => '원거리 기관포 강화 가능 · 탄약 필요 · 넓은 차체',
+    _ => '수면 전용 · 물살로 가속 · 육상 이동 불가',
+  };
 }
 
 const travelMountDefs = [
-  TravelMountDef('horse', '말', 520),
-  TravelMountDef('bicycle', '자전거', 460),
-  TravelMountDef('motor', '오토바이', 620),
-  TravelMountDef('boat', '배', 340, waterOnly: true),
-  TravelMountDef('boat-west', '배', 340, waterOnly: true),
-  TravelMountDef('boat-ruins', '배', 340, waterOnly: true),
-  TravelMountDef('boat-marsh', '배', 340, waterOnly: true),
-  TravelMountDef('boat-east', '배', 340, waterOnly: true),
-  TravelMountDef('boat-south', '배', 340, waterOnly: true),
-  TravelMountDef('boat-coast', '배', 340, waterOnly: true),
+  TravelMountDef('horse', '말', 340),
+  TravelMountDef('bicycle', '자전거', 300),
+  TravelMountDef('motor', '오토바이', 370),
+  TravelMountDef('boat', '배', 240, waterOnly: true),
+  TravelMountDef('boat-west', '배', 240, waterOnly: true),
+  TravelMountDef('boat-ruins', '배', 240, waterOnly: true),
+  TravelMountDef('boat-marsh', '배', 240, waterOnly: true),
+  TravelMountDef('boat-east', '배', 240, waterOnly: true),
+  TravelMountDef('boat-south', '배', 240, waterOnly: true),
+  TravelMountDef('boat-coast', '배', 240, waterOnly: true),
 ];
 const authoredInitialMountPositions = [
   Offset(4000, 3440),
@@ -98,13 +129,18 @@ const authoredInitialMountPositions = [
 ];
 
 class TravelMount {
-  TravelMount(this.def, this.at);
+  TravelMount(this.def, this.at, {MountCondition? condition})
+    : state = condition ?? MountCondition();
+  final MountCondition state;
   final TravelMountDef def;
   Offset at;
   double bearing = 1.5707963267948966;
-  double durability = 100;
+  double get durability => state.durability;
+  set durability(double value) => state.durability = value;
+  int get hits => state.hits;
+  bool get fallen => state.fallen;
   int get condition => durability.ceil().clamp(0, 100);
-  int get repairCost => ((100 - durability) * .6).ceil();
+  int get repairCost => fallen ? 40 : ((100 - durability) * .6).ceil();
   double get speed => durability <= 0
       ? (def.waterOnly ? 100 : 140)
       : def.speed * (durability <= 20 ? .75 : 1);

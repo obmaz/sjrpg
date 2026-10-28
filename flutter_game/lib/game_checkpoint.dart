@@ -24,10 +24,17 @@ class GameCheckpoint {
   String encode() => jsonEncode(data);
   // Each authored stage has an independent scene budget; only visited scenes are saved.
   static const _maximumEncodedLength = 8000000;
-  static GameCheckpoint? capture(Adventure session) {
-    if (!session.ready || session.disposed || session.progress.hp <= 0) {
+  static GameCheckpoint? capture(Adventure session, {bool forDefeat = false}) {
+    if (!session.ready ||
+        session.disposed ||
+        session.progress.hp <= 0 && !(forDefeat && session.defeated)) {
       return null;
     }
+    final savedProgress = forDefeat
+        ? (Progress.fromSave(session.progress.toSave())!
+            ..hp = session.progress.maxHp
+            ..energy = session.progress.maxEnergy)
+        : session.progress;
     final bosses = session.mobs.where(
       (mob) => mob.boss && !mob.isDead && !mob.isRemoving,
     );
@@ -82,13 +89,14 @@ class GameCheckpoint {
               },
             )
             .toList(),
-        'riding': session.riding?.def.id,
-        'progress': session.progress.toSave(),
+        'riding': forDefeat ? null : session.riding?.def.id,
+        'progress': savedProgress.toSave(),
+        'revivalPending': forDefeat,
         'seed': session.world.seed,
         'hubOrigin': [session.world.spawn.dx, session.world.spawn.dy],
         'travel': session.travelJournal.toSave(),
-        'x': session.hero.position.x,
-        'y': session.hero.position.y,
+        'x': forDefeat ? session.world.spawn.dx : session.hero.position.x,
+        'y': forDefeat ? session.world.spawn.dy : session.hero.position.y,
         'elapsed': session.elapsed,
         'chests': session.openedChests.toList(),
         'memoryRewarded': session.memoryRewarded,
@@ -96,10 +104,15 @@ class GameCheckpoint {
         'attackClock': session.hero.attackClock,
         'dodgeClock': session.hero.dodgeClock,
         'mobilityClock': session.hero.mobilityClock,
-        'sprintTime': session.hero.sprintTime,
-        'armor': session.hero.armorTime,
-        'frenzy': session.hero.frenzyTime,
-        'afflictions': session.afflictions.toSave(),
+        'mountSkillClock': session.mountSkillClock,
+        'mountBoostTime': forDefeat ? 0 : session.mountBoostTime,
+        'motorRecoilTime': forDefeat ? 0 : session.motorRecoilTime,
+        'sprintTime': forDefeat ? 0 : session.hero.sprintTime,
+        'armor': forDefeat ? 0 : session.hero.armorTime,
+        'frenzy': forDefeat ? 0 : session.hero.frenzyTime,
+        'afflictions': forDefeat
+            ? PlayerAfflictions().toSave()
+            : session.afflictions.toSave(),
         'loot': session.loot
             .where((g) => !g.collected && !g.isRemoving)
             .map(
@@ -173,6 +186,8 @@ class GameCheckpoint {
       'attackClock': 0,
       'dodgeClock': 0,
       'sprintTime': 0,
+      'mountBoostTime': 0,
+      'motorRecoilTime': 0,
       'armor': 0,
       'frenzy': 0,
     });
@@ -199,6 +214,9 @@ class GameCheckpoint {
         'progress': recovered.toSave(),
         'afflictions': PlayerAfflictions().toSave(),
         'sprintTime': 0,
+        'mountBoostTime': 0,
+        'motorRecoilTime': 0,
+        'revivalPending': false,
       }),
     )!;
     return GameCheckpoint._(snapshot.data, snapshot.progress, revival: true);
@@ -221,6 +239,8 @@ class GameCheckpoint {
   }) {
     try {
       if (data['version'] != 1) return null;
+      data['revivalPending'] ??= false;
+      if (data['revivalPending'] is! bool) return null;
       data['afflictions'] = PlayerAfflictions.fromSave(
         data['afflictions'],
       ).toSave();
@@ -338,6 +358,14 @@ class GameCheckpoint {
       data['dodgeClock'] ??= 0;
       data['mobilityClock'] ??= 0;
       data['sprintTime'] ??= 0;
+      data['mountSkillClock'] ??= 0;
+      data['mountBoostTime'] ??= 0;
+      data['motorRecoilTime'] ??= 0;
+      if (!number(data['mountSkillClock'], 14) ||
+          !number(data['mountBoostTime'], 3) ||
+          !number(data['motorRecoilTime'], .5)) {
+        return null;
+      }
       if (!number(data['attackClock'], 60) ||
           !number(data['dodgeClock'], 1.5) ||
           !number(data['mobilityClock'], 60) ||
@@ -618,7 +646,11 @@ class GameCheckpoint {
       // Persist even an empty migrated ledger, so future reads cannot re-mint
       // spent rewards from the same completed scene or an older archive.
       data['progress'] = progress.toSave();
-      return GameCheckpoint._(data, progress);
+      return GameCheckpoint._(
+        data,
+        progress,
+        revival: data['revivalPending'] == true,
+      );
     } catch (_) {
       return null;
     }
@@ -692,6 +724,8 @@ class GameCheckpoint {
         if (scene.containsKey(key)) key: scene[key],
       'progress': progress,
       'sprintTime': 0,
+      'mountBoostTime': 0,
+      'motorRecoilTime': 0,
       'stageStartKills': progress['kills'] - scene['stageKills'],
       'commissionStartKills': progress['kills'] - scene['commissionKills'],
     };
@@ -846,10 +880,11 @@ class GameCheckpoint {
     // are validated; the hero may have walked through the remains before saving.
     session.openedChests.addAll((data['chests'] as List).cast<int>());
     for (final entry in data['mounts'] as List) {
+      if (!session.progress.mountProgress.owns(entry['id'] as String)) continue;
       final existing = session.mounts.where((m) => m.def.id == entry['id']);
       if (existing.isEmpty) continue;
       final mount = existing.first;
-      mount.durability = (entry['durability'] as num).toDouble();
+      // Condition belongs to global ownership, not an older scene archive.
       final at = Offset(
         (entry['x'] as num).toDouble(),
         (entry['y'] as num).toDouble(),
@@ -864,7 +899,9 @@ class GameCheckpoint {
         mount.bearing = (entry['angle'] as num).toDouble();
       }
     }
-    final riding = session.mounts.where((m) => m.def.id == data['riding']);
+    final riding = session.mounts.where(
+      (m) => m.def.id == data['riding'] && !m.fallen,
+    );
     if (riding.isNotEmpty) {
       session.riding = riding.first;
       session.hero.resizeBody(riding.first.def.bodySize, riding.first.at);
@@ -920,6 +957,11 @@ class GameCheckpoint {
     }
     session.hero.attackClock = (data['attackClock'] as num).toDouble();
     session.hero.dodgeClock = (data['dodgeClock'] as num).toDouble();
+    session.mountSkillClock = (data['mountSkillClock'] as num).toDouble();
+    if (session.riding != null) {
+      session.mountBoostTime = (data['mountBoostTime'] as num).toDouble();
+      session.motorRecoilTime = (data['motorRecoilTime'] as num).toDouble();
+    }
     session.hero.armorTime = (data['armor'] as num).toDouble();
     session.hero.frenzyTime = (data['frenzy'] as num).toDouble();
     for (final raw in data['loot'] as List) {

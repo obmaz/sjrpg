@@ -38,6 +38,18 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
   Set<int> newTabItems = {};
   Adventure get s => widget.session;
   Progress get p => s.progress;
+  double get _frenzyTempo => s.hero.frenzyTime > 0 ? p.frenzyAttackTempo : 1;
+  double get _currentBasicDps => p
+      .basicAttackStats(
+        frenzyTempo: _frenzyTempo,
+        attackTempo: s.afflictions.attackTempo,
+      )
+      .dps;
+  BasicAttackStats? _previewBasicAttack(Gear gear) => p.previewBasicAttack(
+    gear,
+    frenzyTempo: _frenzyTempo,
+    attackTempo: s.afflictions.attackTempo,
+  );
   @override
   void initState() {
     super.initState();
@@ -297,8 +309,8 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
   String _gearAccessibilityStats(Gear gear) {
     final current = p.equipped[gear.base.slot];
     if (gear.base.slot == GearSlot.weapon) {
-      final attack = p.previewBasicAttack(gear);
-      return '${gear.base.comboProfile == null ? '' : '타이밍 연계 ${gear.base.comboProfile!.chainLabel} · '}무기 레벨 ${gear.weaponLevel} · 무기 공격 ${gear.attack.round()} · 초당 피해 ${attack?.dps.toStringAsFixed(1) ?? '직업 제한'} · 현재 초당 피해 ${p.basicDps.toStringAsFixed(1)}';
+      final attack = _previewBasicAttack(gear);
+      return '${gear.base.comboProfile == null ? '' : '타이밍 연계 ${gear.base.comboProfile!.chainLabel} · '}무기 레벨 ${gear.weaponLevel} · 무기 공격 ${gear.attack.round()} · 초당 피해 ${attack?.dps.toStringAsFixed(1) ?? '직업 제한'} · 현재 초당 피해 ${_currentBasicDps.toStringAsFixed(1)}';
     }
     return '방어 ${gear.armor.round()} · 생명 ${gear.health.round()} · ${p.heroClass.resource} ${gear.mana.round()} · 현재 방어 ${current?.armor.round() ?? 0} · 현재 생명 ${current?.health.round() ?? 0}';
   }
@@ -530,7 +542,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
     final already = !owned && _sameEquippedOffer(entry);
     final usable = gear.base.usable(p.heroClass);
     final attack = usable && gear.base.slot == GearSlot.weapon
-        ? p.previewBasicAttack(gear)
+        ? _previewBasicAttack(gear)
         : null;
     final label = owned
         ? '보관 장비 · ${gear.name}${active ? ' · 장착 중' : ''}${gear.locked ? ' · 잠금' : ''}${p.unseenGear.contains(gear.serial) ? ' · 신규' : ''}'
@@ -684,7 +696,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                                       _quickStat(
                                         '초당 피해',
                                         attack.dps,
-                                        p.basicDps,
+                                        _currentBasicDps,
                                         active,
                                         decimal: true,
                                       ),

@@ -34,6 +34,21 @@ T inCombatField<T extends Adventure>(T session) {
   return session;
 }
 
+/// Explicit old-scene fixture: these tests exercise purchased vehicles.
+T withOwnedMounts<T extends Adventure>(T session) {
+  if (session.mounts.isEmpty) {
+    session.progress.mountProgress.ownedIds.addAll({
+      'horse',
+      'bicycle',
+      'motor',
+      'boat',
+    });
+    session.progress.mountProgress.motorAmmo = 12;
+    session.spawnOwnedMounts();
+  }
+  return session;
+}
+
 class TestGame implements BonfireGameInterface {
   @override
   double timeScale = 1;

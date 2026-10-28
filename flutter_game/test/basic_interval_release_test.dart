@@ -101,10 +101,13 @@ void main() {
 
         stepBolt(releaseDelay * .75);
         expect(bolt.launchDelay, greaterThan(0));
-        expect(bolt.remaining, .88);
+        expect(bolt.remaining, p.weapon.base.range / ArcaneBolt.speed);
         stepBolt(releaseDelay * .35);
         expect(bolt.launchDelay, 0);
-        expect(bolt.remaining, lessThan(.88));
+        expect(
+          bolt.remaining,
+          lessThan(p.weapon.base.range / ArcaneBolt.speed),
+        );
       }
       void stepHero(double seconds) {
         while (seconds > 0) {

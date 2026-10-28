@@ -42,7 +42,7 @@ void main() {
       final site = s.world.sites.first;
       s.hero.position.setValues(site.at.dx, site.at.dy + 55);
       s.cleansedSites.add(site.id);
-      s.riding = s.mounts.first;
+      s.riding = withOwnedMounts(s).mounts.first;
       expect(s.nearbyQuestGuide, null);
       expect(s.nearbyAction, NearbyAction.dismount);
       final sands = inCombatField(Adventure(GameArt(), stage: WorldStage.sands))
@@ -50,7 +50,7 @@ void main() {
       addTearDown(sands.dispose);
       final q = timeCommissions.first;
       sands.hero.position.setValues(q.site.at.dx, q.site.at.dy + 55);
-      sands.riding = sands.mounts.first;
+      sands.riding = withOwnedMounts(sands).mounts.first;
       expect(sands.nearbyQuestGuide, null);
       expect(sands.nearbyAction, NearbyAction.dismount);
       sands.timePath = TimePath.past;

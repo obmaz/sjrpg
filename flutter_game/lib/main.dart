@@ -19,6 +19,7 @@ import 'game_checkpoint.dart';
 import 'game_panels.dart';
 import 'game_ui.dart';
 import 'health_widgets.dart';
+import 'mount_merchant.dart';
 import 'nearby_controls.dart';
 import 'panel_controls.dart';
 import 'player_afflictions.dart';
@@ -221,11 +222,20 @@ class _EntryPageState extends State<EntryPage> with WidgetsBindingObserver {
         await _prepareCheckpointArtwork(art, checkpoint);
       }
       if (!mounted) return;
+      final preparedCheckpoint = checkpoint?.revival == true
+          ? checkpoint!.forRevival()
+          : checkpoint;
+      // Consume paid revival before input is enabled. Reloading cannot reroll
+      // the loss or renew the transient three-second protection marker.
+      if (checkpoint?.revival == true &&
+          !widget.writeCheckpoint(preparedCheckpoint!.encode())) {
+        throw StateError('Could not commit paid revival');
+      }
       setState(() {
         run++;
         chosen = heroClass;
-        if (checkpoint != null) savedAdventure = checkpoint;
-        resuming = checkpoint != null;
+        if (preparedCheckpoint != null) savedAdventure = preparedCheckpoint;
+        resuming = preparedCheckpoint != null;
         enteringStage = false;
         arrivingByWell = false;
         started = true;
@@ -408,18 +418,44 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   void Function()? stopSaveListener;
   void Function()? stopBackAction;
   bool keepSave = true, interruptedBeforeReady = false;
+  GameCheckpoint? _deathCheckpoint;
+  bool _deathCommitted = false, _persistingDefeat = false;
+
+  void _persistDefeat() {
+    if (adventure.defeated && !_deathCommitted && !_persistingDefeat) {
+      saveNow();
+    }
+  }
+
   void saveNow({bool notify = true}) {
     if (!keepSave) return;
-    final checkpoint = GameCheckpoint.capture(adventure);
+    final checkpoint = adventure.defeated
+        ? (_deathCheckpoint ??= GameCheckpoint.capture(
+            adventure,
+            forDefeat: true,
+          ))
+        : GameCheckpoint.capture(adventure);
     if (checkpoint == null) return;
-    final failed = !widget.writeCheckpoint(checkpoint.encode());
+    _persistingDefeat = adventure.defeated;
+    var failed = true;
+    try {
+      failed = !widget.writeCheckpoint(checkpoint.encode());
+    } catch (_) {
+      failed = true;
+    }
+    if (adventure.defeated) _deathCommitted = !failed;
     final changed = failed != adventure.saveFailed;
     adventure.saveFailed = failed;
     if (changed && notify && mounted && !adventure.disposed) {
-      adventure.announce(
-        failed ? '저장하지 못했습니다 · 설정에서 저장 상태를 확인하세요' : '자동 저장이 다시 작동합니다',
-      );
+      if (adventure.defeated) {
+        adventure.refresh();
+      } else {
+        adventure.announce(
+          failed ? '저장하지 못했습니다 · 설정에서 저장 상태를 확인하세요' : '자동 저장이 다시 작동합니다',
+        );
+      }
     }
+    _persistingDefeat = false;
   }
 
   bool preparingTransition = false, preparationInterrupted = false;
@@ -550,6 +586,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   void returnToMenu() {
     if (widget.onReturnToMenu == null) return;
     saveNow();
+    if (adventure.defeated && !_deathCommitted) return;
     keepSave = false;
     widget.onReturnToMenu!();
   }
@@ -575,6 +612,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
       }
     });
     WidgetsBinding.instance.addObserver(this);
+    adventure.addListener(_persistDefeat);
     saveTimer = async.Timer.periodic(
       const Duration(seconds: 5),
       (_) => saveNow(),
@@ -611,6 +649,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         for (final section in adventure.world.sanctuaryFences)
           SanctuaryFence(section, adventure.world.stage),
         VillagePerson(adventure, true),
+        MountMerchant(adventure),
         if (adventure.world.stage == WorldStage.forest)
           BlacksmithWorkshop(adventure),
         if (adventure.world.stage == WorldStage.sands)
@@ -703,6 +742,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    adventure.removeListener(_persistDefeat);
     saveTimer?.cancel();
     stopSaveListener?.call();
     stopBackAction?.call();
@@ -754,10 +794,17 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
             ? 'victory'
             : panel;
         final p = adventure.progress;
+        final mount = adventure.riding;
         final mobility = p.mobilitySkill;
         final hasMobility = p.rank(mobility.id) > 0;
         final guide = adventure.nearbyQuestGuide;
         final contextActions = [
+          if (adventure.nearMountMerchant && mount == null)
+            NearbyControl(
+              label: '탈것',
+              icon: Icons.pets_rounded,
+              onTap: () => open('mounts'),
+            ),
           for (final action in adventure.nearbyActions)
             if (switch (action) {
               NearbyAction.shrine => guide == null,
@@ -786,7 +833,9 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
             adventure
                 .attackableChests(
                   adventure.hero.body.center,
-                  p.heroClass == HeroClass.mage ? 540 : p.weapon.base.range,
+                  mount?.def.artKey == 'motor'
+                      ? Adventure.motorGunRange
+                      : p.weapon.base.range,
                 )
                 .isEmpty;
         final compactBattle =
@@ -945,7 +994,13 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                       children: [
                         Opacity(
                           opacity: peacefulAttack ? .45 : 1,
-                          child: p.selectedBasic != p.defaultBasicId
+                          child: mount?.def.artKey == 'motor'
+                              ? MountSkillBadge(
+                                  kind: 'motor',
+                                  size: attack * .75,
+                                  ammo: p.mountProgress.motorAmmo,
+                                )
+                              : p.selectedBasic != p.defaultBasicId
                               ? CustomPaint(
                                   painter: EffectIconPainter(
                                     widget.art,
@@ -979,37 +1034,93 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   label: '공격',
                   showLabel: false,
                   semanticLabel: '공격',
-                  semanticHint:
-                      '기본 공격 · ${p.basicSkill.name} · ${p.rank(p.selectedBasic)}등급',
+                  semanticHint: mount?.def.artKey == 'motor'
+                      ? '기관포 · 탄약 ${p.mountProgress.motorAmmo}발 · V'
+                      : mount == null || mount.def.artKey == 'horse'
+                      ? '기본 공격 · ${p.basicSkill.name} · ${p.rank(p.selectedBasic)}등급'
+                      : '내려서 기본 공격',
+                  enabled:
+                      mount?.def.artKey != 'motor' ||
+                      adventure.active &&
+                          !adventure.afflictions.frozen &&
+                          !peacefulAttack &&
+                          mount!.durability > 0 &&
+                          !mount.fallen &&
+                          adventure.mountSkillClock <= 0 &&
+                          p.mountProgress.motorAmmo > 0,
                   size: attack,
-                  remaining: adventure.hero.attackClock,
-                  total: p.attackInterval,
-                  onHold: (held) => adventure.holdAttack('touch', held),
-                  onTap: adventure.hero.slash,
+                  remaining: mount?.def.artKey == 'motor'
+                      ? adventure.mountSkillClock
+                      : adventure.hero.attackClock,
+                  total: mount?.def.artKey == 'motor'
+                      ? adventure.mountSkillTotal
+                      : p.actualBasicInterval(
+                          frenzyTempo: adventure.hero.frenzyTime > 0
+                              ? p.frenzyAttackTempo
+                              : 1,
+                          attackTempo: adventure.afflictions.attackTempo,
+                        ),
+                  onHold: mount?.def.artKey == 'motor'
+                      ? null
+                      : (held) => adventure.holdAttack('touch', held),
+                  onTap: mount?.def.artKey == 'motor'
+                      ? () => adventure.useMountSkill()
+                      : adventure.hero.slash,
                 ),
               ),
               for (var slot = 0; slot < 4; slot++)
-                if (p.skillAt(slot) != null) skillButton(slot),
-              Positioned(
-                right: width < 360 ? 112 : 134,
-                bottom: bottom + 20,
-                child: ActionButton(
-                  art: widget.art,
-                  sprite: 'roundEmpty',
-                  artwork: CustomPaint(
-                    size: Size.square((width < 360 ? 56 : 64) * .78),
-                    painter: AbilityPicturePainter(widget.art, 'dodge-icon'),
+                if (mount == null && p.skillAt(slot) != null) skillButton(slot),
+              if (mount?.def.artKey != 'motor')
+                Positioned(
+                  right: width < 360 ? 112 : 134,
+                  bottom: bottom + 20,
+                  child: ActionButton(
+                    art: widget.art,
+                    sprite: 'roundEmpty',
+                    artwork: mount == null
+                        ? CustomPaint(
+                            size: Size.square((width < 360 ? 56 : 64) * .78),
+                            painter: AbilityPicturePainter(
+                              widget.art,
+                              'dodge-icon',
+                            ),
+                          )
+                        : MountSkillBadge(
+                            kind: mount.def.artKey,
+                            size: (width < 360 ? 56 : 64) * .78,
+                            ammo: p.mountProgress.motorAmmo,
+                            hits: mount.hits,
+                          ),
+                    label: mount?.def.skillName ?? '회피',
+                    showLabel: false,
+                    semanticLabel: mount == null
+                        ? '회피'
+                        : '탈것 스킬 · ${mount.def.skillName}',
+                    semanticHint: mount?.def.artKey == 'motor'
+                        ? '탄약 ${p.mountProgress.motorAmmo}발 · V'
+                        : mount == null
+                        ? null
+                        : '전용 기술 · V',
+                    enabled:
+                        mount == null ||
+                        adventure.active &&
+                            !adventure.afflictions.frozen &&
+                            !mount.fallen &&
+                            mount.durability > 0 &&
+                            adventure.mountSkillClock <= 0 &&
+                            (mount.def.artKey != 'motor' ||
+                                p.mountProgress.motorAmmo > 0),
+                    size: width < 360 ? 56 : 64,
+                    remaining: mount == null
+                        ? adventure.hero.dodgeClock
+                        : adventure.mountSkillClock,
+                    total: mount == null ? 1.5 : adventure.mountSkillTotal,
+                    onTap: mount == null
+                        ? adventure.hero.dodge
+                        : () => adventure.useMountSkill(),
                   ),
-                  label: '회피',
-                  showLabel: false,
-                  semanticLabel: '회피',
-                  size: width < 360 ? 56 : 64,
-                  remaining: adventure.hero.dodgeClock,
-                  total: 1.5,
-                  onTap: adventure.hero.dodge,
                 ),
-              ),
-              if (hasMobility)
+              if (hasMobility && mount == null)
                 Positioned(
                   right: width < 360 ? (compactBattle ? 120 : 112) : 134,
                   bottom: bottom + 112,
@@ -1177,9 +1288,14 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   onTravel: widget.onTravel == null ? null : travelTo,
                   onRetryCheckpoint:
                       adventure.defeated &&
+                          _deathCommitted &&
+                          !adventure.saveFailed &&
                           widget.onRetryCheckpoint != null &&
                           GameCheckpoint.decode(widget.readCheckpoint()) != null
-                      ? widget.onRetryCheckpoint
+                      ? () {
+                          keepSave = false;
+                          widget.onRetryCheckpoint!();
+                        }
                       : null,
                 ),
               ),

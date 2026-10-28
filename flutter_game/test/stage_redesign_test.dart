@@ -34,7 +34,9 @@ void main() {
     'an occupied mount explains the blocker and becomes boardable after the enemy dies',
     () {
       final s = session();
-      final motor = s.mounts.firstWhere((m) => m.def.id == 'motor');
+      final motor = withOwnedMounts(
+        s,
+      ).mounts.firstWhere((m) => m.def.id == 'motor');
       // The expanded starter ward protects the parked town motor. Exercise an
       // actually contested mount on clear ground in the combat fixture instead.
       motor.at = const Offset(6100, 4200);
@@ -254,10 +256,12 @@ void main() {
     expect(s.stageCleared, false);
   });
   test(
-    'ground mounts require a button and persist; attacking returns to foot',
+    'purchased horses require a button, persist and keep basic attacks mounted',
     () {
       final s = session();
-      final horse = s.mounts.firstWhere((m) => m.def.id == 'horse');
+      final horse = withOwnedMounts(
+        s,
+      ).mounts.firstWhere((m) => m.def.id == 'horse');
       s.hero.position.setValues(horse.at.dx - 14, horse.at.dy + 50);
       s.tick(.05);
       expect(s.riding, null);
@@ -272,13 +276,13 @@ void main() {
       expect(restored.riding?.def.id, 'horse');
       expect(restored.hero.body.size, horse.def.bodySize);
       s.hero.slash();
-      expect(s.riding, null);
-      expect(s.hero.body.size, const Size(28, 24));
+      expect(s.riding, horse);
+      expect(s.hero.body.size, horse.def.bodySize);
     },
   );
   test('boats stay on water and cannot dismount in the middle of a lake', () {
     final s = session();
-    final boat = s.mounts.firstWhere((m) => m.def.waterOnly);
+    final boat = withOwnedMounts(s).mounts.firstWhere((m) => m.def.waterOnly);
     expect(s.world.largeWater(boat.at), true);
     final shore = s.world.spawnNear(
       boat.at - const Offset(220, 12),

@@ -203,7 +203,7 @@ void main() {
     () {
       final s = field();
       s.progress.energy = 100;
-      final mount = s.mounts.first
+      final mount = withOwnedMounts(s).mounts.first
         ..at = s.hero.body.center + const Offset(40, 0);
       expect(s.boardNearbyMount(), true);
       s.hurtHero(1, status: PlayerStatus.root);
@@ -233,7 +233,8 @@ void main() {
       expect(s.afflictions.movementBlocked, true);
       expect(s.world.blocked(s.hero.body), false);
       final other = field();
-      other.mounts.first.at = other.hero.body.center + const Offset(40, 0);
+      withOwnedMounts(other).mounts.first.at =
+          other.hero.body.center + const Offset(40, 0);
       expect(other.boardNearbyMount(), true);
       other.progress.energy = 100;
       other.hurtHero(1, status: PlayerStatus.freeze);

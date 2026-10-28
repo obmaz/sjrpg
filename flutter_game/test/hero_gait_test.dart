@@ -88,10 +88,10 @@ void main() {
       addTearDown(s.dispose);
       final original = s.hero.body.size;
       expect(original, const ui.Size(28, 24));
-      s.mounts.first.at = const ui.Offset(6000, 4200);
+      withOwnedMounts(s).mounts.first.at = const ui.Offset(6000, 4200);
       s.hero.position.setValues(5990, 4250);
       expect(s.boardNearbyMount(), true);
-      expect(s.hero.body.size, s.mounts.first.def.bodySize);
+      expect(s.hero.body.size, withOwnedMounts(s).mounts.first.def.bodySize);
       expect(s.dismount(), true);
       expect(s.hero.body.size, original);
       expect(s.world.blocked(s.hero.body), false);

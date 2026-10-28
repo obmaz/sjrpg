@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'combat_balance.dart';
+import 'mount_progress.dart';
 import 'skill_growth.dart';
 import 'stage_content.dart';
 import 'weapon_profiles.dart';
@@ -45,6 +46,26 @@ class GearDef {
   final int value;
   bool usable(HeroClass c) => heroClass == null || heroClass == c;
   WeaponComboProfile? get comboProfile => meleeWeaponProfiles[id];
+
+  /// Half of the forward hit arc; long thrusts trade width for reach.
+  double get meleeHalfAngle => switch (id) {
+    'rapier' => .32,
+    'spear' => .42,
+    'halberd' => .72,
+    'glaive' => .95,
+    'greatsword' || 'dualblades' || 'mace' || 'warhammer' => 1.05,
+    'runeblade' => 1.10,
+    'katana' => 1.15,
+    'longsword' => 1.20,
+    'flail' => 1.35,
+    'falchion' => 1.40,
+    _ =>
+      style == 'spear'
+          ? .5
+          : style == 'axe'
+          ? 1.5
+          : 1.25,
+  };
 }
 
 const gearCatalog = <GearDef>[
@@ -134,7 +155,7 @@ const gearCatalog = <GearDef>[
     '불씨 완드',
     GearSlot.weapon,
     heroClass: HeroClass.mage,
-    range: 540,
+    range: 440,
     attack: 14,
     tempo: .42,
     style: 'fire',
@@ -145,7 +166,7 @@ const gearCatalog = <GearDef>[
     '참나무 지팡이',
     GearSlot.weapon,
     heroClass: HeroClass.mage,
-    range: 540,
+    range: 560,
     attack: 18,
     health: 10,
     tempo: .45,
@@ -157,7 +178,7 @@ const gearCatalog = <GearDef>[
     '서리 완드',
     GearSlot.weapon,
     heroClass: HeroClass.mage,
-    range: 540,
+    range: 480,
     attack: 16,
     mana: 15,
     tempo: .37,
@@ -169,7 +190,7 @@ const gearCatalog = <GearDef>[
     '폭풍 마법봉',
     GearSlot.weapon,
     heroClass: HeroClass.mage,
-    range: 540,
+    range: 500,
     attack: 20,
     tempo: .39,
     style: 'lightning',
@@ -180,7 +201,7 @@ const gearCatalog = <GearDef>[
     '잿불 지팡이',
     GearSlot.weapon,
     heroClass: HeroClass.mage,
-    range: 540,
+    range: 600,
     attack: 26,
     tempo: .52,
     style: 'fire',
@@ -191,7 +212,7 @@ const gearCatalog = <GearDef>[
     '수정 홀',
     GearSlot.weapon,
     heroClass: HeroClass.mage,
-    range: 540,
+    range: 520,
     attack: 21,
     mana: 25,
     tempo: .4,
@@ -1253,6 +1274,7 @@ class Progress {
     energy = heroClass == HeroClass.warrior ? 25 : maxEnergy;
   }
   final HeroClass heroClass;
+  MountProgress mountProgress = MountProgress();
   int kills = 0, gold = 0, level = 1, xp = 0, skillPoints = 2;
   int healingPotions = 3, energyPotions = 2;
   int _serial = 1;
@@ -1346,6 +1368,7 @@ class Progress {
   final Map<GearSlot, Gear> equipped = {};
   Map<String, dynamic> toSave() => {
     'heroClass': heroClass.name,
+    'mountProgress': mountProgress.toSave(),
     'kills': kills,
     'gold': gold,
     'level': level,
@@ -1409,6 +1432,7 @@ class Progress {
       p.xp = integer('xp');
       if (p.xp >= p.nextLevelXp) return null;
       p.skillPoints = integer('skillPoints');
+      p.mountProgress = MountProgress.fromSave(data['mountProgress']);
       p.healingPotions = integer('healingPotions');
       p.energyPotions = integer('energyPotions');
       p.bonusAttack = decimal('bonusAttack');
@@ -1796,10 +1820,47 @@ class Progress {
         (1 - attackHaste),
   );
   double get attackInterval => attackIntervalFor(basicSkill);
-  double get basicDps => basicDamage / attackInterval;
-  BasicAttackStats? previewBasicAttack(Gear gear) {
+
+  /// Single-hit cadence shared by combat and equipment comparisons. Combo
+  /// finishers/follow-ups and enemy damage sharing are separate hit rules.
+  double actualBasicInterval({double frenzyTempo = 1, double attackTempo = 1}) {
+    if (!frenzyTempo.isFinite ||
+        frenzyTempo <= 0 ||
+        !attackTempo.isFinite ||
+        attackTempo <= 0) {
+      throw ArgumentError('Attack tempo must be positive and finite');
+    }
+    final recovery =
+        math.max(
+          CombatBalance.minimumStrikeInterval,
+          attackInterval / frenzyTempo,
+        ) /
+        attackTempo;
+    return heroClass == HeroClass.mage
+        ? math.max(recovery, .26 / (basicTempo * attackTempo))
+        : recovery;
+  }
+
+  BasicAttackStats basicAttackStats({
+    double frenzyTempo = 1,
+    double attackTempo = 1,
+  }) => BasicAttackStats(
+    basicDamage,
+    actualBasicInterval(frenzyTempo: frenzyTempo, attackTempo: attackTempo),
+  );
+  double get basicDps => basicAttackStats().dps;
+  BasicAttackStats? previewBasicAttack(
+    Gear gear, {
+    double frenzyTempo = 1,
+    double attackTempo = 1,
+  }) {
     if (!gear.base.usable(heroClass)) return null;
-    if (isEquipped(gear)) return BasicAttackStats(basicDamage, attackInterval);
+    if (isEquipped(gear)) {
+      return basicAttackStats(
+        frenzyTempo: frenzyTempo,
+        attackTempo: attackTempo,
+      );
+    }
     final next = Progress(heroClass: heroClass)
       ..level = level
       ..bonusAttack = bonusAttack
@@ -1812,7 +1873,10 @@ class Progress {
       ..clear()
       ..addAll(equipped)
       ..[gear.base.slot] = gear;
-    return BasicAttackStats(next.basicDamage, next.attackInterval);
+    return next.basicAttackStats(
+      frenzyTempo: frenzyTempo,
+      attackTempo: attackTempo,
+    );
   }
 
   double mitigate(double damage, {double protection = 0}) =>

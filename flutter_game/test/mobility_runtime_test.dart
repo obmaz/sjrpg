@@ -324,7 +324,7 @@ void main() {
     openField(s);
     expect(s.hero.useMobility(), true);
     final clock = s.hero.mobilityClock;
-    final mount = s.mounts.firstWhere((m) => !m.def.waterOnly);
+    final mount = withOwnedMounts(s).mounts.firstWhere((m) => !m.def.waterOnly);
     mount.at = s.hero.body.center;
     expect(s.boardNearbyMount(), true);
     expect(s.hero.sprintTime, 0);

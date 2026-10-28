@@ -52,7 +52,9 @@ void main() {
           reason: 'the relocated hub must retain a full-body service approach',
         );
       }
-      final landMounts = s.mounts.where((mount) => !mount.def.waterOnly);
+      final landMounts = withOwnedMounts(
+        s,
+      ).mounts.where((mount) => !mount.def.waterOnly);
       expect(landMounts.length, 3);
       for (final mount in landMounts) {
         expect(

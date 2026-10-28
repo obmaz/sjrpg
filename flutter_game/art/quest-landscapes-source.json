@@ -1,0 +1,10 @@
+{
+  "source": "/workspace/generated_images/exec-08cfb78a-8022-4822-b488-da4b5349df90.png",
+  "sha256": "4bc755ec7eaf62a400b78399353fbca9f8756d575bcb79991b1cb08cef4293e0",
+  "grid": [
+    3,
+    2
+  ],
+  "terrainOnly": true,
+  "generator": "image_gen"
+}

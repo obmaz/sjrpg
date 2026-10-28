@@ -12,6 +12,7 @@ import 'enemy_catalog.dart';
 import 'ground_texture.dart';
 import 'interface_art.dart';
 import 'mount_sprite_mesh.dart';
+import 'quest_scenery.dart';
 import 'world_model.dart';
 
 class GameArt {
@@ -102,6 +103,7 @@ class GameArt {
     'blacksmith-forge',
     'village-gardens',
     'village-cottage',
+    'quest-landscapes',
     'landscape-bridge',
     'world-forest',
     'world-desert',
@@ -881,6 +883,7 @@ class TerrainArt {
   final AdventureWorld world;
   final GameArt art;
   final cache = <String, ui.Picture>{};
+  late final questScenery = QuestScenery(world);
   late final ui.Path waterPath = [...world.lakes, world.river]
       .map((region) => region.path)
       .reduce((a, b) => ui.Path.combine(ui.PathOperation.union, a, b));
@@ -895,12 +898,22 @@ class TerrainArt {
     final recorder = ui.PictureRecorder(),
         c = ui.Canvas(recorder),
         area = ui.Rect.fromLTWH(col * 512.0, row * 512.0, 512, 512);
-    c.clipRect(area);
+    c.clipRect(area, doAntiAlias: false);
     final base = world.stage.baseMaterial;
     final road = world.stage.roadMaterial;
-    c.drawRect(area, ui.Paint()..shader = art.materials[base]);
+    c.drawRect(
+      area,
+      ui.Paint()
+        ..isAntiAlias = false
+        ..shader = art.materials[base],
+    );
     if (world.stage.groundTint.a > 0) {
-      c.drawRect(area, ui.Paint()..color = world.stage.groundTint);
+      c.drawRect(
+        area,
+        ui.Paint()
+          ..isAntiAlias = false
+          ..color = world.stage.groundTint,
+      );
     }
     for (final wood in world.woods) {
       if (!wood.bounds.overlaps(area.inflate(80))) continue;
@@ -980,6 +993,16 @@ class TerrainArt {
       );
     }
     c.restore();
+    // Large flat courtyards soften the trail endpoints just like the village
+    // gardens. They add no walls; real bridges and props remain above them.
+    final questLandscapes = art.images['quest-landscapes'];
+    if (questLandscapes != null &&
+        questScenery.patches.any((patch) => patch.bounds.overlaps(area))) {
+      c.save();
+      c.clipPath(dryGroundPath, doAntiAlias: false);
+      questScenery.paint(c, questLandscapes, area);
+      c.restore();
+    }
     // The entire settlement shares one ground material. Paint after biome
     // patches and trails so the workshop does not become an isolated grass lot;
     // retain visible water and render the authored fountain scene above it.
