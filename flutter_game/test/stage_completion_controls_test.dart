@@ -124,7 +124,7 @@ void main() {
     );
   }
   testWidgets(
-    'large currency and timer fit one HUD row without a resource-like kill number',
+    'large currency, elapsed time and kills stay outside the battle HUD',
     (tester) async {
       final semantics = tester.ensureSemantics();
       try {
@@ -152,16 +152,14 @@ void main() {
           ),
         );
         await tester.pump(const Duration(milliseconds: 100));
-        final gold = find.text('123만'), time = find.text('999:59');
-        expect(gold, findsOneWidget);
-        expect(find.bySemanticsLabel('골드 1234567'), findsOneWidget);
-        expect(time, findsOneWidget);
-        expect(
-          tester.getRect(gold).center.dy,
-          closeTo(tester.getRect(time).center.dy, .01),
-        );
-        // The taller resource vessel still leaves the potion row at y=110 clear.
-        expect(tester.getRect(time).bottom, lessThan(110));
+        expect(find.text('123만'), findsNothing);
+        expect(find.bySemanticsLabel('골드 1234567'), findsNothing);
+        expect(find.text('999:59'), findsNothing);
+        expect(find.bySemanticsLabel('모험 시간 999:59'), findsNothing);
+        expect(find.bySemanticsLabel(RegExp(r'^생명 ')), findsOneWidget);
+        expect(find.bySemanticsLabel(RegExp(r'^분노 ')), findsOneWidget);
+        expect(s.progress.gold, 1234567);
+        expect(s.elapsed, 59999);
         expect(find.text('820'), findsNothing);
         expect(tester.takeException(), null);
       } finally {
