@@ -12,6 +12,7 @@ import 'enemy_catalog.dart';
 import 'ground_texture.dart';
 import 'interface_art.dart';
 import 'mount_sprite_mesh.dart';
+import 'prop_grounding.dart';
 import 'quest_scenery.dart';
 import 'world_model.dart';
 
@@ -104,6 +105,7 @@ class GameArt {
     'village-gardens',
     'village-cottage',
     'quest-root-garden',
+    'action-glyphs',
     'landscape-bridge',
     'world-forest',
     'world-desert',
@@ -127,6 +129,10 @@ class GameArt {
     'foundry': {'cyber-props'},
     'convergence': {'ruin-props'},
   };
+  // Simplified runtime effects no longer draw these large decorative atlases.
+  // Keep the original sources available to the full loader and art tooling.
+  static const _stagedRetiredVfx = {'fx-steel-whirlwind', 'fx-warcry'};
+
   static const _sharedActors = {
     'actors-hero',
     'actors-mage',
@@ -212,7 +218,8 @@ class GameArt {
         .toSet();
     final names = <String>{
       for (final name in _allImages)
-        if ((!name.startsWith('actors-') || _sharedActors.contains(name)) &&
+        if (!_stagedRetiredVfx.contains(name) &&
+            (!name.startsWith('actors-') || _sharedActors.contains(name)) &&
             !exclusiveScenery.contains(name))
           name,
       ...scenery,
@@ -885,6 +892,7 @@ class TerrainArt {
   final GameArt art;
   final cache = <String, ui.Picture>{};
   late final questScenery = QuestScenery(world);
+  late final propGrounding = PropGrounding(world.propBuckets);
   late final ui.Path waterPath = [...world.lakes, world.river]
       .map((region) => region.path)
       .reduce((a, b) => ui.Path.combine(ui.PathOperation.union, a, b));
@@ -1091,6 +1099,12 @@ class TerrainArt {
           ..strokeWidth = 2.5,
       );
     }
+    // Ground-plane shading stays below every depth-sorted actor and prop.
+    // Bake only this sector's indexed supports; do not shade lake surfaces.
+    c.save();
+    c.clipPath(dryGroundPath, doAntiAlias: false);
+    propGrounding.paintSector(c, col, row);
+    c.restore();
     // Deterministic dappled light is presentation-only and never consumes gameplay RNG.
     // Regenerate neighboring lights in the same world coordinates, so sector
     // clipping cannot cut a warm patch off at a 512px cache boundary.

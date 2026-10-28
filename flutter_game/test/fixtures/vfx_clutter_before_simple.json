@@ -1,0 +1,146 @@
+{
+  "fire-shot-1": {
+    "alpha": 276781,
+    "strongPixels": 1092
+  },
+  "fire-shot-3": {
+    "alpha": 332867,
+    "strongPixels": 1294
+  },
+  "fire-shot-5": {
+    "alpha": 393608,
+    "strongPixels": 1511
+  },
+  "ice-shot-1": {
+    "alpha": 138024,
+    "strongPixels": 460
+  },
+  "ice-shot-3": {
+    "alpha": 158570,
+    "strongPixels": 523
+  },
+  "ice-shot-5": {
+    "alpha": 176240,
+    "strongPixels": 567
+  },
+  "lightning-shot-1": {
+    "alpha": 126444,
+    "strongPixels": 401
+  },
+  "lightning-shot-3": {
+    "alpha": 200223,
+    "strongPixels": 654
+  },
+  "lightning-shot-5": {
+    "alpha": 282381,
+    "strongPixels": 951
+  },
+  "fire-impact-1": {
+    "alpha": 415407,
+    "strongPixels": 2181
+  },
+  "fire-impact-3": {
+    "alpha": 442641,
+    "strongPixels": 2344
+  },
+  "fire-impact-5": {
+    "alpha": 469325,
+    "strongPixels": 2487
+  },
+  "ice-impact-1": {
+    "alpha": 338694,
+    "strongPixels": 1135
+  },
+  "ice-impact-3": {
+    "alpha": 370116,
+    "strongPixels": 1326
+  },
+  "ice-impact-5": {
+    "alpha": 393785,
+    "strongPixels": 1453
+  },
+  "lightning-impact-1": {
+    "alpha": 339054,
+    "strongPixels": 1697
+  },
+  "lightning-impact-3": {
+    "alpha": 371802,
+    "strongPixels": 1842
+  },
+  "lightning-impact-5": {
+    "alpha": 403163,
+    "strongPixels": 2010
+  },
+  "warcry-1": {
+    "alpha": 2022919,
+    "strongPixels": 8797
+  },
+  "warcry-3": {
+    "alpha": 2039749,
+    "strongPixels": 8841
+  },
+  "warcry-5": {
+    "alpha": 2080935,
+    "strongPixels": 9001
+  },
+  "whirlwind-1": {
+    "alpha": 1057499,
+    "strongPixels": 5481
+  },
+  "whirlwind-3": {
+    "alpha": 2133557,
+    "strongPixels": 10018
+  },
+  "whirlwind-5": {
+    "alpha": 3396764,
+    "strongPixels": 14446
+  },
+  "ice-armor-1": {
+    "alpha": 187234,
+    "strongPixels": 592
+  },
+  "ice-armor-3": {
+    "alpha": 271357,
+    "strongPixels": 936
+  },
+  "ice-armor-5": {
+    "alpha": 392155,
+    "strongPixels": 1702
+  },
+  "frenzy-1": {
+    "alpha": 69318,
+    "strongPixels": 316
+  },
+  "frenzy-3": {
+    "alpha": 87790,
+    "strongPixels": 408
+  },
+  "frenzy-5": {
+    "alpha": 108135,
+    "strongPixels": 495
+  },
+  "sword-1": {
+    "alpha": 120430,
+    "strongPixels": 681
+  },
+  "sword-3": {
+    "alpha": 128854,
+    "strongPixels": 733
+  },
+  "sword-5": {
+    "alpha": 136906,
+    "strongPixels": 815
+  },
+  "heavy-contact-1": {
+    "alpha": 75142,
+    "strongPixels": 382
+  },
+  "heavy-contact-3": {
+    "alpha": 87407,
+    "strongPixels": 431
+  },
+  "heavy-contact-5": {
+    "alpha": 101973,
+    "strongPixels": 493
+  }
+}

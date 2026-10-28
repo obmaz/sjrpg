@@ -530,9 +530,11 @@ void main() {
                 as ComposedParticle)
             .children
             .length;
-    expect(count(burst(1)), 14);
-    expect(count(burst(5)), 18);
-    expect(count(burst(100000)), 18);
+    expect(
+      [for (var rank = 1; rank <= 5; rank++) count(burst(rank))],
+      [6, 6, 7, 7, 8],
+    );
+    expect(count(burst(100000)), 8);
     expect(
       burst(5).particles.particle!.lifespan,
       greaterThan(burst(1).particles.particle!.lifespan),

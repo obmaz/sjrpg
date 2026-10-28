@@ -35,7 +35,7 @@ void main() {
         (HeroClass.mage, 25.0, .42),
       ]) {
         final p = Progress(heroClass: hero);
-        expect(p.basicDps / oldDps, closeTo(.153, .000001));
+        expect(p.basicDps / oldDps, closeTo(.1836, .000001));
         expect(p.attackInterval / oldInterval, closeTo(1 / .30, .000001));
         expect(p.basicDps / oldDps, greaterThan(.15));
         final basic = hero == HeroClass.warrior ? 'cleave' : 'firebolt';

@@ -14,9 +14,15 @@ class SkillPreviewValue {
   final double current, next;
   final int digits;
   final bool zeroAsDash;
-  String format(double value) => zeroAsDash && value == 0
-      ? '—'
-      : '${value.toStringAsFixed(digits)}$suffix';
+  String format(double value) {
+    if (zeroAsDash && value == 0) return '—';
+    final shown = switch (suffix) {
+      '초' => CombatBalance.realSeconds(value),
+      'px/초' || '/초' => value * CombatBalance.gameSpeed,
+      _ => value,
+    };
+    return '${shown.toStringAsFixed(digits)}$suffix';
+  }
 }
 
 Progress _nextRank(Progress p, SkillDef skill) {

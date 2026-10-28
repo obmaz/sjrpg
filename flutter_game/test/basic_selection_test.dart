@@ -176,7 +176,7 @@ void main() {
       final changed = Progress.fromSave(p.toSave())!
         ..equipped[GearSlot.weapon] = gear;
       expect(preview.damage, changed.basicDamage);
-      expect(preview.interval, changed.attackInterval);
+      expect(preview.interval, changed.basicAttackStats().interval);
     });
   }
   test(

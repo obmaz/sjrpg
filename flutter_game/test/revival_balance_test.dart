@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/combat_balance.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/player_afflictions.dart';
@@ -33,7 +34,7 @@ void main() {
         expect(retry.progress.hp, retry.progress.maxHp);
         expect(retry.progress.energy, retry.progress.maxEnergy);
         expect(retry.afflictions.active, isEmpty);
-        expect(retry.hero.revivalProtection, 3);
+        expect(retry.hero.revivalProtection, CombatBalance.revivalProtection);
         expect(checkpoint.progress.hp, 7);
         expect(checkpoint.progress.energy, 0);
         final hp = retry.progress.hp;
@@ -43,10 +44,14 @@ void main() {
         expect(retry.afflictions.active, isEmpty);
         retry.pause();
         retry.hero.update(1);
-        expect(retry.hero.revivalProtection, 3);
+        expect(retry.hero.revivalProtection, CombatBalance.revivalProtection);
         retry.resume();
         retry.hero.dodge();
-        for (var frame = 0; frame < 59; frame++) {
+        for (
+          var frame = 0;
+          frame < (CombatBalance.revivalProtection / .05).round() - 1;
+          frame++
+        ) {
           retry.hero.update(.05);
         }
         retry.hurtHero(100, periodic: true);

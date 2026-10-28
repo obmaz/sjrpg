@@ -380,11 +380,13 @@ extension WeaponGiftInfo on WeaponGift {
     WeaponGift.comboGuard => '연격의 수호',
   };
   String get description => switch (this) {
-    WeaponGift.frost => '적중한 대상 둔화 0.8초',
+    WeaponGift.frost =>
+      '적중한 대상 둔화 ${CombatBalance.realSeconds(.8).toStringAsFixed(2)}초',
     WeaponGift.guardian => '받는 피해 8% 감소',
     WeaponGift.renewal => '처치 시 생명 4 회복',
     WeaponGift.comboFury => '타이밍 3연계마다 분노 6 회복',
-    WeaponGift.comboGuard => '타이밍 3연계마다 0.9초간 받는 피해 25% 감소',
+    WeaponGift.comboGuard =>
+      '타이밍 3연계마다 ${CombatBalance.realSeconds(WeaponGiftInfo.comboGuardDuration).toStringAsFixed(2)}초간 받는 피해 25% 감소',
   };
   bool get isCombo =>
       this == WeaponGift.comboFury || this == WeaponGift.comboGuard;
@@ -682,6 +684,8 @@ const _innateMagicDef = GearDef(
 
 class BasicAttackStats {
   const BasicAttackStats(this.damage, this.interval);
+
+  /// Damage per hit and recovery in real seconds at the shared game speed.
   final double damage, interval;
   double get dps => damage / interval;
 }
@@ -960,7 +964,7 @@ const warriorSkills = [
     'battleSprint',
     '전투 질주',
     '전투 숙련',
-    '짧은 시간 평소의 두 배 속도로 달립니다. 회피 옆의 전용 버튼으로 사용하며 자원은 소모하지 않습니다. 등급마다 지속 시간이 0.1초 늘고 재사용이 조금 빨라집니다.',
+    '짧은 시간 평소의 두 배 속도로 달립니다. 회피 옆의 전용 버튼으로 사용하며 자원은 소모하지 않습니다. 등급마다 지속 시간이 조금 늘고 재사용이 빨라집니다.',
     8,
     0,
     15,
@@ -1061,7 +1065,7 @@ const mageSkills = [
     'warmth',
     '온기',
     '화염',
-    '등급마다 초당 마나 회복 +0.315.',
+    '등급마다 마나 회복 속도가 증가합니다.',
     2,
     0,
     0,
@@ -1182,7 +1186,7 @@ const mageSkills = [
     'arcaneEconomy',
     '비전 순환',
     '번개',
-    '등급마다 최대 마나 +2, 초당 마나 회복 +0.105.',
+    '등급마다 최대 마나 +2, 마나 회복 속도가 증가합니다.',
     16,
     0,
     0,
@@ -1823,6 +1827,7 @@ class Progress {
 
   /// Single-hit cadence shared by combat and equipment comparisons. Combo
   /// finishers/follow-ups and enemy damage sharing are separate hit rules.
+  /// Returns simulation seconds; [basicAttackStats] converts to real seconds.
   double actualBasicInterval({double frenzyTempo = 1, double attackTempo = 1}) {
     if (!frenzyTempo.isFinite ||
         frenzyTempo <= 0 ||
@@ -1846,7 +1851,9 @@ class Progress {
     double attackTempo = 1,
   }) => BasicAttackStats(
     basicDamage,
-    actualBasicInterval(frenzyTempo: frenzyTempo, attackTempo: attackTempo),
+    CombatBalance.realSeconds(
+      actualBasicInterval(frenzyTempo: frenzyTempo, attackTempo: attackTempo),
+    ),
   );
   double get basicDps => basicAttackStats().dps;
   BasicAttackStats? previewBasicAttack(

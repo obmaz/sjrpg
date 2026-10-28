@@ -51,6 +51,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'village-gardens',
         'village-cottage',
         'quest-root-garden',
+        'action-glyphs',
         'actors-bicycle',
         'skill-perks',
         'physical-icons',

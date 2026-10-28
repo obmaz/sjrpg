@@ -10,11 +10,9 @@ import 'boss_attacks.dart';
 import 'combat_feedback.dart';
 import 'device_settings.dart';
 import 'effect_visibility.dart';
-import 'fire_plume.dart';
 import 'gear_icon_art.dart';
 import 'mage_combat_art.dart';
 import 'player_afflictions.dart';
-import 'ranked_vfx.dart';
 import 'spell_vfx.dart';
 import 'world_model.dart';
 
@@ -618,20 +616,6 @@ class ArcaneBolt extends GameComponent with EffectVisibility {
       _element,
       rank,
     );
-    if (element == 'fire') {
-      canvas.save();
-      canvas.translate(tip.dx, tip.dy);
-      canvas.rotate(math.atan2(direction.dy, direction.dx) - math.pi * .75);
-      paintSpellFrame(
-        session.art,
-        canvas,
-        SpellClip.meteorFlight,
-        (.88 - remaining) % .65,
-        ui.Offset.zero,
-        64,
-      );
-      canvas.restore();
-    }
   }
 }
 
@@ -684,20 +668,6 @@ class MageContact extends GameComponent with EffectVisibility {
     if (finished) return;
     super.render(canvas);
     _art.impact(canvas, ui.Offset.zero, age / duration, radius, element, rank);
-    if (element != MageElement.lightning) {
-      final clip = element == MageElement.ice
-          ? SpellClip.iceNova
-          : SpellClip.meteorImpact;
-      paintSpellFrame(
-        session.art,
-        canvas,
-        clip,
-        age / duration * clip.duration,
-        ui.Offset.zero,
-        radius * 1.6,
-        opacity: (1 - age / duration).clamp(0, .95),
-      );
-    }
   }
 }
 
@@ -947,7 +917,6 @@ class MeteorFall extends GameComponent with EffectVisibility {
   final int buildRevision;
   double age = 0;
   bool struck = false;
-  late final _flame = FirePlume();
   final _art = MageCombatArt();
   @override
   ui.Rect get effectBounds => ui.Rect.fromLTRB(
@@ -1006,38 +975,26 @@ class MeteorFall extends GameComponent with EffectVisibility {
   void render(ui.Canvas canvas) {
     super.render(canvas);
     final c = canvas;
-    c.drawOval(
-      ui.Rect.fromCenter(center: target, width: 280, height: 180),
-      ui.Paint()
-        ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..color = const ui.Color(0xaaffab59),
-    );
     final t = (age * tempo / .65).clamp(0.0, 1.0), fall = t * t;
     _art.meteorPressure(c, target, t, rank);
-    paintRankImpact(c, target, t, rank, const ui.Color(0xffffc578), radius: 85);
     final p = target + ui.Offset(110 * (1 - fall), -360 * (1 - fall));
-    _flame.flight(c, p, math.atan2(360, -110), age * tempo, radius: 65);
     c.drawOval(
       ui.Rect.fromCenter(
         center: target,
         width: 35 + t * 65,
         height: 18 + t * 30,
       ),
-      ui.Paint()..color = ui.Color.fromRGBO(255, 160, 70, .1 + t * .25),
+      ui.Paint()..color = ui.Color.fromRGBO(60, 43, 31, .12 + t * .14),
     );
-    for (var i = 0; i < 7 + (rank - 1) * 2; i++) {
+    for (var i = 0; i < 2 + (rank >= 3 ? 1 : 0); i++) {
       final lag = (age * 2.6 + i * .13) % 1;
       final at =
           p +
-          ui.Offset(
-            20 + lag * 65,
-            -35 - lag * 135 + math.sin(age * 40 + i) * 7,
-          );
+          ui.Offset(10 + lag * 28, -20 - lag * 65 + math.sin(age * 40 + i) * 4);
       c.drawCircle(
         at,
-        1 + (1 - lag) * 2,
-        ui.Paint()..color = ui.Color.fromRGBO(255, 195, 101, (1 - lag) * .7),
+        1 + (1 - lag),
+        ui.Paint()..color = ui.Color.fromRGBO(255, 195, 101, (1 - lag) * .65),
       );
     }
     c.save();
@@ -1049,7 +1006,7 @@ class MeteorFall extends GameComponent with EffectVisibility {
       SpellClip.meteorFlight,
       age * tempo,
       ui.Offset.zero,
-      170 + (rank - 1) * 8,
+      138 + (rank - 1) * 2,
     );
     c.restore();
   }

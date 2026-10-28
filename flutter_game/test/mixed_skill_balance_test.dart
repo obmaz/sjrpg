@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guardian_new/combat_balance.dart';
 import 'package:guardian_new/rpg_model.dart';
 
 void main() {
@@ -95,7 +96,13 @@ void main() {
                   p.equipped.values.fold(0.0, (v, g) => v + g.attack)) *
               (1 + p.rank('mastery') * .02 + p.rank('arcaneMastery') * .025);
           expect(p.swordDamage, closeTo(raw * .75 * .85, .00001));
-          expect(p.basicDps, closeTo(p.basicDamage / p.attackInterval, .00001));
+          expect(
+            p.basicDps,
+            closeTo(
+              p.basicDamage / p.attackInterval * CombatBalance.gameSpeed,
+              .00001,
+            ),
+          );
           final saved = p.toSave(), restored = Progress.fromSave(saved)!;
           expect(restored.toSave(), saved);
           for (final s in p.skills.where((s) => !s.passive)) {

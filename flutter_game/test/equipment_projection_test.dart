@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guardian_new/combat_balance.dart';
 import 'package:guardian_new/rpg_model.dart';
 
 void main() {
@@ -27,7 +28,10 @@ void main() {
         p.inventory.add(candidate);
         expect(p.equip(candidate), true);
         expect(p.basicDamage, prediction.damage);
-        expect(p.attackInterval, prediction.interval);
+        expect(
+          CombatBalance.realSeconds(p.actualBasicInterval()),
+          prediction.interval,
+        );
         expect(p.basicDps, prediction.dps);
         expect(candidate.locked, true);
       },

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'adventure.dart';
+import 'combat_balance.dart';
 import 'game_art.dart';
 import 'game_ui.dart';
 import 'mount_merchant.dart';
@@ -192,7 +193,7 @@ class _MountPanelState extends State<MountPanel> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '${def.skillName} · ${def.skillCooldown % 1 == 0 ? def.skillCooldown.toInt() : def.skillCooldown}초',
+                      '${def.skillName} · ${CombatBalance.realSeconds(def.skillCooldown).toStringAsFixed(1)}초',
                       style: const TextStyle(color: gold, fontSize: 12),
                     ),
                   ],

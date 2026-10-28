@@ -43,7 +43,7 @@ void paintMeleeWeaponSwing(
     canvas.drawPath(
       path,
       line
-        ..color = color.withValues(alpha: fade * .88)
+        ..color = color.withValues(alpha: fade * .8)
         ..strokeWidth = width * (.3 + fade * .7),
     );
   }
@@ -85,7 +85,7 @@ void paintMeleeWeaponSwing(
   final impact = ui.Offset(reach * (.48 + t * .22), 0);
   switch (profile.effect) {
     case 'crescent':
-      arc(radius, start, 1.35, silver, 5 + math.min(rank, 6) * .45);
+      arc(radius, start, 1.35, silver, 3.1 + math.min(rank, 6) * .12);
       arc(radius - 5, start + .05, 1.05, white, 1.5);
     case 'silver-cross':
       arc(radius, start - .25, 1.8, silver, 4.5);
@@ -97,29 +97,28 @@ void paintMeleeWeaponSwing(
         1.5,
       );
     case 'amber-cleave':
-      for (var i = 0; i < 3; i++) {
+      for (var i = 0; i < 2; i++) {
         arc(
           radius - i * 7,
           start - .35,
           1.85 - i * .12,
           amber,
-          5 - i.toDouble(),
+          3.5 - i.toDouble(),
         );
       }
     case 'iron-star':
-      arc(13 + t * 27, 0, math.pi * 2, silver, 3.5);
-      for (var i = 0; i < 8; i++) {
-        final a = i * math.pi / 4;
+      for (var i = 0; i < 4; i++) {
+        final a = -.8 + i * .5;
         final d = ui.Offset(math.cos(a), math.sin(a));
         segment(
           impact + d * 8,
-          impact + d * (15 + t * 20),
+          impact + d * (13 + t * 13),
           white,
-          i.isEven ? 3 : 1.3,
+          i.isEven ? 2.2 : 1.3,
         );
       }
     case 'broad-edge':
-      arc(radius * 1.06, start - .45, 2.15, silver, 9);
+      arc(radius * 1.06, start - .45, 2.15, silver, 5);
       arc(radius * .96, start - .4, 1.9, white, 2.4);
     case 'crossed-axes':
       arc(radius, -1.3 + t * .6, 1.5, amber, 5);
@@ -129,10 +128,7 @@ void paintMeleeWeaponSwing(
       diamond(impact * 1.6, 7 + t * 4, white);
     case 'rune-arc':
       arc(radius, start - .2, 1.65, const ui.Color(0xffb3caff), 4);
-      for (var i = 0; i < 3; i++) {
-        final a = -.65 + i * .65;
-        diamond(ui.Offset(math.cos(a), math.sin(a)) * radius, 4, white);
-      }
+      segment(impact, impact + const ui.Offset(8, 0), white, 1.2);
     case 'twin-moons':
       arc(radius, -1.4 + t * .65, 1.6, silver, 3.6);
       arc(radius * .8, -.15 - t * .65, 1.6, amber, 3.6);
@@ -190,7 +186,6 @@ void paintMeleeWeaponSwing(
     case 'jade-sweep':
       arc(radius, start - .5, 2, const ui.Color(0xffb6e2c2), 4.5);
       arc(radius * .87, start - .4, 1.75, silver, 2.3);
-      arc(radius * .75, start - .25, 1.4, white, 1);
     case 'sun-hook':
       stroke(
         ui.Path()
@@ -209,11 +204,7 @@ void paintMeleeWeaponSwing(
       arc(radius * .88, start, 1.25, white, 1.5);
   }
   if (finisher) {
-    arc(radius * 1.08, start - .15, 1.9, amber, 3.2);
-    arc(radius * 1.2, start + .1, 1.25, white, 1.3);
-    for (final side in [-1.0, 1.0]) {
-      diamond(ui.Offset(radius * .9, side * radius * .52), 4 + t * 5, amber);
-    }
+    arc(radius * 1.08, start - .15, 1.65, amber, 2.2);
   }
   canvas.restore();
 }

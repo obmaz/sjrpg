@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import 'combat_balance.dart';
 import 'player_afflictions.dart';
 
 class AfflictionIcons extends StatelessWidget {
@@ -14,7 +15,8 @@ class AfflictionIcons extends StatelessWidget {
       children: [
         for (final status in state.active)
           Semantics(
-            label: '${status.label} ${state.remaining(status).ceil()}초',
+            label:
+                '${status.label} ${CombatBalance.realSeconds(state.remaining(status)).ceil()}초',
             excludeSemantics: true,
             child: Container(
               width: 16,

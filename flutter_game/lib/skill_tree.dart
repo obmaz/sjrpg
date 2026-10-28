@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 
 import 'adventure.dart';
 import 'game_ui.dart';
-import 'interface_art.dart';
-import 'panel_controls.dart';
 import 'rpg_model.dart';
 import 'rpg_widgets.dart';
 import 'skill_tree_layout.dart';
@@ -80,7 +78,7 @@ class SkillTree extends StatelessWidget {
                                 branch,
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
-                                  color: gold,
+                                  color: mobileText,
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -177,10 +175,12 @@ class SkillTree extends StatelessWidget {
                       height: core,
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        image: gameButtonImage(enabled: !locked),
+                        color: locked
+                            ? const Color(0xff1b262d)
+                            : mobileRaisedSurface,
                         border: Border.all(
                           color: chosen
-                              ? gold
+                              ? mobileAccent
                               : rank > 0
                               ? color
                               : Colors.transparent,
@@ -190,8 +190,8 @@ class SkillTree extends StatelessWidget {
                         boxShadow: chosen || canLearn
                             ? [
                                 BoxShadow(
-                                  color: gold.withValues(alpha: .25),
-                                  blurRadius: 8,
+                                  color: mobileAccent.withValues(alpha: .12),
+                                  blurRadius: 4,
                                 ),
                               ]
                             : null,
@@ -285,8 +285,6 @@ class SkillTree extends StatelessWidget {
   }
 }
 
-// Split the existing artwork at its title band instead of squeezing the full
-// tablet into a short viewport. Both sections share the decoded image cache.
 class _TabletSection extends StatelessWidget {
   const _TabletSection({
     required this.width,
@@ -295,31 +293,21 @@ class _TabletSection extends StatelessWidget {
   });
   final double width, height;
   final bool heading;
-  static const headingFraction = 92 / 1152;
-
   @override
-  Widget build(BuildContext context) {
-    final imageHeight =
-        height / (heading ? headingFraction : 1 - headingFraction);
-    return ExcludeSemantics(
-      child: ClipRect(
-        child: OverflowBox(
-          alignment: heading ? Alignment.topCenter : Alignment.bottomCenter,
-          minWidth: width,
-          maxWidth: width,
-          minHeight: imageHeight,
-          maxHeight: imageHeight,
-          child: Image(
-            image: skillTabletArtwork,
-            width: width,
-            height: imageHeight,
-            fit: BoxFit.fill,
-            filterQuality: FilterQuality.medium,
-          ),
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: SizedBox(
+      width: width,
+      height: height,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: heading ? mobileRaisedSurface : const Color(0xff111e26),
+          border: heading
+              ? const Border(bottom: BorderSide(color: mobileBorder))
+              : null,
         ),
       ),
-    );
-  }
+    ),
+  );
 }
 
 class _Connections extends CustomPainter {

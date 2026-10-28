@@ -2,8 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'action_glyph_art.dart';
 import 'adventure.dart';
 import 'affliction_widgets.dart';
+import 'combat_balance.dart';
 import 'game_art.dart';
 import 'health_widgets.dart';
 import 'resource_meter.dart';
@@ -12,6 +14,11 @@ import 'world_model.dart';
 const gold = Color(0xffd5b772),
     ink = Color(0xff102f2d),
     cream = Color(0xfff0e5c8);
+const mobileSurface = Color(0xd915232c),
+    mobileRaisedSurface = Color(0xee263943),
+    mobileBorder = Color(0x557a949b),
+    mobileAccent = Color(0xff8fd4d1),
+    mobileText = Color(0xffe8f0f2);
 String gameTime(double seconds) =>
     '${seconds ~/ 60}:${(seconds.toInt() % 60).toString().padLeft(2, '0')}';
 
@@ -67,7 +74,7 @@ class GameHud extends StatelessWidget {
               height: 72,
               decoration: BoxDecoration(
                 color: ink,
-                border: Border.all(color: gold, width: 2),
+                border: Border.all(color: mobileBorder, width: 1.2),
                 borderRadius: BorderRadius.circular(35),
               ),
               child: ClipRRect(
@@ -93,7 +100,7 @@ class GameHud extends StatelessWidget {
               decoration: BoxDecoration(
                 color: ink,
                 shape: BoxShape.circle,
-                border: Border.all(color: gold, width: 1.5),
+                border: Border.all(color: mobileBorder, width: 1),
               ),
               child: Text(
                 '${p.level}',
@@ -238,8 +245,49 @@ class ControlPainter extends CustomPainter {
   final GameArt art;
   final String sprite;
   @override
-  void paint(Canvas canvas, Size size) =>
+  void paint(Canvas canvas, Size size) {
+    if (sprite != 'touchJoystick' && sprite != 'touchThumb') {
       art.control(canvas, sprite, Offset.zero & size);
+      return;
+    }
+    final center = size.center(Offset.zero), radius = size.shortestSide / 2 - 2;
+    final thumb = sprite == 'touchThumb';
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = thumb ? const Color(0xbbaabdc4) : const Color(0x5515232c),
+    );
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2
+        ..color = thumb ? const Color(0xbbe3edf0) : mobileBorder,
+    );
+    if (!thumb) {
+      final line = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..strokeCap = StrokeCap.round
+        ..color = const Color(0x779fb7bf);
+      for (var i = 0; i < 4; i++) {
+        canvas.save();
+        canvas.translate(center.dx, center.dy);
+        canvas.rotate(i * math.pi / 2);
+        canvas.drawPath(
+          Path()
+            ..moveTo(-3, -radius * .76 + 3)
+            ..lineTo(0, -radius * .76)
+            ..lineTo(3, -radius * .76 + 3),
+          line,
+        );
+        canvas.restore();
+      }
+    }
+  }
+
   @override
   bool shouldRepaint(covariant ControlPainter oldDelegate) =>
       oldDelegate.sprite != sprite;
@@ -722,15 +770,15 @@ class MapPainter extends CustomPainter {
         rect.deflate(2),
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 4
-          ..color = gold,
+          ..strokeWidth = 1.5
+          ..color = const Color(0xaa9bb3b9),
       );
       c.drawOval(
         rect.deflate(6),
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
-          ..color = ink,
+          ..strokeWidth = .75
+          ..color = const Color(0x99374f59),
       );
     }
   }
@@ -788,6 +836,356 @@ class EffectIconPainter extends CustomPainter {
       oldDelegate.index != index || oldDelegate.art != art;
 }
 
+abstract final class MobileGlyph {
+  static const attack = 0,
+      dodge = 1,
+      bag = 2,
+      skills = 3,
+      map = 4,
+      settings = 5,
+      slash = 6,
+      warcry = 7,
+      fire = 8,
+      ice = 9,
+      lightning = 10,
+      whirl = 11,
+      shield = 12,
+      sprint = 13,
+      heavy = 14,
+      fist = 15,
+      motor = 16,
+      blink = 17;
+}
+
+class MobileActionGlyphPainter extends CustomPainter {
+  const MobileActionGlyphPainter(
+    this.art,
+    this.index, {
+    this.color = mobileText,
+  });
+  final GameArt art;
+  final int index;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (ActionGlyphArt.draw(
+      canvas,
+      art.images['action-glyphs'],
+      index,
+      Offset.zero & size,
+      tint: color == mobileText ? null : color,
+    )) {
+      return;
+    }
+    canvas.save();
+    canvas.translate(size.width / 2, size.height / 2);
+    canvas.scale(math.min(size.width, size.height) / 36);
+    canvas.translate(-16, -16);
+    final line = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.2
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final solid = Paint()..color = color;
+    void path(List<Offset> points, {bool fill = false, bool closed = false}) {
+      final p = Path()..moveTo(points.first.dx, points.first.dy);
+      for (final point in points.skip(1)) {
+        p.lineTo(point.dx, point.dy);
+      }
+      if (closed) p.close();
+      canvas.drawPath(p, fill ? solid : line);
+    }
+
+    void sword() {
+      path(
+        const [
+          Offset(27, 3),
+          Offset(29, 3),
+          Offset(29, 8),
+          Offset(14, 23),
+          Offset(10, 19),
+        ],
+        fill: true,
+        closed: true,
+      );
+      canvas.drawLine(const Offset(8, 18), const Offset(18, 28), line);
+      canvas.drawLine(const Offset(11, 23), const Offset(5, 29), line);
+    }
+
+    switch (index) {
+      case 0:
+        sword();
+      case 1:
+        path(
+          const [
+            Offset(11, 3),
+            Offset(21, 3),
+            Offset(20, 17),
+            Offset(28, 22),
+            Offset(28, 29),
+            Offset(7, 29),
+            Offset(6, 23),
+            Offset(10, 17),
+          ],
+          fill: true,
+          closed: true,
+        );
+      case 2:
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            const Rect.fromLTWH(6, 8, 20, 22),
+            const Radius.circular(4),
+          ),
+          line,
+        );
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            const Rect.fromLTWH(10, 18, 12, 8),
+            const Radius.circular(2),
+          ),
+          line,
+        );
+        path(const [
+          Offset(11, 8),
+          Offset(11, 3),
+          Offset(21, 3),
+          Offset(21, 8),
+        ]);
+      case 3:
+        path(const [
+          Offset(7, 23),
+          Offset(7, 16),
+          Offset(25, 16),
+          Offset(25, 23),
+        ]);
+        canvas.drawLine(const Offset(16, 16), const Offset(16, 7), line);
+        for (final p in const [Offset(7, 26), Offset(16, 4), Offset(25, 26)]) {
+          canvas.drawCircle(p, 3, solid);
+        }
+      case 4:
+        path(const [
+          Offset(3, 7),
+          Offset(12, 3),
+          Offset(21, 7),
+          Offset(29, 3),
+          Offset(29, 26),
+          Offset(21, 30),
+          Offset(12, 26),
+          Offset(3, 30),
+        ], closed: true);
+        canvas.drawLine(const Offset(12, 3), const Offset(12, 26), line);
+        canvas.drawLine(const Offset(21, 7), const Offset(21, 30), line);
+      case 5:
+        canvas.drawCircle(const Offset(16, 16), 9, line);
+        canvas.drawCircle(const Offset(16, 16), 3.5, line);
+        for (var i = 0; i < 8; i++) {
+          final d = Offset(
+            math.cos(i * math.pi / 4),
+            math.sin(i * math.pi / 4),
+          );
+          canvas.drawLine(
+            const Offset(16, 16) + d * 10,
+            const Offset(16, 16) + d * 14,
+            line,
+          );
+        }
+      case 6:
+        sword();
+        canvas.save();
+        canvas.translate(32, 0);
+        canvas.scale(-1, 1);
+        sword();
+        canvas.restore();
+      case 7:
+        for (final r in [7.0, 12.0, 17.0]) {
+          canvas.drawArc(
+            Rect.fromCircle(center: const Offset(6, 16), radius: r),
+            -.8,
+            1.6,
+            false,
+            line,
+          );
+        }
+        canvas.drawCircle(const Offset(6, 16), 2, solid);
+      case 8:
+        canvas.drawPath(
+          Path()
+            ..moveTo(16, 2)
+            ..cubicTo(29, 15, 29, 26, 18, 30)
+            ..cubicTo(4, 31, 2, 20, 8, 13)
+            ..cubicTo(8, 20, 13, 21, 13, 17)
+            ..cubicTo(18, 12, 18, 8, 16, 2)
+            ..close(),
+          solid,
+        );
+      case 9:
+        for (var i = 0; i < 3; i++) {
+          canvas.save();
+          canvas.translate(16, 16);
+          canvas.rotate(i * math.pi / 3);
+          canvas.drawLine(const Offset(0, -13), const Offset(0, 13), line);
+          for (final sign in [-1.0, 1.0]) {
+            path([
+              Offset(-4, sign * 7),
+              Offset(0, sign * 10),
+              Offset(4, sign * 7),
+            ]);
+          }
+          canvas.restore();
+        }
+      case 10:
+        path(
+          const [
+            Offset(18, 2),
+            Offset(6, 18),
+            Offset(15, 18),
+            Offset(12, 30),
+            Offset(28, 12),
+            Offset(19, 12),
+          ],
+          fill: true,
+          closed: true,
+        );
+      case 11:
+        for (var i = 0; i < 3; i++) {
+          canvas.drawArc(
+            Rect.fromCircle(center: const Offset(16, 16), radius: 11),
+            i * math.pi * 2 / 3,
+            1.65,
+            false,
+            line,
+          );
+          final a = i * math.pi * 2 / 3;
+          canvas.drawLine(
+            Offset(16 + 11 * math.cos(a), 16 + 11 * math.sin(a)),
+            Offset(16 + 6 * math.cos(a - .4), 16 + 6 * math.sin(a - .4)),
+            line,
+          );
+        }
+      case 12:
+        path(const [
+          Offset(16, 3),
+          Offset(28, 8),
+          Offset(26, 21),
+          Offset(16, 30),
+          Offset(6, 21),
+          Offset(4, 8),
+        ], closed: true);
+      case 13:
+        path(const [Offset(4, 7), Offset(13, 16), Offset(4, 25)]);
+        path(const [Offset(18, 7), Offset(27, 16), Offset(18, 25)]);
+      case 14:
+        canvas.save();
+        canvas.translate(16, 16);
+        canvas.rotate(-.55);
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            const Rect.fromLTWH(-11, -13, 22, 10),
+            const Radius.circular(2),
+          ),
+          solid,
+        );
+        canvas.drawLine(
+          const Offset(0, -3),
+          const Offset(0, 14),
+          line..strokeWidth = 4,
+        );
+        canvas.restore();
+      case MobileGlyph.fist:
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            const Rect.fromLTWH(8, 12, 17, 17),
+            const Radius.circular(5),
+          ),
+          solid,
+        );
+        for (var i = 0; i < 4; i++) {
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromLTWH(7 + i * 4.8, 5, 4.3, 14),
+              const Radius.circular(2),
+            ),
+            solid,
+          );
+        }
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            const Rect.fromLTWH(3, 15, 8, 10),
+            const Radius.circular(3),
+          ),
+          solid,
+        );
+      case MobileGlyph.motor:
+        path(
+          const [
+            Offset(3, 9),
+            Offset(29, 9),
+            Offset(29, 15),
+            Offset(18, 15),
+            Offset(14, 27),
+            Offset(7, 27),
+            Offset(11, 15),
+            Offset(3, 15),
+          ],
+          fill: true,
+          closed: true,
+        );
+        canvas.drawLine(const Offset(25, 8), const Offset(25, 5), line);
+      case MobileGlyph.blink:
+        path(const [
+          Offset(22, 3),
+          Offset(30, 16),
+          Offset(22, 29),
+          Offset(14, 16),
+        ], closed: true);
+        path(const [Offset(11, 7), Offset(5, 16), Offset(11, 25)]);
+        canvas.drawLine(const Offset(1, 16), const Offset(10, 16), line);
+      default:
+        sword();
+    }
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant MobileActionGlyphPainter oldDelegate) =>
+      oldDelegate.art != art ||
+      oldDelegate.index != index ||
+      oldDelegate.color != color;
+}
+
+class _BattleSurfacePainter extends CustomPainter {
+  const _BattleSurfacePainter(
+    this.accent, {
+    this.pressed = false,
+    this.primary = false,
+  });
+  final Color accent;
+  final bool pressed, primary;
+  @override
+  void paint(Canvas c, Size s) {
+    final center = s.center(Offset.zero), radius = s.shortestSide / 2 - 2;
+    c.drawCircle(
+      center,
+      radius,
+      Paint()..color = pressed ? const Color(0xee29414a) : mobileSurface,
+    );
+    c.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = (primary ? 1.6 : 1.1)
+        ..color = accent.withValues(alpha: primary ? 0.85 : 0.5),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _BattleSurfacePainter old) =>
+      old.accent != accent || old.pressed != pressed || old.primary != primary;
+}
+
 class ActionButton extends StatefulWidget {
   const ActionButton({
     required this.art,
@@ -803,6 +1201,8 @@ class ActionButton extends StatefulWidget {
     this.onAimEnd,
     this.icon,
     this.effect,
+    this.glyphIndex,
+    this.primary = false,
     this.artwork,
     this.showLabel = true,
     this.enabled = true,
@@ -821,7 +1221,8 @@ class ActionButton extends StatefulWidget {
   final ValueChanged<Offset>? onAimMove;
   final ValueChanged<bool>? onAimEnd;
   final IconData? icon;
-  final int? effect;
+  final int? effect, glyphIndex;
+  final bool primary;
   final Widget? artwork;
   final bool showLabel, insufficientResource, enabled;
   @override
@@ -847,6 +1248,28 @@ class _ActionButtonState extends State<ActionButton> {
     widget.onHold?.call(false);
     super.dispose();
   }
+
+  int get _glyph =>
+      widget.glyphIndex ??
+      switch (widget.effect) {
+        0 => MobileGlyph.warcry,
+        1 => MobileGlyph.whirl,
+        2 => MobileGlyph.ice,
+        3 => MobileGlyph.lightning,
+        4 => MobileGlyph.fire,
+        5 || 7 => MobileGlyph.slash,
+        6 => MobileGlyph.shield,
+        34 => MobileGlyph.sprint,
+        35 => MobileGlyph.heavy,
+        _ => MobileGlyph.attack,
+      };
+  Color get _accent => switch (_glyph) {
+    8 => const Color(0xffe6ad80),
+    9 => const Color(0xffa3d9ed),
+    10 => const Color(0xffc0b7e8),
+    6 => const Color(0xffe1ad9e),
+    _ => mobileText,
+  };
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -894,22 +1317,44 @@ class _ActionButtonState extends State<ActionButton> {
                   alignment: Alignment.center,
                   children: [
                     AnimatedScale(
-                      scale: pressed ? .94 : 1,
+                      scale: pressed ? .96 : 1,
                       duration: const Duration(milliseconds: 70),
                       child: CustomPaint(
                         size: Size.square(widget.size),
-                        painter: ControlPainter(widget.art, widget.sprite),
+                        painter: _BattleSurfacePainter(
+                          _accent,
+                          pressed: pressed,
+                          primary: widget.primary,
+                        ),
                       ),
                     ),
                     if (widget.artwork != null)
                       widget.artwork!
-                    else if (widget.effect != null)
-                      CustomPaint(
-                        size: Size.square(widget.size * .74),
-                        painter: EffectIconPainter(widget.art, widget.effect!),
-                      )
-                    else if (widget.icon != null)
-                      Icon(widget.icon, size: widget.size * .43, color: cream),
+                    else
+                      Opacity(
+                        opacity: widget.remaining > 0
+                            ? .38
+                            : widget.enabled
+                            ? 1
+                            : .35,
+                        child:
+                            widget.glyphIndex == null &&
+                                widget.effect == null &&
+                                widget.icon != null
+                            ? Icon(
+                                widget.icon,
+                                size: widget.size * .5,
+                                color: _accent,
+                              )
+                            : CustomPaint(
+                                size: Size.square(widget.size * .5),
+                                painter: MobileActionGlyphPainter(
+                                  widget.art,
+                                  _glyph,
+                                  color: _accent,
+                                ),
+                              ),
+                      ),
                     if (widget.insufficientResource)
                       const Positioned.fill(
                         child: ColoredBox(color: Color(0x66000000)),
@@ -957,7 +1402,7 @@ class _ActionButtonState extends State<ActionButton> {
                       ),
                     if (!widget.showLabel && widget.remaining > 0)
                       Text(
-                        '${widget.remaining.ceil()}',
+                        '${CombatBalance.realSeconds(widget.remaining).ceil()}',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -1000,9 +1445,9 @@ class _CooldownPainter extends CustomPainter {
     false,
     Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 4
+      ..strokeWidth = 2.6
       ..strokeCap = StrokeCap.round
-      ..color = const Color(0xaaebd293),
+      ..color = mobileAccent,
   );
   @override
   bool shouldRepaint(covariant _CooldownPainter oldDelegate) =>
@@ -1127,7 +1572,25 @@ class MenuButton extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               Positioned.fill(
-                child: CustomPaint(painter: ControlPainter(art, sprite)),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: mobileSurface,
+                    borderRadius: BorderRadius.circular(13),
+                    border: Border.all(color: mobileBorder),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: CustomPaint(
+                      painter: MobileActionGlyphPainter(art, switch (sprite) {
+                        'touchInventory' => 2,
+                        'touchQuests' => 3,
+                        'touchCompendium' => 4,
+                        'touchSettings' => 5,
+                        _ => 4,
+                      }),
+                    ),
+                  ),
+                ),
               ),
               if (badge > 0)
                 Positioned(
@@ -1141,9 +1604,9 @@ class MenuButton extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 5),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: const Color(0xffc74c35),
+                      color: const Color(0xffc85d57),
                       shape: BoxShape.circle,
-                      border: Border.all(color: gold, width: 1.5),
+                      border: Border.all(color: const Color(0xff20323a)),
                     ),
                     child: Text(
                       '$badge',

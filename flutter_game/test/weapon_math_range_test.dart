@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/area_damage.dart';
 import 'package:guardian_new/battle_effects.dart';
+import 'package:guardian_new/combat_balance.dart';
 import 'package:guardian_new/equipment_panel.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/player_afflictions.dart';
@@ -39,11 +40,11 @@ void main() {
       expect(p.swordDamage, closeTo(9.5625, 1e-10));
       expect(p.basicDamage, closeTo(5.7375, 1e-10));
       expect(p.attackInterval, closeTo(.34 / .30, 1e-10));
-      expect(p.basicDps, closeTo(5.0625, 1e-10));
+      expect(p.basicDps, closeTo(6.075, 1e-10));
       final mage = Progress(heroClass: HeroClass.mage);
       expect(mage.weapon.attack, 14);
       expect(mage.basicDamage, closeTo(5.355, 1e-10));
-      expect(mage.basicDps, closeTo(3.825, 1e-10));
+      expect(mage.basicDps, closeTo(4.59, 1e-10));
     },
   );
 
@@ -79,12 +80,15 @@ void main() {
             s.hero.slash();
             expect(
               stats.interval,
-              closeTo(expected, 1e-9),
+              closeTo(expected / CombatBalance.gameSpeed, 1e-9),
               reason: '${basic.id} $state',
             );
-            expect(s.hero.attackClock, closeTo(stats.interval, 1e-9));
-            expect(s.hero.castLock, lessThanOrEqualTo(stats.interval));
-            expect(stats.dps, closeTo(p.basicDamage / expected, 1e-9));
+            expect(s.hero.attackClock, closeTo(expected, 1e-9));
+            expect(s.hero.castLock, lessThanOrEqualTo(expected));
+            expect(
+              stats.dps,
+              closeTo(p.basicDamage / expected * CombatBalance.gameSpeed, 1e-9),
+            );
           }
         }
       }

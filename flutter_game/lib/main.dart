@@ -11,6 +11,7 @@ import 'back_bridge.dart' as history;
 import 'battle_effects.dart';
 import 'blacksmith_workshop.dart';
 import 'class_selection.dart';
+import 'combat_balance.dart';
 import 'combo_meter.dart';
 import 'destructible_chest.dart';
 import 'entry_loading.dart';
@@ -671,6 +672,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
       backgroundColor: ink,
       focusNode: gameFocus,
       onReady: (game) {
+        game.timeScale = CombatBalance.gameSpeed;
         game.camera.updateBoundsAndZoomFit(moveOnlyMapArea: true);
         game.camera.position = adventure.cameraFocus;
         adventure.start(game);
@@ -987,6 +989,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 child: ActionButton(
                   art: widget.art,
                   sprite: 'roundEmpty',
+                  primary: true,
                   artwork: SizedBox.square(
                     dimension: attack * .75,
                     child: Stack(
@@ -1077,14 +1080,9 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   child: ActionButton(
                     art: widget.art,
                     sprite: 'roundEmpty',
+                    glyphIndex: mount == null ? MobileGlyph.dodge : null,
                     artwork: mount == null
-                        ? CustomPaint(
-                            size: Size.square((width < 360 ? 56 : 64) * .78),
-                            painter: AbilityPicturePainter(
-                              widget.art,
-                              'dodge-icon',
-                            ),
-                          )
+                        ? null
                         : MountSkillBadge(
                             kind: mount.def.artKey,
                             size: (width < 360 ? 56 : 64) * .78,
@@ -1127,6 +1125,9 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   child: ActionButton(
                     art: widget.art,
                     sprite: 'roundEmpty',
+                    glyphIndex: mobility.id == 'blink'
+                        ? MobileGlyph.blink
+                        : MobileGlyph.sprint,
                     icon: skillIcon(mobility.id),
                     label: mobility.shortName,
                     semanticLabel: mobility.name,
@@ -1135,7 +1136,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                         : adventure.hero.physicalAction
                         ? '기술 동작 중'
                         : adventure.hero.mobilityClock > 0
-                        ? '재사용 ${adventure.hero.mobilityClock.ceil()}초'
+                        ? '재사용 ${CombatBalance.realSeconds(adventure.hero.mobilityClock).ceil()}초'
                         : '이동 기술 · M',
                     showLabel: false,
                     size: width < 360 ? 48 : 56,

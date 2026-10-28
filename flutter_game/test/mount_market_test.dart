@@ -212,6 +212,12 @@ void main() {
       final bolt = game.added.whereType<ArcaneBolt>().single;
       expect(bolt.targetLimit, 1);
       expect(bolt.damage, 20.25);
+      expect(
+        s.mountSkillClock,
+        2.8,
+        reason: 'cooldown remains simulation seconds',
+      );
+      expect(s.motorGunDps, closeTo(8.67857142857143, 1e-9));
       expect(s.useMountSkill(), false);
       s.mountSkillClock = 0;
       s.progress.mountProgress.motorAmmo = 0;

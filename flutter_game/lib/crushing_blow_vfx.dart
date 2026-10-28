@@ -82,7 +82,7 @@ void paintCrushingFrame(
   double opacity = 1,
 }) {
   final side =
-      275.0 + SkillGrowth.level(rank) * 10 + charge.clamp(0.0, 1.0) * 30;
+      220.0 + SkillGrowth.level(rank) * 3 + charge.clamp(0.0, 1.0) * 12;
   // Bring the painted blade from the hero's side for west-facing strikes.
   // Flip only X around contact: flying stones still fall down the screen.
   final mirror = math.cos(bearing) < -.000001;
@@ -97,7 +97,7 @@ void paintCrushingFrame(
     'fx-crushing-blow',
     frame,
     ui.Rect.fromLTWH(at.dx - side / 2, at.dy - side * 180 / 256, side, side),
-    opacity: opacity,
+    opacity: opacity * .3,
   );
   if (mirror) canvas.restore();
 }
@@ -182,14 +182,15 @@ class CrushingBlowArt {
   }) : rank = SkillGrowth.level(rank),
        charge = charge.clamp(0.0, 1.0) {
     final r = this.rank, power = this.charge;
-    for (var i = 0; i < 8 + r * 2; i++) {
-      final angle = bearing - 1.15 + i / (7 + r * 2) * 2.3;
+    final count = 4 + SkillGrowth.tier(r);
+    for (var i = 0; i < count; i++) {
+      final angle = bearing - .85 + i / (count - 1) * 1.7;
       shards.add((
         velocity:
             ui.Offset(math.cos(angle), math.sin(angle)) *
-            (35 + i % 4 * 17 + power * 20),
-        height: 20.0 + i % 3 * 12 + power * 18,
-        width: 3.0 + i % 3 * 1.1,
+            (30 + i % 4 * 12 + power * 14),
+        height: 15.0 + i % 3 * 8 + power * 12,
+        width: 2.2 + i % 3 * .7,
       ));
     }
   }
@@ -233,16 +234,16 @@ class CrushingBlowArt {
         radius: 100 + rank * 3,
       );
       final start = bearing - 1.0 + cut * 1.7;
-      for (var layer = 0; layer < 3; layer++) {
+      for (var layer = 0; layer < 2; layer++) {
         canvas.drawArc(
           arc,
           start - .65,
           .7,
           false,
           _line
-            ..strokeWidth = (15 - layer * 5) * (1 - cut) * power + 1
-            ..color = _edgeColors[layer].withValues(
-              alpha: (1 - cut) * (.5 + layer * .2),
+            ..strokeWidth = (layer == 0 ? 8 : 2) * (1 - cut) * power + 1
+            ..color = _edgeColors[layer == 0 ? 0 : 2].withValues(
+              alpha: (1 - cut) * .85,
             ),
         );
       }
@@ -250,7 +251,7 @@ class CrushingBlowArt {
     // The impact is directional and remains in front of the hero's feet.
     canvas.save();
     canvas.translate(impact.dx, impact.dy);
-    final spread = 13 + math.sqrt(t) * (58 + rank * 4 + charge * 14);
+    final spread = 13 + math.sqrt(t) * (45 + rank * 2 + charge * 10);
     canvas.drawOval(
       ui.Rect.fromCenter(
         center: ui.Offset.zero,
@@ -259,32 +260,7 @@ class CrushingBlowArt {
       ),
       _fill..color = const ui.Color(0xffa78555).withValues(alpha: fade * .18),
     );
-    for (var i = 0; i < 2; i++) {
-      canvas.drawArc(
-        ui.Rect.fromCenter(
-          center: ui.Offset.zero,
-          width: (spread + i * 7) * 2,
-          height: spread + i * 7,
-        ),
-        bearing - 1.2 + i * math.pi,
-        1.8,
-        false,
-        _line
-          ..strokeWidth = (3.5 - i) * fade
-          ..color = const ui.Color(0xffedd5a0).withValues(alpha: fade * .65),
-      );
-    }
     canvas.restore();
-    paintCrushingFrame(
-      gameArt,
-      canvas,
-      impact,
-      2 + (t * 14).floor().clamp(0, 13),
-      rank: rank,
-      charge: charge,
-      bearing: bearing,
-      opacity: t < .65 ? 1 : (1 - t) / .35,
-    );
     for (var i = 0; i < shards.length; i++) {
       final shard = shards[i];
       final flight = (t * 1.3 - i % 3 * .025).clamp(0.0, 1.0);

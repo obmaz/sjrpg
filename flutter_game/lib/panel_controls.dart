@@ -1,16 +1,28 @@
 import 'package:flutter/material.dart';
 import 'game_ui.dart';
-import 'interface_art.dart';
 
-const _muted = Color(0xffa4bcb6);
+const _muted = Color(0xffa7bac3);
 
-DecorationImage gameButtonImage({bool enabled = true, bool primary = false}) =>
-    DecorationImage(
-      image: buttonArtwork(enabled: enabled, primary: primary),
-      centerSlice: const Rect.fromLTRB(12, 10, 244, 32.6666667),
-      fit: BoxFit.fill,
-      filterQuality: FilterQuality.medium,
-    );
+BoxDecoration gameButtonDecoration({
+  bool enabled = true,
+  bool primary = false,
+  double radius = 12,
+}) => BoxDecoration(
+  color: !enabled
+      ? const Color(0xff18242b)
+      : primary
+      ? const Color(0xf02b4c56)
+      : mobileSurface,
+  borderRadius: BorderRadius.circular(radius),
+  border: Border.all(
+    color: !enabled
+        ? const Color(0xff30414a)
+        : primary
+        ? mobileAccent.withValues(alpha: .75)
+        : mobileBorder,
+    width: 1,
+  ),
+);
 
 class GameIconButton extends StatelessWidget {
   const GameIconButton({
@@ -36,20 +48,20 @@ class GameIconButton extends StatelessWidget {
       message: label,
       excludeFromSemantics: true,
       child: SizedBox.square(
-        dimension: size,
+        dimension: size < 44 ? 44 : size,
         child: Material(
           color: Colors.transparent,
           child: Ink(
-            decoration: BoxDecoration(
-              image: gameButtonImage(enabled: onTap != null),
-            ),
+            decoration: gameButtonDecoration(enabled: onTap != null),
             child: InkWell(
               onTap: onTap,
-              borderRadius: BorderRadius.circular(7),
+              splashColor: mobileAccent.withValues(alpha: .12),
+              highlightColor: mobileAccent.withValues(alpha: .06),
+              borderRadius: BorderRadius.circular(12),
               child: Icon(
                 icon,
                 size: 20,
-                color: onTap == null ? _muted : cream,
+                color: onTap == null ? _muted : mobileText,
               ),
             ),
           ),
@@ -88,7 +100,7 @@ class GamePanelHeader extends StatelessWidget {
                 child: Text(
                   title,
                   style: TextStyle(
-                    color: cream,
+                    color: mobileText,
                     fontSize: dense ? 18 : 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -141,13 +153,8 @@ class GameAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final enabled = onTap != null;
-    final shape = BeveledRectangleBorder(
-      borderRadius: BorderRadius.circular(7),
-      side: BorderSide(
-        color: enabled
-            ? (primary ? gold : const Color(0xff608b7c))
-            : const Color(0xff37524c),
-      ),
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
     );
     return Semantics(
       container: true,
@@ -157,16 +164,19 @@ class GameAction extends StatelessWidget {
       onTap: onTap,
       excludeSemantics: true,
       child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: minHeight),
+        constraints: BoxConstraints(minHeight: minHeight < 44 ? 44 : minHeight),
         child: Material(
           color: Colors.transparent,
           child: Ink(
-            decoration: BoxDecoration(
-              image: gameButtonImage(enabled: enabled, primary: primary),
+            decoration: gameButtonDecoration(
+              enabled: enabled,
+              primary: primary,
             ),
             child: InkWell(
               customBorder: shape,
               onTap: onTap,
+              splashColor: mobileAccent.withValues(alpha: .12),
+              highlightColor: mobileAccent.withValues(alpha: .06),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Row(
@@ -176,11 +186,7 @@ class GameAction extends StatelessWidget {
                       Icon(
                         icon,
                         size: 17,
-                        color: primary && enabled
-                            ? ink
-                            : enabled
-                            ? cream
-                            : _muted,
+                        color: enabled ? mobileText : _muted,
                       ),
                       const SizedBox(width: 6),
                     ],
@@ -192,11 +198,7 @@ class GameAction extends StatelessWidget {
                         style: TextStyle(
                           fontSize: fontSize,
                           fontWeight: FontWeight.bold,
-                          color: !enabled
-                              ? _muted
-                              : primary
-                              ? ink
-                              : cream,
+                          color: enabled ? mobileText : _muted,
                         ),
                       ),
                     ),
@@ -249,17 +251,15 @@ class GameTabs extends StatelessWidget {
                       alignment: Alignment.center,
                       decoration: flat
                           ? null
-                          : BoxDecoration(
-                              image: gameButtonImage(primary: selected == i),
-                            ),
+                          : gameButtonDecoration(primary: selected == i),
                       foregroundDecoration: flat
                           ? BoxDecoration(
                               border: Border(
                                 bottom: BorderSide(
                                   color: selected == i
-                                      ? gold
+                                      ? mobileAccent
                                       : Colors.transparent,
-                                  width: 3,
+                                  width: 2,
                                 ),
                               ),
                             )
@@ -268,7 +268,7 @@ class GameTabs extends StatelessWidget {
                         decoration: flat
                             ? BoxDecoration(
                                 color: selected == i
-                                    ? gold.withValues(alpha: .08)
+                                    ? mobileAccent.withValues(alpha: .10)
                                     : Colors.transparent,
                               )
                             : null,
@@ -277,11 +277,7 @@ class GameTabs extends StatelessWidget {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 14,
-                            color: selected == i
-                                ? flat
-                                      ? gold
-                                      : const Color(0xff18342e)
-                                : _muted,
+                            color: selected == i ? mobileText : _muted,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

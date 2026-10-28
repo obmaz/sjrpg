@@ -266,15 +266,12 @@ class ImpactParticles extends GameComponent with EffectVisibility {
     final growth = (impact.rank - 1).clamp(0, 4);
     final count =
         (heavy
-            ? 14
+            ? 6
             : physical
-            ? 9
-            : 10) +
-        growth;
+            ? 4
+            : 3) +
+        growth ~/ 2;
     final duration = (heavy ? .28 : .22) + growth * .008;
-    final ringPaint = ui.Paint()
-      ..style = ui.PaintingStyle.stroke
-      ..strokeWidth = (heavy ? 2.8 : 1.6) + growth * .2;
     final corePaint = ui.Paint();
     return ComposedParticle(
       lifespan: duration,
@@ -282,22 +279,13 @@ class ImpactParticles extends GameComponent with EffectVisibility {
         ComputedParticle(
           renderer: (canvas, particle) {
             final t = particle.progress;
-            ringPaint.color = color.withValues(alpha: (1 - t) * .7);
-            canvas.drawOval(
-              ui.Rect.fromCenter(
-                center: ui.Offset(0, t * 5),
-                width: (heavy ? 92 : 54) * (1 + growth * .06) * t + 4,
-                height: (heavy ? 50 : 30) * (1 + growth * .06) * t + 2,
-              ),
-              ringPaint,
-            );
-            if (t < .35) {
+            if (t < .24) {
               corePaint.color = const ui.Color(
                 0xfffffff2,
-              ).withValues(alpha: 1 - t / .35);
+              ).withValues(alpha: 1 - t / .24);
               canvas.drawCircle(
                 ui.Offset.zero,
-                (heavy ? 9 : 5) * (1 - t),
+                (heavy ? 6.0 : 3.6) * (1 - t),
                 corePaint,
               );
             }
@@ -309,7 +297,7 @@ class ImpactParticles extends GameComponent with EffectVisibility {
             final angle = physical && index < count * .7
                 ? impact.bearing + (index / (count * .7) - .5) * 2.2
                 : impact.bearing + index * math.pi * 2 / count;
-            final speed = (heavy ? 200.0 : 135.0) + index % 3 * 30;
+            final speed = (heavy ? 140.0 : 100.0) + index % 3 * 18;
             final axis = ui.Offset(math.cos(angle), math.sin(angle) * .75);
             final paint = ui.Paint()..strokeCap = ui.StrokeCap.round;
             return AcceleratedParticle(
@@ -320,10 +308,10 @@ class ImpactParticles extends GameComponent with EffectVisibility {
                   final fade = 1 - particle.progress;
                   paint
                     ..color = color.withValues(alpha: fade)
-                    ..strokeWidth = (heavy ? 2.7 : 1.8) * fade + .4;
+                    ..strokeWidth = (heavy ? 1.8 : 1.2) * fade + .4;
                   canvas.drawLine(
                     ui.Offset.zero,
-                    -axis * (physical ? 12 : 7) * fade,
+                    -axis * (physical ? 7 : 4) * fade,
                     paint,
                   );
                   if (impact.kind == ImpactKind.ice) {

@@ -131,7 +131,7 @@ class Adventure extends ChangeNotifier {
   static const motorGunRange = 520.0;
   double get motorGunDamage =>
       8 + progress.mountProgress.motorLevel * 4 + progress.level * .25;
-  double get motorGunDps => motorGunDamage / 2.8;
+  double get motorGunDps => motorGunDamage / CombatBalance.realSeconds(2.8);
   bool get mountedBasicAllowed =>
       riding?.def.artKey == 'horse' && !riding!.fallen;
   bool ensureBasicAttackMount() =>
@@ -3416,45 +3416,46 @@ class Guardian extends Player with WithCollision {
     final feet = ui.Offset(size.x / 2, size.y),
         center = ui.Offset(size.x / 2, size.y - 8);
     final crushingAim = aim?.id == 'crushingBlow' ? aim : null;
+    // A quiet contact shadow anchors the feet to the same ground plane as props.
     canvas.drawOval(
-      ui.Rect.fromCenter(center: feet - ui.Offset(0, 2), width: 36, height: 13),
-      ui.Paint()..color = const ui.Color(0x6642c8ba),
+      ui.Rect.fromCenter(
+        center: feet + const ui.Offset(5, -1),
+        width: 38,
+        height: 12,
+      ),
+      ui.Paint()..color = const ui.Color(0x28101919),
     );
     canvas.drawOval(
-      ui.Rect.fromCenter(center: feet - ui.Offset(0, 2), width: 36, height: 13),
+      ui.Rect.fromCenter(
+        center: feet - const ui.Offset(0, 1),
+        width: 25,
+        height: 8,
+      ),
+      ui.Paint()..color = const ui.Color(0x48101919),
+    );
+    final footMark = ui.Rect.fromCenter(
+      center: feet - const ui.Offset(0, 2),
+      width: 36,
+      height: 13,
+    );
+    canvas.drawOval(
+      footMark,
       ui.Paint()
         ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = 1.5
-        ..color = const ui.Color(0xaaafffe3),
+        ..strokeWidth = 1
+        ..color = const ui.Color(0x9968c6b8),
     );
     if (invulnerable > 0 || revivalProtection > 0) {
-      final protectionTime = math.max(invulnerable, revivalProtection);
-      final pulse = .5 + .5 * math.sin(protectionTime * math.pi * 2 / .65);
-      final guard = ui.Rect.fromCenter(
-        center: feet - const ui.Offset(0, 2),
-        width: 40 + pulse * 3,
-        height: 16 + pulse * 2,
-      );
-      canvas.drawOval(
-        guard,
-        ui.Paint()
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = const ui.Color(
-            0xffb5fff0,
-          ).withValues(alpha: .3 + pulse * .35),
-      );
       canvas.drawArc(
-        guard,
-        session.elapsed * 4,
-        math.pi * .65,
+        footMark.inflate(2),
+        session.elapsed * 3,
+        math.pi * 1.25,
         false,
         ui.Paint()
           ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 2.5
-          ..color = const ui.Color(
-            0xffe6fff7,
-          ).withValues(alpha: .55 + pulse * .25),
+          ..strokeWidth = 1.8
+          ..strokeCap = ui.StrokeCap.round
+          ..color = const ui.Color(0xbbc2e8df),
       );
     }
     final damageFlash = (hurtFlash / .12).clamp(0.0, 1.0) * .65;
@@ -5317,25 +5318,28 @@ class WoodlandProp extends GameComponent with EffectVisibility {
     ).inflate(2);
   }
 
+  bool get occludesHero {
+    final hero = session.hero.body;
+    return (prop.kind == 'tree' ||
+            prop.kind.startsWith('city-') ||
+            prop.kind.startsWith('ruin-') ||
+            prop.kind == 'blacksmith-forge' ||
+            prop.kind == 'village-cottage') &&
+        prop.body.bottom > hero.bottom &&
+        prop.body.bottom - prop.drawSize.height < hero.bottom &&
+        (prop.body.center.dx - hero.center.dx).abs() <
+            prop.drawSize.width * .38;
+  }
+
   @override
   void render(ui.Canvas canvas) {
     super.render(canvas);
     canvas.save();
     canvas.translate(-position.x, -position.y);
-    final hero = session.hero.body;
-    final covers =
-        (prop.kind == 'tree' ||
-            prop.kind.startsWith('city-') ||
-            prop.kind.startsWith('ruin-') ||
-            prop.kind == 'blacksmith-forge') &&
-        prop.body.bottom > hero.bottom &&
-        prop.body.bottom - prop.drawSize.height < hero.bottom &&
-        (prop.body.center.dx - hero.center.dx).abs() <
-            prop.drawSize.width * .38;
     session.art.prop(
       canvas,
       prop,
-      opacity: covers
+      opacity: occludesHero
           ? prop.kind == 'tree'
                 ? .4
                 : .55

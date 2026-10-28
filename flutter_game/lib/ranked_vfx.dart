@@ -6,7 +6,7 @@ import 'effect_visibility.dart';
 import 'game_art.dart';
 import 'skill_growth.dart';
 
-/// Extra moving fragments are added at every rank, rather than scaling a still picture.
+/// A few short fragments mark the contact; rank refines their spread.
 void paintRankImpact(
   ui.Canvas canvas,
   ui.Offset at,
@@ -17,15 +17,11 @@ void paintRankImpact(
 }) {
   final r = SkillGrowth.level(rank);
   if (r <= 1) return;
-  final t = phase.clamp(0.0, 1.0), fade = (1 - t) * (.25 + r * .06);
-  final bright = ui.Color.lerp(
-    color,
-    const ui.Color(0xfffffbeb),
-    (r - 1) * .12,
-  )!;
-  for (var i = 0; i < (r - 1) * 5; i++) {
-    final angle = i * 2.39996 + .16 * math.sin(t * 7 + i);
-    final distance = radius * (.2 + .75 * t) * (.65 + i % 4 * .12);
+  final t = (phase * 1.35).clamp(0.0, 1.0), fade = (1 - t) * .55;
+  final bright = ui.Color.lerp(color, const ui.Color(0xfffffbeb), .12)!;
+  for (var i = 0; i < 2 + SkillGrowth.tier(r); i++) {
+    final angle = i * 2.39996 + r * .045 + .1 * math.sin(t * 7 + i);
+    final distance = radius * (.12 + .48 * t) * (.65 + i % 4 * .12);
     final p =
         at +
         ui.Offset(
@@ -33,22 +29,15 @@ void paintRankImpact(
           math.sin(angle) * distance * .65 -
               math.sin(t * math.pi) * (8 + i % 3 * 9),
         );
-    final d = ui.Offset(math.cos(angle), math.sin(angle) * .65) * (3 + r * .7);
+    final d = ui.Offset(math.cos(angle), math.sin(angle) * .65) * (3 + r * .15);
     canvas.drawLine(
       p - d,
       p + d,
       ui.Paint()
         ..color = bright.withValues(alpha: fade)
-        ..strokeWidth = 1 + r * .25
+        ..strokeWidth = 1.3
         ..strokeCap = ui.StrokeCap.round,
     );
-    if (r >= 4 && i.isEven) {
-      canvas.drawCircle(
-        p,
-        1.5,
-        ui.Paint()..color = const ui.Color(0xfffffff1).withValues(alpha: fade),
-      );
-    }
   }
 }
 
@@ -65,16 +54,8 @@ void paintSteelWhirlwind(
 ) {
   final r = SkillGrowth.level(rank);
   final angle = phase * math.pi * 4;
-  final side = 300.0 + r * 8;
-  art.effects.draw(
-    canvas,
-    'fx-steel-whirlwind',
-    steelWhirlwindFrame(r, phase),
-    ui.Rect.fromCenter(center: center, width: side, height: side * .65),
-    rows: 9,
-    opacity: .7 + r * .05,
-  );
-  for (var i = 0; i < SkillGrowth.layers(r); i++) {
+  // The moving blade edge is the effect. No broad vortex image covers the hero.
+  for (var i = 0; i < 1 + (r >= 3 ? 1 : 0); i++) {
     final radius = 78.0 + i * 12;
     canvas.drawArc(
       ui.Rect.fromCenter(
@@ -83,25 +64,17 @@ void paintSteelWhirlwind(
         height: radius * 1.15,
       ),
       angle - i * 1.7,
-      1.45 + r * .08,
+      1.65 + r * .035,
       false,
       ui.Paint()
         ..color =
-            (r >= 4 ? const ui.Color(0xffffdf9e) : const ui.Color(0xffe7f9ff))
-                .withValues(alpha: .45 + r * .07)
+            (i == 0 ? const ui.Color(0xffe7f1ed) : const ui.Color(0xffc8b18c))
+                .withValues(alpha: i == 0 ? .8 : .36)
         ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = 1.3 + r * .55
+        ..strokeWidth = i == 0 ? 3.6 + r * .08 : 1.3
         ..strokeCap = ui.StrokeCap.round,
     );
   }
-  paintRankImpact(
-    canvas,
-    center,
-    phase * 2 % 1,
-    r,
-    const ui.Color(0xffe9c88f),
-    radius: 100,
-  );
 }
 
 class SteelWhirlwind extends GameComponent with EffectVisibility {
@@ -168,8 +141,11 @@ void paintGroundStrike(
 }) {
   final r = SkillGrowth.level(rank), t = phase.clamp(0.0, 1.0);
   final fade = (1 - t), length = 80 + r * 8.0;
-  for (var i = 0; i < 5 + r * 2; i++) {
-    final a = directional ? bearing - 1.1 + i / (4 + r * 2) * 2.2 : i * 2.39996;
+  final fragments = 3 + SkillGrowth.tier(r);
+  for (var i = 0; i < fragments; i++) {
+    final a = directional
+        ? bearing - .75 + i / (fragments - 1) * 1.5
+        : i * 2.39996 + r * .025;
     final reach = length * math.min(1, t * 4) * (.6 + i % 3 * .16);
     final axis = ui.Offset(math.cos(a), math.sin(a) * .7);
     final side = ui.Offset(-axis.dy, axis.dx) * (i.isEven ? 4 : -4);
@@ -182,24 +158,22 @@ void paintGroundStrike(
       ui.Paint()
         ..color = const ui.Color(0xff3d2d21).withValues(alpha: fade * .65)
         ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = 2 + r * .4
+        ..strokeWidth = 2
         ..strokeCap = ui.StrokeCap.round,
     );
     canvas.drawPath(
       path,
       ui.Paint()
-        ..color = const ui.Color(
-          0xffffdda1,
-        ).withValues(alpha: fade * (.3 + r * .09))
+        ..color = const ui.Color(0xffffdda1).withValues(alpha: fade * .38)
         ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = .8 + r * .2,
+        ..strokeWidth = 1,
     );
     final at =
         axis * (reach * t) +
         ui.Offset(0, -math.sin(t * math.pi) * (10 + i % 3 * 9));
     canvas.drawCircle(
       at,
-      1.5 + r * .3,
+      1.7,
       ui.Paint()
         ..color = const ui.Color(0xffd8bd87).withValues(alpha: fade * .8),
     );

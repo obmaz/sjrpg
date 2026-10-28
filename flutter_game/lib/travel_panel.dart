@@ -188,9 +188,7 @@ class TravelPanel extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: Ink(
-            decoration: BoxDecoration(
-              image: gameButtonImage(enabled: enabled || current),
-            ),
+            decoration: gameButtonDecoration(enabled: enabled || current),
             child: InkWell(
               onTap: enabled ? travel : null,
               borderRadius: BorderRadius.circular(7),

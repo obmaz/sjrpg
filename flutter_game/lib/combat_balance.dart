@@ -1,5 +1,11 @@
 /// Shared pacing values used by simulation, offers and their previews.
 abstract final class CombatBalance {
+  /// Simulation seconds per real second. Combat timers keep simulation units;
+  /// displayed durations and rates convert at the presentation boundary.
+  static const gameSpeed = 1.2;
+  static double realSeconds(double simulationSeconds) =>
+      simulationSeconds / gameSpeed;
+
   // Apply the outgoing skill reduction once, after weapon/rank calculations.
   static const heroDamageScale = .85;
   static const skillDamageScale = .60;
@@ -22,7 +28,8 @@ abstract final class CombatBalance {
   static const maxActiveEnemies = 30;
   static const enemyPopulationScale = 1.5;
   static const enemyExperienceScale = .60;
-  static const revivalProtection = 3.0;
+  // Revival promises three real seconds, independently of global pacing.
+  static const revivalProtection = 3.0 * gameSpeed;
   static const potionBundleSize = 2;
   static const healingPotionPrice = 80;
   static const resourcePotionPrice = 72;

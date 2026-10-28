@@ -4,11 +4,7 @@ import 'dart:ui' as ui;
 /// Continuous flame geometry fills the time between the authored atlas frames.
 /// No interpolated image layers or per-frame particle components are needed.
 class FirePlume {
-  static const _flightColors = [
-    ui.Color(0x99ed6b2c),
-    ui.Color(0xb3ffba51),
-    ui.Color(0xddfff2b0),
-  ];
+  static const _flightColors = [ui.Color(0xa6ed6b2c), ui.Color(0xe6ffe0a1)];
   final _paint = ui.Paint();
   final _path = ui.Path();
 
@@ -22,10 +18,10 @@ class FirePlume {
     canvas.save();
     canvas.translate(at.dx, at.dy);
     canvas.rotate(bearing);
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < 2; i++) {
       final wave = math.sin(time * 25 + i * 2.1);
-      final length = radius * (1.3 + i * .28 + wave * .09);
-      final width = radius * (.18 - i * .035);
+      final length = radius * (1.25 - i * .28 + wave * .09);
+      final width = radius * (.15 - i * .045);
       final bend = math.sin(time * 32 + i * 1.9) * radius * .16;
       _path
         ..reset()
@@ -44,13 +40,13 @@ class FirePlume {
     final fade = (1 - t) * (1 - t);
     if (fade <= 0) return;
     final spread = radius * (.12 + .58 * (1 - math.pow(1 - t, 3)));
-    for (var i = 0; i < 5; i++) {
-      final angle = i * math.pi * 2 / 5 + .2;
+    for (var i = 0; i < 3; i++) {
+      final angle = i * math.pi * 2 / 3 + .2;
       final pulse = math.sin(t * 21 + i * 1.7);
       final x = at.dx + math.cos(angle) * spread * .65;
       final y = at.dy + math.sin(angle) * spread * .25;
-      final width = spread * (.6 + pulse * .08);
-      final rise = radius * math.sin(t * math.pi) * (.22 + i % 2 * .09);
+      final width = spread * (.3 + pulse * .04);
+      final rise = radius * math.sin(t * math.pi) * (.16 + i % 2 * .05);
       _path
         ..reset()
         ..moveTo(x - width, y)
@@ -71,15 +67,15 @@ class FirePlume {
           y,
         )
         ..close();
-      _paint.color = ui.Color.fromRGBO(255, 115 + i * 15, 42, fade * .42);
+      _paint.color = ui.Color.fromRGBO(255, 130 + i * 15, 55, fade * .55);
       canvas.drawPath(_path, _paint);
     }
-    _paint.color = ui.Color.fromRGBO(255, 230, 153, fade * .8);
+    _paint.color = ui.Color.fromRGBO(255, 230, 153, fade * .55);
     canvas.drawOval(
       ui.Rect.fromCenter(
         center: at - ui.Offset(0, radius * t * .13),
-        width: spread * 1.1,
-        height: spread * .55,
+        width: spread * .5,
+        height: spread * .2,
       ),
       _paint,
     );

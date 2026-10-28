@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/combat_balance.dart';
 import 'package:guardian_new/death_penalty.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
@@ -82,7 +83,7 @@ void main() {
       addTearDown(revived.dispose);
       expect(revived.progress.hp, revived.progress.maxHp);
       expect(revived.progress.energy, revived.progress.maxEnergy);
-      expect(revived.hero.revivalProtection, 3);
+      expect(revived.hero.revivalProtection, CombatBalance.revivalProtection);
       expect(revived.progress.gold, gold);
       final repeated = saved.forRevival().forRevival();
       expect(repeated.progress.gold, gold);

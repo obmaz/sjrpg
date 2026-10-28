@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/affliction_widgets.dart';
+import 'package:guardian_new/combat_balance.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/game_ui.dart';
@@ -174,7 +175,12 @@ void main() {
         );
         final semantics = tester.ensureSemantics();
         expect(find.bySemanticsLabel('속박 2초'), findsOneWidget);
-        expect(find.bySemanticsLabel('중독 4초'), findsOneWidget);
+        expect(
+          find.bySemanticsLabel(
+            '중독 ${CombatBalance.realSeconds(s.afflictions.remaining(PlayerStatus.poison)).ceil()}초',
+          ),
+          findsOneWidget,
+        );
         expect(find.bySemanticsLabel('시야 제한 3초'), findsOneWidget);
         expect(find.bySemanticsLabel('공격 둔화 3초'), findsOneWidget);
         expect(find.bySemanticsLabel('이동 둔화 3초'), findsOneWidget);

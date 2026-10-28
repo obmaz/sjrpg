@@ -135,18 +135,6 @@ class SpellBurst extends GameComponent with EffectVisibility {
         : clip == SpellClip.whirlwind
         ? const ui.Color(0xffa8f6df)
         : const ui.Color(0xffffbf73);
-    final front = radius * (1 - math.pow(1 - t, 3));
-    canvas.drawOval(
-      ui.Rect.fromCenter(
-        center: ui.Offset.zero,
-        width: front * 2,
-        height: front * 1.3,
-      ),
-      ui.Paint()
-        ..color = color.withValues(alpha: (1 - t) * .65)
-        ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = 2 + (1 - t) * 3,
-    );
     final mageContact = icy || clip == SpellClip.meteorImpact;
     if (mageContact) {
       _mageArt.impact(
@@ -158,58 +146,25 @@ class SpellBurst extends GameComponent with EffectVisibility {
         rank,
       );
     }
-    paintSpellFrame(
-      session.art,
-      canvas,
-      clip,
-      age,
-      ui.Offset.zero,
-      radius * (clip == SpellClip.warcry ? 2.4 : 2.1),
-      opacity: ((1 - t) / .22).clamp(0, .95),
-    );
     if (mageContact) {
       canvas.restore();
       return;
     }
-    // Debris has independent radial velocity and gravity, beyond the atlas shape changes.
+    // A single pressure edge identifies the shout; the contact painter above
+    // already owns elemental impacts, so no atlas or second ring overlaps it.
+    final front = radius * (1 - math.pow(1 - t, 3));
+    canvas.drawOval(
+      ui.Rect.fromCenter(
+        center: ui.Offset.zero,
+        width: front * 2,
+        height: front * 1.3,
+      ),
+      ui.Paint()
+        ..color = color.withValues(alpha: (1 - t) * .65)
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = 2.2,
+    );
     paintRankImpact(canvas, ui.Offset.zero, t, rank, color, radius: radius);
-    for (var layer = 1; layer < SkillGrowth.layers(rank); layer++) {
-      final f = front * (1 - layer * .1);
-      canvas.drawOval(
-        ui.Rect.fromCenter(
-          center: ui.Offset.zero,
-          width: f * 2,
-          height: f * 1.3,
-        ),
-        ui.Paint()
-          ..color = color.withValues(alpha: (1 - t) * (.2 + rank * .045))
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 1 + rank * .45,
-      );
-    }
-    for (var i = 0; i < SkillGrowth.particles(rank); i++) {
-      final a = i * 2.39996, speed = radius * (.5 + (i % 4) * .16);
-      final at = ui.Offset(
-        math.cos(a) * speed * t,
-        math.sin(a) * speed * t * .6 -
-            math.sin(t * math.pi) * (22 + i % 3 * 15),
-      );
-      canvas.save();
-      canvas.translate(at.dx, at.dy);
-      canvas.rotate(a + t * (i.isEven ? 4 : -4));
-      canvas.drawRRect(
-        ui.RRect.fromRectAndRadius(
-          ui.Rect.fromCenter(
-            center: ui.Offset.zero,
-            width: icy ? 3 : 4,
-            height: icy ? 8 : 4,
-          ),
-          const ui.Radius.circular(1),
-        ),
-        ui.Paint()..color = color.withValues(alpha: (1 - t) * .85),
-      );
-      canvas.restore();
-    }
     canvas.restore();
   }
 }
@@ -239,45 +194,19 @@ void paintIceShield(
   canvas.drawPath(
     shell,
     ui.Paint()
-      ..color = const ui.Color(0xff8edff4).withValues(alpha: .08 + rank * .014)
+      ..color = const ui.Color(0xff8edff4).withValues(alpha: .035)
       ..style = ui.PaintingStyle.fill,
   );
   canvas.drawPath(
     shell,
     ui.Paint()
-      ..color = const ui.Color(0xffdbfaff).withValues(alpha: .23 + rank * .045)
+      ..color = const ui.Color(0xffdbfaff).withValues(alpha: .36)
       ..style = ui.PaintingStyle.stroke
-      ..strokeWidth = 1 + rank * .18,
+      ..strokeWidth = 1.1,
   );
-  for (var layer = 1; layer < SkillGrowth.layers(rank); layer++) {
-    canvas.drawArc(
-      ui.Rect.fromCenter(
-        center: center,
-        width: 72 + layer * 8,
-        height: 35 + layer * 5,
-      ),
-      -time * (1.4 + layer * .3),
-      math.pi * (1.1 + rank * .1),
-      false,
-      ui.Paint()
-        ..color = const ui.Color(0xffc3f8ff).withValues(alpha: .2 + rank * .055)
-        ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = 1 + rank * .25,
-    );
-  }
-  final ring = ui.Rect.fromCenter(center: center, width: 72, height: 35);
-  canvas.drawArc(
-    ring,
-    time * 1.7,
-    math.pi * 1.3,
-    false,
-    ui.Paint()
-      ..style = ui.PaintingStyle.stroke
-      ..strokeWidth = 1.5
-      ..color = const ui.Color(0x7789eaff),
-  );
-  for (var i = 0; i < 5 + rank * 2; i++) {
-    final a = time * 1.7 + i * math.pi * 2 / (5 + rank * 2);
+  final shards = 3 + SkillGrowth.tier(rank);
+  for (var i = 0; i < shards; i++) {
+    final a = time * .65 + i * math.pi * 2 / shards + rank * .03;
     final at =
         center +
         ui.Offset(
@@ -290,21 +219,13 @@ void paintIceShield(
     canvas.rotate(math.sin(a) * .28);
     canvas.drawPath(
       _iceShieldShard,
-      ui.Paint()
-        ..shader = ui.Gradient.linear(
-          const ui.Offset(-4, -7),
-          const ui.Offset(4, 6),
-          [
-            ui.Color.fromRGBO(212, 251, 255, .65 + glint * .3),
-            const ui.Color(0x8868bfdc),
-          ],
-        ),
+      ui.Paint()..color = ui.Color.fromRGBO(182, 226, 237, .4 + glint * .2),
     );
     canvas.drawLine(
       const ui.Offset(0, -8),
       const ui.Offset(1, 5),
       ui.Paint()
-        ..color = ui.Color.fromRGBO(235, 255, 255, .5 + glint * .4)
+        ..color = ui.Color.fromRGBO(235, 255, 255, .4 + glint * .2)
         ..strokeWidth = 1,
     );
     canvas.restore();
@@ -319,7 +240,7 @@ void paintRuneWave(
   int rank = 1,
 }) {
   paintRankImpact(canvas, ui.Offset.zero, t, rank, color, radius: radius);
-  for (var wave = 0; wave < 3; wave++) {
+  for (var wave = 0; wave < 1; wave++) {
     final life = (t - wave * .13) / (1 - wave * .13);
     if (life < 0 || life >= 1) continue;
     final r = radius * (1 - math.pow(1 - life, 2));
@@ -330,30 +251,27 @@ void paintRuneWave(
         height: r * 1.35,
       ),
       ui.Paint()
-        ..color = color.withValues(alpha: (1 - life) * (.7 - wave * .15))
+        ..color = color.withValues(alpha: (1 - life) * .4)
         ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = 1 + (1 - life) * (5 - wave),
+        ..strokeWidth = 1.8,
     );
   }
-  for (var i = 0; i < 16; i++) {
-    final a = i * math.pi / 8 + .1, r = radius * (.15 + .85 * t);
+  final streaks = 3 + SkillGrowth.tier(rank);
+  for (var i = 0; i < streaks; i++) {
+    final a = i * math.pi * 2 / streaks + rank * .03,
+        r = radius * (.15 + .65 * t);
     final at = ui.Offset(
       math.cos(a) * r,
       math.sin(a) * r * .675 - math.sin(t * math.pi) * (i.isEven ? 16 : 5),
     );
     final axis = ui.Offset(math.cos(a), math.sin(a) * .675);
     canvas.drawLine(
-      at - axis * (1 - t) * 18,
+      at - axis * (1 - t) * 9,
       at,
       ui.Paint()
-        ..color = color.withValues(alpha: 1 - t)
-        ..strokeWidth = 1 + (1 - t) * 2
+        ..color = color.withValues(alpha: (1 - t) * .65)
+        ..strokeWidth = 1.3
         ..strokeCap = ui.StrokeCap.round,
-    );
-    canvas.drawCircle(
-      at,
-      (i.isEven ? 2.5 : 1.5) * (1 - t),
-      ui.Paint()..color = color.withValues(alpha: 1 - t),
     );
   }
 }
@@ -433,39 +351,40 @@ void paintBattleAura(
       ? const ui.Color(0xffff9b65)
       : const ui.Color(0xffffd58a);
   final feet = center + const ui.Offset(0, 8);
-  canvas.drawOval(
-    ui.Rect.fromCenter(center: feet, width: 68, height: 24),
+  canvas.drawArc(
+    ui.Rect.fromCenter(center: feet, width: 54, height: 18),
+    .2,
+    math.pi * .75,
+    false,
     ui.Paint()
       ..style = ui.PaintingStyle.stroke
-      ..strokeWidth = 1.5
-      ..color = color.withValues(alpha: .35 + .15 * math.sin(time * 5)),
+      ..strokeWidth = 1.2
+      ..color = color.withValues(alpha: .25 + .05 * math.sin(time * 5)),
   );
-  for (var i = 0; i < 6 + rank * 2; i++) {
-    final a = time * 1.9 + i * math.pi * 2 / (6 + rank * 2);
-    final rise = (.5 + .5 * math.sin(time * 5 + i)) * (frenzy ? 17 : 9);
+  final embers = 2 + SkillGrowth.tier(rank);
+  for (var i = 0; i < embers; i++) {
+    final a = time * .7 + i * math.pi * 2 / embers + rank * .035;
+    final rise = (.5 + .5 * math.sin(time * 5 + i)) * (frenzy ? 10 : 5);
     final at = feet + ui.Offset(math.cos(a) * 31, math.sin(a) * 10);
-    final rune = ui.Path()
-      ..moveTo(at.dx - 2, at.dy)
-      ..lineTo(at.dx, at.dy - 5 - rise)
-      ..lineTo(at.dx + 2, at.dy);
-    canvas.drawPath(
-      rune,
+    canvas.drawLine(
+      at,
+      at - ui.Offset(0, 2 + rise),
       ui.Paint()
-        ..color = color.withValues(alpha: .45 + .25 * math.sin(a))
+        ..color = color.withValues(alpha: .3 + .1 * math.sin(a))
         ..style = ui.PaintingStyle.stroke
         ..strokeWidth = 1.3,
     );
   }
   if (frenzy) {
-    for (var i = 0; i < 2 + rank; i++) {
+    for (var i = 0; i < 2; i++) {
       final y = -8.0 - i * 14;
-      final x = math.sin(time * 7 + i * 2) * 22;
+      final x = (i == 0 ? -19 : 19) + math.sin(time * 7 + i * 2) * 2;
       canvas.drawLine(
         center + ui.Offset(x - 5, y + 6),
         center + ui.Offset(x + 3, y - 4),
         ui.Paint()
-          ..color = color.withValues(alpha: .7)
-          ..strokeWidth = 1.5
+          ..color = color.withValues(alpha: .45)
+          ..strokeWidth = 1.2
           ..strokeCap = ui.StrokeCap.round,
       );
     }

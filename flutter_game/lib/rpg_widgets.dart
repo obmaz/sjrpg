@@ -102,15 +102,11 @@ class FramedSurface extends StatelessWidget {
       return Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xff173d39), Color(0xff0b2225)],
-          ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xff577d72)),
+          color: const Color(0xf016242c),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: mobileBorder),
           boxShadow: const [
-            BoxShadow(color: Color(0x88000b0c), blurRadius: 24),
+            BoxShadow(color: Color(0x55000000), blurRadius: 14),
           ],
         ),
         child: child,
@@ -128,23 +124,16 @@ class _FramePainter extends CustomPainter {
   final GameArt art;
   @override
   void paint(Canvas canvas, Size size) {
-    final image = art.images['popup-frame'];
-    if (image == null) {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(20)),
-        Paint()..color = ink,
-      );
-      return;
-    }
-    canvas.save();
-    canvas.scale(.25);
-    canvas.drawImageNine(
-      image,
-      Rect.fromLTWH(150, 150, image.width - 300, image.height - 300),
-      Rect.fromLTWH(0, 0, size.width * 4, size.height * 4),
-      Paint()..filterQuality = FilterQuality.medium,
+    final bounds = (Offset.zero & size).deflate(.5);
+    final shape = RRect.fromRectAndRadius(bounds, const Radius.circular(18));
+    canvas.drawRRect(shape, Paint()..color = const Color(0xf016242c));
+    canvas.drawRRect(
+      shape,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..color = mobileBorder,
     );
-    canvas.restore();
   }
 
   @override
