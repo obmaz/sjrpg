@@ -60,19 +60,12 @@ void main() {
       expect(saved.withWeaponLevel(9).gifts, item.gifts);
       expect(saved.base.comboProfile!.endless, true);
       expect(saved.stats, contains('무한 콤보'));
-      expect(gearById('longsword').comboProfile!.chainLabel, '4연격');
+      expect(gearById('longsword').comboProfile!.chainLabel, '6연격');
     },
   );
 
   test('inert combo affixes cannot enter constructors or forged saves', () {
-    for (final id in [
-      'leather',
-      'amber',
-      'wand',
-      'axe',
-      'greatsword',
-      'warhammer',
-    ]) {
+    for (final id in ['leather', 'amber', 'wand']) {
       final base = gearById(id);
       expect(
         () => Gear(2, base, rarity: Rarity.rare, gifts: [WeaponGift.comboFury]),
@@ -85,6 +78,24 @@ void main() {
       expect(() => Gear.fromSave(raw), throwsFormatException, reason: id);
     }
   });
+
+  test(
+    'four-hit heavy weapons can activate and preserve third-contact traits',
+    () {
+      for (final id in ['axe', 'greatsword', 'warhammer']) {
+        final base = gearById(id);
+        expect(base.comboProfile!.chainLength, 4);
+        expect(WeaponGift.comboFury.supports(base), true);
+        final gear = Gear(
+          2,
+          base,
+          rarity: Rarity.unique,
+          gifts: [WeaponGift.comboFury, WeaponGift.comboGuard],
+        );
+        expect(Gear.fromSave(gear.toSave()).gifts, gear.gifts);
+      }
+    },
+  );
 
   test('legacy ability defaults keep their original serial mapping', () {
     const original = [
