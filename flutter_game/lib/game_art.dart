@@ -26,8 +26,13 @@ class GameArt {
   final _bossMesh = BossSpriteMeshPainter();
   final _mountMesh = MountSpriteMeshPainter();
   static const heroWidthScale = 1.36, heroHeightScale = 1.0;
+
+  /// Presentation only; collision footprints and weapon reach stay in world units.
+  static const warriorRenderScale = 1.18;
   late final _actorPaint = ui.Paint()..filterQuality = ui.FilterQuality.low;
   late final _rollPaint = ui.Paint()..filterQuality = ui.FilterQuality.medium;
+  late final _portraitPaint = ui.Paint()
+    ..filterQuality = ui.FilterQuality.medium;
   ActorAtlas _atlas(String sheet) {
     final cached = _actorAtlases[sheet];
     if (cached != null) return cached;
@@ -54,6 +59,7 @@ class GameArt {
     'class-selection',
     'entry-ui',
     'actors-hero',
+    'hero-helmeted-portrait',
     'actors-mage',
     'gear-icons',
     'combat-fx',
@@ -234,7 +240,11 @@ class GameArt {
     final names = <String>{
       for (final name in _allImages)
         if (!_stagedRetiredVfx.contains(name) &&
-            (name != 'barbarian-skills' || heroClass == HeroClass.warrior) &&
+            (!const {
+                  'barbarian-skills',
+                  'hero-helmeted-portrait',
+                }.contains(name) ||
+                heroClass == HeroClass.warrior) &&
             (!name.startsWith('actors-') || _sharedActors.contains(name)) &&
             !exclusiveScenery.contains(name))
           name,
@@ -613,6 +623,18 @@ class GameArt {
     );
   }
 
+  /// The HUD may clip this identity portrait to its existing circular frame.
+  void helmetedWarriorPortrait(ui.Canvas canvas, ui.Rect destination) {
+    final image = images['hero-helmeted-portrait'];
+    if (image == null) return;
+    canvas.drawImageRect(
+      image,
+      ui.Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+      destination,
+      _portraitPaint,
+    );
+  }
+
   /// Existing and unloaded atlases retain the original two-phase gait.
   int runFrameCount(String key) {
     final sheet = _actorDefinitions[key]!.$1;
@@ -689,8 +711,9 @@ class GameArt {
     final frame = atlas.frames[index];
     final scale = height / atlas.heights[definition.$2], src = frame.source;
     final hero = key == 'hero' || key == 'mage';
-    final scaleX = scale * (hero ? heroWidthScale : 1);
-    final scaleY = scale * (hero ? heroHeightScale : 1);
+    final warriorScale = key == 'hero' ? warriorRenderScale : 1.0;
+    final scaleX = scale * (hero ? heroWidthScale : 1) * warriorScale;
+    final scaleY = scale * (hero ? heroHeightScale : 1) * warriorScale;
     final dst = ui.Rect.fromLTWH(
       feet.dx - frame.anchor.dx * scaleX,
       feet.dy - frame.anchor.dy * scaleY,
@@ -752,7 +775,8 @@ class GameArt {
     final anchor = atlas.projectedOrigin
         ? frame.anchor
         : ui.Offset(src.width / 2, src.height);
-    final scale = 43 / atlas.heights[mage ? 1 : 0];
+    final scale =
+        43 / atlas.heights[mage ? 1 : 0] * (mage ? 1 : warriorRenderScale);
     canvas.drawImageRect(
       images['actors-roll']!,
       src,

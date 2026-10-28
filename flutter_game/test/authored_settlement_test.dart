@@ -19,6 +19,13 @@ void main() {
           false,
           reason: '$stage $at',
         );
+        expect(
+          world.sanctuary.protects(
+            Rect.fromCenter(center: at, width: 28, height: 24),
+          ),
+          true,
+          reason: '$stage revisited service $at must remain protected',
+        );
       }
     }
   });
@@ -28,14 +35,27 @@ void main() {
       () {
         final world = AdventureWorld(stage: stage);
         expect(world.authoredSettlement.imageKey, 'settlement-${stage.name}');
-        // Every painted wall and fence corner belongs to the protected town;
-        // otherwise an exposed hero can stand in a pocket enemies cannot enter.
-        for (final point in world.settlementCollision.expand(
-          (shape) => shape.points,
-        )) {
+        // The safety line follows ground-level walls rather than the square
+        // illustration or projecting roofs. Full bodies touching its real wall
+        // vertices stay protected, and those walls remain solid terrain.
+        for (final point in world.authoredSettlement.safeBoundary) {
+          final body = Rect.fromCenter(center: point, width: 28, height: 24);
+          expect(world.sanctuary.protects(body), true);
+          expect(world.blocked(body), true);
+        }
+        for (final corner in [
+          world.settlement.topLeft,
+          world.settlement.topRight,
+          world.settlement.bottomLeft,
+          world.settlement.bottomRight,
+        ]) {
           expect(
-            (point - world.sanctuary.center).distance,
-            lessThan(world.sanctuary.radius - 24),
+            world.sanctuary.protects(
+              Rect.fromCenter(center: corner, width: 28, height: 24),
+            ),
+            false,
+            reason:
+                'outside ground at the image corner is not part of the town',
           );
         }
 
@@ -54,17 +74,36 @@ void main() {
         ];
         for (final at in anchors) {
           expect(
+            world.sanctuary.protects(
+              Rect.fromCenter(center: at, width: 28, height: 24),
+            ),
+            true,
+            reason: '$stage service anchor $at must be inside the painted wall',
+          );
+          expect(
             world.settlement.contains(at),
             isTrue,
             reason: '$stage anchor $at',
           );
           expect(
-            world.blocked(Rect.fromCenter(center: at, width: 24, height: 24)),
+            world.blocked(Rect.fromCenter(center: at, width: 28, height: 24)),
             isFalse,
             reason: '$stage anchor $at',
           );
         }
         for (final line in world.authoredSettlement.gatePaths) {
+          expect(
+            world.sanctuary.protects(
+              Rect.fromCenter(center: line.first, width: 30, height: 30),
+            ),
+            true,
+          );
+          expect(
+            world.sanctuary.protects(
+              Rect.fromCenter(center: line.last, width: 30, height: 30),
+            ),
+            false,
+          );
           final steps = ((line.last - line.first).distance / 10).ceil();
           for (var i = 0; i <= steps; i++) {
             final at = Offset.lerp(line.first, line.last, i / steps)!;

@@ -17,8 +17,19 @@ void main() {
         }
       }
       const size = ui.Size(28, 24);
+      for (final uv in const [
+        ui.Offset(.09, .19),
+        ui.Offset(.80, .135),
+        ui.Offset(.045, .72),
+        ui.Offset(.95, .70),
+      ]) {
+        final wall = world.authoredSettlement.point(uv);
+        final body = ui.Rect.fromCenter(center: wall, width: 28, height: 24);
+        expect(world.blocked(body), true);
+        expect(world.sanctuary.protects(body), true);
+      }
       for (final service in [
-        world.healAt + const ui.Offset(0, 70),
+        world.authoredSettlement.wellApproach,
         world.merchantAt,
         if (stage == WorldStage.sands)
           ...timeQuestGivers.map((giver) => world.questGiverAt(giver.path))

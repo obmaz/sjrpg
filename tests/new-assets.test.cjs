@@ -99,13 +99,13 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
         assert.equal(metadata.actors[actor].frames.length, count);
     }
     for (const [actor, source] of [
-        ['hero', 'hero-clean'],
+        ['hero', 'hero-helmeted'],
         ['mage', 'mage'],
-        ['hero-attack', 'hero-attack-clean'],
-        ['hero-backhand', 'actors-hero-backhand'],
-        ['hero-cleave', 'actors-hero-cleave'],
+        ['hero-attack', 'hero-helmeted-attack'],
+        ['hero-backhand', 'hero-helmeted-backhand'],
+        ['hero-cleave', 'hero-helmeted-cleave'],
         ['mage-cast', 'actors-mage-cast'],
-        ['roll', 'roll'],
+        ['roll', 'hero-helmeted-roll'],
     ]) {
         const original = JSON.parse(
             fs.readFileSync(path.join(root, `flutter_game/art/${source}-bounds.json`), 'utf8'),
@@ -113,6 +113,20 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
         assert.deepEqual(metadata.actors[actor], original, `${actor} retains projected anchors`);
         assert.equal(metadata.actors[actor].anchorMode, 'projected-origin');
         assert.equal(metadata.actors[actor].feet.length, metadata.actors[actor].frames.length);
+    }
+    for (const [targetName, sourceName] of [
+        ['actors-hero.webp', 'hero-helmeted.webp'],
+        ['actors-hero-attack.webp', 'hero-helmeted-attack.webp'],
+        ['actors-hero-backhand.webp', 'hero-helmeted-backhand.webp'],
+        ['actors-hero-cleave.webp', 'hero-helmeted-cleave.webp'],
+        ['actors-roll.png', 'hero-helmeted-roll.png'],
+        ['hero-helmeted-portrait.webp', 'hero-helmeted-portrait.webp'],
+    ]) {
+        assert.equal(
+            fs.readFileSync(path.join(target, targetName), 'utf8'),
+            `source picture ${sourceName}`,
+            'active warrior runtime aliases must use helmeted artwork',
+        );
     }
     for (const actor of ['hero', 'mage']) {
         assert.deepEqual(metadata.actors[actor].motion, {

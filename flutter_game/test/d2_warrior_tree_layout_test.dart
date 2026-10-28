@@ -4,6 +4,64 @@ import 'package:guardian_new/skill_tree_layout.dart';
 
 void main() {
   test(
+    'selected schools keep their complete local geometry within the viewport',
+    () {
+      for (final hero in HeroClass.values) {
+        final p = Progress(heroClass: hero);
+        for (final width in [240.0, 274.0, 372.0, 620.0]) {
+          for (
+            var school = 0;
+            school < skillTreeSchoolLabels(p).length;
+            school++
+          ) {
+            final layout = SkillSchoolLayout(
+              p,
+              school,
+              width,
+              dense: false,
+              textScale: 1.3,
+            );
+            for (final skill in layout.skills) {
+              final rect = layout.rects[skill.id]!;
+              expect(rect.width, greaterThanOrEqualTo(44));
+              expect(rect.left, greaterThanOrEqualTo(0));
+              expect(rect.right, lessThanOrEqualTo(width));
+              for (final parent in skill.requires.keys.where(
+                layout.rects.containsKey,
+              )) {
+                final points = skillTreeConnectionPoints(
+                  layout,
+                  parent,
+                  skill.id,
+                );
+                for (var segment = 1; segment < points.length; segment++) {
+                  for (var step = 0; step <= 30; step++) {
+                    final point = Offset.lerp(
+                      points[segment - 1],
+                      points[segment],
+                      step / 30,
+                    )!;
+                    for (final obstacle in layout.rects.entries) {
+                      if (obstacle.key == parent || obstacle.key == skill.id) {
+                        continue;
+                      }
+                      expect(
+                        obstacle.value.contains(point),
+                        false,
+                        reason:
+                            '${hero.name}/$school $parent->${skill.id} through ${obstacle.key}',
+                      );
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+  );
+  test(
     'Barbarian keeps all thirty original school cells and six level tiers',
     () {
       final p = Progress(heroClass: HeroClass.warrior),

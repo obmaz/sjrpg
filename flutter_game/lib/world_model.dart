@@ -1419,16 +1419,7 @@ class AdventureWorld {
   Offset get healAt => _authoring
       ? _authoredHubOrigin + const Offset(-280, -100)
       : authoredSettlement.well;
-  late final sanctuary = Sanctuary(
-    authoredSettlement.bounds.center,
-    // The circular combat ward encloses the complete painted perimeter. An
-    // exposed pocket between a corner fence and the ward traps pursuit routes.
-    settlementCollision
-            .expand((shape) => shape.points)
-            .map((point) => (point - authoredSettlement.bounds.center).distance)
-            .reduce(math.max) +
-        48,
-  );
+  late final sanctuary = Sanctuary.polygon(authoredSettlement.safeBoundary);
   final sanctuaryFences = <SanctuaryFenceSection>[];
   Offset wellApproach(QuestSite well) => well.id == 'hub'
       ? authoredSettlement.wellApproach

@@ -195,7 +195,8 @@ class _SkillsPanelState extends State<SkillsPanel> {
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
     final short = media.size.height < 500;
-    final tight = media.size.height < 360 && media.size.width >= 600;
+    final compactMage =
+        short && media.size.width < 600 && p.heroClass == HeroClass.mage;
     return ColoredBox(
       color: const Color(0xcc040d10),
       child: SafeArea(
@@ -207,119 +208,130 @@ class _SkillsPanelState extends State<SkillsPanel> {
               child: FramedSurface(
                 art: s.art,
                 compact: true,
-                child: Stack(
-                  children: [
-                    ExcludeSemantics(
-                      excluding: selected != null,
-                      child: ExcludeFocus(
+                child: Padding(
+                  padding: const EdgeInsets.all(3),
+                  child: Stack(
+                    children: [
+                      ExcludeSemantics(
                         excluding: selected != null,
-                        child: Column(
-                          children: [
-                            GamePanelHeader(
-                              title: '스킬 트리',
-                              subtitle: tight
-                                  ? null
-                                  : 'Lv.${p.level} ${p.heroClass.title}',
-                              dense: tight,
-                              onClose: widget.onClose,
-                              trailing: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 7,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xff394634),
-                                  border: Border.all(
-                                    color: gold.withValues(alpha: .55),
+                        child: ExcludeFocus(
+                          excluding: selected != null,
+                          child: Column(
+                            children: [
+                              GamePanelHeader(
+                                title: '스킬 트리',
+                                subtitle: short
+                                    ? null
+                                    : 'Lv.${p.level} ${p.heroClass.title}',
+                                dense: short,
+                                onClose: widget.onClose,
+                                trailing: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 7,
                                   ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  '${p.skillPoints} P',
-                                  style: const TextStyle(
-                                    color: gold,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                              child: Row(
-                                children: [
-                                  for (var i = 0; i < 4; i++)
-                                    Expanded(
-                                      child: Padding(
-                                        padding: EdgeInsets.only(
-                                          right: i == 3 ? 0 : 8,
-                                        ),
-                                        child: _slot(i, compact: short),
-                                      ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xff394634),
+                                    border: Border.all(
+                                      color: gold.withValues(alpha: .55),
                                     ),
-                                ],
-                              ),
-                            ),
-                            BasicAttackStrip(
-                              session: s,
-                              compact: short,
-                              onFocus: (skill) =>
-                                  setState(() => focused = skill),
-                            ),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                ),
-                                child: SkillTree(
-                                  session: s,
-                                  controller: treeScroll,
-                                  focused: focused,
-                                  onFocus: (skill) =>
-                                      setState(() => focused = skill),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    '${p.skillPoints} P',
+                                    style: const TextStyle(
+                                      color: gold,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                            if (short && media.size.width >= 600)
-                              Row(
-                                children: [
-                                  Expanded(child: _investmentBar(short: true)),
-                                  SizedBox(width: 236, child: _footer()),
-                                ],
-                              )
-                            else ...[
-                              _investmentBar(short: short),
-                              _footer(),
+                              if (!compactMage)
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    12,
+                                    0,
+                                    12,
+                                    8,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      for (var i = 0; i < 4; i++)
+                                        Expanded(
+                                          child: Padding(
+                                            padding: EdgeInsets.only(
+                                              right: i == 3 ? 0 : 8,
+                                            ),
+                                            child: _slot(i, compact: short),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              BasicAttackStrip(
+                                session: s,
+                                compact: short,
+                                onFocus: (skill) =>
+                                    setState(() => focused = skill),
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  child: SkillTree(
+                                    session: s,
+                                    controller: treeScroll,
+                                    focused: focused,
+                                    onFocus: (skill) =>
+                                        setState(() => focused = skill),
+                                  ),
+                                ),
+                              ),
+                              if (short && media.size.width >= 600)
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _investmentBar(short: true),
+                                    ),
+                                    SizedBox(width: 270, child: _footer()),
+                                  ],
+                                )
+                              else ...[
+                                _investmentBar(short: short),
+                                _footer(),
+                              ],
                             ],
-                          ],
-                        ),
-                      ),
-                    ),
-                    if (selected != null) ...[
-                      Positioned.fill(
-                        child: GestureDetector(
-                          onTap: () => setState(() => selected = null),
-                          child: const ColoredBox(color: Color(0xb300080a)),
-                        ),
-                      ),
-                      Align(
-                        alignment: media.size.width > 700
-                            ? Alignment.centerRight
-                            : Alignment.bottomCenter,
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: 420,
-                            maxHeight:
-                                (media.size.height -
-                                    media.padding.vertical -
-                                    20) *
-                                (short ? 1 : .88),
                           ),
-                          child: _details(selected!),
                         ),
                       ),
+                      if (selected != null) ...[
+                        Positioned.fill(
+                          child: GestureDetector(
+                            onTap: () => setState(() => selected = null),
+                            child: const ColoredBox(color: Color(0xb300080a)),
+                          ),
+                        ),
+                        Align(
+                          alignment: media.size.width > 700
+                              ? Alignment.centerRight
+                              : Alignment.bottomCenter,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: 420,
+                              maxHeight:
+                                  (media.size.height -
+                                      media.padding.vertical -
+                                      20) *
+                                  (short ? 1 : .88),
+                            ),
+                            child: _details(selected!),
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),

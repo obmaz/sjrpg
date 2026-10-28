@@ -60,6 +60,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'quest-root-garden',
         'action-glyphs',
         'barbarian-skills',
+        'hero-helmeted-portrait',
         'actors-bicycle',
         'skill-perks',
         'physical-icons',
@@ -106,23 +107,29 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
             path.join(destination, `images/${name}.webp`),
         );
     for (const [source, target] of [
-        ['hero-clean', 'actors-hero'],
-        ['hero-attack-clean', 'actors-hero-attack'],
+        ['hero-helmeted', 'actors-hero'],
+        ['hero-helmeted-attack', 'actors-hero-attack'],
+        ['hero-helmeted-backhand', 'actors-hero-backhand'],
+        ['hero-helmeted-cleave', 'actors-hero-cleave'],
     ])
         fs.copyFileSync(
             path.join(root, `flutter_game/art/${source}.webp`),
             path.join(destination, `images/${target}.webp`),
         );
+    fs.copyFileSync(
+        path.join(root, 'flutter_game/art/hero-helmeted-roll.png'),
+        path.join(destination, 'images/actors-roll.png'),
+    );
     const repaired = Object.fromEntries(
         [
-            ['hero', 'hero-clean'],
-            ['hero-attack', 'hero-attack-clean'],
+            ['hero', 'hero-helmeted'],
+            ['hero-attack', 'hero-helmeted-attack'],
             ['bicycle', 'actors-bicycle'],
             ['motor', 'actors-motor'],
             ['horse', 'actors-horse'],
             ['boat', 'actors-boat'],
-            ['hero-backhand', 'actors-hero-backhand'],
-            ['hero-cleave', 'actors-hero-cleave'],
+            ['hero-backhand', 'hero-helmeted-backhand'],
+            ['hero-cleave', 'hero-helmeted-cleave'],
             ['mage-cast', 'actors-mage-cast'],
             ...[
                 'boar',
@@ -148,7 +155,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         fs.readFileSync(path.join(root, 'flutter_game/art/mage-bounds.json'), 'utf8'),
     );
     const roll = JSON.parse(
-        fs.readFileSync(path.join(root, 'flutter_game/art/roll-bounds.json'), 'utf8'),
+        fs.readFileSync(path.join(root, 'flutter_game/art/hero-helmeted-roll-bounds.json'), 'utf8'),
     );
     const cyber = JSON.parse(
         fs.readFileSync(path.join(root, 'flutter_game/art/cyber-bounds.json'), 'utf8'),

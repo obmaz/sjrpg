@@ -5,6 +5,7 @@ import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/panel_controls.dart';
 import 'package:guardian_new/rpg_model.dart';
 import 'package:guardian_new/skill_tree.dart';
+import 'package:guardian_new/skill_tree_layout.dart';
 import 'package:guardian_new/skills_panel.dart';
 import 'support/test_game.dart';
 
@@ -77,6 +78,12 @@ void main() {
           : ['iceArmor', 'chainLightning', 'meteor'];
       for (final id in ids) {
         final skill = p.skills.firstWhere((v) => v.id == id);
+        await tester.tap(
+          find.byKey(
+            ValueKey('skill-school-tab-${skillTreeSchoolIndex(p, id)}'),
+          ),
+        );
+        await tester.pumpAndSettle();
         final node = find.bySemanticsLabel('스킬 보기 · ${skill.name} · 0 등급');
         await reveal(tester, node);
         if (schoolRect != null) {

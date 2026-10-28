@@ -29,6 +29,8 @@ abstract final class GearIconArt {
       'flail',
       'glaive',
       'falchion',
+      'throwingaxes',
+      'javelin',
     }.contains(gear.id)) {
       return false;
     }
@@ -78,6 +80,65 @@ abstract final class GearIconArt {
 
     try {
       switch (gear.id) {
+        case 'throwingaxes':
+          for (final x in [-12.0, 12.0]) {
+            canvas.save();
+            canvas.translate(x, x < 0 ? -6 : 6);
+            canvas.rotate(x < 0 ? -.28 : .28);
+            canvas.drawLine(
+              const ui.Offset(0, -21),
+              const ui.Offset(0, 30),
+              shaft,
+            );
+            shape(
+              ui.Path()
+                ..moveTo(-2, -28)
+                ..lineTo(16, -34)
+                ..quadraticBezierTo(27, -19, 15, -8)
+                ..lineTo(0, -15)
+                ..lineTo(-8, -12)
+                ..lineTo(-6, -24)
+                ..close(),
+            );
+            canvas.drawLine(
+              const ui.Offset(-2, -14),
+              const ui.Offset(6, -14),
+              ui.Paint()
+                ..color = const ui.Color(0xffd1a65c)
+                ..strokeWidth = 3,
+            );
+            canvas.restore();
+          }
+        case 'javelin':
+          canvas.drawLine(
+            const ui.Offset(0, -22),
+            const ui.Offset(0, 42),
+            shaft..strokeWidth = 4,
+          );
+          shape(
+            ui.Path()
+              ..moveTo(0, -45)
+              ..lineTo(8, -20)
+              ..lineTo(0, -25)
+              ..lineTo(-8, -20)
+              ..close(),
+          );
+          canvas.drawLine(
+            const ui.Offset(-4, -19),
+            const ui.Offset(4, -19),
+            ui.Paint()
+              ..color = const ui.Color(0xffd1a65c)
+              ..strokeWidth = 3,
+          );
+          for (var y = 7.0; y <= 21; y += 5) {
+            canvas.drawLine(
+              ui.Offset(-3, y),
+              ui.Offset(3, y - 2),
+              ui.Paint()
+                ..color = const ui.Color(0xffd5bd89)
+                ..strokeWidth = 2,
+            );
+          }
         case 'dualblades':
           for (final x in [-13.0, 13.0]) {
             canvas.save();

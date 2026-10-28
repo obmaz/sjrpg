@@ -5,6 +5,7 @@ import 'adventure.dart';
 import 'effect_visibility.dart';
 import 'game_art.dart';
 import 'skill_growth.dart';
+import 'steel_pressure_vfx.dart';
 
 /// A few short fragments mark the contact; rank refines their spread.
 void paintRankImpact(
@@ -45,6 +46,8 @@ int steelWhirlwindFrame(int rank, double phase) =>
     SkillGrowth.tier(rank) * 12 +
     ((phase.clamp(0.0, .999999) * 2 % 1) * 12).floor();
 
+final _steelPressure = SteelPressureArt();
+
 void paintSteelWhirlwind(
   GameArt art,
   ui.Canvas canvas,
@@ -52,29 +55,13 @@ void paintSteelWhirlwind(
   double phase,
   int rank,
 ) {
-  final r = SkillGrowth.level(rank);
-  final angle = phase * math.pi * 4;
-  // The moving blade edge is the effect. No broad vortex image covers the hero.
-  for (var i = 0; i < 1 + (r >= 3 ? 1 : 0); i++) {
-    final radius = 78.0 + i * 12;
-    canvas.drawArc(
-      ui.Rect.fromCenter(
-        center: center,
-        width: radius * 2,
-        height: radius * 1.15,
-      ),
-      angle - i * 1.7,
-      1.65 + r * .035,
-      false,
-      ui.Paint()
-        ..color =
-            (i == 0 ? const ui.Color(0xffe7f1ed) : const ui.Color(0xffc8b18c))
-                .withValues(alpha: i == 0 ? .8 : .36)
-        ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = i == 0 ? 3.6 + r * .08 : 1.3
-        ..strokeCap = ui.StrokeCap.round,
-    );
-  }
+  _steelPressure.paintWhirlwind(
+    canvas,
+    center: center,
+    progress: phase,
+    radius: 96,
+    rank: rank,
+  );
 }
 
 class SteelWhirlwind extends GameComponent with EffectVisibility {

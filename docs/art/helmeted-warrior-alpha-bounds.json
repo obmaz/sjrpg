@@ -1,0 +1,4488 @@
+{
+    "bakeContract": "fbf45a6b65366121",
+    "rawCellSize": [256, 256],
+    "packedTransparentPadding": 6,
+    "minimumRawEdgePadding": 37,
+    "frames": [
+        {
+            "role": "hero",
+            "kind": "idle",
+            "direction": 0,
+            "phase": 0,
+            "alphaBounds": [100, 69, 157, 195],
+            "edgePadding": [100, 69, 99, 61]
+        },
+        {
+            "role": "hero",
+            "kind": "idle",
+            "direction": 1,
+            "phase": 0,
+            "alphaBounds": [102, 68, 156, 197],
+            "edgePadding": [102, 68, 100, 59]
+        },
+        {
+            "role": "hero",
+            "kind": "idle",
+            "direction": 2,
+            "phase": 0,
+            "alphaBounds": [99, 69, 153, 198],
+            "edgePadding": [99, 69, 103, 58]
+        },
+        {
+            "role": "hero",
+            "kind": "idle",
+            "direction": 3,
+            "phase": 0,
+            "alphaBounds": [98, 69, 150, 196],
+            "edgePadding": [98, 69, 106, 60]
+        },
+        {
+            "role": "hero",
+            "kind": "idle",
+            "direction": 4,
+            "phase": 0,
+            "alphaBounds": [101, 69, 156, 193],
+            "edgePadding": [101, 69, 100, 63]
+        },
+        {
+            "role": "hero",
+            "kind": "idle",
+            "direction": 5,
+            "phase": 0,
+            "alphaBounds": [98, 69, 158, 190],
+            "edgePadding": [98, 69, 98, 66]
+        },
+        {
+            "role": "hero",
+            "kind": "idle",
+            "direction": 6,
+            "phase": 0,
+            "alphaBounds": [98, 68, 159, 188],
+            "edgePadding": [98, 68, 97, 68]
+        },
+        {
+            "role": "hero",
+            "kind": "idle",
+            "direction": 7,
+            "phase": 0,
+            "alphaBounds": [100, 67, 158, 193],
+            "edgePadding": [100, 67, 98, 63]
+        },
+        {
+            "role": "hero",
+            "kind": "idle",
+            "direction": 8,
+            "phase": 0,
+            "alphaBounds": [98, 67, 157, 196],
+            "edgePadding": [98, 67, 99, 60]
+        },
+        {
+            "role": "hero",
+            "kind": "idle",
+            "direction": 9,
+            "phase": 0,
+            "alphaBounds": [100, 68, 154, 198],
+            "edgePadding": [100, 68, 102, 58]
+        },
+        {
+            "role": "hero",
+            "kind": "idle",
+            "direction": 10,
+            "phase": 0,
+            "alphaBounds": [103, 69, 158, 198],
+            "edgePadding": [103, 69, 98, 58]
+        },
+        {
+            "role": "hero",
+            "kind": "idle",
+            "direction": 11,
+            "phase": 0,
+            "alphaBounds": [105, 70, 157, 197],
+            "edgePadding": [105, 70, 99, 59]
+        },
+        {
+            "role": "hero",
+            "kind": "idle",
+            "direction": 12,
+            "phase": 0,
+            "alphaBounds": [100, 70, 155, 195],
+            "edgePadding": [100, 70, 101, 61]
+        },
+        {
+            "role": "hero",
+            "kind": "idle",
+            "direction": 13,
+            "phase": 0,
+            "alphaBounds": [97, 70, 158, 191],
+            "edgePadding": [97, 70, 98, 65]
+        },
+        {
+            "role": "hero",
+            "kind": "idle",
+            "direction": 14,
+            "phase": 0,
+            "alphaBounds": [97, 69, 158, 186],
+            "edgePadding": [97, 69, 98, 70]
+        },
+        {
+            "role": "hero",
+            "kind": "idle",
+            "direction": 15,
+            "phase": 0,
+            "alphaBounds": [97, 69, 156, 191],
+            "edgePadding": [97, 69, 100, 65]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 0,
+            "phase": 0,
+            "alphaBounds": [99, 90, 160, 195],
+            "edgePadding": [99, 90, 96, 61]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 1,
+            "phase": 0,
+            "alphaBounds": [91, 92, 160, 196],
+            "edgePadding": [91, 92, 96, 60]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 2,
+            "phase": 0,
+            "alphaBounds": [83, 90, 162, 193],
+            "edgePadding": [83, 90, 94, 63]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 3,
+            "phase": 0,
+            "alphaBounds": [81, 86, 174, 189],
+            "edgePadding": [81, 86, 82, 67]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 4,
+            "phase": 0,
+            "alphaBounds": [84, 80, 179, 184],
+            "edgePadding": [84, 80, 77, 72]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 5,
+            "phase": 0,
+            "alphaBounds": [86, 74, 179, 180],
+            "edgePadding": [86, 74, 77, 76]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 6,
+            "phase": 0,
+            "alphaBounds": [91, 68, 172, 188],
+            "edgePadding": [91, 68, 84, 68]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 7,
+            "phase": 0,
+            "alphaBounds": [99, 64, 158, 195],
+            "edgePadding": [99, 64, 98, 61]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 8,
+            "phase": 0,
+            "alphaBounds": [96, 61, 157, 198],
+            "edgePadding": [96, 61, 99, 58]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 9,
+            "phase": 0,
+            "alphaBounds": [96, 63, 165, 198],
+            "edgePadding": [96, 63, 91, 58]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 10,
+            "phase": 0,
+            "alphaBounds": [94, 67, 172, 193],
+            "edgePadding": [94, 67, 84, 63]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 11,
+            "phase": 0,
+            "alphaBounds": [82, 72, 174, 186],
+            "edgePadding": [82, 72, 82, 70]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 12,
+            "phase": 0,
+            "alphaBounds": [77, 78, 172, 178],
+            "edgePadding": [77, 78, 84, 78]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 13,
+            "phase": 0,
+            "alphaBounds": [77, 83, 170, 183],
+            "edgePadding": [77, 83, 86, 73]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 14,
+            "phase": 0,
+            "alphaBounds": [84, 85, 165, 188],
+            "edgePadding": [84, 85, 91, 68]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 15,
+            "phase": 0,
+            "alphaBounds": [98, 87, 157, 193],
+            "edgePadding": [98, 87, 99, 63]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 0,
+            "phase": 1,
+            "alphaBounds": [98, 97, 164, 183],
+            "edgePadding": [98, 97, 92, 73]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 1,
+            "phase": 1,
+            "alphaBounds": [93, 96, 158, 185],
+            "edgePadding": [93, 96, 98, 71]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 2,
+            "phase": 1,
+            "alphaBounds": [90, 93, 151, 185],
+            "edgePadding": [90, 93, 105, 71]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 3,
+            "phase": 1,
+            "alphaBounds": [87, 88, 154, 186],
+            "edgePadding": [87, 88, 102, 70]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 4,
+            "phase": 1,
+            "alphaBounds": [86, 82, 159, 186],
+            "edgePadding": [86, 82, 97, 70]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 5,
+            "phase": 1,
+            "alphaBounds": [87, 77, 160, 186],
+            "edgePadding": [87, 77, 96, 70]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 6,
+            "phase": 1,
+            "alphaBounds": [93, 71, 158, 186],
+            "edgePadding": [93, 71, 98, 70]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 7,
+            "phase": 1,
+            "alphaBounds": [91, 67, 153, 186],
+            "edgePadding": [91, 67, 103, 70]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 8,
+            "phase": 1,
+            "alphaBounds": [92, 66, 158, 188],
+            "edgePadding": [92, 66, 98, 68]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 9,
+            "phase": 1,
+            "alphaBounds": [98, 67, 162, 188],
+            "edgePadding": [98, 67, 94, 68]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 10,
+            "phase": 1,
+            "alphaBounds": [104, 71, 166, 186],
+            "edgePadding": [104, 71, 90, 70]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 11,
+            "phase": 1,
+            "alphaBounds": [101, 76, 169, 183],
+            "edgePadding": [101, 76, 87, 73]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 12,
+            "phase": 1,
+            "alphaBounds": [97, 82, 169, 179],
+            "edgePadding": [97, 82, 87, 77]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 13,
+            "phase": 1,
+            "alphaBounds": [96, 87, 169, 178],
+            "edgePadding": [96, 87, 87, 78]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 14,
+            "phase": 1,
+            "alphaBounds": [98, 92, 163, 180],
+            "edgePadding": [98, 92, 93, 76]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 15,
+            "phase": 1,
+            "alphaBounds": [104, 95, 165, 181],
+            "edgePadding": [104, 95, 91, 75]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 0,
+            "phase": 2,
+            "alphaBounds": [98, 93, 160, 181],
+            "edgePadding": [98, 93, 96, 75]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 1,
+            "phase": 2,
+            "alphaBounds": [96, 91, 156, 178],
+            "edgePadding": [96, 91, 100, 78]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 2,
+            "phase": 2,
+            "alphaBounds": [90, 88, 171, 176],
+            "edgePadding": [90, 88, 85, 80]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 3,
+            "phase": 2,
+            "alphaBounds": [84, 82, 179, 176],
+            "edgePadding": [84, 82, 77, 80]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 4,
+            "phase": 2,
+            "alphaBounds": [85, 77, 180, 184],
+            "edgePadding": [85, 77, 76, 72]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 5,
+            "phase": 2,
+            "alphaBounds": [86, 70, 175, 192],
+            "edgePadding": [86, 70, 81, 64]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 6,
+            "phase": 2,
+            "alphaBounds": [87, 65, 162, 199],
+            "edgePadding": [87, 65, 94, 57]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 7,
+            "phase": 2,
+            "alphaBounds": [91, 61, 154, 202],
+            "edgePadding": [91, 61, 102, 54]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 8,
+            "phase": 2,
+            "alphaBounds": [96, 60, 157, 201],
+            "edgePadding": [96, 60, 99, 55]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 9,
+            "phase": 2,
+            "alphaBounds": [100, 62, 160, 198],
+            "edgePadding": [100, 62, 96, 58]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 10,
+            "phase": 2,
+            "alphaBounds": [85, 67, 166, 193],
+            "edgePadding": [85, 67, 90, 63]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 11,
+            "phase": 2,
+            "alphaBounds": [77, 73, 171, 185],
+            "edgePadding": [77, 73, 85, 71]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 12,
+            "phase": 2,
+            "alphaBounds": [75, 80, 172, 177],
+            "edgePadding": [75, 80, 84, 79]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 13,
+            "phase": 2,
+            "alphaBounds": [81, 85, 170, 180],
+            "edgePadding": [81, 85, 86, 76]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 14,
+            "phase": 2,
+            "alphaBounds": [94, 90, 169, 181],
+            "edgePadding": [94, 90, 87, 75]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 15,
+            "phase": 2,
+            "alphaBounds": [103, 93, 165, 182],
+            "edgePadding": [103, 93, 91, 74]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 0,
+            "phase": 3,
+            "alphaBounds": [97, 90, 158, 193],
+            "edgePadding": [97, 90, 98, 63]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 1,
+            "phase": 3,
+            "alphaBounds": [98, 86, 160, 190],
+            "edgePadding": [98, 86, 96, 66]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 2,
+            "phase": 3,
+            "alphaBounds": [86, 83, 176, 183],
+            "edgePadding": [86, 83, 80, 73]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 3,
+            "phase": 3,
+            "alphaBounds": [78, 80, 185, 174],
+            "edgePadding": [78, 80, 71, 82]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 4,
+            "phase": 3,
+            "alphaBounds": [77, 74, 185, 171],
+            "edgePadding": [77, 74, 71, 85]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 5,
+            "phase": 3,
+            "alphaBounds": [83, 68, 179, 182],
+            "edgePadding": [83, 68, 77, 74]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 6,
+            "phase": 3,
+            "alphaBounds": [86, 63, 166, 191],
+            "edgePadding": [86, 63, 90, 65]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 7,
+            "phase": 3,
+            "alphaBounds": [92, 59, 157, 196],
+            "edgePadding": [92, 59, 99, 60]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 8,
+            "phase": 3,
+            "alphaBounds": [98, 58, 159, 197],
+            "edgePadding": [98, 58, 97, 59]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 9,
+            "phase": 3,
+            "alphaBounds": [96, 61, 157, 193],
+            "edgePadding": [96, 61, 99, 63]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 10,
+            "phase": 3,
+            "alphaBounds": [80, 66, 169, 185],
+            "edgePadding": [80, 66, 87, 71]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 11,
+            "phase": 3,
+            "alphaBounds": [72, 72, 178, 175],
+            "edgePadding": [72, 72, 78, 81]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 12,
+            "phase": 3,
+            "alphaBounds": [71, 78, 179, 173],
+            "edgePadding": [71, 78, 77, 83]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 13,
+            "phase": 3,
+            "alphaBounds": [77, 84, 173, 181],
+            "edgePadding": [77, 84, 83, 75]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 14,
+            "phase": 3,
+            "alphaBounds": [90, 88, 170, 188],
+            "edgePadding": [90, 88, 86, 68]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 15,
+            "phase": 3,
+            "alphaBounds": [99, 90, 164, 193],
+            "edgePadding": [99, 90, 92, 63]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 0,
+            "phase": 4,
+            "alphaBounds": [95, 91, 157, 193],
+            "edgePadding": [95, 91, 99, 63]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 1,
+            "phase": 4,
+            "alphaBounds": [99, 87, 156, 191],
+            "edgePadding": [99, 87, 100, 65]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 2,
+            "phase": 4,
+            "alphaBounds": [92, 85, 169, 187],
+            "edgePadding": [92, 85, 87, 69]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 3,
+            "phase": 4,
+            "alphaBounds": [87, 82, 175, 182],
+            "edgePadding": [87, 82, 81, 74]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 4,
+            "phase": 4,
+            "alphaBounds": [84, 77, 175, 176],
+            "edgePadding": [84, 77, 81, 80]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 5,
+            "phase": 4,
+            "alphaBounds": [82, 70, 170, 177],
+            "edgePadding": [82, 70, 86, 79]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 6,
+            "phase": 4,
+            "alphaBounds": [85, 66, 159, 183],
+            "edgePadding": [85, 66, 97, 73]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 7,
+            "phase": 4,
+            "alphaBounds": [93, 62, 160, 187],
+            "edgePadding": [93, 62, 96, 69]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 8,
+            "phase": 4,
+            "alphaBounds": [99, 62, 160, 188],
+            "edgePadding": [99, 62, 96, 68]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 9,
+            "phase": 4,
+            "alphaBounds": [100, 64, 157, 184],
+            "edgePadding": [100, 64, 99, 72]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 10,
+            "phase": 4,
+            "alphaBounds": [87, 69, 164, 178],
+            "edgePadding": [87, 69, 92, 78]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 11,
+            "phase": 4,
+            "alphaBounds": [81, 74, 169, 177],
+            "edgePadding": [81, 74, 87, 79]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 12,
+            "phase": 4,
+            "alphaBounds": [81, 80, 172, 183],
+            "edgePadding": [81, 80, 84, 73]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 13,
+            "phase": 4,
+            "alphaBounds": [86, 85, 174, 188],
+            "edgePadding": [86, 85, 82, 68]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 14,
+            "phase": 4,
+            "alphaBounds": [97, 89, 172, 192],
+            "edgePadding": [97, 89, 84, 64]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 15,
+            "phase": 4,
+            "alphaBounds": [96, 91, 163, 194],
+            "edgePadding": [96, 91, 93, 62]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 0,
+            "phase": 5,
+            "alphaBounds": [93, 96, 157, 196],
+            "edgePadding": [93, 96, 99, 60]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 1,
+            "phase": 5,
+            "alphaBounds": [91, 95, 152, 194],
+            "edgePadding": [91, 95, 104, 62]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 2,
+            "phase": 5,
+            "alphaBounds": [92, 91, 150, 189],
+            "edgePadding": [92, 91, 106, 67]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 3,
+            "phase": 5,
+            "alphaBounds": [87, 86, 151, 183],
+            "edgePadding": [87, 86, 105, 73]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 4,
+            "phase": 5,
+            "alphaBounds": [87, 81, 149, 179],
+            "edgePadding": [87, 81, 107, 77]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 5,
+            "phase": 5,
+            "alphaBounds": [88, 75, 146, 175],
+            "edgePadding": [88, 75, 110, 81]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 6,
+            "phase": 5,
+            "alphaBounds": [92, 70, 152, 177],
+            "edgePadding": [92, 70, 104, 79]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 7,
+            "phase": 5,
+            "alphaBounds": [96, 67, 157, 177],
+            "edgePadding": [96, 67, 99, 79]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 8,
+            "phase": 5,
+            "alphaBounds": [99, 66, 163, 176],
+            "edgePadding": [99, 66, 93, 80]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 9,
+            "phase": 5,
+            "alphaBounds": [104, 68, 165, 174],
+            "edgePadding": [104, 68, 91, 82]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 10,
+            "phase": 5,
+            "alphaBounds": [105, 72, 164, 178],
+            "edgePadding": [105, 72, 92, 78]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 11,
+            "phase": 5,
+            "alphaBounds": [105, 77, 169, 182],
+            "edgePadding": [105, 77, 87, 74]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 12,
+            "phase": 5,
+            "alphaBounds": [107, 83, 169, 187],
+            "edgePadding": [107, 83, 87, 69]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 13,
+            "phase": 5,
+            "alphaBounds": [110, 88, 168, 191],
+            "edgePadding": [110, 88, 88, 65]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 14,
+            "phase": 5,
+            "alphaBounds": [104, 93, 164, 195],
+            "edgePadding": [104, 93, 92, 61]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 15,
+            "phase": 5,
+            "alphaBounds": [99, 95, 160, 196],
+            "edgePadding": [99, 95, 96, 60]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 0,
+            "phase": 6,
+            "alphaBounds": [96, 91, 155, 188],
+            "edgePadding": [96, 91, 101, 68]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 1,
+            "phase": 6,
+            "alphaBounds": [90, 89, 153, 188],
+            "edgePadding": [90, 89, 103, 68]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 2,
+            "phase": 6,
+            "alphaBounds": [87, 86, 159, 186],
+            "edgePadding": [87, 86, 97, 70]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 3,
+            "phase": 6,
+            "alphaBounds": [87, 83, 171, 181],
+            "edgePadding": [87, 83, 85, 75]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 4,
+            "phase": 6,
+            "alphaBounds": [86, 77, 176, 174],
+            "edgePadding": [86, 77, 80, 82]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 5,
+            "phase": 6,
+            "alphaBounds": [87, 70, 175, 182],
+            "edgePadding": [87, 70, 81, 74]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 6,
+            "phase": 6,
+            "alphaBounds": [93, 65, 167, 189],
+            "edgePadding": [93, 65, 89, 67]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 7,
+            "phase": 6,
+            "alphaBounds": [98, 61, 154, 195],
+            "edgePadding": [98, 61, 102, 61]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 8,
+            "phase": 6,
+            "alphaBounds": [102, 59, 160, 198],
+            "edgePadding": [102, 59, 96, 58]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 9,
+            "phase": 6,
+            "alphaBounds": [103, 61, 166, 198],
+            "edgePadding": [103, 61, 90, 58]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 10,
+            "phase": 6,
+            "alphaBounds": [97, 65, 170, 195],
+            "edgePadding": [97, 65, 86, 61]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 11,
+            "phase": 6,
+            "alphaBounds": [85, 71, 169, 190],
+            "edgePadding": [85, 71, 87, 66]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 12,
+            "phase": 6,
+            "alphaBounds": [80, 77, 170, 183],
+            "edgePadding": [80, 77, 86, 73]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 13,
+            "phase": 6,
+            "alphaBounds": [81, 82, 169, 175],
+            "edgePadding": [81, 82, 87, 81]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 14,
+            "phase": 6,
+            "alphaBounds": [89, 86, 163, 181],
+            "edgePadding": [89, 86, 93, 75]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 15,
+            "phase": 6,
+            "alphaBounds": [102, 90, 157, 186],
+            "edgePadding": [102, 90, 99, 70]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 0,
+            "phase": 7,
+            "alphaBounds": [98, 89, 158, 194],
+            "edgePadding": [98, 89, 98, 62]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 1,
+            "phase": 7,
+            "alphaBounds": [91, 88, 156, 194],
+            "edgePadding": [91, 88, 100, 62]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 2,
+            "phase": 7,
+            "alphaBounds": [85, 86, 167, 190],
+            "edgePadding": [85, 86, 89, 66]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 3,
+            "phase": 7,
+            "alphaBounds": [83, 82, 180, 184],
+            "edgePadding": [83, 82, 76, 72]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 4,
+            "phase": 7,
+            "alphaBounds": [77, 77, 186, 177],
+            "edgePadding": [77, 77, 70, 79]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 5,
+            "phase": 7,
+            "alphaBounds": [78, 70, 185, 180],
+            "edgePadding": [78, 70, 71, 76]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 6,
+            "phase": 7,
+            "alphaBounds": [87, 65, 176, 190],
+            "edgePadding": [87, 65, 80, 66]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 7,
+            "phase": 7,
+            "alphaBounds": [99, 60, 161, 198],
+            "edgePadding": [99, 60, 95, 58]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 8,
+            "phase": 7,
+            "alphaBounds": [98, 58, 158, 202],
+            "edgePadding": [98, 58, 98, 54]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 9,
+            "phase": 7,
+            "alphaBounds": [100, 59, 165, 201],
+            "edgePadding": [100, 59, 91, 55]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 10,
+            "phase": 7,
+            "alphaBounds": [89, 63, 171, 196],
+            "edgePadding": [89, 63, 85, 60]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 11,
+            "phase": 7,
+            "alphaBounds": [76, 68, 173, 187],
+            "edgePadding": [76, 68, 83, 69]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 12,
+            "phase": 7,
+            "alphaBounds": [70, 75, 179, 176],
+            "edgePadding": [70, 75, 77, 80]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 13,
+            "phase": 7,
+            "alphaBounds": [71, 80, 178, 177],
+            "edgePadding": [71, 80, 78, 79]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 14,
+            "phase": 7,
+            "alphaBounds": [80, 84, 169, 185],
+            "edgePadding": [80, 84, 87, 71]
+        },
+        {
+            "role": "hero",
+            "kind": "run",
+            "direction": 15,
+            "phase": 7,
+            "alphaBounds": [95, 86, 157, 191],
+            "edgePadding": [95, 86, 99, 65]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 0,
+            "alphaBounds": [100, 73, 157, 198],
+            "edgePadding": [100, 73, 99, 58]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 0,
+            "alphaBounds": [100, 72, 153, 199],
+            "edgePadding": [100, 72, 103, 57]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 0,
+            "alphaBounds": [94, 72, 149, 199],
+            "edgePadding": [94, 72, 107, 57]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 0,
+            "alphaBounds": [93, 71, 146, 197],
+            "edgePadding": [93, 71, 110, 59]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 0,
+            "alphaBounds": [97, 69, 151, 192],
+            "edgePadding": [97, 69, 105, 64]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 0,
+            "alphaBounds": [93, 67, 154, 189],
+            "edgePadding": [93, 67, 102, 67]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 0,
+            "alphaBounds": [95, 66, 156, 186],
+            "edgePadding": [95, 66, 100, 70]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 0,
+            "alphaBounds": [98, 64, 157, 191],
+            "edgePadding": [98, 64, 99, 65]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 0,
+            "alphaBounds": [99, 63, 156, 194],
+            "edgePadding": [99, 63, 100, 62]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 0,
+            "alphaBounds": [102, 65, 157, 195],
+            "edgePadding": [102, 65, 99, 61]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 0,
+            "alphaBounds": [107, 67, 162, 196],
+            "edgePadding": [107, 67, 94, 60]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 0,
+            "alphaBounds": [111, 69, 163, 196],
+            "edgePadding": [111, 69, 93, 60]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 0,
+            "alphaBounds": [105, 71, 159, 195],
+            "edgePadding": [105, 71, 97, 61]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 0,
+            "alphaBounds": [102, 73, 163, 192],
+            "edgePadding": [102, 73, 93, 64]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 0,
+            "alphaBounds": [100, 73, 161, 188],
+            "edgePadding": [100, 73, 95, 68]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 0,
+            "alphaBounds": [99, 73, 158, 193],
+            "edgePadding": [99, 73, 98, 63]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 1,
+            "alphaBounds": [69, 103, 149, 196],
+            "edgePadding": [69, 103, 107, 60]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 1,
+            "alphaBounds": [69, 97, 147, 191],
+            "edgePadding": [69, 97, 109, 65]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 1,
+            "alphaBounds": [76, 90, 145, 191],
+            "edgePadding": [76, 90, 111, 65]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 1,
+            "alphaBounds": [75, 81, 143, 191],
+            "edgePadding": [75, 81, 113, 65]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 1,
+            "alphaBounds": [70, 73, 139, 191],
+            "edgePadding": [70, 73, 117, 65]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 1,
+            "alphaBounds": [72, 67, 148, 189],
+            "edgePadding": [72, 67, 108, 67]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 1,
+            "alphaBounds": [82, 64, 159, 187],
+            "edgePadding": [82, 64, 97, 69]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 1,
+            "alphaBounds": [95, 62, 177, 186],
+            "edgePadding": [95, 62, 79, 70]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 1,
+            "alphaBounds": [107, 64, 187, 183],
+            "edgePadding": [107, 64, 69, 73]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 1,
+            "alphaBounds": [110, 70, 188, 180],
+            "edgePadding": [110, 70, 68, 76]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 1,
+            "alphaBounds": [111, 77, 180, 182],
+            "edgePadding": [111, 77, 76, 74]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 1,
+            "alphaBounds": [113, 86, 181, 187],
+            "edgePadding": [113, 86, 75, 69]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 1,
+            "alphaBounds": [116, 94, 185, 193],
+            "edgePadding": [116, 94, 71, 63]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 1,
+            "alphaBounds": [108, 101, 184, 197],
+            "edgePadding": [108, 101, 72, 59]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 1,
+            "alphaBounds": [96, 105, 174, 199],
+            "edgePadding": [96, 105, 82, 57]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 1,
+            "alphaBounds": [80, 106, 161, 199],
+            "edgePadding": [80, 106, 95, 57]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 2,
+            "alphaBounds": [89, 105, 154, 205],
+            "edgePadding": [89, 105, 102, 51]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 2,
+            "alphaBounds": [78, 98, 156, 200],
+            "edgePadding": [78, 98, 100, 56]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 2,
+            "alphaBounds": [67, 96, 161, 192],
+            "edgePadding": [67, 96, 95, 64]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 2,
+            "alphaBounds": [64, 99, 164, 187],
+            "edgePadding": [64, 99, 92, 69]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 2,
+            "alphaBounds": [70, 87, 172, 190],
+            "edgePadding": [70, 87, 84, 66]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 2,
+            "alphaBounds": [80, 79, 183, 194],
+            "edgePadding": [80, 79, 73, 62]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 2,
+            "alphaBounds": [91, 75, 186, 196],
+            "edgePadding": [91, 75, 70, 60]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 2,
+            "alphaBounds": [102, 75, 180, 195],
+            "edgePadding": [102, 75, 76, 61]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 2,
+            "alphaBounds": [102, 78, 167, 194],
+            "edgePadding": [102, 78, 89, 62]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 2,
+            "alphaBounds": [100, 86, 178, 190],
+            "edgePadding": [100, 86, 78, 66]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 2,
+            "alphaBounds": [95, 96, 189, 185],
+            "edgePadding": [95, 96, 67, 71]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 2,
+            "alphaBounds": [92, 107, 192, 183],
+            "edgePadding": [92, 107, 64, 73]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 2,
+            "alphaBounds": [84, 115, 186, 191],
+            "edgePadding": [84, 115, 70, 65]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 2,
+            "alphaBounds": [73, 121, 176, 199],
+            "edgePadding": [73, 121, 80, 57]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 2,
+            "alphaBounds": [70, 124, 165, 204],
+            "edgePadding": [70, 124, 91, 52]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 2,
+            "alphaBounds": [76, 115, 155, 207],
+            "edgePadding": [76, 115, 101, 49]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 3,
+            "alphaBounds": [103, 99, 163, 198],
+            "edgePadding": [103, 99, 93, 58]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 3,
+            "alphaBounds": [96, 95, 172, 194],
+            "edgePadding": [96, 95, 84, 62]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 3,
+            "alphaBounds": [91, 90, 178, 190],
+            "edgePadding": [91, 90, 78, 66]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 3,
+            "alphaBounds": [67, 86, 178, 187],
+            "edgePadding": [67, 86, 78, 69]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 3,
+            "alphaBounds": [53, 82, 173, 196],
+            "edgePadding": [53, 82, 83, 60]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 3,
+            "alphaBounds": [49, 80, 165, 203],
+            "edgePadding": [49, 80, 91, 53]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 3,
+            "alphaBounds": [57, 79, 152, 207],
+            "edgePadding": [57, 79, 104, 49]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 3,
+            "alphaBounds": [77, 77, 148, 207],
+            "edgePadding": [77, 77, 108, 49]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 3,
+            "alphaBounds": [94, 68, 153, 204],
+            "edgePadding": [94, 68, 103, 52]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 3,
+            "alphaBounds": [84, 67, 160, 199],
+            "edgePadding": [84, 67, 96, 57]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 3,
+            "alphaBounds": [78, 71, 165, 192],
+            "edgePadding": [78, 71, 91, 64]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 3,
+            "alphaBounds": [79, 79, 189, 189],
+            "edgePadding": [79, 79, 67, 67]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 3,
+            "alphaBounds": [84, 85, 203, 193],
+            "edgePadding": [84, 85, 53, 63]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 3,
+            "alphaBounds": [91, 94, 207, 197],
+            "edgePadding": [91, 94, 49, 59]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 3,
+            "alphaBounds": [104, 100, 198, 200],
+            "edgePadding": [104, 100, 58, 56]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 3,
+            "alphaBounds": [109, 101, 179, 200],
+            "edgePadding": [109, 101, 77, 56]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 4,
+            "alphaBounds": [100, 84, 161, 195],
+            "edgePadding": [100, 84, 95, 61]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 4,
+            "alphaBounds": [100, 84, 176, 191],
+            "edgePadding": [100, 84, 80, 65]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 4,
+            "alphaBounds": [96, 83, 184, 189],
+            "edgePadding": [96, 83, 72, 67]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 4,
+            "alphaBounds": [96, 81, 185, 185],
+            "edgePadding": [96, 81, 71, 71]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 4,
+            "alphaBounds": [91, 76, 180, 196],
+            "edgePadding": [91, 76, 76, 60]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 4,
+            "alphaBounds": [92, 72, 171, 205],
+            "edgePadding": [92, 72, 85, 51]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 4,
+            "alphaBounds": [97, 67, 157, 210],
+            "edgePadding": [97, 67, 99, 46]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 4,
+            "alphaBounds": [105, 62, 156, 211],
+            "edgePadding": [105, 62, 100, 45]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 4,
+            "alphaBounds": [95, 59, 157, 208],
+            "edgePadding": [95, 59, 99, 48]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 4,
+            "alphaBounds": [81, 59, 156, 203],
+            "edgePadding": [81, 59, 100, 53]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 4,
+            "alphaBounds": [72, 60, 160, 195],
+            "edgePadding": [72, 60, 96, 61]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 4,
+            "alphaBounds": [71, 62, 160, 191],
+            "edgePadding": [71, 62, 96, 65]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 4,
+            "alphaBounds": [76, 66, 165, 193],
+            "edgePadding": [76, 66, 91, 63]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 4,
+            "alphaBounds": [85, 72, 164, 196],
+            "edgePadding": [85, 72, 92, 60]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 4,
+            "alphaBounds": [99, 77, 159, 198],
+            "edgePadding": [99, 77, 97, 58]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 4,
+            "alphaBounds": [100, 81, 151, 197],
+            "edgePadding": [100, 81, 105, 59]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 5,
+            "alphaBounds": [105, 77, 169, 193],
+            "edgePadding": [105, 77, 87, 63]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 5,
+            "alphaBounds": [98, 79, 170, 188],
+            "edgePadding": [98, 79, 86, 68]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 5,
+            "alphaBounds": [90, 81, 166, 183],
+            "edgePadding": [90, 81, 90, 73]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 5,
+            "alphaBounds": [88, 82, 163, 186],
+            "edgePadding": [88, 82, 93, 70]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 5,
+            "alphaBounds": [91, 81, 159, 191],
+            "edgePadding": [91, 81, 97, 65]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 5,
+            "alphaBounds": [94, 80, 157, 195],
+            "edgePadding": [94, 80, 99, 61]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 5,
+            "alphaBounds": [90, 78, 152, 196],
+            "edgePadding": [90, 78, 104, 60]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 5,
+            "alphaBounds": [88, 75, 146, 195],
+            "edgePadding": [88, 75, 110, 61]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 5,
+            "alphaBounds": [87, 72, 151, 191],
+            "edgePadding": [87, 72, 105, 65]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 5,
+            "alphaBounds": [86, 69, 158, 185],
+            "edgePadding": [86, 69, 98, 71]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 5,
+            "alphaBounds": [90, 67, 166, 188],
+            "edgePadding": [90, 67, 90, 68]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 5,
+            "alphaBounds": [93, 66, 168, 191],
+            "edgePadding": [93, 66, 88, 65]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 5,
+            "alphaBounds": [96, 66, 165, 194],
+            "edgePadding": [96, 66, 91, 62]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 5,
+            "alphaBounds": [98, 68, 162, 196],
+            "edgePadding": [98, 68, 94, 60]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 5,
+            "alphaBounds": [104, 70, 166, 197],
+            "edgePadding": [104, 70, 90, 59]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 5,
+            "alphaBounds": [109, 73, 167, 195],
+            "edgePadding": [109, 73, 89, 61]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 6,
+            "alphaBounds": [90, 77, 160, 201],
+            "edgePadding": [90, 77, 96, 55]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 6,
+            "alphaBounds": [87, 77, 155, 202],
+            "edgePadding": [87, 77, 101, 54]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 6,
+            "alphaBounds": [85, 76, 150, 201],
+            "edgePadding": [85, 76, 106, 55]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 6,
+            "alphaBounds": [80, 74, 142, 198],
+            "edgePadding": [80, 74, 114, 58]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 6,
+            "alphaBounds": [82, 72, 145, 192],
+            "edgePadding": [82, 72, 111, 64]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 6,
+            "alphaBounds": [88, 69, 150, 187],
+            "edgePadding": [88, 69, 106, 69]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 6,
+            "alphaBounds": [91, 66, 152, 183],
+            "edgePadding": [91, 66, 104, 73]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 6,
+            "alphaBounds": [96, 64, 160, 187],
+            "edgePadding": [96, 64, 96, 69]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 6,
+            "alphaBounds": [97, 63, 166, 190],
+            "edgePadding": [97, 63, 90, 66]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 6,
+            "alphaBounds": [101, 64, 169, 192],
+            "edgePadding": [101, 64, 87, 64]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 6,
+            "alphaBounds": [106, 67, 171, 193],
+            "edgePadding": [106, 67, 85, 63]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 6,
+            "alphaBounds": [113, 70, 176, 195],
+            "edgePadding": [113, 70, 80, 61]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 6,
+            "alphaBounds": [111, 73, 174, 195],
+            "edgePadding": [111, 73, 82, 61]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 6,
+            "alphaBounds": [107, 75, 168, 193],
+            "edgePadding": [107, 75, 88, 63]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 6,
+            "alphaBounds": [104, 77, 165, 190],
+            "edgePadding": [104, 77, 91, 66]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 6,
+            "alphaBounds": [96, 78, 160, 196],
+            "edgePadding": [96, 78, 96, 60]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 7,
+            "alphaBounds": [100, 72, 158, 198],
+            "edgePadding": [100, 72, 98, 58]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 7,
+            "alphaBounds": [97, 71, 154, 200],
+            "edgePadding": [97, 71, 102, 56]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 7,
+            "alphaBounds": [91, 71, 149, 200],
+            "edgePadding": [91, 71, 107, 56]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 7,
+            "alphaBounds": [91, 71, 145, 197],
+            "edgePadding": [91, 71, 111, 59]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 7,
+            "alphaBounds": [96, 70, 150, 192],
+            "edgePadding": [96, 70, 106, 64]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 7,
+            "alphaBounds": [92, 68, 153, 189],
+            "edgePadding": [92, 68, 103, 67]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 7,
+            "alphaBounds": [94, 66, 155, 186],
+            "edgePadding": [94, 66, 101, 70]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 7,
+            "alphaBounds": [97, 64, 156, 190],
+            "edgePadding": [97, 64, 100, 66]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 7,
+            "alphaBounds": [98, 63, 156, 193],
+            "edgePadding": [98, 63, 100, 63]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 7,
+            "alphaBounds": [102, 65, 159, 195],
+            "edgePadding": [102, 65, 97, 61]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 7,
+            "alphaBounds": [107, 67, 164, 196],
+            "edgePadding": [107, 67, 92, 60]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 7,
+            "alphaBounds": [111, 69, 165, 196],
+            "edgePadding": [111, 69, 91, 60]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 7,
+            "alphaBounds": [106, 70, 160, 195],
+            "edgePadding": [106, 70, 96, 61]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 7,
+            "alphaBounds": [102, 72, 164, 193],
+            "edgePadding": [102, 72, 92, 63]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 7,
+            "alphaBounds": [101, 72, 162, 189],
+            "edgePadding": [101, 72, 94, 67]
+        },
+        {
+            "role": "hero-attack",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 7,
+            "alphaBounds": [100, 72, 159, 194],
+            "edgePadding": [100, 72, 97, 62]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 0,
+            "alphaBounds": [102, 75, 162, 196],
+            "edgePadding": [102, 75, 94, 60]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 0,
+            "alphaBounds": [101, 75, 176, 192],
+            "edgePadding": [101, 75, 80, 64]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 0,
+            "alphaBounds": [97, 76, 183, 190],
+            "edgePadding": [97, 76, 73, 66]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 0,
+            "alphaBounds": [97, 77, 184, 186],
+            "edgePadding": [97, 77, 72, 70]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 0,
+            "alphaBounds": [96, 78, 178, 196],
+            "edgePadding": [96, 78, 78, 60]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 0,
+            "alphaBounds": [94, 80, 169, 205],
+            "edgePadding": [94, 80, 87, 51]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 0,
+            "alphaBounds": [97, 80, 159, 209],
+            "edgePadding": [97, 80, 97, 47]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 0,
+            "alphaBounds": [102, 81, 157, 210],
+            "edgePadding": [102, 81, 99, 46]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 0,
+            "alphaBounds": [95, 82, 155, 207],
+            "edgePadding": [95, 82, 101, 49]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 0,
+            "alphaBounds": [81, 82, 155, 202],
+            "edgePadding": [81, 82, 101, 54]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 0,
+            "alphaBounds": [73, 81, 159, 194],
+            "edgePadding": [73, 81, 97, 62]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 0,
+            "alphaBounds": [72, 80, 160, 190],
+            "edgePadding": [72, 80, 96, 66]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 0,
+            "alphaBounds": [77, 79, 160, 193],
+            "edgePadding": [77, 79, 96, 63]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 0,
+            "alphaBounds": [87, 78, 162, 196],
+            "edgePadding": [87, 78, 94, 60]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 0,
+            "alphaBounds": [97, 77, 159, 198],
+            "edgePadding": [97, 77, 97, 58]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 0,
+            "alphaBounds": [100, 76, 153, 198],
+            "edgePadding": [100, 76, 103, 58]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 1,
+            "alphaBounds": [105, 94, 161, 197],
+            "edgePadding": [105, 94, 95, 59]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 1,
+            "alphaBounds": [100, 98, 174, 193],
+            "edgePadding": [100, 98, 82, 63]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 1,
+            "alphaBounds": [95, 98, 180, 187],
+            "edgePadding": [95, 98, 76, 69]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 1,
+            "alphaBounds": [92, 98, 180, 186],
+            "edgePadding": [92, 98, 76, 70]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 1,
+            "alphaBounds": [87, 101, 175, 195],
+            "edgePadding": [87, 101, 81, 61]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 1,
+            "alphaBounds": [89, 103, 166, 203],
+            "edgePadding": [89, 103, 90, 53]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 1,
+            "alphaBounds": [96, 101, 153, 207],
+            "edgePadding": [96, 101, 103, 49]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 1,
+            "alphaBounds": [97, 98, 152, 207],
+            "edgePadding": [97, 98, 104, 49]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 1,
+            "alphaBounds": [95, 94, 150, 204],
+            "edgePadding": [95, 94, 106, 52]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 1,
+            "alphaBounds": [83, 90, 156, 199],
+            "edgePadding": [83, 90, 100, 57]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 1,
+            "alphaBounds": [76, 87, 161, 192],
+            "edgePadding": [76, 87, 95, 64]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 1,
+            "alphaBounds": [76, 85, 165, 188],
+            "edgePadding": [76, 85, 91, 68]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 1,
+            "alphaBounds": [81, 85, 168, 192],
+            "edgePadding": [81, 85, 88, 64]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 1,
+            "alphaBounds": [90, 87, 167, 196],
+            "edgePadding": [90, 87, 89, 60]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 1,
+            "alphaBounds": [103, 89, 161, 199],
+            "edgePadding": [103, 89, 95, 57]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 1,
+            "alphaBounds": [104, 92, 159, 200],
+            "edgePadding": [104, 92, 97, 56]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 2,
+            "alphaBounds": [107, 123, 162, 194],
+            "edgePadding": [107, 123, 94, 62]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 2,
+            "alphaBounds": [101, 122, 173, 190],
+            "edgePadding": [101, 122, 83, 66]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 2,
+            "alphaBounds": [91, 120, 180, 185],
+            "edgePadding": [91, 120, 76, 71]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 2,
+            "alphaBounds": [83, 118, 181, 187],
+            "edgePadding": [83, 118, 75, 69]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 2,
+            "alphaBounds": [75, 115, 176, 196],
+            "edgePadding": [75, 115, 80, 60]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 2,
+            "alphaBounds": [74, 110, 168, 205],
+            "edgePadding": [74, 110, 88, 51]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 2,
+            "alphaBounds": [79, 101, 155, 209],
+            "edgePadding": [79, 101, 101, 47]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 2,
+            "alphaBounds": [85, 94, 147, 209],
+            "edgePadding": [85, 94, 109, 47]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 2,
+            "alphaBounds": [94, 89, 148, 206],
+            "edgePadding": [94, 89, 108, 50]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 2,
+            "alphaBounds": [83, 87, 155, 201],
+            "edgePadding": [83, 87, 101, 55]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 2,
+            "alphaBounds": [76, 89, 165, 193],
+            "edgePadding": [76, 89, 91, 63]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 2,
+            "alphaBounds": [75, 95, 174, 186],
+            "edgePadding": [75, 95, 82, 70]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 2,
+            "alphaBounds": [80, 103, 181, 190],
+            "edgePadding": [80, 103, 75, 66]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 2,
+            "alphaBounds": [88, 112, 182, 193],
+            "edgePadding": [88, 112, 74, 63]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 2,
+            "alphaBounds": [101, 117, 177, 196],
+            "edgePadding": [101, 117, 79, 60]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 2,
+            "alphaBounds": [109, 120, 171, 196],
+            "edgePadding": [109, 120, 85, 60]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 3,
+            "alphaBounds": [49, 96, 159, 193],
+            "edgePadding": [49, 96, 97, 63]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 3,
+            "alphaBounds": [59, 80, 168, 196],
+            "edgePadding": [59, 80, 88, 60]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 3,
+            "alphaBounds": [76, 66, 183, 194],
+            "edgePadding": [76, 66, 73, 62]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 3,
+            "alphaBounds": [73, 59, 192, 186],
+            "edgePadding": [73, 59, 64, 70]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 3,
+            "alphaBounds": [66, 58, 191, 189],
+            "edgePadding": [66, 58, 65, 67]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 3,
+            "alphaBounds": [60, 64, 181, 199],
+            "edgePadding": [60, 64, 75, 57]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 3,
+            "alphaBounds": [64, 76, 193, 206],
+            "edgePadding": [64, 76, 63, 50]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 3,
+            "alphaBounds": [76, 83, 206, 209],
+            "edgePadding": [76, 83, 50, 47]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 3,
+            "alphaBounds": [97, 85, 207, 207],
+            "edgePadding": [97, 85, 49, 49]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 3,
+            "alphaBounds": [88, 90, 197, 202],
+            "edgePadding": [88, 90, 59, 54]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 3,
+            "alphaBounds": [72, 98, 180, 193],
+            "edgePadding": [72, 98, 76, 63]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 3,
+            "alphaBounds": [65, 107, 183, 185],
+            "edgePadding": [65, 107, 73, 71]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 3,
+            "alphaBounds": [65, 116, 189, 190],
+            "edgePadding": [65, 116, 67, 66]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 3,
+            "alphaBounds": [75, 122, 196, 193],
+            "edgePadding": [75, 122, 60, 63]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 3,
+            "alphaBounds": [63, 118, 192, 195],
+            "edgePadding": [63, 118, 64, 61]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 3,
+            "alphaBounds": [50, 109, 180, 195],
+            "edgePadding": [50, 109, 76, 61]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 4,
+            "alphaBounds": [57, 86, 152, 196],
+            "edgePadding": [57, 86, 104, 60]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 4,
+            "alphaBounds": [73, 72, 169, 197],
+            "edgePadding": [73, 72, 87, 59]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 4,
+            "alphaBounds": [74, 62, 185, 193],
+            "edgePadding": [74, 62, 71, 63]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 4,
+            "alphaBounds": [74, 59, 192, 184],
+            "edgePadding": [74, 59, 64, 72]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 4,
+            "alphaBounds": [67, 62, 191, 190],
+            "edgePadding": [67, 62, 65, 66]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 4,
+            "alphaBounds": [63, 71, 182, 200],
+            "edgePadding": [63, 71, 74, 56]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 4,
+            "alphaBounds": [69, 84, 198, 207],
+            "edgePadding": [69, 84, 58, 49]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 4,
+            "alphaBounds": [83, 84, 204, 210],
+            "edgePadding": [83, 84, 52, 46]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 4,
+            "alphaBounds": [104, 86, 199, 207],
+            "edgePadding": [104, 86, 57, 49]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 4,
+            "alphaBounds": [87, 92, 183, 201],
+            "edgePadding": [87, 92, 73, 55]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 4,
+            "alphaBounds": [72, 100, 181, 192],
+            "edgePadding": [72, 100, 75, 64]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 4,
+            "alphaBounds": [64, 109, 182, 185],
+            "edgePadding": [64, 109, 74, 71]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 4,
+            "alphaBounds": [65, 118, 189, 190],
+            "edgePadding": [65, 118, 67, 66]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 4,
+            "alphaBounds": [75, 118, 193, 194],
+            "edgePadding": [75, 118, 63, 62]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 4,
+            "alphaBounds": [58, 111, 187, 196],
+            "edgePadding": [58, 111, 69, 60]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 4,
+            "alphaBounds": [52, 102, 173, 195],
+            "edgePadding": [52, 102, 83, 61]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 5,
+            "alphaBounds": [45, 105, 162, 194],
+            "edgePadding": [45, 105, 94, 62]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 5,
+            "alphaBounds": [55, 96, 166, 190],
+            "edgePadding": [55, 96, 90, 66]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 5,
+            "alphaBounds": [74, 84, 180, 190],
+            "edgePadding": [74, 84, 76, 66]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 5,
+            "alphaBounds": [77, 75, 188, 184],
+            "edgePadding": [77, 75, 68, 72]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 5,
+            "alphaBounds": [75, 74, 188, 189],
+            "edgePadding": [75, 74, 68, 67]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 5,
+            "alphaBounds": [68, 79, 178, 198],
+            "edgePadding": [68, 79, 78, 58]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 5,
+            "alphaBounds": [69, 84, 192, 204],
+            "edgePadding": [69, 84, 64, 52]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 5,
+            "alphaBounds": [78, 82, 208, 207],
+            "edgePadding": [78, 82, 48, 49]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 5,
+            "alphaBounds": [94, 84, 211, 205],
+            "edgePadding": [94, 84, 45, 51]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 5,
+            "alphaBounds": [90, 88, 202, 200],
+            "edgePadding": [90, 88, 54, 56]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 5,
+            "alphaBounds": [76, 95, 181, 192],
+            "edgePadding": [76, 95, 75, 64]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 5,
+            "alphaBounds": [68, 104, 179, 184],
+            "edgePadding": [68, 104, 77, 72]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 5,
+            "alphaBounds": [68, 111, 181, 190],
+            "edgePadding": [68, 111, 75, 66]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 5,
+            "alphaBounds": [77, 118, 188, 195],
+            "edgePadding": [77, 118, 68, 61]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 5,
+            "alphaBounds": [64, 121, 187, 197],
+            "edgePadding": [64, 121, 69, 59]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 5,
+            "alphaBounds": [48, 115, 178, 197],
+            "edgePadding": [48, 115, 78, 59]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 6,
+            "alphaBounds": [88, 102, 164, 194],
+            "edgePadding": [88, 102, 92, 62]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 6,
+            "alphaBounds": [84, 101, 153, 196],
+            "edgePadding": [84, 101, 103, 60]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 6,
+            "alphaBounds": [77, 97, 142, 196],
+            "edgePadding": [77, 97, 114, 60]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 6,
+            "alphaBounds": [76, 92, 140, 193],
+            "edgePadding": [76, 92, 116, 63]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 6,
+            "alphaBounds": [82, 86, 139, 189],
+            "edgePadding": [82, 86, 117, 67]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 6,
+            "alphaBounds": [77, 79, 144, 183],
+            "edgePadding": [77, 79, 112, 73]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 6,
+            "alphaBounds": [76, 72, 156, 177],
+            "edgePadding": [76, 72, 100, 79]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 6,
+            "alphaBounds": [82, 68, 164, 179],
+            "edgePadding": [82, 68, 92, 77]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 6,
+            "alphaBounds": [91, 66, 169, 181],
+            "edgePadding": [91, 66, 87, 75]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 6,
+            "alphaBounds": [103, 68, 172, 184],
+            "edgePadding": [103, 68, 84, 72]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 6,
+            "alphaBounds": [114, 72, 180, 187],
+            "edgePadding": [114, 72, 76, 69]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 6,
+            "alphaBounds": [116, 78, 180, 190],
+            "edgePadding": [116, 78, 76, 66]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 6,
+            "alphaBounds": [116, 85, 174, 193],
+            "edgePadding": [116, 85, 82, 63]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 6,
+            "alphaBounds": [112, 92, 179, 194],
+            "edgePadding": [112, 92, 77, 62]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 6,
+            "alphaBounds": [99, 97, 180, 194],
+            "edgePadding": [99, 97, 76, 62]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 6,
+            "alphaBounds": [91, 101, 174, 192],
+            "edgePadding": [91, 101, 82, 64]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 7,
+            "alphaBounds": [100, 73, 158, 198],
+            "edgePadding": [100, 73, 98, 58]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 7,
+            "alphaBounds": [100, 72, 154, 200],
+            "edgePadding": [100, 72, 102, 56]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 7,
+            "alphaBounds": [94, 72, 148, 200],
+            "edgePadding": [94, 72, 108, 56]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 7,
+            "alphaBounds": [93, 71, 144, 197],
+            "edgePadding": [93, 71, 112, 59]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 7,
+            "alphaBounds": [95, 69, 149, 192],
+            "edgePadding": [95, 69, 107, 64]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 7,
+            "alphaBounds": [92, 67, 153, 189],
+            "edgePadding": [92, 67, 103, 67]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 7,
+            "alphaBounds": [94, 66, 155, 186],
+            "edgePadding": [94, 66, 101, 70]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 7,
+            "alphaBounds": [97, 64, 156, 190],
+            "edgePadding": [97, 64, 100, 66]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 7,
+            "alphaBounds": [98, 63, 157, 193],
+            "edgePadding": [98, 63, 99, 63]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 7,
+            "alphaBounds": [102, 64, 157, 195],
+            "edgePadding": [102, 64, 99, 61]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 7,
+            "alphaBounds": [107, 67, 162, 195],
+            "edgePadding": [107, 67, 94, 61]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 7,
+            "alphaBounds": [112, 69, 163, 196],
+            "edgePadding": [112, 69, 93, 60]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 7,
+            "alphaBounds": [107, 71, 161, 195],
+            "edgePadding": [107, 71, 95, 61]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 7,
+            "alphaBounds": [103, 72, 164, 193],
+            "edgePadding": [103, 72, 92, 63]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 7,
+            "alphaBounds": [101, 72, 163, 189],
+            "edgePadding": [101, 72, 93, 67]
+        },
+        {
+            "role": "hero-backhand",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 7,
+            "alphaBounds": [100, 73, 160, 194],
+            "edgePadding": [100, 73, 96, 62]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 0,
+            "alphaBounds": [54, 90, 157, 193],
+            "edgePadding": [54, 90, 99, 63]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 0,
+            "alphaBounds": [68, 74, 169, 195],
+            "edgePadding": [68, 74, 87, 61]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 0,
+            "alphaBounds": [75, 63, 183, 192],
+            "edgePadding": [75, 63, 73, 64]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 0,
+            "alphaBounds": [73, 59, 190, 184],
+            "edgePadding": [73, 59, 66, 72]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 0,
+            "alphaBounds": [66, 60, 188, 190],
+            "edgePadding": [66, 60, 68, 66]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 0,
+            "alphaBounds": [61, 68, 177, 200],
+            "edgePadding": [61, 68, 79, 56]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 0,
+            "alphaBounds": [65, 81, 196, 206],
+            "edgePadding": [65, 81, 60, 50]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 0,
+            "alphaBounds": [79, 82, 205, 208],
+            "edgePadding": [79, 82, 51, 48]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 0,
+            "alphaBounds": [99, 84, 202, 206],
+            "edgePadding": [99, 84, 54, 50]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 0,
+            "alphaBounds": [88, 89, 188, 200],
+            "edgePadding": [88, 89, 68, 56]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 0,
+            "alphaBounds": [73, 97, 181, 190],
+            "edgePadding": [73, 97, 75, 66]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 0,
+            "alphaBounds": [66, 106, 183, 184],
+            "edgePadding": [66, 106, 73, 72]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 0,
+            "alphaBounds": [68, 115, 189, 190],
+            "edgePadding": [68, 115, 67, 66]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 0,
+            "alphaBounds": [78, 120, 195, 193],
+            "edgePadding": [78, 120, 61, 63]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 0,
+            "alphaBounds": [60, 113, 191, 195],
+            "edgePadding": [60, 113, 65, 61]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 0,
+            "alphaBounds": [51, 105, 178, 195],
+            "edgePadding": [51, 105, 78, 61]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 1,
+            "alphaBounds": [94, 83, 163, 183],
+            "edgePadding": [94, 83, 93, 73]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 1,
+            "alphaBounds": [94, 81, 142, 181],
+            "edgePadding": [94, 81, 114, 75]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 1,
+            "alphaBounds": [77, 75, 150, 179],
+            "edgePadding": [77, 75, 106, 77]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 1,
+            "alphaBounds": [53, 72, 161, 180],
+            "edgePadding": [53, 72, 95, 76]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 1,
+            "alphaBounds": [42, 70, 167, 182],
+            "edgePadding": [42, 70, 89, 74]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 1,
+            "alphaBounds": [42, 64, 167, 185],
+            "edgePadding": [42, 64, 89, 71]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 1,
+            "alphaBounds": [56, 59, 163, 188],
+            "edgePadding": [56, 59, 93, 68]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 1,
+            "alphaBounds": [76, 56, 160, 190],
+            "edgePadding": [76, 56, 96, 66]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 1,
+            "alphaBounds": [93, 57, 162, 191],
+            "edgePadding": [93, 57, 94, 65]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 1,
+            "alphaBounds": [114, 59, 162, 191],
+            "edgePadding": [114, 59, 94, 65]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 1,
+            "alphaBounds": [105, 65, 179, 190],
+            "edgePadding": [105, 65, 77, 66]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 1,
+            "alphaBounds": [95, 69, 202, 189],
+            "edgePadding": [95, 69, 54, 67]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 1,
+            "alphaBounds": [89, 75, 215, 190],
+            "edgePadding": [89, 75, 41, 66]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 1,
+            "alphaBounds": [89, 81, 214, 189],
+            "edgePadding": [89, 81, 42, 67]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 1,
+            "alphaBounds": [93, 86, 201, 188],
+            "edgePadding": [93, 86, 55, 68]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 1,
+            "alphaBounds": [95, 86, 180, 186],
+            "edgePadding": [95, 86, 76, 70]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 2,
+            "alphaBounds": [74, 70, 170, 161],
+            "edgePadding": [74, 70, 86, 95]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 2,
+            "alphaBounds": [72, 76, 162, 154],
+            "edgePadding": [72, 76, 94, 102]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 2,
+            "alphaBounds": [59, 83, 163, 158],
+            "edgePadding": [59, 83, 93, 98]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 2,
+            "alphaBounds": [56, 78, 171, 165],
+            "edgePadding": [56, 78, 85, 91]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 2,
+            "alphaBounds": [62, 72, 175, 174],
+            "edgePadding": [62, 72, 81, 82]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 2,
+            "alphaBounds": [77, 67, 176, 183],
+            "edgePadding": [77, 67, 80, 73]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 2,
+            "alphaBounds": [86, 62, 170, 192],
+            "edgePadding": [86, 62, 86, 64]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 2,
+            "alphaBounds": [83, 59, 178, 199],
+            "edgePadding": [83, 59, 78, 57]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 2,
+            "alphaBounds": [86, 59, 182, 202],
+            "edgePadding": [86, 59, 74, 54]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 2,
+            "alphaBounds": [94, 61, 184, 202],
+            "edgePadding": [94, 61, 72, 54]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 2,
+            "alphaBounds": [93, 63, 196, 198],
+            "edgePadding": [93, 63, 60, 58]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 2,
+            "alphaBounds": [85, 67, 200, 191],
+            "edgePadding": [85, 67, 56, 65]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 2,
+            "alphaBounds": [80, 67, 194, 182],
+            "edgePadding": [80, 67, 62, 74]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 2,
+            "alphaBounds": [80, 65, 179, 172],
+            "edgePadding": [80, 65, 77, 84]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 2,
+            "alphaBounds": [86, 64, 169, 163],
+            "edgePadding": [86, 64, 87, 93]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 2,
+            "alphaBounds": [78, 66, 172, 165],
+            "edgePadding": [78, 66, 84, 91]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 3,
+            "alphaBounds": [97, 93, 156, 200],
+            "edgePadding": [97, 93, 100, 56]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 3,
+            "alphaBounds": [90, 96, 150, 197],
+            "edgePadding": [90, 96, 106, 59]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 3,
+            "alphaBounds": [82, 100, 158, 192],
+            "edgePadding": [82, 100, 98, 64]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 3,
+            "alphaBounds": [72, 101, 178, 184],
+            "edgePadding": [72, 101, 78, 72]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 3,
+            "alphaBounds": [56, 95, 193, 176],
+            "edgePadding": [56, 95, 63, 80]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 3,
+            "alphaBounds": [52, 86, 198, 179],
+            "edgePadding": [52, 86, 58, 77]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 3,
+            "alphaBounds": [58, 80, 193, 193],
+            "edgePadding": [58, 80, 63, 63]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 3,
+            "alphaBounds": [75, 77, 179, 205],
+            "edgePadding": [75, 77, 77, 51]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 3,
+            "alphaBounds": [100, 77, 160, 214],
+            "edgePadding": [100, 77, 96, 42]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 3,
+            "alphaBounds": [106, 80, 166, 217],
+            "edgePadding": [106, 80, 90, 39]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 3,
+            "alphaBounds": [98, 86, 174, 214],
+            "edgePadding": [98, 86, 82, 42]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 3,
+            "alphaBounds": [78, 95, 184, 207],
+            "edgePadding": [78, 95, 72, 49]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 3,
+            "alphaBounds": [63, 99, 200, 196],
+            "edgePadding": [63, 99, 56, 60]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 3,
+            "alphaBounds": [58, 97, 205, 191],
+            "edgePadding": [58, 97, 51, 65]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 3,
+            "alphaBounds": [63, 94, 198, 196],
+            "edgePadding": [63, 94, 58, 60]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 3,
+            "alphaBounds": [77, 93, 181, 200],
+            "edgePadding": [77, 93, 75, 56]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 4,
+            "alphaBounds": [96, 86, 176, 198],
+            "edgePadding": [96, 86, 80, 58]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 4,
+            "alphaBounds": [92, 87, 161, 195],
+            "edgePadding": [92, 87, 95, 61]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 4,
+            "alphaBounds": [85, 90, 160, 190],
+            "edgePadding": [85, 90, 96, 66]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 4,
+            "alphaBounds": [78, 94, 181, 190],
+            "edgePadding": [78, 94, 75, 66]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 4,
+            "alphaBounds": [76, 99, 196, 185],
+            "edgePadding": [76, 99, 60, 71]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 4,
+            "alphaBounds": [81, 90, 201, 181],
+            "edgePadding": [81, 90, 55, 75]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 4,
+            "alphaBounds": [71, 83, 195, 195],
+            "edgePadding": [71, 83, 61, 61]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 4,
+            "alphaBounds": [71, 80, 180, 208],
+            "edgePadding": [71, 80, 76, 48]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 4,
+            "alphaBounds": [80, 80, 160, 216],
+            "edgePadding": [80, 80, 96, 40]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 4,
+            "alphaBounds": [95, 83, 164, 219],
+            "edgePadding": [95, 83, 92, 37]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 4,
+            "alphaBounds": [95, 90, 170, 216],
+            "edgePadding": [95, 90, 86, 40]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 4,
+            "alphaBounds": [75, 97, 178, 208],
+            "edgePadding": [75, 97, 78, 48]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 4,
+            "alphaBounds": [60, 101, 181, 196],
+            "edgePadding": [60, 101, 75, 60]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 4,
+            "alphaBounds": [55, 97, 176, 189],
+            "edgePadding": [55, 97, 80, 67]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 4,
+            "alphaBounds": [61, 91, 184, 195],
+            "edgePadding": [61, 91, 72, 61]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 4,
+            "alphaBounds": [76, 88, 185, 198],
+            "edgePadding": [76, 88, 71, 58]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 5,
+            "alphaBounds": [94, 100, 152, 198],
+            "edgePadding": [94, 100, 104, 58]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 5,
+            "alphaBounds": [89, 102, 158, 196],
+            "edgePadding": [89, 102, 98, 60]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 5,
+            "alphaBounds": [84, 101, 161, 191],
+            "edgePadding": [84, 101, 95, 65]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 5,
+            "alphaBounds": [67, 93, 160, 184],
+            "edgePadding": [67, 93, 96, 72]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 5,
+            "alphaBounds": [57, 85, 154, 177],
+            "edgePadding": [57, 85, 102, 79]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 5,
+            "alphaBounds": [56, 77, 155, 176],
+            "edgePadding": [56, 77, 101, 80]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 5,
+            "alphaBounds": [68, 71, 155, 181],
+            "edgePadding": [68, 71, 101, 75]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 5,
+            "alphaBounds": [87, 68, 155, 185],
+            "edgePadding": [87, 68, 101, 71]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 5,
+            "alphaBounds": [104, 68, 162, 189],
+            "edgePadding": [104, 68, 94, 67]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 5,
+            "alphaBounds": [98, 71, 167, 192],
+            "edgePadding": [98, 71, 89, 64]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 5,
+            "alphaBounds": [95, 77, 172, 194],
+            "edgePadding": [95, 77, 84, 62]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 5,
+            "alphaBounds": [96, 85, 189, 195],
+            "edgePadding": [96, 85, 67, 61]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 5,
+            "alphaBounds": [101, 93, 199, 194],
+            "edgePadding": [101, 93, 57, 62]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 5,
+            "alphaBounds": [101, 97, 199, 192],
+            "edgePadding": [101, 97, 57, 64]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 5,
+            "alphaBounds": [101, 96, 189, 195],
+            "edgePadding": [101, 96, 67, 61]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 5,
+            "alphaBounds": [101, 97, 169, 198],
+            "edgePadding": [101, 97, 87, 58]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 6,
+            "alphaBounds": [96, 79, 157, 200],
+            "edgePadding": [96, 79, 99, 56]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 6,
+            "alphaBounds": [96, 78, 155, 202],
+            "edgePadding": [96, 78, 101, 54]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 6,
+            "alphaBounds": [93, 76, 150, 202],
+            "edgePadding": [93, 76, 106, 54]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 6,
+            "alphaBounds": [88, 74, 144, 198],
+            "edgePadding": [88, 74, 112, 58]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 6,
+            "alphaBounds": [89, 71, 145, 192],
+            "edgePadding": [89, 71, 111, 64]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 6,
+            "alphaBounds": [86, 69, 149, 186],
+            "edgePadding": [86, 69, 107, 70]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 6,
+            "alphaBounds": [89, 66, 152, 183],
+            "edgePadding": [89, 66, 104, 73]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 6,
+            "alphaBounds": [96, 64, 157, 187],
+            "edgePadding": [96, 64, 99, 69]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 6,
+            "alphaBounds": [99, 63, 160, 190],
+            "edgePadding": [99, 63, 96, 66]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 6,
+            "alphaBounds": [101, 65, 160, 191],
+            "edgePadding": [101, 65, 96, 65]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 6,
+            "alphaBounds": [106, 68, 164, 192],
+            "edgePadding": [106, 68, 92, 64]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 6,
+            "alphaBounds": [112, 71, 168, 192],
+            "edgePadding": [112, 71, 88, 64]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 6,
+            "alphaBounds": [110, 74, 167, 193],
+            "edgePadding": [110, 74, 89, 63]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 6,
+            "alphaBounds": [107, 76, 169, 192],
+            "edgePadding": [107, 76, 87, 64]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 6,
+            "alphaBounds": [104, 78, 167, 190],
+            "edgePadding": [104, 78, 89, 66]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 6,
+            "alphaBounds": [100, 79, 160, 196],
+            "edgePadding": [100, 79, 96, 60]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 0,
+            "phase": 7,
+            "alphaBounds": [99, 72, 157, 198],
+            "edgePadding": [99, 72, 99, 58]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 1,
+            "phase": 7,
+            "alphaBounds": [101, 71, 154, 201],
+            "edgePadding": [101, 71, 102, 55]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 2,
+            "phase": 7,
+            "alphaBounds": [94, 71, 149, 200],
+            "edgePadding": [94, 71, 107, 56]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 3,
+            "phase": 7,
+            "alphaBounds": [93, 71, 144, 197],
+            "edgePadding": [93, 71, 112, 59]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 4,
+            "phase": 7,
+            "alphaBounds": [94, 69, 149, 193],
+            "edgePadding": [94, 69, 107, 63]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 5,
+            "phase": 7,
+            "alphaBounds": [91, 67, 153, 189],
+            "edgePadding": [91, 67, 103, 67]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 6,
+            "phase": 7,
+            "alphaBounds": [92, 66, 154, 186],
+            "edgePadding": [92, 66, 102, 70]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 7,
+            "phase": 7,
+            "alphaBounds": [98, 64, 156, 190],
+            "edgePadding": [98, 64, 100, 66]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 8,
+            "phase": 7,
+            "alphaBounds": [99, 63, 157, 193],
+            "edgePadding": [99, 63, 99, 63]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 9,
+            "phase": 7,
+            "alphaBounds": [102, 65, 155, 194],
+            "edgePadding": [102, 65, 101, 62]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 10,
+            "phase": 7,
+            "alphaBounds": [107, 67, 162, 195],
+            "edgePadding": [107, 67, 94, 61]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 11,
+            "phase": 7,
+            "alphaBounds": [112, 69, 164, 194],
+            "edgePadding": [112, 69, 92, 62]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 12,
+            "phase": 7,
+            "alphaBounds": [107, 71, 162, 193],
+            "edgePadding": [107, 71, 94, 63]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 13,
+            "phase": 7,
+            "alphaBounds": [103, 72, 165, 191],
+            "edgePadding": [103, 72, 91, 65]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 14,
+            "phase": 7,
+            "alphaBounds": [102, 72, 163, 188],
+            "edgePadding": [102, 72, 93, 68]
+        },
+        {
+            "role": "hero-cleave",
+            "kind": "attack",
+            "direction": 15,
+            "phase": 7,
+            "alphaBounds": [100, 72, 158, 194],
+            "edgePadding": [100, 72, 98, 62]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 0,
+            "phase": 0,
+            "alphaBounds": [86, 103, 157, 192],
+            "edgePadding": [86, 103, 99, 64]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 2,
+            "phase": 0,
+            "alphaBounds": [98, 99, 154, 194],
+            "edgePadding": [98, 99, 102, 62]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 4,
+            "phase": 0,
+            "alphaBounds": [96, 94, 155, 189],
+            "edgePadding": [96, 94, 101, 67]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 6,
+            "phase": 0,
+            "alphaBounds": [97, 88, 162, 184],
+            "edgePadding": [97, 88, 94, 72]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 8,
+            "phase": 0,
+            "alphaBounds": [99, 87, 170, 193],
+            "edgePadding": [99, 87, 86, 63]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 10,
+            "phase": 0,
+            "alphaBounds": [102, 93, 158, 194],
+            "edgePadding": [102, 93, 98, 62]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 12,
+            "phase": 0,
+            "alphaBounds": [101, 100, 160, 192],
+            "edgePadding": [101, 100, 96, 64]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 14,
+            "phase": 0,
+            "alphaBounds": [94, 104, 159, 185],
+            "edgePadding": [94, 104, 97, 71]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 0,
+            "phase": 1,
+            "alphaBounds": [95, 74, 151, 193],
+            "edgePadding": [95, 74, 105, 63]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 2,
+            "phase": 1,
+            "alphaBounds": [85, 79, 196, 191],
+            "edgePadding": [85, 79, 60, 65]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 4,
+            "phase": 1,
+            "alphaBounds": [74, 103, 211, 176],
+            "edgePadding": [74, 103, 45, 80]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 6,
+            "phase": 1,
+            "alphaBounds": [81, 97, 198, 169],
+            "edgePadding": [81, 97, 58, 87]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 8,
+            "phase": 1,
+            "alphaBounds": [104, 95, 161, 177],
+            "edgePadding": [104, 95, 95, 79]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 10,
+            "phase": 1,
+            "alphaBounds": [60, 100, 172, 167],
+            "edgePadding": [60, 100, 84, 89]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 12,
+            "phase": 1,
+            "alphaBounds": [45, 106, 182, 167],
+            "edgePadding": [45, 106, 74, 89]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 14,
+            "phase": 1,
+            "alphaBounds": [58, 81, 175, 179],
+            "edgePadding": [58, 81, 81, 77]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 0,
+            "phase": 2,
+            "alphaBounds": [96, 107, 159, 181],
+            "edgePadding": [96, 107, 97, 75]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 2,
+            "phase": 2,
+            "alphaBounds": [95, 111, 159, 181],
+            "edgePadding": [95, 111, 97, 75]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 4,
+            "phase": 2,
+            "alphaBounds": [92, 120, 162, 183],
+            "edgePadding": [92, 120, 94, 73]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 6,
+            "phase": 2,
+            "alphaBounds": [88, 121, 164, 185],
+            "edgePadding": [88, 121, 92, 71]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 8,
+            "phase": 2,
+            "alphaBounds": [97, 119, 160, 186],
+            "edgePadding": [97, 119, 96, 70]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 10,
+            "phase": 2,
+            "alphaBounds": [97, 117, 161, 187],
+            "edgePadding": [97, 117, 95, 69]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 12,
+            "phase": 2,
+            "alphaBounds": [94, 113, 164, 186],
+            "edgePadding": [94, 113, 92, 70]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 14,
+            "phase": 2,
+            "alphaBounds": [92, 113, 167, 184],
+            "edgePadding": [92, 113, 89, 72]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 0,
+            "phase": 3,
+            "alphaBounds": [93, 90, 158, 193],
+            "edgePadding": [93, 90, 98, 63]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 2,
+            "phase": 3,
+            "alphaBounds": [100, 86, 150, 196],
+            "edgePadding": [100, 86, 106, 60]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 4,
+            "phase": 3,
+            "alphaBounds": [94, 79, 156, 192],
+            "edgePadding": [94, 79, 100, 64]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 6,
+            "phase": 3,
+            "alphaBounds": [94, 73, 162, 187],
+            "edgePadding": [94, 73, 94, 69]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 8,
+            "phase": 3,
+            "alphaBounds": [99, 71, 163, 195],
+            "edgePadding": [99, 71, 93, 61]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 10,
+            "phase": 3,
+            "alphaBounds": [106, 75, 156, 197],
+            "edgePadding": [106, 75, 100, 59]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 12,
+            "phase": 3,
+            "alphaBounds": [100, 83, 162, 194],
+            "edgePadding": [100, 83, 94, 62]
+        },
+        {
+            "role": "roll-warrior",
+            "kind": "roll",
+            "direction": 14,
+            "phase": 3,
+            "alphaBounds": [94, 88, 162, 186],
+            "edgePadding": [94, 88, 94, 70]
+        }
+    ]
+}

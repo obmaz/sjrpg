@@ -14,7 +14,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test(
-    'complete village keeps services aligned with the protected illustration',
+    'complete village keeps ground services inside its painted safety boundary',
     () {
       final world = AdventureWorld();
       expect(world.spawn, arrival);
@@ -23,11 +23,30 @@ void main() {
       expect(world.healAt, world.authoredSettlement.well);
       expect(world.settlement.width, greaterThan(town.width * 2));
       expect(world.settlement.contains(world.blacksmithAt), true);
+      for (final at in [
+        world.blacksmithAt,
+        world.blacksmithAt + const Offset(0, 64),
+      ]) {
+        final body = Rect.fromCenter(center: at, width: 28, height: 24);
+        expect(world.sanctuary.protects(body), true);
+        expect(world.blocked(body), false);
+      }
+      for (final point in world.authoredSettlement.safeBoundary) {
+        expect(
+          world.sanctuary.protects(
+            Rect.fromCenter(center: point, width: 28, height: 24),
+          ),
+          true,
+          reason: 'the protected ground follows the actual village wall',
+        );
+      }
+      // A projected roof or chimney may extend beyond the ground-level wall;
+      // it remains solid artwork, without extending safety onto outside fields.
       for (final point in world.settlementCollision[1].points) {
         expect(
-          world.sanctuary.protects(point & const Size(1, 1)),
+          world.blocked(Rect.fromCenter(center: point, width: 28, height: 24)),
           true,
-          reason: 'the ward must cover the complete painted forge',
+          reason: 'all painted forge vertices remain physical obstacles',
         );
       }
     },

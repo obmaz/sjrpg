@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+import 'steel_pressure_vfx.dart';
 
 /// Presentation only: callers own movement, hit timing, targets and simulation.
 enum BarbarianVfxKind {
@@ -136,6 +137,8 @@ class BarbarianVfxArt {
     );
   }
 
+  final _pressure = SteelPressureArt();
+
   void paint(
     ui.Canvas canvas, {
     required double progress,
@@ -168,6 +171,15 @@ class BarbarianVfxArt {
         case BarbarianVfxKind.battleOrders:
         case BarbarianVfxKind.battleCommand:
         case BarbarianVfxKind.warCry:
+          _pressure.paintWave(
+            canvas,
+            progress: t,
+            radius: r,
+            bearing: bearing,
+            rank: rank,
+            waves: kind == BarbarianVfxKind.taunt ? 1 : 2,
+            directed: kind == BarbarianVfxKind.taunt,
+          );
           _voice(canvas, t, r, weight, bearing);
         case BarbarianVfxKind.leap:
         case BarbarianVfxKind.leapAttack:
@@ -200,26 +212,43 @@ class BarbarianVfxArt {
             paintThrownAxe(canvas, at, t * 9 + side, t, rank: rank);
           }
         case BarbarianVfxKind.whirlwind:
-          // Steel edges circle the body; no filled vortex or magic disc.
-          final spin = t * math.pi * 4;
-          for (var i = 0; i < 2; i++) {
-            _arc(
-              canvas,
-              r * (.78 + i * .12),
-              spin + i * math.pi,
-              1.7,
-              i == 0 ? _steel : _dust,
-              fade * .85,
-              2.5 * weight,
-            );
-          }
+          _pressure.paintWhirlwind(
+            canvas,
+            progress: t,
+            radius: r,
+            bearing: bearing,
+            rank: rank,
+          );
         case BarbarianVfxKind.findPotion:
         case BarbarianVfxKind.findItem:
         case BarbarianVfxKind.grimWard:
           _recovery(canvas, t, r);
         default:
           canvas.rotate(bearing);
-          _blades(canvas, t, r, weight);
+          if ({
+            BarbarianVfxKind.bash,
+            BarbarianVfxKind.concentrate,
+            BarbarianVfxKind.berserk,
+            BarbarianVfxKind.frenzy,
+            BarbarianVfxKind.doubleSwing,
+          }.contains(kind)) {
+            _blades(canvas, t, r, weight);
+            _pressure.paintStrike(
+              canvas,
+              progress: t,
+              radius: r,
+              rank: rank,
+              heavy:
+                  kind == BarbarianVfxKind.bash ||
+                  kind == BarbarianVfxKind.concentrate,
+              fierce: kind == BarbarianVfxKind.berserk,
+              dual:
+                  kind == BarbarianVfxKind.frenzy ||
+                  kind == BarbarianVfxKind.doubleSwing,
+            );
+          } else {
+            _blades(canvas, t, r, weight);
+          }
       }
     } finally {
       canvas.restore();
@@ -431,6 +460,34 @@ class BarbarianVfxArt {
 
   /// Draw this at each actual projectile position; [progress] rotates the axe,
   /// but never moves it or applies damage. No extra projectile is spawned.
+  void paintJavelin(ui.Canvas canvas, ui.Offset center, double bearing) {
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(bearing);
+    canvas.drawLine(
+      const ui.Offset(-22, 0),
+      const ui.Offset(16, 0),
+      _line
+        ..color = const ui.Color(0xffb88b51)
+        ..strokeWidth = 3,
+    );
+    final tip = ui.Path()
+      ..moveTo(25, 0)
+      ..lineTo(12, -4)
+      ..lineTo(15, 0)
+      ..lineTo(12, 4)
+      ..close();
+    canvas.drawPath(tip, ui.Paint()..color = const ui.Color(0xffe9f4ef));
+    canvas.drawLine(
+      const ui.Offset(-13, -1),
+      const ui.Offset(9, -1),
+      _line
+        ..color = const ui.Color(0xfff1c990)
+        ..strokeWidth = 1,
+    );
+    canvas.restore();
+  }
+
   void paintThrownAxe(
     ui.Canvas canvas,
     ui.Offset center,

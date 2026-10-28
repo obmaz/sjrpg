@@ -6,6 +6,7 @@ import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/encounters.dart';
 
 import 'support/crowd_fixture.dart';
+import 'support/sanctuary_fixture.dart';
 import 'support/test_game.dart';
 
 void main() {
@@ -143,8 +144,10 @@ void main() {
         if (mode == 'hurt') m.hurt = 1;
         if (mode == 'windup') m.windup = 1;
         if (mode == 'heroMove') {
+          final gate = safetyGate(s.world);
           final hero = s.hero.position.toOffset(),
-              target = hero + const Offset(0, -30);
+              target = gate.boundary - gate.outward * 30 - const Offset(14, 12);
+          expect(s.world.sanctuary.protects(target & s.hero.body.size), true);
           expect(s.world.blocked(target & s.hero.body.size), false);
           expect(
             s.mobs.any(
@@ -288,6 +291,16 @@ void main() {
       lessThan(reach),
       reason: 'still blocks its inflated exterior corner',
     );
+    // The painted polygon leaves the alternate upper entry in open field.
+    // Occupy that entry explicitly instead of relying on the old, oversized
+    // circular ward to reject it invisibly; the lower escape stays open.
+    final upperCorner = rawBounds.inflate(margin).topLeft;
+    final upperBlocker = s.spawnEnemy(
+      'goblin',
+      upperCorner - Offset(0, reach * .95) - const Offset(12, 11),
+    )!..stun = 100;
+    expect(envelope(upperBlocker).overlaps(rawBounds), false);
+    expect((upperBlocker.body.center - upperCorner).distance, lessThan(reach));
     for (var frame = 0; frame < 100; frame++) {
       stepCrowd(s, 1 / 30);
     }

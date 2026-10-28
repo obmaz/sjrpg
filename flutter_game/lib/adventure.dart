@@ -10,6 +10,7 @@ import 'area_damage.dart';
 import 'audio_settings.dart';
 import 'barbarian_combat.dart';
 import 'barbarian_utilities.dart';
+import 'barbarian_vfx.dart' show BarbarianVfxKind;
 import 'battle_effects.dart';
 import 'boss_attacks.dart';
 import 'boss_sprite_mesh.dart';
@@ -1926,6 +1927,7 @@ class Adventure extends ChangeNotifier {
     double damage,
     ui.Offset impulse, {
     bool generateRage = false,
+    int? rageStrikeId,
     bool hitStop = true,
     bool critical = false,
     ui.Offset? origin,
@@ -1967,11 +1969,13 @@ class Adventure extends ChangeNotifier {
     }
     if (generateRage &&
         progress.heroClass == HeroClass.warrior &&
-        rageStrike != hero.strikes) {
-      rageStrike = hero.strikes;
+        rageStrike != (rageStrikeId ?? hero.strikes)) {
+      rageStrike = rageStrikeId ?? hero.strikes;
       // Pin the contact phase, not a fixed remaining duration: slow/heavy
       // attacks must keep the same follow-through when their tempo changes.
-      hero.swing = math.min(hero.swing, hero.swingDuration * .5);
+      if (rageStrike == hero.strikes) {
+        hero.swing = math.min(hero.swing, hero.swingDuration * .5);
+      }
       kickCamera(heavy ? 2.1 : .95);
       progress.energy = math.min(
         progress.maxEnergy,
@@ -2167,6 +2171,15 @@ class Guardian extends Player with WithCollision {
     );
   }
   final Adventure session;
+
+  // Armor, outstretched weapons, leaps and the blade ribbon extend past the
+  // collision feet. Rendering stays visible at the viewport edge without
+  // changing the player's physical body or attack reach.
+  @override
+  bool get isVisible =>
+      !hasGameRef ||
+      gameRef.camera.visibleWorldRect.overlaps(body.inflate(160));
+
   SkillAim? aim;
   late final barbarianCombat = BarbarianCombat(this);
   ({int slot, String id, SkillAim? aim})? queuedCast;
@@ -2991,6 +3004,16 @@ class Guardian extends Player with WithCollision {
         critical: critical,
       );
     }
+    session.game?.add(
+      BarbarianCombatVisual(
+        session,
+        BarbarianVfxKind.frenzy,
+        body.center,
+        bearing: bearing,
+        rank: p.rank(skill.id),
+        radius: 76,
+      ),
+    );
     for (var echo = 0; echo < 2; echo++) {
       session.game?.add(
         ShadowAssaultEcho(
@@ -3143,6 +3166,27 @@ class Guardian extends Player with WithCollision {
           explosive: p.basicTargetLimit > 1,
           targetLimit: p.basicTargetLimit,
           propOnly: session.sheltered,
+        ),
+      );
+      return;
+    }
+
+    if (p.weapon.base.isThrowingWeapon) {
+      final critical =
+          p.weaponCriticalChance > 0 &&
+          session.random.nextDouble() < p.weaponCriticalChance;
+      session.game?.add(
+        BarbarianThrownAxe(
+          session,
+          body.center,
+          angle,
+          p.basicDamage * (critical ? 2 : 1),
+          range: p.weapon.base.range,
+          rank: p.rank(basic.id),
+          critical: critical,
+          profile: p.weapon.base.throwingProfile,
+          generateRage: true,
+          rageStrikeId: strikes,
         ),
       );
       return;
@@ -3901,20 +3945,6 @@ class Guardian extends Player with WithCollision {
           ..color = session.progress.heroClass == HeroClass.mage
               ? const ui.Color(0x9979dfff)
               : const ui.Color(0x99ffce83),
-      );
-    }
-    if (spin > 0) {
-      final angle = bearing + (1 - spin / spinDuration) * math.pi * 4;
-      canvas.drawArc(
-        ui.Rect.fromCircle(center: center, radius: 49),
-        angle - 1.6,
-        1.5,
-        false,
-        ui.Paint()
-          ..color = const ui.Color(0xffe8f5ee)
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 4
-          ..strokeCap = ui.StrokeCap.round,
       );
     }
     if (chargeTime > 0) {

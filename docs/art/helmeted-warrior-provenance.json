@@ -1,0 +1,92 @@
+{
+    "version": 1,
+    "design": "Adult male armored warrior with open-faced steel helmet; all scalp covered, visible male face and short beard, layered dark steel armor, charcoal joints, short muted teal cloth.",
+    "generatedReference": {
+        "original": "/workspace/generated_images/exec-e021b823-4c7f-43bf-9e50-5d23e0fd4322.png",
+        "retained": "docs/art/helmeted-warrior-reference.png",
+        "sha256": "818f736b25a08bb42bc30418b08b90ba540eeeaf9f9b2f4ae93e5f353fe692e9",
+        "method": "image_gen; original character direction guided by the user-provided complete ARPG concept"
+    },
+    "portrait": {
+        "image": "flutter_game/art/hero-helmeted-portrait.webp",
+        "sourceCrop": [130, 45, 390, 305],
+        "outputSize": [256, 256],
+        "method": "exact source crop and uniform resize; no repainting"
+    },
+    "rigSource": "Reviewed Quaternius CC0 adult male Ranger skeleton/base male head and UAL actions, see character-motion-provenance.json; original hood hidden, new original authored armor meshes bound once in rest space.",
+    "geometry": "tools/character-art/helmeted-armor.py",
+    "renderer": "tools/character-art/render-helmeted-warrior.py",
+    "packer": "tools/character-art/pack-helmeted-warrior.py",
+    "poses": {
+        "warriorFrames": 560,
+        "unchangedMageRollFrames": 32,
+        "directions": 16,
+        "runPoses": 8,
+        "attackPoses": 8,
+        "rollDirections": 8,
+        "rollPoses": 4,
+        "projectedOrigin": [64.0, 90.21539688110352],
+        "uniformExportScale": 0.5,
+        "perPoseScaleCorrection": false,
+        "reference": "exec-e021b823-4c7f-43bf-9e50-5d23e0fd4322.png",
+        "bakeContract": "fbf45a6b65366121"
+    },
+    "alphaBounds": "docs/art/helmeted-warrior-alpha-bounds.json",
+    "presentationScale": 1.18,
+    "physicsAndReachChanged": false,
+    "sourceFiles": {
+        "tools/character-art/helmeted-armor.py": "ea0ab3a25ffaed6e24b68eec834e161ee92c94db897eb66c7e3b4e083cf77fde",
+        "tools/character-art/render-helmeted-warrior.py": "c3e304506d4db2a1dd5a1c5a1e27f2acbe11bcbd3290716b4cdd846fb332ec17",
+        "tools/character-art/pack-helmeted-warrior.py": "f246d4f55b373c60d3e3234b330b00834c117fa88819b105f171ee41fff9ca7d"
+    },
+    "runtimeRoles": {
+        "hero": {
+            "image": "flutter_game/art/hero-helmeted.webp",
+            "metadata": "flutter_game/art/hero-helmeted-bounds.json",
+            "frameCount": 144,
+            "decodedRGBABytes": 4194304,
+            "compressedBytes": 359354,
+            "sha256": "73aa10fee7fa43ec55962b9bbbdec9cb87edb209624bd5f808ada718266dac5c"
+        },
+        "hero-attack": {
+            "image": "flutter_game/art/hero-helmeted-attack.webp",
+            "metadata": "flutter_game/art/hero-helmeted-attack-bounds.json",
+            "frameCount": 128,
+            "decodedRGBABytes": 4194304,
+            "compressedBytes": 347336,
+            "sha256": "396c6c780b0ad26375efb5afdbd7048c3edaca72d7112a136280abd4ceb0f478"
+        },
+        "hero-backhand": {
+            "image": "flutter_game/art/hero-helmeted-backhand.webp",
+            "metadata": "flutter_game/art/hero-helmeted-backhand-bounds.json",
+            "frameCount": 128,
+            "decodedRGBABytes": 4194304,
+            "compressedBytes": 338214,
+            "sha256": "ec2b5c2799d9b4aee8e07e76ae1b91670e7bca556b94e0e2ab0a79d3f72b74ab"
+        },
+        "hero-cleave": {
+            "image": "flutter_game/art/hero-helmeted-cleave.webp",
+            "metadata": "flutter_game/art/hero-helmeted-cleave-bounds.json",
+            "frameCount": 128,
+            "decodedRGBABytes": 4194304,
+            "compressedBytes": 353034,
+            "sha256": "acbb7e565e5b3776e7ebf27f67ad6d3b86546d626cab0a44fa17c647c0e4be6b"
+        },
+        "roll": {
+            "image": "flutter_game/art/hero-helmeted-roll.png",
+            "metadata": "flutter_game/art/hero-helmeted-roll-bounds.json",
+            "frameCount": 64,
+            "decodedRGBABytes": 1048576,
+            "compressedBytes": 222246,
+            "sha256": "d28bbc5b64924e81f5dce41e56c13bce44c1b5f157d07bee1bd3b07c54533596"
+        }
+    },
+    "originalSourcesPreserved": [
+        "hero-clean.webp",
+        "hero-attack-clean.webp",
+        "actors-hero-backhand.webp",
+        "actors-hero-cleave.webp",
+        "actors-roll.png",
+        "roll-bounds.json"
+    ]
+}

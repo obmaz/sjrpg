@@ -53,6 +53,10 @@ void main() {
             if (heroClass == HeroClass.warrior) {
               expect(p.basicSkills.map((skill) => skill.id), ['cleave']);
               expect(find.bySemanticsLabel('기본 공격 일반 공격 선택'), findsNothing);
+              await tester.tap(
+                find.byKey(const ValueKey('skill-school-tab-2')),
+              );
+              await tester.pumpAndSettle();
               final target = find.byKey(const ValueKey('skill-node-bash'));
               await Scrollable.ensureVisible(
                 tester.element(target),

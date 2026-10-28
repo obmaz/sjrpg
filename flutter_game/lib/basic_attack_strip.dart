@@ -92,12 +92,14 @@ class BasicAttackStrip extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      SizedBox.square(
-                        dimension: 22,
-                        child: CustomPaint(
-                          painter: EffectIconPainter(
-                            session.art,
-                            skillEffect(skill.id),
+                      Flexible(
+                        child: SizedBox.square(
+                          dimension: 22,
+                          child: CustomPaint(
+                            painter: EffectIconPainter(
+                              session.art,
+                              skillEffect(skill.id),
+                            ),
                           ),
                         ),
                       ),

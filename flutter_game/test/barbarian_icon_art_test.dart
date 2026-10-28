@@ -26,6 +26,83 @@ void main() {
     },
   );
   test(
+    'battle icons crop the square plaque while tree icons retain it',
+    () async {
+      final referenceRecorder = ui.PictureRecorder();
+      ui.Canvas(referenceRecorder);
+      final referencePicture = referenceRecorder.endRecording();
+      final reference = await referencePicture.toImage(1374, 1145);
+      referencePicture.dispose();
+      final recorder = ui.PictureRecorder(), canvas = ui.Canvas(recorder);
+      for (var i = 0; i < 30; i++) {
+        final source = BarbarianIconArt.source(reference, i)!;
+        canvas.drawRect(source, ui.Paint()..color = const ui.Color(0xffffbb33));
+        canvas.drawRect(
+          source.deflate(16),
+          ui.Paint()..color = const ui.Color(0xff235577),
+        );
+      }
+      reference.dispose();
+      final picture = recorder.endRecording(),
+          atlas = await picture.toImage(1374, 1145);
+      picture.dispose();
+      final art = GameArt()..images[BarbarianIconArt.imageKey] = atlas;
+      addTearDown(art.dispose);
+      for (final framed in [true, false]) {
+        final r = ui.PictureRecorder();
+        EffectIconPainter(
+          art,
+          100,
+          framed: framed,
+        ).paint(ui.Canvas(r), const ui.Size(64, 64));
+        final p = r.endRecording(), image = await p.toImage(64, 64);
+        p.dispose();
+        final bytes = (await image.toByteData(
+          format: ui.ImageByteFormat.rawRgba,
+        ))!.buffer.asUint8List();
+        expect(bytes.sublist((32 * 64 + 32) * 4, (32 * 64 + 32) * 4 + 4), [
+          35,
+          85,
+          119,
+          255,
+        ]);
+        if (!framed) {
+          expect(
+            bytes[3],
+            0,
+            reason: 'the circular battle icon has no rectangular corners',
+          );
+          expect(
+            [
+              for (var i = 0; i < bytes.length; i += 4)
+                if (bytes[i] == 255 &&
+                    bytes[i + 1] == 187 &&
+                    bytes[i + 2] == 51 &&
+                    bytes[i + 3] == 255)
+                  i,
+            ],
+            isEmpty,
+            reason: 'the baked gold square border is cropped away',
+          );
+        } else {
+          expect(
+            [
+              for (var i = 0; i < bytes.length; i += 4)
+                if (bytes[i] == 255 &&
+                    bytes[i + 1] == 187 &&
+                    bytes[i + 2] == 51 &&
+                    bytes[i + 3] == 255)
+                  i,
+            ],
+            isNotEmpty,
+            reason: 'tree and popup icons retain their original plaque',
+          );
+        }
+        image.dispose();
+      }
+    },
+  );
+  test(
     'each effect samples its own six by five cell without the legacy physical sheet',
     () async {
       final recorder = ui.PictureRecorder(), canvas = ui.Canvas(recorder);

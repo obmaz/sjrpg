@@ -39,10 +39,10 @@ class GameHud extends StatelessWidget {
     final short = height < 520 || landscape;
     final statusRight = math.max(104.0, width - (landscape ? 280 : 360));
     final resourceHeight = math.max(
-      18.0,
+      17.0,
       ResourceMeter.minimumHeight(MediaQuery.textScalerOf(context)),
     );
-    final statTop = 46 + resourceHeight + 10;
+    final statTop = 42 + resourceHeight + 6;
     return SizedBox(
       height: 130,
       child: Stack(
@@ -51,12 +51,12 @@ class GameHud extends StatelessWidget {
             top: 17,
             left: 57,
             right: statusRight,
-            child: HealthMeter(session, height: 25),
+            child: HealthMeter(session, height: 20),
           ),
           Positioned(
             left: 77,
             right: statusRight + 6,
-            top: 46,
+            top: 42,
             child: ResourceMeter(session, height: resourceHeight),
           ),
           Positioned(
@@ -229,7 +229,10 @@ class _PortraitPainter extends CustomPainter {
   final HeroClass heroClass;
   @override
   void paint(Canvas c, Size s) {
-    if (!art.face(c, heroClass, Offset.zero & s)) {
+    if (heroClass == HeroClass.warrior &&
+        art.images.containsKey('hero-helmeted-portrait')) {
+      art.helmetedWarriorPortrait(c, Offset.zero & s);
+    } else if (!art.face(c, heroClass, Offset.zero & s)) {
       c.drawOval(Offset.zero & s, Paint()..color = ink);
     }
   }
@@ -468,14 +471,16 @@ class MapPainter extends CustomPainter {
     }
     _terrain(
       c,
-      Path()..addRect(session.world.settlement),
+      round
+          ? session.world.sanctuary.boundaryPath
+          : (Path()..addRect(session.world.settlement)),
       road,
-      const Color(0xffe3d29a),
+      const Color(0xffa89a77),
     );
     c.restore();
     final settlement = session.world.authoredSettlement;
     final settlementImage = session.art.images[settlement.imageKey];
-    if (settlementImage != null && view.overlaps(settlement.bounds)) {
+    if (!round && settlementImage != null && view.overlaps(settlement.bounds)) {
       c.drawImageRect(
         settlementImage,
         Rect.fromLTWH(
@@ -493,19 +498,43 @@ class MapPainter extends CustomPainter {
     }
 
     final sanctuary = session.world.sanctuary;
-    c.drawCircle(
-      sanctuary.center,
-      sanctuary.radius,
+    if (round) {
+      // A single top-down plan stays legible at 85px. The full map can retain
+      // the scene illustration without layering perspective art on this plan.
+      c.save();
+      c.clipPath(sanctuary.boundaryPath);
+      for (final gate in settlement.gatePaths) {
+        c.drawLine(
+          gate.first,
+          session.world.healAt,
+          Paint()
+            ..color = const Color(0xffc9b58a)
+            ..strokeWidth = 100
+            ..strokeCap = StrokeCap.round,
+        );
+      }
+      for (final building in session.world.settlementCollision.take(4)) {
+        c.drawPath(building.path, Paint()..color = const Color(0xff5d5c50));
+        c.drawPath(
+          building.path,
+          Paint()
+            ..color = const Color(0xffd2c5a2)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 14,
+        );
+      }
+      c.drawOval(
+        Rect.fromCenter(center: session.world.healAt, width: 180, height: 140),
+        Paint()..color = const Color(0xff5396a3),
+      );
+      c.restore();
+    }
+    c.drawPath(
+      sanctuary.boundaryPath,
       Paint()
-        ..color = session.world.stage.sanctuaryColor.withValues(alpha: .08),
-    );
-    c.drawCircle(
-      sanctuary.center,
-      sanctuary.radius,
-      Paint()
-        ..color = session.world.stage.sanctuaryColor.withValues(alpha: .65)
+        ..color = const Color(0xffc2b18a).withValues(alpha: round ? .8 : .45)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = (round ? 10 : 30 * markerScale),
+        ..strokeWidth = (round ? 18 : 30 * markerScale),
     );
     if (round) {
       for (final mob in session.mobs) {
@@ -577,7 +606,7 @@ class MapPainter extends CustomPainter {
       if (!round)
         (project(session.mountMerchantAt), '탈것', Icons.pets_rounded, gold),
       ...(groupServices
-          ? [(project(session.world.spawn), '거점', Icons.cottage_rounded, gold)]
+          ? [(project(session.world.healAt), '거점', Icons.cottage_rounded, gold)]
           : [
               (shopPoint, '상점', Icons.storefront_rounded, gold),
               (
@@ -611,7 +640,12 @@ class MapPainter extends CustomPainter {
     ];
     final occupied = <Offset>[];
     for (final (anchor, label, icon, color) in services) {
-      final radius = (round ? 7.0 : 10.0) * markerScale;
+      final radius = (round ? 5.0 : 10.0) * markerScale;
+      if (round &&
+          ((anchor - heroPoint).distance < 11 ||
+              occupied.any((point) => (point - anchor).distance < 12))) {
+        continue;
+      }
       if (round &&
           (anchor - rect.center).distance > s.shortestSide / 2 - radius - 3) {
         continue;
@@ -653,7 +687,7 @@ class MapPainter extends CustomPainter {
           text: String.fromCharCode(icon.codePoint),
           style: TextStyle(
             fontFamily: icon.fontFamily,
-            fontSize: (round ? 11 : 15) * markerScale,
+            fontSize: (round ? 8 : 15) * markerScale,
             color: color,
           ),
         ),
@@ -812,14 +846,7 @@ class MapPainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.5
-          ..color = const Color(0xaa9bb3b9),
-      );
-      c.drawOval(
-        rect.deflate(6),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = .75
-          ..color = const Color(0x99374f59),
+          ..color = const Color(0xffa58e67),
       );
     }
   }
@@ -829,17 +856,26 @@ class MapPainter extends CustomPainter {
 }
 
 class EffectIconPainter extends CustomPainter {
-  EffectIconPainter(this.art, this.index);
+  EffectIconPainter(this.art, this.index, {this.framed = true});
   final GameArt art;
   final int index;
+  final bool framed;
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.save();
+    if (!framed) canvas.clipPath(Path()..addOval(Offset.zero & size));
+    _paint(canvas, size);
+    canvas.restore();
+  }
+
+  void _paint(Canvas canvas, Size size) {
     if (BarbarianIconArt.containsEffect(index)) {
       BarbarianIconArt.draw(
         canvas,
         art.images[BarbarianIconArt.imageKey],
         index - BarbarianIconArt.firstEffect,
         Offset.zero & size,
+        framed: framed,
       );
       return;
     }
@@ -883,7 +919,7 @@ class EffectIconPainter extends CustomPainter {
         (localIndex ~/ columns) * cell,
         cell,
         cell,
-      ).deflate(1),
+      ).deflate(framed ? 1 : cell * .09),
       Offset.zero & size,
       Paint()..filterQuality = FilterQuality.medium,
     );
@@ -891,7 +927,9 @@ class EffectIconPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant EffectIconPainter oldDelegate) =>
-      oldDelegate.index != index || oldDelegate.art != art;
+      oldDelegate.index != index ||
+      oldDelegate.art != art ||
+      oldDelegate.framed != framed;
 }
 
 abstract final class MobileGlyph {
@@ -1414,15 +1452,14 @@ class _ActionButtonState extends State<ActionButton> {
                   : 'combat-fx',
             ))) {
       return CustomPaint(
-        size: Size.square(widget.size * .58),
-        painter: EffectIconPainter(widget.art, effect),
+        size: Size.square(widget.size * .80),
+        painter: EffectIconPainter(widget.art, effect, framed: false),
       );
     }
-    if (widget.glyphIndex == MobileGlyph.dodge &&
-        widget.art.images.containsKey('dodge-icon')) {
+    if (widget.glyphIndex == MobileGlyph.dodge) {
       return CustomPaint(
-        size: Size.square(widget.size * .60),
-        painter: AbilityPicturePainter(widget.art, 'dodge-icon'),
+        size: Size.square(widget.size * .65),
+        painter: const DodgeActionPainter(),
       );
     }
     if (widget.glyphIndex == null &&
@@ -1696,6 +1733,71 @@ class _GameStickState extends State<GameStick> {
       ),
     ),
   );
+}
+
+/// A moving figure keeps evasion distinct from a boot or a skill plaque.
+class DodgeActionPainter extends CustomPainter {
+  const DodgeActionPainter();
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.save();
+    canvas.scale(size.width / 32, size.height / 32);
+    final limbs = Path()
+      ..moveTo(17, 11)
+      ..lineTo(23, 14)
+      ..lineTo(27, 9)
+      ..moveTo(17, 12)
+      ..lineTo(11, 10)
+      ..lineTo(7, 15)
+      ..moveTo(13, 18)
+      ..lineTo(20, 21)
+      ..lineTo(23, 28)
+      ..moveTo(13, 18)
+      ..lineTo(10, 24)
+      ..lineTo(3, 24);
+    final body = Path()
+      ..moveTo(17, 9)
+      ..lineTo(21, 12)
+      ..lineTo(16, 21)
+      ..lineTo(10, 18)
+      ..close();
+    final shader = const LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [Color(0xfff0d6a1), Color(0xffb89661), Color(0xff69533b)],
+    ).createShader(const Rect.fromLTWH(3, 3, 26, 27));
+    canvas.drawPath(
+      limbs,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5.3
+        ..strokeJoin = StrokeJoin.round
+        ..strokeCap = StrokeCap.round
+        ..color = const Color(0xff211d19),
+    );
+    canvas.drawPath(
+      limbs,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.5
+        ..strokeJoin = StrokeJoin.round
+        ..strokeCap = StrokeCap.round
+        ..shader = shader,
+    );
+    canvas.drawPath(body, Paint()..shader = shader);
+    canvas.drawCircle(const Offset(22, 5), 3.2, Paint()..shader = shader);
+    shader.dispose();
+    final trail = Paint()
+      ..strokeWidth = 1.3
+      ..strokeCap = StrokeCap.round
+      ..color = const Color(0xff8a7351);
+    canvas.drawLine(const Offset(2, 7), const Offset(9, 7), trail);
+    canvas.drawLine(const Offset(1, 18), const Offset(5, 18), trail);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant DodgeActionPainter oldDelegate) => false;
 }
 
 class IllustratedMenuPainter extends CustomPainter {

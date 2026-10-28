@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math' as math;
 
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,6 +8,7 @@ import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/world_model.dart';
 
+import 'support/sanctuary_fixture.dart';
 import 'support/test_game.dart';
 
 void main() {
@@ -17,22 +17,16 @@ void main() {
     test('$stage denies a close melee target across an open safety gate', () {
       final s = Adventure(GameArt(), stage: stage)..start(TestGame());
       addTearDown(s.dispose);
-      final ward = s.world.sanctuary;
       // This assertion concerns hostile targets. Chest attacks are explicitly
       // allowed inside a village, so remove them from this combat fixture.
       s.world.openedChests.addAll(
         List.generate(s.world.chests.length, (i) => i),
       );
-      final gate = s.world.authoredSettlement.gatePaths.last.last;
-      final gateOffset = gate - ward.center;
-      final angle = math.atan2(gateOffset.dy, gateOffset.dx);
-      final direction = Offset(math.cos(angle), math.sin(angle));
-      final inside =
-          ward.center + direction * (ward.radius - 10) - const Offset(14, 12);
+      final gate = safetyGate(s.world);
+      final inside = gate.boundary - gate.outward * 18 - const Offset(14, 12);
       s.hero.position.setValues(inside.dx, inside.dy);
       expect(s.world.blocked(s.hero.body), false);
-      final enemyAt =
-          ward.center + direction * (ward.radius + 20) - const Offset(12, 11);
+      final enemyAt = gate.boundary + gate.outward * 18 - const Offset(12, 11);
       final mob = s.spawnEnemy('goblin', enemyAt)!;
       expect(
         (mob.body.center - s.hero.body.center).distance,
@@ -42,8 +36,7 @@ void main() {
       s.hero.slash();
       expect(mob.life.value, health);
       expect(s.hero.attackClock, 0);
-      final outside =
-          ward.center + direction * (ward.radius + 50) - const Offset(14, 12);
+      final outside = gate.boundary + gate.outward * 50 - const Offset(14, 12);
       s.hero.position.setValues(outside.dx, outside.dy);
       expect(s.sheltered, false);
       s.hero.slash();
@@ -101,13 +94,47 @@ void main() {
       },
     );
 
+    test('$stage enemies chase and attack outside the visible east gate', () {
+      final s = Adventure(GameArt(), stage: stage)..start(TestGame());
+      addTearDown(s.dispose);
+      final gate = safetyGate(s.world);
+      final heroAt = gate.boundary + gate.outward * 80 - const Offset(14, 12);
+      s.hero.position.setValues(heroAt.dx, heroAt.dy);
+      s.hero.lastClearPosition = s.hero.position.toOffset();
+      expect(s.world.blocked(s.hero.body), false);
+      expect(s.sheltered, false);
+      expect(
+        (s.hero.body.center - s.world.sanctuary.center).distance,
+        lessThan(s.world.sanctuary.radius),
+        reason:
+            'the enclosing circle must not protect the field outside the wall',
+      );
+      final enemyAt = gate.boundary + gate.outward * 220 - const Offset(12, 11);
+      final mob = s.spawnEnemy('goblin', enemyAt)!;
+      expect(mob.body.topLeft, Vector2(enemyAt.dx, enemyAt.dy).toOffset());
+      final before = (mob.body.center - s.hero.body.center).distance;
+      final hp = s.progress.hp;
+      for (var frame = 0; frame < 240; frame++) {
+        s.hero.invulnerable = 0;
+        mob.update(1 / 30);
+        expect(s.world.blocksEnemy(mob.body), false);
+      }
+      expect(
+        (mob.body.center - s.hero.body.center).distance,
+        lessThan(before - 40),
+      );
+      expect(s.progress.hp, lessThan(hp));
+      expect(s.sheltered, false);
+    });
+
     test('$stage movement and knockback keep entire enemy bodies out', () {
       final session = Adventure(GameArt(), stage: stage)..start(TestGame());
       addTearDown(session.dispose);
       final ward = session.world.sanctuary;
+      final gate = safetyGate(session.world);
       final mob = session.spawnEnemy(
         'goblin',
-        ward.center + Offset(ward.radius + 20, 0),
+        gate.boundary + gate.outward * 30,
       )!;
       final before = mob.position.toOffset();
       final moved = session.world.moveEnemy(
@@ -123,8 +150,8 @@ void main() {
       }
       expect(
         session.world.clearEnemyLine(
-          ward.center - Offset(ward.radius + 100, 0),
-          ward.center + Offset(ward.radius + 100, 0),
+          gate.boundary - gate.outward * 100,
+          gate.boundary + gate.outward * 100,
           const Size(24, 22),
         ),
         false,
@@ -136,8 +163,8 @@ void main() {
       () {
         final session = Adventure(GameArt(), stage: stage)..start(TestGame());
         addTearDown(session.dispose);
-        final ward = session.world.sanctuary;
-        final from = ward.center + Offset(ward.radius + 35, 0);
+        final gate = safetyGate(session.world);
+        final from = gate.boundary + gate.outward * 35;
         final friendly = ArcaneBolt(session, from, 3.141592653589793, 999);
         final hostile = ShadowBolt(
           session,

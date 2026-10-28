@@ -67,7 +67,7 @@ void main() {
       const Size(390, 844),
       const Size(844, 390),
     ]) {
-      testWidgets('$hero readable tree and fixed actions at $size text1.3', (
+      testWidgets('$hero tabs fit the complete viewport at $size text1.3', (
         tester,
       ) async {
         tester.view.physicalSize = size;
@@ -77,88 +77,108 @@ void main() {
         final s = Adventure(await art(tester), heroClass: hero)
           ..start(TestGame());
         s.pause();
-        s.progress.gainXp(10000);
+        s.progress.level = 30;
         s.progress.skillPoints = 60;
         addTearDown(s.dispose);
         await tester.pumpWidget(app(SkillsPanel(session: s, onClose: () {})));
         await tester.pumpAndSettle();
-        final footer = find.bySemanticsLabel('모험 계속하기');
-        final footerRect = tester.getRect(footer);
-        expect(footerRect.bottom, lessThanOrEqualTo(size.height));
-        for (final slot in skillTreeRows(hero).first) {
-          final rect = tester.getRect(
-            find.byKey(ValueKey('skill-node-${slot.id}')),
+        final footer = find.bySemanticsLabel('모험 계속하기'),
+            footerRect = tester.getRect(footer);
+        final tree = find.byType(SkillTree), treeRect = tester.getRect(tree);
+        for (
+          var school = 0;
+          school < skillTreeSchoolLabels(s.progress).length;
+          school++
+        ) {
+          final tab = find.byKey(ValueKey('skill-school-tab-$school'));
+          expect(tester.getRect(tab).height, greaterThanOrEqualTo(44));
+          expect(tester.getRect(tab).width, greaterThanOrEqualTo(44));
+          await tester.tap(tab);
+          await tester.pumpAndSettle();
+          final geometry = SkillSchoolLayout(
+            s.progress,
+            school,
+            treeRect.width - 18,
+            dense: treeRect.height < 180,
+            textScale: 1.3,
           );
-          expect(rect.left, greaterThanOrEqualTo(0));
-          if (hero == HeroClass.mage || slot.column < 3) {
-            expect(rect.right, lessThanOrEqualTo(size.width));
+          for (final skill in geometry.skills) {
+            final rect = tester.getRect(
+              find.byKey(ValueKey('skill-node-${skill.id}')),
+            );
+            expect(rect.left, greaterThanOrEqualTo(treeRect.left));
+            expect(rect.right, lessThanOrEqualTo(treeRect.right));
           }
+          expect(
+            find.byKey(const ValueKey('skill-tree-horizontal')),
+            findsNothing,
+          );
+          await proof(
+            tester,
+            '${hero.name}-${size.width.toInt()}-school$school-top',
+          );
+          final last = geometry.rects.entries.reduce(
+            (a, b) => a.value.top > b.value.top ? a : b,
+          );
+          await Scrollable.ensureVisible(
+            tester.element(find.byKey(ValueKey('skill-node-${last.key}'))),
+            alignment: .5,
+          );
+          await tester.pumpAndSettle();
+          expect(tester.getRect(footer), footerRect);
+          expect(footerRect.bottom, lessThanOrEqualTo(size.height));
+          expect(tester.takeException(), null);
+          await proof(
+            tester,
+            '${hero.name}-${size.width.toInt()}-school$school-bottom',
+          );
         }
-        await proof(tester, '${hero.name}-${size.width.toInt()}-top');
-        final scrollable = hero == HeroClass.warrior
-            ? find
-                  .descendant(
-                    of: find.byKey(const ValueKey('skill-tree-vertical')),
-                    matching: find.byType(Scrollable),
-                  )
-                  .first
-            : find
-                  .descendant(
-                    of: find.byType(SkillTree),
-                    matching: find.byType(Scrollable),
-                  )
-                  .first;
-        await tester.scrollUntilVisible(
-          find.byKey(
-            ValueKey('skill-node-${skillTreeRows(hero).last.first.id}'),
-          ),
-          100,
-          scrollable: scrollable,
-        );
-        await tester.pumpAndSettle();
-        expect(tester.getRect(footer), footerRect);
-        expect(tester.takeException(), null);
-        await proof(tester, '${hero.name}-${size.width.toInt()}-bottom');
       });
     }
-
-    testWidgets('$hero complete level tiers have clear local joins text1.3', (
-      tester,
-    ) async {
-      final s = Adventure(await art(tester), heroClass: hero)
-        ..start(TestGame());
-      s.pause();
-      s.progress.gainXp(10000);
-      addTearDown(s.dispose);
-      final geometry = SkillTreeLayout(
-        s.progress,
-        320,
-        dense: false,
-        textScale: 1.3,
-      );
-      tester.view.physicalSize = Size(
-        geometry.contentWidth,
-        geometry.height + 34,
-      );
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      final controller = ScrollController();
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(
-        app(
-          SkillTree(
-            session: s,
-            controller: controller,
-            focused: null,
-            onFocus: (_) {},
+    testWidgets(
+      '$hero complete selected school has no partial neighboring panel',
+      (tester) async {
+        final s = Adventure(await art(tester), heroClass: hero)
+          ..start(TestGame());
+        s.pause();
+        s.progress.level = 30;
+        addTearDown(s.dispose);
+        final geometry = SkillSchoolLayout(
+          s.progress,
+          0,
+          372,
+          dense: false,
+          textScale: 1.3,
+        );
+        tester.view.physicalSize = Size(390, geometry.height + 68);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final controller = ScrollController();
+        addTearDown(controller.dispose);
+        await tester.pumpWidget(
+          app(
+            SkillTree(
+              session: s,
+              controller: controller,
+              focused: null,
+              onFocus: (_) {},
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(controller.position.maxScrollExtent, 0);
-      expect(tester.takeException(), null);
-      await proof(tester, '${hero.name}-full-tree');
-    });
+        );
+        await tester.pumpAndSettle();
+        for (
+          var school = 0;
+          school < skillTreeSchoolLabels(s.progress).length;
+          school++
+        ) {
+          await tester.tap(find.byKey(ValueKey('skill-school-tab-$school')));
+          await tester.pumpAndSettle();
+          expect(controller.position.maxScrollExtent, 0);
+          expect(tester.takeException(), null);
+          await proof(tester, '${hero.name}-full-school$school');
+        }
+      },
+    );
   }
 }

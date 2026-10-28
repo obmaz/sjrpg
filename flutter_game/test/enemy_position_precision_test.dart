@@ -1,11 +1,10 @@
-import 'dart:math' as math;
-
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/world_model.dart';
 
+import 'support/sanctuary_fixture.dart';
 import 'support/test_game.dart';
 
 void main() {
@@ -38,33 +37,6 @@ void main() {
     return enemy;
   }
 
-  ({Offset desired, Offset from}) wardContact(Adventure session) {
-    final ward = session.world.sanctuary;
-    const size = Size(24, 22);
-    for (var angle = .08; angle < math.pi / 2; angle += .017) {
-      final y = stored(
-        ward.center + Offset(0, math.sin(angle) * ward.radius),
-      ).dy;
-      final dy = y - ward.center.dy;
-      final x = ward.center.dx + math.sqrt(ward.radius * ward.radius - dy * dy);
-      final desired = Offset(x + .0000001, y);
-      final from = stored(desired + const Offset(2, 0));
-      if (session.world.blocksEnemy(desired & size) ||
-          !session.world.blocksEnemy(stored(desired) & size) ||
-          session.world.blocksEnemy(from & size)) {
-        continue;
-      }
-      final geometric = session.world.moveEnemy(from, desired - from, size);
-      if (!session.world.blocksEnemy(geometric & size) &&
-          session.world.blocksEnemy(stored(geometric) & size)) {
-        return (desired: desired, from: from);
-      }
-    }
-    throw StateError(
-      'current ward must expose a legal double/blocked Float32 contact',
-    );
-  }
-
   double openRow(Adventure session) {
     for (var y = 2000.0; y < 16000; y += 64) {
       if (!session.world.blocksEnemy(Rect.fromLTWH(8170, y - 20, 100, 80))) {
@@ -80,9 +52,8 @@ void main() {
       final session = Adventure(GameArt(), stage: WorldStage.sands)
         ..start(TestGame());
       addTearDown(session.dispose);
-      final ward = session.world.sanctuary;
-      final at =
-          ward.center + const Offset(.7, .714142842854285) * (ward.radius + 12);
+      final gate = safetyGate(session.world);
+      final at = gate.boundary + gate.outward * 70;
       session.hero.position.setValues(at.dx, at.dy);
       session.hero.lastClearPosition = session.hero.position.toOffset();
       session.progress.bonusHealth = 2000;
@@ -114,7 +85,7 @@ void main() {
 
   test('invalid rounded fast-path ward slide falls through safely', () {
     final session = field(stage: WorldStage.sands);
-    final contact = wardContact(session);
+    final contact = precisionWardContact(session);
     final from = contact.from, nudge = contact.desired - contact.from;
     final enemy = spawn(session, from);
     final geometric = session.world.moveEnemy(from, nudge, enemy.body.size);

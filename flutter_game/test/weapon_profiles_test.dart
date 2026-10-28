@@ -35,10 +35,13 @@ void main() {
   test(
     'all melee weapons have unique effects and preserve the old atlas IDs',
     () {
-      expect(gearCatalog.length, 32);
+      expect(gearCatalog.length, 34);
       expect(gearCatalog[23].id, 'sentinel');
       final melee = gearCatalog.where(
-        (g) => g.slot == GearSlot.weapon && g.heroClass == HeroClass.warrior,
+        (g) =>
+            g.slot == GearSlot.weapon &&
+            g.heroClass == HeroClass.warrior &&
+            !g.isThrowingWeapon,
       );
       expect(melee.length, 16);
       expect(melee.every((g) => g.comboProfile != null), true);
@@ -87,9 +90,10 @@ void main() {
       for (final def in gearCatalog.skip(24)) {
         expect(observed, contains(def.id));
         expect(mage.shopGear, isNot(contains(def)));
-        final required = const {'dualblades', 'rapier'}.contains(def.id)
+        final required =
+            const {'dualblades', 'rapier', 'throwingaxes'}.contains(def.id)
             ? 1
-            : const {'katana', 'flail'}.contains(def.id)
+            : const {'katana', 'flail', 'javelin'}.contains(def.id)
             ? 3
             : 5;
         p.level = required - 1;
@@ -101,10 +105,19 @@ void main() {
         expect(p.equip(item), true);
         final restored = Progress.fromSave(p.toSave())!;
         expect(restored.weapon.base.id, def.id);
-        expect(
-          restored.weapon.base.comboProfile!.effect,
-          def.comboProfile!.effect,
-        );
+        if (def.isThrowingWeapon) {
+          expect(restored.weapon.base.isThrowingWeapon, true);
+          expect(
+            restored.weapon.base.throwingProfile,
+            same(def.throwingProfile),
+          );
+          expect(restored.weapon.base.comboProfile, isNull);
+        } else {
+          expect(
+            restored.weapon.base.comboProfile!.effect,
+            def.comboProfile!.effect,
+          );
+        }
       }
     },
   );
@@ -218,7 +231,7 @@ void main() {
         }
         expect(visible, greaterThan(100), reason: gear.id);
       }
-      expect(frames.length, 8);
+      expect(frames.length, 10);
     },
   );
 }

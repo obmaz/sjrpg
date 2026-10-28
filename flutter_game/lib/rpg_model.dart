@@ -48,6 +48,10 @@ class GearDef {
   final int value;
   bool usable(HeroClass c) => heroClass == null || heroClass == c;
   WeaponComboProfile? get comboProfile => meleeWeaponProfiles[id];
+  ThrownWeaponProfile? get throwingProfile => throwingWeaponProfiles[id];
+  bool get isThrowingWeapon =>
+      slot == GearSlot.weapon && style == 'throwing' && throwingProfile != null;
+  double get contactRange => isThrowingWeapon ? 115 : range;
 
   /// Half of the forward hit arc; long thrusts trade width for reach.
   double get meleeHalfAngle => switch (id) {
@@ -364,6 +368,28 @@ const gearCatalog = <GearDef>[
     tempo: .44,
     value: 85,
   ),
+  GearDef(
+    'throwingaxes',
+    '투척 도끼',
+    GearSlot.weapon,
+    heroClass: HeroClass.warrior,
+    attack: 17,
+    range: 390,
+    tempo: .40,
+    style: 'throwing',
+    value: 70,
+  ),
+  GearDef(
+    'javelin',
+    '투창',
+    GearSlot.weapon,
+    heroClass: HeroClass.warrior,
+    attack: 21,
+    range: 470,
+    tempo: .48,
+    style: 'throwing',
+    value: 85,
+  ),
 ];
 GearDef gearById(String id) => gearCatalog.firstWhere((g) => g.id == id);
 
@@ -621,6 +647,7 @@ class Gear {
       math.max(5, (base.value * (1 + rarity.index * .6) / 3).round());
   String get stats => [
     if (weaponLevel != null) '무기 Lv.$weaponLevel',
+    if (base.isThrowingWeapon) '투척 · 단일 대상',
     if (attack > 0) '공격 +${attack.round()}',
     if (armor > 0) '방어 +${armor.round()}',
     if (health > 0) '생명 +${health.round()}',
@@ -1103,7 +1130,9 @@ class Progress {
             'mace',
             'dualblades',
             'rapier',
+            'throwingaxes',
             if (level >= 3) ...['katana', 'flail'],
+            if (level >= 3) 'javelin',
             if (level >= 5) ...['greatsword', 'twinaxes', 'runeblade'],
             if (level >= 5) ...['halberd', 'warhammer', 'glaive', 'falchion'],
             'leather',
@@ -1388,6 +1417,7 @@ class Progress {
       : switch (weapon.base.id) {
           'halberd' || 'glaive' => 'polearmMastery',
           _ => switch (weapon.base.style) {
+            'throwing' => 'throwingMastery',
             'axe' => 'axeMastery',
             'hammer' => 'maceMastery',
             'spear' => 'spearMastery',
@@ -1428,7 +1458,7 @@ class Progress {
       'leap' => 120.0 + r * 8,
       'leapAttack' => 180.0 + r * 8,
       'doubleThrow' => 420.0,
-      _ => weapon.base.range,
+      _ => skill.basic ? weapon.base.range : weapon.base.contactRange,
     };
   }
 
@@ -1573,6 +1603,9 @@ class Progress {
   int basicTargetLimitForRank(int rank, {SkillDef? basic}) {
     final skill = basic ?? basicSkill;
     if (rank <= 0) return 0;
+    if (heroClass == HeroClass.warrior && weapon.base.isThrowingWeapon) {
+      return 1;
+    }
     return switch (skill.id) {
       'cleave' || 'firebolt' || 'sparkBolt' => SkillGrowth.level(rank),
       _ => 1,

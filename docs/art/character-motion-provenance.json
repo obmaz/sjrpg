@@ -112,36 +112,36 @@
     },
     "runtimeRoles": {
         "hero": {
-            "image": "flutter_game/art/hero-clean.webp",
-            "metadata": "flutter_game/art/hero-clean-bounds.json",
+            "image": "flutter_game/art/hero-helmeted.webp",
+            "metadata": "flutter_game/art/hero-helmeted-bounds.json",
             "frameCount": 144,
             "decodedRGBABytes": 4194304,
-            "compressedBytes": 380450,
-            "sha256": "ff9f3e3ca11bb5229c5239f0a62cd44ce7b6e13d8e5522c48267a6c1eb25ca65"
+            "compressedBytes": 359354,
+            "sha256": "73aa10fee7fa43ec55962b9bbbdec9cb87edb209624bd5f808ada718266dac5c"
         },
         "hero-attack": {
-            "image": "flutter_game/art/hero-attack-clean.webp",
-            "metadata": "flutter_game/art/hero-attack-clean-bounds.json",
+            "image": "flutter_game/art/hero-helmeted-attack.webp",
+            "metadata": "flutter_game/art/hero-helmeted-attack-bounds.json",
             "frameCount": 128,
             "decodedRGBABytes": 4194304,
-            "compressedBytes": 365008,
-            "sha256": "64f1fcfab9db9dd721fb15dc7dda762034625b04050363868b220b82f5f88931"
+            "compressedBytes": 347336,
+            "sha256": "396c6c780b0ad26375efb5afdbd7048c3edaca72d7112a136280abd4ceb0f478"
         },
         "hero-backhand": {
-            "image": "flutter_game/art/actors-hero-backhand.webp",
-            "metadata": "flutter_game/art/actors-hero-backhand-bounds.json",
+            "image": "flutter_game/art/hero-helmeted-backhand.webp",
+            "metadata": "flutter_game/art/hero-helmeted-backhand-bounds.json",
             "frameCount": 128,
             "decodedRGBABytes": 4194304,
-            "compressedBytes": 353854,
-            "sha256": "91d182d08a286a093db59b0cb2fddfd3d5825b02d11f069cadc70b25e0c2dae0"
+            "compressedBytes": 338214,
+            "sha256": "ec2b5c2799d9b4aee8e07e76ae1b91670e7bca556b94e0e2ab0a79d3f72b74ab"
         },
         "hero-cleave": {
-            "image": "flutter_game/art/actors-hero-cleave.webp",
-            "metadata": "flutter_game/art/actors-hero-cleave-bounds.json",
+            "image": "flutter_game/art/hero-helmeted-cleave.webp",
+            "metadata": "flutter_game/art/hero-helmeted-cleave-bounds.json",
             "frameCount": 128,
             "decodedRGBABytes": 4194304,
-            "compressedBytes": 370700,
-            "sha256": "2786b19b1dc91bac3ba8cbe11c856fb02ee16157943c4b9e8b3938795574f303"
+            "compressedBytes": 353034,
+            "sha256": "acbb7e565e5b3776e7ebf27f67ad6d3b86546d626cab0a44fa17c647c0e4be6b"
         },
         "mage": {
             "image": "flutter_game/art/actors-mage.png",
@@ -160,17 +160,17 @@
             "sha256": "b18e4e01247ea607f530291534377786c4b341d8659fd5304cb70bd4ed3e7c46"
         },
         "roll": {
-            "image": "flutter_game/art/actors-roll.png",
-            "metadata": "flutter_game/art/roll-bounds.json",
+            "image": "flutter_game/art/hero-helmeted-roll.png",
+            "metadata": "flutter_game/art/hero-helmeted-roll-bounds.json",
             "frameCount": 64,
             "decodedRGBABytes": 1048576,
-            "compressedBytes": 210240,
-            "sha256": "6dc26be09cc0430a4da7c3c45cf0df7f4f7c82a8727921b08d9d876ab6791ccc"
+            "compressedBytes": 222246,
+            "sha256": "d28bbc5b64924e81f5dce41e56c13bce44c1b5f157d07bee1bd3b07c54533596"
         }
     },
     "runtimeFrameCount": 864,
     "runtimeDecodedRGBAUnionBytes": 26214400,
-    "runtimeCompressedBytes": 2543781,
+    "runtimeCompressedBytes": 2483713,
     "camera": {
         "workingCanvas": [256, 256],
         "exportCanvas": [128, 128],
@@ -357,5 +357,6 @@
         "height": 1.02,
         "pivot": "projected world origin",
         "applies": ["idle", "run", "attack", "cast", "roll", "rider"]
-    }
+    },
+    "helmetedWarrior": "helmeted-warrior-provenance.json"
 }

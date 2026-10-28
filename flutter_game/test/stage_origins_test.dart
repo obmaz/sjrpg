@@ -24,12 +24,19 @@ void main() {
       expect(world.sanctuary.protects(s.hero.body), true);
       expect(world.settlementCollision, isNotEmpty);
       if (stage != WorldStage.forest) {
-        expect(world.sanctuary.center, world.settlement.center);
+        final points = world.authoredSettlement.safeBoundary;
+        var protectedBounds = Rect.fromPoints(points.first, points.first);
+        for (final point in points.skip(1)) {
+          protectedBounds = protectedBounds.expandToInclude(
+            Rect.fromPoints(point, point),
+          );
+        }
+        expect(world.sanctuary.center, protectedBounds.center);
         expect(world.settlement.contains(world.chests.first), true);
       }
       const size = Size(28, 24);
       for (final service in [
-        world.healAt + const Offset(0, 77),
+        world.authoredSettlement.wellApproach,
         world.merchantAt,
         if (stage == WorldStage.sands)
           ...timeQuestGivers.map((giver) => world.questGiverAt(giver.path))

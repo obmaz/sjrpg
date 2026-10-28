@@ -54,6 +54,31 @@ class AuthoredSettlement {
     ])
       line.map(point).toList(),
   ];
+
+  /// Closed line through the same wall vertices, spanning the four open gates.
+  /// It excludes the outside ground visible at the corners of the square art.
+  late final safeBoundary = const [
+    Offset(.43, .12),
+    Offset(.57, .12),
+    Offset(.80, .135),
+    Offset(.91, .21),
+    Offset(.925, .355),
+    Offset(.93, .49),
+    Offset(.95, .70),
+    Offset(.94, .83),
+    Offset(.81, .88),
+    Offset(.58, .85),
+    Offset(.43, .85),
+    Offset(.28, .86),
+    Offset(.08, .84),
+    Offset(.045, .72),
+    Offset(.075, .49),
+    Offset(.08, .35),
+    Offset(.09, .19),
+    Offset(.14, .115),
+    Offset(.39, .11),
+  ].map(point).toList(growable: false);
+
   List<List<Offset>> get collisionPolygons {
     final shapes = <List<Offset>>[
       ..._layout.buildings,

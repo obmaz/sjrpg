@@ -87,7 +87,7 @@ Future<List<int>> raster(
 
 Future<ui.Image> recorderImage(ui.Picture picture) => picture.toImage(16, 20);
 void expectSlot(List<int> bytes, int index) {
-  final sample = (5 * 16 + 5) * 4, left = (5 * 16 + 2) * 4;
+  final sample = (5 * 16 + 5) * 4;
   final c = color(index);
   expect(bytes.sublist(sample, sample + 4), [
     (c.r * 255).round(),
@@ -95,12 +95,23 @@ void expectSlot(List<int> bytes, int index) {
     (c.b * 255).round(),
     255,
   ]);
-  final edge = bytes.sublist(left, left + 4);
-  // The wider hero puts this one-pixel marker on a fractional sample. Its
-  // red contribution must remain on the left rather than moving on a mirror.
-  expect(edge[0], greaterThan((c.r * 255).round() + 10));
-  expect(edge[1], lessThan((c.g * 255).round()));
-  expect(edge[3], 255);
+  // The source's asymmetric red marker stays left of the foot anchor at
+  // both the larger warrior scale and the unchanged mage/creature scale.
+  final leftMarkers =
+      [
+        for (var x = 0; x < 5; x++)
+          bytes.sublist((5 * 16 + x) * 4, (5 * 16 + x) * 4 + 4),
+      ].where(
+        (edge) =>
+            edge[3] == 255 &&
+            edge[0] > (c.r * 255).round() + 10 &&
+            edge[1] < (c.g * 255).round(),
+      );
+  expect(
+    leftMarkers,
+    isNotEmpty,
+    reason: 'real direction frames must not mirror their asymmetric marker',
+  );
 }
 
 class VariableArt extends GameArt {
@@ -356,8 +367,12 @@ void main() {
           for (var phase = 0; phase < 4; phase++) {
             final bytes = await rasterRoll(art, angle, phase, mage);
             final bounds = projected
-                ? const ui.Rect.fromLTRB(45, 54, 57, 66)
-                : const ui.Rect.fromLTRB(44, 58, 56, 70);
+                ? mage
+                      ? const ui.Rect.fromLTRB(45, 54, 57, 66)
+                      : const ui.Rect.fromLTRB(45, 51, 59, 66)
+                : mage
+                ? const ui.Rect.fromLTRB(44, 58, 56, 70)
+                : const ui.Rect.fromLTRB(43, 55, 57, 70);
             expect(
               alphaBounds(bytes),
               bounds,

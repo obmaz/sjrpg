@@ -100,13 +100,21 @@ List<List<SkillTreeSlot>> skillTreeRows(HeroClass heroClass) =>
     heroClass == HeroClass.warrior ? _warriorRows : _mageRows;
 
 /// Geometry has fixed rows, independent of points, locks or old learned ranks.
-class SkillTreeLayout {
+abstract interface class SkillNodeGeometry {
+  Map<String, Rect> get rects;
+  double get contentWidth;
+  double get rowGap;
+  int get columns;
+}
+
+class SkillTreeLayout implements SkillNodeGeometry {
   SkillTreeLayout(
     Progress progress,
     double width, {
     required bool dense,
     required double textScale,
   }) {
+    columns = progress.heroClass == HeroClass.warrior ? 9 : 6;
     final rows = skillTreeRows(progress.heroClass);
     contentWidth = progress.heroClass == HeroClass.warrior
         ? math.max(900.0, width)
@@ -192,8 +200,12 @@ class SkillTreeLayout {
             : 50 + ((extras.length + 2) ~/ 3) * (nodeHeight + 12));
   }
 
+  @override
   final rects = <String, Rect>{};
+  @override
   late final double contentWidth;
+  @override
+  late final int columns;
   double? bonusTop;
   List<Rect> get schoolBounds => [
     for (var school = 0; school < 3; school++)
@@ -204,13 +216,15 @@ class SkillTreeLayout {
         bonusTop ?? height,
       ),
   ];
-  late final double nodeHeight, rowGap, height;
+  late final double nodeHeight, height;
+  @override
+  late final double rowGap;
 }
 
 /// Compact school-local arrows. A skipped node is routed in the empty gutter,
 /// never through another skill's icon or label.
 List<Offset> skillTreeConnectionPoints(
-  SkillTreeLayout layout,
+  SkillNodeGeometry layout,
   String parentId,
   String childId,
 ) {
@@ -230,7 +244,7 @@ List<Offset> skillTreeConnectionPoints(
       lastY = end.dy - layout.rowGap * .3;
   if ((start.dx - end.dx).abs() < 1 ||
       crosses(Offset(start.dx, firstY), Offset(end.dx, lastY))) {
-    final unit = layout.contentWidth / 9;
+    final unit = layout.contentWidth / layout.columns;
     final column = (parent.center.dx / unit).floor();
     final gutter = column % 3 == 2 ? column * unit : (column + 1) * unit;
     return [
@@ -243,4 +257,99 @@ List<Offset> skillTreeConnectionPoints(
     ];
   }
   return [start, Offset(start.dx, firstY), Offset(end.dx, lastY), end];
+}
+
+List<String> skillTreeSchoolLabels(Progress progress) =>
+    progress.heroClass == HeroClass.warrior
+    ? [...warriorSchoolLabels, '특수']
+    : progress.skillBranches;
+
+int skillTreeSchoolIndex(Progress progress, String id) {
+  if (progress.heroClass == HeroClass.warrior) {
+    for (final row in _warriorRows) {
+      for (final slot in row) {
+        if (slot.id == id) return slot.column ~/ 3;
+      }
+    }
+    return 3;
+  }
+  final skill = progress.skills.where((skill) => skill.id == id).firstOrNull;
+  return skill == null
+      ? 0
+      : progress.skillBranches.indexOf(skill.branch).clamp(0, 2);
+}
+
+/// One selected school uses the complete viewport. Reference D2 cells remain
+/// unchanged; tabs translate their three columns without shrinking touch areas.
+class SkillSchoolLayout implements SkillNodeGeometry {
+  SkillSchoolLayout(
+    Progress progress,
+    this.school,
+    this.contentWidth, {
+    required bool dense,
+    required double textScale,
+  }) {
+    final reference = SkillTreeLayout(
+      progress,
+      900,
+      dense: dense,
+      textScale: textScale,
+    );
+    nodeHeight = reference.nodeHeight;
+    rowGap = reference.rowGap;
+    skills = progress.skills
+        .where(
+          (skill) =>
+              skillTreeSkillVisible(progress, skill) &&
+              skillTreeSchoolIndex(progress, skill.id) == school,
+        )
+        .toList();
+    if (progress.heroClass == HeroClass.warrior && school == 3) {
+      for (final (index, skill) in skills.indexed) {
+        final unit = contentWidth / 2, nodeWidth = math.min(120.0, unit - 12);
+        rects[skill.id] = Rect.fromLTWH(
+          (index % 2 + .5) * unit - nodeWidth / 2,
+          (dense ? 0 : 16) + (index ~/ 2) * (nodeHeight + 24),
+          nodeWidth,
+          nodeHeight,
+        );
+      }
+      height = 32 + ((skills.length + 1) ~/ 2) * (nodeHeight + 24);
+      return;
+    }
+    final rows = skillTreeRows(progress.heroClass);
+    for (var row = 0; row < rows.length; row++) {
+      for (final slot in rows[row]) {
+        if (!skills.any((skill) => skill.id == slot.id)) continue;
+        final localColumn = progress.heroClass == HeroClass.warrior
+            ? slot.column % 3
+            : switch (slot.id) {
+                'lightningMastery' => 0.0,
+                'blink' => 2.0,
+                _ => (slot.column - school * 2) * 2,
+              };
+        final unit = contentWidth / 3, nodeWidth = math.min(100.0, unit - 8);
+        rects[slot.id] = Rect.fromLTWH(
+          (localColumn + .5) * unit - nodeWidth / 2,
+          (dense ? 0 : 30) + row * (nodeHeight + rowGap),
+          nodeWidth,
+          nodeHeight,
+        );
+      }
+    }
+    height = rects.isEmpty
+        ? 0
+        : rects.values.map((rect) => rect.bottom).reduce(math.max) + 16;
+  }
+  final int school;
+  @override
+  final double contentWidth;
+  @override
+  final int columns = 3;
+  @override
+  final rects = <String, Rect>{};
+  late final List<SkillDef> skills;
+  late final double nodeHeight, height;
+  @override
+  late final double rowGap;
 }

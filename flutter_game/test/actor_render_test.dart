@@ -82,12 +82,12 @@ void main() {
       expect(pixel(bytes, 94, 28), [0, 0, 255, 255]);
       expect(pixel(bytes, 104, 28), [255, 0, 0, 255]);
       expect(pixel(bytes, 28, 28).last, 0);
-      expect(pixel(bytes, 56, 28).last, 0);
+      expect(pixel(bytes, 58, 28).last, 0);
     },
   );
 
   test(
-    'heavier hero adds body mass without increasing height or shifting feet',
+    'armored hero adds body mass and presentation height without shifting feet',
     () async {
       Future<Uint8List> body({bool originalWidth = false}) => raster((canvas) {
         if (originalWidth) {
@@ -113,7 +113,11 @@ void main() {
           if (pixel(current, x, y).last >= 128) rows.add(y);
         }
       }
-      expect(rows.length, 20);
+      expect(
+        rows.length,
+        23,
+        reason: '18% taller presentation keeps the same ground anchor',
+      );
       expect(
         pixel(current, 40, 40),
         pixel(previous, 40, 40),
@@ -149,7 +153,7 @@ void main() {
     expect(pixel(bytes, 36, 28).last, closeTo(64, 1));
     expect(pixel(bytes, 36, 28)[2], greaterThan(40));
     expect(pixel(bytes, 94, 28), [255, 0, 0, 255]);
-    expect(pixel(bytes, 104, 28), [0, 0, 255, 255]);
+    expect(pixel(bytes, 106, 28), [0, 0, 255, 255]);
     expect(pixel(bytes, 156, 28).last, 0);
     expect(pixel(bytes, 216, 28), [255, 0, 0, 255]);
   });
@@ -174,7 +178,7 @@ void main() {
       expect(pixel(bytes, 90, 25), [255, 0, 0, 255]);
       expect(pixel(bytes, 103, 25), [0, 0, 255, 255]);
       expect(pixel(bytes, 156, 28), [255, 0, 0, 255]);
-      expect(pixel(bytes, 164, 28), [0, 0, 255, 255]);
+      expect(pixel(bytes, 166, 28), [0, 0, 255, 255]);
     },
   );
 }

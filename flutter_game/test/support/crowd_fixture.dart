@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math' as math;
 
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -47,21 +46,14 @@ class CrowdFixture extends Adventure {
 CrowdFixture sandsCrowd() {
   final s = CrowdFixture(stage: WorldStage.sands)..start(TestGame());
   expect(s.mobs, isEmpty);
-  final ward = s.world.sanctuary;
-  final angle = (_historicalData['wardAngle'] as num).toDouble();
-  final at =
-      ward.center +
-      Offset(math.cos(angle), math.sin(angle)) * (ward.radius + 12);
-  s.hero.position.setValues(at.dx, at.dy);
+  // Replay the captured field position, independent of the safety shape.
   final expectedHero = _historicalData['hero'] as Map;
-  expect(
-    s.hero.position.toOffset(),
-    Offset(
-      (expectedHero['x'] as num).toDouble(),
-      (expectedHero['y'] as num).toDouble(),
-    ),
-    reason: 'current ward and frozen dense crowd must use the same origin',
+  final at = Offset(
+    (expectedHero['x'] as num).toDouble(),
+    (expectedHero['y'] as num).toDouble(),
   );
+  s.hero.position.setValues(at.dx, at.dy);
+  expect(s.hero.position.toOffset(), at);
   s.hero.lastClearPosition = s.hero.position.toOffset();
   s.progress.bonusHealth = 2000; // Keep the stationary diagnostic hero alive.
   s.progress.hp = s.progress.maxHp;

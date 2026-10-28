@@ -142,7 +142,13 @@ class _ResourceMeterState extends State<ResourceMeter>
       child: Stack(
         fit: StackFit.expand,
         children: [
-          RepaintBoundary(child: CustomPaint(painter: _painter)),
+          Center(
+            child: SizedBox(
+              height: math.min(widget.height, 14),
+              width: double.infinity,
+              child: RepaintBoundary(child: CustomPaint(painter: _painter)),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
             child: Center(

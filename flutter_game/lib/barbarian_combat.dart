@@ -11,6 +11,7 @@ import 'effect_visibility.dart';
 import 'physical_aim_preview.dart' show barbarianDoubleThrowHalfSpread;
 import 'rpg_model.dart';
 import 'skill_aim.dart';
+import 'weapon_profiles.dart';
 
 /// Paid combat actions own their follow-up hits and grounded leap trajectory.
 /// The caller owns skill-slot validation, the one resource debit and cooldown.
@@ -81,7 +82,7 @@ class BarbarianCombat {
       if (enemy != null) {
         final d = enemy.body.center - hero.body.center;
         if (distanceToTargetBody(hero.body.center, enemy.body) <=
-                progress.weapon.base.range &&
+                progress.weapon.base.contactRange &&
             !session.world.blocksEnemy(hero.body) &&
             !session.mobs.any(
               (m) =>
@@ -202,7 +203,9 @@ class BarbarianCombat {
   void _strike(SkillDef skill, {bool followup = false}) {
     final enemy = _target(
       skill,
-      range: skill.id == 'leapAttack' ? progress.weapon.base.range : null,
+      range: skill.id == 'leapAttack'
+          ? progress.weapon.base.contactRange
+          : null,
     );
     if (enemy != null) {
       final delta = enemy.body.center - hero.body.center;
@@ -266,6 +269,7 @@ class BarbarianCombat {
         range: progress.skillRange(skill),
         rank: progress.effectiveRank(skill.id),
         critical: critical,
+        profile: progress.weapon.base.throwingProfile,
       ),
     );
   }
@@ -389,7 +393,7 @@ class BarbarianCombat {
       hero.body.center,
       bearing: _bearing,
       rank: progress.effectiveRank(kind.name),
-      radius: math.min(150, progress.weapon.base.range),
+      radius: math.min(150, progress.weapon.base.contactRange),
     ),
   );
   BarbarianVfxKind _kind(String id) => BarbarianVfxKind.values.firstWhere(
@@ -474,6 +478,9 @@ class BarbarianThrownAxe extends GameComponent with EffectVisibility {
     required this.range,
     required this.rank,
     this.critical = false,
+    this.profile,
+    this.generateRage = false,
+    this.rageStrikeId,
   }) : direction = ui.Offset(math.cos(bearing), math.sin(bearing)),
        bearing = bearing,
        revision = session.buildRevision {
@@ -484,6 +491,12 @@ class BarbarianThrownAxe extends GameComponent with EffectVisibility {
   final ui.Offset direction;
   final int rank, revision;
   final bool critical;
+  final ThrownWeaponProfile? profile;
+  final bool generateRage;
+  final int? rageStrikeId;
+  double get speed => profile?.speed ?? 700;
+  double get impactRadius => profile?.impactRadius ?? 5;
+  String get projectileId => profile?.id ?? 'throwingaxes';
   final _art = BarbarianVfxArt(BarbarianVfxKind.doubleThrow);
   double travelled = 0;
   bool resolved = false;
@@ -502,7 +515,7 @@ class BarbarianThrownAxe extends GameComponent with EffectVisibility {
       _finish();
       return;
     }
-    final distance = math.min(math.min(dt, .05) * 700, range - travelled);
+    final distance = math.min(math.min(dt, .05) * speed, range - travelled);
     final steps = math.max(1, (distance / 5).ceil());
     final enemies = List<HuntEnemy>.of(session.mobs);
     for (var i = 0; i < steps; i++) {
@@ -528,7 +541,7 @@ class BarbarianThrownAxe extends GameComponent with EffectVisibility {
       position.setValues(next.dx, next.dy);
       for (final enemy in enemies) {
         if (session.canHitEnemy(enemy, origin: next) &&
-            enemy.body.inflate(5).contains(next)) {
+            enemy.body.inflate(impactRadius).contains(next)) {
           session.hit(
             enemy,
             damage,
@@ -537,6 +550,8 @@ class BarbarianThrownAxe extends GameComponent with EffectVisibility {
             impactKind: ImpactKind.heavy,
             impactRank: rank,
             critical: critical,
+            generateRage: generateRage,
+            rageStrikeId: rageStrikeId,
           );
           session.game?.add(
             BarbarianCombatVisual(
@@ -563,6 +578,10 @@ class BarbarianThrownAxe extends GameComponent with EffectVisibility {
   void render(ui.Canvas canvas) {
     super.render(canvas);
     if (!resolved) {
+      if (projectileId == 'javelin') {
+        _art.paintJavelin(canvas, const ui.Offset(0, -14), bearing);
+        return;
+      }
       _art.paintThrownAxe(
         canvas,
         const ui.Offset(0, -14),

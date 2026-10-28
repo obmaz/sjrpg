@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/back_actions.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/panel_controls.dart';
 import 'package:guardian_new/rpg_model.dart';
+import 'package:guardian_new/skill_tree_layout.dart';
 import 'package:guardian_new/skills_panel.dart';
 
 import 'support/test_game.dart';
@@ -59,6 +61,8 @@ void main() {
         addTearDown(s.dispose);
         s.pause();
         final skill = s.progress.skillAt(0)!;
+        final backActions = BackActions();
+        var closed = 0;
         final semantics = tester.ensureSemantics();
         try {
           await tester.pumpWidget(
@@ -69,11 +73,35 @@ void main() {
                 ).copyWith(textScaler: const TextScaler.linear(1.3)),
                 child: child!,
               ),
-              home: SkillsPanel(session: s, onClose: () {}),
+              home: SkillsPanel(
+                session: s,
+                backActions: backActions,
+                onClose: () => closed++,
+              ),
             ),
           );
           await tester.pumpAndSettle();
-          await tester.tap(find.bySemanticsLabel('전투 슬롯 1 · ${skill.name}'));
+          final primary = find.bySemanticsLabel('전투 슬롯 1 · ${skill.name}');
+          if (primary.evaluate().isNotEmpty) {
+            await tester.tap(primary);
+          } else {
+            // Short portrait layouts collapse the duplicate loadout row. The
+            // actual school/node/info route still exposes every assignment.
+            await tester.tap(
+              find.byKey(
+                ValueKey(
+                  'skill-school-tab-${skillTreeSchoolIndex(s.progress, skill.id)}',
+                ),
+              ),
+            );
+            await tester.pumpAndSettle();
+            final node = find.byKey(ValueKey('skill-node-${skill.id}'));
+            await Scrollable.ensureVisible(tester.element(node), alignment: .5);
+            await tester.pumpAndSettle();
+            await tester.tap(node);
+            await tester.pumpAndSettle();
+            await tester.tap(find.byTooltip('스킬 설명과 배치'));
+          }
           await tester.pumpAndSettle();
           for (var slot = 2; slot <= 4; slot++) {
             final action = find.widgetWithText(GameAction, '$slot');
@@ -86,6 +114,14 @@ void main() {
           );
           expect(s.progress.selectedSkill, skill.id);
           expect(s.progress.skillSlots.skip(1), everyElement(isNull));
+          backActions.dispatch();
+          await tester.pumpAndSettle();
+          expect(find.byTooltip('스킬 상세 닫기'), findsNothing);
+          expect(find.text('스킬 트리'), findsOneWidget);
+          expect(closed, 0);
+          expect(s.progress.selectedSkill, skill.id);
+          backActions.dispatch();
+          expect(closed, 1);
           expect(tester.takeException(), null);
         } finally {
           semantics.dispose();

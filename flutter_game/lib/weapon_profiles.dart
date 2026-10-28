@@ -1,5 +1,26 @@
 import 'dart:math' as math;
 
+/// A physical projectile profile, independent of melee timing combos.
+class ThrownWeaponProfile {
+  const ThrownWeaponProfile(
+    this.id, {
+    required this.speed,
+    this.impactRadius = 7,
+  });
+
+  final String id;
+  final double speed, impactRadius;
+}
+
+const throwingWeaponProfiles = <String, ThrownWeaponProfile>{
+  'throwingaxes': ThrownWeaponProfile(
+    'throwingaxes',
+    speed: 520,
+    impactRadius: 9,
+  ),
+  'javelin': ThrownWeaponProfile('javelin', speed: 640, impactRadius: 6),
+};
+
 /// Presentation and timing are independent of the saved equipment identity.
 /// Existing weapon IDs therefore keep their saves and physical hit shapes.
 class WeaponComboProfile {
