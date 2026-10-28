@@ -142,6 +142,7 @@ void main() {
     (tester) async {
       final s = Adventure(GameArt(), heroClass: HeroClass.mage);
       s.start(TestGame());
+      s.progress.skillPoints = 1;
       s.pause();
       addTearDown(s.dispose);
       final semantics = tester.ensureSemantics();

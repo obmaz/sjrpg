@@ -2298,7 +2298,9 @@ class Guardian extends Player with WithCollision {
   final comboHud = ValueNotifier<ComboHudState>(const ComboHudState());
   ComboPressResult? _queuedCombo;
   (int, String)? _comboIdentity;
-  double _comboDelay = 0, _comboFeedback = 0, comboGuardTime = 0;
+  double _comboFeedback = 0, comboGuardTime = 0;
+  double _flowClock = 0, _lastBasicInterval = 1;
+  bool comboFlow = false;
   int _comboCount = 0;
   bool comboFinisher = false, _comboMissed = false, _comboProc = false;
   bool _comboDisposed = false;
@@ -2308,11 +2310,31 @@ class Guardian extends Player with WithCollision {
       ? session.progress.weapon.base.comboProfile
       : null;
 
+  double get _flowInterval {
+    final cycle = math.min(
+      _comboProfile?.barDuration ?? _lastBasicInterval,
+      _lastBasicInterval,
+    );
+    return math.max(
+      .12,
+      math.min(
+        _lastBasicInterval * WeaponComboProfile.flowIntervalScale,
+        cycle * .6,
+      ),
+    );
+  }
+
+  double get _flowDamageScale => math.min(
+    WeaponComboProfile.flowDamageScale,
+    .7 * _flowInterval / _lastBasicInterval,
+  );
+
   void resetCombo() {
     timedCombo.reset();
     _queuedCombo = null;
     _comboIdentity = null;
-    _comboDelay = _comboFeedback = 0;
+    _flowClock = _comboFeedback = 0;
+    comboFlow = false;
     _comboCount = 0;
     comboFinisher = _comboMissed = _comboProc = false;
     session.combo = 0;
@@ -2344,6 +2366,7 @@ class Guardian extends Player with WithCollision {
       finisher: comboFinisher && _comboFeedback > 0,
       missed: _comboMissed && _comboFeedback > 0,
       traitProc: _comboProc && _comboFeedback > 0,
+      flow: comboFlow,
     );
     if (comboHud.value != state) comboHud.value = state;
   }
@@ -2372,6 +2395,7 @@ class Guardian extends Player with WithCollision {
   void _advanceCombo(double dt) {
     comboGuardTime = math.max(0, comboGuardTime - dt);
     _comboFeedback = math.max(0, _comboFeedback - dt);
+    _flowClock = math.max(0, _flowClock - dt);
     final identity = (
       session.progress.weapon.serial,
       session.progress.selectedBasic,
@@ -2379,18 +2403,23 @@ class Guardian extends Player with WithCollision {
     if (_comboIdentity != null &&
         (_comboIdentity != identity ||
             session.riding != null ||
+            session.sheltered && (comboFlow || _queuedCombo != null) ||
             session.afflictions.frozen ||
             physicalAction)) {
       resetCombo();
       return;
     }
     if (_queuedCombo == null && timedCombo.active) {
-      final delay = math.min(dt, _comboDelay);
-      _comboDelay -= delay;
       final previous = timedCombo.count;
-      timedCombo.advance(dt - delay);
+      final timingScale = math.max(
+        1.0,
+        (_comboProfile?.barDuration ?? 0) / _lastBasicInterval,
+      );
+      timedCombo.advance(dt * timingScale);
       if (!timedCombo.active) {
         _comboCount = previous;
+        comboFlow = false;
+        _flowClock = 0;
         _comboMissed = true;
         _comboFeedback = .45;
       }
@@ -2404,6 +2433,13 @@ class Guardian extends Player with WithCollision {
           resetCombo();
         }
       }
+    }
+    if (comboFlow &&
+        (timedCombo.active || _queuedCombo != null) &&
+        _flowClock <= 0 &&
+        _basicAvailable(recovery: false)) {
+      _performSlash(flow: true);
+      _flowClock = _flowInterval;
     }
     _publishCombo();
   }
@@ -2420,24 +2456,23 @@ class Guardian extends Player with WithCollision {
       resetCombo();
     }
     if (automatic) {
-      if (attackClock > 0 || _queuedCombo != null) return;
+      if (attackClock > 0 || _queuedCombo != null || comboFlow) return;
       // Holding remains useful for ordinary attacks, but never earns a link.
       resetCombo();
     } else if (_queuedCombo != null) {
       return;
     }
     if (!timedCombo.active && attackClock > 0) return;
-    final early = timedCombo.active && _comboDelay > 0;
-    final result = early
-        ? const ComboPressResult(ComboPress.missed, 0)
-        : timedCombo.press(
-            profile,
-            hasTripletTrait: session.progress.weapon.gifts.any(
-              (gift) => gift.isCombo,
-            ),
-          );
+    final result = timedCombo.press(
+      profile,
+      hasTripletTrait: session.progress.weapon.gifts.any(
+        (gift) => gift.isCombo,
+      ),
+    );
     if (result.kind == ComboPress.missed) {
       timedCombo.reset();
+      comboFlow = false;
+      _flowClock = 0;
       _comboCount = 0;
       _comboMissed = true;
       comboFinisher = _comboProc = false;
@@ -2459,6 +2494,15 @@ class Guardian extends Player with WithCollision {
       session.progress.weapon.serial,
       session.progress.selectedBasic,
     );
+    if (result.kind != ComboPress.started) {
+      if (!comboFlow) {
+        comboFlow = true;
+        _flowClock = _flowInterval;
+      }
+      // A successful rhythm accelerates the remaining recovery, not the basic
+      // attack cadence for arbitrary taps or held input.
+      attackClock *= WeaponComboProfile.successRecoveryScale;
+    }
     if (attackClock > 0) {
       _queuedCombo = result;
       _publishCombo();
@@ -2476,8 +2520,9 @@ class Guardian extends Player with WithCollision {
     comboFinisher = result.kind == ComboPress.finisher;
     _comboMissed = _comboProc = false;
     _comboFeedback = comboFinisher ? .7 : 0;
-    _performSlash(result);
-    _comboDelay = math.max(0, attackClock - (_comboProfile?.barDuration ?? 0));
+    _performSlash(chain: result);
+    comboFlow = result.kind == ComboPress.linked;
+    _flowClock = comboFlow ? _flowInterval : 0;
     _publishCombo();
   }
 
@@ -2496,7 +2541,7 @@ class Guardian extends Player with WithCollision {
     _publishCombo();
   }
 
-  void _performSlash([ComboPressResult? chain]) {
+  void _performSlash({ComboPressResult? chain, bool flow = false}) {
     final p = session.progress;
     final basic = p.basicSkill;
     final propRange = session.progress.heroClass == HeroClass.mage
@@ -2506,7 +2551,7 @@ class Guardian extends Player with WithCollision {
     if (!session.active ||
         session.afflictions.frozen ||
         !session.combatAllowed && props.isEmpty ||
-        attackClock > 0 ||
+        !flow && attackClock > 0 ||
         castLock > 0 ||
         dashing > 0 ||
         physicalAction ||
@@ -2553,29 +2598,37 @@ class Guardian extends Player with WithCollision {
     attackBearing = angle;
     strikes++;
     if (comboGrace <= 0) session.combo = 0;
-    strikePose = basic.id == 'heavyStrike'
+    strikePose = flow
+        ? strikes % 3
+        : basic.id == 'heavyStrike'
         ? 2
         : basic.id == 'quickCut'
         ? strikes % 2
         : chain != null
         ? (chain.kind == ComboPress.finisher ? 2 : (chain.count - 1) % 3)
         : session.combo;
-    session.combo = chain != null
+    session.combo = flow
+        ? _comboCount
+        : chain != null
         ? (chain.kind == ComboPress.finisher ? 0 : chain.count)
         : basic.id == 'cleave' || p.heroClass == HeroClass.mage
         ? (session.combo + 1) % 3
         : 1;
-    attackClock =
-        math.max(
-          CombatBalance.minimumStrikeInterval,
-          session.progress.attackInterval /
-              (frenzyTime > 0 ? session.progress.frenzyAttackTempo : 1),
-        ) /
-        session.afflictions.attackTempo;
+    if (!flow) {
+      attackClock =
+          math.max(
+            CombatBalance.minimumStrikeInterval,
+            session.progress.attackInterval /
+                (frenzyTime > 0 ? session.progress.frenzyAttackTempo : 1),
+          ) /
+          session.afflictions.attackTempo;
+      _lastBasicInterval = attackClock;
+    }
     // Slow weapons and attack debuffs must still reach the next combo strike.
     // Once this scheduled attack becomes ready, only a short idle margin remains.
     comboGrace = math.max(1.2, attackClock + .25);
-    swingDuration = (strikePose == 2 ? .32 : .26) / effectiveBasicTempo;
+    swingDuration =
+        (strikePose == 2 ? .32 : .26) / effectiveBasicTempo * (flow ? .4 : 1);
     swing = swingDuration;
     if (p.heroClass == HeroClass.mage) {
       castLock = .26 / effectiveBasicTempo;
@@ -2678,7 +2731,8 @@ class Guardian extends Player with WithCollision {
         (chain?.kind == ComboPress.finisher
             ? p.weapon.base.comboProfile!.finisherScale
             : 1) *
-        multiplier;
+        multiplier *
+        (flow ? _flowDamageScale : 1);
     var landed = false;
     for (final target in selected) {
       final mob = target.mob;
@@ -2698,9 +2752,16 @@ class Guardian extends Player with WithCollision {
                     ? 42
                     : 23)
           : const ui.Offset(0, 23);
-      final accepted = session.hit(mob, damage, push, generateRage: true);
+      final impulse = flow ? push * .45 : push;
+      final accepted = session.hit(
+        mob,
+        damage,
+        impulse,
+        generateRage: !flow,
+        impactKind: flow ? ImpactKind.melee : null,
+      );
       landed |= accepted;
-      if (accepted && basic.id == 'heavyStrike' && !mob.isDead) {
+      if (accepted && !flow && basic.id == 'heavyStrike' && !mob.isDead) {
         mob.applyStun(.12 + p.rank(basic.id) * .025);
       }
     }

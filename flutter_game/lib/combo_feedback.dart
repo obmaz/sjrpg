@@ -14,12 +14,13 @@ class ComboHudState {
     this.finisher = false,
     this.missed = false,
     this.traitProc = false,
+    this.flow = false,
   });
 
   final int count;
   final int? chainLength;
   final double progress, windowStart, windowEnd;
-  final bool active, queued, finisher, missed, traitProc;
+  final bool active, queued, finisher, missed, traitProc, flow;
   bool get endless => chainLength == null;
   bool get visible => active || finisher || missed || traitProc;
 
@@ -35,7 +36,8 @@ class ComboHudState {
       queued == other.queued &&
       finisher == other.finisher &&
       missed == other.missed &&
-      traitProc == other.traitProc;
+      traitProc == other.traitProc &&
+      flow == other.flow;
 
   @override
   int get hashCode => Object.hash(
@@ -49,5 +51,6 @@ class ComboHudState {
     finisher,
     missed,
     traitProc,
+    flow,
   );
 }

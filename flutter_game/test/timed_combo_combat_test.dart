@@ -47,57 +47,47 @@ void main() {
   void link(Adventure s, HuntEnemy? enemy) {
     final h = s.hero, profile = s.progress.weapon.base.comboProfile!;
     final view = h.comboHud.value;
-    final delay = math.max(0.0, h.attackClock - profile.barDuration);
-    advance(
-      s,
-      delay + profile.barDuration * (view.windowStart + view.windowEnd) / 2,
-    );
+    advance(s, profile.barDuration * (view.windowStart + view.windowEnd) / 2);
     if (enemy != null) place(s, enemy);
-    final strikes = h.strikes;
+    final count = h.comboHud.value.count;
     h.slash();
-    for (var i = 0; i < 300 && h.strikes == strikes; i++) {
+    for (var i = 0; i < 300 && h.comboHud.value.count == count; i++) {
       h.update(.01);
     }
-    expect(h.strikes, strikes + 1);
+    expect(h.comboHud.value.count, count + 1);
   }
 
-  test(
-    'finite chain only finishes after timed edges, at the existing attack rate',
-    () {
-      final s = field(), h = s.hero;
-      final mob = s.spawnEnemy(
-        'goblin',
-        s.hero.body.center + const Offset(50, 0),
-      )!..life.initial(100000);
-      place(s, mob);
-      final damage = s.progress.basicDamage;
-      h.slash();
-      expect(h.comboHud.value.count, 1);
-      expect(mob.life.value, closeTo(100000 - damage, .001));
-      final clock = h.attackClock;
-      final view = h.comboHud.value,
-          profile = s.progress.weapon.base.comboProfile!;
-      advance(
-        s,
-        math.max(0, clock - profile.barDuration) +
-            profile.barDuration * (view.windowStart + view.windowEnd) / 2,
-      );
-      place(s, mob);
-      h.slash();
-      expect(h.comboHud.value.queued, true);
-      expect(h.strikes, 1);
-      expect(h.attackClock, greaterThan(0));
-      while (h.strikes == 1) {
-        h.update(.01);
-      }
-      expect(h.comboHud.value.count, 2);
-      link(s, mob);
-      expect(h.comboHud.value.finisher, true);
-      expect(h.comboHud.value.count, 3);
-      expect(h.timedCombo.active, false);
-      expect(mob.life.value, closeTo(100000 - damage * 3.6, .001));
-    },
-  );
+  test('finite timing accelerates recovery and earns a finishing attack', () {
+    final s = field(), h = s.hero;
+    final mob = s.spawnEnemy(
+      'goblin',
+      s.hero.body.center + const Offset(50, 0),
+    )!..life.initial(100000);
+    place(s, mob);
+    final damage = s.progress.basicDamage;
+    h.slash();
+    expect(h.comboHud.value.count, 1);
+    expect(mob.life.value, closeTo(100000 - damage, .001));
+    final view = h.comboHud.value,
+        profile = s.progress.weapon.base.comboProfile!;
+    advance(s, profile.barDuration * (view.windowStart + view.windowEnd) / 2);
+    place(s, mob);
+    final remaining = h.attackClock;
+    h.slash();
+    expect(h.attackClock, closeTo(remaining * .65, .001));
+    expect(h.comboHud.value.queued, true);
+    expect(h.strikes, 1);
+    expect(h.attackClock, greaterThan(0));
+    while (h.comboHud.value.count < 2) {
+      h.update(.01);
+    }
+    expect(h.comboHud.value.count, 2);
+    link(s, mob);
+    expect(h.comboHud.value.finisher, true);
+    expect(h.comboHud.value.count, 3);
+    expect(h.timedCombo.active, false);
+    expect(100000 - mob.life.value, greaterThanOrEqualTo(damage * 3.6 - .001));
+  });
 
   test(
     'held attacks never auto-finish and repeated input cannot bypass recovery',
@@ -129,11 +119,7 @@ void main() {
       h.slash();
       final profile = s.progress.weapon.base.comboProfile!,
           view = h.comboHud.value;
-      advance(
-        s,
-        math.max(0, h.attackClock - profile.barDuration) +
-            profile.barDuration * (view.windowStart + view.windowEnd) / 2,
-      );
+      advance(s, profile.barDuration * (view.windowStart + view.windowEnd) / 2);
       h.slash();
       expect(h.comboHud.value.queued, true);
       if (action == 'pause') {

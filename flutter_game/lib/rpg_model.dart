@@ -1253,7 +1253,7 @@ class Progress {
     energy = heroClass == HeroClass.warrior ? 25 : maxEnergy;
   }
   final HeroClass heroClass;
-  int kills = 0, gold = 0, level = 1, xp = 0, skillPoints = 1;
+  int kills = 0, gold = 0, level = 1, xp = 0, skillPoints = 2;
   int healingPotions = 3, energyPotions = 2;
   int _serial = 1;
   double hp = 100, energy = 0, bonusAttack = 0, bonusHealth = 0;

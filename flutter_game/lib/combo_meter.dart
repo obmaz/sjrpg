@@ -19,7 +19,7 @@ class ComboMeterLayout {
     final inset = padding.bottom > 8;
     final compact =
         shortPortrait || tightLandscape || size.width < 300 || inset;
-    final maxWidth = compact ? 238.0 : 264.0;
+    final maxWidth = compact ? 196.0 : 212.0;
     // Tight landscape puts both potions at x=136, up to150px wide.
     // Safe-area devices also need a horizontal gap because menus sit higher.
     final stick = shortPortrait
@@ -94,6 +94,8 @@ class ComboMeter extends StatelessWidget {
       ? '연계 특성'
       : state.queued
       ? '연계 성공'
+      : state.flow
+      ? '연속 공격'
       : '';
   String get _count => state.endless
       ? '${state.count} COMBO ∞'

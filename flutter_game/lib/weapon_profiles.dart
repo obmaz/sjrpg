@@ -7,11 +7,15 @@ class WeaponComboProfile {
     this.id,
     this.effect, {
     this.chainLength = 3,
-    this.barDuration = .9,
+    this.barDuration = .63,
     this.windowWidth = .25,
     this.changingWindow = false,
     this.finisherScale = 1.6,
   });
+
+  static const flowDamageScale = .35;
+  static const flowIntervalScale = .45;
+  static const successRecoveryScale = .65;
 
   final String id, effect;
   final int? chainLength;
@@ -40,7 +44,7 @@ const meleeWeaponProfiles = <String, WeaponComboProfile>{
     'greatsword',
     'broad-edge',
     chainLength: 2,
-    barDuration: 1.05,
+    barDuration: .74,
   ),
   'twinaxes': WeaponComboProfile('twinaxes', 'crossed-axes', chainLength: 5),
   'spear': WeaponComboProfile('spear', 'needle-thrust', chainLength: 4),
@@ -49,7 +53,7 @@ const meleeWeaponProfiles = <String, WeaponComboProfile>{
     'dualblades',
     'twin-moons',
     chainLength: null,
-    barDuration: .46,
+    barDuration: .32,
     windowWidth: .28,
     changingWindow: true,
   ),
@@ -57,7 +61,7 @@ const meleeWeaponProfiles = <String, WeaponComboProfile>{
     'rapier',
     'silver-lance',
     chainLength: 6,
-    barDuration: .78,
+    barDuration: .55,
   ),
   'katana': WeaponComboProfile('katana', 'draw-cut', chainLength: 5),
   'halberd': WeaponComboProfile('halberd', 'poleaxe-hook', chainLength: 3),
@@ -65,7 +69,7 @@ const meleeWeaponProfiles = <String, WeaponComboProfile>{
     'warhammer',
     'earth-crack',
     chainLength: 2,
-    barDuration: 1.08,
+    barDuration: .76,
   ),
   'flail': WeaponComboProfile('flail', 'chain-orbit', chainLength: 4),
   'glaive': WeaponComboProfile('glaive', 'jade-sweep', chainLength: 5),

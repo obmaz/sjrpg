@@ -28,11 +28,11 @@ void main() {
       final p = Progress();
       final whirlwind = warriorSkills.firstWhere((s) => s.id == 'whirlwind');
       expect(p.learn(whirlwind), false);
-      expect(p.skillPoints, 1);
+      expect(p.skillPoints, 2);
       p.gainXp(211);
       expect(p.level, 3);
 
-      expect(p.skillPoints, 3);
+      expect(p.skillPoints, 4);
       expect(p.learn(warriorSkills.firstWhere((s) => s.id == 'mastery')), true);
       expect(p.learn(whirlwind), true);
       expect(p.selectSkill('whirlwind'), true);
