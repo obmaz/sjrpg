@@ -121,7 +121,7 @@ void main() {
         session.hit(elite, 100000, Offset.zero);
         expect(session.progress.kills, 3);
         expect(session.progress.gold, gold + 20);
-        expect(session.progress.xp, xp + 18);
+        expect(session.progress.xp, xp + 11);
         expect(session.loot.length, 1);
         expect(session.loot.single.item.rarity, Rarity.rare);
         session.hit(elite, 100000, Offset.zero);

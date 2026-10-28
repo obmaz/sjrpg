@@ -110,9 +110,20 @@ void main() {
         expect(
           pixel(35, 30).last,
           greaterThan(0),
-          reason: 'the 1.20 width gain is visible at the old left boundary',
+          reason: 'the heavier body still fills the old left boundary',
         );
-        expect(pixel(34, 30).last, 0);
+        expect(
+          pixel(34, 30).last,
+          greaterThan(0),
+          reason: 'the new 1.36 width reaches beyond the old silhouette',
+        );
+        expect(
+          pixel(34, 30).last,
+          pixel(45, 30).last,
+          reason: 'the broadened edges remain symmetric about the x=40 anchor',
+        );
+        expect(pixel(33, 30).last, 0);
+        expect(pixel(46, 30).last, 0);
         seen.add(pixel(40, 30));
         image.dispose();
       }
