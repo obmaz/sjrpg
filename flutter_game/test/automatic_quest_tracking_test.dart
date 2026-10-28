@@ -27,17 +27,32 @@ void main() {
 
   void cleanse(Adventure s, QuestSite site) {
     s.mobs.clear();
-    s.hero.position.setValues(site.at.dx - 14, site.at.dy + 45);
+    final center = wellApproachForSite(
+      s.world.stage,
+      site,
+      hubOrigin: s.world.spawn,
+    );
+    s.hero.position.setValues(
+      center.dx - s.hero.body.width / 2,
+      center.dy - s.hero.body.height / 2,
+    );
     expect(s.cleanseNearbySite(), true);
   }
 
   void visitHub(Adventure s) {
     s.travelJournal.discover(s.world.stage, 'hub');
-    final at = wellSitesForStage(
+    final well = wellSitesForStage(
       s.world.stage,
       hubOrigin: s.world.spawn,
-    ).firstWhere((site) => site.id == 'hub').at;
-    s.hero.position.setValues(at.dx - 14, at.dy + 65);
+    ).firstWhere((site) => site.id == 'hub');
+    final center = s.world.wellApproach(well);
+    s.hero.position.setValues(
+      center.dx - s.hero.body.width / 2,
+      center.dy - s.hero.body.height / 2,
+    );
+    final nearby = s.travelJournal.nearbyWell(s.world, s.hero.body.center);
+    expect(nearby?.id, 'hub');
+    expect(nearby?.stage, s.world.stage);
   }
 
   test(

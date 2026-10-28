@@ -95,9 +95,15 @@ class GameHud extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(color: mobileBorder, width: 1),
               ),
-              child: Text(
-                '${p.level}',
-                style: const TextStyle(color: cream, fontSize: 14),
+              child: Padding(
+                padding: const EdgeInsets.all(3),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '${p.level}',
+                    style: const TextStyle(color: cream, fontSize: 14),
+                  ),
+                ),
               ),
             ),
           ),
@@ -467,6 +473,21 @@ class MapPainter extends CustomPainter {
       const Color(0xffe3d29a),
     );
     c.restore();
+    final settlement = session.world.authoredSettlement;
+    final settlementImage = session.art.images[settlement.imageKey];
+    if (settlementImage != null && view.overlaps(settlement.bounds)) {
+      c.drawImageRect(
+        settlementImage,
+        Rect.fromLTWH(
+          0,
+          0,
+          settlementImage.width.toDouble(),
+          settlementImage.height.toDouble(),
+        ),
+        settlement.bounds,
+        Paint()..filterQuality = FilterQuality.low,
+      );
+    }
     for (final bridge in session.world.bridges) {
       _terrain(c, Path()..addRect(bridge), road, const Color(0xffdac489));
     }
