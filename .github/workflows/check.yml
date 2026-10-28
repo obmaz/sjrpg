@@ -35,11 +35,18 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v7.0.1
+            - name: Compute Flutter cache key once
+              id: flutter-cache-key
+              env:
+                  SJRPG_FLUTTER_SOURCE_HASH: ${{ hashFiles('flutter_game/lib/**', 'flutter_game/test/**', 'flutter_game/web/**', 'flutter_game/art/**', 'flutter_game/assets-fonts/**', 'flutter_game/pubspec.yaml', 'flutter_game/pubspec.lock', 'flutter_game/analysis_options.yaml', 'assets/actors-hero*.webp', 'assets/actors-creatures-a.webp', 'assets/actors-creatures-b.webp', 'assets/actors-villagers.webp', 'assets/actors-vehicles.webp', 'assets/village-scene.webp', 'assets/landscape*.webp', 'assets/world-forest.webp', 'assets/world-desert.webp', 'assets/controls.webp', 'assets/ui-reference.webp', 'assets/popup-frame.webp', 'assets/atlas.webp', 'src/data/actor-bounds.js', 'src/data/ui-art.js', 'scripts/prepare-new-assets.cjs', '.github/workflows/check.yml') }}
+              run: |
+                  test -n "$SJRPG_FLUTTER_SOURCE_HASH"
+                  echo "key=flutter-wasm-3.47.8-v1-$SJRPG_FLUTTER_SOURCE_HASH" >> "$GITHUB_OUTPUT"
             - uses: actions/cache@v4
               id: flutter-cache
               with:
                   path: flutter_game/build/web
-                  key: flutter-wasm-3.47.8-v1-${{ hashFiles('flutter_game/lib/**', 'flutter_game/test/**', 'flutter_game/web/**', 'flutter_game/art/**', 'flutter_game/assets-fonts/**', 'flutter_game/pubspec.yaml', 'flutter_game/pubspec.lock', 'flutter_game/analysis_options.yaml', 'assets/actors-hero*.webp', 'assets/actors-creatures-a.webp', 'assets/actors-creatures-b.webp', 'assets/actors-villagers.webp', 'assets/actors-vehicles.webp', 'assets/village-scene.webp', 'assets/landscape*.webp', 'assets/world-forest.webp', 'assets/world-desert.webp', 'assets/controls.webp', 'assets/ui-reference.webp', 'assets/popup-frame.webp', 'assets/atlas.webp', 'src/data/actor-bounds.js', 'src/data/ui-art.js', 'scripts/prepare-new-assets.cjs', '.github/workflows/check.yml') }}
+                  key: ${{ steps.flutter-cache-key.outputs.key }}
             - uses: actions/setup-node@v7.1.0
               if: steps.flutter-cache.outputs.cache-hit != 'true'
               with:
