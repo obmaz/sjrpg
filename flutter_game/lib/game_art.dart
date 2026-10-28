@@ -1247,6 +1247,25 @@ class TerrainArt {
   }
 
   void render(ui.Canvas canvas, ui.Rect view) {
+    final transform = canvas.getTransform();
+    final pixelRatio =
+        ui.PlatformDispatcher.instance.implicitView?.devicePixelRatio ?? 1;
+    final scaleX = transform[0], scaleY = transform[5];
+    final translateX = transform[12], translateY = transform[13];
+    final alignClips =
+        transform[1].abs() < 1e-6 &&
+        transform[4].abs() < 1e-6 &&
+        scaleX.isFinite &&
+        scaleY.isFinite &&
+        scaleX > 0 &&
+        scaleY > 0 &&
+        pixelRatio.isFinite &&
+        pixelRatio > 0;
+    double align(double value, double scale, double translation) =>
+        (((value * scale + translation) * pixelRatio).roundToDouble() /
+                pixelRatio -
+            translation) /
+        scale;
     for (
       var y = (view.top / 512).floor();
       y <= (view.bottom / 512).floor();
@@ -1257,7 +1276,22 @@ class TerrainArt {
         x <= (view.right / 512).floor();
         x++
       ) {
+        final cell = ui.Rect.fromLTWH(x * 512.0, y * 512.0, 512, 512);
+        final clip = alignClips
+            ? ui.Rect.fromLTRB(
+                align(cell.left, scaleX, translateX),
+                align(cell.top, scaleY, translateY),
+                align(cell.right, scaleX, translateX),
+                align(cell.bottom, scaleY, translateY),
+              )
+            : cell;
+        // Only replay each cell's interior. Its recorded guard band keeps
+        // path/vertex clip artifacts outside this shared, pixel-aligned edge.
+        // Adjacent cells use the exact same edge without moving world art.
+        canvas.save();
+        canvas.clipRect(clip, doAntiAlias: false);
         canvas.drawPicture(sector(x, y));
+        canvas.restore();
       }
     }
   }
