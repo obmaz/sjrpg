@@ -56,10 +56,12 @@ class EffectAtlas {
     int rows = 4,
     double inset = 1,
     double opacity = 1,
+    ui.ColorFilter? colorFilter,
   }) {
     final grid = _grid(asset, columns, rows, inset);
     if (grid == null) return false;
     _paint.color = ui.Color.fromRGBO(255, 255, 255, opacity.clamp(0, 1));
+    _paint.colorFilter = colorFilter;
     canvas.drawImageRect(
       grid.image,
       grid.frames[frame.clamp(0, grid.frames.length - 1)],

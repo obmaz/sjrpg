@@ -6,6 +6,7 @@ import 'package:bonfire/bonfire.dart';
 import 'adventure.dart';
 import 'effect_visibility.dart';
 import 'game_art.dart';
+import 'illustrated_combat_art.dart';
 import 'skill_growth.dart';
 
 /// A physical strike: the blade lands first, then the ground and debris respond.
@@ -248,6 +249,13 @@ class CrushingBlowArt {
         );
       }
     }
+    IllustratedCombatArt.contact(
+      gameArt.effects,
+      canvas,
+      impact,
+      t / .30,
+      radius: 55 + rank * 2 + charge * 12,
+    );
     // The impact is directional and remains in front of the hero's feet.
     canvas.save();
     canvas.translate(impact.dx, impact.dy);

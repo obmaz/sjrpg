@@ -8,6 +8,7 @@ import 'area_damage.dart';
 import 'barbarian_vfx.dart';
 import 'combat_feedback.dart';
 import 'effect_visibility.dart';
+import 'illustrated_combat_art.dart';
 import 'physical_aim_preview.dart' show barbarianDoubleThrowHalfSpread;
 import 'rpg_model.dart';
 import 'skill_aim.dart';
@@ -465,6 +466,25 @@ class BarbarianCombatVisual extends GameComponent with EffectVisibility {
         radius: radius,
         rank: rank,
       );
+      if (const {
+        BarbarianVfxKind.bash,
+        BarbarianVfxKind.doubleSwing,
+        BarbarianVfxKind.concentrate,
+        BarbarianVfxKind.berserk,
+        BarbarianVfxKind.frenzy,
+      }.contains(art.kind)) {
+        IllustratedCombatArt.sequence(
+          session.art.effects,
+          canvas,
+          CombatIllustration.blade,
+          ui.Offset.zero,
+          progress: 1 - remaining / .32,
+          radius: math.min(96, radius),
+          bearing: bearing,
+          steel: art.kind != BarbarianVfxKind.berserk,
+          protectBody: true,
+        );
+      }
     }
   }
 }

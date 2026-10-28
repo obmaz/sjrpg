@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart' show WidgetsBinding;
 
 import 'actor_motion.dart';
 import 'area_damage.dart';
@@ -5764,26 +5765,47 @@ class BattleText extends GameComponent {
     size = Vector2(160, critical ? 44 : 35);
   }
   final Adventure session;
+  // Keep the original value for reward classification and gameplay consumers.
   final String label;
   final bool isReward, critical;
   final ui.Color color;
   double remaining = .9;
-  ui.Paragraph? _paragraph;
+  ui.Paragraph? _paragraph, _outline, _title, _titleOutline;
   ui.Color? _paintedColor;
-  double get textSize => critical
-      ? 22
-      : label.startsWith('+')
-      ? 13
-      : 18;
+  final _fadePaint = ui.Paint();
+  late final String displayLabel = isReward
+      ? label
+      : label.replaceAllMapped(
+          RegExp(r'\d(?=(\d{3})+(?!\d))'),
+          (match) => '${match[0]},',
+        );
+  bool get reducedMotion => WidgetsBinding
+      .instance
+      .platformDispatcher
+      .accessibilityFeatures
+      .disableAnimations;
+  late final double textSize = isReward
+      ? label.startsWith('+')
+            ? 13
+            : 18
+      : math.min(critical ? 27 : 21, 232 / displayLabel.length);
+  double get punchScale {
+    if (isReward || reducedMotion) return 1;
+    final age = (.9 - remaining).clamp(0.0, .9);
+    if (age < .07) return .9 + age / .07 * .15;
+    if (age < .18) return 1.05 - (age - .07) / .11 * .05;
+    return 1;
+  }
+
   ui.Rect get combatBounds => ui.Rect.fromLTWH(
     position.x - combatWidth / 2,
-    position.y,
+    position.y - (critical ? 1 : 0),
     combatWidth,
-    critical ? 42 : 24,
+    critical ? 44 : 27,
   );
-  double get combatWidth => math.min(
+  late final double combatWidth = math.min(
     148,
-    math.max(critical ? 64 : 0, label.length * (critical ? 15.0 : 12.0) + 6),
+    math.max(critical ? 90 : 0, displayLabel.length * textSize * .7 + 10),
   );
 
   bool placeWithoutOverlap(ui.Offset origin, List<BattleText> others) {
@@ -5799,7 +5821,7 @@ class BattleText extends GameComponent {
       for (final x in columns) {
         position.setValues(
           origin.dx + x,
-          origin.dy - row * (critical ? 44 : 28),
+          origin.dy - row * (critical ? 48 : 31),
         );
         final bounds = combatBounds.inflate(2);
         if (!occupied.any(bounds.overlaps)) {
@@ -5812,8 +5834,34 @@ class BattleText extends GameComponent {
 
   void releaseText() {
     _paragraph?.dispose();
-    _paragraph = null;
+    _outline?.dispose();
+    _title?.dispose();
+    _titleOutline?.dispose();
+    _paragraph = _outline = _title = _titleOutline = null;
     _paintedColor = null;
+  }
+
+  ui.Paragraph _stroke(String text, double fontSize) {
+    final builder =
+        ui.ParagraphBuilder(
+            ui.ParagraphStyle(
+              fontFamily: 'Guardian',
+              fontSize: fontSize,
+              textAlign: ui.TextAlign.center,
+            ),
+          )
+          ..pushStyle(
+            ui.TextStyle(
+              fontWeight: ui.FontWeight.bold,
+              foreground: ui.Paint()
+                ..color = const ui.Color(0xff26160e)
+                ..style = ui.PaintingStyle.stroke
+                ..strokeWidth = critical ? 3.5 : 3
+                ..strokeJoin = ui.StrokeJoin.round,
+            ),
+          )
+          ..addText(text);
+    return builder.build()..layout(const ui.ParagraphConstraints(width: 160));
   }
 
   @override
@@ -5825,7 +5873,7 @@ class BattleText extends GameComponent {
     if (!session.active) return;
     super.update(dt);
     remaining -= dt;
-    position.y -= dt * 27;
+    if (!reducedMotion) position.y -= dt * (isReward ? 27 : 23);
     if (remaining <= 0) removeFromParent();
   }
 
@@ -5840,49 +5888,63 @@ class BattleText extends GameComponent {
   void render(ui.Canvas canvas) {
     super.render(canvas);
     if (session.disposed || remaining <= 0 || isRemoving) return;
-    final paintedColor = (critical ? const ui.Color(0xffffbc58) : color)
-        .withValues(alpha: (remaining / .3).clamp(0, 1));
-    if (_paragraph == null || _paintedColor != paintedColor) {
+    final opacity = (remaining / .3).clamp(0.0, 1.0);
+    final ink = isReward
+        ? color.withValues(alpha: opacity)
+        : critical
+        ? const ui.Color(0xffffad36)
+        : label.startsWith('-')
+        ? const ui.Color(0xffff7566)
+        : const ui.Color(0xffffdc79);
+    if (_paragraph == null || _paintedColor != ink) {
       releaseText();
-      if (!critical) {
-        _paragraph = session.art.layoutText(
-          label,
-          size: textSize,
-          color: paintedColor,
-        );
-      } else {
-        final builder =
-            ui.ParagraphBuilder(
-              ui.ParagraphStyle(
-                fontFamily: 'Guardian',
-                fontSize: textSize,
-                textAlign: ui.TextAlign.center,
-              ),
-            )..pushStyle(
-              ui.TextStyle(
-                color: paintedColor,
-                fontWeight: ui.FontWeight.bold,
-                shadows: const [
-                  ui.Shadow(
-                    color: ui.Color(0xdd101010),
-                    offset: ui.Offset(0, 1),
-                    blurRadius: 2,
-                  ),
-                ],
-              ),
-            );
+      _paragraph = session.art.layoutText(
+        displayLabel,
+        size: textSize,
+        color: ink,
+      );
+      if (!isReward) {
+        _outline = _stroke(displayLabel, textSize);
         if (critical) {
-          builder.pushStyle(ui.TextStyle(fontSize: 11, color: paintedColor));
-          builder.addText('치명타\n');
-          builder.pop();
+          _title = session.art.layoutText(
+            'CRITICAL!',
+            size: 10,
+            color: const ui.Color(0xffffb347),
+          );
+          _titleOutline = _stroke('CRITICAL!', 10);
         }
-        builder.addText(label);
-        _paragraph = builder.build()
-          ..layout(const ui.ParagraphConstraints(width: 160));
       }
-      _paintedColor = paintedColor;
+      _paintedColor = ink;
     }
-    canvas.drawParagraph(_paragraph!, const ui.Offset(-80, 0));
+    canvas.save();
+    if (!isReward) {
+      // Fade cached opaque glyphs together; no per-frame Paragraph rebuilding.
+      if (opacity < 1) {
+        canvas.saveLayer(
+          const ui.Rect.fromLTWH(-84, -4, 168, 54),
+          _fadePaint..color = ui.Color.fromRGBO(255, 255, 255, opacity),
+        );
+      }
+      canvas.translate(0, critical ? 18 : 12);
+      canvas.scale(punchScale);
+      canvas.translate(0, critical ? -18 : -12);
+      final fit = math.min(
+        1.0,
+        (combatWidth - 8) / math.max(1.0, _paragraph!.longestLine * 1.05),
+      );
+      canvas.scale(fit, 1);
+      if (critical) {
+        canvas.drawParagraph(_titleOutline!, const ui.Offset(-80, 0));
+        canvas.drawParagraph(_title!, const ui.Offset(-80, 0));
+      }
+      final at = ui.Offset(-80, critical ? 11 : 0);
+      canvas.drawParagraph(_outline!, at);
+      canvas.drawParagraph(_paragraph!, at);
+      if (opacity < 1) canvas.restore();
+    } else {
+      canvas.drawParagraph(_paragraph!, const ui.Offset(-80, 0));
+    }
+    canvas.restore();
   }
 }
 

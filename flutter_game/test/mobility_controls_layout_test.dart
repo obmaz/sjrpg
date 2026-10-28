@@ -103,6 +103,10 @@ void main() {
         s.refresh();
         await tester.pump();
         expect(button(), findsOneWidget);
+        expect(
+          tester.widget<ActionButton>(button()).effect,
+          type == HeroClass.warrior ? 34 : 216,
+        );
         s.hero.spin = 1;
         s.refresh();
         await tester.pump();

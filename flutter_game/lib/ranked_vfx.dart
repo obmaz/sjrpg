@@ -4,6 +4,7 @@ import 'package:bonfire/bonfire.dart';
 import 'adventure.dart';
 import 'effect_visibility.dart';
 import 'game_art.dart';
+import 'illustrated_combat_art.dart';
 import 'skill_growth.dart';
 import 'steel_pressure_vfx.dart';
 
@@ -61,6 +62,17 @@ void paintSteelWhirlwind(
     progress: phase,
     radius: 96,
     rank: rank,
+  );
+  IllustratedCombatArt.sequence(
+    art.effects,
+    canvas,
+    CombatIllustration.blade,
+    center,
+    progress: (phase * 7) % 1,
+    radius: 102,
+    bearing: phase * math.pi * 6,
+    steel: true,
+    protectBody: true,
   );
 }
 

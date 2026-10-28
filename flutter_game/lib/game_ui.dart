@@ -10,6 +10,7 @@ import 'combat_balance.dart';
 import 'field_palettes.dart';
 import 'game_art.dart';
 import 'health_widgets.dart';
+import 'illustrated_combat_art.dart';
 import 'resource_meter.dart';
 import 'sorceress_icon_art.dart';
 import 'world_model.dart';
@@ -874,6 +875,10 @@ class EffectIconPainter extends CustomPainter {
   }
 
   void _paint(Canvas canvas, Size size) {
+    if (index == 34 &&
+        IllustratedCombatArt.sprint(art.effects, canvas, Offset.zero & size)) {
+      return;
+    }
     if (SorceressIconArt.containsEffect(index)) {
       SorceressIconArt.draw(
         canvas,
@@ -1454,6 +1459,8 @@ class _ActionButtonState extends State<ActionButton> {
     final effect = _illustratedEffect;
     if (effect != null &&
         (effect == 36 ||
+            (effect == 34 &&
+                widget.art.images.containsKey(IllustratedCombatArt.imageKey)) ||
             BarbarianIconArt.containsEffect(effect) ||
             SorceressIconArt.containsEffect(effect) ||
             widget.art.images.containsKey(

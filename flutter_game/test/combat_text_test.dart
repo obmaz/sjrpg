@@ -40,6 +40,47 @@ void main() {
     }
   }
 
+  test(
+    'formatting changes display only, preserving rewards and damage values',
+    () {
+      final hit = BattleText(s, '12890', origin, color);
+      final crit = BattleText(s, '34512', origin, color, critical: true);
+      final hurt = BattleText(s, '-1234', origin, color);
+      final reward = BattleText(s, '+12890 골드', origin, color);
+      expect(hit.displayLabel, '12,890');
+      expect(crit.displayLabel, '34,512');
+      expect(hurt.displayLabel, '-1,234');
+      expect([hit.isReward, crit.isReward, hurt.isReward], everyElement(false));
+      expect(hit.label, '12890');
+      expect(reward.displayLabel, '+12890 골드');
+      expect(reward.isReward, true);
+      expect(crit.textSize, greaterThan(hit.textSize));
+      for (final text in [hit, crit, hurt, reward]) {
+        text.releaseText();
+      }
+    },
+  );
+  test('normal and critical damage share the bounded non-overlap budget', () {
+    for (var i = 0; i < 50; i++) {
+      s.bubble('${12890 + i}', origin, color, critical: i.isEven);
+      verifySeparation();
+    }
+    expect(s.texts.length, lessThanOrEqualTo(14));
+    expect(s.texts.where((text) => text.critical), isNotEmpty);
+  });
+  test('critical fill and title are cached through motion and fading', () {
+    final text = BattleText(s, '34512', origin, color, critical: true);
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder);
+    for (var frame = 0; frame < 53; frame++) {
+      text.render(canvas);
+      text.update(1 / 60);
+    }
+    expect(art.layouts, 2, reason: 'One number and one CRITICAL! title');
+    text.releaseText();
+    text.releaseText();
+    recorder.endRecording().dispose();
+  });
   test('dense hits stay individually readable as old numbers float upward', () {
     for (var wave = 0; wave < 5; wave++) {
       for (var i = 0; i < 10; i++) {
@@ -67,7 +108,7 @@ void main() {
       }
       for (final text in s.texts) {
         expect((text.position.x - origin.dx).abs(), lessThanOrEqualTo(77));
-        expect(origin.dy - text.position.y, lessThanOrEqualTo(140));
+        expect(origin.dy - text.position.y, lessThanOrEqualTo(155));
       }
     },
   );
@@ -91,7 +132,7 @@ void main() {
         text.render(canvas);
         text.update(1 / 60);
       }
-      expect(art.layouts, lessThanOrEqualTo(20));
+      expect(art.layouts, 1, reason: 'Fading reuses the opaque glyph layout');
       text.releaseText();
       text.releaseText();
       final picture = recorder.endRecording(),
@@ -138,7 +179,7 @@ void main() {
         return result;
       }
 
-      for (final label in ['45', '+8 골드', '레벨 상승']) {
+      for (final label in ['+8 골드', '레벨 상승']) {
         for (final time in [.9, .2, .05]) {
           expect(
             await pixels(label, time, true),

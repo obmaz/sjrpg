@@ -1152,9 +1152,10 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   child: ActionButton(
                     art: widget.art,
                     sprite: 'roundEmpty',
+                    effect: skillEffect(mobility.id),
                     glyphIndex: mobility.id == 'blink'
                         ? MobileGlyph.blink
-                        : null,
+                        : MobileGlyph.sprint,
                     icon: skillIcon(mobility.id),
                     label: mobility.shortName,
                     semanticLabel: mobility.name,

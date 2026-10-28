@@ -7,6 +7,7 @@ import 'adventure.dart';
 import 'area_damage.dart';
 import 'combat_feedback.dart';
 import 'effect_visibility.dart';
+import 'illustrated_combat_art.dart';
 import 'mobility_motion.dart';
 import 'rpg_model.dart';
 import 'skill_aim.dart';
@@ -1141,7 +1142,7 @@ class SorceressFlash extends SorceressEffect {
           points!.reduce(
             (a, b) => ui.Offset(math.max(a.dx, b.dx), math.max(a.dy, b.dy)),
           ),
-        ).inflate(35);
+        ).inflate(60);
   @override
   void update(double dt) {
     if (!step(dt)) return;
@@ -1191,6 +1192,41 @@ class SorceressFlash extends SorceressEffect {
         rank: spec.rank,
         radius: radius,
         bearing: bearing,
+      );
+    }
+    if (mode == 'beam' && points != null && points!.isNotEmpty) {
+      IllustratedCombatArt.sequence(
+        session.art.effects,
+        canvas,
+        CombatIllustration.lightning,
+        points!.last - position.toOffset(),
+        progress: t,
+        radius: 32,
+        opacity: .78,
+      );
+    } else if (mode == 'impact' ||
+        (mode == 'cast' &&
+            const {'frostNova', 'nova', 'staticField'}.contains(spec.id))) {
+      IllustratedCombatArt.sequence(
+        session.art.effects,
+        canvas,
+        IllustratedCombatArt.family(spec.id),
+        ui.Offset.zero,
+        progress: t,
+        radius: math.min(128, radius),
+        bearing: bearing,
+        protectBody: mode == 'cast',
+      );
+    } else if (mode == 'ground' && spec.id == 'inferno') {
+      IllustratedCombatArt.sequence(
+        session.art.effects,
+        canvas,
+        CombatIllustration.blade,
+        ui.Offset(math.cos(bearing), math.sin(bearing)) * radius * .35,
+        progress: t,
+        radius: 28,
+        bearing: bearing,
+        opacity: .5,
       );
     }
   }
