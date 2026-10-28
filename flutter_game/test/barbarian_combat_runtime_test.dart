@@ -104,6 +104,27 @@ void main() {
     },
   );
 
+  test('paid strikes and shouts do not inherit the basic weapon sweep', () {
+    final s = field('bash');
+    enemy(s);
+    s.hero.slash();
+    expect(s.hero.basicWeaponSwing, true);
+    s.hero.attackClock = 0;
+    s.hero.swing = 0;
+    s.hero.skill();
+    expect(s.hero.basicWeaponSwing, false);
+    advance(s, .5);
+    s.hero.attackClock = 0;
+    s.hero.slash();
+    expect(s.hero.basicWeaponSwing, true);
+    s.progress.ranks['howl'] = 1;
+    s.progress.selectSkill('howl');
+    s.hero.attackClock = 0;
+    s.hero.swing = 0;
+    s.hero.skill();
+    expect(s.hero.basicWeaponSwing, false);
+  });
+
   test('double swing pays once and performs its second physical hit later', () {
     final s = field('doubleSwing'), m = enemy(s);
     final damage = s.progress.skillDamage(skill(s));

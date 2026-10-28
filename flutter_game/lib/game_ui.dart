@@ -1445,8 +1445,8 @@ class _ActionButtonState extends State<ActionButton> {
     }
     if (widget.glyphIndex == MobileGlyph.dodge) {
       return CustomPaint(
-        size: Size.square(widget.size * .65),
-        painter: const DodgeActionPainter(),
+        size: Size.square(widget.size * .86),
+        painter: DodgeActionPainter(widget.art),
       );
     }
     if (widget.glyphIndex == null &&
@@ -1724,67 +1724,26 @@ class _GameStickState extends State<GameStick> {
 
 /// A moving figure keeps evasion distinct from a boot or a skill plaque.
 class DodgeActionPainter extends CustomPainter {
-  const DodgeActionPainter();
+  DodgeActionPainter(this.art);
+  final GameArt art;
+  static final _paint = Paint()..filterQuality = FilterQuality.medium;
   @override
   void paint(Canvas canvas, Size size) {
+    final image = art.images['dodge-icon'];
+    if (image == null) return;
     canvas.save();
-    canvas.scale(size.width / 32, size.height / 32);
-    final limbs = Path()
-      ..moveTo(17, 11)
-      ..lineTo(23, 14)
-      ..lineTo(27, 9)
-      ..moveTo(17, 12)
-      ..lineTo(11, 10)
-      ..lineTo(7, 15)
-      ..moveTo(13, 18)
-      ..lineTo(20, 21)
-      ..lineTo(23, 28)
-      ..moveTo(13, 18)
-      ..lineTo(10, 24)
-      ..lineTo(3, 24);
-    final body = Path()
-      ..moveTo(17, 9)
-      ..lineTo(21, 12)
-      ..lineTo(16, 21)
-      ..lineTo(10, 18)
-      ..close();
-    final shader = const LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [Color(0xfff0d6a1), Color(0xffb89661), Color(0xff69533b)],
-    ).createShader(const Rect.fromLTWH(3, 3, 26, 27));
-    canvas.drawPath(
-      limbs,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 5.3
-        ..strokeJoin = StrokeJoin.round
-        ..strokeCap = StrokeCap.round
-        ..color = const Color(0xff211d19),
+    canvas.clipPath(Path()..addOval(Offset.zero & size));
+    canvas.drawImageRect(
+      image,
+      Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+      Offset.zero & size,
+      _paint,
     );
-    canvas.drawPath(
-      limbs,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3.5
-        ..strokeJoin = StrokeJoin.round
-        ..strokeCap = StrokeCap.round
-        ..shader = shader,
-    );
-    canvas.drawPath(body, Paint()..shader = shader);
-    canvas.drawCircle(const Offset(22, 5), 3.2, Paint()..shader = shader);
-    shader.dispose();
-    final trail = Paint()
-      ..strokeWidth = 1.3
-      ..strokeCap = StrokeCap.round
-      ..color = const Color(0xff8a7351);
-    canvas.drawLine(const Offset(2, 7), const Offset(9, 7), trail);
-    canvas.drawLine(const Offset(1, 18), const Offset(5, 18), trail);
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(covariant DodgeActionPainter oldDelegate) => false;
+  bool shouldRepaint(covariant DodgeActionPainter old) => old.art != art;
 }
 
 class IllustratedMenuPainter extends CustomPainter {

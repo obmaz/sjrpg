@@ -171,6 +171,12 @@ void main() {
             (w) => w is ActionButton && w.semanticLabel == '회피',
           ),
         );
+        expect(
+          find.byWidgetPredicate(
+            (w) => w is CustomPaint && w.painter is DodgeActionPainter,
+          ),
+          findsOneWidget,
+        );
         final movement = tester.getRect(button());
         expect(
           (movement.center - dodge.center).distance,

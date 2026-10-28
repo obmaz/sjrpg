@@ -2455,6 +2455,7 @@ class Guardian extends Player with WithCollision {
   }
 
   double impactHold = 0;
+  bool basicWeaponSwing = false;
   double swingDuration = .23, castLock = 0, comboGrace = 0;
   int strikePose = 0;
   double chargeTime = 0, chargeAngle = 0, chargeDamage = 0, chargeSpeed = 900;
@@ -3215,6 +3216,7 @@ class Guardian extends Player with WithCollision {
       if (velocity.length < 5) bearing = angle;
     }
     attackBearing = angle;
+    basicWeaponSwing = true;
     strikes++;
     if (comboGrace <= 0) session.combo = 0;
     strikePose = basic.id == 'heavyStrike'
@@ -3460,6 +3462,7 @@ class Guardian extends Player with WithCollision {
     session.device.pulse(FeedbackKind.skill);
     p.energy -= p.skillCost(def);
     cooldowns[def.id] = p.skillCooldown(def);
+    basicWeaponSwing = false;
     if (p.heroClass == HeroClass.mage) {
       sorceressCombat.activate(def, aim: manualAim);
       session.refresh();
@@ -3922,6 +3925,7 @@ class Guardian extends Player with WithCollision {
       );
     }
     if (swing > 0 &&
+        basicWeaponSwing &&
         heavyWindup <= 0 &&
         spin <= 0 &&
         session.progress.heroClass == HeroClass.warrior) {
