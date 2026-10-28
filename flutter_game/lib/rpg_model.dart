@@ -344,12 +344,34 @@ const gearCatalog = <GearDef>[
 ];
 GearDef gearById(String id) => gearCatalog.firstWhere((g) => g.id == id);
 
-enum WeaponGift { frost, guardian, renewal }
+enum WeaponGift { frost, guardian, renewal, comboFury, comboGuard }
 
 extension WeaponGiftInfo on WeaponGift {
-  String get title => ['서리의 낙인', '수호의 맹세', '생명의 수확'][index];
-  String get description =>
-      ['적중한 대상 둔화 0.8초', '받는 피해 8% 감소', '처치 시 생명 4 회복'][index];
+  static const comboRageGain = 6.0;
+  static const comboGuardDuration = .9;
+  static const comboGuardReduction = .25;
+
+  String get title => switch (this) {
+    WeaponGift.frost => '서리의 낙인',
+    WeaponGift.guardian => '수호의 맹세',
+    WeaponGift.renewal => '생명의 수확',
+    WeaponGift.comboFury => '연격의 격정',
+    WeaponGift.comboGuard => '연격의 수호',
+  };
+  String get description => switch (this) {
+    WeaponGift.frost => '적중한 대상 둔화 0.8초',
+    WeaponGift.guardian => '받는 피해 8% 감소',
+    WeaponGift.renewal => '처치 시 생명 4 회복',
+    WeaponGift.comboFury => '타이밍 3연계마다 분노 6 회복',
+    WeaponGift.comboGuard => '타이밍 3연계마다 0.9초간 받는 피해 25% 감소',
+  };
+  bool get isCombo =>
+      this == WeaponGift.comboFury || this == WeaponGift.comboGuard;
+  bool supports(GearDef base) {
+    if (!isCombo) return true;
+    final profile = base.comboProfile;
+    return profile != null && (profile.endless || profile.chainLength! >= 3);
+  }
 }
 
 // Options are fixed when acquired; levelling never rewrites owned equipment.
@@ -386,6 +408,10 @@ class Gear {
         affixVersion > 1 ||
         this.gifts.length != expected ||
         this.gifts.toSet().length != this.gifts.length ||
+        this.gifts.any(
+          (ability) =>
+              !ability.supports(base) || affixVersion == 0 && ability.isCombo,
+        ) ||
         gift != null && this.gifts.firstOrNull != gift) {
       throw ArgumentError('Invalid equipment abilities');
     }
@@ -411,15 +437,26 @@ class Gear {
       : rarity == Rarity.rare
       ? 1
       : 0;
+  static const _legacyGifts = [
+    WeaponGift.frost,
+    WeaponGift.guardian,
+    WeaponGift.renewal,
+  ];
   static List<WeaponGift> _defaultGifts(
     int serial,
     GearDef base,
     Rarity rarity,
     int version,
-  ) => [
-    for (var i = 0; i < _giftCount(base, rarity, version); i++)
-      WeaponGift.values[(serial + i) % WeaponGift.values.length],
-  ];
+  ) {
+    final pool = version > 0 && WeaponGift.comboFury.supports(base)
+        ? WeaponGift.values
+        : _legacyGifts;
+    return [
+      for (var i = 0; i < _giftCount(base, rarity, version); i++)
+        pool[(serial + i) % pool.length],
+    ];
+  }
+
   Map<String, dynamic> toSave() => {
     'serial': serial,
     'base': base.id,
@@ -507,6 +544,11 @@ class Gear {
         throw const FormatException('Conflicting equipment abilities');
       }
     }
+    if (abilities.any(
+      (ability) => !ability.supports(base) || version == 0 && ability.isCombo,
+    )) {
+      throw const FormatException('Unsupported equipment ability');
+    }
     return Gear(
       serial,
       base,
@@ -559,6 +601,7 @@ class Gear {
     if (health > 0) '생명 +${health.round()}',
     if (mana > 0) '자원 +${mana.round()}',
     if (base.haste > 0) '공격속도 +${(base.haste * 100).round()}%',
+    if (base.comboProfile case final profile?) '타이밍 연계 · ${profile.chainLabel}',
     for (final ability in gifts) '${ability.title} · ${ability.description}',
   ].join(' · ');
 }

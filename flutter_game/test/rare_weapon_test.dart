@@ -61,7 +61,7 @@ void main() {
       }
     },
   );
-  for (final gift in WeaponGift.values) {
+  for (final gift in WeaponGift.values.where((gift) => !gift.isCombo)) {
     test('${gift.name} affects real combat without creating extra victims', () {
       final s = Adventure(GameArt());
       s.start(TestGame());

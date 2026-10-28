@@ -55,7 +55,11 @@ void main() {
 
   test('a newly earned unique weapon carries two working abilities', () {
     final s = inCombatField(session()), p = s.progress;
-    final weapon = p.createGear(gearById('longsword'), rarity: Rarity.unique);
+    final weapon = p.createGear(
+      gearById('longsword'),
+      rarity: Rarity.unique,
+      gifts: [WeaponGift.frost, WeaponGift.guardian],
+    );
     p.inventory.add(weapon);
     expect(p.equip(weapon), true);
     final enemy = s.spawnEnemy('goblin', const Offset(6100, 4200))!;

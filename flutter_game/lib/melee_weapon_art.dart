@@ -14,6 +14,7 @@ void paintMeleeWeaponSwing(
   required double reach,
   required int pose,
   required int rank,
+  bool finisher = false,
 }) {
   final t = phase.clamp(0.0, 1.0), fade = 1 - phase.clamp(0.0, 1.0);
   if (fade <= 0 || !reach.isFinite || reach <= 0) return;
@@ -206,6 +207,13 @@ void paintMeleeWeaponSwing(
         5,
       );
       arc(radius * .88, start, 1.25, white, 1.5);
+  }
+  if (finisher) {
+    arc(radius * 1.08, start - .15, 1.9, amber, 3.2);
+    arc(radius * 1.2, start + .1, 1.25, white, 1.3);
+    for (final side in [-1.0, 1.0]) {
+      diamond(ui.Offset(radius * .9, side * radius * .52), 4 + t * 5, amber);
+    }
   }
   canvas.restore();
 }

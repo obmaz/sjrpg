@@ -11,6 +11,7 @@ import 'back_bridge.dart' as history;
 import 'battle_effects.dart';
 import 'blacksmith_workshop.dart';
 import 'class_selection.dart';
+import 'combo_meter.dart';
 import 'destructible_chest.dart';
 import 'entry_loading.dart';
 import 'game_art.dart';
@@ -907,6 +908,12 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
             if (!adventure.ready)
               const Center(child: CircularProgressIndicator(color: gold)),
             if (modal == null && adventure.ready) ...[
+              if (adventure.active && p.heroClass == HeroClass.warrior)
+                ComboMeterOverlay(
+                  feedback: adventure.hero.comboHud,
+                  viewport: media.size,
+                  padding: media.padding,
+                ),
               Positioned(
                 left: 12,
                 bottom: bottom,

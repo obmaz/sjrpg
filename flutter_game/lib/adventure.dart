@@ -13,6 +13,7 @@ import 'boss_attacks.dart';
 import 'boss_sprite_mesh.dart';
 import 'combat_balance.dart';
 import 'combat_feedback.dart';
+import 'combo_feedback.dart';
 import 'crushing_blow_vfx.dart';
 import 'destructible_chest.dart';
 import 'device_settings.dart';
@@ -38,6 +39,7 @@ import 'shop_content.dart';
 import 'skill_aim.dart';
 import 'spell_vfx.dart';
 import 'travel_journal.dart';
+import 'weapon_profiles.dart';
 import 'world_model.dart';
 
 enum NearbyAction { shrine, mount, dismount, shop, talk, smith }
@@ -876,7 +878,8 @@ class Adventure extends ChangeNotifier {
     if (!ready || defeated || disposed || !progress.resetSkills()) return false;
     buildRevision++;
     releaseInput();
-    hero.armorTime = hero.frenzyTime = hero.spin = 0;
+    hero.armorTime = hero.frenzyTime = hero.spin = hero.comboGuardTime = 0;
+    hero.resetCombo();
     hero.cancelSprint();
     hero.impactHold = 0;
     hero.chargeTime = hero.heavyWindup = hero.swing = 0;
@@ -889,6 +892,7 @@ class Adventure extends ChangeNotifier {
 
   bool equip(Gear item) {
     if (defeated || disposed || !progress.equip(item)) return false;
+    hero.resetCombo();
     syncLife();
     refresh();
     return true;
@@ -962,6 +966,7 @@ class Adventure extends ChangeNotifier {
   void releaseInput() {
     hero.aim = null;
     hero.queuedCast = null;
+    hero.resetCombo();
     attackSources.clear();
     hero.onJoystickChangeDirectional(
       JoystickDirectionalEvent(directional: JoystickMoveDirectional.IDLE),
@@ -1470,6 +1475,9 @@ class Adventure extends ChangeNotifier {
     }
     combatTime = 5;
     damage = progress.mitigate(damage, protection: hero.protection);
+    if (hero.comboGuardTime > 0) {
+      damage *= 1 - WeaponGiftInfo.comboGuardReduction;
+    }
     if (progress.hasGift(WeaponGift.guardian)) damage *= .92;
     if (!periodic &&
         hero.armorTime > 0 &&
@@ -1496,8 +1504,10 @@ class Adventure extends ChangeNotifier {
     hero.life.remove(damage);
     if (progress.hp > 0 &&
         dispel &&
-        (hero.armorTime > 0 || hero.frenzyTime > 0)) {
-      hero.armorTime = hero.frenzyTime = 0;
+        (hero.armorTime > 0 ||
+            hero.frenzyTime > 0 ||
+            hero.comboGuardTime > 0)) {
+      hero.armorTime = hero.frenzyTime = hero.comboGuardTime = 0;
       bubble(
         '강화 해제',
         hero.body.center - const ui.Offset(0, 90),
@@ -1755,6 +1765,7 @@ class Adventure extends ChangeNotifier {
     device.cancel();
     releaseInput();
     terrain.dispose();
+    hero.disposeCombo();
     super.dispose();
   }
 }
@@ -2099,7 +2110,10 @@ class Guardian extends Player with WithCollision {
     final held = event.event != ActionEvent.UP;
     if (event.id == LogicalKeyboardKey.space ||
         event.id == LogicalKeyboardKey.keyJ) {
-      session.holdAttack('key:${event.id}', held);
+      final source = 'key:${event.id}';
+      final fresh = held && !session.attackSources.contains(source);
+      session.holdAttack(source, held);
+      if (fresh) slash();
     }
     if (held &&
         (event.id == LogicalKeyboardKey.keyK ||
@@ -2274,10 +2288,215 @@ class Guardian extends Player with WithCollision {
         skill(slot: queued.slot, manualAim: queued.aim);
       }
     }
-    if (session.attackSources.isNotEmpty && attackClock <= 0) slash();
+    _advanceCombo(dt);
+    if (session.attackSources.isNotEmpty && attackClock <= 0) {
+      slash(automatic: true);
+    }
   }
 
-  void slash() {
+  final timedCombo = TimedWeaponCombo();
+  final comboHud = ValueNotifier<ComboHudState>(const ComboHudState());
+  ComboPressResult? _queuedCombo;
+  (int, String)? _comboIdentity;
+  double _comboDelay = 0, _comboFeedback = 0, comboGuardTime = 0;
+  int _comboCount = 0;
+  bool comboFinisher = false, _comboMissed = false, _comboProc = false;
+  bool _comboDisposed = false;
+
+  WeaponComboProfile? get _comboProfile =>
+      session.progress.heroClass == HeroClass.warrior
+      ? session.progress.weapon.base.comboProfile
+      : null;
+
+  void resetCombo() {
+    timedCombo.reset();
+    _queuedCombo = null;
+    _comboIdentity = null;
+    _comboDelay = _comboFeedback = 0;
+    _comboCount = 0;
+    comboFinisher = _comboMissed = _comboProc = false;
+    session.combo = 0;
+    _publishCombo();
+  }
+
+  void disposeCombo() {
+    if (_comboDisposed) return;
+    _comboDisposed = true;
+    comboHud.dispose();
+  }
+
+  void _publishCombo() {
+    if (_comboDisposed) return;
+    final profile = _comboProfile;
+    final window = _queuedCombo != null
+        ? profile?.windowFor(_queuedCombo!.count)
+        : timedCombo.window;
+    final state = ComboHudState(
+      active:
+          profile != null &&
+          (timedCombo.active || _queuedCombo != null || _comboFeedback > 0),
+      count: _comboCount,
+      chainLength: profile?.chainLength,
+      progress: timedCombo.progress,
+      windowStart: window?.start ?? 0,
+      windowEnd: window?.end ?? 0,
+      queued: _queuedCombo != null,
+      finisher: comboFinisher && _comboFeedback > 0,
+      missed: _comboMissed && _comboFeedback > 0,
+      traitProc: _comboProc && _comboFeedback > 0,
+    );
+    if (comboHud.value != state) comboHud.value = state;
+  }
+
+  bool _basicAvailable({bool recovery = true}) {
+    if (!session.active ||
+        session.afflictions.frozen ||
+        recovery && attackClock > 0 ||
+        castLock > 0 ||
+        dashing > 0 ||
+        physicalAction ||
+        aim?.id == 'crushingBlow') {
+      return false;
+    }
+    return session.combatAllowed ||
+        session
+            .attackableChests(
+              body.center,
+              session.progress.heroClass == HeroClass.mage
+                  ? 540
+                  : session.progress.weapon.base.range,
+            )
+            .isNotEmpty;
+  }
+
+  void _advanceCombo(double dt) {
+    comboGuardTime = math.max(0, comboGuardTime - dt);
+    _comboFeedback = math.max(0, _comboFeedback - dt);
+    final identity = (
+      session.progress.weapon.serial,
+      session.progress.selectedBasic,
+    );
+    if (_comboIdentity != null &&
+        (_comboIdentity != identity ||
+            session.riding != null ||
+            session.afflictions.frozen ||
+            physicalAction)) {
+      resetCombo();
+      return;
+    }
+    if (_queuedCombo == null && timedCombo.active) {
+      final delay = math.min(dt, _comboDelay);
+      _comboDelay -= delay;
+      final previous = timedCombo.count;
+      timedCombo.advance(dt - delay);
+      if (!timedCombo.active) {
+        _comboCount = previous;
+        _comboMissed = true;
+        _comboFeedback = .45;
+      }
+    }
+    if (_queuedCombo case final result?) {
+      if (attackClock <= 0) {
+        if (_basicAvailable()) {
+          _queuedCombo = null;
+          _executeCombo(result);
+        } else {
+          resetCombo();
+        }
+      }
+    }
+    _publishCombo();
+  }
+
+  void slash({bool automatic = false}) {
+    if (!_basicAvailable(recovery: false)) return;
+    final profile = _comboProfile;
+    if (profile == null) {
+      if (attackClock <= 0) _performSlash();
+      return;
+    }
+    if (_comboIdentity !=
+        (session.progress.weapon.serial, session.progress.selectedBasic)) {
+      resetCombo();
+    }
+    if (automatic) {
+      if (attackClock > 0 || _queuedCombo != null) return;
+      // Holding remains useful for ordinary attacks, but never earns a link.
+      resetCombo();
+    } else if (_queuedCombo != null) {
+      return;
+    }
+    if (!timedCombo.active && attackClock > 0) return;
+    final early = timedCombo.active && _comboDelay > 0;
+    final result = early
+        ? const ComboPressResult(ComboPress.missed, 0)
+        : timedCombo.press(
+            profile,
+            hasTripletTrait: session.progress.weapon.gifts.any(
+              (gift) => gift.isCombo,
+            ),
+          );
+    if (result.kind == ComboPress.missed) {
+      timedCombo.reset();
+      _comboCount = 0;
+      _comboMissed = true;
+      comboFinisher = _comboProc = false;
+      _comboFeedback = .45;
+      if (attackClock <= 0) {
+        final restart = timedCombo.press(profile);
+        _comboIdentity = (
+          session.progress.weapon.serial,
+          session.progress.selectedBasic,
+        );
+        _executeCombo(restart);
+        _comboMissed = true;
+        _comboFeedback = .45;
+      }
+      _publishCombo();
+      return;
+    }
+    _comboIdentity = (
+      session.progress.weapon.serial,
+      session.progress.selectedBasic,
+    );
+    if (attackClock > 0) {
+      _queuedCombo = result;
+      _publishCombo();
+    } else {
+      _executeCombo(result);
+    }
+  }
+
+  void _executeCombo(ComboPressResult result) {
+    if (!_basicAvailable()) {
+      resetCombo();
+      return;
+    }
+    _comboCount = result.count;
+    comboFinisher = result.kind == ComboPress.finisher;
+    _comboMissed = _comboProc = false;
+    _comboFeedback = comboFinisher ? .7 : 0;
+    _performSlash(result);
+    _comboDelay = math.max(0, attackClock - (_comboProfile?.barDuration ?? 0));
+    _publishCombo();
+  }
+
+  void _procComboTraits(ComboPressResult? result) {
+    if (result?.tripletProc != true) return;
+    final p = session.progress;
+    if (p.weapon.hasGift(WeaponGift.comboFury)) {
+      p.energy = math.min(p.maxEnergy, p.energy + WeaponGiftInfo.comboRageGain);
+    }
+    if (p.weapon.hasGift(WeaponGift.comboGuard)) {
+      comboGuardTime = WeaponGiftInfo.comboGuardDuration;
+    }
+    _comboProc = true;
+    _comboFeedback = .65;
+    session.device.pulse(FeedbackKind.skill);
+    _publishCombo();
+  }
+
+  void _performSlash([ComboPressResult? chain]) {
     final p = session.progress;
     final basic = p.basicSkill;
     final propRange = session.progress.heroClass == HeroClass.mage
@@ -2338,8 +2557,12 @@ class Guardian extends Player with WithCollision {
         ? 2
         : basic.id == 'quickCut'
         ? strikes % 2
+        : chain != null
+        ? (chain.kind == ComboPress.finisher ? 2 : (chain.count - 1) % 3)
         : session.combo;
-    session.combo = basic.id == 'cleave' || p.heroClass == HeroClass.mage
+    session.combo = chain != null
+        ? (chain.kind == ComboPress.finisher ? 0 : chain.count)
+        : basic.id == 'cleave' || p.heroClass == HeroClass.mage
         ? (session.combo + 1) % 3
         : 1;
     attackClock =
@@ -2452,8 +2675,11 @@ class Guardian extends Player with WithCollision {
     );
     final damage =
         p.basicDamage *
-        (basic.id == 'cleave' && session.combo == 0 ? 1.6 : 1) *
+        (chain?.kind == ComboPress.finisher
+            ? p.weapon.base.comboProfile!.finisherScale
+            : 1) *
         multiplier;
+    var landed = false;
     for (final target in selected) {
       final mob = target.mob;
       if (mob == null) {
@@ -2472,12 +2698,13 @@ class Guardian extends Player with WithCollision {
                     ? 42
                     : 23)
           : const ui.Offset(0, 23);
-      if (session.hit(mob, damage, push, generateRage: true) &&
-          basic.id == 'heavyStrike' &&
-          !mob.isDead) {
+      final accepted = session.hit(mob, damage, push, generateRage: true);
+      landed |= accepted;
+      if (accepted && basic.id == 'heavyStrike' && !mob.isDead) {
         mob.applyStun(.12 + p.rank(basic.id) * .025);
       }
     }
+    if (landed) _procComboTraits(chain);
   }
 
   bool _hasSkillResource(SkillDef def) {
@@ -2512,6 +2739,7 @@ class Guardian extends Player with WithCollision {
       return;
     }
     queuedCast = null;
+    resetCombo();
     session.audio.play(switch (def.id) {
       'warcry' || 'frenzy' => EffectSound.warcry,
       'frostNova' || 'iceArmor' => EffectSound.ice,
@@ -2781,6 +3009,7 @@ class Guardian extends Player with WithCollision {
     }
     aim = null;
     queuedCast = null;
+    resetCombo();
     session.audio.play(EffectSound.dodge);
     session.device.pulse(FeedbackKind.dodge);
     rollBearing = bearing;
@@ -2961,8 +3190,20 @@ class Guardian extends Player with WithCollision {
           reach: weapon.range,
           pose: strikePose,
           rank: session.progress.rank('cleave'),
+          finisher: comboFinisher,
         );
       }
+    }
+    if (comboGuardTime > 0) {
+      canvas.drawOval(
+        ui.Rect.fromCenter(center: feet, width: 44, height: 15),
+        ui.Paint()
+          ..color = const ui.Color(
+            0xff91e4d3,
+          ).withValues(alpha: math.min(.7, comboGuardTime))
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
     }
     if (session.progress.heroClass == HeroClass.warrior &&
         (armorTime > 0 || frenzyTime > 0)) {

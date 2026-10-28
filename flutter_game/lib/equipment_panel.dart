@@ -298,7 +298,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
     final current = p.equipped[gear.base.slot];
     if (gear.base.slot == GearSlot.weapon) {
       final attack = p.previewBasicAttack(gear);
-      return '무기 레벨 ${gear.weaponLevel} · 무기 공격 ${gear.attack.round()} · 초당 피해 ${attack?.dps.toStringAsFixed(1) ?? '직업 제한'} · 현재 초당 피해 ${p.basicDps.toStringAsFixed(1)}';
+      return '${gear.base.comboProfile == null ? '' : '타이밍 연계 ${gear.base.comboProfile!.chainLabel} · '}무기 레벨 ${gear.weaponLevel} · 무기 공격 ${gear.attack.round()} · 초당 피해 ${attack?.dps.toStringAsFixed(1) ?? '직업 제한'} · 현재 초당 피해 ${p.basicDps.toStringAsFixed(1)}';
     }
     return '방어 ${gear.armor.round()} · 생명 ${gear.health.round()} · ${p.heroClass.resource} ${gear.mana.round()} · 현재 방어 ${current?.armor.round() ?? 0} · 현재 생명 ${current?.health.round() ?? 0}';
   }
@@ -668,6 +668,20 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                                       fontSize: 13,
                                     ),
                                   ),
+                                  if (gear.base.comboProfile
+                                      case final profile?)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 3),
+                                      child: Text(
+                                        '타이밍 연계 · ${profile.chainLabel}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: gold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
                                   const SizedBox(height: 5),
                                   if (gear.base.slot == GearSlot.weapon) ...[
                                     _quickStat(

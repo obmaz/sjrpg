@@ -10,7 +10,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   for (final slowed in [false, true]) {
     test(
-      'held greatsword preserves three strikes and breaks after idle; slow=$slowed',
+      'held greatsword repeats ordinary strikes without a timed finisher; slow=$slowed',
       () {
         final s = inCombatField(Adventure(GameArt()))..start(TestGame());
         addTearDown(s.dispose);
@@ -40,14 +40,14 @@ void main() {
           health = target.life.value;
         }
         s.holdAttack('touch:combo', false);
-        expect(poses, [0, 1, 2]);
+        expect(poses, [0, 0, 0]);
         expect(damage.length, 3);
         expect(damage[0], closeTo(p.basicDamage, .000001));
         expect(damage[1], closeTo(p.basicDamage, .000001));
-        expect(damage[2], closeTo(p.basicDamage * 1.6, .000001));
-        // Waiting out the scheduled interval plus its short idle allowance
-        // still starts a new sequence rather than preserving a stale finisher.
-        var idle = s.hero.comboGrace + .02;
+        expect(damage[2], closeTo(p.basicDamage, .000001));
+        // Held input cannot bank a finisher, even for the slower debuffed weapon.
+        // Waiting past the interval starts another ordinary opening strike.
+        var idle = s.hero.attackClock + 1.2;
         while (idle > 0) {
           final dt = idle > .02 ? .02 : idle;
           s.hero.update(dt);

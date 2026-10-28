@@ -88,8 +88,8 @@ class ComboPressResult {
   bool get successful => kind != ComboPress.missed;
 }
 
-/// Pure simulation-time rule, intentionally not connected to input until the
-/// timing-gauge design is approved. Rendering never changes its judgement.
+/// Simulation-time judgement shared by input and the timing gauge.
+/// Rendering never advances time or changes its judgement.
 class TimedWeaponCombo {
   WeaponComboProfile? _profile;
   double elapsed = 0;
