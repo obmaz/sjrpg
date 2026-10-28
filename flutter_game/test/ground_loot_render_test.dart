@@ -82,7 +82,7 @@ void main() {
   }
 
   test(
-    'all 24 real item crops match inventory glyphs at ground size',
+    'all equipment crops and silhouettes match inventory glyphs at ground size',
     () async {
       final s = session(art: true);
       for (final base in gearCatalog) {
@@ -109,7 +109,11 @@ void main() {
             );
           }
         }
-        expect(checked, greaterThan(30), reason: base.id);
+        expect(
+          checked,
+          greaterThan(gearCatalog.indexOf(base) < 24 ? 30 : 12),
+          reason: base.id,
+        );
         actual.dispose();
         expected.dispose();
       }
@@ -295,7 +299,7 @@ void main() {
         }
       },
       width: 528,
-      height: 384,
+      height: ((gearCatalog.length / 6).ceil() * 96),
     );
     final phases = await _raster(
       (c) {

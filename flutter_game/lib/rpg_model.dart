@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'combat_balance.dart';
 import 'skill_growth.dart';
 import 'stage_content.dart';
+import 'weapon_profiles.dart';
 
 enum HeroClass { warrior, mage }
 
@@ -43,6 +44,7 @@ class GearDef {
   final double attack, armor, health, mana, haste, range, tempo;
   final int value;
   bool usable(HeroClass c) => heroClass == null || heroClass == c;
+  WeaponComboProfile? get comboProfile => meleeWeaponProfiles[id];
 }
 
 const gearCatalog = <GearDef>[
@@ -252,6 +254,92 @@ const gearCatalog = <GearDef>[
     health: 25,
     mana: 10,
     value: 150,
+  ),
+  // Append new definitions: the first 24 IDs retain their equipment-sheet cells.
+  GearDef(
+    'dualblades',
+    '그림자 쌍검',
+    GearSlot.weapon,
+    heroClass: HeroClass.warrior,
+    attack: 16,
+    range: 110,
+    tempo: .28,
+    value: 85,
+  ),
+  GearDef(
+    'rapier',
+    '결투사의 세검',
+    GearSlot.weapon,
+    heroClass: HeroClass.warrior,
+    attack: 18,
+    range: 155,
+    tempo: .32,
+    style: 'spear',
+    value: 65,
+  ),
+  GearDef(
+    'katana',
+    '달빛 외날검',
+    GearSlot.weapon,
+    heroClass: HeroClass.warrior,
+    attack: 23,
+    range: 145,
+    tempo: .40,
+    value: 90,
+  ),
+  GearDef(
+    'halberd',
+    '성채의 할버드',
+    GearSlot.weapon,
+    heroClass: HeroClass.warrior,
+    attack: 27,
+    range: 185,
+    tempo: .51,
+    style: 'spear',
+    value: 110,
+  ),
+  GearDef(
+    'warhammer',
+    '산맥 파괴 망치',
+    GearSlot.weapon,
+    heroClass: HeroClass.warrior,
+    attack: 30,
+    range: 120,
+    tempo: .58,
+    style: 'hammer',
+    value: 120,
+  ),
+  GearDef(
+    'flail',
+    '사슬 철퇴',
+    GearSlot.weapon,
+    heroClass: HeroClass.warrior,
+    attack: 24,
+    range: 140,
+    tempo: .49,
+    style: 'hammer',
+    value: 95,
+  ),
+  GearDef(
+    'glaive',
+    '청옥 월도',
+    GearSlot.weapon,
+    heroClass: HeroClass.warrior,
+    attack: 25,
+    range: 190,
+    tempo: .46,
+    style: 'spear',
+    value: 115,
+  ),
+  GearDef(
+    'falchion',
+    '태양의 곡도',
+    GearSlot.weapon,
+    heroClass: HeroClass.warrior,
+    attack: 24,
+    range: 135,
+    tempo: .44,
+    value: 85,
   ),
 ];
 GearDef gearById(String id) => gearCatalog.firstWhere((g) => g.id == id);
@@ -1184,7 +1272,11 @@ class Progress {
             'axe',
             'spear',
             'mace',
+            'dualblades',
+            'rapier',
+            if (level >= 3) ...['katana', 'flail'],
             if (level >= 5) ...['greatsword', 'twinaxes', 'runeblade'],
+            if (level >= 5) ...['halberd', 'warhammer', 'glaive', 'falchion'],
             'leather',
             'chainmail',
             if (level >= 5) 'plate',
@@ -1488,8 +1580,7 @@ class Progress {
     final skill = basic ?? basicSkill;
     if (rank <= 0) return 0;
     return switch (skill.id) {
-      'cleave' || 'firebolt' => 1 + SkillGrowth.tier(rank),
-      'sparkBolt' => rank >= 3 ? 2 : 1,
+      'cleave' || 'firebolt' || 'sparkBolt' => SkillGrowth.level(rank),
       _ => 1,
     };
   }
@@ -1499,17 +1590,14 @@ class Progress {
     if (r == 0 || !skills.contains(skill)) return 0;
     if (skill.basic) return basicTargetLimitForRank(r, basic: skill);
     return switch (skill.id) {
-      'whirlwind' || 'seismicSlam' =>
-        3 + SkillGrowth.tier(r) + SkillGrowth.tier(rank('stormOfSteel')),
-      'chainLightning' =>
-        3 + SkillGrowth.tier(r) + SkillGrowth.tier(rank('forkedStorm')),
-      'meteor' =>
-        3 + SkillGrowth.tier(r) + SkillGrowth.tier(rank('cinderReach')),
+      'whirlwind' || 'seismicSlam' => 2 + r + rank('stormOfSteel'),
+      'chainLightning' => 2 + r + rank('forkedStorm'),
+      'meteor' => 2 + r + rank('cinderReach'),
       'warcry' ||
       'frostNova' ||
       'frenzy' ||
       'charge' ||
-      'crushingBlow' => 3 + SkillGrowth.tier(r),
+      'crushingBlow' => 2 + r,
       _ => 0,
     };
   }
@@ -1697,13 +1785,15 @@ class Progress {
         : 8;
     bossDefeated |= boss;
     gainXp(
-      boss
-          ? 80
-          : unique
-          ? 26
-          : elite
-          ? 18
-          : 8,
+      ((boss
+                  ? 80
+                  : unique
+                  ? 26
+                  : elite
+                  ? 18
+                  : 8) *
+              CombatBalance.enemyExperienceScale)
+          .round(),
     );
   }
 

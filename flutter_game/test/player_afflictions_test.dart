@@ -355,7 +355,7 @@ void main() {
       addTearDown(revived.dispose);
       revived.tick(.05);
       expect(revived.defeated, false);
-      expect(revived.progress.hp, .1);
+      expect(revived.progress.hp, revived.progress.maxHp);
       expect(revived.afflictions.active, isEmpty);
       expect(
         cp.data['afflictions']['poison'],

@@ -81,8 +81,44 @@ void main() {
       expect(pixel(bytes, 46, 28), [0, 0, 255, 255]);
       expect(pixel(bytes, 94, 28), [0, 0, 255, 255]);
       expect(pixel(bytes, 104, 28), [255, 0, 0, 255]);
-      expect(pixel(bytes, 30, 28).last, 0);
-      expect(pixel(bytes, 54, 28).last, 0);
+      expect(pixel(bytes, 28, 28).last, 0);
+      expect(pixel(bytes, 56, 28).last, 0);
+    },
+  );
+
+  test(
+    'heavier hero adds body mass without increasing height or shifting feet',
+    () async {
+      Future<Uint8List> body({bool originalWidth = false}) => raster((canvas) {
+        if (originalWidth) {
+          canvas.translate(40, 0);
+          canvas.scale(1.20 / GameArt.heroWidthScale, 1);
+          canvas.translate(-40, 0);
+        }
+        art.actor(canvas, 'hero', const ui.Offset(40, 40), math.pi / 2, 0, 28);
+      });
+      final current = await body(), previous = await body(originalWidth: true);
+      double mass(Uint8List bytes) {
+        var alpha = 0.0;
+        for (var i = 3; i < bytes.length; i += 4) {
+          alpha += bytes[i] / 255;
+        }
+        return alpha;
+      }
+
+      expect(mass(current) / mass(previous), inInclusiveRange(1.10, 1.17));
+      final rows = <int>{};
+      for (var y = 0; y < 64; y++) {
+        for (var x = 0; x < 80; x++) {
+          if (pixel(current, x, y).last >= 128) rows.add(y);
+        }
+      }
+      expect(rows.length, 20);
+      expect(
+        pixel(current, 40, 40),
+        pixel(previous, 40, 40),
+        reason: 'feet keep the same ground anchor',
+      );
     },
   );
 

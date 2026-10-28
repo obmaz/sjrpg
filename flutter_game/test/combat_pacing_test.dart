@@ -140,10 +140,10 @@ void main() {
   );
 
   test(
-    'ordinary leveling takes eleven kills and old earned levels stay intact',
+    'ordinary leveling takes seventeen kills and old earned levels stay intact',
     () {
       final p = Progress();
-      for (var i = 0; i < 10; i++) {
+      for (var i = 0; i < 16; i++) {
         p.reward();
       }
       expect(p.level, 1);
@@ -161,36 +161,33 @@ void main() {
     },
   );
 
-  test(
-    'smaller packs preserve finite waves and stop at the new active cap',
-    () {
-      final s = field();
-      s.spawnPack(initial: true);
-      expect(s.living, 3);
-      s.mobs.clear();
-      s.encounterAreas.clear();
+  test('larger packs preserve finite waves and stop at the new active cap', () {
+    final s = field();
+    s.spawnPack(initial: true);
+    expect(s.living, 5);
+    s.mobs.clear();
+    s.encounterAreas.clear();
+    s.spawnPack();
+    expect(s.living, 6);
+    s.progress.level = 5;
+    s.mobs.clear();
+    s.encounterAreas.clear();
+    s.spawnPack();
+    expect(s.living, 8);
+    final area = s.encounterAreas[s.encounterKey]!;
+    expect(area.waves, 1);
+    while (s.living < CombatBalance.maxActiveEnemies) {
+      area.waves = 0;
+      final before = s.living;
       s.spawnPack();
-      expect(s.living, 4);
-      s.progress.level = 5;
-      s.mobs.clear();
-      s.encounterAreas.clear();
-      s.spawnPack();
-      expect(s.living, 5);
-      final area = s.encounterAreas[s.encounterKey]!;
-      expect(area.waves, 1);
-      while (s.living < CombatBalance.maxActiveEnemies) {
-        area.waves = 0;
-        final before = s.living;
-        s.spawnPack();
-        expect(s.living, greaterThan(before));
-      }
-      expect(s.living, 20);
-      final spent = area.waves;
-      s.spawnPack();
-      expect(s.living, 20);
-      expect(area.waves, spent);
-    },
-  );
+      expect(s.living, greaterThan(before));
+    }
+    expect(s.living, 30);
+    final spent = area.waves;
+    s.spawnPack();
+    expect(s.living, 30);
+    expect(area.waves, spent);
+  });
 
   test(
     'old forty-survivor checkpoints keep all wounded enemies across the new cap',
@@ -214,8 +211,8 @@ void main() {
         restored.elapsed += .6;
         restored.wakeEnemies();
       }
-      expect(restored.living, 20);
-      expect(restored.dormantEnemies, hasLength(20));
+      expect(restored.living, 30);
+      expect(restored.dormantEnemies, hasLength(10));
       final saved = GameCheckpoint.capture(restored)!;
       expect(saved.data['enemies'].length, 40);
       for (final enemy in saved.data['enemies']) {

@@ -241,6 +241,9 @@ class GearGlyph extends CustomPainter {
   final GameArt art;
   @override
   void paint(Canvas canvas, Size size) {
+    if (GearIconArt.paintExpanded(canvas, Offset.zero & size, item.base)) {
+      return;
+    }
     final image = art.images['gear-icons'];
     if (image == null) return;
     final source = GearIconArt.source(image, item.base);

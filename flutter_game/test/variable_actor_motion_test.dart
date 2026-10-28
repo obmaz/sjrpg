@@ -356,14 +356,22 @@ void main() {
           for (var phase = 0; phase < 4; phase++) {
             final bytes = await rasterRoll(art, angle, phase, mage);
             final bounds = projected
-                ? const ui.Rect.fromLTRB(46, 53, 56, 66)
-                : const ui.Rect.fromLTRB(45, 57, 55, 70);
+                ? const ui.Rect.fromLTRB(45, 54, 57, 66)
+                : const ui.Rect.fromLTRB(44, 58, 56, 70);
             expect(
               alphaBounds(bytes),
               bounds,
               reason:
                   'all frames retain their projected ground origin, not their alpha bottom',
             );
+            // Broader artwork keeps the exact (50,70) ground anchor. A
+            // projected feet marker remains four pixels below visible art;
+            // the legacy center-bottom origin remains on its visible bottom.
+            expect(bounds.bottom, projected ? 66 : 70);
+            expect(bytes[(70 * 100 + 50) * 4 + 3], 0);
+            if (!projected) {
+              expect(bytes[(69 * 100 + 50) * 4 + 3], 255);
+            }
             final sample =
                 ((bounds.top.toInt() + 3) * 100 + bounds.left.toInt() + 3) * 4;
             final expected = color((mage ? 32 : 0) + phase * 8 + direction);

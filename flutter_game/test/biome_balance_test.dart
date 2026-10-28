@@ -71,10 +71,10 @@ void main() {
     },
   );
   test(
-    'ordinary leveling takes eleven kills and earned levels are preserved on load',
+    'ordinary leveling takes seventeen kills and earned levels are preserved on load',
     () {
       final p = Progress();
-      for (var i = 0; i < 10; i++) {
+      for (var i = 0; i < 16; i++) {
         p.reward();
       }
       expect(p.level, 1);

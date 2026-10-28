@@ -75,64 +75,70 @@ void main() {
     'melee starts with one target and cleave investment increases its cap',
     () {
       final s = session(), mobs = crowd(s);
+      // Keep all six victims within reach, so reach never masks the target cap.
+      final sword = s.progress.createGear(gearById('longsword'));
+      s.progress.addOwnedGear(sword);
+      s.progress.equip(sword);
+      final original = mobs.map((m) => m.body.topLeft).toList();
       s.hero.bearing = 0;
       s.hero.slash();
       expect(mobs.where((m) => m.life.value < 500).length, 1);
-      for (final m in mobs) {
-        m.life.initial(500);
+      for (final (index, mob) in mobs.indexed) {
+        mob.life.initial(500);
+        mob.position.setValues(original[index].dx, original[index].dy);
+        s.updateEnemySpacing(mob);
       }
       s.progress.ranks['cleave'] = 3;
       s.hero.attackClock = 0;
       s.hero.slash();
-      expect(mobs.where((m) => m.life.value < 500).length, 2);
-      for (final m in mobs) {
-        m.life.initial(500);
+      expect(mobs.where((m) => m.life.value < 500).length, 3);
+      for (final (index, mob) in mobs.indexed) {
+        mob.life.initial(500);
+        mob.position.setValues(original[index].dx, original[index].dy);
+        s.updateEnemySpacing(mob);
       }
       s.progress.ranks['cleave'] = 5;
       s.hero.attackClock = 0;
       s.hero.slash();
-      expect(mobs.where((m) => m.life.value < 500).length, 3);
+      expect(mobs.where((m) => m.life.value < 500).length, 5);
     },
   );
-  test(
-    'offensive skills gain targets at3/5 and specialties add at most two',
-    () {
-      for (final hero in HeroClass.values) {
-        final p = Progress(heroClass: hero);
-        for (final skill in p.skills.where(
-          (s) => !s.passive && !s.mobility && s.id != 'iceArmor',
-        )) {
-          expect(
-            [
-              for (var rank = 1; rank <= 5; rank++)
-                p.skillTargetLimit(skill, atRank: rank),
-            ],
-            [3, 3, 4, 4, 5],
-            reason: skill.id,
-          );
-        }
-        final specialties = hero == HeroClass.warrior
-            ? {
-                'stormOfSteel': ['whirlwind', 'seismicSlam'],
-              }
-            : {
-                'cinderReach': ['meteor'],
-                'forkedStorm': ['chainLightning'],
-              };
-        for (final entry in specialties.entries) {
-          for (final id in entry.value) {
-            final skill = p.skills.firstWhere((skill) => skill.id == id);
-            final caps = <int>[];
-            for (var rank = 0; rank <= 5; rank++) {
-              p.ranks[entry.key] = rank;
-              caps.add(p.skillTargetLimit(skill, atRank: 5));
+  test('offensive skills and specialties gain a target for every point', () {
+    for (final hero in HeroClass.values) {
+      final p = Progress(heroClass: hero);
+      for (final skill in p.skills.where(
+        (s) => !s.passive && !s.mobility && s.id != 'iceArmor',
+      )) {
+        expect(
+          [
+            for (var rank = 1; rank <= 5; rank++)
+              p.skillTargetLimit(skill, atRank: rank),
+          ],
+          [3, 4, 5, 6, 7],
+          reason: skill.id,
+        );
+      }
+      final specialties = hero == HeroClass.warrior
+          ? {
+              'stormOfSteel': ['whirlwind', 'seismicSlam'],
             }
-            expect(caps, [5, 5, 5, 6, 6, 7], reason: '$id ${entry.key}');
+          : {
+              'cinderReach': ['meteor'],
+              'forkedStorm': ['chainLightning'],
+            };
+      for (final entry in specialties.entries) {
+        for (final id in entry.value) {
+          final skill = p.skills.firstWhere((skill) => skill.id == id);
+          final caps = <int>[];
+          for (var rank = 0; rank <= 5; rank++) {
+            p.ranks[entry.key] = rank;
+            caps.add(p.skillTargetLimit(skill, atRank: 5));
           }
+          expect(caps, [7, 8, 9, 10, 11, 12], reason: '$id ${entry.key}');
         }
       }
-    },
-  );
+    }
+  });
   test('whirlwind cannot select additional victims across later pulses', () {
     final s = session(), mobs = crowd(s);
     final spin = WhirlwindPulse(s, s.hero, 5);
@@ -198,25 +204,22 @@ void main() {
       2880,
     );
   });
-  test(
-    'moving cannot bypass the slower spawn interval or reduced pack cap',
-    () {
-      final s = session();
-      s.waveTime = 0;
-      for (var i = 0; i < 150; i++) {
-        s.tick(.05);
-      }
-      expect(s.living, 0);
-      for (var i = 0; i < 20; i++) {
-        s.tick(.05);
-      }
-      expect(s.living, 4);
-      for (var i = 0; i < 8; i++) {
-        s.spawnPack();
-      }
-      expect(s.living, lessThanOrEqualTo(20));
-    },
-  );
+  test('moving cannot bypass the finite spawn interval or active pack cap', () {
+    final s = session();
+    s.waveTime = 0;
+    for (var i = 0; i < 150; i++) {
+      s.tick(.05);
+    }
+    expect(s.living, 0);
+    for (var i = 0; i < 20; i++) {
+      s.tick(.05);
+    }
+    expect(s.living, 6);
+    for (var i = 0; i < 8; i++) {
+      s.spawnPack();
+    }
+    expect(s.living, lessThanOrEqualTo(30));
+  });
   test('all mandatory sites gate the boss, reward once, and persist', () {
     final s = session();
     s.progress.kills = stageKillGoal;

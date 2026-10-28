@@ -650,6 +650,8 @@ class MageContact extends GameComponent with EffectVisibility {
   ui.Rect get effectBounds =>
       MageCombatArt.impactBounds(position.toOffset(), radius);
   @override
+  ui.Rect get protectedActorBody => session.hero.body;
+  @override
   int get priority => 9999;
   @override
   void update(double dt) {
@@ -865,6 +867,8 @@ class LightningTrace extends GameComponent with EffectVisibility {
   @override
   bool get isVisible => true;
   @override
+  ui.Rect get protectedActorBody => session.hero.body;
+  @override
   int get priority => 9999;
   @override
   void update(double dt) {
@@ -944,6 +948,8 @@ class MeteorFall extends GameComponent with EffectVisibility {
   );
   @override
   bool get isVisible => true;
+  @override
+  ui.Rect get protectedActorBody => session.hero.body;
   @override
   int get priority => 9999;
   @override
@@ -1145,7 +1151,9 @@ class GroundLoot extends GameComponent with EffectVisibility {
       }
     }
     final image = session.art.images['gear-icons'];
-    if (image != null) {
+    if (GearIconArt.paintExpanded(canvas, _iconBounds, item.base)) {
+      // New weapon silhouettes share the inventory and world-drop painter.
+    } else if (image != null) {
       if (!identical(image, _iconSheet)) {
         _iconSheet = image;
         _iconSource = GearIconArt.source(image, item.base);

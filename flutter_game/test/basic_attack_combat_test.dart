@@ -78,7 +78,7 @@ void main() {
   test('canonical cleave keeps actual three-target damage splitting', () {
     final s = field(HeroClass.warrior), p = s.progress;
     train(p, 'cleave', 5);
-    expect(p.basicTargetLimit, 3);
+    expect(p.basicTargetLimit, 5);
     p.selectBasic('cleave');
     final mobs = pack(s), power = p.basicDamage;
     s.hero.slash();
@@ -119,12 +119,15 @@ void main() {
           expect(mobs[1].life.value, 10000);
           expect(mobs[2].life.value, 10000);
         } else {
-          expect(mobs[0].life.value, closeTo(10000 - damage * .8, .00001));
+          expect(mobs[0].life.value, closeTo(10000 - damage * .7, .00001));
           expect(
             mobs[1].life.value,
-            closeTo(10000 - damage * .35 * .8, .00001),
+            closeTo(10000 - damage * .35 * .7, .00001),
           );
-          expect(mobs[2].life.value, 10000);
+          expect(
+            mobs[2].life.value,
+            closeTo(10000 - damage * .35 * .7, .00001),
+          );
         }
       },
     );

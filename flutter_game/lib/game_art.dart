@@ -22,7 +22,7 @@ class GameArt {
   final _actorAtlases = <String, ActorAtlas>{};
   final _bossMesh = BossSpriteMeshPainter();
   final _mountMesh = MountSpriteMeshPainter();
-  static const heroWidthScale = 1.20, heroHeightScale = 1.02;
+  static const heroWidthScale = 1.36, heroHeightScale = 1.0;
   late final _actorPaint = ui.Paint()..filterQuality = ui.FilterQuality.low;
   late final _rollPaint = ui.Paint()..filterQuality = ui.FilterQuality.medium;
   ActorAtlas _atlas(String sheet) {

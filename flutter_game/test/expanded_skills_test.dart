@@ -50,14 +50,17 @@ void main() {
           expect(p.skillPoints, points - 1);
           final after = previewSkill(p, skill);
           expect(after.map((s) => s.current), before.map((s) => s.next));
-          // Target-cap perks grow at3/5, avoiding a free extra victim at1/2.
+          // Every specialty point adds one victim to its linked area skills.
           if (['stormOfSteel', 'cinderReach', 'forkedStorm'].contains(id)) {
-            expect(after.first.current, before.first.current);
+            expect(after.first.current, before.first.current + 1);
             expect(p.learn(skill), true);
-            expect(previewSkill(p, skill).first.current, before.first.current);
+            expect(
+              previewSkill(p, skill).first.current,
+              before.first.current + 2,
+            );
             expect(p.learn(skill), true);
             final cap = previewSkill(p, skill);
-            expect(cap.first.current, before.first.current + 1);
+            expect(cap.first.current, before.first.current + 3);
           } else {
             expect(after.any((s) => s.current != before.first.current), true);
           }
@@ -141,7 +144,7 @@ void main() {
         for (final id in affected) {
           expect(
             p.skillTargetLimit(p.skills.firstWhere((s) => s.id == id)),
-            caps[id],
+            caps[id]! + 1,
           );
         }
         expect(
@@ -161,7 +164,7 @@ void main() {
         for (final id in affected) {
           final skill = p.skills.firstWhere((s) => s.id == id);
           expect(p.skillDamage(skill), closeTo(damage[id]! * 1.025, .00001));
-          expect(p.skillTargetLimit(skill), caps[id]! + 2);
+          expect(p.skillTargetLimit(skill), caps[id]! + SkillDef.maxRank);
         }
       },
     );

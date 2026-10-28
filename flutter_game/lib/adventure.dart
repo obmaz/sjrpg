@@ -26,6 +26,7 @@ import 'enemy_spacing.dart';
 import 'game_art.dart';
 import 'health_feedback.dart';
 import 'loot_policy.dart';
+import 'melee_weapon_art.dart';
 import 'mobility_motion.dart';
 import 'mount_sprite_mesh.dart';
 import 'physical_aim_preview.dart';
@@ -1462,6 +1463,7 @@ class Adventure extends ChangeNotifier {
     bool dispel = false,
   }) {
     if (!combatAllowed ||
+        hero.revivalProtection > 0 ||
         !periodic && hero.invulnerable > 0 ||
         origin != null && world.sanctuary.blocksRay(origin, hero.body.center)) {
       return;
@@ -1863,6 +1865,7 @@ class Guardian extends Player with WithCollision {
       dodgeClock = 0,
       dashing = 0,
       invulnerable = 0,
+      revivalProtection = 0,
       hurtFlash = 0;
   final cooldowns = <String, double>{};
   double armorTime = 0, frenzyTime = 0;
@@ -2262,6 +2265,7 @@ class Guardian extends Player with WithCollision {
     }
     dodgeClock = math.max(0, dodgeClock - dt);
     invulnerable = math.max(0, invulnerable - dt);
+    revivalProtection = math.max(0, revivalProtection - dt);
     hurtFlash = math.max(0, hurtFlash - dt);
     final queued = queuedCast;
     if (queued != null && castLock <= 0 && dashing <= 0 && !physicalAction) {
@@ -2805,8 +2809,9 @@ class Guardian extends Player with WithCollision {
         ..strokeWidth = 1.5
         ..color = const ui.Color(0xaaafffe3),
     );
-    if (invulnerable > 0) {
-      final pulse = .5 + .5 * math.sin(invulnerable * math.pi * 2 / .65);
+    if (invulnerable > 0 || revivalProtection > 0) {
+      final protectionTime = math.max(invulnerable, revivalProtection);
+      final pulse = .5 + .5 * math.sin(protectionTime * math.pi * 2 / .65);
       final guard = ui.Rect.fromCenter(
         center: feet - const ui.Offset(0, 2),
         width: 40 + pulse * 3,
@@ -2944,91 +2949,18 @@ class Guardian extends Player with WithCollision {
         heavyWindup <= 0 &&
         spin <= 0 &&
         session.progress.heroClass == HeroClass.warrior) {
-      final phase = 1 - swing / swingDuration,
-          rect = ui.Rect.fromCircle(
-            center: center,
-            radius: session.progress.weapon.base.range * .58,
-          );
-      final style = session.progress.weapon.base.style,
-          direction = ui.Offset(
-            math.cos(attackBearing),
-            math.sin(attackBearing),
-          );
-      if (style == 'spear') {
-        final tip =
-            center +
-            direction * session.progress.weapon.base.range * (.5 + phase * .45);
-        canvas.drawLine(
-          center + direction * 15,
-          tip,
-          ui.Paint()
-            ..color = ui.Color.fromRGBO(212, 248, 255, 1 - phase)
-            ..strokeWidth = 4 * (1 - phase) + 1
-            ..strokeCap = ui.StrokeCap.round,
-        );
-        canvas.drawCircle(
-          tip,
-          3,
-          ui.Paint()
-            ..color = const ui.Color(0xfffff4c7).withValues(alpha: 1 - phase),
-        );
-      } else if (style == 'hammer') {
-        final at = center + direction * 65;
-        canvas.drawOval(
-          ui.Rect.fromCenter(
-            center: at,
-            width: 20 + phase * 72,
-            height: 14 + phase * 40,
-          ),
-          ui.Paint()
-            ..color = const ui.Color(0xffffc47d).withValues(alpha: 1 - phase)
-            ..style = ui.PaintingStyle.stroke
-            ..strokeWidth = 5 * (1 - phase) + 1,
-        );
-        for (var i = 0; i < 6; i++) {
-          final angle = i * math.pi / 3;
-          canvas.drawLine(
-            at +
-                ui.Offset(math.cos(angle), math.sin(angle)) * (12 + phase * 10),
-            at +
-                ui.Offset(math.cos(angle), math.sin(angle)) * (18 + phase * 35),
-            ui.Paint()
-              ..color = const ui.Color(0xffffdf94).withValues(alpha: 1 - phase)
-              ..strokeWidth = 2,
-          );
-        }
-      } else {
-        canvas.drawArc(
-          rect,
-          attackBearing +
-              (strikePose == 1 ? 1.2 - phase * 2.1 : -1.2 + phase * .9),
-          1.6,
-          false,
-          ui.Paint()
-            ..style = ui.PaintingStyle.stroke
-            ..strokeWidth =
-                (7 + math.max(0, session.progress.rank('cleave') - 1) * 1.3) *
-                    (1 - phase) +
-                1
-            ..strokeCap = ui.StrokeCap.round
-            ..color =
-                (session.progress.weapon.base.style == 'hammer'
-                        ? const ui.Color(0xffffbd6c)
-                        : session.progress.weapon.base.style == 'axe'
-                        ? const ui.Color(0xffffdfa3)
-                        : const ui.Color(0xffcbf8ff))
-                    .withValues(alpha: (1 - phase) * .9),
-        );
-        canvas.drawArc(
-          rect.deflate(5),
-          attackBearing +
-              (strikePose == 1 ? 1.1 - phase * 2.1 : -1.1 + phase * .9),
-          1.3,
-          false,
-          ui.Paint()
-            ..style = ui.PaintingStyle.stroke
-            ..strokeWidth = 2
-            ..color = ui.Color.fromRGBO(255, 249, 213, 1 - phase),
+      final weapon = session.progress.weapon.base;
+      final profile = weapon.comboProfile;
+      if (profile != null) {
+        paintMeleeWeaponSwing(
+          canvas,
+          center,
+          profile,
+          phase: 1 - swing / swingDuration,
+          bearing: attackBearing,
+          reach: weapon.range,
+          pose: strikePose,
+          rank: session.progress.rank('cleave'),
         );
       }
     }

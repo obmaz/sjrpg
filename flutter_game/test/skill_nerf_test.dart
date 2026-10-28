@@ -63,7 +63,7 @@ void main() {
     );
 
     test(
-      '$hero offensive points have small gains and stepped target growth',
+      '$hero offensive points have small damage gains and one target per point',
       () {
         final p = ranked(hero, 1);
         for (final s in p.skills.where(
@@ -85,16 +85,14 @@ void main() {
             expect(caps, [0, 0, 0, 0, 0]);
           } else if (['quickCut', 'heavyStrike', 'iceShard'].contains(s.id)) {
             expect(caps, [1, 1, 1, 1, 1]);
-          } else if (s.id == 'sparkBolt') {
-            expect(caps, [1, 1, 2, 2, 2]);
           } else {
             final initial = s.basic ? 1 : 3;
             expect(caps, [
               initial,
-              initial,
-              initial + 1,
               initial + 1,
               initial + 2,
+              initial + 3,
+              initial + 4,
             ], reason: s.id);
           }
         }
@@ -151,30 +149,27 @@ void main() {
     },
   );
 
-  test(
-    'target perks grow at3/5 and extra targets still divide actual damage',
-    () {
-      for (final (hero, id, affected) in [
-        (HeroClass.warrior, 'stormOfSteel', 'whirlwind'),
-        (HeroClass.mage, 'cinderReach', 'meteor'),
-        (HeroClass.mage, 'forkedStorm', 'chainLightning'),
-      ]) {
-        final p = ranked(hero, 1),
-            skill = p.skills.firstWhere((s) => s.id == affected);
-        final caps = <int>[];
-        for (var rank = 1; rank <= 5; rank++) {
-          p.ranks[id] = rank;
-          caps.add(p.skillTargetLimit(skill));
-        }
-        expect(caps, [3, 3, 4, 4, 5]);
-        final damage = p.skillDamage(skill);
-        expect(
-          damage * enemyGroupDamageScale(5),
-          lessThan(damage * enemyGroupDamageScale(3)),
-        );
+  test('each target perk rank adds one victim and damage still divides', () {
+    for (final (hero, id, affected) in [
+      (HeroClass.warrior, 'stormOfSteel', 'whirlwind'),
+      (HeroClass.mage, 'cinderReach', 'meteor'),
+      (HeroClass.mage, 'forkedStorm', 'chainLightning'),
+    ]) {
+      final p = ranked(hero, 1),
+          skill = p.skills.firstWhere((s) => s.id == affected);
+      final caps = <int>[];
+      for (var rank = 1; rank <= 5; rank++) {
+        p.ranks[id] = rank;
+        caps.add(p.skillTargetLimit(skill));
       }
-    },
-  );
+      expect(caps, [4, 5, 6, 7, 8]);
+      final damage = p.skillDamage(skill);
+      expect(
+        damage * enemyGroupDamageScale(5),
+        lessThan(damage * enemyGroupDamageScale(3)),
+      );
+    }
+  });
 
   test(
     'saved ranks survive the nerf and previews use the same new derived values',

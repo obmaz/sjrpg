@@ -192,7 +192,7 @@ void main() {
       expect(warrior.basicTargetLimit, 1);
       expect(warrior.attackInterval, greaterThan(ordinary));
       warrior.selectBasic('cleave');
-      expect(warrior.basicTargetLimit, 3);
+      expect(warrior.basicTargetLimit, 5);
     },
   );
   test('chosen ice and electricity override a different weapon element', () {
@@ -203,9 +203,9 @@ void main() {
     expect(p.basicTargetLimit, 1);
     train(p, 'sparkBolt', 2);
     expect(p.basicElement, 'lightning');
-    expect(p.basicTargetLimit, 1);
-    train(p, 'sparkBolt', 3);
     expect(p.basicTargetLimit, 2);
+    train(p, 'sparkBolt', 3);
+    expect(p.basicTargetLimit, 3);
     p.selectBasic('firebolt');
     expect(p.basicElement, 'fire');
   });

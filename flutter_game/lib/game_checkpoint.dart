@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'adventure.dart';
 import 'battle_effects.dart';
 import 'boss_attacks.dart';
+import 'combat_balance.dart';
 import 'encounters.dart';
 import 'enemy_catalog.dart';
 import 'enemy_difficulty.dart';
@@ -14,7 +15,8 @@ import 'travel_journal.dart';
 import 'world_model.dart';
 
 class GameCheckpoint {
-  GameCheckpoint._(this.data, this.progress);
+  GameCheckpoint._(this.data, this.progress, {this.revival = false});
+  final bool revival;
   final Map<String, dynamic> data;
   final Progress progress;
   String get summary =>
@@ -185,14 +187,22 @@ class GameCheckpoint {
 
   static GameCheckpoint? decode(String? text) => _decode(text);
 
-  /// Explicit death retry cleanses the rollback snapshot, never a normal resume.
-  GameCheckpoint forRevival() => decode(
-    jsonEncode({
-      ...data,
-      'afflictions': PlayerAfflictions().toSave(),
-      'sprintTime': 0,
-    }),
-  )!;
+  /// Death retry recovers resources and cleanses; an ordinary resume never does.
+  /// The protection marker is transient, so a saved checkpoint cannot renew it.
+  GameCheckpoint forRevival() {
+    final recovered = Progress.fromSave(progress.toSave())!
+      ..hp = progress.maxHp
+      ..energy = progress.maxEnergy;
+    final snapshot = decode(
+      jsonEncode({
+        ...data,
+        'progress': recovered.toSave(),
+        'afflictions': PlayerAfflictions().toSave(),
+        'sprintTime': 0,
+      }),
+    )!;
+    return GameCheckpoint._(snapshot.data, snapshot.progress, revival: true);
+  }
 
   static GameCheckpoint? _decode(String? text) {
     if (text == null || text.length > _maximumEncodedLength) return null;
@@ -941,6 +951,9 @@ class GameCheckpoint {
       (data['mobilityClock'] as num).toDouble(),
       (data['sprintTime'] as num).toDouble(),
     );
+    if (revival) {
+      session.hero.revivalProtection = CombatBalance.revivalProtection;
+    }
     session.syncLife();
     return session;
   }
