@@ -192,12 +192,14 @@ void main() {
     final picture = recorder.endRecording();
     final image = await picture.toImage(980, 320);
     picture.dispose();
+    final output = await Directory.systemTemp.createTemp('steel-pressure-vfx-');
     try {
       final png = (await image.toByteData(format: ui.ImageByteFormat.png))!;
-      final file = File('/workspace/artifacts/steel-pressure-vfx-preview.png');
-      await file.parent.create(recursive: true);
+      final file = File('${output.path}/preview.png');
       await file.writeAsBytes(png.buffer.asUint8List());
+      expect(await file.length(), greaterThan(1000));
     } finally {
+      await output.delete(recursive: true);
       image.dispose();
     }
   });
