@@ -28,6 +28,7 @@ abstract final class CombatBalance {
   static const maxActiveEnemies = 30;
   static const enemyPopulationScale = 1.5;
   static const enemyExperienceScale = .60;
+  static const experienceRewardMultiplier = 2;
   // Revival promises three real seconds, independently of global pacing.
   static const revivalProtection = 3.0 * gameSpeed;
   static const potionBundleSize = 2;

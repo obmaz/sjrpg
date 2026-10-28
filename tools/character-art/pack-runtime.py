@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(os.environ.get("SJRPG_CHARACTER_SOURCE_DIR", "/tmp/sjrpg-character-source"))
 OUT = ROOT / "runtime"
-OUT.mkdir(exist_ok=True)
+OUT.mkdir(parents=True, exist_ok=True)
 FONT = ImageFont.load_default(size=9)
 BG = (36, 53, 46, 255)
 
@@ -16,8 +16,8 @@ def power2(x):
     return 1 << (x - 1).bit_length()
 
 
-def load(className, folder, expected):
-    m = json.loads((ROOT / folder / "render-metadata.json").read_text())
+def load(className, folder, expected, *, export_scale=0.5, metadata=None):
+    m = metadata if metadata is not None else json.loads((ROOT / folder / "render-metadata.json").read_text())
     assert len(m["frames"]) == expected, (className, len(m["frames"]), expected)
     for f in m["frames"]:
         im = Image.open(f["path"]).convert("RGBA")
@@ -49,11 +49,11 @@ def load(className, folder, expected):
                 (feet["foot_l"]["world"][i] - feet["foot_r"]["world"][i]) * fw[i]
                 for i in range(2)
             )
-        # Exactly one uniform2x exportdownsample, with premultiplied alpha filtering.
-        f["_image"] = (
-            im.convert("RGBa")
-            .resize((128, 128), Image.Resampling.LANCZOS)
-            .convert("RGBA")
+        # Preserve native samples for high-density exports; filter only an explicit downsample.
+        cell = round(256 * export_scale)
+        assert export_scale in (0.5, 1.0)
+        f["_image"] = im if cell == 256 else (
+            im.convert("RGBa").resize((cell, cell), Image.Resampling.LANCZOS).convert("RGBA")
         )
     for d in range(16):
         fs = sorted(
@@ -66,21 +66,23 @@ def load(className, folder, expected):
     return m
 
 
-def pack(role, frames, reference, anchor, motion=None, anchored=False):
+def pack(role, frames, reference, anchor, motion=None, anchored=False, *, export_scale=0.5):
+    cell = round(256 * export_scale)
+    density = export_scale / 0.5
     tiles = []
     for i, f in enumerate(frames):
         im = f["_image"]
         b = im.getchannel("A").getbbox()
         C = (b[0] - 6, b[1] - 6)
         crop = (C[0], C[1], b[2] + 6, b[3] + 6)
-        assert crop[0] >= 0 and crop[1] >= 0 and crop[2] <= 128 and crop[3] <= 128, (
+        assert crop[0] >= 0 and crop[1] >= 0 and crop[2] <= cell and crop[3] <= cell, (
             role,
             i,
             crop,
         )
         tile = im.crop(crop)
         tiles.append({"index": i, "tile": tile, "crop": crop, "frame": f})
-    width = 512 if len(tiles) <= 64 else 1024
+    width = round((512 if len(tiles) <= 64 else 1024) * density)
     shelves = []
     placements = {}
     for t in sorted(tiles, key=lambda t: (-t["tile"].height, -t["tile"].width)):
@@ -95,9 +97,9 @@ def pack(role, frames, reference, anchor, motion=None, anchored=False):
         placements[t["index"]] = (shelf["x"], shelf["y"])
         shelf["x"] += w
     height = power2(sum(s["height"] for s in shelves))
-    assert width * height * 4 <= 9 * 1024 * 1024, (role, width, height)
+    assert width * height * 4 <= 9 * 1024 * 1024 * density ** 2, (role, width, height)
     atlas = Image.new("RGBA", (width, height))
-    record = {"frames": [], "feet": [], "sizes": [[128, reference]]}
+    record = {"frames": [], "feet": [], "sizes": [[cell, reference]]}
     proof = []
     for t in tiles:
         i = t["index"]
@@ -118,9 +120,9 @@ def pack(role, frames, reference, anchor, motion=None, anchored=False):
                 "sourceFile": t["frame"]["path"],
                 "sourceAction": t["frame"]["action"],
                 "normalizedActionTime": t["frame"]["normalizedActionTime"],
-                "exportCrop128": t["crop"],
+                f"exportCrop{cell}": t["crop"],
                 "packedOrigin": [x, y],
-                "originalProjectedOrigin128": anchor,
+                f"originalProjectedOrigin{cell}": anchor,
                 "absoluteFeet": foot,
                 "derivedAnchor": [foot[0] - x, foot[1] - y],
             }
@@ -145,10 +147,10 @@ def pack(role, frames, reference, anchor, motion=None, anchored=False):
                 "compressedWebPBytes": path.stat().st_size,
                 "compressedPNGBytes": png.stat().st_size,
                 "transparentPadding": 6,
-                "fixedGlobalSourceToRuntimeScale": 0.5,
+                "fixedGlobalSourceToRuntimeScale": export_scale,
                 "alphaBottomNormalization": False,
                 "perFrameScaleAdjustment": False,
-                "fixedProjectedOrigin128": anchor,
+                f"fixedProjectedOrigin{cell}": anchor,
                 "referenceHeight": reference,
                 "slots": proof,
             },

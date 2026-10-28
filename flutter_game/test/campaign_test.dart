@@ -3,12 +3,21 @@ import 'dart:ui' show Size, Rect;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/combat_balance.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/travel_journal.dart';
 import 'package:guardian_new/world_model.dart';
 
 import 'support/test_game.dart';
+
+int _totalXp(Adventure s) {
+  var amount = s.progress.xp;
+  for (var level = 1; level < s.progress.level; level++) {
+    amount += CombatBalance.experienceForLevel(level);
+  }
+  return amount;
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -198,10 +207,17 @@ void main() {
           s.hero.position.setValues(q.site.at.dx - 12, q.site.at.dy - 11);
           expect(s.cleanseNearbySite(), false);
           s.progress.kills += q.goal;
+          final xpBefore = _totalXp(s);
           expect(s.cleanseNearbySite(), true);
+          expect(_totalXp(s) - xpBefore, (50 + q.step * 20) * 2);
           final gold = s.progress.gold;
           expect(s.cleanseNearbySite(), false);
           expect(s.progress.gold, gold);
+          expect(
+            _totalXp(s) - xpBefore,
+            (50 + q.step * 20) * 2,
+            reason: 'completing an already cleared commission never pays twice',
+          );
           final saved = GameCheckpoint.capture(s)!;
           expect(GameCheckpoint.decode(saved.encode()), isNotNull);
           final restored = saved.restore(GameArt());

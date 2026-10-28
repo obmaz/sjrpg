@@ -75,7 +75,7 @@ void main() {
           'hero-backhand',
           'hero-cleave',
         });
-        expect(warBytes, 21 * 1024 * 1024);
+        expect(warBytes, 44 * 1024 * 1024);
         // Reuse the already decoded shared textures, with explicit ownership.
         // This admits a fresh staged Mage target, not a second cold decode.
         final mage = await GameArt.loadMenu();
@@ -100,7 +100,7 @@ void main() {
               .toList();
           expect(mageNames.toSet(), {'hero', 'mage', 'roll', 'mage-cast'});
           final mageBytes = resident(mage);
-          expect(mageBytes, 13 * 1024 * 1024);
+          expect(mageBytes, 28 * 1024 * 1024);
           art.images['actors-mage-cast'] = mage.images['actors-mage-cast']!;
           borrowed.add(art.images['actors-mage-cast']!);
           stagedAdmission = {
@@ -169,6 +169,15 @@ void main() {
           ((value['record'] as Map<String, dynamic>)['feet'] as List).length,
           atlas.frames.length,
         );
+        if (manifestPath == null) {
+          expect(
+            atlas.heights.first,
+            greaterThan(90),
+            reason: 'native256 exports retain twice the source pixel density',
+          );
+          expect(image.width, lessThanOrEqualTo(2048));
+          expect(image.height, lessThanOrEqualTo(2048));
+        }
         for (final frame in atlas.frames) {
           expect(frame.source.left, greaterThanOrEqualTo(0));
           expect(frame.source.top, greaterThanOrEqualTo(0));

@@ -115,74 +115,95 @@
             "image": "flutter_game/art/hero-helmeted.webp",
             "metadata": "flutter_game/art/hero-helmeted-bounds.json",
             "frameCount": 144,
-            "decodedRGBABytes": 4194304,
-            "compressedBytes": 359354,
-            "sha256": "73aa10fee7fa43ec55962b9bbbdec9cb87edb209624bd5f808ada718266dac5c"
+            "sha256": "c673aaf29a0c28176b749d60f9e8b51fbd512a27276582d252a27ebe530e9ac3",
+            "nativeRenderSequenceSha256": "a7221756ba77f6ddf9b4dce3dc7239888f2a1e454399d49cbf62341f4e637762",
+            "decodedRGBABytes": 8388608,
+            "compressedBytes": 903274,
+            "referenceHeight": 130.88888888888889,
+            "projectedOrigin": [128.0, 180.43079376220703]
         },
         "hero-attack": {
             "image": "flutter_game/art/hero-helmeted-attack.webp",
             "metadata": "flutter_game/art/hero-helmeted-attack-bounds.json",
             "frameCount": 128,
-            "decodedRGBABytes": 4194304,
-            "compressedBytes": 347336,
-            "sha256": "396c6c780b0ad26375efb5afdbd7048c3edaca72d7112a136280abd4ceb0f478"
+            "sha256": "d035836b25ccfe8870261b2df199a99ee823df76b90e9f51adecedeb0cfc0905",
+            "nativeRenderSequenceSha256": "5f2f79e1ea6acf5f684fd4ba6a585f994f5be87801425ca09b73414138b1a22b",
+            "decodedRGBABytes": 8388608,
+            "compressedBytes": 851724,
+            "referenceHeight": 130.88888888888889,
+            "projectedOrigin": [128.0, 180.43079376220703]
         },
         "hero-backhand": {
             "image": "flutter_game/art/hero-helmeted-backhand.webp",
             "metadata": "flutter_game/art/hero-helmeted-backhand-bounds.json",
             "frameCount": 128,
-            "decodedRGBABytes": 4194304,
-            "compressedBytes": 338214,
-            "sha256": "ec2b5c2799d9b4aee8e07e76ae1b91670e7bca556b94e0e2ab0a79d3f72b74ab"
+            "sha256": "42449a968bd704df97470c74ab0158f3ea84a88b2471fd58a41363c3be558edb",
+            "nativeRenderSequenceSha256": "76ad14b5fa4ccab99c81e20daa14e3ea636a9eb854115e2ec5de2c44d2911021",
+            "decodedRGBABytes": 8388608,
+            "compressedBytes": 833040,
+            "referenceHeight": 130.88888888888889,
+            "projectedOrigin": [128.0, 180.43079376220703]
         },
         "hero-cleave": {
             "image": "flutter_game/art/hero-helmeted-cleave.webp",
             "metadata": "flutter_game/art/hero-helmeted-cleave-bounds.json",
             "frameCount": 128,
-            "decodedRGBABytes": 4194304,
-            "compressedBytes": 353034,
-            "sha256": "acbb7e565e5b3776e7ebf27f67ad6d3b86546d626cab0a44fa17c647c0e4be6b"
+            "sha256": "41dd157890de415ae80ac592871eb6fcdd7af2bcaabe1a5bb08a76235266125b",
+            "nativeRenderSequenceSha256": "dbd9078be5371f86d9bf55be9a781ed39c855ace4d90cdd55e76c4deda2a1fab",
+            "decodedRGBABytes": 8388608,
+            "compressedBytes": 867512,
+            "referenceHeight": 130.88888888888889,
+            "projectedOrigin": [128.0, 180.43079376220703]
         },
         "mage": {
             "image": "flutter_game/art/actors-mage.png",
             "metadata": "flutter_game/art/mage-bounds.json",
             "frameCount": 144,
-            "decodedRGBABytes": 4194304,
-            "compressedBytes": 495005,
-            "sha256": "bafed70c9d3c0404ef73f93907875fa7eecc2c0576de8e4b66bb5ef66aab934e"
+            "sha256": "1ded9a643657109e4dd705f095cd741b235d2ccb0c2a28aacadf23ee4e601925",
+            "nativeRenderSequenceSha256": "9d1b6c53741bf5ec22ab2c287bbf870f25f720d24820152504180167cb01eb4d",
+            "decodedRGBABytes": 8388608,
+            "compressedBytes": 1255720,
+            "referenceHeight": 130.88888888888889,
+            "projectedOrigin": [128.0, 180.43079376220703]
         },
         "mage-cast": {
             "image": "flutter_game/art/actors-mage-cast.webp",
             "metadata": "flutter_game/art/actors-mage-cast-bounds.json",
             "frameCount": 128,
-            "decodedRGBABytes": 4194304,
-            "compressedBytes": 368524,
-            "sha256": "b18e4e01247ea607f530291534377786c4b341d8659fd5304cb70bd4ed3e7c46"
+            "sha256": "43f31f330422256838a6ccc9fa0c0f5cd904a0adbc2319dbefb8cb667b3e5157",
+            "nativeRenderSequenceSha256": "22ae814310c7231cdc7bd3f8272cab5144e48eafe0983c4327fd55886efbdfae",
+            "decodedRGBABytes": 8388608,
+            "compressedBytes": 834806,
+            "referenceHeight": 130.88888888888889,
+            "projectedOrigin": [128.0, 180.43079376220703]
         },
         "roll": {
             "image": "flutter_game/art/hero-helmeted-roll.png",
             "metadata": "flutter_game/art/hero-helmeted-roll-bounds.json",
             "frameCount": 64,
-            "decodedRGBABytes": 1048576,
-            "compressedBytes": 222246,
-            "sha256": "d28bbc5b64924e81f5dce41e56c13bce44c1b5f157d07bee1bd3b07c54533596"
+            "sha256": "738825ce94b8b6ccf61634696a020511739fb4626889f066761140367fde70cf",
+            "nativeRenderSequenceSha256": "6aa7651d848e1db813b8b04ea7b1e606dcb264042f892cab2a88df96ce9c9595",
+            "decodedRGBABytes": 4194304,
+            "compressedBytes": 595991,
+            "referenceHeight": 93.8037037037037,
+            "projectedOrigin": [128.0, 180.43079376220703]
         }
     },
     "runtimeFrameCount": 864,
-    "runtimeDecodedRGBAUnionBytes": 26214400,
-    "runtimeCompressedBytes": 2483713,
+    "runtimeDecodedRGBAUnionBytes": 54525952,
+    "runtimeCompressedBytes": 6142067,
     "camera": {
         "workingCanvas": [256, 256],
-        "exportCanvas": [128, 128],
+        "exportCanvas": [256, 256],
         "location": [0.0, -6.0, 5.099999904632568],
         "target": [0, 0, 0.9],
         "orthographicScale": 3.5999999046325684,
         "projectedWorldOriginRaw": [128.0, 180.43079376220703],
-        "actorReferenceHeight128": 65.44444444444444,
-        "rollReferenceHeight128": 46.901851851851845,
         "transparentCropPadding": 6,
-        "feetFormula": "packedOrigin + projectedWorldOrigin128 - cropOrigin128",
-        "perPoseScaleOrAlphaBottomNormalization": false
+        "feetFormula": "packedOrigin + projectedWorldOrigin256 - cropOrigin256",
+        "perPoseScaleOrAlphaBottomNormalization": false,
+        "actorReferenceHeight256": 130.88888888888889,
+        "rollReferenceHeight256": 93.80370370370369
     },
     "directionOrder": [
         "S",
@@ -337,7 +358,7 @@
     },
     "physics": "Artwork-only changes. Run phase follows the existing84 units of resolved movement per cycle and action progress follows actual simulation timers. Body widening keeps the projected origin and changes no hitbox/damage/locks; separate balance/mobility changes are outside this art provenance.",
     "assembly": {
-        "warrior": "Male_Ranger outfit + official male base head; original sword, matte deepteal hood/brownleather",
+        "warrior": "Male_Ranger rig + official male base head; original helmet and steel plate armor, muted teal cloth and original sword",
         "mage": "Male_Peasant outfit + Ranger hood + same official male base head; navycloth, original wand and skinned split robe panels",
         "head": "Rest-space head trim/map once and rigidHead binding, no per-frame changes",
         "roll": "Both classes same camera/worldpixel scale via43/rollRef=60/actorRef"
@@ -353,10 +374,18 @@
     },
     "previewNotice": "The320ms GIF is a phase inspection at60px worldheight, not browserFPS measurement. Actual run phase follows resolved movement distance.",
     "runtimeBodyScale": {
-        "width": 1.2,
-        "height": 1.02,
+        "width": 1.36,
+        "height": 1.0,
         "pivot": "projected world origin",
         "applies": ["idle", "run", "attack", "cast", "roll", "rider"]
     },
-    "helmetedWarrior": "helmeted-warrior-provenance.json"
+    "helmetedWarrior": "helmeted-warrior-provenance.json",
+    "highResolutionExport": {
+        "sourceCell": 256,
+        "runtimeCell": 256,
+        "scale": 1.0,
+        "downsample": false,
+        "provenance": "character-high-resolution-provenance.json",
+        "exporter": "tools/character-art/export-high-resolution.py"
+    }
 }

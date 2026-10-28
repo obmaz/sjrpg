@@ -72,22 +72,26 @@ void main() {
       },
     );
   }
-  test('every enemy tier reduces XP without changing gold or kill rewards', () {
-    for (final (boss, elite, unique, xp, gold) in [
-      (false, false, false, 5, 8),
-      (false, true, false, 11, 20),
-      (false, true, true, 16, 35),
-      (true, false, false, 48, 100),
-    ]) {
-      final p = Progress();
-      final beforeGold = p.gold;
-      p.reward(boss: boss, elite: elite, unique: unique);
-      expect(p.xp, xp);
-      expect(p.gold - beforeGold, gold);
-      expect(p.kills, 1);
-      expect(p.bossDefeated, boss);
-    }
-  });
+  test(
+    'every enemy tier doubles its previous rounded XP without changing gold or kills',
+    () {
+      for (final (boss, elite, unique, xp, gold) in [
+        (false, false, false, 10, 8),
+        (false, true, false, 22, 20),
+        (false, true, true, 32, 35),
+        (true, false, false, 96, 100),
+      ]) {
+        final p = Progress();
+        final beforeGold = p.gold, firstLevelXp = p.nextLevelXp;
+        p.reward(boss: boss, elite: elite, unique: unique);
+        final totalXp = p.level == 1 ? p.xp : p.xp + firstLevelXp;
+        expect(totalXp, xp);
+        expect(p.gold - beforeGold, gold);
+        expect(p.kills, 1);
+        expect(p.bossDefeated, boss);
+      }
+    },
+  );
   test(
     'original class-specific quantities preserve Barbarian per-point growth and Sorceress source caps',
     () {

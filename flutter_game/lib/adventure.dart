@@ -759,7 +759,9 @@ class Adventure extends ChangeNotifier {
     }
     if (commission != null) {
       acceptedCommission = null;
-      progress.gainXp(50 + commission.step * 20);
+      progress.gainXp(
+        (50 + commission.step * 20) * CombatBalance.experienceRewardMultiplier,
+      );
       syncLife();
     }
     progress.gold += 40;

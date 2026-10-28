@@ -174,42 +174,20 @@ void main() {
   }
 
   test(
-    'all armored dodge directions remain intact and mage dodge pixels are unchanged',
+    'high-density dodge retains every direction, pose and projected world silhouette',
     () async {
       final oldAtlas = ActorAtlas.fromJson(oldRoll.actors['roll']);
       final currentAtlas = atlases['roll']!;
       final oldImage = oldRoll.images['actors-roll']!;
       final currentImage = art.images['actors-roll']!;
-      final oldPixels = (await oldImage.toByteData(
-        format: ui.ImageByteFormat.rawRgba,
-      ))!.buffer.asUint8List();
-      final currentPixels = (await currentImage.toByteData(
-        format: ui.ImageByteFormat.rawRgba,
-      ))!.buffer.asUint8List();
-      for (var i = 32; i < 64; i++) {
-        final before = oldAtlas.frames[i], after = currentAtlas.frames[i];
-        expect(after.source.size, before.source.size);
-        expect(after.anchor, before.anchor);
-        for (var y = 0; y < before.source.height; y++) {
-          for (var x = 0; x < before.source.width; x++) {
-            final a =
-                ((before.source.top.toInt() + y) * oldImage.width +
-                    before.source.left.toInt() +
-                    x) *
-                4;
-            final b =
-                ((after.source.top.toInt() + y) * currentImage.width +
-                    after.source.left.toInt() +
-                    x) *
-                4;
-            expect(
-              currentPixels.sublist(b, b + 4),
-              oldPixels.sublist(a, a + 4),
-              reason: 'mage source crop $i is preserved exactly',
-            );
-          }
-        }
-      }
+      expect(
+        currentAtlas.heights[1],
+        closeTo(oldAtlas.heights[1] * 2, .000001),
+      );
+      expect(
+        currentImage.width * currentImage.height,
+        greaterThanOrEqualTo(oldImage.width * oldImage.height * 4),
+      );
       for (var direction = 0; direction < 8; direction++) {
         for (var phase = 0; phase < 4; phase++) {
           final angle = math.pi / 2 + direction * math.pi / 4;
@@ -231,19 +209,20 @@ void main() {
               mage: true,
             ),
           );
-          var maximumDifference = 0;
-          for (var i = 0; i < current.rgba.length; i++) {
-            maximumDifference = math.max(
-              maximumDifference,
-              (current.rgba[i] - original.rgba[i]).abs(),
-            );
+          var intersection = 0, union = 0, currentArea = 0, oldArea = 0;
+          for (var i = 3; i < current.rgba.length; i += 4) {
+            final now = current.rgba[i] > 20, before = original.rgba[i] > 20;
+            if (now) currentArea++;
+            if (before) oldArea++;
+            if (now && before) intersection++;
+            if (now || before) union++;
           }
           expect(
-            maximumDifference,
-            lessThanOrEqualTo(1),
-            reason:
-                'identical crops/anchors allow only atlas sampling quantization',
+            intersection / union,
+            greaterThan(.88),
+            reason: 'native detail must retain the same pose and foot anchor',
           );
+          expect(currentArea / oldArea, inInclusiveRange(.90, 1.10));
           current.image.dispose();
           original.image.dispose();
           final warrior = await _raster(

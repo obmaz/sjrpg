@@ -16,7 +16,7 @@
     "rigSource": "Reviewed Quaternius CC0 adult male Ranger skeleton/base male head and UAL actions, see character-motion-provenance.json; original hood hidden, new original authored armor meshes bound once in rest space.",
     "geometry": "tools/character-art/helmeted-armor.py",
     "renderer": "tools/character-art/render-helmeted-warrior.py",
-    "packer": "tools/character-art/pack-helmeted-warrior.py",
+    "packer": "tools/character-art/export-high-resolution.py",
     "poses": {
         "warriorFrames": 560,
         "unchangedMageRollFrames": 32,
@@ -25,8 +25,8 @@
         "attackPoses": 8,
         "rollDirections": 8,
         "rollPoses": 4,
-        "projectedOrigin": [64.0, 90.21539688110352],
-        "uniformExportScale": 0.5,
+        "projectedOrigin": [128, 180.43079376220703],
+        "uniformExportScale": 1.0,
         "perPoseScaleCorrection": false,
         "reference": "exec-e021b823-4c7f-43bf-9e50-5d23e0fd4322.png",
         "bakeContract": "fbf45a6b65366121"
@@ -37,48 +37,65 @@
     "sourceFiles": {
         "tools/character-art/helmeted-armor.py": "ea0ab3a25ffaed6e24b68eec834e161ee92c94db897eb66c7e3b4e083cf77fde",
         "tools/character-art/render-helmeted-warrior.py": "c3e304506d4db2a1dd5a1c5a1e27f2acbe11bcbd3290716b4cdd846fb332ec17",
-        "tools/character-art/pack-helmeted-warrior.py": "f246d4f55b373c60d3e3234b330b00834c117fa88819b105f171ee41fff9ca7d"
+        "tools/character-art/pack-helmeted-warrior.py": "f246d4f55b373c60d3e3234b330b00834c117fa88819b105f171ee41fff9ca7d",
+        "tools/character-art/export-high-resolution.py": "fbed624d222f7726e63f623cbd10bfb8c7a3a04ee930be5561a059cad0d1e394",
+        "tools/character-art/pack-runtime.py": "cd3d38f7bd30a70320769317755b5bea50084b445d55ac3115455be8cd25c70e"
     },
     "runtimeRoles": {
         "hero": {
             "image": "flutter_game/art/hero-helmeted.webp",
             "metadata": "flutter_game/art/hero-helmeted-bounds.json",
             "frameCount": 144,
-            "decodedRGBABytes": 4194304,
-            "compressedBytes": 359354,
-            "sha256": "73aa10fee7fa43ec55962b9bbbdec9cb87edb209624bd5f808ada718266dac5c"
+            "sha256": "c673aaf29a0c28176b749d60f9e8b51fbd512a27276582d252a27ebe530e9ac3",
+            "nativeRenderSequenceSha256": "a7221756ba77f6ddf9b4dce3dc7239888f2a1e454399d49cbf62341f4e637762",
+            "decodedRGBABytes": 8388608,
+            "compressedBytes": 903274,
+            "referenceHeight": 130.88888888888889,
+            "projectedOrigin": [128.0, 180.43079376220703]
         },
         "hero-attack": {
             "image": "flutter_game/art/hero-helmeted-attack.webp",
             "metadata": "flutter_game/art/hero-helmeted-attack-bounds.json",
             "frameCount": 128,
-            "decodedRGBABytes": 4194304,
-            "compressedBytes": 347336,
-            "sha256": "396c6c780b0ad26375efb5afdbd7048c3edaca72d7112a136280abd4ceb0f478"
+            "sha256": "d035836b25ccfe8870261b2df199a99ee823df76b90e9f51adecedeb0cfc0905",
+            "nativeRenderSequenceSha256": "5f2f79e1ea6acf5f684fd4ba6a585f994f5be87801425ca09b73414138b1a22b",
+            "decodedRGBABytes": 8388608,
+            "compressedBytes": 851724,
+            "referenceHeight": 130.88888888888889,
+            "projectedOrigin": [128.0, 180.43079376220703]
         },
         "hero-backhand": {
             "image": "flutter_game/art/hero-helmeted-backhand.webp",
             "metadata": "flutter_game/art/hero-helmeted-backhand-bounds.json",
             "frameCount": 128,
-            "decodedRGBABytes": 4194304,
-            "compressedBytes": 338214,
-            "sha256": "ec2b5c2799d9b4aee8e07e76ae1b91670e7bca556b94e0e2ab0a79d3f72b74ab"
+            "sha256": "42449a968bd704df97470c74ab0158f3ea84a88b2471fd58a41363c3be558edb",
+            "nativeRenderSequenceSha256": "76ad14b5fa4ccab99c81e20daa14e3ea636a9eb854115e2ec5de2c44d2911021",
+            "decodedRGBABytes": 8388608,
+            "compressedBytes": 833040,
+            "referenceHeight": 130.88888888888889,
+            "projectedOrigin": [128.0, 180.43079376220703]
         },
         "hero-cleave": {
             "image": "flutter_game/art/hero-helmeted-cleave.webp",
             "metadata": "flutter_game/art/hero-helmeted-cleave-bounds.json",
             "frameCount": 128,
-            "decodedRGBABytes": 4194304,
-            "compressedBytes": 353034,
-            "sha256": "acbb7e565e5b3776e7ebf27f67ad6d3b86546d626cab0a44fa17c647c0e4be6b"
+            "sha256": "41dd157890de415ae80ac592871eb6fcdd7af2bcaabe1a5bb08a76235266125b",
+            "nativeRenderSequenceSha256": "dbd9078be5371f86d9bf55be9a781ed39c855ace4d90cdd55e76c4deda2a1fab",
+            "decodedRGBABytes": 8388608,
+            "compressedBytes": 867512,
+            "referenceHeight": 130.88888888888889,
+            "projectedOrigin": [128.0, 180.43079376220703]
         },
         "roll": {
             "image": "flutter_game/art/hero-helmeted-roll.png",
             "metadata": "flutter_game/art/hero-helmeted-roll-bounds.json",
             "frameCount": 64,
-            "decodedRGBABytes": 1048576,
-            "compressedBytes": 222246,
-            "sha256": "d28bbc5b64924e81f5dce41e56c13bce44c1b5f157d07bee1bd3b07c54533596"
+            "sha256": "738825ce94b8b6ccf61634696a020511739fb4626889f066761140367fde70cf",
+            "nativeRenderSequenceSha256": "6aa7651d848e1db813b8b04ea7b1e606dcb264042f892cab2a88df96ce9c9595",
+            "decodedRGBABytes": 4194304,
+            "compressedBytes": 595991,
+            "referenceHeight": 93.8037037037037,
+            "projectedOrigin": [128.0, 180.43079376220703]
         }
     },
     "originalSourcesPreserved": [
@@ -88,5 +105,6 @@
         "actors-hero-cleave.webp",
         "actors-roll.png",
         "roll-bounds.json"
-    ]
+    ],
+    "highResolutionExport": "Native256 source samples retained without resize; same projected origin, poses and world size."
 }

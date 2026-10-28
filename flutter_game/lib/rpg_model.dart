@@ -1724,14 +1724,15 @@ class Progress {
     bossDefeated |= boss;
     gainXp(
       ((boss
-                  ? 80
-                  : unique
-                  ? 26
-                  : elite
-                  ? 18
-                  : 8) *
-              CombatBalance.enemyExperienceScale)
-          .round(),
+                      ? 80
+                      : unique
+                      ? 26
+                      : elite
+                      ? 18
+                      : 8) *
+                  CombatBalance.enemyExperienceScale)
+              .round() *
+          CombatBalance.experienceRewardMultiplier,
     );
   }
 
