@@ -108,7 +108,11 @@ void main() {
         final old = (baseline[hero.name] as Map)['stacked'] as Map;
         final dps =
             p.basicDps * (hero == HeroClass.warrior ? p.frenzyAttackTempo : 1);
-        expect(dps / (old['buffedDps'] as num), inExclusiveRange(.08, .30));
+        // Compare balance at the same global pace: the legacy fixture was
+        // recorded at 1.0x, while basicDps now reports real seconds at 1.2x.
+        final oldAtCurrentPace =
+            (old['buffedDps'] as num) * CombatBalance.gameSpeed;
+        expect(dps / oldAtCurrentPace, inExclusiveRange(.08, .30));
         expect(
           p.attackMultiplier / Progress.playerDamageScale,
           lessThanOrEqualTo(1.15),
