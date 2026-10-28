@@ -185,7 +185,7 @@ void main() {
       for (final p in meleeWeaponProfiles.values) {
         expect(p.barDuration, lessThan(.8));
       }
-      expect(meleeWeaponProfiles['dualblades']!.barDuration, .32);
+      expect(meleeWeaponProfiles['dualblades']!.barDuration, .30);
     },
   );
 }

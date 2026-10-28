@@ -82,9 +82,11 @@ void main() {
       h.update(.01);
     }
     expect(h.comboHud.value.count, 2);
-    link(s, mob);
+    while (h.comboHud.value.count < profile.chainLength!) {
+      link(s, mob);
+    }
     expect(h.comboHud.value.finisher, true);
-    expect(h.comboHud.value.count, 3);
+    expect(h.comboHud.value.count, profile.chainLength);
     expect(h.timedCombo.active, false);
     expect(100000 - mob.life.value, greaterThanOrEqualTo(damage * 3.6 - .001));
   });
@@ -151,6 +153,10 @@ void main() {
         final windows = <double>{};
         for (var i = 1; i < length; i++) {
           windows.add(h.comboHud.value.windowStart);
+          expect(
+            h.comboHud.value.nextFinisher,
+            !def.comboProfile!.endless && i == length - 1,
+          );
           link(s, null);
         }
         expect(h.comboHud.value.count, length, reason: def.id);

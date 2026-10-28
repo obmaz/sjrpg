@@ -32,6 +32,14 @@ class _FeedbackGame extends TestGame {
 
   List<ImpactParticles> get impacts =>
       added.whereType<ImpactParticles>().toList();
+  void advanceFeedbackRecovery() {
+    for (var i = 0; i < 3; i++) {
+      for (final observer in added.whereType<CombatClockObserver>()) {
+        observer.update(.1);
+      }
+    }
+  }
+
   void observeStoppedUpdate() {
     for (final observer in added.whereType<CombatClockObserver>()) {
       observer.update(0);
@@ -78,6 +86,40 @@ HuntEnemy enemy(Adventure s, double x) =>
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets(
+    'rapid followups retain particles without repeatedly stopping the world',
+    (tester) async {
+      final game = _FeedbackGame(), s = scene(_FeedbackGame());
+      s.game = game;
+      addTearDown(s.dispose);
+      final mob = enemy(s, 6050);
+      s.hit(mob, 1, Offset.zero, impactKind: ImpactKind.melee);
+      await tester.pump(Duration.zero);
+      expect(game.stops, 1);
+      game.observeStoppedUpdate();
+      await tester.pump(const Duration(milliseconds: 55));
+      expect(game.timeScale, 1);
+      s.hit(mob, 1, Offset.zero, hitStop: false);
+      await tester.pump(Duration.zero);
+      expect(game.stops, 1);
+      expect(game.impacts.length, greaterThan(1));
+      s.hit(mob, 1, Offset.zero);
+      await tester.pump(Duration.zero);
+      expect(
+        game.stops,
+        1,
+        reason: 'a new hit in the refractory interval is visual only',
+      );
+      game.advanceFeedbackRecovery();
+      s.hit(mob, 1, Offset.zero);
+      await tester.pump(Duration.zero);
+      expect(game.stops, 2);
+      game.observeStoppedUpdate();
+      await tester.pump(const Duration(milliseconds: 55));
+      expect(game.timeScale, 1);
+    },
+  );
 
   testWidgets(
     'accepted AoE applies damage immediately, batches two bursts and one maximum stop',
@@ -318,6 +360,7 @@ void main() {
         await tester.pump(Duration.zero);
         game.observeStoppedUpdate();
         await tester.pump(const Duration(milliseconds: 22));
+        game.advanceFeedbackRecovery();
       }
       expect(game.impacts.length, CombatFeedback.maxLiveBursts);
       final stops = game.stops;

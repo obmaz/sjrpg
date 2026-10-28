@@ -19,7 +19,7 @@ class ComboMeterLayout {
     final inset = padding.bottom > 8;
     final compact =
         shortPortrait || tightLandscape || size.width < 300 || inset;
-    final maxWidth = compact ? 196.0 : 212.0;
+    final maxWidth = compact ? 164.0 : 176.0;
     // Tight landscape puts both potions at x=136, up to150px wide.
     // Safe-area devices also need a horizontal gap because menus sit higher.
     final stick = shortPortrait
@@ -90,6 +90,8 @@ class ComboMeter extends StatelessWidget {
       ? '연계 끊김'
       : state.finisher
       ? '마무리 일격'
+      : state.nextFinisher
+      ? '다음 마무리 · 금색에서 공격'
       : state.traitProc
       ? '연계 특성'
       : state.queued
@@ -101,26 +103,43 @@ class ComboMeter extends StatelessWidget {
       ? '${state.count} COMBO ∞'
       : '${state.count} / ${state.chainLength} COMBO';
 
-  Widget get _pips => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: List.generate(
-      3,
-      (index) => Padding(
-        padding: const EdgeInsets.only(left: 4),
-        child: Container(
-          width: 5,
-          height: 5,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: state.traitProc || index < state.count % 3
-                ? gold
-                : const Color(0xff173331),
-            border: Border.all(color: const Color(0xffbb9b5d), width: 1),
+  Widget get _pips {
+    final finite = !state.endless;
+    final total = state.chainLength?.clamp(1, 8) ?? 3;
+    return Row(
+      key: const ValueKey('combo-progress-pips'),
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(total, (index) {
+        final filled = finite
+            ? index < state.count
+            : state.traitProc || index < state.count % 3;
+        return Padding(
+          padding: EdgeInsets.only(left: finite ? (index == 0 ? 0 : 2) : 4),
+          child: Container(
+            key: ValueKey('combo-progress-$index'),
+            width: finite ? 3.5 : 5,
+            height: finite ? 3.5 : 5,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: filled ? gold : const Color(0xff173331),
+              border: Border.all(
+                color: finite && state.nextFinisher && index == total - 1
+                    ? const Color(0xffffedbd)
+                    : const Color(0xffbb9b5d),
+                width: finite ? .7 : 1,
+              ),
+            ),
           ),
-        ),
-      ),
-    ),
-  );
+        );
+      }),
+    );
+  }
+
+  String get _heading => state.nextFinisher
+      ? '마무리 · 금색 공격'
+      : !state.endless && (state.finisher || state.missed)
+      ? _status
+      : _count;
 
   Widget _text(String text, {double size = 14, Color color = gold}) =>
       FittedBox(
@@ -154,7 +173,7 @@ class ComboMeter extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Semantics(
     label:
-        '${state.endless ? '${state.count}회 무한 연계' : '${state.chainLength}회 중 ${state.count}회 연계'}${_status.isEmpty ? '' : ', $_status'}',
+        '${state.endless ? '${state.count}회 무한 연계' : '${state.chainLength}회 중 ${state.count}회 연계'}${_status.isEmpty ? '' : ', $_status'}${state.nextFinisher ? '. 커서가 금색 구간에 올 때 공격 버튼을 다시 누르면 마무리 일격이 나갑니다' : ''}',
     excludeSemantics: true,
     child: compact
         ? LayoutBuilder(
@@ -162,12 +181,32 @@ class ComboMeter extends StatelessWidget {
               children: [
                 SizedBox(
                   width: (constraints.maxWidth * .25).clamp(22.0, 56.0),
-                  child: _text(
-                    state.endless
-                        ? '${state.count}∞'
-                        : '${state.count}/${state.chainLength}',
-                    size: 12,
-                    color: state.missed ? const Color(0xffe38b76) : gold,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _text(
+                          state.nextFinisher
+                              ? '마무리'
+                              : state.endless
+                              ? '${state.count}∞'
+                              : '${state.count}/${state.chainLength}',
+                          size: 12,
+                          color: state.missed ? const Color(0xffe38b76) : gold,
+                        ),
+                      ),
+                      if (!state.endless) ...[
+                        const SizedBox(height: .5),
+                        SizedBox(
+                          height: 3,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: _pips,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 const SizedBox(width: 5),
@@ -186,18 +225,20 @@ class ComboMeter extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _text(
-                          _count,
+                          _heading,
+                          size: state.nextFinisher ? 12 : 14,
                           color: state.missed ? const Color(0xffe38b76) : gold,
                         ),
                       ),
-                      if (_status.isNotEmpty)
+                      if (state.endless && _status.isNotEmpty)
                         Flexible(
                           child: Padding(
                             padding: const EdgeInsets.only(left: 6),
                             child: _text(_status, size: 10, color: teal),
                           ),
                         ),
-                      if (state.endless) _pips,
+                      const SizedBox(width: 6),
+                      _pips,
                     ],
                   ),
                 ),
@@ -245,7 +286,7 @@ class ComboTimingPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.1
-        ..color = state.finisher
+        ..color = state.finisher || state.nextFinisher
             ? const Color(0xffffe2a4)
             : const Color(0xffd2ad65),
     );
@@ -271,6 +312,8 @@ class ComboTimingPainter extends CustomPainter {
         Paint()
           ..color = state.queued
               ? const Color(0xaa6be8c9)
+              : state.nextFinisher
+              ? const Color(0xdddf983c)
               : const Color(0x99b88a34),
       );
       canvas.drawRect(
@@ -279,6 +322,27 @@ class ComboTimingPainter extends CustomPainter {
           ..style = PaintingStyle.stroke
           ..strokeWidth = .7
           ..color = const Color(0xffffd58c),
+      );
+    }
+    if (state.nextFinisher && end > start) {
+      final center = Offset(
+        inner.left + inner.width * (start + end) / 2,
+        size.height / 2,
+      );
+      final radius = math.min(3.2, size.height * .24);
+      final mark = Path()
+        ..moveTo(center.dx, center.dy - radius)
+        ..lineTo(center.dx + radius, center.dy)
+        ..lineTo(center.dx, center.dy + radius)
+        ..lineTo(center.dx - radius, center.dy)
+        ..close();
+      canvas.drawPath(mark, Paint()..color = const Color(0xfffff0bb));
+      canvas.drawPath(
+        mark,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = .7
+          ..color = const Color(0xff573315),
       );
     }
     for (var i = 1; i < 6; i++) {

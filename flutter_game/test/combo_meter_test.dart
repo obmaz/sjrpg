@@ -83,6 +83,227 @@ void main() {
   );
 
   test(
+    'next finisher is a pre-input cue, not queued or completed feedback',
+    () {
+      const ready = ComboHudState(
+        active: true,
+        count: 2,
+        chainLength: 3,
+        windowStart: .6,
+        windowEnd: .8,
+      );
+      expect(ready.nextFinisher, true);
+      for (final state in const [
+        ComboHudState(
+          active: true,
+          count: 1,
+          chainLength: 3,
+          windowStart: .6,
+          windowEnd: .8,
+        ),
+        ComboHudState(
+          active: true,
+          queued: true,
+          count: 2,
+          chainLength: 3,
+          windowStart: .6,
+          windowEnd: .8,
+        ),
+        ComboHudState(
+          active: true,
+          missed: true,
+          count: 2,
+          chainLength: 3,
+          windowStart: .6,
+          windowEnd: .8,
+        ),
+        ComboHudState(
+          active: true,
+          finisher: true,
+          count: 3,
+          chainLength: 3,
+          windowStart: .6,
+          windowEnd: .8,
+        ),
+        ComboHudState(active: true, count: 8, windowStart: .6, windowEnd: .8),
+        ComboHudState(count: 2, chainLength: 3, windowStart: .6, windowEnd: .8),
+        ComboHudState(active: true, count: 2, chainLength: 3),
+      ]) {
+        expect(state.nextFinisher, false);
+      }
+      expect(
+        const ComboHudState(
+          active: true,
+          count: 1,
+          chainLength: 2,
+          windowStart: .6,
+          windowEnd: .8,
+        ).nextFinisher,
+        true,
+      );
+    },
+  );
+
+  testWidgets('finisher tells the next input method before the final attack', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    try {
+      const ready = ComboHudState(
+        active: true,
+        count: 2,
+        chainLength: 3,
+        progress: .2,
+        windowStart: .6,
+        windowEnd: .8,
+      );
+      Future<void> show(ComboHudState state, {bool compact = false}) =>
+          tester.pumpWidget(
+            MaterialApp(
+              home: Center(
+                child: SizedBox(
+                  width: compact ? 164 : 176,
+                  height: compact ? 18 : 38,
+                  child: ComboMeter(state: state, compact: compact),
+                ),
+              ),
+            ),
+          );
+      await show(ready);
+      expect(find.text('마무리 · 금색 공격'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(RegExp('커서가 금색 구간에 올 때 공격 버튼을 다시 누르면')),
+        findsOneWidget,
+      );
+      expect(
+        find.text('마무리 일격'),
+        findsNothing,
+        reason: 'do not announce completion before input',
+      );
+      await show(ready, compact: true);
+      expect(find.text('마무리'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await show(
+        const ComboHudState(
+          active: true,
+          queued: true,
+          count: 2,
+          chainLength: 3,
+          windowStart: .6,
+          windowEnd: .8,
+        ),
+      );
+      expect(find.text('마무리 · 금색 공격'), findsNothing);
+      await show(
+        const ComboHudState(
+          active: true,
+          finisher: true,
+          count: 3,
+          chainLength: 3,
+        ),
+      );
+      expect(find.text('마무리 일격'), findsOneWidget);
+      expect(find.text('마무리 · 금색 공격'), findsNothing);
+    } finally {
+      semantics.dispose();
+    }
+  });
+
+  testWidgets(
+    'finite pips show the actual four-to-eight hit chain; only endless keeps three',
+    (tester) async {
+      Future<void> show(ComboHudState state, bool compact) => tester.pumpWidget(
+        MaterialApp(
+          home: Center(
+            child: SizedBox(
+              width: compact ? 164 : 176,
+              height: compact ? 18 : 38,
+              child: ComboMeter(state: state, compact: compact),
+            ),
+          ),
+        ),
+      );
+      Color pipColor(int index) =>
+          (tester
+                      .widget<Container>(
+                        find.byKey(ValueKey('combo-progress-$index')),
+                      )
+                      .decoration
+                  as BoxDecoration)
+              .color!;
+      for (final compact in [false, true]) {
+        for (final length in [4, 5, 6, 7, 8]) {
+          await show(
+            ComboHudState(
+              active: true,
+              count: length - 1,
+              chainLength: length,
+              progress: .5,
+              windowStart: .4,
+              windowEnd: .8,
+            ),
+            compact,
+          );
+          for (var index = 0; index < length; index++) {
+            expect(
+              find.byKey(ValueKey('combo-progress-$index')),
+              findsOneWidget,
+            );
+            expect(
+              pipColor(index),
+              index < length - 1 ? ComboMeter.gold : const Color(0xff173331),
+            );
+          }
+          expect(find.byKey(ValueKey('combo-progress-$length')), findsNothing);
+          expect(
+            tester.takeException(),
+            isNull,
+            reason: '$length-hit compact:$compact',
+          );
+        }
+      }
+      await show(
+        const ComboHudState(
+          active: true,
+          count: 8,
+          windowStart: .4,
+          windowEnd: .8,
+        ),
+        false,
+      );
+      expect(find.byKey(const ValueKey('combo-progress-2')), findsOneWidget);
+      expect(find.byKey(const ValueKey('combo-progress-3')), findsNothing);
+      expect(pipColor(0), ComboMeter.gold);
+      expect(pipColor(1), ComboMeter.gold);
+      expect(pipColor(2), const Color(0xff173331));
+    },
+  );
+
+  test('shorter timing dock preserves the established compact reflow', () {
+    expect(
+      ComboMeterLayout.forViewport(
+        const Size(390, 844),
+        EdgeInsets.zero,
+      ).bounds.width,
+      176,
+    );
+    expect(
+      ComboMeterLayout.forViewport(
+        const Size(568, 320),
+        EdgeInsets.zero,
+      ).bounds.width,
+      164,
+    );
+    expect(
+      ComboMeterLayout.forViewport(
+        const Size(300, 450),
+        const EdgeInsets.only(bottom: 34),
+      ).bounds.width,
+      lessThanOrEqualTo(164),
+    );
+  });
+
+  test(
     'cursor follows timing data and queued success stays in the target window',
     () async {
       Future<Uint8List> paint(ComboHudState state) async {
@@ -115,6 +336,22 @@ void main() {
           windowStart: .6,
           windowEnd: .8,
         ),
+      );
+      final ready = await paint(
+        const ComboHudState(
+          active: true,
+          count: 2,
+          chainLength: 3,
+          progress: .25,
+          windowStart: .6,
+          windowEnd: .8,
+        ),
+      );
+      expect(
+        pixel(ready, 136),
+        isNot(pixel(early, 136)),
+        reason:
+            'the next-finisher target gets a diamond before the final input',
       );
       final queued = await paint(
         const ComboHudState(
@@ -198,6 +435,8 @@ void main() {
           hero.comboHud.value = const ComboHudState(
             active: true,
             count: 7,
+            chainLength: 8,
+            flow: true,
             progress: .4,
             windowStart: .3,
             windowEnd: .6,

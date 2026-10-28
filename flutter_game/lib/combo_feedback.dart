@@ -22,6 +22,16 @@ class ComboHudState {
   final double progress, windowStart, windowEnd;
   final bool active, queued, finisher, missed, traitProc, flow;
   bool get endless => chainLength == null;
+
+  /// The next accepted press finishes this finite chain; no new combat rule.
+  bool get nextFinisher =>
+      active &&
+      !queued &&
+      !finisher &&
+      !missed &&
+      chainLength != null &&
+      count == chainLength! - 1 &&
+      windowEnd > windowStart;
   bool get visible => active || finisher || missed || traitProc;
 
   @override

@@ -48,6 +48,34 @@ void main() {
   );
 
   test(
+    'every opening picks a stable random target entirely after the first third',
+    () {
+      for (final profile in meleeWeaponProfiles.values) {
+        final combo = TimedWeaponCombo(random: math.Random(479));
+        final openings = <double>{};
+        for (var i = 0; i < 25; i++) {
+          combo.reset();
+          combo.press(profile);
+          final window = combo.window!;
+          expect(window.start, greaterThanOrEqualTo(1 / 3));
+          expect(window.end, lessThanOrEqualTo(.94 + .000001));
+          expect(
+            window.end - window.start,
+            closeTo(profile.windowWidth, .000001),
+          );
+          openings.add(window.start);
+          combo.advance(profile.barDuration * .15);
+          expect(identical(combo.window, window), true);
+        }
+        expect(openings.length, greaterThan(20), reason: profile.id);
+        if (!profile.endless) {
+          expect(profile.chainLength, inInclusiveRange(4, 8));
+        }
+      }
+    },
+  );
+
+  test(
     'new weapons enter loot, level-gated shops and real equipment saves',
     () {
       final p = Progress(), mage = Progress(heroClass: HeroClass.mage);
@@ -92,10 +120,14 @@ void main() {
       combo.press(profile);
       link(combo, profile);
       expect(combo.press(profile).kind, ComboPress.linked);
+      while (combo.count < profile.chainLength! - 1) {
+        link(combo, profile);
+        expect(combo.press(profile).kind, ComboPress.linked);
+      }
       link(combo, profile);
       final finish = combo.press(profile);
       expect(finish.kind, ComboPress.finisher);
-      expect(finish.count, 3);
+      expect(finish.count, profile.chainLength);
       expect(combo.active, false);
       combo.press(profile);
       combo.advance(profile.barDuration + .01);

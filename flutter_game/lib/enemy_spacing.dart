@@ -1,14 +1,26 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+class _SpacingBody {
+  _SpacingBody(this.body, this.space) : center = body.center;
+  Rect body;
+  Size space;
+  Offset center;
+
+  void update(Rect next, Size nextSpace) {
+    body = next;
+    center = next.center;
+    space = nextSpace;
+  }
+}
+
 /// A local, immediately updated index for crowd steering between engine steps.
 /// Bonfire's hitboxes still resolve physical contacts after component updates.
 class EnemySpacing<T extends Object> {
   static const cellSize = 96.0;
   final _cells = <(int, int), Set<T>>{};
-  final _bodies = <T, Rect>{};
+  final _bodies = <T, _SpacingBody>{};
   final _slots = <T, (int, int)>{};
-  final _spaces = <T, Size>{};
   final _order = <T, int>{};
   int _nextOrder = 0;
 
@@ -16,15 +28,22 @@ class EnemySpacing<T extends Object> {
     _cells.clear();
     _bodies.clear();
     _slots.clear();
-    _spaces.clear();
     _order.clear();
     _nextOrder = 0;
   }
 
   void update(T item, Rect body, {Size? personalSpace}) {
-    _spaces[item] = personalSpace ?? body.size;
+    final entry = _bodies[item];
+    final _SpacingBody current;
+    if (entry == null) {
+      current = _SpacingBody(body, personalSpace ?? body.size);
+      _bodies[item] = current;
+    } else {
+      entry.update(body, personalSpace ?? body.size);
+      current = entry;
+    }
     _order.putIfAbsent(item, () => _nextOrder++);
-    final center = body.center;
+    final center = current.center;
     final slot = (
       (center.dx / cellSize).floor(),
       (center.dy / cellSize).floor(),
@@ -39,7 +58,6 @@ class EnemySpacing<T extends Object> {
       (_cells[slot] ??= <T>{}).add(item);
       _slots[item] = slot;
     }
-    _bodies[item] = body;
   }
 
   void remove(T item) {
@@ -50,35 +68,42 @@ class EnemySpacing<T extends Object> {
       if (bucket.isEmpty) _cells.remove(slot);
     }
     _bodies.remove(item);
-    _spaces.remove(item);
     _order.remove(item);
   }
 
   bool contains(T item) => _bodies.containsKey(item);
-  Rect bodyOf(T item) => _bodies[item]!;
+  Rect bodyOf(T item) => _bodies[item]!.body;
   double preferredSide(T item) => _order[item]!.isEven ? 1 : -1;
 
-  double _proximity(T item, Rect body, T other) {
-    final difference = body.center - bodyOf(other).center;
-    final a = _spaces[item]!, b = _spaces[other]!;
+  double _proximitySquared(T item, Rect body, T other) {
+    final otherBody = _bodies[other]!;
+    final difference = body.center - otherBody.center;
+    final a = _bodies[item]!.space, b = otherBody.space;
     final x = difference.dx / ((a.width + b.width) / 2);
     final y = difference.dy / ((a.height + b.height) / 2);
-    return math.sqrt(x * x + y * y);
+    return x * x + y * y;
   }
 
   bool permitsPersonalSpace(T item, Rect from, Rect to, T other) {
-    final after = _proximity(item, to, other);
-    return after >= 1 || after >= _proximity(item, from, other) - .000001;
+    final after = _proximitySquared(item, to, other);
+    if (after >= 1) return true;
+    final before = _proximitySquared(item, from, other);
+    if (after >= before) return true;
+    // Most probes are outside the illustration ellipse or move away from it.
+    // Only an inward probe needs the original linear-distance tolerance.
+    return math.sqrt(after) >= math.sqrt(before) - .000001;
   }
 
   /// Soft illustration spacing never enlarges the physical terrain hitbox.
   Offset separation(T item, Rect body, Iterable<T> neighbors, double step) {
     var force = Offset.zero, pressure = 0.0;
+    final center = body.center;
     for (final other in neighbors) {
-      final proximity = _proximity(item, body, other);
-      if (proximity >= .97) continue;
+      final squared = _proximitySquared(item, body, other);
+      if (squared >= .97 * .97) continue;
+      final proximity = math.sqrt(squared);
       pressure = math.max(pressure, 1 - proximity);
-      var away = body.center - bodyOf(other).center;
+      var away = center - _bodies[other]!.center;
       if (away.distanceSquared < .001) {
         final a = _order[item]!, b = _order[other]!;
         final angle =
@@ -120,16 +145,17 @@ class EnemySpacing<T extends Object> {
     if (distance < .001) return delta;
     final forward = delta / distance;
     final side = Offset(-forward.dy, forward.dx);
+    final center = body.center, space = _bodies[item]!.space;
     var adjustment = Offset.zero;
     for (final other in neighbors) {
-      final next = bodyOf(other);
-      final difference = body.center - next.center;
-      final a = _spaces[item]!, b = _spaces[other]!;
-      final reachX = (a.width + b.width) / 2,
-          reachY = (a.height + b.height) / 2;
+      final next = _bodies[other]!;
+      final difference = center - next.center;
+      final reachX = (space.width + next.space.width) / 2,
+          reachY = (space.height + next.space.height) / 2;
       final dx = difference.dx / reachX, dy = difference.dy / reachY;
-      final proximity = math.sqrt(dx * dx + dy * dy);
-      if (proximity >= 1) continue;
+      final squared = dx * dx + dy * dy;
+      if (squared >= 1) continue;
+      final proximity = math.sqrt(squared);
       final weight = 1 - proximity;
       if (difference.distanceSquared > .001) {
         adjustment += difference / difference.distance * (distance * weight);

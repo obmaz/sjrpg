@@ -6,47 +6,6 @@ import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/quest_scenery.dart';
 import 'package:guardian_new/world_model.dart';
 
-const _colors = [
-  ui.Color(0xff5dba71),
-  ui.Color(0xff54a5d6),
-  ui.Color(0xffd6a34e),
-  ui.Color(0xffda9869),
-  ui.Color(0xffa69285),
-  ui.Color(0xff8075ce),
-];
-Future<ui.Image> _atlas() async {
-  final recorder = ui.PictureRecorder(),
-      c = ui.Canvas(recorder),
-      paint = ui.Paint();
-  for (var index = 0; index < 6; index++) {
-    final center = ui.Offset(index % 3 * 64 + 32, index ~/ 3 * 64 + 32);
-    for (var radius = 30; radius > 0; radius--) {
-      c.drawCircle(
-        center,
-        radius.toDouble(),
-        paint
-          ..color = _colors[index].withAlpha(
-            ((31 - radius) * 12).clamp(0, 255),
-          ),
-      );
-    }
-    c.drawRect(
-      ui.Rect.fromCenter(
-        center: center + const ui.Offset(5, -9),
-        width: 5,
-        height: 11,
-      ),
-      paint..color = const ui.Color(0x887ae7d2),
-    );
-  }
-  final picture = recorder.endRecording();
-  try {
-    return await picture.toImage(192, 128);
-  } finally {
-    picture.dispose();
-  }
-}
-
 Future<Uint8List> _pixels(
   void Function(ui.Canvas canvas) draw,
   int width,
@@ -70,6 +29,21 @@ Future<Uint8List> _pixels(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test(
+    'all 26 objectives have independent compositions and only roots uses the generated scene',
+    () {
+      final all = [
+        for (final stage in WorldStage.values)
+          ...QuestScenery(AdventureWorld(stage: stage)).patches,
+      ];
+      expect(all.length, 26);
+      expect(all.map((p) => p.composition).toSet().length, all.length);
+      expect(all.where((p) => p.usesDedicatedImage).map((p) => p.siteId), [
+        'roots',
+      ]);
+    },
+  );
+
+  test(
     'every chapter landscapes its actual mandatory sites without changing collision',
     () {
       for (final stage in WorldStage.values) {
@@ -80,9 +54,8 @@ void main() {
           final site = world.sites[index];
           expect(patch.siteId, site.id);
           expect(patch.center, site.at);
-          expect(patch.cell, inInclusiveRange(0, 5));
-          expect(patch.size.width, inInclusiveRange(800, 1000));
-          expect(patch.size.height, inInclusiveRange(800, 1000));
+          expect(patch.size.width, inInclusiveRange(800, 1600));
+          expect(patch.size.height, inInclusiveRange(800, 1600));
           final body = ui.Rect.fromCenter(
             center: site.at + const ui.Offset(0, 75),
             width: 28,
@@ -94,23 +67,15 @@ void main() {
           cache.dispose();
           expect(world.blocked(body), blocked);
         }
-        if (stage == WorldStage.forest) {
-          expect(scenery.patches.map((p) => p.cell), [0, 1, 2]);
-        }
-        if (stage == WorldStage.future || stage == WorldStage.foundry) {
-          expect(scenery.patches.every((p) => p.cell == 5), true);
-        }
       }
     },
   );
   test(
-    'large ground patches are identical across sector boundaries and culled outside their bounds',
+    'large ground patches remain visually continuous across sector boundaries and culled outside their bounds',
     () async {
-      final atlas = await _atlas();
-      addTearDown(atlas.dispose);
       for (final stage in WorldStage.values) {
-        final scenery = QuestScenery(AdventureWorld(stage: stage)),
-            patch = QuestScenery(AdventureWorld(stage: stage)).patches.first;
+        final scenery = QuestScenery(AdventureWorld(stage: stage));
+        final patch = scenery.patches.firstWhere((p) => !p.usesDedicatedImage);
         final region = ui.Rect.fromCenter(
           center: patch.center,
           width: 1024,
@@ -119,7 +84,7 @@ void main() {
         final direct = await _pixels(
           (c) {
             c.translate(-region.left, -region.top);
-            scenery.paint(c, atlas, region);
+            scenery.paintGround(c, region);
           },
           1024,
           1024,
@@ -145,7 +110,7 @@ void main() {
                 );
                 c.save();
                 c.clipRect(bounds, doAntiAlias: false);
-                scenery.paint(c, atlas, bounds);
+                scenery.paintGround(c, bounds);
                 c.restore();
               }
             }
@@ -153,19 +118,30 @@ void main() {
           1024,
           1024,
         );
-        expect(sectors, direct, reason: stage.name);
-        final at = (512 * 1024 + 512) * 4, color = _colors[patch.cell];
+        // Native stroked-path clipping changes fringe coverage slightly; the
+        // opaque cached terrain regression below checks actual visible seams.
+        var totalChannelDifference = 0.0;
+        for (var i = 0; i < direct.length; i += 4) {
+          for (var channel = 0; channel < 4; channel++) {
+            // rawRgba is unpremultiplied: tiny alpha differences magnify RGB
+            // errors in invisible fringe pixels. Compare visible contribution.
+            final a = channel == 3
+                ? sectors[i + 3].toDouble()
+                : sectors[i + channel] * sectors[i + 3] / 255;
+            final b = channel == 3
+                ? direct[i + 3].toDouble()
+                : direct[i + channel] * direct[i + 3] / 255;
+            final difference = (a - b).abs();
+            totalChannelDifference += difference;
+          }
+        }
         expect(
-          direct.sublist(at, at + 4),
-          [
-            color.r,
-            color.g,
-            color.b,
-            color.a,
-          ].map((v) => (v * 255).round()).toList(),
+          totalChannelDifference / direct.length,
+          lessThan(.01),
+          reason: stage.name,
         );
         final outside = await _pixels(
-          (c) => scenery.paint(c, atlas, const ui.Rect.fromLTWH(0, 0, 32, 32)),
+          (c) => scenery.paintGround(c, const ui.Rect.fromLTWH(0, 0, 32, 32)),
           32,
           32,
         );
@@ -178,9 +154,9 @@ void main() {
     () async {
       final art = await GameArt.loadMenu();
       addTearDown(art.dispose);
-      expect(art.images.containsKey('quest-landscapes'), false);
+      expect(art.images.containsKey('quest-root-garden'), false);
       await art.ensureStage(WorldStage.forest, heroClass: HeroClass.warrior);
-      expect(art.images.containsKey('quest-landscapes'), true);
+      expect(art.images.containsKey('quest-root-garden'), true);
       final world = AdventureWorld(),
           terrain = TerrainArt(AdventureWorld(), art);
       addTearDown(terrain.dispose);

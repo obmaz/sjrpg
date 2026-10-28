@@ -1595,6 +1595,13 @@ class Adventure extends ChangeNotifier {
       if (!world.blocksEnemy(next & size)) return next;
     }
     if (steer) delta = enemySpacing.steer(mover, original, delta, neighbors);
+    // Steering needs the wider illustration neighborhood, but a short physical
+    // step cannot touch most of those bodies. Keep the exact same narrow-phase
+    // rules for reachable contacts and leave soft spacing on the wider set.
+    final reachable = original.inflate(delta.distance + .1);
+    final contacts = neighbors
+        .where((other) => reachable.overlaps(enemySpacing.bodyOf(other)))
+        .toList(growable: false);
     final steps = math.max(1, (delta.distance / 6).ceil());
     final step = delta / steps.toDouble();
     var at = from;
@@ -1605,20 +1612,25 @@ class Adventure extends ChangeNotifier {
       if (heroInWay && !EnemySpacing.permits(beforeBody, afterBody, heroBody)) {
         return false;
       }
-      for (final other in neighbors) {
+      for (final other in contacts) {
         if (!EnemySpacing.permits(
-              beforeBody,
-              afterBody,
-              enemySpacing.bodyOf(other),
-            ) ||
-            enforceSpace &&
-                !enemySpacing.permitsPersonalSpace(
-                  mover,
-                  beforeBody,
-                  afterBody,
-                  other,
-                )) {
+          beforeBody,
+          afterBody,
+          enemySpacing.bodyOf(other),
+        )) {
           return false;
+        }
+      }
+      if (enforceSpace) {
+        for (final other in neighbors) {
+          if (!enemySpacing.permitsPersonalSpace(
+            mover,
+            beforeBody,
+            afterBody,
+            other,
+          )) {
+            return false;
+          }
         }
       }
       return true;
@@ -1873,6 +1885,7 @@ class Adventure extends ChangeNotifier {
     double damage,
     ui.Offset impulse, {
     bool generateRage = false,
+    bool hitStop = true,
     ui.Offset? origin,
     ImpactKind? impactKind,
     int? impactRank,
@@ -1899,6 +1912,7 @@ class Adventure extends ChangeNotifier {
                 : generateRage && heavy
                 ? ImpactKind.heavy
                 : ImpactKind.melee),
+        hitStop: hitStop,
         rank:
             impactRank ??
             (generateRage ? progress.rank(progress.selectedBasic) : 1),
@@ -2686,9 +2700,7 @@ class Guardian extends Player with WithCollision {
   void _publishCombo() {
     if (_comboDisposed) return;
     final profile = _comboProfile;
-    final window = _queuedCombo != null
-        ? profile?.windowFor(_queuedCombo!.count)
-        : timedCombo.window;
+    final window = timedCombo.window;
     final state = ComboHudState(
       active:
           profile != null &&
@@ -3073,6 +3085,7 @@ class Guardian extends Player with WithCollision {
         damage,
         impulse,
         generateRage: !flow,
+        hitStop: !flow,
         impactKind: flow ? ImpactKind.melee : null,
       );
       landed |= accepted;
@@ -4721,7 +4734,11 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
     } else if (hurt <= 0 && _knockbackTime <= 0) {
       ordinaryPursuit = true;
       var toward = session.hero.position.toOffset();
-      final direct = session.world.clearEnemyLine(before, toward, body.size);
+      // A committed local detour owns its next corner. The direct hero ray is
+      // unused until that detour finishes; physical movement still sweeps below.
+      final direct =
+          !_localIntent.active &&
+          session.world.clearEnemyLine(before, toward, body.size);
       if (_localIntent.active) {
         toward = _localIntent.points.first;
       } else if (!direct) {

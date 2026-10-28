@@ -103,7 +103,7 @@ class GameArt {
     'blacksmith-forge',
     'village-gardens',
     'village-cottage',
-    'quest-landscapes',
+    'quest-root-garden',
     'landscape-bridge',
     'world-forest',
     'world-desert',
@@ -118,6 +118,7 @@ class GameArt {
       'blacksmith-forge',
       'village-gardens',
       'village-cottage',
+      'quest-root-garden',
     },
     'sands': {'world-desert', 'ruin-props'},
     'past': {'ruin-props'},
@@ -967,6 +968,10 @@ class TerrainArt {
       );
     }
     c.save();
+    c.clipPath(dryGroundPath, doAntiAlias: false);
+    questScenery.paintGround(c, area, stoneTexture: art.materials[5]);
+    c.restore();
+    c.save();
     if (nearWater) c.clipPath(dryGroundPath, doAntiAlias: false);
     for (final t in world.trails) {
       if (!t.bounds.inflate(t.width / 2 + 2).overlaps(area)) continue;
@@ -993,14 +998,16 @@ class TerrainArt {
       );
     }
     c.restore();
-    // Large flat courtyards soften the trail endpoints just like the village
-    // gardens. They add no walls; real bridges and props remain above them.
-    final questLandscapes = art.images['quest-landscapes'];
-    if (questLandscapes != null &&
-        questScenery.patches.any((patch) => patch.bounds.overlaps(area))) {
+    // One complete root-garden scene blends into its real approaches. Other
+    // objectives have independent ground compositions beneath the roads.
+    final rootGarden = art.images['quest-root-garden'];
+    if (rootGarden != null &&
+        questScenery.patches.any(
+          (patch) => patch.usesDedicatedImage && patch.bounds.overlaps(area),
+        )) {
       c.save();
       c.clipPath(dryGroundPath, doAntiAlias: false);
-      questScenery.paint(c, questLandscapes, area);
+      questScenery.paintDedicated(c, rootGarden, area);
       c.restore();
     }
     // The entire settlement shares one ground material. Paint after biome

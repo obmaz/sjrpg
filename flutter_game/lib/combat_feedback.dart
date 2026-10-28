@@ -27,11 +27,18 @@ enum ImpactKind {
 
 /// A notification of damage that already happened, never a deferred attack.
 class AcceptedImpact {
-  const AcceptedImpact(this.at, this.bearing, this.kind, {this.rank = 1});
+  const AcceptedImpact(
+    this.at,
+    this.bearing,
+    this.kind, {
+    this.rank = 1,
+    this.hitStop = true,
+  });
   final ui.Offset at;
   final double bearing;
   final ImpactKind kind;
   final int rank;
+  final bool hitStop;
 }
 
 /// One bounded visual batch and one engine stop per simulation turn. Damage,
@@ -47,8 +54,12 @@ class CombatFeedback {
   final bool Function() active;
   final bool Function(ui.Offset) visible;
   static const maxBurstsPerBatch = 2, maxLiveBursts = 10;
+  static const minimumStopInterval = Duration(milliseconds: 240);
   final _pending = <AcceptedImpact>[];
   async.Timer? _batch, _release;
+  double _stopRecovery = 0;
+  BonfireGameInterface? _recoveryGame;
+  int _pendingHoldMilliseconds = 0;
   BonfireGameInterface? _heldGame, _batchGame;
   double _previousScale = 1;
   bool _disposed = false,
@@ -61,6 +72,12 @@ class CombatFeedback {
     if (_disposed || !active() || !visible(impact.at)) return;
     // Keep the strongest contacts when a spell hits a large crowd. Never
     // allocate particles or start a timer for each victim of the same attack.
+    if (impact.hitStop) {
+      _pendingHoldMilliseconds = math.max(
+        _pendingHoldMilliseconds,
+        impact.kind.holdMilliseconds,
+      );
+    }
     _batchGame ??= game();
     _pending.add(impact);
     _pending.sort(
@@ -73,6 +90,8 @@ class CombatFeedback {
   void _flush({bool hold = true}) {
     _batch = null;
     final impacts = List<AcceptedImpact>.of(_pending);
+    final holdMilliseconds = _pendingHoldMilliseconds;
+    _pendingHoldMilliseconds = 0;
     _pending.clear();
     final target = _batchGame;
     _batchGame = null;
@@ -91,7 +110,16 @@ class CombatFeedback {
     // Bonfire's BaseGame uses Flame HasTimeScale. A wall timer is necessary:
     // an engine stopped at zero cannot advance its own recovery component.
     // Never extend/restart a hold, and never resume a paused engine here.
-    if (!hold || _release != null || target.timeScale <= 0) return;
+    if (!identical(_recoveryGame, target)) _stopRecovery = 0;
+    if (!hold ||
+        holdMilliseconds == 0 ||
+        _release != null ||
+        _stopRecovery > 0 ||
+        target.timeScale <= 0) {
+      return;
+    }
+    _recoveryGame = target;
+    _stopRecovery = minimumStopInterval.inMilliseconds / 1000;
     _heldGame = target;
     _deadlinePassed = _observedStoppedUpdate = false;
     if (!identical(_observer?._game, target) || _observer!.isRemoving) {
@@ -102,7 +130,7 @@ class CombatFeedback {
     _previousScale = target.timeScale;
     target.timeScale = 0;
     _release = async.Timer(
-      Duration(milliseconds: impacts.first.kind.holdMilliseconds),
+      Duration(milliseconds: holdMilliseconds),
       _onDeadline,
     );
   }
@@ -116,6 +144,13 @@ class CombatFeedback {
   }
 
   void _observeUpdate(BonfireGameInterface source, double dt) {
+    if (!_disposed &&
+        dt.isFinite &&
+        dt > 0 &&
+        identical(source, _recoveryGame) &&
+        identical(source, game())) {
+      _stopRecovery = math.max(0, _stopRecovery - math.min(dt, .1));
+    }
     if (_disposed ||
         !identical(_heldGame, source) ||
         dt != 0 ||
@@ -152,6 +187,9 @@ class CombatFeedback {
     _batch?.cancel();
     _batch = null;
     _pending.clear();
+    _pendingHoldMilliseconds = 0;
+    _stopRecovery = 0;
+    _recoveryGame = null;
     _batchGame = null;
     _restoreClock();
   }

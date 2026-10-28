@@ -70,6 +70,7 @@ void _damageAreaTargets(
   int impactRank = 1,
   double stun = 0,
   double slow = 0,
+  bool hitStop = true,
 }) {
   for (final mob in targets) {
     final d = mob.body.center - center;
@@ -80,6 +81,7 @@ void _damageAreaTargets(
       origin: center,
       impactKind: impactKind,
       impactRank: impactRank,
+      hitStop: hitStop,
     )) {
       continue;
     }
@@ -117,6 +119,7 @@ void areaStrike(
   Set<HuntEnemy> excluded = const {},
   ImpactKind? impactKind,
   int impactRank = 1,
+  bool hitStop = true,
 }) {
   if (maxTargets <= 0 || !s.combatAllowed) return;
   final targets = castTargets ?? <HuntEnemy>{};
@@ -137,6 +140,7 @@ void areaStrike(
     multiplier: enemyGroupDamageScale(selected.length),
     impactKind: impactKind,
     impactRank: impactRank,
+    hitStop: hitStop,
     stun: stun,
     slow: slow,
   );
@@ -780,6 +784,7 @@ class WhirlwindPulse extends GameComponent {
         castTargets: targets,
         castChests: chests,
         impactRank: rank,
+        hitStop: pulses == 1,
       );
       if (targets.isNotEmpty) session.kickCamera(.35 + rank * .08);
     }

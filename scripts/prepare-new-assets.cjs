@@ -50,7 +50,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'blacksmith-forge',
         'village-gardens',
         'village-cottage',
-        'quest-landscapes',
+        'quest-root-garden',
         'actors-bicycle',
         'skill-perks',
         'physical-icons',
@@ -134,6 +134,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
     );
     // Remove superseded generated output when upgrading an existing asset cache.
     fs.rmSync(path.join(destination, 'images/terrain-materials.png'), { force: true });
+    fs.rmSync(path.join(destination, 'images/quest-landscapes.webp'), { force: true });
     const mage = JSON.parse(
         fs.readFileSync(path.join(root, 'flutter_game/art/mage-bounds.json'), 'utf8'),
     );

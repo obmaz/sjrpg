@@ -1,0 +1,11 @@
+{
+  "source": "/workspace/generated_images/exec-f7b9eec4-7ed6-4c9f-b12c-ec0817f93d0d.png",
+  "sha256": "f201681dd32b27cf34862609aac087768e1625934e440f29ee429266c5b11f43",
+  "generator": "image_gen",
+  "terrainOnly": true,
+  "uniqueRegion": "forest/roots",
+  "size": [
+    1254,
+    1254
+  ]
+}
