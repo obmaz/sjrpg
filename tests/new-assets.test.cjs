@@ -50,6 +50,10 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
         'source picture village-scene.webp',
     );
     for (const name of [
+        'field-ground-meadow',
+        'field-ground-desert',
+        'field-ground-stone',
+        'field-ground-industrial',
         'entry-scene',
         'entry-splash',
         'class-selection',

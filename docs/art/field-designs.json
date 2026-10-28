@@ -1,0 +1,93 @@
+{
+    "version": 1,
+    "camera": "consistent near-overhead 2.5D, upper-left light",
+    "runtime": "16x12 sampled ground palette plus four shared 768px generated ground materials; no full-map bitmap enlargement",
+    "chapters": {
+        "forest": {
+            "source": "flutter_game/art/field-design-forest.webp",
+            "original": "/workspace/generated_images/exec-dcf17ed5-bc00-4a5a-a301-8108a4868f89.png",
+            "blueprint": "forest.png",
+            "purpose": "Whole chapter design master; ground palette only at runtime, physical geometry remains authoritative.",
+            "originalSha256": "14632a63ef18bf39c3426906fea81e0691717fdd92b74b1287abdf3e9e0ce688",
+            "size": [1448, 1086]
+        },
+        "sands": {
+            "source": "flutter_game/art/field-design-sands.webp",
+            "original": "/workspace/generated_images/exec-ddb8f7df-fdb5-4a1c-8e80-1053ca95df45.png",
+            "blueprint": "sands.png",
+            "purpose": "Whole chapter design master; ground palette only at runtime, physical geometry remains authoritative.",
+            "originalSha256": "5ef9f72de0deafe2cc50e6b95f7b07e0b715dad2e0314c49e6424fdf5843a878",
+            "size": [1448, 1086]
+        },
+        "past": {
+            "source": "flutter_game/art/field-design-past.webp",
+            "original": "/workspace/generated_images/exec-18a92681-f72f-4fd5-aadd-52d28b442b58.png",
+            "blueprint": "past.png",
+            "purpose": "Whole chapter design master; ground palette only at runtime, physical geometry remains authoritative.",
+            "originalSha256": "1361194d2741f03a23397fd612ba3dee644cc11c4ff61170a854a049868efac0",
+            "size": [1448, 1086]
+        },
+        "future": {
+            "source": "flutter_game/art/field-design-future.webp",
+            "original": "/workspace/generated_images/exec-6e83f65d-c66b-47c1-a846-d4b2bc3a77aa.png",
+            "blueprint": "future.png",
+            "purpose": "Whole chapter design master; ground palette only at runtime, physical geometry remains authoritative.",
+            "originalSha256": "9db0770c2ca1b62b9f1f94a4688d19d8e42950790dce2d76fc62bf2c7979e808",
+            "size": [1448, 1086]
+        },
+        "tombs": {
+            "source": "flutter_game/art/field-design-tombs.webp",
+            "original": "/workspace/generated_images/exec-d1654f6e-ecdb-49d5-a5d8-3e1a11ad31ab.png",
+            "blueprint": "tombs.png",
+            "purpose": "Whole chapter design master; ground palette only at runtime, physical geometry remains authoritative.",
+            "originalSha256": "19520ab6dcfac8ac0a3d991bc3c49d87fffee61ea006243a8c137ac71837fff0",
+            "size": [1448, 1086]
+        },
+        "foundry": {
+            "source": "flutter_game/art/field-design-foundry.webp",
+            "original": "/workspace/generated_images/exec-5c3c1706-1881-4f41-a8f0-ead151da8fd9.png",
+            "blueprint": "foundry.png",
+            "purpose": "Whole chapter design master; ground palette only at runtime, physical geometry remains authoritative.",
+            "originalSha256": "7f6a29412b706a981bfefb97ddc7e26a1f640aa4dc41d1ac3128c8c4fa8a5bad",
+            "size": [1448, 1086]
+        },
+        "convergence": {
+            "source": "flutter_game/art/field-design-convergence.webp",
+            "original": "/workspace/generated_images/exec-b60bd29a-dce7-4386-9ae4-9370b10eb7e0.png",
+            "blueprint": "convergence.png",
+            "purpose": "Whole chapter design master; ground palette only at runtime, physical geometry remains authoritative.",
+            "originalSha256": "adfaf1ce61f4b3e6bb0e23a1bc4d09900feed1be3230da06453bd54ef38784a7",
+            "size": [1448, 1086]
+        }
+    },
+    "groundMaterials": {
+        "meadow": {
+            "source": "flutter_game/art/field-ground-meadow.webp",
+            "original": "/workspace/generated_images/exec-f6db3cc2-ed3d-4189-9994-871ea6183f47.png",
+            "runtimeSize": [768, 768],
+            "originalSize": [1254, 1254],
+            "originalSha256": "d7ddcf1d4a134e705fd7547f428755c20ec927a2ef339505d5fb5c37299d3ea2"
+        },
+        "desert": {
+            "source": "flutter_game/art/field-ground-desert.webp",
+            "original": "/workspace/generated_images/exec-9618a6aa-44e5-40d5-921e-b38596c10634.png",
+            "runtimeSize": [768, 768],
+            "originalSize": [1254, 1254],
+            "originalSha256": "e851cb115468adfaef65de636bd55095d9eaa64b1c526f895eeca15f4c0b552c"
+        },
+        "stone": {
+            "source": "flutter_game/art/field-ground-stone.webp",
+            "original": "/workspace/generated_images/exec-fba39a32-7123-436a-bb3f-fed0a84bab1b.png",
+            "runtimeSize": [768, 768],
+            "originalSize": [1254, 1254],
+            "originalSha256": "04d2c6d9b9d8a22bcedd6ecaf842353383abf2b2f5a72ff63c3dec2da608aeaa"
+        },
+        "industrial": {
+            "source": "flutter_game/art/field-ground-industrial.webp",
+            "original": "/workspace/generated_images/exec-fc013580-296a-4c01-a547-1c144d442be7.png",
+            "runtimeSize": [768, 768],
+            "originalSize": [1254, 1254],
+            "originalSha256": "a89cda825c0b079f18d43805fd07ef1fb676f37fcc6e08817cbfedf69a24f6c9"
+        }
+    }
+}

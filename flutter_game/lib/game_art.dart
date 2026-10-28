@@ -9,6 +9,8 @@ import 'actor_atlas.dart';
 import 'boss_sprite_mesh.dart';
 import 'effect_atlas.dart';
 import 'enemy_catalog.dart';
+import 'field_landscape.dart';
+import 'field_palettes.dart';
 import 'ground_texture.dart';
 import 'interface_art.dart';
 import 'mount_sprite_mesh.dart';
@@ -22,6 +24,15 @@ class GameArt {
   late final effects = EffectAtlas(images);
   late final Map<String, dynamic> actors, controls;
   final materials = <ui.Shader>[];
+
+  /// Four full-resolution shared field textures; all stages borrow these.
+  final fieldMaterials = <ui.Shader>[];
+  static const _fieldImages = [
+    'field-ground-meadow',
+    'field-ground-desert',
+    'field-ground-stone',
+    'field-ground-industrial',
+  ];
   final _actorAtlases = <String, ActorAtlas>{};
   final _bossMesh = BossSpriteMeshPainter();
   final _mountMesh = MountSpriteMeshPainter();
@@ -55,6 +66,7 @@ class GameArt {
     'actors-roll',
   };
   static const _allImages = [
+    ..._fieldImages,
     'entry-scene',
     'class-selection',
     'entry-ui',
@@ -339,6 +351,7 @@ class GameArt {
     bool village = false,
   }) async {
     final buildGround = ground && materials.isEmpty;
+    final buildField = ground && fieldMaterials.isEmpty;
     final buildVillage = village && !images.containsKey('village-blended');
     final requested = names
         .where(
@@ -346,18 +359,25 @@ class GameArt {
         )
         .toSet();
     if (buildGround) requested.addAll(['terrain-materials', 'stage-materials']);
+    if (buildField) requested.addAll(_fieldImages);
     final decoded = await _decodeMissing(requested);
-    for (final name in decoded.keys.toList()) {
-      if (!name.startsWith('settlement-')) continue;
-      final source = decoded[name]!;
-      decoded[name] = await _featherSettlement(source);
-      source.dispose();
-    }
     final consumedSources = decoded.keys.toList();
-    final sourceImages = {...images, ...decoded};
     final baked = <String, ui.Image>{};
     final shaders = <ui.Shader>[];
+    final fieldShaders = <ui.Shader>[];
     try {
+      for (final name in decoded.keys.toList()) {
+        final source = decoded[name]!;
+        if (name.startsWith('settlement-')) {
+          decoded[name] = await _featherSettlement(source);
+        } else if (buildField && _fieldImages.contains(name)) {
+          decoded[name] = await _bakeFieldTexture(source);
+        } else {
+          continue;
+        }
+        source.dispose();
+      }
+      final sourceImages = {...images, ...decoded};
       if (buildGround) {
         await _bakeGround(sourceImages, shaders, baked);
         for (final name in ['terrain-materials', 'stage-materials']) {
@@ -365,9 +385,10 @@ class GameArt {
           decoded.remove(name)!.dispose();
         }
       }
+      if (buildField) _buildFieldMaterials(sourceImages, fieldShaders);
       if (buildVillage) await _bakeVillage(sourceImages, baked);
     } catch (_) {
-      for (final shader in shaders) {
+      for (final shader in [...shaders, ...fieldShaders]) {
         shader.dispose();
       }
       for (final image in [...decoded.values, ...baked.values]) {
@@ -378,12 +399,69 @@ class GameArt {
     images.addAll(decoded);
     images.addAll(baked);
     materials.addAll(shaders);
+    fieldMaterials.addAll(fieldShaders);
     for (final name in consumedSources) {
       _sourceBytes.remove(name);
     }
     _bossMesh.trim(images.values);
     _mountMesh.trim(images.values);
     effects.warm();
+  }
+
+  void _buildFieldMaterials(
+    Map<String, ui.Image> sourceImages,
+    List<ui.Shader> shaders,
+  ) {
+    for (final name in _fieldImages) {
+      final image = sourceImages[name]!;
+      if (image.width != 768 || image.height != 768) {
+        throw FormatException('$name must retain its 768px field detail');
+      }
+      shaders.add(
+        ui.ImageShader(
+          image,
+          ui.TileMode.repeated,
+          ui.TileMode.repeated,
+          Float64List.fromList([
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+          ]),
+        ),
+      );
+    }
+  }
+
+  Future<ui.Image> _bakeFieldTexture(ui.Image source) async {
+    if (source.width != 768 || source.height != 768) {
+      throw const FormatException('Field sources must retain 768px detail');
+    }
+    final recorder = ui.PictureRecorder();
+    paintSeamlessGround(
+      ui.Canvas(recorder),
+      source,
+      const ui.Rect.fromLTWH(0, 0, 768, 768),
+      768,
+    );
+    final picture = recorder.endRecording();
+    try {
+      return await picture.toImage(768, 768);
+    } finally {
+      picture.dispose();
+    }
   }
 
   Future<void> _bakeGround(
@@ -531,13 +609,14 @@ class GameArt {
   void dispose() {
     _bossMesh.dispose();
     _mountMesh.dispose();
-    for (final shader in materials) {
+    for (final shader in [...materials, ...fieldMaterials]) {
       shader.dispose();
     }
     for (final image in images.values) {
       image.dispose();
     }
     materials.clear();
+    fieldMaterials.clear();
     images.clear();
     _sourceBytes.clear();
   }
@@ -955,6 +1034,7 @@ class TerrainArt {
   final GameArt art;
   final cache = <String, ui.Picture>{};
   late final questScenery = QuestScenery(world);
+  late final fieldLandscape = FieldLandscape(world);
   late final propGrounding = PropGrounding(world.propBuckets);
   late final ui.Path waterPath = ui.Path.combine(
     ui.PathOperation.difference,
@@ -1021,6 +1101,12 @@ class TerrainArt {
         );
       }
     }
+    fieldLandscape.paintGround(
+      c,
+      area,
+      macroColors: fieldPalettes[world.stage.name],
+      details: art.fieldMaterials,
+    );
     final nearWater = [
       ...world.lakes,
       world.river,

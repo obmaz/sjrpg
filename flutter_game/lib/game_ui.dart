@@ -7,6 +7,7 @@ import 'adventure.dart';
 import 'affliction_widgets.dart';
 import 'barbarian_icon_art.dart';
 import 'combat_balance.dart';
+import 'field_palettes.dart';
 import 'game_art.dart';
 import 'health_widgets.dart';
 import 'resource_meter.dart';
@@ -400,36 +401,39 @@ class MapPainter extends CustomPainter {
     c.clipRect(Offset.zero & worldSize);
     final base = session.world.stage.baseMaterial;
     final road = session.world.stage.roadMaterial;
-    _terrain(
-      c,
-      Path()..addRect(Offset.zero & worldSize),
-      base,
-      session.world.stage.mapColor,
-    );
-    for (final wood in session.world.woods) {
-      if (!round) {
-        c.drawPath(
-          wood.path,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 100
-            ..color = const Color(0xff506d48),
-        );
-      }
-      _terrain(c, wood.path, 1, const Color(0xff315947));
-    }
-    for (final clearing in session.world.clearings) {
-      _terrain(c, clearing.path, base, session.world.stage.clearingColor);
-    }
-    for (final sand in session.world.sandFields) {
+    if (!round) {
+      c.drawRect(
+        Offset.zero & worldSize,
+        Paint()..color = session.world.stage.mapColor,
+      );
+      session.terrain.fieldLandscape.paintOverview(
+        c,
+        view,
+        macroColors: fieldPalettes[session.world.stage.name],
+      );
+    } else {
       _terrain(
         c,
-        sand.path,
-        session.world.stage == WorldStage.tombs ? 3 : 2,
-        session.world.stage == WorldStage.tombs
-            ? const Color(0xff9e967f)
-            : const Color(0xffc7b579),
+        Path()..addRect(Offset.zero & worldSize),
+        base,
+        session.world.stage.mapColor,
       );
+      for (final wood in session.world.woods) {
+        _terrain(c, wood.path, 1, const Color(0xff315947));
+      }
+      for (final clearing in session.world.clearings) {
+        _terrain(c, clearing.path, base, session.world.stage.clearingColor);
+      }
+      for (final sand in session.world.sandFields) {
+        _terrain(
+          c,
+          sand.path,
+          session.world.stage == WorldStage.tombs ? 3 : 2,
+          session.world.stage == WorldStage.tombs
+              ? const Color(0xff9e967f)
+              : const Color(0xffc7b579),
+        );
+      }
     }
     final water = session.terrain.waterPath;
     if (!round) {
