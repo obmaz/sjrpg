@@ -138,7 +138,7 @@ void main() {
       final accessible = find.bySemanticsLabel('보관 장비 · ${weapon.name} · 장착 중');
       expect(
         tester.widget<Semantics>(accessible).properties.hint,
-        '무기 레벨 ${weapon.weaponLevel} · 무기 공격 15 · 초당 피해 ${p.basicDps.toStringAsFixed(1)} · 현재 초당 피해 ${p.basicDps.toStringAsFixed(1)}',
+        '타이밍 연계 ${weapon.base.comboProfile!.chainLabel} · 무기 레벨 ${weapon.weaponLevel} · 무기 공격 15 · 초당 피해 ${p.basicDps.toStringAsFixed(1)} · 현재 초당 피해 ${p.basicDps.toStringAsFixed(1)}',
       );
       for (final element in comparisons.evaluate()) {
         final paragraph = element.renderObject! as RenderParagraph;

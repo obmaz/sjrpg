@@ -662,26 +662,16 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                                   ),
                                   const SizedBox(height: 3),
                                   Text(
-                                    '${gear.rarity.title} · ${_slotName(gear.base.slot)}${gear.weaponLevel == null ? '' : ' · Lv.${gear.weaponLevel}'}',
+                                    gear.base.comboProfile == null
+                                        ? '${gear.rarity.title} · ${_slotName(gear.base.slot)}${gear.weaponLevel == null ? '' : ' · Lv.${gear.weaponLevel}'}'
+                                        : '${gear.base.comboProfile!.chainLabel} · Lv.${gear.weaponLevel} · ${gear.rarity.title}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
                                       color: _muted,
                                       fontSize: 13,
                                     ),
                                   ),
-                                  if (gear.base.comboProfile
-                                      case final profile?)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 3),
-                                      child: Text(
-                                        '타이밍 연계 · ${profile.chainLabel}',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: gold,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ),
                                   const SizedBox(height: 5),
                                   if (gear.base.slot == GearSlot.weapon) ...[
                                     _quickStat(
