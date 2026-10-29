@@ -949,15 +949,7 @@ class EffectIconPainter extends CustomPainter {
   }
 
   void _paint(Canvas canvas, Size size) {
-    final d1 = index >= 100
-        ? index
-        : switch (index) {
-            34 => 5,
-            35 => 9,
-            36 => 11,
-            7 => 8,
-            _ => null,
-          };
+    final d1 = D1IconArt.effectIndex(index);
     if (d1 != null && D1IconArt.draw(canvas, art, d1, Offset.zero & size)) {
       return;
     }
@@ -1560,7 +1552,8 @@ class _ActionButtonState extends State<ActionButton> {
   Widget get _symbol {
     final effect = _illustratedEffect;
     if (effect != null &&
-        (effect == 36 ||
+        (D1IconArt.hasEffect(widget.art, effect) ||
+            effect == 36 ||
             (effect == 34 &&
                 widget.art.images.containsKey(
                   ActionIllustrationPainter.imageKey,
@@ -1581,13 +1574,21 @@ class _ActionButtonState extends State<ActionButton> {
                   : 'combat-fx',
             ))) {
       return CustomPaint(
-        size: Size.square(widget.size * .86),
+        size: Size.square(
+          D1IconArt.hasEffect(widget.art, effect)
+              ? widget.size
+              : widget.size * .86,
+        ),
         painter: EffectIconPainter(widget.art, effect, framed: false),
       );
     }
     if (widget.glyphIndex == MobileGlyph.dodge) {
       return CustomPaint(
-        size: Size.square(widget.size * .86),
+        size: Size.square(
+          widget.art.images.containsKey(D1IconArt.interfaceKey)
+              ? widget.size
+              : widget.size * .86,
+        ),
         painter: DodgeActionPainter(widget.art),
       );
     }

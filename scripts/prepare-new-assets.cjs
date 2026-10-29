@@ -23,6 +23,16 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         );
     for (const name of [
         'guardian-title',
+        'select-scene',
+        'select-header',
+        'select-warrior-card',
+        'select-mage-card',
+        'select-frame',
+        'select-warrior-info',
+        'select-mage-info',
+        'select-start',
+        'select-back',
+
         'actors-mage',
         'actors-motor',
         'actors-horse',

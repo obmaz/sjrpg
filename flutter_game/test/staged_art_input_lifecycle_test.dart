@@ -280,9 +280,9 @@ void main() {
             await tester.pump();
             await tester.tap(find.text('제2장 의뢰 받기'));
           } else {
-            await tester.tap(find.text('시작'));
+            await tester.tap(find.byKey(const ValueKey('title-start')));
             await tester.pumpAndSettle();
-            await tester.tap(find.text('전사로 모험 시작'));
+            await tester.tap(find.byKey(const ValueKey('select-start')));
           }
           await tester.pump();
           expect(art.waiting, isTrue);

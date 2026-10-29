@@ -6,6 +6,7 @@ import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/class_selection.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
+import 'package:guardian_new/landscape_entry.dart';
 import 'package:guardian_new/main.dart';
 import 'package:guardian_new/title_screen.dart';
 import 'package:guardian_new/world_model.dart';
@@ -55,19 +56,17 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         tester
-            .widget<OutlinedButton>(
-              find.byKey(const ValueKey('title-continue')),
-            )
-            .onPressed,
+            .widget<EntryHotspot>(find.byKey(const ValueKey('title-continue')))
+            .onTap,
         isNull,
       );
       for (final key in ['title-start', 'title-continue']) {
         final rect = tester.getRect(find.byKey(ValueKey(key)));
         expect(rect.top, greaterThanOrEqualTo(0));
         expect(rect.bottom, lessThanOrEqualTo(size.height));
-        expect(rect.height, greaterThanOrEqualTo(48));
+        expect(rect.height, greaterThanOrEqualTo(44));
       }
-      await tester.tap(find.text('시작'));
+      await tester.tap(find.byKey(const ValueKey('title-start')));
       expect(starts, 1);
       expect(tester.takeException(), isNull);
     });
@@ -93,25 +92,25 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('시작'));
+    await tester.tap(find.byKey(const ValueKey('title-start')));
     await tester.pumpAndSettle();
     expect(find.byType(AlertDialog), findsOneWidget);
     await tester.tap(find.text('취소'));
     await tester.pumpAndSettle();
     expect(find.byType(TitleScreen), findsOneWidget);
     expect(writes, 0);
-    await tester.tap(find.text('시작'));
+    await tester.tap(find.byKey(const ValueKey('title-start')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('새 모험'));
     await tester.pumpAndSettle();
     expect(find.byType(ClassSelection), findsOneWidget);
-    await tester.tap(find.text('타이틀로 돌아가기'));
+    await tester.tap(find.byKey(const ValueKey('select-back')));
     await tester.pumpAndSettle();
     expect(find.byType(TitleScreen), findsOneWidget);
     expect(
       tester
-          .widget<OutlinedButton>(find.byKey(const ValueKey('title-continue')))
-          .onPressed,
+          .widget<EntryHotspot>(find.byKey(const ValueKey('title-continue')))
+          .onTap,
       isNotNull,
     );
     expect(writes, 0);

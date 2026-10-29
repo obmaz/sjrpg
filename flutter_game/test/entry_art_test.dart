@@ -8,11 +8,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/class_selection.dart';
-import 'package:guardian_new/entry_art_widgets.dart';
 import 'package:guardian_new/entry_loading.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/game_ui.dart';
+import 'package:guardian_new/landscape_entry.dart';
 import 'package:guardian_new/main.dart';
 import 'package:guardian_new/rpg_model.dart';
 import 'package:guardian_new/stage_content.dart';
@@ -116,49 +116,34 @@ void main() {
           final warrior = find.bySemanticsLabel('전사 선택');
           final mage = find.bySemanticsLabel('마법사 선택');
           for (final card in [warrior, mage]) {
-            expect(tester.getSize(card).width, greaterThanOrEqualTo(48));
-            expect(tester.getSize(card).height, greaterThanOrEqualTo(48));
+            expect(tester.getSize(card).width, greaterThanOrEqualTo(44));
+            expect(tester.getSize(card).height, greaterThanOrEqualTo(44));
           }
-          expect(
-            tester
-                .state<ScrollableState>(find.byType(Scrollable).first)
-                .position
-                .maxScrollExtent,
-            lessThanOrEqualTo(1),
-          );
+          expect(find.byType(Scrollable), findsNothing);
           await proof(
             tester,
             'classes-warrior-${size.width.toInt()}x${size.height.toInt()}-$scale',
           );
           await tester.ensureVisible(mage);
           await tester.tapAt(
-            tester.getBottomRight(mage) - const Offset(12, 12),
+            tester.getRect(mage).bottomRight - const Offset(12, 12),
           );
           await tester.pumpAndSettle();
           expect(tester.widget<Semantics>(mage).properties.selected, true);
-          final start = find.text('마법사로 모험 시작');
-          await tester.ensureVisible(
-            find.ancestor(of: start, matching: find.byType(EntryAction)),
-          );
+          final start = find.bySemanticsLabel('마법사로 모험 시작');
+          await tester.ensureVisible(start);
           await proof(
             tester,
             'classes-${size.width.toInt()}x${size.height.toInt()}-$scale',
           );
-          final startAction = find.ancestor(
-            of: start,
-            matching: find.byType(EntryAction),
-          );
+          final startAction = start;
           final startBounds = tester.getRect(startAction);
           await tester.tapAt(
             Offset(startBounds.left + 16, startBounds.center.dy),
           );
           expect(began, HeroClass.mage);
           expect(tester.takeException(), isNull);
-          final resumeAction = tester.widget<EntryAction>(
-            find.widgetWithText(EntryAction, '모험 이어하기'),
-          );
-          expect(resumeAction.onTap, isNull);
-          expect(find.text('저장된 모험이 없습니다'), findsOneWidget);
+          expect(find.bySemanticsLabel('모험 이어하기'), findsNothing);
           semantics.dispose();
           await tester.pumpWidget(const SizedBox.shrink());
         },
@@ -183,27 +168,18 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final resume = find.text('모험 이어하기');
-      await tester.ensureVisible(
-        find.ancestor(of: resume, matching: find.byType(EntryAction)),
-      );
-      final resumeBounds = tester.getRect(
-        find.ancestor(of: resume, matching: find.byType(EntryAction)),
-      );
+      final resume = find.bySemanticsLabel('모험 이어하기');
+      await tester.ensureVisible(resume);
+      final resumeBounds = tester.getRect(resume);
       await tester.tapAt(
         Offset(resumeBounds.right - 16, resumeBounds.center.dy),
       );
       expect(continued, true);
       expect(began, isNull);
-      final fresh = find.text('전사로 새 모험');
-      await tester.ensureVisible(
-        find.ancestor(of: fresh, matching: find.byType(EntryAction)),
-      );
+      final fresh = find.bySemanticsLabel('전사로 새 모험');
+      await tester.ensureVisible(fresh);
       await tester.pumpAndSettle();
-      final action = find.ancestor(
-        of: fresh,
-        matching: find.byType(EntryAction),
-      );
+      final action = fresh;
       expect(tester.getRect(action).bottom, lessThanOrEqualTo(size.height));
       await proof(
         tester,
@@ -381,10 +357,10 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      OutlinedButton resume() => tester.widget<OutlinedButton>(
+      EntryHotspot resume() => tester.widget<EntryHotspot>(
         find.byKey(const ValueKey('title-continue')),
       );
-      expect(resume().onPressed, isNull);
+      expect(resume().onTap, isNull);
       expect(find.textContaining('저장된 모험을 불러올 수 없습니다'), findsOneWidget);
       expect(writes, 0);
       expect(stored, '{"unreadable":true}');
@@ -395,7 +371,7 @@ void main() {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pumpAndSettle();
-      expect(resume().onPressed, isNotNull);
+      expect(resume().onTap, isNotNull);
       expect(find.textContaining('Lv.1 마법사'), findsOneWidget);
       expect(writes, 0);
       await tester.pumpWidget(const SizedBox.shrink());

@@ -45,17 +45,90 @@ void main() {
           picture.dispose();
           final pixels = (await image.toByteData())!.buffer.asUint8List();
           expect(pixels.where((v) => v > 0).length, greaterThan(100));
+          var left = 56, top = 56, right = 0, bottom = 0;
           for (var y = 0; y < 56; y++) {
             for (var x = 0; x < 56; x++) {
+              if (pixels[(y * 56 + x) * 4 + 3] > 128) {
+                if (x < left) left = x;
+                if (x > right) right = x;
+                if (y < top) top = y;
+                if (y > bottom) bottom = y;
+              }
               if (x < 4 || x >= 52 || y < 4 || y >= 52) {
                 expect(pixels[(y * 56 + x) * 4 + 3], 0);
               }
             }
           }
+          expect(
+            (left + right) / 2,
+            closeTo(27.5, .8),
+            reason: 'icon ${first + i} horizontal center',
+          );
+          expect(
+            (top + bottom) / 2,
+            closeTo(27.5, .8),
+            reason: 'icon ${first + i} vertical center',
+          );
+          expect(
+            right - left,
+            greaterThanOrEqualTo(45),
+            reason: 'icon ${first + i} complete rim width',
+          );
+          expect(
+            bottom - top,
+            greaterThanOrEqualTo(45),
+            reason: 'icon ${first + i} complete rim height',
+          );
           fingerprints.add(Object.hashAll(pixels));
           image.dispose();
         }
         expect(fingerprints.length, count);
+      }
+    },
+  );
+  testWidgets(
+    'generated skill and dodge faces occupy the button frame without nested rims',
+    (tester) async {
+      final recorder = ui.PictureRecorder();
+      ui.Canvas(
+        recorder,
+      ).drawCircle(const Offset(4, 4), 4, Paint()..color = Colors.white);
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(8, 8);
+      picture.dispose();
+      final art = GameArt()..images[D1IconArt.interfaceKey] = image;
+      addTearDown(art.dispose);
+      for (final effect in [34, 35, 36, 7, null]) {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Center(
+              child: ActionButton(
+                art: art,
+                sprite: 'roundEmpty',
+                label: '',
+                semanticLabel: 'test action',
+                size: 80,
+                showLabel: false,
+                effect: effect,
+                glyphIndex: effect == null ? MobileGlyph.dodge : null,
+                onTap: () {},
+              ),
+            ),
+          ),
+        );
+        final paint = find.byWidgetPredicate(
+          (w) =>
+              w is CustomPaint &&
+              (w.painter is EffectIconPainter ||
+                  w.painter is DodgeActionPainter),
+        );
+        expect(paint, findsOneWidget);
+        expect(tester.getSize(paint), const Size.square(80));
+        expect(
+          tester.getCenter(paint),
+          tester.getCenter(find.byType(ActionButton)),
+        );
+        expect(tester.takeException(), isNull);
       }
     },
   );

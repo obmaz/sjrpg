@@ -1,0 +1,109 @@
+{
+    "canvas": {
+        "width": 1672,
+        "height": 941,
+        "aspect_ratio": "16:9"
+    },
+    "layers": [
+        {
+            "id": "landscape",
+            "path": "background/landscape_clean_1672x941.png",
+            "x": 0,
+            "y": 0,
+            "width": 1672,
+            "height": 941,
+            "z": 0
+        },
+        {
+            "id": "warrior",
+            "path": "characters/warrior_full.png",
+            "x": 263,
+            "y": 100,
+            "width": 490,
+            "height": 545,
+            "z": 10
+        },
+        {
+            "id": "mage",
+            "path": "characters/mage_full.png",
+            "x": 676,
+            "y": 103,
+            "width": 400,
+            "height": 550,
+            "z": 11
+        },
+        {
+            "id": "ground_blend",
+            "path": "foreground/ground_blend.png",
+            "x": 0,
+            "y": 610,
+            "width": 1672,
+            "height": 331,
+            "z": 15
+        },
+        {
+            "id": "header",
+            "path": "ui/decor/character_select_title.png",
+            "x": 18,
+            "y": 46,
+            "width": 440,
+            "height": 198,
+            "z": 21
+        },
+        {
+            "id": "warrior_panel",
+            "path": "ui/panels/warrior_info.png",
+            "x": 1165,
+            "y": 249,
+            "width": 455,
+            "height": 457,
+            "z": 22
+        },
+        {
+            "id": "warrior_card",
+            "path": "ui/cards/warrior_card.png",
+            "x": 298,
+            "y": 633,
+            "width": 143,
+            "height": 175,
+            "z": 24
+        },
+        {
+            "id": "mage_card",
+            "path": "ui/cards/mage_card.png",
+            "x": 463,
+            "y": 634,
+            "width": 139,
+            "height": 172,
+            "z": 24
+        },
+        {
+            "id": "card_frame",
+            "path": "ui/cards/card_frame_selected.png",
+            "x": 294,
+            "y": 625,
+            "width": 149,
+            "height": 185,
+            "z": 26
+        },
+        {
+            "id": "start",
+            "path": "ui/buttons/start.png",
+            "x": 670,
+            "y": 823,
+            "width": 330,
+            "height": 68,
+            "z": 30
+        },
+        {
+            "id": "back",
+            "path": "ui/buttons/back.png",
+            "x": 41,
+            "y": 835,
+            "width": 149,
+            "height": 55,
+            "z": 30
+        }
+    ],
+    "note": "Characters, panels, buttons, card frames and foliage are independent RGBA images. PNG dimensions may be larger than visual placement; use width/height placement. Original visual reference is included separately."
+}

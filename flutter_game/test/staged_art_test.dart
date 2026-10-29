@@ -273,13 +273,21 @@ void main() {
         tester,
         () => find.byType(TitleScreen).evaluate().isNotEmpty,
       );
-      await tester.tap(find.text('시작'));
+      await tester.tap(find.byKey(const ValueKey('title-start')));
       await tester.pumpAndSettle();
       expect(find.byType(GamePage), findsNothing);
-      expect(
-        tester.widget<RawImage>(find.byType(RawImage).first).image,
-        isNotNull,
+      await tester.runAsync(
+        () => precacheImage(
+          const AssetImage('assets/images/select-scene.png'),
+          tester.element(find.byKey(const ValueKey('select-start'))),
+        ),
       );
+      await tester.pump();
+      final scene = find.descendant(
+        of: find.image(const AssetImage('assets/images/select-scene.png')),
+        matching: find.byType(RawImage),
+      );
+      expect(tester.widget<RawImage>(scene).image, isNotNull);
       expect(
         bundle.reads.where((name) => name.contains('actors-cyber')),
         isEmpty,
@@ -287,7 +295,7 @@ void main() {
       bundle.delayed = 'assets/images/actors-creatures-a.webp';
       bundle.failure = bundle.delayed;
       bundle.gate = Completer<void>();
-      await tester.tap(find.text('전사로 모험 시작'));
+      await tester.tap(find.byKey(const ValueKey('select-start')));
       await tester.pump();
       expect(find.byType(GamePage), findsNothing);
       expect(find.byType(EntryPreparationPanel), findsOneWidget);
@@ -304,7 +312,7 @@ void main() {
       }
       bundle.failure = null;
       bundle.delayed = null;
-      await tester.tap(find.text('전사로 모험 시작'));
+      await tester.tap(find.byKey(const ValueKey('select-start')));
       await _until(
         tester,
         () =>

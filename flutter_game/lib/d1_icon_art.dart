@@ -9,6 +9,26 @@ abstract final class D1IconArt {
   static const interfaceKey = 'd1-interface';
   static const warriorKey = 'd1-warrior';
   static const mageKey = 'd1-mage';
+  static int? effectIndex(int effect) =>
+      BarbarianIconArt.containsEffect(effect) ||
+          SorceressIconArt.containsEffect(effect)
+      ? effect
+      : switch (effect) {
+          34 => 5,
+          35 => 9,
+          36 => 11,
+          7 => 8,
+          _ => null,
+        };
+  static bool hasEffect(GameArt art, int effect) =>
+      effectIndex(effect) != null &&
+      art.images.containsKey(
+        BarbarianIconArt.containsEffect(effect)
+            ? warriorKey
+            : SorceressIconArt.containsEffect(effect)
+            ? mageKey
+            : interfaceKey,
+      );
   static const _tone = ui.ColorFilter.matrix([
     .787,
     .179,

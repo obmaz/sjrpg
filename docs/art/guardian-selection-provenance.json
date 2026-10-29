@@ -1,0 +1,47 @@
+{
+    "source": "user-supplied Guardians_of_Nature_Character_Select_Assets.zip",
+    "zipSha256": "717ec065d025efe11882f63e1830007b49dde4e01c3055b63caa098c884ea014",
+    "reference": "docs/art/guardian-selection-reference.png",
+    "referenceLayout": "docs/art/guardian-selection-layout.json",
+    "scene": {
+        "generator": "image_gen",
+        "original": "/workspace/generated_images/exec-76bf3608-26ff-4185-9bf4-e13d55ee933c.png",
+        "runtime": "flutter_game/art/select-scene.png",
+        "sha256": "682cdd80f91fb882add395ea0e2aee42ba98b5c86c219144a91e67ecbc000893",
+        "method": "Remove baked UI from supplied original reference while preserving characters, complete feet, terrain and composition."
+    },
+    "ui": {
+        "select-header": {
+            "zipPath": "ui/decor/character_select_title.png",
+            "sha256": "5d50379b01b80c0deac69fe3ddf2167a9d25aec083f0ebb749c0c1a40c150f14"
+        },
+        "select-warrior-card": {
+            "zipPath": "ui/cards/warrior_card.png",
+            "sha256": "9af0a0b51aca55dee9a8c4bbc64f68fc48c2defed8b57b31ec47e55a6ecd7763"
+        },
+        "select-mage-card": {
+            "zipPath": "ui/cards/mage_card.png",
+            "sha256": "55555d474befd21e932c564cf1e2ce0218e51d562d06139642854fcb256f1837"
+        },
+        "select-frame": {
+            "zipPath": "ui/cards/card_frame_selected.png",
+            "sha256": "b4f9f355815c144b0583bb8478280f2fd92c322bc56299b238de5fa1a3adeb81"
+        },
+        "select-warrior-info": {
+            "zipPath": "ui/panels/warrior_info.png",
+            "sha256": "2e36dcfc83445b4174b1a68d036fa40f425ff5c43cc57819fd211cdc72cf28e2"
+        },
+        "select-mage-info": {
+            "zipPath": "ui/panels/mage_info.png",
+            "sha256": "8a53b4a43cc3ae9e5961782633acd2d6e365bbe1abceff382fb2215850619e20"
+        },
+        "select-start": {
+            "zipPath": "ui/buttons/start.png",
+            "sha256": "dc58cd5883f49f8e9b57d71f3ed6dc54fcfc1f6aaf779c8849802235abc74aec"
+        },
+        "select-back": {
+            "zipPath": "ui/buttons/back.png",
+            "sha256": "662a379ec79026d4bc647ff17e874ccde54edb3f503e3b6d1eb996b3de68f7dd"
+        }
+    }
+}

@@ -13,6 +13,7 @@ import 'blacksmith_workshop.dart';
 import 'class_selection.dart';
 import 'combat_balance.dart';
 import 'combo_meter.dart';
+import 'd1_icon_art.dart';
 import 'destructible_chest.dart';
 import 'entry_loading.dart';
 import 'game_art.dart';
@@ -994,6 +995,18 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 (hasMobility ? 84.0 : 160.0, hasMobility ? 252.0 : 112.0, 48.0),
               ];
         final primary = p.primarySkill;
+        final primaryUsesSkillArt =
+            primary != null &&
+            (!primary.basic ||
+                p.heroClass == HeroClass.mage ||
+                p.selectedBasic != p.defaultBasicId);
+        final primaryHasFrame =
+            mount?.def.artKey != 'motor' &&
+            primary != null &&
+            (primaryUsesSkillArt
+                ? D1IconArt.hasEffect(widget.art, skillEffect(primary.id))
+                : p.usingFallbackWeapon &&
+                      widget.art.images.containsKey(D1IconArt.interfaceKey));
         final primaryContinuing =
             primary?.id == 'shadowAssault' &&
             adventure.hero.shadowAssaultActive;
@@ -1136,7 +1149,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   sprite: 'roundEmpty',
                   primary: true,
                   artwork: SizedBox.square(
-                    dimension: attack * .75,
+                    dimension: primaryHasFrame ? attack : attack * .75,
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
@@ -1156,9 +1169,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                                     size: 30,
                                   ),
                                 )
-                              : !primary.basic ||
-                                    p.heroClass == HeroClass.mage ||
-                                    p.selectedBasic != p.defaultBasicId
+                              : primaryUsesSkillArt
                               ? CustomPaint(
                                   painter: EffectIconPainter(
                                     widget.art,
@@ -1184,9 +1195,10 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                                 ),
                         ),
                         if (peacefulAttack)
-                          const Align(
-                            alignment: Alignment.topRight,
-                            child: Icon(
+                          Positioned(
+                            top: primaryHasFrame ? attack * .12 : 0,
+                            right: primaryHasFrame ? attack * .12 : 0,
+                            child: const Icon(
                               Icons.shield_rounded,
                               color: gold,
                               size: 22,

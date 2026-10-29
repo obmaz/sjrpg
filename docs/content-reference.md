@@ -44,7 +44,7 @@ Flutter 버전의 전사·마법사는 근접 연타·함성·소용돌이와 �
 
 ## 아트
 
-`flutter_game/art/entry-scene.webp`·`class-selection.webp`·`entry-ui.webp`는 시작·로딩·직업 선택을 위해 생성한 그림입니다. 인물 없는 차분한 숲 마을과 석재·무광 청동 UI를 사용하며, 넓은 무광 강철 갑옷과 양손 검을 든 남성 전사, 가느다란 체형의 짙은 남색 천 로브·마법서·지팡이를 든 남성 마법사를 구분합니다. 금속 반사와 옷의 장식을 줄이고 마법의 빛은 지팡이 끝에만 작게 남겨 인물과 직업 실루엣이 먼저 보이도록 합니다. 최종 직업 그림의 무기 끝은 각 절반 안에 보존하며 같은 그림의 얼굴을 HUD에서도 사용합니다. 실행 그림은 배경 768×1152, 직업·UI 아틀라스 각각 1024×683 WebP입니다. `entry-splash.webp`는 첫 로딩용 384×576 파생본이고 작은 `entry-crest.webp`·`entry-loading-bar.webp`를 함께 사용합니다. 문구·선택 상태·진행 표시·버튼 동작은 그림에 굽지 않고 Flutter와 HTML로 구현합니다. [전체 UI 시안](art/entry-ui-reference.webp)의 임시 영문 라벨은 실행 그림에 포함하지 않습니다. 기존 게임의 아트는 바꾸지 않습니다.
+`flutter_game/art/entry-scene.webp`·`class-selection.webp`·`entry-ui.webp`는 로딩·게임 내 초상 등에 쓰는 기존 생성 그림입니다. 인물 없는 차분한 숲 마을과 석재·무광 청동 UI를 사용하며, 넓은 무광 강철 갑옷과 양손 검을 든 남성 전사, 가느다란 체형의 짙은 남색 천 로브·마법서·지팡이를 든 남성 마법사를 구분합니다. 금속 반사와 옷의 장식을 줄이고 마법의 빛은 지팡이 끝에만 작게 남겨 인물과 직업 실루엣이 먼저 보이도록 합니다. 최종 직업 그림의 무기 끝은 각 절반 안에 보존하며 같은 그림의 얼굴을 HUD에서도 사용합니다. 실행 그림은 배경 768×1152, 직업·UI 아틀라스 각각 1024×683 WebP입니다. `entry-splash.webp`는 첫 로딩용 384×576 파생본이고 작은 `entry-crest.webp`·`entry-loading-bar.webp`를 함께 사용합니다. 문구·선택 상태·진행 표시·버튼 동작은 그림에 굽지 않고 Flutter와 HTML로 구현합니다. [전체 UI 시안](art/entry-ui-reference.webp)의 임시 영문 라벨은 실행 그림에 포함하지 않습니다. 기존 게임의 아트는 바꾸지 않습니다.
 
 `flutter_game/art/combat-fx.png`는 함성·소용돌이·서릿발·번개·유성·격노·빙결 방패·타격을 위해 생성한 4×2 투명 이펙트 아틀라스입니다. 표시만 담당하며 판정과 재사용 시간은 게임 코드에서 처리합니다.
 
@@ -111,4 +111,6 @@ Flutter 대장간의 투명 그림 `flutter_game/art/blacksmith-forge.webp`는 �
 
 `flutter_game/art/fx-level-up.webp`는 금빛 지면 고리와 중앙이 열린 상승 빛의 생성형 16프레임 시트입니다. 원본·해시는 `docs/art/level-up-provenance.json`과 `level-up-original.png`에 보존합니다. `prepare-combat-illustrations.py --preset level-up`이 셀을 분리하고 투명 여백을 넣어 1024² WebP로 준비합니다. 런타임은 프레임을 보간하고 주인공 뒤에 그려 본체를 가리지 않습니다.
 
-D1 기술·메뉴·상태 그림은 `docs/art/d1-icons-provenance.json`에 원본·런타임 해시를 보존합니다. 전사 30종·마법사 30종·공용 32종을 `tools/prepare-d1-icons.py`로 균일 셀과 투명 여백에 패킹하며 그림을 다시 그리거나 겹쳐 합성하지 않습니다. 사용 순서는 기존 직업 아이콘 ID와 공용 D1 인덱스를 따릅니다. 원형 초상과 게이지는 코드에서 동일 프레임에 연결하며 이미지의 가로세로 비율을 보존해 크롭합니다.
+D1 기술·메뉴·상태 그림은 `docs/art/d1-icons-provenance.json`에 원본·런타임 해시를 보존합니다. 전사 30종·마법사 30종·공용 32종을 `tools/prepare-d1-icons.py`로 원본 알파에서 각 원형 버튼의 실제 경계를 측정한 뒤 중심을 맞춘 셀과 투명 여백에 패킹하며 그림을 다시 그리거나 겹쳐 합성하지 않습니다. 사용 순서는 기존 직업 아이콘 ID와 공용 D1 인덱스를 따릅니다. 원형 초상과 게이지는 코드에서 동일 프레임에 연결하며 이미지의 가로세로 비율을 보존해 크롭합니다.
+
+가로형 직업 선택은 사용자가 제공한 `Guardians_of_Nature_Character_Select_Assets.zip`의 카드·설명 패널·시작/뒤로 버튼·제목 PNG를 사용합니다. `docs/art/guardian-selection-provenance.json`에 ZIP 해시와 개별 자산의 출처·해시를 기록합니다. `select-scene.png`는 첨부 원화의 인물과 지형을 보존하면서 문구·카드·패널을 제거해 생성한 통합 풍경입니다. 흰 외곽선과 발 잘림이 있는 별도 컷아웃 대신 이 풍경 위에 실제 선택 UI를 배치합니다. 제공된 배치 좌표는 `guardian-selection-layout.json`에 보존하며, 현재 존재하는 전사·마법사 두 카드만 표시합니다.
