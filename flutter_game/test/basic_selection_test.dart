@@ -183,7 +183,7 @@ void main() {
       expect(p.skillAt(0)!.id, 'howl');
       expect(p.basicSkill.cost, 0);
       expect(p.basicTargetLimit, 1);
-      expect(p.canSelectSkill('cleave'), false);
+      expect(p.canSelectSkill('cleave'), true);
     });
     test(
       'upgrading the basic never replaces the four assigned active actions',

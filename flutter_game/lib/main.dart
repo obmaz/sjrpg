@@ -1314,7 +1314,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
               for (var slot = 0; slot < 4; slot++)
                 if (mount == null &&
                     p.skillAt(slot) != null &&
-                    !(p.skillAt(slot)!.id == primary?.id))
+                    (p.skillAt(slot)!.basic ||
+                        p.skillAt(slot)!.id != primary?.id))
                   skillButton(slot),
               if (mount?.def.artKey != 'motor')
                 Positioned(

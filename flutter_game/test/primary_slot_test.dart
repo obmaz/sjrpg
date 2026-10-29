@@ -20,6 +20,38 @@ void main() {
   }
 
   test(
+    'warrior basic equips every auxiliary slot and shares main recovery',
+    () {
+      for (var slot = 0; slot < 4; slot++) {
+        final p = Progress();
+        expect(p.selectSkill('cleave', slot: slot), isTrue);
+        expect(p.skillAt(slot)!.id, 'cleave');
+        expect(Progress.fromSave(p.toSave())!.skillSlots, p.skillSlots);
+      }
+      final art = GameArt();
+      final s = inCombatField(Adventure(art))..start(TestGame());
+      addTearDown(s.dispose);
+      addTearDown(art.dispose);
+      s.mobs.clear();
+      expect(s.progress.selectSkill('cleave', slot: 1), isTrue);
+      expect(s.progress.selectPrimary('howl'), isTrue);
+      final target = s.spawnEnemy(
+        'goblin',
+        s.hero.body.center + const Offset(40, 0),
+      )!..life.initial(1000);
+      final energy = s.progress.energy;
+      s.hero.skill(slot: 1);
+      expect(target.life.value, lessThan(1000));
+      expect(s.hero.attackClock, greaterThan(0));
+      expect(s.progress.energy, greaterThanOrEqualTo(energy));
+      final health = target.life.value;
+      s.progress.selectPrimary('cleave');
+      s.hero.slash();
+      s.hero.skill(slot: 1);
+      expect(target.life.value, health);
+    },
+  );
+  test(
     'primary accepts learned active skills and can be emptied and restored without unlearning',
     () {
       for (final hero in HeroClass.values) {

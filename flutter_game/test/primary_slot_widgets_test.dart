@@ -56,6 +56,19 @@ void main() {
         await tester.tap(equip);
         await tester.pumpAndSettle();
         expect(session.progress.primarySkill!.name, name);
+        final slot = hero == HeroClass.warrior ? 1 : 0;
+        final auxiliary = find.bySemanticsLabel(
+          '$name · 슬롯 ${slot + 1} 지정${slot == 0 ? ' · 사용 중' : ''}',
+        );
+        await tester.ensureVisible(auxiliary);
+        await tester.tap(auxiliary);
+        await tester.pumpAndSettle();
+        expect(session.progress.skillAt(slot)!.name, name);
+        expect(
+          Progress.fromSave(session.progress.toSave())!.skillAt(slot)!.name,
+          name,
+        );
+
         expect(tester.takeException(), isNull);
         semantics.dispose();
       });

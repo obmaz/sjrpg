@@ -27,7 +27,7 @@ void main() {
           p.canSelectSkill(
             hero == HeroClass.warrior ? 'cleave' : 'sorceressAttack',
           ),
-          false,
+          hero == HeroClass.warrior,
         );
         expect(p.canSelectSkill('missing'), false);
         expect(p.canSelectSkill(primary, slot: -1), false);

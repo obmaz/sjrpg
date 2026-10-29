@@ -742,6 +742,8 @@ class SkillDef {
   final int rankLimit;
   final double cost, cooldown;
   final bool passive, basic, mobility;
+  bool get combatAssignable =>
+      !mobility && id != 'sorceressAttack' && (basic || !passive);
   final double basicDamageScale, basicTempoScale;
   final Map<String, int> requires;
   static const maxRank = 5;
@@ -1166,14 +1168,13 @@ class Progress {
       }
       p.selectedSkill = data['selectedSkill'] as String;
       final active = p.skills.firstWhere((s) => s.id == p.selectedSkill);
-      if (active.passive || active.mobility || p.rank(active.id) == 0) {
+      if (!active.combatAssignable || p.rank(active.id) == 0) {
         return null;
       }
       p.secondarySkill = data['secondarySkill'] as String?;
       if (p.secondarySkill != null) {
         final secondary = p.skills.firstWhere((s) => s.id == p.secondarySkill);
-        if (secondary.passive ||
-            secondary.mobility ||
+        if (!secondary.combatAssignable ||
             p.rank(secondary.id) == 0 ||
             secondary.id == active.id) {
           return null;
@@ -1199,8 +1200,7 @@ class Progress {
       for (var slot = 0; slot < 4; slot++) {
         final skill = p.skillAt(slot);
         if (skill == null) continue;
-        if (skill.passive ||
-            skill.mobility ||
+        if (!skill.combatAssignable ||
             p.rank(skill.id) == 0 ||
             !assigned.add(skill.id)) {
           return null;
@@ -1902,9 +1902,7 @@ class Progress {
   bool canSelectSkill(String id, {int slot = 0}) {
     if (slot < 0 ||
         slot > 3 ||
-        !skills.any(
-          (s) => s.id == id && !s.passive && !s.mobility && rank(id) > 0,
-        )) {
+        !skills.any((s) => s.id == id && s.combatAssignable && rank(id) > 0)) {
       return false;
     }
     final values = skillSlots;

@@ -723,7 +723,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
                 }),
               ),
             ),
-          if (!skill.passive && !skill.mobility && rank > 0)
+          if (skill.combatAssignable && rank > 0)
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 4, 14, 0),
               child: Column(

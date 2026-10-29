@@ -41,7 +41,7 @@ void main() {
       expect(p.learn(doubleSwing), false, reason: 'requires level six');
       expect(p.selectSkill('bash'), true);
       expect(p.learn(mageSkills.first), false);
-      expect(p.selectSkill('cleave'), false);
+      expect(p.selectSkill('cleave'), true);
       p.level = 100;
       expect(p.learn(doubleSwing), true);
       p.skillPoints = 100;
