@@ -73,18 +73,21 @@ void main() {
     );
   }
   test(
-    'every enemy tier doubles its previous rounded XP without changing gold or kills',
+    'every enemy tier adds 20 percent XP without changing gold or kills',
     () {
       for (final (boss, elite, unique, xp, gold) in [
-        (false, false, false, 10, 8),
-        (false, true, false, 22, 20),
-        (false, true, true, 32, 35),
-        (true, false, false, 96, 100),
+        (false, false, false, 12, 8),
+        (false, true, false, 26, 20),
+        (false, true, true, 38, 35),
+        (true, false, false, 115, 100),
       ]) {
         final p = Progress();
-        final beforeGold = p.gold, firstLevelXp = p.nextLevelXp;
+        final beforeGold = p.gold;
         p.reward(boss: boss, elite: elite, unique: unique);
-        final totalXp = p.level == 1 ? p.xp : p.xp + firstLevelXp;
+        var totalXp = p.xp;
+        for (var level = 1; level < p.level; level++) {
+          totalXp += CombatBalance.experienceForLevel(level);
+        }
         expect(totalXp, xp);
         expect(p.gold - beforeGold, gold);
         expect(p.kills, 1);
