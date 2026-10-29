@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart';
@@ -272,8 +273,12 @@ void main() {
     test(
       '$asset contains sixteen distinct transparent animation frames',
       () async {
-        final data = await rootBundle.load('assets/images/$asset.webp');
-        final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+        final data = asset == 'fx-whirlwind'
+            ? await File('art/$asset.webp').readAsBytes()
+            : (await rootBundle.load(
+                'assets/images/$asset.webp',
+              )).buffer.asUint8List();
+        final codec = await ui.instantiateImageCodec(data);
         final image = (await codec.getNextFrame()).image;
         codec.dispose();
         expect(image.width, 1024);

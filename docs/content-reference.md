@@ -89,11 +89,11 @@ Flutter 전용 `actors-roll.png`는 전사·마법사의 웅크리기·구르기
 
 전투 애니메이션 `flutter_game/art/fx-meteor.webp`·`fx-ice-nova.webp`는 이 게임을 위해 생성한 각 16프레임 4×4 효과 시트입니다. 원본은 각각 `/workspace/generated_images/exec-d4379692-c85e-4a0a-b1ee-2286206e6830.png`·`/workspace/generated_images/exec-525696d9-0f57-4f62-8779-1bc33fd12720.png`이며, 투명도를 보존해 1024×1024 WebP로 준비했습니다. 운석의 비행·폭발과 얼음의 성장·파쇄를 서로 다른 실제 그림 프레임으로 재생하고, 충돌·중력 파편·파동·갑옷 결정은 코드로 결합합니다.
 
-`flutter_game/art/fx-whirlwind.webp`는 비어 있는 중앙 주위로 베기·바람·먼지가 모였다가 흩어지는 16프레임 소용돌이 시트입니다. 생성 원본은 `/workspace/generated_images/exec-4e38067a-cf06-457d-a966-05e0d667192d.png`이며 투명도를 보존해 1024×1024 WebP로 준비했습니다. 이 이전 시트와 `SpellClip.whirlwind` 정의는 보존하지만 현재 Flutter 전투에서는 디코딩·재생하지 않습니다. 실제 소용돌이는 `flutter_game/art/fx-steel-whirlwind.webp`의 4×9 아틀라스에서 은빛/금빛 3단계×12프레임을 `SteelWhirlwind`로 재생하며, 본체 회전과 연속 벡터 궤적·파편을 결합합니다.
+`flutter_game/art/fx-whirlwind.webp`는 비어 있는 중앙 주위로 베기·바람·먼지가 모였다가 흩어지는 16프레임 소용돌이 시트입니다. 생성 원본은 `/workspace/generated_images/exec-4e38067a-cf06-457d-a966-05e0d667192d.png`이며 투명도를 보존해 1024×1024 WebP로 준비했습니다. 이 이전 시트와 `SpellClip.whirlwind` 정의는 보존하지만 현재 Flutter 전투에서는 디코딩·재생하지 않습니다. 실제 소용돌이는 `SteelWhirlwind`가 주인공 뒤에 붉은 연속 삼각형 궤적·밝은 끝·짧은 파편을 그립니다. 구형 `fx-steel-whirlwind.webp`도 출처·회귀 비교용으로 보존하지만 단계별 플레이에서 다운로드·디코딩하지 않습니다.
 
 `flutter_game/art/passive-icons.webp`는 전투 집중·전장의 맹세·고양의 울림·온기·냉기 숙련·번개 숙련의 전용 그림 6종을 담은 3×2 아틀라스입니다. 생성 원본은 `/workspace/generated_images/exec-8f84cf7a-27a5-4a77-8a5b-fef1e2ce266a.png`이며 투명도를 보존해 768×512 WebP로 준비했습니다. 트리와 설명 창은 같은 그림을 사용하고 기존 전투 효과와는 별도 텍스처로 읽습니다.
 
-`flutter_game/art/fx-warcry.webp`는 금빛 함성 충격파가 생겨 퍼지고 파편으로 흩어지는 16프레임 시트입니다. 생성 원본은 `/workspace/generated_images/exec-c249e696-e899-4b9d-a011-bf8a32a9ef02.png`입니다. 원본의 4×4 셀을 각각 224px로 준비해 16px 투명 여백과 함께 1024×1024 WebP로 배치하므로 인접 프레임을 샘플링하지 않습니다. 지면 효과는 시전 위치에 머물고 캐릭터 아래에서 1등급 기준 0.64초간 재생하며 등급별 동작 배율에 따라 짧아집니다.
+`flutter_game/art/fx-warcry.webp`는 금빛 함성 충격파가 생겨 퍼지고 파편으로 흩어지는 16프레임 시트입니다. 생성 원본은 `/workspace/generated_images/exec-c249e696-e899-4b9d-a011-bf8a32a9ef02.png`입니다. 원본의 4×4 셀을 각각 224px로 준비해 16px 투명 여백과 함께 1024×1024 WebP로 배치하므로 인접 프레임을 샘플링하지 않습니다. 이 시트는 출처·비교용으로 보존하며 단계별 플레이에서는 다운로드·디코딩하지 않습니다. 실제 전사 함성은 `BarbarianUtilityVisual`과 `BarbarianVfx`가 기술별 압력선·파편을 그립니다.
 
 `flutter_game/art/fx-crushing-blow.webp`는 집중 강타의 내려베기·금빛 접촉·돌 파편·먼지 정착을 위해 생성한 16프레임 4×4 시트입니다. 원본 `/workspace/generated_images/exec-88fcbeae-1cd0-43b3-a505-625dc64a37c9.png`의 각 장면을 측정한 접촉점에 맞춰 256px 셀의 `(128, 180)`에 고정했고, 모든 셀에 최소 16px 투명 여백을 둡니다. 정렬·원본 장면 순서·준비 수치는 `fx-crushing-blow-source.json`에 보존합니다. 앞 두 프레임은 실제 준비 동작의 마지막에, 나머지 14프레임은 피해가 발생하는 순간부터 재생합니다. 등급과 실제 충전량에 따라 그림 크기와 코드로 날리는 흙빛 파편을 더하며, 마법진 없이 캐릭터 아래의 지면 효과로 그립니다.
 
@@ -108,3 +108,5 @@ Flutter 상점 재고는 `Progress.shopGear`가 정의하며 UI와 실제 구매
 제4·5장 전용 `actors-bonehound.webp`·`actors-clockwork-spider.webp`·`actors-crystal-beetle.webp`는 각각 뼈 사냥개·태엽 거미·수정 갑충의 여덟 방향×두 보행 자세를 생성한 투명 그림입니다. 원본은 `/workspace/generated_images/exec-4784e935-556e-4828-a06f-e7047cf1e125.png`·`/workspace/generated_images/exec-8ca85511-6e4e-412e-8321-d7d754a9e5be.png`·`/workspace/generated_images/exec-ab86afa6-f48a-414b-8c9a-48a96f066961.png`입니다. 원본에서 분리된 16개 몸체를 꼬리·다리·뿔까지 측정하고 종마다 같은 배율로 768×640 무손실 WebP에 여백을 두어 준비했습니다. 각각의 `-bounds.json`은 실제 그림 경계와 지면 기준점을 기록합니다.
 
 Flutter 대장간의 투명 그림 `flutter_game/art/blacksmith-forge.webp`는 숲 마을의 청록 천막·목재·석조 화로·금속 모루 스타일로 생성한 원본 `exec-592b7727-a1c6-4ad0-904d-4b9a01cb2a44.png`를 512×458 WebP로 준비합니다. 배경을 합성한 타일이 아닌 고체 작업장 물체로 사용하며 열린 바닥과 실제 기구의 충돌 범위를 분리합니다.
+
+`flutter_game/art/fx-level-up.webp`는 금빛 지면 고리와 중앙이 열린 상승 빛의 생성형 16프레임 시트입니다. 원본·해시는 `docs/art/level-up-provenance.json`과 `level-up-original.png`에 보존합니다. `prepare-combat-illustrations.py --preset level-up`이 셀을 분리하고 투명 여백을 넣어 1024² WebP로 준비합니다. 런타임은 프레임을 보간하고 주인공 뒤에 그려 본체를 가리지 않습니다.

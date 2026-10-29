@@ -145,12 +145,6 @@ abstract final class IllustratedCombatArt {
     return true;
   }
 
-  static bool sprint(EffectAtlas atlas, ui.Canvas canvas, ui.Rect rect) {
-    final image = atlas.images[imageKey];
-    if (image == null) return false;
-    return atlas.draw(canvas, imageKey, 12, rect, inset: image.width / 4 * .14);
-  }
-
   static bool contact(
     EffectAtlas atlas,
     ui.Canvas canvas,

@@ -5,20 +5,15 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
     const destination = path.join(root, 'flutter_game/assets');
     fs.mkdirSync(path.join(destination, 'images'), { recursive: true });
     const images = [
-        'actors-hero',
-        'actors-hero-attack',
         'actors-creatures-a',
         'actors-creatures-b',
         'actors-villagers',
-        'actors-vehicles',
         'village-scene',
         'landscape-materials',
         'landscape-bridge',
         'world-forest',
         'world-desert',
         'controls',
-        'ui-reference',
-        'popup-frame',
         'atlas',
     ];
     for (const image of images)
@@ -89,7 +84,6 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'fx-level-up',
         'fx-meteor',
         'fx-ice-nova',
-        'fx-whirlwind',
         'fx-steel-whirlwind',
         'victory-crest',
         'well-portal',
@@ -160,6 +154,9 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
     // Remove superseded generated output when upgrading an existing asset cache.
     fs.rmSync(path.join(destination, 'images/terrain-materials.png'), { force: true });
     fs.rmSync(path.join(destination, 'images/quest-landscapes.webp'), { force: true });
+    for (const name of ['actors-vehicles', 'ui-reference', 'popup-frame', 'fx-whirlwind']) {
+        fs.rmSync(path.join(destination, `images/${name}.webp`), { force: true });
+    }
     const mage = JSON.parse(
         fs.readFileSync(path.join(root, 'flutter_game/art/mage-bounds.json'), 'utf8'),
     );

@@ -310,6 +310,20 @@ void main() {
             _session(tester).ready,
       );
       expect(_session(tester).world.stage, WorldStage.forest);
+      for (final retired in [
+        'fx-steel-whirlwind',
+        'fx-warcry',
+        'village-scene',
+        'village-gardens',
+        'village-cottage',
+        'blacksmith-forge',
+      ]) {
+        expect(
+          bundle.reads,
+          isNot(contains('assets/images/$retired.webp')),
+          reason: 'staged play does not fetch retired diagnostic artwork',
+        );
+      }
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     },

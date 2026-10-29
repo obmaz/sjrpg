@@ -1,18 +1,18 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/ranked_vfx.dart';
 import 'package:guardian_new/rpg_widgets.dart';
 
 Future<ui.Image> _decodeLegacyImage(String name) async {
-  final data = await rootBundle.load('assets/images/$name.webp');
-  final codec = await ui.instantiateImageCodec(
-    data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
-  );
+  final directory = name == 'popup-frame' ? '../assets' : 'art';
+  final data = await File('$directory/$name.webp').readAsBytes();
+  final codec = await ui.instantiateImageCodec(data);
   try {
     return (await codec.getNextFrame()).image;
   } finally {

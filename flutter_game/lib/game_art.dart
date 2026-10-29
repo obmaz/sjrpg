@@ -35,6 +35,8 @@ class GameArt {
     'field-ground-industrial',
   ];
   final _actorAtlases = <String, ActorAtlas>{};
+  final _labels = <(String, double, ui.Color), ui.Paragraph>{};
+  static const _labelLimit = 128;
   final _bossMesh = BossSpriteMeshPainter();
   final _mountMesh = MountSpriteMeshPainter();
   static const heroWidthScale = 1.36, heroHeightScale = 1.0;
@@ -317,7 +319,7 @@ class GameArt {
     // source when its decoded image or baked replacement becomes resident.
     await Future.wait([
       for (final name in _allImages)
-        if (!images.containsKey(name))
+        if (!_stagedRetiredVfx.contains(name) && !images.containsKey(name))
           _bundle.load(_imagePath(name)).then((bytes) {
             incoming[name] = bytes;
           }),
@@ -619,6 +621,10 @@ class GameArt {
   }
 
   void dispose() {
+    for (final paragraph in _labels.values) {
+      paragraph.dispose();
+    }
+    _labels.clear();
     _bossMesh.dispose();
     _mountMesh.dispose();
     for (final shader in [...materials, ...fieldMaterials]) {
@@ -1023,9 +1029,14 @@ class GameArt {
     double size = 16,
     ui.Color color = const ui.Color(0xffffedbb),
   }) {
-    final paragraph = layoutText(value, size: size, color: color);
+    final key = (value, size, color);
+    final paragraph =
+        _labels.remove(key) ?? layoutText(value, size: size, color: color);
+    _labels[key] = paragraph;
+    if (_labels.length > _labelLimit) {
+      _labels.remove(_labels.keys.first)!.dispose();
+    }
     canvas.drawParagraph(paragraph, at - const ui.Offset(80, 0));
-    paragraph.dispose();
   }
 
   ui.Paragraph layoutText(

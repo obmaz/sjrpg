@@ -39,8 +39,16 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
     const target = path.join(root, 'flutter_game/assets/images');
     fs.writeFileSync(path.join(target, 'terrain-materials.png'), 'obsolete large PNG');
     fs.writeFileSync(path.join(target, 'retained.webp'), 'unrelated prepared asset');
+    for (const name of ['actors-vehicles', 'ui-reference', 'popup-frame', 'fx-whirlwind']) {
+        fs.writeFileSync(path.join(target, `${name}.webp`), 'obsolete runtime copy');
+    }
     await prepareNewAssets(root);
     assert.equal(fs.existsSync(path.join(target, 'terrain-materials.png')), false);
+    for (const name of ['actors-vehicles', 'ui-reference', 'popup-frame', 'fx-whirlwind']) {
+        assert.equal(fs.existsSync(path.join(target, `${name}.webp`)), false);
+        const original = name === 'fx-whirlwind' ? 'flutter_game/art' : 'assets';
+        assert.equal(fs.existsSync(path.join(root, original, `${name}.webp`)), true);
+    }
     assert.equal(
         fs.readFileSync(path.join(target, 'terrain-materials.webp'), 'utf8'),
         'source picture terrain-materials.webp',
@@ -176,6 +184,11 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
     }
     await prepareNewAssets(root);
     assert.equal(fs.existsSync(path.join(target, 'terrain-materials.png')), false);
+    for (const name of ['actors-vehicles', 'ui-reference', 'popup-frame', 'fx-whirlwind']) {
+        assert.equal(fs.existsSync(path.join(target, `${name}.webp`)), false);
+        const original = name === 'fx-whirlwind' ? 'flutter_game/art' : 'assets';
+        assert.equal(fs.existsSync(path.join(root, original, `${name}.webp`)), true);
+    }
     assert.equal(
         fs.readFileSync(path.join(target, 'terrain-materials.webp'), 'utf8'),
         'source picture terrain-materials.webp',
