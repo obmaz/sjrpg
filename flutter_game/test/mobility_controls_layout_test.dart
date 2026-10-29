@@ -84,8 +84,8 @@ void main() {
                   w is ActionButton &&
                   w.semanticLabel == s.progress.basicSkill.name,
             ),
-            findsNothing,
-            reason: 'the chosen basic spell has one primary attack button',
+            findsOneWidget,
+            reason: 'an equipped basic stays visible in its auxiliary slot',
           );
         }
         if (type == HeroClass.warrior) {
