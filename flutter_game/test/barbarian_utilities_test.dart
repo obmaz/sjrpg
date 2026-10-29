@@ -34,16 +34,21 @@ void main() {
   }
 
   HuntEnemy corpse({ui.Offset? at, bool boss = false}) {
-    final enemy = HuntEnemy(
-      session,
-      'goblin',
-      at ?? session.hero.body.center + const ui.Offset(50, 0),
-      boss: boss,
-    );
-    enemy.life.remove(enemy.life.max);
-    enemy.rewarded = true;
-    utilities.recordCorpse(enemy);
-    return enemy;
+    final game = session.game! as TestGame;
+    final before = game.added.length;
+    for (var attempt = 0; attempt < 200; attempt++) {
+      final enemy = HuntEnemy(
+        session,
+        'goblin',
+        at ?? session.hero.body.center + const ui.Offset(50, 0),
+        boss: boss,
+      );
+      enemy.life.remove(enemy.life.max);
+      enemy.rewarded = true;
+      utilities.recordCorpse(enemy);
+      if (boss || game.added.length > before) return enemy;
+    }
+    throw StateError('Seeded corpse fixture could not produce a body');
   }
 
   HuntEnemy enemy({bool boss = false, EnemyTrait trait = EnemyTrait.none}) {
@@ -56,6 +61,24 @@ void main() {
     enemy.combatReady = true;
     return enemy;
   }
+
+  test('ten percent corpse rolls are independent and cannot be retried', () {
+    final game = session.game! as TestGame;
+    final before = game.added.length;
+    for (var i = 0; i < 1000; i++) {
+      final enemy = HuntEnemy(session, 'goblin', session.hero.body.center);
+      enemy.life.remove(enemy.life.max);
+      enemy.rewarded = true;
+      utilities.recordCorpse(enemy);
+      final after = game.added.length;
+      for (var retry = 0; retry < 5; retry++) {
+        utilities.recordCorpse(enemy);
+      }
+      expect(game.added.length, after);
+    }
+    expect(game.added.length - before, inInclusiveRange(75, 125));
+    expect(utilities.corpseCount, BarbarianUtilities.corpseLimit);
+  });
 
   test(
     'accepted corpse ledger deduplicates, caps and expires in simulation time',
@@ -319,9 +342,16 @@ void main() {
   test(
     'actual accepted death creates one searchable corpse and no second reward',
     () {
-      final target = enemy();
-      final kills = session.progress.kills;
-      expect(session.hit(target, target.life.max + 1, ui.Offset.zero), isTrue);
+      var target = enemy();
+      for (var attempt = 0; attempt < 200; attempt++) {
+        expect(
+          session.hit(target, target.life.max + 1, ui.Offset.zero),
+          isTrue,
+        );
+        if (utilities.corpseCount > 0) break;
+        target = enemy();
+      }
+      final kills = session.progress.kills - 1;
       expect(target.rewarded, isTrue);
       expect(utilities.corpseCount, 1);
       expect(session.progress.kills, kills + 1);

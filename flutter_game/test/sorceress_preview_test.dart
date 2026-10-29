@@ -95,7 +95,10 @@ void main() {
     () {
       final p = Progress(heroClass: HeroClass.mage);
       final bolt = _skill('firebolt');
-      final scale = Progress.playerDamageScale * CombatBalance.skillDamageScale;
+      final scale =
+          Progress.playerDamageScale *
+          CombatBalance.skillDamageScale *
+          CombatBalance.sorceressDamageScale;
       expect(
         _row(p, 'firebolt', '1회 최소 피해').current,
         closeTo(3 * scale, 1e-10),

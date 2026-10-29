@@ -33,8 +33,11 @@ void main() {
     'all original Sorceress damage packets retain exactly one shared damage reduction',
     () {
       final p = sorceress();
-      final scale = Progress.playerDamageScale * CombatBalance.skillDamageScale;
-      expect(scale, closeTo(.3825, 1e-9));
+      final scale =
+          Progress.playerDamageScale *
+          CombatBalance.skillDamageScale *
+          CombatBalance.sorceressDamageScale;
+      expect(scale, closeTo(.57375, 1e-9));
       for (final def in mageSkills) {
         for (final rank in [1, 7, 20]) {
           final raw = SorceressRules.evaluate(

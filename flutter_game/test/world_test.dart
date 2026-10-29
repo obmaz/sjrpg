@@ -161,17 +161,17 @@ void main() {
       for (var i = 0; i < 8; i++) {
         p.reward();
       }
-      expect(p.level, 1);
-      expect(p.xp, 80);
+      expect(p.level, 2);
+      expect(p.xp, 38);
       expect(p.gold, 64);
       p.gainXp(p.nextLevelXp - p.xp);
-      expect(p.level, 2);
+      expect(p.level, 3);
       expect(p.xp, 0);
       expect(p.gold, 64, reason: 'experience alone must not create gold');
-      expect(p.swordDamage, closeTo(17 * .75 * .85, .00001));
+      expect(p.swordDamage, closeTo(19 * .75 * .85, .00001));
       expect(p.buy(45, () => p.swordDamage += 5), true);
       expect(p.gold, 19);
-      expect(p.swordDamage, closeTo(17 * .75 * .85 + 5, .00001));
+      expect(p.swordDamage, closeTo(19 * .75 * .85 + 5, .00001));
       p.reward(boss: true);
       expect(p.bossDefeated, true);
       expect(p.gold, 119);

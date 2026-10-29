@@ -9,6 +9,7 @@ class EffectAtlas {
 
   void warm() {
     for (final asset in [
+      'fx-level-up',
       'fx-meteor',
       'fx-ice-nova',
       'fx-warcry',

@@ -216,15 +216,15 @@ void main() {
     final s = session();
     expect(
       s.spawnEnemy('goblin', const Offset(6050, 4200))!.life.max,
-      closeTo(44.8, .000001),
+      closeTo(22.4, .000001),
     );
     expect(
       s.spawnEnemy('wolf', const Offset(6100, 4200))!.life.max,
-      closeTo(60.8, .000001),
+      closeTo(30.4, .000001),
     );
     expect(
       s.spawnEnemy('skeleton', const Offset(6150, 4200))!.life.max,
-      closeTo(83.2, .000001),
+      closeTo(41.6, .000001),
     );
     expect(
       s
@@ -235,7 +235,7 @@ void main() {
           )!
           .life
           .max,
-      closeTo(44.8 * 1.8, .001),
+      closeTo(22.4 * 1.8, .001),
     );
     expect(
       s.spawnEnemy('golem', const Offset(6300, 4200), boss: true)!.life.max,
@@ -252,7 +252,7 @@ void main() {
     for (var i = 0; i < 20; i++) {
       s.tick(.05);
     }
-    expect(s.living, 6);
+    expect(s.living, 3);
     for (var i = 0; i < 8; i++) {
       s.spawnPack();
     }

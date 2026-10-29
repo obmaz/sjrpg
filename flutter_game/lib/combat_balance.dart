@@ -9,6 +9,8 @@ abstract final class CombatBalance {
   // Apply the outgoing skill reduction once, after weapon/rank calculations.
   static const heroDamageScale = .85;
   static const skillDamageScale = .60;
+  // The spell base curves do not inherit weapon damage like melee skills.
+  static const sorceressDamageScale = 1.5;
   static const basicAttackRate = .30;
   static const basicRankTempoGrowth = .015;
   static const minimumBasicInterval = .16 / basicAttackRate;
@@ -27,6 +29,7 @@ abstract final class CombatBalance {
   static const enemyDamageScale = 1.2;
   static const maxActiveEnemies = 30;
   static const enemyPopulationScale = 1.5;
+  static const nearTownRadius = 4000.0;
   static const enemyExperienceScale = .60;
   static const experienceRewardMultiplier = 2;
   // Revival promises three real seconds, independently of global pacing.
@@ -41,12 +44,13 @@ abstract final class CombatBalance {
       basicAttackRate * (1 + (rank.clamp(1, 5) - 1) * basicRankTempoGrowth);
 
   static int experienceForLevel(int level) =>
-      ((55 + (level - 1) * 30) * 1.5).ceil();
+      (((55 + (level - 1) * 30) * 1.5).ceil() / 2).ceil();
 
   static int packSize({
     required bool initial,
     required int playerLevel,
     required int living,
+    bool nearTown = false,
   }) {
     final baseSize = initial
         ? 3
@@ -55,6 +59,7 @@ abstract final class CombatBalance {
         : living < 9
         ? 5
         : 4;
-    return (baseSize * enemyPopulationScale).round();
+    final count = (baseSize * enemyPopulationScale).round();
+    return nearTown ? (count / 2).ceil() : count;
   }
 }

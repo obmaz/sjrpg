@@ -76,7 +76,10 @@ void main() {
             (boss ? 1 : trait.healthScale) *
             2 *
             (1 + (level - 1) * (boss ? .15 : .08));
-        expect(mob.life.max, closeTo(old * .8, .000001));
+        expect(
+          mob.life.max,
+          closeTo(old * .8 * mob.power.healthMultiplier, .000001),
+        );
         expect(mob.life.value, mob.life.max);
       }
     }

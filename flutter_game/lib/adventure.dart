@@ -31,6 +31,7 @@ import 'enemy_motion.dart';
 import 'enemy_spacing.dart';
 import 'game_art.dart';
 import 'health_feedback.dart';
+import 'level_up_effect.dart';
 import 'loot_policy.dart';
 import 'melee_weapon_art.dart';
 import 'mobility_motion.dart';
@@ -760,10 +761,12 @@ class Adventure extends ChangeNotifier {
     }
     if (commission != null) {
       acceptedCommission = null;
+      final oldLevel = progress.level;
       progress.gainXp(
         (50 + commission.step * 20) * CombatBalance.experienceRewardMultiplier,
       );
       syncLife();
+      _showLevelUp(oldLevel);
     }
     progress.gold += 40;
     bubble(
@@ -1482,6 +1485,7 @@ class Adventure extends ChangeNotifier {
         initial: initial,
         playerLevel: progress.level,
         living: living,
+        nearTown: (at - world.spawn).distance <= CombatBalance.nearTownRadius,
       ),
       CombatBalance.maxActiveEnemies - living,
     );
@@ -1981,6 +1985,24 @@ class Adventure extends ChangeNotifier {
       !world.sanctuary.blocksRay(hero.body.center, mob.body.center) &&
       !world.sanctuary.blocksRay(origin ?? hero.body.center, mob.body.center);
 
+  LevelUpEffect? _levelUpEffect;
+  void _showLevelUp(int previousLevel) {
+    if (progress.level <= previousLevel || game == null) return;
+    bubble(
+      'Lv.${progress.level}',
+      hero.body.center - const ui.Offset(0, 85),
+      const ui.Color(0xffffe4a1),
+    );
+    final existing = _levelUpEffect;
+    if (existing != null && !existing.finished) {
+      existing.restart();
+    } else {
+      final effect = LevelUpEffect(this);
+      _levelUpEffect = effect;
+      game!.add(effect);
+    }
+  }
+
   bool hit(
     HuntEnemy mob,
     double damage,
@@ -2062,21 +2084,7 @@ class Adventure extends ChangeNotifier {
         progress.hp = math.min(progress.maxHp, progress.hp + 4);
       }
       syncLife();
-      if (progress.level > level) {
-        bubble(
-          'Lv.${progress.level}',
-          hero.body.center - const ui.Offset(0, 85),
-          const ui.Color(0xffffe4a1),
-        );
-        game?.add(
-          RuneBurst(
-            this,
-            hero.body.center,
-            const ui.Color(0xffffcf81),
-            radius: 65,
-          ),
-        );
-      }
+      _showLevelUp(level);
       if (mob.boss ||
           mob.isElite ||
           progress.kills % ordinaryGearInterval == 0) {

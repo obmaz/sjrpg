@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'combat_balance.dart';
 import 'stage_content.dart';
 
 enum EnemyTier { normal, elite, unique }
@@ -40,7 +41,10 @@ class EnemyPower {
     };
     final sampled = distance.clamp(0.0, maximumDistance);
     // Leave the opening settlement/nearby fields gentle; outer regions ramp up.
-    final outward = ((sampled - 4000) / 24000).clamp(0.0, 1.0);
+    final outward = ((sampled - CombatBalance.nearTownRadius) / 24000).clamp(
+      0.0,
+      1.0,
+    );
     final health = boss
         ? 1 + chapter * .12 + outward * .2
         : (1 + chapter * .18 + outward * .45) *
@@ -52,7 +56,12 @@ class EnemyPower {
             : tier == EnemyTier.unique
             ? 1.12
             : 1.06);
-    return EnemyPower(sampled, health, damage.clamp(1.0, 1.5));
+    final nearTown = !boss && sampled <= CombatBalance.nearTownRadius;
+    return EnemyPower(
+      sampled,
+      health * (nearTown ? .5 : 1),
+      damage.clamp(1.0, 1.5),
+    );
   }
 
   static const maximumDistance = 43200.0;
@@ -78,7 +87,7 @@ extension EnemyPowerSave on EnemyPower {
 
     return EnemyPower(
       read('distance', 0, EnemyPower.maximumDistance),
-      read('health', 1, 4),
+      read('health', .5, 4),
       read('damage', 1, 1.5),
     );
   }

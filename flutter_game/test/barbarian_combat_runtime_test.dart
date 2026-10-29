@@ -436,8 +436,13 @@ void main() {
   test(
     'accepted death records one corpse and find-potion consumes it once',
     () {
-      final s = field('findPotion'), m = enemy(s);
-      s.hit(m, 200000, Offset.zero);
+      final s = field('findPotion');
+      var m = enemy(s);
+      for (var attempt = 0; attempt < 200; attempt++) {
+        s.hit(m, 200000, Offset.zero);
+        if (s.barbarianUtilities.corpseCount > 0) break;
+        m = enemy(s);
+      }
       expect(s.barbarianUtilities.corpseCount, 1);
       s.hit(m, 200000, Offset.zero);
       expect(s.barbarianUtilities.corpseCount, 1);

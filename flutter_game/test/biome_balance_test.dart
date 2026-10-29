@@ -64,23 +64,26 @@ void main() {
         expect(m.usesPounce || m.usesSweep || m.usesBolt, true);
         expect(
           m.life.max,
-          closeTo(enemyCatalog[kind]!.health * 2 * .8, .000001),
+          closeTo(
+            enemyCatalog[kind]!.health * 2 * .8 * m.power.healthMultiplier,
+            .000001,
+          ),
         );
       }
       expect(GameCheckpoint.capture(s)!.data['enemies'].length, 4);
     },
   );
   test(
-    'ordinary leveling takes nine kills and earned levels are preserved on load',
+    'ordinary leveling takes five kills and earned levels are preserved on load',
     () {
       final p = Progress();
-      for (var i = 0; i < 8; i++) {
+      for (var i = 0; i < 4; i++) {
         p.reward();
       }
       expect(p.level, 1);
       p.reward();
       expect(p.level, 2);
-      expect(p.xp, 7);
+      expect(p.xp, 8);
       expect(Progress.fromSave(p.toSave())!.level, 2);
     },
   );

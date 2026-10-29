@@ -193,8 +193,12 @@ void main() {
       p.ranks[skill.id] = 1;
       expect(p.selectSkill(skill.id), isTrue);
       p.energy = p.maxEnergy;
-      final body = enemy(6050);
-      expect(s.hit(body, 1001, Offset.zero), isTrue);
+      for (var attempt = 0; attempt < 200; attempt++) {
+        final body = enemy(6050);
+        expect(s.hit(body, 1001, Offset.zero), isTrue);
+        if (s.barbarianUtilities.corpseCount > 0) break;
+      }
+      expect(s.barbarianUtilities.corpseCount, 1);
       final mobs = [for (var i = 0; i < 5; i++) enemy(6080 + i * 30.0)];
       expect(p.skillTargetLimit(skill), 3);
       s.hero.skill();

@@ -13,7 +13,11 @@ from PIL import Image, ImageChops
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source', type=Path, required=True)
-    source = parser.parse_args().source
+    parser.add_argument('--preset', choices=['combat-illustrations', 'level-up'],
+                        default='combat-illustrations')
+    args = parser.parse_args()
+    source, preset = args.source, args.preset
+    runtime_name = 'fx-level-up' if preset == 'level-up' else preset
     root = Path(__file__).resolve().parents[1]
     with Image.open(source) as raw:
         image = raw.convert('RGBA')
@@ -49,9 +53,9 @@ def main():
                 'sourceRect': bounds,
                 'outputRect': [column * 256, row * 256, 256, 256],
             })
-    output = root / 'flutter_game/art/combat-illustrations.webp'
+    output = root / f'flutter_game/art/{runtime_name}.webp'
     atlas.save(output, format='WEBP', lossless=True, method=6, exact=True)
-    original = root / 'docs/art/combat-illustrations-original.png'
+    original = root / f'docs/art/{preset}-original.png'
     if source.resolve() != original.resolve():
         shutil.copyfile(source, original)
     provenance = {
@@ -59,9 +63,9 @@ def main():
         'generator': 'image_gen',
         'packer': 'tools/prepare-combat-illustrations.py',
         'generatedSource': source.name,
-        'original': 'docs/art/combat-illustrations-original.png',
+        'original': f'docs/art/{preset}-original.png',
         'originalSha256': hashlib.sha256(source.read_bytes()).hexdigest(),
-        'runtime': 'flutter_game/art/combat-illustrations.webp',
+        'runtime': f'flutter_game/art/{runtime_name}.webp',
         'runtimeSha256': hashlib.sha256(output.read_bytes()).hexdigest(),
         'imageSize': [1024, 1024],
         'decodedRGBABytes': 4194304,
@@ -78,7 +82,11 @@ def main():
                     'gold-contact-star', 'teleport-flare'],
         'frames': frames,
     }
-    (root / 'docs/art/combat-illustrations-provenance.json').write_text(
+    if preset == 'level-up':
+        provenance.pop('animationRows')
+        provenance.pop('symbols')
+        provenance['animation'] = '16 chronological level-up frames; empty central hero space'
+    (root / f'docs/art/{preset}-provenance.json').write_text(
         json.dumps(provenance, indent=4) + '\n'
     )
     print(f'Prepared16 isolated sprites: {output.stat().st_size} bytes,4MiB RGBA')

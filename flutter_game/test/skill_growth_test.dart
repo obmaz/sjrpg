@@ -124,7 +124,15 @@ void main() {
                 'findItem',
                 'grimWard',
               }.contains(skill.id)) {
-                expect(s.hit(target, target.life.max + 1, Offset.zero), isTrue);
+                var body = target;
+                for (var attempt = 0; attempt < 200; attempt++) {
+                  expect(s.hit(body, body.life.max + 1, Offset.zero), isTrue);
+                  if (s.barbarianUtilities.corpseCount > 0) break;
+                  body = s.spawnEnemy(
+                    'goblin',
+                    s.hero.body.center + const Offset(80, 0),
+                  )!;
+                }
                 expect(s.barbarianUtilities.corpseCount, 1);
               }
             }

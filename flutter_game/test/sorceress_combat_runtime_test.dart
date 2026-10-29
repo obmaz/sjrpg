@@ -6,6 +6,7 @@ import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/rpg_model.dart';
 import 'package:guardian_new/skill_aim.dart';
+import 'package:guardian_new/skill_preview_model.dart';
 import 'package:guardian_new/sorceress_combat.dart';
 import 'package:guardian_new/sorceress_rules.dart';
 
@@ -82,7 +83,18 @@ void main() {
       expect(s.progress.energy, closeTo(energy - spec.manaCost, 1e-8));
       expect(effects(s).whereType<SorceressProjectile>().length, 1);
       advance(s, .5);
-      expect(m.life.value, lessThan(100000));
+      final lost = 100000 - m.life.value;
+      final preview = previewSkill(s.progress, def);
+      expect(
+        preview.firstWhere((v) => v.label == '1회 최소 피해').current,
+        spec.minDamage,
+      );
+      expect(
+        preview.firstWhere((v) => v.label == '1회 최대 피해').current,
+        spec.maxDamage,
+      );
+      expect(lost, greaterThanOrEqualTo(spec.minDamage - 1e-8));
+      expect(lost, lessThanOrEqualTo(spec.maxDamage + 1e-8));
       if (spec.freezeDuration > 0) expect(m.stun, greaterThan(0));
       if (spec.damageType == SorceressDamageType.cold) {
         expect(m.slow, greaterThan(0));

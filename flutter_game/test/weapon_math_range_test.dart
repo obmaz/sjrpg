@@ -56,7 +56,10 @@ void main() {
       expect(
         mage.basicDamage,
         closeTo(
-          4.5 * Progress.playerDamageScale * CombatBalance.skillDamageScale,
+          4.5 *
+              Progress.playerDamageScale *
+              CombatBalance.skillDamageScale *
+              CombatBalance.sorceressDamageScale,
           1e-10,
         ),
       );

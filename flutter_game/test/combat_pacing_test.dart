@@ -167,30 +167,49 @@ void main() {
   );
 
   test(
-    'ordinary leveling takes nine kills and old earned levels stay intact',
+    'ordinary leveling takes five kills and old earned levels stay intact',
     () {
       final p = Progress();
-      for (var i = 0; i < 8; i++) {
+      for (var i = 0; i < 4; i++) {
         p.reward();
       }
       expect(p.level, 1);
       p.reward();
       expect(p.level, 2);
-      expect(p.xp, 7);
+      expect(p.xp, 8);
       final old = Progress()
         ..level = 8
         ..xp = 264;
       final owned = old.inventory.map((g) => g.toSave()).toList();
-      final restored = Progress.fromSave(jsonDecode(jsonEncode(old.toSave())))!;
-      expect(restored.level, 8);
-      expect(restored.xp, 264);
+      final saved =
+          jsonDecode(jsonEncode(old.toSave())) as Map<String, dynamic>;
+      saved.remove('experienceVersion');
+      final restored = Progress.fromSave(saved)!;
+      expect(restored.level, 9);
+      expect(restored.xp, 65);
       expect(restored.inventory.map((g) => g.toSave()), owned);
-      expect(restored.nextLevelXp, greaterThan(265));
+      expect(restored.nextLevelXp, 222);
     },
   );
 
   test('larger packs preserve finite waves and stop at the new active cap', () {
     final s = field();
+    final distant = s.world.trails
+        .expand((trail) => trail.points)
+        .firstWhere(
+          (at) =>
+              (at - s.world.spawn).distance >
+                  CombatBalance.nearTownRadius + 500 &&
+              !s.world.blocked(
+                Rect.fromLTWH(
+                  at.dx,
+                  at.dy,
+                  s.hero.body.width,
+                  s.hero.body.height,
+                ),
+              ),
+        );
+    s.hero.position.setValues(distant.dx, distant.dy);
     s.spawnPack(initial: true);
     expect(s.living, 5);
     s.mobs.clear();

@@ -389,6 +389,7 @@ void main() {
         'y': 4200,
         'hp': 37,
         'maxHp': 100,
+        'power': {'distance': 5000.0, 'health': 1.0, 'damage': 1.0},
       });
       final sands = start(GameCheckpoint.advance(forest)!);
       final liveArchive = sands.travelJournal.archives[WorldStage.forest]!;
@@ -437,6 +438,7 @@ void main() {
         'y': 4200,
         'hp': 37,
         'maxHp': 100,
+        'power': {'distance': 5000.0, 'health': 1.0, 'damage': 1.0},
       });
       final sands = start(GameCheckpoint.advance(forest)!);
       expect(GameCheckpoint.capture(sands), isNotNull);

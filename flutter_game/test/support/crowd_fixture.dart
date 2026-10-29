@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:bonfire/bonfire.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/enemy_difficulty.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/world_model.dart';
 
@@ -104,7 +105,11 @@ void stepCrowd(CrowdFixture s, double dt) {
         (enemy['x'] as num).toDouble(),
         (enemy['y'] as num).toDouble(),
       );
-      final mob = s.spawnEnemy(enemy['kind'] as String, at)!;
+      final mob = s.spawnEnemy(
+        enemy['kind'] as String,
+        at,
+        power: EnemyPowerSave.fromSave(enemy['power']),
+      )!;
       expect(
         mob.body.topLeft,
         at,

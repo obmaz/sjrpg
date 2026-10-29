@@ -1,0 +1,99 @@
+{
+    "version": 1,
+    "generator": "image_gen",
+    "packer": "tools/prepare-combat-illustrations.py",
+    "generatedSource": "exec-d56adb6e-6b93-4e45-866f-f608b2808318.png",
+    "original": "docs/art/level-up-original.png",
+    "originalSha256": "81bedc7941e39b3f8bb8faed5ec74a82a4cd74860ad55b10801586663fbf582e",
+    "runtime": "flutter_game/art/fx-level-up.webp",
+    "runtimeSha256": "886ad0fb101a0f95eed1aefecc5f2fb6c37679bdeedca8b684f8eeade75bc123",
+    "imageSize": [1024, 1024],
+    "decodedRGBABytes": 4194304,
+    "columns": 4,
+    "rows": 4,
+    "transparentPadding": 32,
+    "method": "Uniform cell slicing; elliptical edge-alpha isolation; premultiplied-alpha downsample to192px;32px transparent gutters; lossless WebP. No repainting.",
+    "animation": "16 chronological level-up frames; empty central hero space",
+    "frames": [
+        {
+            "index": 0,
+            "sourceRect": [0, 0, 314, 314],
+            "outputRect": [0, 0, 256, 256]
+        },
+        {
+            "index": 1,
+            "sourceRect": [314, 0, 627, 314],
+            "outputRect": [256, 0, 256, 256]
+        },
+        {
+            "index": 2,
+            "sourceRect": [627, 0, 940, 314],
+            "outputRect": [512, 0, 256, 256]
+        },
+        {
+            "index": 3,
+            "sourceRect": [940, 0, 1254, 314],
+            "outputRect": [768, 0, 256, 256]
+        },
+        {
+            "index": 4,
+            "sourceRect": [0, 314, 314, 627],
+            "outputRect": [0, 256, 256, 256]
+        },
+        {
+            "index": 5,
+            "sourceRect": [314, 314, 627, 627],
+            "outputRect": [256, 256, 256, 256]
+        },
+        {
+            "index": 6,
+            "sourceRect": [627, 314, 940, 627],
+            "outputRect": [512, 256, 256, 256]
+        },
+        {
+            "index": 7,
+            "sourceRect": [940, 314, 1254, 627],
+            "outputRect": [768, 256, 256, 256]
+        },
+        {
+            "index": 8,
+            "sourceRect": [0, 627, 314, 940],
+            "outputRect": [0, 512, 256, 256]
+        },
+        {
+            "index": 9,
+            "sourceRect": [314, 627, 627, 940],
+            "outputRect": [256, 512, 256, 256]
+        },
+        {
+            "index": 10,
+            "sourceRect": [627, 627, 940, 940],
+            "outputRect": [512, 512, 256, 256]
+        },
+        {
+            "index": 11,
+            "sourceRect": [940, 627, 1254, 940],
+            "outputRect": [768, 512, 256, 256]
+        },
+        {
+            "index": 12,
+            "sourceRect": [0, 940, 314, 1254],
+            "outputRect": [0, 768, 256, 256]
+        },
+        {
+            "index": 13,
+            "sourceRect": [314, 940, 627, 1254],
+            "outputRect": [256, 768, 256, 256]
+        },
+        {
+            "index": 14,
+            "sourceRect": [627, 940, 940, 1254],
+            "outputRect": [512, 768, 256, 256]
+        },
+        {
+            "index": 15,
+            "sourceRect": [940, 940, 1254, 1254],
+            "outputRect": [768, 768, 256, 256]
+        }
+    ]
+}

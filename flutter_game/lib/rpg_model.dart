@@ -930,6 +930,7 @@ class Progress {
   final Map<GearSlot, Gear> equipped = {};
   Map<String, dynamic> toSave() => {
     'heroClass': heroClass.name,
+    'experienceVersion': 2,
     'mountProgress': mountProgress.toSave(),
     'kills': kills,
     'gold': gold,
@@ -1007,7 +1008,12 @@ class Progress {
       p.kills = integer('kills');
       p.gold = integer('gold');
       p.xp = integer('xp');
-      if (p.xp >= p.nextLevelXp) return null;
+      final experienceVersion = data['experienceVersion'] ?? 1;
+      if (experienceVersion != 1 && experienceVersion != 2) return null;
+      final xpLimit = experienceVersion == 1
+          ? ((55 + (p.level - 1) * 30) * 1.5).ceil()
+          : p.nextLevelXp;
+      if (p.xp >= xpLimit) return null;
       p.skillPoints = integer('skillPoints');
       p.mountProgress = MountProgress.fromSave(data['mountProgress']);
       p.healingPotions = integer('healingPotions');
@@ -1155,6 +1161,14 @@ class Progress {
       p._serial = math.max(integer('serial'), identities.fold(0, math.max) + 1);
       p.hp = decimal('hp').clamp(0, p.maxHp);
       p.energy = decimal('energy').clamp(0, p.maxEnergy);
+      // Preserve banked XP when the new requirement crosses a level boundary.
+      if (experienceVersion == 1) {
+        final hp = p.hp, energy = p.energy;
+        p.gainXp(0);
+        // Migration grants earned levels, not a free heal or resurrection.
+        p.hp = hp;
+        p.energy = energy;
+      }
       return p;
     } catch (_) {
       return null;
@@ -1397,7 +1411,10 @@ class Progress {
             ? effectiveRank(skill.id, atRank: atRank)
             : 0,
         hardRanks: ranks,
-        damageScale: playerDamageScale * CombatBalance.skillDamageScale,
+        damageScale:
+            playerDamageScale *
+            CombatBalance.skillDamageScale *
+            CombatBalance.sorceressDamageScale,
       );
   int get basicTargetLimit => basicTargetLimitForRank(rank(selectedBasic));
   int basicTargetLimitForRank(int rank, {SkillDef? basic}) {

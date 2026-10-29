@@ -229,7 +229,10 @@ void main() {
     enemy['maxHp'] = 40.0;
     final cp = GameCheckpoint.decode(jsonEncode(raw))!;
     final migrated = (cp.data['enemies'] as List).single as Map;
-    expect(migrated['maxHp'], greaterThan(40));
+    expect(
+      migrated['maxHp'],
+      closeTo(40 * (migrated['power']['health'] as num), .000001),
+    );
     expect((migrated['hp'] as num) / (migrated['maxHp'] as num), .25);
     expect(
       GameCheckpoint.decode(cp.encode())!.data['enemies'],

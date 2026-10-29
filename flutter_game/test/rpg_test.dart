@@ -31,7 +31,7 @@ void main() {
       final whirlwind = warriorSkills.firstWhere((s) => s.id == 'whirlwind');
       expect(p.learn(whirlwind), false);
       expect(p.skillPoints, 2);
-      p.gainXp(211);
+      p.gainXp(106);
       expect(p.level, 3);
 
       expect(p.skillPoints, 4);

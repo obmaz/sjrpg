@@ -10,7 +10,14 @@ import 'effect_visibility.dart';
 import 'rpg_model.dart';
 
 class _Corpse {
-  _Corpse(this.at, this.expires, {required this.elite, required this.unique});
+  _Corpse(
+    this.at,
+    this.expires, {
+    required this.kind,
+    required this.elite,
+    required this.unique,
+  });
+  final String kind;
   final ui.Offset at;
   final double expires;
   final bool elite, unique;
@@ -38,6 +45,8 @@ class BarbarianUtilities {
 
   final Adventure session;
   int _revision;
+  // Corpse rolls must not change the loot/critical random sequence.
+  late final _corpseRandom = math.Random(session.world.seed ^ 0x435250);
   double _time = 0, _wardPulse = 0;
   double _shoutUntil = 0, _ordersUntil = 0, _commandUntil = 0;
   double _shoutArmor = 1, _ordersPower = 1;
@@ -48,6 +57,7 @@ class BarbarianUtilities {
   Expando<bool> _recorded = Expando<bool>('barbarian corpse');
   static const corpseLimit = 32, enemyStateLimit = 64, wardLimit = 3;
   static const corpseLifetime = 180.0, corpseRange = 240.0;
+  static const corpseChance = .10;
   static const skillIds = {
     'howl',
     'findPotion',
@@ -100,6 +110,7 @@ class BarbarianUtilities {
       return;
     }
     _recorded[enemy] = true;
+    if (_corpseRandom.nextDouble() >= corpseChance) return;
     _expire();
     if (_corpses.length >= corpseLimit) {
       _corpses.removeAt(0).available = false;
@@ -107,6 +118,7 @@ class BarbarianUtilities {
     final corpse = _Corpse(
       enemy.body.center,
       _time + corpseLifetime,
+      kind: enemy.kind,
       elite: enemy.isElite,
       unique: enemy.isUnique,
     );
@@ -492,16 +504,17 @@ class _CorpseMarker extends GameComponent with EffectVisibility {
   final BarbarianUtilities owner;
   final _Corpse corpse;
   final int revision;
-  final _paint = ui.Paint()
-    ..color = const ui.Color(0xffa79779)
-    ..strokeWidth = 2
+  final _shadow = ui.Paint()..color = const ui.Color(0x550b1714);
+  final _glint = ui.Paint()
+    ..color = const ui.Color(0xffd8ce9d)
+    ..strokeWidth = 1.5
     ..strokeCap = ui.StrokeCap.round;
   @override
   int get priority => 25;
   @override
   bool get isVisible => true;
   @override
-  ui.Rect get effectBounds => ui.Rect.fromCircle(center: corpse.at, radius: 18);
+  ui.Rect get effectBounds => ui.Rect.fromCircle(center: corpse.at, radius: 48);
   @override
   void update(double dt) {
     if (!corpse.available ||
@@ -518,8 +531,23 @@ class _CorpseMarker extends GameComponent with EffectVisibility {
         revision != owner.session.buildRevision) {
       return;
     }
-    canvas.drawLine(const ui.Offset(-9, 3), const ui.Offset(8, -2), _paint);
-    canvas.drawLine(const ui.Offset(-7, -3), const ui.Offset(7, 4), _paint);
-    canvas.drawOval(const ui.Rect.fromLTWH(-3, -6, 7, 6), _paint);
+    canvas.drawOval(const ui.Rect.fromLTWH(-29, -9, 58, 20), _shadow);
+    // Reuse each species' art in a quiet, collapsed ground pose: no blood or
+    // extra decoded atlases. A small search glint distinguishes it from decor.
+    canvas.save();
+    canvas.scale(1, .55);
+    canvas.rotate(-math.pi / 2);
+    owner.session.art.actor(
+      canvas,
+      corpse.kind,
+      const ui.Offset(-12, 27),
+      math.pi / 2,
+      0,
+      64,
+      opacity: .72,
+    );
+    canvas.restore();
+    canvas.drawLine(const ui.Offset(25, -12), const ui.Offset(25, -4), _glint);
+    canvas.drawLine(const ui.Offset(21, -8), const ui.Offset(29, -8), _glint);
   }
 }

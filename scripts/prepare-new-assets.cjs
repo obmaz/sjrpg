@@ -86,6 +86,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'ui-button-primary',
         'ui-button-secondary',
         'ui-button-disabled',
+        'fx-level-up',
         'fx-meteor',
         'fx-ice-nova',
         'fx-whirlwind',

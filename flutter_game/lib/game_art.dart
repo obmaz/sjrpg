@@ -81,6 +81,7 @@ class GameArt {
     'physical-icons',
     'combat-illustrations',
     'combat-actions',
+    'fx-level-up',
     'fx-meteor',
     'fx-ice-nova',
     'fx-steel-whirlwind',
