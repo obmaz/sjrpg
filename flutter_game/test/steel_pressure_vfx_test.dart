@@ -124,6 +124,97 @@ void main() {
   );
 
   test(
+    'heated sweep keeps a red edge and a clear open center as its tip moves',
+    () async {
+      final art = SteelPressureArt();
+      final early = await _frame(
+        (c) => art.paintWhirlwind(
+          c,
+          center: _center,
+          radius: 116,
+          progress: .18,
+          rank: 12,
+        ),
+      );
+      final late = await _frame(
+        (c) => art.paintWhirlwind(
+          c,
+          center: _center,
+          radius: 116,
+          progress: .47,
+          rank: 12,
+        ),
+      );
+      var hotEdge = 0, nearCore = 0;
+      for (var y = 0; y < _side; y++) {
+        for (var x = 0; x < _side; x++) {
+          final i = (y * _side + x) * 4;
+          if (early[i + 3] > 50 &&
+              early[i] > 170 &&
+              early[i] > early[i + 1] * 1.5 &&
+              early[i + 2] < 100) {
+            hotEdge++;
+          }
+          if (x >= 142 && x < 178 && y >= 106 && y < 171 && early[i + 3] > 0) {
+            nearCore++;
+          }
+        }
+      }
+      expect(
+        hotEdge,
+        greaterThan(100),
+        reason: 'the edge is ember-red instead of uniformly pale',
+      );
+      expect(
+        nearCore,
+        0,
+        reason: 'head and torso stay visible inside the broad sweep',
+      );
+      expect(
+        early,
+        isNot(orderedEquals(late)),
+        reason: 'the blade and its torn edge advance with simulation time',
+      );
+    },
+  );
+
+  test(
+    'behind-actor sweep stays continuous through the former rectangular mask',
+    () async {
+      final art = SteelPressureArt();
+      Future<Uint8List> draw(bool protect) => _frame(
+        (c) => art.paintWhirlwind(
+          c,
+          center: _center,
+          radius: 116,
+          progress: .47,
+          rank: 12,
+          protectBody: protect,
+        ),
+      );
+      final standalone = await draw(true), behindActor = await draw(false);
+      var protectedPixels = 0, continuousPixels = 0;
+      for (var y = 109; y < 130; y++) {
+        for (var x = 147; x < 173; x++) {
+          final i = (y * _side + x) * 4 + 3;
+          if (standalone[i] > 0) protectedPixels++;
+          if (behindActor[i] > 0) continuousPixels++;
+        }
+      }
+      expect(
+        protectedPixels,
+        0,
+        reason: 'standalone effects still protect a foreground actor',
+      );
+      expect(
+        continuousPixels,
+        greaterThan(30),
+        reason: 'the layer behind an actor has no rectangular gap',
+      );
+    },
+  );
+
+  test(
     'expired frames paint nothing and canvas transform/clip is restored',
     () async {
       final art = SteelPressureArt();
@@ -172,6 +263,14 @@ void main() {
       radius: 120,
       progress: .2,
       rank: 12,
+      protectBody: false,
+    );
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(
+        ui.Rect.fromLTWH(centers[0].dx - 14, centers[0].dy - 54, 28, 44),
+        const ui.Radius.circular(8),
+      ),
+      ui.Paint()..color = const ui.Color(0xff52726c),
     );
     art.paintStrike(
       canvas,
@@ -197,6 +296,13 @@ void main() {
       final png = (await image.toByteData(format: ui.ImageByteFormat.png))!;
       final file = File('${output.path}/preview.png');
       await file.writeAsBytes(png.buffer.asUint8List());
+      final proof = Platform.environment['SJRPG_STEEL_PROOF_DIR'];
+      if (proof != null) {
+        await Directory(proof).create(recursive: true);
+        await File(
+          '$proof/physical-effects.png',
+        ).writeAsBytes(png.buffer.asUint8List());
+      }
       expect(await file.length(), greaterThan(1000));
     } finally {
       await output.delete(recursive: true);

@@ -81,12 +81,13 @@ void main() {
             final weaponGlyph = find.byWidgetPredicate(
               (widget) => widget is CustomPaint && widget.painter is GearGlyph,
             );
-            expect(weaponGlyph, findsOneWidget);
-            expect(
-              (tester.widget<CustomPaint>(weaponGlyph).painter as GearGlyph)
-                  .item,
-              p.weapon,
-            );
+            expect(weaponGlyph, findsNothing);
+            expect(find.bySemanticsLabel('기본 공격 일반 공격 선택'), findsNothing);
+            expect(p.basicSkills.map((skill) => skill.id).toSet(), {
+              'firebolt',
+              'chargedBolt',
+              'iceBolt',
+            });
             final bounds = <Rect>[];
             for (final basic in p.basicSkills) {
               final target = find.bySemanticsLabel('기본 공격 ${basic.name} 선택'),
@@ -113,7 +114,8 @@ void main() {
               find.bySemanticsLabel('${chosen.name} 기본 공격으로 사용'),
               findsOneWidget,
             );
-            expect(find.text('전투 슬롯'), findsNothing);
+            expect(chosen.id, 'iceBolt');
+            expect(find.text('전투 슬롯'), findsOneWidget);
             expect(tester.takeException(), null);
             await tester.tap(find.byTooltip('스킬 상세 닫기'));
             await tester.pumpAndSettle();

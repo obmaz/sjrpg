@@ -1,6 +1,7 @@
 part of 'rpg_model.dart';
 
-// Original Diablo II 1.13 Sorceress catalogue; the normal weapon attack is extra.
+// Original Diablo II 1.13 Sorceress catalogue. Retired weapon basic below
+// remains only for old checkpoint/refund compatibility, never player selection.
 const mageSkills = <SkillDef>[
   SkillDef(
     "firebolt",

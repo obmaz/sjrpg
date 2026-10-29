@@ -157,7 +157,7 @@ void main() {
     },
   );
   test(
-    'zero mana falls back to a physical staff while paid spell buffering preserves cast locks',
+    'zero mana prevents basic attacks while paid spell buffering preserves cast locks',
     () {
       final game = TestGame(),
           s = inCombatField(Adventure(GameArt(), heroClass: HeroClass.mage))
@@ -175,12 +175,14 @@ void main() {
       p.energy = 0;
       s.hero.slash();
       expect(game.added.whereType<SorceressProjectile>(), isEmpty);
-      expect(enemy.life.value, lessThan(10000));
+      expect(enemy.life.value, 10000);
+      expect(s.hero.attackClock, 0);
+      expect(s.hero.castLock, 0);
       expect(p.energy, 0);
       expect(
         p.selectedBasic,
         'firebolt',
-        reason: 'mana fallback is temporary, not a selection reset',
+        reason: 'mana shortage preserves the selected spell',
       );
       s.hero.skill();
       expect(s.hero.queuedCast, isNull);

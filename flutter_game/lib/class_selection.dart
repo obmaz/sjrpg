@@ -35,8 +35,7 @@ class _ClassSelectionState extends State<ClassSelection> {
           child: LayoutBuilder(
             builder: (context, box) {
               final compact = box.maxHeight < 600;
-              final tightContinue =
-                  compact && box.maxWidth >= 600 && widget.onContinue != null;
+              final tightContinue = compact && box.maxWidth >= 600;
               final brandHeight = tightContinue
                   ? 70.0
                   : compact
@@ -47,11 +46,7 @@ class _ClassSelectionState extends State<ClassSelection> {
                   : compact
                   ? 54.0
                   : 68.0;
-              final continueHeight = widget.onContinue == null
-                  ? 0.0
-                  : tightContinue
-                  ? 72.0
-                  : 80.0;
+              final continueHeight = tightContinue ? 72.0 : 80.0;
               final contentWidth = math.min(530.0, box.maxWidth - 24);
               final cardWidth = (contentWidth - 10) / 2;
               final portraits = widget.art.images['class-selection'];
@@ -136,30 +131,29 @@ class _ClassSelectionState extends State<ClassSelection> {
                               ],
                             ),
                           ),
-                          if (widget.onContinue != null)
-                            SizedBox(
-                              height: continueHeight,
-                              child: Column(
-                                children: [
-                                  EntryAction(
-                                    '모험 이어하기',
-                                    art: widget.art,
-                                    onTap: widget.onContinue!,
-                                    height: 47,
+                          SizedBox(
+                            height: continueHeight,
+                            child: Column(
+                              children: [
+                                EntryAction(
+                                  '모험 이어하기',
+                                  art: widget.art,
+                                  onTap: widget.onContinue,
+                                  height: 47,
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  widget.continueSummary ?? '저장된 모험이 없습니다',
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  style: const TextStyle(
+                                    color: entryCream,
+                                    fontSize: 11,
                                   ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    widget.continueSummary ?? '',
-                                    textAlign: TextAlign.center,
-                                    maxLines: 2,
-                                    style: const TextStyle(
-                                      color: entryCream,
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
+                          ),
                           const SizedBox(height: 6),
                           SizedBox(
                             height: cardHeight,

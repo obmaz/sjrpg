@@ -65,11 +65,8 @@ void main() {
         reason:
             'Cold Mastery affects enemy resistance, not a weapon-style raw DPS multiplier',
       );
-      p.selectBasic('sorceressAttack');
-      expect(
-        p.previewBasicAttack(ice)!.dps,
-        greaterThan(p.previewBasicAttack(lightning)!.dps),
-      );
+      expect(p.selectBasic('sorceressAttack'), false);
+      expect(p.selectedBasic, 'iceBolt');
       expect(p.previewBasicAttack(p.createGear(gearById('longsword'))), null);
     },
   );

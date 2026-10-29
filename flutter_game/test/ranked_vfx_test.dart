@@ -13,6 +13,34 @@ import 'support/test_game.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test(
+    'hero-owned whirlwind is not painted a second time by its lifecycle component',
+    () async {
+      final session = Adventure(GameArt())..start(TestGame());
+      addTearDown(session.dispose);
+      final component = SteelWhirlwind(
+        session,
+        session.hero,
+        rank: 5,
+        duration: 1,
+        renderWithHero: true,
+      )..age = .3;
+      final recorder = ui.PictureRecorder();
+      component.render(ui.Canvas(recorder));
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(64, 64);
+      picture.dispose();
+      try {
+        final pixels = await image.toByteData(
+          format: ui.ImageByteFormat.rawRgba,
+        );
+        expect(pixels!.buffer.asUint8List().every((v) => v == 0), true);
+      } finally {
+        image.dispose();
+      }
+    },
+  );
+
+  test(
     'original rank milestones change the rendered budget for ten major skills',
     () async {
       final art = await GameArt.load(),

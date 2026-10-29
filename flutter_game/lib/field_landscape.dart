@@ -107,10 +107,39 @@ class FieldLandscape {
       ui.Path()..addRect(ui.Offset.zero & worldSize),
       protected,
     );
+    // Follow the actual visible material: macro -> woods -> clearings -> sand.
+    var sandy = ui.Path();
+    if (world.stage == WorldStage.sands) {
+      sandy.addRect(ui.Offset.zero & worldSize);
+    } else {
+      for (final region in regions.where(
+        (r) => r.ground == FieldGround.desert,
+      )) {
+        sandy = ui.Path.combine(ui.PathOperation.union, sandy, region.path);
+      }
+      for (final biome in _biomes) {
+        sandy = ui.Path.combine(
+          biome.region.ground == FieldGround.desert
+              ? ui.PathOperation.union
+              : ui.PathOperation.difference,
+          sandy,
+          biome.region.path,
+        );
+      }
+    }
+    _sandClip = ui.Path.combine(ui.PathOperation.intersect, sandy, _groundClip);
+    _hardTrailClip = ui.Path.combine(
+      ui.PathOperation.difference,
+      ui.Path()..addRect(ui.Offset.zero & worldSize),
+      _sandClip,
+    );
   }
   final AdventureWorld world;
   late final List<FieldRegionPlan> regions;
-  late final ui.Path _groundClip;
+  late final ui.Path _groundClip, _sandClip, _hardTrailClip;
+  bool isSandyGround(ui.Offset point) => _sandClip.contains(point);
+  void clipHardTrailGround(ui.Canvas canvas) =>
+      canvas.clipPath(_hardTrailClip, doAntiAlias: false);
   late final List<({FieldRegionPlan region, ui.Color tint, int alpha})> _biomes;
   ({FieldRegionPlan region, ui.Color tint, int alpha}) _biome(
     String id,
@@ -500,6 +529,8 @@ class FieldLandscape {
   }
 
   void _shoulders(ui.Canvas canvas, ui.Rect sector, List<ui.Shader> shaders) {
+    canvas.save();
+    clipHardTrailGround(canvas);
     final material = world.stage.usesCityArt
         ? FieldGround.stone
         : FieldGround.desert;
@@ -513,6 +544,22 @@ class FieldLandscape {
         alpha: 148,
       );
     }
+    canvas.restore();
+  }
+
+  /// Wind covers visible sandy terrain in every chapter. Forest and stone
+  /// ground retain their ordinary paving outside the cached sand-material clip.
+  void paintSandTrails(ui.Canvas canvas, ui.Rect sector, ui.Shader sand) {
+    if (!_sandClip.getBounds().overlaps(sector)) return;
+    canvas.save();
+    canvas.clipRect(sector, doAntiAlias: false);
+    canvas.clipPath(_sandClip, doAntiAlias: false);
+    for (final road in world.trails) {
+      if (!road.bounds.inflate(road.width / 2 + 150).overlaps(sector)) continue;
+      _ribbon(canvas, road.points, road.width + 180, sand, alpha: 24);
+      _ribbon(canvas, road.points, road.width * .9, sand, alpha: 38);
+    }
+    canvas.restore();
   }
 
   void _palette(

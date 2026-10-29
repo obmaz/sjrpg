@@ -105,7 +105,12 @@ class QuestScenery {
       if (patch.usesDedicatedImage || !patch.bounds.overlaps(view)) continue;
       canvas.save();
       canvas.translate(patch.center.dx, patch.center.dy);
-      _SitePainter(canvas, patch.design, stoneTexture).paint();
+      _SitePainter(
+        canvas,
+        patch.design,
+        stoneTexture,
+        buriedInSand: world.stage == WorldStage.sands,
+      ).paint();
       canvas.restore();
     }
   }
@@ -154,10 +159,16 @@ class QuestScenery {
 /// Ground-only strokes are baked once into TerrainArt's bounded picture cache.
 /// Coordinates and details are authored, not taken from simulation randomness.
 class _SitePainter {
-  _SitePainter(this.c, this.design, this.stoneTexture);
+  _SitePainter(
+    this.c,
+    this.design,
+    this.stoneTexture, {
+    this.buriedInSand = false,
+  });
   final ui.Canvas c;
   final QuestGroundDesign design;
   final ui.Shader? stoneTexture;
+  final bool buriedInSand;
   final ui.Paint brush = ui.Paint();
   static const stone = ui.Color(0xffafa58a);
   static const sand = ui.Color(0xffd7b677);
@@ -184,7 +195,7 @@ class _SitePainter {
         ..strokeCap = ui.StrokeCap.round
         ..strokeJoin = ui.StrokeJoin.round
         ..strokeWidth = width
-        ..color = color,
+        ..color = buriedInSand ? color.withValues(alpha: color.a * .30) : color,
     );
   }
 
@@ -199,7 +210,7 @@ class _SitePainter {
       brush
         ..style = ui.PaintingStyle.fill
         ..shader = ui.Gradient.radial(ui.Offset.zero, x, [
-          color,
+          buriedInSand ? color.withValues(alpha: color.a * .28) : color,
           color.withAlpha(0),
         ]),
     );
@@ -214,6 +225,10 @@ class _SitePainter {
     ui.Color color = stone,
     double width = 96,
   }) {
+    if (buriedInSand) {
+      _buriedFragments(points, color, width);
+      return;
+    }
     line(points, const ui.Color(0x332a3029), width + 9);
     line(points, color.withAlpha(155), width);
     if (stoneTexture != null) {
@@ -244,6 +259,43 @@ class _SitePainter {
           [middle - side * (width * .37), middle + side * (width * .39)],
           const ui.Color(0x68585444),
           2,
+        );
+      }
+    }
+  }
+
+  void _buriedFragments(List<ui.Offset> points, ui.Color color, double width) {
+    // Sand interrupts the former paving: no continuous strip, border or slab grid.
+    for (var edge = 1; edge < points.length; edge++) {
+      final a = points[edge - 1], delta = points[edge] - a;
+      if (delta.distance < 1) continue;
+      final axis = delta / delta.distance, side = ui.Offset(-axis.dy, axis.dx);
+      for (
+        var d = 20.0 + edge % 3 * 13;
+        d < delta.distance;
+        d += 83 + edge % 4 * 11
+      ) {
+        final t = d / delta.distance;
+        final center =
+            a + axis * d + side * (math.sin(d * .027 + edge) * width * .28);
+        final half = math.min(15.0, width * .22), along = 8.0 + edge % 3 * 3;
+        final fragment = ui.Path()
+          ..addPolygon([
+            center - axis * along - side * half,
+            center + axis * (along * .8) - side * (half * .6),
+            center + axis * along + side * half,
+            center - axis * (along * .75) + side * (half * .7),
+          ], true);
+        c.drawPath(
+          fragment,
+          brush
+            ..shader = null
+            ..style = ui.PaintingStyle.fill
+            ..color = ui.Color.lerp(
+              color,
+              sand,
+              .7,
+            )!.withAlpha(30 + (t * 17).round()),
         );
       }
     }
@@ -294,7 +346,7 @@ class _SitePainter {
             color,
             const ui.Color(0xffe0d3a4),
             i % 5 / 8,
-          )!.withAlpha(155),
+          )!.withAlpha(buriedInSand ? 62 : 155),
       );
     }
   }

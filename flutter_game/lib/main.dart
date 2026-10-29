@@ -169,13 +169,15 @@ class _EntryPageState extends State<EntryPage> with WidgetsBindingObserver {
   }
 
   void returnToMenu() {
-    final checkpoint = GameCheckpoint.decode(widget.readCheckpoint());
+    final stored = widget.readCheckpoint();
+    final checkpoint = GameCheckpoint.decode(stored);
     setState(() {
       run++;
       started = false;
       resuming = false;
       enteringStage = false;
       arrivingByWell = false;
+      storedCheckpoint = stored;
       savedAdventure = checkpoint;
       if (checkpoint != null) chosen = checkpoint.progress.heroClass;
     });
@@ -192,9 +194,8 @@ class _EntryPageState extends State<EntryPage> with WidgetsBindingObserver {
   bool started = false;
   int run = 0;
   HeroClass chosen = HeroClass.warrior;
-  late GameCheckpoint? savedAdventure = GameCheckpoint.decode(
-    widget.readCheckpoint(),
-  );
+  late String? storedCheckpoint = widget.readCheckpoint();
+  late GameCheckpoint? savedAdventure = GameCheckpoint.decode(storedCheckpoint);
   bool resuming = false, enteringStage = false, arrivingByWell = false;
   bool preparingSession = false, startPaused = false;
   bool preparationInterrupted = false;
@@ -205,6 +206,14 @@ class _EntryPageState extends State<EntryPage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed && (preparingSession || started)) {
       preparationInterrupted = true;
+    }
+    if (state == AppLifecycleState.resumed && !started && !preparingSession) {
+      final stored = widget.readCheckpoint();
+      final checkpoint = GameCheckpoint.decode(stored);
+      setState(() {
+        storedCheckpoint = stored;
+        savedAdventure = checkpoint;
+      });
     }
   }
 
@@ -342,6 +351,7 @@ class _EntryPageState extends State<EntryPage> with WidgetsBindingObserver {
               onRestart: () => setState(() {
                 run++;
                 started = false;
+                storedCheckpoint = null;
                 savedAdventure = null;
                 resuming = false;
                 enteringStage = false;
@@ -355,7 +365,11 @@ class _EntryPageState extends State<EntryPage> with WidgetsBindingObserver {
           busy: preparingSession,
           child: ClassSelection(
             art: art,
-            continueSummary: savedAdventure?.summary,
+            continueSummary:
+                savedAdventure?.summary ??
+                (storedCheckpoint == null
+                    ? '저장된 모험이 없습니다'
+                    : '저장된 모험을 불러올 수 없습니다. 새 모험 시작 전 저장을 확인하세요'),
             onContinue: savedAdventure == null
                 ? null
                 : () => startSession(
@@ -436,7 +450,14 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
             forDefeat: true,
           ))
         : GameCheckpoint.capture(adventure);
-    if (checkpoint == null) return;
+    if (checkpoint == null) {
+      final changed = !adventure.saveFailed;
+      adventure.saveFailed = true;
+      if (changed && notify && mounted && !adventure.disposed) {
+        adventure.refresh();
+      }
+      return;
+    }
     _persistingDefeat = adventure.defeated;
     var failed = true;
     try {
@@ -782,7 +803,9 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 : width < 360
                 ? 122.0
                 : short
-                ? 112.0
+                ? landscape && width >= 700
+                      ? 128.0
+                      : 112.0
                 : 142.0,
             attack = width < 360 ? 90.0 : 104.0,
             bottom = landscape && width >= 700
@@ -842,7 +865,38 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 .isEmpty;
         final compactBattle =
             width < 500 && (short || hasMobility && media.size.height < 650);
-        final layouts = compactBattle
+        final referenceFan =
+            landscape && width >= 700 ||
+            !landscape && width >= 360 && media.size.height >= 650;
+        final attackRight = referenceFan
+            ? 64.0
+            : width < 360
+            ? 14.0
+            : 22.0;
+        final dodgeRight = referenceFan
+            ? 8.0
+            : width < 360
+            ? 112.0
+            : 134.0;
+        final dodgeSize = referenceFan
+            ? 44.0
+            : width < 360
+            ? 56.0
+            : 64.0;
+        final mobilityRight = referenceFan
+            ? 8.0
+            : width < 360
+            ? (compactBattle ? 120.0 : 112.0)
+            : 134.0;
+        final mobilityRise = referenceFan ? (landscape ? 84.0 : 80.0) : 112.0;
+        final layouts = referenceFan
+            ? [
+                (170.0, 84.0, 56.0),
+                (146.0, 150.0, 56.0),
+                (80.0, 170.0, 56.0),
+                (14.0, 146.0, 56.0),
+              ]
+            : compactBattle
             ? hasMobility
                   ? [
                       (14.0, 128.0, 48.0),
@@ -1010,7 +1064,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 ),
               ),
               Positioned(
-                right: width < 360 ? 14 : 22,
+                right: attackRight,
                 bottom: bottom,
                 child: ActionButton(
                   art: widget.art,
@@ -1029,7 +1083,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                                   size: attack * .75,
                                   ammo: p.mountProgress.motorAmmo,
                                 )
-                              : p.selectedBasic != p.defaultBasicId
+                              : p.heroClass == HeroClass.mage ||
+                                    p.selectedBasic != p.defaultBasicId
                               ? CustomPaint(
                                   painter: EffectIconPainter(
                                     widget.art,
@@ -1066,6 +1121,10 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                       ],
                     ),
                   ),
+                  insufficientResource:
+                      p.heroClass == HeroClass.mage &&
+                      mount?.def.artKey != 'motor' &&
+                      p.energy < p.skillCost(p.basicSkill),
                   label: '공격',
                   showLabel: false,
                   semanticLabel: '공격',
@@ -1104,10 +1163,14 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 ),
               ),
               for (var slot = 0; slot < 4; slot++)
-                if (mount == null && p.skillAt(slot) != null) skillButton(slot),
+                if (mount == null &&
+                    p.skillAt(slot) != null &&
+                    !(p.heroClass == HeroClass.mage &&
+                        p.skillAt(slot)!.id == p.selectedBasic))
+                  skillButton(slot),
               if (mount?.def.artKey != 'motor')
                 Positioned(
-                  right: width < 360 ? 112 : 134,
+                  right: dodgeRight,
                   bottom: bottom + 20,
                   child: ActionButton(
                     art: widget.art,
@@ -1117,7 +1180,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                         ? null
                         : MountSkillBadge(
                             kind: mount.def.artKey,
-                            size: (width < 360 ? 56 : 64) * .78,
+                            size: dodgeSize * .78,
                             ammo: p.mountProgress.motorAmmo,
                             hits: mount.hits,
                           ),
@@ -1140,7 +1203,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                             adventure.mountSkillClock <= 0 &&
                             (mount.def.artKey != 'motor' ||
                                 p.mountProgress.motorAmmo > 0),
-                    size: width < 360 ? 56 : 64,
+                    size: dodgeSize,
                     remaining: mount == null
                         ? adventure.hero.dodgeClock
                         : adventure.mountSkillClock,
@@ -1152,8 +1215,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 ),
               if (hasMobility && mount == null)
                 Positioned(
-                  right: width < 360 ? (compactBattle ? 120 : 112) : 134,
-                  bottom: bottom + 112,
+                  right: mobilityRight,
+                  bottom: bottom + mobilityRise,
                   child: ActionButton(
                     art: widget.art,
                     sprite: 'roundEmpty',
@@ -1177,7 +1240,11 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                         ? '재사용 ${CombatBalance.realSeconds(adventure.hero.mobilityClock).ceil()}초'
                         : '이동 기술 · M',
                     showLabel: false,
-                    size: width < 360 ? 48 : 56,
+                    size: referenceFan
+                        ? 48
+                        : width < 360
+                        ? 48
+                        : 56,
                     enabled:
                         adventure.active &&
                         !adventure.afflictions.movementBlocked &&
@@ -1320,6 +1387,23 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   ),
                 ),
               ),
+              if (landscape && width >= 700) ...[
+                Positioned(
+                  right: 109,
+                  top: media.padding.top + 7,
+                  child: _menu('touchInventory', '가방', 'bag', compact: true),
+                ),
+                Positioned(
+                  right: 165,
+                  top: media.padding.top + 7,
+                  child: _menu(
+                    'touchSettings',
+                    '설정',
+                    'settings',
+                    compact: true,
+                  ),
+                ),
+              ],
               Positioned(
                 left: 0,
                 right: 0,
@@ -1327,10 +1411,22 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _menu('touchInventory', '가방', 'bag'),
-                    _menu('touchQuests', '스킬', 'skills'),
-                    _menu('touchCompendium', '여정', 'journal'),
-                    _menu('touchSettings', '설정', 'settings'),
+                    if (!(landscape && width >= 700))
+                      _menu('touchInventory', '가방', 'bag'),
+                    _menu(
+                      'touchQuests',
+                      '스킬',
+                      'skills',
+                      compact: landscape && width >= 700,
+                    ),
+                    _menu(
+                      'touchCompendium',
+                      '여정',
+                      'journal',
+                      compact: landscape && width >= 700,
+                    ),
+                    if (!(landscape && width >= 700))
+                      _menu('touchSettings', '설정', 'settings'),
                   ],
                 ),
               ),
@@ -1365,10 +1461,16 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
       },
     ),
   );
-  Widget _menu(String sprite, String label, String target) => MenuButton(
+  Widget _menu(
+    String sprite,
+    String label,
+    String target, {
+    bool compact = false,
+  }) => MenuButton(
     art: widget.art,
     sprite: sprite,
     label: label,
+    compact: compact,
     badge: target == 'skills'
         ? adventure.progress.skillPoints
         : target == 'journal'

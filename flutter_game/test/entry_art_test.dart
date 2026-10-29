@@ -11,6 +11,7 @@ import 'package:guardian_new/class_selection.dart';
 import 'package:guardian_new/entry_art_widgets.dart';
 import 'package:guardian_new/entry_loading.dart';
 import 'package:guardian_new/game_art.dart';
+import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/game_ui.dart';
 import 'package:guardian_new/main.dart';
 import 'package:guardian_new/rpg_model.dart';
@@ -152,6 +153,11 @@ void main() {
           );
           expect(began, HeroClass.mage);
           expect(tester.takeException(), isNull);
+          final resumeAction = tester.widget<EntryAction>(
+            find.widgetWithText(EntryAction, '모험 이어하기'),
+          );
+          expect(resumeAction.onTap, isNull);
+          expect(find.text('저장된 모험이 없습니다'), findsOneWidget);
           semantics.dispose();
           await tester.pumpWidget(const SizedBox.shrink());
         },
@@ -352,6 +358,48 @@ void main() {
       }
     });
   }
+
+  testWidgets(
+    'continue stays visible for unreadable saves and refreshes on app return',
+    (tester) async {
+      final art = await artwork(tester);
+      String? stored = '{"unreadable":true}';
+      var writes = 0;
+      await show(
+        tester,
+        const Size(390, 844),
+        1,
+        EntryPage(
+          loadArt: () async => art,
+          readCheckpoint: () => stored,
+          writeCheckpoint: (value) {
+            writes++;
+            stored = value;
+            return true;
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+      EntryAction resume() => tester.widget<EntryAction>(
+        find.widgetWithText(EntryAction, '모험 이어하기'),
+      );
+      expect(resume().onTap, isNull);
+      expect(find.textContaining('저장된 모험을 불러올 수 없습니다'), findsOneWidget);
+      expect(writes, 0);
+      expect(stored, '{"unreadable":true}');
+      final session = Adventure(GameArt(), heroClass: HeroClass.mage)
+        ..start(TestGame());
+      addTearDown(session.dispose);
+      stored = GameCheckpoint.capture(session)!.encode();
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(resume().onTap, isNotNull);
+      expect(find.textContaining('Lv.1 마법사'), findsOneWidget);
+      expect(writes, 0);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 
   testWidgets(
     'initial entry shows generated splash before menu art completes',

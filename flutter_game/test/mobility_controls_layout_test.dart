@@ -77,6 +77,17 @@ void main() {
                     as Guardian)
                 .session;
         expect(s.ready, true);
+        if (type == HeroClass.mage) {
+          expect(
+            find.byWidgetPredicate(
+              (w) =>
+                  w is ActionButton &&
+                  w.semanticLabel == s.progress.basicSkill.name,
+            ),
+            findsNothing,
+            reason: 'the chosen basic spell has one primary attack button',
+          );
+        }
         if (type == HeroClass.warrior) {
           s.progress.equipped.remove(GearSlot.weapon);
           s.refresh();
@@ -145,6 +156,19 @@ void main() {
         ];
         for (final element in find.byType(MenuButton).evaluate()) {
           rects.add(tester.getRect(find.byWidget(element.widget)));
+        }
+        if (size.width >= 700 && size.width > size.height) {
+          Rect menu(String label) => tester.getRect(
+            find.byWidgetPredicate((w) => w is MenuButton && w.label == label),
+          );
+          final bag = menu('가방'), settings = menu('설정');
+          expect(bag.size, const Size(52, 44));
+          expect(settings.size, const Size(52, 44));
+          expect(bag.top, 7);
+          expect(settings.top, 7);
+          expect(settings.right, lessThan(bag.left));
+          expect(menu('스킬').top, greaterThan(size.height - 60));
+          expect(menu('여정').top, greaterThan(size.height - 60));
         }
         final viewport = Offset.zero & size;
         final stick = tester.getRect(find.byType(GameStick));

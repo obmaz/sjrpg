@@ -1,0 +1,10 @@
+{
+    "generator": "image_gen",
+    "packer": "tools/prepare-dodge-roll.py",
+    "original": "docs/art/dodge-roll-original.png",
+    "originalSha256": "16b8d8f2b9165cb31f72941cce73e473da2415514b4eb206ad0e1ac3bff9f758",
+    "runtime": "flutter_game/art/dodge-icon.png",
+    "runtimeSha256": "b132ae2bd02e172198e53a33ac37695c3c27a6e77a5edf4a19cf14d278a0734f",
+    "size": [256, 256],
+    "decodedRGBABytes": 262144
+}

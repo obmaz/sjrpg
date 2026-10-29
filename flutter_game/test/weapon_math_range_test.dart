@@ -81,7 +81,7 @@ void main() {
         } else {
           train(p, 'fireMastery', 5);
         }
-        for (final basic in p.skills.where((skill) => skill.basic)) {
+        for (final basic in p.basicSkills) {
           train(p, basic.id, math.min(5, basic.rankLimit));
           expect(p.selectBasic(basic.id), true);
           for (final state in ['normal', 'frenzy', 'slow', 'both']) {

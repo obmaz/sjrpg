@@ -15,19 +15,16 @@ void main() {
     Progress fresh() => trainedSorceress();
     final alternatives = ['iceBolt', 'chargedBolt'];
     test(
-      '$heroClass has three mana spells plus one free weapon basic and a firebolt primary',
+      '$heroClass has three selectable elemental basics and a firebolt primary',
       () {
         final p = Progress(heroClass: heroClass);
-        expect(p.basicSkills.length, 4);
+        expect(p.basicSkills.length, 3);
         expect(p.selectedBasic, p.defaultBasicId);
         expect(p.basicSkill.basic, true);
         expect(p.basicTargetLimit, 1);
         expect(p.skillAt(0)!.id, 'firebolt');
         for (final basic in p.basicSkills) {
-          expect(
-            basic.cost,
-            basic.id == 'sorceressAttack' ? 0 : greaterThan(0),
-          );
+          expect(basic.cost, greaterThan(0));
           expect(p.canSelectSkill(basic.id), basic.id == 'firebolt');
         }
       },

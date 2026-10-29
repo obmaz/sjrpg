@@ -848,10 +848,11 @@ class Progress {
   String selectedBasic = '';
   String get defaultBasicId =>
       heroClass == HeroClass.warrior ? 'cleave' : 'firebolt';
-  Iterable<SkillDef> get basicSkills => skills.where((s) => s.basic);
+  Iterable<SkillDef> get basicSkills =>
+      skills.where((s) => s.basic && s.id != 'sorceressAttack');
   SkillDef get basicSkill => skills.firstWhere((s) => s.id == selectedBasic);
   bool canSelectBasic(String id) =>
-      skills.any((s) => s.id == id && s.basic && rank(id) > 0);
+      basicSkills.any((s) => s.id == id && rank(id) > 0);
   bool selectBasic(String id) {
     if (!canSelectBasic(id)) return false;
     selectedBasic = id;
@@ -1091,13 +1092,22 @@ class Progress {
         return null;
       }
       if (p.heroClass == HeroClass.warrior && p.rank('howl') == 0) return null;
+      // Retain the retired rank only as a compatibility marker for old saves.
+      if (p.heroClass == HeroClass.mage &&
+          !p.ranks.containsKey('sorceressAttack')) {
+        p.ranks['sorceressAttack'] = 1;
+      }
       if (p.heroClass == HeroClass.mage && p.rank('sorceressAttack') != 1) {
         return null;
       }
       if (p.skills.any((s) => p.rank(s.id) > 0 && !p.prerequisitesMet(s))) {
         return null;
       }
-      final basic = data['selectedBasic'] ?? p.defaultBasicId;
+      final storedBasic = data['selectedBasic'] ?? p.defaultBasicId;
+      final basic =
+          p.heroClass == HeroClass.mage && storedBasic == 'sorceressAttack'
+          ? p.defaultBasicId
+          : storedBasic;
       if (basic is! String || !p.canSelectBasic(basic)) return null;
       p.selectedBasic = basic;
       p.selectedSkill = data['selectedSkill'] as String;

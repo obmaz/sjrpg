@@ -35,44 +35,78 @@ class GameHud extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = session.progress;
-    final width = MediaQuery.sizeOf(context).width;
-    final height = MediaQuery.sizeOf(context).height;
-    final landscape = width > height && width >= 500;
-    final short = height < 520 || landscape;
-    final statusRight = math.max(104.0, width - (landscape ? 280 : 360));
-    final resourceHeight = math.max(
-      17.0,
-      ResourceMeter.minimumHeight(MediaQuery.textScalerOf(context)),
+    final media = MediaQuery.of(context);
+    final width = media.size.width;
+    final landscape = width > media.size.height && width >= 500;
+    final short = media.size.height < 520 || landscape;
+    final mapSide = width < 360
+        ? 76.0
+        : landscape
+        ? 90.0
+        : 86.0;
+    final statusWidth = math.min(
+      landscape ? 286.0 : 306.0,
+      width - mapSide - 22,
     );
+    final resourceHeight = math.max(
+      18.0,
+      ResourceMeter.minimumHeight(media.textScaler),
+    );
+    const healthTop = 30.0, healthHeight = 18.0, resourceTop = 49.0;
     return SizedBox(
       height: 130,
       child: Stack(
         children: [
           Positioned(
-            top: 17,
-            left: 57,
-            right: statusRight,
-            child: HealthMeter(session, height: 20),
+            left: 5,
+            top: 4,
+            width: statusWidth,
+            height: 84,
+            child: IgnorePointer(
+              child: CustomPaint(painter: const _HeroStatusChrome()),
+            ),
           ),
           Positioned(
             left: 77,
-            right: statusRight + 6,
-            top: 42,
+            top: 7,
+            width: math.max(44, statusWidth - 81),
+            height: 21,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Lv.${p.level}  ${p.heroClass.title}',
+                key: const ValueKey('hud-identity'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: gold,
+                  fontSize: 12,
+                  height: 1.1,
+                  shadows: [Shadow(color: Color(0xff0c1011), blurRadius: 2)],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: healthTop,
+            left: 66,
+            width: math.max(50, statusWidth - 66),
+            child: HealthMeter(session, height: healthHeight),
+          ),
+          Positioned(
+            left: 68,
+            top: resourceTop,
+            width: math.max(48, statusWidth - 75),
             child: ResourceMeter(session, height: resourceHeight),
           ),
           Positioned(
             left: 10,
-            top: 7,
-            child: Container(
-              width: 63,
-              height: 72,
-              decoration: BoxDecoration(
-                color: ink,
-                border: Border.all(color: mobileBorder, width: 1.2),
-                borderRadius: BorderRadius.circular(35),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(32),
+            top: 11,
+            child: SizedBox(
+              key: const ValueKey('hud-portrait'),
+              width: 56,
+              height: 68,
+              child: ClipOval(
                 child: CustomPaint(
                   painter: _PortraitPainter(session.art, p.heroClass),
                 ),
@@ -80,40 +114,16 @@ class GameHud extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: 3,
-            top: 91,
+            left: 9,
+            top: 88,
             child: AfflictionIcons(session.afflictions),
           ),
           Positioned(
-            top: 60,
-            left: 10,
-            child: Container(
-              width: 27,
-              height: 27,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: ink,
-                shape: BoxShape.circle,
-                border: Border.all(color: mobileBorder, width: 1),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(3),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    '${p.level}',
-                    style: const TextStyle(color: cream, fontSize: 14),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            right: 10,
+            right: 9,
             top: 7,
             child: SizedBox(
-              width: 85,
-              height: 85,
+              width: mapSide,
+              height: mapSide,
               child: Semantics(
                 button: true,
                 label: '지도 확대',
@@ -138,8 +148,9 @@ class GameHud extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: ink.withValues(alpha: .8),
-                  borderRadius: BorderRadius.circular(10),
+                  color: const Color(0xbf191b1a),
+                  border: Border.all(color: const Color(0x665b5645)),
+                  borderRadius: BorderRadius.circular(5),
                 ),
                 child: Text(
                   session.sheltered ? '안전 구역' : session.region,
@@ -151,6 +162,99 @@ class GameHud extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The portrait and two vessels share one fitted dark-metal silhouette.
+/// The live meters retain their own damage trail, danger pulse and fluid clock.
+class _HeroStatusChrome extends CustomPainter {
+  const _HeroStatusChrome();
+  @override
+  void paint(Canvas canvas, Size size) {
+    final plate = Path()
+      ..moveTo(52, 1)
+      ..lineTo(size.width, 1)
+      ..lineTo(size.width - 12, 23)
+      ..lineTo(size.width - 5, 44)
+      ..lineTo(size.width - 18, 66)
+      ..lineTo(52, 66)
+      ..close();
+    canvas.drawPath(
+      plate.shift(const Offset(0, 2)),
+      Paint()..color = const Color(0xaa000000),
+    );
+    canvas.drawPath(plate, Paint()..color = const Color(0xe51c1b1c));
+    canvas.drawPath(
+      plate,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.4
+        ..color = const Color(0xff71604b),
+    );
+    canvas.drawLine(
+      const Offset(65, 23),
+      Offset(size.width - 13, 23),
+      Paint()
+        ..color = const Color(0xffbd9e72)
+        ..strokeWidth = .7,
+    );
+    final portrait = const Rect.fromLTWH(1, 2, 64, 78);
+    canvas.drawOval(
+      portrait.shift(const Offset(0, 2)),
+      Paint()..color = const Color(0xaa000000),
+    );
+    canvas.drawOval(portrait, Paint()..color = const Color(0xff171d20));
+    canvas.drawOval(
+      portrait,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..color = const Color(0xff4a4337),
+    );
+    canvas.drawArc(
+      portrait,
+      -math.pi + .2,
+      2.7,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.4
+        ..color = const Color(0xffc3ac82),
+    );
+    canvas.drawOval(
+      portrait.deflate(3),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = .7
+        ..color = const Color(0xff9c8761),
+    );
+    // Small crest and rivets distinguish the portrait from an ordinary button.
+    for (final y in [0.0, 79.0]) {
+      final crest = Path()
+        ..moveTo(33, y - 3)
+        ..lineTo(38, y + 1)
+        ..lineTo(33, y + 6)
+        ..lineTo(28, y + 1)
+        ..close();
+      canvas.drawPath(crest, Paint()..color = const Color(0xff292b2b));
+      canvas.drawPath(
+        crest,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..color = const Color(0xffa38e68),
+      );
+    }
+    for (final x in [5.0, 61.0]) {
+      canvas.drawCircle(
+        Offset(x, 41),
+        1.4,
+        Paint()..color = const Color(0xffad9770),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _HeroStatusChrome old) => false;
 }
 
 /// Shared generated medallions use the same circular face as learned skills.
@@ -1735,7 +1839,12 @@ class DodgeActionPainter extends CustomPainter {
     canvas.clipPath(Path()..addOval(Offset.zero & size));
     canvas.drawImageRect(
       image,
-      Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+      Rect.fromLTWH(
+        0,
+        0,
+        image.width.toDouble(),
+        image.height.toDouble(),
+      ).deflate(image.width * .07),
       Offset.zero & size,
       _paint,
     );
@@ -1799,15 +1908,17 @@ class MenuButton extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.badge = 0,
+    this.compact = false,
     super.key,
   });
   final int badge;
+  final bool compact;
   final GameArt art;
   final String sprite, label;
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 7),
+    padding: EdgeInsets.symmetric(horizontal: compact ? 4 : 7),
     child: Semantics(
       button: true,
       label: label,
@@ -1815,10 +1926,10 @@ class MenuButton extends StatelessWidget {
       onTap: onTap,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(29),
+        borderRadius: BorderRadius.circular(compact ? 22 : 29),
         child: SizedBox(
-          width: 58,
-          height: 58,
+          width: compact ? 44 : 58,
+          height: compact ? 44 : 58,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -1832,9 +1943,9 @@ class MenuButton extends StatelessWidget {
                   right: -4,
                   top: -5,
                   child: Container(
-                    constraints: const BoxConstraints(
-                      minWidth: 23,
-                      minHeight: 23,
+                    constraints: BoxConstraints(
+                      minWidth: compact ? 18 : 23,
+                      minHeight: compact ? 18 : 23,
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 5),
                     alignment: Alignment.center,

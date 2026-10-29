@@ -388,21 +388,11 @@ void main() {
   );
 
   test(
-    'Enchant adds to actual staff strikes but not ordinary spell projectiles',
+    'Enchant stays a weapon buff without enabling a removed staff basic or buffing spells',
     () {
       final spec = cast('enchant');
-      final m = enemy(s.hero.body.center + const Offset(50, 0));
-      expect(s.progress.selectBasic('sorceressAttack'), true);
-      final base = s.progress.skillDamage(skill('sorceressAttack'));
-      s.hero.slash();
-      final dealt = 10000 - m.life.value;
-      expect(
-        dealt,
-        inInclusiveRange(
-          base + spec.enchantFireMin - 1e-8,
-          base + spec.enchantFireMax + 1e-8,
-        ),
-      );
+      expect(spec.enchantFireMin, greaterThan(0));
+      expect(s.progress.selectBasic('sorceressAttack'), false);
       expect(s.progress.selectSkill('firebolt'), true);
       final firebolt = s.progress.sorceressSpell(skill('firebolt'));
       s.hero.castLock = s.hero.attackClock = s.hero.swing = 0;

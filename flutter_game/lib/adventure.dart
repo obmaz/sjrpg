@@ -3160,13 +3160,13 @@ class Guardian extends Player with WithCollision {
 
   void _performSlash() {
     final p = session.progress;
-    var basic = p.basicSkill;
+    final basic = p.basicSkill;
     if (p.heroClass == HeroClass.mage &&
-        p.isSorceressSpell(basic) &&
-        p.energy < p.skillCost(basic)) {
-      basic = p.skills.firstWhere((skill) => skill.id == 'sorceressAttack');
+        (!p.isSorceressSpell(basic) ||
+            p.energy < p.skillCost(basic) ||
+            !sorceressCombat.canActivate(basic))) {
+      return;
     }
-    final staff = basic.id == 'sorceressAttack';
     final propRange = p.heroClass == HeroClass.mage
         ? p.skillRange(basic)
         : p.weapon.base.range;
@@ -3225,22 +3225,16 @@ class Guardian extends Player with WithCollision {
         ? strikes % 2
         : strikes % 3;
     session.combo = (session.combo + 1) % 3;
-    attackClock = staff
-        ? math.max(
-                CombatBalance.minimumStrikeInterval,
-                p.attackIntervalFor(basic),
-              ) /
-              session.afflictions.attackTempo
-        : p.actualBasicInterval(
-            frenzyTempo: frenzyTime > 0 ? p.frenzyAttackTempo : 1,
-            attackTempo: session.afflictions.attackTempo,
-          );
+    attackClock = p.actualBasicInterval(
+      frenzyTempo: frenzyTime > 0 ? p.frenzyAttackTempo : 1,
+      attackTempo: session.afflictions.attackTempo,
+    );
     // Slow weapons and attack debuffs must still reach the next combo strike.
     // Once this scheduled attack becomes ready, only a short idle margin remains.
     comboGrace = math.max(1.2, attackClock + .25);
     swingDuration = (strikePose == 2 ? .32 : .26) / effectiveBasicTempo;
     swing = swingDuration;
-    if (p.heroClass == HeroClass.mage && !staff) {
+    if (p.heroClass == HeroClass.mage) {
       castLock = p.skillMotionTime(basic) / session.afflictions.attackTempo;
       swingDuration = swing = castLock;
     }
@@ -3250,7 +3244,7 @@ class Guardian extends Player with WithCollision {
       return;
     }
     session.audio.play(
-      (p.heroClass == HeroClass.warrior || staff)
+      (p.heroClass == HeroClass.warrior)
           ? (p.weapon.base.style == 'hammer'
                 ? EffectSound.impact
                 : EffectSound.slash)
@@ -3260,7 +3254,7 @@ class Guardian extends Player with WithCollision {
               _ => EffectSound.fire,
             },
     );
-    if (p.heroClass == HeroClass.mage && !staff) {
+    if (p.heroClass == HeroClass.mage) {
       if (p.energy >= p.skillCost(basic) &&
           sorceressCombat.canActivate(basic)) {
         p.energy -= p.skillCost(basic);
@@ -3330,7 +3324,7 @@ class Guardian extends Player with WithCollision {
               .distanceSquared,
         ),
     ]..sort((a, b) => a.distance.compareTo(b.distance));
-    final selected = targets.take(staff ? 1 : p.basicTargetLimit).toList();
+    final selected = targets.take(p.basicTargetLimit).toList();
     final multiplier = enemyGroupDamageScale(
       selected
           .where((t) => t.mob != null && session.canHitEnemy(t.mob!))
@@ -3339,16 +3333,7 @@ class Guardian extends Player with WithCollision {
     final critical =
         p.weaponCriticalChance > 0 &&
         session.random.nextDouble() < p.weaponCriticalChance;
-    final damage =
-        (p.skillDamage(basic) +
-            (staff
-                ? sorceressCombat.defenses.enchantMinDamage +
-                      session.random.nextDouble() *
-                          (sorceressCombat.defenses.enchantMaxDamage -
-                              sorceressCombat.defenses.enchantMinDamage)
-                : 0)) *
-        multiplier *
-        (critical ? 2 : 1);
+    final damage = p.skillDamage(basic) * multiplier * (critical ? 2 : 1);
     for (final target in selected) {
       final mob = target.mob;
       if (mob == null) {
@@ -3560,7 +3545,13 @@ class Guardian extends Player with WithCollision {
         spin = spinDuration;
         swing = 0;
         session.game?.add(
-          SteelWhirlwind(session, this, rank: rank, duration: spinDuration),
+          SteelWhirlwind(
+            session,
+            this,
+            rank: rank,
+            duration: spinDuration,
+            renderWithHero: true,
+          ),
         );
         attackClock = math.max(attackClock, spinDuration);
         invulnerable = math.max(invulnerable, spinDuration * .7);
@@ -3874,6 +3865,18 @@ class Guardian extends Player with WithCollision {
           : swing > 0 && swingDuration > 0
           ? 1 - swing / swingDuration
           : 0.0;
+      // Draw the full sweep behind the actual actor. Its sprite alpha supplies
+      // natural occlusion without cutting a rectangular hole through the ring.
+      if (spin > 0) {
+        paintSteelWhirlwind(
+          session.art,
+          canvas,
+          ui.Offset(size.x / 2, size.y / 2),
+          (1 - spin / spinDuration).clamp(0.0, .999999),
+          session.progress.rank('whirlwind'),
+          protectBody: false,
+        );
+      }
       session.art.actor(
         canvas,
         session.progress.heroClass == HeroClass.mage ? 'mage' : 'hero',

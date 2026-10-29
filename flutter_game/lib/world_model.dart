@@ -276,6 +276,27 @@ class RegionShape {
 
 class WorldProp {
   const WorldProp(this.body, this.kind, this.drawSize);
+  factory WorldProp.desertTemple(Offset at, int index) {
+    if (index < 0 || index > 3) {
+      throw RangeError.range(index, 0, 3, 'index');
+    }
+    final footprint = const [
+      Size(132, 52),
+      Size(142, 60),
+      Size(186, 60),
+      Size(180, 60),
+    ][index];
+    final side = const [220.0, 224.0, 240.0, 230.0][index];
+    return WorldProp(
+      Rect.fromCenter(
+        center: at,
+        width: footprint.width,
+        height: footprint.height,
+      ),
+      'temple-$index',
+      Size.square(side),
+    );
+  }
   final Rect body;
   final String kind;
   final Size drawSize;
@@ -1110,6 +1131,8 @@ class AdventureWorld {
         }
       }
     }
+    if (stage == WorldStage.sands) _templeCourts();
+    final authoredRuins = props.toList(growable: false);
     // Roadside silhouettes stay visible, while the entire road admits a mounted body.
     final spacing = stage.usesCityArt
         ? 200.0
@@ -1125,6 +1148,7 @@ class AdventureWorld {
         if (settlement.inflate(240).contains(p) ||
             sites.any((s) => (s.at - p).distance < 240) ||
             chests.any((c) => (c - p).distance < 130) ||
+            authoredRuins.any((ruin) => ruin.body.inflate(100).contains(p)) ||
             trails.any((t) => t.near(p, 85)) ||
             isWater(p)) {
           continue;
@@ -1149,7 +1173,7 @@ class AdventureWorld {
                   ? 'ruin-7'
                   : random.nextBool()
                   ? 'cactus'
-                  : 'ruin-5')
+                  : 'temple-${random.nextInt(4)}')
             : 'ruin-${4 + random.nextInt(3)}';
         final body = Rect.fromCenter(
           center: p,
@@ -1165,26 +1189,71 @@ class AdventureWorld {
             : stage.usesCityArt
             ? 144.0 + random.nextInt(29)
             : 128.0 + random.nextInt(25);
-        final prop = WorldProp(
-          body,
-          kind,
-          kind == 'tree' ? const Size(165, 220) : Size(side, side),
-        );
+        final prop = kind.startsWith('temple-')
+            ? WorldProp.desertTemple(p, int.parse(kind.substring(7)))
+            : WorldProp(
+                body,
+                kind,
+                kind == 'tree' ? const Size(165, 220) : Size(side, side),
+              );
         props.add(prop);
         for (final body in prop.collisionBodies) {
           _indexSolid(body);
         }
         for (
-          var by = (body.top - prop.drawSize.height) ~/ 256;
-          by <= (body.bottom + 50) ~/ 256;
+          var by = (prop.body.top - prop.drawSize.height) ~/ 256;
+          by <= (prop.body.bottom + 50) ~/ 256;
           by++
         ) {
           for (
-            var bx = (body.left - prop.drawSize.width) ~/ 256;
-            bx <= (body.right + prop.drawSize.width) ~/ 256;
+            var bx = (prop.body.left - prop.drawSize.width) ~/ 256;
+            bx <= (prop.body.right + prop.drawSize.width) ~/ 256;
             bx++
           ) {
             propBuckets.putIfAbsent('$bx:$by', () => []).add(prop);
+          }
+        }
+      }
+    }
+  }
+
+  void _templeCourts() {
+    // Sparse broken courts frame two objectives. Wide central gaps and the
+    // existing approaches remain open to players, mounts and monster bodies.
+    for (final anchor in [sites[1].at, sites[5].at]) {
+      const layout = [
+        (Offset(-390, -260), 0),
+        (Offset(370, -240), 1),
+        (Offset(-420, 90), 0),
+        (Offset(390, 110), 0),
+        (Offset(-430, 390), 2),
+        (Offset(390, 410), 3),
+      ];
+      for (final (offset, index) in layout) {
+        final at = anchor + offset;
+        final prop = WorldProp.desertTemple(at, index);
+        final clearance = prop.body.inflate(30);
+        if (settlement.inflate(240).overlaps(clearance) ||
+            sites.any((s) => s.body.inflate(170).overlaps(clearance)) ||
+            trails.any((t) => t.near(at, prop.body.width / 2 + 44)) ||
+            chests.any((p) => clearance.inflate(100).contains(p)) ||
+            isWater(at) ||
+            props.any((p) => p.body.overlaps(clearance))) {
+          continue;
+        }
+        props.add(prop);
+        _indexSolid(prop.body);
+        for (
+          var y = (prop.body.top - prop.drawSize.height) ~/ 256;
+          y <= (prop.body.bottom + 50) ~/ 256;
+          y++
+        ) {
+          for (
+            var x = (prop.body.left - prop.drawSize.width) ~/ 256;
+            x <= (prop.body.right + prop.drawSize.width) ~/ 256;
+            x++
+          ) {
+            propBuckets.putIfAbsent('$x:$y', () => []).add(prop);
           }
         }
       }

@@ -51,7 +51,7 @@ void main() {
   );
 
   test(
-    'fresh Sorceress has two points, one spell and a free normal weapon attack',
+    'fresh Sorceress has two points and a firebolt basic, without selectable staff attack',
     () {
       final p = Progress(heroClass: HeroClass.mage);
       expect(p.skillPoints, 2);
@@ -63,6 +63,7 @@ void main() {
       expect(p.skillCost(skill(p, 'sorceressAttack')), 0);
       expect(p.canSelectBasic('iceBolt'), false);
       expect(p.canSelectSkill('sorceressAttack'), false);
+      expect(p.canSelectBasic('sorceressAttack'), false);
       expect(Progress.fromSave(p.toSave())!.toSave(), p.toSave());
     },
   );
@@ -78,15 +79,9 @@ void main() {
         'firebolt',
         'iceBolt',
         'chargedBolt',
-        'sorceressAttack',
       });
       final points = p.skillPoints, slots = List<String?>.of(p.skillSlots);
-      for (final id in [
-        'firebolt',
-        'iceBolt',
-        'chargedBolt',
-        'sorceressAttack',
-      ]) {
+      for (final id in ['firebolt', 'iceBolt', 'chargedBolt']) {
         expect(p.selectBasic(id), true);
         expect(p.skillPoints, points);
         expect(p.skillSlots, slots);
@@ -128,6 +123,21 @@ void main() {
       final points = p.skillPoints;
       expect(p.learn(skill(p, 'meteor')), false);
       expect(p.skillPoints, points);
+    },
+  );
+
+  test(
+    'retired staff basic saves resume with firebolt without losing progress',
+    () {
+      final p = advanced()..gold = 345;
+      final data = jsonDecode(jsonEncode(p.toSave())) as Map<String, dynamic>;
+      data['selectedBasic'] = 'sorceressAttack';
+      final restored = Progress.fromSave(data)!;
+      expect(restored.selectedBasic, 'firebolt');
+      expect(restored.gold, 345);
+      expect(restored.level, p.level);
+      (data['ranks'] as Map).remove('sorceressAttack');
+      expect(Progress.fromSave(data)!.selectedBasic, 'firebolt');
     },
   );
 

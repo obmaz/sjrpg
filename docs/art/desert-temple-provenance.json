@@ -1,0 +1,43 @@
+{
+    "generator": "image_gen",
+    "packer": "tools/world-art/prepare_desert_temple.py",
+    "original": "docs/art/desert-temple-original.png",
+    "originalSha256": "955eb724d109ab3e57fbde95ff303434a2f3b6c88bf239fa6750619e938802b7",
+    "runtime": "flutter_game/art/desert-temple.webp",
+    "runtimeSha256": "520791f8ce55a15f40ff9f82fba6a44a7afb9058031dea0cfc905602fe78dde6",
+    "size": [1024, 1024],
+    "decodedRGBABytes": 4194304,
+    "columns": 2,
+    "rows": 2,
+    "transparentPadding": 32,
+    "frames": [
+        {
+            "index": 0,
+            "sourceCell": [0, 0, 627, 627],
+            "contentCrop": [128, 27, 571, 596],
+            "outputContent": [81, 32, 349, 448],
+            "footY": 480
+        },
+        {
+            "index": 1,
+            "sourceCell": [627, 0, 1254, 627],
+            "contentCrop": [139, 92, 597, 600],
+            "outputContent": [566, 32, 404, 448],
+            "footY": 480
+        },
+        {
+            "index": 2,
+            "sourceCell": [0, 627, 627, 1254],
+            "contentCrop": [40, 124, 627, 546],
+            "outputContent": [32, 670, 448, 322],
+            "footY": 480
+        },
+        {
+            "index": 3,
+            "sourceCell": [627, 627, 1254, 1254],
+            "contentCrop": [35, 88, 627, 571],
+            "outputContent": [544, 626, 448, 366],
+            "footY": 480
+        }
+    ]
+}

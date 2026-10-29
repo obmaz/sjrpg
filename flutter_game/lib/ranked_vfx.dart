@@ -54,14 +54,16 @@ void paintSteelWhirlwind(
   ui.Canvas canvas,
   ui.Offset center,
   double phase,
-  int rank,
-) {
+  int rank, {
+  bool protectBody = true,
+}) {
   _steelPressure.paintWhirlwind(
     canvas,
     center: center,
     progress: phase,
-    radius: 96,
+    radius: 116,
     rank: rank,
+    protectBody: protectBody,
   );
   IllustratedCombatArt.sequence(
     art.effects,
@@ -69,10 +71,11 @@ void paintSteelWhirlwind(
     CombatIllustration.blade,
     center,
     progress: (phase * 7) % 1,
-    radius: 102,
+    radius: 94,
     bearing: phase * math.pi * 6,
-    steel: true,
-    protectBody: true,
+    opacity: .30,
+    steel: false,
+    protectBody: protectBody,
   );
 }
 
@@ -82,6 +85,7 @@ class SteelWhirlwind extends GameComponent with EffectVisibility {
     this.hero, {
     required this.rank,
     required this.duration,
+    this.renderWithHero = false,
   }) : revision = session.buildRevision {
     position = Vector2(hero.body.center.dx, hero.body.center.dy);
     size = Vector2.all(1);
@@ -90,6 +94,7 @@ class SteelWhirlwind extends GameComponent with EffectVisibility {
   final Guardian hero;
   final int rank, revision;
   final double duration;
+  final bool renderWithHero;
   double age = 0;
   bool finished = false;
   @override
@@ -120,7 +125,7 @@ class SteelWhirlwind extends GameComponent with EffectVisibility {
 
   @override
   void render(ui.Canvas canvas) {
-    if (finished) return;
+    if (finished || renderWithHero) return;
     paintSteelWhirlwind(
       session.art,
       canvas,

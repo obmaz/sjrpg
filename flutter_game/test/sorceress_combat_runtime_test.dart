@@ -378,13 +378,16 @@ void main() {
     expect(m.life.value, hp);
   });
   test(
-    'normal staff and empty-mana fallback are close physical single hits',
+    'empty-mana elemental basics do not swing a staff or create free hits',
     () {
-      for (final id in ['sorceressAttack', 'firebolt']) {
+      for (final id in ['firebolt', 'chargedBolt', 'iceBolt']) {
         final s = field(id), near = enemy(s, 60), far = enemy(s, 170);
+        s.progress.selectBasic(id);
         s.progress.energy = 0;
         s.hero.slash();
-        expect(near.life.value, lessThan(100000));
+        expect(near.life.value, 100000);
+        expect(s.hero.swing, 0);
+        expect(s.hero.attackClock, 0);
         expect(far.life.value, 100000);
         expect(effects(s).whereType<SorceressProjectile>(), isEmpty);
         expect(s.progress.energy, 0);

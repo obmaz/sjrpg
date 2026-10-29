@@ -66,17 +66,17 @@ const _cases = [
   ),
   (
     WorldStage.sands,
-    'ruin-5',
-    Offset(2836.524144926786, 167.22718294873346),
-    Offset(3036.524144926786, 167.22718294873346),
-    (12, 12),
+    'temple-0',
+    Offset(7606.5, 18062.5),
+    Offset(7978.5, 18062.5),
+    (18, 19),
   ),
   (
     WorldStage.sands,
     'cactus',
-    Offset(3430.5023204011914, 142.64899377903387),
-    Offset(3630.5023204011914, 142.64899377903387),
-    (11, 11),
+    Offset(9249.706984668632, 135.37727129055884),
+    Offset(9523.706984668632, 135.37727129055884),
+    (15, 15),
   ),
   (
     WorldStage.sands,
@@ -274,6 +274,26 @@ void main() {
             (const Size(48, 40), sample.$5.$2),
           ]) {
             final path = world.routeEnemy(sample.$3, sample.$4, body);
+            if (stage == WorldStage.sands &&
+                (sample.$2 == 'temple-0' || sample.$2 == 'cactus')) {
+              final between = Offset.lerp(sample.$3, sample.$4, .5)!;
+              expect(
+                world.props.any(
+                  (prop) =>
+                      prop.kind == sample.$2 && prop.body.contains(between),
+                ),
+                true,
+                reason: 'the fixture must cross the actual current obstacle',
+              );
+              expect(world.blocksEnemy(sample.$3 & body), false);
+              expect(world.blocksEnemy(sample.$4 & body), false);
+              expect(world.clearEnemyLine(sample.$3, sample.$4, body), false);
+              expect(
+                path,
+                isNotEmpty,
+                reason: 'both body sizes can detour around the ruin',
+              );
+            }
             if (sample.$2 == 'warded-chest') {
               expect(world.sanctuary.protects(sample.$4 & body), true);
             }

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import 'actor_atlas.dart';
 import 'boss_sprite_mesh.dart';
+import 'desert_temple_art.dart';
 import 'effect_atlas.dart';
 import 'enemy_catalog.dart';
 import 'field_landscape.dart';
@@ -121,6 +122,7 @@ class GameArt {
     'actors-crystal-beetle',
     'cyber-props',
     'ruin-props',
+    'desert-temple',
     'village-scene',
     'settlement-forest',
     'settlement-sands',
@@ -151,7 +153,12 @@ class GameArt {
       'landscape-bridge',
       'quest-root-garden',
     },
-    'sands': {'settlement-sands', 'world-desert', 'ruin-props'},
+    'sands': {
+      'settlement-sands',
+      'world-desert',
+      'ruin-props',
+      'desert-temple',
+    },
     'past': {'settlement-past', 'ruin-props'},
     'future': {'settlement-future', 'cyber-props'},
     'tombs': {'settlement-tombs', 'ruin-props'},
@@ -893,6 +900,15 @@ class GameArt {
       );
       return;
     }
+    if (DesertTempleArt.supports(prop.kind)) {
+      DesertTempleArt.draw(
+        canvas,
+        images[DesertTempleArt.imageKey],
+        prop,
+        opacity: opacity,
+      );
+      return;
+    }
     if (prop.kind.startsWith('ruin-')) {
       final image = images['ruin-props'];
       if (image == null) return;
@@ -1147,6 +1163,8 @@ class TerrainArt {
     c.restore();
     c.save();
     if (nearWater) c.clipPath(dryGroundPath, doAntiAlias: false);
+    c.save();
+    fieldLandscape.clipHardTrailGround(c);
     for (final t in world.trails) {
       if (!t.bounds.inflate(t.width / 2 + 2).overlaps(area)) continue;
       c.drawPath(
@@ -1171,6 +1189,14 @@ class TerrainArt {
           ..shader = art.materials[road],
       );
     }
+    c.restore();
+    fieldLandscape.paintSandTrails(
+      c,
+      area,
+      art.fieldMaterials.length == 4
+          ? art.fieldMaterials[FieldGround.desert.index]
+          : art.materials[base],
+    );
     c.restore();
     // One complete root-garden scene blends into its real approaches. Other
     // objectives have independent ground compositions beneath the roads.

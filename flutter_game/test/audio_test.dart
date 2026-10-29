@@ -171,7 +171,7 @@ void main() {
         ('frostwand', 'firebolt', EffectSound.fire),
         ('wand', 'iceBolt', EffectSound.ice),
         ('frostwand', 'chargedBolt', EffectSound.lightning),
-        ('stormrod', 'sorceressAttack', EffectSound.slash),
+        ('stormrod', 'chargedBolt', EffectSound.lightning),
       ]) {
         expect(s.progress.selectBasic(spell), true);
         final item = s.progress.createGear(gearById(id));

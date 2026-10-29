@@ -87,11 +87,12 @@ class EntryAction extends StatelessWidget {
   });
   final String label;
   final GameArt art;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final double height;
   @override
   Widget build(BuildContext context) => Semantics(
     button: true,
+    enabled: onTap != null,
     label: label,
     excludeSemantics: true,
     onTap: onTap,
@@ -110,8 +111,10 @@ class EntryAction extends StatelessWidget {
                 child: Text(
                   label,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: entryCream,
+                  style: TextStyle(
+                    color: onTap == null
+                        ? entryCream.withValues(alpha: .4)
+                        : entryCream,
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
                   ),
