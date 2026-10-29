@@ -225,7 +225,7 @@ void main() {
     }
   }
   test(
-    'old hero/mage, grouped creature, mount and all3 sword poses retain2-frame mapping',
+    'old hero/mage, grouped villagers, new enemies, mounts and swords retain correct two-pose mapping',
     () async {
       final image = await sheet(64), art = GameArt();
       addTearDown(image.dispose);
@@ -238,7 +238,8 @@ void main() {
           'hero-cleave',
         ])
           key: record(32),
-        'creatures-a': record(64, groups: 4),
+        'villagers': record(64, groups: 4),
+        'cinematic-skeleton': record(16),
         'horse': record(16),
       };
       art.images.addAll({
@@ -275,8 +276,12 @@ void main() {
         for (var phase = 0; phase < 2; phase++) {
           final angle = math.pi / 2 + d * math.pi * 2 / 8;
           expectSlot(
+            await raster(art, 'villager', angle, phase),
+            8 + d + phase * 32,
+          );
+          expectSlot(
             await raster(art, 'skeleton', angle, phase),
-            16 + d + phase * 32,
+            d * 2 + phase,
           );
           expectSlot(await raster(art, 'horse', angle, phase), d * 2 + phase);
         }

@@ -10,7 +10,7 @@ class SteelPressureArt {
   static const _steel = ui.Color(0xffb8d4dc);
   static const _ember = ui.Color(0xffe36b26);
   static final _torso = ui.RRect.fromRectAndRadius(
-    const ui.Rect.fromLTRB(-20, -78, 20, -5),
+    const ui.Rect.fromLTRB(-30, -117, 30, -5),
     const ui.Radius.circular(10),
   );
   final _fill = ui.Paint();
@@ -300,7 +300,7 @@ class SteelPressureArt {
         r * .88,
         head,
         3.25,
-        r * .19 * strength,
+        r * .20 * strength,
         alpha,
         const ui.Color(0xffffa43b),
         heated: true,
@@ -310,9 +310,9 @@ class SteelPressureArt {
         r * .72,
         head + math.pi,
         1.65,
-        r * .07 * strength,
-        alpha * .85,
-        const ui.Color(0xffffd379),
+        r * .11 * strength,
+        alpha * .72,
+        _gold,
       );
       _ribbon(
         canvas,

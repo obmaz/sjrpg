@@ -64,7 +64,8 @@ class SorceressCombat {
           session.riding != null ||
           session.progress.heroClass != HeroClass.mage ||
           hero.aim?.cancelled == true ||
-          !session.combatAllowed) {
+          !session.combatAllowed &&
+              session.attackableChests(hero.body.center, spec.range).isEmpty) {
         endChannel();
       } else {
         channelTime += dt;
@@ -204,7 +205,16 @@ class SorceressCombat {
         }
       }
     }
-    final angle = aim?.angle ?? _autoBearing(spec.range);
+    var angle = aim?.angle ?? _autoBearing(spec.range);
+    if (aim == null && eligible(hero.body.center, spec.range).isEmpty) {
+      final chests = session.attackableChests(hero.body.center, spec.range);
+      if (chests.isNotEmpty) {
+        final delta =
+            session.stageChestLocations[chests.first] - hero.body.center;
+        angle = math.atan2(delta.dy, delta.dx);
+      }
+    }
+
     hero.attackBearing = angle;
     hero.strikePose = 2;
     final motionTime =
@@ -327,7 +337,13 @@ class SorceressCombat {
       case 'hydra':
         session.game?.add(SorceressHydra(this, spec, targetPoint(spec, aim)));
       case 'frozenOrb':
-        projectile(spec, hero.body.center, angle, orb: true);
+        projectile(
+          spec,
+          hero.body.center,
+          angle,
+          orb: true,
+          propOnly: propOnly,
+        );
       case 'chargedBolt':
         for (var i = 0; i < spec.projectileCount; i++) {
           final spread = spec.projectileCount == 1
@@ -427,6 +443,16 @@ class SorceressCombat {
     }
     final targets = eligible(hero.body.center, spec.range);
     if (targets.isNotEmpty) return targets.first.body.center;
+    final chests = session.attackableChests(hero.body.center, spec.range);
+    if (chests.isNotEmpty) {
+      final approach = session.world.chestApproach(
+        chests.first,
+        hero.body.center,
+      );
+      return spec.id == 'hydra'
+          ? approach - unit(approach - hero.body.center) * 24
+          : approach;
+    }
     return hero.aimedImpact(hero.bearing, math.min(190, spec.range));
   }
 
@@ -542,14 +568,22 @@ class SorceressCombat {
     ui.Offset center, {
     double? radius,
     double? amount,
+    bool propsOnly = false,
   }) {
-    final targets = eligible(
-      center,
-      radius ?? spec.radius,
-    ).take(spec.maxTargets).toList();
+    final targets =
+        (propsOnly ? <HuntEnemy>[] : eligible(center, radius ?? spec.radius))
+            .take(spec.maxTargets)
+            .toList();
     final share = enemyGroupDamageScale(targets.length);
     for (final enemy in targets) {
       damage(enemy, (amount ?? roll(spec)) * share, spec, hitStop: true);
+    }
+    if ((amount ?? spec.meanDamage) > 0 || spec.damagePerSecond > 0) {
+      session.strikeChests(
+        center,
+        radius ?? spec.radius,
+        maxTargets: spec.maxTargets - targets.length,
+      );
     }
   }
 
@@ -567,6 +601,13 @@ class SorceressCombat {
     for (final enemy in targets) {
       damage(enemy, roll(spec, perSecond: true) * interval * share, spec);
     }
+    session.strikeChests(
+      hero.body.center,
+      spec.range,
+      bearing: bearing,
+      halfAngle: .30,
+      maxTargets: spec.maxTargets - targets.length,
+    );
   }
 
   void _lightning(SorceressSpellStats spec, double bearing) {
@@ -603,6 +644,12 @@ class SorceressCombat {
     for (final enemy in selected) {
       damage(enemy, roll(spec) * share, spec);
     }
+    final chest = session.world.firstChestOnSegment(from, to, padding: 9);
+    if (chest != null &&
+        selected.length < spec.maxTargets &&
+        session.attackableChests(from, spec.range).contains(chest.index)) {
+      session.breakChest(chest.index);
+    }
     _beam(spec, [from, to]);
   }
 
@@ -634,6 +681,15 @@ class SorceressCombat {
     final share = enemyGroupDamageScale(visited.length);
     for (final enemy in visited) {
       damage(enemy, roll(spec) * share, spec);
+    }
+    if (visited.isEmpty) {
+      session.strikeChests(
+        hero.body.center,
+        spec.range,
+        bearing: bearing,
+        halfAngle: .15,
+        maxTargets: 1,
+      );
     }
     _beam(spec, points);
   }
@@ -676,6 +732,7 @@ class SorceressCombat {
     double bearing = 0,
     bool line = false,
     bool falling = false,
+    bool? protectedCast,
   }) {
     session.game?.add(
       SorceressGround(
@@ -688,6 +745,7 @@ class SorceressCombat {
         bearing: bearing,
         line: line,
         falling: falling,
+        protectedCast: protectedCast,
       ),
     );
   }
@@ -730,14 +788,16 @@ class SorceressCombat {
 }
 
 abstract class SorceressEffect extends GameComponent with EffectVisibility {
-  SorceressEffect(this.owner, this.spec, ui.Offset at)
-    : revision = owner.session.buildRevision {
+  SorceressEffect(this.owner, this.spec, ui.Offset at, {bool? protectedCast})
+    : revision = owner.session.buildRevision,
+      protectedCast = protectedCast ?? owner.session.sheltered {
     position = Vector2(at.dx, at.dy);
     size = Vector2.all(1);
   }
   final SorceressCombat owner;
   final SorceressSpellStats spec;
   final int revision;
+  final bool protectedCast;
   double age = 0;
   bool finished = false;
   Adventure get session => owner.session;
@@ -870,6 +930,7 @@ class SorceressProjectile extends SorceressEffect {
           damageOverride: damageAmount,
           rangeOverride: 180,
           simple: true,
+          propOnly: propOnly,
         );
         orbShards++;
       }
@@ -895,6 +956,7 @@ class SorceressProjectile extends SorceressEffect {
         damageOverride: damageAmount,
         rangeOverride: 180,
         simple: true,
+        propOnly: propOnly,
       );
     }
   }
@@ -930,6 +992,7 @@ class SorceressGround extends SorceressEffect {
     this.bearing = 0,
     this.line = false,
     this.falling = false,
+    super.protectedCast,
   });
   final double duration, radius, interval, bearing;
   final bool line, falling;
@@ -954,7 +1017,9 @@ class SorceressGround extends SorceressEffect {
     if (pulse > 0) return;
     pulse += math.max(.1, interval);
     final center = position.toOffset();
-    var targets = owner.eligible(center, radius);
+    var targets = protectedCast
+        ? <HuntEnemy>[]
+        : owner.eligible(center, radius);
     if (line) {
       final normal = ui.Offset(-math.sin(bearing), math.cos(bearing));
       targets = targets.where((e) {
@@ -962,10 +1027,13 @@ class SorceressGround extends SorceressEffect {
         return (d.dx * normal.dx + d.dy * normal.dy).abs() < 24;
       }).toList();
     }
+    var propCenter = center, propRadius = radius;
     if (falling) {
       final angle = session.random.nextDouble() * math.pi * 2;
       final r = math.sqrt(session.random.nextDouble()) * radius;
       final at = center + ui.Offset(math.cos(angle), math.sin(angle)) * r;
+      propCenter = at;
+      propRadius = 45;
       owner._visual(spec, at, mode: 'impact', radius: 28, duration: .3);
       // Blizzard shards are discrete falling contacts, never a full-radius DoT.
       targets = targets
@@ -991,6 +1059,20 @@ class SorceressGround extends SorceressEffect {
       for (final enemy in targets) {
         owner._trailHitUntil[enemy] = owner._clock + interval;
       }
+    }
+    final chests = session.attackableChests(propCenter, propRadius).where((
+      index,
+    ) {
+      if (!line) return true;
+      final delta = session.stageChestLocations[index] - center;
+      return (delta.dx * -math.sin(bearing) + delta.dy * math.cos(bearing))
+              .abs() <
+          24;
+    });
+    for (final index in chests.take(
+      math.max(0, spec.maxTargets - targets.length),
+    )) {
+      session.breakChest(index);
     }
     final share = enemyGroupDamageScale(targets.length);
     for (final enemy in targets) {
@@ -1036,13 +1118,14 @@ class SorceressMeteor extends SorceressEffect {
     if (!step(dt)) return;
     if (age < fallTime) return;
     final center = position.toOffset();
-    owner.area(spec, center);
+    owner.area(spec, center, propsOnly: protectedCast);
     owner._visual(spec, center, radius: spec.radius, duration: .5);
     owner.addZone(
       spec,
       center,
       duration: math.max(.1, spec.groundDuration),
       radius: spec.radius,
+      protectedCast: protectedCast,
     );
     finish();
   }
@@ -1087,11 +1170,27 @@ class SorceressHydra extends SorceressEffect {
     shoot -= math.min(.05, dt);
     if (shoot > 0) return;
     shoot += math.max(.35, spec.interval);
-    final targets = owner
-        .eligible(position.toOffset(), spec.range)
-        .take(spec.maxTargets)
-        .toList();
-    if (targets.isEmpty) return;
+    final targets =
+        (protectedCast
+                ? <HuntEnemy>[]
+                : owner.eligible(position.toOffset(), spec.range))
+            .take(spec.maxTargets)
+            .toList();
+    if (targets.isEmpty) {
+      final chests = session.attackableChests(position.toOffset(), spec.range);
+      if (chests.isNotEmpty) {
+        final from = position.toOffset();
+        final delta = session.stageChestLocations[chests.first] - from;
+        owner.projectile(
+          spec,
+          from,
+          math.atan2(delta.dy, delta.dx),
+          simple: true,
+          propOnly: protectedCast,
+        );
+      }
+      return;
+    }
     for (var head = 0; head < 3; head++) {
       final from = SorceressVfx.hydraHeads(
         position.toOffset(),

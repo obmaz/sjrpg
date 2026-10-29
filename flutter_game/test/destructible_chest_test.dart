@@ -11,6 +11,7 @@ import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/sorceress_combat.dart';
 import 'package:guardian_new/world_model.dart';
 
+import 'support/sorceress_fixture.dart';
 import 'support/test_game.dart';
 
 void main() {
@@ -224,6 +225,58 @@ void main() {
     expect(restored.hero.position.toOffset(), s.hero.position.toOffset());
     expect(restored.world.blocked(restored.hero.body), false);
   });
+
+  for (final entry in [
+    (HeroClass.warrior, 'warcry'),
+    (HeroClass.warrior, 'bash'),
+    (HeroClass.mage, 'frostNova'),
+    (HeroClass.mage, 'nova'),
+    (HeroClass.mage, 'fireball'),
+    (HeroClass.mage, 'lightning'),
+    (HeroClass.mage, 'chainLightning'),
+    (HeroClass.mage, 'firewall'),
+    (HeroClass.mage, 'inferno'),
+    (HeroClass.mage, 'frozenOrb'),
+    (HeroClass.mage, 'meteor'),
+    (HeroClass.mage, 'hydra'),
+  ]) {
+    test('${entry.$2} breaks a village chest through the paid skill slot', () {
+      final s = session(stage: WorldStage.sands, heroClass: entry.$1);
+      final game = s.game! as TestGame;
+      final chest = s.stageChestLocations.first;
+      s.hero.position.setValues(chest.dx - 14, chest.dy + 65);
+      s.hero.bearing = -math.pi / 2;
+      s.progress.level = 100;
+      s.progress.skillPoints = 500;
+      trainSkill(s.progress, entry.$2);
+      expect(s.progress.selectSkill(entry.$2, slot: 0), true);
+      s.progress.energy = s.progress.maxEnergy;
+      final energy = s.progress.energy;
+      final skill = s.progress.skillAt(0)!;
+      final cost = s.progress.skillCost(skill);
+      expect(s.sheltered, true);
+      s.hero.skill(slot: 0);
+      for (var i = 0; i < 100; i++) {
+        for (final effect in List<Component>.from(game.added)) {
+          if (effect is SorceressEffect) effect.update(1 / 30);
+        }
+      }
+      expect(
+        s.openedChests,
+        contains(0),
+        reason:
+            'energy ${s.progress.energy}/$energy, cost $cost, cooldowns ${s.hero.cooldowns}, effects ${game.added.map((e) => e.runtimeType).toList()}',
+      );
+      if (skill.id == 'inferno') {
+        expect(s.progress.energy, lessThan(energy));
+      } else {
+        expect(s.progress.energy, closeTo(energy - cost, .00001));
+      }
+      expect(s.hero.cooldowns[skill.id], greaterThanOrEqualTo(0));
+      expect(game.added.whereType<ChestFragments>(), hasLength(1));
+      expect(s.progress.kills, 0);
+    });
+  }
 
   test('paused and defeated sessions cannot break or reward a chest', () {
     final s = session();

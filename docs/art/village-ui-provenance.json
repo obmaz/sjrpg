@@ -1,0 +1,23 @@
+{
+    "generator": "image_gen",
+    "original": "docs/art/village-ui-original.png",
+    "sha256": "c9653fc8c6db180c616ea285233ad925db560ae78c4bc116a545254b25bdc11c",
+    "packer": "tools/prepare-village-ui.py",
+    "gateSourceRect": [20, 8, 1517, 670],
+    "menuSourceRects": [
+        [49, 676, 359, 979],
+        [430, 676, 737, 979],
+        [797, 676, 1104, 979],
+        [1179, 676, 1488, 979]
+    ],
+    "menuCell": 192,
+    "menuFaceMaximum": 188,
+    "forestGround": {
+        "original": "docs/art/settlement-forest-open-approach-original.png",
+        "sha256": "bc0166d8395623bc189ed46d83d5a678c67ca8f227810cde37f5b0ead0850490",
+        "runtime": "flutter_game/art/settlement-forest.webp",
+        "runtimeSha256": "f299c728d839de85526301f9061214428da7435d00b213a23c8a713d11d5287c",
+        "edit": "Remove the old painted south gate beneath the separate generated open gateway; preserve the other village landmarks and wall opening."
+    },
+    "style": "Reference: thin bronze circular rims, chest, sword book, quest scroll, iron cog; mossy green-roofed open village gateway."
+}

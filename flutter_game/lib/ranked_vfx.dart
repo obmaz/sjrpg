@@ -73,7 +73,7 @@ void paintSteelWhirlwind(
     progress: (phase * 7) % 1,
     radius: 94,
     bearing: phase * math.pi * 6,
-    opacity: .30,
+    opacity: .75,
     steel: false,
     protectBody: protectBody,
   );

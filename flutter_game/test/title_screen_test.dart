@@ -54,6 +54,13 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      final artwork = find.byType(FittedBox);
+      expect(tester.widget<FittedBox>(artwork).fit, BoxFit.cover);
+      final bounds = tester.getRect(artwork);
+      expect(bounds.left, closeTo(0, .01));
+      expect(bounds.top, closeTo(0, .01));
+      expect(bounds.right, closeTo(size.width, .01));
+      expect(bounds.bottom, closeTo(size.height, .01));
       expect(
         tester
             .widget<EntryHotspot>(find.byKey(const ValueKey('title-continue')))

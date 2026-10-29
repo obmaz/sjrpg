@@ -10,6 +10,7 @@ OUT = ROOT / "runtime"
 OUT.mkdir(parents=True, exist_ok=True)
 FONT = ImageFont.load_default(size=9)
 BG = (36, 53, 46, 255)
+SOURCE_CELL = int(os.environ.get("SJRPG_RENDER_CELL", "256"))
 
 
 def power2(x):
@@ -21,11 +22,11 @@ def load(className, folder, expected, *, export_scale=0.5, metadata=None):
     assert len(m["frames"]) == expected, (className, len(m["frames"]), expected)
     for f in m["frames"]:
         im = Image.open(f["path"]).convert("RGBA")
-        assert im.size == (256, 256)
+        assert im.size == (SOURCE_CELL, SOURCE_CELL)
         a = im.getchannel("A")
         box = a.getbbox()
         assert box is not None
-        padding = [box[0], box[1], 256 - box[2], 256 - box[3]]
+        padding = [box[0], box[1], SOURCE_CELL - box[2], SOURCE_CELL - box[3]]
         assert min(padding) >= 8, (f["path"], padding)
         f["sourceAlphaBounds"] = box
         f["sourceEdgePadding"] = padding
@@ -50,9 +51,9 @@ def load(className, folder, expected, *, export_scale=0.5, metadata=None):
                 for i in range(2)
             )
         # Preserve native samples for high-density exports; filter only an explicit downsample.
-        cell = round(256 * export_scale)
+        cell = round(SOURCE_CELL * export_scale)
         assert export_scale in (0.5, 1.0)
-        f["_image"] = im if cell == 256 else (
+        f["_image"] = im if cell == SOURCE_CELL else (
             im.convert("RGBa").resize((cell, cell), Image.Resampling.LANCZOS).convert("RGBA")
         )
     for d in range(16):
@@ -67,7 +68,7 @@ def load(className, folder, expected, *, export_scale=0.5, metadata=None):
 
 
 def pack(role, frames, reference, anchor, motion=None, anchored=False, *, export_scale=0.5):
-    cell = round(256 * export_scale)
+    cell = round(SOURCE_CELL * export_scale)
     density = export_scale / 0.5
     tiles = []
     for i, f in enumerate(frames):
@@ -179,7 +180,7 @@ def review(m, role, folderName=None):
 
     def cell(f, label):
         im = Image.open(f["path"]).convert("RGBA")
-        sz = (round(256 * scale * 1.20), round(256 * scale * 1.02))
+        sz = (round(SOURCE_CELL * scale * 1.20), round(SOURCE_CELL * scale * 1.02))
         im = im.convert("RGBa").resize(sz, Image.Resampling.LANCZOS).convert("RGBA")
         c = Image.new("RGBA", (96, 110), BG)
         c.alpha_composite(

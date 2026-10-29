@@ -174,7 +174,7 @@ void main() {
   }
 
   test(
-    'high-density dodge retains every direction, pose and projected world silhouette',
+    'native384 dodge preserves each pose at 1.5 times the previous world silhouette',
     () async {
       final oldAtlas = ActorAtlas.fromJson(oldRoll.actors['roll']);
       final currentAtlas = atlases['roll']!;
@@ -200,15 +200,18 @@ void main() {
               mage: true,
             ),
           );
-          final original = await _raster(
-            (c) => oldRoll.roll(
+          final original = await _raster((c) {
+            c.translate(128, 180);
+            c.scale(1.5);
+            c.translate(-128, -180);
+            oldRoll.roll(
               c,
               const ui.Offset(128, 180),
               angle,
               phase,
               mage: true,
-            ),
-          );
+            );
+          });
           var intersection = 0, union = 0, currentArea = 0, oldArea = 0;
           for (var i = 3; i < current.rgba.length; i += 4) {
             final now = current.rgba[i] > 20, before = original.rgba[i] > 20;
@@ -220,7 +223,8 @@ void main() {
           expect(
             intersection / union,
             greaterThan(.88),
-            reason: 'native detail must retain the same pose and foot anchor',
+            reason:
+                'native detail must retain the same pose and foot anchor at the requested size',
           );
           expect(currentArea / oldArea, inInclusiveRange(.90, 1.10));
           current.image.dispose();

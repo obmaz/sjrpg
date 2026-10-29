@@ -6,6 +6,7 @@ import 'action_glyph_art.dart';
 import 'adventure.dart';
 import 'affliction_widgets.dart';
 import 'barbarian_icon_art.dart';
+import 'cinematic_icon_art.dart';
 import 'combat_balance.dart';
 import 'd1_icon_art.dart';
 import 'field_palettes.dart';
@@ -16,16 +17,16 @@ import 'sorceress_icon_art.dart';
 import 'world_model.dart';
 
 const gold = Color(0xffd5b772),
-    ink = Color(0xff102f2d),
+    ink = Color(0xff1d1713),
     cream = Color(0xfff0e5c8);
-const mobileSurface = Color(0xd915232c),
-    mobileRaisedSurface = Color(0xee263943),
-    mobileBorder = Color(0x557a949b),
-    mobileAccent = Color(0xff8fd4d1),
+const mobileSurface = Color(0xd91b1715),
+    mobileRaisedSurface = Color(0xee33271f),
+    mobileBorder = Color(0x558e7859),
+    mobileAccent = Color(0xffe5bd70),
     mobileText = Color(0xffe8f0f2);
 const gameMetal = Color(0xffb3a079),
     gameMetalDark = Color(0xff5b5645),
-    gameTeal = Color(0xff173b3e);
+    gameTeal = Color(0xff292019);
 String gameTime(double seconds) =>
     '${seconds ~/ 60}:${(seconds.toInt() % 60).toString().padLeft(2, '0')}';
 
@@ -962,6 +963,19 @@ class EffectIconPainter extends CustomPainter {
   }
 
   void _paint(Canvas canvas, Size size) {
+    final cinematic = switch (index) {
+      34 => 6,
+      35 => 2,
+      100 || 108 => 11,
+      120 || 126 || 129 => 2,
+      127 => 0,
+      128 => 3,
+      _ => null,
+    };
+    if (cinematic != null &&
+        CinematicIconArt.draw(canvas, art, cinematic, Offset.zero & size)) {
+      return;
+    }
     final d1 = D1IconArt.effectIndex(index);
     if (d1 != null && D1IconArt.draw(canvas, art, d1, Offset.zero & size)) {
       return;
@@ -1076,6 +1090,24 @@ class MobileActionGlyphPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final cinematic = switch (index) {
+      MobileGlyph.attack => 0,
+      MobileGlyph.dodge => 7,
+      MobileGlyph.bag => 4,
+      MobileGlyph.skills => 9,
+      MobileGlyph.map => 10,
+      MobileGlyph.settings => 8,
+      MobileGlyph.sprint => 6,
+      MobileGlyph.fire => 1,
+      MobileGlyph.whirl => 3,
+      MobileGlyph.heavy => 2,
+      MobileGlyph.warcry => 11,
+      _ => null,
+    };
+    if (cinematic != null &&
+        CinematicIconArt.draw(canvas, art, cinematic, Offset.zero & size)) {
+      return;
+    }
     final d1 = switch (index) {
       MobileGlyph.attack => 7,
       MobileGlyph.dodge => 4,
@@ -1611,7 +1643,11 @@ class _ActionButtonState extends State<ActionButton> {
       return Icon(widget.icon, size: widget.size * .5, color: _accent);
     }
     return CustomPaint(
-      size: Size.square(widget.size * .5),
+      size: Size.square(
+        widget.art.images.containsKey(CinematicIconArt.imageKey)
+            ? widget.size
+            : widget.size * .5,
+      ),
       painter: MobileActionGlyphPainter(widget.art, _glyph, color: _accent),
     );
   }
@@ -1885,6 +1921,7 @@ class DodgeActionPainter extends CustomPainter {
   static final _paint = Paint()..filterQuality = FilterQuality.medium;
   @override
   void paint(Canvas canvas, Size size) {
+    if (CinematicIconArt.draw(canvas, art, 7, Offset.zero & size)) return;
     if (D1IconArt.draw(canvas, art, 4, Offset.zero & size)) return;
     final image = art.images['dodge-icon'];
     if (image == null) return;
@@ -1921,6 +1958,29 @@ class IllustratedMenuPainter extends CustomPainter {
       'touchSettings' => 3,
       _ => null,
     };
+    final cinematic = switch (d1) {
+      0 => 4,
+      1 => 9,
+      2 => 10,
+      3 => 8,
+      _ => null,
+    };
+    if (cinematic != null &&
+        CinematicIconArt.draw(canvas, art, cinematic, Offset.zero & size)) {
+      return;
+    }
+    if (d1 != null &&
+        art.effects.draw(
+          canvas,
+          'reference-menus',
+          d1,
+          Offset.zero & size,
+          columns: 4,
+          rows: 1,
+          inset: 2,
+        )) {
+      return;
+    }
     if (d1 != null && D1IconArt.draw(canvas, art, d1, Offset.zero & size)) {
       return;
     }

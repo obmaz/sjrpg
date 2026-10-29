@@ -379,7 +379,7 @@ void main() {
   );
 
   testWidgets(
-    'initial entry shows generated splash before menu art completes',
+    'initial entry uses a neutral background before menu art completes',
     (tester) async {
       final art = await artwork(tester), ready = Completer<GameArt>();
       await show(
@@ -390,12 +390,12 @@ void main() {
       );
       await tester.pump();
       expect(find.byType(EntryLoading), findsOneWidget);
-      final image = tester.widget<Image>(
+      expect(
         find.byWidgetPredicate(
           (widget) => widget is Image && widget.image is ResizeImage,
         ),
+        findsNothing,
       );
-      expect(image.image, isA<ResizeImage>());
       for (var i = 0; i < 5; i++) {
         await tester.runAsync(
           () => Future<void>.delayed(const Duration(milliseconds: 20)),

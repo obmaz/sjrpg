@@ -10,7 +10,8 @@ from bpy_extras.object_utils import world_to_camera_view
 from mathutils import Matrix, Vector
 
 ROOT = Path(os.environ.get("SJRPG_CHARACTER_SOURCE_DIR", "/tmp/sjrpg-character-source"))
-OUT = ROOT / "mage-full"
+RENDER_CELL = int(os.environ.get("SJRPG_RENDER_CELL", "256"))
+OUT = ROOT / ("mage-full" if RENDER_CELL == 256 else f"mage-full-{RENDER_CELL}")
 OUT.mkdir(exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.context.scene.render.fps = 30
@@ -216,8 +217,8 @@ scene.cycles.samples = 32
 scene.cycles.use_denoising = False
 scene.render.threads_mode = "FIXED"
 scene.render.threads = 1
-scene.render.resolution_x = 256
-scene.render.resolution_y = 256
+scene.render.resolution_x = RENDER_CELL
+scene.render.resolution_y = RENDER_CELL
 scene.render.resolution_percentage = 100
 scene.render.film_transparent = True
 scene.render.image_settings.file_format = "PNG"
@@ -257,8 +258,8 @@ m = {
     "headSource": "official CC0 Superhero_Male, head-only rest trim; no per-pose changes",
     "headRestMap": [list(row) for row in headMap],
     "headRestCutoffZ": headCut,
-    "cellSize": [256, 256],
-    "worldOriginAnchorPx": [origin.x * 256, (1 - origin.y) * 256],
+    "cellSize": [RENDER_CELL, RENDER_CELL],
+    "worldOriginAnchorPx": [origin.x * RENDER_CELL, (1 - origin.y) * RENDER_CELL],
     "orthoScale": cam.data.ortho_scale,
     "cameraLocation": list(cam.location),
     "target": [0, 0, 0.9],
@@ -347,7 +348,7 @@ for jobIndex, (sheet, kind, d, phase, actionName, norm) in enumerate(jobs):
         b = rig.pose.bones[name]
         w = rig.matrix_world @ b.head
         p = world_to_camera_view(scene, cam, w)
-        bones[name] = {"world": list(w), "pixel": [p.x * 256, (1 - p.y) * 256]}
+        bones[name] = {"world": list(w), "pixel": [p.x * RENDER_CELL, (1 - p.y) * RENDER_CELL]}
     head = rig.pose.bones["Head"]
     localGaze = rig.data.bones["Head"].matrix_local.to_3x3().inverted() @ Vector(
         (0, -1, 0)
@@ -358,8 +359,8 @@ for jobIndex, (sheet, kind, d, phase, actionName, norm) in enumerate(jobs):
     bones["projectedGaze"] = {
         "worldDirection": list(worldGaze),
         "pixelDelta": [
-            (gazePoint.x * 256) - bones["Head"]["pixel"][0],
-            ((1 - gazePoint.y) * 256) - bones["Head"]["pixel"][1],
+            (gazePoint.x * RENDER_CELL) - bones["Head"]["pixel"][0],
+            ((1 - gazePoint.y) * RENDER_CELL) - bones["Head"]["pixel"][1],
         ],
     }
     path = FRAME_DIR / f"{sheet}-{kind}-d{d:02d}-p{phase}.png"

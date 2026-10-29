@@ -11,6 +11,7 @@ import 'back_bridge.dart' as history;
 import 'battle_control_layout.dart';
 import 'battle_effects.dart';
 import 'blacksmith_workshop.dart';
+import 'cinematic_icon_art.dart';
 import 'class_selection.dart';
 import 'combat_balance.dart';
 import 'combo_meter.dart';
@@ -1029,11 +1030,17 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 p.selectedBasic != p.defaultBasicId);
         final primaryHasFrame =
             mount?.def.artKey != 'motor' &&
-            primary != null &&
-            (primaryUsesSkillArt
-                ? D1IconArt.hasEffect(widget.art, skillEffect(primary.id))
-                : p.usingFallbackWeapon &&
-                      widget.art.images.containsKey(D1IconArt.interfaceKey));
+            (widget.art.images.containsKey(CinematicIconArt.imageKey) ||
+                primary != null &&
+                    (primaryUsesSkillArt
+                        ? D1IconArt.hasEffect(
+                            widget.art,
+                            skillEffect(primary.id),
+                          )
+                        : p.usingFallbackWeapon &&
+                              widget.art.images.containsKey(
+                                D1IconArt.interfaceKey,
+                              )));
         final primaryContinuing =
             primary?.id == 'shadowAssault' &&
             adventure.hero.shadowAssaultActive;
@@ -1218,7 +1225,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                                         ),
                                 )
                               : CustomPaint(
-                                  painter: GearGlyph(p.weapon, widget.art),
+                                  painter: CinematicIconPainter(widget.art, 0),
                                 ),
                         ),
                         if (peacefulAttack)
@@ -1415,27 +1422,24 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 ),
               if (contextActions.isNotEmpty)
                 Positioned(
-                  left: short && width >= 500 ? 136 : 12,
+                  left: landscape && width >= 700
+                      ? 152
+                      : short && width >= 500
+                      ? 136
+                      : 12,
                   top: short
                       ? media.padding.top +
                             (landscape
                                 ? guide == null
                                       ? 116
                                       : 164
-                                : guide == null
-                                ? 164
-                                : 156)
+                                : 200)
                       : null,
                   bottom: short ? null : bottom + stick + 12,
                   width: short
                       ? width >= 500
                             ? (width - 450).clamp(100, 220).toDouble()
-                            : (width -
-                                      (hasMobility
-                                          ? (width < 360 ? 184 : 206)
-                                          : 174))
-                                  .clamp(44, width - 24)
-                                  .toDouble()
+                            : (width - 240).clamp(44, width - 24).toDouble()
                       : 120,
                   child: NearbyControls(
                     actions: contextActions,
@@ -1454,7 +1458,9 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                     : tightLandscape
                     ? null
                     : media.padding.top +
-                          (landscape && width >= 700
+                          (short && width < 500
+                              ? 104
+                              : landscape && width >= 700
                               ? 110
                               : guide != null
                               ? (short && width < 500 ? 200 : 164)
@@ -1524,13 +1530,13 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                       (landscape
                           ? 116
                           : short
-                          ? 108
+                          ? 152
                           : 112),
-                  width: sideGuide
+                  width: short && width < 500
+                      ? (width - 240).clamp(44, width - 24).toDouble()
+                      : sideGuide
                       ? (width - 450).clamp(100, 220).toDouble()
-                      : (width - (short ? 164 : 150))
-                            .clamp(148, 250)
-                            .toDouble(),
+                      : (width - 150).clamp(148, 250).toDouble(),
                   height: 44,
                   child: NearbyQuestCard(
                     guide,
@@ -1548,6 +1554,64 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                       }
                       restoreGameFocus();
                     },
+                  ),
+                ),
+              if (guide == null &&
+                  contextActions.isEmpty &&
+                  (landscape && width >= 700 ||
+                      !short && media.size.height >= 700))
+                Positioned(
+                  left: landscape ? 152 : 14,
+                  top: media.padding.top + (landscape ? 116 : 170),
+                  width: 220,
+                  height: math.max(
+                    landscape ? 44 : 58,
+                    14 +
+                        1.1 *
+                            (media.textScaler.scale(12) +
+                                media.textScaler.scale(11)),
+                  ),
+                  child: Material(
+                    color: ink.withValues(alpha: .86),
+                    shape: const Border(
+                      left: BorderSide(color: gold, width: 2),
+                    ),
+                    child: InkWell(
+                      onTap: () => open('journal'),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 5,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '퀘스트: ${adventure.world.stage.title}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: gold,
+                                fontSize: 12,
+                                height: 1.1,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              adventure.mainQuestNext,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: cream,
+                                fontSize: 11,
+                                height: 1.1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               if (adventure.noticeTime > 0)

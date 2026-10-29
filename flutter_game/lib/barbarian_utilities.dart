@@ -197,7 +197,14 @@ class BarbarianUtilities {
           _nearestCorpse(id) != null;
     }
     if ({'howl', 'taunt', 'battleCry', 'warcry'}.contains(id)) {
-      return _targets(id).isNotEmpty;
+      return _targets(id).isNotEmpty ||
+          id == 'warcry' &&
+              session
+                  .attackableChests(
+                    session.hero.body.center,
+                    session.progress.barbarianRadius(id),
+                  )
+                  .isNotEmpty;
     }
     return true;
   }
@@ -269,7 +276,15 @@ class BarbarianUtilities {
       _commandUntil = _time + p.barbarianBuffDuration(id, atRank: rank);
     } else {
       final targets = _targets(id, atRank: rank);
-      if (targets.isEmpty) return false;
+      if (id == 'warcry') {
+        session.strikeChests(
+          at,
+          p.barbarianRadius(id, atRank: rank),
+          maxTargets: p.skillTargetLimit(skill, atRank: rank) - targets.length,
+        );
+      } else if (targets.isEmpty) {
+        return false;
+      }
       final warcryDamage = id == 'warcry'
           ? p.skillDamage(skill, atRank: rank) *
                 enemyGroupDamageScale(targets.length)

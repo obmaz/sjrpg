@@ -38,15 +38,16 @@ void main() {
         for (var direction = 0; direction < 8; direction++) {
           for (var phase = 0; phase < 2; phase++) {
             final index = direction * 2 + phase, f = frames[index] as List;
-            expect(f[0], greaterThanOrEqualTo(index % 4 * 256 + 16));
-            expect(f[1], greaterThanOrEqualTo(index ~/ 4 * 256 + 16));
+            final sheet = art.images['actors-cinematic-$kind']!;
+            expect(f[0], greaterThanOrEqualTo(4));
+            expect(f[1], greaterThanOrEqualTo(4));
             expect(
               (f[0] as num) + (f[2] as num),
-              lessThanOrEqualTo(index % 4 * 256 + 240),
+              lessThanOrEqualTo(sheet.width - 4),
             );
             expect(
               (f[1] as num) + (f[3] as num),
-              lessThanOrEqualTo(index ~/ 4 * 256 + 240),
+              lessThanOrEqualTo(sheet.height - 4),
             );
             final recorder = ui.PictureRecorder();
             art.actor(

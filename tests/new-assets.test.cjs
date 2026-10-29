@@ -39,14 +39,28 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
     const target = path.join(root, 'flutter_game/assets/images');
     fs.writeFileSync(path.join(target, 'terrain-materials.png'), 'obsolete large PNG');
     fs.writeFileSync(path.join(target, 'retained.webp'), 'unrelated prepared asset');
-    for (const name of ['actors-vehicles', 'ui-reference', 'popup-frame', 'fx-whirlwind']) {
+    for (const name of [
+        'actors-vehicles',
+        'ui-reference',
+        'popup-frame',
+        'fx-whirlwind',
+        'entry-splash',
+    ]) {
         fs.writeFileSync(path.join(target, `${name}.webp`), 'obsolete runtime copy');
     }
     await prepareNewAssets(root);
     assert.equal(fs.existsSync(path.join(target, 'terrain-materials.png')), false);
-    for (const name of ['actors-vehicles', 'ui-reference', 'popup-frame', 'fx-whirlwind']) {
+    for (const name of [
+        'actors-vehicles',
+        'ui-reference',
+        'popup-frame',
+        'fx-whirlwind',
+        'entry-splash',
+    ]) {
         assert.equal(fs.existsSync(path.join(target, `${name}.webp`)), false);
-        const original = name === 'fx-whirlwind' ? 'flutter_game/art' : 'assets';
+        const original = ['fx-whirlwind', 'entry-splash'].includes(name)
+            ? 'flutter_game/art'
+            : 'assets';
         assert.equal(fs.existsSync(path.join(root, original, `${name}.webp`)), true);
     }
     assert.equal(
@@ -63,7 +77,6 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
         'field-ground-stone',
         'field-ground-industrial',
         'entry-scene',
-        'entry-splash',
         'class-selection',
         'entry-ui',
         'entry-crest',
@@ -167,26 +180,34 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
     for (const actor of ['bonehound', 'clockwork-spider', 'crystal-beetle']) {
         assert.equal(metadata.actors[actor].feet.length, 16);
         assert.equal(
-            fs.readFileSync(path.join(target, `actors-${actor}.webp`), 'utf8'),
-            `source picture actors-${actor}.webp`,
+            fs.readFileSync(path.join(target, `actors-cinematic-${actor}.webp`), 'utf8'),
+            `source picture actors-cinematic-${actor}.webp`,
         );
     }
     assert.equal(
-        fs.readFileSync(path.join(target, 'actors-viper.webp'), 'utf8'),
-        'source picture actors-viper.webp',
+        fs.readFileSync(path.join(target, 'actors-cinematic-viper.webp'), 'utf8'),
+        'source picture actors-cinematic-viper.webp',
     );
     for (const actor of ['sand-warden', 'ancient-king', 'cyber-core']) {
         assert.equal(metadata.actors[actor].frames.length, 16);
         assert.equal(
-            fs.readFileSync(path.join(target, `actors-${actor}.webp`), 'utf8'),
-            `source picture actors-${actor}.webp`,
+            fs.readFileSync(path.join(target, `actors-cinematic-${actor}.webp`), 'utf8'),
+            `source picture actors-cinematic-${actor}.webp`,
         );
     }
     await prepareNewAssets(root);
     assert.equal(fs.existsSync(path.join(target, 'terrain-materials.png')), false);
-    for (const name of ['actors-vehicles', 'ui-reference', 'popup-frame', 'fx-whirlwind']) {
+    for (const name of [
+        'actors-vehicles',
+        'ui-reference',
+        'popup-frame',
+        'fx-whirlwind',
+        'entry-splash',
+    ]) {
         assert.equal(fs.existsSync(path.join(target, `${name}.webp`)), false);
-        const original = name === 'fx-whirlwind' ? 'flutter_game/art' : 'assets';
+        const original = ['fx-whirlwind', 'entry-splash'].includes(name)
+            ? 'flutter_game/art'
+            : 'assets';
         assert.equal(fs.existsSync(path.join(root, original, `${name}.webp`)), true);
     }
     assert.equal(

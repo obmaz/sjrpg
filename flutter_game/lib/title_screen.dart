@@ -15,6 +15,7 @@ class TitleScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => LandscapeEntry(
+    fill: true,
     builder: (scale) => Stack(
       children: [
         Positioned.fill(

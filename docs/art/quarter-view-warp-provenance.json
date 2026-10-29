@@ -1,0 +1,11 @@
+{
+    "generator": "image_gen",
+    "source": "docs/art/quarter-view-warp-original.png",
+    "sha256": "db7d957a79881ab142d0bbbcc7c22fe58e538f6070501dcccfc29ac290c6d154",
+    "sourceBounds": [0, 0, 1292, 1199],
+    "packedBounds": [18, 39, 280, 260],
+    "anchor": [158, 299],
+    "frames": 16,
+    "note": "Same authored gate in each frame; ambient glow is rendered in game.",
+    "packer": "tools/prepare-quarter-view-warp.py"
+}

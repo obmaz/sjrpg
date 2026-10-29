@@ -1,4 +1,5 @@
 import 'combat_balance.dart';
+import 'combat_distance.dart';
 import 'rpg_model.dart';
 import 'sorceress_rules.dart';
 
@@ -17,9 +18,11 @@ class SkillPreviewValue {
   final bool zeroAsDash;
   String format(double value) {
     if (zeroAsDash && value == 0) return '—';
+    if (suffix == '걸음') return CombatDistance.format(value);
     final shown = switch (suffix) {
       '초' => CombatBalance.realSeconds(value),
-      'px/초' || '/초' => value * CombatBalance.gameSpeed,
+      '걸음/초' => CombatDistance.steps(value) * CombatBalance.gameSpeed,
+      '/초' => value * CombatBalance.gameSpeed,
       _ => value,
     };
     return '${shown.toStringAsFixed(digits)}$suffix';
@@ -117,7 +120,7 @@ List<SkillPreviewValue> _barbarianStats(Progress p, SkillDef skill) {
         value(
           '시체 조사 거리',
           (q) => q.barbarianRadius(id),
-          suffix: 'px',
+          suffix: '걸음',
           digits: 0,
         ),
       ];
@@ -162,7 +165,7 @@ List<SkillPreviewValue> _barbarianStats(Progress p, SkillDef skill) {
     case 'taunt':
     case 'grimWard':
       return [
-        value('효과 반경', (q) => q.barbarianRadius(id), suffix: 'px', digits: 0),
+        value('효과 반경', (q) => q.barbarianRadius(id), suffix: '걸음', digits: 0),
         value(
           '지속 시간',
           (q) => id == 'grimWard'
@@ -173,11 +176,11 @@ List<SkillPreviewValue> _barbarianStats(Progress p, SkillDef skill) {
       ];
     case 'leap':
       return [
-        value('도약 거리', (q) => q.skillRange(skill), suffix: 'px', digits: 0),
+        value('도약 거리', (q) => q.skillRange(skill), suffix: '걸음', digits: 0),
         value(
           '착지 밀침 반경',
           (q) => q.barbarianRadius(id),
-          suffix: 'px',
+          suffix: '걸음',
           digits: 0,
         ),
       ];
@@ -208,7 +211,7 @@ List<SkillPreviewValue> _barbarianStats(Progress p, SkillDef skill) {
   }
   if (id == 'leapAttack' || id == 'doubleThrow') {
     result.add(
-      value('사거리', (q) => q.skillRange(skill), suffix: 'px', digits: 0),
+      value('사거리', (q) => q.skillRange(skill), suffix: '걸음', digits: 0),
     );
   }
   if (id == 'concentrate') {
@@ -403,13 +406,13 @@ List<SkillPreviewValue> _sorceressStats(Progress p, SkillDef skill) {
       stat(
         id == 'blink' ? '순간이동 거리' : '사거리',
         (s) => s.rank == 0 ? 0 : s.range,
-        suffix: 'px',
+        suffix: '걸음',
         digits: 0,
       ),
     );
   }
   if ((current.radius > 0 || upgraded.radius > 0) && id != 'thunderStorm') {
-    rows.add(stat('효과 반경', (s) => s.radius, suffix: 'px', digits: 0));
+    rows.add(stat('효과 반경', (s) => s.radius, suffix: '걸음', digits: 0));
   }
   if (id != 'inferno' && (current.duration > 0 || upgraded.duration > 0)) {
     rows.add(stat('효과 지속', (s) => s.duration, suffix: '초'));
@@ -501,7 +504,7 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
         value(
           '이동 속도',
           (p) => p.rank(skill.id) == 0 ? 0 : CombatBalance.sprintMoveSpeed,
-          suffix: 'px/초',
+          suffix: '걸음/초',
         ),
       ];
     default:

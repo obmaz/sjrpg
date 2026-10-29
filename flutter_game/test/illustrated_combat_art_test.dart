@@ -49,22 +49,22 @@ void main() {
   });
 
   test(
-    'all16 generated cells have real transparent gutters within4MiB',
+    'all16 generated cells have real transparent gutters within9MiB',
     () async {
-      expect(image.width, 1024);
-      expect(image.height, 1024);
-      expect(image.width * image.height * 4, 4 * 1024 * 1024);
+      expect(image.width, 1536);
+      expect(image.height, 1536);
+      expect(image.width * image.height * 4, 9 * 1024 * 1024);
       final bytes = (await image.toByteData(
         format: ui.ImageByteFormat.rawRgba,
       ))!.buffer.asUint8List();
       for (var tile = 0; tile < 16; tile++) {
         var visible = 0;
-        for (var y = 0; y < 256; y++) {
-          for (var x = 0; x < 256; x++) {
+        for (var y = 0; y < 384; y++) {
+          for (var x = 0; x < 384; x++) {
             final alpha =
-                bytes[((tile ~/ 4 * 256 + y) * 1024 + tile % 4 * 256 + x) * 4 +
+                bytes[((tile ~/ 4 * 384 + y) * 1536 + tile % 4 * 384 + x) * 4 +
                     3];
-            if (x < 32 || y < 32 || x >= 224 || y >= 224) {
+            if (x < 16 || y < 16 || x >= 368 || y >= 368) {
               expect(alpha, 0, reason: 'neighbour cells must never bleed');
             } else if (alpha > 20) {
               visible++;
@@ -72,6 +72,50 @@ void main() {
           }
         }
         expect(visible, greaterThan(1000));
+      }
+    },
+  );
+
+  test(
+    'authored ground ellipses retain their projection at every facing',
+    () async {
+      final base = await _render(
+        (canvas) => IllustratedCombatArt.sequence(
+          atlas,
+          canvas,
+          CombatIllustration.blade,
+          const ui.Offset(128, 140),
+          progress: .4,
+          radius: 84,
+          protectBody: true,
+        ),
+      );
+      try {
+        for (final bearing in [
+          1.5707963267948966,
+          3.141592653589793,
+          4.71238898038469,
+        ]) {
+          final other = await _render(
+            (canvas) => IllustratedCombatArt.sequence(
+              atlas,
+              canvas,
+              CombatIllustration.blade,
+              const ui.Offset(128, 140),
+              progress: .4,
+              radius: 84,
+              bearing: bearing,
+              protectBody: true,
+            ),
+          );
+          try {
+            expect(other.pixels, orderedEquals(base.pixels));
+          } finally {
+            other.image.dispose();
+          }
+        }
+      } finally {
+        base.image.dispose();
       }
     },
   );

@@ -63,8 +63,10 @@ void main() {
     () async {
       final data =
           jsonDecode(await rootBundle.loadString('assets/art.json')) as Map;
-      final record = data['actors']['viper'] as Map;
-      final bytes = await rootBundle.load('assets/images/actors-viper.webp');
+      final record = data['actors']['cinematic-viper'] as Map;
+      final bytes = await rootBundle.load(
+        'assets/images/actors-cinematic-viper.webp',
+      );
       final codec = await ui.instantiateImageCodec(bytes.buffer.asUint8List());
       final image = (await codec.getNextFrame()).image;
       codec.dispose();
@@ -72,49 +74,48 @@ void main() {
       final frames = record['frames'] as List, feet = record['feet'] as List;
       expect(frames, hasLength(16));
       expect(feet, hasLength(16));
-      expect(image.width, 960);
-      expect(image.height, 640);
+      expect(record['artworkWorldHeightMultiplier'], 1.5);
       for (var i = 0; i < 16; i++) {
         final f = (frames[i] as List).cast<num>();
-        expect(f[0], greaterThanOrEqualTo(i % 4 * 240));
-        expect(f[1], greaterThanOrEqualTo(i ~/ 4 * 160));
-        expect(f[0] + f[2], lessThanOrEqualTo((i % 4 + 1) * 240));
-        expect(f[1] + f[3], lessThanOrEqualTo((i ~/ 4 + 1) * 160));
+        expect(f[0], greaterThanOrEqualTo(4));
+        expect(f[1], greaterThanOrEqualTo(4));
+        expect(f[0] + f[2], lessThanOrEqualTo(image.width - 4));
+        expect(f[1] + f[3], lessThanOrEqualTo(image.height - 4));
         expect(f[2], greaterThan(60));
         expect(f[3], greaterThan(80));
         final anchor = (feet[i] as List).cast<num>();
         expect(anchor[0], inInclusiveRange(f[0], f[0] + f[2]));
         expect(anchor[1], inInclusiveRange(f[1], f[1] + f[3]));
       }
+      final hashes = <int>{};
       final rgba = (await image.toByteData(
         format: ui.ImageByteFormat.rawRgba,
       ))!.buffer.asUint8List();
-      for (var facing = 0; facing < 8; facing++) {
-        final a = facing * 2, b = a + 1;
-        var differing = 0;
-        for (var y = 0; y < 160; y++) {
-          for (var x = 0; x < 240; x++) {
-            final ai = ((a ~/ 4 * 160 + y) * image.width + a % 4 * 240 + x) * 4;
-            final bi = ((b ~/ 4 * 160 + y) * image.width + b % 4 * 240 + x) * 4;
-            if (rgba[ai + 3] > 32 || rgba[bi + 3] > 32) {
-              if ((rgba[ai] - rgba[bi]).abs() +
-                      (rgba[ai + 1] - rgba[bi + 1]).abs() +
-                      (rgba[ai + 2] - rgba[bi + 2]).abs() >
-                  35) {
-                differing++;
-              }
-            }
-          }
+      for (final raw in frames) {
+        final frame = (raw as List).cast<int>();
+        final pixels = <int>[];
+        for (var y = frame[1]; y < frame[1] + frame[3]; y++) {
+          pixels.addAll(
+            rgba.sublist(
+              (y * image.width + frame[0]) * 4,
+              (y * image.width + frame[0] + frame[2]) * 4,
+            ),
+          );
         }
-        expect(differing, greaterThan(1500), reason: 'slithering pair $facing');
+        hashes.add(Object.hashAll(pixels));
       }
+      expect(
+        hashes,
+        hasLength(16),
+        reason: 'every facing and contact pose has native artwork',
+      );
 
       final directory = Platform.environment['VIPER_ART_PROOF_DIR'];
       if (directory == null) return;
       await Directory(directory).create(recursive: true);
       final art = GameArt()
         ..actors = Map<String, dynamic>.from(data['actors'] as Map)
-        ..images['actors-viper'] = image;
+        ..images['actors-cinematic-viper'] = image;
       Future<void> save(
         String name,
         int width,

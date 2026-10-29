@@ -122,7 +122,7 @@ void areaStrike(
   bool hitStop = true,
   bool critical = false,
 }) {
-  if (maxTargets <= 0 || !s.combatAllowed) return;
+  if (maxTargets <= 0 || !s.active) return;
   final targets = castTargets ?? <HuntEnemy>{};
   final selected = _areaTargets(
     s,

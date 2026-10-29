@@ -6,24 +6,30 @@ const entryCanvasSize = Size(1672, 941);
 
 /// Artwork, highlights and input regions share one reference canvas.
 class LandscapeEntry extends StatelessWidget {
-  const LandscapeEntry({required this.builder, super.key});
+  const LandscapeEntry({required this.builder, this.fill = false, super.key});
+  final bool fill;
   final Widget Function(double scale) builder;
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: const Color(0xff111b18),
     body: SafeArea(
+      top: !fill,
+      bottom: !fill,
+      left: !fill,
+      right: !fill,
       child: LayoutBuilder(
         builder: (context, box) {
           final rotated = box.maxHeight > box.maxWidth;
           final width = rotated ? box.maxHeight : box.maxWidth;
           final height = rotated ? box.maxWidth : box.maxHeight;
-          final scale = math.min(
+          final scale = (fill ? math.max : math.min)(
             width / entryCanvasSize.width,
             height / entryCanvasSize.height,
           );
-          final canvas = Center(
+          final canvas = SizedBox.expand(
             child: FittedBox(
-              fit: BoxFit.contain,
+              clipBehavior: Clip.hardEdge,
+              fit: fill ? BoxFit.cover : BoxFit.contain,
               child: SizedBox.fromSize(
                 size: entryCanvasSize,
                 child: builder(scale),

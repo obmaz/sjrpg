@@ -9,30 +9,8 @@ enum CombatIllustration { blade, cold, lightning }
 /// At most two texture samples are blended; this never owns a gameplay clock.
 abstract final class IllustratedCombatArt {
   static const imageKey = 'combat-illustrations';
-  static const _steel = ui.ColorFilter.matrix([
-    .30,
-    .64,
-    .06,
-    0,
-    4,
-    .20,
-    .72,
-    .08,
-    0,
-    10,
-    .15,
-    .68,
-    .17,
-    0,
-    20,
-    0,
-    0,
-    0,
-    1,
-    0,
-  ]);
   static final _body = ui.RRect.fromRectAndRadius(
-    const ui.Rect.fromLTRB(-20, -78, 20, -5),
+    const ui.Rect.fromLTRB(-30, -117, 30, -5),
     const ui.Radius.circular(11),
   );
   static final _clip = ui.Path();
@@ -110,9 +88,8 @@ abstract final class IllustratedCombatArt {
           ..addRRect(_body);
         canvas.clipPath(_clip);
       }
-      if (family == CombatIllustration.blade) {
-        canvas.rotate(bearing + (t - .4) * .65);
-      }
+      // These authored ellipses already carry the camera's ground projection.
+      // Turning the image by the facing angle would make the ground ring stand up.
       final rect = ui.Rect.fromCenter(
         center: ui.Offset.zero,
         width: side,
@@ -126,7 +103,7 @@ abstract final class IllustratedCombatArt {
         rect,
         inset: inset,
         opacity: alpha * (1 - blend),
-        colorFilter: steel ? _steel : null,
+        colorFilter: null,
       );
       if (blend > 0 && index < 3) {
         atlas.draw(
@@ -136,7 +113,7 @@ abstract final class IllustratedCombatArt {
           rect,
           inset: inset,
           opacity: alpha * blend,
-          colorFilter: steel ? _steel : null,
+          colorFilter: null,
         );
       }
     } finally {

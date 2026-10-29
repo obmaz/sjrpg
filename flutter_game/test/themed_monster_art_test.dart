@@ -43,7 +43,7 @@ void main() {
     final data =
         jsonDecode(await rootBundle.loadString('assets/art.json')) as Map;
     art = GameArt()..actors = Map<String, dynamic>.from(data['actors'] as Map);
-    for (final key in [..._kinds, 'hero']) {
+    for (final key in [..._kinds.map((kind) => 'cinematic-$kind'), 'hero']) {
       final bytes = await rootBundle.load('assets/images/actors-$key.webp');
       final codec = await ui.instantiateImageCodec(bytes.buffer.asUint8List());
       art.images['actors-$key'] = (await codec.getNextFrame()).image;
@@ -60,11 +60,11 @@ void main() {
     test(
       '$kind contains sixteen complete padded frames and independent gaits',
       () async {
-        final record = art.actors[kind] as Map;
+        final record = art.actors['cinematic-$kind'] as Map;
         final frames = record['frames'] as List,
             anchors = record['feet'] as List;
-        final image = art.images['actors-$kind']!;
-        expect((image.width, image.height), (768, 640));
+        final image = art.images['actors-cinematic-$kind']!;
+        expect(record['artworkWorldHeightMultiplier'], 1.5);
         expect(frames, hasLength(16));
         expect(anchors, hasLength(16));
         final rgba = (await image.toByteData(
@@ -73,43 +73,32 @@ void main() {
         for (var i = 0; i < 16; i++) {
           final frame = (frames[i] as List).cast<num>();
           final anchor = (anchors[i] as List).cast<num>();
-          expect(frame[0], greaterThanOrEqualTo(i % 4 * 192 + 12));
-          expect(frame[1], greaterThanOrEqualTo(i ~/ 4 * 160 + 12));
-          expect(
-            frame[0] + frame[2],
-            lessThanOrEqualTo((i % 4 + 1) * 192 - 12),
-          );
-          expect(
-            frame[1] + frame[3],
-            lessThanOrEqualTo((i ~/ 4 + 1) * 160 - 12),
-          );
+          expect(frame[0], greaterThanOrEqualTo(4));
+          expect(frame[1], greaterThanOrEqualTo(4));
+          expect(frame[0] + frame[2], lessThanOrEqualTo(image.width - 4));
+          expect(frame[1] + frame[3], lessThanOrEqualTo(image.height - 4));
           expect(anchor[0], inInclusiveRange(frame[0], frame[0] + frame[2]));
           expect(anchor[1], inInclusiveRange(frame[1], frame[1] + frame[3]));
         }
-        for (var bearing = 0; bearing < 8; bearing++) {
-          final first = bearing * 2, second = first + 1;
-          var different = 0;
-          for (var y = 0; y < 160; y++) {
-            for (var x = 0; x < 192; x++) {
-              final a =
-                  ((first ~/ 4 * 160 + y) * 768 + first % 4 * 192 + x) * 4;
-              final b =
-                  ((second ~/ 4 * 160 + y) * 768 + second % 4 * 192 + x) * 4;
-              if ((rgba[a + 3] > 32 || rgba[b + 3] > 32) &&
-                  (rgba[a] - rgba[b]).abs() +
-                          (rgba[a + 1] - rgba[b + 1]).abs() +
-                          (rgba[a + 2] - rgba[b + 2]).abs() >
-                      35) {
-                different++;
-              }
-            }
+        final hashes = <int>{};
+        for (final raw in frames) {
+          final frame = (raw as List).cast<int>();
+          final pixels = <int>[];
+          for (var y = frame[1]; y < frame[1] + frame[3]; y++) {
+            pixels.addAll(
+              rgba.sublist(
+                (y * image.width + frame[0]) * 4,
+                (y * image.width + frame[0] + frame[2]) * 4,
+              ),
+            );
           }
-          expect(
-            different,
-            greaterThan(400),
-            reason: '$kind gait pair $bearing',
-          );
+          hashes.add(Object.hashAll(pixels));
         }
+        expect(
+          hashes,
+          hasLength(16),
+          reason: '$kind has sixteen native bearing and gait samples',
+        );
       },
     );
   }

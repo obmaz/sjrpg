@@ -35,6 +35,23 @@ class WellPortal extends GameComponent with TapGesture {
   final DiscoveredWell well;
   final ui.Offset at;
   final void Function() onOpen;
+  double _glowTime = 0;
+
+  @override
+  void update(double dt) {
+    if (session.active) _glowTime += math.min(dt, .05);
+    super.update(dt);
+  }
+
+  @override
+  void render(ui.Canvas canvas) {
+    final opacity = .10 + .04 * math.sin(_glowTime * 2);
+    canvas.drawOval(
+      const ui.Rect.fromLTWH(18, 96, 76, 14),
+      ui.Paint()..color = ui.Color.fromRGBO(71, 220, 193, opacity),
+    );
+    super.render(canvas);
+  }
 
   bool get canUse =>
       session.active &&
@@ -64,6 +81,7 @@ class WellPortal extends GameComponent with TapGesture {
         paint: ui.Paint()..filterQuality = ui.FilterQuality.medium,
       ),
     );
+    await add(_PortalLight(() => _glowTime));
   }
 
   @override
@@ -85,6 +103,36 @@ class WellPortal extends GameComponent with TapGesture {
   @override
   void onTap() {
     if (canUse) onOpen();
+  }
+}
+
+class _PortalLight extends GameComponent {
+  _PortalLight(this.time) {
+    size = Vector2.all(112);
+  }
+  final double Function() time;
+
+  @override
+  void render(ui.Canvas canvas) {
+    final paint = ui.Paint()
+      ..color = const ui.Color(0x99a9fff1)
+      ..style = ui.PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..strokeCap = ui.StrokeCap.round;
+    canvas.drawArc(
+      const ui.Rect.fromLTWH(44, 48, 22, 28),
+      time() * 1.7,
+      1.2,
+      false,
+      paint,
+    );
+    canvas.drawArc(
+      const ui.Rect.fromLTWH(48, 53, 14, 18),
+      -time() * 2,
+      1.0,
+      false,
+      paint,
+    );
   }
 }
 

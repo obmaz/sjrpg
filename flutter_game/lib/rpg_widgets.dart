@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'adventure.dart';
 import 'barbarian_icon_art.dart';
+import 'cinematic_icon_art.dart';
 import 'game_art.dart';
 import 'game_ui.dart';
 import 'gear_icon_art.dart';
@@ -208,36 +209,40 @@ class PotionBelt extends StatelessWidget {
     onTap: () => _use(action),
     child: InkWell(
       onTap: () => _use(action),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        constraints: const BoxConstraints(minWidth: 50, maxWidth: 72),
+      customBorder: const CircleBorder(),
+      child: SizedBox(
+        width: 44,
         height: 44,
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        decoration: BoxDecoration(
-          color: ink.withValues(alpha: .88),
-          border: Border.all(color: gold.withValues(alpha: .55)),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
+          clipBehavior: Clip.none,
           children: [
-            SizedBox(
-              width: 28,
-              height: 32,
-              child: CustomPaint(
-                painter: PotionPainter(
-                  session.art,
-                  blue: color == const Color(0xffa2caff),
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: ink.withValues(alpha: .9),
+                  border: Border.all(color: gold.withValues(alpha: .65)),
+                ),
+                child: CustomPaint(
+                  painter: color == const Color(0xffa2caff)
+                      ? PotionPainter(session.art, blue: true)
+                      : CinematicIconPainter(session.art, 5),
                 ),
               ),
             ),
-            Flexible(
-              child: Text(
-                '$count',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: cream, fontSize: 13),
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                decoration: BoxDecoration(
+                  color: ink,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  '$count',
+                  style: const TextStyle(color: cream, fontSize: 12),
+                ),
               ),
             ),
           ],

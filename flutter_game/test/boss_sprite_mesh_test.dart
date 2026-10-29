@@ -288,10 +288,10 @@ void main() {
       final canvas = ui.Canvas(recorder), loaded = <ui.Image>[];
       final profiles = BossMeshProfile.values;
       final roles = [
-        'creatures-b',
-        'sand-warden',
-        'ancient-king',
-        'cyber-core',
+        'cinematic-golem',
+        'cinematic-sand-warden',
+        'cinematic-ancient-king',
+        'cinematic-cyber-core',
       ];
       final variants = [
         const BossVisualPose(),
@@ -310,9 +310,9 @@ void main() {
         final atlas = ActorAtlas.fromJson(
           Map<String, dynamic>.from(data['actors'][roles[row]] as Map),
         );
-        final index = row == 0 ? 8 : 0, frame = atlas.frames[index];
-        final heightIndex = row == 0 ? 1 : 0;
-        final scale = 105 / atlas.heights[heightIndex];
+        final frame = atlas.frames[0];
+        const heightIndex = 0;
+        final scale = 70 / atlas.heights[heightIndex];
         for (var col = 0; col < variants.length; col++) {
           final foot = ui.Offset(96 + col * 192, 116 + row * 128);
           final dst = ui.Rect.fromLTWH(

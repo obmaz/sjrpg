@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'adventure.dart';
 import 'combat_balance.dart';
+import 'combat_distance.dart';
 import 'game_ui.dart';
 import 'panel_controls.dart';
 import 'rpg_model.dart';
@@ -310,7 +311,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
     final current = p.equipped[gear.base.slot];
     if (gear.base.slot == GearSlot.weapon) {
       final attack = _previewBasicAttack(gear);
-      return '무기 레벨 ${gear.weaponLevel} · 무기 공격 ${gear.attack.round()} · 초당 피해 ${attack?.dps.toStringAsFixed(1) ?? '직업 제한'} · 현재 초당 피해 ${_currentBasicDps.toStringAsFixed(1)}';
+      return '무기 레벨 ${gear.weaponLevel} · 무기 공격 ${gear.attack.round()} · 기본 공격 1타 ${attack?.damage.toStringAsFixed(1) ?? '직업 제한'} · 사거리 ${CombatDistance.format(gear.base.range)} · 초당 피해 ${attack?.dps.toStringAsFixed(1) ?? '직업 제한'} · 현재 초당 피해 ${_currentBasicDps.toStringAsFixed(1)}';
     }
     return '방어 ${gear.armor.round()} · 생명 ${gear.health.round()} · ${p.heroClass.resource} ${gear.mana.round()} · 현재 방어 ${current?.armor.round() ?? 0} · 현재 생명 ${current?.health.round() ?? 0}';
   }
@@ -704,6 +705,14 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                                     ),
                                     if (attack != null)
                                       _quickStat(
+                                        '기본 공격 1타',
+                                        attack.damage,
+                                        p.basicAttackStats().damage,
+                                        active,
+                                        decimal: true,
+                                      ),
+                                    if (attack != null)
+                                      _quickStat(
                                         '초당 피해',
                                         attack.dps,
                                         _currentBasicDps,
@@ -823,7 +832,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
             Padding(
               padding: const EdgeInsets.only(top: 5),
               child: Text(
-                '공격 주기 ${(attack?.interval ?? gear.base.tempo).toStringAsFixed(2)}초 · 사거리 ${gear.base.range.round()}',
+                '공격 주기 ${(attack?.interval ?? gear.base.tempo).toStringAsFixed(2)}초 · 사거리 ${CombatDistance.format(gear.base.range)}',
                 style: const TextStyle(color: _muted, fontSize: 12),
               ),
             ),
@@ -850,10 +859,19 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
             ),
             const SizedBox(height: 8),
             if (attack != null)
+              Text(
+                '기본 공격 1타 ${attack.damage.toStringAsFixed(1)} · 치명타 ${(attack.criticalChance * 100).toStringAsFixed(1)}%\n${attack.damage.toStringAsFixed(1)} × ${(1 + attack.criticalChance).toStringAsFixed(3)} ÷ ${attack.interval.toStringAsFixed(2)}초 ≈ 초당 ${attack.dps.toStringAsFixed(1)} 피해',
+                style: const TextStyle(
+                  color: _muted,
+                  fontSize: 13,
+                  height: 1.5,
+                ),
+              ),
+            if (attack != null)
               const Padding(
                 padding: EdgeInsets.only(bottom: 10),
                 child: Text(
-                  '공격력은 장비·레벨·숙련을 반영합니다. 초당 피해는 기본 1타 기준입니다.',
+                  '무기 공격은 장비 수치입니다. 기본 공격 1타는 레벨·숙련·기술 배율을 반영합니다. 초당 피해 = 1타 피해 × (1 + 치명타 확률) ÷ 공격 주기.',
                   style: TextStyle(color: _muted, fontSize: 13, height: 1.5),
                 ),
               ),
@@ -934,7 +952,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
             ),
         ],
       ),
-      style: const TextStyle(fontSize: 14, height: 1.4),
+      style: const TextStyle(fontSize: 14, height: 1.2),
     );
   }
 

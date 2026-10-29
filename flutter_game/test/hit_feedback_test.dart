@@ -150,13 +150,13 @@ void main() {
         return result;
       }
 
-      expect(await pixel(125, 155), [255, 216, 149]);
-      expect(await pixel(110, 155), [232, 119, 83]);
+      expect(await pixel(133, 115), [255, 216, 149]);
+      expect(await pixel(110, 115), [173, 36, 32]);
       for (var i = 0; i < 40; i++) {
         mob.update(.02);
       }
-      expect(await pixel(125, 155), isNot([255, 216, 149]));
-      expect(await pixel(110, 155), [232, 119, 83]);
+      expect(await pixel(133, 115), isNot([255, 216, 149]));
+      expect(await pixel(110, 115), [173, 36, 32]);
       expect(mob.life.value, 400);
     },
   );

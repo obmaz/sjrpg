@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/game_art.dart';
+import 'package:guardian_new/world_model.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -54,6 +55,26 @@ void main() {
         reason:
             'forest, water, sand, ruins, city and their roads retain distinct textures',
       );
+    },
+  );
+  test(
+    'recently viewed terrain survives cache eviction during travel',
+    () async {
+      final art = await GameArt.load();
+      final terrain = TerrainArt(AdventureWorld(), art);
+      addTearDown(() {
+        terrain.dispose();
+        art.dispose();
+      });
+      final first = terrain.sector(0, 0);
+      for (var x = 1; x < 24; x++) {
+        terrain.sector(x, 0);
+      }
+      expect(identical(terrain.sector(0, 0), first), isTrue);
+      terrain.sector(24, 0);
+      expect(terrain.cache.containsKey('0:0'), isTrue);
+      expect(terrain.cache.containsKey('1:0'), isFalse);
+      expect(first.debugDisposed, isFalse);
     },
   );
 }

@@ -1,87 +1,88 @@
 {
     "version": 1,
-    "sourceCell": 256,
-    "runtimeCell": 256,
-    "pixelDensityIncrease": 2,
+    "sourceCell": 384,
+    "runtimeCell": 384,
+    "worldSizeIncrease": 1.5,
+    "pixelDensityIncrease": 3.0,
     "runtimeRoles": {
         "hero": {
             "image": "flutter_game/art/hero-helmeted.webp",
             "metadata": "flutter_game/art/hero-helmeted-bounds.json",
             "frameCount": 144,
-            "sha256": "c673aaf29a0c28176b749d60f9e8b51fbd512a27276582d252a27ebe530e9ac3",
-            "nativeRenderSequenceSha256": "a7221756ba77f6ddf9b4dce3dc7239888f2a1e454399d49cbf62341f4e637762",
-            "decodedRGBABytes": 8388608,
-            "compressedBytes": 903274,
+            "sha256": "fcf3ebc8a0b6d2f0f3ff7e812ef22686904c131f8113ed3ebb2c59f84a671a96",
+            "nativeRenderSequenceSha256": "0d25f5915c80340f06ae054ec47826df8168f9f361e94a024edf44921292bbe7",
+            "decodedRGBABytes": 16777216,
+            "compressedBytes": 1749480,
             "referenceHeight": 130.88888888888889,
-            "projectedOrigin": [128.0, 180.43079376220703]
+            "projectedOrigin": [192.0, 270.64619064331055]
         },
         "hero-attack": {
             "image": "flutter_game/art/hero-helmeted-attack.webp",
             "metadata": "flutter_game/art/hero-helmeted-attack-bounds.json",
             "frameCount": 128,
-            "sha256": "d035836b25ccfe8870261b2df199a99ee823df76b90e9f51adecedeb0cfc0905",
-            "nativeRenderSequenceSha256": "5f2f79e1ea6acf5f684fd4ba6a585f994f5be87801425ca09b73414138b1a22b",
-            "decodedRGBABytes": 8388608,
-            "compressedBytes": 851724,
+            "sha256": "40fff11d772a6bbcb017388f86a72e426d60a1347ac8e6c229fc7e466ba529e1",
+            "nativeRenderSequenceSha256": "9e93ce0b1c825bad9e4f3030995fea081a378c506db101171b0bc9fc9f6f5269",
+            "decodedRGBABytes": 16777216,
+            "compressedBytes": 1642878,
             "referenceHeight": 130.88888888888889,
-            "projectedOrigin": [128.0, 180.43079376220703]
+            "projectedOrigin": [192.0, 270.64619064331055]
         },
         "hero-backhand": {
             "image": "flutter_game/art/hero-helmeted-backhand.webp",
             "metadata": "flutter_game/art/hero-helmeted-backhand-bounds.json",
             "frameCount": 128,
-            "sha256": "42449a968bd704df97470c74ab0158f3ea84a88b2471fd58a41363c3be558edb",
-            "nativeRenderSequenceSha256": "76ad14b5fa4ccab99c81e20daa14e3ea636a9eb854115e2ec5de2c44d2911021",
-            "decodedRGBABytes": 8388608,
-            "compressedBytes": 833040,
+            "sha256": "3885c1ad00f25dd4a9bd92932cb91ecbf388ba1a2d17cac68f1b1d8ac62b1ac2",
+            "nativeRenderSequenceSha256": "91c9a8093848c0deb3a0614b62226cdd86c582da2e2c1678e5459174f9aec8a7",
+            "decodedRGBABytes": 16777216,
+            "compressedBytes": 1608802,
             "referenceHeight": 130.88888888888889,
-            "projectedOrigin": [128.0, 180.43079376220703]
+            "projectedOrigin": [192.0, 270.64619064331055]
         },
         "hero-cleave": {
             "image": "flutter_game/art/hero-helmeted-cleave.webp",
             "metadata": "flutter_game/art/hero-helmeted-cleave-bounds.json",
             "frameCount": 128,
-            "sha256": "41dd157890de415ae80ac592871eb6fcdd7af2bcaabe1a5bb08a76235266125b",
-            "nativeRenderSequenceSha256": "dbd9078be5371f86d9bf55be9a781ed39c855ace4d90cdd55e76c4deda2a1fab",
-            "decodedRGBABytes": 8388608,
-            "compressedBytes": 867512,
+            "sha256": "fdd445fb8a27033dea997a1e08f440064e6da4228752de9cca13562d9e14dd72",
+            "nativeRenderSequenceSha256": "1aa580506f8ded322651a78d081384f1488fe172f97225d17a1d953628eef171",
+            "decodedRGBABytes": 16777216,
+            "compressedBytes": 1675102,
             "referenceHeight": 130.88888888888889,
-            "projectedOrigin": [128.0, 180.43079376220703]
+            "projectedOrigin": [192.0, 270.64619064331055]
         },
         "mage": {
             "image": "flutter_game/art/actors-mage.png",
             "metadata": "flutter_game/art/mage-bounds.json",
             "frameCount": 144,
-            "sha256": "1ded9a643657109e4dd705f095cd741b235d2ccb0c2a28aacadf23ee4e601925",
-            "nativeRenderSequenceSha256": "9d1b6c53741bf5ec22ab2c287bbf870f25f720d24820152504180167cb01eb4d",
-            "decodedRGBABytes": 8388608,
-            "compressedBytes": 1255720,
+            "sha256": "be63cbdf32b188bae9532f70c725e118d5a85143cb2ca997b7249043ce357b51",
+            "nativeRenderSequenceSha256": "52fd3df6cb212272aff151912f9fbb69b1020f349ca7fe6bd294e35938a096bc",
+            "decodedRGBABytes": 16777216,
+            "compressedBytes": 2394518,
             "referenceHeight": 130.88888888888889,
-            "projectedOrigin": [128.0, 180.43079376220703]
+            "projectedOrigin": [192.0, 270.64619064331055]
         },
         "mage-cast": {
             "image": "flutter_game/art/actors-mage-cast.webp",
             "metadata": "flutter_game/art/actors-mage-cast-bounds.json",
             "frameCount": 128,
-            "sha256": "43f31f330422256838a6ccc9fa0c0f5cd904a0adbc2319dbefb8cb667b3e5157",
-            "nativeRenderSequenceSha256": "22ae814310c7231cdc7bd3f8272cab5144e48eafe0983c4327fd55886efbdfae",
-            "decodedRGBABytes": 8388608,
-            "compressedBytes": 834806,
+            "sha256": "447a6b0da16a3724bf780e49e9953e465d1b1b9b6729a4d587d2deb525eb2ba9",
+            "nativeRenderSequenceSha256": "83be4d6456ffbb5ec4a8ba7b838fc865443f81be10a6c7d74c38c19967685028",
+            "decodedRGBABytes": 16777216,
+            "compressedBytes": 1563474,
             "referenceHeight": 130.88888888888889,
-            "projectedOrigin": [128.0, 180.43079376220703]
+            "projectedOrigin": [192.0, 270.64619064331055]
         },
         "roll": {
             "image": "flutter_game/art/hero-helmeted-roll.png",
             "metadata": "flutter_game/art/hero-helmeted-roll-bounds.json",
             "frameCount": 64,
-            "sha256": "738825ce94b8b6ccf61634696a020511739fb4626889f066761140367fde70cf",
-            "nativeRenderSequenceSha256": "6aa7651d848e1db813b8b04ea7b1e606dcb264042f892cab2a88df96ce9c9595",
-            "decodedRGBABytes": 4194304,
-            "compressedBytes": 595991,
+            "sha256": "ed124eb0a61a6292bd380bd554621a564a0cb4d706e76c1d2529ce1a20079d5f",
+            "nativeRenderSequenceSha256": "6e37ce3a8410da86afb2aefa3066db66c61448526c09d9a0f461b28ce49db433",
+            "decodedRGBABytes": 8388608,
+            "compressedBytes": 1117045,
             "referenceHeight": 93.8037037037037,
-            "projectedOrigin": [128.0, 180.43079376220703]
+            "projectedOrigin": [192.0, 270.64619064331055]
         }
     },
-    "decodedRGBAUnionBytes": 54525952,
-    "compressedBytes": 6142067
+    "decodedRGBAUnionBytes": 109051904,
+    "compressedBytes": 11751299
 }

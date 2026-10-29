@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/combat_distance.dart';
 import 'package:guardian_new/equipment_panel.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/interface_art.dart';
@@ -88,89 +89,90 @@ void main() {
     });
   }
 
-  testWidgets(
-    'attack foundation, weapon stat and computed damage stay distinct',
-    (tester) async {
-      final s = session();
-      final p = s.progress;
-      p.level = 2;
-      p.ranks.addAll({'cleave': 3, 'swordMastery': 2});
-      final weapon = p.weapon;
-      expect(weapon.attack, 15);
-      expect(p.swordDamage, closeTo(11.271, 1e-9));
-      expect(p.basicDamage, isNot(closeTo(p.swordDamage, .01)));
-      await tester.runAsync(() async {
-        final bytes = await rootBundle.load('assets/images/gear-icons.png');
-        final codec = await ui.instantiateImageCodec(
-          bytes.buffer.asUint8List(),
-        );
-        s.art.images['gear-icons'] = (await codec.getNextFrame()).image;
-        codec.dispose();
-      });
-      addTearDown(() => s.art.images['gear-icons']!.dispose());
-      await showBag(tester, s, const Size(320, 420), 1.3);
-      final summary = find.byKey(const ValueKey('equipment-overview'));
-      expect(
-        find.descendant(of: summary, matching: find.text('공격력 11')),
-        findsOneWidget,
-      );
-      await saveProof(tester, 'attack-overview-320x420-1.3');
-      await tester.tap(find.byKey(const ValueKey('equipped-slot-weapon')));
-      await tester.pumpAndSettle();
-      final row = find.byKey(ValueKey('gear-row-${weapon.serial}'));
-      final comparisons = find.descendant(
-        of: row,
-        matching: find.byWidgetPredicate(
-          (widget) => widget is Text && widget.textSpan != null,
-        ),
-      );
-      final lines = tester
-          .widgetList<Text>(comparisons)
-          .map((text) => text.textSpan!.toPlainText())
-          .toList();
-      expect(lines, ['무기 공격 15', '초당 피해 ${p.basicDps.toStringAsFixed(1)}']);
-      await Scrollable.ensureVisible(
-        tester.element(comparisons.last),
-        alignment: 1,
-      );
-      await tester.pumpAndSettle();
-      await saveProof(tester, 'attack-card-320x420-1.3');
-      final accessible = find.bySemanticsLabel('보관 장비 · ${weapon.name} · 장착 중');
-      expect(
-        tester.widget<Semantics>(accessible).properties.hint,
-        '무기 레벨 ${weapon.weaponLevel} · 무기 공격 15 · 초당 피해 ${p.basicDps.toStringAsFixed(1)} · 현재 초당 피해 ${p.basicDps.toStringAsFixed(1)}',
-      );
-      for (final element in comparisons.evaluate()) {
-        final paragraph = element.renderObject! as RenderParagraph;
-        expect(paragraph.text.style?.fontFamily, 'Guardian');
-        expect(paragraph.didExceedMaxLines, false);
-        expect(
-          paragraph.getMaxIntrinsicHeight(paragraph.size.width),
-          lessThanOrEqualTo(paragraph.size.height + .01),
-        );
-      }
-      expect(
-        find.descendant(
-          of: row,
-          matching: find.textContaining('무기 공격 15', findRichText: true),
-        ),
-        findsOneWidget,
-      );
-      final explanation = find.text(
-        '공격력은 장비·레벨·숙련을 반영합니다. 초당 피해는 기본 1타 기준입니다.',
-      );
-      await tester.ensureVisible(explanation);
-      await tester.pumpAndSettle();
-      final paragraph = tester.renderObject<RenderParagraph>(explanation);
+  testWidgets('attack foundation, weapon stat and computed damage stay distinct', (
+    tester,
+  ) async {
+    final s = session();
+    final p = s.progress;
+    p.level = 2;
+    p.ranks.addAll({'cleave': 3, 'swordMastery': 2});
+    final weapon = p.weapon;
+    expect(weapon.attack, 15);
+    expect(p.swordDamage, closeTo(11.271, 1e-9));
+    expect(p.basicDamage, isNot(closeTo(p.swordDamage, .01)));
+    await tester.runAsync(() async {
+      final bytes = await rootBundle.load('assets/images/gear-icons.png');
+      final codec = await ui.instantiateImageCodec(bytes.buffer.asUint8List());
+      s.art.images['gear-icons'] = (await codec.getNextFrame()).image;
+      codec.dispose();
+    });
+    addTearDown(() => s.art.images['gear-icons']!.dispose());
+    await showBag(tester, s, const Size(320, 420), 1.3);
+    final summary = find.byKey(const ValueKey('equipment-overview'));
+    expect(
+      find.descendant(of: summary, matching: find.text('공격력 11')),
+      findsOneWidget,
+    );
+    await saveProof(tester, 'attack-overview-320x420-1.3');
+    await tester.tap(find.byKey(const ValueKey('equipped-slot-weapon')));
+    await tester.pumpAndSettle();
+    final row = find.byKey(ValueKey('gear-row-${weapon.serial}'));
+    final comparisons = find.descendant(
+      of: row,
+      matching: find.byWidgetPredicate(
+        (widget) => widget is Text && widget.textSpan != null,
+      ),
+    );
+    final lines = tester
+        .widgetList<Text>(comparisons)
+        .map((text) => text.textSpan!.toPlainText())
+        .toList();
+    expect(lines, [
+      '무기 공격 15',
+      '기본 공격 1타 ${p.basicDamage.toStringAsFixed(1)}',
+      '초당 피해 ${p.basicDps.toStringAsFixed(1)}',
+    ]);
+    await Scrollable.ensureVisible(
+      tester.element(comparisons.last),
+      alignment: 1,
+    );
+    await tester.pumpAndSettle();
+    await saveProof(tester, 'attack-card-320x420-1.3');
+    final accessible = find.bySemanticsLabel('보관 장비 · ${weapon.name} · 장착 중');
+    expect(
+      tester.widget<Semantics>(accessible).properties.hint,
+      '무기 레벨 ${weapon.weaponLevel} · 무기 공격 15 · 기본 공격 1타 ${p.basicDamage.toStringAsFixed(1)} · 사거리 ${CombatDistance.format(weapon.base.range)} · 초당 피해 ${p.basicDps.toStringAsFixed(1)} · 현재 초당 피해 ${p.basicDps.toStringAsFixed(1)}',
+    );
+    for (final element in comparisons.evaluate()) {
+      final paragraph = element.renderObject! as RenderParagraph;
+      expect(paragraph.text.style?.fontFamily, 'Guardian');
       expect(paragraph.didExceedMaxLines, false);
       expect(
         paragraph.getMaxIntrinsicHeight(paragraph.size.width),
         lessThanOrEqualTo(paragraph.size.height + .01),
       );
-      await saveProof(tester, 'attack-detail-320x420-1.3');
-      expect(tester.takeException(), isNull);
-    },
-  );
+    }
+    expect(
+      find.descendant(
+        of: row,
+        matching: find.textContaining('무기 공격 15', findRichText: true),
+      ),
+      findsOneWidget,
+    );
+    final explanation = find.text(
+      '무기 공격은 장비 수치입니다. 기본 공격 1타는 레벨·숙련·기술 배율을 반영합니다. 초당 피해 = 1타 피해 × (1 + 치명타 확률) ÷ 공격 주기.',
+    );
+    await tester.ensureVisible(explanation);
+    await tester.pumpAndSettle();
+    final paragraph = tester.renderObject<RenderParagraph>(explanation);
+    expect(paragraph.didExceedMaxLines, false);
+    expect(
+      paragraph.getMaxIntrinsicHeight(paragraph.size.width),
+      lessThanOrEqualTo(paragraph.size.height + .01),
+    );
+    await saveProof(tester, 'attack-detail-320x420-1.3');
+    expect(tester.takeException(), isNull);
+  });
 
   for (final rarity in [Rarity.rare, Rarity.unique]) {
     testWidgets(
@@ -273,7 +275,7 @@ void main() {
           (widget) => widget is Text && widget.textSpan != null,
         ),
       );
-      expect(comparisons, findsNWidgets(2));
+      expect(comparisons, findsNWidgets(3));
       final comparisonText = tester
           .widgetList<Text>(comparisons)
           .map((widget) => widget.textSpan!.toPlainText())

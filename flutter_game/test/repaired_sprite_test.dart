@@ -46,8 +46,8 @@ void main() {
           expect(data['action']['directions'], 16);
         }
         final hashes = <int>{};
-        // Keep the 100px body scale and room for swords extending beyond it.
-        const width = 320, height = 280;
+        // Leave room for the larger native bodies and their extended sword poses.
+        const width = 512, height = 480;
         for (var direction = 0; direction < count; direction++) {
           for (var phase = 0; phase < phases; phase++) {
             final rec = ui.PictureRecorder();
@@ -58,7 +58,7 @@ void main() {
                   : key == 'mage-cast'
                   ? 'mage'
                   : key,
-              const ui.Offset(160, 240),
+              const ui.Offset(256, 380),
               math.pi / 2 + direction * math.pi * 2 / count,
               movement ? math.max(0, phase - 1) : phase,
               100,

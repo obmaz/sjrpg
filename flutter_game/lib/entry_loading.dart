@@ -4,7 +4,7 @@ import 'entry_art_widgets.dart';
 import 'game_art.dart';
 import 'game_ui.dart';
 
-/// The small boot image also appears before Flutter's first web frame.
+/// Neutral loading surface shared with the web bootstrap.
 class EntryLoading extends StatelessWidget {
   const EntryLoading({super.key});
 
@@ -13,13 +13,7 @@ class EntryLoading extends StatelessWidget {
     body: Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset(
-          'assets/images/entry-splash.webp',
-          fit: BoxFit.cover,
-          cacheWidth: 384,
-          excludeFromSemantics: true,
-          errorBuilder: (_, _, _) => const ColoredBox(color: ink),
-        ),
+        const ColoredBox(color: ink),
         const DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(

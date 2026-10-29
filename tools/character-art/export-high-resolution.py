@@ -1,7 +1,7 @@
-"""Export the original 256px renders without the old 128px downsample.
+"""Pack native character renders without resampling.
 
-Reuses the same skeleton, poses, projected anchors and lossless atlas format.
-This changes pixel density, never the game's body scale or collision geometry.
+384px sources increase visible body size by 1.5 while preserving collision
+geometry, authored poses and the projected ground origin.
 """
 
 import argparse
@@ -43,8 +43,9 @@ def main():
     mage = pack.load(
         "mage", args.mage, 304, export_scale=1.0, metadata=mage_metadata
     )
-    manifest = {"version": 1, "sourceCell": 256, "runtimeCell": 256,
-                "pixelDensityIncrease": 2, "runtimeRoles": {}}
+    manifest = {"version": 1, "sourceCell": pack.SOURCE_CELL, "runtimeCell": pack.SOURCE_CELL,
+                "worldSizeIncrease": pack.SOURCE_CELL / 256,
+                "pixelDensityIncrease": pack.SOURCE_CELL / 128, "runtimeRoles": {}}
     roles = manifest["runtimeRoles"]
 
     def output(role, frames, metadata, *, motion=None, roll=False):

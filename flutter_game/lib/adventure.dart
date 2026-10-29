@@ -50,6 +50,7 @@ import 'sorceress_combat.dart';
 import 'spell_vfx.dart';
 import 'town_gates.dart';
 import 'travel_journal.dart';
+import 'village_gate.dart';
 import 'weapon_profiles.dart';
 import 'world_model.dart';
 
@@ -1356,6 +1357,7 @@ class Adventure extends ChangeNotifier {
     if (ready || disposed) return;
     game = ref;
     ready = true;
+    if (world.stage == WorldStage.forest) ref.add(VillageGate(art, world));
     for (final mob in List<HuntEnemy>.of(mobs)) {
       ref.add(mob);
     }
@@ -2390,7 +2392,7 @@ class Guardian extends Player with WithCollision {
         body.center - const ui.Offset(3, 3),
         ui.Offset(math.cos(angle), math.sin(angle)) * distance,
         const ui.Size(6, 6),
-        avoidSanctuary: true,
+        avoidSanctuary: !session.sheltered,
       ) +
       const ui.Offset(3, 3);
   ui.Offset meteorAimImpact(SkillAim current) => aimedImpact(
@@ -3501,7 +3503,18 @@ class Guardian extends Player with WithCollision {
         def.id == 'charge' && session.afflictions.movementBlocked) {
       return;
     }
+    final propAttack =
+        p.skillDamage(def) > 0 &&
+        session
+            .attackableChests(
+              body.center,
+              p.heroClass == HeroClass.mage
+                  ? math.max(p.skillRange(def), p.sorceressSpell(def).radius)
+                  : math.max(p.skillRange(def), p.barbarianRadius(def.id)),
+            )
+            .isNotEmpty;
     if (!session.combatAllowed &&
+        !propAttack &&
         !(p.heroClass == HeroClass.mage &&
             SorceressCombat.defensiveIds.contains(def.id))) {
       return;
@@ -3568,7 +3581,11 @@ class Guardian extends Player with WithCollision {
     cooldowns[def.id] = p.skillCooldown(def);
     basicWeaponSwing = false;
     if (p.heroClass == HeroClass.mage) {
-      sorceressCombat.activate(def, aim: manualAim);
+      sorceressCombat.activate(
+        def,
+        aim: manualAim,
+        propOnly: session.sheltered,
+      );
       session.refresh();
       return;
     }
@@ -3927,10 +3944,10 @@ class Guardian extends Player with WithCollision {
           math.sin(mountMotion.cycle * math.pi * 4) * mountMotion.weight * .75;
       canvas.clipRect(
         ui.Rect.fromLTRB(
-          feet.dx - 36,
-          feet.dy - 90,
-          feet.dx + 36,
-          feet.dy - lift - 14,
+          feet.dx - 64,
+          feet.dy - 135,
+          feet.dx + 64,
+          feet.dy - lift - 21,
         ),
       );
       session.art.actor(
@@ -5764,17 +5781,19 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
       }.contains(kind),
       large: boss,
     );
-    if (life.value < life.max || boss || isElite) {
+    if (life.value > 0) {
       final width = boss
-              ? 100.0
+              ? 150.0
               : isElite
-              ? 44.0
-              : 36.0,
+              ? 66.0
+              : 54.0,
           y = boss
-              ? -100.0
+              ? -170.0
               : lowProfile
-              ? size.y / 2 - (isElite ? 76 : definition!.renderHeight) / 2 - 14
-              : -48.0;
+              ? size.y / 2 -
+                    (isElite ? 76 : definition!.renderHeight) * .75 -
+                    14
+              : -88.0;
       canvas.drawRRect(
         ui.RRect.fromRectAndRadius(
           ui.Rect.fromLTWH(size.x / 2 - width / 2, y, width, 6),
@@ -5804,7 +5823,7 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
           ),
           const ui.Radius.circular(2),
         ),
-        ui.Paint()..color = isElite ? tierColor : const ui.Color(0xffe87753),
+        ui.Paint()..color = isElite ? tierColor : const ui.Color(0xffad2420),
       );
       if (isElite) {
         final at = ui.Offset(size.x / 2 - width / 2 - 8, y + 3);
@@ -6055,7 +6074,7 @@ class BattleText extends GameComponent {
       ? label.startsWith('+')
             ? 13
             : 18
-      : math.min(critical ? 27 : 21, 232 / displayLabel.length);
+      : math.min(critical ? 32 : 26, 232 / displayLabel.length);
   double get punchScale {
     if (isReward || reducedMotion) return 1;
     final age = (.9 - remaining).clamp(0.0, .9);

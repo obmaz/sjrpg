@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'combat_distance.dart';
 import 'game_ui.dart';
 import 'rpg_model.dart';
 import 'skill_preview_model.dart';
@@ -67,6 +68,11 @@ class SkillRankPreview extends StatelessWidget {
                   if (canUpgrade) cell(row.format(row.next), highlight: true),
                 ],
               ),
+            ),
+          if (rows.any((row) => row.suffix.startsWith('걸음')))
+            const Text(
+              CombatDistance.help,
+              style: TextStyle(color: Color(0xffa4bcb6), fontSize: 12),
             ),
           if (rows.any((row) => row.label.contains('피해')))
             const Padding(

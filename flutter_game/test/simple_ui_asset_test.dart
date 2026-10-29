@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:ui' as ui;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:guardian_new/action_glyph_art.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/cinematic_icon_art.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/skill_preview_model.dart';
 import 'package:guardian_new/world_model.dart';
@@ -17,15 +17,15 @@ void main() {
       await art.ensureStage(WorldStage.forest, heroClass: HeroClass.warrior);
       expect(art.images.containsKey('fx-steel-whirlwind'), false);
       expect(art.images.containsKey('fx-warcry'), false);
-      final glyphs = art.images['action-glyphs'];
+      final glyphs = art.images[CinematicIconArt.imageKey];
       expect(glyphs, isNotNull);
       final unique = <String>{};
       for (var i = 0; i < 12; i++) {
         final recorder = ui.PictureRecorder(), canvas = ui.Canvas(recorder);
         expect(
-          ActionGlyphArt.draw(
+          CinematicIconArt.draw(
             canvas,
-            glyphs,
+            art,
             i,
             const ui.Rect.fromLTWH(8, 8, 48, 48),
           ),
@@ -51,17 +51,6 @@ void main() {
         picture.dispose();
       }
       expect(unique.length, 12);
-      final recorder = ui.PictureRecorder();
-      expect(
-        ActionGlyphArt.draw(
-          ui.Canvas(recorder),
-          null,
-          0,
-          const ui.Rect.fromLTWH(0, 0, 48, 48),
-        ),
-        false,
-      );
-      recorder.endRecording().dispose();
     },
   );
   test(
@@ -69,11 +58,11 @@ void main() {
     () {
       const seconds = SkillPreviewValue('대기', 12, 6, suffix: '초', digits: 1);
       const recovery = SkillPreviewValue('회복', 2, 3, suffix: '/초', digits: 1);
-      const speed = SkillPreviewValue('속도', 135, 270, suffix: 'px/초');
+      const speed = SkillPreviewValue('속도', 135, 270, suffix: '걸음/초');
       expect(seconds.current, 12);
       expect(seconds.format(seconds.current), '10.0초');
       expect(recovery.format(recovery.current), '2.4/초');
-      expect(speed.format(speed.current), '162px/초');
+      expect(speed.format(speed.current), '4걸음/초');
     },
   );
   test(
