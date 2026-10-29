@@ -111,7 +111,7 @@ void main() {
             await tester.pumpAndSettle();
             final chosen = p.basicSkill;
             expect(
-              find.bySemanticsLabel('${chosen.name} 기본 공격으로 사용'),
+              find.bySemanticsLabel('${chosen.name} · 주 슬롯 해제'),
               findsOneWidget,
             );
             expect(chosen.id, 'iceBolt');

@@ -130,8 +130,8 @@ void main() {
         await tester.pump();
         final dark = await capture('five-statuses');
         final statusBounds = tester.getRect(find.byType(AfflictionIcons));
-        expect(statusBounds.width, lessThanOrEqualTo(80));
-        expect(statusBounds.height, 16);
+        expect(statusBounds.width, lessThanOrEqualTo(210));
+        expect(statusBounds.height, 28);
         expect(
           statusBounds.overlaps(tester.getRect(find.byType(PotionBelt))),
           false,

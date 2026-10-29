@@ -74,6 +74,9 @@ class BarbarianUtilities {
   int get corpseCount => _corpses.where((c) => c.available).length;
   int get wardCount => _wards.length;
   int get enemyStateCount => _enemies.length;
+  double get shoutTime => math.max(0, _shoutUntil - _time);
+  double get ordersTime => math.max(0, _ordersUntil - _time);
+  double get commandTime => math.max(0, _commandUntil - _time);
   double get armorMultiplier => _shoutUntil > _time ? _shoutArmor : 1;
   double get lifeMultiplier => _ordersUntil > _time ? _ordersPower : 1;
   double get resourceMultiplier => lifeMultiplier;

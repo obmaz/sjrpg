@@ -937,6 +937,37 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 (148.0, hasMobility ? 174.0 : 166.0, 52.0),
                 (hasMobility ? 84.0 : 160.0, hasMobility ? 252.0 : 112.0, 48.0),
               ];
+        final primary = p.primarySkill;
+        final primaryContinuing =
+            primary?.id == 'shadowAssault' &&
+            adventure.hero.shadowAssaultActive;
+        const aimedSkillIds = {
+          'inferno',
+          'firebolt',
+          'iceBolt',
+          'chargedBolt',
+          'iceBlast',
+          'glacialSpike',
+          'lightning',
+          'chainLightning',
+          'fireball',
+          'firewall',
+          'blizzard',
+          'frozenOrb',
+          'hydra',
+          'telekinesis',
+          'meteor',
+          'seismicSlam',
+          'charge',
+          'crushingBlow',
+          'leap',
+          'leapAttack',
+          'doubleThrow',
+        };
+        final primaryAimed =
+            primary != null &&
+            !primary.basic &&
+            aimedSkillIds.contains(primary.id);
         Widget skillButton(int slot) {
           final skill = p.skillAt(slot)!, layout = layouts[slot];
           final continuing =
@@ -944,29 +975,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
           final remaining = continuing
               ? 0.0
               : adventure.hero.cooldowns[skill.id] ?? 0;
-          final aimed = const {
-            'inferno',
-            'firebolt',
-            'iceBolt',
-            'chargedBolt',
-            'iceBlast',
-            'glacialSpike',
-            'lightning',
-            'chainLightning',
-            'fireball',
-            'firewall',
-            'blizzard',
-            'frozenOrb',
-            'hydra',
-            'telekinesis',
-            'meteor',
-            'seismicSlam',
-            'charge',
-            'crushingBlow',
-            'leap',
-            'leapAttack',
-            'doubleThrow',
-          }.contains(skill.id);
+          final aimed = aimedSkillIds.contains(skill.id);
           return Positioned(
             right: layout.$1,
             bottom: bottom + layout.$2,
@@ -1083,12 +1092,21 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                                   size: attack * .75,
                                   ammo: p.mountProgress.motorAmmo,
                                 )
-                              : p.heroClass == HeroClass.mage ||
+                              : primary == null
+                              ? const Center(
+                                  child: Icon(
+                                    Icons.add,
+                                    color: cream,
+                                    size: 30,
+                                  ),
+                                )
+                              : !primary.basic ||
+                                    p.heroClass == HeroClass.mage ||
                                     p.selectedBasic != p.defaultBasicId
                               ? CustomPaint(
                                   painter: EffectIconPainter(
                                     widget.art,
-                                    skillEffect(p.selectedBasic),
+                                    skillEffect(primary.id),
                                     framed: false,
                                   ),
                                 )
@@ -1122,16 +1140,22 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                     ),
                   ),
                   insufficientResource:
-                      p.heroClass == HeroClass.mage &&
+                      primary != null &&
+                      !primaryContinuing &&
                       mount?.def.artKey != 'motor' &&
-                      p.energy < p.skillCost(p.basicSkill),
+                      p.energy <
+                          (p.isSorceressSpell(primary)
+                              ? p.sorceressSpell(primary).minimumStartMana
+                              : p.skillCost(primary)),
                   label: '공격',
                   showLabel: false,
                   semanticLabel: '공격',
                   semanticHint: mount?.def.artKey == 'motor'
                       ? '기관포 · 탄약 ${p.mountProgress.motorAmmo}발 · V'
                       : mount == null || mount.def.artKey == 'horse'
-                      ? '기본 공격 · ${p.basicSkill.name} · ${p.rank(p.selectedBasic)}등급'
+                      ? primary == null
+                            ? '주 슬롯 비어 있음 · 기술 장착'
+                            : '주 슬롯 · ${primary.name} · ${p.rank(primary.id)}등급'
                       : '내려서 기본 공격',
                   enabled:
                       mount?.def.artKey != 'motor' ||
@@ -1145,28 +1169,57 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   size: attack,
                   remaining: mount?.def.artKey == 'motor'
                       ? adventure.mountSkillClock
-                      : adventure.hero.attackClock,
+                      : primary == null || primaryContinuing
+                      ? 0
+                      : primary.basic
+                      ? adventure.hero.attackClock
+                      : primary.mobility
+                      ? adventure.hero.mobilityClock
+                      : adventure.hero.cooldowns[primary.id] ?? 0,
                   total: mount?.def.artKey == 'motor'
                       ? adventure.mountSkillTotal
+                      : primary != null && !primary.basic
+                      ? primary.mobility
+                            ? p.mobilityCooldown
+                            : p.skillCooldown(primary)
                       : p.actualBasicInterval(
                           frenzyTempo: adventure.hero.frenzyTime > 0
                               ? p.frenzyAttackTempo
                               : 1,
                           attackTempo: adventure.afflictions.attackTempo,
                         ),
-                  onHold: mount?.def.artKey == 'motor'
+                  onHold:
+                      mount?.def.artKey == 'motor' ||
+                          primary == null ||
+                          !primary.basic
                       ? null
                       : (held) => adventure.holdAttack('touch', held),
                   onTap: mount?.def.artKey == 'motor'
                       ? () => adventure.useMountSkill()
+                      : primary == null
+                      ? () => open('skills')
                       : adventure.hero.slash,
+                  onAimStart: primaryAimed
+                      ? () => adventure.hero.beginAim(Progress.primarySlot)
+                      : null,
+                  onAimMove: primaryAimed
+                      ? (delta) => adventure.hero.moveAim(
+                          delta,
+                          ownerSlot: Progress.primarySlot,
+                        )
+                      : null,
+                  onAimEnd: primaryAimed
+                      ? (cancelled) => adventure.hero.finishAim(
+                          cancelled,
+                          ownerSlot: Progress.primarySlot,
+                        )
+                      : null,
                 ),
               ),
               for (var slot = 0; slot < 4; slot++)
                 if (mount == null &&
                     p.skillAt(slot) != null &&
-                    !(p.heroClass == HeroClass.mage &&
-                        p.skillAt(slot)!.id == p.selectedBasic))
+                    !(p.skillAt(slot)!.id == primary?.id))
                   skillButton(slot),
               if (mount?.def.artKey != 'motor')
                 Positioned(

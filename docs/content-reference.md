@@ -110,3 +110,5 @@ Flutter 상점 재고는 `Progress.shopGear`가 정의하며 UI와 실제 구매
 Flutter 대장간의 투명 그림 `flutter_game/art/blacksmith-forge.webp`는 숲 마을의 청록 천막·목재·석조 화로·금속 모루 스타일로 생성한 원본 `exec-592b7727-a1c6-4ad0-904d-4b9a01cb2a44.png`를 512×458 WebP로 준비합니다. 배경을 합성한 타일이 아닌 고체 작업장 물체로 사용하며 열린 바닥과 실제 기구의 충돌 범위를 분리합니다.
 
 `flutter_game/art/fx-level-up.webp`는 금빛 지면 고리와 중앙이 열린 상승 빛의 생성형 16프레임 시트입니다. 원본·해시는 `docs/art/level-up-provenance.json`과 `level-up-original.png`에 보존합니다. `prepare-combat-illustrations.py --preset level-up`이 셀을 분리하고 투명 여백을 넣어 1024² WebP로 준비합니다. 런타임은 프레임을 보간하고 주인공 뒤에 그려 본체를 가리지 않습니다.
+
+D1 기술·메뉴·상태 그림은 `docs/art/d1-icons-provenance.json`에 원본·런타임 해시를 보존합니다. 전사 30종·마법사 30종·공용 32종을 `tools/prepare-d1-icons.py`로 균일 셀과 투명 여백에 패킹하며 그림을 다시 그리거나 겹쳐 합성하지 않습니다. 사용 순서는 기존 직업 아이콘 ID와 공용 D1 인덱스를 따릅니다. 원형 초상과 게이지는 코드에서 동일 프레임에 연결하며 이미지의 가로세로 비율을 보존해 크롭합니다.

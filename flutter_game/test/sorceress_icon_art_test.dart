@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/barbarian_icon_art.dart';
+import 'package:guardian_new/d1_icon_art.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_ui.dart';
 import 'package:guardian_new/rpg_widgets.dart';
@@ -180,15 +181,15 @@ void main() {
     () async {
       final art = await GameArt.loadMenu();
       addTearDown(art.dispose);
-      expect(art.images.containsKey(SorceressIconArt.imageKey), false);
+      expect(art.images.containsKey(D1IconArt.mageKey), false);
       await art.ensureStage(WorldStage.forest, heroClass: HeroClass.warrior);
-      expect(art.images.containsKey(SorceressIconArt.imageKey), false);
-      expect(art.images.containsKey(BarbarianIconArt.imageKey), true);
+      expect(art.images.containsKey(D1IconArt.mageKey), false);
+      expect(art.images.containsKey(D1IconArt.warriorKey), true);
       await art.ensureStage(WorldStage.forest, heroClass: HeroClass.mage);
-      final atlas = art.images[SorceressIconArt.imageKey];
+      final atlas = art.images[D1IconArt.mageKey];
       expect(atlas, isNotNull);
       await art.ensureStage(WorldStage.sands, heroClass: HeroClass.mage);
-      expect(identical(atlas, art.images[SorceressIconArt.imageKey]), true);
+      expect(identical(atlas, art.images[D1IconArt.mageKey]), true);
     },
   );
 }
