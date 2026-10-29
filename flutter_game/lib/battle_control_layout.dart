@@ -31,25 +31,22 @@ class BattleControlLayout {
     required double skillSize,
     required double gap,
   }) {
-    final radius = math.max(
-      (attackSize + skillSize) / 2 + gap,
-      (attackSize + skillSize) / math.sqrt2 + 5,
-    );
+    // Place square touch areas against the primary's left and upper edges.
+    // This keeps the illustrated circles close without overlapping hit boxes.
+    final spacing = math.min(gap, 5.0);
     return [
-      for (final angle in [
-        math.pi,
-        3 * math.pi / 4,
-        math.pi / 2,
-        55 * math.pi / 180,
-      ])
-        (
-          attackRight +
-              attackSize / 2 -
-              math.cos(angle) * radius -
-              skillSize / 2,
-          attackSize / 2 + math.sin(angle) * radius - skillSize / 2,
-          skillSize,
-        ),
+      (
+        attackRight + attackSize + spacing,
+        (attackSize - skillSize) / 2,
+        skillSize,
+      ),
+      (attackRight + attackSize + spacing, attackSize + spacing, skillSize),
+      (
+        attackRight + (attackSize - skillSize) / 2,
+        attackSize + spacing,
+        skillSize,
+      ),
+      (attackRight - skillSize - spacing, attackSize + spacing, skillSize),
     ];
   }
 
@@ -57,11 +54,6 @@ class BattleControlLayout {
     attackRight: attackRight,
     attackSize: attackSize,
     skillSize: smallSize,
-    gap: math.max(
-      14 * scale,
-      smallSize / math.cos(55 * math.pi / 180) -
-          (attackSize + smallSize) / 2 +
-          3,
-    ),
+    gap: 5 * scale,
   );
 }

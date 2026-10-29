@@ -53,7 +53,7 @@ class GameHud extends StatelessWidget {
     final landscape = width > media.size.height && width >= 500;
     final short = media.size.height < 520 || landscape;
     final portraitSide = battlePortraitDiameter(media.size);
-    final meterLeft = landscape ? portraitSide + 16 : 70.0;
+    final meterLeft = landscape ? portraitSide * .75 + 10 : 58.0;
     final mapSide = battleMapDiameter(media.size);
     final statusWidth = math.min(
       landscape ? 360 * (media.size.height / 720).clamp(.65, 1.0) : 306.0,

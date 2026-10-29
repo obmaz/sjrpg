@@ -1693,36 +1693,30 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 ),
               ),
               Positioned(
-                left: 0,
-                right: 0,
-                bottom: math.max(8, media.padding.bottom),
+                left: landscape ? null : 0,
+                right: landscape ? battleMapDiameter(media.size) + 16 : 0,
+                top: landscape ? media.padding.top + 6 : null,
+                bottom: landscape ? null : math.max(8, media.padding.bottom),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _menu(
-                      'touchInventory',
-                      '가방',
-                      'bag',
-                      compact: landscape && width >= 500,
-                    ),
-                    _menu(
-                      'touchQuests',
-                      '스킬',
-                      'skills',
-                      compact: landscape && width >= 500,
-                    ),
+                    if (!landscape) _menu('touchInventory', '가방', 'bag'),
+                    _menu('touchQuests', '스킬', 'skills', compact: landscape),
                     _menu(
                       'touchCompendium',
                       '여정',
                       'journal',
-                      compact: landscape && width >= 500,
+                      compact: landscape,
                     ),
                     _menu(
                       'touchSettings',
                       '설정',
                       'settings',
-                      compact: landscape && width >= 500,
+                      compact: landscape,
                     ),
+                    if (landscape)
+                      _menu('touchInventory', '가방', 'bag', compact: true),
                   ],
                 ),
               ),

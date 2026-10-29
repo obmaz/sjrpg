@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:bonfire/bonfire.dart';
@@ -168,7 +167,8 @@ void main() {
           final bag = menu('가방'), settings = menu('설정');
           expect(bag.size, const Size(52, 44));
           expect(settings.size, const Size(52, 44));
-          expect(bag.top, greaterThan(size.height - 60));
+          expect(bag.top, lessThan(20));
+          expect(settings.left, lessThan(bag.left));
           expect(settings.top, bag.top);
           expect(menu('스킬').top, bag.top);
           expect(menu('여정').top, bag.top);
@@ -200,10 +200,10 @@ void main() {
           expect(slots[2].center.dy, lessThan(main.center.dy));
           expect(slots[3].center.dx, greaterThan(main.center.dx));
           expect(slots[3].center.dy, lessThan(main.center.dy));
-          final radii = slots
-              .map((rect) => (rect.center - main.center).distance)
-              .toList();
-          expect(radii.reduce(math.max) - radii.reduce(math.min), lessThan(1));
+          expect(
+            (slots[0].center - main.center).distance,
+            lessThan((main.width + slots[0].width) / 2 + 8),
+          );
         }
         final viewport = Offset.zero & size;
         final stick = tester.getRect(find.byType(GameStick));

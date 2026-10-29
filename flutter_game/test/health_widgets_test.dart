@@ -136,7 +136,7 @@ void main() {
         );
         expect(find.text('Lv.${s.progress.level}  전사'), findsOneWidget);
         expect(identity.bottom, lessThanOrEqualTo(health.top));
-        expect(portrait.right, lessThanOrEqualTo(health.left));
+        expect(portrait.right - health.left, inInclusiveRange(0, 16));
         expect(resource.width, lessThanOrEqualTo(health.width));
         expect(health.height, lessThanOrEqualTo(18));
         expect(health.bottom, lessThanOrEqualTo(resource.top));
