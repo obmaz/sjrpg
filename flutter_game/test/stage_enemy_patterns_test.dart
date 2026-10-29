@@ -48,18 +48,21 @@ void main() {
           ),
     );
     s.hero.position.setValues(tree.body.right + 30, tree.body.center.dy - 11);
-    enemy.position.setValues(tree.body.left - 70, tree.body.center.dy - 11);
-    enemy.pounceRemaining = .5;
-    enemy.pounceBearing = 0;
-    final startX = enemy.position.x;
+    final terrainEnemy = s.spawnEnemy(
+      'scorpion',
+      Offset(tree.body.left - 70, tree.body.center.dy - 11),
+    )!;
+    terrainEnemy.pounceRemaining = .5;
+    terrainEnemy.pounceBearing = 0;
+    final startX = terrainEnemy.position.x;
     for (var i = 0; i < 12; i++) {
-      enemy.update(.05);
-      expect(s.world.blocked(enemy.body), false);
-      if (enemy.pounceRemaining == 0) break;
+      terrainEnemy.update(.05);
+      expect(s.world.blocked(terrainEnemy.body), false);
+      if (terrainEnemy.pounceRemaining == 0) break;
     }
-    expect(enemy.position.x, greaterThan(startX));
-    expect(enemy.pounceRemaining, 0);
-    expect(enemy.body.right, lessThanOrEqualTo(tree.body.left + 1));
+    expect(terrainEnemy.position.x, greaterThan(startX));
+    expect(terrainEnemy.pounceRemaining, 0);
+    expect(terrainEnemy.body.right, lessThanOrEqualTo(tree.body.left + 1));
     expect(s.progress.hp, hp);
   });
   test(
