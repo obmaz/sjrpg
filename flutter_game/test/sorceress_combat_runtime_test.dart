@@ -56,6 +56,21 @@ void main() {
       )!..life.initial(100000);
   List<SorceressEffect> effects(Adventure s) =>
       (s.game as TestGame).added.whereType<SorceressEffect>().toList();
+  test(
+    'one-point Frost Nova hits only three real enemies; trained Nova reaches more',
+    () {
+      for (final rank in [1, 20]) {
+        final s = field('frostNova', rank: rank);
+        final targets = [for (var i = 0; i < 5; i++) enemy(s, 60 + i * 18)];
+        s.hero.skill();
+        expect(
+          targets.where((m) => m.life.value < 100000).length,
+          rank == 1 ? 3 : 5,
+        );
+        expect(targets.where((m) => m.slow > 0).length, rank == 1 ? 3 : 5);
+      }
+    },
+  );
   void advance(Adventure s, double seconds) {
     while (seconds > 1e-8) {
       final dt = math.min(.02, seconds);
@@ -139,7 +154,7 @@ void main() {
     expect(m.life.value, hp);
   });
   test(
-    'Static Field removes exactly one quarter independently from two enemies',
+    'Static Field uses its rank-scaled health fraction independently on two enemies',
     () {
       final s = field('staticField', rank: 20),
           one = enemy(s, 75),
@@ -275,18 +290,17 @@ void main() {
     advance(s, .6);
     expect(m.life.value, lessThan(100000));
   });
-  test(
-    'frozen orb emits exactly thirty rotating and sixteen terminal shards',
-    () {
-      final s = field('frozenOrb');
+  test('Frozen Orb grows from eighteen to forty-six actual shards', () {
+    for (final rank in [1, 20]) {
+      final s = field('frozenOrb', rank: rank);
       s.hero.skill();
       advance(s, 1.5);
       final missiles = effects(s).whereType<SorceressProjectile>().toList();
       expect(missiles.where((p) => p.orb).length, 1);
-      expect(missiles.where((p) => p.simple).length, 46);
+      expect(missiles.where((p) => p.simple).length, rank == 1 ? 18 : 46);
       expect(missiles.first.finished, true);
-    },
-  );
+    }
+  });
   test(
     'Frozen Orb bursts once against terrain before its normal range ends',
     () {
@@ -306,13 +320,13 @@ void main() {
       final shards = effects(
         s,
       ).whereType<SorceressProjectile>().where((p) => p.simple);
-      expect(shards.length, 16);
+      expect(shards.length, spec.orbBurstCount);
       orb.update(.05);
       expect(
         effects(
           s,
         ).whereType<SorceressProjectile>().where((p) => p.simple).length,
-        16,
+        spec.orbBurstCount,
       );
     },
   );
@@ -360,7 +374,7 @@ void main() {
         s,
       ).whereType<SorceressProjectile>().where((p) => p.simple).toList();
       // Moving shards emitted before contact are separate from the final nova.
-      expect(shards.length, orb.orbShards + 16);
+      expect(shards.length, orb.orbShards + spec.orbBurstCount);
       final count = shards.length;
       orb.update(.05);
       expect(

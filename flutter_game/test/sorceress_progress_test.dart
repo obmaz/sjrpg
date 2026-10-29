@@ -205,7 +205,7 @@ void main() {
       expect(p.swordDamage, greaterThan(normal));
       expect(p.skillDamage(bolt), before);
       train(p, 'fireMastery');
-      expect(p.skillDamage(bolt), closeTo(before * 1.3, 1e-9));
+      expect(p.skillDamage(bolt), closeTo(before * 1.12, 1e-9));
       expect(p.sorceressSpell(bolt).damageType, SorceressDamageType.fire);
       expect(p.skillCooldown(bolt), 0);
       expect(p.actualBasicInterval(), p.skillMotionTime(bolt));

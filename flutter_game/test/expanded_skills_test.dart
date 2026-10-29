@@ -135,8 +135,8 @@ void main() {
     expect(p.rank('meteor'), 1);
   });
   for (final (mastery, spell, multiplier) in [
-    ('fireMastery', 'firebolt', 1.3),
-    ('lightningMastery', 'chargedBolt', 1.5),
+    ('fireMastery', 'firebolt', 1.12),
+    ('lightningMastery', 'chargedBolt', 1.2),
   ]) {
     test(
       '$mastery increases only its own element and keeps original target geometry',
@@ -173,7 +173,7 @@ void main() {
       final ice = p.skills.firstWhere((s) => s.id == 'iceBolt');
       final damage = p.skillDamage(ice), targets = p.skillTargetLimit(ice);
       trainSkill(p, 'coldMastery');
-      expect(p.sorceressColdPierce, .20);
+      expect(p.sorceressColdPierce, closeTo(.08, 1e-9));
       expect(p.skillDamage(ice), damage);
       expect(p.skillTargetLimit(ice), targets);
       trainSkill(p, 'coldMastery', 20);

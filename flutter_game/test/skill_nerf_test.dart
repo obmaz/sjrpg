@@ -67,7 +67,7 @@ void main() {
   );
 
   test(
-    'Sorceress ranks grow source damage and counts, not invented cast haste or target perks',
+    'Sorceress ranks grow damage and target budgets while cast pacing stays fixed',
     () {
       final p = sorceress();
       for (final def in mageSkills.where((d) => !d.passive)) {
@@ -76,7 +76,7 @@ void main() {
           expect(p.skillCooldown(def, atRank: rank), def.cooldown);
           final expected = switch (def.id) {
             'chargedBolt' => rank + 2,
-            'chainLightning' => (rank + 25) ~/ 5,
+            'chainLightning' => ((rank + 25) ~/ 5).clamp(0, rank + 2),
             'firebolt' ||
             'iceBolt' ||
             'iceBlast' ||
@@ -88,7 +88,7 @@ void main() {
             'energyShield' ||
             'enchant' ||
             'blink' => 0,
-            _ => CombatBalance.maxActiveEnemies,
+            _ => rank + 2,
           };
           expect(
             p.skillTargetLimit(def, atRank: rank),
@@ -198,7 +198,7 @@ void main() {
   );
 
   test(
-    'source area caps still divide multi-target damage without legacy target perks',
+    'rank-scaled area caps still divide multi-target damage without legacy target perks',
     () {
       final p = sorceress();
       for (final id in [
@@ -209,7 +209,7 @@ void main() {
         'frostNova',
       ]) {
         final def = p.skills.firstWhere((s) => s.id == id);
-        expect(p.skillTargetLimit(def), CombatBalance.maxActiveEnemies);
+        expect(p.skillTargetLimit(def), 22);
         final damage = p.skillDamage(def);
         expect(damage, greaterThan(0));
         expect(

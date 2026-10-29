@@ -55,6 +55,11 @@ class SorceressSpellStats {
   final double currentHpFraction, staticBossFloor, boltSpeed;
   final bool pierces;
 
+  int get orbBurstCount =>
+      id == 'frozenOrb' ? (projectileCount * 16 / 46).round() : 0;
+  int get orbTrailCount =>
+      id == 'frozenOrb' ? projectileCount - orbBurstCount : 0;
+
   double get meanDamage => (minDamage + maxDamage) / 2;
   double get armorBonusPercent => (armorMultiplier - 1) * 100;
   double get shieldAbsorb => damageAbsorb;
@@ -454,7 +459,8 @@ const _rules = <String, _SorceressRule>{
 };
 
 /// Original Skills.txt / Missiles.txt numbers use 25 simulation frames/second.
-/// Only geometry is converted: one source sub-tile is 24 world pixels here.
+/// Source curves use one sub-tile per 24 world pixels. Mobile rank scaling
+/// weakens one-point skills and reaches the source potency at rank twenty.
 abstract final class SorceressRules {
   static const framesPerSecond = 25.0;
   static const worldSubtile = 24.0;
@@ -476,13 +482,22 @@ abstract final class SorceressRules {
       (minimum + (maximum - minimum) * (110 * rank ~/ (rank + 6)) / 100)
           .floorToDouble();
 
+  // A learned skill starts useful without granting its fully trained utility.
+  static double _rankProgress(int rank) => (rank.clamp(1, 20) - 1) / 19;
+  static double _damagePotency(int rank) =>
+      rank <= 0 ? 0 : .6 + .4 * _rankProgress(rank);
+  static double _utilityPotency(int rank) =>
+      rank <= 0 ? 0 : .4 + .6 * _rankProgress(rank);
+  static double _reachPotency(int rank) => .75 + .25 * _rankProgress(rank);
+
   static double fireMastery(int rank) =>
-      rank <= 0 ? 1 : 1 + (.30 + (rank - 1) * .07);
+      rank <= 0 ? 1 : 1 + (.30 + (rank - 1) * .07) * _utilityPotency(rank);
   static double lightningMastery(int rank) =>
-      rank <= 0 ? 1 : 1 + (.50 + (rank - 1) * .12);
-  static double coldPierce(int rank) => rank <= 0 ? 0 : .20 + (rank - 1) * .05;
+      rank <= 0 ? 1 : 1 + (.50 + (rank - 1) * .12) * _utilityPotency(rank);
+  static double coldPierce(int rank) =>
+      rank <= 0 ? 0 : (.20 + (rank - 1) * .05) * _utilityPotency(rank);
   static double warmthMultiplier(int rank) =>
-      rank <= 0 ? 1 : 1 + (.30 + (rank - 1) * .12);
+      rank <= 0 ? 1 : 1 + (.30 + (rank - 1) * .12) * _utilityPotency(rank);
 
   static SorceressSpellStats evaluate(
     String id, {
@@ -544,7 +559,11 @@ abstract final class SorceressRules {
           (sum, entry) => sum + hard(entry.key) * entry.value,
         );
     final scale =
-        damageScale * mastery * synergy * math.pow(2, rule.hitShift - 8);
+        damageScale *
+        _damagePotency(r) *
+        mastery *
+        synergy *
+        math.pow(2, rule.hitShift - 8);
     var minDamage = _curve(rule.min, rule.minSteps, r) * scale;
     var maxDamage = _curve(rule.max, rule.maxSteps, r) * scale;
     var minDps = 0.0, maxDps = 0.0;
@@ -556,7 +575,12 @@ abstract final class SorceressRules {
     }
     if (id == 'meteor') {
       final burnScale =
-          damageScale * mastery * (1 + hard('inferno') * .03) * 75 / 32;
+          damageScale *
+          _damagePotency(r) *
+          mastery *
+          (1 + hard('inferno') * .03) *
+          75 /
+          32;
       minDps = _curve(15, const [4, 5, 6, 6, 6], r) * burnScale;
       maxDps = _curve(25, const [4, 5, 6, 6, 6], r) * burnScale;
     }
@@ -630,10 +654,13 @@ abstract final class SorceressRules {
     final bolts = switch (id) {
       'chargedBolt' => math.min(24, 3 + n),
       'hydra' => 3,
-      'frozenOrb' => 46,
+      'frozenOrb' => 18 + (28 * _rankProgress(r)).round(),
       _ => 1,
     };
-    final bounces = id == 'chainLightning' ? (26 + n) ~/ 5 : 0;
+    final areaTargets = 3 + n;
+    final bounces = id == 'chainLightning'
+        ? math.min((26 + n) ~/ 5, areaTargets)
+        : 0;
     final targets = switch (id) {
       'firebolt' ||
       'iceBolt' ||
@@ -652,7 +679,7 @@ abstract final class SorceressRules {
       'fireMastery' ||
       'lightningMastery' ||
       'coldMastery' => 0,
-      _ => 30,
+      _ => areaTargets,
     };
     return SorceressSpellStats(
       id: id,
@@ -671,14 +698,16 @@ abstract final class SorceressRules {
       minDamagePerSecond: minDps,
       maxDamagePerSecond: maxDps,
       damagePerSecond: (minDps + maxDps) / 2,
-      range: switch (id) {
-        'inferno' => (20 + n * 3) / 4 * worldSubtile,
-        'frozenOrb' => 300.0,
-        'blink' => 600.0,
-        'telekinesis' => 25 * worldSubtile,
-        _ => 600.0,
-      },
-      radius: radius,
+      range:
+          (switch (id) {
+            'inferno' => (20 + n * 3) / 4 * worldSubtile,
+            'frozenOrb' => 300.0,
+            'blink' => 600.0,
+            'telekinesis' => 25 * worldSubtile,
+            _ => 600.0,
+          }) *
+          _reachPotency(r),
+      radius: radius * _reachPotency(r),
       projectileCount: bolts,
       maxTargets: targets,
       duration: duration,
@@ -695,21 +724,24 @@ abstract final class SorceressRules {
         'thunderStorm' => (125 - _diminishing(r, 0, 100)) / 25,
         _ => .2,
       },
-      slowFraction: chill > 0 || freeze > 0 ? .5 : 0,
-      chillDuration: chill,
-      freezeDuration: freeze,
+      slowFraction: chill > 0 || freeze > 0 ? .55 : 0,
+      chillDuration: chill * _utilityPotency(r),
+      freezeDuration: freeze * _utilityPotency(r),
       armorMultiplier: switch (id) {
-        'frozenArmor' => 1 + (.30 + n * .05),
-        'shiverArmor' => 1 + (.45 + n * .06),
-        'chillingArmor' => 1 + (.45 + n * .05),
+        'frozenArmor' => 1 + (.30 + n * .05) * _utilityPotency(r),
+        'shiverArmor' => 1 + (.45 + n * .06) * _utilityPotency(r),
+        'chillingArmor' => 1 + (.45 + n * .05) * _utilityPotency(r),
         _ => 1.0,
       },
       damageAbsorb: id == 'energyShield'
-          ? (_curve(20, const [5, 2, 1, 1, 1], r) / 100).clamp(0.0, .95)
+          ? (_curve(20, const [5, 2, 1, 1, 1], r) / 100 * _utilityPotency(r))
+                .clamp(0.0, .95)
           : 0,
       shieldManaPerDamage: (32 - hard('telekinesis')) / 16,
-      attackRatingBonus: id == 'enchant' ? 20.0 + n * 9 : 0,
-      currentHpFraction: id == 'staticField' ? .25 : 0,
+      attackRatingBonus: id == 'enchant'
+          ? (20.0 + n * 9) * _utilityPotency(r)
+          : 0,
+      currentHpFraction: id == 'staticField' ? .25 * _utilityPotency(r) : 0,
       lightningBounces: bounces,
       boltSpeed: switch (id) {
         'chargedBolt' || 'iceBolt' => 12 * 25,

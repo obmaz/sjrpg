@@ -105,7 +105,7 @@ void main() {
   test('Frozen Armor freezes a melee attacker without dealing any damage', () {
     final stats = cast('frozenArmor');
     final m = enemy();
-    expect(stats.freezeDuration, 30 / 25);
+    expect(stats.freezeDuration, .48);
     final before = m.life.value;
     defense().onHit(m, melee: true);
     expect(m.life.value, before);
@@ -200,11 +200,11 @@ void main() {
       final hp = s.progress.hp;
       // ES requires Teleport and therefore one real Telekinesis point: 31/16.
       expect(s.progress.rank('telekinesis'), 1);
-      expect(es.shieldAbsorb, .20);
-      final remainingRaw = 20 * (1 - .20);
+      expect(es.shieldAbsorb, closeTo(.08, 1e-9));
+      final remainingRaw = 20 * (1 - .08);
       final expectedHpLoss = s.progress.mitigate(remainingRaw);
       s.hurtHero(20, origin: m.body.center);
-      expect(s.progress.energy, closeTo(50 - 20 * .20 * 31 / 16, 1e-9));
+      expect(s.progress.energy, closeTo(50 - 20 * .08 * 31 / 16, 1e-9));
       expect(s.progress.hp, closeTo(hp - expectedHpLoss, 1e-9));
       expect(m.stun, greaterThan(0));
     },
