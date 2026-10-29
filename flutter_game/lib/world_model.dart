@@ -1482,6 +1482,9 @@ class AdventureWorld {
   late final settlementCollision = authoredSettlement.collisionPolygons
       .map(RegionShape.new)
       .toList();
+  late final Rect settlementCollisionBounds = settlementCollision
+      .map((shape) => shape.bounds)
+      .reduce((a, b) => a.expandToInclude(b));
   Rect get settlement => _authoring
       ? Rect.fromCenter(center: spawn, width: 900, height: 900)
       : authoredSettlement.bounds;
@@ -1708,6 +1711,7 @@ class AdventureWorld {
     if (avoidSanctuary && sanctuary.protects(body)) return true;
     if (_closedChestOverlaps(body)) return true;
     if (!_authoring &&
+        settlementCollisionBounds.overlaps(body) &&
         settlementCollision.any((shape) => shape.overlaps(body))) {
       return true;
     }

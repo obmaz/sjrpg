@@ -230,14 +230,26 @@ class BarbarianUtilities {
         // An unsuccessful search still consumes this corpse once, as in the
         // source mechanic; retrying cannot reroll a body indefinitely.
         final chance = p.barbarianFindChance(id, atRank: rank);
-        if (session.random.nextDouble() < chance) {
+        final found = session.random.nextDouble() < chance;
+        if (found) {
           if (id == 'findPotion') {
             if (session.random.nextBool()) {
               session.progress.healingPotions++;
+              session.bubble(
+                '탐색 성공 · 생명 물약 +1',
+                at,
+                const ui.Color(0xff9fd8b0),
+              );
             } else {
               session.progress.energyPotions++;
+              session.bubble(
+                '탐색 성공 · 자원 물약 +1',
+                at,
+                const ui.Color(0xff99c9ed),
+              );
             }
           } else {
+            session.bubble('탐색 성공 · 장비 발견', at, const ui.Color(0xffe7c77d));
             session.dropGear(
               session.progress.rollLoot(
                 session.random,
@@ -247,6 +259,8 @@ class BarbarianUtilities {
               at,
             );
           }
+        } else {
+          session.bubble('탐색 실패 · 발견한 것 없음', at, const ui.Color(0xffc5bda9));
         }
       }
     } else if (id == 'shout') {

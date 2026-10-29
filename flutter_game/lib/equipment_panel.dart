@@ -582,16 +582,8 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (final ability in gear.gifts)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                '${ability.title} · ${ability.description}',
-                style: const TextStyle(color: gold, fontSize: 12, height: 1.35),
-              ),
-            ),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Semantics(
@@ -609,8 +601,10 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 3),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
+                              key: ValueKey('gear-icon-${gear.serial}'),
                               width: 48,
                               height: 58,
                               decoration: BoxDecoration(
@@ -663,6 +657,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                                 children: [
                                   Text(
                                     gear.name,
+                                    key: ValueKey('gear-title-${gear.serial}'),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
@@ -683,6 +678,23 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                                     ),
                                   ),
                                   const SizedBox(height: 5),
+                                  if (gear.base.slot != GearSlot.weapon &&
+                                      gear.attack > 0)
+                                    _quickStat(
+                                      '장비 공격',
+                                      gear.attack,
+                                      current?.attack,
+                                      active,
+                                    ),
+                                  if (gear.base.slot == GearSlot.charm &&
+                                      gear.mana > 0 &&
+                                      gear.armor > 0)
+                                    _quickStat(
+                                      '방어',
+                                      gear.armor,
+                                      current?.armor,
+                                      active,
+                                    ),
                                   if (gear.base.slot == GearSlot.weapon) ...[
                                     _quickStat(
                                       '무기 공격',
@@ -792,6 +804,37 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
               ),
             ],
           ),
+          if (gear.base.slot == GearSlot.weapon) ...[
+            if (gear.armor > 0)
+              _quickStat('방어', gear.armor, current?.armor, active),
+            if (gear.health > 0)
+              _quickStat('생명', gear.health, current?.health, active),
+          ],
+          if (gear.base.slot != GearSlot.charm && gear.mana > 0)
+            _quickStat(p.heroClass.resource, gear.mana, current?.mana, active),
+          if (gear.base.haste > 0)
+            _quickStat(
+              '공격속도 %',
+              gear.base.haste * 100,
+              (current?.base.haste ?? 0) * 100,
+              active,
+            ),
+          if (gear.base.slot == GearSlot.weapon)
+            Padding(
+              padding: const EdgeInsets.only(top: 5),
+              child: Text(
+                '공격 주기 ${(attack?.interval ?? gear.base.tempo).toStringAsFixed(2)}초 · 사거리 ${gear.base.range.round()}',
+                style: const TextStyle(color: _muted, fontSize: 12),
+              ),
+            ),
+          for (final ability in gear.gifts)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                '${ability.title} · ${ability.description}',
+                style: const TextStyle(color: gold, fontSize: 12, height: 1.35),
+              ),
+            ),
           if (!owned && feedbackOffer == entry.id && message.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 8),
@@ -806,38 +849,6 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
               child: Divider(height: 1, color: Color(0xff36574c)),
             ),
             const SizedBox(height: 8),
-            Text(
-              gear.name,
-              style: TextStyle(
-                color: color,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            _stat(
-              gear.base.slot == GearSlot.weapon ? '무기 공격' : '장비 공격',
-              gear.attack,
-              current?.attack,
-              active,
-            ),
-            _stat('방어', gear.armor, current?.armor, active),
-            _stat('생명', gear.health, current?.health, active),
-            _stat(p.heroClass.resource, gear.mana, current?.mana, active),
-            if (gear.base.haste > 0 || (current?.base.haste ?? 0) > 0)
-              _stat(
-                '공격속도 %',
-                gear.base.haste * 100,
-                (current?.base.haste ?? 0) * 100,
-                active,
-              ),
-            if (gear.base.slot == GearSlot.weapon)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Text(
-                  '공격 주기 ${(attack?.interval ?? gear.base.tempo).toStringAsFixed(2)}초 · 사거리 ${gear.base.range.round()}',
-                  style: const TextStyle(color: _muted, fontSize: 13),
-                ),
-              ),
             if (attack != null)
               const Padding(
                 padding: EdgeInsets.only(bottom: 10),
@@ -998,50 +1009,6 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
               child: Text(
                 message,
                 style: const TextStyle(color: _mint, fontSize: 14),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _stat(
-    String label,
-    double value,
-    double? previous,
-    bool active, {
-    bool decimal = false,
-  }) {
-    if (value == 0 && (previous ?? 0) == 0) return const SizedBox.shrink();
-    final diff = value - (previous ?? 0), changed = !active && diff.abs() > .01;
-    String number(double n) => decimal ? n.toStringAsFixed(1) : '${n.round()}';
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(color: _muted, fontSize: 15),
-            ),
-          ),
-          Text(
-            number(value),
-            style: const TextStyle(
-              color: cream,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          if (changed)
-            Padding(
-              padding: const EdgeInsets.only(left: 12),
-              child: Text(
-                '${diff > 0 ? '↑ +' : '↓ '}${number(diff)}',
-                style: TextStyle(
-                  color: diff > 0 ? _mint : const Color(0xffffa493),
-                  fontSize: 14,
-                ),
               ),
             ),
         ],

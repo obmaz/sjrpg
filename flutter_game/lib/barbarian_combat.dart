@@ -109,13 +109,7 @@ class BarbarianCombat {
       final at = Vector2(point.dx, point.dy).toOffset();
       final body = at & hero.body.size;
       if (!session.world.blocksEnemy(body) &&
-          !session.mobs.any(
-            (enemy) =>
-                !enemy.isDead &&
-                !enemy.isRemoving &&
-                !enemy.encounterDormant &&
-                enemy.body.overlaps(body),
-          ) &&
+          session.townGates.permits(session.world.sanctuary, hero.body, body) &&
           session.world.clearEnemyLine(origin, at, hero.body.size)) {
         return at;
       }
@@ -312,17 +306,19 @@ class BarbarianCombat {
     final skill = progress.skills.firstWhere(
       (s) => s.id == (_leapAttack ? 'leapAttack' : 'leap'),
     );
-    final crowded = session.mobs.any(
-      (m) =>
-          !m.isDead &&
-          !m.isRemoving &&
-          !m.encounterDormant &&
-          m.body.overlaps(hero.body),
+    // Ground was validated before takeoff. Actors arriving later are displaced;
+    // they cannot rewind a completed jump to its launch point.
+    final destination = session.world.spawnNear(
+      _leapTo!,
+      hero.body.size,
+      avoidSanctuary: true,
+      occupied: (body) =>
+          !session.townGates.permits(session.world.sanctuary, hero.body, body),
     );
-    if (crowded || session.world.blocksEnemy(hero.body)) {
-      // The committed destination can become occupied during the jump.
-      hero.position.setValues(_leapFrom!.dx, _leapFrom!.dy);
+    if (destination != null) {
+      hero.position.setValues(destination.dx, destination.dy);
     }
+    _clearLanding();
     _leapTo = null;
     hero.lastClearPosition = hero.body.topLeft;
     if (_leapAttack) {
@@ -349,6 +345,64 @@ class BarbarianCombat {
       }
     }
     _visual(_kind(skill.id));
+  }
+
+  void _clearLanding() {
+    for (final enemy in session.mobs.where(
+      (m) =>
+          !m.isDead &&
+          !m.isRemoving &&
+          !m.encounterDormant &&
+          m.body.overlaps(hero.body),
+    )) {
+      final from = enemy.body.topLeft;
+      final direction = enemy.body.center - hero.body.center;
+      final bearing = direction.distanceSquared < .01
+          ? hero.bearing
+          : math.atan2(direction.dy, direction.dx);
+      bool available(ui.Offset at, {bool otherBodies = true}) {
+        final body = at & enemy.body.size;
+        return !body.overlaps(hero.body.inflate(3)) &&
+            !session.world.blocksEnemy(body) &&
+            session.world.clearEnemyLine(from, at, enemy.body.size) &&
+            (!otherBodies ||
+                !session.mobs.any(
+                  (m) =>
+                      m != enemy &&
+                      !m.isDead &&
+                      !m.isRemoving &&
+                      !m.encounterDormant &&
+                      m.body.overlaps(body),
+                ));
+      }
+
+      ui.Offset? landing;
+      for (var radius = 36.0; radius <= 768 && landing == null; radius += 24) {
+        for (var i = 0; i < 16; i++) {
+          final turn = (i + 1) ~/ 2;
+          final a = bearing + (i.isEven ? turn : -turn) * math.pi / 8;
+          final point = from + ui.Offset(math.cos(a), math.sin(a)) * radius;
+          final at = Vector2(point.dx, point.dy).toOffset();
+          if (available(at)) {
+            landing = at;
+            break;
+          }
+        }
+      }
+      // The vacated launch area is a final ground-safe escape in a narrow pack.
+      if (landing == null &&
+          _leapFrom != null &&
+          available(_leapFrom!, otherBodies: false)) {
+        landing = _leapFrom;
+      }
+      if (landing != null) {
+        enemy.position.setValues(landing.dx, landing.dy);
+        enemy.lastClearPosition = landing;
+        enemy.inertia.stop();
+        enemy.motion.hit(landing - from);
+        session.updateEnemySpacing(enemy);
+      }
+    }
   }
 
   void update(double dt) {

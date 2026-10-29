@@ -200,7 +200,7 @@ void main() {
   });
 
   test(
-    'a newly occupied leap destination safely returns to grounded origin',
+    'a newly occupied leap destination displaces the enemy and never rewinds',
     () {
       final s = field('leap'), blocker = enemy(s, distance: 300);
       final origin = s.hero.body.topLeft;
@@ -211,9 +211,39 @@ void main() {
       blocker.position.setValues(landing.dx, landing.dy);
       advance(s, .8);
       expect(s.hero.barbarianCombat.airborne, false);
-      expect(s.hero.body.topLeft, origin);
+      expect((s.hero.body.topLeft - landing).distance, lessThan(3));
+      expect((s.hero.body.topLeft - origin).distance, greaterThan(100));
       expect(s.hero.body.overlaps(blocker.body), false);
       expect(s.world.blocksEnemy(s.hero.body), false);
+    },
+  );
+
+  test(
+    'an occupied destination can be selected before takeoff and cleared on landing',
+    () {
+      final s = field('leap');
+      final origin = s.hero.body.topLeft;
+      final landing = origin + Offset(s.progress.skillRange(skill(s)), 0);
+      final pack = <HuntEnemy>[];
+      for (var i = 0; i < 12; i++) {
+        final m = s.spawnEnemy(
+          'goblin',
+          landing + Offset((i % 4 - 1) * 26.0, (i ~/ 4 - 1) * 24.0),
+        );
+        if (m != null) {
+          m.life.initial(100000);
+          pack.add(m);
+        }
+      }
+      expect(pack, isNotEmpty);
+      s.hero.skill();
+      expect(s.hero.barbarianCombat.airborne, true);
+      advance(s, 1);
+      expect((s.hero.body.topLeft - landing).distance, lessThan(3));
+      for (final m in pack) {
+        expect(m.body.overlaps(s.hero.body), false);
+        expect(s.world.blocksEnemy(m.body), false);
+      }
     },
   );
 

@@ -209,13 +209,16 @@ void main() {
           s.progress.kills += q.goal;
           final xpBefore = _totalXp(s);
           expect(s.cleanseNearbySite(), true);
-          expect(_totalXp(s) - xpBefore, (50 + q.step * 20) * 2);
+          expect(
+            _totalXp(s) - xpBefore,
+            ((50 + q.step * 20) * 2 * 1.2).round(),
+          );
           final gold = s.progress.gold;
           expect(s.cleanseNearbySite(), false);
           expect(s.progress.gold, gold);
           expect(
             _totalXp(s) - xpBefore,
-            (50 + q.step * 20) * 2,
+            ((50 + q.step * 20) * 2 * 1.2).round(),
             reason: 'completing an already cleared commission never pays twice',
           );
           final saved = GameCheckpoint.capture(s)!;

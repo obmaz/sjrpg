@@ -8,6 +8,7 @@ import 'adventure.dart';
 import 'affliction_widgets.dart';
 import 'back_actions.dart';
 import 'back_bridge.dart' as history;
+import 'battle_control_layout.dart';
 import 'battle_effects.dart';
 import 'blacksmith_workshop.dart';
 import 'class_selection.dart';
@@ -855,18 +856,24 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         final landscapeControls = landscape;
         final tightLandscape = landscapeControls && width < 700;
         final sideGuide = landscapeControls || width >= 600;
-        final stick = short && width < 500
-                ? math.min(112.0, math.max(44.0, media.size.height - 330))
-                : width < 360
-                ? 122.0
-                : short
-                ? landscape && width >= 700
-                      ? 128.0
-                      : 112.0
-                : 142.0,
-            attack = width < 360 ? 90.0 : 104.0,
-            bottom = landscape && width >= 700
-                ? 28.0
+        final referenceControls = landscape && width >= 700
+            ? BattleControlLayout(media.size, safeBottom: media.padding.bottom)
+            : null;
+        final stick =
+                referenceControls?.stickSize ??
+                (short && width < 500
+                    ? math.min(112.0, math.max(44.0, media.size.height - 330))
+                    : width < 360
+                    ? 122.0
+                    : short
+                    ? landscape && width >= 700
+                          ? 128.0
+                          : 112.0
+                    : 142.0),
+            attack =
+                referenceControls?.attackSize ?? (width < 360 ? 90.0 : 104.0),
+            bottom = referenceControls != null
+                ? referenceControls.bottom
                 : short
                 ? 86.0
                 : 112.0;
@@ -925,75 +932,95 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         final referenceFan =
             landscape && width >= 700 ||
             !landscape && width >= 360 && media.size.height >= 650;
-        final attackRight = referenceFan
-            ? 64.0
-            : width < 360
-            ? 14.0
-            : 22.0;
-        final dodgeRight = referenceFan
-            ? 8.0
-            : width < 360
-            ? 112.0
-            : 134.0;
-        final dodgeSize = referenceFan
-            ? 44.0
-            : width < 360
-            ? 56.0
-            : 64.0;
-        final mobilityRight = referenceFan
-            ? 8.0
-            : width < 360
-            ? (compactBattle ? 120.0 : 112.0)
-            : 134.0;
-        final mobilityRise = referenceFan ? (landscape ? 84.0 : 80.0) : 112.0;
-        final layouts = referenceFan
-            ? [
-                (170.0, 84.0, 56.0),
-                (146.0, 150.0, 56.0),
-                (80.0, 170.0, 56.0),
-                (14.0, 146.0, 56.0),
-              ]
-            : compactBattle
-            ? hasMobility
-                  ? [
-                      (14.0, 128.0, 48.0),
-                      (14.0, 184.0, 48.0),
-                      (70.0, 184.0, 48.0),
-                      (70.0, 128.0, 48.0),
-                    ]
-                  : [
-                      (14.0, 128.0, 52.0),
-                      (18.0, 188.0, 48.0),
-                      (94.0, 168.0, 48.0),
-                      (94.0, 112.0, 48.0),
-                    ]
-            : landscape && width >= 700
-            ? [
-                (258.0, 136.0, 48.0),
-                (202.0, 136.0, 48.0),
-                (258.0, 80.0, 48.0),
-                (202.0, 80.0, 48.0),
-              ]
-            : short
-            ? [
-                (258.0, 80.0, 48.0),
-                (202.0, 80.0, 48.0),
-                (258.0, 24.0, 48.0),
-                (202.0, 24.0, 48.0),
-              ]
-            : width < 360
-            ? [
-                (18.0, 152.0, 56.0),
-                (66.0, 204.0, 48.0),
-                (96.0, hasMobility ? 174.0 : 166.0, 48.0),
-                (hasMobility ? 18.0 : 120.0, hasMobility ? 258.0 : 112.0, 48.0),
-              ]
-            : [
-                (18.0, 152.0, 64.0),
-                (84.0, 192.0, 56.0),
-                (148.0, hasMobility ? 174.0 : 166.0, 52.0),
-                (hasMobility ? 84.0 : 160.0, hasMobility ? 252.0 : 112.0, 48.0),
-              ];
+        final attackRight =
+            referenceControls?.attackRight ??
+            (referenceFan
+                ? 64.0
+                : width < 360
+                ? 14.0
+                : 22.0);
+        final dodgeRight =
+            referenceControls?.dodgeRight ??
+            (referenceFan
+                ? 8.0
+                : width < 360
+                ? 112.0
+                : 134.0);
+        final dodgeSize =
+            referenceControls?.smallSize ??
+            (referenceFan
+                ? 44.0
+                : width < 360
+                ? 56.0
+                : 64.0);
+        final mobilityRight =
+            referenceControls?.dodgeRight ??
+            (referenceFan
+                ? 8.0
+                : width < 360
+                ? (compactBattle ? 120.0 : 112.0)
+                : 134.0);
+        final mobilityRise =
+            referenceControls?.mobilityRise ??
+            (referenceFan ? (landscape ? 84.0 : 80.0) : 112.0);
+        final layouts =
+            referenceControls?.skills ??
+            (referenceFan
+                ? [
+                    (170.0, 84.0, 56.0),
+                    (146.0, 150.0, 56.0),
+                    (80.0, 170.0, 56.0),
+                    (14.0, 146.0, 56.0),
+                  ]
+                : compactBattle
+                ? hasMobility
+                      ? [
+                          (14.0, 128.0, 48.0),
+                          (14.0, 184.0, 48.0),
+                          (70.0, 184.0, 48.0),
+                          (70.0, 128.0, 48.0),
+                        ]
+                      : [
+                          (14.0, 128.0, 52.0),
+                          (18.0, 188.0, 48.0),
+                          (94.0, 168.0, 48.0),
+                          (94.0, 112.0, 48.0),
+                        ]
+                : landscape && width >= 700
+                ? [
+                    (258.0, 136.0, 48.0),
+                    (202.0, 136.0, 48.0),
+                    (258.0, 80.0, 48.0),
+                    (202.0, 80.0, 48.0),
+                  ]
+                : short
+                ? [
+                    (258.0, 80.0, 48.0),
+                    (202.0, 80.0, 48.0),
+                    (258.0, 24.0, 48.0),
+                    (202.0, 24.0, 48.0),
+                  ]
+                : width < 360
+                ? [
+                    (18.0, 152.0, 56.0),
+                    (66.0, 204.0, 48.0),
+                    (96.0, hasMobility ? 174.0 : 166.0, 48.0),
+                    (
+                      hasMobility ? 18.0 : 120.0,
+                      hasMobility ? 258.0 : 112.0,
+                      48.0,
+                    ),
+                  ]
+                : [
+                    (18.0, 152.0, 64.0),
+                    (84.0, 192.0, 56.0),
+                    (148.0, hasMobility ? 174.0 : 166.0, 52.0),
+                    (
+                      hasMobility ? 84.0 : 160.0,
+                      hasMobility ? 252.0 : 112.0,
+                      48.0,
+                    ),
+                  ]);
         final primary = p.primarySkill;
         final primaryUsesSkillArt =
             primary != null &&
@@ -1124,8 +1151,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   padding: media.padding,
                 ),
               Positioned(
-                left: 12,
-                bottom: bottom,
+                left: referenceControls?.stickLeft ?? 12,
+                bottom: referenceControls?.stickBottom ?? bottom,
                 child: GameStick(
                   art: widget.art,
                   size: stick,
@@ -1292,7 +1319,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
               if (mount?.def.artKey != 'motor')
                 Positioned(
                   right: dodgeRight,
-                  bottom: bottom + 20,
+                  bottom: bottom + (referenceControls?.dodgeRise ?? 20),
                   child: ActionButton(
                     art: widget.art,
                     sprite: 'roundEmpty',
@@ -1361,11 +1388,13 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                         ? '재사용 ${CombatBalance.realSeconds(adventure.hero.mobilityClock).ceil()}초'
                         : '이동 기술 · M',
                     showLabel: false,
-                    size: referenceFan
-                        ? 48
-                        : width < 360
-                        ? 48
-                        : 56,
+                    size:
+                        referenceControls?.smallSize ??
+                        (referenceFan
+                            ? 48
+                            : width < 360
+                            ? 48
+                            : 56),
                     enabled:
                         adventure.active &&
                         !adventure.afflictions.movementBlocked &&
@@ -1413,12 +1442,15 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   ),
                 ),
               Positioned(
-                left: landscape && width >= 700
-                    ? 14
+                right: referenceControls != null ? 8 : null,
+                left: referenceControls != null
+                    ? null
                     : short && width >= 500
                     ? 136
                     : 14,
-                top: tightLandscape
+                top: referenceControls != null
+                    ? media.padding.top + media.size.height * .35
+                    : tightLandscape
                     ? null
                     : media.padding.top +
                           (landscape && width >= 700
@@ -1431,6 +1463,58 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                     : null,
                 child: PotionBelt(adventure, onUse: restoreGameFocus),
               ),
+              if (referenceControls != null &&
+                  guide == null &&
+                  !adventure.sheltered)
+                Positioned(
+                  left: 10,
+                  top:
+                      media.padding.top +
+                      math.max(112, media.size.height * .30),
+                  width: (media.size.width * .22).clamp(170, 270),
+                  child: Semantics(
+                    button: true,
+                    label: '현재 의뢰 · ${adventure.mainQuestNext}',
+                    child: GestureDetector(
+                      onTap: () => open('journal'),
+                      child: Container(
+                        padding: const EdgeInsets.fromLTRB(10, 7, 9, 7),
+                        decoration: const BoxDecoration(
+                          color: Color(0xb3191b1a),
+                          border: Border(
+                            left: BorderSide(color: gold, width: 3),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              adventure.stageContract?.title ?? '현재 의뢰',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: gold,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              adventure.mainQuestNext,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: cream,
+                                fontSize: 11,
+                                height: 1.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               if (guide != null)
                 Positioned(
                   left: sideGuide ? 136 : 12,
@@ -1510,12 +1594,12 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
               ),
               if (landscape && width >= 700) ...[
                 Positioned(
-                  right: 109,
+                  right: battleMapDiameter(media.size) + 19,
                   top: media.padding.top + 7,
                   child: _menu('touchInventory', '가방', 'bag', compact: true),
                 ),
                 Positioned(
-                  right: 165,
+                  right: battleMapDiameter(media.size) + 75,
                   top: media.padding.top + 7,
                   child: _menu(
                     'touchSettings',

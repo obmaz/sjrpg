@@ -29,6 +29,12 @@ const gameMetal = Color(0xffb3a079),
 String gameTime(double seconds) =>
     '${seconds ~/ 60}:${(seconds.toInt() % 60).toString().padLeft(2, '0')}';
 
+double battleMapDiameter(Size viewport) => viewport.width < 360
+    ? 76
+    : viewport.width > viewport.height && viewport.width >= 500
+    ? 150 * (viewport.height / 720).clamp(.65, 1.0)
+    : 86;
+
 class GameHud extends StatelessWidget {
   const GameHud(this.session, {this.onMap, super.key});
   final Adventure session;
@@ -40,13 +46,13 @@ class GameHud extends StatelessWidget {
     final width = media.size.width;
     final landscape = width > media.size.height && width >= 500;
     final short = media.size.height < 520 || landscape;
-    final mapSide = width < 360
-        ? 76.0
-        : landscape
-        ? 90.0
-        : 86.0;
+    final portraitSide = landscape
+        ? 92 * (media.size.height / 720).clamp(.65, 1.0)
+        : 60.0;
+    final meterLeft = landscape ? portraitSide + 16 : 70.0;
+    final mapSide = battleMapDiameter(media.size);
     final statusWidth = math.min(
-      landscape ? 286.0 : 306.0,
+      landscape ? 360 * (media.size.height / 720).clamp(.65, 1.0) : 306.0,
       width - mapSide - 22,
     );
     final resourceHeight = math.max(
@@ -55,22 +61,22 @@ class GameHud extends StatelessWidget {
     );
     const healthTop = 30.0, healthHeight = 18.0, resourceTop = 49.0;
     return SizedBox(
-      height: 130,
+      height: math.max(130, mapSide + 14),
       child: Stack(
         children: [
           Positioned(
             left: 5,
             top: 4,
             width: statusWidth,
-            height: 84,
+            height: math.max(84, portraitSide + 24),
             child: IgnorePointer(
-              child: CustomPaint(painter: const _HeroStatusChrome()),
+              child: CustomPaint(painter: _HeroStatusChrome(portraitSide + 8)),
             ),
           ),
           Positioned(
-            left: 77,
+            left: meterLeft + 7,
             top: 7,
-            width: math.max(44, statusWidth - 81),
+            width: math.max(44, statusWidth - meterLeft - 11),
             height: 21,
             child: Align(
               alignment: Alignment.centerLeft,
@@ -90,14 +96,14 @@ class GameHud extends StatelessWidget {
           ),
           Positioned(
             top: healthTop,
-            left: 70,
-            width: math.max(50, statusWidth - 70),
+            left: meterLeft,
+            width: math.max(50, statusWidth - meterLeft),
             child: HealthMeter(session, height: healthHeight),
           ),
           Positioned(
-            left: 70,
+            left: meterLeft,
             top: resourceTop,
-            width: math.max(48, statusWidth - 77),
+            width: math.max(48, statusWidth - meterLeft - 7),
             child: ResourceMeter(session, height: resourceHeight),
           ),
           Positioned(
@@ -105,8 +111,8 @@ class GameHud extends StatelessWidget {
             top: 16,
             child: SizedBox(
               key: const ValueKey('hud-portrait'),
-              width: 60,
-              height: 60,
+              width: portraitSide,
+              height: portraitSide,
               child: ClipOval(
                 child: CustomPaint(
                   painter: _PortraitPainter(session.art, p.heroClass),
@@ -115,8 +121,13 @@ class GameHud extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: 77,
-            top: math.max(73, resourceTop + resourceHeight + 3),
+            left: landscape ? 10 : 77,
+            top: landscape
+                ? math.max(
+                    16 + portraitSide + 8,
+                    resourceTop + resourceHeight + 3,
+                  )
+                : math.max(73, resourceTop + resourceHeight + 3),
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxWidth: math.max(60, statusWidth - 76),
@@ -173,16 +184,17 @@ class GameHud extends StatelessWidget {
 /// The portrait and two vessels share one fitted dark-metal silhouette.
 /// The live meters retain their own damage trail, danger pulse and fluid clock.
 class _HeroStatusChrome extends CustomPainter {
-  const _HeroStatusChrome();
+  const _HeroStatusChrome(this.portraitSide);
+  final double portraitSide;
   @override
   void paint(Canvas canvas, Size size) {
     final plate = Path()
-      ..moveTo(52, 1)
+      ..moveTo(portraitSide - 16, 1)
       ..lineTo(size.width, 1)
       ..lineTo(size.width - 12, 23)
       ..lineTo(size.width - 5, 44)
       ..lineTo(size.width - 18, 66)
-      ..lineTo(52, 66)
+      ..lineTo(portraitSide - 16, 66)
       ..close();
     canvas.drawPath(
       plate.shift(const Offset(0, 2)),
@@ -197,13 +209,13 @@ class _HeroStatusChrome extends CustomPainter {
         ..color = const Color(0xff71604b),
     );
     canvas.drawLine(
-      const Offset(65, 23),
+      Offset(portraitSide - 3, 23),
       Offset(size.width - 13, 23),
       Paint()
         ..color = const Color(0xffbd9e72)
         ..strokeWidth = .7,
     );
-    final portrait = const Rect.fromLTWH(1, 8, 68, 68);
+    final portrait = Rect.fromLTWH(1, 8, portraitSide, portraitSide);
     canvas.drawOval(
       portrait.shift(const Offset(0, 2)),
       Paint()..color = const Color(0xaa000000),
@@ -234,12 +246,12 @@ class _HeroStatusChrome extends CustomPainter {
         ..color = const Color(0xff9c8761),
     );
     // Small crest and rivets distinguish the portrait from an ordinary button.
-    for (final y in [7.0, 76.0]) {
+    for (final y in [7.0, portraitSide + 8]) {
       final crest = Path()
-        ..moveTo(33, y - 3)
-        ..lineTo(38, y + 1)
-        ..lineTo(33, y + 6)
-        ..lineTo(28, y + 1)
+        ..moveTo(portraitSide / 2 - 1, y - 3)
+        ..lineTo(portraitSide / 2 + 4, y + 1)
+        ..lineTo(portraitSide / 2 - 1, y + 6)
+        ..lineTo(portraitSide / 2 - 6, y + 1)
         ..close();
       canvas.drawPath(crest, Paint()..color = const Color(0xff292b2b));
       canvas.drawPath(
@@ -250,9 +262,9 @@ class _HeroStatusChrome extends CustomPainter {
           ..color = const Color(0xffa38e68),
       );
     }
-    for (final x in [5.0, 61.0]) {
+    for (final x in [5.0, portraitSide - 7]) {
       canvas.drawCircle(
-        Offset(x, 41),
+        Offset(x, portraitSide / 2 + 7),
         1.4,
         Paint()..color = const Color(0xffad9770),
       );
@@ -260,7 +272,8 @@ class _HeroStatusChrome extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _HeroStatusChrome old) => false;
+  bool shouldRepaint(covariant _HeroStatusChrome old) =>
+      old.portraitSide != portraitSide;
 }
 
 /// Shared generated medallions use the same circular face as learned skills.

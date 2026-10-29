@@ -25,6 +25,7 @@ class TimelineArt extends GameArt {
     int comboPose = 0,
     double? actionProgress,
     BossVisualPose? bossPose,
+    BossVisualPose? walkPose,
     Object? mountPose,
     double opacity = 1,
     double flash = 0,

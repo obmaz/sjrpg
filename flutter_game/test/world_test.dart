@@ -162,7 +162,7 @@ void main() {
         p.reward();
       }
       expect(p.level, 2);
-      expect(p.xp, 38);
+      expect(p.xp, 54);
       expect(p.gold, 64);
       p.gainXp(p.nextLevelXp - p.xp);
       expect(p.level, 3);

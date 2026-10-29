@@ -16,15 +16,21 @@ class BossVisualPose {
     this.strike = 0,
     this.skill = 0,
     this.recoil = 0,
+    this.walking = false,
   });
 
   final BossMeshProfile profile;
+  final bool walking;
   final double stride, weight, windup, strike, skill, recoil;
 }
 
 /// Deforms one sprite, rather than blending two bodies or moving the whole cutout.
-/// Owns at most four image shaders; their images remain owned by GameArt.
+/// Bounded image/UV caches are configured by GameArt, which owns the images.
 class BossSpriteMeshPainter {
+  BossSpriteMeshPainter({this.imageLimit = 4, this.uvLimit = 32})
+    : assert(imageLimit > 0),
+      assert(uvLimit > 0);
+  final int imageLimit, uvLimit;
   static const _columns = 9, _rows = 11;
   static const _verticesCount = _columns * _rows;
   static final _indices = _makeIndices();
@@ -80,7 +86,7 @@ class BossSpriteMeshPainter {
       _shaders[image] = old;
       return old;
     }
-    if (_shaders.length == 4) {
+    if (_shaders.length == imageLimit) {
       final evicted = _shaders.keys.first;
       _shaders.remove(evicted)!.dispose();
       _uvs.removeWhere((key, _) => identical(key.$1, evicted));
@@ -106,7 +112,7 @@ class BossSpriteMeshPainter {
       _uvs[key] = old;
       return old;
     }
-    if (_uvs.length == 32) _uvs.remove(_uvs.keys.first);
+    if (_uvs.length == uvLimit) _uvs.remove(_uvs.keys.first);
     final result = Float32List(_verticesCount * 2);
     for (var row = 0; row < _rows; row++) {
       final y = row <= _rows - 2 ? row / (_rows - 2) * ground : 1.0;
@@ -171,7 +177,13 @@ class BossSpriteMeshPainter {
         final leg = ((y - .55) / .3).clamp(0.0, 1.0) * lift;
         final torso = (1 - side.abs()) * lift;
         double dx, dy;
-        if (pose.profile == BossMeshProfile.cyberCore) {
+        if (pose.walking) {
+          // Opposite limbs progress continuously without blending two bodies.
+          final gait = wave * weight;
+          dx = gait * side * (.055 * leg - .025 * arm);
+          dy = gait * side * (.042 * leg - .018 * arm);
+          dx += gait * torso * .006;
+        } else if (pose.profile == BossMeshProfile.cyberCore) {
           final panel = side.abs() * lift;
           dx = side * panel * (wave * weight * .018 + skill * .055);
           dx += side * arm * (strike * .055 - windup * .025);

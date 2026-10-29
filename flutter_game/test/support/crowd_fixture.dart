@@ -14,6 +14,7 @@ class CrowdProbeWorld extends AdventureWorld {
   CrowdProbeWorld({super.stage});
   bool recording = false, heroSheltered = false;
   Offset heroGoal = Offset.zero;
+  Set<Offset> homeGoals = {};
   int frame = 0;
   final cornerSearchFrames = <int>{};
 
@@ -26,6 +27,7 @@ class CrowdProbeWorld extends AdventureWorld {
         !heroSheltered &&
         size == const Size(24, 22) &&
         to != heroGoal &&
+        !homeGoals.contains(to) &&
         (to.dx % 24 != 0 || to.dy % 24 != 0)) {
       cornerSearchFrames.add(frame);
     }
@@ -91,6 +93,7 @@ final _historicalBirths = _historicalData['births'] as List;
 void stepCrowd(CrowdFixture s, double dt) {
   if (dt > 0) s.observed.frame++;
   s.observed.heroGoal = s.hero.position.toOffset();
+  s.observed.homeGoals = s.mobs.map((m) => m.home).toSet();
   if (s.historicalCrowd) s.waveTime = 10000;
   s.tick(dt);
   s.observed.heroSheltered = s.sheltered;

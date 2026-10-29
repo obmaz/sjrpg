@@ -167,16 +167,16 @@ void main() {
   );
 
   test(
-    'ordinary leveling takes five kills and old earned levels stay intact',
+    'ordinary leveling takes four kills and old earned levels stay intact',
     () {
       final p = Progress();
-      for (var i = 0; i < 4; i++) {
+      for (var i = 0; i < 3; i++) {
         p.reward();
       }
       expect(p.level, 1);
       p.reward();
       expect(p.level, 2);
-      expect(p.xp, 8);
+      expect(p.xp, 6);
       final old = Progress()
         ..level = 8
         ..xp = 264;

@@ -24,6 +24,7 @@ class WakeBudgetAdventure extends Adventure {
     EnemyTrait trait = EnemyTrait.none,
     EnemyTier? tier,
     EnemyPower? power,
+    Offset? home,
   }) {
     attempts++;
     return rejectSpawns
@@ -35,6 +36,7 @@ class WakeBudgetAdventure extends Adventure {
             trait: trait,
             tier: tier,
             power: power,
+            home: home,
           );
   }
 }

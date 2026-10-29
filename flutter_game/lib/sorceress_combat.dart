@@ -181,7 +181,14 @@ class SorceressCombat {
     for (var travel = distance; travel > 6; travel -= 6) {
       final candidate = from + direction * travel;
       final stored = Vector2(candidate.dx, candidate.dy).toOffset();
-      if (!session.world.blocked(stored & hero.body.size)) return stored;
+      if (!session.world.blocked(stored & hero.body.size) &&
+          session.townGates.permits(
+            session.world.sanctuary,
+            hero.body,
+            stored & hero.body.size,
+          )) {
+        return stored;
+      }
     }
     return null;
   }
@@ -216,6 +223,7 @@ class SorceressCombat {
         if (landing != null) {
           final before = hero.body.center;
           hero.position.setValues(landing.dx, landing.dy);
+          session.townGates.observe(session.sheltered);
           hero.lastClearPosition = landing;
           session.game?.add(MobilityVisual(session, before, hero.body.center));
         }

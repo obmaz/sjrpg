@@ -960,6 +960,7 @@ class Progress {
   Map<String, dynamic> toSave() => {
     'heroClass': heroClass.name,
     'experienceVersion': 2,
+    'milestonePointsVersion': 1,
     'mountProgress': mountProgress.toSave(),
     'kills': kills,
     'gold': gold,
@@ -1045,6 +1046,9 @@ class Progress {
           : p.nextLevelXp;
       if (p.xp >= xpLimit) return null;
       p.skillPoints = integer('skillPoints');
+      final milestoneVersion = data['milestonePointsVersion'];
+      if (milestoneVersion != null && milestoneVersion != 1) return null;
+      if (milestoneVersion == null) p.skillPoints += p.level ~/ 5;
       p.mountProgress = MountProgress.fromSave(data['mountProgress']);
       p.healingPotions = integer('healingPotions');
       p.energyPotions = integer('energyPotions');
@@ -1793,7 +1797,7 @@ class Progress {
         ? 20
         : 8;
     bossDefeated |= boss;
-    gainXp(
+    awardXp(
       ((boss
                       ? 80
                       : unique
@@ -1807,12 +1811,15 @@ class Progress {
     );
   }
 
+  /// Earned rewards receive the current bonus; raw XP remains useful for migration.
+  void awardXp(int amount) => gainXp((amount * 1.2).round());
+
   void gainXp(int amount) {
     xp += amount;
     while (xp >= nextLevelXp) {
       xp -= nextLevelXp;
       level++;
-      skillPoints++;
+      skillPoints += level % 5 == 0 ? 2 : 1;
       hp = math.min(maxHp, hp + maxHp * .2);
       energy = math.min(
         maxEnergy,

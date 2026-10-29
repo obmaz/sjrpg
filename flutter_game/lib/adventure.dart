@@ -31,6 +31,7 @@ import 'enemy_motion.dart';
 import 'enemy_spacing.dart';
 import 'game_art.dart';
 import 'health_feedback.dart';
+import 'held_weapon_art.dart';
 import 'level_up_effect.dart';
 import 'loot_policy.dart';
 import 'melee_weapon_art.dart';
@@ -47,6 +48,7 @@ import 'shop_content.dart';
 import 'skill_aim.dart';
 import 'sorceress_combat.dart';
 import 'spell_vfx.dart';
+import 'town_gates.dart';
 import 'travel_journal.dart';
 import 'weapon_profiles.dart';
 import 'world_model.dart';
@@ -762,7 +764,7 @@ class Adventure extends ChangeNotifier {
     if (commission != null) {
       acceptedCommission = null;
       final oldLevel = progress.level;
-      progress.gainXp(
+      progress.awardXp(
         (50 + commission.step * 20) * CombatBalance.experienceRewardMultiplier,
       );
       syncLife();
@@ -883,6 +885,8 @@ class Adventure extends ChangeNotifier {
     'power': m.power.toSave(),
     'wardPhase': m.wardPhase,
     'area': m.encounterKey,
+    'homeX': m.home.dx,
+    'homeY': m.home.dy,
     'x': m.position.x,
     'y': m.position.y,
     'hp': m.life.value,
@@ -909,6 +913,10 @@ class Adventure extends ChangeNotifier {
       final mob = spawnEnemy(
         raw['kind'] as String,
         at,
+        home: ui.Offset(
+          (raw['homeX'] as num?)?.toDouble() ?? at.dx,
+          (raw['homeY'] as num?)?.toDouble() ?? at.dy,
+        ),
         trait: EnemyTrait.values.firstWhere((t) => t.name == raw['trait']),
         tier: EnemyTier.values.firstWhere((t) => t.name == raw['tier']),
         power: EnemyPowerSave.fromSave(raw['power']),
@@ -963,6 +971,7 @@ class Adventure extends ChangeNotifier {
 
   final random = math.Random(52);
   bool get active => ready && !disposed && !paused && !defeated && !won;
+  final townGates = TownGates();
   bool get sheltered => world.sanctuary.protects(hero.body);
   bool get combatAllowed => active && !sheltered;
   String get region => world.areaName(hero.position.toOffset());
@@ -1368,6 +1377,7 @@ class Adventure extends ChangeNotifier {
 
   void tick(double dt) {
     if (!active || dt <= 0) return;
+    townGates.update(dt, sheltered);
     barbarianUtilities.update(dt);
     syncBarbarianBuffs();
     mountSkillClock = math.max(0, mountSkillClock - dt);
@@ -1554,13 +1564,25 @@ class Adventure extends ChangeNotifier {
   }
 
   final enemySpacing = EnemySpacing<HuntEnemy>();
+  double _crowdPlanTime = -1;
+  int _crowdPlans = 0;
+  bool takeCrowdPlan() {
+    if (_crowdPlanTime != elapsed) {
+      _crowdPlanTime = elapsed;
+      _crowdPlans = 0;
+    }
+    if (_crowdPlans >= 2) return false;
+    _crowdPlans++;
+    return true;
+  }
+
   double _enemySpacingTime = -1;
   int _enemySpacingCount = -1;
 
-  void _syncEnemySpacing(HuntEnemy mover) {
+  void _syncEnemySpacing(HuntEnemy? mover) {
     if (_enemySpacingTime == elapsed &&
         _enemySpacingCount == mobs.length &&
-        enemySpacing.contains(mover)) {
+        (mover == null || enemySpacing.contains(mover))) {
       return;
     }
     enemySpacing.clear();
@@ -1706,6 +1728,58 @@ class Adventure extends ChangeNotifier {
     return stored(at);
   }
 
+  /// Sweep the actual hero body through terrain and local enemy contacts.
+  ui.Offset moveHeroBody(
+    ui.Offset from,
+    ui.Offset delta,
+    ui.Size size, {
+    bool airborne = false,
+    bool waterOnly = false,
+  }) {
+    _syncEnemySpacing(null);
+    final search = (from & size)
+        .expandToInclude((from + delta) & size)
+        .inflate(48);
+    final contacts = airborne
+        ? const <HuntEnemy>[]
+        : enemySpacing.query(search).toList(growable: false);
+    final count = math.max(1, (delta.distance / 5).ceil());
+    final step = delta / count.toDouble();
+    var at = from;
+    bool permits(ui.Offset next) =>
+        townGates.permits(world.sanctuary, at & size, next & size) &&
+        contacts.every(
+          (m) =>
+              m.isDead ||
+              m.isRemoving ||
+              m.encounterDormant ||
+              EnemySpacing.permits(at & size, next & size, m.body),
+        );
+    for (var i = 0; i < count; i++) {
+      final next = world.move(at, step, size, waterOnly: waterOnly);
+      if (permits(next)) {
+        at = next;
+        continue;
+      }
+      final horizontal = world.move(
+        at,
+        ui.Offset(step.dx, 0),
+        size,
+        waterOnly: waterOnly,
+      );
+      if (permits(horizontal)) at = horizontal;
+      final vertical = world.move(
+        at,
+        ui.Offset(0, step.dy),
+        size,
+        waterOnly: waterOnly,
+      );
+      if (permits(vertical)) at = vertical;
+    }
+    townGates.observe(world.sanctuary.protects(at & size));
+    return at;
+  }
+
   void settleEnemy(HuntEnemy mover, double dt) {
     _syncEnemySpacing(mover);
     final from = mover.body.topLeft;
@@ -1757,6 +1831,7 @@ class Adventure extends ChangeNotifier {
     EnemyTrait trait = EnemyTrait.none,
     EnemyTier? tier,
     EnemyPower? power,
+    ui.Offset? home,
   }) {
     final size = boss ? const ui.Size(48, 40) : const ui.Size(24, 22);
     final storedPosition = Vector2.zero();
@@ -1792,6 +1867,7 @@ class Adventure extends ChangeNotifier {
       trait: boss ? EnemyTrait.none : trait,
       tier: tier,
       power: power,
+      home: home,
     );
     enemy.life.initial(
       enemy.life.max *
@@ -1811,6 +1887,7 @@ class Adventure extends ChangeNotifier {
     bool critical = false,
   }) {
     final next = BattleText(this, text, at, color, critical: critical);
+    if (text.startsWith('탐색 ')) next.remaining = 1.8;
     final same = texts.where((t) => t.isReward == next.isReward).toList();
     final limit = next.isReward ? 2 : 14;
     if (same.length >= limit) {
@@ -2701,14 +2778,23 @@ class Guardian extends Player with WithCollision {
       dashing -= dt;
     }
     if (session.afflictions.movementBlocked) delta = ui.Offset.zero;
-    var p = session.world.move(
+    var p = session.moveHeroBody(
       before,
       delta,
       ui.Size(size.x, size.y),
+      airborne: barbarianCombat.airborne,
       waterOnly: session.riding?.def.waterOnly ?? false,
     );
     position.setValues(p.dx, p.dy);
     barbarianCombat.finishMovement();
+    if (!session.townGates.permits(
+      session.world.sanctuary,
+      before & body.size,
+      body,
+    )) {
+      position.setValues(before.dx, before.dy);
+    }
+    session.townGates.observe(session.sheltered);
     p = position.toOffset();
     session.wearMount((p - before).distance / 350);
     if (chargeTime > 0) {
@@ -3433,6 +3519,13 @@ class Guardian extends Player with WithCollision {
     if (!session.active || (cooldowns[def.id] ?? 0) > 0 || rank == 0) return;
     if (BarbarianUtilities.skillIds.contains(def.id) &&
         !session.barbarianUtilities.canActivate(def.id)) {
+      if (def.id == 'findPotion' || def.id == 'findItem') {
+        session.bubble(
+          '탐색 실패 · 가까운 시체 없음',
+          body.center - const ui.Offset(0, 55),
+          const ui.Color(0xffc5bda9),
+        );
+      }
       return;
     }
     if (BarbarianCombat.skillIds.contains(def.id) &&
@@ -3903,6 +3996,34 @@ class Guardian extends Player with WithCollision {
           protectBody: false,
         );
       }
+      final held =
+          session.progress.heroClass == HeroClass.warrior &&
+          !session.progress.usingFallbackWeapon;
+      final heldBearing = swing > 0 ? attackBearing : bearing;
+      final heldFeet = feet - ui.Offset(0, barbarianCombat.airborneHeight);
+      void paintHeld() {
+        HeldWeaponArt.paint(
+          canvas,
+          heldFeet,
+          session.progress.weapon.base,
+          heldBearing,
+          stride: runMotion.phaseFor(32) / 32 * math.pi * 2,
+          attackProgress: swing > 0 ? actionProgress : null,
+        );
+        if (session.progress.weapon.base.id == 'dualblades' ||
+            session.progress.weapon.base.id == 'twinaxes') {
+          HeldWeaponArt.paint(
+            canvas,
+            heldFeet,
+            session.progress.weapon.base,
+            heldBearing,
+            attackProgress: swing > 0 ? actionProgress : null,
+            offhand: true,
+          );
+        }
+      }
+
+      if (held && math.sin(heldBearing) < 0) paintHeld();
       session.art.actor(
         canvas,
         session.progress.heroClass == HeroClass.mage ? 'mage' : 'hero',
@@ -3952,6 +4073,7 @@ class Guardian extends Player with WithCollision {
         flash: damageFlash,
         actionProgress: actionProgress.clamp(0.0, 1.0),
       );
+      if (held && math.sin(heldBearing) >= 0) paintHeld();
     }
     if (swing > 0 &&
         basicWeaponSwing &&
@@ -4293,6 +4415,10 @@ class _LocalCrowdIntent {
   }
 
   void plan(HuntEnemy m, ui.Offset desired) {
+    if (!m.session.takeCrowdPlan()) {
+      cooldown = .12;
+      return;
+    }
     final others = nearby(m), from = m.position.toOffset();
     final probe =
         Vector2(from.dx + desired.dx, from.dy + desired.dy).toOffset() &
@@ -4435,7 +4561,9 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
     this.trait = EnemyTrait.none,
     EnemyTier? tier,
     EnemyPower? power,
-  }) : tier = boss
+    ui.Offset? home,
+  }) : home = home ?? at,
+       tier = boss
            ? EnemyTier.normal
            : tier ??
                  (trait == EnemyTrait.none
@@ -4469,6 +4597,40 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
   final EnemyTrait trait;
   final _localIntent = _LocalCrowdIntent();
   final EnemyTier tier;
+  final ui.Offset home;
+  bool returningHome = false;
+  double get leashRadius =>
+      (boss
+          ? 1100.0
+          : switch (kind) {
+              'wolf' || 'bonehound' => 820.0,
+              'troll' || 'scorpion' => 460.0,
+              'goblin' || 'viper' => 560.0,
+              'cultist' || 'gunner' || 'basilisk' => 700.0,
+              _ => 640.0,
+            }) +
+      ((home.dx.floor() * 31 + home.dy.floor() * 17) % 5) * 24 +
+      (isUnique ? 120 : 0);
+  double _sightTime = -1;
+  ui.Offset? _sightFrom, _sightTo;
+  int _sightTerrain = -1;
+  bool _directSight = false;
+  bool pursuitClear(ui.Offset from, ui.Offset target) {
+    if (_sightFrom == null ||
+        _sightTo == null ||
+        session.elapsed - _sightTime >= .15 ||
+        (from - _sightFrom!).distanceSquared > 16 * 16 ||
+        (target - _sightTo!).distanceSquared > 24 * 24 ||
+        _sightTerrain != session.world.openedChests.length) {
+      _sightFrom = from;
+      _sightTo = target;
+      _sightTime = session.elapsed;
+      _sightTerrain = session.world.openedChests.length;
+      _directSight = session.world.clearEnemyLine(from, target, body.size);
+    }
+    return _directSight;
+  }
+
   late final EnemyPower power;
   double outgoingDamage(double base) =>
       base *
@@ -4790,7 +4952,25 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
     attackClock -= dt;
     replan -= dt;
     slamClock -= dt;
-    if (session.sheltered || target.distance > 950 && !(boss && windup > 0)) {
+    final homeDistance = (position.toOffset() - home).distance;
+    final heroOutside =
+        (session.hero.position.toOffset() - home).distance > leashRadius + 120;
+    if (homeDistance > leashRadius ||
+        returningHome ||
+        heroOutside && homeDistance > 35) {
+      returningHome = homeDistance > 28;
+      _localIntent.reset(this);
+      meleeWindup = windup = 0;
+      attackMotion.cancel();
+      if (pounceRemaining > 0) finishPounce();
+      slamTarget = null;
+      bossAttack = null;
+      _returnHome(dt);
+      return;
+    }
+    if (heroOutside ||
+        session.sheltered ||
+        target.distance > 950 && !(boss && windup > 0)) {
       meleeWindup = 0;
       attackMotion.cancel();
       if (pounceRemaining > 0) finishPounce();
@@ -5100,9 +5280,7 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
       var toward = session.hero.position.toOffset();
       // A committed local detour owns its next corner. The direct hero ray is
       // unused until that detour finishes; physical movement still sweeps below.
-      final direct =
-          !_localIntent.active &&
-          session.world.clearEnemyLine(before, toward, body.size);
+      final direct = !_localIntent.active && pursuitClear(before, toward);
       if (_localIntent.active) {
         toward = _localIntent.points.first;
       } else if (!direct) {
@@ -5168,6 +5346,48 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
     }
   }
 
+  void _returnHome(double dt) {
+    stop();
+    if (stun > 0 || hurt > 0 || _knockbackTime > 0) {
+      inertia.stop();
+      return;
+    }
+    final from = position.toOffset();
+    if ((from - home).distance < 28) {
+      returningHome = false;
+      route.clear();
+      routeGoal = null;
+      return;
+    }
+    var goal = home;
+    if (!pursuitClear(from, home)) {
+      if (replan <= 0 || routeGoal != home) {
+        route = session.world.routeEnemy(from, home, body.size);
+        routeGoal = home;
+        replan = .8;
+      }
+      while (route.isNotEmpty && (route.first - from).distance < 8) {
+        route.removeAt(0);
+      }
+      if (route.isEmpty) {
+        inertia.stop();
+        return;
+      }
+      goal = route.first;
+    }
+    final d = goal - from;
+    final step = inertia.advance(
+      d / math.max(.001, d.distance) * math.min(speed * .9, d.distance / dt),
+      dt,
+    );
+    final next = session.moveEnemyBody(this, from, step, steer: true);
+    bearing = math.atan2(d.dy, d.dx);
+    position.setValues(next.dx, next.dy);
+    velocity.setValues((next.dx - from.dx) / dt, (next.dy - from.dy) / dt);
+    session.updateEnemySpacing(this);
+    lastClearPosition = next;
+  }
+
   ui.Offset? _patrolOrigin, _patrolGoal;
   double _patrolClock = 0;
   int _patrolStep = 0;
@@ -5181,7 +5401,7 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
       return;
     }
     final from = position.toOffset();
-    final origin = _patrolOrigin ??= from;
+    final origin = _patrolOrigin ??= home;
     _patrolClock -= dt;
     if (_patrolClock <= 0) {
       _patrolGoal = null;
@@ -5516,6 +5736,19 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
           : definition?.renderHeight ?? 62,
       flash: hurt > .08 ? .75 : 0,
       bossPose: bossPose,
+      walkPose:
+          !boss &&
+              motion.weight > .02 &&
+              hurt <= .08 &&
+              !preparingAttack &&
+              !attackMotion.active &&
+              pounceRemaining <= 0
+          ? BossVisualPose(
+              walking: true,
+              stride: motion.stride / (math.pi * 2),
+              weight: motion.weight,
+            )
+          : null,
     );
     canvas.restore();
     attackMotion.paintMeleeTrace(
@@ -5657,6 +5890,7 @@ class LandscapeLayer extends GameComponent {
         view.width.isFinite &&
         view.width > 0) {
       session.terrain.render(canvas, view);
+      session.townGates.paint(canvas, session.world.authoredSettlement, view);
     }
   }
 }

@@ -80,6 +80,33 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test(
+    'walking mesh articulates between old two-frame switch points',
+    () async {
+      final image = await sprite(),
+          mesh = BossSpriteMeshPainter(imageLimit: 12, uvLimit: 128);
+      addTearDown(() {
+        mesh.dispose();
+        image.dispose();
+      });
+      final first = await draw(
+        mesh,
+        image,
+        const BossVisualPose(walking: true, stride: .1, weight: 1),
+      );
+      final next = await draw(
+        mesh,
+        image,
+        const BossVisualPose(walking: true, stride: .2, weight: 1),
+      );
+      expect(difference(first, next), greaterThan(0));
+      expect(mesh.cachedImageCount, 1);
+      mesh.trim([]);
+      expect(mesh.cachedImageCount, 0);
+      expect(mesh.cachedUvCount, 0);
+    },
+  );
+
+  test(
     'all profiles articulate one sprite with fixed feet and isolated UVs',
     () async {
       final image = await sprite(), mesh = BossSpriteMeshPainter();

@@ -150,7 +150,10 @@ void main() {
         );
       }
       expect(
-        find.descendant(of: row, matching: find.text('무기 공격')),
+        find.descendant(
+          of: row,
+          matching: find.textContaining('무기 공격 15', findRichText: true),
+        ),
         findsOneWidget,
       );
       final explanation = find.text(
@@ -168,6 +171,50 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  for (final rarity in [Rarity.rare, Rarity.unique]) {
+    testWidgets(
+      '$rarity affixes follow numeric stats and title aligns with icon',
+      (tester) async {
+        final s = session();
+        final gear = s.progress.createGear(
+          gearById('longsword'),
+          rarity: rarity,
+          gifts: [
+            WeaponGift.frost,
+            if (rarity == Rarity.unique) WeaponGift.guardian,
+          ],
+        );
+        s.progress.inventory
+          ..clear()
+          ..add(gear);
+        await showBag(tester, s, const Size(390, 844), 1.3);
+        final row = find.byKey(ValueKey('gear-row-${gear.serial}'));
+        final title = find.byKey(ValueKey('gear-title-${gear.serial}'));
+        final icon = find.byKey(ValueKey('gear-icon-${gear.serial}'));
+        expect(
+          tester.getTopLeft(title).dy,
+          closeTo(tester.getTopLeft(icon).dy, .01),
+        );
+        final stats = find.descendant(
+          of: row,
+          matching: find.byWidgetPredicate(
+            (w) => w is Text && w.textSpan != null,
+          ),
+        );
+        final statsBottom = tester.getRect(stats.last).bottom;
+        for (final gift in gear.gifts) {
+          final text = find.descendant(
+            of: row,
+            matching: find.text('${gift.title} · ${gift.description}'),
+          );
+          expect(text, findsOneWidget);
+          expect(tester.getTopLeft(text).dy, greaterThan(statsBottom));
+        }
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 
   for (final (size, scale) in [
     (const Size(320, 420), 1.0),

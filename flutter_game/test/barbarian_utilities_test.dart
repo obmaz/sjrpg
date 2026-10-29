@@ -284,6 +284,23 @@ void main() {
     expect(utilities.enemyStateCount, 0);
   });
 
+  for (final id in ['findPotion', 'findItem']) {
+    test('$id announces successful and failed searches above the corpse', () {
+      final outcomes = <String>{};
+      for (var i = 0; i < 60; i++) {
+        corpse();
+        expect(activate(skill(id)), true);
+        final messages = session.texts.where((t) => t.label.startsWith('탐색 '));
+        expect(messages, isNotEmpty);
+        final message = messages.last;
+        expect(message.isReward, true);
+        expect(message.remaining, 1.8);
+        outcomes.add(message.label.startsWith('탐색 성공') ? 'success' : 'failure');
+      }
+      expect(outcomes, {'success', 'failure'});
+    });
+  }
+
   test(
     'successful corpse searches produce real rewards without another kill',
     () {

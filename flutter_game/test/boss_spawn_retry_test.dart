@@ -17,6 +17,7 @@ class CountingAdventure extends Adventure {
     EnemyTrait trait = EnemyTrait.none,
     EnemyTier? tier,
     EnemyPower? power,
+    Offset? home,
   }) {
     if (boss) {
       attempts++;
@@ -29,6 +30,7 @@ class CountingAdventure extends Adventure {
       trait: trait,
       tier: tier,
       power: power,
+      home: home,
     );
   }
 }

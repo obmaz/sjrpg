@@ -289,7 +289,8 @@ class SteelPressureArt {
     if (!_valid(progress, center, bearing)) return;
     final r = _radius(radius), t = progress;
     final strength = 1 + rank.clamp(1, 20) * .018;
-    final alpha = math.pow(1 - t, .38).toDouble();
+    final alpha =
+        (math.min(1.0, (1 - t) * 9)) * (.88 + .12 * math.sin(t * math.pi * 14));
     final head = bearing + t * math.pi * 4 - .5;
     _begin(canvas, center, r, protectBody: protectBody);
     try {
@@ -299,7 +300,7 @@ class SteelPressureArt {
         r * .88,
         head,
         3.25,
-        r * .13 * strength,
+        r * .19 * strength,
         alpha,
         const ui.Color(0xffffa43b),
         heated: true,
@@ -310,8 +311,8 @@ class SteelPressureArt {
         head + math.pi,
         1.65,
         r * .07 * strength,
-        alpha * .72,
-        _steel,
+        alpha * .85,
+        const ui.Color(0xffffd379),
       );
       _ribbon(
         canvas,

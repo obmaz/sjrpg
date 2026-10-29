@@ -38,6 +38,7 @@ class GameArt {
   final _labels = <(String, double, ui.Color), ui.Paragraph>{};
   static const _labelLimit = 128;
   final _bossMesh = BossSpriteMeshPainter();
+  final _walkMesh = BossSpriteMeshPainter(imageLimit: 12, uvLimit: 128);
   final _mountMesh = MountSpriteMeshPainter();
   static const heroWidthScale = 1.36, heroHeightScale = 1.0;
 
@@ -425,6 +426,7 @@ class GameArt {
       _sourceBytes.remove(name);
     }
     _bossMesh.trim(images.values);
+    _walkMesh.trim(images.values);
     _mountMesh.trim(images.values);
     effects.warm();
   }
@@ -633,6 +635,7 @@ class GameArt {
     }
     _labels.clear();
     _bossMesh.dispose();
+    _walkMesh.dispose();
     _mountMesh.dispose();
     for (final shader in [...materials, ...fieldMaterials]) {
       shader.dispose();
@@ -762,6 +765,7 @@ class GameArt {
     int comboPose = 0,
     double? actionProgress,
     BossVisualPose? bossPose,
+    BossVisualPose? walkPose,
     MountVisualPose? mountPose,
     double opacity = 1,
     double flash = 0,
@@ -779,7 +783,7 @@ class GameArt {
         ? atlas.motion
         : null;
     final action = attack ? atlas.action : null;
-    final selectedPhase = bossPose == null ? phase : 0;
+    final selectedPhase = bossPose == null && walkPose == null ? phase : 0;
     final index = action != null
         ? action.frameIndex(
             facingFrame(angle, 16),
@@ -851,6 +855,16 @@ class GameArt {
         dst,
         _actorPaint,
         mountPose,
+        groundOrigin: feet,
+      );
+    } else if (walkPose != null) {
+      _walkMesh.paint(
+        canvas,
+        images['actors-$sheet']!,
+        src,
+        dst,
+        _actorPaint,
+        walkPose,
         groundOrigin: feet,
       );
     } else if (bossPose == null) {

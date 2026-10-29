@@ -12,6 +12,7 @@ import 'enemy_difficulty.dart';
 import 'game_art.dart';
 import 'player_afflictions.dart';
 import 'sorceress_defenses.dart';
+import 'town_gates.dart';
 import 'travel_journal.dart';
 import 'world_model.dart';
 
@@ -47,6 +48,8 @@ class GameCheckpoint {
             : {
                 'x': boss.position.x,
                 'y': boss.position.y,
+                'homeX': boss.home.dx,
+                'homeY': boss.home.dy,
                 'hp': boss.life.value,
                 'maxHp': boss.life.max,
                 'sequence': boss.bossSequence,
@@ -99,6 +102,7 @@ class GameCheckpoint {
         'x': forDefeat ? session.world.spawn.dx : session.hero.position.x,
         'y': forDefeat ? session.world.spawn.dy : session.hero.position.y,
         'elapsed': session.elapsed,
+        'townGateRemaining': forDefeat ? 0.0 : session.townGates.remaining,
         'chests': session.openedChests.toList(),
         'memoryRewarded': session.memoryRewarded,
         'cooldowns': Map<String, double>.of(session.hero.cooldowns),
@@ -370,6 +374,10 @@ class GameCheckpoint {
       data['mobilityClock'] ??= 0;
       data['sprintTime'] ??= 0;
       data['mountSkillClock'] ??= 0;
+      data['townGateRemaining'] ??= 0.0;
+      if (!number(data['townGateRemaining'], TownGates.lockDuration)) {
+        return null;
+      }
       data['mountBoostTime'] ??= 0;
       data['motorRecoilTime'] ??= 0;
       if (!number(data['mountSkillClock'], 14) ||
@@ -530,6 +538,8 @@ class GameCheckpoint {
             !enemyCatalog.containsKey(raw['kind']) ||
             !EnemyTrait.values.any((t) => t.name == raw['trait']) ||
             raw['area'] != null && !keys.contains(raw['area']) ||
+            (raw['homeX'] != null && !number(raw['homeX'], worldSize.width)) ||
+            (raw['homeY'] != null && !number(raw['homeY'], worldSize.height)) ||
             !number(raw['x'], worldSize.width) ||
             !number(raw['y'], worldSize.height) ||
             !number(raw['maxHp'], 10000000) ||
@@ -554,6 +564,12 @@ class GameCheckpoint {
       // Older survivors gain regional strength once, retaining every wound.
       // The snapshot travels with each enemy, including archived stage scenes.
       for (final raw in [...enemies, ?boss]) {
+        if ((raw['homeX'] == null) != (raw['homeY'] == null) ||
+            raw['homeX'] != null &&
+                (!number(raw['homeX'], worldSize.width) ||
+                    !number(raw['homeY'], worldSize.height))) {
+          return null;
+        }
         final isBoss = identical(raw, boss);
         final legacy = raw['power'] == null;
         final oldTrait = isBoss
@@ -764,6 +780,7 @@ class GameCheckpoint {
     'trackedSite',
     'mounts',
     'riding',
+    'townGateRemaining',
     'chests',
     'memoryRewarded',
     'boss',
@@ -1009,6 +1026,10 @@ class GameCheckpoint {
     session.hero.lastClearPosition = safe;
     session.hero.invulnerable = .75;
     session.elapsed = (data['elapsed'] as num).toDouble();
+    session.townGates.restore(
+      (data['townGateRemaining'] as num?)?.toDouble() ?? 0,
+      inside: session.sheltered,
+    );
     session.memoryRewarded = data['memoryRewarded'] as bool;
     session.cleansedSites.addAll((data['sites'] as List).cast<String>());
     session.bossSummoned = session.progress.bossDefeated;
@@ -1021,6 +1042,10 @@ class GameCheckpoint {
           (savedBoss['y'] as num).toDouble(),
         ),
         boss: true,
+        home: Offset(
+          (savedBoss['homeX'] as num? ?? savedBoss['x'] as num).toDouble(),
+          (savedBoss['homeY'] as num? ?? savedBoss['y'] as num).toDouble(),
+        ),
         power: EnemyPowerSave.fromSave(savedBoss['power']),
       );
       if (boss != null) {

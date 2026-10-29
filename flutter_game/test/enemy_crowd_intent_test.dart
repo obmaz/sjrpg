@@ -92,7 +92,7 @@ void main() {
         s.spawnEnemy(
           'goblin',
           s.hero.body.center +
-              Offset(math.cos(angle), math.sin(angle)) * 900 -
+              Offset(math.cos(angle), math.sin(angle)) * 500 -
               const Offset(12, 11),
         ),
         isNotNull,
@@ -168,10 +168,10 @@ void main() {
         }
         if (mode == 'heroMove') {
           expect(
-            (m.position.toOffset() - origin).distance,
-            lessThan(1),
+            (m.position.toOffset() - m.home).distance,
+            lessThanOrEqualTo(m.leashRadius),
             reason:
-                'entering the ward cancels the retreat; only brief patrol inertia remains',
+                'entering the ward cancels pursuit and resumes a home-centered patrol',
           );
         } else {
           expect(
