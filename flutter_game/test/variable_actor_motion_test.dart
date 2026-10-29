@@ -375,17 +375,17 @@ void main() {
             final bounds = projected
                 ? mage
                       ? const ui.Rect.fromLTRB(45, 54, 57, 66)
-                      : const ui.Rect.fromLTRB(45, 51, 59, 66)
+                      : const ui.Rect.fromLTRB(46, 51, 57, 66)
                 : mage
                 ? const ui.Rect.fromLTRB(44, 58, 56, 70)
-                : const ui.Rect.fromLTRB(43, 55, 57, 70);
+                : const ui.Rect.fromLTRB(44, 55, 56, 70);
             expect(
               alphaBounds(bytes),
               bounds,
               reason:
                   'all frames retain their projected ground origin, not their alpha bottom',
             );
-            // Broader artwork keeps the exact (50,70) ground anchor. A
+            // The character artwork keeps the exact (50,70) ground anchor. A
             // projected feet marker remains four pixels below visible art;
             // the legacy center-bottom origin remains on its visible bottom.
             expect(bounds.bottom, projected ? 66 : 70);

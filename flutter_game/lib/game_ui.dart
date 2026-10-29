@@ -30,6 +30,11 @@ const gameMetal = Color(0xffb3a079),
 String gameTime(double seconds) =>
     '${seconds ~/ 60}:${(seconds.toInt() % 60).toString().padLeft(2, '0')}';
 
+double battlePortraitDiameter(Size viewport) =>
+    viewport.width > viewport.height && viewport.width >= 500
+    ? 92 * (viewport.height / 720).clamp(.65, 1.0)
+    : 60;
+
 double battleMapDiameter(Size viewport) => viewport.width < 360
     ? 76
     : viewport.width > viewport.height && viewport.width >= 500
@@ -47,9 +52,7 @@ class GameHud extends StatelessWidget {
     final width = media.size.width;
     final landscape = width > media.size.height && width >= 500;
     final short = media.size.height < 520 || landscape;
-    final portraitSide = landscape
-        ? 92 * (media.size.height / 720).clamp(.65, 1.0)
-        : 60.0;
+    final portraitSide = battlePortraitDiameter(media.size);
     final meterLeft = landscape ? portraitSide + 16 : 70.0;
     final mapSide = battleMapDiameter(media.size);
     final statusWidth = math.min(

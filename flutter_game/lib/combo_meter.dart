@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'battle_control_layout.dart';
 import 'combo_feedback.dart';
 
 /// Fits the free strip between combat controls and the four menu buttons.
@@ -28,12 +29,17 @@ class ComboMeterLayout {
         ? 122.0
         : 142.0;
     final attackLeft = size.width - (size.width < 360 ? 104 : 126);
+    final controls = landscape
+        ? BattleControlLayout(size, safeBottom: padding.bottom)
+        : null;
     final left = tightLandscape
-        ? 294.0
+        ? controls!.stickLeft + controls.stickSize + 8
         : inset && shortPortrait
         ? 12 + stick + 8
         : (size.width - math.min(maxWidth, size.width - 32)) / 2;
-    final rightLimit = inset && (shortPortrait || tightLandscape)
+    final rightLimit = tightLandscape
+        ? size.width - controls!.skills.first.$1 - controls.skills.first.$3 - 8
+        : inset && shortPortrait
         ? attackLeft - 8
         : size.width - 16;
     final width = math.min(maxWidth, rightLimit - left);

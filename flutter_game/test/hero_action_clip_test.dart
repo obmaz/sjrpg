@@ -60,7 +60,7 @@ void main() {
     expect(ActorAtlas.fromJson(legacy).action, isNull);
   });
   test(
-    'actual raster uses eight action poses and retains the heavier feet anchor',
+    'actual raster uses eight action poses with a centered warrior and fixed feet',
     () async {
       ui.Color color(int i) =>
           ui.Color.fromARGB(255, i + 1, 255 - i, i * 17 % 256);
@@ -107,26 +107,16 @@ void main() {
           0,
           reason: 'the fixed ground anchor does not float on widening',
         );
+        expect(pixel(36, 30).last, greaterThan(0));
         expect(
-          pixel(35, 30).last,
-          greaterThan(0),
-          reason: 'the heavier body still fills the old left boundary',
+          pixel(36, 30).last,
+          pixel(43, 30).last,
+          reason: 'the slimmer body remains centered on the ground anchor',
         );
-        expect(
-          pixel(34, 30).last,
-          greaterThan(0),
-          reason:
-              'the broader, 18% larger body reaches beyond the old silhouette',
-        );
-        expect(
-          pixel(34, 30).last,
-          pixel(45, 30).last,
-          reason: 'the broadened edges remain symmetric about the x=40 anchor',
-        );
-        expect(pixel(33, 30).last, greaterThan(0));
-        expect(pixel(33, 30).last, pixel(46, 30).last);
-        expect(pixel(32, 30).last, 0);
-        expect(pixel(47, 30).last, 0);
+        expect(pixel(35, 30).last, pixel(44, 30).last);
+        expect(pixel(34, 30).last, pixel(45, 30).last);
+        expect(pixel(33, 30).last, 0);
+        expect(pixel(46, 30).last, 0);
         seen.add(pixel(40, 30));
         image.dispose();
       }

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'adventure.dart';
 import 'effect_visibility.dart';
+import 'game_art.dart';
 
 class MountMerchant extends GameComponent with EffectVisibility {
   MountMerchant(this.session) {
@@ -192,12 +193,14 @@ class MountSkillBadge extends StatelessWidget {
   const MountSkillBadge({
     required this.kind,
     required this.size,
+    required this.art,
     this.ammo = 0,
     this.hits = 0,
     super.key,
   });
   final String kind;
   final double size;
+  final GameArt art;
   final int ammo, hits;
   @override
   Widget build(BuildContext context) => SizedBox.square(
@@ -205,7 +208,7 @@ class MountSkillBadge extends StatelessWidget {
     child: Stack(
       fit: StackFit.expand,
       children: [
-        CustomPaint(painter: MountSkillIconPainter(kind)),
+        CustomPaint(painter: _MountSkillArtPainter(art, kind)),
         if (kind == 'motor')
           Align(
             alignment: Alignment.bottomRight,
@@ -255,4 +258,37 @@ class MountSkillBadge extends StatelessWidget {
       ],
     ),
   );
+}
+
+class _MountSkillArtPainter extends CustomPainter {
+  const _MountSkillArtPainter(this.art, this.kind);
+  final GameArt art;
+  final String kind;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final index = switch (kind) {
+      'motor' => 0,
+      'horse' => 1,
+      'bicycle' => 2,
+      _ => 3,
+    };
+    canvas.save();
+    canvas.clipPath(Path()..addOval(Offset.zero & size));
+    final painted = art.effects.draw(
+      canvas,
+      'mount-skill-icons',
+      index,
+      Offset.zero & size,
+      columns: 2,
+      rows: 2,
+      inset: 6,
+    );
+    canvas.restore();
+    if (!painted) MountSkillIconPainter(kind).paint(canvas, size);
+  }
+
+  @override
+  bool shouldRepaint(covariant _MountSkillArtPainter old) =>
+      old.art != art || old.kind != kind;
 }

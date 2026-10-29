@@ -3874,7 +3874,7 @@ class Guardian extends Player with WithCollision {
         feet,
         mount.bearing,
         0,
-        mount.def.waterOnly ? 48 : 62,
+        mount.def.visualHeight,
         mountPose: mountMotion.pose(mount.def.artKey),
       );
       if (mount.def.artKey == 'motor') {
@@ -3940,7 +3940,7 @@ class Guardian extends Player with WithCollision {
       }
       canvas.save();
       final lift =
-          (mount.def.waterOnly ? 8.0 : 20.0) +
+          mount.def.riderLift +
           math.sin(mountMotion.cycle * math.pi * 4) * mountMotion.weight * .75;
       canvas.clipRect(
         ui.Rect.fromLTRB(

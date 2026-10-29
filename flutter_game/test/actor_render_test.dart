@@ -87,12 +87,12 @@ void main() {
   );
 
   test(
-    'armored hero adds body mass and presentation height without shifting feet',
+    'slimmer warrior preserves the larger height and ground anchor',
     () async {
       Future<Uint8List> body({bool originalWidth = false}) => raster((canvas) {
         if (originalWidth) {
           canvas.translate(40, 0);
-          canvas.scale(1.20 / GameArt.heroWidthScale, 1);
+          canvas.scale(1.36 / GameArt.warriorWidthScale, 1);
           canvas.translate(-40, 0);
         }
         art.actor(canvas, 'hero', const ui.Offset(40, 40), math.pi / 2, 0, 28);
@@ -106,7 +106,7 @@ void main() {
         return alpha;
       }
 
-      expect(mass(current) / mass(previous), inInclusiveRange(1.10, 1.17));
+      expect(mass(current) / mass(previous), inInclusiveRange(.75, .84));
       final rows = <int>{};
       for (var y = 0; y < 64; y++) {
         for (var x = 0; x < 80; x++) {

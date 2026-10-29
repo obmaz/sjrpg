@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
@@ -76,6 +77,66 @@ void main() {
       );
     }
   });
+
+  test(
+    'a sword extending beyond its source cell stays intact in the native atlas',
+    () async {
+      final sourceCodec = await ui.instantiateImageCodec(
+        await File('../docs/art/cinematic/skeleton-original.png').readAsBytes(),
+      );
+      final source = (await sourceCodec.getNextFrame()).image;
+      sourceCodec.dispose();
+      final atlasCodec = await ui.instantiateImageCodec(
+        await File('art/actors-cinematic-skeleton.webp').readAsBytes(),
+      );
+      final atlas = (await atlasCodec.getNextFrame()).image;
+      atlasCodec.dispose();
+      addTearDown(source.dispose);
+      addTearDown(atlas.dispose);
+      final provenance =
+          jsonDecode(
+                File(
+                  '../docs/art/cinematic/provenance.json',
+                ).readAsStringSync(),
+              )
+              as Map;
+      final original =
+          (provenance['assets']['skeleton']['sourceRects'][0] as List)
+              .cast<int>();
+      final record =
+          jsonDecode(
+                File(
+                  'art/actors-cinematic-skeleton-bounds.json',
+                ).readAsStringSync(),
+              )
+              as Map;
+      final target = (record['frames'][12] as List).cast<int>();
+      final from = (await source.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      ))!.buffer.asUint8List();
+      final to = (await atlas.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      ))!.buffer.asUint8List();
+      var retained = 0;
+      for (var y = 0; y < target[3]; y++) {
+        for (var x = 0; x < target[2]; x++) {
+          final sourceX = original[0] + x;
+          if (sourceX < source.width ~/ 4) continue;
+          final a = from[((original[1] + y) * source.width + sourceX) * 4 + 3];
+          final b = to[((target[1] + y) * atlas.width + target[0] + x) * 4 + 3];
+          if (b > 96) {
+            expect(b, a);
+            retained++;
+          }
+        }
+      }
+      expect(
+        retained,
+        greaterThan(100),
+        reason: 'the complete sword extends beyond the equal-grid boundary',
+      );
+    },
+  );
 
   test(
     'all21 new enemies preserve measured native crops at 1.5 world height',

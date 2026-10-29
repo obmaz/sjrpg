@@ -857,27 +857,31 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         final landscapeControls = landscape;
         final tightLandscape = landscapeControls && width < 700;
         final sideGuide = landscapeControls || width >= 600;
-        final referenceControls = landscape && width >= 700
+        final portraitFan =
+            !landscape && width >= 360 && media.size.height >= 500;
+        final referenceControls = landscape && width >= 500
             ? BattleControlLayout(media.size, safeBottom: media.padding.bottom)
             : null;
-        final stick =
-                referenceControls?.stickSize ??
-                (short && width < 500
-                    ? math.min(112.0, math.max(44.0, media.size.height - 330))
-                    : width < 360
-                    ? 122.0
-                    : short
-                    ? landscape && width >= 700
-                          ? 128.0
-                          : 112.0
-                    : 142.0),
+        final stick = portraitFan
+                ? math.min(142.0, width * .25)
+                : referenceControls?.stickSize ??
+                      (short && width < 500
+                          ? math.min(
+                              112.0,
+                              math.max(44.0, media.size.height - 330),
+                            )
+                          : width < 360
+                          ? 122.0
+                          : short
+                          ? landscape && width >= 700
+                                ? 128.0
+                                : 112.0
+                          : 142.0),
             attack =
                 referenceControls?.attackSize ?? (width < 360 ? 90.0 : 104.0),
             bottom = referenceControls != null
                 ? referenceControls.bottom
-                : short
-                ? 86.0
-                : 112.0;
+                : media.padding.bottom + (short ? 86.0 : 112.0);
         final modal = adventure.defeated
             ? 'defeat'
             : adventure.won
@@ -930,9 +934,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 .isEmpty;
         final compactBattle =
             width < 500 && (short || hasMobility && media.size.height < 650);
-        final referenceFan =
-            landscape && width >= 700 ||
-            !landscape && width >= 360 && media.size.height >= 650;
+        final referenceFan = landscape && width >= 700 || portraitFan;
         final attackRight =
             referenceControls?.attackRight ??
             (referenceFan
@@ -962,17 +964,16 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 ? (compactBattle ? 120.0 : 112.0)
                 : 134.0);
         final mobilityRise =
-            referenceControls?.mobilityRise ??
-            (referenceFan ? (landscape ? 84.0 : 80.0) : 112.0);
+            referenceControls?.mobilityRise ?? (referenceFan ? -36.0 : 112.0);
         final layouts =
             referenceControls?.skills ??
             (referenceFan
-                ? [
-                    (170.0, 84.0, 56.0),
-                    (146.0, 150.0, 56.0),
-                    (80.0, 170.0, 56.0),
-                    (14.0, 146.0, 56.0),
-                  ]
+                ? BattleControlLayout.fan(
+                    attackRight: attackRight,
+                    attackSize: attack,
+                    skillSize: 52,
+                    gap: 18,
+                  )
                 : compactBattle
                 ? hasMobility
                       ? [
@@ -1022,6 +1023,14 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                       48.0,
                     ),
                   ]);
+        final visibleSkillSlots = [
+          for (var slot = 0; slot < 4; slot++)
+            if (mount == null &&
+                p.skillAt(slot) != null &&
+                (p.skillAt(slot)!.basic ||
+                    p.skillAt(slot)!.id != p.primarySkill?.id))
+              slot,
+        ];
         final primary = p.primarySkill;
         final primaryUsesSkillArt =
             primary != null &&
@@ -1029,18 +1038,20 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 p.heroClass == HeroClass.mage ||
                 p.selectedBasic != p.defaultBasicId);
         final primaryHasFrame =
+            (mount?.def.artKey == 'motor' &&
+                widget.art.images.containsKey('mount-skill-icons')) ||
             mount?.def.artKey != 'motor' &&
-            (widget.art.images.containsKey(CinematicIconArt.imageKey) ||
-                primary != null &&
-                    (primaryUsesSkillArt
-                        ? D1IconArt.hasEffect(
-                            widget.art,
-                            skillEffect(primary.id),
-                          )
-                        : p.usingFallbackWeapon &&
-                              widget.art.images.containsKey(
-                                D1IconArt.interfaceKey,
-                              )));
+                (widget.art.images.containsKey(CinematicIconArt.imageKey) ||
+                    primary != null &&
+                        (primaryUsesSkillArt
+                            ? D1IconArt.hasEffect(
+                                widget.art,
+                                skillEffect(primary.id),
+                              )
+                            : p.usingFallbackWeapon &&
+                                  widget.art.images.containsKey(
+                                    D1IconArt.interfaceKey,
+                                  )));
         final primaryContinuing =
             primary?.id == 'shadowAssault' &&
             adventure.hero.shadowAssaultActive;
@@ -1072,7 +1083,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
             !primary.basic &&
             aimedSkillIds.contains(primary.id);
         Widget skillButton(int slot) {
-          final skill = p.skillAt(slot)!, layout = layouts[slot];
+          final skill = p.skillAt(slot)!,
+              layout = layouts[visibleSkillSlots.indexOf(slot)];
           final continuing =
               skill.id == 'shadowAssault' && adventure.hero.shadowAssaultActive;
           final remaining = continuing
@@ -1192,7 +1204,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                           child: mount?.def.artKey == 'motor'
                               ? MountSkillBadge(
                                   kind: 'motor',
-                                  size: attack * .75,
+                                  art: widget.art,
+                                  size: attack,
                                   ammo: p.mountProgress.motorAmmo,
                                 )
                               : primary == null
@@ -1336,7 +1349,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                         ? null
                         : MountSkillBadge(
                             kind: mount.def.artKey,
-                            size: dodgeSize * .78,
+                            art: widget.art,
+                            size: dodgeSize,
                             ammo: p.mountProgress.motorAmmo,
                             hits: mount.hits,
                           ),
@@ -1422,7 +1436,11 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 ),
               if (contextActions.isNotEmpty)
                 Positioned(
-                  left: landscape && width >= 700
+                  left: referenceControls != null
+                      ? referenceControls.stickLeft +
+                            referenceControls.stickSize +
+                            8
+                      : landscape && width >= 700
                       ? 152
                       : short && width >= 500
                       ? 136
@@ -1447,37 +1465,54 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   ),
                 ),
               Positioned(
-                right: referenceControls != null ? 8 : null,
                 left: referenceControls != null
-                    ? null
+                    ? 14
                     : short && width >= 500
                     ? 136
                     : 14,
                 top: referenceControls != null
-                    ? media.padding.top + media.size.height * .35
+                    ? media.padding.top +
+                          math.max(
+                            110,
+                            16 +
+                                battlePortraitDiameter(media.size) +
+                                8 +
+                                28 +
+                                4,
+                          )
                     : tightLandscape
                     ? null
                     : media.padding.top +
                           (short && width < 500
                               ? 104
-                              : landscape && width >= 700
-                              ? 110
                               : guide != null
-                              ? (short && width < 500 ? 200 : 164)
+                              ? 164
                               : 110),
-                bottom: tightLandscape
+                bottom: tightLandscape && referenceControls == null
                     ? math.max(8, media.padding.bottom) + 58
                     : null,
                 child: PotionBelt(adventure, onUse: restoreGameFocus),
               ),
               if (referenceControls != null &&
+                  media.size.height >= 380 &&
                   guide == null &&
                   !adventure.sheltered)
                 Positioned(
                   left: 10,
                   top:
                       media.padding.top +
-                      math.max(112, media.size.height * .30),
+                      math.max(
+                        math.max(
+                              110,
+                              16 +
+                                  battlePortraitDiameter(media.size) +
+                                  8 +
+                                  28 +
+                                  4,
+                            ) +
+                            52,
+                        media.size.height * .30,
+                      ),
                   width: (media.size.width * .22).clamp(170, 270),
                   child: Semantics(
                     button: true,
@@ -1657,23 +1692,6 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   ),
                 ),
               ),
-              if (landscape && width >= 700) ...[
-                Positioned(
-                  right: battleMapDiameter(media.size) + 19,
-                  top: media.padding.top + 7,
-                  child: _menu('touchInventory', '가방', 'bag', compact: true),
-                ),
-                Positioned(
-                  right: battleMapDiameter(media.size) + 75,
-                  top: media.padding.top + 7,
-                  child: _menu(
-                    'touchSettings',
-                    '설정',
-                    'settings',
-                    compact: true,
-                  ),
-                ),
-              ],
               Positioned(
                 left: 0,
                 right: 0,
@@ -1681,22 +1699,30 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if (!(landscape && width >= 700))
-                      _menu('touchInventory', '가방', 'bag'),
+                    _menu(
+                      'touchInventory',
+                      '가방',
+                      'bag',
+                      compact: landscape && width >= 500,
+                    ),
                     _menu(
                       'touchQuests',
                       '스킬',
                       'skills',
-                      compact: landscape && width >= 700,
+                      compact: landscape && width >= 500,
                     ),
                     _menu(
                       'touchCompendium',
                       '여정',
                       'journal',
-                      compact: landscape && width >= 700,
+                      compact: landscape && width >= 500,
                     ),
-                    if (!(landscape && width >= 700))
-                      _menu('touchSettings', '설정', 'settings'),
+                    _menu(
+                      'touchSettings',
+                      '설정',
+                      'settings',
+                      compact: landscape && width >= 500,
+                    ),
                   ],
                 ),
               ),

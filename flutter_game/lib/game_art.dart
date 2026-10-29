@@ -40,7 +40,9 @@ class GameArt {
   final _bossMesh = BossSpriteMeshPainter();
   final _walkMesh = BossSpriteMeshPainter(imageLimit: 12, uvLimit: 128);
   final _mountMesh = MountSpriteMeshPainter();
-  static const heroWidthScale = 1.36, heroHeightScale = 1.0;
+  static const heroWidthScale = 1.36,
+      warriorWidthScale = 1.08,
+      heroHeightScale = 1.0;
 
   /// Presentation only; collision footprints and weapon reach stay in world units.
   static const warriorRenderScale = 1.18;
@@ -86,6 +88,7 @@ class GameArt {
     'combat-actions',
     'd1-interface',
     'cinematic-interface',
+    'mount-skill-icons',
     'actors-cinematic-goblin',
     'actors-cinematic-wolf',
     'actors-cinematic-skeleton',
@@ -835,7 +838,14 @@ class GameArt {
     final scale = height / atlas.heights[definition.$2], src = frame.source;
     final hero = key == 'hero' || key == 'mage';
     final warriorScale = key == 'hero' ? warriorRenderScale : 1.0;
-    final scaleX = scale * (hero ? heroWidthScale : 1) * warriorScale;
+    final scaleX =
+        scale *
+        (key == 'hero'
+            ? warriorWidthScale
+            : hero
+            ? heroWidthScale
+            : 1) *
+        warriorScale;
     final scaleY = scale * (hero ? heroHeightScale : 1) * warriorScale;
     final dst = ui.Rect.fromLTWH(
       feet.dx - frame.anchor.dx * scaleX,
@@ -914,9 +924,10 @@ class GameArt {
       images['actors-roll']!,
       src,
       ui.Rect.fromLTWH(
-        feet.dx - anchor.dx * scale * heroWidthScale,
+        feet.dx -
+            anchor.dx * scale * (mage ? heroWidthScale : warriorWidthScale),
         feet.dy - anchor.dy * scale * heroHeightScale,
-        src.width * scale * heroWidthScale,
+        src.width * scale * (mage ? heroWidthScale : warriorWidthScale),
         src.height * scale * heroHeightScale,
       ),
       _rollPaint,

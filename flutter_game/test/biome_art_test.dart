@@ -18,7 +18,7 @@ void main() {
         }
       });
       for (final kind in ['boar', 'basilisk', 'wraith', 'drone']) {
-        expect(art.actors[kind]['frames'].length, 16);
+        expect(art.actors['cinematic-$kind']['frames'].length, 16);
         final hashes = <int>{};
         for (var d = 0; d < 8; d++) {
           for (var phase = 0; phase < 2; phase++) {
@@ -26,24 +26,24 @@ void main() {
             art.actor(
               ui.Canvas(rec),
               kind,
-              const ui.Offset(125, 160),
+              const ui.Offset(160, 230),
               math.pi / 2 + d * math.pi / 4,
               phase,
               80,
             );
             final picture = rec.endRecording(),
-                im = await picture.toImage(250, 180);
+                im = await picture.toImage(320, 260);
             picture.dispose();
             final bytes = (await im.toByteData(
               format: ui.ImageByteFormat.rawRgba,
             ))!.buffer.asUint8List();
             var visible = 0;
-            for (var y = 0; y < 180; y++) {
-              for (var x = 0; x < 250; x++) {
-                if (bytes[(y * 250 + x) * 4 + 3] > 20) {
+            for (var y = 0; y < 260; y++) {
+              for (var x = 0; x < 320; x++) {
+                if (bytes[(y * 320 + x) * 4 + 3] > 20) {
                   visible++;
-                  expect(x, inInclusiveRange(2, 247));
-                  expect(y, inInclusiveRange(2, 177));
+                  expect(x, inInclusiveRange(2, 317));
+                  expect(y, inInclusiveRange(2, 257));
                 }
               }
             }

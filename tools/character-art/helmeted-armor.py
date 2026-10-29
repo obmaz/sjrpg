@@ -12,7 +12,7 @@ from mathutils import Matrix, Vector
 def equip_armor(bpy, rig, visible, material):
     steel = material("Original dark forged armor", (.12, .16, .18))
     edge = material("Original worn steel edges", (.32, .38, .40))
-    cloth = material("Original muted teal short cloth", (.025, .105, .105))
+    cloth = material("Original muted teal short cloth", (.105, .026, .022))
     under = material("Original charcoal underarmor", (.055, .065, .07))
     beard = material("Original adult male dark beard", (.11, .065, .045))
     strap = material("Original dark leather armor strap", (.10, .055, .028))
@@ -144,12 +144,12 @@ def equip_armor(bpy, rig, visible, material):
     for side, suffix in [(-1, 'r'), (1, 'l')]:
         shoulder = rig.data.bones['upperarm_'+suffix].head_local
         ellipsoid('Layered steel pauldron', (side*.225,.045,1.49),
-                  (.135,.15,.1), 'upperarm_'+suffix, steel,
+                  (.095,.125,.075), 'upperarm_'+suffix, steel,
                   cut=lambda points: sum(p[2] for p in points)/4 < 1.464)
-        ellipsoid('Pauldron lower rim', (side*.25,.045,1.442),
-                  (.126,.141,.036), 'upperarm_'+suffix, edge)
+        ellipsoid('Pauldron lower rim', (side*.235,.045,1.442),
+                  (.091,.12,.025), 'upperarm_'+suffix, edge)
         # Arm plates follow the same bones as the unmodified CC0 action clips.
-        plate('Upper arm plate', (side*.33,.052,1.455), (.095,.095,.09), 'upperarm_'+suffix)
+        plate('Upper arm plate', (side*.33,.052,1.455), (.078,.08,.08), 'upperarm_'+suffix)
         plate('Steel elbow cap', (side*.445,.054,1.455), (.05,.103,.1), 'lowerarm_'+suffix)
         plate('Steel vambrace', (side*.57,.056,1.455), (.1,.092,.082), 'lowerarm_'+suffix)
         plate('Steel gauntlet', (side*.716,.054,1.455), (.067,.085,.074), 'hand_'+suffix)

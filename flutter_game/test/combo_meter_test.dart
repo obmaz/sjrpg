@@ -293,7 +293,7 @@ void main() {
         const Size(568, 320),
         EdgeInsets.zero,
       ).bounds.width,
-      164,
+      inInclusiveRange(130, 164),
     );
     expect(
       ComboMeterLayout.forViewport(

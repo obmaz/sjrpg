@@ -415,12 +415,12 @@ void main() {
         var row = 0;
         for (final key in classes.keys) {
           for (final mount in ['horse', 'boat']) {
-            final water = mount == 'boat', lift = water ? 8.0 : 20.0;
+            final water = mount == 'boat', lift = water ? 11.0 : 27.0;
             for (var direction = 0; direction < 4; direction++) {
               final feet = ui.Offset(direction * 150 + 75, row * 200 + 177),
                   angle = direction * math.pi / 2;
               anchor(canvas, feet);
-              art.actor(canvas, mount, feet, angle, 0, water ? 48 : 62);
+              art.actor(canvas, mount, feet, angle, 0, water ? 65 : 84);
               canvas.save();
               canvas.clipRect(
                 ui.Rect.fromLTRB(
@@ -446,7 +446,7 @@ void main() {
     );
     for (final key in classes.keys) {
       for (final water in [false, true]) {
-        final lift = water ? 8.0 : 20.0;
+        final lift = water ? 11.0 : 27.0;
         for (var direction = 0; direction < 4; direction++) {
           final recorder = ui.PictureRecorder();
           art.actor(

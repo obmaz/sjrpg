@@ -1,0 +1,7 @@
+{
+    "generator": "image_gen",
+    "source": "docs/art/mount-skill-icons-original.png",
+    "sha256": "f5ae5786f16695290a46fd135f4864bfa188a64670be0de2b5365c9e6fd89603",
+    "packer": "tools/prepare-mount-skill-icons.py",
+    "order": ["motor", "horse", "bicycle", "boat"]
+}

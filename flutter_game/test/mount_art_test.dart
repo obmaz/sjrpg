@@ -1,8 +1,11 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/game_art.dart';
+import 'package:guardian_new/mount_merchant.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +21,61 @@ void main() {
       image.dispose();
     }
   });
+  testWidgets('each mount skill uses a centered complete illustrated button', (
+    tester,
+  ) async {
+    final fingerprints = <int>{};
+    for (final kind in ['motor', 'horse', 'bicycle', 'boat']) {
+      final boundaryKey = GlobalKey();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Center(
+            child: RepaintBoundary(
+              key: boundaryKey,
+              child: MountSkillBadge(art: art, kind: kind, size: 80, ammo: 27),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      final boundary =
+          boundaryKey.currentContext!.findRenderObject()!
+              as RenderRepaintBoundary;
+      final image = await tester.runAsync(() => boundary.toImage());
+      final raw = (await tester.runAsync(
+        () => image!.toByteData(format: ui.ImageByteFormat.rawRgba),
+      ))!;
+      final bytes = raw.buffer.asUint8List();
+      var left = 80, right = 0, top = 80, bottom = 0;
+      for (var y = 0; y < 80; y++) {
+        for (var x = 0; x < 80; x++) {
+          if (bytes[(y * 80 + x) * 4 + 3] > 128) {
+            left = math.min(left, x);
+            right = math.max(right, x);
+            top = math.min(top, y);
+            bottom = math.max(bottom, y);
+          }
+        }
+      }
+      expect(
+        right - left,
+        greaterThanOrEqualTo(70),
+        reason: '$kind full frame width',
+      );
+      expect(
+        bottom - top,
+        greaterThanOrEqualTo(70),
+        reason: '$kind full frame height',
+      );
+      expect((left + right) / 2, closeTo(39.5, 2));
+      expect((top + bottom) / 2, closeTo(39.5, 2));
+      fingerprints.add(Object.hashAll(bytes));
+      image!.dispose();
+    }
+    expect(fingerprints.length, 4);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   for (final kind in ['motor', 'horse', 'boat']) {
     test(
       '$kind has 16 complete, distinct renders with safe crop edges',

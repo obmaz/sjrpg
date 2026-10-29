@@ -1194,7 +1194,7 @@ class StageLandmarks extends GameComponent {
         mount.at + ui.Offset(0, mount.def.bodySize.height / 2),
         mount.bearing,
         0,
-        mount.def.waterOnly ? 48 : 62,
+        mount.def.visualHeight,
       );
     }
     final marked = session.visibleSites.map((site) => site.id).toSet();

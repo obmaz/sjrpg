@@ -71,6 +71,8 @@ class TravelMountDef {
   final double speed;
   final bool waterOnly;
   String get artKey => waterOnly ? 'boat' : id;
+  double get visualHeight => waterOnly ? 65 : 84;
+  double get riderLift => waterOnly ? 11 : 27;
   Size get bodySize => waterOnly
       ? const Size(46, 34)
       : switch (id) {

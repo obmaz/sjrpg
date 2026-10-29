@@ -6,6 +6,9 @@ import math
 import shutil
 from pathlib import Path
 from PIL import Image
+import numpy as np
+from scipy import ndimage
+from scipy.optimize import linear_sum_assignment
 
 ROOT = Path(__file__).resolve().parents[1]
 ART = ROOT / 'flutter_game/art'
@@ -22,14 +25,45 @@ def save(image, name):
     image.save(ART / f'{name}.webp', lossless=True, exact=True, method=6)
 
 def actor(image, name):
-    rects = [bounds(image, (round(c*image.width/4), round(r*image.height/4),
-                           round((c+1)*image.width/4), round((r+1)*image.height/4)))
-             for r in range(4) for c in range(4)]
+    # Assign complete silhouettes by connected alpha components rather than
+    # cutting at grid lines: weapons and tails can extend into the next cell.
+    rgba = np.asarray(image.convert('RGBA'))
+    alpha = rgba[:, :, 3]
+    labels, _ = ndimage.label(alpha > 96)
+    areas = np.bincount(labels.ravel())
+    if len(areas) < 17:
+        raise ValueError(f'{name}: fewer than sixteen separated sprites')
+    ids = np.argsort(areas[1:])[-16:][::-1] + 1
+    if min(areas[ids]) < 1000:
+        raise ValueError(f'{name}: sprites touch or are incomplete')
+    centers = np.asarray(ndimage.center_of_mass(alpha > 96, labels, ids))
+    expected = np.array([[(r + .5) * image.height / 4, (c + .5) * image.width / 4]
+                         for r in range(4) for c in range(4)])
+    cost = ((expected[:, None, :] - centers[None, :, :]) ** 2).sum(axis=2)
+    rows, cols = linear_sum_assignment(cost)
+    if np.sqrt(cost[rows, cols]).max() > min(image.size) / 7:
+        raise ValueError(f'{name}: sprite layout cannot be identified reliably')
+    ordered_ids = ids[cols[np.argsort(rows)]]
+    cores = np.isin(labels, ids)
+    nearest = ndimage.distance_transform_edt(~cores, return_distances=False, return_indices=True)
+    owners = labels[nearest[0], nearest[1]]
+    source_tiles = []
+    rects = []
+    for ident in ordered_ids:
+        mask = (owners == ident) & (alpha > 0)
+        opaque = mask & (alpha > 96)
+        ys, xs = np.nonzero(opaque)
+        box = (int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1)
+        x0, y0, x1, y1 = box
+        pixels = rgba[y0:y1, x0:x1].copy()
+        pixels[~mask[y0:y1, x0:x1]] = 0
+        source_tiles.append(Image.fromarray(pixels, 'RGBA'))
+        rects.append(box)
     # Runtime bearings begin at south. The generated sequence begins at east.
-    ordered = [rects[((d+2)%8)*2+p] for d in range(8) for p in range(2)]
+    indices = [((d + 2) % 8) * 2 + p for d in range(8) for p in range(2)]
+    tiles = [source_tiles[i] for i in indices]
     heights = sorted(b[3]-b[1] for b in rects)
     reference = (heights[7]+heights[8])/2
-    tiles = [image.crop(b) for b in ordered]
     width = 2048 if max(t.width for t in tiles) > 400 else 1024
     placements=[]; x=y=row_height=0
     for tile in tiles:
@@ -55,7 +89,8 @@ def actor(image, name):
             'nativeBodyHeight':reference,'artworkWorldHeightMultiplier':1.5}
     (ART/f'{key}-bounds.json').write_text(json.dumps(record,separators=(',',':'))+'\n')
     return {'sourceRects':rects,'runtime':f'flutter_game/art/{key}.webp',
-            'nativeBodyHeight':reference,'decodedRGBABytes':width*height*4}
+            'nativeBodyHeight':reference,'decodedRGBABytes':width*height*4,
+            'separatedAlphaComponents':True}
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)

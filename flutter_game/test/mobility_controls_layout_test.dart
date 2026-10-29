@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:bonfire/bonfire.dart';
@@ -11,6 +12,7 @@ import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_ui.dart';
 import 'package:guardian_new/main.dart';
 import 'package:guardian_new/rpg_model.dart';
+import 'package:guardian_new/rpg_widgets.dart';
 
 import 'support/sorceress_fixture.dart';
 
@@ -38,6 +40,7 @@ void main() {
       Size(390, 844),
       Size(320, 420),
       Size(320, 600),
+      Size(600, 320),
       Size(844, 390),
       Size(915, 412),
       Size(756, 506),
@@ -154,6 +157,7 @@ void main() {
           for (var i = 0; i < targets.evaluate().length; i++)
             tester.getRect(targets.at(i)),
         ];
+        rects.add(tester.getRect(find.byType(PotionBelt)));
         for (final element in find.byType(MenuButton).evaluate()) {
           rects.add(tester.getRect(find.byWidget(element.widget)));
         }
@@ -164,11 +168,42 @@ void main() {
           final bag = menu('가방'), settings = menu('설정');
           expect(bag.size, const Size(52, 44));
           expect(settings.size, const Size(52, 44));
-          expect(bag.top, 7);
-          expect(settings.top, 7);
-          expect(settings.right, lessThan(bag.left));
-          expect(menu('스킬').top, greaterThan(size.height - 60));
-          expect(menu('여정').top, greaterThan(size.height - 60));
+          expect(bag.top, greaterThan(size.height - 60));
+          expect(settings.top, bag.top);
+          expect(menu('스킬').top, bag.top);
+          expect(menu('여정').top, bag.top);
+        }
+        if (size == const Size(390, 844) || size == const Size(844, 390)) {
+          final main = tester.getRect(
+            find.byWidgetPredicate((w) => w is ActionButton && w.primary),
+          );
+          final slots = <Rect>[];
+          for (var slot = 0; slot < 4; slot++) {
+            final skill = s.progress.skillAt(slot)!;
+            final label = slot == 0
+                ? skill.name
+                : slot == 1
+                ? '보조 ${skill.name}'
+                : '스킬 ${slot + 1} ${skill.name}';
+            slots.add(
+              tester.getRect(
+                find.byWidgetPredicate(
+                  (w) => w is ActionButton && w.semanticLabel == label,
+                ),
+              ),
+            );
+          }
+          expect(slots[0].center.dx, lessThan(main.center.dx));
+          expect(slots[1].center.dx, lessThan(main.center.dx));
+          expect(slots[1].center.dy, lessThan(main.center.dy));
+          expect(slots[2].center.dx, closeTo(main.center.dx, 1));
+          expect(slots[2].center.dy, lessThan(main.center.dy));
+          expect(slots[3].center.dx, greaterThan(main.center.dx));
+          expect(slots[3].center.dy, lessThan(main.center.dy));
+          final radii = slots
+              .map((rect) => (rect.center - main.center).distance)
+              .toList();
+          expect(radii.reduce(math.max) - radii.reduce(math.min), lessThan(1));
         }
         final viewport = Offset.zero & size;
         final stick = tester.getRect(find.byType(GameStick));
