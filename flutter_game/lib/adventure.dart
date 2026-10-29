@@ -2615,6 +2615,9 @@ class Guardian extends Player with WithCollision {
       final source = 'key:${event.id}';
       final fresh = held && !session.attackSources.contains(source);
       session.holdAttack(source, held);
+      if (!held && session.progress.primarySkill?.id == 'inferno') {
+        sorceressCombat.endChannel();
+      }
       if (fresh) {
         if (session.riding?.def.artKey == 'motor') {
           session.useMountSkill();
@@ -2923,6 +2926,17 @@ class Guardian extends Player with WithCollision {
   }
 
   void slash({bool automatic = false}) {
+    final primary = session.progress.primarySkill;
+    if (primary == null) return;
+    if (!primary.basic) {
+      if (automatic) return;
+      if (primary.mobility) {
+        useMobility();
+      } else {
+        skill(slot: Progress.primarySlot);
+      }
+      return;
+    }
     if (session.progress.heroClass == HeroClass.mage) {
       sorceressCombat.endChannel();
     }
@@ -3393,6 +3407,10 @@ class Guardian extends Player with WithCollision {
     final p = session.progress;
     final slotIndex = slot ?? (secondary ? 1 : 0);
     final def = p.skillAt(slotIndex);
+    if (def != null && def.basic && p.heroClass == HeroClass.warrior) {
+      if (_basicAvailable()) _performSlash();
+      return;
+    }
     if (def == null ||
         def.id == 'charge' && session.afflictions.movementBlocked) {
       return;

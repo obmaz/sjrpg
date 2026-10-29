@@ -56,7 +56,7 @@ void main() {
     );
 
     testWidgets(
-      '$hero explains why its only primary cannot move to an empty slot',
+      '$hero explains its mandatory auxiliary slot without restricting the main slot',
       (tester) async {
         tester.view.physicalSize = const Size(320, 420);
         tester.view.devicePixelRatio = 1;
@@ -113,10 +113,7 @@ void main() {
             expect(tester.widget<GameAction>(action).onTap, null);
             expect(tester.getRect(action).bottom, lessThan(420));
           }
-          expect(
-            find.text('1번 슬롯은 비울 수 없습니다. 다른 기술과 자리를 바꿀 수 있어요.'),
-            findsOneWidget,
-          );
+          expect(find.text('보조 1번 슬롯은 다른 기술과 교체할 수 있습니다.'), findsOneWidget);
           expect(s.progress.selectedSkill, skill.id);
           expect(s.progress.skillSlots.skip(1), everyElement(isNull));
           backActions.dispatch();

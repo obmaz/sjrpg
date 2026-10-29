@@ -54,7 +54,7 @@ void main() {
       final footer = find.bySemanticsLabel('모험 계속하기');
       final footerRect = tester.getRect(footer);
       final treeRect = tester.getRect(find.byType(SkillTree));
-      final slotFinder = find.bySemanticsLabel(RegExp('전투 슬롯 1 ·'));
+      final slotFinder = find.bySemanticsLabel(RegExp('주 슬롯 ·'));
       final firstSlot = slotFinder.evaluate().isEmpty
           ? null
           : tester.getRect(slotFinder);
@@ -129,7 +129,7 @@ void main() {
       for (var slot = 0; slot < 4; slot++) {
         final name = p.skillAt(slot)!.name;
         final slotButton = find.bySemanticsLabel('전투 슬롯 ${slot + 1} · $name');
-        if (firstSlot == null) {
+        if (slotButton.evaluate().isEmpty) {
           // The short portrait layout exposes assignments in the detail panel,
           // which was exercised through real node/info taps above.
           expect(slotButton, findsNothing);

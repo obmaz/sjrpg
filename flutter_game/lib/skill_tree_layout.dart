@@ -61,6 +61,7 @@ final warriorTreeIds = Set<String>.unmodifiable(
 bool skillTreeSkillVisible(Progress progress, SkillDef skill) =>
     progress.heroClass == HeroClass.warrior
     ? warriorTreeIds.contains(skill.id) ||
+          skill.basic ||
           skill.id == 'shadowAssault' ||
           skill.id == 'battleSprint'
     : mageTreeIds.contains(skill.id);
@@ -248,7 +249,7 @@ List<Offset> skillTreeConnectionPoints(
 
 List<String> skillTreeSchoolLabels(Progress progress) =>
     progress.heroClass == HeroClass.warrior
-    ? [...warriorSchoolLabels, '특수']
+    ? [...warriorSchoolLabels, '기본·특수']
     : mageSchoolLabels;
 
 int skillTreeSchoolIndex(Progress progress, String id) {

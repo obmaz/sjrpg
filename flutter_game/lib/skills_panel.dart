@@ -257,19 +257,27 @@ class _SkillsPanelState extends State<SkillsPanel> {
                                   ),
                                   child: Row(
                                     children: [
-                                      for (var i = 0; i < 4; i++)
+                                      for (var i = 0; i < 5; i++)
                                         Expanded(
                                           child: Padding(
                                             padding: EdgeInsets.only(
-                                              right: i == 3 ? 0 : 8,
+                                              right: i == 4 ? 0 : 6,
                                             ),
-                                            child: _slot(i, compact: short),
+                                            child: _slot(
+                                              i == 0
+                                                  ? Progress.primarySlot
+                                                  : i - 1,
+                                              compact: short,
+                                            ),
                                           ),
                                         ),
                                     ],
                                   ),
                                 ),
                               BasicAttackStrip(
+                                leading: compactMage
+                                    ? _slot(Progress.primarySlot, compact: true)
+                                    : null,
                                 session: s,
                                 compact: short,
                                 onFocus: (skill) =>
@@ -475,15 +483,18 @@ class _SkillsPanelState extends State<SkillsPanel> {
   );
   Widget _slot(int slot, {bool compact = false}) {
     final skill = p.skillAt(slot);
+    final primary = slot == Progress.primarySlot;
+    void inspectSlot() => inspect(skill ?? p.basicSkill);
     return Semantics(
-      button: skill != null,
-      label: '전투 슬롯 ${slot + 1} · ${skill?.name ?? '미지정'}',
+      button: skill != null || primary,
+      label:
+          '${slot == Progress.primarySlot ? '주 슬롯' : '전투 슬롯 ${slot + 1}'} · ${skill?.name ?? '미지정'}',
       excludeSemantics: true,
-      onTap: skill == null ? null : () => inspect(skill),
+      onTap: skill == null && !primary ? null : inspectSlot,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: skill == null ? null : () => inspect(skill),
+          onTap: skill == null && !primary ? null : inspectSlot,
           borderRadius: BorderRadius.circular(8),
           child: Container(
             height: compact ? 44 : 60,
@@ -511,7 +522,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
                       ),
                       const SizedBox(width: 3),
                       Text(
-                        '${slot + 1}',
+                        primary ? '주' : '${slot + 1}',
                         style: const TextStyle(color: cream, fontSize: 11),
                       ),
                     ],
@@ -524,7 +535,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
                             : _art(skill, 40),
                       ),
                       Text(
-                        skill?.shortName ?? '${slot + 1}',
+                        skill?.shortName ?? (primary ? '주 슬롯' : '${slot + 1}'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(color: cream, fontSize: 11),
@@ -696,15 +707,18 @@ class _SkillsPanelState extends State<SkillsPanel> {
               ),
             ),
           ),
-          if (skill.basic && rank > 0)
+          if (p.canSelectPrimary(skill.id))
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 4, 14, 0),
               child: GameAction(
-                p.selectedBasic == skill.id ? '기본 공격 사용 중' : '기본 공격으로 사용',
-                semanticLabel: '${skill.name} 기본 공격으로 사용',
-                primary: p.selectedBasic == skill.id,
+                p.primarySkill?.id == skill.id ? '주 슬롯 해제' : '주 슬롯에 장착',
+                semanticLabel:
+                    '${skill.name} · ${p.primarySkill?.id == skill.id ? '주 슬롯 해제' : '주 슬롯에 장착'}',
+                primary: p.primarySkill?.id == skill.id,
                 onTap: () => setState(() {
-                  p.selectBasic(skill.id);
+                  p.selectPrimary(
+                    p.primarySkill?.id == skill.id ? null : skill.id,
+                  );
                   s.refresh();
                 }),
               ),
@@ -718,7 +732,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
                     const Padding(
                       padding: EdgeInsets.only(bottom: 8),
                       child: Text(
-                        '1번 슬롯은 비울 수 없습니다. 다른 기술과 자리를 바꿀 수 있어요.',
+                        '보조 1번 슬롯은 다른 기술과 교체할 수 있습니다.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: _dim,
@@ -744,7 +758,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
                                   '${skill.name} · 슬롯 ${i + 1} 지정${current == i
                                       ? ' · 사용 중'
                                       : !p.canSelectSkill(skill.id, slot: i)
-                                      ? ' · 1번 슬롯 유지 필요'
+                                      ? ' · 보조 1번 유지 필요'
                                       : ''}',
                               primary: current == i,
                               onTap: !p.canSelectSkill(skill.id, slot: i)

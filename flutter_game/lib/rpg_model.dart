@@ -846,6 +846,33 @@ class Progress {
   bool awardSkillResetTicket(WorldStage stage) =>
       _claimedResetStages.add(stage);
   String selectedBasic = '';
+  static const primarySlot = 4;
+  static const _primaryBasic = '@basic';
+  String? _primarySkillId = _primaryBasic;
+  SkillDef? get primarySkill => _primarySkillId == null
+      ? null
+      : _primarySkillId == _primaryBasic
+      ? basicSkill
+      : skills.firstWhere((skill) => skill.id == _primarySkillId);
+  bool canSelectPrimary(String id) => skills.any(
+    (skill) =>
+        skill.id == id &&
+        (skill.basic || !skill.passive) &&
+        skill.id != 'sorceressAttack' &&
+        rank(id) > 0,
+  );
+  bool selectPrimary(String? id) {
+    if (id == null) {
+      _primarySkillId = null;
+      return true;
+    }
+    if (!canSelectPrimary(id)) return false;
+    final skill = skills.firstWhere((skill) => skill.id == id);
+    if (skill.basic) return selectBasic(id);
+    _primarySkillId = id;
+    return true;
+  }
+
   String get defaultBasicId =>
       heroClass == HeroClass.warrior ? 'cleave' : 'firebolt';
   Iterable<SkillDef> get basicSkills =>
@@ -856,6 +883,7 @@ class Progress {
   bool selectBasic(String id) {
     if (!canSelectBasic(id)) return false;
     selectedBasic = id;
+    _primarySkillId = _primaryBasic;
     return true;
   }
 
@@ -875,6 +903,7 @@ class Progress {
     quaternarySkill,
   ];
   SkillDef? skillAt(int slot) {
+    if (slot == primarySlot) return primarySkill;
     if (slot < 0 || slot >= 4) return null;
     final id = skillSlots[slot];
     return id == null ? null : skills.firstWhere((skill) => skill.id == id);
@@ -962,6 +991,7 @@ class Progress {
     if (heroClass == HeroClass.warrior) 'barbarianTreeVersion': 1,
     if (heroClass == HeroClass.mage) 'sorceressTreeVersion': 1,
     'selectedBasic': selectedBasic,
+    'primarySkill': _primarySkillId,
     'selectedSkill': selectedSkill,
     'secondarySkill': secondarySkill,
     'tertiarySkill': tertiarySkill,
@@ -1116,6 +1146,20 @@ class Progress {
           : storedBasic;
       if (basic is! String || !p.canSelectBasic(basic)) return null;
       p.selectedBasic = basic;
+      final primary = data.containsKey('primarySkill')
+          ? data['primarySkill']
+          : _primaryBasic;
+      if (primary != null &&
+          primary != _primaryBasic &&
+          (primary is! String || !p.canSelectPrimary(primary))) {
+        return null;
+      }
+      p._primarySkillId = primary as String?;
+      if (primary != null &&
+          primary != _primaryBasic &&
+          p.primarySkill!.basic) {
+        p.selectBasic(primary);
+      }
       p.selectedSkill = data['selectedSkill'] as String;
       final active = p.skills.firstWhere((s) => s.id == p.selectedSkill);
       if (active.passive || active.mobility || p.rank(active.id) == 0) {
@@ -1819,6 +1863,11 @@ class Progress {
       ..[starter] = 1;
     selectedSkill = heroClass == HeroClass.warrior ? starter : basic;
     secondarySkill = tertiarySkill = quaternarySkill = null;
+    if (_primarySkillId != null &&
+        _primarySkillId != _primaryBasic &&
+        rank(_primarySkillId!) == 0) {
+      _primarySkillId = null;
+    }
     hp = math.min(hp, maxHp);
     energy = math.min(energy, maxEnergy);
     return true;

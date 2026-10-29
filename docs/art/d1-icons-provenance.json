@@ -1,0 +1,41 @@
+{
+    "generator": "image_gen",
+    "style": "approved D1",
+    "packer": "tools/prepare-d1-icons.py",
+    "sheets": {
+        "mage": {
+            "original": "docs/art/d1-mage-original.png",
+            "originalSha256": "3c03bd4066a852f000bcc923b8885383f9d50b0475fabb589e9e6bd934fde6ba",
+            "runtime": "flutter_game/art/d1-mage.webp",
+            "runtimeSha256": "7019e08d63d9c83e6277891bbaad2636ed9b683a5adc583f9533cbe4fdc321f6",
+            "columns": 6,
+            "rows": 5,
+            "cell": 192,
+            "gutter": 8,
+            "decodedRGBABytes": 4423680
+        },
+        "warrior": {
+            "original": "docs/art/d1-warrior-original.png",
+            "originalSha256": "e5b8273fa253fc301a6bf1fb8c4994386705670ed27cd0a7b1fa0c0ff8eefe21",
+            "runtime": "flutter_game/art/d1-warrior.webp",
+            "runtimeSha256": "afc13bff0305f76981ef19524b096bd62b6a7587d74065c3b3aae1a7a1378ebf",
+            "columns": 6,
+            "rows": 5,
+            "cell": 192,
+            "gutter": 8,
+            "decodedRGBABytes": 4423680
+        },
+        "interface": {
+            "original": "docs/art/d1-interface-original.png",
+            "originalSha256": "f40ab2f43b0fe663c770e0b20317776b7b7d94f0a673e4bdeca6117a5d6cd288",
+            "runtime": "flutter_game/art/d1-interface.webp",
+            "runtimeSha256": "6784599197bbecb386cf92914437f3af6aaa8e96df0c9324611e35b8b0c5df4b",
+            "columns": 8,
+            "rows": 4,
+            "cell": 192,
+            "gutter": 8,
+            "decodedRGBABytes": 4718592
+        }
+    },
+    "method": "Uniform grid slicing, premultiplied alpha resampling and transparent gutters; no repainting."
+}

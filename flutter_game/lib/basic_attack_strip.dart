@@ -11,11 +11,13 @@ class BasicAttackStrip extends StatelessWidget {
     required this.session,
     required this.onFocus,
     this.compact = false,
+    this.leading,
     super.key,
   });
   final Adventure session;
   final ValueChanged<SkillDef> onFocus;
   final bool compact;
+  final Widget? leading;
 
   @override
   Widget build(BuildContext context) {
@@ -25,14 +27,17 @@ class BasicAttackStrip extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
       child: Row(
         children: [
-          const SizedBox(
-            width: 28,
-            child: Text(
-              '기본\n공격',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Color(0xffa4bcb6), fontSize: 11),
+          if (leading != null)
+            SizedBox(width: 54, child: leading)
+          else
+            const SizedBox(
+              width: 28,
+              child: Text(
+                '기본\n공격',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Color(0xffa4bcb6), fontSize: 11),
+              ),
             ),
-          ),
           const SizedBox(width: 6),
           for (var i = 0; i < basics.length; i++)
             Expanded(
@@ -49,7 +54,7 @@ class BasicAttackStrip extends StatelessWidget {
   Widget _card(SkillDef skill) {
     final p = session.progress,
         rank = p.rank(skill.id),
-        chosen = p.selectedBasic == skill.id;
+        chosen = p.primarySkill?.id == skill.id;
     final label = switch (skill.id) {
       'cleave' => '베기',
       'quickCut' => '속사',

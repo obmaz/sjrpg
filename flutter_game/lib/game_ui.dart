@@ -7,6 +7,7 @@ import 'adventure.dart';
 import 'affliction_widgets.dart';
 import 'barbarian_icon_art.dart';
 import 'combat_balance.dart';
+import 'd1_icon_art.dart';
 import 'field_palettes.dart';
 import 'game_art.dart';
 import 'health_widgets.dart';
@@ -89,23 +90,23 @@ class GameHud extends StatelessWidget {
           ),
           Positioned(
             top: healthTop,
-            left: 66,
-            width: math.max(50, statusWidth - 66),
+            left: 70,
+            width: math.max(50, statusWidth - 70),
             child: HealthMeter(session, height: healthHeight),
           ),
           Positioned(
-            left: 68,
+            left: 70,
             top: resourceTop,
-            width: math.max(48, statusWidth - 75),
+            width: math.max(48, statusWidth - 77),
             child: ResourceMeter(session, height: resourceHeight),
           ),
           Positioned(
             left: 10,
-            top: 11,
+            top: 16,
             child: SizedBox(
               key: const ValueKey('hud-portrait'),
-              width: 56,
-              height: 68,
+              width: 60,
+              height: 60,
               child: ClipOval(
                 child: CustomPaint(
                   painter: _PortraitPainter(session.art, p.heroClass),
@@ -114,9 +115,14 @@ class GameHud extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: 9,
-            top: 88,
-            child: AfflictionIcons(session.afflictions),
+            left: 77,
+            top: math.max(73, resourceTop + resourceHeight + 3),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: math.max(60, statusWidth - 76),
+              ),
+              child: AfflictionIcons(session.afflictions, session: session),
+            ),
           ),
           Positioned(
             right: 9,
@@ -197,7 +203,7 @@ class _HeroStatusChrome extends CustomPainter {
         ..color = const Color(0xffbd9e72)
         ..strokeWidth = .7,
     );
-    final portrait = const Rect.fromLTWH(1, 2, 64, 78);
+    final portrait = const Rect.fromLTWH(1, 8, 68, 68);
     canvas.drawOval(
       portrait.shift(const Offset(0, 2)),
       Paint()..color = const Color(0xaa000000),
@@ -228,7 +234,7 @@ class _HeroStatusChrome extends CustomPainter {
         ..color = const Color(0xff9c8761),
     );
     // Small crest and rivets distinguish the portrait from an ordinary button.
-    for (final y in [0.0, 79.0]) {
+    for (final y in [7.0, 76.0]) {
       final crest = Path()
         ..moveTo(33, y - 3)
         ..lineTo(38, y + 1)
@@ -264,6 +270,9 @@ class ActionIllustrationPainter extends CustomPainter {
   final GameArt art;
   final bool fist;
   static bool draw(GameArt art, Canvas canvas, Size size, {bool fist = false}) {
+    if (D1IconArt.draw(canvas, art, fist ? 6 : 5, Offset.zero & size)) {
+      return true;
+    }
     final image = art.images[imageKey];
     if (image == null) return false;
     canvas.save();
@@ -940,6 +949,18 @@ class EffectIconPainter extends CustomPainter {
   }
 
   void _paint(Canvas canvas, Size size) {
+    final d1 = index >= 100
+        ? index
+        : switch (index) {
+            34 => 5,
+            35 => 9,
+            36 => 11,
+            7 => 8,
+            _ => null,
+          };
+    if (d1 != null && D1IconArt.draw(canvas, art, d1, Offset.zero & size)) {
+      return;
+    }
     if (index == 34 && ActionIllustrationPainter.draw(art, canvas, size)) {
       return;
     }
@@ -1050,6 +1071,23 @@ class MobileActionGlyphPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final d1 = switch (index) {
+      MobileGlyph.attack => 7,
+      MobileGlyph.dodge => 4,
+      MobileGlyph.bag => 0,
+      MobileGlyph.skills => 1,
+      MobileGlyph.map => 2,
+      MobileGlyph.settings => 3,
+      MobileGlyph.sprint => 5,
+      MobileGlyph.fist => 6,
+      MobileGlyph.motor => 15,
+      MobileGlyph.shadow => 11,
+      MobileGlyph.heavy => 9,
+      _ => null,
+    };
+    if (d1 != null && D1IconArt.draw(canvas, art, d1, Offset.zero & size)) {
+      return;
+    }
     if (ActionGlyphArt.draw(
       canvas,
       art.images['action-glyphs'],
@@ -1833,6 +1871,7 @@ class DodgeActionPainter extends CustomPainter {
   static final _paint = Paint()..filterQuality = FilterQuality.medium;
   @override
   void paint(Canvas canvas, Size size) {
+    if (D1IconArt.draw(canvas, art, 4, Offset.zero & size)) return;
     final image = art.images['dodge-icon'];
     if (image == null) return;
     canvas.save();
@@ -1861,6 +1900,16 @@ class IllustratedMenuPainter extends CustomPainter {
   final String sprite;
   @override
   void paint(Canvas canvas, Size size) {
+    final d1 = switch (sprite) {
+      'touchInventory' => 0,
+      'touchCodex' || 'touchQuests' => 1,
+      'touchJournal' || 'touchCompendium' => 2,
+      'touchSettings' => 3,
+      _ => null,
+    };
+    if (d1 != null && D1IconArt.draw(canvas, art, d1, Offset.zero & size)) {
+      return;
+    }
     const _BattleSurfacePainter(Color(0xffcbb591)).paint(canvas, size);
     final destination = (Offset.zero & size).deflate(size.shortestSide * .19);
     if (art.images['controls'] case final image?) {

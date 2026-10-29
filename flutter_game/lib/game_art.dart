@@ -83,6 +83,9 @@ class GameArt {
     'physical-icons',
     'combat-illustrations',
     'combat-actions',
+    'd1-interface',
+    'd1-warrior',
+    'd1-mage',
     'fx-level-up',
     'fx-meteor',
     'fx-ice-nova',
@@ -173,6 +176,8 @@ class GameArt {
   static const _stagedRetiredVfx = {
     'fx-steel-whirlwind',
     'fx-warcry',
+    'barbarian-skills',
+    'sorceress-skills',
     'village-scene',
     'village-gardens',
     'village-cottage',
@@ -267,10 +272,12 @@ class GameArt {
         if (!_stagedRetiredVfx.contains(name) &&
             (!const {
                   'barbarian-skills',
+                  'd1-warrior',
                   'hero-helmeted-portrait',
                 }.contains(name) ||
                 heroClass == HeroClass.warrior) &&
-            (name != 'sorceress-skills' || heroClass == HeroClass.mage) &&
+            (!const {'sorceress-skills', 'd1-mage'}.contains(name) ||
+                heroClass == HeroClass.mage) &&
             (!name.startsWith('actors-') || _sharedActors.contains(name)) &&
             !exclusiveScenery.contains(name))
           name,
@@ -724,12 +731,16 @@ class GameArt {
   void helmetedWarriorPortrait(ui.Canvas canvas, ui.Rect destination) {
     final image = images['hero-helmeted-portrait'];
     if (image == null) return;
-    canvas.drawImageRect(
-      image,
-      ui.Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
-      destination,
-      _portraitPaint,
+    final fit = math.max(
+      destination.width / image.width,
+      destination.height / image.height,
     );
+    final source = ui.Rect.fromCenter(
+      center: ui.Offset(image.width / 2, image.height / 2),
+      width: destination.width / fit,
+      height: destination.height / fit,
+    );
+    canvas.drawImageRect(image, source, destination, _portraitPaint);
   }
 
   /// Existing and unloaded atlases retain the original two-phase gait.
