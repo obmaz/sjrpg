@@ -850,7 +850,10 @@ class SorceressProjectile extends SorceressEffect {
     }
     travelled += distance;
     if (orb) {
-      final wanted = math.min(30, (travelled / range * 30 + 1e-6).floor());
+      final wanted = math.min(
+        spec.orbTrailCount,
+        (travelled / range * spec.orbTrailCount + 1e-6).floor(),
+      );
       while (orbShards < wanted) {
         owner.projectile(
           spec,
@@ -872,7 +875,7 @@ class SorceressProjectile extends SorceressEffect {
   void _terminalNova() {
     if (!orb || _terminalExploded) return;
     _terminalExploded = true;
-    _shards(16);
+    _shards(spec.orbBurstCount);
   }
 
   void _shards(int count) {
@@ -972,7 +975,7 @@ class SorceressGround extends SorceressEffect {
           )
           .toList();
     }
-    targets = targets.take(spec.id == 'blaze' ? 30 : spec.maxTargets).toList();
+    targets = targets.take(spec.maxTargets).toList();
     if (spec.id == 'blaze') {
       targets = targets
           .where((enemy) => (owner._trailHitUntil[enemy] ?? 0) <= owner._clock)

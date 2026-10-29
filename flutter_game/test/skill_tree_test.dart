@@ -155,13 +155,13 @@ void main() {
         reason: 'staff art does not change the selected spell element',
       );
       trainSkill(p, 'warmth');
-      expect(p.manaRecovery, closeTo(9 * .7 * 1.3, .000001));
+      expect(p.manaRecovery, closeTo(9 * .7 * 1.12, .000001));
       trainSkill(p, 'iceBolt');
       p.selectBasic('iceBolt');
       final iceDamage = p.basicDamage;
       trainSkill(p, 'coldMastery');
       expect(p.coldDamageMultiplier, 1);
-      expect(p.sorceressColdPierce, .2);
+      expect(p.sorceressColdPierce, closeTo(.08, 1e-9));
       expect(
         p.basicDamage,
         iceDamage,
@@ -173,13 +173,13 @@ void main() {
       trainSkill(p, 'fireMastery');
       expect(p.basicDamage, iceDamage);
       p.selectBasic('firebolt');
-      expect(p.basicDamage, closeTo(originalFire * 1.3, .000001));
+      expect(p.basicDamage, closeTo(originalFire * 1.12, .000001));
       trainSkill(p, 'chargedBolt');
       p.selectBasic('chargedBolt');
       final lightningDamage = p.basicDamage;
       trainSkill(p, 'lightningMastery');
-      expect(p.lightningDamageMultiplier, 1.5);
-      expect(p.basicDamage, closeTo(lightningDamage * 1.5, .000001));
+      expect(p.lightningDamageMultiplier, 1.2);
+      expect(p.basicDamage, closeTo(lightningDamage * 1.2, .000001));
       expect(Progress.fromSave(p.toSave())!.toSave(), p.toSave());
     },
   );

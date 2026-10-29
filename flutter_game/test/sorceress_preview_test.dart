@@ -91,7 +91,7 @@ void main() {
   );
 
   test(
-    'original Fire Bolt damage is balanced exactly once and basic DPS is per projectile',
+    'first-rank Fire Bolt includes potency exactly once and basic DPS is per projectile',
     () {
       final p = Progress(heroClass: HeroClass.mage);
       final bolt = _skill('firebolt');
@@ -101,11 +101,11 @@ void main() {
           CombatBalance.sorceressDamageScale;
       expect(
         _row(p, 'firebolt', '1회 최소 피해').current,
-        closeTo(3 * scale, 1e-10),
+        closeTo(3 * scale * .6, 1e-10),
       );
       expect(
         _row(p, 'firebolt', '1회 최대 피해').current,
-        closeTo(6 * scale, 1e-10),
+        closeTo(6 * scale * .6, 1e-10),
       );
       for (final id in ['firebolt', 'iceBolt', 'chargedBolt']) {
         p.ranks[id] = 7;
@@ -156,12 +156,15 @@ void main() {
       expect(_row(p, 'blink', '공통 시전 지연').current, 0);
       expect(_row(p, 'hydra', '불뱀 머리').current, 3);
       expect(_row(p, 'hydra', '한 차례 최대 대상').current, 3);
-      expect(_row(p, 'frozenOrb', '얼음 파편').current, 46);
+      expect(_row(p, 'frozenOrb', '얼음 파편').current, 34);
       expect(
         _row(p, 'chainLightning', '연쇄 적중').current,
         p.sorceressSpell(_skill('chainLightning')).lightningBounces,
       );
-      expect(_row(p, 'staticField', '현재 생명 피해').current, 25);
+      expect(
+        _row(p, 'staticField', '현재 생명 피해').current,
+        closeTo(18.68421052631579, 1e-9),
+      );
       expect(_row(p, 'staticField', '보스 최소 남은 생명').current, 50);
       for (final id in [
         'blizzard',

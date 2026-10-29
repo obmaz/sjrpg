@@ -7,6 +7,79 @@ import 'package:guardian_new/rpg_model.dart';
 import 'package:guardian_new/sorceress_rules.dart';
 
 void main() {
+  test('one-point utility is weaker and every investment improves potency', () {
+    expect(SorceressRules.fireMastery(0), 1);
+    expect(SorceressRules.fireMastery(1), closeTo(1.12, 1e-9));
+    expect(SorceressRules.lightningMastery(1), closeTo(1.20, 1e-9));
+    expect(SorceressRules.coldPierce(1), closeTo(.08, 1e-9));
+    expect(SorceressRules.warmthMultiplier(1), closeTo(1.12, 1e-9));
+    for (final skill in mageSkills) {
+      var previous = SorceressRules.evaluate(
+        skill.id,
+        rank: 0,
+        hardRanks: const {},
+      );
+      for (var rank = 1; rank <= 20; rank++) {
+        final current = SorceressRules.evaluate(
+          skill.id,
+          rank: rank,
+          hardRanks: const {},
+        );
+        expect(
+          current.meanDamage,
+          greaterThanOrEqualTo(previous.meanDamage),
+          reason: skill.id,
+        );
+        expect(
+          current.damagePerSecond,
+          greaterThanOrEqualTo(previous.damagePerSecond),
+          reason: skill.id,
+        );
+        expect(
+          current.maxTargets,
+          greaterThanOrEqualTo(previous.maxTargets),
+          reason: skill.id,
+        );
+        previous = current;
+      }
+    }
+    for (final id in [
+      'nova',
+      'frostNova',
+      'staticField',
+      'fireball',
+      'meteor',
+      'blizzard',
+      'firewall',
+      'blaze',
+      'frozenOrb',
+    ]) {
+      expect(
+        SorceressRules.evaluate(id, rank: 1, hardRanks: const {}).maxTargets,
+        3,
+        reason: id,
+      );
+      expect(
+        SorceressRules.evaluate(id, rank: 20, hardRanks: const {}).maxTargets,
+        22,
+        reason: id,
+      );
+    }
+    final first = SorceressRules.evaluate(
+      'frostNova',
+      rank: 1,
+      hardRanks: const {},
+    );
+    final last = SorceressRules.evaluate(
+      'frostNova',
+      rank: 20,
+      hardRanks: const {},
+    );
+    expect(first.radius, 162);
+    expect(last.radius, 216);
+    expect(first.chillDuration, 3.2);
+    expect(last.chillDuration, 27);
+  });
   final fixture =
       jsonDecode(
             File('test/fixtures/diablo2_sorceress_113.json').readAsStringSync(),
@@ -52,7 +125,7 @@ void main() {
   );
 
   test(
-    'original HitShift and piecewise elemental damage are applied before one balance scale',
+    'source damage curves receive one rank potency and one balance scale',
     () {
       for (final skill in mageSkills) {
         if (skill.id == 'energyShield') continue;
@@ -71,12 +144,24 @@ void main() {
           final factor = skill.id == 'inferno' ? 25 : 75;
           expect(
             dot ? stats.minDamagePerSecond : stats.minDamage,
-            closeTo((packet[0] as num) * scale * (dot ? factor : 1), 1e-9),
+            closeTo(
+              (packet[0] as num) *
+                  scale *
+                  (rank == 1 ? .6 : 1) *
+                  (dot ? factor : 1),
+              1e-9,
+            ),
             reason: '${skill.id} min rank$rank',
           );
           expect(
             dot ? stats.maxDamagePerSecond : stats.maxDamage,
-            closeTo((packet[1] as num) * scale * (dot ? factor : 1), 1e-9),
+            closeTo(
+              (packet[1] as num) *
+                  scale *
+                  (rank == 1 ? .6 : 1) *
+                  (dot ? factor : 1),
+              1e-9,
+            ),
             reason: '${skill.id} max rank$rank',
           );
         }
@@ -127,7 +212,7 @@ void main() {
   });
 
   test(
-    'source armor, shield and enchant retain long durations and distinct defenses',
+    'defenses retain lifetimes with reduced first-rank potency and unchanged rank twenty',
     () {
       SorceressSpellStats stats(
         String id,
@@ -136,7 +221,7 @@ void main() {
       ]) => SorceressRules.evaluate(id, rank: rank, hardRanks: hard);
       expect(stats('frozenArmor', 1).duration, 120);
       expect(stats('frozenArmor', 20).duration, 348);
-      expect(stats('frozenArmor', 1).armorMultiplier, 1.3);
+      expect(stats('frozenArmor', 1).armorMultiplier, 1.12);
       expect(stats('shiverArmor', 20).armorMultiplier, closeTo(2.59, 1e-9));
       expect(stats('chillingArmor', 20).duration, 258);
       expect(
@@ -146,7 +231,7 @@ void main() {
         }).duration,
         520,
       );
-      expect(stats('energyShield', 1).damageAbsorb, .20);
+      expect(stats('energyShield', 1).damageAbsorb, closeTo(.08, 1e-9));
       expect(stats('energyShield', 20).damageAbsorb, .75);
       expect(stats('energyShield', 20).duration, 1284);
       expect(stats('energyShield', 20).manaPerDamage, 2);
@@ -168,7 +253,7 @@ void main() {
           SorceressRules.evaluate(id, rank: rank, hardRanks: const {});
       expect(stats('chargedBolt', 1).projectileCount, 3);
       expect(stats('chargedBolt', 20).projectileCount, 22);
-      expect(stats('chainLightning', 1).lightningBounces, 5);
+      expect(stats('chainLightning', 1).lightningBounces, 3);
       expect(stats('chainLightning', 20).lightningBounces, 9);
       expect(stats('lightning', 20).pierces, true);
       expect(stats('frozenOrb', 20).range, 300);
@@ -177,13 +262,13 @@ void main() {
       expect(stats('hydra', 20).projectileCount, 3);
       expect(stats('blizzard', 20).duration, 4);
       expect(stats('blizzard', 20).interval, .16);
-      expect(stats('blaze', 20).maxTargets, 30);
+      expect(stats('blaze', 20).maxTargets, 22);
       final meteor = stats('meteor', 1);
-      expect(meteor.minDamagePerSecond, 35.15625);
-      expect(meteor.maxDamagePerSecond, 58.59375);
+      expect(meteor.minDamagePerSecond, closeTo(21.09375, 1e-9));
+      expect(meteor.maxDamagePerSecond, closeTo(35.15625, 1e-9));
       expect(meteor.groundDuration, 1.2);
       expect(stats('meteor', 20).groundDuration, 12.6);
-      expect(stats('staticField', 1).currentHpFraction, .25);
+      expect(stats('staticField', 1).currentHpFraction, .10);
     },
   );
 }

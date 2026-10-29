@@ -144,13 +144,13 @@ void main() {
                 ? old + 1
                 : switch (id) {
                     'chargedBolt' => 3 + rank - 1,
-                    'chainLightning' => (26 + rank - 1) ~/ 5,
+                    'chainLightning' => ((rank + 25) ~/ 5).clamp(0, rank + 2),
                     'firebolt' ||
                     'iceBolt' ||
                     'iceBlast' ||
                     'telekinesis' ||
                     'thunderStorm' => 1,
-                    _ => CombatBalance.maxActiveEnemies,
+                    _ => rank + 2,
                   };
             expect(next, expected, reason: '$id rank$rank');
             old = next;
