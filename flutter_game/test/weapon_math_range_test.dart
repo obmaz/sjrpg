@@ -57,6 +57,7 @@ void main() {
         mage.basicDamage,
         closeTo(
           4.5 *
+              .6 * // One-point spells use 60% of their source damage.
               Progress.playerDamageScale *
               CombatBalance.skillDamageScale *
               CombatBalance.sorceressDamageScale,
@@ -253,11 +254,11 @@ void main() {
           bolt.range,
           s.progress.sorceressSpell(s.progress.basicSkill).range,
         );
-        expect(bolt.range, 600);
+        expect(bolt.range, 450);
         ranges.add(bolt.range);
         attacks.add(s.progress.weapon.attack);
       }
-      expect(ranges, {600});
+      expect(ranges, {450});
       expect(attacks.length, greaterThan(1));
       final s = field(HeroClass.mage), from = s.hero.body.center;
       final bolt = SorceressProjectile(

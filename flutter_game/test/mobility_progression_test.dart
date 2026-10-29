@@ -58,7 +58,11 @@ void main() {
           closeTo(hero == HeroClass.warrior ? 12.42 : 0, .000001),
         );
         expect(p.mobilityDuration, hero == HeroClass.warrior ? 2.8 : 0);
-        expect(p.mobilityRange, hero == HeroClass.mage ? 600 : 0);
+        expect(
+          p.mobilityRange,
+          closeTo(hero == HeroClass.mage ? 481.57894736842104 : 0, 1e-9),
+          reason: 'rank-five Teleport has not reached its rank-twenty range',
+        );
         if (hero == HeroClass.mage) {
           final node = skillTreeRows(
             hero,

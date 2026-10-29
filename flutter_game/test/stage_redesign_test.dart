@@ -153,10 +153,8 @@ void main() {
       final meteor = mage.skills.firstWhere((skill) => skill.id == 'meteor');
       expect(mage.sorceressSpell(meteor, atRank: 1).castDelay, 1.2);
       expect(SorceressMeteor.fallTime, 2.4);
-      expect(
-        mage.sorceressSpell(meteor, atRank: 20).radius,
-        mage.sorceressSpell(meteor, atRank: 1).radius,
-      );
+      expect(mage.sorceressSpell(meteor, atRank: 1).radius, 108);
+      expect(mage.sorceressSpell(meteor, atRank: 20).radius, 144);
     },
   );
   test('whirlwind cannot select additional victims across later pulses', () {
