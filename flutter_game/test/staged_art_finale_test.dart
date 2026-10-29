@@ -6,11 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
-import 'package:guardian_new/class_selection.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/game_ui.dart';
 import 'package:guardian_new/main.dart';
+import 'package:guardian_new/title_screen.dart';
 import 'package:guardian_new/world_model.dart';
 
 import 'support/test_game.dart';
@@ -111,9 +111,9 @@ void main() {
         );
         await _until(
           tester,
-          () => find.byType(ClassSelection).evaluate().isNotEmpty,
+          () => find.byType(TitleScreen).evaluate().isNotEmpty,
         );
-        await tester.tap(find.text('모험 이어하기'));
+        await tester.tap(find.text('이어하기'));
         await _until(
           tester,
           () =>

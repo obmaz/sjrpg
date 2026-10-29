@@ -30,6 +30,7 @@ import 'reload_bridge.dart' as app_reload;
 import 'rpg_widgets.dart';
 import 'sanctuary_fence.dart';
 import 'save_bridge.dart' as storage;
+import 'title_screen.dart';
 import 'well_portal.dart';
 import 'world_model.dart';
 
@@ -163,6 +164,8 @@ class _EntryPageState extends State<EntryPage> with WidgetsBindingObserver {
     final navigator = Navigator.of(context);
     if (navigator.canPop()) {
       navigator.maybePop();
+    } else if (!started && selectingClass) {
+      setState(() => selectingClass = false);
     } else {
       backActions.dispatch();
     }
@@ -174,6 +177,7 @@ class _EntryPageState extends State<EntryPage> with WidgetsBindingObserver {
     setState(() {
       run++;
       started = false;
+      selectingClass = false;
       resuming = false;
       enteringStage = false;
       arrivingByWell = false;
@@ -192,6 +196,7 @@ class _EntryPageState extends State<EntryPage> with WidgetsBindingObserver {
 
   late Future<GameArt> loading = widget.loadArt();
   bool started = false;
+  bool selectingClass = false, confirmingStart = false;
   int run = 0;
   HeroClass chosen = HeroClass.warrior;
   late String? storedCheckpoint = widget.readCheckpoint();
@@ -257,6 +262,54 @@ class _EntryPageState extends State<EntryPage> with WidgetsBindingObserver {
       }
     } finally {
       if (mounted) setState(() => preparingSession = false);
+    }
+  }
+
+  Future<void> chooseNewAdventure() async {
+    if (preparingSession || confirmingStart || selectingClass) return;
+    // Re-read before confirmation in case another tab updated the checkpoint.
+    final raw = widget.readCheckpoint();
+    storedCheckpoint = raw;
+    savedAdventure = GameCheckpoint.decode(raw);
+    if (raw != null) {
+      confirmingStart = true;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('새 모험을 시작할까요?'),
+          content: const Text('직업을 선택해 모험을 시작하면 이 브라우저의 기존 저장을 덮어씁니다.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('취소'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('새 모험'),
+            ),
+          ],
+        ),
+      );
+      confirmingStart = false;
+      if (!mounted) return;
+      if (confirmed != true) {
+        setState(() {});
+        return;
+      }
+    }
+    if (mounted) setState(() => selectingClass = true);
+  }
+
+  void continueAdventure(GameArt art) {
+    if (preparingSession || confirmingStart) return;
+    final stored = widget.readCheckpoint();
+    final checkpoint = GameCheckpoint.decode(stored);
+    setState(() {
+      storedCheckpoint = stored;
+      savedAdventure = checkpoint;
+    });
+    if (checkpoint != null) {
+      startSession(art, checkpoint.progress.heroClass, checkpoint: checkpoint);
     }
   }
 
@@ -352,6 +405,7 @@ class _EntryPageState extends State<EntryPage> with WidgetsBindingObserver {
                 run++;
                 started = false;
                 storedCheckpoint = null;
+                selectingClass = false;
                 savedAdventure = null;
                 resuming = false;
                 enteringStage = false;
@@ -363,22 +417,24 @@ class _EntryPageState extends State<EntryPage> with WidgetsBindingObserver {
         return _ArtworkPreparation(
           art: art,
           busy: preparingSession,
-          child: ClassSelection(
-            art: art,
-            continueSummary:
-                savedAdventure?.summary ??
-                (storedCheckpoint == null
-                    ? '저장된 모험이 없습니다'
-                    : '저장된 모험을 불러올 수 없습니다. 새 모험 시작 전 저장을 확인하세요'),
-            onContinue: savedAdventure == null
-                ? null
-                : () => startSession(
-                    art,
-                    savedAdventure!.progress.heroClass,
-                    checkpoint: savedAdventure,
-                  ),
-            onBegin: (value) => startSession(art, value),
-          ),
+          child: selectingClass
+              ? ClassSelection(
+                  art: art,
+                  showContinue: false,
+                  onBack: () => setState(() => selectingClass = false),
+                  onBegin: (value) => startSession(art, value),
+                )
+              : TitleScreen(
+                  continueSummary:
+                      savedAdventure?.summary ??
+                      (storedCheckpoint == null
+                          ? '저장된 모험이 없습니다'
+                          : '저장된 모험을 불러올 수 없습니다. 새 모험 시작 전 저장을 확인하세요'),
+                  onStart: chooseNewAdventure,
+                  onContinue: savedAdventure == null
+                      ? null
+                      : () => continueAdventure(art),
+                ),
         );
       },
     ),

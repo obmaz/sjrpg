@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
-import 'package:guardian_new/class_selection.dart';
 import 'package:guardian_new/enemy_difficulty.dart';
 import 'package:guardian_new/entry_loading.dart';
 import 'package:guardian_new/game_art.dart';
@@ -14,6 +13,7 @@ import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/game_ui.dart';
 import 'package:guardian_new/main.dart';
 import 'package:guardian_new/player_afflictions.dart';
+import 'package:guardian_new/title_screen.dart';
 import 'package:guardian_new/world_model.dart';
 
 import 'support/test_game.dart';
@@ -139,9 +139,9 @@ void main() {
       );
       await _until(
         tester,
-        () => find.byType(ClassSelection).evaluate().isNotEmpty,
+        () => find.byType(TitleScreen).evaluate().isNotEmpty,
       );
-      await tester.tap(find.text('모험 이어하기'));
+      await tester.tap(find.text('이어하기'));
       await _until(
         tester,
         () =>
@@ -271,8 +271,10 @@ void main() {
       );
       await _until(
         tester,
-        () => find.byType(ClassSelection).evaluate().isNotEmpty,
+        () => find.byType(TitleScreen).evaluate().isNotEmpty,
       );
+      await tester.tap(find.text('시작'));
+      await tester.pumpAndSettle();
       expect(find.byType(GamePage), findsNothing);
       expect(
         tester.widget<RawImage>(find.byType(RawImage).first).image,
@@ -357,10 +359,10 @@ void main() {
       );
       await _until(
         tester,
-        () => find.byType(ClassSelection).evaluate().isNotEmpty,
+        () => find.byType(TitleScreen).evaluate().isNotEmpty,
       );
       bundle.failure = 'assets/images/actors-creatures-b.webp';
-      await tester.tap(find.text('모험 이어하기'));
+      await tester.tap(find.text('이어하기'));
       await _until(
         tester,
         () => find.byType(EntryPreparationPanel).evaluate().isEmpty,
@@ -368,7 +370,7 @@ void main() {
       expect(find.byType(GamePage), findsNothing);
       expect(writes, 0);
       bundle.failure = null;
-      await tester.tap(find.text('모험 이어하기'));
+      await tester.tap(find.text('이어하기'));
       await _until(
         tester,
         () =>
@@ -426,9 +428,9 @@ void main() {
       );
       await _until(
         tester,
-        () => find.byType(ClassSelection).evaluate().isNotEmpty,
+        () => find.byType(TitleScreen).evaluate().isNotEmpty,
       );
-      await tester.tap(find.text('모험 이어하기'));
+      await tester.tap(find.text('이어하기'));
       await _until(
         tester,
         () =>
@@ -527,9 +529,9 @@ void main() {
       );
       await _until(
         tester,
-        () => find.byType(ClassSelection).evaluate().isNotEmpty,
+        () => find.byType(TitleScreen).evaluate().isNotEmpty,
       );
-      await tester.tap(find.text('모험 이어하기'));
+      await tester.tap(find.text('이어하기'));
       await _until(
         tester,
         () =>
@@ -562,13 +564,13 @@ void main() {
       await tester.tap(find.widgetWithText(SnackBarAction, '새로 열기'));
       await _until(
         tester,
-        () => find.byType(ClassSelection).evaluate().isNotEmpty,
+        () => find.byType(TitleScreen).evaluate().isNotEmpty,
       );
       expect(reloads, 1);
       expect(checkpointAtReload, [originalSave]);
       expect(source.disposed, isTrue);
       expect(GameCheckpoint.decode(stored)!.data['stage'], 'forest');
-      await tester.tap(find.text('모험 이어하기'));
+      await tester.tap(find.text('이어하기'));
       await _until(
         tester,
         () =>

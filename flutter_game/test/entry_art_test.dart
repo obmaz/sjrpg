@@ -16,6 +16,7 @@ import 'package:guardian_new/game_ui.dart';
 import 'package:guardian_new/main.dart';
 import 'package:guardian_new/rpg_model.dart';
 import 'package:guardian_new/stage_content.dart';
+import 'package:guardian_new/title_screen.dart';
 
 import 'support/test_game.dart';
 
@@ -380,10 +381,10 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      EntryAction resume() => tester.widget<EntryAction>(
-        find.widgetWithText(EntryAction, '모험 이어하기'),
+      OutlinedButton resume() => tester.widget<OutlinedButton>(
+        find.byKey(const ValueKey('title-continue')),
       );
-      expect(resume().onTap, isNull);
+      expect(resume().onPressed, isNull);
       expect(find.textContaining('저장된 모험을 불러올 수 없습니다'), findsOneWidget);
       expect(writes, 0);
       expect(stored, '{"unreadable":true}');
@@ -394,7 +395,7 @@ void main() {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pumpAndSettle();
-      expect(resume().onTap, isNotNull);
+      expect(resume().onPressed, isNotNull);
       expect(find.textContaining('Lv.1 마법사'), findsOneWidget);
       expect(writes, 0);
       await tester.pumpWidget(const SizedBox.shrink());
@@ -429,7 +430,7 @@ void main() {
       ready.complete(art);
       await tester.pump();
       await tester.pumpAndSettle();
-      expect(find.byType(ClassSelection), findsOneWidget);
+      expect(find.byType(TitleScreen), findsOneWidget);
       expect(find.byType(EntryLoading), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());

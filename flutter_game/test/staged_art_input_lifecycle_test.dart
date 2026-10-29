@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
-import 'package:guardian_new/class_selection.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/game_ui.dart';
 import 'package:guardian_new/main.dart';
 import 'package:guardian_new/player_afflictions.dart';
+import 'package:guardian_new/title_screen.dart';
 import 'package:guardian_new/world_model.dart';
 
 import 'support/test_game.dart';
@@ -109,9 +109,9 @@ void main() {
       );
       await _until(
         tester,
-        () => find.byType(ClassSelection).evaluate().isNotEmpty,
+        () => find.byType(TitleScreen).evaluate().isNotEmpty,
       );
-      await tester.tap(find.text('모험 이어하기'));
+      await tester.tap(find.text('이어하기'));
       await _until(
         tester,
         () =>
@@ -129,7 +129,7 @@ void main() {
         // EntryPage.handleBack before its child's BackActions handlers.
         await tester.binding.handlePopRoute();
         await tester.pump();
-        expect(find.byType(ClassSelection), findsNothing);
+        expect(find.byType(TitleScreen), findsNothing);
         expect(_session(tester), same(fallen));
         expect(fallen.disposed, isFalse);
         expect(stored, checkpointBeforeRetry);
@@ -174,9 +174,9 @@ void main() {
       );
       await _until(
         tester,
-        () => find.byType(ClassSelection).evaluate().isNotEmpty,
+        () => find.byType(TitleScreen).evaluate().isNotEmpty,
       );
-      await tester.tap(find.text('모험 이어하기'));
+      await tester.tap(find.text('이어하기'));
       await _until(
         tester,
         () =>
@@ -262,10 +262,10 @@ void main() {
           );
           await _until(
             tester,
-            () => find.byType(ClassSelection).evaluate().isNotEmpty,
+            () => find.byType(TitleScreen).evaluate().isNotEmpty,
           );
           if (continuing) {
-            await tester.tap(find.text('모험 이어하기'));
+            await tester.tap(find.text('이어하기'));
             await _until(
               tester,
               () =>
@@ -280,6 +280,8 @@ void main() {
             await tester.pump();
             await tester.tap(find.text('제2장 의뢰 받기'));
           } else {
+            await tester.tap(find.text('시작'));
+            await tester.pumpAndSettle();
             await tester.tap(find.text('전사로 모험 시작'));
           }
           await tester.pump();

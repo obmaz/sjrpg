@@ -4,17 +4,17 @@
 
 ## Flutter 코드 구조
 
-| 영역                                                              | 책임                                                       |
-| ----------------------------------------------------------------- | ---------------------------------------------------------- |
-| `main.dart`·`class_selection.dart`·`entry_loading.dart`           | 메뉴, 새 모험/이어하기, 비동기 그림 준비, 엔진·페이지 수명 |
-| `adventure.dart`                                                  | 세션, 주인공·적 컴포넌트, 스폰, 피격·처치 보상, 상호작용   |
-| `rpg_model.dart`·`combat_balance.dart`                            | 성장·장비·기술 수치, 투자·선택, 공통 전투 속도와 배율      |
-| `barbarian_combat.dart`·`barbarian_utilities.dart`                | 전사의 공격·도약·투척·함성·시체 조사                       |
-| `sorceress_rules.dart`·`sorceress_combat.dart`                    | 원본 주문 곡선·시너지·숙련과 실제 투사체·범위·지속 피해    |
-| `world_model.dart`·`authored_settlement.dart`                     | 지형·마을·안전 경계·몸체 이동·접근성·경로 탐색             |
-| `stage_content.dart`·`game_checkpoint.dart`·`travel_journal.dart` | 단계·의뢰·분기, 저장 검증·이전·방문 지도 보존              |
-| `game_art.dart`·`field_landscape.dart`·`quest_scenery.dart`       | 그림 로딩, 지형·장면 캐시, 전체 지도 디자인과 의뢰터       |
-| `game_ui.dart`·`rpg_widgets.dart`·각 패널                         | HUD·미니맵·팝업, 안전 영역·글자 배율·접근성                |
+| 영역                                                                        | 책임                                                       |
+| --------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `main.dart`·`title_screen.dart`·`class_selection.dart`·`entry_loading.dart` | 메뉴, 새 모험/이어하기, 비동기 그림 준비, 엔진·페이지 수명 |
+| `adventure.dart`                                                            | 세션, 주인공·적 컴포넌트, 스폰, 피격·처치 보상, 상호작용   |
+| `rpg_model.dart`·`combat_balance.dart`                                      | 성장·장비·기술 수치, 투자·선택, 공통 전투 속도와 배율      |
+| `barbarian_combat.dart`·`barbarian_utilities.dart`                          | 전사의 공격·도약·투척·함성·시체 조사                       |
+| `sorceress_rules.dart`·`sorceress_combat.dart`                              | 원본 주문 곡선·시너지·숙련과 실제 투사체·범위·지속 피해    |
+| `world_model.dart`·`authored_settlement.dart`                               | 지형·마을·안전 경계·몸체 이동·접근성·경로 탐색             |
+| `stage_content.dart`·`game_checkpoint.dart`·`travel_journal.dart`           | 단계·의뢰·분기, 저장 검증·이전·방문 지도 보존              |
+| `game_art.dart`·`field_landscape.dart`·`quest_scenery.dart`                 | 그림 로딩, 지형·장면 캐시, 전체 지도 디자인과 의뢰터       |
+| `game_ui.dart`·`rpg_widgets.dart`·각 패널                                   | HUD·미니맵·팝업, 안전 영역·글자 배율·접근성                |
 
 Flame·Bonfire의 컴포넌트 수명·카메라·Player/Enemy·충돌 공간 탐색·입력을 사용합니다. 게임 고유의 지형·전투 규칙과 프레임 아틀라스는 위 모델과 렌더러가 담당합니다. 화면 위젯에 별도 전투 공식을 만들지 않습니다.
 
@@ -70,7 +70,9 @@ Flutter는 주소창 높이 변화에는 기준 높이를 고정하고 너비 �
 
 저장은 브라우저에 남으며 5초 간격·중요 변경·백그라운드 전환 시 기록합니다. `GameCheckpoint`는 버전·크기·유효 위치·장비 ID·스킬·쿨다운·의뢰·방문 장을 검사합니다. 현재 체크포인트 `version=1`·`mapVersion=2`·`balance=3`, 직업 트리 버전 1을 사용합니다. 성장 데이터의 `experienceVersion=2`는 이전 누적 XP를 한 번 정규화해 레벨·포인트를 보존하며 체력·자원을 무료 회복시키지 않습니다.
 
-일반 이어하기와 사망 후 부활을 구분합니다. 사망 손실은 한 번 확정해 저장하고 부활 보호·상태 이상 정리는 명시적인 부활 때만 적용합니다. 저장 실패는 성공처럼 덮어쓰지 않으며 기존 모험을 유지하고 오류·재시도를 표시합니다. 처음 메뉴의 이어하기는 저장 유효성을 재확인합니다.
+일반 이어하기와 사망 후 부활을 구분합니다. 사망 손실은 한 번 확정해 저장하고 부활 보호·상태 이상 정리는 명시적인 부활 때만 적용합니다. 저장 실패는 성공처럼 덮어쓰지 않으며 기존 모험을 유지하고 오류·재시도를 표시합니다. 타이틀의 이어하기는 누를 때와 앱으로 돌아올 때 저장 유효성을 재확인합니다. 타이틀에서 시작을 누르면 기존 저장의 덮어쓰기를 확인하고 직업 선택으로 이어집니다. 확인 취소·직업 선택 복귀는 저장을 변경하지 않으며, 비동기 준비 중 중복 입력과 확인 창 중복 열기를 막습니다.
+
+`title_screen.dart`는 `art/guardian-title.png` 원본(1672×941, Library `libfile_9e05ed38e2808191868ef90303b5aa33`, 버전 0)을 비율 유지로 표시합니다. 그림 속 PRESS START 위에 실제 버튼 패널을 두며, 모바일 가로·세로 모두 제목과 전사 구도를 유지합니다.
 
 설치 요청은 브라우저가 제공한 이벤트를 설정의 사용자 탭 안에서 전달합니다. PWA ID·시작 경로·서비스 워커 범위는 `/sjrpg/new/`로 고정합니다. 진동 API는 지원 여부와 사용자 설정을 존중합니다.
 

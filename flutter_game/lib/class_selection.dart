@@ -11,12 +11,16 @@ class ClassSelection extends StatefulWidget {
     required this.art,
     required this.onBegin,
     this.onContinue,
+    this.onBack,
+    this.showContinue = true,
     this.continueSummary,
     super.key,
   });
   final GameArt art;
   final ValueChanged<HeroClass> onBegin;
   final VoidCallback? onContinue;
+  final VoidCallback? onBack;
+  final bool showContinue;
   final String? continueSummary;
   @override
   State<ClassSelection> createState() => _ClassSelectionState();
@@ -35,7 +39,8 @@ class _ClassSelectionState extends State<ClassSelection> {
           child: LayoutBuilder(
             builder: (context, box) {
               final compact = box.maxHeight < 600;
-              final tightContinue = compact && box.maxWidth >= 600;
+              final tightContinue =
+                  compact && box.maxWidth >= 600 && widget.showContinue;
               final brandHeight = tightContinue
                   ? 70.0
                   : compact
@@ -46,7 +51,11 @@ class _ClassSelectionState extends State<ClassSelection> {
                   : compact
                   ? 54.0
                   : 68.0;
-              final continueHeight = tightContinue ? 72.0 : 80.0;
+              final continueHeight = !widget.showContinue
+                  ? 0.0
+                  : tightContinue
+                  ? 72.0
+                  : 80.0;
               final contentWidth = math.min(530.0, box.maxWidth - 24);
               final cardWidth = (contentWidth - 10) / 2;
               final portraits = widget.art.images['class-selection'];
@@ -63,6 +72,7 @@ class _ClassSelectionState extends State<ClassSelection> {
                 math.min(
                   preferredCardHeight,
                   box.maxHeight -
+                      (widget.onBack == null ? 0 : 48) -
                       24 -
                       brandHeight -
                       actionHeight -
@@ -85,6 +95,12 @@ class _ClassSelectionState extends State<ClassSelection> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          if (widget.onBack != null)
+                            TextButton.icon(
+                              onPressed: widget.onBack,
+                              icon: const Icon(Icons.arrow_back),
+                              label: const Text('타이틀로 돌아가기'),
+                            ),
                           SizedBox(
                             height: brandHeight,
                             child: Row(
@@ -131,29 +147,30 @@ class _ClassSelectionState extends State<ClassSelection> {
                               ],
                             ),
                           ),
-                          SizedBox(
-                            height: continueHeight,
-                            child: Column(
-                              children: [
-                                EntryAction(
-                                  '모험 이어하기',
-                                  art: widget.art,
-                                  onTap: widget.onContinue,
-                                  height: 47,
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  widget.continueSummary ?? '저장된 모험이 없습니다',
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  style: const TextStyle(
-                                    color: entryCream,
-                                    fontSize: 11,
+                          if (widget.showContinue)
+                            SizedBox(
+                              height: continueHeight,
+                              child: Column(
+                                children: [
+                                  EntryAction(
+                                    '모험 이어하기',
+                                    art: widget.art,
+                                    onTap: widget.onContinue,
+                                    height: 47,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    widget.continueSummary ?? '저장된 모험이 없습니다',
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    style: const TextStyle(
+                                      color: entryCream,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
                           const SizedBox(height: 6),
                           SizedBox(
                             height: cardHeight,

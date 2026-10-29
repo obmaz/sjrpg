@@ -22,6 +22,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
             path.join(destination, `images/${image}.webp`),
         );
     for (const name of [
+        'guardian-title',
         'actors-mage',
         'actors-motor',
         'actors-horse',
