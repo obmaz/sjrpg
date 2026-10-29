@@ -34,6 +34,11 @@ class BossSpriteMeshPainter {
   static const _columns = 9, _rows = 11;
   static const _verticesCount = _columns * _rows;
   static final _indices = _makeIndices();
+  static final _walkSides = List<double>.generate(
+    _columns,
+    (column) => ((column / (_columns - 1) - .5) * 6).clamp(-1.0, 1.0),
+    growable: false,
+  );
   static final _identity = Float64List.fromList([
     1,
     0,
@@ -158,6 +163,7 @@ class BossSpriteMeshPainter {
         skill = _unit(pose.skill),
         recoil = _unit(pose.recoil),
         wave = math.sin(phase * math.pi * 2),
+        walkCycle = wave * weight,
         ground = groundOrigin != null && groundOrigin.dy.isFinite
             ? ((groundOrigin.dy - destination.top) / destination.height).clamp(
                 .25,
@@ -165,24 +171,26 @@ class BossSpriteMeshPainter {
               )
             : 1.0;
     for (var row = 0; row < _rows; row++) {
-      // A row lies exactly on the projected ground line. Everything at or below
-      // it stays fixed, including transparent pixels below a cropped foot.
+      // Boss poses pin the ground row. Walking alternates a planted foot with
+      // a lifted foot; transparent padding below that row stays fixed.
       final y = row <= _rows - 2 ? row / (_rows - 2) * ground : 1.0;
       final lift = y < ground ? math.sin(y / ground * math.pi) : 0.0;
+      final armHeight = 1 - ((y - .43).abs() / .38).clamp(0.0, 1.0);
+      final leg = ((y - .55) / .3).clamp(0.0, 1.0) * lift;
+      final foot = pose.walking ? ((y / ground - .5) * 2).clamp(0.0, 1.0) : 0.0;
+      final pinned = (!pose.walking && y >= ground) || y > ground + .0001;
       for (var column = 0; column < _columns; column++) {
         final x = column / (_columns - 1), side = (x - .5) * 2;
-        final arm =
-            ((side.abs() - .22) / .55).clamp(0.0, 1.0) *
-            (1 - ((y - .43).abs() / .38).clamp(0.0, 1.0));
-        final leg = ((y - .55) / .3).clamp(0.0, 1.0) * lift;
+        final arm = ((side.abs() - .22) / .55).clamp(0.0, 1.0) * armHeight;
         final torso = (1 - side.abs()) * lift;
         double dx, dy;
         if (pose.walking) {
-          // Opposite limbs progress continuously without blending two bodies.
-          final gait = wave * weight;
-          dx = gait * side * (.055 * leg - .025 * arm);
-          dy = gait * side * (.042 * leg - .018 * arm);
-          dx += gait * torso * .006;
+          // A signed leg cycle gives each side a planted half-cycle. Using the
+          // torso's sine envelope here would freeze both toes at ground level.
+          final gait = walkCycle * _walkSides[column];
+          dx = gait * (.065 * foot - .045 * arm);
+          dy = -(gait > 0 ? gait : 0.0) * .055 * foot - gait * .018 * arm;
+          dx += walkCycle * torso * .006;
         } else if (pose.profile == BossMeshProfile.cyberCore) {
           final panel = side.abs() * lift;
           dx = side * panel * (wave * weight * .018 + skill * .055);
@@ -202,7 +210,9 @@ class BossSpriteMeshPainter {
           dy += arm * (-windup * .04 + strike * .025 - skill * .035);
           dy += torso * (windup * .012 + recoil * .03);
         }
-        if (y >= ground) dx = dy = 0;
+        if (pinned) {
+          dx = dy = 0;
+        }
         final index = (row * _columns + column) * 2;
         _positions[index] = destination.left + (x + dx) * destination.width;
         _positions[index + 1] = destination.top + (y + dy) * destination.height;

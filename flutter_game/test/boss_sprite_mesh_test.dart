@@ -107,6 +107,56 @@ void main() {
   );
 
   test(
+    'walking alternates lifted toes while retaining a grounded foot',
+    () async {
+      final image = await sprite(), mesh = BossSpriteMeshPainter();
+      addTearDown(() {
+        mesh.dispose();
+        image.dispose();
+      });
+      final left = await draw(
+        mesh,
+        image,
+        const BossVisualPose(walking: true, stride: .25, weight: 1),
+      );
+      final right = await draw(
+        mesh,
+        image,
+        const BossVisualPose(walking: true, stride: .75, weight: 1),
+      );
+      var changed = 0;
+      final grounded = [0, 0];
+      for (var y = 97; y < 104; y++) {
+        for (var x = 0; x < 128; x++) {
+          final i = (y * 128 + x) * 4;
+          if (left[i] != right[i] ||
+              left[i + 1] != right[i + 1] ||
+              left[i + 2] != right[i + 2] ||
+              left[i + 3] != right[i + 3]) {
+            changed++;
+          }
+          for (var frame = 0; frame < 2; frame++) {
+            final bytes = frame == 0 ? left : right;
+            if (bytes[i + 3] > 100 && bytes[i + 2] > 180 && bytes[i] < 100) {
+              grounded[frame]++;
+            }
+          }
+        }
+      }
+      expect(
+        changed,
+        greaterThan(20),
+        reason: 'toes must step instead of freezing below the knee',
+      );
+      expect(
+        grounded,
+        everyElement(greaterThan(10)),
+        reason: 'one foot remains planted in each half-cycle',
+      );
+    },
+  );
+
+  test(
     'all profiles articulate one sprite with fixed feet and isolated UVs',
     () async {
       final image = await sprite(), mesh = BossSpriteMeshPainter();

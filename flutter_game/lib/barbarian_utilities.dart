@@ -235,21 +235,17 @@ class BarbarianUtilities {
           if (id == 'findPotion') {
             if (session.random.nextBool()) {
               session.progress.healingPotions++;
-              session.bubble(
-                '탐색 성공 · 생명 물약 +1',
-                at,
-                const ui.Color(0xff9fd8b0),
-              );
+              session.bubble('탐색 성공\n생명 물약 +1', at, const ui.Color(0xff9fd8b0));
             } else {
               session.progress.energyPotions++;
               session.bubble(
-                '탐색 성공 · 자원 물약 +1',
+                '탐색 성공\n${p.heroClass.resource} 물약 +1',
                 at,
                 const ui.Color(0xff99c9ed),
               );
             }
           } else {
-            session.bubble('탐색 성공 · 장비 발견', at, const ui.Color(0xffe7c77d));
+            session.bubble('탐색 성공\n장비 발견', at, const ui.Color(0xffe7c77d));
             session.dropGear(
               session.progress.rollLoot(
                 session.random,
@@ -260,7 +256,7 @@ class BarbarianUtilities {
             );
           }
         } else {
-          session.bubble('탐색 실패 · 발견한 것 없음', at, const ui.Color(0xffc5bda9));
+          session.bubble('탐색 실패\n발견한 것 없음', at, const ui.Color(0xffc5bda9));
         }
       }
     } else if (id == 'shout') {

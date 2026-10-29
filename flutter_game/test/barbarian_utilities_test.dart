@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/barbarian_utilities.dart';
@@ -10,6 +11,11 @@ import 'support/test_game.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(() async {
+    await (FontLoader(
+      'Guardian',
+    )..addFont(rootBundle.load('assets-fonts/NanumGothic-Regular.ttf'))).load();
+  });
   late Adventure session;
   late BarbarianUtilities utilities;
   setUp(() {
@@ -295,6 +301,17 @@ void main() {
         final message = messages.last;
         expect(message.isReward, true);
         expect(message.remaining, 1.8);
+        final paragraph = session.art.layoutText(
+          message.label,
+          size: message.textSize,
+        );
+        expect(
+          paragraph.computeLineMetrics().length,
+          2,
+          reason: 'result and reward each fit one complete line',
+        );
+        paragraph.dispose();
+        expect(message.label, isNot(contains('자원 물약')));
         outcomes.add(message.label.startsWith('탐색 성공') ? 'success' : 'failure');
       }
       expect(outcomes, {'success', 'failure'});

@@ -3521,7 +3521,7 @@ class Guardian extends Player with WithCollision {
         !session.barbarianUtilities.canActivate(def.id)) {
       if (def.id == 'findPotion' || def.id == 'findItem') {
         session.bubble(
-          '탐색 실패 · 가까운 시체 없음',
+          '탐색 실패\n가까운 시체 없음',
           body.center - const ui.Offset(0, 55),
           const ui.Color(0xffc5bda9),
         );
