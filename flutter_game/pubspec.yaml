@@ -24,3 +24,7 @@ flutter:
     - family: Guardian
       fonts:
         - asset: assets-fonts/NanumGothic-Regular.ttf
+    - family: CombatDamage
+      fonts:
+        - asset: assets-fonts/NanumGothic-ExtraBold.ttf
+          weight: 900

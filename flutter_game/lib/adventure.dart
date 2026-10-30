@@ -6291,8 +6291,8 @@ class BattleText extends GameComponent {
             ? 13
             : 18
       : math.min(
-          critical ? 32 : 26,
-          (critical ? 280 : 232) / displayLabel.length,
+          critical ? 27 : 22,
+          (critical ? 238 : 197) / displayLabel.length,
         );
   double get punchScale {
     if (isReward || reducedMotion) return 1;
@@ -6350,14 +6350,16 @@ class BattleText extends GameComponent {
     final builder =
         ui.ParagraphBuilder(
             ui.ParagraphStyle(
-              fontFamily: 'Guardian',
+              fontFamily: text == 'CRITICAL!' ? 'Guardian' : 'CombatDamage',
               fontSize: fontSize,
               textAlign: ui.TextAlign.center,
             ),
           )
           ..pushStyle(
             ui.TextStyle(
-              fontWeight: ui.FontWeight.bold,
+              fontWeight: text == 'CRITICAL!'
+                  ? ui.FontWeight.bold
+                  : ui.FontWeight.w900,
               foreground: ui.Paint()
                 ..color = const ui.Color(0xff26160e)
                 ..style = ui.PaintingStyle.stroke
@@ -6427,6 +6429,8 @@ class BattleText extends GameComponent {
         displayLabel,
         size: textSize,
         color: ink,
+        fontFamily: isReward ? 'Guardian' : 'CombatDamage',
+        fontWeight: isReward ? ui.FontWeight.bold : ui.FontWeight.w900,
       );
       if (!isReward) {
         _outline = _stroke(displayLabel, textSize);

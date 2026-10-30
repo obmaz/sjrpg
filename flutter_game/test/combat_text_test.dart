@@ -12,10 +12,18 @@ class CountingArt extends GameArt {
   ui.Paragraph layoutText(
     String value, {
     double size = 16,
+    String fontFamily = 'Guardian',
+    ui.FontWeight fontWeight = ui.FontWeight.bold,
     ui.Color color = const ui.Color(0xffffedbb),
   }) {
     layouts++;
-    return super.layoutText(value, size: size, color: color);
+    return super.layoutText(
+      value,
+      size: size,
+      color: color,
+      fontFamily: fontFamily,
+      fontWeight: fontWeight,
+    );
   }
 }
 

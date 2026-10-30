@@ -1178,19 +1178,19 @@ class GameArt {
   ui.Paragraph layoutText(
     String value, {
     double size = 16,
+    String fontFamily = 'Guardian',
+    ui.FontWeight fontWeight = ui.FontWeight.bold,
     ui.Color color = const ui.Color(0xffffedbb),
   }) {
     final builder =
         ui.ParagraphBuilder(
             ui.ParagraphStyle(
-              fontFamily: 'Guardian',
+              fontFamily: fontFamily,
               fontSize: size,
               textAlign: ui.TextAlign.center,
             ),
           )
-          ..pushStyle(
-            ui.TextStyle(color: color, fontWeight: ui.FontWeight.bold),
-          )
+          ..pushStyle(ui.TextStyle(color: color, fontWeight: fontWeight))
           ..addText(value);
     return builder.build()..layout(const ui.ParagraphConstraints(width: 160));
   }
