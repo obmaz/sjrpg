@@ -6,7 +6,11 @@ import 'package:guardian_new/forest_quest_runtime.dart';
 import 'package:guardian_new/forest_quests.dart';
 
 /// Uses the same safe person interaction and reward paths as the game UI.
-ForestQuestNpcInfo approachForestNpc(Adventure s, String key) {
+ForestQuestNpcInfo approachForestNpc(
+  Adventure s,
+  String key, {
+  bool open = true,
+}) {
   final npc = s.forestQuests.npcs.firstWhere((n) => n.key == key);
   final body = s.hero.body.size;
   final at = s.world.spawnNear(
@@ -26,7 +30,7 @@ ForestQuestNpcInfo approachForestNpc(Adventure s, String key) {
   s.hero.stop();
   s.hero.position.setValues(at!.dx, at.dy);
   s.hero.lastClearPosition = at;
-  expect(s.forestQuests.openNpc(npc), true);
+  if (open) expect(s.forestQuests.openNpc(npc), true);
   return npc;
 }
 

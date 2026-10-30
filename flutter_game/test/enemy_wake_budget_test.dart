@@ -1,3 +1,5 @@
+import 'dart:ui' show Rect;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/enemy_difficulty.dart';
@@ -26,6 +28,7 @@ class WakeBudgetAdventure extends Adventure {
     EnemyPower? power,
     Offset? home,
     bool reserveSpacing = false,
+    Rect? reservedBody,
   }) {
     attempts++;
     return rejectSpawns
@@ -39,6 +42,7 @@ class WakeBudgetAdventure extends Adventure {
             power: power,
             home: home,
             reserveSpacing: reserveSpacing,
+            reservedBody: reservedBody,
           );
   }
 }

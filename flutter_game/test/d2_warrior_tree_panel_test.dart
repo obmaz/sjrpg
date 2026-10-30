@@ -41,7 +41,13 @@ void main() {
       await tester.pumpAndSettle();
       expect(p.rank('battleSprint'), 1);
       expect(p.skillPoints, points - 1);
-      expect(p.skillSlots, slots);
+      for (var i = 0; i < slots.length; i++) {
+        if (slots[i] != null) {
+          expect(p.skillSlots[i], slots[i]);
+        }
+      }
+      expect(p.skillSlots.where((id) => id == 'battleSprint'), hasLength(1));
+      expect(p.skillSlots.indexOf('battleSprint'), slots.indexOf(null));
       expect(p.mobilityDuration, greaterThan(0));
       expect(tester.takeException(), null);
     },

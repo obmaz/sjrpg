@@ -31,20 +31,21 @@ void main() {
         widget is GameAction && widget.label == label ||
         widget is GameIconButton && widget.label == label,
   );
-  test('a well offers its quest and adjacent mount independently', () {
-    final session = Adventure(GameArt())..start(TestGame());
-    addTearDown(session.dispose);
-    besideWell(session);
-    expect(session.nearbySite, isNotNull);
-    expect(session.nearbyQuestGuide?.action, QuestGuideAction.cleanse);
-    expect(
-      session.nearbyActions,
-      containsAll([NearbyAction.mount, NearbyAction.shrine]),
-    );
-    expect(session.boardNearbyMount(), true);
-    expect(session.nearbyActions, [NearbyAction.dismount]);
-    expect(session.dismount(), true);
-  });
+  test(
+    'an NPC gives the quest while nearby well and mount stay independent',
+    () {
+      final session = Adventure(GameArt())..start(TestGame());
+      addTearDown(session.dispose);
+      besideWell(session);
+      expect(session.nearbySite, isNotNull);
+      expect(session.nearbyQuestGuide?.action, QuestGuideAction.talk);
+      expect(session.nearbyActions, contains(NearbyAction.mount));
+      expect(session.nearbyActions, isNot(contains(NearbyAction.shrine)));
+      expect(session.boardNearbyMount(), true);
+      expect(session.nearbyActions, [NearbyAction.dismount]);
+      expect(session.dismount(), true);
+    },
+  );
 
   for (final size in [
     const Size(320, 420),
@@ -108,6 +109,10 @@ void main() {
         expect(guide, findsOneWidget);
         expect(mount, findsOneWidget);
         expect(warp, findsOneWidget);
+        expect(
+          tester.getSize(guide).width,
+          closeTo(tester.getSize(warp).width, .01),
+        );
         expect(tester.getRect(guide).overlaps(tester.getRect(controls)), false);
         expect(
           tester

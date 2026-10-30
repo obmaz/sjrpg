@@ -225,11 +225,38 @@ void main() {
     expect(s.living, 8);
     final area = s.encounterAreas[s.encounterKey]!;
     expect(area.waves, 1);
-    while (s.living < CombatBalance.maxActiveEnemies) {
-      area.waves = 0;
+    final charges = area.charges;
+    final beforeRepeat = s.living;
+    s.spawnPack();
+    expect(
+      s.living,
+      beforeRepeat,
+      reason: 'exploration never refills a known region',
+    );
+    expect(area.waves, 1);
+    expect(
+      area.charges,
+      charges,
+      reason: 'only striking the stone spends charges',
+    );
+    for (final at in s.world.trails.expand((trail) => trail.points)) {
+      if (s.living == CombatBalance.maxActiveEnemies) {
+        break;
+      }
+      if ((at - s.world.spawn).distance <= CombatBalance.nearTownRadius + 500 ||
+          s.world.blocked(
+            Rect.fromLTWH(at.dx, at.dy, s.hero.body.width, s.hero.body.height),
+          )) {
+        continue;
+      }
+      s.hero.position.setValues(at.dx, at.dy);
+      if (s.encounterAreas.containsKey(s.encounterKey)) {
+        continue;
+      }
       final before = s.living;
       s.spawnPack();
-      expect(s.living, greaterThan(before));
+      expect(s.living, greaterThanOrEqualTo(before));
+      expect(s.living, lessThanOrEqualTo(CombatBalance.maxActiveEnemies));
     }
     expect(s.living, 30);
     final spent = area.waves;

@@ -950,27 +950,62 @@ class Adventure extends ChangeNotifier {
     }
   }
 
-  EncounterArea _newEncounterArea(String key, ui.Offset origin) {
+  EncounterArea? _newEncounterArea(String key, ui.Offset origin) {
     const bodySize = ui.Size(36, 24);
-    final at = world.spawnNear(
-      origin + const ui.Offset(62, 28),
-      bodySize,
-      avoidSanctuary: true,
-      occupied: (body) =>
-          EncounterArea.keyAt(body.center) != key ||
-          body.overlaps(hero.body.inflate(12)) ||
-          encounterAreas.values.any((a) => a.body.overlaps(body)) ||
-          mobs.any((m) => !m.isDead && !m.isRemoving && m.body.overlaps(body)),
-    );
-    return EncounterArea(key, at == null ? origin : (at & bodySize).center);
+    // Keep the fight's central approach open; try each side at region edges.
+    for (final offset in const [
+      ui.Offset(300, 180),
+      ui.Offset(-300, 180),
+      ui.Offset(300, -180),
+      ui.Offset(-300, -180),
+    ]) {
+      final at = world.spawnNear(
+        origin + offset,
+        bodySize,
+        avoidSanctuary: true,
+        occupied: (body) =>
+            EncounterArea.keyAt(body.center) != key ||
+            body.overlaps(hero.body.inflate(180)) ||
+            encounterAreas.values.any((a) => a.body.overlaps(body)) ||
+            _encounterEnemyOverlaps(body),
+      );
+      if (at != null) return EncounterArea(key, (at & bodySize).center);
+    }
+    return null;
   }
+
+  bool _encounterEnemyOverlaps(ui.Rect body) =>
+      mobs.any(
+        (m) =>
+            !m.isDead &&
+            !m.isRemoving &&
+            !m.encounterDormant &&
+            m.body.overlaps(body),
+      ) ||
+      dormantEnemies.any((raw) {
+        final x = raw['x'], y = raw['y'];
+        // Dormant exploration enemies use the same 24x22 body as spawnEnemy.
+        // Ignore incomplete debug/legacy entries instead of inventing a body.
+        return x is num &&
+            y is num &&
+            ui.Rect.fromLTWH(x.toDouble(), y.toDouble(), 24, 22).overlaps(body);
+      });
 
   void _installStoneBody(EncounterArea area) {
     world.addRuntimeSolid(area.body);
     // Old saves could stand on the formerly non-solid stone. Move only those
     // overlapping bodies to the nearest valid foot position on restoration.
     if (area.body.overlaps(hero.body)) {
-      final safe = world.spawnNear(hero.position.toOffset(), hero.body.size);
+      bool occupied(ui.Rect body) =>
+          _encounterEnemyOverlaps(body) ||
+          encounterAreas.values.any((a) => a.body.overlaps(body));
+      final safe =
+          world.spawnNear(
+            hero.position.toOffset(),
+            hero.body.size,
+            occupied: occupied,
+          ) ??
+          world.spawnNear(world.spawn, hero.body.size, occupied: occupied);
       if (safe != null) {
         hero.position.setValues(safe.dx, safe.dy);
         hero.lastClearPosition = safe;
@@ -1142,6 +1177,10 @@ class Adventure extends ChangeNotifier {
 
   int _chestAmbush(ui.Offset at) {
     const size = ui.Size(24, 22), half = ui.Offset(12, 11);
+    final key = EncounterArea.keyAt(at);
+    final area = encounterAreas[key] ?? _newEncounterArea(key, at);
+    // A failed beacon placement must not leave unowned ambush enemies behind.
+    if (area == null) return 0;
     final away = at - hero.body.center;
     final bearing = math.atan2(away.dy, away.dx);
     var added = 0;
@@ -1156,6 +1195,7 @@ class Adventure extends ChangeNotifier {
         size,
         avoidSanctuary: true,
         occupied: (body) =>
+            area.body.overlaps(body) ||
             (body.center - hero.body.center).distanceSquared < 90 * 90 ||
             (body.center - at).distanceSquared > 240 * 240 ||
             !world.clearEnemyLine(body.center, at, const ui.Size(3, 3)) ||
@@ -1172,11 +1212,10 @@ class Adventure extends ChangeNotifier {
         world.stage.usesCityArt ? 'drone' : 'viper',
         safe,
         reserveSpacing: true,
+        reservedBody: area.body,
       );
       if (enemy == null) continue;
-      final key = EncounterArea.keyAt(at);
       if (!encounterAreas.containsKey(key)) {
-        final area = _newEncounterArea(key, at);
         encounterAreas[key] = area;
         game?.add(EncounterStone(this, area));
       }
@@ -1561,6 +1600,10 @@ class Adventure extends ChangeNotifier {
         !initial) {
       return;
     }
+    final area = existingArea ?? _newEncounterArea(key, hero.body.center);
+    // Decide the beacon before any enemies are created, and reserve its body
+    // while sampling each spawn. No valid site means no encounter transaction.
+    if (area == null) return;
     final count = math.min(
       CombatBalance.packSize(
         initial: initial,
@@ -1616,6 +1659,7 @@ class Adventure extends ChangeNotifier {
         desired,
         trait: trait,
         reserveSpacing: true,
+        reservedBody: area.body,
         tier: unique ? EnemyTier.unique : null,
       );
       if (mob != null) {
@@ -1624,7 +1668,6 @@ class Adventure extends ChangeNotifier {
       }
     }
     if (added > 0) {
-      final area = existingArea ?? _newEncounterArea(key, hero.body.center);
       if (existingArea == null) {
         encounterAreas[key] = area;
         game?.add(EncounterStone(this, area));
@@ -1922,6 +1965,7 @@ class Adventure extends ChangeNotifier {
     EnemyPower? power,
     ui.Offset? home,
     bool reserveSpacing = false,
+    ui.Rect? reservedBody,
   }) {
     final size = boss ? const ui.Size(48, 40) : const ui.Size(24, 22);
     final storedPosition = Vector2.zero();
@@ -1945,6 +1989,7 @@ class Adventure extends ChangeNotifier {
           body.height,
         );
         return world.blocksEnemy(storedBody) ||
+            (reservedBody?.overlaps(storedBody) ?? false) ||
             storedBody.overlaps(hero.body) ||
             mobs.any(
               (enemy) =>
@@ -6585,7 +6630,10 @@ class EncounterStone extends GameComponent with EffectVisibility {
   String? _hintStamp;
 
   @override
-  int get priority => area.stone.dy.toInt();
+  int get priority => LayerPriority.getComponentPriority(
+    (area.stone.dy + (hasGameRef ? gameRef.map.renderPriorityOffsetY : 0))
+        .floor(),
+  );
   @override
   bool get isVisible => true;
   @override

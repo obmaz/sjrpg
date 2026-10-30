@@ -38,6 +38,22 @@ void main() {
     },
   );
   test(
+    'the actual forest places all nine designs with unchanged solid trunks',
+    () {
+      final world = AdventureWorld();
+      final trees = world.props.where((p) => p.treeVariant != null).toList();
+      expect(
+        trees.map((p) => p.treeVariant).toSet(),
+        containsAll(List.generate(9, (i) => i)),
+      );
+      for (final tree in trees) {
+        expect(tree.kind, 'tree');
+        expect(world.blocked(tree.body), true);
+        expect(tree.drawSize, ForestTreeArt.drawSize(tree.treeVariant!));
+      }
+    },
+  );
+  test(
     'all nine native sprites keep measured roots and complete atlas bounds',
     () {
       expect(ForestTreeArt.frames.length, 9);

@@ -2,11 +2,14 @@ import 'package:bonfire/bonfire.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/forest_quest_panel.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_ui.dart';
 import 'package:guardian_new/main.dart';
 import 'package:guardian_new/quest_guide.dart';
 import 'package:guardian_new/rpg_widgets.dart';
+
+import 'support/forest_quest_flow.dart';
 
 void main() {
   for (final size in const [
@@ -16,7 +19,7 @@ void main() {
     Size(844, 390),
   ]) {
     testWidgets(
-      'nearby quest guidance avoids every battle control and opens journal at $size',
+      'nearby quest guidance avoids every battle control and opens the NPC dialogue at $size',
       (tester) async {
         tester.view.physicalSize = size;
         tester.view.devicePixelRatio = 1;
@@ -51,10 +54,7 @@ void main() {
         s.progress.selectSkill('warcry', slot: 2);
         s.progress.selectSkill('seismicSlam', slot: 3);
         s.mobs.clear();
-        s.hero.position.setValues(
-          s.world.elderAt.dx + 50,
-          s.world.elderAt.dy + 20,
-        );
+        approachForestNpc(s, 'mira', open: false);
         s.refresh();
         await tester.pump();
         final card = find.byType(NearbyQuestCard), rect = tester.getRect(card);
@@ -98,7 +98,8 @@ void main() {
         await tester.tap(card);
         await tester.pump();
         expect(s.paused, true);
-        expect(find.text('지금 할 일'), findsOneWidget);
+        expect(find.byType(ForestQuestPanel), findsOneWidget);
+        expect(find.text('보급원 미라'), findsOneWidget);
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());
         await tester.pump();

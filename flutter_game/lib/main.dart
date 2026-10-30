@@ -924,6 +924,24 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
             ),
         ];
 
+        final nearbyAvailableWidth = short
+            ? width >= 500
+                  ? (width - 450).clamp(100, 220).toDouble()
+                  : (width - 240).clamp(44, width - 24).toDouble()
+            : 120.0;
+        final nearbyWidth = math.min(
+          nearbyAvailableWidth,
+          math.max(1, contextActions.length) * 120.0 +
+              math.max(0, contextActions.length - 1) * 4,
+        );
+        final guideWidth = short && contextActions.isNotEmpty
+            ? math.max(
+                44.0,
+                (nearbyWidth - (contextActions.length - 1) * 4) /
+                    contextActions.length,
+              )
+            : math.min(120.0, nearbyAvailableWidth);
+
         final peacefulAttack =
             adventure.sheltered &&
             adventure
@@ -1417,11 +1435,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                                 : 200)
                       : null,
                   bottom: short ? null : bottom + stick + 12,
-                  width: short
-                      ? width >= 500
-                            ? (width - 450).clamp(100, 220).toDouble()
-                            : (width - 240).clamp(44, width - 24).toDouble()
-                      : 120,
+                  width: nearbyWidth,
                   child: NearbyControls(
                     actions: contextActions,
                     horizontal: short,
@@ -1473,11 +1487,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                           : short
                           ? 152
                           : 112),
-                  width: short
-                      ? width >= 500
-                            ? (width - 450).clamp(100, 220).toDouble()
-                            : (width - 240).clamp(44, width - 24).toDouble()
-                      : 120,
+                  width: guideWidth,
                   height: 44,
                   child: NearbyQuestCard(
                     guide,

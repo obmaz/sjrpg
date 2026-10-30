@@ -194,37 +194,47 @@ class NearbyQuestCard extends StatelessWidget {
             vertical: compact ? 4 : 7,
           ),
           child: compact
-              ? Row(
-                  children: [
-                    const Icon(
-                      Icons.priority_high_rounded,
-                      color: gold,
-                      size: 21,
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        switch (guide.action) {
-                          QuestGuideAction.journal => '의뢰',
-                          QuestGuideAction.talk => '대화',
-                          QuestGuideAction.cleanse => '정화',
-                          QuestGuideAction.dismount => '내리기',
-                        },
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: cream,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
+              ? LayoutBuilder(
+                  builder: (context, constraints) => constraints.maxWidth < 64
+                      ? const Center(
+                          child: Icon(
+                            Icons.priority_high_rounded,
+                            color: gold,
+                            size: 21,
+                          ),
+                        )
+                      : Row(
+                          children: [
+                            const Icon(
+                              Icons.priority_high_rounded,
+                              color: gold,
+                              size: 21,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                switch (guide.action) {
+                                  QuestGuideAction.journal => '의뢰',
+                                  QuestGuideAction.talk => '대화',
+                                  QuestGuideAction.cleanse => '정화',
+                                  QuestGuideAction.dismount => '내리기',
+                                },
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: cream,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              color: gold,
+                              size: 14,
+                            ),
+                          ],
                         ),
-                      ),
-                    ),
-                    const Icon(
-                      Icons.chevron_right_rounded,
-                      color: gold,
-                      size: 14,
-                    ),
-                  ],
                 )
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
