@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/game_art.dart';
+import 'package:guardian_new/loot_policy.dart';
 import 'package:guardian_new/sorceress_combat.dart';
 import 'package:guardian_new/world_model.dart';
 
@@ -215,43 +216,58 @@ void main() {
       expect(s.hero.queuedCast, isNull);
     },
   );
-  test(
-    'chests reward once and stage clearance resumes exploration without resummoning',
-    () {
-      final s = inCombatField(Adventure(GameArt()));
-      s.start(TestGame());
-      addTearDown(s.dispose);
-      s.hero.position.setValues(
-        s.stageChestLocations.first.dx,
-        s.stageChestLocations.first.dy,
-      );
-      s.openChest();
-      s.openChest();
-      expect(s.openedChests.length, 1);
-      expect(s.progress.gold, 18);
-      expect(s.loot.length, 1);
-      // The enlarged village protects this starter chest; fight outside it.
-      inCombatField(s);
-      s.cleansedSites.addAll(questSites.map((q) => q.id));
-      s.progress.kills = stageKillGoal;
-      s.tick(.05);
-      final boss = s.mobs.firstWhere((m) => m.boss);
-      s.hit(boss, 99999, Offset.zero);
-      expect(s.won, true);
-      expect(s.progress.bossDefeated, true);
-      expect(s.loot.where((l) => l.item.rarity == Rarity.rare).length, 1);
-      s.continueExploring();
-      expect(s.active, true);
-      final before = s.mobs.where((m) => m.boss).length;
-      s.spawnPack();
-      s.tick(.05);
-      expect(s.mobs.where((m) => m.boss).length, before);
-      expect(s.living, lessThanOrEqualTo(28));
-      expect(s.won, false);
-      s.hero.position.setValues(4650, 360);
-      expect(s.nearbyAction, null);
-    },
-  );
+  for (final seed in [0, 1, 7, 12]) {
+    test(
+      'chest seed $seed rewards once and stage clearance resumes without resummoning',
+      () {
+        final s = inCombatField(
+          Adventure(GameArt(), restoredProgress: Progress(chestLootSeed: seed)),
+        );
+        s.start(TestGame());
+        addTearDown(s.dispose);
+        s.hero.position.setValues(
+          s.stageChestLocations.first.dx,
+          s.stageChestLocations.first.dy,
+        );
+        final rawContent = chestContent(s.world.stage, 0, seed: seed);
+        final content = rawContent == ChestContent.ambush
+            ? ChestContent.coins
+            : rawContent;
+        final gold = s.progress.gold;
+        s.openChest();
+        s.openChest();
+        expect(s.openedChests.length, 1);
+        expect(s.progress.gold, gold + content.gold);
+        expect(s.loot.length, content == ChestContent.gear ? 1 : 0);
+        final rareBefore = s.loot
+            .where((l) => l.item.rarity == Rarity.rare)
+            .length;
+        // The enlarged village protects this starter chest; fight outside it.
+        inCombatField(s);
+        s.cleansedSites.addAll(questSites.map((q) => q.id));
+        s.progress.kills = stageKillGoal;
+        s.tick(.05);
+        final boss = s.mobs.firstWhere((m) => m.boss);
+        s.hit(boss, 99999, Offset.zero);
+        expect(s.won, true);
+        expect(s.progress.bossDefeated, true);
+        expect(
+          s.loot.where((l) => l.item.rarity == Rarity.rare).length,
+          rareBefore + 1,
+        );
+        s.continueExploring();
+        expect(s.active, true);
+        final before = s.mobs.where((m) => m.boss).length;
+        s.spawnPack();
+        s.tick(.05);
+        expect(s.mobs.where((m) => m.boss).length, before);
+        expect(s.living, lessThanOrEqualTo(28));
+        expect(s.won, false);
+        s.hero.position.setValues(4650, 360);
+        expect(s.nearbyAction, null);
+      },
+    );
+  }
   test('forest treasure approaches admit a ground body for multiple seeds', () {
     for (final seed in [1, 7829, 18344]) {
       final w = AdventureWorld(seed: seed);
