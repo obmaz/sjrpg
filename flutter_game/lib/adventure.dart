@@ -6048,7 +6048,7 @@ class BattleText extends GameComponent {
     this.critical = false,
   }) : isReward = !critical && !RegExp(r'^-?\d+$').hasMatch(label) {
     position = Vector2(at.dx, at.dy);
-    size = Vector2(160, critical ? 44 : 35);
+    size = Vector2(160, critical ? 52 : 35);
   }
   final Adventure session;
   // Keep the original value for reward classification and gameplay consumers.
@@ -6087,7 +6087,7 @@ class BattleText extends GameComponent {
     position.x - combatWidth / 2,
     position.y - (critical ? 1 : 0),
     combatWidth,
-    critical ? 44 : 27,
+    critical ? 52 : 27,
   );
   late final double combatWidth = math.min(
     148,
@@ -6107,7 +6107,7 @@ class BattleText extends GameComponent {
       for (final x in columns) {
         position.setValues(
           origin.dx + x,
-          origin.dy - row * (critical ? 48 : 31),
+          origin.dy - row * (critical ? 56 : 31),
         );
         final bounds = combatBounds.inflate(2);
         if (!occupied.any(bounds.overlaps)) {
@@ -6194,10 +6194,10 @@ class BattleText extends GameComponent {
         if (critical) {
           _title = session.art.layoutText(
             'CRITICAL!',
-            size: 10,
+            size: 15,
             color: const ui.Color(0xffffb347),
           );
-          _titleOutline = _stroke('CRITICAL!', 10);
+          _titleOutline = _stroke('CRITICAL!', 15);
         }
       }
       _paintedColor = ink;
@@ -6207,13 +6207,13 @@ class BattleText extends GameComponent {
       // Fade cached opaque glyphs together; no per-frame Paragraph rebuilding.
       if (opacity < 1) {
         canvas.saveLayer(
-          const ui.Rect.fromLTWH(-84, -4, 168, 54),
+          const ui.Rect.fromLTWH(-84, -4, 168, 64),
           _fadePaint..color = ui.Color.fromRGBO(255, 255, 255, opacity),
         );
       }
-      canvas.translate(0, critical ? 18 : 12);
+      canvas.translate(0, critical ? 22 : 12);
       canvas.scale(punchScale);
-      canvas.translate(0, critical ? -18 : -12);
+      canvas.translate(0, critical ? -22 : -12);
       final fit = math.min(
         1.0,
         (combatWidth - 8) / math.max(1.0, _paragraph!.longestLine * 1.05),
@@ -6223,7 +6223,7 @@ class BattleText extends GameComponent {
         canvas.drawParagraph(_titleOutline!, const ui.Offset(-80, 0));
         canvas.drawParagraph(_title!, const ui.Offset(-80, 0));
       }
-      final at = ui.Offset(-80, critical ? 11 : 0);
+      final at = ui.Offset(-80, critical ? 17 : 0);
       canvas.drawParagraph(_outline!, at);
       canvas.drawParagraph(_paragraph!, at);
       if (opacity < 1) canvas.restore();
