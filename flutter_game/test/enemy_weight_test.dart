@@ -72,6 +72,60 @@ void main() {
     },
   );
 
+  test('a pursuing group keeps visible bodies separated around the hero', () {
+    final s = session();
+    final center = s.hero.body.center;
+    for (var i = 0; i < 8; i++) {
+      final angle = i * math.pi / 4;
+      final at = center + Offset(math.cos(angle), math.sin(angle)) * 200;
+      final mob = s.spawnEnemy('goblin', at, reserveSpacing: true)!;
+      mob.combatReady = true;
+      mob.attackClock = 999;
+    }
+    advance(s, 10);
+    for (var i = 0; i < s.mobs.length; i++) {
+      final a = s.mobs[i];
+      expect(
+        HuntEnemy.heroProximity(a.body.center - center),
+        greaterThanOrEqualTo(.96),
+        reason: 'a monster must not cover the hero while pursuing',
+      );
+      for (final b in s.mobs.skip(i + 1)) {
+        final delta = a.body.center - b.body.center;
+        final x =
+            delta.dx / ((a.personalSpace.width + b.personalSpace.width) / 2);
+        final y =
+            delta.dy / ((a.personalSpace.height + b.personalSpace.height) / 2);
+        expect(
+          math.sqrt(x * x + y * y),
+          greaterThanOrEqualTo(.94),
+          reason: 'pursuers must keep their visible bodies apart',
+        );
+      }
+    }
+  });
+
+  for (final kind in ['goblin', 'wolf', 'troll']) {
+    test('$kind can still approach and damage the hero', () {
+      final s = session();
+      s.hero.invulnerable = 0;
+      final mob = s.spawnEnemy(
+        kind,
+        s.hero.body.center + const Offset(145, 0),
+      )!;
+      mob.combatReady = true;
+      mob.attackClock = 0;
+      final hp = s.progress.hp;
+      advance(s, 6);
+      expect(
+        s.progress.hp,
+        lessThan(hp),
+        reason: 'the larger spacing cannot make attacks impossible',
+      );
+      expect(mob.body.overlaps(s.hero.body), false);
+    });
+  }
+
   test('a dense pack leaves distinct personal foot space around the hero', () {
     final s = session();
     for (var row = 0; row < 3; row++) {
@@ -108,7 +162,8 @@ void main() {
       s.mobs
           .where((e) => (e.body.center - s.hero.body.center).distance < 100)
           .length,
-      greaterThan(5),
+      greaterThanOrEqualTo(2),
+      reason: 'a larger ring still allows multiple nearby attackers',
     );
   });
 
@@ -242,7 +297,11 @@ void main() {
     for (final at in c.queue) {
       s.spawnEnemy('goblin', at)!.attackClock = 999;
     }
-    advance(s, 6);
+    advance(s, 8);
+    // A larger attack ring can fill the exit while the hero stands nearby.
+    // Moving onward must let every queued body leave the narrow passage.
+    s.hero.position.y -= 120;
+    advance(s, 4);
     for (var i = 0; i < s.mobs.length; i++) {
       final mob = s.mobs[i];
       expect(s.world.blocksEnemy(mob.body), false);

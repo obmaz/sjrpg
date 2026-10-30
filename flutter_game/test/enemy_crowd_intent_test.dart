@@ -53,7 +53,11 @@ void main() {
         nearest = math.min(nearest, heroDistance(s, s.mobs[9]));
       }
     }
-    expect(nearest, lessThan(123));
+    expect(
+      nearest,
+      lessThan(150),
+      reason: 'the pursuer must reach the widened combat ring',
+    );
     expect(s.observed.cornerSearchFrames.length, 1);
     expect(s.progress.hp, greaterThan(0));
   });

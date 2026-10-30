@@ -1627,7 +1627,7 @@ class Adventure extends ChangeNotifier {
     if (delta.distanceSquared < .000001) return from;
     _syncEnemySpacing(mover);
     final size = mover.body.size, original = from & size;
-    final search = original.expandToInclude(original.shift(delta)).inflate(64);
+    final search = original.expandToInclude(original.shift(delta)).inflate(110);
     final neighbors = enemySpacing
         .query(search)
         .where(
@@ -1643,7 +1643,7 @@ class Adventure extends ChangeNotifier {
     );
     final enforceSpace = !hasOverlap;
     final heroBody = hero.body;
-    final heroInWay = avoidHero && search.overlaps(heroBody);
+    final heroInWay = avoidHero && search.overlaps(heroBody.inflate(75));
     final storedPosition = Vector2.zero();
     ui.Offset stored(ui.Offset at) {
       // Validate Bonfire's actual Float32 endpoint while preserving the double
@@ -1671,7 +1671,13 @@ class Adventure extends ChangeNotifier {
       final beforeBody = stored(before) & size,
           afterBody = stored(after) & size;
       if (world.blocksEnemy(afterBody)) return false;
-      if (heroInWay && !EnemySpacing.permits(beforeBody, afterBody, heroBody)) {
+      if (heroInWay &&
+          (!EnemySpacing.permits(beforeBody, afterBody, heroBody) ||
+              !HuntEnemy.permitsHeroSpacing(
+                beforeBody.center,
+                afterBody.center,
+                heroBody.center,
+              ))) {
         return false;
       }
       for (final other in contacts) {
@@ -1789,7 +1795,7 @@ class Adventure extends ChangeNotifier {
     _syncEnemySpacing(mover);
     final from = mover.body.topLeft;
     final neighbors = enemySpacing
-        .query(mover.body.inflate(64))
+        .query(mover.body.inflate(110))
         .where(
           (other) =>
               other != mover &&
@@ -1801,14 +1807,19 @@ class Adventure extends ChangeNotifier {
     final hasOverlap = neighbors.any(
       (other) => mover.body.overlaps(enemySpacing.bodyOf(other)),
     );
-    var nudge = enemySpacing.separation(mover, mover.body, neighbors, 46 * dt);
+    var nudge = enemySpacing.separation(mover, mover.body, neighbors, 75 * dt);
     final away = mover.body.center - hero.body.center;
+    final heroProximity = HuntEnemy.heroProximity(away);
+    if (heroProximity < 1 && away.distanceSquared > .001) {
+      nudge += away / away.distance * (75 * dt * (1 - heroProximity));
+    }
     if (mover.body.overlaps(hero.body)) {
       final direction = away.distanceSquared > .001
           ? away / away.distance
           : ui.Offset(0, enemySpacing.preferredSide(mover));
       nudge += direction * (46 * dt);
     } else if (!hasOverlap &&
+        heroProximity >= 1 &&
         nudge.distanceSquared > .000001 &&
         away.distanceSquared > 1 &&
         away.distance <= mover.idleRange) {
@@ -4763,14 +4774,14 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
     required bool boss,
     required bool elite,
   }) => boss
-      ? const ui.Size(78, 58)
+      ? const ui.Size(128, 120)
       : kind == 'troll'
-      ? const ui.Size(58, 42)
+      ? const ui.Size(108, 100)
       : enemyCatalog[kind]?.lowProfile == true
-      ? const ui.Size(50, 32)
+      ? const ui.Size(102, 92)
       : elite
-      ? const ui.Size(48, 38)
-      : const ui.Size(44, 34);
+      ? const ui.Size(104, 96)
+      : const ui.Size(98, 92);
 
   static bool tooClose(ui.Offset a, ui.Size aSize, ui.Offset b, ui.Size bSize) {
     final d = a - b;
@@ -4779,7 +4790,37 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
     return x * x + y * y < 1;
   }
 
-  ui.Size get personalSpace => spacingFor(kind, boss: boss, elite: isElite);
+  static double heroProximity(ui.Offset delta) {
+    final x = delta.dx / 58, y = delta.dy / 68;
+    return math.sqrt(x * x + y * y);
+  }
+
+  static bool permitsHeroSpacing(ui.Offset from, ui.Offset to, ui.Offset hero) {
+    final before = heroProximity(from - hero), after = heroProximity(to - hero);
+    return after >= 1 || after >= before - .000001;
+  }
+
+  ui.Size get personalSpace {
+    // Close to the player the projected silhouettes need more space; away
+    // from combat the smaller foot envelope keeps narrow paths usable.
+    final nearHero =
+        (body.center - session.hero.body.center).distanceSquared < 150 * 150;
+    // Footprint-sized movement stays possible through authored narrow gaps;
+    // widen spacing again once the monster reaches open ground.
+    if (nearHero && !session.world.blocksEnemy(body.inflate(12))) {
+      return spacingFor(kind, boss: boss, elite: isElite);
+    }
+    return boss
+        ? const ui.Size(78, 58)
+        : kind == 'troll'
+        ? const ui.Size(58, 42)
+        : lowProfile
+        ? const ui.Size(50, 32)
+        : isElite
+        ? const ui.Size(48, 38)
+        : const ui.Size(44, 34);
+  }
+
   static const visualScale = .8;
   double get visualHeight =>
       (boss
@@ -4794,7 +4835,7 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
       ? (definition?.attackRange ?? (kind == 'gunner' ? 350 : 280))
       : usesSweep
       ? sweepRange - 18
-      : 42;
+      : 70;
   double get mass =>
       (boss
           ? 2.6
@@ -4819,7 +4860,7 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
   final attackMotion = EnemyAttackMotion();
   double meleeWindup = 0;
   double get meleeWarning => boss ? .26 : .2;
-  double get meleeReach => boss ? 64 : 42;
+  double get meleeReach => boss ? 80 : 72;
   double get anticipation {
     if (meleeWindup > 0) return 1 - meleeWindup / meleeWarning;
     if (windup <= 0) return 0;
@@ -4971,6 +5012,7 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
     if ((velocity.isZero() ||
             (position.toOffset() - before).distanceSquared < .0001) &&
         !preparingAttack &&
+        !attackMotion.active &&
         pounceRemaining <= 0 &&
         hurt <= 0 &&
         _knockbackTime <= 0 &&
@@ -5314,7 +5356,7 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
                 ? (definition?.attackRange ?? (kind == 'gunner' ? 350 : 280))
                 : usesSweep
                 ? sweepRange - 18
-                : 42) &&
+                : 70) &&
         session.world.clearEnemyLine(
           body.center,
           session.hero.body.center,
