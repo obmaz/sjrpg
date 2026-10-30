@@ -114,16 +114,33 @@ class GameHud extends StatelessWidget {
             left: meterLeft,
             top: resourceTop + resourceHeight + 4,
             width: math.max(48, statusWidth - meterLeft - 7),
-            height: 4,
+            height: 8,
             child: Semantics(
               label: '경험치',
               value: '${p.xp} / ${p.nextLevelXp}',
-              child: LinearProgressIndicator(
-                key: const ValueKey('hud-experience'),
-                value: (p.xp / p.nextLevelXp).clamp(0.0, 1.0),
-                minHeight: 4,
-                color: gold,
-                backgroundColor: const Color(0xdd201c18),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  LinearProgressIndicator(
+                    key: const ValueKey('hud-experience'),
+                    value: (p.xp / p.nextLevelXp).clamp(0.0, 1.0),
+                    minHeight: 8,
+                    color: gold,
+                    backgroundColor: const Color(0xff514537),
+                  ),
+                  Center(
+                    child: Text(
+                      'EXP ${(p.xp / p.nextLevelXp * 100).floor()}%',
+                      textScaler: TextScaler.noScaling,
+                      style: const TextStyle(
+                        fontSize: 7,
+                        height: 1,
+                        color: cream,
+                        shadows: [Shadow(color: Colors.black, blurRadius: 2)],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -146,9 +163,9 @@ class GameHud extends StatelessWidget {
             top: landscape
                 ? math.max(
                     16 + portraitSide + 8,
-                    resourceTop + resourceHeight + 13,
+                    resourceTop + resourceHeight + 16,
                   )
-                : math.max(73, resourceTop + resourceHeight + 13),
+                : math.max(73, resourceTop + resourceHeight + 16),
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxWidth: math.max(60, statusWidth - 76),
