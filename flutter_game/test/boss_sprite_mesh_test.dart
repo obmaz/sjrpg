@@ -288,10 +288,10 @@ void main() {
       final canvas = ui.Canvas(recorder), loaded = <ui.Image>[];
       final profiles = BossMeshProfile.values;
       final roles = [
-        'cinematic-golem',
-        'cinematic-sand-warden',
-        'cinematic-ancient-king',
-        'cinematic-cyber-core',
+        'walk-golem',
+        'walk-sand-warden',
+        'walk-ancient-king',
+        'walk-cyber-core',
       ];
       final variants = [
         const BossVisualPose(),

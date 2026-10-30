@@ -33,7 +33,8 @@ void main() {
       for (var i = 0; i < 25; i++) {
         expect(s.hit(mob, 1, Offset.zero, critical: i.isEven), true);
       }
-      expect(s.texts.where((t) => !t.isReward).length, 14);
+      expect(s.texts.where((t) => !t.isReward).length, 1);
+      expect(mob.life.value, closeTo(before - 49, 1e-8));
       for (var i = 0; i < s.texts.length; i++) {
         for (var j = i + 1; j < s.texts.length; j++) {
           expect(

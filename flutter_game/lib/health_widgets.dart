@@ -108,9 +108,14 @@ class _HealthScope extends InheritedWidget {
 }
 
 class _HealthSurface extends StatefulWidget {
-  const _HealthSurface({required this.feedback, required this.danger});
+  const _HealthSurface({
+    required this.feedback,
+    required this.danger,
+    this.flatEnd = false,
+  });
   final PlayerHealthFeedback feedback;
   final bool danger;
+  final bool flatEnd;
   @override
   State<_HealthSurface> createState() => _HealthSurfaceState();
 }
@@ -119,7 +124,7 @@ class _HealthSurfaceState extends State<_HealthSurface> {
   late CustomPainter painter = createPainter();
   CustomPainter createPainter() => widget.danger
       ? HealthDangerPainter(widget.feedback)
-      : HealthMeterPainter(widget.feedback);
+      : HealthMeterPainter(widget.feedback, flatEnd: widget.flatEnd);
   void release() {
     if (painter case final HealthDangerPainter danger) {
       danger.release();
@@ -133,7 +138,8 @@ class _HealthSurfaceState extends State<_HealthSurface> {
   void didUpdateWidget(covariant _HealthSurface oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.feedback, widget.feedback) ||
-        oldWidget.danger != widget.danger) {
+        oldWidget.danger != widget.danger ||
+        oldWidget.flatEnd != widget.flatEnd) {
       release();
       painter = createPainter();
     }
@@ -159,18 +165,25 @@ class HealthMeter extends StatelessWidget {
     this.session, {
     this.height = 25,
     this.leadingInset = 18,
+    this.flatEnd = false,
     super.key,
   });
   final Adventure session;
   final double height;
   final double leadingInset;
+  final bool flatEnd;
   @override
   Widget build(BuildContext context) {
     final feedback = PlayerHealthFeedbackScope.maybeOf(context);
     if (feedback == null || !identical(feedback.session, session)) {
       return PlayerHealthFeedbackScope(
         session: session,
-        child: HealthMeter(session, height: height, leadingInset: leadingInset),
+        child: HealthMeter(
+          session,
+          height: height,
+          leadingInset: leadingInset,
+          flatEnd: flatEnd,
+        ),
       );
     }
     return ValueListenableBuilder<HealthReading>(
@@ -183,7 +196,11 @@ class HealthMeter extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              _HealthSurface(feedback: feedback, danger: false),
+              _HealthSurface(
+                feedback: feedback,
+                danger: false,
+                flatEnd: flatEnd,
+              ),
               Padding(
                 padding: EdgeInsets.fromLTRB(leadingInset, 2, 17, 2),
                 child: FittedBox(
@@ -212,7 +229,9 @@ class HealthMeter extends StatelessWidget {
 }
 
 class HealthMeterPainter extends CustomPainter {
-  HealthMeterPainter(this.feedback) : super(repaint: feedback);
+  HealthMeterPainter(this.feedback, {this.flatEnd = false})
+    : super(repaint: feedback);
+  final bool flatEnd;
   final PlayerHealthFeedback feedback;
   ui.Shader? _fillShader;
   Size _shaderSize = Size.zero;
@@ -228,8 +247,8 @@ class HealthMeterPainter extends CustomPainter {
     final edge = math.min(13.0, size.height * .42);
     final shape = Path()
       ..moveTo(0, 1)
-      ..lineTo(size.width - 1, 1)
-      ..lineTo(size.width - edge, size.height - 1)
+      ..lineTo(size.width + (flatEnd ? 1 : -1), 1)
+      ..lineTo(flatEnd ? size.width + 1 : size.width - edge, size.height - 1)
       ..lineTo(0, size.height - 1)
       ..close();
     canvas.save();
@@ -299,7 +318,8 @@ class HealthMeterPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant HealthMeterPainter oldDelegate) =>
-      !identical(oldDelegate.feedback, feedback);
+      !identical(oldDelegate.feedback, feedback) ||
+      oldDelegate.flatEnd != flatEnd;
 }
 
 class HealthDangerVignette extends StatelessWidget {

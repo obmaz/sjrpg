@@ -57,13 +57,6 @@ class GameHud extends StatelessWidget {
     // Labels start beyond the portrait's complete metal rim. Only the fluid
     // and its frame continue underneath the circular join.
     final labelInset = 10 + portraitSide + 8 - meterLeft;
-    Widget joinPortrait(Widget child, double top) => ClipPath(
-      clipper: PortraitGaugeClipper(
-        Offset(10 + portraitSide / 2 - meterLeft, 16 + portraitSide / 2 - top),
-        portraitSide / 2 + 5,
-      ),
-      child: child,
-    );
     final mapSide = battleMapDiameter(media.size);
     final statusWidth = math.min(
       landscape ? 360 * (media.size.height / 720).clamp(.65, 1.0) : 306.0,
@@ -73,13 +66,26 @@ class GameHud extends StatelessWidget {
       18.0,
       ResourceMeter.minimumHeight(media.textScaler),
     );
-    final identityHeight = math.max(
-      21.0,
-      (media.textScaler.scale(12) * 1.1).ceilToDouble(),
-    );
-    final healthTop = 7 + identityHeight + 2;
-    const healthHeight = 18.0;
+    const portraitTop = 10.0,
+        healthTop = 10.0,
+        healthHeight = 18.0,
+        slant = 16.0;
     final resourceTop = healthTop + healthHeight + 1;
+    final ribbonTop = healthTop - 3;
+    final ribbonBottom = resourceTop + resourceHeight + 15;
+    Widget joinPortrait(Widget child, double top) => ClipPath(
+      clipper: PortraitGaugeClipper(
+        Offset(
+          10 + portraitSide / 2 - meterLeft,
+          portraitTop + portraitSide / 2 - top,
+        ),
+        portraitSide / 2 + 5,
+        ribbonOffset: top - ribbonTop,
+        ribbonHeight: ribbonBottom - ribbonTop,
+        slant: slant,
+      ),
+      child: child,
+    );
     return SizedBox(
       height: math.max(130, mapSide + 14),
       child: Stack(
@@ -97,29 +103,10 @@ class GameHud extends StatelessWidget {
               child: CustomPaint(
                 painter: _HeroStatusChrome(
                   portraitSide + 8,
-                  plateBottom: resourceTop + resourceHeight + 11,
-                  headerBottom: healthTop - 7,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: portraitSide + 16,
-            top: 7,
-            width: math.max(44, statusWidth - portraitSide - 22),
-            height: identityHeight,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Lv.${p.level}  ${p.heroClass.title}',
-                key: const ValueKey('hud-identity'),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: gold,
-                  fontSize: 12,
-                  height: 1.1,
-                  shadows: [Shadow(color: Color(0xff0c1011), blurRadius: 2)],
+                  plateTop: ribbonTop - 4,
+                  plateBottom: ribbonBottom - 4,
+                  portraitTop: portraitTop,
+                  slant: slant,
                 ),
               ),
             ),
@@ -133,6 +120,7 @@ class GameHud extends StatelessWidget {
                 session,
                 height: healthHeight,
                 leadingInset: labelInset,
+                flatEnd: true,
               ),
               healthTop,
             ),
@@ -194,7 +182,7 @@ class GameHud extends StatelessWidget {
           ),
           Positioned(
             left: 10,
-            top: 16,
+            top: portraitTop,
             child: SizedBox(
               key: const ValueKey('hud-portrait'),
               width: portraitSide,
@@ -210,7 +198,7 @@ class GameHud extends StatelessWidget {
             left: landscape ? 10 : 116,
             top: landscape
                 ? math.max(
-                    16 + portraitSide + 8,
+                    portraitTop + portraitSide + 8,
                     resourceTop + resourceHeight + 16,
                   )
                 : math.max(73, resourceTop + resourceHeight + 16),
@@ -269,18 +257,38 @@ class GameHud extends StatelessWidget {
 
 /// One circular cutout joins each live bar to the same portrait rim.
 class PortraitGaugeClipper extends CustomClipper<Path> {
-  const PortraitGaugeClipper(this.center, this.radius);
+  const PortraitGaugeClipper(
+    this.center,
+    this.radius, {
+    this.ribbonOffset = 0,
+    this.ribbonHeight,
+    this.slant = 0,
+  });
   final Offset center;
   final double radius;
+  final double ribbonOffset, slant;
+  final double? ribbonHeight;
+  double rightAt(Size size, double y) => ribbonHeight == null
+      ? size.width
+      : size.width - slant * (ribbonOffset + y) / ribbonHeight!;
   @override
   Path getClip(Size size) => Path.combine(
     PathOperation.difference,
-    Path()..addRect(Offset.zero & size),
+    Path()
+      ..moveTo(0, 0)
+      ..lineTo(rightAt(size, 0), 0)
+      ..lineTo(rightAt(size, size.height), size.height)
+      ..lineTo(0, size.height)
+      ..close(),
     Path()..addOval(Rect.fromCircle(center: center, radius: radius)),
   );
   @override
   bool shouldReclip(covariant PortraitGaugeClipper old) =>
-      old.center != center || old.radius != radius;
+      old.center != center ||
+      old.radius != radius ||
+      old.ribbonOffset != ribbonOffset ||
+      old.ribbonHeight != ribbonHeight ||
+      old.slant != slant;
 }
 
 /// The portrait and two vessels share one fitted dark-metal silhouette.
@@ -289,21 +297,23 @@ class _HeroStatusChrome extends CustomPainter {
   const _HeroStatusChrome(
     this.portraitSide, {
     required this.plateBottom,
-    required this.headerBottom,
+    required this.plateTop,
+    required this.portraitTop,
+    required this.slant,
   });
   final double portraitSide;
   final double plateBottom;
-  final double headerBottom;
+  final double plateTop, portraitTop, slant;
   @override
   void paint(Canvas canvas, Size size) {
     final plate = Path()
-      ..moveTo(portraitSide * .70, 1)
-      ..lineTo(size.width, 1)
-      ..lineTo(size.width - 8, headerBottom)
-      ..lineTo(size.width - 8, plateBottom)
+      ..moveTo(portraitSide * .70, plateTop)
+      ..lineTo(size.width - 9, plateTop)
+      ..lineTo(size.width - 9 - slant, plateBottom)
       ..lineTo(portraitSide * .70, plateBottom)
       ..close();
-    final portrait = Rect.fromLTWH(1, 8, portraitSide, portraitSide);
+    final ringTop = portraitTop - 8;
+    final portrait = Rect.fromLTWH(1, ringTop, portraitSide, portraitSide);
     final joinedPlate = Path.combine(
       PathOperation.difference,
       plate,
@@ -320,13 +330,6 @@ class _HeroStatusChrome extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.4
         ..color = const Color(0xff6e6355),
-    );
-    canvas.drawLine(
-      Offset(portraitSide + 3, headerBottom),
-      Offset(size.width - 13, headerBottom),
-      Paint()
-        ..color = const Color(0xff897a64)
-        ..strokeWidth = .7,
     );
     canvas.drawOval(
       portrait.shift(const Offset(0, 2)),
@@ -358,7 +361,7 @@ class _HeroStatusChrome extends CustomPainter {
         ..color = const Color(0xff9c8761),
     );
     // Small crest and rivets distinguish the portrait from an ordinary button.
-    for (final y in [7.0, portraitSide + 8]) {
+    for (final y in [ringTop - 1, ringTop + portraitSide]) {
       final crest = Path()
         ..moveTo(portraitSide / 2 - 1, y - 3)
         ..lineTo(portraitSide / 2 + 4, y + 1)
@@ -376,7 +379,7 @@ class _HeroStatusChrome extends CustomPainter {
     }
     for (final x in [5.0, portraitSide - 7]) {
       canvas.drawCircle(
-        Offset(x, portraitSide / 2 + 7),
+        Offset(x, ringTop + portraitSide / 2 - 1),
         1.4,
         Paint()..color = const Color(0xffad9770),
       );
@@ -387,7 +390,9 @@ class _HeroStatusChrome extends CustomPainter {
   bool shouldRepaint(covariant _HeroStatusChrome old) =>
       old.portraitSide != portraitSide ||
       old.plateBottom != plateBottom ||
-      old.headerBottom != headerBottom;
+      old.plateTop != plateTop ||
+      old.portraitTop != portraitTop ||
+      old.slant != slant;
 }
 
 /// Shared generated medallions use the same circular face as learned skills.

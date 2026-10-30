@@ -23,6 +23,7 @@ import 'world_model.dart';
 
 class GameArt {
   final images = <String, ui.Image>{};
+  Map<String, dynamic> corpses = {};
   late final effects = EffectAtlas(images);
   late final Map<String, dynamic> actors, controls;
   final materials = <ui.Shader>[];
@@ -97,27 +98,28 @@ class GameArt {
     'cinematic-interface',
     'reference-battle-buttons',
     'mount-skill-icons',
-    'actors-cinematic-goblin',
-    'actors-cinematic-wolf',
-    'actors-cinematic-skeleton',
-    'actors-cinematic-cultist',
-    'actors-cinematic-troll',
-    'actors-cinematic-golem',
-    'actors-cinematic-scorpion',
-    'actors-cinematic-mummy',
-    'actors-cinematic-boar',
-    'actors-cinematic-basilisk',
-    'actors-cinematic-wraith',
-    'actors-cinematic-drone',
-    'actors-cinematic-viper',
-    'actors-cinematic-bonehound',
-    'actors-cinematic-clockwork-spider',
-    'actors-cinematic-crystal-beetle',
-    'actors-cinematic-cyber',
-    'actors-cinematic-gunner',
-    'actors-cinematic-sand-warden',
-    'actors-cinematic-ancient-king',
-    'actors-cinematic-cyber-core',
+    'monster-corpses',
+    'actors-walk-goblin',
+    'actors-walk-wolf',
+    'actors-walk-skeleton',
+    'actors-walk-cultist',
+    'actors-walk-troll',
+    'actors-walk-golem',
+    'actors-walk-scorpion',
+    'actors-walk-mummy',
+    'actors-walk-boar',
+    'actors-walk-basilisk',
+    'actors-walk-wraith',
+    'actors-walk-drone',
+    'actors-walk-viper',
+    'actors-walk-bonehound',
+    'actors-walk-clockwork-spider',
+    'actors-walk-crystal-beetle',
+    'actors-walk-cyber',
+    'actors-walk-gunner',
+    'actors-walk-sand-warden',
+    'actors-walk-ancient-king',
+    'actors-walk-cyber-core',
     'reference-menus',
     'village-gateway',
     'd1-warrior',
@@ -245,6 +247,7 @@ class GameArt {
               as Map<String, dynamic>;
       art.actors = data['actors'];
       art.controls = data['controls'];
+      art.corpses = Map<String, dynamic>.from(data['corpses'] ?? {});
       for (final sheet in art.actors.keys) {
         art._atlas(sheet);
       }
@@ -338,7 +341,11 @@ class GameArt {
       actorKeys.addAll(timeQuestGivers.map((giver) => giver.actor));
     }
     names.addAll(
-      actorKeys.map((key) => 'actors-${_actorDefinitions[key]!.$1}'),
+      actorKeys.map(
+        (key) => _actorDefinitions[key]!.$1.startsWith('cinematic-')
+            ? 'actors-walk-$key'
+            : 'actors-${_actorDefinitions[key]!.$1}',
+      ),
     );
     await _ensureImages(names, ground: true, village: false);
   }
@@ -773,8 +780,9 @@ class GameArt {
     canvas.drawImageRect(image, source, destination, _portraitPaint);
   }
 
-  /// Existing and unloaded atlases retain the original two-phase gait.
+  /// Native enemy clips expose four poses; heroes keep their full run clips.
   int runFrameCount(String key) {
+    if (images.containsKey('actors-walk-$key')) return 4;
     final sheet = _actorDefinitions[key]!.$1;
     if (!images.containsKey('actors-$sheet')) return 2;
     return _atlas(sheet).motion?.framesPerDirection ?? 2;
@@ -803,6 +811,8 @@ class GameArt {
                   .clamp(0, 2)]
             : attack && key == 'mage'
             ? 'mage-cast'
+            : images.containsKey('actors-walk-$key')
+            ? 'walk-$key'
             : definition.$1,
         count = definition.$3;
     final atlas = _atlas(sheet);
@@ -811,7 +821,13 @@ class GameArt {
         : null;
     final action = attack ? atlas.action : null;
     final selectedPhase = bossPose == null && walkPose == null ? phase : 0;
-    final index = action != null
+    final walking = walkPose ?? (bossPose?.walking == true ? bossPose : null);
+    final index = atlas.walk != null
+        ? atlas.walk!.frameIndex(
+            facingFrame(angle, 8),
+            walking?.stride ?? (selectedPhase % 4) / 4,
+          )
+        : action != null
         ? action.frameIndex(
             facingFrame(angle, 16),
             actionProgress ?? (phase.isEven ? 0.0 : .5),
@@ -911,6 +927,44 @@ class GameArt {
       );
     }
     if (mirror) canvas.restore();
+  }
+
+  /// Ground poses keep the generated silhouette's aspect, without rotating or flattening a standing actor.
+  ui.Rect corpseBounds(String kind, ui.Offset center, double width) {
+    final kinds = corpses['kinds'] as List?;
+    final index = kinds?.indexOf(kind) ?? -1;
+    if (index < 0) {
+      return ui.Rect.fromCenter(
+        center: center,
+        width: width,
+        height: width * .55,
+      );
+    }
+    final raw = corpses['frames'][index] as List;
+    return ui.Rect.fromCenter(
+      center: center,
+      width: width,
+      height: width * (raw[3] as num) / (raw[2] as num),
+    );
+  }
+
+  void corpse(ui.Canvas canvas, String kind, ui.Offset center, double width) {
+    final image = images['monster-corpses'];
+    final kinds = corpses['kinds'] as List?;
+    final index = kinds?.indexOf(kind) ?? -1;
+    if (image == null || index < 0) return;
+    final raw = corpses['frames'][index] as List;
+    canvas.drawImageRect(
+      image,
+      ui.Rect.fromLTWH(
+        (raw[0] as num).toDouble(),
+        (raw[1] as num).toDouble(),
+        (raw[2] as num).toDouble(),
+        (raw[3] as num).toDouble(),
+      ),
+      corpseBounds(kind, center, width),
+      _portraitPaint,
+    );
   }
 
   void roll(

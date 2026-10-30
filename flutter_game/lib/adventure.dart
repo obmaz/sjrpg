@@ -117,6 +117,7 @@ class Adventure extends ChangeNotifier {
   DeathLoss? deathLoss;
   final loot = <GroundLoot>[];
   final texts = <BattleText>[];
+  final _damageLanes = <Object, _DamageTextLane>{};
   final mounts = <TravelMount>[];
   TravelMount? riding;
   TravelMount? get nearbyMount {
@@ -1396,6 +1397,7 @@ class Adventure extends ChangeNotifier {
     impactTime = math.max(0, impactTime - dt);
     if (impactTime == 0) impactStrength = 0;
     elapsed += dt;
+    _advanceDamageNumbers(dt);
     noticeTime = math.max(0, noticeTime - dt);
     combatTime = math.max(0, combatTime - dt);
     progress.energy =
@@ -1920,8 +1922,29 @@ class Adventure extends ChangeNotifier {
     ui.Offset at,
     ui.Color color, {
     bool critical = false,
+    Object? target,
+    ui.Offset Function()? follow,
   }) {
-    final next = BattleText(this, text, at, color, critical: critical);
+    final next = BattleText(
+      this,
+      text,
+      at,
+      color,
+      critical: critical,
+      target: target,
+      follow: follow,
+    );
+    if (next.isStream) {
+      final lane = _damageLanes.putIfAbsent(target!, _DamageTextLane.new);
+      if (lane.wait <= 0 && lane.pending.isEmpty) {
+        _showDamageNumber(next);
+        lane.wait = BattleText.streamInterval;
+      } else {
+        if (lane.pending.length >= 24) lane.pending.removeAt(0).releaseText();
+        lane.pending.add(next);
+      }
+      return;
+    }
     if (text.startsWith('탐색 ')) next.remaining = 1.8;
     final same = texts.where((t) => t.isReward == next.isReward).toList();
     final limit = next.isReward ? 2 : 14;
@@ -1940,6 +1963,47 @@ class Adventure extends ChangeNotifier {
     }
     texts.add(next);
     game?.add(next);
+  }
+
+  void _removeBattleText(BattleText text) {
+    text.remaining = 0;
+    text.releaseText();
+    text.removeFromParent();
+    texts.remove(text);
+  }
+
+  void _showDamageNumber(BattleText next) {
+    final same = texts
+        .where((t) => t.isStream && identical(t.target, next.target))
+        .toList();
+    while (same.length >= 3) {
+      _removeBattleText(same.removeAt(0));
+    }
+    final visible = texts.where((t) => !t.isReward).toList();
+    if (visible.length >= 14) _removeBattleText(visible.first);
+    final at = next.follow?.call();
+    if (at != null) next.position.setValues(at.dx, at.dy);
+    texts.add(next);
+    game?.add(next);
+  }
+
+  void _advanceDamageNumbers(double dt) {
+    for (final entry in _damageLanes.entries.toList()) {
+      final lane = entry.value;
+      lane.wait = math.max(0, lane.wait - dt);
+      if (lane.wait <= 0 && lane.pending.isNotEmpty) {
+        _showDamageNumber(lane.pending.removeAt(0));
+        lane.wait = BattleText.streamInterval;
+      }
+      if (lane.pending.isEmpty &&
+          lane.wait <= 0 &&
+          !texts.any(
+            (t) =>
+                t.isStream && identical(t.target, entry.key) && t.remaining > 0,
+          )) {
+        _damageLanes.remove(entry.key);
+      }
+    }
   }
 
   void hurtHero(
@@ -2073,8 +2137,10 @@ class Adventure extends ChangeNotifier {
     }
     bubble(
       '-${damage.toInt()}',
-      hero.position.toOffset() - const ui.Offset(0, 65),
+      hero.body.center - const ui.Offset(0, 65),
       const ui.Color(0xffff8a72),
+      target: hero,
+      follow: () => hero.body.center - const ui.Offset(0, 65),
     );
     if (progress.hp <= 0) {
       hero.sorceressCombat.clear();
@@ -2184,9 +2250,11 @@ class Adventure extends ChangeNotifier {
     mob.push(impulse);
     bubble(
       '${damage.round()}',
-      mob.position.toOffset() - ui.Offset(0, mob.boss ? 125 : 70),
+      mob.body.center - ui.Offset(0, mob.boss ? 125 : 70),
       const ui.Color(0xffffedb4),
       critical: critical,
+      target: mob,
+      follow: () => mob.body.center - ui.Offset(0, mob.boss ? 125 : 70),
     );
     if (mob.isDead && !mob.rewarded) {
       mob.rewarded = true;
@@ -2317,6 +2385,12 @@ class Adventure extends ChangeNotifier {
     barbarianUtilities.clear();
     hero.sorceressCombat.clear();
     disposed = true;
+    for (final lane in _damageLanes.values) {
+      for (final text in lane.pending) {
+        text.releaseText();
+      }
+    }
+    _damageLanes.clear();
     for (final text in texts) {
       text.releaseText();
     }
@@ -5802,6 +5876,11 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
               _ => BossMeshProfile.golem,
             },
             stride: motion.stride / (math.pi * 2),
+            walking:
+                motion.weight > .02 &&
+                !preparingAttack &&
+                !attackMotion.active &&
+                hurt <= .08,
             weight: preparingAttack || attackMotion.active ? 0 : motion.weight,
             windup: preparingAttack ? anticipation : releaseWindup,
             strike: attackMotion.extension,
@@ -6151,6 +6230,11 @@ class VillagePerson extends GameComponent {
   }
 }
 
+class _DamageTextLane {
+  double wait = 0;
+  final pending = <BattleText>[];
+}
+
 class BattleText extends GameComponent {
   BattleText(
     this.session,
@@ -6158,10 +6242,19 @@ class BattleText extends GameComponent {
     ui.Offset at,
     this.color, {
     this.critical = false,
+    this.target,
+    this.follow,
   }) : isReward = !critical && !RegExp(r'^-?\d+$').hasMatch(label) {
     position = Vector2(at.dx, at.dy);
     size = Vector2(160, critical ? 52 : 35);
+    if (isStream) remaining = streamLifetime;
   }
+  static const streamInterval = .18,
+      streamLifetime = .54,
+      streamRiseSpeed = 360.0;
+  final Object? target;
+  final ui.Offset Function()? follow;
+  bool get isStream => target != null && !isReward;
   final Adventure session;
   // Keep the original value for reward classification and gameplay consumers.
   final String label;
@@ -6189,7 +6282,7 @@ class BattleText extends GameComponent {
       : math.min(critical ? 32 : 26, 232 / displayLabel.length);
   double get punchScale {
     if (isReward || reducedMotion) return 1;
-    final age = (.9 - remaining).clamp(0.0, .9);
+    final age = ((isStream ? streamLifetime : .9) - remaining).clamp(0.0, .9);
     if (age < .07) return .9 + age / .07 * .15;
     if (age < .18) return 1.05 - (age - .07) / .11 * .05;
     return 1;
@@ -6271,7 +6364,30 @@ class BattleText extends GameComponent {
     if (!session.active) return;
     super.update(dt);
     remaining -= dt;
-    if (!reducedMotion) position.y -= dt * (isReward ? 27 : 23);
+    if (isStream) {
+      final at = follow?.call();
+      if (at != null) position.x = at.dx;
+      if (at != null) {
+        if (reducedMotion) {
+          final lane = session.texts
+              .where(
+                (t) =>
+                    t.isStream &&
+                    identical(t.target, target) &&
+                    t.remaining > 0,
+              )
+              .toList();
+          final row = math.max(0, lane.length - 1 - lane.indexOf(this));
+          position.y = at.dy - row * 65;
+        } else {
+          position.y = at.dy - (streamLifetime - remaining) * streamRiseSpeed;
+        }
+      } else if (!reducedMotion) {
+        position.y -= dt * streamRiseSpeed;
+      }
+    } else if (!reducedMotion) {
+      position.y -= dt * (isReward ? 27 : 23);
+    }
     if (remaining <= 0) removeFromParent();
   }
 
@@ -6286,7 +6402,7 @@ class BattleText extends GameComponent {
   void render(ui.Canvas canvas) {
     super.render(canvas);
     if (session.disposed || remaining <= 0 || isRemoving) return;
-    final opacity = (remaining / .3).clamp(0.0, 1.0);
+    final opacity = (remaining / (isStream ? .12 : .3)).clamp(0.0, 1.0);
     final ink = isReward
         ? color.withValues(alpha: opacity)
         : critical

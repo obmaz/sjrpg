@@ -59,23 +59,23 @@ void main() {
   });
 
   test(
-    'real viper atlas covers eight facings and two distinct complete poses',
+    'real viper atlas covers eight facings and four distinct complete poses',
     () async {
       final data =
           jsonDecode(await rootBundle.loadString('assets/art.json')) as Map;
-      final record = data['actors']['cinematic-viper'] as Map;
+      final record = data['actors']['walk-viper'] as Map;
       final bytes = await rootBundle.load(
-        'assets/images/actors-cinematic-viper.webp',
+        'assets/images/actors-walk-viper.webp',
       );
       final codec = await ui.instantiateImageCodec(bytes.buffer.asUint8List());
       final image = (await codec.getNextFrame()).image;
       codec.dispose();
       addTearDown(image.dispose);
       final frames = record['frames'] as List, feet = record['feet'] as List;
-      expect(frames, hasLength(16));
-      expect(feet, hasLength(16));
+      expect(frames, hasLength(32));
+      expect(feet, hasLength(32));
       expect(record['artworkWorldHeightMultiplier'], 1.5);
-      for (var i = 0; i < 16; i++) {
+      for (var i = 0; i < 32; i++) {
         final f = (frames[i] as List).cast<num>();
         expect(f[0], greaterThanOrEqualTo(4));
         expect(f[1], greaterThanOrEqualTo(4));
@@ -106,7 +106,7 @@ void main() {
       }
       expect(
         hashes,
-        hasLength(16),
+        hasLength(32),
         reason: 'every facing and contact pose has native artwork',
       );
 
@@ -115,7 +115,7 @@ void main() {
       await Directory(directory).create(recursive: true);
       final art = GameArt()
         ..actors = Map<String, dynamic>.from(data['actors'] as Map)
-        ..images['actors-cinematic-viper'] = image;
+        ..images['actors-walk-viper'] = image;
       Future<void> save(
         String name,
         int width,

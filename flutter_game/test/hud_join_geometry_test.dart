@@ -65,9 +65,7 @@ void main() {
             final portrait = tester.getRect(
               find.byKey(const ValueKey('hud-portrait')),
             );
-            final identity = tester.getRect(
-              find.byKey(const ValueKey('hud-identity')),
-            );
+            expect(find.byKey(const ValueKey('hud-identity')), findsNothing);
             final health = tester.getRect(find.byType(HealthMeter));
             final resource = tester.getRect(find.byType(ResourceMeter));
             final xp = tester.getRect(
@@ -84,7 +82,43 @@ void main() {
             );
             expect(hpText.left, greaterThanOrEqualTo(portrait.right + 4));
             expect(resourceText.left, greaterThanOrEqualTo(portrait.right + 4));
-            expect(identity.bottom, lessThanOrEqualTo(health.top));
+            expect(health.top, 10);
+            expect(health.height, 18);
+            expect(xp.height, 8);
+            final clips = tester
+                .widgetList<ClipPath>(
+                  find.descendant(
+                    of: find.byType(GameHud),
+                    matching: find.byType(ClipPath),
+                  ),
+                )
+                .where((w) => w.clipper is PortraitGaugeClipper)
+                .toList();
+            expect(clips.length, 3);
+            final points = <Offset>[];
+            for (var i = 0; i < clips.length; i++) {
+              final clip = clips[i].clipper! as PortraitGaugeClipper;
+              final rect = [health, resource, xp][i];
+              for (final y in [0.0, rect.height]) {
+                points.add(
+                  Offset(rect.left + clip.rightAt(rect.size, y), rect.top + y),
+                );
+              }
+            }
+            final slope =
+                (points.last.dx - points.first.dx) /
+                (points.last.dy - points.first.dy);
+            expect(slope, lessThan(0));
+            for (final point in points) {
+              expect(
+                point.dx,
+                closeTo(
+                  points.first.dx + slope * (point.dy - points.first.dy),
+                  .01,
+                ),
+                reason: 'all three endpoints share one continuous diagonal',
+              );
+            }
             expect(health.bottom, lessThan(resource.top));
             expect(resource.bottom, lessThan(xp.top));
             expect(xp.bottom, lessThan(chrome.bottom));

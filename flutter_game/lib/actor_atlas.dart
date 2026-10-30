@@ -14,6 +14,7 @@ class ActorAtlas {
     this.motion,
     this.projectedOrigin,
     this.action,
+    this.walk,
   );
   factory ActorAtlas.fromJson(Map<String, dynamic> record) {
     final anchors = record['feet'] as List?,
@@ -24,7 +25,10 @@ class ActorAtlas {
     }
     final projected = mode == 'projected-origin';
     final opted =
-        projected || record['motion'] != null || record['action'] != null;
+        projected ||
+        record['motion'] != null ||
+        record['action'] != null ||
+        record['walk'] != null;
     if (opted &&
         (anchors == null ||
             anchors.length != (record['frames'] as List).length)) {
@@ -83,6 +87,12 @@ class ActorAtlas {
               record['action'] as Map<String, dynamic>,
               frames,
             ),
+      record['walk'] == null
+          ? null
+          : EnemyWalkClip.fromJson(
+              record['walk'] as Map<String, dynamic>,
+              frames,
+            ),
     );
   }
 
@@ -110,6 +120,7 @@ class ActorAtlas {
   final ActorRunClip? motion;
   final bool projectedOrigin;
   final ActorActionClip? action;
+  final EnemyWalkClip? walk;
 }
 
 enum ActorRunLayout { phaseMajor, directionMajor }
@@ -237,5 +248,33 @@ class ActorActionClip {
     return layout == ActorRunLayout.phaseMajor
         ? phase * 16 + direction
         : direction * framesPerDirection + phase;
+  }
+}
+
+/// Four native contact/passing poses per bearing, driven by distance travelled.
+class EnemyWalkClip {
+  const EnemyWalkClip._();
+  factory EnemyWalkClip.fromJson(
+    Map<String, dynamic> record,
+    List<ActorFrame> frames,
+  ) {
+    if (record['directions'] != 8 ||
+        record['frames'] != 4 ||
+        record['layout'] != 'direction-major' ||
+        frames.length != 32 ||
+        frames.map((f) => f.source).toSet().length != 32 ||
+        frames.any((f) => f.mirrored)) {
+      throw const FormatException(
+        'Enemy walking requires eight bearings and four independent native poses',
+      );
+    }
+    return const EnemyWalkClip._();
+  }
+  int frameIndex(int direction, double cycle) {
+    if (direction < 0 || direction >= 8) {
+      throw RangeError.range(direction, 0, 7, 'direction');
+    }
+    final phase = cycle.isFinite ? ((cycle % 1) * 4).floor() : 0;
+    return direction * 4 + phase;
   }
 }

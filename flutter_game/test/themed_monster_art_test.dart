@@ -43,7 +43,7 @@ void main() {
     final data =
         jsonDecode(await rootBundle.loadString('assets/art.json')) as Map;
     art = GameArt()..actors = Map<String, dynamic>.from(data['actors'] as Map);
-    for (final key in [..._kinds.map((kind) => 'cinematic-$kind'), 'hero']) {
+    for (final key in [..._kinds.map((kind) => 'walk-$kind'), 'hero']) {
       final bytes = await rootBundle.load('assets/images/actors-$key.webp');
       final codec = await ui.instantiateImageCodec(bytes.buffer.asUint8List());
       art.images['actors-$key'] = (await codec.getNextFrame()).image;
@@ -58,19 +58,19 @@ void main() {
 
   for (final kind in _kinds) {
     test(
-      '$kind contains sixteen complete padded frames and independent gaits',
+      '$kind contains thirty-two complete padded frames and independent gaits',
       () async {
-        final record = art.actors['cinematic-$kind'] as Map;
+        final record = art.actors['walk-$kind'] as Map;
         final frames = record['frames'] as List,
             anchors = record['feet'] as List;
-        final image = art.images['actors-cinematic-$kind']!;
+        final image = art.images['actors-walk-$kind']!;
         expect(record['artworkWorldHeightMultiplier'], 1.5);
-        expect(frames, hasLength(16));
-        expect(anchors, hasLength(16));
+        expect(frames, hasLength(32));
+        expect(anchors, hasLength(32));
         final rgba = (await image.toByteData(
           format: ui.ImageByteFormat.rawRgba,
         ))!.buffer.asUint8List();
-        for (var i = 0; i < 16; i++) {
+        for (var i = 0; i < 32; i++) {
           final frame = (frames[i] as List).cast<num>();
           final anchor = (anchors[i] as List).cast<num>();
           expect(frame[0], greaterThanOrEqualTo(4));
@@ -96,8 +96,8 @@ void main() {
         }
         expect(
           hashes,
-          hasLength(16),
-          reason: '$kind has sixteen native bearing and gait samples',
+          hasLength(32),
+          reason: '$kind has thirty-two native bearing and gait samples',
         );
       },
     );

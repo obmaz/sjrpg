@@ -20,7 +20,7 @@ void main() {
     },
   );
   test(
-    'each themed boss renders eight unique bearings and two gaits without neighboring-cell leakage',
+    'each themed boss renders eight unique bearings and four gaits without neighboring-cell leakage',
     () async {
       final art = await GameArt.load();
       addTearDown(() {
@@ -32,13 +32,13 @@ void main() {
         }
       });
       for (final kind in ['sand-warden', 'ancient-king', 'cyber-core']) {
-        final frames = art.actors[kind]['frames'] as List;
-        expect(frames.length, 16);
+        final frames = art.actors['walk-$kind']['frames'] as List;
+        expect(frames.length, 32);
         final unique = <int>{};
         for (var direction = 0; direction < 8; direction++) {
-          for (var phase = 0; phase < 2; phase++) {
-            final index = direction * 2 + phase, f = frames[index] as List;
-            final sheet = art.images['actors-cinematic-$kind']!;
+          for (var phase = 0; phase < 4; phase++) {
+            final index = direction * 4 + phase, f = frames[index] as List;
+            final sheet = art.images['actors-walk-$kind']!;
             expect(f[0], greaterThanOrEqualTo(4));
             expect(f[1], greaterThanOrEqualTo(4));
             expect(
@@ -76,7 +76,7 @@ void main() {
         }
         expect(
           unique.length,
-          16,
+          32,
           reason: 'all bearings and gait phases must select their own image',
         );
       }

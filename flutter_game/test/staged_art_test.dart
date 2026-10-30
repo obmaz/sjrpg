@@ -153,7 +153,7 @@ void main() {
       expect(survivor.isUnique, isTrue);
       expect(survivor.power.toSave(), expectedPower);
       expect(survivor.life.value, expectedHealth);
-      expect(art.images['actors-cinematic-troll'], isNotNull);
+      expect(art.images['actors-walk-troll'], isNotNull);
       expect(savedPoison, isNotEmpty);
       expect(
         savedPoison.first,
@@ -220,7 +220,7 @@ void main() {
         heroClass: HeroClass.mage,
         enemyKinds: ['troll'],
       );
-      final image = art.images['actors-cinematic-troll']!;
+      final image = art.images['actors-walk-troll']!;
       final recorder = ui.PictureRecorder();
       art.actor(
         ui.Canvas(recorder),
@@ -243,9 +243,9 @@ void main() {
         enemyKinds: ['troll'],
       );
       expect(bundle.reads.length, reads);
-      expect(art.images['actors-cinematic-troll'], same(image));
+      expect(art.images['actors-walk-troll'], same(image));
       await art.ensureStage(WorldStage.forest, heroClass: HeroClass.warrior);
-      expect(art.images['actors-cinematic-troll'], same(image));
+      expect(art.images['actors-walk-troll'], same(image));
       expect(bundle.reads.length, reads);
       for (final entry in menuImages.entries) {
         expect(art.images[entry.key], same(entry.value));
@@ -289,10 +289,10 @@ void main() {
       );
       expect(tester.widget<RawImage>(scene).image, isNotNull);
       expect(
-        bundle.reads.where((name) => name.contains('actors-cinematic-cyber')),
+        bundle.reads.where((name) => name.contains('actors-walk-cyber')),
         isEmpty,
       );
-      bundle.delayed = 'assets/images/actors-cinematic-goblin.webp';
+      bundle.delayed = 'assets/images/actors-walk-goblin.webp';
       bundle.failure = bundle.delayed;
       bundle.gate = Completer<void>();
       await tester.tap(find.byKey(const ValueKey('select-start')));
@@ -369,7 +369,7 @@ void main() {
         tester,
         () => find.byType(TitleScreen).evaluate().isNotEmpty,
       );
-      bundle.failure = 'assets/images/actors-cinematic-troll.webp';
+      bundle.failure = 'assets/images/actors-walk-troll.webp';
       await tester.tap(find.text('이어하기'));
       await _until(
         tester,
@@ -394,7 +394,7 @@ void main() {
       );
       expect(
         bundle.reads
-            .where((name) => name.endsWith('actors-cinematic-troll.webp'))
+            .where((name) => name.endsWith('actors-walk-troll.webp'))
             .length,
         2,
       );

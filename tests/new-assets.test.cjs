@@ -174,27 +174,27 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
             128,
         );
     }
-    assert.equal(metadata.actors.gunner.frames.length, 16);
-    assert.equal(metadata.actors.cyber.frames.length, 16);
-    assert.equal(metadata.actors.viper.feet.length, 16);
-    for (const actor of ['bonehound', 'clockwork-spider', 'crystal-beetle']) {
-        assert.equal(metadata.actors[actor].feet.length, 16);
+    const walks = Object.entries(metadata.actors).filter(([key]) => key.startsWith('walk-'));
+    assert.equal(walks.length, 21);
+    for (const [key, record] of walks) {
+        assert.equal(record.frames.length, 32);
+        assert.equal(record.feet.length, 32);
+        assert.deepEqual(record.walk, { directions: 8, frames: 4, layout: 'direction-major' });
         assert.equal(
-            fs.readFileSync(path.join(target, `actors-cinematic-${actor}.webp`), 'utf8'),
-            `source picture actors-cinematic-${actor}.webp`,
+            fs.readFileSync(path.join(target, `actors-${key}.webp`), 'utf8'),
+            `source picture actors-${key}.webp`,
+        );
+        assert.equal(
+            fs.existsSync(path.join(target, `actors-cinematic-${key.slice(5)}.webp`)),
+            false,
         );
     }
+    assert.equal(metadata.corpses.kinds.length, 17);
+    assert.equal(metadata.corpses.frames.length, 17);
     assert.equal(
-        fs.readFileSync(path.join(target, 'actors-cinematic-viper.webp'), 'utf8'),
-        'source picture actors-cinematic-viper.webp',
+        fs.readFileSync(path.join(target, 'monster-corpses.webp'), 'utf8'),
+        'source picture monster-corpses.webp',
     );
-    for (const actor of ['sand-warden', 'ancient-king', 'cyber-core']) {
-        assert.equal(metadata.actors[actor].frames.length, 16);
-        assert.equal(
-            fs.readFileSync(path.join(target, `actors-cinematic-${actor}.webp`), 'utf8'),
-            `source picture actors-cinematic-${actor}.webp`,
-        );
-    }
     await prepareNewAssets(root);
     assert.equal(fs.existsSync(path.join(target, 'terrain-materials.png')), false);
     for (const name of [

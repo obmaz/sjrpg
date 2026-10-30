@@ -14,12 +14,13 @@ class _Corpse {
     this.at,
     this.expires, {
     required this.kind,
+    required this.width,
     required this.elite,
     required this.unique,
   });
   final String kind;
   final ui.Offset at;
-  final double expires;
+  final double expires, width;
   final bool elite, unique;
   bool available = true;
 }
@@ -122,6 +123,7 @@ class BarbarianUtilities {
       enemy.body.center,
       _time + corpseLifetime,
       kind: enemy.kind,
+      width: enemy.visualHeight * 1.65,
       elite: enemy.isElite,
       unique: enemy.isUnique,
     );
@@ -542,7 +544,9 @@ class _CorpseMarker extends GameComponent with EffectVisibility {
   @override
   bool get isVisible => true;
   @override
-  ui.Rect get effectBounds => ui.Rect.fromCircle(center: corpse.at, radius: 48);
+  ui.Rect get effectBounds => owner.session.art
+      .corpseBounds(corpse.kind, corpse.at, corpse.width)
+      .inflate(8);
   @override
   void update(double dt) {
     if (!corpse.available ||
@@ -560,21 +564,7 @@ class _CorpseMarker extends GameComponent with EffectVisibility {
       return;
     }
     canvas.drawOval(const ui.Rect.fromLTWH(-29, -9, 58, 20), _shadow);
-    // Reuse each species' art in a quiet, collapsed ground pose: no blood or
-    // extra decoded atlases. A small search glint distinguishes it from decor.
-    canvas.save();
-    canvas.scale(1, .55);
-    canvas.rotate(-math.pi / 2);
-    owner.session.art.actor(
-      canvas,
-      corpse.kind,
-      const ui.Offset(-12, 27),
-      math.pi / 2,
-      0,
-      64,
-      opacity: .72,
-    );
-    canvas.restore();
+    owner.session.art.corpse(canvas, corpse.kind, ui.Offset.zero, corpse.width);
     canvas.drawLine(const ui.Offset(25, -12), const ui.Offset(25, -4), _glint);
     canvas.drawLine(const ui.Offset(21, -8), const ui.Offset(29, -8), _glint);
   }

@@ -332,6 +332,7 @@ void main() {
       s.progress.ranks['swordMastery'] = 20;
       var normal = false, critical = false;
       for (var hit = 0; hit < 80; hit++) {
+        s.tick(BattleText.streamInterval + .001);
         s.hero.attackClock = s.hero.castLock = 0;
         final hp = m.life.value;
         s.hero.slash();

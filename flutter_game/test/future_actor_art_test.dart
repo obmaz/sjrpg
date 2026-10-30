@@ -6,7 +6,7 @@ import 'package:guardian_new/game_art.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test(
-    'both future guards render eight unique bearings and two gait frames without neighboring-cell leakage',
+    'both future guards render eight unique bearings and four gait frames without neighboring-cell leakage',
     () async {
       final art = await GameArt.load();
       addTearDown(() {
@@ -18,21 +18,22 @@ void main() {
         }
       });
       for (final kind in ['cyber', 'gunner']) {
-        final frames = art.actors[kind]['frames'] as List;
-        expect(frames.length, 16);
+        final frames = art.actors['walk-$kind']['frames'] as List;
+        expect(frames.length, 32);
         final unique = <int>{};
         for (var direction = 0; direction < 8; direction++) {
-          for (var phase = 0; phase < 2; phase++) {
-            final index = direction * 2 + phase, f = frames[index] as List;
-            expect(f[0], greaterThanOrEqualTo(index % 4 * 256 + 16));
-            expect(f[1], greaterThanOrEqualTo(index ~/ 4 * 256 + 16));
+          for (var phase = 0; phase < 4; phase++) {
+            final index = direction * 4 + phase, f = frames[index] as List;
+            final sheet = art.images['actors-walk-$kind']!;
+            expect(f[0], greaterThanOrEqualTo(4));
+            expect(f[1], greaterThanOrEqualTo(4));
             expect(
               (f[0] as num) + (f[2] as num),
-              lessThanOrEqualTo(index % 4 * 256 + 240),
+              lessThanOrEqualTo(sheet.width - 4),
             );
             expect(
               (f[1] as num) + (f[3] as num),
-              lessThanOrEqualTo(index ~/ 4 * 256 + 240),
+              lessThanOrEqualTo(sheet.height - 4),
             );
             final recorder = ui.PictureRecorder();
             art.actor(
@@ -61,7 +62,7 @@ void main() {
         }
         expect(
           unique.length,
-          16,
+          32,
           reason: 'all bearings and gait phases must select their own image',
         );
       }

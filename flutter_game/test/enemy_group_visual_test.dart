@@ -18,9 +18,9 @@ void main() {
       () async {
         final art = GameArt()..actors = {};
         for (final (key, path) in [
-          ('cinematic-goblin', 'actors-cinematic-goblin'),
-          ('cinematic-mummy', 'actors-cinematic-mummy'),
-          ('cinematic-scorpion', 'actors-cinematic-scorpion'),
+          ('walk-goblin', 'actors-walk-goblin'),
+          ('walk-mummy', 'actors-walk-mummy'),
+          ('walk-scorpion', 'actors-walk-scorpion'),
           ('hero', 'hero-helmeted'),
         ]) {
           art.actors[key] = jsonDecode(

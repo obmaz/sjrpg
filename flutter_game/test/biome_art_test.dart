@@ -6,7 +6,7 @@ import 'package:guardian_new/game_art.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test(
-    'four biome creatures render eight complete bearings and two distinct gait frames',
+    'four biome creatures render eight complete bearings and four distinct gait frames',
     () async {
       final art = await GameArt.load();
       addTearDown(() {
@@ -18,10 +18,10 @@ void main() {
         }
       });
       for (final kind in ['boar', 'basilisk', 'wraith', 'drone']) {
-        expect(art.actors['cinematic-$kind']['frames'].length, 16);
+        expect(art.actors['walk-$kind']['frames'].length, 32);
         final hashes = <int>{};
         for (var d = 0; d < 8; d++) {
-          for (var phase = 0; phase < 2; phase++) {
+          for (var phase = 0; phase < 4; phase++) {
             final rec = ui.PictureRecorder();
             art.actor(
               ui.Canvas(rec),
@@ -52,7 +52,7 @@ void main() {
             im.dispose();
           }
         }
-        expect(hashes.length, 16);
+        expect(hashes.length, 32);
       }
     },
   );

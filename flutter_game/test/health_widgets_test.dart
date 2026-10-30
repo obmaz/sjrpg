@@ -137,14 +137,12 @@ void main() {
         expect(tester.takeException(), isNull);
         final health = tester.getRect(find.byType(HealthMeter));
         final resource = tester.getRect(find.byType(ResourceMeter));
-        final identity = tester.getRect(
-          find.byKey(const ValueKey('hud-identity')),
-        );
+        expect(find.byKey(const ValueKey('hud-identity')), findsNothing);
         final portrait = tester.getRect(
           find.byKey(const ValueKey('hud-portrait')),
         );
-        expect(find.text('Lv.${s.progress.level}  전사'), findsOneWidget);
-        expect(identity.bottom, lessThanOrEqualTo(health.top));
+        expect(find.text('Lv.${s.progress.level}  전사'), findsNothing);
+        expect(health.top, 10);
         expect(health.left, lessThan(portrait.right));
         expect(health.left, greaterThan(portrait.center.dx));
         final xp = tester.getRect(find.byKey(const ValueKey('hud-experience')));
