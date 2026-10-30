@@ -30,6 +30,9 @@ import 'enemy_catalog.dart';
 import 'enemy_difficulty.dart';
 import 'enemy_motion.dart';
 import 'enemy_spacing.dart';
+import 'forest_quest_runtime.dart';
+import 'forest_quest_structure.dart';
+import 'forest_tree_art.dart';
 import 'game_art.dart';
 import 'health_feedback.dart';
 import 'held_weapon_art.dart';
@@ -735,7 +738,9 @@ class Adventure extends ChangeNotifier {
   }
 
   bool cleanseNearbySite() {
-    if (!active || riding != null) return false;
+    if (!active || riding != null || world.stage == WorldStage.forest) {
+      return false;
+    }
     final site = nearbySite;
     if (site == null) return false;
     if (mobs.any(
@@ -862,6 +867,8 @@ class Adventure extends ChangeNotifier {
   int combo = 0, rageStrike = -1;
   int buildRevision = 0;
   int _successfulPacks = 0;
+  late final ForestQuestRuntime forestQuests = ForestQuestRuntime(this)
+    ..onLevelReward = _showLevelUp;
   final encounterAreas = <String, EncounterArea>{};
   final _encounterStones = <EncounterStone>{};
   final dormantEnemies = <Map<String, dynamic>>[];
@@ -879,9 +886,9 @@ class Adventure extends ChangeNotifier {
             m.encounterKey == key,
       ) ||
       dormantEnemies.any((m) => m['area'] == key);
-  Iterable<EncounterArea> get exhaustedAreas =>
-      encounterAreas.values.where((a) => a.waves >= EncounterArea.waveLimit);
+  Iterable<EncounterArea> get exhaustedAreas => encounterAreas.values;
   Map<String, dynamic> saveEnemy(HuntEnemy m) => {
+    ...forestQuests.saveEnemyTags(m),
     'kind': m.kind,
     'trait': m.trait.name,
     'tier': m.tier.name,
@@ -935,37 +942,67 @@ class Adventure extends ChangeNotifier {
       mob.wardPhase = (raw['wardPhase'] as num).toDouble();
       mob.life.initial((raw['maxHp'] as num).toDouble());
       mob.life.update((raw['hp'] as num).toDouble());
+      if (!forestQuests.restoreEnemyTags(mob, raw)) {
+        mobs.remove(mob);
+        mob.removeFromParent();
+      }
       dormantEnemies.remove(raw);
+    }
+  }
+
+  EncounterArea _newEncounterArea(String key, ui.Offset origin) {
+    const bodySize = ui.Size(36, 24);
+    final at = world.spawnNear(
+      origin + const ui.Offset(62, 28),
+      bodySize,
+      avoidSanctuary: true,
+      occupied: (body) =>
+          EncounterArea.keyAt(body.center) != key ||
+          body.overlaps(hero.body.inflate(12)) ||
+          encounterAreas.values.any((a) => a.body.overlaps(body)) ||
+          mobs.any((m) => !m.isDead && !m.isRemoving && m.body.overlaps(body)),
+    );
+    return EncounterArea(key, at == null ? origin : (at & bodySize).center);
+  }
+
+  void _installStoneBody(EncounterArea area) {
+    world.addRuntimeSolid(area.body);
+    // Old saves could stand on the formerly non-solid stone. Move only those
+    // overlapping bodies to the nearest valid foot position on restoration.
+    if (area.body.overlaps(hero.body)) {
+      final safe = world.spawnNear(hero.position.toOffset(), hero.body.size);
+      if (safe != null) {
+        hero.position.setValues(safe.dx, safe.dy);
+        hero.lastClearPosition = safe;
+      }
     }
   }
 
   bool strikeEncounterStone(double range) {
     if (!active || riding != null) return false;
-    for (final area in exhaustedAreas) {
-      if (areaHasEnemies(area.key) ||
-          (area.stone - hero.body.center).distance > range + 20 ||
-          !world.clearLine(hero.body.center, area.stone, const ui.Size(3, 3))) {
+    for (final area in encounterAreas.values) {
+      final delta = area.stone - hero.body.center;
+      final nearFace = delta.distance == 0
+          ? area.stone
+          : area.stone - delta / delta.distance * 26;
+      if (area.charges <= 0 ||
+          areaHasEnemies(area.key) ||
+          delta.distance > range + 20 ||
+          !world.clearLine(hero.body.center, nearFace, const ui.Size(3, 3))) {
         continue;
       }
-      hero.attackBearing = math.atan2(
-        area.stone.dy - hero.body.center.dy,
-        area.stone.dx - hero.body.center.dx,
-      );
-      area.stoneHits++;
+      final before = area.charges;
+      spawnPack(summoned: area);
+      if (area.charges == before) continue;
+      hero.attackBearing = math.atan2(delta.dy, delta.dx);
       audio.play(EffectSound.impact);
       device.pulse(FeedbackKind.hit);
       kickCamera(.5);
-      if (area.stoneHits >= 3) {
-        area.waves = 0;
-        area.stoneHits = 0;
-        waveTime = 0;
-        lastPackSpawn = elapsed - 10;
-        bubble(
-          '새로운 적의 기척',
-          area.stone - const ui.Offset(0, 55),
-          const ui.Color(0xffb4eee0),
-        );
-      }
+      bubble(
+        '새로운 적의 기척 · ${area.charges}/3',
+        area.stone - const ui.Offset(0, 55),
+        const ui.Color(0xffb4eee0),
+      );
       refresh();
       return true;
     }
@@ -992,7 +1029,8 @@ class Adventure extends ChangeNotifier {
     final actions = <NearbyAction>[
       if (nearbyBlacksmith) NearbyAction.smith,
       if (nearbyMount != null) NearbyAction.mount,
-      if (nearbySite != null) NearbyAction.shrine,
+      if (nearbySite != null && world.stage != WorldStage.forest)
+        NearbyAction.shrine,
     ];
     final at = hero.position.toOffset();
     final shop = (at - world.merchantAt).distance;
@@ -1047,7 +1085,11 @@ class Adventure extends ChangeNotifier {
     device.pulse(FeedbackKind.loot);
     game?.add(ChestFragments(this, stageChestLocations[index]));
     final at = stageChestLocations[index];
-    var content = chestContent(world.stage, index);
+    var content = chestContent(
+      world.stage,
+      index,
+      seed: progress.chestLootSeed,
+    );
     // A safe settlement must never release enemies behind its fence.
     if (content == ChestContent.ambush &&
         world.sanctuary.protects(world.chestBody(index))) {
@@ -1066,7 +1108,13 @@ class Adventure extends ChangeNotifier {
       progress.energyPotions++;
     }
     if (content == ChestContent.gear) {
-      dropGear(progress.rollLoot(random, chest: true), at);
+      dropGear(
+        progress.rollLoot(
+          chestRewardRandom(progress.chestLootSeed, world.stage, index),
+          chest: true,
+        ),
+        at,
+      );
     }
     bubble(
       ambushed
@@ -1128,7 +1176,7 @@ class Adventure extends ChangeNotifier {
       if (enemy == null) continue;
       final key = EncounterArea.keyAt(at);
       if (!encounterAreas.containsKey(key)) {
-        final area = EncounterArea(key, at);
+        final area = _newEncounterArea(key, at);
         encounterAreas[key] = area;
         game?.add(EncounterStone(this, area));
       }
@@ -1360,7 +1408,13 @@ class Adventure extends ChangeNotifier {
     if (ready || disposed) return;
     game = ref;
     ready = true;
-    if (world.stage == WorldStage.forest) ref.add(VillageGate(art, world));
+    if (world.stage == WorldStage.forest) {
+      ref.add(VillageGate(art, world));
+      for (final site in world.sites) {
+        ref.add(ForestQuestStructure(this, site));
+      }
+      forestQuests.installActors();
+    }
     for (final mob in List<HuntEnemy>.of(mobs)) {
       ref.add(mob);
     }
@@ -1398,6 +1452,10 @@ class Adventure extends ChangeNotifier {
     impactTime = math.max(0, impactTime - dt);
     if (impactTime == 0) impactStrength = 0;
     elapsed += dt;
+    forestQuests.tick(dt);
+    for (final area in encounterAreas.values) {
+      area.recharge(dt);
+    }
     _advanceDamageNumbers(dt);
     noticeTime = math.max(0, noticeTime - dt);
     combatTime = math.max(0, combatTime - dt);
@@ -1429,6 +1487,7 @@ class Adventure extends ChangeNotifier {
           !mob.boss &&
           (mob.position - hero.position).length > 1500) {
         dormantEnemies.add(saveEnemy(mob));
+        forestQuests.forgetDormantEnemy(mob);
         mob.combatReady = false;
         mob.encounterDormant = true;
         mob.removeFromParent();
@@ -1473,7 +1532,7 @@ class Adventure extends ChangeNotifier {
     }
   }
 
-  void spawnPack({bool initial = false}) {
+  void spawnPack({bool initial = false, EncounterArea? summoned}) {
     if (!combatAllowed ||
         living >= CombatBalance.maxActiveEnemies ||
         riding?.def.waterOnly == true) {
@@ -1485,9 +1544,14 @@ class Adventure extends ChangeNotifier {
             progress.kills == 0 &&
             world.stage == WorldStage.forest);
     final at = hero.position.toOffset();
-    final key = encounterKey;
+    final key = summoned?.key ?? encounterKey;
     final existingArea = encounterAreas[key];
-    if (existingArea != null && existingArea.waves >= EncounterArea.waveLimit) {
+    // Exploration only creates a region's first pack. Recharging never spawns.
+    if (summoned == null && existingArea != null ||
+        summoned != null &&
+            (existingArea != summoned ||
+                summoned.charges <= 0 ||
+                areaHasEnemies(key))) {
       return;
     }
     // Wake existing packs before spending another wave in this region.
@@ -1560,12 +1624,16 @@ class Adventure extends ChangeNotifier {
       }
     }
     if (added > 0) {
-      final area = existingArea ?? EncounterArea(key, hero.body.center);
+      final area = existingArea ?? _newEncounterArea(key, hero.body.center);
       if (existingArea == null) {
         encounterAreas[key] = area;
         game?.add(EncounterStone(this, area));
       }
-      area.waves++;
+      area.waves = math.min(EncounterArea.waveLimit, area.waves + 1);
+      if (summoned != null) {
+        if (area.charges == EncounterArea.maxCharges) area.rechargeElapsed = 0;
+        area.charges--;
+      }
       _successfulPacks++;
       lastPackSpawn = elapsed;
     }
@@ -2264,6 +2332,7 @@ class Adventure extends ChangeNotifier {
     );
     if (mob.isDead && !mob.rewarded) {
       mob.rewarded = true;
+      forestQuests.onEnemyDefeated(mob);
       barbarianUtilities.recordCorpse(mob);
       final level = progress.level, goldBefore = progress.gold;
       progress.reward(boss: mob.boss, elite: mob.isElite, unique: mob.isUnique);
@@ -2387,6 +2456,7 @@ class Adventure extends ChangeNotifier {
 
   @override
   void dispose() {
+    forestQuests.dispose();
     combatFeedback.dispose();
     barbarianUtilities.clear();
     hero.sorceressCombat.clear();
@@ -3464,7 +3534,8 @@ class Guardian extends Player with WithCollision {
     }
     if (candidates.isEmpty &&
         props.isEmpty &&
-        session.strikeEncounterStone(propRange)) {
+        session.strikeEncounterStone(propRange) &&
+        p.heroClass == HeroClass.warrior) {
       return;
     }
     session.audio.play(
@@ -5160,6 +5231,9 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
     attackClock -= dt;
     replan -= dt;
     slamClock -= dt;
+    if (_knockbackTime <= 0 && session.forestQuests.updateThreat(this, dt)) {
+      return;
+    }
     final homeDistance = (position.toOffset() - home).distance;
     final heroOutside =
         (session.hero.position.toOffset() - home).distance > leashRadius + 120;
@@ -6123,6 +6197,9 @@ class WoodlandProp extends GameComponent with EffectVisibility {
   @override
   ui.Rect get effectBounds {
     final feet = prop.body.bottomCenter;
+    if (prop.treeVariant != null) {
+      return ForestTreeArt.drawBounds(feet, prop.treeVariant!).inflate(2);
+    }
     // Ruins and city props use square crops; natural props use drawSize.width.
     final width = math.max(prop.drawSize.width, prop.drawSize.height);
     return ui.Rect.fromLTWH(
@@ -6135,6 +6212,13 @@ class WoodlandProp extends GameComponent with EffectVisibility {
 
   bool get occludesHero {
     final hero = session.hero.body;
+    if (prop.treeVariant != null) {
+      final bounds = ForestTreeArt.drawBounds(
+        prop.body.bottomCenter,
+        prop.treeVariant!,
+      );
+      return prop.body.bottom > hero.bottom && bounds.overlaps(hero);
+    }
     return (prop.kind == 'tree' ||
             prop.landmark != null ||
             prop.kind.startsWith('city-') ||
@@ -6166,7 +6250,9 @@ class WoodlandProp extends GameComponent with EffectVisibility {
 
   @override
   bool get isVisible => gameRef.camera.visibleWorldRect.overlaps(
-    prop.landmark?.drawBounds ?? prop.body.inflate(230),
+    prop.treeVariant != null
+        ? effectBounds
+        : prop.landmark?.drawBounds ?? prop.body.inflate(230),
   );
 }
 
@@ -6484,6 +6570,7 @@ class BattleText extends GameComponent {
 class EncounterStone extends GameComponent with EffectVisibility {
   EncounterStone(this.session, this.area) {
     session._encounterStones.add(this);
+    session._installStoneBody(area);
     position = Vector2(area.stone.dx - 22, area.stone.dy - 48);
     size = Vector2(44, 48);
   }
@@ -6495,7 +6582,7 @@ class EncounterStone extends GameComponent with EffectVisibility {
   final _hintBackingPaint = ui.Paint()..color = const ui.Color(0xa6000000);
   ui.Paragraph? _hint;
   ui.RRect? _hintBacking;
-  int? _hintHits;
+  String? _hintStamp;
 
   @override
   int get priority => area.stone.dy.toInt();
@@ -6508,7 +6595,7 @@ class EncounterStone extends GameComponent with EffectVisibility {
     _hint?.dispose();
     _hint = null;
     _hintBacking = null;
-    _hintHits = null;
+    _hintStamp = null;
   }
 
   @override
@@ -6520,15 +6607,20 @@ class EncounterStone extends GameComponent with EffectVisibility {
 
   @override
   void render(ui.Canvas canvas) {
-    if (session.disposed || area.waves < EncounterArea.waveLimit) return;
-    final ready = !session.areaHasEnemies(area.key);
+    if (session.disposed) return;
+    final clear = !session.areaHasEnemies(area.key);
+    final ready = clear && area.charges > 0;
     canvas.save();
     canvas.translate(22, 48);
-    if (ready && (session.hero.body.center - area.stone).distance < 220) {
-      if (_hint == null || _hintHits != area.stoneHits) {
+    if (clear && (session.hero.body.center - area.stone).distance < 220) {
+      final seconds = area.charges == 0 ? area.remainingSeconds : 0;
+      final stamp = '${area.charges}:$seconds';
+      if (_hint == null || _hintStamp != stamp) {
         _hint?.dispose();
         _hint = session.art.layoutText(
-          '공격해 재소환 · ${area.stoneHits}/3',
+          area.charges > 0
+              ? '공격해 재소환 · ${area.charges}/3'
+              : '재소환 0/3 · ${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}',
           size: 11,
           color: const ui.Color(0xffb9e9d9),
         );
@@ -6541,7 +6633,7 @@ class EncounterStone extends GameComponent with EffectVisibility {
           ),
           const ui.Radius.circular(4),
         );
-        _hintHits = area.stoneHits;
+        _hintStamp = stamp;
       }
       canvas.drawRRect(_hintBacking!, _hintBackingPaint);
       canvas.drawParagraph(_hint!, EncounterBeaconArt.hintTextOrigin);
@@ -6569,8 +6661,7 @@ class EncounterStone extends GameComponent with EffectVisibility {
       canvas.drawCircle(
         ui.Offset(-9 + i * 9, 3),
         2,
-        _dotPaint
-          ..color = i < area.stoneHits ? glow : const ui.Color(0xff344b45),
+        _dotPaint..color = i < area.charges ? glow : const ui.Color(0xff344b45),
       );
     }
     canvas.restore();

@@ -6,6 +6,7 @@ import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/quest_guide.dart';
 import 'package:guardian_new/world_model.dart';
+import 'support/forest_quest_flow.dart';
 import 'support/test_game.dart';
 
 void main() {
@@ -132,35 +133,31 @@ void main() {
       expect(GameCheckpoint.decode(jsonEncode(data)), null);
     },
   );
-  test(
-    'nearby forest guide explains approach, danger, purification, progress and boss',
-    () {
-      final s = session();
-      s.hero.position.setValues(
-        s.world.elderAt.dx + 50,
-        s.world.elderAt.dy + 20,
-      );
-      expect(s.nearbyQuestGuide!.message, contains('성소 3곳'));
-      final site = s.world.sites.first;
-      s.hero.position.setValues(site.at.dx - 14, site.at.dy + 190);
-      expect(s.nearbyQuestGuide!.title, contains('접근 중'));
-      s.hero.position.setValues(site.at.dx - 14, site.at.dy + 45);
-      expect(s.nearbyQuestGuide!.action, QuestGuideAction.cleanse);
-      final mob = s.spawnEnemy('goblin', site.at + const Offset(80, 50))!;
-      expect(s.nearbyQuestGuide!.message, contains('적 1명'));
-      expect(s.cleanseNearbySite(), false);
-      s.mobs.remove(mob);
-      expect(s.cleanseNearbySite(), true);
-      expect(s.nearbyQuestGuide!.title, contains('완료'));
-      expect(s.nearbyQuestGuide!.message, contains('성소 2곳'));
-      s.cleansedSites.addAll(s.world.sites.map((s) => s.id));
-      expect(s.nearbyQuestGuide!.message, contains('120마리'));
-      s.progress.kills = 120;
-      expect(s.nearbyQuestGuide!.message, contains('붉은 표식'));
-      s.hero.position.setValues(18000, 18000);
-      expect(s.nearbyQuestGuide, null);
-    },
-  );
+  test('forest guidance belongs to people and explains each objective', () {
+    final s = session();
+    s.mobs.clear();
+    final npc = approachForestNpc(s, 'elin');
+    expect(s.nearbyQuestGuide!.title, npc.name);
+    expect(s.nearbyQuestGuide!.action, QuestGuideAction.talk);
+    expect(s.cleanseNearbySite(), false);
+    expect(s.forestQuests.performAction(), true);
+    final site = s.world.sites.first;
+    final mob = s.spawnEnemy('goblin', site.at + const Offset(80, 50))!;
+    expect(s.forestQuests.actionEnabled, false);
+    expect(s.forestQuests.blockedReason, contains('적'));
+    s.mobs.remove(mob);
+    completeForestQuest(s, 'roots');
+    expect(s.cleansedSites, contains('roots'));
+    expect(s.forestQuests.actionEnabled, false);
+    approachForestNpc(s, 'mira');
+    expect(s.nearbyQuestGuide!.message, contains('미라'));
+    completeForestQuest(s, 'moon');
+    completeForestQuest(s, 'sun');
+    expect(s.mandatoryQuestsComplete, true);
+    expect(s.forestQuests.mainObjective, contains('파수꾼'));
+    s.hero.position.setValues(18000, 18000);
+    expect(s.nearbyQuestGuide, null);
+  });
   test('NPC guidance never hides a closer shop, chest or dismount control', () {
     final s = session();
     s.hero.position.setValues(

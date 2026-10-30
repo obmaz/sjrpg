@@ -251,7 +251,7 @@ void main() {
   );
 
   test(
-    'stone hides before quota, selects dormant state and caches hit hint',
+    'a persistent stone shows charge hints and switches dormant visuals',
     () async {
       final art = _TextArt()..images['encounter-beacons'] = atlas;
       final session = Adventure(art);
@@ -269,14 +269,14 @@ void main() {
         return bytes;
       }
 
-      expect((await draw()).every((b) => b == 0), true);
-      area.waves = 3;
       final ready = await draw();
-      expect(art.layouts, 1);
-      expect(art.labels.last, '공격해 재소환 · 0/3');
+      area.waves = 3;
       expect(await draw(), ready);
       expect(art.layouts, 1);
-      area.stoneHits = 2;
+      expect(art.labels.last, '공격해 재소환 · 3/3');
+      expect(await draw(), ready);
+      expect(art.layouts, 1);
+      area.charges = 2;
       expect(await draw(), isNot(ready));
       expect(art.layouts, 2);
       expect(art.labels.last, '공격해 재소환 · 2/3');
@@ -288,7 +288,7 @@ void main() {
       expect(dormant.sublist(0, 192 * 28 * 4).every((b) => b == 0), true);
       session.dormantEnemies.clear();
       area.waves = 0;
-      expect((await draw()).every((b) => b == 0), true);
+      expect((await draw()).any((b) => b != 0), true);
       stone.onRemove();
       art.images.clear();
     },
@@ -395,7 +395,7 @@ void main() {
     stone.renderTree(canvas);
     expect(stone.draws, 2);
     expect(area.waves, 3);
-    expect(area.stoneHits, 0);
+    expect(area.charges, 3);
     recorder.endRecording().dispose();
     stone.onRemove();
   });
@@ -428,7 +428,7 @@ void main() {
               '1:1',
               const ui.Offset(6000, 4200),
               waves: 3,
-            )..stoneHits = 2;
+            )..charges = 2;
             session.hero.position.setValues(5986, 4188);
             if (!ready) session.dormantEnemies.add({'area': area.key});
             final stone = EncounterStone(session, area);

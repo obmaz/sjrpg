@@ -1,3 +1,5 @@
+import 'dart:ui' show Size;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/encounters.dart';
@@ -19,47 +21,91 @@ void main() {
     s.mobs.clear();
   }
 
-  test(
-    'three successful waves stop; only reachable stone attacks reset an empty region',
-    () {
-      final area = s.encounterAreas[s.encounterKey]!;
-      expect(area.waves, 1);
-      expect(s.strikeEncounterStone(100), false);
-      clear();
-      s.spawnPack();
-      clear();
-      s.spawnPack();
-      expect(area.waves, EncounterArea.waveLimit);
+  test('a cleared region only respawns after a charged stone is struck', () {
+    final area = s.encounterAreas[s.encounterKey]!;
+    expect(area.waves, 1);
+    expect(s.strikeEncounterStone(100), false);
+    clear();
+    s.spawnPack();
+    s.tick(30);
+    expect(
+      s.living,
+      0,
+      reason: 'the periodic director cannot refill this region',
+    );
+    s.hero.position.setValues(
+      area.stone.dx - 60,
+      area.stone.dy - s.hero.body.height / 2,
+    );
+    s.pause();
+    expect(s.strikeEncounterStone(100), false);
+    s.resume();
+    for (var i = 0; i < 3; i++) {
+      expect(s.strikeEncounterStone(100), true);
+      expect(area.charges, 2 - i);
+      expect(s.living, greaterThan(0));
       expect(
         s.strikeEncounterStone(100),
         false,
-        reason: 'living enemies prevent stacking waves',
+        reason: 'living enemies prevent stacking',
       );
       clear();
-      s.spawnPack();
-      expect(s.living, 0);
-      final kills = s.progress.kills,
-          gold = s.progress.gold,
-          energy = s.progress.energy;
-      s.pause();
-      expect(s.strikeEncounterStone(100), false);
-      s.resume();
-      s.hero.position.setValues(area.stone.dx + 1000, area.stone.dy);
-      expect(s.strikeEncounterStone(100), false);
-      s.hero.position.setValues(area.stone.dx - 12, area.stone.dy - 11);
-      for (var i = 0; i < 2; i++) {
-        expect(s.strikeEncounterStone(100), true);
-      }
-      expect(area.waves, 3);
-      expect(s.strikeEncounterStone(100), true);
-      expect(area.waves, 0);
-      expect(
-        (s.progress.kills, s.progress.gold, s.progress.energy),
-        (kills, gold, energy),
+    }
+    expect(s.strikeEncounterStone(100), false);
+    s.tick(EncounterArea.rechargeSeconds - .01);
+    expect(area.charges, 0);
+    expect(s.living, 0);
+    s.tick(.01);
+    expect(area.charges, 1);
+    expect(s.living, 0, reason: 'a recharge alone never spawns');
+    expect(s.strikeEncounterStone(100), true);
+    expect(area.charges, 0);
+  });
+  test(
+    'stone footprints block walking and restore without trapping a player',
+    () {
+      final area = s.encounterAreas[s.encounterKey]!;
+      expect(s.world.blocked(area.body), true);
+      expect(area.body.overlaps(s.hero.body), false);
+      final from = area.stone - const Offset(70, 10);
+      final moved = s.world.move(
+        from,
+        const Offset(140, 0),
+        const Size(20, 20),
       );
-      s.spawnPack();
-      expect(area.waves, 1);
-      expect(s.living, greaterThan(0));
+      expect(moved.dx, lessThan(area.stone.dx));
+      expect(area.body.overlaps(moved & const Size(20, 20)), false);
+      final cp = GameCheckpoint.capture(s)!;
+      cp.data['x'] = area.stone.dx - s.hero.body.width / 2;
+      cp.data['y'] = area.stone.dy - s.hero.body.height / 2;
+      final restored = cp.restore(GameArt())..start(TestGame());
+      addTearDown(restored.dispose);
+      expect(area.body.overlaps(restored.hero.body), false);
+    },
+  );
+  test(
+    'a charge takes five real minutes and partial progress survives reload',
+    () {
+      clear();
+      final area = s.encounterAreas[s.encounterKey]!;
+      area.charges = 0;
+      expect(area.remainingSeconds, 300);
+      s.tick(EncounterArea.rechargeSeconds / 2);
+      expect(area.remainingSeconds, 150);
+      s.pause();
+      s.tick(EncounterArea.rechargeSeconds);
+      s.resume();
+      expect(area.charges, 0);
+      final restored = GameCheckpoint.capture(s)!.restore(GameArt())
+        ..start(TestGame());
+      addTearDown(restored.dispose);
+      final saved = restored.encounterAreas[area.key]!;
+      expect(saved.charges, 0);
+      expect(saved.rechargeElapsed, area.rechargeElapsed);
+      restored.tick(EncounterArea.rechargeSeconds / 2);
+      expect(saved.charges, 1);
+      expect(saved.rechargeElapsed, 0);
+      expect(restored.living, 0, reason: 'recharging does not create a wave');
     },
   );
   test(

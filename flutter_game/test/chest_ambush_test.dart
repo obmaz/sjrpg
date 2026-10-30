@@ -13,8 +13,12 @@ import 'support/test_game.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  Adventure session({WorldStage stage = WorldStage.forest}) {
-    final s = Adventure(GameArt(), stage: stage)..start(TestGame());
+  Adventure session({WorldStage stage = WorldStage.forest, int? chestSeed}) {
+    final s = Adventure(
+      GameArt(),
+      stage: stage,
+      restoredProgress: Progress(chestLootSeed: chestSeed),
+    )..start(TestGame());
     s.mobs.clear();
     addTearDown(s.dispose);
     return s;
@@ -23,7 +27,8 @@ void main() {
   int ambush(Adventure s) =>
       List.generate(s.stageChestLocations.length, (i) => i).firstWhere(
         (i) =>
-            chestContent(s.world.stage, i) == ChestContent.ambush &&
+            chestContent(s.world.stage, i, seed: s.progress.chestLootSeed) ==
+                ChestContent.ambush &&
             !s.world.sanctuary.protects(s.world.chestBody(i)),
       );
 
@@ -158,8 +163,13 @@ void main() {
   test(
     'a protected futuristic chest cannot release enemies across the fence',
     () {
-      final s = session(stage: WorldStage.future);
-      expect(chestContent(s.world.stage, 0), ChestContent.ambush);
+      final seed = List.generate(1000, (i) => i).firstWhere(
+        (seed) =>
+            chestContent(WorldStage.future, 0, seed: seed) ==
+            ChestContent.ambush,
+      );
+      final s = session(stage: WorldStage.future, chestSeed: seed);
+      expect(chestContent(s.world.stage, 0, seed: seed), ChestContent.ambush);
       expect(s.world.sanctuary.protects(s.world.chestBody(0)), true);
       expect(s.breakChest(0), true);
       expect(s.mobs, isEmpty);
@@ -175,8 +185,17 @@ void main() {
       final heals = s.progress.healingPotions;
       expect(s.breakChest(0), true);
       expect(s.progress.healingPotions, heals + 1);
-      expect(s.progress.gold, 18);
-      expect(s.loot, hasLength(1));
+      var content = chestContent(
+        s.world.stage,
+        0,
+        seed: s.progress.chestLootSeed,
+      );
+      if (content == ChestContent.ambush) content = ChestContent.coins;
+      expect(s.progress.gold, content.gold);
+      expect(s.loot, hasLength(content == ChestContent.gear ? 1 : 0));
+      final priorRare = s.loot
+          .where((e) => e.item.rarity == Rarity.rare)
+          .length;
       inCombatField(s);
       for (final elite in [true, false]) {
         final enemy = s.spawnEnemy(
@@ -187,7 +206,10 @@ void main() {
         )!;
         expect(s.hit(enemy, 100000, Offset.zero), true);
       }
-      expect(s.loot.where((e) => e.item.rarity == Rarity.rare), hasLength(2));
+      expect(
+        s.loot.where((e) => e.item.rarity == Rarity.rare),
+        hasLength(priorRare + 2),
+      );
     },
   );
 

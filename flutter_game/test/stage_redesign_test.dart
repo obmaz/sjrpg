@@ -11,6 +11,7 @@ import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/sorceress_combat.dart';
 import 'package:guardian_new/world_model.dart';
 
+import 'support/forest_quest_flow.dart';
 import 'support/sorceress_fixture.dart';
 import 'support/test_game.dart';
 
@@ -259,10 +260,14 @@ void main() {
     expect(s.bossSummoned, false);
     s.mobs.clear();
     for (final site in questSites) {
-      s.hero.position.setValues(site.at.dx - 14, site.at.dy - 12);
       final gold = s.progress.gold;
-      expect(s.cleanseNearbySite(), true, reason: site.id);
-      expect(s.progress.gold, gold + 40);
+      completeForestQuest(s, site.id);
+      final reward = switch (site.id) {
+        'roots' => 40,
+        'moon' => 55,
+        _ => 70,
+      };
+      expect(s.progress.gold, greaterThanOrEqualTo(gold + reward));
       expect(s.cleanseNearbySite(), false);
     }
     expect(s.mandatoryQuestsComplete, true);

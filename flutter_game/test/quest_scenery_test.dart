@@ -28,20 +28,14 @@ Future<Uint8List> _pixels(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  test(
-    'all 26 objectives have independent compositions and only roots uses the generated scene',
-    () {
-      final all = [
-        for (final stage in WorldStage.values)
-          ...QuestScenery(AdventureWorld(stage: stage)).patches,
-      ];
-      expect(all.length, 26);
-      expect(all.map((p) => p.composition).toSet().length, all.length);
-      expect(all.where((p) => p.usesDedicatedImage).map((p) => p.siteId), [
-        'roots',
-      ]);
-    },
-  );
+  test('all 26 objectives have independent ground compositions', () {
+    final all = [
+      for (final stage in WorldStage.values)
+        ...QuestScenery(AdventureWorld(stage: stage)).patches,
+    ];
+    expect(all.length, 26);
+    expect(all.map((p) => p.composition).toSet().length, all.length);
+  });
 
   test(
     'every chapter landscapes its actual mandatory sites without changing collision',
@@ -75,7 +69,7 @@ void main() {
     () async {
       for (final stage in WorldStage.values) {
         final scenery = QuestScenery(AdventureWorld(stage: stage));
-        final patch = scenery.patches.firstWhere((p) => !p.usesDedicatedImage);
+        final patch = scenery.patches.first;
         final region = ui.Rect.fromCenter(
           center: patch.center,
           width: 1024,
@@ -156,7 +150,9 @@ void main() {
       addTearDown(art.dispose);
       expect(art.images.containsKey('quest-root-garden'), false);
       await art.ensureStage(WorldStage.forest, heroClass: HeroClass.warrior);
-      expect(art.images.containsKey('quest-root-garden'), true);
+      expect(art.images.containsKey('quest-root-garden'), false);
+      expect(art.images.containsKey('forest-quest-chapel'), true);
+      expect(art.images.containsKey('forest-trees'), true);
       final world = AdventureWorld(),
           terrain = TerrainArt(AdventureWorld(), art);
       addTearDown(terrain.dispose);

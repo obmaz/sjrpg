@@ -8,6 +8,7 @@ import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/destructible_chest.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
+import 'package:guardian_new/loot_policy.dart';
 import 'package:guardian_new/sorceress_combat.dart';
 import 'package:guardian_new/world_model.dart';
 
@@ -102,6 +103,14 @@ void main() {
         expect(s.sheltered, true);
         final hp = s.progress.hp, energy = s.progress.energy;
         final gold = s.progress.gold;
+        final content = chestContent(
+          s.world.stage,
+          0,
+          seed: s.progress.chestLootSeed,
+        );
+        final rewardGold =
+            (content == ChestContent.ambush ? ChestContent.coins : content)
+                .gold;
         s.hero.slash();
         if (heroClass == HeroClass.mage) {
           final bolt = game.added.whereType<SorceressProjectile>().single;
@@ -117,7 +126,7 @@ void main() {
           }
         }
         expect(s.openedChests, contains(0));
-        expect(s.progress.gold, gold + 18);
+        expect(s.progress.gold, gold + rewardGold);
         final cost = heroClass == HeroClass.mage
             ? s.progress.skillCost(s.progress.basicSkill)
             : 0;
@@ -127,7 +136,7 @@ void main() {
         expect(s.progress.kills, 0);
         expect(game.added.whereType<ChestFragments>(), hasLength(1));
         expect(s.breakChest(0), false);
-        expect(s.progress.gold, gold + 18);
+        expect(s.progress.gold, gold + rewardGold);
       },
     );
   }

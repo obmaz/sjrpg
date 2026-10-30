@@ -27,18 +27,16 @@ void main() {
       s.spawnPack();
       expect(s.living, greaterThan(0));
       final area = s.encounterAreas[s.encounterKey]!;
-      for (var i = 0; i < 3; i++) {
-        s.mobs.clear();
-        s.spawnPack();
-      }
-      expect(area.waves, 3);
-      expect(s.living, 0);
-      s.hero.position.setValues(area.stone.dx - 14, area.stone.dy - 12);
-      for (var i = 0; i < 3; i++) {
-        expect(s.strikeEncounterStone(150), true);
-      }
-      expect(area.waves, 0);
+      s.mobs.clear();
       s.spawnPack();
+      expect(area.waves, 1);
+      expect(s.living, 0);
+      s.hero.position.setValues(
+        area.stone.dx - 60,
+        area.stone.dy - s.hero.body.height / 2,
+      );
+      expect(s.strikeEncounterStone(150), true);
+      expect(area.charges, 2);
       expect(s.living, greaterThan(0));
       final mob = s.mobs.first;
       s.hit(mob, 100000, Offset.zero);

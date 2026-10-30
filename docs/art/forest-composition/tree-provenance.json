@@ -1,0 +1,143 @@
+{
+    "source": "docs/art/forest-composition/tree-sheet.png",
+    "output": "flutter_game/art/forest-trees.webp",
+    "sourceSha256": "e9649c7110b920483a2ecc286016fb940c264201d84d6739d8966dcdd91a469b",
+    "outputSha256": "2080715594c6f4b448da28c9872d6ead04e4466b7e90c1fa95bd2d0823d0d8f1",
+    "atlasSize": [1440, 1440],
+    "cellSize": 480,
+    "sourceSize": [1254, 1254],
+    "alphaThreshold": 8,
+    "packing": "Native pixels, measured alpha bounds plus3px padding; no resize. Per-frame brown-root foot anchors.",
+    "frames": [
+        {
+            "id": 0,
+            "species": "oak",
+            "age": "sapling",
+            "worldHeight": 140,
+            "sourceRoi": [0, 0, 358, 441],
+            "sourceAlphaBounds": [110, 242, 303, 430],
+            "sourceRect": [107, 239, 306, 433],
+            "sourceFoot": [220, 428],
+            "rect": [140, 278, 199, 194],
+            "foot": [253, 467]
+        },
+        {
+            "id": 1,
+            "species": "oak",
+            "age": "mid",
+            "worldHeight": 210,
+            "sourceRoi": [358, 0, 737, 441],
+            "sourceAlphaBounds": [413, 139, 722, 434],
+            "sourceRect": [410, 136, 725, 437],
+            "sourceFoot": [566, 432],
+            "rect": [562, 171, 315, 301],
+            "foot": [718, 467]
+        },
+        {
+            "id": 2,
+            "species": "oak",
+            "age": "mature",
+            "worldHeight": 280,
+            "sourceRoi": [737, 0, 1254, 441],
+            "sourceAlphaBounds": [754, 46, 1207, 434],
+            "sourceRect": [751, 43, 1210, 437],
+            "sourceFoot": [990, 432],
+            "rect": [970, 78, 459, 394],
+            "foot": [1209, 467]
+        },
+        {
+            "id": 3,
+            "species": "fir",
+            "age": "sapling",
+            "worldHeight": 140,
+            "sourceRoi": [0, 441, 369, 863],
+            "sourceAlphaBounds": [121, 646, 289, 853],
+            "sourceRect": [118, 643, 292, 856],
+            "sourceFoot": [206, 851],
+            "rect": [153, 739, 174, 213],
+            "foot": [241, 947]
+        },
+        {
+            "id": 4,
+            "species": "fir",
+            "age": "mid",
+            "worldHeight": 210,
+            "sourceRoi": [369, 441, 777, 863],
+            "sourceAlphaBounds": [450, 542, 704, 854],
+            "sourceRect": [447, 539, 707, 857],
+            "sourceFoot": [566, 853],
+            "rect": [590, 634, 260, 318],
+            "foot": [709, 948]
+        },
+        {
+            "id": 5,
+            "species": "fir",
+            "age": "mature",
+            "worldHeight": 280,
+            "sourceRoi": [777, 441, 1254, 863],
+            "sourceAlphaBounds": [849, 447, 1148, 856],
+            "sourceRect": [846, 444, 1151, 859],
+            "sourceFoot": [991, 854],
+            "rect": [1047, 537, 305, 415],
+            "foot": [1192, 947]
+        },
+        {
+            "id": 6,
+            "species": "willow",
+            "age": "sapling",
+            "worldHeight": 140,
+            "sourceRoi": [0, 863, 358, 1254],
+            "sourceAlphaBounds": [102, 976, 317, 1183],
+            "sourceRect": [99, 973, 320, 1186],
+            "sourceFoot": [180, 1181],
+            "rect": [129, 1219, 221, 213],
+            "foot": [210, 1427]
+        },
+        {
+            "id": 7,
+            "species": "willow",
+            "age": "mid",
+            "worldHeight": 210,
+            "sourceRoi": [358, 863, 762, 1254],
+            "sourceAlphaBounds": [401, 910, 742, 1187],
+            "sourceRect": [398, 907, 745, 1190],
+            "sourceFoot": [573, 1185],
+            "rect": [546, 1149, 347, 283],
+            "foot": [721, 1427]
+        },
+        {
+            "id": 8,
+            "species": "willow",
+            "age": "mature",
+            "worldHeight": 280,
+            "sourceRoi": [762, 863, 1254, 1254],
+            "sourceAlphaBounds": [780, 870, 1199, 1191],
+            "sourceRect": [777, 867, 1202, 1194],
+            "sourceFoot": [978, 1189],
+            "rect": [987, 1105, 425, 327],
+            "foot": [1188, 1427]
+        }
+    ],
+    "composition": {
+        "reference": "docs/art/forest-composition/world-layout-reference.png",
+        "overview": "docs/art/forest-composition/stage-concept.png",
+        "overviewSha256": "01d21309f02a6b75527b07b17bc1dc6093603620a260fc48797f4f32ddea1196",
+        "initialOverview": "docs/art/forest-composition/stage-concept-initial.png",
+        "initialOverviewSha256": "250434efbfe02dc6efa41607f1afaeccee8d2c9364ebdb4bbbb5dea31472e252",
+        "worldLayoutSha256": "1021fc232c4f0d570e90b3b03a1808850c0588d4000ad62cdbb0c5fe036eaf02",
+        "rejectedUnpaddedSource": "docs/art/forest-composition/tree-sheet-unpadded.png",
+        "rejectedSourceSha256": "8a373d512f5a858176f29ea9c6fd247af230ade096f8d83f9e4a166cffbe6651",
+        "rejectedReason": "Mature oak touched the right canvas edge; padded re-generation is deployed.",
+        "zones": {
+            "oak": "central mature groves",
+            "fir": "remote northeast and southeast deep woods",
+            "willow": "river and lake banks"
+        },
+        "heights": "saplings on village/road edges, mid trees in grove transitions, mature trees in deep cores",
+        "constraints": [
+            "preserve actual water and road topology",
+            "keep quest clearing and combat approaches open",
+            "retain original trunk collision bodies"
+        ]
+    }
+}

@@ -7,6 +7,7 @@ import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/travel_journal.dart';
 import 'package:guardian_new/world_model.dart';
 
+import 'support/forest_quest_flow.dart';
 import 'support/test_game.dart';
 
 void main() {
@@ -26,6 +27,10 @@ void main() {
   }
 
   void cleanse(Adventure s, QuestSite site) {
+    if (s.world.stage == WorldStage.forest) {
+      completeForestQuest(s, site.id);
+      return;
+    }
     s.mobs.clear();
     final center = wellApproachForSite(
       s.world.stage,
@@ -87,10 +92,14 @@ void main() {
 
   test('purifying another site preserves a manual target or explicit off', () {
     final s = start(), target = s.world.sites.last;
+    approachForestNpc(s, 'elin');
+    expect(s.forestQuests.performAction(), true);
     expect(s.toggleTrackedSite(target), true);
     cleanse(s, s.world.sites.first);
     expect(s.trackedSite?.id, target.id);
-    expect(s.toggleTrackedSite(target), true);
+    approachForestNpc(s, 'mira');
+    expect(s.forestQuests.performAction(), true);
+    expect(s.toggleTrackedSite(s.world.sites[1]), true);
     cleanse(s, s.world.sites[1]);
     expect(s.trackedSiteId, null);
     expect(start(saved: GameCheckpoint.capture(s)!).trackedSite, null);

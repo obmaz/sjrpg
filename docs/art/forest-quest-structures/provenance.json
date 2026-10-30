@@ -1,0 +1,56 @@
+{
+    "source": "generated-source.png",
+    "sourceSize": [2172, 724],
+    "sourceSha256": "7f267ce73ed77e259e21af9b2f52b664e4bbaaa2fe6ccbe56d47fd8972194e8b",
+    "referenceConcept": "docs/art/forest-composition/",
+    "lighting": "Upper left, high southeast quarter view; tops/front/right sides visible",
+    "assets": [
+        {
+            "key": "forest-quest-chapel",
+            "quest": "roots",
+            "sourceRect": [7, 27, 662, 683],
+            "runtimeSize": [655, 656],
+            "groundAnchor": [323, 536],
+            "frontApproach": [253, 568],
+            "solidFootprint": [
+                [163, 450],
+                [326, 516],
+                [491, 442],
+                [320, 376]
+            ],
+            "sha256": "ee7ca51b6f5ab2ed5a8b9de692aa3f98e9522e19d87358b551ce010d66af4116"
+        },
+        {
+            "key": "forest-quest-cottage",
+            "quest": "moon",
+            "sourceRect": [687, 73, 1384, 699],
+            "runtimeSize": [697, 626],
+            "groundAnchor": [339, 497],
+            "frontApproach": [198, 527],
+            "solidFootprint": [
+                [108, 428],
+                [352, 528],
+                [577, 443],
+                [322, 346]
+            ],
+            "sha256": "e85a5d091a2c72cc5df39b1700a8badca8d1eab1261bff9962a226e2a71ce9e4"
+        },
+        {
+            "key": "forest-quest-cave",
+            "quest": "sun",
+            "sourceRect": [1402, 140, 2165, 703],
+            "runtimeSize": [763, 563],
+            "groundAnchor": [388, 431],
+            "frontApproach": [448, 504],
+            "solidFootprint": [
+                [68, 315],
+                [405, 461],
+                [688, 353],
+                [369, 220]
+            ],
+            "sha256": "426742282292c0b49b0b5f56e16e44277cfa83f3d567cc84dfa596b27b65634b"
+        }
+    ],
+    "packing": "tools/prepare-forest-quest-structures.py; measured alpha>4 components with4px gutter; alpha1-3 generator noise cleared, native pixels, WebP quality94",
+    "anchors": "Ground anchor is the center of the illustrated ground-contact plinth. frontApproach marks a free place in front of the door/worksite for a separate NPC. solidFootprint outlines the structure body, excluding the apron and approach."
+}

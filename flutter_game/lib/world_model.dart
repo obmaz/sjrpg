@@ -5,7 +5,9 @@ import 'package:collection/collection.dart';
 
 import 'authored_settlement.dart';
 import 'field_landmark.dart';
+import 'forest_tree_art.dart';
 import 'mount_progress.dart';
+import 'quest_structure_art.dart';
 import 'sanctuary.dart';
 import 'stage_content.dart';
 
@@ -158,23 +160,23 @@ class TravelMount {
 const authoredQuestSites = [
   QuestSite(
     'roots',
-    '뿌리 우물',
-    '서부 초원과 숲이 만나는 오래된 우물',
+    '이끼 예배당',
+    '예배당의 수녀 엘린에게 봉인 의뢰를 받으세요',
     Offset(10000, 11000),
     Color(0xff94db9c),
   ),
   QuestSite(
     'moon',
-    '달빛 샘',
-    '북동쪽 숲길 끝의 푸른 샘',
+    '약초사의 오두막',
+    '마을 보급원 미라의 약초 꾸러미를 전할 집',
     Offset(34500, 8500),
     Color(0xff9cdbf2),
     artIndex: 1,
   ),
   QuestSite(
     'sun',
-    '태양 제단',
-    '남동쪽 고목 숲의 황금 제단',
+    '동굴 조사 현장',
+    '동굴 앞의 조사관 로웬을 보호할 작업장',
     Offset(31000, 28000),
     Color(0xffffd581),
     artIndex: 2,
@@ -278,7 +280,13 @@ class RegionShape {
 }
 
 class WorldProp {
-  const WorldProp(this.body, this.kind, this.drawSize, {this.landmark});
+  const WorldProp(
+    this.body,
+    this.kind,
+    this.drawSize, {
+    this.landmark,
+    this.treeVariant,
+  });
   factory WorldProp.desertTemple(Offset at, int index) {
     if (index < 0 || index > 3) {
       throw RangeError.range(index, 0, 3, 'index');
@@ -301,6 +309,7 @@ class WorldProp {
     );
   }
   final FieldLandmark? landmark;
+  final int? treeVariant;
   final Rect body;
   final String kind;
   final Size drawSize;
@@ -704,7 +713,17 @@ class AdventureWorld {
     }
     _compact();
     _applyAuthoredSettlement();
+    _applyForestComposition();
     _addFieldLandmarks();
+    for (final site in sites) {
+      addRuntimeShape(ForestQuestStructureArt.solidFootprint(site.id, site.at));
+      final approach =
+          ForestQuestStructureArt.npcApproach(site.id, site.at) +
+          const Offset(0, 50);
+      trails.add(
+        Trail(_dryRoad([_siteRoadAnchor(approach), approach], 90), 90),
+      );
+    }
   }
 
   List<Offset> _dryRoad(List<Offset> authored, double width) {
@@ -1267,6 +1286,41 @@ class AdventureWorld {
   }
 
   List<List<Offset>> _themedSpines = [];
+  void _applyForestComposition() {
+    for (var i = 0; i < props.length; i++) {
+      final prop = props[i];
+      if (prop.kind != 'tree') continue;
+      final at = prop.body.center;
+      var depth = 0.0;
+      for (final wood in woods) {
+        if (!wood.contains(at)) continue;
+        final b = wood.bounds;
+        final x = (at.dx - b.center.dx) / (b.width / 2);
+        final y = (at.dy - b.center.dy) / (b.height / 2);
+        depth = math.max(depth, (1 - math.sqrt(x * x + y * y)).clamp(0.0, 1.0));
+      }
+      final variant = ForestTreeArt.variant(
+        at: at,
+        worldSize: worldSize,
+        nearWater:
+            river.bounds.inflate(500).contains(at) ||
+            lakes.any((l) => l.bounds.inflate(450).contains(at)),
+        roadEdge:
+            sites.any((s) => (s.at - at).distance < 400) ||
+            trails.any((t) => t.near(at, 160)),
+        roadTransition: trails.any((t) => t.near(at, 320)),
+        groveDepth: depth,
+        townDistance: (at - spawn).distance,
+      );
+      props[i] = WorldProp(
+        prop.body,
+        prop.kind,
+        ForestTreeArt.drawSize(variant),
+        treeVariant: variant,
+      );
+    }
+  }
+
   void _compact() {
     // Freeze lazy authored anchors before replacing the geometry.
     final _ = (_authoredMerchant, _authoredChests);
@@ -1816,6 +1870,16 @@ class AdventureWorld {
   final List<WorldProp> campProps = [];
   final Map<String, List<WorldProp>> propBuckets = {};
   final Map<String, List<Rect>> _solids = {};
+  final Set<Rect> _runtimeSolids = {};
+  final List<RegionShape> _runtimeShapes = [];
+  void addRuntimeShape(List<Offset> points) {
+    _runtimeShapes.add(RegionShape(points));
+  }
+
+  void addRuntimeSolid(Rect body) {
+    if (_runtimeSolids.add(body)) _indexSolid(body);
+  }
+
   void _indexSolid(Rect rect) {
     for (var y = rect.top ~/ 128; y <= rect.bottom ~/ 128; y++) {
       for (var x = rect.left ~/ 128; x <= rect.right ~/ 128; x++) {
@@ -1842,6 +1906,11 @@ class AdventureWorld {
     }
     if (avoidSanctuary && sanctuary.protects(body)) return true;
     if (_closedChestOverlaps(body)) return true;
+    if (_runtimeShapes.any(
+      (shape) => shape.bounds.overlaps(body) && shape.overlaps(body),
+    )) {
+      return true;
+    }
     if (!_authoring &&
         settlementCollisionBounds.overlaps(body) &&
         settlementCollision.any((shape) => shape.overlaps(body))) {
@@ -1936,10 +2005,11 @@ class AdventureWorld {
         sweep.bottom > (_authoring ? authoredWorldSize : worldSize).height) {
       return false;
     }
-    if (!_authoring && settlement.overlaps(sweep)) {
-      final candidates = settlementCollision
-          .where((shape) => shape.bounds.overlaps(sweep))
-          .toList();
+    if (!_authoring) {
+      final candidates = [
+        ...settlementCollision,
+        ..._runtimeShapes,
+      ].where((shape) => shape.bounds.overlaps(sweep)).toList();
       if (candidates.isNotEmpty) {
         // Exact swept rectangle hull catches diagonal corner crossings even
         // when a short intersection falls between physical movement substeps.

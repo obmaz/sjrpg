@@ -809,7 +809,8 @@ const stageKillGoal = 120;
 const startingStageName = '십자로의 숲';
 
 class Progress {
-  Progress({this.heroClass = HeroClass.warrior}) {
+  Progress({this.heroClass = HeroClass.warrior, int? chestLootSeed})
+    : chestLootSeed = chestLootSeed ?? math.Random().nextInt(0x80000000) {
     inventory.addAll([
       Gear(
         _serial++,
@@ -828,6 +829,7 @@ class Progress {
     energy = heroClass == HeroClass.warrior ? 25 : maxEnergy;
   }
   final HeroClass heroClass;
+  final int chestLootSeed;
   int activeSkillBonus = 0, frenzyStacks = 0;
   double activeLifeMultiplier = 1,
       activeResourceMultiplier = 1,
@@ -962,6 +964,7 @@ class Progress {
   final Map<GearSlot, Gear> equipped = {};
   Map<String, dynamic> toSave() => {
     'heroClass': heroClass.name,
+    'chestLootSeed': chestLootSeed,
     'experienceVersion': 2,
     'milestonePointsVersion': 1,
     'mountProgress': mountProgress.toSave(),
@@ -1026,6 +1029,9 @@ class Progress {
       }
 
       final p = Progress(
+        chestLootSeed: data.containsKey('chestLootSeed')
+            ? integer('chestLootSeed', max: 0x7fffffff)
+            : 0,
         heroClass: HeroClass.values.firstWhere(
           (c) => c.name == data['heroClass'],
         ),

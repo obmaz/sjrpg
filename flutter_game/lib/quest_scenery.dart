@@ -16,7 +16,6 @@ class QuestGroundPatch {
   final ui.Offset center;
   final QuestGroundDesign design;
   final ui.Size size;
-  bool get usesDedicatedImage => siteId == 'roots';
   String get composition => design.name;
   ui.Rect get bounds => ui.Rect.fromCenter(
     center: center,
@@ -101,8 +100,27 @@ class QuestScenery {
 
   /// Painted underneath the actual roads; every approach remains legible.
   void paintGround(ui.Canvas canvas, ui.Rect view, {ui.Shader? stoneTexture}) {
+    if (world.stage == WorldStage.forest) {
+      for (final patch in patches) {
+        if (!patch.bounds.overlaps(view)) continue;
+        final ground = ui.Rect.fromCenter(
+          center: patch.center + const ui.Offset(0, 20),
+          width: 310,
+          height: 170,
+        );
+        canvas.drawOval(
+          ground,
+          ui.Paint()
+            ..shader = ui.Gradient.radial(ground.center, 155, const [
+              ui.Color(0x88a09574),
+              ui.Color(0x00958259),
+            ]),
+        );
+      }
+      return;
+    }
     for (final patch in patches) {
-      if (patch.usesDedicatedImage || !patch.bounds.overlaps(view)) continue;
+      if (!patch.bounds.overlaps(view)) continue;
       canvas.save();
       canvas.translate(patch.center.dx, patch.center.dy);
       _SitePainter(
@@ -116,44 +134,6 @@ class QuestScenery {
   }
 
   /// One independent full scene, never tiled, mirrored or reused elsewhere.
-  void paintDedicated(ui.Canvas canvas, ui.Image image, ui.Rect view) {
-    for (final patch in patches) {
-      if (!patch.usesDedicatedImage || !patch.bounds.overlaps(view)) continue;
-      canvas.drawImageRect(
-        image,
-        ui.Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
-        patch.bounds,
-        ui.Paint()..filterQuality = ui.FilterQuality.medium,
-      );
-      // Reconnect only the real authored approaches. Their earth tint fades
-      // into the broad central paving instead of ending abruptly in foliage.
-      final approachPaint = ui.Paint()
-        ..style = ui.PaintingStyle.stroke
-        ..strokeCap = ui.StrokeCap.round
-        ..strokeJoin = ui.StrokeJoin.round
-        ..shader = ui.Gradient.radial(
-          patch.center,
-          patch.size.width / 2,
-          const [
-            ui.Color(0x00b6a078),
-            ui.Color(0x00b6a078),
-            ui.Color(0x99b6a078),
-            ui.Color(0x00b6a078),
-          ],
-          const [0, .42, .78, 1],
-        );
-      for (final trail in world.trails) {
-        if (!trail.bounds.inflate(trail.width).overlaps(patch.bounds) ||
-            !trail.near(patch.center, 220)) {
-          continue;
-        }
-        canvas.drawPath(
-          trail.path,
-          approachPaint..strokeWidth = trail.width * .92,
-        );
-      }
-    }
-  }
 }
 
 /// Ground-only strokes are baked once into TerrainArt's bounded picture cache.

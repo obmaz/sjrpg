@@ -9,6 +9,7 @@ import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/travel_journal.dart';
 import 'package:guardian_new/world_model.dart';
 
+import 'support/forest_quest_flow.dart';
 import 'support/test_game.dart';
 
 int _totalXp(Adventure s) {
@@ -263,7 +264,9 @@ void main() {
       expect(GameCheckpoint.advance(s), null);
       s.progress.bossDefeated = true;
       expect(GameCheckpoint.advance(s), null);
-      s.cleansedSites.addAll(questSites.map((q) => q.id));
+      for (final site in questSites) {
+        completeForestQuest(s, site.id);
+      }
       final before = s.progress.toSave();
       final next = GameCheckpoint.advance(s)!;
       expect(next.data['stage'], 'sands');

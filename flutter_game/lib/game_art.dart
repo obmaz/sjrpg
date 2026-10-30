@@ -7,15 +7,18 @@ import 'package:flutter/services.dart';
 
 import 'actor_atlas.dart';
 import 'boss_sprite_mesh.dart';
+import 'bridge_art.dart';
 import 'desert_temple_art.dart';
 import 'effect_atlas.dart';
 import 'enemy_catalog.dart';
 import 'field_landscape.dart';
 import 'field_palettes.dart';
+import 'forest_tree_art.dart';
 import 'ground_texture.dart';
 import 'interface_art.dart';
 import 'mount_sprite_mesh.dart';
 import 'prop_grounding.dart';
+import 'quarter_view_road_art.dart';
 import 'quest_scenery.dart';
 import 'terrain_map_plan.dart';
 import 'village_scene_blend.dart';
@@ -164,11 +167,14 @@ class GameArt {
     'blacksmith-forge',
     'village-gardens',
     'village-cottage',
-    'quest-root-garden',
     'action-glyphs',
     'barbarian-skills',
     'sorceress-skills',
     'landscape-bridge',
+    'forest-trees',
+    'forest-quest-chapel',
+    'forest-quest-cottage',
+    'forest-quest-cave',
     'world-forest',
     'world-desert',
     'controls',
@@ -182,7 +188,10 @@ class GameArt {
       'village-gateway',
       'world-desert',
       'landscape-bridge',
-      'quest-root-garden',
+      'forest-trees',
+      'forest-quest-chapel',
+      'forest-quest-cottage',
+      'forest-quest-cave',
     },
     'sands': {
       'landmarks-sands',
@@ -1000,6 +1009,17 @@ class GameArt {
   }
 
   void prop(ui.Canvas canvas, WorldProp prop, {double opacity = 1}) {
+    final tree = prop.treeVariant;
+    if (tree != null && images['forest-trees'] != null) {
+      ForestTreeArt.draw(
+        canvas,
+        images['forest-trees']!,
+        prop.body.bottomCenter,
+        tree,
+        opacity: opacity,
+      );
+      return;
+    }
     final formation = prop.landmark;
     if (formation != null) {
       final image = images[formation.imageKey];
@@ -1347,6 +1367,9 @@ class TerrainArt {
           ..shader = art.materials[road],
       );
     }
+    if (world.stage == WorldStage.forest) {
+      QuarterViewRoadArt.paint(c, world.trails, area);
+    }
     c.restore();
     fieldLandscape.paintSandTrails(
       c,
@@ -1356,26 +1379,9 @@ class TerrainArt {
           : art.materials[base],
     );
     c.restore();
-    // One complete root-garden scene blends into its real approaches. Other
-    // objectives have independent ground compositions beneath the roads.
-    final rootGarden = art.images['quest-root-garden'];
-    if (rootGarden != null &&
-        questScenery.patches.any(
-          (patch) => patch.usesDedicatedImage && patch.bounds.overlaps(area),
-        )) {
-      c.save();
-      c.clipPath(dryGroundPath, doAntiAlias: false);
-      questScenery.paintDedicated(c, rootGarden, area);
-      c.restore();
-    }
     for (final bridge in world.bridges) {
-      if (!bridge.overlaps(area)) continue;
-      c.drawImageRect(
-        art.images['landscape-bridge']!,
-        const ui.Rect.fromLTWH(50, 112, 1880, 540),
-        bridge,
-        ui.Paint(),
-      );
+      if (!QuarterViewBridgeArt.visualBounds(bridge).overlaps(area)) continue;
+      QuarterViewBridgeArt.draw(c, art.images['landscape-bridge']!, bridge);
     }
     final settlement = art.images[world.authoredSettlement.imageKey];
     if (settlement != null && world.settlement.overlaps(area)) {

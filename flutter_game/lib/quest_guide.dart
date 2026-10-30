@@ -28,6 +28,7 @@ extension QuestGuidance on Adventure {
           ? '몬스터 $remaining마리 더 처치하면 ${world.stage.bossName}이 나타납니다.'
           : '${world.stage.bossName}을 쓰러뜨리세요. 지도에 붉은 표식으로 표시됩니다.';
     }
+    if (world.stage == WorldStage.forest) return forestQuests.mainObjective;
     if (world.stage == WorldStage.sands) {
       final q = currentCommission;
       if (q == null) {
@@ -49,6 +50,7 @@ extension QuestGuidance on Adventure {
 
   QuestGuide? get nearbyQuestGuide {
     if (!ready || disposed || defeated) return null;
+    if (world.stage == WorldStage.forest) return forestQuests.guide;
     QuestSite? site;
     var distance = 300.0;
     for (final candidate in world.sites) {

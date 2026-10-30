@@ -6,6 +6,7 @@ import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/world_model.dart';
 
+import 'support/forest_quest_flow.dart';
 import 'support/test_game.dart';
 
 void main() {
@@ -34,10 +35,9 @@ void main() {
       expect(s.trackedSite, null);
       expect(s.toggleTrackedSite(site), true);
       s.resume();
-      s.mobs.clear();
-      s.hero.position.setValues(site.at.dx - 14, site.at.dy + 45);
-      expect(s.cleanseNearbySite(), true);
-      expect(s.trackedSiteId, 'moon');
+      completeForestQuest(s, site.id);
+      expect(s.trackedSiteId, isNot(site.id));
+      expect(s.trackedSite, isNotNull);
       expect(s.toggleTrackedSite(site), false);
     },
   );

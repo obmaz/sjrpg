@@ -9,6 +9,7 @@ import 'combat_balance.dart';
 import 'encounters.dart';
 import 'enemy_catalog.dart';
 import 'enemy_difficulty.dart';
+import 'forest_quests.dart';
 import 'game_art.dart';
 import 'player_afflictions.dart';
 import 'sorceress_defenses.dart';
@@ -56,6 +57,9 @@ class GameCheckpoint {
                 'controlGuard': boss.bossControlGuard,
                 'power': boss.power.toSave(),
               },
+        'forestQuests': session.world.stage == WorldStage.forest
+            ? session.forestQuests.toSave()
+            : null,
         'encounterVersion': 1,
         'encounters': session.encounterAreas.values
             .map((a) => a.toSave())
@@ -434,6 +438,22 @@ class GameCheckpoint {
           sites.any((id) => !availableSites.any((q) => q.id == id))) {
         return null;
       }
+      ForestQuestLedger? forestLedger;
+      if (stage == WorldStage.forest) {
+        forestLedger = ForestQuestLedger.fromSave(
+          data['forestQuests'],
+          completedSiteIds: sites.cast<String>(),
+        );
+        if (forestLedger == null ||
+            forestLedger.quests.any(
+              (q) =>
+                  q.phase == ForestQuestPhase.completed &&
+                  !sites.contains(q.definition.id),
+            )) {
+          return null;
+        }
+        data['forestQuests'] = forestLedger.toSave();
+      }
       if (stage == WorldStage.sands) {
         final branch = timeCommissions.where((q) => q.path == path).toList();
         if (sites.any((id) => !branch.any((q) => q.id == id))) return null;
@@ -533,6 +553,7 @@ class GameCheckpoint {
         final area = EncounterArea.fromSave(raw as Map);
         if (!keys.add(area.key)) return null;
       }
+      final protectionTokens = <int>{};
       for (final raw in enemies) {
         if (raw is! Map ||
             !enemyCatalog.containsKey(raw['kind']) ||
@@ -548,6 +569,33 @@ class GameCheckpoint {
             raw['hp'] > raw['maxHp']) {
           return null;
         }
+      }
+      for (final raw in enemies) {
+        final token = raw['forestGuardToken'],
+            attempt = raw['forestGuardAttempt'],
+            windup = raw['forestGuardWindup'];
+        if (token == null && attempt == null && windup == null) continue;
+        final defense = forestLedger?['sun'];
+        if (stage != WorldStage.forest ||
+            defense == null ||
+            !defense.protectionActive ||
+            token is! int ||
+            token < 0 ||
+            token >= 3 ||
+            !defense.remainingThreatTokens.contains(token) ||
+            !protectionTokens.add(token) ||
+            attempt is! int ||
+            attempt != defense.attempt ||
+            windup is! num ||
+            !windup.isFinite ||
+            windup < 0 ||
+            windup > .22 * CombatBalance.gameSpeed) {
+          return null;
+        }
+      }
+      if (forestLedger?['sun']?.protectionActive == true &&
+          protectionTokens.length != forestLedger!['sun']!.threatsRemaining) {
+        return null;
       }
       data['encounters'] = areas;
       data['enemies'] = enemies;
@@ -801,6 +849,7 @@ class GameCheckpoint {
     'chests',
     'memoryRewarded',
     'boss',
+    'forestQuests',
     'encounterVersion',
     'encounters',
     'enemies',
@@ -1049,6 +1098,14 @@ class GameCheckpoint {
     );
     session.memoryRewarded = data['memoryRewarded'] as bool;
     session.cleansedSites.addAll((data['sites'] as List).cast<String>());
+    if (session.world.stage == WorldStage.forest &&
+        !session.forestQuests.restoreLedger(
+          data['forestQuests'],
+          session.cleansedSites,
+        )) {
+      throw const FormatException('Invalid forest quest state');
+    }
+
     session.bossSummoned = session.progress.bossDefeated;
     final savedBoss = data['boss'];
     if (savedBoss != null) {

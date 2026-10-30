@@ -14,6 +14,7 @@ import 'package:guardian_new/player_afflictions.dart';
 import 'package:guardian_new/rpg_model.dart';
 import 'package:guardian_new/skill_preview_model.dart';
 
+import 'support/forest_quest_flow.dart';
 import 'support/test_game.dart';
 
 void main() {
@@ -293,9 +294,7 @@ void main() {
       final boss = s.spawnEnemy('golem', const Offset(6200, 4200), boss: true)!;
       s.hit(boss, 100000, Offset.zero);
       expect((p.healingPotions, p.energyPotions), before);
-      final site = s.world.sites.first;
-      s.hero.position.setValues(site.at.dx, site.at.dy + 90);
-      expect(s.cleanseNearbySite(), true);
+      completeForestQuest(s, s.world.sites.first.id);
       expect((p.healingPotions, p.energyPotions), before);
       expect(s.breakChest(0), true);
       expect(
@@ -304,7 +303,10 @@ void main() {
       );
       final supplies = List.generate(s.stageChestLocations.length, (i) => i)
           .firstWhere(
-            (i) => chestContent(s.world.stage, i) == ChestContent.supplies,
+            (i) =>
+                i != 0 &&
+                chestContent(s.world.stage, i, seed: p.chestLootSeed) ==
+                    ChestContent.supplies,
           );
       expect(s.breakChest(supplies), true);
       expect(

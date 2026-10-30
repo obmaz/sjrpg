@@ -643,7 +643,10 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         case NearbyAction.smith:
           open('smith');
         case NearbyAction.talk:
-          open('talk');
+          if (adventure.world.stage != WorldStage.forest ||
+              !adventure.forestQuests.openNearest()) {
+            open('talk');
+          }
       }
       restoreGameFocus();
     },
@@ -670,6 +673,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    adventure.forestQuests.onOpen = () => open('forestTalk');
     stopBackAction = widget.backActions?.register(() {
       if (preparingTransition) return;
       if (adventure.defeated) {
@@ -1469,11 +1473,11 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                           : short
                           ? 152
                           : 112),
-                  width: short && width < 500
-                      ? (width - 240).clamp(44, width - 24).toDouble()
-                      : sideGuide
-                      ? (width - 450).clamp(100, 220).toDouble()
-                      : (width - 150).clamp(148, 250).toDouble(),
+                  width: short
+                      ? width >= 500
+                            ? (width - 450).clamp(100, 220).toDouble()
+                            : (width - 240).clamp(44, width - 24).toDouble()
+                      : 120,
                   height: 44,
                   child: NearbyQuestCard(
                     guide,
@@ -1483,7 +1487,10 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                         case QuestGuideAction.journal:
                           open('journal');
                         case QuestGuideAction.talk:
-                          open('talk');
+                          if (adventure.world.stage != WorldStage.forest ||
+                              !adventure.forestQuests.openNearest()) {
+                            open('talk');
+                          }
                         case QuestGuideAction.cleanse:
                           if (adventure.cleanseNearbySite()) saveNow();
                         case QuestGuideAction.dismount:

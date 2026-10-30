@@ -13,6 +13,7 @@ import 'effect_visibility.dart';
 import 'gear_icon_art.dart';
 import 'mage_combat_art.dart';
 import 'player_afflictions.dart';
+import 'quest_structure_art.dart';
 import 'spell_vfx.dart';
 import 'world_model.dart';
 
@@ -1199,8 +1200,14 @@ class StageLandmarks extends GameComponent {
     }
     final marked = session.visibleSites.map((site) => site.id).toSet();
     for (final site in session.world.sites) {
+      if (session.world.stage == WorldStage.forest) continue;
       if (!view.inflate(100).contains(site.at)) continue;
-      if (session.world.stage.usesCityArt) {
+      final questImage = session.world.stage == WorldStage.forest
+          ? session.art.images[ForestQuestStructureArt.assetKey(site.id)]
+          : null;
+      if (questImage != null) {
+        ForestQuestStructureArt.draw(c, questImage, site.id, site.at);
+      } else if (session.world.stage.usesCityArt) {
         session.art.cityProp(
           c,
           site.artIndex,

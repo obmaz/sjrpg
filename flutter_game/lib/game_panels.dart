@@ -8,6 +8,8 @@ import 'blacksmith_panel.dart';
 import 'commission_board.dart';
 import 'device_controls.dart';
 import 'equipment_panel.dart';
+import 'forest_quest_panel.dart';
+import 'forest_quests.dart';
 import 'game_ui.dart';
 import 'mount_panel.dart';
 import 'panel_controls.dart';
@@ -73,6 +75,14 @@ class _AdventurePanelState extends State<AdventurePanel> {
         p = s.progress,
         name = widget.name,
         media = MediaQuery.of(context);
+    if (name == 'forestTalk') {
+      return ForestQuestPanel(
+        runtime: s.forestQuests,
+        onClose: widget.onClose,
+        onCheckpoint: widget.onCheckpoint,
+        backActions: widget.backActions,
+      );
+    }
     if (name == 'mounts') {
       return MountPanel(
         session: s,
@@ -167,36 +177,42 @@ class _AdventurePanelState extends State<AdventurePanel> {
         const SizedBox(height: 14),
         if (name == 'talk') ...[
           const Text(
-            '“숲의 뿌리에 오래된 어둠이 잠들어 있네. 뿌리 우물·달빛 샘·태양 제단부터 정화해 주게. 세 성소와 숲길을 정화하면 파수꾼이 깨어날 걸세. 상자와 전리품을 모으고, 얻은 힘을 스스로 선택하게나. 전투를 벗어나 분수 곁에서 쉬면 생명이 회복된다네.”',
+            '“예배당의 엘린은 봉인을 지키고, 마을 보급원 미라는 약초 배달을 기다리네. 동굴의 조사관 로웬도 도움이 필요하다네. 세 의뢰와 숲길의 위협을 해결하면 파수꾼이 깨어날 걸세. 상자와 전리품을 모으고, 얻은 힘을 스스로 선택하게나. 전투를 벗어나 분수 곁에서 쉬면 생명이 회복된다네.”',
             style: TextStyle(fontSize: 16, height: 1.8, color: cream),
           ),
           const SizedBox(height: 22),
         ],
-        for (final site in questSites) ...[
-          QuestSiteCard(
-            art: s.art,
-            site: site,
-            done: s.cleansedSites.contains(site.id),
-            stage: s.world.stage,
+        for (final q in s.forestQuests.ledger.quests) ...[
+          _quest(
+            q.title,
+            q.currentObjective,
+            q.phase == ForestQuestPhase.completed
+                ? 1
+                : q.phase == ForestQuestPhase.ready
+                ? .8
+                : q.phase == ForestQuestPhase.accepted
+                ? .35
+                : 0,
+            q.phase == ForestQuestPhase.completed ? '완료' : q.definition.giver,
           ),
           const SizedBox(height: 12),
         ],
         _quest(
           '숲길 정화',
-          '필수 성소 3곳과 몬스터 처치 목표를 완수해 파수꾼을 깨우세요.',
+          '서로 다른 NPC 의뢰 3개와 몬스터 처치 목표를 완수해 파수꾼을 깨우세요.',
           math.min(stageKillGoal, s.stageKills) / stageKillGoal,
           '${math.min(stageKillGoal, s.stageKills)} / $stageKillGoal',
         ),
         const SizedBox(height: 12),
         _quest(
           '첫 파수꾼',
-          '성소 3곳을 정화하고 파수꾼을 쓰러뜨리면 제1장을 완료합니다.',
+          'NPC 의뢰 3개를 해결하고 파수꾼을 쓰러뜨리면 제1장을 완료합니다.',
           p.bossDefeated ? 1 : 0,
           s.stageCleared
               ? '정화 완료'
               : s.bossSummoned
               ? '파수꾼 출현'
-              : '필수 성소·처치 목표 완료 후 등장',
+              : 'NPC 의뢰·처치 목표 완료 후 등장',
         ),
         const SizedBox(height: 18),
         _quest(

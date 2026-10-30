@@ -38,7 +38,7 @@ void main() {
       expect(tester.takeException(), null);
       expect(find.text('우물 워프'), findsOneWidget);
       expect(find.text('현재 위치'), findsOneWidget);
-      final destination = find.text('뿌리 우물');
+      final destination = find.text('이끼 예배당');
       await tester.scrollUntilVisible(
         destination,
         70,
