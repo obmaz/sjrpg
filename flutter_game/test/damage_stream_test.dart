@@ -76,4 +76,31 @@ void main() {
       expect(s.texts.where((t) => identical(t.target, b)).length, 2);
     },
   );
+  test(
+    'a slow rendering frame cannot expire or jump a just-born damage number',
+    () {
+      final s = Adventure(GameArt())..start(TestGame());
+      addTearDown(s.dispose);
+      final target = Object();
+      s.bubble(
+        '1',
+        const Offset(100, 200),
+        const Color(0xffffdd77),
+        target: target,
+      );
+      final text = s.texts.single;
+      s.tick(.05);
+      text.update(1);
+      expect(text.remaining, closeTo(.49, .001));
+      expect(text.position.y, closeTo(182, .001));
+      s.pause();
+      s.tick(1);
+      text.update(1);
+      expect(text.remaining, closeTo(.49, .001));
+      s.resume();
+      s.tick(.05);
+      text.update(1);
+      expect(text.remaining, closeTo(.44, .001));
+    },
+  );
 }

@@ -1973,6 +1973,7 @@ class Adventure extends ChangeNotifier {
   }
 
   void _showDamageNumber(BattleText next) {
+    next._streamBornAt = elapsed;
     final same = texts
         .where((t) => t.isStream && identical(t.target, next.target))
         .toList();
@@ -6244,15 +6245,21 @@ class BattleText extends GameComponent {
     this.critical = false,
     this.target,
     this.follow,
-  }) : isReward = !critical && !RegExp(r'^-?\d+$').hasMatch(label) {
+  }) : _origin = at,
+       isReward = !critical && !RegExp(r'^-?\d+$').hasMatch(label) {
     position = Vector2(at.dx, at.dy);
     size = Vector2(160, critical ? 52 : 35);
-    if (isStream) remaining = streamLifetime;
+    if (isStream) {
+      remaining = streamLifetime;
+      _streamBornAt = session.elapsed;
+    }
   }
   static const streamInterval = .18,
       streamLifetime = .54,
       streamRiseSpeed = 360.0;
   final Object? target;
+  final ui.Offset _origin;
+  double _streamBornAt = 0;
   final ui.Offset Function()? follow;
   bool get isStream => target != null && !isReward;
   final Adventure session;
@@ -6363,30 +6370,27 @@ class BattleText extends GameComponent {
   void update(double dt) {
     if (!session.active) return;
     super.update(dt);
-    remaining -= dt;
     if (isStream) {
-      final at = follow?.call();
-      if (at != null) position.x = at.dx;
-      if (at != null) {
-        if (reducedMotion) {
-          final lane = session.texts
-              .where(
-                (t) =>
-                    t.isStream &&
-                    identical(t.target, target) &&
-                    t.remaining > 0,
-              )
-              .toList();
-          final row = math.max(0, lane.length - 1 - lane.indexOf(this));
-          position.y = at.dy - row * 65;
-        } else {
-          position.y = at.dy - (streamLifetime - remaining) * streamRiseSpeed;
-        }
-      } else if (!reducedMotion) {
-        position.y -= dt * streamRiseSpeed;
+      // Director ticks clamp slow render frames; share its simulation clock so
+      // a newly mounted number cannot expire before its first rendered frame.
+      remaining = streamLifetime - math.max(0, session.elapsed - _streamBornAt);
+      final at = follow?.call() ?? _origin;
+      position.x = at.dx;
+      if (reducedMotion) {
+        final lane = session.texts
+            .where(
+              (t) =>
+                  t.isStream && identical(t.target, target) && t.remaining > 0,
+            )
+            .toList();
+        final row = math.max(0, lane.length - 1 - lane.indexOf(this));
+        position.y = at.dy - row * 65;
+      } else {
+        position.y = at.dy - (streamLifetime - remaining) * streamRiseSpeed;
       }
-    } else if (!reducedMotion) {
-      position.y -= dt * (isReward ? 27 : 23);
+    } else {
+      remaining -= dt;
+      if (!reducedMotion) position.y -= dt * (isReward ? 27 : 23);
     }
     if (remaining <= 0) removeFromParent();
   }

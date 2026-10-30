@@ -94,6 +94,7 @@ void main() {
       final damage = s.progress.basicDamage;
       var sawCrit = false, sawNormal = false;
       for (var i = 0; i < 80; i++) {
+        s.tick(BattleText.streamInterval + .001);
         s.hero.attackClock = s.hero.castLock = 0;
         final hp = enemy.life.value;
         s.hero.slash();
