@@ -1,0 +1,11 @@
+{
+    "source": "reference-battle-buttons-original.png",
+    "method": "Generated dark fantasy buttons; alpha bounds measured independently and centered in square cells.",
+    "buttons": ["sword", "settings", "bag", "journal"],
+    "sourceRects": [
+        [23, 84, 524, 585],
+        [565, 84, 1065, 585],
+        [1108, 84, 1608, 585],
+        [1650, 84, 2151, 585]
+    ]
+}

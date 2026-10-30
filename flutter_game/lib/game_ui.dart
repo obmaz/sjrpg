@@ -195,9 +195,9 @@ class _HeroStatusChrome extends CustomPainter {
     final plate = Path()
       ..moveTo(portraitSide - 16, 1)
       ..lineTo(size.width, 1)
-      ..lineTo(size.width - 12, 23)
-      ..lineTo(size.width - 5, 44)
-      ..lineTo(size.width - 18, 66)
+      ..lineTo(size.width - 11, 23)
+      ..lineTo(size.width - 14, 44)
+      ..lineTo(size.width - 24, 66)
       ..lineTo(portraitSide - 16, 66)
       ..close();
     canvas.drawPath(
@@ -210,13 +210,13 @@ class _HeroStatusChrome extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.4
-        ..color = const Color(0xff71604b),
+        ..color = const Color(0xff6e6355),
     );
     canvas.drawLine(
       Offset(portraitSide - 3, 23),
       Offset(size.width - 13, 23),
       Paint()
-        ..color = const Color(0xffbd9e72)
+        ..color = const Color(0xff897a64)
         ..strokeWidth = .7,
     );
     final portrait = Rect.fromLTWH(1, 8, portraitSide, portraitSide);
@@ -1948,6 +1948,31 @@ class DodgeActionPainter extends CustomPainter {
   bool shouldRepaint(covariant DodgeActionPainter old) => old.art != art;
 }
 
+/// Framed illustrations packed from their measured source bounds.
+class ReferenceBattleButtonPainter extends CustomPainter {
+  const ReferenceBattleButtonPainter(this.art, this.index);
+  final GameArt art;
+  final int index;
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (!art.effects.draw(
+      canvas,
+      'reference-battle-buttons',
+      index,
+      Offset.zero & size,
+      columns: 4,
+      rows: 1,
+      inset: 0,
+    )) {
+      CinematicIconArt.draw(canvas, art, 0, Offset.zero & size);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant ReferenceBattleButtonPainter old) =>
+      old.art != art || old.index != index;
+}
+
 class IllustratedMenuPainter extends CustomPainter {
   const IllustratedMenuPainter(this.art, this.sprite);
   final GameArt art;
@@ -1961,6 +1986,24 @@ class IllustratedMenuPainter extends CustomPainter {
       'touchSettings' => 3,
       _ => null,
     };
+    final reference = switch (d1) {
+      0 => 2,
+      2 => 3,
+      3 => 1,
+      _ => null,
+    };
+    if (reference != null &&
+        art.effects.draw(
+          canvas,
+          'reference-battle-buttons',
+          reference,
+          Offset.zero & size,
+          columns: 4,
+          rows: 1,
+          inset: 0,
+        )) {
+      return;
+    }
     final cinematic = switch (d1) {
       0 => 4,
       1 => 9,

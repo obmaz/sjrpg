@@ -222,8 +222,7 @@ class HealthMeterPainter extends CustomPainter {
     final edge = math.min(13.0, size.height * .42);
     final shape = Path()
       ..moveTo(0, 1)
-      ..lineTo(size.width - edge, 1)
-      ..lineTo(size.width - 1, size.height / 2)
+      ..lineTo(size.width - 1, 1)
       ..lineTo(size.width - edge, size.height - 1)
       ..lineTo(0, size.height - 1)
       ..close();
@@ -273,43 +272,22 @@ class HealthMeterPainter extends CustomPainter {
       shape,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 3.2
-        ..color = const Color(0xff3d3020),
+        ..strokeWidth = 2.4
+        ..color = const Color(0xff201c19),
     );
     final warning = feedback.reading.value.danger != HealthDanger.none;
     canvas.drawPath(
       shape,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.8
+        ..strokeWidth = 1
         ..color = warning
             ? Color.lerp(
                 const Color(0xffad6b54),
                 const Color(0xffe0a177),
                 feedback.pulse,
               )!
-            : const Color(0xffe0c58c),
-    );
-    final ornament = Paint()
-      ..color = const Color(0xffe6ce94)
-      ..strokeWidth = 1;
-    canvas.drawLine(
-      const Offset(4, 3),
-      Offset(size.width - edge - 4, 3),
-      ornament,
-    );
-    canvas.drawLine(
-      Offset(4, size.height - 3),
-      Offset(size.width - edge - 4, size.height - 3),
-      ornament..color = const Color(0xff8b6639),
-    );
-    final jewel = Offset(size.width - edge - 4, size.height / 2);
-    canvas.drawCircle(jewel, 3.3, Paint()..color = const Color(0xff3a2720));
-    canvas.drawCircle(
-      jewel,
-      1.9,
-      Paint()
-        ..color = warning ? const Color(0xffff7154) : const Color(0xffffd887),
+            : const Color(0xff8e8069),
     );
   }
 

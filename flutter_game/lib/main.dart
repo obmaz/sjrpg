@@ -857,6 +857,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         final landscapeControls = landscape;
         final tightLandscape = landscapeControls && width < 700;
         final sideGuide = landscapeControls || width >= 600;
+        final rightPotions = landscape && media.size.height >= 380;
         final portraitFan =
             !landscape && width >= 360 && media.size.height >= 500;
         final referenceControls = landscape && width >= 500
@@ -1238,7 +1239,10 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                                         ),
                                 )
                               : CustomPaint(
-                                  painter: CinematicIconPainter(widget.art, 0),
+                                  painter: ReferenceBattleButtonPainter(
+                                    widget.art,
+                                    0,
+                                  ),
                                 ),
                         ),
                         if (peacefulAttack)
@@ -1465,12 +1469,17 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   ),
                 ),
               Positioned(
-                left: referenceControls != null
+                left: rightPotions
+                    ? null
+                    : referenceControls != null
                     ? 14
                     : short && width >= 500
                     ? 136
                     : 14,
-                top: referenceControls != null
+                right: rightPotions ? 8 : null,
+                top: rightPotions
+                    ? null
+                    : referenceControls != null
                     ? media.padding.top +
                           math.max(
                             110,
@@ -1488,75 +1497,16 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                               : guide != null
                               ? 164
                               : 110),
-                bottom: tightLandscape && referenceControls == null
+                bottom: rightPotions
+                    ? referenceControls!.bottom +
+                          referenceControls.attackSize +
+                          referenceControls.smallSize +
+                          10
+                    : tightLandscape && referenceControls == null
                     ? math.max(8, media.padding.bottom) + 58
                     : null,
                 child: PotionBelt(adventure, onUse: restoreGameFocus),
               ),
-              if (referenceControls != null &&
-                  media.size.height >= 380 &&
-                  guide == null &&
-                  !adventure.sheltered)
-                Positioned(
-                  left: 10,
-                  top:
-                      media.padding.top +
-                      math.max(
-                        math.max(
-                              110,
-                              16 +
-                                  battlePortraitDiameter(media.size) +
-                                  8 +
-                                  28 +
-                                  4,
-                            ) +
-                            52,
-                        media.size.height * .30,
-                      ),
-                  width: (media.size.width * .22).clamp(170, 270),
-                  child: Semantics(
-                    button: true,
-                    label: '현재 의뢰 · ${adventure.mainQuestNext}',
-                    child: GestureDetector(
-                      onTap: () => open('journal'),
-                      child: Container(
-                        padding: const EdgeInsets.fromLTRB(10, 7, 9, 7),
-                        decoration: const BoxDecoration(
-                          color: Color(0xb3191b1a),
-                          border: Border(
-                            left: BorderSide(color: gold, width: 3),
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              adventure.stageContract?.title ?? '현재 의뢰',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: gold,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              adventure.mainQuestNext,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: cream,
-                                fontSize: 11,
-                                height: 1.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
               if (guide != null)
                 Positioned(
                   left: sideGuide ? 136 : 12,
@@ -1596,8 +1546,14 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   (landscape && width >= 700 ||
                       !short && media.size.height >= 700))
                 Positioned(
-                  left: landscape ? 152 : 14,
-                  top: media.padding.top + (landscape ? 116 : 170),
+                  left: landscape && !rightPotions ? 152 : 14,
+                  top:
+                      media.padding.top +
+                      (landscape && rightPotions
+                          ? math.max(110, media.size.height * .30)
+                          : landscape
+                          ? 116
+                          : 170),
                   width: 220,
                   height: math.max(
                     landscape ? 44 : 58,

@@ -204,7 +204,7 @@ class _ResourcePainter extends CustomPainter {
   final _frame = Paint()
     ..style = PaintingStyle.stroke
     ..strokeWidth = 1
-    ..color = const Color(0xff8c8a60);
+    ..color = const Color(0xff726b60);
   final _empty = Paint()..color = const Color(0xff102426);
 
   void release() {
@@ -247,7 +247,7 @@ class _ResourcePainter extends CustomPainter {
     if (size.width <= 2 || size.height <= 2) return;
     final outer = RRect.fromRectAndRadius(
       (Offset.zero & size).deflate(.5),
-      const Radius.circular(4),
+      const Radius.circular(1),
     );
     final inner = Rect.fromLTWH(1, 1, size.width - 2, size.height - 2);
     canvas.drawRRect(outer, _empty);
@@ -290,7 +290,7 @@ class _ResourcePainter extends CustomPainter {
         ..close();
       canvas.save();
       canvas.clipRRect(
-        RRect.fromRectAndRadius(inner, const Radius.circular(3)),
+        RRect.fromRectAndRadius(inner, const Radius.circular(1)),
       );
       canvas.clipRect(
         Rect.fromLTWH(inner.left, inner.top, fillWidth, inner.height),

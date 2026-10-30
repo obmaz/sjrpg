@@ -88,6 +88,7 @@ class GameArt {
     'combat-actions',
     'd1-interface',
     'cinematic-interface',
+    'reference-battle-buttons',
     'mount-skill-icons',
     'actors-cinematic-goblin',
     'actors-cinematic-wolf',
