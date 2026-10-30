@@ -260,7 +260,10 @@ void main() {
         pulse.update(.05);
       }
       expect(pulse.pulses, 3);
-      expect(mob.life.value, closeTo(life - pulse.damage * 3, .001));
+      expect(
+        mob.life.value,
+        closeTo(life - mob.power.mitigate(pulse.damage) * 3, .001),
+      );
       s.progress.awardSkillResetTicket(WorldStage.forest);
       expect(s.resetSkills(), true);
       expect(s.hero.spin, 0);

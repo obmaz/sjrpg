@@ -3,15 +3,15 @@ import 'dart:ui' as ui;
 
 import 'effect_atlas.dart';
 
-enum CombatIllustration { blade, cold, lightning }
+enum CombatIllustration { blade, cold, lightning, fire }
 
 /// Generated keyframes enrich the live weapon paths and elemental particles.
 /// At most two texture samples are blended; this never owns a gameplay clock.
 abstract final class IllustratedCombatArt {
   static const imageKey = 'combat-illustrations';
   static final _body = ui.RRect.fromRectAndRadius(
-    const ui.Rect.fromLTRB(-30, -117, 30, -5),
-    const ui.Radius.circular(11),
+    const ui.Rect.fromLTRB(-15, -64, 15, -8),
+    const ui.Radius.circular(10),
   );
   static final _clip = ui.Path();
 
@@ -42,6 +42,18 @@ abstract final class IllustratedCombatArt {
     }.contains(id)) {
       return CombatIllustration.lightning;
     }
+    if (const {
+      'firebolt',
+      'fireball',
+      'inferno',
+      'meteor',
+      'firewall',
+      'blaze',
+      'hydra',
+      'enchant',
+    }.contains(id)) {
+      return CombatIllustration.fire;
+    }
     return CombatIllustration.blade;
   }
 
@@ -70,13 +82,14 @@ abstract final class IllustratedCombatArt {
       return false;
     }
     final r = radius.clamp(16.0, 160.0), t = progress;
-    final phase = t * 3, index = phase.floor(), blend = phase - phase.floor();
     final alpha =
         opacity.clamp(0.0, 1.0) *
         math.min(1.0, t * 14) *
         math.min(1.0, (1 - t) / .25);
-    final row = family.index * 4;
-    final side = r * 2.5;
+    // An authored effect expands without rotating its ground projection.
+    // Two closely spaced scales form a short luminous afterimage.
+    final growth = .55 + .5 * (1 - math.pow(1 - t, 2));
+    final side = r * 3.15 * growth;
     canvas.save();
     try {
       canvas.translate(center.dx, center.dy);
@@ -95,27 +108,26 @@ abstract final class IllustratedCombatArt {
         width: side,
         height: side,
       );
-      final inset = atlas.images[imageKey]!.width / 4 * .04;
       atlas.draw(
         canvas,
         imageKey,
-        row + index,
-        rect,
-        inset: inset,
-        opacity: alpha * (1 - blend),
-        colorFilter: null,
+        family.index,
+        rect.inflate(side * .025),
+        columns: 2,
+        rows: 2,
+        inset: 0,
+        opacity: alpha * .18,
       );
-      if (blend > 0 && index < 3) {
-        atlas.draw(
-          canvas,
-          imageKey,
-          row + index + 1,
-          rect,
-          inset: inset,
-          opacity: alpha * blend,
-          colorFilter: null,
-        );
-      }
+      atlas.draw(
+        canvas,
+        imageKey,
+        family.index,
+        rect,
+        columns: 2,
+        rows: 2,
+        inset: 0,
+        opacity: alpha * .86,
+      );
     } finally {
       canvas.restore();
     }
@@ -144,9 +156,11 @@ abstract final class IllustratedCombatArt {
     return atlas.draw(
       canvas,
       imageKey,
-      14,
+      CombatIllustration.fire.index,
       ui.Rect.fromCircle(center: center, radius: r),
-      inset: image.width / 4 * .12,
+      columns: 2,
+      rows: 2,
+      inset: 0,
       opacity: math.sin(progress * math.pi) * .85,
     );
   }

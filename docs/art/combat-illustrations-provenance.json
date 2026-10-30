@@ -5,8 +5,6 @@
     "generatedSource": "exec-53bb30df-5dee-461d-ad58-5dba40c1a9a9.png",
     "original": "docs/art/combat-illustrations-original.png",
     "originalSha256": "1e370eca65f9e6534b919f4364f43053ba6c15938d568b616ae000d1e2f3f8cf",
-    "runtime": "flutter_game/art/combat-illustrations.webp",
-    "runtimeSha256": "7830425545459c382de92cc4c831bc4663b57cbcad0f6ad9e0bacef5f7d58b37",
     "imageSize": [1024, 1024],
     "decodedRGBABytes": 4194304,
     "columns": 4,
@@ -96,5 +94,9 @@
             "sourceRect": [940, 940, 1254, 1254],
             "outputRect": [768, 768, 256, 256]
         }
-    ]
+    ],
+    "archived": true,
+    "supersededBy": "docs/art/cinematic-combat-vfx-provenance.json",
+    "historicalRuntime": "flutter_game/art/combat-illustrations.webp",
+    "historicalRuntimeSha256": "7830425545459c382de92cc4c831bc4663b57cbcad0f6ad9e0bacef5f7d58b37"
 }

@@ -231,7 +231,14 @@ void main() {
     final migrated = (cp.data['enemies'] as List).single as Map;
     expect(
       migrated['maxHp'],
-      closeTo(40 * (migrated['power']['health'] as num), .000001),
+      closeTo(
+        HuntEnemy.maximumHealthFor(
+          'goblin',
+          boss: false,
+          power: EnemyPowerSave.fromSave(migrated['power']),
+        ),
+        .000001,
+      ),
     );
     expect((migrated['hp'] as num) / (migrated['maxHp'] as num), .25);
     expect(

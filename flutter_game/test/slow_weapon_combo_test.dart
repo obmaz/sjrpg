@@ -42,9 +42,10 @@ void main() {
         s.holdAttack('touch:combo', false);
         expect(poses, [1, 2, 0]);
         expect(damage.length, 3);
-        expect(damage[0], closeTo(p.basicDamage, .000001));
-        expect(damage[1], closeTo(p.basicDamage, .000001));
-        expect(damage[2], closeTo(p.basicDamage, .000001));
+        final expectedDamage = target.power.mitigate(p.basicDamage);
+        expect(damage[0], closeTo(expectedDamage, .000001));
+        expect(damage[1], closeTo(expectedDamage, .000001));
+        expect(damage[2], closeTo(expectedDamage, .000001));
         // Held input cannot bank a finisher, even for the slower debuffed weapon.
         // Waiting past the interval starts another ordinary opening strike.
         var idle = s.hero.attackClock + 1.2;
@@ -57,7 +58,7 @@ void main() {
         final before = target.life.value;
         s.hero.slash();
         expect(s.hero.strikePose, 1);
-        expect(target.life.value, closeTo(before - p.basicDamage, .000001));
+        expect(target.life.value, closeTo(before - expectedDamage, .000001));
       },
     );
   }

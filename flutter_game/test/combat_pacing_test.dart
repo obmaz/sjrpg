@@ -149,12 +149,13 @@ void main() {
         PlayerStatus.poison,
         potency: enemy.outgoingDamage(1),
       );
-      expect(s.afflictions.poisonPotency, closeTo(1.2, .000001));
+      final potency = 1.2 * enemy.power.damageMultiplier;
+      expect(s.afflictions.poisonPotency, closeTo(potency, .000001));
       final before = s.progress.hp;
       s.tick(.9);
       expect(
         s.progress.hp,
-        closeTo(before - s.progress.mitigate(2.4), .000001),
+        closeTo(before - s.progress.mitigate(2 * potency), .000001),
       );
       s.afflictions.clear();
       s.afflictions.apply(PlayerStatus.poison, potency: 1.1);

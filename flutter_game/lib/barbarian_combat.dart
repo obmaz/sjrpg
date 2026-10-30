@@ -491,7 +491,14 @@ class BarbarianCombatVisual extends GameComponent with EffectVisibility {
   final bool axeImpact, contactImpact;
   double remaining = .32;
   @override
-  ui.Rect get effectBounds => art.bounds(position.toOffset(), radius);
+  ui.Rect get effectBounds => art
+      .bounds(position.toOffset(), radius)
+      .expandToInclude(
+        ui.Rect.fromCircle(
+          center: position.toOffset(),
+          radius: math.min(160, radius) * 1.8,
+        ),
+      );
   @override
   void update(double dt) {
     if (revision != session.buildRevision || session.disposed) {

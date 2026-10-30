@@ -1,0 +1,47 @@
+{
+    "generator": "image_gen",
+    "packer": "tools/prepare-cinematic-combat-vfx.py",
+    "runtime": "flutter_game/art/combat-illustrations.webp",
+    "imageSize": [1024, 1024],
+    "decodedRGBABytes": 4194304,
+    "columns": 2,
+    "rows": 2,
+    "minimumTransparentPadding": 24,
+    "camera": "elevated quarter-view ground ellipses; upper-left light",
+    "animation": "live expansion, short afterimage and fade with existing particles and directional trails",
+    "atlasSha256": "47ff46f1eb56914f1064d0feea3cfeb06e10c039312254d461e0fb24773d6c71",
+    "frames": [
+        {
+            "family": "blade",
+            "generatedSource": "exec-3c790bab-e127-45cb-b45f-a0353ef43eca.png",
+            "source": "cinematic-combat-blade-original.png",
+            "sourceSha256": "719ccdb6d22d28c6508ad19c727afef085a9eba3e6091932739778c38252abc8",
+            "sourceRect": [37, 172, 1519, 871],
+            "packedRect": [24, 146, 464, 219]
+        },
+        {
+            "family": "cold",
+            "generatedSource": "exec-461fec54-b5e2-4ec1-9044-51e5c811d221.png",
+            "source": "cinematic-combat-cold-original.png",
+            "sourceSha256": "b3ec300a4d7feb67235256d2c70fbed61cc203138f159db25823479b4a269a8d",
+            "sourceRect": [101, 133, 1440, 882],
+            "packedRect": [536, 126, 464, 260]
+        },
+        {
+            "family": "lightning",
+            "generatedSource": "exec-b8486ed5-b1cb-44a4-91aa-9e9871aa86e9.png",
+            "source": "cinematic-combat-lightning-original.png",
+            "sourceSha256": "526684f0cd531dcfe5dd6dda579d5fd36c6d7754c2db94f2635dbe4124715529",
+            "sourceRect": [86, 167, 1590, 830],
+            "packedRect": [24, 665, 464, 205]
+        },
+        {
+            "family": "fire",
+            "generatedSource": "exec-746f80f0-c67b-42f0-93d0-7915b7e4dbd0.png",
+            "source": "cinematic-combat-fire-original.png",
+            "sourceSha256": "ade67594547fe5b3a1f99600c2ad97aae8007e412eedef4f52325663328253f5",
+            "sourceRect": [32, 87, 1498, 912],
+            "packedRect": [536, 637, 464, 261]
+        }
+    ]
+}

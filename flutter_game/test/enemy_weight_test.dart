@@ -231,8 +231,8 @@ void main() {
     final lightHp = light.life.value, heavyHp = heavy.life.value;
     s.hit(light, 2, const Offset(42, 0));
     s.hit(heavy, 2, const Offset(42, 0));
-    expect(light.life.value, lightHp - 2);
-    expect(heavy.life.value, heavyHp - 2);
+    expect(light.life.value, lightHp - light.power.mitigate(2));
+    expect(heavy.life.value, heavyHp - heavy.power.mitigate(2));
     expect(light.body.left, lightStart);
     expect(heavy.body.left, heavyStart);
     for (var i = 0; i < 20; i++) {

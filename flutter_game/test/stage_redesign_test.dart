@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/area_damage.dart';
 import 'package:guardian_new/battle_effects.dart';
+import 'package:guardian_new/enemy_difficulty.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/sorceress_combat.dart';
@@ -212,33 +213,28 @@ void main() {
   );
   test('normal, elite and boss life use the current reduced baseline', () {
     final s = session();
+    for (final (kind, x, base) in [
+      ('goblin', 6050.0, 44.8),
+      ('wolf', 6100.0, 60.8),
+      ('skeleton', 6150.0, 83.2),
+    ]) {
+      final enemy = s.spawnEnemy(kind, Offset(x, 4200))!;
+      expect(
+        enemy.life.max,
+        closeTo(base * enemy.power.healthMultiplier, .000001),
+      );
+    }
+    final elite = s.spawnEnemy(
+      'goblin',
+      const Offset(6200, 4200),
+      trait: EnemyTrait.armored,
+    )!;
     expect(
-      s.spawnEnemy('goblin', const Offset(6050, 4200))!.life.max,
-      closeTo(22.4, .000001),
+      elite.life.max,
+      closeTo(44.8 * 1.8 * elite.power.healthMultiplier, .001),
     );
-    expect(
-      s.spawnEnemy('wolf', const Offset(6100, 4200))!.life.max,
-      closeTo(30.4, .000001),
-    );
-    expect(
-      s.spawnEnemy('skeleton', const Offset(6150, 4200))!.life.max,
-      closeTo(41.6, .000001),
-    );
-    expect(
-      s
-          .spawnEnemy(
-            'goblin',
-            const Offset(6200, 4200),
-            trait: EnemyTrait.armored,
-          )!
-          .life
-          .max,
-      closeTo(22.4 * 1.8, .001),
-    );
-    expect(
-      s.spawnEnemy('golem', const Offset(6300, 4200), boss: true)!.life.max,
-      2880,
-    );
+    final boss = s.spawnEnemy('golem', const Offset(6300, 4200), boss: true)!;
+    expect(boss.life.max, closeTo(2880 * boss.power.healthMultiplier, .000001));
   });
   test('moving cannot bypass the finite spawn interval or active pack cap', () {
     final s = session();
@@ -360,8 +356,14 @@ void main() {
       data.remove('riding');
       data['boss'] = {'x': 6100.0, 'y': 4200.0, 'hp': 900.0, 'maxHp': 1800.0};
       final migrated = GameCheckpoint.decode(jsonEncode(data))!;
-      expect(migrated.data['boss']['hp'], 1440);
-      expect(migrated.data['boss']['maxHp'], 2880);
+      final power = EnemyPower.atDistance(
+        stage: WorldStage.forest,
+        distance: 0,
+        boss: true,
+      );
+      final maximum = 2880 * power.healthMultiplier;
+      expect(migrated.data['boss']['maxHp'], closeTo(maximum, .000001));
+      expect(migrated.data['boss']['hp'], closeTo(maximum * .5, .000001));
       expect(
         GameCheckpoint.decode(migrated.encode())!.data['boss'],
         migrated.data['boss'],

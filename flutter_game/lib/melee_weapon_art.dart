@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'effect_atlas.dart';
+import 'illustrated_combat_art.dart';
 import 'weapon_profiles.dart';
 
 /// Weapon trails are presentation only. Neither the timing model nor damage
@@ -15,9 +17,23 @@ void paintMeleeWeaponSwing(
   required int pose,
   required int rank,
   bool finisher = false,
+  EffectAtlas? atlas,
 }) {
   final t = phase.clamp(0.0, 1.0), fade = 1 - phase.clamp(0.0, 1.0);
   if (fade <= 0 || !reach.isFinite || reach <= 0) return;
+  if (atlas != null) {
+    IllustratedCombatArt.sequence(
+      atlas,
+      canvas,
+      CombatIllustration.blade,
+      center,
+      progress: t,
+      radius: (reach * .5).clamp(38, 88).toDouble(),
+      bearing: bearing,
+      opacity: finisher ? .95 : .75,
+      protectBody: true,
+    );
+  }
   final radius = reach * .58;
   final silver = const ui.Color(0xffc9edf2),
       amber = const ui.Color(0xffffce83),

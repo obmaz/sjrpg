@@ -4,6 +4,8 @@ import hashlib
 import json
 import math
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 from PIL import Image
 import numpy as np
@@ -117,15 +119,13 @@ def main():
                     rects.append(box)
             save(atlas,'cinematic-interface'); record={'sourceRects':rects}
         elif name=='vfx':
-            atlas=Image.new('RGBA',(1536,1536)); rects=[]
-            for r in range(4):
-                for c in range(4):
-                    region=(c*image.width//4,r*image.height//4,(c+1)*image.width//4,(r+1)*image.height//4)
-                    box=bounds(image,region); tile=image.crop(box)
-                    tile.thumbnail((352,352),Image.Resampling.LANCZOS)
-                    atlas.alpha_composite(tile,(c*384+(384-tile.width)//2,r*384+(384-tile.height)//2))
-                    rects.append(box)
-            save(atlas,'combat-illustrations'); record={'sourceRects':rects}
+            # Preserve the earlier source, but never restore its superseded
+            # 4x4 layout over the current, isolated 2x2 runtime atlas.
+            subprocess.run([
+                sys.executable, str(ROOT / 'tools/prepare-cinematic-combat-vfx.py'),
+            ], check=True)
+            record={'archived':True,
+                    'supersededBy':'docs/art/cinematic-combat-vfx-provenance.json'}
         else:
             record=actor(image,name)
         record.update({'source':str(original.relative_to(ROOT)),

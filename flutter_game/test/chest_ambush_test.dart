@@ -136,7 +136,14 @@ void main() {
       for (var i = 0; i < 26; i++) {
         enemy.update(.05);
       }
-      expect(s.progress.hp, closeTo(hp - s.progress.mitigate(7.2), .001));
+      expect(
+        enemy.outgoingDamage(6),
+        closeTo(7.2 * enemy.power.damageMultiplier, .000001),
+      );
+      expect(
+        s.progress.hp,
+        closeTo(hp - s.progress.mitigate(enemy.outgoingDamage(6)), .001),
+      );
       expect(enemy.body.overlaps(s.hero.body), false);
       expect(enemy.pounceRemaining, 0);
       expect(enemy.attackClock, greaterThan(2));

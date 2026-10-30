@@ -1244,7 +1244,10 @@ class SorceressFlash extends SorceressEffect {
   final List<ui.Offset>? points;
   @override
   ui.Rect get effectBounds => points == null
-      ? ui.Rect.fromCircle(center: position.toOffset(), radius: radius + 35)
+      ? ui.Rect.fromCircle(
+          center: position.toOffset(),
+          radius: math.max(radius + 35, math.min(160, radius) * 1.8),
+        )
       : ui.Rect.fromPoints(
           points!.reduce(
             (a, b) => ui.Offset(math.min(a.dx, b.dx), math.min(a.dy, b.dy)),
@@ -1331,7 +1334,7 @@ class SorceressFlash extends SorceressEffect {
       IllustratedCombatArt.sequence(
         session.art.effects,
         canvas,
-        CombatIllustration.blade,
+        CombatIllustration.fire,
         ui.Offset(math.cos(bearing), math.sin(bearing)) * radius * .35,
         progress: t,
         radius: 28,

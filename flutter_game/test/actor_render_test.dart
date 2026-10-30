@@ -98,7 +98,7 @@ void main() {
       }
       if (originalWidth) {
         canvas.translate(40, 0);
-        canvas.scale(1.36 / GameArt.warriorWidthScale, 1);
+        canvas.scale(1.36 / GameArt.characterWidthScale, 1);
         canvas.translate(-40, 0);
       }
       art.actor(canvas, 'hero', const ui.Offset(40, 40), math.pi / 2, 0, 28);

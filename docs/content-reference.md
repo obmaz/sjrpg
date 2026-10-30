@@ -119,4 +119,6 @@ D1 기술·메뉴·상태 그림은 `docs/art/d1-icons-provenance.json`에 원�
 
 `docs/art/village-ui-original.png`는 image_gen으로 제작한 투명 마을문·메뉴 원본입니다. 참고 이미지의 초록 지붕·목재·석조 마을문과 얇은 청동 원형 테두리의 상자·검 문양 책·퀘스트 두루마리·철제 톱니바퀴를 반영합니다. `tools/prepare-village-ui.py`는 개별 알파 경계를 측정해 `village-gateway.webp`와 `reference-menus.webp`로 패킹하며, 원본 해시·자르기 좌표는 `docs/art/village-ui-provenance.json`에 보존합니다. `docs/art/settlement-forest-open-approach-original.png`는 기존 남문 기둥만 제거한 생성형 배경 원본입니다. 숲 마을 남문은 실제 통과 가능한 남쪽 성벽 틈에 열린 문 그림을 맞추며, 배경에 구형 문이 중복으로 남지 않게 합니다.
 
-현재 전투 HUD·일반 버튼은 `cinematic-interface.webp`의 흑철·청동 원형 그림을 사용합니다. 몬스터 21종은 `actors-cinematic-*`의 새 방향별 원본으로 교체하며 이전 몬스터 시트의 배포 복사본은 제거합니다. 공격의 붉은 금빛·얼음·번개·피격 그림은 `combat-illustrations.webp`의 384px 셀을 사용합니다. 원본과 재현 과정은 [전투 화면 원본](art/cinematic/README.md), 캐릭터의 네이티브 384px 재렌더링은 [캐릭터 동작](art/character-motion.md)을 참고합니다.
+현재 전투 HUD·일반 버튼은 `cinematic-interface.webp`의 흑철·청동 원형 그림을 사용합니다. 몬스터 21종은 `actors-cinematic-*`의 새 방향별 원본으로 교체하며 이전 몬스터 시트의 배포 복사본은 제거합니다. 공격의 검격·얼음·번개·화염 그림은 아래 공통 이펙트 시트를 사용합니다. 원본과 재현 과정은 [전투 화면 원본](art/cinematic/README.md), 캐릭터의 네이티브 384px 재렌더링은 [캐릭터 동작](art/character-motion.md)을 참고합니다.
+
+공통 전투 이펙트 `combat-illustrations.webp`는 검격·냉기·번개·화염을 각각 생성한 투명 원본 네 장을 사용합니다. 원본·측정 경계·해시는 [생성 이펙트 출처](art/cinematic-combat-vfx-provenance.json)에 기록하며, `tools/prepare-cinematic-combat-vfx.py`가 서로 닿지 않는 실제 알파 경계를 검사해 2×2 시트로 준비합니다. 런타임은 팽창·잔상·페이드와 기존 무기 궤적·입자를 조합합니다.

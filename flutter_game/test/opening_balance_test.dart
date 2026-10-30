@@ -54,7 +54,10 @@ void main() {
       }
     }
     for (final stage in WorldStage.values) {
-      final near = EnemyPower.atDistance(stage: stage, distance: 1000);
+      final near = EnemyPower.atDistance(
+        stage: stage,
+        distance: CombatBalance.nearTownRadius - .001,
+      );
       final edge = EnemyPower.atDistance(
         stage: stage,
         distance: CombatBalance.nearTownRadius + .001,

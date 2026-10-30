@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/battle_effects.dart';
 import 'package:guardian_new/boss_attacks.dart';
+import 'package:guardian_new/enemy_difficulty.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/world_model.dart';
 import 'support/test_game.dart';
@@ -107,6 +108,9 @@ void main() {
       '$stage resolves one damage event and a new phase cannot change a warning already shown',
       () {
         final s = inCombatField(Adventure(GameArt(), stage: stage));
+        // Late-chapter bosses must not kill the warning/phase test fixture.
+        s.progress.level = EnemyPower.maximumLevel(stage);
+        s.progress.hp = s.progress.maxHp;
         final game = TestGame();
         s.start(game);
         addTearDown(s.dispose);

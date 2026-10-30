@@ -40,12 +40,10 @@ class GameArt {
   final _bossMesh = BossSpriteMeshPainter();
   final _walkMesh = BossSpriteMeshPainter(imageLimit: 12, uvLimit: 128);
   final _mountMesh = MountSpriteMeshPainter();
-  static const heroWidthScale = 1.36,
-      warriorWidthScale = 1.08,
-      heroHeightScale = 1.0;
+  static const characterWidthScale = 1.08, heroHeightScale = 1.0;
 
   /// Presentation only; collision footprints and weapon reach stay in world units.
-  static const warriorRenderScale = 1.18;
+  static const characterBodyScale = 1.18;
   static const characterRenderScale = .8;
   late final _actorPaint = ui.Paint()..filterQuality = ui.FilterQuality.low;
   late final _rollPaint = ui.Paint()..filterQuality = ui.FilterQuality.medium;
@@ -839,18 +837,11 @@ class GameArt {
     final frame = atlas.frames[index];
     final scale = height / atlas.heights[definition.$2], src = frame.source;
     final hero = key == 'hero' || key == 'mage';
-    final warriorScale = hero
-        ? characterRenderScale * (key == 'hero' ? warriorRenderScale : 1.0)
+    final characterScale = hero
+        ? characterRenderScale * characterBodyScale
         : 1.0;
-    final scaleX =
-        scale *
-        (key == 'hero'
-            ? warriorWidthScale
-            : hero
-            ? heroWidthScale
-            : 1) *
-        warriorScale;
-    final scaleY = scale * (hero ? heroHeightScale : 1) * warriorScale;
+    final scaleX = scale * (hero ? characterWidthScale : 1) * characterScale;
+    final scaleY = scale * (hero ? heroHeightScale : 1) * characterScale;
     final dst = ui.Rect.fromLTWH(
       feet.dx - frame.anchor.dx * scaleX,
       feet.dy - frame.anchor.dy * scaleY,
@@ -926,15 +917,14 @@ class GameArt {
         43 /
         atlas.heights[mage ? 1 : 0] *
         characterRenderScale *
-        (mage ? 1 : warriorRenderScale);
+        characterBodyScale;
     canvas.drawImageRect(
       images['actors-roll']!,
       src,
       ui.Rect.fromLTWH(
-        feet.dx -
-            anchor.dx * scale * (mage ? heroWidthScale : warriorWidthScale),
+        feet.dx - anchor.dx * scale * characterWidthScale,
         feet.dy - anchor.dy * scale * heroHeightScale,
-        src.width * scale * (mage ? heroWidthScale : warriorWidthScale),
+        src.width * scale * characterWidthScale,
         src.height * scale * heroHeightScale,
       ),
       _rollPaint,

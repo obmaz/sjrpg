@@ -572,6 +572,8 @@ class GameCheckpoint {
         }
         final isBoss = identical(raw, boss);
         final legacy = raw['power'] == null;
+        final regional =
+            !legacy && (raw['power'] is Map) && raw['power']['version'] == null;
         final oldTrait = isBoss
             ? EnemyTrait.none
             : EnemyTrait.values.firstWhere((t) => t.name == raw['trait']);
@@ -587,22 +589,37 @@ class GameCheckpoint {
                 oldTrait != EnemyTrait.none) {
           return null;
         }
-        final power = legacy
-            ? EnemyPower.forSpawn(
+        final previousPower = legacy
+            ? null
+            : EnemyPowerSave.fromSave(raw['power']);
+        final power = legacy || regional
+            ? EnemyPower.atDistance(
                 stage: stage,
-                origin: hubOrigin,
-                at: Offset(
-                  (raw['x'] as num).toDouble(),
-                  (raw['y'] as num).toDouble(),
-                ),
+                distance:
+                    previousPower?.spawnDistance ??
+                    (Offset(
+                              ((raw['homeX'] ?? raw['x']) as num).toDouble(),
+                              ((raw['homeY'] ?? raw['y']) as num).toDouble(),
+                            ) -
+                            hubOrigin)
+                        .distance,
                 tier: tier,
                 boss: isBoss,
+                kind: isBoss ? stage.bossActor : raw['kind'] as String,
               )
-            : EnemyPowerSave.fromSave(raw['power']);
-        if (legacy) {
-          raw['hp'] = (raw['hp'] as num) * power.healthMultiplier;
-          raw['maxHp'] = (raw['maxHp'] as num) * power.healthMultiplier;
+            : previousPower!;
+        if (legacy || regional) {
+          final ratio = (raw['hp'] as num) / (raw['maxHp'] as num);
+          final maximum = HuntEnemy.maximumHealthFor(
+            isBoss ? stage.bossActor : raw['kind'] as String,
+            boss: isBoss,
+            trait: oldTrait,
+            power: power,
+          );
+          raw['maxHp'] = maximum;
+          raw['hp'] = maximum * ratio;
         }
+        if (power.level > EnemyPower.maximumLevel(stage)) return null;
         raw['power'] = power.toSave();
         if (!isBoss) {
           raw['tier'] = tier.name;

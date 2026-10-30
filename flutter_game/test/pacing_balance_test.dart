@@ -54,36 +54,38 @@ void main() {
       }
     },
   );
-  test('ordinary, elite and boss health is 80 percent of the old formula', () {
-    for (final level in [1, 20]) {
-      final s = Adventure(GameArt())..start(TestGame());
-      addTearDown(s.dispose);
-      s.progress.level = level;
-      s.mobs.clear();
-      for (final (kind, boss, trait, x) in [
-        ('goblin', false, EnemyTrait.none, 6000.0),
-        ('wolf', false, EnemyTrait.armored, 6100.0),
-        ('golem', true, EnemyTrait.none, 6200.0),
-      ]) {
-        final mob = s.spawnEnemy(
-          kind,
-          Offset(x, 4200),
-          boss: boss,
-          trait: trait,
-        )!;
-        final old =
-            (boss ? 1800 : enemyCatalog[kind]!.health) *
-            (boss ? 1 : trait.healthScale) *
-            2 *
-            (1 + (level - 1) * (boss ? .15 : .08));
-        expect(
-          mob.life.max,
-          closeTo(old * .8 * mob.power.healthMultiplier, .000001),
-        );
-        expect(mob.life.value, mob.life.max);
+  test(
+    'ordinary, elite and boss health uses species and fixed enemy growth',
+    () {
+      for (final level in [1, 20]) {
+        final s = Adventure(GameArt())..start(TestGame());
+        addTearDown(s.dispose);
+        s.progress.level = level;
+        s.mobs.clear();
+        for (final (kind, boss, trait, x) in [
+          ('goblin', false, EnemyTrait.none, 6000.0),
+          ('wolf', false, EnemyTrait.armored, 6100.0),
+          ('golem', true, EnemyTrait.none, 6200.0),
+        ]) {
+          final mob = s.spawnEnemy(
+            kind,
+            Offset(x, 4200),
+            boss: boss,
+            trait: trait,
+          )!;
+          final old =
+              (boss ? 1800 : enemyCatalog[kind]!.health) *
+              (boss ? 1 : trait.healthScale) *
+              2;
+          expect(
+            mob.life.max,
+            closeTo(old * .8 * mob.power.healthMultiplier, .000001),
+          );
+          expect(mob.life.value, mob.life.max);
+        }
       }
-    }
-  });
+    },
+  );
   for (final oldBalance in [1, 2]) {
     test('balance $oldBalance migrates health ratio and cooldown once', () {
       final s = Adventure(GameArt())..start(TestGame());

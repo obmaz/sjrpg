@@ -8,19 +8,22 @@ import 'package:guardian_new/effect_atlas.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_ui.dart';
 import 'package:guardian_new/illustrated_combat_art.dart';
+import 'package:guardian_new/melee_weapon_art.dart';
 import 'package:guardian_new/rpg_model.dart';
 import 'package:guardian_new/sorceress_combat.dart';
+import 'package:guardian_new/weapon_profiles.dart';
 
 import 'support/sorceress_fixture.dart';
 import 'support/test_game.dart';
 
 Future<({ui.Image image, Uint8List pixels})> _render(
-  void Function(ui.Canvas) draw,
-) async {
+  void Function(ui.Canvas) draw, {
+  int side = 256,
+}) async {
   final recorder = ui.PictureRecorder();
   draw(ui.Canvas(recorder));
   final picture = recorder.endRecording();
-  final image = await picture.toImage(256, 256);
+  final image = await picture.toImage(side, side);
   picture.dispose();
   final data = (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
   return (image: image, pixels: Uint8List.fromList(data.buffer.asUint8List()));
@@ -48,23 +51,41 @@ void main() {
     actionImage.dispose();
   });
 
+  test('fire spells use the generated fire family', () {
+    for (final id in [
+      'firebolt',
+      'fireball',
+      'meteor',
+      'inferno',
+      'firewall',
+      'hydra',
+    ]) {
+      expect(IllustratedCombatArt.family(id), CombatIllustration.fire);
+    }
+    expect(IllustratedCombatArt.family('iceBolt'), CombatIllustration.cold);
+    expect(
+      IllustratedCombatArt.family('lightning'),
+      CombatIllustration.lightning,
+    );
+  });
+
   test(
-    'all16 generated cells have real transparent gutters within9MiB',
+    'four isolated generated originals have transparent gutters within4MiB',
     () async {
-      expect(image.width, 1536);
-      expect(image.height, 1536);
-      expect(image.width * image.height * 4, 9 * 1024 * 1024);
+      expect(image.width, 1024);
+      expect(image.height, 1024);
+      expect(image.width * image.height * 4, 4 * 1024 * 1024);
       final bytes = (await image.toByteData(
         format: ui.ImageByteFormat.rawRgba,
       ))!.buffer.asUint8List();
-      for (var tile = 0; tile < 16; tile++) {
+      for (var tile = 0; tile < 4; tile++) {
         var visible = 0;
-        for (var y = 0; y < 384; y++) {
-          for (var x = 0; x < 384; x++) {
+        for (var y = 0; y < 512; y++) {
+          for (var x = 0; x < 512; x++) {
             final alpha =
-                bytes[((tile ~/ 4 * 384 + y) * 1536 + tile % 4 * 384 + x) * 4 +
+                bytes[((tile ~/ 2 * 512 + y) * 1024 + tile % 2 * 512 + x) * 4 +
                     3];
-            if (x < 16 || y < 16 || x >= 368 || y >= 368) {
+            if (x < 16 || y < 16 || x >= 496 || y >= 496) {
               expect(alpha, 0, reason: 'neighbour cells must never bleed');
             } else if (alpha > 20) {
               visible++;
@@ -121,7 +142,7 @@ void main() {
   );
 
   test(
-    'three families change shape across time and leave the torso visible',
+    'four families change shape across time and leave the torso visible',
     () async {
       final proof = Platform.environment['ILLUSTRATED_COMBAT_PROOF'];
       if (proof != null) await Directory(proof).create(recursive: true);
@@ -272,6 +293,62 @@ void main() {
           after.image.dispose();
           art.images.clear();
         }
+      }
+    },
+  );
+
+  test(
+    'basic sword attacks use the generated glow and retain their directional trail',
+    () async {
+      Future<({ui.Image image, Uint8List pixels})> draw(bool generated) =>
+          _render((c) {
+            paintMeleeWeaponSwing(
+              c,
+              const ui.Offset(128, 140),
+              const WeaponComboProfile('sword', 'crescent'),
+              phase: .42,
+              bearing: 0,
+              reach: 90,
+              pose: 0,
+              rank: 5,
+              atlas: generated ? atlas : null,
+            );
+          });
+      final before = await draw(false), after = await draw(true);
+      expect(after.pixels, isNot(before.pixels));
+      expect(
+        after.pixels.where((a) => a > 20).length,
+        greaterThan(before.pixels.where((a) => a > 20).length * 2),
+      );
+      before.image.dispose();
+      after.image.dispose();
+    },
+  );
+
+  test(
+    'large generated spells remain inside their declared draw envelope',
+    () async {
+      for (final family in CombatIllustration.values) {
+        final result = await _render(
+          (c) => IllustratedCombatArt.sequence(
+            atlas,
+            c,
+            family,
+            const ui.Offset(300, 300),
+            progress: .68,
+            radius: 160,
+            protectBody: true,
+          ),
+          side: 600,
+        );
+        for (var y = 0; y < 600; y++) {
+          for (var x = 0; x < 600; x++) {
+            if ((x - 300).abs() > 160 * 1.8 || (y - 300).abs() > 160 * 1.8) {
+              expect(result.pixels[(y * 600 + x) * 4 + 3], 0);
+            }
+          }
+        }
+        result.image.dispose();
       }
     },
   );

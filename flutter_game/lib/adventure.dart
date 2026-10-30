@@ -1903,10 +1903,12 @@ class Adventure extends ChangeNotifier {
       home: home,
     );
     enemy.life.initial(
-      enemy.life.max *
-          2 *
-          (1 + (progress.level - 1) * (boss ? .15 : .08)) *
-          enemy.power.healthMultiplier,
+      HuntEnemy.maximumHealthFor(
+        kind,
+        boss: boss,
+        trait: enemy.trait,
+        power: enemy.power,
+      ),
     );
     mobs.add(enemy);
     game?.add(enemy);
@@ -2129,6 +2131,7 @@ class Adventure extends ChangeNotifier {
       return false;
     }
     combatTime = 5;
+    damage = mob.power.mitigate(damage);
     damage *=
         (mob.wardActive ? .65 : 1) *
         barbarianUtilities.incomingDamageMultiplier(mob);
@@ -4141,6 +4144,7 @@ class Guardian extends Player with WithCollision {
           pose: strikePose,
           rank: session.progress.rank('cleave'),
           finisher: comboFinisher,
+          atlas: session.art.effects,
         );
       }
     }
@@ -4601,6 +4605,25 @@ class _LocalCrowdIntent {
 }
 
 class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
+  static double baseHealthFor(
+    String kind, {
+    required bool boss,
+    EnemyTrait trait = EnemyTrait.none,
+  }) =>
+      (boss ? 1800 : (enemyCatalog[kind]?.health ?? 52)) *
+      (boss ? 1 : trait.healthScale) *
+      monsterHealthScale;
+
+  static double maximumHealthFor(
+    String kind, {
+    required bool boss,
+    EnemyTrait trait = EnemyTrait.none,
+    required EnemyPower power,
+  }) =>
+      baseHealthFor(kind, boss: boss, trait: trait) *
+      2 *
+      power.healthMultiplier;
+
   HuntEnemy(
     this.session,
     this.kind,
@@ -4620,10 +4643,7 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
        super(
          position: Vector2(at.dx, at.dy),
          size: boss ? Vector2(48, 40) : Vector2(24, 22),
-         life:
-             (boss ? 1800 : (enemyCatalog[kind]?.health ?? 52)) *
-             (boss ? 1 : trait.healthScale) *
-             monsterHealthScale,
+         life: baseHealthFor(kind, boss: boss, trait: trait),
          speed:
              (boss ? 90 : (enemyCatalog[kind]?.speed ?? 105)) *
              (boss ? 1 : trait.speedScale),
@@ -4636,6 +4656,7 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
           at: body.center,
           tier: this.tier,
           boss: boss,
+          kind: kind,
         );
   }
   final Adventure session;
@@ -5905,6 +5926,15 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
         ),
         ui.Paint()..color = isElite ? tierColor : const ui.Color(0xffad2420),
       );
+      if (!boss) {
+        session.art.text(
+          canvas,
+          'Lv.${power.level}',
+          ui.Offset(size.x / 2, y - 13),
+          size: 10,
+          color: const ui.Color(0xffeed9ab),
+        );
+      }
       if (isElite) {
         final at = ui.Offset(size.x / 2 - width / 2 - 8, y + 3);
         canvas.save();
@@ -5961,7 +5991,7 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
         );
         session.art.text(
           canvas,
-          session.world.stage.bossName,
+          'Lv.${power.level} ${session.world.stage.bossName}',
           ui.Offset(size.x / 2, y - 23),
           size: 14,
         );
