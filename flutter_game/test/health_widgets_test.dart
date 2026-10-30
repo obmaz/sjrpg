@@ -18,6 +18,15 @@ import 'package:guardian_new/rpg_widgets.dart';
 import 'support/test_game.dart';
 
 void main() {
+  test('gauge join follows the portrait circle and preserves the live bar', () {
+    const clipper = PortraitGaugeClipper(Offset(0, 15), 35);
+    final clip = clipper.getClip(const Size(180, 20));
+    expect(clip.contains(const Offset(10, 10)), false);
+    expect(clip.contains(const Offset(34, 15)), false);
+    expect(clip.contains(const Offset(36, 15)), true);
+    expect(clip.contains(const Offset(34, 0)), true);
+    expect(clip.contains(const Offset(170, 10)), true);
+  });
   TestWidgetsFlutterBinding.ensureInitialized();
   GameArt? loaded;
   Future<GameArt> art(WidgetTester tester) async =>
@@ -136,7 +145,8 @@ void main() {
         );
         expect(find.text('Lv.${s.progress.level}  전사'), findsOneWidget);
         expect(identity.bottom, lessThanOrEqualTo(health.top));
-        expect(portrait.right, lessThanOrEqualTo(health.left));
+        expect(health.left, lessThan(portrait.right));
+        expect(health.left, greaterThan(portrait.center.dx));
         final xp = tester.getRect(find.byKey(const ValueKey('hud-experience')));
         expect(xp.top, greaterThan(resource.bottom));
         expect(xp.left, health.left);
