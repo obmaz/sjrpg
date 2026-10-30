@@ -352,7 +352,7 @@ class ControlPainter extends CustomPainter {
       center,
       radius,
       Paint()
-        ..color = thumb ? const Color(0xdd3b5755) : const Color(0x77263d37),
+        ..color = thumb ? const Color(0xdd493928) : const Color(0x7756402b),
     );
     canvas.drawCircle(
       center,
@@ -368,7 +368,7 @@ class ControlPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = .7
-        ..color = const Color(0x775e9186),
+        ..color = const Color(0x776b5a43),
     );
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius - .8),
@@ -378,10 +378,10 @@ class ControlPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = .7
-        ..color = const Color(0x99e2d3a9),
+        ..color = const Color(0x99c4a67a),
     );
     if (!thumb) {
-      final mark = Paint()..color = const Color(0xbcc2c39f);
+      final mark = Paint()..color = const Color(0xbcb9a079);
       final tip = radius * .76, half = math.max(4.0, radius * .085);
       for (var i = 0; i < 4; i++) {
         canvas.save();
@@ -406,7 +406,7 @@ class ControlPainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.2
-          ..color = const Color(0x669fbaa8),
+          ..color = const Color(0x66c1a376),
       );
     }
   }
@@ -455,7 +455,10 @@ class MapPainter extends CustomPainter {
     Color color, {
     double? width,
   }) {
-    final solid = Paint()..color = color;
+    final solid = Paint()
+      ..color = round
+          ? Color.lerp(color, const Color(0xff332c24), .38)!
+          : color;
     if (width != null) {
       solid
         ..style = PaintingStyle.stroke
@@ -634,17 +637,6 @@ class MapPainter extends CustomPainter {
         ..strokeWidth = (round ? 18 : 30 * markerScale),
     );
     if (round) {
-      for (final mob in session.mobs) {
-        if (!mob.combatReady || mob.isDead || mob.isRemoving || mob.boss) {
-          continue;
-        }
-        c.drawCircle(
-          mob.body.center,
-          mob.isElite ? 42 : 30,
-          Paint()
-            ..color = mob.isElite ? mob.tierColor : const Color(0xffef785e),
-        );
-      }
       for (var i = 0; i < session.stageChestLocations.length; i++) {
         if (session.openedChests.contains(i)) continue;
         c.drawCircle(session.stageChestLocations[i], 42, Paint()..color = gold);
@@ -696,6 +688,30 @@ class MapPainter extends CustomPainter {
       }
     }
     final heroPoint = project(session.hero.body.center);
+    if (round) {
+      final radius = math.max(1.8, s.shortestSide * .022);
+      for (final mob in session.mobs) {
+        if (!mob.combatReady || mob.isDead || mob.isRemoving || mob.boss) {
+          continue;
+        }
+        final point = project(mob.body.center);
+        if (!view.contains(mob.body.center) ||
+            (point - rect.center).distance > s.shortestSide / 2 - radius - 4) {
+          continue;
+        }
+        c.drawCircle(
+          point,
+          radius + .7,
+          Paint()..color = const Color(0xff511d17),
+        );
+        c.drawCircle(
+          point,
+          radius,
+          Paint()
+            ..color = mob.isElite ? mob.tierColor : const Color(0xffe94430),
+        );
+      }
+    }
     final shopPoint = project(session.world.merchantAt),
         healPoint = project(session.world.healAt);
     final groupServices = (shopPoint - healPoint).distance < 40 * markerScale;
@@ -923,27 +939,55 @@ class MapPainter extends CustomPainter {
       (session.hero.body.center.dx - view.left) / view.width * s.width,
       (session.hero.body.center.dy - view.top) / view.height * s.height,
     );
-    c.drawCircle(
-      hero,
-      round ? 3 : 5 * markerScale,
-      Paint()..color = const Color(0xff9df3ee),
-    );
-    c.drawCircle(
-      hero,
-      round ? 3 : 5 * markerScale,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1
-        ..color = Colors.white,
-    );
+    if (round) {
+      c.save();
+      c.translate(hero.dx, hero.dy);
+      c.rotate(session.hero.bearing);
+      final pointer = Path()
+        ..moveTo(5, 0)
+        ..lineTo(-3.5, -3.5)
+        ..lineTo(-1.8, 0)
+        ..lineTo(-3.5, 3.5)
+        ..close();
+      c.drawPath(pointer, Paint()..color = const Color(0xfff3e8ce));
+      c.drawPath(
+        pointer,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = .8
+          ..color = const Color(0xff43362a),
+      );
+      c.restore();
+    } else {
+      c.drawCircle(
+        hero,
+        5 * markerScale,
+        Paint()..color = const Color(0xff9df3ee),
+      );
+      c.drawCircle(
+        hero,
+        5 * markerScale,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..color = Colors.white,
+      );
+    }
     c.restore();
     if (round) {
       c.drawOval(
-        rect.deflate(2),
+        rect.deflate(1.5),
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5
-          ..color = const Color(0xffa58e67),
+          ..strokeWidth = 3
+          ..color = const Color(0xff3b3025),
+      );
+      c.drawOval(
+        rect.deflate(3),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..color = const Color(0xffa18b68),
       );
     }
   }
