@@ -1121,6 +1121,7 @@ class Adventure extends ChangeNotifier {
       final enemy = spawnEnemy(
         world.stage.usesCityArt ? 'drone' : 'viper',
         safe,
+        reserveSpacing: true,
       );
       if (enemy == null) continue;
       final key = EncounterArea.keyAt(at);
@@ -1449,6 +1450,7 @@ class Adventure extends ChangeNotifier {
         'golem',
         hero.position.toOffset() + const ui.Offset(0, -310),
         boss: true,
+        reserveSpacing: true,
       );
       if (boss != null) bossSummoned = true;
       if (boss != null) {
@@ -1546,6 +1548,7 @@ class Adventure extends ChangeNotifier {
         kind,
         desired,
         trait: trait,
+        reserveSpacing: true,
         tier: unique ? EnemyTier.unique : null,
       );
       if (mob != null) {
@@ -1638,7 +1641,7 @@ class Adventure extends ChangeNotifier {
     final hasOverlap = neighbors.any(
       (other) => original.overlaps(enemySpacing.bodyOf(other)),
     );
-    final enforceSpace = (steer || personalSpace) && !hasOverlap;
+    final enforceSpace = !hasOverlap;
     final heroBody = hero.body;
     final heroInWay = avoidHero && search.overlaps(heroBody);
     final storedPosition = Vector2.zero();
@@ -1826,6 +1829,8 @@ class Adventure extends ChangeNotifier {
     mover.lastClearPosition = at;
   }
 
+  /// New encounters reserve space between visible bodies; restored or
+  /// scripted positions can keep their precise coordinates and settle later.
   HuntEnemy? spawnEnemy(
     String kind,
     ui.Offset desired, {
@@ -1834,9 +1839,17 @@ class Adventure extends ChangeNotifier {
     EnemyTier? tier,
     EnemyPower? power,
     ui.Offset? home,
+    bool reserveSpacing = false,
   }) {
     final size = boss ? const ui.Size(48, 40) : const ui.Size(24, 22);
     final storedPosition = Vector2.zero();
+    final spacing = HuntEnemy.spacingFor(
+      kind,
+      boss: boss,
+      elite:
+          !boss &&
+          (tier != null ? tier != EnemyTier.normal : trait != EnemyTrait.none),
+    );
     final p = world.spawnNear(
       desired,
       size,
@@ -1856,7 +1869,14 @@ class Adventure extends ChangeNotifier {
                   !enemy.isDead &&
                   !enemy.isRemoving &&
                   !enemy.encounterDormant &&
-                  enemy.body.overlaps(storedBody),
+                  (storedBody.overlaps(enemy.body) ||
+                      reserveSpacing &&
+                          HuntEnemy.tooClose(
+                            storedBody.center,
+                            spacing * 1.2,
+                            enemy.body.center,
+                            enemy.personalSpace * 1.2,
+                          )),
             );
       },
     );
@@ -4735,15 +4755,39 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
           ? const ui.Color(0xffbcda75)
           : const ui.Color(0xffefab78));
   int impactPose = 0;
-  ui.Size get personalSpace => boss
+
+  /// Ground-plane personal space gives the visible bodies depth without
+  /// enlarging their terrain collision or changing attack reach.
+  static ui.Size spacingFor(
+    String kind, {
+    required bool boss,
+    required bool elite,
+  }) => boss
       ? const ui.Size(78, 58)
       : kind == 'troll'
       ? const ui.Size(58, 42)
-      : lowProfile
+      : enemyCatalog[kind]?.lowProfile == true
       ? const ui.Size(50, 32)
-      : isElite
+      : elite
       ? const ui.Size(48, 38)
       : const ui.Size(44, 34);
+
+  static bool tooClose(ui.Offset a, ui.Size aSize, ui.Offset b, ui.Size bSize) {
+    final d = a - b;
+    final x = d.dx / ((aSize.width + bSize.width) / 2);
+    final y = d.dy / ((aSize.height + bSize.height) / 2);
+    return x * x + y * y < 1;
+  }
+
+  ui.Size get personalSpace => spacingFor(kind, boss: boss, elite: isElite);
+  static const visualScale = .8;
+  double get visualHeight =>
+      (boss
+          ? 125
+          : isElite
+          ? 76
+          : definition?.renderHeight ?? 62) *
+      visualScale;
   double get idleRange => boss
       ? 64
       : usesBolt
@@ -5746,11 +5790,7 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
           : attackMotion.active
           ? 1
           : motion.phase,
-      boss
-          ? 125
-          : isElite
-          ? 76
-          : definition?.renderHeight ?? 62,
+      visualHeight,
       flash: hurt > .08 ? .75 : 0,
       bossPose: bossPose,
       walkPose:
@@ -5788,12 +5828,10 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
               ? 66.0
               : 54.0,
           y = boss
-              ? -170.0
+              ? -136.0
               : lowProfile
-              ? size.y / 2 -
-                    (isElite ? 76 : definition!.renderHeight) * .75 -
-                    14
-              : -88.0;
+              ? size.y / 2 - visualHeight * .75 - 14
+              : -70.4;
       canvas.drawRRect(
         ui.RRect.fromRectAndRadius(
           ui.Rect.fromLTWH(size.x / 2 - width / 2, y, width, 6),

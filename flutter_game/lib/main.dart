@@ -1648,34 +1648,57 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   ),
                 ),
               ),
-              Positioned(
-                left: landscape ? null : 0,
-                right: landscape ? battleMapDiameter(media.size) + 16 : 0,
-                top: landscape ? media.padding.top + 6 : null,
-                bottom: landscape ? null : math.max(8, media.padding.bottom),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (!landscape) _menu('touchInventory', '가방', 'bag'),
-                    _menu('touchQuests', '스킬', 'skills', compact: landscape),
-                    _menu(
-                      'touchCompendium',
-                      '여정',
-                      'journal',
-                      compact: landscape,
-                    ),
-                    _menu(
-                      'touchSettings',
-                      '설정',
-                      'settings',
-                      compact: landscape,
-                    ),
-                    if (landscape)
+              if (landscape) ...[
+                Positioned(
+                  right: battleMapDiameter(media.size) + 68,
+                  top: media.padding.top + 6,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _menu('touchSettings', '설정', 'settings', compact: true),
                       _menu('touchInventory', '가방', 'bag', compact: true),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+                Positioned(
+                  right: 4,
+                  top: media.padding.top + 6,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _menu(
+                        'touchQuests',
+                        '스킬',
+                        'skills',
+                        compact: true,
+                        side: true,
+                      ),
+                      const SizedBox(height: 8),
+                      _menu(
+                        'touchCompendium',
+                        '여정',
+                        'journal',
+                        compact: true,
+                        side: true,
+                      ),
+                    ],
+                  ),
+                ),
+              ] else
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: math.max(8, media.padding.bottom),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _menu('touchInventory', '가방', 'bag'),
+                      _menu('touchQuests', '스킬', 'skills'),
+                      _menu('touchCompendium', '여정', 'journal'),
+                      _menu('touchSettings', '설정', 'settings'),
+                    ],
+                  ),
+                ),
             ],
             if (modal != null)
               Positioned.fill(
@@ -1712,11 +1735,13 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     String label,
     String target, {
     bool compact = false,
+    bool side = false,
   }) => MenuButton(
     art: widget.art,
     sprite: sprite,
     label: label,
     compact: compact,
+    side: side,
     badge: target == 'skills'
         ? adventure.progress.skillPoints
         : target == 'journal'

@@ -11,7 +11,7 @@ from mathutils import Matrix, Vector
 
 ROOT = Path(os.environ.get("SJRPG_CHARACTER_SOURCE_DIR", "/tmp/sjrpg-character-source"))
 RENDER_CELL = int(os.environ.get("SJRPG_RENDER_CELL", "256"))
-OUT = ROOT / ("helmet-warrior" if RENDER_CELL == 256 else f"helmet-warrior-{RENDER_CELL}")
+OUT = ROOT / ("frontier-warrior" if RENDER_CELL == 256 else f"frontier-warrior-{RENDER_CELL}")
 OUT.mkdir(exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.context.scene.render.fps = 30
@@ -112,7 +112,7 @@ def mat(name, color):
 
 # Add the original armor to the reviewed adult CC0 skeleton before animation.
 import runpy
-armor = runpy.run_path(str(Path(__file__).with_name('helmeted-armor.py')))
+armor = runpy.run_path(str(Path(__file__).with_name('frontier-armor.py')))
 armor['equip_armor'](bpy, rig, visible, mat)
 
 steel = mat("Original matte sword steel", (0.43, 0.49, 0.48))
@@ -209,7 +209,7 @@ for name, pos, power, size in [
 origin = world_to_camera_view(scene, cam, Vector((0, 0, 0)))
 m = {
     "source": "Quaternius CC0 Male_Ranger + male base head + UAL1_Standard + UAL2_Standard",
-    "sourceType": "adult male helmeted steel-plate warrior",
+    "sourceType": "adult male frontier leather warrior with green cloak",
     "headSource": "official CC0 Superhero_Male, head-only rest trim; no per-pose changes",
     "headRestMap": [list(row) for row in headMap],
     "headRestCutoffZ": headCut,
@@ -228,12 +228,12 @@ m = {
 }
 # A new pose/material contract must never reuse older two-pose PNGs.
 source_contract = json.loads((Path(__file__).resolve().parents[2] / "docs/art/character-motion-provenance.json").read_text())["sourceFiles"]
-bake_key = hashlib.sha256(Path(__file__).read_bytes() + Path(__file__).with_name('helmeted-armor.py').read_bytes() + json.dumps(source_contract, sort_keys=True).encode()).hexdigest()[:16]
+bake_key = hashlib.sha256(Path(__file__).read_bytes() + Path(__file__).with_name('frontier-armor.py').read_bytes() + json.dumps(source_contract, sort_keys=True).encode()).hexdigest()[:16]
 FRAME_DIR = OUT / "frames" / bake_key
 FRAME_DIR.mkdir(parents=True, exist_ok=True)
 m["bakeContract"] = bake_key
-m["armorSource"] = "tools/character-art/helmeted-armor.py"
-m["designReference"] = "exec-e021b823-4c7f-43bf-9e50-5d23e0fd4322.png"
+m["armorSource"] = "tools/character-art/frontier-armor.py"
+m["designReference"] = "docs/art/frontier-warrior-concept.png (middle option)"
 
 # All slots are separate real rendered directions. S0,W4,N8,E12.
 labels = [
@@ -270,7 +270,7 @@ m["motion"] = {
     "layout": "phase-major",
 }
 m["globalMaterialTreatment"] = (
-    "Original open-faced steel helmet and articulated steel armor over CC0 adult male rig; matte charcoal undercloth, short muted teal cloth, no hood or bare scalp."
+    "Brown leather and chain armour, dark hair, fur collar and forest-green cloak over the CC0 adult male rig."
 )
 jobs = []
 for d in range(16):

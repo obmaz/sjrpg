@@ -170,8 +170,37 @@ void main() {
           expect(bag.top, lessThan(20));
           expect(settings.left, lessThan(bag.left));
           expect(settings.top, bag.top);
-          expect(menu('스킬').top, bag.top);
-          expect(menu('여정').top, bag.top);
+          final skills = menu('스킬'), journal = menu('여정');
+          final map = tester.getRect(
+            find.byWidgetPredicate(
+              (w) => w is Semantics && w.properties.label == '지도 확대',
+            ),
+          );
+          expect(bag.right, lessThanOrEqualTo(map.left));
+          expect(skills.left, greaterThanOrEqualTo(map.right));
+          expect(journal.left, skills.left);
+          expect(journal.top, greaterThanOrEqualTo(skills.bottom));
+          expect(skills.top, bag.top);
+          expect(
+            tester
+                .widget<MenuButton>(
+                  find.byWidgetPredicate(
+                    (w) => w is MenuButton && w.label == '스킬',
+                  ),
+                )
+                .side,
+            true,
+          );
+          expect(
+            tester
+                .widget<MenuButton>(
+                  find.byWidgetPredicate(
+                    (w) => w is MenuButton && w.label == '가방',
+                  ),
+                )
+                .side,
+            false,
+          );
         }
         if (size == const Size(390, 844) || size == const Size(844, 390)) {
           final main = tester.getRect(

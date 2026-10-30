@@ -46,6 +46,20 @@ def main():
     manifest = {"version": 1, "sourceCell": pack.SOURCE_CELL, "runtimeCell": pack.SOURCE_CELL,
                 "worldSizeIncrease": pack.SOURCE_CELL / 256,
                 "pixelDensityIncrease": pack.SOURCE_CELL / 128, "runtimeRoles": {}}
+    if warrior.get("armorSource") == "tools/character-art/frontier-armor.py":
+        concept = root / "docs/art/frontier-warrior-concept.png"
+        portrait = root / "docs/art/frontier-warrior-portrait-original.png"
+        manifest["warriorDesign"] = {
+            "concept": str(concept.relative_to(root)),
+            "conceptSha256": hashlib.sha256(concept.read_bytes()).hexdigest(),
+            "conceptChoice": "middle: dark hair, beard, leather, fur collar, green cloak",
+            "portraitSource": str(portrait.relative_to(root)),
+            "portraitSourceSha256": hashlib.sha256(portrait.read_bytes()).hexdigest(),
+            "runtimePortrait": "flutter_game/art/hero-helmeted-portrait.webp",
+            "armorSource": warrior["armorSource"],
+            "bakeContract": warrior["bakeContract"],
+            "renderStyle": warrior["sourceType"],
+        }
     roles = manifest["runtimeRoles"]
 
     def output(role, frames, metadata, *, motion=None, roll=False):

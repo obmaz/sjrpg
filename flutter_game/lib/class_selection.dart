@@ -61,7 +61,28 @@ class _ClassSelectionState extends State<ClassSelection> {
             label: '${hero.title} 선택',
             selected: selected == hero,
             onTap: () => setState(() => selected = hero),
-            artwork: entryImage('select-${hero.name}-card'),
+            artwork: hero == HeroClass.warrior
+                ? Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      entryImage('select-warrior-card'),
+                      Positioned(
+                        left: 10,
+                        right: 10,
+                        top: 12,
+                        bottom: 34,
+                        child: ClipRect(
+                          child: Image.asset(
+                            'assets/images/hero-helmeted-portrait.webp',
+                            fit: BoxFit.cover,
+                            alignment: const Alignment(0, -.3),
+                            excludeFromSemantics: true,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : entryImage('select-mage-card'),
           ),
         Positioned.fromRect(
           rect: (selected == HeroClass.warrior ? warriorCard : mageCard)

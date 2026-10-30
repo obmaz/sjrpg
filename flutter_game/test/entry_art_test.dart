@@ -113,6 +113,13 @@ void main() {
             ClassSelection(art: art, onBegin: (hero) => began = hero),
           );
           await tester.pumpAndSettle();
+          expect(
+            find.image(
+              const AssetImage('assets/images/hero-helmeted-portrait.webp'),
+            ),
+            findsOneWidget,
+            reason: 'the selected warrior identity appears on the class card',
+          );
           final warrior = find.bySemanticsLabel('전사 선택');
           final mage = find.bySemanticsLabel('마법사 선택');
           for (final card in [warrior, mage]) {

@@ -57,7 +57,7 @@ class GameHud extends StatelessWidget {
     final mapSide = battleMapDiameter(media.size);
     final statusWidth = math.min(
       landscape ? 360 * (media.size.height / 720).clamp(.65, 1.0) : 306.0,
-      width - mapSide - 22,
+      width - mapSide - (landscape ? 61 + 112 + 8 : 22),
     );
     final resourceHeight = math.max(
       18.0,
@@ -140,7 +140,7 @@ class GameHud extends StatelessWidget {
             ),
           ),
           Positioned(
-            right: 9,
+            right: landscape ? 61 : 9,
             top: 7,
             child: SizedBox(
               width: mapSide,
@@ -2122,10 +2122,11 @@ class MenuButton extends StatelessWidget {
     required this.onTap,
     this.badge = 0,
     this.compact = false,
+    this.side = false,
     super.key,
   });
   final int badge;
-  final bool compact;
+  final bool compact, side;
   final GameArt art;
   final String sprite, label;
   final VoidCallback onTap;
@@ -2146,9 +2147,22 @@ class MenuButton extends StatelessWidget {
           child: Stack(
             clipBehavior: Clip.none,
             children: [
+              if (side)
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: const Color(0xe5221c16),
+                      border: Border.all(color: const Color(0xff71614a)),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                ),
               Positioned.fill(
-                child: CustomPaint(
-                  painter: IllustratedMenuPainter(art, sprite),
+                child: Padding(
+                  padding: EdgeInsets.all(side ? 3 : 0),
+                  child: CustomPaint(
+                    painter: IllustratedMenuPainter(art, sprite),
+                  ),
                 ),
               ),
               if (badge > 0)

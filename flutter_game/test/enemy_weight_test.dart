@@ -27,6 +27,51 @@ void main() {
     }
   }
 
+  test('fresh crowded spawns reserve visual body space immediately', () {
+    final s = session();
+    for (var i = 0; i < 8; i++) {
+      expect(
+        s.spawnEnemy('goblin', const Offset(6300, 4200), reserveSpacing: true),
+        isNotNull,
+      );
+    }
+    for (var i = 0; i < s.mobs.length; i++) {
+      final a = s.mobs[i];
+      for (final b in s.mobs.skip(i + 1)) {
+        expect(
+          HuntEnemy.tooClose(
+            a.body.center,
+            a.personalSpace,
+            b.body.center,
+            b.personalSpace,
+          ),
+          false,
+          reason: 'distinct artwork needs visible foot spacing at spawn',
+        );
+      }
+    }
+  });
+
+  test(
+    'monster appearance scales down without changing its collision body',
+    () {
+      final s = session();
+      final mob = s.spawnEnemy('goblin', const Offset(6300, 4200))!;
+      final boss = s.spawnEnemy(
+        'goblin',
+        const Offset(6500, 4200),
+        boss: true,
+      )!;
+      expect(mob.body.size, const Size(24, 22));
+      expect(boss.body.size, const Size(48, 40));
+      expect(
+        mob.visualHeight,
+        closeTo((mob.definition?.renderHeight ?? 62) * .8, 1e-8),
+      );
+      expect(boss.visualHeight, 100);
+    },
+  );
+
   test('a dense pack leaves distinct personal foot space around the hero', () {
     final s = session();
     for (var row = 0; row < 3; row++) {

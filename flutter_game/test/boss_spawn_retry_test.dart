@@ -18,6 +18,7 @@ class CountingAdventure extends Adventure {
     EnemyTier? tier,
     EnemyPower? power,
     Offset? home,
+    bool reserveSpacing = false,
   }) {
     if (boss) {
       attempts++;
@@ -31,6 +32,7 @@ class CountingAdventure extends Adventure {
       tier: tier,
       power: power,
       home: home,
+      reserveSpacing: reserveSpacing,
     );
   }
 }

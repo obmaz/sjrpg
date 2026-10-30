@@ -98,7 +98,7 @@ void main() {
 
   for (var direction = 0; direction < 16; direction++) {
     test(
-      'helmeted direction $direction renders every idle, gait and attack pose without clipping',
+      'frontier warrior direction $direction renders every idle, gait and attack pose without clipping',
       () async {
         final angle = math.pi / 2 + direction * math.pi / 8;
         final hashes = <String, Set<int>>{};
@@ -250,7 +250,7 @@ void main() {
   );
 
   test(
-    'helmeted HUD portrait paints the approved adult male identity',
+    'frontier HUD portrait paints the selected adult male identity',
     () async {
       final frame = await _raster(
         (c) => art.helmetedWarriorPortrait(

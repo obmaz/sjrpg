@@ -25,6 +25,7 @@ class WakeBudgetAdventure extends Adventure {
     EnemyTier? tier,
     EnemyPower? power,
     Offset? home,
+    bool reserveSpacing = false,
   }) {
     attempts++;
     return rejectSpawns
@@ -37,6 +38,7 @@ class WakeBudgetAdventure extends Adventure {
             tier: tier,
             power: power,
             home: home,
+            reserveSpacing: reserveSpacing,
           );
   }
 }
