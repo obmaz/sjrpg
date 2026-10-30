@@ -12,7 +12,7 @@ class BattleControlLayout {
       ),
       inset = math.max(8, safeBottom);
   final double height, scale, inset;
-  double get attackSize => 168 * scale;
+  double get attackSize => 132 * scale;
   double get smallSize => math.max(44, 64 * scale);
   double get attackRight => 8 * scale + smallSize + 8 * scale;
   double get bottom =>
@@ -31,22 +31,20 @@ class BattleControlLayout {
     required double skillSize,
     required double gap,
   }) {
-    // Place square touch areas against the primary's left and upper edges.
-    // This keeps the illustrated circles close without overlapping hit boxes.
-    final spacing = math.min(gap, 5.0);
+    final radius = math.max(
+      (attackSize + skillSize) / 2 + 7,
+      (skillSize + 5) / (2 * math.sin(math.pi / 8)),
+    );
     return [
-      (
-        attackRight + attackSize + spacing,
-        (attackSize - skillSize) / 2,
-        skillSize,
-      ),
-      (attackRight + attackSize + spacing, attackSize + spacing, skillSize),
-      (
-        attackRight + (attackSize - skillSize) / 2,
-        attackSize + spacing,
-        skillSize,
-      ),
-      (attackRight - skillSize - spacing, attackSize + spacing, skillSize),
+      for (final angle in [math.pi, 3 * math.pi / 4, math.pi / 2, math.pi / 4])
+        (
+          attackRight +
+              attackSize / 2 -
+              math.cos(angle) * radius -
+              skillSize / 2,
+          attackSize / 2 + math.sin(angle) * radius - skillSize / 2,
+          skillSize,
+        ),
     ];
   }
 

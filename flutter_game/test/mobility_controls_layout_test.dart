@@ -231,7 +231,7 @@ void main() {
           expect(slots[3].center.dy, lessThan(main.center.dy));
           expect(
             (slots[0].center - main.center).distance,
-            lessThan((main.width + slots[0].width) / 2 + 8),
+            lessThan((main.width + slots[0].width) / 2 + 16),
           );
         }
         final viewport = Offset.zero & size;
@@ -248,7 +248,10 @@ void main() {
           );
           for (var j = i + 1; j < rects.length; j++) {
             expect(
-              rects[i].overlaps(rects[j]),
+              i < targets.evaluate().length && j < targets.evaluate().length
+                  ? (rects[i].center - rects[j].center).distance <
+                        (rects[i].width + rects[j].width) / 2
+                  : rects[i].overlaps(rects[j]),
               false,
               reason: 'battle controls $i and $j overlap',
             );

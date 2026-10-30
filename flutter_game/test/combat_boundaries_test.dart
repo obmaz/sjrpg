@@ -129,10 +129,14 @@ void main() {
         expect((Offset.zero & size).contains(all[i].topLeft), true);
         expect((Offset.zero & size).contains(all[i].bottomRight), true);
         for (var j = i + 1; j < all.length; j++) {
-          expect(all[i].overlaps(all[j]), false, reason: '$i / $j');
+          expect(
+            (all[i].center - all[j].center).distance,
+            greaterThanOrEqualTo((all[i].width + all[j].width) / 2),
+            reason: '$i / $j',
+          );
         }
       }
-      expect(main.center.dy / size.height, closeTo(.77, .05));
+      expect(main.center.dy / size.height, closeTo(.81, .06));
     });
   }
 }

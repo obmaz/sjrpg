@@ -136,7 +136,11 @@ void main() {
         );
         expect(find.text('Lv.${s.progress.level}  전사'), findsOneWidget);
         expect(identity.bottom, lessThanOrEqualTo(health.top));
-        expect(portrait.right - health.left, inInclusiveRange(0, 16));
+        expect(portrait.right, lessThanOrEqualTo(health.left));
+        final xp = tester.getRect(find.byKey(const ValueKey('hud-experience')));
+        expect(xp.top, greaterThan(resource.bottom));
+        expect(xp.left, health.left);
+        expect(xp.bottom, lessThan(100));
         expect(resource.width, lessThanOrEqualTo(health.width));
         expect(health.height, lessThanOrEqualTo(18));
         expect(health.bottom, lessThanOrEqualTo(resource.top));

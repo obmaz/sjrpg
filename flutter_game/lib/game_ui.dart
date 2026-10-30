@@ -53,7 +53,7 @@ class GameHud extends StatelessWidget {
     final landscape = width > media.size.height && width >= 500;
     final short = media.size.height < 520 || landscape;
     final portraitSide = battlePortraitDiameter(media.size);
-    final meterLeft = landscape ? portraitSide * .75 + 10 : 58.0;
+    final meterLeft = portraitSide + 16;
     final mapSide = battleMapDiameter(media.size);
     final statusWidth = math.min(
       landscape ? 360 * (media.size.height / 720).clamp(.65, 1.0) : 306.0,
@@ -101,7 +101,7 @@ class GameHud extends StatelessWidget {
           Positioned(
             top: healthTop,
             left: meterLeft,
-            width: math.max(50, statusWidth - meterLeft),
+            width: math.max(50, statusWidth - meterLeft - 7),
             child: HealthMeter(session, height: healthHeight),
           ),
           Positioned(
@@ -109,6 +109,23 @@ class GameHud extends StatelessWidget {
             top: resourceTop,
             width: math.max(48, statusWidth - meterLeft - 7),
             child: ResourceMeter(session, height: resourceHeight),
+          ),
+          Positioned(
+            left: meterLeft,
+            top: resourceTop + resourceHeight + 4,
+            width: math.max(48, statusWidth - meterLeft - 7),
+            height: 4,
+            child: Semantics(
+              label: '경험치',
+              value: '${p.xp} / ${p.nextLevelXp}',
+              child: LinearProgressIndicator(
+                key: const ValueKey('hud-experience'),
+                value: (p.xp / p.nextLevelXp).clamp(0.0, 1.0),
+                minHeight: 4,
+                color: gold,
+                backgroundColor: const Color(0xdd201c18),
+              ),
+            ),
           ),
           Positioned(
             left: 10,
@@ -125,13 +142,13 @@ class GameHud extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: landscape ? 10 : 77,
+            left: landscape ? 10 : 116,
             top: landscape
                 ? math.max(
                     16 + portraitSide + 8,
-                    resourceTop + resourceHeight + 3,
+                    resourceTop + resourceHeight + 13,
                   )
-                : math.max(73, resourceTop + resourceHeight + 3),
+                : math.max(73, resourceTop + resourceHeight + 13),
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxWidth: math.max(60, statusWidth - 76),
@@ -193,12 +210,11 @@ class _HeroStatusChrome extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final plate = Path()
-      ..moveTo(portraitSide - 16, 1)
+      ..moveTo(portraitSide + 3, 1)
       ..lineTo(size.width, 1)
-      ..lineTo(size.width - 11, 23)
-      ..lineTo(size.width - 14, 44)
-      ..lineTo(size.width - 24, 66)
-      ..lineTo(portraitSide - 16, 66)
+      ..lineTo(size.width - 8, 23)
+      ..lineTo(size.width - 8, 79)
+      ..lineTo(portraitSide + 3, 79)
       ..close();
     canvas.drawPath(
       plate.shift(const Offset(0, 2)),
@@ -213,7 +229,7 @@ class _HeroStatusChrome extends CustomPainter {
         ..color = const Color(0xff6e6355),
     );
     canvas.drawLine(
-      Offset(portraitSide - 3, 23),
+      Offset(portraitSide + 3, 23),
       Offset(size.width - 13, 23),
       Paint()
         ..color = const Color(0xff897a64)
@@ -1708,150 +1724,157 @@ class _ActionButtonState extends State<ActionButton> {
   };
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    enabled: widget.enabled,
-    label: widget.semanticLabel,
-    hint: widget.semanticHint,
-    onTap: widget.enabled ? widget.onTap : null,
-    excludeSemantics: true,
-    child: Listener(
-      onPointerDown: (event) {
-        if (pointer != null || !widget.enabled) return;
-        pointer = event.pointer;
-        origin = event.position;
-        aimDelta = Offset.zero;
-        setState(() => pressed = true);
-        if (widget.onAimStart != null) {
-          widget.onAimStart!();
-        } else {
-          widget.onHold?.call(true);
-          widget.onTap();
-        }
-      },
-      onPointerMove: (event) {
-        if (pointer != event.pointer || widget.onAimMove == null) return;
-        setState(() => aimDelta = event.position - origin);
-        widget.onAimMove!(aimDelta);
-      },
-      onPointerUp: (event) {
-        if (pointer == event.pointer) release();
-      },
-      onPointerCancel: (event) {
-        if (pointer == event.pointer) release(cancelled: true);
-      },
-      child: SizedBox(
-        width: widget.size,
-        height: widget.size + (widget.showLabel ? 22 : 0),
-        child: Column(
-          children: [
-            SizedBox(
-              width: widget.size,
-              height: widget.size,
-              child: ClipOval(
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    AnimatedScale(
-                      scale: pressed ? .96 : 1,
-                      duration: const Duration(milliseconds: 70),
-                      child: CustomPaint(
-                        size: Size.square(widget.size),
-                        painter: _BattleSurfacePainter(
-                          _accent,
-                          pressed: pressed,
-                          primary: widget.primary,
+  Widget build(BuildContext context) {
+    final control = Semantics(
+      button: true,
+      enabled: widget.enabled,
+      label: widget.semanticLabel,
+      hint: widget.semanticHint,
+      onTap: widget.enabled ? widget.onTap : null,
+      excludeSemantics: true,
+      child: Listener(
+        onPointerDown: (event) {
+          if (pointer != null || !widget.enabled) return;
+          pointer = event.pointer;
+          origin = event.position;
+          aimDelta = Offset.zero;
+          setState(() => pressed = true);
+          if (widget.onAimStart != null) {
+            widget.onAimStart!();
+          } else {
+            widget.onHold?.call(true);
+            widget.onTap();
+          }
+        },
+        onPointerMove: (event) {
+          if (pointer != event.pointer || widget.onAimMove == null) return;
+          setState(() => aimDelta = event.position - origin);
+          widget.onAimMove!(aimDelta);
+        },
+        onPointerUp: (event) {
+          if (pointer == event.pointer) release();
+        },
+        onPointerCancel: (event) {
+          if (pointer == event.pointer) release(cancelled: true);
+        },
+        child: SizedBox(
+          width: widget.size,
+          height: widget.size + (widget.showLabel ? 22 : 0),
+          child: Column(
+            children: [
+              SizedBox(
+                width: widget.size,
+                height: widget.size,
+                child: ClipOval(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      AnimatedScale(
+                        scale: pressed ? .96 : 1,
+                        duration: const Duration(milliseconds: 70),
+                        child: CustomPaint(
+                          size: Size.square(widget.size),
+                          painter: _BattleSurfacePainter(
+                            _accent,
+                            pressed: pressed,
+                            primary: widget.primary,
+                          ),
                         ),
                       ),
-                    ),
-                    if (widget.artwork != null)
-                      widget.artwork!
-                    else
-                      Opacity(
-                        opacity: widget.remaining > 0
-                            ? .38
-                            : widget.enabled
-                            ? 1
-                            : .35,
-                        child: _symbol,
-                      ),
-                    if (widget.insufficientResource)
-                      const Positioned.fill(
-                        child: ColoredBox(color: Color(0x66000000)),
-                      ),
-                    if (pressed && widget.onAimStart != null)
-                      Positioned.fill(
-                        child: ColoredBox(
-                          color: aimDelta.distance > 156
-                              ? const Color(0x99a12929)
-                              : const Color(0x334bd8c2),
-                          child: aimDelta.distance > 156
-                              ? const Icon(Icons.close, color: Colors.white)
-                              : Center(
-                                  child: Transform.translate(
-                                    offset:
-                                        aimDelta.distance > widget.size * .28
-                                        ? aimDelta /
-                                              aimDelta.distance *
-                                              widget.size *
-                                              .28
-                                        : aimDelta,
-                                    child: Container(
-                                      width: 16,
-                                      height: 16,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: const Color(0xaa9deee4),
-                                        border: Border.all(color: Colors.white),
+                      if (widget.artwork != null)
+                        widget.artwork!
+                      else
+                        Opacity(
+                          opacity: widget.remaining > 0
+                              ? .38
+                              : widget.enabled
+                              ? 1
+                              : .35,
+                          child: _symbol,
+                        ),
+                      if (widget.insufficientResource)
+                        const Positioned.fill(
+                          child: ColoredBox(color: Color(0x66000000)),
+                        ),
+                      if (pressed && widget.onAimStart != null)
+                        Positioned.fill(
+                          child: ColoredBox(
+                            color: aimDelta.distance > 156
+                                ? const Color(0x99a12929)
+                                : const Color(0x334bd8c2),
+                            child: aimDelta.distance > 156
+                                ? const Icon(Icons.close, color: Colors.white)
+                                : Center(
+                                    child: Transform.translate(
+                                      offset:
+                                          aimDelta.distance > widget.size * .28
+                                          ? aimDelta /
+                                                aimDelta.distance *
+                                                widget.size *
+                                                .28
+                                          : aimDelta,
+                                      child: Container(
+                                        width: 16,
+                                        height: 16,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: const Color(0xaa9deee4),
+                                          border: Border.all(
+                                            color: Colors.white,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
+                          ),
                         ),
-                      ),
-                    if (!widget.enabled && widget.remaining <= 0)
-                      const Positioned.fill(
-                        child: ColoredBox(color: Color(0x66000204)),
-                      ),
-                    if (widget.remaining > 0)
-                      CustomPaint(
-                        size: Size.square(widget.size),
-                        painter: _CooldownPainter(
-                          widget.remaining / widget.total,
+                      if (!widget.enabled && widget.remaining <= 0)
+                        const Positioned.fill(
+                          child: ColoredBox(color: Color(0x66000204)),
                         ),
-                      ),
-                    if (!widget.showLabel && widget.remaining > 0)
-                      Text(
-                        '${CombatBalance.realSeconds(widget.remaining).ceil()}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          shadows: [Shadow(color: Colors.black, blurRadius: 5)],
+                      if (widget.remaining > 0)
+                        CustomPaint(
+                          size: Size.square(widget.size),
+                          painter: _CooldownPainter(
+                            widget.remaining / widget.total,
+                          ),
                         ),
-                      ),
-                  ],
+                      if (!widget.showLabel && widget.remaining > 0)
+                        Text(
+                          '${CombatBalance.realSeconds(widget.remaining).ceil()}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(color: Colors.black, blurRadius: 5),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            if (widget.showLabel)
-              Text(
-                widget.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: cream,
-                  fontSize: 13,
-                  height: 1.1,
-                  fontWeight: FontWeight.bold,
-                  shadows: [Shadow(color: Colors.black, blurRadius: 3)],
+              if (widget.showLabel)
+                Text(
+                  widget.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: cream,
+                    fontSize: 13,
+                    height: 1.1,
+                    fontWeight: FontWeight.bold,
+                    shadows: [Shadow(color: Colors.black, blurRadius: 3)],
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+    return widget.showLabel ? control : ClipOval(child: control);
+  }
 }
 
 class _CooldownPainter extends CustomPainter {

@@ -879,7 +879,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                                 : 112.0
                           : 142.0),
             attack =
-                referenceControls?.attackSize ?? (width < 360 ? 90.0 : 104.0),
+                referenceControls?.attackSize ?? (width < 360 ? 76.0 : 84.0),
             bottom = referenceControls != null
                 ? referenceControls.bottom
                 : media.padding.bottom + (short ? 86.0 : 112.0);
@@ -1633,21 +1633,6 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                     ),
                   ),
                 ),
-              Positioned(
-                left: 12,
-                right: 12,
-                bottom: math.max(1, media.padding.bottom + 1),
-                child: Semantics(
-                  label: '경험치',
-                  value: '${p.xp} / ${p.nextLevelXp}',
-                  child: LinearProgressIndicator(
-                    value: (p.xp / p.nextLevelXp).clamp(0.0, 1.0),
-                    minHeight: 3,
-                    color: gold,
-                    backgroundColor: const Color(0xbb0c1a1b),
-                  ),
-                ),
-              ),
               if (landscape) ...[
                 Positioned(
                   right: battleMapDiameter(media.size) + 68,
