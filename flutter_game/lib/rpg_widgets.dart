@@ -122,9 +122,13 @@ class FramedSurface extends StatelessWidget {
     final body = compact
         ? child
         : Padding(padding: const EdgeInsets.all(10), child: child);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: CustomPaint(painter: _FramePainter(art), child: body),
+    return Material(
+      // Adding a clipping surface must preserve the caller's text metrics.
+      textStyle: DefaultTextStyle.of(context).style,
+      color: const Color(0xf5103032),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      clipBehavior: Clip.antiAlias,
+      child: CustomPaint(foregroundPainter: _FramePainter(art), child: body),
     );
   }
 }
@@ -136,7 +140,6 @@ class _FramePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final bounds = (Offset.zero & size).deflate(1.2);
     final shape = RRect.fromRectAndRadius(bounds, const Radius.circular(18));
-    canvas.drawRRect(shape, Paint()..color = const Color(0xf5103032));
     canvas.drawRRect(
       shape,
       Paint()

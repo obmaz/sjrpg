@@ -63,16 +63,20 @@ class _SkillsPanelState extends State<SkillsPanel> {
     if (detailScroll.hasClients) detailScroll.jumpTo(0);
   });
   String actionFor(SkillDef skill) => p.rank(skill.id) >= skill.rankLimit
-      ? '최대 등급'
-      : p.level < skill.requiredLevelForRank(p.rank(skill.id) + 1)
-      ? 'Lv.${skill.requiredLevelForRank(p.rank(skill.id) + 1)} 필요'
-      : p.rank(skill.id) == 0 && !p.prerequisitesMet(skill)
-      ? '선행 필요'
-      : p.skillPoints <= 0
-      ? '포인트 없음'
+      ? '완료'
       : p.rank(skill.id) == 0
       ? '습득 · 1P'
       : '강화 · 1P';
+
+  String? learningReason(SkillDef skill) => p.rank(skill.id) >= skill.rankLimit
+      ? '최대 등급'
+      : p.level < skill.requiredLevelForRank(p.rank(skill.id) + 1)
+      ? '필요 레벨 ${skill.requiredLevelForRank(p.rank(skill.id) + 1)}'
+      : p.rank(skill.id) == 0 && !p.prerequisitesMet(skill)
+      ? '선행 기술 필요'
+      : p.skillPoints <= 0
+      ? '스킬 포인트 부족'
+      : null;
 
   Future<void> confirmReset() async {
     final refund = p.investedSkillPoints;
@@ -168,7 +172,8 @@ class _SkillsPanelState extends State<SkillsPanel> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: GameAction(
-                          '초기화권 1장 · 초기화',
+                          '초기화',
+                          semanticLabel: '초기화권 1장 · 초기화',
                           primary: true,
                           onTap: !p.canResetSkills
                               ? null
@@ -280,6 +285,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
                                     ? _slot(Progress.primarySlot, compact: true)
                                     : null,
                                 session: s,
+                                onChanged: () => setState(() {}),
                                 compact: short,
                                 onFocus: (skill) =>
                                     setState(() => focused = skill),
@@ -453,6 +459,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
               action,
               primary: true,
               semanticLabel: '${focused.name} $action',
+              semanticValue: learningReason(focused),
               onTap: p.canLearn(focused)
                   ? () => setState(() {
                       s.learn(focused);
@@ -587,6 +594,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
         [1, 2, 3].any((slot) => !p.canSelectSkill(skill.id, slot: slot));
     return Material(
       key: const ValueKey('skill-detail-surface'),
+      textStyle: DefaultTextStyle.of(context).style,
       clipBehavior: Clip.antiAlias,
       color: const Color(0xff0d2828),
       elevation: 16,
@@ -799,6 +807,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
             child: GameAction(
               action,
               semanticLabel: '${skill.name} $action',
+              semanticValue: learningReason(skill),
               primary: true,
               icon: Icons.upgrade_rounded,
               onTap: p.canLearn(skill)

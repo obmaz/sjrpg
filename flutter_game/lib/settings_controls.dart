@@ -142,11 +142,12 @@ class GameNoticeDialog extends StatelessWidget {
             MediaQuery.viewInsetsOf(context).vertical -
             48,
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xff102d2a),
+      child: Material(
+        textStyle: DefaultTextStyle.of(context).style,
+        color: const Color(0xff102d2a),
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xff577d72)),
+          side: const BorderSide(color: Color(0xff577d72)),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(

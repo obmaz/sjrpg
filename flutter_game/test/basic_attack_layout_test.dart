@@ -88,6 +88,9 @@ void main() {
               'chargedBolt',
               'iceBolt',
             });
+            final focusedBefore = tester
+                .widget<SkillTree>(find.byType(SkillTree))
+                .focused;
             final bounds = <Rect>[];
             for (final basic in p.basicSkills) {
               final target = find.bySemanticsLabel('기본 공격 ${basic.name} 선택'),
@@ -103,18 +106,22 @@ void main() {
               await tester.tap(target);
               await tester.pumpAndSettle();
               expect(p.selectedBasic, basic.id);
+              expect(
+                tester.widget<SkillTree>(find.byType(SkillTree)).focused,
+                focusedBefore,
+              );
               expect(p.skillPoints, points);
               expect(p.skillSlots, slots);
               expect(tester.takeException(), null);
             }
             await tester.tap(find.byTooltip('스킬 설명과 배치'));
             await tester.pumpAndSettle();
-            final chosen = p.basicSkill;
+            final chosen = focusedBefore!;
             expect(
-              find.bySemanticsLabel('${chosen.name} · 주 슬롯 해제'),
+              find.bySemanticsLabel('${chosen.name} · 주 슬롯에 장착'),
               findsOneWidget,
             );
-            expect(chosen.id, 'iceBolt');
+            expect(chosen.id, p.defaultBasicId);
             expect(find.text('전투 슬롯'), findsOneWidget);
             expect(tester.takeException(), null);
             await tester.tap(find.byTooltip('스킬 상세 닫기'));

@@ -173,7 +173,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         tester
-            .widget<GameAction>(find.widgetWithText(GameAction, 'Lv.24 필요'))
+            .widget<GameAction>(find.widgetWithText(GameAction, '습득 · 1P'))
             .onTap,
         null,
       );
@@ -190,7 +190,7 @@ void main() {
       expect(s.progress.rank('firebolt'), 2);
       expect(
         tester
-            .widget<GameAction>(find.widgetWithText(GameAction, '포인트 없음'))
+            .widget<GameAction>(find.widgetWithText(GameAction, '강화 · 1P'))
             .onTap,
         null,
       );

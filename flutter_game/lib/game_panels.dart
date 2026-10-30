@@ -401,9 +401,7 @@ class _AdventurePanelState extends State<AdventurePanel> {
       color: const Color(0xbb071918),
       child: SafeArea(
         child: Align(
-          alignment: media.size.width < 600 && media.size.height > 600
-              ? Alignment.bottomCenter
-              : Alignment.center,
+          alignment: Alignment.center,
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: ConstrainedBox(

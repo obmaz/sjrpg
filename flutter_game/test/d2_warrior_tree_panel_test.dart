@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/game_art.dart';
+import 'package:guardian_new/panel_controls.dart';
 import 'package:guardian_new/rpg_model.dart';
 import 'package:guardian_new/skill_tree.dart';
 import 'package:guardian_new/skills_panel.dart';
@@ -77,8 +78,16 @@ void main() {
 
       await selectNode(2, 'meteor');
       expect(
-        find.bySemanticsLabel('${meteorSkill.name} 선행 필요'),
-        findsOneWidget,
+        tester
+            .widget<GameAction>(
+              find.byWidgetPredicate(
+                (w) =>
+                    w is GameAction &&
+                    w.semanticLabel == '${meteorSkill.name} 습득 · 1P',
+              ),
+            )
+            .onTap,
+        isNull,
       );
       expect(p.rank('meteor'), 0);
       await selectNode(0, 'frozenArmor');
@@ -87,8 +96,16 @@ void main() {
       await tester.pumpAndSettle();
       await selectNode(2, 'meteor');
       expect(
-        find.bySemanticsLabel('${meteorSkill.name} 선행 필요'),
-        findsOneWidget,
+        tester
+            .widget<GameAction>(
+              find.byWidgetPredicate(
+                (w) =>
+                    w is GameAction &&
+                    w.semanticLabel == '${meteorSkill.name} 습득 · 1P',
+              ),
+            )
+            .onTap,
+        isNull,
       );
       await selectNode(2, 'firewall');
       final wall = p.skills.firstWhere((s) => s.id == 'firewall');

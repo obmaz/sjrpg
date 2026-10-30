@@ -241,9 +241,7 @@ void main() {
       await tester.tap(find.byTooltip('스킬 초기화'));
       await tester.pumpAndSettle();
       final action = tester.widget<GameAction>(
-        find.byWidgetPredicate(
-          (w) => w is GameAction && w.label == '초기화권 1장 · 초기화',
-        ),
+        find.byWidgetPredicate((w) => w is GameAction && w.label == '초기화'),
       );
       expect(action.onTap, null);
       expect(s.progress.gold, 1000000);

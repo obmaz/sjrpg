@@ -10,12 +10,14 @@ class BasicAttackStrip extends StatelessWidget {
   const BasicAttackStrip({
     required this.session,
     required this.onFocus,
+    required this.onChanged,
     this.compact = false,
     this.leading,
     super.key,
   });
   final Adventure session;
   final ValueChanged<SkillDef> onFocus;
+  final VoidCallback onChanged;
   final bool compact;
   final Widget? leading;
 
@@ -65,8 +67,10 @@ class BasicAttackStrip extends StatelessWidget {
       if (rank > 0) {
         p.selectBasic(skill.id);
         session.refresh();
+        onChanged();
+      } else {
+        onFocus(skill);
       }
-      onFocus(skill);
     }
 
     return Semantics(

@@ -1,12 +1,9 @@
 {
-  "source": "generated-source.png",
-  "reference": "flutter_game/art/guardian-title.png",
-  "output": "flutter_game/art/entry-scene.webp",
-  "sourceSha256": "515e7bd36483a633e5e5a9c39067a8713aad8f05c359d02db8308eeff77ee9f4",
-  "size": [
-    1024,
-    576
-  ],
-  "packing": "Pillow LANCZOS resize, WebP quality 85",
-  "description": "Text-free upright panoramic loading scene. Shared by HTML bootstrap, Flutter entry and session preparation; cover without rotation."
+    "source": "generated-source.png",
+    "reference": "flutter_game/art/guardian-title.png",
+    "output": "flutter_game/art/entry-scene.webp",
+    "sourceSha256": "515e7bd36483a633e5e5a9c39067a8713aad8f05c359d02db8308eeff77ee9f4",
+    "size": [1024, 576],
+    "packing": "Pillow LANCZOS resize, WebP quality 85",
+    "description": "Text-free upright panoramic loading scene. Shared by HTML bootstrap, Flutter entry and session preparation; cover without rotation."
 }

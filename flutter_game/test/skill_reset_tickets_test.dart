@@ -316,9 +316,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text('초기화권이 없습니다'), findsOneWidget);
         final action = tester.widget<GameAction>(
-          find.byWidgetPredicate(
-            (w) => w is GameAction && w.label == '초기화권 1장 · 초기화',
-          ),
+          find.byWidgetPredicate((w) => w is GameAction && w.label == '초기화'),
         );
         expect(action.onTap, isNull);
         expect(p.gold, 0);
