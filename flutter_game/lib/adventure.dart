@@ -3580,7 +3580,8 @@ class Guardian extends Player with WithCollision {
     if (candidates.isEmpty &&
         props.isEmpty &&
         session.strikeEncounterStone(propRange) &&
-        p.heroClass == HeroClass.warrior) {
+        p.heroClass == HeroClass.warrior &&
+        !p.weapon.base.isThrowingWeapon) {
       return;
     }
     session.audio.play(

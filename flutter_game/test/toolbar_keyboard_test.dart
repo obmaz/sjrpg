@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/forest_quest_panel.dart';
+import 'package:guardian_new/forest_quests.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/main.dart';
@@ -10,6 +12,7 @@ import 'package:guardian_new/panel_controls.dart';
 import 'package:guardian_new/quest_guide.dart';
 import 'package:guardian_new/rpg_widgets.dart';
 
+import 'support/forest_quest_flow.dart';
 import 'support/test_game.dart';
 
 void main() {
@@ -82,13 +85,23 @@ void main() {
     );
     expect(hero.session.progress.healingPotions, potions - 1);
     await move();
-    final site = hero.session.world.sites.first;
-    hero.position.setValues(site.at.dx - 14, site.at.dy + 45);
+    final runtime = hero.session.forestQuests;
+    final onOpen = runtime.onOpen;
+    runtime.onOpen = null;
+    approachForestNpc(hero.session, 'elin');
+    runtime.onOpen = onOpen;
     hero.session.waveTime = 1000;
     hero.session.refresh();
     await tester.pump();
     await activate(find.byType(NearbyQuestCard));
-    expect(hero.session.cleansedSites, contains(site.id));
+    expect(find.byType(ForestQuestPanel), findsOneWidget);
+    expect(hero.session.cleansedSites, isEmpty);
+    await tester.tap(find.widgetWithText(GameAction, '수락'));
+    await tester.pump();
+    expect(runtime.ledger['roots']!.phase, ForestQuestPhase.accepted);
+    await tester.tap(find.bySemanticsLabel('닫기').last);
+    await tester.pump();
+    expect(find.byType(ForestQuestPanel), findsNothing);
     await move();
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());

@@ -166,11 +166,11 @@ void main() {
     );
     expect(s.nearbyAction, NearbyAction.shop);
     expect(s.nearbyQuestGuide, null);
-    s.hero.position.setValues(s.world.elderAt.dx + 50, s.world.elderAt.dy + 20);
-    expect(s.nearbyQuestGuide, isNotNull);
+    approachForestNpc(s, 'elin');
+    expect(s.nearbyQuestGuide!.action, QuestGuideAction.talk);
     s.riding = withOwnedMounts(s).mounts.first;
     expect(s.nearbyAction, NearbyAction.dismount);
-    expect(s.nearbyQuestGuide, null);
+    expect(s.nearbyQuestGuide!.action, QuestGuideAction.dismount);
   });
   test(
     'sands guidance distinguishes unaccepted, locked, kill-gated and complete commissions',

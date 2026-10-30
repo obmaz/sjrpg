@@ -1,7 +1,14 @@
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guardian_new/quest_structure_art.dart';
 import 'package:guardian_new/world_model.dart';
+
+Offset interactionAt(AdventureWorld world, QuestSite site) =>
+    world.stage == WorldStage.forest
+    ? ForestQuestStructureArt.npcApproach(site.id, site.at) +
+          const Offset(0, 50)
+    : site.at;
 
 // Sample authored roads and open approaches, then validate every graph edge with
 // the same swept body used by gameplay. The local grids let a route round camp furniture.
@@ -61,7 +68,7 @@ Map<String, List<Offset>> questRoutes(AdventureWorld world, Size size) {
   }
   for (final center in [
     world.spawn + half,
-    ...world.sites.map((site) => site.at),
+    ...world.sites.map((site) => interactionAt(world, site)),
   ]) {
     for (var y = -360; y <= 360; y += 48) {
       for (var x = -360; x <= 360; x += 48) {
@@ -115,14 +122,17 @@ Map<String, List<Offset>> questRoutes(AdventureWorld world, Size size) {
         queue
             .where(
               (i) =>
-                  (nodes[i] - site.at).distance < 115 &&
-                  world.clearLine(nodes[i], site.at, const Size(3, 3)),
+                  (nodes[i] - interactionAt(world, site)).distance < 115 &&
+                  world.clearLine(
+                    nodes[i],
+                    interactionAt(world, site),
+                    const Size(3, 3),
+                  ),
             )
             .toList()
           ..sort(
-            (a, b) => (nodes[a] - site.at).distance.compareTo(
-              (nodes[b] - site.at).distance,
-            ),
+            (a, b) => (nodes[a] - interactionAt(world, site)).distance
+                .compareTo((nodes[b] - interactionAt(world, site)).distance),
           );
     if (candidates.isEmpty) continue;
     var current = candidates.first;
@@ -161,9 +171,16 @@ void main() {
                     '${site.id}: full movement reaches each swept-clear route segment; from/target/actual ${[from.dx, from.dy, target.dx, target.dy, position.dx, position.dy]}',
               );
             }
-            expect((position + half - site.at).distance, lessThan(115));
             expect(
-              world.clearLine(position + half, site.at, const Size(3, 3)),
+              (position + half - interactionAt(world, site)).distance,
+              lessThan(115),
+            );
+            expect(
+              world.clearLine(
+                position + half,
+                interactionAt(world, site),
+                const Size(3, 3),
+              ),
               true,
             );
           }

@@ -6,6 +6,7 @@ import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/quest_guide.dart';
 import 'package:guardian_new/world_map.dart';
 import 'package:guardian_new/world_model.dart';
+import 'support/forest_quest_flow.dart';
 import 'support/test_game.dart';
 
 void main() {
@@ -39,11 +40,10 @@ void main() {
     () {
       final s = session();
       s.mobs.clear();
-      final site = s.world.sites.first;
-      s.hero.position.setValues(site.at.dx, site.at.dy + 55);
-      s.cleansedSites.add(site.id);
+      completeForestQuest(s, 'roots');
+      approachForestNpc(s, 'elin');
       s.riding = withOwnedMounts(s).mounts.first;
-      expect(s.nearbyQuestGuide, null);
+      expect(s.nearbyQuestGuide!.action, QuestGuideAction.dismount);
       expect(s.nearbyAction, NearbyAction.dismount);
       final sands = inCombatField(Adventure(GameArt(), stage: WorldStage.sands))
         ..start(TestGame());

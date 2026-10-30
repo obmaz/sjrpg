@@ -62,11 +62,18 @@ void main() {
         }
         expect(art.counts, isNotEmpty);
         if (!round) {
+          final grouped = art.counts
+              .map(int.tryParse)
+              .whereType<int>()
+              .toList();
+          expect(grouped, everyElement(greaterThan(1)));
           expect(
-            art.counts,
-            contains('4'),
-            reason: 'four town services form one count at overview zoom',
+            grouped.fold<int>(0, (sum, count) => sum + count),
+            4,
+            reason:
+                'all four services remain counted around the clear hero marker',
           );
+          expect(art.counts, contains('내 위치'));
         }
         image.dispose();
         picture.dispose();

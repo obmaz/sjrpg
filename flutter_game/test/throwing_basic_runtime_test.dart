@@ -70,6 +70,30 @@ void main() {
   }
   test('basic thrown range expires without damaging a distant enemy', () {
     final s = field('throwingaxes');
+    // Isolate the empty-flight range proof from auto-targetable charged stones.
+    Offset? corridor;
+    for (final point in [
+      s.hero.position.toOffset() + const Offset(0, -700),
+      ...s.world.trails.expand((t) => t.points),
+    ]) {
+      corridor = s.world.spawnNear(
+        point,
+        s.hero.body.size,
+        avoidSanctuary: true,
+        occupied: (body) =>
+            s.encounterAreas.values.any(
+              (a) => (a.stone - body.center).distance < 650,
+            ) ||
+            !s.world.clearEnemyLine(
+              body.topLeft,
+              body.topLeft + const Offset(500, 0),
+              body.size,
+            ),
+      );
+      if (corridor != null) break;
+    }
+    expect(corridor, isNotNull, reason: 'an unobstructed range-test corridor');
+    s.hero.position.setValues(corridor!.dx, corridor.dy);
     final enemy = s.spawnEnemy(
       'goblin',
       s.hero.body.center + const Offset(460, 0),

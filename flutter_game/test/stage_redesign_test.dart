@@ -237,21 +237,30 @@ void main() {
     final boss = s.spawnEnemy('golem', const Offset(6300, 4200), boss: true)!;
     expect(boss.life.max, closeTo(2880 * boss.power.healthMultiplier, .000001));
   });
-  test('moving cannot bypass the finite spawn interval or active pack cap', () {
+  test('periodic updates cannot refill a region; only a charged stone can', () {
     final s = session();
+    final area = s.encounterAreas[s.encounterKey]!;
+    final charges = area.charges;
     s.waveTime = 0;
-    for (var i = 0; i < 150; i++) {
+    for (var i = 0; i < 170; i++) {
       s.tick(.05);
     }
     expect(s.living, 0);
-    for (var i = 0; i < 20; i++) {
-      s.tick(.05);
-    }
+    expect(area.charges, charges);
+    s.hero.position.setValues(
+      area.stone.dx - 60,
+      area.stone.dy - s.hero.body.height / 2,
+    );
+    expect(s.strikeEncounterStone(100), true);
     expect(s.living, 3);
+    expect(area.charges, charges - 1);
     for (var i = 0; i < 8; i++) {
       s.spawnPack();
+      expect(s.strikeEncounterStone(100), false);
     }
+    expect(s.living, 3, reason: 'living enemies prevent wave stacking');
     expect(s.living, lessThanOrEqualTo(30));
+    expect(area.charges, charges - 1);
   });
   test('all mandatory sites gate the boss, reward once, and persist', () {
     final s = session();

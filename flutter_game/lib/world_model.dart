@@ -712,18 +712,39 @@ class AdventureWorld {
       }
     }
     _compact();
-    _applyAuthoredSettlement();
-    _applyForestComposition();
-    _addFieldLandmarks();
+    final approaches = <Trail>[];
     for (final site in sites) {
       addRuntimeShape(ForestQuestStructureArt.solidFootprint(site.id, site.at));
       final approach =
           ForestQuestStructureArt.npcApproach(site.id, site.at) +
           const Offset(0, 50);
-      trails.add(
-        Trail(_dryRoad([_siteRoadAnchor(approach), approach], 90), 90),
+      final trail = Trail(
+        _dryRoad([_siteRoadAnchor(approach), approach], 90),
+        90,
       );
+      approaches.add(trail);
+      trails.add(trail);
     }
+    // Spurs join existing roads before settlement clipping and landmark choice.
+    // Clear their small props and matching solids before rebuilding the index.
+    final removed = props
+        .where(
+          (p) => approaches.any(
+            (t) => t.near(
+              p.body.center,
+              math.max(p.body.width, p.body.height) / 2 + 35,
+            ),
+          ),
+        )
+        .toSet();
+    final removedSolids = removed.expand((p) => p.collisionBodies).toSet();
+    props.removeWhere(removed.contains);
+    for (final bucket in _solids.values) {
+      bucket.removeWhere(removedSolids.contains);
+    }
+    _applyAuthoredSettlement();
+    _applyForestComposition();
+    _addFieldLandmarks();
   }
 
   List<Offset> _dryRoad(List<Offset> authored, double width) {
@@ -802,7 +823,7 @@ class AdventureWorld {
   }
 
   Offset _siteRoadAnchor(Offset approach) {
-    if (!stage.requiresContract) return spawn;
+    if (!stage.requiresContract && stage != WorldStage.forest) return spawn;
     var anchor = spawn, nearest = double.infinity;
     for (final road in trails) {
       for (var i = 1; i < road.points.length; i++) {
