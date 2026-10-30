@@ -323,9 +323,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
                           ),
                         ),
                         Align(
-                          alignment: media.size.width > 700
-                              ? Alignment.centerRight
-                              : Alignment.bottomCenter,
+                          alignment: Alignment.center,
                           child: ConstrainedBox(
                             constraints: BoxConstraints(
                               maxWidth: 420,
@@ -565,6 +563,19 @@ class _SkillsPanelState extends State<SkillsPanel> {
     ],
   );
 
+  Widget _currentSlotArt(int slot, double side) {
+    final equipped = p.skillAt(slot);
+    return Tooltip(
+      message: '현재: ${equipped?.name ?? '비어 있음'}',
+      child: SizedBox.square(
+        dimension: side,
+        child: equipped == null
+            ? const Icon(Icons.add, color: _dim, size: 18)
+            : _art(equipped, side),
+      ),
+    );
+  }
+
   Widget _details(SkillDef skill) {
     final compact = MediaQuery.sizeOf(context).height < 500;
     final rank = p.rank(skill.id),
@@ -574,13 +585,15 @@ class _SkillsPanelState extends State<SkillsPanel> {
     final mustKeepPrimary =
         current == 0 &&
         [1, 2, 3].any((slot) => !p.canSelectSkill(skill.id, slot: slot));
-    return Container(
+    return Material(
+      key: const ValueKey('skill-detail-surface'),
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: const Color(0xff0d2828),
+      color: const Color(0xff0d2828),
+      elevation: 16,
+      shadowColor: const Color(0x99000000),
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: .65)),
-        boxShadow: const [BoxShadow(color: Color(0x99000000), blurRadius: 22)],
+        side: BorderSide(color: color.withValues(alpha: .65)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -713,6 +726,8 @@ class _SkillsPanelState extends State<SkillsPanel> {
               padding: const EdgeInsets.fromLTRB(14, 4, 14, 0),
               child: GameAction(
                 p.primarySkill?.id == skill.id ? '주 슬롯 해제' : '주 슬롯에 장착',
+                leading: _currentSlotArt(Progress.primarySlot, 28),
+                semanticValue: '현재 ${p.primarySkill?.name ?? '비어 있음'}',
                 semanticLabel:
                     '${skill.name} · ${p.primarySkill?.id == skill.id ? '주 슬롯 해제' : '주 슬롯에 장착'}',
                 primary: p.primarySkill?.id == skill.id,
@@ -755,6 +770,9 @@ class _SkillsPanelState extends State<SkillsPanel> {
                             padding: EdgeInsets.only(right: i == 3 ? 0 : 8),
                             child: GameAction(
                               '${i + 1}',
+                              leading: _currentSlotArt(i, 24),
+                              semanticValue:
+                                  '현재 ${p.skillAt(i)?.name ?? '비어 있음'}',
                               semanticLabel:
                                   '${skill.name} · 슬롯 ${i + 1} 지정${current == i
                                       ? ' · 사용 중'

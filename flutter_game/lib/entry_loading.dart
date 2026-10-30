@@ -13,7 +13,7 @@ class EntryLoading extends StatelessWidget {
     body: Stack(
       fit: StackFit.expand,
       children: [
-        const ColoredBox(color: ink),
+        const EntryBackdrop(),
         const DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -68,6 +68,28 @@ class EntryLoading extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// One upright landscape for bootstrap, startup and session preparation.
+class EntryBackdrop extends StatelessWidget {
+  const EntryBackdrop({this.art, super.key});
+  final GameArt? art;
+  @override
+  Widget build(BuildContext context) {
+    final image = art?.images['entry-scene'];
+    return ExcludeSemantics(
+      child: ColoredBox(
+        color: ink,
+        child: image != null
+            ? RawImage(image: image, fit: BoxFit.cover)
+            : Image.asset(
+                'assets/images/entry-scene.webp',
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => const SizedBox.expand(),
+              ),
+      ),
+    );
+  }
 }
 
 /// Prepared sessions use their retained atlas rather than issuing asset reads.

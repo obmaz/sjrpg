@@ -37,6 +37,13 @@ void main() {
         final name = session.progress.basicSkill.name;
         await tester.tap(find.bySemanticsLabel('주 슬롯 · $name'));
         await tester.pumpAndSettle();
+        final surface = find.byKey(const ValueKey('skill-detail-surface'));
+        final bounds = tester.getRect(surface);
+        expect(bounds.center.dy, closeTo(size.height / 2, 1));
+        expect(bounds.center.dx, closeTo(size.width / 2, 1));
+        final material = tester.widget<Material>(surface);
+        expect(material.clipBehavior, Clip.antiAlias);
+        expect(find.byTooltip('현재: $name'), findsWidgets);
         final remove = find.bySemanticsLabel('$name · 주 슬롯 해제');
         expect(
           remove,

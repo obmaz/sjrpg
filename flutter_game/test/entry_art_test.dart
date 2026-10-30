@@ -432,7 +432,7 @@ void main() {
       );
       expect(
         (art.images['entry-scene']!.width, art.images['entry-scene']!.height),
-        (768, 1152),
+        (1024, 576),
       );
       expect(
         (

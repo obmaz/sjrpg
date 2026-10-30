@@ -152,6 +152,8 @@ class GameAction extends StatelessWidget {
     required this.onTap,
     this.primary = false,
     this.icon,
+    this.leading,
+    this.semanticValue,
     this.semanticLabel,
     this.fontSize = 16,
     this.minHeight = 50,
@@ -159,6 +161,8 @@ class GameAction extends StatelessWidget {
   });
   final String label;
   final String? semanticLabel;
+  final String? semanticValue;
+  final Widget? leading;
   final double fontSize;
   final double minHeight;
   final VoidCallback? onTap;
@@ -175,6 +179,7 @@ class GameAction extends StatelessWidget {
       button: true,
       enabled: enabled,
       label: semanticLabel ?? label,
+      value: semanticValue,
       onTap: onTap,
       excludeSemantics: true,
       child: ConstrainedBox(
@@ -196,6 +201,10 @@ class GameAction extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    if (leading != null) ...[
+                      leading!,
+                      const SizedBox(width: 6),
+                    ],
                     if (icon != null) ...[
                       Icon(
                         icon,

@@ -80,6 +80,7 @@ class _ArtworkPreparation extends StatelessWidget {
         ),
       ),
       if (busy) ...[
+        Positioned.fill(child: EntryBackdrop(art: art)),
         const Positioned.fill(
           child: ModalBarrier(dismissible: false, color: Color(0xbb071d1c)),
         ),
