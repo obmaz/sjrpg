@@ -22,7 +22,9 @@ class FieldLandmark {
       Rect.fromCenter(center: center, width: side * .72, height: side * .30);
   Rect get drawBounds => Rect.fromLTWH(
     footprint.center.dx - side / 2,
-    footprint.bottom - side,
+    // The packed sprite ends 32px above its 768px cell edge. Keep that
+    // transparent gutter below the physical ground contact, not above it.
+    footprint.bottom - side + side * (32 / 768),
     side,
     side,
   );

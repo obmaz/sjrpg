@@ -25,8 +25,11 @@ void main() {
         final image = art.images['landmarks-${stage.name}']!;
         expect(image.width, 1536);
         final bytes = (await image.toByteData())!.buffer.asUint8List();
+        final s = Adventure(art, stage: stage, hubOrigin: stage.arrival)
+          ..start(TestGame());
+        addTearDown(s.dispose);
         for (var index = 0; index < 4; index++) {
-          var visible = 0, borderAlpha = 0;
+          var visible = 0, borderAlpha = 0, bottom = 0;
           for (var y = 0; y < 768; y++) {
             for (var x = 0; x < 768; x++) {
               final alpha =
@@ -34,6 +37,7 @@ void main() {
                           4) +
                       3];
               if (alpha > 16) visible++;
+              if (alpha > 2) bottom = y + 1;
               if (x < 30 || x >= 738 || y < 30 || y >= 738) {
                 if (alpha > borderAlpha) borderAlpha = alpha;
               }
@@ -41,10 +45,15 @@ void main() {
           }
           expect(borderAlpha, 0, reason: 'neighbor-free cell padding $index');
           expect(visible, greaterThan(20000));
+          final landmark = s.world.landmarks[index];
+          final visibleGround =
+              landmark.drawBounds.top + bottom / 768 * landmark.side;
+          expect(
+            visibleGround,
+            closeTo(landmark.footprint.bottom, 6),
+            reason: 'visible terrain contact must meet its physical front edge',
+          );
         }
-        final s = Adventure(art, stage: stage, hubOrigin: stage.arrival)
-          ..start(TestGame());
-        addTearDown(s.dispose);
         final output = Platform.environment['SJRPG_LANDMARK_PROOF_DIR'];
         if (output != null) {
           Directory(output).createSync(recursive: true);
