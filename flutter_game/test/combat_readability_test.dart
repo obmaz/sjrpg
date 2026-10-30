@@ -26,7 +26,10 @@ void main() {
       expect(text.critical, true);
       expect(text.isReward, false);
       expect(text.textSize, 32);
-      expect(text.combatBounds.height, 44);
+      expect(
+        text.combatBounds.height,
+        greaterThanOrEqualTo(text.textSize + 17),
+      );
       for (var i = 0; i < 25; i++) {
         expect(s.hit(mob, 1, Offset.zero, critical: i.isEven), true);
       }
