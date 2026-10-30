@@ -54,7 +54,7 @@ class MapMarkerLayout {
       var center = contain(mean, radius);
       if (hero != null && items.length > 1) {
         var delta = center - hero;
-        final separation = radius + 6 * unit;
+        final separation = radius + (round ? 6 : 14) * unit;
         if (delta.distance < separation) {
           if (delta.distance < .01) delta = const Offset(1, -1);
           center = contain(hero + delta / delta.distance * separation, radius);

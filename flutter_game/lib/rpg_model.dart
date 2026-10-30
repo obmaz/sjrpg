@@ -744,8 +744,7 @@ class SkillDef {
   final int rankLimit;
   final double cost, cooldown;
   final bool passive, basic, mobility;
-  bool get combatAssignable =>
-      !mobility && id != 'sorceressAttack' && (basic || !passive);
+  bool get combatAssignable => id != 'sorceressAttack' && (basic || !passive);
   final double basicDamageScale, basicTempoScale;
   final Map<String, int> requires;
   static const maxRank = 5;
@@ -1888,7 +1887,7 @@ class Progress {
     skillPoints--;
     ranks[skill.id] = previousRank + 1;
     if (skill.basic && previousRank == 0) selectedBasic = skill.id;
-    if (!skill.passive && !skill.mobility && !skillSlots.contains(skill.id)) {
+    if (!skill.passive && !skillSlots.contains(skill.id)) {
       if (secondarySkill == null) {
         secondarySkill = skill.id;
       } else if (tertiarySkill == null) {

@@ -704,7 +704,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
                       const Padding(
                         padding: EdgeInsets.only(top: 10),
                         child: Text(
-                          '이동 전용 · 습득하면 회피 옆에 표시됩니다 · M',
+                          '주 슬롯 또는 보조 슬롯에 장착해서 사용합니다.',
                           style: TextStyle(
                             color: gold,
                             fontSize: 13,
@@ -712,7 +712,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
                           ),
                         ),
                       ),
-                    if (!skill.passive && !skill.mobility && rank == 0)
+                    if (!skill.passive && rank == 0)
                       const Padding(
                         padding: EdgeInsets.only(top: 10),
                         child: Text(

@@ -39,6 +39,31 @@ void main() {
     return s;
   }
 
+  test(
+    'Teleport casts from each ordinary slot with the same movement and mana',
+    () {
+      for (final slot in [0, 1, 2, 3, Progress.primarySlot]) {
+        final s = field(HeroClass.mage);
+        final p = s.progress, h = s.hero;
+        p.energy = p.maxEnergy;
+        expect(
+          slot == Progress.primarySlot
+              ? p.selectPrimary('blink')
+              : p.selectSkill('blink', slot: slot),
+          true,
+        );
+        final origin = h.position.toOffset(), mana = p.energy;
+        if (slot == Progress.primarySlot) {
+          h.slash();
+        } else {
+          h.skill(slot: slot);
+        }
+        expect((h.position.toOffset() - origin).distance, greaterThan(0));
+        expect(p.energy, closeTo(mana - p.skillCost(p.mobilitySkill), 1e-8));
+      }
+    },
+  );
+
   void walk(Guardian h) => h.onJoystickChangeDirectional(
     JoystickDirectionalEvent(
       directional: JoystickMoveDirectional.MOVE_RIGHT,

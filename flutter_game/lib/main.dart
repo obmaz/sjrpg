@@ -79,17 +79,7 @@ class _ArtworkPreparation extends StatelessWidget {
           child: AbsorbPointer(absorbing: busy, child: child),
         ),
       ),
-      if (busy) ...[
-        Positioned.fill(child: EntryBackdrop(art: art)),
-        const Positioned.fill(
-          child: ModalBarrier(dismissible: false, color: Color(0xbb071d1c)),
-        ),
-        Positioned.fill(
-          child: SafeArea(
-            child: Center(child: EntryPreparationPanel(art: art)),
-          ),
-        ),
-      ],
+      if (busy) Positioned.fill(child: LandscapePreparation(art: art)),
     ],
   );
 }
@@ -964,15 +954,6 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 : width < 360
                 ? 56.0
                 : 64.0);
-        final mobilityRight =
-            referenceControls?.dodgeRight ??
-            (referenceFan
-                ? 8.0
-                : width < 360
-                ? (compactBattle ? 120.0 : 112.0)
-                : 134.0);
-        final mobilityRise =
-            referenceControls?.mobilityRise ?? (referenceFan ? -36.0 : 112.0);
         final layouts =
             referenceControls?.skills ??
             (referenceFan
@@ -1097,6 +1078,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
               skill.id == 'shadowAssault' && adventure.hero.shadowAssaultActive;
           final remaining = continuing
               ? 0.0
+              : skill.mobility
+              ? adventure.hero.mobilityClock
               : adventure.hero.cooldowns[skill.id] ?? 0;
           final aimed = aimedSkillIds.contains(skill.id);
           return Positioned(
@@ -1114,6 +1097,22 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                   ? '보조 ${skill.name}'
                   : '스킬 ${slot + 1} ${skill.name}',
               size: layout.$3,
+              enabled:
+                  !skill.mobility ||
+                  adventure.active &&
+                      !adventure.afflictions.movementBlocked &&
+                      !adventure.hero.physicalAction &&
+                      adventure.hero.mobilityClock <= 0 &&
+                      (p.heroClass != HeroClass.mage ||
+                          adventure.hero.castLock <= 0 &&
+                              adventure.hero.dashing <= 0 &&
+                              p.energy >= p.skillCost(skill) &&
+                              adventure.hero.sorceressCombat.canActivate(
+                                skill,
+                              )),
+              semanticHint: skill.mobility && adventure.hero.physicalAction
+                  ? '기술 동작 중'
+                  : null,
               insufficientResource:
                   !continuing &&
                   p.energy <
@@ -1392,57 +1391,6 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                     onTap: mount == null
                         ? adventure.hero.dodge
                         : () => adventure.useMountSkill(),
-                  ),
-                ),
-              if (hasMobility && mount == null)
-                Positioned(
-                  right: mobilityRight,
-                  bottom: bottom + mobilityRise,
-                  child: ActionButton(
-                    art: widget.art,
-                    sprite: 'roundEmpty',
-                    effect: skillEffect(mobility.id),
-                    glyphIndex: mobility.id == 'blink'
-                        ? MobileGlyph.blink
-                        : MobileGlyph.sprint,
-                    icon: skillIcon(mobility.id),
-                    label: mobility.shortName,
-                    semanticLabel: mobility.name,
-                    semanticHint: adventure.afflictions.movementBlocked
-                        ? '이동 불가 상태'
-                        : mobility.id == 'blink' && adventure.hero.castLock > 0
-                        ? '시전 중'
-                        : mobility.id == 'blink' &&
-                              p.energy < p.skillCost(mobility)
-                        ? '마나 부족'
-                        : adventure.hero.physicalAction
-                        ? '기술 동작 중'
-                        : adventure.hero.mobilityClock > 0
-                        ? '재사용 ${CombatBalance.realSeconds(adventure.hero.mobilityClock).ceil()}초'
-                        : '이동 기술 · M',
-                    showLabel: false,
-                    size:
-                        referenceControls?.mobilitySize ??
-                        (referenceFan
-                            ? 48
-                            : width < 360
-                            ? 48
-                            : 56),
-                    enabled:
-                        adventure.active &&
-                        !adventure.afflictions.movementBlocked &&
-                        !adventure.hero.physicalAction &&
-                        adventure.hero.mobilityClock <= 0 &&
-                        (mobility.id != 'blink' ||
-                            adventure.hero.castLock <= 0 &&
-                                adventure.hero.dashing <= 0 &&
-                                p.energy >= p.skillCost(mobility) &&
-                                adventure.hero.sorceressCombat.canActivate(
-                                  mobility,
-                                )),
-                    remaining: adventure.hero.mobilityClock,
-                    total: p.mobilityCooldown,
-                    onTap: () => adventure.hero.useMobility(),
                   ),
                 ),
               if (contextActions.isNotEmpty)

@@ -552,6 +552,18 @@ class AbilityPicturePainter extends CustomPainter {
       old.art != art || old.name != name;
 }
 
+/// Shared by quest markers and their map selector legend; completion keeps hue.
+Color mapQuestColor(int index) => const [
+  Color(0xffffcf70),
+  Color(0xff63e6dd),
+  Color(0xffc7a0ff),
+  Color(0xffa7df70),
+  Color(0xff72b7ff),
+  Color(0xffffa5ca),
+  Color(0xffe9a46a),
+  Color(0xff93ccbd),
+][index % 8];
+
 class MapPainter extends CustomPainter {
   MapPainter(this.session, {this.round = true, this.markerScale = 1});
   final Adventure session;
@@ -727,7 +739,7 @@ class MapPainter extends CustomPainter {
         icon: icon,
       );
     }
-    for (final site in session.visibleSites) {
+    for (final (siteIndex, site) in session.visibleSites.indexed) {
       final anchor = project(site.at),
           tracked = site.id == session.trackedSite?.id;
       final done = session.cleansedSites.contains(site.id),
@@ -737,7 +749,7 @@ class MapPainter extends CustomPainter {
         'site:${site.id}',
         anchor,
         'site',
-        done ? const Color(0xff85d6aa) : gold,
+        mapQuestColor(siteIndex),
         round ? (tracked ? 8 : 6) : (tracked ? 13 : 10),
         label: '${site.name}${done ? ' ✓' : ''}',
         tracked: tracked,
@@ -954,18 +966,51 @@ class MapPainter extends CustomPainter {
       );
       c.restore();
     } else {
+      c.drawCircle(hero, 13 * unit, Paint()..color = const Color(0xcc09252d));
       c.drawCircle(
         hero,
-        5 * markerScale,
-        Paint()..color = const Color(0xff9df3ee),
-      );
-      c.drawCircle(
-        hero,
-        5 * markerScale,
+        10 * unit,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
+          ..strokeWidth = 2 * unit
+          ..color = const Color(0xff63f6ed),
+      );
+      c.drawCircle(hero, 6 * unit, Paint()..color = const Color(0xff63f6ed));
+      c.drawCircle(
+        hero,
+        6 * unit,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2 * unit
           ..color = Colors.white,
+      );
+      c.save();
+      c.translate(hero.dx, hero.dy);
+      c.rotate(session.hero.bearing);
+      c.drawPath(
+        Path()
+          ..moveTo(17 * unit, 0)
+          ..lineTo(9 * unit, -4 * unit)
+          ..lineTo(9 * unit, 4 * unit)
+          ..close(),
+        Paint()..color = Colors.white,
+      );
+      c.restore();
+      final labelAt = hero - Offset(0, 28 * unit);
+      c.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(center: labelAt, width: 52 * unit, height: 20 * unit),
+          Radius.circular(6 * unit),
+        ),
+        Paint()..color = const Color(0xee09252d),
+      );
+      session.art.text(
+        c,
+        '내 위치',
+        labelAt,
+        size: 11 * unit,
+        color: Colors.white,
+        centered: true,
       );
     }
     c.restore();

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'entry_art_widgets.dart';
 import 'game_art.dart';
 import 'game_ui.dart';
+import 'landscape_entry.dart';
 
 /// Neutral loading surface shared with the web bootstrap.
 class EntryLoading extends StatelessWidget {
@@ -90,6 +91,29 @@ class EntryBackdrop extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Session preparation shares the title's landscape canvas, including its panel.
+class LandscapePreparation extends StatelessWidget {
+  const LandscapePreparation({required this.art, super.key});
+  final GameArt art;
+  @override
+  Widget build(BuildContext context) => LandscapeEntry(
+    fill: true,
+    builder: (scale) => Stack(
+      fit: StackFit.expand,
+      children: [
+        EntryBackdrop(art: art),
+        const ColoredBox(color: Color(0xbb071d1c)),
+        Center(
+          child: Transform.scale(
+            scale: 1 / scale,
+            child: EntryPreparationPanel(art: art),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 /// Prepared sessions use their retained atlas rather than issuing asset reads.

@@ -3609,6 +3609,10 @@ class Guardian extends Player with WithCollision {
     final p = session.progress;
     final slotIndex = slot ?? (secondary ? 1 : 0);
     final def = p.skillAt(slotIndex);
+    if (def?.mobility ?? false) {
+      useMobility();
+      return;
+    }
     if (def != null && def.basic && p.heroClass == HeroClass.warrior) {
       if (_basicAvailable()) _performSlash();
       return;

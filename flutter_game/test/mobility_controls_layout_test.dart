@@ -108,7 +108,7 @@ void main() {
         }
         final mobility = s.progress.mobilitySkill;
         Finder button() => find.byWidgetPredicate(
-          (w) => w is ActionButton && w.semanticLabel == mobility.name,
+          (w) => w is ActionButton && w.semanticLabel.endsWith(mobility.name),
         );
         expect(
           button(),
@@ -128,6 +128,7 @@ void main() {
         for (var i = 0; i < choices.length; i++) {
           s.progress.selectSkill(choices[i].id, slot: i);
         }
+        expect(s.progress.selectSkill(mobility.id, slot: 3), true);
         expect(s.progress.rank(mobility.id), 5);
         s.refresh();
         await tester.pump();
@@ -152,6 +153,11 @@ void main() {
         s.refresh();
         await tester.pump();
         final targets = find.byType(ActionButton);
+        expect(
+          targets.evaluate().length,
+          lessThanOrEqualTo(6),
+          reason: 'one primary, four auxiliary slots and dodge only',
+        );
         final rects = [
           for (var i = 0; i < targets.evaluate().length; i++)
             tester.getRect(targets.at(i)),

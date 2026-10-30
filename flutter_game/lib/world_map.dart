@@ -200,6 +200,14 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
                                 child: GameAction(
                                   '${done ? '✓ ' : ''}${site.name}',
                                   primary: tracked,
+                                  leading: Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: mapQuestColor(index),
+                                    ),
+                                  ),
                                   fontSize: box.maxWidth < 340 ? 13 : 14,
                                   semanticLabel: '지도 목표 · ${site.name}',
                                   onTap: () => selectGoal(site),

@@ -24,7 +24,7 @@ void main() {
 
   for (final hero in HeroClass.values) {
     test(
-      '$hero mobility uses its class source unlock and never occupies a regular skill slot',
+      '$hero mobility uses its class source unlock and can be assigned to a regular skill slot',
       () {
         final p = Progress(heroClass: hero)
           ..level = hero == HeroClass.warrior ? 7 : 17
@@ -36,7 +36,6 @@ void main() {
         for (final parent in skill.requires.entries) {
           train(p, parent.key, parent.value);
         }
-        final before = p.skillSlots;
         expect(p.canLearn(skill), false);
         expect(p.mobilityCooldown, 0);
         p.level = skill.requiredLevel;
@@ -50,9 +49,10 @@ void main() {
           p.level = 22;
         }
         train(p, skill.id, 5);
-        expect(p.skillSlots, before);
-        expect(p.canSelectSkill(skill.id), false);
-        expect(p.selectSkill(skill.id), false);
+        expect(p.canSelectSkill(skill.id, slot: 3), true);
+        expect(p.selectSkill(skill.id, slot: 3), true);
+        expect(p.skillAt(3)?.id, skill.id);
+        expect(Progress.fromSave(p.toSave())!.skillAt(3)?.id, skill.id);
         expect(
           p.mobilityCooldown,
           closeTo(hero == HeroClass.warrior ? 12.42 : 0, .000001),
@@ -95,17 +95,14 @@ void main() {
         );
         final restored = Progress.fromSave(jsonDecode(jsonEncode(p.toSave())))!;
         expect(restored.rank(skill.id), 5);
-        expect(restored.skillSlots, before);
-        for (final key in [
-          'selectedSkill',
-          'secondarySkill',
-          'tertiarySkill',
-          'quaternarySkill',
-        ]) {
-          final invalid =
-              jsonDecode(jsonEncode(p.toSave())) as Map<String, dynamic>;
-          invalid[key] = skill.id;
-          expect(Progress.fromSave(invalid), null, reason: key);
+        expect(restored.skillSlots, p.skillSlots);
+        for (var slot = 0; slot < 4; slot++) {
+          final candidate = Progress.fromSave(p.toSave())!;
+          expect(candidate.selectSkill(skill.id, slot: slot), true);
+          expect(
+            Progress.fromSave(candidate.toSave())!.skillAt(slot)?.id,
+            skill.id,
+          );
         }
         p.awardSkillResetTicket(WorldStage.forest);
         final refund = p.investedSkillPoints, points = p.skillPoints;
