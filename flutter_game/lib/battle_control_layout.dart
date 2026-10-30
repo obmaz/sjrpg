@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
-/// One height-scaled fan, keeping the primary, four skills and dodge together.
+/// Fixed portrait-size buttons with anchors adapted to viewport height.
 /// Coordinates are offsets from the right/bottom viewport edges, not sprites.
 class BattleControlLayout {
   BattleControlLayout(Size viewport, {double safeBottom = 0})
@@ -12,14 +12,16 @@ class BattleControlLayout {
       ),
       inset = math.max(8, safeBottom);
   final double height, scale, inset;
-  double get attackSize => 132 * scale;
-  double get smallSize => math.max(44, 64 * scale);
-  double get attackRight => 8 * scale + smallSize + 8 * scale;
+  double get attackSize => 84;
+  double get smallSize => 52;
+  double get dodgeSize => 44;
+  double get mobilitySize => 48;
+  double get attackRight => 64;
   double get bottom =>
-      math.max(inset + 8, 82 * scale - math.max(0, 350 - height) * .55);
-  double get dodgeRight => 8 * scale;
-  double get dodgeRise => (attackSize - smallSize) / 2;
-  double get mobilityRise => dodgeRise - smallSize - 8 * scale;
+      math.max(inset + 36, 82 * scale - math.max(0, 350 - height) * .55);
+  double get dodgeRight => 8;
+  double get dodgeRise => 20;
+  double get mobilityRise => -36;
   double get stickSize => 202 * scale;
   double get stickLeft => 70 * scale;
   double get stickBottom => math.max(inset + 8, 50 * scale);

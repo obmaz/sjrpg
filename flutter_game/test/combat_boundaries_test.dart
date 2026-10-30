@@ -120,8 +120,8 @@ void main() {
       final main = box(l.attackRight, l.bottom, l.attackSize);
       final all = [
         main,
-        box(l.dodgeRight, l.bottom + l.dodgeRise, l.smallSize),
-        box(l.dodgeRight, l.bottom + l.mobilityRise, l.smallSize),
+        box(l.dodgeRight, l.bottom + l.dodgeRise, l.dodgeSize),
+        box(l.dodgeRight, l.bottom + l.mobilityRise, l.mobilitySize),
         for (final p in l.skills) box(p.$1, l.bottom + p.$2, p.$3),
       ];
       for (var i = 0; i < all.length; i++) {

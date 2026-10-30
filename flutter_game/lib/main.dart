@@ -858,9 +858,10 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         final landscapeControls = landscape;
         final tightLandscape = landscapeControls && width < 700;
         final sideGuide = landscapeControls || width >= 600;
-        final rightPotions = landscape && media.size.height >= 380;
-        final portraitFan =
-            !landscape && width >= 360 && media.size.height >= 500;
+        final rightPotions = landscape
+            ? media.size.height >= 380
+            : media.size.height >= 500;
+        final portraitFan = !landscape && media.size.height >= 500;
         final referenceControls = landscape && width >= 500
             ? BattleControlLayout(media.size, safeBottom: media.padding.bottom)
             : null;
@@ -880,7 +881,12 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                                 : 112.0
                           : 142.0),
             attack =
-                referenceControls?.attackSize ?? (width < 360 ? 76.0 : 84.0),
+                referenceControls?.attackSize ??
+                (portraitFan
+                    ? 84.0
+                    : width < 360
+                    ? 76.0
+                    : 84.0),
             bottom = referenceControls != null
                 ? referenceControls.bottom
                 : media.padding.bottom + (short ? 86.0 : 112.0);
@@ -952,7 +958,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 ? 112.0
                 : 134.0);
         final dodgeSize =
-            referenceControls?.smallSize ??
+            referenceControls?.dodgeSize ??
             (referenceFan
                 ? 44.0
                 : width < 360
@@ -1416,7 +1422,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                         : '이동 기술 · M',
                     showLabel: false,
                     size:
-                        referenceControls?.smallSize ??
+                        referenceControls?.mobilitySize ??
                         (referenceFan
                             ? 48
                             : width < 360
@@ -1499,10 +1505,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                               ? 164
                               : 110),
                 bottom: rightPotions
-                    ? referenceControls!.bottom +
-                          referenceControls.attackSize +
-                          referenceControls.smallSize +
-                          10
+                    ? bottom + attack + 52 + 10
                     : tightLandscape && referenceControls == null
                     ? math.max(8, media.padding.bottom) + 58
                     : null,
@@ -1720,7 +1723,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     String sprite,
     String label,
     String target, {
-    bool compact = false,
+    bool compact = true,
     bool side = false,
   }) => MenuButton(
     art: widget.art,
