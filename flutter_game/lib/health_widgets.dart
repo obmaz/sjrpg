@@ -155,16 +155,22 @@ class _HealthSurfaceState extends State<_HealthSurface> {
 }
 
 class HealthMeter extends StatelessWidget {
-  const HealthMeter(this.session, {this.height = 25, super.key});
+  const HealthMeter(
+    this.session, {
+    this.height = 25,
+    this.leadingInset = 18,
+    super.key,
+  });
   final Adventure session;
   final double height;
+  final double leadingInset;
   @override
   Widget build(BuildContext context) {
     final feedback = PlayerHealthFeedbackScope.maybeOf(context);
     if (feedback == null || !identical(feedback.session, session)) {
       return PlayerHealthFeedbackScope(
         session: session,
-        child: HealthMeter(session, height: height),
+        child: HealthMeter(session, height: height, leadingInset: leadingInset),
       );
     }
     return ValueListenableBuilder<HealthReading>(
@@ -179,7 +185,7 @@ class HealthMeter extends StatelessWidget {
             children: [
               _HealthSurface(feedback: feedback, danger: false),
               Padding(
-                padding: const EdgeInsets.fromLTRB(18, 2, 17, 2),
+                padding: EdgeInsets.fromLTRB(leadingInset, 2, 17, 2),
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(

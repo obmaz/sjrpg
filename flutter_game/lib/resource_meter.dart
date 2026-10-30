@@ -11,8 +11,12 @@ import 'rpg_model.dart';
 /// A small resource vessel. Its clock repaints only the clipped fluid layer;
 /// text and semantics change with the session, never with animation frames.
 class ResourceMeter extends StatefulWidget {
-  const ResourceMeter(this.session, {this.height = 15, super.key})
-    : assert(height > 0 && height < double.infinity);
+  const ResourceMeter(
+    this.session, {
+    this.height = 15,
+    this.leadingInset = 4,
+    super.key,
+  }) : assert(height > 0 && height < double.infinity);
 
   /// The caller reserves this much height so large text keeps its full scale.
   static double minimumHeight(TextScaler scaler) =>
@@ -20,6 +24,7 @@ class ResourceMeter extends StatefulWidget {
 
   final Adventure session;
   final double height;
+  final double leadingInset;
 
   @override
   State<ResourceMeter> createState() => _ResourceMeterState();
@@ -150,7 +155,7 @@ class _ResourceMeterState extends State<ResourceMeter>
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+            padding: EdgeInsets.fromLTRB(widget.leadingInset, 1, 4, 1),
             child: Center(
               child: Text(
                 _visibleLabel,

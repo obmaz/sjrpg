@@ -700,13 +700,15 @@ abstract final class SorceressRules {
       damagePerSecond: (minDps + maxDps) / 2,
       range:
           (switch (id) {
-            'inferno' => (20 + n * 3) / 4 * worldSubtile,
-            'frozenOrb' => 300.0,
-            'blink' => 600.0,
-            'telekinesis' => 25 * worldSubtile,
-            _ => 600.0,
-          }) *
-          _reachPotency(r),
+                'inferno' => (20 + n * 3) / 4 * worldSubtile,
+                'frozenOrb' => 300.0,
+                'blink' => 600.0,
+                'telekinesis' => 25 * worldSubtile,
+                _ => 600.0,
+              }) *
+              _reachPotency(r) -
+          // Keep every rank's original increment after halving rank one's reach.
+          (id == 'blink' ? 600 * _reachPotency(1) * .5 : 0),
       radius: radius * _reachPotency(r),
       projectileCount: bolts,
       maxTargets: targets,

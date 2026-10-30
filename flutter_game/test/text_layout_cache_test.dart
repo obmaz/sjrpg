@@ -26,9 +26,13 @@ class _UncachedArt extends _MeasuredArt {
     ui.Offset at, {
     double size = 16,
     ui.Color color = const ui.Color(0xffffedbb),
+    bool centered = false,
   }) {
     final paragraph = layoutText(value, size: size, color: color);
-    canvas.drawParagraph(paragraph, at - const ui.Offset(80, 0));
+    canvas.drawParagraph(
+      paragraph,
+      at - ui.Offset(80, centered ? paragraph.height / 2 : 0),
+    );
     paragraph.dispose();
   }
 }

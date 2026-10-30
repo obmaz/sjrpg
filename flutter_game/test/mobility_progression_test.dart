@@ -60,7 +60,7 @@ void main() {
         expect(p.mobilityDuration, hero == HeroClass.warrior ? 2.8 : 0);
         expect(
           p.mobilityRange,
-          closeTo(hero == HeroClass.mage ? 481.57894736842104 : 0, 1e-9),
+          closeTo(hero == HeroClass.mage ? 256.57894736842104 : 0, 1e-9),
           reason: 'rank-five Teleport has not reached its rank-twenty range',
         );
         if (hero == HeroClass.mage) {

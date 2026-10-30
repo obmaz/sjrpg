@@ -11,6 +11,7 @@ import 'combat_balance.dart';
 import 'd1_icon_art.dart';
 import 'game_art.dart';
 import 'health_widgets.dart';
+import 'map_marker_layout.dart';
 import 'resource_meter.dart';
 import 'sorceress_icon_art.dart';
 import 'world_model.dart';
@@ -53,6 +54,9 @@ class GameHud extends StatelessWidget {
     final short = media.size.height < 520 || landscape;
     final portraitSide = battlePortraitDiameter(media.size);
     final meterLeft = 10 + portraitSide * .55;
+    // Labels start beyond the portrait's complete metal rim. Only the fluid
+    // and its frame continue underneath the circular join.
+    final labelInset = 10 + portraitSide + 8 - meterLeft;
     Widget joinPortrait(Widget child, double top) => ClipPath(
       clipper: PortraitGaugeClipper(
         Offset(10 + portraitSide / 2 - meterLeft, 16 + portraitSide / 2 - top),
@@ -69,25 +73,41 @@ class GameHud extends StatelessWidget {
       18.0,
       ResourceMeter.minimumHeight(media.textScaler),
     );
-    const healthTop = 30.0, healthHeight = 18.0, resourceTop = 49.0;
+    final identityHeight = math.max(
+      21.0,
+      (media.textScaler.scale(12) * 1.1).ceilToDouble(),
+    );
+    final healthTop = 7 + identityHeight + 2;
+    const healthHeight = 18.0;
+    final resourceTop = healthTop + healthHeight + 1;
     return SizedBox(
       height: math.max(130, mapSide + 14),
       child: Stack(
         children: [
           Positioned(
+            key: const ValueKey('hud-status-chrome'),
             left: 5,
             top: 4,
             width: statusWidth,
-            height: math.max(84, portraitSide + 24),
+            height: math.max(
+              math.max(84, portraitSide + 24),
+              resourceTop + resourceHeight + 19,
+            ),
             child: IgnorePointer(
-              child: CustomPaint(painter: _HeroStatusChrome(portraitSide + 8)),
+              child: CustomPaint(
+                painter: _HeroStatusChrome(
+                  portraitSide + 8,
+                  plateBottom: resourceTop + resourceHeight + 11,
+                  headerBottom: healthTop - 7,
+                ),
+              ),
             ),
           ),
           Positioned(
             left: portraitSide + 16,
             top: 7,
             width: math.max(44, statusWidth - portraitSide - 22),
-            height: 21,
+            height: identityHeight,
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
@@ -109,7 +129,11 @@ class GameHud extends StatelessWidget {
             left: meterLeft,
             width: math.max(50, statusWidth - meterLeft - 7),
             child: joinPortrait(
-              HealthMeter(session, height: healthHeight),
+              HealthMeter(
+                session,
+                height: healthHeight,
+                leadingInset: labelInset,
+              ),
               healthTop,
             ),
           ),
@@ -118,7 +142,11 @@ class GameHud extends StatelessWidget {
             top: resourceTop,
             width: math.max(48, statusWidth - meterLeft - 7),
             child: joinPortrait(
-              ResourceMeter(session, height: resourceHeight),
+              ResourceMeter(
+                session,
+                height: resourceHeight,
+                leadingInset: labelInset,
+              ),
               resourceTop,
             ),
           ),
@@ -141,15 +169,20 @@ class GameHud extends StatelessWidget {
                       color: gold,
                       backgroundColor: const Color(0xff514537),
                     ),
-                    Center(
-                      child: Text(
-                        'EXP ${(p.xp / p.nextLevelXp * 100).floor()}%',
-                        textScaler: TextScaler.noScaling,
-                        style: const TextStyle(
-                          fontSize: 7,
-                          height: 1,
-                          color: cream,
-                          shadows: [Shadow(color: Colors.black, blurRadius: 2)],
+                    Padding(
+                      padding: EdgeInsets.only(left: labelInset, right: 8),
+                      child: Center(
+                        child: Text(
+                          'EXP ${(p.xp / p.nextLevelXp * 100).floor()}%',
+                          textScaler: TextScaler.noScaling,
+                          style: const TextStyle(
+                            fontSize: 7,
+                            height: 1,
+                            color: cream,
+                            shadows: [
+                              Shadow(color: Colors.black, blurRadius: 2),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -253,16 +286,22 @@ class PortraitGaugeClipper extends CustomClipper<Path> {
 /// The portrait and two vessels share one fitted dark-metal silhouette.
 /// The live meters retain their own damage trail, danger pulse and fluid clock.
 class _HeroStatusChrome extends CustomPainter {
-  const _HeroStatusChrome(this.portraitSide);
+  const _HeroStatusChrome(
+    this.portraitSide, {
+    required this.plateBottom,
+    required this.headerBottom,
+  });
   final double portraitSide;
+  final double plateBottom;
+  final double headerBottom;
   @override
   void paint(Canvas canvas, Size size) {
     final plate = Path()
       ..moveTo(portraitSide * .70, 1)
       ..lineTo(size.width, 1)
-      ..lineTo(size.width - 8, 23)
-      ..lineTo(size.width - 8, 79)
-      ..lineTo(portraitSide * .70, 79)
+      ..lineTo(size.width - 8, headerBottom)
+      ..lineTo(size.width - 8, plateBottom)
+      ..lineTo(portraitSide * .70, plateBottom)
       ..close();
     final portrait = Rect.fromLTWH(1, 8, portraitSide, portraitSide);
     final joinedPlate = Path.combine(
@@ -283,8 +322,8 @@ class _HeroStatusChrome extends CustomPainter {
         ..color = const Color(0xff6e6355),
     );
     canvas.drawLine(
-      Offset(portraitSide + 3, 23),
-      Offset(size.width - 13, 23),
+      Offset(portraitSide + 3, headerBottom),
+      Offset(size.width - 13, headerBottom),
       Paint()
         ..color = const Color(0xff897a64)
         ..strokeWidth = .7,
@@ -346,7 +385,9 @@ class _HeroStatusChrome extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _HeroStatusChrome old) =>
-      old.portraitSide != portraitSide;
+      old.portraitSide != portraitSide ||
+      old.plateBottom != plateBottom ||
+      old.headerBottom != headerBottom;
 }
 
 /// Shared generated medallions use the same circular face as learned skills.
@@ -538,17 +579,12 @@ class MapPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = (round ? 18 : 30 * markerScale),
     );
-    if (round) {
-      for (var i = 0; i < session.stageChestLocations.length; i++) {
-        if (session.openedChests.contains(i)) continue;
-        c.drawCircle(session.stageChestLocations[i], 42, Paint()..color = gold);
-      }
-    }
     c.restore();
     Offset project(Offset at) => Offset(
       (at.dx - view.left) / view.width * s.width,
       (at.dy - view.top) / view.height * s.height,
     );
+    c.clipRect(rect.deflate(round ? 3 : markerScale));
     if (!round) {
       // Decorations stay fixed in screen pixels while the actual map scales.
       final unit = markerScale;
@@ -609,250 +645,283 @@ class MapPainter extends CustomPainter {
       }
     }
     final heroPoint = project(session.hero.body.center);
-    if (round) {
-      final radius = math.max(1.8, s.shortestSide * .022);
-      for (final mob in session.mobs) {
-        if (!mob.combatReady || mob.isDead || mob.isRemoving || mob.boss) {
-          continue;
-        }
-        final point = project(mob.body.center);
-        if (!view.contains(mob.body.center) ||
-            (point - rect.center).distance > s.shortestSide / 2 - radius - 4) {
-          continue;
-        }
-        c.drawCircle(
-          point,
-          radius + .7,
-          Paint()..color = const Color(0xff511d17),
-        );
-        c.drawCircle(
-          point,
-          radius,
-          Paint()
-            ..color = mob.isElite ? mob.tierColor : const Color(0xffe94430),
-        );
-      }
+    final unit = round ? 1.0 : markerScale;
+    final markers = <MapMarker>[];
+    final visuals =
+        <
+          String,
+          ({
+            String kind,
+            Color color,
+            String label,
+            IconData? icon,
+            bool tracked,
+            bool outside,
+            Offset anchor,
+          })
+        >{};
+    void add(
+      String id,
+      Offset anchor,
+      String kind,
+      Color color,
+      double radius, {
+      String label = '',
+      IconData? icon,
+      bool tracked = false,
+      bool outside = false,
+    }) {
+      markers.add(MapMarker(id, anchor, radius * unit));
+      visuals[id] = (
+        kind: kind,
+        color: color,
+        label: label,
+        icon: icon,
+        tracked: tracked,
+        outside: outside,
+        anchor: anchor,
+      );
     }
-    final shopPoint = project(session.world.merchantAt),
-        healPoint = project(session.world.healAt);
-    final groupServices = (shopPoint - healPoint).distance < 40 * markerScale;
+
+    bool inside(Offset point) =>
+        !round || (point - rect.center).distance < s.shortestSide / 2 - 4;
     final services = [
-      if (!round)
-        (project(session.mountMerchantAt), '탈것', Icons.pets_rounded, gold),
-      ...(groupServices
-          ? [(project(session.world.healAt), '거점', Icons.cottage_rounded, gold)]
-          : [
-              (shopPoint, '상점', Icons.storefront_rounded, gold),
-              (
-                healPoint,
-                '회복',
-                Icons.water_drop_rounded,
-                const Color(0xff8ce6bd),
-              ),
-            ]),
+      (session.mountMerchantAt, '탈것', Icons.pets_rounded, gold),
+      (session.world.merchantAt, '상점', Icons.storefront_rounded, gold),
+      (
+        session.world.healAt,
+        '회복',
+        Icons.water_drop_rounded,
+        const Color(0xff8ce6bd),
+      ),
       if (session.world.stage == WorldStage.forest)
-        (
-          project(session.world.blacksmithAt),
-          '대장간',
-          Icons.hardware_rounded,
-          gold,
-        ),
+        (session.world.blacksmithAt, '대장간', Icons.hardware_rounded, gold),
       if (session.world.stage == WorldStage.sands)
         for (final giver in timeQuestGivers)
           (
-            project(session.world.questGiverAt(giver.path)),
+            session.world.questGiverAt(giver.path),
             giver.name,
             giver.path == TimePath.past
                 ? Icons.auto_stories_rounded
                 : Icons.cell_tower_rounded,
             session.timePath != null && session.timePath != giver.path
                 ? const Color(0xff8faaa3)
-                : giver.path == TimePath.past
-                ? gold
-                : const Color(0xff92e7f2),
+                : gold,
           ),
     ];
-    final occupied = <Offset>[];
-    for (final (anchor, label, icon, color) in services) {
-      final radius = (round ? 5.0 : 10.0) * markerScale;
-      if (round &&
-          ((anchor - heroPoint).distance < 11 ||
-              occupied.any((point) => (point - anchor).distance < 12))) {
-        continue;
-      }
-      if (round &&
-          (anchor - rect.center).distance > s.shortestSide / 2 - radius - 3) {
-        continue;
-      }
-      var point = anchor;
-      if (!round) {
-        for (
-          var shift = 0;
-          shift < 3 &&
-              occupied.any(
-                (other) => (point - other).distance < 21 * markerScale,
-              );
-          shift++
-        ) {
-          point += Offset(0, -24 * markerScale);
-        }
-      }
-      occupied.add(point);
-      if ((point - anchor).distance > markerScale) {
-        c.drawLine(
-          anchor,
-          point,
-          Paint()
-            ..color = color.withValues(alpha: .5)
-            ..strokeWidth = markerScale,
-        );
-      }
-      c.drawCircle(point, radius, Paint()..color = ink);
-      c.drawCircle(
-        point,
-        radius,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = markerScale
-          ..color = color,
+    for (final (at, label, icon, color) in services) {
+      final anchor = project(at);
+      if (!inside(anchor)) continue;
+      add(
+        'service:$label',
+        anchor,
+        'service',
+        color,
+        round ? 6 : 11,
+        label: label,
+        icon: icon,
       );
-      final glyph = TextPainter(
-        text: TextSpan(
-          text: String.fromCharCode(icon.codePoint),
-          style: TextStyle(
-            fontFamily: icon.fontFamily,
-            fontSize: (round ? 8 : 15) * markerScale,
-            color: color,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      glyph.paint(c, point - Offset(glyph.width / 2, glyph.height / 2));
-      glyph.dispose();
-      if (!round &&
-          markerScale <= 2.5 &&
-          (point - heroPoint).distance > 45 * markerScale) {
-        session.art.text(
-          c,
-          label,
-          point - Offset(0, 22 * markerScale),
-          size: 13 * markerScale,
-          color: color,
-        );
-      }
     }
-    final trackedSite = session.trackedSite;
-    final orderedSites = [
-      ...session.visibleSites.where((s) => s.id != trackedSite?.id),
-      ?trackedSite,
-    ];
-    for (final site in orderedSites) {
-      final tracked = site.id == trackedSite?.id;
-      final done = session.cleansedSites.contains(site.id);
-      var point = Offset(
-        (site.at.dx - view.left) / view.width * s.width,
-        (site.at.dy - view.top) / view.height * s.height,
+    for (final site in session.visibleSites) {
+      final anchor = project(site.at),
+          tracked = site.id == session.trackedSite?.id;
+      final done = session.cleansedSites.contains(site.id),
+          outside = !inside(anchor);
+      if (round && outside && done) continue;
+      add(
+        'site:${site.id}',
+        anchor,
+        'site',
+        done ? const Color(0xff85d6aa) : gold,
+        round ? (tracked ? 8 : 6) : (tracked ? 13 : 10),
+        label: '${site.name}${done ? ' ✓' : ''}',
+        tracked: tracked,
+        outside: outside,
       );
-      var outside = false;
-      final direction = point - rect.center;
-      if (round) {
-        final d = direction;
-        final edge = s.shortestSide / 2 - (tracked ? 12 : 9);
-        if (d.distance > edge) {
-          outside = true;
-          if (done) continue;
-          point = rect.center + d / d.distance * edge;
+    }
+    if (round) {
+      for (var i = 0; i < session.stageChestLocations.length; i++) {
+        if (session.openedChests.contains(i)) continue;
+        final anchor = project(session.stageChestLocations[i]);
+        if (inside(anchor)) add('chest:$i', anchor, 'chest', gold, 2.5);
+      }
+      var index = 0;
+      for (final mob in session.mobs) {
+        if (!mob.combatReady || mob.isDead || mob.isRemoving || mob.boss) {
+          continue;
         }
-      }
-      final r = (round ? 4.0 : 8.0) * markerScale;
-      if (tracked) {
-        c.drawCircle(point, r + 4 * markerScale, Paint()..color = ink);
-        c.drawCircle(
-          point,
-          r + 3 * markerScale,
-          Paint()
-            ..color = gold
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.5 * markerScale,
-        );
-      }
-      if (tracked && round && outside) {
-        c.save();
-        c.translate(point.dx, point.dy);
-        c.rotate(math.atan2(direction.dy, direction.dx));
-        c.drawPath(
-          Path()
-            ..moveTo(5, 0)
-            ..lineTo(-3, -4)
-            ..lineTo(-1, 0)
-            ..lineTo(-3, 4)
-            ..close(),
-          Paint()..color = gold,
-        );
-        c.restore();
-        continue;
-      }
-      c.drawCircle(point, r + 1.5 * markerScale, Paint()..color = ink);
-      c.drawCircle(
-        point,
-        r,
-        Paint()..color = done ? const Color(0xff85d6aa) : gold,
-      );
-      c.drawCircle(point, r * .45, Paint()..color = const Color(0xff164d55));
-      if (!round && markerScale <= 2.5) {
-        session.art.text(
-          c,
-          '${site.name}${done ? ' ✓' : ''}',
-          point - Offset(0, 23 * markerScale),
-          size: 14 * markerScale,
-          color: done ? const Color(0xff85d6aa) : gold,
-        );
+        final anchor = project(mob.body.center);
+        if (inside(anchor)) {
+          add(
+            'enemy:${index++}',
+            anchor,
+            'enemy',
+            mob.isElite ? mob.tierColor : const Color(0xffe94430),
+            3,
+          );
+        }
       }
     }
     for (final area in session.exhaustedAreas) {
-      final point = project(area.stone);
-      if (round && (point - rect.center).distance > s.shortestSide / 2 - 10) {
-        continue;
+      final anchor = project(area.stone);
+      if (inside(anchor)) {
+        add(
+          'memory:${area.stone}',
+          anchor,
+          'memory',
+          const Color(0xffa9d6d0),
+          round ? 4 : 6,
+        );
       }
-      final r = (round ? 3.0 : 5.0) * markerScale;
-      c.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(center: point, width: r * 1.5, height: r * 2),
-          Radius.circular(r * .4),
-        ),
-        Paint()..color = const Color(0xffa9d6d0),
-      );
     }
     for (final boss in session.mobs.where(
       (m) => m.boss && m.combatReady && !m.isDead && !m.isRemoving,
     )) {
-      var point = project(boss.body.center);
-      if (round) {
-        final delta = point - rect.center;
-        final edge = s.shortestSide / 2 - 10;
-        if (delta.distance > edge) {
-          point = rect.center + delta / delta.distance * edge;
+      add(
+        'boss',
+        project(boss.body.center),
+        'boss',
+        const Color(0xffef6455),
+        round ? 7 : 11,
+        label: session.world.stage.bossName,
+      );
+    }
+    final groups = MapMarkerLayout(
+      rect,
+      round: round,
+      unit: unit,
+    ).layout(markers, hero: heroPoint);
+    for (final group in groups) {
+      final selected = group.items.any((m) => visuals[m.id]!.tracked);
+      final visual = visuals[group.items.first.id]!;
+      final point = group.center;
+      if (group.items.length > 1) {
+        final color = selected ? gold : visual.color;
+        c.drawCircle(point, group.radius, Paint()..color = ink);
+        c.drawCircle(
+          point,
+          group.radius - .5 * unit,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = unit
+            ..color = color,
+        );
+        if (selected) {
+          c.drawCircle(
+            point,
+            group.radius + unit,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = unit
+              ..color = gold,
+          );
         }
-      }
-      final radius = (round ? 5.0 : 9.0) * markerScale;
-      final diamond = Path()
-        ..moveTo(point.dx, point.dy - radius)
-        ..lineTo(point.dx + radius, point.dy)
-        ..lineTo(point.dx, point.dy + radius)
-        ..lineTo(point.dx - radius, point.dy)
-        ..close();
-      c.drawCircle(point, radius + 2 * markerScale, Paint()..color = ink);
-      c.drawPath(diamond, Paint()..color = const Color(0xffef6455));
-      c.drawCircle(point, radius * .3, Paint()..color = cream);
-      if (!round &&
-          markerScale <= 2.5 &&
-          (point - heroPoint).distance > 35 * markerScale) {
         session.art.text(
           c,
-          session.world.stage.bossName,
-          point - Offset(0, 23 * markerScale),
-          size: 14 * markerScale,
-          color: const Color(0xffffa195),
+          group.items.length > 99 ? '99+' : '${group.items.length}',
+          point,
+          size: (round ? 9 : 13) * unit,
+          color: cream,
+          centered: true,
+        );
+        continue;
+      }
+      final r = group.radius;
+      switch (visual.kind) {
+        case 'service':
+          c.drawCircle(point, r - unit, Paint()..color = ink);
+          c.drawCircle(
+            point,
+            r - unit,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = unit
+              ..color = visual.color,
+          );
+          final icon = visual.icon!;
+          final glyph = TextPainter(
+            text: TextSpan(
+              text: String.fromCharCode(icon.codePoint),
+              style: TextStyle(
+                fontFamily: icon.fontFamily,
+                fontSize: (round ? 8 : 15) * unit,
+                color: visual.color,
+              ),
+            ),
+            textDirection: TextDirection.ltr,
+          )..layout();
+          glyph.paint(c, point - Offset(glyph.width / 2, glyph.height / 2));
+          glyph.dispose();
+        case 'site':
+          c.drawCircle(point, r, Paint()..color = ink);
+          if (selected) {
+            c.drawCircle(
+              point,
+              r - unit,
+              Paint()
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = unit
+                ..color = gold,
+            );
+          }
+          if (round && visual.outside && selected) {
+            c.save();
+            c.translate(point.dx, point.dy);
+            final direction = visual.anchor - rect.center;
+            c.rotate(math.atan2(direction.dy, direction.dx));
+            c.drawPath(
+              Path()
+                ..moveTo(5, 0)
+                ..lineTo(-3, -4)
+                ..lineTo(-1, 0)
+                ..lineTo(-3, 4)
+                ..close(),
+              Paint()..color = gold,
+            );
+            c.restore();
+          } else {
+            c.drawCircle(point, r * .64, Paint()..color = visual.color);
+            c.drawCircle(
+              point,
+              r * .30,
+              Paint()..color = const Color(0xff164d55),
+            );
+          }
+        case 'boss':
+          c.drawCircle(point, r, Paint()..color = ink);
+          c.drawPath(
+            Path()
+              ..moveTo(point.dx, point.dy - r + unit)
+              ..lineTo(point.dx + r - unit, point.dy)
+              ..lineTo(point.dx, point.dy + r - unit)
+              ..lineTo(point.dx - r + unit, point.dy)
+              ..close(),
+            Paint()..color = visual.color,
+          );
+        case 'memory':
+          c.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromCenter(center: point, width: r * 1.3, height: r * 1.8),
+              Radius.circular(unit),
+            ),
+            Paint()..color = visual.color,
+          );
+        default:
+          c.drawCircle(point, r, Paint()..color = ink);
+          c.drawCircle(point, r - .7 * unit, Paint()..color = visual.color);
+      }
+      if (!round &&
+          markerScale <= 2.5 &&
+          visual.label.isNotEmpty &&
+          point.dx > 70 * unit &&
+          point.dx < rect.right - 70 * unit &&
+          point.dy > 32 * unit) {
+        session.art.text(
+          c,
+          visual.label,
+          point - Offset(0, r + 12 * unit),
+          size: 12 * unit,
+          color: visual.color,
         );
       }
     }

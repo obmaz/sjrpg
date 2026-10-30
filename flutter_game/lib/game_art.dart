@@ -1106,6 +1106,7 @@ class GameArt {
     ui.Offset at, {
     double size = 16,
     ui.Color color = const ui.Color(0xffffedbb),
+    bool centered = false,
   }) {
     final key = (value, size, color);
     final paragraph =
@@ -1114,7 +1115,10 @@ class GameArt {
     if (_labels.length > _labelLimit) {
       _labels.remove(_labels.keys.first)!.dispose();
     }
-    canvas.drawParagraph(paragraph, at - const ui.Offset(80, 0));
+    canvas.drawParagraph(
+      paragraph,
+      at - ui.Offset(80, centered ? paragraph.height / 2 : 0),
+    );
   }
 
   ui.Paragraph layoutText(
