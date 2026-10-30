@@ -205,7 +205,19 @@ void main() {
     'an already-flying player bolt must not collide during a frozen update after an enemy moved into its path',
     (tester) async {
       await prepare();
-      final bolt = ArcaneBolt(s, const Offset(6011.5, 4208), 0, 25);
+      // Start outside the enlarged melee ring so the enemy is pursuing the
+      // hero, and place the bolt just before its inflated collision boundary
+      // after one 50ms flight step. The enemy then moves into that path.
+      source.position.setValues(6100, 4200);
+      source.lastClearPosition = source.body.topLeft;
+      source.attackClock = 999;
+      s.updateEnemySpacing(source);
+      final bolt = ArcaneBolt(
+        s,
+        Offset(source.body.left - 7.3 - ArcaneBolt.speed * .05, 4208),
+        0,
+        25,
+      );
       await engine.world.add(bolt);
       // The existing projectile updates before the enemy by world depth. Its
       // positive flight step misses, then the enemy moves into that position.
