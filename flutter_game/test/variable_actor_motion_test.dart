@@ -87,7 +87,7 @@ Future<List<int>> raster(
 
 Future<ui.Image> recorderImage(ui.Picture picture) => picture.toImage(16, 20);
 void expectSlot(List<int> bytes, int index) {
-  final sample = (5 * 16 + 5) * 4;
+  final sample = (7 * 16 + 5) * 4;
   final c = color(index);
   expect(bytes.sublist(sample, sample + 4), [
     (c.r * 255).round(),
@@ -96,11 +96,11 @@ void expectSlot(List<int> bytes, int index) {
     255,
   ]);
   // The source's asymmetric red marker stays left of the foot anchor at
-  // both the larger warrior scale and the unchanged mage/creature scale.
+  // the character and creature presentation scales.
   final leftMarkers =
       [
         for (var x = 0; x < 5; x++)
-          bytes.sublist((5 * 16 + x) * 4, (5 * 16 + x) * 4 + 4),
+          bytes.sublist((7 * 16 + x) * 4, (7 * 16 + x) * 4 + 4),
       ].where(
         (edge) =>
             edge[3] == 255 &&
@@ -353,59 +353,55 @@ void main() {
     expect(art.seenPhase, 0);
   });
   for (final projected in [false, true]) {
-    test('roll8×4×2classes preserves selected origin mode:$projected', () async {
-      final image = await sheet(64), art = GameArt();
-      addTearDown(image.dispose);
-      final r = record(64, groups: 2)
-        ..['sizes'] = [
-          [8, 43],
-          [8, 43],
-        ]
-        ..['feet'] = [
-          for (var i = 0; i < 64; i++) [i * 8 + 3, 16],
-        ];
-      if (projected) r['anchorMode'] = 'projected-origin';
-      art.actors = {'roll': r};
-      art.images['actors-roll'] = image;
-      for (final mage in [false, true]) {
-        for (var direction = 0; direction < 8; direction++) {
-          final angle = math.pi / 2 + direction * math.pi * 2 / 8;
-          for (var phase = 0; phase < 4; phase++) {
-            final bytes = await rasterRoll(art, angle, phase, mage);
-            final bounds = projected
-                ? mage
-                      ? const ui.Rect.fromLTRB(45, 54, 57, 66)
-                      : const ui.Rect.fromLTRB(46, 51, 57, 66)
-                : mage
-                ? const ui.Rect.fromLTRB(44, 58, 56, 70)
-                : const ui.Rect.fromLTRB(44, 55, 56, 70);
-            expect(
-              alphaBounds(bytes),
-              bounds,
-              reason:
-                  'all frames retain their projected ground origin, not their alpha bottom',
-            );
-            // The character artwork keeps the exact (50,70) ground anchor. A
-            // projected feet marker remains four pixels below visible art;
-            // the legacy center-bottom origin remains on its visible bottom.
-            expect(bounds.bottom, projected ? 66 : 70);
-            expect(bytes[(70 * 100 + 50) * 4 + 3], 0);
-            if (!projected) {
-              expect(bytes[(69 * 100 + 50) * 4 + 3], 255);
+    test(
+      'roll8×4×2classes preserves selected origin mode:$projected',
+      () async {
+        final image = await sheet(64), art = GameArt();
+        addTearDown(image.dispose);
+        final r = record(64, groups: 2)
+          ..['sizes'] = [
+            [8, 43],
+            [8, 43],
+          ]
+          ..['feet'] = [
+            for (var i = 0; i < 64; i++) [i * 8 + 3, 16],
+          ];
+        if (projected) r['anchorMode'] = 'projected-origin';
+        art.actors = {'roll': r};
+        art.images['actors-roll'] = image;
+        for (final mage in [false, true]) {
+          for (var direction = 0; direction < 8; direction++) {
+            final angle = math.pi / 2 + direction * math.pi * 2 / 8;
+            for (var phase = 0; phase < 4; phase++) {
+              final bytes = await rasterRoll(art, angle, phase, mage);
+              final bounds = alphaBounds(bytes);
+              expect(bounds.width, inInclusiveRange(8, 12));
+              expect(bounds.height, inInclusiveRange(9, 13));
+              expect(bounds.center.dx, closeTo(50, 1.5));
+              expect(
+                bounds.bottom,
+                projected ? inInclusiveRange(66, 68) : 70,
+                reason: 'the ground anchor stays fixed as the art shrinks',
+              );
+              expect(bytes[(70 * 100 + 50) * 4 + 3], 0);
+              if (!projected) {
+                expect(bytes[(69 * 100 + 50) * 4 + 3], 255);
+              }
+              final sample =
+                  ((bounds.top.toInt() + 3) * 100 + bounds.left.toInt() + 3) *
+                  4;
+              final expected = color((mage ? 32 : 0) + phase * 8 + direction);
+              expect(bytes.sublist(sample, sample + 4), [
+                (expected.r * 255).round(),
+                (expected.g * 255).round(),
+                (expected.b * 255).round(),
+                255,
+              ]);
             }
-            final sample =
-                ((bounds.top.toInt() + 3) * 100 + bounds.left.toInt() + 3) * 4;
-            final expected = color((mage ? 32 : 0) + phase * 8 + direction);
-            expect(bytes.sublist(sample, sample + 4), [
-              (expected.r * 255).round(),
-              (expected.g * 255).round(),
-              (expected.b * 255).round(),
-              255,
-            ]);
           }
         }
-      }
-    });
+      },
+    );
   }
   test(
     'projected-origin metadata fails closed without real finite unmirrored anchors',

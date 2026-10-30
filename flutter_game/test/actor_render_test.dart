@@ -86,45 +86,56 @@ void main() {
     },
   );
 
-  test(
-    'slimmer warrior preserves the larger height and ground anchor',
-    () async {
-      Future<Uint8List> body({bool originalWidth = false}) => raster((canvas) {
-        if (originalWidth) {
-          canvas.translate(40, 0);
-          canvas.scale(1.36 / GameArt.warriorWidthScale, 1);
-          canvas.translate(-40, 0);
-        }
-        art.actor(canvas, 'hero', const ui.Offset(40, 40), math.pi / 2, 0, 28);
-      });
-      final current = await body(), previous = await body(originalWidth: true);
-      double mass(Uint8List bytes) {
-        var alpha = 0.0;
-        for (var i = 3; i < bytes.length; i += 4) {
-          alpha += bytes[i] / 255;
-        }
-        return alpha;
+  test('smaller warrior preserves its proportions and ground anchor', () async {
+    Future<Uint8List> body({
+      bool originalWidth = false,
+      bool originalSize = false,
+    }) => raster((canvas) {
+      if (originalSize) {
+        canvas.translate(40, 40);
+        canvas.scale(1 / GameArt.characterRenderScale);
+        canvas.translate(-40, -40);
       }
+      if (originalWidth) {
+        canvas.translate(40, 0);
+        canvas.scale(1.36 / GameArt.warriorWidthScale, 1);
+        canvas.translate(-40, 0);
+      }
+      art.actor(canvas, 'hero', const ui.Offset(40, 40), math.pi / 2, 0, 28);
+    });
+    final current = await body(), previous = await body(originalWidth: true);
+    final originalSize = await body(originalSize: true);
+    double mass(Uint8List bytes) {
+      var alpha = 0.0;
+      for (var i = 3; i < bytes.length; i += 4) {
+        alpha += bytes[i] / 255;
+      }
+      return alpha;
+    }
 
-      expect(mass(current) / mass(previous), inInclusiveRange(.75, .84));
-      final rows = <int>{};
-      for (var y = 0; y < 64; y++) {
-        for (var x = 0; x < 80; x++) {
-          if (pixel(current, x, y).last >= 128) rows.add(y);
-        }
+    expect(mass(current) / mass(previous), inInclusiveRange(.75, .84));
+    expect(
+      mass(current) / mass(originalSize),
+      inInclusiveRange(.60, .68),
+      reason: 'both sprite dimensions shrink by 20%',
+    );
+    final rows = <int>{};
+    for (var y = 0; y < 64; y++) {
+      for (var x = 0; x < 80; x++) {
+        if (pixel(current, x, y).last >= 128) rows.add(y);
       }
-      expect(
-        rows.length,
-        23,
-        reason: '18% taller presentation keeps the same ground anchor',
-      );
-      expect(
-        pixel(current, 40, 40),
-        pixel(previous, 40, 40),
-        reason: 'feet keep the same ground anchor',
-      );
-    },
-  );
+    }
+    expect(
+      rows.length,
+      19,
+      reason: 'the reduced presentation keeps the same ground anchor',
+    );
+    expect(
+      pixel(current, 40, 40),
+      pixel(previous, 40, 40),
+      reason: 'feet keep the same ground anchor',
+    );
+  });
 
   test('fading and hit flash never leak into the next actor', () async {
     final bytes = await raster((canvas) {
@@ -152,8 +163,8 @@ void main() {
     });
     expect(pixel(bytes, 36, 28).last, closeTo(64, 1));
     expect(pixel(bytes, 36, 28)[2], greaterThan(40));
-    expect(pixel(bytes, 94, 28), [255, 0, 0, 255]);
-    expect(pixel(bytes, 106, 28), [0, 0, 255, 255]);
+    expect(pixel(bytes, 96, 28), [255, 0, 0, 255]);
+    expect(pixel(bytes, 104, 28), [0, 0, 255, 255]);
     expect(pixel(bytes, 156, 28).last, 0);
     expect(pixel(bytes, 216, 28), [255, 0, 0, 255]);
   });

@@ -95,6 +95,6 @@ flutter build web --wasm --release --base-href /sjrpg/new/ --no-web-resources-cd
 
 GitHub Actions **Check and deploy**는 두 게임의 검사·캐시 작업과 조립·Pages 배포를 분리합니다. 완료 보고 전 정확한 커밋의 워크플로 성공, 공개 진입 화면·두 하위 경로, 실제 WASM과 생성 자산의 해시·브라우저 동작을 확인합니다. 한 버전의 수정 때문에 다른 게임을 불필요하게 재컴파일하지 않습니다.
 
-전투 그림은 `docs/art/cinematic/`의 생성 원본·측정 경계·해시와 `tools/prepare-cinematic-art.py`로 재현합니다. 몬스터 21종은 네이티브 그림을 확대하지 않고 기준 월드 높이를 기록해 1.5배 크기로 표시합니다. UI는 `CinematicIconArt`, 공격 궤적은 `IllustratedCombatArt`를 공유하며 충돌·피해 판정은 기존 월드 모델을 유지합니다. 캐릭터는 `SJRPG_RENDER_CELL=384`로 각 방향과 동작을 다시 렌더링하고 원본 픽셀을 그대로 패킹합니다.
+전투 그림은 `docs/art/cinematic/`의 생성 원본·측정 경계·해시와 `tools/prepare-cinematic-art.py`로 재현합니다. 몬스터 21종은 네이티브 그림을 확대하지 않고 기준 월드 높이를 기록해 1.5배 크기로 표시합니다. UI는 `CinematicIconArt`, 공격 궤적은 `IllustratedCombatArt`를 공유하며 충돌·피해 판정은 기존 월드 모델을 유지합니다. 캐릭터는 `SJRPG_RENDER_CELL=384`로 각 방향과 동작을 다시 렌더링하고 원본 픽셀을 그대로 패킹합니다. 전사와 마법사의 일반·탑승·구르기 그림은 같은 표시 배율을 사용하며, 충돌 몸체와 공격 범위는 바꾸지 않습니다.
 
 탈것은 탑승·주차 화면에서 동일한 표시 크기를 사용하며 더 큰 차체에 맞춰 탑승자의 높이를 조정합니다. 충돌 크기와 이동 판정은 유지합니다. 기관포·질주·물살 버튼은 `mount-skill-icons`의 생성 원본을 사용하고 탄약·말의 피격 횟수는 별도 표시합니다.

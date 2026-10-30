@@ -46,6 +46,7 @@ class GameArt {
 
   /// Presentation only; collision footprints and weapon reach stay in world units.
   static const warriorRenderScale = 1.18;
+  static const characterRenderScale = .8;
   late final _actorPaint = ui.Paint()..filterQuality = ui.FilterQuality.low;
   late final _rollPaint = ui.Paint()..filterQuality = ui.FilterQuality.medium;
   late final _portraitPaint = ui.Paint()
@@ -838,7 +839,9 @@ class GameArt {
     final frame = atlas.frames[index];
     final scale = height / atlas.heights[definition.$2], src = frame.source;
     final hero = key == 'hero' || key == 'mage';
-    final warriorScale = key == 'hero' ? warriorRenderScale : 1.0;
+    final warriorScale = hero
+        ? characterRenderScale * (key == 'hero' ? warriorRenderScale : 1.0)
+        : 1.0;
     final scaleX =
         scale *
         (key == 'hero'
@@ -920,7 +923,10 @@ class GameArt {
         ? frame.anchor
         : ui.Offset(src.width / 2, src.height);
     final scale =
-        43 / atlas.heights[mage ? 1 : 0] * (mage ? 1 : warriorRenderScale);
+        43 /
+        atlas.heights[mage ? 1 : 0] *
+        characterRenderScale *
+        (mage ? 1 : warriorRenderScale);
     canvas.drawImageRect(
       images['actors-roll']!,
       src,
