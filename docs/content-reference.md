@@ -122,3 +122,7 @@ D1 기술·메뉴·상태 그림은 `docs/art/d1-icons-provenance.json`에 원�
 현재 전투 HUD·일반 버튼은 `cinematic-interface.webp`의 흑철·청동 원형 그림을 사용합니다. 몬스터 21종은 `actors-cinematic-*`의 새 방향별 원본으로 교체하며 이전 몬스터 시트의 배포 복사본은 제거합니다. 공격의 검격·얼음·번개·화염 그림은 아래 공통 이펙트 시트를 사용합니다. 원본과 재현 과정은 [전투 화면 원본](art/cinematic/README.md), 캐릭터의 네이티브 384px 재렌더링은 [캐릭터 동작](art/character-motion.md)을 참고합니다.
 
 공통 전투 이펙트 `combat-illustrations.webp`는 검격·냉기·번개·화염을 각각 생성한 투명 원본 네 장을 사용합니다. 원본·측정 경계·해시는 [생성 이펙트 출처](art/cinematic-combat-vfx-provenance.json)에 기록하며, `tools/prepare-cinematic-combat-vfx.py`가 서로 닿지 않는 실제 알파 경계를 검사해 2×2 시트로 준비합니다. 런타임은 팽창·잔상·페이드와 기존 무기 궤적·입자를 조합합니다.
+
+## 지역별 대형 지형물
+
+일곱 지도에 각 4개, 총 28개의 대형 지형물을 생성형 이미지로 제작합니다. 높은 대각선 쿼터뷰와 왼쪽 위 광원을 사용하며 투명 배경의 원본은 [field-landmarks](art/field-landmarks/)에 보존합니다. 연결된 주요 알파 실루엣과 주변 파편을 측정해 개별 그림을 분리하고 32px 여백의 2×2 런타임 시트에 패킹합니다. 원본·개별 경계·생성 ID·SHA-256은 [provenance.json](art/field-landmarks/provenance.json), 재현 도구는 `tools/prepare-field-landmarks.py`입니다. 실제 월드 배치와 충돌은 `FieldLandmark`, 간결한 지도 윤곽은 `TerrainMapPlan`이 같은 좌표를 공유합니다.

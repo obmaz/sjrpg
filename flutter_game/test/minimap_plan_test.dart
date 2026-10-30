@@ -13,7 +13,7 @@ import 'support/test_game.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test(
-    'round minimap uses one flat plan while expanded map retains scene art',
+    'both maps use a flat plan independent of perspective scene art',
     () async {
       final art = GameArt();
       final worldSession = Adventure(art)..start(TestGame());
@@ -54,8 +54,8 @@ void main() {
       );
       expect(
         listEquals(await pixels(false), expandedWithout),
-        false,
-        reason: 'expanded map keeps its optional detailed settlement scene',
+        true,
+        reason: 'expanded map also stays a quiet top-down terrain plan',
       );
     },
   );

@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:collection/collection.dart';
 
 import 'authored_settlement.dart';
+import 'field_landmark.dart';
 import 'mount_progress.dart';
 import 'sanctuary.dart';
 import 'stage_content.dart';
@@ -277,7 +278,7 @@ class RegionShape {
 }
 
 class WorldProp {
-  const WorldProp(this.body, this.kind, this.drawSize);
+  const WorldProp(this.body, this.kind, this.drawSize, {this.landmark});
   factory WorldProp.desertTemple(Offset at, int index) {
     if (index < 0 || index > 3) {
       throw RangeError.range(index, 0, 3, 'index');
@@ -299,6 +300,7 @@ class WorldProp {
       Size.square(side),
     );
   }
+  final FieldLandmark? landmark;
   final Rect body;
   final String kind;
   final Size drawSize;
@@ -361,6 +363,7 @@ class AdventureWorld {
       _buildThemed();
       _compact();
       _applyAuthoredSettlement();
+      _addFieldLandmarks();
       return;
     }
     final random = math.Random(seed);
@@ -701,6 +704,7 @@ class AdventureWorld {
     }
     _compact();
     _applyAuthoredSettlement();
+    _addFieldLandmarks();
   }
 
   List<Offset> _dryRoad(List<Offset> authored, double width) {
@@ -1465,6 +1469,132 @@ class AdventureWorld {
       }
     }
   }
+
+  /// Place each formation near an authored journey anchor without closing
+  /// existing roads, water crossings, chest approaches or objective clearings.
+  void _addFieldLandmarks() {
+    final oldProps = {...props, ...campProps};
+    final propSolids = {for (final p in oldProps) ...p.collisionBodies};
+    final staticSolids = _solids.values
+        .expand((v) => v)
+        .toSet()
+        .where((r) => !propSolids.contains(r))
+        .toList();
+    final anchors = [
+      hubOrigin + const Offset(1800, 1800),
+      sites.first.at + const Offset(1500, -1100),
+      sites[sites.length ~/ 2].at + const Offset(-1500, 1100),
+      sites.last.at + const Offset(1500, 1100),
+    ];
+    for (var i = 0; i < 4; i++) {
+      final plan = FieldLandmark(
+        stage,
+        i,
+        FieldLandmark.names[stage]![i],
+        anchors[i],
+        [920.0, 1000.0, 900.0, 960.0][i],
+      );
+      bool valid(FieldLandmark item) {
+        final body = item.footprint.inflate(100);
+        if (!(Offset.zero & worldSize).deflate(100).contains(body.topLeft) ||
+            !(Offset.zero & worldSize)
+                .deflate(100)
+                .contains(body.bottomRight) ||
+            item.drawBounds.overlaps(settlement.inflate(250)) ||
+            river.overlaps(body) ||
+            lakes.any((lake) => lake.overlaps(body)) ||
+            bridges.any((bridge) => bridge.overlaps(body)) ||
+            trails.any(
+              (trail) =>
+                  trail.near(body.center, body.size.longestSide / 2 + 100),
+            ) ||
+            sites.any((site) => site.body.inflate(1000).overlaps(body)) ||
+            chests.any((chest) => body.inflate(130).contains(chest)) ||
+            staticSolids.any((solid) => solid.overlaps(body)) ||
+            landmarks.any(
+              (other) =>
+                  other.drawBounds.inflate(100).overlaps(item.drawBounds),
+            )) {
+          return false;
+        }
+        return true;
+      }
+
+      FieldLandmark? chosen;
+      for (var ring = 0; ring <= 24 && chosen == null; ring++) {
+        final steps = ring == 0 ? 1 : 24;
+        for (var step = 0; step < steps; step++) {
+          final angle = step * math.pi * 2 / steps;
+          final candidate = plan.at(
+            anchors[i] +
+                Offset(math.cos(angle), math.sin(angle)) * (ring * 150),
+          );
+          if (valid(candidate)) {
+            chosen = candidate;
+            break;
+          }
+        }
+      }
+      if (chosen == null) {
+        throw StateError('No safe field landmark: ${stage.name}/$i');
+      }
+      landmarks.add(chosen);
+    }
+    // Replace small random clutter beneath the authored scene, including its
+    // old collision/index entries, so invisible tree stumps cannot remain.
+    props.removeWhere(
+      (prop) => landmarks.any(
+        (landmark) => landmark.drawBounds
+            .inflate(30)
+            .overlaps(
+              Rect.fromCenter(
+                center: prop.body.center - Offset(0, prop.drawSize.height / 2),
+                width: prop.drawSize.width,
+                height: prop.drawSize.height,
+              ),
+            ),
+      ),
+    );
+    props.addAll(
+      landmarks.map(
+        (landmark) => WorldProp(
+          landmark.footprint,
+          'landmark-${stage.name}-${landmark.index}',
+          Size.square(landmark.side),
+          landmark: landmark,
+        ),
+      ),
+    );
+    _solids.clear();
+    propBuckets.clear();
+    staticSolids.forEach(_indexSolid);
+    for (final prop in [...props, ...campProps]) {
+      prop.collisionBodies.forEach(_indexSolid);
+      final bounds =
+          prop.landmark?.drawBounds ??
+          Rect.fromLTWH(
+            prop.body.left - prop.drawSize.width,
+            prop.body.top - prop.drawSize.height,
+            prop.body.width + prop.drawSize.width * 2,
+            prop.body.height + prop.drawSize.height + 50,
+          );
+      for (
+        var y = (bounds.top / 256).floor();
+        y <= (bounds.bottom / 256).floor();
+        y++
+      ) {
+        for (
+          var x = (bounds.left / 256).floor();
+          x <= (bounds.right / 256).floor();
+          x++
+        ) {
+          propBuckets.putIfAbsent('$x:$y', () => []).add(prop);
+        }
+      }
+    }
+  }
+
+  final List<FieldLandmark> landmarks = [];
 
   final int seed;
   final WorldStage stage;

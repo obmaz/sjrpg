@@ -1,0 +1,215 @@
+{
+    "generator": "image_gen",
+    "packer": "tools/prepare-field-landmarks.py",
+    "camera": "elevated diagonal quarter view; upper-left light",
+    "imageSize": [1536, 1536],
+    "columns": 2,
+    "rows": 2,
+    "padding": 32,
+    "decodedBytesPerStage": 9437184,
+    "stages": {
+        "forest": {
+            "generation": "exec-03b7a8f4-ddca-4570-991e-d2424ec14155.png",
+            "source": "docs/art/field-landmarks/forest-original.png",
+            "sourceSha256": "632b42db2300e6093da188ae214a22bb7a65dd190e1cdb8318f750cfadb5f503",
+            "runtime": "flutter_game/art/landmarks-forest.webp",
+            "runtimeSha256": "bc534ca476a90fd2949ced97b8fbc77e7e990af39210589466ece456453ecf0f",
+            "frames": [
+                {
+                    "index": 0,
+                    "sourceRect": [18, 23, 625, 627],
+                    "packedRect": [80, 132, 607, 604]
+                },
+                {
+                    "index": 1,
+                    "sourceRect": [656, 68, 1241, 637],
+                    "packedRect": [859, 167, 585, 569]
+                },
+                {
+                    "index": 2,
+                    "sourceRect": [12, 685, 624, 1193],
+                    "packedRect": [78, 996, 612, 508]
+                },
+                {
+                    "index": 3,
+                    "sourceRect": [643, 675, 1245, 1202],
+                    "packedRect": [851, 977, 602, 527]
+                }
+            ]
+        },
+        "sands": {
+            "generation": "exec-f9db3d69-e1a1-4a3e-879b-f414ed30bd38.png",
+            "source": "docs/art/field-landmarks/sands-original.png",
+            "sourceSha256": "3bf3b400fa11a03839894c90c067af0a5cfe5140dbbf3a751038f0c04fe8dbb4",
+            "runtime": "flutter_game/art/landmarks-sands.webp",
+            "runtimeSha256": "efd8ae364c91b46a6071cdd33c32c7f0248650ab53d53450c6e6c87e498d86b6",
+            "frames": [
+                {
+                    "index": 0,
+                    "sourceRect": [12, 26, 623, 597],
+                    "packedRect": [78, 165, 611, 571]
+                },
+                {
+                    "index": 1,
+                    "sourceRect": [634, 75, 1242, 593],
+                    "packedRect": [848, 218, 608, 518]
+                },
+                {
+                    "index": 2,
+                    "sourceRect": [16, 638, 627, 1197],
+                    "packedRect": [78, 945, 611, 559]
+                },
+                {
+                    "index": 3,
+                    "sourceRect": [639, 644, 1242, 1222],
+                    "packedRect": [850, 926, 603, 578]
+                }
+            ]
+        },
+        "past": {
+            "generation": "exec-8459bf0c-a2ed-4a68-a3aa-0b1b01775f04.png",
+            "source": "docs/art/field-landmarks/past-original.png",
+            "sourceSha256": "e68d272f489c4326e94fa89b25a8cc1d27c37e7db92f924b5e7fb5b8740c9361",
+            "runtime": "flutter_game/art/landmarks-past.webp",
+            "runtimeSha256": "a7978f9f8b2d1d7203bd0aadd54dab04329c0a5a9b7151e5141e72836dc1eae1",
+            "frames": [
+                {
+                    "index": 0,
+                    "sourceRect": [25, 50, 667, 577],
+                    "packedRect": [63, 209, 642, 527]
+                },
+                {
+                    "index": 1,
+                    "sourceRect": [670, 43, 1235, 592],
+                    "packedRect": [869, 187, 565, 549]
+                },
+                {
+                    "index": 2,
+                    "sourceRect": [25, 583, 629, 1209],
+                    "packedRect": [82, 878, 604, 626]
+                },
+                {
+                    "index": 3,
+                    "sourceRect": [643, 593, 1246, 1196],
+                    "packedRect": [850, 901, 603, 603]
+                }
+            ]
+        },
+        "future": {
+            "generation": "exec-82ee4d76-bd04-47a8-83a9-6e1b7f5832f1.png",
+            "source": "docs/art/field-landmarks/future-original.png",
+            "sourceSha256": "ad2db66d5432f9f3901491ab646105904b96b9737cd9813681ce8c79636955c7",
+            "runtime": "flutter_game/art/landmarks-future.webp",
+            "runtimeSha256": "ad47c29152116522984b555c76b86f58c84e26157d97d9c69ed9db250108c53a",
+            "frames": [
+                {
+                    "index": 0,
+                    "sourceRect": [20, 32, 688, 549],
+                    "packedRect": [50, 219, 668, 517]
+                },
+                {
+                    "index": 1,
+                    "sourceRect": [692, 18, 1238, 627],
+                    "packedRect": [879, 127, 546, 609]
+                },
+                {
+                    "index": 2,
+                    "sourceRect": [18, 577, 621, 1221],
+                    "packedRect": [82, 860, 603, 644]
+                },
+                {
+                    "index": 3,
+                    "sourceRect": [636, 639, 1237, 1200],
+                    "packedRect": [851, 943, 601, 561]
+                }
+            ]
+        },
+        "tombs": {
+            "generation": "exec-492e4dcd-6141-41cb-b9c1-48aa730af483.png",
+            "source": "docs/art/field-landmarks/tombs-original.png",
+            "sourceSha256": "ab7d743a4c7d2ef145042a48ea7cf62c112972d36a81f3048d6c27e9d51b2ace",
+            "runtime": "flutter_game/art/landmarks-tombs.webp",
+            "runtimeSha256": "93c852e49d99b581918c52aded7bbd0c77dc0f7f209171fcfab211c5ed215350",
+            "frames": [
+                {
+                    "index": 0,
+                    "sourceRect": [16, 13, 669, 601],
+                    "packedRect": [57, 148, 653, 588]
+                },
+                {
+                    "index": 1,
+                    "sourceRect": [653, 48, 1239, 597],
+                    "packedRect": [859, 187, 586, 549]
+                },
+                {
+                    "index": 2,
+                    "sourceRect": [14, 667, 649, 1185],
+                    "packedRect": [66, 986, 635, 518]
+                },
+                {
+                    "index": 3,
+                    "sourceRect": [631, 596, 1240, 1229],
+                    "packedRect": [847, 871, 609, 633]
+                }
+            ]
+        },
+        "foundry": {
+            "generation": "exec-f613fbea-bd74-4ed7-8082-e8485dbc7385.png",
+            "source": "docs/art/field-landmarks/foundry-original.png",
+            "sourceSha256": "d1c4b7c226d957a0d41743eb39078695babb9c48a991efd0474350275743893d",
+            "runtime": "flutter_game/art/landmarks-foundry.webp",
+            "runtimeSha256": "bb4b3261db17595f7d380cdbe0588b42c45902e62d4b1c856f23e03942a0ed5d",
+            "frames": [
+                {
+                    "index": 0,
+                    "sourceRect": [19, 42, 646, 576],
+                    "packedRect": [70, 202, 627, 534]
+                },
+                {
+                    "index": 1,
+                    "sourceRect": [658, 30, 1238, 584],
+                    "packedRect": [862, 182, 580, 554]
+                },
+                {
+                    "index": 2,
+                    "sourceRect": [14, 599, 645, 1219],
+                    "packedRect": [68, 884, 631, 620]
+                },
+                {
+                    "index": 3,
+                    "sourceRect": [651, 638, 1244, 1218],
+                    "packedRect": [855, 924, 593, 580]
+                }
+            ]
+        },
+        "convergence": {
+            "generation": "exec-fa287836-2dcf-40f4-93c3-72ca0975ac56.png",
+            "source": "docs/art/field-landmarks/convergence-original.png",
+            "sourceSha256": "72781bb5fe3412ac5cddf0ffbdab0c4eaff35983078a0889c58f1c2f9badf1ec",
+            "runtime": "flutter_game/art/landmarks-convergence.webp",
+            "runtimeSha256": "505a804c0b23352e82ec08f6d8b745af43e33c016e9012c50d4b9dbc59c1d5df",
+            "frames": [
+                {
+                    "index": 0,
+                    "sourceRect": [33, 20, 640, 610],
+                    "packedRect": [80, 146, 607, 590]
+                },
+                {
+                    "index": 1,
+                    "sourceRect": [646, 56, 1232, 589],
+                    "packedRect": [859, 203, 586, 533]
+                },
+                {
+                    "index": 2,
+                    "sourceRect": [20, 623, 655, 1221],
+                    "packedRect": [66, 906, 635, 598]
+                },
+                {
+                    "index": 3,
+                    "sourceRect": [617, 651, 1241, 1226],
+                    "packedRect": [840, 929, 624, 575]
+                }
+            ]
+        }
+    }
+}

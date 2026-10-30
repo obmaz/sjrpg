@@ -17,6 +17,7 @@ import 'interface_art.dart';
 import 'mount_sprite_mesh.dart';
 import 'prop_grounding.dart';
 import 'quest_scenery.dart';
+import 'terrain_map_plan.dart';
 import 'village_scene_blend.dart';
 import 'world_model.dart';
 
@@ -72,6 +73,13 @@ class GameArt {
   };
   static const _allImages = [
     ..._fieldImages,
+    'landmarks-forest',
+    'landmarks-sands',
+    'landmarks-past',
+    'landmarks-future',
+    'landmarks-tombs',
+    'landmarks-foundry',
+    'landmarks-convergence',
     'entry-scene',
     'class-selection',
     'entry-ui',
@@ -167,6 +175,7 @@ class GameArt {
   // Stable saved stage IDs keep later chapters compatible with their art family.
   static const _sceneryImages = <String, Set<String>>{
     'forest': {
+      'landmarks-forest',
       'settlement-forest',
       'village-gateway',
       'world-desert',
@@ -174,16 +183,21 @@ class GameArt {
       'quest-root-garden',
     },
     'sands': {
+      'landmarks-sands',
       'settlement-sands',
       'world-desert',
       'ruin-props',
       'desert-temple',
     },
-    'past': {'settlement-past', 'ruin-props'},
-    'future': {'settlement-future', 'cyber-props'},
-    'tombs': {'settlement-tombs', 'ruin-props'},
-    'foundry': {'settlement-foundry', 'cyber-props'},
-    'convergence': {'settlement-convergence', 'ruin-props'},
+    'past': {'settlement-past', 'ruin-props', 'landmarks-past'},
+    'future': {'settlement-future', 'cyber-props', 'landmarks-future'},
+    'tombs': {'settlement-tombs', 'ruin-props', 'landmarks-tombs'},
+    'foundry': {'settlement-foundry', 'cyber-props', 'landmarks-foundry'},
+    'convergence': {
+      'settlement-convergence',
+      'ruin-props',
+      'landmarks-convergence',
+    },
   };
   // Simplified runtime effects no longer draw these large decorative atlases.
   // Keep the original sources available to the full loader and art tooling.
@@ -932,6 +946,26 @@ class GameArt {
   }
 
   void prop(ui.Canvas canvas, WorldProp prop, {double opacity = 1}) {
+    final formation = prop.landmark;
+    if (formation != null) {
+      final image = images[formation.imageKey];
+      if (image == null) return;
+      final cell = image.width / 2;
+      canvas.drawImageRect(
+        image,
+        ui.Rect.fromLTWH(
+          formation.index % 2 * cell,
+          formation.index ~/ 2 * cell,
+          cell,
+          cell,
+        ),
+        formation.drawBounds,
+        ui.Paint()
+          ..color = ui.Color.fromRGBO(255, 255, 255, opacity)
+          ..filterQuality = ui.FilterQuality.medium,
+      );
+      return;
+    }
     if (prop.kind == 'blacksmith-forge' || prop.kind == 'village-cottage') {
       final image = images[prop.kind];
       if (image == null) return;
@@ -1111,6 +1145,12 @@ class TerrainArt {
   final cache = <String, ui.Picture>{};
   late final questScenery = QuestScenery(world);
   late final fieldLandscape = FieldLandscape(world);
+  late final mapPlan = TerrainMapPlan(
+    world,
+    fieldLandscape,
+    waterPath,
+    dryGroundPath,
+  );
   late final propGrounding = PropGrounding(world.propBuckets);
   late final ui.Path waterPath = ui.Path.combine(
     ui.PathOperation.difference,

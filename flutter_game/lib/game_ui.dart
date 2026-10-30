@@ -9,7 +9,6 @@ import 'barbarian_icon_art.dart';
 import 'cinematic_icon_art.dart';
 import 'combat_balance.dart';
 import 'd1_icon_art.dart';
-import 'field_palettes.dart';
 import 'game_art.dart';
 import 'health_widgets.dart';
 import 'resource_meter.dart';
@@ -512,45 +511,6 @@ class MapPainter extends CustomPainter {
   final Adventure session;
   final bool round;
   final double markerScale;
-  static const _textureScale = 16.0;
-  static final _textureTransform = Matrix4.diagonal3Values(
-    1 / _textureScale,
-    1 / _textureScale,
-    1,
-  ).storage;
-  void _terrain(
-    Canvas canvas,
-    Path path,
-    int material,
-    Color color, {
-    double? width,
-  }) {
-    final solid = Paint()
-      ..color = round
-          ? Color.lerp(color, const Color(0xff332c24), .38)!
-          : color;
-    if (width != null) {
-      solid
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = width;
-    }
-    canvas.drawPath(path, solid);
-    if (round || session.art.materials.length <= material) return;
-    canvas.save();
-    canvas.scale(_textureScale);
-    final texture = Paint()
-      ..shader = session.art.materials[material]
-      ..color = const Color(0xaaffffff)
-      ..filterQuality = FilterQuality.medium;
-    if (width != null) {
-      texture
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = width / _textureScale;
-    }
-    canvas.drawPath(path.transform(_textureTransform), texture);
-    canvas.restore();
-  }
-
   @override
   void paint(Canvas c, Size s) {
     final rect = Offset.zero & s;
@@ -565,140 +525,12 @@ class MapPainter extends CustomPainter {
     c.scale(s.width / view.width, s.height / view.height);
     c.translate(-view.left, -view.top);
     c.clipRect(Offset.zero & worldSize);
-    final base = session.world.stage.baseMaterial;
-    final road = session.world.stage.roadMaterial;
-    if (!round) {
-      c.drawRect(
-        Offset.zero & worldSize,
-        Paint()..color = session.world.stage.mapColor,
-      );
-      session.terrain.fieldLandscape.paintOverview(
-        c,
-        view,
-        macroColors: fieldPalettes[session.world.stage.name],
-      );
-    } else {
-      _terrain(
-        c,
-        Path()..addRect(Offset.zero & worldSize),
-        base,
-        session.world.stage.mapColor,
-      );
-      for (final wood in session.world.woods) {
-        _terrain(c, wood.path, 1, const Color(0xff315947));
-      }
-      for (final clearing in session.world.clearings) {
-        _terrain(c, clearing.path, base, session.world.stage.clearingColor);
-      }
-      for (final sand in session.world.sandFields) {
-        _terrain(
-          c,
-          sand.path,
-          session.world.stage == WorldStage.tombs ? 3 : 2,
-          session.world.stage == WorldStage.tombs
-              ? const Color(0xff9e967f)
-              : const Color(0xffc7b579),
-        );
-      }
-    }
-    final water = session.terrain.waterPath;
-    if (!round) {
-      c.drawPath(
-        water,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 140
-          ..color = const Color(0xffd5c99a),
-      );
-      c.drawPath(
-        water,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 55
-          ..color = const Color(0xff29636d),
-      );
-    }
-    _terrain(c, water, 4, const Color(0xff3b91a0));
-    c.save();
-    c.clipPath(session.terrain.dryGroundPath, doAntiAlias: false);
-    for (final trail in session.world.trails) {
-      if (!round) {
-        c.drawPath(
-          trail.path,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = trail.width + 90
-            ..color = const Color(0xff4a5540),
-        );
-      }
-      _terrain(
-        c,
-        trail.path,
-        road,
-        const Color(0xffdac489),
-        width: trail.width,
-      );
-    }
-    _terrain(
+    session.terrain.mapPlan.paint(
       c,
-      round
-          ? session.world.sanctuary.boundaryPath
-          : (Path()..addRect(session.world.settlement)),
-      road,
-      const Color(0xffa89a77),
+      view,
+      unitsPerPixel: view.width / s.width * (round ? 1 : markerScale),
     );
-    c.restore();
-    final settlement = session.world.authoredSettlement;
-    final settlementImage = session.art.images[settlement.imageKey];
-    if (!round && settlementImage != null && view.overlaps(settlement.bounds)) {
-      c.drawImageRect(
-        settlementImage,
-        Rect.fromLTWH(
-          0,
-          0,
-          settlementImage.width.toDouble(),
-          settlementImage.height.toDouble(),
-        ),
-        settlement.bounds,
-        Paint()..filterQuality = FilterQuality.low,
-      );
-    }
-    for (final bridge in session.world.bridges) {
-      _terrain(c, Path()..addRect(bridge), road, const Color(0xffdac489));
-    }
-
     final sanctuary = session.world.sanctuary;
-    if (round) {
-      // A single top-down plan stays legible at 85px. The full map can retain
-      // the scene illustration without layering perspective art on this plan.
-      c.save();
-      c.clipPath(sanctuary.boundaryPath);
-      for (final gate in settlement.gatePaths) {
-        c.drawLine(
-          gate.first,
-          session.world.healAt,
-          Paint()
-            ..color = const Color(0xffc9b58a)
-            ..strokeWidth = 100
-            ..strokeCap = StrokeCap.round,
-        );
-      }
-      for (final building in session.world.settlementCollision.take(4)) {
-        c.drawPath(building.path, Paint()..color = const Color(0xff5d5c50));
-        c.drawPath(
-          building.path,
-          Paint()
-            ..color = const Color(0xffd2c5a2)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 14,
-        );
-      }
-      c.drawOval(
-        Rect.fromCenter(center: session.world.healAt, width: 180, height: 140),
-        Paint()..color = const Color(0xff5396a3),
-      );
-      c.restore();
-    }
     c.drawPath(
       sanctuary.boundaryPath,
       Paint()
@@ -754,6 +586,25 @@ class MapPainter extends CustomPainter {
           Paint()
             ..color = cream
             ..strokeWidth = unit,
+        );
+      }
+    }
+    if (!round && markerScale <= 2.0) {
+      for (final landmark in session.world.landmarks) {
+        final labelAt =
+            project(landmark.footprint.bottomCenter) +
+            Offset(0, 12 * markerScale);
+        if (session.world.sites.any(
+          (site) => (project(site.at) - labelAt).distance < 85 * markerScale,
+        )) {
+          continue;
+        }
+        session.art.text(
+          c,
+          landmark.name,
+          labelAt,
+          size: 10 * markerScale,
+          color: const Color(0xffc7bea5),
         );
       }
     }

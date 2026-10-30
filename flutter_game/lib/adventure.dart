@@ -6047,6 +6047,7 @@ class WoodlandProp extends GameComponent with EffectVisibility {
   bool get occludesHero {
     final hero = session.hero.body;
     return (prop.kind == 'tree' ||
+            prop.landmark != null ||
             prop.kind.startsWith('city-') ||
             prop.kind.startsWith('ruin-') ||
             prop.kind == 'blacksmith-forge' ||
@@ -6075,8 +6076,9 @@ class WoodlandProp extends GameComponent with EffectVisibility {
   }
 
   @override
-  bool get isVisible =>
-      gameRef.camera.visibleWorldRect.overlaps(prop.body.inflate(230));
+  bool get isVisible => gameRef.camera.visibleWorldRect.overlaps(
+    prop.landmark?.drawBounds ?? prop.body.inflate(230),
+  );
 }
 
 class WorldDirector extends GameComponent {

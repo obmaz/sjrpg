@@ -52,10 +52,10 @@ Future<Uint8List> _ground(Adventure session, List<ui.Color> colors) async {
     ui.Offset.zero & worldSize,
     ui.Paint()..color = session.world.stage.mapColor,
   );
-  session.terrain.fieldLandscape.paintOverview(
+  session.terrain.mapPlan.paint(
     canvas,
     ui.Offset.zero & worldSize,
-    macroColors: colors,
+    unitsPerPixel: worldSize.width / 1200,
   );
   final picture = recorder.endRecording(),
       image = await picture.toImage(1200, 900);
@@ -83,7 +83,7 @@ void main() {
   });
   for (final stage in WorldStage.values) {
     test(
-      '${stage.name} expanded map shares field palettes while round minimap stays flat',
+      '${stage.name} both maps share actual terrain geometry in a flat restrained palette',
       () async {
         final art = await GameArt.loadMenu();
         await art.ensureStage(stage, heroClass: HeroClass.warrior);
@@ -126,7 +126,7 @@ void main() {
           matches / samples,
           greaterThan(.98),
           reason:
-              'expanded map ground must use the exact playable region/palette renderer',
+              'expanded terrain must follow the same quiet plan as the compact map',
         );
         await _ground(
           current,
