@@ -37,7 +37,7 @@ void main() {
             .toList();
         births.addAll(visible);
         if (visible.length > peak) peak = visible.length;
-        expect(visible.length, lessThanOrEqualTo(3));
+        expect(visible.length, lessThanOrEqualTo(5));
         for (var i = 0; i < visible.length; i++) {
           expect(visible[i].position.x, mob.body.center.dx);
           for (var j = i + 1; j < visible.length; j++) {
@@ -50,7 +50,7 @@ void main() {
         }
       }
       expect(births.length, 9);
-      expect(peak, 3);
+      expect(peak, 5);
       expect(mob.life.value, 9991);
     },
   );
@@ -91,16 +91,16 @@ void main() {
       final text = s.texts.single;
       s.tick(.05);
       text.update(1);
-      expect(text.remaining, closeTo(.49, .001));
+      expect(text.remaining, closeTo(BattleText.streamLifetime - .05, .001));
       expect(text.position.y, closeTo(182, .001));
       s.pause();
       s.tick(1);
       text.update(1);
-      expect(text.remaining, closeTo(.49, .001));
+      expect(text.remaining, closeTo(BattleText.streamLifetime - .05, .001));
       s.resume();
       s.tick(.05);
       text.update(1);
-      expect(text.remaining, closeTo(.44, .001));
+      expect(text.remaining, closeTo(BattleText.streamLifetime - .1, .001));
     },
   );
 }

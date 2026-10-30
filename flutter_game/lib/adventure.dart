@@ -1980,7 +1980,7 @@ class Adventure extends ChangeNotifier {
     final same = texts
         .where((t) => t.isStream && identical(t.target, next.target))
         .toList();
-    while (same.length >= 3) {
+    while (same.length >= 5) {
       _removeBattleText(same.removeAt(0));
     }
     final visible = texts.where((t) => !t.isReward).toList();
@@ -6265,7 +6265,7 @@ class BattleText extends GameComponent {
     }
   }
   static const streamInterval = .18,
-      streamLifetime = .54,
+      streamLifetime = .9,
       streamRiseSpeed = 360.0;
   final double? combatAmount;
   final Object? target;
@@ -6295,8 +6295,8 @@ class BattleText extends GameComponent {
             ? 13
             : 18
       : math.min(
-          critical ? 27 : 22,
-          (critical ? 238 : 197) / displayLabel.length,
+          critical ? 22 : 18,
+          (critical ? 194 : 162) / displayLabel.length,
         );
   double get punchScale {
     if (isReward || reducedMotion) return 1;
@@ -6354,14 +6354,14 @@ class BattleText extends GameComponent {
     final builder =
         ui.ParagraphBuilder(
             ui.ParagraphStyle(
-              fontFamily: text == 'CRITICAL!' ? 'Guardian' : 'CombatDamage',
+              fontFamily: text == 'CRITICAL' ? 'Guardian' : 'CombatDamage',
               fontSize: fontSize,
               textAlign: ui.TextAlign.center,
             ),
           )
           ..pushStyle(
             ui.TextStyle(
-              fontWeight: text == 'CRITICAL!'
+              fontWeight: text == 'CRITICAL'
                   ? ui.FontWeight.bold
                   : ui.FontWeight.w900,
               foreground: ui.Paint()
@@ -6440,11 +6440,11 @@ class BattleText extends GameComponent {
         _outline = _stroke(displayLabel, textSize);
         if (critical) {
           _title = session.art.layoutText(
-            'CRITICAL!',
+            'CRITICAL',
             size: 15,
-            color: const ui.Color(0xffffb347),
+            color: const ui.Color(0xffff4b45),
           );
-          _titleOutline = _stroke('CRITICAL!', 15);
+          _titleOutline = _stroke('CRITICAL', 15);
         }
       }
       _paintedColor = ink;

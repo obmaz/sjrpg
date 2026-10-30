@@ -25,7 +25,7 @@ void main() {
       expect(text.label, '24');
       expect(text.critical, true);
       expect(text.isReward, false);
-      expect(text.textSize, 27);
+      expect(text.textSize, 22);
       expect(
         text.combatBounds.height,
         greaterThanOrEqualTo(text.textSize + 17),

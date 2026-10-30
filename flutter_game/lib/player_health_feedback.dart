@@ -82,6 +82,12 @@ class PlayerHealthFeedback extends ChangeNotifier {
           damageRemaining > 0 ||
           _trail.value > reading.value.ratio + .001);
   double get pulse => _reduced ? .5 : .5 - .5 * math.cos(phase * math.pi * 2);
+  double get warningTintOpacity =>
+      !visible || reading.value.danger == HealthDanger.none
+      ? 0
+      : reading.value.danger == HealthDanger.critical
+      ? .22 + .42 * pulse
+      : .14 + .32 * pulse;
   double get dangerOpacity {
     if (!visible) return 0;
     final low = switch (reading.value.danger) {

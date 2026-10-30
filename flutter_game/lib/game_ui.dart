@@ -12,6 +12,7 @@ import 'd1_icon_art.dart';
 import 'game_art.dart';
 import 'health_widgets.dart';
 import 'map_marker_layout.dart';
+import 'player_health_feedback.dart';
 import 'resource_meter.dart';
 import 'sorceress_icon_art.dart';
 import 'world_model.dart';
@@ -47,6 +48,12 @@ class GameHud extends StatelessWidget {
   final VoidCallback? onMap;
   @override
   Widget build(BuildContext context) {
+    if (PlayerHealthFeedbackScope.maybeOf(context) == null) {
+      return PlayerHealthFeedbackScope(
+        session: session,
+        child: GameHud(session, onMap: onMap),
+      );
+    }
     final p = session.progress;
     final media = MediaQuery.of(context);
     final width = media.size.width;
@@ -189,7 +196,11 @@ class GameHud extends StatelessWidget {
               height: portraitSide,
               child: ClipOval(
                 child: CustomPaint(
-                  painter: _PortraitPainter(session.art, p.heroClass),
+                  painter: _PortraitPainter(
+                    session.art,
+                    p.heroClass,
+                    PlayerHealthFeedbackScope.maybeOf(context),
+                  ),
                 ),
               ),
             ),
@@ -433,7 +444,9 @@ class ActionIllustrationPainter extends CustomPainter {
 }
 
 class _PortraitPainter extends CustomPainter {
-  _PortraitPainter(this.art, this.heroClass);
+  _PortraitPainter(this.art, this.heroClass, this.feedback)
+    : super(repaint: feedback);
+  final PlayerHealthFeedback? feedback;
   final GameArt art;
   final HeroClass heroClass;
   @override
@@ -444,11 +457,20 @@ class _PortraitPainter extends CustomPainter {
     } else if (!art.face(c, heroClass, Offset.zero & s)) {
       c.drawOval(Offset.zero & s, Paint()..color = ink);
     }
+    final tint = feedback?.warningTintOpacity ?? 0;
+    if (tint > 0) {
+      c.drawOval(
+        Offset.zero & s,
+        Paint()..color = Color.fromRGBO(255, 42, 36, tint),
+      );
+    }
   }
 
   @override
   bool shouldRepaint(covariant _PortraitPainter oldDelegate) =>
-      oldDelegate.heroClass != heroClass || oldDelegate.art != art;
+      oldDelegate.heroClass != heroClass ||
+      oldDelegate.art != art ||
+      oldDelegate.feedback != feedback;
 }
 
 class ControlPainter extends CustomPainter {

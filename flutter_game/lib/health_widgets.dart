@@ -279,11 +279,11 @@ class HealthMeterPainter extends CustomPainter {
       ).createShader(bounds);
     }
     canvas.drawRect(fill, Paint()..shader = _fillShader);
-    if (critical) {
+    if (feedback.warningTintOpacity > 0) {
       canvas.drawRect(
-        fill,
+        bounds,
         Paint()
-          ..color = Color.fromRGBO(255, 66, 54, .08 + .32 * feedback.pulse),
+          ..color = Color.fromRGBO(255, 42, 36, feedback.warningTintOpacity),
       );
     }
     canvas.drawLine(
