@@ -68,10 +68,10 @@ void main() {
       final s = session();
       s.progress.hp = s.progress.maxHp - 4;
       s.potion();
-      expect(s.texts.last.label, '+4 생명');
+      expect(s.texts.last.label, '+4,000 생명');
       s.progress.energy = s.progress.maxEnergy - 7;
       s.potion(energy: true);
-      expect(s.texts.last.label, '+7 분노');
+      expect(s.texts.last.label, '+70 분노');
     },
   );
   testWidgets('zoom out never jumps inward from a short-screen overview', (

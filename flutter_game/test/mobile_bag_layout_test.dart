@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/combat_distance.dart';
+import 'package:guardian_new/combat_numbers.dart';
 import 'package:guardian_new/equipment_panel.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/interface_art.dart';
@@ -110,7 +111,7 @@ void main() {
     await showBag(tester, s, const Size(320, 420), 1.3);
     final summary = find.byKey(const ValueKey('equipment-overview'));
     expect(
-      find.descendant(of: summary, matching: find.text('공격력 11')),
+      find.descendant(of: summary, matching: find.text('공격력 11,271')),
       findsOneWidget,
     );
     await saveProof(tester, 'attack-overview-320x420-1.3');
@@ -128,9 +129,9 @@ void main() {
         .map((text) => text.textSpan!.toPlainText())
         .toList();
     expect(lines, [
-      '무기 공격 15',
-      '기본 공격 1타 ${p.basicDamage.toStringAsFixed(1)}',
-      '초당 피해 ${p.basicDps.toStringAsFixed(1)}',
+      '무기 공격 15,000',
+      '기본 공격 1타 ${CombatNumbers.stat(p.basicDamage)}',
+      '초당 피해 ${CombatNumbers.stat(p.basicDps)}',
     ]);
     await Scrollable.ensureVisible(
       tester.element(comparisons.last),
@@ -141,7 +142,7 @@ void main() {
     final accessible = find.bySemanticsLabel('보관 장비 · ${weapon.name} · 장착 중');
     expect(
       tester.widget<Semantics>(accessible).properties.hint,
-      '무기 레벨 ${weapon.weaponLevel} · 무기 공격 15 · 기본 공격 1타 ${p.basicDamage.toStringAsFixed(1)} · 사거리 ${CombatDistance.format(weapon.base.range)} · 초당 피해 ${p.basicDps.toStringAsFixed(1)} · 현재 초당 피해 ${p.basicDps.toStringAsFixed(1)}',
+      '무기 레벨 ${weapon.weaponLevel} · 무기 공격 15,000 · 기본 공격 1타 ${CombatNumbers.stat(p.basicDamage)} · 사거리 ${CombatDistance.format(weapon.base.range)} · 초당 피해 ${CombatNumbers.stat(p.basicDps)} · 현재 초당 피해 ${CombatNumbers.stat(p.basicDps)}',
     );
     for (final element in comparisons.evaluate()) {
       final paragraph = element.renderObject! as RenderParagraph;
@@ -155,7 +156,7 @@ void main() {
     expect(
       find.descendant(
         of: row,
-        matching: find.textContaining('무기 공격 15', findRichText: true),
+        matching: find.textContaining('무기 공격 15,000', findRichText: true),
       ),
       findsOneWidget,
     );
@@ -280,11 +281,14 @@ void main() {
           .widgetList<Text>(comparisons)
           .map((widget) => widget.textSpan!.toPlainText())
           .toList();
-      expect(comparisonText.first, startsWith('무기 공격 ${gear.attack.round()}'));
+      expect(
+        comparisonText.first,
+        startsWith('무기 공격 ${CombatNumbers.stat(gear.attack)}'),
+      );
       expect(
         comparisonText.last,
         startsWith(
-          '초당 피해 ${s.progress.previewBasicAttack(gear)!.dps.toStringAsFixed(1)}',
+          '초당 피해 ${CombatNumbers.stat(s.progress.previewBasicAttack(gear)!.dps)}',
         ),
       );
       for (final target in [

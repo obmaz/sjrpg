@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/combat_numbers.dart';
 import 'package:guardian_new/equipment_panel.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/rpg_model.dart';
@@ -97,7 +98,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         find.bySemanticsLabel(
-          RegExp('^공격력 \\+${RegExp.escape(quoted.toStringAsFixed(2))} · 수련'),
+          RegExp('^공격력 \\+${RegExp.escape(CombatNumbers.stat(quoted))} · 수련'),
         ),
         findsOneWidget,
       );

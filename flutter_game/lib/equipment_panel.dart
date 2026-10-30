@@ -679,86 +679,6 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                                       fontSize: 13,
                                     ),
                                   ),
-                                  const SizedBox(height: 5),
-                                  if (gear.base.slot != GearSlot.weapon &&
-                                      gear.attack > 0)
-                                    _quickStat(
-                                      '장비 공격',
-                                      gear.attack,
-                                      current?.attack,
-                                      active,
-                                    ),
-                                  if (gear.base.slot == GearSlot.charm &&
-                                      gear.mana > 0 &&
-                                      gear.armor > 0)
-                                    _quickStat(
-                                      '방어',
-                                      gear.armor,
-                                      current?.armor,
-                                      active,
-                                    ),
-                                  if (gear.base.slot == GearSlot.weapon) ...[
-                                    _quickStat(
-                                      '무기 공격',
-                                      gear.attack,
-                                      current?.attack,
-                                      active,
-                                    ),
-                                    if (attack != null)
-                                      _quickStat(
-                                        '기본 공격 1타',
-                                        attack.damage,
-                                        p.basicAttackStats().damage,
-                                        active,
-                                        decimal: true,
-                                      ),
-                                    if (attack != null)
-                                      _quickStat(
-                                        '초당 피해',
-                                        attack.dps,
-                                        _currentBasicDps,
-                                        active,
-                                        decimal: true,
-                                      ),
-                                  ] else if (gear.base.slot ==
-                                      GearSlot.armor) ...[
-                                    _quickStat(
-                                      '방어',
-                                      gear.armor,
-                                      current?.armor,
-                                      active,
-                                    ),
-                                    _quickStat(
-                                      '생명',
-                                      gear.health,
-                                      current?.health,
-                                      active,
-                                    ),
-                                  ] else ...[
-                                    _quickStat(
-                                      '생명',
-                                      gear.health,
-                                      current?.health,
-                                      active,
-                                    ),
-                                    _quickStat(
-                                      gear.mana > 0 || (current?.mana ?? 0) > 0
-                                          ? p.heroClass.resource
-                                          : '방어',
-                                      gear.mana > 0 || (current?.mana ?? 0) > 0
-                                          ? gear.mana
-                                          : gear.armor,
-                                      gear.mana > 0 || (current?.mana ?? 0) > 0
-                                          ? current?.mana
-                                          : current?.armor,
-                                      active,
-                                      unit:
-                                          gear.mana > 0 ||
-                                              (current?.mana ?? 0) > 0
-                                          ? CombatUnit.resource
-                                          : CombatUnit.stat,
-                                    ),
-                                  ],
                                 ],
                               ),
                             ),
@@ -819,6 +739,52 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
               ),
             ],
           ),
+          const SizedBox(height: 6),
+          if (gear.base.slot != GearSlot.weapon && gear.attack > 0)
+            _quickStat('장비 공격', gear.attack, current?.attack, active),
+          if (gear.base.slot == GearSlot.charm &&
+              gear.mana > 0 &&
+              gear.armor > 0)
+            _quickStat('방어', gear.armor, current?.armor, active),
+          if (gear.base.slot == GearSlot.weapon) ...[
+            _quickStat('무기 공격', gear.attack, current?.attack, active),
+            if (attack != null)
+              _quickStat(
+                '기본 공격 1타',
+                attack.damage,
+                p.basicAttackStats().damage,
+                active,
+                decimal: true,
+              ),
+            if (attack != null)
+              _quickStat(
+                '초당 피해',
+                attack.dps,
+                _currentBasicDps,
+                active,
+                decimal: true,
+              ),
+          ] else if (gear.base.slot == GearSlot.armor) ...[
+            _quickStat('방어', gear.armor, current?.armor, active),
+            _quickStat('생명', gear.health, current?.health, active),
+          ] else ...[
+            _quickStat('생명', gear.health, current?.health, active),
+            _quickStat(
+              gear.mana > 0 || (current?.mana ?? 0) > 0
+                  ? p.heroClass.resource
+                  : '방어',
+              gear.mana > 0 || (current?.mana ?? 0) > 0
+                  ? gear.mana
+                  : gear.armor,
+              gear.mana > 0 || (current?.mana ?? 0) > 0
+                  ? current?.mana
+                  : current?.armor,
+              active,
+              unit: gear.mana > 0 || (current?.mana ?? 0) > 0
+                  ? CombatUnit.resource
+                  : CombatUnit.stat,
+            ),
+          ],
           if (gear.base.slot == GearSlot.weapon) ...[
             if (gear.armor > 0)
               _quickStat('방어', gear.armor, current?.armor, active),

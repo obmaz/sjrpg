@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/area_damage.dart';
 import 'package:guardian_new/combat_balance.dart';
+import 'package:guardian_new/combat_numbers.dart';
 import 'package:guardian_new/equipment_panel.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/player_afflictions.dart';
@@ -318,12 +319,13 @@ void main() {
     await tester.pumpAndSettle();
     final row = find.bySemanticsLabel(RegExp('보관 장비 · ${p.weapon.name}'));
     final hint = tester.getSemantics(row).getSemanticsData().hint;
-    final expected = p
-        .basicAttackStats(frenzyTempo: p.frenzyAttackTempo, attackTempo: .72)
-        .dps
-        .toStringAsFixed(1);
+    final expected = CombatNumbers.stat(
+      p
+          .basicAttackStats(frenzyTempo: p.frenzyAttackTempo, attackTempo: .72)
+          .dps,
+    );
     expect(hint, contains('현재 초당 피해 $expected'));
-    expect(hint, isNot(contains('현재 초당 피해 ${p.basicDps.toStringAsFixed(1)}')));
+    expect(hint, isNot(contains('현재 초당 피해 ${CombatNumbers.stat(p.basicDps)}')));
     semantics.dispose();
   });
 }
