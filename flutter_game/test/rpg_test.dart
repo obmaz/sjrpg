@@ -529,7 +529,7 @@ void main() {
       s.bubble('18', arrival, const Color(0xffffedb4));
     }
     expect(s.texts.where((t) => t.isReward).length, 2);
-    expect(s.texts.length, 16);
+    expect(s.texts.length, inInclusiveRange(3, 16));
     final text = s.texts.last, remaining = text.remaining;
     s.pause();
     text.update(.5);

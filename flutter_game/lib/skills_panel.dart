@@ -4,6 +4,7 @@ import 'adventure.dart';
 import 'back_actions.dart';
 import 'basic_attack_strip.dart';
 import 'combat_balance.dart';
+import 'combat_numbers.dart';
 import 'game_ui.dart';
 import 'panel_controls.dart';
 import 'rpg_model.dart';
@@ -656,7 +657,7 @@ class _SkillsPanelState extends State<SkillsPanel> {
                           ? '기본 공격 · 자원 소모 없음 · 필요 레벨 ${skill.requiredLevel}'
                           : skill.passive
                           ? '지속 효과 · 필요 레벨 ${skill.requiredLevel}'
-                          : '${p.heroClass.resource} ${p.skillCost(skill, atRank: p.rank(skill.id).clamp(1, skill.rankLimit)).round()} · 재사용 ${CombatBalance.realSeconds(p.skillCooldown(skill, atRank: p.rank(skill.id).clamp(1, skill.rankLimit))).toStringAsFixed(1)}초 · 필요 레벨 ${skill.requiredLevel}',
+                          : '${p.heroClass.resource} ${CombatNumbers.resource(p.skillCost(skill, atRank: p.rank(skill.id).clamp(1, skill.rankLimit)), digits: 1)} · 재사용 ${CombatBalance.realSeconds(p.skillCooldown(skill, atRank: p.rank(skill.id).clamp(1, skill.rankLimit))).toStringAsFixed(1)}초 · 필요 레벨 ${skill.requiredLevel}',
                       style: const TextStyle(
                         color: _dim,
                         fontSize: 13,

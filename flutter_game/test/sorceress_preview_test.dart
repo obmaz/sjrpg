@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/combat_balance.dart';
+import 'package:guardian_new/combat_numbers.dart';
 import 'package:guardian_new/rpg_model.dart';
 import 'package:guardian_new/skill_preview_model.dart';
 
@@ -116,7 +117,7 @@ void main() {
         expect(dps.current, stats.meanDamage / p.attackIntervalFor(skill));
         expect(
           dps.format(dps.current),
-          '${(stats.meanDamage / CombatBalance.realSeconds(p.attackIntervalFor(skill))).toStringAsFixed(2)}/초',
+          '${CombatNumbers.stat(stats.meanDamage / CombatBalance.realSeconds(p.attackIntervalFor(skill)))}/초',
         );
       }
       expect(bolt.basic, true);
@@ -151,7 +152,7 @@ void main() {
         _row(p, 'energyShield', '피해 흡수율').current,
         shield.damageAbsorb * 100,
       );
-      expect(_row(p, 'energyShield', '피해 1당 마나').current, (32 - 12) / 16);
+      expect(_row(p, 'energyShield', '피해 1,000당 마나').current, (32 - 12) / 16);
       expect(_row(p, 'blink', '순간이동 거리').current, p.mobilityRange);
       expect(_row(p, 'blink', '공통 시전 지연').current, 0);
       expect(_row(p, 'hydra', '불뱀 머리').current, 3);

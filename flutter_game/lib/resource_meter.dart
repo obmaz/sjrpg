@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'adventure.dart';
+import 'combat_numbers.dart';
 import 'hud_motion_clock.dart';
 import 'rpg_model.dart';
 
@@ -57,9 +58,12 @@ class _ResourceMeterState extends State<ResourceMeter>
     final p = widget.session.progress;
     final energy = _resourceValue(p);
     _resource = (p.heroClass, energy, p.maxEnergy);
-    final current = energy.floor();
+    final current = CombatNumbers.resource(
+      energy,
+      rounding: CombatRounding.down,
+    );
     _visibleLabel = '${p.heroClass.resource} $current';
-    _label = '$_visibleLabel / ${p.maxEnergy.round()}';
+    _label = '$_visibleLabel / ${CombatNumbers.resource(p.maxEnergy)}';
     return _resource != previous;
   }
 

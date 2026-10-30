@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'adventure.dart';
+import 'combat_numbers.dart';
 import 'player_health_feedback.dart';
 
 /// One local presentation clock serves both the meter and the edge warning.
@@ -206,7 +207,7 @@ class HealthMeter extends StatelessWidget {
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    '${reading.hp.ceil()} / ${reading.maximum.ceil()}',
+                    '${CombatNumbers.stat(reading.hp, rounding: CombatRounding.up)} / ${CombatNumbers.stat(reading.maximum, rounding: CombatRounding.up)}',
                     maxLines: 1,
                     style: const TextStyle(
                       color: Color(0xfffff0de),

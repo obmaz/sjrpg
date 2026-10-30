@@ -106,6 +106,29 @@ void main() {
   Finder action() =>
       find.byWidgetPredicate((w) => w is GameAction && w.primary);
 
+  testWidgets(
+    'normalized high-level attack comparisons fit a narrow screen at180percent text',
+    (tester) async {
+      tester.view.physicalSize = const ui.Size(320, 420);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final s = session(await art(tester), _Roll(0));
+      s.progress.level = 100;
+      final weapon = Gear(
+        999,
+        gearById('longsword'),
+        weaponLevel: 100,
+        power: 50,
+      );
+      s.progress.inventory.add(weapon);
+      expect(s.progress.equip(weapon), true);
+      await mount(tester, s, scale: 1.8);
+      expect(tester.takeException(), isNull);
+      expect(find.text('공격력'), findsOneWidget);
+    },
+  );
+
   for (final size in [
     const Size(390, 844),
     const Size(320, 420),

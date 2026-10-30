@@ -47,9 +47,9 @@ void main() {
       final crit = BattleText(s, '34512', origin, color, critical: true);
       final hurt = BattleText(s, '-1234', origin, color);
       final reward = BattleText(s, '+12890 골드', origin, color);
-      expect(hit.displayLabel, '12,890');
-      expect(crit.displayLabel, '34,512');
-      expect(hurt.displayLabel, '-1,234');
+      expect(hit.displayLabel, '12,890,000');
+      expect(crit.displayLabel, '34,512,000');
+      expect(hurt.displayLabel, '-1,234,000');
       expect([hit.isReward, crit.isReward, hurt.isReward], everyElement(false));
       expect(hit.label, '12890');
       expect(reward.displayLabel, '+12890 골드');

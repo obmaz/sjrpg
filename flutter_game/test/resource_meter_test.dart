@@ -7,6 +7,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/combat_numbers.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/resource_meter.dart';
 import 'package:guardian_new/rpg_model.dart';
@@ -124,10 +125,13 @@ void main() {
           s.progress.energy = s.progress.maxEnergy * fraction;
           await tester.pumpWidget(host(s, scale: 1.3));
           await tester.pump();
-          final label = '${hero.resource} ${s.progress.energy.floor()}';
+          final label =
+              '${hero.resource} ${CombatNumbers.resource(s.progress.energy, rounding: CombatRounding.down)}';
           expect(find.text(label), findsOneWidget);
           expect(
-            find.bySemanticsLabel('$label / ${s.progress.maxEnergy.round()}'),
+            find.bySemanticsLabel(
+              '$label / ${CombatNumbers.resource(s.progress.maxEnergy)}',
+            ),
             findsOneWidget,
           );
           final text = tester.widget<Text>(find.text(label));
@@ -295,7 +299,7 @@ void main() {
       old.refresh();
       await pumpEngine(tester, next, const Duration(seconds: 2));
       expect(await capture(tester, paintOnly: true), orderedEquals(before));
-      expect(find.text('마나 90'), findsOneWidget);
+      expect(find.text('마나 900'), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
       old.refresh();
       next.refresh();
@@ -351,7 +355,7 @@ void main() {
     s.progress.energy = 25.9;
     s.refresh();
     await tester.pump();
-    expect(find.text('분노 25'), findsOneWidget);
+    expect(find.text('분노 259'), findsOneWidget);
     final updated = await capture(tester, paintOnly: true);
     expect(changes(before, updated), greaterThan(0));
     await pumpEngine(tester, s, const Duration(seconds: 2));

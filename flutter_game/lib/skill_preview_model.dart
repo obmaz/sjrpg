@@ -1,5 +1,6 @@
 import 'combat_balance.dart';
 import 'combat_distance.dart';
+import 'combat_numbers.dart';
 import 'rpg_model.dart';
 import 'sorceress_rules.dart';
 
@@ -11,11 +12,13 @@ class SkillPreviewValue {
     this.suffix = '',
     this.digits = 0,
     this.zeroAsDash = false,
+    this.unit,
   });
   final String label, suffix;
   final double current, next;
   final int digits;
   final bool zeroAsDash;
+  final CombatUnit? unit;
   String format(double value) {
     if (zeroAsDash && value == 0) return '—';
     if (suffix == '걸음') return CombatDistance.format(value);
@@ -25,6 +28,9 @@ class SkillPreviewValue {
       '/초' => value * CombatBalance.gameSpeed,
       _ => value,
     };
+    if (unit != null) {
+      return '${CombatNumbers.format(shown, unit: unit!, digits: unit == CombatUnit.resource ? 2 : 0)}$suffix';
+    }
     return '${shown.toStringAsFixed(digits)}$suffix';
   }
 }
@@ -61,12 +67,14 @@ List<SkillPreviewValue> _barbarianStats(Progress p, SkillDef skill) {
     double Function(Progress) read, {
     String suffix = '',
     int digits = 1,
+    CombatUnit? unit,
   }) => SkillPreviewValue(
     label,
     read(p),
     read(next),
     suffix: suffix,
     digits: digits,
+    unit: unit,
   );
   double learned(Progress q, double Function() read) =>
       q.rank(id) == 0 ? 0 : read();
@@ -100,7 +108,7 @@ List<SkillPreviewValue> _barbarianStats(Progress p, SkillDef skill) {
         ),
       ];
     case 'ironSkin':
-      return [value('방어력', (q) => q.armor)];
+      return [value('방어력', (q) => q.armor, unit: CombatUnit.stat)];
     case 'increasedSpeed':
       return [
         value('도보 속도 배율', (q) => q.increasedSpeedMultiplier * 100, suffix: '%'),
@@ -194,6 +202,7 @@ List<SkillPreviewValue> _barbarianStats(Progress p, SkillDef skill) {
           : '기술 피해',
       (q) => q.skillDamage(skill),
       digits: 2,
+      unit: CombatUnit.stat,
     ),
   ];
   if (const {'doubleSwing', 'doubleThrow', 'frenzy'}.contains(id)) {
@@ -224,7 +233,9 @@ List<SkillPreviewValue> _barbarianStats(Progress p, SkillDef skill) {
     );
   }
   if (id == 'berserk') {
-    result.add(const SkillPreviewValue('광폭화 중 방어력', 0, 0));
+    result.add(
+      const SkillPreviewValue('광폭화 중 방어력', 0, 0, unit: CombatUnit.stat),
+    );
     result.add(
       value('방어력 상실 시간', (q) => q.barbarianEffectDuration(id), suffix: '초'),
     );
@@ -252,6 +263,7 @@ List<SkillPreviewValue> _sorceressStats(Progress p, SkillDef skill) {
     String suffix = '',
     int digits = 2,
     bool zeroAsDash = false,
+    CombatUnit? unit,
   }) => SkillPreviewValue(
     label,
     read(current),
@@ -259,18 +271,21 @@ List<SkillPreviewValue> _sorceressStats(Progress p, SkillDef skill) {
     suffix: suffix,
     digits: digits,
     zeroAsDash: zeroAsDash,
+    unit: unit,
   );
   SkillPreviewValue passive(
     String label,
     double Function(Progress) read, {
     String suffix = '%',
     int digits = 1,
+    CombatUnit? unit,
   }) => SkillPreviewValue(
     label,
     read(p),
     read(next),
     suffix: suffix,
     digits: digits,
+    unit: unit,
   );
   switch (id) {
     case 'warmth':
@@ -280,7 +295,13 @@ List<SkillPreviewValue> _sorceressStats(Progress p, SkillDef skill) {
           (q) =>
               (SorceressRules.warmthMultiplier(q.effectiveRank(id)) - 1) * 100,
         ),
-        passive('마나 회복', (q) => q.manaRecovery, suffix: '/초', digits: 2),
+        passive(
+          '마나 회복',
+          (q) => q.manaRecovery,
+          suffix: '/초',
+          digits: 2,
+          unit: CombatUnit.resource,
+        ),
       ];
     case 'fireMastery':
       return [passive('화염 피해 증가', (q) => (q.fireDamageMultiplier - 1) * 100)];
@@ -292,10 +313,15 @@ List<SkillPreviewValue> _sorceressStats(Progress p, SkillDef skill) {
       return [passive('냉기 저항 관통', (q) => q.sorceressColdPierce * 100)];
   }
   final rows = <SkillPreviewValue>[
-    stat('마나 소모', (s) => s.manaCost),
+    stat('마나 소모', (s) => s.manaCost, unit: CombatUnit.resource),
     if (current.manaPerSecond > 0 || upgraded.manaPerSecond > 0) ...[
-      stat('유지 마나', (s) => s.manaPerSecond, suffix: '/초'),
-      stat('시작에 필요한 마나', (s) => s.minimumStartMana),
+      stat(
+        '유지 마나',
+        (s) => s.manaPerSecond,
+        suffix: '/초',
+        unit: CombatUnit.resource,
+      ),
+      stat('시작에 필요한 마나', (s) => s.minimumStartMana, unit: CombatUnit.resource),
     ],
     stat('공통 시전 지연', (s) => s.castDelay, suffix: '초', zeroAsDash: true),
     SkillPreviewValue(
@@ -313,8 +339,8 @@ List<SkillPreviewValue> _sorceressStats(Progress p, SkillDef skill) {
         ? '반격'
         : '1회';
     rows.addAll([
-      stat('$prefix 최소 피해', (s) => s.minDamage),
-      stat('$prefix 최대 피해', (s) => s.maxDamage),
+      stat('$prefix 최소 피해', (s) => s.minDamage, unit: CombatUnit.stat),
+      stat('$prefix 최대 피해', (s) => s.maxDamage, unit: CombatUnit.stat),
     ]);
   }
   if (skill.basic) {
@@ -329,6 +355,7 @@ List<SkillPreviewValue> _sorceressStats(Progress p, SkillDef skill) {
         '투사체 1개 초당 피해',
         current.rank == 0 ? 0 : current.meanDamage / p.attackIntervalFor(skill),
         upgraded.meanDamage / next.attackIntervalFor(skill),
+        unit: CombatUnit.stat,
         suffix: '/초',
         digits: 2,
       ),
@@ -345,8 +372,18 @@ List<SkillPreviewValue> _sorceressStats(Progress p, SkillDef skill) {
   }
   if (current.maxDamagePerSecond > 0 || upgraded.maxDamagePerSecond > 0) {
     rows.addAll([
-      stat('최소 지속 피해', (s) => s.minDamagePerSecond, suffix: '/초'),
-      stat('최대 지속 피해', (s) => s.maxDamagePerSecond, suffix: '/초'),
+      stat(
+        '최소 지속 피해',
+        (s) => s.minDamagePerSecond,
+        suffix: '/초',
+        unit: CombatUnit.stat,
+      ),
+      stat(
+        '최대 지속 피해',
+        (s) => s.maxDamagePerSecond,
+        suffix: '/초',
+        unit: CombatUnit.stat,
+      ),
     ]);
   }
   if (id == 'staticField') {
@@ -445,7 +482,11 @@ List<SkillPreviewValue> _sorceressStats(Progress p, SkillDef skill) {
   if (id == 'energyShield') {
     rows.addAll([
       stat('피해 흡수율', (s) => s.damageAbsorb * 100, suffix: '%'),
-      stat('피해 1당 마나', (s) => s.rank == 0 ? 0 : s.shieldManaPerDamage),
+      stat(
+        '피해 ${CombatNumbers.stat(1)}당 마나',
+        (s) => s.rank == 0 ? 0 : s.shieldManaPerDamage,
+        unit: CombatUnit.resource,
+      ),
     ]);
   }
   return rows;
@@ -463,12 +504,14 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
     double Function(Progress) read, {
     String suffix = '',
     int digits = 0,
+    CombatUnit? unit,
   }) => SkillPreviewValue(
     label,
     read(p),
     read(next),
     suffix: suffix,
     digits: digits,
+    unit: unit,
   );
   switch (skill.id) {
     case 'shadowAssault':
@@ -482,6 +525,7 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
           '첫 타격 피해',
           (p) => p.skillDamage(skill) * p.shadowAssaultStrikeScale(1),
           digits: 2,
+          unit: CombatUnit.stat,
         ),
         value(
           '마지막 타격 피해',
@@ -489,6 +533,7 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
               p.skillDamage(skill) *
               p.shadowAssaultStrikeScale(p.rank(skill.id)),
           digits: 2,
+          unit: CombatUnit.stat,
         ),
         const SkillPreviewValue('추가 피해 예산', 20, 20, suffix: '%'),
         const SkillPreviewValue('주변 추가 대상', 2, 2, suffix: '명'),
@@ -508,7 +553,14 @@ List<SkillPreviewValue> _previewStats(Progress p, SkillDef skill) {
         ),
       ];
     default:
-      return [value('기본 1타 피해', (p) => p.skillDamage(skill), digits: 2)];
+      return [
+        value(
+          '기본 1타 피해',
+          (p) => p.skillDamage(skill),
+          digits: 2,
+          unit: CombatUnit.stat,
+        ),
+      ];
   }
 }
 
@@ -526,6 +578,7 @@ List<SkillPreviewValue> previewSkill(Progress p, SkillDef skill) {
         p.skillCost(skill),
         upgraded.skillCost(skill),
         digits: 2,
+        unit: CombatUnit.resource,
       ),
     );
   }

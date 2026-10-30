@@ -17,6 +17,7 @@ import 'boss_attacks.dart';
 import 'boss_sprite_mesh.dart';
 import 'combat_balance.dart';
 import 'combat_feedback.dart';
+import 'combat_numbers.dart';
 import 'combo_feedback.dart';
 import 'crushing_blow_vfx.dart';
 import 'death_penalty.dart';
@@ -1274,7 +1275,7 @@ class Adventure extends ChangeNotifier {
         progress.energy + CombatBalance.potionEnergy,
       );
       bubble(
-        '+${restored.ceil()} ${progress.heroClass.resource}',
+        '+${CombatNumbers.resource(restored, rounding: CombatRounding.up)} ${progress.heroClass.resource}',
         hero.body.center - const ui.Offset(0, 80),
         const ui.Color(0xff9fdfff),
       );
@@ -1291,7 +1292,7 @@ class Adventure extends ChangeNotifier {
       );
       syncLife();
       bubble(
-        '+${restored.ceil()} 생명',
+        '+${CombatNumbers.stat(restored, rounding: CombatRounding.up)} 생명',
         hero.body.center - const ui.Offset(0, 80),
         const ui.Color(0xffffb6a0),
       );
@@ -1922,6 +1923,7 @@ class Adventure extends ChangeNotifier {
     ui.Offset at,
     ui.Color color, {
     bool critical = false,
+    double? combatAmount,
     Object? target,
     ui.Offset Function()? follow,
   }) {
@@ -1931,6 +1933,7 @@ class Adventure extends ChangeNotifier {
       at,
       color,
       critical: critical,
+      combatAmount: combatAmount,
       target: target,
       follow: follow,
     );
@@ -2140,6 +2143,7 @@ class Adventure extends ChangeNotifier {
       '-${damage.toInt()}',
       hero.body.center - const ui.Offset(0, 65),
       const ui.Color(0xffff8a72),
+      combatAmount: -damage,
       target: hero,
       follow: () => hero.body.center - const ui.Offset(0, 65),
     );
@@ -2254,6 +2258,7 @@ class Adventure extends ChangeNotifier {
       mob.body.center - ui.Offset(0, mob.boss ? 125 : 70),
       const ui.Color(0xffffedb4),
       critical: critical,
+      combatAmount: damage,
       target: mob,
       follow: () => mob.body.center - ui.Offset(0, mob.boss ? 125 : 70),
     );
@@ -6243,6 +6248,7 @@ class BattleText extends GameComponent {
     ui.Offset at,
     this.color, {
     this.critical = false,
+    this.combatAmount,
     this.target,
     this.follow,
   }) : _origin = at,
@@ -6257,6 +6263,7 @@ class BattleText extends GameComponent {
   static const streamInterval = .18,
       streamLifetime = .54,
       streamRiseSpeed = 360.0;
+  final double? combatAmount;
   final Object? target;
   final ui.Offset _origin;
   double _streamBornAt = 0;
@@ -6273,10 +6280,7 @@ class BattleText extends GameComponent {
   final _fadePaint = ui.Paint();
   late final String displayLabel = isReward
       ? label
-      : label.replaceAllMapped(
-          RegExp(r'\d(?=(\d{3})+(?!\d))'),
-          (match) => '${match[0]},',
-        );
+      : CombatNumbers.stat(combatAmount ?? num.parse(label));
   bool get reducedMotion => WidgetsBinding
       .instance
       .platformDispatcher
@@ -6286,7 +6290,10 @@ class BattleText extends GameComponent {
       ? label.startsWith('+')
             ? 13
             : 18
-      : math.min(critical ? 32 : 26, 232 / displayLabel.length);
+      : math.min(
+          critical ? 32 : 26,
+          (critical ? 280 : 232) / displayLabel.length,
+        );
   double get punchScale {
     if (isReward || reducedMotion) return 1;
     final age = ((isStream ? streamLifetime : .9) - remaining).clamp(0.0, .9);

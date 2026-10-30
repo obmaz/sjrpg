@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'adventure.dart';
 import 'combat_balance.dart';
 import 'combat_distance.dart';
+import 'combat_numbers.dart';
 import 'game_ui.dart';
 import 'panel_controls.dart';
 import 'rpg_model.dart';
@@ -293,7 +294,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                 ('생명', p.maxHp),
               ])
                 Text(
-                  '${pair.$1} ${pair.$2.round()}',
+                  '${pair.$1} ${CombatNumbers.stat(pair.$2)}',
                   style: const TextStyle(
                     color: cream,
                     fontSize: 13,
@@ -311,9 +312,9 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
     final current = p.equipped[gear.base.slot];
     if (gear.base.slot == GearSlot.weapon) {
       final attack = _previewBasicAttack(gear);
-      return '무기 레벨 ${gear.weaponLevel} · 무기 공격 ${gear.attack.round()} · 기본 공격 1타 ${attack?.damage.toStringAsFixed(1) ?? '직업 제한'} · 사거리 ${CombatDistance.format(gear.base.range)} · 초당 피해 ${attack?.dps.toStringAsFixed(1) ?? '직업 제한'} · 현재 초당 피해 ${_currentBasicDps.toStringAsFixed(1)}';
+      return '무기 레벨 ${gear.weaponLevel} · 무기 공격 ${CombatNumbers.stat(gear.attack)} · 기본 공격 1타 ${attack == null ? '직업 제한' : CombatNumbers.stat(attack.damage)} · 사거리 ${CombatDistance.format(gear.base.range)} · 초당 피해 ${attack == null ? '직업 제한' : CombatNumbers.stat(attack.dps)} · 현재 초당 피해 ${CombatNumbers.stat(_currentBasicDps)}';
     }
-    return '방어 ${gear.armor.round()} · 생명 ${gear.health.round()} · ${p.heroClass.resource} ${gear.mana.round()} · 현재 방어 ${current?.armor.round() ?? 0} · 현재 생명 ${current?.health.round() ?? 0}';
+    return '방어 ${CombatNumbers.stat(gear.armor)} · 생명 ${CombatNumbers.stat(gear.health)} · ${p.heroClass.resource} ${CombatNumbers.resource(gear.mana)} · 현재 방어 ${CombatNumbers.stat(current?.armor ?? 0)} · 현재 생명 ${CombatNumbers.stat(current?.health ?? 0)}';
   }
 
   Widget _gearCell(Gear? gear, {GearSlot? equippedSlot}) {
@@ -447,13 +448,13 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
         _Offer(
           'heal',
           '치유 물약 ×${CombatBalance.potionBundleSize}',
-          '생명 ${CombatBalance.potionHealing.round()} 회복 · 보유 ${p.healingPotions}개',
+          '생명 ${CombatNumbers.stat(CombatBalance.potionHealing)} 회복 · 보유 ${p.healingPotions}개',
           CombatBalance.healingPotionPrice,
         ),
         _Offer(
           'energy',
           '${p.heroClass.resource} 물약 ×${CombatBalance.potionBundleSize}',
-          '${p.heroClass.resource} ${CombatBalance.potionEnergy.round()} 회복 · 보유 ${p.energyPotions}개',
+          '${p.heroClass.resource} ${CombatNumbers.resource(CombatBalance.potionEnergy)} 회복 · 보유 ${p.energyPotions}개',
           CombatBalance.resourcePotionPrice,
         ),
       ];
@@ -463,13 +464,13 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
         _Offer(
           'power',
           '무기 강화',
-          '공격력 +${p.attackTrainingGain.toStringAsFixed(2)} · 수련 ${p.attackTrainingRank}/${p.maxTrainingRank}',
+          '공격력 +${CombatNumbers.stat(p.attackTrainingGain)} · 수련 ${p.attackTrainingRank}/${p.maxTrainingRank}',
           p.attackTrainingCost,
         ),
         _Offer(
           'vitality',
           '생명 축복',
-          '최대 생명 +20 · 수련 ${p.vitalityTrainingRank}/${p.maxTrainingRank}',
+          '최대 생명 +${CombatNumbers.stat(20)} · 수련 ${p.vitalityTrainingRank}/${p.maxTrainingRank}',
           p.vitalityTrainingCost,
         ),
       ];
@@ -751,6 +752,11 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
                                           ? current?.mana
                                           : current?.armor,
                                       active,
+                                      unit:
+                                          gear.mana > 0 ||
+                                              (current?.mana ?? 0) > 0
+                                          ? CombatUnit.resource
+                                          : CombatUnit.stat,
                                     ),
                                   ],
                                 ],
@@ -820,13 +826,20 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
               _quickStat('생명', gear.health, current?.health, active),
           ],
           if (gear.base.slot != GearSlot.charm && gear.mana > 0)
-            _quickStat(p.heroClass.resource, gear.mana, current?.mana, active),
+            _quickStat(
+              p.heroClass.resource,
+              gear.mana,
+              current?.mana,
+              active,
+              unit: CombatUnit.resource,
+            ),
           if (gear.base.haste > 0)
             _quickStat(
               '공격속도 %',
               gear.base.haste * 100,
               (current?.base.haste ?? 0) * 100,
               active,
+              unit: null,
             ),
           if (gear.base.slot == GearSlot.weapon)
             Padding(
@@ -860,7 +873,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
             const SizedBox(height: 8),
             if (attack != null)
               Text(
-                '기본 공격 1타 ${attack.damage.toStringAsFixed(1)} · 치명타 ${(attack.criticalChance * 100).toStringAsFixed(1)}%\n${attack.damage.toStringAsFixed(1)} × ${(1 + attack.criticalChance).toStringAsFixed(3)} ÷ ${attack.interval.toStringAsFixed(2)}초 ≈ 초당 ${attack.dps.toStringAsFixed(1)} 피해',
+                '기본 공격 1타 ${CombatNumbers.stat(attack.damage)} · 치명타 ${(attack.criticalChance * 100).toStringAsFixed(1)}%\n${CombatNumbers.stat(attack.damage)} × ${(1 + attack.criticalChance).toStringAsFixed(3)} ÷ ${attack.interval.toStringAsFixed(2)}초 ≈ 초당 ${CombatNumbers.stat(attack.dps)} 피해',
                 style: const TextStyle(
                   color: _muted,
                   fontSize: 13,
@@ -933,9 +946,15 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
     double? previous,
     bool active, {
     bool decimal = false,
+    CombatUnit? unit = CombatUnit.stat,
   }) {
     final diff = value - (previous ?? 0);
-    String number(double n) => decimal ? n.toStringAsFixed(1) : '${n.round()}';
+    String number(double n) => unit == null
+        ? (decimal ? n.toStringAsFixed(1) : '${n.round()}')
+        : CombatNumbers.format(n, unit: unit);
+    final hasDifference = unit == null
+        ? diff.abs() > .01
+        : CombatNumbers.value(diff, unit).abs() >= .5;
     return Text.rich(
       TextSpan(
         children: [
@@ -943,7 +962,7 @@ class _EquipmentPanelState extends State<EquipmentPanel> {
             text: '$label ${number(value)}',
             style: const TextStyle(color: cream),
           ),
-          if (!active && diff.abs() > .01)
+          if (!active && hasDifference)
             TextSpan(
               text: ' ${diff > 0 ? '↑ +' : '↓ '}${number(diff)}',
               style: TextStyle(

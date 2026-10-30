@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/combat_numbers.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_checkpoint.dart';
 import 'package:guardian_new/game_ui.dart';
@@ -75,10 +76,14 @@ void main() {
               find.byKey(const ValueKey('hud-status-chrome')),
             );
             final hpText = tester.getRect(
-              find.text('${s.progress.hp.ceil()} / ${s.progress.maxHp.ceil()}'),
+              find.text(
+                '${CombatNumbers.stat(s.progress.hp, rounding: CombatRounding.up)} / ${CombatNumbers.stat(s.progress.maxHp, rounding: CombatRounding.up)}',
+              ),
             );
             final resourceText = tester.getRect(
-              find.text('${hero.resource} ${s.progress.energy.floor()}'),
+              find.text(
+                '${hero.resource} ${CombatNumbers.resource(s.progress.energy, rounding: CombatRounding.down)}',
+              ),
             );
             expect(hpText.left, greaterThanOrEqualTo(portrait.right + 4));
             expect(resourceText.left, greaterThanOrEqualTo(portrait.right + 4));

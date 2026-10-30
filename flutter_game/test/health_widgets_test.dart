@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
+import 'package:guardian_new/combat_numbers.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_ui.dart';
 import 'package:guardian_new/health_widgets.dart';
@@ -153,15 +154,19 @@ void main() {
         expect(health.height, lessThanOrEqualTo(18));
         expect(health.bottom, lessThanOrEqualTo(resource.top));
         expect(resource.height, greaterThanOrEqualTo(18));
-        final hpText = tester.getRect(find.text('${hp.ceil()} / 100'));
+        final hpText = tester.getRect(
+          find.text(
+            '${CombatNumbers.stat(hp, rounding: CombatRounding.up)} / 100,000',
+          ),
+        );
         expect(health.contains(hpText.topLeft), true);
         expect(health.contains(hpText.bottomRight), true);
-        final resourceText = tester.getRect(find.text('분노 25'));
+        final resourceText = tester.getRect(find.text('분노 250'));
         expect(resource.contains(resourceText.topLeft), true);
         expect(resource.contains(resourceText.bottomRight), true);
         expect(
           tester
-              .renderObject<RenderParagraph>(find.text('분노 25'))
+              .renderObject<RenderParagraph>(find.text('분노 250'))
               .didExceedMaxLines,
           false,
         );
@@ -237,8 +242,8 @@ void main() {
       }
       expect(feedback!.dangerOpacity, greaterThan(minimum));
       expect(feedback!.dangerOpacity, lessThanOrEqualTo(.26));
-      expect(find.text('7 / 80'), findsOneWidget);
-      expect(find.text('마나 90'), findsOneWidget);
+      expect(find.text('7,000 / 80,000'), findsOneWidget);
+      expect(find.text('마나 900'), findsOneWidget);
       await proof(tester, 'mage-critical-pulse-peak');
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());

@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'adventure.dart';
+import 'combat_numbers.dart';
 import 'game_ui.dart';
 import 'panel_controls.dart';
 import 'rpg_model.dart';
@@ -125,7 +128,10 @@ class _BlacksmithPanelState extends State<BlacksmithPanel> {
                       ),
                     ),
                     SizedBox(
-                      height: short ? 84 : 92,
+                      height: math.max(
+                        short ? 84.0 : 92.0,
+                        MediaQuery.textScalerOf(context).scale(36) * 1.1 + 36,
+                      ),
                       child: items.isEmpty
                           ? const Center(
                               child: Text(
@@ -237,8 +243,8 @@ class _BlacksmithPanelState extends State<BlacksmithPanel> {
                                   ),
                                   _comparison(
                                     '공격력',
-                                    gear.attack.toStringAsFixed(1),
-                                    quote.nextAttack.toStringAsFixed(1),
+                                    CombatNumbers.stat(gear.attack),
+                                    CombatNumbers.stat(quote.nextAttack),
                                   ),
                                   const SizedBox(height: 10),
                                   Wrap(
@@ -481,26 +487,46 @@ class _BlacksmithPanelState extends State<BlacksmithPanel> {
 
   Widget _comparison(String label, String current, String next) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 5),
-    child: Row(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(color: _muted, fontSize: 14),
-          ),
-        ),
-        Text(current, style: const TextStyle(color: cream, fontSize: 17)),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 10),
-          child: Icon(Icons.arrow_forward_rounded, size: 16, color: gold),
-        ),
-        Text(
-          next,
-          style: const TextStyle(
-            color: _mint,
-            fontSize: 17,
-            fontWeight: FontWeight.bold,
-          ),
+        Text(label, style: const TextStyle(color: _muted, fontSize: 14)),
+        const SizedBox(height: 3),
+        Row(
+          children: [
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    current,
+                    style: const TextStyle(color: cream, fontSize: 17),
+                  ),
+                ),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10),
+              child: Icon(Icons.arrow_forward_rounded, size: 16, color: gold),
+            ),
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    next,
+                    style: const TextStyle(
+                      color: _mint,
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     ),

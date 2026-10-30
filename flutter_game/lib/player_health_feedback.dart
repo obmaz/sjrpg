@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 
 import 'adventure.dart';
+import 'combat_numbers.dart';
 import 'health_feedback.dart';
 import 'hud_motion_clock.dart';
 import 'player_afflictions.dart';
@@ -31,7 +32,7 @@ class HealthReading {
       ? HealthDanger.critical
       : HealthDanger.low;
   String get label =>
-      '생명 ${hp.ceil()} / ${maximum.ceil()}${poisoned ? ' · 중독' : ''}${switch (danger) {
+      '생명 ${CombatNumbers.stat(hp, rounding: CombatRounding.up)} / ${CombatNumbers.stat(maximum, rounding: CombatRounding.up)}${poisoned ? ' · 중독' : ''}${switch (danger) {
         HealthDanger.none => '',
         HealthDanger.low => ' · 체력 낮음',
         HealthDanger.critical => ' · 위험',

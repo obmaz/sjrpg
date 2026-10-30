@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'combat_balance.dart';
+import 'combat_numbers.dart';
 import 'mount_progress.dart';
 import 'skill_growth.dart';
 import 'sorceress_rules.dart';
@@ -413,8 +414,9 @@ extension WeaponGiftInfo on WeaponGift {
     WeaponGift.frost =>
       '적중한 대상 둔화 ${CombatBalance.realSeconds(.8).toStringAsFixed(2)}초',
     WeaponGift.guardian => '받는 피해 8% 감소',
-    WeaponGift.renewal => '처치 시 생명 4 회복',
-    WeaponGift.comboFury => '분신 연격 3연계마다 분노 6 회복',
+    WeaponGift.renewal => '처치 시 생명 ${CombatNumbers.stat(4)} 회복',
+    WeaponGift.comboFury =>
+      '분신 연격 3연계마다 분노 ${CombatNumbers.resource(comboRageGain)} 회복',
     WeaponGift.comboGuard =>
       '분신 연격 3연계마다 ${CombatBalance.realSeconds(WeaponGiftInfo.comboGuardDuration).toStringAsFixed(2)}초간 받는 피해 25% 감소',
   };
@@ -650,10 +652,10 @@ class Gear {
   String get stats => [
     if (weaponLevel != null) '무기 Lv.$weaponLevel',
     if (base.isThrowingWeapon) '투척 · 단일 대상',
-    if (attack > 0) '공격 +${attack.round()}',
-    if (armor > 0) '방어 +${armor.round()}',
-    if (health > 0) '생명 +${health.round()}',
-    if (mana > 0) '자원 +${mana.round()}',
+    if (attack > 0) '공격 +${CombatNumbers.stat(attack)}',
+    if (armor > 0) '방어 +${CombatNumbers.stat(armor)}',
+    if (health > 0) '생명 +${CombatNumbers.stat(health)}',
+    if (mana > 0) '자원 +${CombatNumbers.resource(mana)}',
     if (base.haste > 0) '공격속도 +${(base.haste * 100).round()}%',
     for (final ability in gifts) '${ability.title} · ${ability.description}',
   ].join(' · ');
