@@ -101,10 +101,12 @@ class TerrainMapPlan {
       );
     }
     canvas.drawRect(world.settlement, Paint()..color = const Color(0xffa39779));
+    canvas.restore();
+    // Bridges cross the real water mask, so their plan must be painted after
+    // leaving the dry-land clip, just as their world artwork is.
     for (final bridge in world.bridges) {
       canvas.drawRect(bridge, Paint()..color = const Color(0xffc0b28c));
     }
-    canvas.restore();
 
     for (final landmark in world.landmarks) {
       if (!landmark.footprint.overlaps(view)) continue;
