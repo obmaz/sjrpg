@@ -82,7 +82,9 @@ abstract final class ForestQuestStructureArt {
       Offset(254, 1044),
       Offset(266.5, 979),
       Offset(386.5, 856.5),
-      Offset(504, 819),
+      Offset(400, 835),
+      Offset(444, 825),
+      Offset(504, 810),
     ])
       artPoint('roots', ground, pixel),
   ];

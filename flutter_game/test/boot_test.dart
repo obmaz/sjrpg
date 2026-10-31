@@ -89,7 +89,10 @@ void main() {
             (camera -
                     (hero.position +
                         hero.size / 2 +
-                        Vector2(0, viewport.height < 520 ? 36 : 0)))
+                        Vector2(
+                          0,
+                          viewport.height < 520 ? 36 : -viewport.height * .14,
+                        )))
                 .length,
             lessThan(2),
           );

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' show Size;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guardian_new/adventure.dart';
@@ -19,12 +20,31 @@ void main() {
       final w = AdventureWorld(), site = w.sites.first;
       const size = Guardian.onFootSize, half = Offset(14, 12);
       final path = ForestQuestStructureArt.chapelSteps(site.at);
-      for (var i = 1; i < path.length; i++) {
-        final from = path[i - 1] - half, to = path[i] - half;
-        expect(w.blocked(from & size), false, reason: 'stair segment ${i - 1}');
-        expect(w.blocked(to & size), false, reason: 'stair segment $i');
-        expect(w.clearLine(from, to, size), true, reason: 'continuous ramp $i');
-        expect((w.move(from, to - from, size) - to).distance, lessThan(.01));
+      for (final bodySize in const [Guardian.onFootSize, Size(42, 36)]) {
+        final bodyHalf = Offset(bodySize.width / 2, bodySize.height / 2);
+        for (var i = 1; i < path.length; i++) {
+          final from = path[i - 1] - bodyHalf, to = path[i] - bodyHalf;
+          expect(
+            w.blocked(from & bodySize),
+            false,
+            reason: 'stair start $i $bodySize',
+          );
+          expect(
+            w.blocked(to & bodySize),
+            false,
+            reason: 'stair end $i $bodySize',
+          );
+          expect(
+            w.clearLine(from, to, bodySize),
+            true,
+            reason: 'continuous ramp $i $bodySize',
+          );
+          expect(
+            (w.move(from, to - from, bodySize) - to).distance,
+            lessThan(.01),
+            reason: 'stair move $i $bodySize',
+          );
+        }
       }
       final from =
           ForestQuestStructureArt.artPoint(

@@ -742,6 +742,34 @@ class AdventureWorld {
     }
     _compact();
     final approaches = <Trail>[];
+    final abbey = sites.first;
+    final occupiedAbbey = RegionShape([
+      ...ForestQuestStructureArt.solidFootprint(abbey.id, abbey.at),
+      ...ForestQuestStructureArt.terraceOutline(abbey.at),
+      for (final face in ForestQuestStructureArt.ledges(abbey.id, abbey.at))
+        ...face,
+    ]).bounds;
+    // Through roads go around the complete raised footprint. Only the authored
+    // stair spur enters it; keeping the old centerline would paint through walls.
+    for (var i = 0; i < trails.length; i++) {
+      final road = trails[i],
+          avoid = occupiedAbbey.inflate(road.width / 2 + 32);
+      if (!List.generate(road.points.length - 1, (j) => j).any(
+        (j) => _segmentHitsRect(road.points[j], road.points[j + 1], avoid),
+      )) {
+        continue;
+      }
+      final outside = road.points.where((p) => !avoid.contains(p)).toList();
+      if (outside.length < 2) {
+        throw StateError('Abbey through road needs two exterior anchors');
+      }
+      final rerouted = Trail(
+        _dryRoad(outside, road.width, extraObstacles: [avoid], smooth: false),
+        road.width,
+      );
+      trails[i] = rerouted;
+      approaches.add(rerouted);
+    }
     for (final site in sites) {
       addRuntimeShape(ForestQuestStructureArt.solidFootprint(site.id, site.at));
       for (final ledge in ForestQuestStructureArt.ledges(site.id, site.at)) {
@@ -786,8 +814,14 @@ class AdventureWorld {
     _addFieldLandmarks();
   }
 
-  List<Offset> _dryRoad(List<Offset> authored, double width) {
+  List<Offset> _dryRoad(
+    List<Offset> authored,
+    double width, {
+    List<Rect> extraObstacles = const [],
+    bool smooth = true,
+  }) {
     final obstacles = [
+      ...extraObstacles,
       ...lakes.map((l) => l.bounds.inflate(width / 2 + 32)),
       if (!_authoring)
         ...campProps.expand((p) => p.collisionBodies).map((r) => r.inflate(32)),
@@ -851,7 +885,7 @@ class AdventureWorld {
       }
       route.addAll(section.reversed);
     }
-    if (stage.usesCityArt) return route;
+    if (stage.usesCityArt || !smooth) return route;
     final curved = _curve(route);
     return List.generate(
           curved.length - 1,
