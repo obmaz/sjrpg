@@ -34,6 +34,7 @@ import 'enemy_spacing.dart';
 import 'forest_quest_runtime.dart';
 import 'forest_quest_structure.dart';
 import 'forest_tree_art.dart';
+import 'forest_undergrowth_art.dart';
 import 'game_art.dart';
 import 'health_feedback.dart';
 import 'held_weapon_art.dart';
@@ -6356,6 +6357,14 @@ class WoodlandProp extends GameComponent with EffectVisibility {
   @override
   ui.Rect get effectBounds {
     final feet = prop.body.bottomCenter;
+    final undergrowth = ForestUndergrowthArt.variantOf(prop.kind);
+    if (undergrowth != null) {
+      return ForestUndergrowthArt.bounds(
+        feet,
+        undergrowth,
+        prop.drawSize.height,
+      ).inflate(2);
+    }
     if (prop.treeVariant != null) {
       return ForestTreeArt.drawBounds(feet, prop.treeVariant!).inflate(2);
     }

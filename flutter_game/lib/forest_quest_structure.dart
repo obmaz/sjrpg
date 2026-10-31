@@ -17,7 +17,9 @@ class ForestQuestStructure extends GameComponent with EffectVisibility {
       ForestQuestStructureArt.drawBounds(site.id, site.at);
   @override
   int get priority => LayerPriority.getComponentPriority(
-    (site.at.dy + (hasGameRef ? gameRef.map.renderPriorityOffsetY : 0)).floor(),
+    (ForestQuestStructureArt.depth(site.id, site.at) +
+            (hasGameRef ? gameRef.map.renderPriorityOffsetY : 0))
+        .floor(),
   );
   @override
   void render(ui.Canvas canvas) {

@@ -6,8 +6,7 @@ import 'package:guardian_new/world_model.dart';
 
 Offset interactionAt(AdventureWorld world, QuestSite site) =>
     world.stage == WorldStage.forest
-    ? ForestQuestStructureArt.npcApproach(site.id, site.at) +
-          const Offset(0, 50)
+    ? ForestQuestStructureArt.npcPosition(site.id, site.at)
     : site.at;
 
 // Sample authored roads and open approaches, then validate every graph edge with

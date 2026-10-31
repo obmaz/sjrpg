@@ -81,8 +81,7 @@ class ForestQuestRuntime {
         'roots',
         '수녀 엘린',
         ForestNpcRole.caretaker,
-        ForestQuestStructureArt.npcApproach('roots', site('roots')) +
-            const ui.Offset(0, 50),
+        ForestQuestStructureArt.npcPosition('roots', site('roots')),
         'villager',
       ),
       (
@@ -90,8 +89,7 @@ class ForestQuestRuntime {
         'moon',
         '약초사 노아',
         ForestNpcRole.recipient,
-        ForestQuestStructureArt.npcApproach('moon', site('moon')) +
-            const ui.Offset(0, 50),
+        ForestQuestStructureArt.npcPosition('moon', site('moon')),
         'merchant',
       ),
       (
@@ -99,8 +97,7 @@ class ForestQuestRuntime {
         'sun',
         '조사관 로웬',
         ForestNpcRole.caretaker,
-        ForestQuestStructureArt.npcApproach('sun', site('sun')) +
-            const ui.Offset(0, 50),
+        ForestQuestStructureArt.npcPosition('sun', site('sun')),
         'villager',
       ),
     ];

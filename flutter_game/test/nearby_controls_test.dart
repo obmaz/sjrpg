@@ -17,8 +17,20 @@ void besideQuestGiver(Adventure session) {
   final site = session.world.sites.first;
   final npc = session.forestQuests.npcs.firstWhere((npc) => npc.key == 'elin');
   session.hero.position.setValues(npc.at.dx + 50 - 14, npc.at.dy - 12);
-  withOwnedMounts(session).mounts.first.at =
-      session.hero.body.center + const Offset(65, 0);
+  final mount = withOwnedMounts(session).mounts.first;
+  mount.at = [const Offset(65, 0), const Offset(0, 65), const Offset(-65, 0)]
+      .map((d) => session.hero.body.center + d)
+      .firstWhere(
+        (at) =>
+            !session.world.blocked(
+              Rect.fromCenter(
+                center: at,
+                width: mount.def.bodySize.width,
+                height: mount.def.bodySize.height,
+              ),
+            ) &&
+            session.world.clearBoardingLine(session.hero.body.center, at),
+      );
   session.travelJournal.discover(session.world.stage, site.id);
   session.waveTime = 1000;
   session.lastPackSpawn = session.elapsed;

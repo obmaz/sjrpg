@@ -825,7 +825,11 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     super.didChangeDependencies();
     final size = MediaQuery.sizeOf(context);
     adventure.viewportSize = size;
-    adventure.cameraOffsetY = size.width < 400 && size.height < 520 ? 36 : 0;
+    adventure.cameraOffsetY = size.width < 400 && size.height < 520
+        ? 36
+        : size.height > size.width && size.height >= 600
+        ? -size.height * .14
+        : 0;
   }
 
   @override

@@ -1,0 +1,18 @@
+{
+    "generator": "image_gen",
+    "role": "integrated scene concept and art-direction reference",
+    "reference": "User-attached medieval chapel gameplay screenshot; camera and ground projection take precedence over previous building sheets",
+    "source": "/workspace/generated_images/exec-b480ac23-0c60-4910-8078-cdb514ef3d04.png",
+    "image": "docs/art/quarter-view-abbey/scene-reference.png",
+    "sha256": "a2f422029d2317e394d23f5ba1b19f3a614f573dd707a542bdd3b9a0b5136da0",
+    "size": [998, 1576],
+    "direction": {
+        "camera": "Elevated front-left three-quarter view, short front facade and long right side",
+        "paving": "Oblique diamond lattice on the same ground plane as the architecture; visible short stone side faces, no top-down square grid",
+        "architecture": "Grand late-medieval Gothic abbey, slender tall tower, deep dark windows, weathered limestone and slate; human scale approximately 1:6 to 1:8",
+        "vegetation": "Mixed mature broadleaf trees, birch, yew, low shrubs, ferns, brambles, grasses and sparse wildflowers in varied clumps",
+        "terrain": "Raised accessible terrace, visible retaining rock, continuous stair/ramp access and a higher wooded ridge",
+        "light": "Natural daylight from upper left; no player-centered spotlight or night filter"
+    },
+    "integration": "Applied to the forest abbey at runtime: native abbey and six undergrowth species, diagonal world-anchored paving, shared stair/cliff collision and NPC approaches. Original concept retained as the composition reference."
+}

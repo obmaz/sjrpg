@@ -48,6 +48,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'cave-rock',
         'landscape-bridge',
         'forest-trees',
+        'forest-undergrowth',
         'forest-quest-chapel',
         'forest-quest-cottage',
         'forest-quest-cave',

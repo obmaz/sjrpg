@@ -1,0 +1,61 @@
+{
+    "generator": "image_gen",
+    "processor": "tools/prepare-abbey-environment.py",
+    "abbey": {
+        "source": "docs/art/quarter-view-abbey/abbey-original.png",
+        "sha256": "9bf20373a166cbc2f775820f75f73fb3b72455149aeef0555d308880d72fea45",
+        "runtime": "flutter_game/art/forest-quest-chapel.webp",
+        "size": [1305, 1221],
+        "padding": 4
+    },
+    "undergrowth": {
+        "source": "docs/art/quarter-view-abbey/undergrowth-original.png",
+        "sha256": "52d605ff38bee6abb154fa3a77efb58ebf28a1376b7cfb7b7b0b5d3408584215",
+        "runtime": "flutter_game/art/forest-undergrowth.webp",
+        "size": [960, 640],
+        "frames": [
+            {
+                "name": "fern",
+                "sourceRect": [19, 97, 541, 449],
+                "packedRect": [12, 60, 296, 200],
+                "foot": [163.9693, 244.0909],
+                "height": 78
+            },
+            {
+                "name": "bramble",
+                "sourceRect": [548, 13, 1038, 463],
+                "packedRect": [332, 24, 296, 272],
+                "foot": [478.1878, 277.8667],
+                "height": 105
+            },
+            {
+                "name": "wildflowers",
+                "sourceRect": [1042, 140, 1521, 468],
+                "packedRect": [652, 58, 296, 203],
+                "foot": [802.7808, 242.4329],
+                "height": 65
+            },
+            {
+                "name": "birch",
+                "sourceRect": [29, 454, 476, 1000],
+                "packedRect": [39, 332, 242, 296],
+                "foot": [155.9396, 605.7729],
+                "height": 220
+            },
+            {
+                "name": "yew-ivy",
+                "sourceRect": [452, 552, 1058, 995],
+                "packedRect": [332, 372, 296, 216],
+                "foot": [479.5116, 574.3476],
+                "height": 82
+            },
+            {
+                "name": "moss-stones",
+                "sourceRect": [1051, 670, 1521, 1001],
+                "packedRect": [652, 376, 296, 208],
+                "foot": [805.6681, 565.148],
+                "height": 64
+            }
+        ]
+    }
+}

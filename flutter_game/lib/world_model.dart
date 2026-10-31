@@ -7,6 +7,8 @@ import 'authored_settlement.dart';
 import 'dungeon.dart';
 import 'field_landmark.dart';
 import 'forest_tree_art.dart';
+import 'forest_undergrowth_art.dart';
+import 'meadow_tiles.dart';
 import 'mount_progress.dart';
 import 'quest_structure_art.dart';
 import 'sanctuary.dart';
@@ -315,8 +317,11 @@ class WorldProp {
   final String kind;
   final Size drawSize;
   Iterable<Rect> get collisionBodies =>
-      landmark != null &&
-          (landmark!.stage == WorldStage.forest || landmark!.terrace != null)
+      kind.startsWith(ForestUndergrowthArt.prefix) &&
+          ForestUndergrowthArt.variantOf(kind) != 3
+      ? const []
+      : landmark != null &&
+            (landmark!.stage == WorldStage.forest || landmark!.terrace != null)
       ? const [] // The raised silhouette is registered as a polygon instead.
       : kind == 'ruin-4'
       ? [
@@ -739,26 +744,35 @@ class AdventureWorld {
     final approaches = <Trail>[];
     for (final site in sites) {
       addRuntimeShape(ForestQuestStructureArt.solidFootprint(site.id, site.at));
-      final approach =
-          ForestQuestStructureArt.npcApproach(site.id, site.at) +
-          const Offset(0, 50);
-      final trail = Trail(
-        _dryRoad([_siteRoadAnchor(approach), approach], 90),
-        90,
-      );
+      for (final ledge in ForestQuestStructureArt.ledges(site.id, site.at)) {
+        addRuntimeLedge(ledge);
+      }
+      final approach = ForestQuestStructureArt.roadApproach(site.id, site.at);
+      final trail = Trail([
+        ..._dryRoad([_siteRoadAnchor(approach), approach], 90),
+        if (site.id == 'roots')
+          ...ForestQuestStructureArt.chapelSteps(site.at).skip(1),
+      ], 90);
       approaches.add(trail);
       trails.add(trail);
     }
     // Spurs join existing roads before settlement clipping and landmark choice.
     // Clear their small props and matching solids before rebuilding the index.
+    final structureGround = [
+      for (final s in sites)
+        RegionShape(ForestQuestStructureArt.solidFootprint(s.id, s.at)),
+      RegionShape(ForestQuestStructureArt.terraceOutline(sites.first.at)),
+    ];
     final removed = props
         .where(
-          (p) => approaches.any(
-            (t) => t.near(
-              p.body.center,
-              math.max(p.body.width, p.body.height) / 2 + 35,
-            ),
-          ),
+          (p) =>
+              structureGround.any((shape) => shape.overlaps(p.body)) ||
+              approaches.any(
+                (t) => t.near(
+                  p.body.center,
+                  math.max(p.body.width, p.body.height) / 2 + 35,
+                ),
+              ),
         )
         .toSet();
     final removedSolids = removed.expand((p) => p.collisionBodies).toSet();
@@ -768,6 +782,7 @@ class AdventureWorld {
     }
     _applyAuthoredSettlement();
     _applyForestComposition();
+    _addForestUndergrowth();
     _addFieldLandmarks();
   }
 
@@ -1331,6 +1346,80 @@ class AdventureWorld {
   }
 
   List<List<Offset>> _themedSpines = [];
+  void _addForestUndergrowth() {
+    final occupied = <String>{};
+    final chapel = RegionShape(
+      ForestQuestStructureArt.terraceOutline(sites.first.at),
+    );
+    final npcSpots = [
+      for (final s in sites) ForestQuestStructureArt.npcPosition(s.id, s.at),
+    ];
+    void plant(Offset at, int variant, int salt) {
+      if (!(Offset.zero & worldSize).deflate(200).contains(at) ||
+          settlement.inflate(160).contains(at) ||
+          chapel.contains(at) ||
+          trails.any((trail) => trail.near(at, 10)) ||
+          npcSpots.any((p) => (p - at).distance < 130) ||
+          blocked(Rect.fromCenter(center: at, width: 14, height: 10))) {
+        return;
+      }
+      final key = '${(at.dx / 60).floor()}:${(at.dy / 60).floor()}';
+      if (!occupied.add(key)) return;
+      props.add(
+        WorldProp(
+          Rect.fromCenter(center: at, width: 12, height: 8),
+          '${ForestUndergrowthArt.prefix}$variant',
+          ForestUndergrowthArt.drawSize(
+            variant,
+            factor: .85 + (salt % 31) / 100,
+          ),
+        ),
+      );
+    }
+
+    for (final tree in props.where((p) => p.kind == 'tree').toList()) {
+      final h = MeadowTiles.hash(
+        seed,
+        tree.body.center.dx.floor(),
+        tree.body.center.dy.floor(),
+      );
+      if (h % 5 != 0) continue;
+      plant(
+        tree.body.center +
+            Offset((h % 91 - 45).toDouble(), 45 + (h % 45).toDouble()),
+        h % 6,
+        h,
+      );
+      plant(
+        tree.body.center + Offset(70 + (h % 50).toDouble(), -25),
+        (h >> 4) % 6,
+        h >> 8,
+      );
+    }
+    for (final (index, trail) in trails.indexed) {
+      var next = 0.0, travelled = 0.0, sample = 0;
+      for (var i = 1; i < trail.points.length; i++) {
+        final a = trail.points[i - 1],
+            delta = trail.points[i] - a,
+            length = delta.distance;
+        if (length < .01) continue;
+        final normal = Offset(-delta.dy, delta.dx) / length;
+        while (next <= travelled + length) {
+          final h = MeadowTiles.hash(seed, index, sample++),
+              at = a + delta * ((next - travelled) / length);
+          for (final side in [-1, 1]) {
+            final variant = (h + (side == 1 ? 3 : 0)) % 6;
+            final distance =
+                trail.width / 2 + 55 + (h % 70) + (variant == 3 ? 70 : 0);
+            plant(at + normal * distance * side.toDouble(), variant, h);
+          }
+          next += 300 + h % 120;
+        }
+        travelled += length;
+      }
+    }
+  }
+
   void _applyForestComposition() {
     for (var i = 0; i < props.length; i++) {
       final prop = props[i];
@@ -1450,7 +1539,7 @@ class AdventureWorld {
       _indexSolid(scaledRect(r));
     }
     for (final s in sites) {
-      _indexSolid(s.body);
+      if (stage != WorldStage.forest) _indexSolid(s.body);
     }
     for (final p in [...props, ...campProps]) {
       for (final r in p.collisionBodies) {
@@ -1646,20 +1735,7 @@ class AdventureWorld {
           addRuntimeShape(landmark.artPolygon(solid));
         }
         for (final ledge in terrace.ledges) {
-          final shape = RegionShape(landmark.artPolygon(ledge));
-          for (
-            var y = shape.bounds.top ~/ 128;
-            y <= shape.bounds.bottom ~/ 128;
-            y++
-          ) {
-            for (
-              var x = shape.bounds.left ~/ 128;
-              x <= shape.bounds.right ~/ 128;
-              x++
-            ) {
-              _ledgeBuckets.putIfAbsent('$x:$y', () => []).add(shape);
-            }
-          }
+          addRuntimeLedge(landmark.artPolygon(ledge));
         }
       } else if (landmark.stage == WorldStage.forest) {
         addRuntimeShape(landmark.solidOutline);
@@ -1970,6 +2046,23 @@ class AdventureWorld {
 
   void addRuntimeShape(List<Offset> points) {
     _runtimeShapes.add(RegionShape(points));
+  }
+
+  void addRuntimeLedge(List<Offset> points) {
+    final shape = RegionShape(points);
+    for (
+      var y = shape.bounds.top ~/ 128;
+      y <= shape.bounds.bottom ~/ 128;
+      y++
+    ) {
+      for (
+        var x = shape.bounds.left ~/ 128;
+        x <= shape.bounds.right ~/ 128;
+        x++
+      ) {
+        _ledgeBuckets.putIfAbsent('$x:$y', () => []).add(shape);
+      }
+    }
   }
 
   void addRuntimeSolid(Rect body) {

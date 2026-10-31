@@ -15,6 +15,7 @@ import 'enemy_catalog.dart';
 import 'field_landscape.dart';
 import 'field_palettes.dart';
 import 'forest_tree_art.dart';
+import 'forest_undergrowth_art.dart';
 import 'ground_texture.dart';
 import 'interface_art.dart';
 import 'mount_sprite_mesh.dart';
@@ -177,6 +178,7 @@ class GameArt {
     'sorceress-skills',
     'landscape-bridge',
     'forest-trees',
+    'forest-undergrowth',
     'forest-quest-chapel',
     'forest-quest-cottage',
     'forest-quest-cave',
@@ -195,6 +197,7 @@ class GameArt {
       'world-desert',
       'landscape-bridge',
       'forest-trees',
+      'forest-undergrowth',
       'forest-quest-chapel',
       'forest-quest-cottage',
       'forest-quest-cave',
@@ -1042,6 +1045,20 @@ class GameArt {
   }
 
   void prop(ui.Canvas canvas, WorldProp prop, {double opacity = 1}) {
+    final undergrowth = ForestUndergrowthArt.variantOf(prop.kind);
+    if (undergrowth != null) {
+      final image = images['forest-undergrowth'];
+      if (image != null) {
+        ForestUndergrowthArt.draw(
+          canvas,
+          image,
+          prop.body.bottomCenter,
+          undergrowth,
+          prop.drawSize.height,
+        );
+      }
+      return;
+    }
     final tree = prop.treeVariant;
     if (tree != null && images['forest-trees'] != null) {
       ForestTreeArt.draw(
@@ -1271,18 +1288,20 @@ class TerrainArt {
     }
     final image = art.images['field-paving'];
     if (image == null || world.dungeon != null) return null;
-    final scale = 384 / image.width;
+    final scale = 192 / image.width;
+    // The paving's two axes share the architecture's 2:1 oblique ground plane.
+    // World anchoring preserves the same lattice across road and cache sectors.
     return _paving ??= ui.ImageShader(
       image,
       ui.TileMode.repeated,
       ui.TileMode.repeated,
       Float64List.fromList([
         scale,
+        scale / 2,
         0,
         0,
-        0,
-        0,
-        scale,
+        -scale,
+        scale / 2,
         0,
         0,
         0,
