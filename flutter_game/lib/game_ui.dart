@@ -32,16 +32,8 @@ const gameMetal = Color(0xffb3a079),
 String gameTime(double seconds) =>
     '${seconds ~/ 60}:${(seconds.toInt() % 60).toString().padLeft(2, '0')}';
 
-double battlePortraitDiameter(Size viewport) =>
-    viewport.width > viewport.height && viewport.width >= 500
-    ? 92 * (viewport.height / 720).clamp(.65, 1.0)
-    : 60;
-
-double battleMapDiameter(Size viewport) => viewport.width < 360
-    ? 76
-    : viewport.width > viewport.height && viewport.width >= 500
-    ? 150 * (viewport.height / 720).clamp(.65, 1.0)
-    : 86;
+double battlePortraitDiameter(Size viewport) => 46;
+double battleMapDiameter(Size viewport) => viewport.width < 360 ? 76 : 86;
 
 class GameHud extends StatelessWidget {
   const GameHud(this.session, {this.onMap, super.key});
@@ -55,146 +47,84 @@ class GameHud extends StatelessWidget {
         child: GameHud(session, onMap: onMap),
       );
     }
-    final p = session.progress;
-    final media = MediaQuery.of(context);
-    final width = media.size.width;
-    final landscape = width > media.size.height && width >= 500;
-    final short = media.size.height < 520 || landscape;
-    final portraitSide = battlePortraitDiameter(media.size);
-    final meterLeft = 10 + portraitSide * .55;
-    // Labels start beyond the portrait's complete metal rim. Only the fluid
-    // and its frame continue underneath the circular join.
-    final labelInset = 10 + portraitSide + 8 - meterLeft;
+    final p = session.progress, media = MediaQuery.of(context);
+    final landscape =
+        media.size.width > media.size.height && media.size.width >= 500;
     final mapSide = battleMapDiameter(media.size);
-    final statusWidth = math.min(
-      landscape ? 360 * (media.size.height / 720).clamp(.65, 1.0) : 306.0,
-      width - mapSide - (landscape ? 61 + 112 + 8 : 22),
+    final rowHeight = ResourceMeter.minimumHeight(media.textScaler);
+    final portrait = math.max(
+      battlePortraitDiameter(media.size),
+      rowHeight * 2 + 8,
     );
-    final resourceHeight = math.max(
-      18.0,
-      ResourceMeter.minimumHeight(media.textScaler),
+    final width = math.min(
+      280.0,
+      media.size.width - mapSide - (landscape ? 190 : 28),
     );
-    const portraitTop = 10.0,
-        healthTop = 10.0,
-        healthHeight = 18.0,
-        slant = 16.0;
-    final resourceTop = healthTop + healthHeight + 1;
-    final ribbonTop = healthTop - 3;
-    final ribbonBottom = resourceTop + resourceHeight + 15;
-    Widget joinPortrait(Widget child, double top) => ClipPath(
-      clipper: PortraitGaugeClipper(
-        Offset(
-          10 + portraitSide / 2 - meterLeft,
-          portraitTop + portraitSide / 2 - top,
-        ),
-        portraitSide / 2 + 5,
-        ribbonOffset: top - ribbonTop,
-        ribbonHeight: ribbonBottom - ribbonTop,
-        slant: slant,
-      ),
-      child: child,
-    );
+    final start = 10 + portrait - 3;
+    final xpTop = 14 + rowHeight * 2 + 7;
     return SizedBox(
-      height: math.max(130, mapSide + 14),
+      height: math.max(125, mapSide + 36),
       child: Stack(
         children: [
           Positioned(
-            key: const ValueKey('hud-status-chrome'),
-            left: 5,
-            top: 4,
-            width: statusWidth,
-            height: math.max(
-              math.max(84, portraitSide + 24),
-              resourceTop + resourceHeight + 19,
-            ),
+            left: 34,
+            top: 10,
+            width: math.max(80, width - 34),
+            height: xpTop - 4,
             child: IgnorePointer(
-              child: CustomPaint(
-                painter: _HeroStatusChrome(
-                  portraitSide + 8,
-                  plateTop: ribbonTop - 4,
-                  plateBottom: ribbonBottom - 4,
-                  portraitTop: portraitTop,
-                  slant: slant,
+              child: DecoratedBox(
+                key: const ValueKey('hud-status-chrome'),
+                decoration: BoxDecoration(
+                  color: const Color(0x99000000),
+                  borderRadius: BorderRadius.circular(5),
                 ),
               ),
             ),
           ),
           Positioned(
-            top: healthTop,
-            left: meterLeft,
-            width: math.max(50, statusWidth - meterLeft - 7),
-            child: joinPortrait(
-              HealthMeter(
-                session,
-                height: healthHeight,
-                leadingInset: labelInset,
-                flatEnd: true,
-              ),
-              healthTop,
-            ),
+            left: start,
+            top: 14,
+            width: math.max(120, width - start - 6),
+            child: HealthMeter(session, height: 7),
           ),
           Positioned(
-            left: meterLeft,
-            top: resourceTop,
-            width: math.max(48, statusWidth - meterLeft - 7),
-            child: joinPortrait(
-              ResourceMeter(
-                session,
-                height: resourceHeight,
-                leadingInset: labelInset,
-              ),
-              resourceTop,
-            ),
+            left: start,
+            top: 14 + rowHeight + 3,
+            width: math.max(120, width - start - 6),
+            child: ResourceMeter(session, height: 7),
           ),
           Positioned(
-            left: meterLeft,
-            top: resourceTop + resourceHeight + 4,
-            width: math.max(48, statusWidth - meterLeft - 7),
-            height: 8,
-            child: joinPortrait(
-              Semantics(
-                label: '경험치',
-                value: '${p.xp} / ${p.nextLevelXp}',
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    LinearProgressIndicator(
-                      key: const ValueKey('hud-experience'),
-                      value: (p.xp / p.nextLevelXp).clamp(0.0, 1.0),
-                      minHeight: 8,
-                      color: gold,
-                      backgroundColor: const Color(0xff514537),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(left: labelInset, right: 8),
-                      child: Center(
-                        child: Text(
-                          'EXP ${(p.xp / p.nextLevelXp * 100).floor()}%',
-                          textScaler: TextScaler.noScaling,
-                          style: const TextStyle(
-                            fontSize: 7,
-                            height: 1,
-                            color: cream,
-                            shadows: [
-                              Shadow(color: Colors.black, blurRadius: 2),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+            left: start,
+            top: xpTop,
+            width: math.max(120, width - start - 6),
+            height: 2.5,
+            child: Semantics(
+              label: '경험치',
+              value: '${p.xp} / ${p.nextLevelXp}',
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(1.25),
+                child: LinearProgressIndicator(
+                  key: const ValueKey('hud-experience'),
+                  minHeight: 2.5,
+                  value: (p.xp / p.nextLevelXp).clamp(0.0, 1.0),
+                  color: const Color(0xffbda673),
+                  backgroundColor: const Color(0x66000000),
                 ),
               ),
-              resourceTop + resourceHeight + 4,
             ),
           ),
           Positioned(
             left: 10,
-            top: portraitTop,
-            child: SizedBox(
+            top: 8,
+            child: Container(
               key: const ValueKey('hud-portrait'),
-              width: portraitSide,
-              height: portraitSide,
+              width: portrait,
+              height: portrait,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xffb6aa88), width: 1.5),
+              ),
+              padding: const EdgeInsets.all(1.5),
               child: ClipOval(
                 child: CustomPaint(
                   painter: _PortraitPainter(
@@ -207,35 +137,36 @@ class GameHud extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: 2,
-            top: 2,
+            left: 3,
+            top: 3,
             child: Semantics(
               label: '현재 레벨 ${p.level}',
+              excludeSemantics: true,
               child: SizedBox(
                 key: const ValueKey('hud-level-badge'),
-                width: 26,
-                height: 26,
+                width: 20,
+                height: 20,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
                     if (session.art.images['level-badge'] case final image?)
                       RawImage(
                         image: image,
-                        width: 26,
-                        height: 26,
+                        width: 20,
+                        height: 20,
                         filterQuality: FilterQuality.medium,
                       ),
                     Padding(
-                      padding: const EdgeInsets.all(5),
+                      padding: const EdgeInsets.all(4),
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
                           '${p.level}',
                           style: const TextStyle(
                             color: cream,
-                            fontSize: 12,
+                            fontSize: 10,
                             height: 1,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
@@ -246,204 +177,58 @@ class GameHud extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: landscape ? 10 : 116,
-            top: landscape
-                ? math.max(
-                    portraitTop + portraitSide + 8,
-                    resourceTop + resourceHeight + 16,
-                  )
-                : math.max(73, resourceTop + resourceHeight + 16),
+            left: 10,
+            top: math.max(portrait + 13, xpTop + 10),
             child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: math.max(60, statusWidth - 76),
-              ),
+              constraints: BoxConstraints(maxWidth: width - 10),
               child: AfflictionIcons(session.afflictions, session: session),
             ),
           ),
           Positioned(
             right: landscape ? 61 : 9,
             top: 7,
-            child: SizedBox(
-              width: mapSide,
-              height: mapSide,
-              child: Semantics(
-                button: true,
-                label: '지도 확대',
-                hint: session.trackedSite == null
-                    ? '목표를 선택하면 미니맵에 방향을 표시합니다'
-                    : '추적 목표 ${session.trackedSite!.name}. 금색 화살표는 직선 방향 안내입니다',
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: onMap,
-                  child: CustomPaint(painter: MapPainter(session)),
+            width: mapSide,
+            height: mapSide,
+            child: Semantics(
+              button: true,
+              label: '지도 확대',
+              hint: session.trackedSite == null
+                  ? '목표를 선택하면 미니맵에 방향을 표시합니다'
+                  : '추적 목표 ${session.trackedSite!.name}. 금색 화살표는 직선 방향 안내입니다',
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onMap,
+                child: CustomPaint(painter: MapPainter(session)),
+              ),
+            ),
+          ),
+          Positioned(
+            right: landscape ? 61 : 9,
+            top: mapSide + 13,
+            child: Container(
+              key: const ValueKey('hud-region-chip'),
+              constraints: BoxConstraints(maxWidth: mapSide + 16),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: const Color(0x99000000),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                session.sheltered ? '안전 구역' : session.region,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 9,
+                  height: 1.2,
                 ),
               ),
             ),
           ),
-          if (!short)
-            Positioned(
-              right: 10,
-              top: 98,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xbf191b1a),
-                  border: Border.all(color: const Color(0x665b5645)),
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: Text(
-                  session.sheltered ? '안전 구역' : session.region,
-                  style: const TextStyle(color: cream, fontSize: 12),
-                ),
-              ),
-            ),
         ],
       ),
     );
   }
-}
-
-/// One circular cutout joins each live bar to the same portrait rim.
-class PortraitGaugeClipper extends CustomClipper<Path> {
-  const PortraitGaugeClipper(
-    this.center,
-    this.radius, {
-    this.ribbonOffset = 0,
-    this.ribbonHeight,
-    this.slant = 0,
-  });
-  final Offset center;
-  final double radius;
-  final double ribbonOffset, slant;
-  final double? ribbonHeight;
-  double rightAt(Size size, double y) => ribbonHeight == null
-      ? size.width
-      : size.width - slant * (ribbonOffset + y) / ribbonHeight!;
-  @override
-  Path getClip(Size size) => Path.combine(
-    PathOperation.difference,
-    Path()
-      ..moveTo(0, 0)
-      ..lineTo(rightAt(size, 0), 0)
-      ..lineTo(rightAt(size, size.height), size.height)
-      ..lineTo(0, size.height)
-      ..close(),
-    Path()..addOval(Rect.fromCircle(center: center, radius: radius)),
-  );
-  @override
-  bool shouldReclip(covariant PortraitGaugeClipper old) =>
-      old.center != center ||
-      old.radius != radius ||
-      old.ribbonOffset != ribbonOffset ||
-      old.ribbonHeight != ribbonHeight ||
-      old.slant != slant;
-}
-
-/// The portrait and two vessels share one fitted dark-metal silhouette.
-/// The live meters retain their own damage trail, danger pulse and fluid clock.
-class _HeroStatusChrome extends CustomPainter {
-  const _HeroStatusChrome(
-    this.portraitSide, {
-    required this.plateBottom,
-    required this.plateTop,
-    required this.portraitTop,
-    required this.slant,
-  });
-  final double portraitSide;
-  final double plateBottom;
-  final double plateTop, portraitTop, slant;
-  @override
-  void paint(Canvas canvas, Size size) {
-    final plate = Path()
-      ..moveTo(portraitSide * .70, plateTop)
-      ..lineTo(size.width - 9, plateTop)
-      ..lineTo(size.width - 9 - slant, plateBottom)
-      ..lineTo(portraitSide * .70, plateBottom)
-      ..close();
-    final ringTop = portraitTop - 8;
-    final portrait = Rect.fromLTWH(1, ringTop, portraitSide, portraitSide);
-    final joinedPlate = Path.combine(
-      PathOperation.difference,
-      plate,
-      Path()..addOval(portrait.inflate(1)),
-    );
-    canvas.drawPath(
-      joinedPlate.shift(const Offset(0, 2)),
-      Paint()..color = const Color(0xaa000000),
-    );
-    canvas.drawPath(joinedPlate, Paint()..color = const Color(0xe51c1b1c));
-    canvas.drawPath(
-      joinedPlate,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.4
-        ..color = const Color(0xff6e6355),
-    );
-    canvas.drawOval(
-      portrait.shift(const Offset(0, 2)),
-      Paint()..color = const Color(0xaa000000),
-    );
-    canvas.drawOval(portrait, Paint()..color = const Color(0xff171d20));
-    canvas.drawOval(
-      portrait,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3
-        ..color = const Color(0xff4a4337),
-    );
-    canvas.drawArc(
-      portrait,
-      -math.pi + .2,
-      2.7,
-      false,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.4
-        ..color = const Color(0xffc3ac82),
-    );
-    canvas.drawOval(
-      portrait.deflate(3),
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = .7
-        ..color = const Color(0xff9c8761),
-    );
-    // Small crest and rivets distinguish the portrait from an ordinary button.
-    for (final y in [ringTop - 1, ringTop + portraitSide]) {
-      final crest = Path()
-        ..moveTo(portraitSide / 2 - 1, y - 3)
-        ..lineTo(portraitSide / 2 + 4, y + 1)
-        ..lineTo(portraitSide / 2 - 1, y + 6)
-        ..lineTo(portraitSide / 2 - 6, y + 1)
-        ..close();
-      canvas.drawPath(crest, Paint()..color = const Color(0xff292b2b));
-      canvas.drawPath(
-        crest,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
-          ..color = const Color(0xffa38e68),
-      );
-    }
-    for (final x in [5.0, portraitSide - 7]) {
-      canvas.drawCircle(
-        Offset(x, ringTop + portraitSide / 2 - 1),
-        1.4,
-        Paint()..color = const Color(0xffad9770),
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _HeroStatusChrome old) =>
-      old.portraitSide != portraitSide ||
-      old.plateBottom != plateBottom ||
-      old.plateTop != plateTop ||
-      old.portraitTop != portraitTop ||
-      old.slant != slant;
 }
 
 /// Shared generated medallions use the same circular face as learned skills.
@@ -1108,18 +893,11 @@ class MapPainter extends CustomPainter {
     c.restore();
     if (round) {
       c.drawOval(
-        rect.deflate(1.5),
+        rect.deflate(2),
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 3
-          ..color = const Color(0xff3b3025),
-      );
-      c.drawOval(
-        rect.deflate(3),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
-          ..color = const Color(0xffa18b68),
+          ..strokeWidth = 1.5
+          ..color = const Color(0xffa6a99c),
       );
     }
   }
@@ -1613,65 +1391,21 @@ class _BattleSurfacePainter extends CustomPainter {
   final bool pressed, primary;
   @override
   void paint(Canvas c, Size s) {
-    final center = s.center(Offset.zero), radius = s.shortestSide / 2 - 2;
-    final rim = primary ? 3.6 : 2.8;
-    final bounds = Rect.fromCircle(center: center, radius: radius);
-    c.drawCircle(
-      center + const Offset(0, 2),
-      radius,
-      Paint()..color = const Color(0x99000000),
-    );
-    c.drawCircle(center, radius, Paint()..color = const Color(0xff221b15));
-    final metal = const LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        Color(0xffc4a779),
-        Color(0xff776048),
-        Color(0xff352a20),
-        Color(0xffa08760),
-      ],
-      stops: [0, .35, .70, 1],
-    ).createShader(bounds);
-    c.drawCircle(center, radius - 1, Paint()..shader = metal);
-    metal.dispose();
-    final face = RadialGradient(
-      center: const Alignment(-.3, -.4),
-      radius: 1.1,
-      colors: pressed
-          ? const [Color(0xff4a3930), Color(0xff161719)]
-          : const [Color(0xff303032), Color(0xff101416)],
-    ).createShader(bounds);
-    c.drawCircle(center, radius - rim, Paint()..shader = face);
-    face.dispose();
+    final center = s.center(Offset.zero), radius = s.shortestSide / 2 - 1;
     c.drawCircle(
       center,
-      radius - rim - .6,
+      radius,
+      Paint()
+        ..color = pressed ? const Color(0xdd182027) : const Color(0xcc0b1117),
+    );
+    c.drawCircle(
+      center,
+      radius - .8,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = .8
-        ..color = const Color(0xff554b3a),
+        ..strokeWidth = primary ? 1.5 : 1.2
+        ..color = pressed ? const Color(0xffd2e6ed) : const Color(0xff929da1),
     );
-    c.drawArc(
-      bounds.deflate(1.6),
-      -math.pi + .2,
-      2.5,
-      false,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = .8
-        ..color = const Color(0xffd0b68c),
-    );
-    if (pressed) {
-      c.drawCircle(
-        center,
-        radius - rim - 2,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
-          ..color = accent.withValues(alpha: .35),
-      );
-    }
   }
 
   @override
@@ -1897,17 +1631,37 @@ class _ActionButtonState extends State<ActionButton> {
                           ),
                         ),
                       ),
-                      if (widget.artwork != null)
-                        widget.artwork!
-                      else
-                        Opacity(
-                          opacity: widget.remaining > 0
-                              ? .38
-                              : widget.enabled
-                              ? 1
-                              : .35,
-                          child: _symbol,
+                      Positioned.fill(
+                        child: Padding(
+                          padding: const EdgeInsets.all(2),
+                          child: ClipOval(
+                            child: Transform.scale(
+                              scale: 1.16,
+                              child: Opacity(
+                                opacity: widget.enabled || widget.remaining > 0
+                                    ? 1
+                                    : .35,
+                                child: widget.artwork ?? _symbol,
+                              ),
+                            ),
+                          ),
                         ),
+                      ),
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: pressed
+                                    ? const Color(0xffd4e8ee)
+                                    : const Color(0xffa5b1b5),
+                                width: 1.25,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                       if (widget.insufficientResource)
                         const Positioned.fill(
                           child: ColoredBox(color: Color(0x66000000)),
@@ -1951,16 +1705,17 @@ class _ActionButtonState extends State<ActionButton> {
                       if (widget.remaining > 0)
                         CustomPaint(
                           size: Size.square(widget.size),
+                          key: const ValueKey('cooldown-overlay'),
                           painter: _CooldownPainter(
                             widget.remaining / widget.total,
                           ),
                         ),
                       if (!widget.showLabel && widget.remaining > 0)
                         Text(
-                          '${CombatBalance.realSeconds(widget.remaining).ceil()}',
+                          '${math.max(.1, CombatBalance.realSeconds(widget.remaining)).toStringAsFixed(1)}s',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 18,
+                            fontSize: 11,
                             fontWeight: FontWeight.bold,
                             shadows: [
                               Shadow(color: Colors.black, blurRadius: 5),
@@ -1997,17 +1752,27 @@ class _CooldownPainter extends CustomPainter {
   _CooldownPainter(this.ratio);
   final double ratio;
   @override
-  void paint(Canvas c, Size s) => c.drawArc(
-    (Offset.zero & s).deflate(5),
-    -math.pi / 2,
-    math.pi * 2 * ratio.clamp(0, 1),
-    false,
-    Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.6
-      ..strokeCap = StrokeCap.round
-      ..color = mobileAccent,
-  );
+  void paint(Canvas c, Size s) {
+    final bounds = (Offset.zero & s).deflate(1.5);
+    c.drawArc(
+      bounds,
+      -math.pi / 2 + math.pi * 2 * (1 - ratio.clamp(0, 1)),
+      math.pi * 2 * ratio.clamp(0, 1),
+      true,
+      Paint()..color = const Color(0xaa000000),
+    );
+    c.drawArc(
+      bounds,
+      -math.pi / 2 + math.pi * 2 * (1 - ratio.clamp(0, 1)),
+      math.pi * 2 * ratio.clamp(0, 1),
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2
+        ..color = const Color(0xffc8d7dc),
+    );
+  }
+
   @override
   bool shouldRepaint(covariant _CooldownPainter oldDelegate) =>
       oldDelegate.ratio != ratio;
@@ -2076,28 +1841,68 @@ class _GameStickState extends State<GameStick> {
       child: SizedBox(
         width: widget.size,
         height: widget.size,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Opacity(
-              opacity: .7,
-              child: CustomPaint(
-                size: Size.square(widget.size),
-                painter: ControlPainter(widget.art, 'touchJoystick'),
+        child: Opacity(
+          key: const ValueKey('joystick-opacity'),
+          opacity: pointer == null ? .18 : .4,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Opacity(
+                opacity: 1,
+                child: CustomPaint(
+                  size: Size.square(widget.size),
+                  painter: const _ModernStickPainter(),
+                ),
               ),
-            ),
-            Transform.translate(
-              offset: knob,
-              child: CustomPaint(
-                size: Size.square(widget.size * .36),
-                painter: ControlPainter(widget.art, 'touchThumb'),
+              Transform.translate(
+                offset: knob,
+                child: CustomPaint(
+                  size: Size.square(widget.size * .36),
+                  painter: const _ModernStickPainter(thumb: true),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     ),
   );
+}
+
+class _ModernStickPainter extends CustomPainter {
+  const _ModernStickPainter({this.thumb = false});
+  final bool thumb;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero), radius = size.shortestSide / 2 - 1;
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = thumb ? const Color(0xff9ab0b6) : const Color(0xff111d23),
+    );
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = thumb ? 1.2 : 1
+        ..color = const Color(0xffd3e2e5),
+    );
+    if (!thumb) {
+      canvas.drawCircle(
+        center,
+        radius * .78,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = .6
+          ..color = const Color(0xff8faaaa),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ModernStickPainter old) => old.thumb != thumb;
 }
 
 /// A moving figure keeps evasion distinct from a boot or a skill plaque.

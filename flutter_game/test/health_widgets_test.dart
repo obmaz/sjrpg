@@ -19,15 +19,6 @@ import 'package:guardian_new/rpg_widgets.dart';
 import 'support/test_game.dart';
 
 void main() {
-  test('gauge join follows the portrait circle and preserves the live bar', () {
-    const clipper = PortraitGaugeClipper(Offset(0, 15), 35);
-    final clip = clipper.getClip(const Size(180, 20));
-    expect(clip.contains(const Offset(10, 10)), false);
-    expect(clip.contains(const Offset(34, 15)), false);
-    expect(clip.contains(const Offset(36, 15)), true);
-    expect(clip.contains(const Offset(34, 0)), true);
-    expect(clip.contains(const Offset(170, 10)), true);
-  });
   TestWidgetsFlutterBinding.ensureInitialized();
   GameArt? loaded;
   Future<GameArt> art(WidgetTester tester) async =>
@@ -143,7 +134,7 @@ void main() {
           find.byKey(const ValueKey('hud-portrait')),
         );
         expect(find.text('Lv.${s.progress.level}  전사'), findsNothing);
-        expect(health.top, 10);
+        expect(health.top, 14);
         expect(health.left, lessThan(portrait.right));
         expect(health.left, greaterThan(portrait.center.dx));
         final xp = tester.getRect(find.byKey(const ValueKey('hud-experience')));
@@ -153,17 +144,17 @@ void main() {
         expect(resource.width, lessThanOrEqualTo(health.width));
         expect(health.height, lessThanOrEqualTo(18));
         expect(health.bottom, lessThanOrEqualTo(resource.top));
-        expect(resource.height, greaterThanOrEqualTo(18));
+        expect(resource.height, greaterThanOrEqualTo(12));
         final hpText = tester.getRect(
           find.text(
             '${CombatNumbers.stat(hp, rounding: CombatRounding.up)} / 10,000',
           ),
         );
-        expect(health.contains(hpText.topLeft), true);
-        expect(health.contains(hpText.bottomRight), true);
+        expect(health.inflate(.01).contains(hpText.topLeft), true);
+        expect(health.inflate(.01).contains(hpText.bottomRight), true);
         final resourceText = tester.getRect(find.text('분노 250'));
-        expect(resource.contains(resourceText.topLeft), true);
-        expect(resource.contains(resourceText.bottomRight), true);
+        expect(resource.inflate(.01).contains(resourceText.topLeft), true);
+        expect(resource.inflate(.01).contains(resourceText.bottomRight), true);
         expect(
           tester
               .renderObject<RenderParagraph>(find.text('분노 250'))

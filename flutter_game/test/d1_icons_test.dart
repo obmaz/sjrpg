@@ -123,7 +123,7 @@ void main() {
                   w.painter is DodgeActionPainter),
         );
         expect(paint, findsOneWidget);
-        expect(tester.getSize(paint), const Size.square(80));
+        expect(tester.getSize(paint), const Size.square(76));
         expect(
           tester.getCenter(paint),
           tester.getCenter(find.byType(ActionButton)),

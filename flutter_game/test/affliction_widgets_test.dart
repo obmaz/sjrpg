@@ -143,7 +143,9 @@ void main() {
         for (final rect in controls) {
           final a = crop(before, rect), b = crop(dark, rect);
           for (var i = 0; i < a.length; i += 3) {
-            if ((a[i] == 240 && a[i + 1] == 229 && a[i + 2] == 200) ||
+            if ((a[i] == 87 && a[i + 1] == 150 && a[i + 2] == 176) ||
+                (a[i] == 179 && a[i + 1] == 124 && a[i + 2] == 80) ||
+                (a[i] == 240 && a[i + 1] == 229 && a[i + 2] == 200) ||
                 (a[i] == 255 && a[i + 1] == 255 && a[i + 2] == 255) ||
                 (a[i] == 255 && a[i + 1] == 240 && a[i + 2] == 222)) {
               expect(b.sublist(i, i + 3), a.sublist(i, i + 3));

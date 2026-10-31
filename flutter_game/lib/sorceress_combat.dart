@@ -29,6 +29,8 @@ class SorceressCombat {
   double blazeTime = 0, _blazePulse = 0;
   SorceressSpellStats? _blaze;
   final _trailHitUntil = <HuntEnemy, double>{};
+  final _lights = <SorceressEffect>{};
+  static const maxLights = 8;
   double _clock = 0;
   static const defensiveIds = {
     'frozenArmor',
@@ -122,6 +124,10 @@ class SorceressCombat {
   }
 
   void clear() {
+    for (final effect in _lights.toList()) {
+      effect.lighting.setup(null);
+    }
+    _lights.clear();
     endChannel();
     sharedDelay = blazeTime = 0;
     _blaze = null;
@@ -799,7 +805,8 @@ class SorceressCombat {
   }
 }
 
-abstract class SorceressEffect extends GameComponent with EffectVisibility {
+abstract class SorceressEffect extends GameComponent
+    with WithLighting, EffectVisibility {
   SorceressEffect(this.owner, this.spec, ui.Offset at, {bool? protectedCast})
     : revision = owner.session.buildRevision,
       protectedCast = protectedCast ?? owner.session.sheltered {
@@ -811,7 +818,54 @@ abstract class SorceressEffect extends GameComponent with EffectVisibility {
   final int revision;
   final bool protectedCast;
   double age = 0;
-  bool finished = false;
+  bool finished = false, _lightTried = false;
+  int _lightStep = -1;
+  double? get lightDuration => null;
+  void _updateLight() {
+    if (!_lightTried) {
+      _lightTried = true;
+      if ((this is! SorceressProjectile ||
+              (this as SorceressProjectile).seed % 4 == 0) &&
+          owner._lights.length < SorceressCombat.maxLights) {
+        owner._lights.add(this);
+      }
+    }
+    if (!owner._lights.contains(this)) return;
+    final fraction = lightDuration == null
+        ? 1.0
+        : (1 - age / lightDuration!).clamp(0.0, 1.0);
+    final step = (fraction * 8).ceil();
+    if (_lightStep == step) return;
+    _lightStep = step;
+    final color = switch (spec.damageType) {
+      SorceressDamageType.fire => const ui.Color(0xffffaa65),
+      SorceressDamageType.cold => const ui.Color(0xff8acdeb),
+      _ => const ui.Color(0xffa0b8ff),
+    };
+    lighting.setup(
+      LightingConfig(
+        radius:
+            (this is SorceressProjectile ? 55.0 : 105.0) *
+            (lightDuration == null ? 1 : step / 8),
+        color: color.withValues(
+          alpha: (this is SorceressProjectile ? .12 : .25) * step / 8,
+        ),
+        blurBorder: 28,
+      ),
+    );
+  }
+
+  void _releaseLight() {
+    owner._lights.remove(this);
+    lighting.setup(null);
+  }
+
+  @override
+  void onRemove() {
+    _releaseLight();
+    super.onRemove();
+  }
+
   Adventure get session => owner.session;
   bool step(double dt) {
     if (finished) return false;
@@ -823,10 +877,12 @@ abstract class SorceressEffect extends GameComponent with EffectVisibility {
     }
     if (!session.active || dt <= 0) return false;
     age += math.min(.05, dt);
+    _updateLight();
     return true;
   }
 
   void finish() {
+    _releaseLight();
     finished = true;
     removeFromParent();
   }
@@ -1241,6 +1297,8 @@ class SorceressHydra extends SorceressEffect {
 }
 
 class SorceressFlash extends SorceressEffect {
+  @override
+  double get lightDuration => duration;
   SorceressFlash(
     super.owner,
     super.spec,

@@ -35,6 +35,7 @@ import 'reload_bridge.dart' as app_reload;
 import 'rpg_widgets.dart';
 import 'sanctuary_fence.dart';
 import 'save_bridge.dart' as storage;
+import 'scene_atmosphere.dart';
 import 'title_screen.dart';
 import 'well_portal.dart';
 import 'world_model.dart';
@@ -736,6 +737,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     );
     stopSaveListener = storage.listenForExit(saveNow);
     game = BonfireWidget(
+      lightingColorGame: GameVignette.ambient,
       map: WorldMap.empty(size: Vector2(worldSize.width, worldSize.height)),
       player: adventure.hero,
       playerControllers: [
@@ -934,13 +936,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                                 ? 128.0
                                 : 112.0
                           : 142.0),
-            attack =
-                referenceControls?.attackSize ??
-                (portraitFan
-                    ? 84.0
-                    : width < 360
-                    ? 76.0
-                    : 84.0),
+            attack = referenceControls?.attackSize ?? 76.0,
             bottom = referenceControls != null
                 ? referenceControls.bottom
                 : media.padding.bottom + (short ? 86.0 : 112.0);
@@ -1031,7 +1027,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         final attackRight =
             referenceControls?.attackRight ??
             (referenceFan
-                ? 64.0
+                ? 60.0
                 : width < 360
                 ? 14.0
                 : 22.0);
@@ -1055,8 +1051,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 ? BattleControlLayout.fan(
                     attackRight: attackRight,
                     attackSize: attack,
-                    skillSize: 52,
-                    gap: 18,
+                    skillSize: 48,
+                    gap: 6,
                   )
                 : compactBattle
                 ? hasMobility
@@ -1239,6 +1235,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 child: IgnorePointer(ignoring: modal != null, child: child!),
               ),
             ),
+            const Positioned.fill(child: GameVignette()),
             if (adventure.afflictions.remaining(PlayerStatus.blind) > 0)
               Positioned.fill(
                 child: NarrowVisionCurtain(

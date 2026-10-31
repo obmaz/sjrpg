@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'meadow_tiles.dart';
 import 'world_model.dart';
 
 /// The four shared full-resolution surface families, in loader shader order.
@@ -240,6 +241,7 @@ class FieldLandscape {
     ui.Rect sector, {
     List<ui.Color>? macroColors,
     List<ui.Shader>? details,
+    ui.Shader? grassVariants,
   }) {
     if (!sector.overlaps(ui.Offset.zero & worldSize)) return;
     canvas.save();
@@ -289,6 +291,7 @@ class FieldLandscape {
         }
       }
       _smallGround(canvas, sector, shaders);
+      _meadowVariants(canvas, sector, grassVariants);
       _shoulders(canvas, sector, shaders);
     }
     _palette(canvas, sector, macroColors, overview: false);
@@ -398,11 +401,14 @@ class FieldLandscape {
     double width,
     ui.Shader shader, {
     int alpha = 120,
+    bool flatCore = false,
   }) {
     if (points.length < 2) return;
     final positions = <ui.Offset>[], colors = <ui.Color>[], indices = <int>[];
-    const offsets = [-1.0, -.45, 0.0, .45, 1.0],
-        weights = [0.0, .6, 1.0, .6, 0.0];
+    const offsets = [-1.0, -.45, 0.0, .45, 1.0];
+    final weights = flatCore
+        ? const [0.0, 1.0, 1.0, 1.0, 0.0]
+        : const [0.0, .6, 1.0, .6, 0.0];
     for (var i = 0; i < points.length; i++) {
       final direction =
           points[math.min(i + 1, points.length - 1)] -
@@ -525,6 +531,115 @@ class FieldLandscape {
         final accent = world.isSand(at) ? FieldGround.stone : region.accent;
         _ribbon(canvas, points, width, shaders[accent.index], alpha: 44);
       }
+    }
+  }
+
+  void _meadowVariants(ui.Canvas canvas, ui.Rect sector, ui.Shader? atlas) {
+    if (atlas == null) return;
+    const cell = MeadowTiles.size;
+    final nearbyRoads = world.trails
+        .where((t) => t.bounds.inflate(t.width / 2 + cell).overlaps(sector))
+        .toList();
+    for (
+      var y = (sector.top / cell).floor() - 1;
+      y <= (sector.bottom / cell).floor() + 1;
+      y++
+    ) {
+      for (
+        var x = (sector.left / cell).floor() - 1;
+        x <= (sector.right / cell).floor() + 1;
+        x++
+      ) {
+        final origin = ui.Offset(x * cell, y * cell),
+            at = origin + const ui.Offset(cell / 2, cell / 2);
+        var meadow = _base(world.stage) == FieldGround.meadow;
+        for (final region in regions) {
+          if (region.bounds.contains(at) && region.path.contains(at)) {
+            meadow = region.ground == FieldGround.meadow;
+          }
+        }
+        for (final biome in _biomes) {
+          if (biome.region.bounds.contains(at) &&
+              biome.region.path.contains(at)) {
+            meadow = biome.region.ground == FieldGround.meadow;
+          }
+        }
+        if (!meadow ||
+            isSandyGround(at) ||
+            nearbyRoads.any((t) => t.distance(at) < t.width / 2 + 20)) {
+          continue;
+        }
+        MeadowTiles.paint(
+          canvas,
+          origin +
+              ui.Offset(
+                (MeadowTiles.hash(world.seed, x, y) % 25 - 12).toDouble(),
+                ((MeadowTiles.hash(world.seed, x, y) >> 8) % 25 - 12)
+                    .toDouble(),
+              ),
+          MeadowTiles.variant(world.seed, x, y),
+          atlas,
+        );
+      }
+    }
+  }
+
+  /// Alpha-weighted shoulders are recorded once with their terrain sector.
+  void paintRoadTransition(ui.Canvas canvas, Trail trail, ui.Shader material) {
+    _ribbon(
+      canvas,
+      trail.points,
+      trail.width + 48,
+      material,
+      alpha: 255,
+      flatCore: true,
+    );
+    for (final center in [trail.points.first, trail.points.last]) {
+      final radius = (trail.width + 48) / 2;
+      final positions = <ui.Offset>[center],
+          colors = <ui.Color>[const ui.Color(0xffffffff)],
+          indices = <int>[];
+      for (final inner in [true, false]) {
+        for (var i = 0; i < 24; i++) {
+          final angle = i * math.pi / 12;
+          positions.add(
+            center +
+                ui.Offset(math.cos(angle), math.sin(angle)) *
+                    radius *
+                    (inner ? .45 : 1),
+          );
+          colors.add(
+            inner ? const ui.Color(0xffffffff) : const ui.Color(0x00ffffff),
+          );
+        }
+      }
+      for (var i = 0; i < 24; i++) {
+        final next = (i + 1) % 24;
+        indices.addAll([
+          0,
+          1 + i,
+          1 + next,
+          1 + i,
+          25 + i,
+          1 + next,
+          1 + next,
+          25 + i,
+          25 + next,
+        ]);
+      }
+      final mesh = ui.Vertices(
+        ui.VertexMode.triangles,
+        positions,
+        textureCoordinates: positions,
+        colors: colors,
+        indices: indices,
+      );
+      canvas.drawVertices(
+        mesh,
+        ui.BlendMode.modulate,
+        ui.Paint()..shader = material,
+      );
+      mesh.dispose();
     }
   }
 

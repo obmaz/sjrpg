@@ -78,6 +78,7 @@ class GameArt {
   };
   static const _allImages = [
     ..._fieldImages,
+    'field-grass-variants',
     'cave-entrances',
     'cave-rock',
     'landmarks-forest',
@@ -1243,7 +1244,19 @@ class TerrainArt {
   final _rasterCache = <(int, int, int), ui.Image>{};
   int _rasterBytes = 0;
   bool _disposed = false;
-  ui.Shader? _caveRock;
+  ui.Shader? _caveRock, _grassVariants;
+  ui.Shader? get grassVariantShader {
+    if (world.dungeon != null) return null;
+    final image = art.images['field-grass-variants'];
+    if (image == null) return null;
+    return _grassVariants ??= ui.ImageShader(
+      image,
+      ui.TileMode.clamp,
+      ui.TileMode.clamp,
+      Float64List.fromList([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]),
+    );
+  }
+
   static const maxRasterBytes = 96 * 1024 * 1024;
   int get rasterBytes => _rasterBytes;
   int get rasterTileCount => _rasterCache.length;
@@ -1385,6 +1398,7 @@ class TerrainArt {
       area,
       macroColors: fieldPalettes[world.stage.name],
       details: art.fieldMaterials,
+      grassVariants: grassVariantShader,
     );
     final nearWater = [
       ...world.lakes,
@@ -1416,7 +1430,7 @@ class TerrainArt {
     c.save();
     fieldLandscape.clipHardTrailGround(c);
     for (final t in world.trails) {
-      if (!t.bounds.inflate(t.width / 2 + 2).overlaps(area)) continue;
+      if (!t.bounds.inflate(t.width / 2 + 24).overlaps(area)) continue;
       c.drawPath(
         t.path,
         ui.Paint()
@@ -1428,14 +1442,15 @@ class TerrainArt {
       );
     }
     for (final t in world.trails) {
-      if (!t.bounds.inflate(t.width / 2 + 2).overlaps(area)) continue;
+      if (!t.bounds.inflate(t.width / 2 + 24).overlaps(area)) continue;
+      fieldLandscape.paintRoadTransition(c, t, art.materials[road]);
       c.drawPath(
         t.path,
         ui.Paint()
           ..style = ui.PaintingStyle.stroke
           ..strokeCap = ui.StrokeCap.round
           ..strokeJoin = ui.StrokeJoin.round
-          ..strokeWidth = t.width
+          ..strokeWidth = math.max(8, t.width * .65)
           ..shader = art.materials[road],
       );
     }
@@ -1616,6 +1631,8 @@ class TerrainArt {
     _disposed = true;
     _caveRock?.dispose();
     _caveRock = null;
+    _grassVariants?.dispose();
+    _grassVariants = null;
     for (final image in _rasterCache.values) {
       image.dispose();
     }

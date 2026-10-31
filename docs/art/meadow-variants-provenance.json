@@ -1,0 +1,22 @@
+{
+    "generator": "image_gen",
+    "processor": "tools/prepare-meadow-variants.py",
+    "source": "docs/art/meadow-variants-original.png",
+    "sha256": "258ea544606c632b36383336361537bb8f768b5bad2547c1380ee8c3b37d51cf",
+    "reference": "flutter_game/art/field-ground-meadow.webp",
+    "sourceRects": [
+        [51, 51, 586, 584],
+        [667, 51, 1203, 585],
+        [51, 668, 587, 1203],
+        [667, 667, 1203, 1203]
+    ],
+    "variants": ["grass", "weeds", "flowers", "stones"],
+    "runtime": "flutter_game/art/field-grass-variants.webp",
+    "runtimeSize": [1024, 256],
+    "runtimeRects": [
+        [0, 0, 256, 256],
+        [256, 0, 256, 256],
+        [512, 0, 256, 256],
+        [768, 0, 256, 256]
+    ]
+}

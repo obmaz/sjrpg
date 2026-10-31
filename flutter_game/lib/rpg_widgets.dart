@@ -223,13 +223,24 @@ class PotionBelt extends StatelessWidget {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: ink.withValues(alpha: .9),
-                  border: Border.all(color: gold.withValues(alpha: .65)),
+                  color: const Color(0x990b1117),
+                  border: Border.all(
+                    color: const Color(0xffa5b1b5),
+                    width: 1.25,
+                  ),
                 ),
-                child: CustomPaint(
-                  painter: color == const Color(0xffa2caff)
-                      ? PotionPainter(session.art, blue: true)
-                      : CinematicIconPainter(session.art, 5),
+                child: Padding(
+                  padding: const EdgeInsets.all(2),
+                  child: ClipOval(
+                    child: Transform.scale(
+                      scale: 1.16,
+                      child: CustomPaint(
+                        painter: color == const Color(0xffa2caff)
+                            ? PotionPainter(session.art, blue: true)
+                            : CinematicIconPainter(session.art, 5),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),

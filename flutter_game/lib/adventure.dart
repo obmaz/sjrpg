@@ -2614,7 +2614,7 @@ class Adventure extends ChangeNotifier {
   }
 }
 
-class Guardian extends Player with WithCollision {
+class Guardian extends Player with WithCollision, WithLighting {
   static const onFootSize = ui.Size(28, 24);
   Guardian(this.session)
     : super(
@@ -2626,6 +2626,20 @@ class Guardian extends Player with WithCollision {
     setupMovementByJoystick(
       moveType: MovementByJoystickType.angle,
       intensityEnabled: true,
+    );
+    lighting.setup(
+      LightingConfig(
+        radius: 120,
+        color: const ui.Color(0x4dffc477),
+        withPulse: !ui
+            .PlatformDispatcher
+            .instance
+            .accessibilityFeatures
+            .disableAnimations,
+        pulseVariation: .04,
+        pulseSpeed: .3,
+        blurBorder: 45,
+      ),
     );
   }
   final Adventure session;
@@ -3042,6 +3056,11 @@ class Guardian extends Player with WithCollision {
       return;
     }
     if (dt <= 0) return;
+    final pulse =
+        !ui.PlatformDispatcher.instance.accessibilityFeatures.disableAnimations;
+    if (lighting.config?.withPulse != pulse) {
+      lighting.setup(lighting.config?.copyWith(withPulse: pulse));
+    }
     barbarianCombat.update(dt);
     if (session.progress.heroClass == HeroClass.mage) {
       sorceressCombat.update(dt);

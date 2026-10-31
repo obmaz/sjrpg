@@ -188,7 +188,9 @@ void main() {
         ),
       );
       expect(
-        find.text('${CombatBalance.realSeconds(remaining).ceil()}'),
+        find.text(
+          '${CombatBalance.realSeconds(remaining).toStringAsFixed(1)}s',
+        ),
         findsOneWidget,
       );
       final button = tester.widget<ActionButton>(find.byType(ActionButton));

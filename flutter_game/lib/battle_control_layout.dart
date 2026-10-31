@@ -12,11 +12,11 @@ class BattleControlLayout {
       ),
       inset = math.max(8, safeBottom);
   final double height, scale, inset;
-  double get attackSize => 84;
-  double get smallSize => 52;
+  double get attackSize => 76;
+  double get smallSize => 48;
   double get dodgeSize => 44;
   double get mobilitySize => 48;
-  double get attackRight => 64;
+  double get attackRight => 60;
   double get bottom =>
       math.max(inset + 36, 82 * scale - math.max(0, 350 - height) * .55);
   double get dodgeRight => 8;
@@ -34,8 +34,8 @@ class BattleControlLayout {
     required double gap,
   }) {
     final radius = math.max(
-      (attackSize + skillSize) / 2 + 7,
-      (skillSize + 5) / (2 * math.sin(math.pi / 8)),
+      (attackSize + skillSize) / 2 + math.max(6, gap),
+      (skillSize + math.max(6, gap)) / (2 * math.sin(math.pi / 8)),
     );
     return [
       for (final angle in [math.pi, 3 * math.pi / 4, math.pi / 2, math.pi / 4])
