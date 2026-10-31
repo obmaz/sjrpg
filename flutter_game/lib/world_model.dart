@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:collection/collection.dart';
 
 import 'authored_settlement.dart';
+import 'bridge_art.dart';
 import 'dungeon.dart';
 import 'field_landmark.dart';
 import 'forest_tree_art.dart';
@@ -13,6 +14,7 @@ import 'mount_progress.dart';
 import 'quest_structure_art.dart';
 import 'sanctuary.dart';
 import 'stage_content.dart';
+import 'village_gateway_art.dart';
 
 export 'rpg_model.dart';
 export 'stage_content.dart';
@@ -323,6 +325,30 @@ class WorldProp {
       : landmark != null &&
             (landmark!.stage == WorldStage.forest || landmark!.terrace != null)
       ? const [] // The raised silhouette is registered as a polygon instead.
+      : kind == 'rock'
+      ? [
+          Rect.fromCenter(
+            center: body.bottomCenter - const Offset(0, 10),
+            width: drawSize.width * .82,
+            height: body.height * .75,
+          ),
+        ]
+      : kind == 'ruin-7'
+      ? [
+          Rect.fromCenter(
+            center: body.bottomCenter - const Offset(0, 8),
+            width: 26,
+            height: 22,
+          ),
+        ]
+      : kind == 'cactus'
+      ? [
+          Rect.fromCenter(
+            center: body.bottomCenter - const Offset(0, 8),
+            width: drawSize.height * .2,
+            height: 18,
+          ),
+        ]
       : kind == 'ruin-4'
       ? [
           Rect.fromLTWH(body.left, body.top, 26, body.height),
@@ -401,6 +427,7 @@ class AdventureWorld {
       _buildThemed();
       _compact();
       _applyAuthoredSettlement();
+      _applyForestComposition();
       _addFieldLandmarks();
       return;
     }
@@ -724,7 +751,7 @@ class AdventureWorld {
               : const Size(84, 76),
         );
         props.add(prop);
-        _indexSolid(body);
+        prop.collisionBodies.forEach(_indexSolid);
         for (
           var by = (body.top - prop.drawSize.height) ~/ 256;
           by <= (body.bottom + 50) ~/ 256;
@@ -809,9 +836,99 @@ class AdventureWorld {
       bucket.removeWhere(removedSolids.contains);
     }
     _applyAuthoredSettlement();
+    for (final polygon in VillageGatewayArt.solids(authoredSettlement)) {
+      addRuntimeShape(polygon);
+    }
+    _applyQuarterViewBridges();
     _applyForestComposition();
     _addForestUndergrowth();
     _addFieldLandmarks();
+  }
+
+  void _applyQuarterViewBridges() {
+    final previous = List<Rect>.of(bridges);
+    // The eastern crossing begins at the painted village gate. Its left end
+    // stays level with that opening while the span recedes towards the far bank.
+    if (bridges.length > 3) {
+      final last = bridges.last;
+      const span = 600.0;
+      bridges[bridges.length - 1] = Rect.fromCenter(
+        center: Offset(
+          last.left + span / 2,
+          last.center.dy + QuarterViewBridgeArt.slope * span / 2,
+        ),
+        width: span,
+        height: last.height,
+      );
+    }
+    Offset warp(Offset p) {
+      var at = p;
+      for (var i = 0; i < previous.length; i++) {
+        final old = previous[i], current = bridges[i];
+        final dx = p.dx - old.center.dx, dy = (p.dy - old.center.dy).abs();
+        const run = 200.0;
+        final fullSpan = old.width / 2 + 150;
+        if (dx.abs() > fullSpan + run || dy > old.height * 2) continue;
+        if (i == 3 && p.dx <= old.left) continue;
+        final wx = (1 - (dx.abs() - fullSpan).clamp(0.0, run) / run);
+        final wy = ((old.height * 2 - dy) / old.height).clamp(0.0, 1.0);
+        final along = (p.dx - current.center.dx).clamp(
+          -current.width / 2,
+          current.width / 2 + 80,
+        );
+        final targetY = current.center.dy + along * QuarterViewBridgeArt.slope;
+        at += Offset(0, (targetY - p.dy) * wx * wy);
+      }
+      return at;
+    }
+
+    final influence = [for (final b in previous) b.inflate(500)];
+    trails = [
+      for (final trail in trails)
+        Trail([
+          warp(trail.points.first),
+          for (var j = 1; j < trail.points.length; j++)
+            ...() {
+              final a = trail.points[j - 1], b = trail.points[j];
+              final bounds = Rect.fromPoints(a, b).inflate(1);
+              final n = influence.any((r) => r.overlaps(bounds))
+                  ? math.max(1, ((b - a).distance / 24).ceil())
+                  : 1;
+              return [
+                for (var step = 1; step <= n; step++)
+                  warp(Offset.lerp(a, b, step / n)!),
+              ];
+            }(),
+        ], trail.width),
+    ];
+    for (final b in bridges) {
+      for (final solid in QuarterViewBridgeArt.solids(b)) {
+        addRuntimeShape(solid);
+      }
+      trails.add(Trail(QuarterViewBridgeArt.approach(b), 90));
+    }
+    final removed = props
+        .where(
+          (p) =>
+              influence.any((r) => r.contains(p.body.center)) &&
+              (bridges.any(
+                    (b) => QuarterViewBridgeArt.visualBounds(
+                      b,
+                    ).inflate(25).overlaps(p.body),
+                  ) ||
+                  trails.any(
+                    (t) => t.near(
+                      p.body.center,
+                      math.max(p.body.width, p.body.height) / 2 + 35,
+                    ),
+                  )),
+        )
+        .toSet();
+    final solids = removed.expand((p) => p.collisionBodies).toSet();
+    props.removeWhere(removed.contains);
+    for (final bucket in _solids.values) {
+      bucket.removeWhere(solids.contains);
+    }
   }
 
   List<Offset> _dryRoad(
@@ -1313,7 +1430,11 @@ class AdventureWorld {
             : WorldProp(
                 body,
                 kind,
-                kind == 'tree' ? const Size(165, 220) : Size(side, side),
+                kind == 'tree'
+                    ? const Size(165, 220)
+                    : kind == 'ruin-7'
+                    ? const Size(190, 270)
+                    : Size(side, side),
               );
         props.add(prop);
         for (final body in prop.collisionBodies) {
@@ -1725,7 +1846,10 @@ class AdventureWorld {
             item.drawBounds.overlaps(settlement.inflate(250)) ||
             river.overlaps(body) ||
             lakes.any((lake) => lake.overlaps(body)) ||
-            bridges.any((bridge) => bridge.overlaps(body)) ||
+            bridges.any(
+              (bridge) =>
+                  QuarterViewBridgeArt.visualBounds(bridge).overlaps(body),
+            ) ||
             trails.any(
               (trail) =>
                   trail.near(body.center, body.size.longestSide / 2 + 100),
@@ -2054,11 +2178,8 @@ class AdventureWorld {
       woods.any((wood) => wood.contains(p));
   late Rect bridge;
   late List<Rect> bridges;
-  bool onBridge(Rect body) => bridges.any(
-    (b) =>
-        b.deflate(3).contains(body.topLeft) &&
-        b.deflate(3).contains(body.bottomRight),
-  );
+  bool onBridge(Rect body) =>
+      bridges.any((b) => QuarterViewBridgeArt.supports(b, body.inflate(2)));
   late List<Trail> trails;
   final List<WorldProp> props = [];
   final List<WorldProp> campProps = [];
@@ -2136,7 +2257,7 @@ class AdventureWorld {
   bool isWater(Offset p) =>
       (_authoring || !settlement.contains(p)) &&
       (river.contains(p) || lakes.any((s) => s.contains(p))) &&
-      !bridges.any((b) => b.contains(p));
+      !bridges.any((b) => QuarterViewBridgeArt.contains(b, p));
   bool blocked(
     Rect body, {
     bool waterOnly = false,
@@ -2300,7 +2421,11 @@ class AdventureWorld {
       if (!blocked(sweep, crossLedges: crossLedges)) return true;
       // A blocked dry/body sweep stays blocked. Only a bridge can make a
       // water-crossing sweep valid, keeping ordinary failed A* edges cheap.
-      if (!bridges.any((bridge) => bridge.overlaps(sweep))) return false;
+      if (!bridges.any(
+        (bridge) => QuarterViewBridgeArt.visualBounds(bridge).overlaps(sweep),
+      )) {
+        return false;
+      }
       if (blocked(sweep, ignoreWater: true, crossLedges: crossLedges) ||
           blocked(from & size) ||
           blocked(to & size)) {

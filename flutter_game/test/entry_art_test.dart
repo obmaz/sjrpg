@@ -449,7 +449,7 @@ void main() {
       expect(bundle.reads, isNot(contains('assets/images/actors-hero.webp')));
       expect(bundle.reads, isNot(contains('assets/images/actors-mage.png')));
       final original = Map<String, ui.Image>.of(art.images);
-      bundle.failure = 'assets/images/world-desert.webp';
+      bundle.failure = 'assets/images/quarter-props.webp';
       await expectLater(
         art.ensureStage(WorldStage.forest, heroClass: HeroClass.warrior),
         throwsStateError,

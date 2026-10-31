@@ -19,6 +19,7 @@ import 'forest_undergrowth_art.dart';
 import 'ground_texture.dart';
 import 'interface_art.dart';
 import 'mount_sprite_mesh.dart';
+import 'natural_object_art.dart';
 import 'prop_grounding.dart';
 import 'quest_scenery.dart';
 import 'terrain_map_plan.dart';
@@ -177,13 +178,12 @@ class GameArt {
     'barbarian-skills',
     'sorceress-skills',
     'landscape-bridge',
+    'quarter-props',
     'forest-trees',
     'forest-undergrowth',
     'forest-quest-chapel',
     'forest-quest-cottage',
     'forest-quest-cave',
-    'world-forest',
-    'world-desert',
     'controls',
     'atlas',
   ];
@@ -194,7 +194,6 @@ class GameArt {
       'landmarks-forest',
       'settlement-forest',
       'village-gateway',
-      'world-desert',
       'landscape-bridge',
       'forest-trees',
       'forest-undergrowth',
@@ -203,15 +202,22 @@ class GameArt {
       'forest-quest-cave',
     },
     'sands': {
+      'forest-trees',
       'landmarks-sands',
       'settlement-sands',
-      'world-desert',
       'ruin-props',
       'desert-temple',
     },
-    'past': {'settlement-past', 'ruin-props', 'landmarks-past', 'field-paving'},
+    'past': {
+      'forest-trees',
+      'settlement-past',
+      'ruin-props',
+      'landmarks-past',
+      'field-paving',
+    },
     'future': {'settlement-future', 'cyber-props', 'landmarks-future'},
     'tombs': {
+      'forest-trees',
       'settlement-tombs',
       'ruin-props',
       'landmarks-tombs',
@@ -219,6 +225,7 @@ class GameArt {
     },
     'foundry': {'settlement-foundry', 'cyber-props', 'landmarks-foundry'},
     'convergence': {
+      'forest-trees',
       'field-paving',
       'settlement-convergence',
       'ruin-props',
@@ -1118,6 +1125,20 @@ class GameArt {
       );
       return;
     }
+    if (prop.kind == 'ruin-7') {
+      final image = images['quarter-props'];
+      if (image != null) {
+        NaturalObjectArt.draw(
+          canvas,
+          image,
+          4,
+          prop.body.bottomCenter,
+          prop.drawSize.height,
+          opacity: opacity,
+        );
+      }
+      return;
+    }
     if (prop.kind.startsWith('ruin-')) {
       final image = images['ruin-props'];
       if (image == null) return;
@@ -1166,26 +1187,30 @@ class GameArt {
       return;
     }
 
-    final image =
-            images[prop.kind == 'cactus' ? 'world-desert' : 'world-forest']!,
-        cell = image.width / 4;
-    final index = prop.kind == 'tree'
-        ? 8
-        : prop.kind == 'cactus'
-        ? 1
-        : 10;
-    final feet = prop.body.bottomCenter;
-    canvas.drawImageRect(
-      image,
-      ui.Rect.fromLTWH((index % 4) * cell, (index ~/ 4) * cell, cell, cell),
-      ui.Rect.fromLTWH(
-        feet.dx - prop.drawSize.width / 2,
-        feet.dy - prop.drawSize.height * .88,
-        prop.drawSize.width,
-        prop.drawSize.height,
-      ),
-      ui.Paint()..color = ui.Color.fromRGBO(255, 255, 255, opacity),
-    );
+    if (prop.kind == 'rock' || prop.kind == 'cactus') {
+      final image = images['quarter-props'];
+      if (image != null) {
+        NaturalObjectArt.draw(
+          canvas,
+          image,
+          prop.kind == 'rock' ? 2 : 3,
+          prop.body.bottomCenter,
+          prop.drawSize.height,
+          maxWidth: prop.kind == 'rock' ? prop.drawSize.width : null,
+        );
+      }
+    } else if (prop.kind == 'tree') {
+      final image = images['forest-trees'];
+      if (image != null) {
+        ForestTreeArt.draw(
+          canvas,
+          image,
+          prop.body.bottomCenter,
+          0,
+          opacity: opacity,
+        );
+      }
+    }
   }
 
   bool face(ui.Canvas canvas, HeroClass heroClass, ui.Rect destination) {

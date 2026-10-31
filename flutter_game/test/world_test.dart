@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guardian_new/bridge_art.dart';
 import 'package:guardian_new/world_model.dart';
 
 void main() {
@@ -115,18 +116,18 @@ void main() {
       true,
     );
     for (final size in [const Size(24, 22), const Size(44, 32)]) {
-      final from = Offset(center.dx - 500, center.dy - size.height / 2);
-      final to = from + const Offset(1000, 0);
-      expect(
-        world.clearLine(from, to, size),
-        true,
-        reason: 'shore-to-shore clearance must agree with the visible bridge',
-      );
-      expect(world.clearLine(to, from, size), true);
+      final half = Offset(size.width / 2, size.height / 2);
+      final path = QuarterViewBridgeArt.approach(world.bridge);
+      for (var i = 1; i < path.length; i++) {
+        final from = path[i - 1] - half, to = path[i] - half;
+        expect(world.clearLine(from, to, size), true);
+        expect(world.clearLine(to, from, size), true);
+        expect(
+          (world.move(from, to - from, size) - to).distance,
+          lessThan(.01),
+        );
+      }
     }
-    var p = Offset(center.dx - 500, center.dy - 11);
-    p = world.move(p, const Offset(1000, 0), const Size(24, 22));
-    expect(p.dx, closeTo(center.dx + 500, .01));
   });
   test('the enlarged village east road crosses a visible full-body bridge', () {
     final world = AdventureWorld();
@@ -142,14 +143,21 @@ void main() {
       const Size(44, 32),
       const Size(48, 40),
     ]) {
-      final from = Offset(east.left - 100, east.center.dy - size.height / 2);
-      final to = Offset(east.right + 100, from.dy);
-      expect(world.clearLine(from, to, size), true);
-      expect(world.clearLine(to, from, size), true);
-      final end = world.move(from, to - from, size);
-      expect((end - to).distance, lessThan(.01));
-      final back = world.move(to, from - to, size);
-      expect((back - from).distance, lessThan(.01));
+      final half = Offset(size.width / 2, size.height / 2);
+      final path = QuarterViewBridgeArt.approach(east);
+      for (var i = 1; i < path.length; i++) {
+        final from = path[i - 1] - half, to = path[i] - half;
+        expect(world.clearLine(from, to, size), true);
+        expect(world.clearLine(to, from, size), true);
+        expect(
+          (world.move(from, to - from, size) - to).distance,
+          lessThan(.01),
+        );
+        expect(
+          (world.move(to, from - to, size) - from).distance,
+          lessThan(.01),
+        );
+      }
     }
   });
   test(

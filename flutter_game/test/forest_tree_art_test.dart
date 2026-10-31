@@ -26,7 +26,7 @@ void main() {
       );
       final tree = WoodlandProp(s, prop);
       final body = s.hero.body.size;
-      final leaf = feet + const Offset(170, -80);
+      final leaf = feet + const Offset(-190, -130);
       s.hero.position.setValues(
         leaf.dx - body.width / 2,
         leaf.dy - body.height / 2,

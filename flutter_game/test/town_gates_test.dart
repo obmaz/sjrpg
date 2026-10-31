@@ -10,17 +10,20 @@ void main() {
     for (final entry in world.authoredSettlement.gatePaths.asMap().entries) {
       final name = 'gate-${entry.key}';
       final half = Offset(size.width / 2, size.height / 2);
-      final start = entry.value.first - half, end = entry.value.last - half;
+      final route = world.trails.firstWhere(
+        (t) => (t.points.first - entry.value.first).distance < .1,
+      );
       test('$name village gate admits a complete $size body', () {
-        expect(world.clearLine(start, end, size), true);
-        var current = start;
-        final step = (end - start) / 100;
-        for (var i = 0; i < 100; i++) {
-          current = world.move(current, step, size);
-          expect(world.blocked(current & size), false);
+        for (var i = 1; i < route.points.length; i++) {
+          final start = route.points[i - 1] - half,
+              end = route.points[i] - half;
+          expect(world.clearLine(start, end, size), true);
+          expect(
+            (world.move(start, end - start, size) - end).distance,
+            lessThan(.01),
+          );
+          expect(world.clearLine(end, start, size), true);
         }
-        expect((current - end).distance, lessThan(.01));
-        expect(world.clearLine(end, start, size), true);
       });
     }
   }

@@ -15,6 +15,8 @@ import 'barbarian_vfx.dart' show BarbarianVfxKind;
 import 'battle_effects.dart';
 import 'boss_attacks.dart';
 import 'boss_sprite_mesh.dart';
+import 'bridge_art.dart';
+import 'bridge_rail.dart';
 import 'combat_balance.dart';
 import 'combat_feedback.dart';
 import 'combat_numbers.dart';
@@ -44,6 +46,7 @@ import 'melee_weapon_art.dart';
 import 'mobility_motion.dart';
 import 'mount_projectile.dart';
 import 'mount_sprite_mesh.dart';
+import 'natural_object_art.dart';
 import 'physical_aim_preview.dart';
 import 'player_affliction_art.dart';
 import 'player_afflictions.dart';
@@ -1493,7 +1496,22 @@ class Adventure extends ChangeNotifier {
     game = ref;
     ready = true;
     if (dungeon == null && world.stage == WorldStage.forest) {
+      for (final bridge in world.bridges) {
+        for (var strip = 0; strip < QuarterViewBridgeArt.stripCount; strip++) {
+          for (final front in [false, true]) {
+            if (QuarterViewBridgeArt.railBounds(
+              bridge,
+              strip,
+              front: front,
+            ).isEmpty) {
+              continue;
+            }
+            ref.add(BridgeRail(this, bridge, strip, front: front));
+          }
+        }
+      }
       ref.add(VillageGate(art, world));
+      ref.add(VillageGate(art, world, right: true));
       for (final site in world.sites) {
         ref.add(ForestQuestStructure(this, site));
       }
@@ -6357,6 +6375,9 @@ class WoodlandProp extends GameComponent with EffectVisibility {
   @override
   ui.Rect get effectBounds {
     final feet = prop.body.bottomCenter;
+    if (prop.kind == 'ruin-7') {
+      return NaturalObjectArt.bounds(4, feet, prop.drawSize.height).inflate(2);
+    }
     final undergrowth = ForestUndergrowthArt.variantOf(prop.kind);
     if (undergrowth != null) {
       return ForestUndergrowthArt.bounds(
@@ -6383,6 +6404,9 @@ class WoodlandProp extends GameComponent with EffectVisibility {
     // whole image on proximity changes the ground's color in front of the hero.
     if (prop.landmark != null) return false;
     final hero = session.hero.body;
+    if (prop.kind == 'ruin-7') {
+      return prop.body.bottom > hero.bottom && effectBounds.overlaps(hero);
+    }
     if (prop.treeVariant != null) {
       final bounds = ForestTreeArt.drawBounds(
         prop.body.bottomCenter,
@@ -6416,7 +6440,7 @@ class WoodlandProp extends GameComponent with EffectVisibility {
 
   @override
   bool get isVisible => gameRef.camera.visibleWorldRect.overlaps(
-    prop.treeVariant != null
+    prop.treeVariant != null || prop.kind == 'ruin-7'
         ? effectBounds
         : prop.landmark?.drawBounds ?? prop.body.inflate(230),
   );

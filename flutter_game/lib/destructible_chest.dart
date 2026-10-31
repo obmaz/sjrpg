@@ -5,6 +5,7 @@ import 'package:bonfire/bonfire.dart';
 
 import 'adventure.dart';
 import 'effect_visibility.dart';
+import 'natural_object_art.dart';
 
 class DestructibleChest extends GameComponent {
   DestructibleChest(this.session, this.index) {
@@ -56,37 +57,16 @@ class DestructibleChest extends GameComponent {
       const ui.Rect.fromLTWH(-25, 3, 50, 14),
       paint..color = const ui.Color(0x550a201a),
     );
-    if (opened) {
-      for (var i = 0; i < 4; i++) {
-        canvas.save();
-        canvas.translate((i - 1.5) * 12, i.isEven ? 0 : 6);
-        canvas.rotate((i - 1.5) * .22);
-        canvas.drawRect(
-          const ui.Rect.fromLTWH(-8, -9, 16, 10),
-          paint..color = const ui.Color(0xff714d2c),
-        );
-        canvas.drawLine(
-          const ui.Offset(-6, -8),
-          const ui.Offset(6, -8),
-          paint
-            ..color = const ui.Color(0xffb38d4c)
-            ..strokeWidth = 2,
-        );
-        canvas.restore();
-      }
-    } else {
-      final image = session.art.images['world-forest'];
-      if (image != null) {
-        final cell = image.width / 4;
-        canvas.drawImageRect(
-          image,
-          ui.Rect.fromLTWH(cell * 3, cell * 2, cell, cell),
-          const ui.Rect.fromLTWH(-38, -58, 76, 76),
-          paint
-            ..color = const ui.Color(0xffffffff)
-            ..filterQuality = ui.FilterQuality.medium,
-        );
-      }
+    final image = session.art.images['quarter-props'];
+    if (image != null) {
+      NaturalObjectArt.draw(
+        canvas,
+        image,
+        opened ? 1 : 0,
+        const ui.Offset(0, 12),
+        opened ? 36 : 58,
+        maxWidth: 76,
+      );
     }
     return recorder.endRecording();
   }

@@ -2,13 +2,13 @@ import 'dart:ui' as ui;
 
 import 'world_model.dart';
 
-/// Measured crops in the shared atlas, with the pointed body tip as the anchor.
+/// Measured crops in the shared atlas, with the grounded plinth contact as the anchor.
 class EncounterBeaconFrame {
   EncounterBeaconFrame(this.source, this.tip, double bodyHeight)
     : scale = 56 / bodyHeight,
       destination = ui.Rect.fromLTWH(
         -tip.dx * 56 / bodyHeight,
-        -6 - tip.dy * 56 / bodyHeight,
+        -tip.dy * 56 / bodyHeight,
         source.width * 56 / bodyHeight,
         source.height * 56 / bodyHeight,
       );
@@ -19,7 +19,7 @@ class EncounterBeaconFrame {
   final ui.Rect destination;
 }
 
-/// Fixed, irregular source regions are shared by every non-solid encounter mark.
+/// Fixed, irregular source regions are shared by every solid encounter milestone.
 abstract final class EncounterBeaconArt {
   static const hintTextOrigin = ui.Offset(-80, -84);
   static const hintBounds = ui.Rect.fromLTRB(-86, -86, 86, -66);
@@ -31,44 +31,44 @@ abstract final class EncounterBeaconArt {
   // Each pair shares a reference height so changing state never resizes it.
   static final _frames = <EncounterBeaconFrame>[
     EncounterBeaconFrame(
-      const ui.Rect.fromLTRB(295, 66, 442, 316),
-      const ui.Offset(67.076923, 243),
-      237,
+      const ui.Rect.fromLTWH(0, 0, 256, 256),
+      const ui.Offset(151.79591837, 242),
+      227.5,
     ),
     EncounterBeaconFrame(
-      const ui.Rect.fromLTRB(832, 66, 984, 316),
-      const ui.Offset(69.928571, 243),
-      237,
+      const ui.Rect.fromLTWH(256, 0, 256, 256),
+      const ui.Offset(152.04347826, 241),
+      227.5,
     ),
     EncounterBeaconFrame(
-      const ui.Rect.fromLTRB(278, 365, 452, 616),
-      const ui.Offset(86.358974, 245),
-      238,
+      const ui.Rect.fromLTWH(0, 256, 256, 256),
+      const ui.Offset(145.20000000, 241),
+      226.0,
     ),
     EncounterBeaconFrame(
-      const ui.Rect.fromLTRB(818, 365, 993, 616),
-      const ui.Offset(86.756757, 245),
-      238,
+      const ui.Rect.fromLTWH(256, 256, 256, 256),
+      const ui.Offset(144.73239437, 242),
+      226.0,
     ),
     EncounterBeaconFrame(
-      const ui.Rect.fromLTRB(286, 654, 443, 909),
-      const ui.Offset(78.205882, 249),
-      242.5,
+      const ui.Rect.fromLTWH(0, 512, 256, 256),
+      const ui.Offset(152.26086957, 241),
+      226.0,
     ),
     EncounterBeaconFrame(
-      const ui.Rect.fromLTRB(826, 654, 985, 909),
-      const ui.Offset(78.588235, 249),
-      242.5,
+      const ui.Rect.fromLTWH(256, 512, 256, 256),
+      const ui.Offset(151.55384615, 241),
+      226.0,
     ),
     EncounterBeaconFrame(
-      const ui.Rect.fromLTRB(284, 943, 446, 1188),
-      const ui.Offset(79.358974, 238),
-      231.5,
+      const ui.Rect.fromLTWH(0, 768, 256, 256),
+      const ui.Offset(144.87804878, 242),
+      226.5,
     ),
     EncounterBeaconFrame(
-      const ui.Rect.fromLTRB(825, 943, 988, 1188),
-      const ui.Offset(79.344828, 239),
-      231.5,
+      const ui.Rect.fromLTWH(256, 768, 256, 256),
+      const ui.Offset(145.01960784, 241),
+      226.5,
     ),
   ];
 
@@ -84,7 +84,7 @@ abstract final class EncounterBeaconArt {
   }) {
     final region = frame(stage, ready: ready);
     paint
-      ..color = ui.Color.fromRGBO(255, 255, 255, ready ? .85 : .55)
+      ..color = ui.Color.fromRGBO(255, 255, 255, 1)
       ..filterQuality = ui.FilterQuality.medium;
     canvas.drawImageRect(image, region.source, region.destination, paint);
   }

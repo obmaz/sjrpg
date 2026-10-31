@@ -248,7 +248,15 @@ void main() {
     );
   }
 
-  for (final kind in ['tree', 'rock', 'cactus', 'ruin-0', 'city-0', 'relay']) {
+  for (final kind in [
+    'tree',
+    'rock',
+    'cactus',
+    'ruin-0',
+    'ruin-7',
+    'city-0',
+    'relay',
+  ]) {
     test('$kind crown remains visible above an offscreen prop body', () async {
       final game = _Game(), s = session(game);
       final prop = _Prop(
@@ -262,7 +270,9 @@ void main() {
       await expectSameVisiblePixels(
         game,
         prop,
-        const ui.Rect.fromLTWH(5900, 3950, 250, 150),
+        kind == 'rock'
+            ? const ui.Rect.fromLTWH(5900, 4140, 250, 60)
+            : const ui.Rect.fromLTWH(5900, 3950, 250, 150),
       );
     });
   }

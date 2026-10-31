@@ -94,7 +94,7 @@ void main() {
   tearDownAll(() => atlas.dispose());
 
   test(
-    'all eight measured crops preserve transparent edges and pointed anchors',
+    'all eight measured crops preserve transparent edges and grounded plinth anchors',
     () {
       final crops = <ui.Rect>{};
       for (final stage in WorldStage.values) {
@@ -136,7 +136,7 @@ void main() {
           );
           expect(
             frame.destination.top + bottom * frame.scale,
-            closeTo(-6, .000001),
+            closeTo(0, .000001),
           );
           expect((bottom - top) * frame.scale, closeTo(56, .2));
           expect(
@@ -164,7 +164,7 @@ void main() {
   );
 
   test(
-    'actual eight sprites differ and ready opacity stays isolated per draw',
+    'eight grounded milestones keep opaque plinths while the rune state changes',
     () async {
       final signatures = <String>{};
       final paint = ui.Paint();
@@ -191,7 +191,8 @@ void main() {
           alphas.add(maxAlpha);
           signatures.add('$hash');
         }
-        expect(alphas, [closeTo(140, 1), closeTo(217, 1), closeTo(140, 1)]);
+        expect(alphas, everyElement(greaterThan(248)));
+        expect(alphas.first, alphas.last);
       }
       expect(signatures.length, 8);
     },

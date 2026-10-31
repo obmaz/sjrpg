@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'bridge_art.dart';
 import 'field_landmark.dart';
 import 'field_landscape.dart';
 import 'world_model.dart';
@@ -108,7 +109,10 @@ class TerrainMapPlan {
     // Bridges cross the real water mask, so their plan must be painted after
     // leaving the dry-land clip, just as their world artwork is.
     for (final bridge in world.bridges) {
-      canvas.drawRect(bridge, Paint()..color = const Color(0xffc0b28c));
+      canvas.drawPath(
+        QuarterViewBridgeArt.floorPath(bridge),
+        Paint()..color = const Color(0xffc0b28c),
+      );
     }
 
     for (final landmark in world.landmarks) {

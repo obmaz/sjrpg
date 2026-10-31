@@ -1,0 +1,82 @@
+{
+    "reference": "docs/art/quarter-view-abbey/abbey-original.png",
+    "camera": "Elevated front-left three-quarter view, visible top and receding side faces, upper-left daylight. Ground axes follow the structure; independent object yaw is retained.",
+    "families": [
+        {
+            "images": ["landscape-bridge"],
+            "projection": "Measured native sloping deck and arch piers",
+            "placement": "QuarterViewBridgeArt; BridgeRail; shared floor/solid/map polygons"
+        },
+        {
+            "images": ["forest-trees"],
+            "projection": "Nine independent oak/fir/willow crowns with measured root contacts",
+            "placement": "ForestTreeArt; all wooded stages, ecological size/species masks"
+        },
+        {
+            "images": ["quarter-props"],
+            "projection": "Five measured three-quarter objects: chest, broken chest, limestone rock, cactus, date palm",
+            "placement": "NaturalObjectArt; source aspect and grounded bases"
+        },
+        {
+            "images": ["encounter-beacons"],
+            "projection": "Four pairs of grounded three-dimensional milestones with separate rune states",
+            "placement": "EncounterBeaconArt; opaque plinth, measured ground contact"
+        },
+        {
+            "images": ["village-gateway"],
+            "projection": "Oblique slate roof and stone piers, open transparent passage",
+            "placement": "VillageGatewayArt; per-pier depth and door/pier collision"
+        },
+        {
+            "images": ["forest-quest-chapel", "forest-quest-cottage", "forest-quest-cave"],
+            "projection": "Visible roof/rock tops and receding sides",
+            "placement": "ForestQuestStructureArt; native footprint/NPC/terrace coordinates"
+        },
+        {
+            "images": [
+                "settlement-forest",
+                "settlement-sands",
+                "settlement-past",
+                "settlement-future",
+                "settlement-tombs",
+                "settlement-foundry",
+                "settlement-convergence"
+            ],
+            "projection": "Elevated three-quarter settlement scenes with dimensional buildings and gates",
+            "placement": "AuthoredSettlement; measured scene service points and collision polygons"
+        },
+        {
+            "images": [
+                "landmarks-forest",
+                "landmarks-sands",
+                "landmarks-past",
+                "landmarks-future",
+                "landmarks-tombs",
+                "landmarks-foundry",
+                "landmarks-convergence"
+            ],
+            "projection": "28 elevated formations with rock/architectural side depth",
+            "placement": "FieldLandmark; native ground contours and LandmarkTerrace access edges"
+        },
+        {
+            "images": ["well-portal"],
+            "projection": "Sixteen native views of one quarter-view stone portal with visible right thickness",
+            "placement": "WellPortal; shared solid base and source animation anchor"
+        },
+        {
+            "images": ["quest-sites", "time-sites"],
+            "projection": "Three well/altar and eight themed site silhouettes with elevated elliptical bases",
+            "placement": "GameArt.landmark; existing site geometry"
+        },
+        {
+            "images": ["ruin-props", "cyber-props", "desert-temple"],
+            "projection": "Oblique tops and side faces for ruins, technology and four measured sandstone remnants",
+            "placement": "WorldProp; DesertTempleArt; natural palm overrides the older ruin-7 frame"
+        },
+        {
+            "images": ["cave-entrances", "cave-rock"],
+            "projection": "Six three-quarter entrances; nondirectional rock material on procedural cave faces",
+            "placement": "DungeonEntranceArt and DungeonPainting geometry"
+        }
+    ]
+}

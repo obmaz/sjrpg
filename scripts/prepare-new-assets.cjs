@@ -8,8 +8,6 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'actors-villagers',
         'village-scene',
         'landscape-materials',
-        'world-forest',
-        'world-desert',
         'controls',
         'atlas',
     ];
@@ -47,6 +45,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'cave-entrances',
         'cave-rock',
         'landscape-bridge',
+        'quarter-props',
         'forest-trees',
         'forest-undergrowth',
         'forest-quest-chapel',
@@ -164,6 +163,8 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         path.join(root, 'flutter_game/art/hero-helmeted-roll.png'),
         path.join(destination, 'images/actors-roll.png'),
     );
+    for (const retired of ['world-forest', 'world-desert'])
+        fs.rmSync(path.join(destination, `images/${retired}.webp`), { force: true });
     const repaired = Object.fromEntries(
         [
             ['hero', 'hero-helmeted'],

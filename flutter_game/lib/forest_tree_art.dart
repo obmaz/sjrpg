@@ -23,48 +23,48 @@ abstract final class ForestTreeArt {
   static const speciesNames = ['oak', 'fir', 'willow'];
   static const frames = <ForestTreeFrame>[
     ForestTreeFrame(
-      ui.Rect.fromLTWH(140, 278, 199, 194),
-      ui.Offset(253, 467),
+      ui.Rect.fromLTWH(33, 5, 414, 470),
+      ui.Offset(238.0096, 468.0297),
       200,
     ),
     ForestTreeFrame(
-      ui.Rect.fromLTWH(562, 171, 315, 301),
-      ui.Offset(718, 467),
+      ui.Rect.fromLTWH(505, 5, 429, 470),
+      ui.Offset(739.8926, 469.7106),
       300,
     ),
     ForestTreeFrame(
-      ui.Rect.fromLTWH(970, 78, 459, 394),
-      ui.Offset(1209, 467),
+      ui.Rect.fromLTWH(988, 5, 423, 470),
+      ui.Offset(1221.0579, 470.9232),
       400,
     ),
     ForestTreeFrame(
-      ui.Rect.fromLTWH(153, 739, 174, 213),
-      ui.Offset(241, 947),
+      ui.Rect.fromLTWH(66, 485, 348, 470),
+      ui.Offset(245.6585, 948.3936),
       200,
     ),
     ForestTreeFrame(
-      ui.Rect.fromLTWH(590, 634, 260, 318),
-      ui.Offset(709, 948),
+      ui.Rect.fromLTWH(548, 485, 343, 470),
+      ui.Offset(718.8028, 950.1187),
       300,
     ),
     ForestTreeFrame(
-      ui.Rect.fromLTWH(1047, 537, 305, 415),
-      ui.Offset(1192, 947),
+      ui.Rect.fromLTWH(1031, 485, 337, 470),
+      ui.Offset(1202.3130, 951.0646),
       400,
     ),
     ForestTreeFrame(
-      ui.Rect.fromLTWH(129, 1219, 221, 213),
-      ui.Offset(210, 1427),
+      ui.Rect.fromLTWH(24, 965, 431, 470),
+      ui.Offset(242.4253, 1428.1743),
       200,
     ),
     ForestTreeFrame(
-      ui.Rect.fromLTWH(546, 1149, 347, 283),
-      ui.Offset(721, 1427),
+      ui.Rect.fromLTWH(491, 965, 458, 470),
+      ui.Offset(742.0863, 1429.5799),
       300,
     ),
     ForestTreeFrame(
-      ui.Rect.fromLTWH(987, 1105, 425, 327),
-      ui.Offset(1188, 1427),
+      ui.Rect.fromLTWH(998, 965, 403, 470),
+      ui.Offset(1251.6463, 1431.0361),
       400,
     ),
   ];
