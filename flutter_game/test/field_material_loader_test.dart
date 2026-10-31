@@ -171,6 +171,18 @@ void main() {
       bundle.offline = true;
       for (final stage in WorldStage.values) {
         await art.ensureStage(stage, heroClass: HeroClass.warrior);
+        final terrain = TerrainArt(AdventureWorld(stage: stage), art);
+        expect(
+          terrain.pavingShader != null,
+          const {
+            WorldStage.forest,
+            WorldStage.past,
+            WorldStage.tombs,
+            WorldStage.convergence,
+          }.contains(stage),
+          reason: 'cached forest paving must not change ${stage.name} roads',
+        );
+        terrain.dispose();
         expect(art.fieldMaterials, orderedEquals(shaders));
         expect([
           for (final family in _families) art.images['field-ground-$family'],

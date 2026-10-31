@@ -13,10 +13,12 @@ import 'package:guardian_new/rpg_widgets.dart';
 
 import 'support/test_game.dart';
 
-void besideWell(Adventure session) {
+void besideQuestGiver(Adventure session) {
   final site = session.world.sites.first;
-  session.hero.position.setValues(site.at.dx - 14, site.at.dy + 45);
-  withOwnedMounts(session).mounts.first.at = site.at + const Offset(65, 55);
+  final npc = session.forestQuests.npcs.firstWhere((npc) => npc.key == 'elin');
+  session.hero.position.setValues(npc.at.dx + 50 - 14, npc.at.dy - 12);
+  withOwnedMounts(session).mounts.first.at =
+      session.hero.body.center + const Offset(65, 0);
   session.travelJournal.discover(session.world.stage, site.id);
   session.waveTime = 1000;
   session.lastPackSpawn = session.elapsed;
@@ -36,7 +38,7 @@ void main() {
     () {
       final session = Adventure(GameArt())..start(TestGame());
       addTearDown(session.dispose);
-      besideWell(session);
+      besideQuestGiver(session);
       expect(session.nearbySite, isNotNull);
       expect(session.nearbyQuestGuide?.action, QuestGuideAction.talk);
       expect(session.nearbyActions, contains(NearbyAction.mount));
@@ -55,7 +57,7 @@ void main() {
     const Size(568, 320),
   ]) {
     testWidgets(
-      'scaled well guide and nearby actions preserve battle touch areas at $size',
+      'scaled NPC guide and nearby actions preserve battle touch areas at $size',
       (tester) async {
         tester.view.physicalSize = size;
         tester.view.devicePixelRatio = 1;
@@ -100,7 +102,7 @@ void main() {
           expect(session.progress.selectSkill(skills[slot], slot: slot), true);
         }
         session.progress.healingPotions = session.progress.energyPotions = 128;
-        besideWell(session);
+        besideQuestGiver(session);
         await tester.pump();
         final guide = find.byType(NearbyQuestCard);
         final controls = find.byType(NearbyControls);

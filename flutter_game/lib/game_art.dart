@@ -1261,6 +1261,14 @@ class TerrainArt {
   bool _disposed = false;
   ui.Shader? _caveRock, _grassVariants, _paving;
   ui.Shader? get pavingShader {
+    if (!const {
+      WorldStage.forest,
+      WorldStage.past,
+      WorldStage.tombs,
+      WorldStage.convergence,
+    }.contains(world.stage)) {
+      return null;
+    }
     final image = art.images['field-paving'];
     if (image == null || world.dungeon != null) return null;
     final scale = 384 / image.width;
