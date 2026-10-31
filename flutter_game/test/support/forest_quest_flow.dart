@@ -50,15 +50,36 @@ void completeForestQuest(Adventure s, String id) {
   if (r.ledger[id]!.phase == ForestQuestPhase.offered) {
     expect(r.performAction(), true, reason: '$id accepted from a person');
   }
+  if (id == 'roots') {
+    final altar = s.world.sites.firstWhere((site) => site.id == 'roots');
+    while (r.ledger[id]!.altarKills < ForestQuestProgress.altarKillGoal) {
+      final enemy = s.spawnEnemy('goblin', altar.at + const Offset(300, 100));
+      expect(
+        enemy,
+        isNotNull,
+        reason: 'the altar has a nearby combat approach',
+      );
+      expect(s.hit(enemy!, 1000000, Offset.zero, hitStop: false), true);
+    }
+  }
   expect(r.performAction(), true, reason: '$id objective starts');
   if (id == 'moon') {
     approachForestNpc(s, 'noah');
     expect(r.performAction(), true, reason: 'parcel delivered to recipient');
   } else if (id == 'sun') {
-    final threats = s.mobs.where((m) => r.saveEnemyTags(m).isNotEmpty).toList();
-    expect(threats, hasLength(3));
-    for (final enemy in threats) {
-      expect(s.hit(enemy, 1000000, Offset.zero, hitStop: false), true);
+    for (
+      var wave = 0;
+      wave < ForestQuestProgress.threatCount ~/ ForestQuestProgress.waveSize;
+      wave++
+    ) {
+      final threats = s.mobs
+          .where((m) => r.saveEnemyTags(m).isNotEmpty)
+          .toList();
+      expect(threats, hasLength(ForestQuestProgress.waveSize));
+      for (final enemy in threats) {
+        expect(s.hit(enemy, 1000000, Offset.zero, hitStop: false), true);
+      }
+      r.tick(.01);
     }
     r.tick(ForestQuestProgress.protectionDuration);
     approachForestNpc(s, 'rowen');
