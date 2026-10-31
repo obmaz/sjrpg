@@ -28,6 +28,7 @@ class _GroundArt extends GameArt {
     bool moving = false,
     int comboPose = 0,
     double? actionProgress,
+    double? enemyAttackProgress,
     Object? bossPose,
     Object? walkPose,
     Object? mountPose,
@@ -58,19 +59,19 @@ void main() {
 
   for (final kind in _kinds) {
     test(
-      '$kind contains thirty-two complete padded frames and independent gaits',
+      '$kind contains expanded padded walk and attack frames and independent gaits',
       () async {
         final record = art.actors['walk-$kind'] as Map;
         final frames = record['frames'] as List,
             anchors = record['feet'] as List;
         final image = art.images['actors-walk-$kind']!;
         expect(record['artworkWorldHeightMultiplier'], 1.5);
-        expect(frames, hasLength(32));
-        expect(anchors, hasLength(32));
+        expect(frames, hasLength(128));
+        expect(anchors, hasLength(128));
         final rgba = (await image.toByteData(
           format: ui.ImageByteFormat.rawRgba,
         ))!.buffer.asUint8List();
-        for (var i = 0; i < 32; i++) {
+        for (var i = 0; i < 128; i++) {
           final frame = (frames[i] as List).cast<num>();
           final anchor = (anchors[i] as List).cast<num>();
           expect(frame[0], greaterThanOrEqualTo(4));
@@ -78,10 +79,13 @@ void main() {
           expect(frame[0] + frame[2], lessThanOrEqualTo(image.width - 4));
           expect(frame[1] + frame[3], lessThanOrEqualTo(image.height - 4));
           expect(anchor[0], inInclusiveRange(frame[0], frame[0] + frame[2]));
-          expect(anchor[1], inInclusiveRange(frame[1], frame[1] + frame[3]));
+          expect(
+            anchor[1],
+            inInclusiveRange(frame[1], frame[1] + frame[3] + 32),
+          );
         }
         final hashes = <int>{};
-        for (final raw in frames) {
+        for (final raw in frames.take(64)) {
           final frame = (raw as List).cast<int>();
           final pixels = <int>[];
           for (var y = frame[1]; y < frame[1] + frame[3]; y++) {
@@ -96,8 +100,8 @@ void main() {
         }
         expect(
           hashes,
-          hasLength(32),
-          reason: '$kind has thirty-two native bearing and gait samples',
+          hasLength(64),
+          reason: '$kind has sixty-four bearing and gait samples',
         );
       },
     );

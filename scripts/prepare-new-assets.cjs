@@ -89,6 +89,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'd1-interface',
         'cinematic-interface',
         'reference-battle-buttons',
+        'level-badge',
         'mount-skill-icons',
         'monster-corpses',
         'actors-walk-goblin',

@@ -325,8 +325,15 @@ class ForestQuestRuntime {
     }
     if (q.phase == ForestQuestPhase.accepted &&
         q.definition.kind == ForestQuestKind.cleanse &&
-        !_siteClear('roots')) {
-      return '예배당 주변의 적을 먼저 정리하세요.';
+        (q.altarKills < ForestQuestProgress.altarKillGoal ||
+            !_siteClear('roots'))) {
+      return '예배당 주변 적 ${q.altarKills}/${ForestQuestProgress.altarKillGoal} · 남은 적을 정리하세요.';
+    }
+    if (q.phase == ForestQuestPhase.accepted &&
+        npc.key == 'noah' &&
+        q.hasParcel &&
+        !_siteClear('moon')) {
+      return '오두막 주변의 적을 정리한 뒤 안전하게 약초를 전달하세요.';
     }
     if ((q.phase == ForestQuestPhase.accepted ||
             q.phase == ForestQuestPhase.failed) &&
@@ -349,7 +356,7 @@ class ForestQuestRuntime {
     if (q.phase == ForestQuestPhase.failed) {
       return switch (q.failure) {
         ForestQuestFailure.defenderFallen =>
-          '조사관이 쓰러져 조사를 중단했습니다. 다시 준비하면 새 습격자 세 명이 나타납니다.',
+          '조사관이 쓰러져 조사를 중단했습니다. 다시 준비하면 6마리씩 다섯 차례, 총 30마리의 습격이 다시 시작됩니다.',
         ForestQuestFailure.abandoned =>
           '보호 구역을 벗어나 조사를 중단했습니다. 돌아와 다시 준비해 주세요.',
         _ => '습격자를 배치할 길이 막혀 조사를 중단했습니다. 현장을 정리한 뒤 다시 준비해 주세요.',
@@ -409,27 +416,57 @@ class ForestQuestRuntime {
     if (!ledger.beginProtection()) {
       return false;
     }
-    final at = defenderAt;
-    if (at == null || session.living + 3 > CombatBalance.maxActiveEnemies) {
-      _fail(ForestQuestFailure.blocked);
-      return false;
+    if (!_fillProtectionWave()) return false;
+    session.announce('조사관 보호 시작 · 90초 동안 6마리씩 다섯 차례, 총 30마리를 막으세요.');
+    return true;
+  }
+
+  bool _fillProtectionWave() {
+    final q = ledger['sun']!, at = defenderAt;
+    if (!q.protectionActive || at == null) return false;
+    final owned = {
+      ..._threats.values.map((tag) => tag.token),
+      ...session.dormantEnemies
+          .where((raw) => raw['forestGuardAttempt'] == q.attempt)
+          .map((raw) => raw['forestGuardToken'])
+          .whereType<int>(),
+    };
+    final missing = q.activeThreatTokens
+        .where((token) => !owned.contains(token))
+        .toList();
+    if (missing.isEmpty) return true;
+    if (session.living + missing.length > CombatBalance.maxActiveEnemies) {
+      return true;
     }
-    final attempt = ledger['sun']!.attempt;
-    for (var token = 0; token < ForestQuestProgress.threatCount; token++) {
-      final angle = -.7 + token * math.pi * 2 / 3;
+    for (final token in missing) {
+      final angle =
+          -.7 +
+          (token % ForestQuestProgress.waveSize) *
+              math.pi *
+              2 /
+              ForestQuestProgress.waveSize +
+          (token ~/ ForestQuestProgress.waveSize) * .35;
+      final kind = const [
+        'goblin',
+        'wolf',
+        'goblin',
+        'skeleton',
+        'wolf',
+        'cultist',
+      ][token % ForestQuestProgress.waveSize];
       final enemy = session.spawnEnemy(
-        token == 1 ? 'wolf' : 'goblin',
-        at + ui.Offset(math.cos(angle), math.sin(angle)) * 260,
+        kind,
+        at + ui.Offset(math.cos(angle), math.sin(angle)) * 340,
         reserveSpacing: true,
       );
       if (enemy == null) {
         _fail(ForestQuestFailure.blocked);
         return false;
       }
-      _threats[enemy] = _ForestThreat(token, attempt);
+      _threats[enemy] = _ForestThreat(token, q.attempt);
       enemy.encounterKey = null;
     }
-    session.announce('조사관 보호 시작 · 30초 동안 습격자 세 명을 막으세요.');
+    session.refresh();
     return true;
   }
 
@@ -470,6 +507,7 @@ class ForestQuestRuntime {
       _fail(ForestQuestFailure.blocked);
       return;
     }
+    if (!_fillProtectionWave()) return;
     ledger.advanceProtection(
       dt,
       defenderPresent:
@@ -483,6 +521,14 @@ class ForestQuestRuntime {
   }
 
   void onEnemyDefeated(HuntEnemy enemy) {
+    if (enabled &&
+        !enemy.boss &&
+        (enemy.body.center -
+                    session.world.sites.firstWhere((s) => s.id == 'roots').at)
+                .distance <
+            1200) {
+      ledger.recordAltarKill();
+    }
     final tag = _threats.remove(enemy);
     if (tag == null) return;
     ledger.recordThreatDefeated(tag.token, attempt: tag.attempt);
@@ -649,7 +695,7 @@ class ForestQuestRuntime {
     final windup = raw['forestGuardWindup'] ?? 0;
     if (token is! int ||
         token < 0 ||
-        token >= 3 ||
+        token >= ForestQuestProgress.threatCount ||
         attempt is! int ||
         attempt != ledger['sun']!.attempt ||
         !protectionActive ||

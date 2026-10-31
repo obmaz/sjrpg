@@ -25,6 +25,7 @@ class _FeetArt extends GameArt {
     bool moving = false,
     int comboPose = 0,
     double? actionProgress,
+    double? enemyAttackProgress,
     Object? bossPose,
     Object? walkPose,
     Object? mountPose,
@@ -59,7 +60,7 @@ void main() {
   });
 
   test(
-    'real viper atlas covers eight facings and four distinct complete poses',
+    'real viper atlas covers eight facings and eight distinct complete walk poses and attack clip',
     () async {
       final data =
           jsonDecode(await rootBundle.loadString('assets/art.json')) as Map;
@@ -72,10 +73,10 @@ void main() {
       codec.dispose();
       addTearDown(image.dispose);
       final frames = record['frames'] as List, feet = record['feet'] as List;
-      expect(frames, hasLength(32));
-      expect(feet, hasLength(32));
+      expect(frames, hasLength(128));
+      expect(feet, hasLength(128));
       expect(record['artworkWorldHeightMultiplier'], 1.5);
-      for (var i = 0; i < 32; i++) {
+      for (var i = 0; i < 128; i++) {
         final f = (frames[i] as List).cast<num>();
         expect(f[0], greaterThanOrEqualTo(4));
         expect(f[1], greaterThanOrEqualTo(4));
@@ -85,13 +86,13 @@ void main() {
         expect(f[3], greaterThan(80));
         final anchor = (feet[i] as List).cast<num>();
         expect(anchor[0], inInclusiveRange(f[0], f[0] + f[2]));
-        expect(anchor[1], inInclusiveRange(f[1], f[1] + f[3]));
+        expect(anchor[1], inInclusiveRange(f[1], f[1] + f[3] + 32));
       }
       final hashes = <int>{};
       final rgba = (await image.toByteData(
         format: ui.ImageByteFormat.rawRgba,
       ))!.buffer.asUint8List();
-      for (final raw in frames) {
+      for (final raw in frames.take(64)) {
         final frame = (raw as List).cast<int>();
         final pixels = <int>[];
         for (var y = frame[1]; y < frame[1] + frame[3]; y++) {
@@ -106,7 +107,7 @@ void main() {
       }
       expect(
         hashes,
-        hasLength(32),
+        hasLength(64),
         reason: 'every facing and contact pose has native artwork',
       );
 

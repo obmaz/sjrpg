@@ -20,6 +20,7 @@ class PoseArt extends GameArt {
     bool moving = false,
     int comboPose = 0,
     double? actionProgress,
+    double? enemyAttackProgress,
     Object? bossPose,
     Object? walkPose,
     Object? mountPose,

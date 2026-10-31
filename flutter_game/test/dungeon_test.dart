@@ -38,6 +38,25 @@ void main() {
     return instance;
   }
 
+  test('owned mounts cannot spawn, summon or board inside a cave', () {
+    final field = withOwnedMounts(outside(WorldStage.forest));
+    final instance = enter(field);
+    expect(instance.mounts, isEmpty);
+    instance.spawnOwnedMounts();
+    expect(instance.mounts, isEmpty);
+    for (final id in ['horse', 'bicycle', 'motor', 'boat']) {
+      expect(instance.summonMount(id), false);
+    }
+    // Even an accidentally injected nearby mount cannot bypass the model rule.
+    final horse = field.mounts.firstWhere((m) => m.def.artKey == 'horse');
+    horse.at = instance.hero.body.center;
+    instance.mounts.add(horse);
+    expect(instance.nearbyMount, isNull);
+    expect(instance.boardNearbyMount(), false);
+    expect(instance.riding, isNull);
+    expect(instance.nearMountMerchant, false);
+  });
+
   for (final stage in WorldStage.values) {
     test(
       '${stage.name} has an accessible, isolated cave with fixed level enemies',

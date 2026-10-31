@@ -207,6 +207,45 @@ class GameHud extends StatelessWidget {
             ),
           ),
           Positioned(
+            left: 2,
+            top: 2,
+            child: Semantics(
+              label: '현재 레벨 ${p.level}',
+              child: SizedBox(
+                key: const ValueKey('hud-level-badge'),
+                width: 26,
+                height: 26,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    if (session.art.images['level-badge'] case final image?)
+                      RawImage(
+                        image: image,
+                        width: 26,
+                        height: 26,
+                        filterQuality: FilterQuality.medium,
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.all(5),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          '${p.level}',
+                          style: const TextStyle(
+                            color: cream,
+                            fontSize: 12,
+                            height: 1,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
             left: landscape ? 10 : 116,
             top: landscape
                 ? math.max(
@@ -592,6 +631,11 @@ class MapPainter extends CustomPainter {
   final Adventure session;
   final bool round;
   final double markerScale;
+  Rect get viewBounds =>
+      session.dungeon?.layout.bounds ??
+      (round
+          ? localMapBounds(session.hero.body.center)
+          : (Offset.zero & worldSize));
   @override
   void paint(Canvas c, Size s) {
     final rect = Offset.zero & s;
@@ -600,9 +644,7 @@ class MapPainter extends CustomPainter {
     c.drawRect(rect, Paint()..color = const Color(0xff102a29));
     c.save();
     c.clipRect(rect);
-    final view = round
-        ? localMapBounds(session.hero.body.center)
-        : session.dungeon?.layout.bounds ?? (Offset.zero & worldSize);
+    final view = viewBounds;
     c.scale(s.width / view.width, s.height / view.height);
     c.translate(-view.left, -view.top);
     c.clipRect(Offset.zero & worldSize);
@@ -620,14 +662,16 @@ class MapPainter extends CustomPainter {
         unitsPerPixel: view.width / s.width * (round ? 1 : markerScale),
       );
     }
-    final sanctuary = session.world.sanctuary;
-    c.drawPath(
-      sanctuary.boundaryPath,
-      Paint()
-        ..color = const Color(0xffc2b18a).withValues(alpha: round ? .8 : .45)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = (round ? 18 : 30 * markerScale),
-    );
+    if (session.dungeon == null) {
+      final sanctuary = session.world.sanctuary;
+      c.drawPath(
+        sanctuary.boundaryPath,
+        Paint()
+          ..color = const Color(0xffc2b18a).withValues(alpha: round ? .8 : .45)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = (round ? 18 : 30 * markerScale),
+      );
+    }
     c.restore();
     Offset project(Offset at) => Offset(
       (at.dx - view.left) / view.width * s.width,
@@ -674,7 +718,7 @@ class MapPainter extends CustomPainter {
         );
       }
     }
-    if (!round && markerScale <= 2.0) {
+    if (session.dungeon == null && !round && markerScale <= 2.0) {
       for (final landmark in session.world.landmarks) {
         final labelAt =
             project(landmark.footprint.bottomCenter) +

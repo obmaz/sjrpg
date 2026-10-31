@@ -64,11 +64,12 @@ void main() {
         expect(atlas.contains(frame.source.topLeft), true);
         expect(atlas.contains(frame.source.bottomRight), true);
         expect(frame.source.contains(frame.foot), true);
-        expect(frame.source.height, greaterThan(frame.height));
+        expect(frame.scale, lessThan(1.3));
+        expect(frame.height, [200, 300, 400][i % 3]);
         final bounds = ForestTreeArt.drawBounds(feet, i);
         expect(bounds.top, feet.dy - frame.height);
         expect(bounds.bottom, greaterThanOrEqualTo(feet.dy));
-        expect(bounds.bottom - feet.dy, lessThan(5));
+        expect(bounds.bottom - feet.dy, lessThan(8));
         final rootX =
             bounds.left + (frame.foot.dx - frame.source.left) * frame.scale;
         expect(rootX, closeTo(feet.dx, 1e-8));

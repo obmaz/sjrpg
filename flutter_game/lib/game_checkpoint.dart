@@ -675,8 +675,8 @@ class GameCheckpoint {
             !defense.protectionActive ||
             token is! int ||
             token < 0 ||
-            token >= 3 ||
-            !defense.remainingThreatTokens.contains(token) ||
+            token >= ForestQuestProgress.threatCount ||
+            !defense.activeThreatTokens.contains(token) ||
             !protectionTokens.add(token) ||
             attempt is! int ||
             attempt != defense.attempt ||
@@ -687,9 +687,15 @@ class GameCheckpoint {
           return null;
         }
       }
-      if (forestLedger?['sun']?.protectionActive == true &&
-          protectionTokens.length != forestLedger!['sun']!.threatsRemaining) {
-        return null;
+      if (forestLedger?['sun']?.protectionActive == true) {
+        final q = forestLedger!['sun']!;
+        final expected = q.activeThreatTokens.toSet();
+        final betweenWaves = protectionTokens.isEmpty && q.waitingForWave;
+        if (!betweenWaves &&
+            (expected.length != protectionTokens.length ||
+                !expected.containsAll(protectionTokens))) {
+          return null;
+        }
       }
       data['encounters'] = areas;
       data['enemies'] = enemies;

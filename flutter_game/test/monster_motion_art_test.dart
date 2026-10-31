@@ -13,6 +13,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late GameArt art;
   late Map provenance;
+  late Map smooth;
   setUpAll(() async {
     final data =
         jsonDecode(await rootBundle.loadString('assets/art.json')) as Map;
@@ -23,6 +24,13 @@ void main() {
         jsonDecode(
               File(
                 '../docs/art/monster-motion/provenance.json',
+              ).readAsStringSync(),
+            )
+            as Map;
+    smooth =
+        jsonDecode(
+              File(
+                '../docs/art/monster-motion/smooth-provenance.json',
               ).readAsStringSync(),
             )
             as Map;
@@ -41,41 +49,41 @@ void main() {
     }
   });
   tearDownAll(() => art.dispose());
-  test('all21 species have32 independent padded native walking images', () {
-    final walks = (provenance['assets'] as Map).entries
-        .where((e) => e.key.startsWith('walk-'))
-        .toList();
-    expect(walks, hasLength(21));
-    for (final entry in walks) {
-      final record = art.actors[entry.key] as Map<String, dynamic>;
-      final atlas = ActorAtlas.fromJson(record);
-      final image = art.images['actors-${entry.key}']!;
-      expect(atlas.frames, hasLength(32));
-      expect(atlas.walk, isNotNull);
-      final crops = entry.value['sourceRects'] as List;
-      final columns = entry.value['sourceDirectionColumns'] as List;
-      for (var d = 0; d < 8; d++) {
-        for (var phase = 0; phase < 4; phase++) {
-          final f = atlas.frames[d * 4 + phase];
-          final original =
-              crops[phase * 8 + (columns[(d + 2) % 8] as int)] as List;
-          expect(f.source.width, original[2] - original[0]);
-          expect(f.source.height, original[3] - original[1]);
+  test(
+    'all21 species have eight walk and eight attack poses in each bearing',
+    () {
+      final records = smooth['assets'] as Map;
+      expect(records, hasLength(21));
+      for (final entry in records.entries) {
+        final record = art.actors['walk-${entry.key}'] as Map<String, dynamic>;
+        final atlas = ActorAtlas.fromJson(record);
+        final image = art.images['actors-walk-${entry.key}']!;
+        expect(atlas.frames, hasLength(128));
+        expect(atlas.walk!.framesPerDirection, 8);
+        expect(atlas.enemyAttack!.framesPerDirection, 8);
+        expect(entry.value['nativeWalkKeys'], 32);
+        expect(entry.value['decodedRGBABytes'], lessThan(24 * 1024 * 1024));
+        for (final f in atlas.frames) {
           expect(f.source.left, greaterThanOrEqualTo(4));
           expect(f.source.top, greaterThanOrEqualTo(4));
           expect(f.source.right, lessThanOrEqualTo(image.width - 4));
           expect(f.source.bottom, lessThanOrEqualTo(image.height - 4));
-          expect(f.anchor.dy, f.source.height);
+          expect(f.anchor.dy, inInclusiveRange(0, f.source.height + 32));
+        }
+        for (var d = 0; d < 8; d++) {
+          expect(atlas.walk!.frameIndex(d, .999), d * 8 + 7);
+          expect(atlas.enemyAttack!.frameIndex(d, 0), 64 + d * 8);
+          expect(atlas.enemyAttack!.frameIndex(d, 1), 64 + d * 8 + 7);
         }
       }
-    }
-  });
+    },
+  );
   test(
-    'continuous locomotion selects four actual images instead of freezing at pose zero',
+    'continuous locomotion selects eight baked images instead of freezing at pose zero',
     () async {
       for (final kind in ['goblin', 'wolf', 'viper', 'golem', 'gunner']) {
         final hashes = <int>{};
-        for (var p = 0; p < 4; p++) {
+        for (var p = 0; p < 8; p++) {
           final recorder = ui.PictureRecorder();
           art.actor(
             ui.Canvas(recorder),
@@ -84,7 +92,7 @@ void main() {
             math.pi / 2,
             0,
             62,
-            walkPose: BossVisualPose(walking: true, stride: p / 4, weight: 1),
+            walkPose: BossVisualPose(walking: true, stride: p / 8, weight: 1),
           );
           final picture = recorder.endRecording();
           final image = await picture.toImage(160, 150);
@@ -97,9 +105,39 @@ void main() {
         }
         expect(
           hashes,
-          hasLength(4),
-          reason: '$kind must select four different articulated sprites',
+          hasLength(8),
+          reason: '$kind must select eight different articulated sprites',
         );
+      }
+    },
+  );
+  test(
+    'attack rendering selects preparation, strike and return rather than walking',
+    () async {
+      for (final kind in ['goblin', 'wolf', 'cultist', 'scorpion', 'gunner']) {
+        final hashes = <int>{};
+        for (var p = 0; p < 8; p++) {
+          final recorder = ui.PictureRecorder();
+          art.actor(
+            ui.Canvas(recorder),
+            kind,
+            const ui.Offset(80, 120),
+            math.pi / 2,
+            0,
+            62,
+            enemyAttackProgress: p / 7,
+          );
+          final picture = recorder.endRecording();
+          final image = await picture.toImage(160, 150);
+          picture.dispose();
+          final bytes = (await image.toByteData(
+            format: ui.ImageByteFormat.rawRgba,
+          ))!.buffer.asUint8List();
+          hashes.add(Object.hashAll(bytes));
+          image.dispose();
+        }
+        // The first and last image deliberately return to the same grounded pose.
+        expect(hashes.length, greaterThanOrEqualTo(7), reason: kind);
       }
     },
   );

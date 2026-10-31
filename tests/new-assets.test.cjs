@@ -177,9 +177,15 @@ test('upgrading a prepared Flutter asset cache replaces the old ground PNG witho
     const walks = Object.entries(metadata.actors).filter(([key]) => key.startsWith('walk-'));
     assert.equal(walks.length, 21);
     for (const [key, record] of walks) {
-        assert.equal(record.frames.length, 32);
-        assert.equal(record.feet.length, 32);
-        assert.deepEqual(record.walk, { directions: 8, frames: 4, layout: 'direction-major' });
+        assert.equal(record.frames.length, 128);
+        assert.equal(record.feet.length, 128);
+        assert.deepEqual(record.walk, { directions: 8, frames: 8, layout: 'direction-major' });
+        assert.deepEqual(record.enemyAttack, {
+            directions: 8,
+            frames: 8,
+            offset: 64,
+            layout: 'direction-major',
+        });
         assert.equal(
             fs.readFileSync(path.join(target, `actors-${key}.webp`), 'utf8'),
             `source picture actors-${key}.webp`,

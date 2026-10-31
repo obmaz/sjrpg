@@ -103,6 +103,7 @@ class GameArt {
     'd1-interface',
     'cinematic-interface',
     'reference-battle-buttons',
+    'level-badge',
     'mount-skill-icons',
     'monster-corpses',
     'actors-walk-goblin',
@@ -795,9 +796,11 @@ class GameArt {
     canvas.drawImageRect(image, source, destination, _portraitPaint);
   }
 
-  /// Native enemy clips expose four poses; heroes keep their full run clips.
+  /// Read the baked clip length; heroes keep their full run clips.
   int runFrameCount(String key) {
-    if (images.containsKey('actors-walk-$key')) return 4;
+    if (images.containsKey('actors-walk-$key')) {
+      return _atlas('walk-$key').walk!.framesPerDirection;
+    }
     final sheet = _actorDefinitions[key]!.$1;
     if (!images.containsKey('actors-$sheet')) return 2;
     return _atlas(sheet).motion?.framesPerDirection ?? 2;
@@ -814,6 +817,7 @@ class GameArt {
     bool moving = false,
     int comboPose = 0,
     double? actionProgress,
+    double? enemyAttackProgress,
     BossVisualPose? bossPose,
     BossVisualPose? walkPose,
     MountVisualPose? mountPose,
@@ -837,10 +841,17 @@ class GameArt {
     final action = attack ? atlas.action : null;
     final selectedPhase = bossPose == null && walkPose == null ? phase : 0;
     final walking = walkPose ?? (bossPose?.walking == true ? bossPose : null);
-    final index = atlas.walk != null
+    final index = enemyAttackProgress != null && atlas.enemyAttack != null
+        ? atlas.enemyAttack!.frameIndex(
+            facingFrame(angle, 8),
+            enemyAttackProgress,
+          )
+        : atlas.walk != null
         ? atlas.walk!.frameIndex(
             facingFrame(angle, 8),
-            walking?.stride ?? (selectedPhase % 4) / 4,
+            walking?.stride ??
+                (selectedPhase % atlas.walk!.framesPerDirection) /
+                    atlas.walk!.framesPerDirection,
           )
         : action != null
         ? action.frameIndex(

@@ -25,47 +25,47 @@ abstract final class ForestTreeArt {
     ForestTreeFrame(
       ui.Rect.fromLTWH(140, 278, 199, 194),
       ui.Offset(253, 467),
-      140,
+      200,
     ),
     ForestTreeFrame(
       ui.Rect.fromLTWH(562, 171, 315, 301),
       ui.Offset(718, 467),
-      210,
+      300,
     ),
     ForestTreeFrame(
       ui.Rect.fromLTWH(970, 78, 459, 394),
       ui.Offset(1209, 467),
-      280,
+      400,
     ),
     ForestTreeFrame(
       ui.Rect.fromLTWH(153, 739, 174, 213),
       ui.Offset(241, 947),
-      140,
+      200,
     ),
     ForestTreeFrame(
       ui.Rect.fromLTWH(590, 634, 260, 318),
       ui.Offset(709, 948),
-      210,
+      300,
     ),
     ForestTreeFrame(
       ui.Rect.fromLTWH(1047, 537, 305, 415),
       ui.Offset(1192, 947),
-      280,
+      400,
     ),
     ForestTreeFrame(
       ui.Rect.fromLTWH(129, 1219, 221, 213),
       ui.Offset(210, 1427),
-      140,
+      200,
     ),
     ForestTreeFrame(
       ui.Rect.fromLTWH(546, 1149, 347, 283),
       ui.Offset(721, 1427),
-      210,
+      300,
     ),
     ForestTreeFrame(
       ui.Rect.fromLTWH(987, 1105, 425, 327),
       ui.Offset(1188, 1427),
-      280,
+      400,
     ),
   ];
 

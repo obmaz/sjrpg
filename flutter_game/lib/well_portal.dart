@@ -25,17 +25,37 @@ SpriteAnimation wellPortalAnimation(ui.Image image) {
   return animation;
 }
 
-/// A visual portal and a tap target, with no physical collision body.
+/// The solid base shares the world's movement, dash and projectile queries.
+ui.Rect wellPortalBody(ui.Offset at) =>
+    ui.Rect.fromLTWH(at.dx - 36, at.dy - 22, 72, 28);
+
+/// A quarter-view stone gate, with only its grounded base blocking movement.
 class WellPortal extends GameComponent with TapGesture {
   WellPortal(this.session, this.well, this.at, {required this.onOpen}) {
     position = Vector2(at.dx - 56, at.dy - 107);
     size = Vector2.all(112);
+    session.world.addRuntimeSolid(wellPortalBody(at));
   }
   final Adventure session;
   final DiscoveredWell well;
   final ui.Offset at;
   final void Function() onOpen;
   double _glowTime = 0;
+
+  void releaseCollision() =>
+      session.world.removeRuntimeSolid(wellPortalBody(at));
+
+  @override
+  void onMount() {
+    session.world.addRuntimeSolid(wellPortalBody(at));
+    super.onMount();
+  }
+
+  @override
+  void onRemove() {
+    releaseCollision();
+    super.onRemove();
+  }
 
   @override
   void update(double dt) {
@@ -139,9 +159,8 @@ class _PortalLight extends GameComponent {
 ui.Offset? wellPortalPosition(Adventure session, QuestSite well) {
   final approach = session.world.wellApproach(well);
   bool available(ui.Offset at) =>
-      !session.world.blocked(
-        ui.Rect.fromCenter(center: at, width: 44, height: 36),
-      ) &&
+      !session.world.blocked(wellPortalBody(at)) &&
+      !wellPortalBody(at).inflate(8).overlaps(session.hero.body) &&
       session.world.clearLine(approach, at, const ui.Size(3, 3)) &&
       (at - session.world.merchantAt).distance > 70 &&
       (at - session.world.elderAt).distance > 70 &&
@@ -230,6 +249,7 @@ class WellDiscoveryDirector extends GameComponent {
   @override
   void onRemove() {
     for (final portal in _portals.values) {
+      portal.releaseCollision();
       portal.removeFromParent();
     }
     _portals.clear();

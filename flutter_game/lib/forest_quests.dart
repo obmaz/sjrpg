@@ -47,9 +47,9 @@ const forestQuests = [
     recipient: '수녀 엘린',
     giverPlace: ForestQuestPlace.chapel,
     targetPlace: ForestQuestPlace.chapel,
-    description: '작은 예배당을 위협하는 적을 정리하고 제단의 봉인을 정화해 주세요.',
-    gold: 40,
-    baseExperience: 40,
+    description: '의뢰를 받은 뒤 예배당 근처의 적 18마리를 처치하고 제단의 봉인을 정화해 주세요.',
+    gold: 120,
+    baseExperience: 120,
   ),
   ForestQuestDef(
     id: 'moon',
@@ -60,8 +60,8 @@ const forestQuests = [
     giverPlace: ForestQuestPlace.villageSupply,
     targetPlace: ForestQuestPlace.woodlandCabin,
     description: '마을에서 약초 꾸러미를 받아 북동쪽 숲속 오두막의 약초사에게 전해 주세요.',
-    gold: 55,
-    baseExperience: 50,
+    gold: 80,
+    baseExperience: 90,
   ),
   ForestQuestDef(
     id: 'sun',
@@ -71,9 +71,9 @@ const forestQuests = [
     recipient: '조사관 로웬',
     giverPlace: ForestQuestPlace.caveWorksite,
     targetPlace: ForestQuestPlace.caveWorksite,
-    description: '동굴 앞에서 기록을 해독하는 조사관을 30초 동안 지키고 습격자 세 명을 처치하세요.',
-    gold: 70,
-    baseExperience: 70,
+    description: '조사관을 90초 동안 지키며 6마리씩 다섯 차례 습격하는 적 30마리를 모두 처치하세요.',
+    gold: 300,
+    baseExperience: 360,
   ),
 ];
 
@@ -92,12 +92,33 @@ class ForestQuestProgress {
   ForestQuestPhase _phase = ForestQuestPhase.offered;
   bool _parcel = false, _cleansed = false, _protectionStarted = false;
   double _protectedFor = 0, _defenderHealth = maximumDefenderHealth;
-  int _attempt = 0;
+  int _attempt = 0, _altarKills = 0, _firstWaveSize = waveSize;
   final Set<int> _defeatedThreats = {};
   ForestQuestFailure? _failure;
-  static const maximumDefenderHealth = 240.0;
-  static const protectionDuration = 30 * CombatBalance.gameSpeed;
-  static const threatCount = 3;
+  static const maximumDefenderHealth = 720.0;
+  static const protectionSeconds = 90;
+  static const protectionDuration = protectionSeconds * CombatBalance.gameSpeed;
+  static const threatCount = 30, waveSize = 6, altarKillGoal = 18;
+  int get altarKills => _altarKills;
+  bool get waitingForWave =>
+      _defeatedThreats.isEmpty ||
+      _defeatedThreats.length >= _firstWaveSize &&
+          (_defeatedThreats.length - _firstWaveSize) % waveSize == 0;
+  Iterable<int> get activeThreatTokens {
+    for (var start = 0; start < threatCount;) {
+      final count = start == 0
+          ? _firstWaveSize
+          : (threatCount - start < waveSize ? threatCount - start : waveSize);
+      final pending = List<int>.generate(
+        count,
+        (i) => start + i,
+      ).where((token) => !_defeatedThreats.contains(token)).toList();
+      if (pending.isNotEmpty) return pending;
+      start += count;
+    }
+    return const [];
+  }
+
   ForestQuestPhase get phase => _phase;
   bool get hasParcel => _parcel;
   bool get cleansed => _cleansed;
@@ -129,7 +150,8 @@ class ForestQuestProgress {
       return '$giver에게 말해 다시 준비하세요.';
     }
     return switch (definition.kind) {
-      ForestQuestKind.cleanse => '예배당 주변의 적을 정리하고 제단을 정화하세요.',
+      ForestQuestKind.cleanse =>
+        '예배당 주변 적 $_altarKills/$altarKillGoal · 정리 후 제단을 정화하세요.',
       ForestQuestKind.delivery =>
         _parcel
             ? '숲속 오두막의 $recipient에게 약초 꾸러미를 전하세요.'
@@ -137,7 +159,7 @@ class ForestQuestProgress {
       ForestQuestKind.protection =>
         !_protectionStarted
             ? '$giver에게 말을 걸어 조사를 시작하세요.'
-            : '조사관 보호 ${CombatBalance.realSeconds(_protectedFor).floor()}/30초 · 습격자 $threatsRemaining명 남음',
+            : '조사관 보호 ${CombatBalance.realSeconds(_protectedFor).floor()}/$protectionSeconds초 · 습격자 $threatsRemaining/$threatCount명 남음',
     };
   }
 
@@ -152,6 +174,9 @@ class ForestQuestProgress {
 
   Map<String, dynamic> toSave() => {
     'phase': _phase.name,
+    'threatTarget': threatCount,
+    'firstWaveSize': _firstWaveSize,
+    'altarKills': _altarKills,
     'parcel': _parcel,
     'cleansed': _cleansed,
     'protectionStarted': _protectionStarted,
@@ -205,9 +230,21 @@ class ForestQuestLedger {
     return true;
   }
 
+  bool recordAltarKill() {
+    final q = _quests['roots']!;
+    if (q.phase != ForestQuestPhase.accepted ||
+        q._altarKills >= ForestQuestProgress.altarKillGoal) {
+      return false;
+    }
+    q._altarKills++;
+    return true;
+  }
+
   bool cleanseAltar() {
     final q = _quests['roots']!;
-    if (q.phase != ForestQuestPhase.accepted || q._cleansed) {
+    if (q.phase != ForestQuestPhase.accepted ||
+        q._cleansed ||
+        q._altarKills < ForestQuestProgress.altarKillGoal) {
       return false;
     }
     q._cleansed = true;
@@ -290,6 +327,7 @@ class ForestQuestLedger {
     q._protectedFor = 0;
     q._defenderHealth = ForestQuestProgress.maximumDefenderHealth;
     q._defeatedThreats.clear();
+    q._firstWaveSize = ForestQuestProgress.waveSize;
     q._failure = null;
     return true;
   }
@@ -331,9 +369,33 @@ class ForestQuestLedger {
       }
       for (final entry in states.entries) {
         final q = ledger._quests[entry.key]!;
-        final data = entry.value;
+        final data = entry.value is Map
+            ? Map.of(entry.value as Map)
+            : entry.value;
         if (data is! Map) {
           return null;
+        }
+        if (data['threatTarget'] == null && data['defenderHealth'] is num) {
+          data['defenderHealth'] = (data['defenderHealth'] as num) * 3;
+        }
+        // Completed legacy objectives stay earned. Active old defenses retain
+        // their kills; old three-enemy first waves retain their exact pending tokens.
+        if (data['threatTarget'] == null &&
+            entry.key == 'sun' &&
+            data['protectionStarted'] == true &&
+            (data['phase'] == 'ready' || data['phase'] == 'completed') &&
+            data['defeatedThreats'] is List &&
+            (data['defeatedThreats'] as List).length == 3 &&
+            (data['defeatedThreats'] as List).toSet().containsAll([0, 1, 2]) &&
+            data['protectedFor'] is num &&
+            data['protectedFor'] >= 30 * CombatBalance.gameSpeed &&
+            data['defenderHealth'] is num &&
+            data['defenderHealth'] > 0) {
+          data['defeatedThreats'] = List.generate(
+            ForestQuestProgress.threatCount,
+            (i) => i,
+          );
+          data['protectedFor'] = ForestQuestProgress.protectionDuration;
         }
         final phase = ForestQuestPhase.values
             .where((p) => p.name == data['phase'])
@@ -345,6 +407,29 @@ class ForestQuestLedger {
             hp = data['defenderHealth'],
             attempt = data['attempt'];
         final defeated = data['defeatedThreats'];
+        final firstWave =
+            data['firstWaveSize'] ??
+            (entry.key == 'sun' &&
+                    data['threatTarget'] == null &&
+                    started == true
+                ? 3
+                : ForestQuestProgress.waveSize);
+        if (firstWave != 3 && firstWave != ForestQuestProgress.waveSize) {
+          return null;
+        }
+        final altarKills =
+            data['altarKills'] ??
+            (entry.key == 'roots' && data['cleansed'] == true
+                ? ForestQuestProgress.altarKillGoal
+                : 0);
+        if (altarKills is! int ||
+            altarKills < 0 ||
+            altarKills > ForestQuestProgress.altarKillGoal ||
+            entry.key != 'roots' && altarKills != 0 ||
+            data['threatTarget'] != null &&
+                data['threatTarget'] != ForestQuestProgress.threatCount) {
+          return null;
+        }
         if (phase == null ||
             parcel is! bool ||
             cleansed is! bool ||
@@ -398,7 +483,8 @@ class ForestQuestLedger {
         }
         if (phase == ForestQuestPhase.ready &&
             switch (q.definition.kind) {
-              ForestQuestKind.cleanse => !cleansed,
+              ForestQuestKind.cleanse =>
+                !cleansed || altarKills < ForestQuestProgress.altarKillGoal,
               ForestQuestKind.delivery => parcel,
               ForestQuestKind.protection =>
                 !started ||
@@ -445,6 +531,8 @@ class ForestQuestLedger {
         if (failure == ForestQuestFailure.defenderFallen && hp != 0) {
           return null;
         }
+        q._firstWaveSize = firstWave as int;
+        q._altarKills = altarKills;
         q._phase = phase;
         q._parcel = parcel;
         q._cleansed = cleansed;

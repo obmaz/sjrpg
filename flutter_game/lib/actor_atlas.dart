@@ -15,6 +15,7 @@ class ActorAtlas {
     this.projectedOrigin,
     this.action,
     this.walk,
+    this.enemyAttack,
   );
   factory ActorAtlas.fromJson(Map<String, dynamic> record) {
     final anchors = record['feet'] as List?,
@@ -28,7 +29,8 @@ class ActorAtlas {
         projected ||
         record['motion'] != null ||
         record['action'] != null ||
-        record['walk'] != null;
+        record['walk'] != null ||
+        record['enemyAttack'] != null;
     if (opted &&
         (anchors == null ||
             anchors.length != (record['frames'] as List).length)) {
@@ -71,6 +73,17 @@ class ActorAtlas {
         'Opt-in actors need finite positive sources and finite unmirrored anchors',
       );
     }
+    if (record['walk'] != null && record['enemyAttack'] != null) {
+      final walk = record['walk'] as Map<String, dynamic>;
+      final strike = record['enemyAttack'] as Map<String, dynamic>;
+      if (walk['frames'] is int &&
+          strike['offset'] is int &&
+          (strike['offset'] as int) < 8 * (walk['frames'] as int)) {
+        throw const FormatException(
+          'Enemy walking and attack blocks must not overlap',
+        );
+      }
+    }
     return ActorAtlas._(
       frames,
       heights,
@@ -91,6 +104,12 @@ class ActorAtlas {
           ? null
           : EnemyWalkClip.fromJson(
               record['walk'] as Map<String, dynamic>,
+              frames,
+            ),
+      record['enemyAttack'] == null
+          ? null
+          : EnemyAttackClip.fromJson(
+              record['enemyAttack'] as Map<String, dynamic>,
               frames,
             ),
     );
@@ -121,6 +140,7 @@ class ActorAtlas {
   final bool projectedOrigin;
   final ActorActionClip? action;
   final EnemyWalkClip? walk;
+  final EnemyAttackClip? enemyAttack;
 }
 
 enum ActorRunLayout { phaseMajor, directionMajor }
@@ -251,30 +271,76 @@ class ActorActionClip {
   }
 }
 
-/// Four native contact/passing poses per bearing, driven by distance travelled.
+/// Grounded native keys and offline in-betweens, driven by travelled distance.
 class EnemyWalkClip {
-  const EnemyWalkClip._();
+  const EnemyWalkClip._(this.framesPerDirection);
+  final int framesPerDirection;
   factory EnemyWalkClip.fromJson(
     Map<String, dynamic> record,
     List<ActorFrame> frames,
   ) {
+    final count = record['frames'];
     if (record['directions'] != 8 ||
-        record['frames'] != 4 ||
+        count is! int ||
+        count < 4 ||
+        count > 12 ||
         record['layout'] != 'direction-major' ||
-        frames.length != 32 ||
-        frames.map((f) => f.source).toSet().length != 32 ||
-        frames.any((f) => f.mirrored)) {
+        frames.length < 8 * count ||
+        frames.take(8 * count).map((f) => f.source).toSet().length !=
+            8 * count ||
+        frames.take(8 * count).any((f) => f.mirrored)) {
       throw const FormatException(
-        'Enemy walking requires eight bearings and four independent native poses',
+        'Enemy walking requires eight bearings and 4–12 distinct poses',
       );
     }
-    return const EnemyWalkClip._();
+    return EnemyWalkClip._(count);
   }
   int frameIndex(int direction, double cycle) {
     if (direction < 0 || direction >= 8) {
       throw RangeError.range(direction, 0, 7, 'direction');
     }
-    final phase = cycle.isFinite ? ((cycle % 1) * 4).floor() : 0;
-    return direction * 4 + phase;
+    final phase = cycle.isFinite
+        ? ((cycle % 1) * framesPerDirection).floor()
+        : 0;
+    return direction * framesPerDirection + phase;
+  }
+}
+
+/// A non-looping eight-bearing attack; its progress never controls real damage.
+class EnemyAttackClip {
+  const EnemyAttackClip._(this.framesPerDirection, this.offset);
+  final int framesPerDirection, offset;
+  factory EnemyAttackClip.fromJson(
+    Map<String, dynamic> record,
+    List<ActorFrame> frames,
+  ) {
+    final count = record['frames'], start = record['offset'];
+    if (record['directions'] != 8 ||
+        count is! int ||
+        count < 6 ||
+        count > 12 ||
+        start is! int ||
+        start < 0 ||
+        record['layout'] != 'direction-major' ||
+        start + count * 8 > frames.length) {
+      throw const FormatException(
+        'Enemy attack requires eight bearings, 6–12 poses and a valid offset',
+      );
+    }
+    final block = frames.skip(start).take(count * 8);
+    if (block.map((f) => f.source).toSet().length != count * 8 ||
+        block.any((f) => f.mirrored)) {
+      throw const FormatException('Enemy attack poses cannot alias or mirror');
+    }
+    return EnemyAttackClip._(count, start);
+  }
+  int frameIndex(int direction, double progress) {
+    if (direction < 0 || direction >= 8) {
+      throw RangeError.range(direction, 0, 7, 'direction');
+    }
+    final t = progress.isFinite ? progress.clamp(0.0, 1.0) : 0.0;
+    return offset +
+        direction * framesPerDirection +
+        (t * framesPerDirection).floor().clamp(0, framesPerDirection - 1);
   }
 }

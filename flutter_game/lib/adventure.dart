@@ -149,6 +149,7 @@ class Adventure extends ChangeNotifier {
   final mounts = <TravelMount>[];
   TravelMount? riding;
   TravelMount? get nearbyMount {
+    if (dungeon != null) return null;
     TravelMount? nearest;
     var best = double.infinity;
     for (final mount in mounts) {
@@ -273,7 +274,7 @@ class Adventure extends ChangeNotifier {
 
   /// Existing saves and new stage sessions only instantiate purchased types.
   void spawnOwnedMounts() {
-    if (riding != null) return;
+    if (dungeon != null || riding != null) return;
     mounts.clear();
     for (final def in travelMountDefs.take(4)) {
       if (!progress.mountProgress.owns(def.artKey)) continue;
@@ -320,7 +321,8 @@ class Adventure extends ChangeNotifier {
   }
 
   bool summonMount(String id) {
-    if (disposed ||
+    if (dungeon != null ||
+        disposed ||
         defeated ||
         won ||
         !ready ||
@@ -481,7 +483,8 @@ class Adventure extends ChangeNotifier {
   }
 
   bool boardNearbyMount() {
-    if (!active ||
+    if (dungeon != null ||
+        !active ||
         afflictions.movementBlocked ||
         riding != null ||
         hero.dashing > 0 ||
@@ -2172,11 +2175,11 @@ class Adventure extends ChangeNotifier {
     final same = texts
         .where((t) => t.isStream && identical(t.target, next.target))
         .toList();
-    while (same.length >= 5) {
+    while (same.length >= BattleText.maxPerTarget) {
       _removeBattleText(same.removeAt(0));
     }
     final visible = texts.where((t) => !t.isReward).toList();
-    if (visible.length >= 14) _removeBattleText(visible.first);
+    if (visible.length >= 64) _removeBattleText(visible.first);
     final at = next.follow?.call();
     if (at != null) next.position.setValues(at.dx, at.dy);
     texts.add(next);
@@ -6142,6 +6145,19 @@ class HuntEnemy extends Enemy with WithCollision, EffectVisibility {
           ? 1
           : motion.phase,
       visualHeight,
+      enemyAttackProgress: !boss && hurt <= .08
+          ? preparingAttack
+                ? anticipation * .3
+                : pounceRemaining > 0 && pounceDuration > 0
+                ? .3 + .7 * (1 - pounceRemaining / pounceDuration)
+                : attackMotion.active
+                ? .3 +
+                      .7 *
+                          (1 -
+                              attackMotion.remaining /
+                                  EnemyAttackMotion.recovery)
+                : null
+          : null,
       flash: hurt > .08 ? .75 : 0,
       bossPose: bossPose,
       walkPose:
@@ -6477,8 +6493,9 @@ class BattleText extends GameComponent {
       _streamBornAt = session.elapsed;
     }
   }
+  static const maxPerTarget = 10;
   static const streamInterval = .18,
-      streamLifetime = .9,
+      streamLifetime = 1.8,
       streamRiseSpeed = 360.0;
   final double? combatAmount;
   final Object? target;

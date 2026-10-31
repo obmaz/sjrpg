@@ -968,5 +968,6 @@
             "frameCount": 32,
             "nativeSamples": true
         }
-    }
+    },
+    "scope": "Original generated native key poses; the final expanded runtime is described by smooth-provenance.json"
 }

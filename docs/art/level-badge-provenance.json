@@ -1,0 +1,10 @@
+{
+    "generator": "image_gen",
+    "processor": "tools/prepare-level-badge.py",
+    "source": "docs/art/level-badge-original.png",
+    "sha256": "95493791855ac608269ac26be38f307281648184201f80e8211243ac60a6030a",
+    "alphaBounds": [0, 19, 1209, 1254],
+    "runtime": "flutter_game/art/level-badge.webp",
+    "runtimeSize": [157, 160],
+    "purpose": "26px circular HUD level badge, runtime number centered over empty enamel"
+}

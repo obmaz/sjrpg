@@ -89,7 +89,7 @@ void main() {
       reason: 'explicitly start defense',
     );
     expect(s.forestQuests.protectionActive, true);
-    expect(tagged(s).length, ForestQuestProgress.threatCount);
+    expect(tagged(s).length, ForestQuestProgress.waveSize);
   }
 
   test(
@@ -108,6 +108,10 @@ void main() {
       approach(s, 'elin');
       expect(r.performAction(), true);
       expect(r.ledger['roots']!.phase, ForestQuestPhase.accepted);
+      expect(r.performAction(), false);
+      for (var i = 0; i < ForestQuestProgress.altarKillGoal; i++) {
+        r.ledger.recordAltarKill();
+      }
       expect(r.performAction(), true);
       expect(r.ledger['roots']!.phase, ForestQuestPhase.ready);
       expect(
@@ -163,14 +167,14 @@ void main() {
   );
 
   test(
-    'finite guard enemies really damage the solid NPC; failure cleans them and retry creates only three',
+    'finite guard enemies really damage the solid NPC; failure cleans them and retry creates one six-enemy wave',
     () {
       final s = start(), r = s.forestQuests;
       beginDefense(s);
       expect(r.performAction(), false);
       expect(
         tagged(s).length,
-        3,
+        6,
         reason: 'holding the action cannot create extra waves',
       );
       final at = r.defenderAt!, q = r.ledger['sun']!;
@@ -226,7 +230,7 @@ void main() {
         reason: 'explicit retry starts a new finite attempt',
       );
       expect(q.attempt, oldAttempt + 1);
-      expect(tagged(s).length, 3);
+      expect(tagged(s).length, 6);
     },
   );
 
@@ -235,9 +239,21 @@ void main() {
     () {
       final s = start(), r = s.forestQuests;
       beginDefense(s);
-      for (final enemy in tagged(s)) {
-        expect(s.hit(enemy, 1000000, ui.Offset.zero, hitStop: false), true);
+      final tokens = <int>{};
+      for (var wave = 0; wave < 5; wave++) {
+        expect(tagged(s), hasLength(6));
+        for (final enemy in tagged(s)) {
+          tokens.add(r.saveEnemyTags(enemy)['forestGuardToken'] as int);
+          expect(s.hit(enemy, 1000000, ui.Offset.zero, hitStop: false), true);
+        }
+        expect(
+          GameCheckpoint.decode(GameCheckpoint.capture(s)!.encode()),
+          isNotNull,
+          reason: 'a completed wave saves before the next director tick',
+        );
+        if (wave < 4) r.tick(.01);
       }
+      expect(tokens, hasLength(30));
       final q = r.ledger['sun']!;
       expect(
         q.threatsRemaining,
@@ -245,7 +261,7 @@ void main() {
         reason: 'Adventure hit/death hook records finite tokens',
       );
       expect(q.phase, ForestQuestPhase.accepted);
-      r.tick(ForestQuestProgress.protectionDuration - .01);
+      r.tick(ForestQuestProgress.protectionDuration - .05);
       expect(q.phase, ForestQuestPhase.accepted);
       r.tick(.01);
       expect(q.phase, ForestQuestPhase.ready);
@@ -277,12 +293,46 @@ void main() {
       final restored = start(checkpoint: checkpoint!);
       final q = restored.forestQuests.ledger['sun']!;
       expect(q.protectionActive, true);
-      expect(q.defenderHealth, 222.75);
+      expect(q.defenderHealth, 702.75);
       expect(q.protectedFor, 4.5);
-      expect(q.threatsRemaining, 2);
-      expect(tagged(restored).length, 2);
+      expect(q.threatsRemaining, 29);
+      expect(tagged(restored).length, 5);
       restored.forestQuests.tick(.05);
-      expect(tagged(restored).length, 2);
+      expect(tagged(restored).length, 5);
+    },
+  );
+
+  test(
+    'an active legacy three-enemy wave reloads without duplicating or losing tokens',
+    () {
+      final s = start();
+      beginDefense(s);
+      final data = GameCheckpoint.capture(s)!.data;
+      for (final state in (data['forestQuests']['quests'] as Map).values) {
+        state.remove('threatTarget');
+        state.remove('firstWaveSize');
+        state.remove('altarKills');
+        state['defenderHealth'] = (state['defenderHealth'] as num) / 3;
+      }
+      (data['enemies'] as List).removeWhere(
+        (raw) => raw['forestGuardToken'] is int && raw['forestGuardToken'] >= 3,
+      );
+      final cp = GameCheckpoint.decode(jsonEncode(data));
+      expect(cp, isNotNull);
+      final restored = start(checkpoint: cp!);
+      expect(tagged(restored), hasLength(3));
+      restored.forestQuests.tick(.05);
+      expect(tagged(restored), hasLength(3));
+      expect(
+        GameCheckpoint.decode(GameCheckpoint.capture(restored)!.encode()),
+        isNotNull,
+      );
+      for (final enemy in tagged(restored)) {
+        restored.hit(enemy, 1000000, ui.Offset.zero, hitStop: false);
+      }
+      restored.forestQuests.tick(.05);
+      expect(tagged(restored), hasLength(6));
+      expect(restored.forestQuests.ledger['sun']!.threatsRemaining, 27);
     },
   );
 
@@ -303,12 +353,12 @@ void main() {
       s.dormantEnemies.add(
         Map<String, dynamic>.from(jsonDecode(jsonEncode(raw))),
       );
-      expect(r.ledger['sun']!.threatsRemaining, 3);
+      expect(r.ledger['sun']!.threatsRemaining, 30);
       s.lastEnemyWake = -1;
       s.wakeEnemies();
       expect(s.dormantEnemies, isEmpty);
-      expect(tagged(s).length, 3);
-      expect(r.ledger['sun']!.threatsRemaining, 3);
+      expect(tagged(s).length, 6);
+      expect(r.ledger['sun']!.threatsRemaining, 30);
     },
   );
 

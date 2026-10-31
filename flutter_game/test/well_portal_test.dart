@@ -56,11 +56,26 @@ void main() {
       }
       expect(s.travelJournal.hasDiscovered(WorldStage.forest, 'hub'), true);
       final portal = game.added.whereType<WellPortal>().single;
+      expect(s.world.blocked(wellPortalBody(portal.at)), true);
       expect(
-        portal.shapeHitboxes,
-        isEmpty,
-        reason: 'a portal must never block the path',
+        s.world.clearLine(
+          portal.at - const Offset(90, 0),
+          portal.at + const Offset(90, 0),
+          Guardian.onFootSize,
+        ),
+        false,
       );
+      expect(
+        s.world.blocked(
+          Rect.fromCenter(
+            center: portal.at + const Offset(0, 50),
+            width: 28,
+            height: 24,
+          ),
+        ),
+        false,
+      );
+
       expect(saves, 1);
       expect(opens, 0);
       portal.onTap();
@@ -76,6 +91,13 @@ void main() {
       s.hero.position.setValues(6000, 4200);
       portal.onTap();
       expect(opens, 1);
+      final base = wellPortalBody(portal.at);
+      director.onRemove();
+      expect(
+        s.world.blocked(base),
+        false,
+        reason: 'removed gates leave no invisible blocker',
+      );
     },
   );
 

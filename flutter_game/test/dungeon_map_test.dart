@@ -78,6 +78,10 @@ void main() {
         )..start(TestGame());
         addTearDown(session.dispose);
         for (final round in [true, false]) {
+          expect(
+            MapPainter(session, round: round).viewBounds,
+            session.dungeon!.layout.bounds,
+          );
           final recorder = ui.PictureRecorder();
           MapPainter(
             session,

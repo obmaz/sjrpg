@@ -46,8 +46,8 @@ void main() {
       expect(q['moon']!.hasParcel, false);
       expect(q['moon']!.phase, ForestQuestPhase.ready);
       final reward = q.claimReward('moon')!;
-      expect(reward.gold, 55);
-      expect(reward.experience, 50 * CombatBalance.experienceRewardMultiplier);
+      expect(reward.gold, 80);
+      expect(reward.experience, 90 * CombatBalance.experienceRewardMultiplier);
       expect(q.claimReward('moon'), isNull);
       expect(reload(q).claimReward('moon'), isNull);
     },
@@ -59,6 +59,10 @@ void main() {
       final q = ForestQuestLedger();
       expect(q.cleanseAltar(), false);
       expect(q.accept('roots'), true);
+      expect(q.cleanseAltar(), false);
+      for (var i = 0; i < ForestQuestProgress.altarKillGoal; i++) {
+        q.recordAltarKill();
+      }
       expect(q.cleanseAltar(), true);
       expect(q.cleanseAltar(), false);
       expect(q['roots']!.phase, ForestQuestPhase.ready);
@@ -69,29 +73,34 @@ void main() {
     },
   );
 
-  test('protection needs thirty real seconds AND all three finite threats', () {
-    final q = ForestQuestLedger();
-    expect(q.beginProtection(), false);
-    expect(q.accept('sun'), true);
-    expect(q.beginProtection(), true);
-    expect(q.beginProtection(), false);
-    final attempt = q['sun']!.attempt;
-    expect(q.recordThreatDefeated(0, attempt: attempt), true);
-    expect(q.recordThreatDefeated(0, attempt: attempt), false);
-    expect(q.recordThreatDefeated(1, attempt: attempt), true);
-    expect(q.recordThreatDefeated(2, attempt: attempt), true);
-    expect(q['sun']!.remainingThreatTokens, isEmpty);
-    expect(q['sun']!.phase, ForestQuestPhase.accepted);
-    q.advanceProtection(
-      30 * CombatBalance.gameSpeed - .1,
-      defenderPresent: true,
-    );
-    expect(q.claimReward('sun'), isNull);
-    q.advanceProtection(.1, defenderPresent: true);
-    expect(q['sun']!.phase, ForestQuestPhase.ready);
-    expect(q.claimReward('sun'), isNotNull);
-    expect(q.claimReward('sun'), isNull);
-  });
+  test(
+    'protection needs ninety real seconds AND all thirty finite threats',
+    () {
+      final q = ForestQuestLedger();
+      expect(q.beginProtection(), false);
+      expect(q.accept('sun'), true);
+      expect(q.beginProtection(), true);
+      expect(q.beginProtection(), false);
+      final attempt = q['sun']!.attempt;
+      expect(q.recordThreatDefeated(0, attempt: attempt), true);
+      expect(q.recordThreatDefeated(0, attempt: attempt), false);
+      expect(q.recordThreatDefeated(1, attempt: attempt), true);
+      for (var token = 2; token < ForestQuestProgress.threatCount; token++) {
+        expect(q.recordThreatDefeated(token, attempt: attempt), true);
+      }
+      expect(q['sun']!.remainingThreatTokens, isEmpty);
+      expect(q['sun']!.phase, ForestQuestPhase.accepted);
+      q.advanceProtection(
+        ForestQuestProgress.protectionDuration - .1,
+        defenderPresent: true,
+      );
+      expect(q.claimReward('sun'), isNull);
+      q.advanceProtection(.1, defenderPresent: true);
+      expect(q['sun']!.phase, ForestQuestPhase.ready);
+      expect(q.claimReward('sun'), isNotNull);
+      expect(q.claimReward('sun'), isNull);
+    },
+  );
 
   test(
     'elapsed defense time cannot complete while finite threats are alive',
@@ -102,8 +111,8 @@ void main() {
       q.advanceProtection(9999, defenderPresent: true);
       expect(q['sun']!.protectedFor, ForestQuestProgress.protectionDuration);
       expect(q['sun']!.phase, ForestQuestPhase.accepted);
-      expect(q['sun']!.threatsRemaining, 3);
-      for (var token = 0; token < 3; token++) {
+      expect(q['sun']!.threatsRemaining, 30);
+      for (var token = 0; token < ForestQuestProgress.threatCount; token++) {
         expect(q.recordThreatDefeated(token, attempt: q['sun']!.attempt), true);
       }
       expect(q['sun']!.phase, ForestQuestPhase.ready);
@@ -157,7 +166,10 @@ void main() {
         q['sun']!.defenderHealth,
         ForestQuestProgress.maximumDefenderHealth,
       );
-      expect(q['sun']!.remainingThreatTokens.toList(), [0, 1, 2]);
+      expect(
+        q['sun']!.remainingThreatTokens.toList(),
+        List.generate(ForestQuestProgress.threatCount, (i) => i),
+      );
       expect(q.beginProtection(), true);
       expect(q['sun']!.attempt, oldAttempt + 1);
       expect(q.recordThreatDefeated(0, attempt: oldAttempt), false);
@@ -177,9 +189,40 @@ void main() {
       final restored = reload(q)['sun']!;
       expect(restored.protectionActive, true);
       expect(restored.protectedFor, 12.75);
-      expect(restored.defenderHealth, 222.75);
+      expect(restored.defenderHealth, 702.75);
       expect(restored.attempt, q['sun']!.attempt);
-      expect(restored.remainingThreatTokens.toList(), [0, 2]);
+      expect(
+        restored.remainingThreatTokens.toList(),
+        List.generate(
+          ForestQuestProgress.threatCount,
+          (i) => i,
+        ).where((i) => i != 1).toList(),
+      );
+    },
+  );
+
+  test(
+    'legacy three-enemy completion stays earned without another reward claim',
+    () {
+      final source = ForestQuestLedger()
+        ..accept('sun')
+        ..beginProtection();
+      final raw = jsonDecode(jsonEncode(source.toSave())) as Map;
+      for (final state in (raw['quests'] as Map).values) {
+        state.remove('threatTarget');
+        state.remove('firstWaveSize');
+        state.remove('altarKills');
+        state['defenderHealth'] = 240;
+      }
+      final defense = raw['quests']['sun'];
+      defense['phase'] = 'ready';
+      defense['protectedFor'] = 30 * CombatBalance.gameSpeed;
+      defense['defeatedThreats'] = [0, 1, 2];
+      final restored = ForestQuestLedger.fromSave(raw)!;
+      expect(restored['sun']!.phase, ForestQuestPhase.ready);
+      expect(restored['sun']!.threatsRemaining, 0);
+      expect(restored.claimReward('sun'), isNotNull);
+      expect(reload(restored).claimReward('sun'), isNull);
     },
   );
 
@@ -200,7 +243,7 @@ void main() {
       for (final tokens in [
         [0, 0],
         [-1],
-        [3],
+        [30],
       ]) {
         final raw = save();
         raw['quests']['sun']['defeatedThreats'] = tokens;

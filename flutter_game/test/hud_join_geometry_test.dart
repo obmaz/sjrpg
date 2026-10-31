@@ -67,6 +67,16 @@ void main() {
               find.byKey(const ValueKey('hud-portrait')),
             );
             expect(find.byKey(const ValueKey('hud-identity')), findsNothing);
+            final badgeFinder = find.byKey(const ValueKey('hud-level-badge'));
+            final badge = tester.getRect(badgeFinder);
+            expect(badge.width, 26);
+            expect(badge.left, lessThan(portrait.left));
+            expect(badge.top, lessThan(portrait.top));
+            expect(
+              find.descendant(of: badgeFinder, matching: find.text('30')),
+              findsOneWidget,
+            );
+
             final health = tester.getRect(find.byType(HealthMeter));
             final resource = tester.getRect(find.byType(ResourceMeter));
             final xp = tester.getRect(

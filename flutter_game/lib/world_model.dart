@@ -1941,6 +1941,17 @@ class AdventureWorld {
     if (_runtimeSolids.add(body)) _indexSolid(body);
   }
 
+  void removeRuntimeSolid(Rect body) {
+    if (!_runtimeSolids.remove(body)) return;
+    for (var y = body.top ~/ 128; y <= body.bottom ~/ 128; y++) {
+      for (var x = body.left ~/ 128; x <= body.right ~/ 128; x++) {
+        final bucket = _solids['$x:$y'];
+        bucket?.remove(body);
+        if (bucket?.isEmpty == true) _solids.remove('$x:$y');
+      }
+    }
+  }
+
   void _indexSolid(Rect rect) {
     for (var y = rect.top ~/ 128; y <= rect.bottom ~/ 128; y++) {
       for (var x = rect.left ~/ 128; x <= rect.right ~/ 128; x++) {

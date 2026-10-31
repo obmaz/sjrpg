@@ -9,7 +9,7 @@ import 'support/test_game.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test(
-    'nine simultaneous hits apply immediately and rise one by one in one column',
+    'nineteen simultaneous hits apply immediately and rise one by one in one column',
     () {
       final s = inCombatField(Adventure(GameArt()))..start(TestGame());
       addTearDown(s.dispose);
@@ -18,14 +18,14 @@ void main() {
         s.hero.body.center + const Offset(100, 0),
       )!;
       mob.life.initial(10000);
-      for (var i = 0; i < 9; i++) {
+      for (var i = 0; i < 19; i++) {
         expect(s.hit(mob, 1, Offset.zero, critical: i.isEven), true);
       }
-      expect(mob.life.value, 9991);
+      expect(mob.life.value, 9981);
       expect(s.texts.where((t) => identical(t.target, mob)).length, 1);
       final births = <BattleText>{};
       var peak = 0;
-      for (var frame = 0; frame < 180; frame++) {
+      for (var frame = 0; frame < 300; frame++) {
         // The engine updates existing components before the next tick births.
         for (final text in s.texts.toList()) {
           text.update(1 / 60);
@@ -37,7 +37,7 @@ void main() {
             .toList();
         births.addAll(visible);
         if (visible.length > peak) peak = visible.length;
-        expect(visible.length, lessThanOrEqualTo(5));
+        expect(visible.length, lessThanOrEqualTo(10));
         for (var i = 0; i < visible.length; i++) {
           expect(visible[i].position.x, mob.body.center.dx);
           for (var j = i + 1; j < visible.length; j++) {
@@ -49,9 +49,9 @@ void main() {
           }
         }
       }
-      expect(births.length, 9);
-      expect(peak, 5);
-      expect(mob.life.value, 9991);
+      expect(births.length, 19);
+      expect(peak, 10);
+      expect(mob.life.value, 9981);
     },
   );
   test(
@@ -61,7 +61,7 @@ void main() {
       addTearDown(s.dispose);
       final a = Object(), b = Object();
       const color = Color(0xffffdd77);
-      for (var i = 0; i < 9; i++) {
+      for (var i = 0; i < 19; i++) {
         s.bubble('1', const Offset(100, 100), color, target: a);
         s.bubble('2', const Offset(200, 100), color, target: b);
       }
