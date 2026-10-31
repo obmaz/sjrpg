@@ -19,7 +19,6 @@ import 'ground_texture.dart';
 import 'interface_art.dart';
 import 'mount_sprite_mesh.dart';
 import 'prop_grounding.dart';
-import 'quarter_view_road_art.dart';
 import 'quest_scenery.dart';
 import 'terrain_map_plan.dart';
 import 'village_scene_blend.dart';
@@ -79,6 +78,7 @@ class GameArt {
   static const _allImages = [
     ..._fieldImages,
     'field-grass-variants',
+    'field-paving',
     'cave-entrances',
     'cave-rock',
     'landmarks-forest',
@@ -188,6 +188,7 @@ class GameArt {
   // Stable saved stage IDs keep later chapters compatible with their art family.
   static const _sceneryImages = <String, Set<String>>{
     'forest': {
+      'field-paving',
       'landmarks-forest',
       'settlement-forest',
       'village-gateway',
@@ -205,11 +206,17 @@ class GameArt {
       'ruin-props',
       'desert-temple',
     },
-    'past': {'settlement-past', 'ruin-props', 'landmarks-past'},
+    'past': {'settlement-past', 'ruin-props', 'landmarks-past', 'field-paving'},
     'future': {'settlement-future', 'cyber-props', 'landmarks-future'},
-    'tombs': {'settlement-tombs', 'ruin-props', 'landmarks-tombs'},
+    'tombs': {
+      'settlement-tombs',
+      'ruin-props',
+      'landmarks-tombs',
+      'field-paving',
+    },
     'foundry': {'settlement-foundry', 'cyber-props', 'landmarks-foundry'},
     'convergence': {
+      'field-paving',
       'settlement-convergence',
       'ruin-props',
       'landmarks-convergence',
@@ -443,8 +450,12 @@ class GameArt {
         final source = decoded[name]!;
         if (name.startsWith('settlement-')) {
           decoded[name] = await _featherSettlement(source);
-        } else if (buildField && _fieldImages.contains(name)) {
-          decoded[name] = await _bakeFieldTexture(source);
+        } else if (name == 'field-paving' ||
+            buildField && _fieldImages.contains(name)) {
+          decoded[name] = await _bakeFieldTexture(
+            source,
+            preserveCenter: name == 'field-paving',
+          );
         } else {
           continue;
         }
@@ -519,7 +530,10 @@ class GameArt {
     }
   }
 
-  Future<ui.Image> _bakeFieldTexture(ui.Image source) async {
+  Future<ui.Image> _bakeFieldTexture(
+    ui.Image source, {
+    bool preserveCenter = false,
+  }) async {
     if (source.width != 768 || source.height != 768) {
       throw const FormatException('Field sources must retain 768px detail');
     }
@@ -529,6 +543,7 @@ class GameArt {
       source,
       const ui.Rect.fromLTWH(0, 0, 768, 768),
       768,
+      preserveCenter: preserveCenter,
     );
     final picture = recorder.endRecording();
     try {
@@ -1244,7 +1259,36 @@ class TerrainArt {
   final _rasterCache = <(int, int, int), ui.Image>{};
   int _rasterBytes = 0;
   bool _disposed = false;
-  ui.Shader? _caveRock, _grassVariants;
+  ui.Shader? _caveRock, _grassVariants, _paving;
+  ui.Shader? get pavingShader {
+    final image = art.images['field-paving'];
+    if (image == null || world.dungeon != null) return null;
+    final scale = 384 / image.width;
+    return _paving ??= ui.ImageShader(
+      image,
+      ui.TileMode.repeated,
+      ui.TileMode.repeated,
+      Float64List.fromList([
+        scale,
+        0,
+        0,
+        0,
+        0,
+        scale,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+      ]),
+    );
+  }
+
   ui.Shader? get grassVariantShader {
     if (world.dungeon != null) return null;
     final image = art.images['field-grass-variants'];
@@ -1443,7 +1487,11 @@ class TerrainArt {
     }
     for (final t in world.trails) {
       if (!t.bounds.inflate(t.width / 2 + 24).overlaps(area)) continue;
-      fieldLandscape.paintRoadTransition(c, t, art.materials[road]);
+      fieldLandscape.paintRoadTransition(
+        c,
+        t,
+        pavingShader ?? art.materials[road],
+      );
       c.drawPath(
         t.path,
         ui.Paint()
@@ -1451,11 +1499,8 @@ class TerrainArt {
           ..strokeCap = ui.StrokeCap.round
           ..strokeJoin = ui.StrokeJoin.round
           ..strokeWidth = math.max(8, t.width * .65)
-          ..shader = art.materials[road],
+          ..shader = pavingShader ?? art.materials[road],
       );
-    }
-    if (world.stage == WorldStage.forest) {
-      QuarterViewRoadArt.paint(c, world.trails, area);
     }
     c.restore();
     fieldLandscape.paintSandTrails(
@@ -1633,6 +1678,8 @@ class TerrainArt {
     _caveRock = null;
     _grassVariants?.dispose();
     _grassVariants = null;
+    _paving?.dispose();
+    _paving = null;
     for (final image in _rasterCache.values) {
       image.dispose();
     }

@@ -5,44 +5,75 @@ void paintSeamlessGround(
   ui.Canvas canvas,
   ui.Image source,
   ui.Rect crop,
-  double size,
-) {
+  double size, {
+  bool preserveCenter = false,
+}) {
   final bounds = ui.Rect.fromLTWH(0, 0, size, size);
-  const stops = [0.0, .25, .5, .75, 1.0];
-  const weights = [
-    [
-      ui.Color(0x00ffffff),
-      ui.Color(0x80ffffff),
-      ui.Color(0xffffffff),
-      ui.Color(0x80ffffff),
-      ui.Color(0x00ffffff),
-    ],
-    [
-      ui.Color(0xffffffff),
-      ui.Color(0x80ffffff),
-      ui.Color(0x00ffffff),
-      ui.Color(0x80ffffff),
-      ui.Color(0xffffffff),
-    ],
-  ];
+  final stops = preserveCenter
+      ? const [0.0, .075, .925, 1.0]
+      : const [0.0, .25, .5, .75, 1.0];
+  final weights = preserveCenter
+      ? const [
+          [
+            ui.Color(0x80ffffff),
+            ui.Color(0xffffffff),
+            ui.Color(0xffffffff),
+            ui.Color(0x80ffffff),
+          ],
+          [
+            ui.Color(0x80ffffff),
+            ui.Color(0x00ffffff),
+            ui.Color(0x00ffffff),
+            ui.Color(0x80ffffff),
+          ],
+        ]
+      : const [
+          [
+            ui.Color(0x00ffffff),
+            ui.Color(0x80ffffff),
+            ui.Color(0xffffffff),
+            ui.Color(0x80ffffff),
+            ui.Color(0x00ffffff),
+          ],
+          [
+            ui.Color(0xffffffff),
+            ui.Color(0x80ffffff),
+            ui.Color(0x00ffffff),
+            ui.Color(0x80ffffff),
+            ui.Color(0xffffffff),
+          ],
+        ];
   canvas.save();
   canvas.clipRect(bounds);
   for (var shiftY = 0; shiftY < 2; shiftY++) {
     for (var shiftX = 0; shiftX < 2; shiftX++) {
       canvas.saveLayer(bounds, ui.Paint()..blendMode = ui.BlendMode.plus);
-      for (var y = 0; y <= shiftY; y++) {
-        for (var x = 0; x <= shiftX; x++) {
-          canvas.drawImageRect(
-            source,
-            crop,
-            ui.Rect.fromLTWH(
-              x * size - shiftX * size / 2,
-              y * size - shiftY * size / 2,
-              size,
-              size,
-            ),
-            ui.Paint()..filterQuality = ui.FilterQuality.low,
-          );
+      if (preserveCenter) {
+        canvas.save();
+        canvas.translate(shiftX * size, shiftY * size);
+        canvas.scale(shiftX == 0 ? 1 : -1, shiftY == 0 ? 1 : -1);
+        canvas.drawImageRect(
+          source,
+          crop,
+          bounds,
+          ui.Paint()..filterQuality = ui.FilterQuality.low,
+        );
+        canvas.restore();
+      } else {
+        for (var y = 0; y <= shiftY; y++) {
+          for (var x = 0; x <= shiftX; x++) {
+            canvas.drawImageRect(
+              source,
+              crop,
+              ui.Rect.fromLTWH(
+                x * size - shiftX * size / 2,
+                y * size - shiftY * size / 2,
+                size,
+                size,
+              ),
+              ui.Paint()..filterQuality = ui.FilterQuality.low,
+            );
+          }
         }
       }
       canvas.drawRect(

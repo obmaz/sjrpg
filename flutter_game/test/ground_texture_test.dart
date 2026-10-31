@@ -18,6 +18,54 @@ Future<ui.Image> recordImage(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test(
+    'paving keeps interior stone detail while blending only opposite borders',
+    () async {
+      final source = await recordImage(256, 256, (c) {
+        c.drawRect(
+          const ui.Rect.fromLTWH(0, 0, 256, 256),
+          ui.Paint()
+            ..shader = ui.Gradient.linear(
+              ui.Offset.zero,
+              const ui.Offset(256, 256),
+              [const ui.Color(0xffff2000), const ui.Color(0xff0020ff)],
+            ),
+        );
+        c.drawRect(
+          const ui.Rect.fromLTWH(100, 110, 28, 30),
+          ui.Paint()..color = const ui.Color(0xffffdd33),
+        );
+      });
+      addTearDown(source.dispose);
+      final tile = await recordImage(
+        256,
+        256,
+        (c) => paintSeamlessGround(
+          c,
+          source,
+          const ui.Rect.fromLTWH(0, 0, 256, 256),
+          256,
+          preserveCenter: true,
+        ),
+      );
+      addTearDown(tile.dispose);
+      final before = (await source.toByteData())!,
+          after = (await tile.toByteData())!;
+      for (var y = 32; y < 224; y += 9) {
+        for (var x = 32; x < 224; x += 9) {
+          for (var c = 0; c < 4; c++) {
+            final at = (y * 256 + x) * 4 + c;
+            expect(after.getUint8(at), before.getUint8(at));
+          }
+        }
+      }
+      for (var c = 0; c < 3; c++) {
+        int at(int x, int y) => after.getUint8((y * 256 + x) * 4 + c);
+        expect((at(0, 128) - at(255, 128)).abs(), lessThan(15));
+        expect((at(128, 0) - at(128, 255)).abs(), lessThan(15));
+      }
+    },
+  );
+  test(
     'natural material blending removes an abrupt opposite-edge lighting seam in both axes',
     () async {
       final source = await recordImage(

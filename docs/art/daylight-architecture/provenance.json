@@ -1,0 +1,34 @@
+{
+    "generator": "image_gen",
+    "processor": "tools/prepare-daylight-architecture.py",
+    "buildingSource": "docs/art/daylight-architecture/buildings-original.png",
+    "sourceSha256": "7b7196236035fe99b144bee5eb084cd57b8d3ff1d25e373b6dfa3c1e05743d0d",
+    "frames": {
+        "forest-quest-chapel": {
+            "sourceRect": [1, 3, 672, 694],
+            "size": [671, 691],
+            "sha256": "97760cadd3e2cfb2f189691be3d67321b698f80e4ab66999b3b53d2b0186e17d"
+        },
+        "forest-quest-cottage": {
+            "sourceRect": [674, 160, 1249, 690],
+            "size": [575, 530],
+            "sha256": "2906da8312fee34a2dd9691c2c63658d2141574b64d31fcda77e67f417876015"
+        },
+        "village-cottage": {
+            "sourceRect": [3, 684, 619, 1230],
+            "size": [616, 546],
+            "sha256": "7b8310aaa779c7e3914835edd64be951c401adea8572eb7a3ab2f8acfa6c2122"
+        },
+        "blacksmith-forge": {
+            "sourceRect": [629, 695, 1254, 1226],
+            "size": [625, 531],
+            "sha256": "88ebe5f7d2a1ad3843344b38339a64cebb1cea13d3c2031328a627fc4ee46126"
+        }
+    },
+    "paving": {
+        "source": "docs/art/daylight-architecture/paving-original.png",
+        "runtime": "flutter_game/art/field-paving.webp",
+        "size": [768, 768],
+        "worldTileSize": 384
+    }
+}

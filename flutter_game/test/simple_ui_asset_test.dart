@@ -65,23 +65,20 @@ void main() {
       expect(speed.format(speed.current), '4걸음/초');
     },
   );
-  test(
-    'a cottage fades behind the hero while its front and side remain solid-looking',
-    () {
-      final s = Adventure(GameArt());
-      addTearDown(s.dispose);
-      final p = WorldProp(
-        const ui.Rect.fromLTWH(4000, 4000, 180, 100),
-        'village-cottage',
-        const ui.Size(240, 280),
-      );
-      final prop = WoodlandProp(s, p);
-      s.hero.position.setValues(p.body.center.dx - 14, p.body.bottom - 80 - 24);
-      expect(prop.occludesHero, true);
-      s.hero.position.y = p.body.bottom + 5;
-      expect(prop.occludesHero, false);
-      s.hero.position.setValues(p.body.right + 200, p.body.top);
-      expect(prop.occludesHero, false);
-    },
-  );
+  test('a cottage keeps its color at the back, front and sides', () {
+    final s = Adventure(GameArt());
+    addTearDown(s.dispose);
+    final p = WorldProp(
+      const ui.Rect.fromLTWH(4000, 4000, 180, 100),
+      'village-cottage',
+      const ui.Size(240, 280),
+    );
+    final prop = WoodlandProp(s, p);
+    s.hero.position.setValues(p.body.center.dx - 14, p.body.bottom - 80 - 24);
+    expect(prop.occludesHero, false);
+    s.hero.position.y = p.body.bottom + 5;
+    expect(prop.occludesHero, false);
+    s.hero.position.setValues(p.body.right + 200, p.body.top);
+    expect(prop.occludesHero, false);
+  });
 }

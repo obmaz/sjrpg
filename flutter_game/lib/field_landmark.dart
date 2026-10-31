@@ -1,9 +1,10 @@
 import 'dart:ui';
 
+import 'landmark_terrace.dart';
 import 'stage_content.dart';
 
-/// One large, authored terrain formation. Placement uses the full ground apron;
-/// movement and the map use the raised structure's ground outline.
+/// One authored formation. Placement includes its apron and walkable top;
+/// movement separates open ramps, cliff faces and permanent stone or timber.
 class FieldLandmark {
   const FieldLandmark(
     this.stage,
@@ -18,6 +19,19 @@ class FieldLandmark {
   final Offset center;
   final double side;
   String get imageKey => 'landmarks-${stage.name}';
+  LandmarkTerrace? get terrace => LandmarkTerrace.forArt(stage, index);
+  Offset artPoint(Offset point) => drawBounds.topLeft + point * (side / 768);
+  List<Offset> artPolygon(List<Offset> points) => points.map(artPoint).toList();
+  Rect get walkBounds {
+    var result = footprint;
+    for (final point in terrace?.outline ?? const <Offset>[]) {
+      final at = artPoint(point);
+      result = result.expandToInclude(Rect.fromLTWH(at.dx, at.dy, 0, 0));
+    }
+    return result;
+  }
+
+  double get terraceDepth => walkBounds.top;
   Rect get footprint =>
       Rect.fromCenter(center: center, width: side * .72, height: side * .30);
   Rect get drawBounds => Rect.fromLTWH(

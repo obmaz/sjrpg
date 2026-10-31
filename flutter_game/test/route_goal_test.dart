@@ -15,6 +15,7 @@ class _CountingWorld extends AdventureWorld {
     bool waterOnly = false,
     bool ignoreWater = false,
     bool avoidSanctuary = false,
+    bool crossLedges = false,
   }) {
     if (recording) bodyChecks++;
     return super.blocked(
@@ -22,6 +23,7 @@ class _CountingWorld extends AdventureWorld {
       waterOnly: waterOnly,
       ignoreWater: ignoreWater,
       avoidSanctuary: avoidSanctuary,
+      crossLedges: crossLedges,
     );
   }
 
@@ -31,9 +33,16 @@ class _CountingWorld extends AdventureWorld {
     Offset to,
     Size size, {
     bool avoidSanctuary = false,
+    bool crossLedges = false,
   }) {
     if (recording) lineChecks++;
-    return super.clearLine(from, to, size, avoidSanctuary: avoidSanctuary);
+    return super.clearLine(
+      from,
+      to,
+      size,
+      avoidSanctuary: avoidSanctuary,
+      crossLedges: crossLedges,
+    );
   }
 
   void resetCounts() => lineChecks = bodyChecks = 0;
@@ -55,6 +64,7 @@ class _SinglePointWorld extends AdventureWorld {
     bool waterOnly = false,
     bool ignoreWater = false,
     bool avoidSanctuary = false,
+    bool crossLedges = false,
   }) {
     if (!recording) {
       return super.blocked(
@@ -62,6 +72,7 @@ class _SinglePointWorld extends AdventureWorld {
         waterOnly: waterOnly,
         ignoreWater: ignoreWater,
         avoidSanctuary: avoidSanctuary,
+        crossLedges: crossLedges,
       );
     }
     return body.topLeft != allowed || body.size != bodySize;
@@ -73,13 +84,24 @@ class _SinglePointWorld extends AdventureWorld {
     Offset to,
     Size size, {
     bool avoidSanctuary = false,
+    bool crossLedges = false,
   }) {
     if (!recording) {
-      return super.clearLine(from, to, size, avoidSanctuary: avoidSanctuary);
+      return super.clearLine(
+        from,
+        to,
+        size,
+        avoidSanctuary: avoidSanctuary,
+        crossLedges: crossLedges,
+      );
     }
     lineChecks++;
     return !blocked(from & size, avoidSanctuary: avoidSanctuary) &&
-        !blocked(to & size, avoidSanctuary: avoidSanctuary);
+        !blocked(
+          to & size,
+          avoidSanctuary: avoidSanctuary,
+          crossLedges: crossLedges,
+        );
   }
 }
 

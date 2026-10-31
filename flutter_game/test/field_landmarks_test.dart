@@ -29,16 +29,22 @@ void main() {
           );
           for (final landmark in world.landmarks) {
             final body = landmark.footprint;
+            final solid = landmark.terrace?.solids.first;
+            final core = solid == null
+                ? body.center
+                : landmark.artPoint(
+                    solid.reduce((a, b) => a + b) / solid.length.toDouble(),
+                  );
             expect(
               world.blocked(
-                Rect.fromCenter(center: body.center, width: 24, height: 22),
+                Rect.fromCenter(center: core, width: 24, height: 22),
               ),
               true,
             );
             expect(
               world.clearLine(
-                body.centerLeft - const Offset(80, 0),
-                body.centerRight + const Offset(80, 0),
+                Offset(body.left - 80, core.dy),
+                Offset(body.right + 80, core.dy),
                 const Size(10, 10),
               ),
               false,
@@ -119,7 +125,12 @@ void main() {
         expect(
           world.blocked(
             Rect.fromCenter(
-              center: landmark.footprint.center,
+              center: landmark.terrace == null
+                  ? landmark.footprint.center
+                  : landmark.artPoint(
+                      landmark.terrace!.solids.first.reduce((a, b) => a + b) /
+                          landmark.terrace!.solids.first.length.toDouble(),
+                    ),
               width: size.width,
               height: size.height,
             ),

@@ -32,7 +32,11 @@ const gameMetal = Color(0xffb3a079),
 String gameTime(double seconds) =>
     '${seconds ~/ 60}:${(seconds.toInt() % 60).toString().padLeft(2, '0')}';
 
-double battlePortraitDiameter(Size viewport) => 46;
+double battlePortraitDiameter(Size viewport) =>
+    viewport.width > viewport.height && viewport.width >= 500
+    ? 92 * (viewport.height / 720).clamp(.65, 1.0)
+    : 60;
+
 double battleMapDiameter(Size viewport) => viewport.width < 360 ? 76 : 86;
 
 class GameHud extends StatelessWidget {
@@ -47,84 +51,145 @@ class GameHud extends StatelessWidget {
         child: GameHud(session, onMap: onMap),
       );
     }
-    final p = session.progress, media = MediaQuery.of(context);
-    final landscape =
-        media.size.width > media.size.height && media.size.width >= 500;
+    final p = session.progress;
+    final media = MediaQuery.of(context);
+    final width = media.size.width;
+    final landscape = width > media.size.height && width >= 500;
+    final portraitSide = battlePortraitDiameter(media.size);
+    final meterLeft = 10 + portraitSide * .55;
+    // Labels start beyond the portrait's complete metal rim. Only the fluid
+    // and its frame continue underneath the circular join.
+    final labelInset = 10 + portraitSide + 8 - meterLeft;
     final mapSide = battleMapDiameter(media.size);
-    final rowHeight = ResourceMeter.minimumHeight(media.textScaler);
-    final portrait = math.max(
-      battlePortraitDiameter(media.size),
-      rowHeight * 2 + 8,
+    final statusWidth = math.min(
+      landscape ? 360 * (media.size.height / 720).clamp(.65, 1.0) : 306.0,
+      width - mapSide - (landscape ? 61 + 112 + 8 : 22),
     );
-    final width = math.min(
-      280.0,
-      media.size.width - mapSide - (landscape ? 190 : 28),
+    final resourceHeight = math.max(
+      18.0,
+      ResourceMeter.minimumHeight(media.textScaler),
     );
-    final start = 10 + portrait - 3;
-    final xpTop = 14 + rowHeight * 2 + 7;
+    const portraitTop = 10.0,
+        healthTop = 10.0,
+        healthHeight = 18.0,
+        slant = 16.0;
+    final resourceTop = healthTop + healthHeight + 1;
+    final ribbonTop = healthTop - 3;
+    final ribbonBottom = resourceTop + resourceHeight + 15;
+    Widget joinPortrait(Widget child, double top) => ClipPath(
+      clipper: PortraitGaugeClipper(
+        Offset(
+          10 + portraitSide / 2 - meterLeft,
+          portraitTop + portraitSide / 2 - top,
+        ),
+        portraitSide / 2 + 5,
+        ribbonOffset: top - ribbonTop,
+        ribbonHeight: ribbonBottom - ribbonTop,
+        slant: slant,
+      ),
+      child: child,
+    );
     return SizedBox(
-      height: math.max(125, mapSide + 36),
+      height: math.max(130, mapSide + 14),
       child: Stack(
         children: [
           Positioned(
-            left: 34,
-            top: 10,
-            width: math.max(80, width - 34),
-            height: xpTop - 4,
+            key: const ValueKey('hud-status-chrome'),
+            left: 5,
+            top: 4,
+            width: statusWidth,
+            height: math.max(
+              math.max(84, portraitSide + 24),
+              resourceTop + resourceHeight + 19,
+            ),
             child: IgnorePointer(
-              child: DecoratedBox(
-                key: const ValueKey('hud-status-chrome'),
-                decoration: BoxDecoration(
-                  color: const Color(0x99000000),
-                  borderRadius: BorderRadius.circular(5),
+              child: CustomPaint(
+                painter: _HeroStatusChrome(
+                  portraitSide + 8,
+                  plateTop: ribbonTop - 4,
+                  plateBottom: ribbonBottom - 4,
+                  portraitTop: portraitTop,
+                  slant: slant,
                 ),
               ),
             ),
           ),
           Positioned(
-            left: start,
-            top: 14,
-            width: math.max(120, width - start - 6),
-            child: HealthMeter(session, height: 7),
+            top: healthTop,
+            left: meterLeft,
+            width: math.max(50, statusWidth - meterLeft - 7),
+            child: joinPortrait(
+              HealthMeter(
+                session,
+                height: healthHeight,
+                leadingInset: labelInset,
+                flatEnd: true,
+              ),
+              healthTop,
+            ),
           ),
           Positioned(
-            left: start,
-            top: 14 + rowHeight + 3,
-            width: math.max(120, width - start - 6),
-            child: ResourceMeter(session, height: 7),
+            left: meterLeft,
+            top: resourceTop,
+            width: math.max(48, statusWidth - meterLeft - 7),
+            child: joinPortrait(
+              ResourceMeter(
+                session,
+                height: resourceHeight,
+                leadingInset: labelInset,
+              ),
+              resourceTop,
+            ),
           ),
           Positioned(
-            left: start,
-            top: xpTop,
-            width: math.max(120, width - start - 6),
-            height: 2.5,
-            child: Semantics(
-              label: '경험치',
-              value: '${p.xp} / ${p.nextLevelXp}',
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(1.25),
-                child: LinearProgressIndicator(
-                  key: const ValueKey('hud-experience'),
-                  minHeight: 2.5,
-                  value: (p.xp / p.nextLevelXp).clamp(0.0, 1.0),
-                  color: const Color(0xffbda673),
-                  backgroundColor: const Color(0x66000000),
+            left: meterLeft,
+            top: resourceTop + resourceHeight + 4,
+            width: math.max(48, statusWidth - meterLeft - 7),
+            height: 8,
+            child: joinPortrait(
+              Semantics(
+                label: '경험치',
+                value: '${p.xp} / ${p.nextLevelXp}',
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    LinearProgressIndicator(
+                      key: const ValueKey('hud-experience'),
+                      value: (p.xp / p.nextLevelXp).clamp(0.0, 1.0),
+                      minHeight: 8,
+                      color: gold,
+                      backgroundColor: const Color(0xff514537),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(left: labelInset, right: 8),
+                      child: Center(
+                        child: Text(
+                          'EXP ${(p.xp / p.nextLevelXp * 100).floor()}%',
+                          textScaler: TextScaler.noScaling,
+                          style: const TextStyle(
+                            fontSize: 7,
+                            height: 1,
+                            color: cream,
+                            shadows: [
+                              Shadow(color: Colors.black, blurRadius: 2),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              resourceTop + resourceHeight + 4,
             ),
           ),
           Positioned(
             left: 10,
-            top: 8,
-            child: Container(
+            top: portraitTop,
+            child: SizedBox(
               key: const ValueKey('hud-portrait'),
-              width: portrait,
-              height: portrait,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xffb6aa88), width: 1.5),
-              ),
-              padding: const EdgeInsets.all(1.5),
+              width: portraitSide,
+              height: portraitSide,
               child: ClipOval(
                 child: CustomPaint(
                   painter: _PortraitPainter(
@@ -137,36 +202,36 @@ class GameHud extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: 3,
-            top: 3,
+            left: 2,
+            top: 2,
             child: Semantics(
               label: '현재 레벨 ${p.level}',
               excludeSemantics: true,
               child: SizedBox(
                 key: const ValueKey('hud-level-badge'),
-                width: 20,
-                height: 20,
+                width: 26,
+                height: 26,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
                     if (session.art.images['level-badge'] case final image?)
                       RawImage(
                         image: image,
-                        width: 20,
-                        height: 20,
+                        width: 26,
+                        height: 26,
                         filterQuality: FilterQuality.medium,
                       ),
                     Padding(
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(5),
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
                           '${p.level}',
                           style: const TextStyle(
                             color: cream,
-                            fontSize: 10,
+                            fontSize: 12,
                             height: 1,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w900,
                           ),
                         ),
                       ),
@@ -177,10 +242,17 @@ class GameHud extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: 10,
-            top: math.max(portrait + 13, xpTop + 10),
+            left: landscape ? 10 : 116,
+            top: landscape
+                ? math.max(
+                    portraitTop + portraitSide + 8,
+                    resourceTop + resourceHeight + 16,
+                  )
+                : math.max(73, resourceTop + resourceHeight + 16),
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: width - 10),
+              constraints: BoxConstraints(
+                maxWidth: math.max(60, statusWidth - 76),
+              ),
               child: AfflictionIcons(session.afflictions, session: session),
             ),
           ),
@@ -229,6 +301,146 @@ class GameHud extends StatelessWidget {
       ),
     );
   }
+}
+
+/// One circular cutout joins each live bar to the same portrait rim.
+class PortraitGaugeClipper extends CustomClipper<Path> {
+  const PortraitGaugeClipper(
+    this.center,
+    this.radius, {
+    this.ribbonOffset = 0,
+    this.ribbonHeight,
+    this.slant = 0,
+  });
+  final Offset center;
+  final double radius;
+  final double ribbonOffset, slant;
+  final double? ribbonHeight;
+  double rightAt(Size size, double y) => ribbonHeight == null
+      ? size.width
+      : size.width - slant * (ribbonOffset + y) / ribbonHeight!;
+  @override
+  Path getClip(Size size) => Path.combine(
+    PathOperation.difference,
+    Path()
+      ..moveTo(0, 0)
+      ..lineTo(rightAt(size, 0), 0)
+      ..lineTo(rightAt(size, size.height), size.height)
+      ..lineTo(0, size.height)
+      ..close(),
+    Path()..addOval(Rect.fromCircle(center: center, radius: radius)),
+  );
+  @override
+  bool shouldReclip(covariant PortraitGaugeClipper old) =>
+      old.center != center ||
+      old.radius != radius ||
+      old.ribbonOffset != ribbonOffset ||
+      old.ribbonHeight != ribbonHeight ||
+      old.slant != slant;
+}
+
+/// The portrait and two vessels share one fitted dark-metal silhouette.
+/// The live meters retain their own damage trail, danger pulse and fluid clock.
+class _HeroStatusChrome extends CustomPainter {
+  const _HeroStatusChrome(
+    this.portraitSide, {
+    required this.plateBottom,
+    required this.plateTop,
+    required this.portraitTop,
+    required this.slant,
+  });
+  final double portraitSide;
+  final double plateBottom;
+  final double plateTop, portraitTop, slant;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final plate = Path()
+      ..moveTo(portraitSide * .70, plateTop)
+      ..lineTo(size.width - 9, plateTop)
+      ..lineTo(size.width - 9 - slant, plateBottom)
+      ..lineTo(portraitSide * .70, plateBottom)
+      ..close();
+    final ringTop = portraitTop - 8;
+    final portrait = Rect.fromLTWH(1, ringTop, portraitSide, portraitSide);
+    final joinedPlate = Path.combine(
+      PathOperation.difference,
+      plate,
+      Path()..addOval(portrait.inflate(1)),
+    );
+    canvas.drawPath(
+      joinedPlate.shift(const Offset(0, 2)),
+      Paint()..color = const Color(0xaa000000),
+    );
+    canvas.drawPath(joinedPlate, Paint()..color = const Color(0xe51c1b1c));
+    canvas.drawPath(
+      joinedPlate,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.4
+        ..color = const Color(0xff6e6355),
+    );
+    canvas.drawOval(
+      portrait.shift(const Offset(0, 2)),
+      Paint()..color = const Color(0xaa000000),
+    );
+    canvas.drawOval(portrait, Paint()..color = const Color(0xff171d20));
+    canvas.drawOval(
+      portrait,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..color = const Color(0xff4a4337),
+    );
+    canvas.drawArc(
+      portrait,
+      -math.pi + .2,
+      2.7,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.4
+        ..color = const Color(0xffc3ac82),
+    );
+    canvas.drawOval(
+      portrait.deflate(3),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = .7
+        ..color = const Color(0xff9c8761),
+    );
+    // Small crest and rivets distinguish the portrait from an ordinary button.
+    for (final y in [ringTop - 1, ringTop + portraitSide]) {
+      final crest = Path()
+        ..moveTo(portraitSide / 2 - 1, y - 3)
+        ..lineTo(portraitSide / 2 + 4, y + 1)
+        ..lineTo(portraitSide / 2 - 1, y + 6)
+        ..lineTo(portraitSide / 2 - 6, y + 1)
+        ..close();
+      canvas.drawPath(crest, Paint()..color = const Color(0xff292b2b));
+      canvas.drawPath(
+        crest,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..color = const Color(0xffa38e68),
+      );
+    }
+    for (final x in [5.0, portraitSide - 7]) {
+      canvas.drawCircle(
+        Offset(x, ringTop + portraitSide / 2 - 1),
+        1.4,
+        Paint()..color = const Color(0xffad9770),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _HeroStatusChrome old) =>
+      old.portraitSide != portraitSide ||
+      old.plateBottom != plateBottom ||
+      old.plateTop != plateTop ||
+      old.portraitTop != portraitTop ||
+      old.slant != slant;
 }
 
 /// Shared generated medallions use the same circular face as learned skills.

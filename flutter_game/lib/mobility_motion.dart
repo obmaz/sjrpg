@@ -8,7 +8,7 @@ import 'adventure.dart';
 import 'effect_visibility.dart';
 import 'world_model.dart';
 
-/// Walks the static body corridor before selecting a free teleport landing.
+/// Samples walls and water, crossing only ledges before choosing a safe landing.
 /// Living enemies may occupy the corridor, but never the returned endpoint.
 Offset? blinkLanding(
   AdventureWorld world,
@@ -31,12 +31,14 @@ Offset? blinkLanding(
   for (var i = 1; i <= steps; i++) {
     final next = from + direction * math.min(range, i * 6.0);
     final stored = Vector2(next.dx, next.dy).toOffset();
-    if (world.blocked(stored & body) ||
-        !world.clearLine(previous, stored, body)) {
+    if (world.blocked(stored & body, crossLedges: true) ||
+        !world.clearLine(previous, stored, body, crossLedges: true)) {
       break;
     }
     previous = stored;
-    if (!occupied(stored & body)) landing = stored;
+    if (!world.blocked(stored & body) && !occupied(stored & body)) {
+      landing = stored;
+    }
   }
   return landing != null && (landing - from).distanceSquared > 1
       ? landing

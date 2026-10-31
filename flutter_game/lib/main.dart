@@ -35,7 +35,6 @@ import 'reload_bridge.dart' as app_reload;
 import 'rpg_widgets.dart';
 import 'sanctuary_fence.dart';
 import 'save_bridge.dart' as storage;
-import 'scene_atmosphere.dart';
 import 'title_screen.dart';
 import 'well_portal.dart';
 import 'world_model.dart';
@@ -737,7 +736,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     );
     stopSaveListener = storage.listenForExit(saveNow);
     game = BonfireWidget(
-      lightingColorGame: GameVignette.ambient,
+      lightingColorGame: Colors.transparent,
       map: WorldMap.empty(size: Vector2(worldSize.width, worldSize.height)),
       player: adventure.hero,
       playerControllers: [
@@ -1235,7 +1234,6 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                 child: IgnorePointer(ignoring: modal != null, child: child!),
               ),
             ),
-            const Positioned.fill(child: GameVignette()),
             if (adventure.afflictions.remaining(PlayerStatus.blind) > 0)
               Positioned.fill(
                 child: NarrowVisionCurtain(

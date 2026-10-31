@@ -60,6 +60,7 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
         'landmarks-convergence',
         'field-ground-meadow',
         'field-grass-variants',
+        'field-paving',
         'field-ground-desert',
         'field-ground-stone',
         'field-ground-industrial',

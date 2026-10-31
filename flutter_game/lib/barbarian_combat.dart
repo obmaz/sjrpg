@@ -14,7 +14,7 @@ import 'rpg_model.dart';
 import 'skill_aim.dart';
 import 'weapon_profiles.dart';
 
-/// Paid combat actions own their follow-up hits and grounded leap trajectory.
+/// Paid combat actions own their follow-up hits and ground-safe leap landings.
 /// The caller owns skill-slot validation, the one resource debit and cooldown.
 class BarbarianCombat {
   BarbarianCombat(this.hero);
@@ -110,7 +110,13 @@ class BarbarianCombat {
       final body = at & hero.body.size;
       if (!session.world.blocksEnemy(body) &&
           session.townGates.permits(session.world.sanctuary, hero.body, body) &&
-          session.world.clearEnemyLine(origin, at, hero.body.size)) {
+          session.world.clearLine(
+            origin,
+            at,
+            hero.body.size,
+            avoidSanctuary: true,
+            crossLedges: true,
+          )) {
         return at;
       }
     }

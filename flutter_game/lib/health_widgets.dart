@@ -51,10 +51,7 @@ class _PlayerHealthFeedbackScopeState extends State<PlayerHealthFeedbackScope>
   }
 
   void syncTicker() {
-    if (feedback.needsFrames &&
-        enabled &&
-        (feedback.reading.value.danger != HealthDanger.none ||
-            feedback.damageRemaining > 0)) {
+    if (feedback.needsFrames && enabled) {
       if (!ticker.isActive) ticker.start();
     } else {
       ticker.stop();
@@ -112,9 +109,14 @@ class _HealthScope extends InheritedWidget {
 }
 
 class _HealthSurface extends StatefulWidget {
-  const _HealthSurface({required this.feedback, required this.danger});
+  const _HealthSurface({
+    required this.feedback,
+    required this.danger,
+    this.flatEnd = false,
+  });
   final PlayerHealthFeedback feedback;
   final bool danger;
+  final bool flatEnd;
   @override
   State<_HealthSurface> createState() => _HealthSurfaceState();
 }
@@ -123,10 +125,13 @@ class _HealthSurfaceState extends State<_HealthSurface> {
   late CustomPainter painter = createPainter();
   CustomPainter createPainter() => widget.danger
       ? HealthDangerPainter(widget.feedback)
-      : HealthMeterPainter(widget.feedback);
+      : HealthMeterPainter(widget.feedback, flatEnd: widget.flatEnd);
   void release() {
     if (painter case final HealthDangerPainter danger) {
       danger.release();
+    }
+    if (painter case final HealthMeterPainter meter) {
+      meter.release();
     }
   }
 
@@ -134,7 +139,8 @@ class _HealthSurfaceState extends State<_HealthSurface> {
   void didUpdateWidget(covariant _HealthSurface oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.feedback, widget.feedback) ||
-        oldWidget.danger != widget.danger) {
+        oldWidget.danger != widget.danger ||
+        oldWidget.flatEnd != widget.flatEnd) {
       release();
       painter = createPainter();
     }
@@ -158,19 +164,27 @@ class _HealthSurfaceState extends State<_HealthSurface> {
 class HealthMeter extends StatelessWidget {
   const HealthMeter(
     this.session, {
-    this.height = 7,
-    this.leadingInset = 0,
+    this.height = 25,
+    this.leadingInset = 18,
+    this.flatEnd = false,
     super.key,
   });
   final Adventure session;
-  final double height, leadingInset;
+  final double height;
+  final double leadingInset;
+  final bool flatEnd;
   @override
   Widget build(BuildContext context) {
     final feedback = PlayerHealthFeedbackScope.maybeOf(context);
     if (feedback == null || !identical(feedback.session, session)) {
       return PlayerHealthFeedbackScope(
         session: session,
-        child: HealthMeter(session, height: height, leadingInset: leadingInset),
+        child: HealthMeter(
+          session,
+          height: height,
+          leadingInset: leadingInset,
+          flatEnd: flatEnd,
+        ),
       );
     }
     return ValueListenableBuilder<HealthReading>(
@@ -179,37 +193,30 @@ class HealthMeter extends StatelessWidget {
         label: reading.label,
         excludeSemantics: true,
         child: SizedBox(
-          height: math.max(
-            12,
-            MediaQuery.textScalerOf(context).scale(8.5) * 1.2,
-          ),
-          child: Row(
+          height: height,
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(left: leadingInset),
-                  child: SizedBox(
-                    key: const ValueKey('hud-health-gauge'),
-                    height: height,
-                    child: _HealthSurface(feedback: feedback, danger: false),
-                  ),
-                ),
+              _HealthSurface(
+                feedback: feedback,
+                danger: false,
+                flatEnd: flatEnd,
               ),
-              const SizedBox(width: 5),
-              SizedBox(
-                width: 82,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      '${CombatNumbers.stat(reading.hp, rounding: CombatRounding.up)} / ${CombatNumbers.stat(reading.maximum, rounding: CombatRounding.up)}',
-                      style: const TextStyle(
-                        fontSize: 8.5,
-                        height: 1,
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w600,
-                      ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(leadingInset, 2, 17, 2),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '${CombatNumbers.stat(reading.hp, rounding: CombatRounding.up)} / ${CombatNumbers.stat(reading.maximum, rounding: CombatRounding.up)}',
+                    maxLines: 1,
+                    style: const TextStyle(
+                      color: Color(0xfffff0de),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      height: 1,
+                      shadows: [
+                        Shadow(color: Color(0xff351719), blurRadius: 2),
+                      ],
                     ),
                   ),
                 ),
@@ -223,38 +230,97 @@ class HealthMeter extends StatelessWidget {
 }
 
 class HealthMeterPainter extends CustomPainter {
-  HealthMeterPainter(this.feedback) : super(repaint: feedback);
+  HealthMeterPainter(this.feedback, {this.flatEnd = false})
+    : super(repaint: feedback);
+  final bool flatEnd;
   final PlayerHealthFeedback feedback;
+  ui.Shader? _fillShader;
+  Size _shaderSize = Size.zero;
+  bool? _criticalShader;
+  void release() {
+    _fillShader?.dispose();
+    _fillShader = null;
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     final bounds = Offset.zero & size;
-    final shape = RRect.fromRectAndRadius(bounds, const Radius.circular(2));
+    final edge = math.min(13.0, size.height * .42);
+    final shape = Path()
+      ..moveTo(0, 1)
+      ..lineTo(size.width + (flatEnd ? 1 : -1), 1)
+      ..lineTo(flatEnd ? size.width + 1 : size.width - edge, size.height - 1)
+      ..lineTo(0, size.height - 1)
+      ..close();
     canvas.save();
-    canvas.clipRRect(shape);
-    canvas.drawRect(bounds, Paint()..color = const Color(0x99000000));
-    final reading = feedback.reading.value;
-    canvas.drawRect(
-      Rect.fromLTWH(
-        0,
-        0,
-        size.width * (reading.hp / reading.maximum).clamp(0.0, 1.0),
-        size.height,
-      ),
-      Paint()..color = const Color(0xff963747),
-    );
-    final tint = feedback.warningTintOpacity;
-    if (tint > 0) {
+    canvas.clipPath(shape);
+    canvas.drawRect(bounds, Paint()..color = const Color(0xff291c20));
+    final actual = feedback.reading.value.ratio;
+    if (feedback.trailRatio > actual) {
       canvas.drawRect(
-        bounds,
-        Paint()..color = Color.fromRGBO(232, 49, 56, tint),
+        Rect.fromLTWH(0, 0, size.width * feedback.trailRatio, size.height),
+        Paint()..color = const Color(0xffb88b69),
       );
     }
+    final critical = feedback.reading.value.danger == HealthDanger.critical;
+    final fill = Rect.fromLTWH(0, 0, size.width * actual, size.height);
+    if (_fillShader == null ||
+        _shaderSize != size ||
+        _criticalShader != critical) {
+      release();
+      _shaderSize = size;
+      _criticalShader = critical;
+      _fillShader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: critical
+            ? const [Color(0xffc5443d), Color(0xff7f202c)]
+            : const [Color(0xffd65d4c), Color(0xff8e2e32)],
+      ).createShader(bounds);
+    }
+    canvas.drawRect(fill, Paint()..shader = _fillShader);
+    if (feedback.warningTintOpacity > 0) {
+      canvas.drawRect(
+        bounds,
+        Paint()
+          ..color = Color.fromRGBO(255, 42, 36, feedback.warningTintOpacity),
+      );
+    }
+    canvas.drawLine(
+      const Offset(3, 3),
+      Offset(math.max(3, fill.right - 5), 3),
+      Paint()
+        ..color = const Color(0x66f5bb9d)
+        ..strokeWidth = 1,
+    );
     canvas.restore();
+    canvas.drawPath(
+      shape,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.4
+        ..color = const Color(0xff201c19),
+    );
+    final warning = feedback.reading.value.danger != HealthDanger.none;
+    canvas.drawPath(
+      shape,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..color = warning
+            ? Color.lerp(
+                const Color(0xffad6b54),
+                const Color(0xffe0a177),
+                feedback.pulse,
+              )!
+            : const Color(0xff8e8069),
+    );
   }
 
   @override
   bool shouldRepaint(covariant HealthMeterPainter oldDelegate) =>
-      !identical(oldDelegate.feedback, feedback);
+      !identical(oldDelegate.feedback, feedback) ||
+      oldDelegate.flatEnd != flatEnd;
 }
 
 class HealthDangerVignette extends StatelessWidget {

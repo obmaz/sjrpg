@@ -314,7 +314,9 @@ class WorldProp {
   final Rect body;
   final String kind;
   final Size drawSize;
-  Iterable<Rect> get collisionBodies => landmark?.stage == WorldStage.forest
+  Iterable<Rect> get collisionBodies =>
+      landmark != null &&
+          (landmark!.stage == WorldStage.forest || landmark!.terrace != null)
       ? const [] // The raised silhouette is registered as a polygon instead.
       : kind == 'ruin-4'
       ? [
@@ -1592,7 +1594,7 @@ class AdventureWorld {
         [920.0, 1000.0, 900.0, 960.0][i],
       );
       bool valid(FieldLandmark item) {
-        final body = item.footprint.inflate(100);
+        final body = item.walkBounds.inflate(100);
         if (!(Offset.zero & worldSize).deflate(100).contains(body.topLeft) ||
             !(Offset.zero & worldSize)
                 .deflate(100)
@@ -1638,7 +1640,28 @@ class AdventureWorld {
       landmarks.add(chosen);
     }
     for (final landmark in landmarks) {
-      if (landmark.stage == WorldStage.forest) {
+      final terrace = landmark.terrace;
+      if (terrace != null) {
+        for (final solid in terrace.solids) {
+          addRuntimeShape(landmark.artPolygon(solid));
+        }
+        for (final ledge in terrace.ledges) {
+          final shape = RegionShape(landmark.artPolygon(ledge));
+          for (
+            var y = shape.bounds.top ~/ 128;
+            y <= shape.bounds.bottom ~/ 128;
+            y++
+          ) {
+            for (
+              var x = shape.bounds.left ~/ 128;
+              x <= shape.bounds.right ~/ 128;
+              x++
+            ) {
+              _ledgeBuckets.putIfAbsent('$x:$y', () => []).add(shape);
+            }
+          }
+        }
+      } else if (landmark.stage == WorldStage.forest) {
         addRuntimeShape(landmark.solidOutline);
       }
     }
@@ -1933,6 +1956,18 @@ class AdventureWorld {
   final Map<String, List<Rect>> _solids = {};
   final Set<Rect> _runtimeSolids = {};
   final List<RegionShape> _runtimeShapes = [];
+  final Map<String, List<RegionShape>> _ledgeBuckets = {};
+  Iterable<RegionShape> _ledgesNear(Rect body) sync* {
+    final seen = <RegionShape>{};
+    for (var y = body.top ~/ 128; y <= body.bottom ~/ 128; y++) {
+      for (var x = body.left ~/ 128; x <= body.right ~/ 128; x++) {
+        for (final shape in _ledgeBuckets['$x:$y'] ?? const <RegionShape>[]) {
+          if (seen.add(shape)) yield shape;
+        }
+      }
+    }
+  }
+
   void addRuntimeShape(List<Offset> points) {
     _runtimeShapes.add(RegionShape(points));
   }
@@ -1980,6 +2015,7 @@ class AdventureWorld {
     bool waterOnly = false,
     bool ignoreWater = false,
     bool avoidSanctuary = false,
+    bool crossLedges = false,
   }) {
     if (dungeon != null) return waterOnly || !dungeon!.layout.permits(body);
     if (body.left < 0 ||
@@ -1993,6 +2029,12 @@ class AdventureWorld {
     if (_runtimeShapes.any(
       (shape) => shape.bounds.overlaps(body) && shape.overlaps(body),
     )) {
+      return true;
+    }
+    if (!crossLedges &&
+        _ledgesNear(
+          body,
+        ).any((shape) => shape.bounds.overlaps(body) && shape.overlaps(body))) {
       return true;
     }
     if (!_authoring &&
@@ -2066,6 +2108,7 @@ class AdventureWorld {
     Offset to,
     Size size, {
     bool avoidSanctuary = false,
+    bool crossLedges = false,
   }) {
     if (dungeon != null) {
       final steps = math.max(1, ((to - from).distance / 5).ceil());
@@ -2100,6 +2143,7 @@ class AdventureWorld {
       final candidates = [
         ...settlementCollision,
         ..._runtimeShapes,
+        if (!crossLedges) ..._ledgesNear(sweep),
       ].where((shape) => shape.bounds.overlaps(sweep)).toList();
       if (candidates.isNotEmpty) {
         // Exact swept rectangle hull catches diagonal corner crossings even
@@ -2126,11 +2170,11 @@ class AdventureWorld {
       }
     }
     if (from.dx == to.dx || from.dy == to.dy) {
-      if (!blocked(sweep)) return true;
+      if (!blocked(sweep, crossLedges: crossLedges)) return true;
       // A blocked dry/body sweep stays blocked. Only a bridge can make a
       // water-crossing sweep valid, keeping ordinary failed A* edges cheap.
       if (!bridges.any((bridge) => bridge.overlaps(sweep))) return false;
-      if (blocked(sweep, ignoreWater: true) ||
+      if (blocked(sweep, ignoreWater: true, crossLedges: crossLedges) ||
           blocked(from & size) ||
           blocked(to & size)) {
         return false;
@@ -2247,6 +2291,7 @@ class AdventureWorld {
     Size size, {
     bool waterOnly = false,
     bool avoidSanctuary = false,
+    bool crossLedges = false,
   }) {
     var p = from;
     final n = math.max(
@@ -2259,6 +2304,7 @@ class AdventureWorld {
         Rect.fromLTWH(p.dx + step.dx, p.dy + step.dy, size.width, size.height),
         waterOnly: waterOnly,
         avoidSanctuary: avoidSanctuary,
+        crossLedges: crossLedges,
       )) {
         p += step;
         continue;
@@ -2267,6 +2313,7 @@ class AdventureWorld {
         Rect.fromLTWH(p.dx + step.dx, p.dy, size.width, size.height),
         waterOnly: waterOnly,
         avoidSanctuary: avoidSanctuary,
+        crossLedges: crossLedges,
       )) {
         p += Offset(step.dx, 0);
       }
@@ -2274,6 +2321,7 @@ class AdventureWorld {
         Rect.fromLTWH(p.dx, p.dy + step.dy, size.width, size.height),
         waterOnly: waterOnly,
         avoidSanctuary: avoidSanctuary,
+        crossLedges: crossLedges,
       )) {
         p += Offset(0, step.dy);
       }

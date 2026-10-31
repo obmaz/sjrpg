@@ -7,7 +7,6 @@ import 'package:guardian_new/adventure.dart';
 import 'package:guardian_new/game_art.dart';
 import 'package:guardian_new/game_ui.dart';
 import 'package:guardian_new/rpg_model.dart';
-import 'package:guardian_new/scene_atmosphere.dart';
 import 'package:guardian_new/sorceress_combat.dart';
 
 import 'support/sorceress_fixture.dart';
@@ -15,38 +14,6 @@ import 'support/test_game.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  testWidgets(
-    'vignette leaves the center clear and passes input to the world',
-    (tester) async {
-      var taps = 0;
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Stack(
-            fit: StackFit.expand,
-            children: [
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => taps++,
-                child: const ColoredBox(color: Colors.white),
-              ),
-              const GameVignette(),
-            ],
-          ),
-        ),
-      );
-      await tester.tapAt(const Offset(150, 150));
-      expect(taps, 1);
-      final widget = tester.widget<DecoratedBox>(
-        find.byKey(const ValueKey('game-vignette')),
-      );
-      final gradient =
-          (widget.decoration as BoxDecoration).gradient! as RadialGradient;
-      expect(gradient.center, Alignment.center);
-      expect(gradient.radius, .9);
-      expect(gradient.colors.first.a, 0);
-      expect(gradient.colors.last.a, closeTo(.45, .005));
-    },
-  );
   testWidgets('both joystick parts fade together and cancel returns to rest', (
     tester,
   ) async {
@@ -116,7 +83,7 @@ void main() {
     });
   });
   test(
-    'player and finite spell lights share real Bonfire lighting without gameplay effects',
+    'only finite spell effects emit light without a permanent player halo',
     () {
       final s = inCombatField(Adventure(GameArt(), heroClass: HeroClass.mage))
         ..start(TestGame());
@@ -127,9 +94,7 @@ void main() {
       final spec = s.progress.sorceressSpell(
         s.progress.skills.firstWhere((d) => d.id == 'chargedBolt'),
       );
-      expect(s.hero, isA<WithLighting>());
-      expect(s.hero.lighting.config!.radius, 120);
-      expect(s.hero.lighting.config!.withPulse, true);
+      expect(s.hero, isNot(isA<WithLighting>()));
       final bolts = [
         for (var i = 0; i < 24; i++)
           SorceressProjectile(

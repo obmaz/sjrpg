@@ -1963,7 +1963,13 @@ class Adventure extends ChangeNotifier {
               EnemySpacing.permits(at & size, next & size, m.body),
         );
     for (var i = 0; i < count; i++) {
-      final next = world.move(at, step, size, waterOnly: waterOnly);
+      final next = world.move(
+        at,
+        step,
+        size,
+        waterOnly: waterOnly,
+        crossLedges: airborne,
+      );
       if (permits(next)) {
         at = next;
         continue;
@@ -1973,6 +1979,7 @@ class Adventure extends ChangeNotifier {
         ui.Offset(step.dx, 0),
         size,
         waterOnly: waterOnly,
+        crossLedges: airborne,
       );
       if (permits(horizontal)) at = horizontal;
       final vertical = world.move(
@@ -1980,6 +1987,7 @@ class Adventure extends ChangeNotifier {
         ui.Offset(0, step.dy),
         size,
         waterOnly: waterOnly,
+        crossLedges: airborne,
       );
       if (permits(vertical)) at = vertical;
     }
@@ -2614,7 +2622,7 @@ class Adventure extends ChangeNotifier {
   }
 }
 
-class Guardian extends Player with WithCollision, WithLighting {
+class Guardian extends Player with WithCollision {
   static const onFootSize = ui.Size(28, 24);
   Guardian(this.session)
     : super(
@@ -2626,20 +2634,6 @@ class Guardian extends Player with WithCollision, WithLighting {
     setupMovementByJoystick(
       moveType: MovementByJoystickType.angle,
       intensityEnabled: true,
-    );
-    lighting.setup(
-      LightingConfig(
-        radius: 120,
-        color: const ui.Color(0x4dffc477),
-        withPulse: !ui
-            .PlatformDispatcher
-            .instance
-            .accessibilityFeatures
-            .disableAnimations,
-        pulseVariation: .04,
-        pulseSpeed: .3,
-        blurBorder: 45,
-      ),
     );
   }
   final Adventure session;
@@ -3056,11 +3050,6 @@ class Guardian extends Player with WithCollision, WithLighting {
       return;
     }
     if (dt <= 0) return;
-    final pulse =
-        !ui.PlatformDispatcher.instance.accessibilityFeatures.disableAnimations;
-    if (lighting.config?.withPulse != pulse) {
-      lighting.setup(lighting.config?.copyWith(withPulse: pulse));
-    }
     barbarianCombat.update(dt);
     if (session.progress.heroClass == HeroClass.mage) {
       sorceressCombat.update(dt);
@@ -6357,6 +6346,14 @@ class WoodlandProp extends GameComponent with EffectVisibility {
   final Adventure session;
   final WorldProp prop;
   @override
+  int get priority => prop.landmark?.terrace == null
+      ? super.priority
+      : LayerPriority.getComponentPriority(
+          (prop.landmark!.terraceDepth +
+                  (hasGameRef ? gameRef.map.renderPriorityOffsetY : 0))
+              .floor(),
+        );
+  @override
   ui.Rect get effectBounds {
     final feet = prop.body.bottomCenter;
     if (prop.treeVariant != null) {
@@ -6373,6 +6370,9 @@ class WoodlandProp extends GameComponent with EffectVisibility {
   }
 
   bool get occludesHero {
+    // A formation contains walkable ground as well as tall stone. Fading the
+    // whole image on proximity changes the ground's color in front of the hero.
+    if (prop.landmark != null) return false;
     final hero = session.hero.body;
     if (prop.treeVariant != null) {
       final bounds = ForestTreeArt.drawBounds(
@@ -6381,12 +6381,7 @@ class WoodlandProp extends GameComponent with EffectVisibility {
       );
       return prop.body.bottom > hero.bottom && bounds.overlaps(hero);
     }
-    return (prop.kind == 'tree' ||
-            prop.landmark != null ||
-            prop.kind.startsWith('city-') ||
-            prop.kind.startsWith('ruin-') ||
-            prop.kind == 'blacksmith-forge' ||
-            prop.kind == 'village-cottage') &&
+    return prop.kind == 'tree' &&
         prop.body.bottom > hero.bottom &&
         prop.body.bottom - prop.drawSize.height < hero.bottom &&
         (prop.body.center.dx - hero.center.dx).abs() <
