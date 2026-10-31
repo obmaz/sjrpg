@@ -1221,6 +1221,18 @@ class TerrainArt {
   final AdventureWorld world;
   final GameArt art;
   final cache = <String, ui.Picture>{};
+  // A Picture caches commands, not pixels: replaying field meshes and world
+  // clips still rasterizes them on every moving frame. Keep finished tiles too.
+  final _rasterCache = <(int, int, int), ui.Image>{};
+  int _rasterBytes = 0;
+  bool _disposed = false;
+  static const maxRasterBytes = 96 * 1024 * 1024;
+  int get rasterBytes => _rasterBytes;
+  int get rasterTileCount => _rasterCache.length;
+  final _rasterPaint = ui.Paint()
+    ..isAntiAlias = false
+    ..filterQuality = ui.FilterQuality.low;
+
   late final questScenery = QuestScenery(world);
   late final fieldLandscape = FieldLandscape(world);
   late final mapPlan = TerrainMapPlan(
@@ -1243,6 +1255,7 @@ class TerrainArt {
     waterPath,
   );
   ui.Picture sector(int col, int row) {
+    if (_disposed) throw StateError('Terrain has been disposed');
     final key = '$col:$row';
     final cached = cache.remove(key);
     if (cached != null) {
@@ -1440,7 +1453,42 @@ class TerrainArt {
     return picture;
   }
 
+  /// The returned image belongs to this terrain and is released on eviction.
+  /// Density is keyed by output pixels, never the camera's fractional position.
+  ui.Image rasterSector(int col, int row, {double density = 1}) {
+    if (_disposed) throw StateError('Terrain has been disposed');
+    final scale = density.isFinite ? density.clamp(1.0, 3.0) : 1.0;
+    final pixels = (516 * scale).round();
+    final key = (col, row, pixels);
+    final existing = _rasterCache.remove(key);
+    if (existing != null) {
+      _rasterCache[key] = existing;
+      return existing;
+    }
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder)
+      ..scale(pixels / 516)
+      ..translate(2 - col * 512.0, 2 - row * 512.0);
+    canvas.drawPicture(sector(col, row));
+    final picture = recorder.endRecording();
+    late final ui.Image image;
+    try {
+      image = picture.toImageSync(pixels, pixels);
+    } finally {
+      picture.dispose();
+    }
+    _rasterCache[key] = image;
+    _rasterBytes += pixels * pixels * 4;
+    while (_rasterCache.length > 24 || _rasterBytes > maxRasterBytes) {
+      final oldest = _rasterCache.remove(_rasterCache.keys.first)!;
+      _rasterBytes -= oldest.width * oldest.height * 4;
+      oldest.dispose();
+    }
+    return image;
+  }
+
   void render(ui.Canvas canvas, ui.Rect view) {
+    if (_disposed) return;
     final transform = canvas.getTransform();
     final pixelRatio =
         ui.PlatformDispatcher.instance.implicitView?.devicePixelRatio ?? 1;
@@ -1484,13 +1532,34 @@ class TerrainArt {
         // Adjacent cells use the exact same edge without moving world art.
         canvas.save();
         canvas.clipRect(clip, doAntiAlias: false);
-        canvas.drawPicture(sector(x, y));
+        final image = rasterSector(
+          x,
+          y,
+          density: math.max(scaleX.abs(), scaleY.abs()) * pixelRatio,
+        );
+        canvas.drawImageRect(
+          image,
+          ui.Rect.fromLTWH(
+            0,
+            0,
+            image.width.toDouble(),
+            image.height.toDouble(),
+          ),
+          cell.inflate(2),
+          _rasterPaint,
+        );
         canvas.restore();
       }
     }
   }
 
   void dispose() {
+    _disposed = true;
+    for (final image in _rasterCache.values) {
+      image.dispose();
+    }
+    _rasterCache.clear();
+    _rasterBytes = 0;
     for (final picture in cache.values) {
       picture.dispose();
     }
