@@ -68,7 +68,7 @@ void main() {
       final s = session();
       s.progress.hp = s.progress.maxHp - 4;
       s.potion();
-      expect(s.texts.last.label, '+4,000 생명');
+      expect(s.texts.last.label, '+400 생명');
       s.progress.energy = s.progress.maxEnergy - 7;
       s.potion(energy: true);
       expect(s.texts.last.label, '+70 분노');

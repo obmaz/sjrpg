@@ -111,7 +111,7 @@ void main() {
     await showBag(tester, s, const Size(320, 420), 1.3);
     final summary = find.byKey(const ValueKey('equipment-overview'));
     expect(
-      find.descendant(of: summary, matching: find.text('공격력 11,271')),
+      find.descendant(of: summary, matching: find.text('공격력 1,127')),
       findsOneWidget,
     );
     await saveProof(tester, 'attack-overview-320x420-1.3');
@@ -129,7 +129,7 @@ void main() {
         .map((text) => text.textSpan!.toPlainText())
         .toList();
     expect(lines, [
-      '무기 공격 15,000',
+      '무기 공격 1,500',
       '기본 공격 1타 ${CombatNumbers.stat(p.basicDamage)}',
       '초당 피해 ${CombatNumbers.stat(p.basicDps)}',
     ]);
@@ -142,7 +142,7 @@ void main() {
     final accessible = find.bySemanticsLabel('보관 장비 · ${weapon.name} · 장착 중');
     expect(
       tester.widget<Semantics>(accessible).properties.hint,
-      '무기 레벨 ${weapon.weaponLevel} · 무기 공격 15,000 · 기본 공격 1타 ${CombatNumbers.stat(p.basicDamage)} · 사거리 ${CombatDistance.format(weapon.base.range)} · 초당 피해 ${CombatNumbers.stat(p.basicDps)} · 현재 초당 피해 ${CombatNumbers.stat(p.basicDps)}',
+      '무기 레벨 ${weapon.weaponLevel} · 무기 공격 1,500 · 기본 공격 1타 ${CombatNumbers.stat(p.basicDamage)} · 사거리 ${CombatDistance.format(weapon.base.range)} · 초당 피해 ${CombatNumbers.stat(p.basicDps)} · 현재 초당 피해 ${CombatNumbers.stat(p.basicDps)}',
     );
     for (final element in comparisons.evaluate()) {
       final paragraph = element.renderObject! as RenderParagraph;
@@ -156,7 +156,7 @@ void main() {
     expect(
       find.descendant(
         of: row,
-        matching: find.textContaining('무기 공격 15,000', findRichText: true),
+        matching: find.textContaining('무기 공격 1,500', findRichText: true),
       ),
       findsOneWidget,
     );

@@ -155,7 +155,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(s.progress.healingPotions, potions + 2);
       expect(s.progress.gold, 20);
-      expect(find.text('생명 55,000 회복 · 보유 ${potions + 2}개'), findsOneWidget);
+      expect(find.text('생명 5,500 회복 · 보유 ${potions + 2}개'), findsOneWidget);
       expect(tester.takeException(), null);
       semantics.dispose();
     },

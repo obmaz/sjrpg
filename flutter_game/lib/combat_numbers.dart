@@ -1,7 +1,7 @@
 /// Public combat units. Simulation and checkpoints retain canonical units so
 /// changing the denomination cannot change combat ratios or migrate a save twice.
 enum CombatUnit {
-  stat(1000),
+  stat(100),
   resource(10);
 
   const CombatUnit(this.scale);

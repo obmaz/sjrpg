@@ -13,13 +13,13 @@ import 'support/test_game.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test(
-    'combat stats use1000 units and resources use10 with readable grouping',
+    'combat stats use100 units and resources use10 with readable grouping',
     () {
-      expect(CombatNumbers.stat(1), '1,000');
-      expect(CombatNumbers.stat(35), '35,000');
-      expect(CombatNumbers.stat(100), '100,000');
-      expect(CombatNumbers.stat(.4), '400');
-      expect(CombatNumbers.stat(-1.234), '-1,234');
+      expect(CombatNumbers.stat(1), '100');
+      expect(CombatNumbers.stat(35), '3,500');
+      expect(CombatNumbers.stat(100), '10,000');
+      expect(CombatNumbers.stat(.4), '40');
+      expect(CombatNumbers.stat(-1.234), '-123');
       expect(CombatNumbers.resource(100), '1,000');
       expect(CombatNumbers.resource(6), '60');
       expect(CombatNumbers.resource(.65, digits: 2), '6.5');
@@ -79,7 +79,7 @@ void main() {
     addTearDown(s.dispose);
     final damage = BattleText(s, '1', Offset.zero, const Color(0xffffdd77));
     final gold = BattleText(s, '+1 골드', Offset.zero, const Color(0xffffdd77));
-    expect(damage.displayLabel, '1,000');
+    expect(damage.displayLabel, '100');
     expect(gold.displayLabel, '+1 골드');
   });
   test(
@@ -139,12 +139,12 @@ void main() {
       final exchange = previewSkill(
         p,
         shield,
-      ).singleWhere((r) => r.label == '피해 1,000당 마나');
+      ).singleWhere((r) => r.label == '피해 100당 마나');
       expect(exchange.unit, CombatUnit.resource);
       expect(exchange.current, p.sorceressSpell(shield).shieldManaPerDamage);
       expect(
-        CombatNumbers.value(exchange.current, CombatUnit.resource) / 1000,
-        exchange.current / 100,
+        CombatNumbers.value(exchange.current, CombatUnit.resource) / 100,
+        exchange.current / 10,
       );
     },
   );

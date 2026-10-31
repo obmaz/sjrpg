@@ -152,7 +152,7 @@ void main() {
         _row(p, 'energyShield', '피해 흡수율').current,
         shield.damageAbsorb * 100,
       );
-      expect(_row(p, 'energyShield', '피해 1,000당 마나').current, (32 - 12) / 16);
+      expect(_row(p, 'energyShield', '피해 100당 마나').current, (32 - 12) / 16);
       expect(_row(p, 'blink', '순간이동 거리').current, p.mobilityRange);
       expect(_row(p, 'blink', '공통 시전 지연').current, 0);
       expect(_row(p, 'hydra', '불뱀 머리').current, 3);

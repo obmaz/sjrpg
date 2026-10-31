@@ -156,7 +156,7 @@ void main() {
         expect(resource.height, greaterThanOrEqualTo(18));
         final hpText = tester.getRect(
           find.text(
-            '${CombatNumbers.stat(hp, rounding: CombatRounding.up)} / 100,000',
+            '${CombatNumbers.stat(hp, rounding: CombatRounding.up)} / 10,000',
           ),
         );
         expect(health.contains(hpText.topLeft), true);
@@ -242,7 +242,7 @@ void main() {
       }
       expect(feedback!.dangerOpacity, greaterThan(minimum));
       expect(feedback!.dangerOpacity, lessThanOrEqualTo(.26));
-      expect(find.text('7,000 / 80,000'), findsOneWidget);
+      expect(find.text('700 / 8,000'), findsOneWidget);
       expect(find.text('마나 900'), findsOneWidget);
       await proof(tester, 'mage-critical-pulse-peak');
       expect(tester.takeException(), isNull);
