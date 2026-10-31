@@ -24,8 +24,9 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
   final transform = TransformationController();
   Size viewport = Size.zero;
   String? trackingMessage;
-  String get trackingLabel =>
-      trackingMessage ?? '◆ 의뢰   ⌂ 거점   ● 내 위치 · 목표 선택: 방향 추적';
+  String get trackingLabel => widget.session.dungeon != null
+      ? '● 내 위치 · 금색 점: 출구'
+      : trackingMessage ?? '◆ 의뢰   ⌂ 거점   ● 내 위치 · 목표 선택: 방향 추적';
   static const canvas = Size(1200, 900);
   bool constraining = false;
   @override
@@ -128,8 +129,10 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
               child: Column(
                 children: [
                   GamePanelHeader(
-                    title: '모험 지도',
-                    subtitle: widget.session.world.stage.title,
+                    title: widget.session.dungeon != null ? '동굴 지도' : '모험 지도',
+                    subtitle:
+                        widget.session.dungeon?.definition.name ??
+                        widget.session.world.stage.title,
                     closeLabel: '지도 닫기',
                     onClose: widget.onClose,
                   ),

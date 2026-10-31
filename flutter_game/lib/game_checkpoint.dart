@@ -195,6 +195,11 @@ class GameCheckpoint {
     data['commissionStartKills'] =
         (data['commissionStartKills'] as int) + kills;
     data['revivalPending'] = forDefeat;
+    if (forDefeat) {
+      data['x'] = data['hubOrigin'][0];
+      data['y'] = data['hubOrigin'][1];
+      data['townGateRemaining'] = 0.0;
+    }
     data['cooldowns'] = Map<String, double>.from(session.hero.cooldowns);
     data['attackClock'] = session.hero.attackClock;
     data['dodgeClock'] = session.hero.dodgeClock;
@@ -208,7 +213,9 @@ class GameCheckpoint {
         ? PlayerAfflictions().toSave()
         : session.afflictions.toSave();
     if (session.progress.heroClass == HeroClass.mage) {
-      data['sorceress'] = session.hero.sorceressCombat.captureState();
+      data['sorceress'] = forDefeat
+          ? {'sharedDelay': 0.0, 'defenses': null}
+          : session.hero.sorceressCombat.captureState();
     }
     final decoded = decode(jsonEncode(data));
     if (decoded == null) return null;

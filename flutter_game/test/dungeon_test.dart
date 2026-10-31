@@ -157,6 +157,8 @@ void main() {
       final death = GameCheckpoint.capture(s, forDefeat: true)!;
       expect(death.data['revivalPending'], true);
       expect(death.progress.hp, death.progress.maxHp);
+      expect(death.data['x'], original.world.spawn.dx);
+      expect(death.data['y'], original.world.spawn.dy);
     },
   );
   for (final (stage, cold) in [
