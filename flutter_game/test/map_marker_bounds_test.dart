@@ -69,9 +69,9 @@ void main() {
           expect(grouped, everyElement(greaterThan(1)));
           expect(
             grouped.fold<int>(0, (sum, count) => sum + count),
-            4,
+            5,
             reason:
-                'all four services remain counted around the clear hero marker',
+                'four village services and the cave stay counted around the hero',
           );
           expect(art.counts, contains('내 위치'));
         }
