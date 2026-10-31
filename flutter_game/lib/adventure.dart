@@ -6307,7 +6307,9 @@ class LandscapeLayer extends GameComponent {
         view.width.isFinite &&
         view.width > 0) {
       session.terrain.render(canvas, view);
-      session.townGates.paint(canvas, session.world.authoredSettlement, view);
+      if (session.dungeon == null) {
+        session.townGates.paint(canvas, session.world.authoredSettlement, view);
+      }
     }
   }
 }

@@ -205,6 +205,7 @@ class GameCheckpoint {
     data['dodgeClock'] = session.hero.dodgeClock;
     data['castLock'] = forDefeat ? 0.0 : session.hero.castLock;
     data['mobilityClock'] = session.hero.mobilityClock;
+    data['sprintTime'] = 0.0;
     data['armor'] = forDefeat || p.heroClass == HeroClass.mage
         ? 0.0
         : session.hero.armorTime;

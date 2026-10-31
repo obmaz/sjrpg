@@ -734,30 +734,32 @@ class MapPainter extends CustomPainter {
 
     bool inside(Offset point) =>
         !round || (point - rect.center).distance < s.shortestSide / 2 - 4;
-    final services = [
-      (session.mountMerchantAt, '탈것', Icons.pets_rounded, gold),
-      (session.world.merchantAt, '상점', Icons.storefront_rounded, gold),
-      (
-        session.world.healAt,
-        '회복',
-        Icons.water_drop_rounded,
-        const Color(0xff8ce6bd),
-      ),
-      if (session.world.stage == WorldStage.forest)
-        (session.world.blacksmithAt, '대장간', Icons.hardware_rounded, gold),
-      if (session.world.stage == WorldStage.sands)
-        for (final giver in timeQuestGivers)
-          (
-            session.world.questGiverAt(giver.path),
-            giver.name,
-            giver.path == TimePath.past
-                ? Icons.auto_stories_rounded
-                : Icons.cell_tower_rounded,
-            session.timePath != null && session.timePath != giver.path
-                ? const Color(0xff8faaa3)
-                : gold,
-          ),
-    ];
+    final services = session.dungeon != null
+        ? <(Offset, String, IconData, Color)>[]
+        : [
+            (session.mountMerchantAt, '탈것', Icons.pets_rounded, gold),
+            (session.world.merchantAt, '상점', Icons.storefront_rounded, gold),
+            (
+              session.world.healAt,
+              '회복',
+              Icons.water_drop_rounded,
+              const Color(0xff8ce6bd),
+            ),
+            if (session.world.stage == WorldStage.forest)
+              (session.world.blacksmithAt, '대장간', Icons.hardware_rounded, gold),
+            if (session.world.stage == WorldStage.sands)
+              for (final giver in timeQuestGivers)
+                (
+                  session.world.questGiverAt(giver.path),
+                  giver.name,
+                  giver.path == TimePath.past
+                      ? Icons.auto_stories_rounded
+                      : Icons.cell_tower_rounded,
+                  session.timePath != null && session.timePath != giver.path
+                      ? const Color(0xff8faaa3)
+                      : gold,
+                ),
+          ];
     if (session.dungeon == null) {
       final at = project(session.world.caveEntrance);
       if (inside(at)) {
@@ -772,10 +774,7 @@ class MapPainter extends CustomPainter {
         );
       }
     }
-    for (final (at, label, icon, color)
-        in (session.dungeon != null
-            ? <(Offset, String, IconData, Color)>[]
-            : services)) {
+    for (final (at, label, icon, color) in services) {
       final anchor = project(at);
       if (!inside(anchor)) continue;
       add(

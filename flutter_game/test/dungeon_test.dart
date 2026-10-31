@@ -87,6 +87,17 @@ void main() {
       false,
     );
   });
+  test('chapter arrival hubs also place an accessible cave mouth', () {
+    for (final stage in WorldStage.values) {
+      final s = Adventure(GameArt(), stage: stage, hubOrigin: stage.arrival)
+        ..start(TestGame());
+      addTearDown(s.dispose);
+      final at = s.world.caveEntrance + const Offset(-14, 35);
+      s.hero.position.setValues(at.dx, at.dy);
+      expect(s.world.blocked(s.hero.body), false, reason: stage.name);
+      expect(s.nearCave, true, reason: stage.name);
+    }
+  });
   test(
     'timeout is 300 active real seconds and cannot spawn or award after ending',
     () {
@@ -120,6 +131,8 @@ void main() {
       original.progress.level = 100;
       original.progress.skillPoints = 1000;
       trainSkill(original.progress, 'warcry');
+      trainSkill(original.progress, original.progress.mobilitySkill.id);
+      original.hero.restoreMobility(3, .2);
       original.hero.cooldowns['warcry'] = 4;
       original.hero.armorTime = 2;
       original.hero.cooldowns['howl'] = 4;
@@ -138,6 +151,7 @@ void main() {
       s.progress.gold += 55;
       final cp = GameCheckpoint.capture(s)!;
       expect(cp.dungeonRun, isNull);
+      expect(cp.data['sprintTime'], 0);
       final returned = GameCheckpoint.decode(cp.encode())!.restore(GameArt());
       addTearDown(returned.dispose);
       expect(returned.dungeon, isNull);
