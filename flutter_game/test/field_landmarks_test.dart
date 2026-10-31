@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -90,4 +91,58 @@ void main() {
       lessThan(230),
     );
   });
+
+  test(
+    'forest grass aprons allow eastward walking, raised cores stay solid',
+    () {
+      final world = AdventureWorld();
+      for (final landmark in world.landmarks) {
+        const size = Guardian.onFootSize;
+        // This strip is painted grass in front of the structure. The old full
+        // rectangular footprint stopped the hero on entering it from the left.
+        final from = landmark.footprint.bottomLeft + const Offset(-40, -8);
+        final to = from + const Offset(160, 0);
+        expect(landmark.footprint.overlaps(to & size), true);
+        expect(world.blocked(from & size), false);
+        expect(world.blocked(to & size), false, reason: landmark.name);
+        expect(world.clearLine(from, to, size), true, reason: landmark.name);
+        expect(
+          (world.move(from, to - from, size) - to).distance,
+          lessThan(.000001),
+          reason: landmark.name,
+        );
+        expect(world.clearEnemyLine(from, to, size), true);
+        expect(
+          (world.moveEnemy(from, to - from, size) - to).distance,
+          lessThan(.000001),
+        );
+        expect(
+          world.blocked(
+            Rect.fromCenter(
+              center: landmark.footprint.center,
+              width: size.width,
+              height: size.height,
+            ),
+          ),
+          true,
+        );
+      }
+      final roots = world.landmarks.first.footprint;
+      final west = roots.centerLeft + const Offset(-40, -12);
+      final east = west + const Offset(80, 0);
+      expect(roots.overlaps(east & Guardian.onFootSize), true);
+      expect(world.clearLine(west, east, Guardian.onFootSize), true);
+      expect(world.clearLine(east, roots.center, Guardian.onFootSize), false);
+      final output = Platform.environment['SJRPG_LANDMARK_TRAVEL_PROOF'];
+      if (output != null) {
+        final s = Adventure(GameArt())..start(TestGame());
+        addTearDown(s.dispose);
+        final at =
+            s.world.landmarks.first.footprint.centerLeft +
+            const Offset(-40, -12);
+        s.hero.position.setValues(at.dx, at.dy);
+        File(output).writeAsStringSync(GameCheckpoint.capture(s)!.encode());
+      }
+    },
+  );
 }

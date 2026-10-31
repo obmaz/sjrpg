@@ -19,6 +19,9 @@ class TerrainMapPlan {
           (landmark.index == 0 || landmark.index == 2) ||
       world.stage == WorldStage.convergence && landmark.index == 0;
   Path _contour(FieldLandmark landmark) {
+    if (landmark.stage == WorldStage.forest) {
+      return Path()..addPolygon(landmark.solidOutline, true);
+    }
     final b = landmark.footprint;
     if (_wooded(landmark)) return Path()..addOval(b);
     if (world.stage == WorldStage.future || world.stage == WorldStage.foundry) {

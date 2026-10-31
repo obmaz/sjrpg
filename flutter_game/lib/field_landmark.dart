@@ -2,8 +2,8 @@ import 'dart:ui';
 
 import 'stage_content.dart';
 
-/// One large, authored terrain formation. The same footprint is used by
-/// movement, projectiles, spatial indexing and the flat map contour.
+/// One large, authored terrain formation. Placement uses the full ground apron;
+/// movement and the map use the raised structure's ground outline.
 class FieldLandmark {
   const FieldLandmark(
     this.stage,
@@ -28,6 +28,64 @@ class FieldLandmark {
     side,
     side,
   );
+
+  /// Coordinates measured in each 768px forest cell. Painted grass, loose leaf
+  /// litter and transparent corners are not part of the raised obstacle.
+  List<Offset> get solidOutline {
+    if (stage != WorldStage.forest) {
+      return [
+        footprint.topLeft,
+        footprint.topRight,
+        footprint.bottomRight,
+        footprint.bottomLeft,
+      ];
+    }
+    final points = const [
+      [
+        Offset(240, 520),
+        Offset(410, 495),
+        Offset(598, 575),
+        Offset(634, 650),
+        Offset(540, 701),
+        Offset(390, 716),
+        Offset(225, 672),
+        Offset(176, 602),
+      ],
+      [
+        Offset(240, 480),
+        Offset(500, 470),
+        Offset(642, 550),
+        Offset(664, 626),
+        Offset(532, 708),
+        Offset(310, 720),
+        Offset(142, 633),
+        Offset(152, 560),
+      ],
+      [
+        Offset(225, 520),
+        Offset(480, 500),
+        Offset(617, 565),
+        Offset(628, 640),
+        Offset(526, 695),
+        Offset(336, 696),
+        Offset(172, 626),
+      ],
+      [
+        Offset(250, 510),
+        Offset(493, 505),
+        Offset(629, 573),
+        Offset(648, 637),
+        Offset(527, 703),
+        Offset(326, 713),
+        Offset(145, 632),
+        Offset(167, 568),
+      ],
+    ][index];
+    return [
+      for (final point in points) drawBounds.topLeft + point * (side / 768),
+    ];
+  }
+
   FieldLandmark at(Offset point) =>
       FieldLandmark(stage, index, name, point, side);
 

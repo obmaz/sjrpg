@@ -313,7 +313,9 @@ class WorldProp {
   final Rect body;
   final String kind;
   final Size drawSize;
-  Iterable<Rect> get collisionBodies => kind == 'ruin-4'
+  Iterable<Rect> get collisionBodies => landmark?.stage == WorldStage.forest
+      ? const [] // The raised silhouette is registered as a polygon instead.
+      : kind == 'ruin-4'
       ? [
           Rect.fromLTWH(body.left, body.top, 26, body.height),
           Rect.fromLTWH(body.right - 26, body.top, 26, body.height),
@@ -1614,6 +1616,11 @@ class AdventureWorld {
         throw StateError('No safe field landmark: ${stage.name}/$i');
       }
       landmarks.add(chosen);
+    }
+    for (final landmark in landmarks) {
+      if (landmark.stage == WorldStage.forest) {
+        addRuntimeShape(landmark.solidOutline);
+      }
     }
     // Replace small random clutter beneath the authored scene, including its
     // old collision/index entries, so invisible tree stumps cannot remain.
