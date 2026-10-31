@@ -23,6 +23,7 @@ import 'crushing_blow_vfx.dart';
 import 'death_penalty.dart';
 import 'destructible_chest.dart';
 import 'device_settings.dart';
+import 'dungeon.dart';
 import 'effect_visibility.dart';
 import 'encounter_beacon_art.dart';
 import 'encounters.dart';
@@ -80,7 +81,13 @@ class Adventure extends ChangeNotifier {
     Progress? restoredProgress,
     DeviceSettings? device,
     AudioSettings? audio,
-  }) : world = AdventureWorld(seed: seed, stage: stage, hubOrigin: hubOrigin),
+    DungeonRun? dungeon,
+  }) : world = AdventureWorld(
+         seed: seed,
+         stage: stage,
+         hubOrigin: hubOrigin,
+         dungeon: dungeon,
+       ),
        progress = restoredProgress ?? Progress(heroClass: heroClass),
        device = device ?? DeviceSettings.shared,
        audio = audio ?? AudioSettings.shared {
@@ -88,11 +95,16 @@ class Adventure extends ChangeNotifier {
         stage.requiredPath ??
         (stage == WorldStage.convergence ? TimePath.past : null);
     hero = Guardian(this);
-    trackedSiteId = stage.requiresContract
+    trackedSiteId = dungeon != null
+        ? null
+        : stage.requiresContract
         ? null
         : nearestIncompleteSite(stage, hero.body.center)?.id;
     terrain = TerrainArt(world, art);
-    spawnOwnedMounts();
+    if (dungeon == null) {
+      final _ = world.caveEntrance;
+      spawnOwnedMounts();
+    }
   }
   final GameArt art;
   final DeviceSettings device;
@@ -101,6 +113,18 @@ class Adventure extends ChangeNotifier {
   late final Guardian hero;
   late final TerrainArt terrain;
   final Progress progress;
+  DungeonRun? get dungeon => world.dungeon;
+  Map<String, dynamic>? dungeonReturnData;
+  bool get nearCave =>
+      dungeon == null &&
+      riding == null &&
+      (hero.body.center - world.caveEntrance).distance < 145 &&
+      world.clearLine(
+        hero.body.center,
+        world.caveEntrance,
+        const ui.Size(3, 3),
+      );
+
   PlayerAfflictions afflictions = PlayerAfflictions();
   final travelJournal = TravelJournal();
   late final barbarianUtilities = BarbarianUtilities(this);
@@ -149,6 +173,7 @@ class Adventure extends ChangeNotifier {
     return at + const ui.Offset(12, 12);
   }();
   bool get nearMountMerchant =>
+      dungeon == null &&
       (hero.body.center - mountMerchantAt).distance < 175 &&
       world.clearLine(hero.body.center, mountMerchantAt, const ui.Size(4, 4));
   bool get _canTradeMount =>
@@ -660,7 +685,9 @@ class Adventure extends ChangeNotifier {
   String? acceptedCommission;
   double _nextBossSpawn = 0;
   int get stageKills => math.max(0, progress.kills - stageStartKills);
-  List<QuestSite> get visibleSites => world.stage == WorldStage.sands
+  List<QuestSite> get visibleSites => dungeon != null
+      ? const []
+      : world.stage == WorldStage.sands
       ? timeCommissions
             .where((q) => timePath != null && q.path == timePath)
             .map((q) => q.site)
@@ -791,7 +818,13 @@ class Adventure extends ChangeNotifier {
   }
 
   void completeStageIfReady() {
-    if (disposed || defeated || progress.hp <= 0 || !stageCleared) return;
+    if (dungeon != null ||
+        disposed ||
+        defeated ||
+        progress.hp <= 0 ||
+        !stageCleared) {
+      return;
+    }
     progress.awardSkillResetTicket(world.stage);
     if (won) return;
     combatFeedback.finish();
@@ -1045,12 +1078,19 @@ class Adventure extends ChangeNotifier {
   }
 
   final random = math.Random(52);
-  bool get active => ready && !disposed && !paused && !defeated && !won;
+  bool get active =>
+      ready &&
+      !disposed &&
+      !paused &&
+      !defeated &&
+      !won &&
+      dungeon?.ended != true;
   final townGates = TownGates();
   bool get sheltered => world.sanctuary.protects(hero.body);
   bool get combatAllowed => active && !sheltered;
   String get region => world.areaName(hero.position.toOffset());
   bool get nearbyBlacksmith =>
+      dungeon == null &&
       world.stage == WorldStage.forest &&
       (hero.body.center - world.blacksmithAt).distance < 155 &&
       world.clearLine(
@@ -1060,6 +1100,7 @@ class Adventure extends ChangeNotifier {
       );
   NearbyAction? get nearbyAction => nearbyActions.firstOrNull;
   List<NearbyAction> get nearbyActions {
+    if (dungeon != null) return [];
     if (riding != null) return [NearbyAction.dismount];
     final actions = <NearbyAction>[
       if (nearbyBlacksmith) NearbyAction.smith,
@@ -1447,7 +1488,7 @@ class Adventure extends ChangeNotifier {
     if (ready || disposed) return;
     game = ref;
     ready = true;
-    if (world.stage == WorldStage.forest) {
+    if (dungeon == null && world.stage == WorldStage.forest) {
       ref.add(VillageGate(art, world));
       for (final site in world.sites) {
         ref.add(ForestQuestStructure(this, site));
@@ -1462,6 +1503,29 @@ class Adventure extends ChangeNotifier {
     }
     for (final area in encounterAreas.values) {
       ref.add(EncounterStone(this, area));
+    }
+    if (dungeon != null) {
+      for (var room = 1; room < DungeonLayout.rooms.length; room++) {
+        for (var i = 0; i < 3; i++) {
+          final kind = dungeon!
+              .definition
+              .enemies[i % dungeon!.definition.enemies.length];
+          final finalGuard = room == DungeonLayout.rooms.length - 1 && i == 1;
+          spawnEnemy(
+            kind,
+            DungeonLayout.rooms[room] + ui.Offset((i - 1) * 85.0, 25),
+            tier: finalGuard ? EnemyTier.unique : EnemyTier.normal,
+            power: EnemyPower.atLevel(
+              dungeon!.enemyLevel,
+              kind: kind,
+              tier: finalGuard ? EnemyTier.unique : EnemyTier.normal,
+            ),
+            reserveSpacing: true,
+          );
+        }
+      }
+      refresh();
+      return;
     }
     wakeEnemies();
     waveTime = sheltered ? 0 : 10;
@@ -1491,7 +1555,7 @@ class Adventure extends ChangeNotifier {
     impactTime = math.max(0, impactTime - dt);
     if (impactTime == 0) impactStrength = 0;
     elapsed += dt;
-    forestQuests.tick(dt);
+    if (dungeon == null) forestQuests.tick(dt);
     for (final area in encounterAreas.values) {
       area.recharge(dt);
     }
@@ -1516,6 +1580,20 @@ class Adventure extends ChangeNotifier {
     if (notifyTime <= 0) {
       notifyTime = .1;
       refresh();
+    }
+    if (dungeon != null) {
+      dungeon!.tick(dt);
+      if (!dungeon!.ended &&
+          living == 0 &&
+          (hero.body.center - dungeon!.layout.goal).distance < 150) {
+        dungeon!.outcome = DungeonOutcome.cleared;
+        progress.gold += 100 + dungeon!.enemyLevel * 20;
+      }
+      if (dungeon!.ended) {
+        releaseInput();
+        refresh();
+      }
+      return;
     }
     // Exploration packs are recycled without rewards; bosses remain until defeated.
     for (final mob in List<HuntEnemy>.of(mobs)) {
@@ -1572,7 +1650,8 @@ class Adventure extends ChangeNotifier {
   }
 
   void spawnPack({bool initial = false, EncounterArea? summoned}) {
-    if (!combatAllowed ||
+    if (dungeon != null ||
+        !combatAllowed ||
         living >= CombatBalance.maxActiveEnemies ||
         riding?.def.waterOnly == true) {
       return;
@@ -2377,7 +2456,7 @@ class Adventure extends ChangeNotifier {
     );
     if (mob.isDead && !mob.rewarded) {
       mob.rewarded = true;
-      forestQuests.onEnemyDefeated(mob);
+      if (dungeon == null) forestQuests.onEnemyDefeated(mob);
       barbarianUtilities.recordCorpse(mob);
       final level = progress.level, goldBefore = progress.gold;
       progress.reward(boss: mob.boss, elite: mob.isElite, unique: mob.isUnique);

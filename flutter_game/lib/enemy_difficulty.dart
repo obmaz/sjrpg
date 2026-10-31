@@ -98,6 +98,22 @@ class EnemyPower {
     );
   }
 
+  factory EnemyPower.atLevel(
+    int level, {
+    required String kind,
+    EnemyTier tier = EnemyTier.normal,
+  }) {
+    final growth = EnemyGrowth.forKind(kind);
+    return EnemyPower(
+      0,
+      math.pow(1 + (level - 1) * .09, growth.endurance).toDouble() *
+          (tier == EnemyTier.unique ? 1.45 : 1),
+      math.pow(1 + (level - 1) * .035, growth.offense).toDouble(),
+      level: level,
+      defense: math.min(.65, growth.armor * (level - 1) / 99),
+    );
+  }
+
   static const maximumDistance = 43200.0;
   final int level;
 

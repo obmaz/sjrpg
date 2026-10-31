@@ -1,0 +1,8 @@
+{
+    "generator": "OpenAI image_gen",
+    "source": "cave-rock-original.png",
+    "sourceSha256": "24318b46112dc22b9ec83180880ab18c7133d5ec90bf40e3dc6ae84afac2fd2d",
+    "size": [1254, 1254],
+    "purpose": "Natural irregular upper-left-lit quarter-view cave wall rock; world-aligned repeated material, decoded only for an instance.",
+    "outputSha256": "d4a8ae91b4cd8ace8cb59e2f1d26ab1d43e705157374021f0a9bc3634e4edb95"
+}

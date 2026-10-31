@@ -64,11 +64,13 @@ class _ExpandedWorldMapState extends State<ExpandedWorldMap> {
   void center({bool overview = false, Offset? at}) {
     final hero = at ?? widget.session.hero.body.center;
     final scale = overview ? overviewScale : 1.1;
+    final bounds =
+        widget.session.dungeon?.layout.bounds ?? (Offset.zero & worldSize);
     final focus = overview
         ? canvas.center(Offset.zero)
         : Offset(
-            hero.dx / worldSize.width * canvas.width,
-            hero.dy / worldSize.height * canvas.height,
+            (hero.dx - bounds.left) / bounds.width * canvas.width,
+            (hero.dy - bounds.top) / bounds.height * canvas.height,
           );
     transform.value = Matrix4.identity()
       ..translateByDouble(

@@ -44,6 +44,8 @@ async function prepareNewAssets(root = path.resolve(__dirname, '..')) {
             path.join(destination, `images/${name}.png`),
         );
     for (const name of [
+        'cave-entrances',
+        'cave-rock',
         'landscape-bridge',
         'forest-trees',
         'forest-quest-chapel',

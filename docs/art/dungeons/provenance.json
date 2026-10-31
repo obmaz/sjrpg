@@ -1,0 +1,32 @@
+{
+    "generator": "OpenAI image_gen",
+    "prompt": "Five quarter-view wind, bat, ice, fire and crystal cave mouths plus a return arch; upper-left light, transparent isolated world objects.",
+    "sourceSha256": "b75a239179c0ac3427163a9f0c66bb7f7222f11198264985947a2e8a24ca9f12",
+    "atlasSha256": "13e156b6cdc98828c7f717936cfae94d98ad3348004eb20e1c69faae59adc5b3",
+    "components": [
+        {
+            "sourceBounds": [11, 30, 512, 495],
+            "packedBounds": [20, 54, 472, 438]
+        },
+        {
+            "sourceBounds": [523, 20, 1026, 482],
+            "packedBounds": [532, 58, 472, 434]
+        },
+        {
+            "sourceBounds": [1034, 20, 1522, 497],
+            "packedBounds": [1044, 31, 472, 461]
+        },
+        {
+            "sourceBounds": [12, 481, 523, 995],
+            "packedBounds": [21, 532, 469, 472]
+        },
+        {
+            "sourceBounds": [526, 493, 1040, 995],
+            "packedBounds": [532, 543, 472, 461]
+        },
+        {
+            "sourceBounds": [1047, 510, 1520, 1001],
+            "packedBounds": [1052, 532, 455, 472]
+        }
+    ]
+}

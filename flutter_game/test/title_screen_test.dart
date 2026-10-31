@@ -21,6 +21,7 @@ class _PendingArt extends GameArt {
     WorldStage stage, {
     required HeroClass heroClass,
     Iterable<String> enemyKinds = const [],
+    bool cave = false,
   }) async {
     preparations++;
     await gate.future;

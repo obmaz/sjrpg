@@ -33,6 +33,7 @@ class _GatedArt extends GameArt {
     WorldStage stage, {
     required HeroClass heroClass,
     Iterable<String> enemyKinds = const [],
+    bool cave = false,
   }) async {
     if (blocked && stage == delayedStage) {
       waiting = true;

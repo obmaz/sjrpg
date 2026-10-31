@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:collection/collection.dart';
 
 import 'authored_settlement.dart';
+import 'dungeon.dart';
 import 'field_landmark.dart';
 import 'forest_tree_art.dart';
 import 'mount_progress.dart';
@@ -367,7 +368,26 @@ class AdventureWorld {
     this.seed = 7829,
     this.stage = WorldStage.forest,
     Offset? hubOrigin,
+    this.dungeon,
   }) : hubOrigin = _validatedHubOrigin(stage, hubOrigin) {
+    if (dungeon != null) {
+      _authoring = false;
+      woods = [];
+      lakes = [];
+      sandFields = [];
+      clearings = [];
+      river = RegionShape(const [
+        Offset(-1000, -1000),
+        Offset(-999, -1000),
+        Offset(-999, -999),
+      ]);
+      bridge = Rect.zero;
+      bridges = [];
+      trails = [
+        for (final (a, b) in dungeon!.layout.edges) Trail([a, b], 200),
+      ];
+      return;
+    }
     const worldSize = authoredWorldSize, town = authoredTown;
     const questSites = authoredQuestSites, stageChests = authoredStageChests;
     if (stage != WorldStage.forest) {
@@ -1680,6 +1700,7 @@ class AdventureWorld {
 
   final int seed;
   final WorldStage stage;
+  final DungeonRun? dungeon;
   final Offset hubOrigin;
   static Offset _validatedHubOrigin(WorldStage stage, Offset? requested) {
     final origin = requested ?? stage.spawn;
@@ -1691,21 +1712,29 @@ class AdventureWorld {
 
   bool _authoring = true;
   Offset get _authoredHubOrigin => hubOrigin / worldScale;
-  Offset get spawn => _authoring ? _authoredHubOrigin : hubOrigin;
+  Offset get spawn =>
+      dungeon?.layout.start ?? (_authoring ? _authoredHubOrigin : hubOrigin);
   late final authoredSettlement = AuthoredSettlement(stage, hubOrigin);
-  late final settlementCollision = authoredSettlement.collisionPolygons
-      .map(RegionShape.new)
-      .toList();
+  late final settlementCollision =
+      (dungeon != null
+              ? <List<Offset>>[]
+              : authoredSettlement.collisionPolygons)
+          .map(RegionShape.new)
+          .toList();
   late final Rect settlementCollisionBounds = settlementCollision
       .map((shape) => shape.bounds)
-      .reduce((a, b) => a.expandToInclude(b));
-  Rect get settlement => _authoring
+      .fold(Rect.zero, (a, b) => a.isEmpty ? b : a.expandToInclude(b));
+  Rect get settlement => dungeon != null
+      ? Rect.zero
+      : _authoring
       ? Rect.fromCenter(center: spawn, width: 900, height: 900)
       : authoredSettlement.bounds;
   Offset get healAt => _authoring
       ? _authoredHubOrigin + const Offset(-280, -100)
       : authoredSettlement.well;
-  late final sanctuary = Sanctuary.polygon(authoredSettlement.safeBoundary);
+  late final sanctuary = dungeon != null
+      ? const Sanctuary(Offset(-10000, -10000), 0)
+      : Sanctuary.polygon(authoredSettlement.safeBoundary);
   final sanctuaryFences = <SanctuaryFenceSection>[];
   Offset wellApproach(QuestSite well) => well.id == 'hub'
       ? authoredSettlement.wellApproach
@@ -1753,7 +1782,11 @@ class AdventureWorld {
       : authoredSettlement.elder;
   late final _authoredSites = authoredSitesForStage(stage);
   late final _sites = sitesForStage(stage);
-  List<QuestSite> get sites => _authoring ? _authoredSites : _sites;
+  List<QuestSite> get sites => dungeon != null
+      ? const []
+      : _authoring
+      ? _authoredSites
+      : _sites;
   late final List<Offset> _authoredChests = stage == WorldStage.forest
       ? authoredStageChests
       : [
@@ -1762,9 +1795,9 @@ class AdventureWorld {
           for (final t in trails.skip(2)) t.points.last + const Offset(60, 70),
           for (final trail in trails.take(3)) ..._roadTreasures(trail),
         ];
-  late final List<Offset> chests = _authoredChests
-      .map((p) => p * worldScale)
-      .toList();
+  late final List<Offset> chests = dungeon != null
+      ? []
+      : _authoredChests.map((p) => p * worldScale).toList();
   final openedChests = <int>{};
   Rect chestBody(int index) => Rect.fromCenter(
     center: chests[index] - const Offset(0, 2),
@@ -1916,6 +1949,17 @@ class AdventureWorld {
     }
   }
 
+  late final Offset caveEntrance = () {
+    final desired = hubOrigin + const Offset(800, 650);
+    final corner =
+        spawnNear(desired, const Size(130, 130)) ??
+        spawnNear(hubOrigin + const Offset(500, 600), const Size(130, 130));
+    if (corner == null) throw StateError('No accessible cave entrance');
+    final mouth = corner + const Offset(65, 110);
+    addRuntimeSolid(Rect.fromLTWH(corner.dx + 10, corner.dy + 5, 110, 55));
+    return mouth;
+  }();
+
   bool isWater(Offset p) =>
       (_authoring || !settlement.contains(p)) &&
       (river.contains(p) || lakes.any((s) => s.contains(p))) &&
@@ -1926,6 +1970,7 @@ class AdventureWorld {
     bool ignoreWater = false,
     bool avoidSanctuary = false,
   }) {
+    if (dungeon != null) return waterOnly || !dungeon!.layout.permits(body);
     if (body.left < 0 ||
         body.top < 0 ||
         body.right > (_authoring ? authoredWorldSize : worldSize).width ||
@@ -2011,6 +2056,13 @@ class AdventureWorld {
     Size size, {
     bool avoidSanctuary = false,
   }) {
+    if (dungeon != null) {
+      final steps = math.max(1, ((to - from).distance / 5).ceil());
+      for (var i = 0; i <= steps; i++) {
+        if (blocked(Offset.lerp(from, to, i / steps)! & size)) return false;
+      }
+      return true;
+    }
     if (avoidSanctuary &&
         sanctuary.blocksRay(
           from + Offset(size.width / 2, size.height / 2),
@@ -2287,6 +2339,7 @@ class AdventureWorld {
   bool blocksEnemy(Rect body) => blocked(body, avoidSanctuary: true);
 
   String areaName(Offset p) {
+    if (dungeon != null) return dungeon!.definition.name;
     if (stage != WorldStage.forest) {
       if (settlement.contains(p)) {
         return switch (stage) {

@@ -17,6 +17,8 @@ import 'combat_balance.dart';
 import 'combo_meter.dart';
 import 'd1_icon_art.dart';
 import 'destructible_chest.dart';
+import 'dungeon.dart';
+import 'dungeon_art.dart';
 import 'entry_loading.dart';
 import 'game_art.dart';
 import 'game_checkpoint.dart';
@@ -55,9 +57,13 @@ Future<void> _prepareCheckpointArtwork(
     (stage) => stage.name == checkpoint.data['stage'],
   ),
   heroClass: checkpoint.progress.heroClass,
-  enemyKinds: (checkpoint.data['enemies'] as List).map(
-    (enemy) => (enemy as Map)['kind'] as String,
-  ),
+  cave: checkpoint.dungeonRun != null,
+  enemyKinds: [
+    ...(checkpoint.data['enemies'] as List).map(
+      (enemy) => (enemy as Map)['kind'] as String,
+    ),
+    ...?checkpoint.dungeonRun?.definition.enemies,
+  ],
 );
 
 class _ArtworkPreparation extends StatelessWidget {
@@ -539,6 +545,40 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     await commitTransition(next, widget.onAdvance!);
   }
 
+  bool _dungeonExitQueued = false;
+  void _observeDungeon() {
+    if (adventure.dungeon?.ended != true ||
+        _dungeonExitQueued ||
+        preparingTransition) {
+      return;
+    }
+    _dungeonExitQueued = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) leaveDungeon();
+    });
+  }
+
+  Future<void> enterDungeon() async {
+    if (preparingTransition || widget.onTravel == null) return;
+    final next = GameCheckpoint.enterDungeon(adventure);
+    if (next == null) return;
+    await commitTransition(next, widget.onTravel!);
+  }
+
+  Future<void> leaveDungeon() async {
+    if (preparingTransition || widget.onTravel == null || adventure.defeated) {
+      return;
+    }
+    adventure.dungeon?.outcome ??= DungeonOutcome.abandoned;
+    final next = GameCheckpoint.leaveDungeon(adventure);
+    if (next == null) {
+      _dungeonExitQueued = false;
+      return;
+    }
+    await commitTransition(next, widget.onTravel!);
+    if (mounted && keepSave) _dungeonExitQueued = false;
+  }
+
   Future<void> travelTo(WorldStage stage, String wellId) async {
     if (preparingTransition || widget.onTravel == null) return;
     final next = GameCheckpoint.warp(adventure, stage, wellId);
@@ -689,6 +729,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     });
     WidgetsBinding.instance.addObserver(this);
     adventure.addListener(_persistDefeat);
+    adventure.addListener(_observeDungeon);
     saveTimer = async.Timer.periodic(
       const Duration(seconds: 5),
       (_) => saveNow(),
@@ -710,12 +751,14 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
       components: [
         LandscapeLayer(adventure),
         WorldDirector(adventure),
-        WellDiscoveryDirector(
-          adventure,
-          onOpen: openWarp,
-          onDiscovered: saveNow,
-        ),
-        StageLandmarks(adventure),
+        if (adventure.dungeon == null)
+          WellDiscoveryDirector(
+            adventure,
+            onOpen: openWarp,
+            onDiscovered: saveNow,
+          ),
+        if (adventure.dungeon == null) StageLandmarks(adventure),
+        CavePortals(adventure),
         for (
           var index = 0;
           index < adventure.stageChestLocations.length;
@@ -724,13 +767,15 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
           DestructibleChest(adventure, index),
         for (final section in adventure.world.sanctuaryFences)
           SanctuaryFence(section, adventure.world.stage),
-        VillagePerson(adventure, true),
-        MountMerchant(adventure),
-        if (adventure.world.stage == WorldStage.forest)
+        if (adventure.dungeon == null) VillagePerson(adventure, true),
+        if (adventure.dungeon == null) MountMerchant(adventure),
+        if (adventure.dungeon == null &&
+            adventure.world.stage == WorldStage.forest)
           BlacksmithWorkshop(adventure),
-        if (adventure.world.stage == WorldStage.sands)
+        if (adventure.dungeon == null &&
+            adventure.world.stage == WorldStage.sands)
           for (final giver in timeQuestGivers) QuestGiver(adventure, giver)
-        else
+        else if (adventure.dungeon == null)
           VillagePerson(adventure, false),
       ],
       cameraConfig: CameraConfig(
@@ -751,6 +796,9 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         game.camera.updateBoundsAndZoomFit(moveOnlyMapArea: true);
         game.camera.position = adventure.cameraFocus;
         adventure.start(game);
+        if (widget.checkpoint?.arrivalNotice != null) {
+          adventure.announce(widget.checkpoint!.arrivalNotice!);
+        }
         saveNow();
         if (widget.startPaused || interruptedBeforeReady || !_isForeground) {
           adventure.pause();
@@ -798,6 +846,17 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   }
 
   void open(String name) {
+    if (adventure.dungeon != null &&
+        const {
+          'journal',
+          'talk',
+          'warp',
+          'shop',
+          'smith',
+          'mounts',
+        }.contains(name)) {
+      name = 'map';
+    }
     saveNow();
     adventure.pause();
     setState(() {
@@ -820,6 +879,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   @override
   void dispose() {
     adventure.removeListener(_persistDefeat);
+    adventure.removeListener(_observeDungeon);
     saveTimer?.cancel();
     stopSaveListener?.call();
     stopBackAction?.call();
@@ -895,6 +955,18 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         final hasMobility = p.rank(mobility.id) > 0;
         final guide = adventure.nearbyQuestGuide;
         final contextActions = [
+          if (widget.onTravel != null && adventure.dungeon != null)
+            NearbyControl(
+              label: '나가기',
+              icon: Icons.exit_to_app,
+              onTap: leaveDungeon,
+            ),
+          if (widget.onTravel != null && adventure.nearCave)
+            NearbyControl(
+              label: CaveDefinition.forStage(adventure.world.stage).name,
+              icon: Icons.terrain,
+              onTap: enterDungeon,
+            ),
           if (adventure.nearMountMerchant && mount == null)
             NearbyControl(
               label: '탈것',
@@ -911,6 +983,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
             })
               nearbyControl(action),
           if (widget.onTravel != null &&
+              adventure.dungeon == null &&
               adventure.riding == null &&
               adventure.travelJournal.nearbyWell(
                     adventure.world,
@@ -1426,7 +1499,9 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                       : short && width >= 500
                       ? 136
                       : 12,
-                  top: short
+                  top: adventure.dungeon != null && short
+                      ? media.padding.top + 190
+                      : short
                       ? media.padding.top +
                             (landscape
                                 ? guide == null
@@ -1510,7 +1585,35 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
                     },
                   ),
                 ),
-              if (guide == null &&
+              if (adventure.dungeon != null)
+                Positioned(
+                  left: 14,
+                  top: media.padding.top + (landscape ? 90 : 112),
+                  width: math.min(260, width - 120),
+                  child: Container(
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      color: ink.withValues(alpha: .94),
+                      border: Border.all(
+                        color: adventure.dungeon!.definition.color,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${adventure.dungeon!.definition.name} · ${adventure.dungeon!.clock}\n적 Lv.${adventure.dungeon!.enemyLevel} · 남은 적 ${adventure.living}\n${adventure.dungeon!.definition.resistance}',
+                      key: const ValueKey('dungeon-status'),
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.4,
+                        color: adventure.dungeon!.remaining < 30
+                            ? Colors.redAccent
+                            : cream,
+                      ),
+                    ),
+                  ),
+                ),
+              if (adventure.dungeon == null &&
+                  guide == null &&
                   contextActions.isEmpty &&
                   (landscape && width >= 700 ||
                       !short && media.size.height >= 700))

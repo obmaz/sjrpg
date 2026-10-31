@@ -9,6 +9,7 @@ import 'barbarian_icon_art.dart';
 import 'cinematic_icon_art.dart';
 import 'combat_balance.dart';
 import 'd1_icon_art.dart';
+import 'dungeon.dart';
 import 'game_art.dart';
 import 'health_widgets.dart';
 import 'map_marker_layout.dart';
@@ -601,15 +602,24 @@ class MapPainter extends CustomPainter {
     c.clipRect(rect);
     final view = round
         ? localMapBounds(session.hero.body.center)
-        : Offset.zero & worldSize;
+        : session.dungeon?.layout.bounds ?? (Offset.zero & worldSize);
     c.scale(s.width / view.width, s.height / view.height);
     c.translate(-view.left, -view.top);
     c.clipRect(Offset.zero & worldSize);
-    session.terrain.mapPlan.paint(
-      c,
-      view,
-      unitsPerPixel: view.width / s.width * (round ? 1 : markerScale),
-    );
+    if (session.dungeon != null) {
+      c.drawRect(view, Paint()..color = const Color(0xff182027));
+      c.drawPath(
+        session.dungeon!.layout.floor,
+        Paint()..color = const Color(0xff7a837d),
+      );
+      c.drawCircle(session.dungeon!.layout.goal, 55, Paint()..color = gold);
+    } else {
+      session.terrain.mapPlan.paint(
+        c,
+        view,
+        unitsPerPixel: view.width / s.width * (round ? 1 : markerScale),
+      );
+    }
     final sanctuary = session.world.sanctuary;
     c.drawPath(
       sanctuary.boundaryPath,
@@ -646,7 +656,7 @@ class MapPainter extends CustomPainter {
         Paint()..color = gold,
       );
       final scaleStart = Offset(25 * unit, s.height - 25 * unit);
-      final scaleEnd = scaleStart + Offset(s.width * 1000 / worldSize.width, 0);
+      final scaleEnd = scaleStart + Offset(s.width * 1000 / view.width, 0);
       c.drawLine(
         scaleStart,
         scaleEnd,
@@ -748,7 +758,24 @@ class MapPainter extends CustomPainter {
                 : gold,
           ),
     ];
-    for (final (at, label, icon, color) in services) {
+    if (session.dungeon == null) {
+      final at = project(session.world.caveEntrance);
+      if (inside(at)) {
+        add(
+          'cave',
+          at,
+          'service',
+          CaveDefinition.forStage(session.world.stage).color,
+          round ? 7 : 11,
+          label: CaveDefinition.forStage(session.world.stage).name,
+          icon: Icons.terrain,
+        );
+      }
+    }
+    for (final (at, label, icon, color)
+        in (session.dungeon != null
+            ? <(Offset, String, IconData, Color)>[]
+            : services)) {
       final anchor = project(at);
       if (!inside(anchor)) continue;
       add(

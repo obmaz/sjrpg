@@ -6,6 +6,7 @@ import 'adventure.dart';
 import 'battle_effects.dart';
 import 'boss_attacks.dart';
 import 'combat_balance.dart';
+import 'dungeon.dart';
 import 'encounters.dart';
 import 'enemy_catalog.dart';
 import 'enemy_difficulty.dart';
@@ -18,7 +19,17 @@ import 'travel_journal.dart';
 import 'world_model.dart';
 
 class GameCheckpoint {
-  GameCheckpoint._(this.data, this.progress, {this.revival = false});
+  GameCheckpoint._(
+    this.data,
+    this.progress, {
+    this.revival = false,
+    this.dungeonRun,
+    this.dungeonReturn,
+    this.arrivalNotice,
+  });
+  final DungeonRun? dungeonRun;
+  final GameCheckpoint? dungeonReturn;
+  final String? arrivalNotice;
   final bool revival;
   final Map<String, dynamic> data;
   final Progress progress;
@@ -32,6 +43,9 @@ class GameCheckpoint {
         session.disposed ||
         session.progress.hp <= 0 && !(forDefeat && session.defeated)) {
       return null;
+    }
+    if (session.dungeon != null) {
+      return leaveDungeon(session, forDefeat: forDefeat);
     }
     final savedProgress = forDefeat
         ? (Progress.fromSave(session.progress.toSave())!
@@ -144,8 +158,80 @@ class GameCheckpoint {
     );
   }
 
+  static GameCheckpoint? enterDungeon(Adventure session) {
+    if (!session.active || !session.nearCave) return null;
+    final source = capture(session);
+    if (source == null) return null;
+    return GameCheckpoint._(
+      source.data,
+      source.progress,
+      dungeonRun: DungeonRun(session.world.stage, session.progress.level),
+      dungeonReturn: source,
+    );
+  }
+
+  /// Saves made in an instance resume outside. The abandoned scene cannot reset
+  /// its timer while preserving a partially cleared enemy population.
+  static GameCheckpoint? leaveDungeon(
+    Adventure session, {
+    bool forDefeat = false,
+  }) {
+    final source = session.dungeonReturnData;
+    if (source == null || session.dungeon == null) return null;
+    final data = Map<String, dynamic>.from(
+      jsonDecode(jsonEncode(source)) as Map,
+    );
+    final previous = Progress.fromSave(data['progress'])!;
+    final p = Progress.fromSave(session.progress.toSave())!;
+    if (forDefeat) {
+      p.hp = p.maxHp;
+      p.energy = p.maxEnergy;
+    }
+    if (p.hp <= 0) return null;
+    p.bossDefeated = previous.bossDefeated;
+    final kills = p.kills - previous.kills;
+    data['progress'] = p.toSave();
+    data['stageStartKills'] = (data['stageStartKills'] as int) + kills;
+    data['commissionStartKills'] =
+        (data['commissionStartKills'] as int) + kills;
+    data['revivalPending'] = forDefeat;
+    data['cooldowns'] = Map<String, double>.from(session.hero.cooldowns);
+    data['attackClock'] = session.hero.attackClock;
+    data['dodgeClock'] = session.hero.dodgeClock;
+    data['castLock'] = forDefeat ? 0.0 : session.hero.castLock;
+    data['mobilityClock'] = session.hero.mobilityClock;
+    data['armor'] = forDefeat || p.heroClass == HeroClass.mage
+        ? 0.0
+        : session.hero.armorTime;
+    data['frenzy'] = forDefeat ? 0.0 : session.hero.frenzyTime;
+    data['afflictions'] = forDefeat
+        ? PlayerAfflictions().toSave()
+        : session.afflictions.toSave();
+    if (session.progress.heroClass == HeroClass.mage) {
+      data['sorceress'] = session.hero.sorceressCombat.captureState();
+    }
+    final decoded = decode(jsonEncode(data));
+    if (decoded == null) return null;
+    final outcome = session.dungeon!.outcome;
+    return GameCheckpoint._(
+      decoded.data,
+      decoded.progress,
+      arrivalNotice: outcome == null
+          ? null
+          : switch (outcome) {
+              DungeonOutcome.cleared =>
+                '동굴 클리어 · 보상 골드 ${100 + session.dungeon!.enemyLevel * 20}',
+              DungeonOutcome.expired => '동굴 제한 시간 종료 · 입구로 돌아왔습니다',
+              DungeonOutcome.abandoned => '동굴에서 나왔습니다',
+            },
+    );
+  }
+
   static GameCheckpoint? advance(Adventure session) {
-    if (!session.stageCleared || session.defeated || session.disposed) {
+    if (session.dungeon != null ||
+        !session.stageCleared ||
+        session.defeated ||
+        session.disposed) {
       return null;
     }
     final next = session.world.stage.nextStage(session.timePath);
@@ -965,7 +1051,8 @@ class GameCheckpoint {
     WorldStage destination,
     String wellId,
   ) {
-    if (!session.ready ||
+    if (session.dungeon != null ||
+        !session.ready ||
         session.disposed ||
         session.defeated ||
         session.won ||
@@ -1013,6 +1100,46 @@ class GameCheckpoint {
   }
 
   Adventure restore(GameArt art) {
+    if (dungeonRun != null) {
+      final session = Adventure(
+        art,
+        stage: WorldStage.values.firstWhere((s) => s.name == data['stage']),
+        hubOrigin: Offset(
+          (data['hubOrigin'][0] as num).toDouble(),
+          (data['hubOrigin'][1] as num).toDouble(),
+        ),
+        restoredProgress: Progress.fromSave(progress.toSave())!,
+        dungeon: dungeonRun,
+      );
+      session.dungeonReturnData = dungeonReturn!.data;
+      session.timePath = data['timePath'] == null
+          ? null
+          : TimePath.values.firstWhere((p) => p.name == data['timePath']);
+      session.hero.cooldowns.addAll(
+        (data['cooldowns'] as Map).map(
+          (k, v) => MapEntry(k as String, (v as num).toDouble()),
+        ),
+      );
+      session.hero.attackClock = (data['attackClock'] as num).toDouble();
+      session.hero.castLock = (data['castLock'] as num).toDouble();
+      session.hero.dodgeClock = (data['dodgeClock'] as num).toDouble();
+      session.hero.restoreMobility(
+        (data['mobilityClock'] as num).toDouble(),
+        0,
+      );
+      session.hero.armorTime = (data['armor'] as num).toDouble();
+      session.hero.frenzyTime = (data['frenzy'] as num).toDouble();
+      session.afflictions = PlayerAfflictions.fromSave(data['afflictions']);
+      if (session.progress.heroClass == HeroClass.mage) {
+        session.hero.sorceressCombat.restoreState(
+          Map<String, dynamic>.from(data['sorceress'] as Map),
+        );
+      }
+      session.syncLife();
+      session.hero.invulnerable = .75;
+      return session;
+    }
+
     final session = Adventure(
       art,
       seed: data['seed'] as int,

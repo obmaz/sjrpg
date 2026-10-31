@@ -491,6 +491,12 @@ class SorceressCombat {
     bool hitStop = false,
   }) {
     if (amount <= 0) return false;
+    amount *=
+        session.dungeon?.definition.damageMultiplier(
+          cold: spec.damageType == SorceressDamageType.cold,
+          fire: spec.damageType == SorceressDamageType.fire,
+        ) ??
+        1;
     if (spec.damageType == SorceressDamageType.cold) {
       amount *= 1 + math.min(1, progress.sorceressColdPierce);
     }
@@ -528,7 +534,13 @@ class SorceressCombat {
               )
         : session.hit(
             enemy,
-            amount * (1 + math.min(1, progress.sorceressColdPierce)),
+            amount *
+                (session.dungeon?.definition.damageMultiplier(
+                      cold: true,
+                      fire: false,
+                    ) ??
+                    1) *
+                (1 + math.min(1, progress.sorceressColdPierce)),
             ui.Offset.zero,
             hitStop: false,
             impactKind: ImpactKind.ice,

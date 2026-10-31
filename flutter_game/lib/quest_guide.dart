@@ -14,6 +14,9 @@ class QuestGuide {
 
 extension QuestGuidance on Adventure {
   String get mainQuestNext {
+    if (dungeon != null) {
+      return '${dungeon!.definition.name} · ${dungeon!.clock} 남음 · 적 Lv.${dungeon!.enemyLevel}\n${dungeon!.definition.resistance} · 적을 처치하고 출구로 이동';
+    }
     if (stageCleared) {
       return world.stage.hasNextStage
           ? '의뢰 완료! 여정에서 다음 모험을 선택하세요.'
@@ -49,7 +52,7 @@ extension QuestGuidance on Adventure {
   }
 
   QuestGuide? get nearbyQuestGuide {
-    if (!ready || disposed || defeated) return null;
+    if (dungeon != null || !ready || disposed || defeated) return null;
     if (world.stage == WorldStage.forest) return forestQuests.guide;
     QuestSite? site;
     var distance = 300.0;

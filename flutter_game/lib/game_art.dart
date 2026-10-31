@@ -9,6 +9,7 @@ import 'actor_atlas.dart';
 import 'boss_sprite_mesh.dart';
 import 'bridge_art.dart';
 import 'desert_temple_art.dart';
+import 'dungeon_art.dart';
 import 'effect_atlas.dart';
 import 'enemy_catalog.dart';
 import 'field_landscape.dart';
@@ -77,6 +78,8 @@ class GameArt {
   };
   static const _allImages = [
     ..._fieldImages,
+    'cave-entrances',
+    'cave-rock',
     'landmarks-forest',
     'landmarks-sands',
     'landmarks-past',
@@ -279,11 +282,12 @@ class GameArt {
     WorldStage stage, {
     required HeroClass heroClass,
     Iterable<String> enemyKinds = const [],
+    bool cave = false,
   }) {
     if (!_staged) return Future<void>.value();
     final kinds = enemyKinds.toList();
     final ready = _preparation.then(
-      (_) => _ensureStage(stage, heroClass, kinds),
+      (_) => _ensureStage(stage, heroClass, kinds, cave: cave),
     );
     // A failed request must leave subsequent retry requests usable.
     _preparation = ready.then<void>(
@@ -296,8 +300,9 @@ class GameArt {
   Future<void> _ensureStage(
     WorldStage stage,
     HeroClass heroClass,
-    Iterable<String> savedKinds,
-  ) async {
+    Iterable<String> savedKinds, {
+    bool cave = false,
+  }) async {
     await _prefetchSources();
     final scenery = _sceneryImages[stage.name];
     if (scenery == null) {
@@ -309,7 +314,8 @@ class GameArt {
         .toSet();
     final names = <String>{
       for (final name in _allImages)
-        if (!_stagedRetiredVfx.contains(name) &&
+        if ((name != 'cave-rock' || cave) &&
+            !_stagedRetiredVfx.contains(name) &&
             (!const {
                   'barbarian-skills',
                   'd1-warrior',
@@ -1226,6 +1232,7 @@ class TerrainArt {
   final _rasterCache = <(int, int, int), ui.Image>{};
   int _rasterBytes = 0;
   bool _disposed = false;
+  ui.Shader? _caveRock;
   static const maxRasterBytes = 96 * 1024 * 1024;
   int get rasterBytes => _rasterBytes;
   int get rasterTileCount => _rasterCache.length;
@@ -1275,6 +1282,47 @@ class TerrainArt {
           512,
         ).inflate(2);
     c.clipRect(area, doAntiAlias: false);
+    if (world.dungeon != null) {
+      final rock = art.images['cave-rock'];
+      if (rock != null) {
+        _caveRock ??= ui.ImageShader(
+          rock,
+          ui.TileMode.repeated,
+          ui.TileMode.repeated,
+          Float64List.fromList([
+            .35,
+            0,
+            0,
+            0,
+            0,
+            .35,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+          ]),
+        );
+      }
+      DungeonPainting.terrain(
+        c,
+        area,
+        world.dungeon!,
+        art.fieldMaterials.length > 2 ? art.fieldMaterials[2] : null,
+        _caveRock,
+      );
+      final picture = recorder.endRecording();
+      cache[key] = picture;
+      if (cache.length > 24) {
+        cache.remove(cache.keys.first)!.dispose();
+      }
+      return picture;
+    }
     final base = world.stage.baseMaterial;
     final road = world.stage.roadMaterial;
     c.drawRect(
@@ -1555,6 +1603,8 @@ class TerrainArt {
 
   void dispose() {
     _disposed = true;
+    _caveRock?.dispose();
+    _caveRock = null;
     for (final image in _rasterCache.values) {
       image.dispose();
     }
