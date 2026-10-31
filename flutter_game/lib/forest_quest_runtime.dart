@@ -49,7 +49,8 @@ class ForestQuestRuntime {
   void Function(int previousLevel)? onLevelReward;
   double _npcFlash = 0;
   static const interactionRange = 145.0, protectionRadius = 650.0;
-  bool get enabled => session.world.stage == WorldStage.forest;
+  bool get enabled =>
+      session.dungeon == null && session.world.stage == WorldStage.forest;
   bool get protectionActive => ledger['sun']!.protectionActive;
   List<ForestQuestNpcInfo> get npcs {
     _ensurePositions();

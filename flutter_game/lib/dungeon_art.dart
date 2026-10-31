@@ -30,36 +30,57 @@ abstract final class DungeonPainting {
     ui.Shader? stone,
     ui.Shader? wall,
   ) {
-    final color = run.definition.color, floor = run.layout.floor;
+    final color = run.definition.color, layout = run.layout;
     c.drawRect(view, ui.Paint()..color = const ui.Color(0xff151b20));
     if (wall != null) c.drawRect(view, ui.Paint()..shader = wall);
     c.drawRect(view, ui.Paint()..color = const ui.Color(0x990b1119));
     c.drawRect(view, ui.Paint()..color = color.withValues(alpha: .08));
-    c.drawPath(
-      floor,
+    layout.paintFloor(
+      c,
       ui.Paint()
         ..style = ui.PaintingStyle.stroke
         ..strokeWidth = 48
         ..color = const ui.Color(0xaa050b12),
     );
-    c.drawPath(floor, ui.Paint()..color = const ui.Color(0xff404143));
-    if (stone != null) c.drawPath(floor, ui.Paint()..shader = stone);
-    c.drawPath(floor, ui.Paint()..color = color.withValues(alpha: .18));
-    c.drawPath(floor, ui.Paint()..color = const ui.Color(0x8810161b));
-    c.drawPath(
-      floor,
-      ui.Paint()
-        ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = 9
-        ..color = const ui.Color(0x99212b31),
-    );
-    c.drawPath(
-      floor.shift(const ui.Offset(0, -4)),
+    c.save();
+    c.translate(0, -4);
+    layout.paintFloor(
+      c,
       ui.Paint()
         ..style = ui.PaintingStyle.stroke
         ..strokeWidth = 2
         ..color = color.withValues(alpha: .22),
     );
+    c.restore();
+    // Opaque, identically shaded primitives form the same union as collision.
+    // Drawing complex merged contours can fill their fork holes on the web.
+    final paint = ui.Paint()..color = const ui.Color(0xff444849);
+    if (stone != null) {
+      paint.shader = stone;
+      paint.colorFilter = ui.ColorFilter.matrix([
+        (.82 + color.r * .18) * .58,
+        0,
+        0,
+        0,
+        0,
+        0,
+        (.82 + color.g * .18) * .58,
+        0,
+        0,
+        0,
+        0,
+        0,
+        (.82 + color.b * .18) * .58,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+      ]);
+    }
+    layout.paintFloor(c, paint);
   }
 }
 

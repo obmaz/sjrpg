@@ -68,24 +68,16 @@ class DungeonLayout {
       }
     }
     join(rooms.last, goal);
-    // Union all pieces: overlapping contours must not create even/odd holes.
-    floor = Path();
     for (final room in [...rooms, goal]) {
-      floor = Path.combine(
-        PathOperation.union,
-        floor,
-        Path()..addOval(Rect.fromCircle(center: room, radius: 180)),
-      );
+      surfaces.add(Path()..addOval(Rect.fromCircle(center: room, radius: 180)));
     }
     for (final (a, b) in edges) {
       final d = b - a, n = Offset(-d.dy, d.dx) / d.distance * 100;
-      for (final p in [
+      surfaces.addAll([
         Path()..addPolygon([a + n, b + n, b - n, a - n], true),
         Path()..addOval(Rect.fromCircle(center: a, radius: 100)),
         Path()..addOval(Rect.fromCircle(center: b, radius: 100)),
-      ]) {
-        floor = Path.combine(PathOperation.union, floor, p);
-      }
+      ]);
     }
   }
   static const rooms = [
@@ -97,15 +89,45 @@ class DungeonLayout {
     Offset(7200, 4480),
   ];
   final edges = <(Offset, Offset)>[];
-  late Path floor;
+  final surfaces = <Path>[];
+  void paintFloor(Canvas canvas, Paint paint) {
+    for (final surface in surfaces) {
+      canvas.drawPath(surface, paint);
+    }
+  }
+
+  late final _centers = [...rooms, goal];
+  bool contains(Offset point) => _contains(point.dx, point.dy);
+  bool _contains(double x, double y) {
+    for (final room in _centers) {
+      final dx = x - room.dx, dy = y - room.dy;
+      if (dx * dx + dy * dy <= 180 * 180) return true;
+    }
+    for (final (a, b) in edges) {
+      final dx = b.dx - a.dx, dy = b.dy - a.dy, px = x - a.dx, py = y - a.dy;
+      final t = ((px * dx + py * dy) / (dx * dx + dy * dy)).clamp(0.0, 1.0);
+      final ex = px - dx * t, ey = py - dy * t;
+      if (ex * ex + ey * ey <= 100 * 100) return true;
+    }
+    return false;
+  }
+
   Offset get start => rooms.first;
   // Leave room to collect the final guard's drop before entering the exit.
   Offset get goal => rooms.last + const Offset(480, -140);
-  Rect get bounds => floor.getBounds().inflate(220);
+  late final Rect bounds = surfaces
+      .map((p) => p.getBounds())
+      .reduce((a, b) => a.expandToInclude(b))
+      .inflate(220);
   bool permits(Rect body) {
-    for (final x in [body.left, body.center.dx, body.right]) {
-      for (final y in [body.top, body.center.dy, body.bottom]) {
-        if (!floor.contains(Offset(x, y))) return false;
+    for (var ix = 0; ix < 3; ix++) {
+      for (var iy = 0; iy < 3; iy++) {
+        if (!_contains(
+          body.left + body.width * ix / 2,
+          body.top + body.height * iy / 2,
+        )) {
+          return false;
+        }
       }
     }
     return true;

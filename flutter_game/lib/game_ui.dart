@@ -608,8 +608,8 @@ class MapPainter extends CustomPainter {
     c.clipRect(Offset.zero & worldSize);
     if (session.dungeon != null) {
       c.drawRect(view, Paint()..color = const Color(0xff182027));
-      c.drawPath(
-        session.dungeon!.layout.floor,
+      session.dungeon!.layout.paintFloor(
+        c,
         Paint()..color = const Color(0xff7a837d),
       );
       c.drawCircle(session.dungeon!.layout.goal, 55, Paint()..color = gold);

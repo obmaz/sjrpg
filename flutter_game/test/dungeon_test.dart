@@ -51,6 +51,12 @@ void main() {
         expect(dungeon.world.sanctuary.protects(dungeon.hero.body), false);
         expect(dungeon.world.props, isEmpty);
         expect(dungeon.world.chests, isEmpty);
+        expect(dungeon.forestQuests.enabled, false);
+        expect(dungeon.forestQuests.npcs, isEmpty);
+        expect(
+          dungeon.forestQuests.updateThreat(dungeon.mobs.first, .05),
+          false,
+        );
         dungeon.progress.level = 24;
         dungeon.tick(1.2);
         expect(dungeon.dungeon!.enemyLevel, 25);
