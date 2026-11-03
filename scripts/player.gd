@@ -83,7 +83,7 @@ func buff_value(name: String) -> float:
 func refresh_stats(full := false) -> void:
 	var orders := buff_value("orders")
 	max_hp = GameState.max_hp() * (1.0 + orders)
-	resource_max = GameState.class_info()["resource_max"] * (1.0 + orders)
+	resource_max = GameState.max_resource() * (1.0 + orders)
 	if full:
 		hp = max_hp
 		resource = minf(float(GameState.class_info()["resource_start"]) * (1.0 + buff_value("orders")), resource_max)
@@ -261,7 +261,26 @@ func cast_slot(index: int, repeat := false) -> bool:
 	_attack_duration = (0.4 if _attack_melee else 0.46) / (1.0 + frenzy_stacks * 0.08)
 	_attack_time = _attack_duration
 	_pending = action
+	_cast_feedback(d)
 	return true
+
+
+func _cast_feedback(d: Dictionary) -> void:
+	var sound := "slash"
+	match str(d.get("element", "")):
+		"fire":
+			sound = "fire"
+		"cold":
+			sound = "ice"
+		"lightning":
+			sound = "lightning"
+		_:
+			if d["type"] in ["buff", "corpse"] or d.has("cry") or d.has("fear") or d.has("taunt") or (d["type"] == "nova" and d.has("stun")):
+				sound = "warcry"
+			elif d["type"] == "blink":
+				sound = "dodge"
+	SoundFx.play(sound)
+	Prefs.pulse("skill")
 
 
 func try_roll() -> void:
@@ -273,6 +292,8 @@ func try_roll() -> void:
 	_roll_dir = dir.normalized()
 	facing = _roll_dir.angle()
 	_roll_time = ROLL_TIME
+	SoundFx.play("dodge")
+	Prefs.pulse("dodge")
 	_roll_cooldown = 0.9
 	_invulnerable = ROLL_TIME + 0.05
 	_attack_time = 0.0
@@ -342,6 +363,7 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 			_aim(d["range"] + 40.0)
 			return func():
 				var hits: Array = game.enemies_in_arc(position, facing, d["range"], deg_to_rad(d["arc"]))
+				game.break_chests_in_arc(position, facing, d["range"], deg_to_rad(d["arc"]), self)
 				for e in hits:
 					e.take_damage(damage_for(id, power), self)
 				game.spawn_cone(position + Vector2(0, -30), facing, d["range"], d["color"])
@@ -379,6 +401,7 @@ func _melee(id: String, d: Dictionary, rank: int, power: float) -> void:
 			if d.has("stun"):
 				e.stun(d["stun"] + d.get("stun_growth", 0.0) * (rank - 1))
 		hits_total += hits.size()
+		game.break_chests_in_arc(position, facing, d["range"], deg_to_rad(d["arc"]), self)
 		game.spawn_slash(position + Vector2(0, -28), facing + (0.25 if swing == 1 else 0.0), SkillDefs.FIRE if enchant > 0.0 else SkillDefs.STEEL)
 	_gain_rage(hits_total)
 	if d.get("frenzy", false) and hits_total > 0:
@@ -395,6 +418,7 @@ func _spin(id: String, d: Dictionary, power: float) -> void:
 			if dead:
 				return
 			var hits: Array = game.enemies_in_radius(position, d["radius"])
+			game.break_chests_in_radius(position, d["radius"], self)
 			for e in hits:
 				e.take_damage(damage_for(id, power), self)
 			_gain_rage(hits.size())
@@ -447,6 +471,8 @@ func _prepare_leap(id: String, d: Dictionary, rank: int, power: float) -> Callab
 		game.spawn_nova(position, d["radius"], SkillDefs.STEEL, true)
 		_invulnerable = maxf(_invulnerable, 0.2)
 		var hits: Array = game.enemies_in_radius(position, d["radius"])
+		if d.has("mult"):
+			game.break_chests_in_radius(position, d["radius"], self)
 		for e in hits:
 			if d.has("mult"):
 				e.take_damage(damage_for(id, power), self)
@@ -472,6 +498,8 @@ func _projectiles(id: String, d: Dictionary, rank: int, power: float) -> void:
 func _nova(id: String, d: Dictionary, rank: int, power: float) -> void:
 	var radius: float = d["radius"] + d.get("radius_growth", 0.0) * (rank - 1)
 	game.spawn_nova(position, radius, d["color"])
+	if d.has("mult"):
+		game.break_chests_in_radius(position, radius, self)
 	var hits: Array = game.enemies_in_radius(position, radius)
 	for e in hits:
 		if d.has("mult"):
@@ -581,12 +609,15 @@ func use_mana_potion() -> void:
 func take_damage(amount: float, attacker: Node2D = null) -> void:
 	if dead or _invulnerable > 0.0:
 		return
-	var dealt := maxf(1.0, amount - defense()) * (1.0 - minf(0.5, passive("resist")))
+	var armor := defense()
+	var dealt := maxf(1.0, amount * (1.0 - armor / (armor + 30.0))) * (1.0 - minf(0.5, passive("resist")))
 	if buffs.has("shield") and resource > 0.0:
 		var absorbed := minf(dealt * buff_value("shield"), resource / 1.5)
 		resource -= absorbed * 1.5
 		dealt -= absorbed
 	hp -= dealt
+	SoundFx.play("hurt")
+	Prefs.pulse("hurt")
 	_invulnerable = 0.25
 	sprite.flash = 1.0
 	if not is_mage:

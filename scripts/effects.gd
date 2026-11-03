@@ -58,6 +58,7 @@ func _update_projectile(delta: float) -> void:
 	if params.get("wiggle", false):
 		dir = dir.rotated(sin(age * 18.0 + params.get("seed", 0.0)) * 0.6)
 	position += dir * velocity.length() * delta
+	game.break_chests_at(_ground(), 22.0, owner_node)
 	var hit: Enemy = game.enemy_hit_by_point(_ground(), 26.0)
 	if hit == null or _hit.has(hit):
 		return
@@ -112,6 +113,7 @@ func _update_zone(delta: float) -> void:
 	if _tick_timer > 0.0:
 		return
 	_tick_timer = float(params.get("tick", 0.3))
+	game.break_chests_in_radius(position, radius, owner_node)
 	for e in _zone_targets():
 		e.take_damage(damage, null)
 		if float(params.get("slow", 0.0)) > 0.0:

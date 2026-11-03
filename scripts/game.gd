@@ -2,6 +2,7 @@ extends Node2D
 ## The adventure field (원본: lib/src/game/adventure.dart의 핵심 루프 일부).
 
 signal quit_requested
+signal restart_requested
 
 ## Field in ground units (original scale): the 2400 town sits in the middle.
 const FIELD := Rect2(-3600, -3600, 7200, 7200)
@@ -13,6 +14,7 @@ var camera: Camera2D
 var hud: Hud
 var village: Village
 var enemies: Array[Enemy] = []
+var chests: Array[Chest] = []
 var corpses: Array = []  # {"pos": Vector2, "time": float, "used": bool}
 var _corpse_layer: Node2D
 var _spawn_timer := 0.0
@@ -67,6 +69,13 @@ func _ready() -> void:
 	village = Village.new()
 	village.build(ground_layer, world)
 	village.build_field(world, FIELD.grow(-150), _rng)
+	var chest_def: Dictionary = village.data["sprites"]["chest"]
+	var broken_def: Dictionary = village.data["sprites"]["chest-broken"]
+	for i in village.chest_points.size():
+		var chest := Chest.new().setup(self, i, village.chest_points[i], chest_def, broken_def)
+		world.add_child(chest)
+		chests.append(chest)
+		village.circles.append([chest.position, 24.0])
 
 	player = Player.new()
 	player.setup(self)
@@ -105,6 +114,18 @@ func _update_zoom() -> void:
 var _debug_zoom := 1.0
 
 
+func _debug_open_panel(which: String) -> void:
+	match which:
+		"bag":
+			hud.open_bag(false)
+		"shop":
+			hud.open_bag(true)
+		"skills":
+			hud.open_skill_tree()
+		"settings":
+			hud.open_settings()
+
+
 func _read_debug_params() -> void:
 	if not OS.has_feature("web"):
 		return
@@ -115,6 +136,14 @@ func _read_debug_params() -> void:
 		var kv := part.split("=")
 		if kv.size() == 2 and kv[0] == "zoom":
 			_debug_zoom = clampf(float(kv[1]), 0.1, 4.0)
+		elif kv.size() == 2 and kv[0] == "panel":
+			var which: String = kv[1]
+			get_tree().create_timer(1.5).timeout.connect(_debug_open_panel.bind(which))
+		elif kv.size() == 2 and kv[0] == "gold":
+			GameState.gold = int(kv[1])
+		elif kv.size() == 2 and kv[0] == "chests":
+			for c in chests:
+				c.take_damage(1.0, null)
 		elif kv.size() == 2 and kv[0] == "at":
 			match kv[1]:
 				"field":
@@ -150,6 +179,11 @@ func _dapple_texture() -> ImageTexture:
 	return ImageTexture.create_from_image(img)
 
 
+## 상인 곁에서는 가방에서 상점으로 전환할 수 있습니다 (원본의 근처 행동 버튼).
+func near_merchant() -> bool:
+	return player.position.distance_to(village.merchant_point) < 210.0
+
+
 func in_town(p: Vector2) -> bool:
 	return Geometry2D.is_point_in_polygon(p, village.safe_zone)
 
@@ -183,6 +217,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		match event.keycode:
 			KEY_ESCAPE:
 				hud.toggle_menu()
+			KEY_B:
+				hud.open_bag(near_merchant())
 			KEY_1, KEY_2, KEY_3, KEY_4:
 				player.cast_slot(event.keycode - KEY_0)
 			KEY_L, KEY_SHIFT:
@@ -315,6 +351,65 @@ func enemies_in_arc(center: Vector2, angle: float, radius: float, half_angle: fl
 	return out
 
 
+## 상자는 공격 기술의 범위·투사체에 맞으면 부서집니다.
+func break_chests_in_radius(center: Vector2, radius: float, source: Node2D = null) -> void:
+	for c in chests:
+		if not c.dead and center.distance_to(c.position) <= radius + 26.0:
+			c.take_damage(1.0, source)
+
+
+func break_chests_in_arc(center: Vector2, angle: float, radius: float, half_angle: float, source: Node2D = null) -> void:
+	for c in chests:
+		if c.dead:
+			continue
+		var d := c.position - center
+		if d.length() <= radius + 26.0 and (d.length() < 40.0 or absf(angle_difference(angle, d.angle())) <= half_angle):
+			c.take_damage(1.0, source)
+
+
+func break_chests_at(p: Vector2, r: float, source: Node2D = null) -> void:
+	for c in chests:
+		if not c.dead and p.distance_to(c.position) <= r + 26.0:
+			c.take_damage(1.0, source)
+
+
+func on_chest_broken(chest: Chest) -> void:
+	spawn_nova(chest.position, 70.0, Color(0.95, 0.8, 0.45), true)
+	SoundFx.play("loot")
+	Prefs.pulse("loot")
+	var content := GameState.chest_content(chest.index)
+	var gold: int = {"gear": 18, "supplies": 8, "coins": 10, "ambush": 0}[content]
+	if content == "ambush":
+		gold = 6
+		toast("매복이다!")
+		for i in 2:
+			_spawn_enemy_near(chest.position)
+	GameState.gold += gold
+	float_text(chest.position + Vector2(0, -70), "+%d G" % gold, Color(1, 0.88, 0.45))
+	# 원본: 보급 상자와 숲의 첫 상자는 치유·자원 물약을 하나씩 줌.
+	if content == "supplies" or chest.index == 0:
+		GameState.potions += 1
+		GameState.mana_potions += 1
+		toast("보급품: 치유 물약 +1 · %s 물약 +1" % GameState.class_info()["resource"])
+	if content == "gear":
+		var g := Gear.roll_loot(GameState.hero_class, GameState.level, GameState.next_serial, _rng, true)
+		if GameState.add_gear(g):
+			toast("획득: %s" % g.display_name())
+			player.refresh_stats()
+		else:
+			GameState.gold += g.sale_value()
+			toast("보관함이 가득 차 %s을(를) %d G에 팔았습니다" % [g.display_name(), g.sale_value()])
+	GameState.save_game()
+
+
+func _spawn_enemy_near(at: Vector2) -> void:
+	var enemy := Enemy.new()
+	enemy.setup(self, "goblin", maxi(1, GameState.level))
+	enemy.position = resolve_movement(at, at + Vector2.from_angle(_rng.randf() * TAU) * 70.0, Enemy.RADIUS)
+	world.add_child(enemy)
+	enemies.append(enemy)
+
+
 func enemy_hit_by_point(p: Vector2, r: float) -> Enemy:
 	for e in enemies:
 		if not e.dead and p.distance_to(e.position) <= r + Enemy.RADIUS:
@@ -324,6 +419,7 @@ func enemy_hit_by_point(p: Vector2, r: float) -> Enemy:
 
 func on_enemy_killed(enemy: Enemy) -> void:
 	enemies.erase(enemy)
+	Prefs.pulse("kill")
 	GameState.kills += 1
 	float_text(enemy.position + Vector2(0, -enemy.sprite.body_height - 40), "+%d XP" % enemy.xp_reward, Color(0.7, 0.85, 1))
 	# 원본: 몬스터 처치로는 물약이 나오지 않음 (상자·구매·물약 발견만).

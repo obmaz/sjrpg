@@ -3,6 +3,8 @@ extends RefCounted
 ## Shared styling helpers for the code-built UI.
 
 const BOLD_FONT := preload("res://assets/fonts/NanumGothic-ExtraBold.ttf")
+## Panels raise this so text stays readable on phones (720-wide portrait ≈ 0.57 css px per unit).
+static var boost := 1.0
 const GOLD := Color(0.96, 0.84, 0.52)
 const INK := Color(0.06, 0.14, 0.13)
 
@@ -21,6 +23,7 @@ static func panel_style(bg := Color(0.05, 0.12, 0.11, 0.88), border := GOLD, rad
 
 
 static func label(text: String, size := 22, color := Color.WHITE, bold := false) -> Label:
+	size = roundi(size * boost)
 	var l := Label.new()
 	l.text = text
 	l.add_theme_font_size_override("font_size", size)
@@ -33,6 +36,7 @@ static func label(text: String, size := 22, color := Color.WHITE, bold := false)
 
 
 static func button(text: String, size := 24) -> Button:
+	size = roundi(size * boost)
 	var b := Button.new()
 	b.text = text
 	b.add_theme_font_override("font", BOLD_FONT)

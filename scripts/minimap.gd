@@ -29,12 +29,21 @@ func _to_map(world: Vector2, origin: Vector2) -> Vector2:
 	return (world - origin) * (radius / WORLD_RADIUS)
 
 
+func _area(poly: PackedVector2Array) -> float:
+	var a := 0.0
+	for i in poly.size():
+		var p := poly[i]
+		var q := poly[(i + 1) % poly.size()]
+		a += p.x * q.y - q.x * p.y
+	return a * 0.5
+
+
 func _fill(poly: PackedVector2Array, color: Color, origin: Vector2) -> void:
 	var local := PackedVector2Array()
 	for p in poly:
 		local.append(_to_map(p, origin))
 	for piece in Geometry2D.intersect_polygons(local, _circle):
-		if piece.size() >= 3:
+		if piece.size() >= 3 and absf(_area(piece)) > 1.0:
 			draw_colored_polygon(piece, color)
 
 

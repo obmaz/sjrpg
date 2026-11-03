@@ -48,4 +48,7 @@ func show_class_select() -> void:
 func start_game() -> void:
 	var game := preload("res://scripts/game.gd").new()
 	game.quit_requested.connect(show_title)
+	game.restart_requested.connect(func():
+		GameState.delete_save()
+		show_class_select())
 	_swap(game)

@@ -39,6 +39,7 @@ var river: River
 ## Minimap data (world pixels).
 var map_water := PackedVector2Array()
 var portal_point := Vector2.ZERO
+var merchant_point := Vector2.ZERO
 ## Forecourt (road end before the bridge) in ground units, and the water band.
 var forecourt_g := Vector2.ZERO
 var river_band := Rect2()  # ground units: x = u, y = v
@@ -68,15 +69,8 @@ func build(ground_layer: Node2D, world: Node2D) -> void:
 	_build_plaza(world)
 	_build_trees(world)
 	_build_npcs(world)
-	var cdef: Dictionary = data["sprites"]["chest"]
 	for c in data["chest_uv"]:
-		var at := point(Vector2(c[0], c[1]))
-		chest_points.append(at)
-		# Chest bodies are sized by their measured wooden body width (68).
-		var chest := IsoSprite.new().setup(cdef, float(cdef["height"]) * 68.0 / float(cdef["body"][2]) * 1.3)
-		chest.position = at
-		world.add_child(chest)
-		circles.append([at, 24.0])
+		chest_points.append(point(Vector2(c[0], c[1])))
 	var corners := [Vector2(0.04, 0.10), Vector2(0.94, 0.10), Vector2(0.94, 0.90), Vector2(0.04, 0.90)]
 	safe_zone = PackedVector2Array()
 	for c in corners:
@@ -319,6 +313,8 @@ func _build_npcs(world: Node2D) -> void:
 		var npc := Villager.new()
 		npc.setup(n[2], n[1])
 		npc.position = b.native_point(Vector2(a[0], a[1]))
+		if n[0] == "nw":
+			merchant_point = npc.position
 		world.add_child(npc)
 		circles.append([npc.position, 16.0])
 	var mira := Villager.new()

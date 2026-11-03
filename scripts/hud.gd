@@ -6,13 +6,12 @@ var game: Node
 var _bars: Control
 var _toast: Label
 var _toast_time := 0.0
-var _menu: Control
 var _death: Control
 var controls: TouchControls
 var minimap: Minimap
 var _area: Control
 var _area_name := ""
-var _tree_panel: SkillTreePanel
+var _panel: PanelFrame
 
 
 func _ready() -> void:
@@ -39,49 +38,10 @@ func _ready() -> void:
 	_toast = UiKit.label("", 26, UiKit.GOLD, true)
 	_toast.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_toast.offset_top = 150
-	_toast.offset_bottom = 190
 	_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_toast)
 
-	_build_menu()
 	_build_death()
-
-
-func _build_menu() -> void:
-	_menu = ColorRect.new()
-	_menu.color = Color(0, 0, 0, 0.55)
-	_menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_menu.visible = false
-	_menu.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(_menu)
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_menu.add_child(center)
-	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", UiKit.panel_style())
-	center.add_child(panel)
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 14)
-	panel.add_child(box)
-	var title := UiKit.label("일시 정지", 32, UiKit.GOLD, true)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(title)
-	var info := UiKit.label("", 20)
-	info.name = "Info"
-	info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(info)
-	var help := UiKit.label("이동: WASD/방향키 · 주 슬롯: J/스페이스\n보조 슬롯: 1–4 (K=1) · 구르기: Shift/L\n물약: Q · 스킬 트리: T · 메뉴: Esc", 17, Color(0.8, 0.9, 0.85))
-	help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(help)
-	var resume := UiKit.button("계속하기")
-	resume.pressed.connect(toggle_menu)
-	box.add_child(resume)
-	var quit := UiKit.button("저장 후 타이틀로")
-	quit.pressed.connect(func():
-		get_tree().paused = false
-		game.quit_to_title())
-	box.add_child(quit)
 
 
 func _build_death() -> void:
@@ -98,32 +58,56 @@ func _build_death() -> void:
 	_death.add_child(l)
 
 
-func toggle_menu() -> void:
-	_menu.visible = not _menu.visible
-	get_tree().paused = _menu.visible
-	if _menu.visible:
-		var info: Label = _menu.find_child("Info", true, false)
-		info.text = "%s Lv.%d · 처치 %d · 물약 %d" % [GameState.class_info()["name"], GameState.level, GameState.kills, GameState.potions]
+func panel_open() -> bool:
+	return _panel != null
 
 
-func open_skill_tree() -> void:
-	if _tree_panel or _menu.visible:
+func _open(panel: PanelFrame) -> void:
+	if _panel != null:
+		panel.queue_free()
 		return
 	controls.release_all()
 	get_tree().paused = true
-	_tree_panel = SkillTreePanel.new()
-	_tree_panel.closed.connect(close_skill_tree)
-	add_child(_tree_panel)
+	_panel = panel
+	panel.closed.connect(close_panel)
+	add_child(panel)
 
 
-func close_skill_tree() -> void:
-	if _tree_panel == null:
+func close_panel() -> void:
+	if _panel == null:
 		return
-	_tree_panel.queue_free()
-	_tree_panel = null
+	_panel.queue_free()
+	_panel = null
 	get_tree().paused = false
 	game.player.refresh_stats()
 	GameState.save_game()
+
+
+func open_skill_tree() -> void:
+	_open(SkillTreePanel.new())
+
+
+func open_bag(shop := false) -> void:
+	_open(BagPanel.new().setup(shop, game))
+
+
+func open_settings() -> void:
+	var panel := SettingsPanel.new().setup(game)
+	panel.title_requested.connect(func():
+		close_panel()
+		game.quit_to_title())
+	panel.restart_requested.connect(func():
+		close_panel()
+		game.restart_requested.emit())
+	_open(panel)
+
+
+## Esc: close whatever is open, otherwise open the settings.
+func toggle_menu() -> void:
+	if _panel != null:
+		close_panel()
+	else:
+		open_settings()
 
 
 func show_death() -> void:

@@ -32,6 +32,15 @@ var xp := 0
 var potions := 3
 var mana_potions := 2
 var kills := 0
+var gold := 0
+## 장비 (원본 Progress.inventory / equipped): 보관함 24칸, 부위별 착용 1개.
+var inventory: Array[Gear] = []
+var equipped := {}  # slot name -> Gear
+var unseen: Array[int] = []
+var next_serial := 1
+## 상자 보상 순서 (원본 chestContent: 열 개 중 장비 7 · 보급 1 · 골드 1 · 매복 1) and opened chests.
+var chest_seed := 1
+var opened_chests: Array[int] = []
 ## Skill tree (원본 rpg_model.dart): 2 starting points, +1 per level and +2 every fifth level.
 var skill_points := 2
 var ranks: Dictionary = {}
@@ -177,19 +186,115 @@ func class_info() -> Dictionary:
 	return CLASSES[hero_class]
 
 
+## Canonical combat numbers (원본 rpg_model.dart); the HUD shows health/damage ×100, resources ×10.
+const PLAYER_DAMAGE_SCALE := 0.75 * 0.85
+
+
+func equipped_sum(stat: String) -> float:
+	var total := 0.0
+	for g in equipped.values():
+		total += g.call(stat)
+	return total
+
+
 func max_hp() -> float:
 	var c := class_info()
-	return c["hp"] + c["hp_per_level"] * (level - 1)
+	return c["hp"] + c["hp_per_level"] * (level - 1) + equipped_sum("health")
 
 
+func max_resource() -> float:
+	return class_info()["resource_max"] + equipped_sum("mana")
+
+
+## swordDamage: (레벨 보너스 + 착용 장비 공격) × 0.6375. 마법사의 주문은 무기 공격을 절반만
+## 반영하고(원본: 주문 곡선은 무기를 상속하지 않음) 기본 위력을 따로 가집니다.
 func attack_power() -> float:
-	var c := class_info()
-	return c["attack"] + c["attack_per_level"] * (level - 1)
+	var gear_attack := equipped_sum("attack")
+	if hero_class == "warrior":
+		return ((level - 1) * 2.0 + gear_attack) * PLAYER_DAMAGE_SCALE
+	return (10.0 + (level - 1) * 2.0 + gear_attack * 0.5) * PLAYER_DAMAGE_SCALE * 1.5
 
 
 func defense() -> float:
-	var c := class_info()
-	return c["defense"] + c["defense_per_level"] * (level - 1)
+	return equipped_sum("armor")
+
+
+## ── 장비 ──
+
+func new_gear(def_id: String, r := 0, p := 0, v := 0, f := 0) -> Gear:
+	var g := Gear.make(next_serial, def_id, r, p, v, f, level)
+	next_serial += 1
+	return g
+
+
+func add_gear(g: Gear) -> bool:
+	if inventory.size() >= Gear.CAPACITY:
+		return false
+	inventory.append(g)
+	next_serial = maxi(next_serial, g.serial + 1)
+	unseen.append(g.serial)
+	# 무기가 없으면(파괴됨) 새 무기를 바로 착용합니다.
+	if g.slot() == "weapon" and not equipped.has("weapon") and Gear.usable(g.base, hero_class):
+		equip(g)
+	return true
+
+
+func is_equipped(g: Gear) -> bool:
+	return equipped.get(g.slot()) == g
+
+
+func can_equip(g: Gear) -> bool:
+	return Gear.usable(g.base, hero_class)
+
+
+func equip(g: Gear) -> bool:
+	if not inventory.has(g) or not can_equip(g):
+		return false
+	equipped[g.slot()] = g
+	unseen.erase(g.serial)
+	return true
+
+
+func unequip(g: Gear) -> bool:
+	if g.slot() == "weapon" or not is_equipped(g):
+		return false
+	equipped.erase(g.slot())
+	return true
+
+
+func sell(g: Gear) -> bool:
+	if g.locked or is_equipped(g) or not inventory.has(g):
+		return false
+	inventory.erase(g)
+	unseen.erase(g.serial)
+	gold += g.sale_value()
+	return true
+
+
+func _starting_gear() -> void:
+	inventory.clear()
+	equipped.clear()
+	unseen.clear()
+	next_serial = 1
+	var weapon := new_gear("shortsword" if hero_class == "warrior" else "wand")
+	var armor := new_gear("linen")
+	for g in [weapon, armor]:
+		inventory.append(g)
+		equipped[g.slot()] = g
+		next_serial = maxi(next_serial, g.serial + 1)
+
+
+## 상자 열 개 묶음 (원본: 장비 7 · 보급 1 · 골드 1 · 매복 1을 시드로 섞음).
+func chest_content(index: int) -> String:
+	var bag := ["gear", "gear", "gear", "gear", "gear", "gear", "gear", "supplies", "coins", "ambush"]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = chest_seed * 7919 + (index / 10) * 104729 + 0x193af
+	for i in range(bag.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var tmp = bag[i]
+		bag[i] = bag[j]
+		bag[j] = tmp
+	return bag[index % 10]
 
 
 func xp_to_next() -> int:
@@ -215,9 +320,18 @@ func new_game(cls: String) -> void:
 	potions = 3
 	mana_potions = 2
 	kills = 0
+	gold = 0
+	chest_seed = randi() % 0x7fffffff
+	opened_chests.clear()
 	skill_points = 2
 	_starter_skills()
+	_starting_gear()
 	save_game()
+
+
+func delete_save() -> void:
+	if FileAccess.file_exists(SAVE_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
 
 
 func has_save() -> bool:
@@ -232,6 +346,11 @@ func save_game() -> void:
 		"class": hero_class, "level": level, "xp": xp,
 		"potions": potions, "mana_potions": mana_potions, "kills": kills,
 		"skill_points": skill_points, "ranks": ranks, "slots": slots,
+		"gold": gold, "chest_seed": chest_seed, "opened_chests": opened_chests,
+		"next_serial": next_serial,
+		"inventory": inventory.map(func(g): return g.to_save()),
+		"equipped": equipped.keys().map(func(k): return {"slot": k, "serial": equipped[k].serial}),
+		"unseen": unseen,
 	}))
 
 
@@ -265,4 +384,27 @@ func load_game() -> bool:
 		# Saves from before the skill tree: grant the points earned so far.
 		_starter_skills()
 		skill_points = points_for_level(level)
+	gold = int(data.get("gold", 0))
+	chest_seed = int(data.get("chest_seed", 1))
+	opened_chests.clear()
+	for c in data.get("opened_chests", []):
+		opened_chests.append(int(c))
+	next_serial = int(data.get("next_serial", 1))
+	if data.has("inventory"):
+		inventory.clear()
+		equipped.clear()
+		unseen.clear()
+		for raw in data["inventory"]:
+			var g := Gear.from_save(raw)
+			if g != null and inventory.size() < Gear.CAPACITY:
+				inventory.append(g)
+				next_serial = maxi(next_serial, g.serial + 1)
+		for e in data.get("equipped", []):
+			for g in inventory:
+				if g.serial == int(e.get("serial", 0)) and g.slot() == str(e.get("slot", "")) and can_equip(g):
+					equipped[g.slot()] = g
+		for u in data.get("unseen", []):
+			unseen.append(int(u))
+	else:
+		_starting_gear()
 	return true

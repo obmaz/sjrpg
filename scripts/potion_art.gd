@@ -68,6 +68,8 @@ static func draw(canvas: CanvasItem, center: Vector2, radius: float, energy: boo
 		uvs.append((mid + d * half) / size)
 	canvas.draw_polygon(pts, PackedColorArray([Color(1, 1, 1, 1.0 if not pressed else 0.8)]), uvs, tex)
 	canvas.draw_arc(center, radius - 0.6, 0, TAU, 40, Color(0.647, 0.694, 0.71), 1.5, true)
+	if count < 0:
+		return
 	var badge := Rect2(center + Vector2(radius * 0.18, radius * 0.38), Vector2(radius * 0.8, radius * 0.62))
 	canvas.draw_rect(badge, Color(0.06, 0.14, 0.13), true)
 	canvas.draw_string(UiKit.BOLD_FONT, badge.position + Vector2(0, badge.size.y * 0.8), str(count), HORIZONTAL_ALIGNMENT_CENTER, badge.size.x, int(radius * 0.52), Color(0.93, 0.89, 0.8))

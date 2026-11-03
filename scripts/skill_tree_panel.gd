@@ -1,74 +1,35 @@
 class_name SkillTreePanel
-extends Control
+extends PanelFrame
 ## 스킬 트리 (원본: lib/src/ui/skills_panel.dart · skill_tree.dart · skill_tree_layout.dart).
 ## Three schools of six level tiers (1·6·12·18·24·30), prerequisite arrows,
 ## learning with skill points, and equipping to the main / auxiliary slots.
-
-signal closed
+## 폰 세로 화면에서는 트리(위) + 상세(아래)로 나뉘고 가로에서는 좌우로 나뉩니다.
 
 const TIERS := [1, 6, 12, 18, 24, 30]
 
 var _tab := 0
 var _selected := ""
-var _tabs: HBoxContainer
 var _tree: Control
-var _points: Label
 var _detail: VBoxContainer
 var _layout_box: BoxContainer
 var _nodes := {}  # id -> Rect2 in _tree coordinates
 
 
 func _ready() -> void:
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	process_mode = Node.PROCESS_MODE_ALWAYS
-	var bg := ColorRect.new()
-	bg.color = Color(0.02, 0.06, 0.05, 0.92)
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
-
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 16)
-	add_child(margin)
-	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 10)
-	margin.add_child(root)
-
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 12)
-	root.add_child(header)
-	var title := UiKit.label("%s 스킬" % GameState.class_info()["name"], 28, UiKit.GOLD, true)
-	header.add_child(title)
-	_points = UiKit.label("", 22, Color(0.8, 1, 0.85), true)
-	_points.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(_points)
-	var reset := UiKit.button("초기화", 18)
-	reset.custom_minimum_size = Vector2(100, 44)
-	reset.pressed.connect(func():
-		if GameState.invested_points() == 0:
-			return
-		GameState.reset_skills()
-		_refresh())
-	header.add_child(reset)
-	var close := UiKit.button("닫기", 18)
-	close.custom_minimum_size = Vector2(100, 44)
-	close.pressed.connect(func(): closed.emit())
-	header.add_child(close)
-
-	_tabs = HBoxContainer.new()
-	_tabs.add_theme_constant_override("separation", 8)
-	root.add_child(_tabs)
-
+	super._ready()
+	set_header("%s 스킬" % GameState.class_info()["name"])
+	# The tree needs the whole body, so it replaces the generic scrolling body.
+	scroll.visible = false
 	_layout_box = BoxContainer.new()
-	_layout_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_layout_box.add_theme_constant_override("separation", 14)
-	root.add_child(_layout_box)
+	_layout_box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_layout_box.add_theme_constant_override("separation", 12)
+	body_holder.add_child(_layout_box)
 
 	_tree = Control.new()
 	_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_tree.size_flags_stretch_ratio = 1.6
+	_tree.size_flags_stretch_ratio = 1.15
+	_tree.custom_minimum_size = Vector2(0, 280)
 	_tree.draw.connect(_draw_tree)
 	_tree.gui_input.connect(_tree_input)
 	_tree.resized.connect(func(): _tree.queue_redraw())
@@ -79,13 +40,20 @@ func _ready() -> void:
 	detail_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_layout_box.add_child(detail_panel)
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	detail_panel.add_child(scroll)
+	var detail_scroll := ScrollContainer.new()
+	detail_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	detail_scroll.scroll_deadzone = 14
+	detail_panel.add_child(detail_scroll)
 	_detail = VBoxContainer.new()
 	_detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_detail.add_theme_constant_override("separation", 8)
-	scroll.add_child(_detail)
+	detail_scroll.add_child(_detail)
+
+	add_footer("스킬 초기화", func():
+		if GameState.invested_points() > 0:
+			GameState.reset_skills()
+			_refresh(), false, 1.0)
+	add_footer("모험 계속하기", func(): closed.emit(), true, 2.0)
 
 	get_viewport().size_changed.connect(_fit)
 	_fit()
@@ -138,21 +106,10 @@ func _tab_of(id: String) -> int:
 
 
 func _refresh() -> void:
-	_points.text = "스킬 포인트 %d · Lv.%d" % [GameState.skill_points, GameState.level]
-	for child in _tabs.get_children():
-		child.queue_free()
-	var labels := _tab_labels()
-	for i in labels.size():
-		var b := UiKit.button(labels[i], 18)
-		b.custom_minimum_size = Vector2(120, 42)
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		if i != _tab:
-			b.modulate = Color(0.65, 0.65, 0.65)
-		var index := i
-		b.pressed.connect(func():
-			_tab = index
-			_refresh())
-		_tabs.add_child(b)
+	set_header("%s 스킬" % GameState.class_info()["name"], "스킬 포인트 %d · Lv.%d" % [GameState.skill_points, GameState.level])
+	set_tabs(_tab_labels(), _tab, func(i):
+		_tab = i
+		_refresh())
 	_tree.queue_redraw()
 	_build_detail()
 
@@ -162,16 +119,16 @@ func _refresh() -> void:
 func _draw_tree() -> void:
 	_nodes.clear()
 	var area := _tree.size
-	var label_w := 54.0
+	var label_w := 72.0
 	var col_w := (area.x - label_w) / 3.0
 	var row_h := area.y / 6.0
-	var icon := minf(col_w * 0.62, row_h * 0.7)
+	var icon := minf(col_w * 0.7, row_h * 0.62)
 	var font := UiKit.BOLD_FONT
 	for r in 6:
 		var y := r * row_h
 		_tree.draw_rect(Rect2(0, y + 2, area.x, row_h - 4), Color(1, 1, 1, 0.03 if r % 2 == 0 else 0.06))
 		var tier := "Lv.%d" % TIERS[r] if _tab != 3 else ""
-		_tree.draw_string(font, Vector2(4, y + row_h / 2.0 + 6), tier, HORIZONTAL_ALIGNMENT_LEFT, label_w, 15, Color(0.8, 0.85, 0.75))
+		_tree.draw_string(font, Vector2(4, y + row_h / 2.0 + 6), tier, HORIZONTAL_ALIGNMENT_LEFT, label_w, 19, Color(0.8, 0.85, 0.75))
 	var slots := _tab_slots(_tab)
 	for slot in slots:
 		var c := Vector2(label_w + (slot[2] + 0.5) * col_w, (slot[1] + 0.5) * row_h - 8.0)
@@ -205,16 +162,16 @@ func _draw_tree() -> void:
 		if id == _selected:
 			_tree.draw_rect(rect.grow(5), Color(1, 1, 1, 0.9), false, 2.0)
 		var badge := "%d/%d" % [rank, int(s["limit"])]
-		var bpos := rect.position + Vector2(0, rect.size.y + 15)
-		_tree.draw_string_outline(font, bpos, badge, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 14, 4, Color(0, 0, 0, 0.9))
-		_tree.draw_string(font, bpos, badge, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 14, Color.WHITE if rank > 0 else Color(0.7, 0.7, 0.7))
+		var bpos := rect.position + Vector2(0, rect.size.y + 20)
+		_tree.draw_string_outline(font, bpos, badge, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 19, 5, Color(0, 0, 0, 0.9))
+		_tree.draw_string(font, bpos, badge, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 19, Color.WHITE if rank > 0 else Color(0.7, 0.7, 0.7))
 		if s["passive"] and not s["basic"]:
-			_tree.draw_string(font, rect.position + Vector2(3, 14), "P", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.7, 1, 0.8))
+			_tree.draw_string(font, rect.position + Vector2(3, 14), "P", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color(0.7, 1, 0.8))
 		var slot_index: int = GameState.slots.find(id)
 		if slot_index >= 0:
 			var tag := "주" if slot_index == 0 else str(slot_index)
-			_tree.draw_circle(rect.end - Vector2(4, rect.size.y - 4), 11, Color(0.96, 0.84, 0.52))
-			_tree.draw_string(font, rect.end - Vector2(15, rect.size.y - 9), tag, HORIZONTAL_ALIGNMENT_CENTER, 22, 13, UiKit.INK)
+			_tree.draw_circle(rect.end - Vector2(4, rect.size.y - 4), 14, Color(0.96, 0.84, 0.52))
+			_tree.draw_string(font, rect.end - Vector2(18, rect.size.y - 10), tag, HORIZONTAL_ALIGNMENT_CENTER, 28, 17, UiKit.INK)
 
 
 func _tree_input(event: InputEvent) -> void:
@@ -244,9 +201,9 @@ func _build_detail() -> void:
 	head.add_theme_constant_override("separation", 12)
 	_detail.add_child(head)
 	var icon := Control.new()
-	icon.custom_minimum_size = Vector2(72, 72)
+	icon.custom_minimum_size = Vector2(88, 88)
 	var id := _selected
-	icon.draw.connect(func(): SkillIcons.draw(icon, id, Rect2(Vector2.ZERO, Vector2(72, 72))))
+	icon.draw.connect(func(): SkillIcons.draw(icon, id, Rect2(Vector2.ZERO, Vector2(88, 88))))
 	head.add_child(icon)
 	var names := VBoxContainer.new()
 	head.add_child(names)
@@ -258,7 +215,7 @@ func _build_detail() -> void:
 
 	var desc := UiKit.label(s["desc"], 17)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.custom_minimum_size = Vector2(240, 0)
+	desc.custom_minimum_size = Vector2(160, 0)
 	_detail.add_child(desc)
 
 	var info := []
@@ -276,7 +233,8 @@ func _build_detail() -> void:
 		_add_effect_line("다음 등급" if rank > 0 else "1등급", SkillDefs.describe(_selected, rank + 1), Color(0.7, 1, 0.75))
 
 	var reason := GameState.learn_block_reason(s)
-	var learn := UiKit.button("배우기 (포인트 1)" if rank == 0 else "등급 올리기 (포인트 1)", 20)
+	var learn := UiKit.button("배우기 (포인트 1)" if rank == 0 else "등급 올리기 (포인트 1)", 21)
+	learn.custom_minimum_size = Vector2(0, 72)
 	learn.disabled = reason != ""
 	if reason != "":
 		learn.text = reason
@@ -292,8 +250,9 @@ func _build_detail() -> void:
 		row.add_theme_constant_override("separation", 6)
 		_detail.add_child(row)
 		for i in 5:
-			var b := UiKit.button("주" if i == 0 else str(i), 18)
-			b.custom_minimum_size = Vector2(52, 44)
+			var b := UiKit.button("주" if i == 0 else str(i), 20)
+			b.custom_minimum_size = Vector2(60, 68)
+			b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			if GameState.slots[i] == _selected:
 				b.modulate = Color(0.6, 1, 0.65)
 			var index := i
@@ -312,5 +271,5 @@ func _add_effect_line(title: String, text: String, color: Color) -> void:
 		return
 	var l := UiKit.label("%s: %s" % [title, text], 16, color)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.custom_minimum_size = Vector2(240, 0)
+	l.custom_minimum_size = Vector2(160, 0)
 	_detail.add_child(l)

@@ -27,10 +27,15 @@ Flutter·Bonfire로 만든 [sjrpg](https://github.com/obmaz/sjrpg)를 **Godot 4.
 - 진행 저장(`user://`, 웹에서는 IndexedDB)
 - 키보드(WASD/방향키, J/스페이스 주 슬롯, 1–4 보조 슬롯, Shift/L 구르기, Q 물약, T 스킬 트리, Esc 메뉴)와 모바일 멀티터치(가상 조이스틱 + 버튼)
 - 가로/세로 화면 모두 지원
+- **가방(장비)**: 원본 장비 34종(`assets/data/gear.json`), 부위 3(무기·방어구·부적) · 등급 4 · 옵션 · 무기 레벨, 보관함 24칸, 탭(전체·신규·무기·방어구·부적·잠금), 장착·잠금·판매, 현재 장비와 비교. 시작 장비는 원본과 같음(전사: 수호자의 검, 마법사: 불씨 완드, 둘 다 여행자의 옷). 공격력·생명·자원은 장비를 합산해 계산(`GameState.attack_power`)
+- **상자**: 마을 상자 5개를 공격 기술로 부수면 원본 규칙대로 장비 7 · 보급 1 · 골드 1 · 매복 1 비율로 보상
+- **상점**: 상인(왼쪽 위 집) 곁에서 "상점" 버튼 → 무기·방어구·부적·물약 구매 (원본 가격·레벨 해금)
+- **설정**: 전체화면, 타격 진동, 전투 효과음(원본 SoundProfile 합성), 지금 저장, 타이틀, 새 모험(확인 후 저장 삭제). 설정은 기기에 저장
+- **모바일 레이아웃**: 가방·스킬·설정이 한 틀(`PanelFrame`)을 공유. 화면 전체를 쓰고 안전 영역을 피하며, 글자 약 20px+·터치 영역 64px+, 탭은 가로 스크롤, 본문은 세로 스크롤
 - **레퍼런스 스타일 HUD**: 원본 초상화(전사 hero-helmeted-portrait, 마법사 class-selection 얼굴)와 기울어진 체력·마나·경험치 막대, 원형 미니맵과 지역명, 청색(전사는 호박색) 빛 고리의 주 슬롯과 보조 슬롯 4개, 체력·마나 물약, 구르기, 마법진 조이스틱, 하단 가방·스킬·퀘스트·설정 아이콘 바, 가장자리 비네트
 - 바닥은 원본 자갈 포장 원화를 지면에 깔고 숲 그늘(나뭇잎 그림자) 층을 곱해 레퍼런스의 햇살·그늘 분위기를 냄
 
-원본의 나머지 여섯 지역, 폭포·강 상류, 장비, 퀘스트, NPC 상호작용(상점 등), 상자 파괴 등은 아직 이식 전입니다. 장비가 없어서 무기 숙련은 가장 높은 한 가지가 기본 무기에 적용됩니다.
+원본의 나머지 여섯 지역, 폭포·강 상류, 퀘스트, 대장장이·탈것·촌장 상호작용, 상점의 축복(수련), 무기 능력(희귀·고유 장비의 선물), 장비별 사거리·공격 간격은 아직 이식 전입니다. 장비가 없어서 무기 숙련은 가장 높은 한 가지가 기본 무기에 적용됩니다.
 
 ## 구조
 
@@ -42,6 +47,9 @@ Flutter·Bonfire로 만든 [sjrpg](https://github.com/obmaz/sjrpg)를 **Godot 4.
 | `scripts/iso.gd`, `scripts/iso_sprite.gd`, `scripts/wall_piece.gd` | 쿼터뷰 투영, 실측 원화 배치, 성벽 |
 | `scripts/village.gd`, `assets/data/village.json` | 제1장 숲 마을 배치와 예배당 마당 |
 | `scripts/river.gd`, `scripts/bridge.gd` | 동문 밖 강과 돌다리 |
+| `scripts/gear.gd`, `scripts/gear_art.gd`, `scripts/chest.gd` | 장비 모델·아이콘, 마을 상자 |
+| `scripts/panel_frame.gd`, `scripts/bag_panel.gd`, `scripts/settings_panel.gd` | 모바일 패널 틀, 가방·상점, 설정 |
+| `scripts/prefs.gd`, `scripts/sound_fx.gd` | 기기 설정(진동·효과음), 효과음 합성 |
 | `docs/chapel-regeneration.md` | 예배당 원화가 ±30° 기준에서 벗어난 측정 결과와 재생성 규격 |
 | `scripts/player.gd`, `scripts/enemy.gd` | 영웅 조작과 몬스터 AI |
 | `scripts/hud.gd`, `scripts/touch_controls.gd` | HUD, 메뉴, 터치 조작 |

@@ -48,6 +48,8 @@ func _layout() -> void:
 	var names := ["bar_bag", "bar_skills", "bar_quests", "bar_gear"]
 	for i in 4:
 		_buttons[names[i]] = {"center": Vector2(size.x / 2.0 + (i - 1.5) * 84.0 * u, bar_y), "radius": 33.0 * u}
+	if game.near_merchant():
+		_buttons["near_shop"] = {"center": Vector2(size.x / 2.0, bar_y - 86.0 * u), "radius": 42.0 * u}
 	if _stick_index == -2:
 		_stick_center = Vector2(112.0 * u, size.y * 0.725) if portrait else Vector2(140.0 * u, size.y - 150.0 * u)
 		_stick_knob = _stick_center
@@ -88,10 +90,13 @@ func _press(index: int, pos: Vector2) -> bool:
 			game.hud.open_skill_tree()
 			return true
 		"bar_gear":
-			game.hud.toggle_menu()
+			game.hud.open_settings()
 			return true
 		"bar_bag":
-			game.toast("가방은 아직 준비 중입니다")
+			game.hud.open_bag(false)
+			return true
+		"near_shop":
+			game.hud.open_bag(true)
 			return true
 		"bar_quests":
 			game.toast("퀘스트는 아직 준비 중입니다")
@@ -230,6 +235,11 @@ func _draw() -> void:
 			PotionArt.draw(self, c, r, false, GameState.potions, pressed)
 		elif name == "potion_mp":
 			PotionArt.draw(self, c, r, true, GameState.mana_potions, pressed)
+		elif name == "near_shop":
+			draw_circle(c, r + 2.0, Color(0, 0, 0, 0.4))
+			draw_circle(c, r, Color(0.17, 0.12, 0.05, 0.95))
+			draw_arc(c, r, 0, TAU, 40, UiKit.GOLD, 4.0, true)
+			HudArt.text_outlined(self, "상점", c + Vector2(-r, 8.0 * u), r * 2.0, int(22 * u), Color(1, 0.92, 0.7))
 		elif name.begins_with("bar_"):
 			HudArt.plaque(self, BAR_ICONS[name], c, r, Color(0.92, 0.9, 0.88) if not pressed else Color.WHITE)
 			if name == "bar_skills" and GameState.skill_points > 0:

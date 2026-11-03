@@ -46,7 +46,7 @@ func setup(g: Node, k: String, level: int) -> void:
 	var def: Dictionary = KINDS[k]
 	display_name = def["name"]
 	var scale_factor := 1.0 + (level - 1) * 0.22
-	max_hp = def["hp"] * 2.2 * scale_factor
+	max_hp = def["hp"] * 0.8 * scale_factor
 	hp = max_hp
 	speed = def["speed"]
 	damage = def["damage"] * (1.0 + (level - 1) * 0.15)
@@ -120,6 +120,8 @@ func take_damage(amount: float, source: Node2D) -> void:
 	if _cry_time > 0.0:
 		amount *= 1.0 + _cry_value
 	hp -= amount
+	SoundFx.play("impact")
+	Prefs.pulse("hit")
 	sprite.flash = 1.0
 	game.float_text(position + Vector2(0, -sprite.body_height - 20), HudArt.stat(amount), Color(1, 0.95, 0.6))
 	if source and _knockback.length() < 160.0:
