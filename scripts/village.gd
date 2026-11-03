@@ -6,7 +6,7 @@ extends RefCounted
 
 const DATA_PATH := "res://assets/data/village.json"
 const WALL_HEIGHT := 140.0
-const WALL_THICK := 48.0
+const WALL_THICK := 38.0
 const ROAD_HALF := 0.047  # paved road half width in uv
 ## Town trees measured from the original game's opening view.
 const TREE_UV := [[0.355, 0.724, 11], [0.684, 0.703, 2], [0.246, 0.368, 11]]
@@ -32,6 +32,8 @@ var chest_points: Array[Vector2] = []
 ## Chapel stair path from the yard below to the terrace (world pixels).
 var chapel_steps: PackedVector2Array
 var gate_points: Array[Vector2] = []
+## Measured pillar feet of each gate in ground units: gate -> [Vector2, Vector2].
+var gate_pillars: Array = []
 
 
 func _init() -> void:
@@ -51,8 +53,8 @@ func point(uv: Vector2) -> Vector2:
 
 func build(ground_layer: Node2D, world: Node2D) -> void:
 	_build_paving(ground_layer)
-	_build_walls(world)
 	_build_gates(world)
+	_build_walls(world)
 	_build_buildings(world)
 	_build_plaza(world)
 	_build_trees(world)
@@ -137,12 +139,34 @@ func _build_paving(layer: Node2D) -> void:
 
 # ───────── walls & gates ─────────
 
+## A wall run's gate-side end snaps to the centre of the nearest measured
+## pillar foot, so the pillar covers the end instead of the wall poking into
+## the opening. `axis` is the coordinate that varies across the gate.
+func _snap_to_pillar(end: Vector2, gate: int) -> Vector2:
+	var axis := 0 if gate < 2 else 1
+	var best: Vector2 = gate_pillars[gate][0]
+	for f in gate_pillars[gate]:
+		if absf(f[axis] - end[axis]) < absf(best[axis] - end[axis]):
+			best = f
+	var snapped := end
+	snapped[axis] = best[axis]
+	return snapped
+
+
 func _build_walls(world: Node2D) -> void:
 	var tex := load("res://assets/art/village/wall.webp") as Texture2D
-	for run in data["wall_runs"]:
-		for i in range(1, run.size()):
-			var a := ground(Vector2(run[i - 1][0], run[i - 1][1]))
-			var b := ground(Vector2(run[i][0], run[i][1]))
+	# [first-end gate, last-end gate] for the four runs.
+	var run_gates := [[0, 2], [2, 1], [0, 3], [3, 1]]
+	for r in data["wall_runs"].size():
+		var run: Array = data["wall_runs"][r]
+		var pts: Array[Vector2] = []
+		for p in run:
+			pts.append(ground(Vector2(p[0], p[1])))
+		pts[0] = _snap_to_pillar(pts[0], run_gates[r][0])
+		pts[pts.size() - 1] = _snap_to_pillar(pts[pts.size() - 1], run_gates[r][1])
+		for i in range(1, pts.size()):
+			var a := pts[i - 1]
+			var b := pts[i]
 			var length := a.distance_to(b)
 			var pieces := maxi(1, ceili(length / 72.0))
 			for p in pieces:
@@ -160,13 +184,18 @@ func _build_gates(world: Node2D) -> void:
 		var def: Dictionary = data["sprites"]["gate-%d" % (0 if gate < 2 else 2)]
 		var s := IsoSprite.new().setup(def, float(def["world_height"]) * 1.35)
 		s.position = point(uv)
+		# The gate always draws over the wall ends that tuck into its pillars.
+		s.z_index = 1
 		world.add_child(s)
 		gate_points.append(s.position)
+		var feet: Array[Vector2] = []
 		for contact in data["gate_contacts"][0 if gate < 2 else 1]:
 			var c := s.atlas_point(Vector2(contact[0], contact[1]))
+			feet.append(Iso.unproject(c))
 			var u := Iso.project(Vector2(22, 0))
 			var v := Iso.project(Vector2(0, 22))
 			solids.append(PackedVector2Array([c - u, c - v, c + u, c + v]))
+		gate_pillars.append(feet)
 
 
 # ───────── buildings ─────────

@@ -109,6 +109,12 @@ func _read_debug_params() -> void:
 					player.position = c / village.terrace.size()
 				"field":
 					player.position = village.point(Vector2(0.5, 1.15))
+				"gate0", "gate1", "gate2", "gate3":
+					player.position = village.gate_points[int(kv[1].substr(4))] + Vector2(0, 150)
+				"corner0":
+					player.position = village.point(Vector2(0.04, 0.10)) + Vector2(0, 150)
+				"corner3":
+					player.position = village.point(Vector2(0.94, 0.90)) + Vector2(0, 150)
 			camera.position = player.position
 			camera.reset_smoothing()
 
