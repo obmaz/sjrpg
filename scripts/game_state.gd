@@ -30,6 +30,7 @@ var hero_class := "warrior"
 var level := 1
 var xp := 0
 var potions := 3
+var mana_potions := 3
 var kills := 0
 ## Skill tree (원본 rpg_model.dart): 2 starting points, +1 per level and +2 every fifth level.
 var skill_points := 2
@@ -212,6 +213,7 @@ func new_game(cls: String) -> void:
 	level = 1
 	xp = 0
 	potions = 3
+	mana_potions = 3
 	kills = 0
 	skill_points = 2
 	_starter_skills()
@@ -228,7 +230,7 @@ func save_game() -> void:
 		return
 	file.store_string(JSON.stringify({
 		"class": hero_class, "level": level, "xp": xp,
-		"potions": potions, "kills": kills,
+		"potions": potions, "mana_potions": mana_potions, "kills": kills,
 		"skill_points": skill_points, "ranks": ranks, "slots": slots,
 	}))
 
@@ -246,6 +248,7 @@ func load_game() -> bool:
 	level = int(data.get("level", 1))
 	xp = int(data.get("xp", 0))
 	potions = int(data.get("potions", 3))
+	mana_potions = int(data.get("mana_potions", 3))
 	kills = int(data.get("kills", 0))
 	if data.has("ranks"):
 		ranks = {}

@@ -38,8 +38,23 @@ func _ready() -> void:
 	meadow.position = FIELD.position
 	meadow.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
 	# ForestScenePalette: bright, low-saturation warm grass.
-	meadow.modulate = Color(0.72, 0.69, 0.47)
+	meadow.modulate = Color(0.58, 0.70, 0.50)
 	ground_layer.add_child(meadow)
+
+	# Dappled forest shade: a multiply layer of soft light patches over the ground.
+	var shade := Sprite2D.new()
+	shade.texture = _dapple_texture()
+	shade.centered = false
+	shade.region_enabled = true
+	shade.region_rect = Rect2(Vector2.ZERO, FIELD.size / 1500.0 * 192.0)
+	shade.scale = Vector2.ONE * 1500.0 / 192.0
+	shade.position = FIELD.position
+	shade.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
+	var mul := CanvasItemMaterial.new()
+	mul.blend_mode = CanvasItemMaterial.BLEND_MODE_MUL
+	shade.material = mul
+	shade.z_index = 3
+	ground_layer.add_child(shade)
 
 	_corpse_layer = Node2D.new()
 	_corpse_layer.z_index = -8
@@ -123,6 +138,23 @@ func _read_debug_params() -> void:
 			camera.reset_smoothing()
 
 
+func _dapple_texture() -> ImageTexture:
+	var noise := FastNoiseLite.new()
+	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	noise.frequency = 0.03
+	noise.fractal_octaves = 3
+	noise.seed = 11
+	var img := noise.get_seamless_image(192, 192)
+	img.convert(Image.FORMAT_RGB8)
+	var dark := Color(0.40, 0.48, 0.45)
+	var lit := Color(1.0, 0.97, 0.88)
+	for y in img.get_height():
+		for x in img.get_width():
+			var n := img.get_pixel(x, y).r
+			img.set_pixel(x, y, dark.lerp(lit, smoothstep(0.40, 0.60, n)))
+	return ImageTexture.create_from_image(img)
+
+
 func in_town(p: Vector2) -> bool:
 	return Geometry2D.is_point_in_polygon(p, village.safe_zone)
 
@@ -152,6 +184,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		player.cast_slot(1)
 	elif event.is_action_pressed("potion"):
 		player.use_potion()
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_E:
+		player.use_mana_potion()
 	elif event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
 			KEY_ESCAPE:
@@ -300,8 +334,12 @@ func on_enemy_killed(enemy: Enemy) -> void:
 	GameState.kills += 1
 	float_text(enemy.position + Vector2(0, -enemy.sprite.body_height - 40), "+%d XP" % enemy.xp_reward, Color(0.7, 0.85, 1))
 	if _rng.randf() < 0.12:
-		GameState.potions = mini(GameState.potions + 1, 9)
-		toast("물약을 얻었습니다")
+		if _rng.randf() < 0.5:
+			GameState.potions = mini(GameState.potions + 1, 9)
+			toast("체력 물약을 얻었습니다")
+		else:
+			GameState.mana_potions = mini(GameState.mana_potions + 1, 9)
+			toast("%s 물약을 얻었습니다" % GameState.class_info()["resource"])
 	# Corpses feed 물약 발견 · 아이템 발견 · 섬뜩한 수호물.
 	if _rng.randf() < 0.3:
 		corpses.append({"pos": enemy.position, "time": 30.0, "used": false})

@@ -1,7 +1,8 @@
 class_name TouchControls
 extends Control
-## Multi-touch joystick and combat buttons: 주 슬롯 1개 · 보조 슬롯 4개 · 구르기 · 물약.
-## Mouse works too on desktop. Empty slots open the skill tree.
+## Reference-style controls: 마법진 조이스틱 (left), 주 슬롯 + 보조 슬롯 4 + 구르기 ring
+## (right), 체력/마나 포션 above it and the bottom icon bar (가방 · 스킬 · 퀘스트 · 설정).
+## Multi-touch; the mouse works too. Empty slots open the skill tree.
 
 var game: Node
 var _stick_center := Vector2.ZERO
@@ -9,8 +10,10 @@ var _stick_knob := Vector2.ZERO
 var _stick_index := -2  # -2 none, -1 mouse
 var _held := {}  # touch index -> button name
 var _buttons := {}  # name -> {center, radius}
+var _unit := 1.0
+var _time := 0.0
 
-const STICK_RADIUS := 78.0
+const BAR_ICONS := {"bar_bag": "backpack", "bar_skills": "book", "bar_quests": "scroll", "bar_gear": "gear"}
 
 
 func _ready() -> void:
@@ -18,19 +21,33 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
+func stick_radius() -> float:
+	return 88.0 * _unit
+
+
 func _layout() -> void:
-	var size := get_viewport_rect().size
-	var unit := clampf(minf(size.x, size.y) / 720.0, 0.75, 2.0)
-	var main := size - Vector2(120, 130) * unit
-	_buttons = {"slot0": {"center": main, "radius": 62.0 * unit}}
-	# Auxiliary slots fan around the main button, like the original layout.
-	var angles := [182.0, 210.0, 238.0, 266.0]
+	var size := get_viewport().get_visible_rect().size
+	_unit = clampf(minf(size.x, size.y) / 720.0, 0.75, 2.0)
+	var u := _unit
+	var portrait := size.y > size.x
+	var main := Vector2(size.x - 160.0 * u, size.y * 0.745) if portrait else Vector2(size.x - 170.0 * u, size.y - 190.0 * u)
+	var R := 62.0 * u
+	_buttons = {"slot0": {"center": main, "radius": R}}
+	# Auxiliary slots arc over the main button's left/top; dodge sits to its right.
+	var arc := [[180.0, 2.45], [226.0, 2.0], [266.0, 1.95], [308.0, 2.0]]
 	for i in 4:
-		_buttons["slot%d" % (i + 1)] = {"center": main + Vector2.from_angle(deg_to_rad(angles[i])) * 158.0 * unit, "radius": 35.0 * unit}
-	_buttons["roll"] = {"center": main + Vector2(-270, 62) * unit, "radius": 30.0 * unit}
-	_buttons["potion"] = {"center": main + Vector2(48, -232) * unit, "radius": 30.0 * unit}
+		_buttons["slot%d" % (i + 1)] = {"center": main + Vector2.from_angle(deg_to_rad(arc[i][0])) * R * arc[i][1], "radius": 40.0 * u}
+	var roll_center := main + Vector2(1.55 * R, 1.45 * R)
+	roll_center.x = minf(roll_center.x, size.x - 40.0 * u)
+	_buttons["roll"] = {"center": roll_center, "radius": 33.0 * u}
+	_buttons["potion_hp"] = {"center": main + Vector2(-0.3 * R, -3.2 * R), "radius": 30.0 * u}
+	_buttons["potion_mp"] = {"center": main + Vector2(1.9 * R, -3.2 * R), "radius": 30.0 * u}
+	var bar_y := size.y - (60.0 * u if portrait else 44.0 * u)
+	var names := ["bar_bag", "bar_skills", "bar_quests", "bar_gear"]
+	for i in 4:
+		_buttons[names[i]] = {"center": Vector2(size.x / 2.0 + (i - 1.5) * 84.0 * u, bar_y), "radius": 33.0 * u}
 	if _stick_index == -2:
-		_stick_center = Vector2(150 * unit, size.y - 150 * unit)
+		_stick_center = Vector2(112.0 * u, size.y * 0.725) if portrait else Vector2(140.0 * u, size.y - 150.0 * u)
 		_stick_knob = _stick_center
 
 
@@ -40,7 +57,7 @@ func _hit_button(pos: Vector2) -> String:
 	for name in _buttons:
 		var b: Dictionary = _buttons[name]
 		var d := pos.distance_to(b["center"])
-		if d <= b["radius"] * 1.12 and d < best_d:
+		if d <= b["radius"] * 1.15 and d < best_d:
 			best = name
 			best_d = d
 	return best
@@ -55,13 +72,29 @@ func _press(index: int, pos: Vector2) -> bool:
 		player.held_slots[slot] = true
 		player.cast_slot(slot)
 		return true
-	elif button == "roll":
-		player.try_roll()
-		return true
-	elif button == "potion":
-		player.use_potion()
-		return true
-	elif pos.x < get_viewport_rect().size.x * 0.5 and _stick_index == -2:
+	match button:
+		"roll":
+			player.try_roll()
+			return true
+		"potion_hp":
+			player.use_potion()
+			return true
+		"potion_mp":
+			player.use_mana_potion()
+			return true
+		"bar_skills":
+			game.hud.open_skill_tree()
+			return true
+		"bar_gear":
+			game.hud.toggle_menu()
+			return true
+		"bar_bag":
+			game.toast("가방은 아직 준비 중입니다")
+			return true
+		"bar_quests":
+			game.toast("퀘스트는 아직 준비 중입니다")
+			return true
+	if pos.x < get_viewport().get_visible_rect().size.x * 0.5 and _stick_index == -2:
 		_stick_index = index
 		_stick_center = pos
 		_stick_knob = pos
@@ -83,10 +116,11 @@ func _drag(index: int, pos: Vector2) -> void:
 	if index != _stick_index:
 		return
 	var d := pos - _stick_center
-	if d.length() > STICK_RADIUS:
-		d = d.normalized() * STICK_RADIUS
+	var r := stick_radius()
+	if d.length() > r:
+		d = d.normalized() * r
 	_stick_knob = _stick_center + d
-	game.player.move_input = d / STICK_RADIUS
+	game.player.move_input = d / r
 
 
 func release_all() -> void:
@@ -117,43 +151,98 @@ func _input(event: InputEvent) -> void:
 		_drag(-1, event.position)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_time += delta
 	_layout()
 	queue_redraw()
 
 
+# ───────── drawing ─────────
+
+func _draw_joystick() -> void:
+	var u := _unit
+	var c := _stick_center
+	var r := stick_radius()
+	var active := _stick_index != -2
+	draw_circle(c, r + 4.0 * u, Color(0.0, 0.0, 0.0, 0.28))
+	draw_circle(c, r, Color(0.05, 0.07, 0.08, 0.5))
+	draw_arc(c, r, 0, TAU, 64, Color(0.78, 0.74, 0.62, 0.6 if active else 0.42), 2.5 * u, true)
+	draw_arc(c, r - 7.0 * u, 0, TAU, 64, Color(0.78, 0.74, 0.62, 0.3), 1.5 * u, true)
+	draw_arc(c, r * 0.62, 0, TAU, 48, Color(0.78, 0.74, 0.62, 0.28), 1.5 * u, true)
+	# Rotating rune marks between the rings.
+	for i in 12:
+		var a := TAU * i / 12.0 + _time * 0.15
+		var p := c + Vector2.from_angle(a) * r * 0.81
+		draw_circle(p, 2.0 * u, Color(0.85, 0.8, 0.6, 0.35))
+	# Direction arrows.
+	for i in 4:
+		var dir := Vector2.from_angle(i * PI / 2.0)
+		var tip := c + dir * (r - 14.0 * u)
+		var base := c + dir * (r - 26.0 * u)
+		var side := dir.orthogonal() * 7.0 * u
+		draw_colored_polygon(PackedVector2Array([tip, base + side, base - side]), Color(0.82, 0.78, 0.62, 0.55))
+	# Knob.
+	var kr := 34.0 * u
+	draw_circle(_stick_knob, kr + 3.0 * u, Color(0.0, 0.0, 0.0, 0.35))
+	draw_circle(_stick_knob, kr, Color(0.1, 0.1, 0.1, 0.92 if active else 0.78))
+	draw_arc(_stick_knob, kr, 0, TAU, 40, Color(0.7, 0.66, 0.55, 0.75), 2.5 * u, true)
+	draw_arc(_stick_knob, kr * 0.7, PI * 1.1, PI * 1.9, 16, Color(1, 1, 1, 0.35), 3.0 * u, true)
+
+
+func _draw_flask(c: Vector2, r: float, liquid: Color, count: int) -> void:
+	draw_circle(c, r, Color(0.07, 0.08, 0.09, 0.92))
+	var glow := liquid
+	draw_circle(c + Vector2(0, r * 0.12), r * 0.52, Color(glow, 0.9))
+	draw_circle(c + Vector2(-r * 0.15, -r * 0.02), r * 0.14, Color(1, 1, 1, 0.35))
+	# Neck and cork.
+	draw_rect(Rect2(c + Vector2(-r * 0.14, -r * 0.62), Vector2(r * 0.28, r * 0.34)), Color(0.82, 0.86, 0.9, 0.85))
+	draw_rect(Rect2(c + Vector2(-r * 0.18, -r * 0.7), Vector2(r * 0.36, r * 0.14)), Color(0.55, 0.38, 0.2))
+	draw_arc(c, r, 0, TAU, 40, HudArt.BRONZE, 3.0 * _unit, true)
+	HudArt.text_outlined(self, str(count), c + Vector2(r * 0.25, r * 0.95), r, int(15 * _unit), Color.WHITE, HORIZONTAL_ALIGNMENT_LEFT)
+
+
 func _draw() -> void:
-	var font := UiKit.BOLD_FONT
-	draw_circle(_stick_center, STICK_RADIUS, Color(0, 0, 0, 0.22))
-	draw_arc(_stick_center, STICK_RADIUS, 0, TAU, 48, Color(1, 1, 1, 0.35), 3.0, true)
-	draw_circle(_stick_knob, 34.0, Color(1, 1, 1, 0.35 if _stick_index != -2 else 0.22))
 	var player: Player = game.player
+	if player == null:
+		return
+	var u := _unit
+	_draw_joystick()
+	var is_mage: bool = player.is_mage
+	var glow := Color(0.45, 0.78, 1.0) if is_mage else Color(1.0, 0.68, 0.3)
 	var held_names := _held.values()
 	for name in _buttons:
 		var b: Dictionary = _buttons[name]
 		var c: Vector2 = b["center"]
 		var r: float = b["radius"]
 		var pressed: bool = held_names.has(name)
-		draw_circle(c, r, Color(0.05, 0.12, 0.11, 0.78 if not pressed else 0.95))
 		if name.begins_with("slot"):
 			var slot := int(name.substr(4))
 			var id: String = GameState.slots[slot]
+			draw_circle(c, r + 2.0, Color(0.0, 0.0, 0.0, 0.4))
+			draw_circle(c, r, Color(0.03, 0.04, 0.06, 0.94))
 			if id == "":
-				draw_string(font, c + Vector2(-r, r * 0.25), "+", HORIZONTAL_ALIGNMENT_CENTER, r * 2, int(r * 0.8), Color(1, 1, 1, 0.55))
-			else:
-				var s := GameState.skill(id)
-				var affordable := player.resource >= SkillDefs.cost(s, GameState.effective_rank(id))
-				var inner := r * 0.86
-				SkillIcons.draw(self, id, Rect2(c - Vector2(inner, inner), Vector2(inner, inner) * 2.0),
-					Color(1, 1, 1) if affordable else Color(0.45, 0.45, 0.5))
-				var ready := player.slot_cooldown_ratio(slot)
-				if ready < 1.0:
-					draw_circle(c, inner, Color(0, 0, 0, 0.5))
-					draw_arc(c, r - 3, -PI / 2, -PI / 2 + TAU * ready, 32, Color(1, 1, 1, 0.85), 4.0, true)
-		else:
-			var label := "구르기" if name == "roll" else "물약 %d" % GameState.potions
-			var fs := 15
-			while fs > 10 and font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > r * 2.0 - 8.0:
-				fs -= 1
-			draw_string(font, c + Vector2(-r, fs * 0.35), label, HORIZONTAL_ALIGNMENT_CENTER, r * 2, fs, Color.WHITE)
-		draw_arc(c, r, 0, TAU, 48, Color(0.96, 0.84, 0.52), 4.0 if name == "slot0" else 3.0, true)
+				HudArt.glow_ring(self, c, r, Color(0.7, 0.7, 0.7), 0.35)
+				HudArt.text_outlined(self, "+", c + Vector2(-r, r * 0.32), r * 2.0, int(r * 0.9), Color(1, 1, 1, 0.5))
+				continue
+			var s := GameState.skill(id)
+			var affordable := player.resource >= SkillDefs.cost(s, GameState.effective_rank(id))
+			var inner := r * 0.94
+			SkillIcons.draw_round(self, id, c, inner, Color.WHITE if affordable else Color(0.42, 0.42, 0.5))
+			var pulse := 0.85 + 0.15 * sin(_time * 3.0 + slot)
+			HudArt.glow_ring(self, c, r, glow, (1.15 if pressed else 1.0) * pulse)
+			var ready := player.slot_cooldown_ratio(slot)
+			if ready < 1.0:
+				draw_circle(c, inner, Color(0, 0, 0, 0.55))
+				draw_arc(c, r - 3.0, -PI / 2, -PI / 2 + TAU * ready, 32, Color(1, 1, 1, 0.9), 4.0, true)
+		elif name == "roll":
+			HudArt.plaque(self, "dodge", c, r, Color(1, 1, 1, 0.78 if not pressed else 1.0))
+		elif name == "potion_hp":
+			_draw_flask(c, r, Color(0.9, 0.12, 0.12), GameState.potions)
+		elif name == "potion_mp":
+			_draw_flask(c, r, Color(0.22, 0.42, 0.95), GameState.mana_potions)
+		elif name.begins_with("bar_"):
+			HudArt.plaque(self, BAR_ICONS[name], c, r, Color(0.92, 0.9, 0.88) if not pressed else Color.WHITE)
+			if name == "bar_skills" and GameState.skill_points > 0:
+				var bc := c + Vector2(r * 0.7, -r * 0.7)
+				draw_circle(bc, 12.0 * u, Color(0.96, 0.84, 0.52))
+				HudArt.text_outlined(self, "+%d" % GameState.skill_points, bc + Vector2(-14.0 * u, 5.0 * u), 28.0 * u, int(13 * u), Color(0.1, 0.07, 0.03))

@@ -12,6 +12,8 @@ const ROAD_HALF := 0.047  # paved road half width in uv
 const TREE_UV := [[0.355, 0.724, 11], [0.684, 0.703, 2], [0.246, 0.368, 11]]
 ## Deep, cool foliage grade used for town and field trees (ForestScenePalette).
 const FOLIAGE := Color(0.52, 0.68, 0.66)
+## Cobble texture density: one 418px tile covers 190 ground units.
+const COBBLE_PX := 418.0 / 190.0
 const NPCS := [
 	["nw", "상인", 0], ["ne", "대장장이", 1], ["sw", "탈것 상인", 2], ["se", "촌장", 3],
 ]
@@ -36,6 +38,9 @@ var gate_points: Array[Vector2] = []
 var gate_pillars: Array = []
 var bridge: Bridge
 var river: River
+## Minimap data (world pixels).
+var map_water := PackedVector2Array()
+var portal_point := Vector2.ZERO
 ## Forecourt (road end before the bridge) in ground units, and the water band.
 var forecourt_g := Vector2.ZERO
 var river_band := Rect2()  # ground units: x = u, y = v
@@ -82,47 +87,54 @@ func build(ground_layer: Node2D, world: Node2D) -> void:
 
 # ───────── ground ─────────
 
-func _in_paving(uv: Vector2) -> int:
-	# 0 none, 1 road, 2 plaza (light)
-	var c := Vector2(0.5, 0.5)
-	var d := (uv - c).abs()
-	if maxf(d.x, d.y) < 0.1:
-		return 2
-	if maxf(d.x, d.y) < 0.125:
-		return 1
-	if d.y < ROAD_HALF and uv.x > 0.0 and uv.x < 1.0:
-		return 1
-	if d.x < ROAD_HALF and uv.y > 0.06 and uv.y < 0.94:
-		return 1
-	return 0
+func _box(a_uv: Vector2, b_uv: Vector2) -> PackedVector2Array:
+	var a := ground(a_uv)
+	var b := ground(b_uv)
+	return PackedVector2Array([a, Vector2(b.x, a.y), b, Vector2(a.x, b.y)])
 
 
+## Real cobblestone (원본 forest-isometric-paving) laid on the ground plane, with
+## a dark curb and a patch of sunlight on the plaza like the reference.
 func _build_paving(layer: Node2D) -> void:
-	var node := Node2D.new()
-	node.z_index = 1
-	node.draw.connect(func():
-		var side := Iso.PAVING * 1.3
-		var n := int(extent / side)
-		var rng := RandomNumberGenerator.new()
-		rng.seed = 1201
-		for gy in n:
-			for gx in n:
-				var uv := Vector2((gx + 0.5) * side / extent, (gy + 0.5) * side / extent)
-				var kind := _in_paving(uv)
-				if kind == 0:
-					continue
-				var shade := rng.randf_range(-0.02, 0.02)
-				var col := Color(0.36, 0.37, 0.4) if rng.randf() < 0.7 else Color(0.42, 0.43, 0.46)
-				if kind == 2:
-					# The plaza brightens toward the fountain and dithers at its rim.
-					var t := clampf((1.0 - maxf(absf(uv.x - 0.5), absf(uv.y - 0.5)) / 0.105) * 2.4, 0.0, 1.0)
-					if rng.randf() < t:
-						col = Color(0.75, 0.74, 0.71) if rng.randf() < 0.6 else Color(0.82, 0.81, 0.78)
-				col = col.lightened(shade) if shade > 0 else col.darkened(-shade)
-				var g := ground(uv) - Vector2(side, side) * 0.5
-				node.draw_rect(Rect2(g, Vector2(side, side)), col)
-				node.draw_rect(Rect2(g, Vector2(side, side)), Color(0.2, 0.21, 0.23, 0.6), false, 1.6))
-	layer.add_child(node)
+	var group := Node2D.new()
+	group.z_index = 1
+	layer.add_child(group)
+	var merged := _box(Vector2(0.375, 0.375), Vector2(0.625, 0.625))
+	for other in [_box(Vector2(0.02, 0.453), Vector2(0.96, 0.547)), _box(Vector2(0.453, 0.06), Vector2(0.547, 0.94))]:
+		merged = Geometry2D.merge_polygons(merged, other)[0]
+	var curb: Array = Geometry2D.offset_polygon(merged, 9.0, Geometry2D.JOIN_MITER)
+	var curb_poly := Polygon2D.new()
+	curb_poly.polygon = curb[0]
+	curb_poly.color = Color(0.09, 0.07, 0.05, 0.7)
+	group.add_child(curb_poly)
+	var stone := Polygon2D.new()
+	stone.polygon = merged
+	stone.texture = load("res://assets/art/village/paving.webp")
+	stone.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
+	var uv := PackedVector2Array()
+	for p in merged:
+		uv.append(p * COBBLE_PX)
+	stone.uv = uv
+	stone.modulate = Color(0.86, 0.84, 0.8)
+	group.add_child(stone)
+	# Sunlit plaza: a soft additive glow centred on the fountain.
+	var grad := Gradient.new()
+	grad.colors = PackedColorArray([Color(1.0, 0.95, 0.8, 0.5), Color(1.0, 0.95, 0.8, 0.0)])
+	var tex := GradientTexture2D.new()
+	tex.gradient = grad
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.5)
+	tex.fill_to = Vector2(1.0, 0.5)
+	tex.width = 256
+	tex.height = 256
+	var glow := Sprite2D.new()
+	glow.texture = tex
+	glow.position = ground(Vector2(0.5, 0.5))
+	glow.scale = Vector2.ONE * 760.0 / 256.0
+	var add := CanvasItemMaterial.new()
+	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	glow.material = add
+	group.add_child(glow)
 	# Dirt roads continue outward from the gates; the east road ends at the
 	# bridge forecourt and a narrower road crosses the bridge northwards.
 	var dirt := load("res://assets/art/village/dirt.webp") as Texture2D
@@ -168,6 +180,7 @@ func _build_river(layer: Node2D, world: Node2D) -> void:
 	var water := PackedVector2Array()
 	for g in river.polygon:
 		water.append(Iso.project(g))
+	map_water = water
 	for piece in Geometry2D.clip_polygons(water, bridge.deck_polygon()):
 		solids.append(piece)
 	for poly in bridge.solids():
@@ -300,6 +313,7 @@ func _build_plaza(world: Node2D) -> void:
 	var body_w := float(pdef["body"][2])
 	var portal := IsoSprite.new().setup(pdef, float(pdef["height"]) * 180.0 / body_w * 1.4)
 	portal.position = point(Vector2(0.448, 0.502))
+	portal_point = portal.position
 	world.add_child(portal)
 	var b: Array = pdef["body"]
 	solids.append(portal.atlas_polygon([[b[0], b[1] + b[3] * 0.35], [b[0] + b[2], b[1] + b[3] * 0.35], [b[0] + b[2], b[1] + b[3]], [b[0], b[1] + b[3]]]))

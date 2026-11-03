@@ -564,6 +564,14 @@ func use_potion() -> void:
 	game.float_text(position + Vector2(0, -90), "+%d" % roundi(max_hp * 0.45), Color(0.5, 1, 0.55))
 
 
+func use_mana_potion() -> void:
+	if dead or GameState.mana_potions <= 0 or resource >= resource_max:
+		return
+	GameState.mana_potions -= 1
+	resource = minf(resource_max, resource + resource_max * 0.5)
+	game.float_text(position + Vector2(0, -90), "+%d" % roundi(resource_max * 0.5), Color(0.5, 0.7, 1.0))
+
+
 func take_damage(amount: float, attacker: Node2D = null) -> void:
 	if dead or _invulnerable > 0.0:
 		return
