@@ -151,7 +151,7 @@ func _process(delta: float) -> void:
 	_cry_time = maxf(0.0, _cry_time - delta)
 	_update_tint()
 	if _knockback.length() > 1.0:
-		position = game.resolve_movement(position, position + _knockback * delta, RADIUS)
+		position = game.resolve_movement(position, position + _knockback * delta, RADIUS, true)
 		_knockback = _knockback.move_toward(Vector2.ZERO, 900.0 * delta)
 	if _freeze_time > 0.0 or _stun_time > 0.0:
 		return
@@ -210,7 +210,7 @@ func _step(direction: Vector2, delta: float) -> void:
 	var dir := direction.normalized() * minf(1.0, direction.length())
 	facing = dir.angle()
 	var target := position + dir * speed * delta
-	var moved: Vector2 = game.resolve_movement(position, target, RADIUS)
+	var moved: Vector2 = game.resolve_movement(position, target, RADIUS, true)
 	_walk_cycle += moved.distance_to(position) / 70.0
 	position = moved
 	sprite.set_frame(atlas, atlas.walk_frame(facing, _walk_cycle))

@@ -3,19 +3,18 @@ extends Node2D
 
 signal quit_requested
 
-const WORLD := Rect2(-2400, -2400, 4800, 4800)
-const CAMP_RADIUS := 320.0
-const TREE_TEXTURE := preload("res://assets/art/world/forest-trees.webp")
-const GROUND_TEXTURE := preload("res://assets/art/world/field-ground-meadow.webp")
+## Field in ground units (original scale): the 2400 town sits in the middle.
+const FIELD := Rect2(-3600, -3600, 7200, 7200)
+const MEADOW := preload("res://assets/art/village/meadow-a.webp")
 
 var world: Node2D
 var player: Player
 var camera: Camera2D
 var hud: Hud
+var village: Village
 var enemies: Array[Enemy] = []
 var corpses: Array = []  # {"pos": Vector2, "time": float, "used": bool}
 var _corpse_layer: Node2D
-var obstacles: Array = []  # [Vector2 position, float radius]
 var _spawn_timer := 0.0
 var _save_timer := 0.0
 var _rng := RandomNumberGenerator.new()
@@ -23,24 +22,24 @@ var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_rng.seed = 7
-	var ground := Sprite2D.new()
-	ground.texture = GROUND_TEXTURE
-	ground.centered = false
-	ground.region_enabled = true
-	ground.region_rect = Rect2(Vector2.ZERO, WORLD.size * 2.0)
-	ground.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
-	ground.scale = Vector2(0.5, 0.5)
-	ground.position = WORLD.position
-	ground.z_index = -10
-	add_child(ground)
-
-	var camp := Node2D.new()
-	camp.z_index = -9
-	camp.draw.connect(func():
-		camp.draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.6))
-		camp.draw_circle(Vector2.ZERO, CAMP_RADIUS * 0.75, Color(0.75, 0.62, 0.38, 0.35))
-		camp.draw_arc(Vector2.ZERO, CAMP_RADIUS * 0.75, 0, TAU, 64, Color(0.95, 0.85, 0.55, 0.5), 4.0, true))
-	add_child(camp)
+	# Ground plane: everything under this node is authored in ground units and
+	# projected into the 120° quarter view by its transform.
+	var ground_layer := Node2D.new()
+	ground_layer.transform = Iso.ground_transform()
+	ground_layer.z_index = -10
+	add_child(ground_layer)
+	var meadow := Sprite2D.new()
+	meadow.texture = MEADOW
+	meadow.centered = false
+	meadow.region_enabled = true
+	var units_per_tex := 170.0
+	meadow.region_rect = Rect2(Vector2.ZERO, FIELD.size / units_per_tex * 418.0)
+	meadow.scale = Vector2.ONE * units_per_tex / 418.0
+	meadow.position = FIELD.position
+	meadow.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
+	# ForestScenePalette: bright, low-saturation warm grass.
+	meadow.modulate = Color(0.8, 0.76, 0.5)
+	ground_layer.add_child(meadow)
 
 	_corpse_layer = Node2D.new()
 	_corpse_layer.z_index = -8
@@ -50,76 +49,78 @@ func _ready() -> void:
 	world = Node2D.new()
 	world.y_sort_enabled = true
 	add_child(world)
-	_plant_trees()
+	village = Village.new()
+	village.build(ground_layer, world)
+	village.build_field(world, FIELD.grow(-150), _rng)
 
 	player = Player.new()
 	player.setup(self)
 	player.died.connect(_on_player_died)
 	player.open_skills_requested.connect(func(): hud.open_skill_tree())
+	player.position = village.spawn_point
 	world.add_child(player)
 
 	camera = Camera2D.new()
 	camera.position_smoothing_enabled = true
 	camera.position_smoothing_speed = 8.0
-	camera.limit_left = int(WORLD.position.x)
-	camera.limit_top = int(WORLD.position.y)
-	camera.limit_right = int(WORLD.end.x)
-	camera.limit_bottom = int(WORLD.end.y)
 	add_child(camera)
 	camera.make_current()
+	camera.position = player.position
 
 	hud = Hud.new()
 	hud.game = self
 	add_child(hud)
+	_read_debug_params()
 	_update_zoom()
 	get_viewport().size_changed.connect(_update_zoom)
-	for i in 6:
-		_spawn_enemy()
-	toast("%s Lv.%d — 몬스터를 처치하고 성장하세요" % [GameState.class_info()["name"], GameState.level])
+	for i in 8:
+		_spawn_enemy(true)
+	toast("제1장 숲 마을 · 성문 밖으로 나가 몬스터를 처치하세요")
 
 
 func _update_zoom() -> void:
 	var size := get_viewport_rect().size
 	# Keep characters similarly sized in portrait and landscape.
 	var short_side := minf(size.x, size.y)
-	var z := clampf(short_side / 620.0, 0.8, 1.6)
-	camera.zoom = Vector2(z, z)
+	var z := clampf(short_side / 720.0 * 1.6, 1.0, 2.6)
+	camera.zoom = Vector2(z, z) * _debug_zoom
 
 
-func _plant_trees() -> void:
-	var placed := 0
-	var attempts := 0
-	while placed < 170 and attempts < 4000:
-		attempts += 1
-		var p := Vector2(_rng.randf_range(WORLD.position.x + 60, WORLD.end.x - 60),
-			_rng.randf_range(WORLD.position.y + 60, WORLD.end.y - 60))
-		if p.length() < CAMP_RADIUS + 80.0:
-			continue
-		var ok := true
-		for o in obstacles:
-			if p.distance_to(o[0]) < 150.0:
-				ok = false
-				break
-		if not ok:
-			continue
-		var index := _rng.randi_range(0, 8)
-		var tree := Sprite2D.new()
-		tree.texture = TREE_TEXTURE
-		tree.region_enabled = true
-		tree.region_rect = Rect2((index % 3) * 480, (index / 3) * 480, 480, 480)
-		tree.centered = false
-		tree.offset = Vector2(-240, -446)
-		var s := _rng.randf_range(0.5, 0.68)
-		tree.scale = Vector2(s, s)
-		tree.flip_h = _rng.randf() < 0.5
-		tree.position = p
-		world.add_child(tree)
-		obstacles.append([p, 26.0 * s / 0.58])
-		placed += 1
+## Web debug: ?zoom=0.4 widens the camera (used for layout screenshots).
+var _debug_zoom := 1.0
+
+
+func _read_debug_params() -> void:
+	if not OS.has_feature("web"):
+		return
+	var query = JavaScriptBridge.eval("window.location.search", true)
+	if typeof(query) != TYPE_STRING:
+		return
+	for part in String(query).trim_prefix("?").split("&"):
+		var kv := part.split("=")
+		if kv.size() == 2 and kv[0] == "zoom":
+			_debug_zoom = clampf(float(kv[1]), 0.1, 4.0)
+		elif kv.size() == 2 and kv[0] == "at":
+			match kv[1]:
+				"chapel":
+					var c := Vector2.ZERO
+					for p in village.terrace:
+						c += p
+					player.position = c / village.terrace.size()
+				"field":
+					player.position = village.point(Vector2(0.5, 1.15))
+			camera.position = player.position
+			camera.reset_smoothing()
+
+
+func in_town(p: Vector2) -> bool:
+	return Geometry2D.is_point_in_polygon(p, village.safe_zone)
 
 
 func _process(delta: float) -> void:
 	camera.position = player.position + Vector2(0, -30)
+	# Raised chapel yard: actors on it draw above the chapel's terrace art.
+	player.z_index = 1 if Geometry2D.is_point_in_polygon(player.position, village.terrace) else 0
 	for c in corpses.duplicate():
 		c["time"] -= delta
 		if c["time"] <= 0.0:
@@ -153,14 +154,20 @@ func _unhandled_input(event: InputEvent) -> void:
 				hud.open_skill_tree()
 
 
-func _spawn_enemy() -> void:
-	for attempt in 20:
-		var p := player.position + Vector2.from_angle(_rng.randf() * TAU) * _rng.randf_range(520, 950)
-		if not WORLD.grow(-80).has_point(p) or p.length() < CAMP_RADIUS + 120.0:
+func _spawn_enemy(anywhere := false) -> void:
+	for attempt in 30:
+		var p: Vector2
+		if anywhere:
+			p = Iso.project(Vector2(_rng.randf_range(FIELD.position.x, FIELD.end.x), _rng.randf_range(FIELD.position.y, FIELD.end.y)) * 0.8)
+		else:
+			p = player.position + Vector2.from_angle(_rng.randf() * TAU) * _rng.randf_range(560, 1000)
+		if not _inside_field(p, 200.0) or in_town(p) or p.distance_to(player.position) < 450.0:
+			continue
+		if Geometry2D.is_point_in_polygon(p, _town_buffer()):
 			continue
 		if _blocked(p, Enemy.RADIUS + 10.0):
 			continue
-		var zone := clampi(int(p.length() / 600.0), 0, 3)
+		var zone := clampi(int((p.length() - 1300.0) / 900.0), 0, 3)
 		var pool := ["goblin", "goblin", "wolf"]
 		if zone >= 1:
 			pool.append_array(["wolf", "boar"])
@@ -176,26 +183,56 @@ func _spawn_enemy() -> void:
 		return
 
 
+var _buffer_cache: PackedVector2Array
+
+
+func _town_buffer() -> PackedVector2Array:
+	if _buffer_cache.is_empty():
+		var out := PackedVector2Array()
+		for c in [Vector2(-0.08, -0.02), Vector2(1.06, -0.02), Vector2(1.06, 1.02), Vector2(-0.08, 1.02)]:
+			out.append(village.point(c))
+		_buffer_cache = out
+	return _buffer_cache
+
+
+func _inside_field(p: Vector2, margin: float) -> bool:
+	return FIELD.grow(-margin).has_point(Iso.unproject(p))
+
+
 func _blocked(p: Vector2, r: float) -> bool:
-	for o in obstacles:
-		if p.distance_to(o[0]) < o[1] + r:
+	for c in village.circles:
+		if p.distance_to(c[0]) < c[1] + r:
+			return true
+	for poly in village.solids:
+		if Geometry2D.is_point_in_polygon(p, poly):
 			return true
 	return false
 
 
-func resolve_movement(from: Vector2, to: Vector2, r: float) -> Vector2:
+## Slides a moving circle against trees, buildings, walls and cliffs.
+## Monsters (`keep_out_town`) never enter the safe town.
+func resolve_movement(from: Vector2, to: Vector2, r: float, keep_out_town := false) -> Vector2:
 	var p := to
-	for o in obstacles:
-		var c: Vector2 = o[0]
-		var min_d: float = o[1] + r
-		var d := p - c
-		if absf(d.x) > min_d or absf(d.y) > min_d:
-			continue
-		var len := d.length()
-		if len < min_d:
-			p = c + (d / len if len > 0.001 else (from - c).normalized()) * min_d
-	p.x = clampf(p.x, WORLD.position.x + r, WORLD.end.x - r)
-	p.y = clampf(p.y, WORLD.position.y + r, WORLD.end.y - r)
+	if not _inside_field(p, r):
+		var g := Iso.unproject(p)
+		var f := FIELD.grow(-r)
+		g = Vector2(clampf(g.x, f.position.x, f.end.x), clampf(g.y, f.position.y, f.end.y))
+		p = Iso.project(g)
+	for iteration in 2:
+		for c in village.circles:
+			var d: Vector2 = p - c[0]
+			var min_d: float = c[1] + r
+			if absf(d.x) < min_d and absf(d.y) < min_d and d.length() < min_d:
+				p = c[0] + (d.normalized() if d.length() > 0.01 else (from - c[0]).normalized()) * min_d
+		for poly in village.solids:
+			var b := Iso.poly_bounds(poly).grow(r)
+			if b.has_point(p):
+				p = Iso.push_out(p, poly, r * 0.6)
+	if keep_out_town and in_town(p) and not in_town(from):
+		return from
+	for poly in village.solids:
+		if Geometry2D.is_point_in_polygon(p, poly):
+			return from
 	return p
 
 
@@ -302,8 +339,10 @@ func find_open_point(from: Vector2, dir: Vector2, distance: float, r: float) -> 
 	var steps := int(ceil(distance / 12.0))
 	for i in steps:
 		var next := from + dir * minf(distance, (i + 1) * 12.0)
-		if _blocked(next, r) or not WORLD.grow(-r).has_point(next):
+		if not _inside_field(next, r):
 			break
+		if _blocked(next, r * 0.6):
+			continue  # leap/blink may cross ledges, but never land inside solids
 		p = next
 	return p
 
@@ -311,7 +350,7 @@ func find_open_point(from: Vector2, dir: Vector2, distance: float, r: float) -> 
 func _on_player_died() -> void:
 	hud.show_death()
 	await get_tree().create_timer(2.5).timeout
-	player.revive(Vector2.ZERO)
+	player.revive(village.spawn_point)
 	hud.hide_death()
 	GameState.save_game()
 

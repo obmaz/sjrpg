@@ -1,0 +1,1568 @@
+{
+ "sprites": {
+  "nw": {
+   "sheet": "forest-isometric-town",
+   "source": [
+    6,
+    6,
+    953,
+    1000
+   ],
+   "foot": [
+    575.30232558,
+    1000.41860465
+   ],
+   "height": 994.41860465,
+   "origin": [
+    123,
+    95
+   ],
+   "packing": 0.93023256,
+   "world_height": 529.57348704,
+   "body": null,
+   "gvs": 0.92133337,
+   "gvk": -0.00094959
+  },
+  "ne": {
+   "sheet": "forest-isometric-town",
+   "source": [
+    971,
+    6,
+    1000,
+    852
+   ],
+   "foot": [
+    1577.99062234,
+    852.54731458
+   ],
+   "height": 846.54731458,
+   "origin": [
+    63,
+    191
+   ],
+   "packing": 0.85251492,
+   "world_height": 460.29441768000004,
+   "body": null,
+   "gvs": 0.93924037,
+   "gvk": 0.00477233
+  },
+  "sw": {
+   "sheet": "forest-isometric-town",
+   "source": [
+    6,
+    1018,
+    1000,
+    891
+   ],
+   "foot": [
+    608.14007782,
+    1903.21400778
+   ],
+   "height": 885.21400778,
+   "origin": [
+    123,
+    175
+   ],
+   "packing": 0.97276265,
+   "world_height": 373.01102664,
+   "body": null,
+   "gvs": 0.96124959,
+   "gvk": -0.00346992
+  },
+  "se": {
+   "sheet": "forest-isometric-town",
+   "source": [
+    1018,
+    1018,
+    992,
+    1000
+   ],
+   "foot": [
+    1423.88760036,
+    1804.79750223
+   ],
+   "height": 786.79750223,
+   "origin": [
+    85,
+    68
+   ],
+   "packing": 0.89206066,
+   "world_height": 429.05519784,
+   "body": null,
+   "gvs": 1.01703462,
+   "gvk": -0.01233104
+  },
+  "pool": {
+   "sheet": "forest-isometric-town",
+   "source": [
+    6,
+    2030,
+    707,
+    462
+   ],
+   "foot": [
+    358,
+    2486
+   ],
+   "height": 456,
+   "origin": [
+    1000,
+    404
+   ],
+   "packing": 1,
+   "world_height": 0,
+   "body": null,
+   "gvs": 0.99805098,
+   "gvk": -0.01398052
+  },
+  "chapel": {
+   "sheet": "forest-isometric-town",
+   "source": [
+    725,
+    2030,
+    995,
+    1000
+   ],
+   "foot": [
+    1227.05761317,
+    2957.57201646
+   ],
+   "height": 927.57201646,
+   "origin": [
+    40,
+    8
+   ],
+   "packing": 0.82304527,
+   "world_height": 0,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "chest": {
+   "sheet": "forest-isometric-props",
+   "source": [
+    6,
+    6,
+    621,
+    585
+   ],
+   "foot": [
+    381,
+    585
+   ],
+   "height": 579,
+   "origin": [
+    77,
+    214
+   ],
+   "packing": 1,
+   "world_height": 0,
+   "body": [
+    11,
+    349,
+    611,
+    236
+   ],
+   "gvs": 0.95047637,
+   "gvk": 0.00077453
+  },
+  "chest-broken": {
+   "sheet": "forest-isometric-props",
+   "source": [
+    639,
+    6,
+    650,
+    583
+   ],
+   "foot": [
+    1018,
+    583
+   ],
+   "height": 577,
+   "origin": [
+    895,
+    216
+   ],
+   "packing": 1,
+   "world_height": 0,
+   "body": [
+    644,
+    347,
+    620,
+    236
+   ],
+   "gvs": 0.97200869,
+   "gvk": -0.00022011
+  },
+  "rock": {
+   "sheet": "forest-isometric-props",
+   "source": [
+    6,
+    603,
+    411,
+    285
+   ],
+   "foot": [
+    221,
+    882
+   ],
+   "height": 279,
+   "origin": [
+    881,
+    346
+   ],
+   "packing": 1,
+   "world_height": 100,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "portal": {
+   "sheet": "forest-isometric-props",
+   "source": [
+    429,
+    603,
+    716,
+    768
+   ],
+   "foot": [
+    930.06761566,
+    1365.53380783
+   ],
+   "height": 762.53380783,
+   "origin": [
+    152,
+    35
+   ],
+   "packing": 0.91103203,
+   "world_height": 0,
+   "body": [
+    434.46619217,
+    977.4341637,
+    705.13879004,
+    388.09964413
+   ],
+   "gvs": 1.05039937,
+   "gvk": -0.00191409
+  },
+  "cave": {
+   "sheet": "forest-isometric-props",
+   "source": [
+    6,
+    1383,
+    768,
+    521
+   ],
+   "foot": [
+    432.04379562,
+    1739.2256138
+   ],
+   "height": 356.2256138,
+   "origin": [
+    14,
+    1
+   ],
+   "packing": 0.50962177,
+   "world_height": 400,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "tree-0": {
+   "sheet": "forest-isometric-trees",
+   "source": [
+    6,
+    6,
+    266,
+    257
+   ],
+   "foot": [
+    132,
+    257
+   ],
+   "height": 251,
+   "origin": [
+    54,
+    166
+   ],
+   "packing": 1,
+   "world_height": 200,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "tree-1": {
+   "sheet": "forest-isometric-trees",
+   "source": [
+    284,
+    6,
+    391,
+    348
+   ],
+   "foot": [
+    500,
+    348
+   ],
+   "height": 342,
+   "origin": [
+    380,
+    76
+   ],
+   "packing": 1,
+   "world_height": 300,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "tree-2": {
+   "sheet": "forest-isometric-trees",
+   "source": [
+    687,
+    6,
+    470,
+    424
+   ],
+   "foot": [
+    910.56105892,
+    427.43467122
+   ],
+   "height": 421.43467122,
+   "origin": [
+    50,
+    83
+   ],
+   "packing": 0.40136635,
+   "world_height": 400,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "tree-3": {
+   "sheet": "forest-isometric-trees",
+   "source": [
+    1169,
+    6,
+    211,
+    333
+   ],
+   "foot": [
+    1270,
+    333
+   ],
+   "height": 327,
+   "origin": [
+    78,
+    526
+   ],
+   "packing": 1,
+   "world_height": 200,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "tree-4": {
+   "sheet": "forest-isometric-trees",
+   "source": [
+    6,
+    442,
+    298,
+    430
+   ],
+   "foot": [
+    135,
+    866
+   ],
+   "height": 424,
+   "origin": [
+    435,
+    433
+   ],
+   "packing": 1,
+   "world_height": 300,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "tree-5": {
+   "sheet": "forest-isometric-trees",
+   "source": [
+    316,
+    442,
+    359,
+    448
+   ],
+   "foot": [
+    512,
+    885
+   ],
+   "height": 443,
+   "origin": [
+    845,
+    415
+   ],
+   "packing": 1,
+   "world_height": 400,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "tree-6": {
+   "sheet": "forest-isometric-trees",
+   "source": [
+    687,
+    442,
+    247,
+    265
+   ],
+   "foot": [
+    818,
+    701
+   ],
+   "height": 259,
+   "origin": [
+    59,
+    957
+   ],
+   "packing": 1,
+   "world_height": 200,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "tree-7": {
+   "sheet": "forest-isometric-trees",
+   "source": [
+    946,
+    442,
+    350,
+    342
+   ],
+   "foot": [
+    1100,
+    778
+   ],
+   "height": 336,
+   "origin": [
+    404,
+    892
+   ],
+   "packing": 1,
+   "world_height": 300,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "tree-8": {
+   "sheet": "forest-isometric-trees",
+   "source": [
+    6,
+    902,
+    447,
+    387
+   ],
+   "foot": [
+    258.5,
+    1283
+   ],
+   "height": 381,
+   "origin": [
+    797,
+    853
+   ],
+   "packing": 1,
+   "world_height": 400,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "tree-9": {
+   "sheet": "forest-isometric-trees",
+   "source": [
+    465,
+    902,
+    271,
+    259
+   ],
+   "foot": [
+    590,
+    1149
+   ],
+   "height": 247,
+   "origin": [
+    69,
+    169
+   ],
+   "packing": 1,
+   "world_height": 200,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "tree-10": {
+   "sheet": "forest-isometric-trees",
+   "source": [
+    748,
+    902,
+    350,
+    331
+   ],
+   "foot": [
+    914,
+    1221
+   ],
+   "height": 319,
+   "origin": [
+    411,
+    101
+   ],
+   "packing": 1,
+   "world_height": 300,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "tree-11": {
+   "sheet": "forest-isometric-trees",
+   "source": [
+    6,
+    1301,
+    458,
+    421
+   ],
+   "foot": [
+    231,
+    1714
+   ],
+   "height": 413,
+   "origin": [
+    785,
+    15
+   ],
+   "packing": 1,
+   "world_height": 400,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "tree-12": {
+   "sheet": "forest-isometric-trees",
+   "source": [
+    476,
+    1301,
+    248,
+    271
+   ],
+   "foot": [
+    578,
+    1553
+   ],
+   "height": 252,
+   "origin": [
+    84,
+    565
+   ],
+   "packing": 1,
+   "world_height": 200,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "tree-13": {
+   "sheet": "forest-isometric-trees",
+   "source": [
+    736,
+    1301,
+    355,
+    352
+   ],
+   "foot": [
+    901,
+    1638
+   ],
+   "height": 337,
+   "origin": [
+    416,
+    491
+   ],
+   "packing": 1,
+   "world_height": 300,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "tree-14": {
+   "sheet": "forest-isometric-trees",
+   "source": [
+    6,
+    1734,
+    470,
+    409
+   ],
+   "foot": [
+    252.70124481,
+    2126.96680498
+   ],
+   "height": 392.96680498,
+   "origin": [
+    763,
+    428
+   ],
+   "packing": 0.97510373,
+   "world_height": 400,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "tree-15": {
+   "sheet": "forest-isometric-trees",
+   "source": [
+    488,
+    1734,
+    273,
+    292
+   ],
+   "foot": [
+    611,
+    2019
+   ],
+   "height": 285,
+   "origin": [
+    68,
+    933
+   ],
+   "packing": 1,
+   "world_height": 200,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "tree-16": {
+   "sheet": "forest-isometric-trees",
+   "source": [
+    773,
+    1734,
+    352,
+    369
+   ],
+   "foot": [
+    935,
+    2092
+   ],
+   "height": 358,
+   "origin": [
+    406,
+    866
+   ],
+   "packing": 1,
+   "world_height": 300,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "tree-17": {
+   "sheet": "forest-isometric-trees",
+   "source": [
+    6,
+    2155,
+    445,
+    413
+   ],
+   "foot": [
+    220,
+    2544
+   ],
+   "height": 389,
+   "origin": [
+    796,
+    831
+   ],
+   "packing": 1,
+   "world_height": 400,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "plant-0": {
+   "sheet": "forest-isometric-undergrowth",
+   "source": [
+    6,
+    6,
+    310,
+    228
+   ],
+   "foot": [
+    170.81012658,
+    230.23146474
+   ],
+   "height": 224.23146474,
+   "origin": [
+    33,
+    34
+   ],
+   "packing": 0.56057866,
+   "world_height": 38,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "plant-1": {
+   "sheet": "forest-isometric-undergrowth",
+   "source": [
+    328,
+    6,
+    310,
+    211
+   ],
+   "foot": [
+    535.05882353,
+    213.64705882
+   ],
+   "height": 207.64705882,
+   "origin": [
+    573,
+    97
+   ],
+   "packing": 0.58823529,
+   "world_height": 54,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "plant-2": {
+   "sheet": "forest-isometric-undergrowth",
+   "source": [
+    650,
+    6,
+    310,
+    232
+   ],
+   "foot": [
+    812.18292683,
+    233.58536585
+   ],
+   "height": 227.58536585,
+   "origin": [
+    1106,
+    138
+   ],
+   "packing": 0.75609756,
+   "world_height": 30,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "plant-3": {
+   "sheet": "forest-isometric-undergrowth",
+   "source": [
+    6,
+    250,
+    197,
+    310
+   ],
+   "foot": [
+    141.18388792,
+    556.74255692
+   ],
+   "height": 306.74255692,
+   "origin": [
+    54,
+    420
+   ],
+   "packing": 0.54290718,
+   "world_height": 210,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "plant-4": {
+   "sheet": "forest-isometric-undergrowth",
+   "source": [
+    215,
+    250,
+    310,
+    193
+   ],
+   "foot": [
+    405.68907563,
+    439.64705882
+   ],
+   "height": 189.64705882,
+   "origin": [
+    448,
+    597
+   ],
+   "packing": 0.5210084,
+   "world_height": 52,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "plant-5": {
+   "sheet": "forest-isometric-undergrowth",
+   "source": [
+    537,
+    250,
+    310,
+    234
+   ],
+   "foot": [
+    742.27964206,
+    480.24608501
+   ],
+   "height": 230.24608501,
+   "origin": [
+    1072,
+    628
+   ],
+   "packing": 0.6935123,
+   "world_height": 28,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "beacon-0": {
+   "sheet": "forest-isometric-beacons",
+   "source": [
+    6,
+    6,
+    230,
+    250
+   ],
+   "foot": [
+    144.19875776,
+    252.11801242
+   ],
+   "height": 246.11801242,
+   "origin": [
+    165,
+    49
+   ],
+   "packing": 0.77639752,
+   "world_height": 62,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "beacon-1": {
+   "sheet": "forest-isometric-beacons",
+   "source": [
+    248,
+    6,
+    232,
+    250
+   ],
+   "foot": [
+    387.40809969,
+    252.105919
+   ],
+   "height": 246.105919,
+   "origin": [
+    565,
+    50
+   ],
+   "packing": 0.7788162,
+   "world_height": 62,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "beacon-2": {
+   "sheet": "forest-isometric-beacons",
+   "source": [
+    492,
+    6,
+    187,
+    250
+   ],
+   "foot": [
+    594.15736041,
+    252.82741117
+   ],
+   "height": 246.82741117,
+   "origin": [
+    171,
+    381
+   ],
+   "packing": 0.63451777,
+   "world_height": 62,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "beacon-3": {
+   "sheet": "forest-isometric-beacons",
+   "source": [
+    691,
+    6,
+    187,
+    250
+   ],
+   "foot": [
+    793.15736041,
+    252.82741117
+   ],
+   "height": 246.82741117,
+   "origin": [
+    572,
+    381
+   ],
+   "packing": 0.63451777,
+   "world_height": 62,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "beacon-4": {
+   "sheet": "forest-isometric-beacons",
+   "source": [
+    6,
+    268,
+    250,
+    217
+   ],
+   "foot": [
+    174.46264368,
+    483.15804598
+   ],
+   "height": 215.15804598,
+   "origin": [
+    63,
+    222
+   ],
+   "packing": 0.3591954,
+   "world_height": 61.778061120000004,
+   "body": null,
+   "gvs": 1.00865652,
+   "gvk": 0.01151856
+  },
+  "beacon-5": {
+   "sheet": "forest-isometric-beacons",
+   "source": [
+    268,
+    268,
+    250,
+    217
+   ],
+   "foot": [
+    436.57962697,
+    482.84935438
+   ],
+   "height": 214.84935438,
+   "origin": [
+    882,
+    222
+   ],
+   "packing": 0.35868006,
+   "world_height": 61.778061120000004,
+   "body": null,
+   "gvs": 1.00865652,
+   "gvk": 0.01151856
+  },
+  "beacon-6": {
+   "sheet": "forest-isometric-beacons",
+   "source": [
+    530,
+    268,
+    200,
+    250
+   ],
+   "foot": [
+    646.95544554,
+    514.28712871
+   ],
+   "height": 246.28712871,
+   "origin": [
+    154,
+    1090
+   ],
+   "packing": 0.61881188,
+   "world_height": 62,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "beacon-7": {
+   "sheet": "forest-isometric-beacons",
+   "source": [
+    742,
+    268,
+    200,
+    250
+   ],
+   "foot": [
+    858.95544554,
+    514.28712871
+   ],
+   "height": 246.28712871,
+   "origin": [
+    557,
+    1090
+   ],
+   "packing": 0.61881188,
+   "world_height": 62,
+   "body": null,
+   "gvs": 1,
+   "gvk": 0
+  },
+  "gate-0": {
+   "sheet": "forest-isometric-gates",
+   "source": [
+    6,
+    6,
+    445,
+    538
+   ],
+   "foot": [
+    229,
+    445
+   ],
+   "height": 439,
+   "origin": [
+    143,
+    17
+   ],
+   "packing": 1,
+   "world_height": 197.22721991999998,
+   "body": null,
+   "gvs": 0.98360554,
+   "gvk": 0.00203382
+  },
+  "gate-1": {
+   "sheet": "forest-isometric-gates",
+   "source": [
+    463,
+    6,
+    446,
+    538
+   ],
+   "foot": [
+    687,
+    445
+   ],
+   "height": 439,
+   "origin": [
+    769,
+    17
+   ],
+   "packing": 1,
+   "world_height": 197.22721991999998,
+   "body": null,
+   "gvs": 0.98360554,
+   "gvk": 0.00203382
+  },
+  "gate-2": {
+   "sheet": "forest-isometric-gates",
+   "source": [
+    921,
+    6,
+    447,
+    544
+   ],
+   "foot": [
+    1143,
+    448.5
+   ],
+   "height": 442.5,
+   "origin": [
+    51,
+    642
+   ],
+   "packing": 1,
+   "world_height": 193.53267888000002,
+   "body": null,
+   "gvs": 0.98012056,
+   "gvk": 0.00991205
+  },
+  "gate-3": {
+   "sheet": "forest-isometric-gates",
+   "source": [
+    1380,
+    6,
+    447,
+    546
+   ],
+   "foot": [
+    1604,
+    448.5
+   ],
+   "height": 442.5,
+   "origin": [
+    677,
+    642
+   ],
+   "packing": 1,
+   "world_height": 193.53267888000002,
+   "body": null,
+   "gvs": 0.98012056,
+   "gvk": 0.00991205
+  }
+ },
+ "frames": {
+  "nw": {
+   "ground": [
+    [
+     390.89032558,
+     458.66446512
+    ],
+    [
+     874.87711628,
+     762.45181395
+    ],
+    [
+     572.7375814,
+     951.47506977
+    ],
+    [
+     88.7507907,
+     647.68772093
+    ]
+   ],
+   "height": 994.41860465,
+   "foot": [
+    575.30232558,
+    1000.41860465
+   ]
+  },
+  "ne": {
+   "ground": [
+    [
+     1362.03793691,
+     291.70971867
+    ],
+    [
+     1889.42497869,
+     613.2144075
+    ],
+    [
+     1579.10954817,
+     805.54177323
+    ],
+    [
+     1051.72250639,
+     484.0370844
+    ]
+   ],
+   "height": 846.54731458,
+   "foot": [
+    1577.99062234,
+    852.54731458
+   ]
+  },
+  "sw": {
+   "ground": [
+    [
+     402.8061284,
+     1368.1135214
+    ],
+    [
+     900.53628405,
+     1668.85924125
+    ],
+    [
+     607.2483463,
+     1843.95651751
+    ],
+    [
+     109.51819066,
+     1543.21079767
+    ]
+   ],
+   "height": 885.21400778,
+   "foot": [
+    608.14007782,
+    1903.21400778
+   ]
+  },
+  "se": {
+   "ground": [
+    [
+     1117.91079393,
+     1608.544157
+    ],
+    [
+     1431.02408564,
+     1443.51293488
+    ],
+    [
+     1978.74933095,
+     1761.08652988
+    ],
+    [
+     1665.63603925,
+     1926.11775201
+    ],
+    [
+     1566.61730598,
+     1869.02586976
+    ],
+    [
+     1522.01427297,
+     1920.76538805
+    ],
+    [
+     1379.28456735,
+     1837.80374665
+    ],
+    [
+     1423.88760036,
+     1786.06422837
+    ]
+   ],
+   "height": 786.79750223,
+   "foot": [
+    1423.88760036,
+    1804.79750223
+   ]
+  },
+  "pool": {
+   "ground": [
+    [
+     12,
+     2281
+    ],
+    [
+     361,
+     2075
+    ],
+    [
+     707,
+     2289
+    ],
+    [
+     358,
+     2486
+    ]
+   ],
+   "height": 456,
+   "foot": [
+    358,
+    2486
+   ]
+  },
+  "chapel": {
+   "ground": [
+    [
+     947.22222222,
+     2560.86419753
+    ],
+    [
+     1311.83127572,
+     2350.16460905
+    ],
+    [
+     1589.19753086,
+     2577.32510288
+    ],
+    [
+     1227.05761317,
+     2704.07407407
+    ]
+   ],
+   "height": 927.57201646,
+   "foot": [
+    1227.05761317,
+    2957.57201646
+   ]
+  }
+ },
+ "placements": {
+  "nw": [
+   [
+    0.25,
+    0.71
+   ],
+   6.8
+  ],
+  "ne": [
+   [
+    0.37,
+    0.28
+   ],
+   5.6
+  ],
+  "sw": [
+   [
+    0.68,
+    0.78
+   ],
+   5.2
+  ],
+  "se": [
+   [
+    0.84,
+    0.67
+   ],
+   6.4
+  ],
+  "pool": [
+   [
+    0.5,
+    0.48
+   ],
+   1.45
+  ],
+  "chapel": [
+   [
+    0.76,
+    0.34
+   ],
+   10.7
+  ]
+ },
+ "approaches": {
+  "nw": [
+   394.96,
+   996.36
+  ],
+  "ne": [
+   270.0813,
+   926.5362
+  ],
+  "sw": [
+   389.775,
+   926.5
+  ],
+  "se": [
+   232,
+   963
+  ],
+  "chapel": [
+   192,
+   1150
+  ]
+ },
+ "chapel": {
+  "outline": [
+   [
+    95,
+    1047
+   ],
+   [
+    306,
+    1169
+   ],
+   [
+    530,
+    893
+   ],
+   [
+    650,
+    958
+   ],
+   [
+    1213,
+    633
+   ],
+   [
+    771,
+    338
+   ],
+   [
+    144,
+    700
+   ],
+   [
+    300,
+    790
+   ]
+  ],
+  "entrance": 0,
+  "faces": [
+   [
+    [
+     530,
+     893
+    ],
+    [
+     650,
+     958
+    ],
+    [
+     1213,
+     633
+    ],
+    [
+     1213,
+     913
+    ],
+    [
+     674,
+     1215
+    ],
+    [
+     536,
+     1127
+    ]
+   ],
+   [
+    [
+     144,
+     700
+    ],
+    [
+     300,
+     790
+    ],
+    [
+     74,
+     1054
+    ],
+    [
+     84,
+     878
+    ]
+   ]
+  ],
+  "steps": [
+   [
+    -120,
+    1500
+   ],
+   [
+    198,
+    1108
+   ],
+   [
+    250,
+    1042
+   ],
+   [
+    320,
+    951
+   ],
+   [
+    390,
+    867
+   ],
+   [
+    455,
+    835
+   ]
+  ]
+ },
+ "gate_contacts": [
+  [
+   [
+    212,
+    361
+   ],
+   [
+    520,
+    551
+   ]
+  ],
+  [
+   [
+    114,
+    1183
+   ],
+   [
+    432,
+    986
+   ]
+  ]
+ ],
+ "gate_centers": [
+  [
+   0.5,
+   0.1
+  ],
+  [
+   0.5,
+   0.9
+  ],
+  [
+   0.04,
+   0.5
+  ],
+  [
+   0.94,
+   0.5
+  ]
+ ],
+ "wall_runs": [
+  [
+   [
+    0.475,
+    0.1
+   ],
+   [
+    0.04,
+    0.1
+   ],
+   [
+    0.04,
+    0.475
+   ]
+  ],
+  [
+   [
+    0.04,
+    0.525
+   ],
+   [
+    0.04,
+    0.9
+   ],
+   [
+    0.475,
+    0.9
+   ]
+  ],
+  [
+   [
+    0.525,
+    0.1
+   ],
+   [
+    0.94,
+    0.1
+   ],
+   [
+    0.94,
+    0.475
+   ]
+  ],
+  [
+   [
+    0.94,
+    0.525
+   ],
+   [
+    0.94,
+    0.9
+   ],
+   [
+    0.525,
+    0.9
+   ]
+  ]
+ ],
+ "extent": 2400,
+ "spawn_uv": [
+  0.5,
+  0.525
+ ],
+ "chest_uv": [
+  [
+   0.44,
+   0.62
+  ],
+  [
+   0.36,
+   0.43
+  ],
+  [
+   0.65,
+   0.43
+  ],
+  [
+   0.47,
+   0.72
+  ],
+  [
+   0.57,
+   0.25
+  ]
+ ]
+}

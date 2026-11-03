@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dm1cxqife4nu6"
-path="res://.godot/imported/field-ground-meadow.webp-b9cdf68d930b36c3bada7a80ed543017.ctex"
+uid="uid://rg3auhoptre8"
+path="res://.godot/imported/undergrowth.webp-aeb26d08658b4f5e51d1b1c8fe6e2789.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/world/field-ground-meadow.webp"
-dest_files=["res://.godot/imported/field-ground-meadow.webp-b9cdf68d930b36c3bada7a80ed543017.ctex"]
+source_file="res://assets/art/village/undergrowth.webp"
+dest_files=["res://.godot/imported/undergrowth.webp-aeb26d08658b4f5e51d1b1c8fe6e2789.ctex"]
 
 [params]
 

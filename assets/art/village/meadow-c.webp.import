@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dv5qlt4whf2wo"
-path="res://.godot/imported/forest-trees.webp-75036057cd40a66ff91c4d4907ceec68.ctex"
+uid="uid://b7pxv1v02op7"
+path="res://.godot/imported/meadow-c.webp-85d5616e436614e87ff41c30184aeefb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/world/forest-trees.webp"
-dest_files=["res://.godot/imported/forest-trees.webp-75036057cd40a66ff91c4d4907ceec68.ctex"]
+source_file="res://assets/art/village/meadow-c.webp"
+dest_files=["res://.godot/imported/meadow-c.webp-85d5616e436614e87ff41c30184aeefb.ctex"]
 
 [params]
 
