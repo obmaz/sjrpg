@@ -111,6 +111,10 @@ func _read_debug_params() -> void:
 					player.position = village.point(Vector2(0.5, 1.15))
 				"gate0", "gate1", "gate2", "gate3":
 					player.position = village.gate_points[int(kv[1].substr(4))] + Vector2(0, 150)
+				"bridge":
+					player.position = village.bridge.axis_point(0.5)
+				"bank":
+					player.position = Iso.project(village.forecourt_g + Vector2(0, -60))
 				"corner0":
 					player.position = village.point(Vector2(0.04, 0.10)) + Vector2(0, 150)
 				"corner3":

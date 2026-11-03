@@ -34,6 +34,11 @@ var chapel_steps: PackedVector2Array
 var gate_points: Array[Vector2] = []
 ## Measured pillar feet of each gate in ground units: gate -> [Vector2, Vector2].
 var gate_pillars: Array = []
+var bridge: Bridge
+var river: River
+## Forecourt (road end before the bridge) in ground units, and the water band.
+var forecourt_g := Vector2.ZERO
+var river_band := Rect2()  # ground units: x = u, y = v
 
 
 func _init() -> void:
@@ -52,8 +57,9 @@ func point(uv: Vector2) -> Vector2:
 
 
 func build(ground_layer: Node2D, world: Node2D) -> void:
-	_build_paving(ground_layer)
 	_build_gates(world)
+	_build_paving(ground_layer)
+	_build_river(ground_layer, world)
 	_build_walls(world)
 	_build_buildings(world)
 	_build_plaza(world)
@@ -117,17 +123,22 @@ func _build_paving(layer: Node2D) -> void:
 				node.draw_rect(Rect2(g, Vector2(side, side)), col)
 				node.draw_rect(Rect2(g, Vector2(side, side)), Color(0.2, 0.21, 0.23, 0.6), false, 1.6))
 	layer.add_child(node)
-	# Dirt roads continue outward from the four gates.
+	# Dirt roads continue outward from the gates; the east road ends at the
+	# bridge forecourt and a narrower road crosses the bridge northwards.
 	var dirt := load("res://assets/art/village/dirt.webp") as Texture2D
+	var east_end := Vector2(0.94 + 390.0 / extent, 0.5)
 	var roads := [
-		[Vector2(0.5, 0.10), Vector2(0.5, -0.9)], [Vector2(0.5, 0.90), Vector2(0.5, 1.9)],
-		[Vector2(0.04, 0.5), Vector2(-0.9, 0.5)], [Vector2(0.94, 0.5), Vector2(1.9, 0.5)],
+		[Vector2(0.5, 0.10), Vector2(0.5, -0.9), extent * 0.055],
+		[Vector2(0.5, 0.90), Vector2(0.5, 1.9), extent * 0.055],
+		[Vector2(0.04, 0.5), Vector2(-0.9, 0.5), extent * 0.055],
+		[Vector2(0.94, 0.5), east_end, extent * 0.055],
+		[east_end, east_end + Vector2(0, -2400.0 / extent), 95.0],
 	]
 	for r in roads:
 		var a := ground(r[0])
 		var b := ground(r[1])
 		var dir := (b - a).normalized()
-		var nrm := dir.orthogonal() * extent * 0.055
+		var nrm := dir.orthogonal() * float(r[2])
 		var poly := Polygon2D.new()
 		poly.polygon = PackedVector2Array([a + nrm, b + nrm, b - nrm, a - nrm])
 		poly.texture = dirt
@@ -135,6 +146,39 @@ func _build_paving(layer: Node2D) -> void:
 		poly.texture_scale = Vector2(418.0 / 180.0, 418.0 / 180.0)
 		poly.z_index = 0
 		layer.add_child(poly)
+
+
+# ───────── river & bridge ─────────
+
+func _build_river(layer: Node2D, world: Node2D) -> void:
+	forecourt_g = Iso.unproject(gate_points[3]) + Vector2(390, 0)
+	bridge = Bridge.new().setup(Iso.project(forecourt_g))
+	world.add_child(bridge)
+	# The water spans the bridge axis, tucked 70 units under each bank end.
+	var near_v := Iso.unproject(bridge.axis_point(0.0)).y
+	var far_v := Iso.unproject(bridge.axis_point(1.0)).y
+	var v0 := far_v + 70.0
+	var v1 := near_v - 70.0
+	var u0 := forecourt_g.x - 190.0
+	var u1 := 3500.0
+	river_band = Rect2(u0 - 110.0, v0, u1 - u0 + 110.0, v1 - v0)
+	river = River.new().setup(u0, u1, v0, v1, 110.0)
+	layer.add_child(river)
+	# Water blocks movement everywhere except the bridge deck.
+	var water := PackedVector2Array()
+	for g in river.polygon:
+		water.append(Iso.project(g))
+	for piece in Geometry2D.clip_polygons(water, bridge.deck_polygon()):
+		solids.append(piece)
+	for poly in bridge.solids():
+		solids.append(poly)
+
+
+## True when a ground point lies on water, bank or the bridge road.
+func near_water(g: Vector2, margin: float) -> bool:
+	if river_band.grow(margin + 90.0).has_point(g):
+		return true
+	return absf(g.x - forecourt_g.x) < 190.0 + margin and g.y < forecourt_g.y + 100.0 and g.y > forecourt_g.y - 2400.0
 
 
 # ───────── walls & gates ─────────
@@ -295,7 +339,7 @@ func build_field(world: Node2D, field: Rect2, rng: RandomNumberGenerator) -> voi
 	while placed.size() < 260 and attempts < 9000:
 		attempts += 1
 		var g := Vector2(rng.randf_range(field.position.x, field.end.x), rng.randf_range(field.position.y, field.end.y))
-		if town.grow(120).has_point(g):
+		if town.grow(120).has_point(g) or near_water(g, 60.0):
 			continue
 		var uv := g / extent + spawn_uv
 		# Keep the gate roads open.
@@ -323,7 +367,7 @@ func build_field(world: Node2D, field: Rect2, rng: RandomNumberGenerator) -> voi
 		circles.append([tree.position, 16.0 + float(def["world_height"]) * 0.03])
 	for i in 220:
 		var g2 := Vector2(rng.randf_range(field.position.x, field.end.x), rng.randf_range(field.position.y, field.end.y))
-		if town.has_point(g2):
+		if town.has_point(g2) or near_water(g2, 0.0):
 			continue
 		var pd: Dictionary = data["sprites"]["plant-%d" % rng.randi_range(0, 5)]
 		var plant := IsoSprite.new().setup(pd, float(pd["world_height"]))
@@ -331,7 +375,7 @@ func build_field(world: Node2D, field: Rect2, rng: RandomNumberGenerator) -> voi
 		world.add_child(plant)
 	for i in 30:
 		var g3 := Vector2(rng.randf_range(field.position.x, field.end.x), rng.randf_range(field.position.y, field.end.y))
-		if town.grow(200).has_point(g3):
+		if town.grow(200).has_point(g3) or near_water(g3, 40.0):
 			continue
 		var uv3 := g3 / extent + spawn_uv
 		if absf(uv3.x - 0.5) < 0.09 or absf(uv3.y - 0.5) < 0.09:
