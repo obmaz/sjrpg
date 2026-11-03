@@ -11,7 +11,7 @@ const ROAD_HALF := 0.047  # paved road half width in uv
 ## Town trees measured from the original game's opening view.
 const TREE_UV := [[0.355, 0.724, 11], [0.684, 0.703, 2], [0.246, 0.368, 11]]
 ## Deep, cool foliage grade used for town and field trees (ForestScenePalette).
-const FOLIAGE := Color(0.66, 0.8, 0.74)
+const FOLIAGE := Color(0.52, 0.68, 0.66)
 const NPCS := [
 	["nw", "상인", 0], ["ne", "대장장이", 1], ["sw", "탈것 상인", 2], ["se", "촌장", 3],
 ]
@@ -57,8 +57,15 @@ func build(ground_layer: Node2D, world: Node2D) -> void:
 	_build_plaza(world)
 	_build_trees(world)
 	_build_npcs(world)
+	var cdef: Dictionary = data["sprites"]["chest"]
 	for c in data["chest_uv"]:
-		chest_points.append(point(Vector2(c[0], c[1])))
+		var at := point(Vector2(c[0], c[1]))
+		chest_points.append(at)
+		# Chest bodies are sized by their measured wooden body width (68).
+		var chest := IsoSprite.new().setup(cdef, float(cdef["height"]) * 68.0 / float(cdef["body"][2]) * 1.3)
+		chest.position = at
+		world.add_child(chest)
+		circles.append([at, 24.0])
 	var corners := [Vector2(0.04, 0.10), Vector2(0.94, 0.10), Vector2(0.94, 0.90), Vector2(0.04, 0.90)]
 	safe_zone = PackedVector2Array()
 	for c in corners:
@@ -86,7 +93,7 @@ func _build_paving(layer: Node2D) -> void:
 	var node := Node2D.new()
 	node.z_index = 1
 	node.draw.connect(func():
-		var side := Iso.PAVING
+		var side := Iso.PAVING * 1.3
 		var n := int(extent / side)
 		var rng := RandomNumberGenerator.new()
 		rng.seed = 1201
@@ -203,9 +210,9 @@ func _build_buildings(world: Node2D) -> void:
 
 func _build_plaza(world: Node2D) -> void:
 	var pool := _placed("pool")
-	pool.k *= 1.2
+	pool.k *= 1.44
 	world.add_child(pool)
-	var h := float(data["placements"]["pool"][1]) * Iso.HERO_HEIGHT * Iso.S * 1.2
+	var h := float(data["placements"]["pool"][1]) * Iso.HERO_HEIGHT * Iso.S * 1.44
 	var src_w := float(data["sprites"]["pool"]["source"][2]) * pool.k
 	var well := pool.position - Vector2(0, h * 0.18)
 	var rx := src_w * 0.43
@@ -218,7 +225,7 @@ func _build_plaza(world: Node2D) -> void:
 	# Warp portal beside the fountain, sized by its measured base width (180).
 	var pdef: Dictionary = data["sprites"]["portal"]
 	var body_w := float(pdef["body"][2])
-	var portal := IsoSprite.new().setup(pdef, float(pdef["height"]) * 180.0 / body_w)
+	var portal := IsoSprite.new().setup(pdef, float(pdef["height"]) * 180.0 / body_w * 1.4)
 	portal.position = point(Vector2(0.448, 0.502))
 	world.add_child(portal)
 	var b: Array = pdef["body"]

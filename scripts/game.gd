@@ -38,7 +38,7 @@ func _ready() -> void:
 	meadow.position = FIELD.position
 	meadow.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
 	# ForestScenePalette: bright, low-saturation warm grass.
-	meadow.modulate = Color(0.8, 0.76, 0.5)
+	meadow.modulate = Color(0.72, 0.69, 0.47)
 	ground_layer.add_child(meadow)
 
 	_corpse_layer = Node2D.new()
@@ -82,7 +82,7 @@ func _update_zoom() -> void:
 	var size := get_viewport_rect().size
 	# Keep characters similarly sized in portrait and landscape.
 	var short_side := minf(size.x, size.y)
-	var z := clampf(short_side / 720.0 * 1.6, 1.0, 2.6)
+	var z := clampf(short_side / 720.0 * 0.8, 0.5, 1.6)
 	camera.zoom = Vector2(z, z) * _debug_zoom
 
 

@@ -7,7 +7,7 @@ extends RefCounted
 
 const COS := 0.8660254037844386
 const SIN := 0.5
-const S := 0.78
+const S := 0.97
 const HERO_HEIGHT := 56.64  # SceneScale.heroHeight in original units
 const PAVING := 24.0  # IsometricTileGrid.pavingStoneSide
 
