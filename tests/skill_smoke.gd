@@ -97,6 +97,18 @@ func _bag_test() -> void:
 		GameState.potions += BagPanel.POTION_BUNDLE
 		await _frames(1)
 		print("shop potion bundle: %s" % ("ok" if GameState.potions == potions + 2 else "FAIL"))
+		# 축복 (수련): +5 attack / +20 health per rank, capped by level.
+		var atk := GameState.attack_power()
+		var hp0 := GameState.max_hp()
+		GameState.bonus_attack += 5.0
+		GameState.bonus_health += 20.0
+		var trained := GameState.attack_power() > atk and absf(GameState.max_hp() - hp0 - 20.0) < 0.01 and GameState.attack_training_rank() == 1 and GameState.max_training_rank() == 1
+		print("training: %s (cost %d / %d)" % ["ok" if trained else "FAIL", GameState.attack_training_cost(), GameState.vitality_training_cost()])
+		if not trained:
+			failures += 1
+		bag.shop_tab = 4
+		bag._rebuild()
+		await _frames(1)
 		# Save and reload keep gear and gold.
 		GameState.save_game()
 		var inv := GameState.inventory.size()

@@ -33,6 +33,9 @@ var potions := 3
 var mana_potions := 2
 var kills := 0
 var gold := 0
+## 상점 축복(수련): 공격 +5 / 생명 +20씩 쌓임 (원본 bonusAttack / bonusHealth).
+var bonus_attack := 0.0
+var bonus_health := 0.0
 ## 장비 (원본 Progress.inventory / equipped): 보관함 24칸, 부위별 착용 1개.
 var inventory: Array[Gear] = []
 var equipped := {}  # slot name -> Gear
@@ -199,7 +202,7 @@ func equipped_sum(stat: String) -> float:
 
 func max_hp() -> float:
 	var c := class_info()
-	return c["hp"] + c["hp_per_level"] * (level - 1) + equipped_sum("health")
+	return c["hp"] + c["hp_per_level"] * (level - 1) + equipped_sum("health") + bonus_health
 
 
 func max_resource() -> float:
@@ -211,8 +214,29 @@ func max_resource() -> float:
 func attack_power() -> float:
 	var gear_attack := equipped_sum("attack")
 	if hero_class == "warrior":
-		return ((level - 1) * 2.0 + gear_attack) * PLAYER_DAMAGE_SCALE
-	return (10.0 + (level - 1) * 2.0 + gear_attack * 0.5) * PLAYER_DAMAGE_SCALE * 1.5
+		return (bonus_attack + (level - 1) * 2.0 + gear_attack) * PLAYER_DAMAGE_SCALE
+	return (10.0 + bonus_attack * 0.5 + (level - 1) * 2.0 + gear_attack * 0.5) * PLAYER_DAMAGE_SCALE * 1.5
+
+
+## 수련 단계: 레벨 3마다 한 단계씩 상한이 늘어남.
+func max_training_rank() -> int:
+	return 1 + (level - 1) / 3
+
+
+func attack_training_rank() -> int:
+	return floori(bonus_attack / 5.0)
+
+
+func vitality_training_rank() -> int:
+	return floori(bonus_health / 20.0)
+
+
+func attack_training_cost() -> int:
+	return 45 + attack_training_rank() * 35
+
+
+func vitality_training_cost() -> int:
+	return 60 + vitality_training_rank() * 40
 
 
 func defense() -> float:
@@ -321,6 +345,8 @@ func new_game(cls: String) -> void:
 	mana_potions = 2
 	kills = 0
 	gold = 0
+	bonus_attack = 0.0
+	bonus_health = 0.0
 	chest_seed = randi() % 0x7fffffff
 	opened_chests.clear()
 	skill_points = 2
@@ -346,7 +372,7 @@ func save_game() -> void:
 		"class": hero_class, "level": level, "xp": xp,
 		"potions": potions, "mana_potions": mana_potions, "kills": kills,
 		"skill_points": skill_points, "ranks": ranks, "slots": slots,
-		"gold": gold, "chest_seed": chest_seed, "opened_chests": opened_chests,
+		"gold": gold, "bonus_attack": bonus_attack, "bonus_health": bonus_health, "chest_seed": chest_seed, "opened_chests": opened_chests,
 		"next_serial": next_serial,
 		"inventory": inventory.map(func(g): return g.to_save()),
 		"equipped": equipped.keys().map(func(k): return {"slot": k, "serial": equipped[k].serial}),
@@ -385,6 +411,8 @@ func load_game() -> bool:
 		_starter_skills()
 		skill_points = points_for_level(level)
 	gold = int(data.get("gold", 0))
+	bonus_attack = float(data.get("bonus_attack", 0.0))
+	bonus_health = float(data.get("bonus_health", 0.0))
 	chest_seed = int(data.get("chest_seed", 1))
 	opened_chests.clear()
 	for c in data.get("opened_chests", []):

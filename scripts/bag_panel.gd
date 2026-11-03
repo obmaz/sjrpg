@@ -4,7 +4,7 @@ extends PanelFrame
 ## 마을 상인 곁에서는 상점(무기 · 방어구 · 부적 · 물약)으로 전환. 축복(수련)은 아직 없음.
 
 const INV_TABS := ["전체", "신규", "무기", "방어구", "부적", "잠금"]
-const SHOP_TABS := ["무기", "방어구", "부적", "물약"]
+const SHOP_TABS := ["무기", "방어구", "부적", "물약", "축복"]
 const SLOTS := ["weapon", "armor", "charm"]
 const HEAL_PRICE := 80
 const ENERGY_PRICE := 72
@@ -325,7 +325,11 @@ func _shop_gear_ids() -> Array:
 
 
 func _build_shop() -> void:
-	if shop_tab == 3:
+	if shop_tab == 4:
+		var gain := 5.0 * GameState.PLAYER_DAMAGE_SCALE
+		body.add_child(_potion_offer("power", "무기 강화", "공격력 +%s · 수련 %d/%d" % [HudArt.stat(gain), GameState.attack_training_rank(), GameState.max_training_rank()], GameState.attack_training_cost(), GameState.attack_training_rank() >= GameState.max_training_rank()))
+		body.add_child(_potion_offer("vitality", "생명 축복", "최대 생명 +%s · 수련 %d/%d" % [HudArt.stat(20.0), GameState.vitality_training_rank(), GameState.max_training_rank()], GameState.vitality_training_cost(), GameState.vitality_training_rank() >= GameState.max_training_rank()))
+	elif shop_tab == 3:
 		body.add_child(_potion_offer("heal", "치유 물약 ×%d" % POTION_BUNDLE, "생명 %s 회복 · 보유 %d개" % [HudArt.stat(55.0), GameState.potions], HEAL_PRICE))
 		body.add_child(_potion_offer("energy", "%s 물약 ×%d" % [_res(), POTION_BUNDLE], "%s %s 회복 · 보유 %d개" % [_res(), HudArt.res(60.0), GameState.mana_potions], ENERGY_PRICE))
 	else:
@@ -339,7 +343,7 @@ func _build_shop() -> void:
 		body.add_child(PanelFrame.wrap_label(message, 17, Color(0.7, 1, 0.8)))
 
 
-func _potion_offer(id: String, title: String, sub: String, price: int) -> Control:
+func _potion_offer(id: String, title: String, sub: String, price: int, maxed := false) -> Control:
 	var expanded := selected_offer == id
 	var card := PanelContainer.new()
 	card.add_theme_stylebox_override("panel", UiKit.panel_style(Color(0.1, 0.2, 0.18, 0.95) if expanded else Color(0.07, 0.15, 0.14, 0.95), UiKit.GOLD if expanded else Color(0.24, 0.38, 0.34), 12))
@@ -359,6 +363,7 @@ func _potion_offer(id: String, title: String, sub: String, price: int) -> Contro
 	holder.add_child(top)
 	var icon := PotionCell.new()
 	icon.energy = id == "energy"
+	icon.kind = id
 	icon.custom_minimum_size = Vector2(100, 100)
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top.add_child(icon)
@@ -383,15 +388,21 @@ func _potion_offer(id: String, title: String, sub: String, price: int) -> Contro
 		_rebuild())
 	if expanded:
 		var poor := GameState.gold < price
-		var buy := UiKit.button("구매 · %d G" % price if not poor else "골드가 부족합니다", 20)
+		var buy := UiKit.button(("구매 · %d G" % price) if not (poor or maxed) else ("수련 한계입니다 (레벨 3마다 +1)" if maxed else "골드가 부족합니다"), 20)
 		buy.custom_minimum_size = Vector2(0, 70)
-		buy.disabled = poor
+		buy.disabled = poor or maxed
 		buy.pressed.connect(func():
 			GameState.gold -= price
-			if id == "heal":
-				GameState.potions += POTION_BUNDLE
-			else:
-				GameState.mana_potions += POTION_BUNDLE
+			match id:
+				"heal":
+					GameState.potions += POTION_BUNDLE
+				"energy":
+					GameState.mana_potions += POTION_BUNDLE
+				"power":
+					GameState.bonus_attack += 5.0
+				"vitality":
+					GameState.bonus_health += 20.0
+					game.player.refresh_stats(true)
 			message = "%s 구매 완료" % title
 			GameState.save_game()
 			_rebuild())
@@ -440,6 +451,13 @@ class GearCell:
 class PotionCell:
 	extends Control
 	var energy := false
+	var kind := "heal"
 
 	func _draw() -> void:
-		PotionArt.draw(self, size / 2.0, minf(size.x, size.y) / 2.0 - 2.0, energy, -1)
+		var r := minf(size.x, size.y) / 2.0 - 2.0
+		if kind == "power":
+			HudArt.plaque(self, "swords", size / 2.0, r)
+		elif kind == "vitality":
+			HudArt.plaque(self, "potion", size / 2.0, r, Color(1.0, 0.8, 0.8))
+		else:
+			PotionArt.draw(self, size / 2.0, r, energy, -1)
