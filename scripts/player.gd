@@ -86,7 +86,7 @@ func refresh_stats(full := false) -> void:
 	resource_max = GameState.class_info()["resource_max"] * (1.0 + orders)
 	if full:
 		hp = max_hp
-		resource = resource_max if is_mage else 0.0
+		resource = minf(float(GameState.class_info()["resource_start"]) * (1.0 + buff_value("orders")), resource_max)
 	hp = minf(hp, max_hp)
 	resource = minf(resource, resource_max)
 
@@ -534,21 +534,23 @@ func _buff(id: String, d: Dictionary, rank: int) -> void:
 
 func _corpse(d: Dictionary, rank: int, corpse: Dictionary) -> void:
 	corpse["used"] = true
-	var chance: float = d.get("chance", 1.0) + d.get("chance_growth", 0.0) * (rank - 1)
+	var chance: float = minf(d.get("chance", 1.0) + d.get("chance_growth", 0.0) * (rank - 1), float(d.get("chance_cap", 1.0)))
 	match d["reward"]:
 		"potion":
 			if randf() < chance:
-				GameState.potions = mini(GameState.potions + 1, 9)
-				game.float_text(corpse["pos"] + Vector2(0, -30), "물약!", Color(0.5, 1, 0.55))
+				if randf() < 0.5:
+					GameState.potions += 1
+					game.float_text(corpse["pos"] + Vector2(0, -30), "탐색 성공\n생명 물약 +1", Color(0.62, 0.85, 0.69))
+				else:
+					GameState.mana_potions += 1
+					game.float_text(corpse["pos"] + Vector2(0, -30), "탐색 성공\n%s 물약 +1" % GameState.class_info()["resource"], Color(0.6, 0.79, 0.93))
 			else:
 				game.float_text(corpse["pos"] + Vector2(0, -30), "아무것도 없음", Color(0.8, 0.8, 0.8))
 		"item":
 			if randf() < chance:
 				var bonus := 6 + GameState.level * 3
 				game.grant_xp(bonus)
-				game.float_text(corpse["pos"] + Vector2(0, -30), "전리품 +%d XP" % bonus, Color(1, 0.85, 0.4))
-				if randf() < 0.25:
-					GameState.potions = mini(GameState.potions + 1, 9)
+				game.float_text(corpse["pos"] + Vector2(0, -30), "탐색 성공\n전리품 +%d XP" % bonus, Color(0.91, 0.78, 0.49))
 			else:
 				game.float_text(corpse["pos"] + Vector2(0, -30), "아무것도 없음", Color(0.8, 0.8, 0.8))
 		"ward":
@@ -556,20 +558,24 @@ func _corpse(d: Dictionary, rank: int, corpse: Dictionary) -> void:
 	game.remove_corpse(corpse)
 
 
+## 치유 물약: flat +55 (원본 CombatBalance.potionHealing), shown ×100.
 func use_potion() -> void:
 	if dead or GameState.potions <= 0 or hp >= max_hp:
 		return
+	var restored := minf(55.0, max_hp - hp)
 	GameState.potions -= 1
-	hp = minf(max_hp, hp + max_hp * 0.45)
-	game.float_text(position + Vector2(0, -90), "+%d" % roundi(max_hp * 0.45), Color(0.5, 1, 0.55))
+	hp = minf(max_hp, hp + 55.0)
+	game.float_text(position + Vector2(0, -80), "+%s 생명" % HudArt.stat(restored), Color(1.0, 0.71, 0.63))
 
 
+## 마나/분노 물약: flat +60 (원본 potionEnergy), shown ×10.
 func use_mana_potion() -> void:
 	if dead or GameState.mana_potions <= 0 or resource >= resource_max:
 		return
+	var restored := minf(60.0, resource_max - resource)
 	GameState.mana_potions -= 1
-	resource = minf(resource_max, resource + resource_max * 0.5)
-	game.float_text(position + Vector2(0, -90), "+%d" % roundi(resource_max * 0.5), Color(0.5, 0.7, 1.0))
+	resource = minf(resource_max, resource + 60.0)
+	game.float_text(position + Vector2(0, -80), "+%s %s" % [HudArt.res(restored), GameState.class_info()["resource"]], Color(0.62, 0.87, 1.0))
 
 
 func take_damage(amount: float, attacker: Node2D = null) -> void:
@@ -585,7 +591,7 @@ func take_damage(amount: float, attacker: Node2D = null) -> void:
 	sprite.flash = 1.0
 	if not is_mage:
 		resource = minf(resource_max, resource + 4.0)
-	game.float_text(position + Vector2(0, -90), str(roundi(dealt)), Color(1, 0.4, 0.35))
+	game.float_text(position + Vector2(0, -90), HudArt.stat(dealt), Color(1, 0.4, 0.35))
 	if attacker and is_instance_valid(attacker) and buffs.has("armor"):
 		_armor_retaliate(attacker)
 	if hp <= 0.0:

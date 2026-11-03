@@ -28,10 +28,30 @@ static func plaque(canvas: CanvasItem, name: String, center: Vector2, radius: fl
 	canvas.draw_texture_rect_region(_sheet, Rect2(center - Vector2(radius, radius), Vector2(radius, radius) * 2.0), src, tint)
 
 
+static var _badge: Texture2D
+
+
+static func level_badge() -> Texture2D:
+	if _badge == null:
+		_badge = load("res://assets/art/hud/level-badge.webp")
+	return _badge
+
+
+## 전사: hero-helmeted-portrait.webp (cover-fit square). 마법사: the face cropped out of
+## class-selection.webp at (945,30,330,380) in 1536-wide coordinates, like GameArt.face.
 static func portrait(cls: String) -> Texture2D:
 	if not _portraits.has(cls):
-		_portraits[cls] = load("res://assets/art/hud/portrait-warrior.webp" if cls == "warrior" else "res://assets/art/hud/portrait-mage.png")
+		_portraits[cls] = load("res://assets/art/hud/portrait-warrior.webp" if cls == "warrior" else "res://assets/art/hud/class-selection.webp")
 	return _portraits[cls]
+
+
+static func portrait_uv(cls: String) -> Rect2:
+	if cls == "warrior":
+		return Rect2(0, 0, 1, 1)
+	var tex := portrait(cls)
+	var ratio := tex.get_width() / 1536.0
+	var size := tex.get_size()
+	return Rect2(Vector2(945.0, 30.0) * ratio / size, Vector2(330.0, 380.0) * ratio / size)
 
 
 ## Glowing ring for an equipped combat button (blue for casters, amber for fighters).
@@ -68,6 +88,15 @@ static func _bar_poly(rect: Rect2, ratio: float, slant: float) -> PackedVector2A
 		rect.position + Vector2(maxf(0.0, w - s), rect.size.y),
 		rect.position + Vector2(0, rect.size.y),
 	])
+
+
+## Original CombatUnit: health/damage ×100, resources ×10 (rounded up).
+static func stat(n: float) -> String:
+	return fmt(ceilf(n * 100.0))
+
+
+static func res(n: float) -> String:
+	return fmt(ceilf(n * 10.0))
 
 
 static func fmt(n: float) -> String:

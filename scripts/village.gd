@@ -2,7 +2,7 @@ class_name Village
 extends RefCounted
 ## 제1장 숲 마을 (원본 AuthoredSettlement + forest_isometric_frames.dart).
 ## A 2400×2400 ground diamond with walls, four gates, paved cross roads, the
-## plaza fountain and portal, four service buildings and the raised chapel yard.
+## plaza fountain and portal, four service buildings, the river and the bridge.
 
 const DATA_PATH := "res://assets/data/village.json"
 const WALL_HEIGHT := 140.0
@@ -25,14 +25,12 @@ var spawn_uv := Vector2(0.5, 0.525)
 ## Collision for the game: polygons in world pixels.
 var solids: Array[PackedVector2Array] = []
 var circles: Array = []  # [Vector2 center, float radius]
-## Walkable raised chapel yard (z above the chapel art).
+## Raised terraces (none for now: the chapel art is off the 120° plane).
 var terrace: PackedVector2Array
 ## Town interior (safe zone, no monster spawns).
 var safe_zone: PackedVector2Array
 var spawn_point := Vector2.ZERO
 var chest_points: Array[Vector2] = []
-## Chapel stair path from the yard below to the terrace (world pixels).
-var chapel_steps: PackedVector2Array
 var gate_points: Array[Vector2] = []
 ## Measured pillar feet of each gate in ground units: gate -> [Vector2, Vector2].
 var gate_pillars: Array = []
@@ -272,26 +270,11 @@ var buildings := {}
 
 
 func _build_buildings(world: Node2D) -> void:
-	for key in ["nw", "ne", "sw", "se", "chapel"]:
+	for key in ["nw", "ne", "sw", "se"]:
 		var s := _placed(key)
 		world.add_child(s)
 		buildings[key] = s
 		solids.append(s.atlas_polygon(data["frames"][key]["ground"]))
-	var chapel: IsoSprite = buildings["chapel"]
-	var yard: Dictionary = data["chapel"]
-	terrace = chapel.native_polygon(yard["outline"])
-	chapel_steps = chapel.native_polygon(yard["steps"])
-	for face in yard["faces"]:
-		solids.append(chapel.native_polygon(face))
-	# Every outline edge except the stair entrance is a ledge.
-	var outline: PackedVector2Array = terrace
-	for i in outline.size():
-		if i == int(yard["entrance"]):
-			continue
-		var a := outline[i]
-		var b := outline[(i + 1) % outline.size()]
-		var n := (b - a).orthogonal().normalized() * 5.0
-		solids.append(PackedVector2Array([a + n, b + n, b - n, a - n]))
 
 
 func _build_plaza(world: Node2D) -> void:

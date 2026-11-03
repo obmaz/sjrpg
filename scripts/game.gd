@@ -117,11 +117,6 @@ func _read_debug_params() -> void:
 			_debug_zoom = clampf(float(kv[1]), 0.1, 4.0)
 		elif kv.size() == 2 and kv[0] == "at":
 			match kv[1]:
-				"chapel":
-					var c := Vector2.ZERO
-					for p in village.terrace:
-						c += p
-					player.position = c / village.terrace.size()
 				"field":
 					player.position = village.point(Vector2(0.5, 1.15))
 				"gate0", "gate1", "gate2", "gate3":
@@ -161,8 +156,6 @@ func in_town(p: Vector2) -> bool:
 
 func _process(delta: float) -> void:
 	camera.position = player.position + Vector2(0, -30)
-	# Raised chapel yard: actors on it draw above the chapel's terrace art.
-	player.z_index = 1 if Geometry2D.is_point_in_polygon(player.position, village.terrace) else 0
 	for c in corpses.duplicate():
 		c["time"] -= delta
 		if c["time"] <= 0.0:
@@ -333,13 +326,7 @@ func on_enemy_killed(enemy: Enemy) -> void:
 	enemies.erase(enemy)
 	GameState.kills += 1
 	float_text(enemy.position + Vector2(0, -enemy.sprite.body_height - 40), "+%d XP" % enemy.xp_reward, Color(0.7, 0.85, 1))
-	if _rng.randf() < 0.12:
-		if _rng.randf() < 0.5:
-			GameState.potions = mini(GameState.potions + 1, 9)
-			toast("체력 물약을 얻었습니다")
-		else:
-			GameState.mana_potions = mini(GameState.mana_potions + 1, 9)
-			toast("%s 물약을 얻었습니다" % GameState.class_info()["resource"])
+	# 원본: 몬스터 처치로는 물약이 나오지 않음 (상자·구매·물약 발견만).
 	# Corpses feed 물약 발견 · 아이템 발견 · 섬뜩한 수호물.
 	if _rng.randf() < 0.3:
 		corpses.append({"pos": enemy.position, "time": 30.0, "used": false})

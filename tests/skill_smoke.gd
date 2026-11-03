@@ -26,42 +26,6 @@ func _walk(player: Player, target: Vector2, frames: int) -> void:
 	player.move_input = Vector2.ZERO
 
 
-func _terrace_test() -> void:
-	GameState.new_game("warrior")
-	var game := preload("res://scripts/game.gd").new()
-	add_child(game)
-	await _frames(2)
-	for e in game.enemies:
-		e.queue_free()
-	game.enemies.clear()
-	var player: Player = game.player
-	var v: Village = game.village
-	var steps := v.chapel_steps
-	# Climb: stand at the stair foot and follow the measured stair path.
-	player.position = steps[0]
-	for i in range(1, steps.size()):
-		await _walk(player, steps[i], 240)
-	var center := Vector2.ZERO
-	for p in v.terrace:
-		center += p
-	center /= v.terrace.size()
-	await _walk(player, center, 240)
-	var on_top := Geometry2D.is_point_in_polygon(player.position, v.terrace)
-	print("terrace climb via stairs: %s z=%d" % ["ok" if on_top else "FAIL", player.z_index])
-	if not on_top or player.z_index != 1:
-		failures += 1
-	# Walking straight at the cliff face from below must not reach the top.
-	var below := center + Vector2(0, 260)
-	player.position = below
-	await _walk(player, center, 240)
-	var blocked := not Geometry2D.is_point_in_polygon(player.position, v.terrace)
-	print("terrace cliff blocks: %s" % ("ok" if blocked else "FAIL"))
-	if not blocked:
-		failures += 1
-	game.queue_free()
-	await _frames(2)
-
-
 func _bridge_test() -> void:
 	GameState.new_game("warrior")
 	var game := preload("res://scripts/game.gd").new()
@@ -97,7 +61,6 @@ func _bridge_test() -> void:
 
 
 func _run() -> void:
-	await _terrace_test()
 	await _bridge_test()
 	for cls in ["warrior", "mage"]:
 		GameState.new_game(cls)

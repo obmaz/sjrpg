@@ -40,8 +40,10 @@ func _layout() -> void:
 	var roll_center := main + Vector2(1.55 * R, 1.45 * R)
 	roll_center.x = minf(roll_center.x, size.x - 40.0 * u)
 	_buttons["roll"] = {"center": roll_center, "radius": 33.0 * u}
-	_buttons["potion_hp"] = {"center": main + Vector2(-0.3 * R, -3.2 * R), "radius": 30.0 * u}
-	_buttons["potion_mp"] = {"center": main + Vector2(1.9 * R, -3.2 * R), "radius": 30.0 * u}
+	# 원본 PotionBelt: two 44px potions side by side with a 6px gap, right side above the controls.
+	var potion_y := main.y - 3.25 * R
+	_buttons["potion_hp"] = {"center": Vector2(size.x - 8.0 * u - 50.0 * u - 22.0 * u, potion_y), "radius": 22.0 * u}
+	_buttons["potion_mp"] = {"center": Vector2(size.x - 8.0 * u - 22.0 * u, potion_y), "radius": 22.0 * u}
 	var bar_y := size.y - (60.0 * u if portrait else 44.0 * u)
 	var names := ["bar_bag", "bar_skills", "bar_quests", "bar_gear"]
 	for i in 4:
@@ -189,18 +191,6 @@ func _draw_joystick() -> void:
 	draw_arc(_stick_knob, kr * 0.7, PI * 1.1, PI * 1.9, 16, Color(1, 1, 1, 0.35), 3.0 * u, true)
 
 
-func _draw_flask(c: Vector2, r: float, liquid: Color, count: int) -> void:
-	draw_circle(c, r, Color(0.07, 0.08, 0.09, 0.92))
-	var glow := liquid
-	draw_circle(c + Vector2(0, r * 0.12), r * 0.52, Color(glow, 0.9))
-	draw_circle(c + Vector2(-r * 0.15, -r * 0.02), r * 0.14, Color(1, 1, 1, 0.35))
-	# Neck and cork.
-	draw_rect(Rect2(c + Vector2(-r * 0.14, -r * 0.62), Vector2(r * 0.28, r * 0.34)), Color(0.82, 0.86, 0.9, 0.85))
-	draw_rect(Rect2(c + Vector2(-r * 0.18, -r * 0.7), Vector2(r * 0.36, r * 0.14)), Color(0.55, 0.38, 0.2))
-	draw_arc(c, r, 0, TAU, 40, HudArt.BRONZE, 3.0 * _unit, true)
-	HudArt.text_outlined(self, str(count), c + Vector2(r * 0.25, r * 0.95), r, int(15 * _unit), Color.WHITE, HORIZONTAL_ALIGNMENT_LEFT)
-
-
 func _draw() -> void:
 	var player: Player = game.player
 	if player == null:
@@ -237,9 +227,9 @@ func _draw() -> void:
 		elif name == "roll":
 			HudArt.plaque(self, "dodge", c, r, Color(1, 1, 1, 0.78 if not pressed else 1.0))
 		elif name == "potion_hp":
-			_draw_flask(c, r, Color(0.9, 0.12, 0.12), GameState.potions)
+			PotionArt.draw(self, c, r, false, GameState.potions, pressed)
 		elif name == "potion_mp":
-			_draw_flask(c, r, Color(0.22, 0.42, 0.95), GameState.mana_potions)
+			PotionArt.draw(self, c, r, true, GameState.mana_potions, pressed)
 		elif name.begins_with("bar_"):
 			HudArt.plaque(self, BAR_ICONS[name], c, r, Color(0.92, 0.9, 0.88) if not pressed else Color.WHITE)
 			if name == "bar_skills" and GameState.skill_points > 0:

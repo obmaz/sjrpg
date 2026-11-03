@@ -210,40 +210,61 @@ func _draw_bars() -> void:
 		return
 	var u := unit()
 	var info := GameState.class_info()
-	var center := Vector2(66.0, 64.0) * u
-	var pr := 48.0 * u
-	# Bars sit behind the portrait and run to the right with a slanted end.
-	var x0 := center.x + 18.0 * u
+	var center := Vector2(62.0, 62.0) * u
+	var pr := 46.0 * u
+	var x0 := center.x + 16.0 * u
 	var w := 372.0 * u
 	var hp_rect := Rect2(x0, 12.0 * u, w, 36.0 * u)
 	var mp_rect := Rect2(x0, 48.0 * u, w - 6.0 * u, 28.0 * u)
-	var xp_rect := Rect2(x0, 76.0 * u, w - 12.0 * u, 15.0 * u)
+	var xp_rect := Rect2(x0, 77.0 * u, w - 12.0 * u, 14.0 * u)
+	# Dark metal plate that runs from the portrait under all three bars
+	# (원본 _HeroStatusChrome: fill 0xe51c1b1c, rim 0xff6e6355).
+	var slant := 16.0 * u
+	var plate := PackedVector2Array([
+		Vector2(center.x + pr * 0.0, 6.0 * u), Vector2(x0 + w + 4.0 * u, 6.0 * u),
+		Vector2(x0 + w + 4.0 * u - slant, 100.0 * u), Vector2(center.x, 100.0 * u)])
+	_bars.draw_colored_polygon(PackedVector2Array([plate[0] + Vector2(0, 2), plate[1] + Vector2(0, 2), plate[2] + Vector2(0, 2), plate[3] + Vector2(0, 2)]), Color(0, 0, 0, 0.67))
+	_bars.draw_colored_polygon(plate, Color(0.11, 0.106, 0.11, 0.9))
+	_bars.draw_polyline(PackedVector2Array([plate[0], plate[1], plate[2], plate[3], plate[0]]), Color(0.43, 0.39, 0.33), 1.4 * u, true)
 	HudArt.slanted_bar(_bars, hp_rect, p.hp / p.max_hp, Color(0.95, 0.30, 0.25), Color(0.66, 0.1, 0.1), Color(0.2, 0.05, 0.06), 12.0 * u)
-	HudArt.text_outlined(_bars, "%s / %s" % [HudArt.fmt(p.hp), HudArt.fmt(p.max_hp)], hp_rect.position + Vector2(0, hp_rect.size.y * 0.72), hp_rect.size.x, int(21 * u))
+	HudArt.text_outlined(_bars, "%s / %s" % [HudArt.stat(p.hp), HudArt.stat(p.max_hp)], hp_rect.position + Vector2(0, hp_rect.size.y * 0.72), hp_rect.size.x, int(20 * u))
 	var is_mage: bool = p.is_mage
 	var top := Color(0.35, 0.65, 1.0) if is_mage else Color(1.0, 0.7, 0.3)
 	var bottom := Color(0.1, 0.32, 0.78) if is_mage else Color(0.8, 0.38, 0.08)
 	var back := Color(0.04, 0.08, 0.2) if is_mage else Color(0.2, 0.1, 0.04)
 	HudArt.slanted_bar(_bars, mp_rect, p.resource / p.resource_max, top, bottom, back, 10.0 * u)
-	HudArt.text_outlined(_bars, "%s %s" % [info["resource"], HudArt.fmt(p.resource)], mp_rect.position + Vector2(0, mp_rect.size.y * 0.72), mp_rect.size.x, int(18 * u))
+	HudArt.text_outlined(_bars, "%s %s / %s" % [info["resource"], HudArt.res(p.resource), HudArt.res(p.resource_max)], mp_rect.position + Vector2(0, mp_rect.size.y * 0.72), mp_rect.size.x, int(17 * u))
 	var xp_ratio := float(GameState.xp) / GameState.xp_to_next()
-	HudArt.slanted_bar(_bars, xp_rect, xp_ratio, Color(0.95, 0.8, 0.4), Color(0.72, 0.55, 0.22), Color(0.1, 0.09, 0.06, 0.9), 8.0 * u)
-	HudArt.text_outlined(_bars, "EXP %d%%" % roundi(xp_ratio * 100.0), xp_rect.position + Vector2(0, xp_rect.size.y * 0.8), xp_rect.size.x, int(12 * u), Color(0.95, 0.9, 0.78))
-	# Portrait with a bronze rim.
-	_bars.draw_circle(center, pr + 4.0 * u, Color(0.06, 0.05, 0.04))
+	HudArt.slanted_bar(_bars, xp_rect, xp_ratio, Color(0.95, 0.8, 0.4), Color(0.72, 0.55, 0.22), Color(0.32, 0.27, 0.22), 8.0 * u)
+	HudArt.text_outlined(_bars, "EXP %d%%" % floori(xp_ratio * 100.0), xp_rect.position + Vector2(0, xp_rect.size.y * 0.82), xp_rect.size.x, int(11 * u), Color(0.93, 0.89, 0.8))
+	# Portrait: 원본 art — 전사 hero-helmeted-portrait, 마법사 class-selection 얼굴.
+	_bars.draw_circle(center + Vector2(0, 2.0), pr + 1.0, Color(0, 0, 0, 0.67))
+	_bars.draw_circle(center, pr, Color(0.09, 0.114, 0.125))
 	var tex := HudArt.portrait(GameState.hero_class)
+	var uv_rect := HudArt.portrait_uv(GameState.hero_class)
 	var pts := PackedVector2Array()
 	var uvs := PackedVector2Array()
-	var crop := Rect2(0.0, 0.0, 1.0, 1.0) if GameState.hero_class == "warrior" else Rect2(0.2, 0.1, 0.62, 0.55)
-	for i in 40:
-		var a := TAU * i / 40.0
+	for i in 48:
+		var a := TAU * i / 48.0
 		pts.append(center + Vector2.from_angle(a) * pr)
-		uvs.append(crop.position + crop.size * (Vector2(0.5, 0.5) + Vector2.from_angle(a) * 0.5))
+		uvs.append(uv_rect.position + uv_rect.size * (Vector2(0.5, 0.5) + Vector2.from_angle(a) * 0.5))
 	_bars.draw_polygon(pts, PackedColorArray([Color.WHITE]), uvs, tex)
-	_bars.draw_arc(center, pr + 2.0 * u, 0, TAU, 48, HudArt.BRONZE, 4.0 * u, true)
-	_bars.draw_arc(center, pr - 1.0, 0, TAU, 48, Color(0.1, 0.07, 0.04, 0.8), 2.0, true)
-	# Level badge.
-	var badge := center + Vector2(-pr * 0.72, pr * 0.72)
-	_bars.draw_circle(badge, 14.0 * u, Color(0.1, 0.08, 0.05))
-	_bars.draw_arc(badge, 14.0 * u, 0, TAU, 28, HudArt.BRONZE, 2.5 * u, true)
-	HudArt.text_outlined(_bars, str(GameState.level), badge + Vector2(-14.0 * u, 6.0 * u), 28.0 * u, int(15 * u), Color(1, 0.95, 0.75))
+	if p.hp / p.max_hp < 0.3:
+		_bars.draw_circle(center, pr, Color(1.0, 0.165, 0.14, 0.12 + 0.1 * sin(Time.get_ticks_msec() / 150.0)))
+	_bars.draw_arc(center, pr, 0, TAU, 56, Color(0.29, 0.263, 0.216), 3.0 * u, true)
+	_bars.draw_arc(center, pr, -PI + 0.2, -PI + 2.9, 24, Color(0.765, 0.675, 0.51), 1.4 * u, true)
+	_bars.draw_arc(center, pr - 3.0 * u, 0, TAU, 56, Color(0.61, 0.53, 0.38), 0.8 * u, true)
+	# Crests (top / bottom) and rivets (left / right).
+	for sy in [-1.0, 1.0]:
+		var c := center + Vector2(0, sy * pr)
+		var crest := PackedVector2Array([c + Vector2(0, -4) * u, c + Vector2(5, 0) * u, c + Vector2(0, 5) * u, c + Vector2(-5, 0) * u])
+		_bars.draw_colored_polygon(crest, Color(0.16, 0.17, 0.17))
+		_bars.draw_polyline(crest + PackedVector2Array([crest[0]]), Color(0.64, 0.56, 0.41), 1.0 * u)
+	for sx in [-1.0, 1.0]:
+		_bars.draw_circle(center + Vector2(sx * (pr - 2.0 * u), 0), 1.4 * u, Color(0.68, 0.59, 0.44))
+	# Level badge (원본 level-badge.webp, 26px at the top-left corner).
+	var badge := HudArt.level_badge()
+	var bs := 30.0 * u
+	var bpos := Vector2(2.0 * u, 2.0 * u)
+	_bars.draw_texture_rect(badge, Rect2(bpos, Vector2(bs, bs)), false)
+	HudArt.text_outlined(_bars, str(GameState.level), bpos + Vector2(0, bs * 0.7), bs, int(13 * u), Color(0.93, 0.89, 0.8))

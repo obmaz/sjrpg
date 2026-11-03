@@ -121,7 +121,7 @@ func take_damage(amount: float, source: Node2D) -> void:
 		amount *= 1.0 + _cry_value
 	hp -= amount
 	sprite.flash = 1.0
-	game.float_text(position + Vector2(0, -sprite.body_height - 20), str(roundi(amount)), Color(1, 0.95, 0.6))
+	game.float_text(position + Vector2(0, -sprite.body_height - 20), HudArt.stat(amount), Color(1, 0.95, 0.6))
 	if source and _knockback.length() < 160.0:
 		_knockback = (position - source.position).normalized() * 160.0
 	if _state == "idle":

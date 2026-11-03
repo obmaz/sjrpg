@@ -29,10 +29,10 @@ const DEFS := {
 	"berserk": {"type": "melee", "mult": 2.4, "growth": 0.12, "arc": 45, "range": 100, "self_buff": "berserk", "buff_time": 1.5, "buff_value": 1.0},
 	# ── 전사: 함성 ──
 	"howl": {"type": "nova", "radius": 210, "fear": 2.0, "fear_growth": 0.2, "color": SHOUT},
-	"findPotion": {"type": "corpse", "reward": "potion", "chance": 0.3, "chance_growth": 0.02},
+	"findPotion": {"type": "corpse", "reward": "potion", "chance": 0.265, "chance_growth": 0.015, "chance_cap": 0.65},
 	"taunt": {"type": "nova", "radius": 240, "taunt": 6.0, "color": Color(1, 0.4, 0.3)},
 	"shout": {"type": "buff", "buff": "shout", "duration": 12.0, "dur_growth": 1.0, "value": 0.6, "value_growth": 0.08},
-	"findItem": {"type": "corpse", "reward": "item", "chance": 0.3, "chance_growth": 0.02},
+	"findItem": {"type": "corpse", "reward": "item", "chance": 0.162, "chance_growth": 0.012, "chance_cap": 0.65},
 	"battleCry": {"type": "nova", "radius": 220, "cry": 6.0, "cry_value": 0.2, "cry_growth": 0.02, "color": Color(1, 0.6, 0.35)},
 	"battleOrders": {"type": "buff", "buff": "orders", "duration": 20.0, "dur_growth": 2.0, "value": 0.3, "value_growth": 0.03},
 	"grimWard": {"type": "corpse", "reward": "ward", "duration": 10.0, "dur_growth": 1.0, "radius": 180},
@@ -164,9 +164,9 @@ static func describe(id: String, rank: int) -> String:
 		"corpse":
 			match d["reward"]:
 				"potion":
-					return "시체에서 물약 발견 확률 %d%%" % roundi((d["chance"] + d["chance_growth"] * (r - 1)) * 100)
+					return "시체에서 물약 발견 확률 %d%%" % roundi(minf(d["chance"] + d["chance_growth"] * (r - 1), 0.65) * 100)
 				"item":
-					return "시체에서 전리품(경험치·물약) 발견 확률 %d%%" % roundi((d["chance"] + d["chance_growth"] * (r - 1)) * 100)
+					return "시체에서 전리품(장비 대신 경험치) 발견 확률 %d%%" % roundi(minf(d["chance"] + d["chance_growth"] * (r - 1), 0.65) * 100)
 				_:
 					return "수호물 %.0f초 · 반경 %.1f걸음 공포" % [d["duration"] + d["dur_growth"] * (r - 1), d["radius"] / 40.0]
 		"buff":
