@@ -127,6 +127,44 @@ func _bag_test() -> void:
 		await _frames(2)
 
 
+## 120° 기준: 지면에 닿는 모든 원화는 보정 후 변 각도가 ±30°에서 2.5° 이내여야 합니다.
+func _axis_audit() -> void:
+	var data: Dictionary = JSON.parse_string(FileAccess.open("res://assets/data/village.json", FileAccess.READ).get_as_text())
+	for key in data["frames"]:
+		var s: Dictionary = data["sprites"][key]
+		var poly: Array = data["frames"][key]["ground"]
+		var bad := []
+		for i in poly.size():
+			var a: Array = poly[i]
+			var b: Array = poly[(i + 1) % poly.size()]
+			var pa := Vector2(a[0], a[1] * s["gvs"] + a[0] * s["gvk"])
+			var pb := Vector2(b[0], b[1] * s["gvs"] + b[0] * s["gvk"])
+			if pa.distance_to(pb) < 150.0:
+				continue  # short porch steps are not ground-axis edges
+			var t := rad_to_deg((pb - pa).angle())
+			if t > 90.0:
+				t -= 180.0
+			if t < -90.0:
+				t += 180.0
+			if absf(absf(t) - 30.0) > 2.5:
+				bad.append(snappedf(t, 0.1))
+		print("axis audit %-6s %s" % [key, "ok" if bad.is_empty() else "FAIL %s" % str(bad)])
+		if not bad.is_empty():
+			failures += 1
+	# Bridge deck edges are exactly +-30 by construction of the original measurement.
+	var deck: Array = Bridge.DECK
+	for i in 4:
+		var d: Vector2 = deck[(i + 1) % 4] - deck[i]
+		var t := absf(rad_to_deg(d.angle()))
+		t = t if t <= 90.0 else 180.0 - t
+		if absf(t - 30.0) > 2.5:
+			print("axis audit bridge FAIL %.1f" % t)
+			failures += 1
+	if data["sprites"].has("chapel"):
+		print("axis audit: off-plane chapel art must not ship")
+		failures += 1
+
+
 func _bridge_test() -> void:
 	GameState.new_game("warrior")
 	var game := preload("res://scripts/game.gd").new()
@@ -162,6 +200,7 @@ func _bridge_test() -> void:
 
 
 func _run() -> void:
+	_axis_audit()
 	await _bridge_test()
 	await _bag_test()
 	for cls in ["warrior", "mage"]:
