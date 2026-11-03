@@ -13,6 +13,8 @@ var player: Player
 var camera: Camera2D
 var hud: Hud
 var enemies: Array[Enemy] = []
+var corpses: Array = []  # {"pos": Vector2, "time": float, "used": bool}
+var _corpse_layer: Node2D
 var obstacles: Array = []  # [Vector2 position, float radius]
 var _spawn_timer := 0.0
 var _save_timer := 0.0
@@ -40,6 +42,11 @@ func _ready() -> void:
 		camp.draw_arc(Vector2.ZERO, CAMP_RADIUS * 0.75, 0, TAU, 64, Color(0.95, 0.85, 0.55, 0.5), 4.0, true))
 	add_child(camp)
 
+	_corpse_layer = Node2D.new()
+	_corpse_layer.z_index = -8
+	_corpse_layer.draw.connect(_draw_corpses)
+	add_child(_corpse_layer)
+
 	world = Node2D.new()
 	world.y_sort_enabled = true
 	add_child(world)
@@ -48,6 +55,7 @@ func _ready() -> void:
 	player = Player.new()
 	player.setup(self)
 	player.died.connect(_on_player_died)
+	player.open_skills_requested.connect(func(): hud.open_skill_tree())
 	world.add_child(player)
 
 	camera = Camera2D.new()
@@ -112,6 +120,11 @@ func _plant_trees() -> void:
 
 func _process(delta: float) -> void:
 	camera.position = player.position + Vector2(0, -30)
+	for c in corpses.duplicate():
+		c["time"] -= delta
+		if c["time"] <= 0.0:
+			corpses.erase(c)
+	_corpse_layer.queue_redraw()
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
 		_spawn_timer = 2.2
@@ -125,11 +138,19 @@ func _process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("skill"):
-		player.try_skill()
+		player.cast_slot(1)
 	elif event.is_action_pressed("potion"):
 		player.use_potion()
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
-		hud.toggle_menu()
+	elif event is InputEventKey and event.pressed and not event.echo:
+		match event.keycode:
+			KEY_ESCAPE:
+				hud.toggle_menu()
+			KEY_1, KEY_2, KEY_3, KEY_4:
+				player.cast_slot(event.keycode - KEY_0)
+			KEY_L, KEY_SHIFT:
+				player.try_roll()
+			KEY_T:
+				hud.open_skill_tree()
 
 
 func _spawn_enemy() -> void:
@@ -234,12 +255,57 @@ func on_enemy_killed(enemy: Enemy) -> void:
 	if _rng.randf() < 0.12:
 		GameState.potions = mini(GameState.potions + 1, 9)
 		toast("물약을 얻었습니다")
-	var gained := GameState.add_xp(enemy.xp_reward)
+	# Corpses feed 물약 발견 · 아이템 발견 · 섬뜩한 수호물.
+	if _rng.randf() < 0.3:
+		corpses.append({"pos": enemy.position, "time": 30.0, "used": false})
+	grant_xp(enemy.xp_reward)
+
+
+func grant_xp(amount: int) -> void:
+	var gained := GameState.add_xp(amount)
 	if gained > 0:
 		player.refresh_stats(true)
 		spawn_nova(player.position, 120.0, Color(1, 0.9, 0.4))
-		toast("레벨 업! Lv.%d" % GameState.level)
+		toast("레벨 업! Lv.%d · 스킬 포인트 %d" % [GameState.level, GameState.skill_points])
 		GameState.save_game()
+
+
+func nearest_corpse(from: Vector2, max_range: float):
+	var best = null
+	var best_d := max_range
+	for c in corpses:
+		var d := from.distance_to(c["pos"])
+		if not c["used"] and d < best_d:
+			best_d = d
+			best = c
+	return best
+
+
+func remove_corpse(c: Dictionary) -> void:
+	corpses.erase(c)
+
+
+func _draw_corpses() -> void:
+	for c in corpses:
+		var p: Vector2 = c["pos"]
+		var a := clampf(c["time"] / 3.0, 0.0, 1.0) * 0.8
+		_corpse_layer.draw_set_transform(p, 0.0, Vector2(1.0, 0.5))
+		_corpse_layer.draw_circle(Vector2.ZERO, 20.0, Color(0.25, 0.05, 0.04, a))
+		_corpse_layer.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		_corpse_layer.draw_line(p + Vector2(-12, -4), p + Vector2(12, 4), Color(0.85, 0.8, 0.7, a), 4.0)
+		_corpse_layer.draw_line(p + Vector2(-12, 4), p + Vector2(12, -4), Color(0.85, 0.8, 0.7, a), 4.0)
+
+
+## Walks from `from` along `dir` up to `distance`, stopping before trees and the world edge.
+func find_open_point(from: Vector2, dir: Vector2, distance: float, r: float) -> Vector2:
+	var p := from
+	var steps := int(ceil(distance / 12.0))
+	for i in steps:
+		var next := from + dir * minf(distance, (i + 1) * 12.0)
+		if _blocked(next, r) or not WORLD.grow(-r).has_point(next):
+			break
+		p = next
+	return p
 
 
 func _on_player_died() -> void:
@@ -278,13 +344,141 @@ func spawn_nova(at: Vector2, radius: float, color: Color, small := false) -> voi
 	_add_effect(e)
 
 
-func spawn_fireball(at: Vector2, dir: Vector2, damage: float) -> void:
+func spawn_projectile(p: Dictionary, owner: Node2D) -> void:
 	var e := Effect.new()
-	e.kind = "fireball"
+	e.kind = "proj"
+	e.position = p["pos"]
+	e.velocity = p["dir"] * float(p["speed"])
+	e.damage = p["damage"]
+	e.color = p.get("color", SkillDefs.FIRE)
+	e.life = p.get("life", 0.95)
+	e.owner_node = owner
+	e.params = p
+	e.params["seed"] = randf() * TAU
+	_add_effect(e)
+
+
+func spawn_orb(at: Vector2, dir: Vector2, d: Dictionary, damage: float, owner: Node2D) -> void:
+	var e := Effect.new()
+	e.kind = "orb"
 	e.position = at
-	e.velocity = dir * 620.0
+	e.velocity = dir * float(d["speed"])
 	e.damage = damage
-	e.life = 0.9
+	e.color = d["color"]
+	e.life = d["life"]
+	e.owner_node = owner
+	_add_effect(e)
+
+
+func spawn_zone(z: Dictionary) -> void:
+	var e := Effect.new()
+	e.kind = "zone"
+	e.position = z["pos"]
+	e.radius = z["radius"]
+	e.damage = z["damage"]
+	e.color = z["color"]
+	e.life = float(z["duration"]) + float(z.get("delay", 0.0))
+	e.params = z
+	e.z_index = -6
+	e.z_as_relative = false
+	_add_effect(e)
+
+
+func spawn_beam(from: Vector2, angle: float, length: float, damage: float, color: Color, _owner: Node2D) -> void:
+	var dir := Vector2.from_angle(angle)
+	for en: Enemy in enemies.duplicate():
+		if en.dead:
+			continue
+		var d := en.position - from
+		var along := d.dot(dir)
+		if along > 0.0 and along < length and absf(d.dot(dir.orthogonal())) < 34.0:
+			en.take_damage(damage, player)
+	var pts := PackedVector2Array()
+	var steps := 10
+	for i in steps + 1:
+		var p := dir * length * i / steps + Vector2(0, -32)
+		if i > 0 and i < steps:
+			p += dir.orthogonal() * randf_range(-14, 14)
+		pts.append(p)
+	_line_effect("beam", from, pts, color, 0.25)
+
+
+func chain_lightning(from: Vector2, first: Enemy, jumps: int, radius: float, damage: float, _owner: Node2D) -> void:
+	var pts := PackedVector2Array([Vector2(0, -32)])
+	var hit := []
+	var current := first
+	for i in jumps + 1:
+		if current == null:
+			break
+		hit.append(current)
+		current.take_damage(damage, player)
+		pts.append(current.position - from + Vector2(0, -36))
+		var next: Enemy = null
+		var best := radius
+		for e in enemies_in_radius(current.position, radius):
+			if hit.has(e):
+				continue
+			var d := current.position.distance_to(e.position)
+			if d < best:
+				best = d
+				next = e
+		current = next
+	_line_effect("chain", from, pts, SkillDefs.LIGHT, 0.3)
+
+
+func spawn_bolt_strike(at: Vector2) -> void:
+	var pts := PackedVector2Array()
+	for i in 7:
+		pts.append(Vector2(randf_range(-12, 12) if i > 0 and i < 6 else 0.0, -420.0 + 70.0 * i))
+	pts[6] = Vector2.ZERO
+	_line_effect("strike", at, pts, SkillDefs.LIGHT, 0.3)
+	spawn_nova(at, 50.0, SkillDefs.LIGHT, true)
+
+
+func _line_effect(kind: String, at: Vector2, pts: PackedVector2Array, color: Color, life: float) -> void:
+	var e := Effect.new()
+	e.kind = kind
+	e.position = at
+	e.points = pts
+	e.color = color
+	e.life = life
+	e.z_index = 6
+	_add_effect(e)
+
+
+func spawn_cone(at: Vector2, angle: float, length: float, color: Color) -> void:
+	var e := Effect.new()
+	e.kind = "cone"
+	e.position = at
+	e.angle = angle
+	e.radius = length
+	e.color = color
+	e.life = 0.3
+	e.z_index = 5
+	_add_effect(e)
+
+
+func spawn_trail(from: Vector2, to: Vector2, color: Color) -> void:
+	_line_effect("trail", Vector2.ZERO, PackedVector2Array([from + Vector2(0, -30), to + Vector2(0, -30)]), color, 0.3)
+
+
+func spawn_hydra(at: Vector2, duration: float, rate: float, reach: float, damage: float, owner: Node2D) -> void:
+	var e := Effect.new()
+	e.kind = "hydra"
+	e.position = find_open_point(player.position, (at - player.position).normalized(), at.distance_to(player.position), 20.0)
+	e.life = duration
+	e.damage = damage
+	e.owner_node = owner
+	e.params = {"rate": rate, "range": reach}
+	_add_effect(e)
+
+
+func spawn_ward(at: Vector2, duration: float, radius: float) -> void:
+	var e := Effect.new()
+	e.kind = "ward"
+	e.position = at
+	e.life = duration
+	e.radius = radius
 	_add_effect(e)
 
 

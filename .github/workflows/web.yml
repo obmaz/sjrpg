@@ -48,6 +48,12 @@ jobs:
               run: |
                   if grep -E "SCRIPT ERROR|Parse Error|Failed to load script" import.log; then exit 1; fi
 
+            - name: Skill smoke test (casts every skill headless)
+              run: |
+                  ~/godot/godot --headless res://tests/skill_smoke.tscn 2>&1 | tee smoke.log
+                  grep -q "SMOKE DONE failures=0" smoke.log
+                  if grep -E "SCRIPT ERROR" smoke.log; then exit 1; fi
+
             - name: Export web build
               run: |
                   mkdir -p build/web

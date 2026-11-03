@@ -9,6 +9,8 @@ var _toast_time := 0.0
 var _menu: Control
 var _death: Control
 var controls: TouchControls
+var _skill_button: Button
+var _tree_panel: SkillTreePanel
 
 
 func _ready() -> void:
@@ -32,6 +34,16 @@ func _ready() -> void:
 	menu_button.offset_bottom = 64
 	menu_button.pressed.connect(toggle_menu)
 	add_child(menu_button)
+
+	_skill_button = UiKit.button("스킬", 18)
+	_skill_button.custom_minimum_size = Vector2(96, 48)
+	_skill_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_skill_button.offset_left = -196
+	_skill_button.offset_right = -100
+	_skill_button.offset_top = 16
+	_skill_button.offset_bottom = 64
+	_skill_button.pressed.connect(open_skill_tree)
+	add_child(_skill_button)
 
 	_toast = UiKit.label("", 26, UiKit.GOLD, true)
 	_toast.set_anchors_preset(Control.PRESET_TOP_WIDE)
@@ -68,7 +80,7 @@ func _build_menu() -> void:
 	info.name = "Info"
 	info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(info)
-	var help := UiKit.label("이동: WASD/방향키 · 공격: J/스페이스\n기술: K · 물약: Q · 메뉴: Esc", 17, Color(0.8, 0.9, 0.85))
+	var help := UiKit.label("이동: WASD/방향키 · 주 슬롯: J/스페이스\n보조 슬롯: 1–4 (K=1) · 구르기: Shift/L\n물약: Q · 스킬 트리: T · 메뉴: Esc", 17, Color(0.8, 0.9, 0.85))
 	help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(help)
 	var resume := UiKit.button("계속하기")
@@ -103,6 +115,26 @@ func toggle_menu() -> void:
 		info.text = "%s Lv.%d · 처치 %d · 물약 %d" % [GameState.class_info()["name"], GameState.level, GameState.kills, GameState.potions]
 
 
+func open_skill_tree() -> void:
+	if _tree_panel or _menu.visible:
+		return
+	controls.release_all()
+	get_tree().paused = true
+	_tree_panel = SkillTreePanel.new()
+	_tree_panel.closed.connect(close_skill_tree)
+	add_child(_tree_panel)
+
+
+func close_skill_tree() -> void:
+	if _tree_panel == null:
+		return
+	_tree_panel.queue_free()
+	_tree_panel = null
+	get_tree().paused = false
+	game.player.refresh_stats()
+	GameState.save_game()
+
+
 func show_death() -> void:
 	_death.visible = true
 
@@ -117,6 +149,7 @@ func toast(text: String) -> void:
 
 
 func _process(delta: float) -> void:
+	_skill_button.text = "스킬 +%d" % GameState.skill_points if GameState.skill_points > 0 else "스킬"
 	_toast_time = maxf(0.0, _toast_time - delta)
 	_toast.modulate.a = clampf(_toast_time / 0.5, 0.0, 1.0)
 	_bars.queue_redraw()

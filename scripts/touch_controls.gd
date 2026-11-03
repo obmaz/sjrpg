@@ -1,12 +1,13 @@
 class_name TouchControls
 extends Control
-## Multi-touch virtual joystick and combat buttons (mouse also works on desktop).
+## Multi-touch joystick and combat buttons: 주 슬롯 1개 · 보조 슬롯 4개 · 구르기 · 물약.
+## Mouse works too on desktop. Empty slots open the skill tree.
 
 var game: Node
 var _stick_center := Vector2.ZERO
 var _stick_knob := Vector2.ZERO
 var _stick_index := -2  # -2 none, -1 mouse
-var _attack_index := -2
+var _held := {}  # touch index -> button name
 var _buttons := {}  # name -> {center, radius}
 
 const STICK_RADIUS := 78.0
@@ -20,33 +21,42 @@ func _ready() -> void:
 func _layout() -> void:
 	var size := get_viewport_rect().size
 	var unit := clampf(minf(size.x, size.y) / 720.0, 0.75, 2.0)
-	_buttons = {
-		"attack": {"center": size - Vector2(120, 130) * unit, "radius": 62.0 * unit},
-		"skill": {"center": size - Vector2(250, 92) * unit, "radius": 44.0 * unit},
-		"potion": {"center": size - Vector2(110, 270) * unit, "radius": 36.0 * unit},
-	}
+	var main := size - Vector2(120, 130) * unit
+	_buttons = {"slot0": {"center": main, "radius": 62.0 * unit}}
+	# Auxiliary slots fan around the main button, like the original layout.
+	var angles := [182.0, 210.0, 238.0, 266.0]
+	for i in 4:
+		_buttons["slot%d" % (i + 1)] = {"center": main + Vector2.from_angle(deg_to_rad(angles[i])) * 158.0 * unit, "radius": 35.0 * unit}
+	_buttons["roll"] = {"center": main + Vector2(-270, 62) * unit, "radius": 30.0 * unit}
+	_buttons["potion"] = {"center": main + Vector2(48, -232) * unit, "radius": 30.0 * unit}
 	if _stick_index == -2:
 		_stick_center = Vector2(150 * unit, size.y - 150 * unit)
 		_stick_knob = _stick_center
 
 
 func _hit_button(pos: Vector2) -> String:
+	var best := ""
+	var best_d := INF
 	for name in _buttons:
 		var b: Dictionary = _buttons[name]
-		if pos.distance_to(b["center"]) <= b["radius"] * 1.15:
-			return name
-	return ""
+		var d := pos.distance_to(b["center"])
+		if d <= b["radius"] * 1.12 and d < best_d:
+			best = name
+			best_d = d
+	return best
 
 
 func _press(index: int, pos: Vector2) -> bool:
 	var button := _hit_button(pos)
 	var player: Player = game.player
-	if button == "attack":
-		_attack_index = index
-		player.attack_held = true
+	if button.begins_with("slot"):
+		var slot := int(button.substr(4))
+		_held[index] = button
+		player.held_slots[slot] = true
+		player.cast_slot(slot)
 		return true
-	elif button == "skill":
-		player.try_skill()
+	elif button == "roll":
+		player.try_roll()
 		return true
 	elif button == "potion":
 		player.use_potion()
@@ -60,9 +70,9 @@ func _press(index: int, pos: Vector2) -> bool:
 
 
 func _release(index: int) -> void:
-	if index == _attack_index:
-		_attack_index = -2
-		game.player.attack_held = false
+	if _held.has(index):
+		game.player.held_slots[int(String(_held[index]).substr(4))] = false
+		_held.erase(index)
 	if index == _stick_index:
 		_stick_index = -2
 		game.player.move_input = Vector2.ZERO
@@ -79,8 +89,15 @@ func _drag(index: int, pos: Vector2) -> void:
 	game.player.move_input = d / STICK_RADIUS
 
 
+func release_all() -> void:
+	for index in _held.keys():
+		_release(index)
+	if _stick_index != -2:
+		_release(_stick_index)
+
+
 func _input(event: InputEvent) -> void:
-	if get_tree().paused:
+	if get_tree().paused or not visible:
 		return
 	if event is InputEventScreenTouch:
 		if event.pressed:
@@ -111,25 +128,32 @@ func _draw() -> void:
 	draw_arc(_stick_center, STICK_RADIUS, 0, TAU, 48, Color(1, 1, 1, 0.35), 3.0, true)
 	draw_circle(_stick_knob, 34.0, Color(1, 1, 1, 0.35 if _stick_index != -2 else 0.22))
 	var player: Player = game.player
-	var info := GameState.class_info()
-	var labels := {"attack": info["basic"], "skill": info["skill"], "potion": "물약 %d" % GameState.potions}
+	var held_names := _held.values()
 	for name in _buttons:
 		var b: Dictionary = _buttons[name]
 		var c: Vector2 = b["center"]
 		var r: float = b["radius"]
-		var pressed: bool = name == "attack" and _attack_index != -2
-		var base := Color(0.96, 0.84, 0.52, 0.85) if name == "attack" else Color(0.1, 0.25, 0.22, 0.8)
-		if name == "skill" and player.skill_ready_ratio() < 1.0:
-			base = base.darkened(0.4)
-		if pressed:
-			base = base.darkened(0.2)
-		draw_circle(c, r, base)
-		draw_arc(c, r, 0, TAU, 48, Color(0.96, 0.84, 0.52), 3.0, true)
-		if name == "skill" and player.skill_ready_ratio() < 1.0:
-			draw_arc(c, r - 5, -PI / 2, -PI / 2 + TAU * player.skill_ready_ratio(), 32, Color(1, 1, 1, 0.8), 5.0, true)
-		var text: String = labels[name]
-		var fs := 18 if name != "attack" else 22
-		while fs > 11 and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > r * 2.0 - 12.0:
-			fs -= 1
-		var text_color := UiKit.INK if name == "attack" else Color.WHITE
-		draw_string(font, c + Vector2(-r, fs * 0.35), text, HORIZONTAL_ALIGNMENT_CENTER, r * 2, fs, text_color)
+		var pressed: bool = held_names.has(name)
+		draw_circle(c, r, Color(0.05, 0.12, 0.11, 0.78 if not pressed else 0.95))
+		if name.begins_with("slot"):
+			var slot := int(name.substr(4))
+			var id: String = GameState.slots[slot]
+			if id == "":
+				draw_string(font, c + Vector2(-r, r * 0.25), "+", HORIZONTAL_ALIGNMENT_CENTER, r * 2, int(r * 0.8), Color(1, 1, 1, 0.55))
+			else:
+				var s := GameState.skill(id)
+				var affordable := player.resource >= SkillDefs.cost(s, GameState.effective_rank(id))
+				var inner := r * 0.86
+				SkillIcons.draw(self, id, Rect2(c - Vector2(inner, inner), Vector2(inner, inner) * 2.0),
+					Color(1, 1, 1) if affordable else Color(0.45, 0.45, 0.5))
+				var ready := player.slot_cooldown_ratio(slot)
+				if ready < 1.0:
+					draw_circle(c, inner, Color(0, 0, 0, 0.5))
+					draw_arc(c, r - 3, -PI / 2, -PI / 2 + TAU * ready, 32, Color(1, 1, 1, 0.85), 4.0, true)
+		else:
+			var label := "구르기" if name == "roll" else "물약 %d" % GameState.potions
+			var fs := 15
+			while fs > 10 and font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > r * 2.0 - 8.0:
+				fs -= 1
+			draw_string(font, c + Vector2(-r, fs * 0.35), label, HORIZONTAL_ALIGNMENT_CENTER, r * 2, fs, Color.WHITE)
+		draw_arc(c, r, 0, TAU, 48, Color(0.96, 0.84, 0.52), 4.0 if name == "slot0" else 3.0, true)

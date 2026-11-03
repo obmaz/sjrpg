@@ -29,6 +29,13 @@ var _state := "idle"
 var _timer := 0.0
 var _walk_cycle := 0.0
 var _slow_time := 0.0
+var _freeze_time := 0.0
+var _stun_time := 0.0
+var _fear_time := 0.0
+var _fear_from := Vector2.ZERO
+var _taunt_time := 0.0
+var _cry_time := 0.0
+var _cry_value := 0.0
 var _knockback := Vector2.ZERO
 var _wander := Vector2.ZERO
 
@@ -56,16 +63,66 @@ func setup(g: Node, k: String, level: int) -> void:
 
 func slow(duration: float) -> void:
 	_slow_time = maxf(_slow_time, duration)
-	sprite.tint = Color(0.65, 0.85, 1.0)
+
+
+func freeze(duration: float) -> void:
+	_freeze_time = maxf(_freeze_time, duration)
+	_interrupt()
+
+
+func stun(duration: float) -> void:
+	_stun_time = maxf(_stun_time, duration)
+	_interrupt()
+
+
+func fear(duration: float, from: Vector2) -> void:
+	_fear_time = maxf(_fear_time, duration)
+	_fear_from = from
+	_interrupt()
+
+
+func taunt(duration: float) -> void:
+	_taunt_time = maxf(_taunt_time, duration)
+	_fear_time = 0.0
+	_state = "chase"
+
+
+func cry(duration: float, value: float) -> void:
+	_cry_time = maxf(_cry_time, duration)
+	_cry_value = maxf(_cry_value if _cry_time > 0.0 else 0.0, value)
+
+
+func knock(from: Vector2, strength: float) -> void:
+	_knockback = (position - from).normalized() * strength
+
+
+func _interrupt() -> void:
+	if _state == "windup" or _state == "recover":
+		_state = "chase"
+
+
+func _update_tint() -> void:
+	if _freeze_time > 0.0:
+		sprite.tint = Color(0.55, 0.8, 1.0)
+	elif _slow_time > 0.0:
+		sprite.tint = Color(0.72, 0.88, 1.0)
+	elif _fear_time > 0.0:
+		sprite.tint = Color(0.8, 0.7, 1.0)
+	elif _cry_time > 0.0:
+		sprite.tint = Color(1.0, 0.8, 0.7)
+	else:
+		sprite.tint = Color.WHITE
 
 
 func take_damage(amount: float, source: Node2D) -> void:
 	if dead:
 		return
+	if _cry_time > 0.0:
+		amount *= 1.0 + _cry_value
 	hp -= amount
 	sprite.flash = 1.0
 	game.float_text(position + Vector2(0, -sprite.body_height - 20), str(roundi(amount)), Color(1, 0.95, 0.6))
-	if source:
+	if source and _knockback.length() < 160.0:
 		_knockback = (position - source.position).normalized() * 160.0
 	if _state == "idle":
 		_state = "chase"
@@ -86,13 +143,21 @@ func _process(delta: float) -> void:
 		return
 	var player: Player = game.player
 	var rate := 0.5 if _slow_time > 0.0 else 1.0
-	if _slow_time > 0.0:
-		_slow_time -= delta
-		if _slow_time <= 0.0:
-			sprite.tint = Color.WHITE
+	_slow_time = maxf(0.0, _slow_time - delta)
+	_freeze_time = maxf(0.0, _freeze_time - delta)
+	_stun_time = maxf(0.0, _stun_time - delta)
+	_fear_time = maxf(0.0, _fear_time - delta)
+	_taunt_time = maxf(0.0, _taunt_time - delta)
+	_cry_time = maxf(0.0, _cry_time - delta)
+	_update_tint()
 	if _knockback.length() > 1.0:
 		position = game.resolve_movement(position, position + _knockback * delta, RADIUS)
 		_knockback = _knockback.move_toward(Vector2.ZERO, 900.0 * delta)
+	if _freeze_time > 0.0 or _stun_time > 0.0:
+		return
+	if _fear_time > 0.0:
+		_step((position - _fear_from).normalized(), delta * rate)
+		return
 
 	var to_player := player.position - position
 	var dist := to_player.length()
@@ -109,7 +174,7 @@ func _process(delta: float) -> void:
 			if not player.dead and dist < 340.0:
 				_state = "chase"
 		"chase":
-			if player.dead or dist > 700.0:
+			if player.dead or (dist > 700.0 and _taunt_time <= 0.0):
 				_state = "idle"
 			elif dist <= attack_range:
 				_state = "windup"
@@ -123,7 +188,12 @@ func _process(delta: float) -> void:
 			sprite.set_frame(atlas, atlas.attack_frame(facing, progress * 0.6))
 			if _timer <= 0.0:
 				if not player.dead and position.distance_to(player.position) <= attack_range + 22.0:
-					player.take_damage(damage * randf_range(0.85, 1.15))
+					var mult := 1.0
+					if _taunt_time > 0.0:
+						mult *= 0.7
+					if _cry_time > 0.0:
+						mult *= 0.75
+					player.take_damage(damage * mult * randf_range(0.85, 1.15), self)
 				_state = "recover"
 				_timer = 0.7 / rate
 		"recover":

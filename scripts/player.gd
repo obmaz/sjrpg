@@ -1,10 +1,13 @@
 class_name Player
 extends Node2D
-## Hero controller. 전사: 베기 + 회오리 베기(분노), 마법사: 화염탄 + 얼음 폭발(마나).
+## Hero controller. Every combat skill from the skill tree is cast through `cast_slot`.
 
 signal died
+signal open_skills_requested
 
 const RADIUS := 18.0
+const ROLL_TIME := 0.32
+const ROLL_DISTANCE := 170.0
 
 var game: Node
 var sprite: ActorSprite
@@ -16,19 +19,29 @@ var hp := 100.0
 var max_hp := 100.0
 var resource := 0.0
 var resource_max := 100.0
-var speed := 190.0
+var base_speed := 190.0
 var facing := PI / 2.0
 var move_input := Vector2.ZERO
-var attack_held := false
+## Slots held down on touch / keyboard (index 0 = main).
+var held_slots := {}
+
+var buffs := {}  # name -> {"time": float, "value": float, ...}
+var cooldowns := {}  # skill id -> seconds left
+var frenzy_stacks := 0
+var dead := false
 
 var _run_distance := 0.0
+var _blaze_distance := 0.0
+var _storm_timer := 0.0
 var _attack_time := 0.0
 var _attack_duration := 0.42
-var _attack_cooldown := 0.0
-var _attack_hit_done := false
-var _skill_cooldown := 0.0
+var _attack_melee := false
+var _pending: Callable
 var _invulnerable := 0.0
-var dead := false
+var _roll_time := 0.0
+var _roll_dir := Vector2.ZERO
+var _roll_cooldown := 0.0
+var _frenzy_timer := 0.0
 
 
 func setup(g: Node) -> void:
@@ -37,29 +50,83 @@ func setup(g: Node) -> void:
 	is_mage = GameState.hero_class == "mage"
 	atlas = ActorAtlas.get_atlas(info["atlas"])
 	attack_atlas = ActorAtlas.get_atlas(info["attack_atlas"])
-	speed = info["speed"]
-	resource_max = info["resource_max"]
+	base_speed = info["speed"]
 	sprite = ActorSprite.new()
 	sprite.body_height = 74.0
 	add_child(sprite)
 	refresh_stats(true)
 
 
+# ───────────────────────── stats ─────────────────────────
+
+func passive(stat: String) -> float:
+	var best := 0.0
+	var total := 0.0
+	for skill in GameState.skills():
+		var d := SkillDefs.get_def(skill["id"])
+		if d.get("type") != "passive" or d["stat"] != stat:
+			continue
+		var r := GameState.effective_rank(skill["id"])
+		if r <= 0:
+			continue
+		var v: float = d["value"] + d["value_growth"] * (r - 1)
+		best = maxf(best, v)
+		total += v
+	# Weapon masteries do not stack: the strongest one applies to the weapon in hand.
+	return best if stat == "weapon" else total
+
+
+func buff_value(name: String) -> float:
+	return float(buffs[name]["value"]) if buffs.has(name) else 0.0
+
+
 func refresh_stats(full := false) -> void:
-	max_hp = GameState.max_hp()
+	var orders := buff_value("orders")
+	max_hp = GameState.max_hp() * (1.0 + orders)
+	resource_max = GameState.class_info()["resource_max"] * (1.0 + orders)
 	if full:
 		hp = max_hp
 		resource = resource_max if is_mage else 0.0
+	hp = minf(hp, max_hp)
+	resource = minf(resource, resource_max)
 
+
+func defense() -> float:
+	if buffs.has("berserk"):
+		return 0.0
+	var mult := 1.0 + passive("armor") + buff_value("shout") + buff_value("armor") + buff_value("guard")
+	return GameState.defense() * mult
+
+
+func speed() -> float:
+	var s := base_speed * (1.0 + passive("speed"))
+	s *= 1.0 + buff_value("sprint")
+	s *= 1.0 + frenzy_stacks * 0.08
+	return s
+
+
+func damage_for(id: String, mult: float) -> float:
+	var d := SkillDefs.get_def(id)
+	var power := GameState.attack_power() * mult
+	var element: String = d.get("element", "")
+	if element != "":
+		power *= 1.0 + passive(element)
+	elif d.get("throw", false):
+		power *= 1.0 + passive("throw")
+	elif not is_mage:
+		power *= 1.0 + passive("weapon")
+	return power * randf_range(0.9, 1.1)
+
+
+# ───────────────────────── loop ─────────────────────────
 
 func _process(delta: float) -> void:
 	if dead:
 		return
-	_attack_cooldown = maxf(0.0, _attack_cooldown - delta)
-	_skill_cooldown = maxf(0.0, _skill_cooldown - delta)
-	_invulnerable = maxf(0.0, _invulnerable - delta)
+	_tick_timers(delta)
+	var regen := 7.0 * (1.0 + passive("regen"))
 	if is_mage:
-		resource = minf(resource_max, resource + 7.0 * delta)
+		resource = minf(resource_max, resource + regen * delta)
 	else:
 		resource = maxf(0.0, resource - 2.0 * delta)
 	hp = minf(max_hp, hp + max_hp * 0.006 * delta)
@@ -70,97 +137,423 @@ func _process(delta: float) -> void:
 	if input.length() > 1.0:
 		input = input.normalized()
 
-	if Input.is_action_pressed("attack") or attack_held:
-		try_attack()
+	if _roll_time > 0.0:
+		_roll_time -= delta
+		position = game.resolve_movement(position, position + _roll_dir * ROLL_DISTANCE / ROLL_TIME * delta, RADIUS)
+		sprite.set_frame(atlas, atlas.run_frame(facing, int(_roll_time * 40.0)))
+		return
 
-	var attacking := _attack_time > 0.0
-	if attacking:
+	if Input.is_action_pressed("attack"):
+		cast_slot(0, true)
+	for index in held_slots.keys():
+		if held_slots[index]:
+			cast_slot(index, true)
+
+	if _attack_time > 0.0:
 		_attack_time -= delta
 		var progress := 1.0 - _attack_time / _attack_duration
-		if not _attack_hit_done and progress >= 0.45:
-			_attack_hit_done = true
-			_resolve_basic_attack()
+		if _pending.is_valid() and progress >= 0.45:
+			var action := _pending
+			_pending = Callable()
+			action.call()
 		sprite.set_frame(attack_atlas, attack_atlas.action_frame(facing, progress))
-		# Slow drift while swinging keeps the combat readable.
-		position = game.resolve_movement(position, position + input * speed * 0.25 * delta, RADIUS)
+		position = game.resolve_movement(position, position + input * speed() * 0.25 * delta, RADIUS)
 		return
 
 	if input.length() > 0.05:
 		facing = input.angle()
-		var target := position + input * speed * delta
-		var moved: Vector2 = game.resolve_movement(position, target, RADIUS)
-		_run_distance += moved.distance_to(position)
+		var moved: Vector2 = game.resolve_movement(position, position + input * speed() * delta, RADIUS)
+		var step := moved.distance_to(position)
+		_run_distance += step
 		position = moved
-		var phase := int(_run_distance / 16.0)
-		sprite.set_frame(atlas, atlas.run_frame(facing, phase))
+		_drop_blaze(step)
+		sprite.set_frame(atlas, atlas.run_frame(facing, int(_run_distance / 16.0)))
 	else:
 		sprite.set_frame(atlas, atlas.idle_frame(facing))
 
 
-func _aim_at_nearest(range_limit: float) -> void:
-	var target: Node2D = game.nearest_enemy(position, range_limit)
+func _tick_timers(delta: float) -> void:
+	_invulnerable = maxf(0.0, _invulnerable - delta)
+	_roll_cooldown = maxf(0.0, _roll_cooldown - delta)
+	for id in cooldowns.keys():
+		cooldowns[id] = maxf(0.0, cooldowns[id] - delta)
+	var expired := []
+	for name in buffs:
+		buffs[name]["time"] -= delta
+		if buffs[name]["time"] <= 0.0:
+			expired.append(name)
+	for name in expired:
+		buffs.erase(name)
+		if name == "orders":
+			refresh_stats()
+		elif name == "command":
+			GameState.bonus_ranks = 0
+	if frenzy_stacks > 0:
+		_frenzy_timer -= delta
+		if _frenzy_timer <= 0.0:
+			frenzy_stacks = 0
+	if buffs.has("storm"):
+		_storm_timer -= delta
+		if _storm_timer <= 0.0:
+			_storm_timer = 1.6
+			var target: Enemy = game.nearest_enemy(position, 320.0)
+			if target:
+				var d := SkillDefs.get_def("thunderStorm")
+				target.take_damage(damage_for("thunderStorm", SkillDefs.scaled(d["mult"], d["growth"], int(buffs["storm"]["rank"]))), self)
+				game.spawn_bolt_strike(target.position)
+
+
+func _drop_blaze(step: float) -> void:
+	if not buffs.has("blaze"):
+		return
+	_blaze_distance += step
+	if _blaze_distance >= 38.0:
+		_blaze_distance = 0.0
+		var d := SkillDefs.get_def("blaze")
+		game.spawn_zone({"pos": position, "radius": 34.0, "duration": 3.0, "tick": 0.3,
+			"damage": damage_for("blaze", SkillDefs.scaled(d["mult"], d["growth"], int(buffs["blaze"]["rank"]))),
+			"color": SkillDefs.FIRE})
+
+
+# ───────────────────────── casting ─────────────────────────
+
+func slot_cooldown_ratio(index: int) -> float:
+	var id: String = GameState.slots[index]
+	if id == "":
+		return 1.0
+	var total := float(GameState.skill(id).get("cooldown", 0.0))
+	if total <= 0.0:
+		return 1.0
+	return 1.0 - clampf(cooldowns.get(id, 0.0) / total, 0.0, 1.0)
+
+
+## Returns true when the skill was cast. `repeat` is set for held buttons.
+func cast_slot(index: int, repeat := false) -> bool:
+	if dead or _roll_time > 0.0:
+		return false
+	var id: String = GameState.slots[index]
+	if id == "":
+		if not repeat:
+			open_skills_requested.emit()
+		return false
+	var s := GameState.skill(id)
+	var d := SkillDefs.get_def(id)
+	var rank := GameState.effective_rank(id)
+	if rank <= 0 or d.is_empty():
+		return false
+	# Held buttons only repeat attacks, never buffs or movement.
+	if repeat and d["type"] in ["buff", "leap", "blink", "corpse"]:
+		return false
+	if _attack_time > 0.0 or cooldowns.get(id, 0.0) > 0.0:
+		return false
+	var cost := SkillDefs.cost(s, rank)
+	if resource < cost:
+		if not repeat:
+			game.toast("%s이(가) 부족합니다" % GameState.class_info()["resource"])
+		return false
+	var action := _prepare(id, d, rank)
+	if not action.is_valid():
+		return false
+	resource -= cost
+	if float(s["cooldown"]) > 0.0:
+		cooldowns[id] = float(s["cooldown"])
+	_attack_melee = d["type"] in ["melee", "spin", "shadow"]
+	_attack_duration = (0.4 if _attack_melee else 0.46) / (1.0 + frenzy_stacks * 0.08)
+	_attack_time = _attack_duration
+	_pending = action
+	return true
+
+
+func try_roll() -> void:
+	if dead or _roll_time > 0.0 or _roll_cooldown > 0.0:
+		return
+	var dir := move_input if move_input.length() > 0.1 else Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	if dir.length() < 0.1:
+		dir = Vector2.from_angle(facing)
+	_roll_dir = dir.normalized()
+	facing = _roll_dir.angle()
+	_roll_time = ROLL_TIME
+	_roll_cooldown = 0.9
+	_invulnerable = ROLL_TIME + 0.05
+	_attack_time = 0.0
+	_pending = Callable()
+
+
+func _aim(range_limit: float) -> Enemy:
+	var target: Enemy = game.nearest_enemy(position, range_limit)
 	if target:
 		facing = (target.position - position).angle()
+	return target
 
 
-func try_attack() -> void:
-	if dead or _attack_time > 0.0 or _attack_cooldown > 0.0:
-		return
-	if is_mage and resource < 4.0:
-		return
-	_aim_at_nearest(520.0 if is_mage else 160.0)
-	_attack_duration = 0.46 if is_mage else 0.4
-	_attack_time = _attack_duration
-	_attack_cooldown = _attack_duration + 0.05
-	_attack_hit_done = false
-	if is_mage:
-		resource -= 4.0
+func _gain_rage(hits: int) -> void:
+	if not is_mage and hits > 0:
+		resource = minf(resource_max, resource + 5.0 + hits * 3.0)
 
 
-func _resolve_basic_attack() -> void:
-	var power := GameState.attack_power()
-	if is_mage:
-		var dir := Vector2.from_angle(facing)
-		game.spawn_fireball(position + dir * 8.0 + Vector2(0, -34), dir, power * 1.15)
-		return
-	var hits := 0
-	for enemy in game.enemies_in_arc(position, facing, 105.0, deg_to_rad(70)):
-		enemy.take_damage(power * randf_range(0.9, 1.1), self)
-		hits += 1
-	game.spawn_slash(position + Vector2(0, -28), facing, Color(1, 0.92, 0.7))
-	if hits > 0:
-		resource = minf(resource_max, resource + 7.0 + hits * 3.0)
+## Builds the effect that fires at the swing's impact frame.
+func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
+	var power := SkillDefs.scaled(d.get("mult", 1.0), d.get("growth", 0.0), rank)
+	match d["type"]:
+		"melee":
+			_aim(170.0)
+			return func(): _melee(id, d, rank, power)
+		"spin":
+			return func(): _spin(id, d, power)
+		"shadow":
+			if _aim(d["range"]) == null:
+				game.toast("가까운 적이 없습니다")
+				return Callable()
+			return func(): _shadow(id, d, power)
+		"leap":
+			return _prepare_leap(id, d, rank, power)
+		"blink":
+			var dist: float = d["distance"] + d["dist_growth"] * (rank - 1)
+			var dir := move_input if move_input.length() > 0.1 else Input.get_vector("move_left", "move_right", "move_up", "move_down")
+			if dir.length() > 0.1:
+				facing = dir.angle()
+			return func():
+				var from := position
+				position = game.find_open_point(position, Vector2.from_angle(facing), dist, RADIUS)
+				game.spawn_nova(from, 50.0, SkillDefs.LIGHT, true)
+				game.spawn_nova(position, 60.0, SkillDefs.LIGHT, true)
+		"proj":
+			_aim(560.0)
+			return func(): _projectiles(id, d, rank, power)
+		"orb":
+			_aim(560.0)
+			return func():
+				game.spawn_orb(position + Vector2(0, -34), Vector2.from_angle(facing), d, damage_for(id, power), self)
+		"beam":
+			_aim(600.0)
+			return func():
+				var lo := SkillDefs.scaled(d["mult_min"], d["growth"], rank)
+				var hi := SkillDefs.scaled(d["mult_max"], d["growth"], rank)
+				game.spawn_beam(position, facing, d["length"], damage_for(id, randf_range(lo, hi)), d["color"], self)
+		"chain":
+			var first := _aim(d["range"])
+			if first == null:
+				game.toast("사거리 안에 적이 없습니다")
+				return Callable()
+			return func():
+				var jumps := int(d["jumps"] + d["jump_growth"] * (rank - 1))
+				game.chain_lightning(position, first, jumps, d["radius"], damage_for(id, power), self)
+		"cone":
+			_aim(d["range"] + 40.0)
+			return func():
+				var hits: Array = game.enemies_in_arc(position, facing, d["range"], deg_to_rad(d["arc"]))
+				for e in hits:
+					e.take_damage(damage_for(id, power), self)
+				game.spawn_cone(position + Vector2(0, -30), facing, d["range"], d["color"])
+		"nova":
+			return func(): _nova(id, d, rank, power)
+		"zone":
+			var target := _aim(480.0)
+			var at := target.position if target else position + Vector2.from_angle(facing) * 200.0
+			return func(): _zone(id, d, rank, power, at)
+		"summon":
+			return func():
+				var dur: float = d["duration"]
+				game.spawn_hydra(position + Vector2.from_angle(facing) * 60.0, dur, d["rate"], d["range"], damage_for(id, power), self)
+		"buff":
+			return func(): _buff(id, d, rank)
+		"corpse":
+			var corpse = game.nearest_corpse(position, 170.0)
+			if corpse == null:
+				game.toast("가까운 시체가 없습니다")
+				return Callable()
+			return func(): _corpse(d, rank, corpse)
+	return Callable()
 
 
-func try_skill() -> void:
-	if dead or _skill_cooldown > 0.0:
-		return
-	var power := GameState.attack_power()
-	if is_mage:
-		if resource < 28.0:
-			game.toast("마나가 부족합니다")
-			return
-		resource -= 28.0
-		_skill_cooldown = 1.2
-		_attack_duration = 0.5
-		_attack_time = _attack_duration
-		_attack_hit_done = true
-		game.spawn_nova(position, 190.0, Color(0.6, 0.85, 1.0))
-		for enemy in game.enemies_in_radius(position, 190.0):
-			enemy.take_damage(power * 1.8, self)
-			enemy.slow(2.5)
+func _melee(id: String, d: Dictionary, rank: int, power: float) -> void:
+	var hits_total := 0
+	var swings := int(d.get("hits", 1))
+	var enchant := buff_value("enchant") if id == "sorceressAttack" else 0.0
+	for swing in swings:
+		var hits: Array = game.enemies_in_arc(position, facing, d["range"], deg_to_rad(d["arc"]))
+		for e in hits:
+			e.take_damage(damage_for(id, power) * (1.0 + enchant), self)
+			if d.has("knock"):
+				e.knock(position, d["knock"])
+			if d.has("stun"):
+				e.stun(d["stun"] + d.get("stun_growth", 0.0) * (rank - 1))
+		hits_total += hits.size()
+		game.spawn_slash(position + Vector2(0, -28), facing + (0.25 if swing == 1 else 0.0), SkillDefs.FIRE if enchant > 0.0 else SkillDefs.STEEL)
+	_gain_rage(hits_total)
+	if d.get("frenzy", false) and hits_total > 0:
+		frenzy_stacks = mini(frenzy_stacks + 1, 5)
+		_frenzy_timer = 3.0
+	if d.has("self_buff"):
+		buffs[d["self_buff"]] = {"time": d["buff_time"], "value": d["buff_value"]}
+
+
+func _spin(id: String, d: Dictionary, power: float) -> void:
+	var ticks := int(d["ticks"])
+	for i in ticks:
+		get_tree().create_timer(i * 0.12).timeout.connect(func():
+			if dead:
+				return
+			var hits: Array = game.enemies_in_radius(position, d["radius"])
+			for e in hits:
+				e.take_damage(damage_for(id, power), self)
+			_gain_rage(hits.size())
+			game.spawn_nova(position, d["radius"], SkillDefs.STEEL, true))
+
+
+func _shadow(id: String, d: Dictionary, power: float) -> void:
+	var visited := []
+	for i in int(d["targets"]):
+		var next: Enemy = null
+		var best: float = d["range"]
+		for e in game.enemies_in_radius(position, d["range"]):
+			if visited.has(e):
+				continue
+			var dist := position.distance_to(e.position)
+			if dist < best:
+				best = dist
+				next = e
+		if next == null:
+			break
+		visited.append(next)
+		var from := position
+		position = game.find_open_point(position, (next.position - position).normalized(), maxf(0.0, best - 40.0), RADIUS)
+		facing = (next.position - position).angle()
+		game.spawn_trail(from, position, Color(0.6, 0.7, 1.0))
+		next.take_damage(damage_for(id, power), self)
+		game.spawn_slash(position + Vector2(0, -28), facing, Color(0.7, 0.8, 1.0))
+	_gain_rage(visited.size())
+
+
+func _prepare_leap(id: String, d: Dictionary, rank: int, power: float) -> Callable:
+	var dist: float = d["distance"] + d.get("dist_growth", 0.0) * (rank - 1)
+	var target: Enemy = null
+	if d.get("to_enemy", false):
+		target = _aim(dist)
+		if target == null:
+			game.toast("도약할 적이 없습니다")
+			return Callable()
 	else:
-		if resource < 30.0:
-			game.toast("분노가 부족합니다")
-			return
-		resource -= 30.0
-		_skill_cooldown = 0.8
-		_attack_duration = 0.5
-		_attack_time = _attack_duration
-		_attack_hit_done = true
-		game.spawn_nova(position, 150.0, Color(1.0, 0.78, 0.45))
-		for enemy in game.enemies_in_radius(position, 150.0):
-			enemy.take_damage(power * 2.1, self)
+		var dir := move_input if move_input.length() > 0.1 else Input.get_vector("move_left", "move_right", "move_up", "move_down")
+		if dir.length() > 0.1:
+			facing = dir.angle()
+	return func():
+		var from := position
+		var reach := dist
+		if target and is_instance_valid(target):
+			reach = maxf(0.0, position.distance_to(target.position) - 36.0)
+		position = game.find_open_point(position, Vector2.from_angle(facing), reach, RADIUS)
+		game.spawn_trail(from, position, SkillDefs.STEEL)
+		game.spawn_nova(position, d["radius"], SkillDefs.STEEL, true)
+		_invulnerable = maxf(_invulnerable, 0.2)
+		var hits: Array = game.enemies_in_radius(position, d["radius"])
+		for e in hits:
+			if d.has("mult"):
+				e.take_damage(damage_for(id, power), self)
+			if d.has("knock"):
+				e.knock(position, d["knock"])
+		_gain_rage(hits.size())
+
+
+func _projectiles(id: String, d: Dictionary, rank: int, power: float) -> void:
+	var count := mini(int(d.get("count", 1) + d.get("count_growth", 0.0) * (rank - 1)), int(d.get("max_count", 99)))
+	var spread := deg_to_rad(d.get("spread", 0.0))
+	for i in count:
+		var offset := 0.0 if count == 1 else lerpf(-spread / 2.0, spread / 2.0, float(i) / (count - 1))
+		var dir := Vector2.from_angle(facing + offset)
+		game.spawn_projectile({
+			"pos": position + dir * 8.0 + Vector2(0, -34), "dir": dir, "speed": d["speed"],
+			"damage": damage_for(id, power), "color": d["color"], "explode": d.get("explode", 0.0),
+			"slow": d.get("slow", 0.0), "freeze": d.get("freeze", 0.0) + d.get("freeze_growth", 0.0) * (rank - 1),
+			"knock": d.get("knock", 0.0), "wiggle": d.get("wiggle", false), "throw": d.get("throw", false),
+		}, self)
+
+
+func _nova(id: String, d: Dictionary, rank: int, power: float) -> void:
+	var radius: float = d["radius"] + d.get("radius_growth", 0.0) * (rank - 1)
+	game.spawn_nova(position, radius, d["color"])
+	var hits: Array = game.enemies_in_radius(position, radius)
+	for e in hits:
+		if d.has("mult"):
+			e.take_damage(damage_for(id, power), self)
+		if d.has("pct"):
+			e.take_damage(maxf(1.0, e.hp * d["pct"]), self)
+		if d.has("slow"):
+			e.slow(d["slow"])
+		if d.has("stun"):
+			e.stun(d["stun"])
+		if d.has("fear"):
+			e.fear(d["fear"] + d.get("fear_growth", 0.0) * (rank - 1), position)
+		if d.has("taunt"):
+			e.taunt(d["taunt"])
+		if d.has("cry"):
+			e.cry(d["cry"], d["cry_value"] + d["cry_growth"] * (rank - 1))
+	if d.has("mult"):
+		_gain_rage(hits.size())
+
+
+func _zone(id: String, d: Dictionary, rank: int, power: float, at: Vector2) -> void:
+	var z := {"pos": at, "radius": d["radius"], "duration": d["duration"], "tick": d["tick"],
+		"damage": damage_for(id, power), "color": d["color"], "slow": d.get("slow", 0.0),
+		"shards": d.get("shards", false), "delay": d.get("delay", 0.0)}
+	if d.has("impact"):
+		z["impact"] = damage_for(id, SkillDefs.scaled(d["impact"], d["growth"], rank))
+		z["damage"] = damage_for(id, d["mult"])
+	if d.get("wall", false):
+		z["wall"] = facing + PI / 2.0
+	game.spawn_zone(z)
+
+
+func _buff(id: String, d: Dictionary, rank: int) -> void:
+	var dur: float = d["duration"] + d.get("dur_growth", 0.0) * (rank - 1)
+	var v: float = d.get("value", 0.0) + d.get("value_growth", 0.0) * (rank - 1)
+	var name: String = d["buff"]
+	if name == "sprint":
+		dur *= 1.0 + passive("stamina")
+	buffs[name] = {"time": dur, "value": v, "rank": rank, "id": id}
+	if name == "armor":
+		buffs[name]["kind"] = d["armor"]
+	var color := SkillDefs.SHOUT if not is_mage else SkillDefs.COLD
+	match name:
+		"orders":
+			var hp_ratio := hp / max_hp
+			refresh_stats()
+			hp = max_hp * hp_ratio
+		"command":
+			GameState.bonus_ranks = 1
+		"storm":
+			_storm_timer = 0.3
+			color = SkillDefs.LIGHT
+		"blaze", "enchant":
+			color = SkillDefs.FIRE
+		"shield":
+			color = Color(0.7, 0.6, 1.0)
+	game.spawn_nova(position, 90.0, color, true)
+	game.toast(GameState.skill(id)["name"])
+
+
+func _corpse(d: Dictionary, rank: int, corpse: Dictionary) -> void:
+	corpse["used"] = true
+	var chance: float = d.get("chance", 1.0) + d.get("chance_growth", 0.0) * (rank - 1)
+	match d["reward"]:
+		"potion":
+			if randf() < chance:
+				GameState.potions = mini(GameState.potions + 1, 9)
+				game.float_text(corpse["pos"] + Vector2(0, -30), "물약!", Color(0.5, 1, 0.55))
+			else:
+				game.float_text(corpse["pos"] + Vector2(0, -30), "아무것도 없음", Color(0.8, 0.8, 0.8))
+		"item":
+			if randf() < chance:
+				var bonus := 6 + GameState.level * 3
+				game.grant_xp(bonus)
+				game.float_text(corpse["pos"] + Vector2(0, -30), "전리품 +%d XP" % bonus, Color(1, 0.85, 0.4))
+				if randf() < 0.25:
+					GameState.potions = mini(GameState.potions + 1, 9)
+			else:
+				game.float_text(corpse["pos"] + Vector2(0, -30), "아무것도 없음", Color(0.8, 0.8, 0.8))
+		"ward":
+			game.spawn_ward(corpse["pos"], d["duration"] + d["dur_growth"] * (rank - 1), d["radius"])
+	game.remove_corpse(corpse)
 
 
 func use_potion() -> void:
@@ -171,30 +564,52 @@ func use_potion() -> void:
 	game.float_text(position + Vector2(0, -90), "+%d" % roundi(max_hp * 0.45), Color(0.5, 1, 0.55))
 
 
-func take_damage(amount: float) -> void:
+func take_damage(amount: float, attacker: Node2D = null) -> void:
 	if dead or _invulnerable > 0.0:
 		return
-	var dealt := maxf(1.0, amount - GameState.defense())
+	var dealt := maxf(1.0, amount - defense()) * (1.0 - minf(0.5, passive("resist")))
+	if buffs.has("shield") and resource > 0.0:
+		var absorbed := minf(dealt * buff_value("shield"), resource / 1.5)
+		resource -= absorbed * 1.5
+		dealt -= absorbed
 	hp -= dealt
 	_invulnerable = 0.25
 	sprite.flash = 1.0
 	if not is_mage:
 		resource = minf(resource_max, resource + 4.0)
 	game.float_text(position + Vector2(0, -90), str(roundi(dealt)), Color(1, 0.4, 0.35))
+	if attacker and is_instance_valid(attacker) and buffs.has("armor"):
+		_armor_retaliate(attacker)
 	if hp <= 0.0:
 		hp = 0.0
 		dead = true
+		buffs.clear()
+		GameState.bonus_ranks = 0
 		sprite.tint = Color(1, 1, 1, 0.45)
 		died.emit()
+
+
+func _armor_retaliate(attacker: Node2D) -> void:
+	var b: Dictionary = buffs["armor"]
+	var rank := int(b["rank"])
+	match b["kind"]:
+		"frozen":
+			attacker.freeze(1.0 + 0.05 * rank)
+		"shiver":
+			attacker.take_damage(GameState.attack_power() * (0.6 + 0.06 * rank) * (1.0 + passive("cold")), self)
+			attacker.slow(2.0)
+		"chilling":
+			var dir := (attacker.position - position).normalized()
+			game.spawn_projectile({"pos": position + Vector2(0, -34), "dir": dir, "speed": 600.0,
+				"damage": GameState.attack_power() * (0.7 + 0.07 * rank) * (1.0 + passive("cold")),
+				"color": SkillDefs.COLD, "slow": 2.0}, self)
 
 
 func revive(at: Vector2) -> void:
 	dead = false
 	position = at
 	sprite.tint = Color.WHITE
+	frenzy_stacks = 0
+	cooldowns.clear()
 	refresh_stats(true)
 	_invulnerable = 2.0
-
-
-func skill_ready_ratio() -> float:
-	return 1.0 - clampf(_skill_cooldown / 1.2, 0.0, 1.0)
