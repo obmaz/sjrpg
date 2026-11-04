@@ -1,0 +1,4 @@
+# Authoring tools only; Godot runtime and CI use committed artifacts.
+Pillow>=10
+numpy>=1.26
+opencv-python-headless>=4.10

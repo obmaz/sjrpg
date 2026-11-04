@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+"""Pack revised town illustrations and derive placement/collision data from measured source coordinates.
+Run python3 tools/extract/town_art.py; extract_data.py also applies merge() after original extraction.
+The collision rectangles are geometric models, never evidence of the illustration's projection.
+"""
+import copy
+import json
+import math
+from pathlib import Path
+import numpy as np
+from PIL import Image
+import chapel
+
+ROOT = Path(__file__).resolve().parents[2]
+M = json.loads(Path(__file__).with_name('town_art_measure.json').read_text())
+WARPS = json.loads((ROOT/'assets/data/art_warps.json').read_text())
+COS = math.sqrt(3)/2
+
+
+def warp(key, point, inverse=False):
+    if key not in WARPS:
+        return np.asarray(point, float)
+    mesh = WARPS[key]
+    points = np.array(mesh['points'])
+    src = points[:, 2:] if inverse else points[:, :2]
+    dst = points[:, :2] if inverse else points[:, 2:]
+    for ids in mesh['triangles']:
+        a,b,c = src[ids]
+        matrix = np.array([b-a,c-a]).T
+        if abs(np.linalg.det(matrix)) < 1e-6:
+            continue
+        u,v = np.linalg.solve(matrix,np.asarray(point)-a)
+        if u>=-.001 and v>=-.001 and u+v<=1.001:
+            return dst[ids[0]]*(1-u-v)+dst[ids[1]]*u+dst[ids[2]]*v
+    return np.asarray(point,float)
+
+
+def correction(config, point, inverse=False):
+    yscale,skew = config.get('gvs',1), config.get('gvk',0)
+    if inverse:
+        q=np.array([point[0],(point[1]-point[0]*skew)/yscale])
+        return warp(config.get('warp',''),q,True)
+    q=warp(config.get('warp',''),point)
+    return np.array([q[0],q[1]*yscale+q[0]*skew])
+
+
+def uv(world, data):
+    x,y=np.asarray(world)/.97
+    ground=np.array([(x/COS+y/.5)/2,(y/.5-x/COS)/2])
+    return (ground/data['extent']+data['spawn_uv']).tolist()
+
+
+def derive(key, config, data):
+    im=Image.open(ROOT/config['png']);p=config['packing'];x,y=config['xy'];ref=M['reference'][key]
+    F=correction(config,config['foot']);L,R,_=map(lambda q:correction(config,q),config['ground'])
+    # A rectangular collision model calibrated to the visible footprint; the art audit uses separate samples.
+    L=F+np.array([-COS,-.5])*np.linalg.norm(L-F)
+    R=F+np.array([COS,-.5])*np.linalg.norm(R-F)
+    polygon=np.array([L,L+R-F,R,F]);scale=ref['width']/np.ptp(polygon[:,0])
+    centre_offset=(polygon.mean(0)-F)*scale
+    placement=np.array(ref['center'])-centre_offset
+    height=config['foot'][1]*p
+    origin=np.array([x,y]);raw_foot=np.array(config['foot'])
+    s=dict(sheet='forest-isometric-town',source=[x,y,round(im.width*p),round(im.height*p)],foot=(origin+raw_foot*p).tolist(),height=height,origin=[0,0],packing=p,world_height=scale*height/p/.97,body=None,gvs=config.get('gvs',1),gvk=config.get('gvk',0))
+    if 'warp' in config:s['warp']=config['warp']
+    frame=dict(ground=[(origin+correction(config,q,True)*p).tolist() for q in polygon],height=height,foot=s['foot'])
+    data['sprites'][key]=s;data['frames'][key]=frame;data['placements'][key]=[uv(placement,data),s['world_height']/56.64]
+    if ref['approach']:
+        target=(np.array(ref['approach'])-placement)/scale+F
+        data['approaches'][key]=correction(config,target,True).tolist()
+
+
+def merge(data):
+    for key,config in M['buildings'].items():derive(key,config,data)
+    # Fountain pixels and geometry are retained; only their atlas location changes.
+    pool=json.loads(Path(__file__).with_name('pool_measure.json').read_text());s=copy.deepcopy(pool['sprite']);frame=copy.deepcopy(pool['frame']);old=np.array(s['source'][:2]);new=np.array([6,2054]);shift=new-old
+    s['source'][:2]=new.tolist();s['foot']=(np.array(s['foot'])+shift).tolist();s['origin']=[0,0];s['packing']=1
+    frame['ground']=[(np.array(q)+shift).tolist() for q in frame['ground']];frame['foot']=s['foot']
+    data['sprites']['pool']=s;data['frames']['pool']=frame
+    chapel.merge(data)
+    # Preserve the chapel's old footprint centre/width so revised pixels do not move its yard into a wall.
+    s=data['sprites']['chapel'];raw=np.array(data['frames']['chapel']['ground']);f=np.array(s['foot']);q=raw-f;q[:,1]=q[:,1]*s['gvs']+q[:,0]*s['gvk'];ref=M['reference']['chapel'];scale=ref['width']/np.ptp(q[:,0]);s['world_height']=scale*s['height']/.97
+    placement=np.array(ref['center'])-q.mean(0)*scale;data['placements']['chapel']=[uv(placement,data),s['world_height']/56.64]
+    return data
+
+
+def pack():
+    sheet=Image.new('RGBA',(2048,2940),(0,0,0,0))
+    for key,c in M['buildings'].items():
+        im=Image.open(ROOT/c['png']).convert('RGBA');p=c['packing'];size=(round(im.width*p),round(im.height*p));image=im.convert('RGBa').resize(size,Image.Resampling.LANCZOS).convert('RGBA');image=Image.fromarray(chapel._bleed(np.array(image)));sheet.paste(image,tuple(c['xy']))
+    pool=Image.open(ROOT/'assets/source/town-pool.png');sheet.paste(pool,(6,2054));target=ROOT/'assets/art/village/town.webp';temporary=target.with_suffix('.tmp')
+    sheet.save(temporary,'WEBP',quality=94,alpha_quality=100,method=6,exact=True);temporary.replace(target)
+    chapel.pack()
+
+
+if __name__=='__main__':
+    import sys
+    if '--data' not in sys.argv:pack()
+    path=ROOT/'assets/data/village.json';data=json.loads(path.read_text());path.write_text(json.dumps(merge(data),indent=1)+'\n')
+    print('revised town art packed/merged')

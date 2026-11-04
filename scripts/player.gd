@@ -139,7 +139,7 @@ func _process(delta: float) -> void:
 
 	if _roll_time > 0.0:
 		_roll_time -= delta
-		position = game.resolve_movement(position, position + _roll_dir * ROLL_DISTANCE / ROLL_TIME * delta, RADIUS)
+		position = game.move_actor(position, position + _roll_dir * ROLL_DISTANCE / ROLL_TIME * delta, RADIUS)
 		sprite.set_frame(atlas, atlas.run_frame(facing, int(_roll_time * 40.0)))
 		return
 
@@ -157,12 +157,12 @@ func _process(delta: float) -> void:
 			_pending = Callable()
 			action.call()
 		sprite.set_frame(attack_atlas, attack_atlas.action_frame(facing, progress))
-		position = game.resolve_movement(position, position + input * speed() * 0.25 * delta, RADIUS)
+		position = game.move_actor(position, position + input * speed() * 0.25 * delta, RADIUS)
 		return
 
 	if input.length() > 0.05:
 		facing = input.angle()
-		var moved: Vector2 = game.resolve_movement(position, position + input * speed() * delta, RADIUS)
+		var moved: Vector2 = game.move_actor(position, position + input * speed() * delta, RADIUS)
 		var step := moved.distance_to(position)
 		_run_distance += step
 		position = moved

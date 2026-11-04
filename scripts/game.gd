@@ -443,6 +443,17 @@ func _blocked(p: Vector2, r: float) -> bool:
 	return false
 
 
+## Sweep actor motion in radius-sized steps so slow frames/rolling cannot skip thin ledges.
+## Spawn/debug placement still uses resolve_movement to validate its destination independently.
+func move_actor(from: Vector2, to: Vector2, r: float, keep_out_town := false) -> Vector2:
+	var steps := maxi(1, ceili(from.distance_to(to) / maxf(4.0, r * 0.5)))
+	var increment := (to - from) / steps
+	var current := from
+	for step in steps:
+		current = resolve_movement(current, current + increment, r, keep_out_town)
+	return current
+
+
 ## Slides a moving circle against trees, buildings, walls and cliffs.
 ## Monsters (`keep_out_town`) never enter the safe town.
 func resolve_movement(from: Vector2, to: Vector2, r: float, keep_out_town := false) -> Vector2:

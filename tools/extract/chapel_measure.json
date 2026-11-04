@@ -1,23 +1,79 @@
 {
- "_doc": "assets/source/chapel-new.png(1536x1536 RGBA)에서 직접 잰 값. 좌표는 모두 PNG 원본 픽셀. 도출은 chapel.py.",
+ "_doc": "assets/source/chapel-new.png(1254x1254 RGBA)\uc758 \uc2e4\uce21\uac12. \uc88c\ud45c\ub294 PNG \ud53d\uc140. \uae30\ud558 \ubaa8\ub378\uc740 chapel.py, \uc2e4\uc81c \uc0c1\u00b7\uc911\u00b7\ud558\ub2e8 \ubaa8\uc11c\ub9ac\ub294 art_axis_measure.json\uc5d0\uc11c \ubcc4\ub3c4\ub85c \uac80\uc99d.",
  "png": "assets/source/chapel-new.png",
- "foot_F": [775, 1380],
- "foot_R": [1425, 1020],
- "foot_L": [210, 1055],
- "cliff_height": 190,
+ "foot_F": [
+  623,
+  1238
+ ],
+ "foot_R": [
+  1215,
+  925
+ ],
+ "foot_L": [
+  70,
+  955
+ ],
+ "cliff_height": 178,
  "measured_deg": {
-  "_doc": "밝은 코핑/어두운 절벽 경계의 수직 기울기를 열마다 찾아 Theil-Sen으로 맞춘 값(잔차 중앙값 1.6~7px), 바닥 실루엣은 하한선 접선",
-  "coping_front_right": -29.0,
-  "coping_front_left": 29.9,
-  "foot_silhouette_front_right": -29.3
+  "coping_front_right": -29.22,
+  "roof_eave": -27.07,
+  "foundation_right": -28.36
  },
- "stair_t": [0.375, 0.605],
- "stair_travel": [-205, 300],
+ "stair_t": [
+  0.3,
+  0.6
+ ],
+ "stair_travel": [
+  -220,
+  264
+ ],
  "yard_inset": 0.03,
- "building_s": [0.2, 0.8],
- "building_t": [0.3, 0.7],
- "placement": [[0.89, 0.466], 21.4],
- "placement_doc": "21.4 = 이전(10.7)의 2배. 윗면(yard)이 화면에서 북쪽 성벽 안쪽·북문 날개벽 아래(v≥0.115), 동쪽 성벽·동문 안쪽(u≤0.906), 정면은 동서 길 가장자리(v≈0.453)에 닿도록 고른 값. 테스트(tests/cases/chapel.gd)가 겹침을 검사한다.",
- "chests_moved": [[[0.57, 0.25], [0.56, 0.30]], [[0.65, 0.43], [0.555, 0.42]]],
- "atlas": {"sheet": "forest-isometric-town", "xy": [730, 2040], "packing": 0.65}
+ "building_s": [
+  0.25,
+  0.95
+ ],
+ "building_t": [
+  0.265,
+  0.645
+ ],
+ "placement": [
+  [
+   0.89,
+   0.466
+  ],
+  21.4
+ ],
+ "placement_doc": "\uc6d0\ud654 \uc804\uccb4 \uad6c\uc870\uc120 \uc7ac\uac80\uc0ac\uc640 \ubc30\uce58 \ubcf4\uc874\uc740 town_art_measure.json \ubc0f art_axes.json \ucc38\uc870.",
+ "chests_moved": [
+  [
+   [
+    0.57,
+    0.25
+   ],
+   [
+    0.56,
+    0.3
+   ]
+  ],
+  [
+   [
+    0.65,
+    0.43
+   ],
+   [
+    0.555,
+    0.42
+   ]
+  ]
+ ],
+ "atlas": {
+  "sheet": "forest-isometric-town",
+  "xy": [
+   730,
+   2040
+  ],
+  "packing": 0.65
+ },
+ "gvs": 1.05,
+ "gvk": 0
 }

@@ -175,6 +175,8 @@ def extract_village(src, out):
     chapel.merge(data)
     # 원본 성문(gate-*, gate_contacts)은 얇은 기둥 문이라 새 쌍탑 문루 원화로 바꾼다(`python3 tools/extract/gate.py`).
     gate.merge(data)
+    import town_art
+    town_art.merge(data)
     (out / "village.json").write_text(json.dumps(data, indent=1))
     print("village.json", len(sprites), "sprites (+ chapel, gates from chapel.py, gate.py)")
 
@@ -217,6 +219,8 @@ def extract_landmarks(src, out):
             return polys(balanced(e, st, "[", "]")[0])
 
         result.append(dict(outline=offs(ob), entrance=entrance, faces=key("faces"), solids=key("solids"), water=key("water")))
+    import landmark_art
+    landmark_art.merge(result)
     (out / "landmarks.json").write_text(json.dumps(result))
     print("landmarks.json", len(result))
 

@@ -1,0 +1,1956 @@
+{
+ "version": 1,
+ "tolerance_degrees": 2.5,
+ "parallel_tolerance_degrees": 2.5,
+ "records": [
+  {
+   "id": "nw",
+   "kind": "sprite",
+   "key": "nw",
+   "source_file": "assets/source/town-nw.png",
+   "source_rect": null,
+   "source_size": [
+    1254,
+    1254
+   ],
+   "render_file": "assets/art/village/town.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "roof ridge",
+     "a": [
+      350.0,
+      54.0
+     ],
+     "b": [
+      700.0,
+      254.0
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front eave",
+     "a": [
+      73.0,
+      379.0
+     ],
+     "b": [
+      807.0,
+      795.0
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front upper beam",
+     "a": [
+      80.0,
+      558.0
+     ],
+     "b": [
+      562.0,
+      828.0
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front foundation",
+     "a": [
+      138.0,
+      868.0
+     ],
+     "b": [
+      694.0,
+      1189.0
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "gable upper beam",
+     "a": [
+      780.0,
+      784.0
+     ],
+     "b": [
+      1176.0,
+      580.0
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "gable middle beam",
+     "a": [
+      764.0,
+      969.0
+     ],
+     "b": [
+      1161.0,
+      771.0
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "gable foundation",
+     "a": [
+      800.0,
+      1205.0
+     ],
+     "b": [
+      1100.0,
+      1034.0
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "front corner",
+     "a": [
+      764.0,
+      969.0
+     ],
+     "b": [
+      764.0,
+      1207.0
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "left corner",
+     "a": [
+      96.0,
+      435.0
+     ],
+     "b": [
+      96.0,
+      845.0
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "right corner",
+     "a": [
+      1164.0,
+      615.0
+     ],
+     "b": [
+      1164.0,
+      1000.0
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ],
+   "source_sha256": "14446d5ab2a77d87b19faf51dd2985302c143ce279de51a466b0676bef37664e",
+   "render_sha256": "14eb78cae054deb47f430f4eb97c67df87f80f553bb6033bad292e10c6b1e654"
+  },
+  {
+   "id": "sw",
+   "kind": "sprite",
+   "key": "sw",
+   "source_file": "assets/source/town-sw.png",
+   "source_rect": null,
+   "source_size": [
+    1536,
+    1024
+   ],
+   "render_file": "assets/art/village/town.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "roof ridge",
+     "a": [
+      450.0,
+      27.0
+     ],
+     "b": [
+      1045.0,
+      351.0
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front eave",
+     "a": [
+      222.0,
+      300.0
+     ],
+     "b": [
+      888.0,
+      639.0
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front foundation",
+     "a": [
+      423.0,
+      780.0
+     ],
+     "b": [
+      806.0,
+      988.0
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "gable upper beam",
+     "a": [
+      893.0,
+      630.0
+     ],
+     "b": [
+      1256.0,
+      459.0
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "stall rail",
+     "a": [
+      955.0,
+      823.0
+     ],
+     "b": [
+      1235.0,
+      667.0
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "gable foundation",
+     "a": [
+      888.0,
+      1021.0
+     ],
+     "b": [
+      1259.0,
+      822.0
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "front corner",
+     "a": [
+      884.0,
+      653.0
+     ],
+     "b": [
+      884.0,
+      995.0
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "left corner",
+     "a": [
+      244.0,
+      363.0
+     ],
+     "b": [
+      244.0,
+      622.0
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "right corner",
+     "a": [
+      1257.0,
+      462.0
+     ],
+     "b": [
+      1257.0,
+      824.0
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ],
+   "source_sha256": "809adcf34048c51dc098eadf01d7f6d837dee9afdd9784f0c0026bcb835d91e4",
+   "render_sha256": "14eb78cae054deb47f430f4eb97c67df87f80f553bb6033bad292e10c6b1e654"
+  },
+  {
+   "id": "se",
+   "kind": "sprite",
+   "key": "se",
+   "source_file": "assets/source/town-se.png",
+   "source_rect": null,
+   "source_size": [
+    1254,
+    1254
+   ],
+   "render_file": "assets/art/village/town.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "roof ridge",
+     "a": [
+      400.0,
+      74.0
+     ],
+     "b": [
+      747.0,
+      274.0
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front eave",
+     "a": [
+      66.0,
+      387.0
+     ],
+     "b": [
+      814.0,
+      793.0
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front middle beam",
+     "a": [
+      336.0,
+      648.0
+     ],
+     "b": [
+      818.0,
+      901.0
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "front stair tread",
+     "a": [
+      118.0,
+      1027.0
+     ],
+     "b": [
+      300.0,
+      1131.0
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "gable upper beam",
+     "a": [
+      820.0,
+      820.0
+     ],
+     "b": [
+      1185.0,
+      625.0
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "gable middle beam",
+     "a": [
+      820.0,
+      917.0
+     ],
+     "b": [
+      1182.0,
+      721.0
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "gable foundation",
+     "a": [
+      830.0,
+      1222.0
+     ],
+     "b": [
+      1160.0,
+      1033.0
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "front corner",
+     "a": [
+      812.0,
+      932.0
+     ],
+     "b": [
+      812.0,
+      1213.0
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "left corner",
+     "a": [
+      131.0,
+      467.0
+     ],
+     "b": [
+      131.0,
+      905.0
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "right corner",
+     "a": [
+      1185.0,
+      750.0
+     ],
+     "b": [
+      1185.0,
+      1015.0
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ],
+   "source_sha256": "c0c11850aec11ab8d32ec3676cfa9e6120101393438b2ed1423e547434d4a572",
+   "render_sha256": "14eb78cae054deb47f430f4eb97c67df87f80f553bb6033bad292e10c6b1e654"
+  },
+  {
+   "id": "ne",
+   "kind": "sprite",
+   "key": "ne",
+   "source_file": "assets/source/town-ne.png",
+   "source_rect": null,
+   "source_size": [
+    1536,
+    1024
+   ],
+   "render_file": "assets/art/village/town.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "roof ridge",
+     "a": [
+      496,
+      62
+     ],
+     "b": [
+      1069,
+      386
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front eave",
+     "a": [
+      251,
+      320
+     ],
+     "b": [
+      836,
+      634
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front beam",
+     "a": [
+      224,
+      329
+     ],
+     "b": [
+      696,
+      580
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "front paving edge",
+     "a": [
+      140,
+      605
+     ],
+     "b": [
+      837,
+      992
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "gable beam",
+     "a": [
+      931,
+      719
+     ],
+     "b": [
+      1307,
+      513
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "workbench front",
+     "a": [
+      970,
+      861
+     ],
+     "b": [
+      1191,
+      738
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "gable paving edge",
+     "a": [
+      927,
+      1018
+     ],
+     "b": [
+      1106,
+      917
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "front timber post",
+     "a": [
+      934,
+      742
+     ],
+     "b": [
+      934,
+      965
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ],
+   "source_sha256": "800939381ee413eea82c574138c7ac57405ddd2e1309791f4142a52e081c6603",
+   "render_sha256": "14eb78cae054deb47f430f4eb97c67df87f80f553bb6033bad292e10c6b1e654"
+  },
+  {
+   "id": "chapel",
+   "kind": "sprite",
+   "key": "chapel",
+   "source_file": "assets/source/chapel-new.png",
+   "source_rect": null,
+   "source_size": [
+    1254,
+    1254
+   ],
+   "render_file": "assets/art/village/town.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "roof eave",
+     "a": [
+      544,
+      675
+     ],
+     "b": [
+      992,
+      446
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "roof ridge",
+     "a": [
+      544,
+      448
+     ],
+     "b": [
+      733,
+      345
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "front door step",
+     "a": [
+      420,
+      814
+     ],
+     "b": [
+      547,
+      878
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "left coping",
+     "a": [
+      114,
+      735
+     ],
+     "b": [
+      281,
+      824
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "right coping",
+     "a": [
+      631,
+      991
+     ],
+     "b": [
+      1187,
+      680
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "right foundation",
+     "a": [
+      752,
+      1168
+     ],
+     "b": [
+      1128,
+      965
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "front foundation",
+     "a": [
+      400,
+      1114
+     ],
+     "b": [
+      560,
+      1203
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "facade jamb",
+     "a": [
+      420,
+      517
+     ],
+     "b": [
+      420,
+      760
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "door jamb",
+     "a": [
+      529,
+      596
+     ],
+     "b": [
+      530,
+      824
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ],
+   "source_sha256": "abe084c4975b3d371051dbeb29b344b41516760d942b4c7eef71c80e991493b9",
+   "render_sha256": "14eb78cae054deb47f430f4eb97c67df87f80f553bb6033bad292e10c6b1e654"
+  },
+  {
+   "id": "bridge",
+   "kind": "bridge",
+   "key": "bridge",
+   "source_file": "assets/source/bridge-new.png",
+   "source_rect": null,
+   "source_size": [
+    1536,
+    1024
+   ],
+   "render_file": "assets/art/village/bridge.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "back parapet",
+     "a": [
+      180,
+      715
+     ],
+     "b": [
+      755,
+      377
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "front coping",
+     "a": [
+      787,
+      605
+     ],
+     "b": [
+      1375,
+      272
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "front lower course",
+     "a": [
+      305,
+      933
+     ],
+     "b": [
+      731,
+      691
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "far pier course",
+     "a": [
+      1042,
+      624
+     ],
+     "b": [
+      1381,
+      436
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "near deck end",
+     "a": [
+      112,
+      759
+     ],
+     "b": [
+      324,
+      882
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "far deck end",
+     "a": [
+      1205,
+      136
+     ],
+     "b": [
+      1382,
+      238
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "back post cap left",
+     "a": [
+      1124,
+      45
+     ],
+     "b": [
+      1165,
+      22
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "back post cap right",
+     "a": [
+      1165,
+      22
+     ],
+     "b": [
+      1209,
+      46
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "near post cap left",
+     "a": [
+      331,
+      815
+     ],
+     "b": [
+      372,
+      791
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "front post",
+     "a": [
+      366,
+      852
+     ],
+     "b": [
+      366,
+      975
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ],
+   "source_sha256": "0cdfc991d6cc71dc51e5246b0e27859bdb2877d72fd4ed7061a7e8be292cc1ca",
+   "render_sha256": "df4ad8a1daa01e38f5d913447f2f980ac268484bb5ab283840dd8c7b7ad65a05"
+  },
+  {
+   "id": "gate-0",
+   "kind": "sprite",
+   "key": "gate-0",
+   "source_file": "assets/source/gate-new-a.png",
+   "source_rect": null,
+   "source_size": [
+    1024,
+    1024
+   ],
+   "render_file": "assets/art/village/gates.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "left wing top",
+     "a": [
+      58,
+      342
+     ],
+     "b": [
+      192,
+      414
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "left wing course",
+     "a": [
+      60,
+      450
+     ],
+     "b": [
+      192,
+      521
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "left wing foot",
+     "a": [
+      58,
+      561
+     ],
+     "b": [
+      192,
+      633
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "right wing course",
+     "a": [
+      734,
+      878
+     ],
+     "b": [
+      879,
+      956
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "right wing foot",
+     "a": [
+      744,
+      906
+     ],
+     "b": [
+      891,
+      986
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "end cap depth",
+     "a": [
+      905,
+      742
+     ],
+     "b": [
+      963,
+      709
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "end footing depth",
+     "a": [
+      902,
+      978
+     ],
+     "b": [
+      959,
+      946
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "left vertical corner",
+     "a": [
+      58,
+      349
+     ],
+     "b": [
+      58,
+      550
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ],
+   "source_sha256": "2f8d7044e57457cc50a11320de6750a46a6374bc37efaadc40869b1f7b3d1b25",
+   "render_sha256": "b70675dcb0e210331bb2da020f0278285de296cfe2a9d9c60b6dff00be61f324"
+  },
+  {
+   "id": "gate-2",
+   "kind": "sprite",
+   "key": "gate-2",
+   "source_file": "assets/source/gate-new-b.png",
+   "source_rect": null,
+   "source_size": [
+    1024,
+    1024
+   ],
+   "render_file": "assets/art/village/gates.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "rear parapet",
+     "a": [
+      278,
+      323
+     ],
+     "b": [
+      729,
+      106
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "front high course",
+     "a": [
+      843,
+      401
+     ],
+     "b": [
+      983,
+      335
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "front low course",
+     "a": [
+      852,
+      654
+     ],
+     "b": [
+      987,
+      590
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "left wing foot",
+     "a": [
+      156,
+      987
+     ],
+     "b": [
+      288,
+      925
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "left end top",
+     "a": [
+      44,
+      681
+     ],
+     "b": [
+      143,
+      738
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "left end foot",
+     "a": [
+      44,
+      931
+     ],
+     "b": [
+      143,
+      989
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "right vertical corner",
+     "a": [
+      847,
+      291
+     ],
+     "b": [
+      847,
+      695
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ],
+   "source_sha256": "1ff4f39732ace0fbd123b5474bdb931ee00512f4454ad96c52791bb580336e68",
+   "render_sha256": "b70675dcb0e210331bb2da020f0278285de296cfe2a9d9c60b6dff00be61f324"
+  },
+  {
+   "id": "wall-a",
+   "kind": "wall",
+   "key": "a",
+   "source_file": "assets/source/wall-seg-a.png",
+   "source_rect": null,
+   "source_size": [
+    302,
+    731
+   ],
+   "render_file": "assets/art/village/walls.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "upper coping",
+     "a": [
+      301.01,
+      433.7
+     ],
+     "b": [
+      0.15,
+      262.71
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "middle mortar",
+     "a": [
+      186.55,
+      471.18
+     ],
+     "b": [
+      106.54,
+      424.95
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "lower course",
+     "a": [
+      133.12,
+      634.39
+     ],
+     "b": [
+      20.13,
+      570.25
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "front merlon top depth",
+     "a": [
+      175.76,
+      270.86
+     ],
+     "b": [
+      217.98,
+      246.62
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "rear merlon depth",
+     "a": [
+      102.85,
+      176.4
+     ],
+     "b": [
+      63.04,
+      199.23
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "vertical stone edge",
+     "a": [
+      77,
+      304
+     ],
+     "b": [
+      77,
+      353
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ],
+   "source_sha256": "525657adfb98aba3fba410c9fd94f606f63dad843973099172aca33806f88bd0",
+   "render_sha256": "098d1e49e9abdcefd85941032c25d10587208c810143354144c6edf109e21445"
+  },
+  {
+   "id": "wall-b",
+   "kind": "wall",
+   "key": "b",
+   "source_file": "assets/source/wall-seg-b.png",
+   "source_rect": null,
+   "source_size": [
+    300,
+    801
+   ],
+   "render_file": "assets/art/village/walls.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "upper coping",
+     "a": [
+      298.82,
+      298.2
+     ],
+     "b": [
+      -0.35,
+      455.01
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "middle course",
+     "a": [
+      0.29,
+      431.24
+     ],
+     "b": [
+      192.19,
+      331.23
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "lower footing",
+     "a": [
+      298.71,
+      640.47
+     ],
+     "b": [
+      0.84,
+      799.77
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "merlon cap depth",
+     "a": [
+      108.18,
+      236.78
+     ],
+     "b": [
+      173.02,
+      270.82
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "other cap depth",
+     "a": [
+      298.25,
+      180.38
+     ],
+     "b": [
+      254.49,
+      157.9
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "vertical merlon",
+     "a": [
+      128,
+      101
+     ],
+     "b": [
+      128,
+      158
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ],
+   "source_sha256": "fb5fa0f33971b2563d1342f098ba264bcefb3d56bea885a147045389530173eb",
+   "render_sha256": "098d1e49e9abdcefd85941032c25d10587208c810143354144c6edf109e21445"
+  },
+  {
+   "id": "portal",
+   "kind": "sprite",
+   "key": "portal",
+   "source_file": "assets/art/village/props.webp",
+   "source_rect": [
+    429,
+    603,
+    716,
+    768
+   ],
+   "source_size": [
+    716,
+    768
+   ],
+   "render_file": "assets/art/village/props.webp",
+   "space": "atlas_local",
+   "edges": [
+    {
+     "name": "left cap front",
+     "a": [
+      106,
+      56
+     ],
+     "b": [
+      185,
+      101
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "left cap side",
+     "a": [
+      185,
+      101
+     ],
+     "b": [
+      284,
+      49
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "right plinth course",
+     "a": [
+      355,
+      578
+     ],
+     "b": [
+      558,
+      693
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "front plinth",
+     "a": [
+      7,
+      466
+     ],
+     "b": [
+      506,
+      742
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "right plinth side",
+     "a": [
+      508,
+      759
+     ],
+     "b": [
+      707,
+      650
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "left upright",
+     "a": [
+      103,
+      166
+     ],
+     "b": [
+      103,
+      440
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "right upright",
+     "a": [
+      544,
+      438
+     ],
+     "b": [
+      544,
+      650
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ],
+   "source_sha256": "597311244a6b422dae9d20852f912249a86815f7124d71e9a3c99e4b36fbf666",
+   "render_sha256": "597311244a6b422dae9d20852f912249a86815f7124d71e9a3c99e4b36fbf666"
+  },
+  {
+   "id": "pool",
+   "kind": "sprite",
+   "key": "pool",
+   "source_file": "assets/art/village/town.webp",
+   "source_rect": [
+    6,
+    2054,
+    707,
+    462
+   ],
+   "source_size": [
+    707,
+    462
+   ],
+   "render_file": "assets/art/village/town.webp",
+   "space": "atlas_local",
+   "edges": [
+    {
+     "name": "back left plinth",
+     "a": [
+      135,
+      161
+     ],
+     "b": [
+      375,
+      24
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "back right plinth",
+     "a": [
+      435,
+      82
+     ],
+     "b": [
+      637,
+      194
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front top plinth",
+     "a": [
+      8,
+      215
+     ],
+     "b": [
+      347,
+      414
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "right top plinth",
+     "a": [
+      356,
+      415
+     ],
+     "b": [
+      681,
+      229
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "front foot",
+     "a": [
+      8,
+      255
+     ],
+     "b": [
+      347,
+      454
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "right foot",
+     "a": [
+      352,
+      454
+     ],
+     "b": [
+      697,
+      257
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "pedestal cap front",
+     "a": [
+      282,
+      58
+     ],
+     "b": [
+      345,
+      95
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "pedestal cap side",
+     "a": [
+      345,
+      95
+     ],
+     "b": [
+      404,
+      61
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "pedestal vertical",
+     "a": [
+      345,
+      100
+     ],
+     "b": [
+      345,
+      170
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ],
+   "source_sha256": "14eb78cae054deb47f430f4eb97c67df87f80f553bb6033bad292e10c6b1e654",
+   "render_sha256": "14eb78cae054deb47f430f4eb97c67df87f80f553bb6033bad292e10c6b1e654"
+  },
+  {
+   "id": "chest",
+   "kind": "sprite",
+   "key": "chest",
+   "source_file": "assets/art/village/props.webp",
+   "source_rect": [
+    6,
+    6,
+    621,
+    585
+   ],
+   "source_size": [
+    621,
+    585
+   ],
+   "render_file": "assets/art/village/props.webp",
+   "space": "atlas_local",
+   "edges": [
+    {
+     "name": "lid longitudinal boards",
+     "a": [
+      231,
+      54
+     ],
+     "b": [
+      515,
+      211
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front hinge rail",
+     "a": [
+      58,
+      181
+     ],
+     "b": [
+      385,
+      362
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "front board seam",
+     "a": [
+      60,
+      305
+     ],
+     "b": [
+      338,
+      465
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "front bottom",
+     "a": [
+      57,
+      381
+     ],
+     "b": [
+      377,
+      577
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "right upper frame",
+     "a": [
+      363,
+      373
+     ],
+     "b": [
+      609,
+      232
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "right lower band",
+     "a": [
+      383,
+      575
+     ],
+     "b": [
+      615,
+      445
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "front vertical frame",
+     "a": [
+      374,
+      377
+     ],
+     "b": [
+      376,
+      577
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ],
+   "source_sha256": "597311244a6b422dae9d20852f912249a86815f7124d71e9a3c99e4b36fbf666",
+   "render_sha256": "597311244a6b422dae9d20852f912249a86815f7124d71e9a3c99e4b36fbf666"
+  },
+  {
+   "id": "chest-broken",
+   "kind": "sprite",
+   "key": "chest-broken",
+   "source_file": "assets/art/village/props.webp",
+   "source_rect": [
+    639,
+    6,
+    650,
+    583
+   ],
+   "source_size": [
+    650,
+    583
+   ],
+   "render_file": "assets/art/village/props.webp",
+   "space": "atlas_local",
+   "edges": [
+    {
+     "name": "front upper surviving frame",
+     "a": [
+      12,
+      210
+     ],
+     "b": [
+      378,
+      420
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front lower band",
+     "a": [
+      22,
+      365
+     ],
+     "b": [
+      374,
+      570
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "right upper side",
+     "a": [
+      380,
+      420
+     ],
+     "b": [
+      637,
+      273
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "right lower edge",
+     "a": [
+      380,
+      570
+     ],
+     "b": [
+      637,
+      421
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "front vertical frame",
+     "a": [
+      378,
+      425
+     ],
+     "b": [
+      378,
+      558
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ],
+   "source_sha256": "597311244a6b422dae9d20852f912249a86815f7124d71e9a3c99e4b36fbf666",
+   "render_sha256": "597311244a6b422dae9d20852f912249a86815f7124d71e9a3c99e4b36fbf666"
+  },
+  {
+   "id": "landmark-0",
+   "kind": "landmark",
+   "key": "0",
+   "source_file": "assets/source/hill-new.png",
+   "source_rect": null,
+   "source_size": [
+    1254,
+    1254
+   ],
+   "render_file": "assets/art/village/landmarks.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "upper stair tread",
+     "a": [
+      337.857,
+      794.959
+     ],
+     "b": [
+      354.592,
+      802.652
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "middle stair tread",
+     "a": [
+      148.554,
+      1039.662
+     ],
+     "b": [
+      172.552,
+      1050.355
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "lower stair tread",
+     "a": [
+      176.916,
+      1078.03
+     ],
+     "b": [
+      204.65,
+      1089.987
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "top right retaining edge",
+     "a": [
+      748,
+      767
+     ],
+     "b": [
+      1104,
+      553
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "right lower retaining edge",
+     "a": [
+      412,
+      977
+     ],
+     "b": [
+      1052,
+      630
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "upper post vertical",
+     "a": [
+      287,
+      720
+     ],
+     "b": [
+      287,
+      754
+     ],
+     "axis": 90,
+     "level": "upper"
+    }
+   ],
+   "source_sha256": "0130abe1cac1dcab50b399a8d5efeb138a54b58a80c0594adb7b04f6869c22b3",
+   "render_sha256": "804e09842fb1cbd94be28bc6026093604710f8cf598f6cdcc236a8e8d2890b6e"
+  },
+  {
+   "id": "landmark-1",
+   "kind": "landmark",
+   "key": "1",
+   "source_file": "assets/source/garden-new.png",
+   "source_rect": null,
+   "source_size": [
+    1254,
+    1254
+   ],
+   "render_file": "assets/art/village/landmarks.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "upper paving edge",
+     "a": [
+      216,
+      700
+     ],
+     "b": [
+      549,
+      855
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "upper stair tread",
+     "a": [
+      329.7,
+      812.5
+     ],
+     "b": [
+      372.8,
+      832.6
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "lower stair tread",
+     "a": [
+      145.472,
+      979.72
+     ],
+     "b": [
+      117.401,
+      967.256
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "front coping",
+     "a": [
+      621,
+      797
+     ],
+     "b": [
+      1039,
+      563
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "front wall course",
+     "a": [
+      578,
+      855
+     ],
+     "b": [
+      1134,
+      547
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "lower wall course",
+     "a": [
+      673,
+      940
+     ],
+     "b": [
+      1012,
+      752
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "right vertical corner",
+     "a": [
+      1173.1,
+      554.4
+     ],
+     "b": [
+      1173.1,
+      650.6
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ],
+   "source_sha256": "d4b04ec662fdd1031b81bc6e8fb05c0f9e5c9004bf1bbe50227ac875a9a19ad2",
+   "render_sha256": "804e09842fb1cbd94be28bc6026093604710f8cf598f6cdcc236a8e8d2890b6e"
+  }
+ ],
+ "exemptions": {
+  "natural_sprites": [
+   "rock",
+   "cave",
+   "tree-0",
+   "tree-1",
+   "tree-2",
+   "tree-3",
+   "tree-4",
+   "tree-5",
+   "tree-6",
+   "tree-7",
+   "tree-8",
+   "tree-9",
+   "tree-10",
+   "tree-11",
+   "tree-12",
+   "tree-13",
+   "tree-14",
+   "tree-15",
+   "tree-16",
+   "tree-17",
+   "plant-0",
+   "plant-1",
+   "plant-2",
+   "plant-3",
+   "plant-4",
+   "plant-5"
+  ],
+  "natural_terrain": [
+   "landmark-2",
+   "landmark-3"
+  ],
+  "reason": "Organic silhouettes and curved/broken fragments have no rectangular horizontal axes. Actors can face arbitrary directions. Roof inclines and stair lengths change height and are not horizontal-axis edges. Source-only beacons are not instantiated.",
+  "unused_sources": [
+   "beacon-0",
+   "beacon-1",
+   "beacon-2",
+   "beacon-3",
+   "beacon-4",
+   "beacon-5",
+   "beacon-6",
+   "beacon-7"
+  ]
+ }
+}

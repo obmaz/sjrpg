@@ -18,6 +18,7 @@ var top: PackedVector2Array  # walkable top (world px)
 var ledges: Array[PackedVector2Array] = []
 var blockers: Array[PackedVector2Array] = []
 var water: Array[PackedVector2Array] = []
+var _warp_mesh: ArrayMesh
 
 
 static func data() -> Array:
@@ -56,7 +57,14 @@ func setup(i: int, center: Vector2) -> Landmark:
 
 
 func _pt(p) -> Vector2:
-	return top_left + Vector2(p[0], p[1]) * (side / CELL)
+	var d: Dictionary = data()[index]
+	var source := Vector2(p[0], p[1])
+	if d.has("warp"):
+		var native_size: float = d["native_size"]
+		source = ArtWarp.point(d["warp"], source * native_size / CELL) * CELL / native_size
+	var delta := source - Vector2(384, 600)
+	var corrected := Vector2(delta.x, delta.y * float(d.get("gvs", 1.0)) + delta.x * float(d.get("gvk", 0.0))) + Vector2(384, 600)
+	return top_left + corrected * (side / CELL)
 
 
 func _poly(points: Array) -> PackedVector2Array:
@@ -72,15 +80,45 @@ func contains_top(p: Vector2) -> bool:
 
 ## Rect (world px) covering the art plus a margin, for keeping scatter off it.
 func footprint_rect() -> Rect2:
-	return Rect2(top_left, Vector2(side, side)).grow(60.0)
+	return Iso.poly_bounds(_poly([[0, 0], [CELL, 0], [CELL, CELL], [0, CELL]])).grow(60.0)
 
 
 func _draw() -> void:
+	if _warp_mesh != null:
+		draw_mesh(_warp_mesh, _sheet)
+		return
 	var col := index % 2
 	var row := index / 2
 	var src := Rect2(col * CELL, row * CELL, CELL, CELL)
-	draw_texture_rect_region(_sheet, Rect2(top_left - position, Vector2(side, side)), src)
+	var points := PackedVector2Array()
+	var uvs := PackedVector2Array()
+	for point in [Vector2.ZERO, Vector2(CELL, 0), Vector2(CELL, CELL), Vector2(0, CELL)]:
+		points.append(_pt([point.x, point.y]) - position)
+		uvs.append((src.position + point) / _sheet.get_size())
+	draw_polygon(points, PackedColorArray([Color.WHITE]), uvs, _sheet)
 
 
 func _ready() -> void:
-	WorldOcclusion.attach(self, Rect2(top_left, Vector2(side, side)))
+	var d: Dictionary = data()[index]
+	if d.has("warp"):
+		var calibration := ArtWarp.data(d["warp"])
+		var vertices := PackedVector3Array()
+		var uvs := PackedVector2Array()
+		var native_size: float = d["native_size"]
+		var atlas_origin := Vector2((index % 2) * CELL, (index / 2) * CELL)
+		for row in calibration["points"]:
+			var source := Vector2(row[0], row[1]) * CELL / native_size
+			var local := _pt([source.x, source.y]) - position
+			vertices.append(Vector3(local.x, local.y, 0.0))
+			uvs.append((atlas_origin + source) / _sheet.get_size())
+		var indices := PackedInt32Array()
+		for triangle in calibration["triangles"]:
+			indices.append_array(PackedInt32Array(triangle))
+		var arrays := []
+		arrays.resize(Mesh.ARRAY_MAX)
+		arrays[Mesh.ARRAY_VERTEX] = vertices
+		arrays[Mesh.ARRAY_TEX_UV] = uvs
+		arrays[Mesh.ARRAY_INDEX] = indices
+		_warp_mesh = ArrayMesh.new()
+		_warp_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	WorldOcclusion.attach(self, footprint_rect().grow(-60.0))

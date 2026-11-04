@@ -19,8 +19,9 @@ func run() -> void:
 
 	check("chapel yard is built", v.terrace.size() == 8 and v.chapel_steps.size() == 6)
 
-	# Size: the chapel is placed at twice the earlier 10.7 hero-heights.
-	check("chapel is 2x scale", is_equal_approx(float(v.data["placements"]["chapel"][1]), 21.4))
+	# Retain the village footprint when replacing the illustration.
+	var footprint := Iso.poly_bounds(chapel.atlas_polygon(v.data["frames"]["chapel"]["ground"]))
+	check("chapel keeps its large village footprint", footprint.size.x > 900.0 and footprint.size.x < 1200.0)
 	# Layout: the raised yard, cliff faces and church body must not overlap walls, gates, other buildings or the plaza props.
 	var others: Array[PackedVector2Array] = []
 	for i in v.solids.size():
@@ -71,8 +72,9 @@ func run() -> void:
 	check("chapel yard keeps the player on top", Geometry2D.is_point_in_polygon(player.position, v.terrace))
 
 	# From open ground in front of the right cliff, walking straight up the wall must not reach the yard.
-	var foot_a := chapel.native_point(Vector2(1425, 1020))
-	var foot_b := chapel.native_point(Vector2(775, 1380))
+	var face: Array = v.data["chapel"]["faces"][0]
+	var foot_a := chapel.native_point(Vector2(face[2][0], face[2][1]))
+	var foot_b := chapel.native_point(Vector2(face[3][0], face[3][1]))
 	var mid := (foot_a + foot_b) / 2.0
 	var below := mid + Vector2(0, 45)
 	check("cliff probe starts on open ground", not _inside_any(below, v.solids) and not Geometry2D.is_point_in_polygon(below, v.terrace), "probe %s uv %s" % [str(below), str(v.uv_of(below))])

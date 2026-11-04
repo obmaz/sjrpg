@@ -320,15 +320,18 @@ func _build_walls(world: Node2D) -> void:
 			solids.append(PackedVector2Array([Iso.project(a - n), Iso.project(b - n), Iso.project(b + n), Iso.project(a + n)]))
 			wall_footprints.append(solids[solids.size() - 1])
 			var seg_ground := float(def["source"][2]) * float(def["k"]) / (Iso.COS * Iso.S)  # ground length of one span of art
-			var pieces := maxi(1, roundi(a.distance_to(b) / seg_ground))
-			for p in pieces:
-				var pa := Iso.project(a.lerp(b, float(p) / pieces) + front)
-				var pb := Iso.project(a.lerp(b, float(p + 1) / pieces) + front)
+			var length := a.distance_to(b)
+			var offset := 0.0
+			while offset < length - 0.01:
+				var end := minf(length, offset + seg_ground)
+				var pa := Iso.project(a.lerp(b, offset / length) + front)
+				var pb := Iso.project(a.lerp(b, end / length) + front)
 				if pa.x > pb.x:
 					var t := pa
 					pa = pb
 					pb = t
 				WallPiece.add_span(world, tex, def, strip_px, pa, pb)
+				offset = end
 
 
 ## Twin-tower gatehouse (새 120° 원화 assets/source/gate-new-*.png). Art is cut into vertical strips that each depth-sort

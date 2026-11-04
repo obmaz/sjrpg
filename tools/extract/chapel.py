@@ -70,7 +70,9 @@ def pack():
     sheet = Image.fromarray(arr)
     crop = img.crop((l, t, r, b)).convert("RGBa").resize((w, h), Image.LANCZOS).convert("RGBA")  # 곱한 알파로 줄여 번짐 방지
     sheet.paste(Image.fromarray(_bleed(np.array(crop))), (x, y))
-    sheet.save(SHEET, "WEBP", quality=94, alpha_quality=100, method=6, exact=True)
+    temporary = SHEET.with_suffix(".tmp")
+    sheet.save(temporary, "WEBP", quality=94, alpha_quality=100, method=6, exact=True)
+    temporary.replace(SHEET)
 
 
 def _intersect(p, d, q, e):
@@ -122,7 +124,7 @@ def derive():
     foot = atlas(F)
     height = round(float((F[1] - t) * p), 2)
     sprite = dict(sheet=m["atlas"]["sheet"], source=[x, y, w, h], foot=foot, height=height, origin=[l, t], packing=p,
-                  world_height=0, body=None, gvs=1, gvk=0)
+                  world_height=0, body=None, gvs=m.get("gvs", 1), gvk=m.get("gvk", 0))
     frame = dict(ground=[atlas(q) for q in (L, B, R, F)], height=height, foot=foot)
     yard = dict(outline=native(outline), entrance=0, faces=[native(f) for f in faces], steps=native(steps),
                 building=native(building))
@@ -135,7 +137,7 @@ def merge(data):
     data["frames"]["chapel"] = frame
     data["placements"]["chapel"] = place
     data["chapel"] = yard
-    # 2배로 커진 예배당 밑에 깔리는 상자는 옆으로 옮긴다.
+    # 예배당 마당 아래 겹치는 상자는 옆으로 옮긴다.
     for old, new in MEASURE["chests_moved"]:
         data["chest_uv"] = [list(new) if c == list(old) else c for c in data["chest_uv"]]
     return data

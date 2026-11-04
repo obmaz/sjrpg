@@ -1,20 +1,21 @@
 class_name Bridge
 extends Node2D
-## 동문 밖 돌다리 (원본 QuarterViewBridgeArt). The deck axis climbs at -30° on
+## 동문 밖 돌다리 (assets/source/bridge-new.png). The deck axis climbs at -30° on
 ## screen; the near parapet and corner posts redraw above actors, the rest sits
 ## below them, so heroes walk on the deck and behind the front rail.
 
 const SOURCE := Vector2(1536, 1024)
-const DECK_CENTER := Vector2(812, 490.5)
-const DECK_SPAN := 1096.0
-const AXIS_START := Vector2(264, 806.5)
-const AXIS_END := Vector2(1360, 174.5)
+const DECK_CENTER := Vector2(772.5, 507.5)
+const DECK_SPAN := 1080.0
+const AXIS_START := Vector2(232.5, 820)
+const AXIS_END := Vector2(1312.5, 195)
 const BANK_CLEARANCE := 100.0
-const SLOPE := -632.0 / 1096.0
-const DECK := [Vector2(114, 720), Vector2(1210, 88), Vector2(1510, 261), Vector2(414, 893)]
+const DECK := [Vector2(110, 750), Vector2(1190, 125), Vector2(1435, 265), Vector2(355, 890)]
+## The foreground starts at the actual coping top, above the occluded deck-floor edge.
+const FRONT_TOP := [Vector2(410, 805), Vector2(1400, 235)]
 const POSTS := [
-	[Vector2(335, 835), Vector2(375, 803), Vector2(412, 828), Vector2(412, 900), Vector2(360, 925)],
-	[Vector2(1412, 205), Vector2(1450, 173), Vector2(1487, 199), Vector2(1487, 272), Vector2(1435, 296)],
+	[Vector2(326, 815), Vector2(369, 788), Vector2(411, 815), Vector2(411, 901), Vector2(361, 930)],
+	[Vector2(1390, 196), Vector2(1430, 174), Vector2(1475, 197), Vector2(1475, 275), Vector2(1420, 300)],
 ]
 const ABUTMENTS := [
 	[Vector2(360, 915), Vector2(414, 875), Vector2(730, 695), Vector2(700, 820), Vector2(400, 1000)],
@@ -32,7 +33,8 @@ static func axis_direction() -> Vector2:
 
 
 static func front_edge(x: float) -> float:
-	return 893.0 + (x - 414.0) * SLOPE
+	var slope: float = (FRONT_TOP[1].y - FRONT_TOP[0].y) / (FRONT_TOP[1].x - FRONT_TOP[0].x)
+	return FRONT_TOP[0].y + (x - FRONT_TOP[0].x) * slope
 
 
 ## `forecourt` is the road end on the near bank in world pixels.
@@ -95,7 +97,7 @@ class _Front:
 	func _draw() -> void:
 		var size := Bridge.SOURCE
 		var band := PackedVector2Array([
-			Vector2(0, Bridge.front_edge(0.0) - 18.0), Vector2(size.x, Bridge.front_edge(size.x) - 18.0),
+			Vector2(0, Bridge.front_edge(0.0) - 2.0), Vector2(size.x, Bridge.front_edge(size.x) - 2.0),
 			Vector2(size.x, size.y + 400.0), Vector2(0, size.y + 400.0),
 		])
 		var image := PackedVector2Array([Vector2.ZERO, Vector2(size.x, 0), size, Vector2(0, size.y)])

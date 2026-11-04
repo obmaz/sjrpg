@@ -56,6 +56,8 @@ func run() -> void:
 					break
 			if not found:
 				continue
+			var swept: Vector2 = game.move_actor(probe, m - out_dir * 40.0, Player.RADIUS)
+			check("large-frame movement cannot skip cliff %d/%d" % [lm.index, k], not lm.contains_top(swept))
 			player.position = probe
 			await _walk(player, m - out_dir * 40.0, 300)
 			if lm.contains_top(player.position):

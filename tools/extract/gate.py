@@ -119,9 +119,10 @@ def wall_sheet():
         sw, sh = round(w * p), round(h * p)
         tiles.append((key, img, x, sw, sh))
         # 시트 좌표(패킹 후): 앞 바닥선의 x=0, x=W 에서의 y, 시트 픽셀당 월드 픽셀(세로·가로 같은 배율).
-        k = (height + thick) * 0.97 / e / p
+        gvs = sg.get("gvs", 1)
+        k = (height + thick) * 0.97 / (e * gvs) / p
         out[key] = dict(source=[x, PAD, sw, sh], y0=round(c * p + PAD, 2), y1=round((m * w + c) * p + PAD, 2),
-                        k=round(float(k), 4), slope_deg=round(slope_deg, 2), gain=np.round(gain, 3).tolist(), extent=round(e, 1))
+                        k=round(float(k), 4), gvs=gvs, slope_deg=round(slope_deg, 2), gain=np.round(gain, 3).tolist(), extent=round(e, 1))
         x += sw + PAD * 2
     sheet = Image.new("RGBA", (x, max(t[4] for t in tiles) + PAD * 2), (0, 0, 0, 0))
     for key, img, tx, sw, sh in tiles:
@@ -142,9 +143,10 @@ def wall_data():
         img = Image.open(ROOT / sg["png"]).convert("RGBA")
         m, c, e, w, h = _measure_seg(img)
         sw, sh = round(w * p), round(h * p)
-        k = (cfg["height"] + cfg["thick"]) * 0.97 / e / p
+        gvs = sg.get("gvs", 1)
+        k = (cfg["height"] + cfg["thick"]) * 0.97 / (e * gvs) / p
         out[key] = dict(source=[x, PAD, sw, sh], y0=round(c * p + PAD, 2), y1=round((m * w + c) * p + PAD, 2),
-                        k=round(float(k), 4), slope_deg=round(math.degrees(math.atan(abs(m))), 2), extent=round(e, 1))
+                        k=round(float(k), 4), gvs=gvs, slope_deg=round(math.degrees(math.atan(abs(m))), 2), extent=round(e, 1))
         x += sw + PAD * 2
     return out
 

@@ -1,5 +1,5 @@
 extends TestCase
-## 120° 기준: 지면 접촉 원화의 바닥 변이 ±30°에서 2.5° 이내인지 검사
+## Collision/placement models follow the ground axes. Actual illustration pixels are audited by art_projection.
 
 
 func run() -> void:
@@ -7,13 +7,14 @@ func run() -> void:
 	for key in data["frames"]:
 		var s: Dictionary = data["sprites"][key]
 		var poly: Array = data["frames"][key]["ground"]
+		var sprite := IsoSprite.new().setup(s, 1000.0)
 		var bad := []
 		for i in poly.size():
 			var a: Array = poly[i]
 			var b: Array = poly[(i + 1) % poly.size()]
-			var pa := Vector2(a[0], a[1] * s["gvs"] + a[0] * s["gvk"])
-			var pb := Vector2(b[0], b[1] * s["gvs"] + b[0] * s["gvk"])
-			if pa.distance_to(pb) < 150.0:
+			var pa := sprite.atlas_point(Vector2(a[0], a[1]))
+			var pb := sprite.atlas_point(Vector2(b[0], b[1]))
+			if Vector2(a[0], a[1]).distance_to(Vector2(b[0], b[1])) < 150.0:
 				continue  # short porch steps are not ground-axis edges
 			var t := rad_to_deg((pb - pa).angle())
 			if t > 90.0:
@@ -23,9 +24,10 @@ func run() -> void:
 			if absf(absf(t) - 30.0) > 2.5:
 				bad.append(snappedf(t, 0.1))
 		print("axis audit %-6s %s" % [key, "ok" if bad.is_empty() else "FAIL %s" % str(bad)])
+		sprite.free()
 		if not bad.is_empty():
 			failures += 1
-	# Bridge deck edges are exactly +-30 by construction of the original measurement.
+	# The deck collision plane follows the ground axes; its visible coping is audited separately.
 	var deck: Array = Bridge.DECK
 	for i in 4:
 		var d: Vector2 = deck[(i + 1) % 4] - deck[i]

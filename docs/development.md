@@ -19,6 +19,7 @@
 - 지면 좌표(원본 단위)는 `Iso.project()`로 화면 평면의 월드 픽셀이 됩니다. `Iso.S`는 원본 월드를 이 포트의 화면 비율로 바꾸는 배율입니다.
 - 건물 원화는 `IsoSprite`가 실측 바닥 접점(`foot`), 지면 보정(`gvs`/`gvk`), 패킹 배율로 그립니다.
 - 지면은 균일하게 밝기를 조정하며, 물체·광원을 계산하지 않는 반복 그늘이나 고정 햇빛 레이어를 얹지 않습니다.
+- 배우 이동은 `Game.move_actor()`가 반지름 기준으로 경로를 나눠 검사합니다. 프레임 지연에도 얇은 절벽을 뛰어넘지 않으며, 스폰 목적지 검증은 `resolve_movement()`로 별도 처리합니다.
 - 깊이 정렬은 `world`(y 정렬) 안의 노드 위치 y입니다. 높은 지형 윗면의 캐릭터는 `z_index = 1`로 원화 위에 그립니다.
 
 ## Godot판 조정과 개발 순서
@@ -35,12 +36,11 @@ python3 tools/extract/extract_data.py /path/to/sjrpg            # skills · gear
 python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 ```
 
-예배당은 원본 원화가 120° 기준을 벗어나 추출 대상이 아닙니다. 새 원화(`assets/source/chapel-new.png`)의 측정값은
-`tools/extract/chapel_measure.json`에 있고 `tools/extract/chapel.py`가 `town.webp` 패킹과 `village.json`의 예배당 항목을
-만듭니다(`extract_data.py`도 같은 `merge()`로 합침). 패킹은 시트 전체를 다시 인코딩하므로 예배당이 없는 시트에서 한 번만,
-측정값만 바꿀 때는 `python3 tools/extract/chapel.py --data`를 씁니다. `assets/source/`는 `.gdignore`로 임포트·번들에서 뺍니다.
-성문 두 방향과 성벽 구간 원화(`gate-new-a/b.png`, `wall-seg-a/b.png`)의 측정값은 `tools/extract/gate_measure.json`에 있고
-`tools/extract/gate.py`가 `gates.webp`·`walls.webp` 패킹과 `village.json`의 성문·성벽 항목을 도출합니다.
+원본 추출 뒤 `town_art.merge()`와 `landmark_art.merge()`로 Godot판 실측값을 합칩니다.
+건물 4종·예배당은 `town_art_measure.json`·`chapel_measure.json`, 언덕·정원은 `landmark_art_measure.json`,
+성문·성벽은 `gate_measure.json`이 출처입니다. 원화 재패킹·투영 보정·실제 모서리 검증 절차는
+[원화 규격과 재생성](chapel-regeneration.md)을 따릅니다. `assets/source/`는 `.gdignore`로 번들에서 제외합니다.
+`ArtWarp`의 보정 메시를 그리기와 충돌 좌표에 함께 적용하며, 성벽은 비율을 유지하고 끝 반복만 자릅니다.
 
 ## 디버그 쿼리 (웹)
 
@@ -145,7 +145,8 @@ HUD는 실패 시 누를 수 있는 재시도 안내를 유지하며 설정의 �
 
 | 케이스 | 검증 |
 | --- | --- |
-| `axis` | 지면 접촉 원화(예배당 기단 포함)의 바닥 변이 ±30°(보정 후 2.5° 이내) |
+| `axis` | 배치·충돌 모델의 지면 두 축 정렬 (원화 검증은 별도) |
+| `art_projection` | 16종 실제 원화 모서리 124개, 상·중·하단/반대 방향/수직, 평행·중간 픽셀·메시 뒤집힘·원화/아틀라스 해시 |
 | `chapel` | 예배당 마당: 계단으로 오르면 마당 위(z=1), 건물 자리와 정면 절벽은 막힘 |
 | `terrace` | 랜드마크 윗면은 계단(입구)으로만 오를 수 있고 절벽은 막힘 |
 | `bridge` | 다리를 건널 수 있고 강은 막힘 |
