@@ -11,6 +11,7 @@ const { chromium, devices } = require('playwright');
 const SCENES = {
     town: '',
     juice: 'at=field&combat_preview=1',
+    rewards: 'reward_preview=1',
     background: '',
     wide: 'zoom=0.45',
     bridge: 'at=bridge&zoom=0.7',
@@ -86,7 +87,9 @@ const start = args.start ? args.start.split(',').map(Number) : device === 'phone
 await tap(...start);
 await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { timeout: 30000 });
 if (scene === 'background') await page.evaluate(() => document.querySelector('canvas').blur());
-await page.waitForTimeout(9000);
+if (scene === 'rewards') {
+    await page.waitForFunction(() => window.__sjrpgRewardPreviewReady === true, null, {timeout: 30000});
+} else await page.waitForTimeout(9000);
 await page.screenshot({ path: out });
 if (scene === 'juice') {
     for (let frame=1; frame<=6; frame++) {

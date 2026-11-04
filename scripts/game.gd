@@ -216,6 +216,8 @@ func _read_debug_params() -> void:
 			get_tree().create_timer(1.5).timeout.connect(_debug_open_panel.bind(which))
 		elif kv.size() == 2 and kv[0] == "combat_preview":
 			_combat_preview.call_deferred()
+		elif kv.size() == 2 and kv[0] == "reward_preview" and kv[1] == "1":
+			_reward_preview.call_deferred()
 		elif kv.size() == 2 and kv[0] == "gold":
 			GameState.gold = int(kv[1])
 		elif kv.size() == 2 and kv[0] == "chests":
@@ -306,6 +308,28 @@ func _combat_preview() -> void:
 		player.impact_color = [SkillDefs.STEEL, SkillDefs.FIRE, SkillDefs.LIGHT, SkillDefs.COLD][i % 4]
 		target.take_damage(2.0, player)
 		await get_tree().create_timer(0.37, false).timeout
+
+
+## Explicit review query only. Exercise real grant/chest paths, never run in a normal adventure.
+func _reward_preview() -> void:
+	await get_tree().create_timer(2.0, false).timeout
+	if is_queued_for_deletion():
+		return
+	for chest in chests:
+		if not chest.dead:
+			player.position = chest.position + Vector2(70, 35)
+			chest.take_damage(1.0, player)
+			break
+	await get_tree().create_timer(0.8, false).timeout
+	if not is_queued_for_deletion():
+		grant_xp(GameState.xp_to_next())
+		if OS.has_feature("web"):
+			hud._update_vital_feedback(0.0)
+			hud._update_layout()
+			hud._bars.queue_redraw()
+			hud.controls.queue_redraw()
+			get_tree().paused = true  # Explicit capture preview freezes the confirmed reward at its visual peak.
+			JavaScriptBridge.eval("window.__sjrpgRewardPreviewReady = true")
 
 
 func in_town(p: Vector2) -> bool:
@@ -592,6 +616,8 @@ func on_chest_broken(chest: Chest) -> void:
 		for i in 2:
 			_spawn_enemy_near(chest.position)
 	GameState.gold += gold
+	if gold > 0:
+		RewardFx.spawn(self, chest.position + Vector2(0, -35), 0)
 	float_text(chest.position + Vector2(0, -70), "+%d G" % gold, Color(1, 0.88, 0.45))
 	# 원본: 보급 상자와 숲의 첫 상자는 치유·자원 물약을 하나씩 줌.
 	if content == "supplies" or chest.index == 0:
@@ -605,6 +631,8 @@ func on_chest_broken(chest: Chest) -> void:
 		if chest.index == 8:
 			g = GameState.new_gear("shortsword" if GameState.hero_class == "warrior" else "wand", 2, 4, 8)
 		if GameState.add_gear(g):
+			if g.rarity >= 2:
+				RewardFx.spawn(self, chest.position + Vector2(0, -42), 2)
 			toast("획득: %s" % g.display_name())
 			player.refresh_stats()
 		else:
@@ -677,6 +705,8 @@ func on_enemy_killed(enemy: Enemy) -> void:
 	if enemy.is_boss:
 		on_boss_defeated(enemy)
 	float_text(enemy.position + Vector2(0, -enemy.sprite.body_height - 40), "+%d XP" % enemy.xp_reward, Color(0.7, 0.85, 1))
+	if enemy.xp_reward > 0:
+		RewardFx.spawn(self, enemy.position + Vector2(0, -28), 1)
 	# 원본: 몬스터 처치로는 물약이 나오지 않음 (상자·구매·물약 발견만).
 	# Corpses feed 물약 발견 · 아이템 발견 · 섬뜩한 수호물.
 	if _rng.randf() < 0.3:
@@ -690,7 +720,9 @@ func grant_xp(amount: int) -> void:
 	var gained := GameState.add_xp(amount)
 	if gained > 0:
 		player.refresh_stats(true)
-		spawn_nova(player.position, 120.0, Color(1, 0.9, 0.4))
+		RewardFx.spawn(self, player.position + Vector2(0, -32), 1, true)
+		SoundFx.play("levelup")
+		SoundFx.play("loot")
 		toast("레벨 업! Lv.%d · 스킬 포인트 %d" % [GameState.level, GameState.skill_points])
 		GameState.save_game()
 

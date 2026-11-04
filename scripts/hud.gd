@@ -5,7 +5,12 @@ extends CanvasLayer
 var game: Node
 var _bars: Control
 var _toast: Label
+var _toast_plaque: PanelContainer
+var _toast_queue: Array[Dictionary] = []
+var _toast_clock := 0.0
 var _toast_time := 0.0
+const TOAST_PENDING_LIMIT := 4
+const TOAST_MAX_AGE := 8.0
 var _death: Control
 var controls: TouchControls
 var minimap: Minimap
@@ -44,12 +49,28 @@ func _ready() -> void:
 	_area.draw.connect(_draw_area_label)
 	add_child(_area)
 
-	_toast = UiKit.label("", 21, Color("eee3c7"))
+	_toast_plaque = PanelContainer.new()
+	_toast_plaque.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var toast_skin := UiKit.panel_style(Color("181914"), Color("8d7952"), 6)
+	toast_skin.content_margin_left = 22
+	toast_skin.content_margin_right = 22
+	toast_skin.content_margin_top = 12
+	toast_skin.content_margin_bottom = 12
+	_toast_plaque.add_theme_stylebox_override("panel", toast_skin)
+	_toast_plaque.hide()
+	add_child(_toast_plaque)
+	_toast = UiKit.label("", 20, Color("eee3c7"))
 	_toast.add_theme_font_override("font", HudArt.FONT)
-	_toast.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_toast.add_theme_constant_override("outline_size", 0)
+	_toast.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_toast.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_toast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_toast.max_lines_visible = 3
+	_toast.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_toast.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_toast)
+	_toast_plaque.add_child(_toast)
 
 	_status = UiKit.label("", 16, Color("d6e5e4"))
 	_status.add_theme_font_override("font", HudArt.FONT)
@@ -91,7 +112,7 @@ func _open(panel: PanelFrame) -> void:
 		panel.free()
 		return
 	controls.release_all()
-	_toast.hide()
+	_toast_plaque.hide()
 	get_tree().paused = true
 	_panel = panel
 	panel.closed.connect(close_panel)
@@ -104,7 +125,7 @@ func close_panel() -> void:
 	_panel.queue_free()
 	_panel = null
 	get_tree().paused = false
-	_toast.visible = _toast_time > 0.0
+	_toast_plaque.visible = _toast_time > 0.0
 	game.player.refresh_stats()
 	if GameState.claim_boss_heart():
 		game.toast("파수꾼의 심장을 받았습니다")
@@ -197,16 +218,60 @@ func hide_death() -> void:
 	_death.visible = false
 
 
+## Confirmations wait briefly instead of replacing a reward/level-up delivered in the same frame.
 func toast(text: String) -> void:
-	_toast.text = text
-	_toast_time = 2.4
+	text = text.strip_edges()
+	if text.is_empty() or (_toast_time > 0.0 and _toast.text == text):
+		return
+	for pending in _toast_queue:
+		if pending["text"] == text:
+			return
+	if _toast_queue.size() >= TOAST_PENDING_LIMIT:
+		_toast_queue.pop_front()
+	_toast_queue.append({"text": text, "expires": _toast_clock + TOAST_MAX_AGE})
+	if _toast_time <= 0.0:
+		_advance_toast()
+
+
+func _advance_toast() -> void:
+	while not _toast_queue.is_empty():
+		var next: Dictionary = _toast_queue.pop_front()
+		if float(next["expires"]) <= _toast_clock:
+			continue
+		_toast.text = next["text"]
+		_toast_time = clampf(2.0 + _toast.text.length() * 0.025, 2.4, 3.6)
+		_toast_plaque.visible = not panel_open()
+		return
+	_toast.text = ""
+	_toast_plaque.hide()
+
+
+func _tick_toasts(delta: float) -> void:
+	_toast_clock += delta
+	_toast_time = maxf(0.0, _toast_time - delta)
+	_toast_queue = _toast_queue.filter(func(pending): return float(pending["expires"]) > _toast_clock)
+	if _toast_time <= 0.0:
+		_advance_toast()
+	_toast_plaque.modulate.a = 1.0 if Prefs.reduce_motion else clampf(_toast_time / 0.35, 0.0, 1.0)
+
+
+## Compact confirmation plaque below status/minimap labels and above the combat controls.
+func toast_rect() -> Rect2:
+	var u := unit()
+	var margins := PanelFrame.safe_margins(get_viewport())
+	var available := get_viewport().get_visible_rect().size - Vector2(margins.x + margins.z, margins.y + margins.w)
+	var origin: Vector2 = status_geometry()["origin"]
+	var width := minf(520.0 * u, available.x - 40.0 * u)
+	var y := origin.y + (306.0 if _save_warning != null and _save_warning.visible else 194.0) * u
+	var lines := clampi(_toast.get_line_count(), 1, 3)
+	var height := clampf(lines * 25.0 * u + 24.0, 56.0 * u, 100.0 * u)
+	return Rect2(Vector2(margins.x + (available.x - width) / 2.0, y), Vector2(width, height))
 
 
 func _process(delta: float) -> void:
 	_update_vital_feedback(delta)
+	_tick_toasts(delta)
 	_update_layout()
-	_toast_time = maxf(0.0, _toast_time - delta)
-	_toast.modulate.a = clampf(_toast_time / 0.5, 0.0, 1.0)
 	_bars.queue_redraw()
 
 
@@ -276,8 +341,16 @@ func _update_layout() -> void:
 	for key in game.player.buffs:
 		statuses.append("%s %d초" % [names.get(key, key), ceili(game.player.buffs[key]["time"])])
 	_status.text = " · ".join(statuses.slice(0, 3))
-	_toast.offset_top = origin.y + 184.0 * u
-	_toast.offset_bottom = origin.y + 220.0 * u
+	var toast_font_size := roundi(20.0 * u)
+	# Theme overrides invalidate shaping even when set to the same value.
+	# Updating every frame can continually defer wrapped-label text rendering.
+	if _toast.get_theme_font_size("font_size") != toast_font_size:
+		_toast.add_theme_font_size_override("font_size", toast_font_size)
+	var confirmation := toast_rect()
+	_toast.custom_minimum_size.x = maxf(1.0, confirmation.size.x - 44.0)
+	_toast_plaque.custom_minimum_size = Vector2.ZERO
+	_toast_plaque.position = confirmation.position
+	_toast_plaque.size = confirmation.size
 	_save_warning.offset_top = origin.y + 220.0 * u
 	_save_warning.offset_bottom = origin.y + 290.0 * u
 	var name := "숲 마을" if game.in_town(game.player.position) else "숲 가장자리"

@@ -21,6 +21,8 @@ func run() -> void:
 		controls._layout()
 		var bounds := Rect2(Vector2.ZERO, Vector2(dimensions))
 		var header: Dictionary = game.hud.status_geometry()
+		var confirmation: Rect2 = game.hud.toast_rect()
+		check("confirmation fits and avoids map %s" % dimensions, bounds.encloses(confirmation) and not confirmation.intersects(header["map"]))
 		var hp: Rect2 = header["hp"]
 		var map: Rect2 = header["map"]
 		check("status and map stay separate %s" % dimensions, bounds.encloses(hp) and bounds.encloses(map) and hp.end.x + 20 < map.position.x)
