@@ -184,11 +184,11 @@ func _process(delta: float) -> void:
 
 	var to_player := player.position - position
 	var dist := to_player.length()
-	# 조사관 보호 중에는 더 가까운 쪽(조사관/영웅)을 노립니다.
+	# 도발 중에는 영웅을 우선하고, 종료 후 가까운 조사관/영웅을 다시 고릅니다.
 	var guard := false
 	if is_threat and game.quest_runtime.defender_active():
 		var to_def: Vector2 = game.quest_runtime.defender_position() - position
-		if player.dead or to_def.length() < dist:
+		if player.dead or (_taunt_time <= 0.0 and to_def.length() < dist):
 			to_player = to_def
 			dist = to_def.length()
 			guard = true
