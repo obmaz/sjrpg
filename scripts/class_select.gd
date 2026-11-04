@@ -80,7 +80,8 @@ func _card(cls: String) -> Control:
 	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(desc)
-	var stats := UiKit.label("체력 %d · 공격 %d · 방어 %d" % [info["hp"], info["attack"], info["defense"]], 17, Color(0.8, 0.95, 0.85))
+	var weapon: String = Gear.def("shortsword" if cls == "warrior" else "wand")["name"]
+	var stats := UiKit.label("체력 %s · %s %s · 시작 무기 %s" % [HudArt.stat(info["hp"]), info["resource"], HudArt.res(info["resource_max"]), weapon], 17, Color(0.8, 0.95, 0.85))
 	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(stats)
 	var pick := UiKit.button("%s로 시작" % info["name"], 22)

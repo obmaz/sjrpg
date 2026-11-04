@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# 웹(HTML5/WASM, 단일 스레드) 빌드를 build/web 에 만듭니다. GitHub Pages 배포물과 같은 결과.
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+mkdir -p "$ROOT/build/web"
+LOG="$(mktemp)"; trap 'rm -f "$LOG"' EXIT
+"$ROOT/tools/godot.sh" --headless --import >"$LOG" 2>&1 || true
+if grep -E "SCRIPT ERROR|Parse Error" "$LOG"; then echo "스크립트 오류로 export 중단"; exit 1; fi
+"$ROOT/tools/godot.sh" --headless --export-release "Web" build/web/index.html >"$LOG" 2>&1 || { cat "$LOG"; exit 1; }
+test -s "$ROOT/build/web/index.wasm" && test -s "$ROOT/build/web/index.pck"
+touch "$ROOT/build/web/.nojekyll"
+printf "export ok: pck %s, wasm %s\n" "$(du -h "$ROOT/build/web/index.pck" | cut -f1)" "$(du -h "$ROOT/build/web/index.wasm" | cut -f1)"

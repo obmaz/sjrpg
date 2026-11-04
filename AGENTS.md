@@ -1,0 +1,57 @@
+# AI 개발 지침
+
+이 파일은 저장소 전체에 적용됩니다. 작업 전에 [README.md](README.md)로 현재 이식 범위를,
+[docs/development.md](docs/development.md)로 구조·데이터 출처·검증 방법을 확인합니다.
+문서는 탐색용이므로 변경 전에는 실제 코드를 읽습니다.
+
+## 프로젝트
+
+- Godot 4.5 프로젝트(GL Compatibility)이며 GitHub Pages(`/sjrpg2/`)에 웹(WASM, 단일 스레드)으로 배포합니다.
+  Flutter·Bonfire 원본 [obmaz/sjrpg](https://github.com/obmaz/sjrpg)가 **기준**입니다. 이식은 원본의 수치·규칙·원화를 그대로
+  가져오는 것을 원칙으로 하며, 원본과 다르게 단순화한 부분은 README의 "아직 이식 전"과 코드 주석에 이유를 남깁니다.
+- 스크립트는 `scripts/`, 데이터는 `assets/data/`, 원화는 `assets/art/`, 테스트는 `tests/`, 도구는 `tools/`입니다.
+  장면(`scenes/`)은 `main.tscn` 하나이며 화면은 코드로 구성합니다.
+
+## 그림 규칙 (가장 중요)
+
+- **2.5D 쿼터뷰 120°**: 지면의 두 축은 화면에서 ±30°입니다(`scripts/iso.gd`). 바닥에 닿는 모든 원화는 실측한 바닥 접점이
+  보정(`gvs`/`gvk`) 후 ±30°에서 2.5° 이내여야 합니다. 이 기준을 벗어난 그림은 **게임에 쓰지 않습니다**(예: 예배당 → `docs/chapel-regeneration.md`).
+  `tests/cases/axis.gd`가 CI에서 이를 검사하므로 새 건물·소품을 넣으면 같은 방식으로 측정 데이터를 `assets/data/`에 두고 검사에 포함합니다.
+- 코드로 그림을 대신 그리지 않습니다. 코드는 원화의 배치·투영·충돌·깊이 정렬에만 씁니다(HUD 도형과 효과는 예외).
+- 이미지를 새로 가져오면 `.import`의 `compress/mode`를 손실(1)로 두어 웹 번들 크기를 유지합니다(`tools/check.sh`는 크기를 점검하지 않으므로 export 결과 `pck`를 확인).
+- 그림·UI를 바꾸면 실제 브라우저 화면(`tools/screenshot.mjs`)으로 가로·세로를 함께 확인합니다. 헤드리스 테스트 통과로 시각 검증을 대신하지 않습니다.
+
+## 데이터 출처
+
+- `assets/data/{skills,gear,village,landmarks}.json`은 원본 Dart에서 `tools/extract/extract_data.py`로 뽑습니다. 손으로 고치지 말고
+  추출 스크립트를 고쳐 다시 만듭니다(재현 가능해야 함). 추출 후 `git diff`로 의도한 변화만 있는지 확인합니다.
+- 전투 수치(피해·체력·소모·가격)는 원본 단위를 따릅니다: 정수 내부 단위, 화면 표시는 체력·피해 ×100, 자원 ×10(`HudArt.stat/res`).
+  원본에 없는 값을 임의로 정했다면(예: 마법사 주문 위력) 그 사실을 주석과 README에 적습니다.
+
+## GDScript 규칙
+
+- 탭 들여쓰기, 가능한 곳에는 타입을 적습니다. `Dictionary`/`Variant`에서 꺼낸 값은 `var x: float = d["x"]`처럼 타입을 명시합니다
+  (`:=`로 추론하면 "Variant로 추론" 경고가 오류로 처리됩니다). 한 줄 람다 안에서 `match`를 쓰지 말고 함수로 뺍니다.
+- 폰 화면: 세로 720×1280, 가로 1280×720 기준 해상도입니다(`main.gd`). 패널은 `PanelFrame`을 쓰고(안전 영역, 64px+ 터치, 큰 글자),
+  일반 화면의 `UiKit` 글자 크기는 `PanelFrame`이 `UiKit.boost`로 키웁니다.
+- 게임플레이 상태는 `GameState`(자동 로드)에 두고 `save_game()`/`load_game()`에 항목을 추가합니다. 저장은 하위 호환(`data.get(키, 기본값)`)을 지킵니다.
+- 효과음(`SoundFx`)·진동(`Prefs.pulse`)은 설정에서 꺼질 수 있으므로 항상 해당 호출을 거칩니다.
+- 사용하지 않는 코드·자산은 지웁니다. 주석은 현재 동작의 이유·단위·불변 조건을 설명합니다.
+
+## 검증과 완료
+
+변경 후 반드시 실행합니다.
+
+```sh
+tools/check.sh                 # 임포트(스크립트 오류) + 전체 테스트
+tools/check.sh --only=quests   # 일부 케이스
+tools/check.sh --export        # 웹 빌드까지
+```
+
+- 새 기능은 `tests/cases/`에 케이스를 추가합니다(`extends TestCase`, `run()` 구현). 실패는 `check()`/`failures += 1`로 남깁니다.
+  게임 장면은 `await make_game()`으로 만들고, 걷기·프레임 대기는 `_walk`/`_frames`를 씁니다.
+- UI·입력·렌더링을 바꾸면 `tools/export_web.sh` → `tools/serve.sh` → `node tools/screenshot.mjs --scene … --device phone|desktop`으로 화면을 확인합니다.
+- **푸시·배포를 요청받으면** `main`의 해당 커밋에 대한 워크플로 "Build web and deploy to GitHub Pages" 성공과 공개 페이지
+  <https://obmaz.github.io/sjrpg2/> 로드까지 확인한 뒤 완료를 보고합니다. 배포 설정(Pages 소스 = GitHub Actions)은 저장소 설정에서 한 번만 바꿉니다.
+- 브랜치는 만들지 않고 `main`에 직접 커밋합니다(사용자 지시). 커밋 메시지는 변경의 이유를 적습니다.
+- 기능이 바뀌면 README의 사용자 안내와 `docs/development.md`의 구조를 함께 갱신합니다. 일회성 완료 기록은 문서에 쌓지 않습니다.

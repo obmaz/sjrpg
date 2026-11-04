@@ -67,6 +67,17 @@ Flutter·Bonfire로 만든 [sjrpg](https://github.com/obmaz/sjrpg)를 **Godot 4.
 | `tests/skill_smoke.gd` | 모든 스킬을 배우고 시전하는 헤드리스 테스트 (CI에서 실행) |
 | `assets/art` | 원본 저장소 `art/`에서 가져온 이미지와 아틀라스 JSON |
 
+## 개발 하네스
+
+작업 규칙은 [AGENTS.md](AGENTS.md), 구조·디버그·테스트는 [docs/development.md](docs/development.md)에 있습니다.
+
+```sh
+tools/check.sh            # 임포트 + 전체 테스트
+tools/check.sh --export   # + 웹 빌드
+tools/serve.sh            # build/web 로컬 서빙
+node tools/screenshot.mjs --scene bag --device phone
+```
+
 ## 로컬 실행·빌드
 
 1. [Godot 4.5.1](https://godotengine.org/download)과 같은 버전의 export templates를 설치합니다.
