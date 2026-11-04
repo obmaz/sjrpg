@@ -63,6 +63,7 @@ func _choose_hero(cls: String) -> void:
 		return
 	var confirm := PanelFrame.new()
 	add_child(confirm)
+	confirm.set_compact()
 	confirm.set_header("새 모험을 시작할까요?")
 	confirm.body.add_child(PanelFrame.wrap_label("새 모험을 시작하면 이전 진행을 덮어씁니다. 취소하면 기존 모험을 유지합니다.", 22))
 	confirm.add_footer("취소", func(): confirm.queue_free())

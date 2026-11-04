@@ -8,6 +8,7 @@ signal restart_requested
 
 func _ready() -> void:
 	super._ready()
+	set_compact()
 	set_header("첫 스테이지 정화", "제1장 · 숲과 초원")
 	var crest := UiKit.label("★  제1장 완료  ★", 34, UiKit.GOLD, true)
 	crest.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

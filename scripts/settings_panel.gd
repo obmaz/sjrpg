@@ -131,4 +131,8 @@ class Pill:
 		draw_style_box(sb, r)
 		var knob := Vector2(size.x - size.y / 2.0 if on else size.y / 2.0, size.y / 2.0)
 		draw_circle(knob, size.y / 2.0 - 5.0, Color(0.96, 0.94, 0.88))
-		draw_string(UiKit.BOLD_FONT, Vector2(14.0 if on else 0.0, size.y * 0.66), "ON" if on else "OFF", HORIZONTAL_ALIGNMENT_LEFT if on else HORIZONTAL_ALIGNMENT_RIGHT, size.x - 14.0, 21, Color(1, 1, 1, 0.9))
+		var text := "ON" if on else "OFF"
+		var width := UiKit.BOLD_FONT.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 21).x
+		var left := 8.0 if on else size.y
+		var right := size.x - size.y if on else size.x - 8.0
+		draw_string(UiKit.BOLD_FONT, Vector2((left + right - width) / 2.0, size.y * 0.66), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 21, Color(1, 1, 1, 0.9))

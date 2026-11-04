@@ -27,6 +27,7 @@ static func recovered() -> int:
 
 func _ready() -> void:
 	super._ready()
+	set_compact()
 	var m: Dictionary = MEMORIES[index]
 	set_header("숲의 기억", "기억 %d / %d" % [recovered(), MEMORIES.size()])
 	body.add_child(PanelFrame.section(m["title"]))

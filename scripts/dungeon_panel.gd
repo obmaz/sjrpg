@@ -10,6 +10,7 @@ func setup(g: Node) -> DungeonPanel:
 
 func _ready() -> void:
 	super._ready()
+	set_compact()
 	set_header("바람 동굴", "선택 탐험 · 숲 의뢰와 독립")
 	if game.dungeon.active:
 		body.add_child(PanelFrame.wrap_label(game.dungeon.objective(), 22, UiKit.GOLD))

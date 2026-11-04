@@ -23,6 +23,7 @@ var footer: HBoxContainer
 var _panel: PanelContainer
 var _tab_buttons: Array[Button] = []
 var _on_tab: Callable
+var compact := false
 
 
 func _init() -> void:
@@ -43,15 +44,22 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var dim := ColorRect.new()
-	dim.color = Color(0.01, 0.04, 0.04, 0.9)
+	dim.color = Color(0.015, 0.025, 0.025, 0.72)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(dim)
 
 	_panel = PanelContainer.new()
-	_panel.add_theme_stylebox_override("panel", UiKit.panel_style(Color(0.035, 0.09, 0.09, 0.97), UiKit.GOLD, 18))
+	var surface := UiKit.panel_style(Color("141e1d"), Color("59635a"), 14)
+	surface.content_margin_left = 24
+	surface.content_margin_right = 24
+	surface.content_margin_top = 22
+	surface.content_margin_bottom = 22
+	surface.shadow_color = Color(0, 0, 0, 0.32)
+	surface.shadow_size = 18
+	_panel.add_theme_stylebox_override("panel", surface)
 	add_child(_panel)
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 10)
+	column.add_theme_constant_override("separation", 18)
 	_panel.add_child(column)
 
 	var header := HBoxContainer.new()
@@ -61,9 +69,12 @@ func _ready() -> void:
 	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	titles.add_theme_constant_override("separation", 0)
 	header.add_child(titles)
-	title_label = UiKit.label("", 30, UiKit.GOLD, true)
+	title_label = UiKit.label("", 28, Color("eee9dc"), true)
+	title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title_label.custom_minimum_size.x = 120
 	titles.add_child(title_label)
-	subtitle_label = UiKit.label("", 17, Color(0.72, 0.85, 0.8))
+	subtitle_label = UiKit.label("", 16, Color("a2b0a5"))
+	subtitle_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	titles.add_child(subtitle_label)
 	trailing = HBoxContainer.new()
 	trailing.add_theme_constant_override("separation", 8)
@@ -72,6 +83,7 @@ func _ready() -> void:
 	close.custom_minimum_size = Vector2(MIN_TOUCH + 36.0, MIN_TOUCH)
 	close.pressed.connect(func(): closed.emit())
 	header.add_child(close)
+	column.add_child(HSeparator.new())
 
 	tab_scroll = ScrollContainer.new()
 	tab_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
@@ -95,8 +107,11 @@ func _ready() -> void:
 	body_holder.add_child(scroll)
 	body = VBoxContainer.new()
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 10)
+	body.add_theme_constant_override("separation", 16)
 	scroll.add_child(body)
+	body.minimum_size_changed.connect(func():
+		if compact:
+			_layout.call_deferred())
 
 	footer = HBoxContainer.new()
 	footer.add_theme_constant_override("separation", 10)
@@ -129,16 +144,24 @@ static func safe_margins(viewport: Viewport) -> Vector4:
 func _layout() -> void:
 	var view := get_viewport().get_visible_rect().size
 	var m := safe_margins(get_viewport())
-	var pad := 10.0
+	var pad := 18.0 if view.y > view.x else 28.0
 	var left := pad + m.x
 	var top := pad + m.y
 	var right := pad + m.z
 	var bottom := pad + m.w
 	var width := minf(view.x - left - right, MAX_WIDTH)
 	var cx := left + (view.x - left - right) / 2.0
-	_panel.position = Vector2(cx - width / 2.0, top)
-	_panel.size = Vector2(width, view.y - top - bottom)
-	_panel.custom_minimum_size = _panel.size
+	var height := view.y - top - bottom
+	if compact and body != null:
+		height = minf(height, maxf(380.0, body.get_combined_minimum_size().y + 270.0))
+	_panel.custom_minimum_size = Vector2.ZERO
+	_panel.position = Vector2(cx - width / 2.0, top + (view.y - top - bottom - height) / 2.0)
+	_panel.size = Vector2(width, height)
+
+
+func set_compact() -> void:
+	compact = true
+	_layout.call_deferred()
 
 
 func is_portrait() -> bool:
@@ -161,8 +184,7 @@ func set_tabs(labels: Array, selected: int, on_select: Callable) -> void:
 	for i in labels.size():
 		var b := UiKit.button(labels[i], 20)
 		b.custom_minimum_size = Vector2(maxf(104.0, labels[i].length() * 30.0 + 34.0), MIN_TOUCH)
-		if i != selected:
-			b.modulate = Color(0.62, 0.66, 0.64)
+		UiKit.style_button(b, false, i == selected)
 		var index := i
 		b.pressed.connect(func(): _on_tab.call(index))
 		tab_row.add_child(b)
@@ -180,8 +202,7 @@ func add_footer(text: String, on_press: Callable, primary := false, weight := 1.
 	b.custom_minimum_size = Vector2(0, MIN_TOUCH + 10.0)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.size_flags_stretch_ratio = weight
-	if not primary:
-		b.modulate = Color(0.82, 0.86, 0.84)
+	UiKit.style_button(b, primary)
 	b.pressed.connect(on_press)
 	footer.add_child(b)
 	return b

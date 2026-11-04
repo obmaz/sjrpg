@@ -14,6 +14,7 @@ func setup(g: Node, npc_name: String) -> DialoguePanel:
 
 func _ready() -> void:
 	super._ready()
+	set_compact()
 	_rebuild()
 
 
@@ -41,7 +42,7 @@ func _rebuild() -> void:
 		_action("바람 동굴 탐험 안내", func():
 			closed.emit()
 			game.hud.interact.call_deferred("바람 동굴"))
-	add_footer("닫기", func(): closed.emit(), true)
+	add_footer("대화 마치기", func(): closed.emit())
 
 
 func _say(text: String) -> void:
@@ -56,6 +57,7 @@ func _reward_line(id: String) -> void:
 
 func _action(text: String, on_press: Callable, enabled := true) -> void:
 	var b := UiKit.button(text, 23)
+	UiKit.style_button(b, true)
 	b.custom_minimum_size = Vector2(0, 76)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.disabled = not enabled

@@ -82,6 +82,7 @@ func _open(panel: PanelFrame) -> void:
 		panel.free()
 		return
 	controls.release_all()
+	_toast.hide()
 	get_tree().paused = true
 	_panel = panel
 	panel.closed.connect(close_panel)
@@ -94,6 +95,7 @@ func close_panel() -> void:
 	_panel.queue_free()
 	_panel = null
 	get_tree().paused = false
+	_toast.visible = _toast_time > 0.0
 	game.player.refresh_stats()
 	if GameState.claim_boss_heart():
 		game.toast("파수꾼의 심장을 받았습니다")
@@ -110,6 +112,7 @@ func pause_for_background() -> void:
 		return
 	var panel := PanelFrame.new()
 	_open(panel)
+	panel.set_compact()
 	panel.set_header("잠시 멈췄습니다", "화면을 떠나 모험을 일시정지했습니다")
 	panel.body.add_child(PanelFrame.wrap_label("준비되면 모험을 계속하세요. 전투와 남은 시간은 멈춰 있습니다.", 22))
 	panel.add_footer("모험 계속하기", close_panel, true)
