@@ -5,5 +5,5 @@
 
 흐름: requested → designed → implemented → approved(또는 changes-requested → implemented 반복) → done
 
-외부 AI(Gemini 등): 역할별 담당 AI는 `.harness/roles.conf`에서 정한다(claude/antigravity/gemini/deepseek). `tools/run_role.sh <역할> <작업id>` 한 줄로 담당 AI가 작업 파일을 읽고 결과를 덧붙인다.
+외부 AI(Gemini 등): 역할별 담당 AI는 `.harness/roles.conf`에서 정한다(claude/antigravity/gemini/deepseek/codex). `tools/run_role.sh <역할> <작업id>` 한 줄로 담당 AI가 작업 파일을 읽고 결과를 덧붙인다.
 작업 시작: `tools/new_task.sh "제목"`

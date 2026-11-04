@@ -21,6 +21,9 @@ case "$ai" in
   antigravity) AGY=${AGY:-$(command -v agy || echo "$LOCALAPPDATA/agy/bin/agy.exe")}
             [ -x "$AGY" ] || { echo "agy 미설치(Antigravity CLI)" >&2; exit 1; }
             out=$(printf "%s" "$prompt" | "$AGY" -p "stdin의 지시를 수행하세요. 셸 명령은 ;, &&, | 로 잇지 말고 하나씩 따로 실행하세요." --mode "$mode" --dangerously-skip-permissions) ;;
+  codex)    command -v codex >/dev/null || { echo "codex CLI 미설치: npm i -g @openai/codex (codex login 필요)" >&2; exit 1; }
+            sb=workspace-write; [ "$role" = reviewer ] && sb=read-only
+            out=$(printf "%s" "$prompt" | codex exec --sandbox "$sb" -) ;;
   gemini)   command -v gemini >/dev/null || { echo "gemini CLI 미설치: npm i -g @google/gemini-cli" >&2; exit 1; }
             out=$(printf "%s" "$prompt" | gemini -p "stdin의 지시를 수행하세요") ;;
   deepseek) [ -n "$DEEPSEEK_API_KEY" ] || { echo "DEEPSEEK_API_KEY 환경변수 필요" >&2; exit 1; }
