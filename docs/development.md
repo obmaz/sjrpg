@@ -31,6 +31,8 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 `tools/extract/chapel_measure.json`에 있고 `tools/extract/chapel.py`가 `town.webp` 패킹과 `village.json`의 예배당 항목을
 만듭니다(`extract_data.py`도 같은 `merge()`로 합침). 패킹은 시트 전체를 다시 인코딩하므로 예배당이 없는 시트에서 한 번만,
 측정값만 바꿀 때는 `python3 tools/extract/chapel.py --data`를 씁니다. `assets/source/`는 `.gdignore`로 임포트·번들에서 뺍니다.
+성문 두 방향과 성벽 구간 원화(`gate-new-a/b.png`, `wall-seg-a/b.png`)의 측정값은 `tools/extract/gate_measure.json`에 있고
+`tools/extract/gate.py`가 `gates.webp`·`walls.webp` 패킹과 `village.json`의 성문·성벽 항목을 도출합니다.
 
 ## 디버그 쿼리 (웹)
 

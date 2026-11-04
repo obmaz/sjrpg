@@ -9,6 +9,11 @@ var texture: Texture2D
 var k := 1.0  # world pixels per atlas pixel
 var modulate_color := Color.WHITE
 var flip := false
+## Optional vertical strip of the atlas (`clip` = atlas x range) for tall one-piece art such as the gatehouse: each
+## strip is its own node whose origin is the strip's lowest ground point, so actors depth-sort against the strip
+## beside them instead of the whole sprite. `draw_shift` re-anchors the art to the sprite's foot.
+var clip := Vector2.ZERO
+var draw_shift := Vector2.ZERO
 
 static var _textures := {}
 
@@ -59,9 +64,25 @@ func native_polygon(points: Array) -> PackedVector2Array:
 	return out
 
 
+## The strip of this sprite between atlas x `x0`..`x1` whose depth-sort point is the atlas pixel `sort_at`.
+## Call after this sprite's `position` is set; add the result to the same parent.
+func make_strip(x0: float, x1: float, sort_at: Vector2) -> IsoSprite:
+	var strip := IsoSprite.new()
+	strip.def = def
+	strip.texture = texture
+	strip.k = k
+	strip.clip = Vector2(x0, x1)
+	var delta := _ground_delta(sort_at - Vector2(def["foot"][0], def["foot"][1])) * k
+	strip.position = position + delta
+	strip.draw_shift = -delta
+	return strip
+
+
 func _draw() -> void:
 	var src := Rect2(def["source"][0], def["source"][1], def["source"][2], def["source"][3])
+	if clip != Vector2.ZERO:
+		src = Rect2(clip.x, src.position.y, clip.y - clip.x, src.size.y)
 	var foot := Vector2(def["foot"][0], def["foot"][1])
 	var sx := -k if flip else k
-	draw_set_transform_matrix(Transform2D(Vector2(sx, k * float(def["gvk"])), Vector2(0, k * float(def["gvs"])), Vector2.ZERO))
+	draw_set_transform_matrix(Transform2D(Vector2(sx, k * float(def["gvk"])), Vector2(0, k * float(def["gvs"])), draw_shift))
 	draw_texture_rect_region(texture, Rect2(src.position - foot, src.size), src, modulate_color)

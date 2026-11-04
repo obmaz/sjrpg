@@ -232,6 +232,11 @@ func _process(delta: float) -> void:
 		if lm.contains_top(player.position):
 			elevated = true
 			break
+	# Gate passages: the gatehouse art would hide the player in its arch, so draw above it there.
+	for passage in village.gate_passages:
+		if Geometry2D.is_point_in_polygon(player.position, passage):
+			elevated = true
+			break
 	player.z_index = 1 if elevated else 0
 	for c in corpses.duplicate():
 		c["time"] -= delta

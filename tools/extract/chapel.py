@@ -135,6 +135,9 @@ def merge(data):
     data["frames"]["chapel"] = frame
     data["placements"]["chapel"] = place
     data["chapel"] = yard
+    # 2배로 커진 예배당 밑에 깔리는 상자는 옆으로 옮긴다.
+    for old, new in MEASURE["chests_moved"]:
+        data["chest_uv"] = [list(new) if c == list(old) else c for c in data["chest_uv"]]
     return data
 
 

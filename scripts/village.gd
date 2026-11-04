@@ -6,8 +6,6 @@ extends RefCounted
 ## the river and the bridge.
 
 const DATA_PATH := "res://assets/data/village.json"
-const WALL_HEIGHT := 140.0
-const WALL_THICK := 38.0
 const ROAD_HALF := 0.047  # paved road half width in uv
 ## Town trees measured from the original game's opening view.
 const TREE_UV := [[0.355, 0.724, 11], [0.684, 0.703, 2], [0.246, 0.368, 11]]
@@ -20,6 +18,11 @@ const NPCS := [
 ]
 
 var data: Dictionary
+## Wall height/thickness come from the gatehouse art (data["wall"]) so the wall meets the gate wings exactly.
+var wall_height := 200.0
+var wall_thick := 64.0
+## Collision footprint (world px) of each wall run segment.
+var wall_footprints: Array[PackedVector2Array] = []
 var extent := 2400.0
 var spawn_uv := Vector2(0.5, 0.525)
 
@@ -30,6 +33,8 @@ var circles: Array = []  # [Vector2 center, float radius]
 var terrace: PackedVector2Array
 ## Chapel stair path from the ground below up to the yard (world px).
 var chapel_steps: PackedVector2Array
+## Index range [first, end) of the chapel's own blockers inside `solids` (cliff faces, church body, yard ledges).
+var chapel_solids := Vector2i.ZERO
 var landmarks: Array[Landmark] = []
 ## 의뢰 장소 (world px): roots 석조 정원 제단, moon 고목의 쉼터, sun 동굴.
 var quest_sites := {}
@@ -43,8 +48,10 @@ var chest_points: Array[Vector2] = []
 ## 숲의 기억 상자: 서쪽 · 북쪽 · 동쪽 길 (ground units).
 const MEMORY_SPOTS := [Vector2(-1900.0, 130.0), Vector2(180.0, -1900.0), Vector2(1450.0, 260.0)]
 var gate_points: Array[Vector2] = []
-## Measured pillar feet of each gate in ground units: gate -> [Vector2, Vector2].
-var gate_pillars: Array = []
+## Wall-end centre of each gate's two wings in ground units: gate -> [Vector2, Vector2].
+var gate_ends: Array = []
+## Gate passages (world px): actors inside draw above the gatehouse art so they stay visible in the arch.
+var gate_passages: Array[PackedVector2Array] = []
 var bridge: Bridge
 var river: River
 ## Minimap data (world pixels).
@@ -62,12 +69,19 @@ var river_band := Rect2()  # ground units: x = u, y = v
 func _init() -> void:
 	data = JSON.parse_string(FileAccess.open(DATA_PATH, FileAccess.READ).get_as_text())
 	extent = data["extent"]
+	wall_height = data["wall"]["height"]
+	wall_thick = data["wall"]["thick"]
 	spawn_uv = Vector2(data["spawn_uv"][0], data["spawn_uv"][1])
 
 
 ## Town uv → ground units (spawn at the origin).
 func ground(uv: Vector2) -> Vector2:
 	return (uv - spawn_uv) * extent
+
+
+## World position → town uv (inverse of `point`).
+func uv_of(world: Vector2) -> Vector2:
+	return Iso.unproject(world) / extent + spawn_uv
 
 
 func point(uv: Vector2) -> Vector2:
@@ -269,63 +283,80 @@ func near_water(g: Vector2, margin: float) -> bool:
 
 # ───────── walls & gates ─────────
 
-## A wall run's gate-side end snaps to the centre of the nearest measured
-## pillar foot, so the pillar covers the end instead of the wall poking into
-## the opening. `axis` is the coordinate that varies across the gate.
-func _snap_to_pillar(end: Vector2, gate: int) -> Vector2:
-	var axis := 0 if gate < 2 else 1
-	var best: Vector2 = gate_pillars[gate][0]
-	for f in gate_pillars[gate]:
-		if absf(f[axis] - end[axis]) < absf(best[axis] - end[axis]):
-			best = f
-	var snapped := end
-	snapped[axis] = best[axis]
-	return snapped
+## A wall run's gate-side end snaps to the centre of the nearest gate wing end, so the wall continues the wing
+## at the same height and thickness instead of poking into the gate.
+func _snap_to_gate(end: Vector2, gate: int) -> Vector2:
+	var best: Vector2 = gate_ends[gate][0]
+	for e in gate_ends[gate]:
+		if e.distance_to(end) < best.distance_to(end):
+			best = e
+	return best
 
 
 func _build_walls(world: Node2D) -> void:
-	var tex := load("res://assets/art/village/wall.webp") as Texture2D
+	var tex := load("res://assets/art/village/walls.webp") as Texture2D
+	var segs: Dictionary = data["wall"]["segs"]
+	var strip_px: float = data["wall"]["slice_px"]
 	# [first-end gate, last-end gate] for the four runs.
 	var run_gates := [[0, 2], [2, 1], [0, 3], [3, 1]]
+	var half := wall_thick * 0.5
 	for r in data["wall_runs"].size():
 		var run: Array = data["wall_runs"][r]
 		var pts: Array[Vector2] = []
 		for p in run:
 			pts.append(ground(Vector2(p[0], p[1])))
-		pts[0] = _snap_to_pillar(pts[0], run_gates[r][0])
-		pts[pts.size() - 1] = _snap_to_pillar(pts[pts.size() - 1], run_gates[r][1])
+		pts[0] = _snap_to_gate(pts[0], run_gates[r][0])
+		pts[pts.size() - 1] = _snap_to_gate(pts[pts.size() - 1], run_gates[r][1])
 		for i in range(1, pts.size()):
 			var a := pts[i - 1]
 			var b := pts[i]
-			var length := a.distance_to(b)
-			var pieces := maxi(1, ceili(length / 72.0))
+			var dir := (b - a).normalized()
+			# Corner ends (not at a gate) run on by half a wall thickness so the two runs overlap into a closed corner.
+			if i > 1:
+				a -= dir * half
+			if i < pts.size() - 1:
+				b += dir * half
+			var along_u := absf(b.x - a.x) > absf(b.y - a.y)
+			# Art "a" runs along +u, art "b" along v; the visible face is the +v / +u side of the wall.
+			var def: Dictionary = segs["a" if along_u else "b"]
+			var front := Vector2(0.0, half) if along_u else Vector2(half, 0.0)
+			var n := dir.orthogonal() * half
+			solids.append(PackedVector2Array([Iso.project(a - n), Iso.project(b - n), Iso.project(b + n), Iso.project(a + n)]))
+			wall_footprints.append(solids[solids.size() - 1])
+			var seg_ground := float(def["source"][2]) * float(def["k"]) / (Iso.COS * Iso.S)  # ground length of one span of art
+			var pieces := maxi(1, roundi(a.distance_to(b) / seg_ground))
 			for p in pieces:
-				var pa := a.lerp(b, float(p) / pieces)
-				var pb := a.lerp(b, float(p + 1) / pieces)
-				var w := WallPiece.new()
-				w.setup(pa, pb, WALL_HEIGHT, WALL_THICK, tex)
-				world.add_child(w)
-				solids.append(w.footprint)
+				var pa := Iso.project(a.lerp(b, float(p) / pieces) + front)
+				var pb := Iso.project(a.lerp(b, float(p + 1) / pieces) + front)
+				if pa.x > pb.x:
+					var t := pa
+					pa = pb
+					pb = t
+				WallPiece.add_span(world, tex, def, strip_px, pa, pb)
 
 
+## Twin-tower gatehouse (새 120° 원화 assets/source/gate-new-*.png). Art is cut into vertical strips that each depth-sort
+## by their own lowest ground point, so an actor walking along a wing's face is never hidden by the far end of the gate.
+## Collision: the two towers and the wings outside them; the passage between stays open.
 func _build_gates(world: Node2D) -> void:
 	for gate in 4:
 		var uv := Vector2(data["gate_centers"][gate][0], data["gate_centers"][gate][1])
-		var def: Dictionary = data["sprites"]["gate-%d" % (0 if gate < 2 else 2)]
-		var s := IsoSprite.new().setup(def, float(def["world_height"]) * 1.35)
+		var key := "gate-%d" % (0 if gate < 2 else 2)
+		var def: Dictionary = data["sprites"][key]
+		var info: Dictionary = data["gates"][key]
+		var s := IsoSprite.new().setup(def, float(def["world_height"]))
 		s.position = point(uv)
-		# The gate always draws over the wall ends that tuck into its pillars.
-		s.z_index = 1
-		world.add_child(s)
+		for strip in def["slices"]:
+			world.add_child(s.make_strip(strip[0], strip[1], Vector2(strip[2], strip[3])))
 		gate_points.append(s.position)
-		var feet: Array[Vector2] = []
-		for contact in data["gate_contacts"][0 if gate < 2 else 1]:
-			var c := s.atlas_point(Vector2(contact[0], contact[1]))
-			feet.append(Iso.unproject(c))
-			var u := Iso.project(Vector2(22, 0))
-			var v := Iso.project(Vector2(0, 22))
-			solids.append(PackedVector2Array([c - u, c - v, c + u, c + v]))
-		gate_pillars.append(feet)
+		var ends: Array[Vector2] = []
+		for e in info["ends"]:
+			ends.append(Iso.unproject(s.atlas_point(Vector2(e[0], e[1]))))
+		gate_ends.append(ends)
+		for poly in info["solids"]:
+			solids.append(s.atlas_polygon(poly))
+		gate_passages.append(s.atlas_polygon(info["passage"]))
+		s.free()
 
 
 # ───────── buildings ─────────
@@ -364,6 +395,7 @@ func _build_chapel(world: Node2D) -> void:
 	var yard: Dictionary = data["chapel"]
 	terrace = s.native_polygon(yard["outline"])
 	chapel_steps = s.native_polygon(yard["steps"])
+	var first := solids.size()
 	for face in yard["faces"]:
 		solids.append(s.native_polygon(face))
 	solids.append(s.native_polygon(yard["building"]))
@@ -375,6 +407,7 @@ func _build_chapel(world: Node2D) -> void:
 		var b := terrace[(i + 1) % terrace.size()]
 		var n := (b - a).orthogonal().normalized() * 5.0
 		solids.append(PackedVector2Array([a + n, b + n, b - n, a - n]))
+	chapel_solids = Vector2i(first, solids.size())
 
 
 func _build_plaza(world: Node2D) -> void:

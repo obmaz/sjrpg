@@ -19,6 +19,39 @@ func run() -> void:
 
 	check("chapel yard is built", v.terrace.size() == 8 and v.chapel_steps.size() == 6)
 
+	# Size: the chapel is placed at twice the earlier 10.7 hero-heights.
+	check("chapel is 2x scale", is_equal_approx(float(v.data["placements"]["chapel"][1]), 21.4))
+	# Layout: the raised yard, cliff faces and church body must not overlap walls, gates, other buildings or the plaza props.
+	var others: Array[PackedVector2Array] = []
+	for i in v.solids.size():
+		if i < v.chapel_solids.x or i >= v.chapel_solids.y:
+			others.append(v.solids[i])
+	var mine: Array = [v.terrace, building]
+	for i in range(v.chapel_solids.x, v.chapel_solids.y):
+		mine.append(v.solids[i])
+	var overlaps := 0
+	var where := ""
+	for poly in mine:
+		for q in others:
+			if not Geometry2D.intersect_polygons(poly, q).is_empty():
+				overlaps += 1
+				where += " [mine %s vs other %s]" % [str(v.uv_of(Iso.poly_bounds(poly).get_center())), str(v.uv_of(Iso.poly_bounds(q).get_center()))]
+	check("chapel does not overlap walls, gates or other solids", overlaps == 0, "%d overlaps%s" % [overlaps, where])
+	for c in v.chest_points:
+		var hidden := Geometry2D.is_point_in_polygon(c, v.terrace)
+		for i in range(v.chapel_solids.x, v.chapel_solids.y):
+			hidden = hidden or Geometry2D.is_point_in_polygon(c, v.solids[i])
+		hidden = hidden or Geometry2D.is_point_in_polygon(c, building)
+		if hidden:
+			check("chest under the chapel", false, str(c))
+	# The plinth sits in the north-east quadrant: east of the central road, inside the east wall, and no further
+	# north than the north wall's inner face (the stairs may land on the east road).
+	var base_ok := true
+	for p in chapel.atlas_polygon(v.data["frames"]["chapel"]["ground"]):
+		var uv := v.uv_of(p)
+		base_ok = base_ok and uv.x > 0.547 and uv.x < 0.927 and uv.y > 0.1138 and uv.y < 0.47
+	check("chapel plinth is inside its quadrant", base_ok)
+
 	# Climb: start on open ground below the stairs and follow the measured stair path.
 	var steps := v.chapel_steps
 	player.position = steps[0]
@@ -41,8 +74,8 @@ func run() -> void:
 	var foot_a := chapel.native_point(Vector2(1425, 1020))
 	var foot_b := chapel.native_point(Vector2(775, 1380))
 	var mid := (foot_a + foot_b) / 2.0
-	var below := mid + Vector2(0, 90)
-	check("cliff probe starts on open ground", not _inside_any(below, v.solids) and not Geometry2D.is_point_in_polygon(below, v.terrace))
+	var below := mid + Vector2(0, 45)
+	check("cliff probe starts on open ground", not _inside_any(below, v.solids) and not Geometry2D.is_point_in_polygon(below, v.terrace), "probe %s uv %s" % [str(below), str(v.uv_of(below))])
 	player.position = below
 	var up := mid + Vector2(0, -170)  # over the cliff face, toward the yard
 	await _walk(player, up, 300)
