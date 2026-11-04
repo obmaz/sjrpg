@@ -73,7 +73,7 @@ func _rebuild() -> void:
 func _row(g: Gear) -> Control:
 	var expanded := selected == g
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.panel_style(Color(0.1, 0.2, 0.18, 0.95) if expanded else Color(0.07, 0.15, 0.14, 0.95), UiKit.GOLD if expanded else Color(0.24, 0.38, 0.34), 12))
+	card.add_theme_stylebox_override("panel", UiKit.panel_style(UiKit.SURFACE_RAISED if expanded else UiKit.SURFACE, UiKit.GOLD if expanded else UiKit.EDGE, 12))
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 8)
 	card.add_child(col)

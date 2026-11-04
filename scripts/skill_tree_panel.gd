@@ -6,10 +6,22 @@ extends PanelFrame
 ## 폰 세로 화면에서는 트리(위) + 상세(아래)로 나뉘고 가로에서는 좌우로 나뉩니다.
 
 const TIERS := [1, 6, 12, 18, 24, 30]
+const NODE_SIDE := 64.0
+const TIER_HEIGHT := 104.0
+const TREE_PADDING := 18.0
+const TIER_LABEL_WIDTH := 70.0
+const TREE_MIN_WIDTH := 322.0
+const TAP_SLOP := 12.0
 
 var _tab := 0
 var _selected := ""
 var _tree: Control
+var _tree_scroll: ScrollContainer
+var _gesture_index := -2
+var _gesture_start := Vector2.ZERO
+var _gesture_scroll := 0
+var _gesture_node := ""
+var _gesture_dragged := false
 var _detail: VBoxContainer
 var _layout_box: BoxContainer
 var _nodes := {}  # id -> Rect2 in _tree coordinates
@@ -25,15 +37,25 @@ func _ready() -> void:
 	_layout_box.add_theme_constant_override("separation", 12)
 	body_holder.add_child(_layout_box)
 
+	_tree_scroll = ScrollContainer.new()
+	_tree_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_tree_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_tree_scroll.size_flags_stretch_ratio = 1.15
+	_tree_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_tree_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_tree_scroll.scroll_deadzone = int(TAP_SLOP)
+	_tree_scroll.scroll_started.connect(_cancel_tree_gesture)
+	_layout_box.add_child(_tree_scroll)
 	_tree = Control.new()
 	_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_tree.size_flags_stretch_ratio = 1.15
-	_tree.custom_minimum_size = Vector2(0, 280)
+	_tree.mouse_filter = Control.MOUSE_FILTER_PASS
+	_tree.custom_minimum_size = Vector2(TREE_MIN_WIDTH, TIER_HEIGHT * TIERS.size() + TREE_PADDING * 2)
 	_tree.draw.connect(_draw_tree)
 	_tree.gui_input.connect(_tree_input)
-	_tree.resized.connect(func(): _tree.queue_redraw())
-	_layout_box.add_child(_tree)
+	_tree.resized.connect(func():
+		_layout_nodes()
+		_tree.queue_redraw())
+	_tree_scroll.add_child(_tree)
 
 	var detail_panel := PanelContainer.new()
 	detail_panel.add_theme_stylebox_override("panel", UiKit.panel_style())
@@ -71,6 +93,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _fit() -> void:
 	var size := get_viewport_rect().size
 	_layout_box.vertical = size.y > size.x
+	_tree_scroll.custom_minimum_size.y = 240.0 if _layout_box.vertical else 0.0
 
 
 func _tab_labels() -> Array:
@@ -109,30 +132,34 @@ func _refresh() -> void:
 	set_header("%s 스킬" % GameState.class_info()["name"], "스킬 포인트 %d · Lv.%d" % [GameState.skill_points, GameState.level])
 	set_tabs(_tab_labels(), _tab, func(i):
 		_tab = i
+		_tree_scroll.scroll_vertical = 0
 		_refresh())
+	_layout_nodes()
 	_tree.queue_redraw()
 	_build_detail()
 
 
 # ───────── tree drawing ─────────
 
-func _draw_tree() -> void:
+## Node geometry is independent of viewport height; the scroll area reveals all six tiers.
+func _layout_nodes() -> void:
 	_nodes.clear()
+	var width := maxf(_tree.size.x, TREE_MIN_WIDTH)
+	var col_w := (width - TIER_LABEL_WIDTH - 12.0) / 3.0
+	for slot in _tab_slots(_tab):
+		var center := Vector2(TIER_LABEL_WIDTH + (slot[2] + 0.5) * col_w, TREE_PADDING + slot[1] * TIER_HEIGHT + 44.0)
+		_nodes[slot[0]] = Rect2(center - Vector2.ONE * NODE_SIDE / 2.0, Vector2.ONE * NODE_SIDE)
+
+
+func _draw_tree() -> void:
+	_layout_nodes()
 	var area := _tree.size
-	var label_w := 72.0
-	var col_w := (area.x - label_w) / 3.0
-	var row_h := area.y / 6.0
-	var icon := minf(col_w * 0.7, row_h * 0.62)
 	var font := UiKit.BOLD_FONT
-	for r in 6:
-		var y := r * row_h
-		_tree.draw_rect(Rect2(0, y + 2, area.x, row_h - 4), Color(1, 1, 1, 0.03 if r % 2 == 0 else 0.06))
+	for r in TIERS.size():
+		var y := TREE_PADDING + r * TIER_HEIGHT
+		_tree.draw_rect(Rect2(0, y, area.x, TIER_HEIGHT - 2.0), Color(1, 0.9, 0.7, 0.025 if r % 2 == 0 else 0.045))
 		var tier := "Lv.%d" % TIERS[r] if _tab != 3 else ""
-		_tree.draw_string(font, Vector2(4, y + row_h / 2.0 + 6), tier, HORIZONTAL_ALIGNMENT_LEFT, label_w, 19, Color(0.8, 0.85, 0.75))
-	var slots := _tab_slots(_tab)
-	for slot in slots:
-		var c := Vector2(label_w + (slot[2] + 0.5) * col_w, (slot[1] + 0.5) * row_h - 8.0)
-		_nodes[slot[0]] = Rect2(c - Vector2(icon, icon) / 2.0, Vector2(icon, icon))
+		_tree.draw_string(font, Vector2(4, y + 51.0), tier, HORIZONTAL_ALIGNMENT_LEFT, TIER_LABEL_WIDTH, 19, UiKit.MUTED)
 	# Prerequisite arrows inside this school.
 	for id in _nodes:
 		var s := GameState.skill(id)
@@ -143,11 +170,12 @@ func _draw_tree() -> void:
 			var to: Rect2 = _nodes[id]
 			var met := GameState.rank(req) >= int(s["requires"][req])
 			var col := Color(0.96, 0.84, 0.52, 0.9) if met else Color(0.6, 0.6, 0.6, 0.6)
-			var a := Vector2(from.get_center().x, from.end.y + 20)
+			var a := Vector2(from.get_center().x, from.end.y + 27)
 			var b := Vector2(to.get_center().x, to.position.y - 4)
 			_tree.draw_line(a, b, col, 3.0, true)
 			var dir := (b - a).normalized()
-			_tree.draw_colored_polygon(PackedVector2Array([b, b - dir * 12 + dir.orthogonal() * 7, b - dir * 12 - dir.orthogonal() * 7]), col)
+			var arrow := minf(10.0, maxf(3.0, a.distance_to(b) * 0.55))
+			_tree.draw_colored_polygon(PackedVector2Array([b, b - dir * arrow + dir.orthogonal() * arrow * 0.6, b - dir * arrow - dir.orthogonal() * arrow * 0.6]), col)
 	for id in _nodes:
 		var rect: Rect2 = _nodes[id]
 		var s := GameState.skill(id)
@@ -155,36 +183,83 @@ func _draw_tree() -> void:
 		var learnable := GameState.learn_block_reason(s) == ""
 		var tint := Color.WHITE if rank > 0 else (Color(0.75, 0.75, 0.75) if learnable else Color(0.35, 0.35, 0.38))
 		SkillIcons.draw(_tree, id, rect, tint)
-		var border := Color(0.96, 0.84, 0.52) if rank > 0 else Color(0.4, 0.45, 0.42)
+		var border := Color(0.96, 0.84, 0.52) if rank > 0 else UiKit.EDGE
 		if learnable:
-			border = Color(0.5, 1.0, 0.55)
+			border = Color("ddd1af")
 		_tree.draw_rect(rect, border, false, 4.0 if id == _selected else 2.0)
 		if id == _selected:
-			_tree.draw_rect(rect.grow(5), Color(1, 1, 1, 0.9), false, 2.0)
+			_tree.draw_rect(rect.grow(4), Color("d8c79f"), false, 2.0)
 		var badge := "%d/%d" % [rank, int(s["limit"])]
-		var bpos := rect.position + Vector2(0, rect.size.y + 20)
-		_tree.draw_string_outline(font, bpos, badge, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 19, 5, Color(0, 0, 0, 0.9))
-		_tree.draw_string(font, bpos, badge, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 19, Color.WHITE if rank > 0 else Color(0.7, 0.7, 0.7))
+		var bpos := rect.position + Vector2(0, rect.size.y + 22)
+		_tree.draw_string_outline(font, bpos, badge, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 18, 2, Color(0, 0, 0, 0.9))
+		_tree.draw_string(font, bpos, badge, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 18, Color.WHITE if rank > 0 else Color(0.7, 0.7, 0.7))
 		if s["passive"] and not s["basic"]:
 			_tree.draw_string(font, rect.position + Vector2(3, 14), "P", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color(0.7, 1, 0.8))
 		var slot_index: int = GameState.slots.find(id)
 		if slot_index >= 0:
 			var tag := "주" if slot_index == 0 else str(slot_index)
-			_tree.draw_circle(rect.end - Vector2(4, rect.size.y - 4), 14, Color(0.96, 0.84, 0.52))
-			_tree.draw_string(font, rect.end - Vector2(18, rect.size.y - 10), tag, HORIZONTAL_ALIGNMENT_CENTER, 28, 17, UiKit.INK)
+			_tree.draw_circle(rect.position + Vector2(rect.size.x - 3, 5), 12, Color(0.96, 0.84, 0.52))
+			_tree.draw_string(font, rect.position + Vector2(rect.size.x - 15, 11), tag, HORIZONTAL_ALIGNMENT_CENTER, 24, 16, UiKit.INK)
+
+
+func _node_at(at: Vector2) -> String:
+	for id in _nodes:
+		if (_nodes[id] as Rect2).grow(8).has_point(at):
+			return id
+	return ""
+
+
+func _begin_tree_gesture(index: int, at: Vector2) -> void:
+	if _gesture_index != -2:
+		return
+	_gesture_index = index
+	_gesture_start = _tree.get_global_transform_with_canvas() * at
+	_gesture_scroll = _tree_scroll.scroll_vertical
+	_gesture_node = _node_at(at)
+	_gesture_dragged = false
+
+
+func _cancel_tree_gesture() -> void:
+	_gesture_dragged = true
+
+
+func _drag_tree_gesture(at: Vector2) -> void:
+	var current := _tree.get_global_transform_with_canvas() * at
+	if current.distance_to(_gesture_start) > TAP_SLOP:
+		_gesture_dragged = true
+
+
+func _end_tree_gesture(index: int, at: Vector2) -> void:
+	if index != _gesture_index:
+		return
+	_drag_tree_gesture(at)
+	var tap := not _gesture_dragged and _gesture_scroll == _tree_scroll.scroll_vertical and _node_at(at) == _gesture_node
+	var selected := _gesture_node
+	_gesture_index = -2
+	_gesture_node = ""
+	if tap and selected != "":
+		_selected = selected
+		_tree.queue_redraw()
+		_build_detail()
 
 
 func _tree_input(event: InputEvent) -> void:
-	var pressed: bool = event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT
-	if not pressed:
-		return
-	for id in _nodes:
-		if (_nodes[id] as Rect2).grow(10).has_point(event.position):
-			_selected = id
-			_tree.queue_redraw()
-			_build_detail()
-			_tree.accept_event()
-			return
+	# A node activates on release, after the scroll container has had a chance to claim a drag.
+	# Do not accept press/drag events here: ScrollContainer owns touch panning and its deadzone.
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			_begin_tree_gesture(event.index, event.position)
+		else:
+			_end_tree_gesture(event.index, event.position)
+	elif event is InputEventScreenDrag and event.index == _gesture_index:
+		_drag_tree_gesture(event.position)
+	elif event is InputEventMouseButton and event.device != InputEvent.DEVICE_ID_EMULATION and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			_begin_tree_gesture(-1, event.position)
+		else:
+			_end_tree_gesture(-1, event.position)
+	elif event is InputEventMouseMotion and _gesture_index == -1:
+		_drag_tree_gesture(event.position)
 
 
 # ───────── detail panel ─────────
@@ -206,12 +281,15 @@ func _build_detail() -> void:
 	icon.draw.connect(func(): SkillIcons.draw(icon, id, Rect2(Vector2.ZERO, Vector2(88, 88))))
 	head.add_child(icon)
 	var names := VBoxContainer.new()
+	names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(names)
-	names.add_child(UiKit.label(s["name"], 26, UiKit.GOLD, true))
+	var title := PanelFrame.wrap_label(s["name"], 26, UiKit.GOLD)
+	title.add_theme_font_override("font", UiKit.BOLD_FONT)
+	names.add_child(title)
 	var kind := "패시브" if s["passive"] and not s["basic"] else ("기본 공격" if s["basic"] else ("이동" if s["mobility"] else "사용 기술"))
 	var subtitle := [s["branch"]] if s["branch"] == kind else [s["branch"], kind]
 	subtitle.append("%d/%d등급" % [rank, int(s["limit"])])
-	names.add_child(UiKit.label(" · ".join(subtitle), 16, Color(0.8, 0.9, 0.85)))
+	names.add_child(PanelFrame.wrap_label(" · ".join(subtitle), 16, UiKit.MUTED))
 
 	var desc := UiKit.label(s["desc"], 17)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -226,7 +304,7 @@ func _build_detail() -> void:
 		if float(s["cooldown"]) > 0.0:
 			info.append("재사용 %.1f초" % s["cooldown"])
 	info.append("습득 레벨 %d" % GameState.required_level_for_rank(s, rank + 1) if rank < int(s["limit"]) else "최고 등급")
-	_detail.add_child(UiKit.label(" · ".join(info), 15, Color(0.85, 0.85, 0.75)))
+	_detail.add_child(PanelFrame.wrap_label(" · ".join(info), 15, UiKit.MUTED))
 	if rank > 0:
 		_add_effect_line("현재", SkillDefs.describe(_selected, rank), Color(1, 0.95, 0.75))
 	if rank < int(s["limit"]):
@@ -245,16 +323,16 @@ func _build_detail() -> void:
 	_detail.add_child(learn)
 
 	if rank > 0 and GameState.is_assignable(s):
-		_detail.add_child(UiKit.label("장착 슬롯", 16, Color(0.8, 0.9, 0.85), true))
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 6)
+		_detail.add_child(UiKit.label("장착 슬롯", 16, UiKit.MUTED, true))
+		var row := HFlowContainer.new()
+		row.add_theme_constant_override("h_separation", 8)
+		row.add_theme_constant_override("v_separation", 8)
 		_detail.add_child(row)
 		for i in 5:
 			var b := UiKit.button("주" if i == 0 else str(i), 20)
-			b.custom_minimum_size = Vector2(60, 68)
-			b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			b.custom_minimum_size = Vector2(64, 68)
 			if GameState.slots[i] == _selected:
-				b.modulate = Color(0.6, 1, 0.65)
+				UiKit.style_button(b, false, true)
 			var index := i
 			b.pressed.connect(func():
 				if GameState.slots[index] == _selected:

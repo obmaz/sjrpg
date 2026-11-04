@@ -87,7 +87,7 @@ func _build_inventory() -> void:
 	if items.is_empty():
 		var empty := UiKit.label(
 			"확인하지 않은 새 장비가 없습니다" if tab == 1 else ("잠근 장비가 없습니다" if tab == 5 else "이 부위에 보관한 장비가 없습니다"),
-			19, Color(0.66, 0.78, 0.74))
+			19, UiKit.MUTED)
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		empty.custom_minimum_size = Vector2(0, 90)
 		body.add_child(empty)
@@ -121,7 +121,8 @@ func _overview() -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 8)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
+	row.add_theme_constant_override("separation", 14)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.add_child(row)
 	for slot in SLOTS:
 		var cell := GearCell.new()
@@ -138,10 +139,10 @@ func _overview() -> Control:
 	var stats := VBoxContainer.new()
 	stats.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	stats.add_theme_constant_override("separation", 0)
-	row.add_child(stats)
+	box.add_child(stats)
 	stats.add_child(UiKit.label("공격력 %s    방어 %s" % [HudArt.stat(GameState.attack_power()), HudArt.stat(GameState.defense())], 19))
 	stats.add_child(UiKit.label("생명 %s    %s %s" % [HudArt.stat(GameState.max_hp()), _res(), HudArt.res(GameState.max_resource())], 19))
-	var hint := UiKit.label("착용한 칸을 누르면 상세를 봅니다", 14, Color(0.6, 0.72, 0.68))
+	var hint := UiKit.label("착용한 칸을 누르면 상세를 봅니다", 14, UiKit.MUTED)
 	stats.add_child(hint)
 	return box
 
@@ -151,7 +152,7 @@ func _overview() -> Control:
 func _gear_row(g: Gear, offer: bool, price := 0) -> Control:
 	var expanded := (selected_offer == "gear-%d" % g.base["index"]) if offer else selected == g
 	var card := PanelContainer.new()
-	var style := UiKit.panel_style(Color(0.1, 0.2, 0.18, 0.95) if expanded else Color(0.07, 0.15, 0.14, 0.95), UiKit.GOLD if expanded else Color(0.24, 0.38, 0.34), 12)
+	var style := UiKit.panel_style(UiKit.SURFACE_RAISED if expanded else UiKit.SURFACE, UiKit.GOLD if expanded else UiKit.EDGE, 12)
 	style.content_margin_top = 8
 	style.content_margin_bottom = 8
 	card.add_theme_stylebox_override("panel", style)
@@ -183,7 +184,7 @@ func _gear_row(g: Gear, offer: bool, price := 0) -> Control:
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text.add_child(name_label)
-	var stat_label := UiKit.label(g.stats_text(_res()), 18, Color(0.86, 0.9, 0.84))
+	var stat_label := UiKit.label(g.stats_text(_res()), 18, UiKit.TEXT)
 	stat_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	stat_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text.add_child(stat_label)
@@ -240,7 +241,7 @@ func _detail(g: Gear, offer: bool, price: int) -> Control:
 		box.add_child(PanelFrame.wrap_label(cmp, 16, Color(0.78, 0.92, 0.85)))
 	if g.slot() == "weapon":
 		var profile := g.melee_profile()
-		box.add_child(PanelFrame.wrap_label("무기 근접 공격 · 사거리 %.1f걸음 · 타격 폭 %.0f° · 공격 간격 %.2f초 (일시 강화 제외)" % [profile["range"] / 40.0, rad_to_deg(profile["arc"]) * 2.0, profile["tempo"]], 15, Color(0.66, 0.78, 0.74)))
+		box.add_child(PanelFrame.wrap_label("무기 근접 공격 · 사거리 %.1f걸음 · 타격 폭 %.0f° · 공격 간격 %.2f초 (일시 강화 제외)" % [profile["range"] / 40.0, rad_to_deg(profile["arc"]) * 2.0, profile["tempo"]], 15, UiKit.MUTED))
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 8)
 	box.add_child(actions)
@@ -347,7 +348,7 @@ func _build_shop() -> void:
 func _potion_offer(id: String, title: String, sub: String, price: int, maxed := false) -> Control:
 	var expanded := selected_offer == id
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.panel_style(Color(0.1, 0.2, 0.18, 0.95) if expanded else Color(0.07, 0.15, 0.14, 0.95), UiKit.GOLD if expanded else Color(0.24, 0.38, 0.34), 12))
+	card.add_theme_stylebox_override("panel", UiKit.panel_style(UiKit.SURFACE_RAISED if expanded else UiKit.SURFACE, UiKit.GOLD if expanded else UiKit.EDGE, 12))
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 8)
 	card.add_child(col)
@@ -376,7 +377,7 @@ func _potion_offer(id: String, title: String, sub: String, price: int, maxed := 
 	var t := UiKit.label(title, 21, Color(0.95, 0.92, 0.8), true)
 	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text.add_child(t)
-	var s := UiKit.label(sub, 18, Color(0.86, 0.9, 0.84))
+	var s := UiKit.label(sub, 18, UiKit.TEXT)
 	s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	s.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text.add_child(s)
@@ -428,18 +429,17 @@ class GearCell:
 			pressed.emit()
 
 	func _draw() -> void:
-		var col := Color(0.2, 0.33, 0.3) if gear == null else gear.color()
+		var col := UiKit.EDGE if gear == null else gear.color()
 		var rect := Rect2(Vector2.ZERO, size)
-		draw_rect(rect, Color(col, 0.1 if gear == null else 0.2), true)
-		draw_rect(rect, Color(col, 0.7), false, 2.0)
+		draw_style_box(UiKit.panel_style(Color("151511"), Color(col, 0.8), 5), rect)
 		if gear == null:
 			var name: String = Gear.SLOT_NAMES.get(slot, "")
-			draw_string(UiKit.BOLD_FONT, Vector2(0, size.y * 0.58), name, HORIZONTAL_ALIGNMENT_CENTER, size.x, 22, Color(0.4, 0.55, 0.5))
+			draw_string(UiKit.BOLD_FONT, Vector2(0, size.y * 0.58), name, HORIZONTAL_ALIGNMENT_CENTER, size.x, 22, UiKit.MUTED)
 			return
 		var inner := rect.grow(-6.0)
 		GearArt.draw(self, gear.base, inner, Color.WHITE if GameState.can_equip(gear) else Color(0.5, 0.5, 0.5))
 		if gear.weapon_level > 0:
-			draw_rect(Rect2(3, 3, 52, 24), Color(0.04, 0.15, 0.15, 0.87), true)
+			draw_rect(Rect2(3, 3, 52, 24), Color(0.08, 0.07, 0.05, 0.92), true)
 			draw_string(UiKit.BOLD_FONT, Vector2(6, 23), "Lv.%d" % gear.weapon_level, HORIZONTAL_ALIGNMENT_LEFT, 48, 18, Color(0.93, 0.89, 0.8))
 		if GameState.is_equipped(gear):
 			draw_circle(Vector2(size.x - 12, 12), 8.0, Color(0.55, 0.9, 0.77))

@@ -21,6 +21,7 @@ var scroll: ScrollContainer
 var body: VBoxContainer
 var footer: HBoxContainer
 var _panel: PanelContainer
+var _trim: FrameTrim
 var _tab_buttons: Array[Button] = []
 var _on_tab: Callable
 var compact := false
@@ -44,22 +45,23 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var dim := ColorRect.new()
-	dim.color = Color(0.015, 0.025, 0.025, 0.72)
+	dim.color = Color(0.018, 0.017, 0.014, 0.72)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(dim)
 
 	_panel = PanelContainer.new()
-	var surface := UiKit.panel_style(Color("141e1d"), Color("59635a"), 14)
+	var surface := UiKit.panel_style(Color("1c1b18"), Color("8c7653"), 10)
+	surface.raised = true
 	surface.content_margin_left = 24
 	surface.content_margin_right = 24
-	surface.content_margin_top = 22
-	surface.content_margin_bottom = 22
+	surface.content_margin_top = 26
+	surface.content_margin_bottom = 26
 	surface.shadow_color = Color(0, 0, 0, 0.32)
 	surface.shadow_size = 18
 	_panel.add_theme_stylebox_override("panel", surface)
 	add_child(_panel)
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 18)
+	column.add_theme_constant_override("separation", 16)
 	_panel.add_child(column)
 
 	var header := HBoxContainer.new()
@@ -69,21 +71,30 @@ func _ready() -> void:
 	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	titles.add_theme_constant_override("separation", 0)
 	header.add_child(titles)
-	title_label = UiKit.label("", 28, Color("eee9dc"), true)
+	title_label = UiKit.label("", 28, UiKit.TEXT, true)
 	title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title_label.custom_minimum_size.x = 120
 	titles.add_child(title_label)
-	subtitle_label = UiKit.label("", 16, Color("a2b0a5"))
+	subtitle_label = UiKit.label("", 16, UiKit.MUTED)
 	subtitle_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	titles.add_child(subtitle_label)
 	trailing = HBoxContainer.new()
 	trailing.add_theme_constant_override("separation", 8)
 	header.add_child(trailing)
-	var close := UiKit.button("닫기", 19)
-	close.custom_minimum_size = Vector2(MIN_TOUCH + 36.0, MIN_TOUCH)
+	var close := UiKit.button("×", 30)
+	close.tooltip_text = "모험으로 돌아가기"
+	close.custom_minimum_size = Vector2(MIN_TOUCH, MIN_TOUCH)
+	for state in ["normal", "hover", "pressed", "focus"]:
+		var coin := UiKit.panel_style(Color("211e18"), Color("a18a60") if state != "pressed" else Color("6d5c40"), 32)
+		coin.raised = true
+		coin.content_margin_left = 0
+		coin.content_margin_right = 0
+		coin.content_margin_top = 0
+		coin.content_margin_bottom = 0
+		close.add_theme_stylebox_override(state, coin)
 	close.pressed.connect(func(): closed.emit())
 	header.add_child(close)
-	column.add_child(HSeparator.new())
+	column.add_child(UiKit.divider())
 
 	tab_scroll = ScrollContainer.new()
 	tab_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
@@ -117,6 +128,9 @@ func _ready() -> void:
 	footer.add_theme_constant_override("separation", 10)
 	column.add_child(footer)
 
+	_trim = FrameTrim.new()
+	_trim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_trim)
 	get_viewport().size_changed.connect(_layout)
 	_layout()
 
@@ -157,6 +171,10 @@ func _layout() -> void:
 	_panel.custom_minimum_size = Vector2.ZERO
 	_panel.position = Vector2(cx - width / 2.0, top + (view.y - top - bottom - height) / 2.0)
 	_panel.size = Vector2(width, height)
+	if _trim != null:
+		_trim.position = _panel.position
+		_trim.size = _panel.size
+		_trim.queue_redraw()
 
 
 func set_compact() -> void:
@@ -210,13 +228,39 @@ func add_footer(text: String, on_press: Callable, primary := false, weight := 1.
 
 ## A tappable full-width section label.
 static func section(text: String) -> Label:
-	var l := UiKit.label(text, 19, Color(0.76, 0.9, 0.82), true)
+	var l := UiKit.label(text, 19, UiKit.GOLD, true)
 	return l
 
 
-static func wrap_label(text: String, size := 18, color := Color(0.93, 0.93, 0.88)) -> Label:
+static func wrap_label(text: String, size := 18, color := UiKit.TEXT) -> Label:
 	var l := UiKit.label(text, size, color)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	l.custom_minimum_size = Vector2(120, 0)
 	return l
+
+
+## Small corner brackets and rivets connect menu frames to the HUD's bronze medallions.
+class FrameTrim:
+	extends Control
+
+	func _draw() -> void:
+		var dark := Color("28231a")
+		var gold := Color("aa9061")
+		for x in [false, true]:
+			for y in [false, true]:
+				var corner := Vector2(size.x - 8 if x else 8, size.y - 8 if y else 8)
+				var inward := Vector2(-1 if x else 1, -1 if y else 1)
+				var points := PackedVector2Array([
+					corner + Vector2(26 * inward.x, 0), corner + Vector2(9 * inward.x, 0),
+					corner + Vector2(0, 9 * inward.y), corner + Vector2(0, 26 * inward.y)])
+				draw_polyline(points, dark, 4.0, true)
+				draw_polyline(points, Color(gold, 0.72), 1.0, true)
+				var rivet := corner + inward * 5
+				draw_circle(rivet, 2.4, Color("0f0e0b"))
+				draw_circle(rivet - Vector2(0.4, 0.6), 1.3, gold)
+		var c := Vector2(size.x * 0.5, 2)
+		for i in [-1, 0, 1]:
+			var at := c + Vector2(i * 12, 0)
+			var diamond := PackedVector2Array([at + Vector2(0, -3), at + Vector2(3, 0), at + Vector2(0, 3), at + Vector2(-3, 0)])
+			draw_colored_polygon(diamond, Color(gold, 0.95 if i == 0 else 0.5))

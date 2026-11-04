@@ -2,22 +2,22 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://qlhy5cx4ifkb"
-path="res://.godot/imported/battle.webp-1143ba2431026ab3afd23d6e5c558ee6.ctex"
+uid="uid://cekq5eqin3osj"
+path="res://.godot/imported/panel-leather.webp-073d7f16d3003eb1a90874e06319e301.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/hud/battle.webp"
-dest_files=["res://.godot/imported/battle.webp-1143ba2431026ab3afd23d6e5c558ee6.ctex"]
+source_file="res://assets/art/hud/panel-leather.webp"
+dest_files=["res://.godot/imported/panel-leather.webp-073d7f16d3003eb1a90874e06319e301.ctex"]
 
 [params]
 
 compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.85
+compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1

@@ -1,57 +1,53 @@
 class_name SkillIcons
 extends RefCounted
-## Draws skill plaques from the original icon sheets (barbarian/sorceress-skills.webp).
+## Original illustrated skill plaques, with real art for skills outside the 30-cell catalogs.
 
 const SHEETS := {
 	"warrior": preload("res://assets/art/skills/warrior-skills.webp"),
 	"mage": preload("res://assets/art/skills/mage-skills.webp"),
 }
-## Skills outside the 30-plaque sheets get a lettered medallion.
-const FALLBACK := {
-	"cleave": ["베", Color(0.75, 0.6, 0.35)],
-	"shadowAssault": ["분", Color(0.45, 0.5, 0.85)],
-	"battleSprint": ["질", Color(0.4, 0.7, 0.45)],
-	"sorceressAttack": ["지", Color(0.55, 0.45, 0.3)],
-}
+const BASIC_SWORD := preload("res://assets/art/hud/reference-buttons.webp")
+const COMBAT := preload("res://assets/art/hud/icons.webp")
 
 
-## Draws the icon for `id` into `rect` on any CanvasItem.
-static func draw(canvas: CanvasItem, id: String, rect: Rect2, modulate := Color.WHITE) -> void:
+## Return normalized texture bounds so square panels and round HUD buttons use the same illustration.
+static func source(id: String) -> Dictionary:
 	var cls := GameState.hero_class
 	var icons: Dictionary = GameState.skill_data()[cls]["icons"]
 	if icons.has(id):
-		var tex: Texture2D = SHEETS[cls]
 		var b: Array = icons[id]
-		var size := tex.get_size()
-		var src := Rect2(b[0] * size.x, b[1] * size.y, (b[2] - b[0]) * size.x, (b[3] - b[1]) * size.y)
-		canvas.draw_texture_rect_region(tex, rect, src, modulate)
-		return
-	var f: Array = FALLBACK.get(id, ["?", Color(0.4, 0.4, 0.4)])
-	var c := rect.get_center()
-	var r := minf(rect.size.x, rect.size.y) / 2.0
-	canvas.draw_circle(c, r, Color(f[1], modulate.a) * Color(modulate.r, modulate.g, modulate.b))
-	canvas.draw_arc(c, r - 2, 0, TAU, 32, Color(0.96, 0.84, 0.52, modulate.a), 3.0, true)
-	var fs := int(r * 0.9)
-	canvas.draw_string(UiKit.BOLD_FONT, c + Vector2(-r, fs * 0.36), f[0], HORIZONTAL_ALIGNMENT_CENTER, r * 2, fs, Color(1, 1, 1, modulate.a))
+		return {"texture": SHEETS[cls], "uv": Rect2(b[0], b[1], b[2] - b[0], b[3] - b[1])}
+	match id:
+		"cleave":
+			return {"texture": BASIC_SWORD, "uv": Rect2(0.0, 0.0, 0.25, 1.0)}
+		"shadowAssault":
+			return {"texture": COMBAT, "uv": Rect2(6.0 / 1024, 7.0 / 768, 244.0 / 1024, 241.0 / 768)}
+		"battleSprint":
+			return {"texture": COMBAT, "uv": Rect2(518.0 / 1024, 263.0 / 768, 244.0 / 1024, 242.0 / 768)}
+		"sorceressAttack":
+			var b: Array = GameState.skill_data()["mage"]["icons"]["lightning"]
+			return {"texture": SHEETS["mage"], "uv": Rect2(b[0], b[1], b[2] - b[0], b[3] - b[1])}
+	return {"texture": BASIC_SWORD, "uv": Rect2(0.0, 0.0, 0.25, 1.0)}
 
 
-## Same icon, cropped to a circle (slightly inset so the square plaque border
-## never shows) for round combat buttons.
+static func draw(canvas: CanvasItem, id: String, rect: Rect2, modulate := Color.WHITE) -> void:
+	var art := source(id)
+	var texture: Texture2D = art["texture"]
+	var uv: Rect2 = art["uv"]
+	canvas.draw_texture_rect_region(texture, rect, Rect2(uv.position * texture.get_size(), uv.size * texture.get_size()), modulate)
+
+
+## Clip away square plaque corners for the reference's thin circular silver-blue combat bezels.
 static func draw_round(canvas: CanvasItem, id: String, center: Vector2, radius: float, modulate := Color.WHITE) -> void:
-	var cls := GameState.hero_class
-	var icons: Dictionary = GameState.skill_data()[cls]["icons"]
-	if not icons.has(id):
-		draw(canvas, id, Rect2(center - Vector2(radius, radius), Vector2(radius, radius) * 2.0), modulate)
-		return
-	var tex: Texture2D = SHEETS[cls]
-	var b: Array = icons[id]
-	var size := tex.get_size()
-	var mid := Vector2((b[0] + b[2]) * 0.5, (b[1] + b[3]) * 0.5)
-	var half := Vector2((b[2] - b[0]) * 0.5, (b[3] - b[1]) * 0.5) * 0.84
-	var pts := PackedVector2Array()
+	var art := source(id)
+	var texture: Texture2D = art["texture"]
+	var uv: Rect2 = art["uv"]
+	var mid := uv.get_center()
+	var half := uv.size * 0.42
+	var points := PackedVector2Array()
 	var uvs := PackedVector2Array()
-	for i in 36:
-		var d := Vector2.from_angle(TAU * i / 36.0)
-		pts.append(center + d * radius)
-		uvs.append(mid + d * half)
-	canvas.draw_polygon(pts, PackedColorArray([modulate]), uvs, tex)
+	for i in 48:
+		var direction := Vector2.from_angle(TAU * i / 48.0)
+		points.append(center + direction * radius)
+		uvs.append(mid + direction * half)
+	canvas.draw_polygon(points, PackedColorArray([modulate]), uvs, texture)

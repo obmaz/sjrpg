@@ -15,7 +15,7 @@ func _ready() -> void:
 	if GameState.boss_heart_pending:
 		body.add_child(PanelFrame.wrap_label("파수꾼의 심장 보관 중 · 가방을 비우고 창을 닫으면 받습니다.", 20, UiKit.GOLD))
 	body.add_child(PanelFrame.section("숲의 기억 · 선택 여정  %d / 3" % MemoryPanel.recovered()))
-	body.add_child(PanelFrame.wrap_label("서쪽·북쪽·동쪽 길의 상자에서 기억 3개를 모으세요. 완성 보상: 스킬 포인트 +1.", 17, Color(0.82, 0.9, 0.85)))
+	body.add_child(PanelFrame.wrap_label("서쪽·북쪽·동쪽 길의 상자에서 기억 3개를 모으세요. 완성 보상: 스킬 포인트 +1.", 17, UiKit.MUTED))
 	for i in MemoryPanel.MEMORIES.size():
 		var m: Dictionary = MemoryPanel.MEMORIES[i]
 		var opened := GameState.opened_chests.has(MemoryPanel.FIRST_CHEST + i)
@@ -27,7 +27,7 @@ func _ready() -> void:
 
 func _bar(title: String, sub: String, ratio: float, tag: String) -> Control:
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.panel_style(Color(0.07, 0.15, 0.14, 0.95), Color(0.28, 0.42, 0.37), 12))
+	card.add_theme_stylebox_override("panel", UiKit.panel_style(UiKit.SURFACE, UiKit.EDGE, 12))
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 6)
 	card.add_child(col)
@@ -38,12 +38,24 @@ func _bar(title: String, sub: String, ratio: float, tag: String) -> Control:
 	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	head.add_child(t)
 	head.add_child(UiKit.label(tag, 17, Color(1, 0.88, 0.5)))
-	col.add_child(PanelFrame.wrap_label(sub, 17, Color(0.82, 0.9, 0.85)))
+	col.add_child(PanelFrame.wrap_label(sub, 17, UiKit.MUTED))
 	var bar := ProgressBar.new()
 	bar.show_percentage = false
 	bar.min_value = 0.0
 	bar.max_value = 1.0
 	bar.value = ratio
 	bar.custom_minimum_size = Vector2(0, 14)
+	var track := StyleBoxFlat.new()
+	track.bg_color = Color("0f100d")
+	track.border_color = UiKit.EDGE
+	track.set_border_width_all(1)
+	track.set_corner_radius_all(4)
+	bar.add_theme_stylebox_override("background", track)
+	var progress := StyleBoxFlat.new()
+	progress.bg_color = Color("8d8c58")
+	progress.border_color = Color("c1b584")
+	progress.set_border_width_all(1)
+	progress.set_corner_radius_all(4)
+	bar.add_theme_stylebox_override("fill", progress)
 	col.add_child(bar)
 	return card

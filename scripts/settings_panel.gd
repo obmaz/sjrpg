@@ -38,7 +38,7 @@ func _rebuild() -> void:
 		Prefs.set_reduce_motion(on)
 		_rebuild()))
 	body.add_child(_action_row("진동 확인", func(): Prefs.pulse("hurt", true), Prefs.vibration_supported() and Prefs.haptics_enabled))
-	body.add_child(PanelFrame.wrap_label("진동은 지원되는 기기에서 동작하며, 선택한 설정은 이 기기에 저장됩니다.", 15, Color(0.66, 0.78, 0.74)))
+	body.add_child(PanelFrame.wrap_label("진동은 지원되는 기기에서 동작하며, 선택한 설정은 이 기기에 저장됩니다.", 15, UiKit.MUTED))
 	body.add_child(_toggle("전투 효과음", "공격 · 피격 · 획득", Prefs.sound_enabled, func(on):
 		Prefs.set_sound(on)
 		if on:
@@ -49,9 +49,9 @@ func _rebuild() -> void:
 		body.add_child(_action_row("동굴에서 나가기", func():
 			closed.emit()
 			game.dungeon.leave("동굴 입구로 돌아왔습니다")))
-	body.add_child(HSeparator.new())
+	body.add_child(UiKit.divider())
 	body.add_child(PanelFrame.section("진행"))
-	body.add_child(PanelFrame.wrap_label("5초마다 이 기기에 자동 저장합니다. 다음에 이어하기로 돌아올 수 있습니다. 직업을 고르고 새 모험 시작을 확인하면 이전 진행을 덮어씁니다.", 15, Color(0.73, 0.8, 0.74)))
+	body.add_child(PanelFrame.wrap_label("5초마다 이 기기에 자동 저장합니다. 다음에 이어하기로 돌아올 수 있습니다. 직업을 고르고 새 모험 시작을 확인하면 이전 진행을 덮어씁니다.", 15, UiKit.MUTED))
 	if _feedback != "":
 		body.add_child(PanelFrame.wrap_label(_feedback, 16, Color(0.71, 1, 0.69)))
 	body.add_child(_action_row("진행 상황 지금 저장", func():
@@ -83,7 +83,7 @@ func _action_row(text: String, on_press: Callable, enabled := true) -> Button:
 ## A big switch row: label + hint on the left, ON/OFF pill on the right.
 func _toggle(label: String, hint: String, on: bool, on_change: Callable) -> Control:
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.panel_style(Color(0.07, 0.15, 0.14, 0.95), Color(0.28, 0.42, 0.37) if not on else UiKit.GOLD, 12))
+	card.add_theme_stylebox_override("panel", UiKit.panel_style(UiKit.SURFACE, UiKit.EDGE if not on else UiKit.GOLD, 12))
 	var holder := PanelContainer.new()
 	holder.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	card.add_child(holder)
@@ -104,7 +104,7 @@ func _toggle(label: String, hint: String, on: bool, on_change: Callable) -> Cont
 	var l := UiKit.label(label, 22, Color(0.95, 0.92, 0.82), true)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text.add_child(l)
-	var h := UiKit.label(hint, 15, Color(0.7, 0.82, 0.77))
+	var h := UiKit.label(hint, 15, UiKit.MUTED)
 	h.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text.add_child(h)
@@ -122,17 +122,19 @@ class Pill:
 
 	func _draw() -> void:
 		var r := Rect2(Vector2.ZERO, size)
-		var back := Color(0.28, 0.62, 0.45) if on else Color(0.2, 0.25, 0.26)
+		var back := Color("56533a") if on else Color("24251f")
 		var sb := StyleBoxFlat.new()
 		sb.bg_color = back
 		sb.set_corner_radius_all(int(size.y / 2.0))
-		sb.border_color = Color(0.1, 0.1, 0.1, 0.6)
+		sb.border_color = Color("8c7651")
 		sb.set_border_width_all(2)
 		draw_style_box(sb, r)
 		var knob := Vector2(size.x - size.y / 2.0 if on else size.y / 2.0, size.y / 2.0)
-		draw_circle(knob, size.y / 2.0 - 5.0, Color(0.96, 0.94, 0.88))
+		draw_circle(knob + Vector2(0, 1), size.y / 2.0 - 4.0, Color("14120d"))
+		draw_circle(knob, size.y / 2.0 - 6.0, UiKit.GOLD)
+		draw_arc(knob, size.y / 2.0 - 8.0, PI * 1.1, TAU, 24, Color("e1cca0"), 1.0, true)
 		var text := "ON" if on else "OFF"
 		var width := UiKit.BOLD_FONT.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 21).x
 		var left := 8.0 if on else size.y
 		var right := size.x - size.y if on else size.x - 8.0
-		draw_string(UiKit.BOLD_FONT, Vector2((left + right - width) / 2.0, size.y * 0.66), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 21, Color(1, 1, 1, 0.9))
+		draw_string(UiKit.BOLD_FONT, Vector2((left + right - width) / 2.0, size.y * 0.66), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 21, UiKit.TEXT)

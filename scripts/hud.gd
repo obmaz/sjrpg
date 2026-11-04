@@ -38,13 +38,16 @@ func _ready() -> void:
 	_area.draw.connect(_draw_area_label)
 	add_child(_area)
 
-	_toast = UiKit.label("", 26, UiKit.GOLD, true)
+	_toast = UiKit.label("", 21, Color("eee3c7"))
+	_toast.add_theme_font_override("font", HudArt.FONT)
 	_toast.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_toast)
 
-	_status = UiKit.label("", 18, Color(0.7, 0.9, 1.0), true)
+	_status = UiKit.label("", 16, Color("d6e5e4"))
+	_status.add_theme_font_override("font", HudArt.FONT)
+	_status.add_theme_constant_override("outline_size", 1)
 	_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_status)
 	_build_death()
@@ -205,23 +208,47 @@ func unit() -> float:
 	return clampf(minf(size.x, size.y) / 720.0, 0.75, 2.0)
 
 
+## Geometry measured from the approved 714×1280 composition. Safe margins are
+## added before scaling, so the header keeps its proportions through rotation.
+func status_geometry() -> Dictionary:
+	var u := unit()
+	var m := PanelFrame.safe_margins(get_viewport())
+	var available := get_viewport().get_visible_rect().size - Vector2(m.x + m.z, m.y + m.w)
+	var origin := Vector2(m.x, m.y + available.y * 0.056)
+	var width := minf(374.0 * u, available.x - 250.0 * u)
+	var x := origin.x + 76.0 * u
+	return {
+		"origin": origin,
+		"portrait": origin + Vector2(57.0, 53.0) * u,
+		"radius": 50.0 * u,
+		"hp": Rect2(Vector2(x, origin.y + 7.0 * u), Vector2(width, 29.0 * u)),
+		"mp": Rect2(Vector2(x, origin.y + 40.0 * u), Vector2(width - 7.0 * u, 21.0 * u)),
+		"xp": Rect2(Vector2(x, origin.y + 69.0 * u), Vector2(width - 15.0 * u, 12.0 * u)),
+		"map": Rect2(Vector2(m.x + available.x - 144.0 * u, origin.y + 2.0 * u), Vector2.ONE * 136.0 * u),
+	}
+
+
 func _update_layout() -> void:
 	var u := unit()
-	var size := get_viewport().get_visible_rect().size
-	minimap.radius = 66.0 * u
-	minimap.size = Vector2.ONE * (minimap.radius * 2.0 + 8.0)
-	minimap.position = Vector2(size.x - 16.0 * u - minimap.size.x, 14.0 * u)
+	var geometry := status_geometry()
+	var origin: Vector2 = geometry["origin"]
+	var map_rect: Rect2 = geometry["map"]
+	minimap.radius = 64.0 * u
+	minimap.size = map_rect.size
+	minimap.position = map_rect.position
 	_area.position = Vector2.ZERO
-	_area.size = size
-	_status.position = Vector2(70.0, 143.0) * u
-	_status.size = Vector2(390.0, 30.0) * u
+	_area.size = get_viewport().get_visible_rect().size
+	_status.position = origin + Vector2(114.0, 137.0) * u
+	_status.size = Vector2(340.0, 23.0) * u
 	var statuses: Array[String] = []
 	var names := {"shout": "방어 함성", "orders": "전투 지시", "armor": "원소 갑옷", "enchant": "화염 강화", "storm": "뇌우", "command": "전투 명령", "guard": "집중 방어", "berserk": "광폭", "sprint": "질주"}
 	for key in game.player.buffs:
 		statuses.append("%s %d초" % [names.get(key, key), ceili(game.player.buffs[key]["time"])])
 	_status.text = " · ".join(statuses.slice(0, 3))
-	_toast.offset_top = 180.0 * u
-	_toast.offset_bottom = 222.0 * u
+	_toast.offset_top = origin.y + 184.0 * u
+	_toast.offset_bottom = origin.y + 220.0 * u
+	_save_warning.offset_top = origin.y + 220.0 * u
+	_save_warning.offset_bottom = origin.y + 290.0 * u
 	var name := "숲 마을" if game.in_town(game.player.position) else "숲 가장자리"
 	if not game.dungeon.active and game.village.river_band.grow(60.0).has_point(Iso.unproject(game.player.position)):
 		name = "강가"
@@ -234,17 +261,16 @@ func _update_layout() -> void:
 
 func _draw_area_label() -> void:
 	var u := unit()
-	var size := get_viewport().get_visible_rect().size
-	var w := 150.0 * u
-	var h := 34.0 * u
-	var rect := Rect2(Vector2(size.x - 16.0 * u - 66.0 * u - w / 2.0, 14.0 * u + 66.0 * u * 2.0 + 14.0 * u), Vector2(w, h))
+	var map_rect: Rect2 = status_geometry()["map"]
+	var rect := Rect2(map_rect.get_center().x - 60.0 * u, map_rect.end.y + 6.0 * u, 120.0 * u, 34.0 * u)
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.05, 0.06, 0.05, 0.78)
-	style.border_color = Color(0.55, 0.42, 0.24, 0.9)
-	style.set_border_width_all(2)
+	style.bg_color = Color(0.08, 0.075, 0.065, 0.86)
+	style.border_color = Color(0.48, 0.42, 0.30, 0.88)
+	style.set_border_width_all(1)
 	style.set_corner_radius_all(int(7 * u))
 	_area.draw_style_box(style, rect)
-	HudArt.text_outlined(_area, "제1장 · " + _area_name, rect.position + Vector2(0, h * 0.68), w, int(16 * u), Color(0.95, 0.92, 0.82))
+	_area.draw_line(rect.position + Vector2(8, 1) * u, Vector2(rect.end.x - 8 * u, rect.position.y + u), Color(0.75, 0.66, 0.47, 0.14), u, true)
+	HudArt.text_outlined(_area, _area_name, rect.position + Vector2(0, rect.size.y * 0.69), rect.size.x, int(18 * u), Color("d9cfb3"))
 
 
 func _add_vignette() -> void:
@@ -267,73 +293,92 @@ void fragment() {
 	add_child(rect)
 
 
+## Local fading scrims keep objective/buff text readable over bright paving without a solid HUD block.
+func _draw_hint_backdrop(rect: Rect2) -> void:
+	var clear := Color(0, 0, 0, 0)
+	var shade := Color(0.02, 0.018, 0.014, 0.56)
+	var fade := minf(16.0 * unit(), rect.size.x * 0.12)
+	var middle := Rect2(rect.position + Vector2(fade, 0), rect.size - Vector2(fade * 2.0, 0))
+	_bars.draw_rect(middle, shade)
+	for left in [true, false]:
+		var x := rect.position.x if left else rect.end.x - fade
+		var points := PackedVector2Array([Vector2(x, rect.position.y), Vector2(x + fade, rect.position.y), Vector2(x + fade, rect.end.y), Vector2(x, rect.end.y)])
+		_bars.draw_polygon(points, PackedColorArray([clear, shade, shade, clear]) if left else PackedColorArray([shade, clear, clear, shade]))
+
+
 func _draw_bars() -> void:
 	var p: Player = game.player
 	if p == null:
 		return
 	var u := unit()
-	var info := GameState.class_info()
-	var center := Vector2(62.0, 62.0) * u
-	var pr := 46.0 * u
-	var x0 := center.x + 16.0 * u
-	var w := 372.0 * u
-	var hp_rect := Rect2(x0, 12.0 * u, w, 36.0 * u)
-	var mp_rect := Rect2(x0, 48.0 * u, w - 6.0 * u, 28.0 * u)
-	var xp_rect := Rect2(x0, 77.0 * u, w - 12.0 * u, 14.0 * u)
-	# Dark metal plate that runs from the portrait under all three bars
-	# (원본 _HeroStatusChrome: fill 0xe51c1b1c, rim 0xff6e6355).
-	var slant := 16.0 * u
+	var geometry := status_geometry()
+	var origin: Vector2 = geometry["origin"]
+	var center: Vector2 = geometry["portrait"]
+	var pr: float = geometry["radius"]
+	var hp_rect: Rect2 = geometry["hp"]
+	var mp_rect: Rect2 = geometry["mp"]
+	var xp_rect: Rect2 = geometry["xp"]
+	# One joined gunmetal ribbon, with the portrait rim covering its left join.
 	var plate := PackedVector2Array([
-		Vector2(center.x + pr * 0.0, 6.0 * u), Vector2(x0 + w + 4.0 * u, 6.0 * u),
-		Vector2(x0 + w + 4.0 * u - slant, 100.0 * u), Vector2(center.x, 100.0 * u)])
-	_bars.draw_colored_polygon(PackedVector2Array([plate[0] + Vector2(0, 2), plate[1] + Vector2(0, 2), plate[2] + Vector2(0, 2), plate[3] + Vector2(0, 2)]), Color(0, 0, 0, 0.67))
-	_bars.draw_colored_polygon(plate, Color(0.11, 0.106, 0.11, 0.9))
-	_bars.draw_polyline(PackedVector2Array([plate[0], plate[1], plate[2], plate[3], plate[0]]), Color(0.43, 0.39, 0.33), 1.4 * u, true)
-	HudArt.slanted_bar(_bars, hp_rect, p.hp / p.max_hp, Color(0.95, 0.30, 0.25), Color(0.66, 0.1, 0.1), Color(0.2, 0.05, 0.06), 12.0 * u)
-	HudArt.text_outlined(_bars, "%s / %s" % [HudArt.stat(p.hp), HudArt.stat(p.max_hp)], hp_rect.position + Vector2(0, hp_rect.size.y * 0.72), hp_rect.size.x, int(20 * u))
-	var is_mage: bool = p.is_mage
-	var top := Color(0.35, 0.65, 1.0) if is_mage else Color(1.0, 0.7, 0.3)
-	var bottom := Color(0.1, 0.32, 0.78) if is_mage else Color(0.8, 0.38, 0.08)
-	var back := Color(0.04, 0.08, 0.2) if is_mage else Color(0.2, 0.1, 0.04)
-	HudArt.slanted_bar(_bars, mp_rect, p.resource / p.resource_max, top, bottom, back, 10.0 * u)
-	HudArt.text_outlined(_bars, "%s %s / %s" % [info["resource"], HudArt.res(p.resource), HudArt.res(p.resource_max)], mp_rect.position + Vector2(0, mp_rect.size.y * 0.72), mp_rect.size.x, int(17 * u))
+		origin + Vector2(55, 1) * u, Vector2(hp_rect.end.x + 5.0 * u, origin.y + u),
+		Vector2(xp_rect.end.x + 5.0 * u, origin.y + 88.0 * u), origin + Vector2(55, 88) * u])
+	_bars.draw_colored_polygon(plate, Color(0.055, 0.045, 0.045, 0.94))
+	_bars.draw_polyline(PackedVector2Array([plate[0], plate[1], plate[2], plate[3], plate[0]]), Color("746b5e"), 1.3 * u, true)
+	_bars.draw_line(plate[0] + Vector2(0, 2) * u, plate[1] + Vector2(-2, 2) * u, Color(0.7, 0.62, 0.48, 0.2), 0.8 * u, true)
+	_bars.draw_line(plate[3] + Vector2(0, 3) * u, plate[2] + Vector2(0, 3) * u, Color(0, 0, 0, 0.45), 2.0 * u, true)
+	HudArt.slanted_bar(_bars, hp_rect, p.hp / p.max_hp, Color("b43134"), Color("751719"), Color("432022"), 8.0 * u)
+	# Labels start beyond the full portrait, not at the fluid's hidden left edge.
+	var label_left := center.x + pr + 8.0 * u
+	var label_width := hp_rect.end.x - label_left - 11.0 * u
+	HudArt.text_outlined(_bars, "%s / %s" % [HudArt.stat(p.hp), HudArt.stat(p.max_hp)], Vector2(label_left, hp_rect.position.y + 23.0 * u), label_width, int(23 * u), Color("f4f1eb"))
+	var top := Color("61bfe5") if p.is_mage else Color("cd9c4a")
+	var bottom := Color("245d86") if p.is_mage else Color("895120")
+	var back := Color("142e40") if p.is_mage else Color("39291a")
+	HudArt.slanted_bar(_bars, mp_rect, p.resource / p.resource_max, top, bottom, back, 6.0 * u)
+	var info := GameState.class_info()
+	HudArt.text_outlined(_bars, "%s %s" % [info["resource"], HudArt.res(p.resource)], Vector2(label_left, mp_rect.position.y + 16.0 * u), label_width - 5.0 * u, int(18 * u), Color("e7f4f7"))
+	if p.is_mage:
+		var shimmer := 0.65 if Prefs.reduce_motion else 0.55 + 0.1 * sin(Time.get_ticks_msec() / 800.0)
+		for fraction in [0.17, 0.78]:
+			if p.resource / p.resource_max < fraction:
+				continue
+			var at := mp_rect.position + Vector2(mp_rect.size.x * fraction, 7.0 * u)
+			_bars.draw_line(at - Vector2(4, 0) * u, at + Vector2(4, 0) * u, Color(0.8, 0.96, 1.0, shimmer), 0.8 * u, true)
+			_bars.draw_line(at - Vector2(0, 4) * u, at + Vector2(0, 4) * u, Color(0.8, 0.96, 1.0, shimmer * 0.7), 0.8 * u, true)
 	var xp_ratio := float(GameState.xp) / GameState.xp_to_next()
-	HudArt.slanted_bar(_bars, xp_rect, xp_ratio, Color(0.95, 0.8, 0.4), Color(0.72, 0.55, 0.22), Color(0.32, 0.27, 0.22), 8.0 * u)
-	HudArt.text_outlined(_bars, "EXP %d%%" % floori(xp_ratio * 100.0), xp_rect.position + Vector2(0, xp_rect.size.y * 0.82), xp_rect.size.x, int(11 * u), Color(0.93, 0.89, 0.8))
-	# 지금 할 일 (원본 mainObjective) under the plate.
+	HudArt.slanted_bar(_bars, xp_rect, xp_ratio, Color("bfa361"), Color("8d733f"), Color("393530"), 4.0 * u)
+	HudArt.text_outlined(_bars, "EXP %d%%" % floori(xp_ratio * 100.0), Vector2(label_left, xp_rect.position.y + 10.0 * u), label_width - 11.0 * u, int(11 * u), Color("d9d0b9"))
+	# A quiet single line keeps progression discoverable without dominating the scene.
 	var obj: String = game.dungeon.objective() if game.dungeon.active else Quests.main_objective()
-	HudArt.text_outlined(_bars, obj, Vector2(x0 - 6.0 * u, 124.0 * u), w + 20.0 * u, int(17 * u), Color(1, 0.93, 0.7), HORIZONTAL_ALIGNMENT_LEFT)
-	# Portrait: 원본 art — 전사 hero-helmeted-portrait, 마법사 class-selection 얼굴.
-	_bars.draw_circle(center + Vector2(0, 2.0), pr + 1.0, Color(0, 0, 0, 0.67))
-	_bars.draw_circle(center, pr, Color(0.09, 0.114, 0.125))
+	var hint_width := minf(hp_rect.size.x + 10.0 * u, HudArt.FONT.get_string_size(obj, HORIZONTAL_ALIGNMENT_LEFT, -1, int(16 * u)).x + 30.0 * u)
+	_draw_hint_backdrop(Rect2(origin + Vector2(103, 105) * u, Vector2(hint_width, 27.0 * u)))
+	if not _status.text.is_empty():
+		_draw_hint_backdrop(Rect2(_status.position - Vector2(11, 1) * u, Vector2(_status.size.x + 12.0 * u, 27.0 * u)))
+	HudArt.text_outlined(_bars, obj, origin + Vector2(114, 125) * u, hp_rect.size.x - 28.0 * u, int(16 * u), Color("d5c9a5"), HORIZONTAL_ALIGNMENT_LEFT)
+	_bars.draw_circle(center + Vector2(0, 2.0) * u, pr + 3.0 * u, Color(0, 0, 0, 0.62))
+	_bars.draw_circle(center, pr + 1.0 * u, Color("181c1d"))
 	var tex := HudArt.portrait(GameState.hero_class)
 	var uv_rect := HudArt.portrait_uv(GameState.hero_class)
 	var pts := PackedVector2Array()
 	var uvs := PackedVector2Array()
-	for i in 48:
-		var a := TAU * i / 48.0
-		pts.append(center + Vector2.from_angle(a) * pr)
-		uvs.append(uv_rect.position + uv_rect.size * (Vector2(0.5, 0.5) + Vector2.from_angle(a) * 0.5))
+	for i in 80:
+		var direction := Vector2.from_angle(TAU * i / 80.0)
+		pts.append(center + direction * (pr - 3.0 * u))
+		uvs.append(uv_rect.position + uv_rect.size * (Vector2.ONE + direction) * 0.5)
 	_bars.draw_polygon(pts, PackedColorArray([Color.WHITE]), uvs, tex)
 	if p.hp / p.max_hp < 0.3:
-		_bars.draw_circle(center, pr, Color(1.0, 0.165, 0.14, 0.18 if Prefs.reduce_motion else 0.12 + 0.1 * sin(Time.get_ticks_msec() / 150.0)))
-	_bars.draw_arc(center, pr, 0, TAU, 56, Color(0.29, 0.263, 0.216), 3.0 * u, true)
-	_bars.draw_arc(center, pr, -PI + 0.2, -PI + 2.9, 24, Color(0.765, 0.675, 0.51), 1.4 * u, true)
-	_bars.draw_arc(center, pr - 3.0 * u, 0, TAU, 56, Color(0.61, 0.53, 0.38), 0.8 * u, true)
-	# Crests (top / bottom) and rivets (left / right).
+		_bars.draw_circle(center, pr - 3.0 * u, Color(1.0, 0.165, 0.14, 0.14 if Prefs.reduce_motion else 0.10 + 0.06 * sin(Time.get_ticks_msec() / 180.0)))
+	_bars.draw_arc(center, pr, 0, TAU, 80, Color("302d27"), 4.0 * u, true)
+	_bars.draw_arc(center, pr, -PI + 0.2, -PI + 2.9, 36, Color("a28d66"), 1.1 * u, true)
+	_bars.draw_arc(center, pr - 3.0 * u, 0, TAU, 80, Color("81714e"), 0.8 * u, true)
+	_bars.draw_arc(center, pr + 2.0 * u, 0.2, PI - 0.2, 36, Color(0.48, 0.42, 0.31, 0.75), 0.8 * u, true)
 	for sy in [-1.0, 1.0]:
-		var c := center + Vector2(0, sy * pr)
-		var crest := PackedVector2Array([c + Vector2(0, -4) * u, c + Vector2(5, 0) * u, c + Vector2(0, 5) * u, c + Vector2(-5, 0) * u])
-		_bars.draw_colored_polygon(crest, Color(0.16, 0.17, 0.17))
-		_bars.draw_polyline(crest + PackedVector2Array([crest[0]]), Color(0.64, 0.56, 0.41), 1.0 * u)
+		var crest_center := center + Vector2(0, sy * (pr + 1.0 * u))
+		var crest := PackedVector2Array([crest_center + Vector2(0, -5) * u, crest_center + Vector2(5, 0) * u, crest_center + Vector2(0, 5) * u, crest_center + Vector2(-5, 0) * u])
+		_bars.draw_colored_polygon(crest, Color("292b29"))
+		_bars.draw_polyline(crest + PackedVector2Array([crest[0]]), Color("a08b66"), 0.9 * u, true)
 	for sx in [-1.0, 1.0]:
-		_bars.draw_circle(center + Vector2(sx * (pr - 2.0 * u), 0), 1.4 * u, Color(0.68, 0.59, 0.44))
-	# Level badge (원본 level-badge.webp, 26px at the top-left corner).
-	var badge := HudArt.level_badge()
-	var bs := 30.0 * u
-	var bpos := Vector2(2.0 * u, 2.0 * u)
-	_bars.draw_texture_rect(badge, Rect2(bpos, Vector2(bs, bs)), false)
-	HudArt.text_outlined(_bars, str(GameState.level), bpos + Vector2(0, bs * 0.7), bs, int(13 * u), Color(0.93, 0.89, 0.8))
+		_bars.draw_circle(center + Vector2(sx * (pr - 1.0 * u), 0), 1.1 * u, Color("ac9872"))
 
 
 func _on_save_finished(success: bool, message: String) -> void:

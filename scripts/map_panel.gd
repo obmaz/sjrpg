@@ -52,7 +52,7 @@ class MapCanvas:
 	var game: Node
 
 	func _draw() -> void:
-		draw_style_box(UiKit.panel_style(Color("1d3028")), Rect2(Vector2.ZERO, size))
+		draw_style_box(UiKit.panel_style(UiKit.SURFACE), Rect2(Vector2.ZERO, size))
 		var boundary := PackedVector2Array()
 		for point in [game.FIELD.position, Vector2(game.FIELD.end.x, game.FIELD.position.y), game.FIELD.end, Vector2(game.FIELD.position.x, game.FIELD.end.y)]:
 			boundary.append(Iso.project(point))

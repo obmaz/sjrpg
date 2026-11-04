@@ -2,22 +2,22 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cqv7wnhaym48e"
-path="res://.godot/imported/level-badge.webp-726b788fe0b416e1ffb3e07d13993f0f.ctex"
+uid="uid://vgariuoiifbe"
+path="res://.godot/imported/potions.webp-35f631a7ef5b7d7fa118c34e896205bd.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/hud/level-badge.webp"
-dest_files=["res://.godot/imported/level-badge.webp-726b788fe0b416e1ffb3e07d13993f0f.ctex"]
+source_file="res://assets/art/hud/potions.webp"
+dest_files=["res://.godot/imported/potions.webp-35f631a7ef5b7d7fa118c34e896205bd.ctex"]
 
 [params]
 
 compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.85
+compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
