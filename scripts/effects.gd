@@ -21,6 +21,41 @@ var _tick_timer := 0.0
 var _hit := {}  # enemies already hit (piercing)
 
 
+static var _impact_sheet: Texture2D
+static var _impact_material: CanvasItemMaterial
+
+
+## Generated contact art is cosmetic and shares the existing effect budget, never collision/damage.
+static func spawn_impact(world_game: Node, at: Vector2, source: Node2D, heavy := false) -> Effect:
+	var impact := Effect.new()
+	impact.kind = "impact"
+	impact.position = at
+	impact.radius = 140.0 if heavy else 100.0
+	impact.life = 0.28 if heavy else 0.22
+	impact.z_index = 6
+	var cell := 0
+	var tint := Color.WHITE
+	if source is Effect:
+		tint = source.color
+	elif source is Player:
+		tint = source.impact_color
+	if tint.is_equal_approx(SkillDefs.FIRE):
+		cell = 1
+	elif tint.is_equal_approx(SkillDefs.LIGHT):
+		cell = 2
+	elif tint.is_equal_approx(SkillDefs.COLD):
+		cell = 3
+	impact.params["cell"] = cell
+	if source != null:
+		impact.angle = (at - source.position).angle()
+	if _impact_material == null:
+		_impact_material = CanvasItemMaterial.new()
+		_impact_material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	impact.material = _impact_material
+	world_game._add_effect(impact)
+	return impact
+
+
 func _process(delta: float) -> void:
 	age += delta
 	match kind:
@@ -159,6 +194,17 @@ func _update_ward(delta: float) -> void:
 func _draw() -> void:
 	var t := age / life
 	match kind:
+		"impact":
+			if _impact_sheet == null:
+				_impact_sheet = load("res://assets/art/effects/impact-atlas.webp")
+			var fade := pow(1.0 - clampf(t, 0.0, 1.0), 1.0)
+			var growth := 0.86 if Prefs.reduce_motion else lerpf(0.8, 1.2, ease(t, 0.3))
+			var diameter := radius * growth
+			var cell_size := Vector2(_impact_sheet.get_width() / 4.0, _impact_sheet.get_height())
+			var source := Rect2(Vector2(cell_size.x * int(params["cell"]), 0), cell_size)
+			draw_set_transform(Vector2.ZERO, 0.0 if Prefs.reduce_motion else angle, Vector2.ONE)
+			draw_texture_rect_region(_impact_sheet, Rect2(Vector2.ONE * -diameter * 0.5, Vector2.ONE * diameter), source, Color(1, 1, 1, fade * (0.58 if Prefs.reduce_motion else 0.95)))
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		"slash":
 			var a := 1.0 - t
 			for i in 3:

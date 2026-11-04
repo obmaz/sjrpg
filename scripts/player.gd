@@ -14,6 +14,7 @@ var sprite: ActorSprite
 var atlas: ActorAtlas
 var attack_atlas: ActorAtlas
 var is_mage := false
+var impact_color := SkillDefs.STEEL
 
 var hp := 100.0
 var max_hp := 100.0
@@ -318,6 +319,7 @@ func _gain_rage(hits: int) -> void:
 
 ## Builds the effect that fires at the swing's impact frame.
 func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
+	impact_color = d.get("color", SkillDefs.STEEL)
 	var power := SkillDefs.scaled(d.get("mult", 1.0), d.get("growth", 0.0), rank)
 	match d["type"]:
 		"melee":
@@ -642,6 +644,9 @@ func take_damage(amount: float, attacker: Node2D = null) -> void:
 		resource -= absorbed * 1.5
 		dealt -= absorbed
 	hp -= dealt
+	if dealt > 0.0:
+		Effect.spawn_impact(game, position + Vector2(0, -sprite.body_height * 0.55), attacker, dealt >= max_hp * 0.15)
+		game.combat_feedback(position, clampf(0.4 + dealt / max_hp, 0.4, 1.0), true)
 	SoundFx.play("hurt")
 	Prefs.pulse("hurt")
 	_invulnerable = 0.25

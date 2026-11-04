@@ -10,6 +10,7 @@ const { chromium, devices } = require('playwright');
 
 const SCENES = {
     town: '',
+    juice: 'at=field&combat_preview=1',
     background: '',
     wide: 'zoom=0.45',
     bridge: 'at=bridge&zoom=0.7',
@@ -87,6 +88,12 @@ await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { 
 if (scene === 'background') await page.evaluate(() => document.querySelector('canvas').blur());
 await page.waitForTimeout(9000);
 await page.screenshot({ path: out });
+if (scene === 'juice') {
+    for (let frame=1; frame<=6; frame++) {
+        await page.waitForTimeout(110);
+        await page.screenshot({path: out.replace(/\.png$/, `-${frame}.png`)});
+    }
+}
 const errors = logs.filter((l) => /error/i.test(l));
 console.log(`저장: ${out}${errors.length ? `\n콘솔 오류 ${errors.length}건:\n${errors.slice(0, 5).join('\n')}` : ''}`);
 await browser.close();

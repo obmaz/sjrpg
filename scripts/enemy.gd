@@ -36,6 +36,7 @@ var patrol_radius := 0.0
 var _state := "idle"
 var _timer := 0.0
 var _walk_cycle := 0.0
+var _recoil := Vector2.ZERO
 var _slow_time := 0.0
 var _freeze_time := 0.0
 var _stun_time := 0.0
@@ -137,11 +138,16 @@ func _update_tint() -> void:
 
 
 func take_damage(amount: float, source: Node2D) -> void:
-	if dead:
+	if dead or amount <= 0.0:
 		return
 	if _cry_time > 0.0:
 		amount *= 1.0 + _cry_value
 	hp -= amount
+	var heavy := hp <= 0.0 or amount >= max_hp * 0.3
+	Effect.spawn_impact(game, position + Vector2(0, -sprite.body_height * 0.55), source, heavy)
+	game.combat_feedback(position, 0.8 if heavy else 0.32, false)
+	if source != null and not Prefs.reduce_motion:
+		_recoil = (position - source.position).normalized() * (5.0 if heavy else 3.0)
 	if GameState.has_gift("frost") and source != null and source is Player:
 		slow(0.67)
 	SoundFx.play("impact")
@@ -165,6 +171,8 @@ func _die() -> void:
 
 
 func _process(delta: float) -> void:
+	_recoil = _recoil.move_toward(Vector2.ZERO, delta * 55.0) if not Prefs.reduce_motion else Vector2.ZERO
+	sprite.position = _recoil
 	if dead:
 		return
 	var player: Player = game.player

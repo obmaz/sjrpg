@@ -14,6 +14,12 @@ var _area_name := ""
 var _panel: PanelFrame
 var _save_warning: Button
 var _status: Label
+var _last_hp := -1.0
+var _last_max_hp := -1.0
+var _health_trail := 1.0
+var _trail_hold := 0.0
+var _hurt_feedback := 0.0
+var _heal_feedback := 0.0
 
 
 func _ready() -> void:
@@ -197,10 +203,35 @@ func toast(text: String) -> void:
 
 
 func _process(delta: float) -> void:
+	_update_vital_feedback(delta)
 	_update_layout()
 	_toast_time = maxf(0.0, _toast_time - delta)
 	_toast.modulate.a = clampf(_toast_time / 0.5, 0.0, 1.0)
 	_bars.queue_redraw()
+
+
+## Vital feedback follows health changes, never a blocked hit or a button press.
+func _update_vital_feedback(delta: float) -> void:
+	var player: Player = game.player
+	var ratio := player.hp / maxf(1.0, player.max_hp)
+	_hurt_feedback = maxf(0.0, _hurt_feedback - delta)
+	_heal_feedback = maxf(0.0, _heal_feedback - delta)
+	if not is_equal_approx(_last_max_hp, player.max_hp):
+		_health_trail = ratio
+		_trail_hold = 0.0
+	elif player.hp < _last_hp - 0.001:
+		_health_trail = maxf(_health_trail, _last_hp / player.max_hp)
+		_trail_hold = 0.16
+		_hurt_feedback = 0.28
+	elif player.hp > _last_hp + player.max_hp * 0.01:
+		_heal_feedback = 0.35
+	_trail_hold = maxf(0.0, _trail_hold - delta)
+	if Prefs.reduce_motion or ratio > _health_trail:
+		_health_trail = ratio
+	elif _trail_hold <= 0.0:
+		_health_trail = move_toward(_health_trail, ratio, delta * 0.9)
+	_last_hp = player.hp
+	_last_max_hp = player.max_hp
 
 
 func unit() -> float:
@@ -327,6 +358,17 @@ func _draw_bars() -> void:
 	_bars.draw_line(plate[0] + Vector2(0, 2) * u, plate[1] + Vector2(-2, 2) * u, Color(0.7, 0.62, 0.48, 0.2), 0.8 * u, true)
 	_bars.draw_line(plate[3] + Vector2(0, 3) * u, plate[2] + Vector2(0, 3) * u, Color(0, 0, 0, 0.45), 2.0 * u, true)
 	HudArt.slanted_bar(_bars, hp_rect, p.hp / p.max_hp, Color("b43134"), Color("751719"), Color("432022"), 8.0 * u)
+	var actual_ratio := p.hp / p.max_hp
+	if _health_trail > actual_ratio + 0.001 and not Prefs.reduce_motion:
+		var start := hp_rect.position.x + hp_rect.size.x * actual_ratio
+		var end := minf(hp_rect.end.x - 8.0 * u, hp_rect.position.x + hp_rect.size.x * _health_trail)
+		if end > start:
+			_bars.draw_rect(Rect2(start, hp_rect.position.y + 2.0 * u, end - start, hp_rect.size.y - 4.0 * u), Color(0.84, 0.57, 0.32, 0.7))
+	if _hurt_feedback > 0.0 or _heal_feedback > 0.0:
+		var color := Color(1.0, 0.47, 0.34, _hurt_feedback / 0.28) if _hurt_feedback > 0.0 else Color(0.62, 0.91, 0.7, _heal_feedback / 0.35)
+		var frame := HudArt._bar_poly(hp_rect, 1.0, 8.0 * u)
+		_bars.draw_polyline(frame + PackedVector2Array([frame[0]]), color, 1.8 * u, true)
+
 	# Labels start beyond the full portrait, not at the fluid's hidden left edge.
 	var label_left := center.x + pr + 8.0 * u
 	var label_width := hp_rect.end.x - label_left - 11.0 * u

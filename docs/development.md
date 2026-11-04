@@ -175,3 +175,9 @@ HUD는 실패 시 누를 수 있는 재시도 안내를 유지하며 설정의 �
 ## CI와 배포
 
 `.github/workflows/web.yml`이 모든 푸시에서 `tools/setup_godot.sh` → `tools/check.sh --export`를 실행하고, `main`이면 `build/web`을 Pages에 배포합니다.
+
+## 전투 피드백
+
+`Effect.spawn_impact()`는 실제 피해 확정 뒤에만 생성형 4칸 원화(`assets/source/impact-atlas.png` → `assets/art/effects/impact-atlas.webp`)를 가산광으로 짧게 표시합니다. 기존 장식64개 한도를 공유하며 투사체·피해 영역과 분리합니다. 적의 반동은 스프라이트 위치에만 적용합니다. `Game.combat_feedback()`는 근처 명중에만 최대6px의 감쇠하는 카메라 오프셋을 더하며 시간 배율을 바꾸지 않습니다. 동작 줄이기는 이 움직임을 끕니다.
+HUD는 체력·물약 수·쿨다운의 실제 변화를 감지합니다. 사운드의 작은 피치 변화는 별도 난수기를 써 전투 난수에 영향을 주지 않습니다. `juice` 테스트는 실제 피해·무적 중 중복 반응 방지·모션 설정·장식 한도를 검사합니다.
+`tools/screenshot.mjs --scene juice --class mage --device phone`은 명시적인 `combat_preview=1` 쿼리로 반복 명중을 재현하고 연속 화면을 저장합니다. 일반 모험에는 이 미리보기를 실행하지 않습니다.

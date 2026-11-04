@@ -13,6 +13,10 @@ var _buttons := {}  # name -> {center, radius}
 var _unit := 1.0
 var _near_name := ""
 var _feedback := {}
+var _success_feedback := {}
+var _denied_feedback := {}
+var _cooldown_samples := {}
+var _last_potions := Vector2i(-1, -1)
 var _interaction_normal: StyleBox
 var _interaction_pressed: StyleBox
 static var _reference_buttons: Texture2D
@@ -95,16 +99,24 @@ func _press(index: int, pos: Vector2) -> bool:
 		var slot := int(button.substr(4))
 		_held[index] = button
 		player.held_slots[slot] = true
-		player.cast_slot(slot)
+		var id: String = GameState.slots[slot]
+		var insufficient := id != "" and player.resource < SkillDefs.cost(GameState.skill(id), GameState.effective_rank(id))
+		var cast := player.cast_slot(slot)
+		if not cast and insufficient:
+			_denied_feedback[button] = 0.32
 		return true
 	match button:
 		"roll":
 			player.try_roll()
 			return true
 		"potion_hp":
+			if GameState.potions <= 0:
+				_denied_feedback[button] = 0.32
 			player.use_potion()
 			return true
 		"potion_mp":
+			if GameState.mana_potions <= 0:
+				_denied_feedback[button] = 0.32
 			player.use_mana_potion()
 			return true
 		"bar_skills":
@@ -184,12 +196,48 @@ func _input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
-	for key in _feedback.keys():
-		_feedback[key] -= delta
-		if _feedback[key] <= 0.0:
-			_feedback.erase(key)
+	for timers in [_feedback, _success_feedback, _denied_feedback]:
+		for key in timers.keys():
+			timers[key] -= delta
+			if timers[key] <= 0.0:
+				timers.erase(key)
+	_update_action_feedback()
 	_layout()
 	queue_redraw()
+
+
+## Observe real state changes, including keyboard casts and potions; pressing alone is not success.
+func _update_action_feedback() -> void:
+	var player: Player = game.player
+	for slot in GameState.slots.size():
+		var id: String = GameState.slots[slot]
+		var key := "slot%d" % slot
+		var ready := player.slot_cooldown_ratio(slot)
+		if _cooldown_samples.has(key):
+			var previous: Array = _cooldown_samples[key]
+			if previous[0] == id and float(previous[1]) < 1.0 and ready >= 1.0:
+				_success_feedback[key] = 0.38
+		_cooldown_samples[key] = [id, ready]
+	var counts := Vector2i(GameState.potions, GameState.mana_potions)
+	if _last_potions.x >= 0:
+		if counts.x < _last_potions.x:
+			_success_feedback["potion_hp"] = 0.45
+		if counts.y < _last_potions.y:
+			_success_feedback["potion_mp"] = 0.45
+	_last_potions = counts
+
+
+func _draw_action_feedback(name: String, center: Vector2, radius: float) -> void:
+	var denied: float = _denied_feedback.get(name, 0.0)
+	var success: float = _success_feedback.get(name, 0.0)
+	if denied > 0.0:
+		draw_arc(center, radius + 2.0 * _unit, 0, TAU, 64, Color(0.95, 0.33, 0.22, denied / 0.32), 2.0 * _unit, true)
+	elif success > 0.0:
+		var life := 0.45 if name.begins_with("potion") else 0.38
+		var progress := 1.0 - success / life
+		var expansion := 0.0 if Prefs.reduce_motion else progress * 8.0 * _unit
+		var color := Color(0.93, 0.58, 0.45) if name == "potion_hp" else Color(0.65, 0.87, 1.0)
+		draw_arc(center, radius + 2.0 * _unit + expansion, 0, TAU, 64, Color(color, success / life * 0.8), 1.5 * _unit, true)
 
 
 # ───────── drawing ─────────
@@ -328,3 +376,5 @@ func _draw() -> void:
 				draw_circle(bc, 8.0 * u, Color(0.12, 0.095, 0.06, 0.95))
 				draw_arc(bc, 8.0 * u, 0, TAU, 24, Color(0.65, 0.54, 0.33), 0.8 * u, true)
 				HudArt.text_outlined(self, str(GameState.skill_points), bc + Vector2(-8.0 * u, 4.0 * u), 16.0 * u, int(11 * u), Color(0.94, 0.86, 0.65))
+
+		_draw_action_feedback(name, c, r)

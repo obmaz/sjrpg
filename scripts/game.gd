@@ -14,6 +14,7 @@ var _low_view: SubViewport
 var _view_container: SubViewportContainer
 var world: Node2D
 var player: Player
+var _impact_offset := Vector2.ZERO
 var camera: Camera2D
 var hud: Hud
 var village: Village
@@ -213,6 +214,8 @@ func _read_debug_params() -> void:
 		elif kv.size() == 2 and kv[0] == "panel":
 			var which: String = kv[1]
 			get_tree().create_timer(1.5).timeout.connect(_debug_open_panel.bind(which))
+		elif kv.size() == 2 and kv[0] == "combat_preview":
+			_combat_preview.call_deferred()
 		elif kv.size() == 2 and kv[0] == "gold":
 			GameState.gold = int(kv[1])
 		elif kv.size() == 2 and kv[0] == "chests":
@@ -287,11 +290,41 @@ func near_npc() -> String:
 	return best
 
 
+## Explicit visual-review query only: repeated confirmed hits, never active in a normal adventure.
+func _combat_preview() -> void:
+	await get_tree().create_timer(2.0).timeout
+	var target := Enemy.new()
+	target.setup(self, "goblin", 1)
+	target.position = player.position + Vector2(65, 10)
+	target.hp = 100000.0
+	target.max_hp = target.hp
+	world.add_child(target)
+	target.set_process(false)
+	for i in 120:
+		if not is_inside_tree() or is_queued_for_deletion():
+			return
+		player.impact_color = [SkillDefs.STEEL, SkillDefs.FIRE, SkillDefs.LIGHT, SkillDefs.COLD][i % 4]
+		target.take_damage(2.0, player)
+		await get_tree().create_timer(0.37, false).timeout
+
+
 func in_town(p: Vector2) -> bool:
 	return not dungeon.active and Geometry2D.is_point_in_polygon(p, village.safe_zone)
 
 
+## Only confirmed nearby hits nudge the camera; gameplay clocks and hitboxes stay unchanged.
+func combat_feedback(at: Vector2, strength: float, hurt := false) -> void:
+	if Prefs.reduce_motion or player.position.distance_to(at) > 650.0:
+		return
+	var direction := (player.position - at).normalized()
+	if direction.length_squared() < 0.1:
+		direction = Vector2(0.6, -0.8)
+	_impact_offset = (_impact_offset + direction * clampf(strength, 0.0, 1.0) * (4.0 if hurt else 2.6)).limit_length(6.0)
+
+
 func _process(delta: float) -> void:
+	_impact_offset = Vector2.ZERO if Prefs.reduce_motion else _impact_offset * exp(-18.0 * delta)
+	camera.offset = _impact_offset
 	camera.position = player.position + Vector2(0, -30)
 	if dungeon.active:
 		WorldOcclusion.update(player.global_position, false)

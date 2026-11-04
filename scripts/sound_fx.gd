@@ -18,6 +18,7 @@ const GAIN := 5.0  # the original plays through a master gain; raw gains are ver
 
 var _streams := {}
 var _players: Array[AudioStreamPlayer] = []
+var _variation := RandomNumberGenerator.new()
 var _next := 0
 var _last := {}
 
@@ -75,5 +76,6 @@ func play(name: String, preview := false) -> void:
 	var player := _players[_next]
 	_next = (_next + 1) % _players.size()
 	player.stream = _streams[name]
+	player.pitch_scale = _variation.randf_range(0.96, 1.04) if name in ["slash", "impact", "fire", "ice", "lightning"] else 1.0
 	player.volume_db = -4.0
 	player.play()
