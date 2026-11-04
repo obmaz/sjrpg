@@ -17,6 +17,7 @@ var text := ""
 var points: PackedVector2Array = PackedVector2Array()
 var params := {}
 
+var _impact_started := false
 var _tick_timer := 0.0
 var _hit := {}  # enemies already hit (piercing)
 
@@ -57,7 +58,13 @@ static func spawn_impact(world_game: Node, at: Vector2, source: Node2D, heavy :=
 
 
 func _process(delta: float) -> void:
-	age += delta
+	# A slow frame must not discard a new cosmetic impact before its first render.
+	# Only the first update is bounded; headless/offscreen effects still expire normally.
+	if kind == "impact" and not _impact_started:
+		age += minf(delta, life * 0.2)
+		_impact_started = true
+	else:
+		age += delta
 	match kind:
 		"proj":
 			_update_projectile(delta)

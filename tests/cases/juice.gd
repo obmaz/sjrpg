@@ -37,6 +37,11 @@ func run() -> void:
 	for i in 100:
 		Effect.spawn_impact(game, enemy.position, game.player)
 	check("impact spam respects cosmetic budget", game.cosmetic_effects.size() <= 64)
+	var burst := Effect.spawn_impact(game, enemy.position, game.player)
+	burst._process(0.8)
+	check("slow frame retains first cosmetic impact", not burst.is_queued_for_deletion() and burst.age < burst.life)
+	burst._process(0.8)
+	check("unrendered impact still expires after its first update", burst.is_queued_for_deletion())
 	Prefs.reduce_motion = old_reduce
 	game.queue_free()
 	await _frames(2)
