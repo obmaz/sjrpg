@@ -73,9 +73,9 @@ func force_chase() -> void:
 
 func make_boss() -> void:
 	is_boss = true
-	max_hp = KINDS["golem"]["hp"] * 0.8 * 2.0
+	max_hp = ForestBalance.BOSS_HP
 	hp = max_hp
-	damage = KINDS["golem"]["damage"]
+	damage = ForestBalance.BOSS_DAMAGE
 	attack_range = 150.0
 	_state = "chase"
 
@@ -227,7 +227,7 @@ func _process(delta: float) -> void:
 				if guard:
 					if dist <= hit_range:
 						game.quest_runtime.damage_defender(damage * mult * randf_range(0.85, 1.15))
-				elif not player.dead and position.distance_to(player.position) <= hit_range:
+				elif not player.dead and attack_distance(player.position) <= hit_range:
 					player.take_damage(damage * mult * randf_range(0.85, 1.15), self)
 				if is_boss:
 					_boss_attacks += 1
@@ -253,6 +253,14 @@ func _step(direction: Vector2, delta: float) -> void:
 	_walk_cycle += moved.distance_to(position) / 70.0
 	position = moved
 	sprite.set_frame(atlas, atlas.walk_frame(facing, _walk_cycle))
+
+
+## The boss ring is an ellipse on screen; its hit test must use the same shape.
+func attack_distance(target: Vector2) -> float:
+	var delta := target - position
+	if is_boss:
+		delta.y /= 0.55
+	return delta.length()
 
 
 func _draw() -> void:

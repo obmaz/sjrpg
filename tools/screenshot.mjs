@@ -30,6 +30,7 @@ const SCENES = {
     skills: 'panel=skills',
     settings: 'panel=settings',
     smith: 'panel=smith&chests=1',
+    boss: 'at=boss&panel=boss',
     journal: 'panel=journal',
     mira: 'panel=mira',
     victory: 'panel=victory',

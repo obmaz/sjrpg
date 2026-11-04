@@ -42,6 +42,7 @@ var kills := 0
 var quests := {}
 var stage_kills := 0
 var boss_defeated := false
+var boss_heart_pending := false
 var boss_summoned := false
 var memory_rewarded := false
 var gold := 0
@@ -367,6 +368,7 @@ func new_game(cls: String) -> void:
 	quests = {}
 	stage_kills = 0
 	boss_defeated = false
+	boss_heart_pending = false
 	boss_summoned = false
 	memory_rewarded = false
 	bonus_attack = 0.0
@@ -394,7 +396,7 @@ func save_game() -> bool:
 		"version": SAVE_VERSION, "class": hero_class, "level": level, "xp": xp,
 		"potions": potions, "mana_potions": mana_potions, "kills": kills,
 		"skill_points": skill_points, "ranks": ranks, "slots": slots,
-		"quests": quests, "stage_kills": stage_kills, "boss_defeated": boss_defeated, "memory_rewarded": memory_rewarded, "gold": gold, "bonus_attack": bonus_attack, "bonus_health": bonus_health, "chest_seed": chest_seed, "opened_chests": opened_chests,
+		"quests": quests, "stage_kills": stage_kills, "boss_defeated": boss_defeated, "boss_heart_pending": boss_heart_pending, "memory_rewarded": memory_rewarded, "gold": gold, "bonus_attack": bonus_attack, "bonus_health": bonus_health, "chest_seed": chest_seed, "opened_chests": opened_chests,
 		"next_serial": next_serial,
 		"inventory": inventory.map(func(g): return g.to_save()),
 		"equipped": equipped.keys().map(func(k): return {"slot": k, "serial": equipped[k].serial}),
@@ -499,6 +501,7 @@ func load_game() -> bool:
 		quests[id] = state
 	stage_kills = int(data.get("stage_kills", 0))
 	boss_defeated = bool(data.get("boss_defeated", false))
+	boss_heart_pending = bool(data.get("boss_heart_pending", false))
 	memory_rewarded = bool(data.get("memory_rewarded", false))
 	boss_summoned = false
 	bonus_attack = float(data.get("bonus_attack", 0.0))
@@ -525,4 +528,13 @@ func load_game() -> bool:
 			unseen.append(int(u))
 	else:
 		_starting_gear()
+	return true
+
+
+func claim_boss_heart() -> bool:
+	if not boss_heart_pending or inventory.size() >= Gear.CAPACITY:
+		return false
+	add_gear(new_gear("sentinel", 3, 6, 20, 0))
+	boss_heart_pending = false
+	save_game()
 	return true

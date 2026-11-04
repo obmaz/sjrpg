@@ -7,7 +7,7 @@ var game: Node
 var defender: Node2D  # 조사관 로웬 (Villager)
 var _threats: Array[Enemy] = []
 var _wave_pause := 0.0
-var _boss_timer := 0.0
+var _boss: Enemy
 
 
 func setup(g: Node) -> QuestRuntime:
@@ -218,22 +218,38 @@ func on_enemy_killed(enemy: Enemy) -> void:
 			s["defeated"] = int(s["defeated"]) + 1
 
 
-func _tick_boss(delta: float) -> void:
-	if GameState.boss_defeated or GameState.boss_summoned:
-		return
-	if GameState.stage_kills < Quests.STAGE_KILL_GOAL or not Quests.all_done():
-		return
-	_boss_timer -= delta
-	if _boss_timer > 0.0:
-		return
-	_boss_timer = 1.0
-	var boss := Enemy.new()
-	boss.setup(game, "golem", maxi(1, GameState.level))
-	boss.make_boss()
-	boss.position = game.resolve_movement(game.player.position, game.player.position + Vector2(0, -320), Enemy.RADIUS)
-	game.world.add_child(boss)
-	game.enemies.append(boss)
+func boss_ready() -> bool:
+	return Quests.all_done() and not GameState.boss_defeated and not GameState.boss_summoned
+
+
+func start_boss() -> bool:
+	if not boss_ready() or game.player.dead or game.player.position.distance_to(game.village.boss_point) > 260.0:
+		return false
+	_boss = Enemy.new()
+	_boss.setup(game, "golem", 8)
+	_boss.make_boss()
+	_boss.position = game.village.boss_point
+	game.world.add_child(_boss)
+	game.enemies.append(_boss)
 	GameState.boss_summoned = true
-	game.toast("숲의 파수꾼 출현!")
-	game.spawn_nova(boss.position, 220.0, Color(1, 0.8, 0.4))
+	game.toast("숲의 파수꾼 · 붉은 예고를 피하세요!")
+	game.spawn_nova(_boss.position, 220.0, Color(1, 0.8, 0.4))
 	SoundFx.play("warcry")
+	return true
+
+
+func reset_boss() -> void:
+	if is_instance_valid(_boss) and not _boss.dead:
+		game.enemies.erase(_boss)
+		_boss.queue_free()
+	_boss = null
+	if not GameState.boss_defeated:
+		GameState.boss_summoned = false
+
+
+func _tick_boss(_delta: float) -> void:
+	if GameState.boss_defeated or not GameState.boss_summoned:
+		return
+	if game.player.dead or game.player.position.distance_to(game.village.boss_point) > 1100.0:
+		reset_boss()
+		game.toast("파수꾼이 공터로 돌아갔습니다 · 다시 도전할 수 있습니다")

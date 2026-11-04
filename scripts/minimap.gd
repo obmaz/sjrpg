@@ -90,6 +90,10 @@ func _draw() -> void:
 		var ep := _to_map(e.position, origin)
 		if ep.length() < radius - 4.0:
 			draw_circle(ep, 2.6, Color(0.9, 0.2, 0.18))
+	if Quests.all_done() and not GameState.boss_defeated:
+		var bp := _to_map(v.boss_point, origin)
+		if bp.length() < radius - 5.0:
+			draw_circle(bp, 4.5, Color(1, 0.5, 0.2))
 	# Player arrow.
 	var f: float = game.player.facing
 	var tip := Vector2.from_angle(f) * 9.0

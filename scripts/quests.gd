@@ -19,7 +19,6 @@ const THREAT_COUNT := 30
 const WAVE_SIZE := 6
 const DEFENDER_HP := 720.0
 const EXPERIENCE_MULTIPLIER := 2
-const STAGE_KILL_GOAL := 120
 
 
 static func def(id: String) -> Dictionary:
@@ -82,7 +81,7 @@ static func main_objective() -> String:
 			return objective(d["id"])
 	if GameState.boss_defeated:
 		return "제1장을 완료했습니다."
-	return "숲의 의뢰를 모두 해결했습니다. 파수꾼을 처치하세요."
+	return "서쪽 숲의 공터에서 파수꾼에게 도전하세요."
 
 
 static func quest_progress(id: String) -> float:

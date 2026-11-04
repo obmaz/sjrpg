@@ -10,10 +10,10 @@ func _ready() -> void:
 	body.add_child(PanelFrame.wrap_label(Quests.main_objective(), 21, Color(0.95, 0.93, 0.85)))
 	for d in Quests.DEFS:
 		body.add_child(_bar(d["title"], Quests.objective(d["id"]), Quests.quest_progress(d["id"]), "완료" if Quests.phase(d["id"]) == "completed" else d["giver"]))
-	var kills := mini(GameState.stage_kills, Quests.STAGE_KILL_GOAL)
-	body.add_child(_bar("숲길 정화", "서로 다른 NPC 의뢰 3개와 몬스터 처치 목표를 완수해 파수꾼을 깨우세요.", float(kills) / Quests.STAGE_KILL_GOAL, "%d / %d" % [kills, Quests.STAGE_KILL_GOAL]))
-	var status := "정화 완료" if GameState.boss_defeated else ("파수꾼 출현" if GameState.boss_summoned else "NPC 의뢰·처치 목표 완료 후 등장")
+	var status := "정화 완료" if GameState.boss_defeated else ("도전 중" if GameState.boss_summoned else "서쪽 숲 공터에서 도전" if Quests.all_done() else "의뢰 3개 완료 후 해금")
 	body.add_child(_bar("첫 파수꾼", "NPC 의뢰 3개를 해결하고 파수꾼을 쓰러뜨리면 제1장을 완료합니다.", 1.0 if GameState.boss_defeated else 0.0, status))
+	if GameState.boss_heart_pending:
+		body.add_child(PanelFrame.wrap_label("파수꾼의 심장 보관 중 · 가방을 비우고 창을 닫으면 받습니다.", 20, UiKit.GOLD))
 	body.add_child(PanelFrame.section("숲의 기억 · 선택 여정  %d / 3" % MemoryPanel.recovered()))
 	body.add_child(PanelFrame.wrap_label("서쪽·북쪽·동쪽 길의 상자에서 기억 3개를 모으세요. 완성 보상: 스킬 포인트 +1.", 17, Color(0.82, 0.9, 0.85)))
 	for i in MemoryPanel.MEMORIES.size():

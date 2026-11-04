@@ -39,6 +39,7 @@ var landmarks: Array[Landmark] = []
 ## 의뢰 장소 (world px): roots 석조 정원 제단, moon 고목의 쉼터, sun 동굴.
 var quest_sites := {}
 var cave_ground := Vector2(500, 3100)
+var boss_point := Iso.project(Vector2(-2600, 300))
 ## Screen-plane rects (world px) the field scatter must keep clear.
 var clear_rects: Array[Rect2] = []
 ## Town interior (safe zone, no monster spawns).
@@ -95,6 +96,12 @@ func build(ground_layer: Node2D, world: Node2D) -> void:
 	_build_walls(world)
 	_build_landmarks(world)
 	_build_quest_sites(world)
+	clear_rects.append(Rect2(boss_point - Vector2(600, 500), Vector2(1200, 1000)))
+	var beacon_def: Dictionary = data["sprites"]["portal"]
+	var beacon := IsoSprite.new().setup(beacon_def, 150.0)
+	beacon.position = boss_point + Vector2(0, -280)
+	world.add_child(beacon)
+	circles.append([beacon.position, 45.0])
 	_build_buildings(world)
 	_build_plaza(world)
 	_build_trees(world)

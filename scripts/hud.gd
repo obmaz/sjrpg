@@ -90,6 +90,8 @@ func close_panel() -> void:
 	_panel = null
 	get_tree().paused = false
 	game.player.refresh_stats()
+	if GameState.claim_boss_heart():
+		game.toast("파수꾼의 심장을 받았습니다")
 	GameState.save_game()
 
 
@@ -104,6 +106,8 @@ func open_bag(shop := false) -> void:
 ## Talk to / use the town NPC with this name.
 func interact(npc: String) -> void:
 	match npc:
+		"숲의 파수꾼":
+			_open(BossPanel.new().setup(game))
 		"상인":
 			open_bag(true)
 		"대장장이":

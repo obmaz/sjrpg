@@ -69,8 +69,14 @@ func run() -> void:
 	if not paid:
 		failures += 1
 	# 4) 파수꾼.
-	GameState.stage_kills = Quests.STAGE_KILL_GOAL
-	qr._boss_timer = 0.0
+	GameState.stage_kills = 0
+	check("boss unlock does not require extra kills", qr.boss_ready())
+	check("cannot start boss from town", not qr.start_boss())
+	player.position = game.village.boss_point + Vector2(0, 130)
+	check("start boss at the clearing", qr.start_boss())
+	check("cannot summon a second boss", not qr.start_boss())
+	qr.reset_boss()
+	check("boss can be retried", qr.boss_ready() and qr.start_boss())
 	await _frames(4)
 	var boss: Enemy = null
 	for e in game.enemies:

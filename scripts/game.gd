@@ -140,6 +140,8 @@ func _debug_open_panel(which: String) -> void:
 			hud.interact("보급원 미라")
 		"smith":
 			hud.open_smith()
+		"boss":
+			hud._open(BossPanel.new().setup(self))
 		"victory":
 			hud.open_victory()
 
@@ -164,6 +166,8 @@ func _read_debug_params() -> void:
 				c.take_damage(1.0, null)
 		elif kv.size() == 2 and kv[0] == "at":
 			match kv[1]:
+				"boss":
+					player.position = village.boss_point + Vector2(0, 130)
 				"field":
 					player.position = village.point(Vector2(0.5, 1.15))
 				"gate0", "gate1", "gate2", "gate3":
@@ -213,6 +217,8 @@ func near_merchant() -> bool:
 
 ## Name of the town NPC within talking range, or "".
 func near_npc() -> String:
+	if quest_runtime.boss_ready() and player.position.distance_to(village.boss_point) < 240.0:
+		return "숲의 파수꾼"
 	var best := ""
 	var best_d := 210.0
 	for name in village.npc_points:
@@ -498,13 +504,15 @@ func rng_range(a: float, b: float) -> float:
 
 
 func on_boss_defeated(boss: Enemy) -> void:
+	if GameState.boss_defeated:
+		return
 	GameState.boss_defeated = true
 	GameState.boss_summoned = true
-	var heart := GameState.new_gear("sentinel", 3, 6, 20, 0)
-	if GameState.add_gear(heart):
+	GameState.boss_heart_pending = true
+	if GameState.claim_boss_heart():
 		toast("파수꾼의 심장을 얻었습니다!")
 	else:
-		GameState.gold += heart.sale_value()
+		toast("가방을 비우면 파수꾼의 심장을 받을 수 있습니다")
 	GameState.save_game()
 	await get_tree().create_timer(1.2).timeout
 	hud.open_victory()
@@ -580,6 +588,7 @@ func find_open_point(from: Vector2, dir: Vector2, distance: float, r: float) -> 
 func _on_player_died() -> void:
 	hud.show_death()
 	await get_tree().create_timer(2.5).timeout
+	quest_runtime.reset_boss()
 	player.revive(village.spawn_point)
 	hud.hide_death()
 	GameState.save_game()
