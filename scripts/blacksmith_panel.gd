@@ -2,7 +2,7 @@ class_name BlacksmithPanel
 extends PanelFrame
 ## 대장간 (원본 blacksmith_panel + Progress.smithQuote/enhanceWeapon): 무기 레벨 강화.
 ## 비용 25 + 12×레벨 + 15×등급, 성공 확률은 무기 레벨과 내 레벨의 차이로 결정,
-## 실패하면 선택한 무기가 사라집니다. 잠금 무기는 강화할 수 없습니다.
+## 실패하면 비용만 소비하며 무기와 강화 단계는 보존합니다. 잠금 무기는 강화할 수 없습니다.
 
 var game: Node
 var selected: Gear
@@ -54,7 +54,7 @@ func _rebuild() -> void:
 	for c in footer.get_children():
 		c.queue_free()
 	trailing.add_child(UiKit.label("● %s G" % HudArt.fmt(GameState.gold), 22, UiKit.GOLD, true))
-	set_header("대장간", "무기 강화 · 제한 없는 도전")
+	set_header("대장간", "무기 강화 · 실패해도 무기 보존")
 	var weapons := _weapons()
 	if weapons.is_empty():
 		var l := UiKit.label("강화할 무기가 없습니다", 20, Color(0.7, 0.8, 0.76))
@@ -123,7 +123,7 @@ func _row(g: Gear) -> Control:
 		col.add_child(PanelFrame.wrap_label("무기 레벨 %d → %d" % [g.weapon_level, g.weapon_level + 1], 21, Color(0.95, 0.92, 0.8)))
 		col.add_child(PanelFrame.wrap_label("공격력 %s → %s" % [HudArt.stat(g.attack()), HudArt.stat(g.attack() + Gear.WEAPON_ATTACK_PER_LEVEL)], 20, Color(0.78, 0.92, 0.85)))
 		col.add_child(PanelFrame.wrap_label("성공 %d%% · 비용 %d G · 내 레벨 %d" % [roundi(ch * 100.0), cost, GameState.level], 20, Color(1, 0.9, 0.6)))
-		col.add_child(PanelFrame.wrap_label("무기 레벨이 내 레벨보다 높을수록 성공 확률이 낮아집니다. 실패 시 선택한 무기가 소멸합니다.", 17, Color(0.9, 0.62, 0.55)))
+		col.add_child(PanelFrame.wrap_label("무기 레벨이 내 레벨보다 높을수록 성공 확률이 낮아집니다. 실패 시 비용만 소비하며 무기와 강화 단계는 유지됩니다.", 17, Color(0.9, 0.62, 0.55)))
 		var poor := GameState.gold < cost
 		var go := UiKit.button("골드 부족 · %d G" % cost if poor else "강화 · %d G" % cost, 22)
 		go.custom_minimum_size = Vector2(0, 76)
@@ -144,19 +144,7 @@ func _enhance(g: Gear, ch: float, cost: int) -> void:
 		SoundFx.play("loot")
 		Prefs.pulse("loot")
 	else:
-		var name := g.display_name()
-		var was_equipped := GameState.is_equipped(g)
-		GameState.inventory.erase(g)
-		if was_equipped:
-			GameState.equipped.erase("weapon")
-			var best: Gear = null
-			for w in GameState.inventory:
-				if w.slot() == "weapon" and GameState.can_equip(w) and (best == null or w.attack() > best.attack()):
-					best = w
-			if best != null:
-				GameState.equipped["weapon"] = best
-		selected = null
-		message = "%s 소멸 · 다른 무기를 선택하세요" % name
+		message = "강화 실패 · 무기와 강화 단계는 유지됩니다"
 		SoundFx.play("hurt")
 	game.player.refresh_stats()
 	GameState.save_game()

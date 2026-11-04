@@ -239,7 +239,8 @@ func _detail(g: Gear, offer: bool, price: int) -> Control:
 	if cmp != "":
 		box.add_child(PanelFrame.wrap_label(cmp, 16, Color(0.78, 0.92, 0.85)))
 	if g.slot() == "weapon":
-		box.add_child(PanelFrame.wrap_label("사거리 %.1f걸음 · 공격 간격 %.2f" % [g.base["range"] / 40.0, g.base["tempo"]], 15, Color(0.66, 0.78, 0.74)))
+		var profile := g.melee_profile()
+		box.add_child(PanelFrame.wrap_label("무기 근접 공격 · 사거리 %.1f걸음 · 타격 폭 %.0f° · 공격 간격 %.2f초 (일시 강화 제외)" % [profile["range"] / 40.0, rad_to_deg(profile["arc"]) * 2.0, profile["tempo"]], 15, Color(0.66, 0.78, 0.74)))
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 8)
 	box.add_child(actions)

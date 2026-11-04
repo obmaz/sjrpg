@@ -1,7 +1,7 @@
 class_name Gear
 extends RefCounted
 ## 장비 (원본 rpg_model.dart의 Gear/GearDef): 부위 3 · 등급 4 · 옵션(맹공/생명/집중) · 무기 레벨 · 잠금.
-## Weapon gifts (희귀/고유 무기 능력) are not ported yet.
+## Rare/unique gifts and weapon profiles are shared by combat and the bag.
 
 const SLOT_NAMES := {"weapon": "무기", "armor": "방어구", "charm": "부적"}
 const RARITY_NAMES := ["일반", "마법", "희귀", "고유"]
@@ -193,3 +193,12 @@ static func roll_loot(cls: String, player_level: int, serial_no: int, rng: Rando
 		f = (3 + rng.randi_range(0, 4) * r) if cls == "mage" else 0
 	var wl := maxi(1, player_level + rng.randi_range(0, 4) - 2) if b["slot"] == "weapon" else -1
 	return make(serial_no, b["id"], r, p, v, f, player_level, wl)
+
+
+## World-pixel range, half angle (radians), actual attack interval (seconds).
+func melee_profile(frenzy := 0) -> Dictionary:
+	var angles := {"rapier": 0.32, "spear": 0.42, "halberd": 0.72, "glaive": 0.95, "greatsword": 1.05, "dualblades": 1.05,
+		"mace": 1.05, "warhammer": 1.05, "runeblade": 1.10, "katana": 1.15, "longsword": 1.20, "flail": 1.35, "falchion": 1.40}
+	var arc: float = angles.get(base["id"], 0.5 if base["style"] == "spear" else (1.5 if base["style"] == "axe" else 1.25))
+	return {"range": float(base["range"]) * 0.91, "arc": arc,
+		"tempo": maxf(0.12, float(base["tempo"]) / (1.0 + float(base["haste"]) + frenzy * 0.08))}

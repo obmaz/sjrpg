@@ -120,6 +120,9 @@ var _debug_zoom := 1.0
 
 
 func _debug_open_panel(which: String) -> void:
+	# Debug rewards may have opened a memory; always show the requested capture panel.
+	if hud.panel_open():
+		hud.close_panel()
 	match which:
 		"bag":
 			hud.open_bag(false)
@@ -245,8 +248,14 @@ func _process(delta: float) -> void:
 	_corpse_layer.queue_redraw()
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
-		_spawn_timer = 2.2
-		if enemies.size() < 9 + mini(GameState.level, 10):
+		_spawn_timer = ForestBalance.SPAWN_SECONDS
+		# Distant ambient enemies must not consume the local encounter budget.
+		for enemy in enemies.duplicate():
+			if not enemy.is_boss and not enemy.is_threat and enemy.position.distance_to(player.position) > 1900.0:
+				enemies.erase(enemy)
+				enemy.queue_free()
+		var near_home := Iso.unproject(player.position).length() < ForestBalance.NEAR_TOWN_RADIUS
+		if enemies.size() < ForestBalance.field_limit(near_home):
 			_spawn_enemy()
 	_save_timer += delta
 	if _save_timer >= 5.0:
@@ -297,7 +306,11 @@ func _spawn_enemy(anywhere := false) -> void:
 		if zone >= 3:
 			pool.append_array(["skeleton", "skeleton"])
 		var enemy := Enemy.new()
-		enemy.setup(self, pool[_rng.randi_range(0, pool.size() - 1)], maxi(1, GameState.level - 1 + zone))
+		enemy.setup(self, pool[_rng.randi_range(0, pool.size() - 1)], ForestBalance.area_level(zone))
+		if Iso.unproject(p).length() < ForestBalance.NEAR_TOWN_RADIUS:
+			enemy.max_hp *= ForestBalance.NEAR_TOWN_HP
+			enemy.hp = enemy.max_hp
+			enemy.damage *= ForestBalance.NEAR_TOWN_DAMAGE
 		enemy.position = p
 		world.add_child(enemy)
 		enemies.append(enemy)

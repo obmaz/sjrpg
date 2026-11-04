@@ -245,6 +245,8 @@ func cast_slot(index: int, repeat := false) -> bool:
 	if repeat and d["type"] in ["buff", "leap", "blink", "corpse"]:
 		return false
 	if _attack_time > 0.0 or cooldowns.get(id, 0.0) > 0.0:
+		if not repeat:
+			game.toast("공격 동작 중입니다" if _attack_time > 0.0 else "재사용까지 %.1f초" % float(cooldowns[id]))
 		return false
 	var cost := SkillDefs.cost(s, rank)
 	if resource < cost:
@@ -259,8 +261,8 @@ func cast_slot(index: int, repeat := false) -> bool:
 		cooldowns[id] = float(s["cooldown"])
 	_attack_melee = d["type"] in ["melee", "spin", "shadow"]
 	_attack_duration = (0.4 if _attack_melee else 0.46) / (1.0 + frenzy_stacks * 0.08)
-	if id == "cleave":
-		_attack_duration *= float(weapon_melee()["tempo"]) / 0.34
+	if id in ["cleave", "sorceressAttack"]:
+		_attack_duration = float(weapon_melee()["tempo"])
 	_attack_time = _attack_duration
 	_pending = action
 	_cast_feedback(d)
@@ -391,21 +393,13 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 
 
 ## 착용 무기의 사거리 · 타격 호 · 공격 간격 (원본 GearDef.range / meleeHalfAngle / tempo).
-const HALF_ANGLES := {"rapier": 0.32, "spear": 0.42, "halberd": 0.72, "glaive": 0.95, "greatsword": 1.05, "dualblades": 1.05,
-	"mace": 1.05, "warhammer": 1.05, "runeblade": 1.10, "katana": 1.15, "longsword": 1.20, "flail": 1.35, "falchion": 1.40}
-
-
 func weapon_melee() -> Dictionary:
-	var w: Gear = GameState.equipped.get("weapon")
-	if w == null:
-		return {"range": 68.0, "arc": 1.25, "tempo": 0.4}
-	var b: Dictionary = w.base
-	var arc: float = HALF_ANGLES.get(b["id"], 0.5 if b["style"] == "spear" else (1.5 if b["style"] == "axe" else 1.25))
-	return {"range": float(b["range"]) * 0.91, "arc": arc, "tempo": float(b["tempo"])}
+	var weapon: Gear = GameState.equipped.get("weapon")
+	return weapon.melee_profile(frenzy_stacks) if weapon != null else {"range": 68.0, "arc": 1.25, "tempo": 0.4}
 
 
 func _melee(id: String, d: Dictionary, rank: int, power: float) -> void:
-	if id == "cleave":
+	if id in ["cleave", "sorceressAttack"]:
 		var wm := weapon_melee()
 		d = d.duplicate()
 		d["range"] = wm["range"]

@@ -55,6 +55,12 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 
 `tools/screenshot.mjs --scene <이름>`이 위 조합을 이름으로 묶어 둡니다(`--help` 없이 잘못된 이름을 주면 목록 출력).
 
+## 전투 조정
+
+`ForestBalance`에 Godot 숲의 지역 레벨·마을 주변 완화·생성 간격을 둡니다. 추출 데이터는 수정하지 않습니다.
+`Gear.melee_profile()`의 월드 사거리·반각·공격 간격을 실제 근접 기본 공격과 가방·스킬 설명이 공유합니다.
+무기의 공격속도와 일시적인 연격 강화는 공격 간격에 반영합니다. 대장간은 실패 시 비용만 소비합니다.
+
 ## 저장과 재접속
 
 `SaveStore`는 임시 파일에 작성·flush 후 교체하며, 읽을 수 있는 직전 저장만 `.bak`으로 보존합니다.

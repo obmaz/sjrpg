@@ -117,6 +117,11 @@ static func describe(id: String, rank: int) -> String:
 	match d["type"]:
 		"melee", "spin", "nova", "proj", "chain", "zone", "orb", "cone", "summon", "shadow":
 			var parts := []
+			if id in ["cleave", "sorceressAttack"]:
+				var weapon: Gear = GameState.equipped.get("weapon")
+				if weapon != null:
+					var profile := weapon.melee_profile()
+					parts.append("착용 무기 기준 %.1f걸음 · %.2f초" % [profile["range"] / 40.0, profile["tempo"]])
 			if d.has("mult"):
 				parts.append("피해 %d%%" % roundi(scaled(d["mult"], d.get("growth", 0.0), r) * 100.0))
 			if d.has("impact"):
