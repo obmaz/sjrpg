@@ -32,6 +32,11 @@ var xp := 0
 var potions := 3
 var mana_potions := 2
 var kills := 0
+## 제1장 진행: 의뢰 상태, 이번 장 처치 수, 파수꾼 처치 여부.
+var quests := {}
+var stage_kills := 0
+var boss_defeated := false
+var boss_summoned := false
 var gold := 0
 ## 상점 축복(수련): 공격 +5 / 생명 +20씩 쌓임 (원본 bonusAttack / bonusHealth).
 var bonus_attack := 0.0
@@ -345,6 +350,10 @@ func new_game(cls: String) -> void:
 	mana_potions = 2
 	kills = 0
 	gold = 0
+	quests = {}
+	stage_kills = 0
+	boss_defeated = false
+	boss_summoned = false
 	bonus_attack = 0.0
 	bonus_health = 0.0
 	chest_seed = randi() % 0x7fffffff
@@ -372,7 +381,7 @@ func save_game() -> void:
 		"class": hero_class, "level": level, "xp": xp,
 		"potions": potions, "mana_potions": mana_potions, "kills": kills,
 		"skill_points": skill_points, "ranks": ranks, "slots": slots,
-		"gold": gold, "bonus_attack": bonus_attack, "bonus_health": bonus_health, "chest_seed": chest_seed, "opened_chests": opened_chests,
+		"quests": quests, "stage_kills": stage_kills, "boss_defeated": boss_defeated, "gold": gold, "bonus_attack": bonus_attack, "bonus_health": bonus_health, "chest_seed": chest_seed, "opened_chests": opened_chests,
 		"next_serial": next_serial,
 		"inventory": inventory.map(func(g): return g.to_save()),
 		"equipped": equipped.keys().map(func(k): return {"slot": k, "serial": equipped[k].serial}),
@@ -411,6 +420,10 @@ func load_game() -> bool:
 		_starter_skills()
 		skill_points = points_for_level(level)
 	gold = int(data.get("gold", 0))
+	quests = data.get("quests", {})
+	stage_kills = int(data.get("stage_kills", 0))
+	boss_defeated = bool(data.get("boss_defeated", false))
+	boss_summoned = false
 	bonus_attack = float(data.get("bonus_attack", 0.0))
 	bonus_health = float(data.get("bonus_health", 0.0))
 	chest_seed = int(data.get("chest_seed", 1))

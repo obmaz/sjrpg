@@ -13,6 +13,7 @@ var player: Player
 var camera: Camera2D
 var hud: Hud
 var village: Village
+var quest_runtime: QuestRuntime
 var enemies: Array[Enemy] = []
 var chests: Array[Chest] = []
 var corpses: Array = []  # {"pos": Vector2, "time": float, "used": bool}
@@ -77,6 +78,10 @@ func _ready() -> void:
 		chests.append(chest)
 		village.circles.append([chest.position, 24.0])
 
+	quest_runtime = QuestRuntime.new().setup(self)
+	add_child(quest_runtime)
+	quest_runtime.defender = village.npc_nodes["조사관 로웬"]
+
 	player = Player.new()
 	player.setup(self)
 	player.died.connect(_on_player_died)
@@ -124,6 +129,16 @@ func _debug_open_panel(which: String) -> void:
 			hud.open_skill_tree()
 		"settings":
 			hud.open_settings()
+		"journal":
+			hud.open_journal()
+		"elin":
+			hud.interact("수녀 엘린")
+		"mira":
+			hud.interact("보급원 미라")
+		"smith":
+			hud.open_smith()
+		"victory":
+			hud.open_victory()
 
 
 func _read_debug_params() -> void:
@@ -152,6 +167,13 @@ func _read_debug_params() -> void:
 					player.position = village.gate_points[int(kv[1].substr(4))] + Vector2(0, 150)
 				"bridge":
 					player.position = village.bridge.axis_point(0.5)
+				"elin":
+					player.position = village.quest_sites["roots"] + Vector2(60, 40)
+				"rowen":
+					player.position = village.quest_sites["sun"] + Vector2(-90, 110)
+				"lm0", "lm1", "lm2":
+					var lmk: Landmark = village.landmarks[int(kv[1].substr(2))]
+					player.position = lmk.position + Vector2(0, 140)
 				"bank":
 					player.position = Iso.project(village.forecourt_g + Vector2(0, -60))
 				"corner0":
@@ -184,12 +206,31 @@ func near_merchant() -> bool:
 	return player.position.distance_to(village.merchant_point) < 210.0
 
 
+## Name of the town NPC within talking range, or "".
+func near_npc() -> String:
+	var best := ""
+	var best_d := 210.0
+	for name in village.npc_points:
+		var d := player.position.distance_to(village.npc_points[name])
+		if d < best_d:
+			best_d = d
+			best = name
+	return best
+
+
 func in_town(p: Vector2) -> bool:
 	return Geometry2D.is_point_in_polygon(p, village.safe_zone)
 
 
 func _process(delta: float) -> void:
 	camera.position = player.position + Vector2(0, -30)
+	# Raised terraces: actors on top draw over the landmark art.
+	var elevated := false
+	for lm in village.landmarks:
+		if lm.contains_top(player.position):
+			elevated = true
+			break
+	player.z_index = 1 if elevated else 0
 	for c in corpses.duplicate():
 		c["time"] -= delta
 		if c["time"] <= 0.0:
@@ -417,10 +458,38 @@ func enemy_hit_by_point(p: Vector2, r: float) -> Enemy:
 	return null
 
 
+func rng_int(a: int, b: int) -> int:
+	return _rng.randi_range(a, b)
+
+
+func rng_float() -> float:
+	return _rng.randf()
+
+
+func rng_range(a: float, b: float) -> float:
+	return _rng.randf_range(a, b)
+
+
+func on_boss_defeated(boss: Enemy) -> void:
+	GameState.boss_defeated = true
+	GameState.boss_summoned = true
+	var heart := GameState.new_gear("sentinel", 3, 6, 20, 0)
+	if GameState.add_gear(heart):
+		toast("파수꾼의 심장을 얻었습니다!")
+	else:
+		GameState.gold += heart.sale_value()
+	GameState.save_game()
+	await get_tree().create_timer(1.2).timeout
+	hud.open_victory()
+
+
 func on_enemy_killed(enemy: Enemy) -> void:
 	enemies.erase(enemy)
 	Prefs.pulse("kill")
 	GameState.kills += 1
+	quest_runtime.on_enemy_killed(enemy)
+	if enemy.is_boss:
+		on_boss_defeated(enemy)
 	float_text(enemy.position + Vector2(0, -enemy.sprite.body_height - 40), "+%d XP" % enemy.xp_reward, Color(0.7, 0.85, 1))
 	# 원본: 몬스터 처치로는 물약이 나오지 않음 (상자·구매·물약 발견만).
 	# Corpses feed 물약 발견 · 아이템 발견 · 섬뜩한 수호물.

@@ -1,0 +1,43 @@
+class_name JournalPanel
+extends PanelFrame
+## 퀘스트 일지 (원본 game_panels 'journal'): 지금 할 일 · 의뢰 진행 · 숲길 정화 · 첫 파수꾼 · 발견한 상자.
+
+
+func _ready() -> void:
+	super._ready()
+	set_header("제1장 · 숲과 초원", "퀘스트 일지")
+	body.add_child(PanelFrame.section("지금 할 일"))
+	body.add_child(PanelFrame.wrap_label(Quests.main_objective(), 21, Color(0.95, 0.93, 0.85)))
+	for d in Quests.DEFS:
+		body.add_child(_bar(d["title"], Quests.objective(d["id"]), Quests.quest_progress(d["id"]), "완료" if Quests.phase(d["id"]) == "completed" else d["giver"]))
+	var kills := mini(GameState.stage_kills, Quests.STAGE_KILL_GOAL)
+	body.add_child(_bar("숲길 정화", "서로 다른 NPC 의뢰 3개와 몬스터 처치 목표를 완수해 파수꾼을 깨우세요.", float(kills) / Quests.STAGE_KILL_GOAL, "%d / %d" % [kills, Quests.STAGE_KILL_GOAL]))
+	var status := "정화 완료" if GameState.boss_defeated else ("파수꾼 출현" if GameState.boss_summoned else "NPC 의뢰·처치 목표 완료 후 등장")
+	body.add_child(_bar("첫 파수꾼", "NPC 의뢰 3개를 해결하고 파수꾼을 쓰러뜨리면 제1장을 완료합니다.", 1.0 if GameState.boss_defeated else 0.0, status))
+	body.add_child(PanelFrame.wrap_label("발견한 상자 %d / %d" % [GameState.opened_chests.size(), 5], 20, Color(1, 0.88, 0.5)))
+	body.add_child(PanelFrame.wrap_label("모험가 Lv.%d %s" % [GameState.level, GameState.class_info()["name"]], 20, Color(0.78, 0.92, 0.85)))
+	add_footer("모험 계속하기", func(): closed.emit(), true)
+
+
+func _bar(title: String, sub: String, ratio: float, tag: String) -> Control:
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UiKit.panel_style(Color(0.07, 0.15, 0.14, 0.95), Color(0.28, 0.42, 0.37), 12))
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 6)
+	card.add_child(col)
+	var head := HBoxContainer.new()
+	col.add_child(head)
+	var t := UiKit.label(title, 22, Color(0.95, 0.92, 0.8), true)
+	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	head.add_child(t)
+	head.add_child(UiKit.label(tag, 17, Color(1, 0.88, 0.5)))
+	col.add_child(PanelFrame.wrap_label(sub, 17, Color(0.82, 0.9, 0.85)))
+	var bar := ProgressBar.new()
+	bar.show_percentage = false
+	bar.min_value = 0.0
+	bar.max_value = 1.0
+	bar.value = ratio
+	bar.custom_minimum_size = Vector2(0, 14)
+	col.add_child(bar)
+	return card

@@ -27,6 +27,12 @@ var solids: Array[PackedVector2Array] = []
 var circles: Array = []  # [Vector2 center, float radius]
 ## Raised terraces (none for now: the chapel art is off the 120° plane).
 var terrace: PackedVector2Array
+var landmarks: Array[Landmark] = []
+## 의뢰 장소 (world px): roots 석조 정원 제단, moon 고목의 쉼터, sun 동굴.
+var quest_sites := {}
+var cave_ground := Vector2(500, 3100)
+## Screen-plane rects (world px) the field scatter must keep clear.
+var clear_rects: Array[Rect2] = []
 ## Town interior (safe zone, no monster spawns).
 var safe_zone: PackedVector2Array
 var spawn_point := Vector2.ZERO
@@ -40,6 +46,9 @@ var river: River
 var map_water := PackedVector2Array()
 var portal_point := Vector2.ZERO
 var merchant_point := Vector2.ZERO
+## 이름 → 위치: 상인 · 대장장이 · 탈것 상인 · 촌장 · 보급원 미라.
+var npc_points := {}
+var npc_nodes := {}
 ## Forecourt (road end before the bridge) in ground units, and the water band.
 var forecourt_g := Vector2.ZERO
 var river_band := Rect2()  # ground units: x = u, y = v
@@ -65,6 +74,8 @@ func build(ground_layer: Node2D, world: Node2D) -> void:
 	_build_paving(ground_layer)
 	_build_river(ground_layer, world)
 	_build_walls(world)
+	_build_landmarks(world)
+	_build_quest_sites(world)
 	_build_buildings(world)
 	_build_plaza(world)
 	_build_trees(world)
@@ -180,7 +191,69 @@ func _build_river(layer: Node2D, world: Node2D) -> void:
 
 
 ## True when a ground point lies on water, bank or the bridge road.
+## 숲 랜드마크 (원본 stage-1 필드): 높이가 있는 윗면과 계단. Positions are ground units.
+const LANDMARK_SPOTS := [[2, Vector2(-2350, -900)], [1, Vector2(-1500, -2750)], [0, Vector2(1800, 1900)]]
+
+
+func _build_landmarks(world: Node2D) -> void:
+	for spot in LANDMARK_SPOTS:
+		var lm := Landmark.new().setup(spot[0], Iso.project(spot[1]))
+		world.add_child(lm)
+		landmarks.append(lm)
+		for b in lm.blockers:
+			solids.append(b)
+		for l in lm.ledges:
+			solids.append(l)
+		clear_rects.append(lm.footprint_rect())
+
+
+func _build_quest_sites(world: Node2D) -> void:
+	# 석조 정원(제단)과 고목의 쉼터는 높은 윗면 위, 동굴은 남쪽 길 끝에 있음.
+	var garden: Landmark = landmarks[1]
+	var tree: Landmark = landmarks[0]
+	quest_sites["roots"] = _top_center(garden)
+	quest_sites["moon"] = _top_center(tree)
+	var cdef: Dictionary = data["sprites"]["cave"]
+	var cave := IsoSprite.new().setup(cdef, float(cdef["world_height"]) * 1.6)
+	cave.position = Iso.project(cave_ground)
+	world.add_child(cave)
+	circles.append([cave.position + Vector2(0, -60), 120.0])
+	clear_rects.append(Rect2(cave.position - Vector2(300, 280), Vector2(600, 420)))
+	quest_sites["sun"] = cave.position + Vector2(150, 90)
+	_npc("수녀 엘린", 1, quest_sites["roots"] + Vector2(-30, 10), world, true)
+	_npc("약초사 노아", 1, quest_sites["moon"] + Vector2(-30, 10), world, true)
+	_npc("조사관 로웬", 0, quest_sites["sun"], world, false)
+
+
+func _top_center(lm: Landmark) -> Vector2:
+	var c := Vector2.ZERO
+	for p in lm.top:
+		c += p
+	return c / lm.top.size()
+
+
+func _npc(name: String, kind: int, at: Vector2, world: Node2D, elevated: bool) -> void:
+	var npc := Villager.new()
+	npc.setup(kind, name)
+	npc.position = at
+	if elevated:
+		npc.z_index = 1
+	npc.marker = func(): return Quests.marker_for(name)
+	if name == "조사관 로웬":
+		npc.hp_ratio = func():
+			var q := Quests.state("sun")
+			return (float(q["defender_hp"]) / Quests.DEFENDER_HP) if (q["started"] and q["phase"] == "accepted") else -1.0
+	world.add_child(npc)
+	npc_points[name] = at
+	npc_nodes[name] = npc
+	circles.append([at, 16.0])
+
+
 func near_water(g: Vector2, margin: float) -> bool:
+	var sp := Iso.project(g)
+	for r in clear_rects:
+		if r.grow(margin).has_point(sp):
+			return true
 	if river_band.grow(margin + 90.0).has_point(g):
 		return true
 	return absf(g.x - forecourt_g.x) < 190.0 + margin and g.y < forecourt_g.y + 100.0 and g.y > forecourt_g.y - 2400.0
@@ -313,6 +386,9 @@ func _build_npcs(world: Node2D) -> void:
 		var npc := Villager.new()
 		npc.setup(n[2], n[1])
 		npc.position = b.native_point(Vector2(a[0], a[1]))
+		var nm: String = n[1]
+		npc.marker = func(): return Quests.marker_for(nm)
+		npc_points[n[1]] = npc.position
 		if n[0] == "nw":
 			merchant_point = npc.position
 		world.add_child(npc)
@@ -320,6 +396,8 @@ func _build_npcs(world: Node2D) -> void:
 	var mira := Villager.new()
 	mira.setup(0, "보급원 미라")
 	mira.position = point(Vector2(0.44, 0.57))
+	mira.marker = func(): return Quests.marker_for("보급원 미라")
+	npc_points["보급원 미라"] = mira.position
 	world.add_child(mira)
 	circles.append([mira.position, 16.0])
 
