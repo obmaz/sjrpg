@@ -7,8 +7,9 @@
 ## 프로젝트
 
 - Godot 4.5 프로젝트(GL Compatibility)이며 GitHub Pages(`/sjrpg2/`)에 웹(WASM, 단일 스레드)으로 배포합니다.
-  Flutter·Bonfire 원본 [obmaz/sjrpg](https://github.com/obmaz/sjrpg)가 **기준**입니다. 이식은 원본의 수치·규칙·원화를 그대로
-  가져오는 것을 원칙으로 하며, 원본과 다르게 단순화한 부분은 README의 "아직 이식 전"과 코드 주석에 이유를 남깁니다.
+  Flutter·Bonfire 원본 [obmaz/sjrpg](https://github.com/obmaz/sjrpg)는 **참고 자료**입니다. 세계관·전사와 마법사·쿼터뷰는 유지하되
+  Godot판의 조작감·가독성·진행을 우선해 규칙·밸런스를 개선합니다. 원본과 다른 규칙은 README와 관련 코드에 이유를 남깁니다.
+  현재 목표는 숲 1장 완성(탐험 보강·선택형 동굴 포함)이며, 후속 지역과 탈것은 이후에 작업합니다.
 - 스크립트는 `scripts/`, 데이터는 `assets/data/`, 원화는 `assets/art/`, 테스트는 `tests/`, 도구는 `tools/`입니다.
   장면(`scenes/`)은 `main.tscn` 하나이며 화면은 코드로 구성합니다.
 
@@ -26,7 +27,7 @@
 - `assets/data/{skills,gear,village,landmarks}.json`은 원본 Dart에서 `tools/extract/extract_data.py`로 뽑습니다. 손으로 고치지 말고
   추출 스크립트를 고쳐 다시 만듭니다(재현 가능해야 함). 추출 후 `git diff`로 의도한 변화만 있는지 확인합니다.
 - 전투 수치(피해·체력·소모·가격)는 원본 단위를 따릅니다: 정수 내부 단위, 화면 표시는 체력·피해 ×100, 자원 ×10(`HudArt.stat/res`).
-  원본에 없는 값을 임의로 정했다면(예: 마법사 주문 위력) 그 사실을 주석과 README에 적습니다.
+  Godot판 조정값은 추출 JSON을 직접 바꾸지 않고 별도 설정으로 적용합니다. 변경한 규칙과 이유를 주석과 README에 적습니다.
 
 ## GDScript 규칙
 
