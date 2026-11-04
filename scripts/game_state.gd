@@ -1,7 +1,13 @@
 extends Node
 ## Persistent hero progress (autoload `GameState`). Saved to user:// (IndexedDB on the web).
 
+signal save_finished(success: bool, message: String)
+
 const SAVE_PATH := "user://guardian_save.json"
+const SAVE_VERSION := 1
+var save_path := SAVE_PATH
+var save_error := ""
+var loaded_backup := false
 
 const CLASSES := {
 	"warrior": {
@@ -374,20 +380,18 @@ func new_game(cls: String) -> void:
 
 
 func delete_save() -> void:
-	if FileAccess.file_exists(SAVE_PATH):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	for suffix in ["", ".bak", ".tmp", ".bak.tmp"]:
+		if FileAccess.file_exists(save_path + suffix):
+			DirAccess.remove_absolute(save_path + suffix)
 
 
 func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+	return not SaveStore.read(save_path, _valid_save).is_empty()
 
 
-func save_game() -> void:
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	if file == null:
-		return
-	file.store_string(JSON.stringify({
-		"class": hero_class, "level": level, "xp": xp,
+func save_game() -> bool:
+	var data := {
+		"version": SAVE_VERSION, "class": hero_class, "level": level, "xp": xp,
 		"potions": potions, "mana_potions": mana_potions, "kills": kills,
 		"skill_points": skill_points, "ranks": ranks, "slots": slots,
 		"quests": quests, "stage_kills": stage_kills, "boss_defeated": boss_defeated, "memory_rewarded": memory_rewarded, "gold": gold, "bonus_attack": bonus_attack, "bonus_health": bonus_health, "chest_seed": chest_seed, "opened_chests": opened_chests,
@@ -395,18 +399,67 @@ func save_game() -> void:
 		"inventory": inventory.map(func(g): return g.to_save()),
 		"equipped": equipped.keys().map(func(k): return {"slot": k, "serial": equipped[k].serial}),
 		"unseen": unseen,
-	}))
+	}
+	var error := SaveStore.write(save_path, data, _valid_save)
+	if error == OK and OS.has_feature("web") and not OS.is_userfs_persistent():
+		error = ERR_UNAVAILABLE
+	save_error = "" if error == OK else "저장하지 못했습니다. 설정에서 다시 저장해 주세요. (%s)" % error_string(error)
+	save_finished.emit(error == OK, save_error)
+	return error == OK
+
+
+## Validate containers before applying a save so malformed data cannot partially replace the hero.
+func _valid_save(data: Dictionary) -> bool:
+	if not CLASSES.has(data.get("class", "")):
+		return false
+	for key in ["version", "level", "xp", "potions", "mana_potions", "kills", "skill_points", "gold", "stage_kills", "bonus_attack", "bonus_health", "chest_seed", "next_serial"]:
+		if data.has(key) and (not _number(data[key]) or float(data[key]) < 0):
+			return false
+	if int(data.get("version", 0)) > SAVE_VERSION or int(data.get("level", 1)) < 1:
+		return false
+	for key in ["ranks", "quests"]:
+		if data.has(key) and not data[key] is Dictionary:
+			return false
+	for value in data.get("ranks", {}).values():
+		if not _number(value):
+			return false
+	for record in data.get("quests", {}).values():
+		if not record is Dictionary:
+			return false
+		for key in ["altar_kills", "protected_for", "defender_hp", "defeated", "attempt", "spawned"]:
+			if record.has(key) and not _number(record[key]):
+				return false
+	for key in ["slots", "inventory", "equipped", "unseen", "opened_chests"]:
+		if data.has(key) and not data[key] is Array:
+			return false
+	for key in ["unseen", "opened_chests"]:
+		for value in data.get(key, []):
+			if not _number(value):
+				return false
+	for record in data.get("inventory", []):
+		if not record is Dictionary:
+			return false
+		for key in ["serial", "rarity", "power", "vitality", "focus", "level", "weapon_level"]:
+			if record.has(key) and not _number(record[key]):
+				return false
+		if record.has("gifts") and not record["gifts"] is Array:
+			return false
+	for record in data.get("equipped", []):
+		if not record is Dictionary or not _number(record.get("serial", 0)):
+			return false
+	return true
+
+
+func _number(value: Variant) -> bool:
+	return (value is int or value is float) and is_finite(float(value))
 
 
 func load_game() -> bool:
-	if not has_save():
+	var recovered := SaveStore.read(save_path, _valid_save)
+	if recovered.is_empty():
 		return false
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
-	if file == null:
-		return false
-	var data = JSON.parse_string(file.get_as_text())
-	if typeof(data) != TYPE_DICTIONARY or not CLASSES.has(data.get("class", "")):
-		return false
+	var data: Dictionary = recovered["data"]
+	loaded_backup = recovered["backup"]
 	hero_class = data["class"]
 	level = int(data.get("level", 1))
 	xp = int(data.get("xp", 0))
@@ -429,7 +482,21 @@ func load_game() -> bool:
 		_starter_skills()
 		skill_points = points_for_level(level)
 	gold = int(data.get("gold", 0))
-	quests = data.get("quests", {})
+	quests = {}
+	var saved_quests: Dictionary = data.get("quests", {})
+	for definition in Quests.DEFS:
+		var id: String = definition["id"]
+		var state := Quests.fresh(id)
+		state.merge(saved_quests.get(id, {}), true)
+		if not ["offered", "accepted", "ready", "completed", "failed"].has(state["phase"]):
+			state = Quests.fresh(id)
+		# Threat nodes are transient; restart an interrupted defense without losing other quests.
+		if id == "sun" and state["phase"] == "accepted" and state["started"]:
+			var attempt := int(state["attempt"]) + 1
+			state = Quests.fresh(id)
+			state["phase"] = "accepted"
+			state["attempt"] = attempt
+		quests[id] = state
 	stage_kills = int(data.get("stage_kills", 0))
 	boss_defeated = bool(data.get("boss_defeated", false))
 	memory_rewarded = bool(data.get("memory_rewarded", false))

@@ -55,6 +55,15 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 
 `tools/screenshot.mjs --scene <이름>`이 위 조합을 이름으로 묶어 둡니다(`--help` 없이 잘못된 이름을 주면 목록 출력).
 
+## 저장과 재접속
+
+`SaveStore`는 임시 파일에 작성·flush 후 교체하며, 읽을 수 있는 직전 저장만 `.bak`으로 보존합니다.
+`GameState.save_game()`은 성공 여부를 반환하고 `save_finished(success, message)`를 알립니다.
+HUD는 실패 시 누를 수 있는 재시도 안내를 유지하며 설정의 수동 저장도 실패를 표시합니다.
+버전 없는 기존 Godot 저장을 지원하고, 미래 버전과 잘못된 컨테이너는 적용 전에 거부합니다.
+중단된 조사관 보호는 습격 노드를 복구하는 대신 수락 상태로 되돌려 재시작합니다.
+새 모험 준비·취소는 기존 저장을 지우지 않습니다. 테스트 러너는 별도의 `user://tests/` 경로를 사용합니다.
+
 ## 테스트
 
 `tools/check.sh --list` 대신 `tools/godot.sh --headless res://tests/run_all.tscn -- --list`로 케이스를 봅니다.
@@ -67,6 +76,7 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 | `bridge` | 다리를 건널 수 있고 강은 막힘 |
 | `quests` | 제단·배달·보호 의뢰(실패·재도전 포함), 보상, 파수꾼 처치, 대화·일지 패널 |
 | `bag` | 시작 장비, 상자 보상, 장착·잠금·판매, 상점·수련, 저장·불러오기, 설정·스킬 패널 |
+| `saving` | 손상 저장·백업·이전 형식·실패 후 재시도·보호 의뢰 복구·보상 중복 방지 |
 | `skills` | 두 직업의 모든 스킬을 규칙대로 배우고 시전, 스킬 트리 탭 열기 |
 
 ## CI와 배포

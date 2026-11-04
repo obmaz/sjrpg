@@ -12,6 +12,7 @@ var minimap: Minimap
 var _area: Control
 var _area_name := ""
 var _panel: PanelFrame
+var _save_warning: Button
 
 
 func _ready() -> void:
@@ -42,6 +43,15 @@ func _ready() -> void:
 	add_child(_toast)
 
 	_build_death()
+	_save_warning = UiKit.button("", 18)
+	_save_warning.process_mode = Node.PROCESS_MODE_ALWAYS
+	_save_warning.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_save_warning.offset_top = 165
+	_save_warning.offset_bottom = 239
+	_save_warning.pressed.connect(func(): GameState.save_game())
+	add_child(_save_warning)
+	GameState.save_finished.connect(_on_save_finished)
+	_on_save_finished(GameState.save_error.is_empty(), GameState.save_error)
 
 
 func _build_death() -> void:
@@ -288,3 +298,9 @@ func _draw_bars() -> void:
 	var bpos := Vector2(2.0 * u, 2.0 * u)
 	_bars.draw_texture_rect(badge, Rect2(bpos, Vector2(bs, bs)), false)
 	HudArt.text_outlined(_bars, str(GameState.level), bpos + Vector2(0, bs * 0.7), bs, int(13 * u), Color(0.93, 0.89, 0.8))
+
+
+func _on_save_finished(success: bool, message: String) -> void:
+	_save_warning.visible = not success
+	_save_warning.text = "저장 실패 · 눌러서 재시도"
+	_save_warning.tooltip_text = message

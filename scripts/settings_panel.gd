@@ -41,23 +41,23 @@ func _rebuild() -> void:
 	body.add_child(_action_row("효과음 확인", func(): SoundFx.play("impact", true), Prefs.sound_enabled))
 	body.add_child(HSeparator.new())
 	body.add_child(PanelFrame.section("진행"))
-	body.add_child(PanelFrame.wrap_label("15초마다 이 기기에 자동 저장합니다. 다음에 이어하기로 돌아올 수 있습니다. 새 모험을 시작하면 이전 진행을 덮어씁니다.", 15, Color(0.73, 0.8, 0.74)))
+	body.add_child(PanelFrame.wrap_label("5초마다 이 기기에 자동 저장합니다. 다음에 이어하기로 돌아올 수 있습니다. 직업을 고르고 새 모험 시작을 확인하면 이전 진행을 덮어씁니다.", 15, Color(0.73, 0.8, 0.74)))
 	if _feedback != "":
 		body.add_child(PanelFrame.wrap_label(_feedback, 16, Color(0.71, 1, 0.69)))
 	body.add_child(_action_row("진행 상황 지금 저장", func():
-		GameState.save_game()
-		_feedback = "현재 모험 진행이 저장되었습니다."
+		var saved := GameState.save_game()
+		_feedback = "현재 모험 진행이 저장되었습니다." if saved else GameState.save_error
 		_rebuild()))
 	body.add_child(_action_row("저장하고 타이틀로", func(): title_requested.emit()))
-	var danger := _action_row("새 모험 시작 (기존 저장 삭제)", func(): _confirm_restart())
+	var danger := _action_row("새 모험 준비", func(): _confirm_restart())
 	body.add_child(danger)
 
 
 func _confirm_restart() -> void:
 	clear_body()
 	body.add_child(PanelFrame.section("새 모험을 시작할까요?"))
-	body.add_child(PanelFrame.wrap_label("직업을 다시 고르며, 현재 진행(레벨 · 스킬 · 장비 · 골드)은 삭제됩니다.", 18))
-	body.add_child(_action_row("삭제하고 새 모험", func(): restart_requested.emit()))
+	body.add_child(PanelFrame.wrap_label("직업 선택으로 이동합니다. 새 모험 시작을 확인하기 전까지 현재 진행은 유지됩니다.", 18))
+	body.add_child(_action_row("직업 선택으로", func(): restart_requested.emit()))
 	body.add_child(_action_row("취소", func(): _rebuild()))
 
 

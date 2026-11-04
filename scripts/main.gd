@@ -35,9 +35,7 @@ func show_title() -> void:
 
 func show_class_select() -> void:
 	var select := preload("res://scripts/class_select.gd").new()
-	select.chosen.connect(func(cls: String):
-		GameState.new_game(cls)
-		start_game())
+	select.chosen.connect(_choose_hero)
 	select.continue_requested.connect(func():
 		if GameState.load_game():
 			start_game())
@@ -49,6 +47,26 @@ func start_game() -> void:
 	var game := preload("res://scripts/game.gd").new()
 	game.quit_requested.connect(show_title)
 	game.restart_requested.connect(func():
-		GameState.delete_save()
 		show_class_select())
 	_swap(game)
+
+
+func _choose_hero(cls: String) -> void:
+	if not GameState.has_save():
+		_begin_new_game(cls)
+		return
+	var confirm := PanelFrame.new()
+	add_child(confirm)
+	confirm.set_header("새 모험을 시작할까요?")
+	confirm.body.add_child(PanelFrame.wrap_label("새 모험을 시작하면 이전 진행을 덮어씁니다. 취소하면 기존 모험을 유지합니다.", 22))
+	confirm.add_footer("취소", func(): confirm.queue_free())
+	confirm.add_footer("새 모험 시작", func():
+		confirm.queue_free()
+		_begin_new_game(cls), true)
+	confirm.closed.connect(func(): confirm.queue_free())
+
+
+func _begin_new_game(cls: String) -> void:
+	UiKit.boost = 1.0
+	GameState.new_game(cls)
+	start_game()

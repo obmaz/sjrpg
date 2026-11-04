@@ -48,13 +48,18 @@ func _ready() -> void:
 	back.custom_minimum_size = Vector2(160, 52)
 	back.pressed.connect(func(): back_requested.emit())
 	actions.add_child(back)
-	if GameState.has_save():
-		var cont := UiKit.button("이어하기", 22)
-		cont.custom_minimum_size = Vector2(260, 52)
-		if GameState.load_game():
-			cont.text = "이어하기 · %s Lv.%d" % [GameState.class_info()["name"], GameState.level]
-		cont.pressed.connect(func(): continue_requested.emit())
-		actions.add_child(cont)
+	var cont := UiKit.button("이어하기 · 저장 없음", 22)
+	cont.custom_minimum_size = Vector2(260, 64)
+	cont.disabled = true
+	if GameState.has_save() and GameState.load_game():
+		cont.text = "이어하기 · %s Lv.%d" % [GameState.class_info()["name"], GameState.level]
+		if GameState.loaded_backup:
+			cont.text += " (백업 복원)"
+		cont.disabled = false
+	elif FileAccess.file_exists(GameState.save_path):
+		cont.text = "이어하기 · 저장을 읽을 수 없음"
+	cont.pressed.connect(func(): continue_requested.emit())
+	actions.add_child(cont)
 
 
 func _card(cls: String) -> Control:

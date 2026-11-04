@@ -9,6 +9,9 @@ const CASE_DIR := "res://tests/cases/"
 
 
 func _ready() -> void:
+	# Test runs must never overwrite the player's adventure.
+	DirAccess.make_dir_recursive_absolute("user://tests")
+	GameState.save_path = "user://tests/guardian_save.json"
 	var only: PackedStringArray = []
 	var list := false
 	for arg in OS.get_cmdline_user_args():

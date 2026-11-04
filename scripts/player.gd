@@ -689,4 +689,4 @@ func revive(at: Vector2) -> void:
 	frenzy_stacks = 0
 	cooldowns.clear()
 	refresh_stats(true)
-	_invulnerable = 2.0
+	_invulnerable = 3.0

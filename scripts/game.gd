@@ -249,7 +249,7 @@ func _process(delta: float) -> void:
 		if enemies.size() < 9 + mini(GameState.level, 10):
 			_spawn_enemy()
 	_save_timer += delta
-	if _save_timer > 15.0:
+	if _save_timer >= 5.0:
 		_save_timer = 0.0
 		GameState.save_game()
 
@@ -755,5 +755,5 @@ func toast(text: String) -> void:
 
 
 func quit_to_title() -> void:
-	GameState.save_game()
-	quit_requested.emit()
+	if GameState.save_game():
+		quit_requested.emit()

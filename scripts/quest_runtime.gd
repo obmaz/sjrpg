@@ -29,6 +29,8 @@ func _process(delta: float) -> void:
 # ───────── 대화에서 부르는 행동 ─────────
 
 func accept(id: String) -> void:
+	if Quests.phase(id) != "offered":
+		return
 	var s := Quests.state(id)
 	s["phase"] = "accepted"
 	if id == "roots":
@@ -39,12 +41,16 @@ func accept(id: String) -> void:
 
 
 func receive_parcel() -> void:
+	if Quests.phase("moon") != "accepted" or Quests.state("moon")["parcel"]:
+		return
 	Quests.state("moon")["parcel"] = true
 	game.toast("약초 꾸러미를 받았습니다")
 	GameState.save_game()
 
 
 func deliver() -> void:
+	if Quests.phase("moon") != "accepted" or not Quests.state("moon")["parcel"]:
+		return
 	var s := Quests.state("moon")
 	s["parcel"] = false
 	s["phase"] = "ready"
@@ -64,6 +70,8 @@ func cleanse_blocked_reason() -> String:
 
 
 func cleanse() -> void:
+	if Quests.phase("roots") != "accepted" or cleanse_blocked_reason() != "":
+		return
 	var s := Quests.state("roots")
 	s["cleansed"] = true
 	s["phase"] = "ready"
@@ -74,6 +82,8 @@ func cleanse() -> void:
 
 
 func report(id: String) -> void:
+	if Quests.phase(id) != "ready":
+		return
 	var d := Quests.def(id)
 	var s := Quests.state(id)
 	s["phase"] = "completed"
@@ -88,14 +98,19 @@ func report(id: String) -> void:
 
 
 func retry(id: String) -> void:
+	if Quests.phase(id) != "failed":
+		return
 	var s := Quests.fresh(id)
 	s["attempt"] = int(Quests.state(id)["attempt"]) + 1
 	s["phase"] = "accepted"
 	GameState.quests[id] = s
 	game.toast("다시 준비합니다")
+	GameState.save_game()
 
 
 func start_protection() -> void:
+	if Quests.phase("sun") != "accepted" or Quests.state("sun")["started"]:
+		return
 	var s := Quests.state("sun")
 	s["started"] = true
 	s["protected_for"] = 0.0
