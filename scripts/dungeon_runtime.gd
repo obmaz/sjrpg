@@ -155,6 +155,8 @@ func _build_enemies() -> void:
 			var kind: String = ["goblin", "wolf", "boar", "skeleton"][(room + index) % 4]
 			enemy.setup(game, kind, entry_level)
 			enemy.position = center + Vector2.from_angle(index * TAU / DungeonLayout.COUNTS[room]) * 110.0
+			enemy.patrol_center = center
+			enemy.patrol_radius = 170.0
 			game.world.add_child(enemy)
 			game.enemies.append(enemy)
 			total += 1

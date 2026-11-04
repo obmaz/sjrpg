@@ -11,6 +11,23 @@ func run() -> void:
 	Quests.state("sun")["started"] = false
 	check("cave starts at entrance", cave.enter())
 	check("five rooms contain twenty-two enemies", game.enemies.size() == 22 and cave.total == 22)
+	# Idle monsters must not drift down the unchosen branch before the hero arrives.
+	var idle: Enemy = game.enemies[0]
+	idle.position = idle.patrol_center + Vector2(169, 0)
+	idle._state = "idle"
+	idle._timer = 100.0
+	idle._wander = Vector2(0.4, 0)
+	var stayed_in_room := true
+	for step in 200:
+		idle._process(0.1)
+		stayed_in_room = stayed_in_room and idle.position.distance_to(idle.patrol_center) <= 170.01
+	check("waiting cave enemies stay in their room instead of wandering into branches", stayed_in_room)
+	idle.position = idle.patrol_center + Vector2(169, 0)
+	game.player.position = idle.patrol_center + Vector2(260, 0)
+	idle.force_chase()
+	idle._process(0.1)
+	check("room patrol bounds do not tether active pursuit", idle.position.distance_to(idle.patrol_center) > 170.0)
+	game.player.position = Vector2.ZERO
 	check("cave level is fixed on entry", cave.entry_level == GameState.level + 2)
 	var hp: float = game.enemies[0].max_hp
 	GameState.level += 1

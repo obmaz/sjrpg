@@ -29,6 +29,9 @@ var dead := false
 ## 보호 의뢰의 습격자 / 보스.
 var is_threat := false
 var is_boss := false
+## Cave enemies idle within their room; zero keeps the field's free roaming behavior.
+var patrol_center := Vector2.ZERO
+var patrol_radius := 0.0
 
 var _state := "idle"
 var _timer := 0.0
@@ -198,8 +201,11 @@ func _process(delta: float) -> void:
 			if _timer <= 0.0:
 				_timer = randf_range(1.5, 3.5)
 				_wander = Vector2.from_angle(randf() * TAU) * (0.0 if randf() < 0.4 else 0.4)
-			if _wander != Vector2.ZERO:
-				_step(_wander, delta * rate)
+			var wander := _wander
+			if patrol_radius > 0.0 and (position + wander * speed * delta * rate).distance_to(patrol_center) > patrol_radius:
+				wander = (patrol_center - position).normalized() * 0.4
+			if wander != Vector2.ZERO:
+				_step(wander, delta * rate)
 			else:
 				sprite.set_frame(atlas, atlas.walk_frame(facing, 0.0))
 			if not player.dead and dist < 340.0:
