@@ -11,7 +11,7 @@ Flutter·Bonfire로 만든 [sjrpg](https://github.com/obmaz/sjrpg)를 **Godot 4.
 - **2.5D 쿼터뷰 120°**: 원본 `IsometricGround`와 같은 ±30° 지면 축 (`scripts/iso.gd`)
   - 원본 실측 데이터(`forest_isometric_frames.dart`)를 `assets/data/village.json`으로 옮겨 건물·성문·분수·워프·나무의 원화, 바닥 접점, 지면 보정, 충돌 받침을 그대로 사용 (`scripts/iso_sprite.gd`, `scripts/village.gd`)
   - 성벽과 네 성문, 십자 포장길과 밝은 광장, 상인·대장장이·탈것 상인·촌장·보급원 미라
-  - **120° 기준 점검**: 바닥 접점이 ±30°에서 2° 이내인 원화만 사용. 예배당 원화는 측정 결과 어긋나(-30/+39/-19/+27°) 게임에서 뺐고, 이에 따라 높은 마당(높낮이)도 새 원화가 나올 때까지 없음 (`docs/chapel-regeneration.md`)
+  - **120° 기준 점검**: 바닥 접점이 ±30°에서 2.5° 이내인 원화만 사용. 원본 예배당 원화는 측정 결과 어긋나(-30/+39/-19/+27°) 빼고, 새로 생성한 원화(`assets/source/chapel-new.png`, 기단 변 -29.0°/+29.9°)로 마을 북동쪽에 높은 마당(계단으로만 오름, 절벽·건물 막힘)을 복구 (`docs/chapel-regeneration.md`)
   - 마을은 안전 구역(몬스터 진입·생성 없음), 성문 밖 흙길과 숲에서 몬스터 등장
   - **동문 밖 강과 돌다리**: 원본 실측(`QuarterViewBridgeArt`)대로 동문 앞마당에서 북쪽으로 다리를 건너 길이 이어짐. 물은 흐르는 텍스처 두 겹과 바위 둑으로 그리고, 다리 상판만 걸을 수 있으며 난간 앞면과 모서리 기둥은 캐릭터 위에 그려짐
   - 성벽 끝은 성문의 실측 기둥 위치에 맞물리고 성문이 항상 성벽 끝을 덮음
@@ -59,7 +59,7 @@ Flutter·Bonfire로 만든 [sjrpg](https://github.com/obmaz/sjrpg)를 **Godot 4.
 | `scripts/gear.gd`, `scripts/gear_art.gd`, `scripts/chest.gd` | 장비 모델·아이콘, 마을 상자 |
 | `scripts/panel_frame.gd`, `scripts/bag_panel.gd`, `scripts/settings_panel.gd` | 모바일 패널 틀, 가방·상점, 설정 |
 | `scripts/prefs.gd`, `scripts/sound_fx.gd` | 기기 설정(진동·효과음), 효과음 합성 |
-| `docs/chapel-regeneration.md` | 예배당 원화가 ±30° 기준에서 벗어난 측정 결과와 재생성 규격 |
+| `docs/chapel-regeneration.md` | 원본 예배당 원화가 ±30° 기준에서 벗어난 측정 결과, 새 원화 규격과 교체 결과 |
 | `scripts/player.gd`, `scripts/enemy.gd` | 영웅 조작과 몬스터 AI |
 | `scripts/hud.gd`, `scripts/touch_controls.gd` | HUD, 메뉴, 터치 조작 |
 | `scripts/skill_tree_panel.gd`, `scripts/skill_icons.gd` | 스킬 트리 화면, 아이콘 |

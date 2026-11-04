@@ -174,6 +174,8 @@ func _read_debug_params() -> void:
 				"lm0", "lm1", "lm2":
 					var lmk: Landmark = village.landmarks[int(kv[1].substr(2))]
 					player.position = lmk.position + Vector2(0, 140)
+				"chapel":
+					player.position = village.chapel_steps[village.chapel_steps.size() - 1]
 				"bank":
 					player.position = Iso.project(village.forecourt_g + Vector2(0, -60))
 				"corner0":
@@ -224,8 +226,8 @@ func in_town(p: Vector2) -> bool:
 
 func _process(delta: float) -> void:
 	camera.position = player.position + Vector2(0, -30)
-	# Raised terraces: actors on top draw over the landmark art.
-	var elevated := false
+	# Raised terraces (landmarks, chapel yard): actors on top draw over the terrace art.
+	var elevated := Geometry2D.is_point_in_polygon(player.position, village.terrace)
 	for lm in village.landmarks:
 		if lm.contains_top(player.position):
 			elevated = true

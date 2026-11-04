@@ -10,8 +10,9 @@
   village.json    제1장 마을 실측(스프라이트·바닥 접점·배치·성문·다리)     ← lib/src/rendering/forest_isometric_frames.dart
   landmarks.json  지형 랜드마크 윗면·절벽·구조물                           ← forestIsometricTerraces
 
-원본이 바뀌면 이 스크립트를 다시 돌려 차이를 확인합니다. 예배당처럼 ±30° 기준을 벗어난 항목은
-`EXCLUDE`에서 제외합니다 (docs/chapel-regeneration.md).
+원본이 바뀌면 이 스크립트를 다시 돌려 차이를 확인합니다. 예배당은 원본 원화가 ±30° 기준을 벗어나 새로 생성한
+원화(assets/source/chapel-new.png)를 쓰므로 Dart가 아니라 chapel.py(측정값 chapel_measure.json)에서 village.json에 합칩니다
+(docs/chapel-regeneration.md).
 """
 import json
 import math
@@ -19,7 +20,7 @@ import re
 import sys
 from pathlib import Path
 
-EXCLUDE = {"chapel"}  # 120° 기준을 벗어난 원화: 게임에서 쓰지 않음
+import chapel
 
 
 def balanced(text, start, open_c="(", close_c=")"):
@@ -167,11 +168,12 @@ def extract_village(src, out):
                 wall_runs=[[[.475, .10], [.04, .10], [.04, .475]], [[.04, .525], [.04, .90], [.475, .90]],
                            [[.525, .10], [.94, .10], [.94, .475]], [[.94, .525], [.94, .90], [.525, .90]]],
                 extent=2400, spawn_uv=[.5, .525], chest_uv=[[.44, .62], [.36, .43], [.65, .43], [.47, .72], [.57, .25]])
-    for key in EXCLUDE:
-        for section in ("sprites", "frames", "placements", "approaches"):
-            data[section].pop(key, None)
+    # 원본 chapel 항목은 ±30°를 벗어나 쓰지 않는다. 새 원화는 chapel.py가 합친다(시트 패킹: `python3 tools/extract/chapel.py`).
+    for section in ("sprites", "frames", "placements", "approaches"):
+        data[section].pop("chapel", None)
+    chapel.merge(data)
     (out / "village.json").write_text(json.dumps(data, indent=1))
-    print("village.json", len(sprites), "sprites (excluded:", ",".join(sorted(EXCLUDE)) + ")")
+    print("village.json", len(sprites), "sprites (+ chapel from chapel.py)")
 
 
 # ───────────────────────── landmarks ─────────────────────────

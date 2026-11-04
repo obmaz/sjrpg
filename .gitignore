@@ -2,3 +2,6 @@
 build/
 *.tmp
 export_credentials.cfg
+
+.harness/tasks/
+.harness/.env

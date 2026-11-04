@@ -34,6 +34,5 @@ func run() -> void:
 		if absf(t - 30.0) > 2.5:
 			print("axis audit bridge FAIL %.1f" % t)
 			failures += 1
-	if data["sprites"].has("chapel"):
-		print("axis audit: off-plane chapel art must not ship")
-		failures += 1
+	# The chapel must be in the audited set (its plinth foot is `frames.chapel.ground`).
+	check("axis audit: chapel is audited", data["frames"].has("chapel") and data["sprites"].has("chapel"))

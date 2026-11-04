@@ -2,7 +2,8 @@ class_name Village
 extends RefCounted
 ## 제1장 숲 마을 (원본 AuthoredSettlement + forest_isometric_frames.dart).
 ## A 2400×2400 ground diamond with walls, four gates, paved cross roads, the
-## plaza fountain and portal, four service buildings, the river and the bridge.
+## plaza fountain and portal, four service buildings, the raised chapel yard,
+## the river and the bridge.
 
 const DATA_PATH := "res://assets/data/village.json"
 const WALL_HEIGHT := 140.0
@@ -25,8 +26,10 @@ var spawn_uv := Vector2(0.5, 0.525)
 ## Collision for the game: polygons in world pixels.
 var solids: Array[PackedVector2Array] = []
 var circles: Array = []  # [Vector2 center, float radius]
-## Raised terraces (none for now: the chapel art is off the 120° plane).
+## Walkable raised chapel yard incl. its stairs (world px): actors inside draw above the chapel art.
 var terrace: PackedVector2Array
+## Chapel stair path from the ground below up to the yard (world px).
+var chapel_steps: PackedVector2Array
 var landmarks: Array[Landmark] = []
 ## 의뢰 장소 (world px): roots 석조 정원 제단, moon 고목의 쉼터, sun 동굴.
 var quest_sites := {}
@@ -347,6 +350,31 @@ func _build_buildings(world: Node2D) -> void:
 		world.add_child(s)
 		buildings[key] = s
 		solids.append(s.atlas_polygon(data["frames"][key]["ground"]))
+	_build_chapel(world)
+
+
+## 예배당 (새 120° 원화 assets/source/chapel-new.png): 자갈 마당(기단) 위의 고딕 예배당.
+## 마당 윗면(`outline`)은 계단(`entrance` 0)으로만 오를 수 있고, 정면 절벽(`faces`)과 건물 자리(`building`)는 막힌다.
+## `frames.chapel.ground`는 기단이 땅에 닿는 접점(축 검사용)이라 충돌에는 쓰지 않는다: 마당 위를 걸어야 하므로.
+## 좌표는 원화 원본 픽셀이라 `native_polygon`으로 월드에 옮긴다.
+func _build_chapel(world: Node2D) -> void:
+	var s := _placed("chapel")
+	world.add_child(s)
+	buildings["chapel"] = s
+	var yard: Dictionary = data["chapel"]
+	terrace = s.native_polygon(yard["outline"])
+	chapel_steps = s.native_polygon(yard["steps"])
+	for face in yard["faces"]:
+		solids.append(s.native_polygon(face))
+	solids.append(s.native_polygon(yard["building"]))
+	# Every outline edge except the stair entrance is a ledge.
+	for i in terrace.size():
+		if i == int(yard["entrance"]):
+			continue
+		var a := terrace[i]
+		var b := terrace[(i + 1) % terrace.size()]
+		var n := (b - a).orthogonal().normalized() * 5.0
+		solids.append(PackedVector2Array([a + n, b + n, b - n, a - n]))
 
 
 func _build_plaza(world: Node2D) -> void:

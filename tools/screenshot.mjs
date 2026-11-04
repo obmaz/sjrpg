@@ -18,6 +18,8 @@ const SCENES = {
     gate1: 'at=gate1&zoom=1.5',
     gate2: 'at=gate2&zoom=1.5',
     gate3: 'at=gate3&zoom=1.5',
+    chapel: 'at=chapel&zoom=0.8',
+    chapelwide: 'at=chapel&zoom=0.4',
     lm0: 'at=lm0&zoom=0.5',
     lm1: 'at=lm1&zoom=0.5',
     lm2: 'at=lm2&zoom=0.5',

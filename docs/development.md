@@ -27,7 +27,10 @@ python3 tools/extract/extract_data.py /path/to/sjrpg            # skills · gear
 python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 ```
 
-`EXCLUDE`(예배당)는 120° 기준을 벗어난 항목입니다. 원본이 갱신돼 다시 맞는 원화가 생기면 제외를 풀고 `tests/cases/axis.gd`를 통과시킵니다.
+예배당은 원본 원화가 120° 기준을 벗어나 추출 대상이 아닙니다. 새 원화(`assets/source/chapel-new.png`)의 측정값은
+`tools/extract/chapel_measure.json`에 있고 `tools/extract/chapel.py`가 `town.webp` 패킹과 `village.json`의 예배당 항목을
+만듭니다(`extract_data.py`도 같은 `merge()`로 합침). 패킹은 시트 전체를 다시 인코딩하므로 예배당이 없는 시트에서 한 번만,
+측정값만 바꿀 때는 `python3 tools/extract/chapel.py --data`를 씁니다. `assets/source/`는 `.gdignore`로 임포트·번들에서 뺍니다.
 
 ## 디버그 쿼리 (웹)
 
@@ -49,7 +52,8 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 
 | 케이스 | 검증 |
 | --- | --- |
-| `axis` | 지면 접촉 원화의 바닥 변이 ±30°(보정 후 2.5° 이내), 예배당 원화가 포함되지 않음 |
+| `axis` | 지면 접촉 원화(예배당 기단 포함)의 바닥 변이 ±30°(보정 후 2.5° 이내) |
+| `chapel` | 예배당 마당: 계단으로 오르면 마당 위(z=1), 건물 자리와 정면 절벽은 막힘 |
 | `terrace` | 랜드마크 윗면은 계단(입구)으로만 오를 수 있고 절벽은 막힘 |
 | `bridge` | 다리를 건널 수 있고 강은 막힘 |
 | `quests` | 제단·배달·보호 의뢰(실패·재도전 포함), 보상, 파수꾼 처치, 대화·일지 패널 |

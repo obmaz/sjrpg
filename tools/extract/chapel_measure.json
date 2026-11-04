@@ -1,0 +1,21 @@
+{
+ "_doc": "assets/source/chapel-new.png(1536x1536 RGBA)에서 직접 잰 값. 좌표는 모두 PNG 원본 픽셀. 도출은 chapel.py.",
+ "png": "assets/source/chapel-new.png",
+ "foot_F": [775, 1380],
+ "foot_R": [1425, 1020],
+ "foot_L": [210, 1055],
+ "cliff_height": 190,
+ "measured_deg": {
+  "_doc": "밝은 코핑/어두운 절벽 경계의 수직 기울기를 열마다 찾아 Theil-Sen으로 맞춘 값(잔차 중앙값 1.6~7px), 바닥 실루엣은 하한선 접선",
+  "coping_front_right": -29.0,
+  "coping_front_left": 29.9,
+  "foot_silhouette_front_right": -29.3
+ },
+ "stair_t": [0.375, 0.605],
+ "stair_travel": [-205, 300],
+ "yard_inset": 0.03,
+ "building_s": [0.2, 0.8],
+ "building_t": [0.3, 0.7],
+ "placement": [[0.76, 0.34], 10.7],
+ "atlas": {"sheet": "forest-isometric-town", "xy": [730, 2040], "packing": 0.65}
+}
