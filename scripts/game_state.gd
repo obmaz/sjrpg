@@ -545,6 +545,16 @@ func load_game() -> bool:
 			unseen.append(int(u))
 	else:
 		_starting_gear()
+	collect_memory_reward()
+	return true
+
+
+## Chest flags and the one-time point are committed together; also repairs saves interrupted before the award.
+func collect_memory_reward() -> bool:
+	if memory_rewarded or MemoryPanel.recovered() != MemoryPanel.MEMORIES.size():
+		return false
+	memory_rewarded = true
+	skill_points += 1
 	return true
 
 

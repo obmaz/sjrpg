@@ -43,5 +43,20 @@ func run() -> void:
 		confirmation.closed.emit()
 		await _frames(2)
 	check("canceling new adventure preserves the save", GameState.load_game() and GameState.gold == 321 and GameState.hero_class == "warrior")
+	var old := OldScene.new()
+	root._swap(old)
+	await get_tree().process_frame
+	old.armed = true
+	root._swap(Node.new())
+	await get_tree().process_frame
+	check("old scene cannot mutate progress after replacement", GameState.gold == 321)
 	root.queue_free()
 	await _frames(2)
+
+
+class OldScene:
+	extends Node
+	var armed := false
+	func _process(_delta: float) -> void:
+		if armed:
+			GameState.gold = 0

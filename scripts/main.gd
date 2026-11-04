@@ -22,6 +22,10 @@ func _fit_orientation() -> void:
 
 func _swap(node: Node) -> void:
 	if current:
+		# Queued nodes can still tick during this frame; stop the old adventure before replacing shared state.
+		current.process_mode = Node.PROCESS_MODE_DISABLED
+		if current is CanvasItem:
+			current.hide()
 		current.queue_free()
 	current = node
 	add_child(node)
