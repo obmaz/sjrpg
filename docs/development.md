@@ -50,6 +50,7 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 | `zoom` | 숫자 | 카메라 배율(작을수록 넓게) |
 | `at` | `field` `bridge` `bank` `gate0`–`gate3` `lm0`–`lm2` `elin` `rowen` `corner0` `corner3` | 시작 위치 |
 | `panel` | `bag` `shop` `skills` `settings` `smith` `journal` `mira` `elin` `victory` | 시작 1.5초 뒤 패널 열기 |
+| `quality` | `low` `high` | 절약 화질 켜기·끄기 |
 | `gold` | 정수 | 시작 골드 |
 | `chests` | 아무 값 | 상자를 모두 부숨 |
 
@@ -60,6 +61,19 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 `ForestBalance`에 Godot 숲의 지역 레벨·마을 주변 완화·생성 간격을 둡니다. 추출 데이터는 수정하지 않습니다.
 `Gear.melee_profile()`의 월드 사거리·반각·공격 간격을 실제 근접 기본 공격과 가방·스킬 설명이 공유합니다.
 무기의 공격속도와 일시적인 연격 강화는 공격 간격에 반영합니다. 대장간은 실패 시 비용만 소비합니다.
+
+## 월드 화질
+
+기본 화질은 기존 주 뷰포트에 월드를 직접 그립니다. 절약 화질에서만 월드·카메라·동굴을 별도 SubViewport로 옮기고
+HUD·패널은 주 뷰포트에 유지합니다. `Game.scene_root`/`scene_view`가 현재 월드의 부모와 뷰포트를 가리킵니다.
+설정의 절약 화질(`Prefs.low_resolution`, 기본 false)은 월드 렌더링 크기를 가로·세로 절반으로 낮춥니다.
+카메라 배율도 함께 조정해 보이는 월드 범위와 조작 좌표를 보존합니다. 기기 설정에 저장하며 진행 저장 형식은 바꾸지 않습니다.
+뷰포트 컨테이너는 일시정지 중에도 크기를 갱신하지만 자식 월드의 배우들은 일시정지를 따릅니다.
+캡처 시 `node tools/screenshot.mjs --scene town --device phone --quality low`로 선택할 수 있습니다.
+
+`node tools/benchmark.mjs --quality high|low --device desktop|phone|phone-landscape`은 같은 시작 위치에서
+실제 월드 그리기·렌더링 크기를 확인하고 6초 준비 후 6초 동안 브라우저 프레임 진행과 95백분위 프레임 간격을 기록합니다. 기본 렌더러는 SwiftShader이며,
+실제 기기 성능을 뜻하지 않습니다. `?benchmark=1`에서만 `RenderProbe` 진단을 활성화합니다. 플랫폼 기본 렌더러 비교에는 `--renderer default`를 사용합니다.
 
 ## 가림·모바일 표시
 
@@ -115,6 +129,7 @@ HUD는 실패 시 누를 수 있는 재시도 안내를 유지하며 설정의 �
 | `terrace` | 랜드마크 윗면은 계단(입구)으로만 오를 수 있고 절벽은 막힘 |
 | `bridge` | 다리를 건널 수 있고 강은 막힘 |
 | `progression` | 기억 상자와 보상 원자적 저장·이전 누락 보상 복구·중복 방지 |
+| `render_quality` | 월드/UI 분리·화질 전환·같은 시야·일시정지·키보드 입력·동굴 복귀 |
 | `render_budget` | 실제 마을의 가림 인스턴스 한도·표시 효과 한도·투사체 보존 |
 | `ui_input` | 터치 크기·이동/공격 멀티터치·패널 입력 해제·글자 배율 복구·새 모험 취소 |
 | `dungeon` | 두 경로 이동·시간 정지·숲 의뢰 분리·최초 완료 보상·재입장·시간 종료·사망·재접속 |

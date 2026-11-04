@@ -2,11 +2,14 @@ extends Node
 ## 기기 설정 (원본 DeviceSettings / AudioSettings): 효과음 · 타격 진동 · 전체화면.
 ## Stored in user://settings.cfg (the browser's IndexedDB on the web).
 
+signal graphics_changed
+
 const PATH := "user://settings.cfg"
 
 var sound_enabled := true
 var haptics_enabled := true
 var reduce_motion := false
+var low_resolution := false
 var _last_pulse := 0
 
 
@@ -16,6 +19,7 @@ func _ready() -> void:
 		sound_enabled = bool(cfg.get_value("device", "sound", true))
 		haptics_enabled = bool(cfg.get_value("device", "haptics", true))
 		reduce_motion = bool(cfg.get_value("device", "reduce_motion", false))
+		low_resolution = bool(cfg.get_value("device", "low_resolution", false))
 
 
 func _save() -> void:
@@ -23,6 +27,7 @@ func _save() -> void:
 	cfg.set_value("device", "sound", sound_enabled)
 	cfg.set_value("device", "haptics", haptics_enabled)
 	cfg.set_value("device", "reduce_motion", reduce_motion)
+	cfg.set_value("device", "low_resolution", low_resolution)
 	cfg.save(PATH)
 
 
@@ -67,3 +72,11 @@ func pulse(kind: String, preview := false) -> void:
 func set_reduce_motion(on: bool) -> void:
 	reduce_motion = on
 	_save()
+
+
+func set_low_resolution(on: bool) -> void:
+	if low_resolution == on:
+		return
+	low_resolution = on
+	_save()
+	graphics_changed.emit()

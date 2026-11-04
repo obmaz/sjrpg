@@ -35,6 +35,11 @@ func _ready() -> void:
 		if not only.is_empty() and not only.has(name):
 			continue
 		var script: GDScript = load(CASE_DIR + name + ".gd")
+		if script == null or not script.can_instantiate():
+			total += 1
+			failed.append(name)
+			print("FAIL %s (test script cannot be instantiated)" % name)
+			continue
 		var case_node: TestCase = script.new()
 		add_child(case_node)
 		print("── case: %s" % name)

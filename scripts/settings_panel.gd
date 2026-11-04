@@ -28,6 +28,9 @@ func _rebuild() -> void:
 	body.add_child(_action_row("전체화면 끄기" if Prefs.is_fullscreen() else "전체화면 켜기", func():
 		Prefs.toggle_fullscreen()
 		_rebuild()))
+	body.add_child(_toggle("절약 화질", "배경·캐릭터 해상도를 낮춰 속도를 높입니다. 글자·버튼은 선명하게 유지합니다.", Prefs.low_resolution, func(on):
+		Prefs.set_low_resolution(on)
+		_rebuild()))
 	body.add_child(_toggle("타격 진동", "공격 적중 · 피격 · 스킬 사용" if Prefs.vibration_supported() else "이 기기에서는 진동을 지원하지 않습니다.", Prefs.haptics_enabled, func(on):
 		Prefs.set_haptics(on)
 		_rebuild()))

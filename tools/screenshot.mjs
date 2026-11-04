@@ -59,7 +59,8 @@ const page = await ctx.newPage();
 const logs = [];
 page.on('console', (m) => logs.push(`${m.type()}: ${m.text()}`));
 page.on('pageerror', (e) => logs.push(`pageerror: ${e.message}`));
-await page.goto(`${base}?${SCENES[scene]}`);
+const quality = args.quality ? `&quality=${args.quality}` : "";
+await page.goto(`${base}?${SCENES[scene]}${quality}`);
 await page.waitForTimeout(12000);
 const vp = page.viewportSize();
 const tap = async (x, y) => {

@@ -8,6 +8,10 @@ signal restart_requested
 const FIELD := Rect2(-3600, -3600, 7200, 7200)
 const MEADOW := preload("res://assets/art/village/meadow-a.webp")
 
+var scene_view: Viewport
+var scene_root: Node
+var _low_view: SubViewport
+var _view_container: SubViewportContainer
 var world: Node2D
 var player: Player
 var camera: Camera2D
@@ -30,8 +34,22 @@ var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_rng.seed = 7
+	# Allocate the optional economy render target; full quality keeps drawing directly into the main viewport.
+	_view_container = SubViewportContainer.new()
+	_view_container.stretch = true
+	_view_container.stretch_shrink = 2
+	_view_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_view_container.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	add_child(_view_container)
+	_low_view = SubViewport.new()
+	_low_view.disable_3d = true
+	_low_view.handle_input_locally = false
+	_view_container.add_child(_low_view)
+	_view_container.visible = Prefs.low_resolution
+	scene_root = _low_view if Prefs.low_resolution else self
+	scene_view = _low_view if Prefs.low_resolution else get_viewport()
 	field_root = Node2D.new()
-	add_child(field_root)
+	scene_root.add_child(field_root)
 	dungeon = DungeonRuntime.new().setup(self)
 	add_child(dungeon)
 	# Ground plane: everything under this node is authored in ground units and
@@ -109,9 +127,10 @@ func _ready() -> void:
 	camera = Camera2D.new()
 	camera.position_smoothing_enabled = true
 	camera.position_smoothing_speed = 8.0
-	add_child(camera)
+	scene_root.add_child(camera)
 	camera.make_current()
 	camera.position = player.position
+	Prefs.graphics_changed.connect(_update_render_quality)
 
 	hud = Hud.new()
 	hud.game = self
@@ -128,10 +147,26 @@ func _ready() -> void:
 
 func _update_zoom() -> void:
 	var size := get_viewport_rect().size
+	_view_container.size = size
 	# Keep characters similarly sized in portrait and landscape.
 	var short_side := minf(size.x, size.y)
 	var z := clampf(short_side / 720.0 * 0.8, 0.5, 1.6)
-	camera.zoom = Vector2(z, z) * _debug_zoom
+	camera.zoom = Vector2(z, z) * _debug_zoom / (2.0 if Prefs.low_resolution else 1.0)
+
+
+func _update_render_quality() -> void:
+	scene_root = _low_view if Prefs.low_resolution else self
+	scene_view = _low_view if Prefs.low_resolution else get_viewport()
+	field_root.reparent(scene_root, false)
+	camera.reparent(scene_root, false)
+	if dungeon.active:
+		dungeon._root.reparent(scene_root, false)
+	_view_container.visible = Prefs.low_resolution
+	if Prefs.low_resolution:
+		get_viewport().canvas_transform = Transform2D.IDENTITY
+	camera.make_current()
+	_update_zoom()
+	camera.reset_smoothing()
 
 
 ## Web debug: ?zoom=0.4 widens the camera (used for layout screenshots).
@@ -186,6 +221,10 @@ func _read_debug_params() -> void:
 		var kv := part.split("=")
 		if kv.size() == 2 and kv[0] == "zoom":
 			_debug_zoom = clampf(float(kv[1]), 0.1, 4.0)
+		elif kv.size() == 2 and kv[0] == "benchmark" and kv[1] == "1":
+			add_child(RenderProbe.new().setup(self))
+		elif kv.size() == 2 and kv[0] == "quality":
+			Prefs.set_low_resolution(kv[1] == "low")
 		elif kv.size() == 2 and kv[0] == "panel":
 			var which: String = kv[1]
 			get_tree().create_timer(1.5).timeout.connect(_debug_open_panel.bind(which))
