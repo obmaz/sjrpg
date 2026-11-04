@@ -243,6 +243,9 @@ func _read_debug_params() -> void:
 					player.position = village.gate_points[int(kv[1].substr(4))] + Vector2(0, 150)
 				"bridge":
 					player.position = village.bridge.axis_point(0.5)
+				"mira":
+					var approach: Vector2 = village.spawn_point.lerp(village.npc_points["보급원 미라"], 0.55)
+					player.position = resolve_movement(village.spawn_point, approach, Player.RADIUS)
 				"elin":
 					player.position = village.quest_sites["roots"] + Vector2(60, 40)
 				"rowen":
@@ -295,8 +298,6 @@ func near_merchant() -> bool:
 func near_npc() -> String:
 	if dungeon.active:
 		return "동굴 출구" if dungeon.at_exit() or player.position.length() < 150.0 else ""
-	if exploration.nearby() != "":
-		return "안식처"
 	if quest_runtime.boss_ready() and player.position.distance_to(village.boss_point) < 240.0:
 		return "숲의 파수꾼"
 	var best := ""
@@ -306,8 +307,15 @@ func near_npc() -> String:
 		if d < best_d:
 			best_d = d
 			best = name
-	if player.position.distance_to(dungeon.entry_point()) < best_d:
-		return "바람 동굴"
+	var cave_distance := player.position.distance_to(dungeon.entry_point())
+	if cave_distance < best_d:
+		best = "바람 동굴"
+		best_d = cave_distance
+	var sanctuary := exploration.nearby()
+	if sanctuary != "":
+		var distance := player.position.distance_to(village.sanctuary_points[sanctuary])
+		if distance < best_d:
+			best = "안식처"
 	return best
 
 

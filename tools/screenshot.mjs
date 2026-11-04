@@ -39,6 +39,7 @@ const SCENES = {
     boss: 'at=boss&panel=boss',
     journal: 'panel=journal',
     mira: 'panel=mira',
+    mira_approach: 'at=mira',
     victory: 'panel=victory',
 };
 

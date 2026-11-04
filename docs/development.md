@@ -48,7 +48,7 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 | 키 | 값 | 효과 |
 | --- | --- | --- |
 | `zoom` | 숫자 | 카메라 배율(작을수록 넓게) |
-| `at` | `field` `bridge` `bank` `gate0`–`gate3` `lm0`–`lm2` `elin` `rowen` `corner0` `corner3` | 시작 위치 |
+| `at` | `field` `bridge` `bank` `gate0`–`gate3` `lm0`–`lm3` `mira` `elin` `rowen` `corner0` `corner3` | 시작 위치 |
 | `panel` | `bag` `shop` `skills` `settings` `smith` `journal` `mira` `elin` `victory` | 시작 1.5초 뒤 패널 열기 |
 | `quality` | `low` `high` | 절약 화질 켜기·끄기 |
 | `gold` | 정수 | 시작 골드 |
@@ -101,6 +101,12 @@ HUD·패널은 주 뷰포트에 유지합니다. `Game.scene_root`/`scene_view`�
 이동은 안식처 근처에서만 가능하며 주변 적·보호 의뢰·보스 도전 중에는 막습니다. 도착점은 실제 충돌로 검사합니다.
 폭포는 기존 `landmarks.json`의 네 번째 측정값을 사용하며 상자 ID 8을 추가합니다(기존 기억 상자 5–7 보존).
 
+## 목표와 근처 상호작용
+
+`Quests.next_quest()`는 보호 진행·보호 완료 보고를 우선하고, 다른 완료 보고·수락·재도전·새 의뢰 순으로 안내합니다.
+같은 상태에서는 마을 배달 → 석조 정원 → 조사관 순서이며, 사용자가 다른 의뢰를 먼저 수락하면 그 진행을 존중합니다.
+`Game.near_npc()`는 NPC·동굴·안식처 중 가까운 대상을 고릅니다. 분수 부근 안식처가 더 가까운 주민 대화를 가로채지 않습니다.
+
 ## 파수꾼 도전
 
 의뢰 3개 완료 시 서쪽 고정 공터에서 `QuestRuntime.start_boss()`로 도전합니다. 별도 처치 수 조건은 없습니다.
@@ -128,6 +134,7 @@ HUD는 실패 시 누를 수 있는 재시도 안내를 유지하며 설정의 �
 | `chapel` | 예배당 마당: 계단으로 오르면 마당 위(z=1), 건물 자리와 정면 절벽은 막힘 |
 | `terrace` | 랜드마크 윗면은 계단(입구)으로만 오를 수 있고 절벽은 막힘 |
 | `bridge` | 다리를 건널 수 있고 강은 막힘 |
+| `journey` | 두 직업의 첫 목표·수락/보고 우선순위·보호 안내·마을 NPC와 안식처 선택 |
 | `progression` | 기억 상자와 보상 원자적 저장·이전 누락 보상 복구·중복 방지 |
 | `render_quality` | 월드/UI 분리·화질 전환·같은 시야·일시정지·키보드 입력·동굴 복귀 |
 | `render_budget` | 실제 마을의 가림 인스턴스 한도·표시 효과 한도·투사체 보존 |

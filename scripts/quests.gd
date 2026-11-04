@@ -74,11 +74,23 @@ static func objective(id: String) -> String:
 	return ""
 
 
-## 지금 할 일 (mainObjective).
+## Immediate defense/reporting comes first; otherwise follow active work before suggesting a new village delivery.
+static func next_quest() -> String:
+	var defense := state("sun")
+	if defense["phase"] == "ready" or (defense["phase"] == "accepted" and defense["started"]):
+		return "sun"
+	for status in ["ready", "accepted", "failed", "offered"]:
+		for id in ["moon", "roots", "sun"]:
+			if phase(id) == status:
+				return id
+	return ""
+
+
+## 지금 할 일: begin near the village, but respect quests the player has already accepted.
 static func main_objective() -> String:
-	for d in DEFS:
-		if phase(d["id"]) != "completed":
-			return objective(d["id"])
+	var id := next_quest()
+	if id != "":
+		return objective(id)
 	if GameState.boss_defeated:
 		return "제1장을 완료했습니다."
 	return "서쪽 숲의 공터에서 파수꾼에게 도전하세요."
