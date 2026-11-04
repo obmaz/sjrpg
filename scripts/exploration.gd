@@ -11,6 +11,8 @@ func setup(g: Node) -> Exploration:
 
 
 func nearby() -> String:
+	if game.dungeon.active:
+		return ""
 	for id in game.village.sanctuary_points:
 		if game.player.position.distance_to(game.village.sanctuary_points[id]) < 150.0:
 			return id
@@ -35,6 +37,8 @@ func _process(delta: float) -> void:
 
 
 func travel_block_reason() -> String:
+	if game.dungeon.active:
+		return "동굴 안에서는 안식처로 이동할 수 없습니다."
 	if game.player.dead:
 		return "쓰러진 동안에는 이동할 수 없습니다."
 	if nearby() == "":

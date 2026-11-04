@@ -26,6 +26,8 @@ const SCENES = {
     waterfall: 'at=lm3&zoom=0.6',
     map: 'panel=map',
     travel: 'panel=travel',
+    dungeon: 'panel=dungeon',
+    dungeon_map: 'panel=dungeon_map',
     elin: 'at=elin&zoom=0.8',
     rowen: 'at=rowen&zoom=0.8',
     bag: 'panel=bag&chests=1&gold=300',

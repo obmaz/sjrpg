@@ -39,6 +39,10 @@ func _rebuild() -> void:
 			SoundFx.play("loot", true)
 		_rebuild()))
 	body.add_child(_action_row("효과음 확인", func(): SoundFx.play("impact", true), Prefs.sound_enabled))
+	if game.dungeon.active:
+		body.add_child(_action_row("동굴에서 나가기", func():
+			closed.emit()
+			game.dungeon.leave("동굴 입구로 돌아왔습니다")))
 	body.add_child(HSeparator.new())
 	body.add_child(PanelFrame.section("진행"))
 	body.add_child(PanelFrame.wrap_label("5초마다 이 기기에 자동 저장합니다. 다음에 이어하기로 돌아올 수 있습니다. 직업을 고르고 새 모험 시작을 확인하면 이전 진행을 덮어씁니다.", 15, Color(0.73, 0.8, 0.74)))

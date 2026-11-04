@@ -47,6 +47,8 @@ var boss_summoned := false
 var memory_rewarded := false
 var discovered_sanctuaries: Array[String] = ["town"]
 var last_sanctuary := "town"
+var location_mode := "forest"
+var return_to_cave_entrance := false
 var gold := 0
 ## 상점 축복(수련): 공격 +5 / 생명 +20씩 쌓임 (원본 bonusAttack / bonusHealth).
 var bonus_attack := 0.0
@@ -375,6 +377,8 @@ func new_game(cls: String) -> void:
 	memory_rewarded = false
 	discovered_sanctuaries.assign(["town"])
 	last_sanctuary = "town"
+	location_mode = "forest"
+	return_to_cave_entrance = false
 	bonus_attack = 0.0
 	bonus_health = 0.0
 	chest_seed = randi() % 0x7fffffff
@@ -400,7 +404,7 @@ func save_game() -> bool:
 		"version": SAVE_VERSION, "class": hero_class, "level": level, "xp": xp,
 		"potions": potions, "mana_potions": mana_potions, "kills": kills,
 		"skill_points": skill_points, "ranks": ranks, "slots": slots,
-		"quests": quests, "stage_kills": stage_kills, "boss_defeated": boss_defeated, "boss_heart_pending": boss_heart_pending, "memory_rewarded": memory_rewarded, "discovered_sanctuaries": discovered_sanctuaries, "last_sanctuary": last_sanctuary, "gold": gold, "bonus_attack": bonus_attack, "bonus_health": bonus_health, "chest_seed": chest_seed, "opened_chests": opened_chests,
+		"quests": quests, "stage_kills": stage_kills, "boss_defeated": boss_defeated, "boss_heart_pending": boss_heart_pending, "memory_rewarded": memory_rewarded, "discovered_sanctuaries": discovered_sanctuaries, "last_sanctuary": last_sanctuary, "location_mode": location_mode, "gold": gold, "bonus_attack": bonus_attack, "bonus_health": bonus_health, "chest_seed": chest_seed, "opened_chests": opened_chests,
 		"next_serial": next_serial,
 		"inventory": inventory.map(func(g): return g.to_save()),
 		"equipped": equipped.keys().map(func(k): return {"slot": k, "serial": equipped[k].serial}),
@@ -503,6 +507,8 @@ func load_game() -> bool:
 			state["phase"] = "accepted"
 			state["attempt"] = attempt
 		quests[id] = state
+	return_to_cave_entrance = data.get("location_mode", "forest") == "cave"
+	location_mode = "forest"
 	stage_kills = int(data.get("stage_kills", 0))
 	boss_defeated = bool(data.get("boss_defeated", false))
 	boss_heart_pending = bool(data.get("boss_heart_pending", false))

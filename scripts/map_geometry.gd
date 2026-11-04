@@ -23,6 +23,8 @@ static func build(village: Village) -> Array[Dictionary]:
 
 static func markers(game: Node) -> Array[Dictionary]:
 	var markers: Array[Dictionary] = []
+	if game.dungeon.active:
+		return [{"pos": Vector2.ZERO, "label": "입구", "color": Color("7edbcc")}, {"pos": Iso.project(DungeonLayout.EXIT), "label": "귀환문", "color": Color("ffe197")}]
 	for definition in Quests.DEFS:
 		var id: String = definition["id"]
 		if Quests.phase(id) != "completed":

@@ -15,6 +15,8 @@ var hud: Hud
 var village: Village
 var quest_runtime: QuestRuntime
 var exploration: Exploration
+var dungeon: DungeonRuntime
+var field_root: Node2D
 var map_shapes: Array[Dictionary] = []
 var enemies: Array[Enemy] = []
 var chests: Array[Chest] = []
@@ -27,12 +29,16 @@ var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_rng.seed = 7
+	field_root = Node2D.new()
+	add_child(field_root)
+	dungeon = DungeonRuntime.new().setup(self)
+	add_child(dungeon)
 	# Ground plane: everything under this node is authored in ground units and
 	# projected into the 120° quarter view by its transform.
 	var ground_layer := Node2D.new()
 	ground_layer.transform = Iso.ground_transform()
 	ground_layer.z_index = -10
-	add_child(ground_layer)
+	field_root.add_child(ground_layer)
 	# Continue the textured backdrop beyond collision bounds so edge cameras never reveal a void.
 	var backdrop := FIELD.grow(3500.0)
 	var meadow := Sprite2D.new()
@@ -66,11 +72,11 @@ func _ready() -> void:
 	_corpse_layer = Node2D.new()
 	_corpse_layer.z_index = -8
 	_corpse_layer.draw.connect(_draw_corpses)
-	add_child(_corpse_layer)
+	field_root.add_child(_corpse_layer)
 
 	world = Node2D.new()
 	world.y_sort_enabled = true
-	add_child(world)
+	field_root.add_child(world)
 	village = Village.new()
 	village.build(ground_layer, world)
 	village.build_field(world, FIELD.grow(-150), _rng)
@@ -95,7 +101,8 @@ func _ready() -> void:
 	player.setup(self)
 	player.died.connect(_on_player_died)
 	player.open_skills_requested.connect(func(): hud.open_skill_tree())
-	player.position = exploration.respawn_point()
+	player.position = dungeon.entry_point() if GameState.return_to_cave_entrance else exploration.respawn_point()
+	GameState.return_to_cave_entrance = false
 	world.add_child(player)
 
 	camera = Camera2D.new()
@@ -149,6 +156,13 @@ func _debug_open_panel(which: String) -> void:
 			hud.interact("보급원 미라")
 		"smith":
 			hud.open_smith()
+		"dungeon":
+			player.position = dungeon.entry_point()
+			dungeon.enter()
+		"dungeon_map":
+			player.position = dungeon.entry_point()
+			dungeon.enter()
+			hud.open_map()
 		"map":
 			hud.open_map()
 		"travel":
@@ -225,11 +239,15 @@ func _dapple_texture() -> ImageTexture:
 
 ## 상인 곁에서는 가방에서 상점으로 전환할 수 있습니다 (원본의 근처 행동 버튼).
 func near_merchant() -> bool:
+	if dungeon.active:
+		return false
 	return player.position.distance_to(village.merchant_point) < 210.0
 
 
 ## Name of the town NPC within talking range, or "".
 func near_npc() -> String:
+	if dungeon.active:
+		return "동굴 출구" if dungeon.at_exit() or player.position.length() < 150.0 else ""
 	if exploration.nearby() != "":
 		return "안식처"
 	if quest_runtime.boss_ready() and player.position.distance_to(village.boss_point) < 240.0:
@@ -241,15 +259,24 @@ func near_npc() -> String:
 		if d < best_d:
 			best_d = d
 			best = name
+	if player.position.distance_to(dungeon.entry_point()) < best_d:
+		return "바람 동굴"
 	return best
 
 
 func in_town(p: Vector2) -> bool:
-	return Geometry2D.is_point_in_polygon(p, village.safe_zone)
+	return not dungeon.active and Geometry2D.is_point_in_polygon(p, village.safe_zone)
 
 
 func _process(delta: float) -> void:
 	camera.position = player.position + Vector2(0, -30)
+	if dungeon.active:
+		dungeon.tick(delta)
+		_save_timer += delta
+		if _save_timer >= 5.0:
+			_save_timer = 0.0
+			GameState.save_game()
+		return
 	# Raised terraces (landmarks, chapel yard): actors on top draw over the terrace art.
 	var elevated := Geometry2D.is_point_in_polygon(player.position, village.terrace)
 	for lm in village.landmarks:
@@ -357,10 +384,14 @@ func _town_buffer() -> PackedVector2Array:
 
 
 func _inside_field(p: Vector2, margin: float) -> bool:
+	if dungeon.active:
+		return dungeon.layout.contains(p, margin)
 	return FIELD.grow(-margin).has_point(Iso.unproject(p))
 
 
 func _blocked(p: Vector2, r: float) -> bool:
+	if dungeon.active:
+		return not dungeon.layout.contains(p, r)
 	for c in village.circles:
 		if p.distance_to(c[0]) < c[1] + r:
 			return true
@@ -373,6 +404,8 @@ func _blocked(p: Vector2, r: float) -> bool:
 ## Slides a moving circle against trees, buildings, walls and cliffs.
 ## Monsters (`keep_out_town`) never enter the safe town.
 func resolve_movement(from: Vector2, to: Vector2, r: float, keep_out_town := false) -> Vector2:
+	if dungeon.active:
+		return dungeon.layout.resolve(from, to, r)
 	var p := to
 	if not _inside_field(p, r):
 		var g := Iso.unproject(p)
@@ -547,7 +580,10 @@ func on_enemy_killed(enemy: Enemy) -> void:
 	enemies.erase(enemy)
 	Prefs.pulse("kill")
 	GameState.kills += 1
-	quest_runtime.on_enemy_killed(enemy)
+	if dungeon.active:
+		dungeon.on_enemy_killed(enemy)
+	else:
+		quest_runtime.on_enemy_killed(enemy)
 	if GameState.has_gift("renewal") and not player.dead:
 		player.hp = minf(player.max_hp, player.hp + 4.0)
 		float_text(player.position + Vector2(0, -80), "+%s" % HudArt.stat(4.0), Color(0.6, 1, 0.7))
@@ -613,6 +649,12 @@ func find_open_point(from: Vector2, dir: Vector2, distance: float, r: float) -> 
 func _on_player_died() -> void:
 	hud.show_death()
 	await get_tree().create_timer(2.5).timeout
+	if not player.dead:
+		hud.hide_death()
+		return
+	if dungeon.active:
+		dungeon.leave("쓰러져 동굴 입구로 돌아왔습니다")
+		return
 	quest_runtime.reset_boss()
 	player.revive(exploration.respawn_point())
 	hud.hide_death()
@@ -802,5 +844,7 @@ func toast(text: String) -> void:
 
 
 func quit_to_title() -> void:
+	if dungeon.active:
+		dungeon.leave("동굴 입구로 돌아왔습니다")
 	if GameState.save_game():
 		quit_requested.emit()

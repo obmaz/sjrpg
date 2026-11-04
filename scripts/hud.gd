@@ -107,6 +107,8 @@ func open_bag(shop := false) -> void:
 ## Talk to / use the town NPC with this name.
 func interact(npc: String) -> void:
 	match npc:
+		"바람 동굴", "동굴 출구":
+			_open(DungeonPanel.new().setup(game))
 		"안식처":
 			open_map(true)
 		"숲의 파수꾼":
@@ -196,8 +198,10 @@ func _update_layout() -> void:
 	_toast.offset_top = 112.0 * u
 	_toast.offset_bottom = 152.0 * u
 	var name := "숲 마을" if game.in_town(game.player.position) else "숲 가장자리"
-	if game.village.river_band.grow(60.0).has_point(Iso.unproject(game.player.position)):
+	if not game.dungeon.active and game.village.river_band.grow(60.0).has_point(Iso.unproject(game.player.position)):
 		name = "강가"
+	if game.dungeon.active:
+		name = "바람 동굴"
 	if name != _area_name:
 		_area_name = name
 	_area.queue_redraw()
@@ -272,7 +276,7 @@ func _draw_bars() -> void:
 	HudArt.slanted_bar(_bars, xp_rect, xp_ratio, Color(0.95, 0.8, 0.4), Color(0.72, 0.55, 0.22), Color(0.32, 0.27, 0.22), 8.0 * u)
 	HudArt.text_outlined(_bars, "EXP %d%%" % floori(xp_ratio * 100.0), xp_rect.position + Vector2(0, xp_rect.size.y * 0.82), xp_rect.size.x, int(11 * u), Color(0.93, 0.89, 0.8))
 	# 지금 할 일 (원본 mainObjective) under the plate.
-	var obj := Quests.main_objective()
+	var obj: String = game.dungeon.objective() if game.dungeon.active else Quests.main_objective()
 	HudArt.text_outlined(_bars, obj, Vector2(x0 - 6.0 * u, 124.0 * u), w + 20.0 * u, int(17 * u), Color(1, 0.93, 0.7), HORIZONTAL_ALIGNMENT_LEFT)
 	# Portrait: 원본 art — 전사 hero-helmeted-portrait, 마법사 class-selection 얼굴.
 	_bars.draw_circle(center + Vector2(0, 2.0), pr + 1.0, Color(0, 0, 0, 0.67))

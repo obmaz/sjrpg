@@ -37,6 +37,10 @@ func _rebuild() -> void:
 			_elder()
 		_:
 			body.add_child(PanelFrame.wrap_label("…", 22))
+	if npc == "조사관 로웬":
+		_action("바람 동굴 탐험 안내", func():
+			closed.emit()
+			game.hud.interact.call_deferred("바람 동굴"))
 	add_footer("닫기", func(): closed.emit(), true)
 
 
