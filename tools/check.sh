@@ -25,6 +25,9 @@ if [ $code -ne 0 ]; then echo "임포트 실패: Godot 종료 코드 $code (실�
 elif grep -E "SCRIPT ERROR|Parse Error|Failed to load script" "$LOG"; then echo "임포트 실패"; fail=1
 else echo "임포트 ok"; fi
 
+# A broken autoload cannot run the test scene; stop instead of leaving Godot waiting forever.
+if [ $fail -ne 0 ]; then exit 1; fi
+
 echo "── 2/3 테스트"
 if [ -n "$ONLY" ]; then "$GODOT_SH" --headless res://tests/run_all.tscn -- "$ONLY" >"$LOG" 2>&1
 else "$GODOT_SH" --headless res://tests/run_all.tscn >"$LOG" 2>&1; fi

@@ -14,6 +14,8 @@ var camera: Camera2D
 var hud: Hud
 var village: Village
 var quest_runtime: QuestRuntime
+var exploration: Exploration
+var map_shapes: Array[Dictionary] = []
 var enemies: Array[Enemy] = []
 var chests: Array[Chest] = []
 var corpses: Array = []  # {"pos": Vector2, "time": float, "used": bool}
@@ -31,14 +33,16 @@ func _ready() -> void:
 	ground_layer.transform = Iso.ground_transform()
 	ground_layer.z_index = -10
 	add_child(ground_layer)
+	# Continue the textured backdrop beyond collision bounds so edge cameras never reveal a void.
+	var backdrop := FIELD.grow(3500.0)
 	var meadow := Sprite2D.new()
 	meadow.texture = MEADOW
 	meadow.centered = false
 	meadow.region_enabled = true
 	var units_per_tex := 170.0
-	meadow.region_rect = Rect2(Vector2.ZERO, FIELD.size / units_per_tex * 418.0)
+	meadow.region_rect = Rect2(Vector2.ZERO, backdrop.size / units_per_tex * 418.0)
 	meadow.scale = Vector2.ONE * units_per_tex / 418.0
-	meadow.position = FIELD.position
+	meadow.position = backdrop.position
 	meadow.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
 	# ForestScenePalette: bright, low-saturation warm grass.
 	meadow.modulate = Color(0.58, 0.70, 0.50)
@@ -49,9 +53,9 @@ func _ready() -> void:
 	shade.texture = _dapple_texture()
 	shade.centered = false
 	shade.region_enabled = true
-	shade.region_rect = Rect2(Vector2.ZERO, FIELD.size / 1500.0 * 192.0)
+	shade.region_rect = Rect2(Vector2.ZERO, backdrop.size / 1500.0 * 192.0)
 	shade.scale = Vector2.ONE * 1500.0 / 192.0
-	shade.position = FIELD.position
+	shade.position = backdrop.position
 	shade.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
 	var mul := CanvasItemMaterial.new()
 	mul.blend_mode = CanvasItemMaterial.BLEND_MODE_MUL
@@ -70,11 +74,14 @@ func _ready() -> void:
 	village = Village.new()
 	village.build(ground_layer, world)
 	village.build_field(world, FIELD.grow(-150), _rng)
+	map_shapes = MapGeometry.build(village)
 	var chest_def: Dictionary = village.data["sprites"]["chest"]
 	var broken_def: Dictionary = village.data["sprites"]["chest-broken"]
 	for i in village.chest_points.size():
 		var chest := Chest.new().setup(self, i, village.chest_points[i], chest_def, broken_def)
 		world.add_child(chest)
+		if i == 8:
+			chest.z_index = 1
 		chests.append(chest)
 		village.circles.append([chest.position, 24.0])
 
@@ -82,11 +89,13 @@ func _ready() -> void:
 	add_child(quest_runtime)
 	quest_runtime.defender = village.npc_nodes["조사관 로웬"]
 
+	exploration = Exploration.new().setup(self)
+	add_child(exploration)
 	player = Player.new()
 	player.setup(self)
 	player.died.connect(_on_player_died)
 	player.open_skills_requested.connect(func(): hud.open_skill_tree())
-	player.position = village.spawn_point
+	player.position = exploration.respawn_point()
 	world.add_child(player)
 
 	camera = Camera2D.new()
@@ -140,6 +149,10 @@ func _debug_open_panel(which: String) -> void:
 			hud.interact("보급원 미라")
 		"smith":
 			hud.open_smith()
+		"map":
+			hud.open_map()
+		"travel":
+			hud.open_map(true)
 		"boss":
 			hud._open(BossPanel.new().setup(self))
 		"victory":
@@ -178,7 +191,7 @@ func _read_debug_params() -> void:
 					player.position = village.quest_sites["roots"] + Vector2(60, 40)
 				"rowen":
 					player.position = village.quest_sites["sun"] + Vector2(-90, 110)
-				"lm0", "lm1", "lm2":
+				"lm0", "lm1", "lm2", "lm3":
 					var lmk: Landmark = village.landmarks[int(kv[1].substr(2))]
 					player.position = lmk.position + Vector2(0, 140)
 				"chapel":
@@ -217,6 +230,8 @@ func near_merchant() -> bool:
 
 ## Name of the town NPC within talking range, or "".
 func near_npc() -> String:
+	if exploration.nearby() != "":
+		return "안식처"
 	if quest_runtime.boss_ready() and player.position.distance_to(village.boss_point) < 240.0:
 		return "숲의 파수꾼"
 	var best := ""
@@ -286,6 +301,12 @@ func _unhandled_input(event: InputEvent) -> void:
 				player.cast_slot(event.keycode - KEY_0)
 			KEY_L, KEY_SHIFT:
 				player.try_roll()
+			KEY_M:
+				hud.open_map()
+			KEY_F:
+				var nearby := near_npc()
+				if nearby != "":
+					hud.interact(nearby)
 			KEY_T:
 				hud.open_skill_tree()
 
@@ -458,8 +479,12 @@ func on_chest_broken(chest: Chest) -> void:
 		GameState.potions += 1
 		GameState.mana_potions += 1
 		toast("보급품: 치유 물약 +1 · %s 물약 +1" % GameState.class_info()["resource"])
+	if chest.index == 8:
+		content = "gear"
 	if content == "gear":
 		var g := Gear.roll_loot(GameState.hero_class, GameState.level, GameState.next_serial, _rng, true)
+		if chest.index == 8:
+			g = GameState.new_gear("shortsword" if GameState.hero_class == "warrior" else "wand", 2, 4, 8)
 		if GameState.add_gear(g):
 			toast("획득: %s" % g.display_name())
 			player.refresh_stats()
@@ -589,7 +614,7 @@ func _on_player_died() -> void:
 	hud.show_death()
 	await get_tree().create_timer(2.5).timeout
 	quest_runtime.reset_boss()
-	player.revive(village.spawn_point)
+	player.revive(exploration.respawn_point())
 	hud.hide_death()
 	GameState.save_game()
 

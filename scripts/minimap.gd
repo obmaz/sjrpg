@@ -3,6 +3,8 @@ extends Control
 ## Round minimap (top right). Drawn in world-pixel orientation so it matches the
 ## quarter view; every shape is clipped to the circle.
 
+signal open_requested
+
 var game: Node
 var radius := 70.0
 const WORLD_RADIUS := 1300.0
@@ -11,7 +13,7 @@ var _circle := PackedVector2Array()
 
 
 func _ready() -> void:
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mouse_filter = Control.MOUSE_FILTER_STOP
 
 
 func _process(_delta: float) -> void:
@@ -57,33 +59,12 @@ func _draw() -> void:
 	var v: Village = game.village
 	draw_circle(Vector2.ZERO, radius, Color(0.07, 0.08, 0.07, 0.9))
 	draw_colored_polygon(_circle, Color(0.30, 0.37, 0.27))
-	_fill(v.map_water, Color(0.25, 0.5, 0.62), origin)
-	_fill(v.bridge.deck_polygon(), Color(0.62, 0.55, 0.42), origin)
-	_fill(v.safe_zone, Color(0.52, 0.52, 0.47), origin)
-	var inner: Array = Geometry2D.offset_polygon(v.safe_zone, -22.0)
-	if inner.size() > 0:
-		_fill(inner[0], Color(0.40, 0.46, 0.34), origin)
-	# Paved cross roads inside the town.
-	for road in [[Vector2(0.04, 0.5), Vector2(0.94, 0.5)], [Vector2(0.5, 0.10), Vector2(0.5, 0.90)]]:
-		var a := v.point(road[0])
-		var b := v.point(road[1])
-		var n := (b - a).orthogonal().normalized() * 55.0
-		_fill(PackedVector2Array([a + n, b + n, b - n, a - n]), Color(0.58, 0.58, 0.55), origin)
-	# Wall ring: one thin quad per wall edge (a hollow polygon would fill solid).
-	for i in v.safe_zone.size():
-		var a: Vector2 = v.safe_zone[i]
-		var b: Vector2 = v.safe_zone[(i + 1) % v.safe_zone.size()]
-		var n := (b - a).orthogonal().normalized() * 26.0
-		_fill(PackedVector2Array([a + n, b + n, b - n, a - n]), Color(0.22, 0.21, 0.2), origin)
-	# Buildings.
-	for key in v.buildings:
-		var b: IsoSprite = v.buildings[key]
-		var p := _to_map(b.position, origin)
-		if p.length() < radius - 6.0:
-			draw_rect(Rect2(p - Vector2(3, 3), Vector2(6, 6)), Color(0.78, 0.7, 0.55))
-	var pp := _to_map(v.portal_point, origin)
-	if pp.length() < radius - 5.0:
-		draw_circle(pp, 3.5, Color(0.4, 0.9, 1.0))
+	for shape in game.map_shapes:
+		_fill(shape["poly"], shape["color"], origin)
+	for marker in MapGeometry.markers(game):
+		var marker_at := _to_map(marker["pos"], origin)
+		if marker_at.length() < radius - 5.0:
+			draw_circle(marker_at, 3.5, marker["color"])
 	for e in game.enemies:
 		if e.dead:
 			continue
@@ -105,3 +86,9 @@ func _draw() -> void:
 	draw_arc(c, radius, 0, TAU, 56, Color(0.12, 0.1, 0.07), 6.0, true)
 	draw_arc(c, radius - 1.0, 0, TAU, 56, Color(0.62, 0.45, 0.24), 3.0, true)
 	draw_arc(c, radius - 5.0, 0, TAU, 56, Color(0.9, 0.78, 0.5, 0.35), 1.5, true)
+
+
+func _gui_input(event: InputEvent) -> void:
+	if (event is InputEventMouseButton or event is InputEventScreenTouch) and event.pressed:
+		open_requested.emit()
+		accept_event()

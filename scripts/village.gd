@@ -57,6 +57,8 @@ var bridge: Bridge
 var river: River
 ## Minimap data (world pixels).
 var map_water := PackedVector2Array()
+var map_roads: Array[PackedVector2Array] = []
+var sanctuary_points := {}
 var portal_point := Vector2.ZERO
 var merchant_point := Vector2.ZERO
 ## 이름 → 위치: 상인 · 대장장이 · 탈것 상인 · 촌장 · 보급원 미라.
@@ -104,13 +106,16 @@ func build(ground_layer: Node2D, world: Node2D) -> void:
 	circles.append([beacon.position, 45.0])
 	_build_buildings(world)
 	_build_plaza(world)
+	_build_sanctuaries(world)
 	_build_trees(world)
 	_build_npcs(world)
 	for c in data["chest_uv"]:
 		chest_points.append(point(Vector2(c[0], c[1])))
+	# The waterfall chest is above the measured dry path; memory IDs 5–7 stay stable.
 	for g in MEMORY_SPOTS:
 		chest_points.append(Iso.project(g))
 		clear_rects.append(Rect2(Iso.project(g) - Vector2(80, 80), Vector2(160, 160)))
+	chest_points.append(landmarks[3]._pt(Vector2(215, 472)))
 	var corners := [Vector2(0.04, 0.10), Vector2(0.94, 0.10), Vector2(0.94, 0.90), Vector2(0.04, 0.90)]
 	safe_zone = PackedVector2Array()
 	for c in corners:
@@ -141,6 +146,7 @@ func _build_paving(layer: Node2D) -> void:
 	group.add_child(curb_poly)
 	var stone := Polygon2D.new()
 	stone.polygon = merged
+	map_roads.append(_project_polygon(merged))
 	stone.texture = load("res://assets/art/village/paving.webp")
 	stone.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
 	var uv := PackedVector2Array()
@@ -185,6 +191,7 @@ func _build_paving(layer: Node2D) -> void:
 		var nrm := dir.orthogonal() * float(r[2])
 		var poly := Polygon2D.new()
 		poly.polygon = PackedVector2Array([a + nrm, b + nrm, b - nrm, a - nrm])
+		map_roads.append(_project_polygon(poly.polygon))
 		poly.texture = dirt
 		poly.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
 		poly.texture_scale = Vector2(418.0 / 180.0, 418.0 / 180.0)
@@ -221,7 +228,7 @@ func _build_river(layer: Node2D, world: Node2D) -> void:
 
 ## True when a ground point lies on water, bank or the bridge road.
 ## 숲 랜드마크 (원본 stage-1 필드): 높이가 있는 윗면과 계단. Positions are ground units.
-const LANDMARK_SPOTS := [[2, Vector2(-2350, -900)], [1, Vector2(-1500, -2750)], [0, Vector2(1800, 1900)]]
+const LANDMARK_SPOTS := [[2, Vector2(-2350, -900)], [1, Vector2(-1500, -2750)], [0, Vector2(1800, 1900)], [3, Vector2(-2400, 2400)]]
 
 
 func _build_landmarks(world: Node2D) -> void:
@@ -529,3 +536,26 @@ func build_field(world: Node2D, field: Rect2, rng: RandomNumberGenerator) -> voi
 		rock.position = Iso.project(g3)
 		world.add_child(rock)
 		circles.append([rock.position, 34.0])
+
+
+func _project_polygon(polygon: PackedVector2Array) -> PackedVector2Array:
+	var projected := PackedVector2Array()
+	for point in polygon:
+		projected.append(Iso.project(point))
+	return projected
+
+
+func _build_sanctuaries(world: Node2D) -> void:
+	var tree: Landmark = landmarks[0]
+	var outline: Array = Landmark.data()[tree.index]["outline"]
+	var entrance: int = Landmark.data()[tree.index]["entrance"]
+	var mid := (tree._pt(outline[entrance]) + tree._pt(outline[(entrance + 1) % outline.size()])) / 2.0
+	var tree_point := mid + (mid - _top_center(tree)).normalized() * 160.0
+	sanctuary_points = {"town": spawn_point, "tree": tree_point, "cave": quest_sites["sun"] + Vector2(-220, 220)}
+	for id in ["tree", "cave"]:
+		var point: Vector2 = sanctuary_points[id]
+		clear_rects.append(Rect2(point - Vector2(220, 220), Vector2(440, 440)))
+		var portal := IsoSprite.new().setup(data["sprites"]["portal"], 130.0)
+		portal.position = point + Vector2(0, -110)
+		world.add_child(portal)
+		circles.append([portal.position, 35.0])

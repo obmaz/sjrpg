@@ -104,6 +104,9 @@ func _press(index: int, pos: Vector2) -> bool:
 		"bar_quests":
 			game.hud.open_journal()
 			return true
+	if game.hud.minimap.get_global_rect().has_point(pos):
+		game.hud.open_map()
+		return true
 	if pos.x < get_viewport().get_visible_rect().size.x * 0.5 and _stick_index == -2:
 		_stick_index = index
 		_stick_center = pos
@@ -242,7 +245,7 @@ func _draw() -> void:
 			draw_circle(c, r + 2.0, Color(0, 0, 0, 0.4))
 			draw_circle(c, r, Color(0.17, 0.12, 0.05, 0.95))
 			draw_arc(c, r, 0, TAU, 40, UiKit.GOLD, 4.0, true)
-			HudArt.text_outlined(self, {"숲의 파수꾼": "도전", "상인": "상점", "대장장이": "대장간", "촌장": "대화", "보급원 미라": "대화"}.get(_near_name, "대화"), c + Vector2(-r, 8.0 * u), r * 2.0, int(22 * u), Color(1, 0.92, 0.7))
+			HudArt.text_outlined(self, {"안식처": "이동", "숲의 파수꾼": "도전", "상인": "상점", "대장장이": "대장간", "촌장": "대화", "보급원 미라": "대화"}.get(_near_name, "대화"), c + Vector2(-r, 8.0 * u), r * 2.0, int(22 * u), Color(1, 0.92, 0.7))
 		elif name.begins_with("bar_"):
 			HudArt.plaque(self, BAR_ICONS[name], c, r, Color(0.92, 0.9, 0.88) if not pressed else Color.WHITE)
 			if name == "bar_skills" and GameState.skill_points > 0:

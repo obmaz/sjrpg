@@ -17,6 +17,7 @@ var top_left := Vector2.ZERO
 var top: PackedVector2Array  # walkable top (world px)
 var ledges: Array[PackedVector2Array] = []
 var blockers: Array[PackedVector2Array] = []
+var water: Array[PackedVector2Array] = []
 
 
 static func data() -> Array:
@@ -40,6 +41,7 @@ func setup(i: int, center: Vector2) -> Landmark:
 	for s in d["solids"]:
 		blockers.append(_poly(s))
 	for w in d["water"]:
+		water.append(_poly(w))
 		blockers.append(_poly(w))
 	for k in outline.size():
 		if k == int(d["entrance"]):

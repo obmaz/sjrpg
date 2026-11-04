@@ -45,6 +45,8 @@ var boss_defeated := false
 var boss_heart_pending := false
 var boss_summoned := false
 var memory_rewarded := false
+var discovered_sanctuaries: Array[String] = ["town"]
+var last_sanctuary := "town"
 var gold := 0
 ## 상점 축복(수련): 공격 +5 / 생명 +20씩 쌓임 (원본 bonusAttack / bonusHealth).
 var bonus_attack := 0.0
@@ -371,6 +373,8 @@ func new_game(cls: String) -> void:
 	boss_heart_pending = false
 	boss_summoned = false
 	memory_rewarded = false
+	discovered_sanctuaries.assign(["town"])
+	last_sanctuary = "town"
 	bonus_attack = 0.0
 	bonus_health = 0.0
 	chest_seed = randi() % 0x7fffffff
@@ -396,7 +400,7 @@ func save_game() -> bool:
 		"version": SAVE_VERSION, "class": hero_class, "level": level, "xp": xp,
 		"potions": potions, "mana_potions": mana_potions, "kills": kills,
 		"skill_points": skill_points, "ranks": ranks, "slots": slots,
-		"quests": quests, "stage_kills": stage_kills, "boss_defeated": boss_defeated, "boss_heart_pending": boss_heart_pending, "memory_rewarded": memory_rewarded, "gold": gold, "bonus_attack": bonus_attack, "bonus_health": bonus_health, "chest_seed": chest_seed, "opened_chests": opened_chests,
+		"quests": quests, "stage_kills": stage_kills, "boss_defeated": boss_defeated, "boss_heart_pending": boss_heart_pending, "memory_rewarded": memory_rewarded, "discovered_sanctuaries": discovered_sanctuaries, "last_sanctuary": last_sanctuary, "gold": gold, "bonus_attack": bonus_attack, "bonus_health": bonus_health, "chest_seed": chest_seed, "opened_chests": opened_chests,
 		"next_serial": next_serial,
 		"inventory": inventory.map(func(g): return g.to_save()),
 		"equipped": equipped.keys().map(func(k): return {"slot": k, "serial": equipped[k].serial}),
@@ -431,7 +435,7 @@ func _valid_save(data: Dictionary) -> bool:
 		for key in ["altar_kills", "protected_for", "defender_hp", "defeated", "attempt", "spawned"]:
 			if record.has(key) and not _number(record[key]):
 				return false
-	for key in ["slots", "inventory", "equipped", "unseen", "opened_chests"]:
+	for key in ["slots", "inventory", "equipped", "unseen", "opened_chests", "discovered_sanctuaries"]:
 		if data.has(key) and not data[key] is Array:
 			return false
 	for key in ["unseen", "opened_chests"]:
@@ -503,6 +507,13 @@ func load_game() -> bool:
 	boss_defeated = bool(data.get("boss_defeated", false))
 	boss_heart_pending = bool(data.get("boss_heart_pending", false))
 	memory_rewarded = bool(data.get("memory_rewarded", false))
+	discovered_sanctuaries.assign(["town"])
+	for id in data.get("discovered_sanctuaries", []):
+		if Exploration.NAMES.has(id) and not discovered_sanctuaries.has(id):
+			discovered_sanctuaries.append(id)
+	last_sanctuary = str(data.get("last_sanctuary", "town"))
+	if not discovered_sanctuaries.has(last_sanctuary):
+		last_sanctuary = "town"
 	boss_summoned = false
 	bonus_attack = float(data.get("bonus_attack", 0.0))
 	bonus_health = float(data.get("bonus_health", 0.0))

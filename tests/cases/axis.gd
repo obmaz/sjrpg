@@ -36,3 +36,11 @@ func run() -> void:
 			failures += 1
 	# The chapel must be in the audited set (its plinth foot is `frames.chapel.ground`).
 	check("axis audit: chapel is audited", data["frames"].has("chapel") and data["sprites"].has("chapel"))
+
+	# Natural rock edges are irregular; the waterfall's built entry and path still follow the ground axes.
+	var waterfall: Dictionary = Landmark.data()[3]
+	for edge in [0, 2]:
+		var a: Array = waterfall["outline"][edge]
+		var b: Array = waterfall["outline"][edge + 1]
+		var angle := absf(rad_to_deg(Vector2(b[0] - a[0], b[1] - a[1]).angle()))
+		check("waterfall path axis %d" % edge, absf(angle - 30.0) <= 2.5)

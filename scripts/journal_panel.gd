@@ -20,7 +20,7 @@ func _ready() -> void:
 		var m: Dictionary = MemoryPanel.MEMORIES[i]
 		var opened := GameState.opened_chests.has(MemoryPanel.FIRST_CHEST + i)
 		body.add_child(PanelFrame.wrap_label(("%s — %s" % [m["title"], m["story"]]) if opened else ("찾지 못한 기억 · %s" % m["hint"]), 17, Color(0.95, 0.9, 0.78) if opened else Color(0.6, 0.7, 0.66)))
-	body.add_child(PanelFrame.wrap_label("발견한 상자 %d / %d" % [GameState.opened_chests.size(), 8], 20, Color(1, 0.88, 0.5)))
+	body.add_child(PanelFrame.wrap_label("발견한 상자 %d / %d" % [GameState.opened_chests.size(), 9], 20, Color(1, 0.88, 0.5)))
 	body.add_child(PanelFrame.wrap_label("모험가 Lv.%d %s" % [GameState.level, GameState.class_info()["name"]], 20, Color(0.78, 0.92, 0.85)))
 	add_footer("모험 계속하기", func(): closed.emit(), true)
 

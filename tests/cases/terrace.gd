@@ -62,7 +62,7 @@ func run() -> void:
 				worst_ok = false
 				print("   leak via edge %d (len %.0f) started %s ended %s" % [k, (p1 - p0).length(), player.position, "inside"])
 		print("terrace %s: stairs %s, cliffs %s" % [Landmark.NAMES[lm.index], "ok" if up else "FAIL", "ok" if worst_ok else "LEAK"])
-		if not up:
+		if not up or not worst_ok:
 			failures += 1
 	game.queue_free()
 	await _frames(2)

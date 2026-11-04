@@ -30,6 +30,7 @@ func _ready() -> void:
 
 	minimap = Minimap.new()
 	minimap.game = game
+	minimap.open_requested.connect(open_map)
 	add_child(minimap)
 	_area = Control.new()
 	_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -106,6 +107,8 @@ func open_bag(shop := false) -> void:
 ## Talk to / use the town NPC with this name.
 func interact(npc: String) -> void:
 	match npc:
+		"안식처":
+			open_map(true)
 		"숲의 파수꾼":
 			_open(BossPanel.new().setup(game))
 		"상인":
@@ -308,3 +311,9 @@ func _on_save_finished(success: bool, message: String) -> void:
 	_save_warning.visible = not success
 	_save_warning.text = "저장 실패 · 눌러서 재시도"
 	_save_warning.tooltip_text = message
+
+
+func open_map(travel := false) -> void:
+	var panel := MapPanel.new().setup(game)
+	panel._tab = 1 if travel else 0
+	_open(panel)
