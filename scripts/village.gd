@@ -130,8 +130,8 @@ func _box(a_uv: Vector2, b_uv: Vector2) -> PackedVector2Array:
 	return PackedVector2Array([a, Vector2(b.x, a.y), b, Vector2(a.x, b.y)])
 
 
-## Real cobblestone (원본 forest-isometric-paving) laid on the ground plane, with
-## a dark curb and a patch of sunlight on the plaza like the reference.
+## Real cobblestone (원본 forest-isometric-paving) laid on the ground plane with a dark curb.
+## Ground lighting stays uniform until shadows can follow actual objects and a light source.
 func _build_paving(layer: Node2D) -> void:
 	var group := Node2D.new()
 	group.z_index = 1
@@ -155,24 +155,6 @@ func _build_paving(layer: Node2D) -> void:
 	stone.uv = uv
 	stone.modulate = Color(0.86, 0.84, 0.8)
 	group.add_child(stone)
-	# Sunlit plaza: a soft additive glow centred on the fountain.
-	var grad := Gradient.new()
-	grad.colors = PackedColorArray([Color(1.0, 0.95, 0.8, 0.5), Color(1.0, 0.95, 0.8, 0.0)])
-	var tex := GradientTexture2D.new()
-	tex.gradient = grad
-	tex.fill = GradientTexture2D.FILL_RADIAL
-	tex.fill_from = Vector2(0.5, 0.5)
-	tex.fill_to = Vector2(1.0, 0.5)
-	tex.width = 256
-	tex.height = 256
-	var glow := Sprite2D.new()
-	glow.texture = tex
-	glow.position = ground(Vector2(0.5, 0.5))
-	glow.scale = Vector2.ONE * 760.0 / 256.0
-	var add := CanvasItemMaterial.new()
-	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-	glow.material = add
-	group.add_child(glow)
 	# Dirt roads continue outward from the gates; the east road ends at the
 	# bridge forecourt and a narrower road crosses the bridge northwards.
 	var dirt := load("res://assets/art/village/dirt.webp") as Texture2D

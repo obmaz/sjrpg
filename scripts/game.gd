@@ -73,21 +73,6 @@ func _ready() -> void:
 	meadow.modulate = Color(0.58, 0.70, 0.50)
 	ground_layer.add_child(meadow)
 
-	# Dappled forest shade: a multiply layer of soft light patches over the ground.
-	var shade := Sprite2D.new()
-	shade.texture = _dapple_texture()
-	shade.centered = false
-	shade.region_enabled = true
-	shade.region_rect = Rect2(Vector2.ZERO, backdrop.size / 1500.0 * 192.0)
-	shade.scale = Vector2.ONE * 1500.0 / 192.0
-	shade.position = backdrop.position
-	shade.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
-	var mul := CanvasItemMaterial.new()
-	mul.blend_mode = CanvasItemMaterial.BLEND_MODE_MUL
-	shade.material = mul
-	shade.z_index = 3
-	ground_layer.add_child(shade)
-
 	_corpse_layer = Node2D.new()
 	_corpse_layer.z_index = -8
 	_corpse_layer.draw.connect(_draw_corpses)
@@ -268,23 +253,6 @@ func _read_debug_params() -> void:
 					player.position = village.point(Vector2(0.94, 0.90)) + Vector2(0, 150)
 			camera.position = player.position
 			camera.reset_smoothing()
-
-
-func _dapple_texture() -> ImageTexture:
-	var noise := FastNoiseLite.new()
-	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
-	noise.frequency = 0.03
-	noise.fractal_octaves = 3
-	noise.seed = 11
-	var img := noise.get_seamless_image(192, 192)
-	img.convert(Image.FORMAT_RGB8)
-	var dark := Color(0.40, 0.48, 0.45)
-	var lit := Color(1.0, 0.97, 0.88)
-	for y in img.get_height():
-		for x in img.get_width():
-			var n := img.get_pixel(x, y).r
-			img.set_pixel(x, y, dark.lerp(lit, smoothstep(0.40, 0.60, n)))
-	return ImageTexture.create_from_image(img)
 
 
 ## 상인 곁에서는 가방에서 상점으로 전환할 수 있습니다 (원본의 근처 행동 버튼).
