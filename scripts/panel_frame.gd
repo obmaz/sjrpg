@@ -27,14 +27,19 @@ var _on_tab: Callable
 
 func _init() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	UiKit.boost = BOOST
 
 
 func _exit_tree() -> void:
 	UiKit.boost = 1.0
+	for panel in get_tree().get_nodes_in_group("panel_frames"):
+		if panel != self and not panel.is_queued_for_deletion():
+			UiKit.boost = BOOST
+			break
 
 
 func _ready() -> void:
+	add_to_group("panel_frames")
+	UiKit.boost = BOOST
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var dim := ColorRect.new()
@@ -155,7 +160,7 @@ func set_tabs(labels: Array, selected: int, on_select: Callable) -> void:
 	_tab_buttons.clear()
 	for i in labels.size():
 		var b := UiKit.button(labels[i], 20)
-		b.custom_minimum_size = Vector2(maxf(104.0, labels[i].length() * 30.0 + 34.0), 62.0)
+		b.custom_minimum_size = Vector2(maxf(104.0, labels[i].length() * 30.0 + 34.0), MIN_TOUCH)
 		if i != selected:
 			b.modulate = Color(0.62, 0.66, 0.64)
 		var index := i

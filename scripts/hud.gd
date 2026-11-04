@@ -13,6 +13,7 @@ var _area: Control
 var _area_name := ""
 var _panel: PanelFrame
 var _save_warning: Button
+var _status: Label
 
 
 func _ready() -> void:
@@ -43,6 +44,9 @@ func _ready() -> void:
 	_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_toast)
 
+	_status = UiKit.label("", 18, Color(0.7, 0.9, 1.0), true)
+	_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_status)
 	_build_death()
 	_save_warning = UiKit.button("", 18)
 	_save_warning.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -75,7 +79,7 @@ func panel_open() -> bool:
 
 func _open(panel: PanelFrame) -> void:
 	if _panel != null:
-		panel.queue_free()
+		panel.free()
 		return
 	controls.release_all()
 	get_tree().paused = true
@@ -195,8 +199,15 @@ func _update_layout() -> void:
 	minimap.position = Vector2(size.x - 16.0 * u - minimap.size.x, 14.0 * u)
 	_area.position = Vector2.ZERO
 	_area.size = size
-	_toast.offset_top = 112.0 * u
-	_toast.offset_bottom = 152.0 * u
+	_status.position = Vector2(70.0, 143.0) * u
+	_status.size = Vector2(390.0, 30.0) * u
+	var statuses: Array[String] = []
+	var names := {"shout": "방어 함성", "orders": "전투 지시", "armor": "원소 갑옷", "enchant": "화염 강화", "storm": "뇌우", "command": "전투 명령", "guard": "집중 방어", "berserk": "광폭", "sprint": "질주"}
+	for key in game.player.buffs:
+		statuses.append("%s %d초" % [names.get(key, key), ceili(game.player.buffs[key]["time"])])
+	_status.text = " · ".join(statuses.slice(0, 3))
+	_toast.offset_top = 180.0 * u
+	_toast.offset_bottom = 222.0 * u
 	var name := "숲 마을" if game.in_town(game.player.position) else "숲 가장자리"
 	if not game.dungeon.active and game.village.river_band.grow(60.0).has_point(Iso.unproject(game.player.position)):
 		name = "강가"
@@ -291,7 +302,7 @@ func _draw_bars() -> void:
 		uvs.append(uv_rect.position + uv_rect.size * (Vector2(0.5, 0.5) + Vector2.from_angle(a) * 0.5))
 	_bars.draw_polygon(pts, PackedColorArray([Color.WHITE]), uvs, tex)
 	if p.hp / p.max_hp < 0.3:
-		_bars.draw_circle(center, pr, Color(1.0, 0.165, 0.14, 0.12 + 0.1 * sin(Time.get_ticks_msec() / 150.0)))
+		_bars.draw_circle(center, pr, Color(1.0, 0.165, 0.14, 0.18 if Prefs.reduce_motion else 0.12 + 0.1 * sin(Time.get_ticks_msec() / 150.0)))
 	_bars.draw_arc(center, pr, 0, TAU, 56, Color(0.29, 0.263, 0.216), 3.0 * u, true)
 	_bars.draw_arc(center, pr, -PI + 0.2, -PI + 2.9, 24, Color(0.765, 0.675, 0.51), 1.4 * u, true)
 	_bars.draw_arc(center, pr - 3.0 * u, 0, TAU, 56, Color(0.61, 0.53, 0.38), 0.8 * u, true)

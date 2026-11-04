@@ -19,6 +19,7 @@ const SCENES = {
     gate2: 'at=gate2&zoom=1.5',
     gate3: 'at=gate3&zoom=1.5',
     chapel: 'at=chapel&zoom=0.8',
+    occlusion: 'at=occlusion&zoom=1.3',
     chapelwide: 'at=chapel&zoom=0.4',
     lm0: 'at=lm0&zoom=0.5',
     lm1: 'at=lm1&zoom=0.5',
@@ -53,7 +54,7 @@ const base = args.url ?? 'http://localhost:8765/index.html';
 const out = args.out ?? `shot-${scene}-${device}.png`;
 
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-const ctx = await browser.newContext(device === 'phone' ? { ...devices['Pixel 7'] } : { viewport: { width: 1280, height: 720 } });
+const ctx = await browser.newContext(device === 'phone' ? { ...devices['Pixel 7'] } : device === 'phone-landscape' ? { ...devices['Pixel 7 landscape'] } : { viewport: { width: 1280, height: 720 } });
 const page = await ctx.newPage();
 const logs = [];
 page.on('console', (m) => logs.push(`${m.type()}: ${m.text()}`));
@@ -62,7 +63,7 @@ await page.goto(`${base}?${SCENES[scene]}`);
 await page.waitForTimeout(12000);
 const vp = page.viewportSize();
 const tap = async (x, y) => {
-    if (device === 'phone') {
+    if (device.startsWith('phone')) {
         const cdp = await ctx.newCDPSession(page);
         await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y, id: 1 }] });
         await page.waitForTimeout(80);
@@ -74,8 +75,9 @@ const tap = async (x, y) => {
 await tap(vp.width / 2, vp.height / 2); // 타이틀
 await page.waitForTimeout(4000);
 // 직업 선택: 카드 안의 "시작" 버튼 위치 (가로/세로 레이아웃별)
-const start = args.start ? args.start.split(',').map(Number) : device === 'phone' ? (cls === 'mage' ? [205, 627] : [205, 382]) : cls === 'mage' ? [844, 499] : [436, 521];
+const start = args.start ? args.start.split(',').map(Number) : device === 'phone' ? (cls === 'mage' ? [205, 627] : [205, 382]) : device === 'phone-landscape' ? [vp.width * (cls === 'mage' ? 0.624 : 0.381), vp.height * 0.70] : cls === 'mage' ? [844, 499] : [436, 521];
 await tap(...start);
+await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { timeout: 30000 });
 await page.waitForTimeout(9000);
 await page.screenshot({ path: out });
 const errors = logs.filter((l) => /error/i.test(l));

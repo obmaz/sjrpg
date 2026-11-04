@@ -124,7 +124,7 @@ func _build_floor() -> void:
 		floor_piece.modulate = Color(0.45, 0.48, 0.43)
 		floor_piece.z_index = -2
 		_root.add_child(floor_piece)
-		game.map_shapes.append({"poly": polygon, "color": Color("86785d")})
+		game.map_shapes.append({"poly": polygon, "bounds": Iso.poly_bounds(polygon), "color": Color("86785d")})
 
 
 func _build_rocks() -> void:

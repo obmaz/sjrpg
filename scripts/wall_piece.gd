@@ -37,3 +37,9 @@ static func add_span(parent: Node2D, tex: Texture2D, def: Dictionary, strip_px: 
 func _draw() -> void:
 	draw_set_transform_matrix(_xf)
 	draw_texture_rect_region(_texture, _local, _src)
+
+
+func _ready() -> void:
+	var transform := _xf
+	transform.origin += global_position
+	WorldOcclusion.attach(self, WorldOcclusion.bounds_of(_local, transform))

@@ -20,6 +20,7 @@ var field_root: Node2D
 var map_shapes: Array[Dictionary] = []
 var enemies: Array[Enemy] = []
 var chests: Array[Chest] = []
+var cosmetic_effects: Array[Effect] = []
 var corpses: Array = []  # {"pos": Vector2, "time": float, "used": bool}
 var _corpse_layer: Node2D
 var _spawn_timer := 0.0
@@ -120,7 +121,9 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_update_zoom)
 	for i in 8:
 		_spawn_enemy(true)
-	toast("제1장 숲 마을 · 성문 밖으로 나가 몬스터를 처치하세요")
+	toast("미니맵에서 의뢰 위치를 확인하세요 · 마을의 미라가 기다립니다")
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.__sjrpgAdventureReady = true")
 
 
 func _update_zoom() -> void:
@@ -208,6 +211,11 @@ func _read_debug_params() -> void:
 				"lm0", "lm1", "lm2", "lm3":
 					var lmk: Landmark = village.landmarks[int(kv[1].substr(2))]
 					player.position = lmk.position + Vector2(0, 140)
+				"occlusion":
+					var building: IsoSprite = village.buildings["nw"]
+					var footprint := building.atlas_polygon(village.data["frames"]["nw"]["ground"])
+					var bounds := Iso.poly_bounds(footprint)
+					player.position = Vector2(bounds.get_center().x, bounds.position.y - Player.RADIUS - 10.0)
 				"chapel":
 					player.position = village.chapel_steps[village.chapel_steps.size() - 1]
 				"bank":
@@ -271,6 +279,7 @@ func in_town(p: Vector2) -> bool:
 func _process(delta: float) -> void:
 	camera.position = player.position + Vector2(0, -30)
 	if dungeon.active:
+		WorldOcclusion.update(player.global_position, false)
 		dungeon.tick(delta)
 		_save_timer += delta
 		if _save_timer >= 5.0:
@@ -289,6 +298,7 @@ func _process(delta: float) -> void:
 			elevated = true
 			break
 	player.z_index = 1 if elevated else 0
+	WorldOcclusion.update(player.global_position if not player.dead else Vector2(1000000, 1000000), elevated)
 	for c in corpses.duplicate():
 		c["time"] -= delta
 		if c["time"] <= 0.0:
@@ -594,6 +604,8 @@ func on_enemy_killed(enemy: Enemy) -> void:
 	# Corpses feed 물약 발견 · 아이템 발견 · 섬뜩한 수호물.
 	if _rng.randf() < 0.3:
 		corpses.append({"pos": enemy.position, "time": 30.0, "used": false})
+		if corpses.size() > 32:
+			corpses.pop_front()
 	grant_xp(enemy.xp_reward)
 
 
@@ -662,6 +674,12 @@ func _on_player_died() -> void:
 
 
 func _add_effect(e: Effect) -> void:
+	# Bound only cosmetic nodes; projectiles, damage zones and summons keep their gameplay.
+	if e.kind not in ["proj", "orb", "zone", "hydra", "ward"]:
+		cosmetic_effects = cosmetic_effects.filter(func(effect): return is_instance_valid(effect) and not effect.is_queued_for_deletion())
+		if cosmetic_effects.size() >= 64:
+			cosmetic_effects.pop_front().queue_free()
+		cosmetic_effects.append(e)
 	e.game = self
 	world.add_child(e)
 

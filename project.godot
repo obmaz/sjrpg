@@ -63,6 +63,17 @@ potion={
 
 pointing/emulate_touch_from_mouse=false
 
+[shader_globals]
+
+hero_world_position={
+"type": "vec2",
+"value": Vector2(1000000, 1000000)
+}
+hero_above={
+"type": "bool",
+"value": false
+}
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"

@@ -86,3 +86,12 @@ func _draw() -> void:
 	var sx := -k if flip else k
 	draw_set_transform_matrix(Transform2D(Vector2(sx, k * float(def["gvk"])), Vector2(0, k * float(def["gvs"])), draw_shift))
 	draw_texture_rect_region(texture, Rect2(src.position - foot, src.size), src, modulate_color)
+
+
+func _ready() -> void:
+	var source := Rect2(def["source"][0], def["source"][1], def["source"][2], def["source"][3])
+	if clip != Vector2.ZERO:
+		source = Rect2(clip.x, source.position.y, clip.y - clip.x, source.size.y)
+	var foot := Vector2(def["foot"][0], def["foot"][1])
+	var transform := Transform2D(Vector2(-k if flip else k, k * float(def["gvk"])), Vector2(0, k * float(def["gvs"])), global_position + draw_shift)
+	WorldOcclusion.attach(self, WorldOcclusion.bounds_of(Rect2(source.position - foot, source.size), transform))

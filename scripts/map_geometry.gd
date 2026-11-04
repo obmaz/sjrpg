@@ -18,6 +18,8 @@ static func build(village: Village) -> Array[Dictionary]:
 	for key in village.buildings:
 		var building: IsoSprite = village.buildings[key]
 		shapes.append({"poly": building.atlas_polygon(village.data["frames"][key]["ground"]), "color": Color("c0aa7d")})
+	for shape in shapes:
+		shape["bounds"] = Iso.poly_bounds(shape["poly"])
 	return shapes
 
 

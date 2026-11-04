@@ -683,4 +683,5 @@ func revive(at: Vector2) -> void:
 	frenzy_stacks = 0
 	cooldowns.clear()
 	refresh_stats(true)
+	resource = resource_max
 	_invulnerable = 3.0

@@ -6,6 +6,7 @@ const PATH := "user://settings.cfg"
 
 var sound_enabled := true
 var haptics_enabled := true
+var reduce_motion := false
 var _last_pulse := 0
 
 
@@ -14,12 +15,14 @@ func _ready() -> void:
 	if cfg.load(PATH) == OK:
 		sound_enabled = bool(cfg.get_value("device", "sound", true))
 		haptics_enabled = bool(cfg.get_value("device", "haptics", true))
+		reduce_motion = bool(cfg.get_value("device", "reduce_motion", false))
 
 
 func _save() -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("device", "sound", sound_enabled)
 	cfg.set_value("device", "haptics", haptics_enabled)
+	cfg.set_value("device", "reduce_motion", reduce_motion)
 	cfg.save(PATH)
 
 
@@ -59,3 +62,8 @@ func pulse(kind: String, preview := false) -> void:
 	_last_pulse = now
 	var ms: int = {"hit": 12, "hurt": 90, "kill": 46, "skill": 54, "dodge": 8, "loot": 30}.get(kind, 12)
 	Input.vibrate_handheld(ms)
+
+
+func set_reduce_motion(on: bool) -> void:
+	reduce_motion = on
+	_save()

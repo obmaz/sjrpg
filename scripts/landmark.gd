@@ -80,3 +80,7 @@ func _draw() -> void:
 	var row := index / 2
 	var src := Rect2(col * CELL, row * CELL, CELL, CELL)
 	draw_texture_rect_region(_sheet, Rect2(top_left - position, Vector2(side, side)), src)
+
+
+func _ready() -> void:
+	WorldOcclusion.attach(self, Rect2(top_left, Vector2(side, side)))

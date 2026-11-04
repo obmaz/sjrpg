@@ -28,6 +28,8 @@ func _swap(node: Node) -> void:
 
 
 func show_title() -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.__sjrpgAdventureReady = false")
 	var title := preload("res://scripts/title_screen.gd").new()
 	title.start_requested.connect(show_class_select)
 	_swap(title)

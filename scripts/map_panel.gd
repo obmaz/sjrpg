@@ -28,7 +28,7 @@ func _rebuild() -> void:
 		canvas.game = game
 		canvas.custom_minimum_size = Vector2(0, 460)
 		body.add_child(canvas)
-		body.add_child(PanelFrame.wrap_label("흰 화살표: 내 위치 · 노랑: 의뢰 · 청록: 시설 · 보라: 발견한 안식처 · 주황: 파수꾼", 17))
+		body.add_child(PanelFrame.wrap_label("흰 화살표: 내 위치 · 빨강: 적 · 청록: 입구 · 노랑: 귀환문" if game.dungeon.active else "흰 화살표: 내 위치 · 노랑: 의뢰 · 청록: 시설 · 보라: 발견한 안식처 · 주황: 파수꾼", 17))
 		body.add_child(PanelFrame.wrap_label(game.dungeon.objective() if game.dungeon.active else Quests.main_objective(), 20, UiKit.GOLD))
 		for marker in MapGeometry.markers(game):
 			body.add_child(PanelFrame.wrap_label(marker["label"], 18, marker["color"]))

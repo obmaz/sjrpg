@@ -27,7 +27,9 @@ func stick_radius() -> float:
 
 
 func _layout() -> void:
-	var size := get_viewport().get_visible_rect().size
+	var margins := PanelFrame.safe_margins(get_viewport())
+	var safe_origin := Vector2(margins.x, margins.y)
+	var size := get_viewport().get_visible_rect().size - Vector2(margins.x + margins.z, margins.y + margins.w)
 	_unit = clampf(minf(size.x, size.y) / 720.0, 0.75, 2.0)
 	var u := _unit
 	var portrait := size.y > size.x
@@ -43,8 +45,8 @@ func _layout() -> void:
 	_buttons["roll"] = {"center": roll_center, "radius": 33.0 * u}
 	# 원본 PotionBelt: two 44px potions side by side with a 6px gap, right side above the controls.
 	var potion_y := main.y - 3.25 * R
-	_buttons["potion_hp"] = {"center": Vector2(size.x - 8.0 * u - 50.0 * u - 22.0 * u, potion_y), "radius": 22.0 * u}
-	_buttons["potion_mp"] = {"center": Vector2(size.x - 8.0 * u - 22.0 * u, potion_y), "radius": 22.0 * u}
+	_buttons["potion_hp"] = {"center": Vector2(size.x - 112.0 * u, potion_y), "radius": 32.0 * u}
+	_buttons["potion_mp"] = {"center": Vector2(size.x - 40.0 * u, potion_y), "radius": 32.0 * u}
 	var bar_y := size.y - (60.0 * u if portrait else 44.0 * u)
 	var names := ["bar_bag", "bar_skills", "bar_quests", "bar_gear"]
 	for i in 4:
@@ -53,8 +55,11 @@ func _layout() -> void:
 	_near_name = npc
 	if npc != "" and npc != "탈것 상인":
 		_buttons["near_shop"] = {"center": Vector2(size.x / 2.0, bar_y - 86.0 * u), "radius": 42.0 * u}
+	for button in _buttons.values():
+		button["center"] += safe_origin
 	if _stick_index == -2:
 		_stick_center = Vector2(112.0 * u, size.y * 0.725) if portrait else Vector2(140.0 * u, size.y - 150.0 * u)
+		_stick_center += safe_origin
 		_stick_knob = _stick_center
 
 
@@ -184,7 +189,7 @@ func _draw_joystick() -> void:
 	draw_arc(c, r * 0.62, 0, TAU, 48, Color(0.78, 0.74, 0.62, 0.28), 1.5 * u, true)
 	# Rotating rune marks between the rings.
 	for i in 12:
-		var a := TAU * i / 12.0 + _time * 0.15
+		var a := TAU * i / 12.0 + (0.0 if Prefs.reduce_motion else _time * 0.15)
 		var p := c + Vector2.from_angle(a) * r * 0.81
 		draw_circle(p, 2.0 * u, Color(0.85, 0.8, 0.6, 0.35))
 	# Direction arrows.
@@ -229,7 +234,7 @@ func _draw() -> void:
 			var affordable := player.resource >= SkillDefs.cost(s, GameState.effective_rank(id))
 			var inner := r * 0.94
 			SkillIcons.draw_round(self, id, c, inner, Color.WHITE if affordable else Color(0.42, 0.42, 0.5))
-			var pulse := 0.85 + 0.15 * sin(_time * 3.0 + slot)
+			var pulse := 1.0 if Prefs.reduce_motion else 0.85 + 0.15 * sin(_time * 3.0 + slot)
 			HudArt.glow_ring(self, c, r, glow, (1.15 if pressed else 1.0) * pulse)
 			var ready := player.slot_cooldown_ratio(slot)
 			if ready < 1.0:

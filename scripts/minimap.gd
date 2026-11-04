@@ -60,6 +60,9 @@ func _draw() -> void:
 	draw_circle(Vector2.ZERO, radius, Color(0.07, 0.08, 0.07, 0.9))
 	draw_colored_polygon(_circle, Color(0.30, 0.37, 0.27))
 	for shape in game.map_shapes:
+		var bounds: Rect2 = shape["bounds"]
+		if not bounds.grow(WORLD_RADIUS).has_point(origin):
+			continue
 		_fill(shape["poly"], shape["color"], origin)
 	for marker in MapGeometry.markers(game):
 		var marker_at := _to_map(marker["pos"], origin)
