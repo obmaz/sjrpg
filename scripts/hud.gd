@@ -112,6 +112,10 @@ func open_victory() -> void:
 	_open(panel)
 
 
+func open_memory(i: int) -> void:
+	_open(MemoryPanel.new().setup(i))
+
+
 func open_journal() -> void:
 	_open(JournalPanel.new())
 

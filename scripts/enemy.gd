@@ -139,6 +139,8 @@ func take_damage(amount: float, source: Node2D) -> void:
 	if _cry_time > 0.0:
 		amount *= 1.0 + _cry_value
 	hp -= amount
+	if GameState.has_gift("frost") and source != null and source is Player:
+		slow(0.67)
 	SoundFx.play("impact")
 	Prefs.pulse("hit")
 	sprite.flash = 1.0

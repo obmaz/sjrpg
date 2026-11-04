@@ -37,6 +37,8 @@ var clear_rects: Array[Rect2] = []
 var safe_zone: PackedVector2Array
 var spawn_point := Vector2.ZERO
 var chest_points: Array[Vector2] = []
+## 숲의 기억 상자: 서쪽 · 북쪽 · 동쪽 길 (ground units).
+const MEMORY_SPOTS := [Vector2(-1900.0, 130.0), Vector2(180.0, -1900.0), Vector2(1450.0, 260.0)]
 var gate_points: Array[Vector2] = []
 ## Measured pillar feet of each gate in ground units: gate -> [Vector2, Vector2].
 var gate_pillars: Array = []
@@ -82,6 +84,9 @@ func build(ground_layer: Node2D, world: Node2D) -> void:
 	_build_npcs(world)
 	for c in data["chest_uv"]:
 		chest_points.append(point(Vector2(c[0], c[1])))
+	for g in MEMORY_SPOTS:
+		chest_points.append(Iso.project(g))
+		clear_rects.append(Rect2(Iso.project(g) - Vector2(80, 80), Vector2(160, 160)))
 	var corners := [Vector2(0.04, 0.10), Vector2(0.94, 0.10), Vector2(0.94, 0.90), Vector2(0.04, 0.90)]
 	safe_zone = PackedVector2Array()
 	for c in corners:

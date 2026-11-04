@@ -8,6 +8,17 @@ const RARITY_NAMES := ["일반", "마법", "희귀", "고유"]
 const RARITY_COLORS := [Color("e3dfce"), Color("82c9ff"), Color("ffd877"), Color("efa971")]
 const WEAPON_ATTACK_PER_LEVEL := 2.0
 const CAPACITY := 24
+## 희귀 1개 · 고유 2개의 무기 능력 (원본 WeaponGift). 연격 능력은 3연계 이상 무기에서만.
+const GIFTS := {
+	"frost": ["서리의 낙인", "적중한 대상 둔화 0.67초"],
+	"guardian": ["수호의 맹세", "받는 피해 8% 감소"],
+	"renewal": ["생명의 수확", "처치 시 생명 400 회복"],
+	"comboFury": ["연격의 격정", "분신 연격 3연계마다 분노 60 회복"],
+	"comboGuard": ["연격의 수호", "분신 연격 3연계마다 0.75초간 받는 피해 25% 감소"],
+}
+const LEGACY_GIFTS := ["frost", "guardian", "renewal"]
+const ALL_GIFTS := ["frost", "guardian", "renewal", "comboFury", "comboGuard"]
+const COMBO_WEAPONS := ["shortsword", "longsword", "axe", "mace", "greatsword", "twinaxes", "spear", "runeblade", "dualblades", "rapier", "katana", "halberd", "warhammer", "flail", "glaive", "falchion"]
 
 static var _catalog: Array = []
 static var _by_id := {}
@@ -21,6 +32,7 @@ var focus := 0
 var locked := false
 var acquired_level := 1
 var weapon_level := -1  # -1 for non-weapons
+var gifts: Array[String] = []
 
 
 static func catalog() -> Array:
@@ -56,7 +68,24 @@ static func make(serial_no: int, def_id: String, r := 0, p := 0, v := 0, f := 0,
 	g.focus = affix_for_level(f, lvl)
 	g.acquired_level = lvl
 	g.weapon_level = (w_level if w_level > 0 else lvl) if g.base["slot"] == "weapon" else -1
+	g.gifts = default_gifts(serial_no, g.base, r)
 	return g
+
+
+static func gift_count(r: int) -> int:
+	return 2 if r == 3 else (1 if r == 2 else 0)
+
+
+static func default_gifts(serial_no: int, b: Dictionary, r: int) -> Array[String]:
+	var pool: Array = ALL_GIFTS if COMBO_WEAPONS.has(b["id"]) and b["slot"] == "weapon" else LEGACY_GIFTS
+	var out: Array[String] = []
+	for i in gift_count(r):
+		out.append(pool[(serial_no + i) % pool.size()])
+	return out
+
+
+func has_gift(id: String) -> bool:
+	return gifts.has(id)
 
 
 func slot() -> String:
@@ -112,12 +141,14 @@ func stats_text(resource_name: String) -> String:
 		parts.append("%s +%s" % [resource_name, HudArt.res(mana())])
 	if base["haste"] > 0:
 		parts.append("공격속도 +%d%%" % roundi(base["haste"] * 100.0))
+	for gid in gifts:
+		parts.append("%s · %s" % [GIFTS[gid][0], GIFTS[gid][1]])
 	return " · ".join(parts)
 
 
 func to_save() -> Dictionary:
 	return {"serial": serial, "base": base["id"], "rarity": rarity, "power": power, "vitality": vitality,
-		"focus": focus, "locked": locked, "level": acquired_level, "weapon_level": weapon_level}
+		"focus": focus, "locked": locked, "level": acquired_level, "weapon_level": weapon_level, "gifts": gifts}
 
 
 static func from_save(d: Dictionary) -> Gear:
@@ -134,6 +165,14 @@ static func from_save(d: Dictionary) -> Gear:
 	g.locked = bool(d.get("locked", false))
 	g.acquired_level = clampi(int(d.get("level", 1)), 1, 10000)
 	g.weapon_level = int(d.get("weapon_level", -1)) if b["slot"] == "weapon" else -1
+	g.gifts = default_gifts(g.serial, b, g.rarity)
+	if d.has("gifts"):
+		var saved: Array[String] = []
+		for gid in d["gifts"]:
+			if GIFTS.has(str(gid)):
+				saved.append(str(gid))
+		if saved.size() == gift_count(g.rarity):
+			g.gifts = saved
 	return g if g.serial > 0 else null
 
 

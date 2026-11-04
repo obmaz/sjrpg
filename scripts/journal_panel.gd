@@ -14,7 +14,13 @@ func _ready() -> void:
 	body.add_child(_bar("숲길 정화", "서로 다른 NPC 의뢰 3개와 몬스터 처치 목표를 완수해 파수꾼을 깨우세요.", float(kills) / Quests.STAGE_KILL_GOAL, "%d / %d" % [kills, Quests.STAGE_KILL_GOAL]))
 	var status := "정화 완료" if GameState.boss_defeated else ("파수꾼 출현" if GameState.boss_summoned else "NPC 의뢰·처치 목표 완료 후 등장")
 	body.add_child(_bar("첫 파수꾼", "NPC 의뢰 3개를 해결하고 파수꾼을 쓰러뜨리면 제1장을 완료합니다.", 1.0 if GameState.boss_defeated else 0.0, status))
-	body.add_child(PanelFrame.wrap_label("발견한 상자 %d / %d" % [GameState.opened_chests.size(), 5], 20, Color(1, 0.88, 0.5)))
+	body.add_child(PanelFrame.section("숲의 기억 · 선택 여정  %d / 3" % MemoryPanel.recovered()))
+	body.add_child(PanelFrame.wrap_label("서쪽·북쪽·동쪽 길의 상자에서 기억 3개를 모으세요. 완성 보상: 스킬 포인트 +1.", 17, Color(0.82, 0.9, 0.85)))
+	for i in MemoryPanel.MEMORIES.size():
+		var m: Dictionary = MemoryPanel.MEMORIES[i]
+		var opened := GameState.opened_chests.has(MemoryPanel.FIRST_CHEST + i)
+		body.add_child(PanelFrame.wrap_label(("%s — %s" % [m["title"], m["story"]]) if opened else ("찾지 못한 기억 · %s" % m["hint"]), 17, Color(0.95, 0.9, 0.78) if opened else Color(0.6, 0.7, 0.66)))
+	body.add_child(PanelFrame.wrap_label("발견한 상자 %d / %d" % [GameState.opened_chests.size(), 8], 20, Color(1, 0.88, 0.5)))
 	body.add_child(PanelFrame.wrap_label("모험가 Lv.%d %s" % [GameState.level, GameState.class_info()["name"]], 20, Color(0.78, 0.92, 0.85)))
 	add_footer("모험 계속하기", func(): closed.emit(), true)
 

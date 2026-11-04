@@ -37,6 +37,7 @@ var quests := {}
 var stage_kills := 0
 var boss_defeated := false
 var boss_summoned := false
+var memory_rewarded := false
 var gold := 0
 ## 상점 축복(수련): 공격 +5 / 생명 +20씩 쌓임 (원본 bonusAttack / bonusHealth).
 var bonus_attack := 0.0
@@ -268,6 +269,13 @@ func add_gear(g: Gear) -> bool:
 	return true
 
 
+func has_gift(id: String) -> bool:
+	for g in equipped.values():
+		if g.has_gift(id):
+			return true
+	return false
+
+
 func is_equipped(g: Gear) -> bool:
 	return equipped.get(g.slot()) == g
 
@@ -354,6 +362,7 @@ func new_game(cls: String) -> void:
 	stage_kills = 0
 	boss_defeated = false
 	boss_summoned = false
+	memory_rewarded = false
 	bonus_attack = 0.0
 	bonus_health = 0.0
 	chest_seed = randi() % 0x7fffffff
@@ -381,7 +390,7 @@ func save_game() -> void:
 		"class": hero_class, "level": level, "xp": xp,
 		"potions": potions, "mana_potions": mana_potions, "kills": kills,
 		"skill_points": skill_points, "ranks": ranks, "slots": slots,
-		"quests": quests, "stage_kills": stage_kills, "boss_defeated": boss_defeated, "gold": gold, "bonus_attack": bonus_attack, "bonus_health": bonus_health, "chest_seed": chest_seed, "opened_chests": opened_chests,
+		"quests": quests, "stage_kills": stage_kills, "boss_defeated": boss_defeated, "memory_rewarded": memory_rewarded, "gold": gold, "bonus_attack": bonus_attack, "bonus_health": bonus_health, "chest_seed": chest_seed, "opened_chests": opened_chests,
 		"next_serial": next_serial,
 		"inventory": inventory.map(func(g): return g.to_save()),
 		"equipped": equipped.keys().map(func(k): return {"slot": k, "serial": equipped[k].serial}),
@@ -423,6 +432,7 @@ func load_game() -> bool:
 	quests = data.get("quests", {})
 	stage_kills = int(data.get("stage_kills", 0))
 	boss_defeated = bool(data.get("boss_defeated", false))
+	memory_rewarded = bool(data.get("memory_rewarded", false))
 	boss_summoned = false
 	bonus_attack = float(data.get("bonus_attack", 0.0))
 	bonus_health = float(data.get("bonus_health", 0.0))

@@ -259,6 +259,8 @@ func cast_slot(index: int, repeat := false) -> bool:
 		cooldowns[id] = float(s["cooldown"])
 	_attack_melee = d["type"] in ["melee", "spin", "shadow"]
 	_attack_duration = (0.4 if _attack_melee else 0.46) / (1.0 + frenzy_stacks * 0.08)
+	if id == "cleave":
+		_attack_duration *= float(weapon_melee()["tempo"]) / 0.34
 	_attack_time = _attack_duration
 	_pending = action
 	_cast_feedback(d)
@@ -317,7 +319,7 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 	var power := SkillDefs.scaled(d.get("mult", 1.0), d.get("growth", 0.0), rank)
 	match d["type"]:
 		"melee":
-			_aim(170.0)
+			_aim(170.0 if id != "cleave" else float(weapon_melee()["range"]) + 60.0)
 			return func(): _melee(id, d, rank, power)
 		"spin":
 			return func(): _spin(id, d, power)
@@ -388,7 +390,26 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 	return Callable()
 
 
+## 착용 무기의 사거리 · 타격 호 · 공격 간격 (원본 GearDef.range / meleeHalfAngle / tempo).
+const HALF_ANGLES := {"rapier": 0.32, "spear": 0.42, "halberd": 0.72, "glaive": 0.95, "greatsword": 1.05, "dualblades": 1.05,
+	"mace": 1.05, "warhammer": 1.05, "runeblade": 1.10, "katana": 1.15, "longsword": 1.20, "flail": 1.35, "falchion": 1.40}
+
+
+func weapon_melee() -> Dictionary:
+	var w: Gear = GameState.equipped.get("weapon")
+	if w == null:
+		return {"range": 68.0, "arc": 1.25, "tempo": 0.4}
+	var b: Dictionary = w.base
+	var arc: float = HALF_ANGLES.get(b["id"], 0.5 if b["style"] == "spear" else (1.5 if b["style"] == "axe" else 1.25))
+	return {"range": float(b["range"]) * 0.91, "arc": arc, "tempo": float(b["tempo"])}
+
+
 func _melee(id: String, d: Dictionary, rank: int, power: float) -> void:
+	if id == "cleave":
+		var wm := weapon_melee()
+		d = d.duplicate()
+		d["range"] = wm["range"]
+		d["arc"] = rad_to_deg(wm["arc"])
 	var hits_total := 0
 	var swings := int(d.get("hits", 1))
 	var enchant := buff_value("enchant") if id == "sorceressAttack" else 0.0
@@ -447,6 +468,13 @@ func _shadow(id: String, d: Dictionary, power: float) -> void:
 		next.take_damage(damage_for(id, power), self)
 		game.spawn_slash(position + Vector2(0, -28), facing, Color(0.7, 0.8, 1.0))
 	_gain_rage(visited.size())
+	if visited.size() >= 3:
+		if GameState.has_gift("comboFury"):
+			resource = minf(resource_max, resource + 6.0)
+			game.float_text(position + Vector2(0, -100), "연격의 격정", Color(1, 0.7, 0.4))
+		if GameState.has_gift("comboGuard"):
+			buffs["combo_guard"] = {"time": 0.75, "value": 0.25}
+			game.float_text(position + Vector2(0, -100), "연격의 수호", Color(0.6, 0.8, 1))
 
 
 func _prepare_leap(id: String, d: Dictionary, rank: int, power: float) -> Callable:
@@ -611,6 +639,10 @@ func take_damage(amount: float, attacker: Node2D = null) -> void:
 		return
 	var armor := defense()
 	var dealt := maxf(1.0, amount * (1.0 - armor / (armor + 30.0))) * (1.0 - minf(0.5, passive("resist")))
+	if GameState.has_gift("guardian"):
+		dealt *= 0.92
+	if buffs.has("combo_guard"):
+		dealt *= 0.75
 	if buffs.has("shield") and resource > 0.0:
 		var absorbed := minf(dealt * buff_value("shield"), resource / 1.5)
 		resource -= absorbed * 1.5

@@ -441,6 +441,13 @@ func on_chest_broken(chest: Chest) -> void:
 			GameState.gold += g.sale_value()
 			toast("보관함이 가득 차 %s을(를) %d G에 팔았습니다" % [g.display_name(), g.sale_value()])
 	GameState.save_game()
+	var mem := chest.index - MemoryPanel.FIRST_CHEST
+	if mem >= 0 and mem < MemoryPanel.MEMORIES.size():
+		if MemoryPanel.recovered() == MemoryPanel.MEMORIES.size() and not GameState.memory_rewarded:
+			GameState.memory_rewarded = true
+			GameState.skill_points += 1
+			toast("세 기억을 모았습니다 · 스킬 포인트 +1")
+		get_tree().create_timer(0.6).timeout.connect(func(): hud.open_memory(mem))
 
 
 func _spawn_enemy_near(at: Vector2) -> void:
@@ -488,6 +495,9 @@ func on_enemy_killed(enemy: Enemy) -> void:
 	Prefs.pulse("kill")
 	GameState.kills += 1
 	quest_runtime.on_enemy_killed(enemy)
+	if GameState.has_gift("renewal") and not player.dead:
+		player.hp = minf(player.max_hp, player.hp + 4.0)
+		float_text(player.position + Vector2(0, -80), "+%s" % HudArt.stat(4.0), Color(0.6, 1, 0.7))
 	if enemy.is_boss:
 		on_boss_defeated(enemy)
 	float_text(enemy.position + Vector2(0, -enemy.sprite.body_height - 40), "+%d XP" % enemy.xp_reward, Color(0.7, 0.85, 1))
