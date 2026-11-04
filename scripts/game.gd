@@ -368,6 +368,23 @@ func _process(delta: float) -> void:
 		GameState.save_game()
 
 
+func _notification(what: int) -> void:
+	if what in [NOTIFICATION_WM_WINDOW_FOCUS_OUT, NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_APPLICATION_PAUSED]:
+		if is_node_ready() and process_mode != Node.PROCESS_MODE_DISABLED:
+			_pause_in_background()
+
+
+func _pause_in_background() -> void:
+	# Releasing both sources prevents a lost touch/key-up from moving the hero on return.
+	hud.controls.release_all()
+	player.move_input = Vector2.ZERO
+	player.held_slots.clear()
+	for action in ["move_left", "move_right", "move_up", "move_down", "attack", "skill", "potion"]:
+		Input.action_release(action)
+	GameState.save_game()
+	hud.pause_for_background()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("skill"):
 		player.cast_slot(1)
@@ -586,7 +603,7 @@ func on_chest_broken(chest: Chest) -> void:
 	GameState.save_game()
 	var mem := chest.index - MemoryPanel.FIRST_CHEST
 	if mem >= 0 and mem < MemoryPanel.MEMORIES.size():
-		get_tree().create_timer(0.6).timeout.connect(func():
+		get_tree().create_timer(0.6, false).timeout.connect(func():
 			if is_instance_valid(hud):
 				hud.open_memory(mem))
 
@@ -630,7 +647,7 @@ func on_boss_defeated(boss: Enemy) -> void:
 	else:
 		toast("가방을 비우면 파수꾼의 심장을 받을 수 있습니다")
 	GameState.save_game()
-	await get_tree().create_timer(1.2).timeout
+	await get_tree().create_timer(1.2, false).timeout
 	hud.open_victory()
 
 
@@ -708,7 +725,7 @@ func find_open_point(from: Vector2, dir: Vector2, distance: float, r: float) -> 
 
 func _on_player_died() -> void:
 	hud.show_death()
-	await get_tree().create_timer(2.5).timeout
+	await get_tree().create_timer(2.5, false).timeout
 	if not player.dead:
 		hud.hide_death()
 		return

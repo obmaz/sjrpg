@@ -429,7 +429,7 @@ func _melee(id: String, d: Dictionary, rank: int, power: float) -> void:
 func _spin(id: String, d: Dictionary, power: float) -> void:
 	var ticks := int(d["ticks"])
 	for i in ticks:
-		get_tree().create_timer(i * 0.12).timeout.connect(func():
+		get_tree().create_timer(i * 0.12, false).timeout.connect(func():
 			if dead:
 				return
 			var hits: Array = game.enemies_in_radius(position, d["radius"])

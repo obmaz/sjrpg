@@ -10,6 +10,7 @@ const { chromium, devices } = require('playwright');
 
 const SCENES = {
     town: '',
+    background: '',
     wide: 'zoom=0.45',
     bridge: 'at=bridge&zoom=0.7',
     bank: 'at=bank&zoom=0.45',
@@ -80,6 +81,7 @@ await page.waitForTimeout(4000);
 const start = args.start ? args.start.split(',').map(Number) : device === 'phone' ? (cls === 'mage' ? [205, 627] : [205, 382]) : device === 'phone-landscape' ? [vp.width * (cls === 'mage' ? 0.624 : 0.381), vp.height * 0.70] : cls === 'mage' ? [844, 499] : [436, 521];
 await tap(...start);
 await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { timeout: 30000 });
+if (scene === 'background') await page.evaluate(() => document.querySelector('canvas').blur());
 await page.waitForTimeout(9000);
 await page.screenshot({ path: out });
 const errors = logs.filter((l) => /error/i.test(l));

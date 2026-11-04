@@ -104,6 +104,17 @@ func open_skill_tree() -> void:
 	_open(SkillTreePanel.new())
 
 
+func pause_for_background() -> void:
+	# Keep an existing bag, map or settings panel exactly where the player left it.
+	if panel_open():
+		return
+	var panel := PanelFrame.new()
+	_open(panel)
+	panel.set_header("잠시 멈췄습니다", "화면을 떠나 모험을 일시정지했습니다")
+	panel.body.add_child(PanelFrame.wrap_label("준비되면 모험을 계속하세요. 전투와 남은 시간은 멈춰 있습니다.", 22))
+	panel.add_footer("모험 계속하기", close_panel, true)
+
+
 func open_bag(shop := false) -> void:
 	_open(BagPanel.new().setup(shop, game))
 
