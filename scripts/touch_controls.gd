@@ -215,7 +215,10 @@ func _update_action_feedback() -> void:
 		var ready := player.slot_cooldown_ratio(slot)
 		if _cooldown_samples.has(key):
 			var previous: Array = _cooldown_samples[key]
-			if previous[0] == id and float(previous[1]) < 1.0 and ready >= 1.0:
+			if previous[0] != id:
+				_success_feedback.erase(key)
+				_denied_feedback.erase(key)
+			elif float(previous[1]) < 1.0 and ready >= 1.0:
 				_success_feedback[key] = 0.38
 		_cooldown_samples[key] = [id, ready]
 	var counts := Vector2i(GameState.potions, GameState.mana_potions)
@@ -238,6 +241,44 @@ func _draw_action_feedback(name: String, center: Vector2, radius: float) -> void
 		var expansion := 0.0 if Prefs.reduce_motion else progress * 8.0 * _unit
 		var color := Color(0.93, 0.58, 0.45) if name == "potion_hp" else Color(0.65, 0.87, 1.0)
 		draw_arc(center, radius + 2.0 * _unit + expansion, 0, TAU, 64, Color(color, success / life * 0.8), 1.5 * _unit, true)
+
+
+## Read the equipped skill every frame, so moving a cooling spell cannot bypass
+## its timer or leave another slot displaying the old spell's remaining time.
+func slot_cooldown_remaining(index: int) -> float:
+	var id: String = GameState.slots[index]
+	return maxf(0.0, float(game.player.cooldowns.get(id, 0.0))) if id != "" else 0.0
+
+
+static func cooldown_text(remaining: float) -> String:
+	if remaining <= 0.0:
+		return ""
+	# Never say zero while the authoritative timer still rejects the cast.
+	return "%.1f" % (ceilf(remaining * 10.0) / 10.0) if remaining < 1.0 else str(ceili(remaining))
+
+
+func _draw_cooldown(center: Vector2, radius: float, ready: float, remaining: float, primary: bool) -> void:
+	if remaining <= 0.0:
+		return
+	var u := _unit
+	var inner := radius - 3.0 * u
+	# A dim base keeps the countdown readable on bright fire/lightning icons. The
+	# darker remaining sector recedes clockwise; the thin metal bezel stays clear.
+	draw_circle(center, inner, Color(0.015, 0.02, 0.03, 0.28))
+	if ready <= 0.001:
+		draw_circle(center, inner, Color(0.005, 0.01, 0.02, 0.52))
+	elif ready < 0.999:
+		var sector := PackedVector2Array([center])
+		var segments := maxi(2, ceili((1.0 - ready) * 64.0))
+		for i in segments + 1:
+			var angle := -PI / 2.0 + TAU * (ready + (1.0 - ready) * float(i) / segments)
+			sector.append(center + Vector2.from_angle(angle) * inner)
+		draw_colored_polygon(sector, Color(0.005, 0.01, 0.02, 0.52))
+	if ready > 0.001:
+		draw_arc(center, radius - u, -PI / 2.0, -PI / 2.0 + TAU * ready, 64, Color(0.9, 0.96, 1.0, 0.95), 2.0 * u, true)
+	var font_size := int((32.0 if primary else 26.0) * u)
+	HudArt.text_outlined(self, cooldown_text(remaining), center + Vector2(-inner, 4.0 * u), inner * 2.0, font_size, Color(0.97, 0.96, 0.9))
+	HudArt.text_outlined(self, "초", center + Vector2(-inner, (20.0 if primary else 18.0) * u), inner * 2.0, int(12.0 * u), Color(0.78, 0.83, 0.88))
 
 
 # ───────── drawing ─────────
@@ -349,9 +390,7 @@ func _draw() -> void:
 			SkillIcons.draw_round(self, id, c, inner, Color.WHITE if affordable else Color(0.42, 0.42, 0.5))
 			_draw_skill_bezel(c, r, pressed)
 			var ready := player.slot_cooldown_ratio(slot)
-			if ready < 1.0:
-				draw_circle(c, inner, Color(0, 0, 0, 0.55))
-				draw_arc(c, r - 1.0 * u, -PI / 2, -PI / 2 + TAU * ready, 64, Color(0.9, 0.96, 1.0, 0.85), 1.6 * u, true)
+			_draw_cooldown(c, r, ready, slot_cooldown_remaining(slot), slot == 0)
 		elif name == "roll":
 			HudArt.round_plaque(self, "dodge", c, r, Color(0.82, 0.81, 0.75, 1.0 if pressed else 0.88))
 		elif name == "potion_hp":

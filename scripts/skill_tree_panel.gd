@@ -301,8 +301,9 @@ func _build_detail() -> void:
 	if not s["passive"] or s["basic"]:
 		var cost := SkillDefs.cost(s, shown_rank)
 		info.append("소모 %s %s" % [GameState.class_info()["resource"], HudArt.res(cost)] if cost > 0.0 else "소모 없음")
-		if float(s["cooldown"]) > 0.0:
-			info.append("재사용 %.1f초" % s["cooldown"])
+		var reuse := SkillDefs.cooldown(s)
+		if reuse > 0.0:
+			info.append("재사용 %.1f초" % reuse)
 	info.append("습득 레벨 %d" % GameState.required_level_for_rank(s, rank + 1) if rank < int(s["limit"]) else "최고 등급")
 	_detail.add_child(PanelFrame.wrap_label(" · ".join(info), 15, UiKit.MUTED))
 	if rank > 0:

@@ -1075,64 +1075,64 @@
     {
      "name": "middle mortar",
      "a": [
-      186.55,
-      471.18
+      262.38,
+      374.37
      ],
      "b": [
-      106.54,
-      424.95
+      300.53,
+      396.86
      ],
      "axis": 30,
      "level": "middle"
     },
     {
-     "name": "lower course",
+     "name": "lower mortar",
      "a": [
-      133.12,
-      634.39
+      46.16,
+      550.26
      ],
      "b": [
-      20.13,
-      570.25
+      0.1,
+      523.78
      ],
      "axis": 30,
      "level": "lower"
     },
     {
-     "name": "front merlon top depth",
+     "name": "front cap underside depth",
      "a": [
-      175.76,
-      270.86
+      39,
+      202
      ],
      "b": [
-      217.98,
-      246.62
+      62,
+      188.5
      ],
      "axis": -30,
      "level": "upper"
     },
     {
-     "name": "rear merlon depth",
+     "name": "rear cap underside depth",
      "a": [
-      102.85,
-      176.4
+      40,
+      57
      ],
      "b": [
-      63.04,
-      199.23
+      64,
+      43
      ],
      "axis": -30,
      "level": "upper"
     },
     {
-     "name": "vertical stone edge",
+     "name": "vertical merlon edge",
      "a": [
-      77,
-      304
+      159.41,
+      105.62
      ],
      "b": [
-      77,
-      353
+      159.34,
+      135.63
      ],
      "axis": 90,
      "level": "middle"
@@ -1159,14 +1159,14 @@
       298.2
      ],
      "b": [
-      -0.35,
+      0.35,
       455.01
      ],
      "axis": -30,
      "level": "upper"
     },
     {
-     "name": "middle course",
+     "name": "middle coping course",
      "a": [
       0.29,
       431.24
@@ -1192,40 +1192,40 @@
      "level": "lower"
     },
     {
-     "name": "merlon cap depth",
+     "name": "front cap underside depth",
      "a": [
-      108.18,
-      236.78
+      33.8,
+      296
      ],
      "b": [
-      173.02,
-      270.82
+      62,
+      310.6
      ],
      "axis": 30,
      "level": "upper"
     },
     {
-     "name": "other cap depth",
+     "name": "rear cap underside depth",
      "a": [
-      298.25,
-      180.38
+      12.55,
+      171.79
      ],
      "b": [
-      254.49,
-      157.9
+      33.11,
+      181.91
      ],
      "axis": 30,
      "level": "upper"
     },
     {
-     "name": "vertical merlon",
+     "name": "vertical merlon edge",
      "a": [
-      128,
-      101
+      251.53,
+      221.88
      ],
      "b": [
-      128,
-      158
+      251.6,
+      286.88
      ],
      "axis": 90,
      "level": "middle"

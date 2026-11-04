@@ -12,6 +12,7 @@ const SCENES = {
     town: '',
     juice: 'at=field&combat_preview=1',
     rewards: 'reward_preview=1',
+    cooldowns: '',
     background: '',
     wide: 'zoom=0.45',
     bridge: 'at=bridge&zoom=0.7',
@@ -56,7 +57,7 @@ if (!(scene in SCENES)) {
     process.exit(2);
 }
 const device = args.device ?? 'desktop';
-const cls = args.class ?? 'warrior';
+const cls = args.class ?? (scene === 'cooldowns' ? 'mage' : 'warrior');
 const base = args.url ?? 'http://localhost:8765/index.html';
 const out = args.out ?? `shot-${scene}-${device}.png`;
 
@@ -66,7 +67,7 @@ const page = await ctx.newPage();
 const logs = [];
 page.on('console', (m) => logs.push(`${m.type()}: ${m.text()}`));
 page.on('pageerror', (e) => logs.push(`pageerror: ${e.message}`));
-const quality = args.quality ? `&quality=${args.quality}` : "";
+const quality = (args.quality ? `&quality=${args.quality}` : '') + (args.zoom ? `&zoom=${args.zoom}` : '');
 await page.goto(`${base}?${SCENES[scene]}${quality}`);
 await page.waitForTimeout(12000);
 const vp = page.viewportSize();
@@ -90,7 +91,19 @@ if (scene === 'background') await page.evaluate(() => document.querySelector('ca
 if (scene === 'rewards') {
     await page.waitForFunction(() => window.__sjrpgRewardPreviewReady === true, null, {timeout: 30000});
 } else await page.waitForTimeout(9000);
+if (scene === 'cooldowns') {
+    // Exercise a real held cast; no fabricated cooldown or frozen gameplay state.
+    await page.keyboard.down('Space');
+    await page.waitForTimeout(250);
+}
 await page.screenshot({ path: out });
+if (scene === 'cooldowns') {
+    await page.keyboard.up('Space');
+    await page.waitForTimeout(150);
+    await page.screenshot({path: out.replace(/\.png$/, '-remaining.png')});
+    await page.waitForTimeout(2200);
+    await page.screenshot({path: out.replace(/\.png$/, '-ready.png')});
+}
 if (scene === 'juice') {
     for (let frame=1; frame<=6; frame++) {
         await page.waitForTimeout(110);

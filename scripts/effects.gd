@@ -26,6 +26,18 @@ static var _impact_sheet: Texture2D
 static var _impact_material: CanvasItemMaterial
 
 
+## Projectile velocity gives the contact direction; stationary zones use their actual owner.
+static func contact_direction(source: Node2D, target: Vector2) -> Vector2:
+	if source == null:
+		return Vector2.ZERO
+	if source is Effect:
+		if source.velocity.length_squared() > 1.0:
+			return source.velocity.normalized()
+		if is_instance_valid(source.owner_node):
+			return (target - source.owner_node.position).normalized()
+	return (target - source.position).normalized()
+
+
 ## Generated contact art is cosmetic and shares the existing effect budget, never collision/damage.
 static func spawn_impact(world_game: Node, at: Vector2, source: Node2D, heavy := false) -> Effect:
 	var impact := Effect.new()
@@ -48,7 +60,7 @@ static func spawn_impact(world_game: Node, at: Vector2, source: Node2D, heavy :=
 		cell = 3
 	impact.params["cell"] = cell
 	if source != null:
-		impact.angle = (at - source.position).angle()
+		impact.angle = contact_direction(source, at).angle()
 	if _impact_material == null:
 		_impact_material = CanvasItemMaterial.new()
 		_impact_material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
@@ -204,8 +216,9 @@ func _draw() -> void:
 		"impact":
 			if _impact_sheet == null:
 				_impact_sheet = load("res://assets/art/effects/impact-atlas.webp")
-			var fade := pow(1.0 - clampf(t, 0.0, 1.0), 1.0)
-			var growth := 0.86 if Prefs.reduce_motion else lerpf(0.8, 1.2, ease(t, 0.3))
+			# Compact bright contact, quick expansion, then a quieter tail rather than a soft uniform puff.
+			var fade := pow(1.0 - clampf((t - 0.10) / 0.90, 0.0, 1.0), 1.6)
+			var growth := 0.86 if Prefs.reduce_motion else lerpf(0.64, 1.16, ease(t, 0.3))
 			var diameter := radius * growth
 			var cell_size := Vector2(_impact_sheet.get_width() / 4.0, _impact_sheet.get_height())
 			var source := Rect2(Vector2(cell_size.x * int(params["cell"]), 0), cell_size)

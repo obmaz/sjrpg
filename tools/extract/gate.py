@@ -78,12 +78,10 @@ def pack():
     print("gates sheet", sheet.size)
 
 
-def _opaque_mean(path, box=None):
-    im = np.array(Image.open(ROOT / path).convert("RGBA")).astype(float)
-    if box:
-        x0, y0, x1, y1 = box
-        im = im[y0:y1, x0:x1]
-    return im[..., :3][im[..., 3] > 200].mean(0)
+def _stone_median(img, box):
+    """Use only the reviewed front stone face, never wood, transparent background or an entire shaded silhouette."""
+    arr = np.array(img.crop(tuple(box)).convert("RGBA"))
+    return np.median(arr[..., :3][arr[..., 3] > 200], axis=0)
 
 
 def _measure_seg(img):
@@ -99,7 +97,7 @@ def _measure_seg(img):
 
 
 def wall_sheet():
-    """흉벽 달린 성벽 구간 2종을 성문 날개벽 평균색에 맞춰 채널 보정하고 walls.webp 로 패킹한다. 반환: 항목별 데이터."""
+    """성문과 같은 석재로 제작한 성벽을 석재 앞면 표본에 맞춰 walls.webp 로 패킹한다."""
     cfg = M["wall"]
     p = cfg["packing"]
     thick, height = cfg["thick"], cfg["height"]
@@ -108,10 +106,12 @@ def wall_sheet():
     tiles = []
     for key, sg in cfg["segs"].items():
         img = Image.open(ROOT / sg["png"]).convert("RGBA")
-        gain = np.mean([_opaque_mean(f, box) for f, box in sg["stone_samples"]], axis=0) / _opaque_mean(sg["png"])
-        arr = np.array(img).astype(float)
-        arr[..., :3] = np.clip(arr[..., :3] * gain, 0, 255)
-        img = Image.fromarray(arr.astype(np.uint8))
+        reference_path, reference_box = sg["stone_reference"]
+        reference = Image.open(ROOT / reference_path).convert("RGBA")
+        gain = _stone_median(reference, reference_box) / _stone_median(img, sg["stone_face"])
+        arr = np.array(img)
+        arr[..., :3] = np.clip(arr[..., :3].astype(float) * gain, 0, 255).astype(np.uint8)
+        img = Image.fromarray(arr)
         m, c, e, w, h = _measure_seg(img)
         slope_deg = math.degrees(math.atan(abs(m)))
         if abs(slope_deg - 30.0) > 2.5:
@@ -122,7 +122,7 @@ def wall_sheet():
         gvs = sg.get("gvs", 1)
         k = (height + thick) * 0.97 / (e * gvs) / p
         out[key] = dict(source=[x, PAD, sw, sh], y0=round(c * p + PAD, 2), y1=round((m * w + c) * p + PAD, 2),
-                        k=round(float(k), 4), gvs=gvs, slope_deg=round(slope_deg, 2), gain=np.round(gain, 3).tolist(), extent=round(e, 1))
+                        k=round(float(k), 4), gvs=gvs, slope_deg=round(slope_deg, 2), extent=round(e, 1))
         x += sw + PAD * 2
     sheet = Image.new("RGBA", (x, max(t[4] for t in tiles) + PAD * 2), (0, 0, 0, 0))
     for key, img, tx, sw, sh in tiles:

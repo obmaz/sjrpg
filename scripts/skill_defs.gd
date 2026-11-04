@@ -11,6 +11,17 @@ const LIGHT := Color(0.75, 0.8, 1.0)
 const STEEL := Color(1.0, 0.92, 0.7)
 const SHOUT := Color(1.0, 0.78, 0.45)
 
+# The source spells mostly use mana alone. Short independent reuse times give the
+# Godot five-slot controls readable pacing; existing positive source times win.
+const SPELL_COOLDOWNS := {
+	"firebolt": 1.0, "chargedBolt": 1.0, "iceBolt": 1.0, "inferno": 1.0,
+	"telekinesis": 1.2, "iceBlast": 1.2, "fireball": 1.5, "lightning": 1.5,
+	"glacialSpike": 2.0, "frostNova": 3.0, "staticField": 3.0, "nova": 3.0,
+	"chainLightning": 3.0, "blaze": 3.0, "blink": 3.0,
+	"frozenArmor": 5.0, "shiverArmor": 5.0, "chillingArmor": 5.0,
+	"enchant": 5.0, "thunderStorm": 5.0, "energyShield": 5.0,
+}
+
 const DEFS := {
 	# ── 전사: 기본·특수 ──
 	"cleave": {"type": "melee", "mult": 1.0, "growth": 0.06, "arc": 70, "range": 105},
@@ -89,6 +100,14 @@ const DEFS := {
 
 static func get_def(id: String) -> Dictionary:
 	return DEFS.get(id, {})
+
+
+## One reuse duration for casting, button countdowns and the skill detail panel.
+static func cooldown(skill: Dictionary) -> float:
+	var native := maxf(0.0, float(skill.get("cooldown", 0.0)))
+	if native > 0.0 or (skill.get("passive", false) and not skill.get("basic", false)):
+		return native
+	return float(SPELL_COOLDOWNS.get(str(skill.get("id", "")), 0.0))
 
 
 static func scaled(base: float, growth: float, rank: int) -> float:

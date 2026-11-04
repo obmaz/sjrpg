@@ -37,6 +37,10 @@ var _state := "idle"
 var _timer := 0.0
 var _walk_cycle := 0.0
 var _recoil := Vector2.ZERO
+var _recoil_direction := Vector2.ZERO
+var _recoil_size := 0.0
+var _recoil_age := 1.0
+var _recoil_started := false
 var _slow_time := 0.0
 var _freeze_time := 0.0
 var _stun_time := 0.0
@@ -147,10 +151,18 @@ func take_damage(amount: float, source: Node2D) -> void:
 	Effect.spawn_impact(game, position + Vector2(0, -sprite.body_height * 0.55), source, heavy)
 	game.combat_feedback(position, 0.8 if heavy else 0.32, false)
 	if source != null and not Prefs.reduce_motion:
-		_recoil = (position - source.position).normalized() * (5.0 if heavy else 3.0)
+		_recoil_direction = Effect.contact_direction(source, position)
+		_recoil_size = 8.0 if heavy else 5.0
+		_recoil_age = 0.0
+		_recoil_started = false
+		_recoil = _recoil_direction * _recoil_size
+		sprite.position = _recoil
+	sprite.hold_contact(0.065 if heavy else 0.045)
+	if source is Player:
+		source.confirm_melee_contact(heavy)
 	if GameState.has_gift("frost") and source != null and source is Player:
 		slow(0.67)
-	SoundFx.play("impact")
+	SoundFx.play("impact_heavy" if heavy else "impact")
 	Prefs.pulse("hit")
 	sprite.flash = 1.0
 	game.float_text(position + Vector2(0, -sprite.body_height - 20), HudArt.stat(amount), Color(1, 0.95, 0.6))
@@ -164,6 +176,7 @@ func take_damage(amount: float, source: Node2D) -> void:
 
 func _die() -> void:
 	dead = true
+	sprite.clear_contact_hold()
 	game.on_enemy_killed(self)
 	var tween := create_tween()
 	tween.tween_property(sprite, "modulate:a", 0.0, 0.5)
@@ -171,7 +184,10 @@ func _die() -> void:
 
 
 func _process(delta: float) -> void:
-	_recoil = _recoil.move_toward(Vector2.ZERO, delta * 55.0) if not Prefs.reduce_motion else Vector2.ZERO
+	_recoil_age += delta if _recoil_started else minf(delta, 0.012)
+	_recoil_started = true
+	# A short damped return gives contact weight without changing the actor's collision position.
+	_recoil = _recoil_direction * _recoil_size * exp(-18.0 * _recoil_age) * cos(24.0 * _recoil_age) if not Prefs.reduce_motion and _recoil_age < 0.26 else Vector2.ZERO
 	sprite.position = _recoil
 	if dead:
 		return

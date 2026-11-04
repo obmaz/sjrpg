@@ -37,6 +37,7 @@ var _storm_timer := 0.0
 var _attack_time := 0.0
 var _attack_duration := 0.42
 var _attack_melee := false
+var _resolving_melee_contact := false
 var _pending: Callable
 var _invulnerable := 0.0
 var _roll_time := 0.0
@@ -153,11 +154,14 @@ func _process(delta: float) -> void:
 	if _attack_time > 0.0:
 		_attack_time -= delta
 		var progress := 1.0 - _attack_time / _attack_duration
+		# Set the actual contact pose before damage callbacks request a presentation hold.
+		sprite.set_frame(attack_atlas, attack_atlas.action_frame(facing, progress))
 		if _pending.is_valid() and progress >= 0.45:
 			var action := _pending
 			_pending = Callable()
+			_resolving_melee_contact = _attack_melee
 			action.call()
-		sprite.set_frame(attack_atlas, attack_atlas.action_frame(facing, progress))
+			_resolving_melee_contact = false
 		position = game.move_actor(position, position + input * speed() * 0.25 * delta, RADIUS)
 		return
 
@@ -222,7 +226,7 @@ func slot_cooldown_ratio(index: int) -> float:
 	var id: String = GameState.slots[index]
 	if id == "":
 		return 1.0
-	var total := float(GameState.skill(id).get("cooldown", 0.0))
+	var total := SkillDefs.cooldown(GameState.skill(id))
 	if total <= 0.0:
 		return 1.0
 	return 1.0 - clampf(cooldowns.get(id, 0.0) / total, 0.0, 1.0)
@@ -258,8 +262,9 @@ func cast_slot(index: int, repeat := false) -> bool:
 	if not action.is_valid():
 		return false
 	resource -= cost
-	if float(s["cooldown"]) > 0.0:
-		cooldowns[id] = float(s["cooldown"])
+	var reuse := SkillDefs.cooldown(s)
+	if reuse > 0.0:
+		cooldowns[id] = reuse
 	_attack_melee = d["type"] in ["melee", "spin", "shadow"]
 	_attack_duration = (0.4 if _attack_melee else 0.46) / (1.0 + frenzy_stacks * 0.08)
 	if id in ["cleave", "sorceressAttack"]:
@@ -297,12 +302,19 @@ func try_roll() -> void:
 	_roll_dir = dir.normalized()
 	facing = _roll_dir.angle()
 	_roll_time = ROLL_TIME
+	sprite.clear_contact_hold()
 	SoundFx.play("dodge")
 	Prefs.pulse("dodge")
 	_roll_cooldown = 0.9
 	_invulnerable = ROLL_TIME + 0.05
 	_attack_time = 0.0
 	_pending = Callable()
+
+
+## Only the current contact callback may hold the swing; passive/reflected damage also names this player.
+func confirm_melee_contact(heavy: bool) -> void:
+	if not dead and _resolving_melee_contact and _attack_time > 0.0:
+		sprite.hold_contact(0.060 if heavy else 0.040)
 
 
 func _aim(range_limit: float) -> Enemy:
@@ -659,6 +671,7 @@ func take_damage(amount: float, attacker: Node2D = null) -> void:
 	if hp <= 0.0:
 		hp = 0.0
 		dead = true
+		sprite.clear_contact_hold()
 		buffs.clear()
 		GameState.bonus_ranks = 0
 		sprite.tint = Color(1, 1, 1, 0.45)
@@ -683,6 +696,7 @@ func _armor_retaliate(attacker: Node2D) -> void:
 
 func revive(at: Vector2) -> void:
 	dead = false
+	sprite.clear_contact_hold()
 	position = at
 	sprite.tint = Color.WHITE
 	frenzy_stacks = 0

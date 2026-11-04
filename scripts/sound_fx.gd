@@ -9,6 +9,7 @@ const PROFILES := {
 	"ice": [1500.0, 610.0, 0.19, 5200.0, 0.07, 0.025, "triangle"],
 	"lightning": [840.0, 190.0, 0.15, 3400.0, 0.12, 0.025, "sawtooth"],
 	"impact": [180.0, 48.0, 0.11, 1200.0, 0.13, 0.07, "sine"],
+	"impact_heavy": [125.0, 34.0, 0.17, 1600.0, 0.15, 0.075, "sine"],
 	"hurt": [95.0, 38.0, 0.19, 700.0, 0.11, 0.07, "sine"],
 	"dodge": [190.0, 100.0, 0.12, 3800.0, 0.08, 0.01, "sine"],
 	"warcry": [135.0, 58.0, 0.36, 320.0, 0.10, 0.06, "sine"],
@@ -71,12 +72,14 @@ func play(name: String, preview := false) -> void:
 	if not Prefs.sound_enabled or not _streams.has(name):
 		return
 	var now := Time.get_ticks_msec()
-	if not preview and now - int(_last.get(name, 0)) < 70:
+	# Heavy and light contacts share a gate so area attacks cannot layer a wall of thuds.
+	var gate := "impact" if name == "impact_heavy" else name
+	if not preview and now - int(_last.get(gate, 0)) < 70:
 		return
-	_last[name] = now
+	_last[gate] = now
 	var player := _players[_next]
 	_next = (_next + 1) % _players.size()
 	player.stream = _streams[name]
-	player.pitch_scale = _variation.randf_range(0.96, 1.04) if name in ["slash", "impact", "fire", "ice", "lightning"] else 1.0
+	player.pitch_scale = _variation.randf_range(0.96, 1.04) if name in ["slash", "impact", "impact_heavy", "fire", "ice", "lightning"] else 1.0
 	player.volume_db = -4.0
 	player.play()

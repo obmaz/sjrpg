@@ -1,5 +1,5 @@
 {
- "_doc": "assets/source/gate-new-a.png·gate-new-b.png(1024x1024 RGBA)와 wall-new.png에서 직접 잰 값. 좌표는 PNG 원본 픽셀. 도출은 gate.py (바닥 접점→gvs/gvk, 충돌, 성벽 끝점, 깊이 조각).",
+ "_doc": "assets/source/gate-new-a.png·gate-new-b.png(1024x1024 RGBA)와 wall-seg-a.png·wall-seg-b.png에서 직접 잰 값. 좌표는 PNG 원본 픽셀. 도출은 gate.py (바닥 접점→gvs/gvk, 충돌, 성벽 끝점, 깊이 조각).",
  "sheet": "forest-isometric-gates",
  "packing": 0.7,
  "slice_px": 48,
@@ -8,37 +8,45 @@
   "thick": 64,
   "packing": 0.5,
   "slice_px": 24,
-  "_doc": "흉벽 달린 성벽 구간(assets/source/wall-seg-a|b.png, 흉벽 2주기). a=+30°(u축) 런, b=-30°(v축) 런. 그림 크기는 앞 바닥선·세로 폭에서 도출(gate.py). 색은 성문 날개벽 정면 표본의 평균색에 채널 보정.",
+  "_doc": "흉벽 달린 성벽 구간(assets/source/wall-seg-a|b.png, 흉벽 2주기). a=+30°(u축) 런, b=-30°(v축) 런. 성문의 같은 방향 날개벽을 재질 기준으로 생성한 석재 이음새·거친 표면. 원래 실루엣을 유지하며 석재 앞면 표본의 중앙값으로 성문과 색을 맞춘다(목재·그늘은 표본에서 제외). 그림 크기는 앞 바닥선·세로 폭에서 도출(gate.py).",
   "segs": {
    "a": {
     "png": "assets/source/wall-seg-a.png",
-    "stone_samples": [
-     [
-      "assets/source/gate-new-a.png",
-      [
-       80,
-       420,
-       200,
-       600
-      ]
-     ]
+    "gvs": 1.01,
+    "stone_face": [
+     15,
+     410,
+     220,
+     520
     ],
-    "gvs": 1.01
+    "stone_reference": [
+     "assets/source/gate-new-a.png",
+     [
+      815,
+      790,
+      880,
+      900
+     ]
+    ]
    },
    "b": {
     "png": "assets/source/wall-seg-b.png",
-    "stone_samples": [
-     [
-      "assets/source/gate-new-b.png",
-      [
-       850,
-       380,
-       980,
-       560
-      ]
-     ]
+    "gvs": 1.09,
+    "stone_face": [
+     15,
+     500,
+     275,
+     650
     ],
-    "gvs": 1.09
+    "stone_reference": [
+     "assets/source/gate-new-b.png",
+     [
+      880,
+      410,
+      970,
+      520
+     ]
+    ]
    }
   }
  },

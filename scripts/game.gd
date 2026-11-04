@@ -292,7 +292,7 @@ func near_npc() -> String:
 	return best
 
 
-## Explicit visual-review query only: repeated confirmed hits, never active in a normal adventure.
+## Explicit visual-review query only: real equipped-skill casts against a stationary target.
 func _combat_preview() -> void:
 	await get_tree().create_timer(2.0).timeout
 	var target := Enemy.new()
@@ -301,12 +301,17 @@ func _combat_preview() -> void:
 	target.hp = 100000.0
 	target.max_hp = target.hp
 	world.add_child(target)
-	target.set_process(false)
+	enemies.append(target)
+	# Keep presentation and timers running; only prevent this review target from attacking.
+	target.stun(60.0)
 	for i in 120:
 		if not is_inside_tree() or is_queued_for_deletion():
 			return
-		player.impact_color = [SkillDefs.STEEL, SkillDefs.FIRE, SkillDefs.LIGHT, SkillDefs.COLD][i % 4]
-		target.take_damage(2.0, player)
+		if player._attack_time <= 0.0 and float(player.cooldowns.get(GameState.slots[0], 0.0)) <= 0.0:
+			# Re-seat the review dummy between swings after real knockback moved it away.
+			target.position = player.position + Vector2(65, 10)
+			target._knockback = Vector2.ZERO
+			player.cast_slot(0, true)
 		await get_tree().create_timer(0.37, false).timeout
 
 

@@ -8,16 +8,49 @@ var body_height := 64.0
 var flash := 0.0
 var tint := Color.WHITE
 var shadow := true
+## Presentation only: simulation, attacks and movement continue during this brief contact pose.
+var contact_hold := 0.0
+var _contact_started := false
+var _contact_recovery := 0.0
 
 
 func set_frame(a: ActorAtlas, index: int) -> void:
+	# A new action/atlas must win immediately (roll, run, revive), never inherit an old hit pose.
+	if a != atlas:
+		clear_contact_hold()
+	elif contact_hold > 0.0 and not Prefs.reduce_motion:
+		return
 	if a != atlas or index != frame:
 		atlas = a
 		frame = index
 		queue_redraw()
 
 
+func hold_contact(duration: float) -> void:
+	if Prefs.reduce_motion:
+		clear_contact_hold()
+		return
+	if _contact_recovery > 0.0:
+		return
+	contact_hold = maxf(contact_hold, clampf(duration, 0.0, 0.065))
+	_contact_started = false
+	_contact_recovery = 0.10  # Rapid damage ticks must not pin an actor's presentation indefinitely.
+
+
+func clear_contact_hold() -> void:
+	contact_hold = 0.0
+	_contact_started = false
+	_contact_recovery = 0.0
+
+
 func _process(delta: float) -> void:
+	_contact_recovery = maxf(0.0, _contact_recovery - delta)
+	if Prefs.reduce_motion:
+		clear_contact_hold()
+	elif contact_hold > 0.0:
+		# Retain one contact frame even when the first browser frame is slow, then expire normally.
+		contact_hold = maxf(0.0, contact_hold - (minf(delta, 0.012) if not _contact_started else delta))
+		_contact_started = true
 	if flash > 0.0:
 		flash = maxf(0.0, flash - delta * 4.0)
 		queue_redraw()
