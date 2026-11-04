@@ -8,7 +8,7 @@
 | 상태 | `scripts/game_state.gd` | 영웅 진행·스킬·장비·골드·퀘스트·저장 (자동 로드) |
 | 기기 | `scripts/prefs.gd`, `scripts/sound_fx.gd` | 효과음·진동·전체화면 설정(자동 로드), 효과음 합성 |
 | 월드 | `scripts/game.gd`, `iso.gd`, `iso_sprite.gd`, `village.gd`, `landmark.gd`, `bridge.gd`, `river.gd`, `wall_piece.gd`, `chest.gd` | 쿼터뷰 투영, 실측 원화 배치, 충돌, 지형 높낮이 |
-| 전투 | `player.gd`, `enemy.gd`, `effects.gd`, `skill_defs.gd`, `gear.gd` | 입력·스킬 시전, 몬스터 AI, 투사체·구역, 장비 효과 |
+| 전투 | `player.gd`, `enemy.gd`, `effects.gd`, `corpse_art.gd`, `skill_defs.gd`, `gear.gd` | 입력·스킬 시전, 몬스터 AI, 투사체·구역, 장비 효과 |
 | 진행 | `quests.gd`, `quest_runtime.gd` | 제1장 퀘스트·보스 |
 | UI | `hud.gd`, `touch_controls.gd`, `minimap.gd`, `panel_frame.gd` + 패널들 | HUD, 모바일 조작, 가방·스킬·설정·대화·일지 |
 | 테스트 | `tests/run_all.gd`, `tests/test_case.gd`, `tests/cases/*.gd` | 헤드리스 케이스 러너 |
@@ -54,6 +54,9 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 | `quality` | `low` `high` | 절약 화질 켜기·끄기 |
 | `gold` | 정수 | 시작 골드 |
 | `chests` | 아무 값 | 상자를 모두 부숨 |
+| `corpse_preview` | `1` `bridge` `terrace` | 광장의 5종 시체 또는 다리·높은 마당 위 시체 확인 |
+
+`node tools/screenshot.mjs --scene corpses --device phone --lifecycle 1`은 최초 시체와 게임 시간 30초 후 제거 화면을 함께 캡처합니다. 시간이 흐르도록 두며 테스트용으로 시체를 지우거나 나이를 바꾸지 않습니다.
 
 `tools/screenshot.mjs --scene <이름>`이 위 조합을 이름으로 묶어 둡니다(`--help` 없이 잘못된 이름을 주면 목록 출력).
 
@@ -73,6 +76,17 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 100ms 재진입 제한으로 연속 피해의 자세 고착을 막고, 새 동작·구르기·사망·부활은 유지 상태를 해제합니다.
 적의 그림은 5/8px 이내 감쇠 반동으로 돌아오며 투사체는 진행 방향을 따릅니다. 강한 접촉음도 기존 음성 수·연타 제한을 공유합니다.
 동작 줄이기에서는 자세 유지·반동을 억제합니다.
+
+## 시체 원화와 수명
+
+`assets/source/corpses.png`는 기존 몬스터 외형을 기준으로 생성한 쓰러진 몸 5종입니다.
+`python3 tools/prepare_corpse_art.py`로 투명 여백을 정리하고 `assets/art/actors/corpses.webp`(5×256px)로 패킹합니다.
+`CorpseArt`는 원화를 사망 위치의 바닥에 배치하며 기존 코드로 그리던 원·교차선 시체 표시를 대체합니다.
+일반 바닥·다리에서는 배우 아래에, 높은 마당·랜드마크에서는 해당 바닥 위에 정렬해 원화에 가려지지 않게 합니다.
+처치마다 하나의 레코드가 그림과 사용 판정을 함께 보관합니다. `Game._tick_corpses()`가 숲·동굴에서 활성 맵의 시간을 줄이며,
+기존 시체 기술의 활용 시간을 유지하는 30초 수명과 마지막 3초의 페이드를 공유합니다. 일시정지 중에는 수명도 멈춥니다.
+기존 30%의 시체 기술 대상 확률은 `searchable`로 유지하고, 그림은 모든 처치에 남깁니다. 최대 32개를 유지하며
+소비·만료·오래된 시체 정리·동굴 퇴장 시 레코드를 무효화해 지연된 기술이 같은 시체를 다시 사용하지 못하게 합니다.
 
 ## 월드 화질
 

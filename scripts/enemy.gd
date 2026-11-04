@@ -175,11 +175,13 @@ func take_damage(amount: float, source: Node2D) -> void:
 
 
 func _die() -> void:
+	if dead:
+		return
 	dead = true
 	sprite.clear_contact_hold()
 	game.on_enemy_killed(self)
 	var tween := create_tween()
-	tween.tween_property(sprite, "modulate:a", 0.0, 0.5)
+	tween.tween_property(sprite, "modulate:a", 0.0, 0.18)
 	tween.tween_callback(queue_free)
 
 

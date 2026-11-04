@@ -11,6 +11,9 @@ const { chromium, devices } = require('playwright');
 const SCENES = {
     town: '',
     juice: 'at=field&combat_preview=1',
+    corpses: 'corpse_preview=1',
+    corpses_bridge: 'corpse_preview=bridge&zoom=1.2',
+    corpses_terrace: 'corpse_preview=terrace&zoom=1.1',
     rewards: 'reward_preview=1',
     cooldowns: '',
     background: '',
@@ -90,6 +93,9 @@ await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { 
 if (scene === 'background') await page.evaluate(() => document.querySelector('canvas').blur());
 if (scene === 'rewards') {
     await page.waitForFunction(() => window.__sjrpgRewardPreviewReady === true, null, {timeout: 30000});
+} else if (scene.startsWith('corpses')) {
+    await page.waitForFunction(() => window.__sjrpgCorpsePreviewReady === true, null, {timeout: 30000});
+    await page.waitForTimeout(1500);
 } else await page.waitForTimeout(9000);
 if (scene === 'cooldowns') {
     // Exercise a real held cast; no fabricated cooldown or frozen gameplay state.
@@ -97,6 +103,12 @@ if (scene === 'cooldowns') {
     await page.waitForTimeout(250);
 }
 await page.screenshot({ path: out });
+if (scene.startsWith('corpses') && args.lifecycle === '1') {
+    await page.waitForFunction(() => window.__sjrpgCorpsePreviewExpired === true, null, {timeout: 120000});
+    await page.waitForTimeout(200);
+    await page.screenshot({path: out.replace(/\.png$/, '-expired.png')});
+    console.log('시체 수명 종료: 게임 시간 30초 후 실제 제거 확인');
+}
 if (scene === 'cooldowns') {
     await page.keyboard.up('Space');
     await page.waitForTimeout(150);

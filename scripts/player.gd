@@ -597,6 +597,8 @@ func _buff(id: String, d: Dictionary, rank: int) -> void:
 
 
 func _corpse(d: Dictionary, rank: int, corpse: Dictionary) -> void:
+	if not game.corpse_available(corpse):
+		return
 	corpse["used"] = true
 	var chance: float = minf(d.get("chance", 1.0) + d.get("chance_growth", 0.0) * (rank - 1), float(d.get("chance_cap", 1.0)))
 	match d["reward"]:

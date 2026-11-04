@@ -15,7 +15,6 @@ var _forest_world: Node2D
 var _forest_enemies: Array[Enemy] = []
 var _forest_chests: Array[Chest] = []
 var _forest_corpses: Array = []
-var _forest_corpse_layer: Node2D
 var _forest_shapes: Array[Dictionary] = []
 var _rng := RandomNumberGenerator.new()
 
@@ -53,7 +52,6 @@ func enter() -> bool:
 	_forest_enemies = game.enemies
 	_forest_chests = game.chests
 	_forest_corpses = game.corpses
-	_forest_corpse_layer = game._corpse_layer
 	_forest_shapes = game.map_shapes
 	_root = Node2D.new()
 	game.scene_root.add_child(_root)
@@ -77,11 +75,6 @@ func enter() -> bool:
 	_build_floor()
 	_build_rocks()
 	_build_enemies()
-	var corpse_layer := Node2D.new()
-	corpse_layer.z_index = -1
-	corpse_layer.draw.connect(game._draw_corpses)
-	_root.add_child(corpse_layer)
-	game._corpse_layer = corpse_layer
 	var portal := IsoSprite.new().setup(game.village.data["sprites"]["portal"], 150.0)
 	portal.position = Iso.project(DungeonLayout.EXIT) + Vector2(0, -80)
 	world.add_child(portal)
@@ -164,11 +157,7 @@ func _build_enemies() -> void:
 
 func tick(delta: float) -> void:
 	remaining = maxf(0.0, remaining - delta)
-	for corpse in game.corpses.duplicate():
-		corpse["time"] -= delta
-		if corpse["time"] <= 0.0:
-			game.corpses.erase(corpse)
-	game._corpse_layer.queue_redraw()
+	game._tick_corpses(delta)
 	if remaining <= 0.0:
 		leave("시간이 끝나 동굴 입구로 돌아왔습니다")
 
@@ -205,12 +194,13 @@ func leave(message: String) -> void:
 	if not active:
 		return
 	active = false
+	for corpse in game.corpses.duplicate():
+		game.remove_corpse(corpse)
 	game.player.reparent(_forest_world, false)
 	game.world = _forest_world
 	game.enemies = _forest_enemies
 	game.chests = _forest_chests
 	game.corpses = _forest_corpses
-	game._corpse_layer = _forest_corpse_layer
 	game.map_shapes = _forest_shapes
 	game.field_root.visible = true
 	game.field_root.process_mode = Node.PROCESS_MODE_INHERIT

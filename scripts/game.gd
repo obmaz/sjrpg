@@ -7,6 +7,8 @@ signal restart_requested
 ## Field in ground units (original scale): the 2400 town sits in the middle.
 const FIELD := Rect2(-3600, -3600, 7200, 7200)
 const MEADOW := preload("res://assets/art/village/meadow-a.webp")
+const CORPSE_LIFETIME := 30.0
+const CORPSE_LIMIT := 32
 
 var scene_view: Viewport
 var scene_root: Node
@@ -26,8 +28,7 @@ var map_shapes: Array[Dictionary] = []
 var enemies: Array[Enemy] = []
 var chests: Array[Chest] = []
 var cosmetic_effects: Array[Effect] = []
-var corpses: Array = []  # {"pos": Vector2, "time": float, "used": bool}
-var _corpse_layer: Node2D
+var corpses: Array = []  # Transient image + skill eligibility; shared lifetime keeps visuals and targeting in sync.
 var _spawn_timer := 0.0
 var _save_timer := 0.0
 var _rng := RandomNumberGenerator.new()
@@ -73,11 +74,6 @@ func _ready() -> void:
 	# ForestScenePalette: bright, low-saturation warm grass.
 	meadow.modulate = Color(0.58, 0.70, 0.50)
 	ground_layer.add_child(meadow)
-
-	_corpse_layer = Node2D.new()
-	_corpse_layer.z_index = -8
-	_corpse_layer.draw.connect(_draw_corpses)
-	field_root.add_child(_corpse_layer)
 
 	world = Node2D.new()
 	world.y_sort_enabled = true
@@ -216,6 +212,8 @@ func _read_debug_params() -> void:
 			get_tree().create_timer(1.5).timeout.connect(_debug_open_panel.bind(which))
 		elif kv.size() == 2 and kv[0] == "combat_preview":
 			_combat_preview.call_deferred()
+		elif kv.size() == 2 and kv[0] == "corpse_preview" and kv[1] in ["1", "bridge", "terrace"]:
+			_corpse_preview.call_deferred(kv[1])
 		elif kv.size() == 2 and kv[0] == "reward_preview" and kv[1] == "1":
 			_reward_preview.call_deferred()
 		elif kv.size() == 2 and kv[0] == "gold":
@@ -315,6 +313,57 @@ func _combat_preview() -> void:
 		await get_tree().create_timer(0.37, false).timeout
 
 
+## Explicit art review only: real deaths keep all five body illustrations visible in the plaza.
+func _corpse_preview(surface := "1") -> void:
+	await get_tree().create_timer(2.0, false).timeout
+	if is_queued_for_deletion():
+		return
+	player.position = resolve_movement(village.spawn_point, village.spawn_point + Vector2(0, -10), Player.RADIUS)
+	var positions: Array[Vector2] = []
+	var kinds: Array[String] = []
+	if surface == "bridge":
+		player.position = village.bridge.axis_point(0.5)
+		positions = [village.bridge.axis_point(0.4), village.bridge.axis_point(0.65)]
+		kinds = ["wolf", "skeleton"]
+	elif surface == "terrace":
+		player.position = village.chapel_steps[village.chapel_steps.size() - 2]
+		var body: Vector2 = village.chapel_steps[village.chapel_steps.size() - 1]
+		var further := body + Vector2(-60, -35)
+		if Geometry2D.is_point_in_polygon(further, village.terrace) and not _blocked(further, Enemy.RADIUS):
+			body = further
+		positions = [body]
+		kinds = ["goblin"]
+	else:
+		var offsets := [Vector2(-330, 70), Vector2(-175, 70), Vector2(-20, 70), Vector2(140, 70), Vector2(330, 70)]
+		var offset_index := 0
+		for kind in Enemy.KINDS:
+			kinds.append(kind)
+			positions.append(player.position + offsets[offset_index])
+			offset_index += 1
+	camera.position = player.position
+	camera.reset_smoothing()
+	var index := 0
+	var review_bodies: Array = []
+	for kind in kinds:
+		var enemy := Enemy.new()
+		enemy.setup(self, kind, 1)
+		enemy.position = positions[index]
+		enemy.xp_reward = 0
+		world.add_child(enemy)
+		enemies.append(enemy)
+		enemy.take_damage(enemy.hp + 1.0, null)
+		review_bodies.append(corpses.back())
+		index += 1
+	await get_tree().create_timer(0.25, false).timeout
+	if not is_queued_for_deletion() and OS.has_feature("web"):
+		JavaScriptBridge.eval("window.__sjrpgCorpsePreviewReady = true")
+	await get_tree().create_timer(CORPSE_LIFETIME + 0.1, false).timeout
+	if not is_queued_for_deletion() and OS.has_feature("web"):
+		# Read-only browser assertion: normal gameplay ticks, without aging or removing the review bodies here.
+		var expired := review_bodies.all(func(body): return float(body["time"]) <= 0.0 and body["used"])
+		JavaScriptBridge.eval("window.__sjrpgCorpsePreviewExpired = " + ("true" if expired else "false"))
+
+
 ## Explicit review query only. Exercise real grant/chest paths, never run in a normal adventure.
 func _reward_preview() -> void:
 	await get_tree().create_timer(2.0, false).timeout
@@ -376,11 +425,7 @@ func _process(delta: float) -> void:
 			break
 	player.z_index = 1 if elevated else 0
 	WorldOcclusion.update(player.global_position if not player.dead else Vector2(1000000, 1000000), elevated)
-	for c in corpses.duplicate():
-		c["time"] -= delta
-		if c["time"] <= 0.0:
-			corpses.erase(c)
-	_corpse_layer.queue_redraw()
+	_tick_corpses(delta)
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
 		_spawn_timer = ForestBalance.SPAWN_SECONDS
@@ -713,11 +758,8 @@ func on_enemy_killed(enemy: Enemy) -> void:
 	if enemy.xp_reward > 0:
 		RewardFx.spawn(self, enemy.position + Vector2(0, -28), 1)
 	# 원본: 몬스터 처치로는 물약이 나오지 않음 (상자·구매·물약 발견만).
-	# Corpses feed 물약 발견 · 아이템 발견 · 섬뜩한 수호물.
-	if _rng.randf() < 0.3:
-		corpses.append({"pos": enemy.position, "time": 30.0, "used": false})
-		if corpses.size() > 32:
-			corpses.pop_front()
+	# Every death has a body; the original 30% skill-search eligibility remains independent.
+	add_corpse(enemy, _rng.randf() < 0.3)
 	grant_xp(enemy.xp_reward)
 
 
@@ -732,30 +774,71 @@ func grant_xp(amount: int) -> void:
 		GameState.save_game()
 
 
+## One bounded record owns the picture and any corpse-skill target. No actor/collision survives death.
+func add_corpse(enemy: Enemy, searchable: bool) -> Dictionary:
+	var corpse := {
+		"pos": enemy.position, "time": CORPSE_LIFETIME, "lifetime": CORPSE_LIFETIME, "used": false,
+		"kind": enemy.kind, "facing": enemy.facing, "height": enemy.sprite.body_height,
+		"searchable": searchable,
+	}
+	var visual := CorpseArt.new()
+	visual.corpse = corpse
+	visual.position = enemy.position
+	# Above bridge floors, beneath normal actors; raised yards share the actors' elevation.
+	visual.z_index = -1
+	if not dungeon.active:
+		var elevated := Geometry2D.is_point_in_polygon(enemy.position, village.terrace)
+		for landmark in village.landmarks:
+			if landmark.contains_top(enemy.position):
+				elevated = true
+				break
+		if elevated:
+			visual.z_index = 1
+	corpse["visual"] = visual
+	world.add_child(visual)
+	corpses.append(corpse)
+	while corpses.size() > CORPSE_LIMIT:
+		remove_corpse(corpses[0])
+	return corpse
+
+
+func _tick_corpses(delta: float) -> void:
+	for corpse in corpses.duplicate():
+		corpse["time"] = maxf(0.0, float(corpse["time"]) - delta)
+		if corpse["time"] <= 0.0:
+			remove_corpse(corpse)
+		else:
+			var visual: Node2D = corpse.get("visual")
+			if is_instance_valid(visual):
+				visual.queue_redraw()
+
+
+## Validate again when a delayed skill lands: selection may have expired, been consumed or changed maps.
+func corpse_available(corpse: Dictionary) -> bool:
+	return corpses.has(corpse) and not corpse.get("used", false) and float(corpse.get("time", 0.0)) > 0.0 and corpse.get("searchable", true)
+
+
 func nearest_corpse(from: Vector2, max_range: float):
 	var best = null
 	var best_d := max_range
-	for c in corpses:
-		var d := from.distance_to(c["pos"])
-		if not c["used"] and d < best_d:
-			best_d = d
-			best = c
+	for corpse in corpses:
+		var distance := from.distance_to(corpse["pos"])
+		if corpse_available(corpse) and distance < best_d:
+			best_d = distance
+			best = corpse
 	return best
 
 
-func remove_corpse(c: Dictionary) -> void:
-	corpses.erase(c)
-
-
-func _draw_corpses() -> void:
-	for c in corpses:
-		var p: Vector2 = c["pos"]
-		var a := clampf(c["time"] / 3.0, 0.0, 1.0) * 0.8
-		_corpse_layer.draw_set_transform(p, 0.0, Vector2(1.0, 0.5))
-		_corpse_layer.draw_circle(Vector2.ZERO, 20.0, Color(0.25, 0.05, 0.04, a))
-		_corpse_layer.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-		_corpse_layer.draw_line(p + Vector2(-12, -4), p + Vector2(12, 4), Color(0.85, 0.8, 0.7, a), 4.0)
-		_corpse_layer.draw_line(p + Vector2(-12, 4), p + Vector2(12, -4), Color(0.85, 0.8, 0.7, a), 4.0)
+func remove_corpse(corpse: Dictionary) -> void:
+	# Invalidate captured dictionaries before removal, including pool eviction and cave exit.
+	corpse["used"] = true
+	corpse["time"] = 0.0
+	var visual: Node2D = corpse.get("visual")
+	if is_instance_valid(visual):
+		visual.hide()
+		visual.queue_free()
+	corpse.erase("visual")
+	corpses.erase(corpse)
 
 
 ## Walks from `from` along `dir` up to `distance`, stopping before trees and the world edge.
