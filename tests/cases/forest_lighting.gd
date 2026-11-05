@@ -4,22 +4,19 @@ extends TestCase
 func run() -> void:
 	var game := await make_game()
 	var lighting: ForestLighting = game.forest_lighting
-	check("daylight has a fixed two-light budget", lighting.lights.size() == 2 and lighting.surfaces.size() > 5)
+	check("daylight has a fixed two-light budget", lighting.openings.size() == 2 and lighting.surfaces.size() > 5)
 	var isolated := true
 	for surface in lighting.surfaces:
-		isolated = isolated and surface.material == lighting.ground_material and surface.light_mask == 2
-	for light in lighting.lights:
-		isolated = isolated and light.range_item_cull_mask == 2 and light.range_z_max == -9 and light.range_layer_max == 0
-	check("only textured ground receives forest daylight", isolated and game.player.light_mask == 1 and game.village.fountain.light_mask == 1)
+		isolated = isolated and surface.material == lighting.ground_material
+	check("ground lighting adds no canvas-wide light nodes", lighting.get_child_count() == 0)
+	check("only textured ground receives forest daylight", isolated and game.player.material != lighting.ground_material and game.village.fountain.material != lighting.ground_material)
 	check("lighting leaves ground projection unchanged", lighting.surfaces[0].get_parent().transform == Iso.ground_transform())
-	var positions: Array[Vector2] = []
-	for light in lighting.lights:
-		positions.append(light.global_position)
+	var positions := lighting.openings.duplicate()
 	game.camera.position += Vector2(75, 90)
 	await _frames(2)
-	check("light footprints stay in the world when the camera moves", lighting.lights[0].global_position == positions[0] and lighting.lights[1].global_position == positions[1])
+	check("light footprints stay in the world when the camera moves", lighting.openings == positions and lighting.ground_material.get_shader_parameter("opening_a") == positions[0] and lighting.ground_material.get_shader_parameter("opening_b") == positions[1])
 	lighting.set_enabled(false)
-	check("comparison mode disables light and ambient together", not lighting.lights[0].enabled and is_zero_approx(float(lighting.ground_material.get_shader_parameter("amount"))))
+	check("comparison mode disables light and ambient together", not lighting.enabled and is_zero_approx(float(lighting.ground_material.get_shader_parameter("amount"))))
 	var shade_ok := not lighting.shades.is_empty()
 	for shade in lighting.shades:
 		shade_ok = shade_ok and is_equal_approx(shade.opacity, 0.11)
@@ -32,11 +29,11 @@ func run() -> void:
 	var previous := Prefs.low_resolution
 	Prefs.set_low_resolution(not previous)
 	await _frames(2)
-	check("quality switching keeps lights in the ground viewport", lighting.get_viewport() == lighting.surfaces[0].get_viewport() and lighting.lights[0].global_position == positions[0])
+	check("quality switching keeps lights in the ground viewport", lighting.get_viewport() == lighting.surfaces[0].get_viewport() and lighting.openings == positions)
 	game.player.position = game.dungeon.entry_point()
 	check("cave entry hides the forest lights with their receivers", game.dungeon.enter() and not lighting.is_visible_in_tree())
 	game.dungeon.leave("")
-	check("returning restores the same forest lights", lighting.is_visible_in_tree() and lighting.lights.size() == 2)
+	check("returning restores the same forest lights", lighting.is_visible_in_tree() and lighting.openings.size() == 2)
 	Prefs.set_low_resolution(previous)
 	game.queue_free()
 	await _frames(2)

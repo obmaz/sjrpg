@@ -84,7 +84,7 @@
    "lighting_comparison": "Repeat capture with --lighting off; compare using compare_reference.mjs --before OFF.png --actual ON.png --out comparison.png",
    "runtime_tile_world_size": 180,
    "scale_review": "280 ground units produced oversize stones in actual comparison; 180 retains roughly 50–60px long stone diagonals at the normal portrait camera.",
-   "lighting": "Cool ambient ground material plus two world-positioned warm PointLight2D openings; only grass, earth and paving receive them. Actual tree-alpha shadows remain separate and owner-linked. No baked canopy shadows in material.",
+   "lighting": "Cool ambient ground material plus two world-positioned warm openings calculated in the ground-only shader; only grass, earth and paving receive them. Actual tree-alpha shadows remain separate and owner-linked. No baked canopy shadows in material.",
    "remaining_difference": "The source courses are still more regular than the reference. Existing grass remains noisier, and building/actor illumination does not reproduce the reference whole-scene depth."
   }
  },
