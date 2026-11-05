@@ -251,21 +251,21 @@
   "tree-0": {
    "sheet": "forest-isometric-trees",
    "source": [
-    6,
-    6,
-    266,
-    257
+    66,
+    145,
+    380,
+    359
    ],
    "foot": [
-    132,
-    257
+    254.0,
+    470.0
    ],
-   "height": 251,
+   "height": 325.0,
    "origin": [
-    54,
-    166
+    100,
+    139
    ],
-   "packing": 1,
+   "packing": 1.0,
    "world_height": 200,
    "body": null,
    "gvs": 1,
@@ -274,21 +274,21 @@
   "tree-1": {
    "sheet": "forest-isometric-trees",
    "source": [
-    284,
-    6,
-    391,
-    348
+    66,
+    145,
+    380,
+    359
    ],
    "foot": [
-    500,
-    348
+    254.0,
+    470.0
    ],
-   "height": 342,
+   "height": 325.0,
    "origin": [
-    380,
-    76
+    100,
+    139
    ],
-   "packing": 1,
+   "packing": 1.0,
    "world_height": 300,
    "body": null,
    "gvs": 1,
@@ -297,21 +297,21 @@
   "tree-2": {
    "sheet": "forest-isometric-trees",
    "source": [
-    687,
-    6,
-    470,
-    424
+    520,
+    69,
+    496,
+    435
    ],
    "foot": [
-    910.56105892,
-    427.43467122
+    754.615873015873,
+    465.8
    ],
-   "height": 421.43467122,
+   "height": 396.8,
    "origin": [
-    50,
-    83
+    611,
+    15
    ],
-   "packing": 0.40136635,
+   "packing": 0.7873015873015873,
    "world_height": 400,
    "body": null,
    "gvs": 1,
@@ -320,21 +320,21 @@
   "tree-3": {
    "sheet": "forest-isometric-trees",
    "source": [
-    1169,
-    6,
-    211,
-    333
+    64,
+    520,
+    383,
+    496
    ],
    "foot": [
-    1270,
-    333
+    255.327239488117,
+    985.1700182815357
    ],
-   "height": 327,
+   "height": 465.1700182815357,
    "origin": [
     78,
-    526
+    639
    ],
-   "packing": 1,
+   "packing": 0.906764168190128,
    "world_height": 200,
    "body": null,
    "gvs": 1,
@@ -343,21 +343,21 @@
   "tree-4": {
    "sheet": "forest-isometric-trees",
    "source": [
-    6,
-    442,
-    298,
-    430
+    64,
+    520,
+    383,
+    496
    ],
    "foot": [
-    135,
-    866
+    255.327239488117,
+    985.1700182815357
    ],
-   "height": 424,
+   "height": 465.1700182815357,
    "origin": [
-    435,
-    433
+    78,
+    639
    ],
-   "packing": 1,
+   "packing": 0.906764168190128,
    "world_height": 300,
    "body": null,
    "gvs": 1,
@@ -366,21 +366,21 @@
   "tree-5": {
    "sheet": "forest-isometric-trees",
    "source": [
-    316,
-    442,
-    359,
-    448
+    64,
+    520,
+    383,
+    496
    ],
    "foot": [
-    512,
-    885
+    255.327239488117,
+    985.1700182815357
    ],
-   "height": 443,
+   "height": 465.1700182815357,
    "origin": [
-    845,
-    415
+    78,
+    639
    ],
-   "packing": 1,
+   "packing": 0.906764168190128,
    "world_height": 400,
    "body": null,
    "gvs": 1,
@@ -389,21 +389,21 @@
   "tree-6": {
    "sheet": "forest-isometric-trees",
    "source": [
-    687,
-    442,
-    247,
-    265
+    520,
+    576,
+    496,
+    440
    ],
    "foot": [
-    818,
-    701
+    772.6003372681282,
+    985.0118043844857
    ],
-   "height": 259,
+   "height": 409.0118043844857,
    "origin": [
-    59,
-    957
+    614,
+    650
    ],
-   "packing": 1,
+   "packing": 0.836424957841484,
    "world_height": 200,
    "body": null,
    "gvs": 1,
@@ -412,21 +412,21 @@
   "tree-7": {
    "sheet": "forest-isometric-trees",
    "source": [
-    946,
-    442,
-    350,
-    342
+    520,
+    576,
+    496,
+    440
    ],
    "foot": [
-    1100,
-    778
+    772.6003372681282,
+    985.0118043844857
    ],
-   "height": 336,
+   "height": 409.0118043844857,
    "origin": [
-    404,
-    892
+    614,
+    650
    ],
-   "packing": 1,
+   "packing": 0.836424957841484,
    "world_height": 300,
    "body": null,
    "gvs": 1,
@@ -435,21 +435,21 @@
   "tree-8": {
    "sheet": "forest-isometric-trees",
    "source": [
-    6,
-    902,
-    447,
-    387
+    520,
+    576,
+    496,
+    440
    ],
    "foot": [
-    258.5,
-    1283
+    772.6003372681282,
+    985.0118043844857
    ],
-   "height": 381,
+   "height": 409.0118043844857,
    "origin": [
-    797,
-    853
+    614,
+    650
    ],
-   "packing": 1,
+   "packing": 0.836424957841484,
    "world_height": 400,
    "body": null,
    "gvs": 1,
@@ -458,21 +458,21 @@
   "tree-9": {
    "sheet": "forest-isometric-trees",
    "source": [
-    465,
-    902,
-    271,
-    259
+    66,
+    145,
+    380,
+    359
    ],
    "foot": [
-    590,
-    1149
+    254.0,
+    470.0
    ],
-   "height": 247,
+   "height": 325.0,
    "origin": [
-    69,
-    169
+    100,
+    139
    ],
-   "packing": 1,
+   "packing": 1.0,
    "world_height": 200,
    "body": null,
    "gvs": 1,
@@ -481,21 +481,21 @@
   "tree-10": {
    "sheet": "forest-isometric-trees",
    "source": [
-    748,
-    902,
-    350,
-    331
+    66,
+    145,
+    380,
+    359
    ],
    "foot": [
-    914,
-    1221
+    254.0,
+    470.0
    ],
-   "height": 319,
+   "height": 325.0,
    "origin": [
-    411,
-    101
+    100,
+    139
    ],
-   "packing": 1,
+   "packing": 1.0,
    "world_height": 300,
    "body": null,
    "gvs": 1,
@@ -504,21 +504,21 @@
   "tree-11": {
    "sheet": "forest-isometric-trees",
    "source": [
-    6,
-    1301,
-    458,
-    421
+    520,
+    69,
+    496,
+    435
    ],
    "foot": [
-    231,
-    1714
+    754.615873015873,
+    465.8
    ],
-   "height": 413,
+   "height": 396.8,
    "origin": [
-    785,
+    611,
     15
    ],
-   "packing": 1,
+   "packing": 0.7873015873015873,
    "world_height": 400,
    "body": null,
    "gvs": 1,
@@ -527,21 +527,21 @@
   "tree-12": {
    "sheet": "forest-isometric-trees",
    "source": [
-    476,
-    1301,
-    248,
-    271
+    64,
+    520,
+    383,
+    496
    ],
    "foot": [
-    578,
-    1553
+    255.327239488117,
+    985.1700182815357
    ],
-   "height": 252,
+   "height": 465.1700182815357,
    "origin": [
-    84,
-    565
+    78,
+    639
    ],
-   "packing": 1,
+   "packing": 0.906764168190128,
    "world_height": 200,
    "body": null,
    "gvs": 1,
@@ -550,21 +550,21 @@
   "tree-13": {
    "sheet": "forest-isometric-trees",
    "source": [
-    736,
-    1301,
-    355,
-    352
+    64,
+    520,
+    383,
+    496
    ],
    "foot": [
-    901,
-    1638
+    255.327239488117,
+    985.1700182815357
    ],
-   "height": 337,
+   "height": 465.1700182815357,
    "origin": [
-    416,
-    491
+    78,
+    639
    ],
-   "packing": 1,
+   "packing": 0.906764168190128,
    "world_height": 300,
    "body": null,
    "gvs": 1,
@@ -573,21 +573,21 @@
   "tree-14": {
    "sheet": "forest-isometric-trees",
    "source": [
-    6,
-    1734,
-    470,
-    409
+    64,
+    520,
+    383,
+    496
    ],
    "foot": [
-    252.70124481,
-    2126.96680498
+    255.327239488117,
+    985.1700182815357
    ],
-   "height": 392.96680498,
+   "height": 465.1700182815357,
    "origin": [
-    763,
-    428
+    78,
+    639
    ],
-   "packing": 0.97510373,
+   "packing": 0.906764168190128,
    "world_height": 400,
    "body": null,
    "gvs": 1,
@@ -596,21 +596,21 @@
   "tree-15": {
    "sheet": "forest-isometric-trees",
    "source": [
-    488,
-    1734,
-    273,
-    292
+    66,
+    145,
+    380,
+    359
    ],
    "foot": [
-    611,
-    2019
+    254.0,
+    470.0
    ],
-   "height": 285,
+   "height": 325.0,
    "origin": [
-    68,
-    933
+    100,
+    139
    ],
-   "packing": 1,
+   "packing": 1.0,
    "world_height": 200,
    "body": null,
    "gvs": 1,
@@ -619,21 +619,21 @@
   "tree-16": {
    "sheet": "forest-isometric-trees",
    "source": [
-    773,
-    1734,
-    352,
-    369
+    66,
+    145,
+    380,
+    359
    ],
    "foot": [
-    935,
-    2092
+    254.0,
+    470.0
    ],
-   "height": 358,
+   "height": 325.0,
    "origin": [
-    406,
-    866
+    100,
+    139
    ],
-   "packing": 1,
+   "packing": 1.0,
    "world_height": 300,
    "body": null,
    "gvs": 1,
@@ -642,21 +642,21 @@
   "tree-17": {
    "sheet": "forest-isometric-trees",
    "source": [
-    6,
-    2155,
-    445,
-    413
+    520,
+    69,
+    496,
+    435
    ],
    "foot": [
-    220,
-    2544
+    754.615873015873,
+    465.8
    ],
-   "height": 389,
+   "height": 396.8,
    "origin": [
-    796,
-    831
+    611,
+    15
    ],
-   "packing": 1,
+   "packing": 0.7873015873015873,
    "world_height": 400,
    "body": null,
    "gvs": 1,

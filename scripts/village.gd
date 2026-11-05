@@ -9,8 +9,8 @@ const DATA_PATH := "res://assets/data/village.json"
 const ROAD_HALF := 0.047  # paved road half width in uv
 ## Town trees measured from the original game's opening view.
 const TREE_UV := [[0.355, 0.724, 11], [0.684, 0.703, 2], [0.246, 0.368, 11]]
-## Deep, cool foliage grade used for town and field trees (ForestScenePalette).
-const FOLIAGE := Color(0.52, 0.68, 0.66)
+## The new art already shades its crowns; a mild grade keeps bark warm and readable.
+const FOLIAGE := Color(0.82, 0.9, 0.84)
 ## Cobble texture density: one 418px tile covers 190 ground units.
 const COBBLE_PX := 418.0 / 190.0
 const NPCS := [

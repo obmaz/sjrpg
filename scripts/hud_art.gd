@@ -8,6 +8,7 @@ const FONT := preload("res://assets/fonts/NanumGothic-Regular.ttf")
 static var _sheet: Texture2D
 static var _rects: Dictionary
 static var _portraits := {}
+static var _level_badge: Texture2D
 
 
 static func _load() -> void:
@@ -49,6 +50,12 @@ static func portrait(cls: String) -> Texture2D:
 
 static func portrait_uv(_cls: String) -> Rect2:
 	return Rect2(0, 0, 1, 1)
+
+
+static func level_badge() -> Texture2D:
+	if _level_badge == null:
+		_level_badge = load("res://assets/art/hud/level-badge.webp")
+	return _level_badge
 
 
 static func text_outlined(canvas: CanvasItem, text: String, at: Vector2, width: float, size: int, color := Color.WHITE, align := HORIZONTAL_ALIGNMENT_CENTER) -> void:

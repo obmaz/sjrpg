@@ -15,7 +15,18 @@ def save(image, name):
     temporary.replace(target)
 
 
+def prepare_level_badge():
+    # Reuse sjrpg's generated, number-free medallion; runtime text shows the real level.
+    image = Image.open(ROOT / 'assets/source/level-badge.png').convert('RGBA')
+    if image.getchannel('A').getextrema() != (0, 255):
+        raise ValueError('The level badge must retain its transparent background')
+    image = image.crop(image.getchannel('A').getbbox())
+    image.thumbnail((160, 160), Image.Resampling.LANCZOS)
+    save(image, 'level-badge')
+
+
 def main():
+    prepare_level_badge()
     for name in ['portrait-mage', 'panel-leather']:
         image = Image.open(ROOT / 'assets/source' / (name + '.png'))
         save(image.resize((512, 512), Image.Resampling.LANCZOS), name)

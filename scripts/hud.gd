@@ -4,6 +4,7 @@ extends CanvasLayer
 
 var game: Node
 var _bars: Control
+var _level_badge: Label
 var _toast: Label
 var _toast_plaque: PanelContainer
 var _toast_queue: Array[Dictionary] = []
@@ -35,6 +36,14 @@ func _ready() -> void:
 	_bars.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_bars.draw.connect(_draw_bars)
 	add_child(_bars)
+	_level_badge = UiKit.label("", 12, Color("f2ead5"))
+	_level_badge.name = "LevelBadge"
+	_level_badge.add_theme_font_override("font", HudArt.FONT)
+	_level_badge.add_theme_constant_override("outline_size", 1)
+	_level_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_level_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_level_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bars.add_child(_level_badge)
 
 	controls = TouchControls.new()
 	controls.game = game
@@ -341,7 +350,10 @@ static func header_geometry(view: Vector2, m: Vector4) -> Dictionary:
 		"plate": plate, "slope": slope, "visible_start": center.x + radius + 5.0 * u,
 		"hp": rows["hp"], "mp": rows["mp"], "xp": rows["xp"],
 		"map": Rect2(Vector2(m.x + available.x - 144.0 * u, origin.y + 2.0 * u), Vector2.ONE * 136.0 * u),
+		"level_badge": Rect2(origin + Vector2(2, -5) * u, Vector2.ONE * 26.0 * u),
 	}
+	var badge_rect: Rect2 = geometry["level_badge"]
+	geometry["level_label"] = badge_rect.grow(-4.0 * u)
 	for key in ["hp", "mp", "xp"]:
 		var rect: Rect2 = rows[key]
 		var slant := rect.size.y * slope
@@ -349,7 +361,7 @@ static func header_geometry(view: Vector2, m: Vector4) -> Dictionary:
 	var portrait_bounds := Rect2(center - Vector2(radius + 4.5 * u, radius + 8.0 * u), Vector2(2.0 * (radius + 4.5 * u), 2.0 * (radius + 8.0 * u)))
 	geometry["portrait_bounds"] = portrait_bounds
 	var plate_bounds := Rect2(plate[0], Vector2(right - plate[0].x, 92.0 * u)).grow(2.0 * u)
-	geometry["paint_bounds"] = portrait_bounds.merge(plate_bounds)
+	geometry["paint_bounds"] = portrait_bounds.merge(plate_bounds).merge(badge_rect)
 	return geometry
 
 
@@ -357,6 +369,13 @@ func _update_layout() -> void:
 	var u := unit()
 	var geometry := status_geometry()
 	var origin: Vector2 = geometry["origin"]
+	var level_rect: Rect2 = geometry["level_label"]
+	_level_badge.text = str(GameState.level)
+	_level_badge.position = level_rect.position
+	_level_badge.size = level_rect.size
+	var level_size := HudArt.fit_text_size(_level_badge.text, level_rect, roundi(12.0 * u))
+	if _level_badge.get_theme_font_size("font_size") != level_size:
+		_level_badge.add_theme_font_size_override("font_size", level_size)
 	var map_rect: Rect2 = geometry["map"]
 	minimap.radius = 64.0 * u
 	minimap.size = map_rect.size
@@ -521,6 +540,7 @@ func _draw_bars() -> void:
 		_bars.draw_polyline(crest + PackedVector2Array([crest[0]]), Color("a08b66"), 0.9 * u, true)
 	for sx in [-1.0, 1.0]:
 		_bars.draw_circle(center + Vector2(sx * (pr - 1.0 * u), 0), 1.1 * u, Color("ac9872"))
+	_bars.draw_texture_rect(HudArt.level_badge(), geometry["level_badge"], false)
 
 
 func _on_save_finished(success: bool, message: String) -> void:

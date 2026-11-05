@@ -99,7 +99,7 @@ func _toggle(label: String, hint: String, on: bool, on_change: Callable) -> Cont
 	var text := VBoxContainer.new()
 	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	text.add_theme_constant_override("separation", 0)
+	text.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
 	row.add_child(text)
 	var l := UiKit.label(label, 22, Color(0.95, 0.92, 0.82), true)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -111,6 +111,7 @@ func _toggle(label: String, hint: String, on: bool, on_change: Callable) -> Cont
 	var pill := Pill.new()
 	pill.on = on
 	pill.custom_minimum_size = Vector2(112, 58)
+	pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(pill)
 	return card

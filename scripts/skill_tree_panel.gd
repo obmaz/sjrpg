@@ -281,6 +281,7 @@ func _build_detail() -> void:
 	icon.draw.connect(func(): SkillIcons.draw(icon, id, Rect2(Vector2.ZERO, Vector2(88, 88))))
 	head.add_child(icon)
 	var names := VBoxContainer.new()
+	names.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
 	names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(names)
 	var title := PanelFrame.wrap_label(s["name"], 26, UiKit.GOLD)

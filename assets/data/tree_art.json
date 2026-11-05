@@ -1,0 +1,110 @@
+{
+ "source": "assets/source/forest-trees.png",
+ "source_sha256": "d3139c012d9b9312250603737c5144ab2a3b1e0a6bcf94e50b1ab352845e745a",
+ "render": "assets/art/village/trees.webp",
+ "render_sha256": "b38e2bd51487842fb738b4592126db379407a974c2ba2ea292a559270189e65e",
+ "camera": {
+  "projection": "orthographic",
+  "target_ground_axes_degrees": [
+   -30,
+   30
+  ],
+  "target_azimuth_degrees": 45,
+  "target_elevation_degrees": 35.264
+ },
+ "review": "Organic illustration review: visible upper crown layers, shorter foreshortened trunks, rear roots occluded by the trunk, and no painted ground/cast-shadow plate. These are authored camera targets, not a rigid-edge angle measurement. Foot points mark the trunk/root ground-contact centre, leaving front roots visible below the depth-sort origin.",
+ "frames": {
+  "oak-young": {
+   "source": [
+    66,
+    145,
+    380,
+    359
+   ],
+   "foot": [
+    254.0,
+    470.0
+   ],
+   "height": 325.0,
+   "origin": [
+    100,
+    139
+   ],
+   "packing": 1.0
+  },
+  "oak-mature": {
+   "source": [
+    520,
+    69,
+    496,
+    435
+   ],
+   "foot": [
+    754.615873015873,
+    465.8
+   ],
+   "height": 396.8,
+   "origin": [
+    611,
+    15
+   ],
+   "packing": 0.7873015873015873
+  },
+  "fir": {
+   "source": [
+    64,
+    520,
+    383,
+    496
+   ],
+   "foot": [
+    255.327239488117,
+    985.1700182815357
+   ],
+   "height": 465.1700182815357,
+   "origin": [
+    78,
+    639
+   ],
+   "packing": 0.906764168190128
+  },
+  "willow": {
+   "source": [
+    520,
+    576,
+    496,
+    440
+   ],
+   "foot": [
+    772.6003372681282,
+    985.0118043844857
+   ],
+   "height": 409.0118043844857,
+   "origin": [
+    614,
+    650
+   ],
+   "packing": 0.836424957841484
+  }
+ },
+ "variants": {
+  "tree-0": "oak-young",
+  "tree-1": "oak-young",
+  "tree-2": "oak-mature",
+  "tree-3": "fir",
+  "tree-4": "fir",
+  "tree-5": "fir",
+  "tree-6": "willow",
+  "tree-7": "willow",
+  "tree-8": "willow",
+  "tree-9": "oak-young",
+  "tree-10": "oak-young",
+  "tree-11": "oak-mature",
+  "tree-12": "fir",
+  "tree-13": "fir",
+  "tree-14": "fir",
+  "tree-15": "oak-young",
+  "tree-16": "oak-young",
+  "tree-17": "oak-mature"
+ }
+}

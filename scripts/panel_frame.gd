@@ -3,13 +3,15 @@ extends Control
 ## Mobile-first panel scaffold shared by 가방 · 스킬 · 설정: dim backdrop, a framed panel
 ## that fills the phone screen (respecting the safe area) and caps its width on
 ## wide screens, a header with a big close button, tabs, a scrolling body and a
-## footer of 56px+ touch buttons.
+## footer of 64px+ touch buttons.
 
 signal closed
 
 const MAX_WIDTH := 880.0
 const MIN_TOUCH := 64.0
 const BOOST := 1.3
+const TITLE_GAP := 10
+const CARD_TEXT_GAP := 8
 
 var title_label: Label
 var subtitle_label: Label
@@ -19,8 +21,10 @@ var tab_scroll: ScrollContainer
 var body_holder: Control
 var scroll: ScrollContainer
 var body: VBoxContainer
-var footer: HBoxContainer
+var footer: BoxContainer
 var _panel: PanelContainer
+var _column: VBoxContainer
+var _header: HBoxContainer
 var _trim: FrameTrim
 var _tab_buttons: Array[Button] = []
 var _on_tab: Callable
@@ -60,30 +64,34 @@ func _ready() -> void:
 	surface.shadow_size = 18
 	_panel.add_theme_stylebox_override("panel", surface)
 	add_child(_panel)
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 16)
-	_panel.add_child(column)
+	_column = VBoxContainer.new()
+	_column.add_theme_constant_override("separation", 18)
+	_panel.add_child(_column)
 
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 12)
-	column.add_child(header)
+	_header = HBoxContainer.new()
+	_header.add_theme_constant_override("separation", 16)
+	_column.add_child(_header)
 	var titles := VBoxContainer.new()
 	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	titles.add_theme_constant_override("separation", 0)
-	header.add_child(titles)
+	titles.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	titles.add_theme_constant_override("separation", TITLE_GAP)
+	_header.add_child(titles)
 	title_label = UiKit.label("", 28, UiKit.TEXT, true)
 	title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title_label.custom_minimum_size.x = 120
 	titles.add_child(title_label)
 	subtitle_label = UiKit.label("", 16, UiKit.MUTED)
 	subtitle_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	subtitle_label.add_theme_constant_override("line_spacing", 4)
 	titles.add_child(subtitle_label)
 	trailing = HBoxContainer.new()
 	trailing.add_theme_constant_override("separation", 8)
-	header.add_child(trailing)
+	trailing.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_header.add_child(trailing)
 	var close := UiKit.button("×", 30)
 	close.tooltip_text = "모험으로 돌아가기"
 	close.custom_minimum_size = Vector2(MIN_TOUCH, MIN_TOUCH)
+	close.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	for state in ["normal", "hover", "pressed", "focus"]:
 		var coin := UiKit.panel_style(Color("211e18"), Color("a18a60") if state != "pressed" else Color("6d5c40"), 32)
 		coin.raised = true
@@ -93,15 +101,15 @@ func _ready() -> void:
 		coin.content_margin_bottom = 0
 		close.add_theme_stylebox_override(state, coin)
 	close.pressed.connect(func(): closed.emit())
-	header.add_child(close)
-	column.add_child(UiKit.divider())
+	_header.add_child(close)
+	_column.add_child(UiKit.divider())
 
 	tab_scroll = ScrollContainer.new()
 	tab_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	tab_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	tab_scroll.scroll_deadzone = 10
 	tab_scroll.visible = false
-	column.add_child(tab_scroll)
+	_column.add_child(tab_scroll)
 	tab_row = HBoxContainer.new()
 	tab_row.add_theme_constant_override("separation", 8)
 	tab_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -110,7 +118,7 @@ func _ready() -> void:
 	body_holder = Control.new()
 	body_holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body_holder.clip_contents = true
-	column.add_child(body_holder)
+	_column.add_child(body_holder)
 	scroll = ScrollContainer.new()
 	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -124,9 +132,10 @@ func _ready() -> void:
 		if compact:
 			_layout.call_deferred())
 
-	footer = HBoxContainer.new()
+	footer = BoxContainer.new()
 	footer.add_theme_constant_override("separation", 10)
-	column.add_child(footer)
+	_column.add_child(footer)
+	_column.minimum_size_changed.connect(func(): _layout.call_deferred())
 
 	_trim = FrameTrim.new()
 	_trim.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -166,8 +175,22 @@ func _layout() -> void:
 	var width := minf(view.x - left - right, MAX_WIDTH)
 	var cx := left + (view.x - left - right) / 2.0
 	var height := view.y - top - bottom
+	trailing.visible = trailing.get_children().any(func(child: Node): return not child.is_queued_for_deletion())
+	# Long action labels stack instead of forcing the frame beyond the safe area.
+	var footer_width := 0.0
+	var actions := 0
+	for action in footer.get_children():
+		if action is Control and action.visible and not action.is_queued_for_deletion():
+			footer_width += action.get_combined_minimum_size().x
+			actions += 1
+	footer_width += maxf(0.0, actions - 1) * footer.get_theme_constant("separation")
+	var surface := _panel.get_theme_stylebox("panel")
+	footer.vertical = footer_width > width - surface.get_content_margin(SIDE_LEFT) - surface.get_content_margin(SIDE_RIGHT)
 	if compact and body != null:
-		height = minf(height, maxf(380.0, body.get_combined_minimum_size().y + 270.0))
+		# Measure actual chrome so wrapped subtitles/tabs cannot steal the body space.
+		var chrome := surface.get_content_margin(SIDE_TOP) + surface.get_content_margin(SIDE_BOTTOM)
+		chrome += _column.get_combined_minimum_size().y - body_holder.get_combined_minimum_size().y
+		height = minf(height, chrome + maxf(96.0, body.get_combined_minimum_size().y))
 	_panel.custom_minimum_size = Vector2.ZERO
 	_panel.position = Vector2(cx - width / 2.0, top + (view.y - top - bottom - height) / 2.0)
 	_panel.size = Vector2(width, height)
@@ -191,6 +214,7 @@ func set_header(title: String, subtitle := "") -> void:
 	title_label.text = title
 	subtitle_label.text = subtitle
 	subtitle_label.visible = subtitle != ""
+	_layout.call_deferred()
 
 
 func set_tabs(labels: Array, selected: int, on_select: Callable) -> void:
@@ -207,6 +231,7 @@ func set_tabs(labels: Array, selected: int, on_select: Callable) -> void:
 		b.pressed.connect(func(): _on_tab.call(index))
 		tab_row.add_child(b)
 		_tab_buttons.append(b)
+	_layout.call_deferred()
 
 
 func clear_body() -> void:
@@ -223,6 +248,7 @@ func add_footer(text: String, on_press: Callable, primary := false, weight := 1.
 	UiKit.style_button(b, primary)
 	b.pressed.connect(on_press)
 	footer.add_child(b)
+	_layout.call_deferred()
 	return b
 
 

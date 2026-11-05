@@ -138,7 +138,7 @@ func _overview() -> Control:
 		row.add_child(cell)
 	var stats := VBoxContainer.new()
 	stats.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	stats.add_theme_constant_override("separation", 0)
+	stats.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
 	box.add_child(stats)
 	stats.add_child(UiKit.label("공격력 %s    방어 %s" % [HudArt.stat(GameState.attack_power()), HudArt.stat(GameState.defense())], 19))
 	stats.add_child(UiKit.label("생명 %s    %s %s" % [HudArt.stat(GameState.max_hp()), _res(), HudArt.res(GameState.max_resource())], 19))
@@ -177,7 +177,7 @@ func _gear_row(g: Gear, offer: bool, price := 0) -> Control:
 	top.add_child(cell)
 	var text := VBoxContainer.new()
 	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	text.add_theme_constant_override("separation", 0)
+	text.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
 	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top.add_child(text)
 	var name_label := UiKit.label(g.display_name(), 21, g.color(), true)
@@ -371,7 +371,7 @@ func _potion_offer(id: String, title: String, sub: String, price: int, maxed := 
 	top.add_child(icon)
 	var text := VBoxContainer.new()
 	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	text.add_theme_constant_override("separation", 0)
+	text.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
 	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top.add_child(text)
 	var t := UiKit.label(title, 21, Color(0.95, 0.92, 0.8), true)

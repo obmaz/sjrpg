@@ -19,6 +19,7 @@
   마당은 마을 북동쪽의 기존 점유 폭·중심을 유지하며 계단 외에는 오를 수 없습니다.
 - 다리는 상판, 앞뒤 난간, 양쪽 끝·기둥을 실측합니다. 앞 난간은 바닥선이 아닌 실제 코핑 윗선부터 캐릭터 앞에 그립니다.
 - 성벽은 구간에 맞춰 가로로 늘리지 않습니다. 같은 비율로 반복하고 마지막 부분만 자릅니다.
+- 일반 나무는 정면형 수관·고정 그림자가 혼재한 원화를 높은 쿼터뷰의 4종으로 교체합니다. 수관 윗층과 전면 잎의 가림·짧게 보이는 줄기·뿌리 지면 접점을 검수합니다. `tree_art_measure.json`과 `tree_art.json`에 접점·원본/아틀라스 해시를 기록하며, 자연형 외곽을 직선 축 각도의 증거로 사용하지 않습니다.
 
 ## 검증 데이터
 
@@ -47,6 +48,7 @@ python3 tools/extract/warp_art.py
 python3 tools/extract/town_art.py
 python3 tools/extract/landmark_art.py
 python3 tools/extract/bridge_art.py
+python3 tools/prepare_tree_art.py
 python3 tools/extract/extract_data.py /path/to/sjrpg --only=village,landmarks
 # 실제 픽셀 측정과 화면 리뷰 후 명시적으로 해시를 고정
 python3 tools/extract/art_audit_catalog.py

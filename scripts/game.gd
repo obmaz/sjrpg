@@ -315,6 +315,7 @@ func _hud_preview(which: String) -> void:
 			player.resource = player.resource_max * 0.99
 			GameState.xp = GameState.xp_to_next() - 1
 		"large":
+			GameState.level = 100
 			player.max_hp = 99999.99
 			player.hp = 79543.21
 			player.resource_max = 99999.9

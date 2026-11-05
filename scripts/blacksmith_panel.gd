@@ -100,7 +100,7 @@ func _row(g: Gear) -> Control:
 	var text := VBoxContainer.new()
 	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	text.add_theme_constant_override("separation", 0)
+	text.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
 	top.add_child(text)
 	var n := UiKit.label(g.display_name(), 21, g.color(), true)
 	n.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

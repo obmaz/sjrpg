@@ -1,0 +1,87 @@
+{
+ "source": "assets/source/forest-trees.png",
+ "camera": {
+  "projection": "orthographic",
+  "target_ground_axes_degrees": [
+   -30,
+   30
+  ],
+  "target_azimuth_degrees": 45,
+  "target_elevation_degrees": 35.264
+ },
+ "review": "Organic illustration review: visible upper crown layers, shorter foreshortened trunks, rear roots occluded by the trunk, and no painted ground/cast-shadow plate. These are authored camera targets, not a rigid-edge angle measurement. Foot points mark the trunk/root ground-contact centre, leaving front roots visible below the depth-sort origin.",
+ "frames": [
+  {
+   "id": "oak-young",
+   "roi": [
+    0,
+    0,
+    560,
+    600
+   ],
+   "foot": [
+    288,
+    464
+   ]
+  },
+  {
+   "id": "oak-mature",
+   "roi": [
+    570,
+    0,
+    1254,
+    600
+   ],
+   "foot": [
+    909,
+    519
+   ]
+  },
+  {
+   "id": "fir",
+   "roi": [
+    0,
+    600,
+    560,
+    1254
+   ],
+   "foot": [
+    289,
+    1152
+   ]
+  },
+  {
+   "id": "willow",
+   "roi": [
+    570,
+    600,
+    1254,
+    1254
+   ],
+   "foot": [
+    916,
+    1139
+   ]
+  }
+ ],
+ "variants": {
+  "tree-0": "oak-young",
+  "tree-1": "oak-young",
+  "tree-2": "oak-mature",
+  "tree-3": "fir",
+  "tree-4": "fir",
+  "tree-5": "fir",
+  "tree-6": "willow",
+  "tree-7": "willow",
+  "tree-8": "willow",
+  "tree-9": "oak-young",
+  "tree-10": "oak-young",
+  "tree-11": "oak-mature",
+  "tree-12": "fir",
+  "tree-13": "fir",
+  "tree-14": "fir",
+  "tree-15": "oak-young",
+  "tree-16": "oak-young",
+  "tree-17": "oak-mature"
+ }
+}
