@@ -250,8 +250,7 @@ func cast_slot(index: int, repeat := false) -> bool:
 	if repeat and d["type"] in ["buff", "leap", "blink", "corpse"]:
 		return false
 	if _attack_time > 0.0 or cooldowns.get(id, 0.0) > 0.0:
-		if not repeat:
-			game.toast("공격 동작 중입니다" if _attack_time > 0.0 else "재사용까지 %.1f초" % float(cooldowns[id]))
+		# The skill button already shows readiness; repeated taps must not queue notices.
 		return false
 	var cost := SkillDefs.cost(s, rank)
 	if resource < cost:

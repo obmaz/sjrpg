@@ -72,6 +72,7 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 
 `ForestBalance`에 Godot 숲의 지역 레벨·마을 주변 완화·생성 간격을 둡니다. 추출 데이터는 수정하지 않습니다.
 `SkillDefs.cooldown()`이 시전 판정·주/보조 버튼의 남은 시간·스킬 상세의 재사용 시간을 공유합니다.
+공격 동작·재사용 대기 중의 반복 입력은 알림 대기열에 추가하지 않습니다. 버튼의 남은 초·원형 가림막으로 준비 상태를 표시하며 자원 부족 안내는 유지합니다.
 원본의 양수 쿨타임은 유지하고 마나만 소모하던 주문은 `SPELL_COOLDOWNS`의 1–5초를 적용합니다.
 시간은 `Player.cooldowns`에서만 줄이며 일시정지·슬롯 교체에도 같은 주문의 시간을 유지합니다.
 `Gear.melee_profile()`의 월드 사거리·반각·공격 간격을 실제 근접 기본 공격과 가방·스킬 설명이 공유합니다.

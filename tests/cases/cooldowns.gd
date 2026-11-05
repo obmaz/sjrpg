@@ -21,8 +21,14 @@ func run() -> void:
 	var remaining: float = player.cooldowns.get("firebolt", 0.0)
 	var resource: float = player.resource
 	check("successful cast starts authoritative reuse timer", remaining == SkillDefs.cooldown(GameState.skill("firebolt")))
+	var notice: String = game.hud._toast.text
+	var pending: Array = game.hud._toast_queue.duplicate(true)
+	check("tapping during an attack does not add a duplicate notice", not player.cast_slot(0) and game.hud._toast.text == notice and game.hud._toast_queue == pending)
 	player._attack_time = 0.0
 	check("magic cannot be cast again during reuse", not player.cast_slot(0))
+	for tap in 4:
+		player.cast_slot(0)
+	check("repeated cooldown taps leave current and queued notices unchanged", game.hud._toast.text == notice and game.hud._toast_queue == pending)
 	check("rejected recast spends no mana and does not restart cooldown", player.resource == resource and player.cooldowns["firebolt"] == remaining)
 	player.cooldowns["firebolt"] = 0.35
 	controls._update_action_feedback()
@@ -40,6 +46,7 @@ func run() -> void:
 	player.cooldowns.clear()
 	player.resource = 0.0
 	check("failed mana check starts no reuse timer", not player.cast_slot(4) and player.cooldowns.is_empty() and player.resource == 0.0)
+	check("resource failures still explain the missing mana", game.hud._toast.text.contains("부족") or game.hud._toast_queue.any(func(item: Dictionary) -> bool: return str(item["text"]).contains("부족")))
 	check("sub-second countdown never displays zero while unavailable", TouchControls.cooldown_text(0.001) == "0.1" and TouchControls.cooldown_text(0.35) == "0.4")
 	check("whole-second display rounds remaining time up", TouchControls.cooldown_text(1.001) == "2" and TouchControls.cooldown_text(5.0) == "5")
 	check("ready and empty slots show no countdown", TouchControls.cooldown_text(0.0) == "" and controls.slot_cooldown_remaining(1) == 0.0)
