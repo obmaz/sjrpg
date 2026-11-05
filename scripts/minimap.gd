@@ -10,6 +10,12 @@ var radius := 70.0
 const WORLD_RADIUS := 1300.0
 
 var _circle := PackedVector2Array()
+var _geometry: Array[Dictionary] = []
+var _geometry_source: Array[Dictionary] = []
+var _geometry_count := -1
+var _geometry_origin := Vector2.INF
+var _geometry_radius := -1.0
+var geometry_rebuilds := 0
 const PARCHMENT := Color("637153")
 const COMPASS_OFFSET := Vector2(0.78, -0.40)
 const COMPASS_RADIUS := 9.5
@@ -70,29 +76,45 @@ func _area(poly: PackedVector2Array) -> float:
 	return a * 0.5
 
 
-func _fill(poly: PackedVector2Array, color: Color, origin: Vector2) -> void:
+func _cache_shape(poly: PackedVector2Array, color: Color, origin: Vector2) -> void:
 	var local := PackedVector2Array()
 	for p in poly:
 		local.append(_to_map(p, origin))
 	for piece in Geometry2D.intersect_polygons(local, _circle):
 		if piece.size() >= 3 and absf(_area(piece)) > 1.0:
-			draw_colored_polygon(piece, PARCHMENT.lerp(color, 0.52))
+			_geometry.append({"poly": piece, "color": PARCHMENT.lerp(color, 0.52)})
+
+
+## Reuse the clipped terrain until movement would shift it by a quarter of a map pixel.
+## Markers and the player arrow still use their current positions on every rendered frame.
+func _update_geometry(origin: Vector2) -> void:
+	var tolerance := WORLD_RADIUS / radius * 0.25
+	if is_same(game.map_shapes, _geometry_source) and game.map_shapes.size() == _geometry_count and is_equal_approx(radius, _geometry_radius) and origin.distance_squared_to(_geometry_origin) < tolerance * tolerance:
+		return
+	_geometry_source = game.map_shapes
+	_geometry_count = game.map_shapes.size()
+	_geometry_origin = origin
+	_geometry_radius = radius
+	geometry_rebuilds += 1
+	_circle = _circle_poly(content_radius())
+	_geometry.clear()
+	for shape in game.map_shapes:
+		var bounds: Rect2 = shape["bounds"]
+		if bounds.grow(WORLD_RADIUS).has_point(origin):
+			_cache_shape(shape["poly"], shape["color"], origin)
 
 
 func _draw() -> void:
 	if game == null or game.player == null or game.village == null:
 		return
-	_circle = _circle_poly(content_radius())
 	var c := size / 2.0
 	draw_set_transform(c, 0.0, Vector2.ONE)
 	var origin: Vector2 = game.player.position
+	_update_geometry(origin)
 	draw_circle(Vector2.ZERO, radius, Color(0.07, 0.08, 0.07, 0.9))
 	draw_colored_polygon(_circle, PARCHMENT)
-	for shape in game.map_shapes:
-		var bounds: Rect2 = shape["bounds"]
-		if not bounds.grow(WORLD_RADIUS).has_point(origin):
-			continue
-		_fill(shape["poly"], shape["color"], origin)
+	for shape in _geometry:
+		draw_colored_polygon(shape["poly"], shape["color"])
 	for marker in MapGeometry.markers(game):
 		var marker_at := _to_map(marker["pos"], origin)
 		var marker_radius := maxf(2.0, radius * 0.035)

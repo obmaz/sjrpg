@@ -11,3 +11,7 @@ root = Path(__file__).resolve().parents[1]
 image = Image.open(root / "assets/art/ui/select-scene.png").convert("RGB")
 image.thumbnail((1440, 900), Image.Resampling.LANCZOS)
 image.save(root / "web/loading-bg.webp", "WEBP", quality=83, method=6)
+# Reuse the game's existing hero portrait; installation icons introduce no new source art.
+portrait = Image.open(root / "assets/art/hud/portrait-warrior.webp").convert("RGB")
+for size in (180, 192, 512):
+    portrait.resize((size, size), Image.Resampling.LANCZOS).save(root / f"web/install-{size}.png", optimize=True)

@@ -35,6 +35,9 @@ var patrol_radius := 0.0
 
 var _state := "idle"
 var _timer := 0.0
+var _windup_duration := 0.55
+var _recover_duration := 0.7
+var _recover_visual_duration := 0.28
 var _walk_cycle := 0.0
 var _recoil := Vector2.ZERO
 var _recoil_direction := Vector2.ZERO
@@ -126,6 +129,7 @@ func knock(from: Vector2, strength: float) -> void:
 func _interrupt() -> void:
 	if _state == "windup" or _state == "recover":
 		_state = "chase"
+		queue_redraw()
 
 
 func _update_tint() -> void:
@@ -147,6 +151,7 @@ func take_damage(amount: float, source: Node2D, visual_source: Node2D = null) ->
 	if _cry_time > 0.0:
 		amount *= 1.0 + _cry_value
 	hp -= amount
+	queue_redraw()
 	var heavy := hp <= 0.0 or amount >= max_hp * 0.3
 	# Zone ticks have elemental visuals without acquiring direct-hit knockback or weapon effects.
 	var impact_source: Node2D = visual_source if is_instance_valid(visual_source) else source
@@ -180,6 +185,7 @@ func _die() -> void:
 	if dead:
 		return
 	dead = true
+	queue_redraw()
 	sprite.clear_contact_hold()
 	game.on_enemy_killed(self)
 	var tween := create_tween()
@@ -188,6 +194,8 @@ func _die() -> void:
 
 
 func _process(delta: float) -> void:
+	if is_boss and _state == "windup":
+		queue_redraw()
 	_recoil_age += delta if _recoil_started else minf(delta, 0.012)
 	_recoil_started = true
 	# A short damped return gives contact weight without changing the actor's collision position.
@@ -243,13 +251,16 @@ func _process(delta: float) -> void:
 				_state = "idle"
 			elif dist <= attack_range:
 				_state = "windup"
-				_timer = (1.0 if is_boss else 0.55) / rate
+				_windup_duration = (1.0 if is_boss else 0.55) / rate
+				_timer = _windup_duration
+				if is_boss:
+					queue_redraw()
 				facing = to_player.angle()
 			else:
 				_step(to_player.normalized() + game.separation(self) * 0.6, delta * rate)
 		"windup":
 			_timer -= delta
-			var progress := 1.0 - _timer / ((1.0 if is_boss else 0.55) / rate)
+			var progress := 1.0 - _timer / _windup_duration
 			sprite.set_frame(atlas, atlas.attack_frame(facing, progress * 0.6))
 			if _timer <= 0.0:
 				var mult := 1.0
@@ -268,10 +279,14 @@ func _process(delta: float) -> void:
 					game.spawn_nova(position, attack_range + 60.0, Color(1.0, 0.6, 0.3))
 					SoundFx.play("impact")
 				_state = "recover"
-				_timer = (1.2 if is_boss else 0.7) / rate
+				_recover_duration = (1.2 if is_boss else 0.7) / rate
+				_recover_visual_duration = (0.4 if is_boss else 0.28) / rate
+				_timer = _recover_duration
 		"recover":
 			_timer -= delta
-			var progress := 1.0 - _timer / (0.7 / rate)
+			# Complete the authored return promptly, then hold its neutral last pose.
+			# Recovery gameplay time stays unchanged, including the boss's longer pause.
+			var progress := clampf((_recover_duration - _timer) / _recover_visual_duration, 0.0, 1.0)
 			sprite.set_frame(atlas, atlas.attack_frame(facing, 0.6 + progress * 0.4))
 			if _timer <= 0.0:
 				_state = "chase"
@@ -300,7 +315,7 @@ func attack_distance(target: Vector2) -> float:
 func _draw() -> void:
 	if is_boss and _state == "windup" and not dead:
 		# Danger ring: where the slam will land.
-		var t := clampf(1.0 - _timer / 1.0, 0.0, 1.0)
+		var t := clampf(1.0 - _timer / _windup_duration, 0.0, 1.0)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.55))
 		draw_circle(Vector2.ZERO, attack_range + 60.0, Color(1, 0.2, 0.1, 0.12 + 0.2 * t))
 		draw_arc(Vector2.ZERO, attack_range + 60.0, 0, TAU, 48, Color(1, 0.35, 0.2, 0.9), 4.0, true)
@@ -311,7 +326,3 @@ func _draw() -> void:
 	var y := -sprite.body_height - 14.0
 	draw_rect(Rect2(-w / 2 - 1, y - 1, w + 2, 8), Color(0, 0, 0, 0.7))
 	draw_rect(Rect2(-w / 2, y, w * clampf(hp / max_hp, 0, 1), 6), Color(0.85, 0.2, 0.18))
-
-
-func _physics_process(_delta: float) -> void:
-	queue_redraw()

@@ -157,6 +157,11 @@ HUD·패널은 주 뷰포트에 유지합니다. `Game.scene_root`/`scene_view`�
 `node tools/benchmark.mjs --quality high|low --device desktop|phone|phone-landscape`은 같은 시작 위치에서
 실제 월드 그리기·렌더링 크기를 확인하고 6초 준비 후 6초 동안 브라우저 프레임 진행과 95백분위 프레임 간격을 기록합니다. 기본 렌더러는 SwiftShader이며,
 실제 기기 성능을 뜻하지 않습니다. `?benchmark=1`에서만 `RenderProbe` 진단을 활성화합니다. 플랫폼 기본 렌더러 비교에는 `--renderer default`를 사용합니다.
+`RenderProbe`는 월드와 주 뷰포트의 실제 픽셀 수·별도 렌더 여부를 함께 기록합니다.
+루트의 `ViewportTexture.get_size()`는 Window 크기에 stretch 배율을 다시 곱하므로 framebuffer 측정에는 `Window.size`를 사용합니다.
+브라우저 측정 결과에는 실제 canvas 속성·CSS 크기·DPR도 함께 기록해 이 값을 대조합니다.
+`node tools/screenshot.mjs --scene pc_controls --device desktop --dpr 2`로 높은 픽셀 밀도에서도 클릭 좌표와 시야를 확인합니다.
+미니맵은 원점 이동이 지도 1/4px에 못 미치면 원형으로 잘라 둔 지형을 재사용합니다. 지도 교체·크기 변경은 즉시 갱신하고 마커·방향 화살표는 매 프레임 현재 위치를 사용합니다.
 
 ## 가림·모바일 표시
 
@@ -225,6 +230,12 @@ compact 높이는 실제 헤더·탭·푸터 최소 크기를 측정하며 본�
 
 ## 저장과 재접속
 
+설정의 설치 버튼은 `web/install.js`가 보관한 `beforeinstallprompt`를 사용자 버튼 입력 안에서 동기 호출합니다.
+설치 수락은 완료로 취급하지 않고 `appinstalled` 또는 실제 standalone 실행에서만 설치됨을 표시합니다.
+`web/manifest.webmanifest`와 `install-sw.js`는 `/sjrpg2/` 상대 경로를 사용하며, worker는 엔진·PCK를 캐시하지 않습니다.
+연결이 끊긴 상태로 실행하면 연결 안내를 표시합니다. `tools/export_web.sh`가 manifest·worker·설치 아이콘을 함께 복사합니다.
+`node web/check_install.mjs`는 합성 prompt 이벤트의 상태 처리와 실제 manifest/worker를 검사하며, 기기에서의 실제 설치 검증을 대신하지 않습니다.
+
 PC 월드 좌클릭은 GUI 처리 뒤 `TouchControls.hold_mouse_primary()`를 거쳐 모바일 주 슬롯과 같은 `Player.cast_slot(0)`을 호출합니다.
 마우스는 HUD 버튼을 누를 수 있지만 가상 조이스틱을 시작하지 않습니다. 1–4는 보조 슬롯, WASD/방향키는 직접 이동입니다.
 우클릭은 `Game.screen_to_world()`로 실제 렌더 뷰포트 크기와 카메라 변환을 역산해 이동 목적지를 정합니다.
@@ -281,6 +292,12 @@ HUD는 실패 시 누를 수 있는 재시도 안내를 유지하며 설정의 �
 `.github/workflows/web.yml`이 모든 푸시에서 `tools/setup_godot.sh` → `tools/check.sh --export`를 실행하고, `main`이면 `build/web`을 Pages에 배포합니다.
 
 ## 전투 피드백
+
+[몬스터 원화 검수](monster-animation.md)는 다섯 종류의 걷기·공격 640프레임과 해시를 기록합니다.
+`monster_motion`은 이 원본 해시·클립 구조와 실제 피해 시점·회복 대기를 검사합니다.
+공격 준비의 길이는 진입 시 고정해 둔 타이머를 따릅니다. 공격 후 복귀 원화는 일반 0.28초·보스 0.4초 동안 재생한 뒤
+마지막 중립 자세를 유지하며 기존 0.7초·1.2초 회복 시간을 기다립니다. 둔화는 이 시간들을 같은 비율로 늘립니다.
+보스가 회복에서 이전 공격 자세로 돌아가던 잘못된 분모를 제거했습니다. 체력바는 피해·사망 때, 위험 예고는 준비 중에만 다시 그립니다.
 
 `Effect.spawn_impact()`는 실제 피해 확정 뒤에만 생성형 속성별 4프레임 원화(`assets/source/combat-frames.png` → `assets/art/effects/combat-frames.webp`)를 가산광으로 짧게 표시합니다. 기존 장식64개 한도를 공유하며 투사체·피해 영역과 분리합니다. 적의 반동은 스프라이트 위치에만 적용합니다. `Game.combat_feedback()`는 근처 명중에만 최대6px의 감쇠하는 카메라 오프셋을 더하며 시간 배율을 바꾸지 않습니다. 동작 줄이기는 이 움직임을 끕니다.
 HUD는 체력·물약 수·쿨다운의 실제 변화를 감지합니다. 사운드의 작은 피치 변화는 별도 난수기를 써 전투 난수에 영향을 주지 않습니다. `juice` 테스트는 실제 피해·무적 중 중복 반응 방지·모션 설정·장식 한도를 검사합니다.

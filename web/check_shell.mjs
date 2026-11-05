@@ -8,6 +8,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const template = await readFile(new URL('./shell.html', import.meta.url), 'utf8');
 const art = await readFile(new URL('./loading-bg.webp', import.meta.url));
+const installer = await readFile(new URL('./install.js', import.meta.url), 'utf8');
 const html = template.replaceAll('$GODOT_PROJECT_NAME', '자연의 수호자')
   .replaceAll('$GODOT_HEAD_INCLUDE', '').replaceAll('$GODOT_URL', 'engine.js')
   .replaceAll('$GODOT_CONFIG', '{}').replaceAll('$GODOT_THREADS_ENABLED', 'false');
@@ -18,6 +19,7 @@ try {
     const page = await browser.newPage({ viewport, reducedMotion: 'reduce' });
     await page.route('https://loader.test/**', async route => {
       const name = new URL(route.request().url()).pathname;
+      if (name === '/install.js') return route.fulfill({ contentType: 'text/javascript', body: installer });
       if (name === '/loading-bg.webp') return route.fulfill({ contentType: 'image/webp', body: art });
       if (name === '/engine.js') return route.fulfill({ contentType: 'text/javascript', body: `
         window.Engine = class {
@@ -65,6 +67,7 @@ try {
     const page = await browser.newPage({ viewport: { width: 412, height: 839 } });
     await page.route('https://loader.test/**', async route => {
       const name = new URL(route.request().url()).pathname;
+      if (name === '/install.js') return route.fulfill({ contentType: 'text/javascript', body: installer });
       if (name === '/loading-bg.webp') return route.fulfill({ contentType: 'image/webp', body: art });
       if (name === '/engine.js') {
         if (scenario === 'script-failed') return route.abort('failed');

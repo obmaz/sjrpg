@@ -49,7 +49,11 @@ try {
         };
         requestAnimationFrame(frame);
     }));
-    console.log(JSON.stringify({ device, quality, hero, renderer, ...result, world: await page.evaluate(() => window.__sjrpgRenderProbe), errors }, null, 2));
+    const browserSurface = await page.evaluate(() => {
+        const canvas = document.querySelector('canvas');
+        return { dpr: window.devicePixelRatio, inner_width: innerWidth, inner_height: innerHeight, css_width: canvas.clientWidth, css_height: canvas.clientHeight, canvas_width: canvas.width, canvas_height: canvas.height };
+    });
+    console.log(JSON.stringify({ device, quality, hero, renderer, ...result, world: await page.evaluate(() => window.__sjrpgRenderProbe), surface: browserSurface, errors }, null, 2));
     if (errors.length) process.exitCode = 1;
     await context.close();
 } finally {

@@ -8,6 +8,9 @@ signal restart_requested
 
 var game: Node
 var _feedback := ""
+var _install_button: Button
+var _install_hint: Label
+var _install_poll := 0.0
 
 
 func setup(g: Node) -> SettingsPanel:
@@ -24,6 +27,14 @@ func _ready() -> void:
 
 func _rebuild() -> void:
 	clear_body()
+	if OS.has_feature("web"):
+		body.add_child(PanelFrame.section("기기에 설치"))
+		_install_button = _action_row("이 기기에 설치", _request_install)
+		body.add_child(_install_button)
+		_install_hint = PanelFrame.wrap_label("브라우저의 설치 기능을 확인하고 있습니다.", 15, UiKit.MUTED)
+		body.add_child(_install_hint)
+		_refresh_install()
+		body.add_child(UiKit.divider())
 	body.add_child(PanelFrame.section("화면과 타격감"))
 	body.add_child(_action_row("전체화면 끄기" if Prefs.is_fullscreen() else "전체화면 켜기", func():
 		Prefs.toggle_fullscreen()
@@ -61,6 +72,35 @@ func _rebuild() -> void:
 	body.add_child(_action_row("저장하고 타이틀로", func(): title_requested.emit()))
 	var danger := _action_row("새 모험 준비", func(): _confirm_restart())
 	body.add_child(danger)
+
+
+func _process(delta: float) -> void:
+	if not OS.has_feature("web"):
+		return
+	_install_poll -= delta
+	if _install_poll <= 0.0:
+		_install_poll = 1.0
+		_refresh_install()
+
+
+func _request_install() -> void:
+	# Call synchronously from Button.pressed; the JS bridge invokes prompt before awaiting a result.
+	JavaScriptBridge.eval("if (window.SjrpgInstall) window.SjrpgInstall.request();")
+	_refresh_install()
+
+
+func _refresh_install() -> void:
+	if not is_instance_valid(_install_button) or _install_button.is_queued_for_deletion():
+		return
+	var raw: Variant = JavaScriptBridge.eval("JSON.stringify(window.SjrpgInstall ? window.SjrpgInstall.state() : {status:'manual',title:'설치 · 홈 화면 추가 안내',detail:'브라우저 메뉴에서 앱 설치 또는 홈 화면에 추가를 선택해 주세요.'})", true)
+	if not raw is String:
+		return
+	var parsed: Variant = JSON.parse_string(raw)
+	if not parsed is Dictionary:
+		return
+	_install_button.text = str(parsed.get("title", "이 기기에 설치"))
+	_install_button.disabled = str(parsed.get("status", "manual")) in ["installed", "prompting"]
+	_install_hint.text = str(parsed.get("detail", ""))
 
 
 func _confirm_restart() -> void:
