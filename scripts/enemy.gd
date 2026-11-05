@@ -141,17 +141,19 @@ func _update_tint() -> void:
 		sprite.tint = Color.WHITE
 
 
-func take_damage(amount: float, source: Node2D) -> void:
+func take_damage(amount: float, source: Node2D, visual_source: Node2D = null) -> void:
 	if dead or amount <= 0.0:
 		return
 	if _cry_time > 0.0:
 		amount *= 1.0 + _cry_value
 	hp -= amount
 	var heavy := hp <= 0.0 or amount >= max_hp * 0.3
-	Effect.spawn_impact(game, position + Vector2(0, -sprite.body_height * 0.55), source, heavy)
+	# Zone ticks have elemental visuals without acquiring direct-hit knockback or weapon effects.
+	var impact_source: Node2D = visual_source if is_instance_valid(visual_source) else source
+	Effect.spawn_impact(game, position + Vector2(0, -sprite.body_height * 0.55), impact_source, heavy)
 	game.combat_feedback(position, 0.8 if heavy else 0.32, false)
-	if source != null and not Prefs.reduce_motion:
-		_recoil_direction = Effect.contact_direction(source, position)
+	if is_instance_valid(impact_source) and not Prefs.reduce_motion:
+		_recoil_direction = Effect.contact_direction(impact_source, position)
 		_recoil_size = 8.0 if heavy else 5.0
 		_recoil_age = 0.0
 		_recoil_started = false

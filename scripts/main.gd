@@ -58,14 +58,17 @@ func start_game() -> void:
 
 
 func _choose_hero(cls: String) -> void:
-	if not GameState.has_save():
+	if not GameState.has_save_files():
 		_begin_new_game(cls)
 		return
 	var confirm := PanelFrame.new()
 	add_child(confirm)
 	confirm.set_compact()
 	confirm.set_header("새 모험을 시작할까요?")
-	confirm.body.add_child(PanelFrame.wrap_label("새 모험을 시작하면 이전 진행을 덮어씁니다. 취소하면 기존 모험을 유지합니다.", 22))
+	var message := "새 모험을 시작하면 이전 진행을 덮어씁니다. 취소하면 기존 모험을 유지합니다."
+	if not GameState.has_save():
+		message = "저장 파일이 있지만 현재 읽을 수 없습니다. 새 모험을 시작하면 기존 파일을 덮어씁니다. 취소하면 파일을 그대로 유지합니다."
+	confirm.body.add_child(PanelFrame.wrap_label(message, 22))
 	confirm.add_footer("취소", func(): confirm.queue_free())
 	confirm.add_footer("새 모험 시작", func():
 		confirm.queue_free()

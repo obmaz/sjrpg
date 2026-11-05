@@ -39,6 +39,8 @@ var _attack_duration := 0.42
 var _attack_melee := false
 var _resolving_melee_contact := false
 var _pending: Callable
+var _action_serial := 0
+var _release_pending := false
 var _invulnerable := 0.0
 var _roll_time := 0.0
 var _roll_dir := Vector2.ZERO
@@ -161,6 +163,9 @@ func _process(delta: float) -> void:
 			_pending = Callable()
 			_resolving_melee_contact = _attack_melee
 			action.call()
+			if _release_pending and not dead:
+				Effect.spawn_release(game, self, impact_color)
+			_release_pending = false
 			_resolving_melee_contact = false
 		position = game.move_actor(position, position + input * speed() * 0.25 * delta, RADIUS)
 		return
@@ -270,6 +275,8 @@ func cast_slot(index: int, repeat := false) -> bool:
 		_attack_duration = float(weapon_melee()["tempo"])
 	_attack_time = _attack_duration
 	_pending = action
+	_action_serial += 1
+	_release_pending = is_mage and d["type"] in ["proj", "orb", "beam", "cone"]
 	_cast_feedback(d)
 	return true
 
@@ -300,6 +307,9 @@ func try_roll() -> void:
 	var dir := move_input if move_input.length() > 0.1 else Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	if dir.length() < 0.1:
 		dir = Vector2.from_angle(facing)
+	_action_serial += 1
+	_release_pending = false
+	Effect.spawn_dodge_echo(game, self)
 	_roll_dir = dir.normalized()
 	facing = _roll_dir.angle()
 	_roll_time = ROLL_TIME
@@ -375,9 +385,18 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 			if first == null:
 				game.toast("사거리 안에 적이 없습니다")
 				return Callable()
+			# Capture a WeakRef, not the Enemy: the VM validates strong lambda captures before entering the body.
+			var anchor: WeakRef = weakref(first)
 			return func():
 				var jumps := int(d["jumps"] + d["jump_growth"] * (rank - 1))
-				game.chain_lightning(position, first, jumps, d["radius"], damage_for(id, power), self)
+				var captured_target: Enemy = anchor.get_ref() as Enemy
+				var target: Enemy
+				if is_instance_valid(captured_target) and not captured_target.dead and position.distance_to(captured_target.position) <= float(d["range"]):
+					target = captured_target
+				else:
+					target = game.nearest_enemy(position, d["range"])
+				if target != null:
+					game.chain_lightning(position, target, jumps, d["radius"], damage_for(id, power), self)
 		"cone":
 			_aim(d["range"] + 40.0)
 			return func():
@@ -498,11 +517,15 @@ func _prepare_leap(id: String, d: Dictionary, rank: int, power: float) -> Callab
 		var dir := move_input if move_input.length() > 0.1 else Input.get_vector("move_left", "move_right", "move_up", "move_down")
 		if dir.length() > 0.1:
 			facing = dir.angle()
+	var anchor: WeakRef = weakref(target) if target != null else null
 	return func():
+		var current: Enemy = anchor.get_ref() as Enemy if anchor != null else null
+		if d.get("to_enemy", false) and (not is_instance_valid(current) or current.dead):
+			return
 		var from := position
 		var reach := dist
-		if target and is_instance_valid(target):
-			reach = maxf(0.0, position.distance_to(target.position) - 36.0)
+		if is_instance_valid(current):
+			reach = minf(dist, maxf(0.0, position.distance_to(current.position) - 36.0))
 		position = game.find_open_point(position, Vector2.from_angle(facing), reach, RADIUS)
 		game.spawn_trail(from, position, SkillDefs.STEEL)
 		game.spawn_nova(position, d["radius"], SkillDefs.STEEL, true)
@@ -674,7 +697,7 @@ func take_damage(amount: float, attacker: Node2D = null) -> void:
 	if hp <= 0.0:
 		hp = 0.0
 		dead = true
-		sprite.clear_contact_hold()
+		_cancel_actions()
 		buffs.clear()
 		GameState.bonus_ranks = 0
 		sprite.tint = Color(1, 1, 1, 0.45)
@@ -697,7 +720,23 @@ func _armor_retaliate(attacker: Node2D) -> void:
 				"color": SkillDefs.COLD, "slow": 2.0}, self)
 
 
+## Death and resurrection cannot preserve a delayed skill target or old movement input.
+func _cancel_actions() -> void:
+	_action_serial += 1
+	_pending = Callable()
+	_attack_time = 0.0
+	_attack_melee = false
+	_resolving_melee_contact = false
+	_release_pending = false
+	_roll_time = 0.0
+	_roll_dir = Vector2.ZERO
+	held_slots.clear()
+	move_input = Vector2.ZERO
+	sprite.clear_contact_hold()
+
+
 func revive(at: Vector2) -> void:
+	_cancel_actions()
 	dead = false
 	sprite.clear_contact_hold()
 	position = at

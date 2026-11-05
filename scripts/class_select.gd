@@ -82,7 +82,7 @@ func _ready() -> void:
 		selected_class = GameState.hero_class
 		continue_button.text = "이어하기 · %s Lv.%d%s" % [GameState.class_info()["name"], GameState.level, " · 백업 복원" if GameState.loaded_backup else ""]
 		continue_button.disabled = false
-	elif FileAccess.file_exists(GameState.save_path):
+	elif GameState.has_save_files():
 		continue_button.text = "저장을 읽을 수 없습니다"
 	resized.connect(_layout)
 	select_class(selected_class)

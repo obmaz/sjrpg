@@ -362,6 +362,7 @@ func add_xp(amount: int) -> int:
 
 
 func new_game(cls: String) -> void:
+	bonus_ranks = 0
 	hero_class = cls
 	level = 1
 	xp = 0
@@ -397,6 +398,14 @@ func delete_save() -> void:
 
 func has_save() -> bool:
 	return not SaveStore.read(save_path, _valid_save).is_empty()
+
+
+## Unreadable or interrupted saves still belong to the player and require replacement confirmation.
+func has_save_files() -> bool:
+	for suffix in ["", ".bak", ".tmp", ".bak.tmp"]:
+		if FileAccess.file_exists(save_path + suffix):
+			return true
+	return false
 
 
 func save_game() -> bool:
@@ -469,6 +478,8 @@ func load_game() -> bool:
 	if recovered.is_empty():
 		return false
 	var data: Dictionary = recovered["data"]
+	# Command buffs belong to the old Player and have no timer after a new session starts.
+	bonus_ranks = 0
 	loaded_backup = recovered["backup"]
 	hero_class = data["class"]
 	level = int(data.get("level", 1))

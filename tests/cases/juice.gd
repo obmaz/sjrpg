@@ -18,6 +18,12 @@ func run() -> void:
 	check("confirmed hit preserves exact damage", is_equal_approx(enemy.hp, before - 2))
 	check("confirmed hit creates an impact", game.cosmetic_effects.any(func(e): return e.kind == "impact"))
 	check("camera impact stays bounded", game._impact_offset.length() > 0 and game._impact_offset.length() <= 6.0)
+	var first_pulse: float = game._impact_offset.length()
+	check("confirmed contact reaches the camera in its actual frame", game.camera.offset == game._impact_offset)
+	game._update_impact_camera(0.4)
+	check("slow next frame preserves the first contact pulse", game.camera.offset.length() >= first_pulse * 0.8)
+	game._update_impact_camera(0.4)
+	check("camera impulse still decays after its first presentation", game.camera.offset.length() < first_pulse * 0.01)
 	check("contact pose and recoil are visual only", enemy.sprite.contact_hold > 0.0 and enemy.position == ground_position and enemy.sprite.position.length() <= 8.0)
 	var contact_frame := enemy.sprite.frame
 	enemy.sprite.set_frame(enemy.atlas, (contact_frame + 1) % enemy.atlas.regions.size())
@@ -87,6 +93,10 @@ func run() -> void:
 	game.queue_free()
 	await _frames(2)
 	await _check_cast_presentation()
+	await _check_projectile_sweep()
+	await _check_death_cancellation()
+	await _check_chain_target_lifetime()
+	await _check_leap_target_lifetime()
 	Prefs.reduce_motion = old_reduce
 
 
@@ -111,6 +121,7 @@ func _check_cast_presentation() -> void:
 	glow._process(0.025)
 	check("hand light follows the actor instead of staying on the floor", glow.position.is_equal_approx(mage.position + Effect.cast_hand_offset(mage.facing, mage.sprite.body_height)))
 	check("preparation light does not advance attacks or spend more mana", mage._attack_time == attack_time and mage.resource == resource and mage._pending.is_valid())
+
 	game.hud.open_settings()
 	var age := glow.age
 	await _frames(3)
@@ -121,8 +132,161 @@ func _check_cast_presentation() -> void:
 	calm._process(0.04)
 	check("reduced motion keeps a short gameplay-free cast confirmation", not calm.is_queued_for_deletion() and calm.damage == 0.0 and mage._attack_time == attack_time)
 	Prefs.reduce_motion = false
+	mage._process(mage._attack_duration * 0.46)
+	check("actual spell release emits one short directional pulse", game.cosmetic_effects.filter(func(e: Effect) -> bool: return e.kind == "release").size() == 1 and not mage._pending.is_valid())
 	mage.try_roll()
 	glow._process(0.01)
 	check("rolling cancels the hand light immediately", glow.is_queued_for_deletion())
+	game.queue_free()
+	await _frames(2)
+
+
+func _fixture_enemy(game: Node, at: Vector2) -> Enemy:
+	var foe := Enemy.new()
+	foe.setup(game, "goblin", 1)
+	foe.position = at
+	foe.hp = 100.0
+	foe.max_hp = 100.0
+	game.world.add_child(foe)
+	game.enemies.append(foe)
+	foe.set_process(false)
+	return foe
+
+
+func _fixture_projectile(game: Node, at: Vector2, piercing := false, lifetime := 1.0) -> Effect:
+	var shot := Effect.new()
+	shot.kind = "proj"
+	shot.position = at - Vector2(0, 34)
+	shot.velocity = Vector2(600, 0)
+	shot.damage = 3.0
+	shot.life = lifetime
+	shot.params["pierce"] = piercing
+	game._add_effect(shot)
+	shot.set_process(false)
+	return shot
+
+
+func _check_projectile_sweep() -> void:
+	var game := await make_game()
+	var base: Vector2 = game.player.position + Vector2(0, 250)
+	var far := _fixture_enemy(game, base + Vector2(130, 0))
+	var near := _fixture_enemy(game, base + Vector2(60, 0))
+	var shot := _fixture_projectile(game, base)
+	shot._process(0.35)
+	check("slow projectile frame hits nearest enemy regardless of array order", near.hp == 97.0 and far.hp == 100.0 and shot.is_queued_for_deletion())
+	var overlap := _fixture_enemy(game, near.position)
+	near.hp = 100.0
+	var piercing := _fixture_projectile(game, base, true)
+	piercing._process(0.35)
+	check("piercing sweep reaches stacked and farther enemies exactly once", near.hp == 97.0 and overlap.hp == 97.0 and far.hp == 97.0 and piercing._hit.size() == 3)
+	piercing.position = base - Vector2(0, 34)
+	piercing._process(0.1)
+	check("piercing reentry cannot damage a previous target twice", near.hp == 97.0 and overlap.hp == 97.0)
+	var short_lived := _fixture_projectile(game, base, false, 0.01)
+	short_lived._process(0.35)
+	check("projectile travel is bounded by remaining lifetime", near.hp == 97.0 and short_lived.position.x <= base.x + 6.01 and short_lived.is_queued_for_deletion())
+	var expired := _fixture_projectile(game, near.position)
+	expired.age = expired.life
+	expired._process(0.1)
+	check("expired projectile cannot strike a target already under it", near.hp == 97.0 and expired.is_queued_for_deletion())
+	var zone := Effect.new()
+	zone.kind = "zone"
+	zone.position = near.position
+	zone.radius = 50.0
+	zone.damage = 2.0
+	zone.color = SkillDefs.FIRE
+	zone.owner_node = game.player
+	game._add_effect(zone)
+	zone.set_process(false)
+	near._knockback = Vector2.ZERO
+	var before_tick := near.hp
+	zone._update_zone(0.01)
+	var impacts: Array = game.cosmetic_effects.filter(func(e: Effect) -> bool: return e.kind == "impact")
+	check("zone damage keeps elemental contact art without changing damage or adding knockback", near.hp == before_tick - 2.0 and near._knockback == Vector2.ZERO and impacts[-1].params["cell"] == 1)
+	game.queue_free()
+	await _frames(2)
+
+
+func _check_death_cancellation() -> void:
+	var game := await make_game("mage")
+	var hero: Player = game.player
+	hero.set_process(false)
+	check("death regression begins a real spell windup", hero.cast_slot(0))
+	var glow: Effect = game.cosmetic_effects.filter(func(e: Effect) -> bool: return e.kind == "cast")[0]
+	var called := {"value": false}
+	var queued_action := hero._pending
+	hero._pending = func():
+		called["value"] = true
+		queued_action.call()
+	hero.held_slots[0] = true
+	hero.move_input = Vector2.RIGHT
+	hero._invulnerable = 0.0
+	hero.take_damage(1000000.0)
+	check("lethal damage discards queued skills and held input", hero.dead and not hero._pending.is_valid() and hero._attack_time == 0.0 and hero.held_slots.is_empty() and hero.move_input == Vector2.ZERO)
+	var sanctuary := hero.position + Vector2(200, 40)
+	hero.revive(sanctuary)
+	hero._process(0.8)
+	glow._process(0.01)
+	check("revival cannot resume old spell or leave a stale preparation light", not called["value"] and hero.position.is_equal_approx(sanctuary) and glow.is_queued_for_deletion() and not game.world.get_children().any(func(node: Node) -> bool: return node is Effect and node.kind == "proj"))
+	hero.try_roll()
+	check("successful dodge produces a small cosmetic echo", game.cosmetic_effects.any(func(e: Effect) -> bool: return e.kind == "dodge_echo"))
+	hero._invulnerable = 0.0
+	hero.take_damage(1000000.0)
+	hero.revive(sanctuary)
+	hero._process(0.2)
+	check("revival cannot inherit residual roll movement", hero._roll_time == 0.0 and hero.position.is_equal_approx(sanctuary))
+	Prefs.reduce_motion = true
+	check("reduced motion suppresses dodge echoes", Effect.spawn_dodge_echo(game, hero) == null)
+	Prefs.reduce_motion = false
+	game.queue_free()
+	await _frames(2)
+
+
+func _check_chain_target_lifetime() -> void:
+	var game := await make_game("mage")
+	game.player.set_process(false)
+	var at: Vector2 = game.player.position
+	var first := _fixture_enemy(game, at + Vector2(100, 0))
+	var replacement := _fixture_enemy(game, at + Vector2(200, 0))
+	var action: Callable = game.player._prepare("chainLightning", SkillDefs.get_def("chainLightning"), 1)
+	check("chain regression captures a real target", action.is_valid())
+	game.enemies.erase(first)
+	first.free()
+	action.call()
+	check("delayed chain reacquires within range after captured target is freed", replacement.hp < 100.0)
+	var before := replacement.hp
+	var cosmetics: int = game.cosmetic_effects.size()
+	game.chain_lightning(at, null, 4, 230.0, 10.0, game.player)
+	var dead_target := _fixture_enemy(game, at + Vector2(90, 0))
+	dead_target.dead = true
+	game.chain_lightning(at, dead_target, 4, 230.0, 10.0, game.player)
+	check("public chain helper rejects null and dead anchors without false hits", replacement.hp == before and game.cosmetic_effects.size() == cosmetics)
+	var pending: Callable = game.player._prepare("chainLightning", SkillDefs.get_def("chainLightning"), 1)
+	replacement.position = at + Vector2(1000, 0)
+	var before_moved := replacement.hp
+	pending.call()
+	check("delayed chain does not retain an anchor that left its original range", replacement.hp == before_moved)
+	game.queue_free()
+	await _frames(2)
+
+
+func _check_leap_target_lifetime() -> void:
+	var game := await make_game("warrior")
+	var hero: Player = game.player
+	hero.set_process(false)
+	var start := Iso.project(Vector2(-2800, -2800))
+	hero.position = start
+	var target := _fixture_enemy(game, start + Vector2(100, 0))
+	var definition := {"distance": 200.0, "to_enemy": true, "radius": 40.0}
+	var pending := hero._prepare_leap("leapAttack", definition, 1, 1.0)
+	target.free()
+	game.enemies.clear()
+	pending.call()
+	check("a removed leap target cancels safely without movement", hero.position == start)
+	var distant := _fixture_enemy(game, start + Vector2(100, 0))
+	pending = hero._prepare_leap("leapAttack", definition, 1, 1.0)
+	distant.position = start + Vector2(2000, 0)
+	pending.call()
+	check("target movement cannot extend leap beyond its original range", hero.position.distance_to(start) <= 200.01)
 	game.queue_free()
 	await _frames(2)

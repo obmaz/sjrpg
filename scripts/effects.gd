@@ -51,11 +51,39 @@ static func spawn_cast(world_game: Node, caster: Player, tint: Color) -> Effect:
 	cast.life = 0.30
 	cast.color = tint
 	cast.params["cell"] = _element_cell(tint)
+	cast.params["action_serial"] = caster._action_serial
 	cast.z_index = 5
 	cast.material = _glow_material()
 	cast.position = caster.position + cast_hand_offset(caster.facing, caster.sprite.body_height)
 	world_game._add_effect(cast)
 	return cast
+
+
+## A compact directional release confirms the actual deferred callback, not merely a button press.
+static func spawn_release(world_game: Node, caster: Player, tint: Color) -> Effect:
+	var release := Effect.new()
+	release.kind = "release"
+	release.life = 0.14
+	release.position = caster.position + cast_hand_offset(caster.facing, caster.sprite.body_height)
+	release.velocity = Vector2.from_angle(caster.facing) * (0.0 if Prefs.reduce_motion else 70.0)
+	release.params["cell"] = _element_cell(tint)
+	release.material = _glow_material()
+	release.z_index = 6
+	world_game._add_effect(release)
+	return release
+
+
+static func spawn_dodge_echo(world_game: Node, caster: Player) -> Effect:
+	if Prefs.reduce_motion:
+		return null
+	var echo := Effect.new()
+	echo.kind = "dodge_echo"
+	echo.position = caster.position
+	echo.life = 0.15
+	echo.params = {"atlas": caster.sprite.atlas, "frame": caster.sprite.frame, "height": caster.sprite.body_height}
+	echo.z_index = caster.z_index
+	world_game._add_effect(echo)
+	return echo
 
 
 static func cast_hand_offset(facing: float, body_height: float) -> Vector2:
@@ -102,22 +130,25 @@ static func spawn_impact(world_game: Node, at: Vector2, source: Node2D, heavy :=
 
 
 func _process(delta: float) -> void:
+	var active_delta := minf(delta, maxf(0.0, life - age))
 	# A slow frame must not discard a new cosmetic impact before its first render.
 	# Only the first update is bounded; headless/offscreen effects still expire normally.
-	if kind in ["impact", "cast"] and not _impact_started:
+	if kind in ["impact", "cast", "release", "dodge_echo"] and not _impact_started:
 		age += minf(delta, life * 0.2)
 		_impact_started = true
 	else:
 		age += delta
 	match kind:
+		"release":
+			position += velocity * active_delta
 		"cast":
 			var caster := owner_node as Player
-			if not is_instance_valid(caster) or caster.dead or caster._roll_time > 0.0:
+			if not is_instance_valid(caster) or caster.dead or caster._roll_time > 0.0 or int(params.get("action_serial", -1)) != caster._action_serial:
 				queue_free()
 				return
 			position = caster.position + cast_hand_offset(caster.facing, caster.sprite.body_height)
 		"proj":
-			_update_projectile(delta)
+			_update_projectile(active_delta)
 		"orb":
 			_update_orb(delta)
 		"zone":
@@ -145,25 +176,73 @@ func _ground() -> Vector2:
 	return position + Vector2(0, 34)
 
 
+## Ordered continuous circle contacts prevent tunneling and do not let an already-hit front enemy hide others.
+func _projectile_contacts(start: Vector2, finish: Vector2) -> Array[Dictionary]:
+	var contacts: Array[Dictionary] = []
+	var travel := finish - start
+	var distance_squared := travel.length_squared()
+	var contact_radius := 26.0 + Enemy.RADIUS
+	for enemy in game.enemies:
+		if not is_instance_valid(enemy) or enemy.dead or _hit.has(enemy):
+			continue
+		var offset: Vector2 = start - enemy.position
+		var c := offset.length_squared() - contact_radius * contact_radius
+		var fraction := 0.0
+		if c > 0.0:
+			if distance_squared < 0.0001:
+				continue
+			var projection := offset.dot(travel)
+			var discriminant := projection * projection - distance_squared * c
+			if discriminant < 0.0:
+				continue
+			fraction = (-projection - sqrt(discriminant)) / distance_squared
+			if fraction < 0.0 or fraction > 1.0:
+				continue
+		contacts.append({"enemy": enemy, "fraction": fraction})
+	contacts.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["fraction"]) < float(b["fraction"]))
+	return contacts
+
+
 func _update_projectile(delta: float) -> void:
+	if delta <= 0.0:
+		return
 	var dir := velocity.normalized()
 	if params.get("wiggle", false):
-		dir = dir.rotated(sin(age * 18.0 + params.get("seed", 0.0)) * 0.6)
-	position += dir * velocity.length() * delta
-	game.break_chests_at(_ground(), 22.0, owner_node)
-	var hit: Enemy = game.enemy_hit_by_point(_ground(), 26.0)
-	if hit == null or _hit.has(hit):
-		return
-	_hit[hit] = true
-	if float(params.get("explode", 0.0)) > 0.0:
-		for e in game.enemies_in_radius(_ground(), params["explode"]):
-			_apply(e, damage)
-		game.spawn_nova(_ground(), params["explode"], color, true)
-	else:
-		_apply(hit, damage)
-		game.spawn_nova(_ground(), 40.0, color, true)
-	if not params.get("pierce", false):
-		queue_free()
+		dir = dir.rotated(sin(minf(age, life) * 18.0 + params.get("seed", 0.0)) * 0.6)
+	var start := _ground()
+	var finish := start + dir * velocity.length() * delta
+	var contacts := _projectile_contacts(start, finish)
+	var piercing: bool = params.get("pierce", false)
+	if not piercing and not contacts.is_empty():
+		finish = start.lerp(finish, float(contacts[0]["fraction"]))
+	# Chest interaction follows the same bounded path, never past a blocking first contact.
+	var steps := maxi(1, ceili(start.distance_to(finish) / 22.0))
+	for step in range(steps + 1):
+		game.break_chests_at(start.lerp(finish, float(step) / steps), 22.0, owner_node)
+	var travel_end := start + dir * velocity.length() * delta
+	for contact in contacts:
+		var hit: Enemy = contact["enemy"]
+		if not is_instance_valid(hit) or hit.dead or _hit.has(hit):
+			continue
+		position = start.lerp(travel_end, float(contact["fraction"])) - Vector2(0, 34)
+		_hit[hit] = true
+		if float(params.get("explode", 0.0)) > 0.0:
+			var victims: Array = game.enemies_in_radius(_ground(), params["explode"])
+			if not victims.has(hit):
+				victims.append(hit)
+			for enemy in victims:
+				if enemy != hit and _hit.has(enemy):
+					continue
+				_hit[enemy] = true
+				_apply(enemy, damage)
+			game.spawn_nova(_ground(), params["explode"], color, true)
+		else:
+			_apply(hit, damage)
+			game.spawn_nova(_ground(), 40.0, color, true)
+		if not piercing:
+			queue_free()
+			return
+	position = finish - Vector2(0, 34)
 
 
 func _apply(e: Enemy, amount: float) -> void:
@@ -207,7 +286,7 @@ func _update_zone(delta: float) -> void:
 	_tick_timer = float(params.get("tick", 0.3))
 	game.break_chests_in_radius(position, radius, owner_node)
 	for e in _zone_targets():
-		e.take_damage(damage, null)
+		e.take_damage(damage, null, self)
 		if float(params.get("slow", 0.0)) > 0.0:
 			e.slow(params["slow"])
 
@@ -251,6 +330,18 @@ func _update_ward(delta: float) -> void:
 func _draw() -> void:
 	var t := age / life
 	match kind:
+		"release":
+			_draw_generated_glow(Vector2.ZERO, 38.0 if Prefs.reduce_motion else 42.0 + 8.0 * t, int(params["cell"]), (0.32 if Prefs.reduce_motion else 0.7) * (1.0 - t))
+		"dodge_echo":
+			if Prefs.reduce_motion:
+				return
+			var atlas: ActorAtlas = params["atlas"]
+			var frame: int = params["frame"]
+			if atlas == null or frame >= atlas.regions.size():
+				return
+			var factor: float = float(params["height"]) / atlas.ref_height
+			var region := atlas.regions[frame]
+			draw_texture_rect_region(atlas.texture, Rect2(-atlas.anchors[frame] * factor, region.size * factor), region, Color(0.65, 0.8, 1.0, 0.22 * (1.0 - t)))
 		"cast":
 			var fade := pow(1.0 - clampf(t, 0.0, 1.0), 0.7)
 			var strength := 0.45 if Prefs.reduce_motion else 0.72

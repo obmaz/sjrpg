@@ -47,5 +47,33 @@ func run() -> void:
 	check("preview never overwrites an existing save", FileAccess.get_file_as_string(GameState.save_path) == saved and GameState.hero_class == "warrior" and GameState.gold == 321)
 	loaded.queue_free()
 	await _frames(2)
+	await _check_unreadable_save()
 	GameState.delete_save()
 	GameState.save_path = old_path
+
+
+func _check_unreadable_save() -> void:
+	var root := preload("res://scripts/main.gd").new()
+	add_child(root)
+	for sample in [["", "{broken"], [".bak", JSON.stringify({"class": "mage", "version": GameState.SAVE_VERSION + 1})], [".tmp", "{interrupted"], [".bak.tmp", "{}"]]:
+		GameState.delete_save()
+		var path := GameState.save_path + str(sample[0])
+		var file := FileAccess.open(path, FileAccess.WRITE)
+		file.store_string(str(sample[1]))
+		file.close()
+		root.show_class_select()
+		await _frames(3)
+		check("unreadable save disables continue but explains its presence " + str(sample[0]), root.current.continue_button.disabled and root.current.continue_button.text == "저장을 읽을 수 없습니다")
+		root._choose_hero("mage")
+		var confirmation: PanelFrame = null
+		for child in root.get_children():
+			if child is PanelFrame:
+				confirmation = child
+		check("unreadable or interrupted files still require replacement confirmation " + str(sample[0]), confirmation != null)
+		check("opening replacement confirmation leaves save bytes intact", FileAccess.get_file_as_string(path) == str(sample[1]))
+		if confirmation != null:
+			confirmation.closed.emit()
+		await _frames(3)
+		check("cancel preserves unreadable save files", FileAccess.get_file_as_string(path) == str(sample[1]))
+	root.queue_free()
+	await _frames(2)

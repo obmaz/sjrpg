@@ -20,6 +20,7 @@ const SCENES = {
     warp: 'at=portal&panel=warp',
     warp_trip: 'warp_preview=1',
     juice: 'at=field&combat_preview=1',
+    dodge: 'at=field',
     corpses: 'corpse_preview=1',
     corpses_bridge: 'corpse_preview=bridge&zoom=1.2',
     corpses_terrace: 'corpse_preview=terrace&zoom=1.1',
@@ -41,6 +42,9 @@ const SCENES = {
     hill: 'at=lm2&zoom=0.85',
     garden: 'at=lm1&zoom=0.85',
     wallcorner: 'at=corner0&zoom=0.8',
+    wallcorner1: 'at=corner1&zoom=0.8',
+    wallcorner2: 'at=corner2&zoom=0.8',
+    wallcorner3: 'at=corner3&zoom=0.8',
     lm1: 'at=lm1&zoom=0.5',
     lm2: 'at=lm2&zoom=0.5',
     waterfall: 'at=lm3&zoom=0.6',
@@ -146,12 +150,21 @@ if (scene.startsWith('hud')) {
     await page.waitForFunction(() => window.__sjrpgCorpsePreviewReady === true, null, {timeout: 30000});
     await page.waitForTimeout(1500);
 } else await page.waitForTimeout(9000);
+if (scene === 'dodge') {
+    await page.keyboard.down('Shift');
+    await page.waitForTimeout(70);
+    await page.keyboard.up('Shift');
+}
 if (scene === 'cooldowns') {
     // Exercise a real held cast; no fabricated cooldown or frozen gameplay state.
     await page.keyboard.down('Space');
     await page.waitForTimeout(250);
 }
 await page.screenshot({ path: out });
+if (scene === 'dodge') {
+    await page.waitForTimeout(500);
+    await page.screenshot({path: out.replace(/\.png$/, '-settled.png')});
+}
 if (scene.startsWith('corpses') && args.lifecycle === '1') {
     await page.waitForFunction(() => window.__sjrpgCorpsePreviewExpired === true, null, {timeout: 120000});
     await page.waitForTimeout(200);

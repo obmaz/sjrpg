@@ -65,7 +65,7 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 | 키 | 값 | 효과 |
 | --- | --- | --- |
 | `zoom` | 숫자 | 카메라 배율(작을수록 넓게) |
-| `at` | `field` `bridge` `bank` `gate0`–`gate3` `lm0`–`lm3` `mira` `elin` `rowen` `portal` `corner0` `corner3` | 시작 위치 |
+| `at` | `field` `bridge` `bank` `gate0`–`gate3` `lm0`–`lm3` `mira` `elin` `rowen` `portal` `corner0`–`corner3` | 시작 위치 |
 | `panel` | `bag` `shop` `skills` `settings` `smith` `journal` `mira` `elin` `victory` `warp` | 시작 1.5초 뒤 패널 열기 |
 | `quality` | `low` `high` | 절약 화질 켜기·끄기 |
 | `gold` | 정수 | 시작 골드 |
@@ -95,6 +95,14 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 100ms 재진입 제한으로 연속 피해의 자세 고착을 막고, 새 동작·구르기·사망·부활은 유지 상태를 해제합니다.
 적의 그림은 5/8px 이내 감쇠 반동으로 돌아오며 투사체는 진행 방향을 따릅니다. 강한 접촉음도 기존 음성 수·연타 제한을 공유합니다.
 동작 줄이기에서는 자세 유지·반동을 억제합니다.
+
+
+투사체는 수명의 남은 시간만 이동하며 실제 이동 선분과 적의 원형 판정을 연속 검사합니다. 접촉 순으로 처리해 비관통은 첫 접촉에 멈추고, 관통의 같은 대상은 다시 맞지 않습니다. 상자도 같은 구간을 검사합니다.
+`Player._cancel_actions()`가 사망·부활에서 예약 콜백·공격·구르기·유지 입력을 해제하고, 행동 번호가 이전 준비광을 무효화합니다. 연쇄 번개는 적을 약한 참조(`WeakRef`)로 보관하고 실행 시 생존·사거리를 다시 확인합니다.
+`Enemy.take_damage()`의 `visual_source`는 속성 피격·장식 반동에만 사용합니다. 지속 피해는 기존 `source=null`을 유지해 물리 밀려남·무기 효과를 추가하지 않습니다. 실제 발사광·구르기 잔상은 장식 한도에 포함하며 동작 줄이기를 따릅니다.
+카메라는 확인된 명중 즉시 작은 충격을 표시하고 첫 감쇠만 제한합니다. 이후 정상 시간으로 감쇠하므로 느린 프레임에서 첫 표시가 사라지거나 흔들림이 지속되지 않습니다.
+임시 기술 등급 강화는 새 모험과 정상 불러오기에서 초기화하고, 불러오기 실패 시 현재 상태는 유지합니다. 읽을 수 없는 저장·백업·임시 파일도 교체 확인을 거칩니다.
+검사 도구는 테스트의 실패 수뿐 아니라 엔진 `ERROR` 로그도 실패로 처리합니다.
 
 ## HUD 헤더 배치
 

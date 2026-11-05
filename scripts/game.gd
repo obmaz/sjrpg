@@ -17,6 +17,7 @@ var world: Node2D
 var forest_details: Array[IsoSprite] = []
 var player: Player
 var _impact_offset := Vector2.ZERO
+var _impact_fresh := false
 var camera: Camera2D
 var hud: Hud
 var village: Village
@@ -267,6 +268,10 @@ func _read_debug_params() -> void:
 					player.position = Iso.project(village.forecourt_g + Vector2(0, -60))
 				"corner0":
 					player.position = village.point(Vector2(0.04, 0.10)) + Vector2(0, 150)
+				"corner1":
+					player.position = village.point(Vector2(0.94, 0.10)) + Vector2(0, 150)
+				"corner2":
+					player.position = village.point(Vector2(0.04, 0.90)) + Vector2(0, 150)
 				"corner3":
 					player.position = village.point(Vector2(0.94, 0.90)) + Vector2(0, 150)
 			camera.position = player.position
@@ -520,11 +525,22 @@ func combat_feedback(at: Vector2, strength: float, hurt := false) -> void:
 	if direction.length_squared() < 0.1:
 		direction = Vector2(0.6, -0.8)
 	_impact_offset = (_impact_offset + direction * clampf(strength, 0.0, 1.0) * (4.0 if hurt else 2.6)).limit_length(6.0)
+	_impact_fresh = true
+	camera.offset = _impact_offset
+
+
+## Present a confirmed contact before a slow next frame can decay its whole pulse away.
+func _update_impact_camera(delta: float) -> void:
+	if Prefs.reduce_motion:
+		_impact_offset = Vector2.ZERO
+	else:
+		_impact_offset *= exp(-18.0 * (minf(delta, 0.012) if _impact_fresh else delta))
+	_impact_fresh = false
+	camera.offset = _impact_offset
 
 
 func _process(delta: float) -> void:
-	_impact_offset = Vector2.ZERO if Prefs.reduce_motion else _impact_offset * exp(-18.0 * delta)
-	camera.offset = _impact_offset
+	_update_impact_camera(delta)
 	camera.position = player.position + Vector2(0, -30)
 	if dungeon.active:
 		WorldOcclusion.update(player.global_position, false)
@@ -1086,21 +1102,24 @@ func spawn_beam(from: Vector2, angle: float, length: float, damage: float, color
 
 
 func chain_lightning(from: Vector2, first: Enemy, jumps: int, radius: float, damage: float, _owner: Node2D) -> void:
+	if not is_instance_valid(first) or first.dead:
+		return
 	var pts := PackedVector2Array([Vector2(0, -32)])
 	var hit := []
 	var current := first
 	for i in jumps + 1:
-		if current == null:
+		if not is_instance_valid(current) or current.dead:
 			break
+		var contact := current.position
 		hit.append(current)
 		current.take_damage(damage, player)
-		pts.append(current.position - from + Vector2(0, -36))
+		pts.append(contact - from + Vector2(0, -36))
 		var next: Enemy = null
 		var best := radius
-		for e in enemies_in_radius(current.position, radius):
+		for e in enemies_in_radius(contact, radius):
 			if hit.has(e):
 				continue
-			var d := current.position.distance_to(e.position)
+			var d := contact.distance_to(e.position)
 			if d < best:
 				best = d
 				next = e

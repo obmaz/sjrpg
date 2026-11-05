@@ -58,7 +58,23 @@ func run() -> void:
 	check("manual retry clears error", GameState.save_game() and GameState.save_error.is_empty())
 	GameState.delete_save()
 	check("delete removes primary and backup", not GameState.has_save())
+	await _check_transient_boost()
 	GameState.save_path = original_path
+
+
+func _check_transient_boost() -> void:
+	GameState.bonus_ranks = 1
+	GameState.new_game("mage")
+	check("a new hero cannot inherit an expired command timer", GameState.bonus_ranks == 0 and GameState.effective_rank("firebolt") == GameState.rank("firebolt"))
+	GameState.bonus_ranks = 1
+	GameState.save_game()
+	check("continue does not retain a global command buff from the previous scene", GameState.load_game() and GameState.bonus_ranks == 0 and GameState.effective_rank("firebolt") == GameState.rank("firebolt"))
+	GameState.delete_save()
+	_write(GameState.save_path, "{broken")
+	GameState.bonus_ranks = 1
+	check("a failed load leaves the current session's transient state alone", not GameState.load_game() and GameState.bonus_ranks == 1)
+	GameState.bonus_ranks = 0
+	GameState.delete_save()
 
 
 func _write(path: String, text: String) -> void:
