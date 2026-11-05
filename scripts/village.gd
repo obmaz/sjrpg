@@ -10,7 +10,7 @@ const ROAD_HALF := 0.047  # paved road half width in uv
 ## Preserve the reviewed generated material colors; scene light is a separate layer.
 const FOLIAGE := Color.WHITE
 ## Six to seven irregular stones per tile, around a quarter to a third of hero height.
-const COBBLE_PX := 512.0 / 210.0
+const COBBLE_PX := 512.0 / 180.0  # Match the reference's roughly 50–60px stones at the normal portrait camera.
 const WALL_JOIN_OVERLAP := 4.0  # Ground units: cover filtered cut-edge pixels without changing collision.
 const NPCS := [
 	["nw", "상인", 0], ["ne", "대장장이", 1], ["sw", "탈것 상인", 2], ["se", "촌장", 3],

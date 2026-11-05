@@ -16,6 +16,7 @@ var _low_view: SubViewport
 var _view_container: SubViewportContainer
 var world: Node2D
 var forest_details: Array[IsoSprite] = []
+var forest_lighting: ForestLighting
 var player: Player
 var _impact_offset := Vector2.ZERO
 var _impact_fresh := false
@@ -87,6 +88,9 @@ func _ready() -> void:
 	village.build(ground_layer, world)
 	village.build_field(world, FIELD.grow(-150), _rng)
 	forest_details = ForestArt.decorate(village, world)
+	forest_lighting = ForestLighting.new()
+	field_root.add_child(forest_lighting)
+	forest_lighting.setup(ground_layer, village)
 	map_shapes = MapGeometry.build(village)
 	var chest_def: Dictionary = village.data["sprites"]["chest"]
 	var broken_def: Dictionary = village.data["sprites"]["chest-broken"]
@@ -229,6 +233,8 @@ func _read_debug_params() -> void:
 			add_child(RenderProbe.new().setup(self))
 		elif kv.size() == 2 and kv[0] == "quality":
 			Prefs.set_low_resolution(kv[1] == "low")
+		elif kv.size() == 2 and kv[0] == "lighting":
+			forest_lighting.set_enabled(kv[1] != "off")
 		elif kv.size() == 2 and kv[0] == "panel":
 			var which: String = kv[1]
 			get_tree().create_timer(1.5).timeout.connect(_debug_open_panel.bind(which))

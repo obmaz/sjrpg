@@ -14,7 +14,7 @@ Godot 4.7.2의 Polygon2D UV 갱신 경로가 WebGL에서 index buffer를 잘못�
 | 진입 | `scenes/main.tscn`, `scripts/main.gd` | 화면 전환(타이틀 → 직업 선택 → 모험), 가로/세로 기준 해상도 |
 | 상태 | `scripts/game_state.gd` | 영웅 진행·스킬·장비·골드·퀘스트·저장 (자동 로드) |
 | 기기 | `scripts/prefs.gd`, `scripts/sound_fx.gd` | 효과음·진동·전체화면 설정(자동 로드), 효과음 합성 |
-| 월드 | `scripts/game.gd`, `iso.gd`, `iso_sprite.gd`, `village.gd`, `landmark.gd`, `bridge.gd`, `river.gd`, `wall_piece.gd`, `chest.gd`, `plaza_water.gd`, `canopy_shade.gd` | 쿼터뷰 투영, 실측 원화 배치, 충돌, 지형 높낮이, 평지 수관 그늘 |
+| 월드 | `scripts/game.gd`, `iso.gd`, `iso_sprite.gd`, `village.gd`, `landmark.gd`, `bridge.gd`, `river.gd`, `wall_piece.gd`, `chest.gd`, `plaza_water.gd`, `canopy_shade.gd`, `forest_lighting.gd` | 쿼터뷰 투영, 실측 원화 배치, 충돌, 지형 높낮이, 평지 수관 그늘·낮빛 |
 | 전투 | `player.gd`, `enemy.gd`, `effects.gd`, `corpse_art.gd`, `skill_defs.gd`, `gear.gd` | 입력·스킬 시전, 몬스터 AI, 투사체·구역, 장비 효과 |
 | 진행 | `quests.gd`, `quest_runtime.gd`, `encounter_runtime.gd`, `encounter_stone.gd` | 제1장 퀘스트·보스, 충전식 재소환 비석과 생존 무리 저장 |
 | UI | `hud.gd`, `touch_controls.gd`, `minimap.gd`, `panel_frame.gd`, `warp_gate_panel.gd` + 패널들 | HUD, 모바일 조작, 가방·스킬·설정·대화·일지 |
@@ -166,11 +166,13 @@ python3 tools/prepare_town_remake.py /path/to/sjrpg
 
 새 원화는 먼저 [레퍼런스 분위기 제작 가이드](reference-look-guide.md)·[아트 기준](art-direction.md)·[생성 프롬프트](art-prompts.md)를 읽고 사용자 원본과 같은 패밀리의 검수된 원화를 실제 생성 참조로 사용합니다. 작은 실제 플레이 장면에서 카메라·배우 비례·명암·식생을 먼저 맞추며, 스타일 컨셉과 게임용 투영 검증을 구분합니다. 투영 검사와 분위기 검수를 모두 통과해야 합니다. 가이드의 화면 목표값은 현재 구현값과 구분합니다.
 
-숲의 [전체 화면 기준](forest-reference.md)은 `remake/ground.png`·`remake/flora.png`와 `ForestArt`의 배치를 사용합니다. `prepare_forest_art.py`가 원본을 패킹하고 `forest_art.json`이 해시·접점을 고정합니다.
+숲의 [전체 화면 기준](forest-reference.md)은 `lighting/ground-materials.png`의 석회암 포장, 기존 `remake/ground.png`의 흙·`grass-v2.png`·`remake/flora.png`와 `ForestArt`의 배치를 사용합니다. `prepare_forest_art.py`가 원본을 패킹하고 `forest_art.json`이 해시·접점을 고정합니다. 새 원화의 프롬프트·실제 참조·채택/탈락 이유는 `tools/extract/ground_light_generation.json`에 보존합니다.
 배경 잔디·포장·흙길은 실제 `Iso` 평면에 투영하며 길·건물 가장자리의 낮은 식생은 별도 장식 난수로 배치합니다. 문·주민·상자·게이트·계단 접근을 비우고 식생 자체에 충돌은 추가하지 않습니다.
 `Game.CAMERA_WORLD_SCALE`은 1.60이며 짧은 변 720에서 이 배율을 사용합니다. `_camera_focus()`는 발치를 화면 높이 약60%에 두도록 앞쪽 시야를 확보합니다. 플레이어 원화 높이는 84이고, 게임 수치·충돌·HUD 크기는 카메라 때문에 바뀌지 않습니다. 디버그 `zoom`은 이 기본값의 배수이며 두 화질은 같은 월드 시야를 공유합니다.
 
 `CanopyShade`는 마을 평지의 실제 나무 아틀라스 알파와 발치·배율·반사·변환을 공유 광원 방향으로 투영합니다. 같은 뷰포트의 지면만 받으며 고정된 타일 그림자가 아닙니다. 변경된 나무/수신면 변환·알파·광원·화질만 갱신하고 그림자는 지면 위·배우와 건물 아래에 둡니다. 2D 나무 실루엣을 쓰는 근사이므로 정확한 3D 수관 체적이나 계단·다리·높은 마당의 그림자까지 재현하지 않습니다. `canopy_shade`는 실제 캐스터 이동·반사·접점·변환·한도·화질과 수명을 검사합니다.
+
+`ForestLighting`은 배치가 끝난 잔디·포장·흙의 재질만 차가운 주변색으로 조정하고, 예배당 앞·분수 광장의 월드 좌표에 따뜻한 `PointLight2D` 두 개를 둡니다. 수신 마스크 2·Z -10…-9·캔버스 레이어 0으로 배우·건물·수면·HUD를 제외합니다. 빛의 부드러운 지면 타원은 120° 지면 투영을 바꾸지 않습니다. 최대 6개 수관 그늘의 불투명도는 0.26이며, 매 프레임 새 광원이나 텍스처를 할당하지 않습니다. 월드의 자식이므로 절약 화질 전환에도 좌표를 유지하고 동굴에서는 함께 숨습니다. `?lighting=off`/스크린샷 도구의 `--lighting off`는 동일 재질·구도에서 조명 적용 전후 비교를 위한 진단 옵션입니다. 3D 노멀·건물 높이 기반의 그림자나 전역 광원 시뮬레이션은 아닙니다.
 [생성형 HUD·원소 표현](presentation-design.md)은 `PresentationArt`가 출처를 고정한 금속 4종과 타격 16프레임을 공유합니다. `prepare_presentation_art.py`로 패킹하며 투명 UI와 순수 검정/ADD 발광 원화를 구별합니다.
 시전·발사·투사체·명중·베기·오브·광역 빛은 기존 장식 한도·일시정지·동작 줄이기를 따릅니다.
 
@@ -297,6 +299,7 @@ HUD는 실패 시 누를 수 있는 재시도 안내를 유지하며 설정의 �
 | `bridge` | 다리를 건널 수 있고 강은 막힘 |
 | `river_animation` | 고정된 물 폴리곤·UV와 셰이더 흐름 속도·반복·색·일시정지 |
 | `canopy_shade` | 실제 나무 알파와 접점의 평지 투영·캐스터 이동/반사/변환·화질·수명·한도 |
+| `forest_lighting` | 지면 한정 수신·고정 광원 예산·카메라 독립 좌표·비교 모드·화질/동굴 전환 |
 | `gate_seams` | 실제 성문·성벽 앞면 접점·띠장/캡 높이·필터링 알파와 코너 흉벽의 교차 방지 |
 | `entry_layout` | 선택 화면의 세로/가로·회전·카드와 능력치 상자·실제 수치·미리보기 저장 보존 |
 | `journey` | 두 직업의 첫 목표·수락/보고 우선순위·보호 안내·마을 NPC와 안식처 선택 |

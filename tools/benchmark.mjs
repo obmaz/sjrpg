@@ -20,10 +20,13 @@ try {
     page.on('pageerror', (error) => errors.push(error.message));
     const tap = async (x, y) => device.startsWith('phone') ? page.touchscreen.tap(x, y) : page.mouse.click(x, y);
     const query = new URLSearchParams({ at: args.at ?? "field", quality, benchmark: "1" });
+    if (args.lighting) query.set('lighting', args.lighting);
     await page.goto(`${args.url ?? 'http://localhost:8765/index.html'}?${query}`);
     await page.waitForFunction(() => window.__sjrpgTitleReady === true, null, {timeout: 90000});
+    await page.waitForFunction(() => !window.__sjrpgEntry || window.__sjrpgEntryReady === true, null, {timeout: 30000});
     const size = page.viewportSize();
-    await tap(size.width / 2, size.height / 2);
+    if (await page.locator('#entry-start').isVisible()) await page.locator('#entry-start').click();
+    else await tap(size.width / 2, size.height / 2);
     await page.waitForTimeout(4000);
     await page.waitForFunction(() => window.__sjrpgClassSelectReady === true && window.__sjrpgClassButtons);
     for (const key of [hero, 'start']) {
@@ -53,7 +56,7 @@ try {
         const canvas = document.querySelector('canvas');
         return { dpr: window.devicePixelRatio, inner_width: innerWidth, inner_height: innerHeight, css_width: canvas.clientWidth, css_height: canvas.clientHeight, canvas_width: canvas.width, canvas_height: canvas.height };
     });
-    console.log(JSON.stringify({ device, quality, hero, renderer, ...result, world: await page.evaluate(() => window.__sjrpgRenderProbe), surface: browserSurface, errors }, null, 2));
+    console.log(JSON.stringify({ device, quality, hero, renderer, lighting: args.lighting ?? 'on', at: args.at ?? 'field', ...result, world: await page.evaluate(() => window.__sjrpgRenderProbe), surface: browserSurface, errors }, null, 2));
     if (errors.length) process.exitCode = 1;
     await context.close();
 } finally {

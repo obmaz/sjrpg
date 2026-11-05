@@ -112,7 +112,7 @@ diagnosticLog.on('Log.entryAdded', ({entry}) => {
         logs.push(`error: ${entry.source}: ${entry.text}`);
     }
 });
-const quality = (args.quality ? `&quality=${args.quality}` : '') + (args.zoom ? `&zoom=${args.zoom}` : '');
+const quality = (args.quality ? `&quality=${args.quality}` : '') + (args.zoom ? `&zoom=${args.zoom}` : '') + (args.lighting ? `&lighting=${args.lighting}` : '');
 let releaseDownload;
 let loadingHeader;
 let packArrived;

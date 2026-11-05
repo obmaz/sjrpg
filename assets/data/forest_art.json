@@ -11,6 +11,10 @@
   {
    "path": "assets/source/remake/grass-v2.png",
    "sha256": "f044aae41ad0d83478a3843cea1f9d29be3c8308d6e06f20c37f618a95150b37"
+  },
+  {
+   "path": "assets/source/lighting/ground-materials.png",
+   "sha256": "b774f93948e83c08580fe49649e5fc1d80d65e238392e8bf203b2757c47db9d7"
   }
  ],
  "camera": {
@@ -23,7 +27,7 @@
   "target_azimuth_degrees": 45,
   "target_elevation_degrees": 35.264
  },
- "review": "The remade forest ground and flora follow the original user reference together with town-master-scene-v3: softened neutral-grey limestone, fine irregular moss joints, olive low cover, cream-white petals and restrained warm wildflowers. Each 724-square ground cell is cropped two pixels inward to exclude adjacent material boundary pixels; materials are opaque, evenly lit top-down textures, and game projection supplies their camera. The new flora has alpha0 surroundings despite the olive blur stored in invisible RGB. Light/dark composites show leaf and petal holes with no wide halo, attached earth plate or external ground shadow. Natural high leaf surfaces, occluded rear stems and the root-crown contact are reviewed visually; no rigid-edge angles are invented for organic clumps. Actual first-game comparison rejected the ground sheet grass panel as wiry yellow moss. grass-v2.png replaces only grass with low short blades and small clover, maintaining uniform light and no baked canopy shadows; paving and earth remain the measured ground.png cells.",
+ "review": "Ground material review uses the authoritative approved-game-reference.jpg and the supplemental town-master-scene.png, compared directly with the published chapel screenshot. Paving now uses the 883-square inner left panel of lighting/ground-materials.png: pale warm-neutral limestone, flatter squarer worn faces and restrained shallow earth/moss joints, replacing the darker rounded granular cobbles. The full unmodified generated sheet and exact prompt/input hashes are preserved in ground_light_generation.json. The right grass panel was rejected because its wiry moss texture did not improve the reference; existing short-grass/clover grass-v2.png and earthy paths remain. Each tile is opaque and authored orthographic top-down with a uniform neutral diffuse base, no baked canopy cast shadow, sun patch or isometric perspective; runtime supplies the ground camera and scene lighting. Paving rows remain more regular than the reference, so source adoption requires actual-scale scene comparison rather than claiming final mood completion. Existing flora remains unchanged: high leaf surfaces, occluded rear stems, root contacts, alpha0 surroundings and clean light/dark composites were previously reviewed; organic clumps do not receive invented rigid-edge angles.",
  "textures": {
   "grass": {
    "path": "assets/art/forest/grass.webp",
@@ -35,7 +39,7 @@
   },
   "paving": {
    "path": "assets/art/forest/paving.webp",
-   "sha256": "9053ccb66dfeae08cfee9629e9517fdb8fed27899afcf04d816139b321467cc7",
+   "sha256": "293bb740e1c277bf7e6cd566c8c9f6a05105e5e7ca0e8960e041ad23e2b2d9ef",
    "size": [
     512,
     512

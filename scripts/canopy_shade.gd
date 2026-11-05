@@ -119,7 +119,7 @@ func refresh() -> void:
 		return
 	var gvs: float = caster.def.get("gvs", 1.0)
 	var gvk: float = caster.def.get("gvk", 0.0)
-	var alpha := clampf(opacity, 0.0, 0.18) * caster.modulate.a * caster.self_modulate.a * caster.modulate_color.a
+	var alpha := clampf(opacity, 0.0, 0.36) * caster.modulate.a * caster.self_modulate.a * caster.modulate_color.a
 	if _initialized and caster_pose == _last_caster and receiver_pose == _last_receiver and caster.k == _last_k and caster.flip == _last_flip and gvs == _last_gvs and gvk == _last_gvk and sun_direction == _last_light and cast_length == _last_length and source_rect == _source and contact == _foot and caster.texture == _texture and alpha == _last_alpha and Prefs.low_resolution == _last_economy:
 		return
 	_source = source_rect

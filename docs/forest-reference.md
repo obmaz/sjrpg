@@ -6,7 +6,7 @@
 
 ## 지면과 식생
 
-`assets/source/remake/ground.png`의 포장·흙 패널과 `grass-v2.png`의 짧은 풀·클로버는 고정 조명·나무 그림자가 없는 잔디·포장석·흙길의 위에서 본 원화입니다.
+`assets/source/lighting/ground-materials.png` 왼쪽 패널은 밝고 평평하게 닳은 석회암 포장입니다. 원본 사용자 화면을 실제 생성 참조로 사용했으며 프롬프트·참조 해시·채택 영역은 `tools/extract/ground_light_generation.json`에 기록합니다. 오른쪽 잔디 후보는 가는 실 모양의 밀도가 여전히 높아 탈락시켰습니다. 기존 `remake/ground.png`의 흙 패널과 `grass-v2.png`의 짧은 풀·클로버는 유지합니다. 모두 고정 조명·나무 그림자가 없는 위에서 본 원화이며 실제 120° 투영은 런타임이 맡습니다. 포장 512px 한 반복의 지면 크기는 180으로 두어 기본 세로 화면에서 돌의 긴 대각선이 약 50–60px로 읽히게 합니다. 280 후보는 실제 비교에서 판석이 지나치게 커서 축소했습니다.
 `assets/source/remake/flora.png`는 높은 쿼터뷰의 흰꽃·주황/노랑 꽃·고사리·낮은 풀입니다. 주변의 숨은 RGB와 실제 알파를 구별해 단색 배경에서 검수합니다.
 `tools/extract/forest_art_measure.json`에 영역과 줄기·지면 접점을 측정하고 `tools/prepare_forest_art.py`로 패킹합니다.
 `assets/data/forest_art.json`이 원본·실제 배포 텍스처의 해시를 보관합니다.
@@ -15,9 +15,11 @@
 별도 난수 생성기를 사용하므로 장식이 전투·전리품·나무의 기존 난수 상태나 이동 충돌을 바꾸지 않습니다.
 길과 지도·충돌은 기존 다각형을 유지하며, 잔디와 석재를 균일하게 투영합니다. 반복 검은 그림자나 고정 햇빛 얼룩은 추가하지 않습니다.
 
+`ForestLighting`이 지면에 차가운 주변색과 예배당 앞·광장 두 곳의 따뜻한 낮빛을 적용합니다. 나무 그늘은 실제 수관 실루엣과 발치를 따릅니다. 광원은 월드 좌표에 고정되며 UI·건물·배우·동굴의 재질은 각각 유지합니다. 이는 지면의 명암 개선이며, 건물 높이와 수관 부피를 복원한 3D 조명은 아닙니다. 동일 구도의 `--lighting off`와 기본 화면을 비교하고 원본 레퍼런스도 함께 확인합니다.
+
 ```sh
 python3 tools/prepare_forest_art.py
-tools/check.sh --only=forest_art,juice,hud_layout,ui_input --export
+tools/check.sh --only=forest_art,forest_lighting,canopy_shade,juice,hud_layout,ui_input --export
 ```
 
 ## 캐릭터와 효과
