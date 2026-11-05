@@ -184,6 +184,10 @@ func _debug_open_panel(which: String) -> void:
 		"dungeon_map":
 			player.position = dungeon.entry_point()
 			dungeon.enter()
+			hud._bars.queue_redraw()
+			hud.minimap.queue_redraw()
+			hud.controls._layout()
+			hud.controls.queue_redraw()
 			hud.open_map()
 		"map":
 			hud.open_map()
@@ -214,6 +218,8 @@ func _read_debug_params() -> void:
 			get_tree().create_timer(1.5).timeout.connect(_debug_open_panel.bind(which))
 		elif kv.size() == 2 and kv[0] == "hud_preview" and kv[1] in ["full", "low", "nearfull", "large"]:
 			_hud_preview.call_deferred(kv[1])
+		elif kv.size() == 2 and kv[0] == "dungeon_preview" and kv[1] in ["entry", "room", "branch", "exit"]:
+			_dungeon_preview.call_deferred(kv[1])
 		elif kv.size() == 2 and kv[0] == "warp_preview" and kv[1] == "1":
 			_warp_preview.call_deferred()
 		elif kv.size() == 2 and kv[0] == "combat_preview":
@@ -298,6 +304,46 @@ func near_npc() -> String:
 		if distance < best_d:
 			best = "안식처"
 	return best
+
+
+## Explicit cave-art review only: enter the real instance and freeze a reproducible view.
+func _dungeon_preview(which: String) -> void:
+	JavaScriptBridge.eval("window.__sjrpgDungeonPreviewReady = false")
+	await get_tree().create_timer(1.5, false).timeout
+	if is_queued_for_deletion():
+		return
+	if hud.panel_open():
+		hud.close_panel()
+	player.position = dungeon.entry_point()
+	if not dungeon.enter():
+		push_error("Cave preview could not enter the actual dungeon")
+		return
+	var ground := Vector2.ZERO
+	match which:
+		"room":
+			ground = DungeonLayout.ROOMS[0]
+		"branch":
+			ground = Vector2(1125, -500)
+		"exit":
+			ground = DungeonLayout.EXIT
+	player.position = Iso.project(ground)
+	player.move_input = Vector2.ZERO
+	hud.controls.release_all()
+	_impact_offset = Vector2.ZERO
+	camera.offset = Vector2.ZERO
+	camera.position = player.position + Vector2(0, -30)
+	camera.reset_smoothing()
+	camera.force_update_scroll()
+	WorldOcclusion.update(player.global_position, false)
+	hud._update_layout()
+	hud.controls._layout()
+	hud.controls.queue_redraw()
+	hud._bars.queue_redraw()
+	hud.minimap.queue_redraw()
+	# The fresh entry notice would otherwise stay frozen across the cave artwork.
+	hud._toast_plaque.hide()
+	get_tree().paused = true
+	JavaScriptBridge.eval("window.__sjrpgDungeonPreviewReady = true")
 
 
 ## Explicit visual audit only: freeze genuine numeric state at difficult fill/label cases.

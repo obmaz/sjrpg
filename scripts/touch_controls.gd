@@ -129,7 +129,11 @@ func _press(index: int, pos: Vector2) -> bool:
 			game.hud.open_bag(false)
 			return true
 		"near_shop":
-			game.hud.interact(_near_name)
+			# A map transition or movement can invalidate the last painted button.
+			# Match the keyboard interaction by resolving the live target at press time.
+			var nearby: String = game.near_npc()
+			if nearby != "" and nearby != "탈것 상인":
+				game.hud.interact(nearby)
 			return true
 		"bar_quests":
 			game.hud.open_journal()

@@ -20,10 +20,10 @@ static var _textures := {}
 
 
 static func sheet(name: String) -> Texture2D:
-	var file := name.replace("forest-isometric-", "")
-	if not _textures.has(file):
-		_textures[file] = load("res://assets/art/village/%s.webp" % file)
-	return _textures[file]
+	var path := name if name.begins_with("res://") else "res://assets/art/village/%s.webp" % name.replace("forest-isometric-", "")
+	if not _textures.has(path):
+		_textures[path] = load(path)
+	return _textures[path]
 
 
 ## `height` is in original world units (before Iso.S).

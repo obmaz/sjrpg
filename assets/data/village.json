@@ -226,27 +226,28 @@
    "gvk": -0.00191409
   },
   "cave": {
-   "sheet": "forest-isometric-props",
+   "sheet": "res://assets/art/cave/arches.webp",
    "source": [
-    6,
-    1383,
-    768,
-    521
+    1032,
+    77,
+    496,
+    427
    ],
    "foot": [
-    432.04379562,
-    1739.2256138
+    1291.6187399030696,
+    439.1841680129241
    ],
-   "height": 356.2256138,
+   "height": 362.1841680129241,
    "origin": [
-    14,
-    1
+    1526,
+    88
    ],
-   "packing": 0.50962177,
+   "packing": 0.8012924071082391,
+   "gvs": 1,
+   "gvk": 0,
    "world_height": 400,
    "body": null,
-   "gvs": 1,
-   "gvk": 0
+   "review": "Field cave mouth with the concept grey layered stone, sparse ferns, amber lamp and painted blue interior depth preserved. Pivot is the entry path ground contact at the mouth. The surrounding matte is transparent; this entrance intentionally keeps its tunnel interior opaque."
   },
   "tree-0": {
    "sheet": "forest-isometric-trees",

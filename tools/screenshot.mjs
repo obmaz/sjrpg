@@ -46,6 +46,10 @@ const SCENES = {
     travel: 'panel=travel',
     dungeon: 'panel=dungeon',
     dungeon_map: 'panel=dungeon_map',
+    cave_entry: 'dungeon_preview=entry',
+    cave_room: 'dungeon_preview=room',
+    cave_branch: 'dungeon_preview=branch',
+    cave_exit: 'dungeon_preview=exit',
     elin: 'at=elin&zoom=0.8',
     rowen: 'at=rowen&zoom=0.8',
     bag: 'panel=bag&chests=1&gold=300',
@@ -100,6 +104,9 @@ await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { 
 if (scene === 'background') await page.evaluate(() => document.querySelector('canvas').blur());
 if (scene.startsWith('hud')) {
     await page.waitForFunction(() => window.__sjrpgHudPreviewReady === true, null, {timeout: 30000});
+    await page.waitForTimeout(300);
+} else if (scene.startsWith('cave_')) {
+    await page.waitForFunction(() => window.__sjrpgDungeonPreviewReady === true, null, {timeout: 30000});
     await page.waitForTimeout(300);
 } else if (scene === 'rewards') {
     await page.waitForFunction(() => window.__sjrpgRewardPreviewReady === true, null, {timeout: 30000});

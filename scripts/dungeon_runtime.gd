@@ -10,6 +10,7 @@ var entry_level := 1
 var defeated := 0
 var total := 0
 var layout: DungeonLayout
+var art: DungeonArt
 var _root: Node2D
 var _forest_world: Node2D
 var _forest_enemies: Array[Enemy] = []
@@ -72,8 +73,7 @@ func enter() -> bool:
 	game.exploration.set_process(false)
 	active = true
 	GameState.location_mode = "cave"
-	_build_floor()
-	_build_rocks()
+	_build_art(world)
 	_build_enemies()
 	var portal := IsoSprite.new().setup(game.village.data["sprites"]["portal"], 150.0)
 	portal.position = Iso.project(DungeonLayout.EXIT) + Vector2(0, -80)
@@ -92,53 +92,12 @@ func enter() -> bool:
 	return true
 
 
-func _build_floor() -> void:
-	# A dim layer of the same rock/earth texture keeps passages grounded in a cave floor.
-	var backdrop := Polygon2D.new()
-	var bounds := layout.bounds.grow(1800.0)
-	backdrop.polygon = PackedVector2Array([bounds.position, Vector2(bounds.end.x, bounds.position.y), bounds.end, Vector2(bounds.position.x, bounds.end.y)])
-	backdrop.texture = load("res://assets/art/village/dirt.webp")
-	backdrop.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
-	var backdrop_uvs := PackedVector2Array()
-	for point in backdrop.polygon:
-		backdrop_uvs.append(Iso.unproject(point) * 2.2)
-	backdrop.uv = backdrop_uvs
-	backdrop.modulate = Color(0.10, 0.12, 0.12)
-	backdrop.z_index = -4
-	_root.add_child(backdrop)
+func _build_art(world: Node2D) -> void:
+	# The generated design owns the visible stone; the shared layout still owns movement and maps.
+	art = DungeonArt.new().setup(layout, world)
+	_root.add_child(art)
 	for polygon in layout.polygons:
-		var floor_piece := Polygon2D.new()
-		floor_piece.polygon = polygon
-		floor_piece.texture = load("res://assets/art/village/dirt.webp")
-		floor_piece.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
-		var uvs := PackedVector2Array()
-		for point in polygon:
-			uvs.append(Iso.unproject(point) * 2.2)
-		floor_piece.uv = uvs
-		floor_piece.modulate = Color(0.45, 0.48, 0.43)
-		floor_piece.z_index = -2
-		_root.add_child(floor_piece)
-		game.map_shapes.append({"poly": polygon, "bounds": Iso.poly_bounds(polygon), "color": Color("86785d")})
-
-
-func _build_rocks() -> void:
-	# Reuse the measured rock illustration along the collision boundary, never in a passage.
-	var rock_def: Dictionary = game.village.data["sprites"]["rock"]
-	for x in range(-400, 5100, 180):
-		for y in range(-900, 901, 180):
-			var point := Iso.project(Vector2(x, y))
-			if layout.contains(point, 0.0):
-				continue
-			var near_floor := false
-			for i in 8:
-				if layout.contains(point + Vector2.from_angle(i * TAU / 8.0) * 140.0):
-					near_floor = true
-			if not near_floor:
-				continue
-			var rock := IsoSprite.new().setup(rock_def, float(rock_def["world_height"]) * 1.15)
-			rock.position = point
-			rock.modulate_color = Color(0.55, 0.6, 0.61)
-			game.world.add_child(rock)
+		game.map_shapes.append({"poly": polygon, "bounds": Iso.poly_bounds(polygon), "color": Color("777970")})
 
 
 func _build_enemies() -> void:
@@ -224,6 +183,7 @@ func leave(message: String) -> void:
 	_root.process_mode = Node.PROCESS_MODE_DISABLED
 	_root.queue_free()
 	_root = null
+	art = null
 	GameState.location_mode = "forest"
 	GameState.return_to_cave_entrance = false
 	GameState.save_game()

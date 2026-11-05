@@ -179,6 +179,8 @@ def extract_village(src, out):
     town_art.merge(data)
     import tree_art
     tree_art.merge(data)
+    import cave_art
+    cave_art.merge(data)
     (out / "village.json").write_text(json.dumps(data, indent=1))
     print("village.json", len(sprites), "sprites (+ chapel, gates from chapel.py, gate.py)")
 

@@ -164,6 +164,15 @@ compact 높이는 실제 헤더·탭·푸터 최소 크기를 측정하며 본�
 `location_mode`만 저장하고 동굴 인스턴스는 저장하지 않습니다. 재접속 시 입구로 복귀하며, 보호 의뢰·보스 도전 중 입장은 막습니다.
 `DungeonPanel`은 입장·완료·퇴장을 제공하고 설정에서도 중도 퇴장할 수 있습니다.
 
+동굴의 [완성 디자인과 원화 제작 기준](cave-design.md)은 `assets/source/cave-design.png`가 정본입니다.
+`DungeonArt`가 파생한 석재 바닥·높은 암벽·낮은 돌턱·열린 아치·등불 원화를 실제 이동 다각형에 배치합니다.
+외곽벽은 방·통로 합집합의 바깥 경계에만 놓고 월드 깊이 정렬·가림 완화를 공유합니다.
+등불의 지역 조명은 일시정지와 동작 줄이기를 따릅니다. `cave_art.json`은 원본·배포 원화 해시를 보관하고,
+`prepare_cave_art.py`와 `cave_art.merge()`로 원화·외부 입구 데이터를 재생성합니다.
+`dungeon_art`는 실제 바닥·지도·벽과 조명·화질 전환·수명을 검사합니다.
+`dungeon_preview=entry|room|branch|exit`는 실제 동굴에 입장한 뒤 구도를 고정하며,
+`tools/screenshot.mjs --scene cave_entry|cave_room|cave_branch|cave_exit`로 가로·세로를 비교합니다.
+
 ## 탐험·지도·안식처
 
 `MapGeometry`가 마을 포장·강·다리·벽·건물 바닥·랜드마크 윗면·물 경계에서 두 지도에 쓸 도형을 만듭니다.
