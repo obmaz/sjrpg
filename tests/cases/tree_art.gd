@@ -48,5 +48,13 @@ func run() -> void:
 			if tree.position.y > npc.y + 4.0 and bounds.intersects(Rect2(npc - Vector2(42, 90), Vector2(84, 110))):
 				visible = false
 		check("service NPC stays readable below all foreground crowns: " + npc_name, visible)
+	for service in Village.NPCS:
+		var npc: Vector2 = game.village.npc_points[service[1]]
+		var building: IsoSprite = game.village.buildings[service[0]]
+		check("service resident stands in front of the actual building sort point: " + service[1], npc.y >= building.position.y + 8.0)
+		var clear := true
+		for solid in game.village.solids:
+			clear = clear and not Geometry2D.is_point_in_polygon(npc, solid)
+		check("the readable service position remains on walkable ground: " + service[1], clear)
 	game.queue_free()
 	await _frames(2)

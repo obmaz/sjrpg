@@ -71,7 +71,12 @@ def derive(key, config, data):
         anchor=correction(config,config['approach_native'])
         normal=np.array([-.5,COS])
         clearance=float(config.get('approach_clearance',35.0))/scale
-        offset=max(clearance,clearance-np.dot(anchor-F,normal))
+        # A doorway on the receding face can be outside the solid yet still
+        # sort behind this one-piece building. Put the actual service resident
+        # beyond its front-most painted foot, keeping world position and draw order together.
+        sort_clearance=float(config.get('approach_sort_clearance',12.0))/scale
+        offset=max(clearance,clearance-np.dot(anchor-F,normal),
+                   (F[1]+sort_clearance-anchor[1])/normal[1])
         data['approaches'][key]=correction(config,anchor+normal*offset,True).tolist()
     elif ref['approach']:
         target=(np.array(ref['approach'])-placement)/scale+F
