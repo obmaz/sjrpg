@@ -360,7 +360,7 @@ func _draw_interaction(center: Vector2, half: Vector2, pressed: bool) -> void:
 		_interaction_normal = UiKit.panel_style(Color(0.065, 0.06, 0.048, 0.88), Color(0.51, 0.44, 0.29, 0.85), 5)
 		_interaction_pressed = UiKit.panel_style(Color(0.13, 0.105, 0.075, 0.95), Color(0.62, 0.53, 0.36, 0.9), 5)
 	draw_style_box(_interaction_pressed if pressed else _interaction_normal, rect)
-	var text: String = {"바람 동굴": "동굴 탐험", "동굴 출구": "동굴 나가기", "안식처": "안식처", "숲의 파수꾼": "도전하기", "상인": "상점", "대장장이": "대장간", "촌장": "대화", "보급원 미라": "대화"}.get(_near_name, "대화")
+	var text: String = {"워프게이트": "워프게이트", "바람 동굴": "동굴 탐험", "동굴 출구": "동굴 나가기", "안식처": "안식처", "숲의 파수꾼": "도전하기", "상인": "상점", "대장장이": "대장간", "촌장": "대화", "보급원 미라": "대화"}.get(_near_name, "대화")
 	HudArt.text_outlined(self, text, center + Vector2(-half.x, 7.0 * _unit), half.x * 2.0, int(20.0 * _unit), Color(0.89, 0.85, 0.73))
 
 

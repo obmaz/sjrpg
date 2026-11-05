@@ -15,6 +15,7 @@ const PROFILES := {
 	"warcry": [135.0, 58.0, 0.36, 320.0, 0.10, 0.06, "sine"],
 	"levelup": [660.0, 1320.0, 0.42, 0.0, 0.0, 0.035, "sine"],
 	"loot": [880.0, 1320.0, 0.18, 0.0, 0.0, 0.025, "sine"],
+	"warp": [440.0, 1040.0, 0.32, 1200.0, 0.02, 0.04, "sine"],
 }
 const GAIN := 5.0  # the original plays through a master gain; raw gains are very quiet
 

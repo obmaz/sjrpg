@@ -19,7 +19,7 @@ func _ready() -> void:
 func _rebuild() -> void:
 	if game.dungeon.active:
 		_tab = 0
-	set_tabs(["동굴 지도"] if game.dungeon.active else ["전체 지도", "안식처 이동"], _tab, func(index):
+	set_tabs(["동굴 지도"] if game.dungeon.active else ["전체 지도", "안식처·워프 이동"], _tab, func(index):
 		_tab = index
 		_rebuild())
 	clear_body()
@@ -34,13 +34,13 @@ func _rebuild() -> void:
 			body.add_child(PanelFrame.wrap_label(marker["label"], 18, marker["color"]))
 		return
 	var reason: String = game.exploration.travel_block_reason()
-	body.add_child(PanelFrame.wrap_label(reason if reason != "" else "발견한 안식처로 무료 이동합니다. 도착 시 생명과 자원을 회복합니다.", 20))
+	body.add_child(PanelFrame.wrap_label(reason if reason != "" else "워프게이트 또는 안식처에서 발견한 목적지로 무료 이동합니다. 도착 시 생명과 자원을 회복합니다.", 20))
 	for id in Exploration.NAMES:
 		var found := GameState.discovered_sanctuaries.has(id)
 		var destination: String = id
 		var button := UiKit.button(Exploration.NAMES[id] + ("" if found else " · 직접 방문해 발견하세요"), 21)
 		button.custom_minimum_size = Vector2(0, 76)
-		button.disabled = not found or reason != "" or id == game.exploration.nearby()
+		button.disabled = not found or reason != "" or id == game.exploration.current_origin()
 		button.pressed.connect(func():
 			if game.exploration.travel(destination):
 				closed.emit())

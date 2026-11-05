@@ -7,10 +7,10 @@
 | 진입 | `scenes/main.tscn`, `scripts/main.gd` | 화면 전환(타이틀 → 직업 선택 → 모험), 가로/세로 기준 해상도 |
 | 상태 | `scripts/game_state.gd` | 영웅 진행·스킬·장비·골드·퀘스트·저장 (자동 로드) |
 | 기기 | `scripts/prefs.gd`, `scripts/sound_fx.gd` | 효과음·진동·전체화면 설정(자동 로드), 효과음 합성 |
-| 월드 | `scripts/game.gd`, `iso.gd`, `iso_sprite.gd`, `village.gd`, `landmark.gd`, `bridge.gd`, `river.gd`, `wall_piece.gd`, `chest.gd` | 쿼터뷰 투영, 실측 원화 배치, 충돌, 지형 높낮이 |
+| 월드 | `scripts/game.gd`, `iso.gd`, `iso_sprite.gd`, `village.gd`, `landmark.gd`, `bridge.gd`, `river.gd`, `wall_piece.gd`, `chest.gd`, `plaza_water.gd` | 쿼터뷰 투영, 실측 원화 배치, 충돌, 지형 높낮이 |
 | 전투 | `player.gd`, `enemy.gd`, `effects.gd`, `corpse_art.gd`, `skill_defs.gd`, `gear.gd` | 입력·스킬 시전, 몬스터 AI, 투사체·구역, 장비 효과 |
 | 진행 | `quests.gd`, `quest_runtime.gd` | 제1장 퀘스트·보스 |
-| UI | `hud.gd`, `touch_controls.gd`, `minimap.gd`, `panel_frame.gd` + 패널들 | HUD, 모바일 조작, 가방·스킬·설정·대화·일지 |
+| UI | `hud.gd`, `touch_controls.gd`, `minimap.gd`, `panel_frame.gd`, `warp_gate_panel.gd` + 패널들 | HUD, 모바일 조작, 가방·스킬·설정·대화·일지 |
 | 테스트 | `tests/run_all.gd`, `tests/test_case.gd`, `tests/cases/*.gd` | 헤드리스 케이스 러너 |
 | 도구 | `tools/*.sh`, `tools/screenshot.mjs`, `tools/extract/` | 검증·빌드·캡처·데이터 추출 |
 
@@ -49,11 +49,12 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 | 키 | 값 | 효과 |
 | --- | --- | --- |
 | `zoom` | 숫자 | 카메라 배율(작을수록 넓게) |
-| `at` | `field` `bridge` `bank` `gate0`–`gate3` `lm0`–`lm3` `mira` `elin` `rowen` `corner0` `corner3` | 시작 위치 |
-| `panel` | `bag` `shop` `skills` `settings` `smith` `journal` `mira` `elin` `victory` | 시작 1.5초 뒤 패널 열기 |
+| `at` | `field` `bridge` `bank` `gate0`–`gate3` `lm0`–`lm3` `mira` `elin` `rowen` `portal` `corner0` `corner3` | 시작 위치 |
+| `panel` | `bag` `shop` `skills` `settings` `smith` `journal` `mira` `elin` `victory` `warp` | 시작 1.5초 뒤 패널 열기 |
 | `quality` | `low` `high` | 절약 화질 켜기·끄기 |
 | `gold` | 정수 | 시작 골드 |
 | `chests` | 아무 값 | 상자를 모두 부숨 |
+| `warp_preview` | `1` | 실제 게이트 방문으로 해금한 뒤 워프 창과 실제 이동 버튼 검증 |
 | `corpse_preview` | `1` `bridge` `terrace` | 광장의 5종 시체 또는 다리·높은 마당 위 시체 확인 |
 
 `node tools/screenshot.mjs --scene corpses --device phone --lifecycle 1`은 최초 시체와 게임 시간 30초 후 제거 화면을 함께 캡처합니다. 시간이 흐르도록 두며 테스트용으로 시체를 지우거나 나이를 바꾸지 않습니다.
@@ -76,6 +77,19 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 100ms 재진입 제한으로 연속 피해의 자세 고착을 막고, 새 동작·구르기·사망·부활은 유지 상태를 해제합니다.
 적의 그림은 5/8px 이내 감쇠 반동으로 돌아오며 투사체는 진행 방향을 따릅니다. 강한 접촉음도 기존 음성 수·연타 제한을 공유합니다.
 동작 줄이기에서는 자세 유지·반동을 억제합니다.
+
+## 분수·게이트와 워프
+
+분수 배율은 `Village._build_plaza()`의 2.4(이전 1.44)이며 석조 기단의 접점 다각형도 같은 투영을 사용합니다.
+게이트는 분수·미라와 독립적으로 접근할 수 있도록 배치하고, `Village.portal_points`가 숲 마을·고목·동굴 입구의 공통 기준입니다.
+`PlazaWater`는 기존 아틀라스의 물·소용돌이 픽셀만 움직입니다. 석재의 정점·원화 모서리는 유지하고, 별도의 게임 시간으로
+위상을 갱신해 일시정지·동작 줄이기 설정을 따릅니다. 공통 가림 처리는 `world_occlusion.gdshaderinc`를 공유하며
+`WorldOcclusion`은 애니메이션의 원래 재질을 보존·복원합니다. 보스 진입문·동굴 귀환문도 같은 소용돌이를 사용합니다.
+`Exploration`이 목적지 해금·100px 게이트 거리·전투/진행 제한과 안전한 도착점을 검증합니다.
+`WarpGatePanel`은 제1장 세 목적지의 현재/발견/미발견 상태를 표시하며, 선택 시에도 이동 조건을 다시 검사합니다.
+이동하면 입력·예약 공격·구르기·카메라 충격을 해제하고 회복·저장·효과음·생성형 빛 연출을 적용합니다.
+`--scene plaza`는 애니메이션 연속 화면, `--scene warp_trip`은 실제 목적지 버튼을 누른 전후 화면을 캡처합니다.
+워프 검증은 방문 코드로 목적지를 발견하고 버튼의 실제 화면 좌표를 읽어 누르며, 이동 결과를 조작하지 않습니다.
 
 ## 시체 원화와 수명
 

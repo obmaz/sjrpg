@@ -77,6 +77,7 @@ func enter() -> bool:
 	_build_enemies()
 	var portal := IsoSprite.new().setup(game.village.data["sprites"]["portal"], 150.0)
 	portal.position = Iso.project(DungeonLayout.EXIT) + Vector2(0, -80)
+	PlazaWater.attach(portal, true)
 	world.add_child(portal)
 	game.player._pending = Callable()
 	game.player._attack_time = 0.0

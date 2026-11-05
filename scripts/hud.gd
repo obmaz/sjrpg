@@ -157,6 +157,8 @@ func interact(npc: String) -> void:
 	match npc:
 		"바람 동굴", "동굴 출구":
 			_open(DungeonPanel.new().setup(game))
+		"워프게이트":
+			_open(WarpGatePanel.new().setup(game))
 		"안식처":
 			open_map(true)
 		"숲의 파수꾼":

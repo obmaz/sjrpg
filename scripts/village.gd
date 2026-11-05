@@ -60,6 +60,8 @@ var map_water := PackedVector2Array()
 var map_roads: Array[PackedVector2Array] = []
 var sanctuary_points := {}
 var portal_point := Vector2.ZERO
+var portal_points := {}
+var fountain: IsoSprite
 var merchant_point := Vector2.ZERO
 ## 이름 → 위치: 상인 · 대장장이 · 탈것 상인 · 촌장 · 보급원 미라.
 var npc_points := {}
@@ -102,6 +104,7 @@ func build(ground_layer: Node2D, world: Node2D) -> void:
 	var beacon_def: Dictionary = data["sprites"]["portal"]
 	var beacon := IsoSprite.new().setup(beacon_def, 150.0)
 	beacon.position = boss_point + Vector2(0, -280)
+	PlazaWater.attach(beacon, true)
 	world.add_child(beacon)
 	circles.append([beacon.position, 45.0])
 	_build_buildings(world)
@@ -410,25 +413,24 @@ func _build_chapel(world: Node2D) -> void:
 
 
 func _build_plaza(world: Node2D) -> void:
-	var pool := _placed("pool")
-	pool.k *= 1.44
-	world.add_child(pool)
-	var h := float(data["placements"]["pool"][1]) * Iso.HERO_HEIGHT * Iso.S * 1.44
-	var src_w := float(data["sprites"]["pool"]["source"][2]) * pool.k
-	var well := pool.position - Vector2(0, h * 0.18)
-	var rx := src_w * 0.43
-	var ry := h * 0.18
-	var ellipse := PackedVector2Array()
-	for i in 24:
-		var a := i * TAU / 24.0
-		ellipse.append(well + Vector2(cos(a) * rx, sin(a) * ry))
-	solids.append(ellipse)
-	# Warp portal beside the fountain, sized by its measured base width (180).
+	fountain = _placed("pool")
+	# A central plaza feature: 5/3 the previous width, with a matching stone-base footprint.
+	fountain.k *= 2.4
+	PlazaWater.attach(fountain, false)
+	world.add_child(fountain)
+	var src: Array = fountain.def["source"]
+	var footprint := []
+	for p in [Vector2(14, 258), Vector2(352, 453), Vector2(694, 257), Vector2(355, 61)]:
+		footprint.append([float(src[0]) + p.x, float(src[1]) + p.y])
+	solids.append(fountain.atlas_polygon(footprint))
+	# Leave room for the larger fountain and for Mira's independent interaction approach.
 	var pdef: Dictionary = data["sprites"]["portal"]
 	var body_w := float(pdef["body"][2])
 	var portal := IsoSprite.new().setup(pdef, float(pdef["height"]) * 180.0 / body_w * 1.4)
-	portal.position = point(Vector2(0.448, 0.502))
+	portal.position = point(Vector2(0.395, 0.493))
 	portal_point = portal.position
+	portal_points["town"] = portal.position
+	PlazaWater.attach(portal, true)
 	world.add_child(portal)
 	var b: Array = pdef["body"]
 	solids.append(portal.atlas_polygon([[b[0], b[1] + b[3] * 0.35], [b[0] + b[2], b[1] + b[3] * 0.35], [b[0] + b[2], b[1] + b[3]], [b[0], b[1] + b[3]]]))
@@ -542,5 +544,7 @@ func _build_sanctuaries(world: Node2D) -> void:
 		clear_rects.append(Rect2(point - Vector2(220, 220), Vector2(440, 440)))
 		var portal := IsoSprite.new().setup(data["sprites"]["portal"], 130.0)
 		portal.position = point + Vector2(0, -110)
+		portal_points[id] = portal.position
+		PlazaWater.attach(portal, true)
 		world.add_child(portal)
 		circles.append([portal.position, 35.0])

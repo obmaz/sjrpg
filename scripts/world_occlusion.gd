@@ -9,6 +9,8 @@ static var _active: Array[Node2D] = []
 static func attach(item: Node2D, bounds: Rect2) -> void:
 	item.add_to_group("world_occluders")
 	item.set_meta("occlusion_bounds", bounds)
+	if item.material != null:
+		item.set_meta("base_material", item.material)
 
 
 static func bounds_of(rect: Rect2, transform: Transform2D) -> Rect2:
@@ -36,9 +38,9 @@ static func update(position: Vector2, above: bool) -> void:
 				selected.append(item)
 	for item in _active:
 		if is_instance_valid(item) and not selected.has(item):
-			item.material = null
+			item.material = item.get_meta("base_material") if item.has_meta("base_material") else null
 	for item in selected:
 		if not _active.has(item):
-			item.material = _material
+			item.material = item.get_meta("base_material", _material)
 			item.set_instance_shader_parameter("sort_y", item.global_position.y)
 	_active = selected

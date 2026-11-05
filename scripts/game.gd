@@ -160,6 +160,8 @@ func _debug_open_panel(which: String) -> void:
 	if hud.panel_open():
 		hud.close_panel()
 	match which:
+		"warp":
+			hud.interact("워프게이트")
 		"bag":
 			hud.open_bag(false)
 		"shop":
@@ -210,6 +212,8 @@ func _read_debug_params() -> void:
 		elif kv.size() == 2 and kv[0] == "panel":
 			var which: String = kv[1]
 			get_tree().create_timer(1.5).timeout.connect(_debug_open_panel.bind(which))
+		elif kv.size() == 2 and kv[0] == "warp_preview" and kv[1] == "1":
+			_warp_preview.call_deferred()
 		elif kv.size() == 2 and kv[0] == "combat_preview":
 			_combat_preview.call_deferred()
 		elif kv.size() == 2 and kv[0] == "corpse_preview" and kv[1] in ["1", "bridge", "terrace"]:
@@ -223,6 +227,8 @@ func _read_debug_params() -> void:
 				c.take_damage(1.0, null)
 		elif kv.size() == 2 and kv[0] == "at":
 			match kv[1]:
+				"portal":
+					player.position = exploration.gate_approach("town")
 				"boss":
 					player.position = village.boss_point + Vector2(0, 130)
 				"field":
@@ -269,6 +275,8 @@ func near_merchant() -> bool:
 func near_npc() -> String:
 	if dungeon.active:
 		return "동굴 출구" if dungeon.at_exit() or player.position.length() < 150.0 else ""
+	if exploration.gate_nearby():
+		return "워프게이트"
 	if quest_runtime.boss_ready() and player.position.distance_to(village.boss_point) < 240.0:
 		return "숲의 파수꾼"
 	var best := ""
@@ -288,6 +296,34 @@ func near_npc() -> String:
 		if distance < best_d:
 			best = "안식처"
 	return best
+
+
+## Explicit browser review only: discover by visiting, then exercise a real destination button.
+func _warp_preview() -> void:
+	await get_tree().create_timer(2.0, false).timeout
+	if is_queued_for_deletion():
+		return
+	player.position = exploration.gate_approach("tree")
+	exploration.discover_current()
+	player.position = exploration.gate_approach("town")
+	exploration.discover_current()
+	camera.position = player.position
+	camera.reset_smoothing()
+	hud.interact("워프게이트")
+	var panel: WarpGatePanel = hud._panel
+	for frame in 3:
+		await get_tree().process_frame
+	var button: Button = panel.destination_buttons["tree"]
+	panel.scroll.ensure_control_visible(button)
+	for frame in 3:
+		await get_tree().process_frame
+	var center := button.get_global_rect().get_center() / get_viewport_rect().size
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.__sjrpgWarpPreviewButton = " + JSON.stringify([center.x, center.y]))
+	await panel.closed
+	if not is_queued_for_deletion() and OS.has_feature("web"):
+		var arrived := GameState.last_sanctuary == "tree" and exploration.gate_origin() == "tree" and not _blocked(player.position, Player.RADIUS)
+		JavaScriptBridge.eval("window.__sjrpgWarpPreviewArrived = " + ("true" if arrived else "false"))
 
 
 ## Explicit visual-review query only: real equipped-skill casts against a stationary target.

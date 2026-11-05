@@ -10,6 +10,9 @@ const { chromium, devices } = require('playwright');
 
 const SCENES = {
     town: '',
+    plaza: 'at=portal',
+    warp: 'at=portal&panel=warp',
+    warp_trip: 'warp_preview=1',
     juice: 'at=field&combat_preview=1',
     corpses: 'corpse_preview=1',
     corpses_bridge: 'corpse_preview=bridge&zoom=1.2',
@@ -93,6 +96,8 @@ await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { 
 if (scene === 'background') await page.evaluate(() => document.querySelector('canvas').blur());
 if (scene === 'rewards') {
     await page.waitForFunction(() => window.__sjrpgRewardPreviewReady === true, null, {timeout: 30000});
+} else if (scene === 'warp_trip') {
+    await page.waitForFunction(() => Array.isArray(window.__sjrpgWarpPreviewButton), null, {timeout: 30000});
 } else if (scene.startsWith('corpses')) {
     await page.waitForFunction(() => window.__sjrpgCorpsePreviewReady === true, null, {timeout: 30000});
     await page.waitForTimeout(1500);
@@ -115,6 +120,20 @@ if (scene === 'cooldowns') {
     await page.screenshot({path: out.replace(/\.png$/, '-remaining.png')});
     await page.waitForTimeout(2200);
     await page.screenshot({path: out.replace(/\.png$/, '-ready.png')});
+}
+if (scene === 'warp_trip') {
+    const target = await page.evaluate(() => window.__sjrpgWarpPreviewButton);
+    await tap(vp.width * target[0], vp.height * target[1]);
+    await page.waitForFunction(() => window.__sjrpgWarpPreviewArrived === true, null, {timeout: 15000});
+    await page.waitForTimeout(1200);
+    await page.screenshot({path: out.replace(/\.png$/, '-arrived.png')});
+    console.log('워프게이트 버튼으로 실제 이동·안전 도착 확인');
+}
+if (scene === 'plaza') {
+    for (let frame = 1; frame <= 2; frame++) {
+        await page.waitForTimeout(320);
+        await page.screenshot({path: out.replace(/\.png$/, `-${frame}.png`)});
+    }
 }
 if (scene === 'juice') {
     for (let frame=1; frame<=6; frame++) {
