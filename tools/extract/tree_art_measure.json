@@ -1,5 +1,5 @@
 {
- "source": "assets/source/forest-trees.png",
+ "source": "assets/source/remake/trees-v2.png",
  "camera": {
   "projection": "orthographic",
   "target_ground_axes_degrees": [
@@ -9,7 +9,7 @@
   "target_azimuth_degrees": 45,
   "target_elevation_degrees": 35.264
  },
- "review": "Organic illustration review: visible upper crown layers, shorter foreshortened trunks, rear roots occluded by the trunk, and no painted ground/cast-shadow plate. These are authored camera targets, not a rigid-edge angle measurement. Foot points mark the trunk/root ground-contact centre, leaving front roots visible below the depth-sort origin.",
+ "review": "The remade tree family follows the original user reference and town-master-scene-v3 material language, using the previous high-canopy forest-trees.png as the camera/occlusion reference. The initially generated open frontal crowns were rejected. In this adopted regeneration, upper leaf masses overlap and hide rear forks, exposed trunks are short, fir bough upper surfaces layer over one another, and the willow canopy hides its rear structure. Root centres are measured at the trunk-to-ground spreading junction, with forward root depth retained. Light/dark alpha composites show no wide halo or cast-shadow/ground plate; saturated red/yellow source-RGB residues have alpha<=4 and disappear in normal compositing. The mature crown has alpha>8 from y7, with no visible pixels on the top source row, so its full top is retained. Organic camera consistency is a visual review, not a fake numerical rigid-axis certification.",
  "frames": [
   {
    "id": "oak-young",
@@ -20,21 +20,21 @@
     600
    ],
    "foot": [
-    288,
-    464
+    290,
+    475
    ]
   },
   {
    "id": "oak-mature",
    "roi": [
-    570,
+    560,
     0,
     1254,
     600
    ],
    "foot": [
-    909,
-    519
+    918,
+    535
    ]
   },
   {
@@ -46,21 +46,21 @@
     1254
    ],
    "foot": [
-    289,
-    1152
+    292,
+    1171
    ]
   },
   {
    "id": "willow",
    "roi": [
-    570,
+    560,
     600,
     1254,
     1254
    ],
    "foot": [
-    916,
-    1139
+    917,
+    1171
    ]
   }
  ],
@@ -83,5 +83,19 @@
   "tree-15": "oak-young",
   "tree-16": "oak-young",
   "tree-17": "oak-mature"
- }
+ },
+ "references": [
+  {
+   "path": "assets/source/style/approved-game-reference.jpg",
+   "role": "authoritative user reference"
+  },
+  {
+   "path": "assets/source/remake/town-master-scene.png",
+   "role": "supplementary environment material/mood concept; not a replacement for the user reference"
+  },
+  {
+   "path": "assets/source/forest-trees.png",
+   "role": "existing high-canopy and occluded-root camera reference supplied to regeneration"
+  }
+ ]
 }

@@ -7,12 +7,10 @@ extends RefCounted
 
 const DATA_PATH := "res://assets/data/village.json"
 const ROAD_HALF := 0.047  # paved road half width in uv
-## Town trees measured from the original game's opening view.
-const TREE_UV := [[0.355, 0.724, 11], [0.684, 0.703, 2], [0.246, 0.368, 11]]
-## The new art already shades its crowns; a mild grade keeps bark warm and readable.
-const FOLIAGE := Color(0.82, 0.9, 0.84)
-## Four slabs per tile, each around a third of the hero's height.
-const COBBLE_PX := 512.0 / 110.0
+## Preserve the reviewed generated material colors; scene light is a separate layer.
+const FOLIAGE := Color.WHITE
+## Six to seven irregular stones per tile, around a quarter to a third of hero height.
+const COBBLE_PX := 512.0 / 210.0
 const WALL_JOIN_OVERLAP := 4.0  # Ground units: cover filtered cut-edge pixels without changing collision.
 const NPCS := [
 	["nw", "상인", 0], ["ne", "대장장이", 1], ["sw", "탈것 상인", 2], ["se", "촌장", 3],
@@ -65,6 +63,7 @@ var portal_points := {}
 var portal_sprites: Dictionary = {}
 var portal_footprints: Dictionary = {}
 var fountain: IsoSprite
+var town_trees: Array[IsoSprite] = []
 var merchant_point := Vector2.ZERO
 ## 이름 → 위치: 상인 · 대장장이 · 탈것 상인 · 촌장 · 보급원 미라.
 var npc_points := {}
@@ -109,9 +108,10 @@ func build(ground_layer: Node2D, world: Node2D) -> void:
 	world.add_child(beacon)
 	solids.append(portal_base(beacon))
 	_build_buildings(world)
+	_build_chapel_path(ground_layer)
 	_build_plaza(world)
 	_build_sanctuaries(world)
-	_build_trees(world)
+	_build_trees(world, ground_layer)
 	_build_npcs(world)
 	for c in data["chest_uv"]:
 		chest_points.append(point(Vector2(c[0], c[1])))
@@ -135,7 +135,7 @@ func _box(a_uv: Vector2, b_uv: Vector2) -> PackedVector2Array:
 
 
 ## Reference limestone laid on the actual projected walkable ground.
-## Ground lighting stays uniform until shadows can follow actual objects and a light source.
+## The material has no baked shadow patches; actual tree casters shade it separately.
 func _build_paving(layer: Node2D) -> void:
 	var group := Node2D.new()
 	group.z_index = 1
@@ -152,7 +152,7 @@ func _build_paving(layer: Node2D) -> void:
 	for p in merged:
 		uv.append(p * COBBLE_PX)
 	stone.uv = uv
-	stone.modulate = Color(0.98, 0.97, 0.94)
+	stone.modulate = Color.WHITE
 	group.add_child(stone)
 	# Dirt roads continue outward from the gates; the east road ends at the
 	# bridge forecourt and a narrower road crosses the bridge northwards.
@@ -397,7 +397,7 @@ func _build_buildings(world: Node2D) -> void:
 	_build_chapel(world)
 
 
-## 예배당 (새 120° 원화 assets/source/chapel-new.png): 자갈 마당(기단) 위의 고딕 예배당.
+## 예배당: 새 지면 접근형 본체와 문 앞 얕은 계단을 원화에서 실측한다.
 ## 마당 윗면(`outline`)은 계단(`entrance` 0)으로만 오를 수 있고, 정면 절벽(`faces`)과 건물 자리(`building`)는 막힌다.
 ## `frames.chapel.ground`는 기단이 땅에 닿는 접점(축 검사용)이라 충돌에는 쓰지 않는다: 마당 위를 걸어야 하므로.
 ## 좌표는 원화 원본 픽셀이라 `native_polygon`으로 월드에 옮긴다.
@@ -429,24 +429,143 @@ func _build_plaza(world: Node2D) -> void:
 	fountain.k *= 2.4
 	PlazaWater.attach(fountain, false)
 	world.add_child(fountain)
-	var src: Array = fountain.def["source"]
-	var footprint := []
-	for p in [Vector2(14, 258), Vector2(352, 453), Vector2(694, 257), Vector2(355, 61)]:
-		footprint.append([float(src[0]) + p.x, float(src[1]) + p.y])
-	solids.append(fountain.atlas_polygon(footprint))
+	# Authored frame points follow the same measured source projection as its stone base.
+	solids.append(fountain.atlas_polygon(data["frames"]["pool"]["ground"]))
 	# Leave room for the larger fountain and for Mira's independent interaction approach.
 	var portal := _add_warp_portal("town", point(Vector2(0.395, 0.493)), world)
 	portal_point = portal.position
 
 
-func _build_trees(world: Node2D) -> void:
-	for t in TREE_UV:
-		var def: Dictionary = data["sprites"]["tree-%d" % t[2]]
-		var tree := IsoSprite.new().setup(def, float(def["world_height"]) * 1.05)
-		tree.position = point(Vector2(t[0], t[1]))
-		tree.modulate_color = FOLIAGE
-		world.add_child(tree)
-		circles.append([tree.position, 18.0])
+## Join the measured doorway to the existing street on the real ground plane.
+## The generated stone material shares UVs with the street; the slight outline
+## irregularity is road geometry, not a painted background or a collision wall.
+func _build_chapel_path(layer: Node2D) -> void:
+	var start := Iso.unproject(chapel_steps[0])
+	var closest := start
+	var distance := INF
+	var street := map_roads[0]
+	var outward := (chapel_steps[0] - chapel_steps[chapel_steps.size() - 1]).normalized()
+	for index in street.size():
+		var a := Iso.unproject(street[index])
+		var b := Iso.unproject(street[(index + 1) % street.size()])
+		var at := Geometry2D.get_closest_point_to_segment(start, a, b)
+		# Approach from in front of the steps, rather than the nearer street behind the doorway.
+		if (Iso.project(at) - Iso.project(start)).normalized().dot(outward) < 0.35:
+			continue
+		if start.distance_squared_to(at) < distance:
+			distance = start.distance_squared_to(at)
+			closest = at
+	var direction := (closest - start).normalized()
+	if direction.is_zero_approx():
+		return
+	start -= direction * 55.0
+	var finish := closest + direction * 40.0
+	var normal := direction.orthogonal()
+	var left := PackedVector2Array()
+	var right := PackedVector2Array()
+	for index in 5:
+		var t := float(index) / 4.0
+		var width := lerpf(120.0, 140.0, t)
+		var offset: float = [0.0, 7.0, -5.0, 8.0, 0.0][index]
+		var center := start.lerp(finish, t)
+		left.append(center + normal * (width + offset))
+		right.append(center - normal * (width - offset))
+	right.reverse()
+	left.append_array(right)
+	var path := Polygon2D.new()
+	path.polygon = left
+	path.texture = ForestArt.texture("paving")
+	path.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
+	var uv := PackedVector2Array()
+	for point in left:
+		uv.append(point * COBBLE_PX)
+	path.uv = uv
+	path.z_index = 1
+	layer.add_child(path)
+	map_roads.append(_project_polygon(left))
+
+
+func _build_trees(world: Node2D, ground_layer: Node2D) -> void:
+	# Build a wooded middle/background around the real chapel and service houses.
+	# Trunk positions stay off the actual structures, roads and stair approach.
+	for key in ["chapel", "nw", "ne", "sw", "se"]:
+		var building: IsoSprite = buildings[key]
+		var bounds := Iso.poly_bounds(building.atlas_polygon(data["frames"][key]["ground"]))
+		var points: Array[Vector2] = [
+			Vector2(bounds.position.x - 60.0, bounds.position.y - 65.0),
+			Vector2(bounds.end.x + 65.0, bounds.position.y + 25.0),
+		]
+		if key == "chapel":
+			points[0] = Vector2(bounds.position.x + 10.0, bounds.position.y - 65.0)
+			points.append(Vector2(bounds.get_center().x + 30.0, bounds.position.y - 145.0))
+			points.append(Vector2(bounds.end.x - 20.0, bounds.end.y + 150.0))
+			points.append(bounds.position + Vector2(-340.0, -170.0))
+		for index in points.size():
+			var at := points[index]
+			if not _grove_clear(at):
+				continue
+			var definition: Dictionary = data["sprites"]["tree-2" if index % 2 == 0 else "tree-1"]
+			var extra := IsoSprite.new().setup(definition, float(definition["world_height"]) * (1.0 if key == "chapel" else 0.82))
+			extra.position = at
+			if _canopy_blocks_service(extra):
+				extra.free()
+				continue
+			extra.modulate_color = FOLIAGE
+			if key == "chapel" and at.y < building.position.y - 50.0:
+				# A cool, shaded background layer; foreground crowns keep their source light.
+				extra.modulate_color = Color(0.76, 0.80, 0.79)
+			world.add_child(extra)
+			town_trees.append(extra)
+			circles.append([at, 18.0])
+	# Prioritize the new chapel grove. These flat-ground casters use their own alpha,
+	# never a repeating dark patch painted into the grass material.
+	var casters := town_trees.duplicate()
+	var chapel: IsoSprite = buildings["chapel"]
+	casters.sort_custom(func(a: IsoSprite, b: IsoSprite): return a.position.distance_squared_to(chapel.position) < b.position.distance_squared_to(chapel.position))
+	for caster in casters:
+		CanopyShade.attach(caster, ground_layer)
+
+
+## A trunk can clear the door while its much wider crown still hides the NPC.
+## Compare the actual painted bounds and draw order, including adjacent houses.
+func _canopy_blocks_service(tree: IsoSprite) -> bool:
+	var src: Array = tree.def["source"]
+	var bounds := Iso.poly_bounds(tree.atlas_polygon([[src[0], src[1]], [src[0] + src[2], src[1]], [src[0] + src[2], src[1] + src[3]], [src[0], src[1] + src[3]]]))
+	for key in ["nw", "ne", "sw", "se"]:
+		var approach: Array = data["approaches"][key]
+		var npc: Vector2 = buildings[key].native_point(Vector2(approach[0], approach[1]))
+		if tree.position.y > npc.y + 4.0 and bounds.intersects(Rect2(npc - Vector2(42, 90), Vector2(84, 110))):
+			return true
+	return false
+
+
+func _grove_clear(at: Vector2) -> bool:
+	if near_water(Iso.unproject(at), 30.0):
+		return false
+	for solid in solids:
+		if Geometry2D.is_point_in_polygon(at, solid):
+			return false
+	for road in map_roads:
+		if Geometry2D.is_point_in_polygon(at, road):
+			return false
+	for step in chapel_steps:
+		if at.distance_to(step) < 95.0:
+			return false
+	for point in portal_points.values():
+		if at.distance_to(point) < 145.0:
+			return false
+	for gate in gate_points:
+		if at.distance_to(gate) < 160.0:
+			return false
+	for uv in data["chest_uv"]:
+		if at.distance_to(point(Vector2(uv[0], uv[1]))) < 85.0:
+			return false
+	for key in ["nw", "ne", "sw", "se"]:
+		var building: IsoSprite = buildings[key]
+		var approach: Array = data["approaches"][key]
+		if at.distance_to(building.native_point(Vector2(approach[0], approach[1]))) < 85.0:
+			return false
+	return true
 
 
 func _build_npcs(world: Node2D) -> void:
@@ -548,6 +667,8 @@ func create_portal(at: Vector2) -> IsoSprite:
 
 
 static func portal_base(portal: IsoSprite) -> PackedVector2Array:
+	if portal.def.has("base_ground"):
+		return portal.native_polygon(portal.def["base_ground"])
 	var body: Array = portal.def["body"]
 	return portal.atlas_polygon([[body[0], body[1] + body[3] * 0.35], [body[0] + body[2], body[1] + body[3] * 0.35], [body[0] + body[2], body[1] + body[3]], [body[0], body[1] + body[3]]])
 

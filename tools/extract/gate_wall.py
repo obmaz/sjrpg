@@ -26,7 +26,7 @@ def main():
     height = math.ceil(image.height * gvs + abs(gvk) * image.width) + 16
     corrected = cv2.warpAffine(rgba, np.array([[1., 0., 0.], [gvk, gvs, 0.]]), (image.width, height), flags=cv2.INTER_LINEAR)
     # This interval contains one real front/rear battlement period, before the tower.
-    left, right = 161, 225
+    left, right = measurements['wall'].get('extraction', {}).get('x_range', [161, 225])
     corrected = corrected[:, left:right].copy()
     front = gate_projection.point(gate['baked_warp'], gate['front_L'])
     datum = front[1] * gvs + front[0] * gvk
@@ -41,7 +41,7 @@ def main():
     bounds = result.getchannel('A').point(lambda a: 255 if a > 8 else 0).getbbox()
     crop_top, crop_bottom = max(0, bounds[1] - 4), min(height, bounds[3] + 4)
     result = result.crop((0, crop_top, right - left, crop_bottom))
-    output = ROOT / 'assets/source/wall-from-gate.png'
+    output = ROOT / measurements['wall']['segs']['a']['png']
     result.save(output)
     record = dict(parent=gate['png'], parent_sha256=hashlib.sha256((ROOT / gate['png']).read_bytes()).hexdigest(),
                   warp=gate['baked_warp'], parent_mesh={key: gate_projection.mesh(gate['baked_warp'])[key] for key in ['points', 'triangles']},
@@ -49,7 +49,7 @@ def main():
                   world_pixels_per_source_pixel=unit_scale * 0.97,
                   front_baseline=[float(floor[0] - crop_top), float(floor[-1] - crop_top)],
                   output=str(output.relative_to(ROOT)), sha256=hashlib.sha256(output.read_bytes()).hexdigest())
-    (ROOT / 'tools/extract/wall_from_gate.json').write_text(json.dumps(record, indent=1) + '\n')
+    (ROOT / measurements['wall']['segs']['a']['extracted_scale']).write_text(json.dumps(record, indent=1) + '\n')
     print('Extracted actual gate masonry', result.size, 'world scale', record['world_pixels_per_source_pixel'])
 
 

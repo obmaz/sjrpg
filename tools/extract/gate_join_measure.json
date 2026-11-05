@@ -1,13 +1,13 @@
 {
- "_doc": "Actual native-pixel front-wing profile measurements for joint alignment. This is separate from collision/passages and does not change either. Cap means the same bevel-to-vertical front-face boundary in all four wings; it is not the rear ridge or the first mortar course. Base/coping lines were independently fitted to the actual current sources in art_axis_measure.json; cap lines were newly detected with OpenCV LSD and visually checked in enlarged native crops.",
+ "_doc": "Independent new-source wing base/coping/front lower bevel measurements. Collision/passages are preserved separately; opposite cap planes are distinct.",
  "sources": {
   "gate-0": {
-   "path": "assets/source/gate-cohesive-a.png",
-   "sha256": "2abd38a31c555e1cc379c91c645a99775104aeb0e64cb79697896b1ae9e27983"
+   "path": "assets/source/remake/gate-a.png",
+   "sha256": "a0f3d56235882394d645cea025efae632c16e1e23157b67579945bd95aeb7cb6"
   },
   "gate-2": {
-   "path": "assets/source/gate-cohesive-b.png",
-   "sha256": "8a18435aba7826469ef2d477cafeb6223ed5fbfa4d017e25b68caa56dd032e5b"
+   "path": "assets/source/remake/gate-b-v2.png",
+   "sha256": "d775ab279668e1551180823d7f4e130a9df56220f537167f3a21885134e0593f"
   }
  },
  "canonical": "gate-0.left",
@@ -18,32 +18,32 @@
    "axis": 30,
    "base": [
     [
-     67.419998,
-     685.849976
+     42.0,
+     686.6047765793528
     ],
     [
-     255.589996,
-     785.690002
+     217,
+     777.611132511556
     ]
    ],
    "coping": [
     [
-     67.889999,
-     446.070007
+     41.21,
+     443.16
     ],
     [
-     265.920013,
-     550.070007
+     242.97,
+     548.41
     ]
    ],
    "cap": [
     [
-     67.365,
-     390.737
+     66.207,
+     400.668
     ],
     [
-     98.748,
-     408.26
+     79.673,
+     407.629
     ]
    ]
   },
@@ -53,32 +53,32 @@
    "axis": 30,
    "base": [
     [
-     894.0,
-     1101.319946
+     941,
+     1133.6033136545418
     ],
     [
-     1047.630005,
-     1184.22998
+     1117,
+     1226.1593982098648
     ]
    ],
    "coping": [
     [
-     879.969971,
-     865.77002
+     906.52,
+     868.81
     ],
     [
-     1083.609985,
-     974.719971
+     1117.86,
+     978.63
     ]
    ],
    "cap": [
     [
-     1044.157,
-     892.458
+     1080.33,
+     902.21
     ],
     [
-     1085.009,
-     914.447
+     1119.82,
+     923.78
     ]
    ]
   },
@@ -88,32 +88,32 @@
    "axis": -30,
    "base": [
     [
-     177.699997,
-     1217.22998
+     185,
+     1216.7185356080379
     ],
     [
-     366.5,
-     1127.329956
+     365,
+     1130.9499726792537
     ]
    ],
    "coping": [
     [
-     179.860001,
-     927.789978
+     181.566,
+     934.986
     ],
     [
-     380.170013,
-     830.940002
+     377.344,
+     840.345
     ]
    ],
    "cap": [
     [
-     177.965,
-     854.136
+     184.46,
+     860.793
     ],
     [
-     197.846,
-     843.904
+     219.893,
+     842.9
     ]
    ]
   },
@@ -123,53 +123,67 @@
    "axis": -30,
    "base": [
     [
-     1044.359985,
-     824.349976
+     1065,
+     816.0240176600438
     ],
     [
-     1156.589966,
-     766.320007
+     1214,
+     736.5093156732889
     ]
    ],
    "coping": [
     [
-     1040.599976,
-     521.820007
+     1041.376,
+     522.122
     ],
     [
-     1213.089966,
-     436.850006
+     1217.772,
+     433.664
     ]
    ],
    "cap": [
     [
-     1168.859,
-     384.797
+     1097.782,
+     420.329
     ],
     [
-     1212.432,
-     361.674
+     1137.921,
+     397.461
     ]
    ]
   }
  },
- "constraint_notes": [
-  "Targets emitted by the helper are absolute projected-native pixel positions. A solver storing displacements must subtract the source positions. Account for pad_y exactly once.",
-  "Feature height is measured against each painted wing base, with a separate report against the whole-gate front plane. Do not silently treat these parallel but offset lines as identical.",
-  "Keep metric scale/foot landmarks fixed, or freeze their references while applying targets. derive() currently remeasures wing_height_line and tower anchors after a warp; moving those points changes the scale/foot and invalidates a one-pass position target.",
-  "A point with a nonzero target must not also be a zero-displacement pin. A line-angle constraint alone does not constrain its architectural height.",
-  "Gate-2 depth needs x and y correction if brought to wall thickness 64. vertical_only cannot reduce its measured 71.1-unit thickness while preserving both isometric axes. Match corresponding top and bottom depth corners; check no folded triangles.",
-  "These measurements check profile geometry. They do not assert that independently generated block/corbel patterns match. Use actual gate-wing pixels as the shared wall module to establish that correspondence."
- ],
+ "wall_profiles": {
+  "coping": [
+   [
+    23.437,
+    210.096
+   ],
+   [
+    61.671,
+    232.597
+   ]
+  ],
+  "cap": [
+   [
+    3.999,
+    132.579
+   ],
+   [
+    18.329,
+    140.243
+   ]
+  ]
+ },
  "depth_upper": {
   "back": [
-   45.599998,
-   856.75
+   41.634,
+   857.484
   ],
   "front": [
-   179.860001,
-   927.789978
+   184.35950979606068,
+   933.6355900427577
   ],
-  "method": "The shared front corner is the measured coping endpoint; a 1.3px independent LSD endpoint discrepancy is resolved before triangulation so two source points are not collapsed onto one target line."
+  "method": "New source opposite/front coping lines; review shared painted corner independently of solids"
  }
 }

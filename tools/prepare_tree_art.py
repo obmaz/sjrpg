@@ -13,7 +13,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 MEASURE = ROOT / 'tools/extract/tree_art_measure.json'
-CELL = 512
+CELL = 768
 PADDING = 8
 
 
@@ -25,12 +25,15 @@ def main():
     measure = json.loads(MEASURE.read_text())
     source = ROOT / measure['source']
     image = Image.open(source).convert('RGBA')
-    if image.getchannel('A').getextrema() != (0, 255):
+    minimum, maximum = image.getchannel('A').getextrema()
+    if minimum != 0 or maximum < 250:
         raise ValueError('The reviewed tree sheet must retain its transparent background')
     atlas = Image.new('RGBA', (CELL * 2, CELL * 2))
     frames = {}
     for index, frame in enumerate(measure['frames']):
         roi = frame['roi']
+        if not (0 <= roi[0] < roi[2] <= image.width and 0 <= roi[1] < roi[3] <= image.height):
+            raise ValueError(f'Tree measurement falls outside the current source: {frame["id"]}')
         crop = image.crop(roi)
         alpha = crop.getchannel('A')
         bounds = alpha.point(lambda value: 255 if value > 8 else 0).getbbox()
@@ -59,6 +62,9 @@ def main():
                     render='assets/art/village/trees.webp', render_sha256=sha(target),
                     camera=measure['camera'], review=measure['review'],
                     frames=frames, variants=measure['variants'])
+    if 'references' in measure:
+        metadata['references'] = [dict(**reference, sha256=sha(ROOT / reference['path']))
+                                  for reference in measure['references']]
     (ROOT / 'assets/data/tree_art.json').write_text(json.dumps(metadata, indent=1) + '\n')
     print('Tree atlas:', atlas.size, 'frames:', len(frames))
 

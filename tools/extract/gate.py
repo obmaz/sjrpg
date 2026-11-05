@@ -327,12 +327,12 @@ def family_manifest(data):
         return dict(path=path, sha256=hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
     sources = sorted({g["png"] for g in M["gates"].values()} | {s["png"] for s in M["wall"]["segs"].values()})
     result = dict(master_reference=record("assets/source/style/approved-game-reference.jpg"),
-                  concept=record("assets/source/style/gate-wall-design.png"),
-                  generation=record("tools/extract/gate_generation.json"),
+                  concept=record(M.get("family_concept", "assets/source/style/gate-wall-design.png")),
+                  generation=record(M.get("generation_provenance", "tools/extract/gate_generation.json")),
                   sources=[record(path) for path in sources],
                   renders=[record("assets/art/village/gates.webp"), record("assets/art/village/walls.webp")],
                   wall_module=dict(source=M["wall"]["segs"]["a"]["png"],
-                                   extraction=record('tools/extract/wall_from_gate.json'),
+                                   extraction=record(M['wall']['segs']['a']['extracted_scale']),
                                    derived_direction="b reflects the same projected module horizontally",
                                    height=data["wall"]["height"], thickness=data["wall"]["thick"],
                                    scale_a=data["wall"]["segs"]["a"]["k"], scale_b=data["wall"]["segs"]["b"]["k"]))

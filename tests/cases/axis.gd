@@ -28,7 +28,7 @@ func run() -> void:
 		if not bad.is_empty():
 			failures += 1
 	# The deck collision plane follows the ground axes; its visible coping is audited separately.
-	var deck: Array = Bridge.DECK
+	var deck: Array = Bridge.model_deck()
 	for i in 4:
 		var d: Vector2 = deck[(i + 1) % 4] - deck[i]
 		var t := absf(rad_to_deg(d.angle()))

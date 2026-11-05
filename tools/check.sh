@@ -38,7 +38,7 @@ echo "── 2/3 테스트"
 if [ -n "$ONLY" ]; then "$GODOT_SH" --headless res://tests/run_all.tscn -- "$ONLY" >"$LOG" 2>&1
 else "$GODOT_SH" --headless res://tests/run_all.tscn >"$LOG" 2>&1; fi
 code=$?
-grep -E "^(PASS|FAIL|RESULT)|^FAIL |SCRIPT ERROR|^ERROR" "$LOG"
+grep -E "^(PASS|FAIL|RESULT|ART_AUDIT)|^FAIL |SCRIPT ERROR|^ERROR" "$LOG"
 if [ $code -ne 0 ] || grep -qE "SCRIPT ERROR|^ERROR:" "$LOG"; then fail=1; fi
 # 테스트 러너가 실제로 돌았는지: RESULT 줄이 없고 실패 0이 아니면 통과로 보지 않는다.
 if ! grep -qE "^RESULT cases=[1-9][0-9]* failed=0 " "$LOG"; then echo "테스트 결과(RESULT … failed=0)를 확인하지 못했습니다"; fail=1; fi

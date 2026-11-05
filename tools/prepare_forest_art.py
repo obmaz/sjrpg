@@ -39,13 +39,19 @@ def main():
     for key, tile in measure['tiles'].items():
         # The measured inner square excludes any atlas gutter. Ground remains
         # opaque; its perspective comes from the actual game ground transform.
-        tile_image = images[tile['source']].crop(tile['roi']).convert('RGB')
+        tile_image = images[tile['source']].crop(tile['roi'])
+        if tile_image.getchannel('A').getextrema()[0] < 250:
+            raise ValueError(f'Ground material must be opaque throughout its measured square: {key}')
+        tile_image = tile_image.convert('RGB')
         textures[key] = save(tile_image.resize((CELL, CELL), Image.Resampling.LANCZOS), key)
     atlas = Image.new('RGBA', (CELL * 2, CELL * 2))
     frames = {}
     for key, frame in measure['frames'].items():
         roi = frame['roi']
         crop = images[frame['source']].crop(roi)
+        minimum, maximum = crop.getchannel('A').getextrema()
+        if minimum != 0 or maximum < 250:
+            raise ValueError(f'Flora must retain transparent surroundings and opaque leaves: {key}')
         bounds = crop.getchannel('A').point(lambda value: 255 if value > 8 else 0).getbbox()
         if bounds is None:
             raise ValueError(f'Empty flora illustration: {key}')
@@ -75,6 +81,9 @@ def main():
                              for path in measure['sources'].values()],
                     camera=measure['camera'], review=measure['review'],
                     textures=textures, frames=frames)
+    if 'references' in measure:
+        metadata['references'] = [dict(**reference, sha256=sha(ROOT / reference['path']))
+                                  for reference in measure['references']]
     target = ROOT / 'assets/data/forest_art.json'
     temporary = target.with_suffix('.tmp')
     temporary.write_text(json.dumps(metadata, indent=1) + '\n')

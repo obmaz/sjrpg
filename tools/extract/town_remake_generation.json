@@ -1,0 +1,536 @@
+{
+ "user_reference": "assets/source/style/approved-game-reference.jpg",
+ "guide": "docs/reference-look-guide.md",
+ "scope": "Stage1 town environment; no later stages",
+ "selected_master": "assets/source/remake/town-master-scene.png",
+ "master_is_not_user_approval": true,
+ "records": [
+  {
+   "key": "town-master-scene-v1-rejected",
+   "source": null,
+   "references": [
+    "assets/source/style/approved-game-reference.jpg"
+   ],
+   "prompt": "Create the coherent TOWN REMAKE MASTER SCENE for Guardians of Nature, using the attached user image as the authoritative visual style. Deliver a new close playable forest-village scene with the same refined, natural, realistically detailed atmosphere, NOT a screenshot with HUD.\nTRUE ORTHOGRAPHIC ISOMETRIC 2.5D: azimuth 45 degrees, elevation 35.2643897 degrees. All ground-parallel architecture edges must run at exactly +30 or -30 degrees to image horizontal and all upright posts vertical. Parallel roof eaves, stone courses, window sills and foundations must stay parallel on both visible faces and at every height. No perspective vanishing points, no wide-angle, no 2:1 dimetric. The camera is fixed.\nOne intimate grey limestone forest chapel with slate-blue overlapping shingles and restrained Gothic windows dominates the upper/right background. Include a small adjoining village cottage on the distant left using precisely the same limestone, aged oak, slate and quiet craftsmanship. In front is an irregular grey limestone cobbled path with short moss in fine joints, rich but muted olive ground cover and cream-white / a few warm wildflowers along building feet. A mature oak canopy forms layered upper and side edges, with visible upper canopy and rooted, naturally occluded trunk. Preserve open walkable space in the center. One male navy-coated mage, full-body, head-to-toe height about 23 percent of the short image dimension, stands near center lower-middle, with a small delicate blue-white hand spell, individual sparks and readable body/clothes.\nContemporary realistic finely textured pre-rendered game artwork, tactile limestone grain and shallow mortar, wood joinery, cloth folds; not low-poly, pixel art, thick-outline cartoon, toy diorama or an aerial village map. Warm daylight from upper left and soft cool woodland fill; deep foliage shade, readable sunlit masonry, grounded believable shadows in THIS CONCEPT ONLY. Avoid uniform green filter, flat full-bright surfaces, excessive saturation, harsh bloom and gilding.\nPortrait 1024x1536 composition, broad complete camera-accurate scene, no UI, no text, no numbers, no border, no logo, no navigation bar. This is the unified material/composition concept from which we will make separate production assets; retain the exact image style reference.",
+   "transparent_background": false,
+   "generator": "image_gen.imagegen",
+   "status": "rejected_after_user_comparison",
+   "source_generated": "/workspace/generated_images/exec-c3fa91c1-646a-454f-abe8-32186c48ef53.png",
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+   },
+   "source_sha256": "917dd595d778d910eabf31fe757df2b88d56043d4a62d623116013917a9b1ddd",
+   "source_size": [
+    1024,
+    1536
+   ]
+  },
+  {
+   "key": "town-master-scene-v2",
+   "status": "comparison_iteration",
+   "source": "assets/source/remake/town-master-scene-v2.png",
+   "references": [
+    "assets/source/style/approved-game-reference.jpg"
+   ],
+   "prompt": "Faithfully reconstruct the WORLD ART from the attached reference image. This is a close image-restoration/edit task, NOT a new interpretation of a medieval village. Preserve the original art style, camera, architecture, lighting, palette, framing, proportions and exact visual atmosphere.\nRemove all HUD, portrait and health bars, minimap, skill buttons, joystick, numbers, text, bottom phone navigation icons and logos. Inpaint the covered parts naturally with the same existing world. Do not redesign the world while removing the interface.\nKeep the SAME large Gothic forest chapel in the upper/right image, including its left projecting pointed wooden entrance, bell tower rising behind it and its right pair of tall detailed tracery windows, aged fine light-grey limestone blocks, dark blue-grey irregular slate shingles, buttresses and muted glass. Chapel fills roughly three quarters of image width and continues beyond upper/right image edges. Match the fine photorealistic surface relief and stone joint scale of this reference. No new side cottage, well, cart, barrels, wall, fence or town-square props.\nKeep the SAME narrow diagonal moss-jointed irregular grey stone walkway; it is a forest path, not a broad open plaza. Keep the dense deep-green forest with natural tall trunks along the left and behind the church; the same sparse warm dappled sunlight against deep cool leaf shade, not a uniform golden sunny scene, not a green tint over everything. Preserve natural depth, subtle realistic material detail and the rich lower-edge cream wildflowers and close soft foreground leaves. No miniature/low-poly, cartoon illustration or clean synthetic model.\nKeep the SAME male mage with hood shadowing his face, dark navy long coat, same small full-body scale and near-center position, head around45% image height and feet around59%, arm extended toward the left, delicate small blue-white separated casting sparks left of hand. The mage must stay readable; no excessive bloom or white ball.\nPreserve the reference's elevated orthographic isometric 2.5D quarter-view impression. Horizontal architectural ground-axis lines should remain parallel near ±30 degrees and uprights vertical; do not use perspective convergence or wide-angle distortion. This is the reference master scene, not a production sprite sheet.\nThe result should look like the original image with only the interface removed. Same close portrait framing, target9:16 portrait, maximum detail. Do not zoom out or invent additional scene content.",
+   "transparent_background": false,
+   "generator": "image_gen.imagegen",
+   "source_sha256": "f14c065d12b508e21f09c8568ffb1de6af44356682373a7fc7aaad091e808865",
+   "source_size": [
+    937,
+    1679
+   ],
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+   }
+  },
+  {
+   "key": "town-master-scene",
+   "status": "comparison_iteration_3_not_user_approval",
+   "source": "assets/source/remake/town-master-scene.png",
+   "references": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene-v2.png"
+   ],
+   "prompt": "Image1 is the AUTHORITATIVE user game reference; image2 is our candidate2 world reconstruction without HUD. Refine candidate2 to match image1 even more faithfully in atmosphere and world rendering, while keeping the interface absent.\nPreserve exactly image1's close portrait composition: same large chapel cropped at top/right, projecting pointed entrance, paired tracery windows, tall partially cropped bell tower, same hooded navy-coated mage position and size, same diagonal narrow limestone path and rich layered woodland. Do not add any building, well, cart, barrels, fence, large new flowers or ornamental props.\nThe remaining correction is tonal and material fidelity: candidate2 is slightly too crisp, warmly sunlit and clean. Restore image1's quieter, natural, softly detailed realistic rendering. Keep limestone warm-neutral grey rather than honey-gold, slate desaturated blue-grey rather than saturated blue; leaves and grasses muted deep olive, with more cool dark canopy shade on the left and around building sides. Preserve the fine grain, weathered joints, stone depth and gentle light wrap. Keep the brighter localized daylight on the main path and face of chapel but do not bleach stone surfaces. Retain darks with readable depth rather than crushing them or a uniform dark/green overlay. Foreground flowers remain mostly small cream whites and sparse restrained warm yellows/oranges, with no bright purple flower clusters. Foreground close leaves should be soft natural depth layers, while playable path and mage remain readable.\nMatch the user's photorealistic refined pre-rendered forest-fantasy game art, not an illustration, toy model, low-poly look, hyper-sharpened CGI or stylized fantasy painting. Mage face remains shadowed by navy hood with small blue-white hand sparks, never a bloom blob.\nMaintain the elevated true-isometric 2.5D orthographic camera: ground-axis lines near±30°, verticals upright, no perspective convergence, no camera widening. No GUI, text, icons, status bars, map, joystick, borders, logos or phone navigation. Same portrait9:16 aspect and same content framing as image1. Target: an image that reads as image1 with the HUD removed, not a redesign.",
+   "transparent_background": false,
+   "generator": "image_gen.imagegen",
+   "source_sha256": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389",
+   "source_size": [
+    937,
+    1679
+   ],
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene-v2.png": "f14c065d12b508e21f09c8568ffb1de6af44356682373a7fc7aaad091e808865"
+   }
+  },
+  {
+   "key": "ground",
+   "source": "assets/source/remake/ground.png",
+   "references": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene.png"
+   ],
+   "prompt": "Create a production ground-material atlas that faithfully matches the natural surface rendering of the attached USER REFERENCE (authoritative) and comparison-refined MASTER scene. Photorealistic softly weathered forest materials, muted realistic colors and fine subtle detail, not stylized texture tiles.\nExactly THREE equal SQUARE seamless material swatches side-by-side in one horizontal row, target1536x512 wide3:1. LEFT rich fine muted olive moss and short woodland grass with sparse tiny fallen leaves and subtle earth variation. CENTER irregular rounded worn warm-neutral GREY limestone path cobbles, shallow subtle moss joints and chipped gently weathered corners; about8 to10 stones across the swatch, varied shapes, no regular black mortar grid and no honey-gold cast. RIGHT compact naturally damp brown woodland earth with fine embedded pebbles and subtle organic detail. Match natural grey/olive/brown color balance of the USER image; no yellow tint and no oversaturated green.\nSTRICT ORTHOGRAPHIC TOP-DOWN material capture, no isometric/perspective baking. All three squares equally and diffusely lit, fully filled edge-to-edge and seamless with themselves on all4edges. NO sunlight blotches, tree/building shadows, vignette, cast shadows, rocks sticking up, flowers, UI, text, labels, borders, gutters or blending between swatches. The runtime will project these onto its120degree ground plane and apply actual scene lighting. Only the 3 exact equal-square material panels, no extra content.",
+   "transparent_background": false,
+   "generator": "image_gen.imagegen",
+   "status": "selected_for_runtime_comparison",
+   "source_sha256": "621cf0f8b577a3f53baf2f0d7692269e24f8a8a61cd1eb6287abb00b871032c1",
+   "source_size": [
+    2172,
+    724
+   ],
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
+   },
+   "grass_panel_status": "superseded_after_actual_game_reference_comparison_wiry_yellow_moss",
+   "retained_panels": [
+    "paving",
+    "earth"
+   ]
+  },
+  {
+   "key": "flora",
+   "source": "assets/source/remake/flora.png",
+   "references": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene.png"
+   ],
+   "prompt": "Create production game artwork for Guardians of Nature, matching attached USER STYLE reference and NEW TOWN MASTER CONCEPT. Refined realistic forest fantasy: tactile warm neutral-gray weathered limestone with small shallow mortar joints, finely layered slate-blue roof shingles, aged dark oak, matte iron, restrained craftsmanship. Rich readable surface detail, not a low-poly model, toy diorama, pixel art, cartoon or thick black outlines. The user reference is authoritative; master scene unifies the family. STRICT ORTHOGRAPHIC ISOMETRIC 2.5D, azimuth45°, elevation35.2643897°. All horizontal world-axis architectural edges at exactly +30/-30 degrees in image, uprights vertical; three projected axis directions 120 degrees apart; parallel edges at all heights and opposite sides; no perspective convergence or 2:1 dimetric. Preserve soft realistic form relief and self-shadow in material recesses with gentle neutral diffuse light. No cast shadow on ground, no ground plate or landscape unless expressly a structural part. Complete isolated production asset on ACTUAL TRANSPARENT background, clean fine alpha without colored halo. No text, labels, UI, numbers, watermark or border.\nFaithfully match the actual delicate botanical realism in the USER REFERENCE and comparison-refined master, with small soft natural cream flowers and muted olive leaves, not stylized game tufts. FOUR fully separate plant clumps on actual transparent alpha in a clean2x2 grid. Top-left delicate small cream-white wildflowers with leafy stems; top-right sparse restrained pale-yellow and soft warm-orange wildflowers with tiny flowers and mixed grass; bottom-left irregular natural fern and low leaves with fine petiole detail; bottom-right fine short woodland grass and small low leafy groundcover. High orthographic isometric view35.264deg elevation with visible upper leaf surfaces and naturally occluded rear stems. Each complete clump isolated in its own equal768x512 cell of a1536x1024 atlas, at least40px transparent margin so no stems/leaves touch cell boundaries. Rooted contact at lower-middle of each clump; some forward leaves extend naturally beyond root point. Fine holes between leaves retain true alpha0. No dirt island, platform, ground shadow, green background, checkerboard, labels, line dividers or additional objects. Consistent soft neutral diffuse lighting for mirrored production use, readable fine relief without harsh directional shadows. Exact same muted natural material realism as the source, not neon flowers, not exaggerated giant petals, not painted outlines.",
+   "transparent_background": true,
+   "generator": "image_gen.imagegen",
+   "status": "selected_for_runtime_comparison",
+   "source_sha256": "de2a9e35439abcb546f34d0fc37f8dee0406b3df9737e41560e6f2944202cdb9",
+   "source_size": [
+    1536,
+    1024
+   ],
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
+   }
+  },
+  {
+   "key": "house-nw",
+   "source": "assets/source/remake/house-nw.png",
+   "references": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene.png",
+    "assets/source/town-nw.png"
+   ],
+   "prompt": "Create ONE complete isolated production building for Guardians of Nature. Image1 USER REFERENCE is authoritative for the natural photorealistic softly weathered material rendering; image2 is our comparison-refined scene reference; image3 is ONLY the existing GEOMETRY/STRUCTURE guide, NOT the visual style. The user rejected a bright toy-like village look. Match the refined tactile neutral-grey limestone, shallow fine joints, desaturated slate-blue thin shingles, aged dark oak and restrained matte iron in image1. Preserve subtle realistic surface detail, believable wear and form relief, not a low-poly toy, clean CGI model, painterly cartoon, pixel art, thick black contours, honey-gold stone, exaggerated chips, gold decoration or orange roofs.\nStrict TRUE ORTHOGRAPHIC ISOMETRIC 2.5D: azimuth45°, elevation35.2643897°. Ground-axis architectural lines at exactly+30/-30degrees, uprights vertical. Both visible faces' top eaves, mid stone/wood bands and bottom foundation must stay parallel, no perspective convergence or 2:1dimetric. Roof pitches are slopes, not horizontal ground axes. Preserve the third image's building mass, footprint orientation, door/step locations and open service frontage while replacing its entire material/rendering detail with that of image1.\nUse consistent gentle neutral diffuse production lighting, realistic soft self-shading in recesses and beneath eaves, no cast shadow on ground or unrelated lighting patches. No terrain square, surrounding trees, grass, flowers, people, HUD, text, logo, labels, framing or background. Complete cutout with actual transparent background and at least5%empty alpha margin around roof/chimney/foundation; no clipped edges or colored halo.\nASSET: The village merchant's two-storey stone-and-aged-oak house, warm-neutral grey limestone lower floor and restrained oak frame upper floor with realistic pale plaster infill and slate-blue gable roof, chimney. The principal entrance remains in the LEFT visible wall, with the same gently arched wooden double door, same small side windows and hanging shop-sign silhouette as geometry guide, but no words on sign. Door plane and NPC approach remain visible and reachable. A few subtle ivy strands attached directly to masonry are okay, no ground vegetation. Preserve building volumes and plain foundations. One isolated square high-resolution building, target1536x1536 or largest square supported.",
+   "transparent_background": true,
+   "generator": "image_gen.imagegen",
+   "status": "selected_for_runtime_comparison",
+   "source_sha256": "d75434ed6c1a692e177ffd528c84818a7a01dffe1458c7bbe2c84c01922a7707",
+   "source_size": [
+    1254,
+    1254
+   ],
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389",
+    "assets/source/town-nw.png": "14446d5ab2a77d87b19faf51dd2985302c143ce279de51a466b0676bef37664e"
+   }
+  },
+  {
+   "key": "house-ne",
+   "source": "assets/source/remake/house-ne.png",
+   "references": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene.png",
+    "assets/source/town-ne.png"
+   ],
+   "prompt": "Create ONE complete isolated production building for Guardians of Nature. Image1 USER REFERENCE is authoritative for the natural photorealistic softly weathered material rendering; image2 is our comparison-refined scene reference; image3 is ONLY the existing GEOMETRY/STRUCTURE guide, NOT the visual style. The user rejected a bright toy-like village look. Match the refined tactile neutral-grey limestone, shallow fine joints, desaturated slate-blue thin shingles, aged dark oak and restrained matte iron in image1. Preserve subtle realistic surface detail, believable wear and form relief, not a low-poly toy, clean CGI model, painterly cartoon, pixel art, thick black contours, honey-gold stone, exaggerated chips, gold decoration or orange roofs.\nStrict TRUE ORTHOGRAPHIC ISOMETRIC 2.5D: azimuth45°, elevation35.2643897°. Ground-axis architectural lines at exactly+30/-30degrees, uprights vertical. Both visible faces' top eaves, mid stone/wood bands and bottom foundation must stay parallel, no perspective convergence or 2:1dimetric. Roof pitches are slopes, not horizontal ground axes. Preserve the third image's building mass, footprint orientation, door/step locations and open service frontage while replacing its entire material/rendering detail with that of image1.\nUse consistent gentle neutral diffuse production lighting, realistic soft self-shading in recesses and beneath eaves, no cast shadow on ground or unrelated lighting patches. No terrain square, surrounding trees, grass, flowers, people, HUD, text, logo, labels, framing or background. Complete cutout with actual transparent background and at least5%empty alpha margin around roof/chimney/foundation; no clipped edges or colored halo.\nASSET: Low long village blacksmith workshop, grey limestone wall, aged oak porch posts and broad slate-blue gable roof with shallow weathered irregular shingles, modest stone chimney. Preserve third image's low long mass, front-left entrance/open dark forge/workshop bay with attached few realistic tools and wood workbench but no additional freestanding objects around its footprint. The service doorway on left visible face stays open and readable, door/NPC approach visible. Fine stone and timber relief, subtle restrained hearth warmth inside dark forge ONLY. Complete isolated wide landscape asset, target1536x1024.",
+   "transparent_background": true,
+   "generator": "image_gen.imagegen",
+   "status": "selected_for_runtime_comparison",
+   "source_sha256": "879907b9e0c66c31905ec002a48d09e0099f152716017d167578b977896d9618",
+   "source_size": [
+    1536,
+    1024
+   ],
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389",
+    "assets/source/town-ne.png": "800939381ee413eea82c574138c7ac57405ddd2e1309791f4142a52e081c6603"
+   }
+  },
+  {
+   "key": "house-sw",
+   "source": "assets/source/remake/house-sw.png",
+   "references": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene.png",
+    "assets/source/town-sw.png"
+   ],
+   "prompt": "Create production game artwork for Guardians of Nature, matching attached USER STYLE reference and NEW TOWN MASTER CONCEPT. Refined realistic forest fantasy: tactile warm neutral-gray weathered limestone with small shallow mortar joints, finely layered slate-blue roof shingles, aged dark oak, matte iron, restrained craftsmanship. Rich readable surface detail, not a low-poly model, toy diorama, pixel art, cartoon or thick black outlines. The user reference is authoritative; master scene unifies the family. STRICT ORTHOGRAPHIC ISOMETRIC 2.5D, azimuth45°, elevation35.2643897°. All horizontal world-axis architectural edges at exactly +30/-30 degrees in image, uprights vertical; three projected axis directions 120 degrees apart; parallel edges at all heights and opposite sides; no perspective convergence or 2:1 dimetric. Preserve soft realistic form relief and self-shadow in material recesses with gentle neutral diffuse light. No cast shadow on ground, no ground plate or landscape unless expressly a structural part. Complete isolated production asset on ACTUAL TRANSPARENT background, clean fine alpha without colored halo. No text, labels, UI, numbers, watermark or border.\nImage1 is AUTHORITATIVE material realism and atmospheric softness; image2 is the comparison-refined master; image3 ONLY defines existing footprint/mass/door orientation and must NOT override the user's natural realistic rendering. Replace the old flat clean/miniature look with the fine realistic stone, wood and slate relief of image1. Preserve the old entrance position in the LEFT visible face, relative footprint and functional service frontage. No colored background or haze; actual transparent cutout.\nASSET: A low long village stable and animal-merchant cottage, visible front-left arched oak doorway and open sheltered stable on the right, same footprint and low mass and service entry position as geometry guide. Realistic aged dark oak braces, warm-neutral grey limestone, fine desaturated slate-blue roof shingles (replace the old orange roof), a modest chimney and quiet interior shadow. One brown horse can remain partially visible inside the right stable bay as in the geometry guide, with naturally occluded body and no new animals outside. No freestanding fencing or surroundings. Complete wide isolated building, 1536x1024.",
+   "transparent_background": true,
+   "generator": "image_gen.imagegen",
+   "status": "selected_for_runtime_comparison",
+   "source_sha256": "8f29d82f55782ce2efae9441f90e7aaf2793db7967c4bdf523869aec8044a7b1",
+   "source_size": [
+    1536,
+    1024
+   ],
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389",
+    "assets/source/town-sw.png": "809adcf34048c51dc098eadf01d7f6d837dee9afdd9784f0c0026bcb835d91e4"
+   }
+  },
+  {
+   "key": "house-se",
+   "source": "assets/source/remake/house-se.png",
+   "references": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene.png",
+    "assets/source/town-se.png"
+   ],
+   "prompt": "Create production game artwork for Guardians of Nature, matching attached USER STYLE reference and NEW TOWN MASTER CONCEPT. Refined realistic forest fantasy: tactile warm neutral-gray weathered limestone with small shallow mortar joints, finely layered slate-blue roof shingles, aged dark oak, matte iron, restrained craftsmanship. Rich readable surface detail, not a low-poly model, toy diorama, pixel art, cartoon or thick black outlines. The user reference is authoritative; master scene unifies the family. STRICT ORTHOGRAPHIC ISOMETRIC 2.5D, azimuth45°, elevation35.2643897°. All horizontal world-axis architectural edges at exactly +30/-30 degrees in image, uprights vertical; three projected axis directions 120 degrees apart; parallel edges at all heights and opposite sides; no perspective convergence or 2:1 dimetric. Preserve soft realistic form relief and self-shadow in material recesses with gentle neutral diffuse light. No cast shadow on ground, no ground plate or landscape unless expressly a structural part. Complete isolated production asset on ACTUAL TRANSPARENT background, clean fine alpha without colored halo. No text, labels, UI, numbers, watermark or border.\nImage1 is AUTHORITATIVE material realism and atmospheric softness; image2 is the comparison-refined master; image3 ONLY defines existing footprint/mass/door orientation and must NOT override the user's natural realistic rendering. Replace the old flat clean/miniature look with the fine realistic stone, wood and slate relief of image1. Preserve the old entrance position in the LEFT visible face, relative footprint and functional service frontage. No colored background or haze; actual transparent cutout.\nASSET: A two-storey village elder's house, same principal front-left arched wooden door and small entry step, projecting upper dormer and large right gable as geometry guide. Realistic restrained limestone lower floor and dark aged oak upper framing with pale weathered plaster, finely layered desaturated slate-blue roof, modest chimney. Preserve attached window shutters and small front workbench/pots only where they were part of the original building footprint. Unpainted natural timber joints, small shallow stone mortar and restrained weathering like the USER church. No shiny gold or exaggerated ornaments. Complete square isolated building, target1536square, largest supported.",
+   "transparent_background": true,
+   "generator": "image_gen.imagegen",
+   "status": "selected_for_runtime_comparison",
+   "source_sha256": "7f963dcf60cf7bd4b10c7b6d50024877865bb4e9bb83130d7eb0ca262ef583d0",
+   "source_size": [
+    1254,
+    1254
+   ],
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389",
+    "assets/source/town-se.png": "c0c11850aec11ab8d32ec3676cfa9e6120101393438b2ed1423e547434d4a572"
+   }
+  },
+  {
+   "key": "chapel",
+   "source": "assets/source/remake/chapel.png",
+   "references": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene.png",
+    "assets/source/chapel-new.png"
+   ],
+   "prompt": "Create production game artwork for Guardians of Nature, matching attached USER STYLE reference and NEW TOWN MASTER CONCEPT. Refined realistic forest fantasy: tactile warm neutral-gray weathered limestone with small shallow mortar joints, finely layered slate-blue roof shingles, aged dark oak, matte iron, restrained craftsmanship. Rich readable surface detail, not a low-poly model, toy diorama, pixel art, cartoon or thick black outlines. The user reference is authoritative; master scene unifies the family. STRICT ORTHOGRAPHIC ISOMETRIC 2.5D, azimuth45°, elevation35.2643897°. All horizontal world-axis architectural edges at exactly +30/-30 degrees in image, uprights vertical; three projected axis directions 120 degrees apart; parallel edges at all heights and opposite sides; no perspective convergence or 2:1 dimetric. Preserve soft realistic form relief and self-shadow in material recesses with gentle neutral diffuse light. No cast shadow on ground, no ground plate or landscape unless expressly a structural part. Complete isolated production asset on ACTUAL TRANSPARENT background, clean fine alpha without colored halo. No text, labels, UI, numbers, watermark or border.\nONE complete isolated forest chapel. Image1 USER REFERENCE's architecture and softly realistic material rendering are authoritative: the SAME quiet grey limestone church with projecting Gothic pointed wooden entrance at the LEFT front, modest bell tower rising behind it, a larger right gable and paired detailed tall tracery/stained-glass windows facing the viewer, slate-blue thin overlapping shingles, narrow stone buttresses, shallow fine joints and restrained weathering. It should feel like this actual church, not a generic clean cathedral or toy model.\nImage3 is ONLY a functional FOOTPRINT GUIDE: the church must stand on a rectangular stone forecourt with its open approach courtyard in front-left and a stair entry projecting from the LEFT front edge at the same relative position. Preserve that overall footprint orientation and entrance position, but make the raised foundation and stair much LOWER and more intimate: a short4-to6-step stair, low weathered stone retaining base and thin low perimeter coping/balustrade, not the guide's massive tall fortress podium or grand steep stair. Keep the church itself dominant and detailed as in image1. No people, foliage, pots, loose crates or outside ground patches. Structural forecourt paving/base belongs to this asset and is allowed; everything around it is real transparent background.\nAll rectangular base edges, parapet/coping, nave eaves, foundation courses and window-sill bands follow exact±30degree ground axes at top/mid/base on both faces, vertical posts upright. Roof pitches remain natural slopes. Complete whole bell-tower roof, buttresses, low base, stair toe and both ends of railing must fit inside a square high-resolution canvas with5%alpha padding; no clipping. The church and functional courtyard alone, consistent gentle diffuse neutral production light, detailed self-shading but no external cast-shadow plate, no sun patches, no text or ornamental gold.",
+   "transparent_background": true,
+   "generator": "image_gen.imagegen",
+   "status": "superseded_after_actual_game_reference_comparison",
+   "source_sha256": "01267c3c9bd998c6937b3028bd78ed028848c5fc856fef7267f04a5a9c62f4c3",
+   "source_size": [
+    1254,
+    1254
+   ],
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389",
+    "assets/source/chapel-new.png": "abe084c4975b3d371051dbeb29b344b41516760d942b4c7eef71c80e991493b9"
+   },
+   "rejection_reason": "The large fenced forecourt dominated the actual playable view; original reference has a ground-level chapel with small doorway steps."
+  },
+  {
+   "key": "trees",
+   "source": "assets/source/remake/trees.png",
+   "references": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene.png"
+   ],
+   "prompt": "Create production game artwork for Guardians of Nature, matching attached USER STYLE reference and NEW TOWN MASTER CONCEPT. Refined realistic forest fantasy: tactile warm neutral-gray weathered limestone with small shallow mortar joints, finely layered slate-blue roof shingles, aged dark oak, matte iron, restrained craftsmanship. Rich readable surface detail, not a low-poly model, toy diorama, pixel art, cartoon or thick black outlines. The user reference is authoritative; master scene unifies the family. STRICT ORTHOGRAPHIC ISOMETRIC 2.5D, azimuth45°, elevation35.2643897°. All horizontal world-axis architectural edges at exactly +30/-30 degrees in image, uprights vertical; three projected axis directions 120 degrees apart; parallel edges at all heights and opposite sides; no perspective convergence or 2:1 dimetric. Preserve soft realistic form relief and self-shadow in material recesses with gentle neutral diffuse light. No cast shadow on ground, no ground plate or landscape unless expressly a structural part. Complete isolated production asset on ACTUAL TRANSPARENT background, clean fine alpha without colored halo. No text, labels, UI, numbers, watermark or border.\nFOUR complete separate natural woodland trees in a2x2 equal-square grid: top-left young oak, top-right mature broad oak, bottom-left fir, bottom-right weeping willow. Faithfully match the USER REFERENCE's real delicate leaf clusters, aged bark, natural asymmetrical branches and deep muted olive greens; NO stylized spherical crown clumps or plastic-model miniature trees. High isometric camera with clearly visible upper leaf surfaces, short foreshortened trunks, rear branches occluded behind front foliage and rooted contact. Fine natural canopy gaps retain actual alpha0. Match fine photorealistic natural surface softness, not oversharpened leaves. Very gentle neutral diffuse lighting, no harsh light direction, no ground shadows or halo so mirrored use stays consistent. Each WHOLE tree centered in its cell with8%transparent margin around all leaves and roots, no overlap/crop/cell borders. Square high-resolution atlas, target2048square or highest supported. Only four isolated trees on actual transparent background, no surrounding ground, dirt island, flowers or attached rocks.",
+   "transparent_background": true,
+   "generator": "image_gen.imagegen",
+   "status": "rejected_source_replaced_after_visual_or_projection_review",
+   "source_sha256": "eeab59feab746afcd2b103e0d21b8182499abd9c313f2597e9f4efffddaba81e",
+   "source_size": [
+    1254,
+    1254
+   ],
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
+   }
+  },
+  {
+   "key": "trees-v2",
+   "source": "assets/source/remake/trees-v2.png",
+   "source_generated": "/workspace/generated_images/exec-77e81340-bdbf-47d7-b77a-955a2a689dd4.png",
+   "references": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene.png",
+    "assets/source/forest-trees.png"
+   ],
+   "prompt": "Create production game artwork for Guardians of Nature, matching attached USER STYLE reference and NEW TOWN MASTER CONCEPT. Refined realistic forest fantasy: tactile warm neutral-gray weathered limestone with small shallow mortar joints, finely layered slate-blue roof shingles, aged dark oak, matte iron, restrained craftsmanship. Rich readable surface detail, not a low-poly model, toy diorama, pixel art, cartoon or thick black outlines. The user reference is authoritative; master scene unifies the family. STRICT ORTHOGRAPHIC ISOMETRIC 2.5D, azimuth45°, elevation35.2643897°. All horizontal world-axis architectural edges at exactly +30/-30 degrees in image, uprights vertical; three projected axis directions 120 degrees apart; parallel edges at all heights and opposite sides; no perspective convergence or 2:1 dimetric. Preserve soft realistic form relief and self-shadow in material recesses with gentle neutral diffuse light. No cast shadow on ground, no ground plate or landscape unless expressly a structural part. Complete isolated production asset on ACTUAL TRANSPARENT background, clean fine alpha without colored halo. No text, labels, UI, numbers, watermark or border.\nFOUR forest tree sprites,2x2 equal square cells: top-left young oak, top-right mature oak, bottom-left fir, bottom-right willow. The THIRD reference is the mandatory HIGH-CAMERA GEOMETRY/OVERLAP GUIDE; match its canopy overhead volume and root foreshortening while replacing leaves/bark rendering with photorealistic naturally muted detail of USER image1.\nCRITICAL CAMERA REQUIREMENT: we look DOWN at the crowns from a35.264degree isometric elevation. Large overlapping UPPER crown planes and FRONT canopy layers obscure rear branch junctions and most of upper trunk. Exposed trunks are SHORT below the crown, never a tall frontal Y-shape. Rear roots hidden by trunk and front roots naturally closer to viewer form a wide shallow ground-contact plane. The canopy has real FRONT-TO-BACK DEPTH and upper-surface leaf clusters; no face-on tree elevation, no flat cut-paper foliage silhouette, no long central see-through trunk window. Willow's upper/front crown hangs over the branch junction and upper trunk, with layered rear foliage visibly hidden behind front curtains rather than a huge empty frontal arch.\nNatural individual leaves, aged detailed bark, asymmetrical broad canopies, cool deep olive greens with subtle soft highlights; no gold wash, saturated lime, spherical clumps or cartoon style. Consistent gentle diffuse lighting, actual alpha holes between leaves. Fully isolated complete trees in their own cells with8%empty alpha padding, no cropped leaves, ground/dirt islands, painted cast shadow, background haze, labels or grid borders. Square high-resolution atlas, target2048x2048 or largest available.",
+   "transparent_background": true,
+   "generator": "image_gen.imagegen",
+   "status": "selected_for_runtime_comparison",
+   "source_sha256": "8b906334b11c7051b7ede2788b8ee1a459d9ed44db2f4c9dcfed292236e47927",
+   "source_size": [
+    1254,
+    1254
+   ],
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389",
+    "assets/source/forest-trees.png": "d3139c012d9b9312250603737c5144ab2a3b1e0a6bcf94e50b1ab352845e745a"
+   }
+  },
+  {
+   "key": "fountain",
+   "source": "assets/source/remake/fountain.png",
+   "references": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene.png",
+    "assets/source/town-pool.png"
+   ],
+   "prompt": "Create production game artwork for Guardians of Nature, matching attached USER STYLE reference and NEW TOWN MASTER CONCEPT. Refined realistic forest fantasy: tactile warm neutral-gray weathered limestone with small shallow mortar joints, finely layered slate-blue roof shingles, aged dark oak, matte iron, restrained craftsmanship. Rich readable surface detail, not a low-poly model, toy diorama, pixel art, cartoon or thick black outlines. The user reference is authoritative; master scene unifies the family. STRICT ORTHOGRAPHIC ISOMETRIC 2.5D, azimuth45°, elevation35.2643897°. All horizontal world-axis architectural edges at exactly +30/-30 degrees in image, uprights vertical; three projected axis directions 120 degrees apart; parallel edges at all heights and opposite sides; no perspective convergence or 2:1 dimetric. Preserve soft realistic form relief and self-shadow in material recesses with gentle neutral diffuse light. No cast shadow on ground, no ground plate or landscape unless expressly a structural part. Complete isolated production asset on ACTUAL TRANSPARENT background, clean fine alpha without colored halo. No text, labels, UI, numbers, watermark or border.\nONE quiet village stone fountain, faithful photorealistic natural stone relief/softness of USER image, same family as its chapel. Geometry image3 supplies only the low basin/central pier and overall diamond-square foundation silhouette; replace old bright uniform clean-game rendering with finely weathered neutral-grey limestone, shallow joints, subtle moss confined to crevices. A low circular/octagonal basin on a thin square stone plinth, central short four-sided carved stone pier with a plain stone sphere finial. TWO clearly separate slender water jets flow from the pier into the basin toward front-left and front-right; turquoise clean basin water with small natural pale ripples, not huge splashing fog. Keep all stone plinth corners, basin lip and pier straight horizontal edges camera-accurate, actual top/mid/base visible. Complete isolated fountain fully within square1024x1024 with5%alpha padding. No surrounding paving/grass/dirt, no ground cast shadow, no colored atmosphere behind it. Actual transparent exterior, opacity only on the actual stone and water. The water surface and two jet positions must remain visually distinct for runtime animation masking.",
+   "transparent_background": true,
+   "generator": "image_gen.imagegen",
+   "status": "selected_for_runtime_comparison",
+   "source_sha256": "e343fc456ada5de04ef96b0c571a702c041f98f3e5aa4ab39b8a31897d5434b2",
+   "source_size": [
+    1254,
+    1254
+   ],
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389",
+    "assets/source/town-pool.png": "e56e1792ca6d894be69f5a0eb8ba4fa0e8787a21870f6e33a8126a04346ff80b"
+   }
+  },
+  {
+   "key": "portal",
+   "source": "assets/source/remake/portal.png",
+   "references": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene.png"
+   ],
+   "prompt": "Create production game artwork for Guardians of Nature, matching attached USER STYLE reference and NEW TOWN MASTER CONCEPT. Refined realistic forest fantasy: tactile warm neutral-gray weathered limestone with small shallow mortar joints, finely layered slate-blue roof shingles, aged dark oak, matte iron, restrained craftsmanship. Rich readable surface detail, not a low-poly model, toy diorama, pixel art, cartoon or thick black outlines. The user reference is authoritative; master scene unifies the family. STRICT ORTHOGRAPHIC ISOMETRIC 2.5D, azimuth45°, elevation35.2643897°. All horizontal world-axis architectural edges at exactly +30/-30 degrees in image, uprights vertical; three projected axis directions 120 degrees apart; parallel edges at all heights and opposite sides; no perspective convergence or 2:1 dimetric. Preserve soft realistic form relief and self-shadow in material recesses with gentle neutral diffuse light. No cast shadow on ground, no ground plate or landscape unless expressly a structural part. Complete isolated production asset on ACTUAL TRANSPARENT background, clean fine alpha without colored halo. No text, labels, UI, numbers, watermark or border.\nONE human-scale village warp gateway from the SAME weathered neutral-grey limestone family as the USER chapel: two modest square stone uprights with restrained thin capstones and a softly pointed Gothic stone arch, three shallow foundation steps forming a small square/rectangular isometric base. Slender aged stone profiles, fine small shallow joints, believable edge wear and subtle recess shade. No fantasy horns, large gold decoration, huge temple mass, statues or elaborate tower. In the opening a bright but contained cyan/turquoise vertically oriented magical whirlpool, readable spiral ribbons and a fine luminous edge, NO bloom plate or glow outside the stone silhouette. Fine blue-white particles can sit inside the arch only. The camera matches+30/-30degree ground axes, upright90, all top/mid/base stone course edges on both visible faces parallel. Complete isolated production gate on actual alpha0 transparent exterior, square1024x1024, all corners and top fit with8%margin. No floor tile square around it, no shadows outside its own actual base, no ground or surroundings. Human opening consistent with the chapel door; same portal will be reused at every warp location.",
+   "transparent_background": true,
+   "generator": "image_gen.imagegen",
+   "status": "rejected_source_replaced_after_visual_or_projection_review",
+   "source_sha256": "1a24455758b2660b7a3c53bd809df953f76edd4d211fea4b0ddb4157cea3be50",
+   "source_size": [
+    1254,
+    1254
+   ],
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
+   }
+  },
+  {
+   "key": "portal-v2",
+   "source": "assets/source/remake/portal-v2.png",
+   "source_generated": "/workspace/generated_images/exec-1dd9f1a6-369e-4cd2-837a-4770e1dcfefe.png",
+   "references": [
+    "assets/source/remake/portal-geometry-reference.png",
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene.png"
+   ],
+   "prompt": "Rebuild the portal in image1 with the exact CAMERA/STRUCTURAL GEOMETRY of image1 and the refined natural photorealistic limestone rendering of images2/3. Image1 is mandatory geometry control. Images2/3 define neutral-grey fine weathered stone, subtle shallow joints and restrained natural realism; do NOT take the chapel's camera or roofs from those style references.\nONE low modest Gothic stone portal frame: TWO square uprights with simple small capstones, a softly pointed arch between them and a thin two-step rectangular foundation. NO roof, NO spire, NO gable, NO miniature church. Same open vertical frame silhouette as image1, with a contained cyan magical whirlpool in the opening. Keep the entire actual structure inside the canvas with at least8%transparent margin. No background glow/landscape/floor plate outside its physical base.\nCRITICAL TRUE ISOMETRIC: camera azimuth45degrees and elevation35.2643897degrees. The FRONT frame's long horizontal ground-axis lines must be EXACTLY+30degrees, the right side thickness edges EXACTLY-30degrees. All post capstones, middle bands, base plinth and both step edges have the SAME parallel directions at upper/middle/bottom levels. Vertical uprights EXACTLY90degrees. Do not show the front nearly face-on; front+15degrees is WRONG. Both visible wall faces must have the balanced equal isometric camera of image1. No perspective convergence or asymmetric front-side foreshortening.\nRealistically detailed aged warm-neutral-grey limestone grain and shallow fine mortar like the USER scene, no cartoon/cracked bright white old-game blocks, no overdone chips, no gilt ornaments. Gentle neutral diffuse production light preserves form/recess depth; no painted external ground shadow, haze or white bloom. Cyan swirl spiral and fine small particles remain entirely inside arch. Complete isolated actual alpha0 transparent cutout, all base/step corners/top capstones visible, square high-resolution canvas with padding. No text/UI/borders/checkerboard.",
+   "transparent_background": true,
+   "generator": "image_gen.imagegen",
+   "status": "selected_for_runtime_comparison",
+   "source_sha256": "2ffcc33a29bb9ae4c0db72af4846614e5956b8a53616788f5ad6f1734ebde0ce",
+   "source_size": [
+    1254,
+    1254
+   ],
+   "reference_hashes": {
+    "assets/source/remake/portal-geometry-reference.png": "bc75f2d94eb81c8a5dd47d7eeab06e15c42eb33f818bb5d7efed45d01d9267a3",
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
+   }
+  },
+  {
+   "key": "gate-a",
+   "source": "assets/source/remake/gate-a.png",
+   "source_generated": "/workspace/generated_images/exec-27283403-f2a5-4423-9e97-1d52866d2b67.png",
+   "references": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene.png",
+    "assets/source/gate-cohesive-a.png"
+   ],
+   "prompt": "Create production game artwork for Guardians of Nature, matching attached USER STYLE reference and NEW TOWN MASTER CONCEPT. Refined realistic forest fantasy: tactile warm neutral-gray weathered limestone with small shallow mortar joints, finely layered slate-blue roof shingles, aged dark oak, matte iron, restrained craftsmanship. Rich readable surface detail, not a low-poly model, toy diorama, pixel art, cartoon or thick black outlines. The user reference is authoritative; master scene unifies the family. STRICT ORTHOGRAPHIC ISOMETRIC 2.5D, azimuth45°, elevation35.2643897°. All horizontal world-axis architectural edges at exactly +30/-30 degrees in image, uprights vertical; three projected axis directions 120 degrees apart; parallel edges at all heights and opposite sides; no perspective convergence or 2:1 dimetric. Preserve soft realistic form relief and self-shadow in material recesses with gentle neutral diffuse light. No cast shadow on ground, no ground plate or landscape unless expressly a structural part. Complete isolated production asset on ACTUAL TRANSPARENT background, clean fine alpha without colored halo. No text, labels, UI, numbers, watermark or border.\nONE complete village fortification twin-tower gate, matching image1's finely weathered neutral-grey limestone exactly, no toy-like clean miniature shading. Image3 is only GEOMETRY GUIDE: retain twin round stone towers, same relative tower spacing and wide genuinely open pointed arch passage in the middle, two outward-open aged oak gate leaves, low crenellated wing wall on BOTH ends. Same overall footprint proportions and orientation. The wall's long front axis runs DOWN-RIGHT at EXACTLY+30degrees. Its opposite thickness edges run-30degrees, verticals exactly90. All stone courses, capstones, upper walkway rails and plinth align from top to bottom, no perspective tilt.\nTowers have restrained slit openings, fine realistic course joints and plain stone battlements; wings use the EXACT SAME block size/material/color/roughness/mortar/plinth string course/battlement cap as towers. Show the rear walkway and wall thickness, and at least one COMPLETE unobstructed crenellation repeat on BOTH outside wings with full coping-to-base stone face (needed to derive matching wall modules). Wing wall must not be hidden by towers, banner, vines, trees or gate leaves. No decorative flags, gold, statues or landscape. Actual transparent alpha THROUGH the open central passage and around the complete structure, no opaque dark rectangle/background inside arch. Gentle soft diffuse production illumination, own recessed stone shading only, no cast-shadow ground plate. Square high-res canvas with5%empty margin around all towers/wing ends/feet, no clipping. This and its opposite axis will share identical masonry design.",
+   "transparent_background": true,
+   "generator": "image_gen.imagegen",
+   "status": "selected_for_runtime_comparison",
+   "source_sha256": "a0f3d56235882394d645cea025efae632c16e1e23157b67579945bd95aeb7cb6",
+   "source_size": [
+    1254,
+    1254
+   ],
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389",
+    "assets/source/gate-cohesive-a.png": "2abd38a31c555e1cc379c91c645a99775104aeb0e64cb79697896b1ae9e27983"
+   }
+  },
+  {
+   "key": "gate-b",
+   "source": "assets/source/remake/gate-b.png",
+   "source_generated": "/workspace/generated_images/exec-3e568d90-2a09-40f3-9041-49bc73042509.png",
+   "references": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene.png",
+    "assets/source/remake/gate-a.png",
+    "assets/source/gate-cohesive-b.png"
+   ],
+   "prompt": "Create production game artwork for Guardians of Nature, matching attached USER STYLE reference and NEW TOWN MASTER CONCEPT. Refined realistic forest fantasy: tactile warm neutral-gray weathered limestone with small shallow mortar joints, finely layered slate-blue roof shingles, aged dark oak, matte iron, restrained craftsmanship. Rich readable surface detail, not a low-poly model, toy diorama, pixel art, cartoon or thick black outlines. The user reference is authoritative; master scene unifies the family. STRICT ORTHOGRAPHIC ISOMETRIC 2.5D, azimuth45°, elevation35.2643897°. All horizontal world-axis architectural edges at exactly +30/-30 degrees in image, uprights vertical; three projected axis directions 120 degrees apart; parallel edges at all heights and opposite sides; no perspective convergence or 2:1 dimetric. Preserve soft realistic form relief and self-shadow in material recesses with gentle neutral diffuse light. No cast shadow on ground, no ground plate or landscape unless expressly a structural part. Complete isolated production asset on ACTUAL TRANSPARENT background, clean fine alpha without colored halo. No text, labels, UI, numbers, watermark or border.\nONE complete twin-tower fortification gate. Image3 is the ACTUAL NEW GATE FAMILY: copy its exact small grey limestone blocks, fine shallow mortar, wear, plinth string courses, corbel/cornice, tower battlements and wing-wall cap design. This must be the very same built gate viewed in its OTHER ground-axis orientation; no redesign or different block sizes. Image4 is only the required other-orientation GEOMETRY GUIDE, same twin round towers/spacing, outward-open wooden leaves and genuinely transparent open arch passage, wings at both ends. The front wall's long axis now runs UP-RIGHT at EXACTLY-30degrees; thickness edges+30; verticals90. Match opposite faces and upper/middle/base parallel lines. Retain image1 realistic soft material depth and image2 family mood, not a clean miniature.\nBoth side wings require at least one full unobstructed crenellation repeat from back coping/walkway through front face to bottom plinth; keep towers, doors and decorations from covering that strip. Same wall height/thickness and masonry profile as image3. Show rear walkway thickness. No trees, banners, landscaping, floor square or ground shadows. Complete silhouette including both tower tops/wing ends/feet inside square high-res canvas with5%alpha margin. Open central passage must be alpha0 behind outward wooden panels; no dark opaque background fill. Actual transparent exterior and gently neutral production light, no labels/UI.",
+   "transparent_background": true,
+   "generator": "image_gen.imagegen",
+   "status": "rejected_source_replaced_after_visual_or_projection_review",
+   "source_sha256": "5ffa74c97a88456fcaca0972710d08a99a3a7dce93fbdd4152bd43ffdb652e70",
+   "source_size": [
+    1254,
+    1254
+   ],
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389",
+    "assets/source/remake/gate-a.png": "a0f3d56235882394d645cea025efae632c16e1e23157b67579945bd95aeb7cb6",
+    "assets/source/gate-cohesive-b.png": "8a18435aba7826469ef2d477cafeb6223ed5fbfa4d017e25b68caa56dd032e5b"
+   }
+  },
+  {
+   "key": "gate-b-v2",
+   "source": "assets/source/remake/gate-b-v2.png",
+   "source_generated": "/workspace/generated_images/exec-b31b494c-680d-48c5-8bf4-86011771105c.png",
+   "references": [
+    "assets/source/gate-cohesive-b.png",
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/gate-a.png",
+    "assets/source/remake/town-master-scene.png"
+   ],
+   "prompt": "Retexture/re-render the ONE gate in image1 while preserving image1's STRUCTURAL GEOMETRY and physical proportions VERY STRICTLY. Image1 is the mandatory geometry/mass control, image2 the user's authoritative natural realistic surface style, image3 the matching new gate's limestone/mortar/cap family, image4 the refined forest material mood.\nKeep image1's two round towers at the SAME relative ground-contact center positions, same tower diameters and spacing, SAME arch passage width/height, same high stone wings, same overall silhouette and visible +/−30 degree orientation. The wall's front long axis runs UP-RIGHT at exactly−30degrees, thickness edges+30, posts90. All upper walkway coping, middle stone course/string bands and bottom plinths parallel at both wings. No perspective convergence.\nCRITICAL PHYSICAL MATCH: do not spread the towers farther apart. The previous candidate mistakenly widened their separation and lowered wing walls. Keep the compact tower separation of image1; outside wings must have the SAME substantial height-to-tower-diameter ratio as image1, NOT short garden walls. Front stone wing from footing to cap is approximately1.5 tower diameters tall. There must be a full unobstructed crenellation repeat plus rear walkway/cap/middle band and plinth on BOTH outside wings for matching wall extraction. Preserve both open wooden gate leaves and actual alpha0 passage hole behind them. No trees or banners obscuring structural edges.\nReplace the old bright uniform toy-like rendering with image2/3's photorealistic softly weathered warm-neutral grey limestone, shallow fine mortar and modest crevice moss, exact matching string course/corbel/merlon caps as image3. More tactile fine relief but restrained chips, no thick black outlines or excessive gold/ornament. Keep soft neutral production light and own form shading, no cast shadows or background haze.\nComplete isolated transparent production asset with all wing ends, both tower tops and feet inside square canvas with5%alpha margin, same overall orientation as image1. No ground plate/landscape/UI/text/labels.",
+   "transparent_background": true,
+   "generator": "image_gen.imagegen",
+   "status": "selected_for_runtime_comparison",
+   "source_sha256": "d775ab279668e1551180823d7f4e130a9df56220f537167f3a21885134e0593f",
+   "source_size": [
+    1254,
+    1254
+   ],
+   "reference_hashes": {
+    "assets/source/gate-cohesive-b.png": "8a18435aba7826469ef2d477cafeb6223ed5fbfa4d017e25b68caa56dd032e5b",
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/gate-a.png": "a0f3d56235882394d645cea025efae632c16e1e23157b67579945bd95aeb7cb6",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
+   }
+  },
+  {
+   "key": "bridge",
+   "source": "assets/source/remake/bridge.png",
+   "source_generated": "/workspace/generated_images/exec-4c416d6f-59c4-486c-b659-ec344426e522.png",
+   "references": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene.png",
+    "assets/source/bridge-new.png"
+   ],
+   "prompt": "Create production game artwork for Guardians of Nature, matching attached USER STYLE reference and NEW TOWN MASTER CONCEPT. Refined realistic forest fantasy: tactile warm neutral-gray weathered limestone with small shallow mortar joints, finely layered slate-blue roof shingles, aged dark oak, matte iron, restrained craftsmanship. Rich readable surface detail, not a low-poly model, toy diorama, pixel art, cartoon or thick black outlines. The user reference is authoritative; master scene unifies the family. STRICT ORTHOGRAPHIC ISOMETRIC 2.5D, azimuth45°, elevation35.2643897°. All horizontal world-axis architectural edges at exactly +30/-30 degrees in image, uprights vertical; three projected axis directions 120 degrees apart; parallel edges at all heights and opposite sides; no perspective convergence or 2:1 dimetric. Preserve soft realistic form relief and self-shadow in material recesses with gentle neutral diffuse light. No cast shadow on ground, no ground plate or landscape unless expressly a structural part. Complete isolated production asset on ACTUAL TRANSPARENT background, clean fine alpha without colored halo. No text, labels, UI, numbers, watermark or border.\nONE complete low arched village stone bridge, the SAME fine neutral-grey limestone/mortar/aged subtle moss material as USER chapel. Image3 is structural guide ONLY: retain its elongated rectangular walkable deck, single shallow arch underneath, low solid parapets on BOTH long sides and four plain square capped posts at the deck corners, same proportions and open entries at BOTH ends. Replace old uniform clean blocks with finely textured softly weathered shallow masonry, varied small-grey paving and restrained edge wear, no heavy chips.\nBridge long deck edges run EXACTLY-30degrees (up-right) and transverse ends+30degrees, all horizontal parapet caps/stone courses/underside plinths at upper/mid/lower heights parallel to these axes, corner posts exactlyvertical. No perspective convergence or near/far width change. Very readable inner walkway and front/back rail separation for y-sorted actors. The whole bridge fits in square canvas with5%empty alpha margin. No water, riverbank, rocks, landscape, ground platform, reflection or cast shadow attached outside the real stone bridge. No foliage obscuring corners or decorative sculptures. Complete actual transparent production cutout, neutral soft light and realistic recessed stone shade, largest supported square resolution.",
+   "transparent_background": true,
+   "generator": "image_gen.imagegen",
+   "status": "selected_for_runtime_comparison",
+   "source_sha256": "139a5b49b39cebac19dedc55df1934e36fdac3811d89279183341ff1c11bf688",
+   "source_size": [
+    1254,
+    1254
+   ],
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389",
+    "assets/source/bridge-new.png": "0cdfc991d6cc71dc51e5246b0e27859bdb2877d72fd4ed7061a7e8be292cc1ca"
+   }
+  },
+  {
+   "key": "small-props",
+   "source": "assets/source/remake/small-props.png",
+   "source_generated": "/workspace/generated_images/exec-00946884-9641-4b4d-876c-32ab5db9083b.png",
+   "references": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene.png"
+   ],
+   "prompt": "Create production game artwork for Guardians of Nature, matching attached USER STYLE reference and NEW TOWN MASTER CONCEPT. Refined realistic forest fantasy: tactile warm neutral-gray weathered limestone with small shallow mortar joints, finely layered slate-blue roof shingles, aged dark oak, matte iron, restrained craftsmanship. Rich readable surface detail, not a low-poly model, toy diorama, pixel art, cartoon or thick black outlines. The user reference is authoritative; master scene unifies the family. STRICT ORTHOGRAPHIC ISOMETRIC 2.5D, azimuth45°, elevation35.2643897°. All horizontal world-axis architectural edges at exactly +30/-30 degrees in image, uprights vertical; three projected axis directions 120 degrees apart; parallel edges at all heights and opposite sides; no perspective convergence or 2:1 dimetric. Preserve soft realistic form relief and self-shadow in material recesses with gentle neutral diffuse light. No cast shadow on ground, no ground plate or landscape unless expressly a structural part. Complete isolated production asset on ACTUAL TRANSPARENT background, clean fine alpha without colored halo. No text, labels, UI, numbers, watermark or border.\nA THREE-CELL small-props production atlas, one horizontal row of equal square cells, target1536x512. LEFT: a closed small arched-lid treasure chest made of realistically aged dark oak with quiet matte dark iron bands and hinges, no gold trim/gems. CENTER: the EXACT SAME chest after being broken open, same physical base size, orientation and ground contact, cracked-open lid and a few attached splintered planks contained within its own cell; visibly empty dark interior, no treasure or sparkle. RIGHT: one irregular low grey limestone rock with natural fine weathering and a very small amount of moss in crevices, natural upper plane and rear face occlusion.\nThe two chest states share exactly the same front-left/side camera, size, foot position and base rectangle, fully visible2.5D trueisometric+30/-30 ground edges and verticaluprights. Chest body top/mid iron band/bottom straight lines on BOTH visible faces are parallel; curved lid is naturally curved, not an axis certificate. Fine realistic restrained render style matches the USER reference, no lowpoly/cartoon/toy. Each complete object centered with at least10%empty alpha margin inside its cell, no overlaps between cells. Actual transparent background/holes, no ground dirt island, shadow plate, leaves, glow, labels or grid lines. Three matching-scale isolated props only.",
+   "transparent_background": true,
+   "generator": "image_gen.imagegen",
+   "status": "selected_for_runtime_comparison",
+   "source_sha256": "13f72e85529355c19f065cddcd92a00b4d71acba05ed1c5cc28128c9c0eaba54",
+   "source_size": [
+    2172,
+    724
+   ],
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
+   }
+  },
+  {
+   "key": "river-materials",
+   "source": "assets/source/remake/river-materials.png",
+   "source_generated": "/workspace/generated_images/exec-e889ac43-9d6c-4ac4-95f8-7197adb80092.png",
+   "references": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene.png"
+   ],
+   "prompt": "Create a two-material reusable river atlas matching the attached USER REFERENCE forest world and comparison-refined master scene. Exactly TWO equal SQUARE top-down seamless material panels side-by-side, no gutter, target1024x512 or equivalent2:1 ratio. LEFT: shallow calm clear woodland river surface, naturally muted blue-green-grey water with restrained small flowing ripples and fine soft reflections, a few faint pale highlights and subtle dark depth variation. Avoid bright turquoise tropical ocean, foam bands, dramatic sun reflection, caustic grid, glare, visible fish or objects. RIGHT: natural small rounded weathered grey limestone riverbank stones embedded in darker fine soil, mixed small gravel with a little restrained moss in cracks, coherent natural grey/olive palette and fine realistic softly weathered detail like user reference, not a repeating regular cobblestone path and not huge boulders.\nStrict orthographic TOP-DOWN material textures, completely filled square swatches seamless with themselves at all4edges, evenly diffusely lit. No perspective/isometric baking, no tree/building shadow, no fixed sunlight patch, no vignette or lighting hotspot, no plants sticking up, no UI/labels/text/grid/border. This is a material atlas, not a river landscape. Photorealistic natural fine detail and restrained saturation, same soft limestone/woodland style as attached reference.",
+   "transparent_background": false,
+   "generator": "image_gen.imagegen",
+   "status": "selected_for_runtime_comparison",
+   "source_sha256": "e3f74922c81a5e07728e3901b84f65795af1fe9c58e75f87180873fc88015047",
+   "source_size": [
+    1774,
+    887
+   ],
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
+   }
+  },
+  {
+   "key": "chapel-v2",
+   "source": "assets/source/remake/chapel-v2.png",
+   "references": [
+    "assets/source/remake/chapel.png",
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene.png"
+   ],
+   "prompt": "Edit image 1 into the production CHAPEL SPRITE that matches image 2, the USER'S ACTUAL GAME ART REFERENCE. Image 3 is only the material auxiliary. The previous game test failed because this chapel had a huge raised fenced forecourt instead of the ground-level woodland chapel in image 2. KEEP the finely detailed neutral warm-grey weathered limestone, modest paired tracery stained glass windows, projecting left entrance gable, bell tower, muted slate-blue fine shingles and old oak double door. REMOVE ENTIRELY the whole surrounding terrace, all balustrade railings and pillars, outer platform, skirt walls, moat-like paved floor and external stairs. The church itself sits directly on flat ground. ONLY a small three-step threshold directly below the oak entrance door, width about 1.3 door widths and depth 0.35 door heights. Base of church flush to terrain at all other walls. Nothing around the church's footprint: NO grass, NO soil, NO flowers, NO ground plane, NO floating diamond plinth and NO cast ground shadows. Tree-free transparent background.\nStrongly follow image 2's softened, natural, believable woodland chapel rendering: fine stone grain with restrained mortar contrast, soft upper-left daylight, deep cool recesses, fine carved molding, no bright yellow outlines or oversized cartoon stones. The body should have image 2's simple, compact paired-gable silhouette, not become an ornate cathedral. It is an individual in-game building sprite, not a concept scene.\nCRITICAL orthographic TRUE ISOMETRIC 2.5D quarter view, camera azimuth45degrees/elevation35.264degrees, no perspective vanishing points. ALL horizontal masonry courses, the wall bases, lintels/cornices, front/back edges and the small threshold steps run PARALLEL in screen axes +30degrees or -30degrees, vertical edges at90degrees, yielding120degrees between world axes. Check both faces and upper/middle/lower courses; do not retain the old source's inconsistent sloping courses. Roof slopes are separate from ground axes. Show the front and right faces as in image 1. Full chapel and tower completely visible with clean transparent margins, sharp high-resolution fine details, no UI, no text, no people.",
+   "transparent_background": true,
+   "generator": "image_gen.imagegen",
+   "status": "selected_for_runtime_comparison",
+   "source_generated": "/workspace/generated_images/exec-f1d89cc0-2435-4a26-b3ff-05fcaa5d0010.png",
+   "source_sha256": "e197ff7e23687a692fa02e4b9371c82998fefe51ceb6e47a9b5ab07681317171",
+   "source_size": [
+    1254,
+    1254
+   ],
+   "reference_hashes": {
+    "assets/source/remake/chapel.png": "01267c3c9bd998c6937b3028bd78ed028848c5fc856fef7267f04a5a9c62f4c3",
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
+   }
+  },
+  {
+   "key": "grass-v2",
+   "source": "assets/source/remake/grass-v2.png",
+   "references": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/town-master-scene.png"
+   ],
+   "prompt": "Create ONE seamless game ground MATERIAL TEXTURE matching the low natural ground-cover beside the stone path in the attached USER reference, and its faithful auxiliary scene. The actual reference is authoritative, not a generic grass tile.\nA dense but very LOW woodland carpet of many tiny soft short grass blades mixed with small rounded clover/wood-sorrel leaves and fine dark soil between roots. Muted rich olive-green and slightly cool forest-green, restrained gentle variation, natural closely interleaved individual leaf shapes. Believable finely detailed realistic game artwork, subtle depth at leaf overlaps, leaves lying close to the terrain. The previous grass material failed because it looked like a wiry yellow moss web or long tangled vines. This new one must have NO wiry golden moss, NO network of long curling stems, NO exposed long roots, NO straw, NO scribble texture, NO concentric clumps, NO big leaf rosettes.\nCRITICAL THIS IS A FLAT MATERIAL ALBEDO: strict orthographic directly TOP-DOWN, 90degree overhead view; runtime applies the actual true120degree isometric projection. Entire square edge-to-edge filled with one same-scale material, seamless all four edges, no perspective, no horizon, no ground island, no bevel, no border, no objects, no stones, no flowers, no UI/text, no transparency.\nSoft uniform neutral diffuse light, no directional lighting, NO canopy-shadow blotches, NO large dark patches, NO baked cast shadows or sunny spots, NO vignette, NO green filter. Small contact shading between leaves only. Reusable flat woodland groundcover, quiet and tactile like the user scene, not a painted repeating cartoon grass tile. Square high resolution.",
+   "transparent_background": false,
+   "generator": "image_gen.imagegen",
+   "status": "selected_for_runtime_comparison",
+   "source_generated": "/workspace/generated_images/exec-9bb1e1f9-ed78-40f2-8ef2-a6ccae785050.png",
+   "source_sha256": "f044aae41ad0d83478a3843cea1f9d29be3c8308d6e06f20c37f618a95150b37",
+   "source_size": [
+    1254,
+    1254
+   ],
+   "reference_hashes": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
+   }
+  }
+ ],
+ "selection_note": "Production selection is separate from visual-reference approval. Exact rendered geometry is audited by art_projection; actual portrait/landscape comparisons are required. No generated concept constitutes user approval."
+}

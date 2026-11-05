@@ -17,6 +17,15 @@ static func attach(sprite: IsoSprite, is_portal: bool) -> PlazaWater:
 	var size := sprite.texture.get_size()
 	animation.water_material.set_shader_parameter("atlas_region", Vector4(src[0] / size.x, src[1] / size.y, src[2] / size.x, src[3] / size.y))
 	animation.water_material.set_shader_parameter("portal", is_portal)
+	var profile: Dictionary = sprite.def.get("fluid_profile", {})
+	for key in ["basin_center", "basin_radius", "portal_center", "portal_radius"]:
+		if profile.has(key):
+			var value: Array = profile[key]
+			animation.water_material.set_shader_parameter(key, Vector2(value[0], value[1]))
+	for key in ["jet_left", "jet_right"]:
+		if profile.has(key):
+			var value: Array = profile[key]
+			animation.water_material.set_shader_parameter(key, Vector4(value[0], value[1], value[2], value[3]))
 	sprite.material = animation.water_material
 	sprite.add_child(animation)
 	return animation

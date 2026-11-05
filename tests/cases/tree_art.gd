@@ -38,5 +38,15 @@ func run() -> void:
 	check("all live trees sort and collide at their painted contacts", contacts_match)
 	check("all live tree trunks block walking through their root bases", bases_blocked)
 	check("town and surrounding forest both use the reviewed trees", trees > 200)
+	# Read the actual ready-node bounds/draw order and the live NPC positions,
+	# rather than checking only that trunks clear an authored doorway point.
+	for npc_name in ["상인", "대장장이", "탈것 상인", "촌장"]:
+		var npc: Vector2 = game.village.npc_points[npc_name]
+		var visible := true
+		for tree in game.village.town_trees:
+			var bounds: Rect2 = tree.get_meta("occlusion_bounds")
+			if tree.position.y > npc.y + 4.0 and bounds.intersects(Rect2(npc - Vector2(42, 90), Vector2(84, 110))):
+				visible = false
+		check("service NPC stays readable below all foreground crowns: " + npc_name, visible)
 	game.queue_free()
 	await _frames(2)

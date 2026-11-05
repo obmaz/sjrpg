@@ -1,8 +1,8 @@
 {
- "source": "assets/source/forest-trees.png",
- "source_sha256": "d3139c012d9b9312250603737c5144ab2a3b1e0a6bcf94e50b1ab352845e745a",
+ "source": "assets/source/remake/trees-v2.png",
+ "source_sha256": "8b906334b11c7051b7ede2788b8ee1a459d9ed44db2f4c9dcfed292236e47927",
  "render": "assets/art/village/trees.webp",
- "render_sha256": "b38e2bd51487842fb738b4592126db379407a974c2ba2ea292a559270189e65e",
+ "render_sha256": "1114952d3c6bce0955be22e528c639450ba67df3557029e68570a9bfa7051e8d",
  "camera": {
   "projection": "orthographic",
   "target_ground_axes_degrees": [
@@ -12,79 +12,79 @@
   "target_azimuth_degrees": 45,
   "target_elevation_degrees": 35.264
  },
- "review": "Organic illustration review: visible upper crown layers, shorter foreshortened trunks, rear roots occluded by the trunk, and no painted ground/cast-shadow plate. These are authored camera targets, not a rigid-edge angle measurement. Foot points mark the trunk/root ground-contact centre, leaving front roots visible below the depth-sort origin.",
+ "review": "The remade tree family follows the original user reference and town-master-scene-v3 material language, using the previous high-canopy forest-trees.png as the camera/occlusion reference. The initially generated open frontal crowns were rejected. In this adopted regeneration, upper leaf masses overlap and hide rear forks, exposed trunks are short, fir bough upper surfaces layer over one another, and the willow canopy hides its rear structure. Root centres are measured at the trunk-to-ground spreading junction, with forward root depth retained. Light/dark alpha composites show no wide halo or cast-shadow/ground plate; saturated red/yellow source-RGB residues have alpha<=4 and disappear in normal compositing. The mature crown has alpha>8 from y7, with no visible pixels on the top source row, so its full top is retained. Organic camera consistency is a visual review, not a fake numerical rigid-axis certification.",
  "frames": {
   "oak-young": {
    "source": [
-    66,
-    145,
+    174,
     380,
-    359
+    419,
+    380
    ],
    "foot": [
-    254.0,
-    470.0
+    383.0,
+    722.0
    ],
-   "height": 325.0,
+   "height": 342.0,
    "origin": [
-    100,
-    139
+    81,
+    133
    ],
    "packing": 1.0
   },
   "oak-mature": {
    "source": [
-    520,
-    69,
-    496,
-    435
+    824,
+    189,
+    656,
+    571
    ],
    "foot": [
-    754.615873015873,
-    465.8
+    1159.0,
+    717.0
    ],
-   "height": 396.8,
+   "height": 528.0,
    "origin": [
-    611,
-    15
+    583,
+    7
    ],
-   "packing": 0.7873015873015873
+   "packing": 1.0
   },
   "fir": {
    "source": [
-    64,
-    520,
-    383,
-    496
+    156,
+    955,
+    456,
+    573
    ],
    "foot": [
-    255.327239488117,
-    985.1700182815357
+    382.0,
+    1492.0
    ],
-   "height": 465.1700182815357,
+   "height": 537.0,
    "origin": [
-    78,
-    639
+    66,
+    634
    ],
-   "packing": 0.906764168190128
+   "packing": 1.0
   },
   "willow": {
    "source": [
-    520,
-    576,
-    496,
-    440
+    835,
+    961,
+    633,
+    567
    ],
    "foot": [
-    772.6003372681282,
-    985.0118043844857
+    1164.0,
+    1490.0
    ],
-   "height": 409.0118043844857,
+   "height": 529.0,
    "origin": [
-    614,
-    650
+    588,
+    642
    ],
-   "packing": 0.836424957841484
+   "packing": 1.0
   }
  },
  "variants": {
@@ -106,5 +106,22 @@
   "tree-15": "oak-young",
   "tree-16": "oak-young",
   "tree-17": "oak-mature"
- }
+ },
+ "references": [
+  {
+   "path": "assets/source/style/approved-game-reference.jpg",
+   "role": "authoritative user reference",
+   "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+  },
+  {
+   "path": "assets/source/remake/town-master-scene.png",
+   "role": "supplementary environment material/mood concept; not a replacement for the user reference",
+   "sha256": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
+  },
+  {
+   "path": "assets/source/forest-trees.png",
+   "role": "existing high-canopy and occluded-root camera reference supplied to regeneration",
+   "sha256": "d3139c012d9b9312250603737c5144ab2a3b1e0a6bcf94e50b1ab352845e745a"
+  }
+ ]
 }

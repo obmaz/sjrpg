@@ -5,7 +5,7 @@
 
 강물은 고정된 `Polygon2D` 두 겹과 `river_flow`·`river_shimmer` 셰이더의 게임 시간 기반 UV 오프셋으로 흐릅니다.
 Godot 4.7.2의 Polygon2D UV 갱신 경로가 WebGL에서 index buffer를 잘못된 target으로 갱신하므로 `texture_offset`을 매 프레임 바꾸지 않습니다.
-원래 반복·색·가산 반짝임·속도를 유지하며 일시정지 중에는 uniform도 멈춥니다. `river_animation`과 실제 동문/다리 브라우저 화면으로 검사합니다.
+재제작한 강 재질은 `assets/source/remake/river-materials.png`에서 패킹하며 `assets/data/river_art.json`이 영역과 해시를 보관합니다. 흐름·반복·색은 셰이더에서 유지하고 일시정지 중에는 uniform도 멈춥니다. `river_animation`과 실제 동문/다리 브라우저 화면으로 검사합니다.
 
 ## 한눈에 보는 구조
 
@@ -14,7 +14,7 @@ Godot 4.7.2의 Polygon2D UV 갱신 경로가 WebGL에서 index buffer를 잘못�
 | 진입 | `scenes/main.tscn`, `scripts/main.gd` | 화면 전환(타이틀 → 직업 선택 → 모험), 가로/세로 기준 해상도 |
 | 상태 | `scripts/game_state.gd` | 영웅 진행·스킬·장비·골드·퀘스트·저장 (자동 로드) |
 | 기기 | `scripts/prefs.gd`, `scripts/sound_fx.gd` | 효과음·진동·전체화면 설정(자동 로드), 효과음 합성 |
-| 월드 | `scripts/game.gd`, `iso.gd`, `iso_sprite.gd`, `village.gd`, `landmark.gd`, `bridge.gd`, `river.gd`, `wall_piece.gd`, `chest.gd`, `plaza_water.gd` | 쿼터뷰 투영, 실측 원화 배치, 충돌, 지형 높낮이 |
+| 월드 | `scripts/game.gd`, `iso.gd`, `iso_sprite.gd`, `village.gd`, `landmark.gd`, `bridge.gd`, `river.gd`, `wall_piece.gd`, `chest.gd`, `plaza_water.gd`, `canopy_shade.gd` | 쿼터뷰 투영, 실측 원화 배치, 충돌, 지형 높낮이, 평지 수관 그늘 |
 | 전투 | `player.gd`, `enemy.gd`, `effects.gd`, `corpse_art.gd`, `skill_defs.gd`, `gear.gd` | 입력·스킬 시전, 몬스터 AI, 투사체·구역, 장비 효과 |
 | 진행 | `quests.gd`, `quest_runtime.gd`, `encounter_runtime.gd`, `encounter_stone.gd` | 제1장 퀘스트·보스, 충전식 재소환 비석과 생존 무리 저장 |
 | UI | `hud.gd`, `touch_controls.gd`, `minimap.gd`, `panel_frame.gd`, `warp_gate_panel.gd` + 패널들 | HUD, 모바일 조작, 가방·스킬·설정·대화·일지 |
@@ -36,15 +36,15 @@ Godot 4.7.2의 Polygon2D UV 갱신 경로가 WebGL에서 index buffer를 잘못�
 
 - 지면 좌표(원본 단위)는 `Iso.project()`로 화면 평면의 월드 픽셀이 됩니다. `Iso.S`는 원본 월드를 이 포트의 화면 비율로 바꾸는 배율입니다.
 - 건물 원화는 `IsoSprite`가 실측 바닥 접점(`foot`), 지면 보정(`gvs`/`gvk`), 패킹 배율로 그립니다.
-- 지면은 균일하게 밝기를 조정하며, 물체·광원을 계산하지 않는 반복 그늘이나 고정 햇빛 레이어를 얹지 않습니다.
+- 지면 재료에는 외부 그림자를 굽지 않습니다. 평지의 수관 그늘은 실제 나무·접점·공유 광원 방향을 사용하는 `CanopyShade`로 별도 계산합니다.
 - 배우 이동은 `Game.move_actor()`가 반지름 기준으로 경로를 나눠 검사합니다. 프레임 지연에도 얇은 절벽을 뛰어넘지 않으며, 스폰 목적지 검증은 `resolve_movement()`로 별도 처리합니다.
 - 깊이 정렬은 `world`(y 정렬) 안의 노드 위치 y입니다. 높은 지형 윗면의 캐릭터는 `z_index = 1`로 원화 위에 그립니다.
 
-일반 나무는 `assets/source/forest-trees.png`의 참나무 두 크기·전나무·버드나무를 사용합니다.
+일반 나무는 `assets/source/remake/trees-v2.png`의 참나무 두 크기·전나무·버드나무를 사용합니다.
 수관 윗면·뒤쪽 가지의 가림·줄기와 뿌리 접점을 시각 검수하며, 자연형 실루엣에 건물의 직선 모서리 각도 검사를 적용하지 않습니다.
 `tools/extract/tree_art_measure.json`에 원화 영역과 줄기-지면 접점 중심을 기록하고,
 `python3 tools/prepare_tree_art.py` → `extract_data.py /path/to/sjrpg --only=village`로 재생성합니다.
-`tree_art.merge()`가 기존 18개 ID의 높이를 보존해 새 네 그림에 연결합니다. `tree_art` 검사는 리뷰한 원본·아틀라스 해시와 실제 필드의 발치·충돌을 확인합니다.
+`tree_art.merge()`가 기존 나무 ID의 높이를 보존해 새 그림에 연결합니다. `tree_art` 검사는 리뷰한 원본·아틀라스 해시와 실제 필드의 발치·충돌을 확인합니다. 생성 시 기존 나무 그림은 높은 수관과 가림 구조의 참조로만 사용하며 최상위 스타일은 사용자 원본입니다.
 
 ## Godot판 조정과 개발 순서
 
@@ -67,14 +67,24 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 `ArtWarp`의 보정 메시를 그리기 좌표에 적용합니다. 성벽은 보정된 성문 날개벽의 실제 픽셀과 물리 배율을 추출해 양 방향으로 재사용합니다.
 성문 충돌·통로의 기존 월드 좌표는 보존하고, 긴 벽의 접점은 현재 그려진 앞면 끝점에서 계산합니다. 띠장·캡의 실제 높이와 아틀라스 알파 이음은 `gate_seams`에서 별도로 검사합니다.
 
+마을 재제작 패밀리는 [제작 가이드](town-remake.md)의 입력을 확정한 뒤 다음 통합 도구로 다시 만듭니다.
+
+```sh
+python3 tools/prepare_town_remake.py /path/to/sjrpg
+```
+
+이 도구는 패밀리별 측정 조각·새 메시·건축/성문/다리/소품/지면/식생/나무/강 패킹·원본 village 추출을 순서대로 합치고 명시적으로 해시를 고정합니다.
+입력 측정과 실제 원화 리뷰를 마친 뒤 실행하며, 실행 자체가 투영·화면·배포 검증을 뜻하지 않습니다. 패킹 중에는 엔진 임포트·테스트·export를 겹치지 않습니다.
+건축의 문 높이와 새 문턱 앞 주민 접근은 `town_art_measure.json`·`chapel_measure.json`에서 도출합니다. 옛 절대 폭·주민 위치보다 영웅과 출입문의 실제 비례를 우선하며 최종 접근·충돌은 실제 마을에서 확인합니다.
+
 ## 디버그 쿼리 (웹)
 
 `index.html?zoom=0.45&at=bridge&panel=bag&gold=300&chests=1`
 
 | 키 | 값 | 효과 |
 | --- | --- | --- |
-| `zoom` | 숫자 | 카메라 배율(작을수록 넓게) |
-| `at` | `field` `bridge` `bank` `gate0`–`gate3` `lm0`–`lm3` `mira` `elin` `rowen` `portal` `corner0`–`corner3` | 시작 위치 |
+| `zoom` | 숫자 | 기본 월드 카메라 배율 1.60에 곱하는 디버그 값(작을수록 넓게) |
+| `at` | `field` `bridge` `bank` `gate0`–`gate3` `lm0`–`lm3` `mira` `elin` `rowen` `portal` `chapel` `chapel_reference` `corner0`–`corner3` | 시작 위치 |
 | `panel` | `bag` `shop` `skills` `settings` `smith` `journal` `mira` `elin` `victory` `warp` | 시작 1.5초 뒤 패널 열기 |
 | `quality` | `low` `high` | 절약 화질 켜기·끄기 |
 | `gold` | 정수 | 시작 골드 |
@@ -131,7 +141,7 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 
 분수 배율은 `Village._build_plaza()`의 2.4(이전 1.44)이며 석조 기단의 접점 다각형도 같은 투영을 사용합니다.
 게이트는 분수·미라와 독립적으로 접근할 수 있도록 배치하고, `Village.portal_points`가 숲 마을·고목·동굴 입구의 공통 기준입니다.
-`Village.create_portal()`이 세 이동 게이트·파수꾼 문·동굴 귀환문에 같은 원화 배율·접점·애니메이션을 적용합니다. `_add_warp_portal()`은 세 이동 목적지만 등록하고 마을과 같은 기단 다각형을 사용합니다. 필드 게이트만 작은 별도 높이나 원형 충돌을 사용하지 않습니다. 동굴 귀환문의 기단은 `DungeonLayout.obstacles`에 등록해 숲의 충돌 목록과 분리하며, 실제 이동을 막되 귀환 상호작용의 접근점은 비웁니다. HUD의 ‘워프 이동’ 명판은 184×56, 터치 영역은 212×76 기준이며 목적지 버튼은 96px 높이입니다. `warp_gates`·`warp_layout`은 실제 원화 배율·기단 충돌·안전한 접근점과 가로/세로의 버튼 범위를 검사합니다.
+`Village.create_portal()`이 세 이동 게이트·파수꾼 문·동굴 귀환문에 같은 원화 배율·접점·애니메이션을 적용합니다. `_add_warp_portal()`은 세 이동 목적지만 등록하고 마을과 같은 기단 다각형을 사용합니다. 필드 게이트만 작은 별도 높이나 원형 충돌을 사용하지 않습니다. 동굴 귀환문의 기단은 `DungeonLayout.obstacles`에 등록해 숲의 충돌 목록과 분리하며, 실제 이동을 막되 귀환 상호작용의 접근점은 비웁니다. 새 비대칭 기단은 출구 방 안쪽 `DungeonLayout.EXIT + Vector2(50, -110)`의 지면 좌표에 두고, 네 실제 모서리가 벽 안쪽 20단위 여유와 진입 경로를 침범하지 않는지 검사합니다. HUD의 ‘워프 이동’ 명판은 184×56, 터치 영역은 212×76 기준이며 목적지 버튼은 96px 높이입니다. `warp_gates`·`warp_layout`은 실제 원화 배율·기단 충돌·안전한 접근점과 가로/세로의 버튼 범위를 검사합니다.
 `PlazaWater`는 기존 아틀라스의 물·소용돌이 픽셀만 움직입니다. 석재의 정점·원화 모서리는 유지하고, 별도의 게임 시간으로
 위상을 갱신해 일시정지·동작 줄이기 설정을 따릅니다. 공통 가림 처리는 `world_occlusion.gdshaderinc`를 공유하며
 `WorldOcclusion`은 애니메이션의 원래 재질을 보존·복원합니다. 보스 진입문·동굴 귀환문도 같은 소용돌이를 사용합니다.
@@ -156,9 +166,11 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 
 새 원화는 먼저 [레퍼런스 분위기 제작 가이드](reference-look-guide.md)·[아트 기준](art-direction.md)·[생성 프롬프트](art-prompts.md)를 읽고 사용자 원본과 같은 패밀리의 검수된 원화를 실제 생성 참조로 사용합니다. 작은 실제 플레이 장면에서 카메라·배우 비례·명암·식생을 먼저 맞추며, 스타일 컨셉과 게임용 투영 검증을 구분합니다. 투영 검사와 분위기 검수를 모두 통과해야 합니다. 가이드의 화면 목표값은 현재 구현값과 구분합니다.
 
-숲의 [전체 화면 기준](forest-reference.md)은 `ForestArt`의 생성형 지면·식생을 사용합니다. `prepare_forest_art.py`가 원본을 패킹하고 `forest_art.json`이 해시·접점을 고정합니다.
-배경 잔디·포장·흙길은 같은 투영을 유지하며 길·건물 가장자리의 낮은 식생만 추가합니다. 별도 장식 난수를 사용하고 충돌은 추가하지 않습니다.
-기본 카메라는 짧은 변 720에서 1.0이며 플레이어 원화 높이는 84입니다. 게임 수치와 충돌은 유지하고 두 화질은 같은 시야를 공유합니다.
+숲의 [전체 화면 기준](forest-reference.md)은 `remake/ground.png`·`remake/flora.png`와 `ForestArt`의 배치를 사용합니다. `prepare_forest_art.py`가 원본을 패킹하고 `forest_art.json`이 해시·접점을 고정합니다.
+배경 잔디·포장·흙길은 실제 `Iso` 평면에 투영하며 길·건물 가장자리의 낮은 식생은 별도 장식 난수로 배치합니다. 문·주민·상자·게이트·계단 접근을 비우고 식생 자체에 충돌은 추가하지 않습니다.
+`Game.CAMERA_WORLD_SCALE`은 1.60이며 짧은 변 720에서 이 배율을 사용합니다. `_camera_focus()`는 발치를 화면 높이 약60%에 두도록 앞쪽 시야를 확보합니다. 플레이어 원화 높이는 84이고, 게임 수치·충돌·HUD 크기는 카메라 때문에 바뀌지 않습니다. 디버그 `zoom`은 이 기본값의 배수이며 두 화질은 같은 월드 시야를 공유합니다.
+
+`CanopyShade`는 마을 평지의 실제 나무 아틀라스 알파와 발치·배율·반사·변환을 공유 광원 방향으로 투영합니다. 같은 뷰포트의 지면만 받으며 고정된 타일 그림자가 아닙니다. 변경된 나무/수신면 변환·알파·광원·화질만 갱신하고 그림자는 지면 위·배우와 건물 아래에 둡니다. 2D 나무 실루엣을 쓰는 근사이므로 정확한 3D 수관 체적이나 계단·다리·높은 마당의 그림자까지 재현하지 않습니다. `canopy_shade`는 실제 캐스터 이동·반사·접점·변환·한도·화질과 수명을 검사합니다.
 [생성형 HUD·원소 표현](presentation-design.md)은 `PresentationArt`가 출처를 고정한 금속 4종과 타격 16프레임을 공유합니다. `prepare_presentation_art.py`로 패킹하며 투명 UI와 순수 검정/ADD 발광 원화를 구별합니다.
 시전·발사·투사체·명중·베기·오브·광역 빛은 기존 장식 한도·일시정지·동작 줄이기를 따릅니다.
 
@@ -274,16 +286,17 @@ HUD는 실패 시 누를 수 있는 재시도 안내를 유지하며 설정의 �
 
 ## 테스트
 
-`tools/check.sh --list` 대신 `tools/godot.sh --headless res://tests/run_all.tscn -- --list`로 케이스를 봅니다.
+`tools/check.sh --list` 대신 `tools/godot.sh --headless res://tests/run_all.tscn -- --list`로 현재 케이스를 봅니다. 아래 표는 주요 역할 안내이며 전체 목록과 총수는 러너를 기준으로 합니다. 원화 대상·선분의 총수는 `assets/data/art_axes.json`의 `records`와 각 `edges`를 기준으로 확인합니다.
 
 | 케이스 | 검증 |
 | --- | --- |
 | `axis` | 배치·충돌 모델의 지면 두 축 정렬 (원화 검증은 별도) |
-| `art_projection` | 17종 실제 원화 모서리 157개, 상·중·하단/반대 방향/수직, 평행·중간 픽셀·메시 뒤집힘·원화/아틀라스 해시 |
+| `art_projection` | 현재 매니페스트의 실제 원화 모서리, 상·중·하단/반대 방향/수직, 평행·중간 픽셀·메시 뒤집힘·원화/아틀라스 해시 |
 | `chapel` | 예배당 마당: 계단으로 오르면 마당 위(z=1), 건물 자리와 정면 절벽은 막힘 |
 | `terrace` | 랜드마크 윗면은 계단(입구)으로만 오를 수 있고 절벽은 막힘 |
 | `bridge` | 다리를 건널 수 있고 강은 막힘 |
 | `river_animation` | 고정된 물 폴리곤·UV와 셰이더 흐름 속도·반복·색·일시정지 |
+| `canopy_shade` | 실제 나무 알파와 접점의 평지 투영·캐스터 이동/반사/변환·화질·수명·한도 |
 | `gate_seams` | 실제 성문·성벽 앞면 접점·띠장/캡 높이·필터링 알파와 코너 흉벽의 교차 방지 |
 | `entry_layout` | 선택 화면의 세로/가로·회전·카드와 능력치 상자·실제 수치·미리보기 저장 보존 |
 | `journey` | 두 직업의 첫 목표·수락/보고 우선순위·보호 안내·마을 NPC와 안식처 선택 |
@@ -330,3 +343,7 @@ HUD는 체력·물약 수·쿨다운의 실제 변화를 감지합니다. 사운
 `RewardFx`는 확정된 상자 골드·희귀 장비·처치 XP·레벨업에만 생성형 3칸 원화(`reward-atlas.webp`)를 표시하고 장식64개 한도를 공유합니다. 큰 레벨업 효과는 캐릭터를 따라가며 생성형 빛과 얕은 발밑 광륜을 표시합니다. `LevelUpBanner`는 텍스트 박스 없이 영문 `LEVEL UP`과 실제 `Lv. N`을 1.8초간 표시하며 안전 영역·회전·동작 줄이기·팝업 일시정지를 따릅니다. 여러 레벨을 한 번에 올려도 효과와 배너는 한 번입니다. 레벨업 외의 알림은 HUD의 청동 명판과 최대4개 대기열로 전달하며 중복을 억제하고8초 지난 대기 알림은 버립니다. 패널 일시정지는 알림 수명도 멈춥니다. `rewards` 검사는 중복 보상 방지와 알림 순서·한도를 검증합니다. `tools/screenshot.mjs --scene rewards --device phone`은 명시적인 `reward_preview=1`에서 실제 상자와 레벨업 경로를 재현합니다.
 
 `--scene levelup`은 상자 없이 실제 경험치 레벨업의 영문 배너·캐릭터 주변 효과만 확인합니다. 보상 캡처 미리보기는 확정 직후 장면을 멈춰 원화의 위치·크기를 검토합니다. 일반 플레이의 수명·이동·일시정지는 `RewardFx`와 `rewards` 검사로 별도로 확인합니다.
+
+원본 비교는 `screenshot.mjs --scene chapel_reference --device phone --viewport 714x1280 --dpr 1 --zoom 1`로 실제 보행 지점을 촬영하고 `tools/compare_reference.mjs --actual /tmp/game.png --out /tmp/comparison.png`로 나란히 표시합니다. 비교 도구는 원본 비율을 유지하며 생성 컨셉을 실제 게임 화면으로 대체하지 않습니다. 웹 export는 `tests/*`와 `tools/*`의 제작/검사 자료를 제외하고 런타임이 읽는 `assets/data/`를 배포합니다.
+
+실제 보행 후 화면은 `screenshot.mjs --scene town --walk a:2900,w:300`처럼 키와 유지 시간을 지정해 확인할 수 있습니다. 카메라·물체를 숨기거나 좌표를 조작하지 않고 실제 WASD 입력을 전달합니다.

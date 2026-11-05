@@ -1,7 +1,8 @@
 {
  "sources": {
-  "ground": "assets/source/forest-ground.png",
-  "flora": "assets/source/forest-flora.png"
+  "ground": "assets/source/remake/ground.png",
+  "flora": "assets/source/remake/flora.png",
+  "grass": "assets/source/remake/grass-v2.png"
  },
  "camera": {
   "ground_material_projection": "orthographic top-down; the runtime Iso ground transform provides the camera",
@@ -13,15 +14,15 @@
   "target_azimuth_degrees": 45,
   "target_elevation_degrees": 35.264
  },
- "review": "The approved forest reference guides muted olive ground, worn pale limestone paving, natural earth, cream-white flowers, restrained warm wildflowers and fine low foliage. Ground material tiles contain no directional tree/building shadow layer. Flora was reviewed over light and dark solid backgrounds: the visible olive source backdrop is fully transparent RGB, not a rendered halo. Fine leaf holes and antialiasing remain; no painted ground-shadow plate is present. Organic clumps are reviewed for upper leaf visibility and rooted stem contact rather than certified with invented rigid ground-axis edges.",
+ "review": "The remade forest ground and flora follow the original user reference together with town-master-scene-v3: softened neutral-grey limestone, fine irregular moss joints, olive low cover, cream-white petals and restrained warm wildflowers. Each 724-square ground cell is cropped two pixels inward to exclude adjacent material boundary pixels; materials are opaque, evenly lit top-down textures, and game projection supplies their camera. The new flora has alpha0 surroundings despite the olive blur stored in invisible RGB. Light/dark composites show leaf and petal holes with no wide halo, attached earth plate or external ground shadow. Natural high leaf surfaces, occluded rear stems and the root-crown contact are reviewed visually; no rigid-edge angles are invented for organic clumps. Actual first-game comparison rejected the ground sheet grass panel as wiry yellow moss. grass-v2.png replaces only grass with low short blades and small clover, maintaining uniform light and no baked canopy shadows; paving and earth remain the measured ground.png cells.",
  "tiles": {
   "grass": {
-   "source": "ground",
+   "source": "grass",
    "roi": [
-    2,
-    2,
-    722,
-    722
+    0,
+    0,
+    1254,
+    1254
    ]
   },
   "paving": {
@@ -57,11 +58,11 @@
     512
    ],
    "foot": [
-    395,
-    390
+    398,
+    444
    ],
    "world_height": 22,
-   "review": "Ground-contact centre among lower flower stems and the rooted leaf rosette. White petals retain the generated cream colour; front leaves remain below the contact instead of forcing the foot to the silhouette bottom."
+   "review": "Ground-contact centre at the converging lower flower stems under the central leaf rosette. Foreground leaves remain beyond the contact; this is not the lowest petal or silhouette pixel."
   },
   "flowers_warm": {
    "source": "flora",
@@ -76,11 +77,11 @@
     512
    ],
    "foot": [
-    1130,
-    384
+    1125,
+    429
    ],
    "world_height": 20,
-   "review": "Rooted centre beneath the warm flower stems and central leaf mat. The lower grass tuft and forward leaves remain visible beyond the depth-sort anchor."
+   "review": "Shared rooted centre beneath the warm flower stems and grass rosettes. The thin forward blades retain depth below the anchor."
   },
   "fern": {
    "source": "flora",
@@ -95,11 +96,11 @@
     1024
    ],
    "foot": [
-    351,
-    819
+    355,
+    924
    ],
    "world_height": 24,
-   "review": "Ground contact at the converging fern petiole/root crown. The natural spread of foreground fronds and fallen leaves remains below the anchor."
+   "review": "Ground contact under the fern petiole crown and overlapping low leaves. Rear stems and forward fronds retain their natural occlusion and spread."
   },
   "grass": {
    "source": "flora",
@@ -114,11 +115,21 @@
     1024
    ],
    "foot": [
-    1142,
-    874
+    1113,
+    933
    ],
    "world_height": 12,
-   "review": "Contact at the central rooted grass tuft, beneath the curved upper blades. Low leaves and fine forward blades retain their natural footprint."
+   "review": "Contact under the dense central grass bases and low leaf rosettes. Tall blades do not determine the anchor, and foreground leaves remain visible below it."
   }
- }
+ },
+ "references": [
+  {
+   "path": "assets/source/style/approved-game-reference.jpg",
+   "role": "authoritative user reference supplied to generation"
+  },
+  {
+   "path": "assets/source/remake/town-master-scene.png",
+   "role": "supplementary environment material/mood concept supplied to generation; not a replacement for the user reference"
+  }
+ ]
 }

@@ -18,21 +18,86 @@ def cross(a,b):
     return a[0]*b[1]-a[1]*b[0]
 
 
+def segment_chain(source,edge,tolerance,extent=.001):
+    a,b=np.asarray(edge['a']),np.asarray(edge['b']);direction=b-a
+    length=np.linalg.norm(direction);result=[]
+    for i,q in enumerate(source):
+        t=np.dot(q-a,direction)/(length*length)
+        if -extent<=t<=1+extent and abs(cross(direction,q-a))/length<tolerance:
+            result.append((t,i))
+    return sorted(result)
+
+
+def recover_segments(source,triangles,chains):
+    """Recover painted line segments as mesh edges; an unconstrained Delaunay
+    may cross between its sparse samples and bend the actual intervening pixels.
+    Only convex adjacent quads are flipped, so the source mesh stays planar.
+    """
+    protected=set()
+    def orient(ids):
+        a,b,c=source[ids]
+        return ids if cross(b-a,c-a)>0 else [ids[0],ids[2],ids[1]]
+    triangles=[orient(ids) for ids in triangles]
+    def adjacency():
+        result={}
+        for index,(a,b,c) in enumerate(triangles):
+            for i,j in [(a,b),(b,c),(c,a)]:result.setdefault(tuple(sorted((i,j))),[]).append(index)
+        return result
+    def crosses(i,j,a,b):
+        if len({i,j,a,b})<4:return False
+        p,q,r,s=source[[i,j,a,b]]
+        return cross(q-p,r-p)*cross(q-p,s-p)<-1e-10 and cross(s-r,p-r)*cross(s-r,q-r)<-1e-10
+    for chain in chains:
+        for (_,i),(_,j) in zip(chain,chain[1:]):
+            wanted=tuple(sorted((i,j)));adj=adjacency()
+            queue=[edge for edge in adj if crosses(i,j,*edge)]
+            attempts=0
+            while wanted not in adj:
+                if not queue or attempts>len(source)*20:
+                    raise ValueError('cannot recover a painted structural segment without crossing another')
+                edge=queue.pop(0);attempts+=1
+                if edge not in adj:continue
+                owners=adj[edge]
+                if edge in protected or len(owners)!=2:
+                    raise ValueError('painted segments cross without a shared source vertex')
+                a,b=edge;c=next(v for v in triangles[owners[0]] if v not in edge)
+                d=next(v for v in triangles[owners[1]] if v not in edge)
+                if not crosses(a,b,c,d):
+                    queue.append(edge);continue
+                triangles[owners[0]]=orient([c,d,a]);triangles[owners[1]]=orient([d,c,b])
+                adj=adjacency()
+                if crosses(i,j,c,d):queue.append(tuple(sorted((c,d))))
+            protected.add(wanted)
+    return triangles
+
+
 def build(record):
     image=cv2.imread(str(ROOT/record['png']),cv2.IMREAD_UNCHANGED)
     height,width=image.shape[:2]
     points=[]
+    merge_distance=record.get('point_merge_distance',1.0)
     def add(p):
         q=np.asarray(p,float)
         for i,v in enumerate(points):
-            if np.linalg.norm(q-v)<1:return i
+            if np.linalg.norm(q-v)<merge_distance:return i
         points.append(q)
         return len(points)-1
     for edge in record['segments']:
         a,b=np.array(edge['a']),np.array(edge['b'])
         for t in np.linspace(0,1,max(2,int(np.linalg.norm(b-a)/12))):add(a*(1-t)+b*t)
+    if record.get('constrain_segments',False):
+        for index,first in enumerate(record['segments']):
+            a,b=np.asarray(first['a']),np.asarray(first['b']);ab=b-a
+            for second in record['segments'][index+1:]:
+                c,d=np.asarray(second['a']),np.asarray(second['b']);cd=d-c;den=cross(ab,cd)
+                if abs(den)<1e-9:continue
+                t=cross(c-a,cd)/den;u=cross(c-a,ab)/den
+                if 0<t<1 and 0<u<1:add(a+ab*t)
     targets=[(add(q['source']),np.asarray(q['target'],float)) for q in record.get('targets',[])]
     pins=[add(q) for q in record.get('pins',[])]
+    # Optional free subdivision points let disjoint parallel painted features
+    # keep an invertible interpolation across the space between their ends.
+    for q in record.get('support_points',[]):add(q)
     boundary=[add(q) for q in [[0,0],[width-1,0],[width-1,height-1],[0,height-1]]]
     step=record.get('boundary_step',0)
     if step:
@@ -46,14 +111,12 @@ def build(record):
     for raw in subdivide.getTriangleList().reshape(-1,3,2):
         ids=[int(np.argmin(np.linalg.norm(source-q,axis=1))) for q in raw]
         if max(np.linalg.norm(source[i]-q) for i,q in zip(ids,raw))<.1:triangles.append(ids)
+    chains=[segment_chain(source,edge,record.get('line_membership_distance',.05),
+                          .00001 if record.get('constrain_segments',False) else .001) for edge in record['segments']]
+    if record.get('constrain_segments',False):triangles=recover_segments(source,triangles,chains)
     rows=[];rhs=[]
-    for edge in record['segments']:
+    for edge,chain in zip(record['segments'],chains):
         a,b=np.array(edge['a']),np.array(edge['b']);axis=math.radians(edge['axis']);normal=np.array([-math.sin(axis),math.cos(axis)])
-        direction=b-a;length=np.linalg.norm(direction);chain=[]
-        for i,q in enumerate(source):
-            t=np.dot(q-a,direction)/(length*length)
-            if -.001<=t<=1.001 and abs(cross(direction,q-a))/length<.05:chain.append((t,i))
-        chain.sort()
         for (_,i),(_,j) in zip(chain,chain[1:]):
             row=np.zeros(count*2);row[i*2:i*2+2]=-normal;row[j*2:j*2+2]=normal;rows.append(row);rhs.append(-normal@(source[j]-source[i]))
     for i in boundary:

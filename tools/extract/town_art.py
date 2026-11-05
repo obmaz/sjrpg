@@ -65,7 +65,15 @@ def derive(key, config, data):
     if 'warp' in config:s['warp']=config['warp']
     frame=dict(ground=[(origin+correction(config,q,True)*p).tolist() for q in polygon],height=height,foot=s['foot'])
     data['sprites'][key]=s;data['frames'][key]=frame;data['placements'][key]=[uv(placement,data),s['world_height']/56.64]
-    if ref['approach']:
+    if config.get('approach_native'):
+        # Anchor service NPCs to the new doorway, then leave clearance beyond
+        # the measured solid base (a paved apron can project past the door).
+        anchor=correction(config,config['approach_native'])
+        normal=np.array([-.5,COS])
+        clearance=float(config.get('approach_clearance',35.0))/scale
+        offset=max(clearance,clearance-np.dot(anchor-F,normal))
+        data['approaches'][key]=correction(config,anchor+normal*offset,True).tolist()
+    elif ref['approach']:
         target=(np.array(ref['approach'])-placement)/scale+F
         data['approaches'][key]=correction(config,target,True).tolist()
 
@@ -78,8 +86,22 @@ def merge(data):
     frame['ground']=[(np.array(q)+shift).tolist() for q in frame['ground']];frame['foot']=s['foot']
     data['sprites']['pool']=s;data['frames']['pool']=frame
     chapel.merge(data)
-    # Preserve the chapel's old footprint centre/width so revised pixels do not move its yard into a wall.
-    s=data['sprites']['chapel'];raw=np.array(data['frames']['chapel']['ground']);f=np.array(s['foot']);q=raw-f;q[:,1]=q[:,1]*s['gvs']+q[:,0]*s['gvk'];ref=M['reference']['chapel'];scale=ref['width']/np.ptp(q[:,0]);s['world_height']=scale*s['height']/.97
+    # The measured authoring reference owns the centre and physical width. The
+    # same native warp as drawing must also locate the low replacement yard.
+    s=data['sprites']['chapel'];raw=np.array(data['frames']['chapel']['ground']);f=np.array(s['foot']);p=float(s['packing']);origin=np.array(s['origin']);src=np.array(s['source'][:2]);native=origin+(raw-src)/p;native_foot=origin+(f-src)/p
+    config=dict(gvs=s['gvs'],gvk=s['gvk'],warp=s.get('warp',''));projected_foot=correction(config,native_foot)
+    if chapel.MEASURE.get('ground_model') == 'main_body_rectangle':
+        # The nave rectangle calibrates placement/scale. The projecting porch
+        # has its own observed compound blocker and is never certified by this model.
+        left=correction(config,chapel.MEASURE['foot_L'])
+        right=correction(config,chapel.MEASURE['foot_R'])
+        left=projected_foot+np.array([-COS,-.5])*np.linalg.norm(left-projected_foot)
+        right=projected_foot+np.array([COS,-.5])*np.linalg.norm(right-projected_foot)
+        projected=[left,left+right-projected_foot,right,projected_foot]
+        native=np.array([correction(config,point,True) for point in projected])
+        data['frames']['chapel']['ground']=[(src+(point-origin)*p).tolist() for point in native]
+    q=np.array([correction(config,point)-projected_foot for point in native])*p
+    ref=M['reference']['chapel'];scale=ref['width']/np.ptp(q[:,0]);s['world_height']=scale*s['height']/.97
     placement=np.array(ref['center'])-q.mean(0)*scale;data['placements']['chapel']=[uv(placement,data),s['world_height']/56.64]
     return data
 

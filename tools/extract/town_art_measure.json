@@ -6,32 +6,23 @@
     -216.18030549273516
    ],
    "width": 406.0888521376104,
-   "approach": [
-    -1040.4059353685213,
-    -149.72377156632518
-   ]
+   "approach": null
   },
   "ne": {
    "center": [
     175.1985610496814,
     -587.3251262590738
    ],
-   "width": 441.8206426083777,
-   "approach": [
-    4.824203158728835,
-    -546.3138862345784
-   ]
+   "width": 680.0,
+   "approach": null
   },
   "sw": {
    "center": [
     -193.35418248914675,
     389.7248166888411
    ],
-   "width": 323.31923631755603,
-   "approach": [
-    -291.25451262938725,
-    446.2476004090608
-   ]
+   "width": 450.0,
+   "approach": null
   },
   "se": {
    "center": [
@@ -39,23 +30,20 @@
     544.7780867662506
    ],
    "width": 455.3482062788754,
-   "approach": [
-    247.80695702222187,
-    572.5708372338331
-   ]
+   "approach": null
   },
   "chapel": {
    "center": [
-    942.2733642782074,
-    86.77503513713862
+    780,
+    -110
    ],
-   "width": 1058.9442111193475,
+   "width": 232.77033545999998,
    "approach": null
   }
  },
  "buildings": {
   "nw": {
-   "png": "assets/source/town-nw.png",
+   "png": "assets/source/remake/house-nw.png",
    "xy": [
     6,
     6
@@ -63,82 +51,100 @@
    "packing": 0.72,
    "foot": [
     760,
-    1229
+    1234
    ],
    "ground": [
     [
-     96,
-     846
+     95,
+     860
     ],
     [
-     1163,
-     1000
+     1159,
+     1003
     ],
     [
      760,
-     1229
+     1234
     ]
    ],
-   "warp": "nw"
+   "warp": "nw",
+   "gvs": 1.02,
+   "gvk": 0,
+   "approach_native": [
+    414,
+    1048
+   ],
+   "approach_clearance": 35
   },
   "ne": {
-   "png": "assets/source/town-ne.png",
+   "png": "assets/source/remake/house-ne.png",
    "xy": [
     1030,
     6
    ],
    "packing": 0.62,
    "foot": [
-    915,
-    1019
+    916,
+    1017
    ],
    "ground": [
     [
-     150,
-     615
+     141,
+     623
     ],
     [
-     1384,
-     765
+     1382,
+     766
     ],
     [
-     915,
-     1019
+     916,
+     1017
     ]
    ],
-   "gvs": 1.035,
-   "gvk": 0
+   "gvs": 1.04,
+   "gvk": 0,
+   "approach_native": [
+    650,
+    825
+   ],
+   "approach_clearance": 35
   },
   "sw": {
-   "png": "assets/source/town-sw.png",
+   "png": "assets/source/remake/house-sw.png",
    "xy": [
     6,
     1030
    ],
    "packing": 0.62,
    "foot": [
-    887,
-    1019
+    889,
+    1023
    ],
    "ground": [
     [
-     152,
-     621
+     140,
+     637
     ],
     [
-     1387,
-     754
+     1404,
+     756
     ],
     [
-     887,
-     1019
+     889,
+     1023
     ]
    ],
    "gvk": 0,
-   "warp": "sw"
+   "warp": "sw",
+   "gvs": 1.1,
+   "approach_native": [
+    551,
+    798
+   ],
+   "approach_clearance": 35
   },
   "se": {
-   "png": "assets/source/town-se.png",
+   "png": "assets/source/remake/house-se.png",
    "xy": [
     1030,
     1030
@@ -146,23 +152,30 @@
    "packing": 0.72,
    "foot": [
     812,
-    1240
+    1242
    ],
    "ground": [
     [
-     120,
-     1000
+     89,
+     924
     ],
     [
-     1190,
-     1015
+     1206,
+     1017
     ],
     [
      812,
-     1240
+     1242
     ]
    ],
-   "warp": "se"
+   "warp": "se",
+   "gvs": 1.02,
+   "gvk": 0,
+   "approach_native": [
+    303,
+    942
+   ],
+   "approach_clearance": 35
   }
  }
 }

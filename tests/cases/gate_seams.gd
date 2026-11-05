@@ -42,7 +42,8 @@ func run() -> void:
 	var village: Village = game.village
 	var measure: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tools/extract/gate_join_measure.json"))
 	var config: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tools/extract/gate_measure.json"))
-	var extraction: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tools/extract/wall_from_gate.json"))
+	var extraction_path: String = config["wall"]["segs"]["a"]["extracted_scale"]
+	var extraction: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://" + extraction_path))
 	check("wall really reuses the current gate source", FileAccess.get_sha256("res://" + str(extraction["parent"])) == extraction["parent_sha256"] and FileAccess.get_sha256("res://" + str(extraction["output"])) == extraction["sha256"])
 	var mesh := ArtWarp.data("gate-0")
 	check("wall extraction follows the current gate calibration", extraction["parent_mesh"]["points"] == mesh["points"] and extraction["parent_mesh"]["triangles"] == mesh["triangles"])
@@ -117,9 +118,12 @@ func run() -> void:
 		var base_a := wall.global_position + wall._xf * Vector2(0, y0)
 		var base_b := wall.global_position + wall._xf * Vector2(width, y1)
 		for feature in datums:
-			var points: Array = [[0.19, 172.63], [61.91, 208.07]] if feature == "coping" else [[12.85, 119.83], [45.28, 139.11]]
+			# Actual source-local painted edges, remeasured when the gate-derived strip changes.
+			var points: Array = measure["wall_profiles"][feature]
 			for point in points:
 				var native := Vector2(point[0], point[1])
+				if definition.has("baked_warp"):
+					native = ArtWarp.point(str(definition["baked_warp"]), native)
 				if key == "b":
 					native.x = width - 1.0 - native.x
 				var at := wall.global_position + wall._xf * (native + Vector2(0, definition["source"][1]))

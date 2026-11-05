@@ -1,0 +1,284 @@
+{
+ "records": {
+  "pool": {
+   "sprite": {
+    "sheet": "res://assets/art/village/remake-pool.webp",
+    "source": [
+     0,
+     0,
+     1024,
+     1024
+    ],
+    "foot": [
+     508.7336523125997,
+     893.3460925039873
+    ],
+    "height": 893.3460925039873,
+    "origin": [
+     0,
+     0
+    ],
+    "packing": 0.8165869218500797,
+    "world_height": 110.9247658352379,
+    "body": null,
+    "gvs": 1,
+    "gvk": 0,
+    "fluid_profile": {
+     "basin_center": [
+      0.501,
+      0.482
+     ],
+     "basin_radius": [
+      0.312,
+      0.145
+     ],
+     "jet_left": [
+      0.42,
+      0.322,
+      0.347,
+      0.493
+     ],
+     "jet_right": [
+      0.582,
+      0.321,
+      0.651,
+      0.499
+     ],
+     "portal_center": [
+      0.5,
+      0.5
+     ],
+     "portal_radius": [
+      0.15,
+      0.23
+     ]
+    },
+    "warp": "remake-pool"
+   },
+   "source": "assets/source/remake/fountain.png",
+   "source_sha256": "e343fc456ada5de04ef96b0c571a702c041f98f3e5aa4ab39b8a31897d5434b2",
+   "render": "assets/art/village/remake-pool.webp",
+   "render_sha256": "736d492ff9797a1a6850ce1f4526216d663bcca72c1ab97e32656d9b7ef7e100",
+   "alpha_review": "Native1254 square RGBA; alpha>20 bounding box has complete silhouette and transparent margins. Alpha<=2 hidden matte specks are not visible structural edges; no painted ground shadow.",
+   "frame": {
+    "ground": [
+     [
+      14.698564593301436,
+      564.2615629984051
+     ],
+     [
+      508.7336523125997,
+      893.3460925039873
+     ],
+     [
+      1008.4848484848485,
+      564.2615629984051
+     ],
+     [
+      514.4497607655502,
+      298.4255806069081
+     ]
+    ],
+    "height": 893.3460925039873,
+    "foot": [
+     508.7336523125997,
+     893.3460925039873
+    ]
+   }
+  },
+  "portal": {
+   "sprite": {
+    "sheet": "res://assets/art/village/remake-portal.webp",
+    "source": [
+     0,
+     0,
+     1024,
+     1024
+    ],
+    "foot": [
+     681.0334928229665,
+     979.9043062200957
+    ],
+    "height": 979.9043062200957,
+    "origin": [
+     0,
+     0
+    ],
+    "packing": 0.8165869218500797,
+    "world_height": 0,
+    "body": [
+     75.12599681020734,
+     716.96331738437,
+     862.3157894736842,
+     264.57416267942585
+    ],
+    "gvs": 1,
+    "gvk": 0,
+    "fluid_profile": {
+     "portal_center": [
+      0.512,
+      0.511
+     ],
+     "portal_radius": [
+      0.13,
+      0.22
+     ]
+    },
+    "warp": "remake-portal",
+    "base_ground": [
+     [
+      94,
+      778
+     ],
+     [
+      834,
+      1200
+     ],
+     [
+      1147,
+      1021
+     ],
+     [
+      407.0,
+      593.1154518495099
+     ]
+    ]
+   },
+   "source": "assets/source/remake/portal-v2.png",
+   "source_sha256": "2ffcc33a29bb9ae4c0db72af4846614e5956b8a53616788f5ad6f1734ebde0ce",
+   "render": "assets/art/village/remake-portal.webp",
+   "render_sha256": "27ed6f2de2f404ae021105bcb99860f40cca222cebbdc04f1f2e2fa80b702381",
+   "alpha_review": "Native1254-square RGBA; alpha>20 bounding box [92,14,1148,1202], complete upper caps and stepped base with transparent margins. Low-alpha hidden matte specks are not the opaque silhouette. No painted ground shadow.",
+   "frame": {
+    "ground": [
+     [
+      76.7591706539075,
+      635.304625199362
+     ],
+     [
+      681.0334928229665,
+      979.9043062200957
+     ],
+     [
+      936.6251993620415,
+      833.7352472089315
+     ],
+     [
+      332.35087719298247,
+      484.3303211275105
+     ]
+    ],
+    "height": 979.9043062200957,
+    "foot": [
+     681.0334928229665,
+     979.9043062200957
+    ]
+   }
+  },
+  "chest": {
+   "sprite": {
+    "sheet": "res://assets/art/village/remake-chest.webp",
+    "source": [
+     0,
+     0,
+     512,
+     512
+    ],
+    "foot": [
+     296.30939226519337,
+     475.22651933701655
+    ],
+    "height": 475.22651933701655,
+    "origin": [
+     0,
+     0
+    ],
+    "packing": 0.7071823204419889,
+    "world_height": 0,
+    "body": [
+     67.88950276243094,
+     247.51381215469613,
+     376.2209944751381,
+     227.71270718232043
+    ],
+    "gvs": 1,
+    "gvk": 0,
+    "fluid_profile": {},
+    "warp": "remake-chest"
+   },
+   "source": "assets/source/remake/props-cells/chest.png",
+   "source_sha256": "9879b9b340d1ba85f48f3c7d4d5d6c81e7fa4c5a5615b0c96040948261a03069",
+   "render": "assets/art/village/remake-chest.webp",
+   "render_sha256": "3130cf5430236e5924811fa31d76cde3fbe48e231d459df99edc3a9e7caab4ce",
+   "alpha_review": "Exact unmodified 724-square crop of generated source sheet. Visible alpha>20 has transparent margins on all four sides, no clipped wood/iron/rock and no baked black ground shadow. The two chest bodies use the same532px width and [419,672] anchor; broken raised lid does not change physical scale."
+  },
+  "chest-broken": {
+   "sprite": {
+    "sheet": "res://assets/art/village/remake-chest-broken.webp",
+    "source": [
+     0,
+     0,
+     512,
+     512
+    ],
+    "foot": [
+     296.30939226519337,
+     475.22651933701655
+    ],
+    "height": 475.22651933701655,
+    "origin": [
+     0,
+     0
+    ],
+    "packing": 0.7071823204419889,
+    "world_height": 0,
+    "body": [
+     67.88950276243094,
+     247.51381215469613,
+     376.2209944751381,
+     227.71270718232043
+    ],
+    "gvs": 1,
+    "gvk": 0,
+    "fluid_profile": {},
+    "warp": "remake-chest-broken"
+   },
+   "source": "assets/source/remake/props-cells/chest-broken.png",
+   "source_sha256": "23023e8aa3510d3c2ece1d44b62778251f5715d7fc0f5316a219eb27b9a906f0",
+   "render": "assets/art/village/remake-chest-broken.webp",
+   "render_sha256": "1fd53d1e6c9cc301d7b84c7938d90af407f4aff178bdbceaf75c7d29119b5e9d",
+   "alpha_review": "Exact unmodified 724-square crop of generated source sheet. Visible alpha>20 has transparent margins on all four sides, no clipped wood/iron/rock and no baked black ground shadow. The two chest bodies use the same532px width and [419,672] anchor; broken raised lid does not change physical scale."
+  },
+  "rock": {
+   "sprite": {
+    "sheet": "res://assets/art/village/remake-rock.webp",
+    "source": [
+     0,
+     0,
+     512,
+     512
+    ],
+    "foot": [
+     239.02762430939225,
+     444.81767955801104
+    ],
+    "height": 306.2099447513812,
+    "origin": [
+     0,
+     0
+    ],
+    "packing": 0.7071823204419889,
+    "world_height": 100,
+    "body": null,
+    "gvs": 1,
+    "gvk": 0,
+    "fluid_profile": {}
+   },
+   "source": "assets/source/remake/props-cells/rock.png",
+   "source_sha256": "9196ed77c652663b07f2bb55887bb191846cf9aceb33e74b5f496264e684f418",
+   "render": "assets/art/village/remake-rock.webp",
+   "render_sha256": "15323f438ad4291f2cf2928c2eb1178a36b3c80bdcc6fbfb2c01d3f5aeb2ebf2",
+   "alpha_review": "Exact unmodified 724-square crop of generated source sheet. Visible alpha>20 has transparent margins on all four sides, no clipped wood/iron/rock and no baked black ground shadow. The two chest bodies use the same532px width and [419,672] anchor; broken raised lid does not change physical scale."
+  }
+ }
+}

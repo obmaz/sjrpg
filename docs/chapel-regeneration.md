@@ -12,11 +12,10 @@
 - 마을 건물 4종, 예배당, 다리, 언덕·정원은 새 원화입니다. 밝은 석재 이음새·목재 결·슬레이트 지붕 등 재료의 세부를 살리고,
   굵은 외곽선·과장된 장식·바닥에 붙인 검은 그림자판은 쓰지 않습니다.
 - `assets/source/`에 투명 PNG 원본을 보존합니다. 코드는 그림을 대체하지 않고 배치·패킹·투영·충돌에만 관여합니다.
-- `gvs`/`gvk`는 작은 전역 보정입니다. 높이에 따라 서로 다른 원근이 섞인 NW·SW·SE 건물과 언덕은
+- `gvs`/`gvk`는 작은 전역 보정입니다. 높이에 따라 서로 다른 원근이 섞인 NW·SW·SE 건물·예배당과 언덕은
   `ArtWarp`의 작은 삼각형 투영 보정을 사용합니다. 실제 선분 전체를 제약하고 변위를 부드럽게 분산하며 뒤집힌 삼각형은 거부합니다.
   원본 픽셀은 보존하고, 메시와 동일한 좌표 변환으로 발치·벽·계단·충돌을 계산합니다.
-- 예배당은 1254×1254 원화에 `gvs=1.05`, `gvk=0`을 적용합니다. 처마·지붕 능선·난간·기단·문설주를 검사합니다.
-  마당은 마을 북동쪽의 기존 점유 폭·중심을 유지하며 계단 외에는 오를 수 없습니다.
+- 예배당은 `assets/source/remake/chapel-v2.png`의 본체와 작은 문앞 계단을 사용합니다. 첫 교체본의 넓은 난간 마당은 실제 화면 비교에서 탈락했습니다. 전역 보정과 메시·비례는 `chapel_measure.json`과 `town_art_measure.json`에서 읽고, 처마·종탑·양쪽 조적·창틀·문설주·기단·계단 단을 다시 측정합니다. 기존 높은 마당의 점유 폭·충돌을 새 원화에 강제로 유지하지 않습니다.
 - 다리는 상판, 앞뒤 난간, 양쪽 끝·기둥을 실측합니다. 앞 난간은 바닥선이 아닌 실제 코핑 윗선부터 캐릭터 앞에 그립니다.
 - 성문·성벽은 [하나의 생성형 패밀리](gate-design.md)를 사용합니다. 성문 2방향과 성벽 모듈의 원본 실선을 보정한 결과를 아틀라스에 패킹하며, 원화 좌표를 검증할 때도 같은 보정과 반사를 한 번만 적용합니다.
 - 성벽은 구간에 맞춰 가로로 늘리지 않습니다. 같은 생성형 모듈을 양 방향으로 대칭 배치하고, 같은 비율로 반복하며 마지막 부분만 자릅니다.
@@ -28,7 +27,7 @@
 `assets/data/art_axes.json`은 리뷰한 PNG와 실제 렌더 아틀라스의 SHA-256을 함께 고정합니다.
 테스트가 해시를 자동 갱신하지 않으므로 원화를 바꾸고 옛 측정값으로 통과할 수 없습니다.
 
-`art_projection`은 17종 157개 선분을 런타임 그리기와 같은 투영으로 검사합니다.
+`art_projection`은 `assets/data/art_axes.json`에 기록된 모든 패밀리와 선분을 런타임 그리기와 같은 투영으로 검사합니다. 건수는 이 카탈로그가 기준이며 새 원화로 바뀌면 실제 픽셀에서 다시 측정합니다.
 각 선의 축 오차와 같은 축 선들 사이 최대 각도 차이를 각각 2.5°로 제한하고,
 선 내부 11점으로 양끝만 맞추고 중간은 휘는 보정을 검사합니다. 수직 모서리와 보정 메시 뒤집힘도 확인합니다.
 성벽은 실제 배치된 서로 다른 변환을 검사합니다. `axis`는 별도의 배치·충돌 모델 검사입니다.
@@ -36,7 +35,7 @@
 수평 직선 모서리와 구별하며 제외 사유를 데이터에 남깁니다. 언덕·정원에 있는 계단 단과 석축은 검사에 포함합니다.
 
 검사 통과와 함께 실제 브라우저에서 세로·가로의 마을, 예배당, 다리, 언덕·정원을 확인합니다.
-`chapel`, `terrace`, `gates`, `bridge`, `exploration`은 계단 진입·절벽 차단·성문 연결·강 건너기·안전 도착을 검사합니다.
+`chapel`, `terrace`, `gates`, `bridge`, `exploration`은 실제 계단 진입·건물/단차 차단·성문 연결·강 건너기·안전 도착을 검사합니다.
 
 ## 재생성
 
@@ -45,17 +44,15 @@
 
 ```sh
 python3 -m pip install -r tools/extract/requirements-art.txt
-python3 tools/extract/warp_art.py
-python3 tools/extract/town_art.py
-python3 tools/extract/landmark_art.py
-python3 tools/extract/bridge_art.py
-python3 tools/prepare_tree_art.py
-python3 tools/extract/extract_data.py /path/to/sjrpg --only=village,landmarks
-# 실제 픽셀 측정과 화면 리뷰 후 명시적으로 해시를 고정
-python3 tools/extract/art_audit_catalog.py
+python3 tools/prepare_town_remake.py /path/to/sjrpg
+# 랜드마크 자체를 바꾼 경우에만 해당 원화 재측정/패킹/추출도 수행
+# python3 tools/extract/landmark_art.py
+# python3 tools/extract/extract_data.py /path/to/sjrpg --only=landmarks
 tools/check.sh --export
 ```
 
 `town_art.py`는 보존된 PNG들에서 시트 전체를 새로 조립하므로 반복 실행해도 예배당을 중복 인코딩하지 않습니다.
 측정만 수정하면 `--data`로 패킹을 생략할 수 있습니다. 생성된 village/landmarks JSON을 손으로 고치지 않습니다.
-기존 NPC 접근 지점과 건물 점유 중심·폭은 측정 파일에 보존해 원화를 교체해도 동선이 임의로 바뀌지 않게 합니다.
+NPC 접근은 새 문턱의 실측점과 바깥쪽 보행 여유에서 도출합니다. 기존 건물 중심은 기본 배치 참고이며, 원화 비례나 실제 시야 때문에 바꾸면 측정 파일과 보행 검사를 함께 갱신합니다. 추출 뒤에 JSON을 직접 고치지 않습니다.
+
+성문처럼 세밀한 인접 구조선은 `constrain_segments`로 실제 선을 삼각형의 변에 보존합니다. 끝점만 고정한 일반 Delaunay가 선 중간을 구부릴 수 있으므로 교차점을 공유 정점으로 만들고, 볼록 인접 삼각형의 변 교환 후 메시 뒤집힘과 선 내부를 다시 검사합니다. 잘못 중복한 측정은 근거와 함께 `superseded_measurements`로 남기며 허용오차를 넓혀 해결하지 않습니다.

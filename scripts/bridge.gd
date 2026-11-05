@@ -1,48 +1,58 @@
 class_name Bridge
 extends Node2D
-## 동문 밖 돌다리 (assets/source/bridge-new.png). The deck axis climbs at -30° on
-## screen; the near parapet and corner posts redraw above actors, the rest sits
-## below them, so heroes walk on the deck and behind the front rail.
-
-const SOURCE := Vector2(1536, 1024)
-const DECK_CENTER := Vector2(772.5, 507.5)
-const DECK_SPAN := 1080.0
-const AXIS_START := Vector2(232.5, 820)
-const AXIS_END := Vector2(1312.5, 195)
-const BANK_CLEARANCE := 100.0
-const DECK := [Vector2(110, 750), Vector2(1190, 125), Vector2(1435, 265), Vector2(355, 890)]
-## The foreground starts at the actual coping top, above the occluded deck-floor edge.
-const FRONT_TOP := [Vector2(410, 805), Vector2(1400, 235)]
-const POSTS := [
-	[Vector2(326, 815), Vector2(369, 788), Vector2(411, 815), Vector2(411, 901), Vector2(361, 930)],
-	[Vector2(1390, 196), Vector2(1430, 174), Vector2(1475, 197), Vector2(1475, 275), Vector2(1420, 300)],
-]
-const ABUTMENTS := [
-	[Vector2(360, 915), Vector2(414, 875), Vector2(730, 695), Vector2(700, 820), Vector2(400, 1000)],
-	[Vector2(1210, 425), Vector2(1480, 260), Vector2(1500, 540), Vector2(1220, 660)],
-]
+## Measured remake pixels and foreground masks follow bridge_art.json. The
+## original playable model remains independent, preserving both bank connections
+## and all deck/parapet collision while the illustration is re-authored.
 
 static var texture: Texture2D
+static var _data: Dictionary = {}
 
-var k := 1.0  # world pixels per source pixel
+var k := 1.0  # world pixels per baked texture pixel
+var _model_k := 1.0
 var front: Node2D
 
 
+static func data() -> Dictionary:
+	if _data.is_empty():
+		_data = JSON.parse_string(FileAccess.get_file_as_string("res://assets/data/bridge_art.json"))
+	return _data
+
+
+static func _v(point: Array) -> Vector2:
+	return Vector2(float(point[0]), float(point[1]))
+
+
 static func axis_direction() -> Vector2:
-	return (AXIS_END - AXIS_START).normalized()
+	var model: Dictionary = data()["model_reference"]
+	return (_v(model["axis_end"]) - _v(model["axis_start"])).normalized()
+
+
+static func model_deck() -> Array[Vector2]:
+	var result: Array[Vector2] = []
+	for point: Array in data()["model_reference"]["deck"]:
+		result.append(_v(point))
+	return result
 
 
 static func front_edge(x: float) -> float:
-	var slope: float = (FRONT_TOP[1].y - FRONT_TOP[0].y) / (FRONT_TOP[1].x - FRONT_TOP[0].x)
-	return FRONT_TOP[0].y + (x - FRONT_TOP[0].x) * slope
+	var coping: Array = data()["foreground"]["coping"]
+	var index := 0
+	while index < coping.size() - 2 and x > float(coping[index + 1][0]):
+		index += 1
+	var a := _v(coping[index])
+	var b := _v(coping[index + 1])
+	return a.y + (x - a.x) * (b.y - a.y) / (b.x - a.x)
 
 
 ## `forecourt` is the road end on the near bank in world pixels.
 func setup(forecourt: Vector2) -> Bridge:
 	if texture == null:
-		texture = load("res://assets/art/village/bridge.webp")
-	k = 600.0 / DECK_SPAN * Iso.S
-	position = forecourt - (AXIS_START - DECK_CENTER) * k + axis_direction() * BANK_CLEARANCE * Iso.S
+		texture = load("res://" + str(data()["render"]))
+	var model: Dictionary = data()["model_reference"]
+	var reference: Dictionary = data()["texture_reference"]
+	_model_k = float(model["world_span"]) / float(model["deck_span"]) * Iso.S
+	k = _model_k / float(reference["scale"])
+	position = forecourt - (_v(model["axis_start"]) - _v(model["deck_center"])) * _model_k + axis_direction() * float(model["bank_clearance"]) * Iso.S
 	z_index = -2
 	front = _Front.new()
 	front.bridge = self
@@ -52,42 +62,56 @@ func setup(forecourt: Vector2) -> Bridge:
 
 
 func point(pixel: Vector2) -> Vector2:
-	return position + (pixel - DECK_CENTER) * k
+	return position + local(pixel)
 
 
 func axis_point(t: float) -> Vector2:
-	return point(AXIS_START.lerp(AXIS_END, t))
+	var model: Dictionary = data()["model_reference"]
+	return _model_point(_v(model["axis_start"]).lerp(_v(model["axis_end"]), t))
 
 
 func local(pixel: Vector2) -> Vector2:
-	return (pixel - DECK_CENTER) * k
+	return _texture_local(ArtWarp.point(str(data()["warp_key"]), pixel))
+
+
+func _texture_local(pixel: Vector2) -> Vector2:
+	var reference: Dictionary = data()["texture_reference"]
+	var center := _v(data()["model_reference"]["deck_center"]) * float(reference["scale"]) + _v(reference["offset"])
+	return (pixel - center) * k
+
+
+func _model_point(pixel: Vector2) -> Vector2:
+	return position + (pixel - _v(data()["model_reference"]["deck_center"])) * _model_k
 
 
 func deck_polygon() -> PackedVector2Array:
 	var out := PackedVector2Array()
-	for p in DECK:
-		out.append(point(p))
+	for p in model_deck():
+		out.append(_model_point(p))
 	return out
 
 
 ## Parapets along both long deck edges and the two end abutments.
 func solids() -> Array[PackedVector2Array]:
 	var out: Array[PackedVector2Array] = []
-	for pair in [[DECK[0], DECK[1]], [DECK[3], DECK[2]]]:
+	var deck := model_deck()
+	var model: Dictionary = data()["model_reference"]
+	for pair in [[deck[0], deck[1]], [deck[3], deck[2]]]:
 		var a: Vector2 = pair[0]
 		var b: Vector2 = pair[1]
-		var n := (b - a).orthogonal().normalized() * 20.0
-		out.append(PackedVector2Array([point(a + n), point(b + n), point(b - n), point(a - n)]))
-	for poly in ABUTMENTS:
+		var n := (b - a).orthogonal().normalized() * float(model["rail_half_thickness"])
+		out.append(PackedVector2Array([_model_point(a + n), _model_point(b + n), _model_point(b - n), _model_point(a - n)]))
+	for poly in model["abutments"]:
 		var pts := PackedVector2Array()
 		for p in poly:
-			pts.append(point(p))
+			pts.append(_model_point(_v(p)))
 		out.append(pts)
 	return out
 
 
 func _draw() -> void:
-	draw_texture_rect(texture, Rect2(local(Vector2.ZERO), SOURCE * k), false)
+	var size := _v(data()["texture_size"])
+	draw_texture_rect(texture, Rect2(_texture_local(Vector2.ZERO), size * k), false)
 
 
 class _Front:
@@ -95,21 +119,24 @@ class _Front:
 	var bridge: Bridge
 
 	func _draw() -> void:
-		var size := Bridge.SOURCE
-		var band := PackedVector2Array([
-			Vector2(0, Bridge.front_edge(0.0) - 2.0), Vector2(size.x, Bridge.front_edge(size.x) - 2.0),
-			Vector2(size.x, size.y + 400.0), Vector2(0, size.y + 400.0),
-		])
+		var size := Bridge._v(Bridge.data()["texture_size"])
+		var band := PackedVector2Array([Vector2(0, Bridge.front_edge(0.0) - 2.0)])
+		for point: Array in Bridge.data()["foreground"]["coping"]:
+			band.append(Bridge._v(point) - Vector2(0, 2.0))
+		band.append_array(PackedVector2Array([Vector2(size.x, Bridge.front_edge(size.x) - 2.0), Vector2(size.x, size.y + 400.0), Vector2(0, size.y + 400.0)]))
 		var image := PackedVector2Array([Vector2.ZERO, Vector2(size.x, 0), size, Vector2(0, size.y)])
 		var shapes: Array = []
 		for piece in Geometry2D.intersect_polygons(band, image):
 			shapes.append(piece)
-		for post in Bridge.POSTS:
-			shapes.append(post)
+		for post in Bridge.data()["foreground"]["posts"]:
+			var polygon := PackedVector2Array()
+			for point: Array in post:
+				polygon.append(Bridge._v(point))
+			shapes.append(polygon)
 		for shape in shapes:
 			var pts := PackedVector2Array()
 			var uvs := PackedVector2Array()
 			for p in shape:
-				pts.append(bridge.local(p))
+				pts.append(bridge._texture_local(p))
 				uvs.append(p / size)
 			draw_polygon(pts, PackedColorArray([Color.WHITE]), uvs, Bridge.texture)

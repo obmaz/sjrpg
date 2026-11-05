@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""예배당 원화(assets/source/chapel-new.png)를 마을 시트에 패킹하고 village.json 항목을 도출합니다.
+"""chapel_measure.json이 가리키는 예배당 원화를 패킹하고 village.json 항목을 도출합니다.
 
     python3 tools/extract/chapel.py          # town.webp 패킹 + assets/data/village.json 갱신
     python3 tools/extract/chapel.py --data   # village.json만 갱신 (측정값만 바뀌었을 때)
 
-패킹은 시트 전체를 WebP로 다시 인코딩하므로 예배당이 없는 시트(git의 town.webp)에서 한 번만 실행합니다.
+town_art.py가 새 시트를 조립한 뒤 이 모듈이 예배당 영역을 패킹합니다.
 
 원본 Dart에는 이 원화가 없으므로 extract_data.py가 village.json을 다시 만들 때도 `merge()`로 같은 항목을 넣습니다.
 입력은 chapel_measure.json(원화에서 잰 바닥 접점 F·R·L, 절벽 높이, 계단 위치)뿐이고 나머지는 모두 거기서 도출합니다.
@@ -125,9 +125,18 @@ def derive():
     height = round(float((F[1] - t) * p), 2)
     sprite = dict(sheet=m["atlas"]["sheet"], source=[x, y, w, h], foot=foot, height=height, origin=[l, t], packing=p,
                   world_height=0, body=None, gvs=m.get("gvs", 1), gvk=m.get("gvk", 0))
+    if m.get("warp"):
+        sprite["warp"] = m["warp"]
     frame = dict(ground=[atlas(q) for q in (L, B, R, F)], height=height, foot=foot)
     yard = dict(outline=native(outline), entrance=0, faces=[native(f) for f in faces], steps=native(steps),
                 building=native(building))
+    # A replacement illustration may have a different stair run, lower parapet
+    # or projecting entrance. Keep its observed walkable edges instead of
+    # forcing the old high rectangular platform onto the new pixels.
+    if "measured_yard" in m:
+        yard = dict(m["measured_yard"])
+    if "door_opening" in m:
+        yard["door_opening"] = m["door_opening"]
     return sprite, frame, [list(m["placement"][0]), m["placement"][1]], yard
 
 

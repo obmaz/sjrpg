@@ -8,6 +8,7 @@ signal restart_requested
 const FIELD := Rect2(-3600, -3600, 7200, 7200)
 const CORPSE_LIFETIME := 30.0
 const CORPSE_LIMIT := 32
+const CAMERA_WORLD_SCALE := 1.6
 
 var scene_view: Viewport
 var scene_root: Node
@@ -76,7 +77,7 @@ func _ready() -> void:
 	meadow.scale = Vector2.ONE * units_per_tex / texture_side
 	meadow.position = backdrop.position
 	meadow.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
-	meadow.modulate = Color(0.78, 1.0, 0.85)
+	meadow.modulate = Color.WHITE
 	ground_layer.add_child(meadow)
 
 	world = Node2D.new()
@@ -140,7 +141,14 @@ func _update_zoom() -> void:
 	# Keep characters similarly sized in portrait and landscape.
 	var short_side := minf(size.x, size.y)
 	var z := clampf(short_side / 720.0, 0.5, 1.6)
-	camera.zoom = Vector2(z, z) * _debug_zoom / (2.0 if Prefs.low_resolution else 1.0)
+	camera.zoom = Vector2(z, z) * CAMERA_WORLD_SCALE * _debug_zoom / (2.0 if Prefs.low_resolution else 1.0)
+
+
+## Keep the hero near 60% height in either orientation while revealing the scene ahead.
+func _camera_focus() -> Vector2:
+	var view_height := scene_view.get_visible_rect().size.y
+	var lead := minf(110.0, view_height * 0.10 / maxf(0.01, camera.zoom.y))
+	return player.position + Vector2(0, -lead)
 
 
 func _update_render_quality() -> void:
@@ -272,6 +280,14 @@ func _read_debug_params() -> void:
 					player.position = Vector2(bounds.get_center().x, bounds.position.y - Player.RADIUS - 10.0)
 				"chapel":
 					player.position = village.chapel_steps[village.chapel_steps.size() - 1]
+				"chapel_reference":
+					# A real walkable viewpoint beside the doorway, without hiding any scenery.
+					var entry: Vector2 = village.chapel_steps[0]
+					player.position = entry
+					for offset: Vector2 in [Vector2(80, 75), Vector2(100, 100), Vector2(120, 130)]:
+						if not _blocked(entry + offset, Player.RADIUS):
+							player.position = entry + offset
+							break
 				"bank":
 					player.position = Iso.project(village.forecourt_g + Vector2(0, -60))
 				"corner0":
@@ -345,7 +361,7 @@ func _dungeon_preview(which: String) -> void:
 	hud.controls.release_all()
 	_impact_offset = Vector2.ZERO
 	camera.offset = Vector2.ZERO
-	camera.position = player.position + Vector2(0, -30)
+	camera.position = _camera_focus()
 	camera.reset_smoothing()
 	camera.force_update_scroll()
 	WorldOcclusion.update(player.global_position, false)
@@ -381,7 +397,7 @@ func _encounter_preview(which: String) -> void:
 		encounters.states["west"]["charges"] = 0
 	elif which == "active":
 		encounters.spawn_wave("west", false)
-	camera.position = player.position + Vector2(0, -30)
+	camera.position = _camera_focus()
 	camera.reset_smoothing()
 	hud._toast_queue.clear()
 	hud._toast_time = 0.0
@@ -562,7 +578,7 @@ func _reward_preview(mode := "1") -> void:
 			hud._toast_queue.clear()
 			hud._toast_time = 0.0
 			hud._toast_plaque.hide()
-			camera.position = player.position + Vector2(0, -30)
+			camera.position = _camera_focus()
 			camera.reset_smoothing()
 		grant_xp(GameState.xp_to_next())
 		if OS.has_feature("web"):
@@ -610,7 +626,7 @@ func _update_impact_camera(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	_update_impact_camera(delta)
-	camera.position = player.position + Vector2(0, -30)
+	camera.position = _camera_focus()
 	if dungeon.active:
 		WorldOcclusion.update(player.global_position, false)
 		dungeon.tick(delta)

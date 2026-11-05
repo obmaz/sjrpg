@@ -43,13 +43,19 @@ func run() -> void:
 	check("visible floors match the collision layout", floors_match)
 	check("both maps use the actual visible floors", maps_match)
 	var boundaries_match := not art.boundary_segments.is_empty()
+	var boundary_failures: Array[String] = []
 	for boundary in art.boundary_segments:
 		var a: Vector2 = boundary["a"]
 		var b: Vector2 = boundary["b"]
 		var outward: Vector2 = boundary["outward"]
 		var middle := (a + b) * 0.5
-		boundaries_match = boundaries_match and cave.layout.contains(Iso.project(middle - outward * 4.0)) and not cave.layout.contains(Iso.project(middle + outward * 4.0))
-	check("cave walls follow only the outside of the connected floor", boundaries_match)
+		var inside := cave.layout.contains(Iso.project(middle - outward * 4.0))
+		var outside := not cave.layout.contains(Iso.project(middle + outward * 4.0))
+		if not inside or not outside:
+			boundary_failures.append("%s to %s, outward %s: inner clear=%s, outer blocked=%s" % [a, b, outward, inside, outside])
+		boundaries_match = boundaries_match and inside and outside
+	check("cave walls follow only the outside of the connected floor", boundaries_match, "; ".join(boundary_failures))
+	_check_return_portal(game, cave)
 	var walls := 0
 	var lights: Array[PointLight2D] = []
 	var visual_roots_match := true
@@ -118,6 +124,28 @@ func run() -> void:
 func _check_hash(label: String, record: Dictionary) -> void:
 	var path: String = record["path"]
 	check(label + " matches the reviewed pixels", FileAccess.get_sha256("res://" + path) == str(record["sha256"]))
+
+
+func _check_return_portal(game: Node, cave: DungeonRuntime) -> void:
+	var portal := game.world.get_node_or_null("CaveReturnPortal") as IsoSprite
+	if not check("the return portal uses its actual measured base", portal != null):
+		return
+	var base := Village.portal_base(portal)
+	check("the return portal's visible base is its collision obstacle", cave.layout.obstacles.has(base))
+	# The new asymmetric base reaches farther left from its foot than the old art.
+	# Every vertex must fit inside the final chamber with a 20-ground-unit wall lip.
+	var safe_chamber := Rect2(4520, -200, 380, 400)
+	var fits := not base.is_empty()
+	var outside_vertices: Array[String] = []
+	for point in base:
+		var ground := Iso.unproject(point)
+		if not safe_chamber.has_point(ground):
+			fits = false
+			outside_vertices.append(str(ground))
+	check("the full return portal base clears every exit chamber wall lip", fits, "; ".join(outside_vertices))
+	var target := Iso.project(DungeonLayout.EXIT)
+	var reached := cave.layout.resolve(Iso.project(DungeonLayout.ROOMS[4]), target, Player.RADIUS)
+	check("the measured return portal leaves the incoming exit route open", reached.distance_to(target) < 1.0)
 
 
 func _check_live_interactions(game: Node, forest_target: String, forest_touch: Vector2) -> void:

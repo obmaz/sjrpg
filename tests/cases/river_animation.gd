@@ -20,7 +20,7 @@ func run() -> void:
 	var new_shimmer: Vector2 = river._shimmer_material.get_shader_parameter("flow_offset")
 	check("river sample uniforms retain both original flow velocities", elapsed > 0.0 and (new_water - water_offset).distance_to(Vector2(38, 6) * elapsed / size) < 0.0001 and (new_shimmer - shimmer_offset).distance_to(Vector2(-24, 11) * elapsed / size) < 0.0001)
 	check("flow never changes Polygon2D geometry or texture UVs", river._water.polygon == water_vertices and river._shimmer.polygon == shimmer_vertices and river._water.uv == water_uv and river._shimmer.uv == shimmer_uv and river._water.texture_offset == Vector2.ZERO and river._shimmer.texture_offset == Vector2.ZERO)
-	check("water keeps its original tint and translucent shimmer", river._water.modulate.is_equal_approx(Color(0.55, 0.74, 0.80)) and river._shimmer.modulate.is_equal_approx(Color(1, 1, 1, 0.14)))
+	check("generated water keeps its reviewed color with a restrained translucent shimmer", river._water.modulate.is_equal_approx(Color.WHITE) and river._shimmer.modulate.is_equal_approx(Color(1, 1, 1, 0.07)))
 	check("both layers keep mirrored texture repetition", river._water.texture_repeat == CanvasItem.TEXTURE_REPEAT_MIRROR and river._shimmer.texture_repeat == CanvasItem.TEXTURE_REPEAT_MIRROR)
 	time = river._time
 	get_tree().paused = true

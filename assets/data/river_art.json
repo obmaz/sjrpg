@@ -1,0 +1,41 @@
+{
+ "source": "assets/source/remake/river-materials.png",
+ "source_sha256": "e3f74922c81a5e07728e3901b84f65795af1fe9c58e75f87180873fc88015047",
+ "camera": "top-down material; runtime Iso ground transform",
+ "no_baked_cast_shadows": true,
+ "textures": {
+  "water": {
+   "path": "assets/art/village/water.webp",
+   "sha256": "918bcc547f934d27f7ef1528281e730950b06adb78aaed5af3a8bef06fa5ef21",
+   "source_roi": [
+    1,
+    1,
+    886,
+    886
+   ],
+   "size": [
+    512,
+    512
+   ]
+  },
+  "rock": {
+   "path": "assets/art/village/rock.webp",
+   "sha256": "28cb23eec83e30ae610ad1d46c48276a7174991b280bf47c5e32f17e33227738",
+   "source_roi": [
+    888,
+    1,
+    1773,
+    886
+   ],
+   "size": [
+    512,
+    512
+   ]
+  },
+  "dirt": {
+   "path": "assets/art/village/dirt.webp",
+   "sha256": "379f9866399c0e0e5265adfea05c3779fc7e6723cc42626226c7275157e4a17c",
+   "reused_from": "assets/art/forest/earth.webp"
+  }
+ }
+}

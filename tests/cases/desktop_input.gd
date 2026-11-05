@@ -62,9 +62,20 @@ func run() -> void:
 		Prefs.set_low_resolution(economy)
 		await _frames(3)
 		game.camera.force_update_scroll()
-		var target := player.position + Vector2(110, 25)
-		var painted: Vector2 = player.get_global_transform_with_canvas() * Vector2(110, 25)
-		var screen: Vector2 = painted * get_viewport().get_visible_rect().size / game.scene_view.get_visible_rect().size
+		# Camera framing can place a fixed world offset beneath a real skill button.
+		# Exercise world input at a clear rendered point; GUI interception is tested below.
+		var target := Vector2.ZERO
+		var screen := Vector2.ZERO
+		var found := false
+		for offset: Vector2 in [Vector2(110, 25), Vector2(-90, 15), Vector2(70, -45), Vector2(-70, -45)]:
+			var painted: Vector2 = player.get_global_transform_with_canvas() * offset
+			var candidate: Vector2 = painted * get_viewport().get_visible_rect().size / game.scene_view.get_visible_rect().size
+			if controls._hit_button(candidate) == "" and not game._blocked(player.position + offset, Player.RADIUS):
+				target = player.position + offset
+				screen = candidate
+				found = true
+				break
+		check("mouse destination is visible world rather than a HUD button", found)
 		check("mouse projection agrees with actual rendered hero at quality %s" % economy, game.screen_to_world(screen).distance_to(target) < 0.01)
 		_mouse(MOUSE_BUTTON_RIGHT, screen, true)
 		await _frames(1)

@@ -66,9 +66,10 @@ func run() -> void:
 		var levels := {}
 		for edge in record["edges"]:
 			levels[edge["level"]] = true
-		check("multiple structural heights are measured: " + record["id"], levels.size() >= 2)
+		check("upper middle and lower structure are measured: " + record["id"], levels.has("upper") and levels.has("middle") and levels.has("lower"))
 		var worst := 0.0
 		var worst_parallel := 0.0
+		var worst_straightness := 0.0
 		for pose in poses:
 			var families := {}
 			for edge in record["edges"]:
@@ -89,12 +90,15 @@ func run() -> void:
 					var t := float(step) / 12.0
 					var raw := Vector2(edge["a"][0], edge["a"][1]).lerp(Vector2(edge["b"][0], edge["b"][1]), t)
 					var at := _point(record, [raw.x, raw.y], pose, game)
-					check("straight projected edge %s / %s" % [record["id"], edge["name"]], absf((b - a).cross(at - a)) / maxf(0.01, a.distance_to(b)) < 0.75)
+					var deviation := absf((b - a).cross(at - a)) / maxf(0.01, a.distance_to(b))
+					worst_straightness = maxf(worst_straightness, deviation)
+					check("straight projected edge %s / %s" % [record["id"], edge["name"]], deviation < 0.75)
+			check("both ground directions and verticals are measured: " + record["id"], families.has(30.0) and families.has(-30.0) and families.has(90.0))
 			for family in families.values():
 				var spread: float = family.max() - family.min()
 				worst_parallel = maxf(worst_parallel, spread)
 				check("opposing/upper/lower edges stay parallel: " + record["id"], spread <= float(manifest["parallel_tolerance_degrees"]), "spread %.2f°" % spread)
-		print("ART_AUDIT " + JSON.stringify({"id": record["id"], "samples": record["edges"].size(), "poses": poses.size(), "worst_degrees": worst, "parallel_spread": worst_parallel}))
+		print("ART_AUDIT " + JSON.stringify({"id": record["id"], "samples": record["edges"].size(), "poses": poses.size(), "worst_degrees": worst, "parallel_spread": worst_parallel, "worst_straightness_world": worst_straightness}))
 		if record["kind"] == "sprite":
 			for pose in poses:
 				pose.free()
@@ -104,7 +108,7 @@ func run() -> void:
 		var exempt: bool = manifest["exemptions"]["natural_sprites"].has(key) or manifest["exemptions"]["unused_sources"].has(key)
 		check("every sprite is measured or explicitly exempt: " + key, covered.has(key) or exempt)
 	# Triangles must preserve orientation so texture projection cannot fold or hide an invalid face.
-	for key in ["nw", "se", "sw", "hill", "gate-0", "gate-2", "wall-a", "encounter-stone"]:
+	for key in ["nw", "se", "sw", "chapel", "hill", "gate-0", "gate-2", "wall-a", "encounter-stone", "remake-bridge", "remake-pool", "remake-portal", "remake-chest", "remake-chest-broken"]:
 		var mesh := ArtWarp.data(key)
 		check("projection uses the reviewed illustration: " + key, FileAccess.get_sha256("res://" + mesh["source"]) == mesh["source_sha256"])
 		for triangle in mesh["triangles"]:

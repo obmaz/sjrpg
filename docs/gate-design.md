@@ -6,10 +6,10 @@
 
 ## 고정 디자인과 원본
 
-- [통합 컨셉](../assets/source/style/gate-wall-design.png): 둥근 쌍탑 성문, 두 방향의 흉벽, 실제 코너 연결.
-- `assets/source/gate-cohesive-a.png`, `gate-cohesive-b.png`: 같은 회색 석회암·거친 입자·좁은 줄눈·아케이드 받침띠·경사진 흉벽 캡을 사용하는 성문 두 방향.
-- `assets/source/wall-from-gate.png`: 보정된 `gate-cohesive-a.png`의 실제 날개벽 한 주기를 추출한 모듈입니다. 돌·몰딩·흉벽·목재를 새로 그리거나 색을 맞추지 않고 성문 픽셀을 재사용합니다. 반대 방향은 같은 모듈을 수평 반사합니다.
-- `tools/extract/wall_from_gate.json`은 원본 해시·부모 메시·추출 구간·정확한 물리 배율·바닥 기준선을 보존합니다. 부모 메시가 바뀌면 추출을 다시 해야 합니다.
+- [현재 재질 보조 장면](../assets/source/remake/town-master-scene.png): 원본 사용자 화면을 바탕으로 비교 수정한 후보입니다. 이전 성문 컨셉은 구조 참고로만 사용합니다.
+- `assets/source/remake/gate-a.png`, `assets/source/remake/gate-b-v2.png`: 같은 회색 석회암·거친 입자·좁은 줄눈·아케이드 받침띠·경사진 흉벽 캡을 사용하는 성문 두 방향.
+- `assets/source/remake/wall-from-gate.png`: 보정된 `gate-a.png`의 실제 날개벽 한 주기를 추출한 모듈입니다. 돌·몰딩·흉벽·목재를 새로 그리거나 색을 맞추지 않고 성문 픽셀을 재사용합니다. 반대 방향은 같은 모듈을 수평 반사합니다.
+- `tools/extract/remake_wall_from_gate.json`은 원본 해시·부모 메시·추출 구간·정확한 물리 배율·바닥 기준선을 보존합니다. 부모 메시가 바뀌면 추출을 다시 해야 합니다.
 - 독립 생성했던 `wall-cohesive.png`와 초기 시안은 생성 출처 보관용입니다. 런타임 성벽의 기준으로 사용하지 않습니다.
 
 정규 성벽에는 중성에 가까운 따뜻한 회색의 작은 거친 석재와 얕은 풍화를 사용합니다.
@@ -17,7 +17,7 @@
 원본의 자체 음영과 어두운 참나무 벽걸음길은 유지합니다. 원통형 탑의 곡면 조적과 정규 성벽의 줄눈 크기는 실제 화면에서 비교하며,
 생성 문구만으로 모든 방향의 돌 크기가 완전히 같다고 주장하지 않습니다.
 
-실제로 사용한 생성 문구와 이미지 첨부 순서는 [gate_generation.json](../tools/extract/gate_generation.json)에 있습니다.
+실제로 사용한 생성 문구와 이미지 첨부 순서는 [town_remake_generation.json](../tools/extract/town_remake_generation.json)에 있습니다.
 최종 원본·패킹 결과·사용자 기준·컨셉·프롬프트 파일의 SHA-256은 `assets/data/gate_family.json`에 고정합니다.
 사용하지 않은 생성 시안은 작업 원본 보관소에 남기고 런타임 기준으로 삼지 않습니다.
 
@@ -30,8 +30,8 @@
 `art_warp_measure.json`의 성문은 축 방향뿐 아니라 실제 몰딩·캡의 위치 제약을 함께 사용합니다.
 앞면 띠장은 159.7852, 캡의 bevel-to-front-face 경계는 196.4467 원본 월드 단위로 맞춥니다. 캡 전체의 명목 높이 200과 이 bevel 경계는 구별합니다.
 `unit_scale`과 `placement_foot_projected`를 고정해 위치 제약을 적용할 때 전체 건물 배율이나 피벗이 다시 변하지 않게 합니다.
-`gate-0`은 수직 이동을 사용합니다. `gate-2`는 실제 두께를 약 71에서 64로 맞추기 위해 뒤쪽 모서리의 가로·세로 위치도 함께 제약합니다.
-성벽 원본은 이 보정과 지면 변환까지 반영한 실제 성문 픽셀이므로 `wall-a`는 측정 축이 허용 오차 안에 있는지 확인한 뒤 항등 메시를 사용합니다. 이중 보정을 하지 않습니다.
+새 `gate-0`·`gate-2`는 각각 실제 새 픽셀에서 측정한 기준선·깊이·띠장·캡을 제약합니다. 세부 이동은 `remake_gate_a_measure.json`·`remake_gate_b_measure.json`과 통합 메시가 기준입니다.
+성벽 원본은 보정된 성문의 실제 픽셀입니다. 새 모듈은 실제 성문 접점에 맞춘 긴 벽의 여러 배치 변환에서 가장 짧은 모서리가 2.5°를 넘는 문제가 발견되어, `wall-a`에 최대 0.584원본px의 추가 미세 투영을 사용합니다. 원본·실측 좌표는 유지하고 바닥 양끝과 이미지 경계, 실제 띠장·캡 높이를 보존합니다. 원본→이 메시→반사→실제 벽 변환 순서를 한 번씩만 적용합니다.
 이미지 경계까지 성벽이 차 있는 경우 경계 정점을 충분히 넣고 출력에 투명 여백을 두어 픽셀 누락과 접힌 삼각형을 방지합니다.
 메시 뒤집힘은 제작 단계와 `art_projection` 검사에서 모두 거부합니다.
 
@@ -55,7 +55,7 @@
 `gates` 검사는 네 통로 이동·탑 차단·여덟 날개벽 연결·기존 충돌 보존·동일 벽 모듈과 크기·리뷰 해시를 확인합니다.
 `gate_seams`는 여덟 실제 앞면 접점, 네 날개벽의 띠장·캡 높이와 반복 벽의 동일 높이, 추출 원본과 부모 메시를 검사합니다.
 세 높이의 실제 아틀라스 알파를 그리기 변환으로 되돌려 양쪽 경계에서 선형 보간한 합성 불투명도도 검사해 잔디가 비치는 세로 틈을 잡습니다.
-`gate_join_measure.py`는 같은 원화 관찰점을 독립적으로 보고합니다. `gate_join_measure.json`에는 실제 픽셀 선분과 공유 코너를 보존합니다.
+`gate_join_measure.py`는 같은 원화 관찰점을 독립적으로 보고합니다. `gate_join_measure.json`에는 실제 픽셀 선분·공유 코너와 새 추출벽의 `wall_profiles`를 보존합니다. 검사에서 이전 벽의 좌표를 하드코딩해 재사용하지 않습니다.
 `art_projection`은 실제 원화의 상·중·하·반대쪽 선분과 반사까지 그리기와 같은 좌표로 검사합니다.
 축 오차와 같은 축의 평행선 편차는 모두 2.5° 이내여야 합니다. 검사 통과와 별도로 네 성문·네 코너를 가로·세로에서 검수합니다.
 
@@ -64,13 +64,7 @@
 원본·실측·프롬프트를 먼저 검토한 뒤 다음 순서로 실행합니다. 패킹 중에는 Godot 임포트·테스트·export를 실행하지 않습니다.
 
 ```sh
-python3 tools/extract/gate_projection.py --gates-only
-python3 tools/extract/gate_wall.py
-python3 tools/extract/gate_projection.py --wall-only
-python3 tools/extract/gate.py
-python3 tools/extract/extract_data.py /path/to/sjrpg --only=village
-# 실제 투영·패킹 결과를 리뷰한 뒤 명시적으로 해시 고정
-python3 tools/extract/art_audit_catalog.py
+python3 tools/prepare_town_remake.py /path/to/sjrpg
 python3 tools/extract/gate_join_measure.py
 tools/check.sh --only=art_projection,axis,gates,gate_seams --export
 ```

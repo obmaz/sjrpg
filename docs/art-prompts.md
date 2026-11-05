@@ -5,13 +5,14 @@
 ## 매번 첨부할 참조
 
 - 분위기 최상위: `assets/source/style/approved-game-reference.jpg`
-- 새 패밀리의 분리 원화: 위 사용자 원본과 함께 실제 사용할 작은 장면 컨셉. 채택한 파일 경로·해시를 제작 문서에 기록합니다.
-- 성문·성벽: `assets/source/style/gate-wall-design.png`와 해당 방향의 최근 검수된 성문 원화. 재생성 시 `tools/extract/gate_measure.json`에서 실제 파일을 확인합니다.
-- 마을 건물·예배당: 해당 패밀리의 검수된 원본. `town_art_measure.json`·`chapel_measure.json`에 경로가 있습니다.
-- 식생: `assets/source/forest-trees.png`, `forest-flora.png` 중 해당 패밀리.
+- 새 패밀리의 분리 원화: 위 사용자 원본과 함께 실제 사용할 작은 장면 컨셉. 현재 마을은 `assets/source/remake/town-master-scene.png`의 비교 수정 후보3을 사용하며 승인된 새 기준으로 간주하지 않습니다.
+- 성문·성벽: 위 두 참조와 현재 `assets/source/remake/gate-a.png`·`gate-b-v2.png` 및 실제 추출 벽을 사용합니다. `gate_measure.json`·`remake_gate_*_measure.json`에서 현재 채택 파일을 확인합니다. 이전 `gate-wall-design.png`는 제작 이력입니다.
+- 마을 건물·예배당: 해당 패밀리의 현재 채택 원본. `town_art_measure.json`·`chapel_measure.json`에 경로가 있습니다. 이전 구조 원화를 첨부할 때는 geometry guide임을 명시하고 재질·색·구도 기준으로 삼지 않습니다.
+- 식생: `assets/source/remake/trees-v2.png`·`flora.png` 중 해당 패밀리. 위에서 본 지면은 `remake/ground.png`, 강 재료는 `remake/river-materials.png`를 참조합니다.
 - 배우/선택 원화: `assets/source/hero-selection.png`, 실제 HUD 얼굴 원화. 새 성별·의상으로 바꾸지 않습니다.
 
 통합 컨셉 생성에서는 패밀리 참조가 아직 없을 수 있습니다. 그 경우 사용자 기준 화면과 이미 검수된 인접 건물을 사용하고, 채택한 컨셉의 파일과 실제 생성 프롬프트를 해당 제작 문서에 남깁니다.
+마을의 실제 생성 문구·참조 파일 순서·거절/대체 이력은 `tools/extract/town_remake_generation.json`에 있습니다. 아래 공통 문구는 실제 실행 기록을 대신하지 않습니다.
 
 ## 작은 완성 장면 컨셉
 
@@ -83,7 +84,9 @@ Do not copy the HUD or the scene's cast shadows from the user reference.
 
 ASSET: [type and exact structural requirements]
 VIEW: [the required direction, plus explicit visible front/side]
-SCALE: [existing footprint, total height, door/step proportions; do not change]
+SCALE: [measured world footprint, total height, door/step proportions relative to
+the84-world-unit hero; preserve access, but allow recorded layout corrections
+when an old footprint would make the door smaller than the hero]
 CONNECTIONS: [required matching wing ends, cornice height, block courses, caps]
 OUTPUT: [one complete object / specified separate atlas cells with padding]
 ```

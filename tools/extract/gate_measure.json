@@ -11,52 +11,58 @@
   "_doc": "Both directions reuse one real gate-wing period and the exact parent physical pixel scale. Whole-alpha-extent fitting and independent color-graded wall artwork are forbidden.",
   "segs": {
    "a": {
-    "png": "assets/source/wall-from-gate.png",
+    "png": "assets/source/remake/wall-from-gate.png",
     "baked_warp": "wall-a",
     "mirror_x": false,
     "gvs": 1,
-    "extracted_scale": "tools/extract/wall_from_gate.json"
+    "extracted_scale": "tools/extract/remake_wall_from_gate.json"
    },
    "b": {
-    "png": "assets/source/wall-from-gate.png",
+    "png": "assets/source/remake/wall-from-gate.png",
     "baked_warp": "wall-a",
     "mirror_x": true,
     "gvs": 1,
-    "extracted_scale": "tools/extract/wall_from_gate.json"
+    "extracted_scale": "tools/extract/remake_wall_from_gate.json"
    }
+  },
+  "extraction": {
+   "x_range": [
+    119,
+    182
+   ]
   }
  },
  "gates": {
   "gate-0": {
-   "png": "assets/source/gate-cohesive-a.png",
+   "png": "assets/source/remake/gate-a.png",
    "front_L": [
-    67.42,
-    685.85
+    42.0,
+    686.6047765793528
    ],
    "front_R": [
-    1092.47,
-    1206.95
+    1121.5,
+    1228.5
    ],
    "back": [
-    89.87,
-    -50.23
+    100.0,
+    -59.15
    ],
    "back_at": "front_R",
-   "wing_height_px": 299.85,
+   "wing_height_px": 300.0,
    "towers": [
     {
-     "cx": 370,
-     "bottom": 890,
-     "rx": 116
+     "cx": 352.677,
+     "bottom": 895.779,
+     "rx": 128.002
     },
     {
-     "cx": 815,
-     "bottom": 1118,
-     "rx": 117
+     "cx": 826.562,
+     "bottom": 1136.296,
+     "rx": 137.479
     }
    ],
-   "gvs": 1.081905720130394,
-   "gvk": 0.027346785691310046,
+   "gvs": 1.0559798946456442,
+   "gvk": 0.047261838493272854,
    "baked_warp": "gate-0",
    "model_reference": {
     "ends": [
@@ -247,71 +253,71 @@
    "wing_in": [
     [
      [
-      67.41999816894531,
-      685.8499755859375
+      42.0,
+      686.6047765793528
      ],
      [
-      255.58999633789062,
-      785.6900024414062
+      217,
+      777.611132511556
      ]
     ],
     [
      [
-      894.0,
-      1101.3199462890625
+      941,
+      1133.6033136545418
      ],
      [
-      1047.6300048828125,
-      1184.22998046875
+      1117,
+      1226.1593982098648
      ]
     ]
    ],
    "wing_height_line": [
     [
-     67.42,
-     386.0
+     43.67,
+     380.58
     ],
     [
-     67.42,
-     685.85
+     43.67,
+     687.4430952668123
     ]
    ],
-   "unit_scale": 0.6180360598594108,
+   "unit_scale": 0.5475970119332749,
    "placement_foot_projected": [
-    627.6363636363636,
-    922.690909090909
+    629.0346986399627,
+    916.0850793712551
    ]
   },
   "gate-2": {
-   "png": "assets/source/gate-cohesive-b.png",
+   "png": "assets/source/remake/gate-b-v2.png",
    "front_L": [
-    177.7,
-    1217.23
+    176.16790583848257,
+    1220.9269579629547
    ],
    "front_R": [
-    1211.54,
-    737.49
+    1219.0,
+    733.8410370831294
    ],
    "back": [
-    -132.66,
-    -75.28
+    -134.16790583848257,
+    -76.36772831179178
    ],
    "back_at": "front_L",
-   "wing_height_px": 384.0,
+   "wing_height_px": 380,
    "towers": [
     {
-     "cx": 483,
-     "bottom": 1155,
-     "rx": 119
+     "cx": 474.8570891562631,
+     "bottom": 1154.369385828113,
+     "rx": 146.44113287099577
     },
     {
-     "cx": 945,
-     "bottom": 949,
-     "rx": 112
+     "cx": 928.0568757822449,
+     "bottom": 951.9165461724858,
+     "rx": 141.61930270872858
     }
    ],
-   "gvs": 1.1194353145668583,
-   "gvk": -0.05789087720411092,
+   "gvs": 1.1142799092805282,
+   "gvk": -0.05689250924104171,
    "baked_warp": "gate-2",
    "model_reference": {
     "ends": [
@@ -502,41 +508,42 @@
    "wing_in": [
     [
      [
-      177.6999969482422,
-      1217.22998046875
+      185,
+      1216.7185356080379
      ],
      [
-      366.5,
-      1127.3299560546875
+      365,
+      1130.9499726792537
      ]
     ],
     [
      [
-      1044.3599853515625,
-      824.3499755859375
+      1065,
+      816.0240176600438
      ],
      [
-      1156.5899658203125,
-      766.3200073242188
+      1214,
+      736.5093156732889
      ]
     ]
    ],
    "wing_height_line": [
     [
-     177.7,
-     833.23
+     184.46,
+     860.793
     ],
     [
-     177.7,
-     1217.23
+     184.46,
+     1217.053887366741
     ]
    ],
-   "unit_scale": 0.4639335518532419,
+   "unit_scale": 0.4557651160233175,
    "placement_foot_projected": [
-    624.7818181818182,
-    941.3454545454545
+    619.1461012402175,
+    923.1350234697499
    ]
   }
  },
- "generation_provenance": "tools/extract/gate_generation.json"
+ "generation_provenance": "tools/extract/town_remake_generation.json",
+ "family_concept": "assets/source/remake/town-master-scene.png"
 }

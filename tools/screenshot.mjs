@@ -43,6 +43,7 @@ const SCENES = {
     gate2: 'at=gate2&zoom=1.5',
     gate3: 'at=gate3&zoom=1.5',
     chapel: 'at=chapel&zoom=0.8',
+    chapel_reference: 'at=chapel_reference&zoom=1',
     occlusion: 'at=occlusion&zoom=1.3',
     chapelwide: 'at=chapel&zoom=0.4',
     lm0: 'at=lm0&zoom=0.5',
@@ -87,9 +88,18 @@ const device = args.device ?? 'desktop';
 const cls = args.class ?? (scene === 'cooldowns' ? 'mage' : 'warrior');
 const base = args.url ?? 'http://localhost:8765/index.html';
 const out = args.out ?? `shot-${scene}-${device}.png`;
+const settle = Number(args.settle ?? 9000);
+if (!Number.isFinite(settle) || settle < 500 || settle > 30000) throw new Error('--settle must be 500–30000 ms');
 
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-const ctx = await browser.newContext(device === 'phone' ? { ...devices['Pixel 7'] } : device === 'phone-landscape' ? { ...devices['Pixel 7 landscape'] } : { viewport: { width: 1280, height: 720 }, deviceScaleFactor: Number(args.dpr ?? 1) });
+const profile = device === 'phone' ? { ...devices['Pixel 7'] } : device === 'phone-landscape' ? { ...devices['Pixel 7 landscape'] } : { viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 };
+if (args.viewport) {
+    const match = /^(\d+)x(\d+)$/.exec(args.viewport);
+    if (!match || match.slice(1).some(value => Number(value) < 300 || Number(value) > 4000)) throw new Error('Viewport must be WIDTHxHEIGHT, 300–4000 pixels per side');
+    profile.viewport = {width: Number(match[1]), height: Number(match[2])};
+}
+if (args.dpr) profile.deviceScaleFactor = Number(args.dpr);
+const ctx = await browser.newContext(profile);
 const page = await ctx.newPage();
 const logs = [];
 page.on('console', (m) => logs.push(`${m.type()}: ${m.text()}`));
@@ -210,7 +220,19 @@ if (scene.startsWith('stone')) {
 } else if (scene.startsWith('corpses')) {
     await page.waitForFunction(() => window.__sjrpgCorpsePreviewReady === true, null, {timeout: 30000});
     await page.waitForTimeout(1500);
-} else await page.waitForTimeout(9000);
+} else await page.waitForTimeout(settle);
+if (args.walk) {
+    // Optional real keyboard route for inspecting service buildings without teleporting the scene.
+    for (const step of args.walk.split(',')) {
+        const match = /^([wasd](?:\+[wasd])*):(\d+)$/.exec(step);
+        if (!match || Number(match[2]) > 10000) throw new Error('--walk expects a:1200,w+d:500 (up to 10000 ms per step)');
+        const keys = match[1].split('+');
+        for (const key of keys) await page.keyboard.down(key);
+        await page.waitForTimeout(Number(match[2]));
+        for (const key of keys) await page.keyboard.up(key);
+    }
+    await page.waitForTimeout(500);
+}
 if (scene === 'dodge') {
     await page.keyboard.down('Shift');
     await page.waitForTimeout(70);

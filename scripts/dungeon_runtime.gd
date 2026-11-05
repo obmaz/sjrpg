@@ -75,8 +75,9 @@ func enter() -> bool:
 	GameState.location_mode = "cave"
 	_build_art(world)
 	_build_enemies()
-	# Place the full-size base beside the incoming route, leaving the exit approach open.
-	var portal: IsoSprite = game.village.create_portal(Iso.project(DungeonLayout.EXIT) + Vector2(100, -70))
+	# The measured base extends left/back from its foot. Keep it inside the exit
+	# chamber's wall lip, beside the incoming route rather than across the cliff.
+	var portal: IsoSprite = game.village.create_portal(Iso.project(DungeonLayout.EXIT + Vector2(50, -110)))
 	portal.name = "CaveReturnPortal"
 	world.add_child(portal)
 	layout.obstacles.append(Village.portal_base(portal))

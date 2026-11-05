@@ -12,8 +12,8 @@ var _time := 0.0
 
 const FLOW_SHADER := preload("res://scripts/river_flow.gdshader")
 const SHIMMER_SHADER := preload("res://scripts/river_shimmer.gdshader")
-const TILE_UNITS := 170.0  # ground units covered by one 418px texture tile
-const PX := 418.0 / TILE_UNITS
+const TILE_UNITS := 170.0  # ground units covered by one generated 512px material tile
+const PX := 512.0 / TILE_UNITS
 
 
 ## u0 = west end of the straight reach, u1 = east end; v0 < v1 bound the water.
@@ -52,14 +52,14 @@ func _build() -> void:
 		add_child(_poly(outer[0], "dirt", Color(1, 1, 1, 0.55)))
 	var bank: Array = Geometry2D.offset_polygon(polygon, 40.0, Geometry2D.JOIN_ROUND)
 	if bank.size() > 0:
-		add_child(_poly(bank[0], "rock", Color(0.78, 0.78, 0.74)))
-	_water = _poly(polygon, "water", Color(0.55, 0.74, 0.80))
+		add_child(_poly(bank[0], "rock"))
+	_water = _poly(polygon, "water")
 	_water_material = ShaderMaterial.new()
 	_water_material.shader = FLOW_SHADER
 	_water_material.set_shader_parameter("flow_offset", Vector2.ZERO)
 	_water.material = _water_material
 	add_child(_water)
-	_shimmer = _poly(polygon, "water", Color(1, 1, 1, 0.14), 0.55)
+	_shimmer = _poly(polygon, "water", Color(1, 1, 1, 0.07), 0.55)
 	_shimmer_material = ShaderMaterial.new()
 	_shimmer_material.shader = SHIMMER_SHADER
 	_shimmer_material.set_shader_parameter("flow_offset", Vector2.ZERO)

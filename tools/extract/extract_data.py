@@ -177,6 +177,8 @@ def extract_village(src, out):
     gate.merge(data)
     import town_art
     town_art.merge(data)
+    import props_remake
+    props_remake.merge(data)
     import tree_art
     tree_art.merge(data)
     import cave_art
