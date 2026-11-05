@@ -31,6 +31,7 @@ def build(record):
     for edge in record['segments']:
         a,b=np.array(edge['a']),np.array(edge['b'])
         for t in np.linspace(0,1,max(2,int(np.linalg.norm(b-a)/12))):add(a*(1-t)+b*t)
+    targets=[(add(q['source']),np.asarray(q['target'],float)) for q in record.get('targets',[])]
     pins=[add(q) for q in record.get('pins',[])]
     boundary=[add(q) for q in [[0,0],[width-1,0],[width-1,height-1],[0,height-1]]]
     step=record.get('boundary_step',0)
@@ -65,6 +66,9 @@ def build(record):
     if record.get('vertical_only',False):
         for i in range(count):
             row=np.zeros(count*2);row[i*2]=1;rows.append(row);rhs.append(0.)
+    for i,target in targets:
+        for axis in range(2):
+            row=np.zeros(count*2);row[i*2+axis]=1;rows.append(row);rhs.append(target[axis]-source[i,axis])
     energy=np.eye(count)*.0001;neighbors=set()
     for a,b,c in triangles:
         neighbors.update(tuple(sorted(pair)) for pair in [(a,b),(b,c),(c,a)])

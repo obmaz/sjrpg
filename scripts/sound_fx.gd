@@ -5,6 +5,7 @@ const RATE := 22050
 const PROFILES := {
 	# name: [pitch, endPitch, duration, noiseFreq, noiseGain, toneGain, wave]
 	"slash": [290.0, 85.0, 0.13, 2600.0, 0.14, 0.035, "triangle"],
+	"prepare": [340.0, 520.0, 0.075, 1700.0, 0.025, 0.008, "sine"],
 	"fire": [180.0, 55.0, 0.25, 650.0, 0.15, 0.055, "sine"],
 	"ice": [1500.0, 610.0, 0.19, 5200.0, 0.07, 0.025, "triangle"],
 	"lightning": [840.0, 190.0, 0.15, 3400.0, 0.12, 0.025, "sawtooth"],

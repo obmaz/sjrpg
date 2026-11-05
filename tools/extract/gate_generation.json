@@ -63,7 +63,7 @@
     "assets/source/style/approved-game-reference.jpg"
    ],
    "transparent_background": true,
-   "prompt": "EDIT FIRST IMAGE ONLY: the narrow isometric wall strip (806x1951). Keep exact original full strip silhouette, camera, wall height/thickness, walkway, all battlements and cap spacing, arcade corbel molding, base plinth and transparent background. Do not rotate, zoom, crop, or redesign any structural part. Its material is already the correct finely weathered warm-neutral gray limestone.\nThe regular masonry block courses in the large FRONT WALL BODY below the arcade shelf are TOO SMALL and dense compared with the SECOND and THIRD images of the same castle gate. Increase ordinary front body stone-row height by approximately38percent, from35.5imagepixels toabout49imagepixels atnative resolution. In an unobstructed650pixel-high section between corbel shelf andplinth, showapproximately13courses ratherthan18. Make the blocks correspondingly wider with natural irregular lengths and tightshallowmortar; NO oversizedsmoothcinderblocks. Preserve the same fine grain, subtle weathering, gray palette and neutral diffuse light. Leave the merlon/cap/molding/baseblock sizes and their exact placements unchanged. Only recourse the large masonry field. The stone rows must remain straight and parallel to the visible long-axis coping, not bend or change slope lower on the wall.\nMatch the gate's real stone module scale when displayed at the same wing-wall height. The FOURTH image is the authoritative restrained forest fantasy style reference: no copiedHUD/text/sunpatches/shadowplates. Orthographictrueisometric2.5D, 45degazimuth35.264degelevation, groundaxes±30deg, uprightedgesvertical, no perspectiveconvergence. No groundshadow, no logo/text, transparentoutside. OutputONLYthe correctedFIRSTcompletewall, single strip, preservingnativeaspectandallstructuralgeometry.",
+   "prompt": "EDIT FIRST IMAGE ONLY: the narrow isometric wall strip (806x1951). Keep exact original full strip silhouette, camera, wall height/thickness, walkway, all battlements and cap spacing, arcade corbel molding, base plinth and transparent background. Do not rotate, zoom, crop, or redesign any structural part. Its material is already the correct finely weathered warm-neutral gray limestone.\nThe regular masonry block courses in the large FRONT WALL BODY below the arcade shelf are TOO SMALL and dense compared with the SECOND and THIRD images of the same castle gate. Increase ordinary front body stone-row height by approximately38percent, from35.5imagepixels toabout49imagepixels atnative resolution. In an unobstructed650pixel-high section between corbel shelf andplinth, showapproximately13courses ratherthan18. Make the blocks correspondingly wider with natural irregular lengths and tightshallowmortar; NO oversizedsmoothcinderblocks. Preserve the same fine grain, subtle weathering, gray palette and neutral diffuse light. Leave the merlon/cap/molding/baseblock sizes and their exact placements unchanged. Only recourse the large masonry field. The stone rows must remain straight and parallel to the visible long-axis coping, not bend or change slope lower on the wall.\nMatch the gate's real stone module scale when displayed at the same wing-wall height. The FOURTH image is the authoritative restrained forest fantasy style reference: no copiedHUD/text/sunpatches/shadowplates. Orthographictrueisometric2.5D, 45degazimuth35.264degelevation, groundaxes\u00b130deg, uprightedgesvertical, no perspectiveconvergence. No groundshadow, no logo/text, transparentoutside. OutputONLYthe correctedFIRSTcompletewall, single strip, preservingnativeaspectandallstructuralgeometry.",
    "reference_sha256": [
     "6cdea76128d02ec19f02629c89a059e726bd1f636cedd9fedfea6c2af2057e3b",
     "2abd38a31c555e1cc379c91c645a99775104aeb0e64cb79697896b1ae9e27983",
@@ -71,5 +71,12 @@
     "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
    ]
   }
- ]
+ ],
+ "runtime_wall_derivation": {
+  "parent": "assets/source/gate-cohesive-a.png",
+  "tool": "tools/extract/gate_wall.py",
+  "measurement": "tools/extract/wall_from_gate.json",
+  "output": "assets/source/wall-from-gate.png",
+  "note": "Reuse the actual calibrated gate-wing pixels; the independently generated wall-cohesive.png is retained as historical generation provenance only."
+ }
 }

@@ -107,6 +107,19 @@ static func contact_direction(source: Node2D, target: Vector2) -> Vector2:
 	return (target - source.position).normalized()
 
 
+static func contact_flash_color(source: Node2D) -> Color:
+	var tint := SkillDefs.STEEL
+	if source is Effect:
+		tint = source.color
+	elif source is Player:
+		tint = source.impact_color
+	match _element_cell(tint):
+		1: return Color(1.0, 0.72, 0.36)
+		2: return Color(0.77, 0.75, 1.0)
+		3: return Color(0.50, 0.85, 1.0)
+	return Color(1.0, 0.90, 0.65)
+
+
 ## Generated contact art is cosmetic and shares the existing effect budget, never collision/damage.
 static func spawn_impact(world_game: Node, at: Vector2, source: Node2D, heavy := false) -> Effect:
 	var impact := Effect.new()

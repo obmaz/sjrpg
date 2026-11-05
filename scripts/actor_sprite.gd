@@ -6,6 +6,8 @@ var atlas: ActorAtlas
 var frame := 0
 var body_height := 64.0
 var flash := 0.0
+var flash_tint := Color(1.0, 0.45, 0.4)
+var _flash_presented := false
 var tint := Color.WHITE
 var shadow := true
 ## Presentation only: simulation, attacks and movement continue during this brief contact pose.
@@ -43,16 +45,34 @@ func clear_contact_hold() -> void:
 	_contact_recovery = 0.0
 
 
+## A short first presentation survives slow browser frames without extending rapid-hit flashes forever.
+func trigger_flash(color: Color) -> void:
+	if flash <= 0.0:
+		_flash_presented = false
+	flash_tint = color
+	flash = 0.35 if Prefs.reduce_motion else 1.0
+	queue_redraw()
+
+
+func clear_flash() -> void:
+	flash = 0.0
+	_flash_presented = false
+	queue_redraw()
+
+
 func _process(delta: float) -> void:
 	_contact_recovery = maxf(0.0, _contact_recovery - delta)
 	if Prefs.reduce_motion:
+		flash = minf(flash, 0.35)
 		clear_contact_hold()
 	elif contact_hold > 0.0:
 		# Retain one contact frame even when the first browser frame is slow, then expire normally.
 		contact_hold = maxf(0.0, contact_hold - (minf(delta, 0.012) if not _contact_started else delta))
 		_contact_started = true
 	if flash > 0.0:
-		flash = maxf(0.0, flash - delta * 4.0)
+		var flash_delta := minf(delta, 0.012) if not _flash_presented and not Prefs.reduce_motion else delta
+		flash = maxf(0.0, flash - flash_delta * 4.0)
+		_flash_presented = true
 		queue_redraw()
 
 
@@ -68,5 +88,5 @@ func _draw() -> void:
 	var dest := Rect2(-atlas.anchors[frame] * scale_factor, region.size * scale_factor)
 	var color := tint
 	if flash > 0.0:
-		color = tint.lerp(Color(1.0, 0.45, 0.4, tint.a), flash)
+		color = tint.lerp(Color(flash_tint, tint.a), flash)
 	draw_texture_rect_region(atlas.texture, dest, region, color)

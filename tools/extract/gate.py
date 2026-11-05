@@ -80,12 +80,6 @@ def pack():
     print("gates sheet", sheet.size)
 
 
-def _stone_median(img, box):
-    """Use only the reviewed front stone face, never wood, transparent background or an entire shaded silhouette."""
-    arr = np.array(img.crop(tuple(box)).convert("RGBA"))
-    return np.median(arr[..., :3][arr[..., 3] > 200], axis=0)
-
-
 def _measure_seg(img):
     """성벽 구간 원화(RGBA)에서 앞면 바닥선(최소제곱)과 세로 폭 E를 잰다.
     E = 한 열에서 앞 바닥선 ~ 뒤 흉벽 꼭대기(= 높이 H + 두께 t, 120°에서 두께는 같은 열의 세로 간격 t·S 로 보인다)의 95백분위."""
@@ -98,32 +92,36 @@ def _measure_seg(img):
     return m, c, float(np.percentile(bottom - top, 95)), w, h
 
 
-def _wall_image(sg, grade=False):
+def _wall_image(sg):
     img = gate_projection.image(sg["png"], sg.get("baked_warp", ""))
-    if grade:
-        raw = Image.open(ROOT / sg["png"]).convert("RGBA")
-        reference_path, reference_box = sg["stone_reference"]
-        reference = Image.open(ROOT / reference_path).convert("RGBA")
-        gain = _stone_median(reference, reference_box) / _stone_median(raw, sg["stone_face"])
-        arr = np.array(img)
-        arr[..., :3] = np.clip(arr[..., :3].astype(float) * gain, 0, 255).astype(np.uint8)
-        img = Image.fromarray(arr)
     if sg.get("mirror_x", False):
         img = img.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
     return img
 
 
+def _wall_scale(sg, packing):
+    extraction = json.loads((ROOT / sg['extracted_scale']).read_text())
+    return extraction['world_pixels_per_source_pixel'] / packing
+
+
+def _wall_baseline(sg, width):
+    extraction = json.loads((ROOT / sg['extracted_scale']).read_text())
+    baseline = extraction['front_baseline']
+    slope = (baseline[1] - baseline[0]) / (width - 1)
+    return (-slope, baseline[1]) if sg.get('mirror_x') else (slope, baseline[0])
+
+
 def wall_sheet():
-    """성문과 같은 석재로 제작한 성벽을 석재 앞면 표본에 맞춰 walls.webp 로 패킹한다."""
+    """성문에서 추출한 픽셀을 색상 보정 없이 같은 물리 배율로 패킹한다."""
     cfg = M["wall"]
     p = cfg["packing"]
-    thick, height = cfg["thick"], cfg["height"]
     out = {}
     x = PAD
     tiles = []
     for key, sg in cfg["segs"].items():
-        img = _wall_image(sg, True)
+        img = _wall_image(sg)
         m, c, e, w, h = _measure_seg(img)
+        m, c = _wall_baseline(sg, w)
         slope_deg = math.degrees(math.atan(abs(m)))
         if abs(slope_deg - 30.0) > 2.5:
             sys.exit("%s: 성벽 바닥선이 ±30°에서 2.5° 넘게 벗어납니다 (%.1f°)" % (key, slope_deg))
@@ -131,7 +129,7 @@ def wall_sheet():
         tiles.append((key, img, x, sw, sh))
         # 시트 좌표(패킹 후): 앞 바닥선의 x=0, x=W 에서의 y, 시트 픽셀당 월드 픽셀(세로·가로 같은 배율).
         gvs = sg.get("gvs", 1)
-        k = (height + thick) * 0.97 / (e * gvs) / p
+        k = _wall_scale(sg, p)
         out[key] = dict(source=[x, PAD, sw, sh], y0=round(c * p + PAD, 2), y1=round((m * w + c) * p + PAD, 2),
                         k=round(float(k), 4), gvs=gvs, slope_deg=round(slope_deg, 2), extent=round(e, 1))
         out[key].update(baked_warp=sg.get("baked_warp", ""), mirror_x=sg.get("mirror_x", False))
@@ -139,7 +137,13 @@ def wall_sheet():
     sheet = Image.new("RGBA", (x, max(t[4] for t in tiles) + PAD * 2), (0, 0, 0, 0))
     for key, img, tx, sw, sh in tiles:
         crop = img.convert("RGBa").resize((sw, sh), Image.LANCZOS).convert("RGBA")
-        sheet.paste(Image.fromarray(_bleed(np.array(crop))), (tx, PAD))
+        crop = Image.fromarray(_bleed(np.array(crop)))
+        sheet.paste(crop, (tx, PAD))
+        # A cropped masonry period has opaque cut edges, not silhouette edges.
+        # Extrude their RGBA into the gutter so filtering cannot reveal a vertical gap.
+        for gutter in range(1, PAD + 1):
+            sheet.paste(crop.crop((0, 0, 1, sh)), (tx - gutter, PAD))
+            sheet.paste(crop.crop((sw - 1, 0, sw, sh)), (tx + sw - 1 + gutter, PAD))
     sheet.save(WALL_SHEET, "WEBP", quality=88, alpha_quality=100, method=6, exact=True)
     print("walls sheet", sheet.size, out)
     return out
@@ -154,9 +158,10 @@ def wall_data():
     for key, sg in cfg["segs"].items():
         img = _wall_image(sg)
         m, c, e, w, h = _measure_seg(img)
+        m, c = _wall_baseline(sg, w)
         sw, sh = round(w * p), round(h * p)
         gvs = sg.get("gvs", 1)
-        k = (cfg["height"] + cfg["thick"]) * 0.97 / (e * gvs) / p
+        k = _wall_scale(sg, p)
         out[key] = dict(source=[x, PAD, sw, sh], y0=round(c * p + PAD, 2), y1=round((m * w + c) * p + PAD, 2),
                         k=round(float(k), 4), gvs=gvs, slope_deg=round(math.degrees(math.atan(abs(m))), 2), extent=round(e, 1))
         out[key].update(baked_warp=sg.get("baked_warp", ""), mirror_x=sg.get("mirror_x", False))
@@ -211,7 +216,7 @@ def derive(key, g, lay):
         towers.append((float(c[0]), float(c[1]), rad))
     alpha_f = (towers[0][0] + towers[1][0]) / 2.0
     beta_f = (cl_beta + cr_beta) / 2.0
-    foot_n = uncorr(at(alpha_f, beta_f))  # 원본 픽셀
+    foot_n = np.asarray(g['placement_foot_projected'], float) if 'placement_foot_projected' in g else uncorr(at(alpha_f, beta_f))
 
     def atlas_projected(pt_n):
         return [round(float(sx + (pt_n[0] - l) * p), 2), round(float(sy + (pt_n[1] - t) * p), 2)]
@@ -223,7 +228,9 @@ def derive(key, g, lay):
         return atlas_projected(uncorr(at(al, be)))
 
     # 성벽 높이에 맞춘 배율: 날개벽 높이(보정 후 세로 픽셀)가 wall.height 가 되도록.
-    if "wing_height_line" in g:
+    if 'unit_scale' in g:
+        k_unit = g['unit_scale']
+    elif "wing_height_line" in g:
         top, base = (corr(point) for point in g["wing_height_line"])
         k_unit = M["wall"]["height"] / (base[1] - top[1])
     else:
@@ -280,7 +287,10 @@ def derive(key, g, lay):
             corrected = np.array([foot_n[0], foot_n[1] * gvs + foot_n[0] * gvk])
             return atlas_projected(uncorr(corrected + np.asarray(point) / k_unit))
         model = g["model_reference"]
-        info = dict(ends=[model_point(q) for q in model["ends"]],
+        # Collision stays compatible; visible wall attachments follow the current painted front.
+        wall_beta = M['wall']['thick'] / (2.0 * k_unit)
+        visual_ends = [A(0.0, wall_beta), A(float(alpha_r), float(beta_r) + wall_beta)]
+        info = dict(ends=visual_ends,
                     solids=[[model_point(q) for q in polygon] for polygon in model["solids"]],
                     passage=[model_point(q) for q in model["passage"]])
         frame["ground"] = [model_point(q) for q in model["ground"]]
@@ -322,6 +332,7 @@ def family_manifest(data):
                   sources=[record(path) for path in sources],
                   renders=[record("assets/art/village/gates.webp"), record("assets/art/village/walls.webp")],
                   wall_module=dict(source=M["wall"]["segs"]["a"]["png"],
+                                   extraction=record('tools/extract/wall_from_gate.json'),
                                    derived_direction="b reflects the same projected module horizontally",
                                    height=data["wall"]["height"], thickness=data["wall"]["thick"],
                                    scale_a=data["wall"]["segs"]["a"]["k"], scale_b=data["wall"]["segs"]["b"]["k"]))

@@ -26,9 +26,14 @@ func run() -> void:
 	for gate in 4:
 		var key := "gate-%d" % (0 if gate < 2 else 2)
 		var reference: Dictionary = v.data["gate_model_reference"][key]
-		for i in 2:
-			var point: Array = reference["ends"][i]
-			check("gate wing keeps its original world placement", Iso.project(v.gate_ends[gate][i]).distance_to(v.gate_points[gate] + Vector2(point[0], point[1]) * Iso.S) < 0.1)
+		var pose := IsoSprite.new().setup(v.data["sprites"][key], float(v.data["sprites"][key]["world_height"]))
+		pose.position = v.gate_points[gate]
+		var actual: Array = v.data["gates"][key]["solids"]
+		for polygon in actual.size():
+			for index in actual[polygon].size():
+				var point: Array = reference["solids"][polygon][index]
+				check("gate collision preserves its existing world placement", pose.atlas_point(Vector2(actual[polygon][index][0], actual[polygon][index][1])).distance_to(v.gate_points[gate] + Vector2(point[0], point[1]) * Iso.S) < 0.1)
+		pose.free()
 
 	# Wall runs start/end exactly at a gate wing end: some wall piece footprint has a corner there.
 	var joined := 0

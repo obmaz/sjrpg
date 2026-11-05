@@ -88,6 +88,14 @@ const page = await ctx.newPage();
 const logs = [];
 page.on('console', (m) => logs.push(`${m.type()}: ${m.text()}`));
 page.on('pageerror', (e) => logs.push(`pageerror: ${e.message}`));
+const diagnosticLog = await ctx.newCDPSession(page);
+await diagnosticLog.send('Log.enable');
+diagnosticLog.on('Log.entryAdded', ({entry}) => {
+    // Browser GPU errors need not be console API events; capture their first cause too.
+    if (entry.level === 'error' || /INVALID_(OPERATION|VALUE|ENUM|FRAMEBUFFER_OPERATION)/.test(entry.text)) {
+        logs.push(`error: ${entry.source}: ${entry.text}`);
+    }
+});
 const quality = (args.quality ? `&quality=${args.quality}` : '') + (args.zoom ? `&zoom=${args.zoom}` : '');
 await page.goto(`${base}?${SCENES[scene]}${quality}`);
 await page.waitForFunction(() => window.__sjrpgTitleReady === true, null, {timeout: 90000});

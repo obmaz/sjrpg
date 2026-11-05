@@ -77,12 +77,34 @@ def image(path, key=''):
 
 
 def main():
+    import argparse
     import warp_art
+    parser = argparse.ArgumentParser()
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--gates-only', action='store_true')
+    mode.add_argument('--wall-only', action='store_true')
+    args = parser.parse_args()
     measures = json.loads((ROOT / 'tools/extract/art_warp_measure.json').read_text())
     target = ROOT / 'assets/data/art_warps.json'
     catalog = json.loads(target.read_text())
-    for key in ['gate-0', 'gate-2', 'wall-a']:
-        catalog[key] = warp_art.build(measures[key])
+    keys = ['wall-a'] if args.wall_only else ['gate-0', 'gate-2'] if args.gates_only else ['gate-0', 'gate-2', 'wall-a']
+    for key in keys:
+        record = measures[key]
+        if record.get('derived_identity'):
+            # A crop of the calibrated gate already has the camera transform baked in.
+            # Retain those exact shared pixels; reject a crop whose measured axes do not fit.
+            import math, hashlib
+            for edge in record['segments']:
+                a, b = np.asarray(edge['a']), np.asarray(edge['b'])
+                angle = (math.degrees(math.atan2(*(b - a)[::-1])) + 90) % 180 - 90
+                if abs(angle - edge['axis']) > 2.5:
+                    raise ValueError('extracted wall axis needs remeasurement: ' + edge['name'])
+            width, height = Image.open(ROOT / record['png']).size
+            catalog[key] = dict(source=record['png'], source_sha256=hashlib.sha256((ROOT / record['png']).read_bytes()).hexdigest(),
+                                points=[[0, 0, 0, 0], [width-1, 0, width-1, 0], [width-1, height-1, width-1, height-1], [0, height-1, 0, height-1]],
+                                triangles=[[0,1,2],[0,2,3]], calibration=record['segments'], canvas_size=[width,height])
+        else:
+            catalog[key] = warp_art.build(record)
         print('gate projection', key, len(catalog[key]['points']), 'vertices')
     target.write_text(json.dumps(catalog, separators=(',', ':')) + '\n')
 

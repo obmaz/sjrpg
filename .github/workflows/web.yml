@@ -8,9 +8,6 @@ on:
 permissions:
     contents: read
 
-env:
-    GODOT_VERSION: 4.5.1
-
 jobs:
     build:
         runs-on: ubuntu-latest
@@ -23,7 +20,7 @@ jobs:
                   path: |
                       ~/.godot-tools
                       ~/.local/share/godot/export_templates
-                  key: godot-${{ env.GODOT_VERSION }}-tools-v1
+                  key: godot-${{ hashFiles('.godot-version') }}-tools-v1
 
             - name: Check (import, tests) and export web build
               run: |

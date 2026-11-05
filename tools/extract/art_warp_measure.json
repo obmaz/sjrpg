@@ -584,12 +584,124 @@
     "raw_degrees": -29.2,
     "method": "cv2 LSD on the new source pixels, structural location visually reviewed",
     "render_axis": -30
+   },
+   {
+    "name": "left front cap bevel",
+    "a": [
+     67.365,
+     390.737
+    ],
+    "b": [
+     98.748,
+     408.26
+    ],
+    "axis": 26.94721049838402,
+    "render_axis": 30,
+    "level": "upper",
+    "method": "Native LSD cap bevel fit reviewed against both wing ends"
+   },
+   {
+    "name": "right front cap bevel",
+    "a": [
+     1044.157,
+     892.458
+    ],
+    "b": [
+     1085.009,
+     914.447
+    ],
+    "axis": 26.94721049838402,
+    "render_axis": 30,
+    "level": "upper",
+    "method": "Native LSD cap bevel fit reviewed against both wing ends"
+   }
+  ],
+  "targets": [
+   {
+    "source": [
+     67.89,
+     446.07001
+    ],
+    "target": [
+     67.89,
+     447.12509
+    ]
+   },
+   {
+    "source": [
+     265.92001,
+     550.07001
+    ],
+    "target": [
+     265.92001,
+     547.79671
+    ]
+   },
+   {
+    "source": [
+     67.365,
+     390.737
+    ],
+    "target": [
+     67.365,
+     392.02983
+    ]
+   },
+   {
+    "source": [
+     98.748,
+     408.26
+    ],
+    "target": [
+     98.748,
+     407.98386
+    ]
+   },
+   {
+    "source": [
+     879.96997,
+     865.77002
+    ],
+    "target": [
+     879.96997,
+     859.95849
+    ]
+   },
+   {
+    "source": [
+     1083.60998,
+     974.71997
+    ],
+    "target": [
+     1083.60998,
+     963.48204
+    ]
+   },
+   {
+    "source": [
+     1044.157,
+     892.458
+    ],
+    "target": [
+     1044.157,
+     888.59713
+    ]
+   },
+   {
+    "source": [
+     1085.009,
+     914.447
+    ],
+    "target": [
+     1085.009,
+     909.36487
+    ]
    }
   ]
  },
  "gate-2": {
   "png": "assets/source/gate-cohesive-b.png",
-  "vertical_only": true,
+  "vertical_only": false,
   "pins": [
    [
     177.7,
@@ -600,8 +712,12 @@
     737.49
    ],
    [
-    45.03999999999999,
-    1141.95
+    483,
+    1155
+   ],
+   [
+    945,
+    949
    ]
   ],
   "segments": [
@@ -724,8 +840,8 @@
      856.75
     ],
     "b": [
-     180.22999572753906,
-     929.030029296875
+     179.86000061035156,
+     927.7899780273438
     ],
     "axis": 29.573424046447123,
     "level": "upper",
@@ -748,121 +864,233 @@
     "raw_degrees": 29.66,
     "method": "cv2 LSD on the new source pixels, structural location visually reviewed",
     "render_axis": 30
+   },
+   {
+    "name": "left front cap bevel",
+    "a": [
+     177.965,
+     854.136
+    ],
+    "b": [
+     197.846,
+     843.904
+    ],
+    "axis": -24.8930439341396,
+    "render_axis": -30,
+    "level": "upper",
+    "method": "Native LSD cap bevel fit reviewed against both wing ends"
+   },
+   {
+    "name": "right front cap bevel",
+    "a": [
+     1168.859,
+     384.797
+    ],
+    "b": [
+     1212.432,
+     361.674
+    ],
+    "axis": -24.8930439341396,
+    "render_axis": -30,
+    "level": "upper",
+    "method": "Native LSD cap bevel fit reviewed against both wing ends"
+   }
+  ],
+  "targets": [
+   {
+    "source": [
+     179.86,
+     927.78998
+    ],
+    "target": [
+     179.86,
+     908.5584
+    ]
+   },
+   {
+    "source": [
+     380.17001,
+     830.94
+    ],
+    "target": [
+     380.17001,
+     815.60715
+    ]
+   },
+   {
+    "source": [
+     177.965,
+     854.136
+    ],
+    "target": [
+     177.965,
+     838.84545
+    ]
+   },
+   {
+    "source": [
+     197.846,
+     843.904
+    ],
+    "target": [
+     197.846,
+     829.61993
+    ]
+   },
+   {
+    "source": [
+     1040.59998,
+     521.82001
+    ],
+    "target": [
+     1040.59998,
+     509.14322
+    ]
+   },
+   {
+    "source": [
+     1213.08997,
+     436.85001
+    ],
+    "target": [
+     1213.08997,
+     429.10148
+    ]
+   },
+   {
+    "source": [
+     1168.859,
+     384.797
+    ],
+    "target": [
+     1168.859,
+     379.03398
+    ]
+   },
+   {
+    "source": [
+     1212.432,
+     361.674
+    ],
+    "target": [
+     1212.432,
+     358.8145
+    ]
+   },
+   {
+    "source": [
+     45.6,
+     856.75
+    ],
+    "target": [
+     60.391111361100485,
+     840.7639032659705
+    ]
+   },
+   {
+    "source": [
+     45.04,
+     1141.95
+    ],
+    "target": [
+     58.23069,
+     1149.43527
+    ]
    }
   ]
  },
  "wall-a": {
-  "png": "assets/source/wall-cohesive.png",
+  "png": "assets/source/wall-from-gate.png",
   "vertical_only": true,
   "free_y_boundary": true,
-  "pad_y": 64,
+  "pad_y": 0,
+  "boundary_step": 24,
   "segments": [
    {
-    "name": "left upper coping",
+    "name": "front coping upper",
     "a": [
-     20.0,
-     729.9961
+     0.19,
+     172.63
     ],
     "b": [
-     630.0,
-     1073.1351
+     61.91,
+     208.07
     ],
     "axis": 30,
     "level": "upper",
-    "raw_degrees": 29.3588,
-    "method": "cv2 LSD long stone-coping fit, clipped to native x20..630"
+    "method": "OpenCV LSD on actual extracted gate-wing pixels; cap bevel slopes are excluded from horizontal ground axes"
    },
    {
-    "name": "right upper coping",
+    "name": "rear parapet course",
     "a": [
-     654.8,
-     1085.88
+     0.29,
+     69.96
     ],
     "b": [
-     805.9,
-     1169.1
+     23.23,
+     82.93
     ],
     "axis": 30,
     "level": "upper",
-    "raw_degrees": 28.8443,
-    "method": "cv2 LSD on current PNG; visually reviewed actual stone edge"
+    "method": "OpenCV LSD on actual extracted gate-wing pixels; cap bevel slopes are excluded from horizontal ground axes"
    },
    {
-    "name": "middle face mortar",
+    "name": "front middle mortar",
     "a": [
-     505.2,
-     1426.5
+     21.93,
+     273.04
     ],
     "b": [
-     615.66,
-     1480.56
+     49.29,
+     289.51
     ],
     "axis": 30,
     "level": "middle",
-    "raw_degrees": 26.0775,
-    "method": "cv2 LSD on current PNG; visually reviewed actual stone edge"
+    "method": "OpenCV LSD on actual extracted gate-wing pixels; cap bevel slopes are excluded from horizontal ground axes"
    },
    {
-    "name": "lower face mortar",
+    "name": "front lower footing",
     "a": [
-     614.19,
-     1662.24
+     30.38,
+     452.29
     ],
     "b": [
-     694.02,
-     1702.58
+     61.82,
+     470.72
     ],
     "axis": 30,
     "level": "lower",
-    "raw_degrees": 26.8086,
-    "method": "cv2 LSD on current PNG; visually reviewed actual stone edge"
+    "method": "OpenCV LSD on actual extracted gate-wing pixels; cap bevel slopes are excluded from horizontal ground axes"
    },
    {
-    "name": "front footing baseline",
+    "name": "deck plank left",
     "a": [
-     25.0,
-     1514.8159
+     9.23,
+     96.64
     ],
     "b": [
-     780.0,
-     1932.0526
-    ],
-    "axis": 30,
-    "level": "lower",
-    "raw_degrees": 28.9264,
-    "method": "cv2 fitLine DIST_L1 on alpha128 bottom silhouette, current source x25..780"
-   },
-   {
-    "name": "front merlon cap underside depth",
-    "a": [
-     415.0,
-     713.9006
-    ],
-    "b": [
-     478.0,
-     676.7556
+     19.23,
+     90.4
     ],
     "axis": -30,
     "level": "upper",
-    "raw_degrees": -30.5237,
-    "method": "Sobel negative vertical gradient on actual cap underside, x415..478; cv2 fitLine DIST_HUBER; median residual 0.254px"
+    "method": "OpenCV LSD on actual extracted gate-wing pixels; cap bevel slopes are excluded from horizontal ground axes"
    },
    {
-    "name": "rear merlon cap underside depth",
+    "name": "deck plank right",
     "a": [
-     368.0,
-     302.5318
+     50.43,
+     114.06
     ],
     "b": [
-     432.0,
-     273.7641
+     59.53,
+     108.36
     ],
     "axis": -30,
     "level": "upper",
-    "raw_degrees": -24.2037,
-    "method": "Sobel negative vertical gradient on actual cap underside, x368..432; cv2 fitLine DIST_HUBER; median residual 0.266px"
+    "method": "OpenCV LSD on actual extracted gate-wing pixels; cap bevel slopes are excluded from horizontal ground axes"
    }
   ],
-  "boundary_step": 64
+  "derived_identity": true
  }
 }

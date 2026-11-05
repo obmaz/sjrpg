@@ -6,7 +6,7 @@ config_version=5
 config/name="자연의 수호자"
 config/description="전사와 마법사의 핵앤슬래시 모험 (Godot 4 이식판)"
 run/main_scene="res://scenes/main.tscn"
-config/features=PackedStringArray("4.5", "GL Compatibility")
+config/features=PackedStringArray("4.7", "GL Compatibility")
 boot_splash/bg_color=Color(0.0627, 0.1725, 0.1608, 1)
 boot_splash/show_image=false
 

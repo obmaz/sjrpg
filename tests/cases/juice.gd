@@ -30,8 +30,16 @@ func run() -> void:
 	check("confirmed contact retains the struck pose", enemy.sprite.frame == contact_frame)
 	enemy.sprite._process(0.8)
 	check("slow first frame still presents contact", enemy.sprite.contact_hold > 0.0)
+	check("slow first frame still presents a confirmed hit flash", enemy.sprite.flash > 0.0)
 	enemy.sprite._process(0.8)
 	check("contact pose expires without rendering", enemy.sprite.contact_hold == 0.0)
+	check("hit flash still expires after first presentation", enemy.sprite.flash == 0.0)
+	enemy.sprite.trigger_flash(Color.WHITE)
+	Prefs.reduce_motion = true
+	enemy.sprite._process(0.0)
+	check("enabling reduced motion immediately dims an existing contact flash", enemy.sprite.flash <= 0.35)
+	Prefs.reduce_motion = false
+	enemy.sprite.clear_flash()
 	enemy.sprite.hold_contact(0.045)
 	enemy.sprite._process(0.02)
 	var hold_remaining := enemy.sprite.contact_hold
@@ -99,6 +107,7 @@ func run() -> void:
 	await _check_death_cancellation()
 	await _check_chain_target_lifetime()
 	await _check_leap_target_lifetime()
+	check("outgoing contact flash is distinct from incoming hurt red", Effect.contact_flash_color(null) != Color(1.0, 0.45, 0.4))
 	Prefs.reduce_motion = old_reduce
 
 
@@ -168,6 +177,7 @@ func _check_cast_presentation() -> void:
 	var mage: Player = game.player
 	mage.set_process(false)
 	check("real magic cast starts its hand preparation", mage.cast_slot(0))
+	check("elemental discharge sound waits for real release", mage._release_sound == "fire")
 	var glows: Array = game.cosmetic_effects.filter(func(effect: Effect) -> bool: return effect.kind == "cast")
 	check("successful cast creates one generated preparation glow", glows.size() == 1)
 	if glows.is_empty():
@@ -195,10 +205,12 @@ func _check_cast_presentation() -> void:
 	check("reduced motion keeps a short gameplay-free cast confirmation", not calm.is_queued_for_deletion() and calm.damage == 0.0 and mage._attack_time == attack_time)
 	Prefs.reduce_motion = false
 	mage._process(mage._attack_duration * 0.46)
+	check("actual release consumes the queued discharge sound", mage._release_sound.is_empty())
 	check("actual spell release emits one short directional pulse", game.cosmetic_effects.filter(func(e: Effect) -> bool: return e.kind == "release").size() == 1 and not mage._pending.is_valid())
 	mage.try_roll()
 	glow._process(0.01)
 	check("rolling cancels the hand light immediately", glow.is_queued_for_deletion())
+	check("cancelled casts cannot leave a queued discharge sound", mage._release_sound.is_empty())
 	game.queue_free()
 	await _frames(2)
 
@@ -264,7 +276,7 @@ func _check_projectile_sweep() -> void:
 	var before_tick := near.hp
 	zone._update_zone(0.01)
 	var impacts: Array = game.cosmetic_effects.filter(func(e: Effect) -> bool: return e.kind == "impact")
-	check("zone damage keeps elemental contact art without changing damage or adding knockback", near.hp == before_tick - 2.0 and near._knockback == Vector2.ZERO and impacts[-1].params["cell"] == 1)
+	check("zone damage keeps elemental contact art without changing damage or adding knockback", near.hp == before_tick - 2.0 and near._knockback == Vector2.ZERO and impacts[-1].params["cell"] == 1 and near.sprite.flash_tint.is_equal_approx(Effect.contact_flash_color(zone)))
 	game.queue_free()
 	await _frames(2)
 
@@ -284,9 +296,10 @@ func _check_death_cancellation() -> void:
 	hero.move_input = Vector2.RIGHT
 	hero._invulnerable = 0.0
 	hero.take_damage(1000000.0)
-	check("lethal damage discards queued skills and held input", hero.dead and not hero._pending.is_valid() and hero._attack_time == 0.0 and hero.held_slots.is_empty() and hero.move_input == Vector2.ZERO)
+	check("lethal damage discards queued skills and held input", hero.dead and not hero._pending.is_valid() and hero._release_sound.is_empty() and hero._attack_time == 0.0 and hero.held_slots.is_empty() and hero.move_input == Vector2.ZERO)
 	var sanctuary := hero.position + Vector2(200, 40)
 	hero.revive(sanctuary)
+	check("revival clears the previous damage flash", hero.sprite.flash == 0.0)
 	hero._process(0.8)
 	glow._process(0.01)
 	check("revival cannot resume old spell or leave a stale preparation light", not called["value"] and hero.position.is_equal_approx(sanctuary) and glow.is_queued_for_deletion() and not game.world.get_children().any(func(node: Node) -> bool: return node is Effect and node.kind == "proj"))

@@ -43,6 +43,7 @@ var _resolving_melee_contact := false
 var _pending: Callable
 var _action_serial := 0
 var _release_pending := false
+var _release_sound := ""
 var _invulnerable := 0.0
 var _roll_time := 0.0
 var _roll_dir := Vector2.ZERO
@@ -173,6 +174,9 @@ func _process(delta: float) -> void:
 			_pending = Callable()
 			_resolving_melee_contact = _attack_melee
 			action.call()
+			if not dead and not _release_sound.is_empty():
+				SoundFx.play(_release_sound)
+			_release_sound = ""
 			if _release_pending and not dead:
 				Effect.spawn_release(game, self, impact_color)
 			_release_pending = false
@@ -327,7 +331,12 @@ func _cast_feedback(d: Dictionary) -> void:
 				sound = "warcry"
 			elif d["type"] == "blink":
 				sound = "dodge"
-	SoundFx.play(sound)
+	if is_mage and str(d.get("element", "")) in ["fire", "cold", "lightning"]:
+		_release_sound = sound
+		SoundFx.play("prepare")
+	else:
+		_release_sound = ""
+		SoundFx.play(sound)
 	Prefs.pulse("skill")
 
 
@@ -339,6 +348,7 @@ func try_roll() -> void:
 		dir = Vector2.from_angle(facing)
 	_action_serial += 1
 	_release_pending = false
+	_release_sound = ""
 	Effect.spawn_dodge_echo(game, self)
 	_roll_dir = dir.normalized()
 	facing = _roll_dir.angle()
@@ -718,7 +728,7 @@ func take_damage(amount: float, attacker: Node2D = null) -> void:
 	SoundFx.play("hurt")
 	Prefs.pulse("hurt")
 	_invulnerable = 0.25
-	sprite.flash = 1.0
+	sprite.trigger_flash(Color(1.0, 0.45, 0.4))
 	if not is_mage:
 		resource = minf(resource_max, resource + 4.0)
 	game.float_text(position + Vector2(0, -90), HudArt.stat(dealt), Color(1, 0.4, 0.35))
@@ -758,6 +768,7 @@ func _cancel_actions() -> void:
 	_attack_melee = false
 	_resolving_melee_contact = false
 	_release_pending = false
+	_release_sound = ""
 	_roll_time = 0.0
 	_roll_dir = Vector2.ZERO
 	held_slots.clear()
@@ -768,6 +779,7 @@ func _cancel_actions() -> void:
 
 func revive(at: Vector2) -> void:
 	_cancel_actions()
+	sprite.clear_flash()
 	dead = false
 	sprite.clear_contact_hold()
 	position = at

@@ -13,6 +13,7 @@ const TREE_UV := [[0.355, 0.724, 11], [0.684, 0.703, 2], [0.246, 0.368, 11]]
 const FOLIAGE := Color(0.82, 0.9, 0.84)
 ## Four slabs per tile, each around a third of the hero's height.
 const COBBLE_PX := 512.0 / 110.0
+const WALL_JOIN_OVERLAP := 4.0  # Ground units: cover filtered cut-edge pixels without changing collision.
 const NPCS := [
 	["nw", "상인", 0], ["ne", "대장장이", 1], ["sw", "탈것 상인", 2], ["se", "촌장", 3],
 ]
@@ -317,18 +318,33 @@ func _build_walls(world: Node2D) -> void:
 			var n := dir.orthogonal() * half
 			solids.append(PackedVector2Array([Iso.project(a - n), Iso.project(b - n), Iso.project(b + n), Iso.project(a + n)]))
 			wall_footprints.append(solids[solids.size() - 1])
+			var draw_a := a - dir * WALL_JOIN_OVERLAP if i == 1 else a
+			var draw_b := b + dir * WALL_JOIN_OVERLAP if i == pts.size() - 1 else b
+			var x_clip := Vector2(-INF, INF)
+			for corner in [i - 1, i]:
+				if corner <= 0 or corner >= pts.size() - 1:
+					continue
+				var center_x := Iso.project(pts[corner]).x
+				var before_x := Iso.project(pts[corner - 1]).x - center_x
+				var after_x := Iso.project(pts[corner + 1]).x - center_x
+				if before_x * after_x < 0.0:
+					# A quarter pixel of shared coverage prevents a filtered hairline at the miter.
+					if Iso.project((a + b) * 0.5).x < center_x:
+						x_clip.y = center_x + 0.25
+					else:
+						x_clip.x = center_x - 0.25
 			var seg_ground := float(def["source"][2]) * float(def["k"]) / (Iso.COS * Iso.S)  # ground length of one span of art
-			var length := a.distance_to(b)
+			var length := draw_a.distance_to(draw_b)
 			var offset := 0.0
 			while offset < length - 0.01:
 				var end := minf(length, offset + seg_ground)
-				var pa := Iso.project(a.lerp(b, offset / length) + front)
-				var pb := Iso.project(a.lerp(b, end / length) + front)
+				var pa := Iso.project(draw_a.lerp(draw_b, offset / length) + front)
+				var pb := Iso.project(draw_a.lerp(draw_b, end / length) + front)
 				if pa.x > pb.x:
 					var t := pa
 					pa = pb
 					pb = t
-				WallPiece.add_span(world, tex, def, strip_px, pa, pb)
+				WallPiece.add_span(world, tex, def, strip_px, pa, pb, x_clip)
 				offset = end
 
 

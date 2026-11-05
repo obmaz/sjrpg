@@ -27,7 +27,9 @@ func _poses(record: Dictionary, game: Node) -> Array[Node]:
 	var result: Array[Node] = []
 	match record["kind"]:
 		"sprite":
-			result.append(IsoSprite.new().setup(game.village.data["sprites"][record["key"]], 100.0))
+			var definition: Dictionary = game.village.data["sprites"][record["key"]]
+			var height: float = definition.get("world_height", 100.0)
+			result.append(IsoSprite.new().setup(definition, height if height > 0.0 else 100.0))
 		"bridge":
 			result.append(game.village.bridge)
 		"landmark":

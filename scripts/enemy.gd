@@ -171,7 +171,7 @@ func take_damage(amount: float, source: Node2D, visual_source: Node2D = null) ->
 		slow(0.67)
 	SoundFx.play("impact_heavy" if heavy else "impact")
 	Prefs.pulse("hit")
-	sprite.flash = 1.0
+	sprite.trigger_flash(Effect.contact_flash_color(impact_source))
 	game.float_text(position + Vector2(0, -sprite.body_height - 20), HudArt.stat(amount), Color(1, 0.95, 0.6))
 	if source and _knockback.length() < 160.0:
 		_knockback = (position - source.position).normalized() * 160.0

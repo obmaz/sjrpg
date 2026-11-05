@@ -6,8 +6,12 @@ extends Node2D
 var polygon := PackedVector2Array()
 var _water: Polygon2D
 var _shimmer: Polygon2D
+var _water_material: ShaderMaterial
+var _shimmer_material: ShaderMaterial
 var _time := 0.0
 
+const FLOW_SHADER := preload("res://scripts/river_flow.gdshader")
+const SHIMMER_SHADER := preload("res://scripts/river_shimmer.gdshader")
 const TILE_UNITS := 170.0  # ground units covered by one 418px texture tile
 const PX := 418.0 / TILE_UNITS
 
@@ -50,15 +54,23 @@ func _build() -> void:
 	if bank.size() > 0:
 		add_child(_poly(bank[0], "rock", Color(0.78, 0.78, 0.74)))
 	_water = _poly(polygon, "water", Color(0.55, 0.74, 0.80))
+	_water_material = ShaderMaterial.new()
+	_water_material.shader = FLOW_SHADER
+	_water_material.set_shader_parameter("flow_offset", Vector2.ZERO)
+	_water.material = _water_material
 	add_child(_water)
 	_shimmer = _poly(polygon, "water", Color(1, 1, 1, 0.14), 0.55)
-	var mat := CanvasItemMaterial.new()
-	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-	_shimmer.material = mat
+	_shimmer_material = ShaderMaterial.new()
+	_shimmer_material.shader = SHIMMER_SHADER
+	_shimmer_material.set_shader_parameter("flow_offset", Vector2.ZERO)
+	_shimmer.material = _shimmer_material
 	add_child(_shimmer)
 
 
 func _process(delta: float) -> void:
 	_time += delta
-	_water.texture_offset = Vector2(_time * 38.0, _time * 6.0)
-	_shimmer.texture_offset = Vector2(-_time * 24.0, _time * 11.0)
+	# Godot 4.7's Polygon2D UV updates re-upload indices through a WebGL-incompatible
+	# ARRAY_BUFFER target. Keep geometry/UVs fixed and move only the texture samples.
+	var texture_size := _water.texture.get_size()
+	_water_material.set_shader_parameter("flow_offset", Vector2(_time * 38.0, _time * 6.0) / texture_size)
+	_shimmer_material.set_shader_parameter("flow_offset", Vector2(-_time * 24.0, _time * 11.0) / texture_size)

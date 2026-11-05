@@ -9,7 +9,7 @@
  },
  "generation": {
   "path": "tools/extract/gate_generation.json",
-  "sha256": "1baf943815f7c069b3f7ce83ad22855f5602560b284e033be886427a927b9a36"
+  "sha256": "1110cd1432f260b6e946e4917840fa771c68239086e0c0e2a46552f40cfe7250"
  },
  "sources": [
   {
@@ -21,26 +21,30 @@
    "sha256": "8a18435aba7826469ef2d477cafeb6223ed5fbfa4d017e25b68caa56dd032e5b"
   },
   {
-   "path": "assets/source/wall-cohesive.png",
-   "sha256": "ba962901574e297343ee6d3ce2351ec79183a2a206bc95108b3dcf561e950635"
+   "path": "assets/source/wall-from-gate.png",
+   "sha256": "5fa421880b7020c7fe45a037ddf527db878cb42c3dcc31c8f8ebffbd2d6ec943"
   }
  ],
  "renders": [
   {
    "path": "assets/art/village/gates.webp",
-   "sha256": "35f3d5a27fb44875eefb9d2c8af4fdcd833403d6a57c743284369b4e99ae8340"
+   "sha256": "bd0b4c1066e2d68381549828747e7f03b1995eb053e887aeaf432629d12110c0"
   },
   {
    "path": "assets/art/village/walls.webp",
-   "sha256": "f545a1dca3b8e1445ad299b965936feef320280c66928e619c52cf2a22cde7cf"
+   "sha256": "19898f1c6dc8b2b05246411e79c5428743260d0caa7fac57ecaefcb263595688"
   }
  ],
  "wall_module": {
-  "source": "assets/source/wall-cohesive.png",
+  "source": "assets/source/wall-from-gate.png",
+  "extraction": {
+   "path": "tools/extract/wall_from_gate.json",
+   "sha256": "4dbaa988012cabab87e9a3093a3aef80e22001bd4897ef60319a5f044d5c38c4"
+  },
   "derived_direction": "b reflects the same projected module horizontally",
   "height": 200,
   "thickness": 64,
-  "scale_a": 0.6811,
-  "scale_b": 0.6811
+  "scale_a": 0.5995,
+  "scale_b": 0.5995
  }
 }

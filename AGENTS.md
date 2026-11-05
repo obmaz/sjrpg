@@ -6,7 +6,8 @@
 
 ## 프로젝트
 
-- Godot 4.5 프로젝트(GL Compatibility)이며 GitHub Pages(`/sjrpg2/`)에 웹(WASM, 단일 스레드)으로 배포합니다.
+- Godot 4.7.2 프로젝트(GL Compatibility)이며 GitHub Pages(`/sjrpg2/`)에 웹(WASM, 단일 스레드)으로 배포합니다.
+  엔진·템플릿 버전 기준은 `.godot-version`이며 로컬 도구와 CI가 같은 파일을 읽습니다.
   Flutter·Bonfire 원본 [obmaz/sjrpg](https://github.com/obmaz/sjrpg)는 **참고 자료**입니다. 세계관·전사와 마법사·쿼터뷰는 유지하되
   Godot판의 조작감·가독성·진행을 우선해 규칙·밸런스를 개선합니다. 원본과 다른 규칙은 README와 관련 코드에 이유를 남깁니다.
   현재 목표는 숲 1장 완성(탐험 보강·선택형 동굴 포함)이며, 후속 지역과 탈것은 이후에 작업합니다.

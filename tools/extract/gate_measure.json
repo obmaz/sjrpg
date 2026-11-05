@@ -1,56 +1,28 @@
 {
- "_doc": "Generated coherent gate pair and one canonical wall module. World-unit collision/passages/wing endpoints retain the previous model_reference; source pixel edges are newly measured and projected via baked_warp. Wall b reflects the same calibrated generated wall pixels to preserve the exact block/corbel/cap scale in both directions.",
+ "_doc": "Calibrated gate pixels and an actual gate-wing crop share profile datums. Legacy collision/passages remain; visible attachment points use the painted front ends. Scale and projected pivot are frozen independently of the profile calibration.",
  "sheet": "forest-isometric-gates",
  "packing": 0.55,
  "slice_px": 48,
  "wall": {
   "height": 200,
   "thick": 64,
-  "packing": 0.25,
+  "packing": 1.0,
   "slice_px": 24,
-  "_doc": "One generated wall module, measured and geometrically projected once. Direction b is the same module horizontally reflected, preserving exactly the same masonry/corbel/coping/height/thickness instead of generating a competing style. No new stones are painted by code.",
+  "_doc": "Both directions reuse one real gate-wing period and the exact parent physical pixel scale. Whole-alpha-extent fitting and independent color-graded wall artwork are forbidden.",
   "segs": {
    "a": {
-    "png": "assets/source/wall-cohesive.png",
+    "png": "assets/source/wall-from-gate.png",
     "baked_warp": "wall-a",
     "mirror_x": false,
     "gvs": 1,
-    "stone_face": [
-     250,
-     1200,
-     550,
-     1450
-    ],
-    "stone_reference": [
-     "assets/source/gate-cohesive-a.png",
-     [
-      90,
-      535,
-      220,
-      645
-     ]
-    ]
+    "extracted_scale": "tools/extract/wall_from_gate.json"
    },
    "b": {
-    "png": "assets/source/wall-cohesive.png",
+    "png": "assets/source/wall-from-gate.png",
     "baked_warp": "wall-a",
     "mirror_x": true,
     "gvs": 1,
-    "stone_face": [
-     250,
-     1200,
-     550,
-     1450
-    ],
-    "stone_reference": [
-     "assets/source/gate-cohesive-a.png",
-     [
-      90,
-      535,
-      220,
-      645
-     ]
-    ]
+    "extracted_scale": "tools/extract/wall_from_gate.json"
    }
   }
  },
@@ -303,6 +275,11 @@
      67.42,
      685.85
     ]
+   ],
+   "unit_scale": 0.6180360598594108,
+   "placement_foot_projected": [
+    627.6363636363636,
+    922.690909090909
    ]
   },
   "gate-2": {
@@ -553,6 +530,11 @@
      177.7,
      1217.23
     ]
+   ],
+   "unit_scale": 0.4639335518532419,
+   "placement_foot_projected": [
+    624.7818181818182,
+    941.3454545454545
    ]
   }
  },

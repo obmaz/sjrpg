@@ -968,6 +968,48 @@
      "level": "middle",
      "raw_degrees": -89.89,
      "method": "cv2 LSD on the new source pixels, structural location visually reviewed"
+    },
+    {
+     "name": "left front cap bevel",
+     "a": [
+      67.365,
+      390.737
+     ],
+     "b": [
+      98.748,
+      408.26
+     ],
+     "axis": 30,
+     "level": "upper",
+     "method": "New native-pixel bevel-to-front-face edge reviewed for both gate ends"
+    },
+    {
+     "name": "right front cap bevel",
+     "a": [
+      1044.157,
+      892.458
+     ],
+     "b": [
+      1085.009,
+      914.447
+     ],
+     "axis": 30,
+     "level": "upper",
+     "method": "New native-pixel bevel-to-front-face edge reviewed for both gate ends"
+    },
+    {
+     "name": "left wing upright",
+     "a": [
+      67.365,
+      390.737
+     ],
+     "b": [
+      67.42,
+      685.85
+     ],
+     "axis": 90,
+     "level": "middle",
+     "method": "Visible front wing corner between measured cap bevel and foot; checked on original source"
     }
    ]
   },
@@ -1096,13 +1138,13 @@
       856.75
      ],
      "b": [
-      180.22999572753906,
-      929.030029296875
+      179.860001,
+      927.789978
      ],
      "axis": 30,
      "level": "upper",
      "raw_degrees": 28.23,
-     "method": "cv2 LSD on the new source pixels, structural location visually reviewed"
+     "method": "Native upper depth edge ends at the shared visible coping corner; subpixel line-fit endpoint refined"
     },
     {
      "name": "depth lower",
@@ -1133,6 +1175,62 @@
      "level": "middle",
      "raw_degrees": 89.95,
      "method": "cv2 LSD on the new source pixels, structural location visually reviewed"
+    },
+    {
+     "name": "left front cap bevel",
+     "a": [
+      177.965,
+      854.136
+     ],
+     "b": [
+      197.846,
+      843.904
+     ],
+     "axis": -30,
+     "level": "upper",
+     "method": "New native-pixel bevel-to-front-face edge reviewed for both gate ends"
+    },
+    {
+     "name": "right front cap bevel",
+     "a": [
+      1168.859,
+      384.797
+     ],
+     "b": [
+      1212.432,
+      361.674
+     ],
+     "axis": -30,
+     "level": "upper",
+     "method": "New native-pixel bevel-to-front-face edge reviewed for both gate ends"
+    },
+    {
+     "name": "left wing upright",
+     "a": [
+      177.965,
+      854.136
+     ],
+     "b": [
+      177.7,
+      1217.23
+     ],
+     "axis": 90,
+     "level": "middle",
+     "method": "Visible front wing corner between measured cap bevel and foot; checked on original source"
+    },
+    {
+     "name": "right wing upright",
+     "a": [
+      1212.432,
+      361.674
+     ],
+     "b": [
+      1211.54,
+      737.49
+     ],
+     "axis": 90,
+     "level": "middle",
+     "method": "Visible front wing corner between measured cap bevel and foot; checked on original source"
     }
    ]
   },
@@ -1140,134 +1238,112 @@
    "id": "wall-a",
    "kind": "wall",
    "key": "a",
-   "source_file": "assets/source/wall-cohesive.png",
+   "source_file": "assets/source/wall-from-gate.png",
    "source_rect": null,
    "source_size": [
-    806,
-    1951
+    64,
+    473
    ],
    "render_file": "assets/art/village/walls.webp",
    "space": "native",
    "edges": [
     {
-     "name": "left upper coping",
+     "name": "front coping upper",
      "a": [
-      20.0,
-      729.9961
+      0.19,
+      172.63
      ],
      "b": [
-      630.0,
-      1073.1351
+      61.91,
+      208.07
      ],
      "axis": 30,
      "level": "upper",
-     "raw_degrees": 29.3588,
-     "method": "cv2 LSD long stone-coping fit, clipped to native x20..630"
+     "method": "OpenCV LSD on actual extracted gate-wing pixels; cap bevel slopes are excluded from horizontal ground axes"
     },
     {
-     "name": "right upper coping",
+     "name": "rear parapet course",
      "a": [
-      654.8,
-      1085.88
+      0.29,
+      69.96
      ],
      "b": [
-      805.9,
-      1169.1
+      23.23,
+      82.93
      ],
      "axis": 30,
      "level": "upper",
-     "raw_degrees": 28.8443,
-     "method": "cv2 LSD on current PNG; visually reviewed actual stone edge"
+     "method": "OpenCV LSD on actual extracted gate-wing pixels; cap bevel slopes are excluded from horizontal ground axes"
     },
     {
-     "name": "middle face mortar",
+     "name": "front middle mortar",
      "a": [
-      505.2,
-      1426.5
+      21.93,
+      273.04
      ],
      "b": [
-      615.66,
-      1480.56
+      49.29,
+      289.51
      ],
      "axis": 30,
      "level": "middle",
-     "raw_degrees": 26.0775,
-     "method": "cv2 LSD on current PNG; visually reviewed actual stone edge"
+     "method": "OpenCV LSD on actual extracted gate-wing pixels; cap bevel slopes are excluded from horizontal ground axes"
     },
     {
-     "name": "lower face mortar",
+     "name": "front lower footing",
      "a": [
-      614.19,
-      1662.24
+      30.38,
+      452.29
      ],
      "b": [
-      694.02,
-      1702.58
+      61.82,
+      470.72
      ],
      "axis": 30,
      "level": "lower",
-     "raw_degrees": 26.8086,
-     "method": "cv2 LSD on current PNG; visually reviewed actual stone edge"
+     "method": "OpenCV LSD on actual extracted gate-wing pixels; cap bevel slopes are excluded from horizontal ground axes"
     },
     {
-     "name": "front footing baseline",
+     "name": "deck plank left",
      "a": [
-      25.0,
-      1514.8159
+      9.23,
+      96.64
      ],
      "b": [
-      780.0,
-      1932.0526
-     ],
-     "axis": 30,
-     "level": "lower",
-     "raw_degrees": 28.9264,
-     "method": "cv2 fitLine DIST_L1 on alpha128 bottom silhouette, current source x25..780"
-    },
-    {
-     "name": "front merlon cap underside depth",
-     "a": [
-      415.0,
-      713.9006
-     ],
-     "b": [
-      478.0,
-      676.7556
+      19.23,
+      90.4
      ],
      "axis": -30,
      "level": "upper",
-     "raw_degrees": -30.5237,
-     "method": "Sobel negative vertical gradient on actual cap underside, x415..478; cv2 fitLine DIST_HUBER; median residual 0.254px"
+     "method": "OpenCV LSD on actual extracted gate-wing pixels; cap bevel slopes are excluded from horizontal ground axes"
     },
     {
-     "name": "rear merlon cap underside depth",
+     "name": "deck plank right",
      "a": [
-      368.0,
-      302.5318
+      50.43,
+      114.06
      ],
      "b": [
-      432.0,
-      273.7641
+      59.53,
+      108.36
      ],
      "axis": -30,
      "level": "upper",
-     "raw_degrees": -24.2037,
-     "method": "Sobel negative vertical gradient on actual cap underside, x368..432; cv2 fitLine DIST_HUBER; median residual 0.266px"
+     "method": "OpenCV LSD on actual extracted gate-wing pixels; cap bevel slopes are excluded from horizontal ground axes"
     },
     {
-     "name": "front arrow slit vertical edge",
+     "name": "front slit upright",
      "a": [
-      334.67,
-      705.62
+      26.69,
+      141.87
      ],
      "b": [
-      334.65,
-      759.38
+      26.76,
+      169.37
      ],
      "axis": 90,
-     "level": "upper",
-     "raw_degrees": 89.9787,
-     "method": "cv2 LSD on current PNG; visually reviewed actual stone edge"
+     "level": "middle",
+     "method": "Visible upright slit boundary on extracted gate masonry"
     }
    ],
    "baked_warp": "wall-a",
@@ -1277,134 +1353,112 @@
    "id": "wall-b",
    "kind": "wall",
    "key": "b",
-   "source_file": "assets/source/wall-cohesive.png",
+   "source_file": "assets/source/wall-from-gate.png",
    "source_rect": null,
    "source_size": [
-    806,
-    1951
+    64,
+    473
    ],
    "render_file": "assets/art/village/walls.webp",
    "space": "native",
    "edges": [
     {
-     "name": "left upper coping",
+     "name": "front coping upper",
      "a": [
-      20.0,
-      729.9961
+      0.19,
+      172.63
      ],
      "b": [
-      630.0,
-      1073.1351
+      61.91,
+      208.07
      ],
      "axis": -30,
      "level": "upper",
-     "raw_degrees": 29.3588,
-     "method": "cv2 LSD long stone-coping fit, clipped to native x20..630"
+     "method": "OpenCV LSD on actual extracted gate-wing pixels; cap bevel slopes are excluded from horizontal ground axes"
     },
     {
-     "name": "right upper coping",
+     "name": "rear parapet course",
      "a": [
-      654.8,
-      1085.88
+      0.29,
+      69.96
      ],
      "b": [
-      805.9,
-      1169.1
+      23.23,
+      82.93
      ],
      "axis": -30,
      "level": "upper",
-     "raw_degrees": 28.8443,
-     "method": "cv2 LSD on current PNG; visually reviewed actual stone edge"
+     "method": "OpenCV LSD on actual extracted gate-wing pixels; cap bevel slopes are excluded from horizontal ground axes"
     },
     {
-     "name": "middle face mortar",
+     "name": "front middle mortar",
      "a": [
-      505.2,
-      1426.5
+      21.93,
+      273.04
      ],
      "b": [
-      615.66,
-      1480.56
+      49.29,
+      289.51
      ],
      "axis": -30,
      "level": "middle",
-     "raw_degrees": 26.0775,
-     "method": "cv2 LSD on current PNG; visually reviewed actual stone edge"
+     "method": "OpenCV LSD on actual extracted gate-wing pixels; cap bevel slopes are excluded from horizontal ground axes"
     },
     {
-     "name": "lower face mortar",
+     "name": "front lower footing",
      "a": [
-      614.19,
-      1662.24
+      30.38,
+      452.29
      ],
      "b": [
-      694.02,
-      1702.58
+      61.82,
+      470.72
      ],
      "axis": -30,
      "level": "lower",
-     "raw_degrees": 26.8086,
-     "method": "cv2 LSD on current PNG; visually reviewed actual stone edge"
+     "method": "OpenCV LSD on actual extracted gate-wing pixels; cap bevel slopes are excluded from horizontal ground axes"
     },
     {
-     "name": "front footing baseline",
+     "name": "deck plank left",
      "a": [
-      25.0,
-      1514.8159
+      9.23,
+      96.64
      ],
      "b": [
-      780.0,
-      1932.0526
-     ],
-     "axis": -30,
-     "level": "lower",
-     "raw_degrees": 28.9264,
-     "method": "cv2 fitLine DIST_L1 on alpha128 bottom silhouette, current source x25..780"
-    },
-    {
-     "name": "front merlon cap underside depth",
-     "a": [
-      415.0,
-      713.9006
-     ],
-     "b": [
-      478.0,
-      676.7556
+      19.23,
+      90.4
      ],
      "axis": 30,
      "level": "upper",
-     "raw_degrees": -30.5237,
-     "method": "Sobel negative vertical gradient on actual cap underside, x415..478; cv2 fitLine DIST_HUBER; median residual 0.254px"
+     "method": "OpenCV LSD on actual extracted gate-wing pixels; cap bevel slopes are excluded from horizontal ground axes"
     },
     {
-     "name": "rear merlon cap underside depth",
+     "name": "deck plank right",
      "a": [
-      368.0,
-      302.5318
+      50.43,
+      114.06
      ],
      "b": [
-      432.0,
-      273.7641
+      59.53,
+      108.36
      ],
      "axis": 30,
      "level": "upper",
-     "raw_degrees": -24.2037,
-     "method": "Sobel negative vertical gradient on actual cap underside, x368..432; cv2 fitLine DIST_HUBER; median residual 0.266px"
+     "method": "OpenCV LSD on actual extracted gate-wing pixels; cap bevel slopes are excluded from horizontal ground axes"
     },
     {
-     "name": "front arrow slit vertical edge",
+     "name": "front slit upright",
      "a": [
-      334.67,
-      705.62
+      26.69,
+      141.87
      ],
      "b": [
-      334.65,
-      759.38
+      26.76,
+      169.37
      ],
      "axis": 90,
-     "level": "upper",
-     "raw_degrees": 89.9787,
-     "method": "cv2 LSD on current PNG; visually reviewed actual stone edge"
+     "level": "middle",
+     "method": "Visible upright slit boundary on extracted gate masonry"
     }
    ],
    "baked_warp": "wall-a",
