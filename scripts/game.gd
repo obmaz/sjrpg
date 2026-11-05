@@ -212,6 +212,8 @@ func _read_debug_params() -> void:
 		elif kv.size() == 2 and kv[0] == "panel":
 			var which: String = kv[1]
 			get_tree().create_timer(1.5).timeout.connect(_debug_open_panel.bind(which))
+		elif kv.size() == 2 and kv[0] == "hud_preview" and kv[1] in ["full", "low", "nearfull", "large"]:
+			_hud_preview.call_deferred(kv[1])
 		elif kv.size() == 2 and kv[0] == "warp_preview" and kv[1] == "1":
 			_warp_preview.call_deferred()
 		elif kv.size() == 2 and kv[0] == "combat_preview":
@@ -296,6 +298,42 @@ func near_npc() -> String:
 		if distance < best_d:
 			best = "안식처"
 	return best
+
+
+## Explicit visual audit only: freeze genuine numeric state at difficult fill/label cases.
+func _hud_preview(which: String) -> void:
+	await get_tree().create_timer(2.0, false).timeout
+	if is_queued_for_deletion():
+		return
+	match which:
+		"low":
+			player.hp = player.max_hp * 0.05
+			player.resource = player.resource_max * 0.01
+			GameState.xp = 1
+		"nearfull":
+			player.hp = player.max_hp * 0.99
+			player.resource = player.resource_max * 0.99
+			GameState.xp = GameState.xp_to_next() - 1
+		"large":
+			player.max_hp = 99999.99
+			player.hp = 79543.21
+			player.resource_max = 99999.9
+			player.resource = 12345.6
+		_:
+			player.hp = player.max_hp
+			player.resource = player.resource_max
+	# Inspect the steady fill rather than a transient damage trail.
+	hud._health_trail = player.hp / player.max_hp
+	hud._last_hp = player.hp
+	hud._last_max_hp = player.max_hp
+	hud._hurt_feedback = 0.0
+	hud._heal_feedback = 0.0
+	hud._update_layout()
+	hud._bars.queue_redraw()
+	hud.minimap.queue_redraw()
+	get_tree().paused = true
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.__sjrpgHudPreviewReady = true")
 
 
 ## Explicit browser review only: discover by visiting, then exercise a real destination button.

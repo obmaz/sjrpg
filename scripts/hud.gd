@@ -76,6 +76,8 @@ func _ready() -> void:
 	_status.add_theme_font_override("font", HudArt.FONT)
 	_status.add_theme_constant_override("outline_size", 1)
 	_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_status.clip_text = true
+	_status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	add_child(_status)
 	_build_death()
 	_save_warning = UiKit.button("", 18)
@@ -301,29 +303,54 @@ func _update_vital_feedback(delta: float) -> void:
 	_last_max_hp = player.max_hp
 
 
+static func header_unit(view: Vector2, margins: Vector4) -> float:
+	var available := view - Vector2(margins.x + margins.z, margins.y + margins.w)
+	return clampf(minf(available.x, available.y) / 720.0, 0.75, 2.0)
+
+
 func unit() -> float:
-	var size := get_viewport().get_visible_rect().size
-	return clampf(minf(size.x, size.y) / 720.0, 0.75, 2.0)
+	return header_unit(get_viewport().get_visible_rect().size, PanelFrame.safe_margins(get_viewport()))
 
 
-## Geometry measured from the approved 714×1280 composition. Safe margins are
-## added before scaling, so the header keeps its proportions through rotation.
+## Reference proportions are anchored to the safe top; tall phones must not push the HUD down.
 func status_geometry() -> Dictionary:
-	var u := unit()
-	var m := PanelFrame.safe_margins(get_viewport())
-	var available := get_viewport().get_visible_rect().size - Vector2(m.x + m.z, m.y + m.w)
-	var origin := Vector2(m.x, m.y + available.y * 0.056)
-	var width := minf(374.0 * u, available.x - 250.0 * u)
-	var x := origin.x + 76.0 * u
-	return {
-		"origin": origin,
-		"portrait": origin + Vector2(57.0, 53.0) * u,
-		"radius": 50.0 * u,
-		"hp": Rect2(Vector2(x, origin.y + 7.0 * u), Vector2(width, 29.0 * u)),
-		"mp": Rect2(Vector2(x, origin.y + 40.0 * u), Vector2(width - 7.0 * u, 21.0 * u)),
-		"xp": Rect2(Vector2(x, origin.y + 69.0 * u), Vector2(width - 15.0 * u, 12.0 * u)),
+	return header_geometry(get_viewport().get_visible_rect().size, PanelFrame.safe_margins(get_viewport()))
+
+
+static func header_geometry(view: Vector2, m: Vector4) -> Dictionary:
+	var u := header_unit(view, m)
+	var available := view - Vector2(m.x + m.z, m.y + m.w)
+	var origin := Vector2(m.x, m.y + minf(available.y, 1280.0 * u) * 0.056)
+	var center := origin + Vector2(57, 53) * u
+	var radius := 50.0 * u
+	var right := origin.x + minf(455.0 * u, available.x - 169.0 * u)
+	var slope := 0.28
+	var rows := {}
+	for spec in [["hp", 7.0, 29.0], ["mp", 40.0, 21.0], ["xp", 69.0, 12.0]]:
+		var top: float = spec[1]
+		var height: float = spec[2]
+		var left := origin.x + 76.0 * u
+		var end := right - 5.0 * u - (top - 1.0) * u * slope
+		rows[spec[0]] = Rect2(left, origin.y + top * u, end - left, height * u)
+	var plate := PackedVector2Array([
+		origin + Vector2(55, 1) * u, Vector2(right, origin.y + u),
+		Vector2(right - 87.0 * u * slope, origin.y + 88.0 * u), origin + Vector2(55, 88) * u])
+	var label_left := center.x + radius + 8.0 * u
+	var geometry := {
+		"unit": u, "origin": origin, "portrait": center, "radius": radius,
+		"plate": plate, "slope": slope, "visible_start": center.x + radius + 5.0 * u,
+		"hp": rows["hp"], "mp": rows["mp"], "xp": rows["xp"],
 		"map": Rect2(Vector2(m.x + available.x - 144.0 * u, origin.y + 2.0 * u), Vector2.ONE * 136.0 * u),
 	}
+	for key in ["hp", "mp", "xp"]:
+		var rect: Rect2 = rows[key]
+		var slant := rect.size.y * slope
+		geometry[key + "_label"] = Rect2(label_left, rect.position.y, rect.end.x - slant - label_left - 5.0 * u, rect.size.y)
+	var portrait_bounds := Rect2(center - Vector2(radius + 4.5 * u, radius + 8.0 * u), Vector2(2.0 * (radius + 4.5 * u), 2.0 * (radius + 8.0 * u)))
+	geometry["portrait_bounds"] = portrait_bounds
+	var plate_bounds := Rect2(plate[0], Vector2(right - plate[0].x, 92.0 * u)).grow(2.0 * u)
+	geometry["paint_bounds"] = portrait_bounds.merge(plate_bounds)
+	return geometry
 
 
 func _update_layout() -> void:
@@ -337,7 +364,11 @@ func _update_layout() -> void:
 	_area.position = Vector2.ZERO
 	_area.size = get_viewport().get_visible_rect().size
 	_status.position = origin + Vector2(114.0, 137.0) * u
-	_status.size = Vector2(340.0, 23.0) * u
+	var hp_bounds: Rect2 = geometry["hp"]
+	_status.size = Vector2(minf(340.0 * u, hp_bounds.end.x - _status.position.x - 8.0 * u), 23.0 * u)
+	var status_font_size := roundi(16.0 * u)
+	if _status.get_theme_font_size("font_size") != status_font_size:
+		_status.add_theme_font_size_override("font_size", status_font_size)
 	var statuses: Array[String] = []
 	var names := {"shout": "방어 함성", "orders": "전투 지시", "armor": "원소 갑옷", "enchant": "화염 강화", "storm": "뇌우", "command": "전투 명령", "guard": "집중 방어", "berserk": "광폭", "sprint": "질주"}
 	for key in game.player.buffs:
@@ -425,35 +456,28 @@ func _draw_bars() -> void:
 	var mp_rect: Rect2 = geometry["mp"]
 	var xp_rect: Rect2 = geometry["xp"]
 	# One joined gunmetal ribbon, with the portrait rim covering its left join.
-	var plate := PackedVector2Array([
-		origin + Vector2(55, 1) * u, Vector2(hp_rect.end.x + 5.0 * u, origin.y + u),
-		Vector2(xp_rect.end.x + 5.0 * u, origin.y + 88.0 * u), origin + Vector2(55, 88) * u])
+	var plate: PackedVector2Array = geometry["plate"]
+	var slope: float = geometry["slope"]
+	var visible_start: float = geometry["visible_start"]
 	_bars.draw_colored_polygon(plate, Color(0.055, 0.045, 0.045, 0.94))
 	_bars.draw_polyline(PackedVector2Array([plate[0], plate[1], plate[2], plate[3], plate[0]]), Color("746b5e"), 1.3 * u, true)
 	_bars.draw_line(plate[0] + Vector2(0, 2) * u, plate[1] + Vector2(-2, 2) * u, Color(0.7, 0.62, 0.48, 0.2), 0.8 * u, true)
 	_bars.draw_line(plate[3] + Vector2(0, 3) * u, plate[2] + Vector2(0, 3) * u, Color(0, 0, 0, 0.45), 2.0 * u, true)
-	HudArt.slanted_bar(_bars, hp_rect, p.hp / p.max_hp, Color("b43134"), Color("751719"), Color("432022"), 8.0 * u)
-	var actual_ratio := p.hp / p.max_hp
-	if _health_trail > actual_ratio + 0.001 and not Prefs.reduce_motion:
-		var start := hp_rect.position.x + hp_rect.size.x * actual_ratio
-		var end := minf(hp_rect.end.x - 8.0 * u, hp_rect.position.x + hp_rect.size.x * _health_trail)
-		if end > start:
-			_bars.draw_rect(Rect2(start, hp_rect.position.y + 2.0 * u, end - start, hp_rect.size.y - 4.0 * u), Color(0.84, 0.57, 0.32, 0.7))
+	var actual_ratio := p.hp / maxf(1.0, p.max_hp)
+	HudArt.slanted_bar(_bars, hp_rect, actual_ratio, Color("b43134"), Color("751719"), Color("432022"), hp_rect.size.y * slope, visible_start, _health_trail if not Prefs.reduce_motion else actual_ratio)
 	if _hurt_feedback > 0.0 or _heal_feedback > 0.0:
 		var color := Color(1.0, 0.47, 0.34, _hurt_feedback / 0.28) if _hurt_feedback > 0.0 else Color(0.62, 0.91, 0.7, _heal_feedback / 0.35)
-		var frame := HudArt._bar_poly(hp_rect, 1.0, 8.0 * u)
+		var frame := HudArt._bar_poly(hp_rect, 1.0, hp_rect.size.y * slope, visible_start)
 		_bars.draw_polyline(frame + PackedVector2Array([frame[0]]), color, 1.8 * u, true)
 
-	# Labels start beyond the full portrait, not at the fluid's hidden left edge.
-	var label_left := center.x + pr + 8.0 * u
-	var label_width := hp_rect.end.x - label_left - 11.0 * u
-	HudArt.text_outlined(_bars, "%s / %s" % [HudArt.stat(p.hp), HudArt.stat(p.max_hp)], Vector2(label_left, hp_rect.position.y + 23.0 * u), label_width, int(23 * u), Color("f4f1eb"))
+	# Number baselines use the actual font metrics, clear of the portrait and sloped edge.
+	HudArt.text_in_rect(_bars, "%s / %s" % [HudArt.stat(p.hp), HudArt.stat(p.max_hp)], geometry["hp_label"], roundi(23 * u), Color("f4f1eb"))
 	var top := Color("61bfe5") if p.is_mage else Color("cd9c4a")
 	var bottom := Color("245d86") if p.is_mage else Color("895120")
 	var back := Color("142e40") if p.is_mage else Color("39291a")
-	HudArt.slanted_bar(_bars, mp_rect, p.resource / p.resource_max, top, bottom, back, 6.0 * u)
+	HudArt.slanted_bar(_bars, mp_rect, p.resource / maxf(1.0, p.resource_max), top, bottom, back, mp_rect.size.y * slope, visible_start)
 	var info := GameState.class_info()
-	HudArt.text_outlined(_bars, "%s %s" % [info["resource"], HudArt.res(p.resource)], Vector2(label_left, mp_rect.position.y + 16.0 * u), label_width - 5.0 * u, int(18 * u), Color("e7f4f7"))
+	HudArt.text_in_rect(_bars, "%s %s" % [info["resource"], HudArt.res(p.resource)], geometry["mp_label"], roundi(18 * u), Color("e7f4f7"))
 	if p.is_mage:
 		var shimmer := 0.65 if Prefs.reduce_motion else 0.55 + 0.1 * sin(Time.get_ticks_msec() / 800.0)
 		for fraction in [0.17, 0.78]:
@@ -463,10 +487,11 @@ func _draw_bars() -> void:
 			_bars.draw_line(at - Vector2(4, 0) * u, at + Vector2(4, 0) * u, Color(0.8, 0.96, 1.0, shimmer), 0.8 * u, true)
 			_bars.draw_line(at - Vector2(0, 4) * u, at + Vector2(0, 4) * u, Color(0.8, 0.96, 1.0, shimmer * 0.7), 0.8 * u, true)
 	var xp_ratio := float(GameState.xp) / GameState.xp_to_next()
-	HudArt.slanted_bar(_bars, xp_rect, xp_ratio, Color("bfa361"), Color("8d733f"), Color("393530"), 4.0 * u)
-	HudArt.text_outlined(_bars, "EXP %d%%" % floori(xp_ratio * 100.0), Vector2(label_left, xp_rect.position.y + 10.0 * u), label_width - 11.0 * u, int(11 * u), Color("d9d0b9"))
+	HudArt.slanted_bar(_bars, xp_rect, xp_ratio, Color("bfa361"), Color("8d733f"), Color("393530"), xp_rect.size.y * slope, visible_start)
+	HudArt.text_in_rect(_bars, "EXP %d%%" % floori(xp_ratio * 100.0), geometry["xp_label"], roundi(11 * u), Color("d9d0b9"))
 	# A quiet single line keeps progression discoverable without dominating the scene.
 	var obj: String = game.dungeon.objective() if game.dungeon.active else Quests.main_objective()
+	obj = HudArt.elide(obj, hp_rect.end.x - origin.x - 114.0 * u, roundi(16 * u))
 	var hint_width := minf(hp_rect.size.x + 10.0 * u, HudArt.FONT.get_string_size(obj, HORIZONTAL_ALIGNMENT_LEFT, -1, int(16 * u)).x + 30.0 * u)
 	_draw_hint_backdrop(Rect2(origin + Vector2(103, 105) * u, Vector2(hint_width, 27.0 * u)))
 	if not _status.text.is_empty():

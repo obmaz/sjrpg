@@ -10,6 +10,10 @@ const { chromium, devices } = require('playwright');
 
 const SCENES = {
     town: '',
+    hud: 'hud_preview=full',
+    hud_low: 'hud_preview=low',
+    hud_nearfull: 'hud_preview=nearfull',
+    hud_large: 'hud_preview=large',
     plaza: 'at=portal',
     warp: 'at=portal&panel=warp',
     warp_trip: 'warp_preview=1',
@@ -94,7 +98,10 @@ const start = args.start ? args.start.split(',').map(Number) : device === 'phone
 await tap(...start);
 await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { timeout: 30000 });
 if (scene === 'background') await page.evaluate(() => document.querySelector('canvas').blur());
-if (scene === 'rewards') {
+if (scene.startsWith('hud')) {
+    await page.waitForFunction(() => window.__sjrpgHudPreviewReady === true, null, {timeout: 30000});
+    await page.waitForTimeout(300);
+} else if (scene === 'rewards') {
     await page.waitForFunction(() => window.__sjrpgRewardPreviewReady === true, null, {timeout: 30000});
 } else if (scene === 'warp_trip') {
     await page.waitForFunction(() => Array.isArray(window.__sjrpgWarpPreviewButton), null, {timeout: 30000});

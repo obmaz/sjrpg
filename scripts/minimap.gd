@@ -11,6 +11,31 @@ const WORLD_RADIUS := 1300.0
 
 var _circle := PackedVector2Array()
 const PARCHMENT := Color("637153")
+const COMPASS_OFFSET := Vector2(0.78, -0.40)
+const COMPASS_RADIUS := 9.5
+
+
+func content_radius() -> float:
+	return radius - 2.0 * radius / 64.0
+
+
+## Painted extents include antialiasing and the offset shadow, not just the map disc.
+func paint_bounds() -> Rect2:
+	var u := radius / 64.0
+	var c := size / 2.0
+	var aa := maxf(1.0, u)
+	var outer := radius + 1.5 * u + aa
+	var shadow := radius + 0.25 * u + 1.25 * u + aa
+	var bounds := Rect2(c - Vector2.ONE * outer, Vector2.ONE * outer * 2.0)
+	bounds = bounds.merge(Rect2(c + Vector2(0, 1.0) * u - Vector2.ONE * shadow, Vector2.ONE * shadow * 2.0))
+	var stud := (COMPASS_RADIUS + 0.55) * u + aa
+	var compass := c + COMPASS_OFFSET * radius
+	return bounds.merge(Rect2(compass - Vector2.ONE * stud, Vector2.ONE * stud * 2.0))
+
+
+func marker_fits(at: Vector2, dot_radius: float) -> bool:
+	# A marker's entire antialiased disc must stay inside the content, clear of the metal rim.
+	return at.length() + dot_radius + maxf(1.0, radius / 64.0) <= content_radius()
 
 
 func _ready() -> void:
@@ -53,11 +78,10 @@ func _fill(poly: PackedVector2Array, color: Color, origin: Vector2) -> void:
 func _draw() -> void:
 	if game == null or game.player == null or game.village == null:
 		return
-	_circle = _circle_poly(radius - 2.0)
+	_circle = _circle_poly(content_radius())
 	var c := size / 2.0
 	draw_set_transform(c, 0.0, Vector2.ONE)
 	var origin: Vector2 = game.player.position
-	var v: Village = game.village
 	draw_circle(Vector2.ZERO, radius, Color(0.07, 0.08, 0.07, 0.9))
 	draw_colored_polygon(_circle, PARCHMENT)
 	for shape in game.map_shapes:
@@ -67,14 +91,16 @@ func _draw() -> void:
 		_fill(shape["poly"], shape["color"], origin)
 	for marker in MapGeometry.markers(game):
 		var marker_at := _to_map(marker["pos"], origin)
-		if marker_at.length() < radius - 5.0:
-			draw_circle(marker_at, maxf(2.0, radius * 0.035), Color(marker["color"], 0.82))
+		var marker_radius := maxf(2.0, radius * 0.035)
+		if marker_fits(marker_at, marker_radius):
+			draw_circle(marker_at, marker_radius, Color(marker["color"], 0.82))
 	for e in game.enemies:
 		if e.dead:
 			continue
 		var ep := _to_map(e.position, origin)
-		if ep.length() < radius - 4.0:
-			draw_circle(ep, maxf(1.8, radius * 0.027), Color(0.74, 0.26, 0.18, 0.88))
+		var enemy_radius := maxf(1.8, radius * 0.027)
+		if marker_fits(ep, enemy_radius):
+			draw_circle(ep, enemy_radius, Color(0.74, 0.26, 0.18, 0.88))
 	# Player arrow.
 	var f: float = game.player.facing
 	var tip := Vector2.from_angle(f) * radius * 0.09
@@ -84,14 +110,14 @@ func _draw() -> void:
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	# Muted antique bronze, with fine lit edges rather than a broad gold ring.
 	var u := radius / 64.0
-	draw_arc(c + Vector2(0, 1.5) * u, radius + 1.0 * u, 0, TAU, 80, Color(0.01, 0.015, 0.01, 0.75), 4.5 * u, true)
+	draw_arc(c + Vector2(0, 1.0) * u, radius + 0.25 * u, 0, TAU, 80, Color(0.01, 0.015, 0.01, 0.75), 2.5 * u, true)
 	draw_arc(c, radius, 0, TAU, 80, Color("39352a"), 3.0 * u, true)
 	draw_arc(c, radius - 0.7 * u, 0, TAU, 80, Color("8e7b55"), 1.2 * u, true)
 	draw_arc(c, radius - 2.4 * u, 0, TAU, 80, Color(0.78, 0.72, 0.54, 0.3), 0.7 * u, true)
 	# The small compass stud sits on the rim like the approved composition.
-	var compass := c + Vector2(0.78, -0.40) * radius
-	draw_circle(compass, 9.5 * u, Color("201d17"))
-	draw_arc(compass, 9.5 * u, 0, TAU, 40, Color("a28b5b"), 1.1 * u, true)
+	var compass := c + COMPASS_OFFSET * radius
+	draw_circle(compass, COMPASS_RADIUS * u, Color("201d17"))
+	draw_arc(compass, COMPASS_RADIUS * u, 0, TAU, 40, Color("a28b5b"), 1.1 * u, true)
 	var arrow := PackedVector2Array([compass + Vector2(5.3, -0.7) * u, compass + Vector2(-4.5, -4.0) * u, compass + Vector2(-2.5, 1.0) * u, compass + Vector2(-4.0, 5.0) * u])
 	draw_colored_polygon(arrow, Color("c6b17c"))
 

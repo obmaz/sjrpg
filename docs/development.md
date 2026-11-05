@@ -54,6 +54,7 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 | `quality` | `low` `high` | 절약 화질 켜기·끄기 |
 | `gold` | 정수 | 시작 골드 |
 | `chests` | 아무 값 | 상자를 모두 부숨 |
+| `hud_preview` | `full` `low` `nearfull` `large` | 헤더의 채움·긴 수치를 고정해 가시 영역과 정렬 검사 |
 | `warp_preview` | `1` | 실제 게이트 방문으로 해금한 뒤 워프 창과 실제 이동 버튼 검증 |
 | `corpse_preview` | `1` `bridge` `terrace` | 광장의 5종 시체 또는 다리·높은 마당 위 시체 확인 |
 
@@ -77,6 +78,15 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 100ms 재진입 제한으로 연속 피해의 자세 고착을 막고, 새 동작·구르기·사망·부활은 유지 상태를 해제합니다.
 적의 그림은 5/8px 이내 감쇠 반동으로 돌아오며 투사체는 진행 방향을 따릅니다. 강한 접촉음도 기존 음성 수·연타 제한을 공유합니다.
 동작 줄이기에서는 자세 유지·반동을 억제합니다.
+
+## HUD 헤더 배치
+
+`Hud.header_geometry(view, safe_margins)`가 안전 영역·초상화·세 막대·숫자 영역·미니맵 배치를 공유합니다.
+오른쪽 프레임과 각 막대는 같은 사선과 여백을 사용하고, `HudArt._bar_poly()`가 부분 채움을 사선에 맞춰 자릅니다.
+체력 잔상도 같은 채움 다각형을 사용합니다. 채움 비율은 초상화의 테두리·그림자를 제외한 실제 가시 구간에서 계산합니다.
+`HudArt.text_in_rect()`는 글꼴의 실제 폭과 수직 치수로 숫자를 중앙에 맞추며, 상태·목표 문구는 폭을 넘기면 줄임표를 사용합니다.
+`Minimap.paint_bounds()`는 원 테두리·그림자·나침반의 실제 범위를, `marker_fits()`는 점 전체의 원 내부 배치를 검사합니다.
+자세한 좌표 기준과 웹 검수 장면은 [UI 디자인 기준](ui-reference.md)을 참고합니다.
 
 ## 분수·게이트와 워프
 
