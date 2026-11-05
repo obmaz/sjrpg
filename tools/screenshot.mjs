@@ -16,6 +16,7 @@ const SCENES = {
     hud_low: 'hud_preview=low',
     hud_nearfull: 'hud_preview=nearfull',
     hud_large: 'hud_preview=large',
+    hud_danger: 'hud_preview=danger',
     plaza: 'at=portal',
     warp: 'at=portal&panel=warp',
     warp_trip: 'warp_preview=1',
@@ -243,6 +244,10 @@ if (scene === 'juice') {
         await page.waitForTimeout(110);
         await page.screenshot({path: out.replace(/\.png$/, `-${frame}.png`)});
     }
+}
+if (scene === 'hud_danger') {
+    await page.waitForTimeout(450);
+    await page.screenshot({path: out.replace(/\.png$/, '-pulse.png')});
 }
 if (scene === 'pc_controls') {
     // Real desktop events: inspect these captures alongside the input-state regression case.

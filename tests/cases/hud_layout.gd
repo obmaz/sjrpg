@@ -32,6 +32,14 @@ func run() -> void:
 			check("target remains inside screen %s/%s" % [dimensions, name], bounds.encloses(_bounds(button)))
 			check("touch owns visible center %s/%s" % [dimensions, name], controls._hit_button(button["center"]) == name)
 			check("touch remains at least 64 units %s/%s" % [dimensions, name], _bounds(button).size.x >= 64.0 and _bounds(button).size.y >= 64.0)
+			if name.begins_with("bar_"):
+				var drawn: float = button["visual_radius"]
+				var menu_unit: float = controls._unit
+				check("menu illustration stays inside its touch target", drawn + 0.75 * menu_unit <= float(button["radius"]))
+				if dimensions.y > dimensions.x:
+					check("portrait menus are slightly larger with clear spacing", drawn / menu_unit > 33.0 and drawn / menu_unit < 36.0)
+				else:
+					check("landscape menu illustration keeps its existing size", is_equal_approx(drawn / menu_unit, 31.0))
 			if name == "near_shop":
 				var plaque := controls.interaction_visual_rect(button["center"], button["half_size"])
 				check("quiet interaction plaque keeps a larger touch area", _bounds(button).encloses(plaque) and plaque.size.y < _bounds(button).size.y)
@@ -48,6 +56,10 @@ func run() -> void:
 		for slot in 5:
 			var button: Dictionary = controls._buttons["slot%d" % slot]
 			var visual := controls.slot_visual_radius(slot)
+			if slot == 0:
+				check("primary skill illustration keeps its existing size", is_equal_approx(float(button["visual_radius"]) / controls._unit, 67.0))
+			else:
+				check("auxiliary skills leave more space while preserving their touch circle", float(button["visual_radius"]) < float(button["radius"]) * 0.95 and controls._hit_button(button["center"] + Vector2.DOWN * (float(button["radius"]) - 1.0)) == "slot%d" % slot)
 			if str(GameState.slots[slot]).is_empty():
 				check("empty hints leave more scenery visible without shrinking input", visual < float(button["visual_radius"]) and controls._hit_button(button["center"] + Vector2.RIGHT * (float(button["radius"]) - 1.0)) == "slot%d" % slot)
 		var main: Vector2 = controls._buttons["slot0"]["center"]

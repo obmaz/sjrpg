@@ -26,6 +26,9 @@ var _health_trail := 1.0
 var _trail_hold := 0.0
 var _hurt_feedback := 0.0
 var _heal_feedback := 0.0
+var _critical_warning: ColorRect
+var _critical_clock := 0.0
+const CRITICAL_HEALTH := 0.3
 
 
 func _ready() -> void:
@@ -98,6 +101,12 @@ func _ready() -> void:
 	add_child(_save_warning)
 	GameState.save_finished.connect(_on_save_finished)
 	_on_save_finished(GameState.save_error.is_empty(), GameState.save_error)
+	_critical_warning = ColorRect.new()
+	_critical_warning.name = "CriticalHealthWarning"
+	_critical_warning.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_critical_warning.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_critical_warning.hide()
+	add_child(_critical_warning)
 
 
 func _build_death() -> void:
@@ -283,9 +292,28 @@ func toast_rect() -> Rect2:
 
 func _process(delta: float) -> void:
 	_update_vital_feedback(delta)
+	_update_critical_warning(delta)
 	_tick_toasts(delta)
 	_update_layout()
 	_bars.queue_redraw()
+
+
+## A slow, translucent full-screen warning leaves the scene and controls readable.
+## Its game-time clock pauses with menus/background; reduced motion uses a steady tint.
+func _update_critical_warning(delta: float) -> void:
+	var player: Player = game.player
+	var ratio := player.hp / maxf(1.0, player.max_hp)
+	if player.dead or player.hp <= 0.0 or ratio >= CRITICAL_HEALTH:
+		_critical_clock = 0.0
+		_critical_warning.hide()
+		return
+	_critical_clock = fmod(_critical_clock + delta, 1.0 / 0.9)
+	var severity := clampf((CRITICAL_HEALTH - ratio) / CRITICAL_HEALTH, 0.0, 1.0)
+	var strength := 0.055 + severity * 0.025
+	if not Prefs.reduce_motion:
+		strength += (0.025 + severity * 0.04) * (0.5 + 0.5 * cos(_critical_clock * TAU * 0.9))
+	_critical_warning.color = Color(0.82, 0.035, 0.02, strength)
+	_critical_warning.show()
 
 
 ## Vital feedback follows health changes, never a blocked hit or a button press.
@@ -533,8 +561,6 @@ func _draw_bars() -> void:
 		pts.append(center + direction * (pr - 3.0 * u))
 		uvs.append(uv_rect.position + uv_rect.size * (Vector2.ONE + direction) * 0.5)
 	_bars.draw_polygon(pts, PackedColorArray([Color.WHITE]), uvs, tex)
-	if p.hp / p.max_hp < 0.3:
-		_bars.draw_circle(center, pr - 3.0 * u, Color(1.0, 0.165, 0.14, 0.14 if Prefs.reduce_motion else 0.10 + 0.06 * sin(Time.get_ticks_msec() / 180.0)))
 	_bars.draw_arc(center, pr, 0, TAU, 80, Color("302d27"), 4.0 * u, true)
 	_bars.draw_arc(center, pr, -PI + 0.2, -PI + 2.9, 36, Color("a28d66"), 1.1 * u, true)
 	_bars.draw_arc(center, pr - 3.0 * u, 0, TAU, 80, Color("81714e"), 0.8 * u, true)

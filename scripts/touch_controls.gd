@@ -54,15 +54,17 @@ func _layout() -> void:
 	var offsets := [Vector2(-119, 0), Vector2(-85, -84), Vector2(-4, -121), Vector2(79, -84)]
 	var radii := [44.0, 42.0, 42.0, 42.0]
 	for i in 4:
-		_buttons["slot%d" % (i + 1)] = _button(main + offsets[i] * u, radii[i] * u)
+		_buttons["slot%d" % (i + 1)] = _button(main + offsets[i] * u, radii[i] * u, radii[i] * 0.92 * u)
 	_buttons["roll"] = _button(main + Vector2(114, 0) * u, 32.0 * u, 31.0 * u)
 	var potion_y := main.y - 198.0 * u
 	_buttons["potion_hp"] = _button(Vector2(size.x - 118.0 * u, potion_y), 32.0 * u, 30.0 * u)
 	_buttons["potion_mp"] = _button(Vector2(size.x - 41.0 * u, potion_y), 32.0 * u, 30.0 * u)
 	var bar_y := size.y * 0.902 if portrait else size.y - 44.0 * u
 	var names := ["bar_bag", "bar_skills", "bar_quests", "bar_gear"]
+	var menu_visual := 34.1 if portrait else 31.0
+	var menu_touch := 35.0 if portrait else 32.0
 	for i in 4:
-		_buttons[names[i]] = _button(Vector2(size.x / 2.0 + (i - 1.5) * 79.0 * u, bar_y), 32.0 * u, 31.0 * u)
+		_buttons[names[i]] = _button(Vector2(size.x / 2.0 + (i - 1.5) * 79.0 * u, bar_y), menu_touch * u, menu_visual * u)
 	var npc: String = game.near_npc()
 	_near_name = npc
 	if npc != "" and npc != "탈것 상인":
@@ -380,6 +382,26 @@ func interaction_visual_rect(center: Vector2, half: Vector2) -> Rect2:
 	return Rect2(center - size * 0.5, size)
 
 
+func _draw_menu(name: String, center: Vector2, radius: float, pressed: bool) -> void:
+	var u := _unit
+	var draw_radius := radius - (0.7 * u if pressed else 0.0)
+	var tint := Color(0.82, 0.8, 0.73) if pressed else Color(0.94, 0.91, 0.84)
+	draw_circle(center + Vector2(0, 0.5 * u), radius + 0.2 * u, Color(0, 0, 0, 0.3))
+	match name:
+		"bar_bag":
+			_draw_reference_button(2, center, draw_radius, tint)
+		"bar_quests":
+			_draw_reference_button(3, center, draw_radius, tint)
+		"bar_gear":
+			_draw_reference_button(1, center, draw_radius, tint)
+		"bar_skills":
+			HudArt.round_plaque(self, "book", center, draw_radius, tint)
+	# The existing illustrated bronze stays dominant; a narrow lip makes its
+	# pressed depth readable without a second glowing frame or a new material.
+	draw_arc(center, draw_radius - 0.6 * u, 0, TAU, 72, Color(0.6, 0.5, 0.31, 0.5), 0.65 * u, true)
+	draw_arc(center, draw_radius - 1.1 * u, PI * 1.05, PI * 1.7, 32, Color(0.91, 0.81, 0.59, 0.32 if pressed else 0.22), 0.65 * u, true)
+
+
 func _draw_interaction(center: Vector2, half: Vector2, pressed: bool) -> void:
 	var rect := interaction_visual_rect(center, half)
 	# Keep skins alive between frames: their gradient textures are submitted by RID.
@@ -427,16 +449,7 @@ func _draw() -> void:
 		elif name == "near_shop":
 			_draw_interaction(c, b["half_size"], pressed)
 		elif name.begins_with("bar_"):
-			var tint := Color.WHITE if pressed else Color(0.87, 0.83, 0.75)
-			match name:
-				"bar_bag":
-					_draw_reference_button(2, c, r, tint)
-				"bar_quests":
-					_draw_reference_button(3, c, r, tint)
-				"bar_gear":
-					_draw_reference_button(1, c, r, tint)
-				"bar_skills":
-					HudArt.round_plaque(self, "book", c, r, tint)
+			_draw_menu(name, c, r, pressed)
 			if name == "bar_skills" and GameState.skill_points > 0:
 				var bc := c + Vector2(r * 0.72, -r * 0.72)
 				draw_circle(bc, 8.0 * u, Color(0.12, 0.095, 0.06, 0.95))

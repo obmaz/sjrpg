@@ -218,7 +218,7 @@ func _read_debug_params() -> void:
 		elif kv.size() == 2 and kv[0] == "panel":
 			var which: String = kv[1]
 			get_tree().create_timer(1.5).timeout.connect(_debug_open_panel.bind(which))
-		elif kv.size() == 2 and kv[0] == "hud_preview" and kv[1] in ["full", "low", "nearfull", "large"]:
+		elif kv.size() == 2 and kv[0] == "hud_preview" and kv[1] in ["full", "low", "nearfull", "large", "danger"]:
 			_hud_preview.call_deferred(kv[1])
 		elif kv.size() == 2 and kv[0] == "dungeon_preview" and kv[1] in ["entry", "room", "branch", "exit"]:
 			_dungeon_preview.call_deferred(kv[1])
@@ -358,7 +358,7 @@ func _hud_preview(which: String) -> void:
 	if is_queued_for_deletion():
 		return
 	match which:
-		"low":
+		"low", "danger":
 			player.hp = player.max_hp * 0.05
 			player.resource = player.resource_max * 0.01
 			GameState.xp = 1
@@ -381,10 +381,19 @@ func _hud_preview(which: String) -> void:
 	hud._last_max_hp = player.max_hp
 	hud._hurt_feedback = 0.0
 	hud._heal_feedback = 0.0
+	hud._update_critical_warning(0.0)
 	hud._update_layout()
 	hud._bars.queue_redraw()
 	hud.minimap.queue_redraw()
-	get_tree().paused = true
+	if which == "danger":
+		# Keep the genuine HUD pulse running while holding the audit hero and enemies still.
+		set_process(false)
+		player.set_process(false)
+		exploration.set_process(false)  # The portal's independent rest healing would clear the audit warning.
+		for enemy in enemies:
+			enemy.set_process(false)
+	else:
+		get_tree().paused = true
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.__sjrpgHudPreviewReady = true")
 
