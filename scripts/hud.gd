@@ -330,7 +330,12 @@ static func header_geometry(view: Vector2, m: Vector4) -> Dictionary:
 	var screen_unit := header_unit(view, m)
 	var u := screen_unit * 0.902  # 10% larger than the previous 82% header; map/controls retain their scale.
 	var available := view - Vector2(m.x + m.z, m.y + m.w)
-	var origin := Vector2(m.x, m.y + minf(available.y, 1280.0 * screen_unit) * 0.056)
+	var safe_top := m.y + 16.0 * screen_unit
+	# The portrait crest extends five header units above its origin. Align painted
+	# outlines at the safe top instead of pushing both groups down with screen height.
+	var origin := Vector2(m.x, safe_top + 5.0 * u)
+	var map_size := Vector2.ONE * 136.0 * screen_unit
+	var map_ink := Minimap.painted_bounds(64.0 * screen_unit, map_size)
 	var center := origin + Vector2(57, 53) * u
 	var radius := 50.0 * u
 	var right := origin.x + minf(455.0 * u, available.x - 169.0 * screen_unit)
@@ -349,7 +354,7 @@ static func header_geometry(view: Vector2, m: Vector4) -> Dictionary:
 		"plate": plate, "slope": slope, "visible_start": center.x + radius + 5.0 * u,
 		"hp": rows["hp"], "mp": rows["mp"], "xp": rows["xp"],
 		"map_unit": screen_unit,
-		"map": Rect2(Vector2(m.x + available.x - 144.0 * screen_unit, origin.y + 2.0 * screen_unit), Vector2.ONE * 136.0 * screen_unit),
+		"map": Rect2(Vector2(m.x + available.x - 144.0 * screen_unit, safe_top - map_ink.position.y), map_size),
 		"level_badge": Rect2(origin + Vector2(4, 0) * u, Vector2.ONE * 32.0 * u),
 	}
 	var badge_rect: Rect2 = geometry["level_badge"]

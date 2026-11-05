@@ -18,6 +18,9 @@ func run() -> void:
 			var map_ink := map.paint_bounds()
 			map_ink.position += map_rect.position
 			check("entire map rim fits and avoids the portrait/status ribbon", available.encloses(map_ink) and not map_ink.intersects(geometry["paint_bounds"]))
+			check("portrait crest and minimap rim share the same safe top", absf(map_ink.position.y - portrait_ink.position.y) < 0.01)
+			var top_gap: float = (portrait_ink.position.y - safe.y) / float(geometry["map_unit"])
+			check("header stays close to the safe top in either orientation", top_gap >= 12.0 and top_gap <= 20.0)
 			var plate: PackedVector2Array = geometry["plate"]
 			var avatar: Vector2 = geometry["portrait"]
 			var join_radius: float = float(geometry["radius"]) + 2.0 * u

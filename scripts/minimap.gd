@@ -31,15 +31,19 @@ func rim_radius() -> float:
 
 ## Painted extents include antialiasing and the offset shadow, not just the map disc.
 func paint_bounds() -> Rect2:
-	var u := radius / 64.0
-	var c := size / 2.0
+	return painted_bounds(radius, size)
+
+
+static func painted_bounds(disc_radius: float, control_size: Vector2) -> Rect2:
+	var u := disc_radius / 64.0
+	var c := control_size / 2.0
 	var aa := maxf(1.0, u)
-	var outer := rim_radius() + aa
-	var shadow := radius + 0.25 * u + 1.25 * u + aa
+	var outer := disc_radius + 2.5 * u + aa
+	var shadow := disc_radius + 0.25 * u + 1.25 * u + aa
 	var bounds := Rect2(c - Vector2.ONE * outer, Vector2.ONE * outer * 2.0)
 	bounds = bounds.merge(Rect2(c + Vector2(0, 1.0) * u - Vector2.ONE * shadow, Vector2.ONE * shadow * 2.0))
 	var stud := (COMPASS_RADIUS + 0.55) * u + aa
-	var compass := c + COMPASS_OFFSET * radius
+	var compass := c + COMPASS_OFFSET * disc_radius
 	return bounds.merge(Rect2(compass - Vector2.ONE * stud, Vector2.ONE * stud * 2.0))
 
 
