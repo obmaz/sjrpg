@@ -327,12 +327,13 @@ func status_geometry() -> Dictionary:
 
 
 static func header_geometry(view: Vector2, m: Vector4) -> Dictionary:
-	var u := header_unit(view, m)
+	var screen_unit := header_unit(view, m)
+	var u := screen_unit * 0.82
 	var available := view - Vector2(m.x + m.z, m.y + m.w)
-	var origin := Vector2(m.x, m.y + minf(available.y, 1280.0 * u) * 0.056)
+	var origin := Vector2(m.x, m.y + minf(available.y, 1280.0 * screen_unit) * 0.056)
 	var center := origin + Vector2(57, 53) * u
 	var radius := 50.0 * u
-	var right := origin.x + minf(455.0 * u, available.x - 169.0 * u)
+	var right := origin.x + minf(455.0 * u, available.x - 169.0 * screen_unit)
 	var slope := 0.28
 	var rows := {}
 	for spec in [["hp", 7.0, 29.0], ["mp", 40.0, 21.0], ["xp", 69.0, 12.0]]:
@@ -349,8 +350,9 @@ static func header_geometry(view: Vector2, m: Vector4) -> Dictionary:
 		"unit": u, "origin": origin, "portrait": center, "radius": radius,
 		"plate": plate, "slope": slope, "visible_start": center.x + radius + 5.0 * u,
 		"hp": rows["hp"], "mp": rows["mp"], "xp": rows["xp"],
-		"map": Rect2(Vector2(m.x + available.x - 144.0 * u, origin.y + 2.0 * u), Vector2.ONE * 136.0 * u),
-		"level_badge": Rect2(origin + Vector2(2, -5) * u, Vector2.ONE * 26.0 * u),
+		"map_unit": screen_unit,
+		"map": Rect2(Vector2(m.x + available.x - 144.0 * screen_unit, origin.y + 2.0 * screen_unit), Vector2.ONE * 136.0 * screen_unit),
+		"level_badge": Rect2(origin + Vector2(4, 0) * u, Vector2.ONE * 32.0 * u),
 	}
 	var badge_rect: Rect2 = geometry["level_badge"]
 	geometry["level_label"] = badge_rect.grow(-4.0 * u)
@@ -368,12 +370,13 @@ static func header_geometry(view: Vector2, m: Vector4) -> Dictionary:
 func _update_layout() -> void:
 	var u := unit()
 	var geometry := status_geometry()
+	var h: float = geometry["unit"]
 	var origin: Vector2 = geometry["origin"]
 	var level_rect: Rect2 = geometry["level_label"]
 	_level_badge.text = str(GameState.level)
 	_level_badge.position = level_rect.position
 	_level_badge.size = level_rect.size
-	var level_size := HudArt.fit_text_size(_level_badge.text, level_rect, roundi(12.0 * u))
+	var level_size := HudArt.fit_text_size(_level_badge.text, level_rect, roundi(16.0 * h))
 	if _level_badge.get_theme_font_size("font_size") != level_size:
 		_level_badge.add_theme_font_size_override("font_size", level_size)
 	var map_rect: Rect2 = geometry["map"]
@@ -382,10 +385,10 @@ func _update_layout() -> void:
 	minimap.position = map_rect.position
 	_area.position = Vector2.ZERO
 	_area.size = get_viewport().get_visible_rect().size
-	_status.position = origin + Vector2(114.0, 137.0) * u
+	_status.position = origin + Vector2(114.0, 137.0) * h
 	var hp_bounds: Rect2 = geometry["hp"]
-	_status.size = Vector2(minf(340.0 * u, hp_bounds.end.x - _status.position.x - 8.0 * u), 23.0 * u)
-	var status_font_size := roundi(16.0 * u)
+	_status.size = Vector2(minf(340.0 * h, hp_bounds.end.x - _status.position.x - 8.0 * h), 23.0 * h)
+	var status_font_size := roundi(16.0 * h)
 	if _status.get_theme_font_size("font_size") != status_font_size:
 		_status.add_theme_font_size_override("font_size", status_font_size)
 	var statuses: Array[String] = []
@@ -466,8 +469,8 @@ func _draw_bars() -> void:
 	var p: Player = game.player
 	if p == null:
 		return
-	var u := unit()
 	var geometry := status_geometry()
+	var u: float = geometry["unit"]
 	var origin: Vector2 = geometry["origin"]
 	var center: Vector2 = geometry["portrait"]
 	var pr: float = geometry["radius"]

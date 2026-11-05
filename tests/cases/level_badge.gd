@@ -29,7 +29,7 @@ func run() -> void:
 			var center: Vector2 = layout["portrait"]
 			check("badge stays at the safe upper-left of the avatar", available.encloses(art) and art.get_center().x < center.x and art.get_center().y < center.y and not art.intersects(layout["hp_label"]))
 			for text in ["1", "99", "100", "999"]:
-				var size := HudArt.fit_text_size(text, label, roundi(12.0 * float(layout["unit"])))
+				var size := HudArt.fit_text_size(text, label, roundi(16.0 * float(layout["unit"])))
 				var shaped := HudArt.FONT.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size)
 				check("level digits fit inside the medallion", shaped.x <= label.size.x and HudArt.FONT.get_height(size) <= label.size.y)
 	game.queue_free()

@@ -14,7 +14,7 @@ func run() -> void:
 			check("small fluid amounts clear the portrait rim and shadow", float(geometry["visible_start"]) > portrait_ink.end.x)
 			var map_rect: Rect2 = geometry["map"]
 			map.size = map_rect.size
-			map.radius = 64.0 * u
+			map.radius = 64.0 * float(geometry["map_unit"])
 			var map_ink := map.paint_bounds()
 			map_ink.position += map_rect.position
 			check("entire map rim fits and avoids the portrait/status ribbon", available.encloses(map_ink) and not map_ink.intersects(geometry["paint_bounds"]))
@@ -47,6 +47,11 @@ func run() -> void:
 				check("long numeric label fits its own row: " + key, shaped.x <= label.size.x + 0.01 and HudArt.FONT.get_height(font_size) <= label.size.y + 0.01)
 			check("all ribbon bevels are collinear with equal metal margins", gaps.min() > 0.0 and float(gaps.max()) - float(gaps.min()) < 0.01)
 	var reference := Hud.header_geometry(Vector2(720, 1280), Vector4.ZERO)
+	var bounds: Rect2 = reference["paint_bounds"]
+	check("compact avatar and gauges leave the scene visible", bounds.size.x < 380.0 and float(reference["radius"]) <= 42.0)
+	var badge: Rect2 = reference["level_badge"]
+	var portrait: Vector2 = reference["portrait"]
+	check("level medallion sits on the upper-left rim", badge.get_center().distance_to(portrait) < float(reference["radius"]) + badge.size.x * 0.25 and badge.size.x / (2.0 * float(reference["radius"])) >= 0.3)
 	var tall := Hud.header_geometry(Vector2(720, 1600), Vector4.ZERO)
 	check("tall phones preserve the approved top anchor", reference["origin"] == tall["origin"])
 	var objective := HudArt.elide("아주 긴 의뢰의 설명도 미니맵 이름이나 화면 바깥으로 넘어가면 안 됩니다", 280, 16)
