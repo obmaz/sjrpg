@@ -22,7 +22,6 @@ var _tick_timer := 0.0
 var _hit := {}  # enemies already hit (piercing)
 
 
-static var _impact_sheet: Texture2D
 static var _impact_material: CanvasItemMaterial
 
 
@@ -92,7 +91,7 @@ static func cast_hand_offset(facing: float, body_height: float) -> Vector2:
 
 
 func _ready() -> void:
-	if kind == "proj" and not params.get("throw", false):
+	if kind in ["nova", "slash", "orb"] or (kind == "proj" and not params.get("throw", false)):
 		material = _glow_material()
 
 
@@ -327,11 +326,16 @@ func _update_ward(delta: float) -> void:
 
 # ───────── drawing ─────────
 
+## Reduced motion keeps one authored pose while the effect's real lifetime still runs.
+func visual_phase() -> float:
+	return 1.0 / 3.0 if Prefs.reduce_motion else clampf(age / life, 0.0, 1.0)
+
+
 func _draw() -> void:
 	var t := age / life
 	match kind:
 		"release":
-			_draw_generated_glow(Vector2.ZERO, 38.0 if Prefs.reduce_motion else 42.0 + 8.0 * t, int(params["cell"]), (0.32 if Prefs.reduce_motion else 0.7) * (1.0 - t))
+			_draw_generated_glow(Vector2.ZERO, 38.0 if Prefs.reduce_motion else 42.0 + 8.0 * t, int(params["cell"]), (0.32 if Prefs.reduce_motion else 0.7) * (1.0 - t), visual_phase())
 		"dodge_echo":
 			if Prefs.reduce_motion:
 				return
@@ -345,7 +349,8 @@ func _draw() -> void:
 		"cast":
 			var fade := pow(1.0 - clampf(t, 0.0, 1.0), 0.7)
 			var strength := 0.45 if Prefs.reduce_motion else 0.72
-			_draw_generated_glow(Vector2.ZERO, 38.0, int(params["cell"]), fade * strength)
+			var preparation := 1.0 / 3.0 if Prefs.reduce_motion else lerpf(0.08, 0.28, clampf(t, 0.0, 1.0))
+			_draw_generated_glow(Vector2.ZERO, 38.0, int(params["cell"]), fade * strength, preparation)
 			# Small separated glints preserve the silhouette and floor underneath the hand.
 			for index in 6:
 				var phase := 0.4 if Prefs.reduce_motion else t
@@ -356,26 +361,25 @@ func _draw() -> void:
 				draw_line(at - Vector2(2.2, 0), at + Vector2(2.2, 0), glint, 1.0, true)
 				draw_line(at - Vector2(0, 2.2), at + Vector2(0, 2.2), glint, 1.0, true)
 		"impact":
-			if _impact_sheet == null:
-				_impact_sheet = load("res://assets/art/effects/impact-atlas.webp")
 			# Compact bright contact, quick expansion, then a quieter tail rather than a soft uniform puff.
 			var fade := pow(1.0 - clampf((t - 0.10) / 0.90, 0.0, 1.0), 1.6)
 			var growth := 0.86 if Prefs.reduce_motion else lerpf(0.64, 1.16, ease(t, 0.3))
 			var diameter := radius * growth
-			var cell_size := Vector2(_impact_sheet.get_width() / 4.0, _impact_sheet.get_height())
-			var source := Rect2(Vector2(cell_size.x * int(params["cell"]), 0), cell_size)
 			draw_set_transform(Vector2.ZERO, 0.0 if Prefs.reduce_motion else angle, Vector2.ONE)
-			draw_texture_rect_region(_impact_sheet, Rect2(Vector2.ONE * -diameter * 0.5, Vector2.ONE * diameter), source, Color(1, 1, 1, fade * (0.58 if Prefs.reduce_motion else 0.95)))
+			PresentationArt.draw_impact(self, int(params["cell"]), visual_phase(), Rect2(Vector2.ONE * -diameter * 0.5, Vector2.ONE * diameter), Color(1, 1, 1, fade * (0.58 if Prefs.reduce_motion else 0.95)))
 			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		"slash":
-			var a := 1.0 - t
-			for i in 3:
-				draw_arc(Vector2.ZERO, 70.0 + i * 9.0, angle - 1.1, angle + 1.1, 18,
-					Color(color, a * (0.9 - i * 0.25)), 7.0 - i * 2.0, true)
+			# The authored crescent stays within the old 88px swing silhouette.
+			draw_set_transform(Vector2.ZERO, angle, Vector2.ONE)
+			PresentationArt.draw_impact(self, 0, visual_phase(), Rect2(-32, -40, 108, 80), Color(1, 1, 1, 0.65 * (1.0 - t)))
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		"nova":
-			var r := radius * (0.25 + 0.75 * ease(t, 0.4))
-			_ellipse_fill(r, Color(color, 0.18 * (1.0 - t)))
-			_ellipse_ring(r, Color(color, 0.9 * (1.0 - t)), 6.0)
+			var r := radius if Prefs.reduce_motion else radius * (0.25 + 0.75 * ease(t, 0.4))
+			var element := _element_cell(color)
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.55))
+			PresentationArt.draw_impact(self, element, visual_phase(), Rect2(Vector2.ONE * -r, Vector2.ONE * r * 2.0), Color(1, 1, 1, (0.08 if element == 0 else 0.24) * (1.0 - t)))
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			_ellipse_ring(r, Color(color, 0.4 * (1.0 - t)), 1.4)
 		"proj":
 			if params.get("throw", false):
 				draw_set_transform(Vector2.ZERO, age * 25.0, Vector2.ONE)
@@ -391,11 +395,12 @@ func _draw() -> void:
 				for i in 3:
 					_draw_generated_glow(tail * (11.0 + i * 11.0), 25.0 - i * 5.0, cell, 0.22 - i * 0.06)
 		"orb":
-			draw_circle(Vector2.ZERO, 22.0, Color(color, 0.35))
-			draw_circle(Vector2.ZERO, 13.0, Color(color, 0.9))
-			for i in 6:
-				var dir := Vector2.from_angle(age * 9.0 + TAU * i / 6.0)
-				draw_line(dir * 8.0, dir * 26.0, Color(1, 1, 1, 0.7), 2.0)
+			var element := _element_cell(color)
+			_draw_generated_glow(Vector2.ZERO, 52.0, element, 0.85)
+			for i in 3:
+				var phase := 0.0 if Prefs.reduce_motion else age * 2.5
+				var dir := Vector2.from_angle(phase + TAU * i / 3.0)
+				_draw_generated_glow(dir * 14.0, 10.0, element, 0.4, 2.0 / 3.0)
 		"zone":
 			var delay := float(params.get("delay", 0.0))
 			var fade := clampf((life - age) / 0.5, 0.0, 1.0)
@@ -456,11 +461,8 @@ func _draw() -> void:
 			draw_string(UiKit.BOLD_FONT, Vector2(-60, 0), text, HORIZONTAL_ALIGNMENT_CENTER, 120, 22, Color(color, a2))
 
 
-func _draw_generated_glow(at: Vector2, diameter: float, cell: int, alpha: float) -> void:
-	if _impact_sheet == null:
-		_impact_sheet = load("res://assets/art/effects/impact-atlas.webp")
-	var size := Vector2(_impact_sheet.get_width() / 4.0, _impact_sheet.get_height())
-	draw_texture_rect_region(_impact_sheet, Rect2(at - Vector2.ONE * diameter * 0.5, Vector2.ONE * diameter), Rect2(Vector2(cell * size.x, 0), size), Color(1, 1, 1, alpha))
+func _draw_generated_glow(at: Vector2, diameter: float, cell: int, alpha: float, phase := 1.0 / 3.0) -> void:
+	PresentationArt.draw_impact(self, cell, phase, Rect2(at - Vector2.ONE * diameter * 0.5, Vector2.ONE * diameter), Color(1, 1, 1, alpha))
 
 
 func _ellipse_fill(r: float, c: Color) -> void:

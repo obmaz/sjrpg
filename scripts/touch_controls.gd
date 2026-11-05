@@ -2,7 +2,7 @@ class_name TouchControls
 extends Control
 ## Reference-style controls: 마법진 조이스틱 (left), 주 슬롯 + 보조 슬롯 4 + 구르기 ring
 ## (right), 체력/마나 포션 above it and the bottom icon bar (가방 · 스킬 · 퀘스트 · 설정).
-## Multi-touch; the mouse works too. Empty slots open the skill tree.
+## Multi-touch plus clickable HUD buttons. Empty slots open the skill tree.
 
 var game: Node
 var _stick_center := Vector2.ZERO
@@ -98,6 +98,8 @@ func _hit_button(pos: Vector2) -> String:
 func _press(index: int, pos: Vector2) -> bool:
 	var button := _hit_button(pos)
 	var player: Player = game.player
+	if player.dead:
+		return true
 	if button != "":
 		_feedback[button] = 0.16
 	if button.begins_with("slot"):
@@ -146,7 +148,8 @@ func _press(index: int, pos: Vector2) -> bool:
 	if game.hud.minimap.get_global_rect().has_point(pos):
 		game.hud.open_map()
 		return true
-	if pos.x < get_viewport().get_visible_rect().size.x * 0.5 and _stick_index == -2:
+	# Desktop world clicks belong to primary attack; only fingers move the virtual stick.
+	if index >= 0 and pos.x < get_viewport().get_visible_rect().size.x * 0.5 and _stick_index == -2:
 		_stick_index = index
 		_stick_center = pos
 		_stick_knob = pos
@@ -154,10 +157,21 @@ func _press(index: int, pos: Vector2) -> bool:
 	return false
 
 
+## Called after GUI handling, so clicking a panel or HUD action cannot also attack.
+func hold_mouse_primary() -> void:
+	if game.player.dead:
+		return
+	_feedback["slot0"] = 0.16
+	_held[-1] = "slot0"
+	game.player.held_slots[0] = true
+	game.player.cast_slot(0)
+
+
 func _release(index: int) -> void:
 	if _held.has(index):
-		game.player.held_slots[int(String(_held[index]).substr(4))] = false
+		var slot_name := str(_held[index])
 		_held.erase(index)
+		game.player.held_slots[int(slot_name.substr(4))] = _held.values().has(slot_name)
 	if index == _stick_index:
 		_stick_index = -2
 		game.player.move_input = Vector2.ZERO
@@ -177,6 +191,7 @@ func _drag(index: int, pos: Vector2) -> void:
 
 func release_all() -> void:
 	_feedback.clear()
+	game.player.clear_move_target()
 	for index in _held.keys():
 		_release(index)
 	if _stick_index != -2:
@@ -329,20 +344,15 @@ func _draw_joystick() -> void:
 
 func _draw_skill_bezel(center: Vector2, radius: float, pressed: bool) -> void:
 	var u := _unit
-	draw_arc(center, radius + 4.0 * u, 0, TAU, 96, Color(0.27, 0.7, 1.0, 0.14 if pressed else 0.055), 3.0 * u, true)
-	draw_arc(center, radius + 2.0 * u, 0, TAU, 96, Color(0.45, 0.8, 1.0, 0.32 if pressed else 0.18), 2.0 * u, true)
-	draw_arc(center, radius + 1.2 * u, 0, TAU, 96, Color(0.65, 0.86, 1.0, 0.95), 1.5 * u, true)
-	draw_arc(center, radius - 0.8 * u, 0, TAU, 96, Color(0.9, 0.94, 0.94, 0.9), 1.0 * u, true)
-	draw_arc(center, radius - 2.2 * u, 0, TAU, 96, Color(0.11, 0.15, 0.18, 0.92), 1.4 * u, true)
-	draw_arc(center, radius + 0.4 * u, PI * 1.03, PI * 1.59, 32, Color(0.95, 0.99, 1.0, 0.95), 1.1 * u, true)
+	PresentationArt.draw_ui(self, "active", center, radius + 3.0 * u, Color.WHITE if pressed else Color(0.9, 0.94, 0.98))
+	if pressed:
+		draw_arc(center, radius + 2.0 * u, 0, TAU, 96, Color(0.68, 0.88, 1.0, 0.4), 1.2 * u, true)
 
 
 func _draw_empty_socket(center: Vector2, radius: float) -> void:
 	var u := _unit
 	draw_circle(center, radius, Color(0.035, 0.039, 0.044, 0.56))
-	draw_arc(center, radius + 1.0 * u, 0, TAU, 72, Color(0.12, 0.14, 0.15, 0.5), 1.2 * u, true)
-	draw_arc(center, radius - 0.5 * u, 0, TAU, 72, Color(0.48, 0.45, 0.36, 0.55), 0.9 * u, true)
-	draw_arc(center, radius - 3.0 * u, 0, TAU, 64, Color(0.52, 0.56, 0.59, 0.18), 0.7 * u, true)
+	PresentationArt.draw_ui(self, "empty", center, radius + u, Color(0.8, 0.79, 0.74, 0.72))
 	var etching := Color(0.61, 0.58, 0.45, 0.32)
 	draw_arc(center, radius * 0.3, 0, TAU, 32, etching, 0.8 * u, true)
 	for i in 4:

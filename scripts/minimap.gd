@@ -19,12 +19,16 @@ func content_radius() -> float:
 	return radius - 2.0 * radius / 64.0
 
 
+func rim_radius() -> float:
+	return radius + 2.5 * radius / 64.0
+
+
 ## Painted extents include antialiasing and the offset shadow, not just the map disc.
 func paint_bounds() -> Rect2:
 	var u := radius / 64.0
 	var c := size / 2.0
 	var aa := maxf(1.0, u)
-	var outer := radius + 1.5 * u + aa
+	var outer := rim_radius() + aa
 	var shadow := radius + 0.25 * u + 1.25 * u + aa
 	var bounds := Rect2(c - Vector2.ONE * outer, Vector2.ONE * outer * 2.0)
 	bounds = bounds.merge(Rect2(c + Vector2(0, 1.0) * u - Vector2.ONE * shadow, Vector2.ONE * shadow * 2.0))
@@ -108,12 +112,10 @@ func _draw() -> void:
 	var r := Vector2.from_angle(f - 2.5) * radius * 0.055
 	draw_colored_polygon(PackedVector2Array([tip, l, Vector2.from_angle(f + PI) * 2.0, r]), Color(0.96, 0.96, 0.9))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	# Muted antique bronze, with fine lit edges rather than a broad gold ring.
+	# The generated metal stays within the same measured outer rim and marker inset.
 	var u := radius / 64.0
 	draw_arc(c + Vector2(0, 1.0) * u, radius + 0.25 * u, 0, TAU, 80, Color(0.01, 0.015, 0.01, 0.75), 2.5 * u, true)
-	draw_arc(c, radius, 0, TAU, 80, Color("39352a"), 3.0 * u, true)
-	draw_arc(c, radius - 0.7 * u, 0, TAU, 80, Color("8e7b55"), 1.2 * u, true)
-	draw_arc(c, radius - 2.4 * u, 0, TAU, 80, Color(0.78, 0.72, 0.54, 0.3), 0.7 * u, true)
+	PresentationArt.draw_ui(self, "map", c, rim_radius(), Color(0.9, 0.86, 0.76))
 	# The small compass stud sits on the rim like the approved composition.
 	var compass := c + COMPASS_OFFSET * radius
 	draw_circle(compass, COMPASS_RADIUS * u, Color("201d17"))

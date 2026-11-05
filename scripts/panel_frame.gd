@@ -266,27 +266,15 @@ static func wrap_label(text: String, size := 18, color := UiKit.TEXT) -> Label:
 	return l
 
 
-## Small corner brackets and rivets connect menu frames to the HUD's bronze medallions.
+## Generated bronze brackets stay inside the existing decorative corner footprint.
 class FrameTrim:
 	extends Control
 
 	func _draw() -> void:
-		var dark := Color("28231a")
-		var gold := Color("aa9061")
 		for x in [false, true]:
 			for y in [false, true]:
-				var corner := Vector2(size.x - 8 if x else 8, size.y - 8 if y else 8)
 				var inward := Vector2(-1 if x else 1, -1 if y else 1)
-				var points := PackedVector2Array([
-					corner + Vector2(26 * inward.x, 0), corner + Vector2(9 * inward.x, 0),
-					corner + Vector2(0, 9 * inward.y), corner + Vector2(0, 26 * inward.y)])
-				draw_polyline(points, dark, 4.0, true)
-				draw_polyline(points, Color(gold, 0.72), 1.0, true)
-				var rivet := corner + inward * 5
-				draw_circle(rivet, 2.4, Color("0f0e0b"))
-				draw_circle(rivet - Vector2(0.4, 0.6), 1.3, gold)
-		var c := Vector2(size.x * 0.5, 2)
-		for i in [-1, 0, 1]:
-			var at := c + Vector2(i * 12, 0)
-			var diamond := PackedVector2Array([at + Vector2(0, -3), at + Vector2(3, 0), at + Vector2(0, 3), at + Vector2(-3, 0)])
-			draw_colored_polygon(diamond, Color(gold, 0.95 if i == 0 else 0.5))
+				var center := Vector2(size.x - 21 if x else 21, size.y - 21 if y else 21)
+				draw_set_transform(center, 0.0, inward)
+				PresentationArt.draw_ui(self, "corner", Vector2.ZERO, 13.0, Color(1, 0.96, 0.86, 0.9))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

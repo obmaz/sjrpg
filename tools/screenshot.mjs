@@ -20,6 +20,7 @@ const SCENES = {
     warp: 'at=portal&panel=warp',
     warp_trip: 'warp_preview=1',
     juice: 'at=field&combat_preview=1',
+    pc_controls: 'at=field',
     dodge: 'at=field',
     corpses: 'corpse_preview=1',
     corpses_bridge: 'corpse_preview=bridge&zoom=1.2',
@@ -197,6 +198,32 @@ if (scene === 'juice') {
         await page.waitForTimeout(110);
         await page.screenshot({path: out.replace(/\.png$/, `-${frame}.png`)});
     }
+}
+if (scene === 'pc_controls') {
+    // Real desktop events: inspect these captures alongside the input-state regression case.
+    if (device.startsWith('phone')) throw new Error('pc_controls requires --device desktop');
+    await page.mouse.move(vp.width * 0.56, vp.height * 0.42);
+    await page.mouse.down({button: 'left'});
+    await page.waitForTimeout(180);
+    await page.screenshot({path: out.replace(/\.png$/, '-attack.png')});
+    await page.mouse.up({button: 'left'});
+    await page.mouse.click(vp.width * 0.61, vp.height * 0.49, {button: 'right'});
+    await page.waitForTimeout(650);
+    await page.screenshot({path: out.replace(/\.png$/, '-move.png')});
+    for (const key of ['w', 'a', 's', 'd']) {
+        await page.keyboard.down(key);
+        await page.waitForTimeout(140);
+        await page.keyboard.up(key);
+    }
+    for (const key of ['1', '2', '3', '4']) {
+        await page.keyboard.press(key);
+        await page.waitForTimeout(180);
+    }
+    await page.screenshot({path: out.replace(/\.png$/, '-keys.png')});
+    await page.keyboard.press('b');
+    await page.mouse.click(vp.width * 0.5, vp.height * 0.4, {button: 'right'});
+    await page.screenshot({path: out.replace(/\.png$/, '-panel.png')});
+    console.log('PC actual-event captures: left attack, right move, WASD, 1–4, modal right-click');
 }
 const errors = logs.filter((l) => /error/i.test(l));
 console.log(`저장: ${out}${errors.length ? `\n콘솔 오류 ${errors.length}건:\n${errors.slice(0, 5).join('\n')}` : ''}`);

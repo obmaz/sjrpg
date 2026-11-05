@@ -23,6 +23,8 @@ var resource_max := 100.0
 var base_speed := 190.0
 var facing := PI / 2.0
 var move_input := Vector2.ZERO
+var move_target := Vector2.ZERO
+var has_move_target := false
 ## Slots held down on touch / keyboard (index 0 = main).
 var held_slots := {}
 
@@ -138,6 +140,14 @@ func _process(delta: float) -> void:
 	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	if move_input.length() > 0.05:
 		input = move_input
+	if input.length() > 0.05:
+		clear_move_target()
+	elif has_move_target:
+		var direction := move_target - position
+		if direction.length() <= 3.0:
+			clear_move_target()
+		else:
+			input = direction.normalized()
 	if input.length() > 1.0:
 		input = input.normalized()
 
@@ -167,19 +177,39 @@ func _process(delta: float) -> void:
 				Effect.spawn_release(game, self, impact_color)
 			_release_pending = false
 			_resolving_melee_contact = false
-		position = game.move_actor(position, position + input * speed() * 0.25 * delta, RADIUS)
+		_move(input * speed() * 0.25 * delta)
 		return
 
 	if input.length() > 0.05:
 		facing = input.angle()
-		var moved: Vector2 = game.move_actor(position, position + input * speed() * delta, RADIUS)
-		var step := moved.distance_to(position)
+		var from := position
+		_move(input * speed() * delta)
+		var step := position.distance_to(from)
 		_run_distance += step
-		position = moved
 		_drop_blaze(step)
 		sprite.set_frame(atlas, atlas.run_frame(facing, int(_run_distance / 16.0)))
 	else:
 		sprite.set_frame(atlas, atlas.idle_frame(facing))
+
+
+func set_move_target(at: Vector2) -> void:
+	if not dead:
+		move_target = at
+		has_move_target = true
+
+
+func clear_move_target() -> void:
+	has_move_target = false
+
+
+## Point movement stops at the first obstruction; keyboard/touch retain normal wall sliding.
+func _move(offset: Vector2) -> void:
+	if has_move_target and offset.length() > 0.0:
+		offset = (move_target - position).limit_length(offset.length())
+	var desired := position + offset
+	position = game.move_actor(position, desired, RADIUS)
+	if has_move_target and (position.distance_to(desired) > 0.5 or position.distance_to(move_target) <= 3.0):
+		clear_move_target()
 
 
 func _tick_timers(delta: float) -> void:
@@ -732,6 +762,7 @@ func _cancel_actions() -> void:
 	_roll_dir = Vector2.ZERO
 	held_slots.clear()
 	move_input = Vector2.ZERO
+	clear_move_target()
 	sprite.clear_contact_hold()
 
 

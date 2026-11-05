@@ -42,7 +42,7 @@ HUD는 원화가 보이는 여백을 확보하고, 얇은 청동·은색 테두�
 `assets/source/{portrait-mage,panel-leather,potions,level-badge}.png`는 보존하는 원본이며,
 `python3 tools/prepare_ui_art.py`로 작은 WebP와 물약 두 칸 시트를 패킹합니다.
 `assets/art/hud/reference-buttons.webp`는 원본 저장소의 동일한 원형 메뉴 원화를 사용합니다.
-스킬 그림은 원본 스킬 시트와 실제 검·질주 그림을 재사용하고, 빈 슬롯 그림과 상태 프레임은 HUD 도형으로 표시합니다.
+스킬 그림은 원본 스킬 시트와 실제 검·질주 그림을 재사용하고, 스킬·빈 슬롯·미니맵 링과 팝업 모서리는 [같은 생성형 금속 패밀리](presentation-design.md)를 사용합니다. 링 중앙·외부는 실제 투명 알파이며 쿨타임·상태 숫자는 HUD로 표시합니다.
 새 UI 이미지는 손실 임포트 모드 1을 사용합니다.
 
 `hud_layout`, `ui_input`, `panel_layout`, `skill_layout` 검사는 배치·화면 회전·충분한 터치 크기·영역 겹침·입력 해제를 확인합니다.

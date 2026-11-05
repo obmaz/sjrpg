@@ -594,7 +594,31 @@ func _pause_in_background() -> void:
 	hud.pause_for_background()
 
 
+## Screen positions first enter the render viewport, then undo its actual camera transform.
+## Economy quality renders the world at half resolution while the HUD stays full size.
+func screen_to_world(screen: Vector2) -> Vector2:
+	var render_position := screen * scene_view.get_visible_rect().size / get_viewport_rect().size
+	return scene_view.canvas_transform.affine_inverse() * render_position
+
+
 func _unhandled_input(event: InputEvent) -> void:
+	if get_tree().paused or hud.panel_open():
+		return
+	if event is InputEventMouseButton and event.device != InputEvent.DEVICE_ID_EMULATION and event.pressed:
+		if player.dead:
+			return
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			var direction := screen_to_world(event.position) - player.position
+			if direction.length() > 1.0:
+				player.facing = direction.angle()
+			hud.controls.hold_mouse_primary()
+			get_viewport().set_input_as_handled()
+		elif event.button_index == MOUSE_BUTTON_RIGHT:
+			# Drawn HUD buttons are not Control nodes; reserve their right-click area too.
+			if hud.controls._hit_button(event.position) == "" and not hud.minimap.get_global_rect().has_point(event.position):
+				player.set_move_target(screen_to_world(event.position))
+			get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("skill"):
 		player.cast_slot(1)
 	elif event.is_action_pressed("potion"):
@@ -990,6 +1014,9 @@ func find_open_point(from: Vector2, dir: Vector2, distance: float, r: float) -> 
 
 
 func _on_player_died() -> void:
+	hud.controls.release_all()
+	# Releasing pointers can leave false slot entries; death discards every prior hold.
+	player.held_slots.clear()
 	hud.show_death()
 	await get_tree().create_timer(2.5, false).timeout
 	if not player.dead:

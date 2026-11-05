@@ -144,7 +144,8 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 숲의 [전체 화면 기준](forest-reference.md)은 `ForestArt`의 생성형 지면·식생을 사용합니다. `prepare_forest_art.py`가 원본을 패킹하고 `forest_art.json`이 해시·접점을 고정합니다.
 배경 잔디·포장·흙길은 같은 투영을 유지하며 길·건물 가장자리의 낮은 식생만 추가합니다. 별도 장식 난수를 사용하고 충돌은 추가하지 않습니다.
 기본 카메라는 짧은 변 720에서 1.0이며 플레이어 원화 높이는 84입니다. 게임 수치와 충돌은 유지하고 두 화질은 같은 시야를 공유합니다.
-성공한 원소 시전의 손끝 준비광과 투사체 핵은 기존 생성형 원화를 재사용하며 기존 장식 한도·일시정지·동작 줄이기를 따릅니다.
+[생성형 HUD·원소 표현](presentation-design.md)은 `PresentationArt`가 출처를 고정한 금속 4종과 타격 16프레임을 공유합니다. `prepare_presentation_art.py`로 패킹하며 투명 UI와 순수 검정/ADD 발광 원화를 구별합니다.
+시전·발사·투사체·명중·베기·오브·광역 빛은 기존 장식 한도·일시정지·동작 줄이기를 따릅니다.
 
 기본 화질은 기존 주 뷰포트에 월드를 직접 그립니다. 절약 화질에서만 월드·카메라·동굴을 별도 SubViewport로 옮기고
 HUD·패널은 주 뷰포트에 유지합니다. `Game.scene_root`/`scene_view`가 현재 월드의 부모와 뷰포트를 가리킵니다.
@@ -224,7 +225,15 @@ compact 높이는 실제 헤더·탭·푸터 최소 크기를 측정하며 본�
 
 ## 저장과 재접속
 
-게임은 창·앱의 포커스 이탈과 앱 중단 알림에서 터치·키보드 입력을 해제하고 저장합니다.
+PC 월드 좌클릭은 GUI 처리 뒤 `TouchControls.hold_mouse_primary()`를 거쳐 모바일 주 슬롯과 같은 `Player.cast_slot(0)`을 호출합니다.
+마우스는 HUD 버튼을 누를 수 있지만 가상 조이스틱을 시작하지 않습니다. 1–4는 보조 슬롯, WASD/방향키는 직접 이동입니다.
+우클릭은 `Game.screen_to_world()`로 실제 렌더 뷰포트 크기와 카메라 변환을 역산해 이동 목적지를 정합니다.
+절약 화질의 반 해상도 월드에서도 HUD 좌표를 그대로 월드 좌표로 사용하지 않습니다. 이동은 기존 충돌 검사를 통과하며,
+목적지 도착·충돌·직접 이동·팝업·포커스 이탈·사망·워프에서 취소합니다. 별도 경로 탐색은 하지 않습니다.
+`desktop_input`은 실제 이벤트 전달·주 공격의 재사용/자원 검사·1–4·UI 차단·두 화질의 좌표 변환·충돌 정지를 검사합니다.
+`node tools/screenshot.mjs --scene pc_controls --device desktop`으로 실제 브라우저 조작 결과를 함께 확인합니다.
+
+게임은 창·앱의 포커스 이탈과 앱 중단 알림에서 터치·키보드·목적지 이동을 해제하고 저장합니다.
 열린 패널이 없으면 `Hud.pause_for_background()`로 재개 안내를 열며, 기존 패널은 유지합니다.
 포커스 복귀만으로는 재개하지 않습니다. 지연 회전 공격·기억 표시·승리 표시·부활의 SceneTreeTimer도
 `process_always=false`로 만들어 일시정지를 따릅니다. `tools/screenshot.mjs --scene background`는 실제 캔버스 blur를 발생시킵니다.
@@ -273,7 +282,7 @@ HUD는 실패 시 누를 수 있는 재시도 안내를 유지하며 설정의 �
 
 ## 전투 피드백
 
-`Effect.spawn_impact()`는 실제 피해 확정 뒤에만 생성형 4칸 원화(`assets/source/impact-atlas.png` → `assets/art/effects/impact-atlas.webp`)를 가산광으로 짧게 표시합니다. 기존 장식64개 한도를 공유하며 투사체·피해 영역과 분리합니다. 적의 반동은 스프라이트 위치에만 적용합니다. `Game.combat_feedback()`는 근처 명중에만 최대6px의 감쇠하는 카메라 오프셋을 더하며 시간 배율을 바꾸지 않습니다. 동작 줄이기는 이 움직임을 끕니다.
+`Effect.spawn_impact()`는 실제 피해 확정 뒤에만 생성형 속성별 4프레임 원화(`assets/source/combat-frames.png` → `assets/art/effects/combat-frames.webp`)를 가산광으로 짧게 표시합니다. 기존 장식64개 한도를 공유하며 투사체·피해 영역과 분리합니다. 적의 반동은 스프라이트 위치에만 적용합니다. `Game.combat_feedback()`는 근처 명중에만 최대6px의 감쇠하는 카메라 오프셋을 더하며 시간 배율을 바꾸지 않습니다. 동작 줄이기는 이 움직임을 끕니다.
 HUD는 체력·물약 수·쿨다운의 실제 변화를 감지합니다. 사운드의 작은 피치 변화는 별도 난수기를 써 전투 난수에 영향을 주지 않습니다. `juice` 테스트는 실제 피해·무적 중 중복 반응 방지·모션 설정·장식 한도를 검사합니다.
 `tools/screenshot.mjs --scene juice --class mage --device phone`은 명시적인 `combat_preview=1` 쿼리로 반복 명중을 재현하고 연속 화면을 저장합니다. 일반 모험에는 이 미리보기를 실행하지 않습니다.
 

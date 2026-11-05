@@ -67,4 +67,4 @@ and both faces so mismatches cannot hide behind a single front view. No labels.
 
 - 지면은 실제 `Iso` 평면에 투영하므로 원화는 정면 위에서 보는 반복 재료 타일입니다. 위 단일 구조물 카메라 문구 대신 `orthographic top-down, seamless evenly lit material tile, no directional shadows`를 사용합니다. 오브젝트 원근을 타일에 굽지 않습니다.
 - 식생은 같은 높은 카메라와 색·세부 밀도를 유지하되 자연형 수관을 자로 그은 모서리처럼 만들지 않습니다. `visible upper canopy layers, naturally occluded rear branches, short trunk, rooted ground contact, irregular organic silhouette`을 덧붙입니다.
-- 이펙트는 실제 속성에 맞는 작은 청백/불꽃/서리 핵, 가는 궤적과 짧은 섬광입니다. 투명 배경과 실제 게임에서 사용할 수명·크기·프레임 구분을 지정하고 바닥·캐릭터·UI를 함께 굽지 않습니다.
+- 이펙트는 실제 속성에 맞는 작은 청백/불꽃/서리 핵, 가는 궤적과 짧은 섬광입니다. 발광 전용은 [ADD 원화 규격](presentation-design.md)에 따라 순수 검정 바탕으로 제작할 수 있으며 빈 픽셀의 빛 기여가 0인지 검수합니다. UI·일반 오브젝트는 실제 투명 알파를 유지합니다. 투명 알파 또는 발광 전용 검정 바탕과 실제 게임에서 사용할 수명·크기·프레임 구분을 지정하고 바닥·캐릭터·UI를 함께 굽지 않습니다.

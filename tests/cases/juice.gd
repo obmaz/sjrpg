@@ -92,12 +92,74 @@ func run() -> void:
 	check("death immediately releases the hit pose", enemy.dead and enemy.sprite.contact_hold == 0.0)
 	game.queue_free()
 	await _frames(2)
+	await _check_generated_fx_blending()
 	await _check_cast_presentation()
+	await _check_impact_animation_clock()
 	await _check_projectile_sweep()
 	await _check_death_cancellation()
 	await _check_chain_target_lifetime()
 	await _check_leap_target_lifetime()
 	Prefs.reduce_motion = old_reduce
+
+
+func _check_generated_fx_blending() -> void:
+	var game := await make_game()
+	var generated: Array[Effect] = [
+		Effect.spawn_cast(game, game.player, SkillDefs.LIGHT),
+		Effect.spawn_release(game, game.player, SkillDefs.LIGHT),
+		Effect.spawn_impact(game, game.player.position, game.player),
+	]
+	for kind in ["nova", "slash", "orb", "proj"]:
+		var effect := Effect.new()
+		effect.kind = kind
+		game._add_effect(effect)
+		generated.append(effect)
+	for effect in generated:
+		var blend := effect.material as CanvasItemMaterial
+		check("generated %s art uses additive blending so black remains invisible" % effect.kind, blend != null and blend.blend_mode == CanvasItemMaterial.BLEND_MODE_ADD)
+		effect.queue_free()
+	var thrown := Effect.new()
+	thrown.kind = "proj"
+	thrown.params["throw"] = true
+	game._add_effect(thrown)
+	check("solid thrown projectiles keep their original material", thrown.material == null)
+	game.queue_free()
+	await _frames(2)
+
+
+func _check_impact_animation_clock() -> void:
+	Prefs.reduce_motion = false
+	var game := await make_game()
+	var enemy := _fixture_enemy(game, game.player.position + Vector2(75, 0))
+	enemy.take_damage(1.0, game.player)
+	var impacts: Array = game.cosmetic_effects.filter(func(effect: Effect) -> bool: return effect.kind == "impact")
+	check("confirmed contact supplies the authored impact animation", not impacts.is_empty())
+	if impacts.is_empty():
+		game.queue_free()
+		await _frames(2)
+		return
+	var impact: Effect = impacts[0]
+	var hp := enemy.hp
+	impact._process(0.01)
+	var contact_phase := impact.visual_phase()
+	impact._process(0.04)
+	check("impact art advances from contact toward the later frames", impact.visual_phase() > contact_phase and impact.visual_phase() < 1.0)
+	game.hud.open_settings()
+	var paused_age := impact.age
+	var paused_phase := impact.visual_phase()
+	await _frames(3)
+	check("pause freezes both impact lifetime and authored frame progression", impact.age == paused_age and impact.visual_phase() == paused_phase)
+	game.hud.close_panel()
+	Prefs.reduce_motion = true
+	var still_phase := impact.visual_phase()
+	var before := impact.age
+	impact._process(0.025)
+	check("reduced motion holds one artwork pose while its fade clock advances", impact.visual_phase() == still_phase and impact.age > before)
+	impact._process(impact.life + 0.1)
+	check("frozen artwork still expires without extra damage", impact.is_queued_for_deletion() and enemy.hp == hp)
+	Prefs.reduce_motion = false
+	game.queue_free()
+	await _frames(2)
 
 
 func _check_cast_presentation() -> void:

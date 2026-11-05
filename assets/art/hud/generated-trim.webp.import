@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cd3xgg5y786em"
-path="res://.godot/imported/impact-atlas.webp-f26f5927604eb1f4fff2c7a0861baf00.ctex"
+uid="uid://cjwhw3ixowu5l"
+path="res://.godot/imported/generated-trim.webp-5ac18cef14711e8319d3862446e6ce3c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/effects/impact-atlas.webp"
-dest_files=["res://.godot/imported/impact-atlas.webp-f26f5927604eb1f4fff2c7a0861baf00.ctex"]
+source_file="res://assets/art/hud/generated-trim.webp"
+dest_files=["res://.godot/imported/generated-trim.webp-5ac18cef14711e8319d3862446e6ce3c.ctex"]
 
 [params]
 
