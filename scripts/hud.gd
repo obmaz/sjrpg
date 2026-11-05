@@ -351,7 +351,7 @@ static func header_geometry(view: Vector2, m: Vector4) -> Dictionary:
 	var label_left := center.x + radius + 8.0 * u
 	var geometry := {
 		"unit": u, "origin": origin, "portrait": center, "radius": radius,
-		"plate": plate, "slope": slope, "visible_start": center.x + radius + 5.0 * u,
+		"plate": plate, "slope": slope, "join_radius": radius + 3.0 * u,
 		"hp": rows["hp"], "mp": rows["mp"], "xp": rows["xp"],
 		"map_unit": screen_unit,
 		"map": Rect2(Vector2(m.x + available.x - 144.0 * screen_unit, safe_top - map_ink.position.y), map_size),
@@ -483,24 +483,24 @@ func _draw_bars() -> void:
 	# One joined gunmetal ribbon, with the portrait rim covering its left join.
 	var plate: PackedVector2Array = geometry["plate"]
 	var slope: float = geometry["slope"]
-	var visible_start: float = geometry["visible_start"]
+	var join_radius: float = geometry["join_radius"]
 	_bars.draw_colored_polygon(plate, Color(0.055, 0.045, 0.045, 0.94))
 	_bars.draw_polyline(plate + PackedVector2Array([plate[0]]), Color("746b5e"), 1.3 * u, true)
 	_bars.draw_line(plate[0] + Vector2(0, 2) * u, plate[1] + Vector2(-2, 2) * u, Color(0.7, 0.62, 0.48, 0.2), 0.8 * u, true)
 	_bars.draw_line(plate[3] + Vector2(0, 3) * u, plate[2] + Vector2(0, 3) * u, Color(0, 0, 0, 0.45), 2.0 * u, true)
 	var actual_ratio := p.hp / maxf(1.0, p.max_hp)
-	HudArt.slanted_bar(_bars, hp_rect, actual_ratio, Color("b43134"), Color("751719"), Color("432022"), hp_rect.size.y * slope, visible_start, _health_trail if not Prefs.reduce_motion else actual_ratio)
+	HudArt.slanted_bar(_bars, hp_rect, actual_ratio, Color("b43134"), Color("751719"), Color("432022"), hp_rect.size.y * slope, center, join_radius, _health_trail if not Prefs.reduce_motion else actual_ratio)
 	if _hurt_feedback > 0.0 or _heal_feedback > 0.0:
 		var color := Color(1.0, 0.47, 0.34, _hurt_feedback / 0.28) if _hurt_feedback > 0.0 else Color(0.62, 0.91, 0.7, _heal_feedback / 0.35)
-		var frame := HudArt._bar_poly(hp_rect, 1.0, hp_rect.size.y * slope, visible_start)
-		_bars.draw_polyline(frame + PackedVector2Array([frame[0]]), color, 1.8 * u, true)
+		var frame := HudArt._bar_poly(hp_rect, 1.0, hp_rect.size.y * slope, center, join_radius)
+		_bars.draw_polyline(HudArt.bar_outline(frame), color, 1.8 * u, true)
 
 	# Number baselines use the actual font metrics, clear of the portrait and sloped edge.
 	HudArt.text_in_rect(_bars, "%s / %s" % [HudArt.stat(p.hp), HudArt.stat(p.max_hp)], geometry["hp_label"], roundi(23 * u), Color("f4f1eb"))
 	var top := Color("61bfe5") if p.is_mage else Color("cd9c4a")
 	var bottom := Color("245d86") if p.is_mage else Color("895120")
 	var back := Color("142e40") if p.is_mage else Color("39291a")
-	HudArt.slanted_bar(_bars, mp_rect, p.resource / maxf(1.0, p.resource_max), top, bottom, back, mp_rect.size.y * slope, visible_start)
+	HudArt.slanted_bar(_bars, mp_rect, p.resource / maxf(1.0, p.resource_max), top, bottom, back, mp_rect.size.y * slope, center, join_radius)
 	var info := GameState.class_info()
 	HudArt.text_in_rect(_bars, "%s %s" % [info["resource"], HudArt.res(p.resource)], geometry["mp_label"], roundi(18 * u), Color("e7f4f7"))
 	if p.is_mage:
@@ -508,11 +508,11 @@ func _draw_bars() -> void:
 		for fraction in [0.17, 0.78]:
 			if p.resource / p.resource_max < fraction:
 				continue
-			var at := Vector2(HudArt.fill_end(mp_rect, fraction, visible_start), mp_rect.position.y + 7.0 * u)
+			var at := HudArt.fill_point(mp_rect, fraction, 7.0 * u / mp_rect.size.y, mp_rect.size.y * slope, center, join_radius)
 			_bars.draw_line(at - Vector2(4, 0) * u, at + Vector2(4, 0) * u, Color(0.8, 0.96, 1.0, shimmer), 0.8 * u, true)
 			_bars.draw_line(at - Vector2(0, 4) * u, at + Vector2(0, 4) * u, Color(0.8, 0.96, 1.0, shimmer * 0.7), 0.8 * u, true)
 	var xp_ratio := float(GameState.xp) / GameState.xp_to_next()
-	HudArt.slanted_bar(_bars, xp_rect, xp_ratio, Color("bfa361"), Color("8d733f"), Color("393530"), xp_rect.size.y * slope, visible_start)
+	HudArt.slanted_bar(_bars, xp_rect, xp_ratio, Color("bfa361"), Color("8d733f"), Color("393530"), xp_rect.size.y * slope, center, join_radius)
 	HudArt.text_in_rect(_bars, "EXP %d%%" % floori(xp_ratio * 100.0), geometry["xp_label"], roundi(11 * u), Color("d9d0b9"))
 	# A quiet single line keeps progression discoverable without dominating the scene.
 	var obj: String = game.dungeon.objective() if game.dungeon.active else Quests.main_objective()

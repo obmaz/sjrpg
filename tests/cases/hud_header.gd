@@ -2,6 +2,13 @@ extends TestCase
 ## Validate the actual painted header, visible fill and shaped labels, including safe insets.
 
 
+func _area(poly: PackedVector2Array) -> float:
+	var area := 0.0
+	for index in poly.size():
+		area += (poly[index] - poly[0]).cross(poly[(index + 1) % poly.size()] - poly[0])
+	return absf(area) * 0.5
+
+
 func run() -> void:
 	var map := Minimap.new()
 	for view in [Vector2(540, 960), Vector2(720, 1280), Vector2(1280, 720), Vector2(720, 1600), Vector2(1600, 720), Vector2(1440, 2560)]:
@@ -11,7 +18,6 @@ func run() -> void:
 			var available := Rect2(Vector2(safe.x, safe.y), view - Vector2(safe.x + safe.z, safe.y + safe.w))
 			check("all portrait crests and plate shadows fit safe screen %s/%s" % [view, safe], available.encloses(geometry["paint_bounds"]))
 			var portrait_ink: Rect2 = geometry["portrait_bounds"]
-			check("small fluid amounts clear the portrait rim and shadow", float(geometry["visible_start"]) > portrait_ink.end.x)
 			var map_rect: Rect2 = geometry["map"]
 			map.size = map_rect.size
 			map.radius = 64.0 * float(geometry["map_unit"])
@@ -33,19 +39,28 @@ func run() -> void:
 				var rect: Rect2 = geometry[key]
 				var slant := rect.size.y * float(geometry["slope"])
 				var label: Rect2 = geometry[key + "_label"]
-				check("numbers clear the full portrait: " + key, label.position.x > float(geometry["visible_start"]) and label.size.x > 0)
+				var fluid_radius: float = geometry["join_radius"]
+				var frame := HudArt._bar_poly(rect, 1.0, slant, avatar, fluid_radius)
+				var curved_points := 0
+				for point in frame:
+					if point.x <= avatar.x + fluid_radius + 0.01:
+						curved_points += 1
+						check("meter meets the portrait curve without a broad spacer: " + key, absf(point.distance_to(avatar) - fluid_radius) < 0.02)
+				check("each meter has a curved portrait contact: " + key, curved_points > 4)
+				check("tiny positive decay remainders cannot submit collapsed polygons: " + key, HudArt._bar_poly(rect, 1e-15, slant, avatar, fluid_radius).is_empty())
+				check("numbers clear the full portrait: " + key, label.position.x > portrait_ink.end.x and label.size.x > 0)
 				for point in [Vector2(rect.end.x, rect.position.y), Vector2(rect.end.x - slant, rect.end.y)]:
 					var outside: float = plate[1].x - (point.y - plate[1].y) * slope
 					gaps.append(outside - point.x)
 				for ratio in [0.0, 0.001, 0.01, 0.05, 0.5, 0.979, 0.99, 0.999, 1.0]:
-					var poly := HudArt._bar_poly(rect, ratio, slant, geometry["visible_start"])
+					var poly := HudArt._bar_poly(rect, ratio, slant, avatar, fluid_radius)
 					if ratio == 0.0:
 						check("empty fluid draws no sliver: " + key, poly.is_empty())
 						continue
-					var visible := (poly[1].x - float(geometry["visible_start"])) / (rect.end.x - float(geometry["visible_start"]))
-					check("uncovered fluid shows its actual fraction %s/%.3f" % [key, ratio], absf(visible - ratio) < 0.0001)
-					check("tiny fills have no exposed join wedge: " + key, is_equal_approx(poly[0].x, geometry["visible_start"]) and is_equal_approx(poly[poly.size() - 1].x, geometry["visible_start"]))
+					var visible := _area(poly) / _area(frame)
+					check("visible curved fluid area shows its actual fraction %s/%.3f" % [key, ratio], absf(visible - ratio) < 0.0001)
 					for point in poly:
+						check("fluid clears the portrait rim at every height: " + key, point.distance_to(avatar) >= fluid_radius - 0.02)
 						var edge: float = rect.end.x - (point.y - rect.position.y) / rect.size.y * slant
 						check("fluid stays inside the bevel %s/%.3f" % [key, ratio], point.x <= edge + 0.001 and point.x >= rect.position.x - 0.001 and point.y >= rect.position.y - 0.001 and point.y <= rect.end.y + 0.001)
 				var preferred := roundi((23 if key == "hp" else 18 if key == "mp" else 11) * u)

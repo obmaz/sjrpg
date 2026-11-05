@@ -4,6 +4,7 @@ extends RefCounted
 ## from the original sheets (cinematic-interface.webp), slanted bars and rune rings.
 
 const FONT := preload("res://assets/fonts/NanumGothic-Regular.ttf")
+const BAR_STEPS := 16
 
 static var _sheet: Texture2D
 static var _rects: Dictionary
@@ -64,23 +65,30 @@ static func text_outlined(canvas: CanvasItem, text: String, at: Vector2, width: 
 
 
 ## Slanted bar (parallelogram, right end cut like the reference).
-static func slanted_bar(canvas: CanvasItem, rect: Rect2, ratio: float, fill_top: Color, fill_bottom: Color, back: Color, slant := 10.0, visible_start := -1.0, trail := -1.0) -> void:
-	var back_poly := _bar_poly(rect, 1.0, slant, visible_start)
-	# The shared ribbon owns the curved portrait join; meters never paint rectangular left caps.
+static func slanted_bar(canvas: CanvasItem, rect: Rect2, ratio: float, fill_top: Color, fill_bottom: Color, back: Color, slant: float, center: Vector2, radius: float, trail := -1.0) -> void:
+	var back_poly := _bar_poly(rect, 1.0, slant, center, radius)
 	canvas.draw_colored_polygon(back_poly, back)
+	_draw_join_edge(canvas, back_poly, back, back)
 	ratio = clampf(ratio, 0.0, 1.0)
 	if trail > ratio + 0.001:
-		canvas.draw_colored_polygon(_bar_poly(rect, clampf(trail, 0, 1), slant, visible_start), Color(0.84, 0.57, 0.32, 0.7))
-	if ratio > 0.0:
-		var fill := _bar_poly(rect, ratio, slant, visible_start)
+		var trail_poly := _bar_poly(rect, clampf(trail, 0, 1), slant, center, radius)
+		if not trail_poly.is_empty():
+			var trail_color := Color(0.84, 0.57, 0.32, 0.7)
+			canvas.draw_colored_polygon(trail_poly, trail_color)
+			_draw_join_edge(canvas, trail_poly, trail_color, trail_color)
+	var fill := _bar_poly(rect, ratio, slant, center, radius)
+	if not fill.is_empty():
 		var colors := PackedColorArray()
 		for p in fill:
 			colors.append(fill_top.lerp(fill_bottom, (p.y - rect.position.y) / rect.size.y))
 		canvas.draw_polygon(fill, colors)
+		_draw_join_edge(canvas, fill, fill_top, fill_bottom)
 		var end := Vector2(fill[1].x - (1.0 if ratio >= 0.999 else 0.0), rect.position.y + 1.0)
 		canvas.draw_line(fill[0] + Vector2(0, 1.0), end, Color(fill_top.lightened(0.45), 0.58), 0.8, true)
-	canvas.draw_polyline(PackedVector2Array([back_poly[0], back_poly[1], back_poly[2], back_poly[3], back_poly[0]]), Color(0.54, 0.49, 0.4, 0.95), 0.9, true)
-	canvas.draw_line(back_poly[3] + Vector2(0, 1.0), back_poly[2] + Vector2(0, 1.0), Color(0.015, 0.012, 0.012, 0.9), 1.0, true)
+	var outline := bar_outline(back_poly)
+	# The portrait ring owns the curved edge; only top/right/bottom have a second metal stroke.
+	canvas.draw_polyline(outline, Color(0.54, 0.49, 0.4, 0.95), 0.9, true)
+	canvas.draw_line(outline[-1] + Vector2(0, 1.0), outline[-2] + Vector2(0, 1.0), Color(0.015, 0.012, 0.012, 0.9), 1.0, true)
 
 
 ## A single ribbon follows the portrait's right rim instead of exposing square
@@ -96,24 +104,45 @@ static func joined_ribbon(center: Vector2, radius: float, top: float, right: flo
 	return points
 
 
-static func fill_end(rect: Rect2, ratio: float, visible_start := -1.0) -> float:
-	var start := rect.position.x if visible_start < 0 else clampf(visible_start, rect.position.x, rect.end.x)
-	return lerpf(start, rect.end.x, clampf(ratio, 0.0, 1.0))
+## Every horizontal section fills the same fraction of its visible width. This keeps
+## tiny values honest even where the portrait cuts a curved bite out of the meter.
+static func fill_point(rect: Rect2, ratio: float, height_fraction: float, slant: float, center: Vector2, radius: float) -> Vector2:
+	var y := lerpf(rect.position.y, rect.end.y, height_fraction)
+	var dy := y - center.y
+	var left := maxf(rect.position.x, center.x + sqrt(maxf(0.0, radius * radius - dy * dy)))
+	var right := rect.end.x - slant * height_fraction
+	return Vector2(lerpf(left, right, clampf(ratio, 0.0, 1.0)), y)
 
 
-static func _bar_poly(rect: Rect2, ratio: float, slant: float, visible_start := -1.0) -> PackedVector2Array:
+static func bar_outline(poly: PackedVector2Array) -> PackedVector2Array:
+	return poly.slice(0, BAR_STEPS + 3)
+
+
+static func _draw_join_edge(canvas: CanvasItem, poly: PackedVector2Array, top: Color, bottom: Color) -> void:
+	# Smooth the colour boundary, without adding another metal rim or making tiny fills wider.
+	if poly.is_empty() or poly[1].x - poly[0].x < 1.0:
+		return
+	var edge := PackedVector2Array([poly[0]])
+	for index in range(poly.size() - 1, BAR_STEPS + 1, -1):
+		edge.append(poly[index])
+	var colors := PackedColorArray()
+	for point in edge:
+		colors.append(top.lerp(bottom, (point.y - edge[0].y) / (edge[-1].y - edge[0].y)))
+	canvas.draw_polyline_colors(edge, colors, 1.0, true)
+
+
+static func _bar_poly(rect: Rect2, ratio: float, slant: float, center: Vector2, radius: float) -> PackedVector2Array:
 	if ratio <= 0.0:
 		return PackedVector2Array()
-	var cut := fill_end(rect, ratio, visible_start)
-	var left := rect.position.x if visible_start < 0 else clampf(visible_start, rect.position.x, rect.end.x)
-	var bottom := rect.end.x - minf(slant, rect.size.x)
-	var points := PackedVector2Array([Vector2(left, rect.position.y), Vector2(cut, rect.position.y)])
-	# Intersect the horizontal fill with the full frame's slope. Near-full fills
-	# need a fifth corner; a rectangle would spill out under the beveled end.
-	if cut > bottom and ratio < 1.0 and slant > 0.0:
-		points.append(Vector2(cut, rect.position.y + (rect.end.x - cut) / slant * rect.size.y))
-	points.append(Vector2(minf(cut, bottom), rect.end.y))
-	points.append(Vector2(left, rect.end.y))
+	# Resource decay can leave a positive floating-point remainder at zero. Do not
+	# submit collapsed float32 polygons (or their highlights) to the triangulator.
+	if fill_point(rect, ratio, 0.5, slant, center, radius).x - fill_point(rect, 0.0, 0.5, slant, center, radius).x < 0.01:
+		return PackedVector2Array()
+	var points := PackedVector2Array([fill_point(rect, 0.0, 0.0, slant, center, radius)])
+	for step in range(BAR_STEPS + 1):
+		points.append(fill_point(rect, ratio, float(step) / BAR_STEPS, slant, center, radius))
+	for step in range(BAR_STEPS, 0, -1):
+		points.append(fill_point(rect, 0.0, float(step) / BAR_STEPS, slant, center, radius))
 	return points
 
 
