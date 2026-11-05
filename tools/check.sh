@@ -21,6 +21,12 @@ fail=0
 echo "── 1/3 임포트"
 "$GODOT_SH" --headless --import >"$LOG" 2>&1
 code=$?
+# A clean editor can request the project's custom font before its first import creates it.
+# Verify once more after import; persistent engine errors and all test errors still fail.
+if [ $code -eq 0 ] && ! grep -qE "SCRIPT ERROR|Parse Error|Failed to load script" "$LOG" && grep -q '^ERROR:' "$LOG"; then
+  "$GODOT_SH" --headless --import >"$LOG" 2>&1
+  code=$?
+fi
 if [ $code -ne 0 ]; then echo "임포트 실패: Godot 종료 코드 $code (실행 파일이 이 OS용인지 확인)"; head -3 "$LOG"; fail=1
 elif grep -E "SCRIPT ERROR|Parse Error|Failed to load script|^ERROR:" "$LOG"; then echo "임포트 실패"; fail=1
 else echo "임포트 ok"; fi
