@@ -17,6 +17,10 @@ const SCENES = {
     hud_nearfull: 'hud_preview=nearfull',
     hud_large: 'hud_preview=large',
     hud_danger: 'hud_preview=danger',
+    stone: 'encounter_preview=ready',
+    stone_cast: 'encounter_preview=ready',
+    stone_active: 'encounter_preview=active',
+    stone_empty: 'encounter_preview=empty',
     plaza: 'at=portal',
     warp: 'at=portal&panel=warp',
     warp_trip: 'warp_preview=1',
@@ -27,6 +31,7 @@ const SCENES = {
     corpses_bridge: 'corpse_preview=bridge&zoom=1.2',
     corpses_terrace: 'corpse_preview=terrace&zoom=1.1',
     rewards: 'reward_preview=1',
+    levelup: 'reward_preview=levelup',
     cooldowns: '',
     background: '',
     wide: 'zoom=0.45',
@@ -183,13 +188,22 @@ if (args.start) await tap(...args.start.split(',').map(Number));
 else await tapEntry('start');
 await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { timeout: 30000 });
 if (scene === 'background') await page.evaluate(() => document.querySelector('canvas').blur());
-if (scene.startsWith('hud')) {
+if (scene.startsWith('stone')) {
+    await page.waitForFunction(() => window.__sjrpgEncounterPreviewReady === true, null, {timeout: 30000});
+    if (scene === 'stone_cast') {
+        await page.keyboard.down('Space');
+        await page.waitForTimeout(260);
+        await page.keyboard.up('Space');
+        await page.waitForFunction(() => window.__sjrpgEncounterAudit.charges === 2 && window.__sjrpgEncounterAudit.living > 0, null, {timeout: 15000});
+        console.log('Encounter actual attack consumed one charge and summoned', await page.evaluate(() => window.__sjrpgEncounterAudit.living));
+    }
+} else if (scene.startsWith('hud')) {
     await page.waitForFunction(() => window.__sjrpgHudPreviewReady === true, null, {timeout: 30000});
     await page.waitForTimeout(300);
 } else if (scene.startsWith('cave_')) {
     await page.waitForFunction(() => window.__sjrpgDungeonPreviewReady === true, null, {timeout: 30000});
     await page.waitForTimeout(300);
-} else if (scene === 'rewards') {
+} else if (scene === 'rewards' || scene === 'levelup') {
     await page.waitForFunction(() => window.__sjrpgRewardPreviewReady === true, null, {timeout: 30000});
 } else if (scene === 'warp_trip') {
     await page.waitForFunction(() => Array.isArray(window.__sjrpgWarpPreviewButton), null, {timeout: 30000});

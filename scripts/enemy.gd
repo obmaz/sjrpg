@@ -29,11 +29,15 @@ var dead := false
 ## 보호 의뢰의 습격자 / 보스.
 var is_threat := false
 var is_boss := false
+var encounter_id := ""
+var spawn_level := 1
+var encounter_spawn_frame := -1
 ## Cave enemies idle within their room; zero keeps the field's free roaming behavior.
 var patrol_center := Vector2.ZERO
 var patrol_radius := 0.0
 
 var _state := "idle"
+var _hitstop := GameTempo.ContactStop.new()
 var _timer := 0.0
 var _windup_duration := 0.55
 var _recover_duration := 0.7
@@ -59,6 +63,7 @@ var _boss_attacks := 0
 
 func setup(g: Node, k: String, level: int) -> void:
 	game = g
+	spawn_level = level
 	kind = k
 	var def: Dictionary = KINDS[k]
 	display_name = def["name"]
@@ -148,6 +153,8 @@ func _update_tint() -> void:
 func take_damage(amount: float, source: Node2D, visual_source: Node2D = null) -> void:
 	if dead or amount <= 0.0:
 		return
+	if not encounter_id.is_empty() and encounter_spawn_frame == Engine.get_process_frames():
+		return  # A summon cannot be killed by the same resolved contact that created it.
 	if _cry_time > 0.0:
 		amount *= 1.0 + _cry_value
 	hp -= amount
@@ -164,6 +171,7 @@ func take_damage(amount: float, source: Node2D, visual_source: Node2D = null) ->
 		_recoil_started = false
 		_recoil = _recoil_direction * _recoil_size
 		sprite.position = _recoil
+	_hitstop.trigger(0.055 if heavy else 0.040)
 	sprite.hold_contact(0.065 if heavy else 0.045)
 	if source is Player:
 		source.confirm_melee_contact(heavy)
@@ -185,6 +193,7 @@ func _die() -> void:
 	if dead:
 		return
 	dead = true
+	_hitstop.clear()
 	queue_redraw()
 	sprite.clear_contact_hold()
 	game.on_enemy_killed(self)
@@ -212,6 +221,9 @@ func _process(delta: float) -> void:
 	_taunt_time = maxf(0.0, _taunt_time - delta)
 	_cry_time = maxf(0.0, _cry_time - delta)
 	_update_tint()
+	delta = _hitstop.consume(delta)
+	if delta <= 0.0:
+		return
 	if _knockback.length() > 1.0:
 		position = game.move_actor(position, position + _knockback * delta, RADIUS, true)
 		_knockback = _knockback.move_toward(Vector2.ZERO, 900.0 * delta)
@@ -235,10 +247,10 @@ func _process(delta: float) -> void:
 		"idle":
 			_timer -= delta
 			if _timer <= 0.0:
-				_timer = randf_range(1.5, 3.5)
+				_timer = GameTempo.duration(randf_range(1.5, 3.5))
 				_wander = Vector2.from_angle(randf() * TAU) * (0.0 if randf() < 0.4 else 0.4)
 			var wander := _wander
-			if patrol_radius > 0.0 and (position + wander * speed * delta * rate).distance_to(patrol_center) > patrol_radius:
+			if patrol_radius > 0.0 and (position + wander * GameTempo.speed(speed) * delta * rate).distance_to(patrol_center) > patrol_radius:
 				wander = (patrol_center - position).normalized() * 0.4
 			if wander != Vector2.ZERO:
 				_step(wander, delta * rate)
@@ -251,7 +263,7 @@ func _process(delta: float) -> void:
 				_state = "idle"
 			elif dist <= attack_range:
 				_state = "windup"
-				_windup_duration = (1.0 if is_boss else 0.55) / rate
+				_windup_duration = GameTempo.duration((1.0 if is_boss else 0.55) / rate)
 				_timer = _windup_duration
 				if is_boss:
 					queue_redraw()
@@ -279,13 +291,13 @@ func _process(delta: float) -> void:
 					game.spawn_nova(position, attack_range + 60.0, Color(1.0, 0.6, 0.3))
 					SoundFx.play("impact")
 				_state = "recover"
-				_recover_duration = (1.2 if is_boss else 0.7) / rate
-				_recover_visual_duration = (0.4 if is_boss else 0.28) / rate
+				_recover_duration = GameTempo.duration((1.2 if is_boss else 0.7) / rate)
+				_recover_visual_duration = GameTempo.duration((0.4 if is_boss else 0.28) / rate)
 				_timer = _recover_duration
 		"recover":
 			_timer -= delta
 			# Complete the authored return promptly, then hold its neutral last pose.
-			# Recovery gameplay time stays unchanged, including the boss's longer pause.
+			# Both clocks use the shared action tempo; bosses retain their longer pause.
 			var progress := clampf((_recover_duration - _timer) / _recover_visual_duration, 0.0, 1.0)
 			sprite.set_frame(atlas, atlas.attack_frame(facing, 0.6 + progress * 0.4))
 			if _timer <= 0.0:
@@ -297,7 +309,7 @@ func _step(direction: Vector2, delta: float) -> void:
 		return
 	var dir := direction.normalized() * minf(1.0, direction.length())
 	facing = dir.angle()
-	var target := position + dir * speed * delta
+	var target := position + dir * GameTempo.speed(speed) * delta
 	var moved: Vector2 = game.move_actor(position, target, RADIUS, true)
 	_walk_cycle += moved.distance_to(position) / 70.0
 	position = moved

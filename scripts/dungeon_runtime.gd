@@ -75,10 +75,11 @@ func enter() -> bool:
 	GameState.location_mode = "cave"
 	_build_art(world)
 	_build_enemies()
-	var portal := IsoSprite.new().setup(game.village.data["sprites"]["portal"], 150.0)
-	portal.position = Iso.project(DungeonLayout.EXIT) + Vector2(0, -80)
-	PlazaWater.attach(portal, true)
+	# Place the full-size base beside the incoming route, leaving the exit approach open.
+	var portal: IsoSprite = game.village.create_portal(Iso.project(DungeonLayout.EXIT) + Vector2(100, -70))
+	portal.name = "CaveReturnPortal"
 	world.add_child(portal)
+	layout.obstacles.append(Village.portal_base(portal))
 	game.player._pending = Callable()
 	game.player._attack_time = 0.0
 	game.player.position = Vector2.ZERO

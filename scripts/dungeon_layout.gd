@@ -6,6 +6,7 @@ const ROOMS := [Vector2(700, 0), Vector2(1550, 0), Vector2(2400, 0), Vector2(325
 const COUNTS := [3, 4, 4, 5, 6]
 const EXIT := Vector2(4700, 0)
 var polygons: Array[PackedVector2Array] = []
+var obstacles: Array[PackedVector2Array] = []
 var bounds := Rect2()
 
 func _init() -> void:
@@ -41,6 +42,9 @@ func contains(point: Vector2, radius := 0.0) -> bool:
 
 
 func _inside(point: Vector2) -> bool:
+	for obstacle in obstacles:
+		if Geometry2D.is_point_in_polygon(point, obstacle):
+			return false
 	for polygon in polygons:
 		if Geometry2D.is_point_in_polygon(point, polygon):
 			return true

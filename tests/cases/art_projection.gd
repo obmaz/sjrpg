@@ -27,7 +27,12 @@ func _poses(record: Dictionary, game: Node) -> Array[Node]:
 	var result: Array[Node] = []
 	match record["kind"]:
 		"sprite":
-			var definition: Dictionary = game.village.data["sprites"][record["key"]]
+			var definition: Dictionary
+			if record.has("definition_file"):
+				var external: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://" + str(record["definition_file"])))
+				definition = external[str(record.get("definition_key", "sprite"))]
+			else:
+				definition = game.village.data["sprites"][record["key"]]
 			var height: float = definition.get("world_height", 100.0)
 			result.append(IsoSprite.new().setup(definition, height if height > 0.0 else 100.0))
 		"bridge":
@@ -93,13 +98,13 @@ func run() -> void:
 		if record["kind"] == "sprite":
 			for pose in poses:
 				pose.free()
-	for key in ["nw", "ne", "sw", "se", "chapel", "gate-0", "gate-2", "wall-a", "wall-b", "bridge", "pool", "portal", "chest", "chest-broken", "landmark-0", "landmark-1"]:
+	for key in ["nw", "ne", "sw", "se", "chapel", "gate-0", "gate-2", "wall-a", "wall-b", "bridge", "pool", "portal", "chest", "chest-broken", "landmark-0", "landmark-1", "encounter-stone"]:
 		check("rigid world art is covered: " + key, covered.has(key))
 	for key in game.village.data["sprites"]:
 		var exempt: bool = manifest["exemptions"]["natural_sprites"].has(key) or manifest["exemptions"]["unused_sources"].has(key)
 		check("every sprite is measured or explicitly exempt: " + key, covered.has(key) or exempt)
 	# Triangles must preserve orientation so texture projection cannot fold or hide an invalid face.
-	for key in ["nw", "se", "sw", "hill", "gate-0", "gate-2", "wall-a"]:
+	for key in ["nw", "se", "sw", "hill", "gate-0", "gate-2", "wall-a", "encounter-stone"]:
 		var mesh := ArtWarp.data(key)
 		check("projection uses the reviewed illustration: " + key, FileAccess.get_sha256("res://" + mesh["source"]) == mesh["source_sha256"])
 		for triangle in mesh["triangles"]:

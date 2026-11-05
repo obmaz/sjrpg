@@ -106,8 +106,8 @@ static func get_def(id: String) -> Dictionary:
 static func cooldown(skill: Dictionary) -> float:
 	var native := maxf(0.0, float(skill.get("cooldown", 0.0)))
 	if native > 0.0 or (skill.get("passive", false) and not skill.get("basic", false)):
-		return native
-	return float(SPELL_COOLDOWNS.get(str(skill.get("id", "")), 0.0))
+		return GameTempo.duration(native)
+	return GameTempo.duration(float(SPELL_COOLDOWNS.get(str(skill.get("id", "")), 0.0)))
 
 
 static func scaled(base: float, growth: float, rank: int) -> float:

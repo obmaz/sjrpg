@@ -1,0 +1,54 @@
+{
+ "repository": "https://github.com/obmaz/sjrpg.git",
+ "repository_head_at_reuse": "d8ed1222fc65428b7407e040ef704797dda3c11e",
+ "source_path": "docs/art/world-monuments/beacons-original.png",
+ "source_sha256": "80e47c142ac94c481d27fe2f0af24c98247423a9c4edb139169b2d3be337180e",
+ "source_git_blob": "e56c39e9649bb425f36e56cffebb8c8fa60f145f",
+ "source_last_commit": "9497eda4b26856158803b1f869e7ff3b93c0a263",
+ "source_last_commit_date": "2026-11-01T16:13:03Z",
+ "original_sheet_size": [
+  1536,
+  1024
+ ],
+ "selected_stage": "forest",
+ "selected_cell": [
+  0,
+  0,
+  384,
+  512
+ ],
+ "exact_original_crop": [
+  73,
+  10,
+  385,
+  506
+ ],
+ "original_metadata": "docs/art/world-materials/provenance.json:beacons.frames[0]",
+ "original_packing_tool": "tool/prepare-world-materials.py:beacons",
+ "reuse": "Only the original first forest illustration is copied losslessly; no other stage artwork is imported. Runtime uses a measured geometric remapping and uniform packing, without painting new stones.",
+ "generation": {
+  "generator": "image_gen (upstream existing source)",
+  "new_generation": false,
+  "prompt": "Upstream world-materials/provenance.json records the generator and orthographic +/-30 ground camera; the exact historical generation prompt is not recorded there. No new generation prompt was used for this reuse."
+ },
+ "extracted_source": "assets/source/encounter-stone.png",
+ "extracted_source_sha256": "65ba8098b86194dd2ee59ef2ccaf54e6ac855483499c94d9cdabf2502ba62009",
+ "measure": "tools/extract/encounter_art_measure.json",
+ "measure_sha256": "93c35cf5bf9bd0b454856bdeda53969fb6a15275eb3096cdd6586d194b03bf86",
+ "runtime": "assets/art/village/encounter-stone.webp",
+ "runtime_sha256": "97f4e85f17662634680764cb3f4fec5a3e4ac47ff964ac876559848643edc3e7",
+ "preparation": "tools/prepare_encounter_art.py",
+ "alpha_review": {
+  "background": "The colored blur in fully transparent RGB has alpha0 and contributes no visible background. Pale and dark solid-background composites show no wide cast-shadow plate.",
+  "opaque_threshold": 128,
+  "source_alpha_extrema": [
+   0,
+   254
+  ],
+  "keep_original_alpha": true
+ },
+ "excluded_geometry": [
+  "The pointed crown and small pyramidal post roofs are inclined surfaces, not horizontal ground-axis edges.",
+  "Ivy, moss, chipped rock and rune diagonals are organic or decorative silhouettes, not rigid axis measurements."
+ ]
+}

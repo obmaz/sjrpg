@@ -5,6 +5,7 @@ extends CanvasLayer
 var game: Node
 var _bars: Control
 var _level_badge: Label
+var _level_up: LevelUpBanner
 var _toast: Label
 var _toast_plaque: PanelContainer
 var _toast_queue: Array[Dictionary] = []
@@ -123,6 +124,15 @@ func _build_death() -> void:
 	_death.add_child(l)
 
 
+func show_level_up(level: int) -> void:
+	if _level_up == null:
+		_level_up = LevelUpBanner.new()
+		_level_up.name = "LevelUpBanner"
+		add_child(_level_up)
+	_level_up.show_level(level)
+	_level_up.visible = not panel_open()
+
+
 func panel_open() -> bool:
 	return _panel != null
 
@@ -133,6 +143,8 @@ func _open(panel: PanelFrame) -> void:
 		return
 	controls.release_all()
 	_toast_plaque.hide()
+	if _level_up != null:
+		_level_up.hide()
 	get_tree().paused = true
 	_panel = panel
 	panel.closed.connect(close_panel)
@@ -146,6 +158,8 @@ func close_panel() -> void:
 	_panel = null
 	get_tree().paused = false
 	_toast_plaque.visible = _toast_time > 0.0
+	if _level_up != null:
+		_level_up.visible = _level_up.active
 	game.player.refresh_stats()
 	if GameState.claim_boss_heart():
 		game.toast("파수꾼의 심장을 받았습니다")

@@ -24,26 +24,26 @@ func run() -> void:
 		enemy._state = "chase"
 		game.player._invulnerable = 0.0
 		game.player.hp = game.player.max_hp
-		enemy._process(0.0)
-		var windup := 1.0 if boss else 0.55
-		check("attack retains its real preparation time %s" % boss, enemy._state == "windup" and is_equal_approx(enemy._timer, windup))
+		enemy._process(0.001)
+		var windup := GameTempo.duration(1.0 if boss else 0.55)
+		check("attack uses the accelerated preparation time %s" % boss, enemy._state == "windup" and is_equal_approx(enemy._timer, windup))
 		var hp: float = game.player.hp
 		enemy._process(windup - 0.01)
 		check("animation cannot apply the hit early %s" % boss, game.player.hp == hp)
 		var before := enemy.sprite.frame
 		enemy._process(0.011)
-		check("hit resolves once at the original boundary %s" % boss, enemy._state == "recover" and game.player.hp < hp)
+		check("hit resolves once at the preparation boundary %s" % boss, enemy._state == "recover" and game.player.hp < hp)
 		var hit_hp: float = game.player.hp
 		enemy._process(0.0)
 		check("recovery never replays an earlier attack pose %s" % boss, enemy.sprite.frame >= before)
-		var recovery := 1.2 if boss else 0.7
-		check("recovery gameplay time is preserved %s" % boss, is_equal_approx(enemy._timer, recovery))
-		enemy._process((0.4 if boss else 0.28) + 0.001)
+		var recovery := GameTempo.duration(1.2 if boss else 0.7)
+		check("recovery uses the same accelerated clock %s" % boss, is_equal_approx(enemy._timer, recovery))
+		enemy._process(GameTempo.duration(0.4 if boss else 0.28) + 0.001)
 		check("authored tail reaches neutral without another hit %s" % boss, enemy.sprite.frame == enemy.atlas.attack_frame(enemy.facing, 1.0) and enemy._state == "recover" and game.player.hp == hit_hp)
 		enemy._process(enemy._timer - 0.01)
 		check("neutral pose still waits for the full recovery %s" % boss, enemy._state == "recover")
 		enemy._process(0.011)
-		check("next chase only starts after the original recovery %s" % boss, enemy._state == "chase")
+		check("next chase only starts after the full recovery %s" % boss, enemy._state == "chase")
 		game.enemies.erase(enemy)
 		enemy.queue_free()
 		await _frames(2)

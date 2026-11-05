@@ -201,4 +201,4 @@ func melee_profile(frenzy := 0) -> Dictionary:
 		"mace": 1.05, "warhammer": 1.05, "runeblade": 1.10, "katana": 1.15, "longsword": 1.20, "flail": 1.35, "falchion": 1.40}
 	var arc: float = angles.get(base["id"], 0.5 if base["style"] == "spear" else (1.5 if base["style"] == "axe" else 1.25))
 	return {"range": float(base["range"]) * 0.91, "arc": arc,
-		"tempo": maxf(0.12, float(base["tempo"]) / (1.0 + float(base["haste"]) + frenzy * 0.08))}
+		"tempo": GameTempo.duration(maxf(0.12, float(base["tempo"]) / (1.0 + float(base["haste"]) + frenzy * 0.08)))}

@@ -62,6 +62,8 @@ var map_roads: Array[PackedVector2Array] = []
 var sanctuary_points := {}
 var portal_point := Vector2.ZERO
 var portal_points := {}
+var portal_sprites: Dictionary = {}
+var portal_footprints: Dictionary = {}
 var fountain: IsoSprite
 var merchant_point := Vector2.ZERO
 ## 이름 → 위치: 상인 · 대장장이 · 탈것 상인 · 촌장 · 보급원 미라.
@@ -102,12 +104,10 @@ func build(ground_layer: Node2D, world: Node2D) -> void:
 	_build_landmarks(world)
 	_build_quest_sites(world)
 	clear_rects.append(Rect2(boss_point - Vector2(600, 500), Vector2(1200, 1000)))
-	var beacon_def: Dictionary = data["sprites"]["portal"]
-	var beacon := IsoSprite.new().setup(beacon_def, 150.0)
-	beacon.position = boss_point + Vector2(0, -280)
-	PlazaWater.attach(beacon, true)
+	var beacon := create_portal(boss_point + Vector2(0, -280))
+	beacon.name = "GuardianPortal"
 	world.add_child(beacon)
-	circles.append([beacon.position, 45.0])
+	solids.append(portal_base(beacon))
 	_build_buildings(world)
 	_build_plaza(world)
 	_build_sanctuaries(world)
@@ -435,16 +435,8 @@ func _build_plaza(world: Node2D) -> void:
 		footprint.append([float(src[0]) + p.x, float(src[1]) + p.y])
 	solids.append(fountain.atlas_polygon(footprint))
 	# Leave room for the larger fountain and for Mira's independent interaction approach.
-	var pdef: Dictionary = data["sprites"]["portal"]
-	var body_w := float(pdef["body"][2])
-	var portal := IsoSprite.new().setup(pdef, float(pdef["height"]) * 180.0 / body_w * 1.4)
-	portal.position = point(Vector2(0.395, 0.493))
+	var portal := _add_warp_portal("town", point(Vector2(0.395, 0.493)), world)
 	portal_point = portal.position
-	portal_points["town"] = portal.position
-	PlazaWater.attach(portal, true)
-	world.add_child(portal)
-	var b: Array = pdef["body"]
-	solids.append(portal.atlas_polygon([[b[0], b[1] + b[3] * 0.35], [b[0] + b[2], b[1] + b[3] * 0.35], [b[0] + b[2], b[1] + b[3]], [b[0], b[1] + b[3]]]))
 
 
 func _build_trees(world: Node2D) -> void:
@@ -544,6 +536,38 @@ func _project_polygon(polygon: PackedVector2Array) -> PackedVector2Array:
 	return projected
 
 
+## Every use of this portal art shares one physical scale, including guardian and cave gates.
+func create_portal(at: Vector2) -> IsoSprite:
+	var definition: Dictionary = data["sprites"]["portal"]
+	var body: Array = definition["body"]
+	var height := float(definition["height"]) * 180.0 / float(body[2]) * 1.4
+	var portal := IsoSprite.new().setup(definition, height)
+	portal.position = at
+	PlazaWater.attach(portal, true)
+	return portal
+
+
+static func portal_base(portal: IsoSprite) -> PackedVector2Array:
+	var body: Array = portal.def["body"]
+	return portal.atlas_polygon([[body[0], body[1] + body[3] * 0.35], [body[0] + body[2], body[1] + body[3] * 0.35], [body[0] + body[2], body[1] + body[3]], [body[0], body[1] + body[3]]])
+
+
+## Only the three discovered travel destinations belong to this registry.
+func _add_warp_portal(id: String, at: Vector2, world: Node2D) -> IsoSprite:
+	var portal := create_portal(at)
+	portal.name = "WarpGate_" + id
+	portal_points[id] = at
+	portal_sprites[id] = portal
+	world.add_child(portal)
+	var footprint := portal_base(portal)
+	portal_footprints[id] = footprint
+	solids.append(footprint)
+	var src: Array = portal.def["source"]
+	var corners := portal.atlas_polygon([[src[0], src[1]], [src[0] + src[2], src[1]], [src[0] + src[2], src[1] + src[3]], [src[0], src[1] + src[3]]])
+	clear_rects.append(Iso.poly_bounds(corners).grow(40.0))
+	return portal
+
+
 func _build_sanctuaries(world: Node2D) -> void:
 	var tree: Landmark = landmarks[0]
 	var outline: Array = Landmark.data()[tree.index]["outline"]
@@ -554,9 +578,6 @@ func _build_sanctuaries(world: Node2D) -> void:
 	for id in ["tree", "cave"]:
 		var point: Vector2 = sanctuary_points[id]
 		clear_rects.append(Rect2(point - Vector2(220, 220), Vector2(440, 440)))
-		var portal := IsoSprite.new().setup(data["sprites"]["portal"], 130.0)
-		portal.position = point + Vector2(0, -110)
-		portal_points[id] = portal.position
-		PlazaWater.attach(portal, true)
-		world.add_child(portal)
-		circles.append([portal.position, 35.0])
+		# The full-size tree gate needs room beside the terrace's descending entrance.
+		var gate_offset := Vector2(-80, -110) if id == "tree" else Vector2(0, -110)
+		_add_warp_portal(id, point + gate_offset, world)

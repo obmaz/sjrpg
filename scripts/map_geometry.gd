@@ -40,6 +40,10 @@ static func markers(game: Node) -> Array[Dictionary]:
 			markers.append({"pos": game.village.sanctuary_points[id], "label": Exploration.NAMES[id], "color": Color("bfa0ff")})
 	for name in ["상인", "대장장이"]:
 		markers.append({"pos": game.village.npc_points[name], "label": name, "color": Color("7edbcc")})
+	if game.encounters != null:
+		for id in game.encounters.stones:
+			var stone: EncounterStone = game.encounters.stones[id]
+			markers.append({"pos": stone.position, "label": "재소환 비석", "color": Color("9fdac1") if game.encounters.can_summon(id) else Color("858f80")})
 	markers.append({"pos": Iso.project(game.village.cave_ground), "label": "바람 동굴", "color": Color("7edbcc")})
 	if Quests.all_done() and not GameState.boss_defeated:
 		markers.append({"pos": game.village.boss_point, "label": "파수꾼", "color": Color("ff9e65")})

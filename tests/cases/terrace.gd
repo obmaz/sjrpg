@@ -10,6 +10,12 @@ func run() -> void:
 	for e in game.enemies:
 		e.queue_free()
 	game.enemies.clear()
+	# Geometry walks must not summon packs or respawn a killed hero onto a checkpoint.
+	# Combat, encounter activation and sanctuary healing have their own integration cases.
+	game._spawn_timer = 10000.0
+	game.encounters.set_process(false)
+	game.exploration.set_process(false)
+	game.quest_runtime.set_process(false)
 	var player: Player = game.player
 	for lm in game.village.landmarks:
 		var d: Dictionary = Landmark.data()[lm.index]

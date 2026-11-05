@@ -1092,5 +1092,277 @@
    }
   ],
   "derived_identity": true
+ },
+ "encounter-stone": {
+  "png": "assets/source/encounter-stone.png",
+  "segments": [
+   {
+    "name": "rear left post cap front",
+    "a": [
+     53.785,
+     290.7609
+    ],
+    "b": [
+     71.7024,
+     302.6308
+    ],
+    "axis": 30,
+    "level": "upper"
+   },
+   {
+    "name": "rear right post cap side",
+    "a": [
+     247.7835,
+     329.6863
+    ],
+    "b": [
+     265.2181,
+     320.8079
+    ],
+    "axis": -30,
+    "level": "upper"
+   },
+   {
+    "name": "front post cap front",
+    "a": [
+     137.9905,
+     359.9913
+    ],
+    "b": [
+     157.8663,
+     371.4566
+    ],
+    "axis": 30,
+    "level": "upper"
+   },
+   {
+    "name": "front post cap side",
+    "a": [
+     162.5649,
+     370.5128
+    ],
+    "b": [
+     181.2975,
+     360.4803
+    ],
+    "axis": -30,
+    "level": "upper"
+   },
+   {
+    "name": "shaft base front frieze",
+    "a": [
+     92.2783,
+     314.9029
+    ],
+    "b": [
+     110.8404,
+     327.0926
+    ],
+    "axis": 30,
+    "level": "middle"
+   },
+   {
+    "name": "rear left plinth ledge",
+    "a": [
+     13.7349,
+     351.9098
+    ],
+    "b": [
+     50.4521,
+     331.2051
+    ],
+    "axis": -30,
+    "level": "middle"
+   },
+   {
+    "name": "rear right plinth ledge",
+    "a": [
+     270.0151,
+     350.8244
+    ],
+    "b": [
+     288.095,
+     360.79
+    ],
+    "axis": 30,
+    "level": "middle"
+   },
+   {
+    "name": "front inset stone course left",
+    "a": [
+     84.2064,
+     371.28
+    ],
+    "b": [
+     99.7971,
+     379.9637
+    ],
+    "axis": 30,
+    "level": "middle"
+   },
+   {
+    "name": "front inset stone course right",
+    "a": [
+     99.5033,
+     381.6901
+    ],
+    "b": [
+     115.9778,
+     391.3056
+    ],
+    "axis": 30,
+    "level": "middle"
+   },
+   {
+    "name": "side wall top course",
+    "a": [
+     225.5715,
+     411.3487
+    ],
+    "b": [
+     247.4532,
+     397.8465
+    ],
+    "axis": -30,
+    "level": "middle"
+   },
+   {
+    "name": "front footing long edge",
+    "a": [
+     57.6488,
+     421.8373
+    ],
+    "b": [
+     121.2807,
+     462.0244
+    ],
+    "axis": 30,
+    "level": "lower"
+   },
+   {
+    "name": "front footing opposite end",
+    "a": [
+     25.4217,
+     409.4774
+    ],
+    "b": [
+     44.669,
+     421.8943
+    ],
+    "axis": 30,
+    "level": "lower"
+   },
+   {
+    "name": "side footing upper edge",
+    "a": [
+     193.26,
+     457.6036
+    ],
+    "b": [
+     270.7277,
+     412.3752
+    ],
+    "axis": -30,
+    "level": "lower"
+   },
+   {
+    "name": "side footing lower edge",
+    "a": [
+     200.6537,
+     475.6452
+    ],
+    "b": [
+     277.9545,
+     430.3056
+    ],
+    "axis": -30,
+    "level": "lower"
+   },
+   {
+    "name": "shaft right upper upright",
+    "a": [
+     215.7399,
+     55.581
+    ],
+    "b": [
+     221.2854,
+     133.1314
+    ],
+    "axis": 90,
+    "level": "upper"
+   },
+   {
+    "name": "shaft left middle upright",
+    "a": [
+     80.3106,
+     261.7711
+    ],
+    "b": [
+     83.0028,
+     201.7798
+    ],
+    "axis": 90,
+    "level": "middle"
+   },
+   {
+    "name": "shaft corner upright",
+    "a": [
+     200.2059,
+     244.3705
+    ],
+    "b": [
+     202.4506,
+     284.3848
+    ],
+    "axis": 90,
+    "level": "middle"
+   },
+   {
+    "name": "rear left post upright",
+    "a": [
+     50.6604,
+     333.0151
+    ],
+    "b": [
+     51.3433,
+     313.0385
+    ],
+    "axis": 90,
+    "level": "middle"
+   },
+   {
+    "name": "rear right post upright",
+    "a": [
+     269.3318,
+     329.342
+    ],
+    "b": [
+     269.6466,
+     345.6101
+    ],
+    "axis": 90,
+    "level": "middle"
+   },
+   {
+    "name": "front post upright",
+    "a": [
+     179.5693,
+     363.0761
+    ],
+    "b": [
+     182.0409,
+     398.1661
+    ],
+    "axis": 90,
+    "level": "middle"
+   }
+  ],
+  "pins": [
+   [
+    155,
+    401
+   ]
+  ],
+  "boundary_step": 48
  }
 }

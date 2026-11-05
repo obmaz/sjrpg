@@ -9,7 +9,30 @@ func run() -> void:
 	game.player.set_process(false)
 	route.set_process(false)
 	game.quest_runtime.set_process(false)
+	var town_portal: IsoSprite = game.village.portal_sprites["town"]
+	var town_footprint: PackedVector2Array = game.village.portal_footprints["town"]
+	var guardian_portal: IsoSprite = game.world.get_node("GuardianPortal")
+	check("the guardian gate also uses the shared portal art scale", is_equal_approx(guardian_portal.k, town_portal.k) and guardian_portal.def == town_portal.def and game.village.solids.has(Village.portal_base(guardian_portal)))
+	check("exactly the three functional warp gates share a registry", game.village.portal_sprites.size() == 3)
 	for id in Exploration.NAMES:
+		var portal: IsoSprite = game.village.portal_sprites[id]
+		var base: PackedVector2Array = game.village.portal_footprints[id]
+		check("field gate matches the town gate's actual drawing scale: " + id, is_equal_approx(portal.k, town_portal.k) and portal.def == town_portal.def and portal.position == route.gate_point(id))
+		var same_base := base.size() == town_footprint.size()
+		var center := Vector2.ZERO
+		for i in base.size():
+			same_base = same_base and (base[i] - portal.position).distance_to(town_footprint[i] - town_portal.position) < 0.01
+			center += base[i]
+		center /= base.size()
+		check("equal-size gate stone bases use equal collision footprints: " + id, same_base and game.village.solids.has(base) and game._blocked(center, Player.RADIUS))
+		if id == "tree":
+			var terrace_clear := true
+			for landmark in game.village.landmarks:
+				terrace_clear = terrace_clear and Geometry2D.intersect_polygons(base, landmark.top).is_empty()
+				for face in landmark.blockers:
+					terrace_clear = terrace_clear and Geometry2D.intersect_polygons(base, face).is_empty()
+			check("full-size tree gate base stays clear of the raised entrance", terrace_clear)
+		check("warp animation keeps the same geometry and source: " + id, portal.get_child(0) is PlazaWater and portal.get_child(0).surface == portal)
 		var approach := route.gate_approach(id)
 		check("all three gate approaches are safe: " + id, approach.is_finite() and not game._blocked(approach, Player.RADIUS) and approach.distance_to(route.gate_point(id)) < Exploration.GATE_RANGE)
 	game.player.position = game.village.npc_points["보급원 미라"] + Vector2(0, 25)
@@ -87,6 +110,18 @@ func run() -> void:
 	check("the destination button returns to the town gate and resumes play", not game.hud.panel_open() and not get_tree().paused and route.gate_origin() == "town")
 	game.player.position = game.dungeon.entry_point()
 	check("warp cave test can enter the existing Stage1 cave", game.dungeon.enter())
+	var cave_portal: IsoSprite = game.world.get_node("CaveReturnPortal")
+	check("the cave return gate uses the town portal's scale", is_equal_approx(cave_portal.k, town_portal.k) and cave_portal.def == town_portal.def and cave_portal.get_child(0) is PlazaWater)
+	var cave_base := Village.portal_base(cave_portal)
+	var cave_base_center := Vector2.ZERO
+	for point in cave_base:
+		cave_base_center += point
+	cave_base_center /= cave_base.size()
+	var exit_approach := Iso.project(DungeonLayout.EXIT)
+	var stopped: Vector2 = game.move_actor(exit_approach, cave_base_center, Player.RADIUS)
+	check("the cave gate stone base blocks real actor movement", game._blocked(cave_base_center, Player.RADIUS) and stopped.distance_to(cave_base_center) > Player.RADIUS * 0.5 and not Geometry2D.is_point_in_polygon(stopped, cave_base))
+	game.player.position = exit_approach
+	check("the cave return interaction remains approachable", game.dungeon.layout.contains(exit_approach, Player.RADIUS) and game.near_npc() == "동굴 출구")
 	check("the cave prevents using world gates remotely", route.gate_origin() == "" and not route.warp("town") and not route.travel("town"))
 	game.dungeon.leave("워프 검사")
 	game.queue_free()

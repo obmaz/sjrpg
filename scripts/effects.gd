@@ -47,7 +47,7 @@ static func spawn_cast(world_game: Node, caster: Player, tint: Color) -> Effect:
 	var cast := Effect.new()
 	cast.kind = "cast"
 	cast.owner_node = caster
-	cast.life = 0.30
+	cast.life = GameTempo.duration(0.30)
 	cast.color = tint
 	cast.params["cell"] = _element_cell(tint)
 	cast.params["action_serial"] = caster._action_serial
@@ -78,7 +78,7 @@ static func spawn_dodge_echo(world_game: Node, caster: Player) -> Effect:
 	var echo := Effect.new()
 	echo.kind = "dodge_echo"
 	echo.position = caster.position
-	echo.life = 0.15
+	echo.life = GameTempo.duration(0.15)
 	echo.params = {"atlas": caster.sprite.atlas, "frame": caster.sprite.frame, "height": caster.sprite.body_height}
 	echo.z_index = caster.z_index
 	world_game._add_effect(echo)
@@ -91,6 +91,9 @@ static func cast_hand_offset(facing: float, body_height: float) -> Vector2:
 
 
 func _ready() -> void:
+	if kind in ["proj", "orb"]:
+		velocity *= GameTempo.RATE
+		life = GameTempo.duration(life)
 	if kind in ["nova", "slash", "orb"] or (kind == "proj" and not params.get("throw", false)):
 		material = _glow_material()
 
@@ -211,6 +214,10 @@ func _projectile_contacts(start: Vector2, finish: Vector2) -> Array[Dictionary]:
 			if fraction < 0.0 or fraction > 1.0:
 				continue
 		contacts.append({"enemy": enemy, "fraction": fraction})
+	if owner_node is Player and game.encounters != null:
+		for contact in game.encounters.projectile_contacts(start, finish):
+			if not _hit.has(contact["enemy"]):
+				contacts.append(contact)
 	contacts.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["fraction"]) < float(b["fraction"]))
 	return contacts
 
@@ -220,7 +227,7 @@ func _update_projectile(delta: float) -> void:
 		return
 	var dir := velocity.normalized()
 	if params.get("wiggle", false):
-		dir = dir.rotated(sin(minf(age, life) * 18.0 + params.get("seed", 0.0)) * 0.6)
+		dir = dir.rotated(sin(minf(age, life) * GameTempo.RATE * 18.0 + params.get("seed", 0.0)) * 0.6)
 	var start := _ground()
 	var finish := start + dir * velocity.length() * delta
 	var contacts := _projectile_contacts(start, finish)
@@ -230,10 +237,28 @@ func _update_projectile(delta: float) -> void:
 	# Chest interaction follows the same bounded path, never past a blocking first contact.
 	var steps := maxi(1, ceili(start.distance_to(finish) / 22.0))
 	for step in range(steps + 1):
-		game.break_chests_at(start.lerp(finish, float(step) / steps), 22.0, owner_node)
+		game.break_chests_at(start.lerp(finish, float(step) / steps), 22.0, owner_node, false)
 	var travel_end := start + dir * velocity.length() * delta
 	for contact in contacts:
-		var hit: Enemy = contact["enemy"]
+		var target: Node2D = contact["enemy"]
+		if target is EncounterStone:
+			position = start.lerp(travel_end, float(contact["fraction"])) - Vector2(0, 34)
+			_hit[target] = true
+			var blast := float(params.get("explode", 0.0))
+			if blast > 0.0:
+				# Resolve existing explosion victims before activating the stone: killing its
+				# last defender must not turn this same contact into a fresh summon.
+				for enemy in game.enemies_in_radius(_ground(), blast):
+					if not _hit.has(enemy):
+						_hit[enemy] = true
+						_apply(enemy, damage)
+				game.spawn_nova(_ground(), blast, color, true)
+			target.take_damage(damage, self)
+			if not piercing:
+				queue_free()
+				return
+			continue
+		var hit := target as Enemy
 		if not is_instance_valid(hit) or hit.dead or _hit.has(hit):
 			continue
 		position = start.lerp(travel_end, float(contact["fraction"])) - Vector2(0, 34)
@@ -271,8 +296,8 @@ func _update_orb(delta: float) -> void:
 	position += velocity * delta
 	_tick_timer -= delta
 	if _tick_timer <= 0.0:
-		_tick_timer = 0.09
-		var dir := Vector2.from_angle(age * 9.0)
+		_tick_timer = GameTempo.duration(0.09)
+		var dir := Vector2.from_angle(age * GameTempo.RATE * 9.0)
 		game.spawn_projectile({"pos": position, "dir": dir, "speed": 420.0, "damage": damage,
 			"color": color, "slow": 1.5, "life": 0.6}, owner_node)
 
@@ -319,7 +344,9 @@ func _update_hydra(delta: float) -> void:
 	_tick_timer -= delta
 	if _tick_timer > 0.0:
 		return
-	var target: Enemy = game.nearest_enemy(position, params["range"])
+	var target: Node2D = game.nearest_enemy(position, params["range"])
+	if target == null:
+		target = game.nearest_attackable_prop(position, params["range"])
 	if target == null:
 		return
 	_tick_timer = float(params["rate"])

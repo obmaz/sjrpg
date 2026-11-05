@@ -49,6 +49,10 @@ var discovered_sanctuaries: Array[String] = ["town"]
 var last_sanctuary := "town"
 var location_mode := "forest"
 var return_to_cave_entrance := false
+## Encounter clocks use active gameplay seconds; no wall-clock timestamp is persisted.
+var encounters: Dictionary = {}
+## A live world refreshes survivors immediately before saving. Never persisted.
+var encounter_capture: Callable = Callable()
 var gold := 0
 ## 상점 축복(수련): 공격 +5 / 생명 +20씩 쌓임 (원본 bonusAttack / bonusHealth).
 var bonus_attack := 0.0
@@ -362,6 +366,9 @@ func add_xp(amount: int) -> int:
 
 
 func new_game(cls: String) -> void:
+	# Detach the previous world before the initial save can request a snapshot.
+	encounter_capture = Callable()
+	encounters = {}
 	bonus_ranks = 0
 	hero_class = cls
 	level = 1
@@ -409,11 +416,14 @@ func has_save_files() -> bool:
 
 
 func save_game() -> bool:
+	if encounter_capture.is_valid():
+		encounter_capture.call()
 	var data := {
 		"version": SAVE_VERSION, "class": hero_class, "level": level, "xp": xp,
 		"potions": potions, "mana_potions": mana_potions, "kills": kills,
 		"skill_points": skill_points, "ranks": ranks, "slots": slots,
 		"quests": quests, "stage_kills": stage_kills, "boss_defeated": boss_defeated, "boss_heart_pending": boss_heart_pending, "memory_rewarded": memory_rewarded, "discovered_sanctuaries": discovered_sanctuaries, "last_sanctuary": last_sanctuary, "location_mode": location_mode, "gold": gold, "bonus_attack": bonus_attack, "bonus_health": bonus_health, "chest_seed": chest_seed, "opened_chests": opened_chests,
+		"encounters": encounters.duplicate(true),
 		"next_serial": next_serial,
 		"inventory": inventory.map(func(g): return g.to_save()),
 		"equipped": equipped.keys().map(func(k): return {"slot": k, "serial": equipped[k].serial}),
@@ -429,6 +439,8 @@ func save_game() -> bool:
 
 ## Validate containers before applying a save so malformed data cannot partially replace the hero.
 func _valid_save(data: Dictionary) -> bool:
+	if not _valid_encounters(data.get("encounters", {})):
+		return false
 	if not CLASSES.has(data.get("class", "")):
 		return false
 	for key in ["version", "level", "xp", "potions", "mana_potions", "kills", "skill_points", "gold", "stage_kills", "bonus_attack", "bonus_health", "chest_seed", "next_serial"]:
@@ -469,11 +481,69 @@ func _valid_save(data: Dictionary) -> bool:
 	return true
 
 
+## JSON decodes integers as numbers, so require an integral value rather than a Variant integer tag.
+func _encounter_integer(value: Variant, minimum: int, maximum: int) -> bool:
+	return _number(value) and float(value) >= minimum and float(value) <= maximum and float(value) == floorf(float(value))
+
+
+func _encounter_id(value: Variant) -> bool:
+	if not value is String or value.is_empty() or value.length() > 40:
+		return false
+	for i in value.length():
+		var code: int = value.unicode_at(i)
+		if not ((code >= 48 and code <= 57) or (code >= 65 and code <= 90) or (code >= 97 and code <= 122) or code in [45, 58, 95]):
+			return false
+	return true
+
+
+func _valid_encounters(value: Variant) -> bool:
+	if not value is Dictionary or value.size() > 12:
+		return false
+	var total_members := 0
+	for id in value:
+		if not _encounter_id(id):
+			return false
+		var raw: Variant = value[id]
+		if not raw is Dictionary:
+			return false
+		var record: Dictionary = raw
+		if not _encounter_integer(record.get("charges"), 0, 3):
+			return false
+		var recharge: Variant = record.get("recharge")
+		if not _number(recharge) or float(recharge) < 0.0 or float(recharge) >= 300.0:
+			return false
+		if float(record["charges"]) == 3.0 and float(recharge) != 0.0:
+			return false
+		if not record.get("initial_spawned") is bool or not record.get("members") is Array:
+			return false
+		var members: Array = record["members"]
+		total_members += members.size()
+		if members.size() > 12 or total_members > 30:
+			return false
+		for member in members:
+			if not member is Dictionary:
+				return false
+			if not ["goblin", "wolf", "boar", "skeleton"].has(member.get("kind")) or not _encounter_integer(member.get("level"), 1, 20):
+				return false
+			var health: Variant = member.get("hp")
+			if not _number(health) or float(health) <= 0.0 or float(health) > 100000.0:
+				return false
+			var at: Variant = member.get("position")
+			if not at is Array or at.size() != 2:
+				return false
+			for coordinate in at:
+				if not _number(coordinate) or absf(float(coordinate)) > 10000.0:
+					return false
+	return true
+
+
 func _number(value: Variant) -> bool:
 	return (value is int or value is float) and is_finite(float(value))
 
 
 func load_game() -> bool:
+	# Even a failed continue attempt must not retain a snapshotter from the old world.
+	encounter_capture = Callable()
 	var recovered := SaveStore.read(save_path, _valid_save)
 	if recovered.is_empty():
 		return false
@@ -481,6 +551,8 @@ func load_game() -> bool:
 	# Command buffs belong to the old Player and have no timer after a new session starts.
 	bonus_ranks = 0
 	loaded_backup = recovered["backup"]
+	var saved_encounters: Dictionary = data.get("encounters", {})
+	encounters = saved_encounters.duplicate(true)
 	hero_class = data["class"]
 	level = int(data.get("level", 1))
 	xp = int(data.get("xp", 0))

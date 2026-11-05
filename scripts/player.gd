@@ -6,7 +6,7 @@ signal died
 signal open_skills_requested
 
 const RADIUS := 18.0
-const ROLL_TIME := 0.32
+const ROLL_TIME := 0.32 / GameTempo.RATE
 const ROLL_DISTANCE := 170.0
 
 var game: Node
@@ -46,6 +46,7 @@ var _release_pending := false
 var _release_sound := ""
 var _invulnerable := 0.0
 var _roll_time := 0.0
+var _hitstop := GameTempo.ContactStop.new()
 var _roll_dir := Vector2.ZERO
 var _roll_cooldown := 0.0
 var _frenzy_timer := 0.0
@@ -109,7 +110,7 @@ func speed() -> float:
 	var s := base_speed * (1.0 + passive("speed"))
 	s *= 1.0 + buff_value("sprint")
 	s *= 1.0 + frenzy_stacks * 0.08
-	return s
+	return GameTempo.speed(s)
 
 
 func damage_for(id: String, mult: float) -> float:
@@ -138,6 +139,10 @@ func _process(delta: float) -> void:
 		resource = maxf(0.0, resource - 2.0 * delta)
 	hp = minf(max_hp, hp + max_hp * 0.006 * delta)
 
+	delta = _hitstop.consume(delta)
+	if delta <= 0.0:
+		return
+
 	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	if move_input.length() > 0.05:
 		input = move_input
@@ -153,8 +158,9 @@ func _process(delta: float) -> void:
 		input = input.normalized()
 
 	if _roll_time > 0.0:
-		_roll_time -= delta
-		position = game.move_actor(position, position + _roll_dir * ROLL_DISTANCE / ROLL_TIME * delta, RADIUS)
+		var roll_delta := minf(delta, _roll_time)
+		_roll_time -= roll_delta
+		position = game.move_actor(position, position + _roll_dir * ROLL_DISTANCE / ROLL_TIME * roll_delta, RADIUS)
 		sprite.set_frame(atlas, atlas.run_frame(facing, int(_roll_time * 40.0)))
 		return
 
@@ -181,7 +187,7 @@ func _process(delta: float) -> void:
 				Effect.spawn_release(game, self, impact_color)
 			_release_pending = false
 			_resolving_melee_contact = false
-		_move(input * speed() * 0.25 * delta)
+		_move(input * speed() * 0.25 * (0.0 if _hitstop.remaining > 0.0 else delta))
 		return
 
 	if input.length() > 0.05:
@@ -304,7 +310,7 @@ func cast_slot(index: int, repeat := false) -> bool:
 	if reuse > 0.0:
 		cooldowns[id] = reuse
 	_attack_melee = d["type"] in ["melee", "spin", "shadow"]
-	_attack_duration = (0.4 if _attack_melee else 0.46) / (1.0 + frenzy_stacks * 0.08)
+	_attack_duration = GameTempo.duration((0.4 if _attack_melee else 0.46) / (1.0 + frenzy_stacks * 0.08))
 	if id in ["cleave", "sorceressAttack"]:
 		_attack_duration = float(weapon_melee()["tempo"])
 	_attack_time = _attack_duration
@@ -349,6 +355,7 @@ func try_roll() -> void:
 	_action_serial += 1
 	_release_pending = false
 	_release_sound = ""
+	_hitstop.clear()
 	Effect.spawn_dodge_echo(game, self)
 	_roll_dir = dir.normalized()
 	facing = _roll_dir.angle()
@@ -356,15 +363,16 @@ func try_roll() -> void:
 	sprite.clear_contact_hold()
 	SoundFx.play("dodge")
 	Prefs.pulse("dodge")
-	_roll_cooldown = 0.9
-	_invulnerable = ROLL_TIME + 0.05
+	_roll_cooldown = GameTempo.duration(0.9)
+	_invulnerable = ROLL_TIME + GameTempo.duration(0.05)
 	_attack_time = 0.0
 	_pending = Callable()
 
 
 ## Only the current contact callback may hold the swing; passive/reflected damage also names this player.
 func confirm_melee_contact(heavy: bool) -> void:
-	if not dead and _resolving_melee_contact and _attack_time > 0.0:
+	if not dead and _resolving_melee_contact:
+		_hitstop.trigger(0.050 if heavy else 0.035)
 		sprite.hold_contact(0.060 if heavy else 0.040)
 
 
@@ -372,6 +380,10 @@ func _aim(range_limit: float) -> Enemy:
 	var target: Enemy = game.nearest_enemy(position, range_limit)
 	if target:
 		facing = (target.position - position).angle()
+	else:
+		var prop: Node2D = game.nearest_attackable_prop(position, range_limit)
+		if prop != null:
+			facing = (prop.position - position).angle()
 	return target
 
 
@@ -423,6 +435,14 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 		"chain":
 			var first := _aim(d["range"])
 			if first == null:
+				var stone: EncounterStone = game.nearest_ready_stone(position, d["range"])
+				if stone != null:
+					var stone_ref: WeakRef = weakref(stone)
+					return func():
+						var contact := stone_ref.get_ref() as EncounterStone
+						if is_instance_valid(contact) and position.distance_to(contact.position) <= float(d["range"]):
+							var travel: Vector2 = contact.position - position
+							game.spawn_beam(position, travel.angle(), travel.length() + 35.0, damage_for(id, power), d["color"], self)
 				game.toast("사거리 안에 적이 없습니다")
 				return Callable()
 			# Capture a WeakRef, not the Enemy: the VM validates strong lambda captures before entering the body.
@@ -469,7 +489,7 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 ## 착용 무기의 사거리 · 타격 호 · 공격 간격 (원본 GearDef.range / meleeHalfAngle / tempo).
 func weapon_melee() -> Dictionary:
 	var weapon: Gear = GameState.equipped.get("weapon")
-	return weapon.melee_profile(frenzy_stacks) if weapon != null else {"range": 68.0, "arc": 1.25, "tempo": 0.4}
+	return weapon.melee_profile(frenzy_stacks) if weapon != null else {"range": 68.0, "arc": 1.25, "tempo": GameTempo.duration(0.4)}
 
 
 func _melee(id: String, d: Dictionary, rank: int, power: float) -> void:
@@ -598,7 +618,7 @@ func _projectiles(id: String, d: Dictionary, rank: int, power: float) -> void:
 func _nova(id: String, d: Dictionary, rank: int, power: float) -> void:
 	var radius: float = d["radius"] + d.get("radius_growth", 0.0) * (rank - 1)
 	game.spawn_nova(position, radius, d["color"])
-	if d.has("mult"):
+	if d.has("mult") or d.has("pct"):
 		game.break_chests_in_radius(position, radius, self)
 	var hits: Array = game.enemies_in_radius(position, radius)
 	for e in hits:
@@ -723,6 +743,7 @@ func take_damage(amount: float, attacker: Node2D = null) -> void:
 		dealt -= absorbed
 	hp -= dealt
 	if dealt > 0.0:
+		_hitstop.trigger(0.035)
 		Effect.spawn_impact(game, position + Vector2(0, -sprite.body_height * 0.55), attacker, dealt >= max_hp * 0.15)
 		game.combat_feedback(position, clampf(0.4 + dealt / max_hp, 0.4, 1.0), true)
 	SoundFx.play("hurt")
@@ -762,6 +783,7 @@ func _armor_retaliate(attacker: Node2D) -> void:
 
 ## Death and resurrection cannot preserve a delayed skill target or old movement input.
 func _cancel_actions() -> void:
+	_hitstop.clear()
 	_action_serial += 1
 	_pending = Callable()
 	_attack_time = 0.0

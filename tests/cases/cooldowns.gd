@@ -14,7 +14,7 @@ func run() -> void:
 		elif id != "sorceressAttack":
 			check("every active spell has a reuse timer: " + id, reuse > 0.0)
 		if float(skill["cooldown"]) > 0.0:
-			check("positive source cooldown stays intact: " + id, reuse == float(skill["cooldown"]))
+			check("source cooldown uses the shared faster action tempo: " + id, is_equal_approx(reuse, GameTempo.duration(float(skill["cooldown"]))))
 	check("source spell catalog remains unmodified", GameState.skill("firebolt")["cooldown"] == 0.0)
 	player.resource = player.resource_max
 	check("first magic cast succeeds", player.cast_slot(0))
@@ -33,7 +33,7 @@ func run() -> void:
 	player.cooldowns["firebolt"] = 0.35
 	controls._update_action_feedback()
 	check("main slot reads remaining game seconds", is_equal_approx(controls.slot_cooldown_remaining(0), 0.35))
-	check("main sweep uses same reuse duration", is_equal_approx(player.slot_cooldown_ratio(0), 0.65))
+	check("main sweep uses same reuse duration", is_equal_approx(player.slot_cooldown_ratio(0), 1.0 - 0.35 / SkillDefs.cooldown(GameState.skill("firebolt"))))
 	GameState.assign_slot(4, "firebolt")
 	controls._update_action_feedback()
 	check("moving a spell keeps its cooldown on the auxiliary button", controls.slot_cooldown_remaining(0) == 0.0 and is_equal_approx(controls.slot_cooldown_remaining(4), 0.35))

@@ -18,8 +18,11 @@ var forest_details: Array[IsoSprite] = []
 var player: Player
 var _impact_offset := Vector2.ZERO
 var _impact_fresh := false
+var _impact_age := 1.0
+var _impact_cross := Vector2.ZERO
 var camera: Camera2D
 var hud: Hud
+var encounters: EncounterRuntime
 var village: Village
 var quest_runtime: QuestRuntime
 var exploration: Exploration
@@ -119,10 +122,12 @@ func _ready() -> void:
 	hud = Hud.new()
 	hud.game = self
 	add_child(hud)
+	encounters = EncounterRuntime.new().setup(self)
+	add_child(encounters)
 	_read_debug_params()
 	_update_zoom()
 	get_viewport().size_changed.connect(_update_zoom)
-	for i in 8:
+	for i in 12:
 		_spawn_enemy(true)
 	toast("미니맵에서 의뢰 위치를 확인하세요 · 마을의 미라가 기다립니다")
 	if OS.has_feature("web"):
@@ -155,6 +160,7 @@ func _update_render_quality() -> void:
 
 ## Web debug: ?zoom=0.4 widens the camera (used for layout screenshots).
 var _debug_zoom := 1.0
+var _encounter_audit := false
 
 
 func _debug_open_panel(which: String) -> void:
@@ -220,6 +226,8 @@ func _read_debug_params() -> void:
 			get_tree().create_timer(1.5).timeout.connect(_debug_open_panel.bind(which))
 		elif kv.size() == 2 and kv[0] == "hud_preview" and kv[1] in ["full", "low", "nearfull", "large", "danger"]:
 			_hud_preview.call_deferred(kv[1])
+		elif kv.size() == 2 and kv[0] == "encounter_preview" and kv[1] in ["ready", "active", "empty"]:
+			_encounter_preview.call_deferred(kv[1])
 		elif kv.size() == 2 and kv[0] == "dungeon_preview" and kv[1] in ["entry", "room", "branch", "exit"]:
 			_dungeon_preview.call_deferred(kv[1])
 		elif kv.size() == 2 and kv[0] == "warp_preview" and kv[1] == "1":
@@ -228,8 +236,8 @@ func _read_debug_params() -> void:
 			_combat_preview.call_deferred()
 		elif kv.size() == 2 and kv[0] == "corpse_preview" and kv[1] in ["1", "bridge", "terrace"]:
 			_corpse_preview.call_deferred(kv[1])
-		elif kv.size() == 2 and kv[0] == "reward_preview" and kv[1] == "1":
-			_reward_preview.call_deferred()
+		elif kv.size() == 2 and kv[0] == "reward_preview" and kv[1] in ["1", "levelup"]:
+			_reward_preview.call_deferred(kv[1])
 		elif kv.size() == 2 and kv[0] == "gold":
 			GameState.gold = int(kv[1])
 		elif kv.size() == 2 and kv[0] == "chests":
@@ -353,6 +361,43 @@ func _dungeon_preview(which: String) -> void:
 
 
 ## Explicit visual audit only: freeze genuine numeric state at difficult fill/label cases.
+func _encounter_preview(which: String) -> void:
+	await get_tree().create_timer(2.0, false).timeout
+	if is_queued_for_deletion():
+		return
+	_encounter_audit = true
+	_spawn_timer = 10000.0
+	encounters.set_process(false)
+	for enemy in enemies:
+		enemy.queue_free()
+	enemies.clear()
+	for id in encounters._members:
+		encounters._members[id] = []
+	var stone: EncounterStone = encounters.stones["west"]
+	player.position = resolve_movement(stone.position + Vector2(60, 45), stone.position + Vector2(60, 45), Player.RADIUS)
+	player.facing = (stone.position - player.position).angle()
+	encounters.states["west"]["initial_spawned"] = true
+	if which == "empty":
+		encounters.states["west"]["charges"] = 0
+	elif which == "active":
+		encounters.spawn_wave("west", false)
+	camera.position = player.position + Vector2(0, -30)
+	camera.reset_smoothing()
+	hud._toast_queue.clear()
+	hud._toast_time = 0.0
+	hud._toast_plaque.hide()
+	_update_encounter_audit()
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.__sjrpgEncounterPreviewReady = true")
+
+
+func _update_encounter_audit() -> void:
+	if not _encounter_audit or not OS.has_feature("web"):
+		return
+	var state: Dictionary = encounters.states["west"]
+	JavaScriptBridge.eval("window.__sjrpgEncounterAudit = " + JSON.stringify({"charges": state["charges"], "living": encounters.living("west"), "ready": encounters.can_summon("west")}))
+
+
 func _hud_preview(which: String) -> void:
 	await get_tree().create_timer(2.0, false).timeout
 	if is_queued_for_deletion():
@@ -501,21 +546,31 @@ func _corpse_preview(surface := "1") -> void:
 
 
 ## Explicit review query only. Exercise real grant/chest paths, never run in a normal adventure.
-func _reward_preview() -> void:
+func _reward_preview(mode := "1") -> void:
 	await get_tree().create_timer(2.0, false).timeout
 	if is_queued_for_deletion():
 		return
-	for chest in chests:
-		if not chest.dead:
-			player.position = chest.position + Vector2(70, 35)
-			chest.take_damage(1.0, player)
-			break
+	if mode == "1":
+		for chest in chests:
+			if not chest.dead:
+				player.position = chest.position + Vector2(70, 35)
+				chest.take_damage(1.0, player)
+				break
 	await get_tree().create_timer(0.8, false).timeout
 	if not is_queued_for_deletion():
+		if mode == "levelup":
+			hud._toast_queue.clear()
+			hud._toast_time = 0.0
+			hud._toast_plaque.hide()
+			camera.position = player.position + Vector2(0, -30)
+			camera.reset_smoothing()
 		grant_xp(GameState.xp_to_next())
 		if OS.has_feature("web"):
 			hud._update_vital_feedback(0.0)
 			hud._update_layout()
+			if is_instance_valid(hud._level_up):
+				hud._level_up._process(0.06)
+				hud._level_up._process(0.06)
 			hud._bars.queue_redraw()
 			hud.controls.queue_redraw()
 			get_tree().paused = true  # Explicit capture preview freezes the confirmed reward at its visual peak.
@@ -533,7 +588,9 @@ func combat_feedback(at: Vector2, strength: float, hurt := false) -> void:
 	var direction := (player.position - at).normalized()
 	if direction.length_squared() < 0.1:
 		direction = Vector2(0.6, -0.8)
-	_impact_offset = (_impact_offset + direction * clampf(strength, 0.0, 1.0) * (4.0 if hurt else 2.6)).limit_length(6.0)
+	_impact_offset = (_impact_offset + direction * clampf(strength, 0.0, 1.0) * (5.0 if hurt else 3.8)).limit_length(7.0)
+	_impact_age = 0.0
+	_impact_cross = direction.orthogonal() * clampf(strength, 0.0, 1.0) * 0.65
 	_impact_fresh = true
 	camera.offset = _impact_offset
 
@@ -542,10 +599,13 @@ func combat_feedback(at: Vector2, strength: float, hurt := false) -> void:
 func _update_impact_camera(delta: float) -> void:
 	if Prefs.reduce_motion:
 		_impact_offset = Vector2.ZERO
+		_impact_cross = Vector2.ZERO
 	else:
 		_impact_offset *= exp(-18.0 * (minf(delta, 0.012) if _impact_fresh else delta))
+	_impact_age += minf(delta, 0.012) if _impact_fresh else delta
 	_impact_fresh = false
-	camera.offset = _impact_offset
+	var ripple := _impact_cross * sin(_impact_age * TAU * 32.0) * maxf(0.0, 1.0 - _impact_age / 0.16)
+	camera.offset = (_impact_offset + ripple).limit_length(7.0)
 
 
 func _process(delta: float) -> void:
@@ -574,11 +634,12 @@ func _process(delta: float) -> void:
 		_spawn_timer = ForestBalance.SPAWN_SECONDS
 		# Distant ambient enemies must not consume the local encounter budget.
 		for enemy in enemies.duplicate():
-			if not enemy.is_boss and not enemy.is_threat and enemy.position.distance_to(player.position) > 1900.0:
+			if not enemy.is_boss and not enemy.is_threat and enemy.encounter_id.is_empty() and enemy.position.distance_to(player.position) > 1900.0:
 				enemies.erase(enemy)
 				enemy.queue_free()
 		var near_home := Iso.unproject(player.position).length() < ForestBalance.NEAR_TOWN_RADIUS
-		if enemies.size() < ForestBalance.field_limit(near_home):
+		var ambient := enemies.filter(func(enemy: Enemy): return not enemy.dead and enemy.encounter_id.is_empty() and not enemy.is_threat and not enemy.is_boss).size()
+		if ambient < ForestBalance.field_limit(near_home) and enemies.size() < EncounterRuntime.MAX_ENEMIES:
 			_spawn_enemy()
 	_save_timer += delta
 	if _save_timer >= 5.0:
@@ -655,13 +716,15 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _spawn_enemy(anywhere := false) -> void:
+	if enemies.size() >= EncounterRuntime.MAX_ENEMIES:
+		return
 	for attempt in 30:
 		var p: Vector2
 		if anywhere:
 			p = Iso.project(Vector2(_rng.randf_range(FIELD.position.x, FIELD.end.x), _rng.randf_range(FIELD.position.y, FIELD.end.y)) * 0.8)
 		else:
-			p = player.position + Vector2.from_angle(_rng.randf() * TAU) * _rng.randf_range(560, 1000)
-		if not _inside_field(p, 200.0) or in_town(p) or p.distance_to(player.position) < 450.0:
+			p = player.position + Vector2.from_angle(_rng.randf() * TAU) * _rng.randf_range(440, 720)
+		if not _inside_field(p, 200.0) or in_town(p) or p.distance_to(player.position) < 400.0:
 			continue
 		if Geometry2D.is_point_in_polygon(p, _town_buffer()):
 			continue
@@ -782,6 +845,30 @@ func nearest_enemy(from: Vector2, max_range: float) -> Enemy:
 	return best
 
 
+func nearest_ready_stone(from: Vector2, max_range: float) -> EncounterStone:
+	var best: EncounterStone
+	if encounters == null or dungeon.active:
+		return null
+	for stone in encounters.stones.values():
+		var distance: float = from.distance_to(stone.position)
+		if encounters.can_summon(stone.id) and distance < max_range and encounters.clear_line(from, stone.position):
+			max_range = distance
+			best = stone
+	return best
+
+
+func nearest_attackable_prop(from: Vector2, max_range: float) -> Node2D:
+	var best: Node2D = nearest_ready_stone(from, max_range)
+	if best != null:
+		max_range = from.distance_to(best.position)
+	for chest in chests:
+		var distance: float = from.distance_to(chest.position)
+		if not chest.dead and distance < max_range:
+			max_range = distance
+			best = chest
+	return best
+
+
 func enemies_in_radius(center: Vector2, radius: float) -> Array[Enemy]:
 	var out: Array[Enemy] = []
 	for e in enemies:
@@ -801,12 +888,16 @@ func enemies_in_arc(center: Vector2, angle: float, radius: float, half_angle: fl
 
 ## 상자는 공격 기술의 범위·투사체에 맞으면 부서집니다.
 func break_chests_in_radius(center: Vector2, radius: float, source: Node2D = null) -> void:
+	if encounters != null:
+		encounters.in_radius(center, radius, source)
 	for c in chests:
 		if not c.dead and center.distance_to(c.position) <= radius + 26.0:
 			c.take_damage(1.0, source)
 
 
 func break_chests_in_arc(center: Vector2, angle: float, radius: float, half_angle: float, source: Node2D = null) -> void:
+	if encounters != null:
+		encounters.in_radius(center, radius, source, angle, half_angle)
 	for c in chests:
 		if c.dead:
 			continue
@@ -815,7 +906,9 @@ func break_chests_in_arc(center: Vector2, angle: float, radius: float, half_angl
 			c.take_damage(1.0, source)
 
 
-func break_chests_at(p: Vector2, r: float, source: Node2D = null) -> void:
+func break_chests_at(p: Vector2, r: float, source: Node2D = null, include_stones := true) -> void:
+	if encounters != null and include_stones:
+		encounters.in_radius(p, r, source)
 	for c in chests:
 		if not c.dead and p.distance_to(c.position) <= r + 26.0:
 			c.take_damage(1.0, source)
@@ -910,6 +1003,8 @@ func on_boss_defeated(boss: Enemy) -> void:
 
 func on_enemy_killed(enemy: Enemy) -> void:
 	enemies.erase(enemy)
+	if encounters != null:
+		encounters.on_killed(enemy)
 	Prefs.pulse("kill")
 	GameState.kills += 1
 	if dungeon.active:
@@ -937,7 +1032,7 @@ func grant_xp(amount: int) -> void:
 		RewardFx.spawn(self, player.position + Vector2(0, -32), 1, true)
 		SoundFx.play("levelup")
 		SoundFx.play("loot")
-		toast("레벨 업! Lv.%d · 스킬 포인트 %d" % [GameState.level, GameState.skill_points])
+		hud.show_level_up(GameState.level)
 		GameState.save_game()
 
 
@@ -1109,6 +1204,7 @@ func spawn_zone(z: Dictionary) -> void:
 	e.color = z["color"]
 	e.life = float(z["duration"]) + float(z.get("delay", 0.0))
 	e.params = z
+	e.owner_node = player
 	e.z_index = -6
 	e.z_as_relative = false
 	_add_effect(e)
@@ -1123,6 +1219,9 @@ func spawn_beam(from: Vector2, angle: float, length: float, damage: float, color
 		var along := d.dot(dir)
 		if along > 0.0 and along < length and absf(d.dot(dir.orthogonal())) < 34.0:
 			en.take_damage(damage, player)
+	if encounters != null:
+		for contact in encounters.projectile_contacts(from, from + dir * length):
+			contact["enemy"].take_damage(damage, _owner)
 	var pts := PackedVector2Array()
 	var steps := 10
 	for i in steps + 1:
