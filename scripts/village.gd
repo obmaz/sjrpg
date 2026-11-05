@@ -11,8 +11,8 @@ const ROAD_HALF := 0.047  # paved road half width in uv
 const TREE_UV := [[0.355, 0.724, 11], [0.684, 0.703, 2], [0.246, 0.368, 11]]
 ## The new art already shades its crowns; a mild grade keeps bark warm and readable.
 const FOLIAGE := Color(0.82, 0.9, 0.84)
-## Cobble texture density: one 418px tile covers 190 ground units.
-const COBBLE_PX := 418.0 / 190.0
+## Four slabs per tile, each around a third of the hero's height.
+const COBBLE_PX := 512.0 / 110.0
 const NPCS := [
 	["nw", "상인", 0], ["ne", "대장장이", 1], ["sw", "탈것 상인", 2], ["se", "촌장", 3],
 ]
@@ -133,7 +133,7 @@ func _box(a_uv: Vector2, b_uv: Vector2) -> PackedVector2Array:
 	return PackedVector2Array([a, Vector2(b.x, a.y), b, Vector2(a.x, b.y)])
 
 
-## Real cobblestone (원본 forest-isometric-paving) laid on the ground plane with a dark curb.
+## Reference limestone laid on the actual projected walkable ground.
 ## Ground lighting stays uniform until shadows can follow actual objects and a light source.
 func _build_paving(layer: Node2D) -> void:
 	var group := Node2D.new()
@@ -142,25 +142,20 @@ func _build_paving(layer: Node2D) -> void:
 	var merged := _box(Vector2(0.375, 0.375), Vector2(0.625, 0.625))
 	for other in [_box(Vector2(0.02, 0.453), Vector2(0.96, 0.547)), _box(Vector2(0.453, 0.06), Vector2(0.547, 0.94))]:
 		merged = Geometry2D.merge_polygons(merged, other)[0]
-	var curb: Array = Geometry2D.offset_polygon(merged, 9.0, Geometry2D.JOIN_MITER)
-	var curb_poly := Polygon2D.new()
-	curb_poly.polygon = curb[0]
-	curb_poly.color = Color(0.09, 0.07, 0.05, 0.7)
-	group.add_child(curb_poly)
 	var stone := Polygon2D.new()
 	stone.polygon = merged
 	map_roads.append(_project_polygon(merged))
-	stone.texture = load("res://assets/art/village/paving.webp")
+	stone.texture = ForestArt.texture("paving")
 	stone.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
 	var uv := PackedVector2Array()
 	for p in merged:
 		uv.append(p * COBBLE_PX)
 	stone.uv = uv
-	stone.modulate = Color(0.86, 0.84, 0.8)
+	stone.modulate = Color(0.98, 0.97, 0.94)
 	group.add_child(stone)
 	# Dirt roads continue outward from the gates; the east road ends at the
 	# bridge forecourt and a narrower road crosses the bridge northwards.
-	var dirt := load("res://assets/art/village/dirt.webp") as Texture2D
+	var dirt := ForestArt.texture("earth")
 	var east_end := Vector2(0.94 + 390.0 / extent, 0.5)
 	var roads := [
 		[Vector2(0.5, 0.10), Vector2(0.5, -0.9), extent * 0.055],
@@ -179,7 +174,7 @@ func _build_paving(layer: Node2D) -> void:
 		map_roads.append(_project_polygon(poly.polygon))
 		poly.texture = dirt
 		poly.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
-		poly.texture_scale = Vector2(418.0 / 180.0, 418.0 / 180.0)
+		poly.texture_scale = Vector2.ONE * 512.0 / 360.0
 		poly.z_index = 0
 		layer.add_child(poly)
 
@@ -507,7 +502,8 @@ func build_field(world: Node2D, field: Rect2, rng: RandomNumberGenerator) -> voi
 		var g2 := Vector2(rng.randf_range(field.position.x, field.end.x), rng.randf_range(field.position.y, field.end.y))
 		if town.has_point(g2) or near_water(g2, 0.0):
 			continue
-		var pd: Dictionary = data["sprites"]["plant-%d" % rng.randi_range(0, 5)]
+		# Keep the same random draw count so decoration cannot change tree/loot placement.
+		var pd := ForestArt.frame(["flowers_white", "flowers_warm", "fern", "grass"][rng.randi_range(0, 5) % 4])
 		var plant := IsoSprite.new().setup(pd, float(pd["world_height"]))
 		plant.position = Iso.project(g2)
 		world.add_child(plant)

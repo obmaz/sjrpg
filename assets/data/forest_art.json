@@ -1,0 +1,155 @@
+{
+ "sources": [
+  {
+   "path": "assets/source/forest-ground.png",
+   "sha256": "6c2216184f0d54e325128fd876e2ae12f1846042464144aac50af5d5ed60b3c0"
+  },
+  {
+   "path": "assets/source/forest-flora.png",
+   "sha256": "3c37f76a6cfeb274ae3bb310f08d95b53bf8add0e788a1cb9369c380b3533af6"
+  }
+ ],
+ "camera": {
+  "ground_material_projection": "orthographic top-down; the runtime Iso ground transform provides the camera",
+  "flora_projection": "authored elevated quarter view",
+  "target_ground_axes_degrees": [
+   -30,
+   30
+  ],
+  "target_azimuth_degrees": 45,
+  "target_elevation_degrees": 35.264
+ },
+ "review": "The approved forest reference guides muted olive ground, worn pale limestone paving, natural earth, cream-white flowers, restrained warm wildflowers and fine low foliage. Ground material tiles contain no directional tree/building shadow layer. Flora was reviewed over light and dark solid backgrounds: the visible olive source backdrop is fully transparent RGB, not a rendered halo. Fine leaf holes and antialiasing remain; no painted ground-shadow plate is present. Organic clumps are reviewed for upper leaf visibility and rooted stem contact rather than certified with invented rigid ground-axis edges.",
+ "textures": {
+  "grass": {
+   "path": "assets/art/forest/grass.webp",
+   "sha256": "978367e3ffa2b00ec8f062ec85bad18a3b33d751aa7c110597b25965fac83fe5",
+   "size": [
+    512,
+    512
+   ]
+  },
+  "paving": {
+   "path": "assets/art/forest/paving.webp",
+   "sha256": "6d414fb6f53db1fee5dc3fa964f3fc6e948b9e042522fe4bc8b5edd4e8e636aa",
+   "size": [
+    512,
+    512
+   ]
+  },
+  "earth": {
+   "path": "assets/art/forest/earth.webp",
+   "sha256": "0c43e16f856d729c8f32770a042e4c81049e7ba9fed6952fcc1612c5e43323b3",
+   "size": [
+    512,
+    512
+   ]
+  },
+  "flora": {
+   "path": "assets/art/forest/flora.webp",
+   "sha256": "4eaa642c98f8c4d72df4e54f157b151921c5c3c3e67e53bd436ff57efeb9e7ef",
+   "size": [
+    1024,
+    1024
+   ]
+  }
+ },
+ "frames": {
+  "flowers_white": {
+   "sheet": "res://assets/art/forest/flora.webp",
+   "source": [
+    8,
+    243,
+    496,
+    261
+   ],
+   "foot": [
+    269.0944,
+    467.5888
+   ],
+   "height": 224.5888,
+   "origin": [
+    66,
+    107
+   ],
+   "packing": 0.7936,
+   "gvs": 1,
+   "gvk": 0,
+   "world_height": 22,
+   "body": null,
+   "review": "Ground-contact centre among lower flower stems and the rooted leaf rosette. White petals retain the generated cream colour; front leaves remain below the contact instead of forcing the foot to the silhouette bottom."
+  },
+  "flowers_warm": {
+   "sheet": "res://assets/art/forest/flora.webp",
+   "source": [
+    520,
+    251,
+    496,
+    253
+   ],
+   "foot": [
+    753.4620689655172,
+    471.6344827586207
+   ],
+   "height": 220.63448275862072,
+   "origin": [
+    857,
+    126
+   ],
+   "packing": 0.8551724137931035,
+   "gvs": 1,
+   "gvk": 0,
+   "world_height": 20,
+   "body": null,
+   "review": "Rooted centre beneath the warm flower stems and central leaf mat. The lower grass tuft and forward leaves remain visible beyond the depth-sort anchor."
+  },
+  "fern": {
+   "sheet": "res://assets/art/forest/flora.webp",
+   "source": [
+    8,
+    735,
+    496,
+    281
+   ],
+   "foot": [
+    231.1141868512111,
+    912.6332179930796
+   ],
+   "height": 177.6332179930796,
+   "origin": [
+    91,
+    612
+   ],
+   "packing": 0.8581314878892734,
+   "gvs": 1,
+   "gvk": 0,
+   "world_height": 24,
+   "body": null,
+   "review": "Ground contact at the converging fern petiole/root crown. The natural spread of foreground fronds and fallen leaves remains below the anchor."
+  },
+  "grass": {
+   "sheet": "res://assets/art/forest/flora.webp",
+   "source": [
+    520,
+    780,
+    496,
+    236
+   ],
+   "foot": [
+    773.7853810264386,
+    968.9891135303266
+   ],
+   "height": 188.98911353032656,
+   "origin": [
+    813,
+    629
+   ],
+   "packing": 0.7713841368584758,
+   "gvs": 1,
+   "gvk": 0,
+   "world_height": 12,
+   "body": null,
+   "review": "Contact at the central rooted grass tuft, beneath the curved upper blades. Low leaves and fine forward blades retain their natural footprint."
+  }
+ }
+}

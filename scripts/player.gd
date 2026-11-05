@@ -54,7 +54,7 @@ func setup(g: Node) -> void:
 	attack_atlas = ActorAtlas.get_atlas(info["attack_atlas"])
 	base_speed = info["speed"]
 	sprite = ActorSprite.new()
-	sprite.body_height = 74.0
+	sprite.body_height = 84.0
 	add_child(sprite)
 	refresh_stats(true)
 
@@ -275,6 +275,8 @@ func cast_slot(index: int, repeat := false) -> bool:
 
 
 func _cast_feedback(d: Dictionary) -> void:
+	if is_mage and str(d.get("element", "")) in ["fire", "cold", "lightning"] and d["type"] != "melee":
+		Effect.spawn_cast(game, self, d.get("color", SkillDefs.LIGHT))
 	var sound := "slash"
 	match str(d.get("element", "")):
 		"fire":

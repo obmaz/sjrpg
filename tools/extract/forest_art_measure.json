@@ -1,0 +1,124 @@
+{
+ "sources": {
+  "ground": "assets/source/forest-ground.png",
+  "flora": "assets/source/forest-flora.png"
+ },
+ "camera": {
+  "ground_material_projection": "orthographic top-down; the runtime Iso ground transform provides the camera",
+  "flora_projection": "authored elevated quarter view",
+  "target_ground_axes_degrees": [
+   -30,
+   30
+  ],
+  "target_azimuth_degrees": 45,
+  "target_elevation_degrees": 35.264
+ },
+ "review": "The approved forest reference guides muted olive ground, worn pale limestone paving, natural earth, cream-white flowers, restrained warm wildflowers and fine low foliage. Ground material tiles contain no directional tree/building shadow layer. Flora was reviewed over light and dark solid backgrounds: the visible olive source backdrop is fully transparent RGB, not a rendered halo. Fine leaf holes and antialiasing remain; no painted ground-shadow plate is present. Organic clumps are reviewed for upper leaf visibility and rooted stem contact rather than certified with invented rigid ground-axis edges.",
+ "tiles": {
+  "grass": {
+   "source": "ground",
+   "roi": [
+    2,
+    2,
+    722,
+    722
+   ]
+  },
+  "paving": {
+   "source": "ground",
+   "roi": [
+    726,
+    2,
+    1446,
+    722
+   ]
+  },
+  "earth": {
+   "source": "ground",
+   "roi": [
+    1450,
+    2,
+    2170,
+    722
+   ]
+  }
+ },
+ "frames": {
+  "flowers_white": {
+   "source": "flora",
+   "cell": [
+    0,
+    0
+   ],
+   "roi": [
+    0,
+    0,
+    768,
+    512
+   ],
+   "foot": [
+    395,
+    390
+   ],
+   "world_height": 22,
+   "review": "Ground-contact centre among lower flower stems and the rooted leaf rosette. White petals retain the generated cream colour; front leaves remain below the contact instead of forcing the foot to the silhouette bottom."
+  },
+  "flowers_warm": {
+   "source": "flora",
+   "cell": [
+    1,
+    0
+   ],
+   "roi": [
+    768,
+    0,
+    1536,
+    512
+   ],
+   "foot": [
+    1130,
+    384
+   ],
+   "world_height": 20,
+   "review": "Rooted centre beneath the warm flower stems and central leaf mat. The lower grass tuft and forward leaves remain visible beyond the depth-sort anchor."
+  },
+  "fern": {
+   "source": "flora",
+   "cell": [
+    0,
+    1
+   ],
+   "roi": [
+    0,
+    512,
+    768,
+    1024
+   ],
+   "foot": [
+    351,
+    819
+   ],
+   "world_height": 24,
+   "review": "Ground contact at the converging fern petiole/root crown. The natural spread of foreground fronds and fallen leaves remains below the anchor."
+  },
+  "grass": {
+   "source": "flora",
+   "cell": [
+    1,
+    1
+   ],
+   "roi": [
+    768,
+    512,
+    1536,
+    1024
+   ],
+   "foot": [
+    1142,
+    874
+   ],
+   "world_height": 12,
+   "review": "Contact at the central rooted grass tuft, beneath the curved upper blades. Low leaves and fine forward blades retain their natural footprint."
+  }
+ }
+}

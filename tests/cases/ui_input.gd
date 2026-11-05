@@ -7,6 +7,15 @@ func run() -> void:
 	for name in controls._buttons:
 		var button: Dictionary = controls._buttons[name]
 		check("touch target at least 64 units: " + name, float(button["radius"]) * 2.0 >= 64.0)
+	var empty: Dictionary = controls._buttons["slot4"]
+	var socket_edge: Vector2 = empty["center"] + Vector2.RIGHT * (float(empty["radius"]) - 1.0)
+	check("empty-slot touch test lies outside its smaller engraving", socket_edge.distance_to(empty["center"]) > controls.slot_visual_radius(4))
+	controls._press(29, socket_edge)
+	await _frames(2)
+	check("empty-slot outer touch still opens the skill panel", game.hud.panel_open() and controls._held.is_empty())
+	game.hud.close_panel()
+	await _frames(2)
+	controls._layout()
 	controls._press(10, controls._stick_center)
 	controls._drag(10, controls._stick_center + Vector2(50, 0))
 	controls._press(11, controls._buttons["slot0"]["center"])

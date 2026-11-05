@@ -26,6 +26,48 @@ static var _impact_sheet: Texture2D
 static var _impact_material: CanvasItemMaterial
 
 
+static func _glow_material() -> CanvasItemMaterial:
+	if _impact_material == null:
+		_impact_material = CanvasItemMaterial.new()
+		_impact_material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	return _impact_material
+
+
+static func _element_cell(tint: Color) -> int:
+	if tint.is_equal_approx(SkillDefs.FIRE):
+		return 1
+	if tint.is_equal_approx(SkillDefs.LIGHT):
+		return 2
+	if tint.is_equal_approx(SkillDefs.COLD):
+		return 3
+	return 0
+
+
+## Successful elemental casts light the forward hand; this has no hitbox or gameplay clock.
+static func spawn_cast(world_game: Node, caster: Player, tint: Color) -> Effect:
+	var cast := Effect.new()
+	cast.kind = "cast"
+	cast.owner_node = caster
+	cast.life = 0.30
+	cast.color = tint
+	cast.params["cell"] = _element_cell(tint)
+	cast.z_index = 5
+	cast.material = _glow_material()
+	cast.position = caster.position + cast_hand_offset(caster.facing, caster.sprite.body_height)
+	world_game._add_effect(cast)
+	return cast
+
+
+static func cast_hand_offset(facing: float, body_height: float) -> Vector2:
+	var forward := Vector2.from_angle(facing)
+	return Vector2(forward.x * body_height * 0.25, -body_height * 0.55 + forward.y * body_height * 0.11)
+
+
+func _ready() -> void:
+	if kind == "proj" and not params.get("throw", false):
+		material = _glow_material()
+
+
 ## Projectile velocity gives the contact direction; stationary zones use their actual owner.
 static func contact_direction(source: Node2D, target: Vector2) -> Vector2:
 	if source == null:
@@ -46,25 +88,15 @@ static func spawn_impact(world_game: Node, at: Vector2, source: Node2D, heavy :=
 	impact.radius = 140.0 if heavy else 100.0
 	impact.life = 0.28 if heavy else 0.22
 	impact.z_index = 6
-	var cell := 0
 	var tint := Color.WHITE
 	if source is Effect:
 		tint = source.color
 	elif source is Player:
 		tint = source.impact_color
-	if tint.is_equal_approx(SkillDefs.FIRE):
-		cell = 1
-	elif tint.is_equal_approx(SkillDefs.LIGHT):
-		cell = 2
-	elif tint.is_equal_approx(SkillDefs.COLD):
-		cell = 3
-	impact.params["cell"] = cell
+	impact.params["cell"] = _element_cell(tint)
 	if source != null:
 		impact.angle = contact_direction(source, at).angle()
-	if _impact_material == null:
-		_impact_material = CanvasItemMaterial.new()
-		_impact_material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-	impact.material = _impact_material
+	impact.material = _glow_material()
 	world_game._add_effect(impact)
 	return impact
 
@@ -72,12 +104,18 @@ static func spawn_impact(world_game: Node, at: Vector2, source: Node2D, heavy :=
 func _process(delta: float) -> void:
 	# A slow frame must not discard a new cosmetic impact before its first render.
 	# Only the first update is bounded; headless/offscreen effects still expire normally.
-	if kind == "impact" and not _impact_started:
+	if kind in ["impact", "cast"] and not _impact_started:
 		age += minf(delta, life * 0.2)
 		_impact_started = true
 	else:
 		age += delta
 	match kind:
+		"cast":
+			var caster := owner_node as Player
+			if not is_instance_valid(caster) or caster.dead or caster._roll_time > 0.0:
+				queue_free()
+				return
+			position = caster.position + cast_hand_offset(caster.facing, caster.sprite.body_height)
 		"proj":
 			_update_projectile(delta)
 		"orb":
@@ -213,6 +251,19 @@ func _update_ward(delta: float) -> void:
 func _draw() -> void:
 	var t := age / life
 	match kind:
+		"cast":
+			var fade := pow(1.0 - clampf(t, 0.0, 1.0), 0.7)
+			var strength := 0.45 if Prefs.reduce_motion else 0.72
+			_draw_generated_glow(Vector2.ZERO, 38.0, int(params["cell"]), fade * strength)
+			# Small separated glints preserve the silhouette and floor underneath the hand.
+			for index in 6:
+				var phase := 0.4 if Prefs.reduce_motion else t
+				var direction := Vector2.from_angle(index * 2.39996)
+				var at := direction * lerpf(7.0, 29.0, phase)
+				at.y *= 0.6
+				var glint := Color(0.72, 0.9, 1.0, fade * strength) if index % 2 == 0 else Color(1.0, 0.84, 0.47, fade * strength)
+				draw_line(at - Vector2(2.2, 0), at + Vector2(2.2, 0), glint, 1.0, true)
+				draw_line(at - Vector2(0, 2.2), at + Vector2(0, 2.2), glint, 1.0, true)
 		"impact":
 			if _impact_sheet == null:
 				_impact_sheet = load("res://assets/art/effects/impact-atlas.webp")
@@ -241,13 +292,13 @@ func _draw() -> void:
 				draw_rect(Rect2(6, -8, 8, 16), Color(0.7, 0.72, 0.78))
 				draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 			else:
-				var flicker := 1.0 + 0.15 * sin(age * 40.0)
-				draw_circle(Vector2.ZERO, 15.0 * flicker, Color(color, 0.35))
-				draw_circle(Vector2.ZERO, 9.0 * flicker, Color(color, 0.9))
-				draw_circle(Vector2.ZERO, 4.5, Color(1, 1, 0.95))
+				var flicker := 1.0 if Prefs.reduce_motion else 1.0 + 0.08 * sin(age * 30.0)
+				var cell := _element_cell(color)
+				_draw_generated_glow(Vector2.ZERO, 44.0 * flicker, cell, 0.9)
+				draw_circle(Vector2.ZERO, 2.8, Color(1, 1, 0.95, 0.9))
 				var tail := -velocity.normalized()
-				for i in 4:
-					draw_circle(tail * (10.0 + i * 9.0), 7.0 - i * 1.4, Color(color, 0.45 - i * 0.1))
+				for i in 3:
+					_draw_generated_glow(tail * (11.0 + i * 11.0), 25.0 - i * 5.0, cell, 0.22 - i * 0.06)
 		"orb":
 			draw_circle(Vector2.ZERO, 22.0, Color(color, 0.35))
 			draw_circle(Vector2.ZERO, 13.0, Color(color, 0.9))
@@ -312,6 +363,13 @@ func _draw() -> void:
 			var a2 := clampf(2.0 - t * 2.0, 0.0, 1.0)
 			draw_string_outline(UiKit.BOLD_FONT, Vector2(-60, 0), text, HORIZONTAL_ALIGNMENT_CENTER, 120, 22, 5, Color(0, 0, 0, a2))
 			draw_string(UiKit.BOLD_FONT, Vector2(-60, 0), text, HORIZONTAL_ALIGNMENT_CENTER, 120, 22, Color(color, a2))
+
+
+func _draw_generated_glow(at: Vector2, diameter: float, cell: int, alpha: float) -> void:
+	if _impact_sheet == null:
+		_impact_sheet = load("res://assets/art/effects/impact-atlas.webp")
+	var size := Vector2(_impact_sheet.get_width() / 4.0, _impact_sheet.get_height())
+	draw_texture_rect_region(_impact_sheet, Rect2(at - Vector2.ONE * diameter * 0.5, Vector2.ONE * diameter), Rect2(Vector2(cell * size.x, 0), size), Color(1, 1, 1, alpha))
 
 
 func _ellipse_fill(r: float, c: Color) -> void:

@@ -35,6 +35,11 @@ func _button(center: Vector2, radius: float, visual_radius := -1.0) -> Dictionar
 	return {"center": center, "radius": maxf(32.0, radius), "visual_radius": radius if visual_radius < 0.0 else visual_radius}
 
 
+func slot_visual_radius(index: int) -> float:
+	var radius: float = _buttons["slot%d" % index]["visual_radius"]
+	return radius * 0.82 if str(GameState.slots[index]).is_empty() else radius
+
+
 func _layout() -> void:
 	var margins := PanelFrame.safe_margins(get_viewport())
 	var safe_origin := Vector2(margins.x, margins.y)
@@ -62,7 +67,7 @@ func _layout() -> void:
 	_near_name = npc
 	if npc != "" and npc != "탈것 상인":
 		var interaction := _button(Vector2(size.x / 2.0, bar_y - 78.0 * u), 32.0 * u)
-		interaction["half_size"] = Vector2(78.0 * u, 32.0 * u)
+		interaction["half_size"] = Vector2(78.0 * u, maxf(32.0, 32.0 * u))
 		_buttons["near_shop"] = interaction
 	for button in _buttons.values():
 		button["center"] += safe_origin
@@ -292,9 +297,9 @@ func _draw_joystick() -> void:
 	var c := _stick_center
 	var r := stick_radius()
 	var active := _stick_index != -2
-	var bronze := Color(0.62, 0.57, 0.42, 0.8 if active else 0.65)
-	draw_circle(c, r + 2.0 * u, Color(0.0, 0.0, 0.0, 0.2))
-	draw_circle(c, r, Color(0.025, 0.028, 0.023, 0.34 if active else 0.26))
+	var bronze := Color(0.62, 0.57, 0.42, 0.72 if active else 0.44)
+	draw_circle(c, r + 2.0 * u, Color(0.0, 0.0, 0.0, 0.12))
+	draw_circle(c, r, Color(0.025, 0.028, 0.023, 0.27 if active else 0.12))
 	draw_arc(c, r, 0, TAU, 96, bronze, 1.5 * u, true)
 	draw_arc(c, r - 4.0 * u, 0, TAU, 96, Color(bronze, 0.4), 1.0 * u, true)
 	draw_arc(c, r - 14.0 * u, 0, TAU, 72, Color(bronze, 0.42), 1.1 * u, true)
@@ -316,7 +321,7 @@ func _draw_joystick() -> void:
 		draw_colored_polygon(PackedVector2Array([tip, base + side, base - side]), Color(0.68, 0.63, 0.46, 0.48))
 	var kr := 30.5 * u
 	draw_circle(_stick_knob, kr + 2.0 * u, Color(0, 0, 0, 0.22))
-	draw_circle(_stick_knob, kr, Color(0.1, 0.092, 0.067, 0.8 if active else 0.64))
+	draw_circle(_stick_knob, kr, Color(0.1, 0.092, 0.067, 0.7 if active else 0.42))
 	draw_arc(_stick_knob, kr, 0, TAU, 64, Color(0.62, 0.56, 0.4, 0.72), 1.1 * u, true)
 	draw_arc(_stick_knob, kr - 4.0 * u, 0, TAU, 56, Color(0.62, 0.56, 0.4, 0.25), 0.8 * u, true)
 	draw_arc(_stick_knob, kr - 7.0 * u, PI * 1.12, PI * 1.88, 24, Color(0.8, 0.75, 0.57, 0.2), 0.8 * u, true)
@@ -324,9 +329,8 @@ func _draw_joystick() -> void:
 
 func _draw_skill_bezel(center: Vector2, radius: float, pressed: bool) -> void:
 	var u := _unit
-	var strength := 1.15 if pressed else 1.0
-	draw_arc(center, radius + 6.0 * u, 0, TAU, 96, Color(0.27, 0.7, 1.0, 0.08 * strength), 6.0 * u, true)
-	draw_arc(center, radius + 3.0 * u, 0, TAU, 96, Color(0.45, 0.8, 1.0, 0.25 * strength), 3.0 * u, true)
+	draw_arc(center, radius + 4.0 * u, 0, TAU, 96, Color(0.27, 0.7, 1.0, 0.14 if pressed else 0.055), 3.0 * u, true)
+	draw_arc(center, radius + 2.0 * u, 0, TAU, 96, Color(0.45, 0.8, 1.0, 0.32 if pressed else 0.18), 2.0 * u, true)
 	draw_arc(center, radius + 1.2 * u, 0, TAU, 96, Color(0.65, 0.86, 1.0, 0.95), 1.5 * u, true)
 	draw_arc(center, radius - 0.8 * u, 0, TAU, 96, Color(0.9, 0.94, 0.94, 0.9), 1.0 * u, true)
 	draw_arc(center, radius - 2.2 * u, 0, TAU, 96, Color(0.11, 0.15, 0.18, 0.92), 1.4 * u, true)
@@ -335,11 +339,11 @@ func _draw_skill_bezel(center: Vector2, radius: float, pressed: bool) -> void:
 
 func _draw_empty_socket(center: Vector2, radius: float) -> void:
 	var u := _unit
-	draw_circle(center, radius, Color(0.035, 0.039, 0.044, 0.88))
-	draw_arc(center, radius + 1.0 * u, 0, TAU, 72, Color(0.12, 0.14, 0.15, 0.8), 2.0 * u, true)
+	draw_circle(center, radius, Color(0.035, 0.039, 0.044, 0.56))
+	draw_arc(center, radius + 1.0 * u, 0, TAU, 72, Color(0.12, 0.14, 0.15, 0.5), 1.2 * u, true)
 	draw_arc(center, radius - 0.5 * u, 0, TAU, 72, Color(0.48, 0.45, 0.36, 0.55), 0.9 * u, true)
 	draw_arc(center, radius - 3.0 * u, 0, TAU, 64, Color(0.52, 0.56, 0.59, 0.18), 0.7 * u, true)
-	var etching := Color(0.61, 0.58, 0.45, 0.23)
+	var etching := Color(0.61, 0.58, 0.45, 0.32)
 	draw_arc(center, radius * 0.3, 0, TAU, 32, etching, 0.8 * u, true)
 	for i in 4:
 		var direction := Vector2.from_angle(PI / 4.0 + PI / 2.0 * i)
@@ -356,16 +360,25 @@ func _draw_reference_button(index: int, center: Vector2, radius: float, tint := 
 	draw_texture_rect_region(_reference_buttons, Rect2(center - Vector2.ONE * radius, Vector2.ONE * radius * 2.0), source, tint)
 
 
+func interaction_text() -> String:
+	return {"워프게이트": "워프게이트", "바람 동굴": "동굴 탐험", "동굴 출구": "동굴 나가기", "안식처": "안식처", "숲의 파수꾼": "도전하기", "상인": "상점", "대장장이": "대장간", "촌장": "대화", "보급원 미라": "대화"}.get(_near_name, "대화")
+
+
+func interaction_visual_rect(center: Vector2, half: Vector2) -> Rect2:
+	var text_width := HudArt.FONT.get_string_size(interaction_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, roundi(18.0 * _unit)).x
+	var size := Vector2(minf(half.x * 2.0, maxf(92.0 * _unit, text_width + 30.0 * _unit)), minf(half.y * 2.0, 42.0 * _unit))
+	return Rect2(center - size * 0.5, size)
+
+
 func _draw_interaction(center: Vector2, half: Vector2, pressed: bool) -> void:
-	var rect := Rect2(center - half, half * 2.0)
+	var rect := interaction_visual_rect(center, half)
 	# Keep skins alive between frames: their gradient textures are submitted by RID.
 	# A temporary StyleBox would free those resources before the canvas renders.
 	if _interaction_normal == null:
-		_interaction_normal = UiKit.panel_style(Color(0.065, 0.06, 0.048, 0.88), Color(0.51, 0.44, 0.29, 0.85), 5)
-		_interaction_pressed = UiKit.panel_style(Color(0.13, 0.105, 0.075, 0.95), Color(0.62, 0.53, 0.36, 0.9), 5)
+		_interaction_normal = UiKit.panel_style(Color(0.065, 0.06, 0.048, 0.72), Color(0.51, 0.44, 0.29, 0.7), 21)
+		_interaction_pressed = UiKit.panel_style(Color(0.13, 0.105, 0.075, 0.92), Color(0.62, 0.53, 0.36, 0.9), 21)
 	draw_style_box(_interaction_pressed if pressed else _interaction_normal, rect)
-	var text: String = {"워프게이트": "워프게이트", "바람 동굴": "동굴 탐험", "동굴 출구": "동굴 나가기", "안식처": "안식처", "숲의 파수꾼": "도전하기", "상인": "상점", "대장장이": "대장간", "촌장": "대화", "보급원 미라": "대화"}.get(_near_name, "대화")
-	HudArt.text_outlined(self, text, center + Vector2(-half.x, 7.0 * _unit), half.x * 2.0, int(20.0 * _unit), Color(0.89, 0.85, 0.73))
+	HudArt.text_in_rect(self, interaction_text(), rect.grow(-5.0 * _unit), roundi(18.0 * _unit), Color(0.89, 0.85, 0.73))
 
 
 func _draw() -> void:
@@ -383,10 +396,10 @@ func _draw() -> void:
 		if name.begins_with("slot"):
 			var slot := int(name.substr(4))
 			var id: String = GameState.slots[slot]
-			draw_circle(c, r + 3.0 * u, Color(0.0, 0.0, 0.0, 0.38))
 			if id == "":
-				_draw_empty_socket(c, r)
+				_draw_empty_socket(c, slot_visual_radius(slot))
 				continue
+			draw_circle(c, r + 3.0 * u, Color(0.0, 0.0, 0.0, 0.38))
 			draw_circle(c, r, Color(0.025, 0.028, 0.04, 0.98))
 			var skill := GameState.skill(id)
 			var affordable := player.resource >= SkillDefs.cost(skill, GameState.effective_rank(id))

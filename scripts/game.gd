@@ -6,7 +6,6 @@ signal restart_requested
 
 ## Field in ground units (original scale): the 2400 town sits in the middle.
 const FIELD := Rect2(-3600, -3600, 7200, 7200)
-const MEADOW := preload("res://assets/art/village/meadow-a.webp")
 const CORPSE_LIFETIME := 30.0
 const CORPSE_LIMIT := 32
 
@@ -15,6 +14,7 @@ var scene_root: Node
 var _low_view: SubViewport
 var _view_container: SubViewportContainer
 var world: Node2D
+var forest_details: Array[IsoSprite] = []
 var player: Player
 var _impact_offset := Vector2.ZERO
 var camera: Camera2D
@@ -63,16 +63,16 @@ func _ready() -> void:
 	# Continue the textured backdrop beyond collision bounds so edge cameras never reveal a void.
 	var backdrop := FIELD.grow(3500.0)
 	var meadow := Sprite2D.new()
-	meadow.texture = MEADOW
+	meadow.texture = ForestArt.texture("grass")
 	meadow.centered = false
 	meadow.region_enabled = true
-	var units_per_tex := 170.0
-	meadow.region_rect = Rect2(Vector2.ZERO, backdrop.size / units_per_tex * 418.0)
-	meadow.scale = Vector2.ONE * units_per_tex / 418.0
+	var units_per_tex := 260.0
+	var texture_side := meadow.texture.get_width()
+	meadow.region_rect = Rect2(Vector2.ZERO, backdrop.size / units_per_tex * texture_side)
+	meadow.scale = Vector2.ONE * units_per_tex / texture_side
 	meadow.position = backdrop.position
 	meadow.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR
-	# ForestScenePalette: bright, low-saturation warm grass.
-	meadow.modulate = Color(0.58, 0.70, 0.50)
+	meadow.modulate = Color(0.78, 1.0, 0.85)
 	ground_layer.add_child(meadow)
 
 	world = Node2D.new()
@@ -81,6 +81,7 @@ func _ready() -> void:
 	village = Village.new()
 	village.build(ground_layer, world)
 	village.build_field(world, FIELD.grow(-150), _rng)
+	forest_details = ForestArt.decorate(village, world)
 	map_shapes = MapGeometry.build(village)
 	var chest_def: Dictionary = village.data["sprites"]["chest"]
 	var broken_def: Dictionary = village.data["sprites"]["chest-broken"]
@@ -132,7 +133,7 @@ func _update_zoom() -> void:
 	_view_container.size = size
 	# Keep characters similarly sized in portrait and landscape.
 	var short_side := minf(size.x, size.y)
-	var z := clampf(short_side / 720.0 * 0.8, 0.5, 1.6)
+	var z := clampf(short_side / 720.0, 0.5, 1.6)
 	camera.zoom = Vector2(z, z) * _debug_zoom / (2.0 if Prefs.low_resolution else 1.0)
 
 

@@ -32,6 +32,11 @@ func run() -> void:
 			check("target remains inside screen %s/%s" % [dimensions, name], bounds.encloses(_bounds(button)))
 			check("touch owns visible center %s/%s" % [dimensions, name], controls._hit_button(button["center"]) == name)
 			check("touch remains at least 64 units %s/%s" % [dimensions, name], _bounds(button).size.x >= 64.0 and _bounds(button).size.y >= 64.0)
+			if name == "near_shop":
+				var plaque := controls.interaction_visual_rect(button["center"], button["half_size"])
+				check("quiet interaction plaque keeps a larger touch area", _bounds(button).encloses(plaque) and plaque.size.y < _bounds(button).size.y)
+				var outer_touch := Vector2(plaque.get_center().x, _bounds(button).end.y - 1.0)
+				check("interaction remains tappable beyond its smaller plate", not plaque.has_point(outer_touch) and controls._hit_button(outer_touch) == name)
 			for other in controls._buttons:
 				if name >= other:
 					continue
@@ -40,6 +45,11 @@ func run() -> void:
 					check("interaction avoids menu targets %s/%s" % [name, other], not _bounds(button).intersects(_bounds(b)))
 				else:
 					check("touch circles do not overlap %s/%s" % [name, other], button["center"].distance_to(b["center"]) >= float(button["radius"]) + float(b["radius"]))
+		for slot in 5:
+			var button: Dictionary = controls._buttons["slot%d" % slot]
+			var visual := controls.slot_visual_radius(slot)
+			if str(GameState.slots[slot]).is_empty():
+				check("empty hints leave more scenery visible without shrinking input", visual < float(button["visual_radius"]) and controls._hit_button(button["center"] + Vector2.RIGHT * (float(button["radius"]) - 1.0)) == "slot%d" % slot)
 		var main: Vector2 = controls._buttons["slot0"]["center"]
 		var roll: Vector2 = controls._buttons["roll"]["center"]
 		check("dodge is beside primary skill", roll.x > main.x and absf(roll.y - main.y) < 3.0)

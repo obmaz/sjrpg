@@ -84,6 +84,45 @@ func run() -> void:
 	enemy.sprite.hold_contact(0.045)
 	enemy.take_damage(enemy.hp + 1.0, game.player)
 	check("death immediately releases the hit pose", enemy.dead and enemy.sprite.contact_hold == 0.0)
+	game.queue_free()
+	await _frames(2)
+	await _check_cast_presentation()
 	Prefs.reduce_motion = old_reduce
+
+
+func _check_cast_presentation() -> void:
+	Prefs.reduce_motion = false
+	var game := await make_game("mage")
+	var mage: Player = game.player
+	mage.set_process(false)
+	check("real magic cast starts its hand preparation", mage.cast_slot(0))
+	var glows: Array = game.cosmetic_effects.filter(func(effect: Effect) -> bool: return effect.kind == "cast")
+	check("successful cast creates one generated preparation glow", glows.size() == 1)
+	if glows.is_empty():
+		game.queue_free()
+		await _frames(2)
+		return
+	var glow: Effect = glows[0]
+	var resource := mage.resource
+	var attack_time := mage._attack_time
+	var effect_count: int = game.cosmetic_effects.size()
+	check("blocked recast creates no false preparation", not mage.cast_slot(0) and game.cosmetic_effects.size() == effect_count)
+	mage.position += Vector2(13, 8)
+	glow._process(0.025)
+	check("hand light follows the actor instead of staying on the floor", glow.position.is_equal_approx(mage.position + Effect.cast_hand_offset(mage.facing, mage.sprite.body_height)))
+	check("preparation light does not advance attacks or spend more mana", mage._attack_time == attack_time and mage.resource == resource and mage._pending.is_valid())
+	game.hud.open_settings()
+	var age := glow.age
+	await _frames(3)
+	check("pause freezes the preparation light", glow.age == age)
+	game.hud.close_panel()
+	Prefs.reduce_motion = true
+	var calm := Effect.spawn_cast(game, mage, SkillDefs.LIGHT)
+	calm._process(0.04)
+	check("reduced motion keeps a short gameplay-free cast confirmation", not calm.is_queued_for_deletion() and calm.damage == 0.0 and mage._attack_time == attack_time)
+	Prefs.reduce_motion = false
+	mage.try_roll()
+	glow._process(0.01)
+	check("rolling cancels the hand light immediately", glow.is_queued_for_deletion())
 	game.queue_free()
 	await _frames(2)
