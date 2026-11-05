@@ -328,7 +328,7 @@ func status_geometry() -> Dictionary:
 
 static func header_geometry(view: Vector2, m: Vector4) -> Dictionary:
 	var screen_unit := header_unit(view, m)
-	var u := screen_unit * 0.82
+	var u := screen_unit * 0.902  # 10% larger than the previous 82% header; map/controls retain their scale.
 	var available := view - Vector2(m.x + m.z, m.y + m.w)
 	var origin := Vector2(m.x, m.y + minf(available.y, 1280.0 * screen_unit) * 0.056)
 	var center := origin + Vector2(57, 53) * u
@@ -342,9 +342,7 @@ static func header_geometry(view: Vector2, m: Vector4) -> Dictionary:
 		var left := origin.x + 76.0 * u
 		var end := right - 5.0 * u - (top - 1.0) * u * slope
 		rows[spec[0]] = Rect2(left, origin.y + top * u, end - left, height * u)
-	var plate := PackedVector2Array([
-		origin + Vector2(55, 1) * u, Vector2(right, origin.y + u),
-		Vector2(right - 87.0 * u * slope, origin.y + 88.0 * u), origin + Vector2(55, 88) * u])
+	var plate := HudArt.joined_ribbon(center, radius + 2.0 * u, origin.y + u, right, origin.y + 88.0 * u, slope, 1.5 * u)
 	var label_left := center.x + radius + 8.0 * u
 	var geometry := {
 		"unit": u, "origin": origin, "portrait": center, "radius": radius,
@@ -482,7 +480,7 @@ func _draw_bars() -> void:
 	var slope: float = geometry["slope"]
 	var visible_start: float = geometry["visible_start"]
 	_bars.draw_colored_polygon(plate, Color(0.055, 0.045, 0.045, 0.94))
-	_bars.draw_polyline(PackedVector2Array([plate[0], plate[1], plate[2], plate[3], plate[0]]), Color("746b5e"), 1.3 * u, true)
+	_bars.draw_polyline(plate + PackedVector2Array([plate[0]]), Color("746b5e"), 1.3 * u, true)
 	_bars.draw_line(plate[0] + Vector2(0, 2) * u, plate[1] + Vector2(-2, 2) * u, Color(0.7, 0.62, 0.48, 0.2), 0.8 * u, true)
 	_bars.draw_line(plate[3] + Vector2(0, 3) * u, plate[2] + Vector2(0, 3) * u, Color(0, 0, 0, 0.45), 2.0 * u, true)
 	var actual_ratio := p.hp / maxf(1.0, p.max_hp)
@@ -505,7 +503,7 @@ func _draw_bars() -> void:
 		for fraction in [0.17, 0.78]:
 			if p.resource / p.resource_max < fraction:
 				continue
-			var at := mp_rect.position + Vector2(mp_rect.size.x * fraction, 7.0 * u)
+			var at := Vector2(HudArt.fill_end(mp_rect, fraction, visible_start), mp_rect.position.y + 7.0 * u)
 			_bars.draw_line(at - Vector2(4, 0) * u, at + Vector2(4, 0) * u, Color(0.8, 0.96, 1.0, shimmer), 0.8 * u, true)
 			_bars.draw_line(at - Vector2(0, 4) * u, at + Vector2(0, 4) * u, Color(0.8, 0.96, 1.0, shimmer * 0.7), 0.8 * u, true)
 	var xp_ratio := float(GameState.xp) / GameState.xp_to_next()

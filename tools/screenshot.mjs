@@ -97,8 +97,29 @@ diagnosticLog.on('Log.entryAdded', ({entry}) => {
     }
 });
 const quality = (args.quality ? `&quality=${args.quality}` : '') + (args.zoom ? `&zoom=${args.zoom}` : '');
+let releaseDownload;
+let loadingHeader;
+let packArrived;
+const packHeld = new Promise(resolve => { packArrived = resolve; });
+if (scene === 'title' && args['entry-flow'] === '1') {
+    await page.route('**/index.pck', route => {
+        releaseDownload = () => route.continue();
+        packArrived();
+    });
+}
 await page.goto(`${base}?${SCENES[scene]}${quality}`);
+if (scene === 'title' && args['entry-flow'] === '1') {
+    let timeout;
+    try {
+        await Promise.race([packHeld, new Promise((_, reject) => { timeout = setTimeout(() => reject(new Error('Pack download did not start')), 60000); })]);
+        await page.waitForTimeout(300);
+        loadingHeader = await page.locator('h1').boundingBox();
+        await page.screenshot({path: out.replace(/\.png$/, '-loading.png')});
+    } finally { clearTimeout(timeout); }
+    await releaseDownload();
+}
 await page.waitForFunction(() => window.__sjrpgTitleReady === true, null, {timeout: 90000});
+await page.waitForFunction(() => !window.__sjrpgEntry || window.__sjrpgEntryReady === true, null, {timeout: 30000});
 await page.waitForTimeout(500);
 const vp = page.viewportSize();
 const tap = async (x, y) => {
@@ -113,12 +134,28 @@ const tap = async (x, y) => {
 };
 if (scene === 'title') {
     await page.screenshot({path: out});
+    if (args['entry-flow'] === '1') {
+        if (JSON.stringify(await page.locator('h1').boundingBox()) !== JSON.stringify(loadingHeader)) throw new Error('Loading/title header moved');
+        await page.locator('#entry-start').click();
+        await page.waitForFunction(() => window.__sjrpgClassSelectReady === true, null, {timeout: 30000});
+        const back = await page.evaluate(() => window.__sjrpgClassButtons.back);
+        await tap(vp.width * back[0], vp.height * back[1]);
+        await page.waitForFunction(() => window.__sjrpgTitleReady && window.__sjrpgEntryReady, null, {timeout: 30000});
+        await page.screenshot({path: out.replace(/\.png$/, '-returned.png')});
+        await page.locator('#entry-start').click();
+        await page.waitForFunction(() => window.__sjrpgClassSelectReady === true, null, {timeout: 30000});
+        console.log('Entry flow: real loading → stable title → selection → back → start passed');
+    }
     await browser.close();
     const errors = logs.filter((line) => /error/i.test(line));
     console.log(`저장: ${out}; 콘솔 오류 ${errors.length}건`);
     process.exit(errors.length ? 1 : 0);
 }
-await tap(vp.width / 2, vp.height / 2); // 타이틀
+if (await page.locator('#entry-start').isVisible()) {
+    await page.locator('#entry-start').click();
+} else {
+    await tap(vp.width / 2, vp.height / 2); // native-title fallback
+}
 await page.waitForTimeout(4000);
 // Use real responsive controls for both classes, independent of viewport or orientation.
 await page.waitForFunction(() => window.__sjrpgClassSelectReady === true && window.__sjrpgClassButtons, null, {timeout: 30000});

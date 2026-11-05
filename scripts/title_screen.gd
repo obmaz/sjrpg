@@ -10,6 +10,8 @@ var _subtitle: Label
 var _start: Button
 var _time := 0.0
 var _started := false
+var _web_start: JavaScriptObject
+var _web_entry: JavaScriptObject
 
 
 func _ready() -> void:
@@ -39,6 +41,11 @@ func _ready() -> void:
 	resized.connect(_layout)
 	_layout()
 	if OS.has_feature("web"):
+		_web_entry = JavaScriptBridge.get_interface("__sjrpgEntry")
+		if _web_entry != null:
+			_web_start = JavaScriptBridge.create_callback(func(_arguments: Array): _begin())
+			_web_entry.show(_web_start, Prefs.reduce_motion)
+			hide()
 		JavaScriptBridge.eval("window.__sjrpgTitleReady = true")
 
 
@@ -83,15 +90,21 @@ func _process(delta: float) -> void:
 func _begin() -> void:
 	if not _started:
 		_started = true
+		if _web_entry != null:
+			_web_entry.hide()
 		start_requested.emit()
 
 
 func _gui_input(event: InputEvent) -> void:
+	if _web_entry != null:
+		return
 	if (event is InputEventMouseButton and event.pressed) or (event is InputEventScreenTouch and event.pressed):
 		_begin()
 		accept_event()
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _web_entry != null:
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		_begin()

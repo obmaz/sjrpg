@@ -66,9 +66,7 @@ static func text_outlined(canvas: CanvasItem, text: String, at: Vector2, width: 
 ## Slanted bar (parallelogram, right end cut like the reference).
 static func slanted_bar(canvas: CanvasItem, rect: Rect2, ratio: float, fill_top: Color, fill_bottom: Color, back: Color, slant := 10.0, visible_start := -1.0, trail := -1.0) -> void:
 	var back_poly := _bar_poly(rect, 1.0, slant, visible_start)
-	if visible_start > rect.position.x:
-		# The portrait join is metal, not hidden fluid counted towards the meter.
-		canvas.draw_colored_polygon(_bar_poly(rect, 1.0, slant), Color(0.055, 0.045, 0.045, 0.94))
+	# The shared ribbon owns the curved portrait join; meters never paint rectangular left caps.
 	canvas.draw_colored_polygon(back_poly, back)
 	ratio = clampf(ratio, 0.0, 1.0)
 	if trail > ratio + 0.001:
@@ -83,6 +81,19 @@ static func slanted_bar(canvas: CanvasItem, rect: Rect2, ratio: float, fill_top:
 		canvas.draw_line(fill[0] + Vector2(0, 1.0), end, Color(fill_top.lightened(0.45), 0.58), 0.8, true)
 	canvas.draw_polyline(PackedVector2Array([back_poly[0], back_poly[1], back_poly[2], back_poly[3], back_poly[0]]), Color(0.54, 0.49, 0.4, 0.95), 0.9, true)
 	canvas.draw_line(back_poly[3] + Vector2(0, 1.0), back_poly[2] + Vector2(0, 1.0), Color(0.015, 0.012, 0.012, 0.9), 1.0, true)
+
+
+## A single ribbon follows the portrait's right rim instead of exposing square
+## left corners above/below it. The first four vertices retain the bevel corners.
+static func joined_ribbon(center: Vector2, radius: float, top: float, right: float, bottom: float, slope: float, overlap: float) -> PackedVector2Array:
+	var at := func(y: float) -> Vector2:
+		var dy := y - center.y
+		var chord := sqrt(maxf(0.0, radius * radius - dy * dy))
+		return Vector2(center.x + maxf(0.0, chord - overlap), y)
+	var points := PackedVector2Array([at.call(top), Vector2(right, top), Vector2(right - (bottom - top) * slope, bottom), at.call(bottom)])
+	for step in range(1, 16):
+		points.append(at.call(lerpf(bottom, top, float(step) / 16.0)))
+	return points
 
 
 static func fill_end(rect: Rect2, ratio: float, visible_start := -1.0) -> float:

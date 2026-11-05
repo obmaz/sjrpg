@@ -19,6 +19,11 @@ func run() -> void:
 			map_ink.position += map_rect.position
 			check("entire map rim fits and avoids the portrait/status ribbon", available.encloses(map_ink) and not map_ink.intersects(geometry["paint_bounds"]))
 			var plate: PackedVector2Array = geometry["plate"]
+			var avatar: Vector2 = geometry["portrait"]
+			var join_radius: float = float(geometry["radius"]) + 2.0 * u
+			check("portrait join has a rounded contour instead of a square cap", plate.size() > 8)
+			for index in [0, 3] + range(4, plate.size()):
+				check("ribbon's left contour stays under the portrait rim", plate[index].distance_to(avatar) <= join_radius + 0.01 and plate[index].x >= avatar.x)
 			var slope := (plate[1].x - plate[2].x) / (plate[2].y - plate[1].y)
 			var gaps: Array[float] = []
 			for key in ["hp", "mp", "xp"]:
@@ -48,7 +53,9 @@ func run() -> void:
 			check("all ribbon bevels are collinear with equal metal margins", gaps.min() > 0.0 and float(gaps.max()) - float(gaps.min()) < 0.01)
 	var reference := Hud.header_geometry(Vector2(720, 1280), Vector4.ZERO)
 	var bounds: Rect2 = reference["paint_bounds"]
-	check("compact avatar and gauges leave the scene visible", bounds.size.x < 380.0 and float(reference["radius"]) <= 42.0)
+	check("avatar and gauges grow ten percent from the approved compact header", is_equal_approx(float(reference["radius"]), 50.0 * 0.82 * 1.1) and is_equal_approx(float(reference["unit"]), 0.82 * 1.1))
+	check("larger header still leaves the scene visible", bounds.size.x < 420.0 and float(reference["radius"]) < 46.0)
+	check("header enlargement keeps the existing minimap scale", is_equal_approx(float(reference["map_unit"]), 1.0) and reference["map"].size == Vector2.ONE * 136.0)
 	var badge: Rect2 = reference["level_badge"]
 	var portrait: Vector2 = reference["portrait"]
 	check("level medallion sits on the upper-left rim", badge.get_center().distance_to(portrait) < float(reference["radius"]) + badge.size.x * 0.25 and badge.size.x / (2.0 * float(reference["radius"])) >= 0.3)

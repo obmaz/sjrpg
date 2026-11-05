@@ -8,6 +8,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const template = await readFile(new URL('./shell.html', import.meta.url), 'utf8');
 const art = await readFile(new URL('./loading-bg.webp', import.meta.url));
+const buttonArt = await readFile(new URL('./entry-button.webp', import.meta.url));
 const installer = await readFile(new URL('./install.js', import.meta.url), 'utf8');
 const html = template.replaceAll('$GODOT_PROJECT_NAME', '자연의 수호자')
   .replaceAll('$GODOT_HEAD_INCLUDE', '').replaceAll('$GODOT_URL', 'engine.js')
@@ -21,6 +22,7 @@ try {
       const name = new URL(route.request().url()).pathname;
       if (name === '/install.js') return route.fulfill({ contentType: 'text/javascript', body: installer });
       if (name === '/loading-bg.webp') return route.fulfill({ contentType: 'image/webp', body: art });
+      if (name === '/entry-button.webp') return route.fulfill({ contentType: 'image/webp', body: buttonArt });
       if (name === '/engine.js') return route.fulfill({ contentType: 'text/javascript', body: `
         window.Engine = class {
           static getMissingFeatures() { return []; }
@@ -47,8 +49,36 @@ try {
     assert.equal(await page.locator('#loading').count(), 1, '100% download must not dismiss the initializing engine');
     await page.evaluate(() => window.report(0, 0));
     assert.equal(await page.locator('#amount').textContent(), '');
+    const header = await page.locator('h1').boundingBox();
+    const backdrop = await page.locator('#loading').evaluate(el => getComputedStyle(el, '::before').background);
+    // Engine and title can become ready in either order. Neither download completion nor
+    // the engine promise alone may replace the entry screen or start an adventure.
     await page.evaluate(() => window.finish());
-    await page.locator('#loading').waitFor({ state: 'detached' });
+    assert.equal(await page.locator('#entry-start').isVisible(), false);
+    await page.evaluate(() => {
+      window.starts = 0;
+      window.__sjrpgEntry.show(() => { window.starts++; window.__sjrpgEntry.hide(); });
+    });
+    await page.locator('#entry-start').waitFor({ state: 'visible' });
+    assert.equal(await page.locator('#progress').isVisible(), false);
+    assert.deepEqual(await page.locator('h1').boundingBox(), header, 'title must not jump when the progress changes into Start');
+    assert.equal(await page.locator('#loading').evaluate(el => getComputedStyle(el, '::before').background), backdrop);
+    assert.deepEqual(await page.locator('.loading-panel').boundingBox(), panel, 'entry layout stays fixed across readiness');
+    await page.screenshot({ path: `/tmp/entry-ready-${viewport.width}x${viewport.height}.png` });
+    await page.locator('#entry-start').focus();
+    await page.keyboard.press('Enter');
+    assert.equal(await page.evaluate(() => window.starts), 1);
+    assert.equal(await page.locator('#loading').isVisible(), false);
+    await page.evaluate(() => window.__sjrpgEntry.show(() => { window.starts++; window.__sjrpgEntry.hide(); }, true));
+    assert.equal(await page.locator('#entry-start').isEnabled(), true, 'returning to the title rebinds its live callback');
+    assert.equal(await page.locator('.mote').first().evaluate(el => getComputedStyle(el).animationName), 'none');
+    await page.locator('#entry-start').click();
+    assert.equal(await page.evaluate(() => window.starts), 2);
+    await page.reload();
+    await page.evaluate(() => window.__sjrpgEntry.show(() => window.__sjrpgEntry.hide()));
+    assert.equal(await page.locator('#entry-start').isVisible(), false, 'title registration alone must not bypass engine readiness');
+    await page.evaluate(() => window.finish());
+    await page.locator('#entry-start').waitFor({ state: 'visible' });
     await page.reload();
     await page.evaluate(() => window.fail(new Error('<script>unsafe</script>')));
     await page.locator('#retry').waitFor();
