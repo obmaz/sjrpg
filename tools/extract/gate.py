@@ -12,12 +12,14 @@
 성벽 높이·두께(`wall`)는 날개벽 흉벽 윗면까지의 높이에 맞춰 문루 배율(`world_height`)을 정하므로 성벽과 날개벽이 같은 높이로 이어진다.
 """
 import json
+import hashlib
 import math
 import sys
 from pathlib import Path
 
 import numpy as np
 from PIL import Image
+import gate_projection
 
 ROOT = Path(__file__).resolve().parents[2]
 M = json.loads(Path(__file__).with_name("gate_measure.json").read_text(encoding="utf-8"))
@@ -29,7 +31,7 @@ WALL_SEGS = {}
 
 
 def _bbox(img):
-    return img.getchannel("A").point(lambda a: 255 if a > 0 else 0).getbbox()
+    return img.getchannel("A").point(lambda a: 255 if a > 8 else 0).getbbox()
 
 
 def _bleed(rgba, iterations=6):
@@ -58,7 +60,7 @@ def _layout():
     out = {}
     x = PAD
     for key, g in M["gates"].items():
-        img = Image.open(ROOT / g["png"]).convert("RGBA")
+        img = gate_projection.image(g["png"], g.get("baked_warp", ""))
         l, t, r, b = _bbox(img)
         w, h = round((r - l) * p), round((b - t) * p)
         out[key] = (img, (l, t, r, b), (x, PAD, w, h))
@@ -96,6 +98,21 @@ def _measure_seg(img):
     return m, c, float(np.percentile(bottom - top, 95)), w, h
 
 
+def _wall_image(sg, grade=False):
+    img = gate_projection.image(sg["png"], sg.get("baked_warp", ""))
+    if grade:
+        raw = Image.open(ROOT / sg["png"]).convert("RGBA")
+        reference_path, reference_box = sg["stone_reference"]
+        reference = Image.open(ROOT / reference_path).convert("RGBA")
+        gain = _stone_median(reference, reference_box) / _stone_median(raw, sg["stone_face"])
+        arr = np.array(img)
+        arr[..., :3] = np.clip(arr[..., :3].astype(float) * gain, 0, 255).astype(np.uint8)
+        img = Image.fromarray(arr)
+    if sg.get("mirror_x", False):
+        img = img.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+    return img
+
+
 def wall_sheet():
     """성문과 같은 석재로 제작한 성벽을 석재 앞면 표본에 맞춰 walls.webp 로 패킹한다."""
     cfg = M["wall"]
@@ -105,13 +122,7 @@ def wall_sheet():
     x = PAD
     tiles = []
     for key, sg in cfg["segs"].items():
-        img = Image.open(ROOT / sg["png"]).convert("RGBA")
-        reference_path, reference_box = sg["stone_reference"]
-        reference = Image.open(ROOT / reference_path).convert("RGBA")
-        gain = _stone_median(reference, reference_box) / _stone_median(img, sg["stone_face"])
-        arr = np.array(img)
-        arr[..., :3] = np.clip(arr[..., :3].astype(float) * gain, 0, 255).astype(np.uint8)
-        img = Image.fromarray(arr)
+        img = _wall_image(sg, True)
         m, c, e, w, h = _measure_seg(img)
         slope_deg = math.degrees(math.atan(abs(m)))
         if abs(slope_deg - 30.0) > 2.5:
@@ -123,6 +134,7 @@ def wall_sheet():
         k = (height + thick) * 0.97 / (e * gvs) / p
         out[key] = dict(source=[x, PAD, sw, sh], y0=round(c * p + PAD, 2), y1=round((m * w + c) * p + PAD, 2),
                         k=round(float(k), 4), gvs=gvs, slope_deg=round(slope_deg, 2), extent=round(e, 1))
+        out[key].update(baked_warp=sg.get("baked_warp", ""), mirror_x=sg.get("mirror_x", False))
         x += sw + PAD * 2
     sheet = Image.new("RGBA", (x, max(t[4] for t in tiles) + PAD * 2), (0, 0, 0, 0))
     for key, img, tx, sw, sh in tiles:
@@ -140,13 +152,14 @@ def wall_data():
     out = {}
     x = PAD
     for key, sg in cfg["segs"].items():
-        img = Image.open(ROOT / sg["png"]).convert("RGBA")
+        img = _wall_image(sg)
         m, c, e, w, h = _measure_seg(img)
         sw, sh = round(w * p), round(h * p)
         gvs = sg.get("gvs", 1)
         k = (cfg["height"] + cfg["thick"]) * 0.97 / (e * gvs) / p
         out[key] = dict(source=[x, PAD, sw, sh], y0=round(c * p + PAD, 2), y1=round((m * w + c) * p + PAD, 2),
                         k=round(float(k), 4), gvs=gvs, slope_deg=round(math.degrees(math.atan(abs(m))), 2), extent=round(e, 1))
+        out[key].update(baked_warp=sg.get("baked_warp", ""), mirror_x=sg.get("mirror_x", False))
         x += sw + PAD * 2
     return out
 
@@ -158,14 +171,19 @@ def _unit(sign_y, sign_x=1.0):
 def derive(key, g, lay):
     img, (l, t, r, b), (sx, sy, sw, sh) = lay[key]
     p = M["packing"]
-    F = np.array(g["front_R"], float) - np.array(g["front_L"], float)
+    project = lambda point: gate_projection.point(g.get("baked_warp", ""), point)
+    F = project(g["front_R"]) - project(g["front_L"])
     T = np.array(g["back"], float)
     a = _unit(1.0 if F[1] > 0 else -1.0)
     bv = _unit(-1.0, 1.0 if T[0] > 0 else -1.0)
     # gvs·F.y + gvk·F.x = F.x·tan(a),  gvs·T.y + gvk·T.x = T.x·tan(b)  → 두 변이 정확히 ±30°가 되는 보정
-    gvs, gvk = np.linalg.solve(np.array([[F[1], F[0]], [T[1], T[0]]]), [F[0] * a[1] / a[0], T[0] * bv[1] / bv[0]])
+    if "gvs" in g:
+        gvs, gvk = g["gvs"], g["gvk"]
+    else:
+        gvs, gvk = np.linalg.solve(np.array([[F[1], F[0]], [T[1], T[0]]]), [F[0] * a[1] / a[0], T[0] * bv[1] / bv[0]])
 
     def corr(pt):
+        pt = project(pt)
         return np.array([pt[0], pt[1] * gvs + pt[0] * gvk])
 
     def uncorr(pt):
@@ -180,7 +198,8 @@ def derive(key, g, lay):
     def at(al, be):
         return o + al * a + be * bv
 
-    Tc = corr(T) - corr([0, 0])
+    back_at = np.array(g[g.get("back_at", "front_R")], float)
+    Tc = corr(back_at + T) - corr(back_at)
     beta_t = float(coords(o + Tc)[1])
     alpha_r, beta_r = coords(corr(g["front_R"]))
     cl_beta, cr_beta = beta_t / 2.0, float(beta_r) + beta_t / 2.0
@@ -194,14 +213,21 @@ def derive(key, g, lay):
     beta_f = (cl_beta + cr_beta) / 2.0
     foot_n = uncorr(at(alpha_f, beta_f))  # 원본 픽셀
 
-    def atlas(pt_n):
+    def atlas_projected(pt_n):
         return [round(float(sx + (pt_n[0] - l) * p), 2), round(float(sy + (pt_n[1] - t) * p), 2)]
 
+    def atlas(pt_n):
+        return atlas_projected(project(pt_n))
+
     def A(al, be):  # (α, β) → 아틀라스 픽셀
-        return atlas(uncorr(at(al, be)))
+        return atlas_projected(uncorr(at(al, be)))
 
     # 성벽 높이에 맞춘 배율: 날개벽 높이(보정 후 세로 픽셀)가 wall.height 가 되도록.
-    k_unit = M["wall"]["height"] / (g["wing_height_px"] * gvs)
+    if "wing_height_line" in g:
+        top, base = (corr(point) for point in g["wing_height_line"])
+        k_unit = M["wall"]["height"] / (base[1] - top[1])
+    else:
+        k_unit = M["wall"]["height"] / (g["wing_height_px"] * gvs)
     height = round(float((foot_n[1] - t) * p), 2)
     world_height = float(k_unit * (foot_n[1] - t))
 
@@ -240,11 +266,24 @@ def derive(key, g, lay):
     passage = [A(al0 + r0, beta_f - passage_r), A(al1 - r1, beta_f - passage_r), A(al1 - r1, beta_f + passage_r), A(al0 + r0, beta_f + passage_r)]
     ends = [A(0.0, cl_beta), A(float(alpha_r), cr_beta)]
 
-    sprite = dict(sheet=M["sheet"], source=[sx, sy, sw, sh], foot=atlas(foot_n), height=height, origin=[l, t], packing=p,
+    sprite = dict(sheet=M["sheet"], source=[sx, sy, sw, sh], foot=atlas_projected(foot_n), height=height, origin=[l, t], packing=p,
                   world_height=round(world_height, 2), body=None, gvs=round(float(gvs), 5), gvk=round(float(gvk), 5), slices=slices)
+    if g.get("baked_warp"):
+        sprite["baked_warp"] = g["baked_warp"]
     ground = [atlas(g["front_L"]), atlas(g["front_R"]), atlas(np.array(g["front_R"]) + T), atlas(np.array(g["front_L"]) + T)]
     frame = dict(ground=ground, height=height, foot=sprite["foot"])
     info = dict(ends=ends, solids=solids, passage=passage)
+    if "model_reference" in g:
+        # The generated artwork changes; the existing world-space passages,
+        # collision rings and wall attachment points remain authoritative.
+        def model_point(point):
+            corrected = np.array([foot_n[0], foot_n[1] * gvs + foot_n[0] * gvk])
+            return atlas_projected(uncorr(corrected + np.asarray(point) / k_unit))
+        model = g["model_reference"]
+        info = dict(ends=[model_point(q) for q in model["ends"]],
+                    solids=[[model_point(q) for q in polygon] for polygon in model["solids"]],
+                    passage=[model_point(q) for q in model["passage"]])
+        frame["ground"] = [model_point(q) for q in model["ground"]]
     report = dict(gvs=sprite["gvs"], gvk=sprite["gvk"], wing_deg=wing_deg, k_unit=round(float(k_unit), 3),
                   thick=round(beta_t * k_unit, 1), passage=round((al1 - r1 - al0 - r0) * k_unit, 1),
                   tower_r=round(r0 * k_unit, 1), span=round(float(alpha_r) * k_unit, 1), world_height=sprite["world_height"])
@@ -259,6 +298,7 @@ def merge(data):
         data["sprites"].pop(key, None)
     data.pop("gate_contacts", None)
     data["gates"] = {}
+    data["gate_model_reference"] = {key: g["model_reference"] for key, g in M["gates"].items() if "model_reference" in g}
     data["wall"] = dict(height=M["wall"]["height"], thick=M["wall"]["thick"], slice_px=M["wall"]["slice_px"], segs=WALL_SEGS)
     for key, g in M["gates"].items():
         sprite, frame, info, report = derive(key, g, lay)
@@ -271,13 +311,32 @@ def merge(data):
     return data
 
 
+def family_manifest(data):
+    """Lock the reviewed generated family and its actual packed derivatives."""
+    def record(path):
+        return dict(path=path, sha256=hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
+    sources = sorted({g["png"] for g in M["gates"].values()} | {s["png"] for s in M["wall"]["segs"].values()})
+    result = dict(master_reference=record("assets/source/style/approved-game-reference.jpg"),
+                  concept=record("assets/source/style/gate-wall-design.png"),
+                  generation=record("tools/extract/gate_generation.json"),
+                  sources=[record(path) for path in sources],
+                  renders=[record("assets/art/village/gates.webp"), record("assets/art/village/walls.webp")],
+                  wall_module=dict(source=M["wall"]["segs"]["a"]["png"],
+                                   derived_direction="b reflects the same projected module horizontally",
+                                   height=data["wall"]["height"], thickness=data["wall"]["thick"],
+                                   scale_a=data["wall"]["segs"]["a"]["k"], scale_b=data["wall"]["segs"]["b"]["k"]))
+    (ROOT / "assets/data/gate_family.json").write_text(json.dumps(result, indent=1) + "\n")
+
+
 def main():
     if "--data" not in sys.argv[1:]:
         pack()
         wall_sheet()
     path = ROOT / "assets/data/village.json"
     data = json.loads(path.read_text(encoding="utf-8"))
-    path.write_text(json.dumps(merge(data), indent=1), encoding="utf-8")
+    data = merge(data)
+    path.write_text(json.dumps(data, indent=1), encoding="utf-8")
+    family_manifest(data)
     print("gates merged into", path.name)
 
 

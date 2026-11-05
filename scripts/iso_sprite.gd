@@ -81,6 +81,8 @@ func _build_warp_mesh() -> void:
 
 ## Original (pre-packing) measurement pixel → world position.
 func native_point(native: Vector2) -> Vector2:
+	if def.has("baked_warp"):
+		native = ArtWarp.point(def["baked_warp"], native)
 	var src := Vector2(def["source"][0], def["source"][1])
 	var origin := Vector2(def["origin"][0], def["origin"][1])
 	return atlas_point(src + (native - origin) * float(def["packing"]))

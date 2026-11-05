@@ -139,6 +139,8 @@ python3 tools/extract/extract_data.py /path/to/sjrpg --only=gear
 
 ## 월드 화질
 
+새 원화는 먼저 [아트 기준](art-direction.md)과 [생성 프롬프트](art-prompts.md)를 읽고 사용자 원본과 같은 패밀리의 검수된 원화를 실제 생성 참조로 사용합니다. 스타일 컨셉과 게임용 투영 검증을 구분합니다.
+
 숲의 [전체 화면 기준](forest-reference.md)은 `ForestArt`의 생성형 지면·식생을 사용합니다. `prepare_forest_art.py`가 원본을 패킹하고 `forest_art.json`이 해시·접점을 고정합니다.
 배경 잔디·포장·흙길은 같은 투영을 유지하며 길·건물 가장자리의 낮은 식생만 추가합니다. 별도 장식 난수를 사용하고 충돌은 추가하지 않습니다.
 기본 카메라는 짧은 변 720에서 1.0이며 플레이어 원화 높이는 84입니다. 게임 수치와 충돌은 유지하고 두 화질은 같은 시야를 공유합니다.

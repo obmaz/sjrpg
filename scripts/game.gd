@@ -556,11 +556,7 @@ func _process(delta: float) -> void:
 		if lm.contains_top(player.position):
 			elevated = true
 			break
-	# Gate passages: the gatehouse art would hide the player in its arch, so draw above it there.
-	for passage in village.gate_passages:
-		if Geometry2D.is_point_in_polygon(player.position, passage):
-			elevated = true
-			break
+	# Passing beneath an arch stays on the ground; local occlusion keeps the body readable.
 	player.z_index = 1 if elevated else 0
 	WorldOcclusion.update(player.global_position if not player.dead else Vector2(1000000, 1000000), elevated)
 	_tick_corpses(delta)

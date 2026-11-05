@@ -1,0 +1,46 @@
+{
+ "master_reference": {
+  "path": "assets/source/style/approved-game-reference.jpg",
+  "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+ },
+ "concept": {
+  "path": "assets/source/style/gate-wall-design.png",
+  "sha256": "32589bc30226b4d6e641bbcfd59304a4cd996119de79e28bb1b0bab102731ff3"
+ },
+ "generation": {
+  "path": "tools/extract/gate_generation.json",
+  "sha256": "1baf943815f7c069b3f7ce83ad22855f5602560b284e033be886427a927b9a36"
+ },
+ "sources": [
+  {
+   "path": "assets/source/gate-cohesive-a.png",
+   "sha256": "2abd38a31c555e1cc379c91c645a99775104aeb0e64cb79697896b1ae9e27983"
+  },
+  {
+   "path": "assets/source/gate-cohesive-b.png",
+   "sha256": "8a18435aba7826469ef2d477cafeb6223ed5fbfa4d017e25b68caa56dd032e5b"
+  },
+  {
+   "path": "assets/source/wall-cohesive.png",
+   "sha256": "ba962901574e297343ee6d3ce2351ec79183a2a206bc95108b3dcf561e950635"
+  }
+ ],
+ "renders": [
+  {
+   "path": "assets/art/village/gates.webp",
+   "sha256": "35f3d5a27fb44875eefb9d2c8af4fdcd833403d6a57c743284369b4e99ae8340"
+  },
+  {
+   "path": "assets/art/village/walls.webp",
+   "sha256": "f545a1dca3b8e1445ad299b965936feef320280c66928e619c52cf2a22cde7cf"
+  }
+ ],
+ "wall_module": {
+  "source": "assets/source/wall-cohesive.png",
+  "derived_direction": "b reflects the same projected module horizontally",
+  "height": 200,
+  "thickness": 64,
+  "scale_a": 0.6811,
+  "scale_b": 0.6811
+ }
+}

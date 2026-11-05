@@ -51,7 +51,7 @@ const MEMORY_SPOTS := [Vector2(-1900.0, 130.0), Vector2(180.0, -1900.0), Vector2
 var gate_points: Array[Vector2] = []
 ## Wall-end centre of each gate's two wings in ground units: gate -> [Vector2, Vector2].
 var gate_ends: Array = []
-## Gate passages (world px): actors inside draw above the gatehouse art so they stay visible in the arch.
+## Ground-level gate passages (world px); actors use local occlusion without being raised over other buildings.
 var gate_passages: Array[PackedVector2Array] = []
 var bridge: Bridge
 var river: River
@@ -332,7 +332,7 @@ func _build_walls(world: Node2D) -> void:
 				offset = end
 
 
-## Twin-tower gatehouse (새 120° 원화 assets/source/gate-new-*.png). Art is cut into vertical strips that each depth-sort
+## Twin-tower gatehouse (cohesive generated family, calibrated 120° art). Art is cut into vertical strips that each depth-sort
 ## by their own lowest ground point, so an actor walking along a wing's face is never hidden by the far end of the gate.
 ## Collision: the two towers and the wings outside them; the passage between stays open.
 func _build_gates(world: Node2D) -> void:

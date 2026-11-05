@@ -17,6 +17,18 @@ func run() -> void:
 
 	check("wall dims come from the gate art", v.wall_height == 200.0 and v.wall_thick == 64.0)
 	check("four gates built", v.gate_ends.size() == 4 and v.gate_passages.size() == 4)
+	var wall_a: Dictionary = v.data["wall"]["segs"]["a"]
+	var wall_b: Dictionary = v.data["wall"]["segs"]["b"]
+	check("both wall directions use one generated module and identical physical scale", wall_a["baked_warp"] == wall_b["baked_warp"] and wall_a["k"] == wall_b["k"] and not wall_a["mirror_x"] and wall_b["mirror_x"])
+	var family: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/data/gate_family.json"))
+	for item in family["sources"] + family["renders"] + [family["master_reference"], family["concept"], family["generation"]]:
+		check("reviewed gate family source and render hash: " + item["path"], FileAccess.get_sha256("res://" + item["path"]) == item["sha256"])
+	for gate in 4:
+		var key := "gate-%d" % (0 if gate < 2 else 2)
+		var reference: Dictionary = v.data["gate_model_reference"][key]
+		for i in 2:
+			var point: Array = reference["ends"][i]
+			check("gate wing keeps its original world placement", Iso.project(v.gate_ends[gate][i]).distance_to(v.gate_points[gate] + Vector2(point[0], point[1]) * Iso.S) < 0.1)
 
 	# Wall runs start/end exactly at a gate wing end: some wall piece footprint has a corner there.
 	var joined := 0
@@ -48,7 +60,7 @@ func run() -> void:
 		await _frames(2)
 		var in_arch := Geometry2D.is_point_in_polygon(player.position, v.gate_passages[gate])
 		check("gate %d passage is open" % gate, player.position.distance_to(centre) < 20.0, str(player.position))
-		check("gate %d player draws above the arch" % gate, in_arch and player.z_index == 1)
+		check("gate %d passage preserves ground depth and local visibility" % gate, in_arch and player.z_index == 0 and not WorldOcclusion._active.is_empty())
 		await _walk(player, to, 300)
 		await _frames(2)
 		check("gate %d can be crossed" % gate, player.position.distance_to(to) < 20.0, str(player.position))

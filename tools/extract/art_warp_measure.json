@@ -438,5 +438,431 @@
     "axis": 90
    }
   ]
+ },
+ "gate-0": {
+  "png": "assets/source/gate-cohesive-a.png",
+  "vertical_only": true,
+  "pins": [
+   [
+    67.42,
+    685.85
+   ],
+   [
+    1092.47,
+    1206.95
+   ],
+   [
+    1182.3400000000001,
+    1156.72
+   ]
+  ],
+  "segments": [
+   {
+    "name": "left upper",
+    "a": [
+     67.88999938964844,
+     446.07000732421875
+    ],
+    "b": [
+     265.9200134277344,
+     550.0700073242188
+    ],
+    "axis": 26.94721049838402,
+    "level": "upper",
+    "raw_degrees": 27.71,
+    "method": "cv2 LSD on the new source pixels, structural location visually reviewed",
+    "render_axis": 30
+   },
+   {
+    "name": "left middle",
+    "a": [
+     101.9000015258789,
+     573.0900268554688
+    ],
+    "b": [
+     133.35000610351562,
+     590.219970703125
+    ],
+    "axis": 26.94721049838402,
+    "level": "middle",
+    "raw_degrees": 28.57,
+    "method": "cv2 LSD on the new source pixels, structural location visually reviewed",
+    "render_axis": 30
+   },
+   {
+    "name": "left base",
+    "a": [
+     67.41999816894531,
+     685.8499755859375
+    ],
+    "b": [
+     255.58999633789062,
+     785.6900024414062
+    ],
+    "axis": 26.94721049838402,
+    "level": "lower",
+    "raw_degrees": 27.95,
+    "method": "cv2 LSD on the new source pixels, structural location visually reviewed",
+    "render_axis": 30
+   },
+   {
+    "name": "right upper",
+    "a": [
+     879.969970703125,
+     865.77001953125
+    ],
+    "b": [
+     1083.6099853515625,
+     974.719970703125
+    ],
+    "axis": 26.94721049838402,
+    "level": "upper",
+    "raw_degrees": 28.15,
+    "method": "cv2 LSD on the new source pixels, structural location visually reviewed",
+    "render_axis": 30
+   },
+   {
+    "name": "right middle",
+    "a": [
+     1018.030029296875,
+     1082.050048828125
+    ],
+    "b": [
+     1048.3800048828125,
+     1098.9100341796875
+    ],
+    "axis": 26.94721049838402,
+    "level": "middle",
+    "raw_degrees": 29.05,
+    "method": "cv2 LSD on the new source pixels, structural location visually reviewed",
+    "render_axis": 30
+   },
+   {
+    "name": "right base",
+    "a": [
+     894.0,
+     1101.3199462890625
+    ],
+    "b": [
+     1047.6300048828125,
+     1184.22998046875
+    ],
+    "axis": 26.94721049838402,
+    "level": "lower",
+    "raw_degrees": 28.36,
+    "method": "cv2 LSD on the new source pixels, structural location visually reviewed",
+    "render_axis": 30
+   },
+   {
+    "name": "depth upper",
+    "a": [
+     1102.9300537109375,
+     961.510009765625
+    ],
+    "b": [
+     1182.0400390625,
+     918.4400024414062
+    ],
+    "axis": -29.201629682775607,
+    "level": "upper",
+    "raw_degrees": -28.57,
+    "method": "cv2 LSD on the new source pixels, structural location visually reviewed",
+    "render_axis": -30
+   },
+   {
+    "name": "depth lower",
+    "a": [
+     1092.469970703125,
+     1206.949951171875
+    ],
+    "b": [
+     1182.3399658203125,
+     1156.719970703125
+    ],
+    "axis": -29.201629682775607,
+    "level": "lower",
+    "raw_degrees": -29.2,
+    "method": "cv2 LSD on the new source pixels, structural location visually reviewed",
+    "render_axis": -30
+   }
+  ]
+ },
+ "gate-2": {
+  "png": "assets/source/gate-cohesive-b.png",
+  "vertical_only": true,
+  "pins": [
+   [
+    177.7,
+    1217.23
+   ],
+   [
+    1211.54,
+    737.49
+   ],
+   [
+    45.03999999999999,
+    1141.95
+   ]
+  ],
+  "segments": [
+   {
+    "name": "rear parapet",
+    "a": [
+     370.44000244140625,
+     391.5
+    ],
+    "b": [
+     449.6199951171875,
+     352.3699951171875
+    ],
+    "axis": -24.8930439341396,
+    "level": "upper",
+    "raw_degrees": -26.3,
+    "method": "cv2 LSD on the new source pixels, structural location visually reviewed",
+    "render_axis": -30
+   },
+   {
+    "name": "right upper",
+    "a": [
+     1040.5999755859375,
+     521.8200073242188
+    ],
+    "b": [
+     1213.0899658203125,
+     436.8500061035156
+    ],
+    "axis": -24.8930439341396,
+    "level": "upper",
+    "raw_degrees": -26.23,
+    "method": "cv2 LSD on the new source pixels, structural location visually reviewed",
+    "render_axis": -30
+   },
+   {
+    "name": "right middle",
+    "a": [
+     1119.52001953125,
+     702.1500244140625
+    ],
+    "b": [
+     1146.72998046875,
+     687.8499755859375
+    ],
+    "axis": -24.8930439341396,
+    "level": "middle",
+    "raw_degrees": -27.72,
+    "method": "cv2 LSD on the new source pixels, structural location visually reviewed",
+    "render_axis": -30
+   },
+   {
+    "name": "right base",
+    "a": [
+     1044.3599853515625,
+     824.3499755859375
+    ],
+    "b": [
+     1156.5899658203125,
+     766.3200073242188
+    ],
+    "axis": -24.8930439341396,
+    "level": "lower",
+    "raw_degrees": -27.34,
+    "method": "cv2 LSD on the new source pixels, structural location visually reviewed",
+    "render_axis": -30
+   },
+   {
+    "name": "left upper",
+    "a": [
+     179.86000061035156,
+     927.7899780273438
+    ],
+    "b": [
+     380.1700134277344,
+     830.9400024414062
+    ],
+    "axis": -24.8930439341396,
+    "level": "upper",
+    "raw_degrees": -25.8,
+    "method": "cv2 LSD on the new source pixels, structural location visually reviewed",
+    "render_axis": -30
+   },
+   {
+    "name": "left middle",
+    "a": [
+     294.6499938964844,
+     994.989990234375
+    ],
+    "b": [
+     345.7300109863281,
+     972.1099853515625
+    ],
+    "axis": -24.8930439341396,
+    "level": "middle",
+    "raw_degrees": -24.13,
+    "method": "cv2 LSD on the new source pixels, structural location visually reviewed",
+    "render_axis": -30
+   },
+   {
+    "name": "left base",
+    "a": [
+     177.6999969482422,
+     1217.22998046875
+    ],
+    "b": [
+     366.5,
+     1127.3299560546875
+    ],
+    "axis": -24.8930439341396,
+    "level": "lower",
+    "raw_degrees": -25.46,
+    "method": "cv2 LSD on the new source pixels, structural location visually reviewed",
+    "render_axis": -30
+   },
+   {
+    "name": "depth upper",
+    "a": [
+     45.599998474121094,
+     856.75
+    ],
+    "b": [
+     180.22999572753906,
+     929.030029296875
+    ],
+    "axis": 29.573424046447123,
+    "level": "upper",
+    "raw_degrees": 28.23,
+    "method": "cv2 LSD on the new source pixels, structural location visually reviewed",
+    "render_axis": 30
+   },
+   {
+    "name": "depth lower",
+    "a": [
+     45.040000915527344,
+     1141.949951171875
+    ],
+    "b": [
+     177.35000610351562,
+     1217.2900390625
+    ],
+    "axis": 29.573424046447123,
+    "level": "lower",
+    "raw_degrees": 29.66,
+    "method": "cv2 LSD on the new source pixels, structural location visually reviewed",
+    "render_axis": 30
+   }
+  ]
+ },
+ "wall-a": {
+  "png": "assets/source/wall-cohesive.png",
+  "vertical_only": true,
+  "free_y_boundary": true,
+  "pad_y": 64,
+  "segments": [
+   {
+    "name": "left upper coping",
+    "a": [
+     20.0,
+     729.9961
+    ],
+    "b": [
+     630.0,
+     1073.1351
+    ],
+    "axis": 30,
+    "level": "upper",
+    "raw_degrees": 29.3588,
+    "method": "cv2 LSD long stone-coping fit, clipped to native x20..630"
+   },
+   {
+    "name": "right upper coping",
+    "a": [
+     654.8,
+     1085.88
+    ],
+    "b": [
+     805.9,
+     1169.1
+    ],
+    "axis": 30,
+    "level": "upper",
+    "raw_degrees": 28.8443,
+    "method": "cv2 LSD on current PNG; visually reviewed actual stone edge"
+   },
+   {
+    "name": "middle face mortar",
+    "a": [
+     505.2,
+     1426.5
+    ],
+    "b": [
+     615.66,
+     1480.56
+    ],
+    "axis": 30,
+    "level": "middle",
+    "raw_degrees": 26.0775,
+    "method": "cv2 LSD on current PNG; visually reviewed actual stone edge"
+   },
+   {
+    "name": "lower face mortar",
+    "a": [
+     614.19,
+     1662.24
+    ],
+    "b": [
+     694.02,
+     1702.58
+    ],
+    "axis": 30,
+    "level": "lower",
+    "raw_degrees": 26.8086,
+    "method": "cv2 LSD on current PNG; visually reviewed actual stone edge"
+   },
+   {
+    "name": "front footing baseline",
+    "a": [
+     25.0,
+     1514.8159
+    ],
+    "b": [
+     780.0,
+     1932.0526
+    ],
+    "axis": 30,
+    "level": "lower",
+    "raw_degrees": 28.9264,
+    "method": "cv2 fitLine DIST_L1 on alpha128 bottom silhouette, current source x25..780"
+   },
+   {
+    "name": "front merlon cap underside depth",
+    "a": [
+     415.0,
+     713.9006
+    ],
+    "b": [
+     478.0,
+     676.7556
+    ],
+    "axis": -30,
+    "level": "upper",
+    "raw_degrees": -30.5237,
+    "method": "Sobel negative vertical gradient on actual cap underside, x415..478; cv2 fitLine DIST_HUBER; median residual 0.254px"
+   },
+   {
+    "name": "rear merlon cap underside depth",
+    "a": [
+     368.0,
+     302.5318
+    ],
+    "b": [
+     432.0,
+     273.7641
+    ],
+    "axis": -30,
+    "level": "upper",
+    "raw_degrees": -24.2037,
+    "method": "Sobel negative vertical gradient on actual cap underside, x368..432; cv2 fitLine DIST_HUBER; median residual 0.266px"
+   }
+  ],
+  "boundary_step": 64
  }
 }

@@ -31,7 +31,14 @@ def build(record):
     for edge in record['segments']:
         a,b=np.array(edge['a']),np.array(edge['b'])
         for t in np.linspace(0,1,max(2,int(np.linalg.norm(b-a)/12))):add(a*(1-t)+b*t)
-    for q in [[0,0],[width-1,0],[width-1,height-1],[0,height-1]]:add(q)
+    pins=[add(q) for q in record.get('pins',[])]
+    boundary=[add(q) for q in [[0,0],[width-1,0],[width-1,height-1],[0,height-1]]]
+    step=record.get('boundary_step',0)
+    if step:
+        for x in range(step,width-1,step):
+            boundary.extend([add([x,0]),add([x,height-1])])
+        for y in range(step,height-1,step):
+            boundary.extend([add([0,y]),add([width-1,y])])
     source=np.array(points);count=len(source);subdivide=cv2.Subdiv2D((0,0,width,height))
     for q in source:subdivide.insert(tuple(map(float,q)))
     triangles=[]
@@ -48,9 +55,16 @@ def build(record):
         chain.sort()
         for (_,i),(_,j) in zip(chain,chain[1:]):
             row=np.zeros(count*2);row[i*2:i*2+2]=-normal;row[j*2:j*2+2]=normal;rows.append(row);rhs.append(-normal@(source[j]-source[i]))
-    for i in range(count-4,count):
+    for i in boundary:
+        for axis in range(2):
+            if axis==1 and record.get('free_y_boundary',False):continue
+            row=np.zeros(count*2);row[i*2+axis]=1;rows.append(row);rhs.append(0.)
+    for i in pins:
         for axis in range(2):
             row=np.zeros(count*2);row[i*2+axis]=1;rows.append(row);rhs.append(0.)
+    if record.get('vertical_only',False):
+        for i in range(count):
+            row=np.zeros(count*2);row[i*2]=1;rows.append(row);rhs.append(0.)
     energy=np.eye(count)*.0001;neighbors=set()
     for a,b,c in triangles:
         neighbors.update(tuple(sorted(pair)) for pair in [(a,b),(b,c),(c,a)])
@@ -63,8 +77,11 @@ def build(record):
     if np.max(np.abs(constraints@shift-np.array(rhs)))>.01:raise ValueError('inconsistent structural constraints')
     for ids in triangles:
         a,b,c=source[ids];d,e,f=target[ids]
-        if cross(b-a,c-a)*cross(e-d,f-d)<=0:raise ValueError('projection folds a texture triangle')
-    return dict(source=record['png'],source_sha256=hashlib.sha256((ROOT/record['png']).read_bytes()).hexdigest(),points=[[round(float(v),4) for v in np.r_[a,b]] for a,b in zip(source,target)],triangles=triangles,calibration=record['segments'])
+        if cross(b-a,c-a)*cross(e-d,f-d)<=0:
+            raise ValueError('projection folds a texture triangle: source=%s target=%s' % (source[ids].round(3).tolist(), target[ids].round(3).tolist()))
+    pad_y=record.get('pad_y',0)
+    target[:,1]+=pad_y
+    return dict(source=record['png'],source_sha256=hashlib.sha256((ROOT/record['png']).read_bytes()).hexdigest(),points=[[round(float(v),4) for v in np.r_[a,b]] for a,b in zip(source,target)],triangles=triangles,calibration=record['segments'],canvas_size=[width,height+pad_y*2])
 
 
 if __name__=='__main__':

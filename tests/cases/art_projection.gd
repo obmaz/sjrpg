@@ -11,6 +11,10 @@ func _point(record: Dictionary, raw: Array, pose: Node, game: Node) -> Vector2:
 		"bridge":
 			return pose.point(p)
 		"wall":
+			if record.has("baked_warp"):
+				p = ArtWarp.point(record["baked_warp"], p)
+			if record.get("mirror_x", false):
+				p.x = float(record["source_size"][0]) - 1.0 - p.x
 			var definition: Dictionary = game.village.data["wall"]["segs"][record["key"]]
 			var packing: float = float(definition["source"][2]) / float(record["source_size"][0])
 			return pose.global_position + pose._xf * (p * packing + Vector2(0, definition["source"][1]))
@@ -93,7 +97,7 @@ func run() -> void:
 		var exempt: bool = manifest["exemptions"]["natural_sprites"].has(key) or manifest["exemptions"]["unused_sources"].has(key)
 		check("every sprite is measured or explicitly exempt: " + key, covered.has(key) or exempt)
 	# Triangles must preserve orientation so texture projection cannot fold or hide an invalid face.
-	for key in ["nw", "se", "sw", "hill"]:
+	for key in ["nw", "se", "sw", "hill", "gate-0", "gate-2", "wall-a"]:
 		var mesh := ArtWarp.data(key)
 		check("projection uses the reviewed illustration: " + key, FileAccess.get_sha256("res://" + mesh["source"]) == mesh["source_sha256"])
 		for triangle in mesh["triangles"]:
