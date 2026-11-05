@@ -14,6 +14,16 @@
 | 테스트 | `tests/run_all.gd`, `tests/test_case.gd`, `tests/cases/*.gd` | 헤드리스 케이스 러너 |
 | 도구 | `tools/*.sh`, `tools/screenshot.mjs`, `tools/extract/` | 검증·빌드·캡처·데이터 추출 |
 
+## 로딩과 수호자 선택
+
+`web/shell.html`은 엔진 다운로드 전부터 숲 원화와 실제 전송 진행률을 표시합니다. 전체 크기를 모를 때는 불확정 표시를 사용하고, 다운로드 완료와 엔진 준비 단계를 구분합니다. 실패·기능 미지원·엔진 스크립트 실패는 재시도 화면으로 처리합니다.
+`web/prepare_art.py`가 기존 `select-scene.png`를 외부 배경으로 패킹하며, `tools/export_web.sh`가 248KB의 `loading-bg.webp`를 배포 폴더에 복사합니다. `web/.gdignore`로 HTML용 파일을 게임 PCK에서 제외합니다.
+`node web/check_shell.mjs`로 실제 다운로드 콜백·완료·실패·동작 줄이기·가로/세로 배치를 브라우저에서 검사합니다.
+
+`title_screen.gd`와 `class_select.gd`는 안전 영역과 화면 크기에 따라 다시 배치합니다. 수호자 선택은 두 개의 직업 탭과 단일 큰 원화, 특징·실제 시작 수치, 하단 시작·이어하기 버튼을 사용합니다. 원화는 `assets/source/hero-selection.png`를 `tools/prepare_entry_art.py`로 두 직업의 WebP로 나눕니다. 가로 미리보기는 원화 상단을 기준으로 잘라 얼굴을 보존합니다.
+직업 미리보기는 진행을 변경하지 않으며 실제 새 모험·덮어쓰기 확인은 `main.gd`가 담당합니다. `entry_layout`은 회전·작은 화면·실제 저장 보존과 명시적인 시작을 검사합니다.
+`tools/screenshot.mjs --scene title|select --class warrior|mage --device phone|phone-landscape`로 확인하고, 선택 화면에서 `--rotate 1`을 주면 같은 선택을 유지한 회전 화면도 저장합니다. 웹 하네스는 실제 버튼 중심을 받아 두 직업 선택 후 시작합니다.
+
 ## 좌표와 단위
 
 - 지면 좌표(원본 단위)는 `Iso.project()`로 화면 평면의 월드 픽셀이 됩니다. `Iso.S`는 원본 월드를 이 포트의 화면 비율로 바꾸는 배율입니다.

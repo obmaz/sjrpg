@@ -9,6 +9,8 @@ const require = createRequire(import.meta.url);
 const { chromium, devices } = require('playwright');
 
 const SCENES = {
+    title: '',
+    select: '',
     town: '',
     hud: 'hud_preview=full',
     hud_low: 'hud_preview=low',
@@ -83,7 +85,8 @@ page.on('console', (m) => logs.push(`${m.type()}: ${m.text()}`));
 page.on('pageerror', (e) => logs.push(`pageerror: ${e.message}`));
 const quality = (args.quality ? `&quality=${args.quality}` : '') + (args.zoom ? `&zoom=${args.zoom}` : '');
 await page.goto(`${base}?${SCENES[scene]}${quality}`);
-await page.waitForTimeout(12000);
+await page.waitForFunction(() => window.__sjrpgTitleReady === true, null, {timeout: 90000});
+await page.waitForTimeout(500);
 const vp = page.viewportSize();
 const tap = async (x, y) => {
     if (device.startsWith('phone')) {
@@ -95,11 +98,38 @@ const tap = async (x, y) => {
         await page.mouse.click(x, y);
     }
 };
+if (scene === 'title') {
+    await page.screenshot({path: out});
+    await browser.close();
+    const errors = logs.filter((line) => /error/i.test(line));
+    console.log(`저장: ${out}; 콘솔 오류 ${errors.length}건`);
+    process.exit(errors.length ? 1 : 0);
+}
 await tap(vp.width / 2, vp.height / 2); // 타이틀
 await page.waitForTimeout(4000);
-// 직업 선택: 카드 안의 "시작" 버튼 위치 (가로/세로 레이아웃별)
-const start = args.start ? args.start.split(',').map(Number) : device === 'phone' ? (cls === 'mage' ? [205, 627] : [205, 382]) : device === 'phone-landscape' ? [vp.width * (cls === 'mage' ? 0.624 : 0.381), vp.height * 0.70] : cls === 'mage' ? [844, 499] : [436, 521];
-await tap(...start);
+// Use real responsive controls for both classes, independent of viewport or orientation.
+await page.waitForFunction(() => window.__sjrpgClassSelectReady === true && window.__sjrpgClassButtons, null, {timeout: 30000});
+const tapEntry = async (key) => {
+    const point = await page.evaluate((name) => window.__sjrpgClassButtons[name], key);
+    const viewport = page.viewportSize();
+    await tap(viewport.width * point[0], viewport.height * point[1]);
+};
+await tapEntry(cls);
+await page.waitForTimeout(300);
+if (scene === 'select') {
+    await page.screenshot({path: out});
+    if (args.rotate === '1') {
+        await page.setViewportSize({width: vp.height, height: vp.width});
+        await page.waitForTimeout(700);
+        await page.screenshot({path: out.replace(/\.png$/, '-rotated.png')});
+    }
+    const errors = logs.filter((line) => /error/i.test(line));
+    console.log(`저장: ${out}; 콘솔 오류 ${errors.length}건`);
+    await browser.close();
+    process.exit(errors.length ? 1 : 0);
+}
+if (args.start) await tap(...args.start.split(',').map(Number));
+else await tapEntry('start');
 await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { timeout: 30000 });
 if (scene === 'background') await page.evaluate(() => document.querySelector('canvas').blur());
 if (scene.startsWith('hud')) {

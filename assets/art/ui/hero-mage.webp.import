@@ -2,22 +2,22 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dytbo44o231c8"
-path="res://.godot/imported/select-warrior-card.png-ca87371c0dcc390547bf5d5fdc797d56.ctex"
+uid="uid://drw5s6drft2kx"
+path="res://.godot/imported/hero-mage.webp-93cf4c0f0761589ad28083d1d78ce113.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/ui/select-warrior-card.png"
-dest_files=["res://.godot/imported/select-warrior-card.png-ca87371c0dcc390547bf5d5fdc797d56.ctex"]
+source_file="res://assets/art/ui/hero-mage.webp"
+dest_files=["res://.godot/imported/hero-mage.webp-93cf4c0f0761589ad28083d1d78ce113.ctex"]
 
 [params]
 
 compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.85
+compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1

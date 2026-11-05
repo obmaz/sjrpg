@@ -8,5 +8,7 @@ LOG="$(mktemp)"; trap 'rm -f "$LOG"' EXIT
 if grep -E "SCRIPT ERROR|Parse Error" "$LOG"; then echo "스크립트 오류로 export 중단"; exit 1; fi
 "$ROOT/tools/godot.sh" --headless --export-release "Web" build/web/index.html >"$LOG" 2>&1 || { cat "$LOG"; exit 1; }
 test -s "$ROOT/build/web/index.wasm" && test -s "$ROOT/build/web/index.pck"
+# The loading backdrop is available before the Godot pack is downloaded.
+cp "$ROOT/web/loading-bg.webp" "$ROOT/build/web/loading-bg.webp"
 touch "$ROOT/build/web/.nojekyll"
 printf "export ok: pck %s, wasm %s\n" "$(du -h "$ROOT/build/web/index.pck" | cut -f1)" "$(du -h "$ROOT/build/web/index.wasm" | cut -f1)"

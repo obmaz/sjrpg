@@ -21,12 +21,16 @@ try {
     const tap = async (x, y) => device.startsWith('phone') ? page.touchscreen.tap(x, y) : page.mouse.click(x, y);
     const query = new URLSearchParams({ at: args.at ?? "field", quality, benchmark: "1" });
     await page.goto(`${args.url ?? 'http://localhost:8765/index.html'}?${query}`);
-    await page.waitForTimeout(12000);
+    await page.waitForFunction(() => window.__sjrpgTitleReady === true, null, {timeout: 90000});
     const size = page.viewportSize();
     await tap(size.width / 2, size.height / 2);
     await page.waitForTimeout(4000);
-    const start = device === 'phone' ? (hero === 'mage' ? [205, 627] : [205, 382]) : device === 'phone-landscape' ? [size.width * (hero === 'mage' ? 0.624 : 0.381), size.height * 0.70] : hero === 'mage' ? [844, 499] : [436, 521];
-    await tap(...start);
+    await page.waitForFunction(() => window.__sjrpgClassSelectReady === true && window.__sjrpgClassButtons);
+    for (const key of [hero, 'start']) {
+        const point = await page.evaluate((name) => window.__sjrpgClassButtons[name], key);
+        await tap(size.width * point[0], size.height * point[1]);
+        await page.waitForTimeout(200);
+    }
     await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { timeout: 30000 });
     await page.waitForFunction((expected) => window.__sjrpgRenderProbe?.quality === expected && window.__sjrpgRenderProbe?.world_draw_calls > 0 && window.__sjrpgRenderProbe?.world_width > 2 && window.__sjrpgRenderProbe?.world_height > 2, quality, { timeout: 30000 }).catch(async (error) => {
         throw new Error(`World rendering was not confirmed: ${JSON.stringify(await page.evaluate(() => window.__sjrpgRenderProbe))}; ${error.message}`);
