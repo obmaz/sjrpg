@@ -1,16 +1,54 @@
 # 원화 생성 공통 프롬프트
 
-반드시 [아트 기준](art-direction.md)을 함께 읽습니다. 아래 영어 블록은 제작용 공통 문구이며, 마지막의 자산별 요구만 바꿉니다. 사용자 기준 화면과 같은 패밀리 이미지를 실제 생성 도구에 참조 이미지로 첨부해야 합니다. 파일 이름만 프롬프트에 적는 것은 이미지 참조가 아닙니다.
+반드시 [레퍼런스 분위기 제작 가이드](reference-look-guide.md)와 [아트 기준](art-direction.md)을 함께 읽습니다. 아래 영어 블록은 제작용 공통 문구이며, 마지막의 자산별 요구만 바꿉니다. 사용자 기준 화면과 같은 패밀리 이미지를 실제 생성 도구에 참조 이미지로 첨부해야 합니다. 파일 이름만 프롬프트에 적는 것은 이미지 참조가 아닙니다.
 
 ## 매번 첨부할 참조
 
 - 분위기 최상위: `assets/source/style/approved-game-reference.jpg`
+- 새 패밀리의 분리 원화: 위 사용자 원본과 함께 실제 사용할 작은 장면 컨셉. 채택한 파일 경로·해시를 제작 문서에 기록합니다.
 - 성문·성벽: `assets/source/style/gate-wall-design.png`와 해당 방향의 최근 검수된 성문 원화. 재생성 시 `tools/extract/gate_measure.json`에서 실제 파일을 확인합니다.
 - 마을 건물·예배당: 해당 패밀리의 검수된 원본. `town_art_measure.json`·`chapel_measure.json`에 경로가 있습니다.
 - 식생: `assets/source/forest-trees.png`, `forest-flora.png` 중 해당 패밀리.
 - 배우/선택 원화: `assets/source/hero-selection.png`, 실제 HUD 얼굴 원화. 새 성별·의상으로 바꾸지 않습니다.
 
 통합 컨셉 생성에서는 패밀리 참조가 아직 없을 수 있습니다. 그 경우 사용자 기준 화면과 이미 검수된 인접 건물을 사용하고, 채택한 컨셉의 파일과 실제 생성 프롬프트를 해당 제작 문서에 남깁니다.
+
+## 작은 완성 장면 컨셉
+
+새 패밀리는 이 단계부터 시작합니다. 아래 컨셉은 재료·빛·구도를 맞추는 제작 참조이며, 한 장을 배경으로 붙여 게임을 구현하지 않습니다.
+문·계단·앞뒤 가림과 120° 실측을 통과한 분리 원화로 옮깁니다. 사용자 원본을 실제 참조 이미지로 첨부합니다.
+
+```text
+Create a cohesive close gameplay scene for Guardians of Nature, matching the
+supplied USER GAME REFERENCE: a restrained realistic forest chapel, an intimate
+stone path, layered woodland planting and one male mage in a dark navy coat.
+Keep the character's identity, proportions and materials consistent with the
+supplied CHARACTER REFERENCE when provided.
+
+TRUE ORTHOGRAPHIC ISOMETRIC 2.5D: azimuth 45 degrees, elevation 35.264 degrees.
+Ground-axis edges must be at +30 / -30 degrees, vertical edges exactly upright,
+with the three projected axes 120 degrees apart. Keep parallel edges parallel
+at the top, middle and base of both visible faces. No perspective convergence,
+wide-angle lens or 2:1 dimetric projection. Roof pitches are not ground edges.
+
+Use a close playable composition, not an aerial map or a miniature village.
+The standing character's visible height is roughly 22–26% of the short image
+dimension. One nearby chapel dominates the background; allow its outer extent
+to continue outside the frame. Leave the character and attack direction clear.
+Layer near-edge leaves, the readable character and stone path, and a deeper forest.
+
+Warm restrained daylight from the upper left, cool dark woodland ambient shade,
+warm neutral-gray limestone relief, slate-blue shingles, muted olive vegetation,
+small cream-white and restrained warm wildflowers. Keep material texture legible
+at mobile viewing size. Preserve shadow detail and the navy coat silhouette.
+Add a small blue-white hand-cast light with separated delicate particles;
+never obscure the body with a white bloom blob. No excessive gilding or ornament.
+
+No HUD, text, buttons, phone frame, navigation bar, logo or watermark.
+This is a SCENE CONCEPT: lighting and cast shadows describe the final mood.
+Do not reuse scene shadow patches in tiles or isolated production objects.
+OUTPUT: [portrait or landscape dimensions and the intended playable crop].
+```
 
 ## 단일 월드 오브젝트
 
@@ -34,8 +72,9 @@ Contemporary realistic hand-finished game art, readable silhouettes and material
 texture; no thick outlines, no cartoon, no low-poly or flat painted surfaces,
 no excessive ornament, no bright gold decoration, no yellow oversized stonework.
 
-Use consistent soft neutral diffuse light. Self-shading inside joints and
-recesses is allowed. No cast shadow on the ground, no black shadow plate,
+Use consistent soft neutral diffuse light for the reusable material layer.
+Preserve readable form shading, surface relief and self-shading inside joints
+and recesses; do not flatten the object into an evenly colored cutout. No cast shadow on the ground, no black shadow plate,
 no sun patches, no unrelated lighting or surroundings baked into the asset.
 One isolated complete object, transparent background, no ground platform unless
 it is part of the actual structure. Preserve fine alpha edges without a halo.
