@@ -241,6 +241,8 @@ func _read_debug_params() -> void:
 			_debug_zoom = clampf(float(kv[1]), 0.1, 4.0)
 		elif kv.size() == 2 and kv[0] == "benchmark" and kv[1] == "1":
 			add_child(RenderProbe.new().setup(self))
+		elif kv.size() == 2 and kv[0] == "defender_preview" and kv[1] == "1":
+			_defender_feedback_preview.call_deferred()
 		elif kv.size() == 2 and kv[0] == "quality":
 			Prefs.set_low_resolution(kv[1] == "low")
 		elif kv.size() == 2 and kv[0] == "lighting":
@@ -592,6 +594,38 @@ func _reference_fx_preview(which: String) -> void:
 				get_tree().paused = true
 				JavaScriptBridge.eval("window.__sjrpgFxReview = " + JSON.stringify({"skill": which, "key": key, "phase": effect.visual_phase(), "actual_cast": true}))
 				return
+
+
+## Isolated visual inspection: one real threat completes its attack against the protected NPC.
+func _defender_feedback_preview() -> void:
+	encounters.set_process(false)
+	quest_runtime.set_process(false)
+	_spawn_timer = 10000.0
+	for enemy in enemies:
+		enemy.queue_free()
+	enemies.clear()
+	quest_runtime.accept("sun")
+	quest_runtime.start_protection()
+	var defender := quest_runtime.defender as Villager
+	player.position = resolve_movement(player.position, defender.position + Vector2(-90, 110), Player.RADIUS)
+	_fx_review_focus = defender.position + Vector2(0, -45)
+	camera.position = _fx_review_focus
+	camera.reset_smoothing()
+	await get_tree().create_timer(4.0, false).timeout
+	var target := Enemy.new()
+	target.setup(self, "goblin", 1)
+	target.position = defender.position + Vector2(30, 0)
+	target.is_threat = true
+	target.force_chase()
+	world.add_child(target)
+	enemies.append(target)
+	var hp: float = Quests.state("sun")["defender_hp"]
+	for frame in 300:
+		await get_tree().process_frame
+		if float(Quests.state("sun")["defender_hp"]) < hp and defender._hurt_flash > 0.0:
+			get_tree().paused = true
+			JavaScriptBridge.eval("window.__sjrpgDefenderReview = true")
+			return
 
 
 ## Actual threat scan and door animation; the dummy cannot attack during visual review.

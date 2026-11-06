@@ -191,9 +191,25 @@ func damage_defender(amount: float) -> void:
 	var s := Quests.state("sun")
 	if s["phase"] != "accepted" or not s["started"]:
 		return
+	var previous_hp: float = s["defender_hp"]
 	s["defender_hp"] = maxf(0.0, float(s["defender_hp"]) - amount)
-	if defender != null:
-		game.float_text(defender.position + Vector2(0, -90), HudArt.stat(amount), Color(1, 0.55, 0.45))
+	var actual_damage := previous_hp - float(s["defender_hp"])
+	if is_instance_valid(defender) and actual_damage > 0.0:
+		var text_at := defender.position + Vector2(0, -90)
+		if defender is Villager:
+			var header: Dictionary = defender.header_layout()
+			var name_bounds: Rect2 = header["name_bounds"]
+			var header_top := name_bounds.position.y
+			if defender.marker.is_valid() and defender.marker.call():
+				var marker_bounds: Rect2 = header["marker_bounds"]
+				header_top = minf(header_top, marker_bounds.position.y)
+			# Include the damage font's descent, outline, and a six-pixel clear gap.
+			text_at = defender.position + Vector2(0, header_top - UiKit.BOLD_FONT.get_descent(22) - 12.0)
+			defender.show_hurt()
+		game.float_text(text_at, HudArt.stat(amount), Color(1, 0.55, 0.45))
+		# Local feedback only: defending a distant NPC must never shake the hero's camera.
+		Effect.spawn_impact(game, defender.position + Vector2(0, -Villager.BODY_HEIGHT * 0.55), null,
+			float(s["defender_hp"]) <= 0.0 or actual_damage >= Quests.DEFENDER_HP * 0.15)
 
 
 func defender_active() -> bool:

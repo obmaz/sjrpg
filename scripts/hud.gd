@@ -291,16 +291,29 @@ func _tick_toasts(delta: float) -> void:
 	_toast_plaque.modulate.a = 1.0 if Prefs.reduce_motion else clampf(_toast_time / 0.35, 0.0, 1.0)
 
 
-## Compact confirmation plaque below status/minimap labels and above the combat controls.
+## Wide screens have an empty top gap; other layouts retain the lower confirmation plaque.
 func toast_rect() -> Rect2:
 	var u := unit()
 	var margins := PanelFrame.safe_margins(get_viewport())
-	var available := get_viewport().get_visible_rect().size - Vector2(margins.x + margins.z, margins.y + margins.w)
-	var origin: Vector2 = status_geometry()["origin"]
+	var view := get_viewport().get_visible_rect().size
+	var available := view - Vector2(margins.x + margins.z, margins.y + margins.w)
+	var geometry := status_geometry()
+	var origin: Vector2 = geometry["origin"]
 	var width := minf(520.0 * u, available.x - 40.0 * u)
-	var y := origin.y + (306.0 if _save_warning != null and _save_warning.visible else 194.0) * u
+	var save_warning := _save_warning != null and _save_warning.visible
+	var y := origin.y + (306.0 if save_warning else 194.0) * u
 	var lines := clampi(_toast.get_line_count(), 1, 3)
 	var height := clampf(lines * 25.0 * u + 24.0, 56.0 * u, 100.0 * u)
+	if view.x > view.y and not save_warning:
+		var status_ink: Rect2 = geometry["paint_bounds"]
+		var map_rect: Rect2 = geometry["map"]
+		var map_ink := Minimap.painted_bounds(64.0 * u, map_rect.size)
+		map_ink.position += map_rect.position
+		var gap_left := status_ink.end.x + 20.0 * u
+		var gap_right := map_ink.position.x - 20.0 * u
+		if gap_right - gap_left >= 320.0 * u:
+			width = minf(width, gap_right - gap_left)
+			return Rect2(Vector2((gap_left + gap_right - width) * 0.5, margins.y + 16.0 * u), Vector2(width, height))
 	return Rect2(Vector2(margins.x + (available.x - width) / 2.0, y), Vector2(width, height))
 
 

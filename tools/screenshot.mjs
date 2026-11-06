@@ -40,6 +40,7 @@ const SCENES = {
     npc_sw: 'at=npc_sw',
     npc_se: 'at=npc_se',
     npc_courtyard: 'at=npc_courtyard&zoom=0.65',
+    defender: 'defender_preview=1',
     pc_controls: 'at=field',
     dodge: 'at=field',
     corpses: 'corpse_preview=1',
@@ -217,7 +218,9 @@ if (args.start) await tap(...args.start.split(',').map(Number));
 else await tapEntry('start');
 await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { timeout: 30000 });
 if (scene === 'background') await page.evaluate(() => document.querySelector('canvas').blur());
-if (scene.startsWith('gate_closed')) {
+if (scene === 'defender') {
+    await page.waitForFunction(() => window.__sjrpgDefenderReview === true, null, {timeout: 60000});
+} else if (scene.startsWith('gate_closed')) {
     await page.waitForFunction(() => window.__sjrpgGateReview?.closed === true, null, {timeout: 60000});
     console.log('Actual threat closed the gate:', await page.evaluate(() => window.__sjrpgGateReview));
 } else if (scene.startsWith('fx_')) {
