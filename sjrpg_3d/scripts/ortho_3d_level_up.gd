@@ -24,6 +24,9 @@ func sync() -> void:
 		var source = sources[index]
 		if not is_instance_valid(source) or source.is_queued_for_deletion() or source.kind != "reward" or not source.params.get("large", false) or source.age >= source.life:
 			continue
+		# Inactive forest sources retain their paused clocks during a cave visit.
+		if source.get_parent() != _preview.game.world:
+			continue
 		var id: int = source.get_instance_id()
 		current[id] = true
 		if not _entries.has(id):

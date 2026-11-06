@@ -18,7 +18,7 @@
 | `delete_slot(slot)` | 해당 칸의 알려진 저장·백업·임시 파일만 삭제합니다. 활성 칸을 삭제하면 늦게 도착한 자동 저장도 거부합니다. |
 | `new_game(cls)` / `delete_save()` | 현재 칸에 대한 호환 API입니다. `new_game`도 사용 중인 칸을 덮어쓰지 않으며 성공 여부를 반환합니다. |
 
-요약의 공통 키는 `slot`, `occupied`, `valid`, `class`, `level`, `location`, `sanctuary`, `timestamp`, `backup`입니다. `location`은 기존 저장의 `forest`/`cave`, `sanctuary`는 마지막 안식처ID입니다. `timestamp`는 Unix초이며 날짜가 없던 이전 저장은0입니다. `backup`이 참이면 해당 칸은 정상 백업을 통해 이어갈 수 있습니다. 요약을 표시하거나 직업을 미리 보는 것만으로 현재 수호자의 진행을 바꾸지 않습니다.
+요약의 공통 키는 `slot`, `occupied`, `valid`, `class`, `level`, `location`, `sanctuary`, `timestamp`, `backup`입니다. `location`은 기존 저장의 `forest`/`cave`, `sanctuary`는 마지막 안식처ID입니다. `timestamp`는 UTC Unix초이며 날짜가 없던 이전 저장은0입니다. 화면의 날짜/시각만 기기 로컬 시간으로 표시합니다. 브라우저에서는 저장 시점의 시간대 오프셋을 구하므로 DST 전환을 반영하며, 네이티브에서는 Godot가 제공하는 운영체제 timezone bias(분)를 사용합니다. 이 변환은 저장된 timestamp나 진행을 다시 쓰지 않습니다. `backup`이 참이면 해당 칸은 정상 백업을 통해 이어갈 수 있습니다. 요약을 표시하거나 직업을 미리 보는 것만으로 현재 수호자의 진행을 바꾸지 않습니다.
 
 ## 파일과 마이그레이션
 

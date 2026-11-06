@@ -22,9 +22,10 @@ func sync() -> void:
 		var portal := candidate as IsoSprite
 		if is_instance_valid(portal):
 			_sync_art(portal, current)
-	for candidate in _game.chests:
+	var chests: Array = [] if _game.dungeon.active else _game.chests
+	for candidate in chests:
 		var chest := candidate as Chest
-		if is_instance_valid(chest) and is_instance_valid(chest.body_sprite):
+		if is_instance_valid(chest) and not chest.is_queued_for_deletion() and chest.visible and chest.get_parent() == _game.village.fountain.get_parent() and is_instance_valid(chest.body_sprite):
 			# Breaking a chest replaces its actual sprite, including its measured warp.
 			_sync_art(chest.body_sprite, current)
 	for id in _art.keys():
@@ -45,7 +46,7 @@ func sync() -> void:
 
 
 func _sync_art(sprite: IsoSprite, current: Dictionary) -> void:
-	if sprite.is_queued_for_deletion() or _preview._town_props.owns(sprite):
+	if sprite.is_queued_for_deletion() or _preview._town_props.owns(sprite) or _preview._encounter_props.owns(sprite):
 		return
 	var id := sprite.get_instance_id()
 	current[id] = true

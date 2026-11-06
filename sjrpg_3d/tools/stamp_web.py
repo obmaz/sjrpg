@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Give an exported Godot pack an immutable URL without duplicating its payload."""
+"""Stamp immutable pack and entry-background URLs without duplicate payloads."""
 
 import argparse
 import hashlib
@@ -9,6 +9,10 @@ import re
 
 
 PACK_NAME = re.compile(r"index-[0-9a-f]{20}\.pck\Z")
+BACKGROUND_NAME = re.compile(r"loading-bg-[0-9a-f]{20}\.webp\Z")
+# Only this export's relative basenames; leave other folders/CDN URLs alone.
+BACKGROUND_REFERENCE = re.compile(
+    r"(?<![\w./-])loading-bg(?:-[0-9a-f]{20})?\.webp(?![\w./-])")
 CONFIG_START = re.compile(r"\bconst\s+GODOT_CONFIG\s*=\s*")
 BUILD_MARKER = re.compile(r'\n[ \t]*window\.__sjrpgBuild = "[0-9a-f]{64}"; // web-pack-stamp\n?')
 
@@ -31,6 +35,28 @@ def digest(path):
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             result.update(chunk)
     return result.hexdigest()
+
+
+def background_plan(directory, html):
+    references = set(BACKGROUND_REFERENCE.findall(html))
+    if not references:
+        return None
+    source = directory / "loading-bg.webp"
+    if not source.is_file():
+        existing = [directory / name for name in references
+                    if BACKGROUND_NAME.fullmatch(name) and (directory / name).is_file()]
+        if len(existing) != 1:
+            raise ValueError("exported entry background is missing or ambiguous")
+        source = existing[0]
+    if source.stat().st_size == 0:
+        raise ValueError("exported entry background is empty")
+    sha256 = digest(source)
+    name = "loading-bg-" + sha256[:20] + ".webp"
+    target = directory / name
+    if target.is_file() and target != source and digest(target) != sha256:
+        raise ValueError("entry background content-hash filename collision")
+    return {"source": source, "target": target, "name": name,
+            "sha256": sha256, "bytes": source.stat().st_size}
 
 
 def stamp(directory):
@@ -62,18 +88,23 @@ def stamp(directory):
     sizes[name] = source.stat().st_size
     config["mainPack"] = name
     config["fileSizes"] = sizes
+    background = background_plan(directory, html)
     encoded = json.dumps(config, separators=(",", ":"), ensure_ascii=False)
     html = html[:start] + encoded + html[end:]
     # Keep the marker adjacent to configuration, before Engine construction.
     _, _, end = read_config(html)
     semicolon = html.index(";", end)
     html = html[:semicolon + 1] + '\n    window.__sjrpgBuild = "' + sha256 + '"; // web-pack-stamp\n' + html[semicolon + 1:].lstrip("\n")
+    if background:
+        html = BACKGROUND_REFERENCE.sub(background["name"], html)
     temporary = directory / ".index-stamped.html"
     temporary.write_text(html, encoding="utf-8")
     if source != target:
         source.replace(target)
+    if background and background["source"] != background["target"]:
+        background["source"].replace(background["target"])
     temporary.replace(index)
-    # One stamped entry document, with pathname-based mode selection in the shell.
+    # The legacy entry route uses the same stamped assets as index.html.
     route = directory / ".3d-stamped.html"
     route.write_bytes(index.read_bytes())
     route.replace(directory / "3d.html")
@@ -81,7 +112,13 @@ def stamp(directory):
     for candidate in directory.iterdir():
         if candidate.is_file() and PACK_NAME.fullmatch(candidate.name) and candidate.name != name:
             candidate.unlink()
-    return {"main_pack": name, "sha256": sha256, "bytes": sizes[name]}
+        if (background and candidate.is_file() and BACKGROUND_NAME.fullmatch(candidate.name)
+                and candidate.name != background["name"]):
+            candidate.unlink()
+    result = {"main_pack": name, "sha256": sha256, "bytes": sizes[name]}
+    if background:
+        result["entry_background"] = {key: background[key] for key in ("name", "sha256", "bytes")}
+    return result
 
 
 if __name__ == "__main__":

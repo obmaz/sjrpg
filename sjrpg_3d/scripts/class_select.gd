@@ -154,9 +154,7 @@ func _update() -> void:
 		if bool(entry["valid"]):
 			var name: String = GameState.CLASSES[str(entry["class"])]["name"]
 			var location := "바람 동굴" if str(entry["location"]) == "cave" else "숲 마을"
-			var stamp := "기존 모험"
-			if float(entry["timestamp"]) > 0.0:
-				stamp = Time.get_datetime_string_from_unix_time(int(entry["timestamp"])).substr(5, 11).replace("T", " ")
+			var stamp := SaveTimeLabel.for_device(float(entry["timestamp"]))
 			text = "%02d    %s · Lv.%d\n        %s · %s%s" % [index + 1, name, int(entry["level"]), location, "백업 복원" if bool(entry["backup"]) else stamp, ""]
 		elif bool(entry["occupied"]):
 			text = "%02d    읽을 수 없는 모험\n        삭제 후 새로 시작" % (index + 1)
@@ -283,7 +281,7 @@ func _publish_buttons() -> void:
 	if is_instance_valid(_delete_dialog) and _delete_dialog.footer.get_child_count() == 2:
 		targets["delete_cancel"] = _delete_dialog.footer.get_child(0)
 		targets["delete_confirm"] = _delete_dialog.footer.get_child(1)
-	var points := {"stage": _stage, "selected_slot": selected_slot, "selected_class": selected_class, "slots_state": _summaries}
+	var points := {"stage": _stage, "selected_slot": selected_slot, "selected_class": selected_class, "slots_state": _summaries, "slot_labels": slot_buttons.map(func(button: Button): return button.text)}
 	for key: String in targets:
 		var button: Button = targets[key]
 		var center := button.get_global_rect().get_center() / get_viewport_rect().size

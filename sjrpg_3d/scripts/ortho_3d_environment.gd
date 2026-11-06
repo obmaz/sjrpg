@@ -175,6 +175,8 @@ func _build_forest() -> void:
 	_build_bridge()
 	_build_raised_floors()
 	for stone in preview.game.encounters.stones.values():
+		if preview._encounter_props.owns(stone.art):
+			continue
 		var sprite: IsoSprite = stone.art
 		var texture: Texture2D = sprite.texture
 		var card: MeshInstance3D = preview._new_card(texture, Rect2(Vector2.ZERO, texture.get_size()), false)
@@ -405,7 +407,10 @@ func sync(delta: float, frozen: bool) -> void:
 		var owner: EncounterStone = entry["owner"].get_ref()
 		var card: MeshInstance3D = entry["card"]
 		if not is_instance_valid(owner):
+			card.visible = false
+			(entry["header"] as Label3D).visible = false
 			continue
+		card.visible = owner.visible and owner.art.visible
 		card.basis = preview.camera.global_transform.basis
 		var basis: Basis = card.basis
 		var minimum := 0.0
@@ -417,10 +422,10 @@ func sync(delta: float, frozen: bool) -> void:
 		var header: Label3D = entry["header"]
 		header.basis = basis
 		header.position = foot + basis.y * 1.72
-		header.visible = owner.position.distance_squared_to(preview.game.player.position) < 240.0 * 240.0
+		header.visible = card.visible and owner.position.distance_squared_to(preview.game.player.position) < 240.0 * 240.0
 		var living: int = owner.runtime.living(owner.id)
 		var state: Dictionary = owner.runtime.states[owner.id]
-		header.text = "주변의 적 · %d" % living if living > 0 else "공격해 재소환 · %d/3" % int(state["charges"])
+		header.text = NativeEncounterProps3D.status_text(state, living)
 	_sync_corpses()
 
 

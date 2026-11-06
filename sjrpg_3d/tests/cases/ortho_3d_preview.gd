@@ -149,7 +149,15 @@ func run() -> void:
 	var live_portals := true
 	for source in game.village.portal_sprites.values():
 		live_portals = live_portals and preview._town_props.owns(source) and not preview._affordances._art.has(source.get_instance_id())
-	check("native preview preserves live town portals chests and resident headers", live_portals and preview._affordances._art.size() >= game.chests.size() and preview._affordances._headers.size() == game.village.npc_nodes.size())
+	var live_chests := true
+	for chest: Chest in game.chests:
+		var fallback: Dictionary = preview._affordances._art.get(chest.body_sprite.get_instance_id(), {})
+		var native: Dictionary = preview._encounter_props._entries.get(chest.get_instance_id(), {})
+		if preview._encounter_props.owns(chest.body_sprite):
+			live_chests = live_chests and fallback.is_empty() and not native.is_empty() and (native["root"] as Node3D).is_visible_in_tree() and (native["owner"] as WeakRef).get_ref() == chest
+		else:
+			live_chests = live_chests and native.is_empty() and not fallback.is_empty() and (fallback["node"] as MeshInstance3D).is_visible_in_tree()
+	check("native preview preserves every live chest exactly once with portals and resident headers", live_portals and live_chests and preview._affordances._headers.size() == game.village.npc_nodes.size())
 	var town_residents := ["상인", "대장장이", "탈것 상인", "촌장", "보급원 미라"]
 	for label: String in town_residents:
 		check("town resident has both original source and native body/header: " + label, game.village.npc_nodes.has(label))

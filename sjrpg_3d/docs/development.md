@@ -37,7 +37,7 @@
 
 `Ortho3DTrees`는 마을 나무의 실제 투영 크기와 발치를 공유 GLB 두 개로 유지합니다. `Ortho3DFortification`은 성문·벽을 같은 석재와 접점으로 연결하고 실제 `TownGateRuntime.progress`로 문짝 힌지를 갱신합니다. 움직이는 메시는 정적 배칭에서 제외합니다. 생성형 평면 재질·원본 기록은 `assets/source/preview3d/`에 보존합니다. 옛 [비교 장면 문서](orthographic-3d-comparison.md)는 제작 이력이며 현재 구조의 근거는 [루트 개발 안내](../../docs/development.md)와 [3D 에셋 기준](../../docs/3d-asset-guide.md)입니다.
 
-웹 PCK는 콘텐츠 해시 파일명을 사용합니다. 각 앱은 자기 경로의 HTML·엔진·PCK를 열고 저장 마운트도 분리합니다. 루트의 옛 비교 북마크는3D 전용 경로로 연결되며 실행 중 표시 방식을 바꾸지 않습니다.
+웹 PCK와 다운로드 화면의 배경은 각각 콘텐츠 해시 파일명을 사용합니다. `tools/stamp_web.py`는 배포 폴더의 `loading-bg.webp`를 `loading-bg-<hash>.webp`로 바꾸고 preload/CSS 참조를 함께 갱신합니다. PCK가 그대로여도 배경 바이트가 바뀌면 새 URL을 사용하며, 다시 실행해도 같은 결과를 유지하고 이전의 소유한 해시 파일만 정리합니다. 원본 `web/shell.html`과 셸 모의 검사는 정규 배경 이름을 그대로 사용합니다. 각 앱은 자기 경로의 HTML·엔진·PCK를 열고 저장 마운트도 분리합니다. 루트의 옛 비교 북마크는3D 전용 경로로 연결되며 실행 중 표시 방식을 바꾸지 않습니다.
 
 ## 로딩과 수호자 선택
 
@@ -45,9 +45,9 @@
 
 `EntryUi`는 `assets/art/entry/`의 배경과 두 투명 캐릭터 일러스트를 읽고, 텍스트·버튼은 실제 컨트롤로 구성합니다. 원본 PNG·정확한 생성 지시·해시는 `assets/source/entry-redesign/`에 보존합니다. `tools/prepare_generated_entry.py`가 형식만 변환하며 `web/prepare_art.py`는 동일한 배경 바이트와 새 전사 그림의 설치 아이콘을 패킹합니다. 원본 이미지의 얼굴·손·발은 자르지 않고 비례를 유지합니다. `web/.gdignore`로 웹 전용 파일을 PCK에서 제외합니다.
 
-`ClassSelect`는 네 저장 슬롯의 `slot_summaries()`만 읽어 미리보기를 만듭니다. 기존 모험은 명시적인 이어 하기에서 `select_slot`/`load_game`을 호출하고, 빈 슬롯의 명시적인 시작만 `create_slot`을 호출합니다. 점유되었거나 읽을 수 없는 슬롯은 새로 덮어쓰지 않으며 슬롯별 삭제 확인을 거칩니다. 네 슬롯의 경로·이관·자동 저장 정책은 [저장 슬롯](save-slots.md)을 참고하세요.
+`ClassSelect`는 네 저장 슬롯의 `slot_summaries()`만 읽어 미리보기를 만듭니다. 기존 모험은 명시적인 이어 하기에서 `select_slot`/`load_game`을 호출하고, 빈 슬롯의 명시적인 시작만 `create_slot`을 호출합니다. 점유되었거나 읽을 수 없는 슬롯은 새로 덮어쓰지 않으며 슬롯별 삭제 확인을 거칩니다. 저장 시간의 Unix초는 변경하지 않고 `SaveTimeLabel`이 표시할 때만 로컬 오프셋을 더합니다. 웹은 저장 시점의 브라우저 오프셋(DST 포함), 네이티브는 운영체제의 분 단위 timezone bias를 사용합니다. 네 슬롯의 경로·이관·자동 저장 정책은 [저장 슬롯](save-slots.md)을 참고하세요.
 
-`entry_layout`은 두 방향·작은 창·회전의 실제 컨트롤 경계, 원본 알파·배경 일치, 미리보기의 저장 바이트 보존, 확인/취소, 반복 시작 방지를 검사합니다. `web/check_shell.mjs`는 로딩/준비의 동일 배치와 오류 복구를 검사합니다. `window.__sjrpgClassButtons`는 실제 버튼 중심과 슬롯 요약을 공개하며 기존 `warrior`/`mage`/`start`/`continue`/`back` 외에 `slots`, `slot1`~`slot4`, `delete1`~`delete4`, 모달의 `delete_cancel`/`delete_confirm`을 제공합니다. `TitleReady`/`EntryReady`/`ClassSelectReady` 훅은 유지합니다.
+`entry_layout`은 두 방향·작은 창·회전의 실제 컨트롤 경계, 원본 알파·배경 일치, 미리보기의 저장 바이트 보존, 확인/취소, 반복 시작 방지를 검사합니다. `web/check_shell.mjs`는 로딩/준비의 동일 배치와 오류 복구를 검사합니다. `window.__sjrpgClassButtons`는 실제 버튼 중심과 슬롯 요약을 공개하며 기존 `warrior`/`mage`/`start`/`continue`/`back` 외에 `slots`, `slot1`~`slot4`, `delete1`~`delete4`, 모달의 `delete_cancel`/`delete_confirm`을 제공합니다. `slot_labels`는 실제 저장 행 문자열을 제공하며 미리보기 데이터는 바꾸지 않습니다. `TitleReady`/`EntryReady`/`ClassSelectReady` 훅은 유지합니다.
 
 ## 좌표와 단위
 
@@ -402,3 +402,5 @@ HUD는 체력·물약 수·쿨다운의 실제 변화를 감지합니다. 사운
 ## 외곽 숲의 네이티브 나무
 
 `Ortho3DForestTrees`는 `Ortho3DEnvironment._build_forest`에서 외곽의 실제 소유 인스턴스만 교체합니다. `Ortho3DTrees.mesh_library()`는 마을과 외곽의 두 메시/재질을 공유하며 기존 마을 변환을 유지합니다. 16 m 셀별 MultiMesh, 원본 키 기반 고정 변형, 실제 바닥 Y, 전체 수관 AABB와 기존 충돌 계약은 [외곽 숲 나무](native-forest-trees.md)에 기록합니다. `ortho_3d_forest_trees`와 기존 `ortho_3d_trees`·`native_environment`가 해당 통합을 검사합니다.
+
+`NativeCombatFx3D`는 기존 원화 카드 화이트리스트에서 빠졌던 `visual=""` 일반 투사체만 표시합니다. 실제 `Effect.native_position()`·수명·나이를 관찰하여 생성형 원소 아틀라스의 본체와 짧은 꼬리를 최대32개(각2카드)로 표시하며, 피해·충돌·자원·독립 시계를 만들지 않습니다. 기존 `visual="bolt"` 경로는 유지합니다. 범위와 남은 미매핑 효과는 [일반 투사체 표시](native-projectile-fx.md)에 기록합니다.

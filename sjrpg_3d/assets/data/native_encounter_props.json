@@ -1,0 +1,215 @@
+{
+  "scope": "Existing Stage1 forest encounter stones and all existing chests only; source2D project unchanged.",
+  "method": "Reproducible native full-volume mesh construction. No new image/model generation, image painting, relighting or baked shadows.",
+  "reference": {
+    "path": "assets/source/style/approved-game-reference.jpg",
+    "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "bytes": 174248
+  },
+  "source_art": [
+    {
+      "path": "assets/art/village/encounter-stone.webp",
+      "sha256": "97f4e85f17662634680764cb3f4fec5a3e4ac47ff964ac876559848643edc3e7",
+      "bytes": 63704
+    },
+    {
+      "path": "assets/art/village/remake-chest.webp",
+      "sha256": "3130cf5430236e5924811fa31d76cde3fbe48e231d459df99edc3a9e7caab4ce",
+      "bytes": 79710
+    },
+    {
+      "path": "assets/art/village/remake-chest-broken.webp",
+      "sha256": "1fd53d1e6c9cc301d7b84c7938d90af407f4aff178bdbceaf75c7d29119b5e9d",
+      "bytes": 80720
+    }
+  ],
+  "shared_family_provenance": {
+    "path": "assets/art/preview3d/materials.json",
+    "sha256": "80b0581b66f5a2d5f578a4514dbaf89b5f3f17eecfc23d6122861f2f6d110f1d",
+    "bytes": 2799
+  },
+  "shared_textures": [
+    {
+      "path": "assets/art/preview3d/limestone.webp",
+      "sha256": "8e71b8336aa7a8f6a1ec3ee272eda58296d52b7f5677a207aabf0cec7142c9e5",
+      "bytes": 192976
+    },
+    {
+      "path": "assets/art/preview3d/timber.webp",
+      "sha256": "4cac472a9fb54db9e89bdaf1577db846bd49f936e759dca7b10101175f7dcb1c",
+      "bytes": 164210
+    }
+  ],
+  "new_texture_bytes": 0,
+  "new_binary_model_bytes": 0,
+  "generators": [
+    {
+      "path": "scripts/native_encounter_mesh_3d.gd",
+      "sha256": "7fd6ebf4623b6216b54b8e2607df049bcb6ad6aa28576f06338117a7e624a887",
+      "bytes": 9453
+    },
+    {
+      "path": "scripts/native_encounter_props_3d.gd",
+      "sha256": "8f1ac2d99a9ee7fcd57e11957f85f916daeaf577209171d9840de7d97384b426",
+      "bytes": 8915
+    },
+    {
+      "path": "scripts/native_chest_material.gdshader",
+      "sha256": "67fb7891b5a05b8f92a26c4ddcc91e680418b95898e13f0e21450ee7103b3412",
+      "bytes": 791
+    }
+  ],
+  "materials": {
+    "stone": "Existing shared front-on generated limestone, 2.56m world tile / 8 courses; instance tint observes source flash.",
+    "chest": "Existing shared front-on generated timber, .65 UV scale (1.538m tile), and shared iron colour/roughness/metallic response selected by geometry vertex mask. No painted iron overlay.",
+    "texel_density": "627px limestone:244.92px/m; timber:407.55px/m. No normal/roughness image maps invented.",
+    "limitations": "Reused generated albedos retain fine authored self-relief, not measured PBR scans."
+  },
+  "coordinates": {
+    "units": "metres",
+    "up": "+Y",
+    "ground": "XZ",
+    "forward": "+Z",
+    "baked_scale": [
+      1,
+      1,
+      1
+    ],
+    "camera_azimuth": 45,
+    "camera_elevation": 35.2643897
+  },
+  "geometry": {
+    "chest_closed_bounds_m": [
+      0.456000000238419,
+      0.423195540904999,
+      0.300000011920929
+    ],
+    "chest_closed_surfaces": 2,
+    "chest_open_surfaces": 3,
+    "chest_sweep_radius_m": 0.300411075353622,
+    "chest_triangles": 808,
+    "meshes": {
+      "base": {
+        "bounds_m": [
+          0.456000000238419,
+          0.283500015735626,
+          0.300000011920929
+        ],
+        "origin_m": [
+          -0.228000000119209,
+          0.0,
+          -0.150000005960464
+        ],
+        "surfaces": 1,
+        "triangles": 316
+      },
+      "glyph": {
+        "bounds_m": [
+          0.236000001430511,
+          0.639999985694885,
+          0.296000003814697
+        ],
+        "origin_m": [
+          -0.118000000715256,
+          0.720000028610229,
+          -0.148000001907349
+        ],
+        "surfaces": 2,
+        "triangles": 72
+      },
+      "lid": {
+        "bounds_m": [
+          0.439999997615814,
+          0.143195539712906,
+          0.280195534229279
+        ],
+        "origin_m": [
+          -0.219999998807907,
+          0.0,
+          -0.00699999928474426
+        ],
+        "surfaces": 1,
+        "triangles": 460
+      },
+      "splinters": {
+        "bounds_m": [
+          0.3035569190979,
+          0.0949999988079071,
+          0.0332742780447006
+        ],
+        "origin_m": [
+          -0.153231829404831,
+          0.261999994516373,
+          0.0483628585934639
+        ],
+        "surfaces": 1,
+        "triangles": 32
+      },
+      "stone": {
+        "bounds_m": [
+          0.800000011920929,
+          1.58000004291534,
+          0.49230769276619
+        ],
+        "origin_m": [
+          -0.400000005960464,
+          0.0,
+          -0.246153846383095
+        ],
+        "surfaces": 1,
+        "triangles": 204
+      }
+    },
+    "stone_surfaces": 3,
+    "stone_triangles": 276
+  },
+  "stone_footprint_m": [
+    0.8,
+    0.49230769230769234
+  ],
+  "stone_height_m": 1.58,
+  "chest_proportion_change": "The old ~111.7-world-unit target sprite was replaced by a below-knee-height physical chest bounded by its existing 24px-radius cylinder; the old source card was much wider/taller than that inset physical collider. The original centre/ground source point, collider and consumed lifetime remain unchanged.",
+  "ownership": {
+    "stone": "Only the art instance IDs of the exact six EncounterStone owners; excludes only those old environment cards.",
+    "chest": "Only current Chest.body_sprite IDs; breaking replaces this sprite identity. Affordances remove the previous fallback and retain fallback when no model is owned.",
+    "regions": "Explicit forest scope plus source-local visibility; hidden adapter ancestors are ignored. Native roots hidden in cave and cleaned when owners leave the source world.",
+    "runtime": "Read-only EncounterRuntime states/charges/recharge/living/can_summon, EncounterStone source tint/flash and Chest.dead. No visual timer, altered collision or extra rewards."
+  },
+  "validation": {
+    "headless": "native_encounter_props PASS; actual source strike/open, capsule collider release, hinge-volume check, hidden/cave/return/deletion ownership.",
+    "gpu": {
+      "evidence_sha256": "f34a6087e227b10b49135c843b23be0fe8dd6f69ec13a16218a49005a62bc348",
+      "captures": 12,
+      "unexpected_errors": 0,
+      "quality_modes": [
+        "high",
+        "low"
+      ],
+      "viewports": [
+        "390x844",
+        "844x390"
+      ],
+      "observed_cases": [
+        "clear-stone-native-portrait",
+        "clear-stone-back-landscape",
+        "clear-stone-real-hit",
+        "clear-stone-source-cooldown",
+        "clear-chest-closed",
+        "clear-chest-real-open",
+        "clear-cave-no-forest-props",
+        "clear-return-consumed-chest",
+        "clear-chest-closed",
+        "clear-chest-real-open",
+        "clear-chest-open-landscape",
+        "clear-cave-no-forest-props"
+      ],
+      "interpretation": "Actual coordinated captures were inspected separately; recording evidence is not automatic style approval."
+    },
+    "review_fixture_source": {
+      "path": "scripts/native_encounter_review.gd",
+      "sha256": "8956760b66dbacf2a254038be5ccd1a3e81b1d0231b714d8c949fef45eabe7aa",
+      "bytes": 8045
+    },
+    "review_fixture": "Explicit loot_review=1 in a fresh isolated browser profile only. Official create_slot binds a unique test session before original source state methods. Same source anchors and fixed120 camera; optional native-model rotation checks unseen faces, optional original-art cards provide same-world comparison."
+  }
+}

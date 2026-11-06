@@ -16,11 +16,15 @@ class StampWebTest(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.directory = Path(self.temporary.name)
 
-    def export(self, payload):
+    def export(self, payload, background=None):
         (self.directory / "index.pck").write_bytes(payload)
         config = {"executable": "index", "args": [], "canvasResizePolicy": 2,
                   "fileSizes": {"index.pck": len(payload), "index.wasm": 12345}}
         html = "<script>\nconst GODOT_CONFIG = " + json.dumps(config, indent=2) + ";\nnew Engine(GODOT_CONFIG);\n</script>\n"
+        if background is not None:
+            (self.directory / "loading-bg.webp").write_bytes(background)
+            html += '<link rel="preload" href="loading-bg.webp" as="image">\n'
+            html += '<style>#loading::before{background:url("loading-bg.webp") center/cover}</style>\n'
         (self.directory / "index.html").write_text(html)
 
     def config(self):
@@ -63,6 +67,69 @@ class StampWebTest(unittest.TestCase):
         self.export(b"pack must survive")
         (self.directory / "index.html").write_text("<html>missing config</html>")
         with self.assertRaisesRegex(ValueError, "GODOT_CONFIG"):
+            stamp(self.directory)
+        self.assertEqual((self.directory / "index.pck").read_bytes(), b"pack must survive")
+
+    def test_background_changes_independently_of_the_game_pack(self):
+        self.export(b"unchanged game", b"first entry illustration")
+        first = stamp(self.directory)
+        first_background = first["entry_background"]["name"]
+        self.assertFalse((self.directory / "loading-bg.webp").exists())
+        (self.directory / "loading-bg.webp").write_bytes(b"new entry illustration only")
+        second = stamp(self.directory)
+        second_background = second["entry_background"]["name"]
+        expected = hashlib.sha256(b"new entry illustration only").hexdigest()
+        self.assertEqual(second["entry_background"]["sha256"], expected)
+        self.assertEqual(second_background, "loading-bg-" + expected[:20] + ".webp")
+        self.assertEqual(first["main_pack"], second["main_pack"])
+        self.assertEqual(first["sha256"], second["sha256"])
+        html = (self.directory / "index.html").read_text()
+        self.assertEqual(html.count(second_background), 2, "preload and CSS must share the new URL")
+        self.assertNotIn(first_background, html)
+        self.assertFalse((self.directory / first_background).exists())
+        self.assertEqual((self.directory / second_background).read_bytes(), b"new entry illustration only")
+        self.assertEqual((self.directory / "3d.html").read_text(), html)
+
+    def test_background_rerun_is_idempotent_and_only_cleans_owned_files(self):
+        self.export(b"game", b"entry illustration")
+        index = self.directory / "index.html"
+        index.write_text(index.read_text() + '<img src="https://cdn.test/loading-bg.webp">\n')
+        first = stamp(self.directory)
+        before = index.read_bytes()
+        stale = self.directory / ("loading-bg-" + "0" * 20 + ".webp")
+        stale.write_bytes(b"owned obsolete output")
+        unrelated = ["loading-bg-custom.webp", "other-bg-" + "a" * 20 + ".webp", "unrelated.webp"]
+        for name in unrelated:
+            (self.directory / name).write_bytes(b"keep this")
+        folder = self.directory / ("loading-bg-" + "b" * 20 + ".webp")
+        folder.mkdir()
+        self.assertEqual(stamp(self.directory), first)
+        self.assertEqual(index.read_bytes(), before)
+        self.assertIn(b'https://cdn.test/loading-bg.webp', before)
+        self.assertFalse(stale.exists())
+        self.assertTrue(folder.is_dir())
+        for name in unrelated:
+            self.assertEqual((self.directory / name).read_bytes(), b"keep this")
+
+    def test_old_hashed_reference_recomputes_from_its_existing_bytes(self):
+        self.export(b"game", b"entry illustration")
+        old_name = "loading-bg-" + "a" * 20 + ".webp"
+        (self.directory / "loading-bg.webp").rename(self.directory / old_name)
+        index = self.directory / "index.html"
+        index.write_text(index.read_text().replace("loading-bg.webp", old_name))
+        result = stamp(self.directory)
+        current = result["entry_background"]["name"]
+        self.assertNotEqual(current, old_name)
+        self.assertFalse((self.directory / old_name).exists())
+        self.assertEqual(index.read_text().count(current), 2)
+        before = index.read_bytes()
+        self.assertEqual(stamp(self.directory), result)
+        self.assertEqual(index.read_bytes(), before)
+
+    def test_missing_background_does_not_rename_pack(self):
+        self.export(b"pack must survive", b"missing background")
+        (self.directory / "loading-bg.webp").unlink()
+        with self.assertRaisesRegex(ValueError, "background"):
             stamp(self.directory)
         self.assertEqual((self.directory / "index.pck").read_bytes(), b"pack must survive")
 

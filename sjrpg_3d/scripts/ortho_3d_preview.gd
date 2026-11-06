@@ -50,6 +50,7 @@ var animation: AnimationPlayer
 var display: TextureRect
 var _layer: CanvasLayer
 var _materials := {}
+var _encounter_props: NativeEncounterProps3D
 var _cards := {}
 var _seen_impacts := {}
 var _contact_time := 0.0
@@ -70,6 +71,7 @@ var _batch_gpu_error := -1.0
 var enabled := true
 var _hero_motion: Ortho3DHeroMotion
 var _level_up_fx: Ortho3DLevelUp
+var _combat_fx: NativeCombatFx3D
 var _trees: Node3D
 var _fortification: Ortho3DFortification
 var _houses := {}
@@ -127,6 +129,8 @@ func _ready() -> void:
 	_setup_materials()
 	_town_props = NativeTownProps3D.new().setup(self, _materials)
 	_town_props.sync()
+	_encounter_props = NativeEncounterProps3D.new().setup(self, _materials)
+	_encounter_props.sync()
 	var permanent := stage.get_children()
 	_build_ground()
 	_build_village()
@@ -141,6 +145,7 @@ func _ready() -> void:
 	_load_actor()
 	_affordances = Ortho3DAffordances.new().setup(self)
 	_level_up_fx = Ortho3DLevelUp.new().setup(self)
+	_combat_fx = NativeCombatFx3D.new().setup(self)
 	game.get_viewport().size_changed.connect(_resize)
 	Prefs.graphics_changed.connect(_resize)
 	_resize()
@@ -419,7 +424,9 @@ func _process(delta: float) -> void:
 	_sync_cards()
 	_fortification.sync()
 	_level_up_fx.sync()
+	_combat_fx.sync()
 	_town_props.sync()
+	_encounter_props.sync()
 	_affordances.sync()
 	_world_environment.sync(0.0 if frozen else delta, frozen)
 	if not frozen:
@@ -490,6 +497,7 @@ func _publish_probe() -> void:
 		"physics_bodies": physics.actor_bodies.size() if physics != null else 0,
 		"physics_ticks": physics.physics_ticks if physics != null else 0,
 		"level_up_fx": _level_up_fx._entries.size() if _level_up_fx != null else 0,
+		"generic_projectiles": _combat_fx.snapshot() if _combat_fx != null else {},
 		"native_trees": _trees.get_meta("native_tree_report")["source_count"] if _trees != null else 0,
 		"native_houses": _houses.values().map(func(house: Dictionary): return {"key": house["key"], "triangles": house["triangles"], "surfaces": house["surfaces"]}),
 		"gate_progress": _fortification.gates.map(func(gate: Dictionary): return gate["progress"]) if _fortification != null else [],
