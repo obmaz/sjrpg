@@ -160,6 +160,7 @@ func _move_body(body: CharacterBody3D, destination: Vector2) -> void:
 		# actual continuous ramp can connect floor levels in this walking game.
 		if absf(floor_height - foot) > MAX_STEP:
 			break
+		var previous := body.position
 		var motion := Vector3(point.x, floor_height + height * 0.5 + SKIN, point.y) - body.position
 		for slide in 3:
 			if motion.length_squared() < 0.0000001:
@@ -168,6 +169,55 @@ func _move_body(body: CharacterBody3D, destination: Vector2) -> void:
 			if hit == null:
 				break
 			motion = hit.get_remainder().slide(hit.get_normal())
+		_settle_support(body, previous, height)
+
+
+func _settle_support(body: CharacterBody3D, previous: Vector3, height: float) -> void:
+	# Solid-edge recovery can lift a capsule, and a slide can change its XZ.
+	# FLOOR support belongs to that actual XZ, not to the intended step above.
+	var actual := body.position
+	var origin_foot := previous.y - height * 0.5 - SKIN
+	var support := _supported_pose(actual, origin_foot, height)
+	if not support.is_empty():
+		var grounded: Vector3 = support["position"]
+		if absf(actual.y - grounded.y) <= 0.00001 or _clear_pose(body, grounded):
+			body.position = grounded
+			return
+	# Snapping straight down through the raised edge would penetrate SOLID.
+	# Keep the last clear, supported point along the actual horizontal move.
+	var initial := _supported_pose(previous, origin_foot, height)
+	if initial.is_empty() or not _clear_pose(body, initial["position"]):
+		body.position = previous
+		return
+	var accepted: Vector3 = initial["position"]
+	var low := 0.0
+	var high := 1.0
+	for attempt in 12:
+		var fraction := (low + high) * 0.5
+		var candidate := _supported_pose(previous.lerp(actual, fraction), origin_foot, height)
+		if not candidate.is_empty() and _clear_pose(body, candidate["position"]):
+			accepted = candidate["position"]
+			low = fraction
+		else:
+			high = fraction
+	body.position = accepted
+
+
+func _supported_pose(point: Vector3, origin_foot: float, height: float) -> Dictionary:
+	var sample := _floor_sample(projected(point))
+	if not bool(sample.get("found", false)) or absf(float(sample["height"]) - origin_foot) > MAX_STEP:
+		return {}
+	return {"position": Vector3(point.x, float(sample["height"]) + height * 0.5 + SKIN, point.z)}
+
+
+func _clear_pose(body: CharacterBody3D, point: Vector3) -> bool:
+	var query := PhysicsShapeQueryParameters3D.new()
+	query.shape = (body.get_child(0) as CollisionShape3D).shape
+	query.transform = Transform3D(Basis.IDENTITY, point)
+	query.collision_mask = body.collision_mask
+	query.exclude = [body.get_rid()]
+	query.margin = body.safe_margin
+	return get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty()
 
 
 func move_actor(from: Vector2, to: Vector2, radius: float, monster := false) -> Vector2:

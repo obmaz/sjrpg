@@ -17,7 +17,7 @@ const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] }
 let checks = 0;
 try {
   for (const viewport of [{ width: 412, height: 839 }, { width: 915, height: 412 }, { width: 568, height: 320 }]) {
-    const page = await browser.newPage({ viewport, reducedMotion: 'reduce' });
+    const page = await browser.newPage({ viewport, reducedMotion: 'reduce', isMobile: viewport.width < viewport.height });
     await page.route('https://loader.test/**', async route => {
       const name = new URL(route.request().url()).pathname;
       if (name === '/install.js') return route.fulfill({ contentType: 'text/javascript', body: installer });
@@ -71,6 +71,16 @@ try {
     await page.keyboard.press('Enter');
     assert.equal(await page.evaluate(() => window.starts), 1);
     assert.equal(await page.locator('#loading').isVisible(), false);
+    if (viewport.width < viewport.height) {
+      // A landscape drawing buffer must not enlarge the mobile layout viewport
+      // when returning to portrait: visual zoom changes would misplace touches.
+      await page.evaluate(() => { const canvas = document.querySelector('#canvas'); canvas.width = 1920; canvas.height = 1080; });
+      for (const size of [{width: viewport.height, height: viewport.width}, viewport]) {
+        await page.setViewportSize(size);
+        await page.waitForFunction(expected => innerWidth === expected.width && Math.abs(visualViewport.scale - 1) < 0.01 &&
+          document.querySelector('#canvas').getBoundingClientRect().width === expected.width, size);
+      }
+    }
     await page.evaluate(() => window.__sjrpgEntry.show(() => { window.starts++; window.__sjrpgEntry.hide(); }, true));
     assert.equal(await page.locator('#entry-start').isEnabled(), true, 'returning to the title rebinds its live callback');
     assert.equal(await page.locator('.mote').first().evaluate(el => getComputedStyle(el).animationName), 'none');
