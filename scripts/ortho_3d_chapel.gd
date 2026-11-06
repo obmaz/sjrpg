@@ -42,7 +42,7 @@ func _build(width: float, depth: float, height: float) -> Dictionary:
 	glass.roughness = 0.52
 	_materials["chapel_glass"] = glass
 	var wood := (_materials["wood"] as StandardMaterial3D).duplicate() as StandardMaterial3D
-	wood.albedo_color = Color(0.61, 0.53, 0.40)
+	wood.albedo_color = Color(0.83, 0.79, 0.72)
 	_materials["oak"] = wood
 	var floor := 0.28
 	var top := height + floor
@@ -243,18 +243,21 @@ func _roof(width: float, depth: float, top: float, rise: float) -> void:
 	var slope := atan2(rise, half)
 	var length := sqrt(half * half + rise * rise)
 	var slate := (_materials["slate"] as StandardMaterial3D).duplicate() as StandardMaterial3D
-	slate.uv1_scale = Vector3(length / 2.6, (depth + 0.40) / 2.6, 1)
+	slate.uv1_scale = Vector3((depth + 0.40) / 2.6, length / 2.6, 1)
 	_materials["roof_slate"] = slate
+	var edge := StandardMaterial3D.new()
+	edge.albedo_color = Color("51565b")
+	edge.roughness = 0.92
+	_materials["slate_edge"] = edge
 	for side in [-1.0, 1.0]:
 		var transform := Transform3D(Basis(Vector3(0, 0, 1), -side * slope), Vector3(side * half * 0.5, top + rise * 0.5 + 0.025, 0))
-		var roof := PlaneMesh.new()
-		roof.size = Vector2(length, depth + 0.40)
+		var roof := Ortho3DPreview.roof_mesh(Vector2(length, depth + 0.40))
 		_append_mesh(roof, transform, "roof_slate")
 		for row in 12:
 			var t := row / 12.0
 			var x: float = side * half * (1.0 - t)
 			var y := top + rise * t + 0.038
-			_box(Vector3(x, y, 0), Vector3(0.035, 0.038, depth + 0.40), "slate")
+			_box(Vector3(x, y, 0), Vector3(0.035, 0.038, depth + 0.40), "slate_edge")
 		for end in [-1.0, 1.0]:
 			_beam(Vector3(side * half, top + 0.04, end * (depth * 0.5 + 0.19)), Vector3(0, top + rise + 0.06, end * (depth * 0.5 + 0.19)), 0.15, "stone")
 		_box(Vector3(side * half, top - 0.035, 0), Vector3(0.14, 0.16, depth + 0.46), "oak")

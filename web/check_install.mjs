@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 const { chromium } = createRequire(import.meta.url)('playwright');
 const server = createServer(async (request, response) => {
   const url = new URL(request.url, 'http://localhost');
-  const file = url.pathname.replace(/^\/sjrpg2\//, '');
+  const file = url.pathname.replace(/^\/sjrpg\//, '');
   if (!file) {
     response.setHeader('Content-Type', 'text/html; charset=utf-8');
     response.end(`<!doctype html><html lang="ko"><head>${url.searchParams.has('manifest') ? '<link rel="manifest" href="manifest.webmanifest">' : ''}</head><body><button id="install">설치</button><script src="install.js"></script><script>document.getElementById('install').onclick=()=>window.SjrpgInstall.request();</script></body></html>`);
@@ -22,7 +22,7 @@ const server = createServer(async (request, response) => {
   } catch (_) { response.writeHead(404); response.end(); }
 });
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-const base = `http://127.0.0.1:${server.address().port}/sjrpg2/`;
+const base = `http://127.0.0.1:${server.address().port}/sjrpg/`;
 const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
 try {
   const page = await browser.newPage();

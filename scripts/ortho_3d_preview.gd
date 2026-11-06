@@ -72,6 +72,8 @@ var _mode_label: Label
 var enabled := true
 var _hero_motion: Ortho3DHeroMotion
 var _level_up_fx: Ortho3DLevelUp
+var _trees: Node3D
+var _fortification: Ortho3DFortification
 
 
 func setup(world_game: Node2D) -> Ortho3DPreview:
@@ -141,6 +143,7 @@ func _ready() -> void:
 	_setup_materials()
 	_build_ground()
 	_build_village()
+	_trees = Ortho3DTrees.build(self)
 	_static_batch = Ortho3DStaticBatch.apply(stage)
 	_load_actor()
 	_affordances = Ortho3DAffordances.new().setup(self)
@@ -237,7 +240,7 @@ func _material(path: String, tint := Color.WHITE, repeats := 1.0) -> StandardMat
 	material.roughness = 0.92
 	if not path.is_empty():
 		material.albedo_texture = load(path)
-	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	material.uv1_scale = Vector3.ONE * repeats
 	return material
 
@@ -246,11 +249,15 @@ func _setup_materials() -> void:
 	_materials["stone"] = _material(MATERIAL_ROOT + "limestone.webp")
 	_materials["stone"].uv1_triplanar = true
 	_materials["stone"].uv1_world_triplanar = true
-	_materials["stone"].uv1_scale = Vector3.ONE * 0.8
+	# Eight 32cm courses per generated tile; the same world scale crosses every
+	# gate, wall, corner and building instead of stretching a cropped stone sample.
+	_materials["stone"].uv1_scale = Vector3.ONE / 2.56
 	_materials["slate"] = _material(MATERIAL_ROOT + "slate.webp")
 	_materials["slate"].cull_mode = BaseMaterial3D.CULL_DISABLED
-	_materials["wood"] = _material(MATERIAL_ROOT + "timber.webp", Color(0.72, 0.65, 0.56))
-	_materials["door"] = _material(MATERIAL_ROOT + "door.webp")
+	_materials["wood"] = _material(MATERIAL_ROOT + "timber.webp")
+	_materials["wood"].uv1_triplanar = true
+	_materials["wood"].uv1_scale = Vector3.ONE * 0.65
+	_materials["door"] = _material(MATERIAL_ROOT + "timber.webp")
 	_materials["grass"] = _material("res://assets/art/forest/grass.webp", ForestArt.GRASS_TINT, 38.0)
 	_materials["paving"] = _material("res://assets/art/forest/paving.webp")
 	_materials["iron"] = _material("", Color("292b29"))
@@ -275,6 +282,20 @@ func _box(position: Vector3, size: Vector3, material: Material, parent: Node3D =
 	var shape := BoxMesh.new()
 	shape.size = size
 	return _mesh(shape, material, position, parent)
+
+
+## Plane X follows the roof slope; material rows must cross it along the ridge.
+static func roof_mesh(size: Vector2) -> ArrayMesh:
+	var plane := PlaneMesh.new()
+	plane.size = size
+	var arrays := plane.surface_get_arrays(0)
+	var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+	for index in uv.size():
+		uv[index] = Vector2(uv[index].y, uv[index].x)
+	arrays[Mesh.ARRAY_TEX_UV] = uv
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
 
 
 func _build_ground() -> void:
@@ -319,25 +340,7 @@ func _building_bounds(key: String) -> Rect2:
 func _build_village() -> void:
 	for key: String in game.village.buildings:
 		_build_house(key)
-	for polygon: PackedVector2Array in game.village.wall_footprints:
-		var flat := PackedVector2Array()
-		for point in polygon:
-			flat.append(Iso.unproject(point) / GROUND_PER_METER)
-		var bounds := Iso.poly_bounds(flat)
-		var height := 3.0
-		_box(Vector3(bounds.get_center().x, height * 0.5, bounds.get_center().y), Vector3(bounds.size.x, height, bounds.size.y), _materials["stone"])
-		var along_x := bounds.size.x > bounds.size.y
-		var length := bounds.size.x if along_x else bounds.size.y
-		var count := maxi(1, ceili(length / 0.9))
-		for index in count:
-			var center := bounds.position + bounds.size * 0.5
-			if along_x:
-				center.x = bounds.position.x + (index + 0.5) / count * bounds.size.x
-			else:
-				center.y = bounds.position.y + (index + 0.5) / count * bounds.size.y
-			_box(Vector3(center.x, height + 0.28, center.y), Vector3(0.48 if along_x else bounds.size.x, 0.56, bounds.size.y if along_x else 0.48), _materials["stone"])
-	for gate in 4:
-		_build_gate(gate)
+	_fortification = Ortho3DFortification.build(self)
 	_build_fountain()
 	_build_residents()
 
@@ -364,15 +367,15 @@ func _build_house(key: String) -> void:
 	var half := width * 0.5 + 0.25
 	var slope := atan2(rise, half)
 	for side in [-1.0, 1.0]:
-		var roof := PlaneMesh.new()
-		roof.size = Vector2(sqrt(half * half + rise * rise), depth + 0.6)
+		var roof_size := Vector2(sqrt(half * half + rise * rise), depth + 0.6)
+		var roof := roof_mesh(roof_size)
 		var material := (_materials["slate"] as StandardMaterial3D).duplicate() as StandardMaterial3D
-		material.uv1_scale = Vector3(roof.size.x / 2.6, roof.size.y / 2.6, 1)
+		material.uv1_scale = Vector3(roof_size.y / 2.6, roof_size.x / 2.6, 1)
 		var plane := _mesh(roof, material, Vector3(side * half * 0.5, height + 0.32 + rise * 0.5, 0), root)
 		plane.rotation.z = -side * slope
 		_box(Vector3(side * half, height + 0.28, 0), Vector3(0.16, 0.2, depth + 0.68), _materials["wood"], root)
 		for z in [-1.0, 1.0]:
-			var beam := _box(Vector3(side * half * 0.5, height + 0.32 + rise * 0.5, z * (depth * 0.5 + 0.25)), Vector3(roof.size.x + 0.08, 0.16, 0.16), _materials["wood"], root)
+			var beam := _box(Vector3(side * half * 0.5, height + 0.32 + rise * 0.5, z * (depth * 0.5 + 0.25)), Vector3(roof_size.x + 0.08, 0.16, 0.16), _materials["wood"], root)
 			beam.rotation.z = -side * slope
 	_box(Vector3(0, height + 0.35 + rise, 0), Vector3(0.18, 0.16, depth + 0.65), _materials["wood"], root)
 	# Native framed doors/windows cast and receive the real light; there is no facade billboard.
@@ -427,32 +430,6 @@ func _polygon(points: PackedVector2Array, at: Vector3, thickness: float, materia
 	polygon.position = at
 
 
-func _build_gate(index: int) -> void:
-	var at := ground_position(game.village.gate_points[index])
-	var root := Node3D.new()
-	stage.add_child(root)
-	root.position = at
-	var passages: PackedVector2Array = game.village.gate_passages[index]
-	var first := ground_position(passages[0])
-	var second := ground_position(passages[1])
-	var axis := second - first
-	root.rotation.y = -atan2(axis.z, axis.x)
-	for side in [-1.0, 1.0]:
-		var tower := CylinderMesh.new()
-		tower.top_radius = 1.05
-		tower.bottom_radius = 1.10
-		tower.height = 5.0
-		tower.radial_segments = 16
-		_mesh(tower, _materials["stone"], Vector3(side * 2.2, 2.5, 0), root)
-		for tooth in 8:
-			var angle := tooth * TAU / 8.0
-			_box(Vector3(side * 2.2 + cos(angle) * 0.88, 5.25, sin(angle) * 0.88), Vector3(0.38, 0.5, 0.38), _materials["stone"], root)
-	_box(Vector3(0, 3.65, 0), Vector3(2.7, 1.4, 0.8), _materials["stone"], root)
-	for side in [-1.0, 1.0]:
-		var leaf := _box(Vector3(side * 1.15, 1.35, 0.68), Vector3(1.15, 2.7, 0.12), _materials["door"], root)
-		leaf.rotation.y = side * 0.8
-
-
 func _build_fountain() -> void:
 	var center := ground_position(game.village.fountain.position)
 	var basin := CylinderMesh.new()
@@ -487,13 +464,6 @@ func _build_residents() -> void:
 		var destination := Rect2(-Vector2(foot[0], foot[1]) * factor, frame.size * factor)
 		var card := _new_card(texture, frame, false)
 		_cards[resident.get_instance_id()] = {"node": card, "owner": weakref(resident), "rect": destination, "static": true}
-	for tree: IsoSprite in game.village.town_trees:
-		var source: Array = tree.def["source"]
-		var foot: Array = tree.def["foot"]
-		var frame := Rect2(source[0], source[1], source[2], source[3])
-		var destination := Rect2((frame.position - Vector2(foot[0], foot[1])) * tree.k, frame.size * tree.k)
-		var card := _new_card(tree.texture, frame, false)
-		_cards[tree.get_instance_id()] = {"node": card, "owner": weakref(tree), "rect": destination, "static": true}
 
 
 func _load_actor() -> void:
@@ -559,6 +529,7 @@ func _process(delta: float) -> void:
 	if not frozen or not _was_paused:
 		_sync_actor(0.0 if frozen else delta)
 	_sync_cards()
+	_fortification.sync()
 	_level_up_fx.sync()
 	_affordances.sync()
 	if not frozen:
@@ -616,6 +587,8 @@ func _publish_probe() -> void:
 		"static_boxes": int(_static_batch.get("boxes", 0)), "static_groups": int(_static_batch.get("groups", 0)),
 		"batch_corner_error_m": _batch_gpu_error,
 		"level_up_fx": _level_up_fx._entries.size() if _level_up_fx != null else 0,
+		"native_trees": _trees.get_meta("native_tree_report")["source_count"] if _trees != null else 0,
+		"gate_progress": _fortification.gates.map(func(gate: Dictionary): return gate["progress"]) if _fortification != null else [],
 		"actor_scale": [actor.scale.x, actor.scale.y, actor.scale.z],
 		"actor_position": [actor.position.x, actor.position.y, actor.position.z],
 		"azimuth": rad_to_deg(atan2(eye.x, eye.z)), "elevation": rad_to_deg(asin(eye.y)),

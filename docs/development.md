@@ -27,7 +27,7 @@ Godot 4.7.2의 Polygon2D UV 갱신 경로가 WebGL에서 index buffer를 잘못�
 
 웹 export는 `tools/stamp_web.py`로 게임 PCK의 콘텐츠 해시를 파일명에 넣고 `GODOT_CONFIG.mainPack`·파일 크기를 함께 갱신합니다. 전용 `3d.html`도 같은 패키지를 사용하므로 이전 배포의 동일 URL 캐시를 재사용하지 않습니다.
 
-제작·재현·한계는 [비교 장면 문서](orthographic-3d-comparison.md)를 따릅니다.
+`Ortho3DTrees`는 기존 나무의 실제 투영 크기와 발치를 보존하며 공유 GLB 두 개를 MultiMesh로 배치합니다. `Ortho3DFortification`은 벽 바닥·성문 날개벽 끝점·통로를 같은 석재로 연결하고, 문짝 힌지만 실제 `TownGateRuntime.progress`로 갱신합니다. 움직이는 메시에는 `exclude_static_batch`를 적용합니다. `prepare_materials.py`의 생성형 표면 패킹과 실제 지붕 UV 검사는 `ortho_3d_materials`, 나무/성벽 기하 검사는 해당 전용 케이스에서 수행합니다. 제작·재현·한계는 [비교 장면 문서](orthographic-3d-comparison.md)를 따릅니다.
 
 `?atmosphere=trial`은 `ForestAtmosphere`의 생성형 햇살 원화를 실제 숲 개구부 두 곳에만 표시하는 별도 실험입니다. 기본값은 꺼짐이며 입체 광원·법선·그림자를 대신하지 않습니다. `forest_atmosphere`는 범위·수명·설정 분리를 검사합니다.
 
@@ -285,7 +285,7 @@ compact 높이는 실제 헤더·탭·푸터 최소 크기를 측정하며 본�
 
 설정의 설치 버튼은 `web/install.js`가 보관한 `beforeinstallprompt`를 사용자 버튼 입력 안에서 동기 호출합니다.
 설치 수락은 완료로 취급하지 않고 `appinstalled` 또는 실제 standalone 실행에서만 설치됨을 표시합니다.
-`web/manifest.webmanifest`와 `install-sw.js`는 `/sjrpg2/` 상대 경로를 사용하며, worker는 엔진·PCK를 캐시하지 않습니다.
+`web/manifest.webmanifest`와 `install-sw.js`는 `/sjrpg/` 상대 경로를 사용하며, worker는 엔진·PCK를 캐시하지 않습니다.
 연결이 끊긴 상태로 실행하면 연결 안내를 표시합니다. `tools/export_web.sh`가 manifest·worker·설치 아이콘을 함께 복사합니다.
 `node web/check_install.mjs`는 합성 prompt 이벤트의 상태 처리와 실제 manifest/worker를 검사하며, 기기에서의 실제 설치 검증을 대신하지 않습니다.
 

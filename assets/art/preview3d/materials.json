@@ -1,126 +1,84 @@
 {
-  "purpose": "Optional native3D lighting/geometry comparison, not final reference-art reproduction.",
+  "purpose": "Shared front-on native3D village albedos; 2D sprite art is unchanged.",
+  "generation": "assets/source/preview3d/material-generation.json",
   "authoritative_reference": {
     "path": "assets/source/style/approved-game-reference.jpg",
     "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
   },
   "materials": {
     "limestone": {
-      "source": "assets/source/remake/gate-a.png",
-      "source_sha256": "a0f3d56235882394d645cea025efae632c16e1e23157b67579945bd95aeb7cb6",
-      "source_quad": [
-        [
-          68,
-          490
-        ],
-        [
-          157,
-          540
-        ],
-        [
-          157,
-          632
-        ],
-        [
-          68,
-          581
-        ]
+      "source": "assets/source/preview3d/village-materials.png",
+      "source_sha256": "0ab9f5bc5e5357abf9f5a81a5ddd38f4ea8ef1bc3cef87ebc72e261a112f3591",
+      "crop": [
+        0,
+        0,
+        627,
+        627
       ],
       "path": "assets/art/preview3d/limestone.webp",
-      "sha256": "6945951ec95918afb19ee38f3331864fe69aa815281fc448956cdb65915f69df",
+      "sha256": "8e71b8336aa7a8f6a1ec3ee272eda58296d52b7f5677a207aabf0cec7142c9e5",
       "size": [
-        256,
-        256
+        627,
+        627
       ],
-      "operation": "Perspective rectification of the recorded source quad; no painting or material synthesis."
+      "operation": "Exact quadrant crop and WebP encoding; no upscaling, painting or source relighting."
     },
     "slate": {
-      "source": "assets/source/remake/house-ne.png",
-      "source_sha256": "879907b9e0c66c31905ec002a48d09e0099f152716017d167578b977896d9618",
-      "source_quad": [
-        [
-          340,
-          110
-        ],
-        [
-          660,
-          290
-        ],
-        [
-          520,
-          460
-        ],
-        [
-          210,
-          290
-        ]
+      "source": "assets/source/preview3d/village-materials.png",
+      "source_sha256": "0ab9f5bc5e5357abf9f5a81a5ddd38f4ea8ef1bc3cef87ebc72e261a112f3591",
+      "crop": [
+        627,
+        0,
+        1254,
+        627
       ],
       "path": "assets/art/preview3d/slate.webp",
-      "sha256": "7d3f46929b53d9f9b8e9229ab6daa1e112348fb6e1ad632cd6b2b184dfc22c3d",
+      "sha256": "98b2683713f318f4f2bdf78adb12148ef44efaf3efbc7ae63ba0396fbc00c5c8",
       "size": [
-        512,
-        512
+        627,
+        627
       ],
-      "operation": "Perspective rectification of the recorded source quad; no painting or material synthesis."
+      "operation": "Exact quadrant crop and WebP encoding; no upscaling, painting or source relighting."
     },
     "timber": {
-      "source": "assets/source/remake/house-ne.png",
-      "source_sha256": "879907b9e0c66c31905ec002a48d09e0099f152716017d167578b977896d9618",
-      "source_quad": [
-        [
-          610,
-          139
-        ],
-        [
-          810,
-          249
-        ],
-        [
-          797,
-          273
-        ],
-        [
-          595,
-          159
-        ]
+      "source": "assets/source/preview3d/village-materials.png",
+      "source_sha256": "0ab9f5bc5e5357abf9f5a81a5ddd38f4ea8ef1bc3cef87ebc72e261a112f3591",
+      "crop": [
+        0,
+        627,
+        627,
+        1254
       ],
       "path": "assets/art/preview3d/timber.webp",
-      "sha256": "4a11f6fab8f73109674d478a45ab0a895fbfa1f1225f1b18bf23224add093d87",
+      "sha256": "4cac472a9fb54db9e89bdaf1577db846bd49f936e759dca7b10101175f7dcb1c",
       "size": [
-        512,
-        128
+        627,
+        627
       ],
-      "operation": "Perspective rectification of the recorded source quad; no painting or material synthesis."
+      "operation": "Exact quadrant crop and WebP encoding; no upscaling, painting or source relighting."
     },
-    "door": {
-      "source": "assets/source/remake/house-ne.png",
-      "source_sha256": "879907b9e0c66c31905ec002a48d09e0099f152716017d167578b977896d9618",
-      "source_quad": [
-        [
-          617,
-          637
-        ],
-        [
-          711,
-          692
-        ],
-        [
-          710,
-          836
-        ],
-        [
-          617,
-          782
-        ]
+    "bark": {
+      "source": "assets/source/preview3d/village-materials.png",
+      "source_sha256": "0ab9f5bc5e5357abf9f5a81a5ddd38f4ea8ef1bc3cef87ebc72e261a112f3591",
+      "crop": [
+        627,
+        627,
+        1254,
+        1254
       ],
-      "path": "assets/art/preview3d/door.webp",
-      "sha256": "6bda17cd57cfb2fec3a8202db933bcd6f812fffc97498c117b88d2a15c0f29dc",
+      "path": "assets/art/preview3d/bark.webp",
+      "sha256": "ca8532c220bb6dcb78a2b14a8dc4a78439885e0ee4f061ff92dee58007af7736",
       "size": [
-        256,
-        512
+        627,
+        627
       ],
-      "operation": "Perspective rectification of the recorded source quad; no painting or material synthesis."
+      "operation": "Exact quadrant crop and WebP encoding; no upscaling, painting or source relighting."
     }
   },
-  "limitations": "Rectified albedo patches retain authored source self-shading. No roughness/normal scan or seamless tile certification is claimed."
+  "physical_scale": {
+    "limestone_tile_m": 2.56,
+    "limestone_courses": 8,
+    "slate_tile_m": 2.6
+  },
+  "limitations": "Generated albedo with fine authored relief shading, not a measured PBR scan. No ground or directional scene shadow is baked into the tiles."
 }

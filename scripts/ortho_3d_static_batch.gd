@@ -13,7 +13,7 @@ static func apply(stage: Node3D) -> Dictionary:
 	for candidate in stage.find_children("*", "MeshInstance3D", true, false):
 		var node := candidate as MeshInstance3D
 		var box := node.mesh as BoxMesh
-		if box == null:
+		if box == null or node.get_meta("exclude_static_batch", false):
 			continue
 		# Only the presenter's simple, visible, static leaf boxes are eligible.
 		# Preserve unusual mesh/render behavior by leaving those instances alone.

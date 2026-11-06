@@ -6,9 +6,9 @@
 
 ## 프로젝트
 
-- Godot 4.7.2 프로젝트(GL Compatibility)이며 GitHub Pages(`/sjrpg2/`)에 웹(WASM, 단일 스레드)으로 배포합니다.
+- Godot 4.7.2 프로젝트(GL Compatibility)이며 GitHub Pages(`/sjrpg/`)에 웹(WASM, 단일 스레드)으로 배포합니다.
   엔진·템플릿 버전 기준은 `.godot-version`이며 로컬 도구와 CI가 같은 파일을 읽습니다.
-  Flutter·Bonfire 원본 [obmaz/sjrpg](https://github.com/obmaz/sjrpg)는 **참고 자료**입니다. 세계관·전사와 마법사·쿼터뷰는 유지하되
+  현재 `obmaz/sjrpg`는 Godot 저장소입니다. 기존 Flutter·Bonfire판 소스는 **참고 자료**입니다. 세계관·전사와 마법사·쿼터뷰는 유지하되
   Godot판의 조작감·가독성·진행을 우선해 규칙·밸런스를 개선합니다. 원본과 다른 규칙은 README와 관련 코드에 이유를 남깁니다.
   현재 목표는 숲 1장 완성(탐험 보강·선택형 동굴 포함)이며, 후속 지역과 탈것은 이후에 작업합니다.
 - 스크립트는 `scripts/`, 데이터는 `assets/data/`, 원화는 `assets/art/`, 테스트는 `tests/`, 도구는 `tools/`입니다.
@@ -61,6 +61,6 @@ tools/check.sh --export        # 웹 빌드까지
   게임 장면은 `await make_game()`으로 만들고, 걷기·프레임 대기는 `_walk`/`_frames`를 씁니다.
 - UI·입력·렌더링을 바꾸면 `tools/export_web.sh` → `tools/serve.sh` → `node tools/screenshot.mjs --scene … --device phone|desktop`으로 화면을 확인합니다.
 - **푸시·배포를 요청받으면** `main`의 해당 커밋에 대한 워크플로 "Build web and deploy to GitHub Pages" 성공과 공개 페이지
-  <https://obmaz.github.io/sjrpg2/> 로드까지 확인한 뒤 완료를 보고합니다. 배포 설정(Pages 소스 = GitHub Actions)은 저장소 설정에서 한 번만 바꿉니다.
+  <https://obmaz.github.io/sjrpg/> 로드까지 확인한 뒤 완료를 보고합니다. 배포 설정(Pages 소스 = GitHub Actions)은 저장소 설정에서 한 번만 바꿉니다.
 - 브랜치는 만들지 않고 `main`에 직접 커밋합니다(사용자 지시). 커밋 메시지는 변경의 이유를 적습니다.
 - 기능이 바뀌면 README의 사용자 안내와 `docs/development.md`의 구조를 함께 갱신합니다. 일회성 완료 기록은 문서에 쌓지 않습니다.

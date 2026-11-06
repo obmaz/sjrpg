@@ -1,25 +1,14 @@
-"""Mechanically rectify existing generated material pixels for the 3D comparison.
-
-These are small sampled albedos, not newly painted artwork or full PBR scans.
-The source has its original self-shading; native light/shadows are evaluated
-separately in the optional scene. Mirror repeat is used, not a seamlessness claim.
-"""
+"""Pack generated front-on village materials, using exact crops and WebP only."""
 import hashlib
 import json
 from pathlib import Path
 
-import cv2
-import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / 'assets/art/preview3d'
-PATCHES = {
-    'limestone': ('assets/source/remake/gate-a.png', [[68, 490], [157, 540], [157, 632], [68, 581]], [256, 256]),
-    'slate': ('assets/source/remake/house-ne.png', [[340, 110], [660, 290], [520, 460], [210, 290]], [512, 512]),
-    'timber': ('assets/source/remake/house-ne.png', [[610, 139], [810, 249], [797, 273], [595, 159]], [512, 128]),
-    'door': ('assets/source/remake/house-ne.png', [[617, 637], [711, 692], [710, 836], [617, 782]], [256, 512]),
-}
+OUT = ROOT / "assets/art/preview3d"
+SOURCE = ROOT / "assets/source/preview3d/village-materials.png"
+PATCHES = {"limestone": (0, 0), "slate": (1, 0), "timber": (0, 1), "bark": (1, 1)}
 
 
 def sha(path):
@@ -27,50 +16,50 @@ def sha(path):
 
 
 def main():
-    OUT.mkdir(parents=True, exist_ok=True)
+    image = Image.open(SOURCE).convert("RGB")
+    assert image.width == image.height and image.width % 2 == 0
+    tile = image.width // 2
     records = {}
-    for key, (source, points, size) in PATCHES.items():
-        image = np.array(Image.open(ROOT / source).convert('RGB'))
-        width, height = size
-        transform = cv2.getPerspectiveTransform(np.float32(points), np.float32([[0, 0], [width - 1, 0], [width - 1, height - 1], [0, height - 1]]))
-        patch = cv2.warpPerspective(image, transform, size, flags=cv2.INTER_CUBIC)
-        target = OUT / (key + '.webp')
-        Image.fromarray(patch).save(target, 'WEBP', quality=94, method=6)
-        records[key] = {'source': source, 'source_sha256': sha(ROOT / source), 'source_quad': points,
-                        'path': str(target.relative_to(ROOT)), 'sha256': sha(target), 'size': size,
-                        'operation': 'Perspective rectification of the recorded source quad; no painting or material synthesis.'}
-        path = 'res://' + str(target.relative_to(ROOT))
-        imported = 'res://.godot/imported/' + target.name + '-' + hashlib.md5(path.encode()).hexdigest() + '.ctex'
-        import_file = target.with_suffix('.webp.import')
-        # Preserve editor-generated UIDs and destination metadata on reproducible reruns.
-        if import_file.exists():
+    OUT.mkdir(parents=True, exist_ok=True)
+    for key, (x, y) in PATCHES.items():
+        box = (x * tile, y * tile, (x + 1) * tile, (y + 1) * tile)
+        target = OUT / (key + ".webp")
+        image.crop(box).save(target, "WEBP", quality=94, method=6)
+        records[key] = {"source": str(SOURCE.relative_to(ROOT)), "source_sha256": sha(SOURCE),
+                        "crop": list(box), "path": str(target.relative_to(ROOT)),
+                        "sha256": sha(target), "size": [tile, tile],
+                        "operation": "Exact quadrant crop and WebP encoding; no upscaling, painting or source relighting."}
+        imported = target.with_suffix(".webp.import")
+        if imported.exists():
             continue
-        import_file.write_text(f'''[remap]
+        path = "res://" + str(target.relative_to(ROOT))
+        cache = "res://.godot/imported/" + target.name + "-" + hashlib.md5(path.encode()).hexdigest() + ".ctex"
+        imported.write_text(f'''[remap]
 importer="texture"
 type="CompressedTexture2D"
-path="{imported}"
+path="{cache}"
 metadata={{"vram_texture": false}}
 
 [deps]
 source_file="{path}"
-dest_files=PackedStringArray("{imported}")
+dest_files=PackedStringArray("{cache}")
 
 [params]
 compress/mode=1
 compress/lossy_quality=0.9
-compress/normal_map=0
 mipmaps/generate=true
 process/fix_alpha_border=true
-process/premult_alpha=false
 ''')
-    metadata = {'purpose': 'Optional native3D lighting/geometry comparison, not final reference-art reproduction.',
-                'authoritative_reference': {'path': 'assets/source/style/approved-game-reference.jpg',
-                                            'sha256': sha(ROOT / 'assets/source/style/approved-game-reference.jpg')},
-                'materials': records,
-                'limitations': 'Rectified albedo patches retain authored source self-shading. No roughness/normal scan or seamless tile certification is claimed.'}
-    (OUT / 'materials.json').write_text(json.dumps(metadata, indent=2) + '\n')
-    print('Prepared', len(records), 'rectified comparison materials')
+    record = {"purpose": "Shared front-on native3D village albedos; 2D sprite art is unchanged.",
+              "generation": "assets/source/preview3d/material-generation.json",
+              "authoritative_reference": {"path": "assets/source/style/approved-game-reference.jpg",
+                                          "sha256": sha(ROOT / "assets/source/style/approved-game-reference.jpg")},
+              "materials": records,
+              "physical_scale": {"limestone_tile_m": 2.56, "limestone_courses": 8, "slate_tile_m": 2.6},
+              "limitations": "Generated albedo with fine authored relief shading, not a measured PBR scan. No ground or directional scene shadow is baked into the tiles."}
+    (OUT / "materials.json").write_text(json.dumps(record, indent=2) + "\n")
+    print("Packed", len(records), "material tiles at", tile, "px")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
