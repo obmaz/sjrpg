@@ -85,15 +85,6 @@ python3 tools/hero_art/pack_mage_trial.py \
 출력 `mage.png`, `mage-cast.webp`, 두 JSON, `manifest.json`과 검수 시트는 채택 전 시험 자료입니다.
 실제 게임 원화로 설치하거나 기존 아틀라스를 덮어쓰는 기능은 없습니다.
 
-## 직교 3D 비교용 GLB
+## 별도3D 프로젝트의 GLB
 
-`export_preview_glb.py`는 검증된 CC0 모델·65관절 골격과 정지/달리기/시전 클립을 원래 미터 단위로 내보냅니다. `SJRPG_CHARACTER_SOURCE_DIR`에 위 공식 소스를 준비한 뒤 Blender에서 실행합니다. 생성형 천의 색을 512px로 굽고 미세 범프는 제외합니다. 출력 GLB와 `mage-manifest.json`을 `assets/art/preview3d/`에 보관하며, 이 자산은 명시적인 `preview3d=1`에서만 사용합니다. 기존 272프레임 재질 시험의 채택과는 별개입니다.
-
-```sh
-SJRPG_CHARACTER_SOURCE_DIR=/tmp/sjrpg2-character-source \
-SJRPG_MATERIAL_PILOT_MODE=clearance \
-blender --background --factory-startup --disable-autoexec --threads 2 \
-  --python tools/hero_art/export_preview_glb.py
-```
-
-출력은 `/tmp/sjrpg2-preview3d/{mage.glb,mage-manifest.json}`입니다. `clearance`는 기존 로브 정점과 가중치를 유지하고 휴지 자세에서 바깥으로18mm 여유를 둡니다. 모든 포즈의 관통 제거를 보증하지 않으며 최종 의상 메시 제작을 대체하지 않습니다.
+네이티브 GLB 내보내기는 [3D 프로젝트의 영웅 제작 도구](../../../sjrpg_3d/tools/hero_art/README.md)로 옮겼습니다.2D판에는 GLB 런타임/비교 기능이 없으며, 위2D 아틀라스·재질 검수 파이프라인과 원본 CC0 출처는 그대로 유지합니다.

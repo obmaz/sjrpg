@@ -45,7 +45,7 @@ func sync() -> void:
 
 
 func _sync_art(sprite: IsoSprite, current: Dictionary) -> void:
-	if sprite.is_queued_for_deletion():
+	if sprite.is_queued_for_deletion() or _preview._town_props.owns(sprite):
 		return
 	var id := sprite.get_instance_id()
 	current[id] = true

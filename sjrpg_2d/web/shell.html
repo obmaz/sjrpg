@@ -117,13 +117,6 @@
     const GODOT_CONFIG = $GODOT_CONFIG;
     const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
     (() => {
-      const preview3D = location.pathname.endsWith('/3d.html') || new URLSearchParams(location.search).get('preview3d') === '1';
-      window.__sjrpgLaunch3D = preview3D;
-      if (preview3D) {
-        document.querySelector('.chapter').textContent = '직교 3D 비교 · 숲 마을';
-        document.getElementById('entry-start').textContent = '3D 비교 시작';
-        document.getElementById('hint').textContent = '마법사를 선택해 입체 건물·캐릭터·그림자를 확인하세요.';
-      }
       const overlay = document.getElementById('loading');
       const phase = document.getElementById('phase');
       const progress = document.getElementById('progress');
@@ -192,8 +185,8 @@
         const engine = new Engine(GODOT_CONFIG);
         window.__sjrpgStorageMounts = GODOT_CONFIG.persistentPaths || ['/userfs'];
         window.__sjrpgNavigateEdition = (edition, prepared = false) => {
-          if (!['', '2d', '3d'].includes(edition) || destination) return false;
-          destination = new URL('../' + (edition ? edition + '/' : ''), location.href).href;
+          if (edition !== '' || destination) return false;
+          destination = new URL('../', location.href).href;
           if (!prepared) engine.requestQuit();
           return true;
         };

@@ -314,10 +314,6 @@ func toast_rect() -> Rect2:
 		if gap_right - gap_left >= 320.0 * u:
 			width = minf(width, gap_right - gap_left)
 			var top := margins.y + 16.0 * u
-			if is_instance_valid(game) and is_instance_valid(game.ortho_preview):
-				var badge: PanelContainer = game.ortho_preview._mode_badge
-				if is_instance_valid(badge) and badge.visible:
-					top = maxf(top, badge.position.y + badge.size.y + 8.0 * u)
 			return Rect2(Vector2((gap_left + gap_right - width) * 0.5, top), Vector2(width, height))
 	return Rect2(Vector2(margins.x + (available.x - width) / 2.0, y), Vector2(width, height))
 

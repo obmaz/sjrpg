@@ -38,9 +38,11 @@ class StampWebTest(unittest.TestCase):
         self.assertEqual(self.config()["mainPack"], result["main_pack"])
         self.assertEqual(self.config()["fileSizes"], {"index.wasm": 12345, result["main_pack"]: len(payload)})
         html = (self.directory / "index.html").read_bytes()
-        self.assertEqual((self.directory / "3d.html").read_bytes(), html)
+        self.assertFalse((self.directory / "3d.html").exists())
         self.assertIn(('window.__sjrpgBuild = "' + expected + '";').encode(), html)
+        (self.directory / "3d.html").write_bytes(html)  # Remove a prior mixed-edition export.
         self.assertEqual(stamp(self.directory), result)
+        self.assertFalse((self.directory / "3d.html").exists())
         self.assertEqual((self.directory / "index.html").read_bytes(), html)
         self.assertEqual(len(list(self.directory.glob("*.pck"))), 1)
 

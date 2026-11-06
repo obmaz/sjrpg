@@ -12,7 +12,6 @@ var _install_button: Button
 var _install_hint: Label
 var _install_poll := 0.0
 var _zoom_buttons: Array[Button] = []
-var _renderer_buttons: Array[Button] = []
 var _version_buttons: Array[Button] = []
 
 
@@ -31,7 +30,6 @@ func _ready() -> void:
 func _rebuild() -> void:
 	clear_body()
 	_zoom_buttons.clear()
-	_renderer_buttons.clear()
 	_version_buttons.clear()
 	body.add_child(_version_card())
 	body.add_child(UiKit.divider())
@@ -81,7 +79,7 @@ func _rebuild() -> void:
 	body.add_child(_action_row("저장하고 타이틀로", func(): title_requested.emit()))
 	var danger := _action_row("새 모험 준비", func(): _confirm_restart())
 	body.add_child(danger)
-	_publish_renderer_buttons.call_deferred()
+	_publish_version_buttons.call_deferred()
 
 
 func _process(delta: float) -> void:
@@ -91,21 +89,13 @@ func _process(delta: float) -> void:
 	if _install_poll <= 0.0:
 		_install_poll = 1.0
 		_refresh_install()
-		_publish_renderer_buttons()
+		_publish_version_buttons()
 
 
-func _publish_renderer_buttons() -> void:
+func _publish_version_buttons() -> void:
 	if not OS.has_feature("web") or not is_visible_in_tree():
 		return
 	var view := get_viewport().get_visible_rect().size
-	var buttons := {}
-	for button in _renderer_buttons:
-		if not is_instance_valid(button) or button.is_queued_for_deletion():
-			continue
-		var point := button.get_global_rect().get_center() / view
-		buttons["3d" if bool(button.get_meta("town_3d")) else "2d"] = [point.x, point.y]
-	buttons["selected_3d"] = game.town_3d_enabled
-	JavaScriptBridge.eval("window.__sjrpgTownRendererButtons = " + JSON.stringify(buttons))
 	var versions := {}
 	for button in _version_buttons:
 		if is_instance_valid(button) and not button.is_queued_for_deletion():
@@ -138,10 +128,9 @@ func _refresh_install() -> void:
 
 
 func _confirm_restart() -> void:
-	_renderer_buttons.clear()
 	_version_buttons.clear()
 	if OS.has_feature("web"):
-		JavaScriptBridge.eval("window.__sjrpgTownRendererButtons = null")
+		JavaScriptBridge.eval("window.__sjrpgVersionButtons = null")
 	clear_body()
 	body.add_child(PanelFrame.section("새 모험을 시작할까요?"))
 	body.add_child(PanelFrame.wrap_label("직업 선택으로 이동합니다. 새 모험 시작을 확인하기 전까지 현재 진행은 유지됩니다.", 18))
@@ -193,27 +182,17 @@ func _choose_world_zoom(amount: float) -> void:
 func _version_card() -> Control:
 	var card := VBoxContainer.new()
 	card.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
-	card.add_child(PanelFrame.wrap_label("게임 버전", 22, UiKit.TEXT))
-	card.add_child(PanelFrame.wrap_label("두 버전의 모험 진행은 별도로 저장됩니다.", 15, UiKit.MUTED))
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
-	card.add_child(row)
-	for edition: String in ["2d", "3d"]:
-		var current: bool = edition == "3d"
-		var button := UiKit.button(("현재 버전 · " + edition.to_upper()) if current else (edition.to_upper() + " 모험 열기"), 20)
-		button.name = "Version2D" if edition == "2d" else "Version3D"
-		button.disabled = current
-		button.custom_minimum_size = Vector2(0, 76)
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.pressed.connect(func(): _open_edition(edition))
-		row.add_child(button)
-		_version_buttons.append(button)
-	var select := UiKit.button("버전 선택 화면", 20)
-	select.name = "VersionSelect"
-	select.custom_minimum_size.y = 68
-	select.pressed.connect(func(): _open_edition(""))
-	card.add_child(select)
-	_version_buttons.append(select)
+	var current := PanelFrame.wrap_label("현재 버전 · 3D", 22, UiKit.TEXT)
+	current.name = "CurrentEdition"
+	card.add_child(current)
+	card.add_child(PanelFrame.wrap_label("3D 전용 프로젝트입니다. 버전은 선택 화면에서 고릅니다.", 15, UiKit.MUTED))
+	if OS.has_feature("web"):
+		var select := UiKit.button("저장하고 버전 선택 화면으로", 20)
+		select.name = "VersionSelect"
+		select.custom_minimum_size.y = 76
+		select.pressed.connect(func(): _open_edition(""))
+		card.add_child(select)
+		_version_buttons.append(select)
 	return card
 
 
@@ -221,33 +200,6 @@ func _open_edition(edition: String) -> void:
 	if not EditionNavigation.open(edition):
 		_feedback = GameState.save_error
 		_rebuild()
-
-
-func _town_renderer_card() -> Control:
-	var card := VBoxContainer.new()
-	card.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
-	card.add_child(PanelFrame.wrap_label("마을 표시 방식", 22, UiKit.TEXT))
-	card.add_child(PanelFrame.wrap_label("같은 위치에서 2D·3D를 비교합니다. 3D는 마을에만 적용하며 마을 밖의 숲과 동굴은 2D로 표시합니다.", 15, UiKit.MUTED))
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
-	card.add_child(row)
-	var group := ButtonGroup.new()
-	for native in [false, true]:
-		var button := UiKit.button("3D · 마을" if native else "2D", 22)
-		button.name = "Town3D" if native else "Town2D"
-		button.custom_minimum_size = Vector2(0, 76)
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.toggle_mode = true
-		button.button_group = group
-		button.button_pressed = game.town_3d_enabled == native
-		button.set_meta("town_3d", native)
-		UiKit.style_button(button, false, button.button_pressed)
-		button.pressed.connect(func():
-			Prefs.set_town_3d(native)
-			_rebuild())
-		row.add_child(button)
-		_renderer_buttons.append(button)
-	return card
 
 
 ## A big switch row: label + hint on the left, ON/OFF pill on the right.

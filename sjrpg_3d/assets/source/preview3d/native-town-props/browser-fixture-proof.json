@@ -1,0 +1,1278 @@
+{
+  "passed": false,
+  "error": "Browser errors: WARNING: `NaN` (\"Not a Number\") found in argument passed to JSON.stringify(). `NaN` cannot be represented in JSON, so the value has been replaced with `null`. This warning will not be printed for any later NaN occurrences.\n   at: _stringify (core/io/json.cpp:86)",
+  "snapshots": {
+    "portrait": {
+      "entries": [
+        {
+          "motion": 1,
+          "name": "@Node2D@835",
+          "phase": 1.4233,
+          "role": "fountain",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            132.851867675781,
+            416.002197265625,
+            454.296264648438,
+            457.995178222656
+          ],
+          "source_phase": 1.4233,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "GuardianPortal",
+          "phase": 1.4233,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            -4002.98852539062,
+            -1777.71166992188,
+            382.48193359375,
+            530.023315429688
+          ],
+          "source_phase": 1.4233,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "WarpGate_town",
+          "phase": 1.4233,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            -419.157012939453,
+            114.889945983887,
+            382.482299804688,
+            530.023559570312
+          ],
+          "source_phase": 1.4233,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "WarpGate_tree",
+          "phase": 1.4233,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            -2762.44384765625,
+            -1982.34545898438,
+            382.4833984375,
+            530.023803710938
+          ],
+          "source_phase": 1.4233,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "WarpGate_cave",
+          "phase": 1.4233,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            -3711.767578125,
+            3568.6884765625,
+            382.48193359375,
+            530.0234375
+          ],
+          "source_phase": 1.4233,
+          "source_visible": true,
+          "visible": true
+        }
+      ],
+      "paused": false,
+      "reduce_motion": false,
+      "review_ready": true,
+      "scope": "forest",
+      "sequence": 4,
+      "source_hidden": true,
+      "source_layer": 0
+    },
+    "animation": [
+      {
+        "entries": [
+          {
+            "motion": 1,
+            "name": "@Node2D@835",
+            "phase": 3.0293,
+            "role": "fountain",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              132.851867675781,
+              416.002197265625,
+              454.296264648438,
+              457.995178222656
+            ],
+            "source_phase": 3.0293,
+            "source_visible": true,
+            "visible": true
+          },
+          {
+            "motion": 1,
+            "name": "GuardianPortal",
+            "phase": 3.0293,
+            "role": "portal",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              -4002.98852539062,
+              -1777.71166992188,
+              382.48193359375,
+              530.023315429688
+            ],
+            "source_phase": 3.0293,
+            "source_visible": true,
+            "visible": true
+          },
+          {
+            "motion": 1,
+            "name": "WarpGate_town",
+            "phase": 3.0293,
+            "role": "portal",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              -419.157012939453,
+              114.889945983887,
+              382.482299804688,
+              530.023559570312
+            ],
+            "source_phase": 3.0293,
+            "source_visible": true,
+            "visible": true
+          },
+          {
+            "motion": 1,
+            "name": "WarpGate_tree",
+            "phase": 3.0293,
+            "role": "portal",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              -2762.44384765625,
+              -1982.34545898438,
+              382.4833984375,
+              530.023803710938
+            ],
+            "source_phase": 3.0293,
+            "source_visible": true,
+            "visible": true
+          },
+          {
+            "motion": 1,
+            "name": "WarpGate_cave",
+            "phase": 3.0293,
+            "role": "portal",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              -3711.767578125,
+              3568.6884765625,
+              382.48193359375,
+              530.0234375
+            ],
+            "source_phase": 3.0293,
+            "source_visible": true,
+            "visible": true
+          }
+        ],
+        "paused": false,
+        "reduce_motion": false,
+        "review_ready": true,
+        "scope": "forest",
+        "sequence": 10,
+        "source_hidden": true,
+        "source_layer": 0
+      },
+      {
+        "entries": [
+          {
+            "motion": 1,
+            "name": "@Node2D@835",
+            "phase": 3.3428,
+            "role": "fountain",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              132.851867675781,
+              416.002197265625,
+              454.296264648438,
+              457.995178222656
+            ],
+            "source_phase": 3.3428,
+            "source_visible": true,
+            "visible": true
+          },
+          {
+            "motion": 1,
+            "name": "GuardianPortal",
+            "phase": 3.3428,
+            "role": "portal",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              -4002.98852539062,
+              -1777.71166992188,
+              382.48193359375,
+              530.023315429688
+            ],
+            "source_phase": 3.3428,
+            "source_visible": true,
+            "visible": true
+          },
+          {
+            "motion": 1,
+            "name": "WarpGate_town",
+            "phase": 3.3428,
+            "role": "portal",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              -419.157012939453,
+              114.889945983887,
+              382.482299804688,
+              530.023559570312
+            ],
+            "source_phase": 3.3428,
+            "source_visible": true,
+            "visible": true
+          },
+          {
+            "motion": 1,
+            "name": "WarpGate_tree",
+            "phase": 3.3428,
+            "role": "portal",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              -2762.44384765625,
+              -1982.34545898438,
+              382.4833984375,
+              530.023803710938
+            ],
+            "source_phase": 3.3428,
+            "source_visible": true,
+            "visible": true
+          },
+          {
+            "motion": 1,
+            "name": "WarpGate_cave",
+            "phase": 3.3428,
+            "role": "portal",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              -3711.767578125,
+              3568.6884765625,
+              382.48193359375,
+              530.0234375
+            ],
+            "source_phase": 3.3428,
+            "source_visible": true,
+            "visible": true
+          }
+        ],
+        "paused": false,
+        "reduce_motion": false,
+        "review_ready": true,
+        "scope": "forest",
+        "sequence": 11,
+        "source_hidden": true,
+        "source_layer": 0
+      }
+    ],
+    "paused": [
+      {
+        "entries": [
+          {
+            "motion": 1,
+            "name": "@Node2D@835",
+            "phase": 3.7793,
+            "role": "fountain",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              132.851867675781,
+              416.002197265625,
+              454.296264648438,
+              457.995178222656
+            ],
+            "source_phase": 3.7793,
+            "source_visible": true,
+            "visible": true
+          },
+          {
+            "motion": 1,
+            "name": "GuardianPortal",
+            "phase": 3.7793,
+            "role": "portal",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              -4002.98852539062,
+              -1777.71166992188,
+              382.48193359375,
+              530.023315429688
+            ],
+            "source_phase": 3.7793,
+            "source_visible": true,
+            "visible": true
+          },
+          {
+            "motion": 1,
+            "name": "WarpGate_town",
+            "phase": 3.7793,
+            "role": "portal",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              -419.157012939453,
+              114.889945983887,
+              382.482299804688,
+              530.023559570312
+            ],
+            "source_phase": 3.7793,
+            "source_visible": true,
+            "visible": true
+          },
+          {
+            "motion": 1,
+            "name": "WarpGate_tree",
+            "phase": 3.7793,
+            "role": "portal",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              -2762.44384765625,
+              -1982.34545898438,
+              382.4833984375,
+              530.023803710938
+            ],
+            "source_phase": 3.7793,
+            "source_visible": true,
+            "visible": true
+          },
+          {
+            "motion": 1,
+            "name": "WarpGate_cave",
+            "phase": 3.7793,
+            "role": "portal",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              -3711.767578125,
+              3568.6884765625,
+              382.48193359375,
+              530.0234375
+            ],
+            "source_phase": 3.7793,
+            "source_visible": true,
+            "visible": true
+          }
+        ],
+        "paused": true,
+        "reduce_motion": false,
+        "review_ready": true,
+        "scope": "forest",
+        "sequence": 15,
+        "source_hidden": true,
+        "source_layer": 0
+      },
+      {
+        "entries": [
+          {
+            "motion": 1,
+            "name": "@Node2D@835",
+            "phase": 3.7793,
+            "role": "fountain",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              132.851867675781,
+              416.002197265625,
+              454.296264648438,
+              457.995178222656
+            ],
+            "source_phase": 3.7793,
+            "source_visible": true,
+            "visible": true
+          },
+          {
+            "motion": 1,
+            "name": "GuardianPortal",
+            "phase": 3.7793,
+            "role": "portal",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              -4002.98852539062,
+              -1777.71166992188,
+              382.48193359375,
+              530.023315429688
+            ],
+            "source_phase": 3.7793,
+            "source_visible": true,
+            "visible": true
+          },
+          {
+            "motion": 1,
+            "name": "WarpGate_town",
+            "phase": 3.7793,
+            "role": "portal",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              -419.157012939453,
+              114.889945983887,
+              382.482299804688,
+              530.023559570312
+            ],
+            "source_phase": 3.7793,
+            "source_visible": true,
+            "visible": true
+          },
+          {
+            "motion": 1,
+            "name": "WarpGate_tree",
+            "phase": 3.7793,
+            "role": "portal",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              -2762.44384765625,
+              -1982.34545898438,
+              382.4833984375,
+              530.023803710938
+            ],
+            "source_phase": 3.7793,
+            "source_visible": true,
+            "visible": true
+          },
+          {
+            "motion": 1,
+            "name": "WarpGate_cave",
+            "phase": 3.7793,
+            "role": "portal",
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "screen_bounds": [
+              -3711.767578125,
+              3568.6884765625,
+              382.48193359375,
+              530.0234375
+            ],
+            "source_phase": 3.7793,
+            "source_visible": true,
+            "visible": true
+          }
+        ],
+        "paused": true,
+        "reduce_motion": false,
+        "review_ready": true,
+        "scope": "forest",
+        "sequence": 18,
+        "source_hidden": true,
+        "source_layer": 0
+      }
+    ],
+    "reduced": {
+      "entries": [
+        {
+          "motion": 0,
+          "name": "@Node2D@835",
+          "phase": 0,
+          "role": "fountain",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            132.851867675781,
+            416.002197265625,
+            454.296264648438,
+            457.995178222656
+          ],
+          "source_phase": 0,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 0,
+          "name": "GuardianPortal",
+          "phase": 0,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            -4002.98852539062,
+            -1777.71166992188,
+            382.48193359375,
+            530.023315429688
+          ],
+          "source_phase": 0,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 0,
+          "name": "WarpGate_town",
+          "phase": 0,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            -419.157012939453,
+            114.889945983887,
+            382.482299804688,
+            530.023559570312
+          ],
+          "source_phase": 0,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 0,
+          "name": "WarpGate_tree",
+          "phase": 0,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            -2762.44384765625,
+            -1982.34545898438,
+            382.4833984375,
+            530.023803710938
+          ],
+          "source_phase": 0,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 0,
+          "name": "WarpGate_cave",
+          "phase": 0,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            -3711.767578125,
+            3568.6884765625,
+            382.48193359375,
+            530.0234375
+          ],
+          "source_phase": 0,
+          "source_visible": true,
+          "visible": true
+        }
+      ],
+      "paused": false,
+      "reduce_motion": true,
+      "review_ready": true,
+      "scope": "forest",
+      "sequence": 25,
+      "source_hidden": true,
+      "source_layer": 0
+    },
+    "town": {
+      "entries": [
+        {
+          "motion": 1,
+          "name": "@Node2D@835",
+          "phase": 1.6,
+          "role": "fountain",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            720.767883300781,
+            681.10009765625,
+            454.296081542969,
+            457.9951171875
+          ],
+          "source_phase": 1.6,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "GuardianPortal",
+          "phase": 1.6,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            -3415.07275390625,
+            -1512.61376953125,
+            382.482666015625,
+            530.023498535156
+          ],
+          "source_phase": 1.6,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "WarpGate_town",
+          "phase": 1.6,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            168.758728027344,
+            379.988006591797,
+            382.482543945312,
+            530.023559570312
+          ],
+          "source_phase": 1.6,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "WarpGate_tree",
+          "phase": 1.6,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            -2174.52758789062,
+            -1717.2470703125,
+            382.482421875,
+            530.023315429688
+          ],
+          "source_phase": 1.6,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "WarpGate_cave",
+          "phase": 1.6,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            -3123.85180664062,
+            3833.78637695312,
+            382.482177734375,
+            530.023193359375
+          ],
+          "source_phase": 1.6,
+          "source_visible": true,
+          "visible": true
+        }
+      ],
+      "paused": false,
+      "reduce_motion": false,
+      "review_ready": true,
+      "scope": "forest",
+      "sequence": 33,
+      "source_hidden": true,
+      "source_layer": 0
+    },
+    "landscape": {
+      "entries": [
+        {
+          "motion": 1,
+          "name": "@Node2D@835",
+          "phase": 4.8,
+          "role": "fountain",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            711.809753417969,
+            263.551025390625,
+            454.296325683594,
+            457.995239257812
+          ],
+          "source_phase": 4.8,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "GuardianPortal",
+          "phase": 4.8,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            -3424.03198242188,
+            -1930.16296386719,
+            382.48291015625,
+            530.023559570312
+          ],
+          "source_phase": 4.8,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "WarpGate_town",
+          "phase": 4.8,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            159.80078125,
+            -37.5610961914062,
+            382.482360839844,
+            530.023559570312
+          ],
+          "source_phase": 4.8,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "WarpGate_tree",
+          "phase": 4.8,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            -2183.486328125,
+            -2134.79638671875,
+            382.482666015625,
+            530.0234375
+          ],
+          "source_phase": 4.8,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "WarpGate_cave",
+          "phase": 4.8,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            -3132.810546875,
+            3416.2373046875,
+            382.482177734375,
+            530.023681640625
+          ],
+          "source_phase": 4.8,
+          "source_visible": true,
+          "visible": true
+        }
+      ],
+      "paused": false,
+      "reduce_motion": false,
+      "review_ready": true,
+      "scope": "forest",
+      "sequence": 45,
+      "source_hidden": true,
+      "source_layer": 0
+    },
+    "guardian": {
+      "entries": [
+        {
+          "motion": 1,
+          "name": "@Node2D@835",
+          "phase": 7.61666666666667,
+          "role": "fountain",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            4589.6005859375,
+            2288.70166015625,
+            454.2958984375,
+            457.995361328125
+          ],
+          "source_phase": 7.61666666666667,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "GuardianPortal",
+          "phase": 7.61666666666667,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            453.758941650391,
+            94.9881134033203,
+            382.482330322266,
+            530.0234375
+          ],
+          "source_phase": 7.61666666666667,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "WarpGate_town",
+          "phase": 7.61666666666667,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            4037.59130859375,
+            1987.58972167969,
+            382.482421875,
+            530.023559570312
+          ],
+          "source_phase": 7.61666666666667,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "WarpGate_tree",
+          "phase": 7.61666666666667,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            1694.30444335938,
+            -109.645446777344,
+            382.482666015625,
+            530.023315429688
+          ],
+          "source_phase": 7.61666666666667,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "WarpGate_cave",
+          "phase": 7.61666666666667,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            744.980163574219,
+            5441.38818359375,
+            382.482238769531,
+            530.0234375
+          ],
+          "source_phase": 7.61666666666667,
+          "source_visible": true,
+          "visible": true
+        }
+      ],
+      "paused": false,
+      "reduce_motion": false,
+      "review_ready": true,
+      "scope": "forest",
+      "sequence": 55,
+      "source_hidden": true,
+      "source_layer": 0
+    },
+    "cave_entry": {
+      "entries": [
+        {
+          "motion": 1,
+          "name": "@Node2D@835",
+          "phase": 10.2833333333333,
+          "role": "fountain",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            4298.3798828125,
+            -3057.69873046875,
+            454.2958984375,
+            457.99609375
+          ],
+          "source_phase": 10.2833333333333,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "GuardianPortal",
+          "phase": 10.2833333333333,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            162.537948608398,
+            -5251.412109375,
+            382.482543945312,
+            530.0234375
+          ],
+          "source_phase": 10.2833333333333,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "WarpGate_town",
+          "phase": 10.2833333333333,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            3746.37084960938,
+            -3358.810546875,
+            382.481689453125,
+            530.0234375
+          ],
+          "source_phase": 10.2833333333333,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "WarpGate_tree",
+          "phase": 10.2833333333333,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            1403.08349609375,
+            -5456.0458984375,
+            382.483154296875,
+            530.02294921875
+          ],
+          "source_phase": 10.2833333333333,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "WarpGate_cave",
+          "phase": 10.2833333333333,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            453.759399414062,
+            94.9876403808594,
+            382.482116699219,
+            530.0234375
+          ],
+          "source_phase": 10.2833333333333,
+          "source_visible": true,
+          "visible": true
+        }
+      ],
+      "paused": false,
+      "reduce_motion": false,
+      "review_ready": true,
+      "scope": "forest",
+      "sequence": 65,
+      "source_hidden": true,
+      "source_layer": 0
+    },
+    "cave_return": {
+      "entries": [
+        {
+          "motion": 1,
+          "name": "CaveReturnPortal",
+          "phase": 0.575166666666666,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            453.759185791016,
+            94.9886932373047,
+            382.483062744141,
+            530.023071289062
+          ],
+          "source_phase": 0.575166666666666,
+          "source_visible": true,
+          "visible": true
+        }
+      ],
+      "paused": false,
+      "reduce_motion": false,
+      "review_ready": true,
+      "scope": "cave",
+      "sequence": 75,
+      "source_hidden": true,
+      "source_layer": 0
+    },
+    "returned": {
+      "entries": [
+        {
+          "motion": 1,
+          "name": "@Node2D@835",
+          "phase": 13.0666666666667,
+          "role": "fountain",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            711.809753417969,
+            263.55126953125,
+            454.296325683594,
+            457.995300292969
+          ],
+          "source_phase": 13.0666666666667,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "GuardianPortal",
+          "phase": 13.0666666666667,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            -3424.03198242188,
+            -1930.16235351562,
+            382.48291015625,
+            530.023315429688
+          ],
+          "source_phase": 13.0666666666667,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "WarpGate_town",
+          "phase": 13.0666666666667,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            159.80078125,
+            -37.5608406066895,
+            382.482360839844,
+            530.023559570312
+          ],
+          "source_phase": 13.0666666666667,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "WarpGate_tree",
+          "phase": 13.0666666666667,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            -2183.486328125,
+            -2134.79638671875,
+            382.482666015625,
+            530.023559570312
+          ],
+          "source_phase": 13.0666666666667,
+          "source_visible": true,
+          "visible": true
+        },
+        {
+          "motion": 1,
+          "name": "WarpGate_cave",
+          "phase": 13.0666666666667,
+          "role": "portal",
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "screen_bounds": [
+            -3132.810546875,
+            3416.23754882812,
+            382.482177734375,
+            530.0234375
+          ],
+          "source_phase": 13.0666666666667,
+          "source_visible": true,
+          "visible": true
+        }
+      ],
+      "paused": false,
+      "reduce_motion": false,
+      "review_ready": true,
+      "scope": "forest",
+      "sequence": 85,
+      "source_hidden": true,
+      "source_layer": 0
+    }
+  },
+  "errors": [
+    "WARNING: `NaN` (\"Not a Number\") found in argument passed to JSON.stringify(). `NaN` cannot be represented in JSON, so the value has been replaced with `null`. This warning will not be printed for any later NaN occurrences.",
+    "   at: _stringify (core/io/json.cpp:86)"
+  ],
+  "diagnosis": {
+    "origin": "temporary review fixture assigned Vector2.INF from gate_approach immediately after cave leave, before native forest floors were physics-flushed",
+    "observed_fields": [
+      "production_probe.actor_position[0]=inf",
+      "production_probe.actor_position[2]=nan"
+    ],
+    "production_behavior": "Exploration._move_to already rejects non-finite arrivals; production portal approach has zero browser errors",
+    "fixture_fix": "await two physics frames after cave leave; reject non-finite fixture landings before assigning player.position",
+    "cpu_replay_before": "failed with exact non-finite field labels, /tmp/sjrpg-props-cpu-trace.log",
+    "cpu_replay_after": "same full actual fixture/production-probe sequence PASS, 1 case/0 failures/zero errors, /tmp/sjrpg-props-cpu-trace-fixed.log",
+    "gpu_rerun_after_fixture_fix": "not run; GPU slot handed back to root; production default browser frame already passed cleanly"
+  }
+}

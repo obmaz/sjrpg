@@ -23,6 +23,8 @@ func _town_affordances_hidden(game: Node, preview: Ortho3DPreview) -> bool:
 		if (entry["root"] as Node3D).is_visible_in_tree():
 			return false
 	for portal: IsoSprite in game.village.portal_sprites.values():
+		if preview._town_props.owns(portal):
+			return false
 		var entry: Dictionary = preview._affordances._art.get(portal.get_instance_id(), {})
 		if not entry.is_empty() and (entry["node"] as MeshInstance3D).is_visible_in_tree():
 			return false
@@ -70,15 +72,17 @@ func run() -> void:
 	var ray := -preview.sunlight.global_transform.basis.z
 	var projected_ray := Iso.project(Vector2(ray.x, ray.z)).normalized()
 	check("native shadow direction matches the existing canopy sun", projected_ray.dot(Vector2(0.72, 0.48).normalized()) > 0.99999)
-	var meshes := preview.stage.find_children("*", "MeshInstance3D", true, false)
 	var native_geometry: int = preview._static_batch["boxes"]
 	var installed := DisplayServer.get_name() != "headless"
 	var batch_error := Ortho3DStaticBatch.corner_error(preview._static_batch, installed)
-	check("static batching preserves all eight corners (CPU plan in Dummy, installed transforms with GPU)", batch_error < 0.0001 and int(preview._static_batch["groups"]) < native_geometry)
-	for instance: MeshInstance3D in meshes:
-		if instance.mesh is BoxMesh or instance.mesh is CylinderMesh or instance.mesh is PrismMesh:
-			native_geometry += 1
-	check("building and wall geometry is volumetric rather than facade cards", native_geometry > 40)
+	check("eligible static box batching preserves all eight corners (houses already merge their surfaces)", batch_error < 0.0001 and (native_geometry == 0 or int(preview._static_batch["groups"]) < native_geometry))
+	var house_triangles := 0
+	var houses_have_volume := preview._houses.size() == 4
+	for house: Dictionary in preview._houses.values():
+		var bounds: AABB = house["bounds"]
+		house_triangles += int(house["triangles"])
+		houses_have_volume = houses_have_volume and bounds.size.x > 3.0 and bounds.size.z > 2.5 and bounds.size.y > 4.0
+	check("all four major houses use volumetric meshes rather than facade cards", houses_have_volume and house_triangles >= 24000 and preview._fortification.report["triangles"] > 1000)
 	for low in [false, true]:
 		Prefs.set_low_resolution(low)
 		await _frames(4)
@@ -147,7 +151,10 @@ func run() -> void:
 	get_tree().paused = false
 	preview._process(1.0)
 	check("native contact light expires even without another rendering frame", not preview.contact_light.visible)
-	check("native preview preserves live town portals chests and resident headers", preview._affordances._art.size() >= game.village.portal_sprites.size() + game.chests.size() and preview._affordances._headers.size() == game.village.npc_nodes.size())
+	var live_portals := true
+	for source in game.village.portal_sprites.values():
+		live_portals = live_portals and preview._town_props.owns(source) and not preview._affordances._art.has(source.get_instance_id())
+	check("native preview preserves live town portals chests and resident headers", live_portals and preview._affordances._art.size() >= game.chests.size() and preview._affordances._headers.size() == game.village.npc_nodes.size())
 	var town_residents := ["상인", "대장장이", "탈것 상인", "촌장", "보급원 미라"]
 	for label: String in town_residents:
 		check("town resident has both original source and native body/header: " + label, game.village.npc_nodes.has(label))

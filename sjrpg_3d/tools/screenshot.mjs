@@ -398,6 +398,23 @@ if (scene === 'pc_controls') {
     await page.screenshot({path: out.replace(/\.png$/, '-panel.png')});
     console.log('PC actual-event captures: left attack, right move, WASD, 1–4, modal right-click');
 }
+if (args.rotate === '1') {
+    for (const [label, size] of [
+        ['rotated', {width: vp.height, height: vp.width}],
+        ['returned', {width: vp.width, height: vp.height}],
+    ]) {
+        const ticks = await page.evaluate(() => window.__sjrpg3dProbe.physics_ticks);
+        await page.setViewportSize(size);
+        await page.waitForFunction(({landscape, ticks}) => {
+            const p = window.__sjrpg3dProbe;
+            return p?.native_active && p.physics_ticks > ticks &&
+                (p.native_width > p.native_height) === landscape;
+        }, {landscape: size.width > size.height, ticks}, {timeout: 15000});
+        await page.waitForTimeout(1200);
+        await page.screenshot({path: out.replace(/\.png$/, `-${label}.png`)});
+    }
+    console.log('Live native adventure rotation and return passed');
+}
 const errors = logs.filter((l) => /error/i.test(l));
 console.log(`저장: ${out}${errors.length ? `\n콘솔 오류 ${errors.length}건:\n${errors.slice(0, 5).join('\n')}` : ''}`);
 await browser.close();

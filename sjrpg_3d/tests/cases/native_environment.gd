@@ -9,6 +9,8 @@ func run() -> void:
 	await _frames(3)
 	var preview: Ortho3DPreview = game.ortho_preview
 	var environment: Ortho3DEnvironment = preview._world_environment
+	check("source forest stays hidden before any resize redraw", not game.field_root.visible and not game.world.is_visible_in_tree())
+	check("ancestor hiding preserves native actor source flags", game.player.visible)
 	check("native forest includes all four authored landmarks", int(environment.report["landmarks"]) == 4)
 	check("outer trees and props are individual spatial geometry sharing atlases", int(environment.report["forest_sprites"]) >= 260 and int(environment.report["forest_groups"]) < 20)
 	var point: Vector2 = game.village.bridge.position
@@ -26,6 +28,7 @@ func run() -> void:
 	var entered: bool = game.dungeon.enter()
 	check("existing cave gameplay entry remains available", entered)
 	if entered:
+		check("source cave stays hidden before its first draw", not game.dungeon._root.visible and not game.world.is_visible_in_tree() and game.player.visible)
 		preview._sync_scope()
 		preview._affordances.sync()
 		environment.sync(0.0, true)
@@ -40,6 +43,7 @@ func run() -> void:
 		var batch: Dictionary = environment.cave.get_meta("static_batch")
 		check("cave walls share a bounded spatial batch", int(batch["groups"]) <= 2 and int(batch["boxes"]) > 10)
 		game.dungeon.leave("")
+		check("cave return never shows source canvas even transiently", not game.field_root.visible)
 		preview._sync_scope()
 		environment.sync(0.0, true)
 		check("cave return restores the native forest only", environment.forest.visible and not environment.cave.visible and game.field_root.visibility_layer == 0 and preview._native_visible)

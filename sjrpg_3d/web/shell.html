@@ -194,8 +194,8 @@
         const engine = new Engine(GODOT_CONFIG);
         window.__sjrpgStorageMounts = GODOT_CONFIG.persistentPaths || ['/userfs'];
         window.__sjrpgNavigateEdition = (edition, prepared = false) => {
-          if (!['', '2d', '3d'].includes(edition) || destination) return false;
-          destination = new URL('../' + (edition ? edition + '/' : ''), location.href).href;
+          if (edition !== '' || destination) return false;
+          destination = new URL('../', location.href).href;
           if (!prepared) engine.requestQuit();
           return true;
         };

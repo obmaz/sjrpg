@@ -65,7 +65,7 @@ func run() -> void:
 		await _frames(2)
 		var in_arch := Geometry2D.is_point_in_polygon(player.position, v.gate_passages[gate])
 		check("gate %d passage is open" % gate, player.position.distance_to(centre) < 20.0, str(player.position))
-		check("gate %d passage preserves ground depth and local visibility" % gate, in_arch and player.z_index == 0 and not WorldOcclusion._active.is_empty())
+		check("gate %d passage preserves native actor visibility and height" % gate, in_arch and game.ortho_preview.actor.is_visible_in_tree() and absf(game.spatial_world.actor_foot(player).y - game.spatial_world.height_at(player.position)) < 0.05)
 		await _walk(player, to, 300)
 		await _frames(2)
 		check("gate %d can be crossed" % gate, player.position.distance_to(to) < 20.0, str(player.position))

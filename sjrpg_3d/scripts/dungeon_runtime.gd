@@ -55,6 +55,7 @@ func enter() -> bool:
 	_forest_corpses = game.corpses
 	_forest_shapes = game.map_shapes
 	_root = Node2D.new()
+	_root.visible = false
 	game.scene_root.add_child(_root)
 	var world := Node2D.new()
 	world.y_sort_enabled = true

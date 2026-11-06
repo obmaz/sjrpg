@@ -21,15 +21,11 @@ Godot 4.7.2의 Polygon2D UV 갱신 경로가 WebGL에서 index buffer를 잘못�
 | 테스트 | `tests/run_all.gd`, `tests/test_case.gd`, `tests/cases/*.gd` | 헤드리스 케이스 러너 |
 | 도구 | `tools/*.sh`, `tools/screenshot.mjs`, `tools/extract/` | 검증·빌드·캡처·데이터 추출 |
 
-## 직교 3D 비교
+## 2D 프로젝트의 범위
 
-`3d.html` 전용 진입과 `?preview3d=1&at=chapel_reference`는 `Ortho3DPreview`를 생성합니다. 기본 게임의 렌더러는 바꾸지 않고 별도 공간 뷰포트에서 입체 마을·CC0 골격 마법사·방향광·짧은 명중광을 표시합니다. 기존 2D 시뮬레이션과 HUD를 유지하며, 카메라 투영과 절약 화질·일시정지 설정을 동기화합니다. `ortho_3d_preview`는 실제 투영·공격 진행·카드 반동·명중광과 그림자 거리를 검사합니다. `node tools/screenshot.mjs --scene preview3d --device phone|phone-landscape`로 실제 화면을 확인합니다. `LaunchMode`가 전용 경로를 인식하며 상단 모드 표시로 실제 3D·2D 영역을 구분합니다. `Prefs.town_3d`와 설정의 두 선택 버튼은 같은 위치·진행·카메라를 유지해 렌더러만 전환합니다.
+이 프로젝트는 항상 기존 Canvas2D 렌더러를 사용합니다. 이전 마을3D 비교 표시기·설정 전환·네이티브 자산은 제거했으며, 과거 `preview3d` 쿼리와 `town_3d` 기기 설정은 렌더러를 바꾸지 않습니다. 실제3D 모험·자산 제작은 별도 [3D 프로젝트](../../sjrpg_3d/README.md)와 [3D 제작 기준](../../docs/3d-asset-guide.md)을 따릅니다. 웹 설정에서는 현재2D 표시와 저장 후 루트 버전 선택 화면으로 돌아가는 버튼만 제공합니다. 네이티브 실행에서는 현재 버전만 안내합니다.
 
-웹 export는 `tools/stamp_web.py`로 게임 PCK의 콘텐츠 해시를 파일명에 넣고 `GODOT_CONFIG.mainPack`·파일 크기를 함께 갱신합니다. 전용 `3d.html`도 같은 패키지를 사용하므로 이전 배포의 동일 URL 캐시를 재사용하지 않습니다.
-
-`Ortho3DTrees`는 기존 나무의 실제 투영 크기와 발치를 보존하며 공유 GLB 두 개를 MultiMesh로 배치합니다. `Ortho3DFortification`은 벽 바닥·성문 날개벽 끝점·통로를 같은 석재로 연결하고, 문짝 힌지만 실제 `TownGateRuntime.progress`로 갱신합니다. 움직이는 메시에는 `exclude_static_batch`를 적용합니다. `prepare_materials.py`의 생성형 표면 패킹과 실제 지붕 UV 검사는 `ortho_3d_materials`, 나무/성벽 기하 검사는 해당 전용 케이스에서 수행합니다. 제작·재현·한계는 [비교 장면 문서](orthographic-3d-comparison.md)를 따릅니다.
-
-`?atmosphere=trial`은 `ForestAtmosphere`의 생성형 햇살 원화를 실제 숲 개구부 두 곳에만 표시하는 별도 실험입니다. 기본값은 꺼짐이며 입체 광원·법선·그림자를 대신하지 않습니다. `forest_atmosphere`는 범위·수명·설정 분리를 검사합니다.
+이전 비교의 원화/출처 이력은 [보존 문서](orthographic-3d-comparison.md)에 남아 있으며2D 런타임 기능을 뜻하지 않습니다.
 
 ## 로딩과 수호자 선택
 

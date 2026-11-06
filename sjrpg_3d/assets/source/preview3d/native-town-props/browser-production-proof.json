@@ -1,0 +1,74 @@
+{
+  "query": "at=portal&preview3d=1",
+  "qa_fixture_active": false,
+  "native": {
+    "actor_mode": "skeletal_mage",
+    "actor_position": [
+      -4.0272798538208,
+      -0.00000149011611938477,
+      -0.433432877063751
+    ],
+    "actor_scale": [
+      1,
+      1,
+      1
+    ],
+    "animation": {
+      "active_clip": "idle",
+      "bones": {
+        "Head": [
+          -0.0874125212430954,
+          0.0959026589989662,
+          -0.00532936071977019,
+          0.991530895233154
+        ],
+        "calf_r": [
+          0.201669573783875,
+          0.350654661655426,
+          -0.0633402913808823,
+          0.912336945533752
+        ],
+        "thigh_l": [
+          0.946996808052063,
+          0.118332266807556,
+          -0.017005430534482,
+          0.298170149326324
+        ]
+      },
+      "held": false,
+      "moving": false,
+      "pose_updates": 16,
+      "run_distance": 0,
+      "sample_time": 1.96573333333333
+    },
+    "azimuth": 45,
+    "batch_corner_error_m": 0,
+    "elevation": 35.2643931382155,
+    "gate_progress": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "level_up_fx": 0,
+    "native_active": true,
+    "native_height": 1290,
+    "native_trees": 8,
+    "native_width": 720,
+    "physics_bodies": 3,
+    "physics_ticks": 126,
+    "projection": "orthographic",
+    "quality": "high",
+    "ready": true,
+    "scope": "forest",
+    "shadow_draw_calls": 0,
+    "shadow_primitives": 27870,
+    "simulation": "3d",
+    "skeletal_actor": true,
+    "spatial_draw_calls": 86,
+    "spatial_primitives": 42643,
+    "static_boxes": 96,
+    "static_groups": 3
+  },
+  "errors": []
+}

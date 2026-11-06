@@ -1,5 +1,5 @@
 extends TestCase
-## Real XP grants must celebrate around the native hero as well as on the screen.
+## Real2D XP grants retain their generated around-body art, banner and source clock.
 
 
 func _sources(game: Node) -> Array:
@@ -8,94 +8,59 @@ func _sources(game: Node) -> Array:
 
 
 func run() -> void:
-	var old_mode := Prefs.town_3d
 	var old_reduce := Prefs.reduce_motion
-	Prefs.town_3d = false
 	Prefs.reduce_motion = false
 	var game := await make_game("mage")
 	game.set_process(false)
 	game.player.set_process(false)
 	game.encounters.set_process(false)
 	game.quest_runtime.set_process(false)
-	game.set_town_3d(true)
-	var preview: Ortho3DPreview = game.ortho_preview
-	preview.set_process(false)
-	var celebration: Ortho3DLevelUp = preview._level_up_fx
 	game.grant_xp(0)
-	preview._process(0.0)
-	check("zero XP cannot create a native level-up celebration", celebration._entries.is_empty() and _sources(game).is_empty())
+	check("zero XP cannot create a level-up celebration", _sources(game).is_empty())
 	game.grant_xp(GameState.xp_to_next())
 	var source: RewardFx = _sources(game).back()
 	source.set_process(false)
-	preview._process(0.0)
-	var entry: Dictionary = celebration._entries[source.get_instance_id()]
-	var root: Node3D = entry["root"]
-	var ring: MeshInstance3D = entry["ring"]
-	var sparks: Array = entry["sparks"]
-	var generated_cards := sparks.size() == Ortho3DLevelUp.SPARK_COUNT
-	for spark: MeshInstance3D in sparks:
-		var ink := spark.material_override as ShaderMaterial
-		generated_cards = generated_cards and spark.mesh is QuadMesh and spark.get_parent() == root and ink.get_shader_parameter("atlas_texture") == Ortho3DLevelUp.ATLAS and spark.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	check("real level-up creates a foot ring and existing-art gold particles", GameState.level == 2 and celebration._entries.size() == 1 and ring.mesh is TorusMesh and ring.position.y > 0.0 and generated_cards)
+	var ink := source.material as CanvasItemMaterial
+	check("real2D level-up creates the existing generated around-body art", GameState.level == 2 and source._large and source._cell == 1 and source._diameter == 196.0 and source.get_parent() == game.world and ink != null and ink.blend_mode == CanvasItemMaterial.BLEND_MODE_ADD)
 	var banner: LevelUpBanner = game.hud._level_up
-	check("around-body celebration preserves the existing nonblocking LEVEL UP banner", banner.active and banner.level == GameState.level and LevelUpBanner.TITLE == "LEVEL UP" and banner.mouse_filter == Control.MOUSE_FILTER_IGNORE and not game.hud._toast.text.contains("레벨 업"))
+	check("celebration preserves the existing nonblocking LEVEL UP banner", banner.active and banner.level == GameState.level and LevelUpBanner.TITLE == "LEVEL UP" and banner.mouse_filter == Control.MOUSE_FILTER_IGNORE and not game.hud._toast.text.contains("레벨 업"))
+	var anchor := source._anchor
 	game.player.position += Vector2(60, 25)
 	source._process(0.05)
-	preview._process(0.0)
-	check("celebration follows the actual moving hero's foot anchor", root.position.is_equal_approx(Ortho3DPreview.ground_position(game.player.position)))
-	var spark: MeshInstance3D = sparks[0]
-	var low := spark.position.y
+	check("generated celebration follows the actual moving hero and its foot halo", source.owner_node == game.player and source.position == game.player.position + anchor and source.position - source._anchor == game.player.position)
+	var first_age := source.age
 	source._process(0.20)
-	preview._process(0.0)
-	check("gold particles ascend using only the source effect age", spark.position.y > low and ring.scale.x > 0.86)
-	var source_pose := spark.position
-	var source_age := source.age
-	preview._process(5.0)
-	check("native frame time cannot advance a frozen source celebration", source.age == source_age and spark.position == source_pose and celebration._entries.size() == 1)
+	check("generated glint lifetime advances only with its source effect", source.age > first_age and source.age < source.life)
 	var paused_age := source.age
-	var paused_position := spark.position
-	var paused_scale := ring.scale
+	var paused_position := source.position
 	source.set_process(true)
-	preview.set_process(true)
 	get_tree().paused = true
-	await _frames(2)
-	check("pause freezes the source and all native celebration motion", source.age == paused_age and spark.position == paused_position and ring.scale == paused_scale)
+	await _frames(3)
+	check("pause freezes the actual around-body source clock and anchor", source.age == paused_age and source.position == paused_position)
 	get_tree().paused = false
 	source.set_process(false)
-	preview.set_process(false)
 	Prefs.reduce_motion = true
-	preview._process(0.0)
-	var still_position := spark.position
-	var still_ring := ring.scale
 	source._process(0.20)
-	preview._process(0.0)
-	var ring_ink := ring.material_override as StandardMaterial3D
-	check("reduced motion keeps a restrained stationary ring and glints", spark.position == still_position and ring.scale == still_ring and ring_ink.albedo_color.a <= 0.35 * 0.65)
+	check("reduced motion retains fixed generated art around the hero", source.position == paused_position and source.owner_node == game.player and source._large and source.age > paused_age)
 	source._process(2.0)
-	preview._process(0.0)
-	check("native celebration expires with its source without an extra clock", source.is_queued_for_deletion() and celebration._entries.is_empty() and root.is_queued_for_deletion())
+	check("around-body art expires with its source effect", source.is_queued_for_deletion() and _sources(game).is_empty())
 	Prefs.reduce_motion = false
 	game.grant_xp(GameState.xp_to_next())
 	source = _sources(game).back()
 	source.set_process(false)
 	source._process(5.0)
-	preview._process(0.0)
-	check("slow first source update still presents the real native level-up", not source.is_queued_for_deletion() and source.age <= source.life * 0.101 and celebration._entries.size() == 1)
+	check("a slow first update still presents the real2D celebration", not source.is_queued_for_deletion() and source.age <= source.life * 0.101)
 	source._process(5.0)
-	preview._process(0.0)
-	check("slow-frame level-up eventually expires", celebration._entries.is_empty())
+	check("slow-frame celebration eventually expires", source.is_queued_for_deletion() and _sources(game).is_empty())
 	for index in 4:
 		game.grant_xp(GameState.xp_to_next())
+	check("consecutive real level-ups retain their individual2D sources within the shared cosmetic budget", _sources(game).size() == 4 and game.cosmetic_effects.size() <= 64)
 	for effect: Effect in _sources(game):
 		effect.set_process(false)
-	preview._process(0.0)
-	check("consecutive real level-ups retain a fixed native mesh budget", celebration._entries.size() == Ortho3DLevelUp.MAX_ACTIVE and game.cosmetic_effects.size() <= 64)
-	for effect: Effect in _sources(game):
 		effect._process(2.0)
 		effect._process(2.0)
-	preview._process(0.0)
-	check("all bounded celebrations clear when their source effects end", celebration._entries.is_empty())
+	check("all generated celebrations clear when their source effects end", _sources(game).is_empty())
+	check("level-up never creates a native3D subtree in the2D adventure", game.find_children("*", "Node3D", true, false).is_empty())
 	Prefs.reduce_motion = old_reduce
 	game.queue_free()
 	await _frames(2)
-	Prefs.town_3d = old_mode

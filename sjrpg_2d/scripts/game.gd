@@ -18,8 +18,6 @@ var world: Node2D
 var forest_details: Array[IsoSprite] = []
 var forest_lighting: ForestLighting
 var forest_atmosphere: ForestAtmosphere
-var ortho_preview: Ortho3DPreview
-var town_3d_enabled := false
 var _forest_layer := 1
 var _fx_review_focus := Vector2.ZERO
 var player: Player
@@ -47,6 +45,8 @@ var _rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
+	# This edition never creates or renders a native3D world.
+	get_viewport().disable_3d = true
 	_rng.seed = 7
 	# Allocate the optional economy render target; full quality keeps drawing directly into the main viewport.
 	_view_container = SubViewportContainer.new()
@@ -142,14 +142,12 @@ func _ready() -> void:
 	encounters = EncounterRuntime.new().setup(self)
 	add_child(encounters)
 	_read_debug_params()
-	Prefs.town_renderer_changed.connect(set_town_3d)
-	if Prefs.town_3d:
-		_enable_ortho_preview.call_deferred()
 	_update_zoom()
 	get_viewport().size_changed.connect(_update_zoom)
 	for i in 12:
 		_spawn_enemy(true)
 	toast("미니맵에서 의뢰 위치를 확인하세요 · 마을의 미라가 기다립니다")
+	_publish_2d_probe()
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.__sjrpgAdventureReady = true")
 
@@ -186,6 +184,7 @@ func _update_render_quality() -> void:
 		get_viewport().canvas_transform = Transform2D.IDENTITY
 	camera.make_current()
 	_update_zoom()
+	_publish_2d_probe.call_deferred()
 	camera.reset_smoothing()
 
 
@@ -244,8 +243,11 @@ func _read_debug_params() -> void:
 	var query = JavaScriptBridge.eval("window.location.search", true)
 	if typeof(query) != TYPE_STRING:
 		return
-	var native_preview := LaunchMode.web_preview_3d()
-	var has_viewpoint := false
+	_apply_debug_query(String(query))
+
+
+## Only2D review parameters are supported; obsolete renderer queries are ignored.
+func _apply_debug_query(query: String) -> void:
 	for part in String(query).trim_prefix("?").split("&"):
 		var kv := part.split("=")
 		if kv.size() == 2 and kv[0] == "zoom":
@@ -290,7 +292,6 @@ func _read_debug_params() -> void:
 			for c in chests:
 				c.take_damage(1.0, null)
 		elif kv.size() == 2 and kv[0] == "at":
-			has_viewpoint = true
 			match kv[1]:
 				"npc_nw", "npc_ne", "npc_sw", "npc_se":
 					var key := kv[1].trim_prefix("npc_")
@@ -344,12 +345,6 @@ func _read_debug_params() -> void:
 					player.position = village.point(Vector2(0.94, 0.90)) + Vector2(0, 150)
 			camera.position = player.position
 			camera.reset_smoothing()
-	if native_preview:
-		if not has_viewpoint:
-			_place_at_chapel_reference()
-			camera.position = player.position
-			camera.reset_smoothing()
-		_enable_ortho_preview.call_deferred()
 
 
 func _place_at_chapel_reference() -> void:
@@ -362,24 +357,6 @@ func _place_at_chapel_reference() -> void:
 			break
 
 
-## Explicit comparison only; the default renderer and saved progression stay unchanged.
-func _enable_ortho_preview() -> void:
-	town_3d_enabled = true
-	if is_instance_valid(ortho_preview):
-		ortho_preview.set_enabled(true)
-		return
-	ortho_preview = Ortho3DPreview.new().setup(self)
-	add_child(ortho_preview)
-
-
-func set_town_3d(value: bool) -> void:
-	town_3d_enabled = value
-	if value:
-		_enable_ortho_preview()
-	elif is_instance_valid(ortho_preview):
-		ortho_preview.set_enabled(false)
-
-
 ## Layer culling preserves cached Polygon2D buffers. Godot4.7.2 Compatibility
 ## redraws those through an invalid index-buffer update after hide/show.
 func set_forest_rendered(value: bool) -> void:
@@ -390,6 +367,19 @@ func set_forest_rendered(value: bool) -> void:
 			_forest_layer = field_root.visibility_layer
 		field_root.visibility_layer = 0
 	_sync_forest_daylight()
+	_publish_2d_probe.call_deferred()
+
+
+func _edition_probe() -> Dictionary:
+	return {"renderer": "2d", "native_groups": find_children("*", "Node3D", true, false).size(),
+		"world_is_canvas": world is Node2D, "root_3d_disabled": get_viewport().disable_3d,
+		"world_3d_disabled": scene_view.disable_3d, "quality": "low" if Prefs.low_resolution else "high",
+		"realm": "cave" if dungeon.active else "forest"}
+
+
+func _publish_2d_probe() -> void:
+	if OS.has_feature("web") and is_instance_valid(world):
+		JavaScriptBridge.eval("window.__sjrpg2dProbe = " + JSON.stringify(_edition_probe()))
 
 
 func _sync_forest_daylight() -> void:

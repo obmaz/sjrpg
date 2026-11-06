@@ -27,7 +27,7 @@ func run() -> void:
 	check("paused panels also pause the fountain", animation.phase == phase)
 	game.hud.close_panel()
 	WorldOcclusion.update(fountain.global_position - Vector2(0, 30), false)
-	check("hero visibility composes with water animation", WorldOcclusion._active.has(fountain) and fountain.material == original_material)
+	check("native hero stays visible while the animated source canvas remains hidden", game.ortho_preview.actor.is_visible_in_tree() and not fountain.is_visible_in_tree() and fountain.material == original_material)
 	WorldOcclusion.update(Vector2(100000, 100000), false)
 	check("leaving the occluder preserves its animated material", fountain.material == original_material)
 	Prefs.reduce_motion = true

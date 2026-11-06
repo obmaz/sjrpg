@@ -62,6 +62,7 @@ var _contact_fresh := false
 var _actor_meshes: Array[MeshInstance3D] = []
 var _actor_flash: ShaderMaterial
 var _native_visible := true
+var _town_props: NativeTownProps3D
 var _affordances: Ortho3DAffordances
 var _was_paused := false
 var _static_batch := {}
@@ -74,6 +75,7 @@ var _hero_motion: Ortho3DHeroMotion
 var _level_up_fx: Ortho3DLevelUp
 var _trees: Node3D
 var _fortification: Ortho3DFortification
+var _houses := {}
 var _forest_stage: Node3D
 var _world_environment: Ortho3DEnvironment
 var _scope_is_cave := false
@@ -144,6 +146,8 @@ func _ready() -> void:
 	_mode_badge.add_child(_mode_label)
 	_setup_light()
 	_setup_materials()
+	_town_props = NativeTownProps3D.new().setup(self, _materials)
+	_town_props.sync()
 	var permanent := stage.get_children()
 	_build_ground()
 	_build_village()
@@ -271,11 +275,9 @@ func _setup_materials() -> void:
 	_materials["paving"] = _material("res://assets/art/forest/paving.webp")
 	_materials["iron"] = _material("", Color("292b29"))
 	_materials["glass"] = _material("", Color("182b36"))
-	_materials["glass"].emission_enabled = true
-	_materials["glass"].emission = Color(0.13, 0.19, 0.23)
-	_materials["water"] = _material("", Color("174a4d"))
-	_materials["water"].roughness = 0.25
-	_materials["water"].metallic = 0.3
+	# Residential panes catch the shared light; they are not a blue emissive sign.
+	# Chapel stained glass uses its separate existing material in Ortho3DChapel.
+	_materials["glass"].roughness = 0.46
 
 
 func _mesh(mesh: Mesh, material: Material, position: Vector3, parent: Node3D = null) -> MeshInstance3D:
@@ -350,7 +352,6 @@ func _build_village() -> void:
 	for key: String in game.village.buildings:
 		_build_house(key)
 	_fortification = Ortho3DFortification.build(self)
-	_build_fountain()
 	_build_residents()
 
 
@@ -361,104 +362,13 @@ func _build_house(key: String) -> void:
 	var depth := maxf(3.0, bounds.size.y)
 	var chapel := key == "chapel"
 	var height := 3.5 if chapel else 2.9
-	var rise := 2.4 if chapel else 1.8
 	var root := Node3D.new()
 	stage.add_child(root)
 	root.position = Vector3(center.x, 0, center.y)
 	if chapel:
 		Ortho3DChapel.build(self, root, width, depth, height)
 		return
-	_box(Vector3(0, 0.14, 0), Vector3(width + 0.35, 0.28, depth + 0.35), _materials["stone"], root)
-	_box(Vector3(0, height * 0.5 + 0.28, 0), Vector3(width, height, depth), _materials["stone"], root)
-	var gable := PrismMesh.new()
-	gable.size = Vector3(width, rise, depth)
-	_mesh(gable, _materials["stone"], Vector3(0, height + 0.28 + rise * 0.5, 0), root)
-	var half := width * 0.5 + 0.25
-	var slope := atan2(rise, half)
-	for side in [-1.0, 1.0]:
-		var roof_size := Vector2(sqrt(half * half + rise * rise), depth + 0.6)
-		var roof := roof_mesh(roof_size)
-		var material := (_materials["slate"] as StandardMaterial3D).duplicate() as StandardMaterial3D
-		material.uv1_scale = Vector3(roof_size.y / 2.6, roof_size.x / 2.6, 1)
-		var plane := _mesh(roof, material, Vector3(side * half * 0.5, height + 0.32 + rise * 0.5, 0), root)
-		plane.rotation.z = -side * slope
-		_box(Vector3(side * half, height + 0.28, 0), Vector3(0.16, 0.2, depth + 0.68), _materials["wood"], root)
-		for z in [-1.0, 1.0]:
-			var beam := _box(Vector3(side * half * 0.5, height + 0.32 + rise * 0.5, z * (depth * 0.5 + 0.25)), Vector3(roof_size.x + 0.08, 0.16, 0.16), _materials["wood"], root)
-			beam.rotation.z = -side * slope
-	_box(Vector3(0, height + 0.35 + rise, 0), Vector3(0.18, 0.16, depth + 0.65), _materials["wood"], root)
-	# Native framed doors/windows cast and receive the real light; there is no facade billboard.
-	var front := depth * 0.5 + 0.02
-	_box(Vector3(0, 1.38, front + 0.025), Vector3(1.15, 2.2, 0.10), _materials["door"], root)
-	for x in [-0.67, 0.67]:
-		_box(Vector3(x, 1.42, front + 0.1), Vector3(0.18, 2.35, 0.24), _materials["stone"] if chapel else _materials["wood"], root)
-	_box(Vector3(0, 2.63, front + 0.1), Vector3(1.5, 0.18, 0.24), _materials["stone"] if chapel else _materials["wood"], root)
-	for x in [-1.0, 1.0]:
-		var at := Vector3(x * width * 0.31, 1.9, front + 0.10)
-		_window(root, at, chapel)
-	# A visible side window makes lighting across both axes assessable.
-	var side_window := Node3D.new()
-	root.add_child(side_window)
-	side_window.position = Vector3(width * 0.5 + 0.04, 1.85, 0)
-	side_window.rotation.y = PI * 0.5
-	_window(side_window, Vector3.ZERO, chapel)
-	for x in [-1.0, 1.0]:
-		for z in [-1.0, 1.0]:
-			_box(Vector3(x * (width * 0.5 - 0.08), height * 0.5 + 0.28, z * (depth * 0.5 - 0.08)), Vector3(0.20, height + 0.08, 0.20), _materials["stone"] if chapel else _materials["wood"], root)
-	if chapel:
-		var tower := Vector3(-width * 0.27, 0, -depth * 0.23)
-		_box(tower + Vector3(0, 3.9, 0), Vector3(1.7, 7.8, 1.7), _materials["stone"], root)
-		var spire := CylinderMesh.new()
-		spire.top_radius = 0.0
-		spire.bottom_radius = 1.35
-		spire.height = 2.5
-		spire.radial_segments = 4
-		var tip := _mesh(spire, _materials["slate"], tower + Vector3(0, 9.05, 0), root)
-		tip.rotation.y = PI * 0.25
-	else:
-		_box(Vector3(width * 0.27, height + 1.4, -depth * 0.18), Vector3(0.75, 2.2, 0.75), _materials["stone"], root)
-
-
-func _window(parent: Node3D, at: Vector3, pointed: bool) -> void:
-	var shape := PackedVector2Array([Vector2(-0.48, -0.75), Vector2(0.48, -0.75), Vector2(0.48, 0.45), Vector2(0, 0.95), Vector2(-0.48, 0.45)]) if pointed else PackedVector2Array([Vector2(-0.48, -0.65), Vector2(0.48, -0.65), Vector2(0.48, 0.65), Vector2(-0.48, 0.65)])
-	_polygon(shape, at, 0.16, _materials["stone"] if pointed else _materials["wood"], parent)
-	var inside := PackedVector2Array()
-	for point in shape:
-		inside.append(point * 0.78)
-	_polygon(inside, at + Vector3(0, 0, 0.10), 0.025, _materials["glass"], parent)
-	_box(at + Vector3(0, -0.05, 0.13), Vector3(0.045, 1.3, 0.03), _materials["stone"] if pointed else _materials["wood"], parent)
-	_box(at + Vector3(0, -0.18, 0.13), Vector3(0.8, 0.045, 0.03), _materials["stone"] if pointed else _materials["wood"], parent)
-
-
-func _polygon(points: PackedVector2Array, at: Vector3, thickness: float, material: Material, parent: Node3D) -> void:
-	var polygon := CSGPolygon3D.new()
-	polygon.polygon = points
-	polygon.depth = thickness
-	polygon.material = material
-	parent.add_child(polygon)
-	polygon.position = at
-
-
-func _build_fountain() -> void:
-	var center := ground_position(game.village.fountain.position)
-	var basin := CylinderMesh.new()
-	basin.top_radius = 1.5
-	basin.bottom_radius = 1.6
-	basin.height = 0.35
-	basin.radial_segments = 16
-	_mesh(basin, _materials["stone"], center + Vector3(0, 0.175, 0))
-	var water := CylinderMesh.new()
-	water.top_radius = 1.32
-	water.bottom_radius = 1.32
-	water.height = 0.04
-	water.radial_segments = 24
-	_mesh(water, _materials["water"], center + Vector3(0, 0.36, 0))
-	var pillar := CylinderMesh.new()
-	pillar.top_radius = 0.22
-	pillar.bottom_radius = 0.36
-	pillar.height = 1.7
-	_mesh(pillar, _materials["stone"], center + Vector3(0, 1.0, 0))
-
+	_houses[key] = NativeHouse3D.build(self, root, key, width, depth, height)
 
 func _build_residents() -> void:
 	# Residents stay their reviewed 2D art for this small comparison; the hero is skeletal3D.
@@ -541,6 +451,7 @@ func _process(delta: float) -> void:
 	_sync_cards()
 	_fortification.sync()
 	_level_up_fx.sync()
+	_town_props.sync()
 	_affordances.sync()
 	_world_environment.sync(0.0 if frozen else delta, frozen)
 	if not frozen:
@@ -613,6 +524,7 @@ func _publish_probe() -> void:
 		"physics_ticks": physics.physics_ticks if physics != null else 0,
 		"level_up_fx": _level_up_fx._entries.size() if _level_up_fx != null else 0,
 		"native_trees": _trees.get_meta("native_tree_report")["source_count"] if _trees != null else 0,
+		"native_houses": _houses.values().map(func(house: Dictionary): return {"key": house["key"], "triangles": house["triangles"], "surfaces": house["surfaces"]}),
 		"gate_progress": _fortification.gates.map(func(gate: Dictionary): return gate["progress"]) if _fortification != null else [],
 		"actor_scale": [actor.scale.x, actor.scale.y, actor.scale.z],
 		"actor_position": [actor.position.x, actor.position.y, actor.position.z],

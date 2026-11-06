@@ -92,20 +92,22 @@ try {
     await page.locator('#retry').click();
     await page.locator('#progress').waitFor({ state: 'visible' });
     assert.equal(await page.locator('#failure').isVisible(), false);
-    for (const [path, native] of [['/3d.html', true], ['/?preview3d=1', true], ['/?preview3d=0', false]]) {
+    for (const path of ['/3d.html', '/?preview3d=1', '/?preview3d=0']) {
       await page.goto('https://loader.test' + path);
-      assert.equal(await page.evaluate(() => window.__sjrpgLaunch3D), native);
+      assert.equal(await page.evaluate(() => typeof window.__sjrpgLaunch3D), 'undefined');
       await page.evaluate(() => { window.finish(); window.__sjrpgEntry.show(() => window.__sjrpgEntry.hide()); });
       await page.locator('#entry-start').waitFor({state: 'visible'});
-      assert.equal(await page.locator('#entry-start').textContent(), native ? '3D 비교 시작' : '모험 시작');
+      assert.equal(await page.locator('#entry-start').textContent(), '모험 시작');
     }
     const beforeQuit = page.url();
     assert.equal(await page.evaluate(() => window.__sjrpgNavigateEdition('invalid')), false);
-    assert.equal(await page.evaluate(() => window.__sjrpgNavigateEdition('2d')), true);
+    assert.equal(await page.evaluate(() => window.__sjrpgNavigateEdition('2d')), false);
+    assert.equal(await page.evaluate(() => window.__sjrpgNavigateEdition('3d')), false);
+    assert.equal(await page.evaluate(() => window.__sjrpgNavigateEdition('')), true);
     assert.equal(await page.evaluate(() => window.quitRequested), true);
     assert.equal(page.url(), beforeQuit, 'navigation waits for filesystem shutdown');
     await page.evaluate(() => window.finishQuit());
-    await page.waitForURL('https://loader.test/2d/');
+    await page.waitForURL('https://loader.test/');
     await page.close();
     checks += 1;
   }

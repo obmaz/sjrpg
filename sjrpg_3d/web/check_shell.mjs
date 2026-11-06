@@ -101,11 +101,13 @@ try {
     }
     const beforeQuit = page.url();
     assert.equal(await page.evaluate(() => window.__sjrpgNavigateEdition('invalid')), false);
-    assert.equal(await page.evaluate(() => window.__sjrpgNavigateEdition('2d')), true);
+    assert.equal(await page.evaluate(() => window.__sjrpgNavigateEdition('2d')), false);
+    assert.equal(await page.evaluate(() => window.__sjrpgNavigateEdition('3d')), false);
+    assert.equal(await page.evaluate(() => window.__sjrpgNavigateEdition('')), true);
     assert.equal(await page.evaluate(() => window.quitRequested), true);
     assert.equal(page.url(), beforeQuit, 'navigation waits for filesystem shutdown');
     await page.evaluate(() => window.finishQuit());
-    await page.waitForURL('https://loader.test/2d/');
+    await page.waitForURL('https://loader.test/');
     await page.close();
     checks += 1;
   }

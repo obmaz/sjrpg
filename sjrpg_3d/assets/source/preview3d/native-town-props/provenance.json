@@ -1,0 +1,262 @@
+{
+  "status": "exported/imported; focused tests and production browser approach pass; temporary transition diagnostic isolated/fixed; cave-wall occlusion documented",
+  "guide_read": "docs/3d-asset-guide.md",
+  "references": [
+    {
+      "path": "docs/3d-asset-guide.md",
+      "sha256": "0cc4b438bfa4be43597ef7eca92fb13cfc146d54b5b3b65298f427d21fa53d4c"
+    },
+    {
+      "path": "sjrpg_3d/assets/source/style/approved-game-reference.jpg",
+      "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+    },
+    {
+      "path": "sjrpg_3d/assets/art/village/remake-pool.webp",
+      "sha256": "736d492ff9797a1a6850ce1f4526216d663bcca72c1ab97e32656d9b7ef7e100"
+    },
+    {
+      "path": "sjrpg_3d/assets/art/village/remake-portal.webp",
+      "sha256": "27ed6f2de2f404ae021105bcb99860f40cca222cebbdc04f1f2e2fa80b702381"
+    },
+    {
+      "path": "sjrpg_3d/assets/art/preview3d/limestone.webp",
+      "sha256": "8e71b8336aa7a8f6a1ec3ee272eda58296d52b7f5677a207aabf0cec7142c9e5"
+    },
+    {
+      "path": "sjrpg_3d/assets/art/preview3d/timber.webp",
+      "sha256": "4cac472a9fb54db9e89bdaf1577db846bd49f936e759dca7b10101175f7dcb1c"
+    },
+    {
+      "path": "sjrpg_3d/assets/data/village.json",
+      "sha256": "830c6b0125c090318b26482c151e789b12bf887164cd970246e2a0a093c88f72"
+    },
+    {
+      "path": "sjrpg_3d/assets/data/art_warps.json",
+      "sha256": "3e60399bc14bd12370e50a683e8566013faf8f1ace2eea558a1eeeb549c2e73d"
+    }
+  ],
+  "generation": {
+    "images_generated": false,
+    "tool": "reproducible explicit volumetric mesh authoring; Blender 4.3.2 glTF export",
+    "actual_tool_image_attachments": [],
+    "reference_use": "existing user/family images inspected; no image-generation tool called",
+    "licence": "project-authored procedural geometry; existing project shared material provenance retained"
+  },
+  "transform": {
+    "units": "metres",
+    "up": "+Y",
+    "forward": "+Z",
+    "ground_y": 0,
+    "runtime_scale": [
+      1,
+      1,
+      1
+    ]
+  },
+  "collision": {
+    "owner": "existing SpatialWorld3D and Village source footprint",
+    "new_colliders": false
+  },
+  "validation": {
+    "geometry": "seven pure authoring-buffer and actual-GLB checks passed via python3 tools/preview3d/test_native_town_props.py",
+    "Godot": "4.7.2 import and native_town_props,ortho_3d_preview: RESULT cases=2 failed=0",
+    "browser": {
+      "production": "actual Chromium phone714x1280 at=portal&preview3d=1: zero errors, no QA fixture or camera override",
+      "fixture": "all owned fluid phases advanced; pause held all clocks; reduced phase/motion zero; forest/cave/forest ownership correct",
+      "strict_fixture_console": {
+        "historical_warning": "one JSON NaN warning from fixture-invalid actor landing, not prop geometry/shaders",
+        "diagnosis": {
+          "origin": "temporary review fixture assigned Vector2.INF from gate_approach immediately after cave leave, before native forest floors were physics-flushed",
+          "observed_fields": [
+            "production_probe.actor_position[0]=inf",
+            "production_probe.actor_position[2]=nan"
+          ],
+          "production_behavior": "Exploration._move_to already rejects non-finite arrivals; production portal approach has zero browser errors",
+          "fixture_fix": "await two physics frames after cave leave; reject non-finite fixture landings before assigning player.position",
+          "cpu_replay_before": "failed with exact non-finite field labels, /tmp/sjrpg-props-cpu-trace.log",
+          "cpu_replay_after": "same full actual fixture/production-probe sequence PASS, 1 case/0 failures/zero errors, /tmp/sjrpg-props-cpu-trace-fixed.log",
+          "gpu_rerun_after_fixture_fix": "not run; GPU slot handed back to root; production default browser frame already passed cleanly"
+        }
+      },
+      "known_visual_gap": "existing tall cave-wall cutout partially occludes native cave-return gate; native cave wall replacement queued separately",
+      "captures": [
+        {
+          "file": "/tmp/sjrpg-props-review/production-portal-approach.png",
+          "sha256": "ddf188c897488345a8846ac6af4c40f239ca759db1927af6f7da01c66b872a7c"
+        },
+        {
+          "file": "/tmp/sjrpg-props-review/fountain-portrait.png",
+          "sha256": "d63eabcc925eb58d4196d11726a28949fb0b78fe961ecdda0a2c812445614079"
+        },
+        {
+          "file": "/tmp/sjrpg-props-review/town-portrait.png",
+          "sha256": "5e06eefed501293a80480e10adad2cf5654210c1def88b8f0c34b3671f29c1ff"
+        },
+        {
+          "file": "/tmp/sjrpg-props-review/plaza-landscape.png",
+          "sha256": "40ca26fa3b432151021790d9bae29191e17c5b39a4c4b3167c61dd88fcc4e30b"
+        },
+        {
+          "file": "/tmp/sjrpg-props-review/guardian.png",
+          "sha256": "97886a28f771d19f21f410b09744d4c4b2bcb91030ced35ee4752c9612dfb552"
+        },
+        {
+          "file": "/tmp/sjrpg-props-review/cave_entry.png",
+          "sha256": "20ea9fa9b47ae89ccae841da722d20ce1366e88b8c9c3e42de1ddc2b55429bfd"
+        },
+        {
+          "file": "/tmp/sjrpg-props-review/cave_return.png",
+          "sha256": "20a6254e410c8128547409a2f97e31ac41e0807be37de58198b7ae05793b1257"
+        }
+      ],
+      "camera_note": "production approach uses normal camera; other captures explicitly asset-centred review overviews; shared model scale remains1"
+    },
+    "performance": "authored primitive/surface counts measured; no actual-device frame-time claim",
+    "known_tool_note": "Blender optional Draco library unavailable; uncompressed GLB export succeeded and no Draco extension is used",
+    "cpu_transition_diagnostic": "recursive finite inspection before JSON of actual temporary-fixture and production-probe fields: original replay failed; physics-flushed guarded fixture replay passed"
+  },
+  "generator": {
+    "path": "tools/preview3d/build_native_town_props.py",
+    "sha256": "80f07c7d2ad4d66a04fb7114ed643738f60327a1e22d6cbac8639ddf1b9ab524",
+    "coordinate_conversion": "author native(X,Y,Z) -> Blender(X,-Z,Y) -> GLB Y-up",
+    "command": "blender -b -t 2 --python tools/preview3d/build_native_town_props.py -- --export",
+    "version": "Blender 4.3.2",
+    "export_image_format": "NONE"
+  },
+  "runtime": {
+    "models": [
+      {
+        "path": "assets/art/preview3d/native-fountain.glb",
+        "sha256": "7375cb11df09d6e950c57ad8aa01ecb06bf99494a35138b32a234936f6af25f2",
+        "bytes": 270920,
+        "triangles": 3612,
+        "surfaces": 3,
+        "bounds_m": {
+          "min": [
+            -1.2999999523162842,
+            0,
+            -1.2999999523162842
+          ],
+          "max": [
+            1.2999999523162842,
+            1.940000057220459,
+            1.2999999523162842
+          ],
+          "size": [
+            2.5999999046325684,
+            1.940000057220459,
+            2.5999999046325684
+          ]
+        },
+        "embedded_images": 0,
+        "embedded_textures": 0,
+        "material_slots": [
+          "limestone",
+          "water",
+          "bronze"
+        ],
+        "node_transforms": "identity; all native metre coordinates baked in mesh",
+        "exporter": "Khronos glTF Blender I/O v4.3.47",
+        "automatic_import_lod": false
+      },
+      {
+        "path": "assets/art/preview3d/native-warp-gate.glb",
+        "sha256": "b9a594a0d1a417e3a3d8183aac3c5d13dd12468d4a073baafe5605caae51d2a6",
+        "bytes": 145760,
+        "triangles": 1883,
+        "surfaces": 4,
+        "bounds_m": {
+          "min": [
+            -1.5490000247955322,
+            0,
+            -0.6399999856948853
+          ],
+          "max": [
+            1.5490000247955322,
+            3.065000057220459,
+            0.6399999856948853
+          ],
+          "size": [
+            3.0980000495910645,
+            3.065000057220459,
+            1.2799999713897705
+          ]
+        },
+        "embedded_images": 0,
+        "embedded_textures": 0,
+        "material_slots": [
+          "limestone",
+          "timber",
+          "bronze",
+          "portal"
+        ],
+        "node_transforms": "identity; all native metre coordinates baked in mesh",
+        "exporter": "Khronos glTF Blender I/O v4.3.47",
+        "automatic_import_lod": false
+      }
+    ],
+    "material_images_embedded": false,
+    "maximum_surfaces_with_particles": {
+      "fountain": 3,
+      "portal": 5
+    },
+    "portal_effect_geometry": "12 instances of one shared SphereMesh, radius0.012m/height0.024m, six radial segments and three rings"
+  },
+  "materials": {
+    "limestone": {
+      "shared": "assets/art/preview3d/limestone.webp",
+      "tile_m": 2.56,
+      "courses": 8,
+      "texels_per_m": 244.921875,
+      "maps": [
+        "base color only; shared imported resource"
+      ]
+    },
+    "timber": {
+      "shared": "assets/art/preview3d/timber.webp",
+      "maps": [
+        "base color only"
+      ]
+    },
+    "bronze": {
+      "source": "physical scalar material, no generated image",
+      "metallic": 0.45,
+      "roughness": 0.72
+    },
+    "water_portal": {
+      "source": "explicit spatial shaders",
+      "clock": "original PlazaWater.phase; no TIME or independent timer"
+    },
+    "motes": {
+      "mesh": "shared small effect sphere",
+      "instances_per_gate": 12,
+      "draws_per_gate": 1
+    }
+  },
+  "files": [
+    {
+      "path": "scripts/native_town_props_3d.gd",
+      "sha256": "d8a5d4794c64c2b8768738794aba2558969ab127c1834537443483ad8fb28dd2"
+    },
+    {
+      "path": "scripts/native_prop_portal.gdshader",
+      "sha256": "573ad78d3556bcca1e9b79e61fe2bb4a03890f9b87d9a4994c2bd8c44d02d41a"
+    },
+    {
+      "path": "scripts/native_prop_water.gdshader",
+      "sha256": "2ef9011eb22fc05c977c930901dc60d32a1b016406f8b2c657d37c14e86d6715"
+    },
+    {
+      "path": "tools/preview3d/build_native_town_props.py",
+      "sha256": "80f07c7d2ad4d66a04fb7114ed643738f60327a1e22d6cbac8639ddf1b9ab524"
+    },
+    {
+      "path": "tools/preview3d/test_native_town_props.py",
+      "sha256": "d35e0c94b3391719a29e1802a024716f416526935ff7f2d7a8876a43522ab0ea"
+    },
+    {
+      "path": "tests/cases/native_town_props.gd",
+      "sha256": "d1a676879cb4e0f70d40104e7d9153069e4ff233911b19810c7b23a662a9f76c"
+    }
+  ]
+}

@@ -73,10 +73,9 @@ def stamp(directory):
     if source != target:
         source.replace(target)
     temporary.replace(index)
-    # One stamped entry document, with pathname-based mode selection in the shell.
-    route = directory / ".3d-stamped.html"
-    route.write_bytes(index.read_bytes())
-    route.replace(directory / "3d.html")
+    # The independent2D build has no alternate3D entry document.
+    for obsolete in ("3d.html", ".3d-stamped.html"):
+        (directory / obsolete).unlink(missing_ok=True)
     # Delete only this helper's obsolete generated pack names, never other packs.
     for candidate in directory.iterdir():
         if candidate.is_file() and PACK_NAME.fullmatch(candidate.name) and candidate.name != name:

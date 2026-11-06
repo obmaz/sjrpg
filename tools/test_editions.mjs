@@ -64,16 +64,16 @@ try{
   page.on('console',message=>{if(message.type()==='error'){logs.push(message.text());console.log('Browser error:',message.text());}});
   const record=await enter(page,'3d','mage');await persisted(page,record);
   await page.keyboard.press('Escape');
-  await page.waitForFunction(()=>window.__sjrpgVersionButtons?.Version2D?.point,null,{timeout:15000});
+  await page.waitForFunction(()=>window.__sjrpgVersionButtons?.VersionSelect?.point,null,{timeout:15000});
   await page.waitForTimeout(1200);
   console.log('Version controls',await page.evaluate(()=>window.__sjrpgVersionButtons));
   await page.evaluate(()=>{const original=window.__sjrpgNavigateEdition;window.__sjrpgNavigateEdition=(...args)=>{window.__sjrpgLastVersionRequest=args;return original(...args);};});
-  const p=await page.evaluate(()=>window.__sjrpgVersionButtons.Version2D.point),v=page.viewportSize();
+  const p=await page.evaluate(()=>window.__sjrpgVersionButtons.VersionSelect.point),v=page.viewportSize();
   await page.mouse.click(v.width*p[0],v.height*p[1]);
-  try{await page.waitForURL(url=>url.pathname.endsWith('/2d/'),{timeout:30000,waitUntil:'commit'});}
+  try{await page.waitForURL(url=>url.pathname===new URL(base).pathname,{timeout:30000,waitUntil:'commit'});}
   catch(error){console.log('Navigation stalled',page.url(),await page.evaluate(()=>({title:document.title,request:window.__sjrpgLastVersionRequest,result:window.__sjrpgNativeExitResult,errors:window.__sjrpgTestErrors,buttons:window.__sjrpgVersionButtons,probe:window.__sjrpg3dProbe})));throw error;}
   checkConsole();
-  console.log('Real native edition shutdown, durable save and settings navigation passed');
+  console.log('Real native edition shutdown, durable save and return to root chooser passed');
  }else{
  const two=await context.newPage();let three=await context.newPage();
  for(const page of [two,three]){
@@ -103,13 +103,13 @@ try{
  three.on('console',message=>{if(message.type()==='error')logs.push(message.text());});
  const reloadedThree=await enter(three,'3d','mage',true);await persisted(three,reloadedThree);
  await three.keyboard.press('Escape');
- await three.waitForFunction(()=>window.__sjrpgVersionButtons?.Version2D?.point,null,{timeout:15000});
+ await three.waitForFunction(()=>window.__sjrpgVersionButtons?.VersionSelect?.point,null,{timeout:15000});
  await three.waitForTimeout(1200);
- const point=await three.evaluate(()=>window.__sjrpgVersionButtons.Version2D.point);
+ const point=await three.evaluate(()=>window.__sjrpgVersionButtons.VersionSelect.point);
  const view=three.viewportSize();await three.mouse.click(view.width*point[0],view.height*point[1]);
- await three.waitForURL(url=>url.pathname.endsWith('/2d/'),{timeout:30000,waitUntil:'commit'});
+ await three.waitForURL(url=>url.pathname===new URL(base).pathname,{timeout:30000,waitUntil:'commit'});
  checkConsole();
- console.log('Real editions passed: simultaneous isolated IndexedDB saves, both reload+continue, actual settings3D→2D after graceful filesystem sync');
+ console.log('Real editions passed: simultaneous isolated IndexedDB saves, both reload+continue, actual3D settings return to root chooser after graceful filesystem sync');
  console.log(JSON.stringify({two:first,three:second}));
 }
 }finally{await browser.close();}

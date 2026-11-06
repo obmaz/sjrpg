@@ -42,7 +42,16 @@ jobs:
                   node sjrpg_2d/web/check_shell.mjs
                   node sjrpg_3d/web/check_shell.mjs
                   tools/check.sh --export
+                  tools/check_native_web.sh
                   touch build/web/.nojekyll
+
+            - uses: actions/upload-artifact@v6
+              if: always()
+              with:
+                  name: native3d-browser-review
+                  path: build/review
+                  if-no-files-found: ignore
+                  retention-days: 7
 
             - uses: actions/upload-pages-artifact@v5.0.0
               with:

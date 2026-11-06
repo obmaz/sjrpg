@@ -21,8 +21,6 @@ var forest_atmosphere: ForestAtmosphere
 var ortho_preview: Ortho3DPreview
 var spatial_world: SpatialWorld3D
 var native_ready := false
-var town_3d_enabled := false
-var _forest_layer := 1
 var _fx_review_focus := Vector2.ZERO
 var player: Player
 var _impact_offset := Vector2.ZERO
@@ -66,6 +64,9 @@ func _ready() -> void:
 	scene_root = self
 	scene_view = get_viewport()
 	field_root = Node2D.new()
+	# This project's canvas is a rules/art adapter only. Hide before its first
+	# draw so Compatibility never uploads cached Polygon2D buffers on rotation.
+	field_root.visible = false
 	field_root.add_to_group("forest_daylight")
 	scene_root.add_child(field_root)
 	dungeon = DungeonRuntime.new().setup(self)
@@ -146,7 +147,6 @@ func _ready() -> void:
 	encounters = EncounterRuntime.new()
 	add_child(encounters)
 	encounters.set_process(false)
-	Prefs.town_renderer_changed.connect(set_town_3d)
 	_update_zoom()
 	get_viewport().size_changed.connect(_update_zoom)
 	_enable_ortho_preview()
@@ -255,8 +255,6 @@ func _read_debug_params() -> void:
 	var query = JavaScriptBridge.eval("window.location.search", true)
 	if typeof(query) != TYPE_STRING:
 		return
-	var native_preview := LaunchMode.web_preview_3d()
-	var has_viewpoint := false
 	for part in String(query).trim_prefix("?").split("&"):
 		var kv := part.split("=")
 		if kv.size() == 2 and kv[0] == "zoom":
@@ -301,7 +299,6 @@ func _read_debug_params() -> void:
 			for c in chests:
 				c.take_damage(1.0, null)
 		elif kv.size() == 2 and kv[0] == "at":
-			has_viewpoint = true
 			match kv[1]:
 				"npc_nw", "npc_ne", "npc_sw", "npc_se":
 					var key := kv[1].trim_prefix("npc_")
@@ -355,8 +352,9 @@ func _read_debug_params() -> void:
 					player.position = village.point(Vector2(0.94, 0.90)) + Vector2(0, 150)
 			camera.position = player.position
 			camera.reset_smoothing()
-	if native_preview:
-		_enable_ortho_preview.call_deferred()
+	# Debug zoom is parsed after initial camera setup. Apply it independent of
+	# query ordering or whether a quality setting happens to emit a resize.
+	_update_zoom()
 
 
 func _place_at_chapel_reference() -> void:
@@ -371,7 +369,6 @@ func _place_at_chapel_reference() -> void:
 
 ## Native3D owns spatial movement; this node adapts the existing rules and HUD.
 func _enable_ortho_preview() -> void:
-	town_3d_enabled = true
 	if is_instance_valid(ortho_preview):
 		ortho_preview.set_enabled(true)
 		return
@@ -384,20 +381,11 @@ func _enable_ortho_preview() -> void:
 			spatial_world.register_actor(enemy, Enemy.RADIUS, true)
 
 
-func set_town_3d(_value: bool) -> void:
-	# Kept for old settings callers. Edition switching is page navigation now.
-	_enable_ortho_preview()
-
-
-## Layer culling preserves cached Polygon2D buffers. Godot4.7.2 Compatibility
-## redraws those through an invalid index-buffer update after hide/show.
-func set_forest_rendered(value: bool) -> void:
-	if value:
-		field_root.visibility_layer = _forest_layer
-	else:
-		if field_root.visibility_layer != 0:
-			_forest_layer = field_root.visibility_layer
-		field_root.visibility_layer = 0
+## Native3D never restores source canvas rendering, including cave return.
+## Keep children's local visibility and processing for native cards and rules.
+func set_forest_rendered(_value: bool) -> void:
+	field_root.hide()
+	field_root.visibility_layer = 0
 	_sync_forest_daylight()
 
 

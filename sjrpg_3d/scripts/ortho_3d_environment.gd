@@ -138,7 +138,7 @@ func _floor(polygon: PackedVector2Array, texture: Texture2D, parent: Node3D, hei
 
 func _build_forest() -> void:
 	var buckets := {}
-	var native := {}
+	var native: Dictionary = preview._town_props.source_ids()
 	for object in preview.game.village.buildings.values():
 		native[object.get_instance_id()] = true
 	for tree: IsoSprite in preview.game.village.town_trees:
@@ -276,11 +276,11 @@ func _build_cave() -> void:
 		_floor(polygon, floor_texture, cave, 0.004, Color(0.72, 0.78, 0.80), 2.6)
 	var buckets := {}
 	for node in preview.game.dungeon.art.visuals:
-		if node is IsoSprite:
+		if node is IsoSprite and not preview._town_props.owns(node):
 			_sprite(node, buckets)
 			report["cave_sprites"] = int(report["cave_sprites"]) + 1
 	for node in preview.game.world.get_children():
-		if node is IsoSprite and not preview.game.dungeon.art.visuals.has(node):
+		if node is IsoSprite and not preview._town_props.owns(node) and not preview.game.dungeon.art.visuals.has(node):
 			_sprite(node, buckets)
 	report["cave_groups"] = _flush(buckets, cave, "CaveArt_")
 	# Native solid wall volumes follow the merged playable union. Rear walls are

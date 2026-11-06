@@ -1,0 +1,74 @@
+{
+  "tool": "Blender 4.3.2",
+  "outputs": [
+    {
+      "path": "assets/art/preview3d/native-fountain.glb",
+      "sha256": "7375cb11df09d6e950c57ad8aa01ecb06bf99494a35138b32a234936f6af25f2",
+      "bytes": 270920,
+      "triangles": 3612,
+      "surfaces": 3,
+      "bounds_m": {
+        "min": [
+          -1.2999999523162842,
+          0,
+          -1.2999999523162842
+        ],
+        "max": [
+          1.2999999523162842,
+          1.940000057220459,
+          1.2999999523162842
+        ],
+        "size": [
+          2.5999999046325684,
+          1.940000057220459,
+          2.5999999046325684
+        ]
+      },
+      "embedded_images": 0,
+      "embedded_textures": 0,
+      "material_slots": [
+        "limestone",
+        "water",
+        "bronze"
+      ],
+      "node_transforms": "identity; all native metre coordinates baked in mesh",
+      "exporter": "Khronos glTF Blender I/O v4.3.47",
+      "automatic_import_lod": false
+    },
+    {
+      "path": "assets/art/preview3d/native-warp-gate.glb",
+      "sha256": "b9a594a0d1a417e3a3d8183aac3c5d13dd12468d4a073baafe5605caae51d2a6",
+      "bytes": 145760,
+      "triangles": 1883,
+      "surfaces": 4,
+      "bounds_m": {
+        "min": [
+          -1.5490000247955322,
+          0,
+          -0.6399999856948853
+        ],
+        "max": [
+          1.5490000247955322,
+          3.065000057220459,
+          0.6399999856948853
+        ],
+        "size": [
+          3.0980000495910645,
+          3.065000057220459,
+          1.2799999713897705
+        ]
+      },
+      "embedded_images": 0,
+      "embedded_textures": 0,
+      "material_slots": [
+        "limestone",
+        "timber",
+        "bronze",
+        "portal"
+      ],
+      "node_transforms": "identity; all native metre coordinates baked in mesh",
+      "exporter": "Khronos glTF Blender I/O v4.3.47",
+      "automatic_import_lod": false
+    }
+  ]
+}

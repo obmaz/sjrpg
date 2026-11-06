@@ -1,0 +1,10 @@
+python3 tools/preview3d/test_native_town_props.py
+Ran 7 tests: OK
+
+tools/check.sh --project=3d --only=native_town_props,ortho_3d_preview
+Godot 4.7.2 import: ok
+PASS native_town_props (failures 0)
+PASS ortho_3d_preview (failures 0)
+RESULT cases=2 failed=0
+
+Actual Chromium portrait/landscape appearance reviewed. Production portal approach: zero console errors, QA fixture inactive. All owned source phases advanced; pause/reduced/realm assertions passed. Strict temporary-fixture run logged one transition JSON NaN warning, traced before JSON to actor_position inf/nan: QA assigned gate_approach Vector2.INF before forest-floor physics flush after cave leave. Production travel already guards the sentinel. Exact CPU replay failed before; with two physics-frame waits and guarded fixture placement, the same full sequence passes with every fixture/production-probe field finite and zero errors. No production code fix was needed. Existing cave-wall cutout occludes part of native return gate; native cave-wall replacement queued separately. No device performance claim.

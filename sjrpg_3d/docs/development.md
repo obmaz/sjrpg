@@ -3,9 +3,7 @@
 엔진 기준은 **Godot 4.7.2 / GL Compatibility**입니다. `.godot-version`을 로컬 실행·설치 도구와 CI가 공유하며,
 `tools/setup_godot.sh`는 해당 버전의 실행 파일과 웹 템플릿을 함께 설치합니다. 다른 버전을 명시적으로 검증할 때만 `GODOT_VERSION`을 재정의합니다.
 
-강물은 고정된 `Polygon2D` 두 겹과 `river_flow`·`river_shimmer` 셰이더의 게임 시간 기반 UV 오프셋으로 흐릅니다.
-Godot 4.7.2의 Polygon2D UV 갱신 경로가 WebGL에서 index buffer를 잘못된 target으로 갱신하므로 `texture_offset`을 매 프레임 바꾸지 않습니다.
-재제작한 강 재질은 `assets/source/remake/river-materials.png`에서 패킹하며 `assets/data/river_art.json`이 영역과 해시를 보관합니다. 흐름·반복·색은 셰이더에서 유지하고 일시정지 중에는 uniform도 멈춥니다. `river_animation`과 실제 동문/다리 브라우저 화면으로 검사합니다.
+현재판은 `NativeAdventure`를 진입점으로 사용하는 독립3D 프로젝트입니다. `SpatialWorld3D`가 실제 배우 몸체·지형·성문·충돌을, `SpatialCombat3D`가 실제 높이·벽·몸체에 따른 공격 판정을 담당합니다. `Game`과 원본2D 노드는 규칙·UI·개별 원화의 어댑터입니다. 원본 Canvas 부모는 첫 프레임부터 숨기고 다시 표시하지 않습니다. 이동/전투 처리는 계속하며 개별 원화의 로컬 표시 플래그는3D 카드가 사용합니다. 그림용 `Polygon2D`를 회전 중 다시 그리는 Godot4.7.2 WebGL 버퍼 오류를 피합니다.
 
 ## 한눈에 보는 구조
 
@@ -14,22 +12,28 @@ Godot 4.7.2의 Polygon2D UV 갱신 경로가 WebGL에서 index buffer를 잘못�
 | 진입 | `scenes/main.tscn`, `scripts/main.gd` | 화면 전환(타이틀 → 직업 선택 → 모험), 가로/세로 기준 해상도 |
 | 상태 | `scripts/game_state.gd` | 영웅 진행·스킬·장비·골드·퀘스트·저장 (자동 로드) |
 | 기기 | `scripts/prefs.gd`, `scripts/sound_fx.gd` | 효과음·진동·전체화면 설정(자동 로드), 효과음 합성 |
-| 월드 | `scripts/game.gd`, `iso.gd`, `iso_sprite.gd`, `village.gd`, `landmark.gd`, `bridge.gd`, `river.gd`, `wall_piece.gd`, `chest.gd`, `plaza_water.gd`, `canopy_shade.gd`, `forest_lighting.gd` | 쿼터뷰 투영, 실측 원화 배치, 충돌, 지형 높낮이, 평지 수관 그늘·낮빛 |
+| 공간 | `native_adventure.gd`, `spatial_world_3d.gd`, `spatial_combat_3d.gd` | 실제3D 몸체·충돌·높이·공격 판정 |
+| 표시 | `ortho_3d_preview.gd`, `ortho_3d_environment.gd`와 건축·나무 패밀리 | 직교 카메라·입체 모델·광원·개별 원화 카드 |
+| 어댑터 | `game.gd`, `iso.gd`, `village.gd`, `plaza_water.gd` 등 | 기존 진행·UI 좌표·원화·기능 시계. Canvas는 표시하지 않음 |
 | 전투 | `player.gd`, `enemy.gd`, `effects.gd`, `corpse_art.gd`, `skill_defs.gd`, `gear.gd` | 입력·스킬 시전, 몬스터 AI, 투사체·구역, 장비 효과 |
 | 진행 | `quests.gd`, `quest_runtime.gd`, `encounter_runtime.gd`, `encounter_stone.gd` | 제1장 퀘스트·보스, 충전식 재소환 비석과 생존 무리 저장 |
 | UI | `hud.gd`, `touch_controls.gd`, `minimap.gd`, `panel_frame.gd`, `warp_gate_panel.gd` + 패널들 | HUD, 모바일 조작, 가방·스킬·설정·대화·일지 |
 | 테스트 | `tests/run_all.gd`, `tests/test_case.gd`, `tests/cases/*.gd` | 헤드리스 케이스 러너 |
 | 도구 | `tools/*.sh`, `tools/screenshot.mjs`, `tools/extract/` | 검증·빌드·캡처·데이터 추출 |
 
-## 직교 3D 비교
+## 네이티브 주택
 
-`3d.html` 전용 진입과 `?preview3d=1&at=chapel_reference`는 `Ortho3DPreview`를 생성합니다. 기본 게임의 렌더러는 바꾸지 않고 별도 공간 뷰포트에서 입체 마을·CC0 골격 마법사·방향광·짧은 명중광을 표시합니다. 기존 2D 시뮬레이션과 HUD를 유지하며, 카메라 투영과 절약 화질·일시정지 설정을 동기화합니다. `ortho_3d_preview`는 실제 투영·공격 진행·카드 반동·명중광과 그림자 거리를 검사합니다. `node tools/screenshot.mjs --scene preview3d --device phone|phone-landscape`로 실제 화면을 확인합니다. `LaunchMode`가 전용 경로를 인식하며 상단 모드 표시로 실제 3D·2D 영역을 구분합니다. `Prefs.town_3d`와 설정의 두 선택 버튼은 같은 위치·진행·카메라를 유지해 렌더러만 전환합니다.
+`NativeHouse3D`는 `Ortho3DPreview._build_house()`의 비예배당 네 건물을 생성합니다. 기존 기단 위치/폭/깊이와 닫힌 본체 충돌은 유지하며 공통 재질5개에 실제 기하를 합칩니다. 문/창 개구부·지붕창·모서리·미터 경계는 `native_house_family` 검사와 `assets/source/preview3d/houses/provenance.json`에서 확인합니다. 재질·예산 예외와 검수 범위는 [주택 패밀리](native-house-family.md), 전체 규격은 [3D 제작 기준](../../docs/3d-asset-guide.md)을 따릅니다.
 
-웹 export는 `tools/stamp_web.py`로 게임 PCK의 콘텐츠 해시를 파일명에 넣고 `GODOT_CONFIG.mainPack`·파일 크기를 함께 갱신합니다. 전용 `3d.html`도 같은 패키지를 사용하므로 이전 배포의 동일 URL 캐시를 재사용하지 않습니다.
+## 직교3D 표시
 
-`Ortho3DTrees`는 기존 나무의 실제 투영 크기와 발치를 보존하며 공유 GLB 두 개를 MultiMesh로 배치합니다. `Ortho3DFortification`은 벽 바닥·성문 날개벽 끝점·통로를 같은 석재로 연결하고, 문짝 힌지만 실제 `TownGateRuntime.progress`로 갱신합니다. 움직이는 메시에는 `exclude_static_batch`를 적용합니다. `prepare_materials.py`의 생성형 표면 패킹과 실제 지붕 UV 검사는 `ortho_3d_materials`, 나무/성벽 기하 검사는 해당 전용 케이스에서 수행합니다. 제작·재현·한계는 [비교 장면 문서](orthographic-3d-comparison.md)를 따릅니다.
+`Ortho3DPreview`라는 기존 이름은 공간 표시기이며 비교 모드가 아닙니다. 마을·숲·기존 동굴 모두3D 물리와 표시를 유지합니다. 설정에는 렌더러 전환이 없고 웹에서 저장 후 루트 버전 선택 화면으로 돌아가는 버튼만 있습니다. 이전 `LaunchMode`와 `Prefs.town_3d`는 제거했습니다.
 
-`?atmosphere=trial`은 `ForestAtmosphere`의 생성형 햇살 원화를 실제 숲 개구부 두 곳에만 표시하는 별도 실험입니다. 기본값은 꺼짐이며 입체 광원·법선·그림자를 대신하지 않습니다. `forest_atmosphere`는 범위·수명·설정 분리를 검사합니다.
+카메라는 직교 방위45°·고도35.264°이며 햇빛·반사광·접촉광을 실제3D 표면에 적용합니다. `ortho_3d_preview`는 실제 투영·공격 진행·카드 반동·명중광·그림자 구간을, `world_light_feel`은 실제 공간 광원·일시정지·동작 줄이기·영역 전환을 검사합니다. Canvas 조명 셰이더 검사는2D판에 남깁니다. 웹 회전 검사는 루트 `tools/check_native_web.sh`를 사용합니다.
+
+`Ortho3DTrees`는 마을 나무의 실제 투영 크기와 발치를 공유 GLB 두 개로 유지합니다. `Ortho3DFortification`은 성문·벽을 같은 석재와 접점으로 연결하고 실제 `TownGateRuntime.progress`로 문짝 힌지를 갱신합니다. 움직이는 메시는 정적 배칭에서 제외합니다. 생성형 평면 재질·원본 기록은 `assets/source/preview3d/`에 보존합니다. 옛 [비교 장면 문서](orthographic-3d-comparison.md)는 제작 이력이며 현재 구조의 근거는 [루트 개발 안내](../../docs/development.md)와 [3D 에셋 기준](../../docs/3d-asset-guide.md)입니다.
+
+웹 PCK는 콘텐츠 해시 파일명을 사용합니다. 각 앱은 자기 경로의 HTML·엔진·PCK를 열고 저장 마운트도 분리합니다. 루트의 옛 비교 북마크는3D 전용 경로로 연결되며 실행 중 표시 방식을 바꾸지 않습니다.
 
 ## 로딩과 수호자 선택
 
@@ -44,11 +48,12 @@ Godot 4.7.2의 Polygon2D UV 갱신 경로가 WebGL에서 index buffer를 잘못�
 
 ## 좌표와 단위
 
-- 지면 좌표(원본 단위)는 `Iso.project()`로 화면 평면의 월드 픽셀이 됩니다. `Iso.S`는 원본 월드를 이 포트의 화면 비율로 바꾸는 배율입니다.
-- 건물 원화는 `IsoSprite`가 실측 바닥 접점(`foot`), 지면 보정(`gvs`/`gvk`), 패킹 배율로 그립니다.
-- 지면 재료에는 외부 그림자를 굽지 않습니다. 평지의 수관 그늘은 실제 나무·접점·공유 광원 방향을 사용하는 `CanopyShade`로 별도 계산합니다.
-- 배우 이동은 `Game.move_actor()`가 반지름 기준으로 경로를 나눠 검사합니다. 프레임 지연에도 얇은 절벽을 뛰어넘지 않으며, 스폰 목적지 검증은 `resolve_movement()`로 별도 처리합니다.
-- 깊이 정렬은 `world`(y 정렬) 안의 노드 위치 y입니다. 높은 지형 윗면의 캐릭터는 `z_index = 1`로 원화 위에 그립니다.
+- 실제 지면은 미터 단위XZ, 높이는Y이며 발치·바닥·충돌은 `SpatialWorld3D`를 기준으로 합니다.
+- 기존 UI와 진행 데이터 좌표는 `Iso.project()`/`unproject()` 어댑터로 연결하며 지면65단위가1m입니다. 화면 평면과 실제 수직 높이의 배율은 [3D 기준](../../docs/3d-asset-guide.md)에 구분합니다.
+- 네이티브 모델·광원·투사체는 실제 높이를 사용합니다. 원화 카드의 기존 `z_index`로 공간 판정을 대신하지 않습니다.
+- 바닥과 경사는 가능한 한 공유 `surface_faces()` 기하를 사용합니다. 큰 프레임 이동도 실제 벽/절벽/성문을 통과하지 않는지 검사합니다.
+
+아래의 원화 추출 설명은 입체 자산이 아직 없는 개별 카드의 출처·배치 어댑터를 설명합니다.
 
 일반 나무는 `assets/source/remake/trees-v2.png`의 참나무 두 크기·전나무·버드나무를 사용합니다.
 수관 윗면·뒤쪽 가지의 가림·줄기와 뿌리 접점을 시각 검수하며, 자연형 실루엣에 건물의 직선 모서리 각도 검사를 적용하지 않습니다.
@@ -388,3 +393,5 @@ HUD는 체력·물약 수·쿨다운의 실제 변화를 감지합니다. 사운
 ## 야외 가독성
 
 `WorldLighting`의 기본 그늘광은 `(0.70,0.78,0.84)`, 직사광은 `(0.46,0.32,0.15)`이며 CPU와 GLSL에서 같은 계수를 사용합니다. 그늘을 밝히면서 마을·예배당 개구부의 최대합 `(1.16,1.10,0.99)`은 유지합니다. `ForestArt.GRASS_TINT`는 잔디에만 밝은 황록색 배율을 적용하고 포장석·흙·나뭇잎 원화는 분리합니다. Native3D 잔디도 같은 알베도 배율을 사용합니다. 동굴의 실제 점광원과 접촉광 수명/예산은 이 조정과 별개입니다.
+
+`NativeTownProps3D`는 분수와 숲·동굴의 워프문을 공유 GLB로 배치합니다. 실제 워프 바닥 다각형의 중심·방향을 사용하고 새 콜라이더를 만들지 않습니다. `PlazaWater.phase`가 물·소용돌이·최대 12개 입자의 유일한 시계이며, 환경/상호작용 렌더러는 `owns()`로 중복 카드를 제외합니다. `native_town_props`는 실제 임포트 메시·재질·정지·동작 줄이기·동굴 전환을 검사합니다. 재현 도구는 `tools/preview3d/build_native_town_props.py`, GLB/기하 검사는 `tools/preview3d/test_native_town_props.py`, 해시·재질·충돌 기록은 `assets/source/preview3d/native-town-props/provenance.json`에 있습니다.

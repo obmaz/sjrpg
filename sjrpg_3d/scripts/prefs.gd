@@ -3,7 +3,6 @@ extends Node
 ## Stored in user://settings.cfg (the browser's IndexedDB on the web).
 
 signal graphics_changed
-signal town_renderer_changed(enabled: bool)
 
 const PATH := "user://settings.cfg"
 const WORLD_ZOOMS: Array[float] = [0.5, 1.0, 1.5]
@@ -14,7 +13,6 @@ var haptics_enabled := true
 var reduce_motion := false
 var low_resolution := false
 var world_zoom := 1.0
-var town_3d := true
 var _last_pulse := 0
 
 
@@ -28,7 +26,6 @@ func _ready() -> void:
 		reduce_motion = bool(cfg.get_value("device", "reduce_motion", false))
 		low_resolution = bool(cfg.get_value("device", "low_resolution", false))
 		world_zoom = normalize_world_zoom(cfg.get_value("device", "world_zoom", 1.0))
-		town_3d = true
 
 
 func _save() -> void:
@@ -38,7 +35,6 @@ func _save() -> void:
 	cfg.set_value("device", "reduce_motion", reduce_motion)
 	cfg.set_value("device", "low_resolution", low_resolution)
 	cfg.set_value("device", "world_zoom", world_zoom)
-	cfg.set_value("device", "town_3d", town_3d)
 	cfg.save(settings_path)
 
 
@@ -60,14 +56,6 @@ func set_world_zoom(value: float) -> void:
 	world_zoom = next
 	_save()
 	graphics_changed.emit()
-
-
-func set_town_3d(value: bool) -> void:
-	if town_3d != value:
-		town_3d = value
-		_save()
-	# A direct3D launch may override the stored value for this session.
-	town_renderer_changed.emit(value)
 
 
 func set_sound(on: bool) -> void:

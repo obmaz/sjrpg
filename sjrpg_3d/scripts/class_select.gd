@@ -17,7 +17,7 @@ const DESCRIPTIONS := {
 const CREAM := Color("e8e2cf")
 const GOLD := Color("c7ae74")
 
-var selected_class := "warrior"
+var selected_class := "mage"
 var class_buttons: Dictionary = {}
 var start_button: Button
 var continue_button: Button
@@ -160,9 +160,7 @@ func _ready() -> void:
 		continue_button.disabled = false
 	elif GameState.has_save_files():
 		continue_button.text = "저장을 읽을 수 없습니다"
-	if LaunchMode.web_preview_3d():
-		selected_class = "mage"
-		subtitle.text = "3D 모험 · 수호자를 선택하세요"
+	subtitle.text = "3D 모험 · 수호자를 선택하세요"
 	resized.connect(_layout)
 	select_class(selected_class)
 	_layout()
@@ -275,9 +273,7 @@ func select_class(cls: String) -> void:
 	resource_box.queue_redraw()
 	weapon.text = "시작 무기 · " + str(Gear.def("shortsword" if cls == "warrior" else "wand")["name"])
 	class_emblem.texture = _emblem("warrior") if cls == "warrior" else _mage_emblem()
-	start_button.text = "%s로 모험 시작" % info["name"]
-	if LaunchMode.web_preview_3d():
-		start_button.text = "%s로 3D 모험 시작" % info["name"]
+	start_button.text = "%s로 3D 모험 시작" % info["name"]
 	for key in class_buttons:
 		var button: Button = class_buttons[key]
 		button.set_pressed_no_signal(key == cls)
