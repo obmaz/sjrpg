@@ -127,7 +127,11 @@ diagnosticLog.on('Log.entryAdded', ({entry}) => {
         logs.push(`error: ${entry.source}: ${entry.text}`);
     }
 });
-const quality = (args.quality ? `&quality=${args.quality}` : '') + (args.zoom ? `&zoom=${args.zoom}` : '') + (args.lighting ? `&lighting=${args.lighting}` : '');
+const launchURL = new URL(base);
+for (const [key, value] of new URLSearchParams(SCENES[scene])) launchURL.searchParams.set(key, value);
+for (const key of ['quality', 'zoom', 'lighting', 'at']) {
+    if (args[key]) launchURL.searchParams.set(key, args[key]);
+}
 let releaseDownload;
 let loadingHeader;
 let packArrived;
@@ -138,7 +142,7 @@ if (scene === 'title' && args['entry-flow'] === '1') {
         packArrived();
     });
 }
-await page.goto(`${base}?${SCENES[scene]}${quality}`);
+await page.goto(launchURL.toString());
 if (scene === 'title' && args['entry-flow'] === '1') {
     let timeout;
     try {

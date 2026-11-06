@@ -10,8 +10,8 @@
    "sha256": "02ae223f6144e6a69985de4c90bbcbb1061b75835b69fc77974ea7185ed96dd2"
   },
   {
-   "path": "assets/source/reference-fx/frost-low.png",
-   "sha256": "14487ea4929571797372c76293e7d4e72ad506f152d8ce8d1b404a9ad2f87843"
+   "path": "assets/source/reference-fx/frost-open-v2.png",
+   "sha256": "1c298ae389f30da8fba071f4483fed817f93bfdcee5bb7e523454983c0c65b71"
   }
  ],
  "reference": {
@@ -24,11 +24,11 @@
  },
  "generation": {
   "path": "tools/extract/reference_fx_generation.json",
-  "sha256": "321d09d56e61f96f7707f9ed6750f948ea46d3f3bea04e2c4bdffd4f64f20a5f"
+  "sha256": "63eeefad6546aa666a5b31227eadc3a773f816865be0f6882d857a22e1e51008"
  },
  "measure": {
   "path": "tools/extract/reference_fx_measure.json",
-  "sha256": "fc29679246198532153aa0a78f2bddfc188ac4df0a26cd70ba1a2c9fb8da275f"
+  "sha256": "383c3b1eb7c47205777df73d50ac6b9ffb74f39d5e1483870328d61698850e7a"
  },
  "atlas": {
   "path": "assets/art/effects/reference-skills.webp",
@@ -425,97 +425,97 @@
    "row": 4,
    "pivot": [
     192,
-    250
+    244
    ],
-   "paint_width": 267,
+   "paint_width": 302,
    "source_frames": [
     {
      "roi": [
-      40,
-      270,
-      463,
-      320
+      0,
+      170,
+      543,
+      390
      ],
      "contact": [
-      275,
-      456
+      274,
+      401
      ]
     },
     {
      "roi": [
-      583,
-      270,
-      463,
-      320
+      543,
+      170,
+      543,
+      390
      ],
      "contact": [
-      816,
-      456
+      817,
+      402
      ]
     },
     {
      "roi": [
-      1126,
-      270,
-      463,
-      320
+      1086,
+      170,
+      543,
+      390
      ],
      "contact": [
-      1359,
-      456
+      1360,
+      401
      ]
     },
     {
      "roi": [
-      1669,
-      270,
-      463,
-      320
+      1629,
+      170,
+      543,
+      390
      ],
      "contact": [
-      1901,
-      456
+      1904,
+      402
      ]
     }
    ],
-   "source": "assets/source/reference-fx/frost-low.png",
-   "packing_scale": 0.72,
-   "vertical_projection_scale": 1.06,
+   "source": "assets/source/reference-fx/frost-open-v2.png",
+   "packing_scale": 0.6,
+   "vertical_projection_scale": 0.9084613982600345,
    "frame_bounds": [
     [
-     71,
-     150,
-     315,
-     326
-    ],
-    [
-     54,
-     139,
-     321,
-     325
-    ],
-    [
-     47,
-     127,
-     321,
-     325
-    ],
-    [
      64,
-     138,
-     317,
-     325
+     158,
+     324,
+     308
+    ],
+    [
+     37,
+     139,
+     339,
+     313
+    ],
+    [
+     49,
+     134,
+     332,
+     309
+    ],
+    [
+     81,
+     175,
+     305,
+     314
     ]
    ],
    "frame_energy": [
-    986871.18,
-    2328361.79,
-    1081596.4,
-    478404.68
+    881019.84,
+    2764517.16,
+    1063064.14,
+    148293.72
    ],
    "override": {
     "path": "assets/art/effects/frost-low.webp",
-    "sha256": "8d9e8126084c4784206a1a43f13172bf3aefdce389ffa9dc6240c8ec1985a64b",
+    "sha256": "f9e54c89b027e8f31c111d813e0be04f92a97463690bbf7bf619a7ccb168a842",
     "cell": 384,
     "row": 0,
     "columns": 4,

@@ -15,6 +15,10 @@
   {
    "path": "assets/source/lighting/ground-materials.png",
    "sha256": "b774f93948e83c08580fe49649e5fc1d80d65e238392e8bf203b2757c47db9d7"
+  },
+  {
+   "path": "assets/source/lighting/forest-floor-soft-v2.png",
+   "sha256": "f38a46802fc08c34f3563ce3e71be704b3b8b52196cf341e802391f1f53fea88"
   }
  ],
  "camera": {
@@ -27,11 +31,11 @@
   "target_azimuth_degrees": 45,
   "target_elevation_degrees": 35.264
  },
- "review": "Ground material review uses the authoritative approved-game-reference.jpg and the supplemental town-master-scene.png, compared directly with the published chapel screenshot. Paving now uses the 883-square inner left panel of lighting/ground-materials.png: pale warm-neutral limestone, flatter squarer worn faces and restrained shallow earth/moss joints, replacing the darker rounded granular cobbles. The full unmodified generated sheet and exact prompt/input hashes are preserved in ground_light_generation.json. The right grass panel was rejected because its wiry moss texture did not improve the reference; existing short-grass/clover grass-v2.png and earthy paths remain. Each tile is opaque and authored orthographic top-down with a uniform neutral diffuse base, no baked canopy cast shadow, sun patch or isometric perspective; runtime supplies the ground camera and scene lighting. Paving rows remain more regular than the reference, so source adoption requires actual-scale scene comparison rather than claiming final mood completion. Existing flora remains unchanged: high leaf surfaces, occluded rear stems, root contacts, alpha0 surroundings and clean light/dark composites were previously reviewed; organic clumps do not receive invented rigid-edge angles.",
+ "review": "Ground material review uses the authoritative approved-game-reference.jpg. Paving retains the measured883-square left panel of lighting/ground-materials.png: pale warm-neutral limestone with flat worn faces and restrained earth/moss joints. Earth and flora retain their existing source cells and contacts. The earlier ground sheet grass and first forest-floor-soft.png candidate were rejected: respectively wiry moss and long dry diagonal soil bands. Grass now uses the full untouched forest-floor-soft-v2.png after root comparison in actual portrait and landscape scenes, not separate user approval: lusher quiet olive/moss cover with smaller disconnected earth glimpses, fewer wiry strands and lower saturation than the previous grass-v2.png carpet. Exact prompt, actual references, hashes and rejection history are in forest_floor_soft_v2_generation.json. Distinct leaf groups and broad repeating motifs remain; actual-scale chapel portrait and courtyard landscape were compared; broad repetition remains a known limitation and final reference mood is not claimed. All ground sources are opaque orthographic top-down diffuse materials without baked canopy cast shadows, sun patches or isometric perspective; runtime supplies the120-degree ground projection and owner-linked shade. Previously reviewed flora pixels and alpha remain unchanged; no rigid-edge angles are invented for natural clumps.",
  "textures": {
   "grass": {
    "path": "assets/art/forest/grass.webp",
-   "sha256": "524d7c37244a250cb1c905cd16b9b4ade65bb555dfd218dbefccf7e209a4325d",
+   "sha256": "5fa133204811b3e6603416280109f5fbdbe75da1d0dab964828b6731e71bffc7",
    "size": [
     512,
     512
@@ -170,6 +174,11 @@
    "path": "assets/source/remake/town-master-scene.png",
    "role": "supplementary environment material/mood concept supplied to generation; not a replacement for the user reference",
    "sha256": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
+  },
+  {
+   "path": "tools/extract/forest_floor_soft_v2_generation.json",
+   "role": "exact prompt, actual generation references and provisional technical-adoption history; actual scene review pending",
+   "sha256": "af9d9a473bfcaca3a0ddf0af05782c0678a01c2ab831f85dd5ae1f07f05eaa21"
   }
  ]
 }

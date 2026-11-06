@@ -2,6 +2,21 @@ extends TestCase
 ## Actual walkable geometry, not drawing Z, separates melee across raised ledges.
 
 
+class StoneContactProbe:
+	extends EncounterStone
+	var contacts := 0
+
+	func take_damage(_amount: float, _source: Node2D) -> bool:
+		contacts += 1
+		return false
+
+	func _process(_delta: float) -> void:
+		pass
+
+	func _draw() -> void:
+		pass
+
+
 func _ledge_pair(game: Node) -> PackedVector2Array:
 	for landmark: Landmark in game.village.landmarks:
 		var center := Vector2.ZERO
@@ -99,6 +114,7 @@ func run() -> void:
 	check("actual equal-height monster melee still deals damage", hero.hp < hero_before)
 	_check_stairs_and_bridge(game)
 	_check_walls_and_flat_faces(game)
+	await _check_melee_props(game, upper, lower)
 	# The cave owns a separate flat floor even where its projected coordinates overlap town art.
 	hero.position = game.dungeon.entry_point()
 	check("cave entry succeeds for elevation regression", game.dungeon.enter())
@@ -150,3 +166,98 @@ func _check_walls_and_flat_faces(game: Node) -> void:
 	check("absent cliff faces cannot invent a raised height", is_zero_approx(TerrainLevels._rise(flat_faces)))
 	var slope: Array[PackedVector2Array] = [PackedVector2Array([Vector2(0, 0), Vector2(30, 0), Vector2(50, 40), Vector2(20, 40)])]
 	check("sloped cliff walls retain measured top-to-bottom rise", is_equal_approx(TerrainLevels._rise(slope), 40.0))
+
+
+func _coin_chest(game: Node, at: Vector2) -> Chest:
+	var index := 100
+	while GameState.opened_chests.has(index) or GameState.chest_content(index) != "coins":
+		index += 1
+	var definition: Dictionary = game.village.data["sprites"]["chest"]
+	var broken: Dictionary = game.village.data["sprites"]["chest-broken"]
+	var chest := Chest.new().setup(game, index, at, definition, broken)
+	game.world.add_child(chest)
+	game.chests.append(chest)
+	return chest
+
+
+func _discard_chest(game: Node, chest: Chest) -> void:
+	game.chests.erase(chest)
+	chest.queue_free()
+
+
+func _check_melee_props(game: Node, upper: Vector2, lower: Vector2) -> void:
+	var hero: Player = game.player
+	var runtime: EncounterRuntime = game.encounters
+	var runtime_processing := runtime.is_processing()
+	runtime.set_process(false)
+	# Observe real contact dispatch without spawning an unrelated encounter pack.
+	# Stone authorization/charges/projectiles are exercised in encounter_combat.
+	var original_stones := runtime.stones
+	var stone := StoneContactProbe.new()
+	game.world.add_child(stone)
+	runtime.stones = {"west": stone}
+	for sides in [PackedVector2Array([upper, lower]), PackedVector2Array([lower, upper])]:
+		hero.position = sides[0]
+		hero.facing = (sides[1] - sides[0]).angle()
+		stone.position = sides[1]
+		stone.contacts = 0
+		var chest := _coin_chest(game, sides[1])
+		var gold := GameState.gold
+		hero._melee("cleave", SkillDefs.get_def("cleave"), 1, 1.0)
+		check("resolved weapon swing cannot loot or strike a stone across a raised ledge", not chest.dead and stone.contacts == 0 and GameState.gold == gold)
+		hero._spin("whirlwind", SkillDefs.get_def("whirlwind"), 1.0)
+		await get_tree().create_timer(0.35, false).timeout
+		check("all whirlwind contacts respect prop elevation in both directions", not chest.dead and stone.contacts == 0 and GameState.gold == gold)
+		# A non-melee area attack deliberately retains its original prop rules.
+		hero._nova("warcry", SkillDefs.get_def("warcry"), 1, 1.0)
+		check("area spell retains its existing chest and stone contacts across elevation", chest.dead and stone.contacts > 0 and GameState.gold > gold)
+		_discard_chest(game, chest)
+	hero.position = upper
+	stone.position = lower
+	stone.contacts = 0
+	var landing_chest := _coin_chest(game, lower)
+	var landing := hero._prepare("leapAttack", SkillDefs.get_def("leapAttack"), 1)
+	check("native targeted landing has a live equal-height anchor", landing.is_valid())
+	if landing.is_valid():
+		landing.call()
+		check("actual landing cannot loot or strike a lower-level stone", not landing_chest.dead and stone.contacts == 0)
+	_discard_chest(game, landing_chest)
+	# The same live chest still opens and the same stone dispatches on flat ground.
+	hero.position = game.village.spawn_point
+	stone.position = hero.position + Vector2(40, 0)
+	stone.contacts = 0
+	hero.facing = 0.0
+	var flat_chest := _coin_chest(game, stone.position)
+	hero._melee("cleave", SkillDefs.get_def("cleave"), 1, 1.0)
+	check("same-ground real weapon contact still loots and strikes stones", flat_chest.dead and stone.contacts == 1)
+	_discard_chest(game, flat_chest)
+	# A closed passage must protect props just as it protects actors.
+	var gates: TownGateRuntime = game.town_gates
+	var gate_processing := gates.is_processing()
+	var original_closed := gates.closed.duplicate()
+	gates.set_process(false)
+	gates.closed[0] = true
+	var passage: PackedVector2Array = game.village.gate_passages[0]
+	var center := Vector2.ZERO
+	for point in passage:
+		center += point
+	center /= passage.size()
+	var axis := passage[3] - passage[0]
+	var reach := axis.length() * 0.5 + 8.0
+	hero.position = center - axis.normalized() * reach
+	stone.position = center + axis.normalized() * reach
+	stone.contacts = 0
+	var gate_chest := _coin_chest(game, stone.position)
+	check("gate prop fixture lies within the native whirlwind radius", hero.position.distance_to(stone.position) <= float(SkillDefs.get_def("whirlwind")["radius"]) + 26.0)
+	hero._spin("whirlwind", SkillDefs.get_def("whirlwind"), 1.0)
+	await get_tree().create_timer(0.35, false).timeout
+	check("closed gate blocks actual whirlwind loot and stone contacts", not gate_chest.dead and stone.contacts == 0)
+	gates.closed[0] = false
+	game.break_chests_in_radius(hero.position, float(SkillDefs.get_def("whirlwind")["radius"]), hero, true)
+	check("opening the same gate restores prop melee contact", gate_chest.dead and stone.contacts == 1)
+	_discard_chest(game, gate_chest)
+	gates.closed = original_closed
+	gates.set_process(gate_processing)
+	runtime.stones = original_stones
+	stone.queue_free()
+	runtime.set_process(runtime_processing)

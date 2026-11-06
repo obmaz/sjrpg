@@ -30,6 +30,7 @@ func run() -> void:
 	check("contact light remains emissive instead of inheriting dark woodland tint", glow != null and glow.blend_mode == CanvasItemMaterial.BLEND_MODE_ADD)
 	game.player.sprite.trigger_flash(Color.WHITE)
 	check("enemy and player contact flash keep their separate silhouette shader", game.player.sprite._flash_overlay != null and (game.player.sprite._flash_overlay.material as ShaderMaterial).shader == ActorSprite.FLASH_SHADER)
+	await _check_contact_lighting(game)
 	var before := WorldLighting.color_at(game.player.global_position)
 	game.hud.open_settings()
 	WorldLighting.set_enabled(false)
@@ -78,3 +79,160 @@ func run() -> void:
 
 func _luminance(value: Color) -> float:
 	return value.r * 0.2126 + value.g * 0.7152 + value.b * 0.0722
+
+
+func _check_contact_lighting(game: Node) -> void:
+	var old_process := game.is_processing()
+	var old_motion := Prefs.reduce_motion
+	var old_settings_path := Prefs.settings_path
+	Prefs.settings_path = "user://tests/world-light-settings.cfg"
+	game.set_process(false)
+	Prefs.reduce_motion = false
+	WorldLighting.advance(1.0)
+	WorldLighting.advance(1.0)
+	await _frames(2)
+	var scene_material := WorldLighting.material()
+	var floor_material: ShaderMaterial = game.forest_lighting.materials[0]
+	var water: ShaderMaterial = game.village.fountain.material
+	var water_clock: PlazaWater
+	for child in game.village.fountain.get_children():
+		if child is PlazaWater:
+			water_clock = child
+	var water_processing := water_clock.is_processing()
+	water_clock.set_process(false)
+	var old_phase: float = water.get_shader_parameter("phase")
+	water.set_shader_parameter("phase", 0.375)
+	var gates_processing: bool = game.town_gates.is_processing()
+	game.town_gates.set_process(false)
+	var door: Node2D = game.town_gates.doors[0]
+	var door_material := door.material as ShaderMaterial
+	var old_reveal: float = door_material.get_shader_parameter("reveal")
+	door.set_progress(0.37)
+	var receivers: Array[ShaderMaterial] = [scene_material, water, door_material]
+	receivers.append_array(game.forest_lighting.materials)
+	var bases: Array[Shader] = []
+	var identities: Array[int] = []
+	var ground_values: Array[Dictionary] = []
+	var bound_masks := 0
+	for receiver in receivers:
+		bases.append(receiver.shader)
+		identities.append(receiver.get_instance_id())
+	for receiver: ShaderMaterial in game.forest_lighting.materials:
+		var values := {}
+		for uniform in [&"edge_soil", &"edge_enabled", &"edge_paving", &"edge_distance", &"edge_origin", &"edge_extent", &"edge_span", &"root_enabled", &"root_mask", &"root_origin", &"root_extent", &"root_inverse_basis", &"root_inverse_origin", &"amount", &"opening_a", &"opening_b"]:
+			values[uniform] = receiver.get_shader_parameter(uniform)
+		if values[&"edge_distance"] != null or values[&"root_mask"] != null:
+			bound_masks += 1
+		ground_values.append(values)
+	var prepared_variants := WorldLighting._contact_shaders.size()
+	check("contact variants are prepared at initialization with a bounded shader cache", prepared_variants > 0 and prepared_variants <= WorldLighting.CONTACT_SHADER_LIMIT)
+	var at: Vector2 = game.player.global_position
+	var baseline := WorldLighting.color_at(at)
+	var hp: float = game.player.hp
+	WorldLighting.pulse(at, SkillDefs.COLD)
+	await _frames(2)
+	var cold := WorldLighting.color_at(at)
+	check("confirmed contact changes local reflected light without another damage source", cold.b > baseline.b and cold.b - baseline.b > cold.r - baseline.r and game.player.hp == hp)
+	var far := at + Vector2(500, 0)
+	var far_before := WorldLighting.color_at(far)
+	WorldLighting.pulse(at, SkillDefs.COLD)
+	check("contact light has no whole-scene tint or source alpha change", WorldLighting.color_at(far).is_equal_approx(far_before) and cold.a == baseline.a)
+	var activated := true
+	for index in receivers.size():
+		activated = activated and receivers[index].get_instance_id() == identities[index] and receivers[index].shader != bases[index] and receivers[index].shader.code.contains("#define WORLD_CONTACT_LIGHTS")
+	check("contact enables compiled variants without replacing any material or creating shaders on hit", activated and WorldLighting._contact_shaders.size() == prepared_variants)
+	check("water float and gate progress survive the first shader transition", is_equal_approx(float(water.get_shader_parameter("phase")), 0.375) and is_equal_approx(float(door_material.get_shader_parameter("reveal")), 0.37))
+	check("real soil masks textures booleans and vectors survive the first transition", bound_masks > 1 and _ground_uniforms_match(game.forest_lighting.materials, ground_values))
+	# Animation/controller updates must keep working on the exact same resources
+	# while contact arithmetic is enabled, and remain after returning to idle.
+	water.set_shader_parameter("phase", 1.125)
+	door.set_progress(0.63)
+	var light: Vector4 = scene_material.get_shader_parameter("contact_light_a")
+	var tint: Vector3 = scene_material.get_shader_parameter("contact_color_a")
+	check("ground and scenery share the same bounded contact uniforms", light.w > 0.0 and light == floor_material.get_shader_parameter("contact_light_a") and tint == floor_material.get_shader_parameter("contact_color_a"))
+	var reflected := Vector3(cold.r - baseline.r, cold.g - baseline.g, cold.b - baseline.b)
+	check("CPU body tint matches shader contact strength at its actual origin", reflected.is_equal_approx(tint * light.w) and Vector2(light.x, light.y).is_equal_approx(at))
+	WorldLighting.advance(1.0)
+	check("first slow frame retains one contact-light presentation", WorldLighting._contacts.size() == 1 and WorldLighting.color_at(at).b > baseline.b)
+	var age := WorldLighting._contacts[0].age
+	for hit in 40:
+		WorldLighting.pulse(at, SkillDefs.COLD)
+	check("rapid repeated contacts neither allocate extra lights nor reset their expiry", WorldLighting._contacts.size() == 1 and WorldLighting._contacts[0].age == age)
+	get_tree().paused = true
+	WorldLighting.advance(0.5)
+	WorldLighting.pulse(at + Vector2(300, 0), SkillDefs.FIRE, true)
+	check("pause freezes existing light and rejects new contact pulses", WorldLighting._contacts.size() == 1 and WorldLighting._contacts[0].age == age)
+	Prefs.set_reduce_motion(true)
+	await _frames(2)
+	var paused_light: Vector4 = scene_material.get_shader_parameter("contact_light_a")
+	check("motion setting lowers paused GPU light without advancing its lifetime", paused_light.w > 0.0 and paused_light.w < light.w * 0.5 and WorldLighting._contacts[0].age == age)
+	Prefs.set_reduce_motion(false)
+	get_tree().paused = false
+	WorldLighting.advance(1.0)
+	await _frames(2)
+	check("unrendered contact still expires and clears terrain uniforms", WorldLighting._contacts.is_empty() and WorldLighting.color_at(at).is_equal_approx(baseline) and floor_material.get_shader_parameter("contact_light_a") == Vector4.ZERO)
+	var restored := true
+	for index in receivers.size():
+		restored = restored and receivers[index].get_instance_id() == identities[index] and receivers[index].shader == bases[index]
+	check("expiry restores the original compiled idle shaders on the same materials", restored)
+	check("animated water and gate controller values survive the return to idle", is_equal_approx(float(water.get_shader_parameter("phase")), 1.125) and is_equal_approx(float(door_material.get_shader_parameter("reveal")), 0.63))
+	check("all real terrain mask texture and boundary uniforms survive the return to idle", _ground_uniforms_match(game.forest_lighting.materials, ground_values))
+	WorldLighting.pulse(at - Vector2(25, 0), Color.WHITE, true)
+	WorldLighting.pulse(at + Vector2(25, 0), Color.WHITE, true)
+	var overlap := WorldLighting.color_at(at)
+	check("two overlapping lights keep a strict per-channel ceiling", WorldLighting._contacts.size() == WorldLighting.CONTACT_LIMIT and overlap.r - baseline.r <= 0.5501 and overlap.g - baseline.g <= 0.5501 and overlap.b - baseline.b <= 0.5501)
+	for index in 30:
+		WorldLighting.pulse(at + Vector2(index * 100, 0), SkillDefs.FIRE)
+	check("many simultaneous victims reuse only two local contact lights", WorldLighting._contacts.size() == 2)
+	WorldLighting.advance(1.0)
+	WorldLighting.advance(1.0)
+	WorldLighting.pulse(at, SkillDefs.FIRE, true)
+	var full := WorldLighting.color_at(at)
+	Prefs.reduce_motion = true
+	var reduced := WorldLighting.color_at(at)
+	check("reduced motion immediately lowers local flash energy", reduced.r > baseline.r and reduced.r - baseline.r < (full.r - baseline.r) * 0.5)
+	Prefs.reduce_motion = false
+	_check_contact_registry_cap()
+	game.field_root.hide()
+	check("cave transition clears pulses instead of carrying light into the cave", WorldLighting._contacts.is_empty() and WorldLighting.color_at(at) == Color.WHITE)
+	check("cave transition restores the noncontact shader instead of retaining expensive active arithmetic", scene_material.shader == bases[0] and water.shader == bases[1] and door_material.shader == bases[2])
+	WorldLighting.pulse(at, SkillDefs.FIRE, true)
+	check("hidden forest rejects new pulses", WorldLighting._contacts.is_empty())
+	game.field_root.show()
+	await _frames(2)
+	check("returning forest has no stale contact glow", WorldLighting.color_at(at).is_equal_approx(baseline))
+	Prefs.set_reduce_motion(old_motion)
+	Prefs.settings_path = old_settings_path
+	water.set_shader_parameter("phase", old_phase)
+	water_clock.set_process(water_processing)
+	door.set_progress(old_reveal)
+	game.town_gates.set_process(gates_processing)
+	game.set_process(old_process)
+
+
+func _ground_uniforms_match(materials: Array[ShaderMaterial], expected: Array[Dictionary]) -> bool:
+	for index in materials.size():
+		for uniform in expected[index]:
+			if materials[index].get_shader_parameter(uniform) != expected[index][uniform]:
+				return false
+	return true
+
+
+func _check_contact_registry_cap() -> void:
+	WorldLighting._prune()
+	var original := WorldLighting._contact_materials.size()
+	var receivers: Array[ShaderMaterial] = []
+	for index in WorldLighting.CONTACT_MATERIAL_LIMIT - original:
+		var ink := ShaderMaterial.new()
+		ink.shader = WorldLighting.SHADER
+		receivers.append(ink)
+		WorldLighting.register_contact_material(ink)
+		ink = null
+	var overflow := ShaderMaterial.new()
+	overflow.shader = WorldLighting.SHADER
+	WorldLighting.register_contact_material(overflow)
+	check("contact receiver registry is bounded without retaining a permanent overflow glow", WorldLighting._contact_materials.size() == WorldLighting.CONTACT_MATERIAL_LIMIT and overflow.get_shader_parameter("contact_light_a") == Vector4.ZERO and overflow.get_shader_parameter("contact_light_b") == Vector4.ZERO)
+	overflow = null
+	receivers.clear()
+	WorldLighting._prune()
+	check("discarded contact receivers are not retained by the registry", WorldLighting._contact_materials.size() == original)

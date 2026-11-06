@@ -11,7 +11,7 @@ func run() -> void:
 	WorldOcclusion.update(game.village.spawn_point, true)
 	check("raised player does not punch holes in lower ground art", WorldOcclusion._active.is_empty())
 	for index in 100:
-		game.float_text(game.player.position, str(index), Color.WHITE)
+		game.float_text(game.player.position + Vector2(index * 400, 0), str(index), Color.WHITE)
 	check("cosmetic effects have a bounded budget", game.cosmetic_effects.size() == 64)
 	var projectile := Effect.new()
 	projectile.kind = "proj"

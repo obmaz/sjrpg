@@ -97,6 +97,7 @@ func pulse(kind: String, preview := false) -> void:
 func set_reduce_motion(on: bool) -> void:
 	reduce_motion = on
 	_save()
+	WorldLighting.refresh_contacts()
 
 
 func set_low_resolution(on: bool) -> void:

@@ -94,7 +94,7 @@ func _ready() -> void:
 	forest_lighting = ForestLighting.new()
 	field_root.add_child(forest_lighting)
 	forest_lighting.setup(ground_layer, village)
-	WorldLighting.configure(forest_lighting.openings, field_root)
+	WorldLighting.configure(forest_lighting.openings, field_root, forest_lighting.materials)
 	map_shapes = MapGeometry.build(village)
 	var chest_def: Dictionary = village.data["sprites"]["chest"]
 	var broken_def: Dictionary = village.data["sprites"]["chest-broken"]
@@ -521,6 +521,11 @@ func _warp_preview() -> void:
 
 ## Explicit visual-review query only: real equipped-skill casts against a stationary target.
 func _combat_preview() -> void:
+	encounters.set_process(false)
+	_spawn_timer = 10000.0
+	for enemy in enemies:
+		enemy.queue_free()
+	enemies.clear()
 	await get_tree().create_timer(2.0).timeout
 	var target := Enemy.new()
 	target.setup(self, "goblin", 1)
@@ -733,6 +738,7 @@ func _update_impact_camera(delta: float) -> void:
 func _process(delta: float) -> void:
 	# Forest-root visibility disables/restores lighting in the same cave-transition frame.
 	WorldLighting.set_enabled(forest_lighting.enabled)
+	WorldLighting.advance(delta)
 	_update_impact_camera(delta)
 	camera.position = _camera_focus()
 	if dungeon.active:
@@ -1021,23 +1027,23 @@ func enemies_in_arc(center: Vector2, angle: float, radius: float, half_angle: fl
 	return out
 
 
-## 상자는 공격 기술의 범위·투사체에 맞으면 부서집니다.
-func break_chests_in_radius(center: Vector2, radius: float, source: Node2D = null) -> void:
+## Physical swings share actor elevation/wall reach; ranged spells retain their area rules.
+func break_chests_in_radius(center: Vector2, radius: float, source: Node2D = null, melee := false) -> void:
 	if encounters != null:
-		encounters.in_radius(center, radius, source)
+		encounters.in_radius(center, radius, source, INF, PI, melee)
 	for c in chests:
-		if not c.dead and center.distance_to(c.position) <= radius + 26.0:
+		if not c.dead and center.distance_to(c.position) <= radius + 26.0 and (not melee or can_melee_reach(center, c.position)):
 			c.take_damage(1.0, source)
 
 
-func break_chests_in_arc(center: Vector2, angle: float, radius: float, half_angle: float, source: Node2D = null) -> void:
+func break_chests_in_arc(center: Vector2, angle: float, radius: float, half_angle: float, source: Node2D = null, melee := false) -> void:
 	if encounters != null:
-		encounters.in_radius(center, radius, source, angle, half_angle)
+		encounters.in_radius(center, radius, source, angle, half_angle, melee)
 	for c in chests:
 		if c.dead:
 			continue
 		var d := c.position - center
-		if d.length() <= radius + 26.0 and (d.length() < 40.0 or absf(angle_difference(angle, d.angle())) <= half_angle):
+		if d.length() <= radius + 26.0 and (d.length() < 40.0 or absf(angle_difference(angle, d.angle())) <= half_angle) and (not melee or can_melee_reach(center, c.position)):
 			c.take_damage(1.0, source)
 
 
@@ -1475,6 +1481,7 @@ func float_text(at: Vector2, text: String, color: Color) -> void:
 	e.color = color
 	e.life = 0.9
 	e.z_index = 20
+	e.place_text(cosmetic_effects)
 	_add_effect(e)
 
 

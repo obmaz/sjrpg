@@ -23,6 +23,7 @@ func run() -> void:
 	var previous := Prefs.reduce_motion
 	Prefs.reduce_motion = false
 	_check_art_contract()
+	_check_frost_caster_gap()
 	await _check_warrior_contacts()
 	await _check_frost_and_cosmetic_clocks()
 	await _check_meteor_transition()
@@ -67,9 +68,32 @@ func _check_art_contract() -> void:
 			energies.append(energy)
 		check("authored %s frames keep black ADD padding" % name, padding_clear)
 		check("authored %s tail loses energy after its peak" % name, energies[1] > 1.0 and energies[3] < energies[1])
+		if name == "frost":
+			check("frost shatter ends in a sparse quiet tail", energies[3] < energies[1] * 0.2)
 	var frost_peak: Array = data["effects"]["frost"]["frame_bounds"][1]
 	var crown_ratio := float(frost_peak[3] - frost_peak[1]) / float(frost_peak[2] - frost_peak[0])
 	check("frost keeps the reviewed low broad silhouette", crown_ratio > 0.55 and crown_ratio < 0.9)
+
+
+## Sample the actual standing torso area in world draw units, not just an empty
+## atlas corner. A new central crystal pillar must fail this readability guard.
+func _check_frost_caster_gap() -> void:
+	var image := ReferenceFxArt.texture("frost").get_image()
+	var target := ReferenceFxArt.rect("frost", 280.0)
+	for column in 4:
+		var frame := ReferenceFxArt.frame("frost", column)
+		var energy := 0.0
+		var bright := 0
+		var samples := 0
+		for y in range(-95, -29, 3):
+			for x in range(-18, 19, 3):
+				var uv := (Vector2(x, y) - target.position) / target.size
+				var pixel := image.get_pixelv(Vector2i(frame.position + uv * frame.size))
+				var luminance := pixel.get_luminance()
+				energy += luminance
+				bright += 1 if luminance > 0.18 else 0
+				samples += 1
+		check("frost phase %d leaves the caster torso readable" % column, energy / samples < 0.04 and float(bright) / samples < 0.08)
 
 
 func _target(game: Node, at: Vector2) -> ContactProbe:

@@ -6,7 +6,7 @@
 
 ## 지면과 식생
 
-`assets/source/lighting/ground-materials.png` 왼쪽 패널은 밝고 평평하게 닳은 석회암 포장입니다. 원본 사용자 화면을 실제 생성 참조로 사용했으며 프롬프트·참조 해시·채택 영역은 `tools/extract/ground_light_generation.json`에 기록합니다. 오른쪽 잔디 후보는 가는 실 모양의 밀도가 여전히 높아 탈락시켰습니다. 기존 `remake/ground.png`의 흙 패널과 `grass-v2.png`의 짧은 풀·클로버는 유지합니다. 모두 고정 조명·나무 그림자가 없는 위에서 본 원화이며 실제 120° 투영은 런타임이 맡습니다. 포장 512px 한 반복의 지면 크기는 180으로 두어 기본 세로 화면에서 돌의 긴 대각선이 약 50–60px로 읽히게 합니다. 280 후보는 실제 비교에서 판석이 지나치게 커서 축소했습니다.
+`assets/source/lighting/ground-materials.png` 왼쪽 패널은 밝고 평평하게 닳은 석회암 포장입니다. 원본 사용자 화면을 실제 생성 참조로 사용했으며 프롬프트·참조 해시·채택 영역은 `tools/extract/ground_light_generation.json`에 기록합니다. 오른쪽 잔디 후보는 가는 실 모양의 밀도가 여전히 높아 탈락시켰습니다. 흙은 기존 `remake/ground.png` 패널을 유지하고, 잔디는 `lighting/forest-floor-soft-v2.png`의 조용한 올리브 풀·이끼와 작은 흙 노출을 사용합니다. 생성·거절 이력은 `forest_floor_soft_v2_generation.json`에 보존하며, 넓은 반복 무늬가 남아 있어 완전한 무봉제 재질이라고 간주하지 않습니다. 모두 고정 조명·나무 그림자가 없는 위에서 본 원화이며 실제 120° 투영은 런타임이 맡습니다. 포장 512px 한 반복의 지면 크기는 180으로 두어 기본 세로 화면에서 돌의 긴 대각선이 약 50–60px로 읽히게 합니다. 280 후보는 실제 비교에서 판석이 지나치게 커서 축소했습니다.
 `assets/source/remake/flora.png`는 높은 쿼터뷰의 흰꽃·주황/노랑 꽃·고사리·낮은 풀입니다. 주변의 숨은 RGB와 실제 알파를 구별해 단색 배경에서 검수합니다.
 `tools/extract/forest_art_measure.json`에 영역과 줄기·지면 접점을 측정하고 `tools/prepare_forest_art.py`로 패킹합니다.
 `assets/data/forest_art.json`이 원본·실제 배포 텍스처의 해시를 보관합니다.

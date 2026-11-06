@@ -510,7 +510,7 @@ func _melee(id: String, d: Dictionary, rank: int, power: float) -> void:
 			if d.has("stun"):
 				e.stun(d["stun"] + d.get("stun_growth", 0.0) * (rank - 1))
 		hits_total += hits.size()
-		game.break_chests_in_arc(position, facing, d["range"], deg_to_rad(d["arc"]), self)
+		game.break_chests_in_arc(position, facing, d["range"], deg_to_rad(d["arc"]), self, true)
 		game.spawn_slash(position + Vector2(0, -28), facing + (0.25 if swing == 1 else 0.0), SkillDefs.FIRE if enchant > 0.0 else SkillDefs.STEEL, float(d["range"]), deg_to_rad(d["arc"]))
 	_gain_rage(hits_total)
 	if d.get("frenzy", false) and hits_total > 0:
@@ -530,7 +530,7 @@ func _spin(id: String, d: Dictionary, power: float) -> void:
 				return
 			_resolving_melee_contact = true
 			var hits: Array = game.enemies_in_radius(position, d["radius"], true)
-			game.break_chests_in_radius(position, d["radius"], self)
+			game.break_chests_in_radius(position, d["radius"], self, true)
 			for e in hits:
 				e.take_damage(damage_for(id, power), self)
 			_resolving_melee_contact = false
@@ -603,7 +603,7 @@ func _prepare_leap(id: String, d: Dictionary, rank: int, power: float) -> Callab
 		_invulnerable = maxf(_invulnerable, 0.2)
 		var hits: Array = game.enemies_in_radius(position, d["radius"], true)
 		if d.has("mult"):
-			game.break_chests_in_radius(position, d["radius"], self)
+			game.break_chests_in_radius(position, d["radius"], self, true)
 		var previous_contact := _resolving_melee_contact
 		_resolving_melee_contact = d.has("mult")
 		for e in hits:

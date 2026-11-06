@@ -24,6 +24,41 @@ var _tick_timer := 0.0
 var _hit := {}  # enemies already hit (piercing)
 
 
+## Keep individual amounts readable without a queue, amount merging, or an expanding stack.
+## Nine nearby positions are enough for ordinary rapid hits; saturation replaces only
+## older text intersecting the new label. All text still shares the 64-effect budget.
+func place_text(peers: Array) -> void:
+	var anchor := position
+	var lines := text.split("\n")
+	var width := 0.0
+	for line in lines:
+		width = maxf(width, UiKit.BOLD_FONT.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x)
+	params["text_size"] = Vector2(width, UiKit.BOLD_FONT.get_height(22) * lines.size())
+	var offsets := [Vector2.ZERO, Vector2(-96, 0), Vector2(96, 0),
+		Vector2(0, -40), Vector2(-96, -40), Vector2(96, -40),
+		Vector2(0, -80), Vector2(-96, -80), Vector2(96, -80)]
+	for offset: Vector2 in offsets:
+		position = anchor + offset
+		var occupied := false
+		for peer in peers:
+			if is_instance_valid(peer) and not peer.is_queued_for_deletion() and peer.kind == "text" and text_bounds().intersects(peer.text_bounds()):
+				occupied = true
+				break
+		if not occupied:
+			return
+	position = anchor
+	for peer in peers:
+		if is_instance_valid(peer) and not peer.is_queued_for_deletion() and peer.kind == "text" and text_bounds().intersects(peer.text_bounds()):
+			peer.queue_free()
+
+
+## Match the centered glyphs and their outline, rather than the 120px drawing box.
+func text_bounds() -> Rect2:
+	var measured: Vector2 = params.get("text_size", Vector2(120, UiKit.BOLD_FONT.get_height(22)))
+	var size := measured + Vector2(12, 12)
+	return Rect2(position + Vector2(-size.x * 0.5, -UiKit.BOLD_FONT.get_ascent(22) - 6.0), size)
+
+
 static var _impact_material: CanvasItemMaterial
 
 
@@ -139,6 +174,7 @@ static func spawn_impact(world_game: Node, at: Vector2, source: Node2D, heavy :=
 	elif source is Player:
 		tint = source.impact_color
 	impact.params["cell"] = _element_cell(tint)
+	WorldLighting.pulse(at, contact_flash_color(source), heavy)
 	if source != null:
 		impact.angle = contact_direction(source, at).angle()
 	impact.material = _glow_material()
@@ -183,7 +219,8 @@ func _process(delta: float) -> void:
 		"ward":
 			_update_ward(delta)
 		"text":
-			position.y -= 42.0 * delta
+			if not Prefs.reduce_motion:
+				position.y -= 42.0 * delta
 	if is_queued_for_deletion():
 		return
 	if age >= life:
@@ -539,8 +576,13 @@ func _draw() -> void:
 			draw_circle(Vector2(4, -68), 2.5, Color(0.1, 0, 0.1, fade3))
 		"text":
 			var a2 := clampf(2.0 - t * 2.0, 0.0, 1.0)
-			draw_string_outline(UiKit.BOLD_FONT, Vector2(-60, 0), text, HORIZONTAL_ALIGNMENT_CENTER, 120, 22, 5, Color(0, 0, 0, a2))
-			draw_string(UiKit.BOLD_FONT, Vector2(-60, 0), text, HORIZONTAL_ALIGNMENT_CENTER, 120, 22, Color(color, a2))
+			var measured: Vector2 = params.get("text_size", Vector2(120, 22))
+			var text_width := maxf(120.0, measured.x)
+			var baseline := Vector2(-text_width * 0.5, 0)
+			for line in text.split("\n"):
+				draw_string_outline(UiKit.BOLD_FONT, baseline, line, HORIZONTAL_ALIGNMENT_CENTER, text_width, 22, 5, Color(0, 0, 0, a2))
+				draw_string(UiKit.BOLD_FONT, baseline, line, HORIZONTAL_ALIGNMENT_CENTER, text_width, 22, Color(color, a2))
+				baseline.y += UiKit.BOLD_FONT.get_height(22)
 
 
 func _draw_generated_glow(at: Vector2, diameter: float, cell: int, alpha: float, phase := 1.0 / 3.0) -> void:

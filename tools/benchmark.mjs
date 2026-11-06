@@ -8,6 +8,8 @@ const quality = args.quality ?? 'high';
 const device = args.device ?? 'desktop';
 const hero = args.class ?? 'warrior';
 const renderer = args.renderer ?? 'software';
+const warmup = Number(args.warmup ?? 6000);
+if (!Number.isFinite(warmup) || warmup < 0 || warmup > 30000) throw new Error('warmup must be 0–30000 ms');
 if (!['low', 'high'].includes(quality) || !['phone', 'phone-landscape', 'desktop'].includes(device) || !['warrior', 'mage'].includes(hero) || !['software', 'default'].includes(renderer)) {
     throw new Error('quality=low|high, device=phone|phone-landscape|desktop, class=warrior|mage, renderer=software|default');
 }
@@ -20,6 +22,7 @@ try {
     page.on('pageerror', (error) => errors.push(error.message));
     const tap = async (x, y) => device.startsWith('phone') ? page.touchscreen.tap(x, y) : page.mouse.click(x, y);
     const query = new URLSearchParams({ at: args.at ?? "field", quality, benchmark: "1" });
+    if (args.combat === '1') query.set('combat_preview', '1');
     if (args.lighting) query.set('lighting', args.lighting);
     await page.goto(`${args.url ?? 'http://localhost:8765/index.html'}?${query}`);
     await page.waitForFunction(() => window.__sjrpgTitleReady === true, null, {timeout: 90000});
@@ -38,7 +41,7 @@ try {
     await page.waitForFunction((expected) => window.__sjrpgRenderProbe?.quality === expected && window.__sjrpgRenderProbe?.world_draw_calls > 0 && window.__sjrpgRenderProbe?.world_width > 2 && window.__sjrpgRenderProbe?.world_height > 2, quality, { timeout: 30000 }).catch(async (error) => {
         throw new Error(`World rendering was not confirmed: ${JSON.stringify(await page.evaluate(() => window.__sjrpgRenderProbe))}; ${error.message}`);
     });
-    await page.waitForTimeout(6000);
+    await page.waitForTimeout(warmup);
     const result = await page.evaluate(() => new Promise((resolve) => {
         const deltas = [];
         let start, previous;
@@ -48,7 +51,7 @@ try {
             previous = time;
             if (time - start < 6000) { requestAnimationFrame(frame); return; }
             const sorted = [...deltas].sort((a, b) => a - b);
-            resolve({ browser_fps: Math.round(deltas.length * 10000 / (time - start)) / 10, p95_frame_ms: Math.round(sorted[Math.floor(sorted.length * 0.95)]), samples: deltas.length });
+            resolve({ browser_fps: Math.round(deltas.length * 10000 / (time - start)) / 10, p95_frame_ms: Math.round(sorted[Math.floor(sorted.length * 0.95)]), max_frame_ms: Math.round(sorted.at(-1)), samples: deltas.length });
         };
         requestAnimationFrame(frame);
     }));
@@ -56,7 +59,7 @@ try {
         const canvas = document.querySelector('canvas');
         return { dpr: window.devicePixelRatio, inner_width: innerWidth, inner_height: innerHeight, css_width: canvas.clientWidth, css_height: canvas.clientHeight, canvas_width: canvas.width, canvas_height: canvas.height };
     });
-    console.log(JSON.stringify({ device, quality, hero, renderer, lighting: args.lighting ?? 'on', at: args.at ?? 'field', ...result, world: await page.evaluate(() => window.__sjrpgRenderProbe), surface: browserSurface, errors }, null, 2));
+    console.log(JSON.stringify({ device, quality, hero, renderer, lighting: args.lighting ?? 'on', combat: args.combat === '1', warmup_ms: warmup, at: args.at ?? 'field', ...result, world: await page.evaluate(() => window.__sjrpgRenderProbe), surface: browserSurface, errors }, null, 2));
     if (errors.length) process.exitCode = 1;
     await context.close();
 } finally {

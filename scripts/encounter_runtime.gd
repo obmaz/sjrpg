@@ -209,12 +209,12 @@ func capture() -> void:
 	game._update_encounter_audit()
 
 
-func in_radius(center: Vector2, radius: float, source: Node2D, angle := INF, half_angle := PI) -> void:
+func in_radius(center: Vector2, radius: float, source: Node2D, angle := INF, half_angle := PI, melee := false) -> void:
 	if game.dungeon.active or source == null:
 		return
 	for stone in stones.values():
 		var delta: Vector2 = stone.position - center
-		if delta.length() <= radius + 26.0 and (is_inf(angle) or absf(angle_difference(angle, delta.angle())) <= half_angle):
+		if delta.length() <= radius + 26.0 and (is_inf(angle) or absf(angle_difference(angle, delta.angle())) <= half_angle) and (not melee or game.can_melee_reach(center, stone.position)):
 			stone.take_damage(1.0, source)
 
 

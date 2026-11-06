@@ -26,7 +26,7 @@
   },
   {
    "id": "production",
-   "prompt": "Create the FINAL PRODUCTION SPRITE SHEET for Guardians of Nature skill effects. Attached references: first is the newly generated six-row EFFECT FAMILY CONCEPT derived directly from the user's supplied six-skill action reference; second is the authoritative forest game style screenshot for restrained light intensity and material realism; third is existing elemental impact-family artwork for color continuity only. The first sheet is a concept, not user approval. Preserve its clear golden crescents, golden ground sweep, golden upward slam, cyan bolt, crisp blue ice crown and orange falling meteor; correct contact registration and the too-flat ground rings.\n\nSTRICT OUTPUT: one image 4 columns x6 rows, equal SQUARE cells, 1024x1536 or1536x2304. Exactly24 isolated effects, no dividing lines or frames. Every cell has at least8% pure BLACK RGB0,0,0 margin on ALL sides. Everything beyond the actual glow and small debris is pure black. These are ADD-blended light sprites, not transparent gray matte. No smoke haze filling entire squares. No text, captions, UI, people, weapons, monsters, scenery, terrain tiles, floor slabs, icons or lens artifacts. All four columns are registered temporal phases of one same effect. Columns: onset small, peak strongest, outward fragments, dim sparse tail. Final column must be substantially dimmer than peak.\n\nCRITICAL CAMERA: TRUE orthographic ISOMETRIC2.5D quarter view, azimuth45/elevation35.264, ground axes+30/-30 (threeaxes120apart). Every ground ring and ground sigil is a horizontal ellipse with VISIBLE HEIGHT EXACTLY0.577 times its VISIBLE WIDTH. The prior concept's spin ring is TOO FLAT; make that ring clearly taller while keeping a horizontal long axis, no camera tilt or front-facing circle. No geometry measurements are asserted by this prompt; make shapes consistent for later inspection.\n\nROW1 GOLD CRESCENT SLASH facing screenRIGHT: slender broad golden curved leading blade edge on the right, faint warm trailing streaks, open center no opaque white blob. The swing center is x50%,y50% in EACH cell. 4 phases: small right crescent; complete bright open crescent about75% cellwidth; thin scattered arc remnants; tiny ember remnants. Never a full circle or sword silhouette.\nROW2 GOLD SPIN: fine complete horizontal elliptical golden ring at x50%,y50%, with ring HEIGHT/WIDTH0.577; hollow clear center and two restrained asymmetrical motion ribbons, sparse tiny angular debris. Peak ring width76%cell, height44%cell. Tiny onset ring/arc → peak ring → separated arc fragments → dim arc remnants. No gray dust disk.\nROW3 GOLD GROUND SLAM: fixed contact at x50%,y70% EACH cell. A thin bright golden upright contact spear, a few angular gray-brown stone fragments rising above, and thin radial gold crack lines on the projected ground around contact. Tiny contact → luminous upright slam/debris peak → outward falling fragments → faint scattered sparks. Never a ground tile or opaque rock mass.\nROW4 CYAN MAGIC BOLT: a compact pointed blue-white head fixed at x75%,y50% EACH cell, with 2-3 narrow cyan trailing ribbons flowing LEFT to at leastx10%. Small blue onset head → sharp bright missile peak → thin blue tail fragments → sparse blue motes. No sphere or circular explosion; clear right-facing movement.\nROW5 FROST NOVA: fixed ground contact at x50%,y70% EACH cell. Transparent sharp cyan-blue ice crystal shards erupt in an irregular crown, tallest near center, visible upperfaces, rearcrystalsnaturallyoccluded, small coldwhite edges, clear gapsbetween crystals. Ground sigil ring HEIGHT/WIDTH0.577 centered at contact, not a round frontfacinghalo or extremely flat ellipse. Tinyshards → peak icecrown → separated shattering crystal pieces → fainticy motes.\nROW6 METEOR STRIKE: fixed contact at x50%,y70% EACH cell. Orange meteor flame streak comes diagonally DOWN from upper RIGHT into the same ground contact; peak thin white-orange impact core, upright scattered sparks and a few lifted stone fragments, narrow projected groundshockring HEIGHT/WIDTH0.577. First short arriving streak plus tiny contact → fiery strike/debris peak → outward orange fragments → dim isolated embers. No opaque smoke cloud.\n\nAll24 cells have the same consistent effect family: realistic handfinished fantasy, fine bright white-gold or blue-white cores, controlled local bloom, crisp sparse particles, no huge solid white patches. Preserve the same origin in all phases; extra black padding is more important than filling every cell.",
+   "prompt": "Create the FINAL PRODUCTION SPRITE SHEET for Guardians of Nature skill effects. Attached references: first is the newly generated six-row EFFECT FAMILY CONCEPT derived directly from the user's supplied six-skill action reference; second is the authoritative forest game style screenshot for restrained light intensity and material realism; third is existing elemental impact-family artwork for color continuity only. The first sheet is a concept, not user approval. Preserve its clear golden crescents, golden ground sweep, golden upward slam, cyan bolt, crisp blue ice crown and orange falling meteor; correct contact registration and the too-flat ground rings.\n\nSTRICT OUTPUT: one image 4 columns x6 rows, equal SQUARE cells, 1024x1536 or1536x2304. Exactly24 isolated effects, no dividing lines or frames. Every cell has at least8% pure BLACK RGB0,0,0 margin on ALL sides. Everything beyond the actual glow and small debris is pure black. These are ADD-blended light sprites, not transparent gray matte. No smoke haze filling entire squares. No text, captions, UI, people, weapons, monsters, scenery, terrain tiles, floor slabs, icons or lens artifacts. All four columns are registered temporal phases of one same effect. Columns: onset small, peak strongest, outward fragments, dim sparse tail. Final column must be substantially dimmer than peak.\n\nCRITICAL CAMERA: TRUE orthographic ISOMETRIC2.5D quarter view, azimuth45/elevation35.264, ground axes+30/-30 (threeaxes120apart). Every ground ring and ground sigil is a horizontal ellipse with VISIBLE HEIGHT EXACTLY0.577 times its VISIBLE WIDTH. The prior concept's spin ring is TOO FLAT; make that ring clearly taller while keeping a horizontal long axis, no camera tilt or front-facing circle. No geometry measurements are asserted by this prompt; make shapes consistent for later inspection.\n\nROW1 GOLD CRESCENT SLASH facing screenRIGHT: slender broad golden curved leading blade edge on the right, faint warm trailing streaks, open center no opaque white blob. The swing center is x50%,y50% in EACH cell. 4 phases: small right crescent; complete bright open crescent about75% cellwidth; thin scattered arc remnants; tiny ember remnants. Never a full circle or sword silhouette.\nROW2 GOLD SPIN: fine complete horizontal elliptical golden ring at x50%,y50%, with ring HEIGHT/WIDTH0.577; hollow clear center and two restrained asymmetrical motion ribbons, sparse tiny angular debris. Peak ring width76%cell, height44%cell. Tiny onset ring/arc \u2192 peak ring \u2192 separated arc fragments \u2192 dim arc remnants. No gray dust disk.\nROW3 GOLD GROUND SLAM: fixed contact at x50%,y70% EACH cell. A thin bright golden upright contact spear, a few angular gray-brown stone fragments rising above, and thin radial gold crack lines on the projected ground around contact. Tiny contact \u2192 luminous upright slam/debris peak \u2192 outward falling fragments \u2192 faint scattered sparks. Never a ground tile or opaque rock mass.\nROW4 CYAN MAGIC BOLT: a compact pointed blue-white head fixed at x75%,y50% EACH cell, with 2-3 narrow cyan trailing ribbons flowing LEFT to at leastx10%. Small blue onset head \u2192 sharp bright missile peak \u2192 thin blue tail fragments \u2192 sparse blue motes. No sphere or circular explosion; clear right-facing movement.\nROW5 FROST NOVA: fixed ground contact at x50%,y70% EACH cell. Transparent sharp cyan-blue ice crystal shards erupt in an irregular crown, tallest near center, visible upperfaces, rearcrystalsnaturallyoccluded, small coldwhite edges, clear gapsbetween crystals. Ground sigil ring HEIGHT/WIDTH0.577 centered at contact, not a round frontfacinghalo or extremely flat ellipse. Tinyshards \u2192 peak icecrown \u2192 separated shattering crystal pieces \u2192 fainticy motes.\nROW6 METEOR STRIKE: fixed contact at x50%,y70% EACH cell. Orange meteor flame streak comes diagonally DOWN from upper RIGHT into the same ground contact; peak thin white-orange impact core, upright scattered sparks and a few lifted stone fragments, narrow projected groundshockring HEIGHT/WIDTH0.577. First short arriving streak plus tiny contact \u2192 fiery strike/debris peak \u2192 outward orange fragments \u2192 dim isolated embers. No opaque smoke cloud.\n\nAll24 cells have the same consistent effect family: realistic handfinished fantasy, fine bright white-gold or blue-white cores, controlled local bloom, crisp sparse particles, no huge solid white patches. Preserve the same origin in all phases; extra black padding is more important than filling every cell.",
    "referenced_image_paths": [
     "assets/source/reference-fx/family-concept.png",
     "assets/source/style/approved-game-reference.jpg",
@@ -60,7 +60,7 @@
   },
   {
    "id": "frost-low-v1",
-   "prompt": "Create JUST the frost-nova replacement animation strip for the supplied restrained forest-fantasy game. Use the attached family effects concept and previous production sheet for the cyan-blue crystal/light material and the attached original forest gameplay image for the restrained readable style. The old frost crown was much too tall in actual gameplay, so this revision MUST be LOW and BROAD.\n\nOUTPUT EXACT LAYOUT: one opaque pure-BLACK RGB(0,0,0) image, 4:1 aspect ratio, FOUR equal SQUARE cells in ONE HORIZONTAL ROW; ideally 1536x384 or1024x256. No gutters, cell lines, labels, text, UI, characters, ground tiles, scenery, smoke, gray matte, checkerboard, border or watermark. Every luminous pixel stays inside its own square with at least 8% untouched black padding. ADD blending will make true black invisible. Produce a finished isolated production asset, not a presentation screenshot.\n\nALL FOUR cells depict ONE SAME low frost-nova crown and ground sigil, with an identical fixed ground-center contact at x50%, y60% of each cell. Four temporal phases LEFT to RIGHT: (1) a small onset with a few low shards; (2) the strongest complete broad low crown; (3) separated shards scattering outward and downward; (4) faint small icy fragments/motes and faint ground arc remnants. Last cell much dimmer than second. Do not add a new design between frames.\n\nTRUE ORTHOGRAPHIC120-degree ISOMETRIC2.5D ground camera: azimuth45°, elevation35.264°. The ground sigil is an ellipse with visible HEIGHT/WIDTH0.57735 (not a flat 0.3 ellipse and not a front-facing circle). No perspective. Keep horizontal major axis and upright natural crystal growth. There are no architectural straight-edge measurement claims for the irregular crystal shards.\n\nCRITICAL HEIGHT AND WIDTH: peak visible ground-ring width about76–80% of its square; ring height about44–46% of its square. Its center is at (50%,60%). Tallest crystal tip reaches ONLY about30% of the square height, so it is just about30% of a square above the contact. Ground ring lower edge reaches about82–83% height. Thus the WHOLE peak effect's painted height, INCLUDING ground ellipse, is approximately65–75% of its painted width. Do NOT make tall spear-like ice pillars. No tip near the cell top. Think a low spreading thorny ice flower, not an ice mountain. Peak crown should be at least about1.4 times as WIDE as the whole effect is TALL.\n\nCyan translucent faceted ICE crystals, about9–13 modest sharp shards of varied sizes, arranged as a low wide irregular crown across the ground sigil. Shorter outer shards, modest central shard, clear black gaps where an actor silhouette can remain readable, naturally occluded small rear shards and visible upper facets. Pale blue-white hairline facet edges, blue inner faces, restrained bright contact core at the ground center. Thin icy ground sigil arcs and a handful of separated tiny ice sparkles. Most of the scene remains black; NO opaque white spike cluster, huge bloom cloud, vertical light beam, tall central spear or filled luminous disk. Match the supplied reference's contemporary fine game effect art rather than cartoon outlines or a photoreal still life.",
+   "prompt": "Create JUST the frost-nova replacement animation strip for the supplied restrained forest-fantasy game. Use the attached family effects concept and previous production sheet for the cyan-blue crystal/light material and the attached original forest gameplay image for the restrained readable style. The old frost crown was much too tall in actual gameplay, so this revision MUST be LOW and BROAD.\n\nOUTPUT EXACT LAYOUT: one opaque pure-BLACK RGB(0,0,0) image, 4:1 aspect ratio, FOUR equal SQUARE cells in ONE HORIZONTAL ROW; ideally 1536x384 or1024x256. No gutters, cell lines, labels, text, UI, characters, ground tiles, scenery, smoke, gray matte, checkerboard, border or watermark. Every luminous pixel stays inside its own square with at least 8% untouched black padding. ADD blending will make true black invisible. Produce a finished isolated production asset, not a presentation screenshot.\n\nALL FOUR cells depict ONE SAME low frost-nova crown and ground sigil, with an identical fixed ground-center contact at x50%, y60% of each cell. Four temporal phases LEFT to RIGHT: (1) a small onset with a few low shards; (2) the strongest complete broad low crown; (3) separated shards scattering outward and downward; (4) faint small icy fragments/motes and faint ground arc remnants. Last cell much dimmer than second. Do not add a new design between frames.\n\nTRUE ORTHOGRAPHIC120-degree ISOMETRIC2.5D ground camera: azimuth45\u00b0, elevation35.264\u00b0. The ground sigil is an ellipse with visible HEIGHT/WIDTH0.57735 (not a flat 0.3 ellipse and not a front-facing circle). No perspective. Keep horizontal major axis and upright natural crystal growth. There are no architectural straight-edge measurement claims for the irregular crystal shards.\n\nCRITICAL HEIGHT AND WIDTH: peak visible ground-ring width about76\u201380% of its square; ring height about44\u201346% of its square. Its center is at (50%,60%). Tallest crystal tip reaches ONLY about30% of the square height, so it is just about30% of a square above the contact. Ground ring lower edge reaches about82\u201383% height. Thus the WHOLE peak effect's painted height, INCLUDING ground ellipse, is approximately65\u201375% of its painted width. Do NOT make tall spear-like ice pillars. No tip near the cell top. Think a low spreading thorny ice flower, not an ice mountain. Peak crown should be at least about1.4 times as WIDE as the whole effect is TALL.\n\nCyan translucent faceted ICE crystals, about9\u201313 modest sharp shards of varied sizes, arranged as a low wide irregular crown across the ground sigil. Shorter outer shards, modest central shard, clear black gaps where an actor silhouette can remain readable, naturally occluded small rear shards and visible upper facets. Pale blue-white hairline facet edges, blue inner faces, restrained bright contact core at the ground center. Thin icy ground sigil arcs and a handful of separated tiny ice sparkles. Most of the scene remains black; NO opaque white spike cluster, huge bloom cloud, vertical light beam, tall central spear or filled luminous disk. Match the supplied reference's contemporary fine game effect art rather than cartoon outlines or a photoreal still life.",
    "referenced_image_paths": [
     "assets/source/reference-fx/family-concept.png",
     "assets/source/style/approved-game-reference.jpg",
@@ -95,7 +95,7 @@
   },
   {
    "id": "frost-low-projection-edit",
-   "prompt": "EDIT THE ATTACHED FROST STRIP. Preserve its four-phase cyan crystal material, exact shared ground-contact centers, black background, and broad LOW short crystal crowns. The one required correction is the ground sigil CAMERA: the blue ground rings are currently far too flat, approximately0.22height/width. They MUST become much DEEPER, taller ellipses, 0.57735height/width, like a true35.264-degree high orthographic isometric ground circle.\n\nKeep each ring's horizontal width and contact center fixed. Expand the ring vertically both UP and DOWN around that center until each ellipse is visibly about58% as tall as it is wide. For example a ring400pxwide MUST be230pxhigh, NOT90pxhigh. It should look like a broad oval near a 2:1 rectangle, not a thin line viewed from eye level. Show a deep lower semicircle well below the contact and a deep upper semicircle behind the crystals. Raise the camera angle for THE RING ONLY. Do NOT scale the crystals vertically; preserve the existing low crown tip height. Crystal tips remain about0.35–0.40 ring-width above the center. The full peak painted height including the corrected deep ring should be about0.70 ring-width, leaving comfortable black margin.\n\nMake four equal horizontal frame panels with generous pure black margins. Frame1onsetsmallshards, frame2brightbroadlowcrown, frame3scattered fragments, frame4fainticy motes. Same contact point in every frame. Fine cyan/ice-white facet edges, no big white bloom. Absolutely pure blackRGB0around the effects, no backdrop, groundtile, characters, labels, panel lines, frame, smoke, blur plate or text. This is a production sprite strip for additive blending. Change only the flat ground sigil projection while keeping the restrained game effects style and short readable crystal crown.",
+   "prompt": "EDIT THE ATTACHED FROST STRIP. Preserve its four-phase cyan crystal material, exact shared ground-contact centers, black background, and broad LOW short crystal crowns. The one required correction is the ground sigil CAMERA: the blue ground rings are currently far too flat, approximately0.22height/width. They MUST become much DEEPER, taller ellipses, 0.57735height/width, like a true35.264-degree high orthographic isometric ground circle.\n\nKeep each ring's horizontal width and contact center fixed. Expand the ring vertically both UP and DOWN around that center until each ellipse is visibly about58% as tall as it is wide. For example a ring400pxwide MUST be230pxhigh, NOT90pxhigh. It should look like a broad oval near a 2:1 rectangle, not a thin line viewed from eye level. Show a deep lower semicircle well below the contact and a deep upper semicircle behind the crystals. Raise the camera angle for THE RING ONLY. Do NOT scale the crystals vertically; preserve the existing low crown tip height. Crystal tips remain about0.35\u20130.40 ring-width above the center. The full peak painted height including the corrected deep ring should be about0.70 ring-width, leaving comfortable black margin.\n\nMake four equal horizontal frame panels with generous pure black margins. Frame1onsetsmallshards, frame2brightbroadlowcrown, frame3scattered fragments, frame4fainticy motes. Same contact point in every frame. Fine cyan/ice-white facet edges, no big white bloom. Absolutely pure blackRGB0around the effects, no backdrop, groundtile, characters, labels, panel lines, frame, smoke, blur plate or text. This is a production sprite strip for additive blending. Change only the flat ground sigil projection while keeping the restrained game effects style and short readable crystal crown.",
    "referenced_image_paths": [
     "assets/source/reference-fx/frost-low-v1.png"
    ],
@@ -117,6 +117,107 @@
     ]
    },
    "decision": "Adopted low broad crown and deeper oval; slight documented1.06camera correction remains. Actual game capture still required."
+  },
+  {
+   "id": "frost-open-center-candidate",
+   "prompt": "EDIT ONLY the attached frost sprite strip (first image) into an OPEN-CENTER LOW FROST CROWN. The second image is the current actual gameplay failure: the center crystal hides the mage's torso. Use it only to understand the problem; DO NOT copy its characters, UI, road, trees or scenery. The third image is the authoritative restrained forest-fantasy style reference.\n\nKeep the first image's four equal horizontal animation panels, cyan translucent ice material, fine blue-white facet edges, thin ground sigil and pure-black ADD-only background. Keep the same fixed ground origin in each panel. Show four phases LEFT TO RIGHT: restrained onset, full peak outer crystal ring, separated breaking fragments, faint residual motes/arc. Tail much dimmer than peak. No labels, text, gutters, panel lines, logos, checkerboard, scenery or opaque smoke.\n\nTHE CRITICAL CHANGE IS NEGATIVE SPACE FOR THE CASTER:\nREMOVE the tall central crystal and REMOVE ALL central crystal spikes. Leave a broad visibly EMPTY CENTER, about40% of the whole ring's width. An upright standing mage will occupy this center. The central vertical region from x30% to70% of the ring's span, above its ground-contact line, must remain entirely black except a very faint thin distant ground arc. No big crystal, bright core, glow blob, beam, shard, sparkle concentration or solid light column may cross that standing-body region. This empty area must be obvious in all four frames.\n\nInstead place roughly10\u201314 LOW, varied sharp ice shards around the OUTER annulus:\n- Strongest medium shards on the outer LEFT and RIGHT sides, leaning naturally outward.\n- Smaller rear shards only on the BACK-LEFT and BACK-RIGHT portions, leaving the exact12-o'clock rear center open.\n- A few tiny foreground shards may sit on the FRONT arc well BELOW the ground-contact center; their tips must remain below that center so they do not cover the caster's body.\n- Preserve generous dark gaps between shards. Crystal height above the ring's contact line stays below30% of total ring width. No long spear or mountain. Low spreading ice thorns, not a central erupting tower.\n- Do not draw a person or a black person-shaped cutout; the gap is natural empty space inside an annular ice crown.\n\nTRUE ORTHOGRAPHIC ISOMETRIC2.5D ground:45-degree azimuth,35.264-degree elevation,120-degree axes. The sigil's ground oval HEIGHT/WIDTH is0.57735. Keep its major axis horizontal; upright shards remain vertical. Deep visible upper and lower semicircles, NOT an eye-level flattened0.2oval and NOT a front-facing circle. Ring width approximately75% of panel, full peak painted height INCLUDING lower arc about65\u201375% of painted width. Ground contact center near(50%,60%) of each panel, same origin in every phase. Extra black margins protect every panel edge. No perspective convergence.\n\nThe result must read as a hollow low frosty circle around an unobscured standing character. Preserve the delicate contemporary game-effect finish and restrained local glow; the black areas contribute zero light in ADD blending. Output one wide opaque pure-black sprite strip, preferably1536x384, with four equal square panels.",
+   "referenced_image_paths": [
+    "assets/source/reference-fx/frost-low.png",
+    "/tmp/stage1-review/frost.png",
+    "assets/source/style/approved-game-reference.jpg"
+   ],
+   "reference_records": [
+    {
+     "path": "assets/source/reference-fx/frost-low.png",
+     "sha256": "14487ea4929571797372c76293e7d4e72ad506f152d8ce8d1b404a9ad2f87843"
+    },
+    {
+     "path": "/tmp/stage1-review/frost.png",
+     "sha256": "88d73e75727cb36bf06b432796bd38cfe6a97cd1a048eae6e5d50be5fad9a54c",
+     "archive_path": "assets/source/reference-fx/frost-review-before.png"
+    },
+    {
+     "path": "assets/source/style/approved-game-reference.jpg",
+     "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+    }
+   ],
+   "transparent_background": false,
+   "output": "assets/source/reference-fx/frost-open.png",
+   "original_generation_path": "/workspace/generated_images/exec-28eecfb0-9107-4b79-a888-08401779ad5d.png",
+   "output_record": {
+    "path": "assets/source/reference-fx/frost-open.png",
+    "sha256": "1b12e72f97b0a2959ed6bca49a13fc66de57d46e71dba4e764be8db33533799a",
+    "size": [
+     2172,
+     724
+    ]
+   },
+   "decision": "Candidate only, awaiting root source and actual game review. Runtime remains frost-low until explicitly adopted."
+  },
+  {
+   "id": "frost-open-v2-flat-draft",
+   "prompt": "Create a STRONG ICE-BURST CROWN animation strip for the supplied game, combining the powerful angular cyan crystals of reference image1 with a carefully sized center opening. Reference image2 was a FAILED iteration: it looks like a quiet ward because the ice is tiny and the center is80%empty. DO NOT repeat image2's tiny shards or giant empty space. Reference image3 shows why a central pillar hides the caster; reference image4 is the restrained forest-fantasy style. No characters, UI or scenery may be copied into this production asset.\n\nOUTPUT: one PURE BLACK RGB(0,0,0) opaque sprite strip, FOUR equal SQUARE panels in one horizontal row, preferably1536x384. No labels, numbers, text, icons, panel borders, gutters, checkerboard, gray matte, scenery, smoke or opaque background plate. Black is completely nonemissive for ADD blending. Every effect fits inside its panel with safe black margins. Ground contact centered consistently near(50%,60%) of each panel, unchanged across all four temporal phases.\n\nCRITICAL PEAK DESIGN (panel2):\nThis must read immediately as an energetic ICE ERUPTION, NOT a magic shield, ward or decorative thin circle. Around the outer annulus place EIGHTEEN TO TWENTY-FOUR clearly visible, substantial, angular ice crystals. Each has faceted translucent cyan/ice-blue faces, a few sharp icy-white edge highlights and dark transparent gaps.\nMake8\u201310 medium/tall shards clustered along the LEFT outer arc and8\u201310 along the RIGHT outer arc, plus a few modest back-left/back-right shards and small foreground shards. The tallest rear/side crystals rise25\u201335% of the visible ground ring's WIDTH above their individual ground bases. For a360px-wide ring, major shards are90\u2013125px high, not tiny10px chips. They must be recognizably sharp multi-faceted crystals, not sparks or thin white lines. Create an irregular low-to-medium crown: outer shards lean outward, shorter neighbors fill the groups, several large blades command the silhouette. Bright ice facets and short outward shatter streaks make the peak feel forceful. Controlled glows live along these shards and outer ground contacts.\n\nCENTER OPENING: reserve a clear standing-caster opening ONLY35\u201340% of the visible ring's WIDTH, centered on the origin. Do NOT make the opening80%of the ring. Crystals must approach the left and right boundaries of that35\u201340%gap so the whole outer crown feels dense and powerful. There must be NO central crystal pillar or tall shard inside the exact central35%width above the ground-contact line. Keep that standing-body column black and readable. It is a natural hollow center between outer crystals, not a person-shaped mask. Rear clusters can rise behind the caster's head at the back-left and back-right but must leave the exact rear center open. Foreground shards may span the front arc below the origin and rise only10\u201315%of ring width, so they do not cross the caster's chest or face. Ground light inside the opening remains very faint; no bright central core or vertical beam.\n\nGROUND CAMERA: TRUE ORTHOGRAPHIC ISOMETRIC2.5D,45-degree azimuth,35.264-degree elevation,120-degree ground axes. The ring is a DEEP oval with height/width EXACTLY0.57735. A360px-wide ring is208pxhigh, not80pxhigh. Its major axis is horizontal. Show the lower semicircle well below the contact and the upper semicircle behind the crystal crown. No perspective or very flat eye-level ellipse. The ring is a fine secondary frost shockwave beneath strong crystals, not the main feature; avoid ornate ward runes. Sparse broken frost arcs and a few radial ice cracks are enough.\n\nTEMPORAL PANELS from LEFT to RIGHT:\n1 ONSET:6\u20138 shorter outer shards growing, a few restrained partial frost arcs;20\u201330%of peak total luminous energy.\n2 PEAK: the full18\u201324substantial crystal eruption described above, the brightest and strongest frame.\n3 SHATTER: large crystal pieces split outward with clear directional separation and a few short blue-white trails; still leaves caster column clear; roughly50%of peak energy.\n4 TAIL: only3\u20135tiny faint fragments/motes and one or two faint broken arc remnants. Under20%of peak total energy. NO complete bright ring, NO large standing crystals, NO full circle. Most of this panel must be pure black.\nAll4panels preserve the same origin and coherent ice material. Contemporary fine game-effect art, crisp readable shapes, no cartoon outlines, no huge white bloom blob, no opaque cloud. Favor a powerful crystal silhouette with an unobscured caster over decorative circle markings.",
+   "referenced_image_paths": [
+    "assets/source/reference-fx/frost-low.png",
+    "assets/source/reference-fx/frost-open.png",
+    "/tmp/stage1-review/frost.png",
+    "assets/source/style/approved-game-reference.jpg"
+   ],
+   "reference_records": [
+    {
+     "path": "assets/source/reference-fx/frost-low.png",
+     "sha256": "14487ea4929571797372c76293e7d4e72ad506f152d8ce8d1b404a9ad2f87843"
+    },
+    {
+     "path": "assets/source/reference-fx/frost-open.png",
+     "sha256": "1b12e72f97b0a2959ed6bca49a13fc66de57d46e71dba4e764be8db33533799a"
+    },
+    {
+     "path": "/tmp/stage1-review/frost.png",
+     "sha256": "88d73e75727cb36bf06b432796bd38cfe6a97cd1a048eae6e5d50be5fad9a54c"
+    },
+    {
+     "path": "assets/source/style/approved-game-reference.jpg",
+     "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+    }
+   ],
+   "transparent_background": false,
+   "output": "assets/source/reference-fx/frost-open-v2-flat.png",
+   "original_generation_path": "/workspace/generated_images/exec-64d079c6-b891-4772-beb9-b041c367c927.png",
+   "output_record": {
+    "path": "assets/source/reference-fx/frost-open-v2-flat.png",
+    "sha256": "ddffdac53166158b35355c8b0303ddcdda3a3fcea9ed8e497060d89f0fb175b5",
+    "size": [
+     2172,
+     724
+    ]
+   },
+   "decision": "Stronger outer crown and smaller caster gap achieved, but ground oval too flat; retained as rejected camera draft."
+  },
+  {
+   "id": "frost-open-v2-ground-edit",
+   "prompt": "EDIT THE ATTACHED FOUR-FRAME FROST STRIP. Preserve exactly its POWERFUL large angular outer crystal crown,18\u201324shard visual density,35\u201340%emptycenter for a standing caster, blue/white facet material and sparse faint tail. Do not turn the crystals into tiny ward decorations. Do not add a central pillar. Keep the first onset, second strong peak, third shatter and fourth sparse tail temporal sequence.\n\nCORRECT ONLY THE PROJECTED GROUND OVAL. It is currently far too flat, like a low eye-level ellipse. Make the ground oval DEEPER and TALLER around the same center while keeping its horizontal width. TRUE35.264-degree orthographic isometric ground circle means ellipseHEIGHT/WIDTH0.57735. For a400pxwide oval its total projected height MUST be231px, not100\u2013130px. Expand BOTH upper and lower ground arcs from the center until they form a deep obvious oval near a2:1rectangle. The lower semicircle must reach much farther BELOW the contact center; the upper semicircle reaches equally far behind. Do not make the oval circular(front-facing) and do not leave it thin.\n\nMove shard BASES to sit on the corrected deep oval, but preserve each crystal's own height and width: do NOT stretch the whole crown vertically. Rear-left/rear-right crystal groups should sit on the higher rear arc, left/right groups on the sides, tiny front shards on the lower front arc. The central35\u201340%width standing-body column above the contact stays black and empty. Keep the highest shards at the outer left/right, never in the center. Preserve clear dark gaps and controlled fine cyan glow. The deep ring itself is secondary, only thin broken frost arcs and cracks; no ornate ward glyphs or opaque groundplate.\n\nFour equal panels in one horizontal row, shared origin, pureBLACKRGB(0,0,0) background, all4panels with generous black margin. No text, labels, panel borders, scenery, people, UI, smoke or checkerboard. Panel4must remain under20%of peak light energy:3\u20135tiny faint fragments and faint broken arcs, NO complete bright ring. Match the original clean powerful ice-eruption silhouette and preserve the carefully open caster center.",
+   "referenced_image_paths": [
+    "assets/source/reference-fx/frost-open-v2-flat.png"
+   ],
+   "reference_records": [
+    {
+     "path": "assets/source/reference-fx/frost-open-v2-flat.png",
+     "sha256": "ddffdac53166158b35355c8b0303ddcdda3a3fcea9ed8e497060d89f0fb175b5"
+    }
+   ],
+   "transparent_background": false,
+   "output": "assets/source/reference-fx/frost-open-v2.png",
+   "original_generation_path": "/workspace/generated_images/exec-9ff09d52-71cd-4abd-a78e-d489639eb60b.png",
+   "output_record": {
+    "path": "assets/source/reference-fx/frost-open-v2.png",
+    "sha256": "1c298ae389f30da8fba071f4483fed817f93bfdcee5bb7e523454983c0c65b71",
+    "size": [
+     2172,
+     724
+    ]
+   },
+   "decision": "Candidate only, awaiting root review and measurement. Stronger outer crystal groups and caster gap remain; ground oval is deeper but still requires actual cardinal review."
   }
  ],
  "review": {
@@ -160,6 +261,145 @@
    },
    "packing": "Independent frost override leaves base WebP and the other five effects byte-identical. The old frost base row remains unused for reproducibility.",
    "limitation": "The last generated phase retains a visible ground ring; runtime lifetime fade still removes it. Gameplay readability needs root browser verification."
+  },
+  "frost_open_candidate": {
+   "status": "rejected after root visual review",
+   "reason": "Current frost.png shows the original central crystal covering the caster torso. New source leaves a broad black standing-body gap and keeps shards at outer left/right/rear sides, with tiny foreground shards below the foot plane.",
+   "source_review": "Open center is clearly visible in every phase. No central vertical spike or bright core remains. Deep blue oval is preserved but still requires natural-effect camera-envelope measurement; no rigid-axis certification is claimed. Last phase retains a thin circle and a few small shards, with lower total energy than peak.",
+   "phase_metrics": [
+    {
+     "bounds_rgb32": [
+      102,
+      355,
+      457,
+      554
+     ],
+     "luminance_sum": 1236502.07
+    },
+    {
+     "bounds_rgb32": [
+      88,
+      331,
+      473,
+      554
+     ],
+     "luminance_sum": 1891239.39
+    },
+    {
+     "bounds_rgb32": [
+      95,
+      334,
+      458,
+      553
+     ],
+     "luminance_sum": 1230253.2
+    },
+    {
+     "bounds_rgb32": [
+      96,
+      340,
+      452,
+      553
+     ],
+     "luminance_sum": 774065.8
+    }
+   ],
+   "runtime_change": "None in this task. Do not treat the generated source as user approval or as actual gameplay verification.",
+   "projection_limit": "The new visible ground oval appears approximately0.50\u20130.52minor/major rather than the requested0.57735; measure its actual cardinal envelope before packing and apply a small documented correction (roughly1.11\u20131.15) rather than blindly reusing the prior1.06. This also places overall peak height/width near0.65\u20130.68 while the center stays clear.",
+   "rejection_reason": "Crystal shards were too tiny/quiet and opening occupied roughly80%of ring, reading as a ward/sigil rather than the user iceburst reference."
+  },
+  "frost_open_v2_candidate": {
+   "status": "adopted after root actual-game portrait comparison; not separate user approval",
+   "source": "assets/source/reference-fx/frost-open-v2.png",
+   "reason": "Root rejected the first open-center candidate as too quiet. This variant restores dense substantial angular crystal groups around the outer crown, retains a central standing-body gap and makes the tail much sparser.",
+   "source_review": "Peak has large distinct side/rear crystal groups instead of tiny ward chips. Central upper standing-body column remains empty. Foreground shards end below the circle center. Generator created an almost continuous thin tail arc despite asking for broken arcs, but total tail energy is below20%of peak.",
+   "phase_metrics": [
+    {
+     "bounds_rgb32": [
+      60,
+      244,
+      492,
+      519
+     ],
+     "luminance_sum": 2694329.32
+    },
+    {
+     "bounds_rgb32": [
+      14,
+      209,
+      518,
+      527
+     ],
+     "luminance_sum": 8437576.21
+    },
+    {
+     "bounds_rgb32": [
+      35,
+      199,
+      506,
+      521
+     ],
+     "luminance_sum": 3248735.03
+    },
+    {
+     "bounds_rgb32": [
+      90,
+      276,
+      463,
+      529
+     ],
+     "luminance_sum": 458997.18
+    }
+   ],
+   "tail_over_peak_energy": 0.05439917442831606,
+   "ground_fit": {
+    "method": "OpenCV fitEllipse over cyan tail-arc pixels inside the observed outer ellipse annulus (center272,402,radii174,110; normalized squared radius0.90..1.12). This removes isolated fragments and long cracks; approximate natural-light envelope, not rigid-axis certification. Actual cardinal review still needed.",
+    "points": 1861,
+    "center": [
+     274.6145324707031,
+     401.72418212890625
+    ],
+    "axes": [
+     220.58949279785156,
+     346.8313903808594
+    ],
+    "angle": 89.33011627197266,
+    "minor_over_major": 0.6360136334707761,
+    "target": 0.5773502691896258
+   },
+   "contact_warning": "Use geometric ground-ring center near local(272,402) as caster foot, not the bright frontmost ice seam near local(272,490).",
+   "runtime_change": "Independent frost override packed from v2; main atlas and five other effects retain identical bytes.",
+   "runtime_trial": {
+    "source": "assets/source/reference-fx/frost-open-v2.png",
+    "runtime_override_path": "assets/art/effects/frost-low.webp",
+    "measured_ground_centers": [
+     [
+      274,
+      401
+     ],
+     [
+      817,
+      402
+     ],
+     [
+      1360,
+      401
+     ],
+     [
+      1904,
+      402
+     ]
+    ],
+    "packing_scale": 0.6,
+    "vertical_projection_scale": 0.9084613982600345,
+    "packed_pivot": [
+     192,
+     244
+    ],
+    "source_sha256": "1c298ae389f30da8fba071f4483fed817f93bfdcee5bb7e523454983c0c65b71",
+    "camera_limitation": "Mild documented affine2D correction of natural-light art, not geometric3D crystal reconstruction. Root actual frost cast at714x1280,dpr1 retained readable caster torso and strong outer crystals; additional landscape regression remains required.",
+    "base_atlas": "Historical main atlas is retained byte-identical; only the independent frost override changes."
+   }
   }
  }
 }

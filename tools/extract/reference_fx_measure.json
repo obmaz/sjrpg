@@ -5,7 +5,7 @@
   1024,
   1536
  ],
- "review": "Explicit source ROIs exclude neighboring effect ink because generated rows do not retain exact grid registration. Contacts were visually located at the swing center, projected ring center, ground strike origin, projectile leading head and frost sigil center. Natural emission outlines are not architectural edge certificates. Frost uses a separately generated low crown, per-key source and independent runtime row; legacy base retained for unchanged other-effect pixels.",
+ "review": "Explicit source ROIs exclude neighboring effect ink because generated rows do not retain exact grid registration. Contacts were visually located at the swing center, projected ring center, ground strike origin, projectile leading head and frost sigil center. Natural emission outlines are not architectural edge certificates. Frost uses a separately generated low crown, per-key source and independent runtime row; legacy base retained for unchanged other-effect pixels. Root source review selected the stronger open-center v2 after actual-game portrait comparison; current frost override source is frost-open-v2.png. Main atlas and five other effects remain unchanged.",
  "projection_measurements": {
   "spin": {
    "method": "OpenCV fitEllipse on the largest connected R/G/B-maximum >100 contour inside source peak square (256,256)-(512,512). This includes the bright sweep stroke, not the dust shadow; production packing omits neighboring plume rows below y480.",
@@ -15,6 +15,82 @@
    "vertical_projection_scale": 1.3727252952054785
   },
   "frost": {
+   "source": "assets/source/reference-fx/frost-open-v2.png",
+   "method": "OpenCV fitEllipse over cyan ground-arc pixels in each source frame within the observed outer annulus center(274,402),radii(174,110),normalized squared radius0.90..1.12,RGB B>50,G>20,R<120. This rejects isolated distant shards/cracks. Tail has the clearest uninterrupted ground arc; its ratio sets the shared mild affine correction. Other phases vary naturally and include occluded arcs; not a rigid-edge or exact3D camera certificate.",
+   "target_minor_over_major": 0.5773502691896258,
+   "vertical_projection_scale": 0.9084613982600345,
+   "frames": [
+    {
+     "phase": 0,
+     "points": 5231,
+     "center": [
+      274.4896545410156,
+      400.9285583496094
+     ],
+     "axes": [
+      217.11158752441406,
+      350.1992492675781
+     ],
+     "angle": 90.20722198486328,
+     "minor_over_major": 0.6199658850739704,
+     "corrected_minor_over_major": 0.563215074827819
+    },
+    {
+     "phase": 1,
+     "points": 7770,
+     "center": [
+      273.90313720703125,
+      401.6117858886719
+     ],
+     "axes": [
+      222.1560516357422,
+      350.31964111328125
+     ],
+     "angle": 90.01815795898438,
+     "minor_over_major": 0.6341524298487866,
+     "corrected_minor_over_major": 0.5761030031304271
+    },
+    {
+     "phase": 2,
+     "points": 5304,
+     "center": [
+      273.98419189453125,
+      401.2760009765625
+     ],
+     "axes": [
+      219.5008544921875,
+      351.3485412597656
+     ],
+     "angle": 89.98616027832031,
+     "minor_over_major": 0.6247381978737233,
+     "corrected_minor_over_major": 0.5675505367868168
+    },
+    {
+     "phase": 3,
+     "points": 1864,
+     "center": [
+      275.340087890625,
+      401.80352783203125
+     ],
+     "axes": [
+      220.52069091796875,
+      346.9895935058594
+     ],
+     "angle": 89.49276733398438,
+     "minor_over_major": 0.6355253732249032,
+     "corrected_minor_over_major": 0.5773502691896258
+    }
+   ],
+   "registration": "Each individual fitted geometric ground center is rounded to the nearest source pixel and registered at the same packed pivot. Front ice seam is not the caster foot."
+  },
+  "frost_legacy": {
+   "method": "Visual ground-sigil envelope around the peak crystal crown; upper arc partly occluded by crystals. Source cardinal envelope x293..480, y1118..1174; frost light/crystal shapes receive the same affine y correction and stay upright. This is approximate VFX silhouette correction, not a 3D crystal reconstruction.",
+   "native_width": 187,
+   "native_height": 56,
+   "target_minor_over_major": 0.5773502691896258,
+   "vertical_projection_scale": 1.927937506043929
+  },
+  "frost_low_first": {
    "left": [
     640,
     457
@@ -37,13 +113,6 @@
    "packing_vertical_scale": 1.06,
    "corrected_minor_over_major": 0.577909604519774,
    "method": "Visual outer ground-oval cardinal envelope in peak cell. Upper arc is partly occluded by crystals; this is an approximate natural-light silhouette review, not a rigid-edge camera certificate."
-  },
-  "frost_legacy": {
-   "method": "Visual ground-sigil envelope around the peak crystal crown; upper arc partly occluded by crystals. Source cardinal envelope x293..480, y1118..1174; frost light/crystal shapes receive the same affine y correction and stay upright. This is approximate VFX silhouette correction, not a 3D crystal reconstruction.",
-   "native_width": 187,
-   "native_height": 56,
-   "target_minor_over_major": 0.5773502691896258,
-   "vertical_projection_scale": 1.927937506043929
   }
  },
  "effects": {
@@ -276,7 +345,7 @@
    ]
   },
   "frost": {
-   "source": "assets/source/reference-fx/frost-low.png",
+   "source": "assets/source/reference-fx/frost-open-v2.png",
    "source_size": [
     2172,
     724
@@ -284,57 +353,57 @@
    "override_path": "assets/art/effects/frost-low.webp",
    "packed_pivot": [
     192,
-    250
+    244
    ],
-   "packing_scale": 0.72,
-   "vertical_projection_scale": 1.06,
+   "packing_scale": 0.6,
+   "vertical_projection_scale": 0.9084613982600345,
    "source_frames": [
     {
      "roi": [
-      40,
-      270,
-      463,
-      320
+      0,
+      170,
+      543,
+      390
      ],
      "contact": [
-      275,
-      456
+      274,
+      401
      ]
     },
     {
      "roi": [
-      583,
-      270,
-      463,
-      320
+      543,
+      170,
+      543,
+      390
      ],
      "contact": [
-      816,
-      456
+      817,
+      402
      ]
     },
     {
      "roi": [
-      1126,
-      270,
-      463,
-      320
+      1086,
+      170,
+      543,
+      390
      ],
      "contact": [
-      1359,
-      456
+      1360,
+      401
      ]
     },
     {
      "roi": [
-      1669,
-      270,
-      463,
-      320
+      1629,
+      170,
+      543,
+      390
      ],
      "contact": [
-      1901,
-      456
+      1904,
+      402
      ]
     }
    ],
@@ -453,5 +522,74 @@
     }
    ]
   }
- }
+ },
+ "previous_runtime_trials": [
+  {
+   "id": "frost-low-first",
+   "definition": {
+    "source": "assets/source/reference-fx/frost-low.png",
+    "source_size": [
+     2172,
+     724
+    ],
+    "override_path": "assets/art/effects/frost-low.webp",
+    "packed_pivot": [
+     192,
+     250
+    ],
+    "packing_scale": 0.72,
+    "vertical_projection_scale": 1.06,
+    "source_frames": [
+     {
+      "roi": [
+       40,
+       270,
+       463,
+       320
+      ],
+      "contact": [
+       275,
+       456
+      ]
+     },
+     {
+      "roi": [
+       583,
+       270,
+       463,
+       320
+      ],
+      "contact": [
+       816,
+       456
+      ]
+     },
+     {
+      "roi": [
+       1126,
+       270,
+       463,
+       320
+      ],
+      "contact": [
+       1359,
+       456
+      ]
+     },
+     {
+      "roi": [
+       1669,
+       270,
+       463,
+       320
+      ],
+      "contact": [
+       1901,
+       456
+      ]
+     }
+    ]
+   }
+  }
+ ]
 }
