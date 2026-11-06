@@ -22,18 +22,31 @@ var params := {}
 var _impact_started := false
 var _tick_timer := 0.0
 var _hit := {}  # enemies already hit (piercing)
+var _text_target: WeakRef
+var _text_target_id := 0
+var _text_offset := Vector2.ZERO
+var _text_anchor := Vector2.ZERO
+var _text_rise := 0.0
+const TEXT_STREAM_GAP := 4.0
+const TEXT_STREAM_MAX_RISE := 240.0
 
 
-## Keep individual amounts readable without a queue, amount merging, or an expanding stack.
-## Nine nearby positions are enough for ordinary rapid hits; saturation replaces only
-## older text intersecting the new label. All text still shares the 64-effect budget.
-func place_text(peers: Array) -> void:
+## Monster damage uses its own vertical stream; rewards retain nearby free placement.
+## Every amount stays individual, and all text shares the existing 64-effect budget.
+func place_text(peers: Array, damage_target: Node2D = null) -> void:
 	var anchor := position
 	var lines := text.split("\n")
 	var width := 0.0
 	for line in lines:
 		width = maxf(width, UiKit.BOLD_FONT.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x)
 	params["text_size"] = Vector2(width, UiKit.BOLD_FONT.get_height(22) * lines.size())
+	if is_instance_valid(damage_target):
+		_text_target = weakref(damage_target)
+		_text_target_id = damage_target.get_instance_id()
+		_text_offset = position - damage_target.position
+		_text_anchor = position
+		_place_damage_stream(peers)
+		return
 	var offsets := [Vector2.ZERO, Vector2(-96, 0), Vector2(96, 0),
 		Vector2(0, -40), Vector2(-96, -40), Vector2(96, -40),
 		Vector2(0, -80), Vector2(-96, -80), Vector2(96, -80)]
@@ -50,6 +63,39 @@ func place_text(peers: Array) -> void:
 	for peer in peers:
 		if is_instance_valid(peer) and not peer.is_queued_for_deletion() and peer.kind == "text" and text_bounds().intersects(peer.text_bounds()):
 			peer.queue_free()
+
+
+## Newest hit stays by the target; preceding hits move up in their original order.
+## Push only when needed for the actual outlined font height, then retire the oldest
+## rows at a fixed height rather than growing a tower during dense multi-hit attacks.
+func _place_damage_stream(peers: Array) -> void:
+	var below: Effect = self
+	for index in range(peers.size() - 1, -1, -1):
+		var peer = peers[index]
+		if not is_instance_valid(peer) or peer.is_queued_for_deletion() or peer.kind != "text" or peer._text_target_id != _text_target_id:
+			continue
+		peer._sync_text_position()
+		var needed: float = peer.text_bounds().end.y - below.text_bounds().position.y + TEXT_STREAM_GAP
+		peer._text_rise += maxf(0.0, needed)
+		if peer._text_rise > TEXT_STREAM_MAX_RISE:
+			peer.queue_free()
+			continue
+		peer._sync_text_position()
+		below = peer
+
+
+## Weak targets never keep a dying monster alive. Its last anchor survives removal.
+func _sync_text_position() -> void:
+	if _text_target == null:
+		return
+	var target := _text_target.get_ref() as Node2D
+	if is_instance_valid(target) and not target.is_queued_for_deletion():
+		var follow := true
+		if target is Enemy:
+			follow = not target.dead
+		if follow:
+			_text_anchor = target.position + _text_offset
+	position = _text_anchor - Vector2(0, _text_rise)
 
 
 ## Match the centered glyphs and their outline, rather than the 120px drawing box.
@@ -219,7 +265,13 @@ func _process(delta: float) -> void:
 		"ward":
 			_update_ward(delta)
 		"text":
-			if not Prefs.reduce_motion:
+			if _text_target_id != 0:
+				if not Prefs.reduce_motion:
+					_text_rise += 42.0 * active_delta
+				_sync_text_position()
+				if _text_rise > TEXT_STREAM_MAX_RISE:
+					queue_free()
+			elif not Prefs.reduce_motion:
 				position.y -= 42.0 * delta
 	if is_queued_for_deletion():
 		return

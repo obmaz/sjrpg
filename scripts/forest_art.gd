@@ -2,6 +2,10 @@ class_name ForestArt
 extends RefCounted
 ## Generated reference materials and low path-border flora, independent of gameplay RNG/collision.
 
+## Source-albedo gain only for the low grass plane, not tree leaves or earth.
+## Native3D grass uses the same value; lighting remains a separate model.
+const GRASS_TINT := Color(1.26, 1.30, 1.08, 1.0)
+
 static var _data: Dictionary = {}
 static var _textures: Dictionary = {}
 

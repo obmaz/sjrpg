@@ -13,6 +13,9 @@ func _projection_error(game: Node, preview: Ortho3DPreview) -> float:
 
 
 func run() -> void:
+	check("dedicated3D entry works without query parameters", LaunchMode.preview_3d("/sjrpg2/3d.html", ""))
+	check("existing3D link remains supported", LaunchMode.preview_3d("/sjrpg2/", "?preview3d=1&at=chapel_reference"))
+	check("normal and disabled links keep the2D game", not LaunchMode.preview_3d("/sjrpg2/", "") and not LaunchMode.preview_3d("/sjrpg2/index.html", "?preview3d=0"))
 	var old_quality := Prefs.low_resolution
 	var old_zoom := Prefs.world_zoom
 	Prefs.set_low_resolution(false)
@@ -32,9 +35,10 @@ func run() -> void:
 		Prefs.set_low_resolution(old_quality)
 		return
 	var preview := Ortho3DPreview.new().setup(game)
+	game.ortho_preview = preview
 	game.add_child(preview)
 	await _frames(4)
-	check("comparison hides only the field while keeping original HUD input", not game.field_root.visible and game.hud.visible and preview.display.mouse_filter == Control.MOUSE_FILTER_IGNORE and game.player.get_parent() == game.world)
+	check("comparison hides only the field while keeping original HUD input", game.field_root.visibility_layer == 0 and game.hud.visible and preview.display.mouse_filter == Control.MOUSE_FILTER_IGNORE and game.player.get_parent() == game.world)
 	check("native mage has a real skeletal animation player", preview.actor != null and preview.animation != null and preview.animation.get_animation_list().size() >= 3)
 	check("comparison uses native orthographic camera and real sun shadows", preview.camera.projection == Camera3D.PROJECTION_ORTHOGONAL and preview.sunlight.shadow_enabled and preview.sunlight.directional_shadow_mode == DirectionalLight3D.SHADOW_ORTHOGONAL)
 	var focus := Ortho3DPreview.ground_position(game.camera.get_screen_center_position())
@@ -60,6 +64,11 @@ func run() -> void:
 		preview._sync_camera()
 		check("native view remains above the old economy canvas and below HUD", preview._layer.layer > 0 and preview._layer.layer < game.hud.layer and preview.display.visible)
 		check("native projection matches the actual2D viewport at both qualities", _projection_error(game, preview) < 1.0)
+		var bounds: Rect2 = preview._mode_badge.get_global_rect()
+		var header: Dictionary = game.hud.status_geometry()
+		var paint: Rect2 = header["paint_bounds"]
+		var minimap: Rect2 = header["map"]
+		check("mode label is visible between the status plate and minimap", preview._mode_badge.visible and preview._mode_label.text == "3D 마을" and bounds.position.x > paint.end.x and bounds.end.x < minimap.position.x)
 		check("economy mode removes native multisampling", preview.viewport.msaa_3d == (Viewport.MSAA_DISABLED if low else Viewport.MSAA_2X))
 	get_tree().paused = true
 	Prefs.set_world_zoom(1.5)
@@ -68,6 +77,10 @@ func run() -> void:
 	view.size = Vector2i(1280, 720)
 	await _frames(3)
 	check("paused device rotation preserves projection and display bounds", _projection_error(game, preview) < 1.0 and preview.display.size.is_equal_approx(Vector2(view.size)))
+	get_tree().paused = false
+	await _frames(2)
+	check("landscape confirmation text leaves the renderer label clear", not game.hud.toast_rect().intersects(preview._mode_badge.get_global_rect()))
+	get_tree().paused = true
 	Prefs.set_low_resolution(false)
 	await _frames(3)
 	check("paused quality switch preserves native projection", _projection_error(game, preview) < 1.0)
@@ -123,18 +136,19 @@ func run() -> void:
 	var town_position: Vector2 = game.player.position
 	game.player.position = game.village.safe_zone[0] + Vector2(-10000, 0)
 	preview._process(0.016)
-	check("leaving the comparison restores authoritative2D obstacles", not preview.display.visible and game.field_root.visible and preview.viewport.render_target_update_mode == SubViewport.UPDATE_DISABLED)
+	check("leaving the comparison restores authoritative2D obstacles", not preview.display.visible and game.field_root.visibility_layer != 0 and preview.viewport.render_target_update_mode == SubViewport.UPDATE_DISABLED)
+	check("fallback explicitly identifies the2D area", preview._mode_label.text == "2D 지역" and preview._mode_badge.visible)
 	game.player.position = town_position
 	preview._process(0.016)
-	check("returning to town restores the native view", preview.display.visible and not game.field_root.visible)
+	check("returning to town restores the native view", preview.display.visible and game.field_root.visibility_layer == 0)
 	game.player.position = game.dungeon.entry_point()
 	check("comparison can enter the existing cave normally", game.dungeon.enter())
 	preview._process(0.016)
-	check("cave keeps its actual2D walls while native town is suspended", not preview.display.visible and not game.field_root.visible and game.dungeon._root.visible)
+	check("cave keeps its actual2D walls while native town is suspended", not preview.display.visible and game.field_root.visibility_layer == 0 and game.dungeon._root.visible)
 	game.dungeon.leave("")
 	preview.queue_free()
 	await _frames(2)
-	check("removing the opt-in presenter restores the original field", game.field_root.visible)
+	check("removing the opt-in presenter restores the original field", game.field_root.visibility_layer != 0)
 	view.queue_free()
 	await _frames(2)
 	Prefs.set_low_resolution(old_quality)

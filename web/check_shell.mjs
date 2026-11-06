@@ -90,6 +90,13 @@ try {
     await page.locator('#retry').click();
     await page.locator('#progress').waitFor({ state: 'visible' });
     assert.equal(await page.locator('#failure').isVisible(), false);
+    for (const [path, native] of [['/3d.html', true], ['/?preview3d=1', true], ['/?preview3d=0', false]]) {
+      await page.goto('https://loader.test' + path);
+      assert.equal(await page.evaluate(() => window.__sjrpgLaunch3D), native);
+      await page.evaluate(() => { window.finish(); window.__sjrpgEntry.show(() => window.__sjrpgEntry.hide()); });
+      await page.locator('#entry-start').waitFor({state: 'visible'});
+      assert.equal(await page.locator('#entry-start').textContent(), native ? '3D 비교 시작' : '모험 시작');
+    }
     await page.close();
     checks += 1;
   }

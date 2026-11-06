@@ -3,6 +3,8 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 mkdir -p "$ROOT/build/web"
+# Local screenshots and prior exports are artifacts, not game resources.
+touch "$ROOT/build/.gdignore"
 LOG="$(mktemp)"; trap 'rm -f "$LOG"' EXIT
 "$ROOT/tools/godot.sh" --headless --import >"$LOG" 2>&1 || true
 if grep -E "SCRIPT ERROR|Parse Error" "$LOG"; then echo "스크립트 오류로 export 중단"; exit 1; fi
@@ -12,4 +14,6 @@ test -s "$ROOT/build/web/index.wasm" && test -s "$ROOT/build/web/index.pck"
 cp "$ROOT/web/loading-bg.webp" "$ROOT/web/entry-button.webp" "$ROOT/build/web/"
 cp "$ROOT/web/manifest.webmanifest" "$ROOT/web/install.js" "$ROOT/web/install-sw.js" "$ROOT"/web/install-*.png "$ROOT/build/web/"
 touch "$ROOT/build/web/.nojekyll"
-printf "export ok: pck %s, wasm %s\n" "$(du -h "$ROOT/build/web/index.pck" | cut -f1)" "$(du -h "$ROOT/build/web/index.wasm" | cut -f1)"
+# Immutable pack URLs prevent a cached prior deployment from supplying old game code.
+PACK="$(python3 "$ROOT/tools/stamp_web.py" "$ROOT/build/web")"
+printf "export ok: %s %s, wasm %s\n" "$PACK" "$(du -h "$ROOT/build/web/$PACK" | cut -f1)" "$(du -h "$ROOT/build/web/index.wasm" | cut -f1)"

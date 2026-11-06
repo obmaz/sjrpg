@@ -107,7 +107,7 @@ func run() -> void:
 	var cave_enemy := _enemy(game, "skeleton")
 	var cave_body: Dictionary = game.add_corpse(cave_enemy, true)
 	var cave_visual: Node2D = cave_body["visual"]
-	check("map swap hides the forest body and parents the cave body locally", not forest_visual.is_visible_in_tree() and cave_visual.get_parent() == game.world and cave_visual.z_index == -1)
+	check("map swap culls the forest body and parents the cave body locally", game.field_root.visibility_layer == 0 and forest_visual.is_inside_tree() and cave_visual.get_parent() == game.world and cave_visual.z_index == -1)
 	game.dungeon.tick(1.0)
 	check("cave uses the same timer while hidden forest bodies stay frozen", cave_body["time"] == game.CORPSE_LIFETIME - 1.0 and forest_body["time"] == game.CORPSE_LIFETIME)
 	var cave_action: Callable = game.player._prepare("findItem", guaranteed_item, 1)

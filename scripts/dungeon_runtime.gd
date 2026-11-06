@@ -67,7 +67,7 @@ func enter() -> bool:
 	game.chests = chests
 	game.corpses = []
 	game.map_shapes = [] as Array[Dictionary]
-	game.field_root.visible = false
+	game.set_forest_rendered(false)
 	game.field_root.process_mode = Node.PROCESS_MODE_DISABLED
 	game.quest_runtime.set_process(false)
 	game.exploration.set_process(false)
@@ -164,7 +164,7 @@ func leave(message: String) -> void:
 	game.chests = _forest_chests
 	game.corpses = _forest_corpses
 	game.map_shapes = _forest_shapes
-	game.field_root.visible = true
+	game.set_forest_rendered(true)
 	game.field_root.process_mode = Node.PROCESS_MODE_INHERIT
 	game.quest_runtime.set_process(true)
 	game.exploration.set_process(true)

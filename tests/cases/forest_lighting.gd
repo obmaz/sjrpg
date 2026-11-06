@@ -34,7 +34,7 @@ func run() -> void:
 	await _frames(2)
 	check("quality switching keeps lights in the ground viewport", lighting.get_viewport() == lighting.surfaces[0].get_viewport() and lighting.openings == positions)
 	game.player.position = game.dungeon.entry_point()
-	check("cave entry hides the forest lights with their receivers", game.dungeon.enter() and not lighting.is_visible_in_tree())
+	check("cave entry culls the forest receivers and disables their shared light", game.dungeon.enter() and game.field_root.visibility_layer == 0 and not WorldLighting.is_enabled())
 	game.dungeon.leave("")
 	check("returning restores the same forest lights", lighting.is_visible_in_tree() and lighting.openings.size() == 2)
 	Prefs.set_low_resolution(previous)

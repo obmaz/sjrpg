@@ -19,6 +19,8 @@ var forest_details: Array[IsoSprite] = []
 var forest_lighting: ForestLighting
 var forest_atmosphere: ForestAtmosphere
 var ortho_preview: Ortho3DPreview
+var town_3d_enabled := false
+var _forest_layer := 1
 var _fx_review_focus := Vector2.ZERO
 var player: Player
 var _impact_offset := Vector2.ZERO
@@ -140,6 +142,9 @@ func _ready() -> void:
 	encounters = EncounterRuntime.new().setup(self)
 	add_child(encounters)
 	_read_debug_params()
+	Prefs.town_renderer_changed.connect(set_town_3d)
+	if Prefs.town_3d:
+		_enable_ortho_preview.call_deferred()
 	_update_zoom()
 	get_viewport().size_changed.connect(_update_zoom)
 	for i in 12:
@@ -239,6 +244,8 @@ func _read_debug_params() -> void:
 	var query = JavaScriptBridge.eval("window.location.search", true)
 	if typeof(query) != TYPE_STRING:
 		return
+	var native_preview := LaunchMode.web_preview_3d()
+	var has_viewpoint := false
 	for part in String(query).trim_prefix("?").split("&"):
 		var kv := part.split("=")
 		if kv.size() == 2 and kv[0] == "zoom":
@@ -247,8 +254,6 @@ func _read_debug_params() -> void:
 			add_child(RenderProbe.new().setup(self))
 		elif kv.size() == 2 and kv[0] == "defender_preview" and kv[1] == "1":
 			_defender_feedback_preview.call_deferred()
-		elif kv.size() == 2 and kv[0] == "preview3d" and kv[1] == "1":
-			_enable_ortho_preview.call_deferred()
 		elif kv.size() == 2 and kv[0] == "quality":
 			Prefs.set_low_resolution(kv[1] == "low")
 		elif kv.size() == 2 and kv[0] == "lighting":
@@ -269,6 +274,8 @@ func _read_debug_params() -> void:
 			_warp_preview.call_deferred()
 		elif kv.size() == 2 and kv[0] == "combat_preview":
 			_combat_preview.call_deferred()
+		elif kv.size() == 2 and kv[0] == "combat_text_preview" and kv[1] == "1":
+			_damage_stream_preview.call_deferred()
 		elif kv.size() == 2 and kv[0] == "fx_preview" and kv[1] in ["cleave", "whirlwind", "leapAttack", "iceBolt", "frostNova", "meteor"]:
 			_reference_fx_preview.call_deferred(kv[1])
 		elif kv.size() == 2 and kv[0] == "gate_preview" and kv[1] in ["0", "1", "2", "3"]:
@@ -283,6 +290,7 @@ func _read_debug_params() -> void:
 			for c in chests:
 				c.take_damage(1.0, null)
 		elif kv.size() == 2 and kv[0] == "at":
+			has_viewpoint = true
 			match kv[1]:
 				"npc_nw", "npc_ne", "npc_sw", "npc_se":
 					var key := kv[1].trim_prefix("npc_")
@@ -323,13 +331,7 @@ func _read_debug_params() -> void:
 				"chapel":
 					player.position = village.chapel_steps[village.chapel_steps.size() - 1]
 				"chapel_reference":
-					# A real walkable viewpoint beside the doorway, without hiding any scenery.
-					var entry: Vector2 = village.chapel_steps[0]
-					player.position = entry
-					for offset: Vector2 in [Vector2(80, 75), Vector2(100, 100), Vector2(120, 130)]:
-						if not _blocked(entry + offset, Player.RADIUS):
-							player.position = entry + offset
-							break
+					_place_at_chapel_reference()
 				"bank":
 					player.position = Iso.project(village.forecourt_g + Vector2(0, -60))
 				"corner0":
@@ -342,14 +344,56 @@ func _read_debug_params() -> void:
 					player.position = village.point(Vector2(0.94, 0.90)) + Vector2(0, 150)
 			camera.position = player.position
 			camera.reset_smoothing()
+	if native_preview:
+		if not has_viewpoint:
+			_place_at_chapel_reference()
+			camera.position = player.position
+			camera.reset_smoothing()
+		_enable_ortho_preview.call_deferred()
+
+
+func _place_at_chapel_reference() -> void:
+	# Use the same real walkable entry for direct links and saved adventures.
+	var entry: Vector2 = village.chapel_steps[0]
+	player.position = entry
+	for offset: Vector2 in [Vector2(80, 75), Vector2(100, 100), Vector2(120, 130)]:
+		if not _blocked(entry + offset, Player.RADIUS):
+			player.position = entry + offset
+			break
 
 
 ## Explicit comparison only; the default renderer and saved progression stay unchanged.
 func _enable_ortho_preview() -> void:
+	town_3d_enabled = true
 	if is_instance_valid(ortho_preview):
+		ortho_preview.set_enabled(true)
 		return
 	ortho_preview = Ortho3DPreview.new().setup(self)
 	add_child(ortho_preview)
+
+
+func set_town_3d(value: bool) -> void:
+	town_3d_enabled = value
+	if value:
+		_enable_ortho_preview()
+	elif is_instance_valid(ortho_preview):
+		ortho_preview.set_enabled(false)
+
+
+## Layer culling preserves cached Polygon2D buffers. Godot4.7.2 Compatibility
+## redraws those through an invalid index-buffer update after hide/show.
+func set_forest_rendered(value: bool) -> void:
+	if value:
+		field_root.visibility_layer = _forest_layer
+	else:
+		if field_root.visibility_layer != 0:
+			_forest_layer = field_root.visibility_layer
+		field_root.visibility_layer = 0
+	_sync_forest_daylight()
+
+
+func _sync_forest_daylight() -> void:
+	WorldLighting.set_enabled(forest_lighting.enabled and not dungeon.active and field_root.visibility_layer != 0)
 
 
 ## 상인 곁에서는 가방에서 상점으로 전환할 수 있습니다 (원본의 근처 행동 버튼).
@@ -565,6 +609,39 @@ func _combat_preview() -> void:
 		await get_tree().create_timer(0.37, false).timeout
 
 
+## Real zone ticks create the per-monster streams for an explicit visual review.
+func _damage_stream_preview() -> void:
+	encounters.set_process(false)
+	_spawn_timer = 10000.0
+	for enemy in enemies:
+		enemy.queue_free()
+	enemies.clear()
+	await get_tree().create_timer(2.0, false).timeout
+	var targets: Array[Enemy] = []
+	for offset in [Vector2(70, 75), Vector2(-70, 75)]:
+		var enemy := Enemy.new()
+		enemy.setup(self, "goblin", 1)
+		enemy.position = player.position + offset
+		enemy.hp = 100000.0
+		enemy.max_hp = enemy.hp
+		world.add_child(enemy)
+		enemies.append(enemy)
+		enemy.stun(60.0)
+		targets.append(enemy)
+	spawn_zone({"pos": player.position + Vector2(0, 75), "radius": 110.0,
+		"duration": 2.0, "tick": 0.10, "damage": 16.81, "color": SkillDefs.FIRE})
+	for frame in 200:
+		await get_tree().process_frame
+		var rows := 0
+		for effect in cosmetic_effects:
+			if is_instance_valid(effect) and not effect.is_queued_for_deletion() and effect is Effect and effect.kind == "text" and effect._text_target_id == targets[0].get_instance_id():
+				rows += 1
+		if rows >= 4:
+			get_tree().paused = true
+			JavaScriptBridge.eval("window.__sjrpgDamageStreamReady = true")
+			return
+
+
 ## Explicit visual review only: equip one existing skill, perform its real cast,
 ## then pause the actual simulation near the authored effect's peak for inspection.
 func _reference_fx_preview(which: String) -> void:
@@ -742,6 +819,9 @@ func _reward_preview(mode := "1") -> void:
 			camera.position = _camera_focus()
 			camera.reset_smoothing()
 		grant_xp(GameState.xp_to_next())
+		if mode == "levelup" and OS.has_feature("web"):
+			# Let the real character effect rise before the explicit capture pause.
+			await get_tree().create_timer(0.30, false).timeout
 		if OS.has_feature("web"):
 			hud._update_vital_feedback(0.0)
 			hud._update_layout()
@@ -787,7 +867,7 @@ func _update_impact_camera(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	# Forest-root visibility disables/restores lighting in the same cave-transition frame.
-	WorldLighting.set_enabled(forest_lighting.enabled)
+	_sync_forest_daylight()
 	WorldLighting.advance(delta)
 	_update_impact_camera(delta)
 	camera.position = _camera_focus()
@@ -1523,7 +1603,7 @@ func spawn_ward(at: Vector2, duration: float, radius: float) -> void:
 	_add_effect(e)
 
 
-func float_text(at: Vector2, text: String, color: Color) -> void:
+func float_text(at: Vector2, text: String, color: Color, damage_target: Node2D = null) -> void:
 	var e := Effect.new()
 	e.kind = "text"
 	e.position = at
@@ -1531,7 +1611,7 @@ func float_text(at: Vector2, text: String, color: Color) -> void:
 	e.color = color
 	e.life = 0.9
 	e.z_index = 20
-	e.place_text(cosmetic_effects)
+	e.place_text(cosmetic_effects, damage_target)
 	_add_effect(e)
 
 

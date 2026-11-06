@@ -26,6 +26,7 @@ jobs:
               run: |
                   chmod +x tools/*.sh
                   tools/setup_godot.sh
+                  python3 tools/test_stamp_web.py
                   tools/check.sh --export
                   touch build/web/.nojekyll
 

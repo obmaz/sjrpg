@@ -25,6 +25,7 @@ const SCENES = {
     warp: 'at=portal&panel=warp',
     warp_trip: 'warp_preview=1',
     juice: 'at=field&combat_preview=1',
+    damage_stream: 'at=field&combat_text_preview=1',
     fx_slash: 'at=field&fx_preview=cleave',
     fx_spin: 'at=field&fx_preview=whirlwind',
     fx_slam: 'at=field&fx_preview=leapAttack',
@@ -102,8 +103,8 @@ if (!(scene in SCENES)) {
     process.exit(2);
 }
 const device = args.device ?? 'desktop';
-const cls = args.class ?? (scene === 'cooldowns' || scene === 'preview3d' || args.preview3d === '1' ? 'mage' : 'warrior');
 const base = args.url ?? 'http://localhost:8765/index.html';
+const cls = args.class ?? (scene === 'cooldowns' || scene === 'preview3d' || args.preview3d === '1' || new URL(base).pathname.endsWith('/3d.html') ? 'mage' : 'warrior');
 const out = args.out ?? `shot-${scene}-${device}.png`;
 const settle = Number(args.settle ?? 9000);
 if (!Number.isFinite(settle) || settle < 500 || settle > 30000) throw new Error('--settle must be 500–30000 ms');
@@ -139,7 +140,7 @@ let loadingHeader;
 let packArrived;
 const packHeld = new Promise(resolve => { packArrived = resolve; });
 if (scene === 'title' && args['entry-flow'] === '1') {
-    await page.route('**/index.pck', route => {
+    await page.route(/\/index(?:-[0-9a-f]+)?\.pck(?:\?.*)?$/, route => {
         releaseDownload = () => route.continue();
         packArrived();
     });
@@ -218,13 +219,15 @@ if (scene === 'select') {
 if (args.start) await tap(...args.start.split(',').map(Number));
 else await tapEntry('start');
 await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { timeout: 30000 });
-if (launchURL.searchParams.get('preview3d') === '1') {
+if ((launchURL.searchParams.get('preview3d') === '1' || launchURL.pathname.endsWith('/3d.html')) && !scene.startsWith('cave_')) {
     await page.waitForFunction(() => window.__sjrpg3dReady === true && window.__sjrpg3dProbe?.native_active === true && window.__sjrpg3dProbe?.shadow_primitives > 0 && window.__sjrpg3dProbe?.batch_corner_error_m < 0.0001, null, {timeout: 60000});
     console.log('Native3D world:', await page.evaluate(() => window.__sjrpg3dProbe));
 }
 if (scene === 'background') await page.evaluate(() => document.querySelector('canvas').blur());
 if (scene === 'defender') {
     await page.waitForFunction(() => window.__sjrpgDefenderReview === true, null, {timeout: 60000});
+} else if (scene === 'damage_stream') {
+    await page.waitForFunction(() => window.__sjrpgDamageStreamReady === true, null, {timeout: 60000});
 } else if (scene.startsWith('gate_closed')) {
     await page.waitForFunction(() => window.__sjrpgGateReview?.closed === true, null, {timeout: 60000});
     console.log('Actual threat closed the gate:', await page.evaluate(() => window.__sjrpgGateReview));
@@ -252,6 +255,9 @@ if (scene === 'defender') {
     await page.waitForTimeout(300);
 } else if (scene === 'rewards' || scene === 'levelup') {
     await page.waitForFunction(() => window.__sjrpgRewardPreviewReady === true, null, {timeout: 30000});
+    if (scene === 'levelup' && (launchURL.pathname.endsWith('/3d.html') || launchURL.searchParams.get('preview3d') === '1')) {
+        await page.waitForFunction(() => window.__sjrpg3dProbe?.level_up_fx > 0, null, {timeout: 15000});
+    }
 } else if (scene === 'warp_trip') {
     await page.waitForFunction(() => Array.isArray(window.__sjrpgWarpPreviewButton), null, {timeout: 30000});
 } else if (scene.startsWith('corpses')) {
@@ -265,6 +271,42 @@ if (args.taps) {
         await tap(Number(point[1]), Number(point[2]));
         await page.waitForTimeout(450);
     }
+}
+if (args['renderer-toggle'] === '1') {
+    if (scene !== 'settings') await page.keyboard.press('Escape');
+    await page.waitForFunction(() => window.__sjrpgTownRendererButtons?.['2d'] && window.__sjrpgTownRendererButtons?.['3d'], null, {timeout: 15000});
+    for (const native of [false, true]) {
+        const point = await page.evaluate(mode => window.__sjrpgTownRendererButtons[mode], native ? '3d' : '2d');
+        await tap(vp.width * point[0], vp.height * point[1]);
+        await page.waitForFunction(expected => window.__sjrpgTownRendererButtons?.selected_3d === expected, native);
+        await page.keyboard.press('Escape');
+        await page.waitForFunction(expected => window.__sjrpg3dProbe?.native_active === expected, native);
+        await page.waitForTimeout(700);
+        await page.screenshot({path: out.replace(/\.png$/, native ? '-switched-3d.png' : '-switched-2d.png')});
+        if (!native) { await page.keyboard.press('Escape'); await page.waitForTimeout(700); }
+    }
+    console.log('Actual settings buttons switched2D then3D without restarting the adventure');
+}
+if (args.motion) {
+    const key = args.motion;
+    if (!['w', 'a', 's', 'd'].includes(key)) throw new Error('--motion expects w|a|s|d');
+    await page.keyboard.down(key);
+    try {
+        await page.waitForFunction(() => window.__sjrpg3dProbe?.animation?.active_clip?.toLowerCase().includes('run') && window.__sjrpg3dProbe.animation.moving, null, {timeout: 15000});
+        const first = await page.evaluate(() => window.__sjrpg3dProbe.animation);
+        await page.screenshot({path: out.replace(/\.png$/, '-run-first.png')});
+        await page.waitForFunction(previous => {
+            const next = window.__sjrpg3dProbe?.animation;
+            if (!next?.moving || next.active_clip !== previous.active_clip || Math.abs(next.sample_time - previous.sample_time) < 0.02) return false;
+            return Object.keys(previous.bones).some(name => {
+                const a = previous.bones[name], b = next.bones[name];
+                return b && Math.abs(a.reduce((sum, value, i) => sum + value * b[i], 0)) < 0.9995;
+            });
+        }, first, {timeout: 15000});
+        await page.screenshot({path: out.replace(/\.png$/, '-run-second.png')});
+        console.log('Actual movement advanced native clip and bone poses:', await page.evaluate(() => window.__sjrpg3dProbe.animation));
+    } finally { await page.keyboard.up(key); }
+    await page.waitForTimeout(700);
 }
 if (args.walk) {
     // Optional real keyboard route for inspecting service buildings without teleporting the scene.

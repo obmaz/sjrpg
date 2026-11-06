@@ -54,9 +54,6 @@ var _cards := {}
 var _seen_impacts := {}
 var _contact_time := 0.0
 var _contact_energy := 0.0
-var _old_field_visible := true
-var _animation_name := ""
-var _last_position := Vector2.ZERO
 var _probe_clock := 0.0
 var _ready_published := false
 var _labels := {}
@@ -69,6 +66,12 @@ var _affordances: Ortho3DAffordances
 var _was_paused := false
 var _static_batch := {}
 var _batch_gpu_error := -1.0
+var _mode_layer: CanvasLayer
+var _mode_badge: PanelContainer
+var _mode_label: Label
+var enabled := true
+var _hero_motion: Ortho3DHeroMotion
+var _level_up_fx: Ortho3DLevelUp
 
 
 func setup(world_game: Node2D) -> Ortho3DPreview:
@@ -97,9 +100,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.__sjrpg3dReady = false; window.__sjrpg3dProbe = null")
-	_old_field_visible = game.field_root.visible
-	game.field_root.hide()
-	_last_position = game.player.position
+	game.set_forest_rendered(false)
 	viewport = SubViewport.new()
 	viewport.own_world_3d = true
 	viewport.handle_input_locally = false
@@ -118,6 +119,24 @@ func _ready() -> void:
 	display.texture = viewport.get_texture()
 	display.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_layer.add_child(display)
+	_mode_layer = CanvasLayer.new()
+	_mode_layer.layer = game.hud.layer + 1
+	add_child(_mode_layer)
+	_mode_badge = PanelContainer.new()
+	_mode_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var frame := StyleBoxFlat.new()
+	frame.bg_color = Color(0.06, 0.09, 0.075, 0.9)
+	frame.border_color = Color("93815b")
+	frame.set_border_width_all(1)
+	frame.set_corner_radius_all(5)
+	frame.content_margin_left = 6
+	frame.content_margin_right = 6
+	_mode_badge.add_theme_stylebox_override("panel", frame)
+	_mode_layer.add_child(_mode_badge)
+	_mode_label = UiKit.label("3D 마을", 18, Color("e4d5b1"))
+	_mode_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_mode_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_mode_badge.add_child(_mode_label)
 	_setup_light()
 	_setup_materials()
 	_build_ground()
@@ -125,6 +144,7 @@ func _ready() -> void:
 	_static_batch = Ortho3DStaticBatch.apply(stage)
 	_load_actor()
 	_affordances = Ortho3DAffordances.new().setup(self)
+	_level_up_fx = Ortho3DLevelUp.new().setup(self)
 	game.get_viewport().size_changed.connect(_resize)
 	Prefs.graphics_changed.connect(_resize)
 	_resize()
@@ -136,7 +156,7 @@ func _exit_tree() -> void:
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.__sjrpg3dReady = false; window.__sjrpg3dProbe = null")
 	if is_instance_valid(game) and is_instance_valid(game.field_root) and not game.is_queued_for_deletion():
-		game.field_root.visible = _old_field_visible
+		game.set_forest_rendered(not game.dungeon.active)
 
 
 func _resize() -> void:
@@ -146,6 +166,16 @@ func _resize() -> void:
 	display.size = native
 	viewport.size = Vector2i(native / (2.0 if Prefs.low_resolution else 1.0))
 	viewport.msaa_3d = Viewport.MSAA_DISABLED if Prefs.low_resolution else Viewport.MSAA_2X
+	var header: Dictionary = game.hud.status_geometry()
+	var unit: float = header["map_unit"]
+	var paint: Rect2 = header["paint_bounds"]
+	var minimap: Rect2 = header["map"]
+	var left := paint.end.x + 6.0 * unit
+	var right := minimap.position.x - 6.0 * unit
+	var width := minf(126.0 * unit, right - left)
+	_mode_badge.position = Vector2((left + right - width) * 0.5, minimap.position.y + 2.0 * unit)
+	_mode_badge.size = Vector2(width, 32.0 * unit)
+	_mode_label.add_theme_font_size_override("font_size", roundi(18.0 * unit))
 	if camera != null:
 		_sync_camera()
 		# Container layout can settle after the signal; deferred calls also run while settings pause simulation.
@@ -175,6 +205,15 @@ func _setup_light() -> void:
 	var projected := Iso.unproject(Vector2(0.72, 0.48)).normalized()
 	var ray := Vector3(projected.x, -tan(deg_to_rad(47.0)), projected.y)
 	sunlight.look_at(ray, Vector3.UP)
+	# Soft reflected daylight keeps the door and carved front stone readable.
+	# Only the main sun casts a shadow, so contact direction remains unambiguous.
+	var bounce := DirectionalLight3D.new()
+	bounce.name = "WarmDaylightBounce"
+	bounce.light_color = Color(1.0, 0.94, 0.82)
+	bounce.light_energy = 0.38
+	bounce.shadow_enabled = false
+	stage.add_child(bounce)
+	bounce.look_at(-CAMERA_DIRECTION, Vector3.UP)
 	contact_light = OmniLight3D.new()
 	contact_light.omni_range = 3.0
 	contact_light.omni_attenuation = 1.4
@@ -212,7 +251,7 @@ func _setup_materials() -> void:
 	_materials["slate"].cull_mode = BaseMaterial3D.CULL_DISABLED
 	_materials["wood"] = _material(MATERIAL_ROOT + "timber.webp", Color(0.72, 0.65, 0.56))
 	_materials["door"] = _material(MATERIAL_ROOT + "door.webp")
-	_materials["grass"] = _material("res://assets/art/forest/grass.webp", Color.WHITE, 38.0)
+	_materials["grass"] = _material("res://assets/art/forest/grass.webp", ForestArt.GRASS_TINT, 38.0)
 	_materials["paving"] = _material("res://assets/art/forest/paving.webp")
 	_materials["iron"] = _material("", Color("292b29"))
 	_materials["glass"] = _material("", Color("182b36"))
@@ -314,6 +353,9 @@ func _build_house(key: String) -> void:
 	var root := Node3D.new()
 	stage.add_child(root)
 	root.position = Vector3(center.x, 0, center.y)
+	if chapel:
+		Ortho3DChapel.build(self, root, width, depth, height)
+		return
 	_box(Vector3(0, 0.14, 0), Vector3(width + 0.35, 0.28, depth + 0.35), _materials["stone"], root)
 	_box(Vector3(0, height * 0.5 + 0.28, 0), Vector3(width, height, depth), _materials["stone"], root)
 	var gable := PrismMesh.new()
@@ -458,7 +500,8 @@ func _load_actor() -> void:
 	_native_mage = GameState.hero_class == "mage"
 	if not _native_mage:
 		var sprite: ActorSprite = game.player.sprite
-		actor = _new_card(sprite.atlas.texture, sprite.atlas.regions[sprite.frame], false)
+		var atlas: ActorAtlas = sprite.atlas if sprite.atlas != null else game.player.atlas
+		actor = _new_card(atlas.texture, atlas.regions[sprite.frame], false)
 		return
 	if not ResourceLoader.exists(MAGE_PATH):
 		push_warning("3D comparison awaits its verified skeletal mage asset")
@@ -478,8 +521,7 @@ func _load_actor() -> void:
 	_actor_flash.shader = _actor_flash_shader
 	animation = _find_animation(actor)
 	if animation != null:
-		animation.playback_default_blend_time = 0.08
-		animation.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
+		_hero_motion = Ortho3DHeroMotion.new().setup(animation, actor)
 
 
 func _find_animation(node: Node) -> AnimationPlayer:
@@ -509,6 +551,7 @@ func _sync_camera() -> void:
 
 
 func _process(delta: float) -> void:
+	_mode_badge.visible = not game.hud.panel_open()
 	if not _sync_scope():
 		return
 	var frozen := get_tree().paused
@@ -516,6 +559,7 @@ func _process(delta: float) -> void:
 	if not frozen or not _was_paused:
 		_sync_actor(0.0 if frozen else delta)
 	_sync_cards()
+	_level_up_fx.sync()
 	_affordances.sync()
 	if not frozen:
 		if _contact_fresh:
@@ -534,7 +578,8 @@ func _process(delta: float) -> void:
 ## Only the small village is reconstructed. Restore authoritative2D geometry
 ## outside it, including dungeon/warp transitions, rather than hiding live walls.
 func _sync_scope() -> bool:
-	var inside: bool = not game.dungeon.active and Geometry2D.is_point_in_polygon(game.player.position, game.village.safe_zone)
+	var inside: bool = enabled and not game.dungeon.active and Geometry2D.is_point_in_polygon(game.player.position, game.village.safe_zone)
+	_mode_label.text = ("3D 마을" if inside else "2D 지역") if enabled else "2D 마을"
 	if inside != _native_visible:
 		_native_visible = inside
 		display.visible = inside
@@ -543,10 +588,16 @@ func _sync_scope() -> bool:
 		_contact_fresh = false
 		contact_light.visible = false
 		_publish_probe()
-	# DungeonRuntime itself owns forest visibility while in the cave.
-	if not game.dungeon.active:
-		game.field_root.visible = false if inside else _old_field_visible
+	game.set_forest_rendered(not inside and not game.dungeon.active)
 	return inside
+
+
+func set_enabled(value: bool) -> void:
+	enabled = value
+	_sync_scope()
+	if value:
+		_sync_camera()
+		_was_paused = false
 
 
 func _publish_probe() -> void:
@@ -564,11 +615,13 @@ func _publish_probe() -> void:
 		"shadow_primitives": viewport.get_render_info(Viewport.RENDER_INFO_TYPE_SHADOW, Viewport.RENDER_INFO_PRIMITIVES_IN_FRAME),
 		"static_boxes": int(_static_batch.get("boxes", 0)), "static_groups": int(_static_batch.get("groups", 0)),
 		"batch_corner_error_m": _batch_gpu_error,
+		"level_up_fx": _level_up_fx._entries.size() if _level_up_fx != null else 0,
 		"actor_scale": [actor.scale.x, actor.scale.y, actor.scale.z],
 		"actor_position": [actor.position.x, actor.position.y, actor.position.z],
 		"azimuth": rad_to_deg(atan2(eye.x, eye.z)), "elevation": rad_to_deg(asin(eye.y)),
 		"projection": "orthographic", "simulation": "2d", "skeletal_actor": _native_mage and actor != null and animation != null,
-		"actor_mode": "skeletal_mage" if _native_mage else "warrior_sprite_fallback"}
+		"actor_mode": "skeletal_mage" if _native_mage else "warrior_sprite_fallback",
+		"animation": _hero_motion.snapshot() if _hero_motion != null else {}}
 	JavaScriptBridge.eval("window.__sjrpg3dProbe = " + JSON.stringify(report))
 	if ready and not _ready_published:
 		_ready_published = true
@@ -581,11 +634,12 @@ func _sync_actor(delta: float) -> void:
 		return
 	if not _native_mage:
 		var sprite: ActorSprite = player.sprite
-		var frame: Rect2 = sprite.atlas.regions[sprite.frame]
-		var factor := sprite.body_height / sprite.atlas.ref_height
-		var destination := Rect2(-sprite.atlas.anchors[sprite.frame] * factor, frame.size * factor)
+		var atlas: ActorAtlas = sprite.atlas if sprite.atlas != null else player.atlas
+		var frame: Rect2 = atlas.regions[sprite.frame]
+		var factor := sprite.body_height / atlas.ref_height
+		var destination := Rect2(-atlas.anchors[sprite.frame] * factor, frame.size * factor)
 		var mesh := actor as MeshInstance3D
-		_set_card_frame(mesh, sprite.atlas.texture, frame)
+		_set_card_frame(mesh, atlas.texture, frame)
 		_set_actor_card(mesh, sprite)
 		_place_card(mesh, player.position + sprite.position, destination)
 		return
@@ -597,29 +651,8 @@ func _sync_actor(delta: float) -> void:
 			mesh.material_overlay = _actor_flash if player.sprite.flash > 0.0 else null
 	var direction := ground_position(Vector2.from_angle(player.facing))
 	actor.rotation.y = atan2(direction.x, direction.z)
-	if animation != null:
-		var desired := "cast" if player._attack_time > 0.0 else ("run" if player.position.distance_squared_to(_last_position) > 0.01 else "idle")
-		var selected := ""
-		for clip: StringName in animation.get_animation_list():
-			if str(clip).to_lower().contains(desired):
-				selected = str(clip)
-				break
-		if not selected.is_empty() and selected != _animation_name:
-			animation.play(selected, 0.07)
-			_animation_name = selected
-		# Manual evaluation follows the real simulation clocks; contact hold cannot be bypassed by AnimationPlayer.
-		if player.sprite.contact_hold > 0.0:
-			_last_position = player.position
-			return
-		if desired == "cast" and not selected.is_empty():
-			var clip: Animation = animation.get_animation(selected)
-			animation.seek((1.0 - player._attack_time / player._attack_duration) * clip.length, true)
-		elif desired == "run" and not selected.is_empty():
-			var clip: Animation = animation.get_animation(selected)
-			animation.seek(fposmod(player._run_distance / 128.0, 1.0) * clip.length, true)
-		else:
-			animation.advance(delta)
-	_last_position = player.position
+	if _hero_motion != null:
+		_hero_motion.sync(player, delta, get_tree().paused)
 
 
 func _new_card(texture: Texture2D, frame: Rect2, additive: bool) -> MeshInstance3D:
@@ -704,6 +737,8 @@ func _sync_cards() -> void:
 				fresh_label.pixel_size = 1.0 / (GROUND_PER_METER * PROJECTION_FACTOR)
 				fresh_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 				fresh_label.no_depth_test = true
+				# Combat text sits above foreground foliage, like the source2D z20.
+				fresh_label.render_priority = 20
 				stage.add_child(fresh_label)
 				_labels[id] = {"node": fresh_label, "owner": weakref(effect)}
 			var label: Label3D = _labels[id]["node"]

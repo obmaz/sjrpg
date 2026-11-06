@@ -45,6 +45,10 @@ func _bind_surfaces(node: Node) -> void:
 		var surface := node as CanvasItem
 		var texture: Texture2D = node.texture
 		if surface.material == null and texture in [ForestArt.texture("grass"), ForestArt.texture("paving"), ForestArt.texture("earth")]:
+			if texture == ForestArt.texture("grass"):
+				# Existing vertex tint costs no additional terrain shader work. The
+				# root-soil mix runs afterward and retains its distinct neutral earth.
+				surface.self_modulate *= ForestArt.GRASS_TINT
 			var ink := ground_material
 			if node is Polygon2D:
 				ink = GroundEdges.material_for(node, ground_material)

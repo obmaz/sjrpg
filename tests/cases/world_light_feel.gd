@@ -12,9 +12,10 @@ func run() -> void:
 	var sunny := WorldLighting.color_at(opening)
 	var shaded := WorldLighting.color_at(Vector2(100000, 100000))
 	check("stone in daylight is warm while forest shade is cool", sunny.r > sunny.g and sunny.g > sunny.b and shaded.b > shaded.g and shaded.g > shaded.r)
-	check("daylight has a visibly stronger luminance step than the former subtle tint", _luminance(sunny) > _luminance(shaded) * 1.6)
+	check("daylight retains warm clearing contrast without crushing forest midtones", _luminance(sunny) > _luminance(shaded) * 1.35)
 	check("overlapping openings cannot double the daylight peak", is_equal_approx(sunny.r, 1.16) and sunny.g <= 1.101 and sunny.b <= 0.991)
 	check("body tint keeps source alpha untouched", sunny.a == 1.0 and shaded.a == 1.0)
+	_check_balanced_forest_fill(game)
 	var chapel: IsoSprite = game.village.buildings["chapel"]
 	var base := chapel.get_meta("base_material") as ShaderMaterial
 	check("authored building form uses the shared daylight material", base == WorldLighting.material())
@@ -79,6 +80,63 @@ func run() -> void:
 
 func _luminance(value: Color) -> float:
 	return value.r * 0.2126 + value.g * 0.7152 + value.b * 0.0722
+
+
+func _check_balanced_forest_fill(game: Node) -> void:
+	var old_fill := Color(0.58, 0.66, 0.72)
+	var previous_peak := Color(1.16, 1.10, 0.99)
+	for uv in [Vector2(0.5, -0.25), Vector2(1.25, 0.5), Vector2(0.5, 1.25), Vector2(-0.25, 0.5)]:
+		var outside: Vector2 = game.village.point(uv)
+		var fill := WorldLighting.color_at(outside)
+		var ratio := _luminance(fill) / _luminance(old_fill)
+		check("outside field midtones improve by a bounded fifteen to twenty percent", ratio >= 1.15 and ratio <= 1.20, "%s: %.3fx" % [uv, ratio])
+	for opening in game.forest_lighting.openings:
+		check("existing fully sunlit town and chapel keep their previous exposure", WorldLighting.color_at(opening).is_equal_approx(previous_peak))
+	var source := FileAccess.get_file_as_string("res://scripts/world_daylight.gdshaderinc")
+	var ambient_values := _shader_values(source, "FOREST_AMBIENT\\s*=\\s*vec3\\(([^)]+)\\)", 3)
+	var direct_values := _shader_values(source, "CLEARING_DIRECT\\s*=\\s*vec3\\(([^)]+)\\)", 3)
+	var radius_a := _shader_values(source, "world_daylight_opening\\(p,\\s*opening_a,\\s*vec2\\(([^)]+)\\)", 2)
+	var radius_b := _shader_values(source, "world_daylight_opening\\(p,\\s*opening_b,\\s*vec2\\(([^)]+)\\)", 2)
+	if ambient_values.size() == 3 and direct_values.size() == 3 and radius_a.size() == 2 and radius_b.size() == 2:
+		var gpu_ambient := Vector3(ambient_values[0], ambient_values[1], ambient_values[2])
+		var gpu_direct := Vector3(direct_values[0], direct_values[1], direct_values[2])
+		check("CPU bodies and actual shader share the compensated light coefficients", gpu_ambient.is_equal_approx(WorldLighting.AMBIENT) and gpu_direct.is_equal_approx(WorldLighting.DIRECT))
+		var material: ShaderMaterial = game.forest_lighting.ground_material
+		var first: Vector2 = material.get_shader_parameter("opening_a")
+		var second: Vector2 = material.get_shader_parameter("opening_b")
+		for position in [first, second, second + Vector2(radius_b[0] * 0.5, 0), second + Vector2(radius_b[0] * 2.0, 0)]:
+			var a := WorldLighting._opening(position, first, Vector2(radius_a[0], radius_a[1]))
+			var b := WorldLighting._opening(position, second, Vector2(radius_b[0], radius_b[1]))
+			var expected := gpu_ambient + gpu_direct * (1.0 - (1.0 - a) * (1.0 - b))
+			check("shader-bound openings and CPU tint agree at lit edge and forest samples", WorldLighting.color_at(position).is_equal_approx(Color(expected.x, expected.y, expected.z)))
+	var grass := 0
+	var others := 0
+	for surface: CanvasItem in game.forest_lighting.surfaces:
+		var texture: Texture2D = surface.texture
+		if texture == ForestArt.texture("grass"):
+			grass += 1
+			check("only the authored grass plane receives the warmer lighter albedo", surface.self_modulate == ForestArt.GRASS_TINT)
+		else:
+			others += 1
+			check("paving and earth albedo are not recoloured by the grass request", surface.self_modulate == Color.WHITE)
+	check("grass colour change remains scoped to its material surface", grass > 0 and others > 0 and ForestArt.GRASS_TINT.a == 1.0)
+	var sample := Color(0.296, 0.293, 0.119)
+	var old_grass := sample * old_fill
+	var new_grass := sample * ForestArt.GRASS_TINT * Color(WorldLighting.AMBIENT.x, WorldLighting.AMBIENT.y, WorldLighting.AMBIENT.z)
+	var grass_ratio := _luminance(new_grass) / _luminance(old_grass)
+	check("brighter meadow grass remains bounded without changing foliage", grass_ratio > 1.45 and grass_ratio < 1.60)
+
+
+func _shader_values(source: String, pattern: String, count: int) -> PackedFloat64Array:
+	var expression := RegEx.new()
+	expression.compile(pattern)
+	var found := expression.search(source)
+	var result := PackedFloat64Array()
+	if found != null:
+		for value in found.get_string(1).split(","):
+			result.append(float(value.strip_edges()))
+	check("shared shader light coefficients and radii remain readable for parity checks", result.size() == count)
+	return result
 
 
 func _check_contact_lighting(game: Node) -> void:

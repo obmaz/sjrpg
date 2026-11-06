@@ -117,6 +117,7 @@ func _label(parent: Node3D, size: int, color: Color) -> Label3D:
 	label.pixel_size = 1.0 / (Ortho3DPreview.GROUND_PER_METER * Ortho3DPreview.PROJECTION_FACTOR)
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = true
+	label.render_priority = 10
 	parent.add_child(label)
 	return label
 
@@ -129,6 +130,7 @@ func _bar(parent: Node3D, color: Color) -> MeshInstance3D:
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.albedo_color = color
 	material.no_depth_test = true
+	material.render_priority = 10
 	mesh.material_override = material
 	mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(mesh)
@@ -148,9 +150,9 @@ func _sync_header(resident: Villager) -> void:
 		var marker := _label(root, 22, Color(0.2, 0.1, 0))
 		marker.text = "!"
 		marker.outline_size = 0
-		marker.render_priority = 1
+		marker.render_priority = 12
 		var health := _bar(root, Color(0.3, 0.85, 0.45))
-		(health.material_override as StandardMaterial3D).render_priority = 1
+		(health.material_override as StandardMaterial3D).render_priority = 11
 		_headers[id] = {"root": root, "owner": weakref(resident), "name": name_label,
 			"badge": badge, "marker": marker, "bar": _bar(root, Color(0.05, 0.05, 0.05)),
 			"health": health}

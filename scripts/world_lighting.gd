@@ -4,8 +4,9 @@ extends RefCounted
 ## effects/UI retain their own materials, and the hidden forest contributes no cave tint.
 
 const SHADER := preload("res://scripts/world_daylight.gdshader")
-const AMBIENT := Vector3(0.58, 0.66, 0.72)
-const DIRECT := Vector3(0.58, 0.44, 0.27)
+## Lift forest midtones while keeping the same warm daylight maximum.
+const AMBIENT := Vector3(0.70, 0.78, 0.84)
+const DIRECT := Vector3(0.46, 0.32, 0.15)
 const CONTACT_LIMIT := 2
 const CONTACT_MATERIAL_LIMIT := 128
 const CONTACT_SHADER_LIMIT := 16
