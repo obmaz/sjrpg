@@ -1,0 +1,17 @@
+{
+  "id": "./",
+  "name": "자연의 수호자",
+  "short_name": "자연의 수호자",
+  "description": "전사와 마법사의 숲 모험",
+  "lang": "ko",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#102c29",
+  "theme_color": "#102c29",
+  "icons": [
+    { "src": "install-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "install-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

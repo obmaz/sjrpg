@@ -1,0 +1,220 @@
+{
+  "source": "verified clean/E licensed mage + generated navy cloth",
+  "nativeUnits": "metres",
+  "up": "+Y",
+  "forward": "+Z",
+  "spriteCameraOrYawExported": false,
+  "expectedClips": [
+    "idle",
+    "run",
+    "cast"
+  ],
+  "castSeconds": 0.5,
+  "loopInPresenter": [
+    "idle",
+    "run"
+  ],
+  "cloth": [
+    {
+      "material": "PreviewGeneratedCloth_0",
+      "texture": "/tmp/sjrpg2-preview3d/textures/cloth-0.png",
+      "sha256": "187f974f7201c3427aa4ef815a1d99aeb0ea51351917fcecf3409f0a1490a047",
+      "size": [
+        512,
+        512
+      ],
+      "roughness": 0.949999988079071,
+      "microBumpOmitted": true
+    },
+    {
+      "material": "PreviewGeneratedCloth_1",
+      "texture": "/tmp/sjrpg2-preview3d/textures/cloth-1.png",
+      "sha256": "42a75a427c48dc2927b0bb635f8cc2e905548961271a0b38b8d87a59f5e3f8e1",
+      "size": [
+        512,
+        512
+      ],
+      "roughness": 0.949999988079071,
+      "microBumpOmitted": true
+    },
+    {
+      "material": "PreviewGeneratedCloth_2",
+      "texture": "/tmp/sjrpg2-preview3d/textures/cloth-2.png",
+      "sha256": "2ec5048e0548509e1f8cabaf4f751cfd59c4460526b96c0e80753d322c9bc90a",
+      "size": [
+        512,
+        512
+      ],
+      "roughness": 0.949999988079071,
+      "microBumpOmitted": true
+    },
+    {
+      "material": "PreviewGeneratedCloth_3",
+      "texture": "/tmp/sjrpg2-preview3d/textures/cloth-3.png",
+      "sha256": "61292ff28fc4e11f06e3ed5b894e93791cbcef62ab2e6e4a1e8010e139869cee",
+      "size": [
+        512,
+        512
+      ],
+      "roughness": 0.949999988079071,
+      "microBumpOmitted": true
+    },
+    {
+      "material": "PreviewGeneratedCloth_4",
+      "texture": "/tmp/sjrpg2-preview3d/textures/cloth-4.png",
+      "sha256": "4c5f7266b02231868f06af1b213de4b9980950d9fcce116733800df728922219",
+      "size": [
+        512,
+        512
+      ],
+      "roughness": 0.8999999761581421,
+      "microBumpOmitted": true
+    }
+  ],
+  "materialLimitation": "Base colour explicitly baked to512px, roughness preserved. Cycles micro-bump omitted in this small standard-PBR prototype.",
+  "selectedMeshObjects": [
+    "Male_Peasant_Feet",
+    "Male_Peasant_Legs",
+    "Male_Ranger_Arms",
+    "Male_Ranger_Body",
+    "Male_Ranger_Head_Hood",
+    "Eyebrows",
+    "Eyes",
+    "SuperHero_Male",
+    "OriginalMageWand",
+    "OriginalSmallWandCrystal",
+    "OriginalNavyRobe-left",
+    "OriginalNavyRobe-right"
+  ],
+  "selectedArmature": "MageRig",
+  "sha256": "40f5cc5fc77aa35d934c7c764cdcd0f9b9fa8b5012def66ab638b0c4f910fe48",
+  "bytes": 4546560,
+  "exportOptions": {
+    "filepath": "/tmp/sjrpg2-preview3d/mage.pending.glb",
+    "export_format": "GLB",
+    "use_selection": true,
+    "export_apply": true,
+    "export_yup": true,
+    "export_materials": "EXPORT",
+    "export_animations": true,
+    "export_animation_mode": "NLA_TRACKS",
+    "export_frame_range": false,
+    "export_force_sampling": true,
+    "export_skins": true,
+    "export_cameras": false,
+    "export_lights": false
+  },
+  "actualClips": [
+    {
+      "name": "idle",
+      "seconds": 2.5333333015441895,
+      "channels": 195,
+      "inPlaceRootProof": [
+        {
+          "node": "root",
+          "maximumPlanarDisplacementMetres": 0.0
+        }
+      ]
+    },
+    {
+      "name": "run",
+      "seconds": 0.699999988079071,
+      "channels": 195,
+      "inPlaceRootProof": [
+        {
+          "node": "root",
+          "maximumPlanarDisplacementMetres": 0.0
+        }
+      ]
+    },
+    {
+      "name": "cast",
+      "seconds": 0.5,
+      "channels": 195,
+      "inPlaceRootProof": [
+        {
+          "node": "root",
+          "maximumPlanarDisplacementMetres": 0.0
+        }
+      ]
+    }
+  ],
+  "actualMaterialProof": [
+    {
+      "name": "PreviewGeneratedCloth_3",
+      "baseColorTexture": 3,
+      "embeddedImageSize": [
+        512,
+        512
+      ],
+      "roughnessFactor": 0.949999988079071,
+      "normalTexture": null
+    },
+    {
+      "name": "PreviewGeneratedCloth_0",
+      "baseColorTexture": 5,
+      "embeddedImageSize": [
+        512,
+        512
+      ],
+      "roughnessFactor": 0.949999988079071,
+      "normalTexture": null
+    },
+    {
+      "name": "PreviewGeneratedCloth_1",
+      "baseColorTexture": 6,
+      "embeddedImageSize": [
+        512,
+        512
+      ],
+      "roughnessFactor": 0.949999988079071,
+      "normalTexture": null
+    },
+    {
+      "name": "PreviewGeneratedCloth_2",
+      "baseColorTexture": 8,
+      "embeddedImageSize": [
+        512,
+        512
+      ],
+      "roughnessFactor": 0.949999988079071,
+      "normalTexture": null
+    },
+    {
+      "name": "PreviewGeneratedCloth_4",
+      "baseColorTexture": 9,
+      "embeddedImageSize": [
+        512,
+        512
+      ],
+      "roughnessFactor": 0.8999999761581421,
+      "normalTexture": null
+    }
+  ],
+  "boneAttachments": {
+    "Eyebrows": "Head",
+    "Eyes": "Head",
+    "Male_Ranger_Head_Hood": "Head",
+    "SuperHero_Male": "Head",
+    "OriginalWandGrip": "hand_r"
+  },
+  "actualSkinCount": 1,
+  "actualJointCount": 65,
+  "hiddenSourceBodiesExported": false,
+  "actualMeshObjects": [
+    "Eyebrows",
+    "Eyes",
+    "Male_Ranger_Head_Hood",
+    "SuperHero_Male",
+    "OriginalMageWand",
+    "OriginalSmallWandCrystal",
+    "Male_Peasant_Feet",
+    "Male_Peasant_Legs",
+    "Male_Ranger_Arms",
+    "Male_Ranger_Body",
+    "OriginalNavyRobe-left",
+    "OriginalNavyRobe-right"
+  ],
+  "allImagesEmbedded": true,
+  "validation": "Actual GLB JSON/binary inspected: three clips, in-place root channels, single65-joint skin, proper head/wand parent bones and five embedded512px cloth BaseColor textures. No sprite yaw/camera or hidden bodies."
+}

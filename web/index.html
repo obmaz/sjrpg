@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#102c29">
+<meta name="description" content="자연의 수호자 — 2D와 3D 모험 선택">
+<title>자연의 수호자 · 모험 선택</title>
+<style>
+*{box-sizing:border-box}html{min-height:100%;background:#10201b;color:#f0e9d8;font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif}body{margin:0;min-height:100svh;display:grid;place-items:center;padding:max(28px,env(safe-area-inset-top)) max(22px,env(safe-area-inset-right)) max(28px,env(safe-area-inset-bottom)) max(22px,env(safe-area-inset-left));background:linear-gradient(180deg,#08170bc9,#101b15e8),url('./portal-bg.webp') center/cover fixed}main{width:min(880px,100%)}.brand{text-align:center;color:#c9ae75;font-size:14px;letter-spacing:.18em;margin:0 0 14px}.mark{display:block;font-size:36px;line-height:1.1;margin-bottom:14px;color:#c9ae75}h1{font-weight:650;font-size:clamp(29px,5vw,46px);letter-spacing:-.04em;text-align:center;margin:0}header>p{text-align:center;color:#c5c7ba;font-size:16px;line-height:1.6;margin:17px 0 32px}.editions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}a.card{color:inherit;text-decoration:none;display:flex;flex-direction:column;min-height:285px;padding:30px;border:1px solid #a58e5a;border-radius:13px;background:linear-gradient(145deg,#27352bcc,#111b17ed);box-shadow:inset 0 0 0 4px #0c171450,0 16px 46px #0005;transition:transform .16s,border-color .16s}a.card:hover{transform:translateY(-3px);border-color:#e2c38a}a.card:focus-visible{outline:3px solid #e8d39d;outline-offset:5px}.badge{font-size:12px;letter-spacing:.09em;color:#c8b389;margin:0 0 16px}h2{margin:0 0 14px;font-size:29px;font-weight:650}.description{margin:0 0 27px;font-size:16px;line-height:1.7;color:#c5c7ba}.enter{margin-top:auto;display:block;padding:15px 14px;min-height:56px;text-align:center;font-size:18px;font-weight:650;border:1px solid #9b8456;border-radius:6px;background:linear-gradient(#51462e,#302b21);color:#f6e9ca}.native{background:linear-gradient(145deg,#304133db,#101b17ee)!important}.note{font-size:13px;line-height:1.7;color:#a4afa4;text-align:center;margin:25px 0 0}.note strong{font-weight:500;color:#c1c7b9}@media(max-width:580px){body{padding-top:max(35px,env(safe-area-inset-top))}.editions{grid-template-columns:1fr;gap:16px}.mark{font-size:29px;margin-bottom:10px}.brand{font-size:12px}header>p{margin-bottom:24px}a.card{padding:22px;min-height:220px}h2{font-size:25px}.badge{margin-bottom:10px}.description{font-size:15px;margin-bottom:20px}.note{margin-top:20px}}@media(prefers-reduced-motion:reduce){a.card{transition:none}a.card:hover{transform:none}}
+</style>
+</head>
+<body>
+<main>
+<header><p class="brand"><span class="mark" aria-hidden="true">♧</span>자연의 수호자</p><h1>모험을 선택하세요</h1><p>익숙한 2D 모험과 새로운 3D 세계</p></header>
+<nav class="editions" aria-label="게임 버전">
+<a class="card" href="./2d/" data-edition="2d"><p class="badge">CLASSIC · 2D</p><h2>2D 모험</h2><p class="description">기존 쿼터뷰로 즐기는 숲 모험.<br>지금까지의 2D 버전을 계속 플레이합니다.</p><span class="enter">2D로 시작</span></a>
+<a class="card native" href="./3d/" data-edition="3d"><p class="badge">NATIVE · 3D</p><h2>3D 모험</h2><p class="description">120° 쿼터뷰를 유지한 입체 세계.<br>3D 공간의 지형·충돌·조명을 경험합니다.</p><span class="enter">3D로 시작</span></a>
+</nav>
+<p class="note"><strong>두 버전의 모험 진행은 별도로 저장됩니다.</strong><br>모바일 터치와 키보드·마우스를 지원합니다.</p>
+</main>
+<script>
+// Preserve the explicit comparison bookmark while the root becomes a chooser.
+if(new URLSearchParams(location.search).get('preview3d')==='1'){
+  location.replace('./3d/'+location.search+location.hash);
+}
+window.__sjrpgPortalReady=true;
+</script>
+</body>
+</html>

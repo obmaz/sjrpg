@@ -1,0 +1,478 @@
+{
+ "concept": {
+  "path": "assets/source/cave-design.png",
+  "sha256": "6b95c81daf51edf5f78c442863c5125f810fef639f0f9c0e6f44d13057052979"
+ },
+ "sources": [
+  {
+   "path": "assets/source/cave-kit.png",
+   "sha256": "5f6c799d5040c9f1def0db7b5f46cde63e821acb52916e857ff9307633b8d5b8"
+  },
+  {
+   "path": "assets/source/cave-ledges.png",
+   "sha256": "2b75eac7dbe044a3e1bf66ae94356da10fae78b2741ddc86610058680a6f04af"
+  },
+  {
+   "path": "assets/source/cave-arches.png",
+   "sha256": "454b7087b843a9e82fca6b2ada318c11ff554abdd1db63c1ba3e9969425a7e6a"
+  }
+ ],
+ "camera": {
+  "projection": "orthographic",
+  "target_ground_axes_degrees": [
+   -30,
+   30
+  ],
+  "target_azimuth_degrees": 45,
+  "target_elevation_degrees": 35.264
+ },
+ "review": "The cave design concept fixes the grey layered rock, weathered slab floor, sparse ferns and amber lantern material language. Production sprites were reviewed on light and dark solid backgrounds: hidden RGB blur is fully transparent, with no broad grey halo or ground-shadow plate. Wall end contacts measure the overall authored ground axis; naturally broken ridges are not claimed to be rigid parallel building edges. Small x-to-y shear aligns the wall contacts while preserving vertical rock height.",
+ "textures": {
+  "floor": {
+   "path": "assets/art/cave/floor.webp",
+   "sha256": "2dcf79cdcc806c4c055c76fa0987870a903de753504c63740bc994e5fe185ef4",
+   "size": [
+    512,
+    512
+   ]
+  },
+  "dark": {
+   "path": "assets/art/cave/dark.webp",
+   "sha256": "943feb5680f4ab46fb7a4aa658fbcb6f9d54848a762d350422fccfd1eb86bb84",
+   "size": [
+    512,
+    512
+   ]
+  },
+  "props": {
+   "path": "assets/art/cave/props.webp",
+   "sha256": "4a5d1bd94000ad886ce54c77742d9cb661f74ca0d49d576440cc6026b336aa69",
+   "size": [
+    1024,
+    1024
+   ]
+  },
+  "ledges": {
+   "path": "assets/art/cave/ledges.webp",
+   "sha256": "f9a2f9d890a468d8396bfabac33a1edd0ff44804e3374acd29d6771a80a3c3ee",
+   "size": [
+    1024,
+    512
+   ]
+  },
+  "arches": {
+   "path": "assets/art/cave/arches.webp",
+   "sha256": "93deb00d475df8122015cc1d25d38fa5455a89bd774c46872a6e2d5adda24088",
+   "size": [
+    1536,
+    512
+   ]
+  }
+ },
+ "frames": {
+  "wall_positive": {
+   "sheet": "res://assets/art/cave/props.webp",
+   "source": [
+    9,
+    89,
+    493,
+    415
+   ],
+   "foot": [
+    254.0,
+    398.0
+   ],
+   "height": 309.0,
+   "origin": [
+    1029,
+    59
+   ],
+   "packing": 1.0,
+   "gvs": 1,
+   "gvk": 0.11512804696740353,
+   "world_height": 266.5882352941176,
+   "body": null,
+   "relief": 127.5,
+   "target_relief": 110,
+   "relief_samples": [
+    {
+     "top": [
+      154.0,
+      216.0
+     ],
+     "base": [
+      154.0,
+      348.0
+     ]
+    },
+    {
+     "top": [
+      354.0,
+      330.0
+     ],
+     "base": [
+      354.0,
+      453.0
+     ]
+    }
+   ],
+   "baseline": [
+    [
+     29.0,
+     294.0
+    ],
+    [
+     479.0,
+     502.0
+    ]
+   ],
+   "baseline_degrees": 30.000000000000004,
+   "target_axis_degrees": 30,
+   "review": "Painted ground contacts across the near wall face. Native baseline 24.80 degrees; gvk aligns it to +30 degrees without stretching vertical rock faces. Top/middle/bottom stone surfaces share the elevated rock camera; broken ridge height varies naturally. Two same-x measurements follow the visible vertical front face, excluding the cap top depth and diagonal half-run. Their average calibrates actual rock relief independently of the illustration bounding height."
+  },
+  "wall_negative": {
+   "sheet": "res://assets/art/cave/props.webp",
+   "source": [
+    523,
+    62,
+    490,
+    442
+   ],
+   "foot": [
+    770.5,
+    403.5
+   ],
+   "height": 341.5,
+   "origin": [
+    15,
+    554
+   ],
+   "packing": 1.0,
+   "gvs": 1,
+   "gvk": -0.11382085742491987,
+   "world_height": 239.2675159235669,
+   "body": null,
+   "relief": 157.0,
+   "target_relief": 110,
+   "relief_samples": [
+    {
+     "top": [
+      658.0,
+      306.0
+     ],
+     "base": [
+      658.0,
+      466.0
+     ]
+    },
+    {
+     "top": [
+      883.0,
+      192.0
+     ],
+     "base": [
+      883.0,
+      346.0
+     ]
+    }
+   ],
+   "baseline": [
+    [
+     558.0,
+     502.0
+    ],
+    [
+     983.0,
+     305.0
+    ]
+   ],
+   "baseline_degrees": -30.000000000000004,
+   "target_axis_degrees": -30,
+   "review": "Painted ground contacts across the near wall face. Native baseline -24.86 degrees; gvk aligns it to -30 degrees while preserving vertical rock faces. Natural ridge and pillar height changes are not rigid horizontal-axis measurements. Two same-x measurements follow the visible vertical front face, excluding the cap top depth and diagonal half-run. Their average calibrates actual rock relief independently of the illustration bounding height."
+  },
+  "boulder": {
+   "sheet": "res://assets/art/cave/props.webp",
+   "source": [
+    92,
+    615,
+    328,
+    401
+   ],
+   "foot": [
+    256.0,
+    975.0
+   ],
+   "height": 360.0,
+   "origin": [
+    602,
+    563
+   ],
+   "packing": 1.0,
+   "gvs": 1,
+   "gvk": 0,
+   "world_height": 55,
+   "body": null,
+   "review": "Contact at the centre of the lowest supporting rock cluster; front stones remain below this depth-sort anchor."
+  },
+  "lantern": {
+   "sheet": "res://assets/art/cave/props.webp",
+   "source": [
+    633,
+    707,
+    269,
+    309
+   ],
+   "foot": [
+    752.0,
+    973.0
+   ],
+   "height": 266.0,
+   "origin": [
+    1143,
+    615
+   ],
+   "packing": 1.0,
+   "gvs": 1,
+   "gvk": 0,
+   "world_height": 65,
+   "body": null,
+   "review": "Contact at the stone pedestal ground centre. Only painted light inside the lantern remains; there is no fixed ground glow/shadow plate."
+  },
+  "ledge_positive": {
+   "sheet": "res://assets/art/cave/ledges.webp",
+   "source": [
+    8,
+    255,
+    496,
+    249
+   ],
+   "foot": [
+    261.7071129707113,
+    407.01673640167365
+   ],
+   "height": 152.01673640167365,
+   "origin": [
+    26,
+    150
+   ],
+   "packing": 0.5188284518828452,
+   "gvs": 1,
+   "gvk": 0.1444090927190375,
+   "world_height": 88.45283018867926,
+   "body": null,
+   "relief": 41.24686192468619,
+   "target_relief": 24,
+   "relief_samples": [
+    {
+     "top": [
+      165.72384937238493,
+      326.0794979079498
+     ],
+     "base": [
+      165.72384937238493,
+      371.21757322175733
+     ]
+    },
+    {
+     "top": [
+      279.8661087866109,
+      388.8577405857741
+     ],
+     "base": [
+      279.8661087866109,
+      426.2133891213389
+     ]
+    }
+   ],
+   "baseline": [
+    [
+     41.20502092050209,
+     311.55230125523013
+    ],
+    [
+     482.20920502092054,
+     502.4811715481172
+    ]
+   ],
+   "baseline_degrees": 29.999999999999996,
+   "target_axis_degrees": 30,
+   "review": "Natural knee-height front cutaway. End contacts are actual painted near-ground stone pixels (native baseline 23.41 degrees); gvk aligns the overall ground axis to +30 degrees. Individual stone height and the irregular outer contour are not rigid straight edges. Two same-x measurements follow the visible vertical front face, excluding the cap top depth and diagonal half-run. Their average calibrates actual rock relief independently of the illustration bounding height."
+  },
+  "ledge_negative": {
+   "sheet": "res://assets/art/cave/ledges.webp",
+   "source": [
+    520,
+    253,
+    496,
+    251
+   ],
+   "foot": [
+    772.9237199582027,
+    402.2664576802508
+   ],
+   "height": 149.26645768025082,
+   "origin": [
+    1188,
+    143
+   ],
+   "packing": 0.5182863113897597,
+   "gvs": 1,
+   "gvk": -0.15068360252295904,
+   "world_height": 72.00000000000001,
+   "body": null,
+   "relief": 49.75548589341693,
+   "target_relief": 24,
+   "relief_samples": [
+    {
+     "top": [
+      733.533960292581,
+      361.32183908045977
+     ],
+     "base": [
+      733.533960292581,
+      423.5161964472309
+     ]
+    },
+    {
+     "top": [
+      919.5987460815047,
+      312.0846394984326
+     ],
+     "base": [
+      919.5987460815047,
+      349.4012539184953
+     ]
+    }
+   ],
+   "baseline": [
+    [
+     539.6948798328109,
+     501.77742946708463
+    ],
+    [
+     1006.1525600835946,
+     302.7554858934169
+    ]
+   ],
+   "baseline_degrees": -29.999999999999996,
+   "target_axis_degrees": -30,
+   "review": "Natural knee-height front cutaway. End contacts are actual painted near-ground stone pixels (native baseline -23.11 degrees); gvk aligns the overall ground axis to -30 degrees. Broken rock tops and uneven ground-contact protrusions remain unwarped apart from this shared camera shear. Two same-x measurements follow the visible vertical front face, excluding the cap top depth and diagonal half-run. Their average calibrates actual rock relief independently of the illustration bounding height."
+  },
+  "arch_positive": {
+   "sheet": "res://assets/art/cave/arches.webp",
+   "source": [
+    8,
+    56,
+    496,
+    448
+   ],
+   "foot": [
+    251.31338582677165,
+    425.4614173228346
+   ],
+   "height": 369.4614173228346,
+   "origin": [
+    28,
+    75
+   ],
+   "packing": 0.7811023622047244,
+   "gvs": 1,
+   "gvk": 0.08323262213080218,
+   "world_height": 140,
+   "body": null,
+   "opening": [
+    [
+     151.72283464566928,
+     376.251968503937
+    ],
+    [
+     350.903937007874,
+     474.6708661417323
+    ]
+   ],
+   "baseline": [
+    [
+     151.72283464566928,
+     376.251968503937
+    ],
+    [
+     350.903937007874,
+     474.6708661417323
+    ]
+   ],
+   "baseline_degrees": 29.999999999999996,
+   "target_axis_degrees": 30,
+   "review": "The actual painted inner jamb ground-contact corners define the clear opening and depth-sort midpoint. Small ground-camera shear aligns that pass-through span to the game ground axis. Curved arches, variable rock heights and hanging speleothems are not claimed as rigid parallel building edges. The centre of this opening is transparent (alpha 0); opaque rock and warm lamp painting remain."
+  },
+  "arch_negative": {
+   "sheet": "res://assets/art/cave/arches.webp",
+   "source": [
+    520,
+    80,
+    496,
+    424
+   ],
+   "foot": [
+    772.0595238095239,
+    434.28571428571433
+   ],
+   "height": 354.28571428571433,
+   "origin": [
+    767,
+    74
+   ],
+   "packing": 0.7380952380952381,
+   "gvs": 1,
+   "gvk": -0.18939040296888993,
+   "world_height": 140,
+   "body": null,
+   "opening": [
+    [
+     661.7142857142858,
+     477.09523809523813
+    ],
+    [
+     882.4047619047619,
+     391.4761904761905
+    ]
+   ],
+   "baseline": [
+    [
+     661.7142857142858,
+     477.09523809523813
+    ],
+    [
+     882.4047619047619,
+     391.4761904761905
+    ]
+   ],
+   "baseline_degrees": -30.00000000000001,
+   "target_axis_degrees": -30,
+   "review": "The actual painted inner jamb ground-contact corners define the clear opening and depth-sort midpoint. Small ground-camera shear aligns that pass-through span to the game ground axis. Curved arches, variable rock heights and hanging speleothems are not claimed as rigid parallel building edges. The centre of this opening is transparent (alpha 0); opaque rock and warm lamp painting remain."
+  },
+  "entrance": {
+   "sheet": "res://assets/art/cave/arches.webp",
+   "source": [
+    1032,
+    77,
+    496,
+    427
+   ],
+   "foot": [
+    1291.6187399030696,
+    439.1841680129241
+   ],
+   "height": 362.1841680129241,
+   "origin": [
+    1526,
+    88
+   ],
+   "packing": 0.8012924071082391,
+   "gvs": 1,
+   "gvk": 0,
+   "world_height": 400,
+   "body": null,
+   "review": "Field cave mouth with the concept grey layered stone, sparse ferns, amber lamp and painted blue interior depth preserved. Pivot is the entry path ground contact at the mouth. The surrounding matte is transparent; this entrance intentionally keeps its tunnel interior opaque."
+  }
+ }
+}

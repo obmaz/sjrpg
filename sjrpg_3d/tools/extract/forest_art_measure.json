@@ -1,0 +1,141 @@
+{
+ "sources": {
+  "ground": "assets/source/remake/ground.png",
+  "flora": "assets/source/remake/flora.png",
+  "grass": "assets/source/remake/grass-v2.png",
+  "ground_light": "assets/source/lighting/ground-materials.png",
+  "grass_soft_v2": "assets/source/lighting/forest-floor-soft-v2.png"
+ },
+ "camera": {
+  "ground_material_projection": "orthographic top-down; the runtime Iso ground transform provides the camera",
+  "flora_projection": "authored elevated quarter view",
+  "target_ground_axes_degrees": [
+   -30,
+   30
+  ],
+  "target_azimuth_degrees": 45,
+  "target_elevation_degrees": 35.264
+ },
+ "review": "Ground material review uses the authoritative approved-game-reference.jpg. Paving retains the measured883-square left panel of lighting/ground-materials.png: pale warm-neutral limestone with flat worn faces and restrained earth/moss joints. Earth and flora retain their existing source cells and contacts. The earlier ground sheet grass and first forest-floor-soft.png candidate were rejected: respectively wiry moss and long dry diagonal soil bands. Grass now uses the full untouched forest-floor-soft-v2.png after root comparison in actual portrait and landscape scenes, not separate user approval: lusher quiet olive/moss cover with smaller disconnected earth glimpses, fewer wiry strands and lower saturation than the previous grass-v2.png carpet. Exact prompt, actual references, hashes and rejection history are in forest_floor_soft_v2_generation.json. Distinct leaf groups and broad repeating motifs remain; actual-scale chapel portrait and courtyard landscape were compared; broad repetition remains a known limitation and final reference mood is not claimed. All ground sources are opaque orthographic top-down diffuse materials without baked canopy cast shadows, sun patches or isometric perspective; runtime supplies the120-degree ground projection and owner-linked shade. Previously reviewed flora pixels and alpha remain unchanged; no rigid-edge angles are invented for natural clumps.",
+ "tiles": {
+  "grass": {
+   "source": "grass_soft_v2",
+   "roi": [
+    0,
+    0,
+    1254,
+    1254
+   ]
+  },
+  "paving": {
+   "source": "ground_light",
+   "roi": [
+    2,
+    2,
+    885,
+    885
+   ]
+  },
+  "earth": {
+   "source": "ground",
+   "roi": [
+    1450,
+    2,
+    2170,
+    722
+   ]
+  }
+ },
+ "frames": {
+  "flowers_white": {
+   "source": "flora",
+   "cell": [
+    0,
+    0
+   ],
+   "roi": [
+    0,
+    0,
+    768,
+    512
+   ],
+   "foot": [
+    398,
+    444
+   ],
+   "world_height": 22,
+   "review": "Ground-contact centre at the converging lower flower stems under the central leaf rosette. Foreground leaves remain beyond the contact; this is not the lowest petal or silhouette pixel."
+  },
+  "flowers_warm": {
+   "source": "flora",
+   "cell": [
+    1,
+    0
+   ],
+   "roi": [
+    768,
+    0,
+    1536,
+    512
+   ],
+   "foot": [
+    1125,
+    429
+   ],
+   "world_height": 20,
+   "review": "Shared rooted centre beneath the warm flower stems and grass rosettes. The thin forward blades retain depth below the anchor."
+  },
+  "fern": {
+   "source": "flora",
+   "cell": [
+    0,
+    1
+   ],
+   "roi": [
+    0,
+    512,
+    768,
+    1024
+   ],
+   "foot": [
+    355,
+    924
+   ],
+   "world_height": 24,
+   "review": "Ground contact under the fern petiole crown and overlapping low leaves. Rear stems and forward fronds retain their natural occlusion and spread."
+  },
+  "grass": {
+   "source": "flora",
+   "cell": [
+    1,
+    1
+   ],
+   "roi": [
+    768,
+    512,
+    1536,
+    1024
+   ],
+   "foot": [
+    1113,
+    933
+   ],
+   "world_height": 12,
+   "review": "Contact under the dense central grass bases and low leaf rosettes. Tall blades do not determine the anchor, and foreground leaves remain visible below it."
+  }
+ },
+ "references": [
+  {
+   "path": "assets/source/style/approved-game-reference.jpg",
+   "role": "authoritative user reference supplied to generation"
+  },
+  {
+   "path": "assets/source/remake/town-master-scene.png",
+   "role": "supplementary environment material/mood concept supplied to generation; not a replacement for the user reference"
+  },
+  {
+   "path": "tools/extract/forest_floor_soft_v2_generation.json",
+   "role": "exact prompt, actual generation references and provisional technical-adoption history; actual scene review pending"
+  }
+ ]
+}

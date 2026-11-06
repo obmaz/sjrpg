@@ -1,0 +1,17 @@
+{
+ "purpose": "Empty defocused forest behind the user-defined guardian selection composition; no character or UI baked into the backdrop.",
+ "generated_source": "assets/source/selection-forest.png",
+ "generated_original": "/workspace/generated_images/exec-ab61b986-3703-4815-8079-c09f59c665b8.png",
+ "runtime": "assets/art/ui/selection-forest.webp",
+ "references": [
+  "assets/source/style/approved-game-reference.jpg",
+  "assets/art/ui/hero-warrior.webp"
+ ],
+ "prompt": "Create one production backdrop for the Guardians of Nature guardian-selection UI. Match the supplied USER GAME REFERENCE for restrained realistic forest fantasy, muted olive canopy, warm neutral limestone and quiet natural light. Match the supplied HERO WARRIOR family artwork for the same forest setting and realistic finish. This is only a background plate for UI, not a game world object: no orthographic grid or ground sprite. Tall portrait 9:16 composition, dark softly defocused woodland with an indistinct mossy stone path and leaves, old mature trunks toward left and right, deep forest-green charcoal middle, a few very soft warm bokeh glints high in the canopy. Everything intentionally OUT OF FOCUS as a photographic-looking background for a sharp foreground hero card and gold typography. Very quiet large shapes, no distinct architectural focus. No people, no characters, no human silhouettes, no animals, no face, no hands, no UI, no symbols, no logo, no border, no frame, no lettering. No bright sunbeam, no magical glow, no sparkles covering the scene. Mostly dark olive-green and brown, neutral warm accents only, subtle vignette at corners. Cover the full image edge to edge, opaque background. Preserve the calm contemporary realistic material atmosphere; no cartoon, no flat painted surface, no vintage game pixel look.",
+ "source_sha256": "4ee51dec80b79654bfa76f0c26626f5b648424f6f170e031bc444176dd20eafc",
+ "runtime_sha256": "71d9d71bda1cd1530b8ac94ded2a89c76f8d89df27f115ab866f9d2611fac833",
+ "reference_sha256": {
+  "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+  "assets/art/ui/hero-warrior.webp": "cbe9a8eb03044a1df6320ee1426a54c212371850dd585684283a43be4d3a4b23"
+ }
+}

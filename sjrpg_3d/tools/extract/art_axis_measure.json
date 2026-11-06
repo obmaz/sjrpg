@@ -1,0 +1,4079 @@
+{
+ "version": 1,
+ "tolerance_degrees": 2.5,
+ "parallel_tolerance_degrees": 2.5,
+ "records": [
+  {
+   "id": "nw",
+   "kind": "sprite",
+   "key": "nw",
+   "source_file": "assets/source/remake/house-nw.png",
+   "source_rect": null,
+   "source_size": [
+    1254,
+    1254
+   ],
+   "render_file": "assets/art/village/town.webp",
+   "space": "native",
+   "source_sha256": "d75434ed6c1a692e177ffd528c84818a7a01dffe1458c7bbe2c84c01922a7707",
+   "edges": [
+    {
+     "name": "ridge cap run",
+     "a": [
+      506.5,
+      183.7
+     ],
+     "b": [
+      697.0,
+      290.5
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front eave both ends",
+     "a": [
+      72.7,
+      373.9
+     ],
+     "b": [
+      756.6,
+      761.1
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front waist beam",
+     "a": [
+      82,
+      580
+     ],
+     "b": [
+      760,
+      970
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "front stone base left run",
+     "a": [
+      110,
+      867
+     ],
+     "b": [
+      300,
+      975
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "front stone base right run",
+     "a": [
+      600,
+      1142
+     ],
+     "b": [
+      750,
+      1228
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "gable upper cornice",
+     "a": [
+      761.8,
+      784.3
+     ],
+     "b": [
+      1180,
+      575
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "gable waist cornice",
+     "a": [
+      768,
+      970
+     ],
+     "b": [
+      1160,
+      777
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "gable waist far end",
+     "a": [
+      1080.4,
+      785.2
+     ],
+     "b": [
+      1125.5,
+      762.9
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "gable stone base",
+     "a": [
+      800,
+      1211
+     ],
+     "b": [
+      1150,
+      1008
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "lower window sill",
+     "a": [
+      921.5,
+      1077.5
+     ],
+     "b": [
+      1026.2,
+      1020.4
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "front corner",
+     "a": [
+      764,
+      980
+     ],
+     "b": [
+      764,
+      1200
+     ],
+     "axis": 90,
+     "level": "lower"
+    },
+    {
+     "name": "opposing gable post",
+     "a": [
+      1133.7,
+      639.4
+     ],
+     "b": [
+      1133.8,
+      749.4
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "door jamb",
+     "a": [
+      428.4,
+      809.4
+     ],
+     "b": [
+      428.2,
+      1011.9
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "upper window mullion",
+     "a": [
+      970.4,
+      549.4
+     ],
+     "b": [
+      971.1,
+      656.9
+     ],
+     "axis": 90,
+     "level": "upper"
+    }
+   ]
+  },
+  {
+   "id": "sw",
+   "kind": "sprite",
+   "key": "sw",
+   "source_file": "assets/source/remake/house-sw.png",
+   "source_rect": null,
+   "source_size": [
+    1536,
+    1024
+   ],
+   "render_file": "assets/art/village/town.webp",
+   "space": "native",
+   "source_sha256": "8f29d82f55782ce2efae9441f90e7aaf2793db7967c4bdf523869aec8044a7b1",
+   "edges": [
+    {
+     "name": "ridge cap run",
+     "a": [
+      491,
+      74
+     ],
+     "b": [
+      839,
+      244
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front eave right",
+     "a": [
+      662.9,
+      524.8
+     ],
+     "b": [
+      879.7,
+      631.2
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front upper beam left",
+     "a": [
+      261.1,
+      367.2
+     ],
+     "b": [
+      383.6,
+      428.5
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "front upper beam opposite",
+     "a": [
+      726.3,
+      596.8
+     ],
+     "b": [
+      844.6,
+      656.5
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "front lower paving",
+     "a": [
+      170,
+      654
+     ],
+     "b": [
+      850,
+      1018
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "gable cornice near",
+     "a": [
+      903.9,
+      618.4
+     ],
+     "b": [
+      1062.9,
+      543.8
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "gable cornice far",
+     "a": [
+      1108.6,
+      524.2
+     ],
+     "b": [
+      1200.6,
+      483.1
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "stall half door top",
+     "a": [
+      1057.7,
+      858.5
+     ],
+     "b": [
+      1170.7,
+      802.1
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "stall half door lower rail",
+     "a": [
+      907.2,
+      912.6
+     ],
+     "b": [
+      1017.1,
+      859.7
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "right paving base",
+     "a": [
+      950,
+      1002
+     ],
+     "b": [
+      1350,
+      793
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "double door centre",
+     "a": [
+      561.7,
+      526.9
+     ],
+     "b": [
+      561.4,
+      785.6
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "rear gable king post",
+     "a": [
+      1069.3,
+      403.1
+     ],
+     "b": [
+      1069.6,
+      494.4
+     ],
+     "axis": 90,
+     "level": "upper"
+    },
+    {
+     "name": "stall door post",
+     "a": [
+      1056.4,
+      761.9
+     ],
+     "b": [
+      1056.4,
+      878.1
+     ],
+     "axis": 90,
+     "level": "lower"
+    }
+   ]
+  },
+  {
+   "id": "se",
+   "kind": "sprite",
+   "key": "se",
+   "source_file": "assets/source/remake/house-se.png",
+   "source_rect": null,
+   "source_size": [
+    1254,
+    1254
+   ],
+   "render_file": "assets/art/village/town.webp",
+   "space": "native",
+   "source_sha256": "7f963dcf60cf7bd4b10c7b6d50024877865bb4e9bb83130d7eb0ca262ef583d0",
+   "edges": [
+    {
+     "name": "ridge cap run",
+     "a": [
+      713.2,
+      331.8
+     ],
+     "b": [
+      761.1,
+      359.8
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front eave left",
+     "a": [
+      118.2,
+      425.4
+     ],
+     "b": [
+      163.5,
+      449.8
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front eave right",
+     "a": [
+      519.7,
+      637.4
+     ],
+     "b": [
+      623.6,
+      693.5
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front waist beam",
+     "a": [
+      407.7,
+      593.9
+     ],
+     "b": [
+      452.1,
+      617.6
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "door lower strap",
+     "a": [
+      269.4,
+      874.3
+     ],
+     "b": [
+      332.7,
+      906.6
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "front stone step edge",
+     "a": [
+      170,
+      1058
+     ],
+     "b": [
+      300,
+      1125
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "dormer ridge left",
+     "a": [
+      399.8,
+      244.3
+     ],
+     "b": [
+      466.5,
+      203.3
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "dormer ridge right",
+     "a": [
+      694.8,
+      445.5
+     ],
+     "b": [
+      792.2,
+      388.7
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "gable upper cornice",
+     "a": [
+      1104.2,
+      661.5
+     ],
+     "b": [
+      1175.4,
+      625.1
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "gable waist beam",
+     "a": [
+      873.6,
+      866.5
+     ],
+     "b": [
+      920.5,
+      842.9
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "gable stone base",
+     "a": [
+      850,
+      1219
+     ],
+     "b": [
+      1200,
+      1019
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "front door jamb",
+     "a": [
+      269.2,
+      776.9
+     ],
+     "b": [
+      269.3,
+      871.9
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "upper gable post",
+     "a": [
+      1049.6,
+      553.1
+     ],
+     "b": [
+      1049.8,
+      686.9
+     ],
+     "axis": 90,
+     "level": "upper"
+    },
+    {
+     "name": "lower gable window jamb",
+     "a": [
+      1062.3,
+      831.9
+     ],
+     "b": [
+      1062.7,
+      949.4
+     ],
+     "axis": 90,
+     "level": "lower"
+    }
+   ]
+  },
+  {
+   "id": "ne",
+   "kind": "sprite",
+   "key": "ne",
+   "source_file": "assets/source/remake/house-ne.png",
+   "source_rect": null,
+   "source_size": [
+    1536,
+    1024
+   ],
+   "render_file": "assets/art/village/town.webp",
+   "space": "native",
+   "source_sha256": "879907b9e0c66c31905ec002a48d09e0099f152716017d167578b977896d9618",
+   "edges": [
+    {
+     "name": "ridge front cap",
+     "a": [
+      421.3,
+      31.6
+     ],
+     "b": [
+      620.7,
+      140.4
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "ridge opposite cap",
+     "a": [
+      761.1,
+      215.8
+     ],
+     "b": [
+      897.6,
+      290.4
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front eave left",
+     "a": [
+      269.2,
+      359.6
+     ],
+     "b": [
+      519.3,
+      489.5
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front eave right",
+     "a": [
+      835.6,
+      655.6
+     ],
+     "b": [
+      942.3,
+      713.6
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "door lintel",
+     "a": [
+      595.4,
+      567.2
+     ],
+     "b": [
+      711.5,
+      630.3
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "front paving base",
+     "a": [
+      150,
+      629
+     ],
+     "b": [
+      850,
+      1005
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "gable upper beam",
+     "a": [
+      964.8,
+      696.7
+     ],
+     "b": [
+      1275.4,
+      527.5
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "gable opposite beam end",
+     "a": [
+      1202.4,
+      594.4
+     ],
+     "b": [
+      1300.9,
+      539.9
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "workbench edge",
+     "a": [
+      975.5,
+      856.6
+     ],
+     "b": [
+      1164.0,
+      755.0
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "gable paving base",
+     "a": [
+      960,
+      1010
+     ],
+     "b": [
+      1350,
+      789
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "door jamb",
+     "a": [
+      608.4,
+      601.9
+     ],
+     "b": [
+      609.7,
+      804.4
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "front bench post",
+     "a": [
+      962.3,
+      768.1
+     ],
+     "b": [
+      962.4,
+      906.9
+     ],
+     "axis": 90,
+     "level": "lower"
+    },
+    {
+     "name": "left timber post inside edge",
+     "a": [
+      249.2,
+      494.4
+     ],
+     "b": [
+      249.2,
+      553.1
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ]
+  },
+  {
+   "id": "chapel",
+   "kind": "sprite",
+   "key": "chapel",
+   "source_file": "assets/source/remake/chapel-v2.png",
+   "source_rect": null,
+   "source_size": [
+    1254,
+    1254
+   ],
+   "render_file": "assets/art/village/town.webp",
+   "space": "native",
+   "source_sha256": "e197ff7e23687a692fa02e4b9371c82998fefe51ceb6e47a9b5ab07681317171",
+   "edges": [
+    {
+     "name": "tower upper roof front course",
+     "a": [
+      455.3,
+      81.5
+     ],
+     "b": [
+      504.4,
+      98.0
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "tower front course near corner",
+     "a": [
+      330.6,
+      428.4
+     ],
+     "b": [
+      366.4,
+      439.7
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "tower front opposite course",
+     "a": [
+      394.7,
+      339.5
+     ],
+     "b": [
+      425.2,
+      349.1
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "tower front lower course",
+     "a": [
+      459.1,
+      471.6
+     ],
+     "b": [
+      491.7,
+      481.3
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "tower near eave edge",
+     "a": [
+      490.4,
+      308.8
+     ],
+     "b": [
+      543.1,
+      291.8
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "tower opposite eave edge",
+     "a": [
+      639.0,
+      265.8
+     ],
+     "b": [
+      670.5,
+      255.1
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "tower side balcony cornice",
+     "a": [
+      527.2,
+      492.8
+     ],
+     "b": [
+      613.4,
+      457.5
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "tower side upper balcony edge",
+     "a": [
+      527.6,
+      463.1
+     ],
+     "b": [
+      584.5,
+      439.6
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "main roof upper course near end",
+     "a": [
+      726.4,
+      460.9
+     ],
+     "b": [
+      776.9,
+      435.7
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "main roof upper course opposite end",
+     "a": [
+      936.3,
+      356.8
+     ],
+     "b": [
+      984.4,
+      335.7
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "entry upper stone course left",
+     "a": [
+      211.6,
+      658.9
+     ],
+     "b": [
+      244.8,
+      670.6
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "entry upper stone course opposite",
+     "a": [
+      461.8,
+      737.0
+     ],
+     "b": [
+      494.1,
+      747.8
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "entry left buttress course",
+     "a": [
+      202.2,
+      814.9
+     ],
+     "b": [
+      237.6,
+      828.8
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "entry right buttress course",
+     "a": [
+      455.1,
+      912.1
+     ],
+     "b": [
+      490.4,
+      925.3
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "entry projecting side base",
+     "a": [
+      495.8,
+      1039.8
+     ],
+     "b": [
+      526.9,
+      1024.5
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "window front cornice near end",
+     "a": [
+      627.0,
+      764.0
+     ],
+     "b": [
+      698.4,
+      788.5
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "window front cornice opposite end",
+     "a": [
+      750.2,
+      784.5
+     ],
+     "b": [
+      820.7,
+      808.0
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "main side eave near end",
+     "a": [
+      883.3,
+      787.1
+     ],
+     "b": [
+      1068.5,
+      697.6
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "main side eave opposite end",
+     "a": [
+      1069.2,
+      696.6
+     ],
+     "b": [
+      1144.6,
+      659.9
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "front lower stone course near end",
+     "a": [
+      565.7,
+      1085.5
+     ],
+     "b": [
+      604.1,
+      1100.2
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "front lower stone course opposite end",
+     "a": [
+      734.3,
+      1148.4
+     ],
+     "b": [
+      766.5,
+      1160.3
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "side window plinth long run",
+     "a": [
+      899.1,
+      1117.7
+     ],
+     "b": [
+      1103.7,
+      1007.9
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "side lower foundation long run",
+     "a": [
+      909.8,
+      1135.1
+     ],
+     "b": [
+      1091.9,
+      1035.7
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "closed door threshold left",
+     "a": [
+      356.5,
+      1036.9
+     ],
+     "b": [
+      383.5,
+      1045.7
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "closed door threshold opposite",
+     "a": [
+      383.8,
+      1046.2
+     ],
+     "b": [
+      409.8,
+      1055.6
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "upper step front lip",
+     "a": [
+      371.5,
+      1080.4
+     ],
+     "b": [
+      392.4,
+      1087.9
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "middle step front lip left",
+     "a": [
+      360.6,
+      1109.5
+     ],
+     "b": [
+      379.3,
+      1117.2
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "middle step front lip opposite",
+     "a": [
+      391.6,
+      1121.5
+     ],
+     "b": [
+      409.1,
+      1127.7
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "bottom step stone foot",
+     "a": [
+      250,
+      1116
+     ],
+     "b": [
+      380,
+      1166
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "tower front upright corner",
+     "a": [
+      489,
+      345
+     ],
+     "b": [
+      489,
+      470
+     ],
+     "axis": 90,
+     "level": "upper"
+    },
+    {
+     "name": "tower opposing upright corner",
+     "a": [
+      656,
+      280
+     ],
+     "b": [
+      656,
+      441
+     ],
+     "axis": 90,
+     "level": "upper"
+    },
+    {
+     "name": "door jamb",
+     "a": [
+      309.6,
+      855.6
+     ],
+     "b": [
+      310.0,
+      996.9
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "window front jamb",
+     "a": [
+      766.5,
+      918.1
+     ],
+     "b": [
+      766.4,
+      1091.9
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "side far window jamb",
+     "a": [
+      1083.2,
+      783.1
+     ],
+     "b": [
+      1083.5,
+      994.4
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "front foundation upright corner",
+     "a": [
+      839,
+      1182
+     ],
+     "b": [
+      839,
+      1217
+     ],
+     "axis": 90,
+     "level": "lower"
+    },
+    {
+     "name": "bottom riser upright",
+     "a": [
+      385,
+      1147
+     ],
+     "b": [
+      385,
+      1167
+     ],
+     "axis": 90,
+     "level": "lower"
+    }
+   ]
+  },
+  {
+   "id": "bridge",
+   "kind": "bridge",
+   "key": "bridge",
+   "source_file": "assets/source/remake/bridge.png",
+   "source_rect": null,
+   "source_size": [
+    1254,
+    1254
+   ],
+   "render_file": "assets/art/village/bridge.webp",
+   "source_sha256": "139a5b49b39cebac19dedc55df1934e36fdac3811d89279183341ff1c11bf688",
+   "render_sha256": "602b0209ca4ea4ab10ea654b0e9d748a62df871a51e2c52a572bcbdb46fccac8",
+   "space": "native",
+   "edges": [
+    {
+     "name": "back coping far",
+     "a": [
+      872.7103,
+      299.9313
+     ],
+     "b": [
+      924.2292,
+      269.1311
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "back coping middle",
+     "a": [
+      687.6552,
+      398.6135
+     ],
+     "b": [
+      726.8929,
+      374.404
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "back coping near middle",
+     "a": [
+      518.763,
+      520.9507
+     ],
+     "b": [
+      568.7657,
+      487.8427
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "back coping near",
+     "a": [
+      182.8121,
+      723.878
+     ],
+     "b": [
+      224.1886,
+      697.8289
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "front coping far",
+     "a": [
+      1092.5464,
+      422.981
+     ],
+     "b": [
+      1140.9226,
+      393.6153
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "front coping far middle",
+     "a": [
+      981.7709,
+      489.2008
+     ],
+     "b": [
+      1027.9619,
+      461.602
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "front coping middle",
+     "a": [
+      691.0406,
+      663.8108
+     ],
+     "b": [
+      837.3384,
+      575.1396
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "front coping near",
+     "a": [
+      530.6986,
+      804.494
+     ],
+     "b": [
+      599.442,
+      761.9833
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "back rail inner course far",
+     "a": [
+      773.1633,
+      389.4399
+     ],
+     "b": [
+      824.8639,
+      358.9541
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "back rail inner course middle",
+     "a": [
+      538.2118,
+      532.0157
+     ],
+     "b": [
+      603.1661,
+      491.9416
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "back rail inner course near",
+     "a": [
+      364.1136,
+      610.2067
+     ],
+     "b": [
+      427.0384,
+      570.8865
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "front rail outer course far",
+     "a": [
+      1029.2333,
+      508.7924
+     ],
+     "b": [
+      1082.9061,
+      476.0661
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "front face middle course",
+     "a": [
+      934.146,
+      611.0805
+     ],
+     "b": [
+      1053.8873,
+      539.3985
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "front face near course",
+     "a": [
+      406.0791,
+      906.3553
+     ],
+     "b": [
+      465.9489,
+      869.1353
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "far pier lower footing",
+     "a": [
+      1033.8534,
+      667.2739
+     ],
+     "b": [
+      1168.3951,
+      584.8158
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "near pier lower footing",
+     "a": [
+      509.0776,
+      1012.6371
+     ],
+     "b": [
+      589.9786,
+      963.3148
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "far end post lower footing",
+     "a": [
+      1182.5024,
+      590.8813
+     ],
+     "b": [
+      1237.7471,
+      556.2717
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "near end cap underside",
+     "a": [
+      124.2455,
+      879.597
+     ],
+     "b": [
+      163.4931,
+      902.494
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "near end opposite cap underside",
+     "a": [
+      204.4259,
+      931.3387
+     ],
+     "b": [
+      243.9727,
+      955.4868
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "far end tread inner edge",
+     "a": [
+      972.5004,
+      300.4691
+     ],
+     "b": [
+      1035.2452,
+      336.2901
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "far end tread outer edge",
+     "a": [
+      1066.4917,
+      310.0403
+     ],
+     "b": [
+      1132.453,
+      348.0414
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "near end wall lower course",
+     "a": [
+      98.5949,
+      951.9907
+     ],
+     "b": [
+      274.6845,
+      1052.5833
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "far pier opposite lower face",
+     "a": [
+      764.5045,
+      701.6484
+     ],
+     "b": [
+      929.83,
+      796.0783
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "rear far post cap top",
+     "a": [
+      936.5707,
+      168.6517
+     ],
+     "b": [
+      980.2038,
+      193.8542
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front far post cap top",
+     "a": [
+      1184.1315,
+      316.0392
+     ],
+     "b": [
+      1228.1149,
+      341.8922
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "near front post cap front",
+     "a": [
+      285.5636,
+      874.4811
+     ],
+     "b": [
+      330.6445,
+      900.5913
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "near front post cap side",
+     "a": [
+      332.2058,
+      901.173
+     ],
+     "b": [
+      374.9696,
+      875.3601
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "far front post upright",
+     "a": [
+      1222.1104,
+      356.8763
+     ],
+     "b": [
+      1222.2015,
+      425.6246
+     ],
+     "axis": 90,
+     "level": "upper"
+    },
+    {
+     "name": "rear far post upright",
+     "a": [
+      975.4207763671875,
+      213.1253662109375
+     ],
+     "b": [
+      975.4915771484375,
+      251.875244140625
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "near front post upper upright",
+     "a": [
+      372.2832,
+      898.1211
+     ],
+     "b": [
+      372.0814,
+      941.876
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "near front post lower upright",
+     "a": [
+      284.3813,
+      1026.8746
+     ],
+     "b": [
+      284.3864,
+      1046.8754
+     ],
+     "axis": 90,
+     "level": "lower"
+    },
+    {
+     "name": "front coping near inner top",
+     "a": [
+      507.33599853515625,
+      777.6290893554688
+     ],
+     "b": [
+      555.06103515625,
+      748.4525756835938
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "near front full upright",
+     "a": [
+      333.1424061957514,
+      907.0
+     ],
+     "b": [
+      332.8743541430449,
+      1067.0
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "near rear full upright",
+     "a": [
+      87.31120340526104,
+      778.0
+     ],
+     "b": [
+      83.13646567612886,
+      911.0
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "far front full upright",
+     "a": [
+      1182.8691604896449,
+      398.0
+     ],
+     "b": [
+      1182.991342006484,
+      549.0
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "far rear full upright",
+     "a": [
+      935.1305749565363,
+      236.0
+     ],
+     "b": [
+      933.5516157522798,
+      302.0
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ],
+   "measurement_note": "OpenCV LSD on the actual new alpha-masked PNG, verified with enlarged whole-image and end/pier overlays. The curved stone arch is an arch, not a ground-parallel line. Raised piers and cap top/middle/lower straight edges are independently checked. Full-height post corners also use horizontal Sobel ridge samples and Huber fits across their visible upright intervals, excluding projecting ledges; this prevents upper/lower-only checks from hiding an overall leaning post."
+  },
+  {
+   "id": "gate-0",
+   "kind": "sprite",
+   "key": "gate-0",
+   "source_file": "assets/source/remake/gate-a.png",
+   "source_rect": null,
+   "source_size": [
+    1254,
+    1254
+   ],
+   "render_file": "assets/art/village/gates.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "left coping",
+     "a": [
+      41.21,
+      443.16
+     ],
+     "b": [
+      242.97,
+      548.41
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "upper",
+     "method": "cv2 LSD, visually reviewed source feature",
+     "raw_degrees": 27.549220569652114
+    },
+    {
+     "name": "left cap bevel",
+     "a": [
+      43.67,
+      380.58
+     ],
+     "b": [
+      82.12,
+      403.08
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "upper",
+     "method": "cv2 LSD, visually reviewed source feature",
+     "raw_degrees": 30.33512739129677
+    },
+    {
+     "name": "left mortar",
+     "a": [
+      181.92,
+      571.79
+     ],
+     "b": [
+      205.7,
+      584.23
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "middle",
+     "method": "cv2 LSD, visually reviewed source feature",
+     "raw_degrees": 27.61535613897382
+    },
+    {
+     "name": "left base",
+     "a": [
+      42.0,
+      686.6047765793528
+     ],
+     "b": [
+      217,
+      777.611132511556
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "lower",
+     "method": "alpha>128 contour robust least-squares, visually reviewed plinth",
+     "raw_degrees": 27.47606963759527
+    },
+    {
+     "name": "right coping",
+     "a": [
+      906.52,
+      868.81
+     ],
+     "b": [
+      1117.86,
+      978.63
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "upper",
+     "method": "cv2 LSD, visually reviewed source feature",
+     "raw_degrees": 27.458039841002503
+    },
+    {
+     "name": "right cap bevel",
+     "a": [
+      1080.33,
+      902.21
+     ],
+     "b": [
+      1119.82,
+      923.78
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "upper",
+     "method": "cv2 LSD, visually reviewed source feature",
+     "raw_degrees": 28.643995085840974
+    },
+    {
+     "name": "right mortar",
+     "a": [
+      957.91,
+      1008.54
+     ],
+     "b": [
+      988.14,
+      1024.34
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "middle",
+     "method": "cv2 LSD, visually reviewed source feature",
+     "raw_degrees": 27.59425095618242
+    },
+    {
+     "name": "right base",
+     "a": [
+      941,
+      1133.6033136545418
+     ],
+     "b": [
+      1117,
+      1226.1593982098648
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "lower",
+     "method": "alpha>128 contour robust least-squares, visually reviewed plinth",
+     "raw_degrees": 27.739291621911576
+    },
+    {
+     "name": "opposite coping",
+     "a": [
+      1139.62,
+      973.91
+     ],
+     "b": [
+      1204.07,
+      935.98
+     ],
+     "axis": -30,
+     "render_axis": -30,
+     "level": "upper",
+     "method": "cv2 LSD, visually reviewed source feature",
+     "raw_degrees": -30.477587152340618
+    },
+    {
+     "name": "opposite base",
+     "a": [
+      1130,
+      1222.7544409613374
+     ],
+     "b": [
+      1216,
+      1171.889237199582
+     ],
+     "axis": -30,
+     "render_axis": -30,
+     "level": "lower",
+     "method": "alpha>128 contour robust least-squares, visually reviewed plinth",
+     "raw_degrees": -30.602441029889683
+    },
+    {
+     "name": "left upright",
+     "a": [
+      48.17,
+      555.63
+     ],
+     "b": [
+      47.93,
+      641.88
+     ],
+     "axis": 90,
+     "render_axis": 90,
+     "level": "middle",
+     "method": "cv2 LSD, visually reviewed source feature",
+     "raw_degrees": 90.1594313228106
+    },
+    {
+     "name": "module cap rear upper edge",
+     "a": [
+      120.36,
+      396.15
+     ],
+     "b": [
+      155.37,
+      413.65
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "upper",
+     "method": "Direct OpenCV LSD on the unchanged native source, visually reviewed; replaces inverse-projection approximation of the same feature",
+     "raw_degrees": 26.558504584383318
+    },
+    {
+     "name": "module lower mortar",
+     "a": [
+      150.555,
+      713.251
+     ],
+     "b": [
+      163.812,
+      720.643
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "middle",
+     "method": "Direct OpenCV LSD on the unchanged native source, visually reviewed; replaces inverse-projection approximation of the same feature",
+     "raw_degrees": 29.143697309037826
+    },
+    {
+     "name": "first cap front lower bevel",
+     "a": [
+      66.207,
+      400.668
+     ],
+     "b": [
+      79.673,
+      407.629
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "upper",
+     "method": "New actual source LSD, front bevel and opposite cap planes distinguished visually",
+     "raw_degrees": 27.335868136179656
+    },
+    {
+     "name": "module cap front upper edge",
+     "a": [
+      104.755,
+      413.442
+     ],
+     "b": [
+      138.189,
+      432.009
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "upper",
+     "method": "New actual source LSD, front bevel and opposite cap planes distinguished visually",
+     "raw_degrees": 29.04485449923786
+    },
+    {
+     "name": "module cap front lower bevel",
+     "a": [
+      122.653,
+      430.276
+     ],
+     "b": [
+      136.525,
+      437.543
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "upper",
+     "method": "New actual source LSD, front bevel and opposite cap planes distinguished visually",
+     "raw_degrees": 27.64829035096349
+    },
+    {
+     "name": "module rear cap front upper edge",
+     "a": [
+      120.809,
+      339.055
+     ],
+     "b": [
+      133.444,
+      346.32
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "upper",
+     "method": "New actual source LSD, front bevel and opposite cap planes distinguished visually",
+     "raw_degrees": 29.89847584452155
+    },
+    {
+     "name": "module rear cap front lower bevel",
+     "a": [
+      120.703,
+      349.22
+     ],
+     "b": [
+      136.183,
+      357.016
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "upper",
+     "method": "New actual source LSD, front bevel and opposite cap planes distinguished visually",
+     "raw_degrees": 26.730628363619484
+    },
+    {
+     "name": "module rear parapet upper course",
+     "a": [
+      123.059,
+      364.495
+     ],
+     "b": [
+      139.776,
+      373.642
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "upper",
+     "method": "New actual source LSD, front bevel and opposite cap planes distinguished visually",
+     "raw_degrees": 28.68604803830789
+    },
+    {
+     "name": "module rear parapet lower course",
+     "a": [
+      123.294,
+      386.532
+     ],
+     "b": [
+      139.331,
+      394.464
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "upper",
+     "method": "New actual source LSD, front bevel and opposite cap planes distinguished visually",
+     "raw_degrees": 26.31728564014485
+    },
+    {
+     "name": "module deck grain edge",
+     "a": [
+      139.814,
+      460.276
+     ],
+     "b": [
+      156.416,
+      452.183
+     ],
+     "axis": -30,
+     "render_axis": -30,
+     "level": "upper",
+     "method": "Direct OpenCV LSD on the unchanged native source, visually reviewed; replaces inverse-projection approximation of the same feature",
+     "raw_degrees": -25.987909057224005
+    }
+   ],
+   "baked_warp": "gate-0"
+  },
+  {
+   "id": "gate-2",
+   "kind": "sprite",
+   "key": "gate-2",
+   "source_file": "assets/source/remake/gate-b-v2.png",
+   "source_rect": null,
+   "source_size": [
+    1254,
+    1254
+   ],
+   "render_file": "assets/art/village/gates.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "left coping",
+     "a": [
+      181.566,
+      934.986
+     ],
+     "b": [
+      377.344,
+      840.345
+     ],
+     "axis": -30,
+     "render_axis": -30,
+     "level": "upper",
+     "method": "cv2 LSD, visually reviewed new v2 source feature",
+     "raw_degrees": -25.799577019297796
+    },
+    {
+     "name": "left cap bevel",
+     "a": [
+      184.46,
+      860.793
+     ],
+     "b": [
+      219.893,
+      842.9
+     ],
+     "axis": -30,
+     "render_axis": -30,
+     "level": "upper",
+     "method": "cv2 LSD, visually reviewed new v2 source feature",
+     "raw_degrees": -26.79291881341806
+    },
+    {
+     "name": "left mortar",
+     "a": [
+      206.784,
+      1000.466
+     ],
+     "b": [
+      244.213,
+      979.092
+     ],
+     "axis": -30,
+     "render_axis": -30,
+     "level": "middle",
+     "method": "cv2 LSD, visually reviewed new v2 source feature",
+     "raw_degrees": -29.728723016649578
+    },
+    {
+     "name": "left base",
+     "a": [
+      185,
+      1216.7185356080379
+     ],
+     "b": [
+      365,
+      1130.9499726792537
+     ],
+     "axis": -30,
+     "render_axis": -30,
+     "level": "lower",
+     "method": "alpha>128 contour robust least-squares, visually reviewed plinth",
+     "raw_degrees": -25.477426861611736
+    },
+    {
+     "name": "right coping",
+     "a": [
+      1041.376,
+      522.122
+     ],
+     "b": [
+      1217.772,
+      433.664
+     ],
+     "axis": -30,
+     "render_axis": -30,
+     "level": "upper",
+     "method": "cv2 LSD, visually reviewed new v2 source feature",
+     "raw_degrees": -26.63257251771107
+    },
+    {
+     "name": "right cap bevel",
+     "a": [
+      1097.782,
+      420.329
+     ],
+     "b": [
+      1137.921,
+      397.461
+     ],
+     "axis": -30,
+     "render_axis": -30,
+     "level": "upper",
+     "method": "cv2 LSD, visually reviewed new v2 source feature",
+     "raw_degrees": -29.671039631891546
+    },
+    {
+     "name": "right mortar",
+     "a": [
+      1160.545,
+      521.717
+     ],
+     "b": [
+      1198.404,
+      502.422
+     ],
+     "axis": -30,
+     "render_axis": -30,
+     "level": "middle",
+     "method": "cv2 LSD, visually reviewed new v2 source feature",
+     "raw_degrees": -27.005858103065563
+    },
+    {
+     "name": "right base",
+     "a": [
+      1065,
+      816.0240176600438
+     ],
+     "b": [
+      1214,
+      736.5093156732889
+     ],
+     "axis": -30,
+     "render_axis": -30,
+     "level": "lower",
+     "method": "alpha>128 contour robust least-squares, visually reviewed plinth",
+     "raw_degrees": -28.086865767125488
+    },
+    {
+     "name": "rear parapet",
+     "a": [
+      530.293,
+      313.702
+     ],
+     "b": [
+      758.382,
+      201.179
+     ],
+     "axis": -30,
+     "render_axis": -30,
+     "level": "upper",
+     "method": "cv2 LSD, visually reviewed new v2 source feature",
+     "raw_degrees": -26.258476380935903
+    },
+    {
+     "name": "opposite coping",
+     "a": [
+      41.634,
+      857.484
+     ],
+     "b": [
+      127.007,
+      903.035
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "upper",
+     "method": "cv2 LSD, visually reviewed new v2 source feature",
+     "raw_degrees": 28.082274221278283
+    },
+    {
+     "name": "opposite base",
+     "a": [
+      42,
+      1144.559229651163
+     ],
+     "b": [
+      169,
+      1216.8470203488378
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "lower",
+     "method": "alpha>128 contour robust least-squares, visually reviewed plinth",
+     "raw_degrees": 29.648324363134908
+    },
+    {
+     "name": "upright right",
+     "a": [
+      1209.883,
+      680.624
+     ],
+     "b": [
+      1209.682,
+      555.627
+     ],
+     "axis": 90,
+     "render_axis": 90,
+     "level": "middle",
+     "method": "cv2 LSD, visually reviewed new v2 source feature",
+     "raw_degrees": -90.09213374525612
+    }
+   ],
+   "baked_warp": "gate-2"
+  },
+  {
+   "id": "wall-a",
+   "kind": "wall",
+   "key": "a",
+   "source_file": "assets/source/remake/wall-from-gate.png",
+   "source_rect": null,
+   "source_size": [
+    63,
+    530
+   ],
+   "render_file": "assets/art/village/walls.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "front coping boundary",
+     "a": [
+      23.437,
+      210.096
+     ],
+     "b": [
+      61.671,
+      232.597
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "upper",
+     "raw_degrees": 30.477135195938523,
+     "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+     "name": "rear cap upper edge",
+     "a": [
+      10.572,
+      4.467
+     ],
+     "b": [
+      61.076,
+      33.592
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "upper",
+     "raw_degrees": 29.971489709074405,
+     "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+     "name": "front cap rear upper edge",
+     "a": [
+      0.05,
+      78.123
+     ],
+     "b": [
+      42.678,
+      102.359
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "upper",
+     "raw_degrees": 29.62024353537633,
+     "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+     "name": "front middle mortar",
+     "a": [
+      8.302,
+      342.824
+     ],
+     "b": [
+      24.2,
+      352.173
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "middle",
+     "raw_degrees": 30.45814187560043,
+     "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+     "name": "front lower footing",
+     "a": [
+      1.94,
+      494.261
+     ],
+     "b": [
+      60.779,
+      527.856
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "lower",
+     "raw_degrees": 29.724847551697746,
+     "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+     "name": "front merlon return at deck",
+     "a": [
+      21.157,
+      166.46
+     ],
+     "b": [
+      37.816,
+      155.853
+     ],
+     "axis": -30,
+     "render_axis": -30,
+     "level": "upper",
+     "raw_degrees": -32.48543290558463,
+     "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+     "name": "front merlon slit",
+     "a": [
+      5.882,
+      138.125
+     ],
+     "b": [
+      5.894,
+      169.375
+     ],
+     "axis": 90,
+     "render_axis": 90,
+     "level": "middle",
+     "raw_degrees": 89.97799842174841,
+     "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+     "name": "front cap lower bevel",
+     "a": [
+      3.999,
+      132.579
+     ],
+     "b": [
+      18.329,
+      140.243
+     ],
+     "axis": 30,
+     "render_axis": 30,
+     "level": "upper",
+     "raw_degrees": 28.138853795009386,
+     "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    }
+   ],
+   "baked_warp": "wall-a",
+   "mirror_x": false
+  },
+  {
+   "id": "wall-b",
+   "kind": "wall",
+   "key": "b",
+   "source_file": "assets/source/remake/wall-from-gate.png",
+   "source_rect": null,
+   "source_size": [
+    63,
+    530
+   ],
+   "render_file": "assets/art/village/walls.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "front coping boundary",
+     "a": [
+      23.437,
+      210.096
+     ],
+     "b": [
+      61.671,
+      232.597
+     ],
+     "axis": -30,
+     "render_axis": 30,
+     "level": "upper",
+     "raw_degrees": 30.477135195938523,
+     "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+     "name": "rear cap upper edge",
+     "a": [
+      10.572,
+      4.467
+     ],
+     "b": [
+      61.076,
+      33.592
+     ],
+     "axis": -30,
+     "render_axis": 30,
+     "level": "upper",
+     "raw_degrees": 29.971489709074405,
+     "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+     "name": "front cap rear upper edge",
+     "a": [
+      0.05,
+      78.123
+     ],
+     "b": [
+      42.678,
+      102.359
+     ],
+     "axis": -30,
+     "render_axis": 30,
+     "level": "upper",
+     "raw_degrees": 29.62024353537633,
+     "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+     "name": "front middle mortar",
+     "a": [
+      8.302,
+      342.824
+     ],
+     "b": [
+      24.2,
+      352.173
+     ],
+     "axis": -30,
+     "render_axis": 30,
+     "level": "middle",
+     "raw_degrees": 30.45814187560043,
+     "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+     "name": "front lower footing",
+     "a": [
+      1.94,
+      494.261
+     ],
+     "b": [
+      60.779,
+      527.856
+     ],
+     "axis": -30,
+     "render_axis": 30,
+     "level": "lower",
+     "raw_degrees": 29.724847551697746,
+     "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+     "name": "front merlon return at deck",
+     "a": [
+      21.157,
+      166.46
+     ],
+     "b": [
+      37.816,
+      155.853
+     ],
+     "axis": 30,
+     "render_axis": -30,
+     "level": "upper",
+     "raw_degrees": -32.48543290558463,
+     "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+     "name": "front merlon slit",
+     "a": [
+      5.882,
+      138.125
+     ],
+     "b": [
+      5.894,
+      169.375
+     ],
+     "axis": 90,
+     "render_axis": 90,
+     "level": "middle",
+     "raw_degrees": 89.97799842174841,
+     "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+     "name": "front cap lower bevel",
+     "a": [
+      3.999,
+      132.579
+     ],
+     "b": [
+      18.329,
+      140.243
+     ],
+     "axis": -30,
+     "render_axis": 30,
+     "level": "upper",
+     "raw_degrees": 28.138853795009386,
+     "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    }
+   ],
+   "baked_warp": "wall-a",
+   "mirror_x": true
+  },
+  {
+   "id": "portal",
+   "kind": "sprite",
+   "key": "portal",
+   "source_file": "assets/source/remake/portal-v2.png",
+   "source_rect": null,
+   "source_size": [
+    1254,
+    1254
+   ],
+   "render_file": "assets/art/village/remake-portal.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "upper left cap front course",
+     "a": [
+      237.22,
+      152.43
+     ],
+     "b": [
+      319.65,
+      193.82
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 26.6623,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "upper left cap rear opposite edge",
+     "a": [
+      410.55,
+      27.01
+     ],
+     "b": [
+      508.47,
+      82.23
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 29.4199,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "upper left cap side course",
+     "a": [
+      356.17,
+      214.14
+     ],
+     "b": [
+      431.56,
+      173.78
+     ],
+     "axis": -30,
+     "level": "upper",
+     "raw_angle": -28.1623,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "upper left cap opposite side",
+     "a": [
+      290.39,
+      62.47
+     ],
+     "b": [
+      381.99,
+      12.08
+     ],
+     "axis": -30,
+     "level": "upper",
+     "raw_angle": -28.8156,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "upper right cap rear edge",
+     "a": [
+      930.07,
+      339.16
+     ],
+     "b": [
+      1024.62,
+      390.17
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 28.347,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "upper right cap front course",
+     "a": [
+      822.22,
+      487.41
+     ],
+     "b": [
+      893.49,
+      523.66
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 26.9592,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "upper right cap side course",
+     "a": [
+      918.64,
+      531.6
+     ],
+     "b": [
+      1002.65,
+      487.23
+     ],
+     "axis": -30,
+     "level": "upper",
+     "raw_angle": -27.8408,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "middle left pillar cap front entire course",
+     "a": [
+      214.54,
+      330.37
+     ],
+     "b": [
+      345.91,
+      393.79
+     ],
+     "axis": 30,
+     "level": "middle",
+     "raw_angle": 25.7693,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "middle right pillar cap front entire course",
+     "a": [
+      781.65,
+      637.29
+     ],
+     "b": [
+      894.79,
+      697.34
+     ],
+     "axis": 30,
+     "level": "middle",
+     "raw_angle": 27.9575,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "middle right pillar cap side entire course",
+     "a": [
+      911.53,
+      692.48
+     ],
+     "b": [
+      1034.56,
+      627.22
+     ],
+     "axis": -30,
+     "level": "middle",
+     "raw_angle": -27.9433,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "middle left panel lower front course",
+     "a": [
+      260.67,
+      625.54
+     ],
+     "b": [
+      316.39,
+      654.08
+     ],
+     "axis": 30,
+     "level": "middle",
+     "raw_angle": 27.1217,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "lower full front base course",
+     "a": [
+      94,
+      778
+     ],
+     "b": [
+      834,
+      1200
+     ],
+     "axis": 30,
+     "level": "lower",
+     "raw_angle": 29.6948,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "lower full right base course",
+     "a": [
+      834,
+      1200
+     ],
+     "b": [
+      1147,
+      1021
+     ],
+     "axis": -30,
+     "level": "lower",
+     "raw_angle": -29.7646,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "lower left opposite side base course",
+     "a": [
+      96.06,
+      711.32
+     ],
+     "b": [
+      166.14,
+      667.71
+     ],
+     "axis": -30,
+     "level": "lower",
+     "raw_angle": -31.8935,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "lower right pillar front course",
+     "a": [
+      820.22,
+      915.15
+     ],
+     "b": [
+      869.23,
+      940.9
+     ],
+     "axis": 30,
+     "level": "lower",
+     "raw_angle": 27.7176,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "lower right pillar side course",
+     "a": [
+      943.8,
+      928.03
+     ],
+     "b": [
+      1000.89,
+      894.83
+     ],
+     "axis": -30,
+     "level": "lower",
+     "raw_angle": -30.1796,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "left outer pillar upright",
+     "a": [
+      222.12,
+      631.87
+     ],
+     "b": [
+      223.31,
+      343.13
+     ],
+     "axis": 90,
+     "level": "middle",
+     "raw_angle": 89.7639,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "left inner pillar upright",
+     "a": [
+      318.54,
+      406.88
+     ],
+     "b": [
+      318.71,
+      666.88
+     ],
+     "axis": 90,
+     "level": "middle",
+     "raw_angle": 89.9625,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "right front pillar upright",
+     "a": [
+      871.47,
+      703.12
+     ],
+     "b": [
+      871.64,
+      953.13
+     ],
+     "axis": 90,
+     "level": "lower",
+     "raw_angle": 89.961,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "right side pillar upright",
+     "a": [
+      940.4,
+      694.37
+     ],
+     "b": [
+      940.63,
+      941.87
+     ],
+     "axis": 90,
+     "level": "lower",
+     "raw_angle": 89.9468,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    }
+   ],
+   "measurement_note": "Actual native upper/middle/lower structural pixels on both visible faces; runtime remap only, natural bowl curves/roof pitches excluded."
+  },
+  {
+   "id": "pool",
+   "kind": "sprite",
+   "key": "pool",
+   "source_file": "assets/source/remake/fountain.png",
+   "source_rect": null,
+   "source_size": [
+    1254,
+    1254
+   ],
+   "render_file": "assets/art/village/remake-pool.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "upper cap front left",
+     "a": [
+      497,
+      309
+     ],
+     "b": [
+      629,
+      376
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 26.9112,
+     "method": "Full visible straight stone course from native source, checked at endpoints and interior over the two visible faces. Local chipped stone texture is not a separate projection axis."
+    },
+    {
+     "name": "upper cap front right return",
+     "a": [
+      695.5,
+      227.1
+     ],
+     "b": [
+      746.0,
+      255.9
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 29.696,
+     "method": "Actual alpha-masked native-pixel OpenCV LSD segment; full-size source visually checked. Roof pitches and curved bowl edges excluded."
+    },
+    {
+     "name": "upper cap side",
+     "a": [
+      629,
+      376
+     ],
+     "b": [
+      762,
+      304
+     ],
+     "axis": -30,
+     "level": "upper",
+     "raw_angle": -28.429,
+     "method": "Full visible straight stone course from native source, checked at endpoints and interior over the two visible faces. Local chipped stone texture is not a separate projection axis."
+    },
+    {
+     "name": "upper cap opposite side",
+     "a": [
+      521.2,
+      248.2
+     ],
+     "b": [
+      560.1,
+      225.9
+     ],
+     "axis": -30,
+     "level": "upper",
+     "raw_angle": -29.8241,
+     "method": "Actual alpha-masked native-pixel OpenCV LSD segment; full-size source visually checked. Roof pitches and curved bowl edges excluded."
+    },
+    {
+     "name": "middle pedestal front",
+     "a": [
+      508,
+      560
+     ],
+     "b": [
+      628,
+      615
+     ],
+     "axis": 30,
+     "level": "middle",
+     "raw_angle": 24.6236,
+     "method": "Full visible straight stone course from native source, checked at endpoints and interior over the two visible faces. Local chipped stone texture is not a separate projection axis."
+    },
+    {
+     "name": "middle pedestal side",
+     "a": [
+      628,
+      615
+     ],
+     "b": [
+      746,
+      558
+     ],
+     "axis": -30,
+     "level": "middle",
+     "raw_angle": -25.7829,
+     "method": "Full visible straight stone course from native source, checked at endpoints and interior over the two visible faces. Local chipped stone texture is not a separate projection axis."
+    },
+    {
+     "name": "lower left plinth front",
+     "a": [
+      166.0,
+      789.5
+     ],
+     "b": [
+      216.7,
+      822.8
+     ],
+     "axis": 30,
+     "level": "lower",
+     "raw_angle": 33.2971,
+     "method": "Actual alpha-masked native-pixel OpenCV LSD segment; full-size source visually checked. Roof pitches and curved bowl edges excluded."
+    },
+    {
+     "name": "lower front plinth toe",
+     "a": [
+      18,
+      691
+     ],
+     "b": [
+      623,
+      1094
+     ],
+     "axis": 30,
+     "level": "lower",
+     "raw_angle": 33.6682,
+     "method": "Full visible straight stone course from native source, checked at endpoints and interior over the two visible faces. Local chipped stone texture is not a separate projection axis."
+    },
+    {
+     "name": "lower opposite rear return",
+     "a": [
+      1044.1,
+      493.5
+     ],
+     "b": [
+      1118.4,
+      542.7
+     ],
+     "axis": 30,
+     "level": "lower",
+     "raw_angle": 33.5117,
+     "method": "Actual alpha-masked native-pixel OpenCV LSD segment; full-size source visually checked. Roof pitches and curved bowl edges excluded."
+    },
+    {
+     "name": "lower right plinth side",
+     "a": [
+      623,
+      1094
+     ],
+     "b": [
+      1235,
+      691
+     ],
+     "axis": -30,
+     "level": "lower",
+     "raw_angle": -33.3648,
+     "method": "Full visible straight stone course from native source, checked at endpoints and interior over the two visible faces. Local chipped stone texture is not a separate projection axis."
+    },
+    {
+     "name": "lower opposite side",
+     "a": [
+      111.2,
+      556.6
+     ],
+     "b": [
+      206.4,
+      498.1
+     ],
+     "axis": -30,
+     "level": "lower",
+     "raw_angle": -31.5706,
+     "method": "Actual alpha-masked native-pixel OpenCV LSD segment; full-size source visually checked. Roof pitches and curved bowl edges excluded."
+    },
+    {
+     "name": "right plinth far side",
+     "a": [
+      1046.9,
+      815.6
+     ],
+     "b": [
+      1179.2,
+      729.1
+     ],
+     "axis": -30,
+     "level": "lower",
+     "raw_angle": -33.1773,
+     "method": "Actual alpha-masked native-pixel OpenCV LSD segment; full-size source visually checked. Roof pitches and curved bowl edges excluded."
+    },
+    {
+     "name": "central shaft left upright",
+     "a": [
+      531.4,
+      421.9
+     ],
+     "b": [
+      531.7,
+      486.9
+     ],
+     "axis": 90,
+     "level": "middle",
+     "raw_angle": 89.7356,
+     "method": "Actual alpha-masked native-pixel OpenCV LSD segment; full-size source visually checked. Roof pitches and curved bowl edges excluded."
+    },
+    {
+     "name": "central shaft right upright",
+     "a": [
+      722.2,
+      485.6
+     ],
+     "b": [
+      722.5,
+      423.1
+     ],
+     "axis": 90,
+     "level": "middle",
+     "raw_angle": 89.725,
+     "method": "Actual alpha-masked native-pixel OpenCV LSD segment; full-size source visually checked. Roof pitches and curved bowl edges excluded."
+    },
+    {
+     "name": "base front left upright",
+     "a": [
+      15.6,
+      634.4
+     ],
+     "b": [
+      15.8,
+      689.4
+     ],
+     "axis": 90,
+     "level": "lower",
+     "raw_angle": 89.7917,
+     "method": "Actual alpha-masked native-pixel OpenCV LSD segment; full-size source visually checked. Roof pitches and curved bowl edges excluded."
+    }
+   ],
+   "measurement_note": "Actual native upper/middle/lower structural pixels on both visible faces; runtime remap only, natural bowl curves/roof pitches excluded."
+  },
+  {
+   "id": "chest",
+   "kind": "sprite",
+   "key": "chest",
+   "source_file": "assets/source/remake/props-cells/chest.png",
+   "source_rect": null,
+   "source_size": [
+    724,
+    724
+   ],
+   "render_file": "assets/art/village/remake-chest.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "upper lid longitudinal plank seam",
+     "a": [
+      151.28,
+      303.37
+     ],
+     "b": [
+      335.69,
+      376.72
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 21.6904,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "upper lid opposite longitudinal seam",
+     "a": [
+      327.11,
+      238.82
+     ],
+     "b": [
+      389.44,
+      265.48
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 23.1575,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "upper right rim course",
+     "a": [
+      496.28,
+      423.02
+     ],
+     "b": [
+      548.3,
+      393.43
+     ],
+     "axis": -30,
+     "level": "upper",
+     "raw_angle": -29.6321,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "middle front upper iron course",
+     "a": [
+      104.62,
+      343.73
+     ],
+     "b": [
+      216.31,
+      385.01
+     ],
+     "axis": 30,
+     "level": "middle",
+     "raw_angle": 20.284,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "middle front opposite upper iron course",
+     "a": [
+      365.46,
+      446.07
+     ],
+     "b": [
+      422.67,
+      466.89
+     ],
+     "axis": 30,
+     "level": "middle",
+     "raw_angle": 19.9976,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "middle right iron course",
+     "a": [
+      464.47,
+      480.78
+     ],
+     "b": [
+      517.41,
+      449.42
+     ],
+     "axis": -30,
+     "level": "middle",
+     "raw_angle": -30.6412,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "lower front board base entire edge",
+     "a": [
+      139.85,
+      516.97
+     ],
+     "b": [
+      377.51,
+      613.4
+     ],
+     "axis": 30,
+     "level": "lower",
+     "raw_angle": 22.0847,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "lower front foundation iron course",
+     "a": [
+      104,
+      542
+     ],
+     "b": [
+      420,
+      671
+     ],
+     "axis": 30,
+     "level": "lower",
+     "raw_angle": 22.2067,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "lower right foundation iron course",
+     "a": [
+      451.18,
+      646.92
+     ],
+     "b": [
+      592.62,
+      565.67
+     ],
+     "axis": -30,
+     "level": "lower",
+     "raw_angle": -29.8752,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "lower opposite side iron course",
+     "a": [
+      517.81,
+      448.8
+     ],
+     "b": [
+      578.23,
+      415.82
+     ],
+     "axis": -30,
+     "level": "middle",
+     "raw_angle": -28.6277,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "front left upright",
+     "a": [
+      101.47,
+      389.37
+     ],
+     "b": [
+      101.63,
+      499.38
+     ],
+     "axis": 90,
+     "level": "middle",
+     "raw_angle": 89.9167,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "front right upright",
+     "a": [
+      382.67,
+      608.13
+     ],
+     "b": [
+      382.92,
+      501.87
+     ],
+     "axis": 90,
+     "level": "lower",
+     "raw_angle": 89.8652,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "far right upright",
+     "a": [
+      622.34,
+      499.38
+     ],
+     "b": [
+      622.39,
+      398.12
+     ],
+     "axis": 90,
+     "level": "middle",
+     "raw_angle": 89.9717,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    }
+   ],
+   "measurement_note": "Actual native upper/middle/lower structural pixels on both visible faces; runtime remap only, natural bowl curves/roof pitches excluded."
+  },
+  {
+   "id": "chest-broken",
+   "kind": "sprite",
+   "key": "chest-broken",
+   "source_file": "assets/source/remake/props-cells/chest-broken.png",
+   "source_rect": null,
+   "source_size": [
+    724,
+    724
+   ],
+   "render_file": "assets/art/village/remake-chest-broken.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "upper opened lid longitudinal seam",
+     "a": [
+      342.95,
+      147.26
+     ],
+     "b": [
+      421.44,
+      184.06
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 25.1195,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "upper opened lid opposite longitudinal seam",
+     "a": [
+      408.12,
+      122.76
+     ],
+     "b": [
+      462.71,
+      146.58
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 23.5737,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "middle front iron rim course",
+     "a": [
+      190.66,
+      371.79
+     ],
+     "b": [
+      245.09,
+      394.41
+     ],
+     "axis": 30,
+     "level": "middle",
+     "raw_angle": 22.5668,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "middle right iron rim course",
+     "a": [
+      428.6,
+      448.07
+     ],
+     "b": [
+      517.79,
+      395.05
+     ],
+     "axis": -30,
+     "level": "middle",
+     "raw_angle": -30.7298,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "middle far right iron rim course",
+     "a": [
+      530.53,
+      389.19
+     ],
+     "b": [
+      572.08,
+      367.27
+     ],
+     "axis": -30,
+     "level": "middle",
+     "raw_angle": -27.8142,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "lower entire front board base",
+     "a": [
+      135.82,
+      516.41
+     ],
+     "b": [
+      376.27,
+      614.04
+     ],
+     "axis": 30,
+     "level": "lower",
+     "raw_angle": 22.0986,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "lower entire front iron foundation",
+     "a": [
+      133.68,
+      557.32
+     ],
+     "b": [
+      376.01,
+      657.2
+     ],
+     "axis": 30,
+     "level": "lower",
+     "raw_angle": 22.3998,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "lower right iron foundation",
+     "a": [
+      446.97,
+      649.55
+     ],
+     "b": [
+      588.47,
+      568.73
+     ],
+     "axis": -30,
+     "level": "lower",
+     "raw_angle": -29.7335,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "lower opposite side course",
+     "a": [
+      502.93,
+      459.03
+     ],
+     "b": [
+      560.55,
+      426.74
+     ],
+     "axis": -30,
+     "level": "middle",
+     "raw_angle": -29.2661,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "front left upright",
+     "a": [
+      98.36,
+      389.37
+     ],
+     "b": [
+      98.4,
+      496.88
+     ],
+     "axis": 90,
+     "level": "middle",
+     "raw_angle": 89.9787,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "front right upright",
+     "a": [
+      456.98,
+      594.38
+     ],
+     "b": [
+      457.21,
+      493.12
+     ],
+     "axis": 90,
+     "level": "lower",
+     "raw_angle": 89.8699,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "far right upright",
+     "a": [
+      618.29,
+      506.88
+     ],
+     "b": [
+      618.5,
+      403.12
+     ],
+     "axis": 90,
+     "level": "middle",
+     "raw_angle": 89.884,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    }
+   ],
+   "measurement_note": "Actual native upper/middle/lower structural pixels on both visible faces; runtime remap only, natural bowl curves/roof pitches excluded."
+  },
+  {
+   "id": "landmark-0",
+   "kind": "landmark",
+   "key": "0",
+   "source_file": "assets/source/hill-new.png",
+   "source_rect": null,
+   "source_size": [
+    1254,
+    1254
+   ],
+   "render_file": "assets/art/village/landmarks.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "upper stair tread",
+     "a": [
+      337.857,
+      794.959
+     ],
+     "b": [
+      354.592,
+      802.652
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "middle stair tread",
+     "a": [
+      148.554,
+      1039.662
+     ],
+     "b": [
+      172.552,
+      1050.355
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "lower stair tread",
+     "a": [
+      176.916,
+      1078.03
+     ],
+     "b": [
+      204.65,
+      1089.987
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "top right retaining edge",
+     "a": [
+      748,
+      767
+     ],
+     "b": [
+      1104,
+      553
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "right lower retaining edge",
+     "a": [
+      412,
+      977
+     ],
+     "b": [
+      1052,
+      630
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "upper post vertical",
+     "a": [
+      287,
+      720
+     ],
+     "b": [
+      287,
+      754
+     ],
+     "axis": 90,
+     "level": "upper"
+    }
+   ]
+  },
+  {
+   "id": "landmark-1",
+   "kind": "landmark",
+   "key": "1",
+   "source_file": "assets/source/garden-new.png",
+   "source_rect": null,
+   "source_size": [
+    1254,
+    1254
+   ],
+   "render_file": "assets/art/village/landmarks.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "upper paving edge",
+     "a": [
+      216,
+      700
+     ],
+     "b": [
+      549,
+      855
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "upper stair tread",
+     "a": [
+      329.7,
+      812.5
+     ],
+     "b": [
+      372.8,
+      832.6
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "lower stair tread",
+     "a": [
+      145.472,
+      979.72
+     ],
+     "b": [
+      117.401,
+      967.256
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "front coping",
+     "a": [
+      621,
+      797
+     ],
+     "b": [
+      1039,
+      563
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "front wall course",
+     "a": [
+      578,
+      855
+     ],
+     "b": [
+      1134,
+      547
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "lower wall course",
+     "a": [
+      673,
+      940
+     ],
+     "b": [
+      1012,
+      752
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "right vertical corner",
+     "a": [
+      1173.1,
+      554.4
+     ],
+     "b": [
+      1173.1,
+      650.6
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ]
+  },
+  {
+   "id": "encounter-stone",
+   "kind": "sprite",
+   "key": "encounter-stone",
+   "definition_file": "assets/data/encounter_stone.json",
+   "definition_key": "sprite",
+   "source_file": "assets/source/encounter-stone.png",
+   "source_rect": null,
+   "source_size": [
+    312,
+    496
+   ],
+   "render_file": "assets/art/village/encounter-stone.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "rear left post cap front",
+     "a": [
+      53.785,
+      290.7609
+     ],
+     "b": [
+      71.7024,
+      302.6308
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "rear right post cap side",
+     "a": [
+      247.7835,
+      329.6863
+     ],
+     "b": [
+      265.2181,
+      320.8079
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "front post cap front",
+     "a": [
+      137.9905,
+      359.9913
+     ],
+     "b": [
+      157.8663,
+      371.4566
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front post cap side",
+     "a": [
+      162.5649,
+      370.5128
+     ],
+     "b": [
+      181.2975,
+      360.4803
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "shaft base front frieze",
+     "a": [
+      92.2783,
+      314.9029
+     ],
+     "b": [
+      110.8404,
+      327.0926
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "rear left plinth ledge",
+     "a": [
+      13.7349,
+      351.9098
+     ],
+     "b": [
+      50.4521,
+      331.2051
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "rear right plinth ledge",
+     "a": [
+      270.0151,
+      350.8244
+     ],
+     "b": [
+      288.095,
+      360.79
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "front inset stone course left",
+     "a": [
+      84.2064,
+      371.28
+     ],
+     "b": [
+      99.7971,
+      379.9637
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "front inset stone course right",
+     "a": [
+      99.5033,
+      381.6901
+     ],
+     "b": [
+      115.9778,
+      391.3056
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "side wall top course",
+     "a": [
+      225.5715,
+      411.3487
+     ],
+     "b": [
+      247.4532,
+      397.8465
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "front footing long edge",
+     "a": [
+      57.6488,
+      421.8373
+     ],
+     "b": [
+      121.2807,
+      462.0244
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "front footing opposite end",
+     "a": [
+      25.4217,
+      409.4774
+     ],
+     "b": [
+      44.669,
+      421.8943
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "side footing upper edge",
+     "a": [
+      193.26,
+      457.6036
+     ],
+     "b": [
+      270.7277,
+      412.3752
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "side footing lower edge",
+     "a": [
+      200.6537,
+      475.6452
+     ],
+     "b": [
+      277.9545,
+      430.3056
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "shaft right upper upright",
+     "a": [
+      215.7399,
+      55.581
+     ],
+     "b": [
+      221.2854,
+      133.1314
+     ],
+     "axis": 90,
+     "level": "upper"
+    },
+    {
+     "name": "shaft left middle upright",
+     "a": [
+      80.3106,
+      261.7711
+     ],
+     "b": [
+      83.0028,
+      201.7798
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "shaft corner upright",
+     "a": [
+      200.2059,
+      244.3705
+     ],
+     "b": [
+      202.4506,
+      284.3848
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "rear left post upright",
+     "a": [
+      50.6604,
+      333.0151
+     ],
+     "b": [
+      51.3433,
+      313.0385
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "rear right post upright",
+     "a": [
+      269.3318,
+      329.342
+     ],
+     "b": [
+      269.6466,
+      345.6101
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "front post upright",
+     "a": [
+      179.5693,
+      363.0761
+     ],
+     "b": [
+      182.0409,
+      398.1661
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ],
+   "measurement_note": "Actual forest source pixels at post-cap bases, shaft frieze, opposite plinth courses and upright edges. Sloping pyramid roofs/organic ivy are excluded."
+  }
+ ],
+ "exemptions": {
+  "natural_sprites": [
+   "rock",
+   "cave",
+   "tree-0",
+   "tree-1",
+   "tree-2",
+   "tree-3",
+   "tree-4",
+   "tree-5",
+   "tree-6",
+   "tree-7",
+   "tree-8",
+   "tree-9",
+   "tree-10",
+   "tree-11",
+   "tree-12",
+   "tree-13",
+   "tree-14",
+   "tree-15",
+   "tree-16",
+   "tree-17",
+   "plant-0",
+   "plant-1",
+   "plant-2",
+   "plant-3",
+   "plant-4",
+   "plant-5"
+  ],
+  "natural_terrain": [
+   "landmark-2",
+   "landmark-3"
+  ],
+  "reason": "Organic silhouettes and curved/broken fragments have no rectangular horizontal axes. Actors can face arbitrary directions. Roof inclines and stair lengths change height and are not horizontal-axis edges. Source-only beacons are not instantiated.",
+  "unused_sources": [
+   "beacon-0",
+   "beacon-1",
+   "beacon-2",
+   "beacon-3",
+   "beacon-4",
+   "beacon-5",
+   "beacon-6",
+   "beacon-7"
+  ]
+ }
+}

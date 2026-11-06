@@ -1,0 +1,776 @@
+{
+ "nw": {
+  "png": "assets/source/remake/house-nw.png",
+  "vertical_only": true,
+  "free_y_boundary": true,
+  "pins": [
+   [
+    764,
+    1070
+   ]
+  ],
+  "segments": [
+   {
+    "name": "ridge cap run",
+    "a": [
+     506.5,
+     183.7
+    ],
+    "b": [
+     697.0,
+     290.5
+    ],
+    "axis": 29.511148802518754
+   },
+   {
+    "name": "front eave both ends",
+    "a": [
+     72.7,
+     373.9
+    ],
+    "b": [
+     756.6,
+     761.1
+    ],
+    "axis": 29.511148802518754
+   },
+   {
+    "name": "front waist beam",
+    "a": [
+     82,
+     580
+    ],
+    "b": [
+     760,
+     970
+    ],
+    "axis": 29.511148802518754
+   },
+   {
+    "name": "front stone base left run",
+    "a": [
+     110,
+     867
+    ],
+    "b": [
+     300,
+     975
+    ],
+    "axis": 29.511148802518754
+   },
+   {
+    "name": "front stone base right run",
+    "a": [
+     600,
+     1142
+    ],
+    "b": [
+     750,
+     1228
+    ],
+    "axis": 29.511148802518754
+   },
+   {
+    "name": "gable upper cornice",
+    "a": [
+     761.8,
+     784.3
+    ],
+    "b": [
+     1180,
+     575
+    ],
+    "axis": -29.511148802518754
+   },
+   {
+    "name": "gable waist cornice",
+    "a": [
+     768,
+     970
+    ],
+    "b": [
+     1160,
+     777
+    ],
+    "axis": -29.511148802518754
+   },
+   {
+    "name": "gable waist far end",
+    "a": [
+     1080.4,
+     785.2
+    ],
+    "b": [
+     1125.5,
+     762.9
+    ],
+    "axis": -29.511148802518754
+   },
+   {
+    "name": "gable stone base",
+    "a": [
+     800,
+     1211
+    ],
+    "b": [
+     1150,
+     1008
+    ],
+    "axis": -29.511148802518754
+   },
+   {
+    "name": "lower window sill",
+    "a": [
+     921.5,
+     1077.5
+    ],
+    "b": [
+     1026.2,
+     1020.4
+    ],
+    "axis": -29.511148802518754
+   }
+  ]
+ },
+ "sw": {
+  "png": "assets/source/remake/house-sw.png",
+  "vertical_only": true,
+  "free_y_boundary": true,
+  "pins": [
+   [
+    889,
+    1023
+   ]
+  ],
+  "segments": [
+   {
+    "name": "ridge cap run",
+    "a": [
+     491,
+     74
+    ],
+    "b": [
+     839,
+     244
+    ],
+    "axis": 27.693358568798157
+   },
+   {
+    "name": "front eave right",
+    "a": [
+     662.9,
+     524.8
+    ],
+    "b": [
+     879.7,
+     631.2
+    ],
+    "axis": 27.693358568798157
+   },
+   {
+    "name": "front upper beam left",
+    "a": [
+     261.1,
+     367.2
+    ],
+    "b": [
+     383.6,
+     428.5
+    ],
+    "axis": 27.693358568798157
+   },
+   {
+    "name": "front upper beam opposite",
+    "a": [
+     726.3,
+     596.8
+    ],
+    "b": [
+     844.6,
+     656.5
+    ],
+    "axis": 27.693358568798157
+   },
+   {
+    "name": "front lower paving",
+    "a": [
+     170,
+     654
+    ],
+    "b": [
+     850,
+     1018
+    ],
+    "axis": 27.693358568798157
+   },
+   {
+    "name": "gable cornice near",
+    "a": [
+     903.9,
+     618.4
+    ],
+    "b": [
+     1062.9,
+     543.8
+    ],
+    "axis": -27.693358568798157
+   },
+   {
+    "name": "gable cornice far",
+    "a": [
+     1108.6,
+     524.2
+    ],
+    "b": [
+     1200.6,
+     483.1
+    ],
+    "axis": -27.693358568798157
+   },
+   {
+    "name": "stall half door top",
+    "a": [
+     1057.7,
+     858.5
+    ],
+    "b": [
+     1170.7,
+     802.1
+    ],
+    "axis": -27.693358568798157
+   },
+   {
+    "name": "stall half door lower rail",
+    "a": [
+     907.2,
+     912.6
+    ],
+    "b": [
+     1017.1,
+     859.7
+    ],
+    "axis": -27.693358568798157
+   },
+   {
+    "name": "right paving base",
+    "a": [
+     950,
+     1002
+    ],
+    "b": [
+     1350,
+     793
+    ],
+    "axis": -27.693358568798157
+   }
+  ]
+ },
+ "se": {
+  "png": "assets/source/remake/house-se.png",
+  "vertical_only": true,
+  "free_y_boundary": true,
+  "pins": [
+   [
+    812,
+    1242
+   ]
+  ],
+  "segments": [
+   {
+    "name": "ridge cap run",
+    "a": [
+     713.2,
+     331.8
+    ],
+    "b": [
+     761.1,
+     359.8
+    ],
+    "axis": 29.511148802518754
+   },
+   {
+    "name": "front eave left",
+    "a": [
+     118.2,
+     425.4
+    ],
+    "b": [
+     163.5,
+     449.8
+    ],
+    "axis": 29.511148802518754
+   },
+   {
+    "name": "front eave right",
+    "a": [
+     519.7,
+     637.4
+    ],
+    "b": [
+     623.6,
+     693.5
+    ],
+    "axis": 29.511148802518754
+   },
+   {
+    "name": "front waist beam",
+    "a": [
+     407.7,
+     593.9
+    ],
+    "b": [
+     452.1,
+     617.6
+    ],
+    "axis": 29.511148802518754
+   },
+   {
+    "name": "door lower strap",
+    "a": [
+     269.4,
+     874.3
+    ],
+    "b": [
+     332.7,
+     906.6
+    ],
+    "axis": 29.511148802518754
+   },
+   {
+    "name": "front stone step edge",
+    "a": [
+     170,
+     1058
+    ],
+    "b": [
+     300,
+     1125
+    ],
+    "axis": 29.511148802518754
+   },
+   {
+    "name": "dormer ridge left",
+    "a": [
+     399.8,
+     244.3
+    ],
+    "b": [
+     466.5,
+     203.3
+    ],
+    "axis": -29.511148802518754
+   },
+   {
+    "name": "dormer ridge right",
+    "a": [
+     694.8,
+     445.5
+    ],
+    "b": [
+     792.2,
+     388.7
+    ],
+    "axis": -29.511148802518754
+   },
+   {
+    "name": "gable upper cornice",
+    "a": [
+     1104.2,
+     661.5
+    ],
+    "b": [
+     1175.4,
+     625.1
+    ],
+    "axis": -29.511148802518754
+   },
+   {
+    "name": "gable waist beam",
+    "a": [
+     873.6,
+     866.5
+    ],
+    "b": [
+     920.5,
+     842.9
+    ],
+    "axis": -29.511148802518754
+   },
+   {
+    "name": "gable stone base",
+    "a": [
+     850,
+     1219
+    ],
+    "b": [
+     1200,
+     1019
+    ],
+    "axis": -29.511148802518754
+   }
+  ]
+ },
+ "chapel": {
+  "png": "assets/source/remake/chapel-v2.png",
+  "vertical_only": true,
+  "free_y_boundary": true,
+  "pins": [
+   [
+    840,
+    1120
+   ]
+  ],
+  "segments": [
+   {
+    "name": "tower upper roof front course",
+    "a": [
+     455.3,
+     81.5
+    ],
+    "b": [
+     504.4,
+     98.0
+    ],
+    "axis": 22.483695740514307
+   },
+   {
+    "name": "tower front course near corner",
+    "a": [
+     330.6,
+     428.4
+    ],
+    "b": [
+     366.4,
+     439.7
+    ],
+    "axis": 22.483695740514307
+   },
+   {
+    "name": "tower front opposite course",
+    "a": [
+     394.7,
+     339.5
+    ],
+    "b": [
+     425.2,
+     349.1
+    ],
+    "axis": 22.483695740514307
+   },
+   {
+    "name": "tower front lower course",
+    "a": [
+     459.1,
+     471.6
+    ],
+    "b": [
+     491.7,
+     481.3
+    ],
+    "axis": 22.483695740514307
+   },
+   {
+    "name": "tower near eave edge",
+    "a": [
+     490.4,
+     308.8
+    ],
+    "b": [
+     543.1,
+     291.8
+    ],
+    "axis": -27.01613481114207
+   },
+   {
+    "name": "tower opposite eave edge",
+    "a": [
+     639.0,
+     265.8
+    ],
+    "b": [
+     670.5,
+     255.1
+    ],
+    "axis": -27.01613481114207
+   },
+   {
+    "name": "tower side balcony cornice",
+    "a": [
+     527.2,
+     492.8
+    ],
+    "b": [
+     613.4,
+     457.5
+    ],
+    "axis": -27.01613481114207
+   },
+   {
+    "name": "tower side upper balcony edge",
+    "a": [
+     527.6,
+     463.1
+    ],
+    "b": [
+     584.5,
+     439.6
+    ],
+    "axis": -27.01613481114207
+   },
+   {
+    "name": "main roof upper course near end",
+    "a": [
+     726.4,
+     460.9
+    ],
+    "b": [
+     776.9,
+     435.7
+    ],
+    "axis": -27.01613481114207
+   },
+   {
+    "name": "main roof upper course opposite end",
+    "a": [
+     936.3,
+     356.8
+    ],
+    "b": [
+     984.4,
+     335.7
+    ],
+    "axis": -27.01613481114207
+   },
+   {
+    "name": "entry upper stone course left",
+    "a": [
+     211.6,
+     658.9
+    ],
+    "b": [
+     244.8,
+     670.6
+    ],
+    "axis": 22.483695740514307
+   },
+   {
+    "name": "entry upper stone course opposite",
+    "a": [
+     461.8,
+     737.0
+    ],
+    "b": [
+     494.1,
+     747.8
+    ],
+    "axis": 22.483695740514307
+   },
+   {
+    "name": "entry left buttress course",
+    "a": [
+     202.2,
+     814.9
+    ],
+    "b": [
+     237.6,
+     828.8
+    ],
+    "axis": 22.483695740514307
+   },
+   {
+    "name": "entry right buttress course",
+    "a": [
+     455.1,
+     912.1
+    ],
+    "b": [
+     490.4,
+     925.3
+    ],
+    "axis": 22.483695740514307
+   },
+   {
+    "name": "entry projecting side base",
+    "a": [
+     495.8,
+     1039.8
+    ],
+    "b": [
+     526.9,
+     1024.5
+    ],
+    "axis": -27.01613481114207
+   },
+   {
+    "name": "window front cornice near end",
+    "a": [
+     627.0,
+     764.0
+    ],
+    "b": [
+     698.4,
+     788.5
+    ],
+    "axis": 22.483695740514307
+   },
+   {
+    "name": "window front cornice opposite end",
+    "a": [
+     750.2,
+     784.5
+    ],
+    "b": [
+     820.7,
+     808.0
+    ],
+    "axis": 22.483695740514307
+   },
+   {
+    "name": "main side eave near end",
+    "a": [
+     883.3,
+     787.1
+    ],
+    "b": [
+     1068.5,
+     697.6
+    ],
+    "axis": -27.01613481114207
+   },
+   {
+    "name": "main side eave opposite end",
+    "a": [
+     1069.2,
+     696.6
+    ],
+    "b": [
+     1144.6,
+     659.9
+    ],
+    "axis": -27.01613481114207
+   },
+   {
+    "name": "front lower stone course near end",
+    "a": [
+     565.7,
+     1085.5
+    ],
+    "b": [
+     604.1,
+     1100.2
+    ],
+    "axis": 22.483695740514307
+   },
+   {
+    "name": "front lower stone course opposite end",
+    "a": [
+     734.3,
+     1148.4
+    ],
+    "b": [
+     766.5,
+     1160.3
+    ],
+    "axis": 22.483695740514307
+   },
+   {
+    "name": "side window plinth long run",
+    "a": [
+     899.1,
+     1117.7
+    ],
+    "b": [
+     1103.7,
+     1007.9
+    ],
+    "axis": -27.01613481114207
+   },
+   {
+    "name": "side lower foundation long run",
+    "a": [
+     909.8,
+     1135.1
+    ],
+    "b": [
+     1091.9,
+     1035.7
+    ],
+    "axis": -27.01613481114207
+   },
+   {
+    "name": "closed door threshold left",
+    "a": [
+     356.5,
+     1036.9
+    ],
+    "b": [
+     383.5,
+     1045.7
+    ],
+    "axis": 22.483695740514307
+   },
+   {
+    "name": "closed door threshold opposite",
+    "a": [
+     383.8,
+     1046.2
+    ],
+    "b": [
+     409.8,
+     1055.6
+    ],
+    "axis": 22.483695740514307
+   },
+   {
+    "name": "upper step front lip",
+    "a": [
+     371.5,
+     1080.4
+    ],
+    "b": [
+     392.4,
+     1087.9
+    ],
+    "axis": 22.483695740514307
+   },
+   {
+    "name": "middle step front lip left",
+    "a": [
+     360.6,
+     1109.5
+    ],
+    "b": [
+     379.3,
+     1117.2
+    ],
+    "axis": 22.483695740514307
+   },
+   {
+    "name": "middle step front lip opposite",
+    "a": [
+     391.6,
+     1121.5
+    ],
+    "b": [
+     409.1,
+     1127.7
+    ],
+    "axis": 22.483695740514307
+   },
+   {
+    "name": "bottom step stone foot",
+    "a": [
+     250,
+     1116
+    ],
+    "b": [
+     380,
+     1166
+    ],
+    "axis": 22.483695740514307
+   }
+  ],
+  "point_merge_distance": 0.1,
+  "constrain_segments": true
+ }
+}

@@ -1,0 +1,10 @@
+.godot/
+build/
+*.tmp
+export_credentials.cfg
+
+.harness/tasks/
+.harness/.env
+.harness/refs/
+
+__pycache__/

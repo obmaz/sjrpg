@@ -1,0 +1,82 @@
+{
+ "generator": "image_gen",
+ "user_reference": "assets/source/style/approved-game-reference.jpg",
+ "concept_status": "Generated family concept, subordinate to the user reference; no separate user approval is claimed.",
+ "note": "Prompts below reproduce actual tool inputs. The word 'approved' inside the historical gate tool prompt referred to the selected generated family concept, not a separate user approval. Initial runs preceded the new master-reference attachment rule; the later canonical-wall refinement includes the actual user image.",
+ "records": [
+  {
+   "output": "assets/source/style/gate-wall-design.png",
+   "generated_original": "/workspace/generated_images/exec-a2b2c5af-7beb-4e1a-880d-3b3e30228e52.png",
+   "references": [
+    "assets/source/gate-new-a.png",
+    "assets/source/gate-new-b.png",
+    "assets/source/wall-seg-a.png"
+   ],
+   "transparent_background": true,
+   "prompt": "Create the definitive cohesive design concept for a Godot 2.5D isometric medieval forest-village fortification. The references show the EXISTING game gate designs; unify and substantially refine them into ONE consistent architecture and material family, prioritizing the weathered cool-to-neutral gray finely coursed limestone of the FIRST gate. Deliver one beautiful connected architectural concept: a substantial open twin ROUND tower gatehouse, short continuous crenellated wing walls, one long straight wall run extending to a right-angle corner and a second wall run turning away. It must be visibly ONE building system from gate to wings to BOTH wall directions: the EXACT same small rectangular ashlar block size, mortar spacing, softly rough chipped surface, gray limestone palette, simple bevelled coping caps, thin uninterrupted horizontal string course, and identical modest rectangular corbel band below battlements. No change into big yellow smooth blocks, no different cornices at the corner, no illustrated black outlines. Fine realistic architectural surface detail, subtly worn edges, restrained age and sparse moss only near feet; grounded elegant fantasy realism matching a detailed stone church, not garish and not an old cartoony sprite. Gatehouse has two cylindrical crenellated stone towers, an iron portcullis raised enough to walk under, two open dark aged oak doors with iron straps, simple arrow slits, dark wooden walkways, a plain arch. Keep proportions suitable for existing gameplay: wall crest height 200 units, wall thickness 64, gate opening about 190 wide, round towers about twice wall height. TRUE ORTHOGRAPHIC ISOMETRIC CAMERA: azimuth45 degrees/elevation35.264 degrees, every straight horizontal stone course/coping/battlement edge follows exactly screen +30 or -30 degrees with no vanishing points, vertical edges exactly vertical. Show ALL top/middle/bottom architectural edges in consistent projection, including the back-facing return wall. Warm-neutral soft ambient daylight; both orientations maintain identical stone base color with only mild face shading. Entire fortification visible with generous transparent margins, no cropping. Isolated architecture on genuine transparent alpha, no terrain tile, no grass carpet, no ground shadow, no black cast shadow blobs, no text, no diagrams, no UI, no watermark. This is the concept that the production game assets will reproduce."
+  },
+  {
+   "output": "assets/source/gate-cohesive-a.png",
+   "generated_original": "/workspace/generated_images/exec-f5857771-e5a5-409b-9162-27847fd0f81e.png",
+   "references": [
+    "assets/source/gate-new-a.png",
+    "assets/source/style/gate-wall-design.png"
+   ],
+   "transparent_background": true,
+   "prompt": "PRODUCTION GAME ASSET, one complete isolated twin ROUND tower gatehouse. EDIT REFERENCE1's actual gate; reference2 is the approved UNIFIED MATERIAL/DETAIL concept. Reference1 geometry and framing have priority: preserve its gate overall shape, camera orientation, wall wings on both ends, tower diameters, tower/base/wing pixel positions, open passage width, raised portcullis and open wooden doors. Retexture its stone architecture into the EXACT SAME cool-neutral gray finely coursed weathered limestone as reference2, using small rectangular ashlar blocks with visible fine mortar, restrained rough chipped surfaces, same subtly beveled battlement coping caps, same thin string course and SAME repeating modest small semi-circular corbel-arch band under the parapet. Every wing and each tower uses this same course scale and corbel detail. No yellow sandstone, no huge smooth blocks, no alternate cornice, no cartoon black line art. Dark oak planks on wallwalks and dark iron door straps. More material detail but restrained decoration. The wall facade and front wing base run DOWN toward the RIGHT at +30 degrees, passage depth runs up-right at -30 degrees. Keep the two tower bases, both wing bases and door aperture exactly in the same locations as reference1. Strict parallel orthographic isometric projection: straight ground-aligned courses/coping must be parallel +30 or -30 degrees and all vertical stone edges vertical, no perspective convergence at top/middle/bottom. Source1 already establishes which direction the gate faces: do not mirror or change it. The gate will replace reference1 in the SAME GAME PLACEMENT, so keep all ground contacts and proportions. Keep the FULL original 1024x1024 canvas and original image framing, generous clear alpha at outer edges, no enlarged cropping or trimmed crenels. Soft neutral daylight, cool gray base stone color shared between both orientations with only subtle face shading. Genuine transparent background alpha, no ground plane, no cast shadow around the building or under doors, no white matte, no halo, no text, no UI, no labels. One gate asset only; no extra corners or surrounding long walls."
+  },
+  {
+   "output": "assets/source/gate-cohesive-b.png",
+   "generated_original": "/workspace/generated_images/exec-627e74c2-cf41-47fb-b68e-ec7c42baf54d.png",
+   "references": [
+    "assets/source/gate-new-b.png",
+    "assets/source/style/gate-wall-design.png"
+   ],
+   "transparent_background": true,
+   "prompt": "PRODUCTION GAME ASSET, one complete isolated twin ROUND tower gatehouse. EDIT REFERENCE1's actual gate; reference2 is the approved UNIFIED MATERIAL/DETAIL concept. Reference1 geometry and framing have priority: preserve its gate overall shape, camera orientation, wall wings on both ends, tower diameters, tower/base/wing pixel positions, open passage width, raised portcullis and open wooden doors. Retexture its stone architecture into the EXACT SAME cool-neutral gray finely coursed weathered limestone as reference2, using small rectangular ashlar blocks with visible fine mortar, restrained rough chipped surfaces, same subtly beveled battlement coping caps, same thin string course and SAME repeating modest small semi-circular corbel-arch band under the parapet. Every wing and each tower uses this same course scale and corbel detail. No yellow sandstone, no huge smooth blocks, no alternate cornice, no cartoon black line art. Dark oak planks on wallwalks and dark iron door straps. More material detail but restrained decoration. The wall facade and front wing base run UP toward the RIGHT at -30 degrees, passage depth runs up-left at +30 degrees. Keep the two tower bases, both wing bases and door aperture exactly in the same locations as reference1. Strict parallel orthographic isometric projection: straight ground-aligned courses/coping must be parallel +30 or -30 degrees and all vertical stone edges vertical, no perspective convergence at top/middle/bottom. Source1 already establishes which direction the gate faces: do not mirror or change it. The gate will replace reference1 in the SAME GAME PLACEMENT, so keep all ground contacts and proportions. Keep the FULL original 1024x1024 canvas and original image framing, generous clear alpha at outer edges, no enlarged cropping or trimmed crenels. Soft neutral daylight, cool gray base stone color shared between both orientations with only subtle face shading. Genuine transparent background alpha, no ground plane, no cast shadow around the building or under doors, no white matte, no halo, no text, no UI, no labels. One gate asset only; no extra corners or surrounding long walls."
+  },
+  {
+   "stage": "initial wall-A family source before physical course-size refinement",
+   "generated_original": "/workspace/generated_images/exec-6cefb347-819f-4002-ad78-cc938a1acb5b.png",
+   "references": [
+    "assets/source/wall-seg-a.png",
+    "assets/source/gate-cohesive-a.png",
+    "assets/source/style/gate-wall-design.png"
+   ],
+   "transparent_background": true,
+   "prompt": "PRODUCTION WALL TEXTURE ASSET for the same cohesive forest-village fortification. EDIT REFERENCE1, which is the exact existing wall tile geometry/framing. Reference2 is the new gatehouse whose wing-wall MATERIAL and CORNICE must match EXACTLY. Reference3 is the generated connected-system design concept. Keep the full source1 silhouette, camera, height/thickness ratio, all straight mortar rows/coping directions, two parallel rows of crenellated parapets and the dark wooden wallwalk between them. This is an endless repeat wall segment, about two full battlement periods; keep left and right edges cut straight vertically through the repeat, no end caps, no extra returns, no gate, no tower. Retexture with identical cool-neutral gray weathered small rectangular ashlar limestone to source2, same physical block/coursing scale and narrow mortar, finely rough mildly chipped stone, subtle edge wear. The front body should have about18 small regular masonry courses between its footing and the arcade-corbel band, not a handful of giant blocks. EVERY wall direction uses the exact SAME repeating modest semi-circular corbel arches immediately below the thin string course/parapet, identical rounded/beveled cap thickness and arrow slits. No bracket-type alternative, no new mouldings, no yellow or tan sandstone, no warm directional wash, no huge smooth blocks, no cartoon outlines. True orthographic isometric: all parallel structural top/middle/base edges on the given facade run parallel at exactly30degrees, depth-facing cap edges run the opposite30degrees and vertical edges remain vertical. No vanishing points or different top vs bottom camera. Fine realistic stone and wood detail, restrained fantasy realism, soft neutral ambient daylight, the SAME material base color on both orientations. Entire repeat tile visible, maintain source1's portrait strip aspect ratio and framing, no cropping away top or bottom. Outside the wall use genuine transparent alpha; no opaque matte, no broad halo, no cast shadow or ground plane, no text or labels. The stone blocks and arcade in this asset will join directly onto source2 wing walls in game, so their material, module scale and cornice must visually be one uninterrupted building. This tile's front ground edge/courses descend toward screen RIGHT at +30degrees. Depth edges ascend right at -30degrees."
+  },
+  {
+   "output": "assets/source/wall-cohesive.png",
+   "stage": "canonical wall A body-course refinement; same generated module is reflected for the other runtime direction",
+   "generated_original": "/workspace/generated_images/exec-f0ef80c9-e69b-4ec7-b861-6857e008b9e9.png",
+   "references": [
+    "/workspace/generated_images/exec-6cefb347-819f-4002-ad78-cc938a1acb5b.png",
+    "/workspace/generated_images/exec-f5857771-e5a5-409b-9162-27847fd0f81e.png",
+    "/workspace/generated_images/exec-627e74c2-cf41-47fb-b68e-ec7c42baf54d.png",
+    "/workspace/sjrpg2/assets/source/style/approved-game-reference.jpg"
+   ],
+   "preserved_references": [
+    "assets/source/style/wall-base-design.png",
+    "assets/source/gate-cohesive-a.png",
+    "assets/source/gate-cohesive-b.png",
+    "assets/source/style/approved-game-reference.jpg"
+   ],
+   "transparent_background": true,
+   "prompt": "EDIT FIRST IMAGE ONLY: the narrow isometric wall strip (806x1951). Keep exact original full strip silhouette, camera, wall height/thickness, walkway, all battlements and cap spacing, arcade corbel molding, base plinth and transparent background. Do not rotate, zoom, crop, or redesign any structural part. Its material is already the correct finely weathered warm-neutral gray limestone.\nThe regular masonry block courses in the large FRONT WALL BODY below the arcade shelf are TOO SMALL and dense compared with the SECOND and THIRD images of the same castle gate. Increase ordinary front body stone-row height by approximately38percent, from35.5imagepixels toabout49imagepixels atnative resolution. In an unobstructed650pixel-high section between corbel shelf andplinth, showapproximately13courses ratherthan18. Make the blocks correspondingly wider with natural irregular lengths and tightshallowmortar; NO oversizedsmoothcinderblocks. Preserve the same fine grain, subtle weathering, gray palette and neutral diffuse light. Leave the merlon/cap/molding/baseblock sizes and their exact placements unchanged. Only recourse the large masonry field. The stone rows must remain straight and parallel to the visible long-axis coping, not bend or change slope lower on the wall.\nMatch the gate's real stone module scale when displayed at the same wing-wall height. The FOURTH image is the authoritative restrained forest fantasy style reference: no copiedHUD/text/sunpatches/shadowplates. Orthographictrueisometric2.5D, 45degazimuth35.264degelevation, groundaxes\u00b130deg, uprightedgesvertical, no perspectiveconvergence. No groundshadow, no logo/text, transparentoutside. OutputONLYthe correctedFIRSTcompletewall, single strip, preservingnativeaspectandallstructuralgeometry.",
+   "reference_sha256": [
+    "6cdea76128d02ec19f02629c89a059e726bd1f636cedd9fedfea6c2af2057e3b",
+    "2abd38a31c555e1cc379c91c645a99775104aeb0e64cb79697896b1ae9e27983",
+    "8a18435aba7826469ef2d477cafeb6223ed5fbfa4d017e25b68caa56dd032e5b",
+    "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+   ]
+  }
+ ],
+ "runtime_wall_derivation": {
+  "parent": "assets/source/gate-cohesive-a.png",
+  "tool": "tools/extract/gate_wall.py",
+  "measurement": "tools/extract/wall_from_gate.json",
+  "output": "assets/source/wall-from-gate.png",
+  "note": "Reuse the actual calibrated gate-wing pixels; the independently generated wall-cohesive.png is retained as historical generation provenance only."
+ }
+}

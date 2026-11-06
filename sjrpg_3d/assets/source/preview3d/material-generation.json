@@ -1,0 +1,23 @@
+{
+  "tool": "image_gen.imagegen",
+  "prompt": "Create a high-resolution production-ready 2x2 MATERIAL BASE COLOR TEXTURE SHEET for a native3D medieval woodland village. Use the supplied user game screenshot as the authoritative restrained realistic forest-fantasy material style; gate and chapel images are same-family material references only. The output is NOT a scene, NOT an isometric building, NOT UI. It is four flat, front-on orthographic material tiles occupying four EXACT equal square quadrants, touching at the midpoint with NO gutters, NO borders, NO labels, NO text. 2048x2048 if possible. Each quadrant must tile on its own horizontally and vertically with coherent edges, uniformly neutral diffuse illumination, no baked sunlight/shadows, no perspective, crisp tactile microdetail without crunchy noise. Upper LEFT: warm-neutral gray cut limestone ashlar masonry, eight horizontal courses, restrained varied stone lengths around twice course height, shallow narrow gray mortar, clean stone edges and fine grain, mild weathering, no dark grime or moss, no bevel highlights baked in. Upper RIGHT: thin overlapping blue-gray slate roof tiles, eight horizontal regular straight rows, modest staggered joints, fine natural grain, no shiny highlights, no roof/ridge/eaves/perspective. Lower LEFT: aged dark neutral oak timber, straight VERTICAL wood grain, subtle individual natural knots, flat continuous wood surface with no hinges, no frame, no iron and no planks cut into objects; enough visible detail to read on a mobile 3D door. Lower RIGHT: gray-brown oak bark with narrow organic VERTICAL ridges, flat neutral evenly lit surface. Keep stone, slate, wood and bark low saturation and natural, beautifully clear at close game-camera scale, consistent with the supplied realistic reference. All shapes straight-on texture material planes, not projected geometry. No environment, vegetation, silhouettes or shadows in any tile.",
+  "referenced_image_paths": [
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/remake/gate-a.png",
+    "assets/source/remake/town-master-scene.png"
+  ],
+  "transparent_background": false,
+  "selected_source": "assets/source/preview3d/village-materials.png",
+  "selection": "Front-on detail removes the previous 89px masonry sample enlargement and baked facade perspective. Runtime review is still required; seamlessness is not certified by the prompt.",
+  "processing": "Exact four quadrant crops, no upscaling, no painting, WebP quality94.",
+  "reference_sha256": {
+    "assets/source/style/approved-game-reference.jpg": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "assets/source/remake/gate-a.png": "a0f3d56235882394d645cea025efae632c16e1e23157b67579945bd95aeb7cb6",
+    "assets/source/remake/town-master-scene.png": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
+  },
+  "source_sha256": "0ab9f5bc5e5357abf9f5a81a5ddd38f4ea8ef1bc3cef87ebc72e261a112f3591",
+  "actual_size": [
+    1254,
+    1254
+  ]
+}

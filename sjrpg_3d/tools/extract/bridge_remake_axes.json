@@ -1,0 +1,490 @@
+{
+ "records": [
+  {
+   "id": "bridge",
+   "kind": "bridge",
+   "key": "bridge",
+   "source_file": "assets/source/remake/bridge.png",
+   "source_rect": null,
+   "source_size": [
+    1254,
+    1254
+   ],
+   "render_file": "assets/art/village/bridge.webp",
+   "source_sha256": "139a5b49b39cebac19dedc55df1934e36fdac3811d89279183341ff1c11bf688",
+   "render_sha256": "602b0209ca4ea4ab10ea654b0e9d748a62df871a51e2c52a572bcbdb46fccac8",
+   "space": "native",
+   "edges": [
+    {
+     "name": "back coping far",
+     "a": [
+      872.7103,
+      299.9313
+     ],
+     "b": [
+      924.2292,
+      269.1311
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "back coping middle",
+     "a": [
+      687.6552,
+      398.6135
+     ],
+     "b": [
+      726.8929,
+      374.404
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "back coping near middle",
+     "a": [
+      518.763,
+      520.9507
+     ],
+     "b": [
+      568.7657,
+      487.8427
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "back coping near",
+     "a": [
+      182.8121,
+      723.878
+     ],
+     "b": [
+      224.1886,
+      697.8289
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "front coping far",
+     "a": [
+      1092.5464,
+      422.981
+     ],
+     "b": [
+      1140.9226,
+      393.6153
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "front coping far middle",
+     "a": [
+      981.7709,
+      489.2008
+     ],
+     "b": [
+      1027.9619,
+      461.602
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "front coping middle",
+     "a": [
+      691.0406,
+      663.8108
+     ],
+     "b": [
+      837.3384,
+      575.1396
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "front coping near",
+     "a": [
+      530.6986,
+      804.494
+     ],
+     "b": [
+      599.442,
+      761.9833
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "back rail inner course far",
+     "a": [
+      773.1633,
+      389.4399
+     ],
+     "b": [
+      824.8639,
+      358.9541
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "back rail inner course middle",
+     "a": [
+      538.2118,
+      532.0157
+     ],
+     "b": [
+      603.1661,
+      491.9416
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "back rail inner course near",
+     "a": [
+      364.1136,
+      610.2067
+     ],
+     "b": [
+      427.0384,
+      570.8865
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "front rail outer course far",
+     "a": [
+      1029.2333,
+      508.7924
+     ],
+     "b": [
+      1082.9061,
+      476.0661
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "front face middle course",
+     "a": [
+      934.146,
+      611.0805
+     ],
+     "b": [
+      1053.8873,
+      539.3985
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "front face near course",
+     "a": [
+      406.0791,
+      906.3553
+     ],
+     "b": [
+      465.9489,
+      869.1353
+     ],
+     "axis": -30,
+     "level": "middle"
+    },
+    {
+     "name": "far pier lower footing",
+     "a": [
+      1033.8534,
+      667.2739
+     ],
+     "b": [
+      1168.3951,
+      584.8158
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "near pier lower footing",
+     "a": [
+      509.0776,
+      1012.6371
+     ],
+     "b": [
+      589.9786,
+      963.3148
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "far end post lower footing",
+     "a": [
+      1182.5024,
+      590.8813
+     ],
+     "b": [
+      1237.7471,
+      556.2717
+     ],
+     "axis": -30,
+     "level": "lower"
+    },
+    {
+     "name": "near end cap underside",
+     "a": [
+      124.2455,
+      879.597
+     ],
+     "b": [
+      163.4931,
+      902.494
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "near end opposite cap underside",
+     "a": [
+      204.4259,
+      931.3387
+     ],
+     "b": [
+      243.9727,
+      955.4868
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "far end tread inner edge",
+     "a": [
+      972.5004,
+      300.4691
+     ],
+     "b": [
+      1035.2452,
+      336.2901
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "far end tread outer edge",
+     "a": [
+      1066.4917,
+      310.0403
+     ],
+     "b": [
+      1132.453,
+      348.0414
+     ],
+     "axis": 30,
+     "level": "middle"
+    },
+    {
+     "name": "near end wall lower course",
+     "a": [
+      98.5949,
+      951.9907
+     ],
+     "b": [
+      274.6845,
+      1052.5833
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "far pier opposite lower face",
+     "a": [
+      764.5045,
+      701.6484
+     ],
+     "b": [
+      929.83,
+      796.0783
+     ],
+     "axis": 30,
+     "level": "lower"
+    },
+    {
+     "name": "rear far post cap top",
+     "a": [
+      936.5707,
+      168.6517
+     ],
+     "b": [
+      980.2038,
+      193.8542
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "front far post cap top",
+     "a": [
+      1184.1315,
+      316.0392
+     ],
+     "b": [
+      1228.1149,
+      341.8922
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "near front post cap front",
+     "a": [
+      285.5636,
+      874.4811
+     ],
+     "b": [
+      330.6445,
+      900.5913
+     ],
+     "axis": 30,
+     "level": "upper"
+    },
+    {
+     "name": "near front post cap side",
+     "a": [
+      332.2058,
+      901.173
+     ],
+     "b": [
+      374.9696,
+      875.3601
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "far front post upright",
+     "a": [
+      1222.1104,
+      356.8763
+     ],
+     "b": [
+      1222.2015,
+      425.6246
+     ],
+     "axis": 90,
+     "level": "upper"
+    },
+    {
+     "name": "rear far post upright",
+     "a": [
+      975.4207763671875,
+      213.1253662109375
+     ],
+     "b": [
+      975.4915771484375,
+      251.875244140625
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "near front post upper upright",
+     "a": [
+      372.2832,
+      898.1211
+     ],
+     "b": [
+      372.0814,
+      941.876
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "near front post lower upright",
+     "a": [
+      284.3813,
+      1026.8746
+     ],
+     "b": [
+      284.3864,
+      1046.8754
+     ],
+     "axis": 90,
+     "level": "lower"
+    },
+    {
+     "name": "front coping near inner top",
+     "a": [
+      507.33599853515625,
+      777.6290893554688
+     ],
+     "b": [
+      555.06103515625,
+      748.4525756835938
+     ],
+     "axis": -30,
+     "level": "upper"
+    },
+    {
+     "name": "near front full upright",
+     "a": [
+      333.1424061957514,
+      907.0
+     ],
+     "b": [
+      332.8743541430449,
+      1067.0
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "near rear full upright",
+     "a": [
+      87.31120340526104,
+      778.0
+     ],
+     "b": [
+      83.13646567612886,
+      911.0
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "far front full upright",
+     "a": [
+      1182.8691604896449,
+      398.0
+     ],
+     "b": [
+      1182.991342006484,
+      549.0
+     ],
+     "axis": 90,
+     "level": "middle"
+    },
+    {
+     "name": "far rear full upright",
+     "a": [
+      935.1305749565363,
+      236.0
+     ],
+     "b": [
+      933.5516157522798,
+      302.0
+     ],
+     "axis": 90,
+     "level": "middle"
+    }
+   ],
+   "measurement_note": "OpenCV LSD on the actual new alpha-masked PNG, verified with enlarged whole-image and end/pier overlays. The curved stone arch is an arch, not a ground-parallel line. Raised piers and cap top/middle/lower straight edges are independently checked. Full-height post corners also use horizontal Sobel ridge samples and Huber fits across their visible upright intervals, excluding projecting ledges; this prevents upper/lower-only checks from hiding an overall leaning post."
+  }
+ ]
+}

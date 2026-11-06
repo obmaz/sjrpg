@@ -1,0 +1,244 @@
+{
+ "source": "assets/source/remake/bridge.png",
+ "source_sha256": "139a5b49b39cebac19dedc55df1934e36fdac3811d89279183341ff1c11bf688",
+ "render": "assets/art/village/bridge.webp",
+ "render_sha256": "602b0209ca4ea4ab10ea654b0e9d748a62df871a51e2c52a572bcbdb46fccac8",
+ "source_size": [
+  1254,
+  1254
+ ],
+ "texture_size": [
+  1254,
+  1254
+ ],
+ "warp_key": "remake-bridge",
+ "texture_reference": {
+  "scale": 0.8,
+  "offset": [
+   12,
+   230
+  ]
+ },
+ "model_reference": {
+  "deck_center": [
+   772.5,
+   507.5
+  ],
+  "deck_span": 1080,
+  "axis_start": [
+   232.5,
+   820
+  ],
+  "axis_end": [
+   1312.5,
+   195
+  ],
+  "bank_clearance": 100,
+  "world_span": 600,
+  "deck": [
+   [
+    110,
+    750
+   ],
+   [
+    1190,
+    125
+   ],
+   [
+    1435,
+    265
+   ],
+   [
+    355,
+    890
+   ]
+  ],
+  "rail_half_thickness": 20,
+  "abutments": [
+   [
+    [
+     360,
+     915
+    ],
+    [
+     414,
+     875
+    ],
+    [
+     730,
+     695
+    ],
+    [
+     700,
+     820
+    ],
+    [
+     400,
+     1000
+    ]
+   ],
+   [
+    [
+     1210,
+     425
+    ],
+    [
+     1480,
+     260
+    ],
+    [
+     1500,
+     540
+    ],
+    [
+     1220,
+     660
+    ]
+   ]
+  ]
+ },
+ "source_geometry": {
+  "deck": [
+   [
+    100,
+    835
+   ],
+   [
+    955,
+    310
+   ],
+   [
+    1178,
+    438
+   ],
+   [
+    333,
+    970
+   ]
+  ],
+  "axis_start": [
+   216.5,
+   902.5
+  ],
+  "axis_end": [
+   1066.5,
+   374.0
+  ],
+  "note": "Placement landmarks follow the visible tread/end-cap planes. Corners under posts are completed from their adjoining painted tread edges. These placement landmarks are not source-angle audit samples; the separately measured actual edges above supply that proof."
+ },
+ "foreground": {
+  "coping": [
+   [
+    493.93709890941466,
+    769.7192895221033
+   ],
+   [
+    543.5408368001607,
+    741.0806769278248
+   ],
+   [
+    685.577,
+    661.0284
+   ],
+   [
+    833.5965,
+    575.5692
+   ],
+   [
+    976.8232,
+    491.9042
+   ],
+   [
+    1021.7695,
+    465.9544
+   ],
+   [
+    1083.254,
+    427.7717
+   ],
+   [
+    1130.5757,
+    400.4505
+   ]
+  ],
+  "posts": [
+   [
+    [
+     256.9029075560672,
+     846.0919490346458
+    ],
+    [
+     303.9166767788306,
+     817.6155142747195
+    ],
+    [
+     348.88679374213035,
+     841.9171568274169
+    ],
+    [
+     346.0380978543164,
+     926.3083983478836
+    ],
+    [
+     295.0955850692629,
+     946.9270337761417
+    ],
+    [
+     254.16474252938931,
+     928.0207756351258
+    ]
+   ],
+   [
+    [
+     1128.5009334748534,
+     350.66102722122514
+    ],
+    [
+     1180.5745814922427,
+     319.2722459172186
+    ],
+    [
+     1226.9118267557697,
+     345.8699703838844
+    ],
+    [
+     1226.8655957021256,
+     456.88741899120066
+    ],
+    [
+     1168.8674465519175,
+     487.50243109969415
+    ],
+    [
+     1121.6519465687663,
+     461.2465069659821
+    ]
+   ]
+  ]
+ },
+ "calibration": {
+  "points": 316,
+  "triangles": 550,
+  "max_native_displacement": 46.400431032480725,
+  "minimum_area_ratio": 0.6356554903927237
+ },
+ "alpha_review": "Actual alpha0 surroundings; bright/dark composites show no ground plate, broad halo or clipped stone silhouette. Saturated red residues have alpha<=6 and yellow<=4, and disappear under normal compositing. The source pixels are not recolored, erased or painted.",
+ "placement_review": "Original model-space forecourt offset, axis start/end, walkable deck, parapet collision thickness and abutment solids are preserved exactly. A new texture projection aligns the newly authored tread to that model; the old native pixel measurements are never reused as source-art audit samples.",
+ "references": [
+  {
+   "path": "assets/source/style/approved-game-reference.jpg",
+   "role": "authoritative user reference",
+   "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+  },
+  {
+   "path": "assets/source/remake/town-master-scene.png",
+   "role": "supplementary material/mood reference",
+   "sha256": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
+  },
+  {
+   "path": "assets/source/bridge-new.png",
+   "role": "previous bridge geometry guide",
+   "sha256": "0cdfc991d6cc71dc51e5246b0e27859bdb2877d72fd4ed7061a7e8be292cc1ca"
+  }
+ ]
+}

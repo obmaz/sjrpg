@@ -1,0 +1,181 @@
+{
+ "reference": {
+  "nw": {
+   "center": [
+    -925.299843867461,
+    -216.18030549273516
+   ],
+   "width": 406.0888521376104,
+   "approach": null
+  },
+  "ne": {
+   "center": [
+    175.1985610496814,
+    -587.3251262590738
+   ],
+   "width": 680.0,
+   "approach": null
+  },
+  "sw": {
+   "center": [
+    -193.35418248914675,
+    389.7248166888411
+   ],
+   "width": 450.0,
+   "approach": null
+  },
+  "se": {
+   "center": [
+    439.0296104977495,
+    544.7780867662506
+   ],
+   "width": 455.3482062788754,
+   "approach": null
+  },
+  "chapel": {
+   "center": [
+    780,
+    -110
+   ],
+   "width": 232.77033545999998,
+   "approach": null
+  }
+ },
+ "buildings": {
+  "nw": {
+   "png": "assets/source/remake/house-nw.png",
+   "xy": [
+    6,
+    6
+   ],
+   "packing": 0.72,
+   "foot": [
+    760,
+    1234
+   ],
+   "ground": [
+    [
+     95,
+     860
+    ],
+    [
+     1159,
+     1003
+    ],
+    [
+     760,
+     1234
+    ]
+   ],
+   "warp": "nw",
+   "gvs": 1.02,
+   "gvk": 0,
+   "approach_native": [
+    414,
+    1048
+   ],
+   "approach_clearance": 35
+  },
+  "ne": {
+   "png": "assets/source/remake/house-ne.png",
+   "xy": [
+    1030,
+    6
+   ],
+   "packing": 0.62,
+   "foot": [
+    916,
+    1017
+   ],
+   "ground": [
+    [
+     141,
+     623
+    ],
+    [
+     1382,
+     766
+    ],
+    [
+     916,
+     1017
+    ]
+   ],
+   "gvs": 1.04,
+   "gvk": 0,
+   "approach_native": [
+    650,
+    825
+   ],
+   "approach_clearance": 35
+  },
+  "sw": {
+   "png": "assets/source/remake/house-sw.png",
+   "xy": [
+    6,
+    1030
+   ],
+   "packing": 0.62,
+   "foot": [
+    889,
+    1023
+   ],
+   "ground": [
+    [
+     140,
+     637
+    ],
+    [
+     1404,
+     756
+    ],
+    [
+     889,
+     1023
+    ]
+   ],
+   "gvk": 0,
+   "warp": "sw",
+   "gvs": 1.1,
+   "approach_native": [
+    551,
+    798
+   ],
+   "approach_clearance": 35
+  },
+  "se": {
+   "png": "assets/source/remake/house-se.png",
+   "xy": [
+    1030,
+    1030
+   ],
+   "packing": 0.72,
+   "foot": [
+    812,
+    1242
+   ],
+   "ground": [
+    [
+     89,
+     924
+    ],
+    [
+     1206,
+     1017
+    ],
+    [
+     812,
+     1242
+    ]
+   ],
+   "warp": "se",
+   "gvs": 1.02,
+   "gvk": 0,
+   "approach_native": [
+    303,
+    942
+   ],
+   "approach_clearance": 35
+  }
+ }
+}

@@ -1,0 +1,116 @@
+{
+ "version": 1,
+ "sources": [
+  {
+   "path": "assets/source/mobile-menu/icons.png",
+   "sha256": "55fc7cb4c6f4de5bf00eaba0e15147654bab62a17a2ec1a31050a474bf59c402"
+  }
+ ],
+ "generation": {
+  "path": "tools/extract/mobile_menu_generation.json",
+  "sha256": "3901f7a0cab7f03d854bd7f2feded2b92d12daf44041d427c1092e7b6c58d38a"
+ },
+ "measure": {
+  "path": "tools/extract/mobile_menu_measure.json",
+  "sha256": "00637057a26d1a3fc68a8a597dbfdfed20f6d0e9fb3f8bc47825c984f46fc7f9"
+ },
+ "atlas": {
+  "path": "assets/art/hud/mobile-menu.webp",
+  "sha256": "4c611e6b7c84f0dfd497324158cc6a36f5cbab5662882de9cbc2fb43f3ac96d9",
+  "size": [
+   1024,
+   256
+  ],
+  "cell": 256,
+  "columns": 4,
+  "rows": 1,
+  "blend": "alpha",
+  "frames": {
+   "bag": {
+    "source": [
+     0,
+     0,
+     256,
+     256
+    ],
+    "paint_half": 120.0,
+    "source_roi": [
+     1,
+     88,
+     540,
+     540
+    ],
+    "paint_bounds": [
+     12,
+     8,
+     244,
+     247
+    ]
+   },
+   "skills": {
+    "source": [
+     256,
+     0,
+     256,
+     256
+    ],
+    "paint_half": 120.0,
+    "source_roi": [
+     544,
+     88,
+     540,
+     540
+    ],
+    "paint_bounds": [
+     12,
+     8,
+     244,
+     247
+    ]
+   },
+   "quests": {
+    "source": [
+     512,
+     0,
+     256,
+     256
+    ],
+    "paint_half": 120.0,
+    "source_roi": [
+     1087,
+     88,
+     540,
+     540
+    ],
+    "paint_bounds": [
+     12,
+     8,
+     244,
+     247
+    ]
+   },
+   "settings": {
+    "source": [
+     768,
+     0,
+     256,
+     256
+    ],
+    "paint_half": 120.0,
+    "source_roi": [
+     1631,
+     88,
+     540,
+     540
+    ],
+    "paint_bounds": [
+     12,
+     8,
+     244,
+     247
+    ]
+   }
+  }
+ },
+ "review": "Simplified front-facing mobile menu family; actual phone legibility must be checked at48/64px and native HUD size. Generation is not user approval."
+}

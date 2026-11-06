@@ -1,0 +1,968 @@
+{
+ "records": [
+  {
+   "id": "pool",
+   "kind": "sprite",
+   "key": "pool",
+   "source_file": "assets/source/remake/fountain.png",
+   "source_rect": null,
+   "source_size": [
+    1254,
+    1254
+   ],
+   "render_file": "assets/art/village/remake-pool.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "upper cap front left",
+     "a": [
+      497,
+      309
+     ],
+     "b": [
+      629,
+      376
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 26.9112,
+     "method": "Full visible straight stone course from native source, checked at endpoints and interior over the two visible faces. Local chipped stone texture is not a separate projection axis."
+    },
+    {
+     "name": "upper cap front right return",
+     "a": [
+      695.5,
+      227.1
+     ],
+     "b": [
+      746.0,
+      255.9
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 29.696,
+     "method": "Actual alpha-masked native-pixel OpenCV LSD segment; full-size source visually checked. Roof pitches and curved bowl edges excluded."
+    },
+    {
+     "name": "upper cap side",
+     "a": [
+      629,
+      376
+     ],
+     "b": [
+      762,
+      304
+     ],
+     "axis": -30,
+     "level": "upper",
+     "raw_angle": -28.429,
+     "method": "Full visible straight stone course from native source, checked at endpoints and interior over the two visible faces. Local chipped stone texture is not a separate projection axis."
+    },
+    {
+     "name": "upper cap opposite side",
+     "a": [
+      521.2,
+      248.2
+     ],
+     "b": [
+      560.1,
+      225.9
+     ],
+     "axis": -30,
+     "level": "upper",
+     "raw_angle": -29.8241,
+     "method": "Actual alpha-masked native-pixel OpenCV LSD segment; full-size source visually checked. Roof pitches and curved bowl edges excluded."
+    },
+    {
+     "name": "middle pedestal front",
+     "a": [
+      508,
+      560
+     ],
+     "b": [
+      628,
+      615
+     ],
+     "axis": 30,
+     "level": "middle",
+     "raw_angle": 24.6236,
+     "method": "Full visible straight stone course from native source, checked at endpoints and interior over the two visible faces. Local chipped stone texture is not a separate projection axis."
+    },
+    {
+     "name": "middle pedestal side",
+     "a": [
+      628,
+      615
+     ],
+     "b": [
+      746,
+      558
+     ],
+     "axis": -30,
+     "level": "middle",
+     "raw_angle": -25.7829,
+     "method": "Full visible straight stone course from native source, checked at endpoints and interior over the two visible faces. Local chipped stone texture is not a separate projection axis."
+    },
+    {
+     "name": "lower left plinth front",
+     "a": [
+      166.0,
+      789.5
+     ],
+     "b": [
+      216.7,
+      822.8
+     ],
+     "axis": 30,
+     "level": "lower",
+     "raw_angle": 33.2971,
+     "method": "Actual alpha-masked native-pixel OpenCV LSD segment; full-size source visually checked. Roof pitches and curved bowl edges excluded."
+    },
+    {
+     "name": "lower front plinth toe",
+     "a": [
+      18,
+      691
+     ],
+     "b": [
+      623,
+      1094
+     ],
+     "axis": 30,
+     "level": "lower",
+     "raw_angle": 33.6682,
+     "method": "Full visible straight stone course from native source, checked at endpoints and interior over the two visible faces. Local chipped stone texture is not a separate projection axis."
+    },
+    {
+     "name": "lower opposite rear return",
+     "a": [
+      1044.1,
+      493.5
+     ],
+     "b": [
+      1118.4,
+      542.7
+     ],
+     "axis": 30,
+     "level": "lower",
+     "raw_angle": 33.5117,
+     "method": "Actual alpha-masked native-pixel OpenCV LSD segment; full-size source visually checked. Roof pitches and curved bowl edges excluded."
+    },
+    {
+     "name": "lower right plinth side",
+     "a": [
+      623,
+      1094
+     ],
+     "b": [
+      1235,
+      691
+     ],
+     "axis": -30,
+     "level": "lower",
+     "raw_angle": -33.3648,
+     "method": "Full visible straight stone course from native source, checked at endpoints and interior over the two visible faces. Local chipped stone texture is not a separate projection axis."
+    },
+    {
+     "name": "lower opposite side",
+     "a": [
+      111.2,
+      556.6
+     ],
+     "b": [
+      206.4,
+      498.1
+     ],
+     "axis": -30,
+     "level": "lower",
+     "raw_angle": -31.5706,
+     "method": "Actual alpha-masked native-pixel OpenCV LSD segment; full-size source visually checked. Roof pitches and curved bowl edges excluded."
+    },
+    {
+     "name": "right plinth far side",
+     "a": [
+      1046.9,
+      815.6
+     ],
+     "b": [
+      1179.2,
+      729.1
+     ],
+     "axis": -30,
+     "level": "lower",
+     "raw_angle": -33.1773,
+     "method": "Actual alpha-masked native-pixel OpenCV LSD segment; full-size source visually checked. Roof pitches and curved bowl edges excluded."
+    },
+    {
+     "name": "central shaft left upright",
+     "a": [
+      531.4,
+      421.9
+     ],
+     "b": [
+      531.7,
+      486.9
+     ],
+     "axis": 90,
+     "level": "middle",
+     "raw_angle": 89.7356,
+     "method": "Actual alpha-masked native-pixel OpenCV LSD segment; full-size source visually checked. Roof pitches and curved bowl edges excluded."
+    },
+    {
+     "name": "central shaft right upright",
+     "a": [
+      722.2,
+      485.6
+     ],
+     "b": [
+      722.5,
+      423.1
+     ],
+     "axis": 90,
+     "level": "middle",
+     "raw_angle": 89.725,
+     "method": "Actual alpha-masked native-pixel OpenCV LSD segment; full-size source visually checked. Roof pitches and curved bowl edges excluded."
+    },
+    {
+     "name": "base front left upright",
+     "a": [
+      15.6,
+      634.4
+     ],
+     "b": [
+      15.8,
+      689.4
+     ],
+     "axis": 90,
+     "level": "lower",
+     "raw_angle": 89.7917,
+     "method": "Actual alpha-masked native-pixel OpenCV LSD segment; full-size source visually checked. Roof pitches and curved bowl edges excluded."
+    }
+   ],
+   "measurement_note": "Actual native upper/middle/lower structural pixels on both visible faces; runtime remap only, natural bowl curves/roof pitches excluded."
+  },
+  {
+   "id": "portal",
+   "kind": "sprite",
+   "key": "portal",
+   "source_file": "assets/source/remake/portal-v2.png",
+   "source_rect": null,
+   "source_size": [
+    1254,
+    1254
+   ],
+   "render_file": "assets/art/village/remake-portal.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "upper left cap front course",
+     "a": [
+      237.22,
+      152.43
+     ],
+     "b": [
+      319.65,
+      193.82
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 26.6623,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "upper left cap rear opposite edge",
+     "a": [
+      410.55,
+      27.01
+     ],
+     "b": [
+      508.47,
+      82.23
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 29.4199,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "upper left cap side course",
+     "a": [
+      356.17,
+      214.14
+     ],
+     "b": [
+      431.56,
+      173.78
+     ],
+     "axis": -30,
+     "level": "upper",
+     "raw_angle": -28.1623,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "upper left cap opposite side",
+     "a": [
+      290.39,
+      62.47
+     ],
+     "b": [
+      381.99,
+      12.08
+     ],
+     "axis": -30,
+     "level": "upper",
+     "raw_angle": -28.8156,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "upper right cap rear edge",
+     "a": [
+      930.07,
+      339.16
+     ],
+     "b": [
+      1024.62,
+      390.17
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 28.347,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "upper right cap front course",
+     "a": [
+      822.22,
+      487.41
+     ],
+     "b": [
+      893.49,
+      523.66
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 26.9592,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "upper right cap side course",
+     "a": [
+      918.64,
+      531.6
+     ],
+     "b": [
+      1002.65,
+      487.23
+     ],
+     "axis": -30,
+     "level": "upper",
+     "raw_angle": -27.8408,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "middle left pillar cap front entire course",
+     "a": [
+      214.54,
+      330.37
+     ],
+     "b": [
+      345.91,
+      393.79
+     ],
+     "axis": 30,
+     "level": "middle",
+     "raw_angle": 25.7693,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "middle right pillar cap front entire course",
+     "a": [
+      781.65,
+      637.29
+     ],
+     "b": [
+      894.79,
+      697.34
+     ],
+     "axis": 30,
+     "level": "middle",
+     "raw_angle": 27.9575,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "middle right pillar cap side entire course",
+     "a": [
+      911.53,
+      692.48
+     ],
+     "b": [
+      1034.56,
+      627.22
+     ],
+     "axis": -30,
+     "level": "middle",
+     "raw_angle": -27.9433,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "middle left panel lower front course",
+     "a": [
+      260.67,
+      625.54
+     ],
+     "b": [
+      316.39,
+      654.08
+     ],
+     "axis": 30,
+     "level": "middle",
+     "raw_angle": 27.1217,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "lower full front base course",
+     "a": [
+      94,
+      778
+     ],
+     "b": [
+      834,
+      1200
+     ],
+     "axis": 30,
+     "level": "lower",
+     "raw_angle": 29.6948,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "lower full right base course",
+     "a": [
+      834,
+      1200
+     ],
+     "b": [
+      1147,
+      1021
+     ],
+     "axis": -30,
+     "level": "lower",
+     "raw_angle": -29.7646,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "lower left opposite side base course",
+     "a": [
+      96.06,
+      711.32
+     ],
+     "b": [
+      166.14,
+      667.71
+     ],
+     "axis": -30,
+     "level": "lower",
+     "raw_angle": -31.8935,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "lower right pillar front course",
+     "a": [
+      820.22,
+      915.15
+     ],
+     "b": [
+      869.23,
+      940.9
+     ],
+     "axis": 30,
+     "level": "lower",
+     "raw_angle": 27.7176,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "lower right pillar side course",
+     "a": [
+      943.8,
+      928.03
+     ],
+     "b": [
+      1000.89,
+      894.83
+     ],
+     "axis": -30,
+     "level": "lower",
+     "raw_angle": -30.1796,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "left outer pillar upright",
+     "a": [
+      222.12,
+      631.87
+     ],
+     "b": [
+      223.31,
+      343.13
+     ],
+     "axis": 90,
+     "level": "middle",
+     "raw_angle": 89.7639,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "left inner pillar upright",
+     "a": [
+      318.54,
+      406.88
+     ],
+     "b": [
+      318.71,
+      666.88
+     ],
+     "axis": 90,
+     "level": "middle",
+     "raw_angle": 89.9625,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "right front pillar upright",
+     "a": [
+      871.47,
+      703.12
+     ],
+     "b": [
+      871.64,
+      953.13
+     ],
+     "axis": 90,
+     "level": "lower",
+     "raw_angle": 89.961,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    },
+    {
+     "name": "right side pillar upright",
+     "a": [
+      940.4,
+      694.37
+     ],
+     "b": [
+      940.63,
+      941.87
+     ],
+     "axis": 90,
+     "level": "lower",
+     "raw_angle": 89.9468,
+     "method": "Actual native alpha-masked stone cap/course/upright line, full-size source and both faces reviewed. Curved arch and sloped keystone silhouette excluded."
+    }
+   ],
+   "measurement_note": "Actual native upper/middle/lower structural pixels on both visible faces; runtime remap only, natural bowl curves/roof pitches excluded."
+  },
+  {
+   "id": "chest",
+   "kind": "sprite",
+   "key": "chest",
+   "source_file": "assets/source/remake/props-cells/chest.png",
+   "source_rect": null,
+   "source_size": [
+    724,
+    724
+   ],
+   "render_file": "assets/art/village/remake-chest.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "upper lid longitudinal plank seam",
+     "a": [
+      151.28,
+      303.37
+     ],
+     "b": [
+      335.69,
+      376.72
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 21.6904,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "upper lid opposite longitudinal seam",
+     "a": [
+      327.11,
+      238.82
+     ],
+     "b": [
+      389.44,
+      265.48
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 23.1575,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "upper right rim course",
+     "a": [
+      496.28,
+      423.02
+     ],
+     "b": [
+      548.3,
+      393.43
+     ],
+     "axis": -30,
+     "level": "upper",
+     "raw_angle": -29.6321,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "middle front upper iron course",
+     "a": [
+      104.62,
+      343.73
+     ],
+     "b": [
+      216.31,
+      385.01
+     ],
+     "axis": 30,
+     "level": "middle",
+     "raw_angle": 20.284,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "middle front opposite upper iron course",
+     "a": [
+      365.46,
+      446.07
+     ],
+     "b": [
+      422.67,
+      466.89
+     ],
+     "axis": 30,
+     "level": "middle",
+     "raw_angle": 19.9976,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "middle right iron course",
+     "a": [
+      464.47,
+      480.78
+     ],
+     "b": [
+      517.41,
+      449.42
+     ],
+     "axis": -30,
+     "level": "middle",
+     "raw_angle": -30.6412,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "lower front board base entire edge",
+     "a": [
+      139.85,
+      516.97
+     ],
+     "b": [
+      377.51,
+      613.4
+     ],
+     "axis": 30,
+     "level": "lower",
+     "raw_angle": 22.0847,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "lower front foundation iron course",
+     "a": [
+      104,
+      542
+     ],
+     "b": [
+      420,
+      671
+     ],
+     "axis": 30,
+     "level": "lower",
+     "raw_angle": 22.2067,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "lower right foundation iron course",
+     "a": [
+      451.18,
+      646.92
+     ],
+     "b": [
+      592.62,
+      565.67
+     ],
+     "axis": -30,
+     "level": "lower",
+     "raw_angle": -29.8752,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "lower opposite side iron course",
+     "a": [
+      517.81,
+      448.8
+     ],
+     "b": [
+      578.23,
+      415.82
+     ],
+     "axis": -30,
+     "level": "middle",
+     "raw_angle": -28.6277,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "front left upright",
+     "a": [
+      101.47,
+      389.37
+     ],
+     "b": [
+      101.63,
+      499.38
+     ],
+     "axis": 90,
+     "level": "middle",
+     "raw_angle": 89.9167,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "front right upright",
+     "a": [
+      382.67,
+      608.13
+     ],
+     "b": [
+      382.92,
+      501.87
+     ],
+     "axis": 90,
+     "level": "lower",
+     "raw_angle": 89.8652,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "far right upright",
+     "a": [
+      622.34,
+      499.38
+     ],
+     "b": [
+      622.39,
+      398.12
+     ],
+     "axis": 90,
+     "level": "middle",
+     "raw_angle": 89.9717,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    }
+   ],
+   "measurement_note": "Actual native upper/middle/lower structural pixels on both visible faces; runtime remap only, natural bowl curves/roof pitches excluded."
+  },
+  {
+   "id": "chest-broken",
+   "kind": "sprite",
+   "key": "chest-broken",
+   "source_file": "assets/source/remake/props-cells/chest-broken.png",
+   "source_rect": null,
+   "source_size": [
+    724,
+    724
+   ],
+   "render_file": "assets/art/village/remake-chest-broken.webp",
+   "space": "native",
+   "edges": [
+    {
+     "name": "upper opened lid longitudinal seam",
+     "a": [
+      342.95,
+      147.26
+     ],
+     "b": [
+      421.44,
+      184.06
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 25.1195,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "upper opened lid opposite longitudinal seam",
+     "a": [
+      408.12,
+      122.76
+     ],
+     "b": [
+      462.71,
+      146.58
+     ],
+     "axis": 30,
+     "level": "upper",
+     "raw_angle": 23.5737,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "middle front iron rim course",
+     "a": [
+      190.66,
+      371.79
+     ],
+     "b": [
+      245.09,
+      394.41
+     ],
+     "axis": 30,
+     "level": "middle",
+     "raw_angle": 22.5668,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "middle right iron rim course",
+     "a": [
+      428.6,
+      448.07
+     ],
+     "b": [
+      517.79,
+      395.05
+     ],
+     "axis": -30,
+     "level": "middle",
+     "raw_angle": -30.7298,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "middle far right iron rim course",
+     "a": [
+      530.53,
+      389.19
+     ],
+     "b": [
+      572.08,
+      367.27
+     ],
+     "axis": -30,
+     "level": "middle",
+     "raw_angle": -27.8142,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "lower entire front board base",
+     "a": [
+      135.82,
+      516.41
+     ],
+     "b": [
+      376.27,
+      614.04
+     ],
+     "axis": 30,
+     "level": "lower",
+     "raw_angle": 22.0986,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "lower entire front iron foundation",
+     "a": [
+      133.68,
+      557.32
+     ],
+     "b": [
+      376.01,
+      657.2
+     ],
+     "axis": 30,
+     "level": "lower",
+     "raw_angle": 22.3998,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "lower right iron foundation",
+     "a": [
+      446.97,
+      649.55
+     ],
+     "b": [
+      588.47,
+      568.73
+     ],
+     "axis": -30,
+     "level": "lower",
+     "raw_angle": -29.7335,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "lower opposite side course",
+     "a": [
+      502.93,
+      459.03
+     ],
+     "b": [
+      560.55,
+      426.74
+     ],
+     "axis": -30,
+     "level": "middle",
+     "raw_angle": -29.2661,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "front left upright",
+     "a": [
+      98.36,
+      389.37
+     ],
+     "b": [
+      98.4,
+      496.88
+     ],
+     "axis": 90,
+     "level": "middle",
+     "raw_angle": 89.9787,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "front right upright",
+     "a": [
+      456.98,
+      594.38
+     ],
+     "b": [
+      457.21,
+      493.12
+     ],
+     "axis": 90,
+     "level": "lower",
+     "raw_angle": 89.8699,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    },
+    {
+     "name": "far right upright",
+     "a": [
+      618.29,
+      506.88
+     ],
+     "b": [
+      618.5,
+      403.12
+     ],
+     "axis": 90,
+     "level": "middle",
+     "raw_angle": 89.884,
+     "method": "Native alpha-masked pixel line; rigid iron/board courses and visible uprights checked at full size. Curved barrel-lid end and broken splinters are not ground-axis samples."
+    }
+   ],
+   "measurement_note": "Actual native upper/middle/lower structural pixels on both visible faces; runtime remap only, natural bowl curves/roof pitches excluded."
+  }
+ ]
+}

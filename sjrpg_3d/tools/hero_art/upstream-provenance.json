@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "copied_from": [
+    {
+      "repository": "https://github.com/obmaz/sjrpg",
+      "path": "tool/character-art/render-mage.py",
+      "sha256": "57eb252c26921fd3d5dbc1f9b979d87960b2743bcc3f977c26b1327518586786"
+    },
+    {
+      "repository": "https://github.com/obmaz/sjrpg",
+      "path": "tool/character-art/fetch-sources.py",
+      "sha256": "8874df687ed14612bfd73ff1eac5b32344e6227fec3f469297df2d0a8d4ee238"
+    },
+    {
+      "repository": "https://github.com/obmaz/sjrpg",
+      "path": "docs/art/character-motion-provenance.json",
+      "sha256": "655c3c2436d7f0bfd75d08bd46dde427b06b42b570b596231b567913ae63f6e7"
+    },
+    {
+      "repository": "https://github.com/obmaz/sjrpg",
+      "path": "docs/licenses/quaternius-characters.txt",
+      "sha256": "e27373eac970cca052eb4df13045731ca25c638ea89b537763e68522d6380441"
+    }
+  ],
+  "note": "CC0 applies to Quaternius source models/textures/animations. The helper code derives from the user-owned sjrpg project; no new code license is asserted. No source model is shipped in this folder."
+}

@@ -1,0 +1,84 @@
+{
+  "purpose": "Shared front-on native3D village albedos; 2D sprite art is unchanged.",
+  "generation": "assets/source/preview3d/material-generation.json",
+  "authoritative_reference": {
+    "path": "assets/source/style/approved-game-reference.jpg",
+    "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+  },
+  "materials": {
+    "limestone": {
+      "source": "assets/source/preview3d/village-materials.png",
+      "source_sha256": "0ab9f5bc5e5357abf9f5a81a5ddd38f4ea8ef1bc3cef87ebc72e261a112f3591",
+      "crop": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "path": "assets/art/preview3d/limestone.webp",
+      "sha256": "8e71b8336aa7a8f6a1ec3ee272eda58296d52b7f5677a207aabf0cec7142c9e5",
+      "size": [
+        627,
+        627
+      ],
+      "operation": "Exact quadrant crop and WebP encoding; no upscaling, painting or source relighting."
+    },
+    "slate": {
+      "source": "assets/source/preview3d/village-materials.png",
+      "source_sha256": "0ab9f5bc5e5357abf9f5a81a5ddd38f4ea8ef1bc3cef87ebc72e261a112f3591",
+      "crop": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "path": "assets/art/preview3d/slate.webp",
+      "sha256": "98b2683713f318f4f2bdf78adb12148ef44efaf3efbc7ae63ba0396fbc00c5c8",
+      "size": [
+        627,
+        627
+      ],
+      "operation": "Exact quadrant crop and WebP encoding; no upscaling, painting or source relighting."
+    },
+    "timber": {
+      "source": "assets/source/preview3d/village-materials.png",
+      "source_sha256": "0ab9f5bc5e5357abf9f5a81a5ddd38f4ea8ef1bc3cef87ebc72e261a112f3591",
+      "crop": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "path": "assets/art/preview3d/timber.webp",
+      "sha256": "4cac472a9fb54db9e89bdaf1577db846bd49f936e759dca7b10101175f7dcb1c",
+      "size": [
+        627,
+        627
+      ],
+      "operation": "Exact quadrant crop and WebP encoding; no upscaling, painting or source relighting."
+    },
+    "bark": {
+      "source": "assets/source/preview3d/village-materials.png",
+      "source_sha256": "0ab9f5bc5e5357abf9f5a81a5ddd38f4ea8ef1bc3cef87ebc72e261a112f3591",
+      "crop": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "path": "assets/art/preview3d/bark.webp",
+      "sha256": "ca8532c220bb6dcb78a2b14a8dc4a78439885e0ee4f061ff92dee58007af7736",
+      "size": [
+        627,
+        627
+      ],
+      "operation": "Exact quadrant crop and WebP encoding; no upscaling, painting or source relighting."
+    }
+  },
+  "physical_scale": {
+    "limestone_tile_m": 2.56,
+    "limestone_courses": 8,
+    "slate_tile_m": 2.6
+  },
+  "limitations": "Generated albedo with fine authored relief shading, not a measured PBR scan. No ground or directional scene shadow is baked into the tiles."
+}

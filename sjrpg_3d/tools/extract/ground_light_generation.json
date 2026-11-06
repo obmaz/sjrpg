@@ -1,0 +1,132 @@
+{
+ "version": 1,
+ "purpose": "Ground material refresh against the authoritative user screenshot; separate from prior family generation records.",
+ "date_utc": "2026-11-05",
+ "generator": "image_gen.imagegen",
+ "output": {
+  "path": "assets/source/lighting/ground-materials.png",
+  "original_generation_path": "/workspace/generated_images/exec-28e0dca5-35c8-42bf-b555-ec10b14bbe06.png",
+  "sha256": "b774f93948e83c08580fe49649e5fc1d80d65e238392e8bf203b2757c47db9d7",
+  "size": [
+   1774,
+   887
+  ],
+  "layout": "Two touching 887-square panels; paving left, rejected grass right."
+ },
+ "prompt": "Create a replacement production ground-material sheet for Guardians of Nature, using the attached images in this order: (1) AUTHORITATIVE USER GAME REFERENCE, (2) the existing town master scene as the supplemental material-family reference, (3) existing ground sheet showing materials to correct, (4) current grass material to correct. The first image controls the realistic restrained forest-fantasy style. Match the path's pale worn limestone and quiet low woodland floor from image 1, not the rounded darker granite cobbles or wiry grass in images 3 and 4.\n\nOUTPUT EXACT LAYOUT: one wide 2:1 opaque image composed of TWO EQUAL SQUARE material panels touching at the exact vertical center, left panel paving, right panel low grass. No gutters, labels, borders, margins, text or decorative frame. Both square panels must be orthographic straight top-down material swatches filling every pixel. Each panel should repeat seamlessly across its own edges. Runtime projects them to true 120-degree isometric ground axes at +/-30 degrees; DO NOT render them in isometric view or pre-distort the stones.\n\nLEFT SQUARE: old pale warm-neutral gray limestone setts from the user reference's chapel footpath. Approximately seven to eight stone widths span the square. Mostly squarish blocks mixed with a few short rectangular ones, laid in staggered irregular courses, small shifts of alignment and varied size, flat fairly broad slightly worn faces, slightly softened chipped corners but still distinctly square-cut, subtle shallow erosion and fine restrained stone grain. Avoid round river cobbles and pillowy bevels. Face color is quiet light gray with a very slight beige warmth, restrained small tonal variations. Thin shallow uneven earth-and-moss-filled joints about 2 to 4 percent of a block width, low contrast, subdued olive moss only in some joints, not deep black grooves or broad gaps. Keep the stone faces continuous, readable and not covered with bright mineral flecks or sharp scratch noise. No grass tufts sprouting across the walk. Natural weathered relief with tiny contact shading inside the joints only.\n\nRIGHT SQUARE: quiet low woodland ground cover. Muted middle-value olive, moss green and restrained cool green, tiny short soft grass blades with mixed small broad-leaf rosettes and sparse tiny clover, subtle low moss, small irregular glimpses of matte dark brown soil. Height stays close to the soil. Organic variation at small and medium scales, no repeated clumps or broad bare patches. Most cover is short soft leafy mass, not wiry curled strands, straw, tall lawn blades, a dense crisscross mesh or long grass tufts. No flowers, no leaves from a tree canopy, no stones, sticks, logs, roots, bushes, or isolated objects.\n\nCRITICAL LIGHTING FOR BOTH PANELS: uniform soft neutral diffuse albedo base, consistent exposure from edge to edge, preserve subtle material self-relief only. NO cast shadows, NO tree silhouettes, NO canopy shadow shapes, NO diagonal dark areas, NO sunlight patches, NO shafts, NO vignetting, NO directional highlights, no dark-to-light gradient and no scene lighting copied from the references. The actual game will supply warm directional daylight and cool ambient shade consistently in world coordinates. Contemporary realistic hand-finished game material detail, not a photograph with lens/lighting effects, not low-poly, cartoon, stylized outlines or plastic surfaces.",
+ "referenced_images": [
+  {
+   "path": "assets/source/style/approved-game-reference.jpg",
+   "role": "Authoritative user reference; material/style",
+   "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+  },
+  {
+   "path": "assets/source/remake/town-master-scene.png",
+   "role": "Current supplemental family master, not a user approval",
+   "sha256": "23cd9b1283494d33df68ec24d4ddfa23465fbb83b139a9b3efd5616235482389"
+  },
+  {
+   "path": "assets/source/remake/ground.png",
+   "role": "Existing paving and grass replacement targets; existing earth retained",
+   "sha256": "621cf0f8b577a3f53baf2f0d7692269e24f8a8a61cd1eb6287abb00b871032c1"
+  },
+  {
+   "path": "assets/source/remake/grass-v2.png",
+   "role": "Current grass replacement target; retained after candidate grass rejection",
+   "sha256": "f044aae41ad0d83478a3843cea1f9d29be3c8308d6e06f20c37f618a95150b37"
+  }
+ ],
+ "source_review": {
+  "compared_with": [
+   "assets/source/style/approved-game-reference.jpg",
+   "assets/source/remake/town-master-scene.png",
+   "assets/source/remake/ground.png",
+   "assets/source/remake/grass-v2.png",
+   "/tmp/town-remake-review/published-chapel.png"
+  ],
+  "paving": {
+   "status": "adopted for runtime comparison",
+   "roi": [
+    2,
+    2,
+    885,
+    885
+   ],
+   "material": "Paler warm-neutral limestone, flatter squarer worn faces, subdued shallow earth/moss joints; more faithful to the reference than prior rounded darker granular cobble.",
+   "lighting": "Even neutral diffuse base with small relief inside seams; no external tree shadow, sun patch, vignette or baked isometric perspective.",
+   "limitations": "Rows remain more regular than the user reference and fine grain must be checked at actual runtime scale. Source review does not certify final scene atmosphere."
+  },
+  "grass": {
+   "status": "rejected; existing grass-v2 retained",
+   "panel_roi": [
+    887,
+    0,
+    1774,
+    887
+   ],
+   "reason": "The generated panel repeats fine wiry moss strands and dense texture, despite the prompt requiring soft short cover. It does not improve the reference match."
+  },
+  "earth": {
+   "status": "unchanged",
+   "source": "assets/source/remake/ground.png",
+   "roi": [
+    1450,
+    2,
+    2170,
+    722
+   ]
+  },
+  "projection": "Both material panels are authored top-down. The runtime ground transform supplies the +/-30 degree axes; no invented source rigid-edge measurements.",
+  "actual_scene_review": {
+   "status": "Adopted after actual Godot web portrait/landscape comparison; reference mood is not claimed complete.",
+   "capture": "node tools/screenshot.mjs --scene chapel_reference --class mage --device phone --viewport 714x1280 --dpr 1 --settle 9000 --out /tmp/chapel.png",
+   "reference_comparison": "node tools/compare_reference.mjs --actual /tmp/chapel.png --out /tmp/comparison.png",
+   "lighting_comparison": "Repeat capture with --lighting off; compare using compare_reference.mjs --before OFF.png --actual ON.png --out comparison.png",
+   "runtime_tile_world_size": 180,
+   "scale_review": "280 ground units produced oversize stones in actual comparison; 180 retains roughly 50–60px long stone diagonals at the normal portrait camera.",
+   "lighting": "Cool ambient ground material plus two world-positioned warm openings calculated in the ground-only shader; only grass, earth and paving receive them. Actual tree-alpha shadows remain separate and owner-linked. No baked canopy shadows in material.",
+   "remaining_difference": "The source courses are still more regular than the reference. Existing grass remains noisier, and building/actor illumination does not reproduce the reference whole-scene depth."
+  }
+ },
+ "packing": {
+  "tool": "tools/prepare_forest_art.py",
+  "source_measure": "tools/extract/forest_art_measure.json",
+  "measure_sha256": "4008cdf3a8d89687fad387ff11293fc474219c9eeca8bb4f3cbd0b34463e83d1",
+  "runtime_manifest": "assets/data/forest_art.json",
+  "runtime_manifest_sha256": "30f22348842798645b3aae581cdc97b5e2d5ea1c0d0174adb4974c562a126107",
+  "runtime_textures": {
+   "grass": {
+    "path": "assets/art/forest/grass.webp",
+    "sha256": "524d7c37244a250cb1c905cd16b9b4ade65bb555dfd218dbefccf7e209a4325d",
+    "size": [
+     512,
+     512
+    ]
+   },
+   "paving": {
+    "path": "assets/art/forest/paving.webp",
+    "sha256": "293bb740e1c277bf7e6cd566c8c9f6a05105e5e7ca0e8960e041ad23e2b2d9ef",
+    "size": [
+     512,
+     512
+    ]
+   },
+   "earth": {
+    "path": "assets/art/forest/earth.webp",
+    "sha256": "379f9866399c0e0e5265adfea05c3779fc7e6723cc42626226c7275157e4a17c",
+    "size": [
+     512,
+     512
+    ]
+   },
+   "flora": {
+    "path": "assets/art/forest/flora.webp",
+    "sha256": "90e95fcb25c3163ed7840d9d25077a68d69769b79afc452b139c9234c72487ea",
+    "size": [
+     1024,
+     1024
+    ]
+   }
+  }
+ }
+}

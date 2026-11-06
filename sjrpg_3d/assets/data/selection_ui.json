@@ -1,0 +1,77 @@
+{
+ "texture": "res://assets/art/ui/selection-trim.webp",
+ "regions": {
+  "primary": [
+   8,
+   8,
+   563,
+   141
+  ],
+  "continue": [
+   8,
+   176,
+   562,
+   136
+  ],
+  "crest": [
+   8,
+   350,
+   434,
+   267
+  ],
+  "warrior": [
+   540,
+   350,
+   303,
+   369
+  ],
+  "back": [
+   8,
+   176,
+   562,
+   136
+  ],
+  "tab_active": [
+   8,
+   8,
+   563,
+   141
+  ],
+  "tab_inactive": [
+   8,
+   176,
+   562,
+   136
+  ]
+ },
+ "nine_slice": 22,
+ "source": "assets/source/selection-trim.png",
+ "source_rects": {
+  "primary": [
+   39,
+   235,
+   602,
+   376
+  ],
+  "continue": [
+   654,
+   240,
+   1216,
+   376
+  ],
+  "crest": [
+   110,
+   808,
+   544,
+   1075
+  ],
+  "warrior": [
+   786,
+   778,
+   1089,
+   1147
+  ]
+ },
+ "source_sha256": "4ff6cab1f8c0890b9ba3f3f901e24f0ad4f3521aa9fe9c07b425bbc191bce4ba",
+ "render_sha256": "08b1045013d8220fd6c65497e7e0848d7b43f886cc81e4de9ac0f24a49774039"
+}

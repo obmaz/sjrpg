@@ -1,0 +1,185 @@
+# 3D 에셋 제작 기준
+
+`sjrpg_3d/`의 신규 모델·표면 재질·식생·애니메이션에 적용하는 제작 규격입니다. 숲 1장과 기존 선택형 동굴을 계속 개선하며, 후속 스테이지는 만들지 않습니다. `sjrpg_2d/`의 원화·투영·기능은 별도로 보존합니다. 기존 2D 제작 문서를 3D 모델의 완성 판정으로 사용하지 않습니다.
+
+## 기준과 현재 구현
+
+분위기의 최상위 기준은 사용자가 지정한 [게임 레퍼런스 원본](../sjrpg_3d/assets/source/style/approved-game-reference.jpg)입니다. SHA-256은 `c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a`이며 새 컨셉으로 덮어쓰지 않습니다. [레퍼런스 분위기](../sjrpg_3d/docs/reference-look-guide.md)와 [아트 기준](../sjrpg_3d/docs/art-direction.md)의 재질·거리·명암·식생 원칙은 이어받습니다. [기존 프롬프트](../sjrpg_3d/docs/art-prompts.md)는 2D 원화용이므로, 아래의 3D 컨셉·평면 재질 지시와 구별합니다.
+
+레퍼런스처럼 절제된 사실적 숲 판타지로 만듭니다. 따뜻한 중성 회색 석회암, 얇은 청회색 슬레이트, 낡은 참나무, 무광 철, 남색 옷, 낮은 채도의 올리브 식생이 한 화면에서 같은 밀도로 읽혀야 합니다. 과한 금장·검은 외곽선·장난감 같은 큰 돌·장식으로만 채운 건물을 피합니다. 잔디와 수관은 색·명도를 구별하고, 문·NPC·전투 동선에는 여백을 둡니다.
+
+화면은 가까운 인물·길·건물과 깊은 숲을 함께 읽는 구도입니다. 레퍼런스 비교의 시작 목표는 배우 실루엣이 짧은 변의 약 22–26%, 세로 화면의 발치가 높이 약 58–64%, 가까운 주 건물이 화면 폭의 약 60–80%입니다. 근사 제작 목표이며 실제 달성값이 아닙니다. 투명 여백·브라우저 크롬을 제외한 실제 화면을 비교하고, 검수 때만 줌을 바꿔 다른 비례 문제를 숨기지 않습니다.
+
+| 위치 | 현재 책임 |
+| --- | --- |
+| `sjrpg_3d/scripts/native_adventure.gd` | 독립 3D 모험 진입점 |
+| `scripts/ortho_3d_preview.gd` | 실제 직교 카메라·광원·입체 건축·배우 표시. `preview`라는 기존 파일명은 2D 전환 모드를 뜻하지 않음 |
+| `scripts/spatial_world_3d.gd` | 지속적인 `CharacterBody3D`, 실제 충돌·지형 높이·공격 차폐 |
+| `scripts/ortho_3d_environment.gd` | 마을 밖 숲과 동굴의 공간 표시, 공유 지형 표면 |
+| `scripts/ortho_3d_chapel.gd`, `scripts/ortho_3d_fortification.gd`, `scripts/ortho_3d_trees.gd` | 현재 건축·성문/벽·나무 패밀리 |
+| `assets/art/preview3d/`, `assets/source/preview3d/`, `tools/preview3d/` | 런타임 자산, 실제 생성 원본/기록, 재현 도구 |
+
+위 표의 첫 행 이후 경로는 `sjrpg_3d/` 기준입니다. 현재 `Game`의 `Node2D` 좌표는 UI·규칙과 기존 데이터의 어댑터이며 공간 판정의 기준은 `SpatialWorld3D`입니다. 마을 밖이나 동굴에서도 3D 표시를 유지합니다. 이전 비교 장면 문서의 ‘마을만 3D, 외부는 2D’ 설명은 현재 독립 3D판의 제작 계약이 아닙니다.
+
+## 카메라·좌표·배율
+
+| 항목 | 고정 규격 |
+| --- | --- |
+| 투영 | 원근 없는 직교 투영 |
+| 카메라 | 방위 45°, 고도 35.2643897°. 기준 시선 위치 방향 `(1, 1, 1)` |
+| 화면의 축 | 지면 두 축 ±30°, 수직 90°. 세 투영 축 사이 120° |
+| 모델 좌표 | 미터 단위, `+Y` 위, 지면 `XZ`, 발/기단의 기준 접점 `Y=0` |
+| 앞 방향 | 배우와 건물의 로컬 정면 `+Z`. 다른 원본 축은 내보내기에서 변환하고 기록 |
+| 원점 | 배우 발 중앙, 나무 줄기/뿌리 접점, 건물 배치 기준 기단점. 모든 패밀리가 같은 기준 사용 |
+| 런타임 배율 | 새 모델은 실제 미터 비례를 구워 기본 배율 `(1,1,1)`로 납품. 크기를 맞추려고 한 축만 늘리지 않음 |
+
+`120°`는 투영된 축의 관계이며 카메라를 120° 기울이라는 뜻이 아닙니다. 2:1 디메트릭의 26.565° 축, 원근 수렴, 광각, 기울어진 수직선을 섞지 않습니다. 화면 회전과 줌 0.5/1/1.5에서도 축은 그대로입니다.
+
+현재 변환은 `Iso.S=0.97`, `GROUND_PER_METER=65`, `PROJECTION_FACTOR=√(3/2)×Iso.S`입니다.
+
+- 기존 지면 좌표 `p`를 공간으로 옮길 때 `Iso.unproject(p)/65`를 `XZ`로 사용합니다. `Y`는 실제 미터 높이입니다.
+- 카메라 줌 1에서 **수직 높이 1m**는 화면에서 `65×Iso.S=63.05` 원래 월드 픽셀입니다.
+- 같은 조건에서 **카메라의 화면 평면 1m**는 `65×PROJECTION_FACTOR≈77.22` 픽셀입니다. 기존 그림 카드의 화면 크기에 쓰는 계수이며 지형 `XZ`의 65 단위/m를 대체하지 않습니다.
+- 지면 `+X` 1m는 화면에서 약 `(54.60,31.525)`px, `+Z` 1m는 `(-54.60,31.525)`px입니다. 위 값에 실제 카메라 줌을 곱합니다.
+
+발 위치는 실제 `actor_foot()`를 따릅니다. 이미 화면 높이를 포함한 2D 효과 좌표에 높이를 다시 더하지 않습니다. 투사체는 실제 발사 높이와 `native_position()`을 따라 지형 위를 날아가며, 매 프레임 새 바닥 높이에 붙여 이동시키지 않습니다.
+
+새 모델의 메쉬·골격·소켓·동작을 함께 구워 배율을 정리합니다. 현재 마법사처럼 검증된 기존 골격에 남은 비례 차이와 Compatibility 런타임 축소 문제는 개별 예외로 기록합니다. 기존 예외를 새 배우의 표준 크기로 복제하거나, 임의의 런타임 축소를 검수 없이 적용하지 않습니다.
+
+## 주요 오브젝트는 패밀리로 제작
+
+한 건물의 앞면을 먼저 완성하고 다른 면을 임의로 붙이지 않습니다. 먼저 레퍼런스와 같은 패밀리의 정면·양 측면·후면·위쪽 구조를 설계하고 실제 메시로 만듭니다.
+
+- 주택·상점·대장간·마구간은 석재 단 높이, 슬레이트 줄 간격, 기둥 두께, 문/창틀, 처마, 기단 높이를 공유합니다. 상점의 간판·대장간의 작업 설비·마구간의 출입구처럼 역할은 구별합니다. 동일 건물을 색만 바꿔 복제하지 않습니다.
+- 공통 구조와 개별 실루엣을 분리합니다. 같은 재질 리소스와 모듈을 재사용하되 지붕·증축부·창 배열·장비 배치로 차이를 만듭니다.
+- 성문·날개벽·두 방향 성벽·네 코너는 공통 바닥 접점과 같은 석재 줄눈/띠장 높이에 연결합니다. 힌지 문짝은 움직이는 부품으로 유지하며 정적 배칭에 넣지 않습니다.
+- 문은 실제 사람과 캡슐이 통과할 높이·폭, 계단은 실제 발이 놓일 디딤판을 가집니다. 제작 기록에 문 순높이/순폭, 기단/계단 높이, 통로 폭을 미터로 적습니다.
+- 얼굴·NPC 이름·퀘스트 표시·공격 예고가 창틀·나무·벽에 지속해서 가려지는 배치를 채택하지 않습니다. 앞쪽 면뿐 아니라 뒤/옆 접근 동선도 확인합니다.
+
+건물 컨셉 그림은 모델링 참조입니다. 건물 전체 그림을 한 장의 카메라 방향 평면으로 세워 신규 입체 건물이라고 표시하지 않습니다. 절차적 모델링도 실제 부피·법선·재질·충돌을 가진 3D 메시를 만드는 경우 사용합니다.
+
+## 재질과 표면 디테일
+
+생성형 이미지는 새 모델의 **평면 재료**나 구조 컨셉으로 사용합니다. 재사용 알베도에 예배당·성문·지붕 원근을 그려 넣지 않습니다. 작은 원근 벽면 조각을 크게 확대해 새 석재의 기준으로 삼지 않습니다.
+
+| 재료 | 공유 기준 |
+| --- | --- |
+| 석재 | 세계 좌표 기준 2.56m 타일당 8단, 단 높이 0.32m. 현재 `materials.json` 계약. 모든 건물·문·벽·코너에 같은 배율 적용 |
+| 슬레이트 | 2.6m 타일 기준. 실제 UV의 줄은 지붕 경사를 가로지르고 용마루와 나란히 이어짐. 좌우 경사 모두 검사 |
+| 목재 | 평평한 나뭇결과 절제된 옹이. 문 철물·몰딩·그림자는 모델/별도 재질로 표현 |
+| 식생 | 낮은 채도의 녹색, 읽히는 잎과 투명 구멍. 잔디와 수관을 같은 밝기의 덩어리로 만들지 않음 |
+
+현재 627px 석재 타일은 2.56m에 약 245px/m, 슬레이트는 2.6m에 약 241px/m입니다. 이는 현재 자산의 텍셀 밀도 출발점이며 카메라 줌이나 그림 크기로 돌 크기를 바꾸지 않습니다. 실제 출력 해상도가 달라지면 `해상도÷실제 미터`를 다시 기록합니다. 중요한 문/창의 별도 텍스처는 밀도를 따로 기록하되 같은 화면에서 과도하게 선명하거나 흐려지지 않게 합니다.
+
+알베도에는 재료 고유의 색과 작은 표면 변화만 둡니다. 주변 나무 그림자, 건물의 바닥 그림자, 햇빛 얼룩, 한 방향의 강한 하이라이트·검은 음영을 굽지 않습니다. 깊은 문 홈·창틀·줄눈·처마는 실제 기하나 적절한 법선/거칠기로 만듭니다. 미세 자체 음영이 남은 기존 생성형 알베도는 한계를 기록하며 PBR 스캔이라고 부르지 않습니다.
+
+법선 맵은 실제 표면 방향 데이터, 거칠기는 반사 분포 데이터입니다. 색 그림을 이름만 바꾸어 이 맵으로 납품하지 않습니다. 만들지 않은 법선·거칠기 맵을 있다고 주장하지 않습니다. 법선의 Godot 방향/색공간, 알베도의 sRGB, 데이터 맵의 선형 해석을 검수합니다. 색 텍스처는 기존 웹 압축 규칙을 따르고, 밉맵·알파 가장자리·이방성 필터를 실제 경사진 지붕에서 확인합니다.
+
+그림자는 `DirectionalLight3D`와 실제 기하가 만듭니다. 나무·건물·바닥의 위치와 높이에 맞게 접지되어야 합니다. 재질을 일괄 어둡게 하는 것으로 광원 효과를 대신하지 않습니다. 현재 직교 그림자는 카메라 앞뒤 클리핑 구간의 영향을 받으므로 실제 지붕/종탑/수관이 그 범위 안에 들어오는지 확인합니다.
+
+## 나무·애니메이션·임시 카드
+
+새 입체 나무는 실제 줄기·분기·뿌리와 여러 방향으로 **고정된 곡면 잎 묶음**을 가집니다. 잎은 alpha-scissor 컷아웃, 양면 광원 반응과 실제 그림자를 사용합니다. 카메라를 향해 돌아가는 빌보드와 구별합니다. 알파 여백까지 큰 사각형을 겹쳐 숲 전체의 오버드로를 늘리지 않습니다. 두 종류 이상의 수관/분기 형태를 공유 메시로 재사용하고, 원점·투영 폭·수관 높이를 전체 메시로 측정합니다.
+
+배우는 정지·실제 달리기·공격/시전·피격·사망을 필요한 범위에서 구분합니다. 이동 거리에 따른 보행 주기, 실제 공격 진행도, 일시정지/접촉 정지를 따릅니다. 애니메이션 이름만 재생 중인 상태와 실제 뼈 자세 변화를 함께 검사합니다. 기본 이동은 제자리 동작이며 게임 이동과 중복되는 루트 이동을 넣지 않습니다.
+
+입체 자산이 없는 주민·몬스터·소품·장식의 기존 원화 카드는 임시로 유지할 수 있습니다. 원본/실제 워프 메시·발치·범위·교체 대상을 기록하고 입체 자산 완료와 구별합니다. 숲/동굴 전환 때 이전 지역의 이름·퀘스트 표시·포털·적·시체가 새 공간에 남지 않아야 합니다. 전체 2D 화면을 캡처한 평면을 공간 배경으로 사용하지 않습니다.
+
+분수·워프·성문은 실제 기능과 같은 시계를 사용합니다. 성문의 렌더링은 `TownGateRuntime.progress/closed`를 관찰하고, 충돌의 닫힘 정책·플레이어 접근 허용과 독립적인 타이머를 추가하지 않습니다. 레벨업은 실제 보상 효과의 수명과 배우의 `actor_foot()`를 따르며 높은 바닥에서도 발밑에 붙습니다.
+
+## 충돌·높이·동선 계약
+
+모델 제작과 네이티브 충돌 제작에 **같은 미터 단위 바닥/기단/경사 기준**을 사용합니다. 단순 충돌은 가능하지만 보이는 벽을 통과하거나 빈 길이 막히는 단순화는 허용하지 않습니다.
+
+- 현재 예배당의 네이티브 기단 상단은 0.28m입니다. 예전 그림의 높은 마당 좌표를 새 메시의 바닥 높이로 재사용하지 않습니다. 새 구조가 이를 바꾸면 메시·표면·콜라이더·진입 경로를 함께 바꿉니다.
+- 현재 이동의 `MAX_STEP=0.38m`와 실제 경사를 함께 고려합니다. 낮은 턱은 오를 수 있어도 닫힌 본체 벽을 넘을 수는 없습니다. 과거 그림의 사각형으로 벽 검사 실패를 덮지 않습니다.
+- 바닥/램프는 가능하면 `SpatialWorld3D.surface_faces()`와 같은 공유 기하를 렌더링과 물리에 사용합니다. 시각용 깊이 편향은 기록하며 이동 높이로 다시 더하지 않습니다.
+- 문 순폭과 접근 공간은 실제 배우 캡슐로 검증합니다. 상자·소환 비석은 이동을 막는 실제 소품 콜라이더를 가지며, 이를 투사체 벽 판정과 구별합니다. 깨짐/소모 상태와 충돌 수명을 맞춥니다.
+- 이동·구르기의 큰 프레임 이동도 벽/절벽/성문을 통과하지 않습니다. 위/아래의 근접 공격은 실제 높이와 차폐를 따르고, 투사체·영역 공격은 해당 공격의 실제 공간 경로로 검사합니다.
+- 충돌을 삭제하거나 통과 조건을 느슨하게 해 새 모델을 맞추지 않습니다. 먼저 실제 모델·네이티브 발·콜라이더의 불일치를 수정합니다.
+
+## 모바일 제작 예산
+
+아래는 신규 제작의 **초기 상한 목표**이며 특정 FPS를 보장하는 수치가 아닙니다. 최종 삼각형·서피스·텍스처·패키지 크기는 실제 내보낸 결과로 기록합니다. 화면에 동시에 보이는 수와 알파 오버드로·그림자 패스까지 함께 검수합니다.
+
+| 대상 | 초기 기하/재질 목표 | 확인할 점 |
+| --- | --- | --- |
+| 일반 소품 | LOD0 약 500–2,000 삼각형, 1–2 공유 서피스 | 작은 철물/돌을 각각 독립 draw로 만들지 않음 |
+| 주택·상점 한 채 | LOD0 약 6,000–12,000 삼각형, 2–4 공유 서피스 | 문/창 깊이는 살리고 뒤쪽 미세 부품은 줄임 |
+| 주요 예배당 | 현재 검사 상한 30,000 삼각형 미만, 8 서피스 이하 | 종탑·아치·창 구멍과 실루엣 유지 |
+| 성문·성벽 패밀리 | 현재 정적 합계 30,000 삼각형 미만, 공유 서피스 3 이하 목표 | 열린 통로와 이동 문짝을 배칭으로 소실하지 않음 |
+| 나무 한 변형 | 현재 4,358 삼각형. 신규 LOD0 5,000 미만 출발 | 공유 MultiMesh, 알파 면적, 양면 잎 그림자 비용 |
+
+일반 색 텍스처는 공유 512–1024px로 시작하고, 더 큰 출력은 실제 화면상 이득과 추가 다운로드를 함께 기록합니다. GLB에 포함된 이미지와 별도 런타임 이미지의 중복을 확인합니다. 기존 자산의 정상 동작을 보존한 채 중복 자원을 정리합니다.
+
+LOD는 표면 수·실루엣·그림자·알파 구멍을 함께 유지합니다. 수관이 통째로 비거나 배우가 사라지는 자동 LOD는 채택하지 않습니다. MultiMesh의 묶음 AABB 때문에 화면 밖 인스턴스도 함께 그려질 수 있으므로 큰 숲은 공간별 묶음을 검토합니다. ‘draw 수 감소’만으로 프레임 속도 향상을 선언하지 않습니다. 실제 기기의 같은 위치·같은 줌/화질·같은 전투에서 CPU/GPU 시간과 보이는 비용을 비교합니다. 절약 화질은 네이티브 표적의 절반 해상도/MSAA 끄기를 사용하고, 원본 Canvas 폴리곤을 다시 그리거나 재부모화하지 않습니다.
+
+## 생성 프롬프트와 제작 기록
+
+매 생성에는 사용자 원본과 실제 같은 패밀리 참조 이미지를 도구에 첨부합니다. 프롬프트에 경로만 적는 것으로 대신하지 않습니다. 생성 이미지가 새로운 스타일 기준이 되지 않습니다.
+
+평면 재질용 공통 문구:
+
+```text
+Create a reusable BASE-COLOR MATERIAL for a native3D game asset. Match the
+attached USER GAME REFERENCE and the attached FAMILY MATERIAL reference.
+The user reference remains authoritative. Restrained realistic woodland fantasy,
+natural low saturation, tactile fine detail readable on a mobile game screen.
+FLAT FRONT-ON ORTHOGRAPHIC MATERIAL ONLY: no isometric object, no perspective,
+no building silhouette, no environment, no camera or UI. Uniform neutral diffuse
+illumination; no cast shadow, directional sun patch, baked highlight or vignette.
+Opposite edges must join for the requested repeat. No border, gutters or text.
+MATERIAL: [limestone / slate / oak / bark / cloth].
+PHYSICAL TILE: [metres], [course/row count and orientation].
+OUTPUT: [size; opaque base color, or genuine foliage alpha with clean holes].
+Do not label this a normal or roughness map; those are separate data assets.
+```
+
+건축 패밀리 컨셉용 공통 문구:
+
+```text
+Design one coherent native3D architectural family for Guardians of Nature,
+matching the attached USER GAME REFERENCE and current FAMILY references.
+Show the actual front, both sides, rear, roof construction and joining parts.
+Use one limestone course size, slate row spacing, oak/iron palette and consistent
+human-scale door/step proportions across [house/shop/smithy/stable]. Give each
+role a distinct useful silhouette without excessive ornament or gilding.
+Gameplay presentation uses TRUE ORTHOGRAPHIC ISOMETRIC:45-degree azimuth,
+35.2643897-degree elevation, upright verticals, projected ground axes +/-30degrees,
+120degrees between the three projected axes. No perspective or dimetric grid.
+This is a MODEL-CONSTRUCTION CONCEPT, not a final sprite or a baked game scene.
+Reusable texture materials must be delivered separately as flat front-on tiles.
+DIMENSIONS AND CONNECTIONS: [native metre footprint, height, door clearance,
+plinth, modular seams and required adjacent family assets]. No HUD or text.
+```
+
+컨셉에는 최종 조명/주변 식생을 표현할 수 있으나, 그것을 납품용 알베도·바닥 그림자로 옮기지 않습니다. 모델은 실제 3D 편집/생성 도구 또는 재현 가능한 메시 제작 과정으로 만듭니다. 생성 프롬프트가 직교 각도나 전체 기하 검수를 대신하지 않습니다.
+
+자산별 기록에는 다음을 남깁니다. `/tmp` 파일은 검수 후보로 사용할 수 있지만 최종 자산의 유일한 출처로 남기지 않습니다.
+
+```yaml
+asset: <family and role>
+reference: sjrpg_3d/assets/source/style/approved-game-reference.jpg
+actual_tool_references: [<every attached file and SHA-256>]
+prompt_and_tool: <exact prompt and actual generation tool>
+source: <preserved generated image/model, hash, licence/original provenance>
+generator: <reproducible tool path, version and hash>
+runtime: <GLB/texture/material paths and hashes>
+geometry: <bounds in metres, triangles, surfaces, LODs>
+transform: <Y-up, forward axis, ground pivot, baked scale>
+materials: <shared family paths, physical tile size, texel density, actual maps>
+collision: <shape/surface source, floor/ramp/door heights and runtime ownership>
+validation: <tests, actual paired browser captures, remaining asset gaps>
+```
+
+## 채택 전 게임 검수
+
+1. **구조·각도**: 전체 메시의 앞/뒤/좌/우와 위쪽을 확인합니다. 실제 렌더에서 두 지면 축·수직선, 기단/중간 띠장/처마/상단과 반대 모서리까지 검사합니다. 정면 한 개의 바닥선이나 원본 충돌 사각형으로 완료 처리하지 않습니다. 자연 실루엣과 지붕 경사는 수평축과 구별합니다.
+2. **비례·재질**: 같은 배우·같은 카메라·같은 빛에서 예배당/집/문/벽/나무를 함께 놓습니다. 이전 화면과 새 화면을 같은 크기로 나란히 보여 주고 사용자 원본과도 비교합니다. 포장석·석재 단·슬레이트 행·목재와 잎의 크기를 확인합니다.
+3. **실제 동선**: 문 접근, 두 벽을 따라 걷기, 코너와 계단·다리·성문 통과, NPC/포털/상자 상호작용을 실제 배우 캡슐로 검사합니다. 빠른 이동·구르기·닫힌 문·몹의 성안 진입 제한을 포함합니다.
+4. **전투·성장**: 시전/투사체/근접 명중, 높이가 다른 적의 공격 차폐, 피격 색/반동/죽음 페이드, 시체 생성/만료, 높은 바닥의 레벨업 이펙트를 확인합니다. 효과가 배우를 흰 덩어리로 가리지 않아야 합니다.
+5. **화면·설정**: 실제 세로/가로 브라우저 화면에서 줌 0.5/1/1.5와 양 화질을 확인합니다. 상태창·미니맵·확인 알림·3D 표시·스킬/상호작용 버튼이 서로 가리지 않는지 검사합니다. 일시정지와 동작 줄이기도 포함합니다.
+6. **수명·경계**: 숲→동굴→숲, 사망/재시작/타이틀 전환에서 이전 지역의 표시·콜라이더·효과를 정리합니다. 3D 전용 `/3d/`·2D `/2d/` 경로와 저장 공간을 유지하고 에셋 변경이 다른 판을 덮어쓰지 않게 합니다.
+7. **검증·반영**: 루트에서 `tools/check.sh --project=3d`와 필요한 실제 렌더 검사를 수행합니다. 배포 시 두 프로젝트 검사/웹 빌드와 해당 커밋의 CI·공개 페이지 로드를 확인합니다. 실제 비교 화면을 제시하며 테스트 통과나 생성 컨셉만으로 레퍼런스 도달을 선언하지 않습니다.
+
+같은 위치의 변경 전/후 화면, 전체 면 검수, 실제 이동/전투, 모바일 비용이 함께 확인된 자산부터 순서대로 반영합니다. 모델이 부족한 부분은 다음 교체 대상으로 기록하고, 예산/충돌/스타일 문제가 드러나면 원인을 수정한 뒤 같은 검수를 반복합니다.

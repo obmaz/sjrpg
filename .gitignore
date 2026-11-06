@@ -8,3 +8,5 @@ export_credentials.cfg
 .harness/refs/
 
 __pycache__/
+
+node_modules/

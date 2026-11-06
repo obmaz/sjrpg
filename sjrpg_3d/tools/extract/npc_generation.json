@@ -1,0 +1,68 @@
+{
+ "version": 1,
+ "date_utc": "2026-11-06",
+ "generator": "image_gen.imagegen",
+ "prompt": "Create a production NPC family sprite sheet for Guardians of Nature. Use attached image 1 (AUTHORITATIVE USER GAMEPLAY REFERENCE) for restrained realistic forest-fantasy appearance, true high isometric camera, quiet natural colors, readable material detail; image 2 (existing hero selection art) is the common human/material family, not a background to copy. We need EIGHT DIFFERENT HUMAN NPC identities. Their physical adult human proportions must match a normal protagonist, roughly 7.5-head anatomy, not chibi, oversized heads, dwarfs, giant merchants or toy miniatures. Keep all eight comparable head-to-foot visible height and comparable detail density. The game will render them at 84 world units tall beside the existing human hero.\n\nOUTPUT LAYOUT: one landscape RGBA image with exactly FOUR equal columns and TWO equal rows, eight separate complete standing people on real TRANSPARENT background, no scene, no floor, no shadows, no frames, no labels, no text, no weapons lying separately, no decorative panel or UI. Put one person centered in each cell with generous transparent safe padding; all head tops, soles and projected ground contacts align consistently within their own cell. All boots/feet visible. Every person's arms/hand-held profession props remain inside their cell and attached to their hands. Characters must not touch or overlap another cell.\n\nCAMERA: TRUE ORTHOGRAPHIC ISOMETRIC 2.5D, azimuth45 degrees and elevation35.264 degrees, looking down enough to see tops of shoulders, hair, shoes and carried objects. All eight people face gently toward the lower-right viewer, front and side both readable. Upright human body vertical. This is high quarter-view game sprite art, NOT a straight eye-level portrait or flat front character design sheet. No perspective convergence, no side-only profiles, no 2:1 dimetric view. Natural silhouette does not need rigid architectural edges.\n\nRow1 left-to-right: 1 merchant: middle-aged clean-shaven man, short dark chestnut hair, muted warm-brown long vest over cream shirt, one medium satchel at hip and small leather account pouch, lean-average body. 2 blacksmith: mature broad-shouldered man, dark cropped hair and short beard, charcoal rolled-sleeve shirt, heavy soot-gray/brown leather apron and a modest small hammer held downward, strong but human-sized. 3 stable merchant: young auburn-haired woman with ponytail, ochre short coat over dark trousers and boots, a coiled leather bridle/reins held in one hand, outdoors practical silhouette, no animal. 4 village elder: older gray-haired man with tidy white mustache, muted burgundy knee-length coat, simple dark green collar, wooden walking staff, dignified upright posture, no crown, no royal ornaments.\nRow2 left-to-right: 5 Mira supply quartermaster: adult woman with dark braided hair, muted indigo practical tunic, cream sleeves and brown belt, two simple attached supply pouches and one rolled cloth carried at hip. 6 Sister Elin: adult woman with calm face, modest ivory headscarf covering hair and long desaturated dark navy/cream religious robe, tiny simple bronze clasp, hands folded, no oversized holy symbol. 7 Noah herbalist: older woman with curly gray-brown hair uncovered, moss-green shawl over earth-brown long skirt, one small wicker herb basket held at side with a few restrained green herbs, distinguish her strongly from Elin. 8 Rowen investigator: adult man with sandy/light-brown hair and stubble, muted slate-blue travel coat, tan leather shoulder strap and compact document case, one hand holding a small rolled map. Do not reuse faces, hair silhouettes, clothing layouts or color combinations among the eight; each profession must read from silhouette at mobile game size.\n\nLIGHTING AND MATERIALS: common soft neutral diffuse light with readable small folds, matte cloth, weathered leather, modest iron/bronze. Preserve realistic face and hands but avoid noisy microscopic ornament, exaggerated saturation, hard black outlines, low-poly facets, plastic gloss, epic combat pose, magic effects, halo, big bloom. No cast shadows or unrelated environment baked into the alpha. True clean transparency outside bodies and between arms/props. No words, logos or watermark. Full-body game sprites, not portraits.",
+ "transparent_background": true,
+ "referenced_images": [
+  {
+   "path": "assets/source/style/approved-game-reference.jpg",
+   "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+  },
+  {
+   "path": "assets/source/hero-selection.png",
+   "sha256": "8c2a909faef5497bc858655270c507ce193c8e16cd2e185d3f21868b35a48153"
+  }
+ ],
+ "output": {
+  "path": "assets/source/npcs/identities.png",
+  "original_generation_path": "/workspace/generated_images/exec-123155e8-de36-4c17-abaf-9e585879d693.png",
+  "sha256": "c1d71b2fb5dd9ae3477b546fc3056b6dd7610f91072a0ccbd5a68522f0eb0616",
+  "size": [
+   1536,
+   1024
+  ]
+ },
+ "review": {
+  "status": "adopted for actual runtime comparison, not user approval",
+  "camera": "Eight complete high quarter-view adult human sprites; visible shoulder/hair/shoe tops and upright body. Organic silhouettes are not rigid architectural edge measurements.",
+  "alpha": "True RGBA alpha0 outside bodies; invisible RGB includes a brown preview background but is not rendered. No external ground shadow adopted.",
+  "identity": "Merchant/smith/stable merchant/elder/Mira/Elin/Noah/Rowen have distinct faces, hair, profession props and clothing silhouettes.",
+  "proportions": "Runtime112worldpixels visibly matches the actual hero idle alpha component117–118worldpixels (~95%). The prompt nominal84 is an atlas-reference scale, not the actual painted hero height; this mismatch explained miniature legacy74pixel residents.",
+  "limitations": "One static idle pose per named NPC; original eight-bearing villagers animation is intentionally replaced. Actual scene comparison and wall clearance remain required."
+ },
+ "hero_scale_review": [
+  {
+   "actor": "warrior",
+   "atlas": {
+    "path": "assets/art/actors/warrior.webp",
+    "sha256": "477aae3fc2a57ef5fca9eea1555c2cb3e908e7c50e21d51b7c94514e0768855c"
+   },
+   "metadata": {
+    "path": "assets/art/actors/warrior.json",
+    "sha256": "39d78c414d94f41661ff4aab6186d3861e5971762ccb669ed7f3d74bd23b1857"
+   },
+   "method": "largest alpha>64 connected component of each of16idle frames; head-to-lowest-painted-pixel, excludes transparent region padding; includes attached props and leading boot, not a 3D anatomy measurement",
+   "visible_world_min": 109.10016977928693,
+   "visible_world_mean": 118.40577249575553,
+   "visible_world_max": 123.86078098471987,
+   "front_visible_world": 116.80135823429542
+  },
+  {
+   "actor": "mage",
+   "atlas": {
+    "path": "assets/art/actors/mage.png",
+    "sha256": "be63cbdf32b188bae9532f70c725e118d5a85143cb2ca997b7249043ce357b51"
+   },
+   "metadata": {
+    "path": "assets/art/actors/mage.json",
+    "sha256": "ad3a811b0732ea4b9f6aebe1b1784e0a8c5a7aea399d6de2cca1432d54bdbb46"
+   },
+   "method": "largest alpha>64 connected component of each of16idle frames; head-to-lowest-painted-pixel, excludes transparent region padding; includes attached props and leading boot, not a 3D anatomy measurement",
+   "visible_world_min": 109.10016977928693,
+   "visible_world_mean": 116.96179966044143,
+   "visible_world_max": 121.2937181663837,
+   "front_visible_world": 118.72665534804754
+  }
+ ]
+}

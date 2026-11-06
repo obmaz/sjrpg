@@ -1,0 +1,1633 @@
+{
+ "warrior": {
+  "skills": [
+   {
+    "id": "bash",
+    "name": "강타",
+    "branch": "전투 기술",
+    "desc": "장착 무기 공격력에 비례해 한 명을 강하게 타격하고 뒤로 밀쳐냅니다.",
+    "level": 1,
+    "cost": 4.0,
+    "cooldown": 0.65,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "leap",
+    "name": "도약",
+    "branch": "전투 기술",
+    "desc": "지정한 곳으로 도약하며 착지 주변 적을 밀쳐냅니다. 직접 피해는 없습니다.",
+    "level": 6,
+    "cost": 8.0,
+    "cooldown": 5.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "doubleSwing",
+    "name": "이중 타격",
+    "branch": "전투 기술",
+    "desc": "두 차례 연속으로 근접 타격합니다. 숙련할수록 자원 소모가 줄어 9등급부터 무료입니다.",
+    "level": 6,
+    "cost": 2.0,
+    "cooldown": 0.65,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "bash": 1
+    }
+   },
+   {
+    "id": "stun",
+    "name": "기절",
+    "branch": "전투 기술",
+    "desc": "한 명을 가격해 잠시 기절시킵니다. 보스의 제어 저항은 유지됩니다.",
+    "level": 12,
+    "cost": 8.0,
+    "cooldown": 3.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "bash": 1
+    }
+   },
+   {
+    "id": "doubleThrow",
+    "name": "이중 투척",
+    "branch": "전투 기술",
+    "desc": "두 발의 투척 무기를 발사합니다. 투척 숙련의 피해와 치명타가 적용됩니다.",
+    "level": 12,
+    "cost": 4.0,
+    "cooldown": 0.8,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "doubleSwing": 1
+    }
+   },
+   {
+    "id": "leapAttack",
+    "name": "도약 공격",
+    "branch": "전투 기술",
+    "desc": "적에게 도약해 착지하며 한 명에게 강한 피해를 줍니다.",
+    "level": 18,
+    "cost": 12.0,
+    "cooldown": 5.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "leap": 1
+    }
+   },
+   {
+    "id": "concentrate",
+    "name": "집중 공격",
+    "branch": "전투 기술",
+    "desc": "방어를 높인 자세로 한 명을 공격합니다. 공격 동작은 일반 피격에 끊기지 않습니다.",
+    "level": 18,
+    "cost": 8.0,
+    "cooldown": 3.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "stun": 1
+    }
+   },
+   {
+    "id": "frenzy",
+    "name": "광분",
+    "branch": "전투 기술",
+    "desc": "두 차례 타격하고 적중할수록 공격과 이동 속도를 쌓습니다. 잠시 적중하지 못하면 강화가 끝납니다.",
+    "level": 24,
+    "cost": 10.0,
+    "cooldown": 1.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "doubleThrow": 1
+    }
+   },
+   {
+    "id": "whirlwind",
+    "name": "소용돌이",
+    "branch": "전투 기술",
+    "desc": "무기를 들고 몸을 회전해 주변 적을 세 차례 벱니다.",
+    "level": 30,
+    "cost": 25.0,
+    "cooldown": 6.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "leapAttack": 1,
+     "concentrate": 1
+    }
+   },
+   {
+    "id": "berserk",
+    "name": "광폭화",
+    "branch": "전투 기술",
+    "desc": "한 명에게 무기의 마법 피해를 가합니다. 공격 중 자신의 방어력은 0이 됩니다.",
+    "level": 30,
+    "cost": 12.0,
+    "cooldown": 4.5,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "concentrate": 1
+    }
+   },
+   {
+    "id": "swordMastery",
+    "name": "검 숙련",
+    "branch": "전투 숙련",
+    "desc": "검의 피해와 치명타 확률을 높입니다.",
+    "level": 1,
+    "cost": 0.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": true,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "axeMastery",
+    "name": "도끼 숙련",
+    "branch": "전투 숙련",
+    "desc": "도끼의 피해와 치명타 확률을 높입니다.",
+    "level": 1,
+    "cost": 0.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": true,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "maceMastery",
+    "name": "철퇴 숙련",
+    "branch": "전투 숙련",
+    "desc": "철퇴와 망치의 피해와 치명타 확률을 높입니다.",
+    "level": 1,
+    "cost": 0.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": true,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "polearmMastery",
+    "name": "미늘창 숙련",
+    "branch": "전투 숙련",
+    "desc": "미늘창의 피해와 치명타 확률을 높입니다.",
+    "level": 6,
+    "cost": 0.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": true,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "throwingMastery",
+    "name": "투척 숙련",
+    "branch": "전투 숙련",
+    "desc": "투척 무기의 피해와 치명타 확률을 높입니다.",
+    "level": 6,
+    "cost": 0.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": true,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "spearMastery",
+    "name": "창 숙련",
+    "branch": "전투 숙련",
+    "desc": "창의 피해와 치명타 확률을 높입니다.",
+    "level": 6,
+    "cost": 0.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": true,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "increasedStamina",
+    "name": "지구력 증가",
+    "branch": "전투 숙련",
+    "desc": "질주를 더 오래 유지합니다.",
+    "level": 12,
+    "cost": 0.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": true,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "ironSkin",
+    "name": "철갑 피부",
+    "branch": "전투 숙련",
+    "desc": "장비 방어력을 비율로 높입니다.",
+    "level": 18,
+    "cost": 0.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": true,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "increasedSpeed",
+    "name": "속도 증가",
+    "branch": "전투 숙련",
+    "desc": "도보 이동 속도를 높입니다. 탈것의 속도는 바꾸지 않습니다.",
+    "level": 24,
+    "cost": 0.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": true,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "increasedStamina": 1
+    }
+   },
+   {
+    "id": "naturalResistance",
+    "name": "타고난 저항",
+    "branch": "전투 숙련",
+    "desc": "빙결·그물·독 등 적의 상태 이상 지속 시간을 줄입니다.",
+    "level": 30,
+    "cost": 0.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": true,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "ironSkin": 1
+    }
+   },
+   {
+    "id": "howl",
+    "name": "포효",
+    "branch": "함성",
+    "desc": "주변의 일반 적을 잠시 공포에 빠뜨려 도망가게 합니다.",
+    "level": 1,
+    "cost": 6.0,
+    "cooldown": 5.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "findPotion",
+    "name": "물약 발견",
+    "branch": "함성",
+    "desc": "일반 적은 10% 확률로 시체를 남깁니다. 가까운 시체를 조사해 확률로 물약을 찾으며 한 번만 사용할 수 있습니다.",
+    "level": 1,
+    "cost": 4.0,
+    "cooldown": 3.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "taunt",
+    "name": "도발",
+    "branch": "함성",
+    "desc": "일반 적을 도발해 근접하게 하고 공격을 약화합니다.",
+    "level": 6,
+    "cost": 5.0,
+    "cooldown": 4.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "howl": 1
+    }
+   },
+   {
+    "id": "shout",
+    "name": "외침",
+    "branch": "함성",
+    "desc": "짧은 시간 자신의 방어력을 높입니다.",
+    "level": 6,
+    "cost": 10.0,
+    "cooldown": 10.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "howl": 1
+    }
+   },
+   {
+    "id": "findItem",
+    "name": "아이템 발견",
+    "branch": "함성",
+    "desc": "시체를 조사해 추가 전리품을 찾습니다. 물약 발견과 같은 시체 사용권을 공유합니다.",
+    "level": 12,
+    "cost": 8.0,
+    "cooldown": 4.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "findPotion": 1
+    }
+   },
+   {
+    "id": "battleCry",
+    "name": "전투의 함성",
+    "branch": "함성",
+    "desc": "주변 적의 공격과 방어를 낮춰 덜 아프게 맞고 더 큰 피해를 줍니다.",
+    "level": 18,
+    "cost": 10.0,
+    "cooldown": 7.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "taunt": 1
+    }
+   },
+   {
+    "id": "battleOrders",
+    "name": "전투 지시",
+    "branch": "함성",
+    "desc": "잠시 최대 생명과 최대 분노를 함께 높입니다. 종료하면 초과 수치는 정리됩니다.",
+    "level": 24,
+    "cost": 14.0,
+    "cooldown": 16.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "shout": 1
+    }
+   },
+   {
+    "id": "grimWard",
+    "name": "섬뜩한 수호물",
+    "branch": "함성",
+    "desc": "시체로 수호물을 세워 가까운 일반 적을 공포에 빠뜨립니다.",
+    "level": 24,
+    "cost": 12.0,
+    "cooldown": 12.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "findItem": 1
+    }
+   },
+   {
+    "id": "warcry",
+    "name": "전장의 함성",
+    "branch": "함성",
+    "desc": "주변 적에게 물리 피해를 주고 기절시킵니다.",
+    "level": 30,
+    "cost": 18.0,
+    "cooldown": 7.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "battleCry": 1,
+     "battleOrders": 1
+    }
+   },
+   {
+    "id": "battleCommand",
+    "name": "전투 명령",
+    "branch": "함성",
+    "desc": "잠시 배운 기술을 1등급 높입니다. 투자 등급·습득 조건·저장은 바꾸지 않습니다.",
+    "level": 30,
+    "cost": 12.0,
+    "cooldown": 15.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "battleOrders": 1
+    }
+   },
+   {
+    "id": "cleave",
+    "name": "일반 공격",
+    "branch": "기본 공격",
+    "desc": "무기로 가까운 한 명을 벱니다. 기본 공격은 자원을 소모하지 않습니다.",
+    "level": 1,
+    "cost": 0.0,
+    "cooldown": 0.0,
+    "limit": 5,
+    "passive": true,
+    "basic": true,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "shadowAssault",
+    "name": "분신 연격",
+    "branch": "특수 기술",
+    "desc": "근처 적에게 접근해 벱니다. 타이밍에 맞춰 누르면 다른 적에게 이어지며 최대 다섯 대상을 공격합니다. 벽과 마을 경계는 넘지 못합니다.",
+    "level": 10,
+    "cost": 24.0,
+    "cooldown": 10.0,
+    "limit": 5,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "bash": 2,
+     "doubleSwing": 1
+    }
+   },
+   {
+    "id": "battleSprint",
+    "name": "전투 질주",
+    "branch": "전용 이동",
+    "desc": "회피 옆 버튼으로 짧게 빠르게 달립니다. 자원을 소모하지 않습니다.",
+    "level": 8,
+    "cost": 0.0,
+    "cooldown": 15.0,
+    "limit": 5,
+    "passive": false,
+    "basic": false,
+    "mobility": true,
+    "requires": {
+     "shout": 1
+    }
+   }
+  ],
+  "rows": [
+   [
+    [
+     "howl",
+     0
+    ],
+    [
+     "findPotion",
+     2
+    ],
+    [
+     "swordMastery",
+     3
+    ],
+    [
+     "axeMastery",
+     4
+    ],
+    [
+     "maceMastery",
+     5
+    ],
+    [
+     "bash",
+     7
+    ]
+   ],
+   [
+    [
+     "taunt",
+     0
+    ],
+    [
+     "shout",
+     1
+    ],
+    [
+     "polearmMastery",
+     3
+    ],
+    [
+     "throwingMastery",
+     4
+    ],
+    [
+     "spearMastery",
+     5
+    ],
+    [
+     "leap",
+     6
+    ],
+    [
+     "doubleSwing",
+     8
+    ]
+   ],
+   [
+    [
+     "findItem",
+     2
+    ],
+    [
+     "increasedStamina",
+     3
+    ],
+    [
+     "stun",
+     7
+    ],
+    [
+     "doubleThrow",
+     8
+    ]
+   ],
+   [
+    [
+     "battleCry",
+     0
+    ],
+    [
+     "ironSkin",
+     5
+    ],
+    [
+     "leapAttack",
+     6
+    ],
+    [
+     "concentrate",
+     7
+    ]
+   ],
+   [
+    [
+     "battleOrders",
+     1
+    ],
+    [
+     "grimWard",
+     2
+    ],
+    [
+     "increasedSpeed",
+     3
+    ],
+    [
+     "frenzy",
+     8
+    ]
+   ],
+   [
+    [
+     "warcry",
+     0
+    ],
+    [
+     "battleCommand",
+     1
+    ],
+    [
+     "naturalResistance",
+     5
+    ],
+    [
+     "whirlwind",
+     6
+    ],
+    [
+     "berserk",
+     7
+    ]
+   ]
+  ],
+  "schools": [
+   "함성",
+   "전투 숙련",
+   "전투 기술"
+  ],
+  "icons": {
+   "howl": [
+    0.019650655,
+    0.0270742358,
+    0.1703056769,
+    0.2026200873
+   ],
+   "findPotion": [
+    0.1819505095,
+    0.0270742358,
+    0.3326055313,
+    0.2026200873
+   ],
+   "taunt": [
+    0.3435225619,
+    0.0270742358,
+    0.4949053857,
+    0.2026200873
+   ],
+   "shout": [
+    0.5058224163,
+    0.0270742358,
+    0.6572052402,
+    0.2026200873
+   ],
+   "findItem": [
+    0.6681222707,
+    0.0270742358,
+    0.8187772926,
+    0.2026200873
+   ],
+   "battleCry": [
+    0.8304221252,
+    0.0270742358,
+    0.981077147,
+    0.2026200873
+   ],
+   "battleOrders": [
+    0.019650655,
+    0.2104803493,
+    0.1703056769,
+    0.3868995633
+   ],
+   "grimWard": [
+    0.1819505095,
+    0.2104803493,
+    0.3326055313,
+    0.3868995633
+   ],
+   "warcry": [
+    0.3435225619,
+    0.2104803493,
+    0.4949053857,
+    0.3868995633
+   ],
+   "battleCommand": [
+    0.5058224163,
+    0.2104803493,
+    0.6572052402,
+    0.3868995633
+   ],
+   "swordMastery": [
+    0.6681222707,
+    0.2104803493,
+    0.8187772926,
+    0.3868995633
+   ],
+   "axeMastery": [
+    0.8304221252,
+    0.2104803493,
+    0.981077147,
+    0.3868995633
+   ],
+   "maceMastery": [
+    0.019650655,
+    0.3956331878,
+    0.1703056769,
+    0.5729257642
+   ],
+   "polearmMastery": [
+    0.1819505095,
+    0.3956331878,
+    0.3326055313,
+    0.5729257642
+   ],
+   "spearMastery": [
+    0.3435225619,
+    0.3956331878,
+    0.4949053857,
+    0.5729257642
+   ],
+   "throwingMastery": [
+    0.5058224163,
+    0.3956331878,
+    0.6572052402,
+    0.5729257642
+   ],
+   "increasedStamina": [
+    0.6681222707,
+    0.3956331878,
+    0.8187772926,
+    0.5729257642
+   ],
+   "ironSkin": [
+    0.8304221252,
+    0.3956331878,
+    0.981077147,
+    0.5729257642
+   ],
+   "increasedSpeed": [
+    0.019650655,
+    0.5807860262,
+    0.1703056769,
+    0.7580786026
+   ],
+   "naturalResistance": [
+    0.1819505095,
+    0.5807860262,
+    0.3326055313,
+    0.7580786026
+   ],
+   "bash": [
+    0.3435225619,
+    0.5807860262,
+    0.4949053857,
+    0.7580786026
+   ],
+   "leap": [
+    0.5058224163,
+    0.5807860262,
+    0.6572052402,
+    0.7580786026
+   ],
+   "doubleSwing": [
+    0.6681222707,
+    0.5807860262,
+    0.8187772926,
+    0.7580786026
+   ],
+   "stun": [
+    0.8304221252,
+    0.5807860262,
+    0.981077147,
+    0.7580786026
+   ],
+   "doubleThrow": [
+    0.019650655,
+    0.7668122271,
+    0.1703056769,
+    0.9458515284
+   ],
+   "leapAttack": [
+    0.1819505095,
+    0.7668122271,
+    0.3326055313,
+    0.9458515284
+   ],
+   "concentrate": [
+    0.3435225619,
+    0.7668122271,
+    0.4949053857,
+    0.9458515284
+   ],
+   "frenzy": [
+    0.5058224163,
+    0.7668122271,
+    0.6572052402,
+    0.9458515284
+   ],
+   "whirlwind": [
+    0.6681222707,
+    0.7668122271,
+    0.8187772926,
+    0.9458515284
+   ],
+   "berserk": [
+    0.8304221252,
+    0.7668122271,
+    0.981077147,
+    0.9458515284
+   ]
+  }
+ },
+ "mage": {
+  "skills": [
+   {
+    "id": "firebolt",
+    "name": "화염탄",
+    "branch": "화염",
+    "desc": "작은 화염탄을 날려 한 적을 불태웁니다.",
+    "level": 1,
+    "cost": 2.5,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": true,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "warmth",
+    "name": "온기",
+    "branch": "화염",
+    "desc": "마나 회복 속도를 높입니다.",
+    "level": 1,
+    "cost": 0.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": true,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "chargedBolt",
+    "name": "번개 줄기",
+    "branch": "번개",
+    "desc": "지면을 따라 흩어지는 여러 번개 줄기를 발사합니다.",
+    "level": 1,
+    "cost": 3.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": true,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "iceBolt",
+    "name": "얼음살",
+    "branch": "냉기",
+    "desc": "얼음살로 한 적을 공격하고 느리게 만듭니다.",
+    "level": 1,
+    "cost": 3.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": true,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "frozenArmor",
+    "name": "얼어붙은 갑옷",
+    "branch": "냉기",
+    "desc": "방어력을 높이고 근접 타격자를 잠시 얼립니다.",
+    "level": 1,
+    "cost": 7.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "inferno",
+    "name": "지옥불",
+    "branch": "화염",
+    "desc": "정면으로 화염을 계속 뿜습니다. 유지하는 동안 마나를 소모합니다.",
+    "level": 6,
+    "cost": 0.5625,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "staticField",
+    "name": "전자기장",
+    "branch": "번개",
+    "desc": "주변 적의 현재 생명 중 일부를 번개로 깎습니다.",
+    "level": 6,
+    "cost": 9.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "telekinesis",
+    "name": "염력",
+    "branch": "번개",
+    "desc": "먼 적을 마법으로 밀쳐내거나 상자와 물건에 힘을 가합니다.",
+    "level": 6,
+    "cost": 7.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "frostNova",
+    "name": "서릿발",
+    "branch": "냉기",
+    "desc": "주변으로 냉기를 퍼뜨려 적들을 느리게 만듭니다.",
+    "level": 6,
+    "cost": 9.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "iceBlast",
+    "name": "얼음 작렬",
+    "branch": "냉기",
+    "desc": "한 적을 얼음으로 완전히 얼려 움직임을 멈춥니다.",
+    "level": 6,
+    "cost": 6.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "iceBolt": 1
+    }
+   },
+   {
+    "id": "blaze",
+    "name": "불길",
+    "branch": "화염",
+    "desc": "걸어간 자리에 적을 태우는 불길을 남깁니다.",
+    "level": 12,
+    "cost": 11.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "inferno": 1
+    }
+   },
+   {
+    "id": "fireball",
+    "name": "화염구",
+    "branch": "화염",
+    "desc": "폭발하는 화염구로 목표 주변을 공격합니다.",
+    "level": 12,
+    "cost": 5.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "firebolt": 1
+    }
+   },
+   {
+    "id": "nova",
+    "name": "번개 파장",
+    "branch": "번개",
+    "desc": "몸 주위로 번개 파장을 퍼뜨립니다.",
+    "level": 12,
+    "cost": 15.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "staticField": 1
+    }
+   },
+   {
+    "id": "lightning",
+    "name": "번개",
+    "branch": "번개",
+    "desc": "관통하는 일직선 번개를 쏩니다. 피해의 편차가 큽니다.",
+    "level": 12,
+    "cost": 8.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "chargedBolt": 1
+    }
+   },
+   {
+    "id": "shiverArmor",
+    "name": "오한 갑옷",
+    "branch": "냉기",
+    "desc": "방어력을 높이고 근접 공격을 시도한 적에게 냉기 피해를 돌려줍니다.",
+    "level": 12,
+    "cost": 11.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "iceBlast": 1,
+     "frozenArmor": 1
+    }
+   },
+   {
+    "id": "firewall",
+    "name": "화염벽",
+    "branch": "화염",
+    "desc": "목표 위치에 길게 타오르는 화염벽을 세웁니다.",
+    "level": 18,
+    "cost": 22.0,
+    "cooldown": 1.4,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "blaze": 1
+    }
+   },
+   {
+    "id": "enchant",
+    "name": "마법부여",
+    "branch": "화염",
+    "desc": "일반 무기 공격에 화염 피해를 더합니다. 주문에는 적용되지 않습니다.",
+    "level": 18,
+    "cost": 25.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "warmth": 1,
+     "fireball": 1
+    }
+   },
+   {
+    "id": "chainLightning",
+    "name": "연쇄 번개",
+    "branch": "번개",
+    "desc": "번개가 가까운 적 사이를 연쇄적으로 이동합니다.",
+    "level": 18,
+    "cost": 9.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "lightning": 1
+    }
+   },
+   {
+    "id": "blink",
+    "name": "순간이동",
+    "branch": "번개",
+    "desc": "몸 전체가 설 수 있는 지점으로 순간이동합니다. 등급마다 마나 소모가 줄어듭니다.",
+    "level": 18,
+    "cost": 24.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": true,
+    "requires": {
+     "telekinesis": 1
+    }
+   },
+   {
+    "id": "glacialSpike",
+    "name": "빙하 가시",
+    "branch": "냉기",
+    "desc": "얼음 투사체가 폭발하며 좁은 범위의 적들을 얼립니다.",
+    "level": 18,
+    "cost": 10.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "iceBlast": 1
+    }
+   },
+   {
+    "id": "meteor",
+    "name": "운석 낙하",
+    "branch": "화염",
+    "desc": "운석을 떨어뜨려 충격 피해를 주고 불타는 땅을 남깁니다.",
+    "level": 24,
+    "cost": 17.0,
+    "cooldown": 1.2,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "fireball": 1,
+     "firewall": 1
+    }
+   },
+   {
+    "id": "thunderStorm",
+    "name": "뇌우",
+    "branch": "번개",
+    "desc": "일정 시간 주변의 적에게 자동으로 번개를 떨어뜨립니다.",
+    "level": 24,
+    "cost": 19.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "nova": 1,
+     "chainLightning": 1
+    }
+   },
+   {
+    "id": "energyShield",
+    "name": "마력 보호막",
+    "branch": "번개",
+    "desc": "받는 피해 일부를 생명 대신 마나로 부담합니다. 염력 숙련은 마나 소모를 줄입니다.",
+    "level": 24,
+    "cost": 5.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "blink": 1,
+     "chainLightning": 1
+    }
+   },
+   {
+    "id": "blizzard",
+    "name": "눈보라",
+    "branch": "냉기",
+    "desc": "지정한 구역에 얼음 조각이 반복해서 떨어집니다.",
+    "level": 24,
+    "cost": 23.0,
+    "cooldown": 1.8,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "frostNova": 1,
+     "glacialSpike": 1
+    }
+   },
+   {
+    "id": "chillingArmor",
+    "name": "냉기 갑옷",
+    "branch": "냉기",
+    "desc": "방어력을 높이고 원거리 공격에 냉기 탄환으로 반격합니다.",
+    "level": 24,
+    "cost": 17.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "shiverArmor": 1
+    }
+   },
+   {
+    "id": "fireMastery",
+    "name": "화염 숙련",
+    "branch": "화염",
+    "desc": "모든 화염 주문의 피해를 높입니다.",
+    "level": 30,
+    "cost": 0.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": true,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "hydra",
+    "name": "히드라",
+    "branch": "화염",
+    "desc": "세 머리의 히드라를 소환해 화염탄을 발사하게 합니다.",
+    "level": 30,
+    "cost": 20.0,
+    "cooldown": 1.6,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "enchant": 1
+    }
+   },
+   {
+    "id": "lightningMastery",
+    "name": "번개 숙련",
+    "branch": "번개",
+    "desc": "모든 번개 주문의 피해를 높입니다.",
+    "level": 30,
+    "cost": 0.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": true,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "frozenOrb",
+    "name": "얼음 보주",
+    "branch": "냉기",
+    "desc": "전진하는 얼음 보주가 사방으로 얼음살을 뿜고 끝에서 흩어집니다.",
+    "level": 30,
+    "cost": 25.0,
+    "cooldown": 1.0,
+    "limit": 20,
+    "passive": false,
+    "basic": false,
+    "mobility": false,
+    "requires": {
+     "blizzard": 1
+    }
+   },
+   {
+    "id": "coldMastery",
+    "name": "냉기 숙련",
+    "branch": "냉기",
+    "desc": "적의 냉기 저항을 낮춥니다. 원래 냉기 면역인 적의 면역을 해제하지는 않습니다.",
+    "level": 30,
+    "cost": 0.0,
+    "cooldown": 0.0,
+    "limit": 20,
+    "passive": true,
+    "basic": false,
+    "mobility": false,
+    "requires": {}
+   },
+   {
+    "id": "sorceressAttack",
+    "name": "일반 공격",
+    "branch": "무기",
+    "desc": "지팡이로 한 명을 공격합니다. 마나를 쓰지 않으며 마법부여의 화염 피해가 적용됩니다.",
+    "level": 1,
+    "cost": 0.0,
+    "cooldown": 0.0,
+    "limit": 1,
+    "passive": true,
+    "basic": true,
+    "mobility": false,
+    "requires": {}
+   }
+  ],
+  "rows": [
+   [
+    [
+     "iceBolt",
+     1
+    ],
+    [
+     "frozenArmor",
+     2
+    ],
+    [
+     "chargedBolt",
+     4
+    ],
+    [
+     "firebolt",
+     7
+    ],
+    [
+     "warmth",
+     8
+    ]
+   ],
+   [
+    [
+     "frostNova",
+     0
+    ],
+    [
+     "iceBlast",
+     1
+    ],
+    [
+     "staticField",
+     3
+    ],
+    [
+     "telekinesis",
+     5
+    ],
+    [
+     "inferno",
+     6
+    ]
+   ],
+   [
+    [
+     "shiverArmor",
+     2
+    ],
+    [
+     "nova",
+     3
+    ],
+    [
+     "lightning",
+     4
+    ],
+    [
+     "blaze",
+     6
+    ],
+    [
+     "fireball",
+     7
+    ]
+   ],
+   [
+    [
+     "glacialSpike",
+     1
+    ],
+    [
+     "chainLightning",
+     4
+    ],
+    [
+     "blink",
+     5
+    ],
+    [
+     "firewall",
+     6
+    ],
+    [
+     "enchant",
+     8
+    ]
+   ],
+   [
+    [
+     "blizzard",
+     0
+    ],
+    [
+     "chillingArmor",
+     2
+    ],
+    [
+     "thunderStorm",
+     3
+    ],
+    [
+     "energyShield",
+     5
+    ],
+    [
+     "meteor",
+     7
+    ]
+   ],
+   [
+    [
+     "frozenOrb",
+     0
+    ],
+    [
+     "coldMastery",
+     1
+    ],
+    [
+     "lightningMastery",
+     4
+    ],
+    [
+     "fireMastery",
+     7
+    ],
+    [
+     "hydra",
+     8
+    ]
+   ]
+  ],
+  "schools": [
+   "냉기 주문",
+   "번개 주문",
+   "화염 주문"
+  ],
+  "icons": {
+   "iceBolt": [
+    0.0066964286,
+    0.0142857143,
+    0.1599702381,
+    0.1857142857
+   ],
+   "frozenArmor": [
+    0.1733630952,
+    0.0142857143,
+    0.3266369048,
+    0.1848214286
+   ],
+   "frostNova": [
+    0.3400297619,
+    0.0142857143,
+    0.4933035714,
+    0.1857142857
+   ],
+   "iceBlast": [
+    0.5066964286,
+    0.0151785714,
+    0.6599702381,
+    0.1848214286
+   ],
+   "shiverArmor": [
+    0.6733630952,
+    0.0142857143,
+    0.8266369048,
+    0.1848214286
+   ],
+   "glacialSpike": [
+    0.8400297619,
+    0.0142857143,
+    0.9933035714,
+    0.1857142857
+   ],
+   "blizzard": [
+    0.0066964286,
+    0.2133928571,
+    0.1599702381,
+    0.3857142857
+   ],
+   "chillingArmor": [
+    0.1733630952,
+    0.2133928571,
+    0.3266369048,
+    0.3857142857
+   ],
+   "frozenOrb": [
+    0.3400297619,
+    0.2133928571,
+    0.4933035714,
+    0.3857142857
+   ],
+   "coldMastery": [
+    0.5066964286,
+    0.2142857143,
+    0.6599702381,
+    0.3857142857
+   ],
+   "chargedBolt": [
+    0.6733630952,
+    0.2142857143,
+    0.8266369048,
+    0.3857142857
+   ],
+   "staticField": [
+    0.8400297619,
+    0.2133928571,
+    0.9933035714,
+    0.3857142857
+   ],
+   "telekinesis": [
+    0.0066964286,
+    0.4133928571,
+    0.1599702381,
+    0.5857142857
+   ],
+   "nova": [
+    0.1733630952,
+    0.4142857143,
+    0.3266369048,
+    0.5848214286
+   ],
+   "lightning": [
+    0.3400297619,
+    0.4142857143,
+    0.4933035714,
+    0.5848214286
+   ],
+   "chainLightning": [
+    0.5066964286,
+    0.4142857143,
+    0.6599702381,
+    0.5857142857
+   ],
+   "blink": [
+    0.6733630952,
+    0.4142857143,
+    0.8266369048,
+    0.5857142857
+   ],
+   "thunderStorm": [
+    0.8400297619,
+    0.4142857143,
+    0.9933035714,
+    0.5848214286
+   ],
+   "energyShield": [
+    0.0066964286,
+    0.6169642857,
+    0.1599702381,
+    0.7830357143
+   ],
+   "lightningMastery": [
+    0.1733630952,
+    0.6169642857,
+    0.3266369048,
+    0.7821428571
+   ],
+   "firebolt": [
+    0.3400297619,
+    0.6160714286,
+    0.4933035714,
+    0.7830357143
+   ],
+   "warmth": [
+    0.5066964286,
+    0.6169642857,
+    0.6599702381,
+    0.7821428571
+   ],
+   "inferno": [
+    0.6733630952,
+    0.6169642857,
+    0.8266369048,
+    0.7821428571
+   ],
+   "blaze": [
+    0.8400297619,
+    0.6169642857,
+    0.9933035714,
+    0.7830357143
+   ],
+   "fireball": [
+    0.0066964286,
+    0.8142857143,
+    0.1599702381,
+    0.9848214286
+   ],
+   "firewall": [
+    0.1733630952,
+    0.8142857143,
+    0.3266369048,
+    0.9839285714
+   ],
+   "enchant": [
+    0.3407738095,
+    0.8142857143,
+    0.4925595238,
+    0.9848214286
+   ],
+   "meteor": [
+    0.5066964286,
+    0.8160714286,
+    0.6599702381,
+    0.9839285714
+   ],
+   "hydra": [
+    0.6726190476,
+    0.8151785714,
+    0.8266369048,
+    0.9839285714
+   ],
+   "fireMastery": [
+    0.8400297619,
+    0.8142857143,
+    0.9933035714,
+    0.9839285714
+   ]
+  }
+ }
+}

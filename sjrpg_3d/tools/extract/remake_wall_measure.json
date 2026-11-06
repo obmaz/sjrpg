@@ -1,0 +1,195 @@
+{
+  "png": "assets/source/remake/wall-from-gate.png",
+  "source_sha256": "d9fbcf39f9b7e8f9c230b76f53363ecec6312bb46ebeaecd76b7447b5e9a35d7",
+  "segments": [
+    {
+      "name": "front coping boundary",
+      "a": [
+        23.437,
+        210.096
+      ],
+      "b": [
+        61.671,
+        232.597
+      ],
+      "axis": 30,
+      "render_axis": 30,
+      "level": "upper",
+      "raw_degrees": 30.477135195938523,
+      "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+      "name": "rear cap upper edge",
+      "a": [
+        10.572,
+        4.467
+      ],
+      "b": [
+        61.076,
+        33.592
+      ],
+      "axis": 30,
+      "render_axis": 30,
+      "level": "upper",
+      "raw_degrees": 29.971489709074405,
+      "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+      "name": "front cap rear upper edge",
+      "a": [
+        0.05,
+        78.123
+      ],
+      "b": [
+        42.678,
+        102.359
+      ],
+      "axis": 30,
+      "render_axis": 30,
+      "level": "upper",
+      "raw_degrees": 29.62024353537633,
+      "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+      "name": "front middle mortar",
+      "a": [
+        8.302,
+        342.824
+      ],
+      "b": [
+        24.2,
+        352.173
+      ],
+      "axis": 30,
+      "render_axis": 30,
+      "level": "middle",
+      "raw_degrees": 30.45814187560043,
+      "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+      "name": "front lower footing",
+      "a": [
+        1.94,
+        494.261
+      ],
+      "b": [
+        60.779,
+        527.856
+      ],
+      "axis": 30,
+      "render_axis": 30,
+      "level": "lower",
+      "raw_degrees": 29.724847551697746,
+      "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+      "name": "front merlon return at deck",
+      "a": [
+        21.157,
+        166.46
+      ],
+      "b": [
+        37.816,
+        155.853
+      ],
+      "axis": -30,
+      "render_axis": -30,
+      "level": "upper",
+      "raw_degrees": -32.48543290558463,
+      "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+      "name": "front merlon slit",
+      "a": [
+        5.882,
+        138.125
+      ],
+      "b": [
+        5.894,
+        169.375
+      ],
+      "axis": 90,
+      "render_axis": 90,
+      "level": "middle",
+      "raw_degrees": 89.97799842174841,
+      "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    },
+    {
+      "name": "front cap lower bevel",
+      "a": [
+        3.999,
+        132.579
+      ],
+      "b": [
+        18.329,
+        140.243
+      ],
+      "axis": 30,
+      "render_axis": 30,
+      "level": "upper",
+      "raw_degrees": 28.138853795009386,
+      "method": "Independent OpenCV LSD on actual newly extracted constrained-gate pixels; no coordinates forced to architectural datums"
+    }
+  ],
+  "derived_identity": false,
+  "vertical_only": false,
+  "free_y_boundary": false,
+  "pad_y": 0,
+  "boundary_step": 24,
+  "_doc": "Raw measured gate-wing source stays unchanged. A small constrained pixel projection centers its native structural axes at +/-30/90 before both mirrored WallPiece draw transforms. raw_degrees and all measured a/b remain untouched; source baseline and measured mean coping/cap heights are preserved.",
+  "constrain_segments": true,
+  "point_merge_distance": 0.001,
+  "line_membership_distance": 0.0001,
+  "pins": [
+    [
+      0,
+      488.4818055806055
+    ],
+    [
+      62,
+      524.2775222703623
+    ]
+  ],
+  "targets": [
+    {
+      "source": [
+        23.437,
+        210.096
+      ],
+      "target": [
+        23.437,
+        210.30929490390196
+      ]
+    },
+    {
+      "source": [
+        61.671,
+        232.597
+      ],
+      "target": [
+        61.671,
+        232.38370509609808
+      ]
+    },
+    {
+      "source": [
+        3.999,
+        132.579
+      ],
+      "target": [
+        3.999,
+        132.27428532125634
+      ]
+    },
+    {
+      "source": [
+        18.329,
+        140.243
+      ],
+      "target": [
+        18.329,
+        140.54771467874366
+      ]
+    }
+  ]
+}

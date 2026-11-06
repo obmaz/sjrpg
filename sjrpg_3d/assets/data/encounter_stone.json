@@ -1,0 +1,111 @@
+{
+ "id": "encounter-stone",
+ "source": "assets/source/encounter-stone.png",
+ "source_sha256": "65ba8098b86194dd2ee59ef2ccaf54e6ac855483499c94d9cdabf2502ba62009",
+ "render": "assets/art/village/encounter-stone.webp",
+ "render_sha256": "97f4e85f17662634680764cb3f4fec5a3e4ac47ff964ac876559848643edc3e7",
+ "sprite": {
+  "sheet": "res://assets/art/village/encounter-stone.webp",
+  "source": [
+   4,
+   4,
+   312,
+   496
+  ],
+  "foot": [
+   159.0,
+   405.0
+  ],
+  "height": 489,
+  "origin": [
+   0,
+   0
+  ],
+  "packing": 1,
+  "gvs": 1,
+  "gvk": 0,
+  "world_height": 112,
+  "body": null,
+  "baked_warp": "encounter-stone"
+ },
+ "body_ground": {
+  "size": [
+   52,
+   32
+  ],
+  "origin": [
+   -26,
+   -16
+  ],
+  "note": "Centered inset structural collision rectangle in original ground units; ivy and stepped plinth may extend beyond it.",
+  "polygon": [
+   [
+    -26,
+    -16
+   ],
+   [
+    26,
+    -16
+   ],
+   [
+    26,
+    16
+   ],
+   [
+    -26,
+    16
+   ]
+  ]
+ },
+ "contacts": {
+  "center_native": [
+   155,
+   401
+  ],
+  "center_atlas": [
+   159.0,
+   405.0
+  ],
+  "front_toe_native": [
+   164,
+   490
+  ],
+  "front_toe_atlas": [
+   167.9715748039918,
+   493.9694088201003
+  ]
+ },
+ "opaque_bounds": [
+  3,
+  3,
+  309,
+  492
+ ],
+ "total_world_height": 112,
+ "camera": {
+  "projection": "orthographic",
+  "ground_axes": [
+   -30,
+   30
+  ],
+  "vertical_axis": 90
+ },
+ "calibration": {
+  "key": "encounter-stone",
+  "points": 100,
+  "triangles": 162,
+  "minimum_area_ratio": 0.7839459153374928,
+  "max_native_displacement": 3.2919083173745878
+ },
+ "alpha_review": {
+  "background": "The colored blur in fully transparent RGB has alpha0 and contributes no visible background. Pale and dark solid-background composites show no wide cast-shadow plate.",
+  "opaque_threshold": 128,
+  "source_alpha_extrema": [
+   0,
+   254
+  ],
+  "keep_original_alpha": true
+ },
+ "height_method": "world_height112 is the total opaque image height, including the stepped base in front of the centered ground foot.",
+ "provenance": "tools/extract/encounter_art_provenance.json"
+}

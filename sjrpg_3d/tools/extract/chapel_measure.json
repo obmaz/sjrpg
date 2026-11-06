@@ -1,0 +1,248 @@
+{
+ "_doc": "Fresh raw-native measurements of chapel-v2.png: projecting entrance, paired-window nave and bell tower; no forecourt or balustrade. foot F/L/R bound the principal nave base, with the entrance wing in measured_yard.building. The normalized ground rectangle is a placement model, never art-axis evidence.",
+ "png": "assets/source/remake/chapel-v2.png",
+ "foot_F": [
+  840,
+  1222
+ ],
+ "foot_R": [
+  1194,
+  1031
+ ],
+ "foot_L": [
+  550,
+  1123
+ ],
+ "cliff_height": 20,
+ "stair_t": [
+  0.4,
+  0.7
+ ],
+ "stair_travel": [
+  -50,
+  85
+ ],
+ "yard_inset": 0.03,
+ "building_s": [
+  0.2,
+  0.95
+ ],
+ "building_t": [
+  0.18,
+  0.75
+ ],
+ "placement": [
+  [
+   0.89,
+   0.466
+  ],
+  21.4
+ ],
+ "placement_doc": "town_art_measure.reference.chapel owns the inland centre and principal-nave placement width. Its scale is calibrated to a 128 original-world-unit timber opening before Iso.S. The visible projecting entrance uses the separate compound measured blocker; it is not part of the rectangular placement model.",
+ "chests_moved": [
+  [
+   [
+    0.57,
+    0.25
+   ],
+   [
+    0.56,
+    0.3
+   ]
+  ],
+  [
+   [
+    0.65,
+    0.43
+   ],
+   [
+    0.555,
+    0.42
+   ]
+  ]
+ ],
+ "atlas": {
+  "sheet": "forest-isometric-town",
+  "xy": [
+   730,
+   2040
+  ],
+  "packing": 0.65
+ },
+ "gvs": 1.25,
+ "gvk": 0.06,
+ "warp": "chapel",
+ "door_opening": {
+  "a": [
+   355,
+   762
+  ],
+  "b": [
+   355,
+   1036
+  ],
+  "kind": "timber opening centreline; stone molding and three steps excluded",
+  "target_world_height": [
+   120,
+   130
+  ]
+ },
+ "measured_yard": {
+  "kind": "door_steps",
+  "riser_count": 3,
+  "outline": [
+   [
+    234,
+    1107
+   ],
+   [
+    386,
+    1168
+   ],
+   [
+    437,
+    1074
+   ],
+   [
+    287,
+    1024
+   ]
+  ],
+  "entrance": 0,
+  "faces": [
+   [
+    [
+     234,
+     1107
+    ],
+    [
+     287,
+     1024
+    ],
+    [
+     287,
+     1037
+    ],
+    [
+     234,
+     1120
+    ]
+   ],
+   [
+    [
+     386,
+     1168
+    ],
+    [
+     437,
+     1074
+    ],
+    [
+     437,
+     1088
+    ],
+    [
+     386,
+     1170
+    ]
+   ]
+  ],
+  "steps": [
+   [
+    288,
+    1170
+   ],
+   [
+    309,
+    1137
+   ],
+   [
+    323,
+    1122
+   ],
+   [
+    336,
+    1109
+   ],
+   [
+    349,
+    1096
+   ],
+   [
+    362,
+    1086
+   ]
+  ],
+  "building": [
+   [
+    204,
+    1063
+   ],
+   [
+    247,
+    1080
+   ],
+   [
+    299,
+    1019
+   ],
+   [
+    429,
+    1061
+   ],
+   [
+    462,
+    1127
+   ],
+   [
+    499,
+    1141
+   ],
+   [
+    548,
+    1110
+   ],
+   [
+    840,
+    1222
+   ],
+   [
+    1194,
+    1031
+   ],
+   [
+    615,
+    854
+   ]
+  ],
+  "ground_runs": [
+   [
+    [
+     548,
+     1110
+    ],
+    [
+     840,
+     1222
+    ]
+   ],
+   [
+    [
+     840,
+     1222
+    ],
+    [
+     1194,
+     1031
+    ]
+   ]
+  ]
+ },
+ "measurement_notes": [
+  "v1 chapel.png remains preserved; v2 removes the old forecourt/parapets completely. Only the measured three-step threshold is elevated.",
+  "The hidden rear building point completes the blocker inside opaque architecture; it is not used as a visible art-axis sample.",
+  "The principal nave ground rectangle is normalized only as a placement/width model, independently from actual source-edge audit and compound building collision.",
+  "Door scale, forward approach, both sides of the entry wing, nave, tower and all three step risers require final engine/browser review."
+ ],
+ "ground_model": "main_body_rectangle"
+}

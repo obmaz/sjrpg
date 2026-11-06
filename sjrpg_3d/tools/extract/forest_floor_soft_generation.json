@@ -1,0 +1,84 @@
+{
+ "version": 1,
+ "date_utc": "2026-11-06",
+ "purpose": "Source-only iteration to replace dense wiry grass carpet with quieter olive grass/earth floor; root review required before runtime packing.",
+ "generator": "image_gen.imagegen",
+ "settings": {
+  "transparent_background": false,
+  "num_calls": 1,
+  "requested_layout": "One opaque seamless 1024-square straight top-down material; generator returned the documented native output size."
+ },
+ "prompt": "Create ONE seamless opaque square production ground-material tile for Guardians of Nature. Use the attached images in this exact order: (1) AUTHORITATIVE USER GAME REFERENCE for restrained woodland-fantasy material mood, (2) the reviewed pale limestone paving for the adjacent material family, (3) the reviewed brown earth material for the soil family, (4) the CURRENT GRASS REPLACEMENT TARGET, shown ONLY to explain what to avoid. Image 4 is too uniformly dense, bright yellow-green, wiry and finely stippled in actual mobile gameplay. Do not reproduce its carpet of thin strands or identical sharp little clover clusters.\n\nOUTPUT: a single 1024 x 1024 full-bleed opaque material square. Strictly orthographic STRAIGHT TOP-DOWN view of low ground cover, with no horizon, no isometric projection, no perspective, no framing or border. All four edges must repeat seamlessly. The game will project this material onto its mathematically correct 120-degree isometric ground plane; DO NOT bake that camera into the tile.\n\nDesign a quiet, weathered woodland floor with short soft muted-olive grass, low mossy cover and subdued matte gray-brown earth that gently intermingle. The texture needs broad, low-contrast organic variation, not a uniform fine grain: roughly six to ten softly interlocking areas across the square, with irregular edges that flow across the tile borders. Around two-thirds is very short low soft grass/moss cover and around one-third is calm exposed soil mixed through it. Use restrained earthy olive, gray-olive, moss-brown and warm neutral soil values. Keep the ground less saturated and a little more earth-colored than the tree foliage in image 1 so tree crowns and floor remain visually separate. The broad variations should come from the material itself, not lighting.\n\nKeep the surface close to the ground. Grass reads as soft, compact little leafy masses with only occasional tiny short blades; any single blade stays sparse and low contrast. Soil reads as quiet matte compact earth with restrained fine grain, not hundreds of sharp pebbles. Let areas of grass become thinner into soil and moss without a hard outline. Preserve small natural material detail at mobile scale but prioritize calm masses over microtexture. Avoid wiry curled strands, dense crisscross lawn fibers, sharp scratchy bright grass, yellow straw, regular turf, mown stripes, repeating tufts, a clover carpet, golf-course lawn and photoreal macro lawn photography.\n\nCRITICAL: EVEN NEUTRAL DIFFUSE ALBEDO from corner to corner. NO cast shadows, NO black canopy silhouettes, NO tree shade patterns, NO sunlight patches, NO spotlights, NO corner darkening, NO vignetting, NO directional gradient, NO perspective depth, NO dramatic highlights. Only subtle tiny self-relief within the material. Runtime supplies all scene lighting and tree-position-linked shade. No flowers, tall plants, bushes, trees, roots, logs, leaves, mushrooms, stones, paving, paths, props, figures, UI, text, labels, grid, watermark or decorative scene. Natural restrained hand-finished realistic game material matching image 1, never flat cartoon or a photographic garden lawn.",
+ "source": {
+  "path": "assets/source/lighting/forest-floor-soft.png",
+  "role": "Single untouched generated candidate; source-only pending root technical adoption",
+  "sha256": "3fbf86d5ec43e3b52af84a145acea7663da6ee3b7f08f64abadf91bdddee1103"
+ },
+ "original_generation_path": "/workspace/generated_images/exec-a8167f39-5c84-4f65-b4f6-73691962fd8e.png",
+ "size": [
+  1254,
+  1254
+ ],
+ "mode": "RGB",
+ "alpha_min_max": [
+  255,
+  255
+ ],
+ "referenced_images": [
+  {
+   "path": "assets/source/style/approved-game-reference.jpg",
+   "role": "Authoritative user scene style",
+   "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+  },
+  {
+   "path": "assets/art/forest/paving.webp",
+   "role": "Reviewed adjacent limestone albedo family",
+   "sha256": "293bb740e1c277bf7e6cd566c8c9f6a05105e5e7ca0e8960e041ad23e2b2d9ef"
+  },
+  {
+   "path": "assets/art/forest/earth.webp",
+   "role": "Reviewed earth albedo family",
+   "sha256": "379f9866399c0e0e5265adfea05c3779fc7e6723cc42626226c7275157e4a17c"
+  },
+  {
+   "path": "assets/source/remake/grass-v2.png",
+   "role": "Replacement target and explicit negative-density example",
+   "sha256": "f044aae41ad0d83478a3843cea1f9d29be3c8308d6e06f20c37f618a95150b37"
+  }
+ ],
+ "compared_not_attached": [
+  {
+   "path": "/tmp/stage1-review/published-portrait.png",
+   "role": "Actual published scene comparison; not attached to generator",
+   "sha256": "9e8ab55e5c7e8190b0f7c52bbff925b9551457dc3d0c3a7c6f2a9e30ae1e5857"
+  },
+  {
+   "path": "/tmp/stage1-review/npc-courtyard.png",
+   "role": "Actual courtyard comparison; not attached to generator",
+   "sha256": "23c5fd43741257d5588d9e52fe86cb17ed0c0f027bf97189c1dae2087df2d079"
+  }
+ ],
+ "edge_diagnostics": {
+  "mean_abs_rgb_left_right": 10.562,
+  "mean_abs_rgb_top_bottom": 9.656,
+  "mean_abs_rgb_adjacent_horizontal": 5.917,
+  "mean_abs_rgb_adjacent_vertical": 6.69,
+  "interpretation": "Diagnostics only, not a seamlessness certification; actual repeated rendering remains pending."
+ },
+ "review": {
+  "status": "rejected_by_root_source_review",
+  "improvements": [
+   "Broader irregular soil/moss/grass areas interrupt the former uniform fine strand carpet.",
+   "Less saturated earthy olive/gray-brown floor separates from canopy leaf green.",
+   "No characters, flowers, props, perspective, black cast-shadow patches or obvious spotlight/vignette."
+  ],
+  "limitations": [
+   "Small clover-like leaf groups and some granular soil detail remain; actual mobile-scale packing/rendering must decide whether density is sufficiently calmer.",
+   "Seamless repetition and whole-scene atmosphere are not certified by the source image or numerical edge diagnostics.",
+   "This material is authored top-down; runtime Iso supplies the actual +/-30 degree ground projection. No invented rigid-edge angle certification."
+  ],
+  "runtime_manifest_changed": false,
+  "runtime_assets_changed": false,
+  "rejection_reason": "Several long diagonal brown cleared bands would form a repeated grid of paths; root visual estimate about 50 percent bare earth is too dry for the lush user reference. This percentage is a visual review estimate, not a measured segmentation."
+ }
+}

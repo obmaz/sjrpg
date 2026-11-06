@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>$GODOT_PROJECT_NAME</title>
+  $GODOT_HEAD_INCLUDE
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="install-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script src="install.js"></script>
+  <link rel="preload" href="loading-bg.webp" as="image">
+  <link rel="preload" href="entry-button.webp" as="image">
+  <style>
+    :root { color-scheme: dark; --cream: #eee4c9; --muted: #bab79e; --bronze: #a89b70; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #102c29; touch-action: pan-y; }
+    body { color: var(--cream); font-family: "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
+    #canvas { display: block; outline: none; touch-action: none; }
+    #loading { position: fixed; inset: 0; height: 100vh; height: 100dvh; isolation: isolate; overflow: auto;
+      display: grid; align-content: safe end; justify-items: center; padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(42px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+      background: #162922; }
+    #loading::before { content: ""; position: absolute; inset: 0; z-index: -2; background: url("loading-bg.webp") 43% 36% / cover no-repeat; }
+    #loading::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+      background: linear-gradient(180deg, #0a191b12 8%, #081b1a12 35%, #081814b0 68%, #081511f5 100%), radial-gradient(ellipse at center, transparent 35%, #07171170); }
+    .mote { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #ece5aa; box-shadow: 0 0 10px #ece5aa88; pointer-events: none;
+      animation: drift 7s ease-in-out infinite; opacity: 0; }
+    .mote:nth-child(1) { left: 17%; top: 59%; animation-delay: -2s; }
+    .mote:nth-child(2) { left: 76%; top: 45%; animation-delay: -5s; }
+    .mote:nth-child(3) { left: 58%; top: 67%; animation-delay: -1s; }
+    @keyframes drift { 0%, 100% { opacity: 0; transform: translateY(10px); } 40%, 60% { opacity: .65; } 90% { transform: translateY(-30px); } }
+    .loading-panel { width: min(100%, 460px); text-align: center; text-shadow: 0 2px 12px #06100d; }
+    .chapter { margin: 0 0 14px; color: #d1c69f; font-size: 11px; font-weight: 600; letter-spacing: .24em; }
+    h1 { margin: 0; font-size: clamp(28px, 5vw, 40px); font-weight: 600; letter-spacing: .12em; line-height: 1.4; }
+    .rule { display: flex; align-items: center; gap: 14px; width: min(230px, 70%); margin: 20px auto 22px; color: var(--bronze); }
+    .rule::before, .rule::after { content: ""; height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #a89b7080); }
+    .rule::after { transform: rotate(180deg); }
+    .rune { width: 10px; height: 10px; border: 1px solid #c9bd8c; transform: rotate(45deg); box-shadow: 0 0 12px #b6c39322; }
+    .progress-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 12px; font-size: 14px; line-height: 1.5; }
+    #phase { margin: 0; text-align: left; }
+    #amount { color: #d5ca9d; white-space: nowrap; font-variant-numeric: tabular-nums; font-size: 13px; }
+    progress { display: block; appearance: none; -webkit-appearance: none; width: 100%; height: 5px; overflow: hidden; border: 0; border-radius: 2px;
+      background: #0d1915; box-shadow: 0 0 0 1px #ae9a6345, 0 2px 10px #0006; }
+    progress::-webkit-progress-bar { background: #0d1915; }
+    progress::-webkit-progress-value { background: linear-gradient(90deg, #627a56, #c1b987); }
+    progress::-moz-progress-bar { background: linear-gradient(90deg, #627a56, #c1b987); }
+    progress:indeterminate { background: linear-gradient(90deg, #0d1915 10%, #a7ae7866 50%, #0d1915 90%); background-size: 200% 100%; animation: searching 2.4s ease-in-out infinite; }
+    progress:indeterminate::-webkit-progress-bar { background: transparent; }
+    @keyframes searching { 0%, 100% { background-position: 100% 0; } 50% { background-position: 0 0; } }
+    #transfer { min-height: 18px; margin: 9px 0 0; font-size: 11px; letter-spacing: .03em; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+    .hint { margin: 27px 0 0; color: var(--muted); font-size: 12px; line-height: 1.8; word-break: keep-all; }
+    .entry-action { height: 82px; display: grid; align-items: center; }
+    #entry-start { width: 100%; height: 76px; border: 0; padding: 0 24px; color: var(--cream);
+      background: url("entry-button.webp") center / 100% 100% no-repeat; font: inherit; font-size: 22px; font-weight: 700; cursor: pointer;
+      text-shadow: 0 2px 4px #171209; }
+    #entry-start:hover { filter: brightness(1.12); }
+    #entry-start:focus-visible { outline: 2px solid #ece0a9; outline-offset: 4px; }
+    #failure { text-align: left; margin-top: 16px; }
+    #failure p { margin: 0; color: #ded8c4; font-size: 14px; line-height: 1.7; word-break: keep-all; }
+    details { margin-top: 14px; font-size: 12px; color: var(--muted); line-height: 1.6; }
+    summary { cursor: pointer; padding: 10px 0; }
+    #error-detail { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 90px; overflow: auto; }
+    #retry { width: 100%; min-height: 56px; margin-top: 18px; border: 1px solid #a79767; border-radius: 3px;
+      background: linear-gradient(#403c2a, #242d24); color: var(--cream); font: inherit; font-size: 16px; font-weight: 600; cursor: pointer; }
+    #retry:hover { background: #3f4936; }
+    #retry:focus-visible, summary:focus-visible { outline: 2px solid #ece0a9; outline-offset: 4px; }
+    [hidden] { display: none !important; }
+    noscript { position: fixed; inset: 0; z-index: 5; padding: 30vh 24px 24px; background: #102c29; text-align: center; line-height: 1.8; }
+    @media (orientation: landscape) { #loading::before { background-position: 43% top; } }
+    @media (orientation: portrait) {
+      #loading::before { background-position: 36% 30%; }
+      #loading::after { background: linear-gradient(180deg, #071b1510 20%, #08181430 46%, #081814d9 76%, #081511fa); }
+      .loading-panel { padding-bottom: 3vh; }
+    }
+    @media (max-height: 500px) and (orientation: landscape) {
+      #loading { padding-top: max(16px, env(safe-area-inset-top)); padding-bottom: max(22px, env(safe-area-inset-bottom)); }
+      .loading-panel { width: min(100%, 400px); }
+      .chapter { margin-bottom: 5px; font-size: 10px; }
+      h1 { font-size: 27px; }
+      .rule { margin: 9px auto 14px; }
+      .hint { margin-top: 10px; }
+      #failure { margin-top: 8px; }
+      #retry { margin-top: 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; } .mote { opacity: .25; } }
+    #loading.reduce-motion .mote { animation: none; opacity: .25; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas">이 브라우저는 게임 화면을 표시할 수 없습니다.</canvas>
+  <section id="loading" aria-label="모험 불러오기">
+    <i class="mote" aria-hidden="true"></i><i class="mote" aria-hidden="true"></i><i class="mote" aria-hidden="true"></i>
+    <div class="loading-panel">
+      <p class="chapter">제1장 · 숲의 부름</p>
+      <h1>자연의 수호자</h1>
+      <div class="rule" aria-hidden="true"><span class="rune"></span></div>
+      <div class="entry-action">
+        <div id="download">
+          <div class="progress-heading"><p id="phase" role="status">숲으로 향하는 길을 여는 중</p><span id="amount"></span></div>
+          <progress id="progress" aria-label="게임 다운로드"></progress>
+          <p id="transfer"></p>
+        </div>
+        <button id="entry-start" type="button" hidden disabled>모험 시작</button>
+      </div>
+      <p class="hint" id="hint">숲 마을에서 시작되는 첫 번째 모험<br>전사와 마법사, 당신의 수호자를 만나 보세요.</p>
+      <div id="failure" hidden>
+        <p id="error-message" role="alert"></p>
+        <details><summary>오류 자세히 보기</summary><div id="error-detail"></div></details>
+        <button id="retry" type="button">다시 불러오기</button>
+      </div>
+    </div>
+  </section>
+  <noscript>모험을 시작하려면 브라우저에서 JavaScript를 허용해 주세요.</noscript>
+  <script src="$GODOT_URL"></script>
+  <script>
+    const GODOT_CONFIG = $GODOT_CONFIG;
+    const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
+    (() => {
+      const preview3D = location.pathname.endsWith('/3d.html') || new URLSearchParams(location.search).get('preview3d') === '1';
+      window.__sjrpgLaunch3D = preview3D;
+      if (preview3D) {
+        document.querySelector('.chapter').textContent = '직교 3D 비교 · 숲 마을';
+        document.getElementById('entry-start').textContent = '3D 비교 시작';
+        document.getElementById('hint').textContent = '마법사를 선택해 입체 건물·캐릭터·그림자를 확인하세요.';
+      }
+      const overlay = document.getElementById('loading');
+      const phase = document.getElementById('phase');
+      const progress = document.getElementById('progress');
+      const amount = document.getElementById('amount');
+      const transfer = document.getElementById('transfer');
+      const start = document.getElementById('entry-start');
+      let engineReady = false;
+      let startAdventure = null;
+      let entering = false;
+      let settled = false;
+      function showTitle() {
+        if (!engineReady || !startAdventure) return;
+        overlay.hidden = false;
+        overlay.setAttribute('aria-label', '모험 시작');
+        document.getElementById('download').hidden = true;
+        start.hidden = false;
+        start.disabled = false;
+        entering = false;
+        window.__sjrpgEntryReady = true;
+      }
+      // Keep the same DOM, backdrop and title through download, initialization and readiness.
+      // Godot supplies a callback for the current title, including a return from selection/settings.
+      window.__sjrpgEntry = {
+        show(callback, reduceMotion = false) {
+          startAdventure = callback;
+          overlay.classList.toggle('reduce-motion', reduceMotion);
+          showTitle();
+        },
+        hide() { overlay.hidden = true; startAdventure = null; window.__sjrpgEntryReady = false; }
+      };
+      start.addEventListener('click', () => {
+        if (entering || !engineReady || !startAdventure) return;
+        entering = true;
+        start.disabled = true;
+        document.getElementById('canvas').focus();
+        startAdventure();
+      });
+      function setPhase(text) {
+        if (phase.textContent !== text) phase.textContent = text;
+      }
+      document.getElementById('retry').addEventListener('click', () => window.location.reload());
+      function fail(error, message = '게임을 불러오지 못했습니다. 연결을 확인하고 다시 시도해 주세요.') {
+        if (settled) return;
+        settled = true;
+        console.error(error);
+        setPhase('모험을 준비하지 못했습니다');
+        progress.hidden = true;
+        amount.textContent = '';
+        transfer.hidden = true;
+        document.getElementById('hint').hidden = true;
+        document.getElementById('failure').hidden = false;
+        document.getElementById('error-message').textContent = message;
+        document.getElementById('error-detail').textContent = error instanceof Error ? error.message : String(error);
+      }
+      if (typeof Engine === 'undefined') {
+        fail('The game engine could not be downloaded.');
+        return;
+      }
+      try {
+        let destination = null;
+        GODOT_CONFIG.onExit = code => {
+          // Godot finishes its asynchronous IDBFS sync before this callback.
+          if (destination && code === 0) location.assign(destination);
+          else if (destination) fail(new Error(`저장 후 종료에 실패했습니다 (${code})`));
+        };
+        const engine = new Engine(GODOT_CONFIG);
+        window.__sjrpgStorageMounts = GODOT_CONFIG.persistentPaths || ['/userfs'];
+        window.__sjrpgNavigateEdition = (edition, prepared = false) => {
+          if (!['', '2d', '3d'].includes(edition) || destination) return false;
+          destination = new URL('../' + (edition ? edition + '/' : ''), location.href).href;
+          if (!prepared) engine.requestQuit();
+          return true;
+        };
+        const missing = Engine.getMissingFeatures({ threads: GODOT_THREADS_ENABLED });
+        if (missing.length) {
+          // Keep Godot's optional service-worker recovery for exports that enable it.
+          if (GODOT_CONFIG.serviceWorker && GODOT_CONFIG.ensureCrossOriginIsolationHeaders && 'serviceWorker' in navigator) {
+            setPhase('브라우저 실행 환경을 준비하는 중');
+            Promise.race([
+              Promise.resolve().then(() => navigator.serviceWorker.getRegistration()).then(registration => {
+                if (registration) throw new Error('Service worker already exists.');
+                return engine.installServiceWorker();
+              }),
+              new Promise(resolve => setTimeout(resolve, 2000))
+            ]).then(() => window.location.reload()).catch(error => fail(error));
+          } else {
+            fail(missing.join('\n'), '이 브라우저에서는 게임을 실행할 수 없습니다. 최신 Chrome 또는 Safari에서 다시 열어 주세요.');
+          }
+          return;
+        }
+        engine.startGame({
+          onProgress(current, total) {
+            if (settled) return;
+            if (current > 0 && total > 0) {
+              progress.max = total;
+              progress.value = current;
+              amount.textContent = `${Math.floor(Math.min(current / total, 1) * 100)}%`;
+              transfer.textContent = `${(current / 1048576).toFixed(1)} / ${(total / 1048576).toFixed(1)} MB`;
+              setPhase(current >= total ? '다운로드 완료 · 모험을 준비하는 중' : '모험을 불러오는 중');
+            } else {
+              progress.removeAttribute('value');
+              progress.removeAttribute('max');
+              amount.textContent = '';
+              transfer.textContent = '';
+              setPhase('숲으로 향하는 길을 여는 중');
+            }
+          }
+        }).then(() => {
+          if (settled) return;
+          settled = true;
+          engineReady = true;
+          showTitle();
+        }, error => fail(error));
+      } catch (error) { fail(error); }
+    })();
+  </script>
+</body>
+</html>

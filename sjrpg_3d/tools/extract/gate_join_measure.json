@@ -1,0 +1,189 @@
+{
+ "_doc": "Independent new-source wing base/coping/front lower bevel measurements. Collision/passages are preserved separately; opposite cap planes are distinct.",
+ "sources": {
+  "gate-0": {
+   "path": "assets/source/remake/gate-a.png",
+   "sha256": "a0f3d56235882394d645cea025efae632c16e1e23157b67579945bd95aeb7cb6"
+  },
+  "gate-2": {
+   "path": "assets/source/remake/gate-b-v2.png",
+   "sha256": "d775ab279668e1551180823d7f4e130a9df56220f537167f3a21885134e0593f"
+  }
+ },
+ "canonical": "gate-0.left",
+ "wings": {
+  "gate-0.left": {
+   "gate": "gate-0",
+   "side": "left",
+   "axis": 30,
+   "base": [
+    [
+     42.0,
+     686.6047765793528
+    ],
+    [
+     217,
+     777.611132511556
+    ]
+   ],
+   "coping": [
+    [
+     41.21,
+     443.16
+    ],
+    [
+     242.97,
+     548.41
+    ]
+   ],
+   "cap": [
+    [
+     66.207,
+     400.668
+    ],
+    [
+     79.673,
+     407.629
+    ]
+   ]
+  },
+  "gate-0.right": {
+   "gate": "gate-0",
+   "side": "right",
+   "axis": 30,
+   "base": [
+    [
+     941,
+     1133.6033136545418
+    ],
+    [
+     1117,
+     1226.1593982098648
+    ]
+   ],
+   "coping": [
+    [
+     906.52,
+     868.81
+    ],
+    [
+     1117.86,
+     978.63
+    ]
+   ],
+   "cap": [
+    [
+     1080.33,
+     902.21
+    ],
+    [
+     1119.82,
+     923.78
+    ]
+   ]
+  },
+  "gate-2.left": {
+   "gate": "gate-2",
+   "side": "left",
+   "axis": -30,
+   "base": [
+    [
+     185,
+     1216.7185356080379
+    ],
+    [
+     365,
+     1130.9499726792537
+    ]
+   ],
+   "coping": [
+    [
+     181.566,
+     934.986
+    ],
+    [
+     377.344,
+     840.345
+    ]
+   ],
+   "cap": [
+    [
+     184.46,
+     860.793
+    ],
+    [
+     219.893,
+     842.9
+    ]
+   ]
+  },
+  "gate-2.right": {
+   "gate": "gate-2",
+   "side": "right",
+   "axis": -30,
+   "base": [
+    [
+     1065,
+     816.0240176600438
+    ],
+    [
+     1214,
+     736.5093156732889
+    ]
+   ],
+   "coping": [
+    [
+     1041.376,
+     522.122
+    ],
+    [
+     1217.772,
+     433.664
+    ]
+   ],
+   "cap": [
+    [
+     1097.782,
+     420.329
+    ],
+    [
+     1137.921,
+     397.461
+    ]
+   ]
+  }
+ },
+ "wall_profiles": {
+  "coping": [
+   [
+    23.437,
+    210.096
+   ],
+   [
+    61.671,
+    232.597
+   ]
+  ],
+  "cap": [
+   [
+    3.999,
+    132.579
+   ],
+   [
+    18.329,
+    140.243
+   ]
+  ]
+ },
+ "depth_upper": {
+  "back": [
+   41.634,
+   857.484
+  ],
+  "front": [
+   184.35950979606068,
+   933.6355900427577
+  ],
+  "method": "New source opposite/front coping lines; review shared painted corner independently of solids"
+ }
+}

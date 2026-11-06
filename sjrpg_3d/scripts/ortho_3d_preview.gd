@@ -1,0 +1,847 @@
+class_name Ortho3DPreview
+extends Node
+## Stage-one native3D presentation. Source gameplay/HUD are adapters; the spatial
+## world owns resolved actor feet and terrain height throughout forest and cave.
+
+const GROUND_PER_METER := 65.0
+const PROJECTION_FACTOR := 1.224744871391589 * Iso.S
+const CAMERA_DIRECTION := Vector3(1, 1, 1)
+const MAGE_PATH := "res://assets/art/preview3d/mage.glb"
+const MATERIAL_ROOT := "res://assets/art/preview3d/"
+const CARD_CODE := """
+shader_type spatial;
+render_mode unshaded, blend_mix, depth_draw_never, cull_disabled;
+uniform sampler2D atlas_texture : source_color, filter_linear_mipmap;
+uniform vec4 atlas_rect = vec4(0.0, 0.0, 1.0, 1.0);
+uniform vec4 next_rect = vec4(0.0, 0.0, 1.0, 1.0);
+uniform float frame_blend = 0.0;
+uniform vec4 tint : source_color = vec4(1.0);
+uniform vec4 flash_color : source_color = vec4(1.0);
+uniform float flash_strength = 0.0;
+void fragment() {
+	vec4 first = texture(atlas_texture, atlas_rect.xy + UV * atlas_rect.zw);
+	vec4 second = texture(atlas_texture, next_rect.xy + UV * next_rect.zw);
+	float alpha = mix(first.a, second.a, frame_blend);
+	vec3 rgb = mix(first.rgb * first.a, second.rgb * second.a, frame_blend) / max(alpha, 0.00001);
+	vec4 ink = vec4(rgb, alpha);
+	ALBEDO = mix(ink.rgb * tint.rgb, flash_color.rgb, clamp(flash_strength, 0.0, 0.65));
+	ALPHA = ink.a * tint.a;
+}
+"""
+const ACTOR_FLASH_CODE := """
+shader_type spatial;
+render_mode unshaded, blend_mix, depth_draw_never;
+uniform vec4 flash_color : source_color = vec4(1.0);
+uniform float flash_strength = 0.0;
+void fragment() { ALBEDO = flash_color.rgb; ALPHA = flash_strength; }
+"""
+static var _card_shader: Shader
+static var _add_shader: Shader
+static var _actor_flash_shader: Shader
+
+var game: Node2D
+var viewport: SubViewport
+var stage: Node3D
+var camera: Camera3D
+var sunlight: DirectionalLight3D
+var contact_light: OmniLight3D
+var actor: Node3D
+var animation: AnimationPlayer
+var display: TextureRect
+var _layer: CanvasLayer
+var _materials := {}
+var _cards := {}
+var _seen_impacts := {}
+var _contact_time := 0.0
+var _contact_energy := 0.0
+var _probe_clock := 0.0
+var _ready_published := false
+var _labels := {}
+var _native_mage := false
+var _contact_fresh := false
+var _actor_meshes: Array[MeshInstance3D] = []
+var _actor_flash: ShaderMaterial
+var _native_visible := true
+var _affordances: Ortho3DAffordances
+var _was_paused := false
+var _static_batch := {}
+var _batch_gpu_error := -1.0
+var _mode_layer: CanvasLayer
+var _mode_badge: PanelContainer
+var _mode_label: Label
+var enabled := true
+var _hero_motion: Ortho3DHeroMotion
+var _level_up_fx: Ortho3DLevelUp
+var _trees: Node3D
+var _fortification: Ortho3DFortification
+var _forest_stage: Node3D
+var _world_environment: Ortho3DEnvironment
+var _scope_is_cave := false
+
+
+func setup(world_game: Node2D) -> Ortho3DPreview:
+	game = world_game
+	return self
+
+
+## This conversion is the inverse of the real game's ground projection, not an eyeballed camera.
+static func ground_position(point: Vector2, height := 0.0) -> Vector3:
+	var flat := Iso.unproject(point) / GROUND_PER_METER
+	return Vector3(flat.x, height, flat.y)
+
+
+static func pixels_per_meter(camera_zoom: float) -> float:
+	return GROUND_PER_METER * PROJECTION_FACTOR * camera_zoom
+
+
+## A source point may already include a projected chest height. Undo it before placing a real3D light.
+static func spatial_position(point: Vector2, height: float) -> Vector3:
+	return ground_position(point + Vector2(0, height * GROUND_PER_METER * Iso.S), height)
+
+
+func _ready() -> void:
+	# Presentation must catch the final source frame when a menu/review pauses
+	# the simulation. Its own animation/light clocks remain frozen below.
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.__sjrpg3dReady = false; window.__sjrpg3dProbe = null")
+	game.set_forest_rendered(false)
+	viewport = SubViewport.new()
+	viewport.own_world_3d = true
+	viewport.handle_input_locally = false
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	viewport.msaa_3d = Viewport.MSAA_2X
+	RenderingServer.directional_shadow_atlas_set_size(1024, true)
+	add_child(viewport)
+	stage = Node3D.new()
+	viewport.add_child(stage)
+	_layer = CanvasLayer.new()
+	# Above the original economy viewport's canvas0, below the unchanged HUD layer10.
+	_layer.layer = 1
+	add_child(_layer)
+	display = TextureRect.new()
+	display.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	display.texture = viewport.get_texture()
+	display.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_layer.add_child(display)
+	_mode_layer = CanvasLayer.new()
+	_mode_layer.layer = game.hud.layer + 1
+	add_child(_mode_layer)
+	_mode_badge = PanelContainer.new()
+	_mode_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var frame := StyleBoxFlat.new()
+	frame.bg_color = Color(0.06, 0.09, 0.075, 0.9)
+	frame.border_color = Color("93815b")
+	frame.set_border_width_all(1)
+	frame.set_corner_radius_all(5)
+	frame.content_margin_left = 6
+	frame.content_margin_right = 6
+	_mode_badge.add_theme_stylebox_override("panel", frame)
+	_mode_layer.add_child(_mode_badge)
+	_mode_label = UiKit.label("3D 숲", 18, Color("e4d5b1"))
+	_mode_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_mode_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_mode_badge.add_child(_mode_label)
+	_setup_light()
+	_setup_materials()
+	var permanent := stage.get_children()
+	_build_ground()
+	_build_village()
+	_trees = Ortho3DTrees.build(self)
+	_static_batch = Ortho3DStaticBatch.apply(stage)
+	_forest_stage = Node3D.new()
+	_forest_stage.name = "NativeForest"
+	stage.add_child(_forest_stage)
+	for child in stage.get_children():
+		if child != _forest_stage and not permanent.has(child):
+			child.reparent(_forest_stage, true)
+	_load_actor()
+	_affordances = Ortho3DAffordances.new().setup(self)
+	_level_up_fx = Ortho3DLevelUp.new().setup(self)
+	game.get_viewport().size_changed.connect(_resize)
+	Prefs.graphics_changed.connect(_resize)
+	_resize()
+	_sync_camera()
+	_world_environment = Ortho3DEnvironment.new().setup(self, _forest_stage)
+	_affordances.sync()
+
+
+func _exit_tree() -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.__sjrpg3dReady = false; window.__sjrpg3dProbe = null")
+
+
+func _resize() -> void:
+	if not is_instance_valid(viewport):
+		return
+	var native: Vector2 = game.get_viewport().get_visible_rect().size
+	display.size = native
+	viewport.size = Vector2i(native / (2.0 if Prefs.low_resolution else 1.0))
+	viewport.msaa_3d = Viewport.MSAA_DISABLED if Prefs.low_resolution else Viewport.MSAA_2X
+	var header: Dictionary = game.hud.status_geometry()
+	var unit: float = header["map_unit"]
+	var paint: Rect2 = header["paint_bounds"]
+	var minimap: Rect2 = header["map"]
+	var left := paint.end.x + 6.0 * unit
+	var right := minimap.position.x - 6.0 * unit
+	var width := minf(126.0 * unit, right - left)
+	_mode_badge.position = Vector2((left + right - width) * 0.5, minimap.position.y + 2.0 * unit)
+	_mode_badge.size = Vector2(width, 32.0 * unit)
+	_mode_label.add_theme_font_size_override("font_size", roundi(18.0 * unit))
+	if camera != null:
+		_sync_camera()
+		# Container layout can settle after the signal; deferred calls also run while settings pause simulation.
+		_sync_camera.call_deferred()
+
+
+func _setup_light() -> void:
+	var environment := WorldEnvironment.new()
+	var settings := Environment.new()
+	settings.background_mode = Environment.BG_COLOR
+	settings.background_color = Color("17231d")
+	settings.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	settings.ambient_light_color = Color(0.57, 0.68, 0.77)
+	settings.ambient_light_energy = 0.43
+	environment.environment = settings
+	stage.add_child(environment)
+	sunlight = DirectionalLight3D.new()
+	sunlight.light_color = Color(1.0, 0.89, 0.73)
+	sunlight.light_energy = 1.6
+	sunlight.shadow_enabled = true
+	sunlight.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	# Perspective fallback range; orthographic shadows use the camera clipping range.
+	sunlight.directional_shadow_max_distance = 90.0
+	sunlight.shadow_bias = 0.04
+	sunlight.shadow_normal_bias = 0.6
+	stage.add_child(sunlight)
+	var projected := Iso.unproject(Vector2(0.72, 0.48)).normalized()
+	var ray := Vector3(projected.x, -tan(deg_to_rad(47.0)), projected.y)
+	sunlight.look_at(ray, Vector3.UP)
+	# Soft reflected daylight keeps the door and carved front stone readable.
+	# Only the main sun casts a shadow, so contact direction remains unambiguous.
+	var bounce := DirectionalLight3D.new()
+	bounce.name = "WarmDaylightBounce"
+	bounce.light_color = Color(1.0, 0.94, 0.82)
+	bounce.light_energy = 0.38
+	bounce.shadow_enabled = false
+	stage.add_child(bounce)
+	bounce.look_at(-CAMERA_DIRECTION, Vector3.UP)
+	contact_light = OmniLight3D.new()
+	contact_light.omni_range = 3.0
+	contact_light.omni_attenuation = 1.4
+	contact_light.shadow_enabled = false
+	contact_light.visible = false
+	stage.add_child(contact_light)
+	camera = Camera3D.new()
+	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	camera.keep_aspect = Camera3D.KEEP_HEIGHT
+	camera.near = 0.05
+	# Keep the single shadow map concentrated on the local village instead of a
+	# 200m-deep frustum. The focus is sqrt(3) * 30m from this orthographic eye.
+	camera.far = 90.0
+	stage.add_child(camera)
+	camera.make_current()
+
+
+func _material(path: String, tint := Color.WHITE, repeats := 1.0) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = tint
+	material.roughness = 0.92
+	if not path.is_empty():
+		material.albedo_texture = load(path)
+	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	material.uv1_scale = Vector3.ONE * repeats
+	return material
+
+
+func _setup_materials() -> void:
+	_materials["stone"] = _material(MATERIAL_ROOT + "limestone.webp")
+	_materials["stone"].uv1_triplanar = true
+	_materials["stone"].uv1_world_triplanar = true
+	# Eight 32cm courses per generated tile; the same world scale crosses every
+	# gate, wall, corner and building instead of stretching a cropped stone sample.
+	_materials["stone"].uv1_scale = Vector3.ONE / 2.56
+	_materials["slate"] = _material(MATERIAL_ROOT + "slate.webp")
+	_materials["slate"].cull_mode = BaseMaterial3D.CULL_DISABLED
+	_materials["wood"] = _material(MATERIAL_ROOT + "timber.webp")
+	_materials["wood"].uv1_triplanar = true
+	_materials["wood"].uv1_scale = Vector3.ONE * 0.65
+	_materials["door"] = _material(MATERIAL_ROOT + "timber.webp")
+	_materials["grass"] = _material("res://assets/art/forest/grass.webp", ForestArt.GRASS_TINT, 38.0)
+	_materials["paving"] = _material("res://assets/art/forest/paving.webp")
+	_materials["iron"] = _material("", Color("292b29"))
+	_materials["glass"] = _material("", Color("182b36"))
+	_materials["glass"].emission_enabled = true
+	_materials["glass"].emission = Color(0.13, 0.19, 0.23)
+	_materials["water"] = _material("", Color("174a4d"))
+	_materials["water"].roughness = 0.25
+	_materials["water"].metallic = 0.3
+
+
+func _mesh(mesh: Mesh, material: Material, position: Vector3, parent: Node3D = null) -> MeshInstance3D:
+	var instance := MeshInstance3D.new()
+	instance.mesh = mesh
+	instance.material_override = material
+	(parent if parent != null else stage).add_child(instance)
+	instance.position = position
+	return instance
+
+
+func _box(position: Vector3, size: Vector3, material: Material, parent: Node3D = null) -> MeshInstance3D:
+	var shape := BoxMesh.new()
+	shape.size = size
+	return _mesh(shape, material, position, parent)
+
+
+## Plane X follows the roof slope; material rows must cross it along the ridge.
+static func roof_mesh(size: Vector2) -> ArrayMesh:
+	var plane := PlaneMesh.new()
+	plane.size = size
+	var arrays := plane.surface_get_arrays(0)
+	var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+	for index in uv.size():
+		uv[index] = Vector2(uv[index].y, uv[index].x)
+	arrays[Mesh.ARRAY_TEX_UV] = uv
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
+func _build_ground() -> void:
+	var floor_mesh := PlaneMesh.new()
+	floor_mesh.size = Vector2(150, 150)
+	_mesh(floor_mesh, _materials["grass"], Vector3.ZERO)
+	for polygon: PackedVector2Array in game.village.map_roads:
+		var points := PackedVector2Array()
+		for point in polygon:
+			points.append(Iso.unproject(point) / GROUND_PER_METER)
+		var indices := Geometry2D.triangulate_polygon(points)
+		var vertices := PackedVector3Array()
+		var normals := PackedVector3Array()
+		var uvs := PackedVector2Array()
+		for point in points:
+			vertices.append(Vector3(point.x, 0.012, point.y))
+			normals.append(Vector3.UP)
+			uvs.append(point / (180.0 / GROUND_PER_METER))
+		var arrays := []
+		arrays.resize(Mesh.ARRAY_MAX)
+		arrays[Mesh.ARRAY_VERTEX] = vertices
+		arrays[Mesh.ARRAY_NORMAL] = normals
+		arrays[Mesh.ARRAY_TEX_UV] = uvs
+		arrays[Mesh.ARRAY_INDEX] = indices
+		var road := ArrayMesh.new()
+		road.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		var material := (_materials["paving"] as StandardMaterial3D).duplicate() as StandardMaterial3D
+		material.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_mesh(road, material, Vector3.ZERO)
+
+
+func _building_bounds(key: String) -> Rect2:
+	var sprite: IsoSprite = game.village.buildings[key]
+	var frame: Dictionary = game.village.data["frames"][key]
+	var points := sprite.atlas_polygon(frame["ground"])
+	var flat := PackedVector2Array()
+	for point in points:
+		flat.append(Iso.unproject(point) / GROUND_PER_METER)
+	return Iso.poly_bounds(flat)
+
+
+func _build_village() -> void:
+	for key: String in game.village.buildings:
+		_build_house(key)
+	_fortification = Ortho3DFortification.build(self)
+	_build_fountain()
+	_build_residents()
+
+
+func _build_house(key: String) -> void:
+	var bounds := _building_bounds(key)
+	var center := bounds.get_center()
+	var width := maxf(3.5, bounds.size.x)
+	var depth := maxf(3.0, bounds.size.y)
+	var chapel := key == "chapel"
+	var height := 3.5 if chapel else 2.9
+	var rise := 2.4 if chapel else 1.8
+	var root := Node3D.new()
+	stage.add_child(root)
+	root.position = Vector3(center.x, 0, center.y)
+	if chapel:
+		Ortho3DChapel.build(self, root, width, depth, height)
+		return
+	_box(Vector3(0, 0.14, 0), Vector3(width + 0.35, 0.28, depth + 0.35), _materials["stone"], root)
+	_box(Vector3(0, height * 0.5 + 0.28, 0), Vector3(width, height, depth), _materials["stone"], root)
+	var gable := PrismMesh.new()
+	gable.size = Vector3(width, rise, depth)
+	_mesh(gable, _materials["stone"], Vector3(0, height + 0.28 + rise * 0.5, 0), root)
+	var half := width * 0.5 + 0.25
+	var slope := atan2(rise, half)
+	for side in [-1.0, 1.0]:
+		var roof_size := Vector2(sqrt(half * half + rise * rise), depth + 0.6)
+		var roof := roof_mesh(roof_size)
+		var material := (_materials["slate"] as StandardMaterial3D).duplicate() as StandardMaterial3D
+		material.uv1_scale = Vector3(roof_size.y / 2.6, roof_size.x / 2.6, 1)
+		var plane := _mesh(roof, material, Vector3(side * half * 0.5, height + 0.32 + rise * 0.5, 0), root)
+		plane.rotation.z = -side * slope
+		_box(Vector3(side * half, height + 0.28, 0), Vector3(0.16, 0.2, depth + 0.68), _materials["wood"], root)
+		for z in [-1.0, 1.0]:
+			var beam := _box(Vector3(side * half * 0.5, height + 0.32 + rise * 0.5, z * (depth * 0.5 + 0.25)), Vector3(roof_size.x + 0.08, 0.16, 0.16), _materials["wood"], root)
+			beam.rotation.z = -side * slope
+	_box(Vector3(0, height + 0.35 + rise, 0), Vector3(0.18, 0.16, depth + 0.65), _materials["wood"], root)
+	# Native framed doors/windows cast and receive the real light; there is no facade billboard.
+	var front := depth * 0.5 + 0.02
+	_box(Vector3(0, 1.38, front + 0.025), Vector3(1.15, 2.2, 0.10), _materials["door"], root)
+	for x in [-0.67, 0.67]:
+		_box(Vector3(x, 1.42, front + 0.1), Vector3(0.18, 2.35, 0.24), _materials["stone"] if chapel else _materials["wood"], root)
+	_box(Vector3(0, 2.63, front + 0.1), Vector3(1.5, 0.18, 0.24), _materials["stone"] if chapel else _materials["wood"], root)
+	for x in [-1.0, 1.0]:
+		var at := Vector3(x * width * 0.31, 1.9, front + 0.10)
+		_window(root, at, chapel)
+	# A visible side window makes lighting across both axes assessable.
+	var side_window := Node3D.new()
+	root.add_child(side_window)
+	side_window.position = Vector3(width * 0.5 + 0.04, 1.85, 0)
+	side_window.rotation.y = PI * 0.5
+	_window(side_window, Vector3.ZERO, chapel)
+	for x in [-1.0, 1.0]:
+		for z in [-1.0, 1.0]:
+			_box(Vector3(x * (width * 0.5 - 0.08), height * 0.5 + 0.28, z * (depth * 0.5 - 0.08)), Vector3(0.20, height + 0.08, 0.20), _materials["stone"] if chapel else _materials["wood"], root)
+	if chapel:
+		var tower := Vector3(-width * 0.27, 0, -depth * 0.23)
+		_box(tower + Vector3(0, 3.9, 0), Vector3(1.7, 7.8, 1.7), _materials["stone"], root)
+		var spire := CylinderMesh.new()
+		spire.top_radius = 0.0
+		spire.bottom_radius = 1.35
+		spire.height = 2.5
+		spire.radial_segments = 4
+		var tip := _mesh(spire, _materials["slate"], tower + Vector3(0, 9.05, 0), root)
+		tip.rotation.y = PI * 0.25
+	else:
+		_box(Vector3(width * 0.27, height + 1.4, -depth * 0.18), Vector3(0.75, 2.2, 0.75), _materials["stone"], root)
+
+
+func _window(parent: Node3D, at: Vector3, pointed: bool) -> void:
+	var shape := PackedVector2Array([Vector2(-0.48, -0.75), Vector2(0.48, -0.75), Vector2(0.48, 0.45), Vector2(0, 0.95), Vector2(-0.48, 0.45)]) if pointed else PackedVector2Array([Vector2(-0.48, -0.65), Vector2(0.48, -0.65), Vector2(0.48, 0.65), Vector2(-0.48, 0.65)])
+	_polygon(shape, at, 0.16, _materials["stone"] if pointed else _materials["wood"], parent)
+	var inside := PackedVector2Array()
+	for point in shape:
+		inside.append(point * 0.78)
+	_polygon(inside, at + Vector3(0, 0, 0.10), 0.025, _materials["glass"], parent)
+	_box(at + Vector3(0, -0.05, 0.13), Vector3(0.045, 1.3, 0.03), _materials["stone"] if pointed else _materials["wood"], parent)
+	_box(at + Vector3(0, -0.18, 0.13), Vector3(0.8, 0.045, 0.03), _materials["stone"] if pointed else _materials["wood"], parent)
+
+
+func _polygon(points: PackedVector2Array, at: Vector3, thickness: float, material: Material, parent: Node3D) -> void:
+	var polygon := CSGPolygon3D.new()
+	polygon.polygon = points
+	polygon.depth = thickness
+	polygon.material = material
+	parent.add_child(polygon)
+	polygon.position = at
+
+
+func _build_fountain() -> void:
+	var center := ground_position(game.village.fountain.position)
+	var basin := CylinderMesh.new()
+	basin.top_radius = 1.5
+	basin.bottom_radius = 1.6
+	basin.height = 0.35
+	basin.radial_segments = 16
+	_mesh(basin, _materials["stone"], center + Vector3(0, 0.175, 0))
+	var water := CylinderMesh.new()
+	water.top_radius = 1.32
+	water.bottom_radius = 1.32
+	water.height = 0.04
+	water.radial_segments = 24
+	_mesh(water, _materials["water"], center + Vector3(0, 0.36, 0))
+	var pillar := CylinderMesh.new()
+	pillar.top_radius = 0.22
+	pillar.bottom_radius = 0.36
+	pillar.height = 1.7
+	_mesh(pillar, _materials["stone"], center + Vector3(0, 1.0, 0))
+
+
+func _build_residents() -> void:
+	# Residents stay their reviewed 2D art for this small comparison; the hero is skeletal3D.
+	for label: String in game.village.npc_nodes:
+		var resident: Villager = game.village.npc_nodes[label]
+		var definition: Dictionary = NpcArt.data()["people"][NpcArt.identity(label)]
+		var source: Array = definition["source"]
+		var foot: Array = definition["foot"]
+		var texture: Texture2D = load("res://" + str(NpcArt.data()["atlas"]["path"]))
+		var frame := Rect2(source[0], source[1], source[2], source[3])
+		var factor := Villager.BODY_HEIGHT / float(definition["ref_height"])
+		var destination := Rect2(-Vector2(foot[0], foot[1]) * factor, frame.size * factor)
+		var card := _new_card(texture, frame, false)
+		_cards[resident.get_instance_id()] = {"node": card, "owner": weakref(resident), "rect": destination, "static": true}
+
+
+func _load_actor() -> void:
+	_native_mage = GameState.hero_class == "mage"
+	if not _native_mage:
+		var sprite: ActorSprite = game.player.sprite
+		var atlas: ActorAtlas = sprite.atlas if sprite.atlas != null else game.player.atlas
+		actor = _new_card(atlas.texture, atlas.regions[sprite.frame], false)
+		return
+	if not ResourceLoader.exists(MAGE_PATH):
+		push_warning("3D comparison awaits its verified skeletal mage asset")
+		return
+	var scene := load(MAGE_PATH) as PackedScene
+	actor = scene.instantiate() as Node3D
+	stage.add_child(actor)
+	# Preserve the verified imported skeletal transform. Runtime down-scaling
+	# currently loses the model in Compatibility; final proportion needs an
+	# offline rig/mesh bake instead of changing this root's scale.
+	for child in actor.find_children("*", "MeshInstance3D", true, false):
+		_actor_meshes.append(child as MeshInstance3D)
+	if _actor_flash_shader == null:
+		_actor_flash_shader = Shader.new()
+		_actor_flash_shader.code = ACTOR_FLASH_CODE
+	_actor_flash = ShaderMaterial.new()
+	_actor_flash.shader = _actor_flash_shader
+	animation = _find_animation(actor)
+	if animation != null:
+		_hero_motion = Ortho3DHeroMotion.new().setup(animation, actor)
+
+
+func _find_animation(node: Node) -> AnimationPlayer:
+	if node is AnimationPlayer:
+		return node as AnimationPlayer
+	for child in node.get_children():
+		var found := _find_animation(child)
+		if found != null:
+			return found
+	return null
+
+
+func _sync_camera() -> void:
+	var focus_point: Vector2 = game.camera.get_screen_center_position()
+	var focus := ground_position(focus_point, surface_height(game.player.position))
+	camera.position = focus + CAMERA_DIRECTION * 30.0
+	camera.look_at(focus, Vector3.UP)
+	# Read the actual2D rendering viewport/zoom; low-quality's half-size cancels its half zoom.
+	var source_view: Vector2 = game.scene_view.get_visible_rect().size
+	camera.size = source_view.y / pixels_per_meter(game.camera.zoom.y)
+	# Orthographic directional shadows ignore max_distance and cover the entire
+	# camera depth slab. Fit visible flat ground plus up to11.5m architecture so
+	# the1024 map resolves feet without clipping tall roofs at minimum zoom.
+	var focus_depth := CAMERA_DIRECTION.length() * 30.0
+	var ground_depth := camera.size * 0.5 * sqrt(2.0)
+	camera.near = maxf(0.05, focus_depth - ground_depth - 20.0)
+	camera.far = focus_depth + ground_depth + 4.0
+
+
+func _process(delta: float) -> void:
+	_mode_badge.visible = not game.hud.panel_open()
+	if not _sync_scope():
+		return
+	var frozen := get_tree().paused
+	_sync_camera()
+	if not frozen or not _was_paused:
+		_sync_actor(0.0 if frozen else delta)
+	_sync_cards()
+	_fortification.sync()
+	_level_up_fx.sync()
+	_affordances.sync()
+	_world_environment.sync(0.0 if frozen else delta, frozen)
+	if not frozen:
+		if _contact_fresh:
+			_contact_fresh = false
+		else:
+			_contact_time = maxf(0.0, _contact_time - delta)
+	_was_paused = frozen
+	contact_light.visible = _contact_time > 0.0
+	contact_light.light_energy = _contact_energy * pow(_contact_time / 0.22, 2.0) * (0.35 if Prefs.reduce_motion else 1.0)
+	_probe_clock += delta
+	if _probe_clock >= 0.5:
+		_probe_clock = 0.0
+		_publish_probe()
+
+
+## This independent project has one spatial renderer in every stage-one scope.
+func _sync_scope() -> bool:
+	if _scope_is_cave != game.dungeon.active:
+		_scope_is_cave = game.dungeon.active
+		_contact_time = 0.0
+		_contact_fresh = false
+		contact_light.visible = false
+	_mode_label.text = "3D 동굴" if game.dungeon.active else "3D 숲"
+	_native_visible = true
+	display.visible = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	game.set_forest_rendered(false)
+	return true
+
+
+func set_enabled(_value: bool) -> void:
+	# Kept as a compatibility adapter for old startup calls; never activates a2D renderer.
+	enabled = true
+	_sync_scope()
+	_sync_camera()
+	_was_paused = false
+
+
+func surface_height(point: Vector2) -> float:
+	var spatial: Node = game.get("spatial_world")
+	if is_instance_valid(spatial) and spatial.has_method("height_at"):
+		return float(spatial.height_at(point))
+	if game.dungeon.active:
+		return 0.0
+	# Only used while the backend is being attached after the presenter becomes ready.
+	for surface: Dictionary in SpatialWorld3D.terrain_surfaces(game.village):
+		if SpatialWorld3D._contains(surface["top"], point):
+			return SpatialWorld3D._surface_height(surface, point)
+	return 0.0
+
+
+func _publish_probe() -> void:
+	if not OS.has_feature("web"):
+		return
+	if _batch_gpu_error < 0.0:
+		_batch_gpu_error = Ortho3DStaticBatch.corner_error(_static_batch)
+	var calls := viewport.get_render_info(Viewport.RENDER_INFO_TYPE_VISIBLE, Viewport.RENDER_INFO_DRAW_CALLS_IN_FRAME)
+	var physics: SpatialWorld3D = game.get("spatial_world")
+	var ready := actor != null and (animation != null or not _native_mage) and calls > 0 and physics != null and physics.physics_ticks > 0
+	var eye := camera.global_transform.basis.z.normalized()
+	var report := {"ready": ready, "native_active": _native_visible, "native_width": viewport.size.x, "native_height": viewport.size.y,
+		"quality": "low" if Prefs.low_resolution else "high", "spatial_draw_calls": calls,
+		"spatial_primitives": viewport.get_render_info(Viewport.RENDER_INFO_TYPE_VISIBLE, Viewport.RENDER_INFO_PRIMITIVES_IN_FRAME),
+		"shadow_draw_calls": viewport.get_render_info(Viewport.RENDER_INFO_TYPE_SHADOW, Viewport.RENDER_INFO_DRAW_CALLS_IN_FRAME),
+		"shadow_primitives": viewport.get_render_info(Viewport.RENDER_INFO_TYPE_SHADOW, Viewport.RENDER_INFO_PRIMITIVES_IN_FRAME),
+		"static_boxes": int(_static_batch.get("boxes", 0)), "static_groups": int(_static_batch.get("groups", 0)),
+		"batch_corner_error_m": _batch_gpu_error,
+		"physics_bodies": physics.actor_bodies.size() if physics != null else 0,
+		"physics_ticks": physics.physics_ticks if physics != null else 0,
+		"level_up_fx": _level_up_fx._entries.size() if _level_up_fx != null else 0,
+		"native_trees": _trees.get_meta("native_tree_report")["source_count"] if _trees != null else 0,
+		"gate_progress": _fortification.gates.map(func(gate: Dictionary): return gate["progress"]) if _fortification != null else [],
+		"actor_scale": [actor.scale.x, actor.scale.y, actor.scale.z],
+		"actor_position": [actor.position.x, actor.position.y, actor.position.z],
+		"azimuth": rad_to_deg(atan2(eye.x, eye.z)), "elevation": rad_to_deg(asin(eye.y)),
+		"projection": "orthographic", "simulation": "3d", "scope": "cave" if game.dungeon.active else "forest", "skeletal_actor": _native_mage and actor != null and animation != null,
+		"actor_mode": "skeletal_mage" if _native_mage else "warrior_spatial_card",
+		"animation": _hero_motion.snapshot() if _hero_motion != null else {}}
+	JavaScriptBridge.eval("window.__sjrpg3dProbe = " + JSON.stringify(report))
+	if ready and not _ready_published:
+		_ready_published = true
+		JavaScriptBridge.eval("window.__sjrpg3dReady = true")
+
+
+func _sync_actor(delta: float) -> void:
+	var player: Player = game.player
+	if actor == null:
+		return
+	if not _native_mage:
+		var sprite: ActorSprite = player.sprite
+		var atlas: ActorAtlas = sprite.atlas if sprite.atlas != null else player.atlas
+		var frame: Rect2 = atlas.regions[sprite.frame]
+		var factor := sprite.body_height / atlas.ref_height
+		var destination := Rect2(-atlas.anchors[sprite.frame] * factor, frame.size * factor)
+		var mesh := actor as MeshInstance3D
+		_set_card_frame(mesh, atlas.texture, frame)
+		_set_actor_card(mesh, sprite)
+		_place_card(mesh, player.position + sprite.position, destination, 0.0, actor_foot(player) + ground_position(sprite.position))
+		return
+	actor.position = actor_foot(player) + ground_position(player.sprite.position)
+	if _actor_flash != null:
+		_actor_flash.set_shader_parameter("flash_color", player.sprite.flash_tint.lerp(Color.WHITE, 0.35))
+		_actor_flash.set_shader_parameter("flash_strength", 0.65 * player.sprite.flash)
+		for mesh in _actor_meshes:
+			mesh.material_overlay = _actor_flash if player.sprite.flash > 0.0 else null
+	var direction := ground_position(Vector2.from_angle(player.facing))
+	actor.rotation.y = atan2(direction.x, direction.z)
+	if _hero_motion != null:
+		_hero_motion.sync(player, delta, get_tree().paused)
+
+
+func actor_foot(source: Node2D) -> Vector3:
+	var spatial: Node = game.get("spatial_world")
+	if is_instance_valid(spatial) and spatial.has_method("actor_foot"):
+		return spatial.actor_foot(source)
+	return ground_position(source.position, surface_height(source.position))
+
+
+func _new_card(texture: Texture2D, frame: Rect2, additive: bool) -> MeshInstance3D:
+	if _card_shader == null:
+		_card_shader = Shader.new()
+		_card_shader.code = CARD_CODE
+		_add_shader = Shader.new()
+		# Only authored VFX retain overlay ordering below/above their foot pivot.
+		_add_shader.code = CARD_CODE.replace("blend_mix, depth_draw_never", "blend_add, depth_draw_never, depth_test_disabled")
+	var ink := ShaderMaterial.new()
+	ink.shader = _add_shader if additive else _card_shader
+	var plane := QuadMesh.new()
+	var card := _mesh(plane, ink, Vector3.ZERO)
+	card.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_set_card_frame(card, texture, frame)
+	return card
+
+
+func _set_card_frame(card: MeshInstance3D, texture: Texture2D, frame: Rect2) -> void:
+	var ink := card.material_override as ShaderMaterial
+	var size := texture.get_size()
+	ink.set_shader_parameter("atlas_texture", texture)
+	ink.set_shader_parameter("atlas_rect", Vector4(frame.position.x / size.x, frame.position.y / size.y, frame.size.x / size.x, frame.size.y / size.y))
+	ink.set_shader_parameter("frame_blend", 0.0)
+
+
+func _set_actor_card(card: MeshInstance3D, sprite: ActorSprite) -> void:
+	var ink := card.material_override as ShaderMaterial
+	ink.set_shader_parameter("tint", Color(sprite.tint, sprite.modulate.a * sprite.self_modulate.a))
+	ink.set_shader_parameter("flash_color", sprite.flash_tint.lerp(Color.WHITE, 0.35))
+	ink.set_shader_parameter("flash_strength", 0.65 * sprite.flash)
+
+
+func _place_card(card: MeshInstance3D, at: Vector2, rect: Rect2, angle := 0.0, native_foot := Vector3(INF, INF, INF)) -> void:
+	var factor := GROUND_PER_METER * PROJECTION_FACTOR
+	(card.mesh as QuadMesh).size = rect.size / factor
+	var offset := rect.get_center() / factor
+	var basis := camera.global_transform.basis * Basis(Vector3(0, 0, 1), -angle)
+	card.global_transform.basis = basis
+	var foot := native_foot if native_foot.is_finite() else ground_position(at, surface_height(at))
+	card.position = foot + basis.x * offset.x - basis.y * offset.y
+
+
+func _sync_cards() -> void:
+	for id in _cards.keys():
+		var entry: Dictionary = _cards[id]
+		var owner: Node2D = entry["owner"].get_ref()
+		if owner == null or owner.is_queued_for_deletion():
+			entry["node"].queue_free()
+			_cards.erase(id)
+			continue
+		if owner is Enemy:
+			(entry["node"] as MeshInstance3D).visible = owner.get_parent() == game.world
+			_sync_enemy_card(entry["node"], owner)
+		elif owner is Effect:
+			(entry["node"] as MeshInstance3D).visible = owner.get_parent() == game.world
+		if entry.get("static", false):
+			_place_card(entry["node"], owner.position, entry["rect"])
+			if owner is Villager:
+				var ink := (entry["node"] as MeshInstance3D).material_override as ShaderMaterial
+				ink.set_shader_parameter("flash_color", Color(1.0, 0.45, 0.4).lerp(Color.WHITE, 0.35))
+				ink.set_shader_parameter("flash_strength", 0.65 * owner._hurt_flash)
+	for candidate in game.enemies:
+		if not is_instance_valid(candidate) or candidate.is_queued_for_deletion():
+			continue
+		var enemy := candidate as Enemy
+		var id := enemy.get_instance_id()
+		var sprite: ActorSprite = enemy.sprite
+		var atlas: ActorAtlas = sprite.atlas
+		if atlas == null or sprite.frame >= atlas.regions.size():
+			continue
+		if not _cards.has(id):
+			_cards[id] = {"node": _new_card(atlas.texture, atlas.regions[sprite.frame], false), "owner": weakref(enemy), "static": false}
+		_sync_enemy_card(_cards[id]["node"], enemy)
+	for node in game.world.get_children():
+		var effect := node as Effect
+		if effect == null or effect.is_queued_for_deletion():
+			continue
+		var id := effect.get_instance_id()
+		if effect.kind == "text":
+			if not _labels.has(id):
+				var fresh_label := Label3D.new()
+				fresh_label.font = UiKit.BOLD_FONT
+				fresh_label.font_size = 22
+				fresh_label.outline_size = 5
+				fresh_label.pixel_size = 1.0 / (GROUND_PER_METER * PROJECTION_FACTOR)
+				fresh_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+				fresh_label.no_depth_test = true
+				# Combat text sits above foreground foliage, like the source2D z20.
+				fresh_label.render_priority = 20
+				stage.add_child(fresh_label)
+				_labels[id] = {"node": fresh_label, "owner": weakref(effect)}
+			var label: Label3D = _labels[id]["node"]
+			label.text = effect.text
+			label.modulate = Color(effect.color, clampf(2.0 - effect.age / effect.life * 2.0, 0.0, 1.0))
+			label.position = ground_position(effect.position, surface_height(effect.position))
+			continue
+		if effect.kind == "impact" and not _seen_impacts.has(id):
+			_seen_impacts[id] = weakref(effect)
+			_contact_time = 0.22
+			_contact_fresh = true
+			_contact_energy = 5.5
+			contact_light.position = spatial_position(effect.position, 0.9) + Vector3.UP * surface_height(effect.position)
+			if effect.has_method("native_position"):
+				contact_light.position = effect.native_position() + Vector3.UP * (0.15 if is_finite(effect.spatial_height) else 0.9)
+			var colors := [Color(1, 0.75, 0.45), Color(1, 0.36, 0.08), Color(0.65, 0.5, 1), Color(0.25, 0.65, 1)]
+			contact_light.light_color = colors[int(effect.params.get("cell", 0))]
+		var key: String = str(effect.params.get("visual", ""))
+		if effect.kind == "slash":
+			key = "slash"
+		var impact := effect.kind in ["impact", "cast", "release"]
+		if not impact and key not in ["slash", "spin", "slam", "bolt", "frost", "meteor"]:
+			continue
+		if effect.kind == "zone":
+			continue
+		var phase := effect.visual_phase()
+		var time := clampf(effect.age / effect.life, 0.0, 1.0)
+		var alpha := (0.35 if Prefs.reduce_motion else (0.58 if key == "frost" else 0.78)) * (1.0 - smoothstep(0.6, 1.0, time))
+		var width := effect.radius * (1.4 if key == "frost" else 2.0)
+		var angle := 0.0
+		if effect.kind == "slash":
+			width = effect.radius * 1.7
+			angle = effect.angle
+			alpha = (0.48 if Prefs.reduce_motion else 0.85) * (1.0 - 0.4 * time)
+		elif effect.kind == "proj":
+			width = 110.0
+			angle = effect.velocity.angle()
+			phase = 1.0 / 3.0 if Prefs.reduce_motion else 0.32 + 0.06 * sin(effect.age * 20.0)
+			alpha = 0.65 if Prefs.reduce_motion else 0.9
+		if effect.kind == "impact":
+			width = effect.radius * (0.86 if Prefs.reduce_motion else lerpf(0.64, 1.16, ease(time, 0.3)))
+			angle = 0.0 if Prefs.reduce_motion else effect.angle
+			alpha = pow(1.0 - clampf((time - 0.10) / 0.90, 0.0, 1.0), 1.6) * (0.58 if Prefs.reduce_motion else 0.95)
+		elif effect.kind == "cast":
+			width = 38.0
+			phase = 1.0 / 3.0 if Prefs.reduce_motion else lerpf(0.08, 0.28, time)
+			alpha = pow(1.0 - time, 0.7) * (0.45 if Prefs.reduce_motion else 0.72)
+		elif effect.kind == "release":
+			width = 38.0 if Prefs.reduce_motion else 42.0 + 8.0 * time
+			alpha = (0.32 if Prefs.reduce_motion else 0.7) * (1.0 - time)
+		var columns := PresentationArt.impact_columns(phase)
+		var frame := PresentationArt.impact_frame(int(effect.params.get("cell", 0)), int(columns.x)) if impact else ReferenceFxArt.frame(key, int(columns.x))
+		var next := PresentationArt.impact_frame(int(effect.params.get("cell", 0)), int(columns.y)) if impact else ReferenceFxArt.frame(key, int(columns.y))
+		var texture: Texture2D = load("res://" + str(PresentationArt.data()["impact"]["path"])) if impact else ReferenceFxArt.texture(key)
+		if not _cards.has(id):
+			if _cards.size() > 96:
+				continue
+			_cards[id] = {"node": _new_card(texture, frame, true), "owner": weakref(effect), "static": false}
+		var card: MeshInstance3D = _cards[id]["node"]
+		var material := card.material_override as ShaderMaterial
+		_set_card_frame(card, texture, frame)
+		var size := texture.get_size()
+		material.set_shader_parameter("next_rect", Vector4(next.position.x / size.x, next.position.y / size.y, next.size.x / size.x, next.size.y / size.y))
+		material.set_shader_parameter("frame_blend", columns.z)
+		material.set_shader_parameter("tint", Color(1, 1, 1, alpha))
+		var rect := Rect2(Vector2.ONE * -width * 0.5, Vector2.ONE * width) if impact else ReferenceFxArt.rect(key, width)
+		if effect.kind == "slash":
+			var sweep := clampf(float(effect.params.get("arc", 1.2)) / 1.2, 0.45, 1.2)
+			rect.position.y *= sweep
+			rect.size.y *= sweep
+		var native_effect := Vector3(INF, INF, INF)
+		if effect.has_method("native_position"):
+			native_effect = effect.native_position()
+		_place_card(card, effect.position, rect, angle, native_effect)
+	for id in _seen_impacts.keys():
+		if _seen_impacts[id].get_ref() == null:
+			_seen_impacts.erase(id)
+	for id in _labels.keys():
+		var owner: Node = _labels[id]["owner"].get_ref()
+		if owner == null or owner.is_queued_for_deletion():
+			_labels[id]["node"].queue_free()
+			_labels.erase(id)
+		else:
+			(_labels[id]["node"] as Label3D).visible = owner.get_parent() == game.world
+
+
+func _sync_enemy_card(card: MeshInstance3D, enemy: Enemy) -> void:
+	var sprite: ActorSprite = enemy.sprite
+	var atlas: ActorAtlas = sprite.atlas
+	if atlas == null or sprite.frame >= atlas.regions.size():
+		return
+	var frame: Rect2 = atlas.regions[sprite.frame]
+	var factor := sprite.body_height / atlas.ref_height
+	var rect := Rect2(-atlas.anchors[sprite.frame] * factor, frame.size * factor)
+	_set_card_frame(card, atlas.texture, frame)
+	_set_actor_card(card, sprite)
+	_place_card(card, enemy.position + sprite.position, rect, 0.0, actor_foot(enemy) + ground_position(sprite.position))

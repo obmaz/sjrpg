@@ -1,0 +1,224 @@
+{
+ "version": 1,
+ "source": "assets/source/npcs/identities.png",
+ "source_sha256": "c1d71b2fb5dd9ae3477b546fc3056b6dd7610f91072a0ccbd5a68522f0eb0616",
+ "source_size": [
+  1536,
+  1024
+ ],
+ "references": [
+  "assets/source/style/approved-game-reference.jpg",
+  "assets/source/hero-selection.png"
+ ],
+ "people": {
+  "merchant": {
+   "roi": [
+    94,
+    4,
+    314,
+    506
+   ],
+   "foot": [
+    167.036,
+    498
+   ],
+   "visible_bounds": [
+    102,
+    12,
+    306,
+    498
+   ],
+   "visible_height": 486,
+   "contact_method": "x is alpha>10 centroid of lowest7percent of body; y is lowest painted sole row+1; source grid is unmodified.",
+   "source_cell": [
+    0,
+    0,
+    384,
+    512
+   ]
+  },
+  "smith": {
+   "roi": [
+    461,
+    1,
+    693,
+    508
+   ],
+   "foot": [
+    533.808,
+    500
+   ],
+   "visible_bounds": [
+    469,
+    9,
+    685,
+    500
+   ],
+   "visible_height": 491,
+   "contact_method": "x is alpha>10 centroid of lowest7percent of body; y is lowest painted sole row+1; source grid is unmodified.",
+   "source_cell": [
+    384,
+    0,
+    768,
+    512
+   ]
+  },
+  "stable": {
+   "roi": [
+    876,
+    9,
+    1089,
+    509
+   ],
+   "foot": [
+    920.208,
+    501
+   ],
+   "visible_bounds": [
+    884,
+    17,
+    1081,
+    501
+   ],
+   "visible_height": 484,
+   "contact_method": "x is alpha>10 centroid of lowest7percent of body; y is lowest painted sole row+1; source grid is unmodified.",
+   "source_cell": [
+    768,
+    0,
+    1152,
+    512
+   ]
+  },
+  "elder": {
+   "roi": [
+    1237,
+    3,
+    1466,
+    508
+   ],
+   "foot": [
+    1319.855,
+    500
+   ],
+   "visible_bounds": [
+    1245,
+    11,
+    1458,
+    500
+   ],
+   "visible_height": 489,
+   "contact_method": "x is alpha>10 centroid of lowest7percent of body; y is lowest painted sole row+1; source grid is unmodified.",
+   "source_cell": [
+    1152,
+    0,
+    1536,
+    512
+   ]
+  },
+  "mira": {
+   "roi": [
+    90,
+    517,
+    302,
+    1021
+   ],
+   "foot": [
+    167.941,
+    1013
+   ],
+   "visible_bounds": [
+    98,
+    525,
+    294,
+    1013
+   ],
+   "visible_height": 488,
+   "contact_method": "x is alpha>10 centroid of lowest7percent of body; y is lowest painted sole row+1; source grid is unmodified.",
+   "source_cell": [
+    0,
+    512,
+    384,
+    1024
+   ]
+  },
+  "elin": {
+   "roi": [
+    480,
+    513,
+    674,
+    1020
+   ],
+   "foot": [
+    567.772,
+    1012
+   ],
+   "visible_bounds": [
+    488,
+    521,
+    666,
+    1012
+   ],
+   "visible_height": 491,
+   "contact_method": "x is alpha>10 centroid of lowest7percent of body; y is lowest painted sole row+1; source grid is unmodified.",
+   "source_cell": [
+    384,
+    512,
+    768,
+    1024
+   ]
+  },
+  "noah": {
+   "roi": [
+    827,
+    524,
+    1068,
+    1020
+   ],
+   "foot": [
+    946.444,
+    1012
+   ],
+   "visible_bounds": [
+    835,
+    532,
+    1060,
+    1012
+   ],
+   "visible_height": 480,
+   "contact_method": "x is alpha>10 centroid of lowest7percent of body; y is lowest painted sole row+1; source grid is unmodified.",
+   "source_cell": [
+    768,
+    512,
+    1152,
+    1024
+   ]
+  },
+  "rowen": {
+   "roi": [
+    1236,
+    512,
+    1466,
+    1023
+   ],
+   "foot": [
+    1313.983,
+    1015
+   ],
+   "visible_bounds": [
+    1244,
+    520,
+    1458,
+    1015
+   ],
+   "visible_height": 495,
+   "contact_method": "x is alpha>10 centroid of lowest7percent of body; y is lowest painted sole row+1; source grid is unmodified.",
+   "source_cell": [
+    1152,
+    512,
+    1536,
+    1024
+   ]
+  }
+ },
+ "review": "Eight distinct full human bodies; alpha0 between characters and around all boots/props. Source alpha is preserved with premultiplied-alpha mechanical downsample; no painted or generated replacement pixels in packing."
+}

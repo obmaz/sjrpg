@@ -1,0 +1,9 @@
+{
+ "version": 1,
+ "extent": 3200.0,
+ "previous_extent": 2400.0,
+ "npc_body_height": 112.0,
+ "foreground_wall_margin": 24.0,
+ "reason": "Foreground wall art is approximately280screen-worldpixels tall. Previous service residents stood only46–116pixels behind its projected front edge. Expand the actual town perimeter while preserving each measured building/chapel world centre and scale; derive new UVs rather than offsetting actors with fake draw order.",
+ "scope": "Stage1town walls, gatepoints, roads and safe zone follow actual extent. Building source warps/native dimensions and field landmark world positions remain unchanged. Runtime visibility tests must compare painted wall quads against body/building bounds."
+}

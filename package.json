@@ -1,0 +1,6 @@
+{
+  "name": "sjrpg-workspace",
+  "private": true,
+  "scripts": {"test:portal": "node tools/test_portal.mjs"},
+  "devDependencies": {"playwright": "1.62.1"}
+}

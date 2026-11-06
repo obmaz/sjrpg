@@ -1,0 +1,71 @@
+{
+ "generator": "image_gen.imagegen",
+ "date_client": "2026-11-06",
+ "status": "Parent approved a bounded technical trial only; actual gameplay before/after review pending. Default remains off.",
+ "original_generation_path": "/workspace/generated_images/exec-73a4accc-1aa7-4a30-8042-fde1a2e13487.png",
+ "output": {
+  "path": "assets/source/atmosphere/sunshaft-candidate.png",
+  "sha256": "1da02f81c3ef14a9e36a32ce279694fd8d073478788a099b52a304cc13fc88ce",
+  "size": [
+   1254,
+   1254
+  ]
+ },
+ "references": [
+  {
+   "path": "assets/source/style/approved-game-reference.jpg",
+   "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+   "size": [
+    714,
+    1280
+   ],
+   "role": "authoritative user atmosphere reference"
+  },
+  {
+   "path": "assets/source/atmosphere/reference-current.png",
+   "sha256": "6b4a9970dbaced0ca978f26ccae0c31c52133492acdddd208b7638677be2577e",
+   "size": [
+    714,
+    1280
+   ],
+   "role": "actual published game capture used as current integration context; not user style approval"
+  }
+ ],
+ "review": {
+  "candidate": "One broad warm-neutral diffuse shaft plus two quieter separated diagonal rays and sparse dust; no scenery, characters, HUD or dark cast-shadow plate.",
+  "border_40px_max_rgb": 2,
+  "border_40px_mean_rgb": [
+   0.08624900318979266,
+   0.039239433811802234,
+   0.015694776714513557
+  ],
+  "image_peak_rgb": [
+   245,
+   216,
+   165
+  ],
+  "limitations": "This is an isolated atmosphere asset, not a verified gameplay result. Broad central shaft may read as fog unless opacity and world placement are restrained. No 3D volume or occlusion claim."
+ },
+ "proposed_runtime": {
+  "blend": "ADD",
+  "max_draws": 3,
+  "anchor": "actual existing clearing openings; same shared sun direction (0.72,0.48)",
+  "layer": "above textured ground, below source-linked canopy shadows and actors; HUD remains separate",
+  "default": "unchanged until actual before/after screen review",
+  "opacity": [
+   0.3,
+   0.25
+  ],
+  "extra_dust_draws": 0,
+  "geometry": "Two uniformly scaled source-textured convex envelopes, preserving generated direction; max2draws, no particle nodes or additional rendering pass.",
+  "limitations": "Atmosphere is not recovered3D face lighting or true volumetric shadowing. No changes to existing daylight/contact shader math."
+ },
+ "prompt": "Create ONE production lighting-effect texture for the restrained realistic forest-fantasy game Guardians of Nature. The first attached image is the AUTHORITATIVE USER GAME REFERENCE, controlling the warm woodland daylight, deep cool shade, restrained bloom and fine sparse particles. The second attached image is the CURRENT ACTUAL GODOT GAME FRAME, supplied only to judge the needed lighting visibility and material scale. Do not copy its HUD, characters, buildings, ground, trees or text. The requested output is an isolated atmospheric LIGHT asset, not a new scene or an edited screenshot.\n\nOUTPUT: one square 1024x1024 image on mathematically pure RGB(0,0,0) black, intended for ADD blending. Only light contributes; unused black must contribute absolutely nothing. Keep at least 6 percent completely black padding on all four edges. No border, backdrop texture, gray matte, vignette, labels, UI, words, symbols, objects, or lens flare. No painted shadows, ground patch, foliage silhouettes or architectural objects. Do not render a white light disk or a solid yellow triangle.\n\nSUBJECT: a small naturalistic cluster of THREE separated soft woodland sunshafts and a sparse scattering of tiny dust motes. Warm neutral ivory/champagne light, not saturated orange or fluorescent yellow. All three beams travel consistently from upper left toward lower right, at about 34 degrees below the image horizontal, agreeing with a screen-world sunlight direction (0.72,0.48). Their luminous path should stay roughly from x=0.15,y=0.27 to x=0.84,y=0.73, with unequal tapered lengths and organically softened ends that fade fully to black before the padding. One beam is moderately bright and broad, the other two are quieter thin companions with visible dark gaps between them. They are NOT lasers: no hard parallel edges, crisp white lines, electric arcs, streaking stars, sparks, flames, smoke plumes or god-ray fan originating from one blinding point. Let gentle broken variations of brightness along the shafts suggest filtered daylight without baking leaf/branch shadow shapes. Preserve fine low-opacity rays at the sides and a readable warm ivory core, avoiding broad opaque fog or a whole-image golden wash. Dust motes are a FEW isolated irregular softly focused pinpricks near the shafts, warm ivory, quiet, not glitter confetti or an evenly distributed starfield. A real game character silhouette and paving details must remain clearly readable when this texture is added at low-to-moderate opacity.\n\nThis is an atmosphere effect to be anchored only at actual world clearing openings, behind actors and separate from the real tree-caster shadow layer. Keep light direction consistent with orthographic true isometric 2.5D gameplay (ground axes +/-30 degrees, verticals upright); do not bake a perspective camera, ground grid, rectangle or cast shadow into the light texture. Contemporary realistic hand-finished fantasy lighting detail, not cartoon, not sci-fi, no exaggerated bloom. One coherent reusable isolated effect only.",
+ "settings": {
+  "transparent_background": false,
+  "referenced_image_paths": [
+   "/workspace/sjrpg2/assets/source/style/approved-game-reference.jpg",
+   "/tmp/stage1-review/published-refined-portrait.png"
+  ]
+ }
+}
