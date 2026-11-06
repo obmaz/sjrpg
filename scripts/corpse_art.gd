@@ -8,6 +8,10 @@ static var _sheet: Texture2D
 var corpse: Dictionary
 
 
+func _ready() -> void:
+	add_to_group("daylight_bodies")
+
+
 func _draw() -> void:
 	draw(self, corpse)
 
@@ -29,5 +33,5 @@ static func draw(canvas: Node2D, corpse: Dictionary) -> void:
 	# Reflection selects the other diagonal without tilting a body out of the ground plane.
 	var flip := -1.0 if cos(float(corpse.get("facing", 0.0))) > 0.0 else 1.0
 	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2(flip, 1.0))
-	canvas.draw_texture_rect_region(_sheet, Rect2(Vector2.ONE * -width * 0.5, Vector2.ONE * width), Rect2(cell * 256, 0, 256, 256), Color(1, 1, 1, alpha))
+	canvas.draw_texture_rect_region(_sheet, Rect2(Vector2.ONE * -width * 0.5, Vector2.ONE * width), Rect2(cell * 256, 0, 256, 256), WorldLighting.color_at(canvas.global_position) * Color(1, 1, 1, alpha))
 	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

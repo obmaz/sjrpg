@@ -1,0 +1,624 @@
+{
+ "version": 1,
+ "sources": [
+  {
+   "path": "assets/source/reference-fx/family-concept.png",
+   "sha256": "17fd124680ee05e26f132c62dd63a6fcd4d48157c43b8f256e95e9430f0e7a66"
+  },
+  {
+   "path": "assets/source/reference-fx/skill-sheet.png",
+   "sha256": "02ae223f6144e6a69985de4c90bbcbb1061b75835b69fc77974ea7185ed96dd2"
+  },
+  {
+   "path": "assets/source/reference-fx/frost-low.png",
+   "sha256": "14487ea4929571797372c76293e7d4e72ad506f152d8ce8d1b404a9ad2f87843"
+  }
+ ],
+ "reference": {
+  "path": "assets/source/style/approved-game-reference.jpg",
+  "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+ },
+ "family_reference": {
+  "path": "assets/source/impact-atlas.png",
+  "sha256": "9da7b2773ef0de3f2cd6a4fe6147a451717a7ad62b698ec86127793c3493c835"
+ },
+ "generation": {
+  "path": "tools/extract/reference_fx_generation.json",
+  "sha256": "321d09d56e61f96f7707f9ed6750f948ea46d3f3bea04e2c4bdffd4f64f20a5f"
+ },
+ "measure": {
+  "path": "tools/extract/reference_fx_measure.json",
+  "sha256": "fc29679246198532153aa0a78f2bddfc188ac4df0a26cd70ba1a2c9fb8da275f"
+ },
+ "atlas": {
+  "path": "assets/art/effects/reference-skills.webp",
+  "sha256": "ad99bb8d59c11d95128cac905be40d595fa3eced10528c99e2a949a9d978e71f",
+  "size": [
+   1536,
+   2304
+  ],
+  "cell": 384,
+  "columns": 4,
+  "rows": 6,
+  "blend": "add",
+  "phases": [
+   "onset",
+   "peak",
+   "fragments",
+   "tail"
+  ]
+ },
+ "effects": {
+  "slash": {
+   "row": 0,
+   "pivot": [
+    192,
+    192
+   ],
+   "paint_width": 195,
+   "source_frames": [
+    {
+     "roi": [
+      0,
+      0,
+      256,
+      256
+     ],
+     "contact": [
+      128,
+      136
+     ]
+    },
+    {
+     "roi": [
+      256,
+      0,
+      256,
+      256
+     ],
+     "contact": [
+      384,
+      136
+     ]
+    },
+    {
+     "roi": [
+      512,
+      0,
+      256,
+      256
+     ],
+     "contact": [
+      640,
+      136
+     ]
+    },
+    {
+     "roi": [
+      768,
+      0,
+      256,
+      256
+     ],
+     "contact": [
+      896,
+      136
+     ]
+    }
+   ],
+   "source": "assets/source/reference-fx/skill-sheet.png",
+   "packing_scale": 1.0,
+   "vertical_projection_scale": 1.0,
+   "frame_bounds": [
+    [
+     162,
+     149,
+     275,
+     250
+    ],
+    [
+     111,
+     111,
+     306,
+     278
+    ],
+    [
+     122,
+     108,
+     291,
+     280
+    ],
+    [
+     136,
+     123,
+     275,
+     260
+    ]
+   ],
+   "frame_energy": [
+    164589.92,
+    1270289.74,
+    287044.03,
+    41486.95
+   ]
+  },
+  "spin": {
+   "row": 1,
+   "pivot": [
+    192,
+    192
+   ],
+   "paint_width": 223,
+   "source_frames": [
+    {
+     "roi": [
+      0,
+      280,
+      256,
+      200
+     ],
+     "contact": [
+      134,
+      388
+     ]
+    },
+    {
+     "roi": [
+      256,
+      280,
+      256,
+      200
+     ],
+     "contact": [
+      392,
+      388
+     ]
+    },
+    {
+     "roi": [
+      512,
+      280,
+      256,
+      200
+     ],
+     "contact": [
+      641,
+      388
+     ]
+    },
+    {
+     "roi": [
+      768,
+      280,
+      256,
+      200
+     ],
+     "contact": [
+      895,
+      388
+     ]
+    }
+   ],
+   "source": "assets/source/reference-fx/skill-sheet.png",
+   "packing_scale": 1.0,
+   "vertical_projection_scale": 1.3727252952054785,
+   "frame_bounds": [
+    [
+     109,
+     119,
+     281,
+     241
+    ],
+    [
+     78,
+     94,
+     301,
+     273
+    ],
+    [
+     95,
+     96,
+     286,
+     270
+    ],
+    [
+     111,
+     119,
+     278,
+     263
+    ]
+   ],
+   "frame_energy": [
+    232513.94,
+    1800330.46,
+    493977.41,
+    55850.84
+   ]
+  },
+  "slam": {
+   "row": 2,
+   "pivot": [
+    192,
+    288
+   ],
+   "paint_width": 198,
+   "source_frames": [
+    {
+     "roi": [
+      0,
+      480,
+      256,
+      280
+     ],
+     "contact": [
+      134,
+      673
+     ]
+    },
+    {
+     "roi": [
+      256,
+      480,
+      256,
+      280
+     ],
+     "contact": [
+      385,
+      679
+     ]
+    },
+    {
+     "roi": [
+      512,
+      480,
+      256,
+      280
+     ],
+     "contact": [
+      638,
+      677
+     ]
+    },
+    {
+     "roi": [
+      768,
+      480,
+      256,
+      280
+     ],
+     "contact": [
+      896,
+      677
+     ]
+    }
+   ],
+   "source": "assets/source/reference-fx/skill-sheet.png",
+   "packing_scale": 1.0,
+   "vertical_projection_scale": 1.0,
+   "frame_bounds": [
+    [
+     121,
+     204,
+     263,
+     312
+    ],
+    [
+     96,
+     119,
+     294,
+     319
+    ],
+    [
+     102,
+     135,
+     278,
+     316
+    ],
+    [
+     119,
+     144,
+     268,
+     310
+    ]
+   ],
+   "frame_energy": [
+    226737.78,
+    1498949.34,
+    537164.83,
+    124892.43
+   ]
+  },
+  "bolt": {
+   "row": 3,
+   "pivot": [
+    288,
+    192
+   ],
+   "paint_width": 209,
+   "source_frames": [
+    {
+     "roi": [
+      0,
+      800,
+      256,
+      150
+     ],
+     "contact": [
+      184,
+      864
+     ]
+    },
+    {
+     "roi": [
+      256,
+      800,
+      256,
+      150
+     ],
+     "contact": [
+      482,
+      863
+     ]
+    },
+    {
+     "roi": [
+      512,
+      800,
+      256,
+      150
+     ],
+     "contact": [
+      736,
+      864
+     ]
+    },
+    {
+     "roi": [
+      768,
+      800,
+      256,
+      150
+     ],
+     "contact": [
+      989,
+      864
+     ]
+    }
+   ],
+   "source": "assets/source/reference-fx/skill-sheet.png",
+   "packing_scale": 1.0,
+   "vertical_projection_scale": 1.0,
+   "frame_bounds": [
+    [
+     169,
+     172,
+     303,
+     211
+    ],
+    [
+     85,
+     155,
+     294,
+     226
+    ],
+    [
+     94,
+     156,
+     291,
+     220
+    ],
+    [
+     99,
+     171,
+     278,
+     210
+    ]
+   ],
+   "frame_energy": [
+    139413.6,
+    571139.7,
+    241444.19,
+    22909.98
+   ]
+  },
+  "frost": {
+   "row": 4,
+   "pivot": [
+    192,
+    250
+   ],
+   "paint_width": 267,
+   "source_frames": [
+    {
+     "roi": [
+      40,
+      270,
+      463,
+      320
+     ],
+     "contact": [
+      275,
+      456
+     ]
+    },
+    {
+     "roi": [
+      583,
+      270,
+      463,
+      320
+     ],
+     "contact": [
+      816,
+      456
+     ]
+    },
+    {
+     "roi": [
+      1126,
+      270,
+      463,
+      320
+     ],
+     "contact": [
+      1359,
+      456
+     ]
+    },
+    {
+     "roi": [
+      1669,
+      270,
+      463,
+      320
+     ],
+     "contact": [
+      1901,
+      456
+     ]
+    }
+   ],
+   "source": "assets/source/reference-fx/frost-low.png",
+   "packing_scale": 0.72,
+   "vertical_projection_scale": 1.06,
+   "frame_bounds": [
+    [
+     71,
+     150,
+     315,
+     326
+    ],
+    [
+     54,
+     139,
+     321,
+     325
+    ],
+    [
+     47,
+     127,
+     321,
+     325
+    ],
+    [
+     64,
+     138,
+     317,
+     325
+    ]
+   ],
+   "frame_energy": [
+    986871.18,
+    2328361.79,
+    1081596.4,
+    478404.68
+   ],
+   "override": {
+    "path": "assets/art/effects/frost-low.webp",
+    "sha256": "8d9e8126084c4784206a1a43f13172bf3aefdce389ffa9dc6240c8ec1985a64b",
+    "cell": 384,
+    "row": 0,
+    "columns": 4,
+    "size": [
+     1536,
+     384
+    ],
+    "blend": "add"
+   },
+   "legacy_base_row_retained": true
+  },
+  "meteor": {
+   "row": 5,
+   "pivot": [
+    192,
+    288
+   ],
+   "paint_width": 186,
+   "source_frames": [
+    {
+     "roi": [
+      0,
+      1210,
+      256,
+      326
+     ],
+     "contact": [
+      134,
+      1427
+     ]
+    },
+    {
+     "roi": [
+      256,
+      1210,
+      256,
+      326
+     ],
+     "contact": [
+      385,
+      1430
+     ]
+    },
+    {
+     "roi": [
+      512,
+      1210,
+      256,
+      326
+     ],
+     "contact": [
+      640,
+      1430
+     ]
+    },
+    {
+     "roi": [
+      768,
+      1210,
+      256,
+      326
+     ],
+     "contact": [
+      897,
+      1430
+     ]
+    }
+   ],
+   "source": "assets/source/reference-fx/skill-sheet.png",
+   "packing_scale": 1.0,
+   "vertical_projection_scale": 1.0,
+   "frame_bounds": [
+    [
+     126,
+     158,
+     255,
+     308
+    ],
+    [
+     98,
+     122,
+     284,
+     315
+    ],
+    [
+     101,
+     121,
+     282,
+     312
+    ],
+    [
+     108,
+     136,
+     270,
+     309
+    ]
+   ],
+   "frame_energy": [
+    309599.84,
+    1719602.27,
+    619579.81,
+    113695.94
+   ]
+  }
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "version": 1,
+ "source": "assets/source/mobile-menu/icons.png",
+ "source_size": [2172, 724],
+ "method": "Dominant alpha>100 connected disk bounds, followed by equal540-square source crops centered on the visible medallions. Root source remains unchanged; packing only crops, resamples and pads.",
+ "cell": 256,
+ "icons": {
+  "bag": {"source_roi": [1,88,540,540], "dominant_alpha_bounds": [27,107,488,501]},
+  "skills": {"source_roi": [544,88,540,540], "dominant_alpha_bounds": [570,107,488,501]},
+  "quests": {"source_roi": [1087,88,540,540], "dominant_alpha_bounds": [1113,107,488,501]},
+  "settings": {"source_roi": [1631,88,540,540], "dominant_alpha_bounds": [1657,107,488,501]}
+ }
+}

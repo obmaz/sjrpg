@@ -11,6 +11,7 @@ var _feedback := ""
 var _install_button: Button
 var _install_hint: Label
 var _install_poll := 0.0
+var _zoom_buttons: Array[Button] = []
 
 
 func setup(g: Node) -> SettingsPanel:
@@ -27,6 +28,7 @@ func _ready() -> void:
 
 func _rebuild() -> void:
 	clear_body()
+	_zoom_buttons.clear()
 	if OS.has_feature("web"):
 		body.add_child(PanelFrame.section("기기에 설치"))
 		_install_button = _action_row("이 기기에 설치", _request_install)
@@ -36,6 +38,7 @@ func _rebuild() -> void:
 		_refresh_install()
 		body.add_child(UiKit.divider())
 	body.add_child(PanelFrame.section("화면과 타격감"))
+	body.add_child(_world_zoom_card())
 	body.add_child(_action_row("전체화면 끄기" if Prefs.is_fullscreen() else "전체화면 켜기", func():
 		Prefs.toggle_fullscreen()
 		_rebuild()))
@@ -118,6 +121,38 @@ func _action_row(text: String, on_press: Callable, enabled := true) -> Button:
 	b.disabled = not enabled
 	b.pressed.connect(on_press)
 	return b
+
+
+func _world_zoom_card() -> Control:
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UiKit.panel_style(UiKit.SURFACE, UiKit.EDGE, 12))
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
+	card.add_child(column)
+	column.add_child(UiKit.label("화면 확대", 22, UiKit.TEXT, true))
+	column.add_child(PanelFrame.wrap_label("배경·캐릭터의 크기를 조절합니다. 글자·버튼 크기는 유지됩니다.", 15, UiKit.MUTED))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	column.add_child(row)
+	var group := ButtonGroup.new()
+	for amount: float in Prefs.WORLD_ZOOMS:
+		var button := UiKit.button("%s×" % ("1" if is_equal_approx(amount, 1.0) else str(amount)), 22)
+		button.custom_minimum_size = Vector2(0, 76)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.toggle_mode = true
+		button.button_group = group
+		button.button_pressed = is_equal_approx(Prefs.world_zoom, amount)
+		button.set_meta("world_zoom", amount)
+		UiKit.style_button(button, false, button.button_pressed)
+		button.pressed.connect(_choose_world_zoom.bind(amount))
+		row.add_child(button)
+		_zoom_buttons.append(button)
+	return card
+
+
+func _choose_world_zoom(amount: float) -> void:
+	Prefs.set_world_zoom(amount)
+	_rebuild()
 
 
 ## A big switch row: label + hint on the left, ON/OFF pill on the right.

@@ -4,7 +4,7 @@ extends Node2D
 signal quit_requested
 signal restart_requested
 
-## Field in ground units (original scale): the 2400 town sits in the middle.
+## Field in ground units (original scale): the town perimeter is data-driven.
 const FIELD := Rect2(-3600, -3600, 7200, 7200)
 const CORPSE_LIFETIME := 30.0
 const CORPSE_LIMIT := 32
@@ -17,6 +17,7 @@ var _view_container: SubViewportContainer
 var world: Node2D
 var forest_details: Array[IsoSprite] = []
 var forest_lighting: ForestLighting
+var _fx_review_focus := Vector2.ZERO
 var player: Player
 var _impact_offset := Vector2.ZERO
 var _impact_fresh := false
@@ -26,6 +27,7 @@ var camera: Camera2D
 var hud: Hud
 var encounters: EncounterRuntime
 var village: Village
+var town_gates: TownGateRuntime
 var quest_runtime: QuestRuntime
 var exploration: Exploration
 var dungeon: DungeonRuntime
@@ -57,6 +59,7 @@ func _ready() -> void:
 	scene_root = _low_view if Prefs.low_resolution else self
 	scene_view = _low_view if Prefs.low_resolution else get_viewport()
 	field_root = Node2D.new()
+	field_root.add_to_group("forest_daylight")
 	scene_root.add_child(field_root)
 	dungeon = DungeonRuntime.new().setup(self)
 	add_child(dungeon)
@@ -91,6 +94,7 @@ func _ready() -> void:
 	forest_lighting = ForestLighting.new()
 	field_root.add_child(forest_lighting)
 	forest_lighting.setup(ground_layer, village)
+	WorldLighting.configure(forest_lighting.openings, field_root)
 	map_shapes = MapGeometry.build(village)
 	var chest_def: Dictionary = village.data["sprites"]["chest"]
 	var broken_def: Dictionary = village.data["sprites"]["chest-broken"]
@@ -115,6 +119,8 @@ func _ready() -> void:
 	player.position = dungeon.entry_point() if GameState.return_to_cave_entrance else exploration.respawn_point()
 	GameState.return_to_cave_entrance = false
 	world.add_child(player)
+	town_gates = TownGateRuntime.new().setup(self)
+	field_root.add_child(town_gates)
 
 	camera = Camera2D.new()
 	camera.position_smoothing_enabled = true
@@ -145,11 +151,13 @@ func _update_zoom() -> void:
 	# Keep characters similarly sized in portrait and landscape.
 	var short_side := minf(size.x, size.y)
 	var z := clampf(short_side / 720.0, 0.5, 1.6)
-	camera.zoom = Vector2(z, z) * CAMERA_WORLD_SCALE * _debug_zoom / (2.0 if Prefs.low_resolution else 1.0)
+	camera.zoom = Vector2(z, z) * CAMERA_WORLD_SCALE * Prefs.world_zoom * _debug_zoom / (2.0 if Prefs.low_resolution else 1.0)
 
 
 ## Keep the hero near 60% height in either orientation while revealing the scene ahead.
 func _camera_focus() -> Vector2:
+	if _fx_review_focus != Vector2.ZERO:
+		return _fx_review_focus
 	var view_height := scene_view.get_visible_rect().size.y
 	var lead := minf(110.0, view_height * 0.10 / maxf(0.01, camera.zoom.y))
 	return player.position + Vector2(0, -lead)
@@ -158,9 +166,11 @@ func _camera_focus() -> Vector2:
 func _update_render_quality() -> void:
 	scene_root = _low_view if Prefs.low_resolution else self
 	scene_view = _low_view if Prefs.low_resolution else get_viewport()
-	field_root.reparent(scene_root, false)
-	camera.reparent(scene_root, false)
-	if dungeon.active:
+	if field_root.get_parent() != scene_root:
+		field_root.reparent(scene_root, false)
+	if camera.get_parent() != scene_root:
+		camera.reparent(scene_root, false)
+	if dungeon.active and dungeon._root.get_parent() != scene_root:
 		dungeon._root.reparent(scene_root, false)
 	_view_container.visible = Prefs.low_resolution
 	if Prefs.low_resolution:
@@ -235,6 +245,7 @@ func _read_debug_params() -> void:
 			Prefs.set_low_resolution(kv[1] == "low")
 		elif kv.size() == 2 and kv[0] == "lighting":
 			forest_lighting.set_enabled(kv[1] != "off")
+			WorldLighting.set_enabled(forest_lighting.enabled)
 		elif kv.size() == 2 and kv[0] == "panel":
 			var which: String = kv[1]
 			get_tree().create_timer(1.5).timeout.connect(_debug_open_panel.bind(which))
@@ -248,6 +259,10 @@ func _read_debug_params() -> void:
 			_warp_preview.call_deferred()
 		elif kv.size() == 2 and kv[0] == "combat_preview":
 			_combat_preview.call_deferred()
+		elif kv.size() == 2 and kv[0] == "fx_preview" and kv[1] in ["cleave", "whirlwind", "leapAttack", "iceBolt", "frostNova", "meteor"]:
+			_reference_fx_preview.call_deferred(kv[1])
+		elif kv.size() == 2 and kv[0] == "gate_preview" and kv[1] in ["0", "1", "2", "3"]:
+			_gate_closure_preview.call_deferred(int(kv[1]))
 		elif kv.size() == 2 and kv[0] == "corpse_preview" and kv[1] in ["1", "bridge", "terrace"]:
 			_corpse_preview.call_deferred(kv[1])
 		elif kv.size() == 2 and kv[0] == "reward_preview" and kv[1] in ["1", "levelup"]:
@@ -259,6 +274,17 @@ func _read_debug_params() -> void:
 				c.take_damage(1.0, null)
 		elif kv.size() == 2 and kv[0] == "at":
 			match kv[1]:
+				"npc_nw", "npc_ne", "npc_sw", "npc_se":
+					var key := kv[1].trim_prefix("npc_")
+					for service in Village.NPCS:
+						if service[0] == key:
+							var resident: Vector2 = village.npc_points[service[1]]
+							player.position = resolve_movement(resident, resident + Vector2(65, 75), Player.RADIUS)
+							_fx_review_focus = resident + Vector2(25, -60)
+				"npc_courtyard":
+					var middle: Vector2 = (village.npc_points["탈것 상인"] + village.npc_points["촌장"]) * 0.5
+					player.position = resolve_movement(middle, middle + Vector2(0, 70), Player.RADIUS)
+					_fx_review_focus = middle + Vector2(0, -140)
 				"portal":
 					player.position = exploration.gate_approach("town")
 				"boss":
@@ -516,6 +542,80 @@ func _combat_preview() -> void:
 		await get_tree().create_timer(0.37, false).timeout
 
 
+## Explicit visual review only: equip one existing skill, perform its real cast,
+## then pause the actual simulation near the authored effect's peak for inspection.
+func _reference_fx_preview(which: String) -> void:
+	encounters.set_process(false)
+	for enemy in enemies:
+		enemy.queue_free()
+	enemies.clear()
+	_spawn_timer = 10000.0
+	await get_tree().create_timer(4.0, false).timeout
+	for enemy in enemies:
+		enemy.queue_free()
+	enemies.clear()
+	GameState.ranks[which] = 1
+	GameState.slots[0] = which
+	player.resource = player.resource_max
+	var offsets: Array[Vector2] = [Vector2(60, 0), Vector2(-55, 10), Vector2(0, -65)]
+	if which in ["iceBolt", "meteor"]:
+		offsets = [Vector2(430 if which == "iceBolt" else 240, -50)]
+	_fx_review_focus = player.position + offsets[0] * 0.45 + Vector2(0, -65)
+	camera.position = _fx_review_focus
+	camera.reset_smoothing()
+	for offset in offsets:
+		var target := Enemy.new()
+		target.setup(self, "goblin", 1)
+		target.position = player.position + offset
+		target.hp = 100000.0
+		target.max_hp = target.hp
+		target.xp_reward = 0
+		world.add_child(target)
+		enemies.append(target)
+		target.stun(60.0)
+	var cast_started := player.cast_slot(0)
+	JavaScriptBridge.eval("window.__sjrpgFxReviewStatus = " + JSON.stringify({"started": cast_started, "skill": which}))
+	var key: String = {"cleave": "slash", "whirlwind": "spin", "leapAttack": "slam", "iceBolt": "bolt", "frostNova": "frost", "meteor": "meteor"}[which]
+	for frame in 300:
+		await get_tree().process_frame
+		for node in world.get_children():
+			var effect := node as Effect
+			if effect == null or effect.is_queued_for_deletion():
+				continue
+			var matches: bool = (effect.kind == "slash" and key == "slash") or str(effect.params.get("visual", "")) == key
+			if matches and ((key == "bolt" and effect.kind == "proj" and effect.age >= 0.10) or (effect.kind in ["slash", "skill_fx"] and effect.visual_phase() >= 0.24)):
+				get_tree().paused = true
+				JavaScriptBridge.eval("window.__sjrpgFxReview = " + JSON.stringify({"skill": which, "key": key, "phase": effect.visual_phase(), "actual_cast": true}))
+				return
+
+
+## Actual threat scan and door animation; the dummy cannot attack during visual review.
+func _gate_closure_preview(index: int) -> void:
+	await get_tree().create_timer(4.0, false).timeout
+	for enemy in enemies:
+		enemy.queue_free()
+	enemies.clear()
+	_spawn_timer = 10000.0
+	player.position = village.spawn_point
+	var at := village.gate_points[index]
+	_fx_review_focus = at + Vector2(0, 20)
+	camera.position = _fx_review_focus
+	camera.reset_smoothing()
+	var direction := (at - village.spawn_point).normalized()
+	var target := Enemy.new()
+	target.setup(self, "goblin", 1)
+	target.position = at + direction * 140.0
+	world.add_child(target)
+	enemies.append(target)
+	target.stun(60.0)
+	target.set_process(false)
+	for frame in 300:
+		await get_tree().process_frame
+		if town_gates.closed[index] and town_gates.progress[index] >= 0.99:
+			JavaScriptBridge.eval("window.__sjrpgGateReview = " + JSON.stringify({"gate": index, "closed": true, "progress": town_gates.progress[index]}))
+			return
+
+
 ## Explicit art review only: real deaths keep all five body illustrations visible in the plaza.
 func _corpse_preview(surface := "1") -> void:
 	await get_tree().create_timer(2.0, false).timeout
@@ -631,6 +731,8 @@ func _update_impact_camera(delta: float) -> void:
 
 
 func _process(delta: float) -> void:
+	# Forest-root visibility disables/restores lighting in the same cave-transition frame.
+	WorldLighting.set_enabled(forest_lighting.enabled)
 	_update_impact_camera(delta)
 	camera.position = _camera_focus()
 	if dungeon.active:
@@ -793,6 +895,8 @@ func _inside_field(p: Vector2, margin: float) -> bool:
 func _blocked(p: Vector2, r: float) -> bool:
 	if dungeon.active:
 		return not dungeon.layout.contains(p, r)
+	if town_gates != null and town_gates.blocks(p, r):
+		return true
 	for c in village.circles:
 		if p.distance_to(c[0]) < c[1] + r:
 			return true
@@ -834,6 +938,8 @@ func resolve_movement(from: Vector2, to: Vector2, r: float, keep_out_town := fal
 			var b := Iso.poly_bounds(poly).grow(r)
 			if b.has_point(p):
 				p = Iso.push_out(p, poly, r * 0.6)
+	if town_gates != null:
+		p = town_gates.resolve_actor(from, p, r, keep_out_town)
 	if keep_out_town and in_town(p) and not in_town(from):
 		return from
 	for poly in village.solids:
@@ -891,17 +997,24 @@ func nearest_attackable_prop(from: Vector2, max_range: float) -> Node2D:
 	return best
 
 
-func enemies_in_radius(center: Vector2, radius: float) -> Array[Enemy]:
+## Melee uses measured walkable surfaces; ranged/AOE queries deliberately keep their rules.
+func can_melee_reach(from: Vector2, to: Vector2) -> bool:
+	if dungeon.active:
+		return true
+	return (town_gates == null or not town_gates.blocks_melee(from, to)) and TerrainLevels.can_reach(village, from, to)
+
+
+func enemies_in_radius(center: Vector2, radius: float, melee := false) -> Array[Enemy]:
 	var out: Array[Enemy] = []
 	for e in enemies:
-		if not e.dead and center.distance_to(e.position) <= radius + Enemy.RADIUS:
+		if not e.dead and center.distance_to(e.position) <= radius + Enemy.RADIUS and (not melee or can_melee_reach(center, e.position)):
 			out.append(e)
 	return out
 
 
-func enemies_in_arc(center: Vector2, angle: float, radius: float, half_angle: float) -> Array[Enemy]:
+func enemies_in_arc(center: Vector2, angle: float, radius: float, half_angle: float, melee := false) -> Array[Enemy]:
 	var out: Array[Enemy] = []
-	for e in enemies_in_radius(center, radius):
+	for e in enemies_in_radius(center, radius, melee):
 		var d := e.position - center
 		if d.length() < 30.0 or absf(angle_difference(angle, d.angle())) <= half_angle:
 			out.append(e)
@@ -1168,15 +1281,33 @@ func _add_effect(e: Effect) -> void:
 	world.add_child(e)
 
 
-func spawn_slash(at: Vector2, angle: float, color: Color) -> void:
+func spawn_slash(at: Vector2, angle: float, color: Color, reach := 80.0, arc := 1.2) -> void:
 	var e := Effect.new()
 	e.kind = "slash"
 	e.position = at
 	e.angle = angle
 	e.color = color
+	e.radius = reach
+	e.params["arc"] = arc
 	e.life = 0.22
 	e.z_index = 5
 	_add_effect(e)
+
+
+## Authored skill shapes share the cosmetic budget and never introduce a second hitbox.
+func spawn_reference_fx(key: String, at: Vector2, reach: float, owner: Node2D = null, duration := 0.42) -> Effect:
+	var effect := Effect.new()
+	effect.kind = "skill_fx"
+	effect.position = at
+	effect.radius = reach
+	effect.life = duration
+	effect.owner_node = owner
+	effect.params["visual"] = key
+	effect.z_index = owner.z_index if is_instance_valid(owner) else 0
+	if key == "spin" and owner is Player:
+		effect.params["action_serial"] = owner._action_serial
+	_add_effect(effect)
+	return effect
 
 
 func spawn_nova(at: Vector2, radius: float, color: Color, small := false) -> void:

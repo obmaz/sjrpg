@@ -130,6 +130,8 @@ func _draw() -> void:
 
 
 func _ready() -> void:
+	if material == null and WorldLighting.belongs_to_forest(self):
+		material = WorldLighting.material()
 	if def.has("warp"):
 		_build_warp_mesh()
 	var source := Rect2(def["source"][0], def["source"][1], def["source"][2], def["source"][3])

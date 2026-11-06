@@ -42,10 +42,12 @@ func run() -> void:
 	# rather than checking only that trunks clear an authored doorway point.
 	for npc_name in ["상인", "대장장이", "탈것 상인", "촌장"]:
 		var npc: Vector2 = game.village.npc_points[npc_name]
+		var readable := NpcArt.readability_rect(npc_name, Villager.BODY_HEIGHT)
+		readable.position += npc
 		var visible := true
 		for tree in game.village.town_trees:
 			var bounds: Rect2 = tree.get_meta("occlusion_bounds")
-			if tree.position.y > npc.y + 4.0 and bounds.intersects(Rect2(npc - Vector2(42, 90), Vector2(84, 110))):
+			if tree.position.y > npc.y + 4.0 and bounds.intersects(readable):
 				visible = false
 		check("service NPC stays readable below all foreground crowns: " + npc_name, visible)
 	for service in Village.NPCS:

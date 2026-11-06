@@ -2,6 +2,11 @@ shader_type canvas_item;
 render_mode unshaded;
 
 #include "res://scripts/world_occlusion.gdshaderinc"
+#include "res://scripts/world_daylight.gdshaderinc"
+
+uniform float daylight_amount = 0.0;
+uniform vec2 opening_a;
+uniform vec2 opening_b;
 
 uniform vec4 atlas_region;
 uniform float phase = 0.0;
@@ -57,6 +62,8 @@ void fragment() {
 	float sample_weight = water * blue_sample;
 	vec4 ink = mix(original, flowing, sample_weight);
 	ink.rgb *= mix(1.0, glow, water);
+	// The same daylight reaches the real stone; the animated fluid keeps its glow.
+	ink.rgb *= mix(vec3(1.0), world_daylight(world_position, opening_a, opening_b), daylight_amount * (1.0 - water));
 	ink.a = original.a;
 	COLOR = uncover_hero(ink * art_tint);
 }

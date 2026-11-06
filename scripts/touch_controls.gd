@@ -393,15 +393,14 @@ func _draw_menu(name: String, center: Vector2, radius: float, pressed: bool) -> 
 	draw_circle(center + Vector2(0, 0.5 * u), radius + 0.2 * u, Color(0, 0, 0, 0.3))
 	match name:
 		"bar_bag":
-			_draw_reference_button(2, center, draw_radius, tint)
+			MobileMenuArt.draw(self, "bag", center, draw_radius, tint)
 		"bar_quests":
-			_draw_reference_button(3, center, draw_radius, tint)
+			MobileMenuArt.draw(self, "quests", center, draw_radius, tint)
 		"bar_gear":
-			_draw_reference_button(1, center, draw_radius, tint)
+			MobileMenuArt.draw(self, "settings", center, draw_radius, tint)
 		"bar_skills":
-			HudArt.round_plaque(self, "book", center, draw_radius, tint)
-	# The existing illustrated bronze stays dominant; a narrow lip makes its
-	# pressed depth readable without a second glowing frame or a new material.
+			MobileMenuArt.draw(self, "skills", center, draw_radius, tint)
+	# A narrow pressed lip keeps the new simple pictograms readable at mobile size.
 	draw_arc(center, draw_radius - 0.6 * u, 0, TAU, 72, Color(0.6, 0.5, 0.31, 0.5), 0.65 * u, true)
 	draw_arc(center, draw_radius - 1.1 * u, PI * 1.05, PI * 1.7, 32, Color(0.91, 0.81, 0.59, 0.32 if pressed else 0.22), 0.65 * u, true)
 

@@ -502,7 +502,7 @@ func _melee(id: String, d: Dictionary, rank: int, power: float) -> void:
 	var swings := int(d.get("hits", 1))
 	var enchant := buff_value("enchant") if id == "sorceressAttack" else 0.0
 	for swing in swings:
-		var hits: Array = game.enemies_in_arc(position, facing, d["range"], deg_to_rad(d["arc"]))
+		var hits: Array = game.enemies_in_arc(position, facing, d["range"], deg_to_rad(d["arc"]), true)
 		for e in hits:
 			e.take_damage(damage_for(id, power) * (1.0 + enchant), self)
 			if d.has("knock"):
@@ -511,7 +511,7 @@ func _melee(id: String, d: Dictionary, rank: int, power: float) -> void:
 				e.stun(d["stun"] + d.get("stun_growth", 0.0) * (rank - 1))
 		hits_total += hits.size()
 		game.break_chests_in_arc(position, facing, d["range"], deg_to_rad(d["arc"]), self)
-		game.spawn_slash(position + Vector2(0, -28), facing + (0.25 if swing == 1 else 0.0), SkillDefs.FIRE if enchant > 0.0 else SkillDefs.STEEL)
+		game.spawn_slash(position + Vector2(0, -28), facing + (0.25 if swing == 1 else 0.0), SkillDefs.FIRE if enchant > 0.0 else SkillDefs.STEEL, float(d["range"]), deg_to_rad(d["arc"]))
 	_gain_rage(hits_total)
 	if d.get("frenzy", false) and hits_total > 0:
 		frenzy_stacks = mini(frenzy_stacks + 1, 5)
@@ -522,24 +522,30 @@ func _melee(id: String, d: Dictionary, rank: int, power: float) -> void:
 
 func _spin(id: String, d: Dictionary, power: float) -> void:
 	var ticks := int(d["ticks"])
+	var serial := _action_serial
+	game.spawn_reference_fx("spin", position, float(d["radius"]), self, (ticks - 1) * 0.12 + 0.22)
 	for i in ticks:
 		get_tree().create_timer(i * 0.12, false).timeout.connect(func():
-			if dead:
+			if dead or serial != _action_serial:
 				return
-			var hits: Array = game.enemies_in_radius(position, d["radius"])
+			_resolving_melee_contact = true
+			var hits: Array = game.enemies_in_radius(position, d["radius"], true)
 			game.break_chests_in_radius(position, d["radius"], self)
 			for e in hits:
 				e.take_damage(damage_for(id, power), self)
-			_gain_rage(hits.size())
-			game.spawn_nova(position, d["radius"], SkillDefs.STEEL, true))
+			_resolving_melee_contact = false
+			_gain_rage(hits.size()))
 
 
 func _shadow(id: String, d: Dictionary, power: float) -> void:
 	var visited := []
+	var contacts := 0
 	for i in int(d["targets"]):
 		var next: Enemy = null
 		var best: float = d["range"]
 		for e in game.enemies_in_radius(position, d["range"]):
+			if not game.can_melee_reach(position, e.position):
+				continue
 			if visited.has(e):
 				continue
 			var dist := position.distance_to(e.position)
@@ -553,10 +559,12 @@ func _shadow(id: String, d: Dictionary, power: float) -> void:
 		position = game.find_open_point(position, (next.position - position).normalized(), maxf(0.0, best - 40.0), RADIUS)
 		facing = (next.position - position).angle()
 		game.spawn_trail(from, position, Color(0.6, 0.7, 1.0))
-		next.take_damage(damage_for(id, power), self)
+		if game.can_melee_reach(position, next.position):
+			next.take_damage(damage_for(id, power), self)
+			contacts += 1
 		game.spawn_slash(position + Vector2(0, -28), facing, Color(0.7, 0.8, 1.0))
-	_gain_rage(visited.size())
-	if visited.size() >= 3:
+	_gain_rage(contacts)
+	if contacts >= 3:
 		if GameState.has_gift("comboFury"):
 			resource = minf(resource_max, resource + 6.0)
 			game.float_text(position + Vector2(0, -100), "연격의 격정", Color(1, 0.7, 0.4))
@@ -588,16 +596,22 @@ func _prepare_leap(id: String, d: Dictionary, rank: int, power: float) -> Callab
 			reach = minf(dist, maxf(0.0, position.distance_to(current.position) - 36.0))
 		position = game.find_open_point(position, Vector2.from_angle(facing), reach, RADIUS)
 		game.spawn_trail(from, position, SkillDefs.STEEL)
-		game.spawn_nova(position, d["radius"], SkillDefs.STEEL, true)
+		if id == "leapAttack":
+			game.spawn_reference_fx("slam", position, float(d["radius"]), self)
+		else:
+			game.spawn_nova(position, d["radius"], SkillDefs.STEEL, true)
 		_invulnerable = maxf(_invulnerable, 0.2)
-		var hits: Array = game.enemies_in_radius(position, d["radius"])
+		var hits: Array = game.enemies_in_radius(position, d["radius"], true)
 		if d.has("mult"):
 			game.break_chests_in_radius(position, d["radius"], self)
+		var previous_contact := _resolving_melee_contact
+		_resolving_melee_contact = d.has("mult")
 		for e in hits:
 			if d.has("mult"):
 				e.take_damage(damage_for(id, power), self)
 			if d.has("knock"):
 				e.knock(position, d["knock"])
+		_resolving_melee_contact = previous_contact
 		_gain_rage(hits.size())
 
 
@@ -612,12 +626,16 @@ func _projectiles(id: String, d: Dictionary, rank: int, power: float) -> void:
 			"damage": damage_for(id, power), "color": d["color"], "explode": d.get("explode", 0.0),
 			"slow": d.get("slow", 0.0), "freeze": d.get("freeze", 0.0) + d.get("freeze_growth", 0.0) * (rank - 1),
 			"knock": d.get("knock", 0.0), "wiggle": d.get("wiggle", false), "throw": d.get("throw", false),
+			"visual": "bolt" if id in ["iceBolt", "iceBlast", "glacialSpike", "chargedBolt"] else "",
 		}, self)
 
 
 func _nova(id: String, d: Dictionary, rank: int, power: float) -> void:
 	var radius: float = d["radius"] + d.get("radius_growth", 0.0) * (rank - 1)
-	game.spawn_nova(position, radius, d["color"])
+	if id == "frostNova":
+		game.spawn_reference_fx("frost", position, radius, self, 0.5)
+	else:
+		game.spawn_nova(position, radius, d["color"])
 	if d.has("mult") or d.has("pct"):
 		game.break_chests_in_radius(position, radius, self)
 	var hits: Array = game.enemies_in_radius(position, radius)
@@ -643,7 +661,7 @@ func _nova(id: String, d: Dictionary, rank: int, power: float) -> void:
 func _zone(id: String, d: Dictionary, rank: int, power: float, at: Vector2) -> void:
 	var z := {"pos": at, "radius": d["radius"], "duration": d["duration"], "tick": d["tick"],
 		"damage": damage_for(id, power), "color": d["color"], "slow": d.get("slow", 0.0),
-		"shards": d.get("shards", false), "delay": d.get("delay", 0.0)}
+		"shards": d.get("shards", false), "delay": d.get("delay", 0.0), "visual": "meteor" if id == "meteor" else ""}
 	if d.has("impact"):
 		z["impact"] = damage_for(id, SkillDefs.scaled(d["impact"], d["growth"], rank))
 		z["damage"] = damage_for(id, d["mult"])

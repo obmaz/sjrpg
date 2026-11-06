@@ -1,0 +1,292 @@
+{
+ "version": 1,
+ "source_crop": [
+  84,
+  296,
+  920,
+  931
+ ],
+ "native_bounds": [
+  89,
+  302,
+  910,
+  919
+ ],
+ "method": "Pixel alpha and material run inspection on the untouched generated source. Rail lower edges at339/688/1039 and left/right vertical outer edges are measured at upper, middle and lower spans, not inferred from a collision frame. Both runtime orientations map these same source pixels through the actual gate plane. The first source rail lies above the visible arch. A second measured rail at514 and two central upper bar edges at441/644,y550..640 remain visibly inside the actual clipped arch, so upper visible iron is sampled too.",
+ "native_segments": [
+  {
+   "name": "upper_rail",
+   "axis": "across",
+   "points": [
+    [
+     145,
+     339
+    ],
+    [
+     940,
+     339
+    ]
+   ]
+  },
+  {
+   "name": "middle_rail",
+   "axis": "across",
+   "points": [
+    [
+     145,
+     688
+    ],
+    [
+     940,
+     688
+    ]
+   ]
+  },
+  {
+   "name": "lower_rail",
+   "axis": "across",
+   "points": [
+    [
+     145,
+     1039
+    ],
+    [
+     940,
+     1039
+    ]
+   ]
+  },
+  {
+   "name": "upper_left_bar",
+   "axis": "vertical",
+   "points": [
+    [
+     100,
+     350
+    ],
+    [
+     99,
+     450
+    ]
+   ]
+  },
+  {
+   "name": "upper_right_bar",
+   "axis": "vertical",
+   "points": [
+    [
+     986,
+     350
+    ],
+    [
+     986,
+     450
+    ]
+   ]
+  },
+  {
+   "name": "middle_left_bar",
+   "axis": "vertical",
+   "points": [
+    [
+     99,
+     705
+    ],
+    [
+     99,
+     805
+    ]
+   ]
+  },
+  {
+   "name": "middle_right_bar",
+   "axis": "vertical",
+   "points": [
+    [
+     987,
+     705
+    ],
+    [
+     987,
+     805
+    ]
+   ]
+  },
+  {
+   "name": "lower_left_bar",
+   "axis": "vertical",
+   "points": [
+    [
+     98,
+     1050
+    ],
+    [
+     98,
+     1150
+    ]
+   ]
+  },
+  {
+   "name": "lower_right_bar",
+   "axis": "vertical",
+   "points": [
+    [
+     987,
+     1050
+    ],
+    [
+     987,
+     1150
+    ]
+   ]
+  },
+  {
+   "name": "upper_visible_rail",
+   "axis": "across",
+   "points": [
+    [
+     350,
+     514
+    ],
+    [
+     650,
+     514
+    ]
+   ]
+  },
+  {
+   "name": "upper_visible_left_bar",
+   "axis": "vertical",
+   "points": [
+    [
+     441,
+     550
+    ],
+    [
+     441,
+     640
+    ]
+   ]
+  },
+  {
+   "name": "upper_visible_right_bar",
+   "axis": "vertical",
+   "points": [
+    [
+     644,
+     550
+    ],
+    [
+     644,
+     640
+    ]
+   ]
+  }
+ ],
+ "gates": {
+  "gate-0": {
+   "base_a": [
+    250,
+    471
+   ],
+   "base_b": [
+    370,
+    531.2390350056
+   ],
+   "height": 220,
+   "arch_clip": [
+    [
+     250,
+     471
+    ],
+    [
+     250,
+     354
+    ],
+    [
+     260,
+     318
+    ],
+    [
+     275,
+     306
+    ],
+    [
+     290,
+     301
+    ],
+    [
+     305,
+     311
+    ],
+    [
+     320,
+     328
+    ],
+    [
+     335,
+     351
+    ],
+    [
+     351,
+     383
+    ],
+    [
+     370,
+     414
+    ],
+    [
+     370,
+     531.2390350056
+    ]
+   ],
+   "review": "Arch aperture is measured in the actual baked gate atlas. The iron plane is behind the existing stone and open wooden leaves, which remain unchanged. Across basis is calibrated to +30degrees after the existing gate affine draw transform."
+  },
+  "gate-2": {
+   "base_a": [
+    973,
+    541
+   ],
+   "base_b": [
+    1065,
+    498.024456167
+   ],
+   "height": 220,
+   "arch_clip": [
+    [
+     973,
+     541
+    ],
+    [
+     973,
+     409
+    ],
+    [
+     990,
+     394
+    ],
+    [
+     1010,
+     384
+    ],
+    [
+     1030,
+     374
+    ],
+    [
+     1052,
+     362
+    ],
+    [
+     1065,
+     371
+    ],
+    [
+     1065,
+     498.024456167
+    ]
+   ],
+   "review": "Only the lower opening beneath the existing half-raised lattice is covered, preventing a doubled iron pattern in its upper holes. Open wooden leaves and stone jambs occlude the new iron naturally. Across basis calibrates to -30degrees."
+  }
+ }
+}

@@ -1657,29 +1657,29 @@
  "placements": {
   "nw": [
    [
-    0.24022466534851117,
-    0.6997645516236044
+    0.3051684990113833,
+    0.6560734137177033
    ],
    8.572731640447179
   ],
   "ne": [
    [
-    0.39595541061338846,
-    0.2931115698551673
+    0.42196655796004134,
+    0.35108367739137547
    ],
    10.302480483051095
   ],
   "sw": [
    [
-    0.6854339520131268,
-    0.7859823944271712
+    0.6390754640098452,
+    0.7207367958203784
    ],
    6.66260600718715
   ],
   "se": [
    [
-    0.9146279168500808,
-    0.6913220758486405
+    0.8109709376375607,
+    0.6497415568864804
    ],
    9.51912102417965
   ],
@@ -1692,8 +1692,8 @@
   ],
   "chapel": [
    [
-    0.6714111005776332,
-    0.3168148512424659
+    0.628558325433225,
+    0.3688611384318494
    ],
    8.101935814767403
   ]
@@ -1792,7 +1792,7 @@
    ]
   ]
  ],
- "extent": 2400,
+ "extent": 3200.0,
  "spawn_uv": [
   0.5,
   0.525
@@ -2735,5 +2735,14 @@
     "mirror_x": true
    }
   }
+ },
+ "town_clearance": {
+  "version": 1,
+  "extent": 3200.0,
+  "previous_extent": 2400.0,
+  "npc_body_height": 112.0,
+  "foreground_wall_margin": 24.0,
+  "reason": "Foreground wall art is approximately280screen-worldpixels tall. Previous service residents stood only46\u2013116pixels behind its projected front edge. Expand the actual town perimeter while preserving each measured building/chapel world centre and scale; derive new UVs rather than offsetting actors with fake draw order.",
+  "scope": "Stage1town walls, gatepoints, roads and safe zone follow actual extent. Building source warps/native dimensions and field landmark world positions remain unchanged. Runtime visibility tests must compare painted wall quads against body/building bounds."
  }
 }

@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 M = json.loads(Path(__file__).with_name('town_art_measure.json').read_text())
 WARPS = json.loads((ROOT/'assets/data/art_warps.json').read_text())
 COS = math.sqrt(3)/2
+LAYOUT = json.loads(Path(__file__).with_name('town_clearance.json').read_text())
 
 
 def warp(key, point, inverse=False):
@@ -84,6 +85,10 @@ def derive(key, config, data):
 
 
 def merge(data):
+    # Keep source-measured building centres and physical scales while the outer
+    # walls move away. Re-derive UV from those world positions at the new extent.
+    data['extent'] = LAYOUT['extent']
+    data['town_clearance'] = copy.deepcopy(LAYOUT)
     for key,config in M['buildings'].items():derive(key,config,data)
     # Fountain pixels and geometry are retained; only their atlas location changes.
     pool=json.loads(Path(__file__).with_name('pool_measure.json').read_text());s=copy.deepcopy(pool['sprite']);frame=copy.deepcopy(pool['frame']);old=np.array(s['source'][:2]);new=np.array([6,2054]);shift=new-old

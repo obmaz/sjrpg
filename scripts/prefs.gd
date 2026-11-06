@@ -5,21 +5,25 @@ extends Node
 signal graphics_changed
 
 const PATH := "user://settings.cfg"
+const WORLD_ZOOMS: Array[float] = [0.5, 1.0, 1.5]
 
+var settings_path := PATH
 var sound_enabled := true
 var haptics_enabled := true
 var reduce_motion := false
 var low_resolution := false
+var world_zoom := 1.0
 var _last_pulse := 0
 
 
 func _ready() -> void:
 	var cfg := ConfigFile.new()
-	if cfg.load(PATH) == OK:
+	if cfg.load(settings_path) == OK:
 		sound_enabled = bool(cfg.get_value("device", "sound", true))
 		haptics_enabled = bool(cfg.get_value("device", "haptics", true))
 		reduce_motion = bool(cfg.get_value("device", "reduce_motion", false))
 		low_resolution = bool(cfg.get_value("device", "low_resolution", false))
+		world_zoom = normalize_world_zoom(cfg.get_value("device", "world_zoom", 1.0))
 
 
 func _save() -> void:
@@ -28,7 +32,28 @@ func _save() -> void:
 	cfg.set_value("device", "haptics", haptics_enabled)
 	cfg.set_value("device", "reduce_motion", reduce_motion)
 	cfg.set_value("device", "low_resolution", low_resolution)
-	cfg.save(PATH)
+	cfg.set_value("device", "world_zoom", world_zoom)
+	cfg.save(settings_path)
+
+
+## Only supported world scales enter the camera; legacy/corrupt settings use 1x.
+static func normalize_world_zoom(value: Variant) -> float:
+	if typeof(value) not in [TYPE_FLOAT, TYPE_INT]:
+		return 1.0
+	var candidate := float(value)
+	for supported: float in WORLD_ZOOMS:
+		if is_equal_approx(candidate, supported):
+			return supported
+	return 1.0
+
+
+func set_world_zoom(value: float) -> void:
+	var next := normalize_world_zoom(value)
+	if is_equal_approx(world_zoom, next):
+		return
+	world_zoom = next
+	_save()
+	graphics_changed.emit()
 
 
 func set_sound(on: bool) -> void:

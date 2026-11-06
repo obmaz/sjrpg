@@ -99,6 +99,8 @@ func _draw() -> void:
 
 
 func _ready() -> void:
+	if WorldLighting.belongs_to_forest(self):
+		material = WorldLighting.material()
 	var d: Dictionary = data()[index]
 	if d.has("warp"):
 		var calibration := ArtWarp.data(d["warp"])

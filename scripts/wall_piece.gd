@@ -47,6 +47,8 @@ func _draw() -> void:
 
 
 func _ready() -> void:
+	if WorldLighting.belongs_to_forest(self):
+		material = WorldLighting.material()
 	var transform := _xf
 	transform.origin += global_position
 	WorldOcclusion.attach(self, WorldOcclusion.bounds_of(_local, transform))

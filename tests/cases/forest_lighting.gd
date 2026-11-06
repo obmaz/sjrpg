@@ -7,7 +7,8 @@ func run() -> void:
 	check("daylight has a fixed two-light budget", lighting.openings.size() == 2 and lighting.surfaces.size() > 5)
 	var isolated := true
 	for surface in lighting.surfaces:
-		isolated = isolated and surface.material == lighting.ground_material
+		var ink := surface.material as ShaderMaterial
+		isolated = isolated and ink != null and ink.shader == lighting.ground_material.shader
 	check("ground lighting adds no canvas-wide light nodes", lighting.get_child_count() == 0)
 	check("only textured ground receives forest daylight", isolated and game.player.material != lighting.ground_material and game.village.fountain.material != lighting.ground_material)
 	check("lighting leaves ground projection unchanged", lighting.surfaces[0].get_parent().transform == Iso.ground_transform())
@@ -17,6 +18,8 @@ func run() -> void:
 	check("light footprints stay in the world when the camera moves", lighting.openings == positions and lighting.ground_material.get_shader_parameter("opening_a") == positions[0] and lighting.ground_material.get_shader_parameter("opening_b") == positions[1])
 	lighting.set_enabled(false)
 	check("comparison mode disables light and ambient together", not lighting.enabled and is_zero_approx(float(lighting.ground_material.get_shader_parameter("amount"))))
+	for ink in lighting.materials:
+		check("terrain mask materials share the daylight toggle", is_zero_approx(float(ink.get_shader_parameter("amount"))))
 	var shade_ok := not lighting.shades.is_empty()
 	for shade in lighting.shades:
 		shade_ok = shade_ok and is_equal_approx(shade.opacity, 0.11)

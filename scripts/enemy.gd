@@ -261,7 +261,7 @@ func _process(delta: float) -> void:
 		"chase":
 			if (player.dead and not guard) or (dist > 700.0 and _taunt_time <= 0.0 and not is_threat):
 				_state = "idle"
-			elif dist <= attack_range:
+			elif dist <= attack_range and game.can_melee_reach(position, position + to_player):
 				_state = "windup"
 				_windup_duration = GameTempo.duration((1.0 if is_boss else 0.55) / rate)
 				_timer = _windup_duration
@@ -282,9 +282,9 @@ func _process(delta: float) -> void:
 					mult *= 0.75
 				var hit_range := attack_range + (60.0 if is_boss else 22.0)
 				if guard:
-					if dist <= hit_range:
+					if dist <= hit_range and game.can_melee_reach(position, position + to_player):
 						game.quest_runtime.damage_defender(damage * mult * randf_range(0.85, 1.15))
-				elif not player.dead and attack_distance(player.position) <= hit_range:
+				elif not player.dead and attack_distance(player.position) <= hit_range and game.can_melee_reach(position, player.position):
 					player.take_damage(damage * mult * randf_range(0.85, 1.15), self)
 				if is_boss:
 					_boss_attacks += 1

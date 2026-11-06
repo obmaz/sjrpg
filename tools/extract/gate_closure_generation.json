@@ -1,0 +1,35 @@
+{
+ "version": 1,
+ "date": "2026-11-06",
+ "tool": "image_gen.imagegen",
+ "purpose": "A front-on aged-iron portcullis added behind the existing open wooden gate leaves. Runtime projects the same pixels into both calibrated120-degree gate planes.",
+ "prompt": "Create ONE production game sprite: a simple rectangular iron portcullis, isolated completely on a real transparent background. Use attached gate-a and gate-b images as the exact medieval gate material family, especially the dark matte iron lattice half-raised inside the second gate. The third image is the user's final restrained realistic forest fantasy game style. This is a PART for those existing gatehouses, not a new gatehouse or architectural concept.\n\nOUTPUT: one centered FRONT-ON orthographic flat iron grid panel, roughly 3:4 width-to-height ratio, with generous fully transparent padding. The plane is viewed exactly straight from the front: vertical bars exactly vertical, horizontal cross bars exactly horizontal, all bars parallel at the top, middle and bottom, no camera tilt, no perspective, no isometric rendering baked into this source. Runtime projects this same flat plane to the game's true 120-degree isometric camera with horizontal gate-axis lines +/-30 degrees and vertical bars90degrees; therefore do NOT render an already-isometric gate.\n\nDESIGN: about eleven evenly spaced strong vertical matte aged iron bars, five evenly spaced horizontal iron cross rails, restrained small rivets at selected intersections. Thin but readable construction, dark neutral iron with small soft gray highlights and subtle warm oxidation, not bright silver or glossy black plastic. Each vertical bar ends at the same lower baseline in a short practical taper/point. Rectangular flat upper rail, no arch-shaped frame, no external border, no stone pillars, no wooden gate, no chains, ropes, surrounding wall, landscape, floor, or ground platform. Open spaces between all bars must be fully transparent alpha, not opaque black. Preserve straight regular spacing and subtle actual thickness. Entire silhouette comfortably within image bounds, no cut off bars. Keep high detail restrained and readable on a mobile screen. Uniform soft neutral diffuse light consistent with the provided material-family references. No cast shadow, no vignette, no glow, no UI, no numbers, no lettering, no logos, no watermark.",
+ "parameters": {
+  "transparent_background": true
+ },
+ "output": {
+  "original_generation_path": "/workspace/generated_images/exec-2a3a0337-d51d-43d8-89b0-7eeaa6c2666e.png",
+  "adopted_source": "assets/source/town-gates/portcullis.png",
+  "sha256": "90abf64bca821cb0448de36ad78ce8a67cb876ff03bca7646d3724bec5e5de53"
+ },
+ "references": [
+  {
+   "path": "assets/source/remake/gate-a.png",
+   "sha256": "a0f3d56235882394d645cea025efae632c16e1e23157b67579945bd95aeb7cb6"
+  },
+  {
+   "path": "assets/source/remake/gate-b-v2.png",
+   "sha256": "d775ab279668e1551180823d7f4e130a9df56220f537167f3a21885134e0593f"
+  },
+  {
+   "path": "assets/source/style/approved-game-reference.jpg",
+   "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+  }
+ ],
+ "review": {
+  "material": "Matte aged neutral iron with restrained warm oxidation, matching the existing gate lattice rather than adding a new stone/wood family.",
+  "source_projection": "Orthographic front-on plane. Horizontal rails and vertical bars measured at multiple heights and both sides; renderer supplies the true +/-30-degree ground axes and vertical90-degree direction.",
+  "transparency": "Holes are actual alpha0, not black back plates. Full generated source is preserved unchanged; only measured crop, uniform resize and transparent padding are packed.",
+  "approval": "Generated source is a production candidate, not user approval; root must verify actual four-gate mobile views."
+ }
+}

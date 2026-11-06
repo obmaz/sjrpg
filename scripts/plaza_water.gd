@@ -13,6 +13,7 @@ static func attach(sprite: IsoSprite, is_portal: bool) -> PlazaWater:
 	animation.surface = sprite
 	animation.water_material = ShaderMaterial.new()
 	animation.water_material.shader = SHADER
+	WorldLighting.register_material(animation.water_material)
 	var src: Array = sprite.def["source"]
 	var size := sprite.texture.get_size()
 	animation.water_material.set_shader_parameter("atlas_region", Vector4(src[0] / size.x, src[1] / size.y, src[2] / size.x, src[3] / size.y))

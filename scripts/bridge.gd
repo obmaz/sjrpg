@@ -65,6 +65,12 @@ func point(pixel: Vector2) -> Vector2:
 	return position + local(pixel)
 
 
+func _ready() -> void:
+	if WorldLighting.belongs_to_forest(self):
+		material = WorldLighting.material()
+		front.material = material
+
+
 func axis_point(t: float) -> Vector2:
 	var model: Dictionary = data()["model_reference"]
 	return _model_point(_v(model["axis_start"]).lerp(_v(model["axis_end"]), t))

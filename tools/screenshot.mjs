@@ -25,6 +25,21 @@ const SCENES = {
     warp: 'at=portal&panel=warp',
     warp_trip: 'warp_preview=1',
     juice: 'at=field&combat_preview=1',
+    fx_slash: 'at=field&fx_preview=cleave',
+    fx_spin: 'at=field&fx_preview=whirlwind',
+    fx_slam: 'at=field&fx_preview=leapAttack',
+    fx_bolt: 'at=field&fx_preview=iceBolt&zoom=0.8',
+    fx_frost: 'at=field&fx_preview=frostNova',
+    fx_meteor: 'at=field&fx_preview=meteor',
+    gate_closed0: 'gate_preview=0',
+    gate_closed1: 'gate_preview=1',
+    gate_closed2: 'gate_preview=2',
+    gate_closed3: 'gate_preview=3',
+    npc_nw: 'at=npc_nw',
+    npc_ne: 'at=npc_ne',
+    npc_sw: 'at=npc_sw',
+    npc_se: 'at=npc_se',
+    npc_courtyard: 'at=npc_courtyard&zoom=0.65',
     pc_controls: 'at=field',
     dodge: 'at=field',
     corpses: 'corpse_preview=1',
@@ -198,7 +213,17 @@ if (args.start) await tap(...args.start.split(',').map(Number));
 else await tapEntry('start');
 await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { timeout: 30000 });
 if (scene === 'background') await page.evaluate(() => document.querySelector('canvas').blur());
-if (scene.startsWith('stone')) {
+if (scene.startsWith('gate_closed')) {
+    await page.waitForFunction(() => window.__sjrpgGateReview?.closed === true, null, {timeout: 60000});
+    console.log('Actual threat closed the gate:', await page.evaluate(() => window.__sjrpgGateReview));
+} else if (scene.startsWith('fx_')) {
+    await page.waitForFunction(() => window.__sjrpgFxReview?.actual_cast === true, null, {timeout: 60000}).catch(async error => {
+        await page.screenshot({path: out.replace(/\.png$/, '-failed.png')});
+        const status = await page.evaluate(() => window.__sjrpgFxReviewStatus ?? null);
+        throw new Error(`FX inspection failed: ${JSON.stringify(status)}; ${logs.filter(line => /error/i.test(line)).join('\n')}; ${error.message}`);
+    });
+    console.log('Actual cast, paused for visual inspection:', await page.evaluate(() => window.__sjrpgFxReview));
+} else if (scene.startsWith('stone')) {
     await page.waitForFunction(() => window.__sjrpgEncounterPreviewReady === true, null, {timeout: 30000});
     if (scene === 'stone_cast') {
         await page.keyboard.down('Space');
@@ -221,6 +246,14 @@ if (scene.startsWith('stone')) {
     await page.waitForFunction(() => window.__sjrpgCorpsePreviewReady === true, null, {timeout: 30000});
     await page.waitForTimeout(1500);
 } else await page.waitForTimeout(settle);
+if (args.taps) {
+    for (const item of args.taps.split(',')) {
+        const point = /^(\d+):(\d+)$/.exec(item);
+        if (!point || Number(point[1]) >= vp.width || Number(point[2]) >= vp.height) throw new Error('--taps expects in-viewport x:y,x:y');
+        await tap(Number(point[1]), Number(point[2]));
+        await page.waitForTimeout(450);
+    }
+}
 if (args.walk) {
     // Optional real keyboard route for inspecting service buildings without teleporting the scene.
     for (const step of args.walk.split(',')) {

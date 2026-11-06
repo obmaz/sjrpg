@@ -1,0 +1,42 @@
+{
+ "version": 1,
+ "date": "2026-11-06",
+ "generator": "image_gen.imagegen",
+ "purpose": "Simplify the four mobile menu icons using the user's latest complaint and icon-strip reference.",
+ "prompt": "Create a production-ready four-icon mobile fantasy RPG menu sprite sheet, using the latest attached USER IMAGE (the four current menu icons: backpack, ornate red book, scroll, gear) as context for what to REPLACE. The user says those icons are too ornate, dark and noisy at mobile size. Make a calmer, much more readable replacement family fitting the existing restrained woodland-fantasy UI. The motifs and warm bronze/dark olive palette must remain familiar. This is user-interface art, front-facing; do not apply a world isometric camera.\n\nLAYOUT: one wide 4:1 transparent PNG, FOUR EQUAL SQUARE CELLS side by side, no gaps between cells. Each cell contains ONE complete circular menu medallion centered identically with equal visible diameter about 88% of cell width and clear transparent padding outside its circle. Cell order LEFT TO RIGHT: backpack inventory, open spellbook skills, parchment quest scroll, settings gear. All four circular disks and rims must have exactly the same shape, size, lighting and material.\n\nVISUAL STYLE: clean restrained hand-painted mobile game UI, crisp recognizable silhouettes, two or three BROAD value areas with only very subtle soft relief. A dark charcoal-olive/brown inset disk, ONE THIN muted bronze rim, with warm ivory/parchment or light tan main pictograms contrasting strongly against the disk. No grain, etched textures, flecked metal, filigree, elaborate trim, sharp chrome shine, jewels, runes, decorative glyphs, glowing edges, radial patterns, heavy bevels or external cast shadows. Reduce detail severely compared to the attached old icons. No photoreal miniature objects; no tiny lines or tiny buckles. Aim immediate recognition at 48px and 64px diameter. Main pictogram fills approximately 65–70% of disk diameter with a generous clean dark gap to rim.\n\n1 BACKPACK: a clear front-facing warm tan travel backpack silhouette, one broad flap and one large simple buckle, two uncomplicated shoulder-strap hints, no pockets covered in little fasteners, no hanging tools.\n2 SKILLS: a plainly OPEN book seen almost front-facing, two broad warm ivory pages, one central spine crease and a simple muted burgundy cover edge. NO text, marks or tiny page lines; just the recognizable open-book shape.\n3 QUESTS: a partly unrolled warm ivory parchment scroll with a wide calm center sheet and two simple curled ends, slightly diagonal if helpful, NO writing or map marks, no seal.\n4 SETTINGS: a simple solid light muted bronze/ivory gear with EIGHT broad evenly spaced teeth and one large clearly dark central hole, no inner rings, no bolts, no complicated spokes.\n\nDo not add any labels, text, numbers, badges, icon names, key hints, logos, watermark, background rectangles, checkerboard, or surrounding game scene. Transparent outside each circular button, opaque dark inside. Avoid the old image's fine ornament and shadowy low-contrast rendering. Deliver four coherent finished icons, not a presentation mockup.",
+ "parameters": {
+  "num_last_images_to_include": 1,
+  "transparent_background": true
+ },
+ "referenced_images": [
+  {
+   "kind": "conversation_image",
+   "description": "Latest user attachment: four existing bottom menu medallions, backpack/red book/scroll/gear. Used as the old style to simplify; no local source path or source SHA was supplied."
+  }
+ ],
+ "output": {
+  "path": "assets/source/mobile-menu/icons.png",
+  "original_generation_path": "/workspace/generated_images/exec-b3ad72b2-8a65-4a9f-ad7c-fa3c3f6ea9d7.png",
+  "sha256": "55fc7cb4c6f4de5bf00eaba0e15147654bab62a17a2ec1a31050a474bf59c402",
+  "size": [
+   2172,
+   724
+  ],
+  "mode": "RGBA"
+ },
+ "source_review": {
+  "status": "adopted for mobile runtime comparison, not user approval",
+  "design": "Four restrained matching dark-olive medallions with a thin bronze rim and broad tan/ivory silhouettes; backpack single buckle, open book, unrolled parchment and eight-tooth gear. Tiny ornament, glyphs and text absent.",
+  "alpha": "Transparent external field; RGBA source alpha spans0..255; dominant disk components all488x501 pixels. Outer source has at most1/255-alpha edge residue.",
+  "geometry": "UI art is front-facing and does not use world isometric projection. The matching circular disks are slightly taller than wide (501/488, about2.7%); no anisotropic repaint or new icon geometry is introduced.",
+  "limitations": "Actual phone HUD integration remains for root browser review; generated art and thumbnail readability are not user approval.",
+  "thumbnail_review": {
+   "sizes_px": [
+    64,
+    48
+   ],
+   "artifact": "/tmp/mobile-menu-review/legibility.png",
+   "result": "At actual thumbnail size, the broad flap/buckle, two open book pages, blank curled parchment and eight-tooth gear remain distinguishable. No tiny text or decorative noise is required to identify them. This thumbnail is a direct resample of the generated atlas, not a game screenshot."
+  }
+ }
+}

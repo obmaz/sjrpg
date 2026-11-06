@@ -2,22 +2,22 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://co4ysm7taapsr"
-path="res://.godot/imported/villagers.webp-5150997d37cc1f0c83e1de561954b922.ctex"
+uid="uid://bxcmh1jbpx1ct"
+path="res://.godot/imported/mobile-menu.webp-a794a36c4651b42d2ee364c0b9fb3137.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/actors/villagers.webp"
-dest_files=["res://.godot/imported/villagers.webp-5150997d37cc1f0c83e1de561954b922.ctex"]
+source_file="res://assets/art/hud/mobile-menu.webp"
+dest_files=["res://.godot/imported/mobile-menu.webp-a794a36c4651b42d2ee364c0b9fb3137.ctex"]
 
 [params]
 
 compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.85
+compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1

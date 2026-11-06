@@ -26,6 +26,7 @@ static func update(position: Vector2, above: bool) -> void:
 	if _material == null:
 		_material = ShaderMaterial.new()
 		_material.shader = SHADER
+		WorldLighting.register_material(_material)
 	var selected: Array[Node2D] = []
 	if not above:
 		var body := Rect2(position - Vector2(38, 100), Vector2(76, 116))
@@ -41,6 +42,7 @@ static func update(position: Vector2, above: bool) -> void:
 			item.material = item.get_meta("base_material") if item.has_meta("base_material") else null
 	for item in selected:
 		if not _active.has(item):
-			item.material = item.get_meta("base_material", _material)
+			var base: Material = item.get_meta("base_material", null)
+			item.material = _material if base == null or base == WorldLighting.material() else base
 			item.set_instance_shader_parameter("sort_y", item.global_position.y)
 	_active = selected

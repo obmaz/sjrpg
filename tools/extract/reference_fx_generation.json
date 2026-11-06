@@ -1,0 +1,165 @@
+{
+ "version": 1,
+ "date_utc": "2026-11-06",
+ "purpose": "Six skill motifs matching the user's inline warrior/mage effects reference. Concept is not user approval; actual game comparison remains required.",
+ "generator": "image_gen.imagegen",
+ "calls": [
+  {
+   "id": "family-concept",
+   "prompt": "Use the user's attached TWO-ROW SIX-SKILL COMBAT REFERENCE as the authoritative effects design. Create an isolated production effects family design sheet, NOT a game screenshot. Preserve the readable thin golden slash crescent, golden spinning circular sweep, upright golden ground slam, blue-white magic missile, cyan ice crystal burst, and orange downward meteor strike from that reference. The world is restrained realistic forest-fantasy; luminous effects have fine bright cores, controlled bloom, separated sparks and debris, never a solid white disk.\n\nOUTPUT: one vertical sheet in a strict 4 COLUMNS x 6 ROWS grid, all 24 cells equal square size, preferably 1536 by 2304 pixels (4*384 by 6*384). No borders, gutters as lines, labels, text, icons, characters, weapons, monsters, buildings, ground tiles, scenery, UI, checkerboard, or colored backdrop. Entire background is exactly PURE BLACK RGB 0,0,0 because each isolated effect will use ADD blending. Keep at least 8% truly black margin inside each cell. No effect touches or leaks over a cell boundary. Every effect is centered and registered consistently from frame to frame; the effect's contact/origin stays fixed as its size changes.\n\nCOLUMNS from left to right: 1 anticipation/onset (small restrained energy), 2 strongest clear peak, 3 outward separated fragments, 4 faint dying embers/fragments with mostly black area. Temporal animation keyframes of the SAME effect per row, not different variations. Last column substantially dimmer and sparser than column 2.\n\nROW1: golden-white melee crescent slash sweeping toward SCREEN RIGHT. Bright slender curved blade arc on right side of an otherwise open center, warm orange falloff, a few trailing sparks. Broad open arc with readable leading edge, no sword or actor. Center of the swing fixed at exact cell center, not the rightmost luminous tip.\nROW2: golden circular spinning blade sweep projected on the ground in TRUE orthographic isometric 120-degree quarter view (camera azimuth45/elevation35.264): horizontal ellipse height/width about0.577. Whole elliptical ring fits inside cell, fine asymmetric motion ribbons and sparse dust specks, hollow readable center. Center fixed at cell center. NOT a front-facing round halo.\nROW3: golden-white ground slam impact: short upright central light spear bursting UP from a fixed ground contact at center x,70% cell height, radial small golden cracks/lines and lifted stone sparks on projected ground ellipse height/width0.577. Thin bright contact, dispersed angular gray-brown glowing debris, no opaque earth plate, no gigantic white explosion disk.\nROW4: blue-white magical missile facing SCREEN RIGHT: a compact bright pointed bolt/core with 2-3 fine cyan blue curved trailing strands to the left and a few tiny separated particles. Long readable directional silhouette, not a blue sphere or starburst. Core/contact fixed at cell center.\nROW5: cyan frost crystal explosion growing from a fixed ground contact at center x,70% cell height: sharp translucent blue ice shards of varied heights radiating outward, visible upper faces and rear shards partially occluded, cold white edges, a subtle projected ground sigil ellipse height/width0.577. Space between shards, no solid blue mass, no terrain plate. First tiny shards, then peak ice crown, then fragmented crystals, then sparse fading icy motes.\nROW6: orange downward meteor strike. A short diagonal fiery streak arrives from upper right to a fixed contact at center x,70% cell height; peak golden-orange contact flare and sparse angular stone fragments, then outward embers and thin ground shock ring. Ground ring ellipse height/width0.577, upright plume separate. No stone ground tile, no giant opaque smoke cloud.\n\nEvery square is a standalone production sprite of ONE time phase. Same color/material density across entire family, no cartoon outlines, no low-poly, no lens flare artifacts. Do not reproduce the reference's captions or environmental art.",
+   "num_last_images_to_include": 1,
+   "transparent_background": false,
+   "input_reference": {
+    "kind": "user_inline_attachment",
+    "description": "User's latest inline two-row six-skill battlefield reference: warrior slash/spin/slam and mage bolt/frost/meteor. Original attachment has no local filesystem copy in this session; no SHA is invented."
+   },
+   "output": "assets/source/reference-fx/family-concept.png",
+   "original_generation_path": "/workspace/generated_images/exec-664563ed-e470-46cd-89f2-b6911978a933.png",
+   "output_record": {
+    "path": "assets/source/reference-fx/family-concept.png",
+    "sha256": "17fd124680ee05e26f132c62dd63a6fcd4d48157c43b8f256e95e9430f0e7a66",
+    "size": [
+     1024,
+     1536
+    ]
+   }
+  },
+  {
+   "id": "production",
+   "prompt": "Create the FINAL PRODUCTION SPRITE SHEET for Guardians of Nature skill effects. Attached references: first is the newly generated six-row EFFECT FAMILY CONCEPT derived directly from the user's supplied six-skill action reference; second is the authoritative forest game style screenshot for restrained light intensity and material realism; third is existing elemental impact-family artwork for color continuity only. The first sheet is a concept, not user approval. Preserve its clear golden crescents, golden ground sweep, golden upward slam, cyan bolt, crisp blue ice crown and orange falling meteor; correct contact registration and the too-flat ground rings.\n\nSTRICT OUTPUT: one image 4 columns x6 rows, equal SQUARE cells, 1024x1536 or1536x2304. Exactly24 isolated effects, no dividing lines or frames. Every cell has at least8% pure BLACK RGB0,0,0 margin on ALL sides. Everything beyond the actual glow and small debris is pure black. These are ADD-blended light sprites, not transparent gray matte. No smoke haze filling entire squares. No text, captions, UI, people, weapons, monsters, scenery, terrain tiles, floor slabs, icons or lens artifacts. All four columns are registered temporal phases of one same effect. Columns: onset small, peak strongest, outward fragments, dim sparse tail. Final column must be substantially dimmer than peak.\n\nCRITICAL CAMERA: TRUE orthographic ISOMETRIC2.5D quarter view, azimuth45/elevation35.264, ground axes+30/-30 (threeaxes120apart). Every ground ring and ground sigil is a horizontal ellipse with VISIBLE HEIGHT EXACTLY0.577 times its VISIBLE WIDTH. The prior concept's spin ring is TOO FLAT; make that ring clearly taller while keeping a horizontal long axis, no camera tilt or front-facing circle. No geometry measurements are asserted by this prompt; make shapes consistent for later inspection.\n\nROW1 GOLD CRESCENT SLASH facing screenRIGHT: slender broad golden curved leading blade edge on the right, faint warm trailing streaks, open center no opaque white blob. The swing center is x50%,y50% in EACH cell. 4 phases: small right crescent; complete bright open crescent about75% cellwidth; thin scattered arc remnants; tiny ember remnants. Never a full circle or sword silhouette.\nROW2 GOLD SPIN: fine complete horizontal elliptical golden ring at x50%,y50%, with ring HEIGHT/WIDTH0.577; hollow clear center and two restrained asymmetrical motion ribbons, sparse tiny angular debris. Peak ring width76%cell, height44%cell. Tiny onset ring/arc → peak ring → separated arc fragments → dim arc remnants. No gray dust disk.\nROW3 GOLD GROUND SLAM: fixed contact at x50%,y70% EACH cell. A thin bright golden upright contact spear, a few angular gray-brown stone fragments rising above, and thin radial gold crack lines on the projected ground around contact. Tiny contact → luminous upright slam/debris peak → outward falling fragments → faint scattered sparks. Never a ground tile or opaque rock mass.\nROW4 CYAN MAGIC BOLT: a compact pointed blue-white head fixed at x75%,y50% EACH cell, with 2-3 narrow cyan trailing ribbons flowing LEFT to at leastx10%. Small blue onset head → sharp bright missile peak → thin blue tail fragments → sparse blue motes. No sphere or circular explosion; clear right-facing movement.\nROW5 FROST NOVA: fixed ground contact at x50%,y70% EACH cell. Transparent sharp cyan-blue ice crystal shards erupt in an irregular crown, tallest near center, visible upperfaces, rearcrystalsnaturallyoccluded, small coldwhite edges, clear gapsbetween crystals. Ground sigil ring HEIGHT/WIDTH0.577 centered at contact, not a round frontfacinghalo or extremely flat ellipse. Tinyshards → peak icecrown → separated shattering crystal pieces → fainticy motes.\nROW6 METEOR STRIKE: fixed contact at x50%,y70% EACH cell. Orange meteor flame streak comes diagonally DOWN from upper RIGHT into the same ground contact; peak thin white-orange impact core, upright scattered sparks and a few lifted stone fragments, narrow projected groundshockring HEIGHT/WIDTH0.577. First short arriving streak plus tiny contact → fiery strike/debris peak → outward orange fragments → dim isolated embers. No opaque smoke cloud.\n\nAll24 cells have the same consistent effect family: realistic handfinished fantasy, fine bright white-gold or blue-white cores, controlled local bloom, crisp sparse particles, no huge solid white patches. Preserve the same origin in all phases; extra black padding is more important than filling every cell.",
+   "referenced_image_paths": [
+    "assets/source/reference-fx/family-concept.png",
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/impact-atlas.png"
+   ],
+   "transparent_background": false,
+   "output": "assets/source/reference-fx/skill-sheet.png",
+   "original_generation_path": "/workspace/generated_images/exec-4620a9a2-14f3-43cb-9feb-17d984e68279.png",
+   "output_record": {
+    "path": "assets/source/reference-fx/skill-sheet.png",
+    "sha256": "02ae223f6144e6a69985de4c90bbcbb1061b75835b69fc77974ea7185ed96dd2",
+    "size": [
+     1024,
+     1536
+    ]
+   },
+   "reference_records": [
+    {
+     "path": "assets/source/reference-fx/family-concept.png",
+     "sha256": "17fd124680ee05e26f132c62dd63a6fcd4d48157c43b8f256e95e9430f0e7a66"
+    },
+    {
+     "path": "assets/source/style/approved-game-reference.jpg",
+     "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+    },
+    {
+     "path": "assets/source/impact-atlas.png",
+     "sha256": "9da7b2773ef0de3f2cd6a4fe6147a451717a7ad62b698ec86127793c3493c835"
+    }
+   ]
+  },
+  {
+   "id": "frost-low-v1",
+   "prompt": "Create JUST the frost-nova replacement animation strip for the supplied restrained forest-fantasy game. Use the attached family effects concept and previous production sheet for the cyan-blue crystal/light material and the attached original forest gameplay image for the restrained readable style. The old frost crown was much too tall in actual gameplay, so this revision MUST be LOW and BROAD.\n\nOUTPUT EXACT LAYOUT: one opaque pure-BLACK RGB(0,0,0) image, 4:1 aspect ratio, FOUR equal SQUARE cells in ONE HORIZONTAL ROW; ideally 1536x384 or1024x256. No gutters, cell lines, labels, text, UI, characters, ground tiles, scenery, smoke, gray matte, checkerboard, border or watermark. Every luminous pixel stays inside its own square with at least 8% untouched black padding. ADD blending will make true black invisible. Produce a finished isolated production asset, not a presentation screenshot.\n\nALL FOUR cells depict ONE SAME low frost-nova crown and ground sigil, with an identical fixed ground-center contact at x50%, y60% of each cell. Four temporal phases LEFT to RIGHT: (1) a small onset with a few low shards; (2) the strongest complete broad low crown; (3) separated shards scattering outward and downward; (4) faint small icy fragments/motes and faint ground arc remnants. Last cell much dimmer than second. Do not add a new design between frames.\n\nTRUE ORTHOGRAPHIC120-degree ISOMETRIC2.5D ground camera: azimuth45°, elevation35.264°. The ground sigil is an ellipse with visible HEIGHT/WIDTH0.57735 (not a flat 0.3 ellipse and not a front-facing circle). No perspective. Keep horizontal major axis and upright natural crystal growth. There are no architectural straight-edge measurement claims for the irregular crystal shards.\n\nCRITICAL HEIGHT AND WIDTH: peak visible ground-ring width about76–80% of its square; ring height about44–46% of its square. Its center is at (50%,60%). Tallest crystal tip reaches ONLY about30% of the square height, so it is just about30% of a square above the contact. Ground ring lower edge reaches about82–83% height. Thus the WHOLE peak effect's painted height, INCLUDING ground ellipse, is approximately65–75% of its painted width. Do NOT make tall spear-like ice pillars. No tip near the cell top. Think a low spreading thorny ice flower, not an ice mountain. Peak crown should be at least about1.4 times as WIDE as the whole effect is TALL.\n\nCyan translucent faceted ICE crystals, about9–13 modest sharp shards of varied sizes, arranged as a low wide irregular crown across the ground sigil. Shorter outer shards, modest central shard, clear black gaps where an actor silhouette can remain readable, naturally occluded small rear shards and visible upper facets. Pale blue-white hairline facet edges, blue inner faces, restrained bright contact core at the ground center. Thin icy ground sigil arcs and a handful of separated tiny ice sparkles. Most of the scene remains black; NO opaque white spike cluster, huge bloom cloud, vertical light beam, tall central spear or filled luminous disk. Match the supplied reference's contemporary fine game effect art rather than cartoon outlines or a photoreal still life.",
+   "referenced_image_paths": [
+    "assets/source/reference-fx/family-concept.png",
+    "assets/source/style/approved-game-reference.jpg",
+    "assets/source/reference-fx/skill-sheet.png"
+   ],
+   "reference_records": [
+    {
+     "path": "assets/source/reference-fx/family-concept.png",
+     "sha256": "17fd124680ee05e26f132c62dd63a6fcd4d48157c43b8f256e95e9430f0e7a66"
+    },
+    {
+     "path": "assets/source/style/approved-game-reference.jpg",
+     "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+    },
+    {
+     "path": "assets/source/reference-fx/skill-sheet.png",
+     "sha256": "02ae223f6144e6a69985de4c90bbcbb1061b75835b69fc77974ea7185ed96dd2"
+    }
+   ],
+   "transparent_background": false,
+   "output": "assets/source/reference-fx/frost-low-v1.png",
+   "original_generation_path": "/workspace/generated_images/exec-63b3bd78-9f4c-4173-8592-1f78b277e550.png",
+   "output_record": {
+    "path": "assets/source/reference-fx/frost-low-v1.png",
+    "sha256": "563043fa46667fb99aca7889617b6d6085c0d6a982ab98760f6ce09502c9fbfd",
+    "size": [
+     2172,
+     724
+    ]
+   },
+   "decision": "Low broad crown accepted as material reference, ground sigil ratio around0.22 rejected."
+  },
+  {
+   "id": "frost-low-projection-edit",
+   "prompt": "EDIT THE ATTACHED FROST STRIP. Preserve its four-phase cyan crystal material, exact shared ground-contact centers, black background, and broad LOW short crystal crowns. The one required correction is the ground sigil CAMERA: the blue ground rings are currently far too flat, approximately0.22height/width. They MUST become much DEEPER, taller ellipses, 0.57735height/width, like a true35.264-degree high orthographic isometric ground circle.\n\nKeep each ring's horizontal width and contact center fixed. Expand the ring vertically both UP and DOWN around that center until each ellipse is visibly about58% as tall as it is wide. For example a ring400pxwide MUST be230pxhigh, NOT90pxhigh. It should look like a broad oval near a 2:1 rectangle, not a thin line viewed from eye level. Show a deep lower semicircle well below the contact and a deep upper semicircle behind the crystals. Raise the camera angle for THE RING ONLY. Do NOT scale the crystals vertically; preserve the existing low crown tip height. Crystal tips remain about0.35–0.40 ring-width above the center. The full peak painted height including the corrected deep ring should be about0.70 ring-width, leaving comfortable black margin.\n\nMake four equal horizontal frame panels with generous pure black margins. Frame1onsetsmallshards, frame2brightbroadlowcrown, frame3scattered fragments, frame4fainticy motes. Same contact point in every frame. Fine cyan/ice-white facet edges, no big white bloom. Absolutely pure blackRGB0around the effects, no backdrop, groundtile, characters, labels, panel lines, frame, smoke, blur plate or text. This is a production sprite strip for additive blending. Change only the flat ground sigil projection while keeping the restrained game effects style and short readable crystal crown.",
+   "referenced_image_paths": [
+    "assets/source/reference-fx/frost-low-v1.png"
+   ],
+   "reference_records": [
+    {
+     "path": "assets/source/reference-fx/frost-low-v1.png",
+     "sha256": "563043fa46667fb99aca7889617b6d6085c0d6a982ab98760f6ce09502c9fbfd"
+    }
+   ],
+   "transparent_background": false,
+   "output": "assets/source/reference-fx/frost-low.png",
+   "original_generation_path": "/workspace/generated_images/exec-8d353556-7ec8-4365-a5b8-462da4cf8948.png",
+   "output_record": {
+    "path": "assets/source/reference-fx/frost-low.png",
+    "sha256": "14487ea4929571797372c76293e7d4e72ad506f152d8ce8d1b404a9ad2f87843",
+    "size": [
+     2172,
+     724
+    ]
+   },
+   "decision": "Adopted low broad crown and deeper oval; slight documented1.06camera correction remains. Actual game capture still required."
+  }
+ ],
+ "review": {
+  "motifs": "Adopted for actual runtime comparison: thin gold crescent, hollow gold elliptical sweep, upright gold contact/debris, pointed cyan projectile, irregular cyan ice crown, diagonal orange meteor and debris. No characters, text, scenery, floor tile or large opaque smoke plate are included.",
+  "layout": "Generator did not obey exact contact registration or equal row ink extents. Explicit measured ROIs exclude neighboring plumes; per-frame contact registration avoids projectile and ground contact jumps. Full untouched source is preserved.",
+  "projection": "Ground circles in the generated source were flatter than the required quarter view. Spin/frost y scaling is an explicit mechanical camera correction recorded in reference_fx_measure.json, not painted replacement art. Upright directions remain vertical; effects and ice crystals are non-rigid natural light shapes, not certified architecture edges.",
+  "limitations": "The four generated phases are keyframes blended by runtime, not 24 guaranteed coherent physical simulation frames. Final lifetimes, damage synchronization, actor readability, scale and browser performance must be reviewed in actual gameplay. Not a claim of identical reference atmosphere.",
+  "frost_revision": {
+   "reason": "Original whole-crown1.9279y camera correction obscured actors and reached the HUD in actual portrait capture. New low crown is independently generated; old source preserved.",
+   "original_capture": "/tmp/reference-fx-review/frost-first.png",
+   "peak_native_painted_bounds": [
+    73,
+    310,
+    471,
+    555
+   ],
+   "peak_native_height_over_width": 0.6155778894472361,
+   "ground_envelope": {
+    "left": [
+     640,
+     457
+    ],
+    "right": [
+     994,
+     457
+    ],
+    "top": [
+     817,
+     362
+    ],
+    "bottom": [
+     817,
+     555
+    ],
+    "native_width": 354,
+    "native_height": 193,
+    "native_minor_over_major": 0.5451977401129944,
+    "packing_vertical_scale": 1.06,
+    "corrected_minor_over_major": 0.577909604519774,
+    "method": "Visual outer ground-oval cardinal envelope in peak cell. Upper arc is partly occluded by crystals; this is an approximate natural-light silhouette review, not a rigid-edge camera certificate."
+   },
+   "packing": "Independent frost override leaves base WebP and the other five effects byte-identical. The old frost base row remains unused for reproducibility.",
+   "limitation": "The last generated phase retains a visible ground ring; runtime lifetime fade still removes it. Gameplay readability needs root browser verification."
+  }
+ }
+}

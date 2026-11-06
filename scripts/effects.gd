@@ -3,6 +3,8 @@ extends Node2D
 ## Drawn combat effects. Kinds: slash, nova, proj, zone, orb, beam, chain, cone,
 ## trail, strike, hydra, ward, text.
 
+const GROUND_Y := 0.577350269
+
 var kind := ""
 var color := Color.WHITE
 var life := 0.4
@@ -94,7 +96,7 @@ func _ready() -> void:
 	if kind in ["proj", "orb"]:
 		velocity *= GameTempo.RATE
 		life = GameTempo.duration(life)
-	if kind in ["nova", "slash", "orb"] or (kind == "proj" and not params.get("throw", false)):
+	if kind in ["nova", "slash", "orb", "skill_fx"] or (kind == "proj" and not params.get("throw", false)) or (kind == "zone" and params.get("visual", "") == "meteor"):
 		material = _glow_material()
 
 
@@ -148,12 +150,20 @@ func _process(delta: float) -> void:
 	var active_delta := minf(delta, maxf(0.0, life - age))
 	# A slow frame must not discard a new cosmetic impact before its first render.
 	# Only the first update is bounded; headless/offscreen effects still expire normally.
-	if kind in ["impact", "cast", "release", "dodge_echo"] and not _impact_started:
+	if kind in ["impact", "cast", "release", "dodge_echo", "slash", "nova", "skill_fx"] and not _impact_started:
 		age += minf(delta, life * 0.2)
 		_impact_started = true
 	else:
 		age += delta
 	match kind:
+		"skill_fx":
+			if params.get("visual", "") == "spin":
+				var caster := owner_node as Player
+				if not is_instance_valid(caster) or caster.dead or caster._action_serial != int(params["action_serial"]):
+					queue_free()
+					return
+				position = caster.position
+				z_index = caster.z_index
 		"release":
 			position += velocity * active_delta
 		"cast":
@@ -316,7 +326,10 @@ func _update_zone(delta: float) -> void:
 		params["impacted"] = true
 		for e in game.enemies_in_radius(position, radius):
 			e.take_damage(params.get("impact", damage), self)
-		game.spawn_nova(position, radius * 1.2, color)
+		if params.get("visual", "") == "meteor":
+			game.spawn_reference_fx("meteor", position, radius * 1.2, owner_node, 0.48)
+		else:
+			game.spawn_nova(position, radius * 1.2, color)
 	_tick_timer -= delta
 	if _tick_timer > 0.0:
 		return
@@ -374,6 +387,13 @@ func visual_phase() -> float:
 func _draw() -> void:
 	var t := age / life
 	match kind:
+		"skill_fx":
+			var key: String = params["visual"]
+			var alpha := 0.35 if Prefs.reduce_motion else (0.58 if key == "frost" else 0.78)
+			var fade := 1.0 - smoothstep(0.6, 1.0, clampf(t, 0.0, 1.0))
+			# Native sheet already contains the projected ground plane and upright shards.
+			var width := radius * (1.4 if key == "frost" else 2.0)
+			ReferenceFxArt.draw(self, key, visual_phase(), ReferenceFxArt.rect(key, width), Color(1, 1, 1, alpha * fade))
 		"release":
 			_draw_generated_glow(Vector2.ZERO, 38.0 if Prefs.reduce_motion else 42.0 + 8.0 * t, int(params["cell"]), (0.32 if Prefs.reduce_motion else 0.7) * (1.0 - t), visual_phase())
 		"dodge_echo":
@@ -409,14 +429,17 @@ func _draw() -> void:
 			PresentationArt.draw_impact(self, int(params["cell"]), visual_phase(), Rect2(Vector2.ONE * -diameter * 0.5, Vector2.ONE * diameter), Color(1, 1, 1, fade * (0.58 if Prefs.reduce_motion else 0.95)))
 			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		"slash":
-			# The authored crescent stays within the old 88px swing silhouette.
 			draw_set_transform(Vector2.ZERO, angle, Vector2.ONE)
-			PresentationArt.draw_impact(self, 0, visual_phase(), Rect2(-32, -40, 108, 80), Color(1, 1, 1, 0.65 * (1.0 - t)))
+			var rect := ReferenceFxArt.rect("slash", radius * 1.7)
+			var sweep := clampf(float(params.get("arc", 1.2)) / 1.2, 0.45, 1.2)
+			rect.position.y *= sweep
+			rect.size.y *= sweep
+			ReferenceFxArt.draw(self, "slash", visual_phase(), rect, Color(1, 1, 1, (0.48 if Prefs.reduce_motion else 0.85) * (1.0 - 0.4 * t)))
 			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		"nova":
 			var r := radius if Prefs.reduce_motion else radius * (0.25 + 0.75 * ease(t, 0.4))
 			var element := _element_cell(color)
-			draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.55))
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, GROUND_Y))
 			PresentationArt.draw_impact(self, element, visual_phase(), Rect2(Vector2.ONE * -r, Vector2.ONE * r * 2.0), Color(1, 1, 1, (0.08 if element == 0 else 0.24) * (1.0 - t)))
 			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 			_ellipse_ring(r, Color(color, 0.4 * (1.0 - t)), 1.4)
@@ -425,6 +448,10 @@ func _draw() -> void:
 				draw_set_transform(Vector2.ZERO, age * 25.0, Vector2.ONE)
 				draw_rect(Rect2(-12, -3, 24, 6), Color(0.8, 0.8, 0.85))
 				draw_rect(Rect2(6, -8, 8, 16), Color(0.7, 0.72, 0.78))
+				draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			elif params.get("visual", "") == "bolt":
+				draw_set_transform(Vector2.ZERO, velocity.angle(), Vector2.ONE)
+				ReferenceFxArt.draw(self, "bolt", 1.0 / 3.0 if Prefs.reduce_motion else 0.32 + 0.06 * sin(age * 20.0), ReferenceFxArt.rect("bolt", 110.0), Color(1, 1, 1, 0.65 if Prefs.reduce_motion else 0.9))
 				draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 			else:
 				var flicker := 1.0 if Prefs.reduce_motion else 1.0 + 0.08 * sin(age * 30.0)
@@ -444,7 +471,22 @@ func _draw() -> void:
 		"zone":
 			var delay := float(params.get("delay", 0.0))
 			var fade := clampf((life - age) / 0.5, 0.0, 1.0)
-			if age < delay:
+			if params.get("visual", "") == "meteor":
+				if age < delay:
+					_ellipse_ring(radius, Color(color, 0.65), 1.8)
+					var fall := Vector2(160, -360) * (1.0 - age / delay)
+					if Prefs.reduce_motion:
+						fall = Vector2(0, -36)
+					for index in 3:
+						_draw_generated_glow(fall + Vector2(12, -28) * index, 42.0 - index * 9.0, 1, 0.8 - index * 0.2)
+				else:
+					# Quiet embers retain the continuing damage-zone cue after the one-shot impact.
+					_ellipse_ring(radius, Color(color, 0.25 * fade), 1.0)
+					for index in 5:
+						var ember := Vector2.from_angle(index * 2.39996) * radius * 0.6
+						ember.y *= GROUND_Y
+						_draw_generated_glow(ember, 17.0, 1, 0.2 * fade)
+			elif age < delay:
 				# Meteor warning circle and falling rock.
 				_ellipse_ring(radius, Color(color, 0.8), 3.0)
 				var k := age / delay
@@ -506,12 +548,12 @@ func _draw_generated_glow(at: Vector2, diameter: float, cell: int, alpha: float,
 
 
 func _ellipse_fill(r: float, c: Color) -> void:
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.55))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, GROUND_Y))
 	draw_circle(Vector2.ZERO, r, c)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 func _ellipse_ring(r: float, c: Color, width: float) -> void:
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.55))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, GROUND_Y))
 	draw_arc(Vector2.ZERO, r, 0, TAU, 48, c, width, true)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

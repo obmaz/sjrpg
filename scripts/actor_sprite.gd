@@ -18,6 +18,10 @@ var _contact_started := false
 var _contact_recovery := 0.0
 
 
+func _ready() -> void:
+	add_to_group("daylight_bodies")
+
+
 func set_frame(a: ActorAtlas, index: int) -> void:
 	# A new action/atlas must win immediately (roll, run, revive), never inherit an old hit pose.
 	if a != atlas:
@@ -92,7 +96,7 @@ func _draw() -> void:
 	var scale_factor := body_height / atlas.ref_height
 	var region := atlas.regions[frame]
 	var dest := Rect2(-atlas.anchors[frame] * scale_factor, region.size * scale_factor)
-	draw_texture_rect_region(atlas.texture, dest, region, tint)
+	draw_texture_rect_region(atlas.texture, dest, region, tint * WorldLighting.color_at(global_position))
 	_sync_flash_overlay()
 
 

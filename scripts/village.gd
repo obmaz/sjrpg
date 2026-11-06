@@ -1,7 +1,7 @@
 class_name Village
 extends RefCounted
 ## 제1장 숲 마을 (원본 AuthoredSettlement + forest_isometric_frames.dart).
-## A 2400×2400 ground diamond with walls, four gates, paved cross roads, the
+## A data-sized ground diamond with walls, four gates, paved cross roads, the
 ## plaza fountain and portal, four service buildings, the raised chapel yard,
 ## the river and the bridge.
 
@@ -531,10 +531,13 @@ func _build_trees(world: Node2D, ground_layer: Node2D) -> void:
 func _canopy_blocks_service(tree: IsoSprite) -> bool:
 	var src: Array = tree.def["source"]
 	var bounds := Iso.poly_bounds(tree.atlas_polygon([[src[0], src[1]], [src[0] + src[2], src[1]], [src[0] + src[2], src[1] + src[3]], [src[0], src[1] + src[3]]]))
-	for key in ["nw", "ne", "sw", "se"]:
+	for service in NPCS:
+		var key: String = service[0]
 		var approach: Array = data["approaches"][key]
 		var npc: Vector2 = buildings[key].native_point(Vector2(approach[0], approach[1]))
-		if tree.position.y > npc.y + 4.0 and bounds.intersects(Rect2(npc - Vector2(42, 90), Vector2(84, 110))):
+		var readable := NpcArt.readability_rect(str(service[1]), Villager.BODY_HEIGHT)
+		readable.position += npc
+		if tree.position.y > npc.y + 4.0 and bounds.intersects(readable):
 			return true
 	return false
 
