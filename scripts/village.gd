@@ -581,6 +581,7 @@ func _build_npcs(world: Node2D) -> void:
 		var nm: String = n[1]
 		npc.marker = func(): return Quests.marker_for(nm)
 		npc_points[n[1]] = npc.position
+		npc_nodes[n[1]] = npc
 		if n[0] == "nw":
 			merchant_point = npc.position
 		world.add_child(npc)
@@ -590,6 +591,7 @@ func _build_npcs(world: Node2D) -> void:
 	mira.position = point(Vector2(0.44, 0.57))
 	mira.marker = func(): return Quests.marker_for("보급원 미라")
 	npc_points["보급원 미라"] = mira.position
+	npc_nodes["보급원 미라"] = mira
 	world.add_child(mira)
 	circles.append([mira.position, 16.0])
 

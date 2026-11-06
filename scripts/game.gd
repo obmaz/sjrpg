@@ -17,6 +17,8 @@ var _view_container: SubViewportContainer
 var world: Node2D
 var forest_details: Array[IsoSprite] = []
 var forest_lighting: ForestLighting
+var forest_atmosphere: ForestAtmosphere
+var ortho_preview: Ortho3DPreview
 var _fx_review_focus := Vector2.ZERO
 var player: Player
 var _impact_offset := Vector2.ZERO
@@ -95,6 +97,8 @@ func _ready() -> void:
 	field_root.add_child(forest_lighting)
 	forest_lighting.setup(ground_layer, village)
 	WorldLighting.configure(forest_lighting.openings, field_root, forest_lighting.materials)
+	forest_atmosphere = ForestAtmosphere.new().setup(forest_lighting.openings)
+	field_root.add_child(forest_atmosphere)
 	map_shapes = MapGeometry.build(village)
 	var chest_def: Dictionary = village.data["sprites"]["chest"]
 	var broken_def: Dictionary = village.data["sprites"]["chest-broken"]
@@ -243,11 +247,15 @@ func _read_debug_params() -> void:
 			add_child(RenderProbe.new().setup(self))
 		elif kv.size() == 2 and kv[0] == "defender_preview" and kv[1] == "1":
 			_defender_feedback_preview.call_deferred()
+		elif kv.size() == 2 and kv[0] == "preview3d" and kv[1] == "1":
+			_enable_ortho_preview.call_deferred()
 		elif kv.size() == 2 and kv[0] == "quality":
 			Prefs.set_low_resolution(kv[1] == "low")
 		elif kv.size() == 2 and kv[0] == "lighting":
 			forest_lighting.set_enabled(kv[1] != "off")
 			WorldLighting.set_enabled(forest_lighting.enabled)
+		elif kv.size() == 2 and kv[0] == "atmosphere":
+			forest_atmosphere.set_enabled(kv[1] == "trial")
 		elif kv.size() == 2 and kv[0] == "panel":
 			var which: String = kv[1]
 			get_tree().create_timer(1.5).timeout.connect(_debug_open_panel.bind(which))
@@ -334,6 +342,14 @@ func _read_debug_params() -> void:
 					player.position = village.point(Vector2(0.94, 0.90)) + Vector2(0, 150)
 			camera.position = player.position
 			camera.reset_smoothing()
+
+
+## Explicit comparison only; the default renderer and saved progression stay unchanged.
+func _enable_ortho_preview() -> void:
+	if is_instance_valid(ortho_preview):
+		return
+	ortho_preview = Ortho3DPreview.new().setup(self)
+	add_child(ortho_preview)
 
 
 ## 상인 곁에서는 가방에서 상점으로 전환할 수 있습니다 (원본의 근처 행동 버튼).

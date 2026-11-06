@@ -1,0 +1,126 @@
+{
+  "purpose": "Optional native3D lighting/geometry comparison, not final reference-art reproduction.",
+  "authoritative_reference": {
+    "path": "assets/source/style/approved-game-reference.jpg",
+    "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+  },
+  "materials": {
+    "limestone": {
+      "source": "assets/source/remake/gate-a.png",
+      "source_sha256": "a0f3d56235882394d645cea025efae632c16e1e23157b67579945bd95aeb7cb6",
+      "source_quad": [
+        [
+          68,
+          490
+        ],
+        [
+          157,
+          540
+        ],
+        [
+          157,
+          632
+        ],
+        [
+          68,
+          581
+        ]
+      ],
+      "path": "assets/art/preview3d/limestone.webp",
+      "sha256": "6945951ec95918afb19ee38f3331864fe69aa815281fc448956cdb65915f69df",
+      "size": [
+        256,
+        256
+      ],
+      "operation": "Perspective rectification of the recorded source quad; no painting or material synthesis."
+    },
+    "slate": {
+      "source": "assets/source/remake/house-ne.png",
+      "source_sha256": "879907b9e0c66c31905ec002a48d09e0099f152716017d167578b977896d9618",
+      "source_quad": [
+        [
+          340,
+          110
+        ],
+        [
+          660,
+          290
+        ],
+        [
+          520,
+          460
+        ],
+        [
+          210,
+          290
+        ]
+      ],
+      "path": "assets/art/preview3d/slate.webp",
+      "sha256": "7d3f46929b53d9f9b8e9229ab6daa1e112348fb6e1ad632cd6b2b184dfc22c3d",
+      "size": [
+        512,
+        512
+      ],
+      "operation": "Perspective rectification of the recorded source quad; no painting or material synthesis."
+    },
+    "timber": {
+      "source": "assets/source/remake/house-ne.png",
+      "source_sha256": "879907b9e0c66c31905ec002a48d09e0099f152716017d167578b977896d9618",
+      "source_quad": [
+        [
+          610,
+          139
+        ],
+        [
+          810,
+          249
+        ],
+        [
+          797,
+          273
+        ],
+        [
+          595,
+          159
+        ]
+      ],
+      "path": "assets/art/preview3d/timber.webp",
+      "sha256": "4a11f6fab8f73109674d478a45ab0a895fbfa1f1225f1b18bf23224add093d87",
+      "size": [
+        512,
+        128
+      ],
+      "operation": "Perspective rectification of the recorded source quad; no painting or material synthesis."
+    },
+    "door": {
+      "source": "assets/source/remake/house-ne.png",
+      "source_sha256": "879907b9e0c66c31905ec002a48d09e0099f152716017d167578b977896d9618",
+      "source_quad": [
+        [
+          617,
+          637
+        ],
+        [
+          711,
+          692
+        ],
+        [
+          710,
+          836
+        ],
+        [
+          617,
+          782
+        ]
+      ],
+      "path": "assets/art/preview3d/door.webp",
+      "sha256": "6bda17cd57cfb2fec3a8202db933bcd6f812fffc97498c117b88d2a15c0f29dc",
+      "size": [
+        256,
+        512
+      ],
+      "operation": "Perspective rectification of the recorded source quad; no painting or material synthesis."
+    }
+  },
+  "limitations": "Rectified albedo patches retain authored source self-shading. No roughness/normal scan or seamless tile certification is claimed."
+}

@@ -6,9 +6,10 @@ const { chromium, devices } = createRequire(import.meta.url)('playwright');
 const args = Object.fromEntries(process.argv.slice(2).reduce((pairs, value, index, all) => value.startsWith('--') ? [...pairs, [value.slice(2), all[index + 1]]] : pairs, []));
 const quality = args.quality ?? 'high';
 const device = args.device ?? 'desktop';
-const hero = args.class ?? 'warrior';
+const hero = args.class ?? (args.preview3d === '1' ? 'mage' : 'warrior');
 const renderer = args.renderer ?? 'software';
 const warmup = Number(args.warmup ?? 6000);
+const preview3d = args.preview3d === '1';
 if (!Number.isFinite(warmup) || warmup < 0 || warmup > 30000) throw new Error('warmup must be 0–30000 ms');
 if (!['low', 'high'].includes(quality) || !['phone', 'phone-landscape', 'desktop'].includes(device) || !['warrior', 'mage'].includes(hero) || !['software', 'default'].includes(renderer)) {
     throw new Error('quality=low|high, device=phone|phone-landscape|desktop, class=warrior|mage, renderer=software|default');
@@ -21,9 +22,12 @@ try {
     page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
     page.on('pageerror', (error) => errors.push(error.message));
     const tap = async (x, y) => device.startsWith('phone') ? page.touchscreen.tap(x, y) : page.mouse.click(x, y);
-    const query = new URLSearchParams({ at: args.at ?? "field", quality, benchmark: "1" });
+    const location = args.at ?? (preview3d ? 'chapel_reference' : 'field');
+    const query = new URLSearchParams({ at: location, quality, benchmark: "1" });
     if (args.combat === '1') query.set('combat_preview', '1');
     if (args.lighting) query.set('lighting', args.lighting);
+    if (args.atmosphere) query.set('atmosphere', args.atmosphere);
+    if (preview3d) query.set('preview3d', '1');
     await page.goto(`${args.url ?? 'http://localhost:8765/index.html'}?${query}`);
     await page.waitForFunction(() => window.__sjrpgTitleReady === true, null, {timeout: 90000});
     await page.waitForFunction(() => !window.__sjrpgEntry || window.__sjrpgEntryReady === true, null, {timeout: 30000});
@@ -38,8 +42,11 @@ try {
         await page.waitForTimeout(200);
     }
     await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { timeout: 30000 });
-    await page.waitForFunction((expected) => window.__sjrpgRenderProbe?.quality === expected && window.__sjrpgRenderProbe?.world_draw_calls > 0 && window.__sjrpgRenderProbe?.world_width > 2 && window.__sjrpgRenderProbe?.world_height > 2, quality, { timeout: 30000 }).catch(async (error) => {
-        throw new Error(`World rendering was not confirmed: ${JSON.stringify(await page.evaluate(() => window.__sjrpgRenderProbe))}; ${error.message}`);
+    await page.waitForFunction(({expected, native}) => {
+        const probe = native ? window.__sjrpg3dProbe : window.__sjrpgRenderProbe;
+        return probe?.quality === expected && (native ? probe.ready && probe.native_active && probe.spatial_draw_calls > 0 && probe.shadow_primitives > 0 && probe.batch_corner_error_m < 0.0001 && probe.native_width > 2 && probe.native_height > 2 : probe.world_draw_calls > 0 && probe.world_width > 2 && probe.world_height > 2);
+    }, {expected: quality, native: preview3d}, { timeout: 60000 }).catch(async (error) => {
+        throw new Error(`World rendering was not confirmed: ${JSON.stringify(await page.evaluate((native) => native ? window.__sjrpg3dProbe : window.__sjrpgRenderProbe, preview3d))}; ${error.message}`);
     });
     await page.waitForTimeout(warmup);
     const result = await page.evaluate(() => new Promise((resolve) => {
@@ -59,7 +66,7 @@ try {
         const canvas = document.querySelector('canvas');
         return { dpr: window.devicePixelRatio, inner_width: innerWidth, inner_height: innerHeight, css_width: canvas.clientWidth, css_height: canvas.clientHeight, canvas_width: canvas.width, canvas_height: canvas.height };
     });
-    console.log(JSON.stringify({ device, quality, hero, renderer, lighting: args.lighting ?? 'on', combat: args.combat === '1', warmup_ms: warmup, at: args.at ?? 'field', ...result, world: await page.evaluate(() => window.__sjrpgRenderProbe), surface: browserSurface, errors }, null, 2));
+    console.log(JSON.stringify({ device, quality, hero, renderer, preview3d, lighting: args.lighting ?? 'on', combat: args.combat === '1', warmup_ms: warmup, at: location, ...result, world: await page.evaluate((native) => native ? window.__sjrpg3dProbe : window.__sjrpgRenderProbe, preview3d), surface: browserSurface, errors }, null, 2));
     if (errors.length) process.exitCode = 1;
     await context.close();
 } finally {

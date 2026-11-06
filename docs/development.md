@@ -21,6 +21,12 @@ Godot 4.7.2의 Polygon2D UV 갱신 경로가 WebGL에서 index buffer를 잘못�
 | 테스트 | `tests/run_all.gd`, `tests/test_case.gd`, `tests/cases/*.gd` | 헤드리스 케이스 러너 |
 | 도구 | `tools/*.sh`, `tools/screenshot.mjs`, `tools/extract/` | 검증·빌드·캡처·데이터 추출 |
 
+## 직교 3D 비교
+
+`?preview3d=1&at=chapel_reference`는 `Ortho3DPreview`를 생성합니다. 기본 게임의 렌더러는 바꾸지 않고 별도 공간 뷰포트에서 입체 마을·CC0 골격 마법사·방향광·짧은 명중광을 표시합니다. 기존 2D 시뮬레이션과 HUD를 유지하며, 카메라 투영과 절약 화질·일시정지 설정을 동기화합니다. `ortho_3d_preview`는 실제 투영·공격 진행·카드 반동·명중광과 그림자 거리를 검사합니다. `node tools/screenshot.mjs --scene preview3d --device phone|phone-landscape`로 실제 화면을 확인합니다. 제작·재현·한계는 [비교 장면 문서](orthographic-3d-comparison.md)를 따릅니다.
+
+`?atmosphere=trial`은 `ForestAtmosphere`의 생성형 햇살 원화를 실제 숲 개구부 두 곳에만 표시하는 별도 실험입니다. 기본값은 꺼짐이며 입체 광원·법선·그림자를 대신하지 않습니다. `forest_atmosphere`는 범위·수명·설정 분리를 검사합니다.
+
 ## 로딩과 수호자 선택
 
 `web/shell.html`은 엔진 다운로드 전부터 숲 원화와 실제 전송 진행률을 표시합니다. 웹 시작 화면도 같은 DOM을 유지하며 진행 표시 자리만 생성형 금빛 ‘모험 시작’ 버튼으로 바꾸므로 배경·제목·구도가 바뀌지 않습니다. 엔진 준비와 현재 `TitleScreen`의 콜백 등록이 모두 끝나야 버튼을 활성화하고, 버튼을 누를 때만 직업 선택으로 넘어갑니다. 선택/설정에서 타이틀로 돌아오면 새 장면의 콜백으로 같은 화면을 다시 엽니다. 네이티브 실행은 기존 Godot 타이틀을 사용합니다. 전체 크기를 모를 때는 불확정 표시를 사용하고, 다운로드 완료와 엔진 준비 단계를 구분합니다. 실패·기능 미지원·엔진 스크립트 실패는 재시도 화면으로 처리합니다.

@@ -41,6 +41,7 @@ const SCENES = {
     npc_se: 'at=npc_se',
     npc_courtyard: 'at=npc_courtyard&zoom=0.65',
     defender: 'defender_preview=1',
+    preview3d: 'preview3d=1&at=chapel_reference',
     pc_controls: 'at=field',
     dodge: 'at=field',
     corpses: 'corpse_preview=1',
@@ -101,7 +102,7 @@ if (!(scene in SCENES)) {
     process.exit(2);
 }
 const device = args.device ?? 'desktop';
-const cls = args.class ?? (scene === 'cooldowns' ? 'mage' : 'warrior');
+const cls = args.class ?? (scene === 'cooldowns' || scene === 'preview3d' || args.preview3d === '1' ? 'mage' : 'warrior');
 const base = args.url ?? 'http://localhost:8765/index.html';
 const out = args.out ?? `shot-${scene}-${device}.png`;
 const settle = Number(args.settle ?? 9000);
@@ -130,7 +131,7 @@ diagnosticLog.on('Log.entryAdded', ({entry}) => {
 });
 const launchURL = new URL(base);
 for (const [key, value] of new URLSearchParams(SCENES[scene])) launchURL.searchParams.set(key, value);
-for (const key of ['quality', 'zoom', 'lighting', 'at']) {
+for (const key of ['quality', 'zoom', 'lighting', 'at', 'atmosphere', 'preview3d']) {
     if (args[key]) launchURL.searchParams.set(key, args[key]);
 }
 let releaseDownload;
@@ -217,6 +218,10 @@ if (scene === 'select') {
 if (args.start) await tap(...args.start.split(',').map(Number));
 else await tapEntry('start');
 await page.waitForFunction(() => window.__sjrpgAdventureReady === true, null, { timeout: 30000 });
+if (launchURL.searchParams.get('preview3d') === '1') {
+    await page.waitForFunction(() => window.__sjrpg3dReady === true && window.__sjrpg3dProbe?.native_active === true && window.__sjrpg3dProbe?.shadow_primitives > 0 && window.__sjrpg3dProbe?.batch_corner_error_m < 0.0001, null, {timeout: 60000});
+    console.log('Native3D world:', await page.evaluate(() => window.__sjrpg3dProbe));
+}
 if (scene === 'background') await page.evaluate(() => document.querySelector('canvas').blur());
 if (scene === 'defender') {
     await page.waitForFunction(() => window.__sjrpgDefenderReview === true, null, {timeout: 60000});

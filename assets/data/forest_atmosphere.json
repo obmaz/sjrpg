@@ -1,0 +1,203 @@
+{
+ "version": 1,
+ "trial_only": true,
+ "source": {
+  "path": "assets/source/atmosphere/sunshaft-candidate.png",
+  "sha256": "1da02f81c3ef14a9e36a32ce279694fd8d073478788a099b52a304cc13fc88ce"
+ },
+ "generation": {
+  "path": "tools/extract/forest_atmosphere_generation.json",
+  "sha256": "519e2ce6f87f07c4ed657a2ff998590a3b61abeafe0dab6e40ddfd0da41a7e54"
+ },
+ "references": [
+  {
+   "path": "assets/source/style/approved-game-reference.jpg",
+   "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+  },
+  {
+   "path": "assets/source/atmosphere/reference-current.png",
+   "sha256": "6b4a9970dbaced0ca978f26ccae0c31c52133492acdddd208b7638677be2577e"
+  }
+ ],
+ "texture": {
+  "path": "assets/art/effects/forest-atmosphere.webp",
+  "sha256": "0d194d3d3bcaf23ea81544961e4a8d695d3491c7a9f4215bc960d321e91c14e6",
+  "size": [
+   768,
+   768
+  ],
+  "blend": "add"
+ },
+ "pivot": [
+  327.7941,
+  334.3398
+ ],
+ "source_envelope": [
+  [
+   92,
+   298
+  ],
+  [
+   97,
+   192
+  ],
+  [
+   107,
+   173
+  ],
+  [
+   115,
+   160
+  ],
+  [
+   128,
+   152
+  ],
+  [
+   138,
+   147
+  ],
+  [
+   147,
+   144
+  ],
+  [
+   230,
+   143
+  ],
+  [
+   232,
+   143
+  ],
+  [
+   256,
+   144
+  ],
+  [
+   269,
+   145
+  ],
+  [
+   308,
+   160
+  ],
+  [
+   341,
+   176
+  ],
+  [
+   388,
+   203
+  ],
+  [
+   422,
+   224
+  ],
+  [
+   491,
+   268
+  ],
+  [
+   543,
+   307
+  ],
+  [
+   560,
+   328
+  ],
+  [
+   663,
+   543
+  ],
+  [
+   663,
+   544
+  ],
+  [
+   660,
+   552
+  ],
+  [
+   656,
+   560
+  ],
+  [
+   632,
+   568
+  ],
+  [
+   624,
+   568
+  ],
+  [
+   604,
+   567
+  ],
+  [
+   466,
+   552
+  ],
+  [
+   460,
+   551
+  ],
+  [
+   456,
+   550
+  ],
+  [
+   394,
+   531
+  ],
+  [
+   326,
+   504
+  ],
+  [
+   324,
+   503
+  ],
+  [
+   311,
+   496
+  ],
+  [
+   299,
+   488
+  ],
+  [
+   268,
+   464
+  ],
+  [
+   152,
+   370
+  ],
+  [
+   97,
+   315
+  ],
+  [
+   94,
+   308
+  ],
+  [
+   92,
+   300
+  ]
+ ],
+ "envelope_fraction": 0.24595,
+ "shafts": [
+  {
+   "world_width": 380.0,
+   "opacity": 0.3
+  },
+  {
+   "world_width": 440.0,
+   "opacity": 0.25
+  }
+ ],
+ "z_index": -9,
+ "extra_dust_draws": 0,
+ "review": "Technical trial only. Two world-anchored generated light textures behind actors and real canopy shade. Embedded dust is static. This provides direction and atmosphere, not reconstructed3D volume, face normals or occlusion. Original source retained; cleanup zeros only <=2RGB background, then uniform resize and WebP packing."
+}

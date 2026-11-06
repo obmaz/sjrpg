@@ -5,6 +5,8 @@ Flutter·Bonfire로 만든 [sjrpg](https://github.com/obmaz/sjrpg)를 **Godot 4.
 
 [게임 플레이](https://obmaz.github.io/sjrpg2/)
 
+[직교 3D 비교 장면](https://obmaz.github.io/sjrpg2/?preview3d=1&at=chapel_reference)은 **마법사**를 선택해 확인합니다. 기존 UI·조작·진행을 유지하며 마법사 골격과 마을 입체 건물의 실제 조명·그림자를 비교합니다. 기본 게임은 2.5D이며, 비교용 건물 디테일·2D 주민/몬스터·기존 충돌은 전체 3D 이식 완료를 뜻하지 않습니다. [비교 범위와 제작 방법](docs/orthographic-3d-comparison.md)을 참고하세요.
+
 게임의 **설정 → 이 기기에 설치**에서 브라우저 설치 창을 열 수 있습니다. 설치 창을 지원하지 않는 브라우저에서는 홈 화면 추가 방법을 안내합니다. iPhone/iPad는 Safari의 공유 → 홈 화면에 추가를 사용합니다. 설치한 뒤에도 인터넷 연결이 필요하며, 진행은 해당 브라우저·앱의 로컬 저장 공간을 사용합니다.
 
 레퍼런스의 가까운 카메라·배우 비례·빛과 그늘·식생을 재현하는 제작 순서와 화면 판정은 [레퍼런스 분위기 제작 가이드](docs/reference-look-guide.md)에 보관합니다. 스타일·120° 투영·재질의 고정 기준은 [아트 기준](docs/art-direction.md), 새 원화 생성 지시는 [공통 프롬프트](docs/art-prompts.md)를 따릅니다. 첨부받은 최종 게임 레퍼런스가 최상위이며, 같은 패밀리 원화를 함께 참조하고 실제 투영과 게임 화면을 검수합니다.
