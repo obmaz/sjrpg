@@ -5,6 +5,7 @@ func run() -> void:
 	var view := SubViewport.new()
 	view.size = Vector2i(720, 1280)
 	add_child(view)
+	GameState.delete_save()
 	GameState.new_game("mage")
 	var panel := SkillTreePanel.new()
 	view.add_child(panel)

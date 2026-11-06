@@ -34,6 +34,72 @@ func _leaf_meshes(gate: Dictionary) -> Array:
 	return result
 
 
+func _swept_panel_check(controller: Ortho3DFortification, game: Node, wood: Material) -> void:
+	var original_progress: Array[float] = game.town_gates.progress.duplicate()
+	game.town_gates.progress.assign([1.0, 1.0, 1.0, 1.0])
+	controller.sync()
+	var closed := {}
+	var hinges := {}
+	var depths := {}
+	for gate: Dictionary in controller.gates:
+		var outward: Vector3 = gate["outward"]
+		for leaf: Node3D in gate["leaves"]:
+			var hinge := leaf.get_parent() as Node3D
+			hinges[leaf.get_instance_id()] = hinge.global_transform
+			var depth := 0.0
+			for mesh: MeshInstance3D in leaf.find_children("*", "MeshInstance3D", true, false):
+				var points := PackedVector3Array()
+				for surface in mesh.mesh.get_surface_count():
+					var arrays := mesh.mesh.surface_get_arrays(surface)
+					var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+					for vertex in vertices:
+						var point := mesh.global_transform * vertex
+						points.append(point)
+						depth = maxf(depth, absf((point - hinge.global_position).dot(outward)))
+				closed[mesh.get_instance_id()] = points
+			depths[leaf.get_instance_id()] = depth
+	# Test installed mesh vertices in actual world space, including both faces,
+	# arch tops, braces and hinge hardware. Thickness can straddle the hinge plane;
+	# the free wood edges must travel substantially outside that finite envelope.
+	for progress in [1.0, 0.5, 0.0]:
+		game.town_gates.progress.assign([progress, progress, progress, progress])
+		controller.sync()
+		for gate_index in controller.gates.size():
+			var gate: Dictionary = controller.gates[gate_index]
+			var frame: Transform3D = gate["frame"]
+			var outward: Vector3 = gate["outward"]
+			var half := float(gate["width"]) * 0.5
+			for leaf_index in 2:
+				var leaf: Node3D = gate["leaves"][leaf_index]
+				var hinge := leaf.get_parent() as Node3D
+				var stationary := hinge.global_transform.is_equal_approx(hinges[leaf.get_instance_id()])
+				var full_envelope := true
+				var distal_outward := true
+				var distal_count := 0
+				var depth: float = depths[leaf.get_instance_id()]
+				for mesh: MeshInstance3D in leaf.find_children("*", "MeshInstance3D", true, false):
+					var old_points: PackedVector3Array = closed[mesh.get_instance_id()]
+					var index := 0
+					for surface in mesh.mesh.get_surface_count():
+						var arrays := mesh.mesh.surface_get_arrays(surface)
+						var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+						for vertex in vertices:
+							var point := mesh.global_transform * vertex
+							var original := old_points[index]
+							index += 1
+							var outside := (point - hinge.global_position).dot(outward)
+							full_envelope = full_envelope and outside >= -depth - 0.0001 and absf(point.y - original.y) < 0.0001
+							if progress == 1.0:
+								full_envelope = full_envelope and point.distance_to(original) < 0.0001
+							if mesh.material_override == wood and absf((original - hinge.global_position).dot(frame.basis.x)) > half * 0.8:
+								distal_count += 1
+								if progress < 1.0:
+									distal_outward = distal_outward and outside > half * (0.45 if progress == 0.5 else 0.70) - depth
+				check("gate %d leaf %d actual closed/half/open vertices sweep outside at %s" % [gate_index, leaf_index, progress], stationary and full_envelope and distal_outward and distal_count > 0)
+	game.town_gates.progress.assign(original_progress)
+	controller.sync()
+
+
 func run() -> void:
 	var game := await make_game("mage")
 	game.set_process(false)
@@ -76,6 +142,14 @@ func run() -> void:
 				winding = winding and (vertices[b] - vertices[a]).cross(vertices[c] - vertices[a]).dot(normals[a]) <= 0.00001
 	check("both wall axes wings towers and corners share the same world-scaled limestone", stone_meshes.size() == 1 and stone.uv1_world_triplanar and stone.uv1_scale.is_equal_approx(Vector3.ONE * 0.390625))
 	check("fortification mesh normals UVs and winding remain valid", valid and winding)
+	var reversed_safe: PackedVector2Array = game.village.safe_zone.duplicate()
+	reversed_safe.reverse()
+	var town_center: Vector3 = report["town_center"]
+	for gate: Dictionary in controller.gates:
+		var frame: Transform3D = gate["frame"]
+		var outward_normal: Vector3 = gate["outward"]
+		check("gate exterior follows actual safe boundary independently of winding", outward_normal.length() > 0.999 and outward_normal.dot(frame.origin - town_center) > 0.0 and outward_normal.is_equal_approx(Ortho3DFortification._outward_normal(reversed_safe, frame.origin)))
+	_swept_panel_check(controller, game, fixture._materials["wood"])
 	for wing: Dictionary in report["wing_joins"]:
 		var gate: Dictionary = controller.gates[int(wing["gate"])]
 		var frame: Transform3D = gate["frame"]

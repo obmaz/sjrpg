@@ -4,9 +4,11 @@
 
 ## 기준과 현재 구현
 
-분위기의 최상위 기준은 사용자가 지정한 [게임 레퍼런스 원본](../sjrpg_3d/assets/source/style/approved-game-reference.jpg)입니다. SHA-256은 `c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a`이며 새 컨셉으로 덮어쓰지 않습니다. [레퍼런스 분위기](../sjrpg_3d/docs/reference-look-guide.md)와 [아트 기준](../sjrpg_3d/docs/art-direction.md)의 재질·거리·명암·식생 원칙은 이어받습니다. [기존 프롬프트](../sjrpg_3d/docs/art-prompts.md)는 2D 원화용이므로, 아래의 3D 컨셉·평면 재질 지시와 구별합니다.
+최신 사용자 스타일 지시는 **디아블로 이모탈을 참고한 성숙하고 어두운 게임 일러스트**입니다. 과한 실사·사진 같은 피부/재질과 파스텔·귀여운 만화풍을 피하고, 명확한 형태와 절제된 회화적 디테일을 사용합니다. 이는3D판에만 적용합니다. 기존 [게임 레퍼런스 원본](../sjrpg_3d/assets/source/style/approved-game-reference.jpg)은 구도·재질 계열·빛과 식생의 관계를 참고하되 사진 같은 표현을 그대로 복제하는 목표로 사용하지 않습니다. SHA-256은 `c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a`이며 원본을 새 컨셉으로 덮어쓰지 않습니다. 최신 명시적 사용자 지시가 과거 가이드와 생성 컨셉보다 우선합니다.
 
-레퍼런스처럼 절제된 사실적 숲 판타지로 만듭니다. 따뜻한 중성 회색 석회암, 얇은 청회색 슬레이트, 낡은 참나무, 무광 철, 남색 옷, 낮은 채도의 올리브 식생이 한 화면에서 같은 밀도로 읽혀야 합니다. 과한 금장·검은 외곽선·장난감 같은 큰 돌·장식으로만 채운 건물을 피합니다. 잔디와 수관은 색·명도를 구별하고, 문·NPC·전투 동선에는 여백을 둡니다.
+성숙하고 절제된 회화형 숲 판타지로 만듭니다. 따뜻한 중성 회색 석회암, 얇은 청회색 슬레이트, 낡은 참나무, 무광 철, 남색 옷, 낮은 채도의 올리브 식생이 한 화면에서 같은 밀도로 읽혀야 합니다. 피부 모공·사진 노이즈·무작위 때로 디테일을 채우지 말고, 읽히는 면·명암·재질 차이를 설계합니다. 과한 금장·검은 외곽선·장난감 같은 큰 돌·장식으로만 채운 건물을 피합니다. 잔디와 수관은 색·명도를 구별하고, 문·NPC·전투 동선에는 여백을 둡니다.
+
+시작/로딩과 캐릭터 선택은 새 생성형 일러스트를 사용합니다. 시작과 로딩은 같은 배경·제목·구도를 유지하고 실제 버튼·진행률·한글은 런타임 UI로 표시합니다. 인물 원화는 선택 화면 크기에서 얼굴·손·실루엣이 읽히며 가로/세로에서 잘리지 않아야 합니다. UI 키아트는 영화적 구도를 사용할 수 있지만 게임 월드의 직교120° 규격은 변경하지 않습니다. 특정 상용 게임의 캐릭터·로고·UI 이미지를 복제하지 않고 장르·명암·표현 방향을 참고합니다.
 
 화면은 가까운 인물·길·건물과 깊은 숲을 함께 읽는 구도입니다. 레퍼런스 비교의 시작 목표는 배우 실루엣이 짧은 변의 약 22–26%, 세로 화면의 발치가 높이 약 58–64%, 가까운 주 건물이 화면 폭의 약 60–80%입니다. 근사 제작 목표이며 실제 달성값이 아닙니다. 투명 여백·브라우저 크롬을 제외한 실제 화면을 비교하고, 검수 때만 줌을 바꿔 다른 비례 문제를 숨기지 않습니다.
 
@@ -118,15 +120,16 @@ LOD는 표면 수·실루엣·그림자·알파 구멍을 함께 유지합니다
 
 ## 생성 프롬프트와 제작 기록
 
-매 생성에는 사용자 원본과 실제 같은 패밀리 참조 이미지를 도구에 첨부합니다. 프롬프트에 경로만 적는 것으로 대신하지 않습니다. 생성 이미지가 새로운 스타일 기준이 되지 않습니다.
+기존 패밀리의 이미지를 편집·재생성할 때는 실제 사용자/패밀리 참조를 도구에 첨부하고 최신 스타일 지시와의 관계를 설명합니다. 프롬프트에 경로만 적는 것으로 첨부를 대신하지 않습니다. 최신 사용자 지시로 완전히 새 UI 원화를 만들 때는 그 지시를 그대로 보존한 새 생성 초안을 사용할 수 있으며, 첨부하지 않은 이미지를 실제 도구 참조로 기록하지 않습니다. 생성 초안이 사용자 승인이나 새로운 최상위 스타일 기준이 되지 않습니다.
 
 평면 재질용 공통 문구:
 
 ```text
 Create a reusable BASE-COLOR MATERIAL for a native3D game asset. Match the
 attached USER GAME REFERENCE and the attached FAMILY MATERIAL reference.
-The user reference remains authoritative. Restrained realistic woodland fantasy,
-natural low saturation, tactile fine detail readable on a mobile game screen.
+Apply the latest user brief: mature dark STYLIZED painterly woodland fantasy,
+in the visual genre of Diablo Immortal, not photoreal and not pastel/cute.
+Natural low saturation, designed material planes readable on a mobile screen.
 FLAT FRONT-ON ORTHOGRAPHIC MATERIAL ONLY: no isometric object, no perspective,
 no building silhouette, no environment, no camera or UI. Uniform neutral diffuse
 illumination; no cast shadow, directional sun patch, baked highlight or vignette.

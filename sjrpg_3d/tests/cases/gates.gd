@@ -11,6 +11,11 @@ func _inside_any(p: Vector2, polys: Array) -> bool:
 
 func run() -> void:
 	var game: Node = await make_game()
+	# This case walks empty passages and tests structural collision. Ambient
+	# combat/closure has separate cases; ambient and proximity-triggered packs
+	# must not spawn attackers midway through these four long structural routes.
+	game._spawn_timer = 10000.0
+	game.encounters.set_process(false)
 	var player: Player = game.player
 	var v: Village = game.village
 	var world: Node2D = player.get_parent()
@@ -68,7 +73,8 @@ func run() -> void:
 		check("gate %d passage preserves native actor visibility and height" % gate, in_arch and game.ortho_preview.actor.is_visible_in_tree() and absf(game.spatial_world.actor_foot(player).y - game.spatial_world.height_at(player.position)) < 0.05)
 		await _walk(player, to, 300)
 		await _frames(2)
-		check("gate %d can be crossed" % gate, player.position.distance_to(to) < 20.0, str(player.position))
+		check("gate %d can be crossed" % gate, player.position.distance_to(to) < 20.0, "position=%s target=%s hp=%s dead=%s enemies=%s closed=%s" % [player.position, to, player.hp, player.dead, game.enemies.size(), game.town_gates.closed[gate]])
+		check("clear gate traversal remains free of combat interference", game.enemies.is_empty() and not player.dead)
 
 		# Towers block: walking at a tower centre from the front stops outside the footprint.
 		var tower := PackedVector2Array()

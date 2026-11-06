@@ -36,6 +36,7 @@ func _walk(player: Player, target: Vector2, frames: int) -> void:
 
 ## 새 게임을 시작하고 몬스터를 비운 게임 장면을 돌려준다.
 func make_game(cls := "warrior") -> Node:
+	GameState.delete_save()
 	GameState.new_game(cls)
 	var game := preload("res://scripts/game.gd").new()
 	add_child(game)

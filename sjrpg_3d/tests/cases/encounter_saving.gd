@@ -73,6 +73,7 @@ func _check_capture_lifecycle() -> void:
 	GameState.encounter_capture = func():
 		calls[0] += 1
 		GameState.encounters = {"stale": _area()}
+	GameState.delete_save()
 	GameState.new_game("mage")
 	check("new adventure clears the old callback before its first save", calls[0] == 1 and not GameState.encounter_capture.is_valid() and GameState.encounters.is_empty() and _read()["encounters"].is_empty())
 	var owner := SnapshotOwner.new()

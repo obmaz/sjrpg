@@ -14,6 +14,9 @@ void fragment() {
 	ALPHA_SCISSOR_THRESHOLD = 0.18;
 }
 """
+const CAVE_AMBIENT := 0.34
+const CAVE_AMBIENT_COLOR := Color(0.62, 0.69, 0.76)
+const CAVE_BACKGROUND := Color(0.055, 0.065, 0.070)
 var preview: Node
 var forest: Node3D
 var cave: Node3D
@@ -21,6 +24,11 @@ var _cave_source_id := 0
 var _forest_world: Node2D
 var _water_material: StandardMaterial3D
 var _cave_lights: Array[OmniLight3D] = []
+var _cave_key: DirectionalLight3D
+var _cave_entry_light: OmniLight3D
+var _lighting_scope_cave := false
+var _ambient_outside := {}
+var _cave_rock := {}
 var _stone_cards := {}
 var _corpses := {}
 var _clock := 0.0
@@ -139,12 +147,16 @@ func _floor(polygon: PackedVector2Array, texture: Texture2D, parent: Node3D, hei
 func _build_forest() -> void:
 	var buckets := {}
 	var native: Dictionary = preview._town_props.source_ids()
+	var forest_trees := Ortho3DForestTrees.build(preview, forest, _forest_world)
+	var tree_report: Dictionary = forest_trees.get_meta("native_forest_tree_report")
+	# Failed/unsupported replacements keep their source card. Never skip a whole sheet.
+	native.merge(tree_report["owned_source_ids"])
+	report["native_forest_trees"] = tree_report["trees"].size()
 	for object in preview.game.village.buildings.values():
 		native[object.get_instance_id()] = true
 	for tree: IsoSprite in preview.game.village.town_trees:
 		native[tree.get_instance_id()] = true
-	if preview.game.village.fountain != null:
-		native[preview.game.village.fountain.get_instance_id()] = true
+	# Affordances own the animated fallback for any non-native portal.
 	for portal in preview.game.village.portal_sprites.values():
 		native[portal.get_instance_id()] = true
 	for child in _forest_world.get_children():
@@ -273,36 +285,34 @@ func _build_cave() -> void:
 	var textures: Dictionary = DungeonArt.data()["textures"]
 	var floor_texture: Texture2D = load("res://" + str(textures["floor"]["path"]))
 	for polygon in layout.polygons:
-		_floor(polygon, floor_texture, cave, 0.004, Color(0.72, 0.78, 0.80), 2.6)
+		_floor(polygon, floor_texture, cave, 0.004, Color(0.90, 0.93, 0.94), 2.6)
 	var buckets := {}
+	var replaced: Array[int] = []
+	var retained: Array[int] = []
 	for node in preview.game.dungeon.art.visuals:
 		if node is IsoSprite and not preview._town_props.owns(node):
+			# Wall strips and end caps share atlases with useful lamps. Replace
+			# only the metadata-owned boundary art, never the whole texture bucket.
+			if str(node.get_meta("cave_role", "")) == "wall":
+				replaced.append(node.get_instance_id())
+				continue
 			_sprite(node, buckets)
+			retained.append(node.get_instance_id())
 			report["cave_sprites"] = int(report["cave_sprites"]) + 1
 	for node in preview.game.world.get_children():
 		if node is IsoSprite and not preview._town_props.owns(node) and not preview.game.dungeon.art.visuals.has(node):
 			_sprite(node, buckets)
+			retained.append(node.get_instance_id())
 	report["cave_groups"] = _flush(buckets, cave, "CaveArt_")
-	# Native solid wall volumes follow the merged playable union. Rear walls are
-	# tall; front boundary lips remain low so combat is readable from quarter view.
 	var rock: Texture2D = load("res://" + str(textures["dark"]["path"]))
-	var wall_ink := StandardMaterial3D.new()
-	wall_ink.albedo_texture = rock
-	wall_ink.roughness = 1.0
-	wall_ink.uv1_triplanar = true
-	wall_ink.uv1_scale = Vector3.ONE * 0.8
-	for edge in DungeonArt.outer_boundaries(layout):
-		var a: Vector2 = edge["a"]
-		var b: Vector2 = edge["b"]
-		var outward: Vector2 = edge["outward"]
-		var low := Iso.project(outward).y >= 0.0
-		var height := 0.28 if low else 1.65
-		var from := Vector3(a.x / Ortho3DPreview.GROUND_PER_METER, height * 0.5, a.y / Ortho3DPreview.GROUND_PER_METER)
-		var to := Vector3(b.x / Ortho3DPreview.GROUND_PER_METER, height * 0.5, b.y / Ortho3DPreview.GROUND_PER_METER)
-		var wall: MeshInstance3D = preview._box((from + to) * 0.5, Vector3(from.distance_to(to) + 0.05, height, 0.15), wall_ink, cave)
-		wall.position += Vector3(outward.x, 0, outward.y) * 0.08
-		wall.rotation.y = -atan2((to - from).z, (to - from).x)
-		report["cave_walls"] = int(report["cave_walls"]) + 1
+	# DungeonArt recorded this union before the separate return-portal obstacle
+	# was added; a prop must not become a new cave boundary cell.
+	_cave_rock = Ortho3DCaveRock.build(layout, cave, rock, preview.game.dungeon.art.boundary_segments)
+	report["cave_walls"] = int(_cave_rock["segments"])
+	report["cave_rock_triangles"] = int(_cave_rock["triangles"])
+	report["cave_rock_groups"] = int(_cave_rock["groups"])
+	report["cave_replaced_wall_sources"] = replaced
+	report["cave_retained_sources"] = retained
 	for source in preview.game.dungeon.art.visuals:
 		if source.get_meta("cave_role", "") != "lantern":
 			continue
@@ -314,8 +324,58 @@ func _build_cave() -> void:
 		light.shadow_enabled = false
 		cave.add_child(light)
 		_cave_lights.append(light)
+	_build_cave_fill()
 	var batch := Ortho3DStaticBatch.apply(cave)
 	cave.set_meta("static_batch", batch)
+	cave.set_meta("boundary_sources", {"replaced": replaced, "retained": retained})
+
+
+func _build_cave_fill() -> void:
+	# One bounded directional shadow pass replaces the disabled outdoor sun.
+	# It represents cutaway cave scatter, not a painted outdoor sun patch.
+	_cave_key = DirectionalLight3D.new()
+	_cave_key.name = "CaveScatterKey"
+	_cave_key.light_color = Color(0.76, 0.82, 0.91)
+	_cave_key.light_energy = 0.62
+	_cave_key.shadow_enabled = true
+	_cave_key.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	_cave_key.shadow_opacity = 0.60
+	_cave_key.shadow_bias = 0.025
+	_cave_key.shadow_normal_bias = 0.22
+	cave.add_child(_cave_key)
+	_cave_key.look_at(Vector3(-0.45, -1.0, -0.55), Vector3.UP)
+	# The existing entry chamber has no authored lantern in range. A fixed
+	# cool entrance bounce makes the arriving navy silhouette readable there.
+	_cave_entry_light = OmniLight3D.new()
+	_cave_entry_light.name = "CaveEntryBounce"
+	_cave_entry_light.position = Vector3(-0.60, 2.30, -0.30)
+	_cave_entry_light.light_color = Color(0.67, 0.77, 0.84)
+	_cave_entry_light.light_energy = 1.20
+	_cave_entry_light.omni_range = 6.20
+	_cave_entry_light.shadow_enabled = false
+	cave.add_child(_cave_entry_light)
+
+
+func _sync_cave_lighting(inside: bool) -> void:
+	if inside == _lighting_scope_cave:
+		return
+	for child in preview.stage.get_children():
+		if not child is WorldEnvironment:
+			continue
+		var settings: Environment = (child as WorldEnvironment).environment
+		var id: int = child.get_instance_id()
+		if inside:
+			_ambient_outside[id] = {"energy": settings.ambient_light_energy, "color": settings.ambient_light_color, "background": settings.background_color}
+			settings.ambient_light_energy = CAVE_AMBIENT
+			settings.ambient_light_color = CAVE_AMBIENT_COLOR
+			settings.background_color = CAVE_BACKGROUND
+		elif _ambient_outside.has(id):
+			var original: Dictionary = _ambient_outside[id]
+			settings.ambient_light_energy = original["energy"]
+			settings.ambient_light_color = original["color"]
+			settings.background_color = original["background"]
+			_ambient_outside.erase(id)
+	_lighting_scope_cave = inside
 
 
 func sync(delta: float, frozen: bool) -> void:
@@ -330,9 +390,7 @@ func sync(delta: float, frozen: bool) -> void:
 	if inside and is_instance_valid(preview.game.dungeon._root):
 		preview.game.dungeon._root.visibility_layer = 0
 	preview.sunlight.visible = not inside
-	for child in preview.stage.get_children():
-		if child is WorldEnvironment:
-			(child as WorldEnvironment).environment.ambient_light_energy = 0.23 if inside else 0.43
+	_sync_cave_lighting(inside)
 	var bounce: DirectionalLight3D = preview.stage.get_node_or_null("WarmDaylightBounce")
 	if bounce != null:
 		bounce.visible = not inside

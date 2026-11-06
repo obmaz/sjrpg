@@ -41,6 +41,8 @@ jobs:
                   node tools/test_portal.mjs
                   node sjrpg_2d/web/check_shell.mjs
                   node sjrpg_3d/web/check_shell.mjs
+                  node sjrpg_3d/web/check_install.mjs
+                  node sjrpg_3d/web/check_fullscreen.mjs
                   tools/check.sh --export
                   tools/check_native_web.sh
                   touch build/web/.nojekyll

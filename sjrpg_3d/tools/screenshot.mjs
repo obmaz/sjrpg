@@ -119,6 +119,11 @@ if (args.viewport) {
 if (args.dpr) profile.deviceScaleFactor = Number(args.dpr);
 const ctx = await browser.newContext(profile);
 const page = await ctx.newPage();
+// CI uses a software GPU; permit a separate readback budget without weakening
+// engine startup, input acknowledgement or physics/render readiness checks.
+const captureTimeout = Number(args['capture-timeout'] ?? 30000);
+if (!Number.isFinite(captureTimeout) || captureTimeout < 1000 || captureTimeout > 120000) throw new Error('Invalid capture timeout');
+const capture = options => page.screenshot({...options, timeout: captureTimeout});
 const logs = [];
 page.on('console', (m) => logs.push(`${m.type()}: ${m.text()}`));
 page.on('pageerror', (e) => logs.push(`pageerror: ${e.message}`));
@@ -152,7 +157,7 @@ if (scene === 'title' && args['entry-flow'] === '1') {
         await Promise.race([packHeld, new Promise((_, reject) => { timeout = setTimeout(() => reject(new Error('Pack download did not start')), 60000); })]);
         await page.waitForTimeout(300);
         loadingHeader = await page.locator('h1').boundingBox();
-        await page.screenshot({path: out.replace(/\.png$/, '-loading.png')});
+        await capture({path: out.replace(/\.png$/, '-loading.png')});
     } finally { clearTimeout(timeout); }
     await releaseDownload();
 }
@@ -171,7 +176,7 @@ const tap = async (x, y) => {
     }
 };
 if (scene === 'title') {
-    await page.screenshot({path: out});
+    await capture({path: out});
     if (args['entry-flow'] === '1') {
         if (JSON.stringify(await page.locator('h1').boundingBox()) !== JSON.stringify(loadingHeader)) throw new Error('Loading/title header moved');
         await page.locator('#entry-start').click();
@@ -179,7 +184,7 @@ if (scene === 'title') {
         const back = await page.evaluate(() => window.__sjrpgClassButtons.back);
         await tap(vp.width * back[0], vp.height * back[1]);
         await page.waitForFunction(() => window.__sjrpgTitleReady && window.__sjrpgEntryReady, null, {timeout: 30000});
-        await page.screenshot({path: out.replace(/\.png$/, '-returned.png')});
+        await capture({path: out.replace(/\.png$/, '-returned.png')});
         await page.locator('#entry-start').click();
         await page.waitForFunction(() => window.__sjrpgClassSelectReady === true, null, {timeout: 30000});
         console.log('Entry flow: real loading → stable title → selection → back → start passed');
@@ -205,11 +210,11 @@ const tapEntry = async (key) => {
 await tapEntry(cls);
 await page.waitForTimeout(300);
 if (scene === 'select') {
-    await page.screenshot({path: out});
+    await capture({path: out});
     if (args.rotate === '1') {
         await page.setViewportSize({width: vp.height, height: vp.width});
         await page.waitForTimeout(700);
-        await page.screenshot({path: out.replace(/\.png$/, '-rotated.png')});
+        await capture({path: out.replace(/\.png$/, '-rotated.png')});
     }
     const errors = logs.filter((line) => /error/i.test(line));
     console.log(`저장: ${out}; 콘솔 오류 ${errors.length}건`);
@@ -233,7 +238,7 @@ if (scene === 'defender') {
     console.log('Actual threat closed the gate:', await page.evaluate(() => window.__sjrpgGateReview));
 } else if (scene.startsWith('fx_')) {
     await page.waitForFunction(() => window.__sjrpgFxReview?.actual_cast === true, null, {timeout: 60000}).catch(async error => {
-        await page.screenshot({path: out.replace(/\.png$/, '-failed.png')});
+        await capture({path: out.replace(/\.png$/, '-failed.png')});
         const status = await page.evaluate(() => window.__sjrpgFxReviewStatus ?? null);
         throw new Error(`FX inspection failed: ${JSON.stringify(status)}; ${logs.filter(line => /error/i.test(line)).join('\n')}; ${error.message}`);
     });
@@ -282,7 +287,7 @@ if (args['renderer-toggle'] === '1') {
         await page.keyboard.press('Escape');
         await page.waitForFunction(expected => window.__sjrpg3dProbe?.native_active === expected, native);
         await page.waitForTimeout(700);
-        await page.screenshot({path: out.replace(/\.png$/, native ? '-switched-3d.png' : '-switched-2d.png')});
+        await capture({path: out.replace(/\.png$/, native ? '-switched-3d.png' : '-switched-2d.png')});
         if (!native) { await page.keyboard.press('Escape'); await page.waitForTimeout(700); }
     }
     console.log('Actual settings buttons switched2D then3D without restarting the adventure');
@@ -294,7 +299,7 @@ if (args.motion) {
     try {
         await page.waitForFunction(() => window.__sjrpg3dProbe?.animation?.active_clip?.toLowerCase().includes('run') && window.__sjrpg3dProbe.animation.moving, null, {timeout: 15000});
         const first = await page.evaluate(() => window.__sjrpg3dProbe.animation);
-        await page.screenshot({path: out.replace(/\.png$/, '-run-first.png')});
+        await capture({path: out.replace(/\.png$/, '-run-first.png')});
         await page.waitForFunction(previous => {
             const next = window.__sjrpg3dProbe?.animation;
             if (!next?.moving || next.active_clip !== previous.active_clip || Math.abs(next.sample_time - previous.sample_time) < 0.02) return false;
@@ -303,7 +308,7 @@ if (args.motion) {
                 return b && Math.abs(a.reduce((sum, value, i) => sum + value * b[i], 0)) < 0.9995;
             });
         }, first, {timeout: 15000});
-        await page.screenshot({path: out.replace(/\.png$/, '-run-second.png')});
+        await capture({path: out.replace(/\.png$/, '-run-second.png')});
         console.log('Actual movement advanced native clip and bone poses:', await page.evaluate(() => window.__sjrpg3dProbe.animation));
     } finally { await page.keyboard.up(key); }
     await page.waitForTimeout(700);
@@ -330,47 +335,47 @@ if (scene === 'cooldowns') {
     await page.keyboard.down('Space');
     await page.waitForTimeout(250);
 }
-await page.screenshot({ path: out });
+await capture({ path: out });
 if (scene === 'dodge') {
     await page.waitForTimeout(500);
-    await page.screenshot({path: out.replace(/\.png$/, '-settled.png')});
+    await capture({path: out.replace(/\.png$/, '-settled.png')});
 }
 if (scene.startsWith('corpses') && args.lifecycle === '1') {
     await page.waitForFunction(() => window.__sjrpgCorpsePreviewExpired === true, null, {timeout: 120000});
     await page.waitForTimeout(200);
-    await page.screenshot({path: out.replace(/\.png$/, '-expired.png')});
+    await capture({path: out.replace(/\.png$/, '-expired.png')});
     console.log('시체 수명 종료: 게임 시간 30초 후 실제 제거 확인');
 }
 if (scene === 'cooldowns') {
     await page.keyboard.up('Space');
     await page.waitForTimeout(150);
-    await page.screenshot({path: out.replace(/\.png$/, '-remaining.png')});
+    await capture({path: out.replace(/\.png$/, '-remaining.png')});
     await page.waitForTimeout(2200);
-    await page.screenshot({path: out.replace(/\.png$/, '-ready.png')});
+    await capture({path: out.replace(/\.png$/, '-ready.png')});
 }
 if (scene === 'warp_trip') {
     const target = await page.evaluate(() => window.__sjrpgWarpPreviewButton);
     await tap(vp.width * target[0], vp.height * target[1]);
     await page.waitForFunction(() => window.__sjrpgWarpPreviewArrived === true, null, {timeout: 15000});
     await page.waitForTimeout(1200);
-    await page.screenshot({path: out.replace(/\.png$/, '-arrived.png')});
+    await capture({path: out.replace(/\.png$/, '-arrived.png')});
     console.log('워프게이트 버튼으로 실제 이동·안전 도착 확인');
 }
 if (scene === 'plaza') {
     for (let frame = 1; frame <= 2; frame++) {
         await page.waitForTimeout(320);
-        await page.screenshot({path: out.replace(/\.png$/, `-${frame}.png`)});
+        await capture({path: out.replace(/\.png$/, `-${frame}.png`)});
     }
 }
 if (scene === 'juice') {
     for (let frame=1; frame<=6; frame++) {
         await page.waitForTimeout(110);
-        await page.screenshot({path: out.replace(/\.png$/, `-${frame}.png`)});
+        await capture({path: out.replace(/\.png$/, `-${frame}.png`)});
     }
 }
 if (scene === 'hud_danger') {
     await page.waitForTimeout(450);
-    await page.screenshot({path: out.replace(/\.png$/, '-pulse.png')});
+    await capture({path: out.replace(/\.png$/, '-pulse.png')});
 }
 if (scene === 'pc_controls') {
     // Real desktop events: inspect these captures alongside the input-state regression case.
@@ -378,11 +383,11 @@ if (scene === 'pc_controls') {
     await page.mouse.move(vp.width * 0.56, vp.height * 0.42);
     await page.mouse.down({button: 'left'});
     await page.waitForTimeout(180);
-    await page.screenshot({path: out.replace(/\.png$/, '-attack.png')});
+    await capture({path: out.replace(/\.png$/, '-attack.png')});
     await page.mouse.up({button: 'left'});
     await page.mouse.click(vp.width * 0.61, vp.height * 0.49, {button: 'right'});
     await page.waitForTimeout(650);
-    await page.screenshot({path: out.replace(/\.png$/, '-move.png')});
+    await capture({path: out.replace(/\.png$/, '-move.png')});
     for (const key of ['w', 'a', 's', 'd']) {
         await page.keyboard.down(key);
         await page.waitForTimeout(140);
@@ -392,10 +397,10 @@ if (scene === 'pc_controls') {
         await page.keyboard.press(key);
         await page.waitForTimeout(180);
     }
-    await page.screenshot({path: out.replace(/\.png$/, '-keys.png')});
+    await capture({path: out.replace(/\.png$/, '-keys.png')});
     await page.keyboard.press('b');
     await page.mouse.click(vp.width * 0.5, vp.height * 0.4, {button: 'right'});
-    await page.screenshot({path: out.replace(/\.png$/, '-panel.png')});
+    await capture({path: out.replace(/\.png$/, '-panel.png')});
     console.log('PC actual-event captures: left attack, right move, WASD, 1–4, modal right-click');
 }
 if (args.rotate === '1') {
@@ -411,7 +416,7 @@ if (args.rotate === '1') {
                 (p.native_width > p.native_height) === landscape;
         }, {landscape: size.width > size.height, ticks}, {timeout: 15000});
         await page.waitForTimeout(1200);
-        await page.screenshot({path: out.replace(/\.png$/, `-${label}.png`)});
+        await capture({path: out.replace(/\.png$/, `-${label}.png`)});
     }
     console.log('Live native adventure rotation and return passed');
 }

@@ -4,6 +4,7 @@ extends TestCase
 
 func run() -> void:
 	for cls in ["warrior", "mage"]:
+		GameState.delete_save()
 		GameState.new_game(cls)
 		GameState.level = 60
 		GameState.skill_points = 2000

@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "implementation": "scripts/ortho_3d_forest_trees.gd",
+  "mesh_provenance": "assets/art/preview3d/town-trees.json",
+  "material_provenance": "assets/source/preview3d/trees/generation.json",
+  "approved_reference": "assets/source/style/approved-game-reference.jpg",
+  "approved_reference_sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+  "new_generated_pixels": false,
+  "source_selection": {
+    "sheet": "forest-isometric-trees",
+    "scope": "direct live IsoSprite children of forest world, excluding exact village.town_trees membership",
+    "ownership": "Only successfully installed native instances suppress source cards; unsupported definitions and missing meshes keep their fallback",
+    "collision": "Existing village.circles and SpatialWorld3D cylinders remain authoritative and unchanged"
+  },
+  "placement": {
+    "source_key": "sheet|source frame as Godot Array string|global x,y with six decimal source pixels|flip as 0 or 1",
+    "seed": "FNV-1a UTF-8, offset 2166136261, prime 16777619, mask 0xffffffff after each byte",
+    "variant": "seed modulo 2",
+    "yaw_radians": "((seed >> 1) & 0xffffff) / 16777216 * TAU",
+    "gameplay_random_draws": 0,
+    "size": "Ortho3DTrees.fit_basis over every mesh vertex; projected crown width and top match source frame/foot/k, x and z share one scale",
+    "position": "Ortho3DPreview.ground_position(source.global_position, presenter.surface_height(source.global_position))",
+    "layout_record": "NativeForestTrees metadata native_forest_tree_layout: JSON-safe per-source position, key, frame, foot, k, flip, variant, yaw, native basis, native position, measured crown size and original collision radius"
+  },
+  "batching": {
+    "chunk_metres": 16,
+    "key": "floor(native x / 16), floor(native z / 16), variant",
+    "geometry_copies": 2,
+    "shared_materials": 2,
+    "chunk_bounds": "Merge complete transformed mesh AABBs in chunk-local space, including full crowns and terrain height, plus 0.02 m rounding margin",
+    "new_render_passes": 0
+  },
+  "budget": {
+    "triangles_per_tree": 4358,
+    "leaf_triangles_per_tree": 2488,
+    "leaf_sprays_per_tree": 311,
+    "surfaces_per_mesh": 2,
+    "leaf_texture_pixels": [1024, 1024],
+    "alpha_scissor_threshold": 0.42,
+    "leaf_texture_alpha_coverage_at_threshold": 0.3225555419921875,
+    "leaf_material": "Lit, double-sided alpha-scissor, fixed curved 3D spray orientations; not a camera-facing billboard",
+    "shadow": "Actual native directional-light shadows enabled; requires actual device overdraw/shadow review"
+  },
+  "limitations": [
+    "The approved native family currently contains two broadleaf oak meshes. Existing fir/willow source placements preserve measured crown width/top, root and collision but do not retain exact species silhouette",
+    "A spatial chunk is culled as a unit, including crowns crossing its cell. A draw-count reduction does not establish faster frame time",
+    "Source-sized native tree fitting inherits the existing town-tree positive radial/vertical fitting; no new camera-facing geometry or flattening is introduced",
+    "Runtime portrait/landscape, two-axis full-crown, actual terrain contact, alpha/shadow cost and representative combat performance require engine/browser validation"
+  ]
+}

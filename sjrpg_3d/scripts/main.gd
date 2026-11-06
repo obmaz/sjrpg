@@ -3,6 +3,7 @@ extends Node
 
 var current: Node
 var _edition_exiting := false
+var _entry_starting := false
 
 
 func _ready() -> void:
@@ -33,6 +34,7 @@ func _swap(node: Node) -> void:
 
 
 func show_title() -> void:
+	_entry_starting = false
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.__sjrpgAdventureReady = false; window.__sjrpgClassSelectReady = false; window.__sjrpgTitleReady = false")
 	var title := preload("res://scripts/title_screen.gd").new()
@@ -41,11 +43,10 @@ func show_title() -> void:
 
 
 func show_class_select() -> void:
+	_entry_starting = false
 	var select := preload("res://scripts/class_select.gd").new()
 	select.chosen.connect(_choose_hero)
-	select.continue_requested.connect(func():
-		if GameState.load_game():
-			start_game())
+	select.continue_requested.connect(_continue_hero)
 	select.back_requested.connect(show_title)
 	_swap(select)
 
@@ -59,28 +60,33 @@ func start_game() -> void:
 
 
 func _choose_hero(cls: String) -> void:
-	if not GameState.has_save_files():
-		_begin_new_game(cls)
+	_begin_new_game(cls)
+
+
+func _continue_hero() -> void:
+	if _entry_starting or not current.has_method("show_error"):
 		return
-	var confirm := PanelFrame.new()
-	add_child(confirm)
-	confirm.set_compact()
-	confirm.set_header("새 모험을 시작할까요?")
-	var message := "새 모험을 시작하면 이전 진행을 덮어씁니다. 취소하면 기존 모험을 유지합니다."
-	if not GameState.has_save():
-		message = "저장 파일이 있지만 현재 읽을 수 없습니다. 새 모험을 시작하면 기존 파일을 덮어씁니다. 취소하면 파일을 그대로 유지합니다."
-	confirm.body.add_child(PanelFrame.wrap_label(message, 22))
-	confirm.add_footer("취소", func(): confirm.queue_free())
-	confirm.add_footer("새 모험 시작", func():
-		confirm.queue_free()
-		_begin_new_game(cls), true)
-	confirm.closed.connect(func(): confirm.queue_free())
+	_entry_starting = true
+	var slot: int = current.selected_slot
+	if GameState.select_slot(slot) and GameState.load_game():
+		UiKit.boost = 1.0
+		start_game()
+	else:
+		_entry_starting = false
+		current.show_error("모험을 읽지 못했습니다. 다른 슬롯을 선택하거나 다시 시도해 주세요.")
 
 
 func _begin_new_game(cls: String) -> void:
-	UiKit.boost = 1.0
-	GameState.new_game(cls)
-	start_game()
+	if _entry_starting or not current.has_method("show_error"):
+		return
+	_entry_starting = true
+	var slot: int = current.selected_slot
+	if GameState.create_slot(slot, cls):
+		UiKit.boost = 1.0
+		start_game()
+	else:
+		_entry_starting = false
+		current.show_error("새 모험을 저장하지 못했습니다. 빈 슬롯인지 확인하고 다시 시도해 주세요.")
 
 
 func prepare_edition_exit() -> void:

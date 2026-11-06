@@ -3,6 +3,7 @@ extends TestCase
 
 
 func run() -> void:
+	GameState.delete_save()
 	GameState.new_game("warrior")
 	var game := preload("res://scripts/game.gd").new()
 	add_child(game)

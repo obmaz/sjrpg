@@ -64,6 +64,7 @@ func run() -> void:
 
 func _check_transient_boost() -> void:
 	GameState.bonus_ranks = 1
+	GameState.delete_save()
 	GameState.new_game("mage")
 	check("a new hero cannot inherit an expired command timer", GameState.bonus_ranks == 0 and GameState.effective_rank("firebolt") == GameState.rank("firebolt"))
 	GameState.bonus_ranks = 1

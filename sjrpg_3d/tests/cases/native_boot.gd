@@ -3,6 +3,7 @@ extends TestCase
 
 
 func run() -> void:
+	GameState.delete_save()
 	GameState.new_game("mage")
 	var adventure := NativeAdventure.new()
 	add_child(adventure)

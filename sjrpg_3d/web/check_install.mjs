@@ -11,12 +11,12 @@ const server = createServer(async (request, response) => {
   const file = url.pathname.replace(/^\/sjrpg\//, '');
   if (!file) {
     response.setHeader('Content-Type', 'text/html; charset=utf-8');
-    response.end(`<!doctype html><html lang="ko"><head>${url.searchParams.has('manifest') ? '<link rel="manifest" href="manifest.webmanifest">' : ''}</head><body><button id="install">설치</button><script src="install.js"></script><script>document.getElementById('install').onclick=()=>window.SjrpgInstall.request();</script></body></html>`);
+    response.end(`<!doctype html><html lang="ko"><head>${url.searchParams.has('manifest') ? '<link rel="manifest" href="manifest.webmanifest">' : ''}</head><body><button id="install">설치</button><script src="fullscreen.js"></script><script src="install.js"></script><script>document.getElementById('install').onclick=()=>window.SjrpgInstall.request();</script></body></html>`);
     return;
   }
   const types = { js: 'text/javascript', webmanifest: 'application/manifest+json', png: 'image/png' };
   try {
-    if (!/^(install(?:-sw)?\.js|manifest\.webmanifest|install-(?:180|192|512)\.png)$/.test(file)) throw new Error('missing');
+    if (!/^(install(?:-sw)?\.js|fullscreen\.js|manifest\.webmanifest|install-(?:180|192|512)\.png)$/.test(file)) throw new Error('missing');
     response.setHeader('Content-Type', types[file.split('.').at(-1)]);
     response.end(await readFile(new URL(file, import.meta.url)));
   } catch (_) { response.writeHead(404); response.end(); }
@@ -81,7 +81,8 @@ try {
   const manifest = await cdp.send('Page.getAppManifest');
   assert.equal(manifest.errors.length, 0);
   const data = JSON.parse(manifest.data);
-  assert.equal(data.display, 'standalone');
+  assert.equal(data.display, 'fullscreen');
+  assert.deepEqual(data.display_override, ['fullscreen', 'standalone']);
   assert.equal(data.scope, './');
   for (const icon of data.icons) assert.equal((await live.request.get(new URL(icon.src, base).href)).status(), 200);
   const eligibility = await cdp.send('Page.getInstallabilityErrors');

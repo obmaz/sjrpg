@@ -4,6 +4,7 @@ extends TestCase
 
 func run() -> void:
 	for cls in ["warrior", "mage"]:
+		GameState.delete_save()
 		GameState.new_game(cls)
 		var game := preload("res://scripts/game.gd").new()
 		add_child(game)

@@ -64,16 +64,14 @@ func run() -> void:
 	var root := preload("res://scripts/main.gd").new()
 	add_child(root)
 	root.show_class_select()
+	var saved := FileAccess.get_file_as_bytes(GameState.save_path)
 	root._choose_hero("mage")
 	var confirmation: PanelFrame = null
 	for child in root.get_children():
 		if child is PanelFrame:
 			confirmation = child
-	check("existing adventure requires explicit replacement", confirmation != null)
-	if confirmation != null:
-		confirmation.closed.emit()
-		await _frames(2)
-	check("canceling new adventure preserves the save", GameState.load_game() and GameState.gold == 321 and GameState.hero_class == "warrior")
+	check("an occupied slot refuses a new hero without a replacement flow", confirmation == null and root.current.get_script() == preload("res://scripts/class_select.gd"))
+	check("refusing an occupied start preserves the save", FileAccess.get_file_as_bytes(GameState.save_path) == saved and GameState.load_game() and GameState.gold == 321 and GameState.hero_class == "warrior")
 	var old := OldScene.new()
 	root._swap(old)
 	await get_tree().process_frame

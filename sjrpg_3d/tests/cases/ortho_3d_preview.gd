@@ -39,6 +39,7 @@ func run() -> void:
 	var view := SubViewport.new()
 	view.size = Vector2i(720, 1280)
 	add_child(view)
+	GameState.delete_save()
 	GameState.new_game("mage")
 	var game := preload("res://scripts/game.gd").new()
 	view.add_child(game)
@@ -89,11 +90,6 @@ func run() -> void:
 		preview._sync_camera()
 		check("native view remains above the old economy canvas and below HUD", preview._layer.layer > 0 and preview._layer.layer < game.hud.layer and preview.display.visible)
 		check("native projection matches the actual2D viewport at both qualities", _projection_error(game, preview) < 1.0)
-		var bounds: Rect2 = preview._mode_badge.get_global_rect()
-		var header: Dictionary = game.hud.status_geometry()
-		var paint: Rect2 = header["paint_bounds"]
-		var minimap: Rect2 = header["map"]
-		check("native edition label is visible between the status plate and minimap", preview._mode_badge.visible and "3D" in preview._mode_label.text and bounds.position.x > paint.end.x and bounds.end.x < minimap.position.x)
 		check("economy mode removes native multisampling", preview.viewport.msaa_3d == (Viewport.MSAA_DISABLED if low else Viewport.MSAA_2X))
 	get_tree().paused = true
 	Prefs.set_world_zoom(1.5)
@@ -104,7 +100,6 @@ func run() -> void:
 	check("paused device rotation preserves projection and display bounds", _projection_error(game, preview) < 1.0 and preview.display.size.is_equal_approx(Vector2(view.size)))
 	get_tree().paused = false
 	await _frames(2)
-	check("landscape confirmation text leaves the renderer label clear", not game.hud.toast_rect().intersects(preview._mode_badge.get_global_rect()))
 	get_tree().paused = true
 	Prefs.set_low_resolution(false)
 	await _frames(3)
@@ -165,7 +160,7 @@ func run() -> void:
 	game.player.position = game.village.gate_points[0] + (game.village.gate_points[0] - game.village.spawn_point).normalized() * 450.0
 	preview._process(0.016)
 	check("leaving town keeps native rendering and the source field culled", preview.display.visible and preview._native_visible and game.field_root.visibility_layer == 0 and preview.viewport.render_target_update_mode == SubViewport.UPDATE_ALWAYS)
-	check("native forest is visible and identified as3D", preview._world_environment.forest.visible and "3D" in preview._mode_label.text and preview._mode_badge.visible)
+	check("native forest remains visible in its own realm", preview._world_environment.forest.visible and preview._world_environment.report["scope"] == "forest")
 	game.player.position = town_position
 	preview._process(0.016)
 	check("returning to town reuses the native world", game.ortho_preview == preview and preview.display.visible and game.field_root.visibility_layer == 0)

@@ -1,5 +1,9 @@
 # 개발 참고
 
+`web/fullscreen.js`는 웹의 실제 Fullscreen API와 설치 실행 모드를 구별합니다. 설치 실행 여부는 DOM 전체화면 요청 전에 캡처하므로 일반 브라우저의 전체화면을 설치로 오인하지 않습니다. manifest는 `fullscreen`을 기본으로, `standalone`을 대체 모드로 지정합니다. 설치 앱이 `standalone`으로 대체되고 API가 지원되면 첫 신뢰된 터치/키 입력에서 한 번 전환하며 이후 수동 해제를 존중합니다. iOS 등 API 미지원과 앱 manifest 전체화면의 해제 불가 상태는 설정에 그대로 안내합니다. `Prefs`는 웹에서 이 브리지를 동기 호출하고 네이티브에서는 `DisplayServer`를 사용합니다. `SettingsPanel`의 최상단 버튼은 비동기 전환·외부 전체화면 변경을 실제 상태로 갱신합니다. `fullscreen_settings`는 폰 회전/일시정지/미지원 처리를, `node web/check_fullscreen.mjs`는 실제 DOM 전체화면의 입력 진입/해제와 명시적 설치 실행 픽스처를 검사합니다. `check_install.mjs`는 실제 제공 manifest/worker를 확인합니다. 설치 앱을 실제 기기에 설치했다는 검증은 아닙니다. 기존 고정 크기 Canvas CSS와 네 저장 슬롯은 변경하지 않습니다.
+
+성문 개폐와 게임 표시는 `Ortho3DFortification`·`Ortho3DPreview`·`SettingsPanel`이 담당합니다. 성문 두 날개는 각 통로에 가장 가까운 실제 `Village.safe_zone` 경계의 외향 법선으로 회전 방향을 정하므로 네 방향 모두 마을 밖으로 열립니다. 기존 힌지·닫힌 이음새·네이티브 충돌·위협 자동 닫힘·주인공 접근 허용은 유지하고 `TownGateRuntime.progress/closed`만 관찰합니다. `ortho_3d_fortification`은 네 문 × 양 날개의 닫힘/반열림/완전 열림 상태에서 실제 목재·철물 메시의 모든 정점과 고정 힌지·두께 경계를 검사합니다. 게임의 표시 방식 배지는 생성하지 않으며 HUD 확인문은 상태창과 미니맵 사이 여백을 사용합니다. 설정은 모험 저장·선택 화면 복귀 안내만 제공하고 현재 표시 방식 문구는 생략합니다. `native_product_labels`가 숲·동굴·설정·귀환의 실제 보이는 글자를 검사합니다.
+
 엔진 기준은 **Godot 4.7.2 / GL Compatibility**입니다. `.godot-version`을 로컬 실행·설치 도구와 CI가 공유하며,
 `tools/setup_godot.sh`는 해당 버전의 실행 파일과 웹 템플릿을 함께 설치합니다. 다른 버전을 명시적으로 검증할 때만 `GODOT_VERSION`을 재정의합니다.
 
@@ -37,14 +41,13 @@
 
 ## 로딩과 수호자 선택
 
-`web/shell.html`은 엔진 다운로드 전부터 숲 원화와 실제 전송 진행률을 표시합니다. 웹 시작 화면도 같은 DOM을 유지하며 진행 표시 자리만 생성형 금빛 ‘모험 시작’ 버튼으로 바꾸므로 배경·제목·구도가 바뀌지 않습니다. 엔진 준비와 현재 `TitleScreen`의 콜백 등록이 모두 끝나야 버튼을 활성화하고, 버튼을 누를 때만 직업 선택으로 넘어갑니다. 선택/설정에서 타이틀로 돌아오면 새 장면의 콜백으로 같은 화면을 다시 엽니다. 네이티브 실행은 기존 Godot 타이틀을 사용합니다. 전체 크기를 모를 때는 불확정 표시를 사용하고, 다운로드 완료와 엔진 준비 단계를 구분합니다. 실패·기능 미지원·엔진 스크립트 실패는 재시도 화면으로 처리합니다.
-`web/prepare_art.py`가 기존 `select-scene.png`와 선택 화면의 생성형 금속 원본을 외부 배경·버튼으로 패킹하며, `tools/export_web.sh`가 248KB의 `loading-bg.webp`를 배포 폴더에 복사합니다. `web/.gdignore`로 HTML용 파일을 게임 PCK에서 제외합니다.
-`node web/check_shell.mjs`로 실제 다운로드 콜백·준비 순서·준비 전후 동일 배치·키보드/터치 시작·타이틀 복귀·실패·동작 줄이기·가로/세로 배치를 브라우저에서 검사합니다.
+`web/shell.html`은 생성된 어두운 숲 일러스트 위에 실제 다운로드 진행률·한국어 제목·청동 버튼을 표시합니다. 다운로드와 준비 완료는 같은 DOM/배경/제목 배치를 유지하며, 엔진과 `TitleScreen`의 시작 콜백이 모두 준비되어야 버튼을 활성화합니다. 가로 화면은 우측 행동 영역, 세로 화면은 하단 행동 영역으로 재배치합니다. 웹 캔버스는 고정된 전체 화면 크기로 제한해, 가로→세로 회전 후 그리기 버퍼의 고유 폭이 모바일 레이아웃 뷰포트와 터치 좌표를 확대하지 않게 합니다.
 
-`title_screen.gd`와 `class_select.gd`는 안전 영역과 화면 크기에 따라 다시 배치합니다. 수호자 선택은 두 개의 직업 탭과 단일 큰 원화, 특징·실제 시작 수치, 하단 시작·이어하기 버튼을 사용합니다. 원화는 `assets/source/hero-selection.png`를 `tools/prepare_entry_art.py`로 두 직업의 WebP로 나눕니다. 가로 미리보기는 원화 상단을 기준으로 잘라 얼굴을 보존합니다.
-선택 화면의 배경·금빛 프레임·문장·방패는 생성형 원화를 사용하며 게임 HUD와 별도 스킨입니다. 원본·프롬프트·패킹은 [수호자 선택 디자인](newselection-design.md)에 기록합니다. `prepare_selection_background.py`와 `prepare_selection_ui.py`로 재생성하고, 능력치는 실제 직업·시작 장비 데이터로 표시합니다.
-직업 미리보기는 진행을 변경하지 않으며 실제 새 모험·덮어쓰기 확인은 `main.gd`가 담당합니다. `entry_layout`은 회전·작은 화면·실제 저장 보존과 명시적인 시작을 검사합니다.
-`tools/screenshot.mjs --scene title|select --class warrior|mage --device phone|phone-landscape`로 확인하고, 선택 화면에서 `--rotate 1`을 주면 같은 선택을 유지한 회전 화면도 저장합니다. 웹 하네스는 실제 버튼 중심을 받아 두 직업 선택 후 시작합니다. `--scene title --entry-flow 1`은 실제 PCK 다운로드를 잠시 보류해 로딩을 캡처하고, 동일한 제목 위치·시작·선택 화면에서 돌아오기·재시작까지 검사합니다.
+`EntryUi`는 `assets/art/entry/`의 배경과 두 투명 캐릭터 일러스트를 읽고, 텍스트·버튼은 실제 컨트롤로 구성합니다. 원본 PNG·정확한 생성 지시·해시는 `assets/source/entry-redesign/`에 보존합니다. `tools/prepare_generated_entry.py`가 형식만 변환하며 `web/prepare_art.py`는 동일한 배경 바이트와 새 전사 그림의 설치 아이콘을 패킹합니다. 원본 이미지의 얼굴·손·발은 자르지 않고 비례를 유지합니다. `web/.gdignore`로 웹 전용 파일을 PCK에서 제외합니다.
+
+`ClassSelect`는 네 저장 슬롯의 `slot_summaries()`만 읽어 미리보기를 만듭니다. 기존 모험은 명시적인 이어 하기에서 `select_slot`/`load_game`을 호출하고, 빈 슬롯의 명시적인 시작만 `create_slot`을 호출합니다. 점유되었거나 읽을 수 없는 슬롯은 새로 덮어쓰지 않으며 슬롯별 삭제 확인을 거칩니다. 네 슬롯의 경로·이관·자동 저장 정책은 [저장 슬롯](save-slots.md)을 참고하세요.
+
+`entry_layout`은 두 방향·작은 창·회전의 실제 컨트롤 경계, 원본 알파·배경 일치, 미리보기의 저장 바이트 보존, 확인/취소, 반복 시작 방지를 검사합니다. `web/check_shell.mjs`는 로딩/준비의 동일 배치와 오류 복구를 검사합니다. `window.__sjrpgClassButtons`는 실제 버튼 중심과 슬롯 요약을 공개하며 기존 `warrior`/`mage`/`start`/`continue`/`back` 외에 `slots`, `slot1`~`slot4`, `delete1`~`delete4`, 모달의 `delete_cancel`/`delete_confirm`을 제공합니다. `TitleReady`/`EntryReady`/`ClassSelectReady` 훅은 유지합니다.
 
 ## 좌표와 단위
 
@@ -150,7 +153,7 @@ python3 tools/prepare_town_remake.py /path/to/sjrpg
 `Player._cancel_actions()`가 사망·부활에서 예약 콜백·공격·구르기·유지 입력을 해제하고, 행동 번호가 이전 준비광을 무효화합니다. 연쇄 번개는 적을 약한 참조(`WeakRef`)로 보관하고 실행 시 생존·사거리를 다시 확인합니다.
 `Enemy.take_damage()`의 `visual_source`는 속성 피격·장식 반동에만 사용합니다. 지속 피해는 기존 `source=null`을 유지해 물리 밀려남·무기 효과를 추가하지 않습니다. 실제 발사광·구르기 잔상은 장식 한도에 포함하며 동작 줄이기를 따릅니다.
 카메라는 확인된 명중 즉시 작은 충격을 표시하고 첫 감쇠만 제한합니다. 이후 정상 시간으로 감쇠하므로 느린 프레임에서 첫 표시가 사라지거나 흔들림이 지속되지 않습니다.
-임시 기술 등급 강화는 새 모험과 정상 불러오기에서 초기화하고, 불러오기 실패 시 현재 상태는 유지합니다. 읽을 수 없는 저장·백업·임시 파일도 교체 확인을 거칩니다.
+임시 기술 등급 강화는 새 모험과 정상 불러오기에서 초기화하고, 불러오기 실패 시 현재 상태는 유지합니다. 읽을 수 없는 저장·백업·임시 파일도 점유된 슬롯으로 보존하며 명시적 삭제 확인을 거칩니다.
 검사 도구는 테스트의 실패 수뿐 아니라 엔진 `ERROR` 로그도 실패로 처리합니다.
 
 ## HUD 헤더 배치
@@ -339,12 +342,12 @@ HUD는 실패 시 누를 수 있는 재시도 안내를 유지하며 설정의 �
 | `mobile_menu_art` | 원본/배포 해시·투명 모서리·48px 밝은 실루엣·네 그림 구별 |
 | `reference_fx` | 6종 원화·실제 피해 시점·회전 취소·서리 교체·착지·투사체·유성·예산 |
 | `gate_seams` | 실제 성문·성벽 앞면 접점·띠장/캡 높이·필터링 알파와 코너 흉벽의 교차 방지 |
-| `entry_layout` | 선택 화면의 세로/가로·회전·카드와 능력치 상자·실제 수치·미리보기 저장 보존 |
+| `entry_layout` | 선택 화면의 두 방향·회전·실제 그림/수치·네 슬롯 미리보기 보존·삭제 확인·중복 시작 방지 |
 | `journey` | 두 직업의 첫 목표·수락/보고 우선순위·보호 안내·마을 NPC와 안식처 선택 |
 | `progression` | 기억 상자와 보상 원자적 저장·이전 누락 보상 복구·중복 방지 |
 | `render_quality` | 월드/UI 분리·화질 전환·같은 시야·일시정지·키보드 입력·동굴 복귀 |
 | `render_budget` | 실제 마을의 가림 인스턴스 한도·표시 효과 한도·투사체 보존 |
-| `ui_input` | 터치 크기·이동/공격 멀티터치·패널 입력 해제·글자 배율 복구·새 모험 취소 |
+| `ui_input` | 터치 크기·이동/공격 멀티터치·패널 입력 해제·글자 배율 복구·점유 슬롯 덮어쓰기 거부 |
 | `skill_layout` | 큰 스킬 노드·상단 배지 여백·마지막 단계 스크롤·탭/드래그 구별 |
 | `critical_health` | 전체 화면 체력 경고의 임계값·회복/사망·맥박·동작 줄이기·일시정지·입력 투과 |
 | `hud_layout` | 승인된 HUD 배치·화면 회전·터치 영역 분리·구르기/물약 배치·그림 아이콘 |
@@ -395,3 +398,7 @@ HUD는 체력·물약 수·쿨다운의 실제 변화를 감지합니다. 사운
 `WorldLighting`의 기본 그늘광은 `(0.70,0.78,0.84)`, 직사광은 `(0.46,0.32,0.15)`이며 CPU와 GLSL에서 같은 계수를 사용합니다. 그늘을 밝히면서 마을·예배당 개구부의 최대합 `(1.16,1.10,0.99)`은 유지합니다. `ForestArt.GRASS_TINT`는 잔디에만 밝은 황록색 배율을 적용하고 포장석·흙·나뭇잎 원화는 분리합니다. Native3D 잔디도 같은 알베도 배율을 사용합니다. 동굴의 실제 점광원과 접촉광 수명/예산은 이 조정과 별개입니다.
 
 `NativeTownProps3D`는 분수와 숲·동굴의 워프문을 공유 GLB로 배치합니다. 실제 워프 바닥 다각형의 중심·방향을 사용하고 새 콜라이더를 만들지 않습니다. `PlazaWater.phase`가 물·소용돌이·최대 12개 입자의 유일한 시계이며, 환경/상호작용 렌더러는 `owns()`로 중복 카드를 제외합니다. `native_town_props`는 실제 임포트 메시·재질·정지·동작 줄이기·동굴 전환을 검사합니다. 재현 도구는 `tools/preview3d/build_native_town_props.py`, GLB/기하 검사는 `tools/preview3d/test_native_town_props.py`, 해시·재질·충돌 기록은 `assets/source/preview3d/native-town-props/provenance.json`에 있습니다.
+
+## 외곽 숲의 네이티브 나무
+
+`Ortho3DForestTrees`는 `Ortho3DEnvironment._build_forest`에서 외곽의 실제 소유 인스턴스만 교체합니다. `Ortho3DTrees.mesh_library()`는 마을과 외곽의 두 메시/재질을 공유하며 기존 마을 변환을 유지합니다. 16 m 셀별 MultiMesh, 원본 키 기반 고정 변형, 실제 바닥 Y, 전체 수관 AABB와 기존 충돌 계약은 [외곽 숲 나무](native-forest-trees.md)에 기록합니다. `ortho_3d_forest_trees`와 기존 `ortho_3d_trees`·`native_environment`가 해당 통합을 검사합니다.

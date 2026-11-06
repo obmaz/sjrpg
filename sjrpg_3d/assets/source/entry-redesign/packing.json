@@ -1,0 +1,38 @@
+{
+  "start-background": {
+    "source": "assets/source/entry-redesign/start-background.png",
+    "source_sha256": "83c214e1351f1559d8c76843e8a3414d808aa6c73def975f2292b3dbb9a5155a",
+    "runtime": "assets/art/entry/start-background.webp",
+    "runtime_sha256": "2cbc314340c85228cef04ccfddbbbce235fa407e02d30e0acb6840fa12491aca",
+    "size": [
+      1536,
+      1024
+    ],
+    "mode": "RGB",
+    "runtime_bytes": 240184
+  },
+  "warrior": {
+    "source": "assets/source/entry-redesign/warrior.png",
+    "source_sha256": "898688fe634be120ff474bc1864a36cf6e66675d582bf9d5571ca25c024e7ae2",
+    "runtime": "assets/art/entry/warrior.webp",
+    "runtime_sha256": "d7429d2f665c6c66ca95c2bfc9ad946ee125e89a176d5eddca735676160564c5",
+    "size": [
+      1024,
+      1536
+    ],
+    "mode": "RGBA",
+    "runtime_bytes": 208914
+  },
+  "mage": {
+    "source": "assets/source/entry-redesign/mage.png",
+    "source_sha256": "764f5251fa69b10006a0d56015e262d0465ef6c664e76a36589ab3663119d213",
+    "runtime": "assets/art/entry/mage.webp",
+    "runtime_sha256": "c5584f5b5d6ee1d500fc0fd2dfdd66bd3597178ec8f5c2935882f39a3e100898",
+    "size": [
+      1024,
+      1536
+    ],
+    "mode": "RGBA",
+    "runtime_bytes": 228152
+  }
+}

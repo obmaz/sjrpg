@@ -43,7 +43,7 @@ func run() -> void:
 	check("paused menu changes do not advance the native cast pose", preview._hero_motion.sample_time == pose_time and preview._hero_motion.pose_updates == pose_updates)
 	var current: Label = panel.find_child("CurrentEdition", true, false)
 	var select_link: Button = panel.find_child("VersionSelect", true, false)
-	check("settings identify the fixed3D edition without direct switches", current != null and "3D" in current.text and panel.find_child("Version2D", true, false) == null and panel.find_child("Version3D", true, false) == null and panel.find_child("Town2D", true, false) == null)
+	check("settings omit technical edition text and direct renderer switches", current == null and panel.find_child("Version2D", true, false) == null and panel.find_child("Version3D", true, false) == null and panel.find_child("Town2D", true, false) == null)
 	check("only web settings can return to the root chooser", (select_link != null) == OS.has_feature("web"))
 	panel._confirm_restart()
 	await _frames(3)

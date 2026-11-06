@@ -10,6 +10,8 @@ var game: Node
 var _feedback := ""
 var _install_button: Button
 var _install_hint: Label
+var _fullscreen_button: Button
+var _fullscreen_hint: Label
 var _install_poll := 0.0
 var _zoom_buttons: Array[Button] = []
 var _version_buttons: Array[Button] = []
@@ -31,9 +33,18 @@ func _rebuild() -> void:
 	clear_body()
 	_zoom_buttons.clear()
 	_version_buttons.clear()
-	body.add_child(_version_card())
+	body.add_child(PanelFrame.section("화면"))
+	_fullscreen_button = _action_row("전체화면 켜기", _request_fullscreen)
+	_fullscreen_button.name = "FullscreenToggle"
+	body.add_child(_fullscreen_button)
+	_fullscreen_hint = PanelFrame.wrap_label("전체화면 상태를 확인하고 있습니다.", 15, UiKit.MUTED)
+	_fullscreen_hint.name = "FullscreenHint"
+	body.add_child(_fullscreen_hint)
+	_refresh_fullscreen()
 	body.add_child(UiKit.divider())
 	if OS.has_feature("web"):
+		body.add_child(_version_card())
+		body.add_child(UiKit.divider())
 		body.add_child(PanelFrame.section("기기에 설치"))
 		_install_button = _action_row("이 기기에 설치", _request_install)
 		body.add_child(_install_button)
@@ -43,9 +54,6 @@ func _rebuild() -> void:
 		body.add_child(UiKit.divider())
 	body.add_child(PanelFrame.section("화면과 타격감"))
 	body.add_child(_world_zoom_card())
-	body.add_child(_action_row("전체화면 끄기" if Prefs.is_fullscreen() else "전체화면 켜기", func():
-		Prefs.toggle_fullscreen()
-		_rebuild()))
 	body.add_child(_toggle("절약 화질", "배경·캐릭터 해상도를 낮춰 속도를 높입니다. 글자·버튼은 선명하게 유지합니다.", Prefs.low_resolution, func(on):
 		Prefs.set_low_resolution(on)
 		_rebuild()))
@@ -83,13 +91,27 @@ func _rebuild() -> void:
 
 
 func _process(delta: float) -> void:
-	if not OS.has_feature("web"):
-		return
 	_install_poll -= delta
 	if _install_poll <= 0.0:
-		_install_poll = 1.0
-		_refresh_install()
+		_install_poll = 0.5
+		_refresh_fullscreen()
+		if OS.has_feature("web"):
+			_refresh_install()
 		_publish_version_buttons()
+
+
+func _request_fullscreen() -> void:
+	Prefs.toggle_fullscreen()
+	_refresh_fullscreen()
+
+
+func _refresh_fullscreen() -> void:
+	if not is_instance_valid(_fullscreen_button) or _fullscreen_button.is_queued_for_deletion():
+		return
+	var state := Prefs.fullscreen_state()
+	_fullscreen_button.text = str(state.get("title", "전체화면 켜기"))
+	_fullscreen_button.disabled = not bool(state.get("supported", false)) or bool(state.get("pending", false))
+	_fullscreen_hint.text = str(state.get("detail", ""))
 
 
 func _publish_version_buttons() -> void:
@@ -97,8 +119,11 @@ func _publish_version_buttons() -> void:
 		return
 	var view := get_viewport().get_visible_rect().size
 	var versions := {}
-	for button in _version_buttons:
-		if is_instance_valid(button) and not button.is_queued_for_deletion():
+	var buttons: Array[Button] = _version_buttons.duplicate()
+	if is_instance_valid(_fullscreen_button):
+		buttons.append(_fullscreen_button)
+	for button in buttons:
+		if is_instance_valid(button) and not button.is_queued_for_deletion() and button.is_visible_in_tree():
 			versions[str(button.name)] = {"point": button.get_global_rect().get_center() / view, "disabled": button.disabled}
 	# Use plain arrays so test/browser clients receive actual clickable centres.
 	for name: String in versions:
@@ -182,12 +207,10 @@ func _choose_world_zoom(amount: float) -> void:
 func _version_card() -> Control:
 	var card := VBoxContainer.new()
 	card.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
-	var current := PanelFrame.wrap_label("현재 버전 · 3D", 22, UiKit.TEXT)
-	current.name = "CurrentEdition"
-	card.add_child(current)
-	card.add_child(PanelFrame.wrap_label("3D 전용 프로젝트입니다. 버전은 선택 화면에서 고릅니다.", 15, UiKit.MUTED))
+	card.add_child(PanelFrame.section("모험 선택"))
+	card.add_child(PanelFrame.wrap_label("현재 모험을 저장한 뒤 선택 화면으로 돌아갑니다.", 15, UiKit.MUTED))
 	if OS.has_feature("web"):
-		var select := UiKit.button("저장하고 버전 선택 화면으로", 20)
+		var select := UiKit.button("저장하고 선택 화면으로", 20)
 		select.name = "VersionSelect"
 		select.custom_minimum_size.y = 76
 		select.pressed.connect(func(): _open_edition(""))

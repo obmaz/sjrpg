@@ -27,21 +27,16 @@ func _check_toasts(hud: Hud, dimensions: Vector2i) -> void:
 		var status_ink: Rect2 = geometry["paint_bounds"]
 		var map_ink := hud.minimap.paint_bounds()
 		map_ink.position += hud.minimap.position
-		var native_badge := Rect2()
-		if is_instance_valid(hud.game.ortho_preview) and hud.game.ortho_preview._mode_badge.is_visible_in_tree():
-			native_badge = hud.game.ortho_preview._mode_badge.get_global_rect()
 		var hp: Rect2 = geometry["hp"]
 		var objective := Rect2(origin + Vector2(103, 105) * h, Vector2(hp.size.x + 10.0 * h, 27.0 * h))
 		var buffs := Rect2(hud._status.position - Vector2(11, 1) * h, Vector2(hud._status.size.x + 12.0 * h, 27.0 * h))
 		check("three-line confirmation fits its actual plaque %s/save=%s" % [dimensions, warning], screen.encloses(confirmation) and screen.encloses(plaque) and plaque.encloses(hud._toast.get_global_rect()) and hud._toast.get_visible_line_count() == 3 and plaque.size.y <= 100.0 * u)
-		check("confirmation clears painted status/map progression text and native badge %s/save=%s" % [dimensions, warning], not plaque.intersects(status_ink) and not plaque.intersects(map_ink) and not plaque.intersects(objective) and not plaque.intersects(buffs) and (not native_badge.has_area() or not plaque.intersects(native_badge)))
+		check("confirmation clears painted status/map progression text %s/save=%s" % [dimensions, warning], not plaque.intersects(status_ink) and not plaque.intersects(map_ink) and not plaque.intersects(objective) and not plaque.intersects(buffs))
 		if warning:
 			check("save retry keeps its original separate confirmation row %s" % dimensions, not plaque.intersects(hud._save_warning.get_global_rect()) and is_equal_approx(confirmation.position.y, origin.y + 306.0 * u))
 		elif dimensions.x > dimensions.y and map_ink.position.x - status_ink.end.x - 40.0 * u >= 320.0 * u:
 			var top := margins.y + 16.0 * u
-			if native_badge.has_area():
-				top = maxf(top, native_badge.end.y + 8.0 * u)
-			check("wide confirmation keeps the empty status/map gap below the native badge %s" % dimensions, plaque.position.x >= status_ink.end.x + 20.0 * u - 0.01 and plaque.end.x <= map_ink.position.x - 20.0 * u + 0.01 and plaque.size.x <= 520.0 * u and is_equal_approx(plaque.position.y, top))
+			check("wide confirmation uses the empty status/map gap %s" % dimensions, plaque.position.x >= status_ink.end.x + 20.0 * u - 0.01 and plaque.end.x <= map_ink.position.x - 20.0 * u + 0.01 and plaque.size.x <= 520.0 * u and is_equal_approx(plaque.position.y, top))
 		else:
 			check("portrait/narrow fallback retains its approved position and width %s" % dimensions, is_equal_approx(confirmation.position.y, origin.y + 194.0 * u) and is_equal_approx(confirmation.size.x, minf(520.0 * u, available.x - 40.0 * u)) and is_equal_approx(confirmation.get_center().x, margins.x + available.x * 0.5))
 	hud._toast.text = old_text
@@ -53,6 +48,7 @@ func run() -> void:
 	var view := SubViewport.new()
 	view.size = Vector2i(720, 1280)
 	add_child(view)
+	GameState.delete_save()
 	GameState.new_game("mage")
 	var game := preload("res://scripts/game.gd").new()
 	view.add_child(game)

@@ -2,7 +2,7 @@ extends TestCase
 ## Check actual generated surfaces and openings, not just a footprint rectangle.
 
 
-func _nearest_stone(stone: MeshInstance3D, origin: Vector3, direction: Vector3) -> float:
+func _nearest_mesh(stone: MeshInstance3D, origin: Vector3, direction: Vector3) -> float:
 	var nearest := INF
 	for surface in stone.mesh.get_surface_count():
 		var arrays := stone.mesh.surface_get_arrays(surface)
@@ -20,6 +20,11 @@ func _nearest_stone(stone: MeshInstance3D, origin: Vector3, direction: Vector3) 
 
 
 func run() -> void:
+	var provenance: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/source/preview3d/chapel/refinement.json"))
+	var generator: Dictionary = provenance["generator"]
+	check("chapel refinement keeps its exact native geometry source", FileAccess.get_sha256("res://" + str(generator["path"])) == generator["sha256"])
+	for source: Dictionary in provenance["inputs"]:
+		check("chapel reference and shared material source remains exact: " + str(source["path"]), FileAccess.get_sha256("res://" + str(source["path"])) == source["sha256"])
 	var glass: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/art/preview3d/chapel-glass.json"))
 	check("chapel glass retains its recorded generated-art pixels and reference", FileAccess.get_sha256("res://" + str(glass["source"])) == glass["source_sha256"] and FileAccess.get_sha256("res://" + str(glass["output"])) == glass["sha256"] and FileAccess.get_sha256("res://" + str(glass["reference"])) == glass["reference_sha256"])
 	var game := await make_game("mage")
@@ -36,13 +41,28 @@ func run() -> void:
 		return
 	check("chapel detail keeps a bounded geometry and material budget", int(report["triangles"]) > 1000 and int(report["triangles"]) < 30000 and int(report["surfaces"]) <= 8)
 	check("bell tower remains inside the camera shadow height slab", float(report["tower_height"]) < 11.5)
-	check("both sides have paired real lancet windows", report["windows"].size() == 4)
+	var side_count := 0
+	var rear_count := 0
+	for window: Dictionary in report["windows"]:
+		if window["role"] == "side_lancet":
+			side_count += 1
+		elif window["role"] == "rear_lancet":
+			rear_count += 1
+	check("both sides retain paired real lancets and rear has a coherent opening", side_count == 4 and rear_count == 1)
+	check("front and rear gables have recessed real masonry oculi", report["oculi"].size() == 2)
+	check("door ramp and native platform keep their existing height", absf(float(report["floor_height"]) - 0.28) < 0.00001)
+	check("entry has actual stone orders and jamb shafts", int(report["entry_orders"]) == 3 and int(report["entry_shafts"]) == 2 and float(report["door_recess"]) >= 0.27)
+	var actual_bounds: AABB = report["bounds"]
+	print("ART_AUDIT chapel_refinement " + JSON.stringify({"triangles": report["triangles"], "surfaces": report["surfaces"], "footprint": [report["footprint"].x, report["footprint"].y], "door_recess": report["door_recess"], "door_width": report["door_width"], "door_height": report["door_height"], "floor_height": report["floor_height"], "side_lancets": side_count, "rear_lancets": rear_count, "oculi": report["oculi"].size(), "tower_height": report["tower_height"], "roof_rows": report["roof_rows"], "bounds_min": [actual_bounds.position.x, actual_bounds.position.y, actual_bounds.position.z], "bounds_max": [actual_bounds.end.x, actual_bounds.end.y, actual_bounds.end.z]}))
 	var valid := true
 	var winding := true
 	var stone: MeshInstance3D
+	var oak: MeshInstance3D
 	for node: MeshInstance3D in report["meshes"]:
 		if node.name == "ChapelDetail_stone":
 			stone = node
+		elif node.name == "ChapelDetail_oak":
+			oak = node
 		for surface in node.mesh.get_surface_count():
 			var arrays := node.mesh.surface_get_arrays(surface)
 			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
@@ -63,11 +83,25 @@ func run() -> void:
 	if is_instance_valid(stone):
 		var size: Vector2 = report["footprint"]
 		var origin := Vector3(0, 1.15, size.y * 0.5 + 1.0)
-		check("doorway is an actual opening in the facade stone", _nearest_stone(stone, origin, Vector3(0, 0, -1)) > 1.3)
+		check("doorway is an actual opening in the facade stone", _nearest_mesh(stone, origin, Vector3(0, 0, -1)) > 1.3)
+		if is_instance_valid(oak):
+			var distance := _nearest_mesh(oak, Vector3(0.12, 1.15, size.y * 0.5 + 1.0), Vector3(0, 0, -1))
+			check("closed oak leaves use the measured .28m entry recess", absf(distance - 1.28) < 0.005)
+		var landing_hit := _nearest_mesh(stone, Vector3(0, 1.0, size.y * 0.5 + 0.04), Vector3.DOWN)
+		check("visible stone landing meets the unchanged .28m physics floor", absf(landing_hit - 0.72) < 0.005)
 		for opening: Dictionary in report["windows"]:
 			var facade: Transform3D = opening["transform"]
-			var local := Vector3(float(opening["center"]) + float(opening["width"]) * 0.225, float(opening["bottom"]) + float(opening["height"]) * 0.38, 1.0)
-			var distance := _nearest_stone(stone, facade * local, facade.basis * Vector3(0, 0, -1))
-			check("side window stone clearance %s/%s = %s" % [facade.origin, opening["center"], distance], distance > 1.14)
+			for side in [-1.0, 1.0]:
+				var local := Vector3(float(opening["center"]) + side * float(opening["width"]) * 0.225, float(opening["bottom"]) + float(opening["height"]) * 0.38, 1.0)
+				var distance := _nearest_mesh(stone, facade * local, facade.basis * Vector3(0, 0, -1))
+				check("actual window stone clearance %s/%s/%s = %s" % [facade.origin, opening["center"], side, distance], distance > 1.14)
+		for oculus: Dictionary in report["oculi"]:
+			var facade: Transform3D = oculus["transform"]
+			var center: Vector2 = oculus["center"]
+			var radius: float = oculus["radius"]
+			# Sample a glazed region between radial bars and the four stone lobes.
+			var angle := PI * 0.19
+			var point := Vector3(center.x + cos(angle) * radius * 0.75, center.y + sin(angle) * radius * 0.75, 1.0)
+			check("front/rear oculus is cut through masonry, not a disk on a wall", _nearest_mesh(stone, facade * point, facade.basis * Vector3(0, 0, -1)) > 1.16)
 	game.queue_free()
 	await _frames(2)

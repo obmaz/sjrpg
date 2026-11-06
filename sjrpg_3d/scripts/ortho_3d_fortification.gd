@@ -72,9 +72,10 @@ func _build() -> void:
 		var width := bounds.size.x + 0.02
 		var gate_depth := maxf(thickness, bounds.size.y * 0.8)
 		var shoulder := 2.55
-		var inward := signf(basis.z.dot(town_center - center))
+		var outward := _outward_normal(village.safe_zone, center)
+		var opening_sign := signf(basis.z.dot(outward))
 		var entry := {"frame": frame, "width": width, "depth": gate_depth, "shoulder": shoulder,
-			"point": Ortho3DPreview.ground_position(village.gate_points[index]), "inward": inward, "leaves": [], "progress": 0.0}
+			"point": Ortho3DPreview.ground_position(village.gate_points[index]), "outward": outward, "opening_sign": opening_sign, "leaves": [], "progress": 0.0}
 		for native_end: Vector2 in village.gate_ends[index]:
 			var join := Vector3(native_end.x, 0, native_end.y) / Ortho3DPreview.GROUND_PER_METER
 			var end := inverse * join
@@ -123,12 +124,38 @@ func sync() -> void:
 		value = clampf(value, 0.0, 1.0)
 		var gate: Dictionary = gates[index]
 		gate["progress"] = value
-		var inward: float = gate["inward"]
+		var opening_sign: float = gate["opening_sign"]
 		var leaves: Array = gate["leaves"]
 		for leaf_index in leaves.size():
 			var leaf: Node3D = leaves[leaf_index]
 			var side := -1.0 if leaf_index == 0 else 1.0
-			leaf.rotation.y = side * inward * OPEN_ANGLE * (1.0 - value)
+			# A closed leaf extends along -side*x. Y rotation moves that span toward
+			# side*sin(angle)*z, so this sign sends both leaves outside the safe zone.
+			leaf.rotation.y = side * opening_sign * OPEN_ANGLE * (1.0 - value)
+
+
+## Derive exterior from the actual nearest safe-zone edge, independently of camera
+## and polygon winding. Town-centre guesses can flip on offset/asymmetric passages.
+static func _outward_normal(safe_zone: PackedVector2Array, point: Vector3) -> Vector3:
+	var polygon := _flat_polygon(safe_zone)
+	var at := Vector2(point.x, point.z)
+	var nearest := INF
+	var outward := Vector2.ZERO
+	for index in polygon.size():
+		var first := polygon[index]
+		var last := polygon[(index + 1) % polygon.size()]
+		var edge := last - first
+		if edge.length_squared() < 0.000001:
+			continue
+		var closest := Geometry2D.get_closest_point_to_segment(at, first, last)
+		var distance := closest.distance_squared_to(at)
+		if distance >= nearest:
+			continue
+		nearest = distance
+		outward = edge.orthogonal().normalized()
+		if Geometry2D.is_point_in_polygon((first + last) * 0.5 + outward * 0.05, polygon):
+			outward = -outward
+	return Vector3(outward.x, 0.0, outward.y)
 
 
 static func _flat_polygon(source: PackedVector2Array) -> PackedVector2Array:

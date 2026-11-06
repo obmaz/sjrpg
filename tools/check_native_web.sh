@@ -26,5 +26,5 @@ for SCENE in chapel_reference cave_entry; do
   node "$ROOT/sjrpg_3d/tools/screenshot.mjs" \
     --url "http://127.0.0.1:$PORT/3d/" --scene "$SCENE" --class mage \
     --device phone --viewport 390x844 --dpr 1 --quality "$QUALITY" --rotate 1 \
-    --settle 1500 --out "$ROOT/build/review/$SCENE.png"
+    --settle 1500 --capture-timeout 90000 --out "$ROOT/build/review/$SCENE.png"
 done

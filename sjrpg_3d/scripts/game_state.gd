@@ -5,13 +5,29 @@ signal save_finished(success: bool, message: String)
 
 const SAVE_PATH := "user://guardian_save.json"
 const SAVE_VERSION := 1
-var save_path := "/userfs/sjrpg_3d/guardian_save.json" if OS.has_feature("web") else SAVE_PATH
+const MAX_SAVE_SLOTS := 4
+const SAVE_SUFFIXES := ["", ".bak", ".tmp", ".bak.tmp"]
+var _slot_base_path := "/userfs/sjrpg_3d/guardian_save_slot_1.json" if OS.has_feature("web") else SAVE_PATH.trim_suffix(".json") + "_slot_1.json"
+var _session_path := ""
+var active_slot := 1:
+	set(value):
+		if value >= 1 and value <= MAX_SAVE_SLOTS:
+			active_slot = value
+			_session_path = ""
+## The setter keeps existing isolated test fixtures supported; slot one is the anchor.
+var save_path: String:
+	get:
+		return slot_path(active_slot)
+	set(value):
+		_slot_base_path = value
+var _migration_error := false
 var save_error := ""
 var loaded_backup := false
 
 func _ready() -> void:
 	if OS.has_feature("web"):
 		DirAccess.make_dir_recursive_absolute("/userfs/sjrpg_3d")
+	_ensure_legacy_migration()
 
 
 const CLASSES := {
@@ -370,7 +386,130 @@ func add_xp(amount: int) -> int:
 	return gained
 
 
-func new_game(cls: String) -> void:
+## Slot paths stay beneath this edition's configured user directory. No directory scans.
+func slot_path(slot: int) -> String:
+	if slot < 1 or slot > MAX_SAVE_SLOTS:
+		return ""
+	if slot == 1:
+		return _slot_base_path
+	if _slot_base_path.ends_with("_slot_1.json"):
+		return _slot_base_path.trim_suffix("_slot_1.json") + "_slot_%d.json" % slot
+	return _slot_base_path.get_basename() + ".slot%d.json" % slot
+
+
+func _legacy_path() -> String:
+	if not _slot_base_path.ends_with("_slot_1.json"):
+		return ""
+	return _slot_base_path.trim_suffix("_slot_1.json") + ".json"
+
+
+func _has_slot_files(path: String) -> bool:
+	for suffix: String in SAVE_SUFFIXES + [".migration-copy"]:
+		if FileAccess.file_exists(path + suffix):
+			return true
+	return false
+
+
+func _valid_migration(data: Dictionary) -> bool:
+	return data.get("version") == 1 and data.get("state") in ["pending", "complete"]
+
+
+func _write_migration(state: String) -> bool:
+	var path := slot_path(1) + ".migration"
+	if SaveStore.write(path, {"version": 1, "state": state}, _valid_migration) != OK:
+		return false
+	# Keep a completed receipt in both copies before deleting a migrated hero.
+	return state != "complete" or SaveStore.write(path, {"version": 1, "state": state}, _valid_migration) == OK
+
+
+## Originals stay untouched. A durable receipt prevents a deleted slot from reimporting.
+## Pending copies resume after interruption, without replacing any destination bytes.
+func _ensure_legacy_migration() -> bool:
+	_migration_error = false
+	var legacy := _legacy_path()
+	if legacy.is_empty():
+		return true
+	var path := slot_path(1)
+	var receipt := SaveStore.read(path + ".migration", _valid_migration)
+	if not receipt.is_empty() and receipt["data"]["state"] == "complete":
+		return true
+	if receipt.is_empty():
+		if _has_slot_files(path + ".migration"):
+			_migration_error = true
+			return false
+		if _has_slot_files(path):
+			_migration_error = not _write_migration("complete")
+			return not _migration_error
+		if not _has_slot_files(legacy):
+			return true
+		if not _write_migration("pending"):
+			_migration_error = true
+			return false
+	# Backups copy first, so even an interrupted migration retains readable recovery.
+	for suffix: String in [".bak", "", ".tmp", ".bak.tmp"]:
+		var source := legacy + suffix
+		var target := path + suffix
+		if not FileAccess.file_exists(source):
+			continue
+		if FileAccess.file_exists(target):
+			if FileAccess.get_file_as_bytes(source) != FileAccess.get_file_as_bytes(target):
+				_migration_error = true
+				return false
+			continue
+		var staging := path + ".migration-copy"
+		var error := DirAccess.copy_absolute(source, staging)
+		if error == OK:
+			error = DirAccess.rename_absolute(staging, target)
+		if error != OK:
+			_migration_error = true
+			return false
+	_migration_error = not _write_migration("complete")
+	return not _migration_error
+
+
+## Preview reads metadata without applying a hero or authorizing gameplay autosaves.
+func slot_summaries() -> Array[Dictionary]:
+	_ensure_legacy_migration()
+	var summaries: Array[Dictionary] = []
+	for slot in range(1, MAX_SAVE_SLOTS + 1):
+		var path := slot_path(slot)
+		var recovered := SaveStore.read(path, _valid_save)
+		var data: Dictionary = recovered.get("data", {})
+		var timestamp: Variant = data.get("saved_at", 0.0)
+		if not _number(timestamp) or float(timestamp) < 0.0:
+			timestamp = 0.0
+		summaries.append({"slot": slot, "occupied": _has_slot_files(path) or (slot == 1 and _migration_error),
+			"valid": not recovered.is_empty() and not (slot == 1 and _migration_error), "class": str(data.get("class", "")),
+			"level": int(data.get("level", 1)) if not data.is_empty() else 0,
+			"location": str(data.get("location_mode", "forest")), "sanctuary": str(data.get("last_sanctuary", "town")),
+			"timestamp": float(timestamp), "backup": bool(recovered.get("backup", false))})
+	return summaries
+
+
+func select_slot(slot: int) -> bool:
+	if slot < 1 or slot > MAX_SAVE_SLOTS:
+		return false
+	active_slot = slot
+	encounter_capture = Callable()
+	loaded_backup = false
+	return true
+
+
+func create_slot(slot: int, cls: String) -> bool:
+	if slot < 1 or slot > MAX_SAVE_SLOTS or not CLASSES.has(cls):
+		return false
+	var migrated := _ensure_legacy_migration()
+	if (slot == 1 and not migrated) or _has_slot_files(slot_path(slot)):
+		return false
+	select_slot(slot)
+	return new_game(cls)
+
+
+func new_game(cls: String) -> bool:
+	if not CLASSES.has(cls) or has_save_files():
+		return false
+	if active_slot == 1 and not _legacy_path().is_empty() and not _write_migration("complete"):
+		return false
 	# Detach the previous world before the initial save can request a snapshot.
 	encounter_capture = Callable()
 	encounters = {}
@@ -399,32 +538,57 @@ func new_game(cls: String) -> void:
 	skill_points = 2
 	_starter_skills()
 	_starting_gear()
-	save_game()
+	loaded_backup = false
+	_session_path = save_path
+	var saved := save_game()
+	if not saved:
+		_session_path = ""
+	return saved
 
 
-func delete_save() -> void:
-	for suffix in ["", ".bak", ".tmp", ".bak.tmp"]:
-		if FileAccess.file_exists(save_path + suffix):
-			DirAccess.remove_absolute(save_path + suffix)
+func delete_slot(slot: int) -> bool:
+	if slot < 1 or slot > MAX_SAVE_SLOTS:
+		return false
+	if slot == active_slot:
+		_session_path = ""
+		encounter_capture = Callable()
+		loaded_backup = false
+	if slot == 1 and not _legacy_path().is_empty() and not _write_migration("complete"):
+		return false
+	var path := slot_path(slot)
+	var success := true
+	for suffix: String in SAVE_SUFFIXES + [".migration-copy"]:
+		if FileAccess.file_exists(path + suffix) and DirAccess.remove_absolute(path + suffix) != OK:
+			success = false
+	return success
+
+
+func delete_save() -> bool:
+	return delete_slot(active_slot)
 
 
 func has_save() -> bool:
+	_ensure_legacy_migration()
 	return not SaveStore.read(save_path, _valid_save).is_empty()
 
 
 ## Unreadable or interrupted saves still belong to the player and require replacement confirmation.
 func has_save_files() -> bool:
-	for suffix in ["", ".bak", ".tmp", ".bak.tmp"]:
-		if FileAccess.file_exists(save_path + suffix):
-			return true
-	return false
+	_ensure_legacy_migration()
+	return _has_slot_files(save_path) or (active_slot == 1 and _migration_error)
 
 
 func save_game() -> bool:
+	# Old scenes may still emit a final autosave after selection/deletion.
+	if _session_path != save_path:
+		save_error = "저장할 모험을 먼저 선택하거나 새로 만들어 주세요."
+		save_finished.emit(false, save_error)
+		return false
 	if encounter_capture.is_valid():
 		encounter_capture.call()
 	var data := {
 		"version": SAVE_VERSION, "class": hero_class, "level": level, "xp": xp,
+		"saved_at": Time.get_unix_time_from_system(),
 		"potions": potions, "mana_potions": mana_potions, "kills": kills,
 		"skill_points": skill_points, "ranks": ranks, "slots": slots,
 		"quests": quests, "stage_kills": stage_kills, "boss_defeated": boss_defeated, "boss_heart_pending": boss_heart_pending, "memory_rewarded": memory_rewarded, "discovered_sanctuaries": discovered_sanctuaries, "last_sanctuary": last_sanctuary, "location_mode": location_mode, "gold": gold, "bonus_attack": bonus_attack, "bonus_health": bonus_health, "chest_seed": chest_seed, "opened_chests": opened_chests,
@@ -551,6 +715,9 @@ func _number(value: Variant) -> bool:
 func load_game() -> bool:
 	# Even a failed continue attempt must not retain a snapshotter from the old world.
 	encounter_capture = Callable()
+	_session_path = ""
+	if not _ensure_legacy_migration() and active_slot == 1:
+		return false
 	var recovered := SaveStore.read(save_path, _valid_save)
 	if recovered.is_empty():
 		return false
@@ -635,6 +802,7 @@ func load_game() -> bool:
 			unseen.append(int(u))
 	else:
 		_starting_gear()
+	_session_path = save_path
 	collect_memory_reward()
 	return true
 

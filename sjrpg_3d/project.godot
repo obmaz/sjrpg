@@ -3,7 +3,7 @@ config_version=5
 
 [application]
 
-config/name="자연의 수호자 3D"
+config/name="자연의 수호자"
 config/use_custom_user_dir=true
 config/custom_user_dir_name="sjrpg_3d"
 config/description="120° 직교 쿼터뷰의 네이티브 3D 모험"

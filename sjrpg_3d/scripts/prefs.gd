@@ -73,14 +73,37 @@ func vibration_supported() -> bool:
 
 
 func fullscreen_supported() -> bool:
-	return OS.has_feature("web") or DisplayServer.get_name() != "headless"
+	if OS.has_feature("web"):
+		return bool(fullscreen_state().get("supported", false))
+	return DisplayServer.get_name() != "headless"
 
 
 func is_fullscreen() -> bool:
-	return DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
+	if OS.has_feature("web"):
+		return bool(fullscreen_state().get("active", false))
+	return DisplayServer.window_get_mode() in [DisplayServer.WINDOW_MODE_FULLSCREEN, DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN]
+
+
+func fullscreen_state() -> Dictionary:
+	if OS.has_feature("web"):
+		var raw: Variant = JavaScriptBridge.eval("JSON.stringify(window.SjrpgFullscreen ? window.SjrpgFullscreen.state() : {active:false,supported:false,pending:false,title:'전체화면 지원 안내',detail:'이 브라우저에서 전체화면 기능을 확인할 수 없습니다.'})", true)
+		if raw is String:
+			var parsed: Variant = JSON.parse_string(raw)
+			if parsed is Dictionary:
+				return parsed
+		return {"active": false, "supported": false, "pending": false, "title": "전체화면 지원 안내", "detail": "이 브라우저에서 전체화면 기능을 확인할 수 없습니다."}
+	var supported := DisplayServer.get_name() != "headless"
+	var active := is_fullscreen()
+	return {"active": active, "supported": supported, "pending": false, "title": ("전체화면 끄기" if active else "전체화면 켜기") if supported else "전체화면 지원 안내", "detail": "게임 화면을 전체화면으로 전환합니다." if supported else "이 실행 환경은 전체화면 전환을 지원하지 않습니다."}
 
 
 func toggle_fullscreen() -> void:
+	if OS.has_feature("web"):
+		# Button.pressed must reach the native API before any deferred callback.
+		JavaScriptBridge.eval("if (window.SjrpgFullscreen) window.SjrpgFullscreen.toggle();")
+		return
+	if not fullscreen_supported():
+		return
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if is_fullscreen() else DisplayServer.WINDOW_MODE_FULLSCREEN)
 
 

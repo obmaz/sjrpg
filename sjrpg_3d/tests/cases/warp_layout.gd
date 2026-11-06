@@ -3,6 +3,7 @@ extends TestCase
 
 
 func run() -> void:
+	GameState.delete_save()
 	GameState.new_game("warrior")
 	var view := SubViewport.new()
 	view.size = Vector2i(720, 1280)

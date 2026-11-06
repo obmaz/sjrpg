@@ -1,0 +1,123 @@
+{
+  "purpose": "Bounded native chapel geometry refinement; no 2D edition changes and no new generated images.",
+  "baseline_commit": "a6d6f86fafbf1ba3585df16d8628f4ca158bf910",
+  "baseline_helper": {
+    "path": "scripts/ortho_3d_chapel.gd",
+    "sha256": "cf8397b45e153ea27f0d16b7d856b0429cade4a302948139e74db32223d0f22c"
+  },
+  "generator": {
+    "path": "scripts/ortho_3d_chapel.gd",
+    "sha256": "d254cf3f54b9f83cb831c7b1c8910b5fb0de6e92ecceffad10974dc34be2b2df",
+    "api": "Ortho3DChapel.build(presenter, root, width, depth, height)",
+    "method": "Runtime ArrayMesh construction from dimensioned native stone/wood/roof solids, pointed arch paths and actual wall apertures. No facade billboard or viewport texture."
+  },
+  "inputs": [
+    {
+      "path": "assets/source/style/approved-game-reference.jpg",
+      "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+    },
+    {
+      "path": "assets/source/remake/chapel-v2.png",
+      "sha256": "e197ff7e23687a692fa02e4b9371c82998fefe51ceb6e47a9b5ab07681317171"
+    },
+    {
+      "path": "assets/art/preview3d/chapel-glass.json",
+      "sha256": "e83f4cf44540a6700e0965a61224630368cacebfb8c447cd94650e720ab002ba"
+    },
+    {
+      "path": "assets/art/preview3d/chapel-glass.webp",
+      "sha256": "07fcea6475236e54b4cc73a561aa16509ff8bca6108214f3ab64b98d7ffb09f3"
+    },
+    {
+      "path": "assets/art/preview3d/materials.json",
+      "sha256": "80b0581b66f5a2d5f578a4514dbaf89b5f3f17eecfc23d6122861f2f6d110f1d"
+    },
+    {
+      "path": "assets/art/preview3d/limestone.webp",
+      "sha256": "8e71b8336aa7a8f6a1ec3ee272eda58296d52b7f5677a207aabf0cec7142c9e5"
+    },
+    {
+      "path": "assets/art/preview3d/slate.webp",
+      "sha256": "98b2683713f318f4f2bdf78adb12148ef44efaf3efbc7ae63ba0396fbc00c5c8"
+    },
+    {
+      "path": "assets/art/preview3d/timber.webp",
+      "sha256": "4cac472a9fb54db9e89bdaf1577db846bd49f936e759dca7b10101175f7dcb1c"
+    }
+  ],
+  "source_derivations": "Existing shared generated material quadrants and exact source-glass extraction are unchanged; see materials.json and chapel-glass.json for prompts/references/source quadrilateral. No new texture, image repaint, pixel repair or per-side material colour override.",
+  "coordinate_contract": {
+    "native_axis": "Y-up; X/Z ground; +Z front",
+    "ground_units_per_metre": 65,
+    "camera_azimuth_degrees": 45,
+    "camera_elevation_degrees": 35.26438968,
+    "ground_axis_separation_degrees": 120,
+    "footprint_m": [
+      3.5,
+      3.0
+    ],
+    "wall_height_m": 3.5,
+    "platform_and_collision_height_m": 0.28,
+    "old_visible_landing_top_m": 0.33,
+    "new_visible_landing_top_m": 0.28,
+    "door_leaf_recess_from_facade_m": 0.28,
+    "door_width_m": 1.38,
+    "door_height_m": 2.82,
+    "nominal_tower_height_m": 9.66,
+    "aabb_min_m": [
+      -2.00032377243042,
+      0,
+      -1.75231456756592
+    ],
+    "aabb_max_m": [
+      2.00032377243042,
+      9.65499973297119,
+      2.09999990463257
+    ]
+  },
+  "changes": [
+    "Deeper 10-plank closed oak door and attached metal straps/rivets; three existing pointed stone arch orders plus two jamb shafts and capitals.",
+    "Both gables contain real circular masonry holes with recessed glass, four lobe rings and radial tracery.",
+    "Four side lancets have measured stepped stone surrounds; rear gains one consistent lancet clear of the tower.",
+    "Front/rear corner pilasters remain inside the existing plinth band.",
+    "Twelve restrained slate rows per roof slope with thin physical course lips, stone coping and shared existing slate material.",
+    "Visible landing top now meets existing native floor/ramp height; no physics, placement or gameplay-rule changes."
+  ],
+  "budget": {
+    "triangles": 27276,
+    "merged_surfaces": 6,
+    "surface_groups": [
+      "stone",
+      "oak (shared wood material)",
+      "slate",
+      "lead",
+      "bronze",
+      "chapel_glass"
+    ],
+    "triangle_limit": 30000,
+    "surface_limit": 8,
+    "exception_to_general_house_budget": "This landmark includes a full bell tower/spire, genuinely cut arch/oculus walls, paired lancet tracery and all four sides; repeated pieces merge by shared material. Small side roses and linear cylinders use lower tessellation than main gable detail."
+  },
+  "verification": {
+    "engine": "Godot 4.7.2",
+    "renderer": "GL Compatibility",
+    "case": "ortho_3d_chapel",
+    "test_path": "tests/cases/ortho_3d_chapel.gd",
+    "test_sha256": "d47a7a54126c9d839a61be38f3592dcfd21f31f491b3a73cf9d2fa993383fec5",
+    "result": "PASS (1 case, 0 failures)",
+    "command": "XDG_DATA_HOME=/tmp/sjrpg-chapel-userdata tools/check.sh --only=ortho_3d_chapel",
+    "checks": [
+      "All generated vertex/UV coordinates finite; normals unit length; front/back winding consistent.",
+      "Actual triangle rays pass through doorway, both pane centres of every side/rear lancet and clear regions of front/rear oculus masonry.",
+      "Actual oak triangle ray measures closed door recess 0.28m.",
+      "Actual stone triangle ray measures landing top 0.28m.",
+      "Source reference, generated original glass and extracted runtime glass hashes remain exact."
+    ],
+    "visual_review": "Pending actual portrait/landscape browser review; headless results do not establish reference fidelity or user approval."
+  },
+  "limitations": [
+    "Closed building; door recess and window holes do not imply a walkable interior.",
+    "Existing native rectangular footprint collision and platform/ramp are unchanged; decorative roof/tower geometry does not introduce a detailed collision mesh.",
+    "Shared generated albedo is not a measured PBR scan. Small detail readability still needs the actual fixed-camera mobile review."
+  ]
+}

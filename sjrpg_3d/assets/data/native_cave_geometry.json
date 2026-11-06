@@ -1,0 +1,66 @@
+{
+  "scope": "Existing Stage1 Wind Cave only; no room, gameplay, collision-policy or source-layout changes.",
+  "reference": {
+    "path": "assets/source/style/approved-game-reference.jpg",
+    "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+  },
+  "family": "assets/data/cave_art.json",
+  "generator": {
+    "path": "scripts/ortho_3d_cave_rock.gd",
+    "sha256": "6fccd28a0d53c17060a4da3c39d64c87cae64c4bd2a069e41e8ce93c67b67807",
+    "method": "Closed native3D profile extrusion on recorded union boundary; deterministic endpoint miters and silhouette. No image generation, painting or baked view was used in this revision."
+  },
+  "material": {
+    "path": "assets/art/cave/dark.webp",
+    "sha256": "943feb5680f4ab46fb7a4aa658fbcb6f9d54848a762d350422fccfd1eb86bb84",
+    "tile_metres": 2.6,
+    "pixels_per_metre": 196.9230769230769,
+    "roughness": 0.96,
+    "normal_source": "Actual geometry face normals; no normal-map asset",
+    "limitation": "Existing generated albedo retains its authored micro self-shading; not a PBR scan."
+  },
+  "geometry": {
+    "units": "metres",
+    "up": "+Y",
+    "ground": "XZ",
+    "collision_inner_inset": 0.04,
+    "outer_depth": 1.05,
+    "rear_chamber_height_max": 3.5,
+    "rear_corridor_height": 1.45,
+    "front_cutaway_height": 0.45,
+    "chunk_length": 12,
+    "triangle_budget": 20000,
+    "chunk_budget": 8,
+    "actual_runtime_counts": "Bounded by actual mesh assertions (0 failures); inspect native_cave_rock metadata for counts. GPU counters still pending."
+  },
+  "replacement": {
+    "metadata": "cave_role",
+    "value": "wall",
+    "retained_roles": [
+      "arch",
+      "lantern"
+    ],
+    "source_nodes": "Preserved as hidden rules/art adapters; no ancestor-visibility gating."
+  },
+  "lighting": {
+    "ambient_energy": 0.34,
+    "ambient_color": [
+      0.62,
+      0.69,
+      0.76
+    ],
+    "key_energy": 0.62,
+    "key_shadows": true,
+    "key_shadow_passes": 1,
+    "entry_energy": 1.2,
+    "entry_range_metres": 6.2,
+    "authored_lamp_count": 10,
+    "lamp_energy": 2.6,
+    "local_shadow_passes": 0,
+    "outdoor_settings": "Captured on entry, restored exactly on exit."
+  },
+  "validation": {
+    "engine": "Godot 4.7.2 headless: native_cave_geometry and native_environment PASS; 2 cases, 0 failures, 2504 ms. Log /tmp/native-cave-focused.log; 2026-11-06.",
+    "gpu_and_paired_captures": "Pending House QA; do not infer visual completion from metadata/tests."
+  }
+}

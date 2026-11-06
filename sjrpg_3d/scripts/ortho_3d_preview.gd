@@ -67,9 +67,6 @@ var _affordances: Ortho3DAffordances
 var _was_paused := false
 var _static_batch := {}
 var _batch_gpu_error := -1.0
-var _mode_layer: CanvasLayer
-var _mode_badge: PanelContainer
-var _mode_label: Label
 var enabled := true
 var _hero_motion: Ortho3DHeroMotion
 var _level_up_fx: Ortho3DLevelUp
@@ -126,24 +123,6 @@ func _ready() -> void:
 	display.texture = viewport.get_texture()
 	display.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_layer.add_child(display)
-	_mode_layer = CanvasLayer.new()
-	_mode_layer.layer = game.hud.layer + 1
-	add_child(_mode_layer)
-	_mode_badge = PanelContainer.new()
-	_mode_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var frame := StyleBoxFlat.new()
-	frame.bg_color = Color(0.06, 0.09, 0.075, 0.9)
-	frame.border_color = Color("93815b")
-	frame.set_border_width_all(1)
-	frame.set_corner_radius_all(5)
-	frame.content_margin_left = 6
-	frame.content_margin_right = 6
-	_mode_badge.add_theme_stylebox_override("panel", frame)
-	_mode_layer.add_child(_mode_badge)
-	_mode_label = UiKit.label("3D 숲", 18, Color("e4d5b1"))
-	_mode_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_mode_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_mode_badge.add_child(_mode_label)
 	_setup_light()
 	_setup_materials()
 	_town_props = NativeTownProps3D.new().setup(self, _materials)
@@ -182,16 +161,6 @@ func _resize() -> void:
 	display.size = native
 	viewport.size = Vector2i(native / (2.0 if Prefs.low_resolution else 1.0))
 	viewport.msaa_3d = Viewport.MSAA_DISABLED if Prefs.low_resolution else Viewport.MSAA_2X
-	var header: Dictionary = game.hud.status_geometry()
-	var unit: float = header["map_unit"]
-	var paint: Rect2 = header["paint_bounds"]
-	var minimap: Rect2 = header["map"]
-	var left := paint.end.x + 6.0 * unit
-	var right := minimap.position.x - 6.0 * unit
-	var width := minf(126.0 * unit, right - left)
-	_mode_badge.position = Vector2((left + right - width) * 0.5, minimap.position.y + 2.0 * unit)
-	_mode_badge.size = Vector2(width, 32.0 * unit)
-	_mode_label.add_theme_font_size_override("font_size", roundi(18.0 * unit))
 	if camera != null:
 		_sync_camera()
 		# Container layout can settle after the signal; deferred calls also run while settings pause simulation.
@@ -441,7 +410,6 @@ func _sync_camera() -> void:
 
 
 func _process(delta: float) -> void:
-	_mode_badge.visible = not game.hud.panel_open()
 	if not _sync_scope():
 		return
 	var frozen := get_tree().paused
@@ -475,7 +443,6 @@ func _sync_scope() -> bool:
 		_contact_time = 0.0
 		_contact_fresh = false
 		contact_light.visible = false
-	_mode_label.text = "3D 동굴" if game.dungeon.active else "3D 숲"
 	_native_visible = true
 	display.visible = true
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS

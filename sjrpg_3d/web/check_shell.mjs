@@ -8,8 +8,8 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const template = await readFile(new URL('./shell.html', import.meta.url), 'utf8');
 const art = await readFile(new URL('./loading-bg.webp', import.meta.url));
-const buttonArt = await readFile(new URL('./entry-button.webp', import.meta.url));
 const installer = await readFile(new URL('./install.js', import.meta.url), 'utf8');
+const fullscreen = await readFile(new URL('./fullscreen.js', import.meta.url), 'utf8');
 const html = template.replaceAll('$GODOT_PROJECT_NAME', '자연의 수호자')
   .replaceAll('$GODOT_HEAD_INCLUDE', '').replaceAll('$GODOT_URL', 'engine.js')
   .replaceAll('$GODOT_CONFIG', '{}').replaceAll('$GODOT_THREADS_ENABLED', 'false');
@@ -18,11 +18,19 @@ let checks = 0;
 try {
   for (const viewport of [{ width: 412, height: 839 }, { width: 915, height: 412 }, { width: 568, height: 320 }]) {
     const page = await browser.newPage({ viewport, reducedMotion: 'reduce', isMobile: viewport.width < viewport.height });
+    // Chromium's desktop fullscreen window cannot be resized via WebDriver.
+    // Keep portrait reverse-rotation coverage in the ordinary browser fixture,
+    // and exercise installed fullscreen + return-to-title in the landscape one.
+    const installed = viewport.width === 915;
+    if (installed) await page.addInitScript(() => {
+      const original = window.matchMedia.bind(window);
+      window.matchMedia = query => query === '(display-mode: standalone)' ? { matches: true } : original(query);
+    });
     await page.route('https://loader.test/**', async route => {
       const name = new URL(route.request().url()).pathname;
       if (name === '/install.js') return route.fulfill({ contentType: 'text/javascript', body: installer });
+      if (name === '/fullscreen.js') return route.fulfill({ contentType: 'text/javascript', body: fullscreen });
       if (name === '/loading-bg.webp') return route.fulfill({ contentType: 'image/webp', body: art });
-      if (name === '/entry-button.webp') return route.fulfill({ contentType: 'image/webp', body: buttonArt });
       if (name === '/engine.js') return route.fulfill({ contentType: 'text/javascript', body: `
         window.Engine = class {
           constructor(config) { window.finishQuit = () => config.onExit(0); }
@@ -43,7 +51,7 @@ try {
     assert.equal(await page.locator('#progress').getAttribute('value'), String(37 * 1048576));
     const panel = await page.locator('.loading-panel').boundingBox();
     assert(panel.x >= 0 && panel.y >= 0 && panel.x + panel.width <= viewport.width && panel.y + panel.height <= viewport.height);
-    assert.equal(await page.locator('.mote').first().evaluate(el => getComputedStyle(el).animationName), 'none');
+    assert.equal(await page.locator('#progress').evaluate(el => getComputedStyle(el).animationName), 'none');
     await page.screenshot({ path: `/tmp/loading-${viewport.width}x${viewport.height}.png` });
     await page.evaluate(() => window.report(100, 100));
     assert.equal(await page.locator('#amount').textContent(), '100%');
@@ -70,6 +78,7 @@ try {
     await page.locator('#entry-start').focus();
     await page.keyboard.press('Enter');
     assert.equal(await page.evaluate(() => window.starts), 1);
+    if (installed) await page.waitForFunction(() => document.fullscreenElement === document.documentElement);
     assert.equal(await page.locator('#loading').isVisible(), false);
     if (viewport.width < viewport.height) {
       // A landscape drawing buffer must not enlarge the mobile layout viewport
@@ -83,7 +92,11 @@ try {
     }
     await page.evaluate(() => window.__sjrpgEntry.show(() => { window.starts++; window.__sjrpgEntry.hide(); }, true));
     assert.equal(await page.locator('#entry-start').isEnabled(), true, 'returning to the title rebinds its live callback');
-    assert.equal(await page.locator('.mote').first().evaluate(el => getComputedStyle(el).animationName), 'none');
+    if (installed) {
+      assert.equal(await page.evaluate(() => document.fullscreenElement === document.documentElement), true, 'installed fullscreen keeps the actual entry overlay in the fullscreen DOM');
+      await page.screenshot({ path: '/tmp/entry-fullscreen-return.png' });
+    }
+    assert.equal(await page.locator('#progress').evaluate(el => getComputedStyle(el).animationName), 'none');
     await page.locator('#entry-start').click();
     assert.equal(await page.evaluate(() => window.starts), 2);
     await page.reload();
@@ -107,7 +120,7 @@ try {
       assert.equal(await page.evaluate(() => window.__sjrpgLaunch3D), native);
       await page.evaluate(() => { window.finish(); window.__sjrpgEntry.show(() => window.__sjrpgEntry.hide()); });
       await page.locator('#entry-start').waitFor({state: 'visible'});
-      assert.equal(await page.locator('#entry-start').textContent(), native ? '3D 모험 시작' : '모험 시작');
+      assert.equal(await page.locator('#entry-start').textContent(), '모험 시작');
     }
     const beforeQuit = page.url();
     assert.equal(await page.evaluate(() => window.__sjrpgNavigateEdition('invalid')), false);
@@ -126,6 +139,7 @@ try {
     await page.route('https://loader.test/**', async route => {
       const name = new URL(route.request().url()).pathname;
       if (name === '/install.js') return route.fulfill({ contentType: 'text/javascript', body: installer });
+      if (name === '/fullscreen.js') return route.fulfill({ contentType: 'text/javascript', body: fullscreen });
       if (name === '/loading-bg.webp') return route.fulfill({ contentType: 'image/webp', body: art });
       if (name === '/engine.js') {
         if (scenario === 'script-failed') return route.abort('failed');

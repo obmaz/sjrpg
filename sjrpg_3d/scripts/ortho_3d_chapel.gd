@@ -13,6 +13,8 @@ var _box_arrays: Array
 var _triangles := 0
 var _pieces := 0
 var _windows: Array[Dictionary] = []
+var _oculi: Array[Dictionary] = []
+var _roof_rows := 0
 
 
 static func build(presenter: Node, root: Node3D, width: float, depth: float, height: float) -> Dictionary:
@@ -41,9 +43,7 @@ func _build(width: float, depth: float, height: float) -> Dictionary:
 	glass.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	glass.roughness = 0.52
 	_materials["chapel_glass"] = glass
-	var wood := (_materials["wood"] as StandardMaterial3D).duplicate() as StandardMaterial3D
-	wood.albedo_color = Color(0.83, 0.79, 0.72)
-	_materials["oak"] = wood
+	_materials["oak"] = _materials["wood"]
 	var floor := 0.28
 	var top := height + floor
 	var rise := 2.4
@@ -56,10 +56,15 @@ func _build(width: float, depth: float, height: float) -> Dictionary:
 	for side in [-1.0, 1.0]:
 		side_openings.append({"x": side * depth * 0.235, "width": window_width, "bottom": 0.74, "height": window_height})
 	_box(Vector3(0, 0.12, 0), Vector3(width + 0.30, 0.24, depth + 0.30), "stone")
-	_box(Vector3(0, 0.28, 0), Vector3(width + 0.18, 0.10, depth + 0.18), "stone")
+	# The visible landing meets the unchanged native .28m floor, rather than
+	# burying actor feet under the old .33m top of a centered trim slab.
+	_box(Vector3(0, 0.26, 0), Vector3(width + 0.18, 0.04, depth + 0.18), "stone")
 	var front := Transform3D(Basis.IDENTITY, Vector3(0, 0, depth * 0.5 - 0.14))
 	_wall(width, floor, top, [door], front)
-	_wall(width, floor, top, [], Transform3D(Basis(Vector3.UP, PI), Vector3(0, 0, -depth * 0.5 + 0.14)))
+	var rear := Transform3D(Basis(Vector3.UP, PI), Vector3(0, 0, -depth * 0.5 + 0.14))
+	var rear_opening := {"x": -width * 0.28, "width": minf(0.72, width * 0.21), "bottom": 0.94, "height": 1.62}
+	_wall(width, floor, top, [rear_opening], rear)
+	_rear_window(rear_opening, rear)
 	for side in [-1.0, 1.0]:
 		var facade := Transform3D(Basis(Vector3.UP, side * PI * 0.5), Vector3(side * (width * 0.5 - 0.14), 0, 0))
 		_wall(depth, floor, top, side_openings, facade)
@@ -83,20 +88,30 @@ func _build(width: float, depth: float, height: float) -> Dictionary:
 			_box(Vector3(side * (width * 0.5 - 0.02), level, 0), Vector3(0.12, 0.075, depth + 0.12), "stone")
 			if level > 1.0:
 				_box(Vector3(0, level, side * (depth * 0.5 - 0.02)), Vector3(width + 0.12, 0.075, 0.12), "stone")
-	var triangle := PackedVector2Array([Vector2(-width * 0.5, top), Vector2(width * 0.5, top), Vector2(0, top + rise)])
-	for side in [-1.0, 1.0]:
-		_prism(triangle, 0.28, Transform3D(Basis.IDENTITY, Vector3(0, 0, side * (depth * 0.5 - 0.14))), "stone")
+	# Both gables have actual circular masonry openings; glass is recessed inside.
+	_gable(width, top, rise, front, 0.0)
+	_gable(width, top, rise, rear, -minf(0.42, width * 0.13))
 	_roof(width, depth, top, rise)
-	_rose(Vector3(0, top + rise * 0.42, depth * 0.5 + 0.018), minf(0.35, width * 0.10))
+	for face in [front, rear]:
+		for side in [-1.0, 1.0]:
+			var x: float = side * (width * 0.5 - 0.18)
+			_box(Vector3(x, 1.61, 0.10), Vector3(0.26, 2.66, 0.20), "stone", face)
+			_box(Vector3(x, 0.50, 0.12), Vector3(0.32, 0.14, 0.22), "stone", face)
+			_box(Vector3(x, 2.89, 0.11), Vector3(0.30, 0.10, 0.22), "stone", face)
+			_taper_cap(face * Vector3(x, 3.03, 0.11), Vector2(0.28, 0.25), 0.18)
+
 	# Keep the bell shaft inside the wall's inner surface so it cannot fill a
 	# side lancet opening when the source chapel has a narrow footprint.
 	var tower_x := maxf(-width * 0.27, -width * 0.5 + 1.05)
 	var tower_height := _tower(Vector3(tower_x, 0, -depth * 0.25), height)
 	var meshes := _flush()
+	var bounds := meshes[0].mesh.get_aabb()
+	for mesh in meshes:
+		bounds = bounds.merge(mesh.mesh.get_aabb())
 	var report := {"triangles": _triangles, "pieces": _pieces, "surfaces": meshes.size(), "meshes": meshes,
 		"footprint": Vector2(width, depth), "door_width": door_width, "door_height": door_height,
-		"door_bottom": Vector3(0, floor, depth * 0.5 - 0.20), "door_recess": 0.20,
-		"windows": _windows, "tower_height": tower_height,
+		"door_bottom": Vector3(0, floor, depth * 0.5 - 0.20), "door_recess": 0.28,
+		"windows": _windows, "oculi": _oculi, "roof_rows": _roof_rows, "entry_orders": 3, "entry_shafts": 2, "tower_height": tower_height, "bounds": bounds, "floor_height": floor,
 		"glass_source": "assets/art/preview3d/chapel-glass.json", "reference": "assets/source/style/approved-game-reference.jpg"}
 	_root.set_meta("chapel_detail", report)
 	return report
@@ -168,21 +183,43 @@ func _door(opening: Dictionary, facade: Transform3D) -> void:
 		var left := lerpf(-width * 0.5, width * 0.5, plank / 10.0) + 0.004
 		var right := lerpf(-width * 0.5, width * 0.5, (plank + 1) / 10.0) - 0.004
 		var polygon := PackedVector2Array([Vector2(left, bottom), Vector2(right, bottom), Vector2(right, _arch_y(right, width, shoulder)), Vector2((left + right) * 0.5, _arch_y((left + right) * 0.5, width, shoulder)), Vector2(left, _arch_y(left, width, shoulder))])
-		_prism(polygon, 0.07, facade * Transform3D(Basis.IDENTITY, Vector3(0, 0, -0.06)), "oak")
+		_prism(polygon, 0.07, facade * Transform3D(Basis.IDENTITY, Vector3(0, 0, -0.175)), "oak")
 	for order in 3:
 		_arch_ring(width + order * 0.11, bottom, shoulder, 0.055, 0.10, facade * Transform3D(Basis.IDENTITY, Vector3(0, 0, 0.10 + order * 0.055)))
 	for side in [-1.0, 1.0]:
 		for level in [0.92, 1.83]:
-			_box(Vector3(side * width * 0.25, level, 0.005), Vector3(width * 0.42, 0.045, 0.035), "lead", facade)
+			_box(Vector3(side * width * 0.25, level, -0.1225), Vector3(width * 0.42, 0.045, 0.035), "lead", facade)
 		for level in [0.92, 1.83]:
 			for end in [-1.0, 1.0]:
-				_sphere(Vector3(side * width * 0.25 + end * width * 0.16, level, 0.033), 0.024, "bronze", facade)
+				_sphere(Vector3(side * width * 0.25 + end * width * 0.16, level, -0.097), 0.014, "lead", facade)
 		var ring := TorusMesh.new()
 		ring.inner_radius = 0.039
 		ring.outer_radius = 0.061
 		ring.rings = 12
 		ring.ring_segments = 6
-		_append_mesh(ring, facade * Transform3D(Basis(Vector3.RIGHT, PI * 0.5), Vector3(side * 0.12, 1.30, 0.045)), "lead")
+		_append_mesh(ring, facade * Transform3D(Basis(Vector3.RIGHT, PI * 0.5), Vector3(side * 0.12, 1.30, -0.095)), "lead")
+
+	for side in [-1.0, 1.0]:
+		_entry_shaft(Vector3(side * (width * 0.5 + 0.14), bottom, 0.115), shoulder - bottom, facade)
+
+
+func _entry_shaft(at: Vector3, tall: float, facade: Transform3D) -> void:
+	var shaft := CylinderMesh.new()
+	shaft.top_radius = 0.059
+	shaft.bottom_radius = 0.068
+	shaft.height = tall - 0.12
+	shaft.radial_segments = 12
+	shaft.rings = 1
+	_append_mesh(shaft, facade * Transform3D(Basis.IDENTITY, at + Vector3.UP * (tall * 0.5)), "stone")
+	for y in [0.04, tall - 0.055]:
+		var collar := TorusMesh.new()
+		collar.inner_radius = 0.061
+		collar.outer_radius = 0.088
+		collar.rings = 12
+		collar.ring_segments = 4
+		_append_mesh(collar, facade * Transform3D(Basis.IDENTITY, at + Vector3.UP * y), "stone")
+	_box(at + Vector3(0, 0.015, 0), Vector3(0.19, 0.055, 0.18), "stone", facade)
+	_box(at + Vector3(0, tall - 0.015, 0), Vector3(0.18, 0.055, 0.17), "stone", facade)
 
 
 func _window(opening: Dictionary, facade: Transform3D) -> void:
@@ -191,16 +228,16 @@ func _window(opening: Dictionary, facade: Transform3D) -> void:
 	var bottom: float = opening["bottom"]
 	var total: float = opening["height"]
 	var shoulder := bottom + total - width * sqrt(3.0) * 0.5
-	var at := facade * Transform3D(Basis.IDENTITY, Vector3(x, 0, 0.09))
-	_arch_ring(width, bottom, shoulder, 0.105, 0.12, at)
-	_arch_ring(width - 0.07, bottom + 0.03, shoulder, 0.035, 0.065, facade * Transform3D(Basis.IDENTITY, Vector3(x, 0, 0.035)))
+	_arch_ring(width + 0.10, bottom - 0.02, shoulder, 0.055, 0.10, facade * Transform3D(Basis.IDENTITY, Vector3(x, 0, 0.17)))
+	_arch_ring(width, bottom, shoulder, 0.065, 0.12, facade * Transform3D(Basis.IDENTITY, Vector3(x, 0, 0.11)))
+	_arch_ring(width - 0.08, bottom + 0.025, shoulder, 0.035, 0.08, facade * Transform3D(Basis.IDENTITY, Vector3(x, 0, 0.035)))
 	var pane_width := width * 0.40
 	var pane_height := total * 0.76
 	for side in [-1.0, 1.0]:
 		var pane_x: float = side * width * 0.225
 		var pane_shoulder := bottom + pane_height - pane_width * sqrt(3.0) * 0.5
 		var pane := _arch_path(pane_width, bottom + 0.06, pane_shoulder)
-		var pane_transform := facade * Transform3D(Basis.IDENTITY, Vector3(x + pane_x, 0, -0.04))
+		var pane_transform := facade * Transform3D(Basis.IDENTITY, Vector3(x + pane_x, 0, -0.085))
 		_prism(pane, 0.025, pane_transform, "chapel_glass")
 		_arch_ring(pane_width, bottom + 0.04, pane_shoulder, 0.033, 0.06, facade * Transform3D(Basis.IDENTITY, Vector3(x + pane_x, 0, 0.015)))
 		for row in 3:
@@ -213,59 +250,121 @@ func _window(opening: Dictionary, facade: Transform3D) -> void:
 	_box(Vector3(x, bottom + pane_height * 0.43, 0.035), Vector3(0.055, pane_height * 0.86, 0.095), "stone", facade)
 	_box(Vector3(x, bottom - 0.055, 0.13), Vector3(width + 0.28, 0.12, 0.32), "stone", facade)
 	_rose_local(Vector3(x, bottom + total * 0.82, 0.015), width * 0.16, facade)
-	_windows.append({"transform": facade, "center": x, "width": width, "bottom": bottom, "height": total, "recess": 0.18})
+	_windows.append({"transform": facade, "center": x, "width": width, "bottom": bottom, "height": total, "recess": 0.2125, "role": "side_lancet"})
 
 
-func _rose(at: Vector3, radius: float) -> void:
-	_rose_local(at, radius, Transform3D.IDENTITY)
+func _rear_window(opening: Dictionary, facade: Transform3D) -> void:
+	var x := float(opening["x"])
+	var width := float(opening["width"])
+	var bottom := float(opening["bottom"])
+	var tall := float(opening["height"])
+	var shoulder := bottom + tall - width * sqrt(3.0) * 0.5
+	_arch_ring(width, bottom, shoulder, 0.075, 0.12, facade * Transform3D(Basis.IDENTITY, Vector3(x, 0, 0.14)))
+	var pane := _arch_path(width - 0.045, bottom + 0.025, shoulder)
+	_prism(pane, 0.025, facade * Transform3D(Basis.IDENTITY, Vector3(x, 0, -0.085)), "chapel_glass")
+	_box(Vector3(x, bottom + tall * 0.36, 0.01), Vector3(0.035, tall * 0.71, 0.06), "stone", facade)
+	_box(Vector3(x, bottom - 0.05, 0.12), Vector3(width + 0.20, 0.10, 0.26), "stone", facade)
+	_windows.append({"transform": facade, "center": x, "width": width, "bottom": bottom, "height": tall, "recess": 0.2125, "role": "rear_lancet"})
 
 
-func _rose_local(at: Vector3, radius: float, transform: Transform3D) -> void:
+func _gable(width: float, bottom: float, rise: float, facade: Transform3D, center_x: float) -> void:
+	var radius := minf(0.35, width * 0.10)
+	var center_y := bottom + rise * 0.42
+	var levels: Array[float] = [bottom]
+	for index in 25:
+		levels.append(center_y - radius + radius * 2.0 * index / 24.0)
+	levels.append(bottom + rise)
+	for index in levels.size() - 1:
+		var a := levels[index]
+		var b := levels[index + 1]
+		var left_a := -width * 0.5 * (1.0 - (a - bottom) / rise)
+		var left_b := -width * 0.5 * (1.0 - (b - bottom) / rise)
+		if a >= center_y - radius - 0.00001 and b <= center_y + radius + 0.00001:
+			var hole_a := sqrt(maxf(0.0, radius * radius - (a - center_y) * (a - center_y)))
+			var hole_b := sqrt(maxf(0.0, radius * radius - (b - center_y) * (b - center_y)))
+			_gable_piece(PackedVector2Array([Vector2(left_a, a), Vector2(center_x - hole_a, a), Vector2(center_x - hole_b, b), Vector2(left_b, b)]), facade)
+			_gable_piece(PackedVector2Array([Vector2(center_x + hole_a, a), Vector2(-left_a, a), Vector2(-left_b, b), Vector2(center_x + hole_b, b)]), facade)
+		else:
+			_gable_piece(PackedVector2Array([Vector2(left_a, a), Vector2(-left_a, a), Vector2(-left_b, b), Vector2(left_b, b)]), facade)
+	_rose_local(Vector3(center_x, center_y, 0), radius, facade, true)
+	_oculi.append({"transform": facade, "center": Vector2(center_x, center_y), "radius": radius, "pane_recess": 0.2025, "actual_masonry_hole": true})
+
+
+func _gable_piece(polygon: PackedVector2Array, facade: Transform3D) -> void:
+	var clean := PackedVector2Array()
+	for point in polygon:
+		if clean.is_empty() or clean[clean.size() - 1].distance_squared_to(point) > 0.0000000001:
+			clean.append(point)
+	if clean.size() > 1 and clean[0].distance_squared_to(clean[clean.size() - 1]) < 0.0000000001:
+		clean.remove_at(clean.size() - 1)
+	if clean.size() >= 3:
+		_prism(clean, 0.28, facade, "stone")
+
+
+func _rose_local(at: Vector3, radius: float, transform: Transform3D, recessed := false) -> void:
 	var disk := CylinderMesh.new()
 	disk.top_radius = radius
 	disk.bottom_radius = radius
 	disk.height = 0.025
-	disk.radial_segments = 24
-	_append_mesh(disk, transform * Transform3D(Basis(Vector3.RIGHT, PI * 0.5), at), "chapel_glass")
-	var ring := TorusMesh.new()
-	ring.inner_radius = radius
-	ring.outer_radius = radius + 0.045
-	ring.rings = 24
-	ring.ring_segments = 6
-	_append_mesh(ring, transform * Transform3D(Basis(Vector3.RIGHT, PI * 0.5), at + Vector3(0, 0, 0.025)), "stone")
-	for spoke in 6:
-		var angle := spoke * TAU / 6.0
-		_beam(at + Vector3(0, 0, 0.045), at + Vector3(cos(angle), sin(angle), 0) * radius * 0.88 + Vector3(0, 0, 0.045), 0.018, "stone", transform)
+	disk.radial_segments = 24 if radius >= 0.25 else 16
+	disk.rings = 1
+	var pane_z := -0.075 if recessed else -0.060
+	_append_mesh(disk, transform * Transform3D(Basis(Vector3.RIGHT, PI * 0.5), at + Vector3(0, 0, pane_z)), "chapel_glass")
+	var outer := TorusMesh.new()
+	outer.inner_radius = radius
+	outer.outer_radius = radius + minf(0.06, radius * 0.24)
+	outer.rings = 24 if radius >= 0.25 else 16
+	outer.ring_segments = 4
+	_append_mesh(outer, transform * Transform3D(Basis(Vector3.RIGHT, PI * 0.5), at + Vector3(0, 0, 0.155 if recessed else 0.055)), "stone")
+	var inner := TorusMesh.new()
+	inner.inner_radius = radius - 0.025
+	inner.outer_radius = radius + 0.012
+	inner.rings = 20 if radius >= 0.25 else 16
+	inner.ring_segments = 4
+	_append_mesh(inner, transform * Transform3D(Basis(Vector3.RIGHT, PI * 0.5), at + Vector3(0, 0, 0.060 if recessed else 0.020)), "stone")
+	for lobe in 4:
+		var angle := lobe * TAU / 4.0
+		var center := at + Vector3(cos(angle), sin(angle), 0) * radius * 0.37
+		var ring := TorusMesh.new()
+		ring.inner_radius = radius * 0.34
+		ring.outer_radius = radius * 0.34 + 0.018
+		ring.rings = 12 if radius >= 0.25 else 8
+		ring.ring_segments = 4
+		_append_mesh(ring, transform * Transform3D(Basis(Vector3.RIGHT, PI * 0.5), center + Vector3(0, 0, 0.072)), "stone")
+	for spoke in 8:
+		var angle := spoke * TAU / 8.0
+		var a := at + Vector3(cos(angle), sin(angle), 0) * radius * 0.24 + Vector3(0, 0, 0.060)
+		var b := at + Vector3(cos(angle), sin(angle), 0) * radius * 0.94 + Vector3(0, 0, 0.060)
+		_beam(a, b, 0.014, "stone", transform)
 
 
 func _roof(width: float, depth: float, top: float, rise: float) -> void:
 	var half := width * 0.5 + 0.19
-	var slope := atan2(rise, half)
+	var reach := depth * 0.5 + 0.20
 	var length := sqrt(half * half + rise * rise)
-	var slate := (_materials["slate"] as StandardMaterial3D).duplicate() as StandardMaterial3D
-	slate.uv1_scale = Vector3((depth + 0.40) / 2.6, length / 2.6, 1)
-	_materials["roof_slate"] = slate
-	var edge := StandardMaterial3D.new()
-	edge.albedo_color = Color("51565b")
-	edge.roughness = 0.92
-	_materials["slate_edge"] = edge
+	var rows := maxi(10, ceili(length / 0.27))
+	_roof_rows = rows
 	for side in [-1.0, 1.0]:
-		var transform := Transform3D(Basis(Vector3(0, 0, 1), -side * slope), Vector3(side * half * 0.5, top + rise * 0.5 + 0.025, 0))
-		var roof := Ortho3DPreview.roof_mesh(Vector2(length, depth + 0.40))
-		_append_mesh(roof, transform, "roof_slate")
-		for row in 12:
-			var t := row / 12.0
-			var x: float = side * half * (1.0 - t)
-			var y := top + rise * t + 0.038
-			_box(Vector3(x, y, 0), Vector3(0.035, 0.038, depth + 0.40), "slate_edge")
+		var normal := Vector3(side * rise / half, 1, 0).normalized()
+		for row in rows:
+			var low := float(row) / rows
+			var high := minf(1.0, float(row + 1) / rows + 0.010)
+			var a := Vector3(side * half * (1.0 - low), top + rise * low + 0.025, -reach)
+			var b := Vector3(a.x, a.y, reach)
+			var c := Vector3(side * half * (1.0 - high), top + rise * high + 0.025, reach)
+			var d := Vector3(c.x, c.y, -reach)
+			var uv := [Vector2(-reach / 2.6, low * length / 2.6), Vector2(reach / 2.6, low * length / 2.6), Vector2(reach / 2.6, high * length / 2.6), Vector2(-reach / 2.6, high * length / 2.6)]
+			_triangle([a, b, c], [uv[0], uv[1], uv[2]], normal, "slate")
+			_triangle([a, c, d], [uv[0], uv[2], uv[3]], normal, "slate")
+			_quad([a, a - Vector3.UP * 0.018, b - Vector3.UP * 0.018, b], Vector3(side, 0, 0), "slate")
 		for end in [-1.0, 1.0]:
-			_beam(Vector3(side * half, top + 0.04, end * (depth * 0.5 + 0.19)), Vector3(0, top + rise + 0.06, end * (depth * 0.5 + 0.19)), 0.15, "stone")
-		_box(Vector3(side * half, top - 0.035, 0), Vector3(0.14, 0.16, depth + 0.46), "oak")
+			_beam(Vector3(side * half, top + 0.04, end * (reach - 0.025)), Vector3(0, top + rise + 0.06, end * (reach - 0.025)), 0.11, "stone")
+		_box(Vector3(side * (half - 0.025), top - 0.035, 0), Vector3(0.10, 0.13, depth + 0.40), "stone")
 		for corbel in 9:
-			_box(Vector3(side * (width * 0.5 - 0.01), top - 0.17, lerpf(-depth * 0.43, depth * 0.43, corbel / 8.0)), Vector3(0.24, 0.19, 0.11), "stone")
-	var caps := ceili(depth / 0.40)
+			_box(Vector3(side * (width * 0.5 - 0.01), top - 0.17, lerpf(-depth * 0.43, depth * 0.43, corbel / 8.0)), Vector3(0.21, 0.16, 0.10), "stone")
+	var caps := ceili(depth / 0.38)
 	for cap in caps:
-		_box(Vector3(0, top + rise + 0.09, -depth * 0.5 + (cap + 0.5) * depth / caps), Vector3(0.24, 0.15, depth / caps - 0.012), "stone")
+		_box(Vector3(0, top + rise + 0.07, -depth * 0.5 + (cap + 0.5) * depth / caps), Vector3(0.22, 0.12, depth / caps - 0.012), "stone")
 
 
 func _tower(center: Vector3, height: float) -> float:
@@ -322,6 +421,7 @@ func _taper_cap(at: Vector3, size: Vector2, tall: float) -> void:
 	cap.bottom_radius = 0.71
 	cap.height = 1.0
 	cap.radial_segments = 4
+	cap.rings = 1
 	_append_mesh(cap, Transform3D(Basis(Vector3.UP, PI * 0.25).scaled(Vector3(size.x, tall, size.y)), at), "stone")
 
 

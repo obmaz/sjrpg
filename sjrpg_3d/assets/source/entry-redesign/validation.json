@@ -1,0 +1,50 @@
+{
+  "engine": "Godot4.7.2",
+  "focused": "entry_layout/save_slots/ui_input passed; fresh chapel-first four-case pass after unchanged threshold fixture rerun",
+  "first_full": "78 cases/2 failures: baseline chapel threshold (fresh focused passes) and obsolete Dummy Texture2D alpha query (replaced by CPU Image decoding)",
+  "shell": "six actual browser shell scenarios passed",
+  "actual_browser": {
+    "passed": true,
+    "created_reloaded_slots": 4,
+    "delete_cancel": "four slots preserved",
+    "delete_confirm": "only slot4 removed",
+    "continue": "real slot2 mage loaded, confirmed skeletal_mage",
+    "unexpected_errors": 0,
+    "pinned_allocator_messages_after_proper_native_exit": 10,
+    "reverse_rotation": "actual412x839 inner viewport, visualViewport.scale1, warrior touch acknowledged after landscape→portrait; full-viewport fixed canvas prevents intrinsic-width expansion"
+  },
+  "captures": [
+    {
+      "file": "/tmp/sjrpg-entry-ui-review/loading-portrait.png",
+      "sha256": "a872a50bef04b3a47489041e72233001f58f500e505be622b15890ebaa672b2b"
+    },
+    {
+      "file": "/tmp/sjrpg-entry-ui-review/title-portrait.png",
+      "sha256": "69a3e5952a94f34b35a30ec94cf4bf2d94268147789ae57d9287ca4cf36656d2"
+    },
+    {
+      "file": "/tmp/sjrpg-entry-ui-review/title-landscape.png",
+      "sha256": "2d93e942184a84a4421a18a455888c4b5dc5105e320f0e2c5115659e634aa1ad"
+    },
+    {
+      "file": "/tmp/sjrpg-entry-ui-review/warrior-portrait.png",
+      "sha256": "808a37748e9f663d95f12c02c585a7dfdf42fbb03dbeb68eff7cee13b8de2f7c"
+    },
+    {
+      "file": "/tmp/sjrpg-entry-ui-review/mage-landscape.png",
+      "sha256": "14279a1b6e7bdaf28e11c617978bfd3aa466adbbf74a14c976be718f74931371"
+    },
+    {
+      "file": "/tmp/sjrpg-entry-ui-review/four-slots-portrait.png",
+      "sha256": "a729b79a006feda83d5743ee37b51befd1d9e8f367d033736576b6b420483040"
+    },
+    {
+      "file": "/tmp/sjrpg-entry-ui-review/four-slots-landscape.png",
+      "sha256": "7910329ee86d77f7f829515f5048aee8fef856600a1f3ab52012bdba16539361"
+    },
+    {
+      "file": "/tmp/sjrpg-entry-ui-review/delete-confirmation.png",
+      "sha256": "ccfb2353c3072bc75a8ec0eed3b7b54086d6cda04f32ba13ee47024eb53dc1c3"
+    }
+  ]
+}

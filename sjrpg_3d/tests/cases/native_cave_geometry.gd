@@ -1,0 +1,154 @@
+extends TestCase
+## Actual closed3D rock, native boundary alignment and source-owned replacements.
+
+
+func _point_key(point: Vector3) -> String:
+	return "%d:%d:%d" % [roundi(point.x * 10000), roundi(point.y * 10000), roundi(point.z * 10000)]
+
+
+func _edge_key(a: Vector3, b: Vector3) -> String:
+	var first := _point_key(a)
+	var last := _point_key(b)
+	return first + "/" + last if first < last else last + "/" + first
+
+
+func run() -> void:
+	var provenance: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/data/native_cave_geometry.json"))
+	var sources_match := true
+	for key in ["reference", "generator", "material"]:
+		var source: Dictionary = provenance[key]
+		sources_match = sources_match and FileAccess.get_sha256("res://" + str(source["path"])) == str(source["sha256"])
+	check("native cave retains the actual guide generator and reused albedo provenance", sources_match)
+	var game := await make_game("mage")
+	var preview: Ortho3DPreview = game.ortho_preview
+	var environment: Ortho3DEnvironment = preview._world_environment
+	var settings: Environment
+	for child in preview.stage.get_children():
+		if child is WorldEnvironment:
+			settings = (child as WorldEnvironment).environment
+	var outdoor_energy := settings.ambient_light_energy
+	var outdoor_color := settings.ambient_light_color
+	var outdoor_background := settings.background_color
+	game.player.position = game.dungeon.entry_point()
+	await _frames(2)
+	var entered: bool = game.dungeon.enter()
+	check("existing Stage1 cave entry remains available", entered)
+	if not entered:
+		game.queue_free()
+		return
+	var layout: DungeonLayout = game.dungeon.layout
+	var source_polygons := layout.polygons.duplicate(true)
+	var source_obstacles := layout.obstacles.duplicate(true)
+	environment.sync(0.0, true)
+	var rock: Dictionary = environment._cave_rock
+	check("native rock follows the existing layout instance without changing rooms or props", int(rock["layout_id"]) == layout.get_instance_id() and layout.polygons == source_polygons and layout.obstacles == source_obstacles and DungeonLayout.ROOMS.size() == 5)
+	check("native rock replaces the full original boundary with bounded chunks", int(rock["segments"]) == game.dungeon.art.boundary_segments.size() and int(rock["groups"]) <= 8 and int(rock["triangles"]) > 1000 and int(rock["triangles"]) < 20000)
+	var metadata: Dictionary = environment.cave.get_meta("boundary_sources")
+	var ownership := true
+	var wall_count := 0
+	var keep_count := 0
+	for source: Node2D in game.dungeon.art.visuals:
+		var id := source.get_instance_id()
+		if str(source.get_meta("cave_role", "")) == "wall":
+			wall_count += 1
+			ownership = ownership and metadata["replaced"].has(id) and not metadata["retained"].has(id)
+		else:
+			keep_count += 1
+			ownership = ownership and metadata["retained"].has(id) and not metadata["replaced"].has(id)
+	check("only metadata-owned wall strips and end caps are replaced", ownership and wall_count > 10 and keep_count >= 16)
+	var return_portal: IsoSprite = game.world.get_node("CaveReturnPortal")
+	var portal_anchor := Iso.project(DungeonLayout.EXIT + Vector2(50, -110))
+	check("return portal retains its original anchor and individual art fallback", metadata["retained"].has(return_portal.get_instance_id()) and not metadata["replaced"].has(return_portal.get_instance_id()) and return_portal.position.is_equal_approx(portal_anchor))
+	var material: StandardMaterial3D = rock["material"]
+	check("rock uses the existing generated albedo in native world metres", material.uv1_world_triplanar and material.uv1_scale.is_equal_approx(Vector3.ONE / 2.6) and material.roughness > 0.9 and material.shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL)
+	var vertices_present := {}
+	var edges := {}
+	var valid := true
+	var peak := 0.0
+	for node: MeshInstance3D in rock["meshes"]:
+		valid = valid and node.has_meta("native_cave_boundary") and node.material_override == material
+		for surface in node.mesh.get_surface_count():
+			var arrays := node.mesh.surface_get_arrays(surface)
+			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+			var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+			for index in vertices.size():
+				valid = valid and vertices[index].is_finite() and uv[index].is_finite() and absf(normals[index].length() - 1.0) < 0.001
+				vertices_present[_point_key(vertices[index])] = true
+				peak = maxf(peak, vertices[index].y)
+			for index in range(0, indices.size(), 3):
+				var a := vertices[indices[index]]
+				var b := vertices[indices[index + 1]]
+				var c := vertices[indices[index + 2]]
+				valid = valid and (b - a).cross(c - a).length_squared() > 0.0000000001
+				valid = valid and (b - a).cross(c - a).dot(normals[indices[index]]) <= 0.00001
+				for edge in [_edge_key(a, b), _edge_key(b, c), _edge_key(c, a)]:
+					edges[edge] = int(edges.get(edge, 0)) + 1
+	var closed := true
+	for count: int in edges.values():
+		closed = closed and count == 2
+	check("actual rock triangles form closed volumes across chunk boundaries", closed and valid and peak > 3.0)
+	var toes_match := true
+	var corners := {}
+	for profile: Dictionary in rock["profiles"]:
+		var outward: Vector2 = profile["outward"]
+		for side in ["a", "b"]:
+			var source_point: Vector2 = profile[side]
+			var section: PackedVector3Array = profile["section_" + side]
+			var toe := Vector2(section[0].x, section[0].z)
+			toes_match = toes_match and absf((toe - source_point / SpatialWorld3D.UNITS).dot(outward) + 0.04) < 0.0001
+			for vertex in section:
+				toes_match = toes_match and vertices_present.has(_point_key(vertex))
+			var key := "%d:%d" % [roundi(source_point.x), roundi(source_point.y)]
+			if corners.has(key):
+				var other: PackedVector3Array = corners[key]
+				for index in section.size():
+					toes_match = toes_match and section[index].distance_to(other[index]) < 0.0001
+			else:
+				corners[key] = section
+	check("real rock toes and shared corners meet the native collision inset", toes_match)
+	check("front cutaways keep combat readable while rear walls retain real volume", int(rock["front_cutaways"]) > 0 and Ortho3DCaveRock.OUTER_DEPTH >= 1.0)
+	game.player.set_process(false)
+	game.spatial_world.sync_scope()
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var blocked_boundaries := 0
+	var collision_match := true
+	for profile: Dictionary in rock["profiles"]:
+		var a: Vector2 = profile["a"]
+		var b: Vector2 = profile["b"]
+		var outward: Vector2 = profile["outward"]
+		var middle := (a + b) * 0.5 / SpatialWorld3D.UNITS
+		var from := Iso.project((middle - outward * 0.60) * SpatialWorld3D.UNITS)
+		var to := Iso.project((middle + outward * 0.60) * SpatialWorld3D.UNITS)
+		if game.spatial_world.blocked(from, Player.RADIUS):
+			continue
+		var stopped: Vector2 = game.spatial_world.move_actor(from, to, Player.RADIUS)
+		var native := Iso.unproject(stopped) / SpatialWorld3D.UNITS
+		var limit := -SpatialWorld3D.radius_metres(Player.RADIUS) - Ortho3DCaveRock.COLLISION_INSET + 0.015
+		collision_match = collision_match and (native - middle).dot(outward) <= limit
+		# A missing floor alone also stops the motor. Independently hit the
+		# actual SOLID wall at the visible toe, so this cannot pass without it.
+		var ray_from := Vector3(middle.x - outward.x * 0.60, 0.10, middle.y - outward.y * 0.60)
+		var ray_to := Vector3(middle.x + outward.x * 0.60, 0.10, middle.y + outward.y * 0.60)
+		var query := PhysicsRayQueryParameters3D.create(ray_from, ray_to, SpatialWorld3D.SOLID)
+		var hit: Dictionary = game.spatial_world.get_world_3d().direct_space_state.intersect_ray(query)
+		if hit.is_empty():
+			collision_match = false
+		else:
+			var position: Vector3 = hit["position"]
+			collision_match = collision_match and absf((Vector2(position.x, position.z) - middle).dot(outward) + Ortho3DCaveRock.COLLISION_INSET) < 0.01
+		blocked_boundaries += 1
+	check("actual3D sweeps stop on the same visible rock boundary", collision_match and blocked_boundaries > 10)
+	check("cave fill adds real bounded light without replacing authored lamps", environment._cave_lights.size() == 10 and environment._cave_key.shadow_enabled and environment._cave_key.light_energy > 0.0 and environment._cave_entry_light.omni_range <= 6.5 and not environment._cave_entry_light.shadow_enabled)
+	check("cave lighting gives the entry its own neutral support", is_equal_approx(settings.ambient_light_energy, Ortho3DEnvironment.CAVE_AMBIENT) and environment._cave_entry_light.position.distance_to(Vector3(0, 2.3, 0)) < 1.0)
+	var entry_energy := environment._cave_entry_light.light_energy
+	var lamp_energy := environment._cave_lights[0].light_energy
+	environment.sync(10.0, true)
+	check("paused cave lighting does not advance flicker or entry energy", environment._cave_entry_light.light_energy == entry_energy and environment._cave_lights[0].light_energy == lamp_energy)
+	game.dungeon.leave("")
+	environment.sync(0.0, true)
+	check("leaving cave restores the exact previous outdoor ambient and background", is_equal_approx(settings.ambient_light_energy, outdoor_energy) and settings.ambient_light_color == outdoor_color and settings.background_color == outdoor_background and not environment._cave_key.is_visible_in_tree())
+	game.queue_free()
+	await _frames(2)

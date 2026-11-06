@@ -1,0 +1,410 @@
+{
+  "passed": true,
+  "journal": [
+    {
+      "action": "created",
+      "slot": 1,
+      "cls": "warrior"
+    },
+    {
+      "action": "reloaded",
+      "slots": [
+        {
+          "backup": false,
+          "class": "warrior",
+          "level": 1,
+          "location": "forest",
+          "occupied": true,
+          "sanctuary": "town",
+          "slot": 1,
+          "timestamp": 1793962123.4,
+          "valid": true
+        },
+        {
+          "backup": false,
+          "class": "",
+          "level": 0,
+          "location": "forest",
+          "occupied": false,
+          "sanctuary": "town",
+          "slot": 2,
+          "timestamp": 0,
+          "valid": false
+        },
+        {
+          "backup": false,
+          "class": "",
+          "level": 0,
+          "location": "forest",
+          "occupied": false,
+          "sanctuary": "town",
+          "slot": 3,
+          "timestamp": 0,
+          "valid": false
+        },
+        {
+          "backup": false,
+          "class": "",
+          "level": 0,
+          "location": "forest",
+          "occupied": false,
+          "sanctuary": "town",
+          "slot": 4,
+          "timestamp": 0,
+          "valid": false
+        }
+      ]
+    },
+    {
+      "action": "created",
+      "slot": 2,
+      "cls": "mage"
+    },
+    {
+      "action": "reloaded",
+      "slots": [
+        {
+          "backup": false,
+          "class": "warrior",
+          "level": 1,
+          "location": "forest",
+          "occupied": true,
+          "sanctuary": "town",
+          "slot": 1,
+          "timestamp": 1793962123.4,
+          "valid": true
+        },
+        {
+          "backup": false,
+          "class": "mage",
+          "level": 1,
+          "location": "forest",
+          "occupied": true,
+          "sanctuary": "town",
+          "slot": 2,
+          "timestamp": 1793962146.392,
+          "valid": true
+        },
+        {
+          "backup": false,
+          "class": "",
+          "level": 0,
+          "location": "forest",
+          "occupied": false,
+          "sanctuary": "town",
+          "slot": 3,
+          "timestamp": 0,
+          "valid": false
+        },
+        {
+          "backup": false,
+          "class": "",
+          "level": 0,
+          "location": "forest",
+          "occupied": false,
+          "sanctuary": "town",
+          "slot": 4,
+          "timestamp": 0,
+          "valid": false
+        }
+      ]
+    },
+    {
+      "action": "created",
+      "slot": 3,
+      "cls": "warrior"
+    },
+    {
+      "action": "reloaded",
+      "slots": [
+        {
+          "backup": false,
+          "class": "warrior",
+          "level": 1,
+          "location": "forest",
+          "occupied": true,
+          "sanctuary": "town",
+          "slot": 1,
+          "timestamp": 1793962123.4,
+          "valid": true
+        },
+        {
+          "backup": false,
+          "class": "mage",
+          "level": 1,
+          "location": "forest",
+          "occupied": true,
+          "sanctuary": "town",
+          "slot": 2,
+          "timestamp": 1793962146.392,
+          "valid": true
+        },
+        {
+          "backup": false,
+          "class": "warrior",
+          "level": 1,
+          "location": "forest",
+          "occupied": true,
+          "sanctuary": "town",
+          "slot": 3,
+          "timestamp": 1793962171.426,
+          "valid": true
+        },
+        {
+          "backup": false,
+          "class": "",
+          "level": 0,
+          "location": "forest",
+          "occupied": false,
+          "sanctuary": "town",
+          "slot": 4,
+          "timestamp": 0,
+          "valid": false
+        }
+      ]
+    },
+    {
+      "action": "created",
+      "slot": 4,
+      "cls": "mage"
+    },
+    {
+      "action": "reloaded",
+      "slots": [
+        {
+          "backup": false,
+          "class": "warrior",
+          "level": 1,
+          "location": "forest",
+          "occupied": true,
+          "sanctuary": "town",
+          "slot": 1,
+          "timestamp": 1793962123.4,
+          "valid": true
+        },
+        {
+          "backup": false,
+          "class": "mage",
+          "level": 1,
+          "location": "forest",
+          "occupied": true,
+          "sanctuary": "town",
+          "slot": 2,
+          "timestamp": 1793962146.392,
+          "valid": true
+        },
+        {
+          "backup": false,
+          "class": "warrior",
+          "level": 1,
+          "location": "forest",
+          "occupied": true,
+          "sanctuary": "town",
+          "slot": 3,
+          "timestamp": 1793962171.426,
+          "valid": true
+        },
+        {
+          "backup": false,
+          "class": "mage",
+          "level": 1,
+          "location": "forest",
+          "occupied": true,
+          "sanctuary": "town",
+          "slot": 4,
+          "timestamp": 1793962197.99,
+          "valid": true
+        }
+      ]
+    },
+    {
+      "action": "delete_cancel_preserved_all_four"
+    },
+    {
+      "action": "delete_confirm_removed_only_slot4",
+      "slots": [
+        {
+          "backup": false,
+          "class": "warrior",
+          "level": 1,
+          "location": "forest",
+          "occupied": true,
+          "sanctuary": "town",
+          "slot": 1,
+          "timestamp": 1793962123.4,
+          "valid": true
+        },
+        {
+          "backup": false,
+          "class": "mage",
+          "level": 1,
+          "location": "forest",
+          "occupied": true,
+          "sanctuary": "town",
+          "slot": 2,
+          "timestamp": 1793962146.392,
+          "valid": true
+        },
+        {
+          "backup": false,
+          "class": "warrior",
+          "level": 1,
+          "location": "forest",
+          "occupied": true,
+          "sanctuary": "town",
+          "slot": 3,
+          "timestamp": 1793962171.426,
+          "valid": true
+        },
+        {
+          "backup": false,
+          "class": "",
+          "level": 0,
+          "location": "forest",
+          "occupied": false,
+          "sanctuary": "town",
+          "slot": 4,
+          "timestamp": 0,
+          "valid": false
+        }
+      ]
+    },
+    {
+      "action": "continued_real_slot2_mage",
+      "native": {
+        "actor_mode": "skeletal_mage",
+        "actor_position": [
+          0,
+          0,
+          0
+        ],
+        "actor_scale": [
+          1,
+          1,
+          1
+        ],
+        "animation": {
+          "active_clip": "idle",
+          "bones": {
+            "Head": [
+              -0.086094431579113,
+              0.0959747061133385,
+              -0.00386506202630699,
+              0.991645991802216
+            ],
+            "calf_r": [
+              0.192678183317184,
+              0.351633578538895,
+              -0.0599603056907654,
+              0.914130091667175
+            ],
+            "thigh_l": [
+              0.949413955211639,
+              0.117158465087414,
+              -0.0168367438018322,
+              0.290867120027542
+            ]
+          },
+          "held": false,
+          "moving": false,
+          "pose_updates": 6,
+          "run_distance": 0,
+          "sample_time": 0.524733333333333
+        },
+        "azimuth": 45,
+        "batch_corner_error_m": 0,
+        "elevation": 35.2643931382155,
+        "gate_progress": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "level_up_fx": 0,
+        "native_active": true,
+        "native_height": 1466,
+        "native_houses": [
+          {
+            "key": "nw",
+            "surfaces": 5,
+            "triangles": 10016
+          },
+          {
+            "key": "ne",
+            "surfaces": 5,
+            "triangles": 7748
+          },
+          {
+            "key": "sw",
+            "surfaces": 5,
+            "triangles": 6368
+          },
+          {
+            "key": "se",
+            "surfaces": 5,
+            "triangles": 8988
+          }
+        ],
+        "native_trees": 8,
+        "native_width": 720,
+        "physics_bodies": 3,
+        "physics_ticks": 31,
+        "projection": "orthographic",
+        "quality": "high",
+        "ready": true,
+        "scope": "forest",
+        "shadow_draw_calls": 0,
+        "shadow_primitives": 47618,
+        "simulation": "3d",
+        "skeletal_actor": true,
+        "spatial_draw_calls": 91,
+        "spatial_primitives": 61883,
+        "static_boxes": 0,
+        "static_groups": 0
+      }
+    }
+  ],
+  "errors": [],
+  "expectedPinnedAfterProperExit": [
+    {
+      "phase": "proper_native_exit",
+      "text": "ERROR: Pages in use exist at exit in PagedAllocator: N16WorkerThreadPool5GroupE"
+    },
+    {
+      "phase": "proper_native_exit",
+      "text": "   at: ~PagedAllocator (./core/templates/paged_allocator.h:170)"
+    },
+    {
+      "phase": "proper_native_exit",
+      "text": "ERROR: Pages in use exist at exit in PagedAllocator: N16WorkerThreadPool5GroupE"
+    },
+    {
+      "phase": "proper_native_exit",
+      "text": "   at: ~PagedAllocator (./core/templates/paged_allocator.h:170)"
+    },
+    {
+      "phase": "proper_native_exit",
+      "text": "ERROR: Pages in use exist at exit in PagedAllocator: N16WorkerThreadPool5GroupE"
+    },
+    {
+      "phase": "proper_native_exit",
+      "text": "   at: ~PagedAllocator (./core/templates/paged_allocator.h:170)"
+    },
+    {
+      "phase": "proper_native_exit",
+      "text": "ERROR: Pages in use exist at exit in PagedAllocator: N16WorkerThreadPool5GroupE"
+    },
+    {
+      "phase": "proper_native_exit",
+      "text": "   at: ~PagedAllocator (./core/templates/paged_allocator.h:170)"
+    },
+    {
+      "phase": "proper_native_exit",
+      "text": "ERROR: Pages in use exist at exit in PagedAllocator: N16WorkerThreadPool5GroupE"
+    },
+    {
+      "phase": "proper_native_exit",
+      "text": "   at: ~PagedAllocator (./core/templates/paged_allocator.h:170)"
+    }
+  ]
+}

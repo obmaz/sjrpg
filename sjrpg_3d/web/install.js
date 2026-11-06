@@ -7,7 +7,7 @@
   const standalone = window.matchMedia('(display-mode: standalone)');
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  function isInstalled() { return installedHere || standalone.matches || navigator.standalone === true; }
+  function isInstalled() { return installedHere || standalone.matches || navigator.standalone === true || window.SjrpgFullscreen?.state().installed === true; }
   function manualHint() {
     if (!window.isSecureContext) return '설치는 HTTPS 주소에서 지원됩니다. 공식 게임 주소를 열어 주세요.';
     if (ios) return 'Safari에서 공유 버튼 → 홈 화면에 추가 → 추가를 누르세요. 다른 브라우저라면 Safari로 열어 주세요.';
