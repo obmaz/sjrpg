@@ -3,14 +3,9 @@ extends TestCase
 
 
 func run() -> void:
-	GameState.delete_save()
-	GameState.new_game("warrior")
-	var game := preload("res://scripts/game.gd").new()
-	add_child(game)
-	await _frames(2)
-	for e in game.enemies:
-		e.queue_free()
-	game.enemies.clear()
+	# Native startup spans physics/process frames and creates ambient packs last.
+	# Clear enemies only after that real readiness barrier, as other game fixtures do.
+	var game := await make_game("warrior")
 	var qr: QuestRuntime = game.quest_runtime
 	var player: Player = game.player
 	var level0 := GameState.level
@@ -29,9 +24,7 @@ func run() -> void:
 	if blocked == "":
 		qr.cleanse()
 		qr.report("roots")
-	print("quest roots: %s (%s)" % ["ok" if Quests.phase("roots") == "completed" else "FAIL", blocked])
-	if Quests.phase("roots") != "completed":
-		failures += 1
+	check("altar quest completes after the actual kill and cleanse sequence", Quests.phase("roots") == "completed", "blocked=%s; kills=%d; phase=%s" % [blocked, Quests.state("roots")["altar_kills"], Quests.phase("roots")])
 	# 2) 약초 배달.
 	qr.accept("moon")
 	qr.receive_parcel()
