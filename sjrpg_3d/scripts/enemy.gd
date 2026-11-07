@@ -41,6 +41,7 @@ var _hitstop := GameTempo.ContactStop.new()
 ## JUICE #1: tier of the most recent confirmed hit (HitTier); presentation only.
 var last_hit_tier := HitTier.LIGHT
 ## JUICE #13: a pale "recent loss" segment trails the health bar, then drains after a short hold.
+const TELEGRAPH_COLOR := Color(1.0, 0.82, 0.25)
 const GHOST_HOLD := 0.35
 const GHOST_DRAIN := 1.2  # fractions of max health per second
 var ghost_hp := 0.0
@@ -299,6 +300,10 @@ func _process(delta: float) -> void:
 				_state = "idle"
 			elif dist <= attack_range and game.can_melee_reach(position, position + to_player):
 				_state = "windup"
+				# JUICE #9: ordinary enemies get a brief warning flash so the swing can be read and dodged.
+				# Bosses already show their danger ring; the colour differs from hit and hurt flashes.
+				if not is_boss:
+					sprite.trigger_flash(TELEGRAPH_COLOR, 0.55)
 				_windup_duration = GameTempo.duration((1.0 if is_boss else 0.55) / rate)
 				_timer = _windup_duration
 				if is_boss:

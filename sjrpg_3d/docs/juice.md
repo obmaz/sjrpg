@@ -26,7 +26,7 @@
 | 6 | 보스 처치 연출 | 선택 | | |
 | 7 | 근접 전진 | 예정 | | |
 | 8 | 큰 피해 피격 비네트 | 예정 | | |
-| 9 | 일반 적 공격 예고 | 예정 | | |
+| 9 | 일반 적 공격 예고 (windup 시작 노란 경고 플래시, 강도 0.55) | 완료 | `enemy.gd` `TELEGRAPH_COLOR`, `actor_sprite.gd` `trigger_flash(strength)` | `juice_enemy` |
 | 10 | 보스 슬램 카메라 (착지마다 카메라 충격, 피해 여부와 무관) | 완료 | `enemy.gd` windup 종료 처리 | `juice_enemy` |
 | 11 | 타격음 변주·고음 틱·처치음·연속 처치 피치 (보이스 6→8) | 완료, 청취 튜닝 필요 | `sound_fx.gd` `hit_names`·`play_hit`·`streak_pitch`, `enemy.gd` | `juice_tier` |
 | 12 | 속성별 적중음 (불·번개·얼음 짧은 악센트) | 완료, 청취 튜닝 필요 | `effects.gd` `contact_element`, `sound_fx.gd` `hit_names` | `juice_tier` |

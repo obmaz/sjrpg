@@ -32,6 +32,7 @@ func run() -> void:
 	game.queue_free()
 	await _frames(2)
 	await _check_boss_slam()
+	await _check_telegraph()
 
 
 ## JUICE #10: a boss slam shakes the camera even when the hero stands outside its reach.
@@ -59,6 +60,37 @@ func _check_boss_slam() -> void:
 	game._impact_offset = Vector2.ZERO
 	game.combat_feedback(boss.position, 1.0)
 	check("reduced motion suppresses the slam shake", game._impact_offset == Vector2.ZERO)
+	Prefs.reduce_motion = old_reduce
+	game.queue_free()
+	await _frames(2)
+
+
+## JUICE #9: an ordinary enemy flashes when its swing begins; a boss uses its danger ring instead.
+func _check_telegraph() -> void:
+	var old_reduce := Prefs.reduce_motion
+	Prefs.reduce_motion = false
+	var game := await make_game()
+	game.player.set_process(false)
+	var foe := Enemy.new()
+	foe.setup(game, "goblin", 1)
+	foe.position = game.player.position + Vector2(40, 0)
+	game.world.add_child(foe)
+	game.enemies.append(foe)
+	foe._state = "chase"
+	foe._process(0.02)
+	check("an enemy in reach begins its swing", foe._state == "windup")
+	check("the swing start shows a warning flash in the telegraph colour", foe.sprite.flash > 0.0 and foe.sprite.flash_tint == Enemy.TELEGRAPH_COLOR)
+	check("the warning is weaker than a real hit flash", foe.sprite.flash < 1.0)
+	check("the warning differs from the hurt and hit flashes", Enemy.TELEGRAPH_COLOR != Color(1.0, 0.45, 0.4) and Enemy.TELEGRAPH_COLOR != Effect.contact_flash_color(null))
+	var boss := Enemy.new()
+	boss.setup(game, "goblin", 1)
+	boss.position = game.player.position + Vector2(40, 0)
+	game.world.add_child(boss)
+	game.enemies.append(boss)
+	boss.make_boss()
+	boss._state = "chase"
+	boss._process(0.02)
+	check("a boss keeps its danger ring and gets no extra flash", boss._state == "windup" and boss.sprite.flash == 0.0)
 	Prefs.reduce_motion = old_reduce
 	game.queue_free()
 	await _frames(2)

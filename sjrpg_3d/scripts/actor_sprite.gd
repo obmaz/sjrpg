@@ -53,11 +53,11 @@ func clear_contact_hold() -> void:
 
 
 ## A short first presentation survives slow browser frames without extending rapid-hit flashes forever.
-func trigger_flash(color: Color) -> void:
+func trigger_flash(color: Color, strength := 1.0) -> void:
 	if flash <= 0.0:
 		_flash_presented = false
 	flash_tint = color
-	flash = 0.35 if Prefs.reduce_motion else 1.0
+	flash = (0.35 if Prefs.reduce_motion else 1.0) * clampf(strength, 0.0, 1.0)
 	_sync_flash_overlay()
 	queue_redraw()
 
