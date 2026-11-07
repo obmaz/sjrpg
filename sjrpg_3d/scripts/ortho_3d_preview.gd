@@ -52,6 +52,8 @@ var _layer: CanvasLayer
 var _materials := {}
 var _encounter_props: NativeEncounterProps3D
 var _cards := {}
+var _native_residents: NativeResidents3D
+var _enemy_models: NativeEnemyModels
 var _seen_impacts := {}
 var _contact_time := 0.0
 var _contact_energy := 0.0
@@ -143,9 +145,11 @@ func _ready() -> void:
 		if child != _forest_stage and not permanent.has(child):
 			child.reparent(_forest_stage, true)
 	_load_actor()
+	_build_residents()
 	_affordances = Ortho3DAffordances.new().setup(self)
 	_level_up_fx = Ortho3DLevelUp.new().setup(self)
 	_combat_fx = NativeCombatFx3D.new().setup(self)
+	_enemy_models = NativeEnemyModels.new().setup(self)
 	game.get_viewport().size_changed.connect(_resize)
 	Prefs.graphics_changed.connect(_resize)
 	_resize()
@@ -326,7 +330,6 @@ func _build_village() -> void:
 	for key: String in game.village.buildings:
 		_build_house(key)
 	_fortification = Ortho3DFortification.build(self)
-	_build_residents()
 
 
 func _build_house(key: String) -> void:
@@ -345,19 +348,7 @@ func _build_house(key: String) -> void:
 	_houses[key] = NativeHouse3D.build(self, root, key, width, depth, height)
 
 func _build_residents() -> void:
-	# Residents stay their reviewed 2D art for this small comparison; the hero is skeletal3D.
-	for label: String in game.village.npc_nodes:
-		var resident: Villager = game.village.npc_nodes[label]
-		var definition: Dictionary = NpcArt.data()["people"][NpcArt.identity(label)]
-		var source: Array = definition["source"]
-		var foot: Array = definition["foot"]
-		var texture: Texture2D = load("res://" + str(NpcArt.data()["atlas"]["path"]))
-		var frame := Rect2(source[0], source[1], source[2], source[3])
-		var factor := Villager.BODY_HEIGHT / float(definition["ref_height"])
-		var destination := Rect2(-Vector2(foot[0], foot[1]) * factor, frame.size * factor)
-		var card := _new_card(texture, frame, false)
-		_cards[resident.get_instance_id()] = {"node": card, "owner": weakref(resident), "rect": destination, "static": true}
-
+	_native_residents = NativeResidents3D.new().setup(self)
 
 func _load_actor() -> void:
 	_native_mage = GameState.hero_class == "mage"
@@ -421,7 +412,9 @@ func _process(delta: float) -> void:
 	_sync_camera()
 	if not frozen or not _was_paused:
 		_sync_actor(0.0 if frozen else delta)
+	_enemy_models.sync()
 	_sync_cards()
+	_native_residents.sync()
 	_fortification.sync()
 	_level_up_fx.sync()
 	_combat_fx.sync()
@@ -498,6 +491,8 @@ func _publish_probe() -> void:
 		"physics_ticks": physics.physics_ticks if physics != null else 0,
 		"level_up_fx": _level_up_fx._entries.size() if _level_up_fx != null else 0,
 		"generic_projectiles": _combat_fx.snapshot() if _combat_fx != null else {},
+		"native_residents": _native_residents.snapshot() if _native_residents != null else {},
+		"native_enemies": _enemy_models.snapshot() if _enemy_models != null else {},
 		"native_trees": _trees.get_meta("native_tree_report")["source_count"] if _trees != null else 0,
 		"native_houses": _houses.values().map(func(house: Dictionary): return {"key": house["key"], "triangles": house["triangles"], "surfaces": house["surfaces"]}),
 		"gate_progress": _fortification.gates.map(func(gate: Dictionary): return gate["progress"]) if _fortification != null else [],
@@ -607,18 +602,6 @@ func _sync_cards() -> void:
 				var ink := (entry["node"] as MeshInstance3D).material_override as ShaderMaterial
 				ink.set_shader_parameter("flash_color", Color(1.0, 0.45, 0.4).lerp(Color.WHITE, 0.35))
 				ink.set_shader_parameter("flash_strength", 0.65 * owner._hurt_flash)
-	for candidate in game.enemies:
-		if not is_instance_valid(candidate) or candidate.is_queued_for_deletion():
-			continue
-		var enemy := candidate as Enemy
-		var id := enemy.get_instance_id()
-		var sprite: ActorSprite = enemy.sprite
-		var atlas: ActorAtlas = sprite.atlas
-		if atlas == null or sprite.frame >= atlas.regions.size():
-			continue
-		if not _cards.has(id):
-			_cards[id] = {"node": _new_card(atlas.texture, atlas.regions[sprite.frame], false), "owner": weakref(enemy), "static": false}
-		_sync_enemy_card(_cards[id]["node"], enemy)
 	for node in game.world.get_children():
 		var effect := node as Effect
 		if effect == null or effect.is_queued_for_deletion():

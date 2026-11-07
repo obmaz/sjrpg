@@ -145,12 +145,20 @@ func _floor(polygon: PackedVector2Array, texture: Texture2D, parent: Node3D, hei
 
 
 func _build_forest() -> void:
+	report["remaining_sources"] = {"forest": [], "cave": []}
 	var buckets := {}
 	var native: Dictionary = preview._town_props.source_ids()
 	var forest_trees := Ortho3DForestTrees.build(preview, forest, _forest_world)
 	var tree_report: Dictionary = forest_trees.get_meta("native_forest_tree_report")
 	# Failed/unsupported replacements keep their source card. Never skip a whole sheet.
 	native.merge(tree_report["owned_source_ids"])
+	var landmark_report := NativeLandmarks3D.build(preview, forest)
+	native.merge(landmark_report["owned_source_ids"])
+	report["native_landmarks"] = landmark_report["entries"].size()
+	var flora_report := NativeForestFlora3D.build(preview, forest, _forest_world)
+	native.merge(flora_report["owned_source_ids"])
+	report["native_flora"] = flora_report["placements"].size()
+	report["native_flora_groups"] = flora_report["groups"]
 	report["native_forest_trees"] = tree_report["trees"].size()
 	for object in preview.game.village.buildings.values():
 		native[object.get_instance_id()] = true
@@ -166,9 +174,12 @@ func _build_forest() -> void:
 			if native.has(sprite.get_instance_id()) or sheet.contains("gates") or sheet.contains("wall"):
 				continue
 			_sprite(sprite, buckets)
+			report["remaining_sources"]["forest"].append(_source_record(sprite))
 			report["forest_sprites"] = int(report["forest_sprites"]) + 1
 		elif child is Landmark:
-			_landmark(child, buckets)
+			if not native.has(child.get_instance_id()):
+				_landmark(child, buckets)
+				report["remaining_sources"]["forest"].append(_source_record(child))
 			report["landmarks"] = int(report["landmarks"]) + 1
 	report["forest_groups"] = _flush(buckets, forest, "ForestArt_")
 	_build_river()
@@ -193,6 +204,16 @@ func _build_forest() -> void:
 		forest.add_child(header)
 		_stone_cards[stone.get_instance_id()] = {"owner": weakref(stone), "card": card, "vertices": geometry["vertices"], "header": header}
 
+
+func _source_record(source: Node2D) -> Dictionary:
+	var result := {"source_id": source.get_instance_id(), "name": str(source.name), "type": "IsoSprite" if source is IsoSprite else "Landmark", "foot": [source.global_position.x, source.global_position.y], "role": str(source.get_meta("cave_role", source.get_meta("forest_species", "")))}
+	if source is IsoSprite:
+		result["sheet"] = str(source.def.get("sheet", ""))
+		result["definition"] = source.def.duplicate(true)
+	elif source is Landmark:
+		result["sheet"] = "res://assets/art/village/landmarks.webp"
+		result["definition"] = {"index": source.index}
+	return result
 
 func _landmark(source: Landmark, buckets: Dictionary) -> void:
 	var factor := Ortho3DPreview.GROUND_PER_METER * Ortho3DPreview.PROJECTION_FACTOR
@@ -243,6 +264,8 @@ func _build_bridge() -> void:
 
 func _build_raised_floors() -> void:
 	for surface: Dictionary in SpatialWorld3D.terrain_surfaces(preview.game.village):
+		if str(surface["id"]).begins_with("landmark_") and int(report.get("native_landmarks", 0)) == 4:
+			continue
 		if float(surface["rise"]) <= 0.001:
 			continue
 		var points: PackedVector3Array = SpatialWorld3D.surface_faces(surface)
@@ -291,6 +314,7 @@ func _build_cave() -> void:
 	var buckets := {}
 	var replaced: Array[int] = []
 	var retained: Array[int] = []
+	report["remaining_sources"]["cave"] = []
 	for node in preview.game.dungeon.art.visuals:
 		if node is IsoSprite and not preview._town_props.owns(node):
 			# Wall strips and end caps share atlases with useful lamps. Replace
@@ -299,6 +323,7 @@ func _build_cave() -> void:
 				replaced.append(node.get_instance_id())
 				continue
 			_sprite(node, buckets)
+			report["remaining_sources"]["cave"].append(_source_record(node))
 			retained.append(node.get_instance_id())
 			report["cave_sprites"] = int(report["cave_sprites"]) + 1
 	for node in preview.game.world.get_children():
@@ -437,16 +462,12 @@ func _sync_corpses() -> void:
 			continue
 		var id := source.get_instance_id()
 		current[id] = true
-		var kind: String = corpse.get("kind", "goblin")
-		var cell := int(CorpseArt.CELLS.get(kind, 0))
-		var frame := Rect2(cell * 256, 0, 256, 256)
 		if not _corpses.has(id):
-			_corpses[id] = preview._new_card(load("res://assets/art/actors/corpses.webp"), frame, false)
-		var card: MeshInstance3D = _corpses[id]
-		var width := float(corpse.get("height", 62.0)) * float(CorpseArt.LENGTHS.get(kind, 1.4))
-		preview._place_card(card, corpse["pos"], Rect2(Vector2.ONE * -width * 0.5, Vector2.ONE * width))
-		(card.material_override as ShaderMaterial).set_shader_parameter("tint", Color(1, 1, 1, CorpseArt.opacity(float(corpse.get("time", 0.0)))))
+			var model := NativeEnemyModels.build(str(corpse.get("kind", "goblin")))
+			preview.stage.add_child(model["root"])
+			_corpses[id] = model
+		NativeEnemyModels.place_corpse(preview, _corpses[id], corpse)
 	for id in _corpses.keys():
 		if not current.has(id):
-			(_corpses[id] as MeshInstance3D).queue_free()
+			(_corpses[id]["root"] as Node3D).queue_free()
 			_corpses.erase(id)

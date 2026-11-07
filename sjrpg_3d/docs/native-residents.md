@@ -1,0 +1,11 @@
+# Native resident models
+
+All eight NpcArt identities (merchant, smith, stable keeper, elder, Mira, Elin, Noah and Rowen) use actual closed-volume meshes in the 3D edition. NpcArt remains the identity lookup and original art provenance; the resident body card is no longer registered in Ortho3DPreview. Names, quest markers and protection health bars retain their existing Ortho3DAffordances owner.
+
+NativeResidents3D.build is the reproducible mesh constructor. Models use Y-up metres, +Z front, baked unit scale and sole Y=0. Adult bodies are about1.78m tall; the herbalist hood reaches1.84m. Boots, trouser legs, coat/skirt, neck, head, nose, eyebrows and hair have separate physical volumes before surface batching. Smith apron and hammer, stable vest and brass tool, elder beard and staff, Mira pack/bedroll, Elin veil/tabard, Noah herb basket/hood, merchant cap/pouch and Rowen notebook/shoulder plate give distinct geometry.
+
+Vertex colors preserve the restricted charcoal/olive/indigo/ivory/leather/bronze palette with three shared opaque lit materials (matte, leather, metal), at most three surfaces per resident. No generated texture or PBR scan is claimed. This is a procedural stylized model family, not an imported sculpt or a skeletal animation asset.
+
+Source Villager visibility, parent world, native actor_foot and facing are observed every sync. The existing injury flash controls an overlay; the renderer adds no damage or animation clock. Forest residents are hidden in the cave and disposed when their actual owner is freed. Physics, interaction ranges, protection quests and dialogue are unchanged. NPCs remain stationary as in the current simulation; no walk/attack animation is claimed.
+
+native_residents checks all eight meshes, full XYZ bounds, sole plane, unit normals, vertex colors, shared material/surface/triangle budgets, distinct geometry, real source ownership, card removal, injury cleanup and cave visibility. Actual same-location portrait/landscape browser captures, shared light and hero proportions still require independent review before adoption. Remaining actors: see the separate warrior/enemy conversion records; this file only claims the eight resident identities.
