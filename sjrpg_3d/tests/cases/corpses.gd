@@ -42,7 +42,7 @@ func run() -> void:
 		standing = enemy
 	check("all enemy kinds leave one body and one kill", game.corpses.size() == Enemy.KINDS.size() and GameState.kills == kills + Enemy.KINDS.size())
 	check("repeat death pays experience only once", GameState.xp == kill_xp + Enemy.KINDS.size())
-	await get_tree().create_timer(0.25).timeout
+	await get_tree().create_timer(HitTier.KILL_FADE + 0.1).timeout
 	check("standing actor is freed after the short death transition", not is_instance_valid(standing))
 	_clear(game)
 	var template := _enemy(game, "goblin")

@@ -374,9 +374,12 @@ func try_roll() -> void:
 
 
 ## Only the current contact callback may hold the swing; passive/reflected damage also names this player.
-func confirm_melee_contact(heavy: bool) -> void:
+func confirm_melee_contact(heavy: bool, kill := false) -> void:
 	if not dead and _resolving_melee_contact:
-		_hitstop.trigger(0.050 if heavy else 0.035)
+		if kill:
+			_hitstop.trigger(HitTier.KILL_STOP, HitTier.KILL_STOP_LIMIT)  # JUICE #5
+		else:
+			_hitstop.trigger(0.050 if heavy else 0.035)
 		sprite.hold_contact(0.060 if heavy else 0.040)
 
 

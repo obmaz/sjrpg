@@ -184,7 +184,7 @@ func take_damage(amount: float, source: Node2D, visual_source: Node2D = null) ->
 	game.combat_feedback(position, 0.8 if heavy else 0.32, false)
 	if is_instance_valid(impact_source) and not Prefs.reduce_motion:
 		_recoil_direction = Effect.contact_direction(impact_source, position)
-		_recoil_size = 8.0 if heavy else 5.0
+		_recoil_size = HitTier.KILL_RECOIL if tier == HitTier.KILL else (8.0 if heavy else 5.0)  # JUICE #5
 		_recoil_age = 0.0
 		_recoil_started = false
 		_recoil = _recoil_direction * _recoil_size
@@ -192,12 +192,18 @@ func take_damage(amount: float, source: Node2D, visual_source: Node2D = null) ->
 	_hitstop.trigger(0.055 if heavy else 0.040)
 	sprite.hold_contact(0.065 if heavy else 0.045)
 	if source is Player:
-		source.confirm_melee_contact(heavy)
+		source.confirm_melee_contact(heavy, tier == HitTier.KILL)
 	if GameState.has_gift("frost") and source != null and source is Player:
 		slow(0.67)
 	SoundFx.play_hit(tier, Effect.contact_element(impact_source))  # JUICE #11, #12
 	Prefs.pulse("hit")
-	sprite.trigger_flash(Effect.contact_flash_color(impact_source))
+	# JUICE #5: a killing blow flashes white and throws off a small burst ring instead of the elemental tint.
+	if tier == HitTier.KILL:
+		sprite.trigger_flash(Color.WHITE)
+		if not Prefs.reduce_motion:
+			game.spawn_nova(position, 56.0, Effect.contact_flash_color(impact_source), true)
+	else:
+		sprite.trigger_flash(Effect.contact_flash_color(impact_source))
 	# JUICE #2: size, colour and a scale pop follow the tier.
 	game.float_text(position + Vector2(0, -sprite.body_height - 20), HudArt.stat(amount), HitTier.number_color(tier), self, HitTier.number_size(tier), tier >= HitTier.MEDIUM)
 	# JUICE #3: heavier hits push further; a stronger skill knockback already in progress is kept.
@@ -234,7 +240,8 @@ func _die() -> void:
 	sprite.clear_contact_hold()
 	game.on_enemy_killed(self)
 	var tween := create_tween()
-	tween.tween_property(sprite, "modulate:a", 0.0, 0.18)
+	# JUICE #5: a touch longer than before so the white flash and recoil are seen; unchanged for reduced motion.
+	tween.tween_property(sprite, "modulate:a", 0.0, HitTier.DEFAULT_FADE if Prefs.reduce_motion else HitTier.KILL_FADE)
 	tween.tween_callback(queue_free)
 
 

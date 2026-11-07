@@ -16,10 +16,11 @@ class ContactStop:
 	var remaining := 0.0
 	var recovery := 0.0
 
-	func trigger(seconds: float) -> void:
+	## JUICE #5: only a killing blow may exceed the usual 55ms ceiling (see HitTier.KILL_STOP_LIMIT).
+	func trigger(seconds: float, limit := 0.055) -> void:
 		if Prefs.reduce_motion or remaining > 0.0 or recovery > 0.0:
 			return
-		remaining = clampf(seconds, 0.0, 0.055)
+		remaining = clampf(seconds, 0.0, limit)
 		recovery = 0.14
 
 	func consume(delta: float) -> float:

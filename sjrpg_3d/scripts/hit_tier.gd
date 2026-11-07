@@ -41,6 +41,13 @@ static func number_color(tier: int) -> Color:
 ## bosses so their slam pacing does not change. This is the one tier effect that moves the target.
 const BOSS_KNOCKBACK := 160.0
 
+## JUICE #5: the attacker's pause on a killing blow, and the slightly larger death recoil / longer fade.
+const KILL_STOP := 0.075
+const KILL_STOP_LIMIT := 0.08
+const KILL_RECOIL := 14.0
+const KILL_FADE := 0.25
+const DEFAULT_FADE := 0.18
+
 
 static func knockback(tier: int, boss: bool) -> float:
 	if boss:

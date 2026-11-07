@@ -33,6 +33,7 @@ func run() -> void:
 	await _frames(2)
 	await _check_boss_slam()
 	await _check_telegraph()
+	await _check_kill()
 
 
 ## JUICE #10: a boss slam shakes the camera even when the hero stands outside its reach.
@@ -94,3 +95,47 @@ func _check_telegraph() -> void:
 	Prefs.reduce_motion = old_reduce
 	game.queue_free()
 	await _frames(2)
+
+
+## JUICE #5: a killing blow gets a longer attacker pause, a white flash, a burst ring and a bigger recoil.
+func _check_kill() -> void:
+	var old_reduce := Prefs.reduce_motion
+	Prefs.reduce_motion = false
+	var game := await make_game()
+	var hero: Player = game.player
+	hero.set_process(false)
+	var heavy_foe := _foe(game, 300.0)
+	hero._resolving_melee_contact = true
+	heavy_foe.take_damage(35.0, hero)
+	check("a heavy non-lethal blow keeps the usual pause ceiling", heavy_foe.last_hit_tier == HitTier.HEAVY and hero._hitstop.remaining <= 0.055 + 0.0001)
+	hero._hitstop.clear()
+	var foe := _foe(game, 340.0)
+	var novas_before: int = game.cosmetic_effects.filter(func(e: Effect) -> bool: return e.kind == "nova").size()
+	foe.take_damage(foe.hp + 1.0, hero)
+	hero._resolving_melee_contact = false
+	check("a killing blow pauses the attacker slightly longer", foe.dead and is_equal_approx(hero._hitstop.remaining, HitTier.KILL_STOP))
+	check("the pause stays under the kill ceiling", hero._hitstop.remaining <= HitTier.KILL_STOP_LIMIT)
+	check("a killing blow flashes white", foe.sprite.flash_tint == Color.WHITE)
+	check("a killing blow throws off one burst ring", game.cosmetic_effects.filter(func(e: Effect) -> bool: return e.kind == "nova").size() == novas_before + 1)
+	check("a killing blow recoils further", foe._recoil_size == HitTier.KILL_RECOIL)
+	Prefs.reduce_motion = true
+	hero._hitstop.clear()
+	var calm := _foe(game, 380.0)
+	var novas_calm: int = game.cosmetic_effects.filter(func(e: Effect) -> bool: return e.kind == "nova").size()
+	calm.take_damage(calm.hp + 1.0, hero)
+	check("reduced motion adds no burst ring", game.cosmetic_effects.filter(func(e: Effect) -> bool: return e.kind == "nova").size() == novas_calm)
+	Prefs.reduce_motion = old_reduce
+	game.queue_free()
+	await _frames(2)
+
+
+func _foe(game: Node, distance: float) -> Enemy:
+	var foe := Enemy.new()
+	foe.setup(game, "goblin", 1)
+	foe.position = game.player.position + Vector2(distance, 0)
+	foe.hp = 100.0
+	foe.max_hp = 100.0
+	game.world.add_child(foe)
+	game.enemies.append(foe)
+	foe.set_process(false)
+	return foe

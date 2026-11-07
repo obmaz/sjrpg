@@ -22,7 +22,7 @@
 | 2 | 데미지 숫자 크기·색·팝 (22/26/32/36pt, 1.4배 팝 0.08초) | 완료 | `hit_tier.gd` `number_size/number_color`, `effects.gd` `font_size`·`pop`, `enemy.gd`, `game.gd` `float_text` | `juice_tier` |
 | 3 | 넉백 스케일 (140/180/240/260, 보스는 160 고정) | 완료 | `hit_tier.gd` `knockback`, `enemy.gd` `take_damage` | `juice_tier` |
 | 4 | 스쿼시·스트레치 | 예정 | | |
-| 5 | 처치 연출 | 예정 | | |
+| 5 | 처치 연출 (공격자 정지 75ms, 흰색 플래시, 파편 링, 반동 14px, 페이드 0.25초) | 완료 | `hit_tier.gd` KILL_*, `enemy.gd` `take_damage`·`_die`, `player.gd` `confirm_melee_contact`, `game_tempo.gd` | `juice_enemy` |
 | 6 | 보스 처치 연출 | 선택 | | |
 | 7 | 근접 전진 | 예정 | | |
 | 8 | 큰 피해 피격 비네트 (한 번에 최대 체력 15% 이상, 0.22초, 동작 줄이기 40%) | 완료 | `hud.gd` `_build_heavy_hit_vignette`·`_update_vital_feedback` | `juice_player` |
