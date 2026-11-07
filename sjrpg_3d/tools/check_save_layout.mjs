@@ -14,11 +14,17 @@ await mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
 const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1});
 const page=await context.newPage();
-const errors=[];const captures=[];const checks=[];let failure=null;
+const errors=[];const errorDetails=[];const captures=[];const checks=[];let failure=null;
 const cdp=await context.newCDPSession(page);await cdp.send('Log.enable');
 const bad=/SCRIPT ERROR|ERROR:|INVALID_(OPERATION|VALUE|ENUM)/;
-page.on('pageerror',error=>errors.push({kind:'page',text:String(error)}));
-page.on('console',message=>{if(message.type()==='error'||bad.test(message.text()))errors.push({kind:'console',text:message.text()});});
+page.on('pageerror',error=>errors.push({kind:'page',text:String(error),stack:error.stack}));
+page.on('console',message=>{if(message.type()==='error'||bad.test(message.text())){
+ const entry={kind:'console',text:message.text(),location:message.location()};errors.push(entry);
+ errorDetails.push(Promise.allSettled(message.args().map(arg=>arg.evaluate(value=>{
+  if(value!==null&&typeof value==='object')return {type:Object.prototype.toString.call(value),name:value.name,message:value.message,errno:value.errno,code:value.code,stack:value.stack};
+  return value;
+ }))).then(args=>{entry.args=args;}));
+}});
 cdp.on('Log.entryAdded',({entry})=>{if(entry.level==='error'||bad.test(entry.text))errors.push({kind:'browser',text:entry.text});});
 
 const read=()=>page.evaluate(()=>({ui:window.__sjrpgClassButtons,review:window.__sjrpgSaveLayoutReview,window:[innerWidth,innerHeight],location:location.href,fixture_action_type:typeof window.__sjrpgSaveLayoutAction,adventure:window.__sjrpgAdventureReady===true}));
@@ -28,7 +34,7 @@ async function waitState(predicate,label,timeout=15000){
  const until=Date.now()+timeout;
  let last;
  while(Date.now()<until){
-  assert.equal(errors.length,0,'unexpected runtime error while waiting for '+label);
+  assert.equal(errors.length,0,'unexpected runtime error while waiting for '+label+'; runtimeErrors='+JSON.stringify(errors));
   last=await read();
   if(last.review?.fixture_error)throw new Error(last.review.fixture_error);
   if(predicate(last))return last;
@@ -265,6 +271,9 @@ try{
  console.log('SAVE_LAYOUT_PASS '+JSON.stringify({checks:checks.length,captures:captures.length,errors:0}));
 }catch(error){
  failure=String(error);console.error('SAVE_LAYOUT_FAIL '+failure);
+ await Promise.race([Promise.allSettled(errorDetails),new Promise(resolve=>setTimeout(resolve,1500))]);
+ console.error('SAVE_LAYOUT_RUNTIME_ERRORS '+JSON.stringify(errors));
+ try{console.error('SAVE_LAYOUT_FAILURE_STATE '+JSON.stringify(await read()));}catch(stateError){console.error('SAVE_LAYOUT_STATE_UNAVAILABLE '+String(stateError));}
  try{await capture('failure',true);}catch(captureError){console.error('Failure screenshot unavailable: '+String(captureError));}
  process.exitCode=1;
 }finally{
