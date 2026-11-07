@@ -121,8 +121,11 @@ bind_proof = {"target_rig": rig.name, "source_rig": source_rig.name, "joints": l
               "action_bones": sorted(action_bones), "object_tracks": object_tracks,
               "action": idle_source.name, "translation_unit": "UAL world uniform scale"}
 print("CC0_MERCHANT_BIND_PROOF " + json.dumps(bind_proof), flush=True)
-if position_error > 0.0005 or orientation_error > 0.0005:
-    raise RuntimeError("UAL rest binding needs explicit retargeting; direct action copy rejected")
+# Different official-family rests are expected here, never copied as basis curves.
+# Preserve this mismatch in provenance and solve an explicit rest-aware FK bake.
+bind_proof["binding_mode"] = "world-rotation-delta FK; target rest offsets; root/pelvis translation deltas"
+source_rest = {name: source_world @ bone.matrix_local for name, bone in source_bones.items()}
+source_fps = bpy.context.scene.render.fps / bpy.context.scene.render.fps_base
 
 uniform = HEIGHT / (before_high.z - before_low.z)
 old_rig_world = rig.matrix_world.copy()
@@ -199,15 +202,101 @@ for obj in meshes:
                 small[source] = bpy.data.images.load(str(file), check_existing=False)
             node.image = small[source]
 
-idle = idle_source.copy()
-idle.name = "idle"
-translation_scale = uniform * ual_scale.x
+# Explicit retarget: source world rotation delta relative to its own rest is
+# applied to the target rest rotation. Joint heads are reconstructed from TARGET
+# rest offsets under the newly solved parent, so source proportions cannot stretch
+# the Peasant limbs. Only root/pelvis may transfer animated translation deltas.
+source_rig.animation_data_create()
+source_rig.animation_data.action = idle_source
+for other in source_rig.animation_data.nla_tracks:
+    other.mute = True
+source_rig.data.pose_position = "POSE"
+rig.data.pose_position = "POSE"
+rig.animation_data_create()
+for other in rig.animation_data.nla_tracks:
+    other.mute = True
+idle = bpy.data.actions.new("idle")
+rig.animation_data.action = idle
+translation_scale = uniform
+scene = bpy.context.scene
+source_first, source_last = idle_source.frame_range
+duration_seconds = (source_last - source_first) / source_fps
+bake_count = max(2, round(duration_seconds * 30) + 1)
+ordered = sorted(rig.data.bones, key=lambda bone: len(bone.parent_recursive))
+previous_quaternions = {}
+max_discarded_translation = 0.0
+max_pose_length_error = 0.0
+max_source_scale_error = 0.0
+for sample in range(bake_count):
+    source_frame = source_first + (source_last - source_first) * sample / (bake_count - 1)
+    scene.frame_set(math.floor(source_frame), subframe=source_frame - math.floor(source_frame))
+    bpy.context.view_layer.update()
+    source_pose = {name: source_world @ source_rig.pose.bones[name].matrix for name in source_bones}
+    desired = {}
+    for bone in ordered:
+        name = bone.name
+        rest = bone.matrix_local
+        source_now = source_pose[name]
+        source_bind = source_rest[name]
+        delta_rotation = source_now.to_quaternion() @ source_bind.to_quaternion().inverted()
+        rotation = delta_rotation @ rest.to_quaternion()
+        relative_scale = source_now.to_scale() - source_bind.to_scale()
+        max_source_scale_error = max(max_source_scale_error, max(abs(value) for value in relative_scale))
+        if bone.parent:
+            parent_name = bone.parent.name
+            target_offset = (bone.parent.matrix_local.inverted() @ rest).translation
+            source_local = source_pose[parent_name].inverted() @ source_now
+            source_local_rest = source_rest[parent_name].inverted() @ source_bind
+            animated_translation = source_local.translation - source_local_rest.translation
+            if name == "pelvis":
+                # Parent-frame source metres -> target rest parent frame -> posed parent.
+                source_parent_rotation = source_rest[parent_name].to_quaternion()
+                target_parent_rotation = bone.parent.matrix_local.to_quaternion()
+                target_offset += (target_parent_rotation.inverted() @ source_parent_rotation @ animated_translation) * uniform
+            else:
+                max_discarded_translation = max(max_discarded_translation, animated_translation.length * uniform)
+            position = desired[parent_name] @ target_offset
+        else:
+            position = rest.translation + (source_now.translation - source_bind.translation) * uniform
+        matrix = Matrix.Translation(position) @ rotation.to_matrix().to_4x4()
+        desired[name] = matrix
+        pose = rig.pose.bones[name]
+        pose.rotation_mode = "QUATERNION"
+        if bone.parent:
+            basis = bone.convert_local_to_pose(matrix, rest,
+                parent_matrix=desired[bone.parent.name],
+                parent_matrix_local=bone.parent.matrix_local, invert=True)
+        else:
+            basis = bone.convert_local_to_pose(matrix, rest, invert=True)
+        pose.matrix_basis = basis
+        quaternion = pose.rotation_quaternion.copy()
+        if name in previous_quaternions and quaternion.dot(previous_quaternions[name]) < 0:
+            quaternion.negate()
+            pose.rotation_quaternion = quaternion
+        previous_quaternions[name] = quaternion.copy()
+        pose.keyframe_insert("location", frame=sample + 1, group=name)
+        pose.keyframe_insert("rotation_quaternion", frame=sample + 1, group=name)
+        pose.keyframe_insert("scale", frame=sample + 1, group=name)
+    bpy.context.view_layer.update()
+    for bone in ordered:
+        pose = rig.pose.bones[bone.name]
+        max_pose_length_error = max(max_pose_length_error, abs((pose.tail - pose.head).length - bone.length))
+if max_discarded_translation > 0.002 or max_source_scale_error > 0.0005 or max_pose_length_error > 0.0005:
+    raise RuntimeError("Retarget contains nonrigid/unapproved joint channels: " +
+        str((max_discarded_translation, max_source_scale_error, max_pose_length_error)))
 for curve in idle.fcurves:
-    if curve.data_path.endswith(".location"):
-        for key in curve.keyframe_points:
-            key.co.y *= translation_scale
-            key.handle_left.y *= translation_scale
-            key.handle_right.y *= translation_scale
+    for key in curve.keyframe_points:
+        key.interpolation = "LINEAR"
+scene.render.fps = 30
+scene.render.fps_base = 1.0
+bind_proof["retarget"] = {"fps": 30, "baked_frames": bake_count,
+    "source_fps": source_fps, "duration_seconds": duration_seconds,
+    "max_discarded_nonpelvis_translation_m": max_discarded_translation,
+    "max_source_scale_error": max_source_scale_error,
+    "max_posed_bone_length_error_m": max_pose_length_error,
+    "translated_bones": ["root", "pelvis"], "quaternion_sign_continuity": True,
+    "rest_mismatch_handled_explicitly": position_error > 0.0005 or orientation_error > 0.0005}
+print("CC0_MERCHANT_RETARGET_PROOF " + json.dumps(bind_proof["retarget"]), flush=True)
 # Sample actual CPU-deformed Blender meshes across the complete idle.
 rig.animation_data_create()
 rig.animation_data.action = idle
@@ -223,6 +312,11 @@ scene = bpy.context.scene
 pose_samples = []
 feet_meshes = [obj for obj in meshes if "Feet" in obj.name]
 for fraction in (0.0, 0.25, 0.5, 0.75, 1.0):
+    # Evaluate source and target at matching time, despite the 30fps resample.
+    source_frame = source_first + (source_last - source_first) * fraction
+    scene.frame_set(math.floor(source_frame), subframe=source_frame - math.floor(source_frame))
+    bpy.context.view_layer.update()
+    source_root = source_rig.matrix_world @ source_rig.pose.bones["root"].matrix.translation
     first, last = idle.frame_range
     frame = first + (last - first) * fraction
     scene.frame_set(int(frame), subframe=frame - int(frame))
@@ -239,7 +333,6 @@ for fraction in (0.0, 0.25, 0.5, 0.75, 1.0):
             foot_points.extend(transformed)
         evaluated.to_mesh_clear()
     target_root = rig.matrix_world @ rig.pose.bones["root"].matrix.translation
-    source_root = source_rig.matrix_world @ source_rig.pose.bones["root"].matrix.translation
     pose_samples.append({"phase": fraction, "mesh_min_z": min(point.z for point in points),
                     "mesh_max_z": max(point.z for point in points),
                     "feet_min_z": min(point.z for point in foot_points),
