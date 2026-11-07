@@ -1,15 +1,18 @@
-name: Review save selection layout
+name: Review save selection and adventure loading
 
 on:
     push:
         paths:
             - ".github/workflows/save-layout-review.yml"
             - "sjrpg_3d/scripts/main.gd"
+            - "sjrpg_3d/scripts/entry_loading.gd"
+            - "sjrpg_3d/tests/cases/entry_loading.gd"
             - "sjrpg_3d/scripts/class_select.gd"
             - "sjrpg_3d/scripts/save_layout_review.gd"
             - "sjrpg_3d/tests/cases/entry_layout.gd"
             - "sjrpg_3d/tests/cases/save_layout.gd"
             - "sjrpg_3d/tools/check_save_layout.mjs"
+            - "sjrpg_3d/tools/check_entry_loading.mjs"
     workflow_dispatch:
 
 permissions:
@@ -43,7 +46,7 @@ jobs:
               run: |
                   chmod +x tools/*.sh sjrpg_3d/tools/*.sh
                   tools/setup_godot.sh
-                  tools/check.sh --project=3d --only=entry_layout,save_layout,save_time_label,save_slots
+                  tools/check.sh --project=3d --only=entry_layout,entry_loading,save_layout,save_time_label,save_slots
             - name: Export native UI for visual diagnostics
               if: success() || failure()
               run: sjrpg_3d/tools/export_web.sh
@@ -56,6 +59,7 @@ jobs:
                   trap 'kill "$SJRPG_REVIEW_SERVER_PID" 2>/dev/null || true' EXIT
                   curl --fail --silent --show-error --max-time 2 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 12 http://127.0.0.1:8779/ > /dev/null
                   node sjrpg_3d/tools/check_save_layout.mjs http://127.0.0.1:8779/ build/save-layout-review
+                  node sjrpg_3d/tools/check_entry_loading.mjs http://127.0.0.1:8779/ build/save-layout-review/loading
             - uses: actions/upload-artifact@v6
               if: always()
               with:

@@ -47,6 +47,8 @@
 
 `ClassSelect`는 네 저장 슬롯의 `slot_summaries()`만 읽어 미리보기를 만듭니다. 기존 모험은 명시적인 이어 하기에서 `select_slot`/`load_game`을 호출하고, 빈 슬롯의 명시적인 시작만 `create_slot`을 호출합니다. 점유되었거나 읽을 수 없는 슬롯은 새로 덮어쓰지 않으며 슬롯별 삭제 확인을 거칩니다. 저장 시간의 Unix초는 변경하지 않고 `SaveTimeLabel`이 표시할 때만 로컬 오프셋을 더합니다. 웹은 저장 시점의 브라우저 오프셋(DST 포함), 네이티브는 운영체제의 분 단위 timezone bias를 사용합니다. 네 슬롯의 경로·이관·자동 저장 정책은 [저장 슬롯](save-slots.md)을 참고하세요.
 
+`main.gd`의 모험 진입은 `EntryLoading`을 먼저 표시한 뒤 저장 읽기·새 저장 생성·월드 준비를 순서대로 실행합니다. 웹은 두 번의 실제 브라우저 그리기 콜백을 확인한 후 동기 작업에 들어가므로, 월드 생성 중에도 로딩 화면이 먼저 보입니다. 진행률을 측정할 수 없는 작업에는 퍼센트 대신 회전 아이콘과 단계 안내를 사용합니다. 준비 완료는 실제 `simulation.native_ready`와 첫 월드 표시를 기준으로 합니다. 진입 토큰과 입력 차단은 중복 시작을 막고 선택 화면을 떠난 대기 작업을 취소합니다. 저장 실패는 로딩 표시를 정리한 후 기존 선택 화면에 안내합니다. `entry_loading`은 실제 슬롯 파일을 사용해 중복 시작·읽기/생성 실패·취소와 재시도를 검사합니다.
+
 `entry_layout`은 두 방향·작은 창·회전의 실제 컨트롤 경계, 원본 알파·배경 일치, 미리보기의 저장 바이트 보존, 확인/취소, 반복 시작 방지를 검사합니다. `web/check_shell.mjs`는 로딩/준비의 동일 배치와 오류 복구를 검사합니다. `window.__sjrpgClassButtons`는 실제 버튼 중심과 슬롯 요약을 공개하며 기존 `warrior`/`mage`/`start`/`continue`/`back` 외에 `slots`, `slot1`~`slot4`, `delete1`~`delete4`, 모달의 `delete_cancel`/`delete_confirm`을 제공합니다. `slot_labels`는 실제 저장 행 문자열을 제공하며 미리보기 데이터는 바꾸지 않습니다. `TitleReady`/`EntryReady`/`ClassSelectReady` 훅은 유지합니다.
 
 ## 좌표와 단위

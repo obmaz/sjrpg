@@ -128,6 +128,10 @@ func run() -> void:
 	root.current.select_class("mage")
 	root._choose_hero("mage")
 	root._choose_hero("mage")
+	for frame in 120:
+		if not root._entry_starting:
+			break
+		await _frames(1)
 	check("rapid repeated start callbacks create and launch exactly one real adventure", root.launches == 1 and bool(GameState.slot_summaries()[2]["valid"]) and str(GameState.slot_summaries()[2]["class"]) == "mage")
 	root.queue_free()
 	await _frames(2)
