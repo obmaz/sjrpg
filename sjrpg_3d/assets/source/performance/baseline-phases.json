@@ -1,0 +1,5444 @@
+{
+  "source": "f3fa9f32caa0cfde08f8f1627431816bde01e00f",
+  "workflow": 42395730787,
+  "job": 128472581651,
+  "pass": {
+    "profiles": 2,
+    "phases": 31,
+    "errors": 0
+  },
+  "phases": [
+    {
+      "profile": "portrait",
+      "label": "initial-title",
+      "last": {
+        "actor_atlases": {
+          "atlases": [],
+          "loaded_textures": 0,
+          "metadata_atlases": 0,
+          "rgba8_base_bytes_estimate": 0
+        },
+        "adventure": false,
+        "buttons": [],
+        "frame": 43,
+        "frame_ms": {
+          "count": 44,
+          "max": 150,
+          "mean": 23.3939393939394,
+          "p95": 33.5333333333334
+        },
+        "label": "initial-title",
+        "monitors": {
+          "buffer_bytes": 8540824,
+          "draw_calls": 0,
+          "objects": 1581,
+          "physics_seconds": 0.0001,
+          "process_seconds": 0.0088,
+          "render_objects": 0,
+          "resources": 146,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 40420024,
+          "triangles": 0,
+          "video_bytes": 48960848
+        },
+        "nodes": 23,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 8540824,
+          "draw_calls": 0,
+          "objects": 1581,
+          "physics_seconds": 0.0001,
+          "process_seconds": 0.0088,
+          "render_objects": 0,
+          "resources": 146,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 40420024,
+          "triangles": 0,
+          "video_bytes": 48960848
+        },
+        "screen_script": "res://scripts/title_screen.gd",
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 11080668,
+      "wasm": {
+        "at": 3520.100000000006,
+        "bytes": 100466688
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 32292199,
+          "texture_peak_bytes": 32292199,
+          "renderbuffer_live_bytes": 658320,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-0-town",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 5,
+          "metadata_atlases": 5,
+          "rgba8_base_bytes_estimate": 85090304
+        },
+        "adventure": true,
+        "buttons": [],
+        "dead": false,
+        "dungeon": false,
+        "enemies": 2,
+        "frame": 139,
+        "frame_ms": {
+          "count": 140,
+          "max": 150,
+          "mean": 29.7619047619048,
+          "p95": 136.266666666667
+        },
+        "label": "cycle-0-town",
+        "monitors": {
+          "buffer_bytes": 52025548,
+          "draw_calls": 393,
+          "objects": 6721,
+          "physics_seconds": 0.0003,
+          "process_seconds": 1.4273,
+          "render_objects": 1026,
+          "resources": 275,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 367197172,
+          "triangles": 210290,
+          "video_bytes": 419222720
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3332,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 52025548,
+          "draw_calls": 423,
+          "objects": 6721,
+          "physics_seconds": 0.0365,
+          "process_seconds": 8.7835,
+          "render_objects": 1035,
+          "resources": 275,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 367197172,
+          "triangles": 242042,
+          "video_bytes": 419222720
+        },
+        "player": [
+          -62.9708442687988,
+          679.92724609375
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": true,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 15652020,
+      "wasm": {
+        "at": 22436.399999999994,
+        "bytes": 144703488
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 288608080,
+          "texture_peak_bytes": 288608080,
+          "renderbuffer_live_bytes": 18606480,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-0-title-after-town",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 5,
+          "metadata_atlases": 5,
+          "rgba8_base_bytes_estimate": 85090304
+        },
+        "adventure": false,
+        "buttons": [],
+        "frame": 184,
+        "frame_ms": {
+          "count": 185,
+          "max": 150,
+          "mean": 52.3423423423423,
+          "p95": 148.466666666668
+        },
+        "label": "cycle-0-title-after-town",
+        "monitors": {
+          "buffer_bytes": 44075768,
+          "draw_calls": 0,
+          "objects": 1888,
+          "physics_seconds": 0.0001,
+          "process_seconds": 1.386,
+          "render_objects": 0,
+          "resources": 176,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 291103196,
+          "triangles": 0,
+          "video_bytes": 335178964
+        },
+        "nodes": 23,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 52951924,
+          "draw_calls": 553,
+          "objects": 7118,
+          "physics_seconds": 0.0365,
+          "process_seconds": 8.7835,
+          "render_objects": 2032,
+          "resources": 275,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 368027294,
+          "triangles": 242042,
+          "video_bytes": 420979218
+        },
+        "screen_script": "res://scripts/title_screen.gd",
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 14583808,
+      "wasm": {
+        "at": 77714.29999999999,
+        "bytes": 144703488
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 230801305,
+          "texture_peak_bytes": 294129488,
+          "renderbuffer_live_bytes": 658320,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-0-forest",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 5,
+          "metadata_atlases": 5,
+          "rgba8_base_bytes_estimate": 85090304
+        },
+        "adventure": true,
+        "buttons": [],
+        "dead": false,
+        "dungeon": false,
+        "enemies": 4,
+        "frame": 218,
+        "frame_ms": {
+          "count": 219,
+          "max": 150,
+          "mean": 54.4666666666667,
+          "p95": 147.733333333332
+        },
+        "label": "cycle-0-forest",
+        "monitors": {
+          "buffer_bytes": 52241396,
+          "draw_calls": 387,
+          "objects": 6846,
+          "physics_seconds": 0.0003,
+          "process_seconds": 0.0824,
+          "render_objects": 1066,
+          "resources": 275,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 368464200,
+          "triangles": 121039,
+          "video_bytes": 420705596
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3376,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 52951924,
+          "draw_calls": 553,
+          "objects": 7118,
+          "physics_seconds": 0.0365,
+          "process_seconds": 8.7835,
+          "render_objects": 2032,
+          "resources": 275,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 368464200,
+          "triangles": 242042,
+          "video_bytes": 420979218
+        },
+        "player": [
+          -2124.1162109375,
+          1946
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": false,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 18083888,
+      "wasm": {
+        "at": 90520.79999999999,
+        "bytes": 144703488
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 289787728,
+          "texture_peak_bytes": 299239280,
+          "renderbuffer_live_bytes": 18606480,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-0-cave",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": true,
+        "buttons": [],
+        "dead": false,
+        "dungeon": true,
+        "enemies": 22,
+        "frame": 232,
+        "frame_ms": {
+          "count": 233,
+          "max": 150,
+          "mean": 58.5121602288984,
+          "p95": 147.733333333332
+        },
+        "label": "cycle-0-cave",
+        "monitors": {
+          "buffer_bytes": 53305212,
+          "draw_calls": 290,
+          "objects": 7182,
+          "physics_seconds": 0.0005,
+          "process_seconds": 1.0538,
+          "render_objects": 981,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 30737,
+          "video_bytes": 449511906
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3792,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 53305212,
+          "draw_calls": 553,
+          "objects": 7182,
+          "physics_seconds": 0.0365,
+          "process_seconds": 8.7835,
+          "render_objects": 2032,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 242042,
+          "video_bytes": 449511906
+        },
+        "player": [
+          0,
+          0
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": false,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 17705068,
+      "wasm": {
+        "at": 105361.1,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 310726416,
+          "texture_peak_bytes": 310726416,
+          "renderbuffer_live_bytes": 18606480,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-0-paused-cave",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": true,
+        "buttons": [
+          {
+            "disabled": false,
+            "rect": [
+              614,
+              44,
+              64,
+              64
+            ],
+            "text": "×",
+            "visible_rect": [
+              614,
+              44,
+              64,
+              64
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              194,
+              628,
+              76
+            ],
+            "text": "전체화면 켜기",
+            "visible_rect": [
+              42,
+              194,
+              628,
+              76
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              410,
+              628,
+              76
+            ],
+            "text": "저장하고 선택 화면으로",
+            "visible_rect": [
+              42,
+              410,
+              628,
+              76
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              568,
+              628,
+              76
+            ],
+            "text": "설치 · 홈 화면 추가 안내",
+            "visible_rect": [
+              42,
+              568,
+              628,
+              76
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              866,
+              189,
+              82
+            ],
+            "text": "0.5×",
+            "visible_rect": [
+              60,
+              866,
+              189,
+              82
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              261,
+              866,
+              189,
+              82
+            ],
+            "text": "1×",
+            "visible_rect": [
+              261,
+              866,
+              189,
+              82
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              462,
+              866,
+              190,
+              82
+            ],
+            "text": "1.5×",
+            "visible_rect": [
+              462,
+              866,
+              190,
+              82
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              988,
+              592,
+              83
+            ],
+            "text": "",
+            "visible_rect": [
+              60,
+              988,
+              592,
+              83
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              1111,
+              592,
+              59
+            ],
+            "text": "",
+            "visible_rect": [
+              60,
+              1111,
+              592,
+              59
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              1210,
+              592,
+              59
+            ],
+            "text": "",
+            "visible_rect": [
+              60,
+              1210,
+              592,
+              59
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1297,
+              628,
+              76
+            ],
+            "text": "진동 확인",
+            "visible_rect": [
+              42,
+              1297,
+              628,
+              76
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              1438,
+              592,
+              59
+            ],
+            "text": "",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              1537,
+              592,
+              59
+            ],
+            "text": "",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1624,
+              628,
+              76
+            ],
+            "text": "효과음 확인",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1716,
+              628,
+              76
+            ],
+            "text": "동굴에서 나가기",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1935,
+              628,
+              76
+            ],
+            "text": "진행 상황 지금 저장",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              2027,
+              628,
+              76
+            ],
+            "text": "저장하고 타이틀로",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              2119,
+              628,
+              76
+            ],
+            "text": "새 모험 준비",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1440,
+              636,
+              74
+            ],
+            "text": "모험 계속하기",
+            "visible_rect": [
+              42,
+              1440,
+              636,
+              74
+            ]
+          }
+        ],
+        "dead": false,
+        "dungeon": true,
+        "enemies": 22,
+        "frame": 257,
+        "frame_ms": {
+          "count": 258,
+          "max": 150,
+          "mean": 65.4652454780362,
+          "p95": 147.733333333332
+        },
+        "label": "cycle-0-paused-cave",
+        "monitors": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 448,
+          "objects": 7566,
+          "physics_seconds": 0.0033,
+          "process_seconds": 0.3804,
+          "render_objects": 1922,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 49731,
+          "video_bytes": 450523674
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3896,
+        "orphan_nodes": 0,
+        "paused": true,
+        "peaks": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 553,
+          "objects": 7566,
+          "physics_seconds": 0.0365,
+          "process_seconds": 8.7835,
+          "render_objects": 2032,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 242042,
+          "video_bytes": 450523674
+        },
+        "player": [
+          0,
+          0
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": false,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 17669412,
+      "wasm": {
+        "at": 116976.30000000002,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 310726416,
+          "texture_peak_bytes": 310726416,
+          "renderbuffer_live_bytes": 18606480,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-0-forest-after-cave",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": true,
+        "buttons": [],
+        "dead": false,
+        "dungeon": false,
+        "enemies": 4,
+        "frame": 283,
+        "frame_ms": {
+          "count": 284,
+          "max": 150,
+          "mean": 71.2441314553991,
+          "p95": 147.600000000002
+        },
+        "label": "cycle-0-forest-after-cave",
+        "monitors": {
+          "buffer_bytes": 53300428,
+          "draw_calls": 404,
+          "objects": 7023,
+          "physics_seconds": 0.0004,
+          "process_seconds": 0.086,
+          "render_objects": 1082,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 126520,
+          "video_bytes": 449507122
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3449,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 553,
+          "objects": 7570,
+          "physics_seconds": 0.0365,
+          "process_seconds": 8.7835,
+          "render_objects": 2032,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 242042,
+          "video_bytes": 450523674
+        },
+        "player": [
+          -2154.1162109375,
+          1846
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": false,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 19592852,
+      "wasm": {
+        "at": 128643.49999999997,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 310726416,
+          "texture_peak_bytes": 310740024,
+          "renderbuffer_live_bytes": 18606480,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-0-title-after-cave",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": false,
+        "buttons": [],
+        "frame": 315,
+        "frame_ms": {
+          "count": 300,
+          "max": 150,
+          "mean": 77.8601111111112,
+          "p95": 147.466666666667
+        },
+        "label": "cycle-0-title-after-cave",
+        "monitors": {
+          "buffer_bytes": 44644952,
+          "draw_calls": 0,
+          "objects": 1957,
+          "physics_seconds": 0.0001,
+          "process_seconds": 0.0111,
+          "render_objects": 0,
+          "resources": 179,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 317185446,
+          "triangles": 0,
+          "video_bytes": 361830398
+        },
+        "nodes": 23,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 565,
+          "objects": 7570,
+          "physics_seconds": 0.0616,
+          "process_seconds": 8.7835,
+          "render_objects": 2090,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 242042,
+          "video_bytes": 450523674
+        },
+        "screen_script": "res://scripts/title_screen.gd",
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 17024268,
+      "wasm": {
+        "at": 156158.6,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 250560345,
+          "texture_peak_bytes": 315461392,
+          "renderbuffer_live_bytes": 658320,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-1-town",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": true,
+        "buttons": [],
+        "dead": false,
+        "dungeon": false,
+        "enemies": 2,
+        "frame": 354,
+        "frame_ms": {
+          "count": 300,
+          "max": 150,
+          "mean": 82.5133333333334,
+          "p95": 147.466666666667
+        },
+        "label": "cycle-1-town",
+        "monitors": {
+          "buffer_bytes": 52594732,
+          "draw_calls": 393,
+          "objects": 6813,
+          "physics_seconds": 0.0003,
+          "process_seconds": 0.1116,
+          "render_objects": 1026,
+          "resources": 278,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 394109544,
+          "triangles": 210290,
+          "video_bytes": 446704276
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3332,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 565,
+          "objects": 7570,
+          "physics_seconds": 0.0616,
+          "process_seconds": 8.7835,
+          "render_objects": 2090,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 242042,
+          "video_bytes": 450523674
+        },
+        "player": [
+          -62.9708442687988,
+          679.92724609375
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": true,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 17694424,
+      "wasm": {
+        "at": 165524.49999999997,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 309153552,
+          "texture_peak_bytes": 318605104,
+          "renderbuffer_live_bytes": 18606480,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-1-landscape-town",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": true,
+        "buttons": [],
+        "dead": false,
+        "dungeon": false,
+        "enemies": 2,
+        "frame": 363,
+        "frame_ms": {
+          "count": 300,
+          "max": 150,
+          "mean": 85.6103333333334,
+          "p95": 147.733333333332
+        },
+        "label": "cycle-1-landscape-town",
+        "monitors": {
+          "buffer_bytes": 52594732,
+          "draw_calls": 398,
+          "objects": 6813,
+          "physics_seconds": 0.0003,
+          "process_seconds": 1.4017,
+          "render_objects": 1031,
+          "resources": 278,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 394109544,
+          "triangles": 229984,
+          "video_bytes": 446704276
+        },
+        "native_camera_size": 7.76999092102051,
+        "native_ready": 1,
+        "native_render_size": [
+          1558,
+          720
+        ],
+        "nodes": 3332,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 565,
+          "objects": 7570,
+          "physics_seconds": 0.0616,
+          "process_seconds": 8.7835,
+          "render_objects": 2090,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 242042,
+          "video_bytes": 450523674
+        },
+        "player": [
+          -62.9708442687988,
+          679.92724609375
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": true,
+        "viewport": [
+          1558,
+          720
+        ],
+        "window": [
+          844,
+          390
+        ]
+      },
+      "js_heap": 18747180,
+      "wasm": {
+        "at": 177458.1,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 309153552,
+          "texture_peak_bytes": 318605104,
+          "renderbuffer_live_bytes": 18606480,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-1-title-after-town",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": false,
+        "buttons": [],
+        "frame": 409,
+        "frame_ms": {
+          "count": 300,
+          "max": 150,
+          "mean": 102.533333333333,
+          "p95": 148.400000000002
+        },
+        "label": "cycle-1-title-after-town",
+        "monitors": {
+          "buffer_bytes": 44644952,
+          "draw_calls": 0,
+          "objects": 1956,
+          "physics_seconds": 0.0001,
+          "process_seconds": 1.3253,
+          "render_objects": 0,
+          "resources": 179,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 317185446,
+          "triangles": 0,
+          "video_bytes": 361830398
+        },
+        "nodes": 23,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 565,
+          "objects": 7570,
+          "physics_seconds": 0.0616,
+          "process_seconds": 8.7835,
+          "render_objects": 2090,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 242042,
+          "video_bytes": 450523674
+        },
+        "screen_script": "res://scripts/title_screen.gd",
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 18151612,
+      "wasm": {
+        "at": 240081.49999999997,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 250560345,
+          "texture_peak_bytes": 318605104,
+          "renderbuffer_live_bytes": 658320,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-1-forest",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": true,
+        "buttons": [],
+        "dead": false,
+        "dungeon": false,
+        "enemies": 4,
+        "frame": 461,
+        "frame_ms": {
+          "count": 300,
+          "max": 150,
+          "mean": 97.6227777777778,
+          "p95": 148.233333333331
+        },
+        "label": "cycle-1-forest",
+        "monitors": {
+          "buffer_bytes": 52636532,
+          "draw_calls": 353,
+          "objects": 6878,
+          "physics_seconds": 0.0003,
+          "process_seconds": 0.0837,
+          "render_objects": 1032,
+          "resources": 278,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 394109544,
+          "triangles": 115503,
+          "video_bytes": 446746076
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3376,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 565,
+          "objects": 7570,
+          "physics_seconds": 0.0616,
+          "process_seconds": 8.7835,
+          "render_objects": 2090,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 242042,
+          "video_bytes": 450523674
+        },
+        "player": [
+          -2124.1162109375,
+          1946
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": false,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 22120708,
+      "wasm": {
+        "at": 257744.69999999998,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 309153552,
+          "texture_peak_bytes": 318605104,
+          "renderbuffer_live_bytes": 18606480,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-1-cave",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": true,
+        "buttons": [],
+        "dead": false,
+        "dungeon": true,
+        "enemies": 22,
+        "frame": 477,
+        "frame_ms": {
+          "count": 300,
+          "max": 150,
+          "mean": 98.1363333333334,
+          "p95": 148.233333333331
+        },
+        "label": "cycle-1-cave",
+        "monitors": {
+          "buffer_bytes": 53305212,
+          "draw_calls": 290,
+          "objects": 7188,
+          "physics_seconds": 0.0004,
+          "process_seconds": 0.9671,
+          "render_objects": 980,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 30735,
+          "video_bytes": 449511906
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3792,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 565,
+          "objects": 7570,
+          "physics_seconds": 0.0616,
+          "process_seconds": 8.7835,
+          "render_objects": 2090,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 242042,
+          "video_bytes": 450523674
+        },
+        "player": [
+          0,
+          0
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": false,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 23318740,
+      "wasm": {
+        "at": 277401.4,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 310726416,
+          "texture_peak_bytes": 318605104,
+          "renderbuffer_live_bytes": 18606480,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-1-paused-cave",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": true,
+        "buttons": [
+          {
+            "disabled": false,
+            "rect": [
+              614,
+              44,
+              64,
+              64
+            ],
+            "text": "×",
+            "visible_rect": [
+              614,
+              44,
+              64,
+              64
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              194,
+              628,
+              76
+            ],
+            "text": "전체화면 켜기",
+            "visible_rect": [
+              42,
+              194,
+              628,
+              76
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              410,
+              628,
+              76
+            ],
+            "text": "저장하고 선택 화면으로",
+            "visible_rect": [
+              42,
+              410,
+              628,
+              76
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              568,
+              628,
+              76
+            ],
+            "text": "설치 · 홈 화면 추가 안내",
+            "visible_rect": [
+              42,
+              568,
+              628,
+              76
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              866,
+              189,
+              82
+            ],
+            "text": "0.5×",
+            "visible_rect": [
+              60,
+              866,
+              189,
+              82
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              261,
+              866,
+              189,
+              82
+            ],
+            "text": "1×",
+            "visible_rect": [
+              261,
+              866,
+              189,
+              82
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              462,
+              866,
+              190,
+              82
+            ],
+            "text": "1.5×",
+            "visible_rect": [
+              462,
+              866,
+              190,
+              82
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              988,
+              592,
+              83
+            ],
+            "text": "",
+            "visible_rect": [
+              60,
+              988,
+              592,
+              83
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              1111,
+              592,
+              59
+            ],
+            "text": "",
+            "visible_rect": [
+              60,
+              1111,
+              592,
+              59
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              1210,
+              592,
+              59
+            ],
+            "text": "",
+            "visible_rect": [
+              60,
+              1210,
+              592,
+              59
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1297,
+              628,
+              76
+            ],
+            "text": "진동 확인",
+            "visible_rect": [
+              42,
+              1297,
+              628,
+              76
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              1438,
+              592,
+              59
+            ],
+            "text": "",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              1537,
+              592,
+              59
+            ],
+            "text": "",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1624,
+              628,
+              76
+            ],
+            "text": "효과음 확인",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1716,
+              628,
+              76
+            ],
+            "text": "동굴에서 나가기",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1935,
+              628,
+              76
+            ],
+            "text": "진행 상황 지금 저장",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              2027,
+              628,
+              76
+            ],
+            "text": "저장하고 타이틀로",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              2119,
+              628,
+              76
+            ],
+            "text": "새 모험 준비",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1440,
+              636,
+              74
+            ],
+            "text": "모험 계속하기",
+            "visible_rect": [
+              42,
+              1440,
+              636,
+              74
+            ]
+          }
+        ],
+        "dead": false,
+        "dungeon": true,
+        "enemies": 22,
+        "frame": 486,
+        "frame_ms": {
+          "count": 300,
+          "max": 150,
+          "mean": 99.1205555555556,
+          "p95": 148.100000000002
+        },
+        "label": "cycle-1-paused-cave",
+        "monitors": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 448,
+          "objects": 7569,
+          "physics_seconds": 0.0008,
+          "process_seconds": 0.3631,
+          "render_objects": 1922,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 49731,
+          "video_bytes": 450523674
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3896,
+        "orphan_nodes": 0,
+        "paused": true,
+        "peaks": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 565,
+          "objects": 7572,
+          "physics_seconds": 0.0616,
+          "process_seconds": 8.7835,
+          "render_objects": 2090,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 242042,
+          "video_bytes": 450523674
+        },
+        "player": [
+          0,
+          0
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": false,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 23433672,
+      "wasm": {
+        "at": 280792.30000000005,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 310726416,
+          "texture_peak_bytes": 318605104,
+          "renderbuffer_live_bytes": 18606480,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-1-forest-after-cave",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": true,
+        "buttons": [],
+        "dead": false,
+        "dungeon": false,
+        "enemies": 5,
+        "frame": 514,
+        "frame_ms": {
+          "count": 300,
+          "max": 150,
+          "mean": 106.049555555556,
+          "p95": 148.100000000002
+        },
+        "label": "cycle-1-forest-after-cave",
+        "monitors": {
+          "buffer_bytes": 53301724,
+          "draw_calls": 341,
+          "objects": 7062,
+          "physics_seconds": 0.0031,
+          "process_seconds": 0.3743,
+          "render_objects": 1019,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 116368,
+          "video_bytes": 449508418
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3475,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 565,
+          "objects": 7572,
+          "physics_seconds": 0.0616,
+          "process_seconds": 8.7835,
+          "render_objects": 2090,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 242042,
+          "video_bytes": 450523674
+        },
+        "player": [
+          -2154.1162109375,
+          1846
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": false,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 23475644,
+      "wasm": {
+        "at": 293414.6,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 310726416,
+          "texture_peak_bytes": 318605104,
+          "renderbuffer_live_bytes": 18606480,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-1-title-after-cave",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": false,
+        "buttons": [],
+        "frame": 539,
+        "frame_ms": {
+          "count": 300,
+          "max": 150,
+          "mean": 106.704666666667,
+          "p95": 148.233333333331
+        },
+        "label": "cycle-1-title-after-cave",
+        "monitors": {
+          "buffer_bytes": 44644952,
+          "draw_calls": 0,
+          "objects": 1960,
+          "physics_seconds": 0.0001,
+          "process_seconds": 0.8915,
+          "render_objects": 0,
+          "resources": 179,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 317185446,
+          "triangles": 0,
+          "video_bytes": 361830398
+        },
+        "nodes": 23,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 565,
+          "objects": 7572,
+          "physics_seconds": 0.0616,
+          "process_seconds": 8.7835,
+          "render_objects": 2090,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 242042,
+          "video_bytes": 450523674
+        },
+        "screen_script": "res://scripts/title_screen.gd",
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 20405884,
+      "wasm": {
+        "at": 317685.30000000005,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 250560345,
+          "texture_peak_bytes": 318605104,
+          "renderbuffer_live_bytes": 658320,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-2-town",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": true,
+        "buttons": [],
+        "dead": false,
+        "dungeon": false,
+        "enemies": 2,
+        "frame": 585,
+        "frame_ms": {
+          "count": 300,
+          "max": 150,
+          "mean": 96.4197777777779,
+          "p95": 148.233333333331
+        },
+        "label": "cycle-2-town",
+        "monitors": {
+          "buffer_bytes": 52594732,
+          "draw_calls": 393,
+          "objects": 6813,
+          "physics_seconds": 0.0003,
+          "process_seconds": 1.6698,
+          "render_objects": 1026,
+          "resources": 278,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 394109544,
+          "triangles": 210290,
+          "video_bytes": 446704276
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3332,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 565,
+          "objects": 7572,
+          "physics_seconds": 0.0616,
+          "process_seconds": 8.7835,
+          "render_objects": 2090,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 242042,
+          "video_bytes": 450523674
+        },
+        "player": [
+          -62.9708442687988,
+          679.92724609375
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": true,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 23137408,
+      "wasm": {
+        "at": 333432.1,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 309153552,
+          "texture_peak_bytes": 318605104,
+          "renderbuffer_live_bytes": 18606480,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-2-title-after-town",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": false,
+        "buttons": [],
+        "frame": 613,
+        "frame_ms": {
+          "count": 300,
+          "max": 150,
+          "mean": 97.8333333333334,
+          "p95": 148.400000000002
+        },
+        "label": "cycle-2-title-after-town",
+        "monitors": {
+          "buffer_bytes": 44644952,
+          "draw_calls": 0,
+          "objects": 1956,
+          "physics_seconds": 0.0001,
+          "process_seconds": 1.3134,
+          "render_objects": 0,
+          "resources": 179,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 317185446,
+          "triangles": 0,
+          "video_bytes": 361830398
+        },
+        "nodes": 23,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 565,
+          "objects": 7572,
+          "physics_seconds": 0.0616,
+          "process_seconds": 8.7835,
+          "render_objects": 2090,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 242042,
+          "video_bytes": 450523674
+        },
+        "screen_script": "res://scripts/title_screen.gd",
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 20515392,
+      "wasm": {
+        "at": 366374,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 250560345,
+          "texture_peak_bytes": 318605104,
+          "renderbuffer_live_bytes": 658320,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-2-forest",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": true,
+        "buttons": [],
+        "dead": false,
+        "dungeon": false,
+        "enemies": 4,
+        "frame": 662,
+        "frame_ms": {
+          "count": 300,
+          "max": 150,
+          "mean": 96.6666666666667,
+          "p95": 148.500000000005
+        },
+        "label": "cycle-2-forest",
+        "monitors": {
+          "buffer_bytes": 52636532,
+          "draw_calls": 367,
+          "objects": 6877,
+          "physics_seconds": 0.0003,
+          "process_seconds": 1.0417,
+          "render_objects": 1046,
+          "resources": 278,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 394109544,
+          "triangles": 118815,
+          "video_bytes": 446746076
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3376,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 565,
+          "objects": 8174,
+          "physics_seconds": 0.0616,
+          "process_seconds": 8.7835,
+          "render_objects": 2090,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 242042,
+          "video_bytes": 450523674
+        },
+        "player": [
+          -2124.1162109375,
+          1946
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": false,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 24926564,
+      "wasm": {
+        "at": 383097.6,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 309153552,
+          "texture_peak_bytes": 318605104,
+          "renderbuffer_live_bytes": 18606480,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-2-cave",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": true,
+        "buttons": [],
+        "dead": false,
+        "dungeon": true,
+        "enemies": 22,
+        "frame": 678,
+        "frame_ms": {
+          "count": 300,
+          "max": 150,
+          "mean": 96.6532222222223,
+          "p95": 149.633333333336
+        },
+        "label": "cycle-2-cave",
+        "monitors": {
+          "buffer_bytes": 53305212,
+          "draw_calls": 290,
+          "objects": 7188,
+          "physics_seconds": 0.0009,
+          "process_seconds": 0.9914,
+          "render_objects": 981,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 30737,
+          "video_bytes": 449511906
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3792,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 565,
+          "objects": 8174,
+          "physics_seconds": 0.0616,
+          "process_seconds": 8.7835,
+          "render_objects": 2090,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 242042,
+          "video_bytes": 450523674
+        },
+        "player": [
+          0,
+          0
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": false,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 25941668,
+      "wasm": {
+        "at": 398619.70000000007,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 310726416,
+          "texture_peak_bytes": 318605104,
+          "renderbuffer_live_bytes": 18606480,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-2-paused-cave",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": true,
+        "buttons": [
+          {
+            "disabled": false,
+            "rect": [
+              614,
+              44,
+              64,
+              64
+            ],
+            "text": "×",
+            "visible_rect": [
+              614,
+              44,
+              64,
+              64
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              194,
+              628,
+              76
+            ],
+            "text": "전체화면 켜기",
+            "visible_rect": [
+              42,
+              194,
+              628,
+              76
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              410,
+              628,
+              76
+            ],
+            "text": "저장하고 선택 화면으로",
+            "visible_rect": [
+              42,
+              410,
+              628,
+              76
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              568,
+              628,
+              76
+            ],
+            "text": "설치 · 홈 화면 추가 안내",
+            "visible_rect": [
+              42,
+              568,
+              628,
+              76
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              866,
+              189,
+              82
+            ],
+            "text": "0.5×",
+            "visible_rect": [
+              60,
+              866,
+              189,
+              82
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              261,
+              866,
+              189,
+              82
+            ],
+            "text": "1×",
+            "visible_rect": [
+              261,
+              866,
+              189,
+              82
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              462,
+              866,
+              190,
+              82
+            ],
+            "text": "1.5×",
+            "visible_rect": [
+              462,
+              866,
+              190,
+              82
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              988,
+              592,
+              83
+            ],
+            "text": "",
+            "visible_rect": [
+              60,
+              988,
+              592,
+              83
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              1111,
+              592,
+              59
+            ],
+            "text": "",
+            "visible_rect": [
+              60,
+              1111,
+              592,
+              59
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              1210,
+              592,
+              59
+            ],
+            "text": "",
+            "visible_rect": [
+              60,
+              1210,
+              592,
+              59
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1297,
+              628,
+              76
+            ],
+            "text": "진동 확인",
+            "visible_rect": [
+              42,
+              1297,
+              628,
+              76
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              1438,
+              592,
+              59
+            ],
+            "text": "",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              1537,
+              592,
+              59
+            ],
+            "text": "",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1624,
+              628,
+              76
+            ],
+            "text": "효과음 확인",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1716,
+              628,
+              76
+            ],
+            "text": "동굴에서 나가기",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1935,
+              628,
+              76
+            ],
+            "text": "진행 상황 지금 저장",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              2027,
+              628,
+              76
+            ],
+            "text": "저장하고 타이틀로",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              2119,
+              628,
+              76
+            ],
+            "text": "새 모험 준비",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1440,
+              636,
+              74
+            ],
+            "text": "모험 계속하기",
+            "visible_rect": [
+              42,
+              1440,
+              636,
+              74
+            ]
+          }
+        ],
+        "dead": false,
+        "dungeon": true,
+        "enemies": 22,
+        "frame": 694,
+        "frame_ms": {
+          "count": 300,
+          "max": 150,
+          "mean": 96.8835555555556,
+          "p95": 149.633333333336
+        },
+        "label": "cycle-2-paused-cave",
+        "monitors": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 448,
+          "objects": 7569,
+          "physics_seconds": 0.0016,
+          "process_seconds": 0.3871,
+          "render_objects": 1922,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 49731,
+          "video_bytes": 450523674
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3896,
+        "orphan_nodes": 0,
+        "paused": true,
+        "peaks": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 565,
+          "objects": 8174,
+          "physics_seconds": 0.0616,
+          "process_seconds": 8.7835,
+          "render_objects": 2090,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 242042,
+          "video_bytes": 450523674
+        },
+        "player": [
+          0,
+          0
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": false,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 25925728,
+      "wasm": {
+        "at": 406216.4,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 310726416,
+          "texture_peak_bytes": 318605104,
+          "renderbuffer_live_bytes": 18606480,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-2-forest-after-cave",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": true,
+        "buttons": [],
+        "dead": false,
+        "dungeon": false,
+        "enemies": 5,
+        "frame": 718,
+        "frame_ms": {
+          "count": 300,
+          "max": 150,
+          "mean": 98.8092222222223,
+          "p95": 148.7
+        },
+        "label": "cycle-2-forest-after-cave",
+        "monitors": {
+          "buffer_bytes": 53301724,
+          "draw_calls": 365,
+          "objects": 7062,
+          "physics_seconds": 0.0004,
+          "process_seconds": 0.4271,
+          "render_objects": 1043,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396206694,
+          "triangles": 120512,
+          "video_bytes": 449508418
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3475,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 54320124,
+          "draw_calls": 565,
+          "objects": 8174,
+          "physics_seconds": 0.0616,
+          "process_seconds": 8.7835,
+          "render_objects": 2090,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396210918,
+          "triangles": 242042,
+          "video_bytes": 450531042
+        },
+        "player": [
+          -2154.1162109375,
+          1846
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": false,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 21603588,
+      "wasm": {
+        "at": 420574.30000000005,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 310726416,
+          "texture_peak_bytes": 318605104,
+          "renderbuffer_live_bytes": 18606480,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "portrait",
+      "label": "cycle-2-title-after-cave",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": false,
+        "buttons": [],
+        "frame": 743,
+        "frame_ms": {
+          "count": 300,
+          "max": 150,
+          "mean": 107.230333333333,
+          "p95": 149.366666666667
+        },
+        "label": "cycle-2-title-after-cave",
+        "monitors": {
+          "buffer_bytes": 44644952,
+          "draw_calls": 0,
+          "objects": 1960,
+          "physics_seconds": 0.0001,
+          "process_seconds": 0.7943,
+          "render_objects": 0,
+          "resources": 179,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 317185446,
+          "triangles": 0,
+          "video_bytes": 361830398
+        },
+        "nodes": 23,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 54320124,
+          "draw_calls": 565,
+          "objects": 8174,
+          "physics_seconds": 0.0616,
+          "process_seconds": 8.7835,
+          "render_objects": 2090,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 396210918,
+          "triangles": 242042,
+          "video_bytes": 450531042
+        },
+        "screen_script": "res://scripts/title_screen.gd",
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          390,
+          844
+        ]
+      },
+      "js_heap": 19601672,
+      "wasm": {
+        "at": 441128.4,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 250560345,
+          "texture_peak_bytes": 318605104,
+          "renderbuffer_live_bytes": 658320,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "retina",
+      "label": "initial-title",
+      "last": {
+        "actor_atlases": {
+          "atlases": [],
+          "loaded_textures": 0,
+          "metadata_atlases": 0,
+          "rgba8_base_bytes_estimate": 0
+        },
+        "adventure": false,
+        "buttons": [],
+        "frame": 51,
+        "frame_ms": {
+          "count": 52,
+          "max": 147.766666666667,
+          "mean": 19.6487179487179,
+          "p95": 35.5666666666667
+        },
+        "label": "initial-title",
+        "monitors": {
+          "buffer_bytes": 8540824,
+          "draw_calls": 0,
+          "objects": 1581,
+          "physics_seconds": 0.0001,
+          "process_seconds": 0.0083,
+          "render_objects": 0,
+          "resources": 146,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 48319864,
+          "triangles": 0,
+          "video_bytes": 56860688
+        },
+        "nodes": 23,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 8540824,
+          "draw_calls": 0,
+          "objects": 1581,
+          "physics_seconds": 0.008,
+          "process_seconds": 0.0223,
+          "render_objects": 0,
+          "resources": 146,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 48319864,
+          "triangles": 0,
+          "video_bytes": 56860688
+        },
+        "screen_script": "res://scripts/title_screen.gd",
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          780,
+          1688
+        ]
+      },
+      "js_heap": 9621732,
+      "wasm": {
+        "at": 3015.5,
+        "bytes": 100466688
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 44141959,
+          "texture_peak_bytes": 44141959,
+          "renderbuffer_live_bytes": 2633280,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "retina",
+      "label": "cycle-0-town",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 5,
+          "metadata_atlases": 5,
+          "rgba8_base_bytes_estimate": 85090304
+        },
+        "adventure": true,
+        "buttons": [],
+        "dead": false,
+        "dungeon": false,
+        "enemies": 2,
+        "frame": 152,
+        "frame_ms": {
+          "count": 153,
+          "max": 150,
+          "mean": 27.7777777777778,
+          "p95": 118.4
+        },
+        "label": "cycle-0-town",
+        "monitors": {
+          "buffer_bytes": 52025548,
+          "draw_calls": 402,
+          "objects": 6735,
+          "physics_seconds": 0.0003,
+          "process_seconds": 1.3945,
+          "render_objects": 1026,
+          "resources": 275,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 377631070,
+          "triangles": 210290,
+          "video_bytes": 429656618
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3332,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 52025548,
+          "draw_calls": 404,
+          "objects": 6741,
+          "physics_seconds": 0.0429,
+          "process_seconds": 1.9393,
+          "render_objects": 1028,
+          "resources": 275,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 377631070,
+          "triangles": 214648,
+          "video_bytes": 429656618
+        },
+        "player": [
+          -62.9708442687988,
+          679.92724609375
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": true,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          780,
+          1688
+        ]
+      },
+      "js_heap": 16369872,
+      "wasm": {
+        "at": 17885.599999999977,
+        "bytes": 144703488
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 302948208,
+          "texture_peak_bytes": 302948208,
+          "renderbuffer_live_bytes": 20581440,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "retina",
+      "label": "cycle-0-title-after-town",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 5,
+          "metadata_atlases": 5,
+          "rgba8_base_bytes_estimate": 85090304
+        },
+        "adventure": false,
+        "buttons": [],
+        "frame": 193,
+        "frame_ms": {
+          "count": 194,
+          "max": 150,
+          "mean": 49.6453608247423,
+          "p95": 144.533333333336
+        },
+        "label": "cycle-0-title-after-town",
+        "monitors": {
+          "buffer_bytes": 44075768,
+          "draw_calls": 0,
+          "objects": 1904,
+          "physics_seconds": 0.0001,
+          "process_seconds": 1.4047,
+          "render_objects": 0,
+          "resources": 176,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 302192454,
+          "triangles": 0,
+          "video_bytes": 346268222
+        },
+        "nodes": 23,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 52951924,
+          "draw_calls": 613,
+          "objects": 7134,
+          "physics_seconds": 0.0697,
+          "process_seconds": 1.9393,
+          "render_objects": 2062,
+          "resources": 275,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 379116552,
+          "triangles": 230398,
+          "video_bytes": 432068476
+        },
+        "screen_script": "res://scripts/title_screen.gd",
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          780,
+          1688
+        ]
+      },
+      "js_heap": 14234844,
+      "wasm": {
+        "at": 77140.09999999998,
+        "bytes": 144703488
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 245665721,
+          "texture_peak_bytes": 308993904,
+          "renderbuffer_live_bytes": 2633280,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "retina",
+      "label": "cycle-0-forest",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 5,
+          "metadata_atlases": 5,
+          "rgba8_base_bytes_estimate": 85090304
+        },
+        "adventure": true,
+        "buttons": [],
+        "dead": false,
+        "dungeon": false,
+        "enemies": 4,
+        "frame": 235,
+        "frame_ms": {
+          "count": 236,
+          "max": 150,
+          "mean": 54.609604519774,
+          "p95": 147.666666666664
+        },
+        "label": "cycle-0-forest",
+        "monitors": {
+          "buffer_bytes": 52241396,
+          "draw_calls": 389,
+          "objects": 6861,
+          "physics_seconds": 0.0007,
+          "process_seconds": 1.1035,
+          "render_objects": 1058,
+          "resources": 275,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 380470962,
+          "triangles": 120431,
+          "video_bytes": 432712358
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3376,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 52951924,
+          "draw_calls": 613,
+          "objects": 7134,
+          "physics_seconds": 0.0697,
+          "process_seconds": 3.1181,
+          "render_objects": 2062,
+          "resources": 275,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 380470962,
+          "triangles": 242042,
+          "video_bytes": 432712358
+        },
+        "player": [
+          -2124.1162109375,
+          1946
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": false,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          780,
+          1688
+        ]
+      },
+      "js_heap": 18253080,
+      "wasm": {
+        "at": 95546.8999999999,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 305438576,
+          "texture_peak_bytes": 314890128,
+          "renderbuffer_live_bytes": 20581440,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "retina",
+      "label": "cycle-0-cave",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": true,
+        "buttons": [],
+        "dead": false,
+        "dungeon": true,
+        "enemies": 22,
+        "frame": 252,
+        "frame_ms": {
+          "count": 253,
+          "max": 150,
+          "mean": 59.6508563899868,
+          "p95": 147.766666666667
+        },
+        "label": "cycle-0-cave",
+        "monitors": {
+          "buffer_bytes": 53305212,
+          "draw_calls": 300,
+          "objects": 7200,
+          "physics_seconds": 0.0007,
+          "process_seconds": 1.0804,
+          "render_objects": 981,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 408344528,
+          "triangles": 30737,
+          "video_bytes": 461649740
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3792,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 53305212,
+          "draw_calls": 613,
+          "objects": 7200,
+          "physics_seconds": 0.0697,
+          "process_seconds": 3.1181,
+          "render_objects": 2062,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 408344528,
+          "triangles": 242042,
+          "video_bytes": 461649740
+        },
+        "player": [
+          0,
+          0
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": false,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          780,
+          1688
+        ]
+      },
+      "js_heap": 19537508,
+      "wasm": {
+        "at": 117170.29999999993,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 326508336,
+          "texture_peak_bytes": 326508336,
+          "renderbuffer_live_bytes": 20581440,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "retina",
+      "label": "cycle-0-paused-cave",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": true,
+        "buttons": [
+          {
+            "disabled": false,
+            "rect": [
+              614,
+              44,
+              64,
+              64
+            ],
+            "text": "×",
+            "visible_rect": [
+              614,
+              44,
+              64,
+              64
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              194,
+              628,
+              76
+            ],
+            "text": "전체화면 켜기",
+            "visible_rect": [
+              42,
+              194,
+              628,
+              76
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              410,
+              628,
+              76
+            ],
+            "text": "저장하고 선택 화면으로",
+            "visible_rect": [
+              42,
+              410,
+              628,
+              76
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              568,
+              628,
+              76
+            ],
+            "text": "설치 · 홈 화면 추가 안내",
+            "visible_rect": [
+              42,
+              568,
+              628,
+              76
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              866,
+              189,
+              82
+            ],
+            "text": "0.5×",
+            "visible_rect": [
+              60,
+              866,
+              189,
+              82
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              261,
+              866,
+              189,
+              82
+            ],
+            "text": "1×",
+            "visible_rect": [
+              261,
+              866,
+              189,
+              82
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              462,
+              866,
+              190,
+              82
+            ],
+            "text": "1.5×",
+            "visible_rect": [
+              462,
+              866,
+              190,
+              82
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              988,
+              592,
+              83
+            ],
+            "text": "",
+            "visible_rect": [
+              60,
+              988,
+              592,
+              83
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              1111,
+              592,
+              59
+            ],
+            "text": "",
+            "visible_rect": [
+              60,
+              1111,
+              592,
+              59
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              1210,
+              592,
+              59
+            ],
+            "text": "",
+            "visible_rect": [
+              60,
+              1210,
+              592,
+              59
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1297,
+              628,
+              76
+            ],
+            "text": "진동 확인",
+            "visible_rect": [
+              42,
+              1297,
+              628,
+              76
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              1438,
+              592,
+              59
+            ],
+            "text": "",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              60,
+              1537,
+              592,
+              59
+            ],
+            "text": "",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1624,
+              628,
+              76
+            ],
+            "text": "효과음 확인",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1716,
+              628,
+              76
+            ],
+            "text": "동굴에서 나가기",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1935,
+              628,
+              76
+            ],
+            "text": "진행 상황 지금 저장",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              2027,
+              628,
+              76
+            ],
+            "text": "저장하고 타이틀로",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              2119,
+              628,
+              76
+            ],
+            "text": "새 모험 준비",
+            "visible_rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "disabled": false,
+            "rect": [
+              42,
+              1440,
+              636,
+              74
+            ],
+            "text": "모험 계속하기",
+            "visible_rect": [
+              42,
+              1440,
+              636,
+              74
+            ]
+          }
+        ],
+        "dead": false,
+        "dungeon": true,
+        "enemies": 22,
+        "frame": 277,
+        "frame_ms": {
+          "count": 278,
+          "max": 150,
+          "mean": 66.0671462829737,
+          "p95": 147.666666666664
+        },
+        "label": "cycle-0-paused-cave",
+        "monitors": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 483,
+          "objects": 7584,
+          "physics_seconds": 0.0032,
+          "process_seconds": 0.3931,
+          "render_objects": 1922,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 408344528,
+          "triangles": 49731,
+          "video_bytes": 462661508
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3896,
+        "orphan_nodes": 0,
+        "paused": true,
+        "peaks": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 613,
+          "objects": 7584,
+          "physics_seconds": 0.0697,
+          "process_seconds": 3.1181,
+          "render_objects": 2062,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 408344528,
+          "triangles": 242042,
+          "video_bytes": 462661508
+        },
+        "player": [
+          0,
+          0
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": false,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          780,
+          1688
+        ]
+      },
+      "js_heap": 18112932,
+      "wasm": {
+        "at": 129381.09999999998,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 326508336,
+          "texture_peak_bytes": 326508336,
+          "renderbuffer_live_bytes": 20581440,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "retina",
+      "label": "cycle-0-forest-after-cave",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": true,
+        "buttons": [],
+        "dead": false,
+        "dungeon": false,
+        "enemies": 5,
+        "frame": 302,
+        "frame_ms": {
+          "count": 300,
+          "max": 150,
+          "mean": 71.3378888888889,
+          "p95": 147.133333333336
+        },
+        "label": "cycle-0-forest-after-cave",
+        "monitors": {
+          "buffer_bytes": 53301724,
+          "draw_calls": 388,
+          "objects": 7077,
+          "physics_seconds": 0.0004,
+          "process_seconds": 0.5184,
+          "render_objects": 1036,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 408344528,
+          "triangles": 121714,
+          "video_bytes": 461646252
+        },
+        "native_camera_size": 16.8133964538574,
+        "native_ready": 1,
+        "native_render_size": [
+          720,
+          1558
+        ],
+        "nodes": 3475,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 613,
+          "objects": 7584,
+          "physics_seconds": 0.0697,
+          "process_seconds": 3.1181,
+          "render_objects": 2064,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 408344528,
+          "triangles": 242042,
+          "video_bytes": 462661508
+        },
+        "player": [
+          -2154.1162109375,
+          1846
+        ],
+        "quality_low": false,
+        "screen_script": "res://scripts/native_adventure.gd",
+        "town": false,
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          780,
+          1688
+        ]
+      },
+      "js_heap": 20162832,
+      "wasm": {
+        "at": 144680.59999999998,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 326508336,
+          "texture_peak_bytes": 326524528,
+          "renderbuffer_live_bytes": 20581440,
+          "unknown_formats": []
+        }
+      ]
+    },
+    {
+      "profile": "retina",
+      "label": "cycle-0-title-after-cave",
+      "last": {
+        "actor_atlases": {
+          "atlases": [
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 144,
+              "name": "mage",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2048
+              ],
+              "frames": 128,
+              "name": "mage-cast",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2505
+              ],
+              "frames": 128,
+              "name": "wolf",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1506
+              ],
+              "frames": 128,
+              "name": "goblin",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                2280
+              ],
+              "frames": 128,
+              "name": "boar",
+              "texture_loaded": true
+            },
+            {
+              "dimensions": [
+                2048,
+                1524
+              ],
+              "frames": 128,
+              "name": "skeleton",
+              "texture_loaded": true
+            }
+          ],
+          "loaded_textures": 6,
+          "metadata_atlases": 6,
+          "rgba8_base_bytes_estimate": 97574912
+        },
+        "adventure": false,
+        "buttons": [],
+        "frame": 332,
+        "frame_ms": {
+          "count": 300,
+          "max": 150,
+          "mean": 82.2605555555556,
+          "p95": 147.866666666669
+        },
+        "label": "cycle-0-title-after-cave",
+        "monitors": {
+          "buffer_bytes": 44644952,
+          "draw_calls": 0,
+          "objects": 1975,
+          "physics_seconds": 0.0001,
+          "process_seconds": 0.932,
+          "render_objects": 0,
+          "resources": 179,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 329323280,
+          "triangles": 0,
+          "video_bytes": 373968232
+        },
+        "nodes": 23,
+        "orphan_nodes": 0,
+        "paused": false,
+        "peaks": {
+          "buffer_bytes": 54316980,
+          "draw_calls": 613,
+          "objects": 7584,
+          "physics_seconds": 0.0697,
+          "process_seconds": 3.1181,
+          "render_objects": 2088,
+          "resources": 280,
+          "static_bytes": 0,
+          "static_peak_bytes": 0,
+          "texture_bytes": 408344528,
+          "triangles": 242042,
+          "video_bytes": 462661508
+        },
+        "screen_script": "res://scripts/title_screen.gd",
+        "viewport": [
+          720,
+          1558
+        ],
+        "window": [
+          780,
+          1688
+        ]
+      },
+      "js_heap": 17280560,
+      "wasm": {
+        "at": 170575,
+        "bytes": 173670400
+      },
+      "gl": [
+        {
+          "id": 1,
+          "texture_live_bytes": 266342265,
+          "texture_peak_bytes": 331243312,
+          "renderbuffer_live_bytes": 2633280,
+          "unknown_formats": []
+        }
+      ]
+    }
+  ]
+}

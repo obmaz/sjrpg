@@ -5,7 +5,6 @@ on:
             - ".github/workflows/resource-profile-review.yml"
             - "sjrpg_3d/tools/check_resource_profile.mjs"
             - "sjrpg_3d/tools/resource_telemetry.mjs"
-            - "sjrpg_3d/tools/compare_resource_profile.py"
             - "sjrpg_3d/scripts/resource_profile_review.gd"
     workflow_dispatch:
 permissions:

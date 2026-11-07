@@ -50,5 +50,5 @@ if len(reports)==2:
             comparison.append({"profile":after["name"],"phase":a["label"],"delta":delta})
 proof={"renderer":"Chromium ANGLE SwiftShader; relative comparison only","reports":reports,"comparison":comparison}
 (root/"comparison.json").write_text(json.dumps(proof,indent=2))
-print("RESOURCE_COMPARISON "+json.dumps({"editions":{k:{"sha":v["source_sha"],"passed":v["passed"],"growth":[{"name":p["name"],"growth":p["warm_title_growth"]} for p in v["profiles"]]} for k,v in reports.items()}))
+print("RESOURCE_COMPARISON "+json.dumps({"editions":{k:{"sha":v["source_sha"],"passed":v["passed"],"growth":[{"name":p["name"],"growth":p["warm_title_growth"]} for p in v["profiles"]]} for k,v in reports.items()}}))
 assert len(reports)==2 and all(r["passed"] for r in reports.values()),"A real route failed; inspect original strict errors"
