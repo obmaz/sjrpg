@@ -187,7 +187,7 @@ func take_damage(amount: float, source: Node2D, visual_source: Node2D = null) ->
 		source.confirm_melee_contact(heavy)
 	if GameState.has_gift("frost") and source != null and source is Player:
 		slow(0.67)
-	SoundFx.play("impact_heavy" if heavy else "impact")
+	SoundFx.play_hit(tier)  # JUICE #11
 	Prefs.pulse("hit")
 	sprite.trigger_flash(Effect.contact_flash_color(impact_source))
 	# JUICE #2: size, colour and a scale pop follow the tier.

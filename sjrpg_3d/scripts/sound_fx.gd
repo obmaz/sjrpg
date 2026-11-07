@@ -17,6 +17,13 @@ const PROFILES := {
 	"levelup": [660.0, 1320.0, 0.42, 0.0, 0.0, 0.035, "sine"],
 	"loot": [880.0, 1320.0, 0.18, 0.0, 0.0, 0.025, "sine"],
 	"warp": [440.0, 1040.0, 0.32, 1200.0, 0.02, 0.04, "sine"],
+	# JUICE #11: not in the original audio_profile.dart. Godot-side additions so contact is not one repeated
+	# thud: two light variants, a medium variant, a short high "tick" transient layered on harder hits and a
+	# descending "kill" thud. Values are first guesses tuned by ear, not measured.
+	"impact_b": [215.0, 56.0, 0.10, 1500.0, 0.13, 0.065, "sine"],
+	"impact_c": [150.0, 42.0, 0.14, 1400.0, 0.14, 0.072, "sine"],
+	"tick": [1900.0, 900.0, 0.04, 5200.0, 0.10, 0.02, "triangle"],
+	"kill": [260.0, 62.0, 0.24, 900.0, 0.14, 0.075, "sine"],
 }
 const GAIN := 5.0  # the original plays through a master gain; raw gains are very quiet
 
@@ -25,12 +32,18 @@ var _players: Array[AudioStreamPlayer] = []
 var _variation := RandomNumberGenerator.new()
 var _next := 0
 var _last := {}
+## JUICE #11: round-robin for light variants, and a short kill streak that raises the kill pitch.
+const STREAK_WINDOW_MS := 2500
+const STREAK_MAX := 5
+var _hit_variant := 0
+var _streak := 0
+var _last_kill_ms := -100000
 
 
 func _ready() -> void:
 	for name in PROFILES:
 		_streams[name] = _synth(PROFILES[name])
-	for i in 6:
+	for i in 8:
 		var p := AudioStreamPlayer.new()
 		add_child(p)
 		_players.append(p)
@@ -70,18 +83,53 @@ func _synth(p: Array) -> AudioStreamWAV:
 	return wav
 
 
-func play(name: String, preview := false) -> void:
+## JUICE #11: which sounds one confirmed hit plays. Light hits alternate two variants; harder hits add a
+## high transient; a killing blow adds the kill thud.
+static func hit_names(tier: int, variant: int) -> Array[String]:
+	match tier:
+		HitTier.LIGHT:
+			return ["impact" if variant % 2 == 0 else "impact_b"]
+		HitTier.MEDIUM:
+			return ["impact_c", "tick"]
+		HitTier.HEAVY:
+			return ["impact_heavy", "tick"]
+	return ["impact_heavy", "kill"]
+
+
+## One semitone per consecutive kill inside the window, capped so it never turns shrill.
+static func streak_pitch(count: int) -> float:
+	return pow(2.0, clampi(count, 0, STREAK_MAX) / 12.0)
+
+
+func play_hit(tier: int) -> void:
+	var names := hit_names(tier, _hit_variant)
+	_hit_variant += 1
+	for sound in names:
+		if sound == "kill":
+			play(sound, false, _next_kill_pitch())
+		else:
+			play(sound)
+
+
+func _next_kill_pitch() -> float:
+	var now := Time.get_ticks_msec()
+	_streak = mini(_streak + 1, STREAK_MAX) if now - _last_kill_ms <= STREAK_WINDOW_MS else 0
+	_last_kill_ms = now
+	return streak_pitch(_streak)
+
+
+func play(name: String, preview := false, pitch_multiplier := 1.0) -> void:
 	if not Prefs.sound_enabled or not _streams.has(name):
 		return
 	var now := Time.get_ticks_msec()
-	# Heavy and light contacts share a gate so area attacks cannot layer a wall of thuds.
-	var gate := "impact" if name == "impact_heavy" else name
+	# Every contact variant shares one gate so area attacks cannot layer a wall of thuds.
+	var gate := "impact" if name.begins_with("impact") else name
 	if not preview and now - int(_last.get(gate, 0)) < 70:
 		return
 	_last[gate] = now
 	var player := _players[_next]
 	_next = (_next + 1) % _players.size()
 	player.stream = _streams[name]
-	player.pitch_scale = _variation.randf_range(0.96, 1.04) if name in ["slash", "impact", "impact_heavy", "fire", "ice", "lightning"] else 1.0
+	player.pitch_scale = (_variation.randf_range(0.96, 1.04) if name in ["slash", "impact", "impact_b", "impact_c", "impact_heavy", "fire", "ice", "lightning"] else 1.0) * pitch_multiplier
 	player.volume_db = -4.0
 	player.play()

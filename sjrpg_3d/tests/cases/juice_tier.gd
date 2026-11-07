@@ -50,3 +50,30 @@ func run() -> void:
 	check("killing blow shows the largest number", killing.size() == 1)
 	game.queue_free()
 	await _frames(2)
+	_check_sounds()
+
+
+func _check_sounds() -> void:
+	var light_a := SoundFx.hit_names(HitTier.LIGHT, 0)
+	var light_b := SoundFx.hit_names(HitTier.LIGHT, 1)
+	check("light hits alternate two variants", light_a != light_b and light_a.size() == 1)
+	check("medium and heavy hits add the high tick layer", SoundFx.hit_names(HitTier.MEDIUM, 0).has("tick") and SoundFx.hit_names(HitTier.HEAVY, 0).has("tick"))
+	check("a killing blow plays the kill thud", SoundFx.hit_names(HitTier.KILL, 0).has("kill"))
+	var all_known := true
+	for tier in [HitTier.LIGHT, HitTier.MEDIUM, HitTier.HEAVY, HitTier.KILL]:
+		for variant in 2:
+			for sound in SoundFx.hit_names(tier, variant):
+				all_known = all_known and SoundFx.PROFILES.has(sound)
+	check("every hit sound has a synthesized profile", all_known)
+	check("kill streak starts at the natural pitch", is_equal_approx(SoundFx.streak_pitch(0), 1.0))
+	check("kill streak rises one semitone per kill", is_equal_approx(SoundFx.streak_pitch(1), pow(2.0, 1.0 / 12.0)))
+	check("kill streak pitch is capped", is_equal_approx(SoundFx.streak_pitch(50), SoundFx.streak_pitch(SoundFx.STREAK_MAX)))
+	var before := SoundFx._streak
+	SoundFx._last_kill_ms = -100000
+	SoundFx._next_kill_pitch()
+	SoundFx._next_kill_pitch()
+	check("consecutive kills inside the window build the streak", SoundFx._streak == 1)
+	SoundFx._last_kill_ms = -100000
+	SoundFx._next_kill_pitch()
+	check("a long pause resets the streak", SoundFx._streak == 0)
+	SoundFx._streak = before
