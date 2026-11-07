@@ -778,15 +778,17 @@ func _class_layout_probe() -> Dictionary:
 	var fonts := {}
 	var visible := {}
 	var labels := {}
+	var texts := {}
 	for entry in [["brand", brand_label], ["heading", heading], ["subtitle", subtitle], ["name", hero_name], ["role", role], ["description", description]]:
 		var label: Label = entry[1]
 		fonts[entry[0]] = label.get_theme_font_size("font_size")
 		visible[entry[0]] = label.is_visible_in_tree()
 		labels[entry[0]] = _rect(label)
+		texts[entry[0]] = label.text
 	return {"safe": [_class_safe.position.x, _class_safe.position.y, _class_safe.size.x, _class_safe.size.y],
 		"sheet": _rect(class_surface), "brand": _rect(brand_label), "heading": _rect(heading), "subtitle": _rect(subtitle),
 		"back": _rect(back_button), "tabs": {"warrior": _rect(class_buttons["warrior"]), "mage": _rect(class_buttons["mage"])},
 		"art": _rect(showcase), "details": _rect(details), "stats": stats, "weapon": [],
 		"start": _rect(start_button), "slotchange": _rect(slot_switch), "fonts": fonts, "visible": visible,
-		"labels": labels, "class": selected_class, "compact": _class_compact,
+		"labels": labels, "texts": texts, "class": selected_class, "compact": _class_compact,
 		"portrait": size.y > size.x, "css_scale": _slot_css}

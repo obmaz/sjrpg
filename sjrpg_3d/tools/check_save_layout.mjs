@@ -9,6 +9,9 @@ const {chromium}=createRequire(import.meta.url)('playwright');
 const url=new URL(process.argv[2]||'http://127.0.0.1:8767/');
 url.searchParams.set('save_layout_review','1');
 url.searchParams.set('quality','low');
+const entryVisualOnly=process.env.SJRPG_ENTRY_VISUAL_ONLY==='1';
+const captureBaseline=process.env.SJRPG_ENTRY_BASELINE==='1';
+const visualFailures=[];
 const out=path.resolve(process.argv[3]||'build/save-layout-review');
 await mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
@@ -154,6 +157,99 @@ async function preserve(expected,label){
  assert.equal(s.review.screen,'selection',label+' unexpectedly launched or left selection');
 }
 
+
+function classGeometry(s,label){
+ assert.equal(s.ui.stage,'class',label+' actual hero selection');
+ const p=s.ui.class_layout;
+ assert(p,label+' missing actual class geometry probe');
+ assert.equal(p.class,s.ui.selected_class,label+' probe follows selected class');
+ const win={x:0,y:0,w:s.window[0],h:s.window[1]},safe=css(s,p.safe),sheet=css(s,p.sheet);
+ assert(encloses(win,safe)&&encloses(safe,sheet),label+' class sheet and safe area');
+ const heading=css(s,p.heading),subtitle=css(s,p.subtitle),back=css(s,p.back),art=css(s,p.art),details=css(s,p.details);
+ assert(encloses(safe,heading)&&encloses(safe,subtitle)&&!overlaps(heading,subtitle),label+' separate title/subtitle in safe area');
+ assert(!overlaps(back,heading)&&encloses(safe,back),label+' back does not cover title');
+ const tabs=['warrior','mage'].map(key=>css(s,p.tabs[key]));
+ assert(!overlaps(tabs[0],tabs[1]),label+' independent class tabs');
+ for(const rect of [...tabs,back,css(s,p.start),css(s,p.slotchange)]){
+  assert(encloses(safe,rect)&&rect.w>=43.5&&rect.h>=43.5,label+' actual44CSS class targets');
+ }
+ assert(encloses(safe,art)&&encloses(safe,details),label+' art and details fit safe area');
+ assert(!overlaps(css(s,p.start),css(s,p.slotchange)),label+' primary/secondary actions do not overlap');
+ assert(!overlaps(details,css(s,p.start))&&!overlaps(details,css(s,p.slotchange)),label+' details never cover actions');
+ if(p.portrait){
+  assert(Math.max(...tabs.map(endY))<=art.y+2,label+' portrait tabs above artwork');
+  assert(endY(art)<=details.y+2,label+' portrait art above information');
+  assert(endY(details)<=css(s,p.start).y+2,label+' portrait information before start');
+ }
+ const ratio=s.window[0]/s.ui.viewport[0];
+ for(const key of ['heading','subtitle','name','role','description']){
+  if(p.visible?.[key]===false)continue;
+  assert(Number.isFinite(p.fonts?.[key])&&p.fonts[key]*ratio>=11.8,label+' actual readable '+key+' font');
+  assert(String(p.texts?.[key]||'').trim(),label+' actual '+key+' text');
+  if(['name','role','description'].includes(key)&&p.labels?.[key])assert(encloses(details,css(s,p.labels[key])),label+' '+key+' stays inside information');
+ }
+ assert(Array.isArray(p.stats)&&p.stats.length===2,label+' actual health/resource chips');
+ for(const stat of p.stats){
+  const box=css(s,stat.rect),text=css(s,stat.text_rect);
+  assert(encloses(details,box)&&encloses(box,text),label+' stat chip/text remain inside information');
+  assert(stat.font_size*ratio>=11.8&&String(stat.text||'').trim(),label+' actual readable stat text');
+ }
+ record('class geometry '+label);
+}
+function inspectVisual(label,callback){
+ try{callback();console.log('ENTRY_VISUAL_CHECK_PASS '+label);}
+ catch(error){visualFailures.push({label,error:String(error)});console.error('ENTRY_VISUAL_CHECK_FAIL '+label+' '+String(error));}
+}
+async function focusedVisual(){
+ const sizes=[[390,844],[844,390]];
+ for(const name of ['empty','mixed','full','corrupt','backup']){
+  await resize(390,844);const before=stateKey(await scenario(name));
+  if(name==='mixed'){await tap('slot3');await waitState(s=>s.ui.selected_slot===3,'selected mage save preview');}
+  for(const [w,h]of sizes){
+   await resize(w,h);const state=await read();
+   await capture('entry-save-'+name+'-'+w+'x'+h,true);
+   inspectVisual(name+' '+w+'x'+h,()=>geometry(state,name+' '+w+'x'+h));
+   await preserve(before,name+' actual visual preview');
+   if(name==='full'&&w>h){
+    const footer=css(state,state.ui.save_layout.footer);
+    await ensureCard(4);const last=await read();
+    inspectVisual('full landscape last-row access',()=>{
+     assert(encloses(css(last,last.ui.save_layout.list),css(last,last.ui.save_layout.cards[3].row),1.5),'actual last save row visible');
+     assert.deepEqual(css(last,last.ui.save_layout.footer),footer,'scroll must not move fixed action footer');
+    });
+    await capture('entry-save-full-'+w+'x'+h+'-bottom',true);
+   }
+  }
+ }
+ await resize(390,844);await scenario('mixed');await tap('delete1');
+ await waitState(s=>s.ui.save_layout.modal_open,'actual delete confirmation');
+ const modalBefore=stateKey(await read());
+ for(const [w,h]of sizes){
+  await resize(w,h);await capture('entry-delete-'+w+'x'+h,true);
+  const modalState=await read();inspectVisual('delete '+w+'x'+h,()=>modalGeometry(modalState));
+ }
+ await page.keyboard.press('Escape');
+ await waitState(s=>!s.ui.save_layout.modal_open,'actual Escape cancel');
+ await preserve(modalBefore,'cancelled visual delete');
+ await resize(390,844);const emptyBefore=stateKey(await scenario('empty'));
+ await tap('continue');await waitState(s=>s.ui.stage==='class','actual new-hero selection');
+ for(const [w,h]of [...sizes,[320,640]]){
+  await resize(w,h);
+  for(const cls of ['warrior','mage']){
+   await tap(cls);await waitState(s=>s.ui.selected_class===cls&&s.ui.stage==='class','actual '+cls+' tab');
+   const state=await read();await capture('entry-class-'+cls+'-'+w+'x'+h,true);
+   if(captureBaseline&&!state.ui.class_layout)record('baseline actual class capture '+cls+' '+w+'x'+h+' (new geometry absent)');
+   else inspectVisual(cls+' '+w+'x'+h,()=>classGeometry(state,cls+' '+w+'x'+h));
+   await preserve(emptyBefore,'actual '+cls+' preview without creating a save');
+  }
+ }
+ await tap('slots');await waitState(s=>s.ui.stage==='slots','class returns to actual saves');
+ await preserve(emptyBefore,'class back returns without writing');
+ assert.equal(errors.length,0,'unexpected runtime errors '+JSON.stringify(errors));
+ assert.equal(visualFailures.length,0,'measured entry visual failures '+JSON.stringify(visualFailures));
+ console.log('ENTRY_VISUAL_PASS '+JSON.stringify({checks:checks.length,captures:captures.length,errors:errors.length,baseline:captureBaseline}));
+}
+
 const idbDiagnostics={enabled:process.env.SJRPG_SAVE_IDB_DIAGNOSTICS==='1',engineLogRewrites:0};
 if(idbDiagnostics.enabled){
  // Observe the otherwise discarded ErrnoError fields in this browser response only.
@@ -181,6 +277,7 @@ try{
  if(idbDiagnostics.enabled)assert.equal(idbDiagnostics.engineLogRewrites,1,'one exact Godot IDB error log must expose original error fields');
  await page.locator('#entry-start').click();
  await waitState(s=>s.review?.ready&&s.review?.screen==='selection'&&s.ui?.save_layout,'live save selection',90000);
+ if(entryVisualOnly){await focusedVisual();}else{
  const sizes=[[390,844],[844,390],[568,320],[320,640],[360,640],[390,844]];
  const cases=['mixed','full','empty','corrupt','backup','long'];
  for(const name of cases){
@@ -290,6 +387,7 @@ try{
  assert.equal(errors.length,0,'unexpected app/browser/GPU errors');
  record('actual selected adventure continuation');
  console.log('SAVE_LAYOUT_PASS '+JSON.stringify({checks:checks.length,captures:captures.length,errors:0}));
+ }
 }catch(error){
  failure=String(error);console.error('SAVE_LAYOUT_FAIL '+failure);
  await Promise.race([Promise.allSettled(errorDetails),new Promise(resolve=>setTimeout(resolve,1500))]);
@@ -298,6 +396,6 @@ try{
  try{await capture('failure',true);}catch(captureError){console.error('Failure screenshot unavailable: '+String(captureError));}
  process.exitCode=1;
 }finally{
- await writeFile(path.join(out,'proof.json'),JSON.stringify({url:url.href,idbDiagnostics,checks,captures,errors,failure,passed:failure===null&&errors.length===0},null,2));
+ await writeFile(path.join(out,'proof.json'),JSON.stringify({url:url.href,entryVisualOnly,captureBaseline,visualFailures,idbDiagnostics,checks,captures,errors,failure,passed:failure===null&&errors.length===0},null,2));
  await browser.close();
 }
