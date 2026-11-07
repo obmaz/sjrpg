@@ -24,7 +24,7 @@
 | 4 | 스쿼시·스트레치 | 예정 | | |
 | 5 | 처치 연출 (공격자 정지 75ms, 흰색 플래시, 파편 링, 반동 14px, 페이드 0.25초) | 완료 | `hit_tier.gd` KILL_*, `enemy.gd` `take_damage`·`_die`, `player.gd` `confirm_melee_contact`, `game_tempo.gd` | `juice_enemy` |
 | 6 | 보스 처치 연출 | 선택 | | |
-| 7 | 근접 전진 | 예정 | | |
+| 7 | 근접 전진 (기본 근접만, 접촉 전 16px, 140px 안에 적이 있고 40px보다 멀 때. 전진한 만큼 접촉 시점 실효 사거리가 최대 16px 늘어남) | 완료, 체감 튜닝 필요 | `player.gd` `_lunge`·`LUNGE_*` | `juice_player` |
 | 8 | 큰 피해 피격 비네트 (한 번에 최대 체력 15% 이상, 0.22초, 동작 줄이기 40%) | 완료 | `hud.gd` `_build_heavy_hit_vignette`·`_update_vital_feedback` | `juice_player` |
 | 9 | 일반 적 공격 예고 (windup 시작 노란 경고 플래시, 강도 0.55) | 완료 | `enemy.gd` `TELEGRAPH_COLOR`, `actor_sprite.gd` `trigger_flash(strength)` | `juice_enemy` |
 | 10 | 보스 슬램 카메라 (착지마다 카메라 충격, 피해 여부와 무관) | 완료 | `enemy.gd` windup 종료 처리 | `juice_enemy` |

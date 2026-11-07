@@ -39,6 +39,12 @@ var _storm_timer := 0.0
 var _attack_time := 0.0
 var _attack_duration := 0.42
 var _attack_melee := false
+## JUICE #7: a basic melee swing steps toward a target before contact (weapon-agnostic, off for reduced motion).
+const LUNGE_DISTANCE := 16.0
+const LUNGE_END := 0.45  # swing progress at which the contact callback fires
+const LUNGE_SEEK := 140.0  # only lunge when a target is this close...
+const LUNGE_STOP_GAP := 40.0  # ...and not already in front of the hero
+var _attack_lunges := false
 var _resolving_melee_contact := false
 var _pending: Callable
 var _action_serial := 0
@@ -191,6 +197,7 @@ func _process(delta: float) -> void:
 				Effect.spawn_release(game, self, impact_color)
 			_release_pending = false
 			_resolving_melee_contact = false
+		_lunge(delta, progress)
 		_move(input * speed() * 0.25 * (0.0 if _hitstop.remaining > 0.0 else delta))
 		return
 
@@ -217,6 +224,18 @@ func clear_move_target() -> void:
 
 
 ## Point movement stops at the first obstruction; keyboard/touch retain normal wall sliding.
+## JUICE #7: close LUNGE_DISTANCE toward the nearest target over the swing's wind-up, through the normal
+## collision resolver. It adds movement only; damage, reach checks and cooldowns are unchanged.
+func _lunge(delta: float, progress: float) -> void:
+	if not _attack_lunges or Prefs.reduce_motion or progress >= LUNGE_END or not _pending.is_valid():
+		return
+	var target: Enemy = game.nearest_enemy(position, LUNGE_SEEK)
+	if target == null or position.distance_to(target.position) <= LUNGE_STOP_GAP:
+		return
+	var step := LUNGE_DISTANCE * delta / (LUNGE_END * _attack_duration)
+	position = SpatialCombat3D.move_actor(game, self, position + (target.position - position).normalized() * step, RADIUS)
+
+
 func _move(offset: Vector2) -> void:
 	if has_move_target and offset.length() > 0.0:
 		offset = (move_target - position).limit_length(offset.length())
@@ -314,6 +333,7 @@ func cast_slot(index: int, repeat := false) -> bool:
 	if reuse > 0.0:
 		cooldowns[id] = reuse
 	_attack_melee = d["type"] in ["melee", "spin", "shadow"]
+	_attack_lunges = d["type"] == "melee"
 	_attack_duration = GameTempo.duration((0.4 if _attack_melee else 0.46) / (1.0 + frenzy_stacks * 0.08))
 	if id in ["cleave", "sorceressAttack"]:
 		_attack_duration = float(weapon_melee()["tempo"])
@@ -814,6 +834,7 @@ func _cancel_actions() -> void:
 	_pending = Callable()
 	_attack_time = 0.0
 	_attack_melee = false
+	_attack_lunges = false
 	_resolving_melee_contact = false
 	_release_pending = false
 	_release_sound = ""
