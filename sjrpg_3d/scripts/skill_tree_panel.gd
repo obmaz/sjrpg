@@ -94,6 +94,7 @@ func _fit() -> void:
 	var size := get_viewport_rect().size
 	_layout_box.vertical = size.y > size.x
 	_tree_scroll.custom_minimum_size.y = 240.0 if _layout_box.vertical else 0.0
+	_fit_detail_type()
 
 
 func _tab_labels() -> Array:
@@ -307,6 +308,7 @@ func _build_detail() -> void:
 		child.queue_free()
 	if _selected == "" or GameState.skill(_selected).is_empty():
 		_detail.add_child(UiKit.label("기술을 눌러 정보를 확인하세요", 18))
+		_fit_detail_type()
 		return
 	var s := GameState.skill(_selected)
 	var rank := GameState.rank(_selected)
@@ -361,6 +363,8 @@ func _build_detail() -> void:
 		if GameState.learn(_selected):
 			_refresh())
 	_detail.add_child(learn)
+	if reason != "":
+		_detail.add_child(PanelFrame.wrap_label(reason, 15, UiToneArt.MUTED))
 
 	if rank > 0 and GameState.is_assignable(s):
 		_detail.add_child(UiKit.label("장착 슬롯", 16, UiKit.MUTED, true))
@@ -382,6 +386,32 @@ func _build_detail() -> void:
 				_refresh())
 			row.add_child(b)
 		_detail.add_child(UiKit.label("같은 버튼을 다시 누르면 해제합니다", 13, UiToneArt.MUTED))
+
+	_fit_detail_type()
+
+
+func _fit_detail_type() -> void:
+	if _detail == null:
+		return
+	var minimum := ceili(12.0 * graph_css_scale())
+	for node in _detail.find_children("*", "Control", true, false):
+		var control := node as Control
+		if not (control is Label or control is Button):
+			continue
+		if not control.has_meta("woodland_base_font"):
+			control.set_meta("woodland_base_font", control.get_theme_font_size("font_size"))
+		var pixels := maxi(int(control.get_meta("woodland_base_font")), minimum)
+		if control.get_theme_font_size("font_size") != pixels:
+			control.add_theme_font_size_override("font_size", pixels)
+		if control is Label:
+			var label := control as Label
+			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		elif control is Button:
+			var button := control as Button
+			button.clip_text = true
+			button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+			button.tooltip_text = button.text
 
 
 func _add_effect_line(title: String, text: String, color: Color) -> void:

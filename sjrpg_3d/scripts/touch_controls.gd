@@ -462,9 +462,9 @@ func _draw() -> void:
 		elif name == "roll":
 			HudArt.round_plaque(self, "dodge", c, r, Color(0.82, 0.81, 0.75, 1.0 if pressed else 0.88))
 		elif name == "potion_hp":
-			PotionArt.draw(self, c, r, false, GameState.potions, pressed)
+			PotionArt.draw(self, c, r, false, GameState.potions, pressed, float(b["radius"]))
 		elif name == "potion_mp":
-			PotionArt.draw(self, c, r, true, GameState.mana_potions, pressed)
+			PotionArt.draw(self, c, r, true, GameState.mana_potions, pressed, float(b["radius"]))
 		elif name == "near_shop":
 			_draw_interaction(c, b["half_size"], pressed)
 		elif name.begins_with("bar_"):

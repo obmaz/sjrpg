@@ -13,8 +13,19 @@ jobs:
         # Explicit UI review commits run the focused harness without publishing.
         if: "!contains(github.event.head_commit.message, '[layout-review]')"
         runs-on: ubuntu-latest
+        outputs:
+            native_style_release_allowed: ${{ steps.native_release.outputs.allowed }}
         steps:
             - uses: actions/checkout@v7.0.1
+
+            - name: Read native visual review release state
+              id: native_release
+              run: |
+                  if test -f .native-style-review-hold; then
+                      echo 'allowed=false' >> "$GITHUB_OUTPUT"
+                  else
+                      echo 'allowed=true' >> "$GITHUB_OUTPUT"
+                  fi
 
             - uses: actions/setup-node@v6
               with:
@@ -72,7 +83,7 @@ jobs:
                   include-hidden-files: true
 
     deploy:
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && needs.build.outputs.native_style_release_allowed == 'true'
         needs: build
         runs-on: ubuntu-latest
         permissions:
