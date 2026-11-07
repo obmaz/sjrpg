@@ -9,6 +9,8 @@ const WORLD_ZOOMS: Array[float] = [0.5, 1.0, 1.5]
 
 var settings_path := "/userfs/sjrpg_3d/settings.cfg" if OS.has_feature("web") else PATH
 var sound_enabled := true
+## Background music (town / field / dungeon loops), separate from combat sound effects.
+var music_enabled := true
 var haptics_enabled := true
 var reduce_motion := false
 var low_resolution := false
@@ -22,6 +24,7 @@ func _ready() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(settings_path) == OK:
 		sound_enabled = bool(cfg.get_value("device", "sound", true))
+		music_enabled = bool(cfg.get_value("device", "music", true))
 		haptics_enabled = bool(cfg.get_value("device", "haptics", true))
 		reduce_motion = bool(cfg.get_value("device", "reduce_motion", false))
 		low_resolution = bool(cfg.get_value("device", "low_resolution", false))
@@ -31,6 +34,7 @@ func _ready() -> void:
 func _save() -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("device", "sound", sound_enabled)
+	cfg.set_value("device", "music", music_enabled)
 	cfg.set_value("device", "haptics", haptics_enabled)
 	cfg.set_value("device", "reduce_motion", reduce_motion)
 	cfg.set_value("device", "low_resolution", low_resolution)
@@ -60,6 +64,11 @@ func set_world_zoom(value: float) -> void:
 
 func set_sound(on: bool) -> void:
 	sound_enabled = on
+	_save()
+
+
+func set_music(on: bool) -> void:
+	music_enabled = on
 	_save()
 
 

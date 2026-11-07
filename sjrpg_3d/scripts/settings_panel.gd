@@ -66,6 +66,9 @@ func _rebuild() -> void:
 		_rebuild()))
 	body.add_child(_action_row("진동 확인", func(): Prefs.pulse("hurt", true), Prefs.vibration_supported() and Prefs.haptics_enabled))
 	body.add_child(PanelFrame.wrap_label("진동은 지원되는 기기에서 동작하며, 선택한 설정은 이 기기에 저장됩니다.", 15, UiKit.MUTED))
+	body.add_child(_toggle("배경 음악", "마을 · 들판 · 동굴", Prefs.music_enabled, func(on):
+		Prefs.set_music(on)
+		_rebuild()))
 	body.add_child(_toggle("전투 효과음", "공격 · 피격 · 획득", Prefs.sound_enabled, func(on):
 		Prefs.set_sound(on)
 		if on:

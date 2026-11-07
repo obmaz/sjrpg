@@ -30,6 +30,7 @@ var _impact_cross := Vector2.ZERO
 var camera: Camera2D
 var hud: Hud
 var encounters: EncounterRuntime
+var music: MusicDirector
 var village: Village
 var town_gates: TownGateRuntime
 var quest_runtime: QuestRuntime
@@ -146,6 +147,9 @@ func _ready() -> void:
 	# Keep the adapter available to scenery without processing it before setup.
 	encounters = EncounterRuntime.new()
 	add_child(encounters)
+	music = MusicDirector.new()
+	music.game = self
+	add_child(music)
 	encounters.set_process(false)
 	_update_zoom()
 	get_viewport().size_changed.connect(_update_zoom)
