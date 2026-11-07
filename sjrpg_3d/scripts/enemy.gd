@@ -198,6 +198,8 @@ func take_damage(amount: float, source: Node2D, visual_source: Node2D = null) ->
 	SoundFx.play_hit(tier, Effect.contact_element(impact_source))  # JUICE #11, #12
 	Prefs.pulse("hit")
 	sprite.trigger_squash(HitTier.squash(tier))  # JUICE #4
+	if tier >= HitTier.HEAVY:
+		game.zoom_punch(HitTier.zoom_punch(tier), position)  # JUICE #14
 	# JUICE #5: a killing blow flashes white and throws off a small burst ring instead of the elemental tint.
 	if tier == HitTier.KILL:
 		sprite.trigger_flash(Color.WHITE)

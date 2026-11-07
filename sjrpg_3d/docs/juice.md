@@ -40,7 +40,7 @@ HEAVY는 원래의 "강타" 규칙(피해 ≥ 최대 체력 30% 또는 처치)�
 | 3 | 넉백 스케일 | 완료 | `hit_tier.gd` `knockback`, `enemy.gd` | `juice_tier` |
 | 4 | 스쿼시(0.12초, 적만) | 완료 | `actor_sprite.gd` `trigger_squash`, `native_enemy_models.gd` `sync` | `juice_enemy` |
 | 5 | 처치 연출: 공격자 정지 75ms(상한 80ms), 흰색 플래시, 파편 링, 반동 14px, 페이드 0.25초 | 완료 | `hit_tier.gd` KILL_*, `enemy.gd`, `player.gd` `confirm_melee_contact`, `game_tempo.gd` | `juice_enemy` |
-| 6 | 보스 처치 연출 | 보류 | | |
+| 6 | 보스 처치 연출: 플레이어·남은 적 0.12초 정지, 큰 파편 링(260), 라이트 펄스, `warcry`, 카메라 충격 2회(즉시·0.25초 뒤), 줌 펀치 4% | 완료 | `game.gd` `_boss_defeat_presentation` | `juice_enemy` |
 | 7 | 근접 전진: 기본 근접만, 접촉 전 16px | 완료 | `player.gd` `_lunge` | `juice_player` |
 | 8 | 큰 피해 피격 비네트: 한 번에 최대 체력 15% 이상, 0.22초, 최대 50% | 완료 | `hud.gd` `_build_heavy_hit_vignette` | `juice_player` |
 | 9 | 일반 적 공격 예고: 윈드업 시작 노란 플래시(강도 0.55) | 완료 | `enemy.gd` `TELEGRAPH_COLOR`, `actor_sprite.gd` | `juice_enemy` |
@@ -48,8 +48,8 @@ HEAVY는 원래의 "강타" 규칙(피해 ≥ 최대 체력 30% 또는 처치)�
 | 11 | 타격음 변주·`tick`·`kill`·연속 처치 피치(+1반음/회, 최대 +5, 2.5초 창), 보이스 6→8 | 완료 | `sound_fx.gd` | `juice_tier` |
 | 12 | 속성별 적중음 | 완료 | `effects.gd` `contact_element`, `sound_fx.gd` | `juice_tier` |
 | 13 | 적 체력바 잔상(0.35초 유지, 초당 최대 체력 120% 소모) | 완료 | `enemy.gd` `ghost_hp` | `juice_enemy` |
-| 14 | 카메라 줌 펀치 | 보류 | | |
-| 15 | 타격감 강도 설정 | 보류 | | |
+| 14 | 카메라 줌 펀치: HEAVY 1.5%, KILL 2%, 보스 처치 4%(상한 4%), 약 0.1초 감쇠 | 완료 | `game.gd` `zoom_punch`·`_update_zoom_punch`, `hit_tier.gd` `zoom_punch` | `juice_enemy` |
+| 15 | 타격감 강도 설정 | 제외(필요 없음) | | |
 
 ## 튜닝 위치
 
@@ -64,6 +64,8 @@ HEAVY는 원래의 "강타" 규칙(피해 ≥ 최대 체력 30% 또는 처치)�
 | 비네트 | `hud.gd` `HEAVY_HIT_*` |
 | 공격 예고 색 | `enemy.gd` `TELEGRAPH_COLOR` |
 | 체력바 잔상 | `enemy.gd` `GHOST_*` |
+| 줌 펀치 | `hit_tier.gd` `zoom_punch`, `game.gd` `ZOOM_PUNCH_LIMIT` |
+| 보스 처치 정지·연출 | `game.gd` `BOSS_DEFEAT_PAUSE`·`_boss_defeat_presentation` |
 | 일반 접촉 정지(35~55ms)·반동·카메라 7px | 기존 값: `game_tempo.gd`, `enemy.gd`, `player.gd`, `game.gd` `combat_feedback` |
 
 ## 알려진 한계와 이어서 할 일
@@ -72,5 +74,6 @@ HEAVY는 원래의 "강타" 규칙(피해 ≥ 최대 체력 30% 또는 처치)�
 - **체감 수치 검증은 일부만 했습니다.** 브라우저에서 데미지 숫자와 맞은 적의 눌림·HUD 정상 표시는 확인했지만, 정지·넉백·근접 전진의 손맛과 진동은 직접 플레이로 확인해야 합니다.
 - **히어로는 눌림이 없습니다.** 히어로 3D 루트 스케일은 1로 유지하는 규칙(`native_warrior` 테스트)이라 제외했습니다. 필요하면 몸통 노드 단위로 별도 설계합니다.
 - **근접 전진은 실효 사거리를 최대 16px 늘립니다.** 밸런스에 문제가 있으면 `LUNGE_DISTANCE`를 줄입니다.
-- **보류 항목**(#6 보스 처치 연출, #14 줌 펀치, #15 강도 설정)은 위 항목을 직접 플레이해 본 뒤 부족할 때만 진행합니다. 줌 펀치는 멀미 위험이 있고 `camera.zoom`이 리사이즈 때만 설정되므로 곱 계수를 분리해야 합니다.
+- **줌 펀치는 멀미 위험이 있습니다.** 선택한 줌 위에 곱하는 방식이고 상한 4%, `동작 줄이기`에서는 꺼집니다. 불편하면 `hit_tier.gd` `zoom_punch` 값이나 `game.gd` `ZOOM_PUNCH_LIMIT`을 줄입니다.
+- **강도 설정(#15)은 만들지 않기로 했습니다.** 조절은 `동작 줄이기` 하나로 하고 수치는 코드에서 조정합니다.
 - 플레이어 피격(체력 감소)에는 단계별 숫자·소리를 아직 나누지 않았습니다. 필요하면 `Player.take_damage`에서 같은 `HitTier`를 쓰면 됩니다.

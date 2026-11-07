@@ -58,3 +58,8 @@ static func knockback(tier: int, boss: bool) -> float:
 ## JUICE #4: how far the struck body squashes (wider, shorter) at contact, as a fraction of its size.
 static func squash(tier: int) -> float:
 	return [0.05, 0.07, 0.10, 0.12][clampi(tier, LIGHT, KILL)]
+
+
+## JUICE #14: camera zoom-in on heavy contact, as a fraction of the selected zoom (capped by game.gd ZOOM_PUNCH_LIMIT).
+static func zoom_punch(tier: int) -> float:
+	return 0.015 if tier == HEAVY else (0.02 if tier == KILL else 0.0)

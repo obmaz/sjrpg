@@ -178,7 +178,35 @@ func _update_zoom() -> void:
 	# Keep characters similarly sized in portrait and landscape.
 	var short_side := minf(size.x, size.y)
 	var z := clampf(short_side / 720.0, 0.5, 1.6)
-	camera.zoom = Vector2(z, z) * CAMERA_WORLD_SCALE * Prefs.world_zoom * _debug_zoom
+	_base_zoom = Vector2(z, z) * CAMERA_WORLD_SCALE * Prefs.world_zoom * _debug_zoom
+	camera.zoom = _base_zoom * (1.0 + _zoom_punch)
+
+
+## JUICE #14: a brief zoom-in on heavy contact. It multiplies the selected zoom (never replaces it), is
+## capped, decays in ~0.1s and is off for reduced motion. The native 3D camera reads camera.zoom each sync.
+const ZOOM_PUNCH_LIMIT := 0.04
+var _base_zoom := Vector2.ONE
+var _zoom_punch := 0.0
+var _zoom_punch_fresh := false
+
+
+func zoom_punch(amount: float, at := Vector2.INF) -> void:
+	if Prefs.reduce_motion or (at.is_finite() and player.position.distance_to(at) > 650.0):
+		return
+	_zoom_punch = minf(ZOOM_PUNCH_LIMIT, _zoom_punch + amount)
+	_zoom_punch_fresh = true
+	camera.zoom = _base_zoom * (1.0 + _zoom_punch)
+
+
+func _update_zoom_punch(delta: float) -> void:
+	if Prefs.reduce_motion:
+		_zoom_punch = 0.0
+	elif _zoom_punch > 0.0:
+		_zoom_punch *= exp(-18.0 * (minf(delta, 0.012) if _zoom_punch_fresh else delta))
+		if _zoom_punch < 0.0005:
+			_zoom_punch = 0.0
+	_zoom_punch_fresh = false
+	camera.zoom = _base_zoom * (1.0 + _zoom_punch)
 
 
 ## Keep the hero near 60% height in either orientation while revealing the scene ahead.
@@ -869,6 +897,7 @@ func _process(delta: float) -> void:
 	_sync_forest_daylight()
 	WorldLighting.advance(delta)
 	_update_impact_camera(delta)
+	_update_zoom_punch(delta)
 	camera.position = _camera_focus()
 	if dungeon.active:
 		WorldOcclusion.update(player.global_position, false)
@@ -1225,6 +1254,28 @@ func rng_range(a: float, b: float) -> float:
 	return _rng.randf_range(a, b)
 
 
+## JUICE #6: the 1.2s before the victory panel carries the moment: a short world pause, a large burst, a light
+## pulse, a deep cry, a strong zoom punch and a second camera pulse. Presentation only; reduced motion drops
+## the pause, zoom and shake (the burst, light and sound remain).
+const BOSS_DEFEAT_PAUSE := 0.12
+const BOSS_DEFEAT_PAUSE_LIMIT := 0.15
+
+
+func _boss_defeat_presentation(boss: Enemy) -> void:
+	player._hitstop.trigger(BOSS_DEFEAT_PAUSE, BOSS_DEFEAT_PAUSE_LIMIT)
+	for enemy in enemies:
+		if is_instance_valid(enemy) and not enemy.dead:
+			enemy._hitstop.trigger(BOSS_DEFEAT_PAUSE, BOSS_DEFEAT_PAUSE_LIMIT)
+	spawn_nova(boss.position, 260.0, Color(1.0, 0.85, 0.5))
+	WorldLighting.pulse(boss.position, Color(1.0, 0.9, 0.6), true)
+	SoundFx.play("warcry")
+	combat_feedback(boss.position, 1.0)
+	zoom_punch(ZOOM_PUNCH_LIMIT, boss.position)
+	get_tree().create_timer(0.25, false).timeout.connect(func() -> void:
+		if is_instance_valid(self) and is_instance_valid(boss):
+			combat_feedback(boss.position, 0.8))
+
+
 func on_boss_defeated(boss: Enemy) -> void:
 	if GameState.boss_defeated:
 		return
@@ -1236,6 +1287,7 @@ func on_boss_defeated(boss: Enemy) -> void:
 	else:
 		toast("가방을 비우면 파수꾼의 심장을 받을 수 있습니다")
 	GameState.save_game()
+	_boss_defeat_presentation(boss)
 	await get_tree().create_timer(1.2, false).timeout
 	hud.open_victory()
 

@@ -35,6 +35,8 @@ func run() -> void:
 	await _check_telegraph()
 	await _check_kill()
 	await _check_squash()
+	await _check_zoom_punch()
+	await _check_boss_defeat()
 
 
 ## JUICE #10: a boss slam shakes the camera even when the hero stands outside its reach.
@@ -180,6 +182,74 @@ func _check_squash() -> void:
 	var calm := _foe(game, 380.0)
 	calm.take_damage(40.0, game.player)
 	check("reduced motion removes the squash", calm.sprite.squash_scale() == Vector2.ONE)
+	Prefs.reduce_motion = old_reduce
+	game.queue_free()
+	await _frames(2)
+
+
+## JUICE #14: heavy contact punches the camera in a little, multiplied onto the selected zoom, then settles.
+func _check_zoom_punch() -> void:
+	var old_reduce := Prefs.reduce_motion
+	Prefs.reduce_motion = false
+	var game := await make_game()
+	game.player.set_process(false)
+	game._update_zoom()
+	var base: Vector2 = game.camera.zoom
+	var foe := _foe(game, 300.0)
+	foe.take_damage(4.0, game.player)
+	check("a light hit does not punch the zoom", game.camera.zoom.is_equal_approx(base))
+	foe.take_damage(35.0, game.player)
+	check("a heavy hit zooms in slightly", game.camera.zoom.x > base.x and game.camera.zoom.x <= base.x * (1.0 + game.ZOOM_PUNCH_LIMIT) + 0.0001)
+	for i in 20:
+		game.zoom_punch(0.05)
+	check("stacked punches stay under the cap", game.camera.zoom.x <= base.x * (1.0 + game.ZOOM_PUNCH_LIMIT) + 0.0001)
+	game._update_zoom_punch(0.3)
+	game._update_zoom_punch(0.3)
+	check("the punch settles back to the selected zoom", game.camera.zoom.is_equal_approx(base))
+	game.zoom_punch(0.02, game.player.position + Vector2(2000, 0))
+	check("a distant hit does not punch the camera", game.camera.zoom.is_equal_approx(base))
+	game.zoom_punch(0.02)
+	game._update_zoom()
+	check("resizing mid-punch keeps the punch on top of the new base", game.camera.zoom.x > base.x)
+	game._update_zoom_punch(1.0)
+	game._update_zoom_punch(1.0)
+	Prefs.reduce_motion = true
+	game.zoom_punch(0.03)
+	game._update_zoom_punch(0.0)
+	check("reduced motion removes the zoom punch", game.camera.zoom.is_equal_approx(base))
+	Prefs.reduce_motion = old_reduce
+	game.queue_free()
+	await _frames(2)
+
+
+## JUICE #6: defeating the boss pauses the world briefly and adds a burst, a punch and a second pulse.
+func _check_boss_defeat() -> void:
+	var old_reduce := Prefs.reduce_motion
+	Prefs.reduce_motion = false
+	var game := await make_game()
+	game.player.set_process(false)
+	var boss := _foe(game, 300.0)
+	boss.make_boss()
+	var bystander := _foe(game, 380.0)
+	game._update_zoom()
+	var base: Vector2 = game.camera.zoom
+	var novas_before: int = game.cosmetic_effects.filter(func(e: Effect) -> bool: return e.kind == "nova" and e.radius >= 260.0).size()
+	boss.take_damage(boss.hp + 1.0, game.player)
+	check("the boss is defeated", boss.dead and GameState.boss_defeated)
+	check("the player pauses briefly", game.player._hitstop.remaining > 0.0 and game.player._hitstop.remaining <= game.BOSS_DEFEAT_PAUSE_LIMIT)
+	check("surviving enemies pause with the world", bystander._hitstop.remaining > 0.0)
+	check("a large burst marks the defeat", game.cosmetic_effects.filter(func(e: Effect) -> bool: return e.kind == "nova" and e.radius >= 260.0).size() == novas_before + 1)
+	check("the camera punches in on the defeat", game.camera.zoom.x > base.x)
+	check("the camera shakes on the defeat", game._impact_offset.length() > 0.0 and game._impact_offset.length() <= 7.0)
+	GameState.boss_defeated = false
+	Prefs.reduce_motion = true
+	game._update_zoom_punch(1.0)
+	game._update_zoom_punch(1.0)
+	game.player._hitstop.clear()
+	var calm := _foe(game, 300.0)
+	calm.make_boss()
+	calm.take_damage(calm.hp + 1.0, game.player)
+	check("reduced motion drops the pause and the zoom", game.player._hitstop.remaining == 0.0 and game.camera.zoom.is_equal_approx(base))
 	Prefs.reduce_motion = old_reduce
 	game.queue_free()
 	await _frames(2)
