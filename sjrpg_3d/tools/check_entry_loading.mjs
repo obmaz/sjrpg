@@ -20,6 +20,9 @@ async function inline(name,data){
  for(let i=0;i<b.length;i+=16384)console.log('SJ_ENTRY_LOADING_IMAGE_CHUNK '+name+' '+b.slice(i,i+16384));
  console.log('SJ_ENTRY_LOADING_IMAGE_END '+name);
 }
+async function bounded(promise,label,ms){
+ let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error(label+' timed out after '+ms+'ms')),ms);})]);}finally{clearTimeout(timer);}
+}
 for(const operation of ['load','create'])for(const profile of [{name:'portrait',width:390,height:844,dpr:1},{name:'landscape-retina',width:844,height:390,dpr:2}]){
  const result={name:operation+'-'+profile.name,operation,profile,events:[],frames:[],checks:[],errors:[]};proof.cases.push(result);
  const context=await browser.newContext({viewport:{width:profile.width,height:profile.height},deviceScaleFactor:profile.dpr});
@@ -120,6 +123,7 @@ for(const operation of ['load','create'])for(const profile of [{name:'portrait',
   await page.mouse.click(s.ui[key][0]*s.viewport[0],s.ui[key][1]*s.viewport[1]);await page.waitForTimeout(120);
  }
  try{
+  console.log('ENTRY_LOADING_STAGE '+JSON.stringify({name:result.name,stage:'boot'}));
   await page.goto(base.href,{waitUntil:'domcontentloaded'});
   await wait(s=>s.title&&s.entry&&s.review?.ready,'fresh title and isolated fixture',90000);
   await page.locator('#entry-start').click();
@@ -145,9 +149,10 @@ for(const operation of ['load','create'])for(const profile of [{name:'portrait',
   // Two real pointer activations; the immediate overlay and root guard own suppression.
   await page.mouse.dblclick(...point,{delay:30});
   const ready=await wait(s=>s.adventure&&s.review.screen==='adventure'&&s.loading?.visible===false,'native adventure ready and overlay dismissed',90000);
-  await Promise.allSettled(pending);
+  console.log('ENTRY_LOADING_STAGE '+JSON.stringify({name:result.name,stage:'native-ready',frames:frames.length,loading:ready.loading}));
+  await bounded(Promise.allSettled(pending),'pre-stop CDP acknowledgements',10000);
   await page.waitForTimeout(120);
-  stream=false;await cdp.send('Page.stopScreencast');await Promise.allSettled(pending);
+  stream=false;await bounded(cdp.send('Page.stopScreencast'),'stop screencast',10000);await bounded(Promise.allSettled(pending),'final CDP acknowledgements',10000);
   result.after=await read();
   const events=result.after.events||result.events;result.events=events;
   const paints=events.filter(e=>e.kind==='raf'&&e.visible&&!e.adventure&&e.epoch>=clickedAt-100);
@@ -188,13 +193,18 @@ for(const operation of ['load','create'])for(const profile of [{name:'portrait',
   // Verify real JPEG pixels against the actual DOM card + spinner geometry.
   const worldEvent=ready.loading.phase_events.find(e=>e.phase==='world');
   const worldEpoch=ready.time_origin+worldEvent.painted_at;
-  const end=ready.time_origin+ready.loading.finished_at;
+  const nativeReadyEpoch=ready.time_origin+ready.loading.native_ready_at;
+  const end=Math.min(nativeReadyEpoch,ready.time_origin+ready.loading.finished_at);
   const candidates=frames.filter(f=>Number.isFinite(f.timestamp)&&f.timestamp*1000>=worldEpoch&&f.timestamp*1000<end);
   assert(candidates.length>0,'actual compositor JPEGs after the world paint acknowledgement');
-  const scored=await page.evaluate(async({frames,events})=>{
+  console.log('ENTRY_LOADING_STAGE '+JSON.stringify({name:result.name,stage:'pixel-scoring',frames:frames.length,candidates:candidates.length}));
+  for(const index of [...new Set([0,Math.floor(candidates.length/2),candidates.length-1])])await inline(result.name+'-raw-compositor-'+index,Buffer.from(candidates[index].data,'base64'));
+  const scored=await bounded(page.evaluate(async({frames,events})=>{
    const results=[];
    for(let index=0;index<frames.length;index++){
-    const frame=frames[index],img=new Image();img.src='data:image/jpeg;base64,'+frame.data;await img.decode();
+    const frame=frames[index],img=new Image();img.src='data:image/jpeg;base64,'+frame.data;
+    let timer;
+    try{await Promise.race([img.decode(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('JPEG decode frame '+index+' timed out after 5000ms')),5000);})]);}finally{clearTimeout(timer);}
     const event=[...events].reverse().find(e=>e.visible&&e.card_rect&&e.spinner_rect&&e.epoch<=frame.timestamp*1000&&Math.abs(img.width/img.height-e.viewport[0]/e.viewport[1])<.03);
     if(!event){results.push({index,accepted:false,reason:'no matching actual DOM viewport geometry'});continue;}
     const canvas=document.createElement('canvas');canvas.width=img.width;canvas.height=img.height;
@@ -206,20 +216,29 @@ for(const operation of ['load','create'])for(const profile of [{name:'portrait',
     };
     const bronze=p=>p[0]>=48&&p[0]>p[1]+4&&p[1]>p[2]+5;
     const dark=p=>Math.abs(p[0]-23)<=14&&Math.abs(p[1]-30)<=14&&Math.abs(p[2]-28)<=14;
+    const luminance=p=>.2126*p[0]+.7152*p[1]+.0722*p[2];
     const [x,y,w,h]=event.card_rect;
-    let border=0,background=0,ring=0;
+    let border=0,background=0,ring=0;const borderSamples=[];
     for(let i=0;i<8;i++){
      const t=(i+.5)/8;
-     for(const p of [[x+12+(w-24)*t,y+.5],[x+12+(w-24)*t,y+h-.5],[x+.5,y+12+(h-24)*t],[x+w-.5,y+12+(h-24)*t]])border+=Number(bronze(pixel(...p)));
+     // JPEG chroma subsampling desaturates the real 1px bronze line.
+     // Verify its measured bright edge against the adjacent dark interior.
+     for(const [ex,ey,ix,iy]of [[x+12+(w-24)*t,y+.5,x+12+(w-24)*t,y+4],[x+12+(w-24)*t,y+h-.5,x+12+(w-24)*t,y+h-4],[x+.5,y+12+(h-24)*t,x+4,y+12+(h-24)*t],[x+w-.5,y+12+(h-24)*t,x+w-4,y+12+(h-24)*t]]){
+      const edge=pixel(ex,ey),inside=pixel(ix,iy),contrast=luminance(edge)-luminance(inside);
+      border+=Number(contrast>=25);
+      if(borderSamples.length<8)borderSamples.push({edge,inside,contrast});
+     }
     }
     for(const p of [[x+9,y+9],[x+w-9,y+9],[x+9,y+h-9],[x+w-9,y+h-9],[x+9,y+h*.4],[x+w-9,y+h*.4],[x+9,y+h*.7],[x+w-9,y+h*.7]])background+=Number(dark(pixel(...p)));
     const [a,b,c,d]=event.spinner_rect;
     for(let i=0;i<16;i++){const angle=i*Math.PI/8;ring+=Number(bronze(pixel(a+c/2+Math.cos(angle)*(c/2-1),b+d/2+Math.sin(angle)*(d/2-1))));}
     const score={border:border/32,background:background/8,spinner:ring/16};
-    results.push({index,score,accepted:score.border>=.5&&score.background>=.75&&score.spinner>=.25,epoch:frame.timestamp*1000,dom_epoch:event.epoch,viewport:event.viewport,image:[img.width,img.height],card_rect:event.card_rect,spinner_rect:event.spinner_rect});
+    const accepted=score.border>=.5&&score.background>=.75&&score.spinner>=.25;
+    results.push({index,score,accepted,border_samples:borderSamples,epoch:frame.timestamp*1000,dom_epoch:event.epoch,viewport:event.viewport,image:[img.width,img.height],card_rect:event.card_rect,spinner_rect:event.spinner_rect});
+    if(accepted)return results; // The gate already asks for the first actual overlay, not every video frame.
    }
    return results;
-  },{frames:candidates.map(f=>({timestamp:f.timestamp,data:f.data})),events});
+  },{frames:candidates.map(f=>({timestamp:f.timestamp,data:f.data})),events}),'real compositor pixel scoring',20000);
   result.frame_pixel_checks=scored;
   const match=scored.find(f=>f.accepted);
   if(!match){
@@ -227,13 +246,14 @@ for(const operation of ['load','create'])for(const profile of [{name:'portrait',
   }
   assert(match,'a real compositor frame must visibly contain the measured loading card and spinner; '+JSON.stringify(scored));
   const frame=candidates[match.index];
-  result.loading_frame={timestamp:frame.timestamp,metadata:frame.metadata,paint_epoch:worldEpoch,dismissed_epoch:end,pixel_match:match};
+  result.loading_frame={timestamp:frame.timestamp,metadata:frame.metadata,paint_epoch:worldEpoch,native_ready_epoch:nativeReadyEpoch,dismissed_epoch:ready.time_origin+ready.loading.finished_at,pixel_match:match};
+  assert(frame.timestamp*1000<nativeReadyEpoch,'actual loading image precedes native adventure readiness');
   result.frames=frames.map(f=>({timestamp:f.timestamp,metadata:f.metadata,bytes:Buffer.byteLength(f.data,'base64')}));
   await inline(result.name+'-loading',Buffer.from(frame.data,'base64'));
   await inline(result.name+'-ready',await page.screenshot({type:'jpeg',quality:80,scale:'css'}));
   result.checks.push('fresh actual '+operation+' launches selected slot','rapid double pointer produces one entry','operation and world phases painted before native ready','actual full-viewport compositor loading JPEG','real orientation round-trip and final viewport','other save slots unchanged and requested slot persisted');
   assert.equal(result.errors.length,0,'no app/browser/GPU/IDB errors');
-  console.log('ENTRY_LOADING_CASE_PASS '+JSON.stringify({name:result.name,checks:result.checks.length,frames:result.frames.length,keyboard_during_loading:result.keyboard_during_loading,loading:ready.loading}));
+  console.log('ENTRY_LOADING_CASE_PASS '+JSON.stringify({name:result.name,checks:result.checks.length,frames:result.frames.length,keyboard_during_loading:result.keyboard_during_loading,loading_frame:result.loading_frame,time_origin:ready.time_origin,loading:ready.loading}));
  }catch(e){
   result.failure=String(e);console.error('ENTRY_LOADING_CASE_FAIL '+result.name+' '+String(e));
   result.frames=frames.map(f=>({timestamp:f.timestamp,metadata:f.metadata,bytes:Buffer.byteLength(f.data,'base64')}));

@@ -1,5 +1,5 @@
 name: Diagnose native shutdown resources
-# Baseline runner with explicit music playback ownership and focus restoration.
+# Compare full-suite shutdown with the real entry-transition regression in isolation.
 on:
     push:
         paths:
@@ -17,7 +17,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                partition: [focused, music, last]
+                partition: [full, entry]
         env:
             SJRPG_RESOURCE_PARTITION: ${{ matrix.partition }}
         steps:
@@ -43,7 +43,7 @@ jobs:
                   import re
                   focused = re.search(r"--only=([a-z0-9_,]+)", Path(".github/workflows/native-candidate-smoke.yml").read_text()).group(1).split(",")
                   partition = os.environ["SJRPG_RESOURCE_PARTITION"]
-                  selected = {"focused": sorted(focused), "music": ["music"], "last": ["world_zoom"]}[partition]
+                  selected = {"full": names, "entry": ["entry_layout", "entry_loading"]}[partition]
                   assert all(name in names for name in selected), "Unknown diagnostic case"
                   output = Path("build/resource-diagnostics") / partition
                   output.mkdir(parents=True, exist_ok=True)
