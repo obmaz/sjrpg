@@ -21,7 +21,7 @@ page.on('pageerror',error=>errors.push({kind:'page',text:String(error)}));
 page.on('console',message=>{if(message.type()==='error'||bad.test(message.text()))errors.push({kind:'console',text:message.text()});});
 cdp.on('Log.entryAdded',({entry})=>{if(entry.level==='error'||bad.test(entry.text))errors.push({kind:'browser',text:entry.text});});
 
-const read=()=>page.evaluate(()=>({ui:window.__sjrpgClassButtons,review:window.__sjrpgSaveLayoutReview,window:[innerWidth,innerHeight],adventure:window.__sjrpgAdventureReady===true}));
+const read=()=>page.evaluate(()=>({ui:window.__sjrpgClassButtons,review:window.__sjrpgSaveLayoutReview,window:[innerWidth,innerHeight],location:location.href,fixture_action_type:typeof window.__sjrpgSaveLayoutAction,adventure:window.__sjrpgAdventureReady===true}));
 const stateKey=s=>JSON.stringify({hashes:s.review.file_hashes,hero:s.review.hero_class,gold:s.review.gold,level:s.review.level,xp:s.review.xp,active:s.review.active_slot});
 function record(name){checks.push(name);}
 async function waitState(predicate,label,timeout=15000){
@@ -34,7 +34,7 @@ async function waitState(predicate,label,timeout=15000){
   if(predicate(last))return last;
   await page.waitForTimeout(100);
  }
- throw new Error('Timed out: '+label+'; last stage='+last?.ui?.stage+' focus='+last?.ui?.focus);
+ throw new Error('Timed out: '+label+'; state='+JSON.stringify({stage:last?.ui?.stage,focus:last?.ui?.focus,review:last?.review,location:last?.location,fixture_action_type:last?.fixture_action_type,entry:await page.evaluate(()=>({title:window.__sjrpgTitleReady,ready:window.__sjrpgEntryReady,fixture_boot:window.__sjrpgSaveLayoutReviewBoot}))}));
 }
 function css(s,r){
  assert(Array.isArray(r)&&r.length===4&&r.every(Number.isFinite),'missing/faulty measured rectangle');

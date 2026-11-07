@@ -10,7 +10,7 @@ func _ready() -> void:
 	get_tree().root.size_changed.connect(_fit_orientation)
 	_fit_orientation()
 	show_title()
-	if OS.has_feature("web") and JavaScriptBridge.eval("new URLSearchParams(location.search).get('save_layout_review') === '1'", true) == true:
+	if OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('save_layout_review')", true)) == "1":
 		add_child(preload("res://scripts/save_layout_review.gd").new().setup(self))
 
 

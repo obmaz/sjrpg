@@ -4,6 +4,7 @@ on:
     push:
         paths:
             - ".github/workflows/save-layout-review.yml"
+            - "sjrpg_3d/scripts/main.gd"
             - "sjrpg_3d/scripts/class_select.gd"
             - "sjrpg_3d/scripts/save_layout_review.gd"
             - "sjrpg_3d/tests/cases/entry_layout.gd"
