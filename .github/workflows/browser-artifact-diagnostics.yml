@@ -1,0 +1,29 @@
+name: Inspect browser review artifacts
+on:
+  push:
+    paths:
+      - ".github/workflows/browser-artifact-diagnostics.yml"
+permissions:
+  actions: read
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@v6
+        with:
+          github-token: ${{ github.token }}
+          repository: obmaz/sjrpg
+          run-id: 42364308570
+          name: native3d-browser-review
+          path: review
+      - name: Print bounded browser failure details
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          for p in pathlib.Path('review').rglob('proof.json'):
+              d=json.loads(p.read_text())
+              print(str(p))
+              print(json.dumps({k:d.get(k) for k in ('passed','failure','errors','checks')}, ensure_ascii=False)[:18000])
+          PY
