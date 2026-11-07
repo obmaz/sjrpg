@@ -200,13 +200,21 @@ func _merchant_review(game: Node, preview: Node) -> Dictionary:
 					var world_pose: Transform3D = skeleton.global_transform * skeleton.get_bone_global_pose(index)
 					foot_origins.append({"name": bone_name, "world": [world_pose.origin.x, world_pose.origin.y, world_pose.origin.z]})
 		var native_foot: Vector3 = Ortho3DPreview.ground_position(source.position, preview.surface_height(source.position))
+		var approaches: Array = []
+		for offset: Vector2 in [Vector2(-160, 50), Vector2(-150, 75), Vector2(160, 50), Vector2(150, 75), Vector2(-130, 60), Vector2(130, 60)]:
+			var point: Vector2 = source.position + offset
+			var legal: bool = not game.spatial_world.blocked(point, Player.RADIUS)
+			var native: Vector3 = Ortho3DPreview.ground_position(point, preview.surface_height(point))
+			var display_box: Rect2 = preview.display.get_global_rect()
+			var projected: Vector2 = display_box.position + preview.camera.unproject_position(native) / Vector2(preview.viewport.size) * display_box.size
+			approaches.append({"point": [point.x, point.y], "projected": [projected.x, projected.y], "legal": legal})
 		var circle := {}
 		for value: Array in game.village.circles:
 			var point: Vector2 = value[0]
 			if point.distance_squared_to(source.position) < 0.01:
 				circle = {"position": [point.x, point.y], "radius": value[1]}
 				break
-		return {"identity": "merchant", "source": entry.get("source", "authored"), "asset": model.get_meta("resident_asset", ""), "scene_paths": _model_scene_paths(model), "meshes": meshes.size(), "skinned_meshes": skinned, "bone_count": bone_count, "bone_poses": poses, "foot_bone_origins": foot_origins, "floor_height": preview.surface_height(source.position), "clip": entry.get("clip", ""), "sample_time": entry.get("sample_time", 0.0), "source_time": source._time, "source_position": [source.position.x, source.position.y], "native_foot": [native_foot.x, native_foot.y, native_foot.z], "model_position": [model.global_position.x, model.global_position.y, model.global_position.z], "model_scale": [model.scale.x, model.scale.y, model.scale.z], "circle": circle, "near_name": game.near_npc(), "quests": GameState.quests.duplicate(true)}
+		return {"identity": "merchant", "source": entry.get("source", "authored"), "asset": model.get_meta("resident_asset", ""), "scene_paths": _model_scene_paths(model), "meshes": meshes.size(), "skinned_meshes": skinned, "bone_count": bone_count, "bone_poses": poses, "foot_bone_origins": foot_origins, "floor_height": preview.surface_height(source.position), "clip": entry.get("clip", ""), "sample_time": entry.get("sample_time", 0.0), "source_time": source._time, "source_position": [source.position.x, source.position.y], "review_approaches": approaches, "native_foot": [native_foot.x, native_foot.y, native_foot.z], "model_position": [model.global_position.x, model.global_position.y, model.global_position.z], "model_scale": [model.scale.x, model.scale.y, model.scale.z], "circle": circle, "near_name": game.near_npc(), "quests": GameState.quests.duplicate(true)}
 	return {}
 
 func _model_scene_paths(root: Node3D) -> Array[String]:

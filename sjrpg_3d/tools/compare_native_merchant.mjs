@@ -6,11 +6,12 @@ const root=path.resolve(process.argv[2]||'build/native-merchant-review');
 const before=JSON.parse(await readFile(path.join(root,'before/proof.json'),'utf8'));
 const after=JSON.parse(await readFile(path.join(root,'after/proof.json'),'utf8'));
 const checks=[],measurements=[];let failure=null;
+const photoOnly=before.merchantPhotoOnly===true&&after.merchantPhotoOnly===true;
 const by=(proof,name)=>{const shot=proof.captures.find(x=>x.name===name);assert(shot,'actual capture '+name);return shot;};
 const near=(a,b,label,tol=.0001)=>assert(Math.abs(a-b)<=tol,label+' actual='+a+' expected='+b);
 try{
  assert(before.passed&&after.passed,'both actual merchant runs must pass');
- for(const label of['portrait','landscape','retina']){
+ for(const label of(photoOnly?['portrait']:['portrait','landscape','retina'])){
   const b=by(before,'merchant-'+label+'-town'),a=by(after,'merchant-'+label+'-town');
   near(a.ui.native_camera_size,b.ui.native_camera_size,label+' same actual camera');
   assert.deepEqual(a.ui.merchant.source_position,b.ui.merchant.source_position,label+' unchanged authoritative NPC foot');
@@ -28,9 +29,11 @@ try{
   measurements.push({label,before_source:b.ui.merchant.source,after_source:a.ui.merchant.source,after_height:npc.height_m,bones:a.ui.merchant.bone_count,meshes:a.ui.merchant.meshes,physical_circle:a.ui.merchant.circle});
   checks.push(label+' same actual camera/physics/HUD and real imported body');
  }
+ if(!photoOnly){
  assert.equal(after.merchantIdleSamples.length,3,'three real idle/pause observations');
  for(const sample of after.merchantIdleSamples){assert(sample.live_pose_delta>1e-6,'actual sampled bones advance '+sample.label);assert.equal(sample.paused_pose_delta,0,'actual sampled bones freeze '+sample.label);assert.equal(sample.paused_after_source,sample.paused_source);assert.equal(sample.paused_after_sample,sample.paused_sample);}
  for(let face=0;face<4;face++){const a=by(after,'merchant-gallery-face-'+face);const m=a.ui.gallery.models[0];assert(m.skeletons>0&&m.skinned_meshes>0&&m.scene_paths.some(p=>p.includes('merchant.glb')),'actual imported factory all-face '+face);checks.push('actual imported factory face '+face);}
- console.log('NATIVE_MERCHANT_COMPARISON_PASS '+JSON.stringify({checks:checks.length,measurements,idle:after.merchantIdleSamples,baselineKnownGeometryIssues:before.baselineViolations}));
+ }
+ console.log((photoOnly?'NATIVE_MERCHANT_PHOTO_COMPARISON_PASS ':'NATIVE_MERCHANT_COMPARISON_PASS ')+JSON.stringify({checks:checks.length,measurements,idle:after.merchantIdleSamples,baselineKnownGeometryIssues:before.baselineViolations}));
 }catch(error){failure=String(error);console.error('NATIVE_MERCHANT_COMPARISON_FAIL '+failure);process.exitCode=1;}
 await writeFile(path.join(root,'merchant-comparison.json'),JSON.stringify({passed:!failure,failure,checks,measurements},null,2));

@@ -9,6 +9,7 @@ const baseline=process.env.SJRPG_STYLE_BASELINE==='1';
 const smoke=process.env.SJRPG_STYLE_SMOKE==='1';
 const modelsOnly=process.env.SJRPG_STYLE_MODELS_ONLY==='1';
 const merchantOnly=process.env.SJRPG_STYLE_MERCHANT_ONLY==='1';
+const merchantPhotoOnly=process.env.SJRPG_MERCHANT_PHOTO_ONLY==='1';
 const worldOnly=process.env.SJRPG_STYLE_WORLD_ONLY==='1';
 const base=new URL(process.argv[2]||'http://127.0.0.1:8781/');
 const out=path.resolve(process.argv[3]||'build/native-style-review');
@@ -186,14 +187,23 @@ function merchantGeometry(s,label){
 }
 async function merchantPilot(){
  const shots=[];
- for(const [label,w,h,dpr]of[['portrait',390,844,1],['landscape',844,390,1],['retina',390,844,2]]){
+ const views=merchantPhotoOnly?[['portrait',390,844,1]]:[['portrait',390,844,1],['landscape',844,390,1],['retina',390,844,2]];
+ for(const [label,w,h,dpr]of views){
   await boot('mage',{at:'npc_nw'},dpr);
   if(w!==390||h!==844){await page.setViewportSize({width:w,height:h});await wait(s=>s.window[0]===w&&s.window[1]===h&&s.ui.viewport[0]>s.ui.viewport[1],'real merchant orientation');await settled();}
   let s=await wait(s=>s.ui.merchant?.identity==='merchant'&&s.ui.merchant.near_name==='상인','actual nearby merchant');
+  const approach=s.ui.merchant.review_approaches.find(p=>p.legal&&Math.abs(p.point[0]-s.ui.merchant.source_position[0])>=120);
+  assert(approach,label+' actual legal lateral photography point');
+  const click=css(s,[...approach.projected,0,0]);
+  await page.mouse.click(click.x,click.y,{button:'right'});
+  s=await wait(s=>Math.hypot(s.ui.player[0]-approach.point[0],s.ui.player[1]-approach.point[1])<=3.01&&s.ui.merchant.near_name==='상인',label+' real right-click walk to legal lateral point',30000);
+  await settled(6);s=await read();
+  assert(Math.abs(s.ui.player[0]-s.ui.merchant.source_position[0])>=105,label+' actual hero and NPC have lateral separation');
   hudGeometry(s,'merchant '+label);merchantGeometry(s,'merchant '+label);
   const quests=JSON.stringify(s.ui.merchant.quests),start=s.ui.merchant,frame=s.ui.frame;
   if(!baseline){await wait(s=>s.ui.frame>=frame+3&&s.ui.merchant.source_time>start.source_time+.04&&Math.abs(s.ui.merchant.sample_time-start.sample_time)>.01&&poseDelta(start.bone_poses,s.ui.merchant.bone_poses)>1e-6,'real imported idle advances actual bone poses');checks.push(label+' actual source-clock skeletal idle');}
   await capture('merchant-'+label+'-town',true);
+  if(merchantPhotoOnly){checks.push(label+' actual unoccluded town photography via real movement');continue;}
   await tapHud('near_shop');s=await wait(s=>s.ui.paused&&s.ui.panel.shopping===true&&s.ui.panel.title_text==='상점','real merchant interaction opens shop');
   assert.equal(JSON.stringify(s.ui.merchant.quests),quests,'merchant interaction leaves quests unchanged');
   const paused=s.ui.merchant;await page.waitForTimeout(650);await settled();s=await read();
@@ -207,6 +217,7 @@ async function merchantPilot(){
   assert.equal(JSON.stringify((await read()).ui.merchant.quests),quests,'close merchant shop leaves quests unchanged');
   checks.push(label+' real shop click, paused skeleton and resume');shots.push(label);
  }
+ if(merchantPhotoOnly)return;
  await boot('mage',{at:'npc_nw'});await page.setViewportSize({width:768,height:768});await settled();
  for(let face=0;face<4;face++){
   await page.evaluate(face=>window.__sjrpgNativeStyleAction('merchant_gallery',face),face);
@@ -245,6 +256,6 @@ try{
  await worldScenes();
  if(!baseline)await modelGallery();
  }
- assert.equal(errors.length,0);console.log((modelsOnly?'NATIVE_STYLE_MODELS_PASS ':merchantOnly?'NATIVE_STYLE_MERCHANT_PASS ':worldOnly?'NATIVE_STYLE_WORLD_PASS ':smoke?'NATIVE_STYLE_SMOKE_PASS ':baseline?'NATIVE_STYLE_BASELINE_CAPTURED ':'NATIVE_STYLE_PASS ')+JSON.stringify({checks:checks.length,captures:captures.length,errors:0,baselineViolations:baselineViolations.length,baselineBlockedActions:baselineBlockedActions.length}));
+ assert.equal(errors.length,0);console.log((modelsOnly?'NATIVE_STYLE_MODELS_PASS ':merchantOnly?(merchantPhotoOnly?'NATIVE_STYLE_MERCHANT_PHOTO_PASS ':'NATIVE_STYLE_MERCHANT_PASS '):worldOnly?'NATIVE_STYLE_WORLD_PASS ':smoke?'NATIVE_STYLE_SMOKE_PASS ':baseline?'NATIVE_STYLE_BASELINE_CAPTURED ':'NATIVE_STYLE_PASS ')+JSON.stringify({checks:checks.length,captures:captures.length,errors:0,baselineViolations:baselineViolations.length,baselineBlockedActions:baselineBlockedActions.length}));
 }catch(e){failure=String(e);console.error('NATIVE_STYLE_FAIL '+failure);try{await capture('failure',true);}catch{}process.exitCode=1;}
-finally{await writeFile(path.join(out,'proof.json'),JSON.stringify({url:base.href,modelsOnly,merchantOnly,worldOnly,baseline,smoke,merchantIdleSamples,baselineViolations,baselineBlockedActions,checks,captures,errors,failure,passed:!failure&&!errors.length},null,2));await browser.close();}
+finally{await writeFile(path.join(out,'proof.json'),JSON.stringify({url:base.href,modelsOnly,merchantOnly,merchantPhotoOnly,worldOnly,baseline,smoke,merchantIdleSamples,baselineViolations,baselineBlockedActions,checks,captures,errors,failure,passed:!failure&&!errors.length},null,2));await browser.close();}
