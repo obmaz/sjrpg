@@ -44,5 +44,15 @@ func run() -> void:
 	await _frames(3)
 	check("focus release schedules a real probe update without an idle poll",
 		int(select.probe_activity()["flushes"]) > before_blur and view.gui_get_focus_owner() != select.back_button)
+	var before_parent_move: int = select.probe_activity()["flushes"]
+	var old_list_position: Vector2 = select.slot_list.position
+	var old_scroll_value: int = select.slot_scroll.scroll_vertical
+	select.slot_list.position += Vector2(0.0, -3.0)
+	await _frames(4)
+	check("scroll ancestor movement refreshes probes even without a scrollbar-value event",
+		int(select.probe_activity()["flushes"]) > before_parent_move
+		and select.slot_scroll.scroll_vertical == old_scroll_value)
+	select.slot_list.position = old_list_position
+	await _frames(4)
 	view.queue_free()
 	await _frames(3)

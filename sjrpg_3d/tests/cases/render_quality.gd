@@ -14,7 +14,14 @@ func run() -> void:
 	var native_view := preview.camera.size
 	var source_viewport: Viewport = game.player.get_viewport()
 	var source_parent: Node = game.field_root.get_parent()
-	check("full quality displays the native viewport while source drawing stays culled", preview.display.visible and preview.viewport.size == Vector2i(get_viewport().get_visible_rect().size) and game.field_root.visibility_layer == 0 and not game._view_container.visible)
+	var requested: Vector2 = game.get_viewport().get_visible_rect().size
+	check("full quality displays the bounded native target while source drawing stays culled",
+		preview.display.visible and preview.viewport.size == Ortho3DPreview.render_size(requested, false)
+		and preview.viewport.msaa_3d == Viewport.MSAA_2X
+		and game.field_root.visibility_layer == 0 and not game._view_container.visible)
+	check("actual full target respects pixel and edge budgets without stretching",
+		native_size.x * native_size.y <= 1536000 and maxi(native_size.x, native_size.y) <= 1920
+		and absf(float(native_size.x) / native_size.y - requested.x / requested.y) <= 2.0 / mini(native_size.x, native_size.y))
 	game.player._attack_time = 0.4
 	game.player._pending = Callable()
 	game.hud.open_settings()

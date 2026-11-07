@@ -109,6 +109,8 @@ func _ready() -> void:
 	slot_list = VBoxContainer.new()
 	slot_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	slot_scroll.add_child(slot_list)
+	slot_scroll.item_rect_changed.connect(_queue_publish_buttons)
+	slot_list.item_rect_changed.connect(_queue_publish_buttons)
 	slot_scroll.get_v_scroll_bar().value_changed.connect(func(_value: float): _queue_publish_buttons())
 	slot_footer = Panel.new()
 	slot_footer.name = "SaveFooter"
@@ -128,6 +130,7 @@ func _ready() -> void:
 		band.name = "SaveBand%d" % number
 		band.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		slot_list.add_child(band)
+		band.item_rect_changed.connect(_queue_publish_buttons)
 		slot_bands.append(band)
 		var row := _button("", func(): select_slot(number))
 		row.name = "SaveSlot%d" % number
@@ -537,6 +540,21 @@ func _queue_publish_buttons() -> void:
 
 
 func _flush_buttons() -> void:
+	# ScrollContainer moves its child after scrollbar.value_changed. Publish the
+	# completed rendered geometry, never the preceding scrollbar-only state.
+	if OS.has_feature("web") and DisplayServer.get_name() != "headless":
+		RenderingServer.frame_post_draw.connect(_finish_buttons, CONNECT_ONE_SHOT)
+	else:
+		get_tree().process_frame.connect(_finish_buttons_after_frame, CONNECT_ONE_SHOT)
+
+
+func _finish_buttons_after_frame() -> void:
+	_finish_buttons.call_deferred()
+
+
+func _finish_buttons() -> void:
+	if not is_inside_tree():
+		return
 	_probe_queued = false
 	_probe_flushes += 1
 	_publish_buttons()
