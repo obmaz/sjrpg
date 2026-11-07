@@ -16,7 +16,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                partition: [full, first_half, second_half]
+                partition: [focused, merchant, last]
         env:
             SJRPG_RESOURCE_PARTITION: ${{ matrix.partition }}
         steps:
@@ -39,9 +39,11 @@ jobs:
                   from pathlib import Path
                   names = sorted(p.stem for p in Path("sjrpg_3d/tests/cases").glob("*.gd"))
                   assert names, "No actual 3D test cases"
-                  middle = (len(names) + 1) // 2
+                  import re
+                  focused = re.search(r"--only=([a-z0-9_,]+)", Path(".github/workflows/native-candidate-smoke.yml").read_text()).group(1).split(",")
                   partition = os.environ["SJRPG_RESOURCE_PARTITION"]
-                  selected = {"full": names, "first_half": names[:middle], "second_half": names[middle:]}[partition]
+                  selected = {"focused": sorted(focused), "merchant": ["native_merchant"], "last": ["world_zoom"]}[partition]
+                  assert all(name in names for name in selected), "Unknown diagnostic case"
                   output = Path("build/resource-diagnostics") / partition
                   output.mkdir(parents=True, exist_ok=True)
                   (output / "selection.json").write_text(json.dumps({"partition": partition, "total": len(names), "count": len(selected), "cases": selected}, indent=2))
