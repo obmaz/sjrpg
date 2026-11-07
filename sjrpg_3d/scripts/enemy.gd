@@ -38,6 +38,8 @@ var patrol_radius := 0.0
 
 var _state := "idle"
 var _hitstop := GameTempo.ContactStop.new()
+## JUICE #1: tier of the most recent confirmed hit (HitTier); presentation only.
+var last_hit_tier := HitTier.LIGHT
 var _timer := 0.0
 var _windup_duration := 0.55
 var _recover_duration := 0.7
@@ -163,7 +165,10 @@ func take_damage(amount: float, source: Node2D, visual_source: Node2D = null) ->
 		amount *= 1.0 + _cry_value
 	hp -= amount
 	queue_redraw()
-	var heavy := hp <= 0.0 or amount >= max_hp * 0.3
+	# JUICE #1: one tier drives every presentation below; "heavy" keeps its original meaning.
+	var tier := HitTier.of(amount, max_hp, hp <= 0.0)
+	last_hit_tier = tier
+	var heavy := HitTier.is_heavy(tier)
 	# Zone ticks have elemental visuals without acquiring direct-hit knockback or weapon effects.
 	var impact_source: Node2D = visual_source if is_instance_valid(visual_source) else source
 	var impact := Effect.spawn_impact(game, position + Vector2(0, -sprite.body_height * 0.55), impact_source, heavy)
