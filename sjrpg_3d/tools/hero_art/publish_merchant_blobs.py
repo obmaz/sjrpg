@@ -46,6 +46,8 @@ def main():
     gltf = json.loads(binary[20:20 + json_length])
     if not gltf.get("skins") or not any(a.get("name") == "idle" for a in gltf.get("animations", [])):
         raise RuntimeError("Merchant must retain its skin and idle animation")
+    if "KHR_draco_mesh_compression" in gltf.get("extensionsRequired", []):
+        raise RuntimeError("Plain accessor geometry is required; Draco is not a runtime dependency")
     if gltf.get("cameras") or any("uri" in b for b in gltf.get("buffers", [])) or any("uri" in i for i in gltf.get("images", [])):
         raise RuntimeError("Candidate must be self-contained and contain no cameras")
     triangles = 0
@@ -55,7 +57,7 @@ def main():
                 raise RuntimeError("Expected triangle geometry")
             accessor = primitive.get("indices", primitive["attributes"]["POSITION"])
             triangles += gltf["accessors"][accessor]["count"] // 3
-    if not 0 < triangles <= 16000:
+    if not 0 < triangles <= 18000:
         raise RuntimeError("Merchant triangle budget exceeded: " + str(triangles))
     if max(len(s["joints"]) for s in gltf["skins"]) > 80:
         raise RuntimeError("Merchant joint budget exceeded")

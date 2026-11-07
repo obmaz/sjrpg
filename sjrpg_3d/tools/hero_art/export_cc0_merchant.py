@@ -42,8 +42,8 @@ scope = {"__file__": str(constructor), "__name__": "cc0_merchant_constructor"}
 exec(compile(prefix, str(constructor), "exec"), scope)
 rig = scope["rig"]
 rig.name = "CC0MerchantRig"
-head_meshes = [obj for obj in scope["visible"] if not obj.name.startswith(("Male_Peasant", "Male_Ranger"))]
-body_meshes = [obj for obj in bpy.data.objects if obj.type == "MESH" and obj.name.startswith("Male_Peasant")]
+head_meshes = sorted([obj for obj in scope["visible"] if not obj.name.startswith(("Male_Peasant", "Male_Ranger"))], key=lambda obj: obj.name)
+body_meshes = sorted([obj for obj in bpy.data.objects if obj.type == "MESH" and obj.name.startswith("Male_Peasant")], key=lambda obj: obj.name)
 meshes = body_meshes + head_meshes
 if len(body_meshes) < 4 or not any(obj.name.startswith("Eyes") for obj in head_meshes):
     raise RuntimeError("Expected verified Peasant body and extracted base head")
@@ -377,7 +377,8 @@ options = dict(filepath=str(output), export_format="GLB", use_selection=True,
                export_apply=True, export_yup=True, export_materials="EXPORT",
                export_animations=True, export_animation_mode="NLA_TRACKS",
                export_frame_range=False, export_force_sampling=True,
-               export_skins=True, export_cameras=False, export_lights=False)
+               export_skins=True, export_cameras=False, export_lights=False,
+               export_draco_mesh_compression_enable=False)
 supported = {prop.identifier for prop in bpy.ops.export_scene.gltf.get_rna_type().properties}
 bpy.ops.export_scene.gltf(**{key: value for key, value in options.items() if key in supported})
 raw = output.read_bytes()
@@ -393,7 +394,7 @@ clips = [item.get("name", "") for item in gltf.get("animations", [])]
 joints = [len(skin["joints"]) for skin in gltf.get("skins", [])]
 if not any("idle" in name.lower() for name in clips) or len(joints) != 1 or joints[0] != 65:
     raise RuntimeError("Expected one65-joint skin and actual idle clip: " + str((clips, joints)))
-if triangles > 22000 or surfaces > 12 or len(raw) > 6 * 1024 * 1024:
+if triangles > 18000 or surfaces > 12 or len(raw) > 6 * 1024 * 1024:
     raise RuntimeError("Merchant pilot exceeds measured geometry/material/download budget")
 if any(node.get("camera") is not None for node in gltf.get("nodes", [])) or gltf.get("cameras"):
     raise RuntimeError("Unexpected source camera export")
