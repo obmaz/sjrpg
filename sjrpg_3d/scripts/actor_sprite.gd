@@ -137,7 +137,14 @@ func _draw() -> void:
 
 ## A separate child material brightens the body silhouette without modifying base tint or its ground shadow.
 func _sync_flash_overlay() -> void:
-	if flash <= 0.0 or atlas == null or atlas.texture == null or frame < 0 or frame >= atlas.regions.size():
+	# Native actors keep this canvas hierarchy hidden. Metadata/flash clocks still
+	# advance, but a hidden silhouette must not decode its legacy sprite sheet.
+	if not is_visible_in_tree() or flash <= 0.0 or atlas == null or frame < 0 or frame >= atlas.regions.size():
+		if _flash_overlay != null:
+			_flash_overlay.hide()
+		return
+	var frame_texture: Texture2D = atlas.texture
+	if frame_texture == null:
 		if _flash_overlay != null:
 			_flash_overlay.hide()
 		return
@@ -149,7 +156,7 @@ func _sync_flash_overlay() -> void:
 		add_child(_flash_overlay)
 	var scale_factor := body_height / atlas.ref_height
 	_flash_overlay.scale = squash_scale()
-	_flash_overlay.texture = atlas.texture
+	_flash_overlay.texture = frame_texture
 	_flash_overlay.region = atlas.regions[frame]
 	_flash_overlay.destination = Rect2(-atlas.anchors[frame] * scale_factor, _flash_overlay.region.size * scale_factor)
 	var overlay_material := _flash_overlay.material as ShaderMaterial

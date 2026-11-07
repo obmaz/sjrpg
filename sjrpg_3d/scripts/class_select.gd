@@ -47,6 +47,10 @@ var _slot_css := 1.0
 var _slot_safe := Rect2()
 var _delete_target := 0
 var _slot_relayout_pending := false
+var _probe_queued := false
+var _probe_flushes := 0
+var _probe_writes := 0
+var _last_probe_json := ""
 var brand_label: Label
 var class_surface: Panel
 var info_surface: Panel
@@ -105,7 +109,7 @@ func _ready() -> void:
 	slot_list = VBoxContainer.new()
 	slot_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	slot_scroll.add_child(slot_list)
-	slot_scroll.get_v_scroll_bar().value_changed.connect(func(_value: float): _publish_buttons.call_deferred())
+	slot_scroll.get_v_scroll_bar().value_changed.connect(func(_value: float): _queue_publish_buttons())
 	slot_footer = Panel.new()
 	slot_footer.name = "SaveFooter"
 	slot_footer.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -177,7 +181,8 @@ func _button(text: String, action: Callable, primary := false) -> Button:
 	button.text = text
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.pressed.connect(action)
-	button.focus_entered.connect(func(): _publish_buttons.call_deferred())
+	button.focus_entered.connect(_queue_publish_buttons)
+	button.resized.connect(_queue_publish_buttons)
 	SelectionUi.style(button, primary)
 	add_child(button)
 	return button
@@ -302,10 +307,14 @@ func confirm_delete(number: int) -> void:
 		if not deleted:
 			show_error("삭제하지 못했습니다. 다시 시도해 주세요."), true)
 	_delete_dialog.closed.connect(_close_delete)
+	_delete_dialog._panel.resized.connect(_queue_publish_buttons)
+	_delete_dialog.footer.resized.connect(_queue_publish_buttons)
+	for target: Node in _delete_dialog.find_children("*", "Button", true, false):
+		(target as Button).focus_entered.connect(_queue_publish_buttons)
 	_refresh_disabled()
 	_fit_delete_dialog()
 	(_delete_dialog.footer.get_child(0) as Button).grab_focus.call_deferred()
-	_publish_buttons.call_deferred()
+	_queue_publish_buttons()
 
 func _close_delete(use_row := false) -> void:
 	if is_instance_valid(_delete_dialog):
@@ -313,7 +322,7 @@ func _close_delete(use_row := false) -> void:
 	_delete_dialog = null
 	_refresh_disabled()
 	_restore_delete_focus.call_deferred(_delete_target, use_row)
-	_publish_buttons.call_deferred()
+	_queue_publish_buttons()
 
 func _setup_presentation() -> void:
 	brand_label = _label("자연의 수호자", 22, SelectionUi.BRONZE, true)
@@ -474,7 +483,7 @@ func _layout_class() -> void:
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var sheet := Rect2(showcase.position, Vector2(showcase.size.x, details.position.y + details.size.y - showcase.position.y)) if portrait else showcase.get_rect()
 	EntryUi.place(class_surface, sheet)
-	_publish_buttons()
+	_queue_publish_buttons()
 
 
 func _publish_buttons() -> void:
@@ -506,13 +515,31 @@ func _publish_buttons() -> void:
 		points[key] = [center.x, center.y]
 	if bool(points["save_layout"]["modal_focus"]) and str(points["focus"]).is_empty():
 		points["focus"] = "modal_close"
-	JavaScriptBridge.eval("window.__sjrpgClassButtons = " + JSON.stringify(points))
+	var encoded := JSON.stringify(points)
+	if encoded == _last_probe_json:
+		return
+	_last_probe_json = encoded
+	_probe_writes += 1
+	JavaScriptBridge.eval("window.__sjrpgClassButtons = " + encoded)
 
 
-func _process(_delta: float) -> void:
-	# Modal layout settles after its theme/safe-area update; publish real targets.
-	if OS.has_feature("web") and (_stage == "slots" or is_instance_valid(_delete_dialog)):
-		_publish_buttons()
+## Layout/focus/scroll signals publish only when the actual controls change.
+func _queue_publish_buttons() -> void:
+	if _probe_queued or not is_inside_tree():
+		return
+	_probe_queued = true
+	_flush_buttons.call_deferred()
+
+
+func _flush_buttons() -> void:
+	_probe_queued = false
+	_probe_flushes += 1
+	_publish_buttons()
+
+
+func probe_activity() -> Dictionary:
+	return {"flushes": _probe_flushes, "writes": _probe_writes,
+		"pending": _probe_queued, "idle_process": is_processing()}
 
 
 func _modal_open() -> bool:
@@ -697,7 +724,7 @@ func _layout_slots() -> void:
 	EntryUi.place(slot_footer, Rect2(Vector2(content.x, footer_y), Vector2(inner, footer_h)))
 	EntryUi.place(slot_context, Rect2(Vector2(content.x, footer_y + gap * 0.5), Vector2(inner, context_h)))
 	EntryUi.place(continue_button, Rect2(Vector2(content.x, footer_y + context_h + gap), Vector2(inner, action_h)))
-	_publish_buttons.call_deferred()
+	_queue_publish_buttons()
 
 
 func _place_slot_labels(index: int) -> void:

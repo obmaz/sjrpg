@@ -5,7 +5,19 @@ extends RefCounted
 
 static var _cache: Dictionary = {}
 
-var texture: Texture2D
+var _texture: Texture2D
+var _texture_path := ""
+var _texture_attempted := false
+## Explicit texture consumers still work; metadata acquisition alone never decodes a sheet.
+var texture: Texture2D:
+	get:
+		if _texture == null and not _texture_attempted and not _texture_path.is_empty():
+			_texture_attempted = true
+			_texture = load(_texture_path) as Texture2D
+		return _texture
+	set(value):
+		_texture = value
+		_texture_attempted = true
 var regions: Array[Rect2] = []
 var anchors: Array[Vector2] = []
 var ref_height := 1.0
@@ -29,11 +41,33 @@ static func get_atlas(name: String) -> ActorAtlas:
 	return atlas
 
 
+## No texture getter here: profiling must not itself force an upload.
+func is_texture_loaded() -> bool:
+	return _texture != null
+
+
+static func texture_snapshot() -> Dictionary:
+	var atlases: Array[Dictionary] = []
+	var loaded := 0
+	var rgba8_base_estimate := 0
+	for name: String in _cache:
+		var atlas: ActorAtlas = _cache[name]
+		var size := Vector2i.ZERO
+		if atlas._texture != null:
+			size = Vector2i(atlas._texture.get_size())
+			loaded += 1
+			rgba8_base_estimate += size.x * size.y * 4
+		atlases.append({"name": name, "texture_loaded": atlas.is_texture_loaded(),
+			"dimensions": [size.x, size.y], "frames": atlas.regions.size()})
+	return {"metadata_atlases": _cache.size(), "loaded_textures": loaded,
+		"rgba8_base_bytes_estimate": rgba8_base_estimate, "atlases": atlases}
+
+
 func _load(name: String) -> void:
 	var base := "res://assets/art/actors/" + name
 	for ext in [".webp", ".png"]:
 		if ResourceLoader.exists(base + ext):
-			texture = load(base + ext)
+			_texture_path = base + ext
 			break
 	var file := FileAccess.open(base + ".json", FileAccess.READ)
 	if file == null:

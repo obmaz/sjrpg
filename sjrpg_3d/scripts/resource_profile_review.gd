@@ -26,6 +26,25 @@ func _process(delta: float) -> void:
 		report.monitors[key] = value
 		_peaks[key] = maxf(float(_peaks.get(key, 0.0)), value)
 	report["peaks"] = _peaks
+	var atlas_script: Script = load("res://scripts/actor_atlas.gd")
+	var snapshot_available := false
+	for method in atlas_script.get_script_method_list():
+		if str(method.name) == "texture_snapshot":
+			snapshot_available = true
+	if snapshot_available:
+		report["actor_atlases"] = atlas_script.call("texture_snapshot")
+	else:
+		# Immutable baseline has a plain eager texture field, not the candidate getter.
+		var resident := {"metadata_atlases": ActorAtlas._cache.size(), "loaded_textures": 0, "rgba8_base_bytes_estimate": 0, "atlases": []}
+		for key in ActorAtlas._cache:
+			var entry: ActorAtlas = ActorAtlas._cache[key]
+			var texture: Texture2D = entry.texture
+			var dimensions: Vector2i = Vector2i.ZERO if texture == null else Vector2i(texture.get_size())
+			resident.atlases.append({"name": key, "texture_loaded": texture != null, "dimensions": [dimensions.x, dimensions.y], "frames": entry.regions.size()})
+			if texture != null:
+				resident.loaded_textures += 1
+				resident.rgba8_base_bytes_estimate += dimensions.x * dimensions.y * 4
+		report["actor_atlases"] = resident
 	var ordered: Array[float] = _deltas.duplicate()
 	ordered.sort()
 	if not ordered.is_empty():
@@ -35,6 +54,8 @@ func _process(delta: float) -> void:
 		report.frame_ms = {"count": ordered.size(), "mean": total / ordered.size(), "p95": ordered[mini(ordered.size()-1, floori(ordered.size()*0.95))], "max": ordered.back()}
 	if is_instance_valid(current):
 		report["screen_script"] = str(current.get_script().resource_path)
+		if current.has_method("probe_activity"):
+			report["selection_probe_activity"] = current.call("probe_activity")
 		for control in current.find_children("*", "Button", true, false):
 			var button: Button = control
 			if not button.is_visible_in_tree():
@@ -48,6 +69,10 @@ func _process(delta: float) -> void:
 					clipped = clipped.intersection(parent.get_global_rect())
 				ancestor = ancestor.get_parent()
 			report.buttons.append({"text": button.text, "disabled": button.disabled, "rect": [rectangle.position.x, rectangle.position.y, rectangle.size.x, rectangle.size.y], "visible_rect": [clipped.position.x, clipped.position.y, clipped.size.x, clipped.size.y]})
+	var enemy_script: Script = load("res://scripts/native_enemy_models.gd")
+	for method in enemy_script.get_script_method_list():
+		if str(method.name) == "cache_stats":
+			report["enemy_mesh_cache"] = enemy_script.call("cache_stats")
 	if adventure:
 		report["native_ready"] = JavaScriptBridge.eval("window.__sjrpgAdventureReady === true", true)
 		report["dungeon"] = game.dungeon.active
@@ -56,4 +81,9 @@ func _process(delta: float) -> void:
 		report["dead"] = game.player.dead
 		report["enemies"] = game.enemies.size()
 		report["quality_low"] = Prefs.low_resolution
+		if is_instance_valid(game.ortho_preview):
+			report["native_render_size"] = [game.ortho_preview.viewport.size.x, game.ortho_preview.viewport.size.y]
+			report["native_camera_size"] = game.ortho_preview.camera.size
+			if game.ortho_preview.has_method("render_activity"):
+				report["render_activity"] = game.ortho_preview.call("render_activity")
 	JavaScriptBridge.eval("window.__sjrpgResourceProfile = " + JSON.stringify(report), true)

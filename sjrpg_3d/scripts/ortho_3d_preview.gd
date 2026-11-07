@@ -4,6 +4,8 @@ extends Node
 ## world owns resolved actor feet and terrain height throughout forest and cave.
 
 const GROUND_PER_METER := 65.0
+const MAX_RENDER_EDGE := 1920.0
+const MAX_RENDER_PIXELS := 1536000.0
 const PROJECTION_FACTOR := 1.224744871391589 * Iso.S
 const CAMERA_DIRECTION := Vector3(1, 1, 1)
 const MAGE_PATH := "res://assets/art/preview3d/mage.glb"
@@ -80,6 +82,16 @@ var _houses := {}
 var _forest_stage: Node3D
 var _world_environment: Ortho3DEnvironment
 var _scope_is_cave := false
+var _presentation_dirty := true
+var _full_syncs := 0
+var _paused_skips := 0
+var _paused_nodes: Array[Dictionary] = []
+var _paused_corpses: Array = []
+var _paused_children := -1
+var _paused_enemies := -1
+var _paused_focus := Vector2(INF, INF)
+var _paused_scope := false
+var _paused_reduced := false
 
 
 func setup(world_game: Node2D) -> Ortho3DPreview:
@@ -168,12 +180,14 @@ func _resize() -> void:
 		return
 	var native: Vector2 = game.get_viewport().get_visible_rect().size
 	display.size = native
-	viewport.size = Vector2i(native / (2.0 if Prefs.low_resolution else 1.0))
+	viewport.size = render_size(native, Prefs.low_resolution)
+	request_redraw()
 	viewport.msaa_3d = Viewport.MSAA_DISABLED if Prefs.low_resolution else Viewport.MSAA_2X
 	if camera != null:
 		_sync_camera()
 		# Container layout can settle after the signal; deferred calls also run while settings pause simulation.
 		_sync_camera.call_deferred()
+		request_redraw.call_deferred()
 
 
 func _setup_light() -> void:
@@ -408,9 +422,15 @@ func _process(delta: float) -> void:
 	if not _sync_scope():
 		return
 	var frozen := get_tree().paused
+	if frozen and _was_paused and not _presentation_dirty and _frozen_sources_match():
+		viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
+		_paused_skips += 1
+		_tick_probe(delta)
+		return
+	_full_syncs += 1
+	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE if frozen else SubViewport.UPDATE_ALWAYS
 	_sync_camera()
-	if not frozen or not _was_paused:
-		_sync_actor(0.0 if frozen else delta)
+	_sync_actor(0.0 if frozen else delta)
 	_enemy_models.sync()
 	_sync_cards()
 	_native_residents.sync()
@@ -427,8 +447,18 @@ func _process(delta: float) -> void:
 		else:
 			_contact_time = maxf(0.0, _contact_time - delta)
 	_was_paused = frozen
+	_presentation_dirty = false
+	if frozen:
+		_remember_frozen_sources()
+	elif not _paused_nodes.is_empty():
+		_paused_nodes.clear()
+		_paused_corpses.clear()
 	contact_light.visible = _contact_time > 0.0
 	contact_light.light_energy = _contact_energy * pow(_contact_time / 0.22, 2.0) * (0.35 if Prefs.reduce_motion else 1.0)
+	_tick_probe(delta)
+
+
+func _tick_probe(delta: float) -> void:
 	_probe_clock += delta
 	if _probe_clock >= 0.5:
 		_probe_clock = 0.0
@@ -444,7 +474,6 @@ func _sync_scope() -> bool:
 		contact_light.visible = false
 	_native_visible = true
 	display.visible = true
-	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	game.set_forest_rendered(false)
 	return true
 
@@ -477,7 +506,7 @@ func _publish_probe() -> void:
 		_batch_gpu_error = Ortho3DStaticBatch.corner_error(_static_batch)
 	var calls := viewport.get_render_info(Viewport.RENDER_INFO_TYPE_VISIBLE, Viewport.RENDER_INFO_DRAW_CALLS_IN_FRAME)
 	var physics: SpatialWorld3D = game.get("spatial_world")
-	var ready := actor != null and (animation != null or not _native_mage) and calls > 0 and physics != null and physics.physics_ticks > 0
+	var ready := actor != null and (animation != null or not _native_mage) and (calls > 0 or _ready_published) and physics != null and physics.physics_ticks > 0
 	var eye := camera.global_transform.basis.z.normalized()
 	var report := {"ready": ready, "native_active": _native_visible, "native_width": viewport.size.x, "native_height": viewport.size.y,
 		"quality": "low" if Prefs.low_resolution else "high", "spatial_draw_calls": calls,
@@ -684,3 +713,84 @@ func _sync_cards() -> void:
 			(_labels[id]["node"] as Label3D).visible = owner.get_parent() == game.world
 
 
+
+
+## Cap only the native 3D render target. Display/HUD coordinates and orthographic
+## world coverage remain unchanged; economy retains exactly half each dimension.
+static func render_size(native: Vector2, economy: bool) -> Vector2i:
+	var safe := Vector2(maxf(native.x, 1.0), maxf(native.y, 1.0))
+	var factor := minf(1.0, minf(MAX_RENDER_EDGE / maxf(safe.x, safe.y),
+		sqrt(MAX_RENDER_PIXELS / (safe.x * safe.y))))
+	if economy:
+		factor *= 0.5
+	return Vector2i(maxi(1, floori(safe.x * factor)), maxi(1, floori(safe.y * factor)))
+
+
+func request_redraw() -> void:
+	_presentation_dirty = true
+
+
+func _watch_frozen(node: Node, fields: Array) -> void:
+	var values := []
+	for field: String in fields:
+		var value: Variant = node.get(field)
+		values.append(value.duplicate(true) if value is Dictionary or value is Array else value)
+	_paused_nodes.append({"owner": weakref(node), "parent": node.get_parent().get_instance_id(),
+		"fields": fields, "values": values})
+
+
+func _watch_sprite(sprite: ActorSprite) -> void:
+	_watch_frozen(sprite, ["position", "visible", "modulate", "self_modulate", "frame",
+		"body_height", "flash", "flash_tint", "tint", "squash_amount", "_squash_age"])
+
+
+func _remember_frozen_sources() -> void:
+	_paused_nodes.clear()
+	_paused_children = game.world.get_child_count()
+	_paused_enemies = game.enemies.size()
+	_paused_scope = game.dungeon.active
+	_paused_reduced = Prefs.reduce_motion
+	_paused_focus = game.camera.get_screen_center_position()
+	_paused_corpses = game.corpses.duplicate(true)
+	_watch_frozen(game.camera, ["global_position", "zoom", "offset"])
+	_watch_frozen(game.player, ["position", "facing", "dead", "_attack_time", "_run_distance", "_roll_time"])
+	_watch_sprite(game.player.sprite)
+	for candidate in game.enemies:
+		var enemy := candidate as Enemy
+		if not is_instance_valid(enemy) or enemy.is_queued_for_deletion():
+			continue
+		_watch_frozen(enemy, ["position", "facing", "dead", "_state", "_timer", "_walk_cycle"])
+		_watch_sprite(enemy.sprite)
+	for candidate in game.village.npc_nodes.values():
+		var resident := candidate as Villager
+		if is_instance_valid(resident) and not resident.is_queued_for_deletion():
+			_watch_frozen(resident, ["position", "visible", "facing", "_hurt_flash", "_time"])
+	for candidate in game.world.get_children():
+		var effect := candidate as Effect
+		if is_instance_valid(effect) and not effect.is_queued_for_deletion():
+			_watch_frozen(effect, ["position", "kind", "age", "life", "radius", "angle", "velocity",
+				"text", "color", "spatial_height", "spatial_floor_height", "params"])
+
+
+func _frozen_sources_match() -> bool:
+	if _paused_reduced != Prefs.reduce_motion or _paused_children != game.world.get_child_count() or _paused_enemies != game.enemies.size() or _paused_scope != game.dungeon.active:
+		return false
+	if _paused_focus != game.camera.get_screen_center_position() or _paused_corpses != game.corpses:
+		return false
+	for record: Dictionary in _paused_nodes:
+		var node: Node = record["owner"].get_ref()
+		if not is_instance_valid(node) or node.is_queued_for_deletion() or node.get_parent() == null or node.get_parent().get_instance_id() != int(record["parent"]):
+			return false
+		var fields: Array = record["fields"]
+		var values: Array = record["values"]
+		for index in fields.size():
+			if node.get(fields[index]) != values[index]:
+				return false
+	return true
+
+
+func render_activity() -> Dictionary:
+	return {"full_syncs": _full_syncs, "paused_skips": _paused_skips,
+		"render_width": viewport.size.x, "render_height": viewport.size.y,
+		"pixels": viewport.size.x * viewport.size.y, "update_mode": viewport.render_target_update_mode,
+		"dirty": _presentation_dirty}

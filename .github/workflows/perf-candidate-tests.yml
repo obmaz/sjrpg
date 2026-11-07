@@ -1,0 +1,39 @@
+name: Check 3D optimization budgets
+on:
+    push:
+        paths:
+            - ".github/workflows/perf-candidate-tests.yml"
+            - "sjrpg_3d/scripts/actor_atlas.gd"
+            - "sjrpg_3d/scripts/actor_sprite.gd"
+            - "sjrpg_3d/scripts/native_enemy_models.gd"
+            - "sjrpg_3d/scripts/ortho_3d_preview.gd"
+            - "sjrpg_3d/scripts/class_select.gd"
+            - "sjrpg_3d/tests/cases/*budget*.gd"
+            - "sjrpg_3d/tests/cases/actor_atlas_lazy.gd"
+            - "sjrpg_3d/tests/cases/native_enemy_recipe_cache.gd"
+    workflow_dispatch:
+permissions:
+    contents: read
+concurrency:
+    group: perf-candidate-${{ github.sha }}
+    cancel-in-progress: false
+jobs:
+    regression:
+        runs-on: ubuntu-latest
+        timeout-minutes: 12
+        steps:
+            - uses: actions/checkout@v7.0.1
+            - uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.godot-tools
+                      ~/.local/share/godot/export_templates
+                  key: godot-${{ hashFiles('.godot-version') }}-tools-v1
+            - name: Measure a truly cold model cache and verify immutable instances
+              run: |
+                  chmod +x tools/*.sh sjrpg_3d/tools/*.sh
+                  tools/setup_godot.sh
+                  tools/check.sh --project=3d --only=native_enemy_recipe_cache
+            - name: Check lazy textures, UI idle work, rendering and gameplay
+              run: |
+                  tools/check.sh --project=3d --only=actor_atlas_lazy,entry_probe_budget,native_render_budget,native_enemy_models,native_enemy_scale,native_enemy_radius,corpses,melee_elevation,spatial_combat,world_zoom,entry_layout,gamepad_gameplay,ui_input

@@ -6,6 +6,11 @@ var preview: Node
 var entries := {}
 static var _rig_meshes := {}
 static var _rest_bounds_by_kind := {}
+## Immutable geometry/transform recipes contain no live Node or actor material references.
+static var _recipes: Dictionary = {}
+static var _recipe_hits := 0
+static var _source_builds := 0
+static var _surface_forms_built := 0
 
 func setup(presenter: Node) -> NativeEnemyModels:
 	preview = presenter
@@ -22,6 +27,10 @@ static func _pivot(parent: Node3D, at: Vector3) -> Node3D:
 	return node
 
 static func build(kind: String) -> Dictionary:
+	if _recipes.has(kind):
+		_recipe_hits += 1
+		return _instantiate_recipe(_recipes[kind])
+	_source_builds += 1
 	var root: Node3D = Node3D.new()
 	root.name = "Native_" + kind
 	var bone: StandardMaterial3D = _material(Color("b7ae91"), "bone")
@@ -195,7 +204,88 @@ static func build(kind: String) -> Dictionary:
 	var base_colors: Array[Color] = []
 	for material in materials:
 		base_colors.append(material.albedo_color)
-	return {"root": root, "torso": torso, "legs": legs, "arms": arms, "materials": materials, "colors": base_colors, "kind": kind, "base_height": rest.size.y, "leg_origins": legs.map(func(leg: Node3D): return leg.position)}
+	var model: Dictionary = {"root": root, "torso": torso, "legs": legs, "arms": arms, "materials": materials, "colors": base_colors, "kind": kind, "base_height": rest.size.y, "leg_origins": legs.map(func(leg: Node3D): return leg.position)}
+	_recipes[kind] = _capture_recipe(model)
+	return model
+
+
+## Capture the already-authored, foot-aligned rig once. Shared meshes stay immutable.
+static func _recipe_node(node: Node3D, parent_index: int, nodes: Array[Dictionary], indices: Dictionary, materials: Array) -> void:
+	var index: int = nodes.size()
+	indices[node.get_instance_id()] = index
+	var record: Dictionary = {"parent": parent_index, "transform": node.transform}
+	if node is MeshInstance3D:
+		var instance := node as MeshInstance3D
+		record["mesh"] = instance.mesh
+		record["material"] = materials.find(instance.material_override)
+		record["shadow"] = instance.cast_shadow
+	nodes.append(record)
+	for child: Node in node.get_children():
+		_recipe_node(child as Node3D, index, nodes, indices, materials)
+
+
+static func _capture_recipe(model: Dictionary) -> Dictionary:
+	var nodes: Array[Dictionary] = []
+	var indices: Dictionary = {}
+	var materials: Array = model["materials"]
+	_recipe_node(model["root"], -1, nodes, indices, materials)
+	var palette: Array[Dictionary] = []
+	for material: StandardMaterial3D in materials:
+		palette.append({"surface": str(material.get_meta("actor_surface_kind")), "color": material.albedo_color,
+			"alias": materials.find(material)})
+	var legs: Array[int] = []
+	var arms: Array[int] = []
+	for node: Node3D in model["legs"]:
+		legs.append(int(indices[node.get_instance_id()]))
+	for node: Node3D in model["arms"]:
+		arms.append(int(indices[node.get_instance_id()]))
+	return {"nodes": nodes, "palette": palette, "torso": int(indices[(model["torso"] as Node3D).get_instance_id()]),
+		"legs": legs, "arms": arms, "kind": model["kind"], "base_height": model["base_height"],
+		"leg_origins": (model["leg_origins"] as Array).duplicate()}
+
+
+## A cache hit creates only actor-owned joints/instances/material uniforms.
+## It never builds SurfaceTools, primitive meshes, normals, or temporary geometry.
+static func _instantiate_recipe(recipe: Dictionary) -> Dictionary:
+	var materials: Array[StandardMaterial3D] = []
+	var colors: Array[Color] = []
+	for descriptor: Dictionary in recipe["palette"]:
+		var color: Color = descriptor["color"]
+		var alias: int = int(descriptor["alias"])
+		materials.append(materials[alias] if alias < materials.size() else _material(color, str(descriptor["surface"])))
+		colors.append(color)
+	var built: Array[Node3D] = []
+	for record: Dictionary in recipe["nodes"]:
+		var node: Node3D
+		if record.has("mesh"):
+			var instance := MeshInstance3D.new()
+			instance.mesh = record["mesh"]
+			instance.material_override = materials[int(record["material"])]
+			instance.cast_shadow = int(record["shadow"])
+			node = instance
+		else:
+			node = Node3D.new()
+		node.transform = record["transform"]
+		var parent_index: int = int(record["parent"])
+		if parent_index >= 0:
+			built[parent_index].add_child(node)
+		built.append(node)
+	var root: Node3D = built[0]
+	root.name = "Native_" + str(recipe["kind"])
+	var legs: Array[Node3D] = []
+	var arms: Array[Node3D] = []
+	for index: int in recipe["legs"]:
+		legs.append(built[index])
+	for index: int in recipe["arms"]:
+		arms.append(built[index])
+	return {"root": root, "torso": built[int(recipe["torso"])], "legs": legs, "arms": arms,
+		"materials": materials, "colors": colors, "kind": recipe["kind"], "base_height": recipe["base_height"],
+		"leg_origins": (recipe["leg_origins"] as Array).duplicate()}
+
+
+static func cache_stats() -> Dictionary:
+	return {"recipes": _recipes.size(), "hits": _recipe_hits, "source_builds": _source_builds,
+		"surface_forms": _surface_forms_built}
 
 static func tint(model: Dictionary, color: Color, flash: float, flash_color: Color, alpha: float) -> void:
 	var materials: Array = model["materials"]
@@ -274,18 +364,26 @@ func snapshot() -> Dictionary:
 
 static func place_corpse(presenter: Node, model: Dictionary, corpse: Dictionary) -> void:
 	var root: Node3D = model["root"]
-	var ratio := float(corpse.get("height", 62.0)) / (Ortho3DPreview.GROUND_PER_METER * Iso.S) / float(model["base_height"])
-	root.scale = Vector3.ONE * ratio
-	pose(model, float(corpse.get("facing", 0.0)), 0.0, 0.0, true)
-	# Rest the whole rotated mesh on the real floor, not the old picture's square.
-	var minimum := 0.0
-	for child in root.find_children("*", "MeshInstance3D", true, false):
-		var mesh := child as MeshInstance3D
-		var local := root.global_transform.affine_inverse() * mesh.global_transform
-		for index in 8:
-			minimum = minf(minimum, (root.basis * (local * mesh.get_aabb().get_endpoint(index))).y)
 	var at: Vector2 = corpse.get("pos", Vector2.ZERO)
-	root.position = Ortho3DPreview.ground_position(at, presenter.surface_height(at) - minimum + 0.012)
+	var facing: float = float(corpse.get("facing", 0.0))
+	var height: float = float(corpse.get("height", 62.0))
+	# Query the current floor every time: moved corpses or changed terrain invalidate placement.
+	var floor_height: float = presenter.surface_height(at)
+	var key: Array = [at, facing, height, floor_height]
+	if model.get("_corpse_placement_key", []) != key:
+		var ratio: float = height / (Ortho3DPreview.GROUND_PER_METER * Iso.S) / float(model["base_height"])
+		root.scale = Vector3.ONE * ratio
+		pose(model, facing, 0.0, 0.0, true)
+		# Rest the whole rotated mesh on the real floor, not the old picture's square.
+		var minimum := 0.0
+		for child in root.find_children("*", "MeshInstance3D", true, false):
+			var mesh := child as MeshInstance3D
+			var local := root.global_transform.affine_inverse() * mesh.global_transform
+			for index in 8:
+				minimum = minf(minimum, (root.basis * (local * mesh.get_aabb().get_endpoint(index))).y)
+		root.position = Ortho3DPreview.ground_position(at, floor_height - minimum + 0.012)
+		model["_corpse_placement_key"] = key
+		model["_corpse_placement_updates"] = int(model.get("_corpse_placement_updates", 0)) + 1
 	var opacity := CorpseArt.opacity(float(corpse.get("time", 0.0)), float(corpse.get("lifetime", 30.0)))
 	root.visible = not bool(corpse.get("used", false)) and opacity > 0.0
 	tint(model, Color.WHITE, 0.0, Color.WHITE, opacity)
@@ -326,6 +424,7 @@ static func _tri(tool: SurfaceTool, a: Vector3, b: Vector3, c: Vector3) -> void:
 		tool.add_vertex(point)
 
 static func _form(parent: Node3D, at: Vector3, rows: Array, material: Material, facets := 8, irregular := 0.0) -> MeshInstance3D:
+	_surface_forms_built += 1
 	# Authored horizontal sections, not scaled capsule primitives. Triangles have
 	# independent face normals so broad designed planes respond to real lighting.
 	var tool: SurfaceTool = SurfaceTool.new()

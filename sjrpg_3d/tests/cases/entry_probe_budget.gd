@@ -1,0 +1,32 @@
+extends TestCase
+## Idle entry UI must not rebuild/serialize its read-only browser probe each frame.
+func run() -> void:
+	var view := SubViewport.new()
+	view.size = Vector2i(720, 1280)
+	add_child(view)
+	var select := preload("res://scripts/class_select.gd").new()
+	view.add_child(select)
+	select.show_slots()
+	await _frames(10)
+	var settled: int = select.probe_activity()["flushes"]
+	await _frames(30)
+	check("idle save selection has no script process or recurring probe flush",
+		not select.is_processing() and int(select.probe_activity()["flushes"]) == settled)
+	for index in 128:
+		select._queue_publish_buttons()
+	await _frames(2)
+	check("many control changes coalesce into one deferred probe flush",
+		int(select.probe_activity()["flushes"]) == settled + 1 and not bool(select.probe_activity()["pending"]))
+	var before: int = select.probe_activity()["flushes"]
+	var active := GameState.active_slot
+	var hero := GameState.hero_class
+	select.select_slot(2)
+	await _frames(8)
+	check("actual selection still schedules updated control probes without changing the live save",
+		select.selected_slot == 2 and int(select.probe_activity()["flushes"]) > before
+		and GameState.active_slot == active and GameState.hero_class == hero)
+	var again: int = select.probe_activity()["flushes"]
+	await _frames(20)
+	check("selection settles back to zero idle probe work", int(select.probe_activity()["flushes"]) == again)
+	view.queue_free()
+	await _frames(3)
