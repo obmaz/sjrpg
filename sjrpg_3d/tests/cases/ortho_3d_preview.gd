@@ -157,8 +157,8 @@ func run() -> void:
 	preview._process(1.0)
 	check("native contact light expires even without another rendering frame", not preview.contact_light.visible)
 	var live_portals := true
-	for source in game.village.portal_sprites.values():
-		live_portals = live_portals and preview._town_props.owns(source) and not preview._affordances._art.has(source.get_instance_id())
+	for portal_source in game.village.portal_sprites.values():
+		live_portals = live_portals and preview._town_props.owns(portal_source) and not preview._affordances._art.has(portal_source.get_instance_id())
 	var live_chests := true
 	for chest: Chest in game.chests:
 		var fallback: Dictionary = preview._affordances._art.get(chest.body_sprite.get_instance_id(), {})

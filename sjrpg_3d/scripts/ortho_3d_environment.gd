@@ -323,7 +323,7 @@ func _build_cave() -> void:
 	var lanterns := NativeCaveLanterns3D.build(preview, cave, preview.game.dungeon.art.visuals)
 	var native_lantern_ids: Dictionary = lanterns["owned_source_ids"]
 	report["native_cave_lanterns"] = lanterns["count"]
-	var native_scenery_excluded := preview._town_props.source_ids()
+	var native_scenery_excluded: Dictionary = preview._town_props.source_ids()
 	native_scenery_excluded.merge(native_lantern_ids)
 	var scenery := NativeSceneryProps3D.build(preview, cave, preview.game.world, true, native_scenery_excluded)
 	var native_scenery_ids: Dictionary = scenery["owned_source_ids"]
