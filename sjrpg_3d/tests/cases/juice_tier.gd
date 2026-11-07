@@ -64,7 +64,22 @@ func _check_sounds() -> void:
 		for variant in 2:
 			for sound in SoundFx.hit_names(tier, variant):
 				all_known = all_known and SoundFx.PROFILES.has(sound)
+	for element in [1, 2, 3]:
+		for sound in SoundFx.hit_names(HitTier.LIGHT, 0, element):
+			all_known = all_known and SoundFx.PROFILES.has(sound)
 	check("every hit sound has a synthesized profile", all_known)
+	check("elemental contact adds exactly one accent to the base hit", SoundFx.hit_names(HitTier.HEAVY, 0, 1).size() == SoundFx.hit_names(HitTier.HEAVY, 0, 0).size() + 1)
+	check("steel contact adds no accent", SoundFx.hit_names(HitTier.LIGHT, 0, 0).size() == 1)
+	var fire := Effect.new()
+	fire.color = SkillDefs.FIRE
+	var cold := Effect.new()
+	cold.color = SkillDefs.COLD
+	var lightning := Effect.new()
+	lightning.color = SkillDefs.LIGHT
+	check("contact element is read from the attack's colour", Effect.contact_element(fire) == 1 and Effect.contact_element(lightning) == 2 and Effect.contact_element(cold) == 3 and Effect.contact_element(null) == 0)
+	fire.free()
+	cold.free()
+	lightning.free()
 	check("kill streak starts at the natural pitch", is_equal_approx(SoundFx.streak_pitch(0), 1.0))
 	check("kill streak rises one semitone per kill", is_equal_approx(SoundFx.streak_pitch(1), pow(2.0, 1.0 / 12.0)))
 	check("kill streak pitch is capped", is_equal_approx(SoundFx.streak_pitch(50), SoundFx.streak_pitch(SoundFx.STREAK_MAX)))

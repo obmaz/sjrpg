@@ -131,6 +131,16 @@ static func _element_cell(tint: Color) -> int:
 	return 0
 
 
+## JUICE #12: element of a contact source (0 none/steel, 1 fire, 2 lightning, 3 cold), shared by art and sound.
+static func contact_element(source: Node2D) -> int:
+	var tint := Color.WHITE
+	if source is Effect:
+		tint = source.color
+	elif source is Player:
+		tint = source.impact_color
+	return _element_cell(tint)
+
+
 ## Successful elemental casts light the forward hand; this has no hitbox or gameplay clock.
 static func spawn_cast(world_game: Node, caster: Player, tint: Color) -> Effect:
 	var cast := Effect.new()
@@ -228,12 +238,7 @@ static func spawn_impact(world_game: Node, at: Vector2, source: Node2D, heavy :=
 	impact.radius = 140.0 if heavy else 100.0
 	impact.life = 0.28 if heavy else 0.22
 	impact.z_index = 6
-	var tint := Color.WHITE
-	if source is Effect:
-		tint = source.color
-	elif source is Player:
-		tint = source.impact_color
-	impact.params["cell"] = _element_cell(tint)
+	impact.params["cell"] = contact_element(source)
 	WorldLighting.pulse(at, contact_flash_color(source), heavy)
 	if source != null:
 		impact.angle = contact_direction(source, at).angle()

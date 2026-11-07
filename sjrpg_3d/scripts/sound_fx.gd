@@ -24,6 +24,10 @@ const PROFILES := {
 	"impact_c": [150.0, 42.0, 0.14, 1400.0, 0.14, 0.072, "sine"],
 	"tick": [1900.0, 900.0, 0.04, 5200.0, 0.10, 0.02, "triangle"],
 	"kill": [260.0, 62.0, 0.24, 900.0, 0.14, 0.075, "sine"],
+	# JUICE #12: short elemental accents layered on elemental contact (cast sounds stay on the cast).
+	"hit_fire": [230.0, 70.0, 0.12, 900.0, 0.12, 0.04, "sine"],
+	"hit_lightning": [900.0, 300.0, 0.08, 3600.0, 0.10, 0.02, "sawtooth"],
+	"hit_ice": [1800.0, 900.0, 0.09, 5600.0, 0.06, 0.02, "triangle"],
 }
 const GAIN := 5.0  # the original plays through a master gain; raw gains are very quiet
 
@@ -85,15 +89,21 @@ func _synth(p: Array) -> AudioStreamWAV:
 
 ## JUICE #11: which sounds one confirmed hit plays. Light hits alternate two variants; harder hits add a
 ## high transient; a killing blow adds the kill thud.
-static func hit_names(tier: int, variant: int) -> Array[String]:
+static func hit_names(tier: int, variant: int, element := 0) -> Array[String]:
+	var names: Array[String] = []
 	match tier:
 		HitTier.LIGHT:
-			return ["impact" if variant % 2 == 0 else "impact_b"]
+			names.append("impact" if variant % 2 == 0 else "impact_b")
 		HitTier.MEDIUM:
-			return ["impact_c", "tick"]
+			names.append_array(["impact_c", "tick"])
 		HitTier.HEAVY:
-			return ["impact_heavy", "tick"]
-	return ["impact_heavy", "kill"]
+			names.append_array(["impact_heavy", "tick"])
+		_:
+			names.append_array(["impact_heavy", "kill"])
+	var accent: String = {1: "hit_fire", 2: "hit_lightning", 3: "hit_ice"}.get(element, "")
+	if accent != "":
+		names.append(accent)
+	return names
 
 
 ## One semitone per consecutive kill inside the window, capped so it never turns shrill.
@@ -101,8 +111,8 @@ static func streak_pitch(count: int) -> float:
 	return pow(2.0, clampi(count, 0, STREAK_MAX) / 12.0)
 
 
-func play_hit(tier: int) -> void:
-	var names := hit_names(tier, _hit_variant)
+func play_hit(tier: int, element := 0) -> void:
+	var names := hit_names(tier, _hit_variant, element)
 	_hit_variant += 1
 	for sound in names:
 		if sound == "kill":
@@ -130,6 +140,6 @@ func play(name: String, preview := false, pitch_multiplier := 1.0) -> void:
 	var player := _players[_next]
 	_next = (_next + 1) % _players.size()
 	player.stream = _streams[name]
-	player.pitch_scale = (_variation.randf_range(0.96, 1.04) if name in ["slash", "impact", "impact_b", "impact_c", "impact_heavy", "fire", "ice", "lightning"] else 1.0) * pitch_multiplier
+	player.pitch_scale = (_variation.randf_range(0.96, 1.04) if name in ["slash", "impact", "impact_b", "impact_c", "impact_heavy", "fire", "ice", "lightning", "hit_fire", "hit_ice", "hit_lightning"] else 1.0) * pitch_multiplier
 	player.volume_db = -4.0
 	player.play()
