@@ -69,7 +69,7 @@ for(const operation of ['load','create'])for(const profile of [{name:'portrait',
    const style=getComputedStyle(element),r=element.getBoundingClientRect();
    const sr=status?.getBoundingClientRect(),spin=spinner&&getComputedStyle(spinner),card=element.querySelector('.entry-load-card')?.getBoundingClientRect(),sp=spinner?.getBoundingClientRect();
    return {epoch:performance.timeOrigin+performance.now(),phase:element.dataset.phase||'',visible:!element.hidden&&style.display!=='none'&&style.visibility!=='hidden'&&Number(style.opacity)>0&&r.width>0&&r.height>0,
-    rect:[r.x,r.y,r.width,r.height],card_rect:card?[card.x,card.y,card.width,card.height]:null,spinner_rect:sp?[sp.x,sp.y,sp.width,sp.height]:null,status:status?.textContent||'',status_rect:sr?[sr.x,sr.y,sr.width,sr.height]:null,
+    rect:[r.x,r.y,r.width,r.height],card_rect:card?[card.x,card.y,card.width,card.height]:null,spinner_transformed_bounds:sp?[sp.x,sp.y,sp.width,sp.height]:null,spinner_rect:sp?[sp.x+sp.width/2-spinner.offsetWidth/2,sp.y+sp.height/2-spinner.offsetHeight/2,spinner.offsetWidth,spinner.offsetHeight]:null,status:status?.textContent||'',status_rect:sr?[sr.x,sr.y,sr.width,sr.height]:null,
     spinner_animation:spin?.animationName||'',spinner_duration:spin?.animationDuration||'',spinner_transform:spin?.transform||'',
     viewport:[innerWidth,innerHeight],adventure:window.__sjrpgAdventureReady===true,probe:window.__sjrpgEntryLoading?JSON.parse(JSON.stringify(window.__sjrpgEntryLoading)):null};
   };
