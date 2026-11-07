@@ -24,7 +24,7 @@ jobs:
             - name: Install offline model converter
               run: |
                   sudo apt-get update -qq
-                  sudo apt-get install -y blender
+                  sudo apt-get install -y blender python3-numpy
                   blender --version
             - uses: actions/cache@v4
               with:
@@ -35,7 +35,7 @@ jobs:
             - name: Verify exact official free source files and packaged CC0 licenses
               run: python3 sjrpg_3d/tools/hero_art/fetch_sources.py
             - name: Build actual adult merchant and verify exported geometry
-              run: blender --background --python sjrpg_3d/tools/hero_art/export_cc0_merchant.py
+              run: blender --background --python-exit-code 1 --python sjrpg_3d/tools/hero_art/export_cc0_merchant.py
             - name: Import with the pinned engine and publish candidate blobs without moving refs
               env:
                   SJRPG_ASSET_TOKEN: ${{ github.token }}

@@ -8,6 +8,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import struct
 from pathlib import Path
 
@@ -76,6 +77,53 @@ def rest_bounds(objects):
 
 
 before_low, before_high = rest_bounds(meshes)
+old_rig_world = rig.matrix_world.copy()
+target_rest = {bone.name: {"parent": bone.parent.name if bone.parent else None,
+                          "matrix": old_rig_world @ bone.matrix_local}
+               for bone in rig.data.bones}
+objects_before = set(bpy.data.objects)
+actions_before = set(bpy.data.actions)
+bpy.ops.import_scene.gltf(filepath=str(CACHE / "adult-source/UAL1_Standard.glb"))
+source_rig = next(obj for obj in bpy.data.objects if obj not in objects_before and obj.type == "ARMATURE")
+idle_source = next(action for action in bpy.data.actions if action not in actions_before and action.name.startswith("Idle_Loop_Armature"))
+source_world = source_rig.matrix_world.copy()
+ual_scale = source_world.to_scale()
+if max(ual_scale) - min(ual_scale) > 1e-5 or min(ual_scale) <= 0:
+    raise RuntimeError("UAL rig unit transform is not positive uniform")
+source_bones = {bone.name: bone for bone in source_rig.data.bones}
+if set(source_bones) != set(target_rest):
+    raise RuntimeError("UAL/Peasant joint names differ")
+position_error = 0.0
+orientation_error = 0.0
+for name, record in target_rest.items():
+    bone = source_bones[name]
+    if record["parent"] != (bone.parent.name if bone.parent else None):
+        raise RuntimeError("UAL/Peasant joint parent differs: " + name)
+    source_matrix = source_world @ bone.matrix_local
+    position_error = max(position_error, (source_matrix.translation - record["matrix"].translation).length)
+    source_rotation = source_matrix.to_quaternion().to_matrix()
+    target_rotation = record["matrix"].to_quaternion().to_matrix()
+    orientation_error = max(orientation_error, max(abs(source_rotation[row][col] - target_rotation[row][col]) for row in range(3) for col in range(3)))
+action_bones = set()
+object_tracks = []
+for curve in idle_source.fcurves:
+    match = re.match(r'pose\.bones\["([^"]+)"\]\.(location|rotation_quaternion|rotation_euler|scale)$', curve.data_path)
+    if not match:
+        object_tracks.append(curve.data_path)
+    else:
+        action_bones.add(match.group(1))
+if object_tracks or not action_bones.issubset(target_rest) or len(action_bones) < 5:
+    raise RuntimeError("Unreviewed idle action paths: " + str((object_tracks, sorted(action_bones - set(target_rest)))))
+bind_proof = {"target_rig": rig.name, "source_rig": source_rig.name, "joints": len(target_rest),
+              "parents_equal": True, "max_world_rest_head_error_m": position_error,
+              "max_world_rest_rotation_error": orientation_error,
+              "target_world_scale": list(old_rig_world.to_scale()), "source_world_scale": list(ual_scale),
+              "action_bones": sorted(action_bones), "object_tracks": object_tracks,
+              "action": idle_source.name, "translation_unit": "UAL world uniform scale"}
+print("CC0_MERCHANT_BIND_PROOF " + json.dumps(bind_proof), flush=True)
+if position_error > 0.0005 or orientation_error > 0.0005:
+    raise RuntimeError("UAL rest binding needs explicit retargeting; direct action copy rejected")
+
 uniform = HEIGHT / (before_high.z - before_low.z)
 old_rig_world = rig.matrix_world.copy()
 source_scale = old_rig_world.to_scale()
@@ -151,18 +199,66 @@ for obj in meshes:
                 small[source] = bpy.data.images.load(str(file), check_existing=False)
             node.image = small[source]
 
-actions_before = set(bpy.data.actions)
-bpy.ops.import_scene.gltf(filepath=str(CACHE / "adult-source/UAL1_Standard.glb"))
-idle_source = next(action for action in bpy.data.actions if action not in actions_before and action.name.startswith("Idle_Loop_Armature"))
 idle = idle_source.copy()
 idle.name = "idle"
-translation_scale = uniform * source_scale.x
+translation_scale = uniform * ual_scale.x
 for curve in idle.fcurves:
     if curve.data_path.endswith(".location"):
         for key in curve.keyframe_points:
             key.co.y *= translation_scale
             key.handle_left.y *= translation_scale
             key.handle_right.y *= translation_scale
+# Sample actual CPU-deformed Blender meshes across the complete idle.
+rig.animation_data_create()
+rig.animation_data.action = idle
+for other in rig.animation_data.nla_tracks:
+    other.mute = True
+source_rig.animation_data_create()
+source_rig.animation_data.action = idle_source
+for other in source_rig.animation_data.nla_tracks:
+    other.mute = True
+source_rig.data.pose_position = "POSE"
+rig.data.pose_position = "POSE"
+scene = bpy.context.scene
+pose_samples = []
+feet_meshes = [obj for obj in meshes if "Feet" in obj.name]
+for fraction in (0.0, 0.25, 0.5, 0.75, 1.0):
+    first, last = idle.frame_range
+    frame = first + (last - first) * fraction
+    scene.frame_set(int(frame), subframe=frame - int(frame))
+    bpy.context.view_layer.update()
+    graph = bpy.context.evaluated_depsgraph_get()
+    points = []
+    foot_points = []
+    for obj in meshes:
+        evaluated = obj.evaluated_get(graph)
+        data = evaluated.to_mesh()
+        transformed = [evaluated.matrix_world @ vertex.co for vertex in data.vertices]
+        points.extend(transformed)
+        if obj in feet_meshes:
+            foot_points.extend(transformed)
+        evaluated.to_mesh_clear()
+    target_root = rig.matrix_world @ rig.pose.bones["root"].matrix.translation
+    source_root = source_rig.matrix_world @ source_rig.pose.bones["root"].matrix.translation
+    pose_samples.append({"phase": fraction, "mesh_min_z": min(point.z for point in points),
+                    "mesh_max_z": max(point.z for point in points),
+                    "feet_min_z": min(point.z for point in foot_points),
+                    "root_xy": [target_root.x, target_root.y],
+                    "source_root_xy": [source_root.x, source_root.y],
+                    "head_z": (rig.matrix_world @ rig.pose.bones["Head"].head).z,
+                    "foot_bones_z": [(rig.matrix_world @ rig.pose.bones[name].head).z for name in ("foot_l", "foot_r")]})
+root_drift = max(math.dist(item["root_xy"], pose_samples[0]["root_xy"]) for item in pose_samples)
+source_drift = max(math.dist(item["source_root_xy"], pose_samples[0]["source_root_xy"]) for item in pose_samples)
+foot_drift = max(item["feet_min_z"] for item in pose_samples) - min(item["feet_min_z"] for item in pose_samples)
+pose_proof = {"samples": pose_samples, "target_root_planar_drift_m": root_drift, "source_root_planar_drift_m": source_drift,
+              "feet_vertical_drift_m": foot_drift}
+print("CC0_MERCHANT_POSE_PROOF " + json.dumps(pose_proof), flush=True)
+if root_drift > 0.002 or source_drift > 0.002 or foot_drift > 0.035:
+    raise RuntimeError("Idle root/feet are not a stable in-place adult pose")
+if min(item["feet_min_z"] for item in pose_samples) < -0.03 or max(item["feet_min_z"] for item in pose_samples) > 0.04:
+    raise RuntimeError("Posed merchant feet leave the actual native ground")
+source_rig.animation_data.action = None
+
 rig.animation_data_create()
 for track in list(rig.animation_data.nla_tracks):
     rig.animation_data.nla_tracks.remove(track)
@@ -216,6 +312,7 @@ licenses = {
 for name, relative in licenses.items():
     (OUT / name).write_bytes((CACHE / relative).read_bytes())
 manifest = {
+    "bind_proof": bind_proof, "pose_proof": pose_proof,
     "asset": "merchant", "runtime_path": "assets/art/native_residents/merchant.glb",
     "creator": "Quaternius", "license": "CC0-1.0",
     "license_records": {name: contract["sourceFiles"][relative] for name, relative in licenses.items()},
