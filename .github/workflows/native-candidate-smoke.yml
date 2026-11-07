@@ -1,4 +1,5 @@
 name: Candidate UI and native model diagnostics
+# Native teardown must complete before the test runner requests process exit.
 
 on:
     push:

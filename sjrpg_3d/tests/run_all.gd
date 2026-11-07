@@ -41,6 +41,9 @@ func _ready() -> void:
 			print("FAIL %s (test script cannot be instantiated)" % name)
 			continue
 		var case_node: TestCase = script.new()
+		# The node owns its script; do not keep a second resource reference across
+		# the awaited case and final shutdown continuation.
+		script = null
 		add_child(case_node)
 		print("── case: %s" % name)
 		var t0 := Time.get_ticks_msec()
@@ -51,6 +54,17 @@ func _ready() -> void:
 		if case_node.failures > 0:
 			failed.append(name)
 		case_node.queue_free()
+		case_node = null
 		await get_tree().process_frame
 	print("RESULT cases=%d failed=%d time=%dms %s" % [total, failed.size(), Time.get_ticks_msec() - started, str(failed)])
-	get_tree().quit(1 if failed.size() > 0 or total == 0 else 0)
+	var exit_code := 1 if failed.size() > 0 or total == 0 else 0
+	# Let queued scene/native teardown finish, then leave this coroutine before
+	# shutdown checks resource ownership. No cache clearing or error suppression.
+	get_tree().paused = false
+	await get_tree().physics_frame
+	await get_tree().process_frame
+	_quit_clean.call_deferred(exit_code)
+
+
+func _quit_clean(exit_code: int) -> void:
+	get_tree().quit(exit_code)
