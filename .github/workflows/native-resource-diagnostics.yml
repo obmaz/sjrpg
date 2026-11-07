@@ -16,7 +16,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                partition: [focused, merchant, last]
+                partition: [focused, music, last]
         env:
             SJRPG_RESOURCE_PARTITION: ${{ matrix.partition }}
         steps:
@@ -42,7 +42,7 @@ jobs:
                   import re
                   focused = re.search(r"--only=([a-z0-9_,]+)", Path(".github/workflows/native-candidate-smoke.yml").read_text()).group(1).split(",")
                   partition = os.environ["SJRPG_RESOURCE_PARTITION"]
-                  selected = {"focused": sorted(focused), "merchant": ["native_merchant"], "last": ["world_zoom"]}[partition]
+                  selected = {"focused": sorted(focused), "music": ["music"], "last": ["world_zoom"]}[partition]
                   assert all(name in names for name in selected), "Unknown diagnostic case"
                   output = Path("build/resource-diagnostics") / partition
                   output.mkdir(parents=True, exist_ok=True)

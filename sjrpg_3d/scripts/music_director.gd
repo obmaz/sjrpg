@@ -18,6 +18,32 @@ var current := ""
 var _players := {}
 var _level := {}
 var _next_check := 0.0
+var _focus_paused := false
+
+
+func _enter_tree() -> void:
+	# Re-entering the same director restores streams without creating duplicate players.
+	current = ""
+	_next_check = 0.0
+	for name: String in _players:
+		var player: AudioStreamPlayer = _players[name]
+		if is_instance_valid(player):
+			player.stream = TRACKS[name]
+			player.stream_paused = _focus_paused
+			_level[name] = 0.0
+
+
+func _exit_tree() -> void:
+	# Release each owned Ogg decoder/playback while its player is still alive.
+	# Merely freeing the parent can leave an active looping playback in AudioServer.
+	current = ""
+	_next_check = 0.0
+	for name: String in _players:
+		var player: AudioStreamPlayer = _players[name]
+		if is_instance_valid(player):
+			player.stop()
+			player.stream = null
+		_level[name] = 0.0
 
 
 func _ready() -> void:
@@ -30,6 +56,7 @@ func _ready() -> void:
 		player.stream = stream
 		player.volume_db = -80.0
 		add_child(player)
+		player.stream_paused = _focus_paused
 		_players[name] = player
 		_level[name] = 0.0
 
@@ -62,6 +89,7 @@ func step(delta: float) -> void:
 			player.volume_db = BASE_DB + linear_to_db(level)
 			if not player.playing:
 				player.play()
+			player.stream_paused = _focus_paused
 		elif player.playing:
 			player.stop()
 
@@ -79,5 +107,6 @@ func _notification(what: int) -> void:
 	var back := what in [NOTIFICATION_WM_WINDOW_FOCUS_IN, NOTIFICATION_APPLICATION_FOCUS_IN, NOTIFICATION_APPLICATION_RESUMED]
 	if not (lost or back):
 		return
+	_focus_paused = lost
 	for player: AudioStreamPlayer in _players.values():
-		player.stream_paused = lost
+		player.stream_paused = _focus_paused

@@ -10,6 +10,7 @@ func run() -> void:
 		check("%s track is a 30-90 second loop" % name, stream.get_length() >= 30.0 and stream.get_length() <= 90.0)
 	var game := await make_game()
 	var music: MusicDirector = game.music
+	var town_position: Vector2 = game.player.position
 	check("the game owns a music director", music != null)
 	for name in ["town", "field", "dungeon"]:
 		var looping: AudioStreamOggVorbis = MusicDirector.TRACKS[name]
@@ -43,6 +44,75 @@ func run() -> void:
 	check("music keeps fading while a menu pauses the game", get_tree().paused and music.process_mode == Node.PROCESS_MODE_ALWAYS)
 	game.hud.close_panel()
 	check("music setting is saved with the device settings", Prefs.music_enabled == true)
-	Prefs.music_enabled = old_music
+	# Exercise real overlapping voices before exit, not merely allocated silent players.
+	var exits: Array[Dictionary] = []
+	music.tree_exited.connect(_observe_exit.bind(music, exits))
+	_activate_three(game, music, town_position)
+	check("all three real tracks are active in the interrupted crossfade", _all_playing(music))
+	music._notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
+	for player: AudioStreamPlayer in music._players.values():
+		check("focus loss pauses each actual audio player", player.stream_paused)
+	var players: Dictionary = music._players.duplicate()
+	game.remove_child(music)
+	check("detaching stops voices, releases streams and resets fade state", exits.size() == 1 and bool(exits[0]["released"]) and bool(exits[0]["reset"]))
+	game.dungeon.active = false
+	game.player.position = Iso.project(Vector2(-2800, -2800))
+	game.add_child(music)
+	check("re-entering reuses exactly the original three players", music._players.size() == 3 and music.get_child_count() == 3)
+	for name: String in MusicDirector.TRACKS:
+		var player: AudioStreamPlayer = music._players[name]
+		check("re-entering restores the original track without duplicate players", player == players[name] and player.stream == MusicDirector.TRACKS[name])
+	music._process(0.1)
+	check("re-entering begins the current context fade", music.current == "field" and music.is_playing("field") and music.level_of("field") > 0.0 and music.level_of("field") < 1.0)
+	for player: AudioStreamPlayer in music._players.values():
+		check("re-entry preserves actual player focus pause", player.stream_paused)
+	music._notification(Node.NOTIFICATION_APPLICATION_FOCUS_IN)
+	music.step(MusicDirector.FADE_SECONDS)
+	var field_player: AudioStreamPlayer = music._players["field"]
+	check("focus return resumes the actual field playback and normal fade", not field_player.stream_paused and field_player.playing and is_equal_approx(music.level_of("field"), 1.0))
+	_activate_three(game, music, town_position)
+	check("game shutdown starts with all three overlapping voices active", _all_playing(music))
+	var director_ref: WeakRef = weakref(music)
+	var player_refs: Array[WeakRef] = []
+	for player: AudioStreamPlayer in music._players.values():
+		player_refs.append(weakref(player))
 	game.queue_free()
 	await _frames(2)
+	check("freeing the actual game invokes the same stream-release contract", exits.size() == 2 and bool(exits[1]["released"]) and bool(exits[1]["reset"]))
+	check("game destruction releases its director node", director_ref.get_ref() == null)
+	for reference: WeakRef in player_refs:
+		check("game destruction releases every owned player node", reference.get_ref() == null)
+	Prefs.music_enabled = old_music
+
+
+func _activate_three(game: Node, director: MusicDirector, town_position: Vector2) -> void:
+	var previous_scope: bool = game.dungeon.active
+	game.dungeon.active = false
+	game.player.position = town_position
+	director._next_check = 0.0
+	director._process(MusicDirector.FADE_SECONDS)
+	game.player.position = Iso.project(Vector2(-2800, -2800))
+	director._next_check = 0.0
+	director._process(0.1)
+	game.dungeon.active = true
+	director._next_check = 0.0
+	director._process(0.01)
+	game.dungeon.active = previous_scope
+
+
+func _all_playing(director: MusicDirector) -> bool:
+	for name: String in MusicDirector.TRACKS:
+		if not director.is_playing(name):
+			return false
+	return true
+
+
+func _observe_exit(director: MusicDirector, events: Array[Dictionary]) -> void:
+	var released: bool = director._players.size() == MusicDirector.TRACKS.size()
+	var reset: bool = director.current.is_empty() and is_zero_approx(director._next_check)
+	for name: String in director._players:
+		var player: AudioStreamPlayer = director._players[name]
+		released = released and is_instance_valid(player) and not player.playing and player.stream == null
+		reset = reset and is_zero_approx(director.level_of(name))
+	events.append({"released": released, "reset": reset})
+
