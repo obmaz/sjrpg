@@ -1,5 +1,5 @@
 name: Candidate UI and native model diagnostics
-# Verify music decoder teardown alongside native actor ownership.
+# Verify owned paused music voices and scene teardown without extra runner timing.
 
 on:
     push:

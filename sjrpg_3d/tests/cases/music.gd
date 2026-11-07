@@ -63,9 +63,36 @@ func run() -> void:
 		var player: AudioStreamPlayer = music._players[name]
 		check("re-entering restores the original track without duplicate players", player == players[name] and player.stream == MusicDirector.TRACKS[name])
 	music._process(0.1)
-	check("re-entering begins the current context fade", music.current == "field" and music.is_playing("field") and music.level_of("field") > 0.0 and music.level_of("field") < 1.0)
+	var paused_field: AudioStreamPlayer = music._players["field"]
+	check("re-entering begins the paused context fade", music.current == "field" and paused_field.has_stream_playback() and paused_field.stream_paused and music.level_of("field") > 0.0 and music.level_of("field") < 1.0)
+	for name: String in ["town", "dungeon"]:
+		var inactive: AudioStreamPlayer = music._players[name]
+		check("inactive tracks retain no decoder after re-entry", not inactive.has_stream_playback())
+	if paused_field.has_stream_playback():
+		var playback: AudioStreamPlayback = paused_field.get_stream_playback()
+		var playback_id: int = playback.get_instance_id()
+		playback = null
+		music.step(0.1)
+		check("stepping preserves the same paused decoder", paused_field.has_stream_playback() and paused_field.stream_paused)
+		if paused_field.has_stream_playback():
+			playback = paused_field.get_stream_playback()
+			check("paused playback is not restarted every step", playback.get_instance_id() == playback_id)
+			playback = null
+	Prefs.music_enabled = false
+	music._next_check = 0.0
+	music._process(0.0)
+	music.step(MusicDirector.FADE_SECONDS)
 	for player: AudioStreamPlayer in music._players.values():
-		check("re-entry preserves actual player focus pause", player.stream_paused)
+		check("music off releases every playback while unfocused", not player.has_stream_playback())
+	music._notification(Node.NOTIFICATION_APPLICATION_FOCUS_IN)
+	music._process(0.1)
+	for player: AudioStreamPlayer in music._players.values():
+		check("focus return cannot resume music while the setting is off", not player.has_stream_playback())
+	music._notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
+	Prefs.music_enabled = true
+	music._next_check = 0.0
+	music._process(0.1)
+	check("re-enabling while unfocused preserves paused field playback", paused_field.has_stream_playback() and paused_field.stream_paused)
 	music._notification(Node.NOTIFICATION_APPLICATION_FOCUS_IN)
 	music.step(MusicDirector.FADE_SECONDS)
 	var field_player: AudioStreamPlayer = music._players["field"]
@@ -112,7 +139,7 @@ func _observe_exit(director: MusicDirector, events: Array[Dictionary]) -> void:
 	var reset: bool = director.current.is_empty() and is_zero_approx(director._next_check)
 	for name: String in director._players:
 		var player: AudioStreamPlayer = director._players[name]
-		released = released and is_instance_valid(player) and not player.playing and player.stream == null
+		released = released and is_instance_valid(player) and not player.playing and not player.has_stream_playback() and player.stream == null
 		reset = reset and is_zero_approx(director.level_of(name))
 	events.append({"released": released, "reset": reset})
 

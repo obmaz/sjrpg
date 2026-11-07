@@ -87,10 +87,10 @@ func step(delta: float) -> void:
 		var player: AudioStreamPlayer = _players[name]
 		if level > 0.0:
 			player.volume_db = BASE_DB + linear_to_db(level)
-			if not player.playing:
+			if not player.has_stream_playback():
 				player.play()
 			player.stream_paused = _focus_paused
-		elif player.playing:
+		elif player.has_stream_playback():
 			player.stop()
 
 

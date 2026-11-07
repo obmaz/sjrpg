@@ -1,4 +1,5 @@
 name: Diagnose native shutdown resources
+# Baseline runner with explicit music playback ownership and focus restoration.
 on:
     push:
         paths:
