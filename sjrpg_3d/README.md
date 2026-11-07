@@ -11,7 +11,7 @@ Godot4.7.2에서 120° 직교 쿼터뷰를 유지하는 독립3D 프로젝트입
 - `NativeAdventure`:3D 모험 진입점과 기존 UI·진행 어댑터
 - `SpatialWorld3D`:실제3D 정적 충돌·지형 높이·CharacterBody3D 배우·성문·마을 안전 경계
 - `SpatialCombat3D`:높이·벽·3D 몸체를 반영한 공격과 투사체
-- 공간 표시기:입체 건물·나무·마법사와,3D 에셋이 없는 대상의 개별2.5D 원화 메시
+- 공간 표시기:입체 건물·나무·배우·시체·지형 장식과 기존 위치/수명을 따르는 마법 효과
 - [네 주택 패밀리](docs/native-house-family.md): 같은 재질을 공유하는 여관·대장간·마구간·상점의 실제 문/창 홈·처마·굴뚝·지붕창
 - [소환 비석·보물상자](docs/native-encounter-props.md): 기존 재질·위치·충돌을 유지하는 입체 모델과 실제 충전·피격·소모 상태
 - 기존 숲1장·선택형 동굴·직업·스킬·의뢰·UI·저장 규칙 재사용, 후속 스테이지 추가 없음
@@ -40,6 +40,8 @@ tools/check.sh --export
 
 ## 입체 배우와 UI 패밀리
 
-전사·주민 여덟 역할·기존 몬스터 다섯 종류와 시체는 발 위치·피격·사망 수명을 기존 게임에서 읽는 입체 모델을 사용합니다. [주민](docs/native-residents.md), [전사](docs/native-warrior.md), [몬스터와 시체](docs/native-enemy-models.md), [숲 장식과 랜드마크](docs/native-forest-props.md)에 제작 범위와 공유 재질을 기록합니다. 카메라는 기존 120° 직교 쿼터뷰를 유지합니다.
+전사·주민 여덟 역할·기존 몬스터 다섯 종류와 시체는 발 위치·피격·사망 수명을 기존 게임에서 읽는 입체 모델을 사용합니다. [주민](docs/native-residents.md), [전사](docs/native-warrior.md), [몬스터와 시체](docs/native-enemy-models.md), [숲 장식과 랜드마크](docs/native-forest-props.md)에 제작 범위와 공유 재질을 기록합니다. 카메라는 기존 120° 직교 쿼터뷰를 유지합니다. 배우의 천·가죽·철·피부·털·바위는 [생성형 공유 표면](docs/native-actor-surfaces.md)을 실제 입체 형태에 적용합니다.
 
 물약·하단 메뉴·직업별 아바타는 [회화형 숲 UI 패밀리](docs/woodland-ui-family.md)를 공유합니다. 스킬트리는 같은 청동·아이보리·숯색으로 상태를 구분하고, 모바일 물약과 하단 메뉴 입력 영역은 실제 CSS 크기 44px 이상으로 배치합니다.
+
+검수의 `remaining_sources`는 숲·동굴에 남은 물리 오브젝트 원화만 기록합니다. 바닥·물·마법 입자·이름표·UI의 평면 표시는 별도이며, 이를 입체 모델로 완료 처리하지 않습니다. 주민·전사·다섯 몬스터의 실제 네 방향과 모바일 가로·세로 화면은 `native-style-review.yml`의 비교 캡처로 확인합니다.
