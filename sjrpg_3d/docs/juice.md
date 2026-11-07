@@ -27,7 +27,7 @@
 | 7 | 근접 전진 | 예정 | | |
 | 8 | 큰 피해 피격 비네트 | 예정 | | |
 | 9 | 일반 적 공격 예고 | 예정 | | |
-| 10 | 보스 슬램 카메라 | 예정 | | |
+| 10 | 보스 슬램 카메라 (착지마다 카메라 충격, 피해 여부와 무관) | 완료 | `enemy.gd` windup 종료 처리 | `juice_enemy` |
 | 11 | 타격음 변주·고음 틱·처치음·연속 처치 피치 (보이스 6→8) | 완료, 청취 튜닝 필요 | `sound_fx.gd` `hit_names`·`play_hit`·`streak_pitch`, `enemy.gd` | `juice_tier` |
 | 12 | 속성별 적중음 (불·번개·얼음 짧은 악센트) | 완료, 청취 튜닝 필요 | `effects.gd` `contact_element`, `sound_fx.gd` `hit_names` | `juice_tier` |
 | 13 | 적 체력바 잔상 (0.35초 유지 후 초당 120% 소모) | 완료 | `enemy.gd` `ghost_hp`·`_update_ghost`·`_draw` | `juice_enemy` |

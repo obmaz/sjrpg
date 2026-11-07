@@ -326,6 +326,8 @@ func _process(delta: float) -> void:
 					_boss_attacks += 1
 					game.spawn_nova(position, attack_range + 60.0, Color(1.0, 0.6, 0.3))
 					SoundFx.play("impact")
+					# JUICE #10: the slam lands on the ground even when the hero dodges it.
+					game.combat_feedback(position, 1.0)
 				_state = "recover"
 				_recover_duration = GameTempo.duration((1.2 if is_boss else 0.7) / rate)
 				_recover_visual_duration = GameTempo.duration((0.4 if is_boss else 0.28) / rate)
