@@ -10,6 +10,9 @@ static func _tri(tool: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, normal: 
 		var swap := b
 		b = c
 		c = swap
+	# The caller supplies an outward orientation hint; tapered/broken faces need
+	# their actual triangle plane normal, not the hint projected onto a wall axis.
+	normal = (b - a).cross(c - a).normalized()
 	for point in [a, c, b]:
 		tool.set_normal(normal)
 		var uv := Vector2(point.x, point.z)

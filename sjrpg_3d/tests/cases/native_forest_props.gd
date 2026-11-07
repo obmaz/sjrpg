@@ -45,7 +45,7 @@ func run() -> void:
 		check("landmark includes lit volume geometry", (entry["root"] as Node3D).get_child_count() >= 2)
 		for candidate in (entry["root"] as Node3D).find_children("*", "MeshInstance3D", true, false):
 			var node := candidate as MeshInstance3D
-			if not (str(node.name) == "CliffSides" or str(node.name).begins_with("WeatheredStone")):
+			if not (str(node.name) == "CliffSides" or str(node.name).begins_with("WeatheredStone") or str(node.name) == "RootMound"):
 				continue
 			var arrays := node.mesh.surface_get_arrays(0)
 			var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
@@ -53,6 +53,7 @@ func run() -> void:
 			var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
 			var valid_uv := uv.size() == points.size()
 			var clockwise := true
+			var plane_normals := true
 			var vertical_faces := 0
 			for i in range(0, points.size(), 3):
 				var geometric := (points[i + 1] - points[i]).cross(points[i + 2] - points[i])
@@ -62,13 +63,19 @@ func run() -> void:
 				var uv_b := uv[i + 2] - uv[i]
 				valid_uv = valid_uv and absf(uv_a.cross(uv_b)) > 0.00000001
 				clockwise = clockwise and geometric.dot(normals[i]) < 0.0
+				var edge_a := (points[i + 1] - points[i]).normalized()
+				var edge_b := (points[i + 2] - points[i]).normalized()
+				for offset in 3:
+					var normal := normals[i + offset]
+					plane_normals = plane_normals and absf(normal.length() - 1.0) < 0.001 and absf(normal.dot(edge_a)) < 0.001 and absf(normal.dot(edge_b)) < 0.001
 				if absf(normals[i].y) < 0.7:
 					vertical_faces += 1
 					for offset in [1, 2]:
 						var point_delta := points[i + offset] - points[i]
 						# Vertical UV height always follows metre Y at 2.56m/tile.
 						valid_uv = valid_uv and is_equal_approx((uv[i + offset].y - uv[i].y) * 2.56, -point_delta.y)
-			check("landmark all mapped triangles retain area and vertical metre density " + str(node.name), valid_uv and vertical_faces > 0)
+			check("landmark all mapped triangles retain area and vertical metre density " + str(node.name), valid_uv and (vertical_faces > 0 or str(node.name) == "RootMound"))
+			check("landmark tapered and broken face normals are perpendicular to the real triangle plane " + str(node.name), plane_normals)
 			check("landmark winding is Godot clockwise with outward normals " + str(node.name), clockwise)
 	var children := environment.forest.get_child_count()
 	environment.sync(0.0, true)

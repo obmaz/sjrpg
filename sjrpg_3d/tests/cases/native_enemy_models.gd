@@ -5,7 +5,7 @@ func _check_winding(mesh: Mesh, surface: int, label: String) -> void:
 	var arrays: Array = mesh.surface_get_arrays(surface)
 	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
-	var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+	var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
 	var count: int = indices.size() if not indices.is_empty() else vertices.size()
 	var signed_volume: float = 0.0
 	var wrong_normal: int = 0
@@ -42,7 +42,7 @@ func run() -> void:
 				var arrays := mesh.mesh.surface_get_arrays(surface)
 				var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 				var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
-				var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+				var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
 				check("actor vertices retain normals " + kind, vertices.size() > 0 and normals.size() == vertices.size())
 				_check_winding(mesh.mesh, surface, kind + "/" + str(surface))
 				triangles += indices.size() / 3 if indices.size() > 0 else vertices.size() / 3
