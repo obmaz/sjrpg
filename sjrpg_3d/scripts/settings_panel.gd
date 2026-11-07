@@ -27,6 +27,7 @@ func _ready() -> void:
 	set_header("모험 설정")
 	_rebuild()
 	add_footer("모험 계속하기", func(): closed.emit(), true)
+	get_viewport().size_changed.connect(_fit_zoom_targets)
 
 
 func _rebuild() -> void:
@@ -87,6 +88,7 @@ func _rebuild() -> void:
 	body.add_child(_action_row("저장하고 타이틀로", func(): title_requested.emit()))
 	var danger := _action_row("새 모험 준비", func(): _confirm_restart())
 	body.add_child(danger)
+	_fit_zoom_targets()
 	_publish_version_buttons.call_deferred()
 
 
@@ -197,6 +199,23 @@ func _world_zoom_card() -> Control:
 		row.add_child(button)
 		_zoom_buttons.append(button)
 	return card
+
+
+func zoom_css_scale() -> float:
+	if OS.has_feature("web"):
+		var width: Variant = JavaScriptBridge.eval("window.innerWidth", true)
+		if (width is float or width is int) and float(width) > 0.0:
+			return get_viewport().get_visible_rect().size.x / float(width)
+	if DisplayServer.get_name() == "headless":
+		return 1.0
+	return get_viewport().get_visible_rect().size.x / maxf(1.0, float(get_window().size.x))
+
+
+func _fit_zoom_targets() -> void:
+	var touch := 44.0 * zoom_css_scale()
+	for button in _zoom_buttons:
+		if is_instance_valid(button) and not button.is_queued_for_deletion():
+			button.custom_minimum_size = Vector2(touch, maxf(76.0, touch))
 
 
 func _choose_world_zoom(amount: float) -> void:

@@ -8,6 +8,17 @@ class PhoneTree:
 		return test_css_scale
 
 
+class PhoneSettings:
+	extends SettingsPanel
+	func zoom_css_scale() -> float:
+		return 720.0 / 320.0
+
+
+class SettingsGame:
+	extends Node
+	var dungeon := {"active": false}
+
+
 func run() -> void:
 	check("painted HUD atlas has its actual delivered dimensions", UiToneArt.icons().get_size() == Vector2(1536, 1024))
 	check("painted avatars have their actual delivered dimensions", UiToneArt.portraits().get_size() == Vector2(1774, 887))
@@ -50,7 +61,21 @@ func run() -> void:
 			var control := node as Control
 			if control is Label or control is Button:
 				check("actual skill description/info/effects/slot controls retain 12 CSS pixels", float(control.get_theme_font_size("font_size")) / panel.test_css_scale >= 12.0)
+			if control is Button:
+				check("real learn and equip buttons retain 44 CSS pixel targets", control.size.x / panel.test_css_scale >= 44.0 and control.size.y / panel.test_css_scale >= 44.0)
 		var clipping := panel._detail.get_parent() as ScrollContainer
 		check("larger skill text wraps within the real detail scroll viewport", panel._detail.size.x <= clipping.size.x + 1.0)
+	panel.queue_free()
+	await _frames(2)
+	view.size = Vector2i(720, 1280)
+	var settings_game := SettingsGame.new()
+	view.add_child(settings_game)
+	var settings := PhoneSettings.new()
+	settings.setup(settings_game)
+	view.add_child(settings)
+	await _frames(5)
+	check("all real supported zoom choices are present", settings._zoom_buttons.size() == Prefs.WORLD_ZOOMS.size())
+	for button in settings._zoom_buttons:
+		check("actual zoom controls retain 44 CSS pixel targets", button.size.x / settings.zoom_css_scale() >= 44.0 and button.size.y / settings.zoom_css_scale() >= 44.0)
 	view.queue_free()
 	await _frames(2)

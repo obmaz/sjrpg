@@ -409,6 +409,11 @@ func _fit_detail_type() -> void:
 			label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		elif control is Button:
 			var button := control as Button
+			if not button.has_meta("woodland_base_minimum"):
+				button.set_meta("woodland_base_minimum", button.custom_minimum_size)
+			var original: Vector2 = button.get_meta("woodland_base_minimum")
+			var touch := 44.0 * graph_css_scale()
+			button.custom_minimum_size = Vector2(maxf(original.x, touch), maxf(original.y, touch))
 			button.clip_text = true
 			button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 			button.tooltip_text = button.text
