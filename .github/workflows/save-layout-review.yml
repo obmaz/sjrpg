@@ -38,13 +38,16 @@ jobs:
                       ~/.godot-tools
                       ~/.local/share/godot/export_templates
                   key: godot-${{ hashFiles('.godot-version') }}-tools-v1
-            - name: Check save selection and export native UI
+            - name: Check save selection
               run: |
                   chmod +x tools/*.sh sjrpg_3d/tools/*.sh
                   tools/setup_godot.sh
                   tools/check.sh --project=3d --only=entry_layout,save_layout,save_time_label,save_slots
-                  sjrpg_3d/tools/export_web.sh
+            - name: Export native UI for visual diagnostics
+              if: success() || failure()
+              run: sjrpg_3d/tools/export_web.sh
             - name: Run actual save layout browser harness
+              if: success() || failure()
               run: |
                   mkdir -p build/save-layout-review
                   python3 -m http.server 8779 --bind 127.0.0.1 --directory sjrpg_3d/build/web > build/save-layout-review/server.log 2>&1 &

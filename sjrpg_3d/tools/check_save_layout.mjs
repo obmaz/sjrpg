@@ -57,6 +57,9 @@ function geometry(s,label){
  assert(endY(list)<=footer.y+1,label+' list must not cover the fixed footer');
  const heading=css(s,layout.heading),subtitle=css(s,layout.subtitle),back=css(s,s.ui.rects.back),action=css(s,s.ui.rects.continue);
  assert(encloses(sheet,heading)&&encloses(sheet,subtitle)&&!overlaps(heading,subtitle)&&!overlaps(back,heading),label+' header and subtitle');
+ assert(endY(subtitle)<=list.y+1,label+' wrapped subtitle must not enter the scrolling save list');
+ const contextBox=css(s,layout.context);
+ assert(encloses(footer,contextBox)&&endY(contextBox)<=action.y+1,label+' footer context must remain separate from the main action');
  assert(back.w>=43.5&&back.h>=43.5&&action.w>=43.5&&action.h>=43.5,label+' actual CSS header/footer touch targets');
  assert(encloses(footer,action),label+' main action must remain in its footer');
  const ratio=s.window[0]/s.ui.viewport[0];

@@ -16,6 +16,8 @@ func _layout_check(select: Control, view: SubViewport, scenario: String) -> void
 	var label := "%s/%s" % [scenario, view.size]
 	check("save list and fixed action footer fit the real control viewport " + label, _inside(area, list) and _inside(area, footer) and list.size.y >= 44.0 and list.end.y <= footer.position.y + EPS)
 	check("save title and subtitle stay separate " + label, select.heading.get_global_rect().end.y <= select.subtitle.get_global_rect().position.y + EPS)
+	check("wrapped subtitle stays above the real scrolling list " + label, select.subtitle.get_global_rect().end.y <= list.position.y + EPS)
+	check("footer context stays separate from its main action " + label, _inside(footer, select.slot_context.get_global_rect()) and select.slot_context.get_global_rect().end.y <= select.continue_button.get_global_rect().position.y + EPS)
 	check("save sheet exposes exactly four real source rows " + label, select.slot_buttons.size() == 4 and select.slot_bands.size() == 4)
 	var summaries := GameState.slot_summaries()
 	for index in 4:

@@ -46,6 +46,7 @@ var _slot_touch := 80.0
 var _slot_css := 1.0
 var _slot_safe := Rect2()
 var _delete_target := 0
+var _slot_relayout_pending := false
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -55,6 +56,7 @@ func _ready() -> void:
 	heading = _label("모험 선택", 36, EntryUi.TEXT, true)
 	subtitle = _label("네 개의 여정, 당신만의 수호자", 23, EntryUi.MUTED)
 	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	subtitle.minimum_size_changed.connect(_queue_slot_layout)
 	slot_switch = _button("", show_slots)
 	showcase = Control.new()
 	showcase.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -104,6 +106,7 @@ func _ready() -> void:
 	add_child(slot_footer)
 	slot_context = _label("", 22, EntryUi.MUTED)
 	slot_context.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	slot_context.minimum_size_changed.connect(_queue_slot_layout)
 	for index in 4:
 		var number := index + 1
 		var band := HBoxContainer.new()
@@ -125,7 +128,9 @@ func _ready() -> void:
 		slot_title_labels.back().text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		slot_number_labels.back().horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		var meta := _label("", 22, EntryUi.MUTED, false, row)
-		meta.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		meta.clip_text = true
+		meta.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		meta.minimum_size_changed.connect(_queue_slot_layout)
 		slot_meta_labels.append(meta)
 		slot_status_labels.append(_label("", 20, EntryUi.BRONZE, false, row))
 		var remove := _button("삭제", func(): confirm_delete(number))
@@ -225,18 +230,18 @@ func _update() -> void:
 	for index in 4:
 		var entry: Dictionary = _summaries[index]
 		var title := "새로운 모험"
-		var meta := "전사 또는 마법사로 시작하세요"
+		var meta := "전사 또는 마법사로\n새로운 여정을 시작하세요"
 		var status := "선택됨" if selected_slot == index + 1 else ""
 		if bool(entry["valid"]):
 			var name: String = GameState.CLASSES[str(entry["class"])]["name"]
 			title = "%s · Lv.%d" % [name, int(entry["level"])]
 			var location := "바람 동굴" if str(entry["location"]) == "cave" else "숲 마을"
-			meta = location + " · " + ("백업 복원" if bool(entry["backup"]) else SaveTimeLabel.for_device(float(entry["timestamp"])))
+			meta = location + "\n" + ("백업 복원" if bool(entry["backup"]) else SaveTimeLabel.for_device(float(entry["timestamp"])))
 			if bool(entry["backup"]) and status.is_empty():
 				status = "백업"
 		elif bool(entry["occupied"]):
 			title = "읽을 수 없는 모험"
-			meta = "삭제 후 새로운 모험을 만들 수 있습니다"
+			meta = "삭제 후 새로운 모험을\n만들 수 있습니다"
 			if status.is_empty():
 				status = "확인 필요"
 		slot_title_labels[index].text = title
@@ -444,6 +449,17 @@ func _quiet_row_text(button: Button) -> void:
 	for key in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_disabled_color"]:
 		button.add_theme_color_override(key, Color(1, 1, 1, 0))
 
+func _queue_slot_layout() -> void:
+	if _slot_relayout_pending or _stage != "slots" or slot_context == null:
+		return
+	_slot_relayout_pending = true
+	_settle_slot_layout.call_deferred()
+
+func _settle_slot_layout() -> void:
+	_slot_relayout_pending = false
+	if _stage == "slots":
+		_layout()
+
 func _layout() -> void:
 	if start_button == null:
 		return
@@ -622,7 +638,7 @@ func _save_layout_probe() -> Dictionary:
 	for index in 4:
 		cards.append({"slot": index + 1, "row": _rect(slot_bands[index]), "select": _rect(slot_buttons[index]), "delete": _rect(delete_buttons[index]), "delete_visible": delete_buttons[index].is_visible_in_tree(), "title": _rect(slot_title_labels[index]), "meta": _rect(slot_meta_labels[index]), "number": _rect(slot_number_labels[index]), "status": _rect(slot_status_labels[index]), "title_text": slot_title_labels[index].text, "meta_text": slot_meta_labels[index].text, "status_text": slot_status_labels[index].text, "title_font": slot_title_labels[index].get_theme_font_size("font_size"), "meta_font": slot_meta_labels[index].get_theme_font_size("font_size")})
 	var bar := slot_scroll.get_v_scroll_bar()
-	var result := {"safe": [_slot_safe.position.x, _slot_safe.position.y, _slot_safe.size.x, _slot_safe.size.y], "sheet": _rect(slot_surface), "list": _rect(slot_scroll), "footer": _rect(slot_footer), "scroll_value": slot_scroll.scroll_vertical, "scroll_max": maxi(0, ceili(bar.max_value - bar.page)), "css_scale": _slot_css, "modal_open": _modal_open(), "cards": cards, "heading": _rect(heading), "subtitle": _rect(subtitle)}
+	var result := {"safe": [_slot_safe.position.x, _slot_safe.position.y, _slot_safe.size.x, _slot_safe.size.y], "sheet": _rect(slot_surface), "list": _rect(slot_scroll), "footer": _rect(slot_footer), "context": _rect(slot_context), "scroll_value": slot_scroll.scroll_vertical, "scroll_max": maxi(0, ceili(bar.max_value - bar.page)), "css_scale": _slot_css, "modal_open": _modal_open(), "cards": cards, "heading": _rect(heading), "subtitle": _rect(subtitle)}
 	if _modal_open():
 		result["dialog"] = {"panel": _rect(_delete_dialog._panel), "body": _rect(_delete_dialog.body_holder), "footer": _rect(_delete_dialog.footer)}
 	return result
