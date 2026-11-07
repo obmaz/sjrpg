@@ -6,6 +6,8 @@ signal graphics_changed
 
 const PATH := "user://settings.cfg"
 const WORLD_ZOOMS: Array[float] = [0.5, 1.0, 1.5]
+## Stored values remain relative UI choices; the new 1x view uses the former 0.75 scale.
+const WORLD_ZOOM_BASE := 0.75
 
 var settings_path := "/userfs/sjrpg_3d/settings.cfg" if OS.has_feature("web") else PATH
 var sound_enabled := true
@@ -42,7 +44,7 @@ func _save() -> void:
 	cfg.save(settings_path)
 
 
-## Only supported world scales enter the camera; legacy/corrupt settings use 1x.
+## Only supported relative choices are stored; absent/corrupt settings use displayed 1x.
 static func normalize_world_zoom(value: Variant) -> float:
 	if typeof(value) not in [TYPE_FLOAT, TYPE_INT]:
 		return 1.0
@@ -51,6 +53,11 @@ static func normalize_world_zoom(value: Variant) -> float:
 		if is_equal_approx(candidate, supported):
 			return supported
 	return 1.0
+
+
+## Camera consumers use this once; saved preferences and UI selection stay relative.
+func actual_world_zoom() -> float:
+	return WORLD_ZOOM_BASE * world_zoom
 
 
 func set_world_zoom(value: float) -> void:

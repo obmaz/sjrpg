@@ -5,6 +5,7 @@ const KINDS := ["goblin", "wolf", "boar", "skeleton", "golem"]
 var preview: Node
 var entries := {}
 static var _rig_meshes := {}
+static var _rest_bounds_by_kind := {}
 
 func setup(presenter: Node) -> NativeEnemyModels:
 	preview = presenter
@@ -185,10 +186,16 @@ static func build(kind: String) -> Dictionary:
 			_weapon(arms[0], iron, hide)
 			_shield(arms[1], hide, iron)
 	_batch(kind, [torso] + legs + arms, materials)
+	if not _rest_bounds_by_kind.has(kind):
+		_rest_bounds_by_kind[kind] = rest_bounds(root)
+	var rest: AABB = _rest_bounds_by_kind[kind]
+	# Bake the actual lowest resting vertex to the foot and measure the full exterior.
+	for child: Node3D in root.get_children():
+		child.position.y -= rest.position.y
 	var base_colors: Array[Color] = []
 	for material in materials:
 		base_colors.append(material.albedo_color)
-	return {"root": root, "torso": torso, "legs": legs, "arms": arms, "materials": materials, "colors": base_colors, "kind": kind, "base_height": 1.16 if quadruped else 1.72, "leg_origins": legs.map(func(leg: Node3D): return leg.position)}
+	return {"root": root, "torso": torso, "legs": legs, "arms": arms, "materials": materials, "colors": base_colors, "kind": kind, "base_height": rest.size.y, "leg_origins": legs.map(func(leg: Node3D): return leg.position)}
 
 static func tint(model: Dictionary, color: Color, flash: float, flash_color: Color, alpha: float) -> void:
 	var materials: Array = model["materials"]
@@ -390,3 +397,23 @@ static func _weapon(parent: Node3D, iron: Material, wood: Material) -> void:
 	var blade: MeshInstance3D = _form(parent, Vector3(0, -0.47, 0.18), [[0.0, 0.045, 0.018, 0.0, 0.0], [0.47, 0.032, 0.014, 0.018, 0.0], [0.58, 0.003, 0.003, 0.0, 0.0]], iron, 4)
 	blade.rotation.x = PI * 0.5
 	_bone(parent, Vector3(-0.13, -0.47, 0.17), Vector3(0.13, -0.47, 0.17), Vector2(0.025, 0.02), Vector2(0.025, 0.02), iron)
+
+static func rest_bounds(root: Node3D) -> AABB:
+	# Pure local transforms also work before the model enters a SceneTree.
+	var minimum := Vector3(INF, INF, INF)
+	var maximum := Vector3(-INF, -INF, -INF)
+	for child in root.find_children("*", "MeshInstance3D", true, false):
+		var instance := child as MeshInstance3D
+		var transform: Transform3D = instance.transform
+		var parent: Node = instance.get_parent()
+		while parent != root:
+			transform = (parent as Node3D).transform * transform
+			parent = parent.get_parent()
+		for surface: int in instance.mesh.get_surface_count():
+			var arrays: Array = instance.mesh.surface_get_arrays(surface)
+			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			for vertex: Vector3 in vertices:
+				var point: Vector3 = transform * vertex
+				minimum = minimum.min(point)
+				maximum = maximum.max(point)
+	return AABB(minimum, maximum - minimum)

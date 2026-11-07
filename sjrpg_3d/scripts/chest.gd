@@ -3,6 +3,9 @@ extends Node2D
 ## 마을 상자 (원본 destructible chest): 공격 기술로 한 번 맞으면 부서지며 보상이 나옵니다.
 ## Quacks like an Enemy for the area queries (hp / dead / take_damage and no-op statuses).
 
+## Projected-ground radius; native metre collider and full lid sweep share this envelope.
+const COLLISION_RADIUS := 30.0
+
 var game: Node
 var index := 0
 var hp := 1.0

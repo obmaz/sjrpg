@@ -115,7 +115,7 @@ func _ready() -> void:
 		if i == 8:
 			chest.z_index = 1
 		chests.append(chest)
-		village.circles.append([chest.position, 24.0])
+		village.circles.append([chest.position, Chest.COLLISION_RADIUS])
 
 	quest_runtime = QuestRuntime.new().setup(self)
 	add_child(quest_runtime)
@@ -182,7 +182,7 @@ func _update_zoom() -> void:
 	# Keep characters similarly sized in portrait and landscape.
 	var short_side := minf(size.x, size.y)
 	var z := clampf(short_side / 720.0, 0.5, 1.6)
-	_base_zoom = Vector2(z, z) * CAMERA_WORLD_SCALE * Prefs.world_zoom * _debug_zoom
+	_base_zoom = Vector2(z, z) * CAMERA_WORLD_SCALE * Prefs.actual_world_zoom() * _debug_zoom
 	camera.zoom = _base_zoom * (1.0 + _zoom_punch)
 
 
@@ -232,7 +232,8 @@ func _update_render_quality() -> void:
 	camera.make_current()
 
 
-## Web debug: ?zoom=0.4 widens the camera (used for layout screenshots).
+## Web debug: ?zoom=0.4 multiplies the selected relative view (used for layout screenshots).
+## ?zoom=1 keeps the new 0.75 baseline; it does not restore the former default framing.
 var _debug_zoom := 1.0
 var _encounter_audit := false
 
@@ -1163,7 +1164,7 @@ func break_chests_in_radius(center: Vector2, radius: float, source: Node2D = nul
 	if encounters != null:
 		encounters.in_radius(center, radius, source, INF, PI, melee)
 	for c in chests:
-		if not c.dead and center.distance_to(c.position) <= radius + 26.0 and (can_melee_reach(center, c.position) if melee else SpatialCombat3D.area_reaches(self, center, c.position, radius + 26.0)):
+		if not c.dead and center.distance_to(c.position) <= radius + Chest.COLLISION_RADIUS and (can_melee_reach(center, c.position) if melee else SpatialCombat3D.area_reaches(self, center, c.position, radius + Chest.COLLISION_RADIUS)):
 			c.take_damage(1.0, source)
 
 
@@ -1174,7 +1175,7 @@ func break_chests_in_arc(center: Vector2, angle: float, radius: float, half_angl
 		if c.dead:
 			continue
 		var d := c.position - center
-		if d.length() <= radius + 26.0 and (d.length() < 40.0 or absf(angle_difference(angle, d.angle())) <= half_angle) and (can_melee_reach(center, c.position) if melee else SpatialCombat3D.area_reaches(self, center, c.position, radius + 26.0)):
+		if d.length() <= radius + Chest.COLLISION_RADIUS and (d.length() < 40.0 or absf(angle_difference(angle, d.angle())) <= half_angle) and (can_melee_reach(center, c.position) if melee else SpatialCombat3D.area_reaches(self, center, c.position, radius + Chest.COLLISION_RADIUS)):
 			c.take_damage(1.0, source)
 
 
@@ -1182,7 +1183,7 @@ func break_chests_at(p: Vector2, r: float, source: Node2D = null, include_stones
 	if encounters != null and include_stones:
 		encounters.in_radius(p, r, source)
 	for c in chests:
-		if not c.dead and p.distance_to(c.position) <= r + 26.0 and SpatialCombat3D.area_reaches(self, p, c.position, r + 26.0):
+		if not c.dead and p.distance_to(c.position) <= r + Chest.COLLISION_RADIUS and SpatialCombat3D.area_reaches(self, p, c.position, r + Chest.COLLISION_RADIUS):
 			c.take_damage(1.0, source)
 
 

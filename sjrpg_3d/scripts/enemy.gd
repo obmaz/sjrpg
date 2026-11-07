@@ -11,7 +11,10 @@ const KINDS := {
 	"golem": {"name": "숲의 파수꾼", "hp": 3600.0, "speed": 92.0, "height": 150.0, "damage": 22.0, "xp": 600, "range": 150.0},
 }
 
-const RADIUS := 20.0
+## Native body heights in metres, independent of the legacy atlas catalogue.
+## Source body_height drives meshes, corpse size, health labels and attack origin height.
+const NATIVE_HEIGHT_METRES := {"goblin": 1.30, "wolf": 1.13, "boar": 1.22, "skeleton": 1.70, "golem": 2.85}
+const RADIUS := 25.0  # Shared movement/spawn/area/target footprint, up from 20px.
 
 var game: Node
 var kind := "goblin"
@@ -84,7 +87,7 @@ func setup(g: Node, k: String, level: int) -> void:
 	attack_range = def["range"]
 	atlas = ActorAtlas.get_atlas(k)
 	sprite = ActorSprite.new()
-	sprite.body_height = def["height"]
+	sprite.body_height = float(NATIVE_HEIGHT_METRES[k]) * SpatialCombat3D.HEIGHT_PIXELS
 	sprite.show_behind_parent = true
 	add_child(sprite)
 	facing = randf() * TAU

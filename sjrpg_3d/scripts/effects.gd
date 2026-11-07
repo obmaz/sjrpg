@@ -436,7 +436,7 @@ func _break_projectile_chests(start: Vector2, finish: Vector2) -> void:
 	for chest: Chest in game.chests:
 		if chest.dead:
 			continue
-		var fraction := SpatialCombat3D.target_fraction(game, start, finish, spatial_height, chest, 22.0, 26.0)
+		var fraction := SpatialCombat3D.target_fraction(game, start, finish, spatial_height, chest, 22.0, Chest.COLLISION_RADIUS)
 		if fraction <= 1.0 and SpatialCombat3D.line_clear(game, start, chest.position, spatial_floor_height):
 			chest.take_damage(1.0, owner_node)
 

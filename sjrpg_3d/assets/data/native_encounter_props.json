@@ -45,13 +45,13 @@
   "generators": [
     {
       "path": "scripts/native_encounter_mesh_3d.gd",
-      "sha256": "7fd6ebf4623b6216b54b8e2607df049bcb6ad6aa28576f06338117a7e624a887",
-      "bytes": 9453
+      "sha256": "600e9c6b42293ebb712061b10c2d34b6b320a03e3429d3f04a41c92929038b90",
+      "bytes": 9709
     },
     {
       "path": "scripts/native_encounter_props_3d.gd",
       "sha256": "8f1ac2d99a9ee7fcd57e11957f85f916daeaf577209171d9840de7d97384b426",
-      "bytes": 8915
+      "bytes": 8883
     },
     {
       "path": "scripts/native_chest_material.gdshader",
@@ -80,25 +80,25 @@
   },
   "geometry": {
     "chest_closed_bounds_m": [
-      0.456000000238419,
-      0.423195540904999,
-      0.300000011920929
+      0.5700000002980238,
+      0.5289944261312487,
+      0.37500001490116125
     ],
     "chest_closed_surfaces": 2,
     "chest_open_surfaces": 3,
-    "chest_sweep_radius_m": 0.300411075353622,
+    "chest_sweep_radius_m": 0.3755138441920275,
     "chest_triangles": 808,
     "meshes": {
       "base": {
         "bounds_m": [
-          0.456000000238419,
-          0.283500015735626,
-          0.300000011920929
+          0.5700000002980238,
+          0.3543750196695325,
+          0.37500001490116125
         ],
         "origin_m": [
-          -0.228000000119209,
-          0.0,
-          -0.150000005960464
+          -0.2850000001490113,
+          0,
+          -0.18750000745058001
         ],
         "surfaces": 1,
         "triangles": 316
@@ -119,28 +119,28 @@
       },
       "lid": {
         "bounds_m": [
-          0.439999997615814,
-          0.143195539712906,
-          0.280195534229279
+          0.5499999970197675,
+          0.1789944246411325,
+          0.35024441778659876
         ],
         "origin_m": [
-          -0.219999998807907,
-          0.0,
-          -0.00699999928474426
+          -0.27499999850988377,
+          0,
+          -0.008749999105930325
         ],
         "surfaces": 1,
         "triangles": 460
       },
       "splinters": {
         "bounds_m": [
-          0.3035569190979,
-          0.0949999988079071,
-          0.0332742780447006
+          0.379446148872375,
+          0.11874999850988388,
+          0.04159284755587575
         ],
         "origin_m": [
-          -0.153231829404831,
-          0.261999994516373,
-          0.0483628585934639
+          -0.19153978675603872,
+          0.3274999931454663,
+          0.06045357324182987
         ],
         "surfaces": 1,
         "triangles": 32
@@ -153,7 +153,7 @@
         ],
         "origin_m": [
           -0.400000005960464,
-          0.0,
+          0,
           -0.246153846383095
         ],
         "surfaces": 1,
@@ -161,23 +161,34 @@
       }
     },
     "stone_surfaces": 3,
-    "stone_triangles": 276
+    "stone_triangles": 276,
+    "chest_collision_radius_m": 0.3884995626936048,
+    "chest_collision_height_m": 0.53,
+    "chest_lid_radial_clearance_m": 0.012985718501577315,
+    "source_projection_scale": 0.97,
+    "horizontal_units_per_m": 77.22016414123968
   },
   "stone_footprint_m": [
     0.8,
     0.49230769230769234
   ],
   "stone_height_m": 1.58,
-  "chest_proportion_change": "The old ~111.7-world-unit target sprite was replaced by a below-knee-height physical chest bounded by its existing 24px-radius cylinder; the old source card was much wider/taller than that inset physical collider. The original centre/ground source point, collider and consumed lifetime remain unchanged.",
+  "chest_proportion_change": "Native chest geometry is baked uniformly 25% larger: closed 0.570 x 0.529 x 0.375m, continuous lid sweep radius 0.375514m. Its source collision circle grows with it from24px to30px (0.3884996m native radius from Iso.S=0.97; previous24px radius0.3107997m; lid sweep radial clearance0.0129857m); native blocker height is0.530m instead of the legacy2.2m resident cylinder. Source centres, reward IDs, consumed collision lifetime and save progression remain unchanged. Materials keep metre UV density; no runtime node scaling.",
   "ownership": {
     "stone": "Only the art instance IDs of the exact six EncounterStone owners; excludes only those old environment cards.",
     "chest": "Only current Chest.body_sprite IDs; breaking replaces this sprite identity. Affordances remove the previous fallback and retain fallback when no model is owned.",
     "regions": "Explicit forest scope plus source-local visibility; hidden adapter ancestors are ignored. Native roots hidden in cave and cleaned when owners leave the source world.",
-    "runtime": "Read-only EncounterRuntime states/charges/recharge/living/can_summon, EncounterStone source tint/flash and Chest.dead. No visual timer, altered collision or extra rewards."
+    "runtime": "Read-only EncounterRuntime states/charges/recharge/living/can_summon, EncounterStone source tint/flash and Chest.dead. No visual timer or extra rewards. Chest source/native collision shares the explicit30px envelope; consumed state releases it as before."
   },
   "validation": {
-    "headless": "native_encounter_props PASS; actual source strike/open, capsule collider release, hinge-volume check, hidden/cave/return/deletion ownership.",
-    "gpu": {
+    "headless": "Updated native_encounter_props checks every source placement against real SOLID/PROP geometry, full continuous hinge envelope, matching ground-aligned native cylinders, actual capsule approach/adjacent walk and existing single-reward consumption. Pending candidate execution.",
+    "review_fixture_source": {
+      "path": "scripts/native_encounter_review.gd",
+      "sha256": "8956760b66dbacf2a254038be5ccd1a3e81b1d0231b714d8c949fef45eabe7aa",
+      "bytes": 8045
+    },
+    "review_fixture": "Explicit loot_review=1 in a fresh isolated browser profile only. Official create_slot binds a unique test session before original source state methods. Same source anchors and fixed120 camera; optional native-model rotation checks unseen faces, optional original-art cards provide same-world comparison.",
+    "previous_geometry_evidence": {
       "evidence_sha256": "f34a6087e227b10b49135c843b23be0fe8dd6f69ec13a16218a49005a62bc348",
       "captures": 12,
       "unexpected_errors": 0,
@@ -205,11 +216,6 @@
       ],
       "interpretation": "Actual coordinated captures were inspected separately; recording evidence is not automatic style approval."
     },
-    "review_fixture_source": {
-      "path": "scripts/native_encounter_review.gd",
-      "sha256": "8956760b66dbacf2a254038be5ccd1a3e81b1d0231b714d8c949fef45eabe7aa",
-      "bytes": 8045
-    },
-    "review_fixture": "Explicit loot_review=1 in a fresh isolated browser profile only. Official create_slot binds a unique test session before original source state methods. Same source anchors and fixed120 camera; optional native-model rotation checks unseen faces, optional original-art cards provide same-world comparison."
+    "required_gpu": "Before acceptance compare unchanged camera/lights at actual native zoom0.75 (new UI label1), portrait/landscape, all nine placements and closed/open/full-face states. Previous captures predate enlargement and do not validate this candidate."
   }
 }

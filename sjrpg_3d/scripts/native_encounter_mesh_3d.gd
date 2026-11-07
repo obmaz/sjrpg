@@ -3,12 +3,15 @@ extends RefCounted
 ## Reproducible, fully sided metre geometry. No camera-facing asset planes.
 
 const STONE_SIZE := Vector3(0.80, 1.58, 32.0 / 65.0)
+## All authored chest coordinates are baked 25% larger; native nodes stay scale ONE.
+const CHEST_SCALE := 1.25
+const CHEST_COLLISION_HEIGHT := 0.424 * CHEST_SCALE
 const CHEST_WIDTH := 0.44
 const CHEST_DEPTH := 0.26
 const CHEST_RIM := 0.28
 const LID_RADIUS := CHEST_DEPTH * 0.5
 const OPEN_ANGLE := -65.0
-const LID_PIVOT := Vector3(0, CHEST_RIM, -LID_RADIUS)
+const LID_PIVOT := Vector3(0, CHEST_RIM, -LID_RADIUS) * CHEST_SCALE
 var _tools := {}
 var _triangles := 0
 var _unit: Array
@@ -168,6 +171,10 @@ func _octahedron(center: Vector3, radius: float, slot: String) -> void:
 
 
 func _triangle(a: Vector3, b: Vector3, c: Vector3, expected: Vector3, slot: String) -> void:
+	if _merge_wood_iron:
+		a *= CHEST_SCALE
+		b *= CHEST_SCALE
+		c *= CHEST_SCALE
 	var cross := (b - a).cross(c - a)
 	if cross.length_squared() <= 0.0000000001:
 		return

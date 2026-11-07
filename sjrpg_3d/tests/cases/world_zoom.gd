@@ -16,6 +16,14 @@ func run() -> void:
 		check("unsupported device zoom defaults to 1x", is_equal_approx(Prefs.normalize_world_zoom(invalid), 1.0))
 	var game := await make_game()
 	var baseline: Vector2 = game.camera.zoom
+	var view_size: Vector2 = game.get_viewport_rect().size
+	var original_camera_scale: float = clampf(minf(view_size.x, view_size.y) / 720.0, 0.5, 1.6) * game.CAMERA_WORLD_SCALE
+	check("displayed default 1x uses the former actual 0.75 view", is_equal_approx(Prefs.world_zoom, 1.0) and is_equal_approx(Prefs.actual_world_zoom(), 0.75) and baseline.is_equal_approx(Vector2.ONE * original_camera_scale * 0.75))
+	game._debug_zoom = 0.75
+	game._update_zoom()
+	check("URL debug scale remains an independent relative multiplier", game.camera.zoom.is_equal_approx(baseline * 0.75) and is_equal_approx(Prefs.world_zoom, 1.0))
+	game._debug_zoom = 1.0
+	game._update_zoom()
 	var hud_size: Vector2 = game.hud.minimap.size
 	var controls_before: Dictionary = game.hud.controls._buttons["bar_bag"].duplicate(true)
 	var hero_position: Vector2 = game.player.position
@@ -24,6 +32,7 @@ func run() -> void:
 	for amount: float in Prefs.WORLD_ZOOMS:
 		Prefs.set_world_zoom(amount)
 		await _frames(2)
+		check("relative zoom maps once to the rebased actual scale", is_equal_approx(Prefs.actual_world_zoom(), 0.75 * amount))
 		check("world zoom changes immediately while menu is paused", get_tree().paused and game.camera.zoom.is_equal_approx(baseline * amount))
 		check("zoom cannot advance or move a paused hero", is_equal_approx(game.player._attack_time, 0.5) and game.player.position == hero_position)
 		check("world zoom leaves HUD and menu hit areas unchanged", game.hud.minimap.size == hud_size and game.hud.controls._buttons["bar_bag"] == controls_before)
@@ -44,6 +53,8 @@ func run() -> void:
 			var target: Vector2 = game.player.position + Vector2(40, -30)
 			var native: Vector3 = SpatialWorld3D.native_point(target, game.spatial_world.height_at(target))
 			var preview: Ortho3DPreview = game.ortho_preview
+			var expected_native_size: float = game.scene_view.get_visible_rect().size.y / Ortho3DPreview.pixels_per_meter(game.camera.zoom.y)
+			check("native camera inherits the rebased scale exactly once in either quality", is_equal_approx(preview.camera.size, expected_native_size))
 			var screen := preview.camera.unproject_position(native)
 			screen *= game.get_viewport_rect().size / Vector2(preview.viewport.size)
 			check("native screen-to-floor targeting round-trips at zoom %s/economy=%s" % [amount, low], game.screen_to_world(screen).distance_to(target) < 0.01)
@@ -63,9 +74,18 @@ func run() -> void:
 	loaded = PrefsScript.new()
 	loaded.settings_path = TEST_PATH
 	add_child(loaded)
-	check("legacy device settings keep default zoom and existing values", is_equal_approx(loaded.world_zoom, 1.0) and not loaded.sound_enabled)
+	check("legacy device settings keep displayed default and existing values with the new actual base", is_equal_approx(loaded.world_zoom, 1.0) and is_equal_approx(loaded.actual_world_zoom(), 0.75) and not loaded.sound_enabled)
 	loaded.queue_free()
 	await _frames(2)
+	for old_choice: float in [0.5, 1.0, 1.5]:
+		cfg.set_value("device", "world_zoom", old_choice)
+		cfg.save(TEST_PATH)
+		loaded = PrefsScript.new()
+		loaded.settings_path = TEST_PATH
+		add_child(loaded)
+		check("existing stored preferences keep their relative selection without a schema migration", is_equal_approx(loaded.world_zoom, old_choice) and is_equal_approx(loaded.actual_world_zoom(), 0.75 * old_choice))
+		loaded.queue_free()
+		await _frames(2)
 	cfg.set_value("device", "world_zoom", "corrupt")
 	cfg.save(TEST_PATH)
 	loaded = PrefsScript.new()

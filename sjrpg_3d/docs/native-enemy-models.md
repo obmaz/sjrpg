@@ -30,9 +30,26 @@ animation or gameplay clock is introduced. The leg pivots compensate for the
 pendulum's vertical lift so walking does not lift both feet off the floor.
 Dying actors remain weakly referenced through the original 0.18-second fade.
 
-Height uses source body_height divided by 65*Iso.S, then the authored
-1.72m biped or 1.16m quadruped reference. The original spatial collision is
-authoritative. The player warrior has its own NativeWarrior3D model family.
+Enemy.NATIVE_HEIGHT_METRES is the single native height policy: goblin 1.30m,
+wolf 1.13m, boar 1.22m, skeleton 1.70m and golem 2.85m. The legacy atlas catalogue
+heights remain as source provenance. Enemy.setup sets body_height to those metres
+times 65*Iso.S, which also moves health bars, hit feedback and corpse size with
+the body. Enemy collider height uses this value directly; the former additional
+1.25 multiplier remains only on existing non-enemy adapters.
+
+NativeEnemyModels measures every actual resting vertex through all descendant
+local transforms once per species, caches that AABB, moves its minimum Y to zero
+and stores the measured height as base_height. Live bodies and corpses use the
+same body_height/(65*Iso.S)/base_height scalar. The source JUICE contact squash
+temporarily modifies live visual scale but does not enlarge the collider or corpse.
+The player warrior has its own NativeWarrior3D model family and is not changed.
+
+The shared enemy movement/spawn footprint grows from 20px to 25px
+(0.324m at the current horizontal projection). This is a central capsule proxy,
+not a promise that long tails, weapons or every extremity fit inside a circle.
+Ordinary projectile targets resolve an omitted radius from Enemy.RADIUS. Explicit
+custom radii, including stone/chest queries, are preserved. AI attack reach,
+damage, health, speed, experience and save formats are unchanged.
 
 Corpse visuals reuse the corresponding model rotated prone. The full transformed
 mesh bounds place the resting body on its actual floor. CorpseArt.opacity with
@@ -45,3 +62,13 @@ ortho_3d_preview integration case checks no duplicate enemy card, real visual
 recoil/flash at native feet, dying fade after removal from the live array, and
 the native corpse's original opacity/expiry. Four-facing gallery screenshots
 and real portrait/landscape gameplay review remain required for adoption.
+
+## Native size validation
+
+native_enemy_scale creates a real game after native readiness, uses the actual
+outside-town spawn search, and builds each species through Enemy.setup and the
+normal presenter. It measures transformed mesh vertices in metres; compares
+sprite height, physics capsule and visual top/foot; checks walking and hit/death
+presentation retain native feet/base scale; tests default versus explicit
+projectile radii; and verifies the real death corpse uses the same scale and floor.
+PASS NATIVE_SIZE_METRES logs actual mesh bounds and capsule dimensions for CI review.

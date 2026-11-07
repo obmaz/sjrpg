@@ -32,6 +32,68 @@ func _approach(game: Node, stone: EncounterStone) -> Vector2:
 	return Vector2.INF
 
 
+func _chest_clearance(game: Node, props: NativeEncounterProps3D) -> void:
+	# Check every source placement, including the raised waterfall reward chest.
+	# Use actual native physics; source screen circles cannot establish wall clearance.
+	var world: SpatialWorld3D = game.spatial_world
+	await get_tree().physics_frame
+	var all_clear := true
+	var all_approachable := true
+	var colliders_match := true
+	var reports: Array[Dictionary] = []
+	for chest: Chest in game.chests:
+		var body: StaticBody3D = null
+		for entry: Dictionary in world._props:
+			if (entry["owner"] as WeakRef).get_ref() == chest:
+				body = entry["body"]
+				break
+		if body == null:
+			colliders_match = false
+			continue
+		var collider: CylinderShape3D = (body.get_child(0) as CollisionShape3D).shape
+		var anchor := world.native_point(chest.position, world.height_at(chest.position))
+		colliders_match = colliders_match and is_equal_approx(collider.radius, world.radius_metres(Chest.COLLISION_RADIUS)) and collider.height >= 0.529 and collider.height <= 0.54 and absf(body.position.y - collider.height * 0.5 - anchor.y) < 0.001
+		# Conservative cylinder contains fixed geometry plus every continuous lid pose.
+		# Floor is deliberately not an obstruction; cliff side faces remain SOLID.
+		var envelope := CylinderShape3D.new()
+		envelope.radius = props._lid_sweep_radius
+		envelope.height = 0.80
+		var query := PhysicsShapeQueryParameters3D.new()
+		query.shape = envelope
+		query.transform = Transform3D(Basis.IDENTITY, anchor + Vector3.UP * 0.401)
+		query.collision_mask = SpatialWorld3D.SOLID | SpatialWorld3D.PROP
+		query.exclude = [body.get_rid()]
+		var hits := world.get_world_3d().direct_space_state.intersect_shape(query, 8)
+		all_clear = all_clear and hits.is_empty()
+		var clear: Array[bool] = []
+		var points: Array[Vector2] = []
+		var ring := collider.radius + world.radius_metres(Player.RADIUS) + 0.18
+		for index in 16:
+			var direction := Vector3(cos(TAU * index / 16.0), 0, sin(TAU * index / 16.0))
+			var point := world.projected(anchor + direction * ring)
+			points.append(point)
+			clear.append(not world.blocked(point, Player.RADIUS) and absf(world.height_at(point) - anchor.y) <= SpatialWorld3D.MAX_STEP)
+		var walkable_arc := false
+		for index in 16:
+			var next := (index + 1) % 16
+			if not clear[index] or not clear[next]:
+				continue
+			var reached := world.move_actor(points[index], points[next], Player.RADIUS)
+			var returned := world.move_actor(points[next], points[index], Player.RADIUS)
+			if world.native_point(reached).distance_to(world.native_point(points[next])) < 0.04 and world.native_point(returned).distance_to(world.native_point(points[index])) < 0.04:
+				walkable_arc = true
+				break
+		all_approachable = all_approachable and walkable_arc
+		var hit_names: Array[String] = []
+		for hit: Dictionary in hits:
+			hit_names.append(str((hit["collider"] as Node).name))
+		reports.append({"index": chest.index, "radius_m": collider.radius, "height_m": collider.height, "lid_clear": hits.is_empty(), "obstacles": hit_names, "walkable_arc": walkable_arc})
+	check("every enlarged chest uses a ground-aligned native blocker matching the new envelope", colliders_match and reports.size() == game.chests.size())
+	check("all enlarged chest bodies and complete lid sweeps clear existing walls and props", all_clear, JSON.stringify(reports))
+	check("every enlarged chest retains a real capsule approach and adjacent walking passage", all_approachable, JSON.stringify(reports))
+	print("NATIVE_CHEST_PLACEMENT_METRICS " + JSON.stringify(reports))
+
+
 func run() -> void:
 	var old_sound := Prefs.sound_enabled
 	Prefs.sound_enabled = false
@@ -64,7 +126,7 @@ func run() -> void:
 	var base_bounds: AABB = (models["base"] as ArrayMesh).get_aabb()
 	var lid_bounds: AABB = Transform3D(Basis.IDENTITY, NativeEncounterMesh3D.LID_PIVOT) * (models["lid"] as ArrayMesh).get_aabb()
 	var chest_bounds := base_bounds.merge(lid_bounds)
-	check("closed chest reads as a broad low box without any runtime axis scale", chest_bounds.size.y < chest_bounds.size.x and absf(chest_bounds.size.y - 0.4232) < 0.001 and absf(chest_bounds.size.x - 0.456) < 0.001)
+	check("closed chest reads as a broad low box without any runtime axis scale", chest_bounds.size.y < chest_bounds.size.x and absf(chest_bounds.size.y - 0.5290) < 0.001 and absf(chest_bounds.size.x - 0.570) < 0.001 and absf(chest_bounds.size.z - 0.375) < 0.001)
 	print("NATIVE_ENCOUNTER_METRICS " + JSON.stringify({"meshes": mesh_report, "stone_triangles": models["stone_triangles"], "chest_triangles": models["chest_triangles"], "stone_surfaces": 3, "chest_closed_surfaces": 2, "chest_open_surfaces": 3, "chest_closed_bounds_m": [chest_bounds.size.x, chest_bounds.size.y, chest_bounds.size.z], "chest_sweep_radius_m": props._lid_sweep_radius}))
 	check("stone and chest retain bounded full-volume mobile mesh budgets", int(models["stone_triangles"]) < 2000 and int(models["chest_triangles"]) < 2000 and (models["stone"] as ArrayMesh).get_surface_count() + (models["glyph"] as ArrayMesh).get_surface_count() <= 3 and (models["base"] as ArrayMesh).get_surface_count() + (models["lid"] as ArrayMesh).get_surface_count() + (models["splinters"] as ArrayMesh).get_surface_count() <= 3)
 	var stone_bounds: AABB = (models["stone"] as ArrayMesh).get_aabb()
@@ -78,7 +140,8 @@ func run() -> void:
 			for vertex in vertices:
 				var point := pose * vertex
 				sweep = maxf(sweep, Vector2(point.x, point.z).length())
-	check("every sampled hinge pose stays within the original chest collision radius", sweep <= SpatialWorld3D.radius_metres(24.0) and sweep <= props._lid_sweep_radius + 0.0001, "sweep=%s radius=%s" % [sweep, SpatialWorld3D.radius_metres(24.0)])
+	check("every sampled hinge pose stays within the enlarged chest collision radius", sweep <= SpatialWorld3D.radius_metres(Chest.COLLISION_RADIUS) and sweep <= props._lid_sweep_radius + 0.0001, "sweep=%s radius=%s" % [sweep, SpatialWorld3D.radius_metres(Chest.COLLISION_RADIUS)])
+	await _chest_clearance(game, props)
 	check("chest reuses actual family timber and iron response in one shared material", props._chest_material.get_shader_parameter("timber") == (preview._materials["wood"] as StandardMaterial3D).albedo_texture and props._chest_material.get_shader_parameter("iron_tint") == (preview._materials["iron"] as StandardMaterial3D).albedo_color)
 	var no_colliders := true
 	for entry: Dictionary in props._entries.values():
@@ -134,11 +197,24 @@ func run() -> void:
 	props.sync()
 	preview._affordances.sync()
 	check("unopened native chest starts closed with an intact capsule blocker", not chest.dead and is_zero_approx((chest_entry["lid"] as Node3D).rotation.x) and game.spatial_world.blocked(chest.position, 1.0))
-	chest.take_damage(1.0, game.player)
+	var chest_floor := SpatialCombat3D.floor_at(game, chest.position)
+	var horizontal := Vector3.RIGHT
+	var native_center := SpatialWorld3D.native_point(chest.position)
+	var start := SpatialWorld3D.projected(native_center - horizontal)
+	var finish := SpatialWorld3D.projected(native_center + horizontal)
+	var projectile_radius := 8.0
+	var above := chest_floor + NativeEncounterMesh3D.CHEST_COLLISION_HEIGHT + SpatialWorld3D.radius_metres(projectile_radius) + 0.02
+	check("overhead shots miss the actual closed chest cylinder", is_inf(SpatialCombat3D.target_fraction(game, start, finish, above, chest, projectile_radius, Chest.COLLISION_RADIUS)))
+	check("normal chest-height projectile spheres still contact the lid rim", SpatialCombat3D.target_fraction(game, start, finish, chest_floor + SpatialCombat3D.PROJECTILE_LIFT, chest, 22.0, Chest.COLLISION_RADIUS) < 1.0)
+	check("shots through the real chest body still hit", SpatialCombat3D.target_fraction(game, start, finish, chest_floor + 0.25, chest, projectile_radius, Chest.COLLISION_RADIUS) < 1.0)
+	var rim := chest.position + Vector2(Chest.COLLISION_RADIUS + 0.5, 0)
+	game.break_chests_at(rim, 1.0, game.player, false)
+	check("the enlarged target rim receives the real chest attack path", chest.dead)
 	props.sync()
 	preview._affordances.sync()
 	game.spatial_world.sync_scope()
 	await get_tree().physics_frame
+	check("consumed chests are absent from the projectile target volume", is_inf(SpatialCombat3D.target_fraction(game, start, finish, chest_floor + 0.25, chest, projectile_radius, Chest.COLLISION_RADIUS)))
 	var gold_after := GameState.gold
 	props.sync()
 	chest.take_damage(1.0, game.player)

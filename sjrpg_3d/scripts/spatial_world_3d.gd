@@ -57,7 +57,9 @@ static func actor_dimensions(source: Node2D, radius_pixels: float) -> Vector2:
 	if source != null and source.get("sprite") is ActorSprite:
 		var sprite: ActorSprite = source.get("sprite")
 		authored_height = sprite.body_height
-	return Vector2(radius, maxf(radius * 2.0 + 0.05, authored_height / VERTICAL * 1.25))
+	var height_factor: float = 1.0 if source is Enemy else 1.25
+	# Enemy source height is already canonical native metres; no second hidden enlargement.
+	return Vector2(radius, maxf(radius * 2.0 + 0.05, authored_height / VERTICAL * height_factor))
 
 
 static func radius_metres(radius_pixels: float) -> float:
@@ -427,9 +429,9 @@ func _build_forest() -> void:
 		var chest := _chest_at(point)
 		var shape := CylinderShape3D.new()
 		shape.radius = radius_metres(radius)
-		shape.height = 2.2
+		shape.height = NativeEncounterMesh3D.CHEST_COLLISION_HEIGHT if chest != null else 2.2
 		var base := _construction_height(point)
-		var body := _shape_body(shape, Transform3D(Basis.IDENTITY, native_point(point, base + 1.1)), PROP if chest != null else SOLID, "TrunkOrResident")
+		var body := _shape_body(shape, Transform3D(Basis.IDENTITY, native_point(point, base + shape.height * 0.5)), PROP if chest != null else SOLID, "TrunkOrResident")
 		if chest != null:
 			_props.append({"owner": weakref(chest), "body": body})
 		else:

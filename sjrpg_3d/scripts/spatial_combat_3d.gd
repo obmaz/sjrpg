@@ -83,16 +83,71 @@ static func area_reaches(game: Node, from: Vector2, to: Vector2, radius: float, 
 
 
 ## A sphere swept against the backend's exact vertical actor capsule, in its native space.
-static func target_fraction(game: Node, from: Vector2, to: Vector2, height: float, target: Node2D, radius_pixels := PROJECTILE_RADIUS, target_radius := 20.0) -> float:
+static func target_fraction(game: Node, from: Vector2, to: Vector2, height: float, target: Node2D, radius_pixels := PROJECTILE_RADIUS, target_radius := -1.0) -> float:
 	var backend := world(game)
 	if backend == null or not is_instance_valid(target):
 		return INF
+	if target is Chest:
+		var chest := target as Chest
+		if chest.dead:
+			return INF
+		return cylinder_fraction(point(from, height), point(to, height), point(chest.position, floor_at(game, chest.position)), SpatialWorld3D.radius_metres(Chest.COLLISION_RADIUS), NativeEncounterMesh3D.CHEST_COLLISION_HEIGHT, radius_pixels / HORIZONTAL_PIXELS)
 	var bodies: Dictionary = backend.actor_bodies
 	var foot: Vector3 = backend.actor_foot(target) if bodies.has(target.get_instance_id()) else point(target.position, floor_at(game, target.position))
-	var dimensions: Vector2 = backend.actor_dimensions(target, target_radius)
+	var resolved_radius: float = target_radius if target_radius >= 0.0 else Enemy.RADIUS if target is Enemy else 20.0
+	var dimensions: Vector2 = backend.actor_dimensions(target, resolved_radius)
 	var bottom := foot + Vector3(0, dimensions.x, 0)
 	var top := foot + Vector3(0, dimensions.y - dimensions.x, 0)
 	return capsule_fraction(point(from, height), point(to, height), bottom, top, dimensions.x + radius_pixels / HORIZONTAL_PIXELS)
+
+
+## Swept sphere against the same finite upright chest cylinder used by native movement.
+## Fixed-height projectiles have an exact horizontal-circle solution, including
+## rounded rim contact. Sloped segments retain a convex-distance fallback.
+static func cylinder_fraction(from: Vector3, to: Vector3, foot: Vector3, radius: float, height: float, projectile_radius: float) -> float:
+	if is_equal_approx(from.y, to.y):
+		var vertical := maxf(foot.y - from.y, maxf(from.y - foot.y - height, 0.0))
+		if vertical > projectile_radius:
+			return INF
+		var reach := radius + sqrt(maxf(projectile_radius * projectile_radius - vertical * vertical, 0.0))
+		var ground_center := Vector3(foot.x, 0, foot.z)
+		return capsule_fraction(Vector3(from.x, 0, from.z), Vector3(to.x, 0, to.z), ground_center, ground_center, reach)
+	var center := foot + Vector3.UP * height * 0.5
+	var bound := sqrt(radius * radius + height * height * 0.25) + projectile_radius
+	if is_inf(capsule_fraction(from, to, center, center, bound)):
+		return INF
+	var squared := projectile_radius * projectile_radius
+	if _cylinder_distance_squared(from, foot, radius, height) <= squared:
+		return 0.0
+	var travel := to - from
+	var low := 0.0
+	var high := 1.0
+	for iteration in 40:
+		var left := lerpf(low, high, 1.0 / 3.0)
+		var right := lerpf(low, high, 2.0 / 3.0)
+		if _cylinder_distance_squared(from + travel * left, foot, radius, height) <= _cylinder_distance_squared(from + travel * right, foot, radius, height):
+			high = right
+		else:
+			low = left
+	var minimum := (low + high) * 0.5
+	if _cylinder_distance_squared(from + travel * minimum, foot, radius, height) > squared + 0.0000000001:
+		return INF
+	low = 0.0
+	high = minimum
+	for iteration in 32:
+		var middle := (low + high) * 0.5
+		if _cylinder_distance_squared(from + travel * middle, foot, radius, height) <= squared + 0.0000000001:
+			high = middle
+		else:
+			low = middle
+	return high
+
+
+static func _cylinder_distance_squared(at: Vector3, foot: Vector3, radius: float, height: float) -> float:
+	var offset := at - foot
+	var radial := maxf(Vector2(offset.x, offset.z).length() - radius, 0.0)
+	var vertical := maxf(-offset.y, maxf(offset.y - height, 0.0))
+	return radial * radial + vertical * vertical
 
 
 static func capsule_fraction(from: Vector3, to: Vector3, bottom: Vector3, top: Vector3, radius: float) -> float:
