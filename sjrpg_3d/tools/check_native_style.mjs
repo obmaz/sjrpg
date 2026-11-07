@@ -16,7 +16,7 @@ const errors=[],captures=[],checks=[],baselineViolations=[],baselineBlockedActio
 const css=(s,r)=>({x:r[0]*s.window[0]/s.ui.viewport[0],y:r[1]*s.window[1]/s.ui.viewport[1],w:r[2]*s.window[0]/s.ui.viewport[0],h:r[3]*s.window[1]/s.ui.viewport[1]});
 const inside=(a,b,e=1)=>b.x>=a.x-e&&b.y>=a.y-e&&b.x+b.w<=a.x+a.w+e&&b.y+b.h<=a.y+a.h+e;
 const overlap=(a,b)=>Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x)>1&&Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y)>1;
-const read=()=>page.evaluate(()=>({ui:window.__sjrpgNativeStyleReview,native:window.__sjrpg3dProbe,tone:window.__sjrpgUiTone,window:[innerWidth,innerHeight],dpr:devicePixelRatio}));
+const read=()=>page.evaluate(()=>({ui:window.__sjrpgNativeStyleReview,native:window.__sjrpg3dProbe,tone:window.__sjrpgUiTone,window:[innerWidth,innerHeight],dpr:devicePixelRatio,cavePreviewReady:window.__sjrpgDungeonPreviewReady===true}));
 async function wait(fn,label,timeout=15000){const end=Date.now()+timeout;while(Date.now()<end){assert.equal(errors.length,0,JSON.stringify(errors));const s=await read();if(fn(s))return s;await page.waitForTimeout(150);}throw Error('Timeout '+label+' '+JSON.stringify(await read()));}
 async function settled(frames=3){const n=(await read()).ui.frame;await wait(s=>s.ui.frame>=n+frames,'actual UI frame settlement');}
 function verify(fn,label){if(!baseline)return fn();try{return fn();}catch(e){baselineViolations.push({label,error:String(e)});}}
@@ -24,8 +24,8 @@ async function baselineAction(label,fn){if(!baseline)return fn();try{return awai
 async function tapRect(r){const s=await read();assert(inside({x:0,y:0,w:s.window[0],h:s.window[1]},r),'real target outside viewport '+JSON.stringify(r));await page.mouse.click(r.x+r.w/2,r.y+r.h/2);await settled();}
 async function tapHud(key){const s=await read();assert(s.ui.buttons[key],key+' missing');await tapRect(css(s,s.ui.buttons[key]));}
 async function capture(name,inline=false){const s=await read();await page.screenshot({path:path.join(out,name+'.png'),timeout:90000});captures.push({name,...s});if(inline){const data=(await page.screenshot({type:'jpeg',quality:78,timeout:90000})).toString('base64');console.log('SJ_NATIVE_STYLE_IMAGE_BEGIN '+name+' image/jpeg '+data.length);for(let i=0;i<data.length;i+=16384)console.log('SJ_NATIVE_STYLE_IMAGE_CHUNK '+name+' '+data.slice(i,i+16384));console.log('SJ_NATIVE_STYLE_IMAGE_END '+name);}}
-function hudGeometry(s,label){return verify(()=>strictHudGeometry(s,label),label);}
-function strictHudGeometry(s,label){
+function hudGeometry(s,label,expectedPaused=false){return verify(()=>strictHudGeometry(s,label,expectedPaused),label);}
+function strictHudGeometry(s,label,expectedPaused=false){
  assert(s.ui.native&&s.native?.native_active&&s.native?.simulation==='3d',label+' actual native world');
  if(!baseline){assert.deepEqual(s.ui.coverage.actor_cards,[],label+' no resident/enemy camera-facing object cards');const env=s.ui.coverage.environment;assert(env&&env.remaining_sources,label+' explicit retained source inventory');for(const scope of['forest','cave'])assert.deepEqual(env.remaining_sources[scope],[],label+' no retained physical '+scope+' source cards');for(const key of['forest_sprites','forest_groups','cave_sprites','cave_groups'])assert.equal(Number(env[key]),0,label+' no physical fallback batches '+key);}
  const bounds={x:0,y:0,w:s.window[0],h:s.window[1]};
@@ -35,7 +35,8 @@ function strictHudGeometry(s,label){
  assert(inside(bounds,css(s,s.ui.avatar)),label+' avatar frame');
  assert(inside(bounds,css(s,s.ui.level_badge)),label+' avatar level badge');
  assert(inside(bounds,css(s,s.ui.hp))&&inside(bounds,css(s,s.ui.mp)),label+' status gauge bounds');
- assert(!s.ui.paused,label+' live HUD');
+ assert.equal(s.ui.paused,expectedPaused,label+' expected preview/live pause state');
+ if(expectedPaused)assert(s.cavePreviewReady&&s.ui.dungeon_active&&!s.ui.panel.rect,label+' explicit frozen cave photograph, not a gameplay menu');
  checks.push(label);
 }
 async function closePanel(){const s=await read();const button=s.ui.panel.buttons.find(b=>b.text==='×'||b.text==='모험 계속하기');assert(button,'real close action missing');await tapRect(css(s,button.rect));await wait(s=>!s.ui.paused&&!s.ui.panel.rect,'panel closed');}
@@ -160,7 +161,7 @@ try{
   assert(distance>1,'real WASD movement');checks.push(cls+' actual movement');
  }
  for(const [name,params]of[['bridge',{at:'bridge'}],['landmark0',{at:'lm0'}],['landmark1',{at:'lm1'}],['landmark2',{at:'lm2'}],['landmark3',{at:'lm3'}],['cave-outside',{at:'rowen',zoom:'0.8'}],['cave',{dungeon_preview:'entry'}],['enemy',{at:'field',encounter_preview:'active'}],['corpses-bridge',{corpse_preview:'bridge'}]]){
-  await boot('mage',params);await page.waitForTimeout(800);const state=await read();hudGeometry(state,name);if(name==='cave-outside'){assert.equal(state.ui.dungeon_active,false,'actual exterior remains forest');assert(state.ui.entry_distance<180,'actual exterior camera is at the real cave entrance');assert.equal(state.native.scope,'forest');}if(name==='corpses-bridge'){assert(state.ui.coverage.corpse_count>0,'actual corpse models exist');if(!baseline)assert.deepEqual(state.ui.coverage.corpse_cards,[],'no image-card corpse fallback');}await capture(name+'-native',true);
+  await boot('mage',params);await page.waitForTimeout(800);const state=await read();hudGeometry(state,name,Boolean(params.dungeon_preview));if(name==='cave-outside'){assert.equal(state.ui.dungeon_active,false,'actual exterior remains forest');assert(state.ui.entry_distance<180,'actual exterior camera is at the real cave entrance');assert.equal(state.native.scope,'forest');}if(name==='corpses-bridge'){assert(state.ui.coverage.corpse_count>0,'actual corpse models exist');if(!baseline)assert.deepEqual(state.ui.coverage.corpse_cards,[],'no image-card corpse fallback');}await capture(name+'-native',true);
  }
  await boot('mage',{at:'npc_courtyard'},2);hudGeometry(await read(),'mage DPR2 portrait');await capture('mage-dpr2-portrait',true);
  if(!baseline)await modelGallery();

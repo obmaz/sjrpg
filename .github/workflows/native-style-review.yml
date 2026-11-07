@@ -77,6 +77,8 @@ jobs:
                                   raise
                   PY
     review:
+        # Candidate-only diagnostics use native-candidate-full.yml and retained actual baseline evidence.
+        if: "!contains(github.event.head_commit.message, '[candidate-only]')"
         runs-on: ubuntu-latest
         timeout-minutes: 30
         steps:
@@ -100,7 +102,7 @@ jobs:
               run: |
                   chmod +x tools/*.sh sjrpg_3d/tools/*.sh
                   tools/setup_godot.sh
-                  tools/check.sh --project=3d --only=native_actor_materials,entry_layout,native_residents,native_forest_props,native_warrior,native_enemy_models,ui_tone,native_environment,ortho_3d_preview,native_scenery_props,native_cave_geometry
+                  tools/check.sh --project=3d --only=native_actor_materials,entry_layout,native_residents,native_forest_props,native_warrior,native_enemy_models,ui_tone,native_environment,ortho_3d_preview,native_scenery_props,native_cave_geometry,dungeon_art
             - name: Export native UI for visual diagnostics
               id: candidate_export
               if: success() || failure()

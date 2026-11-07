@@ -42,7 +42,15 @@ func run() -> void:
 			maps_match = maps_match and game.map_shapes[index]["poly"] == floor_piece.polygon
 	check("generated floor source matches the collision and native layout input", floors_match)
 	check("both maps retain the generated floor layout", maps_match)
-	check("native cave displays generated material through spatial floor and wall groups", game.ortho_preview._world_environment.cave.visible and game.ortho_preview._world_environment.report["cave_groups"] > 0 and game.ortho_preview._world_environment.report["cave_walls"] > 0 and cave._root.visibility_layer == 0)
+	var environment: Ortho3DEnvironment = game.ortho_preview._world_environment
+	var spatial_floor_count: int = 0
+	for candidate: Node in environment.cave.find_children("*", "MeshInstance3D", true, false):
+		var rendered: MeshInstance3D = candidate as MeshInstance3D
+		var material: StandardMaterial3D = rendered.material_override as StandardMaterial3D
+		if material != null and material.albedo_texture == floor_texture:
+			spatial_floor_count += 1
+	check("every native cave floor uses the preserved generated material", spatial_floor_count == cave.layout.polygons.size())
+	check("native cave retains spatial walls and replaces physical prop cards", environment.cave.visible and environment.report["cave_walls"] > 0 and environment.report["cave_groups"] == 0 and environment.report["cave_sprites"] == 0 and environment.report["native_cave_lanterns"] == 10 and environment.report["native_cave_scenery"] >= 6 and environment.report["remaining_sources"]["cave"].is_empty() and cave._root.visibility_layer == 0)
 	var boundaries_match := not art.boundary_segments.is_empty()
 	var boundary_failures: Array[String] = []
 	for boundary in art.boundary_segments:
