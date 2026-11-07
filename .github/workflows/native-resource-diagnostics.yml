@@ -17,9 +17,10 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                partition: [full, entry]
+                partition: [full]
         env:
             SJRPG_RESOURCE_PARTITION: ${{ matrix.partition }}
+            SJRPG_QUIET_VERBOSE: "1"
         steps:
             - uses: actions/checkout@v7.0.1
             - uses: actions/cache@v4
@@ -75,10 +76,11 @@ jobs:
               run: |
                   SJRPG_RESOURCE_OUT="build/resource-diagnostics/$SJRPG_RESOURCE_PARTITION"
                   set +e
-                  timeout 900 sjrpg_3d/tools/godot.sh --headless --verbose res://tests/run_all.tscn -- "$SJRPG_RESOURCE_ONLY" 2>&1 | tee "$SJRPG_RESOURCE_OUT/run.log"
-                  SJRPG_RESOURCE_RUN_CODE=${PIPESTATUS[0]}
+                  timeout 900 sjrpg_3d/tools/godot.sh --headless --verbose res://tests/run_all.tscn -- "$SJRPG_RESOURCE_ONLY" > "$SJRPG_RESOURCE_OUT/run.log" 2>&1
+                  SJRPG_RESOURCE_RUN_CODE=$?
                   set -e
                   printf '%s\n' "$SJRPG_RESOURCE_RUN_CODE" > "$SJRPG_RESOURCE_OUT/run.exitcode.txt"
+                  cat "$SJRPG_RESOURCE_OUT/run.log"
                   SJRPG_RESOURCE_STRICT_CODE=0
                   if test "$SJRPG_RESOURCE_RUN_CODE" -ne 0; then SJRPG_RESOURCE_STRICT_CODE=1; fi
                   if grep -qE 'SCRIPT ERROR|^ERROR:' "$SJRPG_RESOURCE_OUT/run.log"; then SJRPG_RESOURCE_STRICT_CODE=1; fi

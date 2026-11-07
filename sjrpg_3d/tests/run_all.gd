@@ -28,6 +28,11 @@ func _ready() -> void:
 		print("cases: %s" % ", ".join(names))
 		get_tree().quit(0)
 		return
+	# Diagnostic-only: keep verbose shutdown resource paths without per-case stdout I/O.
+	var original_stdout: bool = Engine.print_to_stdout
+	var quiet_verbose: bool = OS.get_environment("SJRPG_QUIET_VERBOSE") == "1"
+	if quiet_verbose:
+		Engine.print_to_stdout = false
 	var total := 0
 	var failed: Array[String] = []
 	var started := Time.get_ticks_msec()
@@ -52,5 +57,7 @@ func _ready() -> void:
 			failed.append(name)
 		case_node.queue_free()
 		await get_tree().process_frame
+	if quiet_verbose:
+		Engine.print_to_stdout = original_stdout
 	print("RESULT cases=%d failed=%d time=%dms %s" % [total, failed.size(), Time.get_ticks_msec() - started, str(failed)])
 	get_tree().quit(1 if failed.size() > 0 or total == 0 else 0)
