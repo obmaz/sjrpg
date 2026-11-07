@@ -38,7 +38,7 @@ static func style(button: Button, primary := false, selected := false) -> void:
 	button.add_theme_font_override("font", UiKit.BOLD_FONT)
 	button.add_theme_constant_override("outline_size", 0)
 	for state: String in ["normal", "hover", "pressed", "focus", "disabled"]:
-		var fill := Color("51442d") if primary else Color("14211f")
+		var fill := Color("655638") if primary else Color("14211f")
 		fill.a = 0.96 if primary else 0.88
 		var edge := BRONZE if primary or selected else Color("4e5b50")
 		if state in ["hover", "focus"]:
@@ -49,9 +49,16 @@ static func style(button: Button, primary := false, selected := false) -> void:
 		elif state == "disabled":
 			fill = Color("15201d")
 			edge = Color("39453c")
-		var box := skin(fill, edge, 7)
-		box.set_border_width_all(2 if selected or state == "focus" else 1)
-		button.add_theme_stylebox_override(state, box)
+		if primary:
+			# The existing layered metal/leather renderer supplies a restrained
+			# highlight and inner bevel; the generated board keeps the face quiet.
+			var metal := UiKit.panel_style(fill, edge, 7)
+			metal.raised = true
+			button.add_theme_stylebox_override(state, metal)
+		else:
+			var box := skin(fill, edge, 7)
+			box.set_border_width_all(2 if selected or state == "focus" else 1)
+			button.add_theme_stylebox_override(state, box)
 	for state: String in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
 		button.add_theme_color_override(state, IVORY)
 	button.add_theme_color_override("font_disabled_color", Color("758077"))

@@ -53,6 +53,7 @@ var info_surface: Panel
 var stat_boxes: Array[Panel] = []
 var slot_portraits: Array[TextureRect] = []
 var slot_portrait_frames: Array[Panel] = []
+var slot_number_badges: Array[Panel] = []
 var _hero_backdrop: TextureRect
 var _class_safe := Rect2()
 var _class_compact := false
@@ -356,8 +357,15 @@ func _setup_presentation() -> void:
 		frame.clip_contents = true
 		frame.add_child(art)
 		slot_portraits.append(art)
-		slot_number_labels[index].z_index = 1
-		slot_number_labels[index].add_theme_constant_override("outline_size", 3)
+		var badge := Panel.new()
+		badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		badge.z_index = 1
+		badge.add_theme_stylebox_override("panel", SelectionUi.skin(Color("101b18"), SelectionUi.BRONZE, 4))
+		slot_buttons[index].add_child(badge)
+		slot_number_badges.append(badge)
+		slot_number_labels[index].z_index = 2
+		slot_number_labels[index].add_theme_color_override("font_color", SelectionUi.IVORY)
+		slot_number_labels[index].add_theme_constant_override("outline_size", 0)
 	slot_surface.add_theme_stylebox_override("panel", SelectionUi.skin(Color(0.035, 0.065, 0.058, 0.54), Color("766b50"), 10))
 	slot_footer.add_theme_stylebox_override("panel", SelectionUi.skin(Color(0.035, 0.06, 0.052, 0.86), Color(0.4, 0.43, 0.34, 0.6), 7))
 
@@ -403,12 +411,14 @@ func _layout_class() -> void:
 	role.show()
 	description.show()
 	var top := area.position.y + outer
-	var brand_h := _measure(brand_label, width)
-	var heading_h := _measure(heading, width)
+	var header_gutter := touch + gap if portrait else 0.0
+	var header_width := maxf(1.0, width - header_gutter * 2.0)
+	var brand_h := _measure(brand_label, header_width)
+	var heading_h := _measure(heading, header_width)
 	var subtitle_h := _measure(subtitle, width)
 	var title_y := top + (brand_h + gap if brand_label.visible else 0.0)
-	EntryUi.place(brand_label, Rect2(Vector2(right, top), Vector2(width, brand_h)))
-	EntryUi.place(heading, Rect2(Vector2(right, title_y), Vector2(width, heading_h)))
+	EntryUi.place(brand_label, Rect2(Vector2(right + header_gutter, top), Vector2(header_width, brand_h)))
+	EntryUi.place(heading, Rect2(Vector2(right + header_gutter, title_y), Vector2(header_width, heading_h)))
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var subtitle_y := title_y + heading_h + gap * 0.5
 	EntryUi.place(subtitle, Rect2(Vector2(right, subtitle_y), Vector2(width, subtitle_h)))
@@ -613,11 +623,11 @@ func _layout_slots() -> void:
 	back_button.tooltip_text = "처음 화면으로 돌아가기"
 	for entry in [[back_button, 32, 20], [brand_label, 20, 12], [heading, 36, 22], [subtitle, 22, 12], [continue_button, 28, 16], [slot_context, 21, 12]]:
 		_font(entry[0], float(entry[1]), float(entry[2]))
-	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	brand_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER if portrait else HORIZONTAL_ALIGNMENT_LEFT
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER if portrait else HORIZONTAL_ALIGNMENT_LEFT
+	brand_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER if portrait else HORIZONTAL_ALIGNMENT_LEFT
 	slot_context.text = "저장 %d · %s" % [selected_slot, "이 여정을 계속합니다" if bool(summary["valid"]) else "복구할 수 없는 저장" if bool(summary["occupied"]) else "새로운 여정을 준비하세요"]
-	var header_left := _slot_touch + gap
+	var header_left := 0.0 if portrait else _slot_touch + gap
 	var header_width := maxf(1.0, inner - header_left)
 	var brand_h := _measure(brand_label, header_width) if brand_label.visible else 0.0
 	var title_h := _measure(heading, header_width)
@@ -640,7 +650,7 @@ func _layout_slots() -> void:
 		var remove := delete_buttons[index]
 		row.show()
 		remove.visible = bool(_summaries[index]["occupied"])
-		for entry in [[row, 26, 14], [remove, 20, 12], [slot_number_labels[index], 20, 12], [slot_title_labels[index], 26, 14], [slot_meta_labels[index], 21, 12], [slot_status_labels[index], 18, 10]]:
+		for entry in [[row, 26, 14], [remove, 20, 12], [slot_number_labels[index], 24, 14], [slot_title_labels[index], 26, 14], [slot_meta_labels[index], 21, 12], [slot_status_labels[index], 18, 10]]:
 			_font(entry[0], float(entry[1]), float(entry[2]))
 		var remove_w := maxf(76.0 * u, _slot_touch)
 		remove.custom_minimum_size = Vector2(remove_w, _slot_touch)
@@ -706,7 +716,11 @@ func _place_slot_labels(index: int) -> void:
 	var title_h := title.get_combined_minimum_size().y
 	EntryUi.place(slot_portrait_frames[index], Rect2(Vector2(pad, pad), Vector2.ONE * _slot_badge))
 	var number_h := number.get_combined_minimum_size().y
-	EntryUi.place(number, Rect2(Vector2(pad + 3.0, pad + _slot_badge - number_h - 2.0), Vector2(_slot_badge - 6.0, number_h)))
+	var badge_w := maxf(30.0 * _unit, 24.0 * _slot_css)
+	var badge_h := number_h + 6.0 * _slot_css
+	var badge_rect := Rect2(Vector2(pad - 3.0 * _slot_css, pad + _slot_badge - badge_h + 3.0 * _slot_css), Vector2(badge_w, badge_h))
+	EntryUi.place(slot_number_badges[index], badge_rect)
+	EntryUi.place(number, badge_rect.grow(-2.0 * _slot_css))
 	EntryUi.place(title, Rect2(Vector2(left, pad), Vector2(maxf(1.0, text_w - status_w - (gap if status.visible else 0.0)), title_h)))
 	EntryUi.place(status, Rect2(Vector2(row.size.x - pad - status_w, pad), Vector2(status_w, title_h)))
 	var meta_h := _measure(meta, text_w, 22.0 * _unit)

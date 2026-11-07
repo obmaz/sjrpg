@@ -51,6 +51,7 @@ jobs:
               if: steps.baseline.outputs.cache-hit != 'true'
               run: |
                   mkdir -p "$RUNNER_TEMP/entry-before"
+                  git fetch --no-tags --depth=1 origin 741d16366e4930644d3287fd97f7adc0745fd786
                   git archive 741d16366e4930644d3287fd97f7adc0745fd786 | tar -x -C "$RUNNER_TEMP/entry-before"
                   cp sjrpg_3d/tools/check_save_layout.mjs "$RUNNER_TEMP/entry-before/sjrpg_3d/tools/check_save_layout.mjs"
                   ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/entry-before/node_modules"
