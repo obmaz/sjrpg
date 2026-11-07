@@ -536,7 +536,11 @@ func _draw_gamepad_hints() -> void:
 	var move_width := HudArt.FONT.get_string_size("LS 이동 · RS 조준", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 8.0 * _unit
 	var move_left := maxf(8.0 * _unit, _stick_center.x - move_width * 0.5)
 	var move_rect := Rect2(Vector2(move_left, _stick_center.y), Vector2(move_width, maxf(34.0 * _unit, font_size + 4.0)))
-	HudArt.text_in_rect(self, "LS 이동 · RS 조준", move_rect, font_size, Color("bbb3a1"))
+	var move_skin := StyleBoxFlat.new()
+	move_skin.bg_color = Color(0.06, 0.08, 0.06, 0.88)
+	move_skin.set_corner_radius_all(4)
+	draw_style_box(move_skin, move_rect)
+	HudArt.text_in_rect(self, "LS 이동 · RS 조준", move_rect, font_size, UiToneArt.IVORY)
 	last_drawn_gamepad_hints.append({"name": "move_aim", "text": "LS 이동 · RS 조준", "rect": [move_rect.position.x, move_rect.position.y, move_rect.size.x, move_rect.size.y], "font_size": font_size})
 
 
