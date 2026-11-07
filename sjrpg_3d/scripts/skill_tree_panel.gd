@@ -313,6 +313,7 @@ func _tree_input(event: InputEvent) -> void:
 
 func _build_detail() -> void:
 	for child in _detail.get_children():
+		_detail.remove_child(child)
 		child.queue_free()
 	if _selected == "" or GameState.skill(_selected).is_empty():
 		_detail.add_child(UiKit.label("기술을 눌러 정보를 확인하세요", 18))
