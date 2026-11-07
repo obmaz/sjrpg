@@ -57,7 +57,7 @@ func _canvas_z(item: CanvasItem) -> int:
 		result += current.z_index
 		if not current.z_as_relative:
 			break
-		current = current.get_parent_item()
+		current = current.get_parent() as CanvasItem
 	return result
 
 
