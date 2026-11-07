@@ -4,7 +4,11 @@ import hashlib
 import io
 import json
 import os
+import time
+import urllib.error
 import urllib.request
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 import zipfile
 from pathlib import Path
 
@@ -13,12 +17,35 @@ PROVENANCE = Path(__file__).with_name("source-provenance.json")
 EXPECTED = json.loads(PROVENANCE.read_text())["sourceFiles"]
 
 
+def open_with_backoff(request, data=None, timeout=45):
+    """Respect source-server rate limits without changing reviewed URLs or bytes."""
+    for attempt in range(5):
+        try:
+            return urllib.request.urlopen(request, data=data, timeout=timeout)
+        except urllib.error.HTTPError as error:
+            if error.code not in (429, 500, 502, 503, 504) or attempt == 4:
+                raise
+            header = error.headers.get("Retry-After", "")
+            minimum = 0.0
+            if header:
+                try:
+                    minimum = float(header)
+                except ValueError:
+                    minimum = max(0.0, (parsedate_to_datetime(header) - datetime.now(timezone.utc)).total_seconds())
+            delay = max(15.0 * (2 ** attempt), minimum)
+            if delay > 300.0:
+                raise RuntimeError("Source server requested a retry beyond this import job budget") from error
+            print("Source download backoff", error.code, round(delay, 1), "seconds", flush=True)
+            error.close()
+            time.sleep(delay)
+
+
 class RangeZip(io.RawIOBase):
     def __init__(self, slug, upload):
         endpoint = (
             f"https://quaternius.itch.io/{slug}/file/{upload}?source=game_download"
         )
-        response = urllib.request.urlopen(endpoint, data=b"", timeout=30)
+        response = open_with_backoff(endpoint, data=b"", timeout=30)
         self.url = json.load(response)["url"]
         self.position = 0
         response = self.request(0, 1)
@@ -29,7 +56,7 @@ class RangeZip(io.RawIOBase):
         request = urllib.request.Request(
             self.url, headers={"Range": f"bytes={start}-{start + length - 1}"}
         )
-        response = urllib.request.urlopen(request, timeout=45)
+        response = open_with_backoff(request, timeout=45)
         if response.status != 206:
             response.close()
             raise RuntimeError("Range unsupported; refused full source ZIP download")

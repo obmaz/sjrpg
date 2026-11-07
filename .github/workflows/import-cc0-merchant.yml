@@ -32,6 +32,13 @@ jobs:
                       ~/.godot-tools
                       ~/.local/share/godot/export_templates
                   key: godot-${{ hashFiles('.godot-version') }}-tools-v1
+            - uses: actions/cache/restore@v4
+              id: source_cache
+              with:
+                  path: /tmp/sjrpg-cc0-merchant-source
+                  key: cc0-character-sources-${{ hashFiles('sjrpg_3d/tools/hero_art/source-provenance.json') }}-${{ github.run_id }}
+                  restore-keys: |
+                      cc0-character-sources-${{ hashFiles('sjrpg_3d/tools/hero_art/source-provenance.json') }}-
             - name: Verify exact official free source files and packaged CC0 licenses
               run: python3 sjrpg_3d/tools/hero_art/fetch_sources.py
             - name: Build actual adult merchant and verify exported geometry
@@ -43,6 +50,11 @@ jobs:
                   chmod +x tools/*.sh sjrpg_3d/tools/*.sh sjrpg_2d/tools/*.sh
                   tools/setup_godot.sh
                   python3 sjrpg_3d/tools/hero_art/publish_merchant_blobs.py
+            - uses: actions/cache/save@v4
+              if: always()
+              with:
+                  path: /tmp/sjrpg-cc0-merchant-source
+                  key: cc0-character-sources-${{ hashFiles('sjrpg_3d/tools/hero_art/source-provenance.json') }}-${{ github.run_id }}
             - uses: actions/upload-artifact@v6
               if: always()
               with:
