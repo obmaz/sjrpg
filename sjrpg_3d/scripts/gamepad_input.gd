@@ -8,6 +8,7 @@ signal device_changed(device: int)
 const DEADZONE := 0.2
 const TRIGGER_PRESS := 0.55
 const TRIGGER_RELEASE := 0.35
+const NEUTRAL_POLL_SAMPLES := 2
 const BUTTON_ACTIONS := {
 	JOY_BUTTON_A: "primary", JOY_BUTTON_B: "roll",
 	JOY_BUTTON_X: "aux1", JOY_BUTTON_Y: "aux2",
@@ -27,6 +28,8 @@ var _connected: Array[int] = []
 var _buttons: Dictionary = {}
 var _axes: Dictionary = {}
 var _armed := false
+var _neutral_samples := 0
+var _neutral_frame := -1
 var _focused := true
 var _combat := false
 var _left_trigger := false
@@ -84,6 +87,8 @@ func _connection_changed(device: int, connected: bool) -> void:
 
 func require_neutral() -> void:
 	_armed = false
+	_neutral_samples = 0
+	_neutral_frame = -1
 	_nav_direction = ""
 	_nav_repeat = 0.0
 
@@ -167,7 +172,17 @@ func _process(delta: float) -> void:
 		return
 	if not _armed:
 		_sample_hardware()
-		if _all_neutral():
+		if not _all_neutral():
+			_neutral_samples = 0
+			_neutral_frame = -1
+			return
+		# Web connection notifications clear Input state before the first physical
+		# gamepad poll is flushed. One reset-zero sample is not a release.
+		var frame := Engine.get_process_frames()
+		if frame != _neutral_frame:
+			_neutral_frame = frame
+			_neutral_samples += 1
+		if _neutral_samples >= NEUTRAL_POLL_SAMPLES:
 			_armed = true
 		return
 	var stick := _stick(JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y)
@@ -226,6 +241,10 @@ func _input(event: InputEvent) -> void:
 				if pressed and not _right_trigger:
 					action = "aux4"
 				_right_trigger = pressed
+		if not _armed and not _all_neutral():
+			# A held raw sample arriving after reset-zero invalidates the candidate.
+			_neutral_samples = 0
+			_neutral_frame = -1
 		if not _focused or not _armed:
 			return
 		if not navigation.is_empty():
@@ -253,6 +272,7 @@ func review_snapshot() -> Dictionary:
 	var aim: Vector2 = aim_vector()
 	return {
 		"active_device": active_device, "using_gamepad": using_gamepad, "armed": _armed,
+		"neutral_samples": _neutral_samples, "neutral_sample_frame": _neutral_frame,
 		"focused": _focused, "combat_enabled": combat_enabled(),
 		"move": {"x": move.x, "y": move.y}, "aim": {"x": aim.x, "y": aim.y},
 		"held_slots": held_slots(), "buttons": _buttons.duplicate(), "axes": _axes.duplicate(),
