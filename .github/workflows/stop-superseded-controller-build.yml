@@ -1,0 +1,21 @@
+name: Stop superseded controller build
+on:
+    push:
+        paths:
+            - ".github/workflows/stop-superseded-controller-build.yml"
+permissions:
+    contents: read
+    actions: write
+jobs:
+    cleanup:
+        runs-on: ubuntu-latest
+        timeout-minutes: 2
+        steps:
+            - name: Cancel the superseded retry without touching the final release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  SJRPG_OLD_RUN_STATE="$(gh api repos/obmaz/sjrpg/actions/runs/42382073537 --jq '.status')"
+                  if [ "$SJRPG_OLD_RUN_STATE" != "completed" ]; then
+                      gh api --method POST repos/obmaz/sjrpg/actions/runs/42382073537/cancel
+                  fi
