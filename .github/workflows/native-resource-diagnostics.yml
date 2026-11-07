@@ -20,7 +20,8 @@ jobs:
                 partition: [full]
         env:
             SJRPG_RESOURCE_PARTITION: ${{ matrix.partition }}
-            SJRPG_QUIET_VERBOSE: "1"
+            SJRPG_QUIET_VERBOSE: "0"
+            SJRPG_TRACE_AUDIO_OWNERS: "1"
         steps:
             - uses: actions/checkout@v7.0.1
             - uses: actions/cache@v4
@@ -76,7 +77,7 @@ jobs:
               run: |
                   SJRPG_RESOURCE_OUT="build/resource-diagnostics/$SJRPG_RESOURCE_PARTITION"
                   set +e
-                  timeout 900 sjrpg_3d/tools/godot.sh --headless --verbose res://tests/run_all.tscn -- "$SJRPG_RESOURCE_ONLY" > "$SJRPG_RESOURCE_OUT/run.log" 2>&1
+                  timeout 900 sjrpg_3d/tools/godot.sh --headless res://tests/run_all.tscn -- "$SJRPG_RESOURCE_ONLY" > "$SJRPG_RESOURCE_OUT/run.log" 2>&1
                   SJRPG_RESOURCE_RUN_CODE=$?
                   set -e
                   printf '%s\n' "$SJRPG_RESOURCE_RUN_CODE" > "$SJRPG_RESOURCE_OUT/run.exitcode.txt"

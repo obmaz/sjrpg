@@ -59,5 +59,7 @@ func _ready() -> void:
 		await get_tree().process_frame
 	if quiet_verbose:
 		Engine.print_to_stdout = original_stdout
+	if OS.get_environment("SJRPG_TRACE_AUDIO_OWNERS") == "1":
+		print("AUDIO_OWNER_TRACE " + JSON.stringify(MusicDirector.debug_owned_audio_snapshot()))
 	print("RESULT cases=%d failed=%d time=%dms %s" % [total, failed.size(), Time.get_ticks_msec() - started, str(failed)])
 	get_tree().quit(1 if failed.size() > 0 or total == 0 else 0)
