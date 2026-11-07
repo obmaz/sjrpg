@@ -7,6 +7,7 @@ import {createRequire} from 'node:module';
 const {chromium}=createRequire(import.meta.url)('playwright');
 const baseline=process.env.SJRPG_STYLE_BASELINE==='1';
 const smoke=process.env.SJRPG_STYLE_SMOKE==='1';
+const modelsOnly=process.env.SJRPG_STYLE_MODELS_ONLY==='1';
 const base=new URL(process.argv[2]||'http://127.0.0.1:8781/');
 const out=path.resolve(process.argv[3]||'build/native-style-review');
 await mkdir(out,{recursive:true});
@@ -16,7 +17,7 @@ const css=(s,r)=>({x:r[0]*s.window[0]/s.ui.viewport[0],y:r[1]*s.window[1]/s.ui.v
 const inside=(a,b,e=1)=>b.x>=a.x-e&&b.y>=a.y-e&&b.x+b.w<=a.x+a.w+e&&b.y+b.h<=a.y+a.h+e;
 const overlap=(a,b)=>Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x)>1&&Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y)>1;
 const read=()=>page.evaluate(()=>({ui:window.__sjrpgNativeStyleReview,native:window.__sjrpg3dProbe,tone:window.__sjrpgUiTone,window:[innerWidth,innerHeight],dpr:devicePixelRatio}));
-async function wait(fn,label,timeout=90000){const end=Date.now()+timeout;while(Date.now()<end){assert.equal(errors.length,0,JSON.stringify(errors));const s=await read();if(fn(s))return s;await page.waitForTimeout(150);}throw Error('Timeout '+label+' '+JSON.stringify(await read()));}
+async function wait(fn,label,timeout=15000){const end=Date.now()+timeout;while(Date.now()<end){assert.equal(errors.length,0,JSON.stringify(errors));const s=await read();if(fn(s))return s;await page.waitForTimeout(150);}throw Error('Timeout '+label+' '+JSON.stringify(await read()));}
 async function settled(frames=3){const n=(await read()).ui.frame;await wait(s=>s.ui.frame>=n+frames,'actual UI frame settlement');}
 function verify(fn,label){if(!baseline)return fn();try{return fn();}catch(e){baselineViolations.push({label,error:String(e)});}}
 async function baselineAction(label,fn){if(!baseline)return fn();try{return await fn();}catch(e){baselineBlockedActions.push({label,error:String(e)});if((await read()).ui.panel.rect){await page.keyboard.press('Escape');await settled();}}}
@@ -107,13 +108,28 @@ async function boot(cls,params={},dpr=1){
  await page.locator('#entry-start').click();
  await page.waitForFunction(()=>window.__sjrpgClassButtons?.stage==='class',null,{timeout:30000});
  for(const key of[cls,'start']){const data=await page.evaluate(key=>({p:window.__sjrpgClassButtons[key],w:innerWidth,h:innerHeight}),key);await page.mouse.click(data.p[0]*data.w,data.p[1]*data.h);await page.waitForTimeout(300);}
- await wait(s=>s.ui?.native&&s.native?.native_active&&s.native?.physics_ticks>0,'actual native adventure');
+ await wait(s=>s.ui?.native&&s.native?.native_active&&s.native?.physics_ticks>0,'actual native adventure',90000);
  if(params.dungeon_preview)await page.waitForFunction(()=>window.__sjrpgDungeonPreviewReady===true,null,{timeout:90000});
  if(params.encounter_preview)await page.waitForFunction(()=>window.__sjrpgEncounterPreviewReady===true,null,{timeout:90000});
  await settled();
 }
+async function modelGallery(){
+  await boot('mage',{at:'npc_courtyard'});
+  await page.setViewportSize({width:1280,height:1280});await page.waitForTimeout(700);
+  assert((await read()).ui.gallery_available,'actual native model gallery resource');
+  for(let face=0;face<4;face++){
+   await page.evaluate(face=>window.__sjrpgNativeStyleAction('gallery',face),face);
+   const g=await wait(s=>s.ui.gallery&&s.ui.gallery.face===face&&s.ui.gallery.current_frame>=s.ui.gallery.requested_frame+3,'actual all-face model gallery',90000);
+   assert.equal(g.ui.gallery.count,14,'all actual actor archetypes in gallery');
+   assert.equal(g.ui.gallery.projection,'orthographic');
+   for(const model of g.ui.gallery.models){assert(model.triangles>0&&model.surfaces>0,'actual mesh '+model.identity);assert(model.bounds_max.every((v,i)=>v>model.bounds_min[i]),'three-dimensional envelope '+model.identity);}
+   await capture('native-gallery-face-'+face,true);checks.push('actual native model face '+face);
+  }
+  await page.evaluate(()=>window.__sjrpgNativeStyleAction('gallery',-1));
+}
 try{
- if(smoke){
+ if(modelsOnly){await modelGallery();}
+ else if(smoke){
   await boot('mage',{at:'npc_courtyard'});hudGeometry(await read(),'public mage portrait');await capture('public-mage-hud',true);
   await tapHud('bar_skills');await wait(s=>s.ui?.panel?.nodes?.length>0&&s.ui.paused,'public real skill panel');panelGeometry(await read(),'public skill panel');await capture('public-mage-skills',true);await closePanel();checks.push('public actual skill panel open/close');
  }else{
@@ -134,21 +150,8 @@ try{
   await boot('mage',params);await page.waitForTimeout(800);const state=await read();hudGeometry(state,name);if(name==='cave-outside'){assert.equal(state.ui.dungeon_active,false,'actual exterior remains forest');assert(state.ui.entry_distance<180,'actual exterior camera is at the real cave entrance');assert.equal(state.native.scope,'forest');}await capture(name+'-native',true);
  }
  await boot('mage',{at:'npc_courtyard'},2);hudGeometry(await read(),'mage DPR2 portrait');await capture('mage-dpr2-portrait',true);
- if(!baseline){
-  await boot('mage',{at:'npc_courtyard'});
-  await page.setViewportSize({width:1280,height:1280});await page.waitForTimeout(700);
-  assert((await read()).ui.gallery_available,'actual native model gallery resource');
-  for(let face=0;face<4;face++){
-   await page.evaluate(face=>window.__sjrpgNativeStyleAction('gallery',face),face);
-   const g=await wait(s=>s.ui.gallery&&s.ui.gallery.face===face&&s.ui.gallery.current_frame>=s.ui.gallery.requested_frame+3,'actual all-face model gallery');
-   assert.equal(g.ui.gallery.count,14,'all actual actor archetypes in gallery');
-   assert.equal(g.ui.gallery.projection,'orthographic');
-   for(const model of g.ui.gallery.models){assert(model.triangles>0&&model.surfaces>0,'actual mesh '+model.identity);assert(model.bounds_max.every((v,i)=>v>model.bounds_min[i]),'three-dimensional envelope '+model.identity);}
-   await capture('native-gallery-face-'+face,true);checks.push('actual native model face '+face);
-  }
-  await page.evaluate(()=>window.__sjrpgNativeStyleAction('gallery',-1));
+ if(!baseline)await modelGallery();
  }
- }
- assert.equal(errors.length,0);console.log((smoke?'NATIVE_STYLE_SMOKE_PASS ':baseline?'NATIVE_STYLE_BASELINE_CAPTURED ':'NATIVE_STYLE_PASS ')+JSON.stringify({checks:checks.length,captures:captures.length,errors:0,baselineViolations:baselineViolations.length,baselineBlockedActions:baselineBlockedActions.length}));
+ assert.equal(errors.length,0);console.log((modelsOnly?'NATIVE_STYLE_MODELS_PASS ':smoke?'NATIVE_STYLE_SMOKE_PASS ':baseline?'NATIVE_STYLE_BASELINE_CAPTURED ':'NATIVE_STYLE_PASS ')+JSON.stringify({checks:checks.length,captures:captures.length,errors:0,baselineViolations:baselineViolations.length,baselineBlockedActions:baselineBlockedActions.length}));
 }catch(e){failure=String(e);console.error('NATIVE_STYLE_FAIL '+failure);try{await capture('failure',true);}catch{}process.exitCode=1;}
-finally{await writeFile(path.join(out,'proof.json'),JSON.stringify({baseline,smoke,baselineViolations,baselineBlockedActions,checks,captures,errors,failure,passed:!failure&&!errors.length},null,2));await browser.close();}
+finally{await writeFile(path.join(out,'proof.json'),JSON.stringify({url:base.href,modelsOnly,baseline,smoke,baselineViolations,baselineBlockedActions,checks,captures,errors,failure,passed:!failure&&!errors.length},null,2));await browser.close();}
