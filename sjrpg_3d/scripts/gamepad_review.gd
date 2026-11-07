@@ -109,6 +109,12 @@ func _publish() -> void:
 			report["native_ready"] = game.native_ready
 			report["player"] = {"position": [player.position.x, player.position.y], "facing": player.facing, "move": [player.move_input.x, player.move_input.y], "target": player.has_move_target, "held": player.held_slots.duplicate(), "serial": player._action_serial, "attack_time": player._attack_time, "roll_time": player._roll_time, "roll_cooldown": player._roll_cooldown, "cooldowns": player.cooldowns.duplicate(), "hp": player.hp, "max_hp": player.max_hp, "resource": player.resource, "resource_max": player.resource_max, "dead": player.dead}
 			report["near"] = game.near_npc()
+			var touch: Dictionary = {}
+			for key: String in game.hud.controls._buttons:
+				var data: Dictionary = game.hud.controls._buttons[key]
+				var center: Vector2 = data["center"]
+				touch[key] = [center.x, center.y]
+			report["touch"] = touch
 			var panel: PanelFrame = game.hud._panel
 			if is_instance_valid(panel):
 				var targets: Array = []
