@@ -222,11 +222,15 @@ for(const profile of [{name:'portrait-mage-continue',width:390,height:844,dpr:1,
   origin=(await read()).review.player.position;await page.keyboard.down('d');
   await wait(s=>!s.review.pad.using_gamepad&&Math.hypot(s.review.player.position[0]-origin[0],s.review.player.position[1]-origin[1])>5,'actual keyboard fallback');
   await page.keyboard.up('d');await wait(s=>s.review.hints?.visible===false&&s.review.hints.glyphs.length===0,'actual Xbox glyphs disappear after keyboard input');await capture('keyboard-fallback');
-  await wait(s=>s.review.player.attack_time<=0,'input idle before touch');
+  const beforeTouch=await read();
+  // This is a live world: if an enemy killed the hero during the preceding
+  // navigation checks, wait for the existing automatic respawn, never mutate HP.
+  const touchReady=await wait(s=>!s.review.player.dead&&s.review.player.hp>0&&!s.review.paused&&!s.review.panel?.script&&s.review.player.attack_time<=0,'actual living idle player before touch fallback',8000);
+  c.touch_prerequisite={dead_before:beforeTouch.review.player.dead,hp_before:beforeTouch.review.player.hp,dead_at_gesture:touchReady.review.player.dead,hp_at_gesture:touchReady.review.player.hp,position:touchReady.review.player.position};
   s=await read();const [tx,ty]=s.review.touch.slot0,[vw,vh]=s.review.viewport;
   serial=s.review.player.serial;
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:tx*s.window[0]/vw,y:ty*s.window[1]/vh}]});
-  await wait(s=>s.review.player.serial>serial&&!s.review.pad.using_gamepad,'actual touch primary fallback',6000);
+  await wait(s=>!s.review.player.dead&&s.review.player.hp>0&&s.review.player.serial>serial&&!s.review.pad.using_gamepad,'actual touch primary fallback',6000);
   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   await wait(s=>s.review.hints?.visible===false,'actual Xbox glyphs remain hidden after touch');
   record('real keyboard and touch fallback with pad still connected');
