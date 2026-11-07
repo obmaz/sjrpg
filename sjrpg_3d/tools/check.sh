@@ -35,11 +35,15 @@ else echo "임포트 ok"; fi
 if [ $fail -ne 0 ]; then exit 1; fi
 
 echo "── 2/3 테스트"
-if [ -n "$ONLY" ]; then "$GODOT_SH" --headless res://tests/run_all.tscn -- "$ONLY" >"$LOG" 2>&1
-else "$GODOT_SH" --headless res://tests/run_all.tscn >"$LOG" 2>&1; fi
+if [ -n "$ONLY" ]; then "$GODOT_SH" --headless --verbose res://tests/run_all.tscn -- "$ONLY" >"$LOG" 2>&1
+else "$GODOT_SH" --headless --verbose res://tests/run_all.tscn >"$LOG" 2>&1; fi
 code=$?
 grep -E "^(PASS|FAIL|RESULT|ART_AUDIT)|^FAIL |SCRIPT ERROR|^ERROR" "$LOG"
-if [ $code -ne 0 ] || grep -qE "SCRIPT ERROR|^ERROR:" "$LOG"; then fail=1; fi
+if [ $code -ne 0 ] || grep -qE "SCRIPT ERROR|^ERROR:" "$LOG"; then
+  fail=1
+  # Keep engine resource paths and instance details when shutdown itself fails.
+  tail -n 160 "$LOG"
+fi
 # 테스트 러너가 실제로 돌았는지: RESULT 줄이 없고 실패 0이 아니면 통과로 보지 않는다.
 if ! grep -qE "^RESULT cases=[1-9][0-9]* failed=0 " "$LOG"; then echo "테스트 결과(RESULT … failed=0)를 확인하지 못했습니다"; fail=1; fi
 
