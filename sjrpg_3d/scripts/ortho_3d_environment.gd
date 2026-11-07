@@ -426,6 +426,7 @@ func _sync_cave_lighting(inside: bool) -> void:
 
 
 func sync(delta: float, frozen: bool) -> void:
+	NativeLandmarks3D.sync_water(forest, preview.game.village)
 	var inside: bool = preview.game.dungeon.active
 	forest.visible = not inside
 	if inside and (_cave_source_id != preview.game.dungeon._root.get_instance_id() or not is_instance_valid(cave)):

@@ -77,6 +77,41 @@ func run() -> void:
 			check("landmark all mapped triangles retain area and vertical metre density " + str(node.name), valid_uv and (vertical_faces > 0 or str(node.name) == "RootMound"))
 			check("landmark tapered and broken face normals are perpendicular to the real triangle plane " + str(node.name), plane_normals)
 			check("landmark winding is Godot clockwise with outward normals " + str(node.name), clockwise)
+	var water_materials: Array = landmarks.get("water_materials", [])
+	var clock: PlazaWater
+	for child in game.village.fountain.get_children():
+		if child is PlazaWater:
+			clock = child
+	if check("landmark water observes the existing fountain clock", clock != null and water_materials.size() == 3):
+		var old_phase := clock.phase
+		var old_reduced := Prefs.reduce_motion
+		Prefs.reduce_motion = false
+		clock.phase = 12.5
+		NativeLandmarks3D.sync_water(environment.forest, game.village)
+		var follows_source := true
+		for material: ShaderMaterial in water_materials:
+			follows_source = follows_source and is_equal_approx(float(material.get_shader_parameter("phase")), clock.phase) and material.get_shader_parameter("source_water") != null
+		check("ponds and cascade use actual textured water at the original source phase", follows_source)
+		environment.sync(25.0, true)
+		var remains_paused := is_equal_approx(clock.phase, 12.5)
+		for material: ShaderMaterial in water_materials:
+			remains_paused = remains_paused and is_equal_approx(float(material.get_shader_parameter("phase")), 12.5)
+		check("paused environment delta cannot advance the shared water source", remains_paused)
+		Prefs.reduce_motion = true
+		NativeLandmarks3D.sync_water(environment.forest, game.village)
+		var reduced := true
+		for material: ShaderMaterial in water_materials:
+			reduced = reduced and is_zero_approx(float(material.get_shader_parameter("phase"))) and is_zero_approx(float(material.get_shader_parameter("motion")))
+		check("reduced motion freezes landmark waves and texture drift", reduced)
+		Prefs.reduce_motion = old_reduced
+		clock.phase = old_phase
+		NativeLandmarks3D.sync_water(environment.forest, game.village)
+	var waterfall := native_landmarks.get_node("Landmark3/FallingWater") as MeshInstance3D
+	var shores: Array = waterfall.get_meta("source_shores")
+	var waterfall_source: Landmark = game.village.landmarks[3]
+	var old_span := Ortho3DPreview.ground_position(Iso.poly_bounds(waterfall_source.water[0]).get_center()).distance_squared_to(Ortho3DPreview.ground_position(Iso.poly_bounds(waterfall_source.water[1]).get_center()))
+	var new_span := Ortho3DPreview.ground_position(shores[0]).distance_squared_to(Ortho3DPreview.ground_position(shores[1]))
+	check("cascade connects the actual nearest shores instead of crossing both pond centres", new_span < old_span)
 	var children := environment.forest.get_child_count()
 	environment.sync(0.0, true)
 	environment.sync(0.0, true)

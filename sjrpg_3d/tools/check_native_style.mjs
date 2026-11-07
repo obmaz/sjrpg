@@ -8,11 +8,12 @@ const {chromium}=createRequire(import.meta.url)('playwright');
 const baseline=process.env.SJRPG_STYLE_BASELINE==='1';
 const smoke=process.env.SJRPG_STYLE_SMOKE==='1';
 const modelsOnly=process.env.SJRPG_STYLE_MODELS_ONLY==='1';
+const worldOnly=process.env.SJRPG_STYLE_WORLD_ONLY==='1';
 const base=new URL(process.argv[2]||'http://127.0.0.1:8781/');
 const out=path.resolve(process.argv[3]||'build/native-style-review');
 await mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
-const errors=[],captures=[],checks=[],baselineViolations=[],baselineBlockedActions=[];let page,context,failure=null;
+const errors=[],captures=[],checks=[],baselineViolations=[],baselineBlockedActions=[];let page,context,failure=null,proportionsLogged=false;
 const css=(s,r)=>({x:r[0]*s.window[0]/s.ui.viewport[0],y:r[1]*s.window[1]/s.ui.viewport[1],w:r[2]*s.window[0]/s.ui.viewport[0],h:r[3]*s.window[1]/s.ui.viewport[1]});
 const inside=(a,b,e=1)=>b.x>=a.x-e&&b.y>=a.y-e&&b.x+b.w<=a.x+a.w+e&&b.y+b.h<=a.y+a.h+e;
 const overlap=(a,b)=>Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x)>1&&Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y)>1;
@@ -23,7 +24,7 @@ function verify(fn,label){if(!baseline)return fn();try{return fn();}catch(e){bas
 async function baselineAction(label,fn){if(!baseline)return fn();try{return await fn();}catch(e){baselineBlockedActions.push({label,error:String(e)});if((await read()).ui.panel.rect){await page.keyboard.press('Escape');await settled();}}}
 async function tapRect(r){const s=await read();assert(inside({x:0,y:0,w:s.window[0],h:s.window[1]},r),'real target outside viewport '+JSON.stringify(r));await page.mouse.click(r.x+r.w/2,r.y+r.h/2);await settled();}
 async function tapHud(key){const s=await read();assert(s.ui.buttons[key],key+' missing');await tapRect(css(s,s.ui.buttons[key]));}
-async function capture(name,inline=false){const s=await read();await page.screenshot({path:path.join(out,name+'.png'),timeout:90000});captures.push({name,...s});if(inline){const data=(await page.screenshot({type:'jpeg',quality:78,timeout:90000})).toString('base64');console.log('SJ_NATIVE_STYLE_IMAGE_BEGIN '+name+' image/jpeg '+data.length);for(let i=0;i<data.length;i+=16384)console.log('SJ_NATIVE_STYLE_IMAGE_CHUNK '+name+' '+data.slice(i,i+16384));console.log('SJ_NATIVE_STYLE_IMAGE_END '+name);}}
+async function capture(name,inline=false){const s=await read();if(!proportionsLogged&&s.ui.coverage?.actor_proportions){console.log('NATIVE_ACTOR_PROPORTIONS '+JSON.stringify(s.ui.coverage.actor_proportions));proportionsLogged=true;}await page.screenshot({path:path.join(out,name+'.png'),timeout:90000});captures.push({name,...s});if(inline){const data=(await page.screenshot({type:'jpeg',quality:78,timeout:90000})).toString('base64');console.log('SJ_NATIVE_STYLE_IMAGE_BEGIN '+name+' image/jpeg '+data.length);for(let i=0;i<data.length;i+=16384)console.log('SJ_NATIVE_STYLE_IMAGE_CHUNK '+name+' '+data.slice(i,i+16384));console.log('SJ_NATIVE_STYLE_IMAGE_END '+name);}}
 function hudGeometry(s,label,expectedPaused=false){return verify(()=>strictHudGeometry(s,label,expectedPaused),label);}
 function strictHudGeometry(s,label,expectedPaused=false){
  assert(s.ui.native&&s.native?.native_active&&s.native?.simulation==='3d',label+' actual native world');
@@ -141,8 +142,23 @@ async function modelGallery(){
   }
   await page.evaluate(()=>window.__sjrpgNativeStyleAction('gallery',-1));
 }
+async function worldScenes(){
+ for(const [name,params]of[['bridge',{at:'bridge'}],['landmark0',{at:'lm0'}],['landmark1-overview',{at:'lm1',zoom:'0.5'}],['landmark2-overview',{at:'lm2',zoom:'0.5'}],['landmark3',{at:'lm3'}],['cave-outside',{at:'rowen',zoom:'0.8'}],['cave',{dungeon_preview:'entry'}],['enemy',{at:'field',encounter_preview:'active'}],['corpses-bridge',{corpse_preview:'bridge'}]]){
+  await boot('mage',params);
+  const landmark=/^landmark([0-3])-overview$/.exec(name);
+  await page.waitForTimeout(800);const state=await read();hudGeometry(state,name,Boolean(params.dungeon_preview));if(landmark&&!baseline){
+   const role=Number(landmark[1]),witness=state.ui.coverage.landmark_views?.find(v=>v.role===role);
+   assert(witness&&witness.meshes>0,name+' actual authored mesh projection witness');
+   assert.equal(witness.center_behind_camera,false,name+' actual landmark in front of camera');
+   const box=css(state,witness.projected);
+   assert(witness.visible_area_ratio>=.55&&box.h>=100&&box.w>=100,name+' majority of actual authored mesh envelope must be visible '+JSON.stringify(witness));
+   checks.push(name+' actual '+witness.meshes+' meshes visible area '+witness.visible_area_ratio);
+  }if(name==='cave-outside'){assert.equal(state.ui.dungeon_active,false,'actual exterior remains forest');assert(state.ui.entry_distance<180,'actual exterior camera is at the real cave entrance');assert.equal(state.native.scope,'forest');}if(name==='corpses-bridge'){assert(state.ui.coverage.corpse_count>0,'actual corpse models exist');if(!baseline)assert.deepEqual(state.ui.coverage.corpse_cards,[],'no image-card corpse fallback');}await capture(name+'-native',true);
+ }
+}
 try{
  if(modelsOnly){await modelGallery();}
+ else if(worldOnly){await worldScenes();}
  else if(smoke){
   await boot('mage',{at:'npc_courtyard'});hudGeometry(await read(),'public mage portrait');await capture('public-mage-hud',true);
   await tapHud('bar_skills');await wait(s=>s.ui?.panel?.nodes?.length>0&&s.ui.paused,'public real skill panel');panelGeometry(await read(),'public skill panel');await capture('public-mage-skills',true);await closePanel();checks.push('public actual skill panel open/close');
@@ -160,12 +176,10 @@ try{
   await capture(cls+'-walking-native');
   assert(distance>1,'real WASD movement');checks.push(cls+' actual movement');
  }
- for(const [name,params]of[['bridge',{at:'bridge'}],['landmark0',{at:'lm0'}],['landmark1',{at:'lm1'}],['landmark2',{at:'lm2'}],['landmark3',{at:'lm3'}],['cave-outside',{at:'rowen',zoom:'0.8'}],['cave',{dungeon_preview:'entry'}],['enemy',{at:'field',encounter_preview:'active'}],['corpses-bridge',{corpse_preview:'bridge'}]]){
-  await boot('mage',params);await page.waitForTimeout(800);const state=await read();hudGeometry(state,name,Boolean(params.dungeon_preview));if(name==='cave-outside'){assert.equal(state.ui.dungeon_active,false,'actual exterior remains forest');assert(state.ui.entry_distance<180,'actual exterior camera is at the real cave entrance');assert.equal(state.native.scope,'forest');}if(name==='corpses-bridge'){assert(state.ui.coverage.corpse_count>0,'actual corpse models exist');if(!baseline)assert.deepEqual(state.ui.coverage.corpse_cards,[],'no image-card corpse fallback');}await capture(name+'-native',true);
- }
+ await worldScenes();
  await boot('mage',{at:'npc_courtyard'},2);hudGeometry(await read(),'mage DPR2 portrait');await capture('mage-dpr2-portrait',true);
  if(!baseline)await modelGallery();
  }
- assert.equal(errors.length,0);console.log((modelsOnly?'NATIVE_STYLE_MODELS_PASS ':smoke?'NATIVE_STYLE_SMOKE_PASS ':baseline?'NATIVE_STYLE_BASELINE_CAPTURED ':'NATIVE_STYLE_PASS ')+JSON.stringify({checks:checks.length,captures:captures.length,errors:0,baselineViolations:baselineViolations.length,baselineBlockedActions:baselineBlockedActions.length}));
+ assert.equal(errors.length,0);console.log((modelsOnly?'NATIVE_STYLE_MODELS_PASS ':worldOnly?'NATIVE_STYLE_WORLD_PASS ':smoke?'NATIVE_STYLE_SMOKE_PASS ':baseline?'NATIVE_STYLE_BASELINE_CAPTURED ':'NATIVE_STYLE_PASS ')+JSON.stringify({checks:checks.length,captures:captures.length,errors:0,baselineViolations:baselineViolations.length,baselineBlockedActions:baselineBlockedActions.length}));
 }catch(e){failure=String(e);console.error('NATIVE_STYLE_FAIL '+failure);try{await capture('failure',true);}catch{}process.exitCode=1;}
-finally{await writeFile(path.join(out,'proof.json'),JSON.stringify({url:base.href,modelsOnly,baseline,smoke,baselineViolations,baselineBlockedActions,checks,captures,errors,failure,passed:!failure&&!errors.length},null,2));await browser.close();}
+finally{await writeFile(path.join(out,'proof.json'),JSON.stringify({url:base.href,modelsOnly,worldOnly,baseline,smoke,baselineViolations,baselineBlockedActions,checks,captures,errors,failure,passed:!failure&&!errors.length},null,2));await browser.close();}

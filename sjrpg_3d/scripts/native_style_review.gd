@@ -77,6 +77,7 @@ func _process(delta: float) -> void:
 					corpse_cards.append(id)
 		coverage["corpse_count"] = corpse_count
 		coverage["corpse_cards"] = corpse_cards
+		coverage["landmark_views"] = _landmark_views(preview)
 		for property: Dictionary in preview.get_property_list():
 			var key: String = property["name"]
 			if key.begins_with("_native_") or key.begins_with("_resident") or key.begins_with("_enemy"):
@@ -86,6 +87,10 @@ func _process(delta: float) -> void:
 						coverage[key] = renderer.review_snapshot()
 					elif renderer.has_method("snapshot"):
 						coverage[key] = renderer.snapshot()
+	var audit_path: String = "res://scripts/native_actor_proportion_audit.gd"
+	if is_instance_valid(preview) and ResourceLoader.exists(audit_path):
+		var audit: Script = load(audit_path)
+		coverage["actor_proportions"] = audit.measure(preview)
 	var view := hud.controls.get_viewport_rect().size
 	var report := {"viewport": [view.x, view.y], "frame": Engine.get_process_frames(), "class": GameState.hero_class, "buttons": buttons, "avatar": [portrait.x-radius, portrait.y-radius, radius*2.0, radius*2.0], "hp": rect_value(geometry["hp"]), "mp": rect_value(geometry["mp"]), "level_badge": rect_value(geometry["level_badge"]), "level": GameState.level, "panel": panel, "paused": get_tree().paused, "native": game.native_ready, "dungeon_active": game.dungeon.active, "entry_distance": game.player.position.distance_to(game.dungeon.entry_point()), "coverage": coverage, "player": [game.player.position.x, game.player.position.y], "potions": [GameState.potions, GameState.mana_potions], "zoom": game.camera.zoom.x, "native_camera_size": game.ortho_preview.camera.size, "world_zoom": Prefs.world_zoom}
 	report["gallery_available"] = ResourceLoader.exists("res://scripts/native_model_gallery.gd")
@@ -113,3 +118,42 @@ func _action(arguments: Array) -> void:
 		add_child(_gallery)
 	_gallery.show()
 	_gallery.set_face(face)
+
+## Actual authored mesh envelope projected through the live game camera.
+## No camera/model transforms are modified by this observer.
+func _landmark_views(preview: Node) -> Array:
+	var result: Array = []
+	var environment: Object = preview._world_environment
+	if not is_instance_valid(environment) or not is_instance_valid(environment.forest):
+		return result
+	var container: Node = environment.forest.get_node_or_null("NativeLandmarks")
+	if not is_instance_valid(container) or not container.has_meta("native_landmark_report"):
+		return result
+	var metadata: Dictionary = container.get_meta("native_landmark_report")
+	var camera: Camera3D = preview.camera
+	var native_size: Vector2 = Vector2(preview.viewport.size)
+	var display_box: Rect2 = preview.display.get_global_rect()
+	for entry: Dictionary in metadata.get("entries", []):
+		var group: Node3D = entry.get("root")
+		if not is_instance_valid(group):
+			continue
+		var mesh_count: int = 0
+		var bounds: AABB = AABB()
+		for child: Node in group.find_children("*", "MeshInstance3D", true, false):
+			var instance: MeshInstance3D = child as MeshInstance3D
+			if instance.mesh == null or not instance.is_visible_in_tree():
+				continue
+			var mesh_bounds: AABB = instance.global_transform * instance.mesh.get_aabb()
+			bounds = mesh_bounds if mesh_count == 0 else bounds.merge(mesh_bounds)
+			mesh_count += 1
+		if mesh_count == 0:
+			continue
+		var projected: Rect2 = Rect2()
+		for corner_index: int in range(8):
+			var point: Vector2 = camera.unproject_position(bounds.get_endpoint(corner_index))
+			point = display_box.position + point / native_size * display_box.size
+			projected = Rect2(point, Vector2.ZERO) if corner_index == 0 else projected.expand(point)
+		var clipped: Rect2 = projected.intersection(display_box)
+		var ratio: float = clipped.get_area() / maxf(1.0, projected.get_area())
+		result.append({"role": entry.get("role", -1), "source_id": entry.get("source_id", -1), "meshes": mesh_count, "bounds_min": [bounds.position.x, bounds.position.y, bounds.position.z], "bounds_max": [bounds.end.x, bounds.end.y, bounds.end.z], "projected": rect_value(projected), "visible_area_ratio": ratio, "center_behind_camera": camera.is_position_behind(bounds.get_center())})
+	return result

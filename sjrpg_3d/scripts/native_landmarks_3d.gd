@@ -1,5 +1,6 @@
 class_name NativeLandmarks3D
 extends RefCounted
+const WATER_SHADER := preload("res://scripts/native_landmark_water.gdshader")
 ## Native terrain/solid picture built from the same authored footprint as physics.
 ## Simulation and colliders remain SpatialWorld3D's responsibility.
 
@@ -33,7 +34,7 @@ static func _finish(tool: SurfaceTool, material: Material, parent: Node3D, name:
 	parent.add_child(node)
 	return node
 
-static func _prism(polygon: PackedVector2Array, bottom: float, top: float, material: Material, parent: Node3D, name: String) -> void:
+static func _prism(polygon: PackedVector2Array, bottom: float, top: float, material: Material, parent: Node3D, name: String) -> MeshInstance3D:
 	var tool := SurfaceTool.new()
 	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var native := PackedVector3Array()
@@ -62,7 +63,7 @@ static func _prism(polygon: PackedVector2Array, bottom: float, top: float, mater
 		var low_b := Vector3(b.x, bottom, b.z)
 		_tri(tool, a, low_a, low_b, normal)
 		_tri(tool, a, low_b, b, normal)
-	_finish(tool, material, parent, name)
+	return _finish(tool, material, parent, name)
 
 static func build(preview: Node, parent: Node3D) -> Dictionary:
 	var root := Node3D.new()
@@ -76,6 +77,7 @@ static func build(preview: Node, parent: Node3D) -> Dictionary:
 	rock_material.uv1_scale = Vector3.ONE / 2.56
 	var owned := {}
 	var entries: Array[Dictionary] = []
+	var water_materials: Array[ShaderMaterial] = []
 	var surfaces := {}
 	for surface: Dictionary in SpatialWorld3D.terrain_surfaces(preview.game.village):
 		surfaces[str(surface["id"])] = surface
@@ -156,17 +158,21 @@ static func build(preview: Node, parent: Node3D) -> Dictionary:
 				_weathered_rock(polygon, base, base + 3.5, preview._materials["stone"] if source.index == 1 else rock_material, group, "WeatheredStone%d" % i)
 		for i in source.water.size():
 			var water: PackedVector2Array = source.water[i]
-			var material := StandardMaterial3D.new()
-			material.albedo_color = Color("3e6463")
-			material.roughness = 0.38
 			var water_centre := Iso.poly_bounds(water).get_center()
-			var height := SpatialWorld3D.surface_height_at(preview.game.village, water_centre) + 0.012
-			_prism(water, height - 0.03, height, material, group, "Water%d" % i)
+			var height := SpatialWorld3D.surface_height_at(preview.game.village, water_centre) + 0.052
+			_prism(water, height - 0.15, height - 0.015, rock_material, group, "PondBed%d" % i)
+			var inset := _inset_water(water, 0.07)
+			var material := _water_material(false)
+			water_materials.append(material)
+			var pool := _prism(inset, height - 0.01, height, material, group, "Water%d" % i)
+			if pool != null:
+				pool.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			_shore_stones(water, height, rock_material, group, i)
 		if source.index == 3 and source.water.size() >= 2:
-			_waterfall(preview, source, group)
+			water_materials.append(_waterfall(preview, source, group))
 		owned[source.get_instance_id()] = true
 		entries.append({"source_id": source.get_instance_id(), "role": source.index, "surface": surface, "faces": points, "root": group})
-	var report := {"owned_source_ids": owned, "entries": entries, "root": root, "billboards": false}
+	var report := {"owned_source_ids": owned, "entries": entries, "root": root, "billboards": false, "water_materials": water_materials}
 	root.set_meta("native_landmark_report", report)
 	return report
 
@@ -257,28 +263,128 @@ static func _ancient_tree(preview: Node, parent: Node3D, polygon: PackedVector2A
 		node.basis = Basis(Quaternion(Vector3.UP, (end - start).normalized()))
 		parent.add_child(node)
 
-static func _waterfall(preview: Node, source: Landmark, parent: Node3D) -> void:
+static func _inset_water(polygon: PackedVector2Array, distance: float) -> PackedVector2Array:
+	var native := PackedVector2Array()
+	for point in polygon:
+		var p := Ortho3DPreview.ground_position(point)
+		native.append(Vector2(p.x, p.z))
+	var offset := Geometry2D.offset_polygon(native, -distance)
+	if offset.is_empty():
+		return polygon
+	var result := PackedVector2Array()
+	for point in offset[0]:
+		result.append(Iso.project(point * SpatialWorld3D.UNITS))
+	return result
+
+static func _water_material(falling: bool) -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.shader = WATER_SHADER
+	material.set_shader_parameter("source_water", load("res://assets/art/village/water.webp"))
+	material.set_shader_parameter("falling", falling)
+	return material
+
+static func _shore_stones(polygon: PackedVector2Array, height: float, material: Material, parent: Node3D, index: int) -> void:
+	var center := Iso.poly_bounds(polygon).get_center()
+	var primitive := SphereMesh.new()
+	primitive.radius = 0.11
+	primitive.height = 0.15
+	primitive.radial_segments = 8
+	primitive.rings = 3
+	var multi := MultiMesh.new()
+	multi.transform_format = MultiMesh.TRANSFORM_3D
+	multi.mesh = primitive
+	multi.instance_count = polygon.size()
+	var bounds := AABB()
+	for i in polygon.size():
+		var source := polygon[i].lerp(center, 0.07)
+		var position := Ortho3DPreview.ground_position(source, height + 0.025)
+		var transform := Transform3D(Basis.IDENTITY, position)
+		multi.set_instance_transform(i, transform)
+		var box: AABB = transform * primitive.get_aabb()
+		bounds = box if i == 0 else bounds.merge(box)
+	multi.custom_aabb = bounds.grow(0.01)
+	var batch := MultiMeshInstance3D.new()
+	batch.name = "ShoreStones%d" % index
+	batch.multimesh = multi
+	batch.material_override = material
+	parent.add_child(batch)
+
+static func _flow_triangle(tool: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, uv_a: Vector2, uv_b: Vector2, uv_c: Vector2) -> void:
+	var normal := (b - a).cross(c - a).normalized()
+	if normal.y < 0:
+		var swap := b
+		b = c
+		c = swap
+		var uv_swap := uv_b
+		uv_b = uv_c
+		uv_c = uv_swap
+		normal = -normal
+	for pair in [[a, uv_a], [c, uv_c], [b, uv_b]]:
+		tool.set_normal(normal)
+		tool.set_uv(pair[1])
+		tool.add_vertex(pair[0])
+
+static func _waterfall(preview: Node, source: Landmark, parent: Node3D) -> ShaderMaterial:
 	var upper: PackedVector2Array = source.water[0]
 	var lower: PackedVector2Array = source.water[1]
-	var top := Iso.poly_bounds(upper).get_center()
-	var bottom := Iso.poly_bounds(lower).get_center()
-	var a := Ortho3DPreview.ground_position(top, SpatialWorld3D.surface_height_at(preview.game.village, top) + 0.03)
-	var b := Ortho3DPreview.ground_position(bottom, SpatialWorld3D.surface_height_at(preview.game.village, bottom) + 0.03)
-	var side := Vector3(b.z - a.z, 0, a.x - b.x).normalized() * 0.42
+	var top := upper[0]
+	var bottom := lower[0]
+	var distance := INF
+	# Join closest actual shores, not both pond centres: the old diagonal mint
+	# ribbon crossed entire pools and grass before reaching the cliff edge.
+	for direction in 2:
+		var from: PackedVector2Array = upper if direction == 0 else lower
+		var to: PackedVector2Array = lower if direction == 0 else upper
+		for point in from:
+			for i in to.size():
+				var p := Ortho3DPreview.ground_position(point)
+				var a := Ortho3DPreview.ground_position(to[i])
+				var b := Ortho3DPreview.ground_position(to[(i + 1) % to.size()])
+				var closest := Geometry2D.get_closest_point_to_segment(Vector2(p.x, p.z), Vector2(a.x, a.z), Vector2(b.x, b.z))
+				var gap := Vector2(p.x, p.z).distance_squared_to(closest)
+				if gap < distance:
+					distance = gap
+					var projected := Iso.project(closest * SpatialWorld3D.UNITS)
+					top = point if direction == 0 else projected
+					bottom = projected if direction == 0 else point
+	var top_centre := Iso.poly_bounds(upper).get_center()
+	var bottom_centre := Iso.poly_bounds(lower).get_center()
+	var a := Ortho3DPreview.ground_position(top, SpatialWorld3D.surface_height_at(preview.game.village, top_centre) + 0.052)
+	var b := Ortho3DPreview.ground_position(bottom, SpatialWorld3D.surface_height_at(preview.game.village, bottom_centre) + 0.052)
+	var side := Vector3(b.z - a.z, 0, a.x - b.x).normalized()
 	var tool := SurfaceTool.new()
 	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for i in 6:
-		var from := a.lerp(b, float(i) / 6.0)
-		var to := a.lerp(b, float(i + 1) / 6.0)
-		from.y = lerpf(a.y, b.y, pow(float(i) / 6.0, 0.65))
-		to.y = lerpf(a.y, b.y, pow(float(i + 1) / 6.0, 0.65))
-		var normal := (to + side - from + side).cross(to - side - from + side).normalized()
-		if normal.y < 0:
-			normal = -normal
-		_tri(tool, from - side, to + side, to - side, normal)
-		_tri(tool, from - side, from + side, to + side, normal)
-	var water := StandardMaterial3D.new()
-	water.albedo_color = Color("6b9693")
-	water.roughness = 0.34
-	water.cull_mode = BaseMaterial3D.CULL_DISABLED
-	_finish(tool, water, parent, "FallingWater")
+	for i in 10:
+		var t0 := float(i) / 10.0
+		var t1 := float(i + 1) / 10.0
+		var from := a.lerp(b, t0)
+		var to := a.lerp(b, t1)
+		from.y = lerpf(a.y, b.y, smoothstep(0.10, 0.90, t0))
+		to.y = lerpf(a.y, b.y, smoothstep(0.10, 0.90, t1))
+		var width_a := 0.26 - sin(t0 * PI) * 0.04
+		var width_b := 0.26 - sin(t1 * PI) * 0.04
+		_flow_triangle(tool, from - side * width_a, to + side * width_b, to - side * width_b, Vector2(0, t0), Vector2(1, t1), Vector2(0, t1))
+		_flow_triangle(tool, from - side * width_a, from + side * width_a, to + side * width_b, Vector2(0, t0), Vector2(1, t0), Vector2(1, t1))
+	var water := _water_material(true)
+	var node := _finish(tool, water, parent, "FallingWater")
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	node.set_meta("source_shores", [top, bottom])
+	return water
+
+static func source_water_phase(village: Village) -> float:
+	if Prefs.reduce_motion:
+		return 0.0
+	for child in village.fountain.get_children():
+		if child is PlazaWater:
+			return child.phase
+	return 0.0
+
+static func sync_water(forest: Node3D, village: Village) -> void:
+	var root := forest.get_node_or_null("NativeLandmarks")
+	if root == null:
+		return
+	var report: Dictionary = root.get_meta("native_landmark_report")
+	var phase := source_water_phase(village)
+	for material: ShaderMaterial in report.get("water_materials", []):
+		material.set_shader_parameter("phase", phase)
+		material.set_shader_parameter("motion", 0.0 if Prefs.reduce_motion else 1.0)

@@ -54,6 +54,20 @@ func run() -> void:
 			check("field cave has volumetric cliff mass within the original circular blocker", fits_original_circle and foundation_covers_body and 0.50 > SpatialWorld3D.MAX_STEP)
 			var backs := forest.find_children("TunnelDepth", "MeshInstance3D", true, false)
 			check("field cave transition has actual dark tunnel depth behind its raised mouth", backs.size() == 1 and (backs[0].mesh as BoxMesh).size.z > 0.1)
+			if backs.size() == 1:
+				var back := backs[0] as MeshInstance3D
+				var shape := back.mesh as BoxMesh
+				var visible_back := true
+				for x in [-0.35, 0.0, 0.35]:
+					for y in [1.0, 2.0, 3.0]:
+						var nearest_rock := -INF
+						for i in range(0, points.size(), 3):
+							var hit: Variant = Geometry3D.ray_intersects_triangle(Vector3(x, y, 4), Vector3.FORWARD, points[i], points[i + 1], points[i + 2])
+							if hit != null:
+								var hit_point: Vector3 = hit
+								nearest_rock = maxf(nearest_rock, hit_point.z)
+						visible_back = visible_back and back.position.z + shape.size.z * 0.5 > nearest_rock + 0.02
+				check("the dark tunnel back is visible ahead of rear rock, never coplanar or buried", visible_back)
 	check("actual field rocks and the existing scene-transition cave mouth have native owners", rock_count > 0 and entrance_count == 1)
 	game.player.position = game.dungeon.entry_point()
 	await _frames(2)

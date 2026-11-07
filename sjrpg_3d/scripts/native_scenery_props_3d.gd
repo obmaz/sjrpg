@@ -169,13 +169,13 @@ static func build(preview: Node, parent: Node3D, world: Node2D, cave: bool, excl
 		if role == "entrance":
 			var back := MeshInstance3D.new()
 			var back_shape := BoxMesh.new()
-			back_shape.size = Vector3(1.35, 2.0, 0.16)
+			back_shape.size = Vector3(1.35, 3.3, 0.16)
 			back.mesh = back_shape
 			var dark := StandardMaterial3D.new()
-			dark.albedo_color = Color("25342f")
+			dark.albedo_color = Color("101c1b")
 			dark.roughness = 1.0
 			back.material_override = dark
-			back.position = Vector3(0, 1.5, -1.03)
+			back.position = Vector3(0, 2.15, -0.97)
 			back.name = "TunnelDepth"
 			node.add_child(back)
 		owned[source.get_instance_id()] = true
@@ -190,10 +190,21 @@ static func _polygon_volume(tool: SurfaceTool, polygon: PackedVector2Array, bott
 	var centre := Vector3.ZERO
 	var high := PackedVector3Array()
 	var low := PackedVector3Array()
+	var planar_centre := Vector2.ZERO
+	for point in polygon:
+		planar_centre += point
+	planar_centre /= polygon.size()
 	for i in polygon.size():
 		var p := polygon[i]
 		low.append(Vector3(p.x, bottom, p.y))
-		high.append(Vector3(p.x, top - (0.12 * (0.5 + 0.5 * sin(i * 2.3)) if broken else 0.0), p.y))
+		var peak := top
+		if broken:
+			# The front descends toward the visible mouth; the rear is an irregular
+			# rocky ridge, rather than a constant-height capped cylinder.
+			peak -= 0.65 * clampf((p.y + 0.85) / 1.55, 0.0, 1.0)
+			peak += 0.16 * sin(p.x * 3.1) + 0.13 * cos(p.y * 2.4)
+		var roof_point := p.lerp(planar_centre, 0.14) if broken else p
+		high.append(Vector3(roof_point.x, peak, roof_point.y))
 		centre += low[-1]
 	centre /= polygon.size()
 	var indices := Geometry2D.triangulate_polygon(polygon)
