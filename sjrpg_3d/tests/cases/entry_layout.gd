@@ -50,6 +50,17 @@ func _buttons_fit(select: Control, dimensions: Vector2i) -> void:
 					print("FAIL SAVE_ROW_DIAG ", JSON.stringify({"view": [dimensions.x, dimensions.y], "previous": str(previous), "current": str(current), "band": str(select.slot_bands[index].get_global_rect())}))
 				check("save rows never overlap", previous.end.y < current.position.y)
 
+func _canvas_z(item: CanvasItem) -> int:
+	var result := 0
+	var current := item
+	while current != null:
+		result += current.z_index
+		if not current.z_as_relative:
+			break
+		current = current.get_parent_item()
+	return result
+
+
 func run() -> void:
 	var background := EntryUi.image(EntryUi.BACKGROUND)
 	check("generated entry background exists at its actual delivered dimensions", background != null and background.get_size() == Vector2(1536, 1024))
@@ -106,6 +117,13 @@ func run() -> void:
 	check("occupied class/start callbacks cannot replace existing bytes", FileAccess.get_file_as_string(path) == saved and GameState.hero_class == "warrior" and GameState.gold == 321)
 	loaded.delete_buttons[1].pressed.emit()
 	check("deletion names a real slot and waits for confirmation", is_instance_valid(loaded._delete_dialog) and FileAccess.get_file_as_string(path) == saved)
+	var dimmer := loaded._delete_dialog.get_child(0) as CanvasItem
+	var below_dimmer := true
+	for index in 4:
+		below_dimmer = below_dimmer and _canvas_z(loaded.slot_number_labels[index]) <= _canvas_z(dimmer)
+		below_dimmer = below_dimmer and _canvas_z(loaded.slot_number_badges[index]) <= _canvas_z(dimmer)
+	check("actual save badges stay beneath the delete dimmer and action controls",
+		below_dimmer and loaded.slot_scroll.get_index() < loaded._delete_dialog.get_index())
 	loaded._delete_dialog.closed.emit()
 	await _frames(2)
 	check("cancel leaves the exact save intact", FileAccess.get_file_as_string(path) == saved)
