@@ -24,6 +24,7 @@ var _gesture_node := ""
 var _gesture_dragged := false
 var _detail: VBoxContainer
 var _layout_box: BoxContainer
+var _pad_nodes: Dictionary = {}
 var _nodes := {}  # id -> Rect2 in _tree coordinates
 
 
@@ -138,6 +139,7 @@ func _refresh() -> void:
 	_layout_nodes()
 	_tree.queue_redraw()
 	_build_detail()
+	_rebuild_pad_nodes()
 
 
 # ───────── tree drawing ─────────
@@ -150,6 +152,12 @@ func _layout_nodes() -> void:
 	for slot in _tab_slots(_tab):
 		var center := Vector2(TIER_LABEL_WIDTH + (slot[2] + 0.5) * col_w, TREE_PADDING + slot[1] * TIER_HEIGHT + 56.0)
 		_nodes[slot[0]] = Rect2(center - Vector2.ONE * NODE_SIDE / 2.0, Vector2.ONE * NODE_SIDE)
+
+	for id: String in _pad_nodes:
+		if _nodes.has(id) and is_instance_valid(_pad_nodes[id]):
+			var button: Button = _pad_nodes[id]
+			button.position = (_nodes[id] as Rect2).position
+			button.size = (_nodes[id] as Rect2).size
 
 
 ## Canvas labels do not inherit PanelFrame's control font boost.
@@ -423,3 +431,54 @@ func _add_effect_line(title: String, text: String, color: Color) -> void:
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.custom_minimum_size = Vector2(160, 0)
 	_detail.add_child(l)
+
+
+func _rebuild_pad_nodes() -> void:
+	for old: Node in _pad_nodes.values():
+		old.queue_free()
+	_pad_nodes.clear()
+	for slot: Array in _tab_slots(_tab):
+		var id: String = slot[0]
+		var button := Button.new()
+		button.name = "Skill_" + id
+		button.set_meta("gamepad_key", "skill:" + id)
+		button.tooltip_text = str(GameState.skill(id)["name"])
+		button.flat = true
+		button.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button.focus_mode = Control.FOCUS_ALL
+		button.set_meta("gamepad_target", true)
+		for state: String in ["normal", "hover", "pressed", "disabled"]:
+			button.add_theme_stylebox_override(state, StyleBoxEmpty.new())
+		button.position = (_nodes[id] as Rect2).position
+		button.size = (_nodes[id] as Rect2).size
+		button.focus_entered.connect(func():
+			_selected = id
+			_tree.queue_redraw()
+			_build_detail())
+		button.pressed.connect(func():
+			_selected = id
+			_build_detail()
+			_focus_detail.call_deferred())
+		_tree.add_child(button)
+		_pad_nodes[id] = button
+
+
+func _focus_detail() -> void:
+	for child: Node in _detail.find_children("*", "Button", true, false):
+		var button := child as Button
+		if not button.is_queued_for_deletion() and not button.disabled:
+			button.grab_focus()
+			var parent := button.get_parent()
+			while parent != null and parent != self:
+				if parent is ScrollContainer:
+					(parent as ScrollContainer).ensure_control_visible(button)
+				parent = parent.get_parent()
+			return
+
+
+func gamepad_back() -> bool:
+	var focus := get_viewport().gui_get_focus_owner()
+	if focus != null and _detail.is_ancestor_of(focus) and _pad_nodes.has(_selected):
+		(_pad_nodes[_selected] as Button).grab_focus()
+		return true
+	return false

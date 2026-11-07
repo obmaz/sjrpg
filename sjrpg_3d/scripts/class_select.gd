@@ -49,6 +49,7 @@ var _delete_target := 0
 var _slot_relayout_pending := false
 
 func _ready() -> void:
+	add_to_group("gamepad_entry")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	EntryUi.backdrop(self)
 	EntryUi.shade(self, 0.97)
@@ -642,3 +643,17 @@ func _save_layout_probe() -> Dictionary:
 	if _modal_open():
 		result["dialog"] = {"panel": _rect(_delete_dialog._panel), "body": _rect(_delete_dialog.body_holder), "footer": _rect(_delete_dialog.footer)}
 	return result
+
+
+func gamepad_back() -> bool:
+	if _modal_open():
+		_close_delete()
+	elif _stage == "class":
+		show_slots()
+	else:
+		_request_back()
+	return true
+
+
+func gamepad_initial_focus() -> BaseButton:
+	return class_buttons[selected_class] if _stage == "class" else slot_buttons[selected_slot - 1]

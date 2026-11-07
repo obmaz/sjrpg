@@ -90,6 +90,7 @@ func setup(action: String, selected_slot: int, cls: String, id: int) -> EntryLoa
 
 
 func _ready() -> void:
+	add_to_group("entry_loading")
 	layer = 100
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_web = OS.has_feature("web")

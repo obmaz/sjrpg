@@ -156,6 +156,12 @@ func _process(delta: float) -> void:
 	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	if move_input.length() > 0.05:
 		input = move_input
+	var pad_move: Vector2 = Gamepad.move_vector()
+	if pad_move.length() > 0.0:
+		input = pad_move
+	var pad_aim: Vector2 = Gamepad.aim_vector()
+	if pad_aim.length() > 0.0:
+		facing = pad_aim.angle()
 	if input.length() > 0.05:
 		clear_move_target()
 	elif has_move_target:
@@ -176,6 +182,8 @@ func _process(delta: float) -> void:
 
 	if Input.is_action_pressed("attack"):
 		cast_slot(0, true)
+	for pad_slot: int in Gamepad.held_slots():
+		cast_slot(pad_slot, true)
 	for index in held_slots.keys():
 		if held_slots[index]:
 			cast_slot(index, true)
@@ -202,7 +210,7 @@ func _process(delta: float) -> void:
 		return
 
 	if input.length() > 0.05:
-		facing = input.angle()
+		facing = pad_aim.angle() if pad_aim.length() > 0.0 else input.angle()
 		var from := position
 		_move(input * speed() * delta)
 		var step := position.distance_to(from)
@@ -229,7 +237,7 @@ func clear_move_target() -> void:
 func _lunge(delta: float, progress: float) -> void:
 	if not _attack_lunges or Prefs.reduce_motion or progress >= LUNGE_END or not _pending.is_valid():
 		return
-	var target: Enemy = game.nearest_enemy(position, LUNGE_SEEK)
+	var target: Enemy = _manual_aim_target(LUNGE_SEEK) if Gamepad.aim_vector() != Vector2.ZERO else game.nearest_enemy(position, LUNGE_SEEK)
 	if target == null or position.distance_to(target.position) <= LUNGE_STOP_GAP:
 		return
 	var step := LUNGE_DISTANCE * delta / (LUNGE_END * _attack_duration)
@@ -325,6 +333,9 @@ func cast_slot(index: int, repeat := false) -> bool:
 		if not repeat:
 			game.toast("%s이(가) 부족합니다" % GameState.class_info()["resource"])
 		return false
+	var pad_aim: Vector2 = Gamepad.aim_vector()
+	if pad_aim != Vector2.ZERO:
+		facing = pad_aim.angle()
 	var action := _prepare(id, d, rank)
 	if not action.is_valid():
 		return false
@@ -373,7 +384,7 @@ func _cast_feedback(d: Dictionary) -> void:
 func try_roll() -> void:
 	if dead or _roll_time > 0.0 or _roll_cooldown > 0.0:
 		return
-	var dir := move_input if move_input.length() > 0.1 else Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var dir: Vector2 = _movement_direction()
 	if dir.length() < 0.1:
 		dir = Vector2.from_angle(facing)
 	_action_serial += 1
@@ -403,7 +414,40 @@ func confirm_melee_contact(heavy: bool, kill := false) -> void:
 		sprite.hold_contact(0.060 if heavy else 0.040)
 
 
+func _movement_direction() -> Vector2:
+	var pad_move: Vector2 = Gamepad.move_vector()
+	if pad_move != Vector2.ZERO:
+		return pad_move
+	return move_input if move_input.length() > 0.1 else Input.get_vector("move_left", "move_right", "move_up", "move_down")
+
+
+## Stick vectors already use the simulation's screen-projected ground coordinates.
+func _manual_aim_target(range_limit: float) -> Enemy:
+	var aim: Vector2 = Gamepad.aim_vector()
+	if aim == Vector2.ZERO:
+		return null
+	var best: Enemy = null
+	var score: float = INF
+	for enemy: Enemy in game.enemies:
+		if not is_instance_valid(enemy) or enemy.dead:
+			continue
+		var direction: Vector2 = enemy.position - position
+		if direction.length() > range_limit:
+			continue
+		var angle: float = absf(aim.angle_to(direction))
+		if angle <= PI / 4.0:
+			var candidate: float = angle * range_limit + direction.length() * 0.2
+			if candidate < score:
+				best = enemy
+				score = candidate
+	return best
+
+
 func _aim(range_limit: float) -> Enemy:
+	var aim: Vector2 = Gamepad.aim_vector()
+	if aim != Vector2.ZERO:
+		facing = aim.angle()
+		return _manual_aim_target(range_limit)
 	var target: Enemy = game.nearest_enemy(position, range_limit)
 	if target:
 		facing = (target.position - position).angle()
@@ -438,7 +482,7 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 			return _prepare_leap(id, d, rank, power)
 		"blink":
 			var dist: float = d["distance"] + d["dist_growth"] * (rank - 1)
-			var dir := move_input if move_input.length() > 0.1 else Input.get_vector("move_left", "move_right", "move_up", "move_down")
+			var dir: Vector2 = Gamepad.aim_vector() if Gamepad.aim_vector() != Vector2.ZERO else _movement_direction()
 			if dir.length() > 0.1:
 				facing = dir.angle()
 			return func():
@@ -463,7 +507,7 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 			var first := _aim(d["range"])
 			if first == null:
 				var stone: EncounterStone = game.nearest_ready_stone(position, d["range"])
-				if stone != null:
+				if stone != null and (Gamepad.aim_vector() == Vector2.ZERO or absf(Gamepad.aim_vector().angle_to(stone.position - position)) <= PI / 4.0):
 					var stone_ref: WeakRef = weakref(stone)
 					return func():
 						var contact := stone_ref.get_ref() as EncounterStone
@@ -481,7 +525,7 @@ func _prepare(id: String, d: Dictionary, rank: int) -> Callable:
 				if is_instance_valid(captured_target) and not captured_target.dead and position.distance_to(captured_target.position) <= float(d["range"]):
 					target = captured_target
 				else:
-					target = game.nearest_enemy(position, d["range"])
+					target = _manual_aim_target(d["range"]) if Gamepad.aim_vector() != Vector2.ZERO else game.nearest_enemy(position, d["range"])
 				if target != null:
 					game.chain_lightning(position, target, jumps, d["radius"], damage_for(id, power), self)
 		"cone":
@@ -573,6 +617,8 @@ func _shadow(id: String, d: Dictionary, power: float) -> void:
 		for e in game.enemies_in_radius(position, d["range"]):
 			if not game.can_melee_reach(position, e.position):
 				continue
+			if visited.is_empty() and Gamepad.aim_vector() != Vector2.ZERO and absf(Gamepad.aim_vector().angle_to(e.position - position)) > PI / 4.0:
+				continue
 			if visited.has(e):
 				continue
 			var dist := position.distance_to(e.position)
@@ -608,8 +654,10 @@ func _prepare_leap(id: String, d: Dictionary, rank: int, power: float) -> Callab
 		if target == null:
 			game.toast("도약할 적이 없습니다")
 			return Callable()
+		# A targeted leap travels to its selected body; free casts retain the exact stick bearing.
+		facing = (target.position - position).angle()
 	else:
-		var dir := move_input if move_input.length() > 0.1 else Input.get_vector("move_left", "move_right", "move_up", "move_down")
+		var dir: Vector2 = Gamepad.aim_vector() if Gamepad.aim_vector() != Vector2.ZERO else _movement_direction()
 		if dir.length() > 0.1:
 			facing = dir.angle()
 	var anchor: WeakRef = weakref(target) if target != null else null
@@ -621,6 +669,7 @@ func _prepare_leap(id: String, d: Dictionary, rank: int, power: float) -> Callab
 		var reach := dist
 		if is_instance_valid(current):
 			reach = minf(dist, maxf(0.0, position.distance_to(current.position) - 36.0))
+			facing = (current.position - position).angle()
 		position = SpatialCombat3D.teleport_actor(game, self, game.find_open_point(position, Vector2.from_angle(facing), reach, RADIUS), RADIUS)
 		game.spawn_trail(from, position, SkillDefs.STEEL)
 		if id == "leapAttack":
@@ -829,6 +878,7 @@ func _armor_retaliate(attacker: Node2D) -> void:
 
 ## Death and resurrection cannot preserve a delayed skill target or old movement input.
 func _cancel_actions() -> void:
+	Gamepad.require_neutral()
 	_hitstop.clear()
 	_action_serial += 1
 	_pending = Callable()

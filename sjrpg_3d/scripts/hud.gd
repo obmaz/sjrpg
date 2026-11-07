@@ -39,6 +39,7 @@ const CRITICAL_HEALTH := 0.3
 
 
 func _ready() -> void:
+	add_to_group("gamepad_hud")
 	layer = 10
 	_add_vignette()
 	_bars = Control.new()
@@ -178,6 +179,7 @@ func panel_open() -> bool:
 
 
 func _open(panel: PanelFrame) -> void:
+	Gamepad.require_neutral()
 	if _panel != null:
 		panel.free()
 		return
@@ -192,6 +194,7 @@ func _open(panel: PanelFrame) -> void:
 
 
 func close_panel() -> void:
+	Gamepad.require_neutral()
 	if _panel == null:
 		return
 	_panel.queue_free()

@@ -48,6 +48,8 @@ var _rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
+	Gamepad.set_combat_enabled(false)
+	Gamepad.action_pressed.connect(_gamepad_action)
 	_rng.seed = 7
 	# Allocate the optional economy render target; full quality keeps drawing directly into the main viewport.
 	_view_container = SubViewportContainer.new()
@@ -896,6 +898,7 @@ func _update_impact_camera(delta: float) -> void:
 
 
 func _process(delta: float) -> void:
+	Gamepad.set_combat_enabled(_gamepad_playable())
 	if not native_ready:
 		return
 	# Forest-root visibility disables/restores lighting in the same cave-transition frame.
@@ -947,6 +950,7 @@ func _notification(what: int) -> void:
 
 
 func _pause_in_background() -> void:
+	Gamepad.require_neutral()
 	# Releasing both sources prevents a lost touch/key-up from moving the hero on return.
 	hud.controls.release_all()
 	player.move_input = Vector2.ZERO
@@ -972,6 +976,35 @@ func screen_to_world(screen: Vector2) -> Vector2:
 			return SpatialWorld3D.projected(hit["position"])
 	var render_position := screen * scene_view.get_visible_rect().size / get_viewport_rect().size
 	return scene_view.canvas_transform.affine_inverse() * render_position
+
+
+## Pad actions are device-owned; they never synthesize keyboard or touch holds.
+func _gamepad_playable() -> bool:
+	return native_ready and is_instance_valid(player) and not player.dead and not get_tree().paused and is_instance_valid(hud) and not hud.panel_open() and not Gamepad.loading_blocked() and not Gamepad.navigation_scope()
+
+
+func _gamepad_action(action: String) -> void:
+	if not _gamepad_playable() or not Gamepad.combat_enabled():
+		return
+	match action:
+		"primary":
+			player.cast_slot(0)
+		"aux1", "aux2", "aux3", "aux4":
+			player.cast_slot(int(action.trim_prefix("aux")))
+		"roll":
+			player.try_roll()
+		"health":
+			player.use_potion()
+		"mana":
+			player.use_mana_potion()
+		"interact":
+			var nearby: String = near_npc()
+			if not nearby.is_empty():
+				hud.interact(nearby)
+
+
+func _exit_tree() -> void:
+	Gamepad.set_combat_enabled(false)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -1419,6 +1452,8 @@ func find_open_point(from: Vector2, dir: Vector2, distance: float, r: float) -> 
 
 
 func _on_player_died() -> void:
+	Gamepad.set_combat_enabled(false)
+	Gamepad.require_neutral()
 	hud.controls.release_all()
 	# Releasing pointers can leave false slot entries; death discards every prior hold.
 	player.held_slots.clear()

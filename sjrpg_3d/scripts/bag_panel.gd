@@ -136,6 +136,19 @@ func _overview() -> Control:
 				selected = g
 				_rebuild())
 		row.add_child(cell)
+		var pad := Button.new()
+		pad.name = "Equipped_" + s
+		pad.tooltip_text = str(Gear.SLOT_NAMES.get(s, s))
+		pad.set_meta("gamepad_key", "equipped:" + s)
+		pad.set_meta("gamepad_target", true)
+		pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pad.flat = true
+		pad.disabled = GameState.equipped.get(s) == null
+		for state: String in ["normal", "hover", "pressed", "disabled"]:
+			pad.add_theme_stylebox_override(state, StyleBoxEmpty.new())
+		pad.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		pad.pressed.connect(func(): cell.pressed.emit())
+		cell.add_child(pad)
 	var stats := VBoxContainer.new()
 	stats.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	stats.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
@@ -164,7 +177,7 @@ func _gear_row(g: Gear, offer: bool, price := 0) -> Control:
 	col.add_child(holder)
 	var hit := Button.new()
 	hit.flat = true
-	hit.focus_mode = Control.FOCUS_NONE
+	hit.focus_mode = Control.FOCUS_ALL
 	holder.add_child(hit)
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 12)
@@ -205,6 +218,8 @@ func _gear_row(g: Gear, offer: bool, price := 0) -> Control:
 		tag_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		text.add_child(tag_label)
 	# The whole top row is the tap target (the action buttons below stay separate).
+	hit.set_meta("gamepad_key", "offer-%d" % g.base["index"] if offer else "gear-%d" % g.serial)
+	hit.tooltip_text = g.display_name()
 	hit.pressed.connect(func():
 		if offer:
 			selected_offer = "" if expanded else "gear-%d" % g.base["index"]
@@ -384,6 +399,8 @@ func _potion_offer(id: String, title: String, sub: String, price: int, maxed := 
 	var p := UiKit.label("%d G" % price, 17, Color(1, 0.88, 0.5))
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text.add_child(p)
+	hit.set_meta("gamepad_key", "shop:" + id)
+	hit.tooltip_text = title
 	hit.pressed.connect(func():
 		selected_offer = "" if expanded else id
 		message = ""
@@ -462,3 +479,12 @@ class PotionCell:
 			HudArt.plaque(self, "potion", size / 2.0, r, Color(1.0, 0.8, 0.8))
 		else:
 			PotionArt.draw(self, size / 2.0, r, energy, -1)
+
+
+func gamepad_back() -> bool:
+	if selected != null or selected_offer != "":
+		selected = null
+		selected_offer = ""
+		_rebuild()
+		return true
+	return false

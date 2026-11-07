@@ -15,6 +15,8 @@ var _web_entry: JavaScriptObject
 
 
 func _ready() -> void:
+	add_to_group("gamepad_entry")
+	set_meta("gamepad_hidden_scope", true)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_backdrop = EntryUi.backdrop(self)
 	var shade := TextureRect.new()
@@ -99,3 +101,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		_begin()
+
+
+func gamepad_accept() -> void:
+	_begin()

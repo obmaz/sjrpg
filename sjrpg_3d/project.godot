@@ -17,6 +17,7 @@ boot_splash/show_image=false
 GameState="*res://scripts/game_state.gd"
 Prefs="*res://scripts/prefs.gd"
 SoundFx="*res://scripts/sound_fx.gd"
+Gamepad="*res://scripts/gamepad_input.gd"
 
 [display]
 
