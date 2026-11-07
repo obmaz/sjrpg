@@ -161,13 +161,14 @@ async function preserve(expected,label){
 function classGeometry(s,label){
  assert.equal(s.ui.stage,'class',label+' actual hero selection');
  const p=s.ui.class_layout;
+ console.log('ENTRY_CLASS_LAYOUT_DIAGNOSTIC',JSON.stringify({label,stage:s.ui.stage,window:s.window,css_scale:p?.css_scale,heading:p?.heading,subtitle:p?.subtitle,back:p?.back,brand:p?.brand,visible:p?.visible,texts:p?.texts}));
  assert(p,label+' missing actual class geometry probe');
  assert.equal(p.class,s.ui.selected_class,label+' probe follows selected class');
  const win={x:0,y:0,w:s.window[0],h:s.window[1]},safe=css(s,p.safe),sheet=css(s,p.sheet);
  assert(encloses(win,safe)&&encloses(safe,sheet),label+' class sheet and safe area');
  const heading=css(s,p.heading),subtitle=css(s,p.subtitle),back=css(s,p.back),art=css(s,p.art),details=css(s,p.details);
  assert(encloses(safe,heading)&&encloses(safe,subtitle)&&!overlaps(heading,subtitle),label+' separate title/subtitle in safe area');
- assert(!overlaps(back,heading)&&encloses(safe,back),label+' back does not cover title');
+ assert(!overlaps(back,heading)&&encloses(safe,back),label+' back does not cover title '+JSON.stringify({stage:s.ui.stage,css_scale:p.css_scale,heading,back,visible:p.visible,texts:p.texts}));
  const tabs=['warrior','mage'].map(key=>css(s,p.tabs[key]));
  assert(!overlaps(tabs[0],tabs[1]),label+' independent class tabs');
  for(const rect of [...tabs,back,css(s,p.start),css(s,p.slotchange)]){

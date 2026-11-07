@@ -378,6 +378,8 @@ func _measure(label: Label, width: float, minimum := 0.0) -> float:
 
 
 func _layout_class() -> void:
+	# Set the compact glyph before Control.size can be clamped by its text minimum.
+	back_button.text = "‹"
 	var margins := PanelFrame.safe_margins(get_viewport())
 	var area := Rect2(Vector2(margins.x, margins.y), size - Vector2(margins.x + margins.z, margins.y + margins.w))
 	_class_safe = area
@@ -578,7 +580,7 @@ func _layout() -> void:
 		slot_scroll.hide()
 		slot_footer.hide()
 		slot_context.hide()
-		back_button.text = "‹  돌아가기"
+		back_button.text = "‹"
 		_layout_class()
 	if _modal_open():
 		_fit_delete_dialog()
@@ -627,8 +629,8 @@ func _layout_slots() -> void:
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER if portrait else HORIZONTAL_ALIGNMENT_LEFT
 	brand_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER if portrait else HORIZONTAL_ALIGNMENT_LEFT
 	slot_context.text = "저장 %d · %s" % [selected_slot, "이 여정을 계속합니다" if bool(summary["valid"]) else "복구할 수 없는 저장" if bool(summary["occupied"]) else "새로운 여정을 준비하세요"]
-	var header_left := 0.0 if portrait else _slot_touch + gap
-	var header_width := maxf(1.0, inner - header_left)
+	var header_left := _slot_touch + gap
+	var header_width := maxf(1.0, inner - header_left * (2.0 if portrait else 1.0))
 	var brand_h := _measure(brand_label, header_width) if brand_label.visible else 0.0
 	var title_h := _measure(heading, header_width)
 	var title_y := brand_h + gap * 0.4 if brand_label.visible else maxf(0.0, (_slot_touch - title_h) * 0.5)
