@@ -34,9 +34,6 @@ func _rebuild() -> void:
 	clear_body()
 	_zoom_buttons.clear()
 	_version_buttons.clear()
-	body.add_child(PanelFrame.section("게임패드 조작"))
-	body.add_child(PanelFrame.wrap_label("LS 이동 · RS 조준\nA 기본 공격 / 확인 · B 회피 / 뒤로\nX · Y · RB · RT 보조 기술 1–4\nLT 대화 / 상호작용 · LB 체력 물약 · ↑ 자원 물약\n← 가방 · → 의뢰 · ↓ 스킬\nMenu 설정 · View 지도\n메뉴에서는 LS / 방향키로 선택하고 A로 확인합니다.", 16, UiKit.MUTED))
-	body.add_child(UiKit.divider())
 	body.add_child(PanelFrame.section("화면"))
 	_fullscreen_button = _action_row("전체화면 켜기", _request_fullscreen)
 	_fullscreen_button.name = "FullscreenToggle"
@@ -94,6 +91,9 @@ func _rebuild() -> void:
 	body.add_child(_action_row("저장하고 타이틀로", func(): title_requested.emit()))
 	var danger := _action_row("새 모험 준비", func(): _confirm_restart())
 	body.add_child(danger)
+	body.add_child(PanelFrame.section("게임패드 조작"))
+	body.add_child(PanelFrame.wrap_label("LS 이동 · RS 조준\nA 기본 공격 / 확인 · B 회피 / 뒤로\nX · Y · RB · RT 보조 기술 1–4\nLT 대화 / 상호작용 · LB 체력 물약 · ↑ 자원 물약\n← 가방 · → 의뢰 · ↓ 스킬\nMenu 설정 · View 지도\n메뉴에서는 LS / 방향키로 선택하고 A로 확인합니다.", 16, UiKit.MUTED))
+	body.add_child(UiKit.divider())
 	_fit_zoom_targets()
 	_publish_version_buttons.call_deferred()
 
