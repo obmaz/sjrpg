@@ -26,6 +26,12 @@ var _last_max_hp := -1.0
 var _health_trail := 1.0
 var _trail_hold := 0.0
 var _hurt_feedback := 0.0
+## JUICE #8: a red edge vignette for one large loss of health (>= 15% of max health in one hit).
+const HEAVY_HIT_RATIO := 0.15
+const HEAVY_HIT_TIME := 0.22
+const HEAVY_HIT_ALPHA := 0.5
+var _heavy_hit := 0.0
+var _heavy_hit_vignette: TextureRect
 var _heal_feedback := 0.0
 var _critical_warning: ColorRect
 var _critical_clock := 0.0
@@ -108,6 +114,40 @@ func _ready() -> void:
 	_critical_warning.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_critical_warning.hide()
 	add_child(_critical_warning)
+	_build_heavy_hit_vignette()
+
+
+## Radial gradient: clear centre, red edges. A texture rather than a shader keeps the web build light.
+func _build_heavy_hit_vignette() -> void:
+	var gradient := Gradient.new()
+	gradient.offsets = PackedFloat32Array([0.55, 1.0])
+	gradient.colors = PackedColorArray([Color(0.85, 0.05, 0.03, 0.0), Color(0.85, 0.05, 0.03, 1.0)])
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.5, 0.5)
+	texture.fill_to = Vector2(1.0, 0.5)
+	texture.width = 128
+	texture.height = 128
+	_heavy_hit_vignette = TextureRect.new()
+	_heavy_hit_vignette.name = "HeavyHitVignette"
+	_heavy_hit_vignette.texture = texture
+	_heavy_hit_vignette.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_heavy_hit_vignette.stretch_mode = TextureRect.STRETCH_SCALE
+	_heavy_hit_vignette.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_heavy_hit_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_heavy_hit_vignette.hide()
+	add_child(_heavy_hit_vignette)
+
+
+func _update_heavy_hit_vignette() -> void:
+	if _heavy_hit <= 0.0 or game.player.dead:
+		_heavy_hit_vignette.hide()
+		return
+	# Reduced motion keeps the cue but at 40% strength, since it is a flash rather than information.
+	var strength := HEAVY_HIT_ALPHA * (0.4 if Prefs.reduce_motion else 1.0)
+	_heavy_hit_vignette.modulate.a = strength * clampf(_heavy_hit / HEAVY_HIT_TIME, 0.0, 1.0)
+	_heavy_hit_vignette.show()
 
 
 func _build_death() -> void:
@@ -321,6 +361,7 @@ func toast_rect() -> Rect2:
 func _process(delta: float) -> void:
 	_update_vital_feedback(delta)
 	_update_critical_warning(delta)
+	_update_heavy_hit_vignette()
 	_tick_toasts(delta)
 	_update_layout()
 	_bars.queue_redraw()
@@ -349,6 +390,7 @@ func _update_vital_feedback(delta: float) -> void:
 	var player: Player = game.player
 	var ratio := player.hp / maxf(1.0, player.max_hp)
 	_hurt_feedback = maxf(0.0, _hurt_feedback - delta)
+	_heavy_hit = maxf(0.0, _heavy_hit - delta)
 	_heal_feedback = maxf(0.0, _heal_feedback - delta)
 	if not is_equal_approx(_last_max_hp, player.max_hp):
 		_health_trail = ratio
@@ -357,6 +399,8 @@ func _update_vital_feedback(delta: float) -> void:
 		_health_trail = maxf(_health_trail, _last_hp / player.max_hp)
 		_trail_hold = 0.16
 		_hurt_feedback = 0.28
+		if _last_hp - player.hp >= player.max_hp * HEAVY_HIT_RATIO:
+			_heavy_hit = HEAVY_HIT_TIME
 	elif player.hp > _last_hp + player.max_hp * 0.01:
 		_heal_feedback = 0.35
 	_trail_hold = maxf(0.0, _trail_hold - delta)
