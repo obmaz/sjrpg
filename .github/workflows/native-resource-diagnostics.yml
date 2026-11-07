@@ -1,0 +1,91 @@
+name: Diagnose native shutdown resources
+on:
+    push:
+        paths:
+            - ".github/workflows/native-resource-diagnostics.yml"
+    workflow_dispatch:
+permissions:
+    contents: read
+concurrency:
+    group: native-resource-diagnostics-${{ github.sha }}
+    cancel-in-progress: false
+jobs:
+    resources:
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        strategy:
+            fail-fast: false
+            matrix:
+                partition: [full, first_half, second_half]
+        env:
+            SJRPG_RESOURCE_PARTITION: ${{ matrix.partition }}
+        steps:
+            - uses: actions/checkout@v7.0.1
+            - uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.godot-tools
+                      ~/.local/share/godot/export_templates
+                  key: godot-${{ hashFiles('.godot-version') }}-tools-v1
+            - name: Install the pinned Godot
+              run: |
+                  chmod +x tools/*.sh sjrpg_3d/tools/*.sh
+                  tools/setup_godot.sh
+            - name: Select the actual sorted case partition
+              id: cases
+              run: |
+                  python3 - <<'PY'
+                  import json, os
+                  from pathlib import Path
+                  names = sorted(p.stem for p in Path("sjrpg_3d/tests/cases").glob("*.gd"))
+                  assert names, "No actual 3D test cases"
+                  middle = (len(names) + 1) // 2
+                  partition = os.environ["SJRPG_RESOURCE_PARTITION"]
+                  selected = {"full": names, "first_half": names[:middle], "second_half": names[middle:]}[partition]
+                  output = Path("build/resource-diagnostics") / partition
+                  output.mkdir(parents=True, exist_ok=True)
+                  (output / "selection.json").write_text(json.dumps({"partition": partition, "total": len(names), "count": len(selected), "cases": selected}, indent=2))
+                  with open(os.environ["GITHUB_OUTPUT"], "a") as handle:
+                      handle.write("only=--only=" + ",".join(selected) + "\n")
+                      handle.write("expected=" + str(len(selected)) + "\n")
+                  print(json.dumps({"partition": partition, "count": len(selected), "cases": selected}))
+                  PY
+            - name: Import with complete diagnostics
+              run: |
+                  SJRPG_RESOURCE_OUT="build/resource-diagnostics/$SJRPG_RESOURCE_PARTITION"
+                  set +e
+                  timeout 300 sjrpg_3d/tools/godot.sh --headless --verbose --import > "$SJRPG_RESOURCE_OUT/import-first.log" 2>&1
+                  SJRPG_RESOURCE_IMPORT_CODE=$?
+                  set -e
+                  cat "$SJRPG_RESOURCE_OUT/import-first.log"
+                  if test "$SJRPG_RESOURCE_IMPORT_CODE" -ne 0; then exit "$SJRPG_RESOURCE_IMPORT_CODE"; fi
+                  if grep -qE 'SCRIPT ERROR|Parse Error|Failed to load script' "$SJRPG_RESOURCE_OUT/import-first.log"; then exit 1; fi
+                  if grep -q '^ERROR:' "$SJRPG_RESOURCE_OUT/import-first.log"; then
+                      timeout 300 sjrpg_3d/tools/godot.sh --headless --verbose --import > "$SJRPG_RESOURCE_OUT/import-confirm.log" 2>&1
+                      cat "$SJRPG_RESOURCE_OUT/import-confirm.log"
+                      if grep -qE 'SCRIPT ERROR|Parse Error|Failed to load script|^ERROR:' "$SJRPG_RESOURCE_OUT/import-confirm.log"; then exit 1; fi
+                  fi
+            - name: Run the real cases with verbose resource paths
+              env:
+                  SJRPG_RESOURCE_ONLY: ${{ steps.cases.outputs.only }}
+                  SJRPG_RESOURCE_EXPECTED: ${{ steps.cases.outputs.expected }}
+              run: |
+                  SJRPG_RESOURCE_OUT="build/resource-diagnostics/$SJRPG_RESOURCE_PARTITION"
+                  set +e
+                  timeout 900 sjrpg_3d/tools/godot.sh --headless --verbose res://tests/run_all.tscn -- "$SJRPG_RESOURCE_ONLY" 2>&1 | tee "$SJRPG_RESOURCE_OUT/run.log"
+                  SJRPG_RESOURCE_RUN_CODE=${PIPESTATUS[0]}
+                  set -e
+                  printf '%s\n' "$SJRPG_RESOURCE_RUN_CODE" > "$SJRPG_RESOURCE_OUT/run.exitcode.txt"
+                  SJRPG_RESOURCE_STRICT_CODE=0
+                  if test "$SJRPG_RESOURCE_RUN_CODE" -ne 0; then SJRPG_RESOURCE_STRICT_CODE=1; fi
+                  if grep -qE 'SCRIPT ERROR|^ERROR:' "$SJRPG_RESOURCE_OUT/run.log"; then SJRPG_RESOURCE_STRICT_CODE=1; fi
+                  if ! grep -qE "^RESULT cases=$SJRPG_RESOURCE_EXPECTED failed=0 " "$SJRPG_RESOURCE_OUT/run.log"; then SJRPG_RESOURCE_STRICT_CODE=1; fi
+                  printf '%s\n' "$SJRPG_RESOURCE_STRICT_CODE" > "$SJRPG_RESOURCE_OUT/strict.exitcode.txt"
+                  exit "$SJRPG_RESOURCE_STRICT_CODE"
+            - uses: actions/upload-artifact@v6
+              if: always()
+              with:
+                  name: native-resource-${{ matrix.partition }}
+                  path: build/resource-diagnostics
+                  if-no-files-found: ignore
+                  retention-days: 7
