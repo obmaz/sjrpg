@@ -183,8 +183,13 @@ for(const profile of [{name:'portrait-mage-continue',width:390,height:844,dpr:1,
   await openPanel(13,'skill_tree_panel');
   await focusTo(s=>String(s.review.navigation.focus_key).startsWith('skill:'),'actual skill graph node');
   s=await read();const selected=s.review.panel.selected;assert(selected,'focused skill selects actual detail');
-  await tap(0);s=await read();focused(s);assert(panelIs(s,'skill_tree_panel'),'A navigates actual skill detail without escaping scope');
-  await capture('skill-focus');await closePanel();record('skill graph focus, real A detail navigation and B back');
+  await tap(0);
+  s=await wait(s=>/^(learn:|assign:)/.test(s.review.navigation.focus_key),'A focuses an actual enabled skill detail action');
+  focused(s);assert(panelIs(s,'skill_tree_panel'),'A navigates actual skill detail without escaping scope');
+  await capture('skill-focus');
+  await neutral();await tap(1);
+  await wait(s=>panelIs(s,'skill_tree_panel')&&String(s.review.navigation.focus_key).startsWith('skill:'),'first B returns from detail to graph');
+  await closePanel();record('skill graph focus, real A detail action, first B graph and second B close');
 
   await openPanel(9,'settings_panel');
   await focusTo(s=>s.review.navigation.focus_key==='setting:배경 음악','music setting');
