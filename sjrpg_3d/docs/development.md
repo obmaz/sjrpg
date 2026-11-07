@@ -456,3 +456,7 @@ HUD는 체력·물약 수·쿨다운의 실제 변화를 감지합니다. 사운
 ## 헤드리스 종료 진단
 
 3D 회귀 테스트는 Godot의 `--verbose`로 실행해 종료 시 리소스/인스턴스 경로를 추적할 수 있게 합니다. 엔진 종료 코드와 `SCRIPT ERROR`·`ERROR:` 및 전체 `RESULT failed=0` 검사는 그대로 유지하며, 실패 시 마지막 로그도 남깁니다. 상세 로그 모드의 통과는 해당 실행 구성이 통과했다는 의미이며, 상세 로그 없이 나타난 간헐적 종료 진단의 근본 원인이 수정됐다는 근거로 삼지 않습니다.
+
+## 웹 자원과 반복 비용
+
+[웹 성능과 에셋 예산](web-performance.md)은 실제 PCK 분석과 런타임 측정의 단위·경로·한계를 구분합니다. `ActorAtlas.texture_snapshot()`은 메타데이터와 실제 로드 상태를 읽되 텍스처 getter를 호출하지 않습니다. `NativeEnemyModels.cache_stats()`는 최초 SurfaceTool 제작과 반복 레시피 사용을 구분하고, 레시피는 노드를 소유하지 않습니다. `Ortho3DPreview.render_activity()`는 렌더 크기·정지 유지·동기화 횟수를 제공합니다. `ClassSelect.probe_activity()`는 이벤트를 합친 게시 수를 제공하며 일반 유휴 프레임에 JS 레이아웃 게시를 하지 않습니다. 이 관찰 API는 실제 입력과 상태 소유권을 변경하지 않습니다.

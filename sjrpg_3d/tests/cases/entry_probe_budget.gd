@@ -37,5 +37,12 @@ func run() -> void:
 		int(select.probe_activity()["flushes"]) > before_move and select.back_button.size == old_size)
 	select.back_button.position = old_position
 	await _frames(3)
+	select.back_button.grab_focus()
+	await _frames(3)
+	var before_blur: int = select.probe_activity()["flushes"]
+	select.back_button.release_focus()
+	await _frames(3)
+	check("focus release schedules a real probe update without an idle poll",
+		int(select.probe_activity()["flushes"]) > before_blur and view.gui_get_focus_owner() != select.back_button)
 	view.queue_free()
 	await _frames(3)

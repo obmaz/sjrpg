@@ -182,6 +182,7 @@ func _button(text: String, action: Callable, primary := false) -> Button:
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.pressed.connect(action)
 	button.focus_entered.connect(_queue_publish_buttons)
+	button.focus_exited.connect(_queue_publish_buttons)
 	button.item_rect_changed.connect(_queue_publish_buttons)
 	SelectionUi.style(button, primary)
 	add_child(button)
@@ -314,6 +315,7 @@ func confirm_delete(number: int) -> void:
 	_delete_dialog.body_holder.item_rect_changed.connect(_queue_publish_buttons)
 	for target: Node in _delete_dialog.find_children("*", "Button", true, false):
 		(target as Button).focus_entered.connect(_queue_publish_buttons)
+		(target as Button).focus_exited.connect(_queue_publish_buttons)
 	_refresh_disabled()
 	_fit_delete_dialog()
 	(_delete_dialog.footer.get_child(0) as Button).grab_focus.call_deferred()
