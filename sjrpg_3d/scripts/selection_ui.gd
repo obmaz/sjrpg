@@ -64,3 +64,15 @@ static func portrait(texture: Texture2D) -> Texture2D:
 	crop.atlas = texture
 	crop.region = Rect2(Vector2(texture.get_width() * 0.14, texture.get_height() * 0.09), Vector2(texture.get_width() * 0.72, texture.get_height() * 0.48))
 	return crop
+
+
+static func vignette(texture: Texture2D) -> Texture2D:
+	if texture == null:
+		return null
+	var crop := AtlasTexture.new()
+	crop.atlas = texture
+	# Both delivered portraits place the eyes near the upper third. This upper-body
+	# region keeps the face and casting hand in the wide Continue presentation.
+	crop.region = Rect2(Vector2(0, texture.get_height() * 0.12),
+		Vector2(texture.get_width(), texture.get_height() * 0.43))
+	return crop

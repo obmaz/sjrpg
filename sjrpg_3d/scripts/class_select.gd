@@ -358,8 +358,8 @@ func _setup_presentation() -> void:
 		slot_portraits.append(art)
 		slot_number_labels[index].z_index = 1
 		slot_number_labels[index].add_theme_constant_override("outline_size", 3)
-	slot_surface.add_theme_stylebox_override("panel", SelectionUi.skin(Color(0.035, 0.065, 0.058, 0.78), Color("766b50"), 10))
-	slot_footer.add_theme_stylebox_override("panel", SelectionUi.skin(Color(0.035, 0.06, 0.052, 0.93), Color(0.4, 0.43, 0.34, 0.6), 7))
+	slot_surface.add_theme_stylebox_override("panel", SelectionUi.skin(Color(0.035, 0.065, 0.058, 0.54), Color("766b50"), 10))
+	slot_footer.add_theme_stylebox_override("panel", SelectionUi.skin(Color(0.035, 0.06, 0.052, 0.86), Color(0.4, 0.43, 0.34, 0.6), 7))
 
 
 func _measure(label: Label, width: float, minimum := 0.0) -> float:
@@ -589,12 +589,13 @@ func _layout_slots() -> void:
 	_slot_gap = gap
 	_slot_badge = maxf(76.0 * u, 42.0 * _slot_css)
 	_slot_touch = maxf(72.0 * u, 44.0 * _slot_css)
-	var width := minf(area.size.x - outer * 2.0, maxf(1000.0 * u, 292.0 * _slot_css))
-	var inner := maxf(1.0, width - pad * 2.0)
 	var summary := _selected()
-	var preview := bool(summary["valid"]) and not compact
-	var preview_w := inner * 0.30 if preview else 0.0
-	var preview_h := maxf(area.size.y * 0.20, 150.0 * u) if preview else 0.0
+	var preview := bool(summary["valid"])
+	var side_preview := preview and not portrait
+	var side_left := area.position.x + area.size.x * 0.52
+	var width := area.end.x - outer - side_left if side_preview else minf(area.size.x - outer * 2.0, maxf(1000.0 * u, 292.0 * _slot_css))
+	var inner := maxf(1.0, width - pad * 2.0)
+	var preview_h := maxf(150.0 * _slot_css, 180.0 * u) if preview and portrait else 0.0
 	slot_surface.show()
 	slot_scroll.show()
 	slot_footer.show()
@@ -605,8 +606,8 @@ func _layout_slots() -> void:
 	start_button.hide()
 	continue_button.show()
 	showcase.visible = preview
-	_hero_backdrop.modulate.a = 0.0
-	hero_art.texture = SelectionUi.portrait(SelectionUi.hero_image(selected_class))
+	_hero_backdrop.modulate.a = 0.44 if side_preview else 0.0
+	hero_art.texture = SelectionUi.vignette(SelectionUi.hero_image(selected_class)) if portrait else SelectionUi.hero_image(selected_class)
 	brand_label.visible = not compact
 	back_button.text = "‹"
 	back_button.tooltip_text = "처음 화면으로 돌아가기"
@@ -617,14 +618,15 @@ func _layout_slots() -> void:
 	brand_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	slot_context.text = "저장 %d · %s" % [selected_slot, "이 여정을 계속합니다" if bool(summary["valid"]) else "복구할 수 없는 저장" if bool(summary["occupied"]) else "새로운 여정을 준비하세요"]
 	var header_left := _slot_touch + gap
-	var header_width := maxf(1.0, inner - header_left - preview_w - (gap if preview else 0.0))
+	var header_width := maxf(1.0, inner - header_left)
 	var brand_h := _measure(brand_label, header_width) if brand_label.visible else 0.0
 	var title_h := _measure(heading, header_width)
 	var title_y := brand_h + gap * 0.4 if brand_label.visible else maxf(0.0, (_slot_touch - title_h) * 0.5)
 	var subtitle_y := maxf(_slot_touch, title_y + title_h) + gap
-	var subtitle_width := inner - preview_w - (gap if preview else 0.0)
+	var subtitle_width := inner
 	var subtitle_h := _measure(subtitle, subtitle_width)
-	var header_h := maxf(subtitle_y + subtitle_h, preview_h)
+	var vignette_y := subtitle_y + subtitle_h + gap
+	var header_h := vignette_y + preview_h if preview and portrait else subtitle_y + subtitle_h
 	slot_context.size.x = inner
 	var context_h := _measure(slot_context, inner)
 	var action_h := maxf(88.0 * u, 48.0 * _slot_css)
@@ -659,6 +661,8 @@ func _layout_slots() -> void:
 	var maximum_h := maxf(1.0, area.size.y - outer * 2.0)
 	var height := minf(maximum_h, pad * 2.0 + header_h + gap * 2.0 + total_rows + footer_h)
 	var origin := area.position + (area.size - Vector2(width, height)) * 0.5
+	if side_preview:
+		origin.x = side_left
 	var content := origin + Vector2.ONE * pad
 	EntryUi.place(slot_surface, Rect2(origin, Vector2(width, height)))
 	EntryUi.place(back_button, Rect2(content, Vector2.ONE * _slot_touch))
@@ -666,7 +670,12 @@ func _layout_slots() -> void:
 	EntryUi.place(heading, Rect2(content + Vector2(header_left, title_y), Vector2(header_width, title_h)))
 	EntryUi.place(subtitle, Rect2(content + Vector2(0, subtitle_y), Vector2(subtitle_width, subtitle_h)))
 	if preview:
-		EntryUi.place(showcase, Rect2(content + Vector2(inner - preview_w, 0), Vector2(preview_w, preview_h)))
+		if portrait:
+			EntryUi.place(showcase, Rect2(content + Vector2(0, vignette_y), Vector2(inner, preview_h)))
+		else:
+			var art_left := area.position.x + outer
+			EntryUi.place(showcase, Rect2(Vector2(art_left, area.position.y + outer),
+				Vector2(side_left - gap * 2.0 - art_left, area.size.y - outer * 2.0)))
 		EntryUi.place(hero_art, Rect2(Vector2.ZERO, showcase.size))
 	var list_y := content.y + header_h + gap
 	var available := maxf(1.0, height - pad * 2.0 - header_h - gap * 2.0 - footer_h)
@@ -691,7 +700,9 @@ func _place_slot_labels(index: int) -> void:
 	var left := pad + _slot_badge + gap
 	var text_w := maxf(1.0, row.size.x - left - pad)
 	var status_w := status.get_combined_minimum_size().x if not status.text.is_empty() else 0.0
-	status.visible = not status.text.is_empty()
+	status.visible = not status.text.is_empty() and text_w >= 190.0 * _slot_css
+	if not status.visible:
+		status_w = 0.0
 	var title_h := title.get_combined_minimum_size().y
 	EntryUi.place(slot_portrait_frames[index], Rect2(Vector2(pad, pad), Vector2.ONE * _slot_badge))
 	var number_h := number.get_combined_minimum_size().y
