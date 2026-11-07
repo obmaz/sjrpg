@@ -182,7 +182,7 @@ func _button(text: String, action: Callable, primary := false) -> Button:
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.pressed.connect(action)
 	button.focus_entered.connect(_queue_publish_buttons)
-	button.resized.connect(_queue_publish_buttons)
+	button.item_rect_changed.connect(_queue_publish_buttons)
 	SelectionUi.style(button, primary)
 	add_child(button)
 	return button
@@ -307,8 +307,11 @@ func confirm_delete(number: int) -> void:
 		if not deleted:
 			show_error("삭제하지 못했습니다. 다시 시도해 주세요."), true)
 	_delete_dialog.closed.connect(_close_delete)
-	_delete_dialog._panel.resized.connect(_queue_publish_buttons)
-	_delete_dialog.footer.resized.connect(_queue_publish_buttons)
+	_delete_dialog._panel.item_rect_changed.connect(_queue_publish_buttons)
+	_delete_dialog.footer.item_rect_changed.connect(_queue_publish_buttons)
+	_delete_dialog.item_rect_changed.connect(_queue_publish_buttons)
+	_delete_dialog._column.item_rect_changed.connect(_queue_publish_buttons)
+	_delete_dialog.body_holder.item_rect_changed.connect(_queue_publish_buttons)
 	for target: Node in _delete_dialog.find_children("*", "Button", true, false):
 		(target as Button).focus_entered.connect(_queue_publish_buttons)
 	_refresh_disabled()

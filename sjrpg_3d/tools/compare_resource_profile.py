@@ -13,6 +13,9 @@ def summarise(path):
         phases=[]
         for phase in profile["phases"]:
             samples=phase["samples"]
+            if not samples:
+                phases.append({"label":phase["label"],"samples":0,"measurement_error":"No completed sample in original failed run"})
+                continue
             frames={f["at"]:f["ms"] for sample in samples for f in sample["telemetry"]["frames"]}
             tasks={f["at"]:f["ms"] for sample in samples for f in sample["telemetry"]["long_tasks"]}
             tail=samples[-1]
@@ -29,7 +32,7 @@ def summarise(path):
                 a,b=first.get(key),last.get(key)
                 growth[key]=b-a if isinstance(a,(int,float)) and isinstance(b,(int,float)) else None
         profiles.append({"name":profile["name"],"dpr":profile["dpr"],"phases":phases,"warm_title_growth":growth,"network":profile["network"],"resource_entries":profile.get("resource_entries",[])})
-    return {"source_sha":raw["source_sha"],"passed":raw["passed"],"errors":raw["errors"],"profiles":profiles}
+    return {"source_sha":raw["source_sha"],"passed":raw["passed"],"failure":raw.get("failure"),"errors":raw["errors"],"profiles":profiles}
 reports={}
 for edition in ["before","after"]:
     file=root/edition/"profile.json"

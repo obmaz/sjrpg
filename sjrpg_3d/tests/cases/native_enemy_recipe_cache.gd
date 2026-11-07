@@ -158,7 +158,7 @@ func run() -> void:
 	corpse["time"] = 0.0
 	NativeEnemyModels.place_corpse(presenter, corpse_model, corpse)
 	check("expired cached corpse is never visible", not corpse_root.visible)
-	print("NATIVE_ENEMY_RECIPE_BENCH ", JSON.stringify({"kinds": benchmark, "static_corpse_calls": 60,
+	print("ART_AUDIT NATIVE_ENEMY_RECIPE_BENCH ", JSON.stringify({"kinds": benchmark, "static_corpse_calls": 60,
 		"static_corpse_total_us": placement_us, "static_corpse_rebuilds": 0, "total_placements_after_invalidation_tests": int(corpse_model["_corpse_placement_updates"])}))
 	corpse_root.free()
 	presenter.free()

@@ -28,5 +28,14 @@ func run() -> void:
 	var again: int = select.probe_activity()["flushes"]
 	await _frames(20)
 	check("selection settles back to zero idle probe work", int(select.probe_activity()["flushes"]) == again)
+	var before_move: int = select.probe_activity()["flushes"]
+	var old_position: Vector2 = select.back_button.position
+	var old_size: Vector2 = select.back_button.size
+	select.back_button.position += Vector2(1.0, 0.0)
+	await _frames(3)
+	check("position-only UI changes refresh probes without an idle poll or resize",
+		int(select.probe_activity()["flushes"]) > before_move and select.back_button.size == old_size)
+	select.back_button.position = old_position
+	await _frames(3)
 	view.queue_free()
 	await _frames(3)
