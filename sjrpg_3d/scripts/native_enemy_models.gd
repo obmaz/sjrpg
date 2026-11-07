@@ -313,7 +313,8 @@ static func _batch(kind: String, pivots: Array, materials: Array) -> void:
 
 
 static func _tri(tool: SurfaceTool, a: Vector3, b: Vector3, c: Vector3) -> void:
-	for point: Vector3 in [a, b, c]:
+	# Godot front faces use clockwise winding; generate_normals follows it.
+	for point: Vector3 in [a, c, b]:
 		tool.set_uv(Vector2(point.x, point.y))
 		tool.add_vertex(point)
 

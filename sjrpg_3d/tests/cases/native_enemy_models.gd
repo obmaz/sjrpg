@@ -1,5 +1,32 @@
 extends TestCase
 ## Volume/normal/pose/lifetime contracts, independent of a camera-facing texture.
+
+func _check_winding(mesh: Mesh, surface: int, label: String) -> void:
+	var arrays: Array = mesh.surface_get_arrays(surface)
+	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+	var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+	var count: int = indices.size() if not indices.is_empty() else vertices.size()
+	var signed_volume: float = 0.0
+	var wrong_normal: int = 0
+	var nondegenerate: int = 0
+	for offset: int in range(0, count, 3):
+		var ia: int = indices[offset] if not indices.is_empty() else offset
+		var ib: int = indices[offset + 1] if not indices.is_empty() else offset + 1
+		var ic: int = indices[offset + 2] if not indices.is_empty() else offset + 2
+		var a: Vector3 = vertices[ia]
+		var b: Vector3 = vertices[ib]
+		var c: Vector3 = vertices[ic]
+		var cross: Vector3 = (b - a).cross(c - a)
+		signed_volume += a.dot(b.cross(c)) / 6.0
+		if cross.length_squared() > 0.0000000000000001:
+			nondegenerate += 1
+			var exported: Vector3 = normals[ia] + normals[ib] + normals[ic]
+			if cross.dot(exported) >= 0.0:
+				wrong_normal += 1
+	check("closed actor surface has outward Godot clockwise volume " + label, signed_volume < -0.000000001)
+	check("actual exported normals oppose clockwise face cross products " + label, nondegenerate > 0 and wrong_normal == 0)
+
 func run() -> void:
 	for kind: String in NativeEnemyModels.KINDS:
 		var model := NativeEnemyModels.build(kind)
@@ -17,6 +44,7 @@ func run() -> void:
 				var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
 				var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
 				check("actor vertices retain normals " + kind, vertices.size() > 0 and normals.size() == vertices.size())
+				_check_winding(mesh.mesh, surface, kind + "/" + str(surface))
 				triangles += indices.size() / 3 if indices.size() > 0 else vertices.size() / 3
 		check("model remains a mobile budget rig " + kind, meshes.size() <= 20 and triangles < 6000)
 		NativeEnemyModels.pose(model, 0.0, 0.25, 0.0)

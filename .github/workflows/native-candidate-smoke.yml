@@ -21,6 +21,22 @@ concurrency:
     cancel-in-progress: false
 
 jobs:
+    candidate_tests:
+        runs-on: ubuntu-latest
+        timeout-minutes: 8
+        steps:
+            - uses: actions/checkout@v7.0.1
+            - uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.godot-tools
+                      ~/.local/share/godot/export_templates
+                  key: godot-${{ hashFiles('.godot-version') }}-tools-v1
+            - name: Run the exact focused native and UI cases independently
+              run: |
+                  chmod +x tools/*.sh sjrpg_3d/tools/*.sh
+                  tools/setup_godot.sh
+                  tools/check.sh --project=3d --only=native_actor_materials,entry_layout,native_residents,native_forest_props,native_warrior,native_enemy_models,ui_tone,native_environment,ortho_3d_preview,native_scenery_props,native_cave_geometry
     candidate_smoke:
         runs-on: ubuntu-latest
         timeout-minutes: 15
