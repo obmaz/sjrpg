@@ -154,7 +154,7 @@ func run() -> void:
 			break
 		await _frames(1)
 	check("teardown fixture reaches the pending world-ready wait", root.launches == 5 and root._entry_starting)
-	var root_ref := weakref(root)
+	var root_ref: WeakRef = weakref(root)
 	root.queue_free()
 	await _frames(3)
 	check("root teardown releases the pending transition and its owned overlay", root_ref.get_ref() == null)

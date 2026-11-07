@@ -81,10 +81,13 @@ for(const operation of ['load','create'])for(const profile of [{name:'portrait',
   const tick=()=>{emit('raf');if(document.getElementById('sjrpg-entry-loading')&&!window.__sjrpgAdventureReady)requestAnimationFrame(tick);else running=false;};
   window.addEventListener('keydown',event=>{
    const sample=read();if(!sample?.visible)return;
-   queueMicrotask(()=>{
+   // CDP/UA dispatch may run a microtask checkpoint BETWEEN window listeners.
+   // Read cancellation in the next task, after the app's later capture listener.
+   // Keep the original event-time visibility and timestamp in the recorded sample.
+   setTimeout(()=>{
     sample.kind='key';sample.key=event.key;sample.prevented=event.defaultPrevented;
     samples.push(sample);console.log('SJ_ENTRY_PAINT '+JSON.stringify(sample));
-   });
+   },0);
   },true);
   const observer=new MutationObserver(()=>{
    emit('mutation');
@@ -163,6 +166,14 @@ for(const operation of ['load','create'])for(const profile of [{name:'portrait',
   assert.equal(first.rect[0],0);assert.equal(first.rect[1],0);
   assert(Math.abs(first.rect[2]-first.viewport[0])<2&&Math.abs(first.rect[3]-first.viewport[1])<2,'loading overlay covers actual viewport');
   const sr=first.status_rect;assert(sr&&sr[2]>0&&sr[3]>0&&sr[0]>=0&&sr[1]>=0&&sr[0]+sr[2]<=first.viewport[0]+1&&sr[1]+sr[3]<=first.viewport[1]+1,'status text inside viewport');
+  const phaseEvents=ready.loading.phase_events||[];
+  for(const phase of [operation,'world']){
+   const event=phaseEvents.find(e=>e.phase===phase);
+   assert(event&&['shown_at','raf1_at','painted_at','work_at'].every(k=>Number.isFinite(event[k])),'actual '+phase+' paint/work timestamps');
+   assert(event.shown_at<=event.raf1_at&&event.raf1_at<=event.painted_at&&event.painted_at<=event.work_at,'actual '+phase+' browser paint acknowledgement precedes blocking work');
+  }
+  assert(Number.isFinite(ready.loading.native_ready_at)&&Number.isFinite(ready.loading.finished_at)&&ready.loading.native_ready_at<=ready.loading.finished_at,'native readiness precedes overlay dismissal');
+  assert.equal(ready.loading.result,'ready','actual successful cleanup result');
   const phases=ready.loading.painted_phases||[];
   assert(phases.some(p=>(typeof p==='string'?p:p.phase)===operation),'production double-RAF acknowledgement for operation');
   assert(phases.some(p=>(typeof p==='string'?p:p.phase)==='world'),'production double-RAF acknowledgement before world build');
