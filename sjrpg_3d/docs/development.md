@@ -404,3 +404,18 @@ HUD는 체력·물약 수·쿨다운의 실제 변화를 감지합니다. 사운
 `Ortho3DForestTrees`는 `Ortho3DEnvironment._build_forest`에서 외곽의 실제 소유 인스턴스만 교체합니다. `Ortho3DTrees.mesh_library()`는 마을과 외곽의 두 메시/재질을 공유하며 기존 마을 변환을 유지합니다. 16 m 셀별 MultiMesh, 원본 키 기반 고정 변형, 실제 바닥 Y, 전체 수관 AABB와 기존 충돌 계약은 [외곽 숲 나무](native-forest-trees.md)에 기록합니다. `ortho_3d_forest_trees`와 기존 `ortho_3d_trees`·`native_environment`가 해당 통합을 검사합니다.
 
 `NativeCombatFx3D`는 기존 원화 카드 화이트리스트에서 빠졌던 `visual=""` 일반 투사체만 표시합니다. 실제 `Effect.native_position()`·수명·나이를 관찰하여 생성형 원소 아틀라스의 본체와 짧은 꼬리를 최대32개(각2카드)로 표시하며, 피해·충돌·자원·독립 시계를 만들지 않습니다. 기존 `visual="bolt"` 경로는 유지합니다. 범위와 남은 미매핑 효과는 [일반 투사체 표시](native-projectile-fx.md)에 기록합니다.
+
+## 저장 선택 레이아웃 검수
+
+저장 선택과 새 수호자 선택의 배치를 분리합니다. 저장 화면은 그림의 예약 공간 없이 번호/직업·레벨/지역·현지 저장 시각을 각각 측정한 네 카드와 독립 footer로 구성합니다. 글꼴을 먼저 정하고 스크롤바가 차지할 너비까지 보수적으로 빼서 행 높이를 측정합니다. 웹의 가상 해상도와 CSS 크기를 구분해 슬롯/삭제/주 행동은 44CSS px 이상, 주 정보는14CSS px·보조 정보는12CSS px 이상을 유지합니다. 스크롤은 목록 안에서만 이동하며 키보드 포커스를 받은 행도 보이는 영역으로 들어옵니다.
+
+삭제는 선택 슬롯과 별개의 명시적 대상 번호를 유지합니다. 확인 중에는 배경 버튼과 콜백을 모두 막고 취소에 포커스를 둡니다. Tab/Shift-Tab은 확인창 안에서 순환하며 취소/Escape는 해당 삭제 버튼으로, 삭제 완료는 남은 대상 카드로 돌아갑니다. 파일 생성·불러오기·삭제는 기존 GameState 경로만 사용합니다.
+
+전용 하네스는 다음 두 경로를 함께 검사합니다.
+
+- **save_layout**: 실제 빈/혼합/가득/손상/백업 파일과 긴 안내를 여러 raw SubViewport 크기·왕복 회전에서 검사합니다. 레이블 실측·행/삭제/고정 footer 경계, 스크롤/포커스, 저장 bytes와 영웅 미리보기 불변을 확인합니다.
+- **node tools/check_save_layout.mjs http://127.0.0.1:8779/ /path/to/review**: 내보낸 실제 main 장면에서 CSS 화면 크기와 포인터/Tab/Shift-Tab/Enter/Escape를 사용합니다. 대표 원본 JPEG는 지정 로그 태그로, 모든 캡처와 JSON은 artifact로 남깁니다. 캡처 기록은 별도 리뷰어의 시각 판정을 대신하지 않습니다.
+
+**?save_layout_review=1**은 새 격리 브라우저 프로필의 검수 전용 진입점입니다. 고유한 user://tests/save-layout-* 경로에서만 정식 create_slot/save_game으로 시나리오를 준비하며 운영 경로의 파일을 고치지 않습니다. 일반 실행에서는 로드하지 않습니다. 기존 __sjrpgClassButtons 중심 좌표와 slot_labels는 유지하고 실제 rect/visible/font/focus 및 save_layout 읽기 전용 측정값을 추가합니다.
+
+.github/workflows/save-layout-review.yml이 관련 변경의 빠른 검수·캡처를 담당합니다. 명시적인 **[layout-review]** 커밋은 기존 운영 배포를 건너뛰어 검수 중인 UI를 공개하지 않습니다. 소스와 실제 캡처의 독립 리뷰가 끝난 동일 소스 트리의 일반 커밋에서 전체 검사와 Pages 배포를 수행합니다.

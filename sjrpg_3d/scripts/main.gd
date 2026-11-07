@@ -10,6 +10,8 @@ func _ready() -> void:
 	get_tree().root.size_changed.connect(_fit_orientation)
 	_fit_orientation()
 	show_title()
+	if OS.has_feature("web") and JavaScriptBridge.eval("new URLSearchParams(location.search).get('save_layout_review') === '1'", true) == true:
+		add_child(preload("res://scripts/save_layout_review.gd").new().setup(self))
 
 
 ## Landscape uses a 1280x720 base, portrait 720x1280, so UI keeps a readable size on phones.

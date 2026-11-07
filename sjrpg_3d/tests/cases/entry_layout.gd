@@ -19,9 +19,10 @@ func _buttons_fit(select: Control, dimensions: Vector2i) -> void:
 	var unit := minf(dimensions.x / 720.0, dimensions.y / 1280.0) if dimensions.y > dimensions.x else minf(dimensions.x / 1280.0, dimensions.y / 720.0)
 	var controls: Array = [select.start_button, select.continue_button, select.back_button, select.slot_switch] + select.class_buttons.values() + select.slot_buttons + select.delete_buttons
 	for button: Button in controls:
-		if button.visible:
+		if button.is_visible_in_tree() and (select._stage == "class" or not select.slot_buttons.has(button) and not select.delete_buttons.has(button)):
 			check("visible entry action remains safe and thumb-sized %s/%s" % [dimensions, button.text], bounds.encloses(button.get_global_rect()) and button.size.y >= 64.0 * unit)
-	check("entry uses a full illustration without stretching or clipping its frame", bounds.encloses(select.showcase.get_global_rect()) and select.hero_art.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_CENTERED and select.hero_art.get_global_rect().size.is_equal_approx(select.showcase.get_global_rect().size))
+	if select.showcase.is_visible_in_tree():
+		check("entry uses a full illustration without stretching or clipping its frame", bounds.encloses(select.showcase.get_global_rect()) and select.hero_art.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_CENTERED and select.hero_art.get_global_rect().size.is_equal_approx(select.showcase.get_global_rect().size))
 	if select._stage == "class":
 		check("class tabs and main action remain separate", not select.start_button.get_global_rect().intersects(select.class_buttons["warrior"].get_global_rect()) and not select.class_buttons["warrior"].get_global_rect().intersects(select.class_buttons["mage"].get_global_rect()))
 		check("role, description and real stats retain their own space", select.role.get_global_rect().end.y <= select.description.get_global_rect().position.y and select.description.get_global_rect().end.y < select.health.get_global_rect().position.y and select.details.get_global_rect().encloses(select.resource.get_global_rect()))
@@ -30,8 +31,12 @@ func _buttons_fit(select: Control, dimensions: Vector2i) -> void:
 		else:
 			check("landscape keeps illustration alongside the complete controls", select.showcase.get_global_rect().end.x < select.details.get_global_rect().position.x)
 	else:
+		var clipping: Rect2 = select.slot_scroll.get_global_rect()
+		check("save scroll and fixed footer remain separate and safe", bounds.encloses(clipping) and bounds.encloses(select.slot_footer.get_global_rect()) and not clipping.intersects(select.slot_footer.get_global_rect()))
 		for index in 4:
-			check("slot row and its delete action have separate targets", not select.slot_buttons[index].get_global_rect().intersects(select.delete_buttons[index].get_global_rect()))
+			if select.delete_buttons[index].is_visible_in_tree():
+				check("slot row and its delete action have separate targets", not select.slot_buttons[index].get_global_rect().intersects(select.delete_buttons[index].get_global_rect()))
+			check("save row stays thumb-sized inside its clipping viewport", select.slot_buttons[index].size.y >= 64.0 * unit and clipping.size.y >= select.slot_buttons[index].size.y)
 			if index > 0:
 				check("save rows never overlap", select.slot_buttons[index - 1].get_global_rect().end.y < select.slot_buttons[index].get_global_rect().position.y)
 
