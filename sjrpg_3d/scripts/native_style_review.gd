@@ -52,6 +52,9 @@ func _process(delta: float) -> void:
 				nodes.append({"id": id, "rect": [box.position.x, box.position.y, box.size.x, box.size.y], "hit_rect": rect_value(box.grow(8.0)), "rank": GameState.rank(id), "reason": GameState.learn_block_reason(GameState.skill(id))})
 			panel["nodes"] = nodes
 			panel["tree_clip"] = rect(p._tree_scroll)
+			panel["tree_scroll_value"] = p._tree_scroll.scroll_vertical
+			var tree_bar: VScrollBar = p._tree_scroll.get_v_scroll_bar()
+			panel["tree_scroll_max"] = maxf(0.0, tree_bar.max_value - tree_bar.page)
 			panel["selected"] = p._selected
 	var coverage := {}
 	var preview: Node = game.ortho_preview
@@ -65,6 +68,15 @@ func _process(delta: float) -> void:
 			var foot: Vector2 = source.position
 			retained.append({"id": source.get_instance_id(), "name": source.name, "type": source.get_script().resource_path, "foot": [foot.x, foot.y]})
 		coverage["actor_cards"] = retained
+		var corpse_cards := []
+		var corpse_count := 0
+		if is_instance_valid(preview._world_environment):
+			corpse_count = preview._world_environment._corpses.size()
+			for id: int in preview._world_environment._corpses:
+				if preview._world_environment._corpses[id] is MeshInstance3D:
+					corpse_cards.append(id)
+		coverage["corpse_count"] = corpse_count
+		coverage["corpse_cards"] = corpse_cards
 		for property: Dictionary in preview.get_property_list():
 			var key: String = property["name"]
 			if key.begins_with("_native_") or key.begins_with("_resident") or key.begins_with("_enemy"):

@@ -356,9 +356,6 @@ func _build_detail() -> void:
 	var learn := UiKit.button("배우기 (포인트 1)" if rank == 0 else "등급 올리기 (포인트 1)", 21)
 	learn.custom_minimum_size = Vector2(0, 72)
 	learn.disabled = reason != ""
-	if reason != "":
-		learn.text = reason
-		learn.modulate = Color(0.6, 0.6, 0.6)
 	learn.pressed.connect(func():
 		if GameState.learn(_selected):
 			_refresh())

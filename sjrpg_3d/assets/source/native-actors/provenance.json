@@ -1,0 +1,74 @@
+{
+  "asset": "shared mature painterly native actor surface family",
+  "tool": "image_gen.imagegen",
+  "generated_on": "2026-11-07",
+  "actual_tool_references": [
+    {
+      "path": "sjrpg_3d/assets/source/style/approved-game-reference.jpg",
+      "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+      "git_blob_sha1": "e4657c739a564fdc7593232d300a920e16a85a52"
+    }
+  ],
+  "num_last_images_to_include": 1,
+  "prompt": "Create a reusable BASE-COLOR MATERIAL ATLAS for native 3D characters in Guardians of Nature. The attached image is the ACTUAL USER APPROVED GAME REFERENCE: match its mature restrained painterly woodland fantasy genre, rich subtle designed material texture, comparable to Diablo Immortal, NOT photoreal, NOT pastel/cute, NOT toy plastic. This is surface material production, NOT a game screenshot or character concept. Exact canvas 1536x1024, six equal SQUARE tiles in a strict 3 columns by 2 rows grid, each 512x512, no margins/gaps/borders/labels. Order top row LEFT TO RIGHT: light-neutral woven matte CLOTH, light-neutral fine-grain LEATHER, light-neutral weathered forged IRON. Bottom row LEFT TO RIGHT: light-neutral soft SKIN surface, light-neutral organic HAIR/FUR strand surface, light-neutral weathered natural ROCK. Every tile is FLAT FRONT-ON ORTHOGRAPHIC, uniform neutral diffuse lighting, very light warm gray/off-white base (around RGB 200-230) so game vertex-color tints can supply navy cloth, brown leather, skin tones and dark hair without becoming double-dark. Gentle mid-frequency painterly material variation: cloth has irregular woven cross-thread detail; leather has restrained organic grain and creases; iron has broad subtle hand-forged texture with NO reflected highlight; skin has soft understated painted microtexture NO face, pores macrophoto or wrinkles; hair/fur has designed flowing fine strand groups with NO hairstyle or creature; rock has subtle granular fracture texture NO separate stone objects. Each tile should repeat on all edges, continuous material sampling, no tile edges or seams. Albedo ONLY: no baked cast shadows, no directional sun patch, no specular hot spots, no ambient-occlusion cavities, no painted object lighting, no normal-map or roughness-map colors. No faces, people, costumes, bones, weapons, objects, scenery, perspective, isometric view, UI, lettering or ornaments. Preserve the visual sophistication of the reference while remaining clearly a production material sheet.",
+  "source": {
+    "path": "sjrpg_3d/assets/source/native-actors/surface-atlas.png",
+    "git_blob_sha1": "baa4b582521c39cf39efa389650814e329ca3335",
+    "sha256": "afa4c79db59673849c25a8eb54ba3587215e9de10fc91429133474677810125f",
+    "bytes": 3137948,
+    "size": [
+      1536,
+      1024
+    ],
+    "format": "PNG",
+    "authorship": "New AI-generated production albedo surface sheet; source illustration reference is user-supplied."
+  },
+  "runtime": {
+    "path": "sjrpg_3d/assets/art/native-actors/surface-atlas.bin",
+    "sha256": "afa4c79db59673849c25a8eb54ba3587215e9de10fc91429133474677810125f",
+    "encoding": "unaltered PNG bytes with a .bin extension for explicit CPU/headless loading",
+    "compression": "PNG; not claimed WebP/PBR scan",
+    "grid": [
+      3,
+      2
+    ],
+    "cell": [
+      512,
+      512
+    ],
+    "order": [
+      "cloth",
+      "leather",
+      "iron",
+      "skin",
+      "hair",
+      "rock"
+    ],
+    "normal_map": null,
+    "roughness_map": null,
+    "scalar_roughness": {
+      "cloth": 0.96,
+      "leather": 0.87,
+      "iron": 0.55,
+      "skin": 0.92,
+      "hair": 0.9,
+      "rock": 0.98
+    },
+    "scalar_metallic": {
+      "iron": 0.5
+    },
+    "crop_processing": "Native Image.get_region; sample an 8x8 grid; adjust_bcs(clamp(0.85/mean_luminance,0.5,2),1,0); generate_mipmaps. This removes source hue and normalizes the neutral albedo mean before vertex tinting.",
+    "material_space": "local triplanar, metres per repeat cloth0.4/leather0.3/iron0.4/skin0.3/hair0.5/rock0.6",
+    "generator": "sjrpg_3d/scripts/native_actor_materials.gd",
+    "generator_git_blob_sha1": "e6d0bfdc9c18cf80dfa147bcaf4d745d61566713"
+  },
+  "validation": {
+    "headless_case": "native_actor_materials",
+    "actual_browser_review": "pending parent integration; neutral production swatches do not establish final actor style approval",
+    "remaining_limitations": [
+      "base-color material grain does not replace authored anatomy/cloth sculpture",
+      "no physical normal or roughness maps were generated",
+      "source opposite-edge seamlessness is a generation goal; actual rendered repeats require visual review"
+    ]
+  }
+}

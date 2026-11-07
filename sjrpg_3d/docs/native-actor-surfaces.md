@@ -1,0 +1,11 @@
+# Shared native actor surfaces
+
+The approved user game reference is the visual source for a newly generated 1536×1024 production atlas. Six 512px cells contain cloth, leather, forged iron, skin, hair/fur and natural rock. This is **albedo grain**, not a character image or an anatomy substitute. The exact prompt, tool references, source hashes and runtime processing are preserved in [provenance](../assets/source/native-actors/provenance.json).
+
+`NativeActorMaterials.material(kind, tint = Color.WHITE)` returns a cached StandardMaterial3D. Each material uses a genuine cropped image, local triplanar coordinates, scene lighting, mipmaps and roughness/metallic scalars. The generated source PNG is unchanged; the runtime crop is desaturated and normalized to a light mean of0.85 before palette tinting so navy cloth, skin and hair do not inherit an orange/brown cast or become double-dark. Cloth repeats every0.40m, leather/skin0.30m, iron0.40m, hair0.50m and rock0.60m.
+
+Vertices that already contain the palette use white material tint. White vertices can instead use the palette as material tint. Avoid applying the same dark palette twice. Materials mutated for per-actor flash, status or death must be duplicated once per actor; textures and cropped CPU images stay shared. Aliases map metal/steel/bronze to iron, bone/flesh to skin, fur to hair and wood to leather; aliases do not claim additional generated materials.
+
+The runtime `assets/art/native-actors/surface-atlas.bin` contains the original PNG bytes. Explicit CPU PNG decoding works without GPU readback in both headless tests and WebGL. Export must include this exact non-resource path and exclude the preserved source PNG directory to avoid a duplicate imported texture. The raw runtime payload is3,137,948bytes before pack compression. It is not claimed to be WebP-compressed or a PBR scan; no normal or roughness maps exist.
+
+`native_actor_materials` checks real decoded crops, neutral/light texture variation, physical repeat scale, material caching and independent per-actor tint clones. Actual model-gallery and game captures are still the final style acceptance gate; a generated swatch or passing pixel test is not actor visual approval.

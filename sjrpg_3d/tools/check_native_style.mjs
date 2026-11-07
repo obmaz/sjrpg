@@ -90,8 +90,20 @@ async function skillTree(label){
  }
  await tapRect(css(s,n.rect));
  s=await wait(s=>s.ui.panel.selected===n.id,'actual node selection');
- await page.mouse.move(clip.x+clip.w*.5,clip.y+clip.h*.5);await page.mouse.wheel(0,520);await page.waitForTimeout(500);
- const moved=await read();assert(moved.ui.panel.nodes.some((n,i)=>Math.abs(n.rect[1]-p.nodes[i].rect[1])>1),label+' actual tree scroll');
+ const beforeWheel=await read(),currentClip=css(beforeWheel,beforeWheel.ui.panel.tree_clip);
+ const beforeScroll=beforeWheel.ui.panel.tree_scroll_value,maxScroll=beforeWheel.ui.panel.tree_scroll_max;
+ assert(Number.isFinite(beforeScroll)&&Number.isFinite(maxScroll),label+' actual native scroll metrics');
+ if(maxScroll>1){
+  const direction=beforeScroll>=maxScroll-1?-1:1;
+  const frame=beforeWheel.ui.frame;
+  await page.mouse.move(currentClip.x+currentClip.w*.5,currentClip.y+currentClip.h*.5);
+  await page.mouse.wheel(0,direction*520);
+  const moved=await wait(s=>s.ui.frame>=frame+3&&Math.abs(s.ui.panel.tree_scroll_value-beforeScroll)>1,label+' actual tree scroll');
+  checks.push(label+' scroll '+beforeScroll+' -> '+moved.ui.panel.tree_scroll_value+' max '+maxScroll);
+ }else{
+  assert(beforeWheel.ui.panel.nodes.every(n=>inside(currentClip,css(beforeWheel,n.rect))),label+' all nodes must fit when no scroll range exists');
+  checks.push(label+' all actual nodes fit without scrolling');
+ }
  await capture(label+'-skills-scrolled');
  checks.push(label+' real skill selection and scroll');
  await closePanel();
@@ -111,6 +123,7 @@ async function boot(cls,params={},dpr=1){
  await wait(s=>s.ui?.native&&s.native?.native_active&&s.native?.physics_ticks>0,'actual native adventure',90000);
  if(params.dungeon_preview)await page.waitForFunction(()=>window.__sjrpgDungeonPreviewReady===true,null,{timeout:90000});
  if(params.encounter_preview)await page.waitForFunction(()=>window.__sjrpgEncounterPreviewReady===true,null,{timeout:90000});
+ if(params.corpse_preview)await page.waitForFunction(()=>window.__sjrpgCorpsePreviewReady===true,null,{timeout:90000});
  await settled();
 }
 async function modelGallery(){
@@ -146,8 +159,8 @@ try{
   await capture(cls+'-walking-native');
   assert(distance>1,'real WASD movement');checks.push(cls+' actual movement');
  }
- for(const [name,params]of[['bridge',{at:'bridge'}],['landmark0',{at:'lm0'}],['landmark1',{at:'lm1'}],['landmark2',{at:'lm2'}],['landmark3',{at:'lm3'}],['cave-outside',{at:'rowen',zoom:'0.8'}],['cave',{dungeon_preview:'entry'}],['enemy',{at:'field',encounter_preview:'active'}]]){
-  await boot('mage',params);await page.waitForTimeout(800);const state=await read();hudGeometry(state,name);if(name==='cave-outside'){assert.equal(state.ui.dungeon_active,false,'actual exterior remains forest');assert(state.ui.entry_distance<180,'actual exterior camera is at the real cave entrance');assert.equal(state.native.scope,'forest');}await capture(name+'-native',true);
+ for(const [name,params]of[['bridge',{at:'bridge'}],['landmark0',{at:'lm0'}],['landmark1',{at:'lm1'}],['landmark2',{at:'lm2'}],['landmark3',{at:'lm3'}],['cave-outside',{at:'rowen',zoom:'0.8'}],['cave',{dungeon_preview:'entry'}],['enemy',{at:'field',encounter_preview:'active'}],['corpses-bridge',{corpse_preview:'bridge'}]]){
+  await boot('mage',params);await page.waitForTimeout(800);const state=await read();hudGeometry(state,name);if(name==='cave-outside'){assert.equal(state.ui.dungeon_active,false,'actual exterior remains forest');assert(state.ui.entry_distance<180,'actual exterior camera is at the real cave entrance');assert.equal(state.native.scope,'forest');}if(name==='corpses-bridge'){assert(state.ui.coverage.corpse_count>0,'actual corpse models exist');if(!baseline)assert.deepEqual(state.ui.coverage.corpse_cards,[],'no image-card corpse fallback');}await capture(name+'-native',true);
  }
  await boot('mage',{at:'npc_courtyard'},2);hudGeometry(await read(),'mage DPR2 portrait');await capture('mage-dpr2-portrait',true);
  if(!baseline)await modelGallery();

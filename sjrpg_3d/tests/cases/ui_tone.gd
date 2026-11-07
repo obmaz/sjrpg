@@ -39,9 +39,11 @@ func run() -> void:
 		check("measured rank ribbon fits its existing row gap", UiKit.BOLD_FONT.get_height(rank_pixels) + 10.0 <= SkillTreePanel.TIER_HEIGHT - SkillTreePanel.NODE_SIDE)
 		for count in [0, 7, 99, 999, 5000]:
 			var target: float = 22.0 * float(scale)
-			var geometry := PotionArt.count_geometry(Vector2.ZERO, 30.0, count, scale, target)
+			var geometry := PotionArt.count_geometry(Vector2.ZERO, 20.0 * scale, count, scale, target)
 			var rect: Rect2 = geometry["rect"]
 			check("actual potion count remains at least 12 CSS pixels", float(geometry["font_size"]) / scale >= 12.0)
+			if count < 10:
+				check("common potion counts clear the vial centre in a lower-right badge", rect.position.x > 0.0 and rect.position.y > 0.0)
 			for point in [rect.position, rect.end, Vector2(rect.position.x, rect.end.y), Vector2(rect.end.x, rect.position.y)]:
 				check("measured potion count ribbon stays inside its actual touch circle", point.length() <= target + 0.01)
 	var view := SubViewport.new()

@@ -71,16 +71,17 @@ func _layout() -> void:
 	var potion_gap := maxf(77.0 * u, potion_touch * 2.0 + 8.0 * u)
 	var potion_y := main.y - maxf(198.0 * u, 163.0 * u + potion_touch + 12.0 * u)
 	var potion_right := maxf(41.0 * u, potion_touch + 8.0 * u)
-	_buttons["potion_hp"] = _button(Vector2(size.x - potion_right - potion_gap, potion_y), potion_touch, 30.0 * u)
-	_buttons["potion_mp"] = _button(Vector2(size.x - potion_right, potion_y), potion_touch, 30.0 * u)
+	var potion_visual := maxf(30.0 * u, 20.0 * css_scale())
+	_buttons["potion_hp"] = _button(Vector2(size.x - potion_right - potion_gap, potion_y), potion_touch, potion_visual)
+	_buttons["potion_mp"] = _button(Vector2(size.x - potion_right, potion_y), potion_touch, potion_visual)
 	var bar_y := size.y * 0.902 if portrait else size.y - 44.0 * u
 	var names := ["bar_bag", "bar_skills", "bar_quests", "bar_gear"]
-	var menu_visual := 34.1 if portrait else 31.0
+	var menu_visual := maxf((34.1 if portrait else 31.0) * u, 20.0 * css_scale())
 	var menu_touch := maxf((35.0 if portrait else 32.0) * u, 22.0 * css_scale())
 	var menu_gap := maxf(79.0 * u, menu_touch * 2.0 + 8.0 * u)
 	bar_y = minf(bar_y, size.y - menu_touch - 8.0 * u)
 	for i in 4:
-		_buttons[names[i]] = _button(Vector2(size.x / 2.0 + (i - 1.5) * menu_gap, bar_y), menu_touch, menu_visual * u)
+		_buttons[names[i]] = _button(Vector2(size.x / 2.0 + (i - 1.5) * menu_gap, bar_y), menu_touch, menu_visual)
 	var npc: String = game.near_npc()
 	_near_name = npc
 	if npc != "" and npc != "탈것 상인":
@@ -405,7 +406,7 @@ func interaction_visual_rect(center: Vector2, half: Vector2) -> Rect2:
 func _draw_menu(name: String, center: Vector2, radius: float, pressed: bool) -> void:
 	var u := _unit
 	var draw_radius := radius - (0.7 * u if pressed else 0.0)
-	var tint := Color(0.82, 0.8, 0.73) if pressed else Color(0.94, 0.91, 0.84)
+	var tint := Color(0.86, 0.84, 0.8) if pressed else Color.WHITE
 	draw_circle(center + Vector2(0, 0.5 * u), radius + 0.2 * u, Color(0, 0, 0, 0.3))
 	match name:
 		"bar_bag":
@@ -416,9 +417,7 @@ func _draw_menu(name: String, center: Vector2, radius: float, pressed: bool) -> 
 			MobileMenuArt.draw(self, "settings", center, draw_radius, tint)
 		"bar_skills":
 			MobileMenuArt.draw(self, "skills", center, draw_radius, tint)
-	# A narrow pressed lip keeps the new simple pictograms readable at mobile size.
-	draw_arc(center, draw_radius - 0.6 * u, 0, TAU, 72, Color(0.6, 0.5, 0.31, 0.5), 0.65 * u, true)
-	draw_arc(center, draw_radius - 1.1 * u, PI * 1.05, PI * 1.7, 32, Color(0.91, 0.81, 0.59, 0.32 if pressed else 0.22), 0.65 * u, true)
+	# The painted atlas owns its single bevel; avoid adding a second etched rim.
 
 
 func _draw_interaction(center: Vector2, half: Vector2, pressed: bool) -> void:

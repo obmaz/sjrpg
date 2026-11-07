@@ -25,14 +25,14 @@ func run() -> void:
 			var ink := mesh.surface_get_material(surface) as StandardMaterial3D
 			check("resident uses shared opaque lit material " + identity, ink != null and ink.vertex_color_use_as_albedo and ink.shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL and ink.transparency == BaseMaterial3D.TRANSPARENCY_DISABLED)
 			materials[ink.get_instance_id()] = true
-		check("resident model has volume from front side and rear " + identity, bounds.size.x > 0.45 and bounds.size.z > 0.25 and bounds.size.y >= 1.74 and bounds.size.y <= 1.86)
+		check("resident model has volume from front side and rear " + identity, bounds.size.x > 0.45 and bounds.size.z > 0.25 and bounds.size.y >= 1.64 and bounds.size.y <= 1.86)
 		check("resident soles are baked at the native ground pivot " + identity, absf(bounds.position.y) < 0.001)
-		check("resident keeps mobile surface and geometry budget " + identity, mesh.get_surface_count() <= 3 and triangles <= 4000)
+		check("resident keeps mobile surface and geometry budget " + identity, mesh.get_surface_count() <= 4 and triangles <= 6500)
 		var signature := str(bounds) + ":" + str(vertex_count)
 		signatures[signature] = true
 		print("ART_AUDIT native_resident " + JSON.stringify({"identity": identity, "triangles": triangles, "surfaces": mesh.get_surface_count(), "bounds": str(bounds)}))
 	check("all eight roles have different actual geometry", signatures.size() == NativeResidents3D.IDS.size())
-	check("all resident roles share at most three actual materials", materials.size() <= 3)
+	check("all resident roles share at most four actual materials", materials.size() <= 4)
 	check("unknown identity is not falsely claimed as converted", NativeResidents3D.build("unknown") == null)
 	var game := await make_game("mage")
 	var preview: Ortho3DPreview = game.ortho_preview

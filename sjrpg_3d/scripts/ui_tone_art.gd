@@ -12,13 +12,20 @@ static var _portraits: Texture2D
 
 static func icons() -> Texture2D:
 	if _icons == null:
-		_icons = load(ICON_PATH)
+		_icons = _painted_texture(ICON_PATH)
 	return _icons
 
 static func portraits() -> Texture2D:
 	if _portraits == null:
-		_portraits = load(PORTRAIT_PATH)
+		_portraits = _painted_texture(PORTRAIT_PATH)
 	return _portraits
+
+## Scope mipmap sampling to these minified painted atlases, not unrelated skill textures.
+static func _painted_texture(path: String) -> CanvasTexture:
+	var texture := CanvasTexture.new()
+	texture.diffuse_texture = load(path) as Texture2D
+	texture.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	return texture
 
 static func frame(key: String) -> Rect2:
 	var index: int = {"bag": 0, "skills": 1, "quests": 2, "settings": 3, "hp": 4, "mp": 5}.get(key, 0)
