@@ -11,6 +11,7 @@ var _scenario := "mixed"
 var _error := ""
 var _elapsed := 0.0
 var _configured := false
+var _scenario_sequence := 0
 
 
 func setup(root: Node) -> SaveLayoutReview:
@@ -117,6 +118,14 @@ func _action(arguments: Array) -> void:
 		_error = "Close the actual deletion dialog before preparing another scenario."
 		_publish()
 		return
+	if not in_test_namespace():
+		_error = "Review scenario preparation requires the isolated test namespace."
+		_publish()
+		return
+	# Prior scenario files stay intact while asynchronous IDBFS may still read them.
+	# Only this explicit browser action rotates paths; the static test helper is unchanged.
+	_scenario_sequence += 1
+	GameState.save_path = PREFIX + "-%d-%d.json" % [Time.get_ticks_usec(), _scenario_sequence]
 	_error = ""
 	_configured = prepare_scenario(name)
 	_scenario = name

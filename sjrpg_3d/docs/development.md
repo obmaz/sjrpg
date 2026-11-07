@@ -420,7 +420,7 @@ HUD는 체력·물약 수·쿨다운의 실제 변화를 감지합니다. 사운
 - **save_layout**: 실제 빈/혼합/가득/손상/백업 파일과 긴 안내를 여러 raw SubViewport 크기·왕복 회전에서 검사합니다. 레이블 실측·행/삭제/고정 footer 경계, 스크롤/포커스, 저장 bytes와 영웅 미리보기 불변을 확인합니다.
 - **node tools/check_save_layout.mjs http://127.0.0.1:8779/ /path/to/review**: 내보낸 실제 main 장면에서 CSS 화면 크기와 포인터/Tab/Shift-Tab/Enter/Escape를 사용합니다. 대표 원본 JPEG는 지정 로그 태그로, 모든 캡처와 JSON은 artifact로 남깁니다. 캡처 기록은 별도 리뷰어의 시각 판정을 대신하지 않습니다.
 
-**?save_layout_review=1**은 새 격리 브라우저 프로필의 검수 전용 진입점입니다. 고유한 user://tests/save-layout-* 경로에서만 정식 create_slot/save_game으로 시나리오를 준비하며 운영 경로의 파일을 고치지 않습니다. 일반 실행에서는 로드하지 않습니다. 기존 __sjrpgClassButtons 중심 좌표와 slot_labels는 유지하고 실제 rect/visible/font/focus 및 save_layout 읽기 전용 측정값을 추가합니다.
+**?save_layout_review=1**은 새 격리 브라우저 프로필의 검수 전용 진입점입니다. 고유한 user://tests/save-layout-* 경로에서만 정식 create_slot/save_game으로 시나리오를 준비하며 운영 경로의 파일을 고치지 않습니다. 브라우저의 각 시나리오는 새 파일 경로를 사용하며, 이전 시나리오의 파일은 프로필 종료까지 남겨 비동기 IDBFS가 읽는 파일을 다음 시나리오 준비가 삭제하지 않게 합니다. 같은 시나리오 안의 실제 삭제·손상·백업 검사는 그대로 수행합니다. 일반 실행에서는 로드하지 않습니다. 기존 __sjrpgClassButtons 중심 좌표와 slot_labels는 유지하고 실제 rect/visible/font/focus 및 save_layout 읽기 전용 측정값을 추가합니다.
 
 .github/workflows/save-layout-review.yml이 관련 변경의 빠른 검수·캡처를 담당합니다. 명시적인 **[layout-review]** 커밋은 기존 운영 배포를 건너뛰어 검수 중인 UI를 공개하지 않습니다. 소스와 실제 캡처의 독립 리뷰가 끝난 동일 소스 트리의 일반 커밋에서 전체 검사와 Pages 배포를 수행합니다.
 

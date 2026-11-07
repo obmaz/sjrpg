@@ -154,10 +154,31 @@ async function preserve(expected,label){
  assert.equal(s.review.screen,'selection',label+' unexpectedly launched or left selection');
 }
 
+const idbDiagnostics={enabled:process.env.SJRPG_SAVE_IDB_DIAGNOSTICS==='1',engineLogRewrites:0};
+if(idbDiagnostics.enabled){
+ // Observe the otherwise discarded ErrnoError fields in this browser response only.
+ // No FS calls, error handling, callbacks, transactions or production files change.
+ await page.route('**/index.js',async route=>{
+  const response=await route.fetch();let source=await response.text();let count=0;
+  const detail=ref=>'JSON.stringify({name:'+ref+'.name,errno:'+ref+'.errno,code:'+ref+'.code,path:'+ref+'.path,stack:'+ref+'.stack,type:typeof '+ref+'})';
+  source=source.replace(/Failed to save IDB file system: \$\{([$A-Za-z_][$\w]*)\.message\}/g,(_,ref)=>{
+   count++;return 'Failed to save IDB file system: ${'+ref+'.message}; diagnostic=${'+detail(ref)+'}';
+  });
+  if(count===0)source=source.replace(/(["'])Failed to save IDB file system: \1\s*\+\s*([$A-Za-z_][$\w]*)\.message/g,(_,quote,ref)=>{
+   count++;return quote+'Failed to save IDB file system: '+quote+'+'+ref+'.message+"; diagnostic="+'+detail(ref);
+  });
+  idbDiagnostics.engineLogRewrites+=count;
+  console.log('SAVE_LAYOUT_IDB_LOG_INSTRUMENTED '+JSON.stringify({count,url:route.request().url()}));
+  const headers={...response.headers()};delete headers['content-length'];delete headers['content-encoding'];
+  await route.fulfill({status:response.status(),headers,body:source});
+ });
+}
+
 try{
  console.log('SAVE_LAYOUT_BEGIN '+url.href);
  await page.goto(url.href,{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>window.__sjrpgTitleReady&&window.__sjrpgEntryReady,null,{timeout:90000});
+ if(idbDiagnostics.enabled)assert.equal(idbDiagnostics.engineLogRewrites,1,'one exact Godot IDB error log must expose original error fields');
  await page.locator('#entry-start').click();
  await waitState(s=>s.review?.ready&&s.review?.screen==='selection'&&s.ui?.save_layout,'live save selection',90000);
  const sizes=[[390,844],[844,390],[568,320],[320,640],[360,640],[390,844]];
@@ -277,6 +298,6 @@ try{
  try{await capture('failure',true);}catch(captureError){console.error('Failure screenshot unavailable: '+String(captureError));}
  process.exitCode=1;
 }finally{
- await writeFile(path.join(out,'proof.json'),JSON.stringify({url:url.href,checks,captures,errors,failure,passed:failure===null&&errors.length===0},null,2));
+ await writeFile(path.join(out,'proof.json'),JSON.stringify({url:url.href,idbDiagnostics,checks,captures,errors,failure,passed:failure===null&&errors.length===0},null,2));
  await browser.close();
 }

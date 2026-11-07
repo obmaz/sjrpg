@@ -46,6 +46,7 @@ jobs:
                   key: godot-${{ hashFiles('.godot-version') }}-tools-v1
 
             - name: Check (import, tests) and export web build
+              id: native_build
               run: |
                   chmod +x tools/*.sh
                   tools/setup_godot.sh
@@ -60,7 +61,7 @@ jobs:
                   tools/check_native_web.sh
                   touch build/web/.nojekyll
 
-            - name: Check exported save selection and adventure loading
+            - name: Check exported save selection
               run: |
                   mkdir -p build/review/save-layout
                   python3 -m http.server 8779 --bind 127.0.0.1 --directory build/web/3d > build/review/save-layout/server.log 2>&1 &
@@ -68,7 +69,16 @@ jobs:
                   trap 'kill "$SJRPG_SAVE_SERVER_PID" 2>/dev/null || true' EXIT
                   curl --fail --silent --show-error --max-time 2 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 12 http://127.0.0.1:8779/ > /dev/null
                   node sjrpg_3d/tools/check_save_layout.mjs http://127.0.0.1:8779/ build/review/save-layout
-                  node sjrpg_3d/tools/check_entry_loading.mjs http://127.0.0.1:8779/ build/review/save-layout/loading
+
+            - name: Check the exported adventure loading screen
+              if: (success() || failure()) && steps.native_build.outcome == 'success'
+              run: |
+                  mkdir -p build/review/save-layout/loading
+                  python3 -m http.server 8780 --bind 127.0.0.1 --directory build/web/3d > build/review/save-layout/loading/server.log 2>&1 &
+                  SJRPG_LOADING_SERVER_PID=$!
+                  trap 'kill "$SJRPG_LOADING_SERVER_PID" 2>/dev/null || true' EXIT
+                  curl --fail --silent --show-error --max-time 2 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 12 http://127.0.0.1:8780/ > /dev/null
+                  node sjrpg_3d/tools/check_entry_loading.mjs http://127.0.0.1:8780/ build/review/save-layout/loading
 
             - uses: actions/upload-artifact@v6
               if: always()

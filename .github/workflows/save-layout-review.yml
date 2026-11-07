@@ -48,18 +48,27 @@ jobs:
                   tools/setup_godot.sh
                   tools/check.sh --project=3d --only=entry_layout,entry_loading,save_layout,save_time_label,save_slots
             - name: Export native UI for visual diagnostics
+              id: native_export
               if: success() || failure()
               run: sjrpg_3d/tools/export_web.sh
             - name: Run actual save layout browser harness
-              if: success() || failure()
+              if: (success() || failure()) && steps.native_export.outcome == 'success'
               run: |
                   mkdir -p build/save-layout-review
                   python3 -m http.server 8779 --bind 127.0.0.1 --directory sjrpg_3d/build/web > build/save-layout-review/server.log 2>&1 &
                   SJRPG_REVIEW_SERVER_PID=$!
                   trap 'kill "$SJRPG_REVIEW_SERVER_PID" 2>/dev/null || true' EXIT
                   curl --fail --silent --show-error --max-time 2 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 12 http://127.0.0.1:8779/ > /dev/null
-                  node sjrpg_3d/tools/check_save_layout.mjs http://127.0.0.1:8779/ build/save-layout-review
-                  node sjrpg_3d/tools/check_entry_loading.mjs http://127.0.0.1:8779/ build/save-layout-review/loading
+                  SJRPG_SAVE_IDB_DIAGNOSTICS=1 node sjrpg_3d/tools/check_save_layout.mjs http://127.0.0.1:8779/ build/save-layout-review
+            - name: Run actual adventure loading browser harness
+              if: (success() || failure()) && steps.native_export.outcome == 'success'
+              run: |
+                  mkdir -p build/save-layout-review/loading
+                  python3 -m http.server 8780 --bind 127.0.0.1 --directory sjrpg_3d/build/web > build/save-layout-review/loading/server.log 2>&1 &
+                  SJRPG_LOADING_SERVER_PID=$!
+                  trap 'kill "$SJRPG_LOADING_SERVER_PID" 2>/dev/null || true' EXIT
+                  curl --fail --silent --show-error --max-time 2 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 12 http://127.0.0.1:8780/ > /dev/null
+                  node sjrpg_3d/tools/check_entry_loading.mjs http://127.0.0.1:8780/ build/save-layout-review/loading
             - uses: actions/upload-artifact@v6
               if: always()
               with:
