@@ -16,6 +16,9 @@ var damage := 0.0
 var game: Node
 var owner_node: Node2D
 var text := ""
+## JUICE #2: damage numbers scale with the hit tier. 22 is the original size every other text keeps.
+var font_size := 22
+var pop := false
 var points: PackedVector2Array = PackedVector2Array()
 var params := {}
 ## Native trajectory centre/floor, in metres. INF means the backend was not available.
@@ -41,8 +44,8 @@ func place_text(peers: Array, damage_target: Node2D = null) -> void:
 	var lines := text.split("\n")
 	var width := 0.0
 	for line in lines:
-		width = maxf(width, UiKit.BOLD_FONT.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x)
-	params["text_size"] = Vector2(width, UiKit.BOLD_FONT.get_height(22) * lines.size())
+		width = maxf(width, UiKit.BOLD_FONT.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x)
+	params["text_size"] = Vector2(width, UiKit.BOLD_FONT.get_height(font_size) * lines.size())
 	if is_instance_valid(damage_target):
 		_text_target = weakref(damage_target)
 		_text_target_id = damage_target.get_instance_id()
@@ -103,9 +106,9 @@ func _sync_text_position() -> void:
 
 ## Match the centered glyphs and their outline, rather than the 120px drawing box.
 func text_bounds() -> Rect2:
-	var measured: Vector2 = params.get("text_size", Vector2(120, UiKit.BOLD_FONT.get_height(22)))
+	var measured: Vector2 = params.get("text_size", Vector2(120, UiKit.BOLD_FONT.get_height(font_size)))
 	var size := measured + Vector2(12, 12)
-	return Rect2(position + Vector2(-size.x * 0.5, -UiKit.BOLD_FONT.get_ascent(22) - 6.0), size)
+	return Rect2(position + Vector2(-size.x * 0.5, -UiKit.BOLD_FONT.get_ascent(font_size) - 6.0), size)
 
 
 static var _impact_material: CanvasItemMaterial
@@ -706,10 +709,23 @@ func _draw() -> void:
 			var measured: Vector2 = params.get("text_size", Vector2(120, 22))
 			var text_width := maxf(120.0, measured.x)
 			var baseline := Vector2(-text_width * 0.5, 0)
+			# JUICE #2: a brief scale pop about the number anchor; skipped for reduced motion.
+			var pop_scale := text_pop_scale(age) if pop and not Prefs.reduce_motion else 1.0
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE * pop_scale)
 			for line in text.split("\n"):
-				draw_string_outline(UiKit.BOLD_FONT, baseline, line, HORIZONTAL_ALIGNMENT_CENTER, text_width, 22, 5, Color(0, 0, 0, a2))
-				draw_string(UiKit.BOLD_FONT, baseline, line, HORIZONTAL_ALIGNMENT_CENTER, text_width, 22, Color(color, a2))
-				baseline.y += UiKit.BOLD_FONT.get_height(22)
+				draw_string_outline(UiKit.BOLD_FONT, baseline, line, HORIZONTAL_ALIGNMENT_CENTER, text_width, font_size, 5, Color(0, 0, 0, a2))
+				draw_string(UiKit.BOLD_FONT, baseline, line, HORIZONTAL_ALIGNMENT_CENTER, text_width, font_size, Color(color, a2))
+				baseline.y += UiKit.BOLD_FONT.get_height(font_size)
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+## JUICE #2: 1.4x at contact easing to 1.0 over POP_SECONDS.
+const POP_SECONDS := 0.08
+const POP_START := 1.4
+
+
+static func text_pop_scale(elapsed: float) -> float:
+	return lerpf(POP_START, 1.0, clampf(elapsed / POP_SECONDS, 0.0, 1.0))
 
 
 func _draw_generated_glow(at: Vector2, diameter: float, cell: int, alpha: float, phase := 1.0 / 3.0) -> void:

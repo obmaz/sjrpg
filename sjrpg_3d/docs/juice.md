@@ -19,7 +19,7 @@
 | # | 항목 | 상태 | 코드 표시 위치 | 테스트 |
 | --- | --- | --- | --- | --- |
 | 1 | 피해 단계화 (`HitTier`) | 완료 | `scripts/hit_tier.gd`, `enemy.gd` `take_damage` | `juice_tier` |
-| 2 | 데미지 숫자 크기·색·팝 | 예정 | | |
+| 2 | 데미지 숫자 크기·색·팝 (22/26/32/36pt, 1.4배 팝 0.08초) | 완료 | `hit_tier.gd` `number_size/number_color`, `effects.gd` `font_size`·`pop`, `enemy.gd`, `game.gd` `float_text` | `juice_tier` |
 | 3 | 넉백 스케일 | 예정 | | |
 | 4 | 스쿼시·스트레치 | 예정 | | |
 | 5 | 처치 연출 | 예정 | | |

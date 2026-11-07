@@ -1574,9 +1574,11 @@ func spawn_ward(at: Vector2, duration: float, radius: float) -> void:
 	_add_effect(e)
 
 
-func float_text(at: Vector2, text: String, color: Color, damage_target: Node2D = null) -> void:
+func float_text(at: Vector2, text: String, color: Color, damage_target: Node2D = null, font_size := 22, pop := false) -> void:
 	var e := Effect.new()
 	e.kind = "text"
+	e.font_size = font_size
+	e.pop = pop
 	e.position = at
 	e.text = text
 	e.color = color

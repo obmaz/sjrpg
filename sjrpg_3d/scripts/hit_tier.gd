@@ -26,3 +26,12 @@ static func of(amount: float, max_health: float, killed: bool) -> int:
 ## Existing heavy-contact art, shake and hit-stop treat HEAVY and KILL alike.
 static func is_heavy(tier: int) -> bool:
 	return tier >= HEAVY
+
+
+## JUICE #2: damage number size (pt) and colour per tier. LIGHT keeps the original 22pt pale yellow.
+static func number_size(tier: int) -> int:
+	return [22, 26, 32, 36][clampi(tier, LIGHT, KILL)]
+
+
+static func number_color(tier: int) -> Color:
+	return [Color(1, 0.95, 0.6), Color(1, 0.82, 0.4), Color(1, 0.6, 0.25), Color(1, 0.42, 0.22)][clampi(tier, LIGHT, KILL)]
