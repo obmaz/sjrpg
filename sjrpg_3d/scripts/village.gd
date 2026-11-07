@@ -46,7 +46,10 @@ var safe_zone: PackedVector2Array
 var spawn_point := Vector2.ZERO
 var chest_points: Array[Vector2] = []
 ## 숲의 기억 상자: 서쪽 · 북쪽 · 동쪽 길 (ground units).
-const MEMORY_SPOTS := [Vector2(-1900.0, 130.0), Vector2(180.0, -1900.0), Vector2(1450.0, 260.0)]
+## East chest stays outside the gate-snapped wall: its old u1450 was inside the
+## 64-unit wall footprint. +30u is the smallest whole-unit shift preserving SKIN
+## around the enlarged native chest cylinder; reward/save index7 is unchanged.
+const MEMORY_SPOTS := [Vector2(-1900.0, 130.0), Vector2(180.0, -1900.0), Vector2(1480.0, 260.0)]
 var gate_points: Array[Vector2] = []
 ## Wall-end centre of each gate's two wings in ground units: gate -> [Vector2, Vector2].
 var gate_ends: Array = []

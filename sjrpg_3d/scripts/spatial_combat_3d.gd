@@ -94,7 +94,7 @@ static func target_fraction(game: Node, from: Vector2, to: Vector2, height: floa
 		return cylinder_fraction(point(from, height), point(to, height), point(chest.position, floor_at(game, chest.position)), SpatialWorld3D.radius_metres(Chest.COLLISION_RADIUS), NativeEncounterMesh3D.CHEST_COLLISION_HEIGHT, radius_pixels / HORIZONTAL_PIXELS)
 	var bodies: Dictionary = backend.actor_bodies
 	var foot: Vector3 = backend.actor_foot(target) if bodies.has(target.get_instance_id()) else point(target.position, floor_at(game, target.position))
-	var resolved_radius: float = target_radius if target_radius >= 0.0 else Enemy.RADIUS if target is Enemy else 20.0
+	var resolved_radius: float = target_radius if target_radius >= 0.0 else (target as Enemy).radius if target is Enemy else 20.0
 	var dimensions: Vector2 = backend.actor_dimensions(target, resolved_radius)
 	var bottom := foot + Vector3(0, dimensions.x, 0)
 	var top := foot + Vector3(0, dimensions.y - dimensions.x, 0)

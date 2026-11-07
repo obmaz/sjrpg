@@ -320,12 +320,12 @@ func _projectile_contacts(start: Vector2, finish: Vector2) -> Array[Dictionary]:
 	var contacts: Array[Dictionary] = []
 	var travel := finish - start
 	var distance_squared := travel.length_squared()
-	var contact_radius := 26.0 + Enemy.RADIUS
 	for enemy in game.enemies:
 		if not is_instance_valid(enemy) or enemy.dead or _hit.has(enemy):
 			continue
+		var contact_radius: float = 26.0 + enemy.radius
 		if SpatialCombat3D.world(game) != null:
-			if enemy.position.distance_to(Geometry2D.get_closest_point_to_segment(enemy.position, start, finish)) > (26.0 + Enemy.RADIUS) * 1.3:
+			if enemy.position.distance_to(Geometry2D.get_closest_point_to_segment(enemy.position, start, finish)) > contact_radius * 1.3:
 				continue
 			var native_fraction := SpatialCombat3D.target_fraction(game, start, finish, spatial_height, enemy)
 			if native_fraction <= 1.0:
@@ -446,7 +446,7 @@ func _area_targets(center: Vector2, reach: float) -> Array:
 		return game.enemies_in_radius(center, reach)
 	var out: Array[Enemy] = []
 	for enemy: Enemy in game.enemies:
-		if not enemy.dead and center.distance_to(enemy.position) <= reach + Enemy.RADIUS and SpatialCombat3D.area_reaches(game, center, enemy.position, reach + Enemy.RADIUS, spatial_floor_height):
+		if not enemy.dead and center.distance_to(enemy.position) <= reach + enemy.radius and SpatialCombat3D.area_reaches(game, center, enemy.position, reach + enemy.radius, spatial_floor_height):
 			out.append(enemy)
 	return out
 

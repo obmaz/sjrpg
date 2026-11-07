@@ -64,7 +64,7 @@ func run() -> void:
 		var model: Dictionary = preview._enemy_models.entries[enemy.get_instance_id()]
 		var root: Node3D = model["root"]
 		var metres: float = Enemy.NATIVE_HEIGHT_METRES[kind]
-		var dimensions: Vector2 = SpatialWorld3D.actor_dimensions(enemy, Enemy.RADIUS)
+		var dimensions: Vector2 = SpatialWorld3D.actor_dimensions(enemy, enemy.radius)
 		var body: CharacterBody3D = backend.actor_bodies[enemy.get_instance_id()]
 		var shape := (body.get_child(0) as CollisionShape3D).shape as CapsuleShape3D
 		var bounds: AABB = _bounds(root)
@@ -76,9 +76,10 @@ func run() -> void:
 			and absf(bounds.end.y - metres) < 0.001
 			and absf(bounds.position.y) < 0.001)
 		check("movement and attack use the same footprint " + kind,
-			is_equal_approx(shape.radius, SpatialWorld3D.radius_metres(Enemy.RADIUS))
-			and is_equal_approx(float(body.get_meta("radius_pixels")), Enemy.RADIUS)
-			and not backend.blocked(spawn, Enemy.RADIUS, true))
+			is_equal_approx(shape.radius, SpatialWorld3D.radius_metres(enemy.radius))
+			and is_equal_approx(float(body.get_meta("radius_pixels")), enemy.radius)
+			and not backend.blocked(spawn, enemy.radius, true)
+			and stance_radius + SpatialWorld3D.SKIN <= shape.radius)
 		check("custom target radii remain explicit " + kind,
 			is_equal_approx(SpatialWorld3D.actor_dimensions(enemy, 7.0).x, SpatialWorld3D.radius_metres(7.0)))
 		var foot: Vector3 = preview.actor_foot(enemy)
@@ -86,7 +87,7 @@ func run() -> void:
 		var to: Vector2 = enemy.position + Vector2(100, 10)
 		var chest_y: float = foot.y + metres * 0.5
 		var default_contact: float = SpatialCombat3D.target_fraction(game, from, to, chest_y, enemy, 0.0)
-		var actual_contact: float = SpatialCombat3D.target_fraction(game, from, to, chest_y, enemy, 0.0, Enemy.RADIUS)
+		var actual_contact: float = SpatialCombat3D.target_fraction(game, from, to, chest_y, enemy, 0.0, enemy.radius)
 		var small_contact: float = SpatialCombat3D.target_fraction(game, from, to, chest_y, enemy, 0.0, 7.0)
 		check("default projectile target follows enlarged capsule but explicit radius is preserved " + kind,
 			is_finite(default_contact) and is_equal_approx(default_contact, actual_contact) and is_inf(small_contact))
@@ -96,7 +97,7 @@ func run() -> void:
 		check("walking keeps native feet and canonical collider size " + kind,
 			root.position.is_equal_approx(preview.actor_foot(enemy) + Ortho3DPreview.ground_position(enemy.sprite.position))
 			and is_equal_approx(shape.height, metres)
-			and not backend.blocked(enemy.position, Enemy.RADIUS, true))
+			and not backend.blocked(enemy.position, enemy.radius, true))
 		enemy.take_damage(1.0, null)
 		preview._enemy_models.sync()
 		var ratio: float = metres / float(model["base_height"])

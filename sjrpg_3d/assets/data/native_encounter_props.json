@@ -173,7 +173,7 @@
     0.49230769230769234
   ],
   "stone_height_m": 1.58,
-  "chest_proportion_change": "Native chest geometry is baked uniformly 25% larger: closed 0.570 x 0.529 x 0.375m, continuous lid sweep radius 0.375514m. Its source collision circle grows with it from24px to30px (0.3884996m native radius from Iso.S=0.97; previous24px radius0.3107997m; lid sweep radial clearance0.0129857m); native blocker height is0.530m instead of the legacy2.2m resident cylinder. Source centres, reward IDs, consumed collision lifetime and save progression remain unchanged. Materials keep metre UV density; no runtime node scaling.",
+  "chest_proportion_change": "Native chest geometry is baked uniformly 25% larger: closed 0.570 x 0.529 x 0.375m, continuous lid sweep radius 0.375514m. Its source collision circle grows with it from24px to30px (0.3884996m native radius from Iso.S=0.97; previous24px radius0.3107997m; lid sweep radial clearance0.0129857m); native blocker height is0.530m instead of the legacy2.2m resident cylinder. Reward IDs, consumed collision lifetime and save progression remain unchanged. The east memory chest index7 moves from ground(1450,260) to(1480,260) to clear the actual gate-snapped east wall; other centres remain unchanged. Materials keep metre UV density; no runtime node scaling.",
   "ownership": {
     "stone": "Only the art instance IDs of the exact six EncounterStone owners; excludes only those old environment cards.",
     "chest": "Only current Chest.body_sprite IDs; breaking replaces this sprite identity. Affordances remove the previous fallback and retain fallback when no model is owned.",
@@ -217,5 +217,33 @@
       "interpretation": "Actual coordinated captures were inspected separately; recording evidence is not automatic style approval."
     },
     "required_gpu": "Before acceptance compare unchanged camera/lights at actual native zoom0.75 (new UI label1), portrait/landscape, all nine placements and closed/open/full-face states. Previous captures predate enlargement and do not validate this candidate."
+  },
+  "placement_correction": {
+    "source": "scripts/village.gd MEMORY_SPOTS[2]",
+    "chest_index": 7,
+    "old_ground": [
+      1450,
+      260
+    ],
+    "new_ground": [
+      1480,
+      260
+    ],
+    "wall_line_ground": [
+      [
+        1422.1559590810868,
+        199.281936446339
+      ],
+      [
+        1408,
+        1200
+      ]
+    ],
+    "wall_half_thickness_ground": 32,
+    "old_signed_exterior_clearance_ground": -3.299924758787011,
+    "minimum_delta_u_with_skin_ground": 29.530350281622766,
+    "chosen_delta_u_ground": 30,
+    "reason": "Existing gate-snapped wall overlaps old chest centre; move authoritative source/body/model/reward anchor together along same exterior route. No wall/collision/test relaxation.",
+    "validation": "Requires runtime obstacle metadata confirmation and unchanged all-placement physics checks plus exterior corridor walking both ways."
   }
 }

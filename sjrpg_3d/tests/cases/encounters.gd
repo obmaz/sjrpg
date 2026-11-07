@@ -61,11 +61,11 @@ func _check_positions(game: Node, id: String) -> void:
 	for i in members.size():
 		var enemy: Enemy = members[i]
 		valid = valid and not game.in_town(enemy.position) and game._inside_field(enemy.position, 80.0)
-		valid = valid and not game._blocked(enemy.position, Enemy.RADIUS + 10.0)
+		valid = valid and not game.spatial_world.blocked(enemy.position, enemy.radius + 10.0, true)
 		valid = valid and enemy.position.distance_to(game.player.position) > 135.0
 		valid = valid and enemy.encounter_id == id and enemy.spawn_level in [1, 3, 5, 7]
 		for j in range(i):
-			separated = separated and enemy.position.distance_to(members[j].position) >= 58.0
+			separated = separated and enemy.position.distance_to(members[j].position) >= enemy.radius + members[j].radius + 8.0
 	check("pack uses free forest positions and the area's fixed levels: " + id, valid)
 	check("pack members do not overlap one another: " + id, separated)
 
@@ -202,6 +202,9 @@ func _check_live_restore() -> void:
 		return
 	await _frames(2)
 	var survivor: Enemy = runtime._members["west"][0]
+	for candidate: Enemy in runtime._members["west"]:
+		if candidate.radius > survivor.radius:
+			survivor = candidate
 	survivor.hp = survivor.max_hp * 0.55
 	for enemy: Enemy in runtime._members["west"].duplicate():
 		if enemy != survivor:
@@ -229,7 +232,9 @@ func _check_live_restore() -> void:
 	if runtime.living("west") == 1:
 		var restored: Enemy = runtime._members["west"][0]
 		check("the live survivor keeps its species, level and exact health", restored.kind == expected["kind"] and restored.spawn_level == int(expected["level"]) and is_equal_approx(restored.hp, float(expected["hp"])))
-		check("survivor restore uses an unblocked forest position", not game.in_town(restored.position) and not game._blocked(restored.position, Enemy.RADIUS + 10.0))
+		var restored_body: CharacterBody3D = game.spatial_world.actor_bodies[restored.get_instance_id()]
+		check("restored species uses its current canonical footprint", restored.radius == Enemy.radius_for(str(expected["kind"])) and is_equal_approx(float(restored_body.get_meta("radius_pixels")), restored.radius))
+		check("survivor restore uses an unblocked forest position", not game.in_town(restored.position) and not game.spatial_world.blocked(restored.position, restored.radius + 10.0, true))
 	await _retire(game)
 	GameState.encounter_capture = Callable()
 	GameState.delete_save()

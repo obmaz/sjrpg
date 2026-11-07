@@ -73,7 +73,7 @@ func register_actor(source: Node2D, radius := -1.0, monster := false) -> Charact
 	if actor_bodies.has(id):
 		return actor_bodies[id] as CharacterBody3D
 	if radius < 0.0:
-		radius = Enemy.RADIUS if source is Enemy else Player.RADIUS
+		radius = (source as Enemy).radius if source is Enemy else Player.RADIUS
 	monster = monster or source is Enemy
 	var dimensions := actor_dimensions(source, radius)
 	var body := _new_body("Actor_%d" % id, dimensions, monster)
@@ -334,7 +334,7 @@ func _physics_process(_delta: float) -> void:
 		register_actor(game.player, Player.RADIUS)
 	for source: Enemy in game.enemies:
 		if is_instance_valid(source) and not source.dead:
-			register_actor(source, Enemy.RADIUS, true)
+			register_actor(source, (source as Enemy).radius, true)
 	for id in actor_bodies.keys():
 		var source: Node2D = _sources[id].get_ref()
 		var body: CharacterBody3D = actor_bodies[id]

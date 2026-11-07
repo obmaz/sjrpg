@@ -14,7 +14,14 @@ const KINDS := {
 ## Native body heights in metres, independent of the legacy atlas catalogue.
 ## Source body_height drives meshes, corpse size, health labels and attack origin height.
 const NATIVE_HEIGHT_METRES := {"goblin": 1.30, "wolf": 1.13, "boar": 1.22, "skeleton": 1.70, "golem": 2.85}
-const RADIUS := 25.0  # Shared movement/spawn/area/target footprint, up from 20px.
+const RADIUS := 25.0  # Generic fallback only when the species is not known.
+const NATIVE_RADIUS_PIXELS := {"goblin": 25.0, "wolf": 36.0, "boar": 38.0, "skeleton": 25.0, "golem": 44.0}
+var radius: float:
+	get:
+		return radius_for(kind)
+
+static func radius_for(species: String) -> float:
+	return float(NATIVE_RADIUS_PIXELS.get(species, RADIUS))
 
 var game: Node
 var kind := "goblin"
@@ -99,7 +106,7 @@ func force_chase() -> void:
 
 
 func _ready() -> void:
-	SpatialCombat3D.register_actor(game, self, RADIUS, true)
+	SpatialCombat3D.register_actor(game, self, radius, true)
 
 
 func make_boss() -> void:
@@ -275,7 +282,7 @@ func _process(delta: float) -> void:
 	if delta <= 0.0:
 		return
 	if _knockback.length() > 1.0:
-		position = SpatialCombat3D.move_actor(game, self, position + _knockback * delta, RADIUS, true)
+		position = SpatialCombat3D.move_actor(game, self, position + _knockback * delta, radius, true)
 		_knockback = _knockback.move_toward(Vector2.ZERO, 900.0 * delta)
 	if _freeze_time > 0.0 or _stun_time > 0.0:
 		return
@@ -367,7 +374,7 @@ func _step(direction: Vector2, delta: float) -> void:
 	facing = dir.angle()
 	var target := position + dir * GameTempo.speed(speed) * delta
 	var from := position
-	var moved: Vector2 = SpatialCombat3D.move_actor(game, self, target, RADIUS, true)
+	var moved: Vector2 = SpatialCombat3D.move_actor(game, self, target, radius, true)
 	_walk_cycle += moved.distance_to(from) / 70.0
 	position = moved
 	sprite.set_frame(atlas, atlas.walk_frame(facing, _walk_cycle))

@@ -169,7 +169,7 @@ func _spawn_wave(s: Dictionary) -> void:
 		e.is_threat = true
 		var ang: float = TAU * (float(i) / count) + float(game.rng_float()) * 0.6
 		var spawn_at: Vector2 = center + Vector2.from_angle(ang) * float(game.rng_range(340.0, 460.0))
-		e.position = game.resolve_movement(center, spawn_at, Enemy.RADIUS)
+		e.position = game.spatial_world.resolve_movement(center, spawn_at, e.radius, true)
 		e.force_chase()
 		game.world.add_child(e)
 		game.enemies.append(e)
@@ -240,6 +240,8 @@ func boss_ready() -> bool:
 
 func start_boss() -> bool:
 	if not boss_ready() or game.player.dead or game.player.position.distance_to(game.village.boss_point) > 260.0:
+		return false
+	if game.spatial_world.blocked(game.village.boss_point, Enemy.radius_for("golem"), true):
 		return false
 	_boss = Enemy.new()
 	_boss.setup(game, "golem", 8)

@@ -44,11 +44,21 @@ same body_height/(65*Iso.S)/base_height scalar. The source JUICE contact squash
 temporarily modifies live visual scale but does not enlarge the collider or corpse.
 The player warrior has its own NativeWarrior3D model family and is not changed.
 
-The shared enemy movement/spawn footprint grows from 20px to 25px
-(0.324m at the current horizontal projection). This is a central capsule proxy,
-not a promise that long tails, weapons or every extremity fit inside a circle.
-Ordinary projectile targets resolve an omitted radius from Enemy.RADIUS. Explicit
-custom radii, including stone/chest queries, are preserved. AI attack reach,
+The species footprint is Enemy.radius, a read-only getter of radius_for(kind):
+goblin/skeleton 25px, wolf 36px, boar 38px and golem 44px. At the shared horizontal
+projection these are about .324/.466/.492/.570m. Actual low-stance radii measured
+from the normalized mesh vertices were .215/.265/.430/.458/.516m respectively;
+the selected capsules cover the measured stance plus the .015m native skin.
+Enemy.RADIUS remains 25px only as a generic fallback before a species is known.
+Long tails, snouts, weapons and shoulder overhang are not treated as solid feet.
+
+Movement, knockback, native body registration/rebuild, teleports, area broad
+phase, ordinary projectile targets, wave placement and survivor restore all use
+the same instance/kind radius. Explicit custom projectile radii remain respected.
+Ambient spawn chooses the kind before its native overlap query. Encounter waves
+revalidate a generic candidate after choosing the kind, and pack spacing/separation
+use the two actors' actual radii. Monster-boundary collision is never relaxed to
+fit a larger model. AI attack reach,
 damage, health, speed, experience and save formats are unchanged.
 
 Corpse visuals reuse the corresponding model rotated prone. The full transformed
@@ -72,3 +82,10 @@ sprite height, physics capsule and visual top/foot; checks walking and hit/death
 presentation retain native feet/base scale; tests default versus explicit
 projectile radii; and verifies the real death corpse uses the same scale and floor.
 PASS NATIVE_SIZE_METRES logs actual mesh bounds and capsule dimensions for CI review.
+
+native_enemy_radius additionally checks real open-gate exclusion for all species,
+bridge clearance under existing native rules, the actual boss-clearing spawn,
+all real cave spawns and a large boar traversing the native narrow cave branch.
+The existing encounters persistence test now preserves the largest pack member
+and verifies its restored native body metadata, legal position and pair spacing
+against the species radii.

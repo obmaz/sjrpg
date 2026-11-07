@@ -38,7 +38,7 @@ func setup(world_game: Node) -> EncounterRuntime:
 		game.village.solids.append(stone.body())
 		for record in state["members"]:
 			var desired := Vector2(record["position"][0], record["position"][1])
-			var point := _spawn_position(desired, at, 0)
+			var point := _spawn_position(desired, at, 0, Enemy.radius_for(str(record["kind"])))
 			if point != Vector2.INF:
 				var enemy := _create_enemy(id, str(record["kind"]), int(record["level"]), point)
 				enemy.hp = minf(enemy.max_hp, float(record["hp"]))
@@ -146,7 +146,12 @@ func spawn_wave(id: String, initial: bool) -> int:
 			continue
 		var zone := clampi(int((point.length() - 1300.0) / 900.0), 0, 3)
 		var kinds := ["goblin", "wolf", "goblin", "boar"] if zone < 2 else ["wolf", "boar", "skeleton", "goblin"]
-		_create_enemy(id, kinds[added % kinds.size()], ForestBalance.area_level(zone), point)
+		var kind: String = kinds[added % kinds.size()]
+		# The first search has no chosen species; validate again with its real footprint.
+		point = _spawn_position(point, stones[id].position, index + 1, Enemy.radius_for(kind))
+		if point == Vector2.INF:
+			continue
+		_create_enemy(id, kind, ForestBalance.area_level(zone), point)
 		added += 1
 	if added > 0:
 		var state: Dictionary = states[id]
@@ -159,17 +164,17 @@ func spawn_wave(id: String, initial: bool) -> int:
 	return added
 
 
-func _spawn_position(desired: Vector2, fallback: Vector2, attempt: int) -> Vector2:
+func _spawn_position(desired: Vector2, fallback: Vector2, attempt: int, radius_pixels := Enemy.RADIUS) -> Vector2:
 	var candidates: Array[Vector2] = [desired]
 	if attempt == 0:
 		for index in 24:
 			candidates.append(fallback + Vector2.from_angle(index * 2.399963) * (180.0 + index * 7.0))
 	for at in candidates:
-		if not game._inside_field(at, 80.0) or game.in_town(at) or game._blocked(at, Enemy.RADIUS + 10.0):
+		if not game._inside_field(at, 80.0) or game.in_town(at) or game.spatial_world.blocked(at, radius_pixels + 10.0, true):
 			continue
 		var occupied := false
 		for enemy in game.enemies:
-			if is_instance_valid(enemy) and not enemy.dead and enemy.position.distance_to(at) < 58.0:
+			if is_instance_valid(enemy) and not enemy.dead and enemy.position.distance_to(at) < radius_pixels + enemy.radius + 8.0:
 				occupied = true
 				break
 		if not occupied and at.distance_to(game.player.position) > 135.0:

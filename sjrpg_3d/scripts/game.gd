@@ -411,7 +411,7 @@ func _enable_ortho_preview() -> void:
 	spatial_world.register_actor(player, Player.RADIUS, false)
 	for enemy in enemies:
 		if is_instance_valid(enemy) and not enemy.dead:
-			spatial_world.register_actor(enemy, Enemy.RADIUS, true)
+			spatial_world.register_actor(enemy, enemy.radius, true)
 
 
 ## Native3D never restores source canvas rendering, including cave return.
@@ -794,7 +794,7 @@ func _corpse_preview(surface := "1") -> void:
 		player.position = village.chapel_steps[village.chapel_steps.size() - 2]
 		var body: Vector2 = village.chapel_steps[village.chapel_steps.size() - 1]
 		var further := body + Vector2(-60, -35)
-		if Geometry2D.is_point_in_polygon(further, village.terrace) and not _blocked(further, Enemy.RADIUS):
+		if Geometry2D.is_point_in_polygon(further, village.terrace) and not _blocked(further, Enemy.radius_for("goblin")):
 			body = further
 		positions = [body]
 		kinds = ["goblin"]
@@ -1031,8 +1031,6 @@ func _spawn_enemy(anywhere := false) -> void:
 			continue
 		if Geometry2D.is_point_in_polygon(p, _town_buffer()):
 			continue
-		if _blocked(p, Enemy.RADIUS + 10.0):
-			continue
 		var zone := clampi(int((p.length() - 1300.0) / 900.0), 0, 3)
 		var pool := ["goblin", "goblin", "wolf"]
 		if zone >= 1:
@@ -1041,8 +1039,11 @@ func _spawn_enemy(anywhere := false) -> void:
 			pool.append_array(["boar", "skeleton"])
 		if zone >= 3:
 			pool.append_array(["skeleton", "skeleton"])
+		var kind: String = pool[_rng.randi_range(0, pool.size() - 1)]
+		if spatial_world.blocked(p, Enemy.radius_for(kind) + 10.0, true):
+			continue
 		var enemy := Enemy.new()
-		enemy.setup(self, pool[_rng.randi_range(0, pool.size() - 1)], ForestBalance.area_level(zone))
+		enemy.setup(self, kind, ForestBalance.area_level(zone))
 		if Iso.unproject(p).length() < ForestBalance.NEAR_TOWN_RADIUS:
 			enemy.max_hp *= ForestBalance.NEAR_TOWN_HP
 			enemy.hp = enemy.max_hp
@@ -1092,8 +1093,9 @@ func separation(enemy: Enemy) -> Vector2:
 			continue
 		var d := enemy.position - other.position
 		var l := d.length()
-		if l < 48.0 and l > 0.01:
-			push += d / l * (1.0 - l / 48.0)
+		var spacing: float = enemy.radius + other.radius + 4.0
+		if l < spacing and l > 0.01:
+			push += d / l * (1.0 - l / spacing)
 	return push
 
 
@@ -1142,9 +1144,9 @@ func can_melee_reach(from: Vector2, to: Vector2) -> bool:
 func enemies_in_radius(center: Vector2, radius: float, melee := false) -> Array[Enemy]:
 	var out: Array[Enemy] = []
 	for e in enemies:
-		if not is_instance_valid(e) or e.dead or center.distance_to(e.position) > radius + Enemy.RADIUS:
+		if not is_instance_valid(e) or e.dead or center.distance_to(e.position) > radius + e.radius:
 			continue
-		var reachable := can_melee_reach(center, e.position) if melee else SpatialCombat3D.area_reaches(self, center, e.position, radius + Enemy.RADIUS)
+		var reachable := can_melee_reach(center, e.position) if melee else SpatialCombat3D.area_reaches(self, center, e.position, radius + e.radius)
 		if reachable:
 			out.append(e)
 	return out
@@ -1235,14 +1237,17 @@ func on_chest_broken(chest: Chest) -> void:
 func _spawn_enemy_near(at: Vector2) -> void:
 	var enemy := Enemy.new()
 	enemy.setup(self, "goblin", maxi(1, GameState.level))
-	enemy.position = resolve_movement(at, at + Vector2.from_angle(_rng.randf() * TAU) * 70.0, Enemy.RADIUS)
+	enemy.position = spatial_world.resolve_movement(at, at + Vector2.from_angle(_rng.randf() * TAU) * 70.0, enemy.radius, true)
+	if spatial_world.blocked(enemy.position, enemy.radius, true):
+		enemy.free()
+		return
 	world.add_child(enemy)
 	enemies.append(enemy)
 
 
 func enemy_hit_by_point(p: Vector2, r: float) -> Enemy:
 	for e in enemies:
-		if not e.dead and p.distance_to(e.position) <= r + Enemy.RADIUS:
+		if not e.dead and p.distance_to(e.position) <= r + e.radius:
 			return e
 	return null
 

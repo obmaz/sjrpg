@@ -270,7 +270,7 @@ func _tick_timers(delta: float) -> void:
 		if _storm_timer <= 0.0:
 			_storm_timer = 1.6
 			var target: Enemy = game.nearest_enemy(position, 320.0)
-			if target and SpatialCombat3D.area_reaches(game, position, target.position, 320.0 + Enemy.RADIUS):
+			if target and SpatialCombat3D.area_reaches(game, position, target.position, 320.0 + target.radius):
 				var d := SkillDefs.get_def("thunderStorm")
 				target.take_damage(damage_for("thunderStorm", SkillDefs.scaled(d["mult"], d["growth"], int(buffs["storm"]["rank"]))), self)
 				game.spawn_bolt_strike(target.position)
