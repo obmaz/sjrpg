@@ -118,7 +118,9 @@ func run() -> void:
 	check("a pending cave skill cannot award loot after leaving", GameState.xp == xp)
 	await _frames(2)
 	var native_corpses: Dictionary = game.ortho_preview._world_environment._corpses
-	var restored_card: MeshInstance3D = native_corpses.get(forest_visual.get_instance_id())
+	# Native corpse entries are dictionaries ({"root": Node3D, ...}), not bare meshes.
+	var restored_entry: Dictionary = native_corpses.get(forest_visual.get_instance_id(), {})
+	var restored_card: Node3D = restored_entry.get("root")
 	check("cave body visual is freed while the native forest corpse is restored", not is_instance_valid(cave_visual) and restored_card != null and restored_card.is_visible_in_tree() and game.field_root.visibility_layer == 0)
 	game._tick_corpses(game.CORPSE_LIFETIME)
 	check("restored forest corpse expires on the same schedule", game.corpses.is_empty() and forest_body["used"])
