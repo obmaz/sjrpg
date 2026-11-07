@@ -27,9 +27,14 @@ func _buttons_fit(select: Control, dimensions: Vector2i) -> void:
 		check("class tabs and main action remain separate", not select.start_button.get_global_rect().intersects(select.class_buttons["warrior"].get_global_rect()) and not select.class_buttons["warrior"].get_global_rect().intersects(select.class_buttons["mage"].get_global_rect()))
 		check("role, description and real stats retain their own space", select.role.get_global_rect().end.y <= select.description.get_global_rect().position.y and select.description.get_global_rect().end.y < select.health.get_global_rect().position.y and select.details.get_global_rect().encloses(select.resource.get_global_rect()))
 		if dimensions.y > dimensions.x:
-			check("portrait stacks illustration above role and class controls", select.showcase.get_global_rect().end.y <= select.details.get_global_rect().position.y and select.details.get_global_rect().end.y <= select.class_buttons["mage"].get_global_rect().position.y)
+			check("portrait class tabs precede the dominant illustration and readable information card",
+				select.class_buttons["mage"].get_global_rect().end.y <= select.showcase.get_global_rect().position.y
+				and select.showcase.get_global_rect().end.y <= select.details.get_global_rect().position.y
+				and select.showcase.size.y >= dimensions.y * 0.20
+				and select.details.get_global_rect().end.y < select.start_button.get_global_rect().position.y)
 		else:
 			check("landscape keeps illustration alongside the complete controls", select.showcase.get_global_rect().end.x < select.details.get_global_rect().position.x)
+		check("class information and tabs keep separate bounds", not select.details.get_global_rect().intersects(select.class_buttons["mage"].get_global_rect()) and not select.start_button.get_global_rect().intersects(select.slot_switch.get_global_rect()))
 	else:
 		var clipping: Rect2 = select.slot_scroll.get_global_rect()
 		check("save scroll and fixed footer remain separate and safe", bounds.encloses(clipping) and bounds.encloses(select.slot_footer.get_global_rect()) and not clipping.intersects(select.slot_footer.get_global_rect()))

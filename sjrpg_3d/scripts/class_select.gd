@@ -47,12 +47,21 @@ var _slot_css := 1.0
 var _slot_safe := Rect2()
 var _delete_target := 0
 var _slot_relayout_pending := false
+var brand_label: Label
+var class_surface: Panel
+var info_surface: Panel
+var stat_boxes: Array[Panel] = []
+var slot_portraits: Array[TextureRect] = []
+var slot_portrait_frames: Array[Panel] = []
+var _hero_backdrop: TextureRect
+var _class_safe := Rect2()
+var _class_compact := false
 
 func _ready() -> void:
 	add_to_group("gamepad_entry")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	EntryUi.backdrop(self)
-	EntryUi.shade(self, 0.97)
+	SelectionUi.backdrop(self)
+	EntryUi.shade(self, 0.82)
 	back_button = _button("‹  돌아가기", _request_back)
 	heading = _label("모험 선택", 36, EntryUi.TEXT, true)
 	subtitle = _label("네 개의 여정, 당신만의 수호자", 23, EntryUi.MUTED)
@@ -157,6 +166,7 @@ func _ready() -> void:
 					selected_slot = int(summary["slot"])
 					break
 	resized.connect(_layout)
+	_setup_presentation()
 	_update()
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.__sjrpgClassSelectReady = true")
@@ -167,7 +177,7 @@ func _button(text: String, action: Callable, primary := false) -> Button:
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.pressed.connect(action)
 	button.focus_entered.connect(func(): _publish_buttons.call_deferred())
-	EntryUi.style(button, primary)
+	SelectionUi.style(button, primary)
 	add_child(button)
 	return button
 
@@ -212,22 +222,22 @@ func _update() -> void:
 	if bool(summary["valid"]):
 		selected_class = str(summary["class"])
 	showcase.visible = choosing or bool(summary["valid"])
-	heading.text = "수호자 선택" if choosing else "모험 선택"
+	heading.text = "수호자 선택" if choosing else "모험 이어가기"
 	subtitle.text = "당신의 전투 방식을 선택하세요" if choosing else "이어 갈 모험을 선택하세요"
-	slot_switch.text = "저장 %d · 새 수호자     변경" % selected_slot
+	slot_switch.text = "저장 %d · 다른 슬롯 선택" % selected_slot
 	var info: Dictionary = GameState.CLASSES.get(selected_class, GameState.CLASSES["mage"])
-	hero_art.texture = EntryUi.image(EntryUi.HEROES[selected_class])
+	hero_art.texture = SelectionUi.hero_image(selected_class)
 	hero_name.text = str(info["name"])
 	role.text = ROLES[selected_class]
 	description.text = DESCRIPTIONS[selected_class]
 	health.text = "체력  " + HudArt.stat(info["hp"])
 	resource.text = str(info["resource"]) + "  " + HudArt.res(info["resource_max"])
-	start_button.text = "%s로 시작" % info["name"]
+	start_button.text = "%s로 모험 시작" % info["name"]
 	start_button.disabled = bool(summary["occupied"])
 	continue_button.disabled = bool(summary["occupied"]) and not bool(summary["valid"])
 	continue_button.text = "이 모험 이어 하기" if bool(summary["valid"]) else ("저장을 읽을 수 없습니다" if bool(summary["occupied"]) else "새 수호자 선택")
 	for key: String in class_buttons:
-		EntryUi.style(class_buttons[key], false, key == selected_class)
+		SelectionUi.style(class_buttons[key], false, key == selected_class)
 	for index in 4:
 		var entry: Dictionary = _summaries[index]
 		var title := "새로운 모험"
@@ -249,9 +259,11 @@ func _update() -> void:
 		slot_meta_labels[index].text = meta
 		slot_status_labels[index].text = status
 		slot_buttons[index].text = "%02d    %s\n        %s" % [index + 1, title, meta]
-		EntryUi.style(slot_buttons[index], false, selected_slot == index + 1)
+		SelectionUi.style(slot_buttons[index], false, selected_slot == index + 1)
 		_quiet_row_text(slot_buttons[index])
-		EntryUi.style(delete_buttons[index])
+		SelectionUi.style(delete_buttons[index])
+		slot_portraits[index].visible = bool(entry["valid"])
+		slot_portraits[index].texture = SelectionUi.portrait(SelectionUi.hero_image(str(entry["class"]))) if bool(entry["valid"]) else null
 	_refresh_disabled()
 
 	_layout()
@@ -302,71 +314,155 @@ func _close_delete(use_row := false) -> void:
 	_restore_delete_focus.call_deferred(_delete_target, use_row)
 	_publish_buttons.call_deferred()
 
+func _setup_presentation() -> void:
+	brand_label = _label("자연의 수호자", 22, SelectionUi.BRONZE, true)
+	brand_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	class_surface = Panel.new()
+	class_surface.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	class_surface.add_theme_stylebox_override("panel", SelectionUi.skin(Color(0.04, 0.075, 0.066, 0.60), SelectionUi.BRONZE, 10))
+	add_child(class_surface)
+	move_child(class_surface, 2)
+	_hero_backdrop = SelectionUi.backdrop(showcase)
+	showcase.move_child(_hero_backdrop, 0)
+	showcase.clip_contents = true
+	info_surface = Panel.new()
+	info_surface.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	info_surface.add_theme_stylebox_override("panel", SelectionUi.skin(Color(0.035, 0.065, 0.058, 0.95), Color("6c745c"), 8))
+	details.add_child(info_surface)
+	details.move_child(info_surface, 0)
+	for index in 2:
+		var chip := Panel.new()
+		chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		chip.add_theme_stylebox_override("panel", SelectionUi.skin(Color(0.04, 0.06, 0.05, 0.9), Color("706b4e"), 6))
+		details.add_child(chip)
+		details.move_child(chip, 1)
+		stat_boxes.append(chip)
+	for index in 4:
+		var frame := Panel.new()
+		frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		frame.add_theme_stylebox_override("panel", SelectionUi.skin(Color("1b2923"), Color("847755"), 6))
+		slot_buttons[index].add_child(frame)
+		slot_buttons[index].move_child(frame, 0)
+		slot_portrait_frames.append(frame)
+		var art := TextureRect.new()
+		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		art.offset_left = 3
+		art.offset_top = 3
+		art.offset_right = -3
+		art.offset_bottom = -3
+		frame.clip_contents = true
+		frame.add_child(art)
+		slot_portraits.append(art)
+		slot_number_labels[index].z_index = 1
+		slot_number_labels[index].add_theme_constant_override("outline_size", 3)
+	slot_surface.add_theme_stylebox_override("panel", SelectionUi.skin(Color(0.035, 0.065, 0.058, 0.78), Color("766b50"), 10))
+	slot_footer.add_theme_stylebox_override("panel", SelectionUi.skin(Color(0.035, 0.06, 0.052, 0.93), Color(0.4, 0.43, 0.34, 0.6), 7))
+
+
+func _measure(label: Label, width: float, minimum := 0.0) -> float:
+	var font := label.get_theme_font("font")
+	var flags := TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND | TextServer.BREAK_ADAPTIVE
+	return maxf(minimum, font.get_multiline_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT,
+		maxf(width, 1.0), label.get_theme_font_size("font_size"), -1, flags).y + 2.0)
+
+
 func _layout_class() -> void:
-	if start_button == null:
-		return
 	var margins := PanelFrame.safe_margins(get_viewport())
 	var area := Rect2(Vector2(margins.x, margins.y), size - Vector2(margins.x + margins.z, margins.y + margins.w))
+	_class_safe = area
 	var portrait := area.size.y > area.size.x
 	_unit = minf(area.size.x / 720.0, area.size.y / 1280.0) if portrait else minf(area.size.x / 1280.0, area.size.y / 720.0)
+	_slot_css = _css_scale()
 	var u := _unit
-	for button in [start_button, continue_button, back_button, slot_switch]:
-		button.add_theme_font_size_override("font_size", maxi(14, roundi((27.0 if button in [start_button, continue_button] else 22.0) * u)))
-	for button in slot_buttons + delete_buttons + class_buttons.values():
-		button.add_theme_font_size_override("font_size", maxi(14, roundi(24.0 * u)))
-	heading.add_theme_font_size_override("font_size", maxi(18, roundi(36.0 * u)))
-	subtitle.add_theme_font_size_override("font_size", maxi(14, roundi(23.0 * u)))
-	var inset := 28.0 * u
-	var left := area.position.x + inset
-	var width := area.size.x - inset * 2.0
-	var choosing := _stage == "class"
-	EntryUi.place(back_button, Rect2(Vector2(left, area.position.y + 16.0 * u), Vector2(164, 100) * u))
-	EntryUi.place(heading, Rect2(Vector2(left + 188.0 * u, area.position.y + 25.0 * u), Vector2(width - 188.0 * u, 50.0 * u)))
-	EntryUi.place(subtitle, Rect2(Vector2(left, area.position.y + (132.0 if portrait else 120.0) * u), Vector2(width if portrait else area.size.x * 0.49 - inset, (44.0 if portrait else 32.0) * u)))
-	var action_y := area.end.y - 136.0 * u
-	var right := left if portrait else area.position.x + area.size.x * 0.53
-	var controls_width := width if portrait else area.end.x - inset - right
-	var action := Rect2(Vector2(right, action_y), Vector2(controls_width, 104.0 * u))
-	EntryUi.place(start_button, action)
-	EntryUi.place(continue_button, action)
-	start_button.visible = choosing
-	continue_button.visible = not choosing
-	slot_switch.visible = choosing
-	EntryUi.place(slot_switch, Rect2(Vector2(right, area.position.y + (190.0 if portrait else 105.0) * u), Vector2(controls_width, 100.0 * u)))
-	for index in 4:
-		slot_buttons[index].hide()
-		delete_buttons[index].hide()
+	var outer := maxf(24.0 * u, 12.0 * _slot_css)
+	var gap := maxf(12.0 * u, 6.0 * _slot_css)
+	var touch := maxf(68.0 * u, 44.0 * _slot_css)
+	var action_h := maxf(88.0 * u, 48.0 * _slot_css)
+	_class_compact = not portrait and area.size.y / _slot_css < 460.0
+	var right := area.position.x + outer if portrait else area.position.x + area.size.x * 0.53
+	var width := area.size.x - outer * 2.0 if portrait else area.end.x - outer - right
+	for entry in [[back_button, 24, 16], [slot_switch, 20, 12], [start_button, 28, 17], [brand_label, 22, 12], [heading, 40, 24], [subtitle, 22, 12], [hero_name, 36, 18], [role, 21, 12], [description, 19, 12], [health, 20, 12], [resource, 20, 12]]:
+		_font(entry[0], float(entry[1]), float(entry[2]))
+	if _class_compact:
+		_font(heading, 36, 20)
+	brand_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	for button: Button in class_buttons.values():
+		_font(button, 26, 16)
+	continue_button.hide()
+	start_button.show()
+	slot_switch.show()
+	details.show()
+	class_surface.show()
+	showcase.show()
+	_hero_backdrop.modulate.a = 0.44
+	hero_name.visible = not _class_compact
+	brand_label.visible = not _class_compact
+	role.show()
+	description.show()
+	var top := area.position.y + outer
+	var brand_h := _measure(brand_label, width)
+	var heading_h := _measure(heading, width)
+	var subtitle_h := _measure(subtitle, width)
+	var title_y := top + (brand_h + gap if brand_label.visible else 0.0)
+	EntryUi.place(brand_label, Rect2(Vector2(right, top), Vector2(width, brand_h)))
+	EntryUi.place(heading, Rect2(Vector2(right, title_y), Vector2(width, heading_h)))
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var subtitle_y := title_y + heading_h + gap * 0.5
+	EntryUi.place(subtitle, Rect2(Vector2(right, subtitle_y), Vector2(width, subtitle_h)))
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	EntryUi.place(back_button, Rect2(area.position + Vector2(outer, outer), Vector2(touch, touch)))
+	back_button.text = "‹"
+	var tabs_y := subtitle_y + subtitle_h + gap
 	for index in 2:
 		var button: Button = class_buttons[["warrior", "mage"][index]]
-		button.visible = choosing
-		EntryUi.place(button, Rect2(Vector2(right + index * (controls_width + 14.0 * u) * 0.5, action_y - 116.0 * u), Vector2((controls_width - 14.0 * u) * 0.5, 100.0 * u)))
-	details.visible = choosing
-	var detail_y := action_y - 322.0 * u if portrait else area.position.y + 212.0 * u
-	EntryUi.place(details, Rect2(Vector2(right, detail_y), Vector2(controls_width, 184.0 * u)))
-	for entry in [[hero_name, 0, 48, 40], [role, 51, 31, 23], [description, 88, 54, 24], [health, 151, 32, 22], [resource, 151, 32, 22]]:
-		var label: Label = entry[0]
-		var x := controls_width * 0.5 if label == resource else 0.0
-		var w := controls_width * 0.5 if label in [health, resource] else controls_width
-		EntryUi.place(label, Rect2(Vector2(x, float(entry[1]) * u), Vector2(w, float(entry[2]) * u)))
-		label.add_theme_font_size_override("font_size", maxi(14, roundi(float(entry[3]) * u)))
-	# Minimum readable type can exceed proportional line boxes in a short window.
-	# Measure the actual labels before placing the following information row.
-	role.position.y = maxf(role.position.y, hero_name.position.y + hero_name.get_combined_minimum_size().y + 3.0 * u)
-	description.position.y = maxf(description.position.y, role.position.y + role.get_combined_minimum_size().y + 4.0 * u)
-	description.size.y = maxf(description.size.y, description.get_combined_minimum_size().y)
-	var stats_y := maxf(health.position.y, description.position.y + description.size.y + 6.0 * u)
-	for label: Label in [health, resource]:
-		label.position.y = stats_y
-		label.size.y = maxf(label.size.y, label.get_combined_minimum_size().y)
-	details.size.y = maxf(details.size.y, stats_y + maxf(health.size.y, resource.size.y))
-	if portrait:
-		var art_top := area.position.y + (306.0 if choosing else 190.0) * u
-		var art_bottom := detail_y - 16.0 * u if choosing else area.position.y + 420.0 * u
-		EntryUi.place(showcase, Rect2(Vector2(left, art_top), Vector2(width, art_bottom - art_top)))
-	else:
-		EntryUi.place(showcase, Rect2(Vector2(left, area.position.y + 164.0 * u), Vector2(area.size.x * 0.49 - inset, area.size.y - 192.0 * u)))
+		button.show()
+		EntryUi.place(button, Rect2(Vector2(right + index * (width + gap) * 0.5, tabs_y), Vector2((width - gap) * 0.5, touch)))
+	var slots_y := area.end.y - outer - touch
+	var start_y := slots_y - gap - action_h
+	EntryUi.place(slot_switch, Rect2(Vector2(right, slots_y), Vector2(width, touch)))
+	EntryUi.place(start_button, Rect2(Vector2(right, start_y), Vector2(width, action_h)))
+	var pad := maxf((12.0 if _class_compact else 16.0) * u, (6.0 if _class_compact else 8.0) * _slot_css)
+	var detail_gap := gap * 0.66 if _class_compact else gap
+	var inside := width - pad * 2.0
+	var name_h := _measure(hero_name, inside) if hero_name.visible else 0.0
+	var role_h := _measure(role, inside)
+	var desc_h := _measure(description, inside)
+	var chip_h := maxf((36.0 if _class_compact else 46.0) * u, (24.0 if _class_compact else 27.0) * _slot_css)
+	var info_h := pad * 2.0 + role_h + desc_h + chip_h + detail_gap * 2.0
+	if hero_name.visible:
+		info_h += name_h + gap * 0.5
+	var info_y := start_y - gap - info_h
+	var art_top := tabs_y + touch + gap if portrait else area.position.y + outer
+	var art_left := right if portrait else area.position.x + outer
+	var art_width := width if portrait else right - gap * 2.0 - art_left
+	var art_bottom := info_y if portrait else area.end.y - outer
+	EntryUi.place(showcase, Rect2(Vector2(art_left, art_top), Vector2(art_width, maxf(32.0, art_bottom - art_top))))
 	EntryUi.place(hero_art, Rect2(Vector2.ZERO, showcase.size))
+	EntryUi.place(details, Rect2(Vector2(right, info_y), Vector2(width, info_h)))
+	EntryUi.place(info_surface, Rect2(Vector2.ZERO, details.size))
+	var cursor := pad
+	if hero_name.visible:
+		EntryUi.place(hero_name, Rect2(Vector2(pad, cursor), Vector2(inside, name_h)))
+		cursor += name_h + gap * 0.5
+	EntryUi.place(role, Rect2(Vector2(pad, cursor), Vector2(inside, role_h)))
+	cursor += role_h + detail_gap
+	EntryUi.place(description, Rect2(Vector2(pad, cursor), Vector2(inside, desc_h)))
+	cursor += desc_h + detail_gap
+	var chip_w := (inside - gap) * 0.5
+	for index in 2:
+		var chip_rect := Rect2(Vector2(pad + index * (chip_w + gap), cursor), Vector2(chip_w, chip_h))
+		EntryUi.place(stat_boxes[index], chip_rect)
+		var label := health if index == 0 else resource
+		EntryUi.place(label, chip_rect.grow(-maxf(5.0 * u, 3.0 * _slot_css)))
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var sheet := Rect2(showcase.position, Vector2(showcase.size.x, details.position.y + details.size.y - showcase.position.y)) if portrait else showcase.get_rect()
+	EntryUi.place(class_surface, sheet)
 	_publish_buttons()
+
 
 func _publish_buttons() -> void:
 	if start_button == null or not OS.has_feature("web"):
@@ -380,6 +476,7 @@ func _publish_buttons() -> void:
 		targets["delete_confirm"] = _delete_dialog.footer.get_child(1)
 	var points := {"viewport": [size.x, size.y], "save_layout": _save_layout_probe(), "stage": _stage, "selected_slot": selected_slot, "selected_class": selected_class, "slots_state": _summaries, "slot_labels": slot_buttons.map(func(button: Button): return button.text)}
 	var focus := get_viewport().gui_get_focus_owner()
+	points["class_layout"] = _class_layout_probe()
 	points["focus"] = ""
 	points["rects"] = {}
 	points["visible"] = {}
@@ -480,70 +577,78 @@ func _layout_slots() -> void:
 	var margins := PanelFrame.safe_margins(get_viewport())
 	var area := Rect2(Vector2(margins.x, margins.y), size - Vector2(margins.x + margins.z, margins.y + margins.w))
 	_slot_safe = area
-	_unit = minf(area.size.x / 720.0, area.size.y / 1280.0) if area.size.y > area.size.x else minf(area.size.x / 1280.0, area.size.y / 720.0)
+	var portrait := area.size.y > area.size.x
+	_unit = minf(area.size.x / 720.0, area.size.y / 1280.0) if portrait else minf(area.size.x / 1280.0, area.size.y / 720.0)
 	_slot_css = _css_scale()
 	var u := _unit
-	var pad := maxf(24.0 * u, 12.0 * _slot_css)
+	var compact := area.size.y / _slot_css < 460.0
+	var pad := maxf(22.0 * u, 10.0 * _slot_css)
 	var gap := maxf(12.0 * u, 6.0 * _slot_css)
-	_slot_pad = maxf(14.0 * u, 8.0 * _slot_css)
+	var outer := maxf(22.0 * u, 12.0 * _slot_css)
+	_slot_pad = maxf(12.0 * u, 7.0 * _slot_css)
 	_slot_gap = gap
-	_slot_badge = maxf(56.0 * u, 28.0 * _slot_css)
-	_slot_touch = maxf(80.0 * u, 44.0 * _slot_css)
-	var outer := maxf(20.0 * u, 12.0 * _slot_css)
-	var width := minf(area.size.x - outer * 2.0, maxf(920.0 * u, 280.0 * _slot_css))
+	_slot_badge = maxf(76.0 * u, 42.0 * _slot_css)
+	_slot_touch = maxf(72.0 * u, 44.0 * _slot_css)
+	var width := minf(area.size.x - outer * 2.0, maxf(1000.0 * u, 292.0 * _slot_css))
 	var inner := maxf(1.0, width - pad * 2.0)
+	var summary := _selected()
+	var preview := bool(summary["valid"]) and not compact
+	var preview_w := inner * 0.30 if preview else 0.0
+	var preview_h := maxf(area.size.y * 0.20, 150.0 * u) if preview else 0.0
 	slot_surface.show()
 	slot_scroll.show()
 	slot_footer.show()
 	slot_context.show()
-	showcase.hide()
+	class_surface.hide()
 	details.hide()
 	slot_switch.hide()
 	start_button.hide()
 	continue_button.show()
+	showcase.visible = preview
+	_hero_backdrop.modulate.a = 0.0
+	hero_art.texture = SelectionUi.portrait(SelectionUi.hero_image(selected_class))
+	brand_label.visible = not compact
 	back_button.text = "‹"
 	back_button.tooltip_text = "처음 화면으로 돌아가기"
-	_font(back_button, 36, 24)
-	_font(heading, 38, 22)
-	_font(subtitle, 23, 12)
-	_font(continue_button, 28, 16)
-	_font(slot_context, 22, 12)
-	var summary := _selected()
-	slot_context.text = "저장 %d · %s" % [selected_slot, "이어 갈 모험" if bool(summary["valid"]) else "읽을 수 없는 모험" if bool(summary["occupied"]) else "빈 슬롯을 선택해 새 모험을 시작하세요"]
-	subtitle.size.x = inner
-	var subtitle_h := maxf(28.0 * u, subtitle.get_combined_minimum_size().y)
-	var header_h := _slot_touch + gap + subtitle_h
+	for entry in [[back_button, 32, 20], [brand_label, 20, 12], [heading, 36, 22], [subtitle, 22, 12], [continue_button, 28, 16], [slot_context, 21, 12]]:
+		_font(entry[0], float(entry[1]), float(entry[2]))
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	brand_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	slot_context.text = "저장 %d · %s" % [selected_slot, "이 여정을 계속합니다" if bool(summary["valid"]) else "복구할 수 없는 저장" if bool(summary["occupied"]) else "새로운 여정을 준비하세요"]
+	var header_left := _slot_touch + gap
+	var header_width := maxf(1.0, inner - header_left - preview_w - (gap if preview else 0.0))
+	var brand_h := _measure(brand_label, header_width) if brand_label.visible else 0.0
+	var title_h := _measure(heading, header_width)
+	var title_y := brand_h + gap * 0.4 if brand_label.visible else maxf(0.0, (_slot_touch - title_h) * 0.5)
+	var subtitle_y := maxf(_slot_touch, title_y + title_h) + gap
+	var subtitle_width := inner - preview_w - (gap if preview else 0.0)
+	var subtitle_h := _measure(subtitle, subtitle_width)
+	var header_h := maxf(subtitle_y + subtitle_h, preview_h)
 	slot_context.size.x = inner
-	var context_h := maxf(26.0 * u, slot_context.get_combined_minimum_size().y)
-	var action_h := maxf(100.0 * u, 48.0 * _slot_css)
-	var footer_h := context_h + gap + action_h + gap
+	var context_h := _measure(slot_context, inner)
+	var action_h := maxf(88.0 * u, 48.0 * _slot_css)
+	var footer_h := context_h + gap * 2.0 + action_h
 	slot_list.add_theme_constant_override("separation", roundi(gap))
 	var total_rows := 0.0
-	for index in 2:
-		class_buttons[["warrior", "mage"][index]].hide()
+	for button: Button in class_buttons.values():
+		button.hide()
 	for index in 4:
 		var row := slot_buttons[index]
 		var remove := delete_buttons[index]
 		row.show()
 		remove.visible = bool(_summaries[index]["occupied"])
-		_font(row, 26, 14)
-		_font(remove, 22, 12)
-		_font(slot_number_labels[index], 28, 16)
-		_font(slot_title_labels[index], 26, 14)
-		_font(slot_meta_labels[index], 22, 12)
-		_font(slot_status_labels[index], 20, 11)
-		var remove_w := maxf(84.0 * u, _slot_touch)
+		for entry in [[row, 26, 14], [remove, 20, 12], [slot_number_labels[index], 20, 12], [slot_title_labels[index], 26, 14], [slot_meta_labels[index], 21, 12], [slot_status_labels[index], 18, 10]]:
+			_font(entry[0], float(entry[1]), float(entry[2]))
+		var remove_w := maxf(76.0 * u, _slot_touch)
 		remove.custom_minimum_size = Vector2(remove_w, _slot_touch)
 		slot_bands[index].add_theme_constant_override("separation", roundi(gap))
-		# Measure at the narrowest possible content width; AUTO scrolling can
-		# reserve this gutter after the first container pass. A wider row stays safe.
 		var scrollbar := slot_scroll.get_v_scroll_bar()
 		var gutter := maxf(scrollbar.get_combined_minimum_size().x, scrollbar.size.x)
-		var row_w := inner - gutter - (remove_w + gap if remove.visible else 0.0)
-		row.size.x = maxf(1.0, row_w)
+		row.size.x = maxf(1.0, inner - gutter - (remove_w + gap if remove.visible else 0.0))
 		_place_slot_labels(index)
 		var labels_h := slot_meta_labels[index].position.y + slot_meta_labels[index].size.y + _slot_pad
-		var row_h := maxf(maxf(116.0 * u, _slot_touch), maxf(labels_h, row.get_minimum_size().y))
+		var row_h := maxf(_slot_badge + _slot_pad * 2.0, maxf(labels_h, _slot_touch))
 		row.custom_minimum_size = Vector2(0, row_h)
 		slot_bands[index].custom_minimum_size.y = row_h
 		total_rows += row_h
@@ -557,9 +662,12 @@ func _layout_slots() -> void:
 	var content := origin + Vector2.ONE * pad
 	EntryUi.place(slot_surface, Rect2(origin, Vector2(width, height)))
 	EntryUi.place(back_button, Rect2(content, Vector2.ONE * _slot_touch))
-	var title_h := heading.get_combined_minimum_size().y
-	EntryUi.place(heading, Rect2(content + Vector2(_slot_touch + gap, (_slot_touch - title_h) * 0.5), Vector2(inner - _slot_touch - gap, title_h)))
-	EntryUi.place(subtitle, Rect2(content + Vector2(0, _slot_touch + gap), Vector2(inner, subtitle_h)))
+	EntryUi.place(brand_label, Rect2(content + Vector2(header_left, 0), Vector2(header_width, brand_h)))
+	EntryUi.place(heading, Rect2(content + Vector2(header_left, title_y), Vector2(header_width, title_h)))
+	EntryUi.place(subtitle, Rect2(content + Vector2(0, subtitle_y), Vector2(subtitle_width, subtitle_h)))
+	if preview:
+		EntryUi.place(showcase, Rect2(content + Vector2(inner - preview_w, 0), Vector2(preview_w, preview_h)))
+		EntryUi.place(hero_art, Rect2(Vector2.ZERO, showcase.size))
 	var list_y := content.y + header_h + gap
 	var available := maxf(1.0, height - pad * 2.0 - header_h - gap * 2.0 - footer_h)
 	EntryUi.place(slot_scroll, Rect2(Vector2(content.x, list_y), Vector2(inner, minf(total_rows, available))))
@@ -569,8 +677,9 @@ func _layout_slots() -> void:
 	EntryUi.place(continue_button, Rect2(Vector2(content.x, footer_y + context_h + gap), Vector2(inner, action_h)))
 	_publish_buttons.call_deferred()
 
+
 func _place_slot_labels(index: int) -> void:
-	if index < 0 or index >= slot_buttons.size() or index >= slot_status_labels.size():
+	if index < 0 or index >= slot_buttons.size() or index >= slot_status_labels.size() or index >= slot_portrait_frames.size():
 		return
 	var row := slot_buttons[index]
 	var pad := _slot_pad
@@ -584,15 +693,14 @@ func _place_slot_labels(index: int) -> void:
 	var status_w := status.get_combined_minimum_size().x if not status.text.is_empty() else 0.0
 	status.visible = not status.text.is_empty()
 	var title_h := title.get_combined_minimum_size().y
-	EntryUi.place(number, Rect2(Vector2(pad, pad), Vector2(_slot_badge, title_h)))
+	EntryUi.place(slot_portrait_frames[index], Rect2(Vector2(pad, pad), Vector2.ONE * _slot_badge))
+	var number_h := number.get_combined_minimum_size().y
+	EntryUi.place(number, Rect2(Vector2(pad + 3.0, pad + _slot_badge - number_h - 2.0), Vector2(_slot_badge - 6.0, number_h)))
 	EntryUi.place(title, Rect2(Vector2(left, pad), Vector2(maxf(1.0, text_w - status_w - (gap if status.visible else 0.0)), title_h)))
 	EntryUi.place(status, Rect2(Vector2(row.size.x - pad - status_w, pad), Vector2(status_w, title_h)))
-	meta.size.x = text_w
-	var font := meta.get_theme_font("font")
-	var flags := TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND | TextServer.BREAK_ADAPTIVE
-	var measured := font.get_multiline_string_size(meta.text, HORIZONTAL_ALIGNMENT_LEFT, text_w, meta.get_theme_font_size("font_size"), -1, flags)
-	var meta_h := maxf(measured.y, 22.0 * _unit)
+	var meta_h := _measure(meta, text_w, 22.0 * _unit)
 	EntryUi.place(meta, Rect2(Vector2(left, pad + title_h + maxf(4.0 * _unit, 3.0 * _slot_css)), Vector2(text_w, meta_h)))
+
 
 func _fit_delete_dialog() -> void:
 	if not _modal_open():
@@ -657,3 +765,28 @@ func gamepad_back() -> bool:
 
 func gamepad_initial_focus() -> BaseButton:
 	return class_buttons[selected_class] if _stage == "class" else slot_buttons[selected_slot - 1]
+
+
+func _class_layout_probe() -> Dictionary:
+	if brand_label == null:
+		return {}
+	var stats := []
+	for index in 2:
+		var label := health if index == 0 else resource
+		stats.append({"rect": _rect(stat_boxes[index]), "text_rect": _rect(label),
+			"font_size": label.get_theme_font_size("font_size"), "text": label.text})
+	var fonts := {}
+	var visible := {}
+	var labels := {}
+	for entry in [["brand", brand_label], ["heading", heading], ["subtitle", subtitle], ["name", hero_name], ["role", role], ["description", description]]:
+		var label: Label = entry[1]
+		fonts[entry[0]] = label.get_theme_font_size("font_size")
+		visible[entry[0]] = label.is_visible_in_tree()
+		labels[entry[0]] = _rect(label)
+	return {"safe": [_class_safe.position.x, _class_safe.position.y, _class_safe.size.x, _class_safe.size.y],
+		"sheet": _rect(class_surface), "brand": _rect(brand_label), "heading": _rect(heading), "subtitle": _rect(subtitle),
+		"back": _rect(back_button), "tabs": {"warrior": _rect(class_buttons["warrior"]), "mage": _rect(class_buttons["mage"])},
+		"art": _rect(showcase), "details": _rect(details), "stats": stats, "weapon": [],
+		"start": _rect(start_button), "slotchange": _rect(slot_switch), "fonts": fonts, "visible": visible,
+		"labels": labels, "class": selected_class, "compact": _class_compact,
+		"portrait": size.y > size.x, "css_scale": _slot_css}
