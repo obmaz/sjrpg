@@ -52,5 +52,59 @@ func _ready() -> void:
 			failed.append(name)
 		case_node.queue_free()
 		await get_tree().process_frame
+	if DisplayServer.get_name() == "headless":
+		var shutdown: Dictionary = await _await_audio_shutdown_boundary()
+		print("ART_AUDIT AUDIO_SHUTDOWN_BOUNDARY ", JSON.stringify(shutdown))
+		if not bool(shutdown["ok"]):
+			failed.append("audio_shutdown_mix_boundary")
+			push_error("Audio driver did not complete the required final mix/main-thread cleanup boundary: " + JSON.stringify(shutdown))
 	print("RESULT cases=%d failed=%d time=%dms %s" % [total, failed.size(), Time.get_ticks_msec() - started, str(failed)])
 	get_tree().quit(1 if failed.size() > 0 or total == 0 else 0)
+
+
+## TEST-ONLY engine lifecycle barrier; no music/player/cache mutation.
+## 4.7.2: stop_playback_stream marks FADE_OUT_TO_DELETION; the audio mix
+## erases the stopped playback, then main-loop AudioServer.update destroys it.
+## Time and AudioDriver use the same OS microsecond clock. Bracket the public
+## elapsed-time query so scheduler/mutex delay cannot fabricate a new mix.
+func _audio_mix_window() -> Dictionary:
+	var begin_us: int = Time.get_ticks_usec()
+	var since: float = AudioServer.get_time_since_last_mix()
+	var end_us: int = Time.get_ticks_usec()
+	if not is_finite(since) or since < 0.0:
+		return {"valid": false, "since_seconds": since}
+	var elapsed_us: int = roundi(since * 1000000.0)
+	return {"valid": true, "lower_us": begin_us - elapsed_us - 2,
+		"upper_us": end_us - elapsed_us + 2, "since_seconds": since,
+		"to_next_seconds": AudioServer.get_time_to_next_mix()}
+
+
+func _await_audio_shutdown_boundary() -> Dictionary:
+	var started_us: int = Time.get_ticks_usec()
+	var deadline_us: int = started_us + 2000000
+	var initial: Dictionary = _audio_mix_window()
+	var current: Dictionary = initial
+	var polls := 0
+	if not bool(initial["valid"]):
+		return {"ok": false, "reason": "invalid_audio_clock", "driver": AudioServer.get_driver_name(), "initial": initial}
+	while true:
+		if Time.get_ticks_usec() >= deadline_us:
+			return {"ok": false, "reason": "no_new_completed_mix", "driver": AudioServer.get_driver_name(),
+				"waited_us": Time.get_ticks_usec() - started_us, "polls": polls, "initial": initial, "observed": current}
+		if bool(current["valid"]) and int(current["lower_us"]) > int(initial["upper_us"]):
+			break
+		await get_tree().process_frame
+		polls += 1
+		current = _audio_mix_window()
+	# The driver query shares its mutex with the completed mix. Cross the next
+	# main-loop update exactly once so SafeList's queued playback destructors run.
+	var before_cleanup: int = Engine.get_process_frames()
+	await get_tree().process_frame
+	var after_cleanup: int = Engine.get_process_frames()
+	var finished_us: int = Time.get_ticks_usec()
+	return {"ok": finished_us < deadline_us and after_cleanup > before_cleanup,
+		"reason": "completed" if finished_us < deadline_us else "cleanup_deadline_exceeded",
+		"driver": AudioServer.get_driver_name(),
+		"waited_us": finished_us - started_us, "polls": polls,
+		"initial": initial, "observed": current, "cleanup_frame_before": before_cleanup,
+		"cleanup_frame_after": after_cleanup}

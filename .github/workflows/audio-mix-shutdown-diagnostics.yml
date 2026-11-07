@@ -65,13 +65,13 @@ jobs:
                   script: |
                       const fs=require('fs');
                       const blob=(await github.rest.git.getBlob({owner:'obmaz',repo:'sjrpg',
-                        file_sha:'9be222152159bee7d8b24f2d5d3b89fd69b91499'})).data;
-                      if(blob.sha!=='9be222152159bee7d8b24f2d5d3b89fd69b91499'||blob.encoding!=='base64')
+                        file_sha:'0188d34a974ad7a354ed66a3df42dea7dca1593a'})).data;
+                      if(blob.sha!=='0188d34a974ad7a354ed66a3df42dea7dca1593a'||blob.encoding!=='base64')
                         throw new Error('Unexpected experimental runner blob');
                       fs.writeFileSync('sjrpg_3d/tests/run_all.gd',Buffer.from(blob.content,'base64'));
             - name: Run the unchanged assertions with the engine-boundary test teardown
               run: |
-                  test "$(git hash-object sjrpg_3d/tests/run_all.gd)" = 9be222152159bee7d8b24f2d5d3b89fd69b91499
+                  test "$(git hash-object sjrpg_3d/tests/run_all.gd)" = 0188d34a974ad7a354ed66a3df42dea7dca1593a
                   test "$(git hash-object sjrpg_3d/scripts/music_director.gd)" = 7121cdaa3206495dd9e38de98af73a7e966fd98e
                   set +e
                   if test "$SJRPG_AUDIO_VARIANT" = full; then

@@ -455,7 +455,11 @@ HUD는 체력·물약 수·쿨다운의 실제 변화를 감지합니다. 사운
 
 ## 헤드리스 종료 진단
 
-3D 회귀 테스트는 Godot의 `--verbose`로 실행해 종료 시 리소스/인스턴스 경로를 추적할 수 있게 합니다. 엔진 종료 코드와 `SCRIPT ERROR`·`ERROR:` 및 전체 `RESULT failed=0` 검사는 그대로 유지하며, 실패 시 마지막 로그도 남깁니다. 상세 로그 모드의 통과는 해당 실행 구성이 통과했다는 의미이며, 상세 로그 없이 나타난 간헐적 종료 진단의 근본 원인이 수정됐다는 근거로 삼지 않습니다.
+3D 회귀 테스트는 Godot의 `--verbose`로 실행해 종료 시 리소스/인스턴스 경로를 추적할 수 있게 합니다. 엔진 종료 코드와 `SCRIPT ERROR`·`ERROR:` 및 전체 `RESULT failed=0` 검사는 그대로 유지하며, 실패 시 마지막 로그도 남깁니다.
+
+헤드리스 테스트 러너는 모든 케이스 해제 후 오디오 드라이버의 새 믹스 완료와 다음 메인 루프 정리를 확인한 뒤 종료합니다. Godot4.7.2의 `stop_playback_stream`은 `FADE_OUT_TO_DELETION`을 요청하며, 믹서가 목록에서 제거한 재생 객체는 `AudioServer.update`에서 해제됩니다. Time/AudioDriver의 공통 OS 시계를 호출 전후로 측정해 실제 새 믹스 경계를 판정합니다. 믹스 확인과 마지막 정리가2초 안에 완료되지 않으면 테스트를 실패시킵니다. 고정 sleep이나 음악 설정 변경, 엔진 오류 무시는 사용하지 않습니다.
+
+이 경계는 테스트 종료 동기화를 위한 것이며 웹 게임의 브라우저 종료 원인과 구분합니다. `.github/workflows/audio-mix-shutdown-diagnostics.yml`은 고정 기준 소스와 같은 작업 환경의 실험 러너를 비교하고 두 strict 결과를 보존합니다. 기준 실행의 실패는 보고서에서 그대로 실패로 남깁니다. 엔진 근거는 Godot4.7.2의 [AudioServer](https://github.com/godotengine/godot/blob/4.7.2-stable/servers/audio/audio_server.cpp), [Dummy 드라이버](https://github.com/godotengine/godot/blob/4.7.2-stable/servers/audio/audio_driver_dummy.cpp), [메인 루프](https://github.com/godotengine/godot/blob/4.7.2-stable/main/main.cpp)에 있습니다.
 
 ## 웹 자원과 반복 비용
 

@@ -9,6 +9,7 @@ on:
             - "sjrpg_3d/scripts/ortho_3d_preview.gd"
             - "sjrpg_3d/scripts/class_select.gd"
             - "sjrpg_3d/tests/cases/*budget*.gd"
+            - "sjrpg_3d/tests/run_all.gd"
             - "sjrpg_3d/tests/cases/render_quality.gd"
             - "sjrpg_3d/tests/cases/actor_atlas_lazy.gd"
             - "sjrpg_3d/tests/cases/native_enemy_recipe_cache.gd"
