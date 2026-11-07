@@ -143,18 +143,23 @@ async function modelGallery(){
   await page.evaluate(()=>window.__sjrpgNativeStyleAction('gallery',-1));
 }
 async function worldScenes(){
- for(const [name,params]of[['bridge',{at:'bridge'}],['landmark0',{at:'lm0'}],['landmark1-overview',{at:'lm1',zoom:'0.5'}],['landmark2-overview',{at:'lm2',zoom:'0.5'}],['landmark3',{at:'lm3'}],['cave-outside',{at:'rowen',zoom:'0.8'}],['cave',{dungeon_preview:'entry'}],['enemy',{at:'field',encounter_preview:'active'}],['corpses-bridge',{corpse_preview:'bridge'}]]){
+ // at=lmN retains the original village array identity; authored roles are [2,1,0,3].
+ const worldFailures=[];
+ for(const [name,params]of[['bridge',{at:'bridge'}],['landmark0-overview',{at:'lm0',zoom:'0.5'}],['landmark1-overview',{at:'lm1',zoom:'0.5'}],['landmark2-overview',{at:'lm2',zoom:'0.5'}],['landmark3',{at:'lm3'}],['cave-outside',{at:'rowen',zoom:'0.8'}],['cave',{dungeon_preview:'entry'}],['enemy',{at:'field',encounter_preview:'active'}],['corpses-bridge',{corpse_preview:'bridge'}]]){
+  try{
   await boot('mage',params);
   const landmark=/^landmark([0-3])-overview$/.exec(name);
   await page.waitForTimeout(800);const state=await read();hudGeometry(state,name,Boolean(params.dungeon_preview));if(landmark&&!baseline){
-   const role=Number(landmark[1]),witness=state.ui.coverage.landmark_views?.find(v=>v.role===role);
+   const role=[2,1,0,3][Number(landmark[1])],witness=state.ui.coverage.landmark_views?.find(v=>v.role===role);
    assert(witness&&witness.meshes>0,name+' actual authored mesh projection witness');
    assert.equal(witness.center_behind_camera,false,name+' actual landmark in front of camera');
    const box=css(state,witness.projected);
    assert(witness.visible_area_ratio>=.55&&box.h>=100&&box.w>=100,name+' majority of actual authored mesh envelope must be visible '+JSON.stringify(witness));
    checks.push(name+' actual '+witness.meshes+' meshes visible area '+witness.visible_area_ratio);
   }if(name==='cave-outside'){assert.equal(state.ui.dungeon_active,false,'actual exterior remains forest');assert(state.ui.entry_distance<180,'actual exterior camera is at the real cave entrance');assert.equal(state.native.scope,'forest');}if(name==='corpses-bridge'){assert(state.ui.coverage.corpse_count>0,'actual corpse models exist');if(!baseline)assert.deepEqual(state.ui.coverage.corpse_cards,[],'no image-card corpse fallback');}await capture(name+'-native',true);
+  }catch(error){worldFailures.push({name,error:String(error)});console.error('NATIVE_STYLE_WORLD_CASE_FAIL '+JSON.stringify(worldFailures.at(-1)));try{await capture(name+'-failed',true);}catch{}if(errors.length)throw error;}
  }
+ assert.deepEqual(worldFailures,[],'all actual world cases must pass');
 }
 try{
  if(modelsOnly){await modelGallery();}
@@ -162,6 +167,7 @@ try{
  else if(smoke){
   await boot('mage',{at:'npc_courtyard'});hudGeometry(await read(),'public mage portrait');await capture('public-mage-hud',true);
   await tapHud('bar_skills');await wait(s=>s.ui?.panel?.nodes?.length>0&&s.ui.paused,'public real skill panel');panelGeometry(await read(),'public skill panel');await capture('public-mage-skills',true);await closePanel();checks.push('public actual skill panel open/close');
+  await boot('mage',{at:'npc_courtyard'},2);hudGeometry(await read(),'public mage DPR2 portrait');await capture('public-mage-dpr2-hud',true);
  }else{
  for(const cls of['warrior','mage']){
   await boot(cls,{at:'npc_courtyard'});
@@ -176,8 +182,8 @@ try{
   await capture(cls+'-walking-native');
   assert(distance>1,'real WASD movement');checks.push(cls+' actual movement');
  }
- await worldScenes();
  await boot('mage',{at:'npc_courtyard'},2);hudGeometry(await read(),'mage DPR2 portrait');await capture('mage-dpr2-portrait',true);
+ await worldScenes();
  if(!baseline)await modelGallery();
  }
  assert.equal(errors.length,0);console.log((modelsOnly?'NATIVE_STYLE_MODELS_PASS ':worldOnly?'NATIVE_STYLE_WORLD_PASS ':smoke?'NATIVE_STYLE_SMOKE_PASS ':baseline?'NATIVE_STYLE_BASELINE_CAPTURED ':'NATIVE_STYLE_PASS ')+JSON.stringify({checks:checks.length,captures:captures.length,errors:0,baselineViolations:baselineViolations.length,baselineBlockedActions:baselineBlockedActions.length}));

@@ -1,4 +1,5 @@
 name: Native candidate world review
+# Review authored landmark roles against the unchanged village entry order.
 on:
     push:
         paths:
