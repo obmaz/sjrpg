@@ -19,7 +19,7 @@ try{for(const file of files){
  const dims=await page.locator('img').evaluateAll(imgs=>({w:imgs.reduce((n,i)=>n+i.naturalWidth,40),h:Math.max(...imgs.map(i=>i.naturalHeight))+54}));
  await page.setViewportSize({width:dims.w,height:dims.h});
  await page.screenshot({path:path.join(out,file),timeout:90000});
- if(['warrior-390x844-hud.png','mage-390x844-hud.png','mage-390x844-skills.png','bridge-native.png','cave-native.png','default-town.png','matched-actors-face-0.png','matched-chest-closed.png','matched-chest7-closed.png'].includes(file)){
+ if(['warrior-390x844-hud.png','mage-390x844-hud.png','mage-390x844-skills.png','bridge-native.png','cave-native.png','default-town.png','matched-actors-face-0.png','matched-chest-closed.png','matched-chest7-closed.png','merchant-portrait-town.png','merchant-landscape-town.png','merchant-portrait-shop.png','merchant-gallery-face-0.png'].includes(file)){
   const encoded=(await page.screenshot({type:'jpeg',quality:80,timeout:90000})).toString('base64');const name='comparison-'+file.slice(0,-4);
   console.log('SJ_NATIVE_STYLE_IMAGE_BEGIN '+name+' image/jpeg '+encoded.length);
   for(let i=0;i<encoded.length;i+=16384)console.log('SJ_NATIVE_STYLE_IMAGE_CHUNK '+name+' '+encoded.slice(i,i+16384));

@@ -196,3 +196,8 @@ validation: <tests, actual paired browser captures, remaining asset gaps>
 ## 무료 프리 에셋의 재사용
 
 무료 에셋도 사용할 수 있습니다. [검증된 무료 3D 에셋 출처](free-asset-sources.md)의 원문 라이선스·고정 source/hash·파일럿 절차를 먼저 따릅니다. 현재 마법사도 Quaternius의 보존된 CC0 Standard 모델/동작을 재사용합니다. 다음 사람형 후보는 같은 성인형 가족의 Male_Peasant/Male_Ranger를 우선하며, KayKit/Kenney의 단순 비례를 기존 회화풍 세계에 검수 없이 섞지 않습니다. 새 Quaternius QAL 팩을 기존 CC0 팩과 동일하게 취급하지 않고, ZIP의 실제 License와 공개 저장소 배포 적합성을 확인합니다. 허용된 무료 팩이라는 사실은 실제 geometry/rig/충돌/모바일/네 방향 비교 검수를 대신하지 않습니다.
+
+
+### 첫 CC0 주민의 적용 범위
+
+상인 한 명은 검증된 Quaternius FREE Standard의 실제 모델·UV·컬러 텍스처와 30fps로 체형에 맞춘 idle을 사용합니다. 얼굴·손·의복의 원래 UV를 무조건 공통 triplanar atlas로 덮지 않고, 기존 빛에 반응하는 무광 PBR/roughness0.95와 최대1024px로 맞춥니다. 나머지 일곱 주민은 기존 공유 회화형 atlas를 유지합니다. 이 구분과 실제 라이선스·해시·17,612삼각형/8서피스/65관절, 한 명에 한정한18k 예산은 [주민 제작 안내](../sjrpg_3d/docs/native-residents.md)에 있습니다. 다음 역할도 자동으로 같은 사람을 복제하지 않고 체형·머리·복장 실루엣과 실제 화면을 먼저 비교합니다.

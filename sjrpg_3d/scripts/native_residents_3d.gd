@@ -1,8 +1,10 @@
 class_name NativeResidents3D
 extends RefCounted
-## Authored adult silhouettes: cross-section anatomy, open hoods, folded cloth
-## and role-specific equipment. Four atlas materials batch the actual volumes.
+## One imported CC0 merchant pilot plus seven authored resident identities.
+## Gameplay clocks, feet, local visibility and injury state remain owned by Villager.
 const IDS := ["merchant", "smith", "stable", "elder", "mira", "elin", "noah", "rowen"]
+const IMPORTED_MERCHANT := "res://assets/art/native_residents/merchant.glb"
+const AUTHORED_IDS := ["smith", "stable", "elder", "mira", "elin", "noah", "rowen"]
 const COATS := ["74634c", "59605b", "68684c", "626e7a", "607b79", "677687", "637452", "526d7c"]
 static var _meshes: Dictionary = {}
 var preview: Node
@@ -81,6 +83,8 @@ static func _face(b: Dictionary, base: float, female: bool, older: bool, identit
 
 
 static func build(identity: String) -> ArrayMesh:
+	if not AUTHORED_IDS.has(identity):
+		return null
 	if _meshes.has(identity):
 		return _meshes[identity]
 	var index: int = IDS.find(identity)
@@ -91,7 +95,7 @@ static func build(identity: String) -> ArrayMesh:
 	var female: bool = identity in ["mira", "elin"]
 	var elder: bool = identity == "elder"
 	var smith: bool = identity == "smith"
-	var width: float = 1.15 if smith else 1.10 if identity == "merchant" else 0.90 if female else 1.0
+	var width: float = 1.15 if smith else 0.90 if female else 1.0
 	var shift: float = -0.065 if elder else -0.025 if female else 0.0
 	for side: float in [-1.0, 1.0]:
 		_part(b, "leather", NativeActorShapes.boot(), Vector3(side * 0.115, 0, 0))
@@ -102,7 +106,7 @@ static func build(identity: String) -> ArrayMesh:
 		_round(b, "skin", Vector3(side * 0.276 * width, 0.79 + shift, 0.070), Vector3(0.104, 0.15, 0.091))
 	_part(b, cloth if not smith else "leather", NativeActorShapes.chest(), Vector3(0, shift, 0.045 if elder else 0), Vector3(width, 1, 1.0))
 	var long_robe: bool = identity in ["elder", "elin", "noah"]
-	var hem: float = 0.14 if long_robe else 0.48 if identity in ["merchant", "mira"] else 0.69
+	var hem: float = 0.14 if long_robe else 0.48 if identity == "mira" else 0.69
 	_loft(b, cloth, [Vector4(hem, 0.29 if long_robe else 0.24 * width, 0.195, 0), Vector4(0.78, 0.225 * width, 0.15, 0), Vector4(0.99, 0.177 * width, 0.13, 0)], Vector3.ZERO, 0.014 if long_robe else 0.009, 24)
 	_loft(b, "leather", [Vector4(0.94, 0.19 * width, 0.153, 0), Vector4(1.01, 0.19 * width, 0.153, 0)], Vector3.ZERO, 0, 16)
 	_box(b, "bronze", Vector3(0, 0.974, 0.169), Vector3(0.069, 0.059, 0.020))
@@ -112,9 +116,6 @@ static func build(identity: String) -> ArrayMesh:
 	var face_base: float = 1.49 + shift
 	_face(b, face_base, female, elder, identity)
 	match identity:
-		"merchant":
-			_loft(b, cloth, [Vector4(1.745, 0.118, 0.115, 0), Vector4(1.77, 0.142, 0.125, -0.015), Vector4(1.82, 0.105, 0.09, -0.035), Vector4(1.84, 0.030, 0.025, -0.05)], Vector3.ZERO, 0.005, 16)
-			_round(b, "leather", Vector3(0.20, 0.91, 0.17), Vector3(0.16, 0.22, 0.12))
 		"smith":
 			_loft(b, "leather", [Vector4(0.43, 0.20, 0.025, 0.23), Vector4(0.65, 0.20, 0.025, 0.23), Vector4(0.98, 0.17, 0.025, 0.19), Vector4(1.28, 0.14, 0.025, 0.18)], Vector3.ZERO, 0.006, 16)
 			for side: float in [-1.0, 1.0]:
@@ -152,6 +153,143 @@ static func build(identity: String) -> ArrayMesh:
 	return result
 
 
+## The runtime and review gallery share this factory; no procedural merchant is silently substituted.
+static func create(identity: String) -> Node3D:
+	if not IDS.has(identity):
+		return null
+	var model: Node3D
+	if identity == "merchant":
+		if not ResourceLoader.exists(IMPORTED_MERCHANT):
+			return null
+		var scene: PackedScene = load(IMPORTED_MERCHANT) as PackedScene
+		if scene == null:
+			return null
+		var candidate: Node = scene.instantiate()
+		model = candidate as Node3D
+		if model == null:
+			candidate.free()
+			return null
+		model.set_meta("resident_source", "cc0_import")
+		model.set_meta("resident_asset", IMPORTED_MERCHANT)
+		_configure_idle(model)
+	else:
+		var mesh: ArrayMesh = build(identity)
+		if mesh == null:
+			return null
+		var body: MeshInstance3D = MeshInstance3D.new()
+		body.mesh = mesh
+		model = body
+		model.set_meta("resident_source", "authored")
+	model.name = "NativeResident_" + identity
+	model.set_meta("resident_identity", identity)
+	return model
+
+
+static func descendant_meshes(node: Node) -> Array[MeshInstance3D]:
+	var result: Array[MeshInstance3D] = []
+	if node is MeshInstance3D:
+		result.append(node as MeshInstance3D)
+	for child: Node in node.get_children():
+		result.append_array(descendant_meshes(child))
+	return result
+
+
+static func _find_animation(node: Node) -> AnimationPlayer:
+	if node is AnimationPlayer:
+		return node as AnimationPlayer
+	for child: Node in node.get_children():
+		var found: AnimationPlayer = _find_animation(child)
+		if found != null:
+			return found
+	return null
+
+
+static func _find_skeleton(node: Node) -> Skeleton3D:
+	if node is Skeleton3D:
+		return node as Skeleton3D
+	for child: Node in node.get_children():
+		var found: Skeleton3D = _find_skeleton(child)
+		if found != null:
+			return found
+	return null
+
+
+static func _configure_idle(model: Node3D) -> void:
+	var animator: AnimationPlayer = _find_animation(model)
+	if animator == null:
+		return
+	animator.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
+	animator.playback_default_blend_time = 0.0
+	animator.autoplay = ""
+	var selected := ""
+	for name: StringName in animator.get_animation_list():
+		if str(name).to_lower().contains("idle"):
+			selected = str(name)
+			break
+	# A relative node path is valid both before and after this root enters the tree.
+	var names := PackedStringArray()
+	var current: Node = animator
+	while current != null and current != model:
+		names.insert(0, str(current.name))
+		current = current.get_parent()
+	model.set_meta("resident_idle_player", NodePath("/".join(names)))
+	model.set_meta("resident_idle_clip", selected)
+
+
+static func idle_player(model: Node3D) -> AnimationPlayer:
+	if model == null or not model.has_meta("resident_idle_player"):
+		return null
+	var path: NodePath = model.get_meta("resident_idle_player")
+	return model.get_node_or_null(path) as AnimationPlayer
+
+
+## Sample the original resident clock, never a second timer or automatic playback.
+static func sample_idle(model: Node3D, source_time: float) -> Dictionary:
+	var animator: AnimationPlayer = idle_player(model)
+	var selected: String = str(model.get_meta("resident_idle_clip", "")) if model != null else ""
+	if animator == null or selected.is_empty() or not is_finite(source_time):
+		return {}
+	var clip: Animation = animator.get_animation(selected)
+	if clip == null or clip.length <= 0.0:
+		return {}
+	var sample: float = fposmod(maxf(source_time, 0.0), clip.length)
+	var previous: float = float(model.get_meta("resident_idle_sample", -1.0))
+	var changed: bool = animator.current_animation != selected
+	if changed:
+		animator.play(selected, 0.0)
+	if changed or not is_equal_approx(sample, previous):
+		animator.seek(sample, true)
+		animator.advance(0.0)
+		model.set_meta("resident_idle_sample", sample)
+	return {"clip": selected, "sample_time": sample, "source_time": source_time}
+
+
+## Mesh-space bounds include every descendant transform but exclude the actor's world placement.
+static func local_bounds(model: Node3D) -> AABB:
+	if model == null:
+		return AABB()
+	var boxes: Array[AABB] = []
+	_collect_bounds(model, Transform3D.IDENTITY, boxes, true)
+	if boxes.is_empty():
+		return AABB()
+	var bounds: AABB = boxes[0]
+	for index: int in range(1, boxes.size()):
+		bounds = bounds.merge(boxes[index])
+	return bounds
+
+
+static func _collect_bounds(node: Node, parent: Transform3D, boxes: Array[AABB], root := false) -> void:
+	var at := parent
+	if node is Node3D and not root:
+		at = parent * (node as Node3D).transform
+	if node is MeshInstance3D:
+		var instance := node as MeshInstance3D
+		if instance.mesh != null:
+			boxes.append(at * instance.mesh.get_aabb())
+	for child: Node in node.get_children():
+		_collect_bounds(child, at, boxes)
+
+
 func sync() -> void:
 	for id: int in entries.keys():
 		var owner: Villager = entries[id]["owner"].get_ref()
@@ -159,43 +297,69 @@ func sync() -> void:
 			entries[id]["node"].queue_free()
 			entries.erase(id)
 	for candidate: Variant in preview.game.village.npc_nodes.values():
+		if not is_instance_valid(candidate):
+			continue
 		var resident: Villager = candidate as Villager
 		if not is_instance_valid(resident) or resident.is_queued_for_deletion():
 			continue
 		var id: int = resident.get_instance_id()
 		if not entries.has(id):
-			var instance: MeshInstance3D = MeshInstance3D.new()
-			instance.name = "NativeResident_" + NpcArt.identity(resident.display_name)
-			instance.mesh = build(NpcArt.identity(resident.display_name))
+			var identity: String = NpcArt.identity(resident.display_name)
+			var instance: Node3D = create(identity)
+			if instance == null:
+				continue
 			preview.stage.add_child(instance)
-			entries[id] = {"owner": weakref(resident), "node": instance}
-		var model: MeshInstance3D = entries[id]["node"]
+			entries[id] = {"owner": weakref(resident), "node": instance,
+				"source": str(instance.get_meta("resident_source", "")),
+				"meshes": descendant_meshes(instance), "animation": idle_player(instance),
+				"skeleton": _find_skeleton(instance), "clip": "", "sample_time": 0.0}
+		var model: Node3D = entries[id]["node"]
 		model.visible = resident.visible and resident.get_parent() == preview.game.world and not preview.game.dungeon.active
 		model.position = preview.actor_foot(resident)
 		var direction: Vector3 = Ortho3DPreview.ground_position(Vector2.from_angle(resident.facing))
 		model.rotation.y = atan2(direction.x, direction.z)
-		# Overlay is original resident damage state, never a new effect clock.
+		if model.visible and str(entries[id]["source"]) == "cc0_import":
+			var pose: Dictionary = sample_idle(model, resident._time)
+			entries[id]["clip"] = str(pose.get("clip", ""))
+			entries[id]["sample_time"] = float(pose.get("sample_time", 0.0))
+		# Original injury overlays every imported mesh without changing shared base materials.
+		var flash: ShaderMaterial = null
 		if resident._hurt_flash > 0.0:
 			if not entries[id].has("flash"):
-				var shader: Shader = Shader.new()
+				var shader := Shader.new()
 				shader.code = Ortho3DPreview.ACTOR_FLASH_CODE
-				var flash: ShaderMaterial = ShaderMaterial.new()
+				flash = ShaderMaterial.new()
 				flash.shader = shader
 				entries[id]["flash"] = flash
-			var flash: ShaderMaterial = entries[id]["flash"]
+			flash = entries[id]["flash"]
 			flash.set_shader_parameter("flash_color", Color(1.0, 0.64, 0.59))
 			flash.set_shader_parameter("flash_strength", resident._hurt_flash * 0.65)
-			model.material_overlay = flash
-		else:
-			model.material_overlay = null
+		var meshes: Array[MeshInstance3D] = entries[id]["meshes"]
+		for mesh: MeshInstance3D in meshes:
+			mesh.material_overlay = flash
 
 
 func review_snapshot() -> Dictionary:
 	var identities: Array[String] = []
-	var visible: int = 0
+	var visible := 0
+	var imported := 0
+	var animated := 0
+	var details: Array[Dictionary] = []
 	for entry: Dictionary in entries.values():
-		var node: MeshInstance3D = entry["node"]
+		var node: Node3D = entry["node"]
 		if node.visible:
 			visible += 1
-		identities.append(node.name)
-	return {"mapped": IDS, "instances": entries.size(), "visible": visible, "identities": identities, "camera_facing_cards": 0}
+		var is_imported: bool = str(entry["source"]) == "cc0_import"
+		imported += 1 if is_imported else 0
+		animated += 1 if not str(entry["clip"]).is_empty() else 0
+		identities.append(str(node.name))
+		details.append({"identity": str(node.get_meta("resident_identity", "")),
+			"source": str(entry["source"]), "clip": str(entry["clip"]),
+			"sample_time": float(entry["sample_time"]), "meshes": entry["meshes"].size()})
+	return {"mapped": IDS, "instances": entries.size(), "visible": visible,
+		"identities": identities, "imported_count": imported, "animated_count": animated,
+		"details": details, "camera_facing_cards": 0}
+
+
+func snapshot() -> Dictionary:
+	return review_snapshot()

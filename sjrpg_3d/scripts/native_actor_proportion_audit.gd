@@ -16,7 +16,7 @@ static func _bounds(model: Node3D, camera: Camera3D, exclude_equipment: bool) ->
 	var skinned: Array[String] = []
 	for node: Node in nodes:
 		var instance: MeshInstance3D = node as MeshInstance3D
-		if instance.mesh == null or not instance.visible:
+		if instance.mesh == null or not instance.is_visible_in_tree():
 			continue
 		var path: String = str(model.get_path_to(instance))
 		var lower: String = path.to_lower()
@@ -90,6 +90,10 @@ static func measure(presenter: Node) -> Dictionary:
 				continue
 			var report: Dictionary = _bounds(model, camera, false)
 			report["label"] = source.display_name
+			report["identity"] = NpcArt.identity(source.display_name)
+			report["source"] = entry.get("source", "authored")
+			report["scene_paths"] = _scene_paths(model)
+			report["current_skeleton"] = _bones(model)
 			residents.append(report)
 			if bool(report.get("valid", false)):
 				npc_heights.append(float(report["height_m"]))
@@ -102,3 +106,13 @@ static func measure(presenter: Node) -> Dictionary:
 		"interpretation": "CPU rest AABB is not posed/skinned silhouette and includes hidden geometry; bone origins are current pose. Screen AABB is an upper bound, not pixel visibility/occlusion. No GPU bake performed."}
 	_cache[id] = report
 	return report
+
+
+static func _scene_paths(root: Node3D) -> Array[String]:
+	var paths: Array[String] = []
+	var nodes: Array[Node] = root.find_children("*", "Node3D", true, false)
+	nodes.append(root)
+	for node: Node in nodes:
+		if not node.scene_file_path.is_empty() and not paths.has(node.scene_file_path):
+			paths.append(node.scene_file_path)
+	return paths

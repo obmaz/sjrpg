@@ -428,3 +428,12 @@ HUD는 체력·물약 수·쿨다운의 실제 변화를 감지합니다. 사운
 `NativeResidents3D`·`NativeWarrior3D`·`NativeEnemyModels`는 기존 배우의 실제 발·이동/공격 진행·피격·사망 상태만 관찰합니다. 주민은 정적 배칭 뒤에 생성하고, 교체한 대상은 기존 원화 카드에서 개별 제외합니다. 시체는 원래 수명과 페이드를 공유합니다. 환경의 `remaining_sources`는 아직 원화를 사용하는 실제 원본의 역할·시트·발 위치를 남겨 교체 누락을 숨기지 않습니다.
 
 `?native_style_review=1`은 검수 전용 읽기 전용 상태 측정기를 연결합니다. `tools/check_native_style.mjs`는 새 브라우저 프로필에서 실제 시작·이동·물약/메뉴/스킬트리 입력과 회전·DPR2를 검사합니다. `native-style-review.yml`은 변경 전 커밋의 실제 게임도 따로 내보내 같은 위치의 PNG와 비교 이미지를 남깁니다. 기준본의 작은 입력 영역은 측정하되 새 기준 통과로 표시하지 않습니다. 렌더링 캡처는 별도 리뷰어가 모델 전체 면·재질·모바일 가독성을 판정하는 자료입니다.
+
+
+## CC0 상인과 공통 주민 factory
+
+`NativeResidents3D.create(identity)`는 실제 마을과 검수 갤러리가 함께 사용하는 factory입니다. 상인만 `assets/art/native_residents/merchant.glb`를 생성하고 나머지 일곱 역할은 기존 절차형 메시를 유지합니다. 주민의 기존 `Villager._time`으로 AnimationPlayer를 수동 샘플링하며 자동 재생·독립 시계·추가 물리 몸체를 만들지 않습니다. 피격 오버레이는 imported root의 모든 자식 메시를 함께 처리하고 이름·의뢰·상점·동굴 범위는 원래 소스가 소유합니다.
+
+`tools/hero_art/fetch_sources.py`는 고정 원본과 실제 CC0 라이선스를 해시로 확인합니다. `export_cc0_merchant.py`는 원본 리그의 기준 자세 차이를 검증하고 대상 뼈 길이를 유지하는 30fps FK retarget과 미터 배율을 구웁니다. `publish_merchant_blobs.py`는 18k 상한·실제 GLB·원문 라이선스를 다시 검증하고 고정 엔진으로 실제 임포트 설정을 만듭니다. 후보 worker는 ref를 이동하지 않고 검수용 blob만 준비합니다. 출처·실제 해시는 `assets/source/native-residents/merchant/`에 보존합니다.
+
+`native_merchant`는 실제 스킨·골격·수동 동작·일시정지·전체 메시 피격·소유권과 기존 발 위치를 검사합니다. `SJRPG_STYLE_MERCHANT_ONLY=1` 브라우저 하네스와 `native-merchant-review.yml`은 변경 전 실제 빌드와 비교해 네 방향·모바일 두 방향·DPR2·실제 상점 버튼·일시정지를 검수합니다. rest AABB와 뼈 원점은 GPU로 변형된 발바닥/보이는 픽셀 경계와 구분합니다. 상점 상호작용 버튼은 다른 HUD와 겹치지 않는 44CSS px 이상 입력 영역을 유지합니다.

@@ -4,7 +4,7 @@ extends TestCase
 func run() -> void:
 	var signatures := {}
 	var materials := {}
-	for identity: String in NativeResidents3D.IDS:
+	for identity: String in NativeResidents3D.AUTHORED_IDS:
 		var mesh := NativeResidents3D.build(identity)
 		var bounds := mesh.get_aabb()
 		var triangles := 0
@@ -31,8 +31,8 @@ func run() -> void:
 		var signature := str(bounds) + ":" + str(vertex_count)
 		signatures[signature] = true
 		print("ART_AUDIT native_resident " + JSON.stringify({"identity": identity, "triangles": triangles, "surfaces": mesh.get_surface_count(), "bounds": str(bounds)}))
-	check("all eight roles have different actual geometry", signatures.size() == NativeResidents3D.IDS.size())
-	check("all resident roles share at most four actual materials", materials.size() <= 4)
+	check("the seven remaining authored roles have distinct actual geometry", signatures.size() == NativeResidents3D.AUTHORED_IDS.size())
+	check("the seven authored roles share at most four actual materials", materials.size() <= 4)
 	check("unknown identity is not falsely claimed as converted", NativeResidents3D.build("unknown") == null)
 	var game := await make_game("mage")
 	var preview: Ortho3DPreview = game.ortho_preview
@@ -42,7 +42,7 @@ func run() -> void:
 	var body_count: int = game.spatial_world.actor_bodies.size()
 	for resident: Villager in game.village.npc_nodes.values():
 		var id := resident.get_instance_id()
-		var node: MeshInstance3D = renderer.entries[id]["node"]
+		var node: Node3D = renderer.entries[id]["node"]
 		check("converted resident has no duplicate source card", not preview._cards.has(id))
 		check("native resident follows authoritative actor foot", node.position.is_equal_approx(preview.actor_foot(resident)))
 		check("resident runtime geometry has baked unit scale", node.scale.is_equal_approx(Vector3.ONE))
@@ -50,11 +50,13 @@ func run() -> void:
 	var first: Villager = game.village.npc_nodes.values()[0]
 	first.show_hurt()
 	renderer.sync()
-	var first_node: MeshInstance3D = renderer.entries[first.get_instance_id()]["node"]
-	check("native resident uses the real injury state", first_node.material_overlay != null)
+	var first_meshes: Array[MeshInstance3D] = renderer.entries[first.get_instance_id()]["meshes"]
+	for mesh: MeshInstance3D in first_meshes:
+		check("native resident uses the real injury state on each body mesh", mesh.material_overlay != null)
 	first._hurt_flash = 0.0
 	renderer.sync()
-	check("native injury overlay clears with its source state", first_node.material_overlay == null)
+	for mesh: MeshInstance3D in first_meshes:
+		check("native injury overlay clears with its source state", mesh.material_overlay == null)
 	var active: bool = game.dungeon.active
 	game.dungeon.active = true
 	renderer.sync()

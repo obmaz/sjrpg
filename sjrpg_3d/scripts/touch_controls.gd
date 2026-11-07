@@ -86,6 +86,7 @@ func _layout() -> void:
 	_near_name = npc
 	if npc != "" and npc != "탈것 상인":
 		var half := Vector2(106.0 * u, maxf(32.0, 38.0 * u)) if npc == "워프게이트" else Vector2(78.0 * u, maxf(32.0, 32.0 * u))
+		half.y = maxf(half.y, 22.0 * css_scale())
 		var rise := maxf(78.0 * u, half.y + menu_touch + 10.0 * u)
 		var interaction := _button(Vector2(size.x / 2.0, bar_y - rise), 32.0 * u)
 		interaction["half_size"] = half

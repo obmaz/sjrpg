@@ -18,6 +18,10 @@ var _models: Array[Node3D] = []
 var _keys: Array[String] = []
 var face := 0
 var requested_frame := 0
+var merchant_only := false
+var _resident_factory: Script
+var _resident_sources: Dictionary = {}
+var _resident_samples: Dictionary = {}
 
 
 func setup(source_game: Node) -> NativeModelGallery:
@@ -86,15 +90,29 @@ func _ready() -> void:
 	_sheet.add_child(_title)
 	var warrior := NativeWarrior3D.new().build()
 	_add(warrior, "warrior")
+	var enemy_script: Script = load("res://scripts/enemy.gd")
+	var native_heights: Dictionary = enemy_script.get_script_constant_map().get("NATIVE_HEIGHT_METRES", {})
 	for kind: String in ["goblin", "wolf", "boar", "skeleton", "golem"]:
 		var model := NativeEnemyModels.build(kind)
 		var root: Node3D = model["root"]
-		var height: float = Enemy.KINDS[kind]["height"]
-		root.scale = Vector3.ONE * height / (Ortho3DPreview.GROUND_PER_METER * Iso.S) / float(model["base_height"])
+		var legacy_height: float = float(Enemy.KINDS[kind]["height"]) / (Ortho3DPreview.GROUND_PER_METER * Iso.S)
+		var height_metres: float = float(native_heights.get(kind, legacy_height))
+		root.scale = Vector3.ONE * height_metres / float(model["base_height"])
 		_add(root, kind)
+	_resident_factory = load("res://scripts/native_residents_3d.gd")
+	for source: Villager in game.village.npc_nodes.values():
+		_resident_sources[NpcArt.identity(source.display_name)] = weakref(source)
 	for identity: String in NativeResidents3D.IDS:
-		var model := MeshInstance3D.new()
-		model.mesh = NativeResidents3D.build(identity)
+		var model: Node3D
+		if _factory_has("create"):
+			model = _resident_factory.call("create", identity)
+		else:
+			var legacy := MeshInstance3D.new()
+			legacy.mesh = NativeResidents3D.build(identity)
+			model = legacy
+		if model == null:
+			push_error("Runtime resident factory did not create " + identity)
+			continue
 		_add(model, identity)
 	resized.connect(_layout)
 	visibility_changed.connect(_visibility)
@@ -113,6 +131,11 @@ func _add(model: Node3D, key: String) -> void:
 	_names.append(label)
 
 
+func set_merchant_only(value: bool) -> void:
+	merchant_only = value
+	set_face(face)
+
+
 func set_face(index: int) -> void:
 	face = clampi(index, 0, 3)
 	if camera == null:
@@ -121,16 +144,22 @@ func set_face(index: int) -> void:
 	var toward := Vector3(sin(yaw), 0, cos(yaw))
 	var right := Vector3(cos(yaw), 0, -sin(yaw))
 	var direction := Vector3(toward.x, tan(deg_to_rad(ELEVATION)), toward.z).normalized()
-	var focus := Vector3(0, 0.85, 0)
+	camera.size = 3.3 if merchant_only else 16.0
+	var focus := Vector3(0, 0.89 if merchant_only else 0.85, 0)
 	camera.position = focus + direction * 35.0
 	camera.look_at(focus, Vector3.UP)
 	for index_model in _models.size():
+		_models[index_model].visible = not merchant_only or _keys[index_model] == "merchant"
+		if merchant_only:
+			_models[index_model].position = Vector3.ZERO
+			continue
 		var column := index_model % COLS
 		var row := index_model / COLS
 		# Ground spacing compensates the true isometric elevation, not a
 		# model distortion: labels stay in screen cells as the camera turns.
 		_models[index_model].position = right * (float(column) - 1.5) * 3.8 + toward * (float(row) - 1.5) * (3.4 / sin(deg_to_rad(ELEVATION)))
 	_title.text = "Native model inspection · azimuth %d° · elevation 35.264°" % (45 + face * 90)
+	_sample_residents()
 	requested_frame = Engine.get_process_frames()
 	_layout()
 	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
@@ -144,6 +173,7 @@ func _layout() -> void:
 	_title.position = Vector2(16, 18)
 	_title.size = Vector2(screen.x - 32, 38)
 	for index in _models.size():
+		_names[index].visible = not merchant_only or _keys[index] == "merchant"
 		var foot := camera.unproject_position(_models[index].position)
 		_names[index].position = foot + Vector2(-100, 9)
 		_names[index].size = Vector2(200, 30)
@@ -161,6 +191,8 @@ func review_snapshot() -> Dictionary:
 	var models := []
 	for index in _models.size():
 		var model := _models[index]
+		if merchant_only and _keys[index] != "merchant":
+			continue
 		var meshes := model.find_children("*", "MeshInstance3D", true, false)
 		if model is MeshInstance3D:
 			meshes.append(model)
@@ -178,7 +210,54 @@ func review_snapshot() -> Dictionary:
 			for surface in mesh.mesh.get_surface_count():
 				var arrays := mesh.mesh.surface_get_arrays(surface)
 				var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-				var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+				var indices := PackedInt32Array()
+				if arrays[Mesh.ARRAY_INDEX] != null:
+					indices = arrays[Mesh.ARRAY_INDEX]
 				triangles += (indices.size() if not indices.is_empty() else points.size()) / 3
-		models.append({"identity": _keys[index], "triangles": triangles, "surfaces": surfaces, "bounds_min": [envelope.position.x, envelope.position.y, envelope.position.z], "bounds_max": [envelope.end.x, envelope.end.y, envelope.end.z], "scale": [model.scale.x, model.scale.y, model.scale.z]})
-	return {"face": face, "azimuth": 45 + face * 90, "elevation": ELEVATION, "projection": "orthographic", "models": models, "mapped": _keys, "count": models.size(), "visible": visible, "requested_frame": requested_frame, "current_frame": Engine.get_process_frames()}
+		var skinned := 0
+		for candidate: Node in meshes:
+			if (candidate as MeshInstance3D).skin != null:
+				skinned += 1
+		models.append({"scene_paths": _model_scene_paths(model), "skeletons": model.find_children("*", "Skeleton3D", true, false).size(), "skinned_meshes": skinned, "sample": _resident_samples.get(_keys[index], {}), "identity": _keys[index], "triangles": triangles, "surfaces": surfaces, "bounds_min": [envelope.position.x, envelope.position.y, envelope.position.z], "bounds_max": [envelope.end.x, envelope.end.y, envelope.end.z], "scale": [model.scale.x, model.scale.y, model.scale.z]})
+	return {"face": face, "azimuth": 45 + face * 90, "elevation": ELEVATION, "projection": "orthographic", "models": models, "mapped": ["merchant"] if merchant_only else _keys, "merchant_only": merchant_only, "count": models.size(), "visible": visible, "requested_frame": requested_frame, "current_frame": Engine.get_process_frames()}
+
+
+func _factory_has(method: String) -> bool:
+	for item: Dictionary in _resident_factory.get_script_method_list():
+		if item["name"] == method:
+			return true
+	return false
+
+
+func _sample_residents() -> bool:
+	if _resident_factory == null or not _factory_has("sample_idle"):
+		return false
+	var changed := false
+	for index in _models.size():
+		var key: String = _keys[index]
+		if not _resident_sources.has(key):
+			continue
+		var source: Villager = (_resident_sources[key] as WeakRef).get_ref()
+		if not is_instance_valid(source):
+			continue
+		var sample: Dictionary = _resident_factory.call("sample_idle", _models[index], source._time)
+		var old: Dictionary = _resident_samples.get(key, {})
+		changed = changed or sample.get("sample_time", -1.0) != old.get("sample_time", -1.0)
+		_resident_samples[key] = sample
+	return changed
+
+
+func _process(_delta: float) -> void:
+	# The imported gallery body reads the real town resident's clock.
+	# Other inspection modes retain their one-frame rendering behavior.
+	if merchant_only and visible and _sample_residents():
+		viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+
+func _model_scene_paths(root: Node3D) -> Array[String]:
+	var paths: Array[String] = []
+	var nodes: Array[Node] = root.find_children("*", "Node3D", true, false)
+	nodes.append(root)
+	for node: Node in nodes:
+		if not node.scene_file_path.is_empty() and not paths.has(node.scene_file_path):
+			paths.append(node.scene_file_path)
+	return paths
