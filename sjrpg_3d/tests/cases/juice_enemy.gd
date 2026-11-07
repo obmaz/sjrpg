@@ -34,6 +34,7 @@ func run() -> void:
 	await _check_boss_slam()
 	await _check_telegraph()
 	await _check_kill()
+	await _check_squash()
 
 
 ## JUICE #10: a boss slam shakes the camera even when the hero stands outside its reach.
@@ -139,3 +140,46 @@ func _foe(game: Node, distance: float) -> Enemy:
 	game.enemies.append(foe)
 	foe.set_process(false)
 	return foe
+
+
+## JUICE #4: the struck body squashes at contact and recovers, in both the sprite and its 3D model.
+func _check_squash() -> void:
+	var old_reduce := Prefs.reduce_motion
+	Prefs.reduce_motion = false
+	var game := await make_game()
+	game.player.set_process(false)
+	var foe := _foe(game, 300.0)
+	check("an untouched body is not squashed", foe.sprite.squash_scale() == Vector2.ONE)
+	foe.take_damage(4.0, game.player)
+	var squash: Vector2 = foe.sprite.squash_scale()
+	check("contact squashes wider and shorter by the tier amount", squash.x > 1.0 and squash.y < 1.0 and is_equal_approx(squash.x - 1.0, HitTier.squash(HitTier.LIGHT)))
+	foe.sprite._process(0.05)
+	check("the squash eases back toward normal", foe.sprite.squash_scale().x < squash.x and foe.sprite.squash_scale().x > 1.0)
+	foe.sprite._process(0.5)
+	check("the squash ends", foe.sprite.squash_scale() == Vector2.ONE)
+	foe.take_damage(40.0, game.player)
+	check("a heavier hit squashes more", foe.sprite.squash_scale().x - 1.0 > HitTier.squash(HitTier.LIGHT))
+	check("squash only grows with the tier", HitTier.squash(HitTier.LIGHT) < HitTier.squash(HitTier.MEDIUM) and HitTier.squash(HitTier.MEDIUM) < HitTier.squash(HitTier.HEAVY) and HitTier.squash(HitTier.HEAVY) <= HitTier.squash(HitTier.KILL))
+	foe.sprite._process(0.5)
+	foe.sprite.trigger_squash(0.1)
+	foe.sprite.trigger_squash(0.02)
+	check("a weaker hit cannot cut a stronger squash short", is_equal_approx(foe.sprite.squash_amount, 0.1))
+	foe.sprite._process(0.5)
+	var preview = game.ortho_preview
+	if preview != null and preview._enemy_models != null:
+		var rest := _foe(game, 340.0)
+		preview._enemy_models.sync()
+		var rest_model: Dictionary = preview._enemy_models.entries[rest.get_instance_id()]
+		var rest_scale: Vector3 = (rest_model["root"] as Node3D).scale
+		check("an unstruck 3D body keeps its uniform scale", is_equal_approx(rest_scale.x, rest_scale.y) and is_equal_approx(rest_scale.x, rest_scale.z))
+		rest.take_damage(40.0, game.player)
+		preview._enemy_models.sync()
+		var hit_scale: Vector3 = (rest_model["root"] as Node3D).scale
+		check("a struck 3D body is wider and shorter, with depth matching width", hit_scale.x > rest_scale.x and hit_scale.y < rest_scale.y and is_equal_approx(hit_scale.x, hit_scale.z))
+	Prefs.reduce_motion = true
+	var calm := _foe(game, 380.0)
+	calm.take_damage(40.0, game.player)
+	check("reduced motion removes the squash", calm.sprite.squash_scale() == Vector2.ONE)
+	Prefs.reduce_motion = old_reduce
+	game.queue_free()
+	await _frames(2)

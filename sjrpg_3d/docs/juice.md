@@ -21,7 +21,7 @@
 | 1 | 피해 단계화 (`HitTier`) | 완료 | `scripts/hit_tier.gd`, `enemy.gd` `take_damage` | `juice_tier` |
 | 2 | 데미지 숫자 크기·색·팝 (22/26/32/36pt, 1.4배 팝 0.08초) | 완료 | `hit_tier.gd` `number_size/number_color`, `effects.gd` `font_size`·`pop`, `enemy.gd`, `game.gd` `float_text` | `juice_tier` |
 | 3 | 넉백 스케일 (140/180/240/260, 보스는 160 고정) | 완료 | `hit_tier.gd` `knockback`, `enemy.gd` `take_damage` | `juice_tier` |
-| 4 | 스쿼시·스트레치 | 예정 | | |
+| 4 | 스쿼시·스트레치 (적만: 5/7/10/12%, 0.12초). 히어로는 3D 루트 스케일 불변 규칙(`native_warrior` 테스트) 때문에 제외 | 완료 (적) | `actor_sprite.gd` `trigger_squash`·`squash_scale`, `native_enemy_models.gd` `sync`, `enemy.gd` | `juice_enemy` |
 | 5 | 처치 연출 (공격자 정지 75ms, 흰색 플래시, 파편 링, 반동 14px, 페이드 0.25초) | 완료 | `hit_tier.gd` KILL_*, `enemy.gd` `take_damage`·`_die`, `player.gd` `confirm_melee_contact`, `game_tempo.gd` | `juice_enemy` |
 | 6 | 보스 처치 연출 | 선택 | | |
 | 7 | 근접 전진 (기본 근접만, 접촉 전 16px, 140px 안에 적이 있고 40px보다 멀 때. 전진한 만큼 접촉 시점 실효 사거리가 최대 16px 늘어남) | 완료, 체감 튜닝 필요 | `player.gd` `_lunge`·`LUNGE_*` | `juice_player` |

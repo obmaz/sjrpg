@@ -182,7 +182,9 @@ func sync() -> void:
 		var model: Dictionary = entries[id]
 		var root: Node3D = model["root"]
 		var size := enemy.sprite.body_height / (Ortho3DPreview.GROUND_PER_METER * Iso.S) / float(model["base_height"])
-		root.scale = Vector3.ONE * size
+		# JUICE #4: the 3D body follows the sprite's contact squash (feet stay planted at the root origin).
+		var squash := enemy.sprite.squash_scale()
+		root.scale = Vector3(size * squash.x, size * squash.y, size * squash.x)
 		root.position = preview.actor_foot(enemy) + Ortho3DPreview.ground_position(enemy.sprite.position)
 		root.visible = enemy.get_parent() == preview.game.world and enemy.sprite.visible
 		var attack := 0.0

@@ -53,3 +53,8 @@ static func knockback(tier: int, boss: bool) -> float:
 	if boss:
 		return BOSS_KNOCKBACK
 	return [140.0, 180.0, 240.0, 260.0][clampi(tier, LIGHT, KILL)]
+
+
+## JUICE #4: how far the struck body squashes (wider, shorter) at contact, as a fraction of its size.
+static func squash(tier: int) -> float:
+	return [0.05, 0.07, 0.10, 0.12][clampi(tier, LIGHT, KILL)]

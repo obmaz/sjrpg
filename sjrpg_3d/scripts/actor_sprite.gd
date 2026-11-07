@@ -16,6 +16,11 @@ var shadow := true
 var contact_hold := 0.0
 var _contact_started := false
 var _contact_recovery := 0.0
+## JUICE #4: a short squash (wider, shorter) at contact, anchored at the feet. Presentation only.
+const SQUASH_TIME := 0.12
+var squash_amount := 0.0
+var _squash_age := SQUASH_TIME
+var _squash_presented := false
 
 
 func _ready() -> void:
@@ -62,6 +67,28 @@ func trigger_flash(color: Color, strength := 1.0) -> void:
 	queue_redraw()
 
 
+func trigger_squash(amount: float) -> void:
+	if Prefs.reduce_motion or amount < squash_factor():
+		return
+	squash_amount = amount
+	_squash_age = 0.0
+	_squash_presented = false
+	queue_redraw()
+
+
+## Current deviation from normal size: full at contact, easing to zero over SQUASH_TIME.
+func squash_factor() -> float:
+	if Prefs.reduce_motion or _squash_age >= SQUASH_TIME:
+		return 0.0
+	return squash_amount * pow(1.0 - _squash_age / SQUASH_TIME, 2.0)
+
+
+## x is the horizontal factor and y the vertical one; the volume is roughly preserved.
+func squash_scale() -> Vector2:
+	var s := squash_factor()
+	return Vector2(1.0 + s, 1.0 - s)
+
+
 func clear_flash() -> void:
 	flash = 0.0
 	_flash_presented = false
@@ -71,6 +98,12 @@ func clear_flash() -> void:
 
 func _process(delta: float) -> void:
 	_contact_recovery = maxf(0.0, _contact_recovery - delta)
+	if _squash_age < SQUASH_TIME:
+		# Like the flash, the first update is bounded so a slow browser frame still shows the squash.
+		_squash_age += minf(delta, 0.012) if not _squash_presented else delta
+		_squash_presented = true
+		_sync_flash_overlay()
+		queue_redraw()
 	if Prefs.reduce_motion:
 		flash = minf(flash, 0.35)
 		clear_contact_hold()
@@ -96,7 +129,9 @@ func _draw() -> void:
 	var scale_factor := body_height / atlas.ref_height
 	var region := atlas.regions[frame]
 	var dest := Rect2(-atlas.anchors[frame] * scale_factor, region.size * scale_factor)
+	draw_set_transform(Vector2.ZERO, 0.0, squash_scale())
 	draw_texture_rect_region(atlas.texture, dest, region, tint * WorldLighting.color_at(global_position))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	_sync_flash_overlay()
 
 
@@ -113,6 +148,7 @@ func _sync_flash_overlay() -> void:
 		_flash_overlay.material = created_material
 		add_child(_flash_overlay)
 	var scale_factor := body_height / atlas.ref_height
+	_flash_overlay.scale = squash_scale()
 	_flash_overlay.texture = atlas.texture
 	_flash_overlay.region = atlas.regions[frame]
 	_flash_overlay.destination = Rect2(-atlas.anchors[frame] * scale_factor, _flash_overlay.region.size * scale_factor)
