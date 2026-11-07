@@ -353,9 +353,8 @@ func _build_residents() -> void:
 func _load_actor() -> void:
 	_native_mage = GameState.hero_class == "mage"
 	if not _native_mage:
-		var sprite: ActorSprite = game.player.sprite
-		var atlas: ActorAtlas = sprite.atlas if sprite.atlas != null else game.player.atlas
-		actor = _new_card(atlas.texture, atlas.regions[sprite.frame], false)
+		actor = NativeWarrior3D.new().build()
+		stage.add_child(actor)
 		return
 	if not ResourceLoader.exists(MAGE_PATH):
 		push_warning("3D comparison awaits its verified skeletal mage asset")
@@ -500,8 +499,8 @@ func _publish_probe() -> void:
 		"actor_position": [actor.position.x, actor.position.y, actor.position.z],
 		"azimuth": rad_to_deg(atan2(eye.x, eye.z)), "elevation": rad_to_deg(asin(eye.y)),
 		"projection": "orthographic", "simulation": "3d", "scope": "cave" if game.dungeon.active else "forest", "skeletal_actor": _native_mage and actor != null and animation != null,
-		"actor_mode": "skeletal_mage" if _native_mage else "warrior_spatial_card",
-		"animation": _hero_motion.snapshot() if _hero_motion != null else {}}
+		"actor_mode": "skeletal_mage" if _native_mage else "native_warrior",
+		"animation": _hero_motion.snapshot() if _hero_motion != null else (actor as NativeWarrior3D).review_snapshot() if actor is NativeWarrior3D else {}}
 	JavaScriptBridge.eval("window.__sjrpg3dProbe = " + JSON.stringify(report))
 	if ready and not _ready_published:
 		_ready_published = true
@@ -513,15 +512,10 @@ func _sync_actor(delta: float) -> void:
 	if actor == null:
 		return
 	if not _native_mage:
-		var sprite: ActorSprite = player.sprite
-		var atlas: ActorAtlas = sprite.atlas if sprite.atlas != null else player.atlas
-		var frame: Rect2 = atlas.regions[sprite.frame]
-		var factor := sprite.body_height / atlas.ref_height
-		var destination := Rect2(-atlas.anchors[sprite.frame] * factor, frame.size * factor)
-		var mesh := actor as MeshInstance3D
-		_set_card_frame(mesh, atlas.texture, frame)
-		_set_actor_card(mesh, sprite)
-		_place_card(mesh, player.position + sprite.position, destination, 0.0, actor_foot(player) + ground_position(sprite.position))
+		actor.position = actor_foot(player) + ground_position(player.sprite.position)
+		var heading := ground_position(Vector2.from_angle(player.facing))
+		actor.rotation.y = atan2(heading.x, heading.z)
+		(actor as NativeWarrior3D).sync(player)
 		return
 	actor.position = actor_foot(player) + ground_position(player.sprite.position)
 	if _actor_flash != null:
@@ -566,11 +560,6 @@ func _set_card_frame(card: MeshInstance3D, texture: Texture2D, frame: Rect2) -> 
 	ink.set_shader_parameter("frame_blend", 0.0)
 
 
-func _set_actor_card(card: MeshInstance3D, sprite: ActorSprite) -> void:
-	var ink := card.material_override as ShaderMaterial
-	ink.set_shader_parameter("tint", Color(sprite.tint, sprite.modulate.a * sprite.self_modulate.a))
-	ink.set_shader_parameter("flash_color", sprite.flash_tint.lerp(Color.WHITE, 0.35))
-	ink.set_shader_parameter("flash_strength", 0.65 * sprite.flash)
 
 
 func _place_card(card: MeshInstance3D, at: Vector2, rect: Rect2, angle := 0.0, native_foot := Vector3(INF, INF, INF)) -> void:
@@ -591,17 +580,8 @@ func _sync_cards() -> void:
 			entry["node"].queue_free()
 			_cards.erase(id)
 			continue
-		if owner is Enemy:
+		if owner is Effect:
 			(entry["node"] as MeshInstance3D).visible = owner.get_parent() == game.world
-			_sync_enemy_card(entry["node"], owner)
-		elif owner is Effect:
-			(entry["node"] as MeshInstance3D).visible = owner.get_parent() == game.world
-		if entry.get("static", false):
-			_place_card(entry["node"], owner.position, entry["rect"])
-			if owner is Villager:
-				var ink := (entry["node"] as MeshInstance3D).material_override as ShaderMaterial
-				ink.set_shader_parameter("flash_color", Color(1.0, 0.45, 0.4).lerp(Color.WHITE, 0.35))
-				ink.set_shader_parameter("flash_strength", 0.65 * owner._hurt_flash)
 	for node in game.world.get_children():
 		var effect := node as Effect
 		if effect == null or effect.is_queued_for_deletion():
@@ -704,14 +684,3 @@ func _sync_cards() -> void:
 			(_labels[id]["node"] as Label3D).visible = owner.get_parent() == game.world
 
 
-func _sync_enemy_card(card: MeshInstance3D, enemy: Enemy) -> void:
-	var sprite: ActorSprite = enemy.sprite
-	var atlas: ActorAtlas = sprite.atlas
-	if atlas == null or sprite.frame >= atlas.regions.size():
-		return
-	var frame: Rect2 = atlas.regions[sprite.frame]
-	var factor := sprite.body_height / atlas.ref_height
-	var rect := Rect2(-atlas.anchors[sprite.frame] * factor, frame.size * factor)
-	_set_card_frame(card, atlas.texture, frame)
-	_set_actor_card(card, sprite)
-	_place_card(card, enemy.position + sprite.position, rect, 0.0, actor_foot(enemy) + ground_position(sprite.position))

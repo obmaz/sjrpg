@@ -15,7 +15,7 @@ static func _triangle(tool: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, cen
 		b = c
 		c = swap
 		normal = -normal
-	for p in [a, b, c]:
+	for p in [a, c, b]:
 		tool.set_normal(normal)
 		tool.set_color(ink)
 		tool.add_vertex(p)

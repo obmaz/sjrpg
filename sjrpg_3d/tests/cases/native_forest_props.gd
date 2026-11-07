@@ -47,5 +47,13 @@ func run() -> void:
 	environment.sync(0.0, true)
 	environment.sync(0.0, true)
 	check("pause does not rebuild vegetation or landmark geometry", children == environment.forest.get_child_count())
+	game.player.position = game.dungeon.entry_point()
+	await _frames(2)
+	if game.dungeon.enter():
+		preview._sync_scope()
+		environment.sync(0.0, true)
+		check("authored cave lanterns have native volume owners and existing lights", int(environment.report["native_cave_lanterns"]) == 10 and environment._cave_lights.size() == 10 and environment.cave.get_node("NativeCaveLanterns").get_child_count() == 10)
+		for record: Dictionary in environment.report["remaining_sources"]["cave"]:
+			check("converted cave lamp never remains in a card bucket", str(record["role"]) != "lantern")
 	game.queue_free()
 	await _frames(2)

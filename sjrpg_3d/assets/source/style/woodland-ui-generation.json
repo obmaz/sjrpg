@@ -1,0 +1,60 @@
+{
+  "brief": "Mature stylized painted woodland HUD, cohesive bronze/charcoal/ivory. New user-directed draft, not user-approved replacement style reference.",
+  "tool": "image_gen.imagegen",
+  "actual_tool_references": [],
+  "latest_instruction": "Potions less photoreal; bottom four buttons more crafted, avatar and skill tree coherent.",
+  "assets": [
+    {
+      "runtime": "assets/art/hud/woodland-icons.png",
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "git_blob_sha1": "c5b8969d79f0e35ee90548bbd0d24bf1f438343c",
+      "prompt": "Production UI asset sheet for a mature dark stylized woodland action RPG. ORIGINAL art direction, painterly designed material planes in the visual genre of Diablo Immortal, NOT photoreal, NOT pastel, NOT cute, NOT flat vector generic icons. Deliver exactly SIX separate circular inventory/HUD medallions in a STRICT THREE COLUMNS by TWO ROWS grid on a fully transparent background. Equal square cells, generous transparent gutters; every icon and rim fully inside its cell. NO TEXT, no numerals, no labels, no UI mockup.\nRow1 left: recognizable worn brown leather adventurer backpack with broad flap, two straps, small bronze clasp. Row1 middle: dark oxblood leather spellbook, inset bronze corner guards, single pale rune embossed into cover. Row1 right: ivory rolled quest parchment tied with one dark red cord and small bronze seal.\nRow2 left: matte iron settings gear with broad eight teeth and warm bronze inset hub. Row2 middle: squat red healing flask with broad angular glass body, readable crimson liquid plane, dark bronze neck collar and cork; absolutely no photographic glass reflections, no specular hotspot, no lens. Row2 right: taller indigo-violet mana flask with geometric shoulders, muted violet liquid plane and same collar/cork family.\nAll six sit on matching very dark charcoal leather recessed round faces with THIN weathered bronze double bevels. Designed restrained engraving only at cardinal points. Each silhouette bold enough to read at 40 CSS pixels; interior shading 3-5 broad painted planes, crisp edges, no tiny noise, no excessive filigree or gold. Keep the objects ivory/brown/oxblood/iron with accents, legible against charcoal. Flask rims and faces same scale as other four. Orthographic FRONT-ON UI presentation, no perspective scene. Real alpha outside each medallion. Do not add grid lines.",
+      "transparent_requested": true,
+      "limitation": "Generated brown gutters are opaque; runtime draws only circular UV geometry, excluding corners.",
+      "cells": {
+        "bag": [
+          0,
+          0
+        ],
+        "skills": [
+          1,
+          0
+        ],
+        "quests": [
+          2,
+          0
+        ],
+        "settings": [
+          0,
+          1
+        ],
+        "hp": [
+          1,
+          1
+        ],
+        "mp": [
+          2,
+          1
+        ]
+      }
+    },
+    {
+      "runtime": "assets/art/hud/woodland-portraits.png",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "git_blob_sha1": "af06717faea5297c6c8da663baf6e0eab1ff9b0f",
+      "prompt": "Create a TWO COLUMN, ONE ROW game HUD portrait atlas, original mature dark STYLIZED PAINTERLY woodland fantasy, visual genre of Diablo Immortal. Not photoreal, not photograph, not pastel/cute, not anime. Two equal cells, each containing one head-and-shoulders portrait centered in an unadorned circular dark charcoal vignette with transparent pixels outside the circle. No frame, no text, no numbers, no marks outside circles. LEFT: rugged male warrior, tousled dark brown hair, short beard, muted olive scarf, brown leather and dull iron shoulder armor, stern but human face. RIGHT: male mage, clean-shaven angular face, dark brown hair partly under deep midnight navy hood, restrained slate/bronze collar. Faces occupy similar size, facing slightly inward but near frontal. Design faces in clear hand-painted broad planes with firm shadow shapes, simplified brush marks and warm ivory highlights. No skin pores, no photographic texture, no glossy eye reflections, no gold ornamental clutter. Same warm neutral lighting from upper left for both; muted forest-gray backgrounds. Faces readable inside 50 CSS pixel avatar circles. Separate two circles with generous transparent margin; no weapons or magic outside portrait silhouettes.",
+      "transparent_requested": true,
+      "cells": {
+        "warrior": 0,
+        "mage": 1
+      }
+    }
+  ],
+  "processing": "No manual image edits or filters. HUD source circles are sampled from shared PNGs. Texture imports use lossy mode1. Portrait crops use delivered pixel bounds; old source art remains historical compatibility provenance."
+}

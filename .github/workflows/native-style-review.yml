@@ -7,6 +7,7 @@ on:
             - "sjrpg_3d/scripts/**"
             - "sjrpg_3d/tests/cases/**"
             - "sjrpg_3d/tools/check_native_style.mjs"
+            - "sjrpg_3d/tools/compare_native_style.mjs"
     workflow_dispatch:
 
 permissions:
@@ -40,19 +41,42 @@ jobs:
               run: |
                   chmod +x tools/*.sh sjrpg_3d/tools/*.sh
                   tools/setup_godot.sh
-                  tools/check.sh --project=3d --only=entry_layout,native_residents,native_forest_props
+                  tools/check.sh --project=3d --only=entry_layout,native_residents,native_forest_props,native_warrior,native_enemy_models,ui_tone
             - name: Export native UI for visual diagnostics
               if: success() || failure()
               run: sjrpg_3d/tools/export_web.sh
-            - name: Run actual native style browser harness
+            - name: Export the actual baseline for paired comparisons
               if: success() || failure()
               run: |
-                  mkdir -p build/native-style-review
-                  python3 -m http.server 8781 --bind 127.0.0.1 --directory sjrpg_3d/build/web > build/native-style-review/server.log 2>&1 &
-                  SJRPG_REVIEW_SERVER_PID=$!
-                  trap 'kill "$SJRPG_REVIEW_SERVER_PID" 2>/dev/null || true' EXIT
-                  curl --fail --silent --show-error --max-time 2 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 12 http://127.0.0.1:8781/ > /dev/null
-                  node sjrpg_3d/tools/check_save_layout.mjs http://127.0.0.1:8781/ build/native-style-review
+                  mkdir -p build/native-style-baseline
+                  git fetch --depth=1 origin 3ec51c4bf4131da4a0e5dafa167a1db63709e714
+                  git archive 3ec51c4bf4131da4a0e5dafa167a1db63709e714 | tar -x -C build/native-style-baseline
+                  cp sjrpg_3d/scripts/native_style_review.gd build/native-style-baseline/sjrpg_3d/scripts/native_style_review.gd
+                  python3 - <<'PY'
+                  from pathlib import Path
+                  p = Path('build/native-style-baseline/sjrpg_3d/scripts/main.gd')
+                  hook = '\tif OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get(\'native_style_review\')", true)) == "1":\n\t\tadd_child(preload("res://scripts/native_style_review.gd").new().setup(self))\n'
+                  p.write_text(p.read_text().replace('\tshow_title()\n', '\tshow_title()\n' + hook, 1))
+                  PY
+                  chmod +x build/native-style-baseline/tools/*.sh build/native-style-baseline/sjrpg_3d/tools/*.sh
+                  build/native-style-baseline/sjrpg_3d/tools/export_web.sh
+            - name: Run paired actual native style browser harness
+              if: success() || failure()
+              run: |
+                  mkdir -p build/native-style-review/before build/native-style-review/after
+                  python3 -m http.server 8780 --bind 127.0.0.1 --directory build/native-style-baseline/sjrpg_3d/build/web > build/native-style-review/before/server.log 2>&1 &
+                  SJRPG_STYLE_BEFORE_PID=$!
+                  python3 -m http.server 8781 --bind 127.0.0.1 --directory sjrpg_3d/build/web > build/native-style-review/after/server.log 2>&1 &
+                  SJRPG_STYLE_AFTER_PID=$!
+                  trap 'kill "$SJRPG_STYLE_BEFORE_PID" "$SJRPG_STYLE_AFTER_PID" 2>/dev/null || true' EXIT
+                  for SJRPG_STYLE_PORT in 8780 8781; do
+                      curl --fail --silent --show-error --max-time 2 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 12 http://127.0.0.1:$SJRPG_STYLE_PORT/ > /dev/null
+                  done
+                  SJRPG_STYLE_BASELINE=1 node sjrpg_3d/tools/check_native_style.mjs http://127.0.0.1:8780/ build/native-style-review/before
+                  node sjrpg_3d/tools/check_native_style.mjs http://127.0.0.1:8781/ build/native-style-review/after
+            - name: Compose actual before and after screenshots
+              if: success() || failure()
+              run: node sjrpg_3d/tools/compare_native_style.mjs build/native-style-review
             - uses: actions/upload-artifact@v6
               if: always()
               with:

@@ -1,9 +1,9 @@
 class_name MobileMenuArt
 extends RefCounted
-## Broad, generated UI silhouettes. Caller owns button state, badges and touch bounds.
+## Painted medallions. Legacy data/frame accessors retain archived source provenance.
+## Caller owns live button state, badges and independently sized touch bounds.
 
 static var _data: Dictionary = {}
-static var _texture: Texture2D
 
 
 static func data() -> Dictionary:
@@ -18,9 +18,4 @@ static func frame(key: String) -> Rect2:
 
 
 static func draw(canvas: CanvasItem, key: String, center: Vector2, radius: float, tint := Color.WHITE) -> void:
-	if _texture == null:
-		_texture = load("res://" + str(data()["atlas"]["path"]))
-	var source := frame(key)
-	var paint_half: float = data()["atlas"]["frames"][key]["paint_half"]
-	var size := source.size * maxf(radius, 0.0) / maxf(paint_half, 1.0)
-	canvas.draw_texture_rect_region(_texture, Rect2(center - size * 0.5, size), source, tint)
+	UiToneArt.draw_icon(canvas, key, center, radius, tint)

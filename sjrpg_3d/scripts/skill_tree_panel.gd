@@ -6,11 +6,11 @@ extends PanelFrame
 ## 폰 세로 화면에서는 트리(위) + 상세(아래)로 나뉘고 가로에서는 좌우로 나뉩니다.
 
 const TIERS := [1, 6, 12, 18, 24, 30]
-const NODE_SIDE := 64.0
-const TIER_HEIGHT := 104.0
+const NODE_SIDE := 84.0
+const TIER_HEIGHT := 128.0
 const TREE_PADDING := 18.0
 const TIER_LABEL_WIDTH := 70.0
-const TREE_MIN_WIDTH := 322.0
+const TREE_MIN_WIDTH := 400.0
 const TAP_SLOP := 12.0
 
 var _tab := 0
@@ -147,7 +147,7 @@ func _layout_nodes() -> void:
 	var width := maxf(_tree.size.x, TREE_MIN_WIDTH)
 	var col_w := (width - TIER_LABEL_WIDTH - 12.0) / 3.0
 	for slot in _tab_slots(_tab):
-		var center := Vector2(TIER_LABEL_WIDTH + (slot[2] + 0.5) * col_w, TREE_PADDING + slot[1] * TIER_HEIGHT + 44.0)
+		var center := Vector2(TIER_LABEL_WIDTH + (slot[2] + 0.5) * col_w, TREE_PADDING + slot[1] * TIER_HEIGHT + 56.0)
 		_nodes[slot[0]] = Rect2(center - Vector2.ONE * NODE_SIDE / 2.0, Vector2.ONE * NODE_SIDE)
 
 
@@ -169,7 +169,7 @@ func _draw_tree() -> void:
 			var from: Rect2 = _nodes[req]
 			var to: Rect2 = _nodes[id]
 			var met := GameState.rank(req) >= int(s["requires"][req])
-			var col := Color(0.96, 0.84, 0.52, 0.9) if met else Color(0.6, 0.6, 0.6, 0.6)
+			var col := Color(UiToneArt.BRONZE, 0.9) if met else Color(UiToneArt.MUTED, 0.4)
 			var a := Vector2(from.get_center().x, from.end.y + 27)
 			var b := Vector2(to.get_center().x, to.position.y - 4)
 			_tree.draw_line(a, b, col, 3.0, true)
@@ -182,23 +182,24 @@ func _draw_tree() -> void:
 		var rank := GameState.rank(id)
 		var learnable := GameState.learn_block_reason(s) == ""
 		var tint := Color.WHITE if rank > 0 else (Color(0.75, 0.75, 0.75) if learnable else Color(0.35, 0.35, 0.38))
-		SkillIcons.draw(_tree, id, rect, tint)
-		var border := Color(0.96, 0.84, 0.52) if rank > 0 else UiKit.EDGE
+		_tree.draw_style_box(UiKit.panel_style(UiToneArt.CHARCOAL, UiToneArt.BRONZE.darkened(0.4), 4), rect.grow(3))
+		SkillIcons.draw(_tree, id, rect.grow(-3), tint)
+		var border := UiToneArt.BRONZE if rank > 0 else UiKit.EDGE
 		if learnable:
-			border = Color("ddd1af")
+			border = UiToneArt.IVORY
 		_tree.draw_rect(rect, border, false, 4.0 if id == _selected else 2.0)
 		if id == _selected:
-			_tree.draw_rect(rect.grow(4), Color("d8c79f"), false, 2.0)
+			_tree.draw_rect(rect.grow(4), UiToneArt.BRONZE, false, 2.0)
 		var badge := "%d/%d" % [rank, int(s["limit"])]
 		var bpos := rect.position + Vector2(0, rect.size.y + 22)
 		_tree.draw_string_outline(font, bpos, badge, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 18, 2, Color(0, 0, 0, 0.9))
 		_tree.draw_string(font, bpos, badge, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 18, Color.WHITE if rank > 0 else Color(0.7, 0.7, 0.7))
 		if s["passive"] and not s["basic"]:
-			_tree.draw_string(font, rect.position + Vector2(3, 14), "P", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color(0.7, 1, 0.8))
+			_tree.draw_string(font, rect.position + Vector2(3, 14), "P", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, UiToneArt.MUTED)
 		var slot_index: int = GameState.slots.find(id)
 		if slot_index >= 0:
 			var tag := "주" if slot_index == 0 else str(slot_index)
-			_tree.draw_circle(rect.position + Vector2(rect.size.x - 3, 5), 12, Color(0.96, 0.84, 0.52))
+			_tree.draw_circle(rect.position + Vector2(rect.size.x - 3, 5), 12, UiToneArt.BRONZE)
 			_tree.draw_string(font, rect.position + Vector2(rect.size.x - 15, 11), tag, HORIZONTAL_ALIGNMENT_CENTER, 24, 16, UiKit.INK)
 
 
@@ -308,9 +309,9 @@ func _build_detail() -> void:
 	info.append("습득 레벨 %d" % GameState.required_level_for_rank(s, rank + 1) if rank < int(s["limit"]) else "최고 등급")
 	_detail.add_child(PanelFrame.wrap_label(" · ".join(info), 15, UiKit.MUTED))
 	if rank > 0:
-		_add_effect_line("현재", SkillDefs.describe(_selected, rank), Color(1, 0.95, 0.75))
+		_add_effect_line("현재", SkillDefs.describe(_selected, rank), UiToneArt.IVORY)
 	if rank < int(s["limit"]):
-		_add_effect_line("다음 등급" if rank > 0 else "1등급", SkillDefs.describe(_selected, rank + 1), Color(0.7, 1, 0.75))
+		_add_effect_line("다음 등급" if rank > 0 else "1등급", SkillDefs.describe(_selected, rank + 1), UiToneArt.BRONZE)
 
 	var reason := GameState.learn_block_reason(s)
 	var learn := UiKit.button("배우기 (포인트 1)" if rank == 0 else "등급 올리기 (포인트 1)", 21)
@@ -343,7 +344,7 @@ func _build_detail() -> void:
 					GameState.assign_slot(index, _selected)
 				_refresh())
 			row.add_child(b)
-		_detail.add_child(UiKit.label("같은 버튼을 다시 누르면 해제합니다", 13, Color(0.7, 0.75, 0.7)))
+		_detail.add_child(UiKit.label("같은 버튼을 다시 누르면 해제합니다", 13, UiToneArt.MUTED))
 
 
 func _add_effect_line(title: String, text: String, color: Color) -> void:

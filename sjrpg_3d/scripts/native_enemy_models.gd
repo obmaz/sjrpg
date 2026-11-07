@@ -5,6 +5,7 @@ const KINDS := ["goblin", "wolf", "boar", "skeleton", "golem", "warrior"]
 var preview: Node
 var entries := {}
 static var _meshes := {}
+static var _rig_meshes := {}
 
 func setup(presenter: Node) -> NativeEnemyModels:
 	preview = presenter
@@ -128,6 +129,7 @@ static func build(kind: String) -> Dictionary:
 				var rock := _part(torso, "box", Vector3(side * 0.40, 1.25, 0), Vector3(0.43, 0.39, 0.43), skin)
 				rock.rotation.z = side * 0.25
 			_part(torso, "round", Vector3(0, 1.04, 0.26), Vector3(0.16, 0.22, 0.07), cloth)
+	_batch(kind, [torso] + legs + arms, materials)
 	var base_colors: Array[Color] = []
 	for material in materials:
 		base_colors.append(material.albedo_color)
@@ -219,3 +221,31 @@ static func place_corpse(presenter: Node, model: Dictionary, corpse: Dictionary)
 	var opacity := CorpseArt.opacity(float(corpse.get("time", 0.0)), float(corpse.get("lifetime", 30.0)))
 	root.visible = not bool(corpse.get("used", false)) and opacity > 0.0
 	tint(model, Color.WHITE, 0.0, Color.WHITE, opacity)
+
+static func _batch(kind: String, pivots: Array, materials: Array) -> void:
+	# Merge authored pieces by joint and material; joints remain independently posed.
+	for index in pivots.size():
+		var pivot := pivots[index] as Node3D
+		var groups := {}
+		for child in pivot.get_children():
+			var mesh := child as MeshInstance3D
+			if mesh == null:
+				continue
+			var slot := materials.find(mesh.material_override)
+			if not groups.has(slot):
+				groups[slot] = []
+			groups[slot].append(mesh)
+		for slot in groups:
+			var key := kind + "/" + str(index) + "/" + str(slot)
+			if not _rig_meshes.has(key):
+				var tool := SurfaceTool.new()
+				tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+				for child: MeshInstance3D in groups[slot]:
+					tool.append_from(child.mesh, 0, child.transform)
+				_rig_meshes[key] = tool.commit()
+			var merged := MeshInstance3D.new()
+			merged.mesh = _rig_meshes[key]
+			merged.material_override = materials[slot]
+			pivot.add_child(merged)
+			for child: MeshInstance3D in groups[slot]:
+				child.free()

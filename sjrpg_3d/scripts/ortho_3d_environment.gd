@@ -311,12 +311,15 @@ func _build_cave() -> void:
 	var floor_texture: Texture2D = load("res://" + str(textures["floor"]["path"]))
 	for polygon in layout.polygons:
 		_floor(polygon, floor_texture, cave, 0.004, Color(0.90, 0.93, 0.94), 2.6)
+	var lanterns := NativeCaveLanterns3D.build(preview, cave, preview.game.dungeon.art.visuals)
+	var native_lantern_ids: Dictionary = lanterns["owned_source_ids"]
+	report["native_cave_lanterns"] = lanterns["count"]
 	var buckets := {}
 	var replaced: Array[int] = []
 	var retained: Array[int] = []
 	report["remaining_sources"]["cave"] = []
 	for node in preview.game.dungeon.art.visuals:
-		if node is IsoSprite and not preview._town_props.owns(node):
+		if node is IsoSprite and not preview._town_props.owns(node) and not native_lantern_ids.has(node.get_instance_id()):
 			# Wall strips and end caps share atlases with useful lamps. Replace
 			# only the metadata-owned boundary art, never the whole texture bucket.
 			if str(node.get_meta("cave_role", "")) == "wall":
@@ -327,7 +330,7 @@ func _build_cave() -> void:
 			retained.append(node.get_instance_id())
 			report["cave_sprites"] = int(report["cave_sprites"]) + 1
 	for node in preview.game.world.get_children():
-		if node is IsoSprite and not preview._town_props.owns(node) and not preview.game.dungeon.art.visuals.has(node):
+		if node is IsoSprite and not preview._town_props.owns(node) and not native_lantern_ids.has(node.get_instance_id()) and not preview.game.dungeon.art.visuals.has(node):
 			_sprite(node, buckets)
 			retained.append(node.get_instance_id())
 	report["cave_groups"] = _flush(buckets, cave, "CaveArt_")

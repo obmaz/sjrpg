@@ -590,14 +590,14 @@ func _draw_bars() -> void:
 		uvs.append(uv_rect.position + uv_rect.size * (Vector2.ONE + direction) * 0.5)
 	_bars.draw_polygon(pts, PackedColorArray([Color.WHITE]), uvs, tex)
 	_bars.draw_arc(center, pr, 0, TAU, 80, Color("302d27"), 4.0 * u, true)
-	_bars.draw_arc(center, pr, -PI + 0.2, -PI + 2.9, 36, Color("a28d66"), 1.1 * u, true)
-	_bars.draw_arc(center, pr - 3.0 * u, 0, TAU, 80, Color("81714e"), 0.8 * u, true)
+	_bars.draw_arc(center, pr, -PI + 0.2, -PI + 2.9, 36, UiToneArt.BRONZE, 1.1 * u, true)
+	_bars.draw_arc(center, pr - 3.0 * u, 0, TAU, 80, UiToneArt.BRONZE.darkened(0.18), 0.8 * u, true)
 	_bars.draw_arc(center, pr + 2.0 * u, 0.2, PI - 0.2, 36, Color(0.48, 0.42, 0.31, 0.75), 0.8 * u, true)
 	for sy in [-1.0, 1.0]:
 		var crest_center := center + Vector2(0, sy * (pr + 1.0 * u))
 		var crest := PackedVector2Array([crest_center + Vector2(0, -5) * u, crest_center + Vector2(5, 0) * u, crest_center + Vector2(0, 5) * u, crest_center + Vector2(-5, 0) * u])
 		_bars.draw_colored_polygon(crest, Color("292b29"))
-		_bars.draw_polyline(crest + PackedVector2Array([crest[0]]), Color("a08b66"), 0.9 * u, true)
+		_bars.draw_polyline(crest + PackedVector2Array([crest[0]]), UiToneArt.BRONZE, 0.9 * u, true)
 	for sx in [-1.0, 1.0]:
 		_bars.draw_circle(center + Vector2(sx * (pr - 1.0 * u), 0), 1.1 * u, Color("ac9872"))
 	_bars.draw_texture_rect(HudArt.level_badge(), geometry["level_badge"], false)

@@ -10,7 +10,7 @@ static func _tri(tool: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, normal: 
 		var swap := b
 		b = c
 		c = swap
-	for point in [a, b, c]:
+	for point in [a, c, b]:
 		tool.set_normal(normal)
 		tool.set_uv(Vector2(point.x, point.z) / 2.56)
 		tool.add_vertex(point)

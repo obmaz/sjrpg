@@ -40,6 +40,12 @@ func slot_visual_radius(index: int) -> float:
 	return radius * 0.82 if str(GameState.slots[index]).is_empty() else radius
 
 
+func css_scale() -> float:
+	if DisplayServer.get_name() == "headless":
+		return 1.0
+	return get_viewport().get_visible_rect().size.x / maxf(1.0, float(get_window().size.x))
+
+
 func _layout() -> void:
 	var margins := PanelFrame.safe_margins(get_viewport())
 	var safe_origin := Vector2(margins.x, margins.y)
@@ -56,20 +62,26 @@ func _layout() -> void:
 	for i in 4:
 		_buttons["slot%d" % (i + 1)] = _button(main + offsets[i] * u, radii[i] * u, radii[i] * 0.92 * u)
 	_buttons["roll"] = _button(main + Vector2(114, 0) * u, 32.0 * u, 31.0 * u)
-	var potion_y := main.y - 198.0 * u
-	_buttons["potion_hp"] = _button(Vector2(size.x - 118.0 * u, potion_y), 32.0 * u, 30.0 * u)
-	_buttons["potion_mp"] = _button(Vector2(size.x - 41.0 * u, potion_y), 32.0 * u, 30.0 * u)
+	# Keep visible art compact while giving both vials independent 44-CSS-pixel targets.
+	var potion_touch := maxf(32.0 * u, 22.0 * css_scale())
+	var potion_gap := maxf(77.0 * u, potion_touch * 2.0 + 8.0 * u)
+	var potion_y := main.y - maxf(198.0 * u, 163.0 * u + potion_touch + 12.0 * u)
+	var potion_right := maxf(41.0 * u, potion_touch + 8.0 * u)
+	_buttons["potion_hp"] = _button(Vector2(size.x - potion_right - potion_gap, potion_y), potion_touch, 30.0 * u)
+	_buttons["potion_mp"] = _button(Vector2(size.x - potion_right, potion_y), potion_touch, 30.0 * u)
 	var bar_y := size.y * 0.902 if portrait else size.y - 44.0 * u
 	var names := ["bar_bag", "bar_skills", "bar_quests", "bar_gear"]
 	var menu_visual := 34.1 if portrait else 31.0
-	var menu_touch := 35.0 if portrait else 32.0
+	var menu_touch := maxf((35.0 if portrait else 32.0) * u, 22.0 * css_scale())
+	var menu_gap := maxf(79.0 * u, menu_touch * 2.0 + 8.0 * u)
+	bar_y = minf(bar_y, size.y - menu_touch - 8.0 * u)
 	for i in 4:
-		_buttons[names[i]] = _button(Vector2(size.x / 2.0 + (i - 1.5) * 79.0 * u, bar_y), menu_touch * u, menu_visual * u)
+		_buttons[names[i]] = _button(Vector2(size.x / 2.0 + (i - 1.5) * menu_gap, bar_y), menu_touch, menu_visual * u)
 	var npc: String = game.near_npc()
 	_near_name = npc
 	if npc != "" and npc != "탈것 상인":
 		var half := Vector2(106.0 * u, maxf(32.0, 38.0 * u)) if npc == "워프게이트" else Vector2(78.0 * u, maxf(32.0, 32.0 * u))
-		var rise := maxf(78.0 * u, half.y + maxf(32.0, menu_touch * u) + 10.0 * u) if npc == "워프게이트" else 78.0 * u
+		var rise := maxf(78.0 * u, half.y + menu_touch + 10.0 * u)
 		var interaction := _button(Vector2(size.x / 2.0, bar_y - rise), 32.0 * u)
 		interaction["half_size"] = half
 		_buttons["near_shop"] = interaction

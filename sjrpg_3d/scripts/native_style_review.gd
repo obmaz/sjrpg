@@ -66,7 +66,7 @@ func _process(delta: float) -> void:
 				if renderer is Node and is_instance_valid(renderer) and renderer.has_method("review_snapshot"):
 					coverage[key] = renderer.review_snapshot()
 	var view := hud.controls.get_viewport_rect().size
-	var report := {"viewport": [view.x, view.y], "class": GameState.hero_class, "buttons": buttons, "avatar": [portrait.x-radius, portrait.y-radius, radius*2.0, radius*2.0], "hp": rect_value(geometry["hp"]), "mp": rect_value(geometry["mp"]), "level": GameState.level, "panel": panel, "paused": get_tree().paused, "native": game.native_ready, "coverage": coverage, "player": [game.player.position.x, game.player.position.y], "potions": [GameState.potions, GameState.mana_potions], "zoom": game.camera.zoom.x}
+	var report := {"viewport": [view.x, view.y], "class": GameState.hero_class, "buttons": buttons, "avatar": [portrait.x-radius, portrait.y-radius, radius*2.0, radius*2.0], "hp": rect_value(geometry["hp"]), "mp": rect_value(geometry["mp"]), "level_badge": rect_value(geometry["level_badge"]), "level": GameState.level, "panel": panel, "paused": get_tree().paused, "native": game.native_ready, "coverage": coverage, "player": [game.player.position.x, game.player.position.y], "potions": [GameState.potions, GameState.mana_potions], "zoom": game.camera.zoom.x}
 	JavaScriptBridge.eval("window.__sjrpgNativeStyleReview = " + JSON.stringify(report), true)
 static func rect(control: Control) -> Array:
 	return rect_value(control.get_global_rect())

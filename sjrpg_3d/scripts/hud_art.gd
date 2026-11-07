@@ -45,12 +45,12 @@ static func round_plaque(canvas: CanvasItem, name: String, center: Vector2, radi
 ## Class-specific portraits are cover-fit inside the shared metal medallion.
 static func portrait(cls: String) -> Texture2D:
 	if not _portraits.has(cls):
-		_portraits[cls] = load("res://assets/art/hud/portrait-warrior.webp" if cls == "warrior" else "res://assets/art/hud/portrait-mage.webp")
+		_portraits[cls] = UiToneArt.portraits()
 	return _portraits[cls]
 
 
-static func portrait_uv(_cls: String) -> Rect2:
-	return Rect2(0, 0, 1, 1)
+static func portrait_uv(cls: String) -> Rect2:
+	return UiToneArt.portrait_uv(cls)
 
 
 static func level_badge() -> Texture2D:

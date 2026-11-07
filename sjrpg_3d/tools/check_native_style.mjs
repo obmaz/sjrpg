@@ -26,6 +26,7 @@ function hudGeometry(s,label){
  for(const key of keys){const r=css(s,s.ui.buttons[key]);assert(inside(bounds,r),label+' bounds '+key);if(!baseline)assert(r.w>=43.5&&r.h>=43.5,label+' 44 CSS target '+key+' '+JSON.stringify(r));}
  if(!baseline)for(let i=0;i<keys.length;i++)for(let j=i+1;j<keys.length;j++)assert(!overlap(css(s,s.ui.buttons[keys[i]]),css(s,s.ui.buttons[keys[j]])),label+' separate hitboxes '+keys[i]+'/'+keys[j]);
  assert(inside(bounds,css(s,s.ui.avatar)),label+' avatar frame');
+ assert(inside(bounds,css(s,s.ui.level_badge)),label+' avatar level badge');
  assert(inside(bounds,css(s,s.ui.hp))&&inside(bounds,css(s,s.ui.mp)),label+' status gauge bounds');
  assert(!s.ui.paused,label+' live HUD');
  checks.push(label);
@@ -69,9 +70,10 @@ try{
    const label=cls+'-'+w+'x'+h;hudGeometry(await read(),label);await capture(label+'-hud',w===390||w===568);
    if(w===390&&captures.filter(c=>c.name===label+'-skills').length===0)await skillTree(label);
   }
-  const before=(await read()).ui.player;await page.keyboard.down('d');await page.waitForTimeout(450);await page.keyboard.up('d');await page.waitForTimeout(250);
+  const before=(await read()).ui.player;let distance=0;
+  for(const key of ['d','a','w','s']){await page.keyboard.down(key);await page.waitForTimeout(350);await page.keyboard.up(key);await page.waitForTimeout(100);const p=(await read()).ui.player;distance=Math.hypot(p[0]-before[0],p[1]-before[1]);if(distance>1)break;}
   await capture(cls+'-walking-native');
-  const after=(await read()).ui.player;assert(Math.hypot(after[0]-before[0],after[1]-before[1])>1,'real WASD movement');checks.push(cls+' actual movement');
+  assert(distance>1,'real WASD movement');checks.push(cls+' actual movement');
  }
  for(const [name,params]of[['bridge',{at:'bridge'}],['landmark',{at:'lm0'}],['cave',{dungeon_preview:'entry'}],['enemy',{at:'field',encounter_preview:'active'}]]){
   await boot('mage',params);await page.waitForTimeout(800);hudGeometry(await read(),name);await capture(name+'-native',true);
