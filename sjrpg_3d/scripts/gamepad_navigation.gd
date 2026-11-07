@@ -179,9 +179,17 @@ func _action(action: String) -> void:
 	# Resolve synchronously: an earlier signal listener may just have opened a menu.
 	var current := _scope_now()
 	if current != _scope:
+		if is_instance_valid(_scope):
+			_history[_scope.get_instance_id()] = _last_key
 		_scope = current
-		_last_key = ""
+		_buttons.clear()
+		_focus_index = 0
+		_last_key = str(_history.get(_scope.get_instance_id(), "")) if _scope != null else ""
+		Gamepad.require_neutral()
 		_refresh()
+		# This edge belongs to the previous context, even if the new scope appeared
+		# between the last process tick and raw joypad input dispatch.
+		return
 	if _scope != null:
 		Gamepad.set_combat_enabled(false)
 		match action:

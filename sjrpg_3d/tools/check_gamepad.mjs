@@ -76,7 +76,7 @@ for(const profile of [{name:'portrait-mage-continue',width:390,height:844,dpr:1,
   const [x,y,w,h]=n.focus_rect,[vw,vh]=s.review.viewport;
   assert(w>0&&h>0&&x>=-1&&y>=-1&&x+w<=vw+2&&y+h<=vh+2,'actual focused target lies inside viewport');
  }
- function record(label){c.checks.push(label);}
+ function record(label){c.checks.push(label);console.log('GAMEPAD_CHECK_PASS '+JSON.stringify({profile:profile.name,label}));}
  async function capture(suffix){
   const name=profile.name+'-'+suffix,data=await page.screenshot({type:'jpeg',quality:78,scale:'css'});
   await writeFile(path.join(out,name+'.jpg'),data);const b=data.toString('base64');

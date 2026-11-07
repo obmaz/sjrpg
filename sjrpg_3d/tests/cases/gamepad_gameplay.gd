@@ -118,6 +118,29 @@ func run() -> void:
 	await _tap(JOY_BUTTON_DPAD_UP)
 	check("D-pad up consumes one actual resource potion", GameState.mana_potions == mana_count - 1 and player.resource > 40.0)
 
+
+	# Add a real focus scope between navigation polls, without Hud._open's own gate.
+	# Flush the raw event now so an old-context edge cannot be hidden by the next poll.
+	var external := PanelFrame.new()
+	game.hud.add_child(external)
+	external.set_header("외부 이벤트")
+	var activations: Array[int] = [0]
+	var external_action := UiKit.button("실제 동작")
+	external_action.pressed.connect(func(): activations[0] += 1)
+	external.body.add_child(external_action)
+	_button(JOY_BUTTON_A, true)
+	Input.flush_buffered_events()
+	await _frames(2)
+	check("external menu before raw A discards old-context edge", activations[0] == 0)
+	_button(JOY_BUTTON_A, false)
+	await _frames(5)
+	_button(JOY_BUTTON_A, true)
+	await _frames(2)
+	check("external menu accepts fresh real A after neutral release", activations[0] == 1)
+	_button(JOY_BUTTON_A, false)
+	external.free()
+	await _frames(6)
+
 	await _tap(JOY_BUTTON_START)
 	check("Menu opens actual settings and pauses the world", get_tree().paused and game.hud.panel_open() and game.hud._panel is SettingsPanel)
 	origin = player.position
@@ -217,6 +240,13 @@ func run() -> void:
 	# A second real world regresses targeted leap impact while RS keeps overwriting facing.
 	# The target is 40 degrees off-axis but inside the real manual acquisition cone.
 	var warrior_game: Node = await make_game("warrior")
+	warrior_game.encounters.set_process(false)
+	warrior_game._spawn_timer = 3600.0
+	for ambient: Enemy in warrior_game.enemies:
+		ambient.queue_free()
+	warrior_game.enemies.clear()
+	await get_tree().physics_frame
+	await _frames(2)
 	var warrior: Player = warrior_game.player
 	GameState.level = 18
 	GameState.ranks = {"cleave": 1, "howl": 1, "leap": 1, "leapAttack": 1}
@@ -231,8 +261,10 @@ func run() -> void:
 	var leap_legal := false
 	for offset: Vector2 in [Vector2.ZERO, Vector2(180, 0), Vector2(-180, 0), Vector2(0, 200)]:
 		var point: Vector2 = leap_origin + offset
-		var candidate: Vector2 = point + Vector2.from_angle(deg_to_rad(40.0)) * 180.0
-		if not warrior_game._blocked(point, Player.RADIUS) and not warrior_game._blocked(candidate, Enemy.radius_for("goblin")) and warrior_game.can_melee_reach(point, candidate):
+		var direction: Vector2 = Vector2.from_angle(deg_to_rad(40.0))
+		var candidate: Vector2 = point + direction * 180.0
+		var intended_landing: Vector2 = candidate - direction * 36.0
+		if not warrior_game._blocked(point, Player.RADIUS) and not warrior_game._blocked(candidate, Enemy.radius_for("goblin")) and not warrior_game._blocked(intended_landing, Player.RADIUS) and warrior_game.can_melee_reach(point, candidate):
 			leap_origin = point
 			leap_target_point = candidate
 			leap_legal = true
@@ -255,11 +287,13 @@ func run() -> void:
 		_axis(JOY_AXIS_RIGHT_X, 0.9)
 		_axis(JOY_AXIS_RIGHT_Y, 0.0)
 		await _frames(3)
+		check("targeted leap fixture has only the intended attackable body", warrior_game.enemies.size() == 1 and warrior_game.enemies[0] == target)
 		var target_hp: float = target.hp
+		var leap_serial: int = warrior._action_serial
 		_button(JOY_BUTTON_X, true)
 		await _frames(2)
 		_button(JOY_BUTTON_X, false)
-		check("off-axis X leap reaches actual impact damage with RS held", await _until(func(): return is_instance_valid(target) and target.hp < target_hp, 2500))
+		check("off-axis X leap reaches actual impact damage with RS held", await _until(func(): return is_instance_valid(target) and target.hp < target_hp, 2500), JSON.stringify({"serial_before": leap_serial, "serial_after": warrior._action_serial, "cooldowns": warrior.cooldowns, "from": [leap_origin.x, leap_origin.y], "landing": [warrior.position.x, warrior.position.y], "target": [leap_target_point.x, leap_target_point.y]}))
 		if is_instance_valid(target):
 			var landing_distance: float = warrior.position.distance_to(target.position)
 			check("off-axis leap lands within physical target plus slam reach", landing_distance <= target.radius + 70.0, str(landing_distance))
