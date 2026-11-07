@@ -12,6 +12,7 @@ var _held := {}  # touch index -> button name
 var _buttons := {}  # name -> {center, radius}
 var _unit := 1.0
 var _near_name := ""
+var last_drawn_gamepad_hints: Array[Dictionary] = []
 var _feedback := {}
 var _success_feedback := {}
 var _denied_feedback := {}
@@ -500,12 +501,13 @@ func _draw() -> void:
 
 ## Compact Xbox cues follow the existing buttons; keyboard/touch art is unchanged.
 func _draw_gamepad_hints() -> void:
+	last_drawn_gamepad_hints.clear()
 	if not Gamepad.using_gamepad:
 		return
 	var labels := {"slot0": "A", "slot1": "X", "slot2": "Y", "slot3": "RB", "slot4": "RT",
 		"roll": "B", "potion_hp": "LB", "potion_mp": "↑", "bar_bag": "←",
 		"bar_skills": "↓", "bar_quests": "→", "bar_gear": "Menu"}
-	var font_size := ceili(maxf(14.0 * _unit, 10.0 * css_scale()))
+	var font_size := ceili(maxf(14.0 * _unit, 12.0 * css_scale()))
 	for key: String in labels:
 		if not _buttons.has(key):
 			continue
@@ -517,7 +519,8 @@ func _draw_gamepad_hints() -> void:
 		var height := maxf(23.0 * _unit, font_size + 5.0)
 		var at := center + Vector2(radius * 0.62, radius * 0.62)
 		if key.begins_with("bar_"):
-			at = center + Vector2(0, radius + height * 0.58)
+			var view := get_viewport_rect().size
+			at = center + Vector2(0, radius + height * 0.58) if view.y > view.x else center + Vector2(radius * 0.6, -radius * 0.7)
 		elif key.begins_with("potion_"):
 			at = center - Vector2(radius * 0.58, radius * 0.58)
 		var rect := Rect2(at - Vector2(width, height) * 0.5, Vector2(width, height))
@@ -529,5 +532,13 @@ func _draw_gamepad_hints() -> void:
 		draw_style_box(skin, rect)
 		var ink := Color("b8cfab") if text == "A" else Color("dba49a") if text == "B" else Color("a4bdd7") if text == "X" else Color("dec38a") if text == "Y" else UiToneArt.IVORY
 		HudArt.text_in_rect(self, text, rect, font_size, ink)
-	var move_rect := Rect2(_stick_center - Vector2(80, 0) * _unit, Vector2(160, 34) * _unit)
+		last_drawn_gamepad_hints.append({"name": key, "text": text, "rect": [rect.position.x, rect.position.y, rect.size.x, rect.size.y], "font_size": font_size, "css_scale": css_scale()})
+	var move_width := HudArt.FONT.get_string_size("LS 이동 · RS 조준", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 8.0 * _unit
+	var move_left := maxf(8.0 * _unit, _stick_center.x - move_width * 0.5)
+	var move_rect := Rect2(Vector2(move_left, _stick_center.y), Vector2(move_width, maxf(34.0 * _unit, font_size + 4.0)))
 	HudArt.text_in_rect(self, "LS 이동 · RS 조준", move_rect, font_size, Color("bbb3a1"))
+	last_drawn_gamepad_hints.append({"name": "move_aim", "text": "LS 이동 · RS 조준", "rect": [move_rect.position.x, move_rect.position.y, move_rect.size.x, move_rect.size.y], "font_size": font_size})
+
+
+func gamepad_hint_snapshot() -> Dictionary:
+	return {"visible": is_visible_in_tree() and not last_drawn_gamepad_hints.is_empty(), "glyphs": last_drawn_gamepad_hints.duplicate(true)}

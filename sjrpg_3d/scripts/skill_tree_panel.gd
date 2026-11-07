@@ -362,6 +362,7 @@ func _build_detail() -> void:
 
 	var reason := GameState.learn_block_reason(s)
 	var learn := UiKit.button("배우기 (포인트 1)" if rank == 0 else "등급 올리기 (포인트 1)", 21)
+	learn.set_meta("gamepad_key", "learn:" + _selected)
 	learn.custom_minimum_size = Vector2(0, 72)
 	learn.disabled = reason != ""
 	learn.pressed.connect(func():
@@ -379,6 +380,7 @@ func _build_detail() -> void:
 		_detail.add_child(row)
 		for i in 5:
 			var b := UiKit.button("주" if i == 0 else str(i), 20)
+			b.set_meta("gamepad_key", "assign:%s:%d" % [_selected, i])
 			b.custom_minimum_size = Vector2(64, 68)
 			if GameState.slots[i] == _selected:
 				UiKit.style_button(b, false, true)

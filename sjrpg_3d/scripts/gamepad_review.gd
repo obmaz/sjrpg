@@ -115,6 +115,8 @@ func _publish() -> void:
 				var center: Vector2 = data["center"]
 				touch[key] = [center.x, center.y]
 			report["touch"] = touch
+			if game.hud.controls.has_method("gamepad_hint_snapshot"):
+				report["hints"] = game.hud.controls.call("gamepad_hint_snapshot")
 			var panel: PanelFrame = game.hud._panel
 			if is_instance_valid(panel):
 				var targets: Array = []

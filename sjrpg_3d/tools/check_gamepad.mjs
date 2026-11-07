@@ -130,6 +130,11 @@ for(const profile of [{name:'portrait-mage-continue',width:390,height:844,dpr:1,
   await neutral();
   record('real pad title/save/class/Continue or New; preview files preserved; held A entry gate');
   console.log('GAMEPAD_STAGE '+JSON.stringify({profile:profile.name,stage:'live'}));
+  await neutral();
+  assert.equal((await read()).review.near,'상인','legal merchant entry remains within real interaction distance');
+  await button(6,.9);await wait(s=>panelIs(s,'bag_panel')&&s.review.panel.shopping,'LT opens actual merchant');
+  await neutral();focused(await wait(s=>s.review.navigation.focus_inside,'merchant focus'));await closePanel();record('LT actual merchant interaction');
+
   let origin=(await read()).review.player.position;
   await axis(0,.1);await axis(1,-.1);await page.waitForTimeout(450);s=await read();
   assert(Math.hypot(s.review.player.position[0]-origin[0],s.review.player.position[1]-origin[1])<.5,'real deadzone blocks stick drift');
@@ -156,12 +161,17 @@ for(const profile of [{name:'portrait-mage-continue',width:390,height:844,dpr:1,
   await button(1,1);await wait(s=>s.review.player.serial>serial&&s.review.player.roll_time>0,'actual B dodge');
   await neutral();await wait(s=>s.review.player.roll_time<=0,'dodge completes');
   s=await read();assert(Math.hypot(s.review.player.position[0]-origin[0],s.review.player.position[1]-origin[1])>8,'real dodge movement');
-  record('held primary and B actual dodge');await capture('pad-hud');
+  record('held primary and B actual dodge');
+  s=await wait(s=>s.review.hints?.visible&&s.review.hints.glyphs?.length>=12,'actual drawn Xbox HUD glyphs');
+  const expected={slot0:'A',slot1:'X',slot2:'Y',slot3:'RB',slot4:'RT',roll:'B',potion_hp:'LB',bar_gear:'Menu'};
+  for(const [name,text]of Object.entries(expected))assert(s.review.hints.glyphs.some(g=>g.name===name&&g.text===text),'actual drawn Xbox glyph '+name);
+  for(const g of s.review.hints.glyphs){
+   const [x,y,w,h]=g.rect,[vw,vh]=s.review.viewport;
+   assert(g.font_size*s.window[0]/vw>=11.95,'actual Xbox glyph font is at least12CSS '+g.name);
+   assert(x>=-1&&y>=-1&&x+w<=vw+2&&y+h<=vh+2,'drawn Xbox glyph remains inside viewport '+g.name);
+  }
+  await capture('pad-hud');
 
-  await neutral();
-  assert.equal((await read()).review.near,'상인','legal merchant entry remains within real interaction distance');
-  await button(6,.9);await wait(s=>panelIs(s,'bag_panel')&&s.review.panel.shopping,'LT opens actual merchant');
-  await neutral();focused(await wait(s=>s.review.navigation.focus_inside,'merchant focus'));await closePanel();record('LT actual merchant interaction');
 
   await openPanel(14,'bag_panel');
   let before=(await read()).review.navigation.focus_key;await tap(13);
@@ -206,13 +216,14 @@ for(const profile of [{name:'portrait-mage-continue',width:390,height:844,dpr:1,
   // Real keyboard and touch input switch the displayed modality while the pad remains connected.
   origin=(await read()).review.player.position;await page.keyboard.down('d');
   await wait(s=>!s.review.pad.using_gamepad&&Math.hypot(s.review.player.position[0]-origin[0],s.review.player.position[1]-origin[1])>5,'actual keyboard fallback');
-  await page.keyboard.up('d');await capture('keyboard-fallback');
+  await page.keyboard.up('d');await wait(s=>s.review.hints?.visible===false&&s.review.hints.glyphs.length===0,'actual Xbox glyphs disappear after keyboard input');await capture('keyboard-fallback');
   await wait(s=>s.review.player.attack_time<=0,'input idle before touch');
   s=await read();const [tx,ty]=s.review.touch.slot0,[vw,vh]=s.review.viewport;
   serial=s.review.player.serial;
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:tx*s.window[0]/vw,y:ty*s.window[1]/vh}]});
   await wait(s=>s.review.player.serial>serial&&!s.review.pad.using_gamepad,'actual touch primary fallback',6000);
   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await wait(s=>s.review.hints?.visible===false,'actual Xbox glyphs remain hidden after touch');
   record('real keyboard and touch fallback with pad still connected');
   c.final=await read();assert.equal(c.errors.length,0);
   console.log('GAMEPAD_CASE_PASS '+JSON.stringify({profile:profile.name,checks:c.checks.length,captures:c.captures.length,errors:0,virtual:true}));
