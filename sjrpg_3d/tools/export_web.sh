@@ -7,7 +7,11 @@ mkdir -p "$ROOT/build/web"
 touch "$ROOT/build/.gdignore"
 LOG="$(mktemp)"; trap 'rm -f "$LOG"' EXIT
 "$ROOT/tools/godot.sh" --headless --import >"$LOG" 2>&1 || true
-if grep -E "SCRIPT ERROR|Parse Error" "$LOG"; then echo "스크립트 오류로 export 중단"; exit 1; fi
+if grep -q -E "SCRIPT ERROR|Parse Error" "$LOG"; then
+  grep -n -B 1 -A 3 -E "SCRIPT ERROR|Parse Error" "$LOG"
+  echo "스크립트 오류로 export 중단"
+  exit 1
+fi
 "$ROOT/tools/godot.sh" --headless --export-release "Web" build/web/index.html >"$LOG" 2>&1 || { cat "$LOG"; exit 1; }
 test -s "$ROOT/build/web/index.wasm" && test -s "$ROOT/build/web/index.pck"
 # The loading backdrop is available before the Godot pack is downloaded.

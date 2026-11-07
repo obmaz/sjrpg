@@ -46,6 +46,13 @@ func run() -> void:
 				check("common potion counts clear the vial centre in a lower-right badge", rect.position.x > 0.0 and rect.position.y > 0.0)
 			for point in [rect.position, rect.end, Vector2(rect.position.x, rect.end.y), Vector2(rect.end.x, rect.position.y)]:
 				check("measured potion count ribbon stays inside its actual touch circle", point.length() <= target + 0.01)
+		var point_scale: float = float(scale)
+		for points: int in [1, 99]:
+			var point_geometry: Dictionary = TouchControls.skill_points_geometry(Vector2.ZERO, 20.0 * point_scale, points, point_scale, 22.0 * point_scale)
+			var point_rect: Rect2 = point_geometry["rect"]
+			check("live skill-point quantity stays at least 12 CSS pixels", float(point_geometry["font_size"]) / point_scale >= 12.0)
+			for corner: Vector2 in [point_rect.position, point_rect.end, Vector2(point_rect.position.x, point_rect.end.y), Vector2(point_rect.end.x, point_rect.position.y)]:
+				check("skill-point badge stays within its existing menu touch circle", corner.length() <= 22.0 * point_scale + 0.01)
 	var view := SubViewport.new()
 	view.size = Vector2i(720, 1280)
 	add_child(view)

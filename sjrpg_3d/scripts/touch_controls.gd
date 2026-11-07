@@ -403,6 +403,27 @@ func interaction_visual_rect(center: Vector2, half: Vector2) -> Rect2:
 	return Rect2(center - size * 0.5, size)
 
 
+## Reuse the potion family's measured type/contrast, mirrored to the book's upper-right.
+static func skill_points_geometry(center: Vector2, radius: float, points: int, scale: float, hit_radius: float) -> Dictionary:
+	var geometry := PotionArt.count_geometry(center, radius, points, scale, hit_radius)
+	var rect: Rect2 = geometry["rect"]
+	rect.position.y = center.y * 2.0 - rect.end.y
+	geometry["rect"] = rect
+	return geometry
+
+
+func _draw_skill_points(center: Vector2, radius: float, hit_radius: float) -> void:
+	var geometry := skill_points_geometry(center, radius, GameState.skill_points, css_scale(), hit_radius)
+	var rect: Rect2 = geometry["rect"]
+	var skin := StyleBoxFlat.new()
+	skin.bg_color = Color(UiToneArt.CHARCOAL, 0.96)
+	skin.border_color = Color(UiToneArt.BRONZE, 0.7)
+	skin.set_border_width_all(1)
+	skin.set_corner_radius_all(3)
+	draw_style_box(skin, rect)
+	HudArt.text_in_rect(self, str(geometry["text"]), rect.grow(-radius / 30.0), int(geometry["font_size"]), UiToneArt.IVORY)
+
+
 func _draw_menu(name: String, center: Vector2, radius: float, pressed: bool) -> void:
 	var u := _unit
 	var draw_radius := radius - (0.7 * u if pressed else 0.0)
@@ -469,9 +490,6 @@ func _draw() -> void:
 		elif name.begins_with("bar_"):
 			_draw_menu(name, c, r, pressed)
 			if name == "bar_skills" and GameState.skill_points > 0:
-				var bc := c + Vector2(r * 0.72, -r * 0.72)
-				draw_circle(bc, 8.0 * u, Color(0.12, 0.095, 0.06, 0.95))
-				draw_arc(bc, 8.0 * u, 0, TAU, 24, Color(0.65, 0.54, 0.33), 0.8 * u, true)
-				HudArt.text_outlined(self, str(GameState.skill_points), bc + Vector2(-8.0 * u, 4.0 * u), 16.0 * u, int(11 * u), Color(0.94, 0.86, 0.65))
+				_draw_skill_points(c, r, float(b["radius"]))
 
 		_draw_action_feedback(name, c, r)
