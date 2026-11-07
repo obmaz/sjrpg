@@ -1,0 +1,124 @@
+{
+  "source_commit": "12240d247534c003bd2f856bca49dd5206a14dff",
+  "worker_commit": "c50dd727c7148b5330febf99961fd106cf4e9231",
+  "engine": "4.7.2",
+  "cwebp_version": "1.3.2\nlibsharpyuv: 0.2.1",
+  "sources": {
+    "warrior.png": {
+      "git_blob": "6503418f33ed3db1abdcf95dc01a4b05a71801ef",
+      "sha256": "98ccdb29643424c05b0e3c60a51ee3a51ee6cbb95000a4f4529bb9b885ac1e1a",
+      "bytes": 2584103,
+      "dimensions": [
+        1086,
+        1448
+      ]
+    },
+    "mage.png": {
+      "git_blob": "0205987e6a80e8f34a58f11cb8bcef5f59640ad6",
+      "sha256": "94bce493d60f2e167bad64db7bd6688019b24ad462a3a9bd60ea5dfb86fcadf5",
+      "bytes": 2339629,
+      "dimensions": [
+        1086,
+        1448
+      ]
+    },
+    "forest.png": {
+      "git_blob": "56245873cdaf8956cca04b30493bea6a2278a6a3",
+      "sha256": "73307ac008d14fedffaefd1f3e9c4bc1567890341216548c5a5caea84d07c6b1",
+      "bytes": 2050995,
+      "dimensions": [
+        1086,
+        1448
+      ]
+    },
+    "selection-and-continue-concept.png": {
+      "git_blob": "9abecb1e6545f31a743a7062234c6c613c3aa9c5",
+      "sha256": "888e5698de6b5e5326db6c35a5beb8f7144c440641452ca6cb43be85be5e33eb",
+      "bytes": 2488265,
+      "dimensions": [
+        1330,
+        1182
+      ]
+    }
+  },
+  "production": {
+    "selection-warrior.webp": {
+      "source": "warrior.png",
+      "sha256": "54742d2b7a26b29466b8e21c73b6977e0984f8fc1655180cfae4a85e296d6fe0",
+      "bytes": 267774,
+      "dimensions": [
+        1086,
+        1448
+      ],
+      "packing": "cwebp -q 88 -m 6 -mt -metadata none; no crop, resize or pixel editing",
+      "import_metadata_sha256": "d8c7ac1060312a8d00b373f1f49b698098ec43046380363da0b645a2bbb50689"
+    },
+    "selection-mage.webp": {
+      "source": "mage.png",
+      "sha256": "c3785de5765547f3cee86a3c64778c376431066f81507191400fba74f79c90cb",
+      "bytes": 196904,
+      "dimensions": [
+        1086,
+        1448
+      ],
+      "packing": "cwebp -q 88 -m 6 -mt -metadata none; no crop, resize or pixel editing",
+      "import_metadata_sha256": "8a6059ec525bf8b05173258b3eb08e477124e5a79fc9c0dc638110a2e2870618"
+    },
+    "selection-forest.webp": {
+      "source": "forest.png",
+      "sha256": "9eead40fe7d6c9894431965d2cb804ad11af029b3749b0acfde16a2b0c320da3",
+      "bytes": 126750,
+      "dimensions": [
+        1086,
+        1448
+      ],
+      "packing": "cwebp -q 88 -m 6 -mt -metadata none; no crop, resize or pixel editing",
+      "import_metadata_sha256": "e28197ff876645852e9e6f677c47bb1a165e27169e404ee68de47c34472c99b1"
+    }
+  },
+  "prompt_record": {
+    "path": "selection-generation.json",
+    "git_blob": "18a56974b93a4f59d2b10ae4d8855129a3ae16ae",
+    "sha256": "a61af33f60b5e5b07ae954a0466e3afa26f5712d963d4f876580effc64991d41",
+    "bytes": 6313,
+    "record": {
+      "version": 1,
+      "task": "character-and-continue-screen-redesign",
+      "concept": {
+        "path": "selection-and-continue-concept.png",
+        "prompt": "Create a polished professional MOBILE DARK FANTASY ARPG UI DESIGN BOARD with TWO equally sized full-height portrait screens side by side, each 720x1280 proportion. This is a concrete buildable UI design for Korean game '자연의 수호자', inspired by Diablo Immortal's atmospheric hand-painted stylization, NOT photorealistic actors, NOT pastel/cartoon, NOT cluttered ornate gold. Palette charcoal green, desaturated forest teal, antique bronze thin frames, ivory text, restrained warm amber highlights. LEFT SCREEN new hero CLASS SELECTION: top small game title, back arrow, headline '수호자 선택', small separated subtitle; two clean tabs '전사' and '마법사'. Large striking hero illustration central upper middle, rugged adult dark-haired MALE warrior in worn steel armor and muted green cloak, painterly premium game concept style with crisp readable shapes; layered misty ancient forest and stone ruin behind. Hero framed by subtle thin bronze arch, no giant flat black box. Lower readable softly translucent dark info area: '전사', '근접 전투 · 강인한 생존력', short one-line description, two compact stat chips '체력 10,000', '분노 1,000'. Bottom wide tasteful bronze primary button '전사로 모험 시작'; small secondary '저장 슬롯 변경'. Plenty of measured whitespace and clean typographic hierarchy, touch-friendly. RIGHT SCREEN CONTINUE / LOAD selection: identical brand/materials/background, title '모험 이어가기', separated subtitle. Upper atmospheric vignette portrait of male NAVY-COAT mage with small cool blue spell at right, quiet forest ruin backdrop. Four elegant SAVE CARDS stacked, each wide with small square illustrated class portrait at left, number, class/level and location/time in separate aligned columns, clear selection glow thin bronze outline. First selected '01 마법사 Lv.12' / '숲 마을 · 11.07 15:10', second '02 전사 Lv.8' / '바람 동굴', third and fourth calm empty cards '새로운 모험' with small plus icon. Small discrete delete affordance only occupied slots, physically separate from card select. Fixed bottom primary '선택한 모험 이어가기' and concise selected-slot context. Beautiful finished production game interface, not wireframe, not web dashboard, no smartphone frame, no OS bar, no 3D version labels. Do not fill with overlong prose. Hero art should feel game painted, atmospheric and confident, refined mobile readability. Both screens share EXACT consistent asset family and framing. This menu design is not a projection diagram: world illustrations must remain coherent orthographic quarter-view if any ground architecture visible.",
+        "references": [],
+        "note": "New UI concept generated from the user's requested dark fantasy menu direction; not a user approval or a world projection certification."
+      },
+      "production": {
+        "warrior": {
+          "path": "warrior.png",
+          "references": [
+            "selection-and-continue-concept.png"
+          ],
+          "prompt": "Using the provided TWO SCREEN GAME UI CONCEPT as exact visual reference, extract/recreate ONLY the LEFT screen warrior HERO ILLUSTRATION as a clean full-bleed portrait production illustration. NO UI, NO TEXT, NO LOGO, NO borders, no cards or buttons. Same rugged adult male dark messy hair stubble, worn steel armor, olive cloak, green shoulder scarf, sword on back. Stylized painterly premium dark fantasy ARPG, moderately simplified clear material shapes, NOT photographic, not cartoon or pastel. Chest-up to belt portrait, head in upper third, hero occupying middle65%width and lower80%height, misty teal ancient forest ruins/background warm subtle torches. Lit face readable against dark woods. Portrait3:4 proportions. Fill entireframe withillustration and scenery. Preserve identity from the left panel exactly, bronze treeclasp, coherent restrained forest materials. This image is solely a hero artwork layer beneath separately implemented live UI."
+        },
+        "mage": {
+          "path": "mage.png",
+          "references": [
+            "selection-and-continue-concept.png",
+            "warrior.png"
+          ],
+          "prompt": "Create a production full-bleed portrait illustration using EXACTLY the MALE MAGE from the RIGHT panel of the TWO SCREEN concept reference, and the painterly rendering/material/forest palette of the supplied warrior portrait. NO UI text frames logo panels controls. Same handsome adult male dark messy hair, navy long coat/cape, muted antique bronze clasps, small swirling cool blue magic above raised right hand, waist-up, head in upper third center, shouldersfillframe, usable clear head/shoulders for small square crop, subjectmiddle65%width lower80%height. Teal misty forest ruins behind, coherent restrained warm torch accents. Stylish premium hand-painted dark-fantasy game character, not photography, not pastel, no cartoon outline, no garish gold. Portrait3:4. Preserve the mageidentityfrom concept, differentiate from armoredwarrior throughnavyclothes/noarmor andslimmer silhouette. This is an illustration layer under live separately laid out UI, absolutely no text."
+        },
+        "forest": {
+          "path": "forest.png",
+          "references": [
+            "selection-and-continue-concept.png",
+            "warrior.png",
+            "mage.png"
+          ],
+          "prompt": "Using the supplied two-screen dark fantasy UI concept and the warrior/mage production paintings as consistent FAMILY REFERENCE, create ONLY a clean background forest ruin painting for the same mobile menus. NO people, NO UI, NO letters, NO symbols/logos, NO panels/buttons/frames. Moody muted teal/charcoal forest and old limestone ruins, soft bright mist highcenter, dark branches framinguppercorners, mossy stonearch onlyrightedge, restrained warm smalltorchfarbackground. Clean quiet low-contrast central and lower70% areas for separately rendered menu cards and text, readable deepgreen midtones notsolidblack. Handpainted premium darkfantasy mobileARPG, notphotographic, notpastel. Tall3:4 fullbleedimage. Ifarchitecture visible, retaincoherentorthographicquarterviewparallelgeometry. Do notbake dark card rectangles orinterface surfaces. Reusableatmosphericbackdrop."
+        }
+      }
+    }
+  },
+  "scope": "Three new selection-family textures only; concept retained as provenance, never a baked interactive UI",
+  "pixel_edits": false,
+  "refs_changed": false
+}
