@@ -53,9 +53,10 @@ for(const operation of ['load','create'])for(const profile of [{name:'portrait',
  cdp.on('Page.screencastFrame',event=>{
   pending.push(cdp.send('Page.screencastFrameAck',{sessionId:event.sessionId}).catch(()=>{}));
   if(!stream)return;
-  // Keep the first real entry paints and final frames; never unbounded video data.
+  // Keep first8 frames plus rolling112: retain actual middle-world spinner paints.
+  // A first-only buffer followed by one final game frame loses the loading interval.
   const frame={timestamp:event.metadata.timestamp,metadata:event.metadata,data:event.data};
-  if(frames.length<32)frames.push(frame);else frames[31]=frame;
+  if(frames.length<120)frames.push(frame);else {frames.splice(8,1);frames.push(frame);}
  });
  await page.addInitScript(()=>{
   const samples=[];window.__sjrpgEntryPaintReview=samples;
@@ -66,9 +67,9 @@ for(const operation of ['load','create'])for(const profile of [{name:'portrait',
    const spinner=document.getElementById('sjrpg-entry-loading-spinner');
    if(!element)return null;
    const style=getComputedStyle(element),r=element.getBoundingClientRect();
-   const sr=status?.getBoundingClientRect(),spin=spinner&&getComputedStyle(spinner);
+   const sr=status?.getBoundingClientRect(),spin=spinner&&getComputedStyle(spinner),card=element.querySelector('.entry-load-card')?.getBoundingClientRect(),sp=spinner?.getBoundingClientRect();
    return {epoch:performance.timeOrigin+performance.now(),phase:element.dataset.phase||'',visible:!element.hidden&&style.display!=='none'&&style.visibility!=='hidden'&&Number(style.opacity)>0&&r.width>0&&r.height>0,
-    rect:[r.x,r.y,r.width,r.height],status:status?.textContent||'',status_rect:sr?[sr.x,sr.y,sr.width,sr.height]:null,
+    rect:[r.x,r.y,r.width,r.height],card_rect:card?[card.x,card.y,card.width,card.height]:null,spinner_rect:sp?[sp.x,sp.y,sp.width,sp.height]:null,status:status?.textContent||'',status_rect:sr?[sr.x,sr.y,sr.width,sr.height]:null,
     spinner_animation:spin?.animationName||'',spinner_duration:spin?.animationDuration||'',spinner_transform:spin?.transform||'',
     viewport:[innerWidth,innerHeight],adventure:window.__sjrpgAdventureReady===true,probe:window.__sjrpgEntryLoading?JSON.parse(JSON.stringify(window.__sjrpgEntryLoading)):null};
   };
@@ -95,7 +96,7 @@ for(const operation of ['load','create'])for(const profile of [{name:'portrait',
   });
   observer.observe(document,{subtree:true,childList:true,attributes:true,characterData:true});
  });
- const read=()=>page.evaluate(()=>({ui:window.__sjrpgClassButtons,review:window.__sjrpgSaveLayoutReview,adventure:window.__sjrpgAdventureReady===true,loading:window.__sjrpgEntryLoading,events:window.__sjrpgEntryPaintReview,viewport:[innerWidth,innerHeight],title:window.__sjrpgTitleReady,entry:window.__sjrpgEntryReady}));
+ const read=()=>page.evaluate(()=>({ui:window.__sjrpgClassButtons,review:window.__sjrpgSaveLayoutReview,adventure:window.__sjrpgAdventureReady===true,loading:window.__sjrpgEntryLoading,events:window.__sjrpgEntryPaintReview,viewport:[innerWidth,innerHeight],time_origin:performance.timeOrigin,title:window.__sjrpgTitleReady,entry:window.__sjrpgEntryReady}));
  async function wait(predicate,label,timeout=15000){
   const until=Date.now()+timeout;let s;
   while(Date.now()<until){
@@ -183,13 +184,50 @@ for(const operation of ['load','create'])for(const profile of [{name:'portrait',
   assert.equal(ready.review.active_slot,selected);assert.equal(ready.review.hero_class,expected.class);assert.equal(ready.review.level,expected.level);
   for(const n of ['1','3','4'])if(Number(n)!==selected)assert.deepEqual(ready.review.file_hashes[n],before.review.file_hashes[n],'entry changed another slot '+n);
   assert(Object.values(ready.review.file_hashes[String(selected)]).some(Boolean),'selected slot remains persisted after actual entry');
-  // Frame timestamps are compositor wall-clock seconds, independently delivered while WASM builds.
-  const dismissed=events.find(e=>!e.visible&&e.epoch>first.epoch);
-  const end=dismissed?.epoch||Date.now();
-  const candidates=frames.filter(f=>Number.isFinite(f.timestamp)&&f.timestamp*1000>=first.epoch&&f.timestamp*1000<end-1);
-  assert(candidates.length>0,'actual compositor JPEG of visible loading interval');
-  const frame=candidates[0];
-  result.loading_frame={timestamp:frame.timestamp,metadata:frame.metadata,paint_epoch:first.epoch,dismissed_epoch:end};
+  // CDP can deliver a stale compositor buffer with a recent timestamp.
+  // Verify real JPEG pixels against the actual DOM card + spinner geometry.
+  const worldEvent=ready.loading.phase_events.find(e=>e.phase==='world');
+  const worldEpoch=ready.time_origin+worldEvent.painted_at;
+  const end=ready.time_origin+ready.loading.finished_at;
+  const candidates=frames.filter(f=>Number.isFinite(f.timestamp)&&f.timestamp*1000>=worldEpoch&&f.timestamp*1000<end);
+  assert(candidates.length>0,'actual compositor JPEGs after the world paint acknowledgement');
+  const scored=await page.evaluate(async({frames,events})=>{
+   const results=[];
+   for(let index=0;index<frames.length;index++){
+    const frame=frames[index],img=new Image();img.src='data:image/jpeg;base64,'+frame.data;await img.decode();
+    const event=[...events].reverse().find(e=>e.visible&&e.card_rect&&e.spinner_rect&&e.epoch<=frame.timestamp*1000&&Math.abs(img.width/img.height-e.viewport[0]/e.viewport[1])<.03);
+    if(!event){results.push({index,accepted:false,reason:'no matching actual DOM viewport geometry'});continue;}
+    const canvas=document.createElement('canvas');canvas.width=img.width;canvas.height=img.height;
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0);
+    const bytes=ctx.getImageData(0,0,img.width,img.height).data,sx=img.width/event.viewport[0],sy=img.height/event.viewport[1];
+    const pixel=(x,y)=>{
+     x=Math.max(0,Math.min(img.width-1,Math.floor(x*sx)));y=Math.max(0,Math.min(img.height-1,Math.floor(y*sy)));
+     return [...bytes.slice((y*img.width+x)*4,(y*img.width+x)*4+3)];
+    };
+    const bronze=p=>p[0]>=48&&p[0]>p[1]+4&&p[1]>p[2]+5;
+    const dark=p=>Math.abs(p[0]-23)<=14&&Math.abs(p[1]-30)<=14&&Math.abs(p[2]-28)<=14;
+    const [x,y,w,h]=event.card_rect;
+    let border=0,background=0,ring=0;
+    for(let i=0;i<8;i++){
+     const t=(i+.5)/8;
+     for(const p of [[x+12+(w-24)*t,y+.5],[x+12+(w-24)*t,y+h-.5],[x+.5,y+12+(h-24)*t],[x+w-.5,y+12+(h-24)*t]])border+=Number(bronze(pixel(...p)));
+    }
+    for(const p of [[x+9,y+9],[x+w-9,y+9],[x+9,y+h-9],[x+w-9,y+h-9],[x+9,y+h*.4],[x+w-9,y+h*.4],[x+9,y+h*.7],[x+w-9,y+h*.7]])background+=Number(dark(pixel(...p)));
+    const [a,b,c,d]=event.spinner_rect;
+    for(let i=0;i<16;i++){const angle=i*Math.PI/8;ring+=Number(bronze(pixel(a+c/2+Math.cos(angle)*(c/2-1),b+d/2+Math.sin(angle)*(d/2-1))));}
+    const score={border:border/32,background:background/8,spinner:ring/16};
+    results.push({index,score,accepted:score.border>=.5&&score.background>=.75&&score.spinner>=.25,epoch:frame.timestamp*1000,dom_epoch:event.epoch,viewport:event.viewport,image:[img.width,img.height],card_rect:event.card_rect,spinner_rect:event.spinner_rect});
+   }
+   return results;
+  },{frames:candidates.map(f=>({timestamp:f.timestamp,data:f.data})),events});
+  result.frame_pixel_checks=scored;
+  const match=scored.find(f=>f.accepted);
+  if(!match){
+   for(const [i,f]of candidates.filter((_,i,a)=>i===0||i===Math.floor(a.length/2)||i===a.length-1).entries())await inline(result.name+'-unmatched-compositor-'+i,Buffer.from(f.data,'base64'));
+  }
+  assert(match,'a real compositor frame must visibly contain the measured loading card and spinner; '+JSON.stringify(scored));
+  const frame=candidates[match.index];
+  result.loading_frame={timestamp:frame.timestamp,metadata:frame.metadata,paint_epoch:worldEpoch,dismissed_epoch:end,pixel_match:match};
   result.frames=frames.map(f=>({timestamp:f.timestamp,metadata:f.metadata,bytes:Buffer.byteLength(f.data,'base64')}));
   await inline(result.name+'-loading',Buffer.from(frame.data,'base64'));
   await inline(result.name+'-ready',await page.screenshot({type:'jpeg',quality:80,scale:'css'}));
