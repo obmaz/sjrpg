@@ -44,11 +44,12 @@ jobs:
                   path: build/original-pages
                   merge-multiple: true
             - name: Compare public indexes and streamed PCK with the original artifact
+              id: identity
               run: |
                   test "$(git rev-parse HEAD)" = 672d850a9b43928fa429d8888b32288683d5da6b
                   mkdir -p build/public-probe
                   python3 - <<'PY'
-                  import hashlib, importlib.util, json, re, tarfile, time, urllib.request
+                  import hashlib, importlib.util, json, os, re, tarfile, time, urllib.request
                   from pathlib import Path, PurePosixPath
                   report={"source":"672d850a9b43928fa429d8888b32288683d5da6b",
                           "artifact_id":13575446821,"checks":[],"passed":False}
@@ -115,17 +116,24 @@ jobs:
                                  "attempts":attempts,"passed":matched}
                           report["checks"].append(check)
                           print(json.dumps(check),flush=True)
-                          assert matched, "Public bytes do not match the reviewed artifact: "+relative
-                      report["passed"]=True
+                      report["passed"]=len(report["checks"])==4 and all(check["passed"] for check in report["checks"])
                   finally:
                       destination.write_text(json.dumps(report,indent=2))
+                      three_d_checks=[check for check in report["checks"] if check["path"].startswith("3d/")]
+                      three_d_matched=len(three_d_checks)==2 and all(check["passed"] for check in three_d_checks)
+                      with open(os.environ["GITHUB_OUTPUT"],"a") as output:
+                          output.write("three_d_matched="+str(three_d_matched).lower()+"\n")
+                      print("PUBLIC_3D_IDENTITY "+json.dumps({"matched":three_d_matched,"checks":three_d_checks}),flush=True)
+                  assert report["passed"], "Public identity mismatch; all four URL results were collected in identity.json"
                   print("PUBLIC_REVIEWED_IDENTITY_PASS indexes=3 streamed_pck=1")
                   PY
             - uses: actions/setup-node@v6
+              if: (success() || failure()) && steps.identity.outputs.three_d_matched == 'true'
               with:
                   node-version: 24
                   cache: npm
             - name: Run the pinned fresh-browser native smoke
+              if: (success() || failure()) && steps.identity.outputs.three_d_matched == 'true'
               run: |
                   npm ci --ignore-scripts
                   npx playwright install --with-deps chromium
