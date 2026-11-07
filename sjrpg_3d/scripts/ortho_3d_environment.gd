@@ -162,6 +162,9 @@ func _build_forest() -> void:
 	native.merge(flora_report["owned_source_ids"])
 	report["native_flora"] = flora_report["placements"].size()
 	report["native_flora_groups"] = flora_report["groups"]
+	var scenery := NativeSceneryProps3D.build(preview, forest, _forest_world, false, native)
+	native.merge(scenery["owned_source_ids"])
+	report["native_forest_scenery"] = scenery["entries"].size()
 	report["native_forest_trees"] = tree_report["trees"].size()
 	for object in preview.game.village.buildings.values():
 		native[object.get_instance_id()] = true
@@ -301,6 +304,9 @@ func _build_raised_floors() -> void:
 
 
 func _build_cave() -> void:
+	# Build-time ownership must be current even when a test/manual scope switch calls
+	# this before the next presenter frame; otherwise a portal card is baked forever.
+	preview._town_props.sync()
 	if cave != null:
 		cave.name = "RetiredCave"
 		cave.queue_free()
@@ -317,12 +323,18 @@ func _build_cave() -> void:
 	var lanterns := NativeCaveLanterns3D.build(preview, cave, preview.game.dungeon.art.visuals)
 	var native_lantern_ids: Dictionary = lanterns["owned_source_ids"]
 	report["native_cave_lanterns"] = lanterns["count"]
+	var native_scenery_excluded := preview._town_props.source_ids()
+	native_scenery_excluded.merge(native_lantern_ids)
+	var scenery := NativeSceneryProps3D.build(preview, cave, preview.game.world, true, native_scenery_excluded)
+	var native_scenery_ids: Dictionary = scenery["owned_source_ids"]
+	report["native_cave_scenery"] = scenery["entries"].size()
+	report["native_cave_prop_sources"] = native_scenery_excluded.keys() + native_scenery_ids.keys()
 	var buckets := {}
 	var replaced: Array[int] = []
 	var retained: Array[int] = []
 	report["remaining_sources"]["cave"] = []
 	for node in preview.game.dungeon.art.visuals:
-		if node is IsoSprite and not preview._town_props.owns(node) and not native_lantern_ids.has(node.get_instance_id()):
+		if node is IsoSprite and not preview._town_props.owns(node) and not native_lantern_ids.has(node.get_instance_id()) and not native_scenery_ids.has(node.get_instance_id()):
 			# Wall strips and end caps share atlases with useful lamps. Replace
 			# only the metadata-owned boundary art, never the whole texture bucket.
 			if str(node.get_meta("cave_role", "")) == "wall":
@@ -333,8 +345,10 @@ func _build_cave() -> void:
 			retained.append(node.get_instance_id())
 			report["cave_sprites"] = int(report["cave_sprites"]) + 1
 	for node in preview.game.world.get_children():
-		if node is IsoSprite and not preview._town_props.owns(node) and not native_lantern_ids.has(node.get_instance_id()) and not preview.game.dungeon.art.visuals.has(node):
+		if node is IsoSprite and not preview._town_props.owns(node) and not native_lantern_ids.has(node.get_instance_id()) and not native_scenery_ids.has(node.get_instance_id()) and not preview.game.dungeon.art.visuals.has(node):
 			_sprite(node, buckets)
+			report["remaining_sources"]["cave"].append(_source_record(node))
+			report["cave_sprites"] = int(report["cave_sprites"]) + 1
 			retained.append(node.get_instance_id())
 	report["cave_groups"] = _flush(buckets, cave, "CaveArt_")
 	var rock: Texture2D = load("res://" + str(textures["dark"]["path"]))
@@ -360,7 +374,7 @@ func _build_cave() -> void:
 	_build_cave_fill()
 	var batch := Ortho3DStaticBatch.apply(cave)
 	cave.set_meta("static_batch", batch)
-	cave.set_meta("boundary_sources", {"replaced": replaced, "retained": retained})
+	cave.set_meta("boundary_sources", {"replaced": replaced, "retained": retained, "native_props": report["native_cave_prop_sources"]})
 
 
 func _build_cave_fill() -> void:

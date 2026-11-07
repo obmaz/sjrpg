@@ -65,8 +65,8 @@ func _ready() -> void:
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 	camera.keep_aspect = Camera3D.KEEP_HEIGHT
 	camera.size = 16.0
-	camera.near = 0.1
-	camera.far = 100.0
+	camera.near = 18.0
+	camera.far = 52.0
 	stage.add_child(camera)
 	camera.make_current()
 	_layer = CanvasLayer.new()

@@ -38,14 +38,17 @@ jobs:
                       ~/.local/share/godot/export_templates
                   key: godot-${{ hashFiles('.godot-version') }}-tools-v1
             - name: Check native UI scripts
+              id: native_check
               run: |
                   chmod +x tools/*.sh sjrpg_3d/tools/*.sh
                   tools/setup_godot.sh
-                  tools/check.sh --project=3d --only=entry_layout,native_residents,native_forest_props,native_warrior,native_enemy_models,ui_tone
+                  tools/check.sh --project=3d --only=entry_layout,native_residents,native_forest_props,native_warrior,native_enemy_models,ui_tone,native_environment,ortho_3d_preview,native_scenery_props,native_cave_geometry
             - name: Export native UI for visual diagnostics
+              id: candidate_export
               if: success() || failure()
               run: sjrpg_3d/tools/export_web.sh
             - name: Export the actual baseline for paired comparisons
+              id: baseline_export
               if: success()
               run: |
                   mkdir -p build/native-style-baseline
@@ -60,23 +63,32 @@ jobs:
                   PY
                   chmod +x build/native-style-baseline/tools/*.sh build/native-style-baseline/sjrpg_3d/tools/*.sh
                   build/native-style-baseline/sjrpg_3d/tools/export_web.sh
-            - name: Run paired actual native style browser harness
-              if: success()
+            - name: Capture the actual baseline
+              id: baseline_capture
+              if: "!cancelled() && steps.native_check.outcome == 'success' && steps.baseline_export.outcome == 'success'"
+              continue-on-error: true
               run: |
-                  mkdir -p build/native-style-review/before build/native-style-review/after
+                  mkdir -p build/native-style-review/before
                   python3 -m http.server 8780 --bind 127.0.0.1 --directory build/native-style-baseline/sjrpg_3d/build/web > build/native-style-review/before/server.log 2>&1 &
                   SJRPG_STYLE_BEFORE_PID=$!
+                  trap 'kill "$SJRPG_STYLE_BEFORE_PID" 2>/dev/null || true' EXIT
+                  curl --fail --silent --show-error --max-time 2 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 12 http://127.0.0.1:8780/ > /dev/null
+                  SJRPG_STYLE_BASELINE=1 node sjrpg_3d/tools/check_native_style.mjs http://127.0.0.1:8780/ build/native-style-review/before
+            - name: Check the actual candidate regardless of baseline defects
+              if: "!cancelled() && steps.native_check.outcome == 'success' && steps.candidate_export.outcome == 'success'"
+              run: |
+                  mkdir -p build/native-style-review/after
                   python3 -m http.server 8781 --bind 127.0.0.1 --directory sjrpg_3d/build/web > build/native-style-review/after/server.log 2>&1 &
                   SJRPG_STYLE_AFTER_PID=$!
-                  trap 'kill "$SJRPG_STYLE_BEFORE_PID" "$SJRPG_STYLE_AFTER_PID" 2>/dev/null || true' EXIT
-                  for SJRPG_STYLE_PORT in 8780 8781; do
-                      curl --fail --silent --show-error --max-time 2 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 12 http://127.0.0.1:$SJRPG_STYLE_PORT/ > /dev/null
-                  done
-                  SJRPG_STYLE_BASELINE=1 node sjrpg_3d/tools/check_native_style.mjs http://127.0.0.1:8780/ build/native-style-review/before
+                  trap 'kill "$SJRPG_STYLE_AFTER_PID" 2>/dev/null || true' EXIT
+                  curl --fail --silent --show-error --max-time 2 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 12 http://127.0.0.1:8781/ > /dev/null
                   node sjrpg_3d/tools/check_native_style.mjs http://127.0.0.1:8781/ build/native-style-review/after
             - name: Compose actual before and after screenshots
-              if: success()
+              if: "!cancelled() && steps.native_check.outcome == 'success'"
               run: node sjrpg_3d/tools/compare_native_style.mjs build/native-style-review
+            - name: Report an incomplete baseline run after retaining candidate diagnostics
+              if: "!cancelled() && steps.baseline_capture.outcome == 'failure'"
+              run: exit 1
             - uses: actions/upload-artifact@v6
               if: always()
               with:

@@ -6,20 +6,25 @@ import path from 'node:path';
 import {createRequire} from 'node:module';
 const {chromium}=createRequire(import.meta.url)('playwright');
 const baseline=process.env.SJRPG_STYLE_BASELINE==='1';
+const smoke=process.env.SJRPG_STYLE_SMOKE==='1';
 const base=new URL(process.argv[2]||'http://127.0.0.1:8781/');
 const out=path.resolve(process.argv[3]||'build/native-style-review');
 await mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
-const errors=[],captures=[],checks=[];let page,context,failure=null;
+const errors=[],captures=[],checks=[],baselineViolations=[],baselineBlockedActions=[];let page,context,failure=null;
 const css=(s,r)=>({x:r[0]*s.window[0]/s.ui.viewport[0],y:r[1]*s.window[1]/s.ui.viewport[1],w:r[2]*s.window[0]/s.ui.viewport[0],h:r[3]*s.window[1]/s.ui.viewport[1]});
 const inside=(a,b,e=1)=>b.x>=a.x-e&&b.y>=a.y-e&&b.x+b.w<=a.x+a.w+e&&b.y+b.h<=a.y+a.h+e;
 const overlap=(a,b)=>Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x)>1&&Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y)>1;
 const read=()=>page.evaluate(()=>({ui:window.__sjrpgNativeStyleReview,native:window.__sjrpg3dProbe,tone:window.__sjrpgUiTone,window:[innerWidth,innerHeight],dpr:devicePixelRatio}));
 async function wait(fn,label,timeout=90000){const end=Date.now()+timeout;while(Date.now()<end){assert.equal(errors.length,0,JSON.stringify(errors));const s=await read();if(fn(s))return s;await page.waitForTimeout(150);}throw Error('Timeout '+label+' '+JSON.stringify(await read()));}
-async function tapRect(r){await page.mouse.click(r.x+r.w/2,r.y+r.h/2);await page.waitForTimeout(450);}
+async function settled(frames=3){const n=(await read()).ui.frame;await wait(s=>s.ui.frame>=n+frames,'actual UI frame settlement');}
+function verify(fn,label){if(!baseline)return fn();try{return fn();}catch(e){baselineViolations.push({label,error:String(e)});}}
+async function baselineAction(label,fn){if(!baseline)return fn();try{return await fn();}catch(e){baselineBlockedActions.push({label,error:String(e)});if((await read()).ui.panel.rect){await page.keyboard.press('Escape');await settled();}}}
+async function tapRect(r){const s=await read();assert(inside({x:0,y:0,w:s.window[0],h:s.window[1]},r),'real target outside viewport '+JSON.stringify(r));await page.mouse.click(r.x+r.w/2,r.y+r.h/2);await settled();}
 async function tapHud(key){const s=await read();assert(s.ui.buttons[key],key+' missing');await tapRect(css(s,s.ui.buttons[key]));}
 async function capture(name,inline=false){const s=await read();await page.screenshot({path:path.join(out,name+'.png'),timeout:90000});captures.push({name,...s});if(inline){const data=(await page.screenshot({type:'jpeg',quality:78,timeout:90000})).toString('base64');console.log('SJ_NATIVE_STYLE_IMAGE_BEGIN '+name+' image/jpeg '+data.length);for(let i=0;i<data.length;i+=16384)console.log('SJ_NATIVE_STYLE_IMAGE_CHUNK '+name+' '+data.slice(i,i+16384));console.log('SJ_NATIVE_STYLE_IMAGE_END '+name);}}
-function hudGeometry(s,label){
+function hudGeometry(s,label){return verify(()=>strictHudGeometry(s,label),label);}
+function strictHudGeometry(s,label){
  assert(s.ui.native&&s.native?.native_active&&s.native?.simulation==='3d',label+' actual native world');
  if(!baseline){assert.deepEqual(s.ui.coverage.actor_cards,[],label+' no resident/enemy camera-facing object cards');const env=s.ui.coverage.environment;assert(env&&env.remaining_sources,label+' explicit retained source inventory');}
  const bounds={x:0,y:0,w:s.window[0],h:s.window[1]};
@@ -34,7 +39,8 @@ function hudGeometry(s,label){
 }
 async function closePanel(){const s=await read();const button=s.ui.panel.buttons.find(b=>b.text==='×'||b.text==='모험 계속하기');assert(button,'real close action missing');await tapRect(css(s,button.rect));await wait(s=>!s.ui.paused&&!s.ui.panel.rect,'panel closed');}
 
-function panelGeometry(s,label){
+function panelGeometry(s,label){return verify(()=>strictPanelGeometry(s,label),label);}
+function strictPanelGeometry(s,label){
  const p=s.ui.panel,bounds={x:0,y:0,w:s.window[0],h:s.window[1]};
  assert(s.ui.paused&&p.rect,label+' actual paused panel');
  assert(inside(bounds,css(s,p.rect))&&inside(css(s,p.rect),css(s,p.title)),label+' frame/title bounds');
@@ -67,14 +73,14 @@ async function menuPanel(key,label){
 async function skillTree(label){
 
  await tapHud('bar_skills');let s=await wait(s=>s.ui?.panel?.nodes?.length>0&&s.ui.paused,'real skill tree');
- const p=s.ui.panel,bounds={x:0,y:0,w:s.window[0],h:s.window[1]};assert(inside(bounds,css(s,p.rect)),label+' panel bounds');
- assert(css(s,p.title).y+css(s,p.title).h<=css(s,p.subtitle).y+1,label+' subtitle spacing');
+ await capture(label+'-skills',true);
+ const p=s.ui.panel,bounds={x:0,y:0,w:s.window[0],h:s.window[1]};verify(()=>assert(inside(bounds,css(s,p.rect)),label+' panel bounds'),label);
+ verify(()=>assert(css(s,p.title).y+css(s,p.title).h<=css(s,p.subtitle).y+1,label+' subtitle spacing'),label);
  const clip=css(s,p.tree_clip);assert(clip.w>40&&clip.h>40,label+' tree scroll viewport');
  const nodes=p.nodes.filter(n=>inside(clip,css(s,n.rect)));
  assert(nodes.length>0,label+' visible skill nodes');for(const node of nodes){const hit=css(s,node.hit_rect);if(!baseline)assert(hit.w>=43.5&&hit.h>=43.5,label+' 44 CSS skill target '+node.id);}
  const n=nodes.find(n=>n.rank>0)||nodes[0];await tapRect(css(s,n.rect));
  s=await wait(s=>s.ui.panel.selected===n.id,'actual node selection');
- await capture(label+'-skills',true);
  await page.mouse.move(clip.x+clip.w*.5,clip.y+clip.h*.5);await page.mouse.wheel(0,520);await page.waitForTimeout(500);
  const moved=await read();assert(moved.ui.panel.nodes.some((n,i)=>Math.abs(n.rect[1]-p.nodes[i].rect[1])>1),label+' actual tree scroll');
  await capture(label+'-skills-scrolled');
@@ -94,15 +100,22 @@ async function boot(cls,params={},dpr=1){
  await page.waitForFunction(()=>window.__sjrpgClassButtons?.stage==='class',null,{timeout:30000});
  for(const key of[cls,'start']){const data=await page.evaluate(key=>({p:window.__sjrpgClassButtons[key],w:innerWidth,h:innerHeight}),key);await page.mouse.click(data.p[0]*data.w,data.p[1]*data.h);await page.waitForTimeout(300);}
  await wait(s=>s.ui?.native&&s.native?.native_active&&s.native?.physics_ticks>0,'actual native adventure');
+ if(params.dungeon_preview)await page.waitForFunction(()=>window.__sjrpgDungeonPreviewReady===true,null,{timeout:90000});
+ if(params.encounter_preview)await page.waitForFunction(()=>window.__sjrpgEncounterPreviewReady===true,null,{timeout:90000});
+ await settled();
 }
 try{
+ if(smoke){
+  await boot('mage',{at:'npc_courtyard'});hudGeometry(await read(),'public mage portrait');await capture('public-mage-hud',true);
+  await tapHud('bar_skills');await wait(s=>s.ui?.panel?.nodes?.length>0&&s.ui.paused,'public real skill panel');panelGeometry(await read(),'public skill panel');await capture('public-mage-skills',true);await closePanel();checks.push('public actual skill panel open/close');
+ }else{
  for(const cls of['warrior','mage']){
   await boot(cls,{at:'npc_courtyard'});
   for(const [rotation,[w,h]]of[[390,844],[320,640],[568,320],[390,844]].entries()){
-   await page.setViewportSize({width:w,height:h});await wait(s=>s.window[0]===w&&s.window[1]===h&&((s.ui.viewport[0]>s.ui.viewport[1])===(w>h)),'rotation');await page.waitForTimeout(600);
+   await page.setViewportSize({width:w,height:h});await wait(s=>s.window[0]===w&&s.window[1]===h&&((s.ui.viewport[0]>s.ui.viewport[1])===(w>h)),'rotation');await settled();
    const label=cls+'-'+w+'x'+h+(rotation===3?'-returned':'');hudGeometry(await read(),label);await capture(label+'-hud',rotation!==3&&(w===390||w===568));
-   if(rotation!==3)await skillTree(label);
-   if(rotation===0)for(const key of['bar_bag','bar_quests','bar_gear'])await menuPanel(key,label+'-'+key);
+   if(rotation!==3)await baselineAction(label+' skill tree',()=>skillTree(label));
+   if(rotation===0)for(const key of['bar_bag','bar_quests','bar_gear'])await baselineAction(label+' '+key,()=>menuPanel(key,label+'-'+key));
   }
   const before=(await read()).ui.player;let distance=0;
   for(const key of ['d','a','w','s']){await page.keyboard.down(key);await page.waitForTimeout(350);await page.keyboard.up(key);await page.waitForTimeout(100);const p=(await read()).ui.player;distance=Math.hypot(p[0]-before[0],p[1]-before[1]);if(distance>1)break;}
@@ -119,11 +132,15 @@ try{
   assert((await read()).ui.gallery_available,'actual native model gallery resource');
   for(let face=0;face<4;face++){
    await page.evaluate(face=>window.__sjrpgNativeStyleAction('gallery',face),face);
-   const g=await wait(s=>s.ui.gallery&&s.ui.gallery.face===face,'actual all-face model gallery');
-   await page.waitForTimeout(400);await capture('native-gallery-face-'+face,true);checks.push('actual native model face '+face);
+   const g=await wait(s=>s.ui.gallery&&s.ui.gallery.face===face&&s.ui.gallery.current_frame>=s.ui.gallery.requested_frame+3,'actual all-face model gallery');
+   assert.equal(g.ui.gallery.count,14,'all actual actor archetypes in gallery');
+   assert.equal(g.ui.gallery.projection,'orthographic');
+   for(const model of g.ui.gallery.models){assert(model.triangles>0&&model.surfaces>0,'actual mesh '+model.identity);assert(model.bounds_max.every((v,i)=>v>model.bounds_min[i]),'three-dimensional envelope '+model.identity);}
+   await capture('native-gallery-face-'+face,true);checks.push('actual native model face '+face);
   }
   await page.evaluate(()=>window.__sjrpgNativeStyleAction('gallery',-1));
  }
- assert.equal(errors.length,0);console.log((baseline?'NATIVE_STYLE_BASELINE_CAPTURED ':'NATIVE_STYLE_PASS ')+JSON.stringify({checks:checks.length,captures:captures.length,errors:0}));
+ }
+ assert.equal(errors.length,0);console.log((smoke?'NATIVE_STYLE_SMOKE_PASS ':baseline?'NATIVE_STYLE_BASELINE_CAPTURED ':'NATIVE_STYLE_PASS ')+JSON.stringify({checks:checks.length,captures:captures.length,errors:0,baselineViolations:baselineViolations.length,baselineBlockedActions:baselineBlockedActions.length}));
 }catch(e){failure=String(e);console.error('NATIVE_STYLE_FAIL '+failure);try{await capture('failure',true);}catch{}process.exitCode=1;}
-finally{await writeFile(path.join(out,'proof.json'),JSON.stringify({baseline,checks,captures,errors,failure,passed:!failure&&!errors.length},null,2));await browser.close();}
+finally{await writeFile(path.join(out,'proof.json'),JSON.stringify({baseline,smoke,baselineViolations,baselineBlockedActions,checks,captures,errors,failure,passed:!failure&&!errors.length},null,2));await browser.close();}

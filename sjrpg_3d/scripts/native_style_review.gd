@@ -75,7 +75,7 @@ func _process(delta: float) -> void:
 					elif renderer.has_method("snapshot"):
 						coverage[key] = renderer.snapshot()
 	var view := hud.controls.get_viewport_rect().size
-	var report := {"viewport": [view.x, view.y], "class": GameState.hero_class, "buttons": buttons, "avatar": [portrait.x-radius, portrait.y-radius, radius*2.0, radius*2.0], "hp": rect_value(geometry["hp"]), "mp": rect_value(geometry["mp"]), "level_badge": rect_value(geometry["level_badge"]), "level": GameState.level, "panel": panel, "paused": get_tree().paused, "native": game.native_ready, "coverage": coverage, "player": [game.player.position.x, game.player.position.y], "potions": [GameState.potions, GameState.mana_potions], "zoom": game.camera.zoom.x, "world_zoom": Prefs.world_zoom}
+	var report := {"viewport": [view.x, view.y], "frame": Engine.get_process_frames(), "class": GameState.hero_class, "buttons": buttons, "avatar": [portrait.x-radius, portrait.y-radius, radius*2.0, radius*2.0], "hp": rect_value(geometry["hp"]), "mp": rect_value(geometry["mp"]), "level_badge": rect_value(geometry["level_badge"]), "level": GameState.level, "panel": panel, "paused": get_tree().paused, "native": game.native_ready, "coverage": coverage, "player": [game.player.position.x, game.player.position.y], "potions": [GameState.potions, GameState.mana_potions], "zoom": game.camera.zoom.x, "world_zoom": Prefs.world_zoom}
 	report["gallery_available"] = ResourceLoader.exists("res://scripts/native_model_gallery.gd")
 	if is_instance_valid(_gallery) and _gallery.visible:
 		report["gallery"] = _gallery.review_snapshot()

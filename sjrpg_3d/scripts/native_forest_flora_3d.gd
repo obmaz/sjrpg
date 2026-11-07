@@ -5,8 +5,18 @@ const SPECIES := ["grass", "fern", "flowers_white", "flowers_warm"]
 const CHUNK := 12.0
 static var _library := {}
 
+static func species_of(source: IsoSprite) -> String:
+	var tagged := str(source.get_meta("forest_species", ""))
+	if tagged in SPECIES:
+		return tagged
+	# build_field's original decoration predates border-flora metadata.
+	for kind: String in SPECIES:
+		if source.def == ForestArt.frame(kind):
+			return kind
+	return ""
+
 static func accepts(source: IsoSprite) -> bool:
-	return source.get_meta("forest_border_flora", false) and str(source.get_meta("forest_species", "")) in SPECIES and source.visible and source.clip == Vector2.ZERO and source.draw_shift == Vector2.ZERO
+	return not species_of(source).is_empty() and source.visible and source.clip == Vector2.ZERO and source.draw_shift == Vector2.ZERO
 
 static func _triangle(tool: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, centre: Vector3, ink: Color) -> void:
 	var normal := (b - a).cross(c - a).normalized()
@@ -106,7 +116,7 @@ static func build(preview: Node, parent: Node3D, world: Node2D) -> Dictionary:
 		if not child is IsoSprite or not accepts(child):
 			continue
 		var source := child as IsoSprite
-		var species := str(source.get_meta("forest_species"))
+		var species := species_of(source)
 		var height := float(source.def.get("height", 0)) * source.k / (Ortho3DPreview.GROUND_PER_METER * Iso.S)
 		if not is_finite(height) or height <= 0.0 or height > 2.5:
 			continue

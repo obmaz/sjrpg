@@ -54,11 +54,11 @@ func run() -> void:
 			ownership = ownership and metadata["replaced"].has(id) and not metadata["retained"].has(id)
 		else:
 			keep_count += 1
-			ownership = ownership and metadata["retained"].has(id) and not metadata["replaced"].has(id)
-	check("only metadata-owned wall strips and end caps are replaced", ownership and wall_count > 10 and keep_count >= 16)
+			ownership = ownership and metadata["native_props"].has(id) and not metadata["retained"].has(id) and not metadata["replaced"].has(id)
+	check("wall boundaries and non-wall props each retain exact native owners", ownership and wall_count > 10 and keep_count >= 16)
 	var return_portal: IsoSprite = game.world.get_node("CaveReturnPortal")
 	var portal_anchor := Iso.project(DungeonLayout.EXIT + Vector2(50, -110))
-	check("return portal retains its original anchor and individual art fallback", metadata["retained"].has(return_portal.get_instance_id()) and not metadata["replaced"].has(return_portal.get_instance_id()) and return_portal.position.is_equal_approx(portal_anchor))
+	check("return portal retains its original anchor and native source ownership", metadata["native_props"].has(return_portal.get_instance_id()) and preview._town_props.owns(return_portal) and not metadata["retained"].has(return_portal.get_instance_id()) and not metadata["replaced"].has(return_portal.get_instance_id()) and return_portal.position.is_equal_approx(portal_anchor))
 	var material: StandardMaterial3D = rock["material"]
 	check("rock uses the existing generated albedo in native world metres", material.uv1_world_triplanar and material.uv1_scale.is_equal_approx(Vector3.ONE / 2.6) and material.roughness > 0.9 and material.shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL)
 	var vertices_present := {}

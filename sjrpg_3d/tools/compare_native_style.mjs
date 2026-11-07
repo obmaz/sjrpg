@@ -6,7 +6,7 @@ import {createRequire} from 'node:module';
 const {chromium}=createRequire(import.meta.url)('playwright');
 const root=path.resolve(process.argv[2]||'build/native-style-review');
 const before=path.join(root,'before'),after=path.join(root,'after'),out=path.join(root,'comparison');
-await mkdir(out,{recursive:true});
+await Promise.all([mkdir(out,{recursive:true}),mkdir(before,{recursive:true}),mkdir(after,{recursive:true})]);
 const files=(await readdir(before)).filter(x=>x.endsWith('.png')&&x!=='failure.png');
 const index=[];const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 try{for(const file of files){
