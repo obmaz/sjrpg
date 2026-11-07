@@ -230,7 +230,7 @@ for(const profile of [{name:'portrait-mage-continue',width:390,height:844,dpr:1,
   s=await read();const [tx,ty]=s.review.touch.slot0,[vw,vh]=s.review.viewport;
   serial=s.review.player.serial;
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:tx*s.window[0]/vw,y:ty*s.window[1]/vh}]});
-  await wait(s=>!s.review.player.dead&&s.review.player.hp>0&&s.review.player.serial>serial&&!s.review.pad.using_gamepad,'actual touch primary fallback',6000);
+  await wait(s=>!s.review.player.dead&&s.review.player.hp>0&&s.review.player.serial>serial&&s.review.player.attack_time>0&&!s.review.pad.using_gamepad,'actual touch primary fallback',6000);
   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   await wait(s=>s.review.hints?.visible===false,'actual Xbox glyphs remain hidden after touch');
   record('real keyboard and touch fallback with pad still connected');
