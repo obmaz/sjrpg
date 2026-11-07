@@ -1,0 +1,44 @@
+#!/usr/bin/env node
+// Actual exported Godot lifecycle, real controls. Software-renderer timings are relative CI evidence.
+import assert from 'node:assert/strict';
+import {mkdir,writeFile} from 'node:fs/promises';
+import path from 'node:path';
+import {createRequire} from 'node:module';
+import {installResourceTelemetry} from './resource_telemetry.mjs';
+const {chromium}=createRequire(import.meta.url)('playwright');
+const base=new URL(process.argv[2]||'http://127.0.0.1:8790/'),out=path.resolve(process.argv[3]||'build/resource-profile');
+await mkdir(out,{recursive:true});
+const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
+const report={edition:process.env.SJRPG_PROFILE_EDITION||'actual',source_sha:process.env.SJRPG_PROFILE_SHA||null,url:base.href,limitations:['SwiftShader CPU/GPU timings compare identical CI routes, not physical mobile FPS certification.','WebGL tracked storage is estimated allocation bookkeeping, not driver VRAM; unknown internal formats and implicit GC are reported.','No forced GC, cache clearing or invulnerability. Fresh browser context contains disposable normal saves.','Review URL at= changes only the next normally constructed game spawn; gameplay transitions use real UI.'],profiles:[],errors:[],passed:false};
+let context,page,cdp,failure;
+const read=()=>page.evaluate(()=>({runtime:window.__sjrpgResourceProfile,entry:window.__sjrpgClassButtons,title:window.__sjrpgTitleReady,ready:window.__sjrpgAdventureReady,loading:window.__sjrpgEntryLoading,telemetry:window.__sjrpgResourceRead?.(),size:[innerWidth,innerHeight],dpr:devicePixelRatio}));
+async function wait(predicate,label,timeout=120000){const end=Date.now()+timeout;while(Date.now()<end){assert.equal(report.errors.length,0,JSON.stringify(report.errors));const s=await read();if(predicate(s))return s;await page.waitForTimeout(200);}throw Error(label+' timeout '+JSON.stringify(await read()));}
+async function clickEntry(key){const s=await wait(s=>s.entry?.[key],'entry '+key);await page.mouse.click(s.entry[key][0]*s.size[0],s.entry[key][1]*s.size[1]);}
+async function clickText(text){for(let i=0;i<24;i++){const s=await read(),r=s.runtime;if(r){const b=r.buttons.find(b=>b.text===text&&!b.disabled),v=b?.visible_rect;if(v&&v[2]>=8&&v[3]>=8){await page.mouse.click((v[0]+v[2]/2)*s.size[0]/r.viewport[0],(v[1]+v[3]/2)*s.size[1]/r.viewport[1]);return;}}await page.mouse.move((await read()).size[0]*.7,(await read()).size[1]*.65);await page.mouse.wheel(0,360);await page.waitForTimeout(180);}throw Error('Actual button not reachable '+text+' '+JSON.stringify((await read()).runtime?.buttons));}
+async function mark(profile,label,duration=3500){await page.evaluate(label=>{window.__sjrpgProfileLabel=label;},label);const start=Date.now(),samples=[],phaseStart=(await read()).telemetry.at;while(Date.now()-start<duration){const s=await read();assert.equal(s.telemetry.context_lost.length,0,'WebGL context loss');s.telemetry.frames=s.telemetry.frames.filter(f=>f.at>=phaseStart);s.telemetry.long_tasks=s.telemetry.long_tasks.filter(f=>f.at>=phaseStart);s.telemetry.shaders=s.telemetry.shaders.filter(f=>f.at>=phaseStart);s.telemetry.links=s.telemetry.links.filter(f=>f.at>=phaseStart);const metrics=await cdp.send('Performance.getMetrics');samples.push({wall:Date.now(),...s,metrics:Object.fromEntries(metrics.metrics.filter(m=>['JSHeapUsedSize','JSHeapTotalSize','Nodes','Documents','LayoutCount','RecalcStyleCount','TaskDuration'].includes(m.name)).map(m=>[m.name,m.value]))});await page.waitForTimeout(750);}profile.phases.push({label,samples});console.log('RESOURCE_PHASE '+JSON.stringify({profile:profile.name,label,last:samples.at(-1)?.runtime,js_heap:samples.at(-1)?.metrics.JSHeapUsedSize,wasm:samples.at(-1)?.telemetry.wasm,gl:samples.at(-1)?.telemetry.contexts.map(c=>({id:c.id,texture_live_bytes:c.texture_live_bytes,texture_peak_bytes:c.texture_peak_bytes,renderbuffer_live_bytes:c.renderbuffer_live_bytes,unknown_formats:c.unknown_formats}))}));}
+async function launch(at){await page.evaluate(at=>{const u=new URL(location.href);u.searchParams.set('at',at);history.replaceState(null,'',u);},at);await wait(s=>s.title&&!s.ready,'actual title');await page.locator('#entry-start').click();await wait(s=>s.entry?.stage==='class'||s.entry?.stage==='slots','actual selection');const s=await read();if(s.entry.stage==='class'){await clickEntry('mage');await clickEntry('start');}else await clickEntry('continue');await wait(s=>s.ready&&s.runtime?.adventure&&!s.runtime.paused&&!s.loading?.visible,'actual constructed adventure');}
+async function toTitle(){await page.keyboard.press('Escape');await wait(s=>s.runtime?.paused,'actual settings pause');await clickText('저장하고 타이틀로');await wait(s=>!s.runtime?.adventure&&s.title&&!s.ready,'actual game teardown to title');}
+async function capture(name){const file=name+'.jpg';await page.screenshot({path:path.join(out,file),type:'jpeg',quality:82});console.log('RESOURCE_CAPTURE '+file);}
+try{
+ for(const[name,width,height,dpr,cycles]of[['portrait',390,844,1,3],['retina',390,844,2,1]]){
+  context=await browser.newContext({viewport:{width,height},deviceScaleFactor:dpr});await context.addInitScript(installResourceTelemetry);page=await context.newPage();
+  page.on('pageerror',e=>report.errors.push({type:'pageerror',message:String(e)}));page.on('crash',()=>report.errors.push({type:'crash'}));page.on('console',m=>{if(m.type()==='error'||/SCRIPT ERROR|ERROR:|INVALID_(OPERATION|VALUE|ENUM)/.test(m.text()))report.errors.push({type:'console',message:m.text()});});
+  cdp=await context.newCDPSession(page);await cdp.send('Performance.enable');await cdp.send('Network.enable');await cdp.send('Log.enable');cdp.on('Log.entryAdded',({entry})=>{if(entry.level==='error')report.errors.push({type:'browser',message:entry.text});});
+  const profile={name,width,height,dpr,cycles,phases:[],network:[]};report.profiles.push(profile);
+  cdp.on('Network.responseReceived',({response})=>{if(/\.(pck|wasm)(\?|$)/.test(response.url))profile.network.push({url:response.url,status:response.status,encodedDataLength:response.encodedDataLength,content_length:response.headers['Content-Length']||response.headers['content-length']||null});});
+  const u=new URL(base);u.searchParams.set('resource_profile','1');u.searchParams.set('quality','high');
+  await page.goto(u.href,{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__sjrpgTitleReady&&window.__sjrpgEntryReady,null,{timeout:120000});await mark(profile,'initial-title',1500);
+  for(let cycle=0;cycle<cycles;cycle++){
+   await launch('npc_courtyard');await mark(profile,'cycle-'+cycle+'-town');if(cycle===0)await capture(name+'-town');
+   if(cycle===1){await page.setViewportSize({width:844,height:390});await wait(s=>s.runtime?.viewport[0]>s.runtime?.viewport[1],'actual landscape rotation');await mark(profile,'cycle-'+cycle+'-landscape-town');await capture(name+'-landscape');await page.setViewportSize({width:390,height:844});await wait(s=>s.runtime?.viewport[1]>s.runtime?.viewport[0],'actual portrait rotation');}
+   await toTitle();await mark(profile,'cycle-'+cycle+'-title-after-town',1800);
+   await launch('rowen');await mark(profile,'cycle-'+cycle+'-forest',1500);await page.keyboard.press('f');await wait(s=>s.runtime?.paused,'actual cave interaction panel');await clickText('동굴 입장');await wait(s=>s.runtime?.dungeon&&!s.runtime.paused,'actual cave enter');await mark(profile,'cycle-'+cycle+'-cave');if(cycle===0)await capture(name+'-cave');
+   await page.keyboard.press('Escape');await wait(s=>s.runtime?.paused,'cave settings');await mark(profile,'cycle-'+cycle+'-paused-cave',1200);await clickText('동굴에서 나가기');await wait(s=>s.runtime?.adventure&&!s.runtime.dungeon&&!s.runtime.paused,'actual cave leave');
+   await mark(profile,'cycle-'+cycle+'-forest-after-cave',1500);await toTitle();await mark(profile,'cycle-'+cycle+'-title-after-cave',1800);
+  }
+  profile.final=await read();profile.resource_entries=await page.evaluate(()=>performance.getEntriesByType('resource').filter(e=>/\.(pck|wasm)(\?|$)/.test(e.name)).map(e=>({name:e.name,transferSize:e.transferSize,encodedBodySize:e.encodedBodySize,decodedBodySize:e.decodedBodySize,duration:e.duration})));
+  assert.equal(profile.final.telemetry.context_lost.length,0);assert(profile.phases.every(p=>p.samples.length>0));await context.close();context=null;
+ }
+ assert.equal(report.errors.length,0,JSON.stringify(report.errors));report.passed=true;console.log('RESOURCE_PROFILE_PASS '+JSON.stringify({profiles:report.profiles.length,phases:report.profiles.reduce((n,p)=>n+p.phases.length,0),errors:0}));
+}catch(e){failure=String(e);report.failure=failure;console.error('RESOURCE_PROFILE_FAIL '+failure);if(page)await capture('failure').catch(()=>{});process.exitCode=1;}
+finally{await writeFile(path.join(out,'profile.json'),JSON.stringify(report,null,2));await browser.close();}
