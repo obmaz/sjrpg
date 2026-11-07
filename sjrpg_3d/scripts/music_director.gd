@@ -13,9 +13,6 @@ const FADE_SECONDS := 1.6
 const BASE_DB := -6.0
 const CHECK_INTERVAL := 0.25
 
-## Diagnostic-only weak references; never own a decoder or playback.
-static var _audio_owner_trace: Array[Dictionary] = []
-
 var game: Node
 var current := ""
 var _players := {}
@@ -44,7 +41,6 @@ func _exit_tree() -> void:
 	for name: String in _players:
 		var player: AudioStreamPlayer = _players[name]
 		if is_instance_valid(player):
-			_trace_owned_playback(name, player, "exit_tree")
 			player.stop()
 			player.stream = null
 		_level[name] = 0.0
@@ -95,7 +91,6 @@ func step(delta: float) -> void:
 				player.play()
 			player.stream_paused = _focus_paused
 		elif player.has_stream_playback():
-			_trace_owned_playback(name, player, "fade_or_music_off")
 			player.stop()
 
 
@@ -115,33 +110,3 @@ func _notification(what: int) -> void:
 	_focus_paused = lost
 	for player: AudioStreamPlayer in _players.values():
 		player.stream_paused = _focus_paused
-
-
-func _trace_owned_playback(track: String, player: AudioStreamPlayer, reason: String) -> void:
-	if OS.get_environment("SJRPG_TRACE_AUDIO_OWNERS") != "1" or not player.has_stream_playback():
-		return
-	# This getter is valid only while a playback exists. Drop its temporary strong reference immediately.
-	var playback: AudioStreamPlayback = player.get_stream_playback()
-	var stream_path: String = player.stream.resource_path if player.stream != null else ""
-	_audio_owner_trace.append({
-		"reason": reason, "track": track, "stream_path": stream_path,
-		"director_id": get_instance_id(), "player_id": player.get_instance_id(),
-		"playback_id": playback.get_instance_id(), "playback": weakref(playback),
-		"stop_frame": Engine.get_process_frames(), "stop_usec": Time.get_ticks_usec(),
-		"paused_at_stop": player.stream_paused,
-	})
-	playback = null
-
-
-static func debug_owned_audio_snapshot() -> Dictionary:
-	var pending: Array[Dictionary] = []
-	var released := 0
-	for record: Dictionary in _audio_owner_trace:
-		var reference: WeakRef = record["playback"]
-		if reference.get_ref() == null:
-			released += 1
-			continue
-		var details: Dictionary = record.duplicate()
-		details.erase("playback")
-		pending.append(details)
-	return {"recorded": _audio_owner_trace.size(), "released": released, "pending_count": pending.size(), "pending": pending}

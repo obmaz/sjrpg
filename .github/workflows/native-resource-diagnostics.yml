@@ -1,9 +1,6 @@
 name: Diagnose native shutdown resources
-# Compare full-suite shutdown with the real entry-transition regression in isolation.
+# Baseline runner with explicit music playback ownership and focus restoration.
 on:
-    push:
-        paths:
-            - ".github/workflows/native-resource-diagnostics.yml"
     workflow_dispatch:
 permissions:
     contents: read
@@ -17,11 +14,9 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                partition: [last]
+                partition: [full, entry]
         env:
             SJRPG_RESOURCE_PARTITION: ${{ matrix.partition }}
-            SJRPG_QUIET_VERBOSE: "0"
-            SJRPG_TRACE_AUDIO_OWNERS: "1"
         steps:
             - uses: actions/checkout@v7.0.1
             - uses: actions/cache@v4
@@ -45,7 +40,7 @@ jobs:
                   import re
                   focused = re.search(r"--only=([a-z0-9_,]+)", Path(".github/workflows/native-candidate-smoke.yml").read_text()).group(1).split(",")
                   partition = os.environ["SJRPG_RESOURCE_PARTITION"]
-                  selected = {"full": names, "entry": ["entry_layout", "entry_loading"], "last": ["world_zoom"]}[partition]
+                  selected = {"full": names, "entry": ["entry_layout", "entry_loading"]}[partition]
                   assert all(name in names for name in selected), "Unknown diagnostic case"
                   output = Path("build/resource-diagnostics") / partition
                   output.mkdir(parents=True, exist_ok=True)
@@ -77,11 +72,10 @@ jobs:
               run: |
                   SJRPG_RESOURCE_OUT="build/resource-diagnostics/$SJRPG_RESOURCE_PARTITION"
                   set +e
-                  timeout 900 sjrpg_3d/tools/godot.sh --headless res://tests/run_all.tscn -- "$SJRPG_RESOURCE_ONLY" > "$SJRPG_RESOURCE_OUT/run.log" 2>&1
-                  SJRPG_RESOURCE_RUN_CODE=$?
+                  timeout 900 sjrpg_3d/tools/godot.sh --headless --verbose res://tests/run_all.tscn -- "$SJRPG_RESOURCE_ONLY" 2>&1 | tee "$SJRPG_RESOURCE_OUT/run.log"
+                  SJRPG_RESOURCE_RUN_CODE=${PIPESTATUS[0]}
                   set -e
                   printf '%s\n' "$SJRPG_RESOURCE_RUN_CODE" > "$SJRPG_RESOURCE_OUT/run.exitcode.txt"
-                  cat "$SJRPG_RESOURCE_OUT/run.log"
                   SJRPG_RESOURCE_STRICT_CODE=0
                   if test "$SJRPG_RESOURCE_RUN_CODE" -ne 0; then SJRPG_RESOURCE_STRICT_CODE=1; fi
                   if grep -qE 'SCRIPT ERROR|^ERROR:' "$SJRPG_RESOURCE_OUT/run.log"; then SJRPG_RESOURCE_STRICT_CODE=1; fi
