@@ -107,7 +107,7 @@ jobs:
               run: sjrpg_3d/tools/export_web.sh
             - name: Export the actual baseline for paired comparisons
               id: baseline_export
-              if: success()
+              if: "!cancelled() && steps.candidate_export.outcome == 'success'"
               run: |
                   mkdir -p build/native-style-baseline
                   git fetch --depth=1 origin 3ec51c4bf4131da4a0e5dafa167a1db63709e714
@@ -123,7 +123,7 @@ jobs:
                   build/native-style-baseline/sjrpg_3d/tools/export_web.sh
             - name: Capture the actual baseline
               id: baseline_capture
-              if: "!cancelled() && steps.native_check.outcome == 'success' && steps.baseline_export.outcome == 'success'"
+              if: "!cancelled() && steps.baseline_export.outcome == 'success'"
               continue-on-error: true
               run: |
                   mkdir -p build/native-style-review/before
@@ -133,7 +133,7 @@ jobs:
                   curl --fail --silent --show-error --max-time 2 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 12 http://127.0.0.1:8780/ > /dev/null
                   SJRPG_STYLE_BASELINE=1 node sjrpg_3d/tools/check_native_style.mjs http://127.0.0.1:8780/ build/native-style-review/before
             - name: Check the actual candidate regardless of baseline defects
-              if: "!cancelled() && steps.native_check.outcome == 'success' && steps.candidate_export.outcome == 'success'"
+              if: "!cancelled() && steps.candidate_export.outcome == 'success'"
               run: |
                   mkdir -p build/native-style-review/after
                   python3 -m http.server 8781 --bind 127.0.0.1 --directory sjrpg_3d/build/web > build/native-style-review/after/server.log 2>&1 &
@@ -142,7 +142,7 @@ jobs:
                   curl --fail --silent --show-error --max-time 2 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 12 http://127.0.0.1:8781/ > /dev/null
                   node sjrpg_3d/tools/check_native_style.mjs http://127.0.0.1:8781/ build/native-style-review/after
             - name: Compose actual before and after screenshots
-              if: "!cancelled() && steps.native_check.outcome == 'success'"
+              if: "!cancelled() && steps.candidate_export.outcome == 'success'"
               run: node sjrpg_3d/tools/compare_native_style.mjs build/native-style-review
             - name: Report an incomplete baseline run after retaining candidate diagnostics
               if: "!cancelled() && steps.baseline_capture.outcome == 'failure'"

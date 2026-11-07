@@ -79,7 +79,15 @@ async function skillTree(label){
  const clip=css(s,p.tree_clip);assert(clip.w>40&&clip.h>40,label+' tree scroll viewport');
  const nodes=p.nodes.filter(n=>inside(clip,css(s,n.rect)));
  assert(nodes.length>0,label+' visible skill nodes');for(const node of nodes){const hit=css(s,node.hit_rect);if(!baseline)assert(hit.w>=43.5&&hit.h>=43.5,label+' 44 CSS skill target '+node.id);}
- const n=nodes.find(n=>n.rank>0)||nodes[0];await tapRect(css(s,n.rect));
+ let n=p.nodes.find(n=>n.id!==p.selected&&n.reason==='')||p.nodes.find(n=>n.id!==p.selected);
+ assert(n,label+' needs another actual skill to inspect');
+ for(let attempt=0;attempt<16;attempt++){
+  s=await read();n=s.ui.panel.nodes.find(node=>node.id===n.id);const actualClip=css(s,s.ui.panel.tree_clip),box=css(s,n.rect);
+  if(inside(actualClip,box))break;
+  await page.mouse.move(actualClip.x+actualClip.w*.5,actualClip.y+actualClip.h*.5);await page.mouse.wheel(0,box.y<actualClip.y?-220:220);await settled();
+  if(attempt===15)throw Error('Actual skill scroll cannot expose another skill '+n.id);
+ }
+ await tapRect(css(s,n.rect));
  s=await wait(s=>s.ui.panel.selected===n.id,'actual node selection');
  await page.mouse.move(clip.x+clip.w*.5,clip.y+clip.h*.5);await page.mouse.wheel(0,520);await page.waitForTimeout(500);
  const moved=await read();assert(moved.ui.panel.nodes.some((n,i)=>Math.abs(n.rect[1]-p.nodes[i].rect[1])>1),label+' actual tree scroll');

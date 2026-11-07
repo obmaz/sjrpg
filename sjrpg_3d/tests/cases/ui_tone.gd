@@ -38,7 +38,7 @@ func run() -> void:
 		var rank_pixels := SkillTreePanel.graph_font_size(18, scale)
 		check("measured rank ribbon fits its existing row gap", UiKit.BOLD_FONT.get_height(rank_pixels) + 10.0 <= SkillTreePanel.TIER_HEIGHT - SkillTreePanel.NODE_SIDE)
 		for count in [0, 7, 99, 999, 5000]:
-			var target := 22.0 * scale
+			var target: float = 22.0 * float(scale)
 			var geometry := PotionArt.count_geometry(Vector2.ZERO, 30.0, count, scale, target)
 			var rect: Rect2 = geometry["rect"]
 			check("actual potion count remains at least 12 CSS pixels", float(geometry["font_size"]) / scale >= 12.0)
