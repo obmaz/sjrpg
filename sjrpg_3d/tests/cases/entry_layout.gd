@@ -38,7 +38,11 @@ func _buttons_fit(select: Control, dimensions: Vector2i) -> void:
 				check("slot row and its delete action have separate targets", not select.slot_buttons[index].get_global_rect().intersects(select.delete_buttons[index].get_global_rect()))
 			check("save row stays thumb-sized inside its clipping viewport", select.slot_buttons[index].size.y >= 64.0 * unit and clipping.size.y >= select.slot_buttons[index].size.y)
 			if index > 0:
-				check("save rows never overlap", select.slot_buttons[index - 1].get_global_rect().end.y < select.slot_buttons[index].get_global_rect().position.y)
+				var previous: Rect2 = select.slot_buttons[index - 1].get_global_rect()
+				var current: Rect2 = select.slot_buttons[index].get_global_rect()
+				if previous.end.y >= current.position.y:
+					print("FAIL SAVE_ROW_DIAG ", JSON.stringify({"view": [dimensions.x, dimensions.y], "previous": str(previous), "current": str(current), "band": str(select.slot_bands[index].get_global_rect())}))
+				check("save rows never overlap", previous.end.y < current.position.y)
 
 func run() -> void:
 	var background := EntryUi.image(EntryUi.BACKGROUND)

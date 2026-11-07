@@ -328,13 +328,8 @@ func _layout_class() -> void:
 	slot_switch.visible = choosing
 	EntryUi.place(slot_switch, Rect2(Vector2(right, area.position.y + (190.0 if portrait else 105.0) * u), Vector2(controls_width, 100.0 * u)))
 	for index in 4:
-		slot_buttons[index].visible = not choosing
-		delete_buttons[index].visible = not choosing
-		var rows_top := area.position.y + (436.0 if portrait else 154.0) * u
-		var row_h := 108.0 if portrait else 100.0
-		var y := rows_top + index * (row_h + (12.0 if portrait else 6.0)) * u
-		EntryUi.place(slot_buttons[index], Rect2(Vector2(right, y), Vector2(controls_width - 116.0 * u, row_h * u)))
-		EntryUi.place(delete_buttons[index], Rect2(Vector2(right + controls_width - 104.0 * u, y), Vector2(104.0 * u, row_h * u)))
+		slot_buttons[index].hide()
+		delete_buttons[index].hide()
 	for index in 2:
 		var button: Button = class_buttons[["warrior", "mage"][index]]
 		button.visible = choosing
@@ -536,6 +531,9 @@ func _layout_slots() -> void:
 		slot_bands[index].custom_minimum_size.y = row_h
 		total_rows += row_h
 	total_rows += gap * 3.0
+	for band in slot_bands:
+		band.queue_sort()
+	slot_list.queue_sort()
 	var maximum_h := maxf(1.0, area.size.y - outer * 2.0)
 	var height := minf(maximum_h, pad * 2.0 + header_h + gap * 2.0 + total_rows + footer_h)
 	var origin := area.position + (area.size - Vector2(width, height)) * 0.5

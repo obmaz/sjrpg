@@ -30,6 +30,9 @@ func _layout_check(select: Control, view: SubViewport, scenario: String) -> void
 		check("real row hitbox remains usable " + label, row.size.y >= 44.0 and row.size.x >= 44.0)
 		check("row has structured, readable identity and metadata " + label, title.get_theme_font_size("font_size") >= 14 and meta.get_theme_font_size("font_size") >= 12 and not title.text.is_empty() and not meta.text.is_empty() and not number.text.is_empty())
 		check("row text has enough measured height " + label, title.size.y + EPS >= title.get_combined_minimum_size().y and meta.size.y + EPS >= meta.get_combined_minimum_size().y)
+		var contained := _inside(row.get_global_rect(), title.get_global_rect()) and _inside(row.get_global_rect(), meta.get_global_rect()) and title.get_global_rect().end.y <= meta.get_global_rect().position.y + EPS and not number.get_global_rect().intersects(title.get_global_rect())
+		if not contained:
+			print("FAIL SAVE_TEXT_DIAG ", JSON.stringify({"label": label, "slot": index + 1, "row": str(row.get_global_rect()), "band": str(box), "title": str(title.get_global_rect()), "meta": str(meta.get_global_rect()), "number": str(number.get_global_rect()), "status": str(select.slot_status_labels[index].get_global_rect()), "minimum": str(meta.get_combined_minimum_size())}))
 		check("row labels retain their own measured space " + label, _inside(row.get_global_rect(), title.get_global_rect()) and _inside(row.get_global_rect(), meta.get_global_rect()) and title.get_global_rect().end.y <= meta.get_global_rect().position.y + EPS and not number.get_global_rect().intersects(title.get_global_rect()))
 		check("delete exists only for occupied source files " + label, remove.is_visible_in_tree() == bool(summaries[index]["occupied"]))
 		if remove.is_visible_in_tree():
