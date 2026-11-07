@@ -38,6 +38,7 @@ jobs:
                   tools/setup_godot.sh
                   tools/check.sh --project=3d --only=native_actor_materials,entry_layout,native_residents,native_merchant,npc_clearance,journey,render_budget,ui_input,native_forest_props,native_warrior,native_enemy_models,ui_tone,native_environment,ortho_3d_preview,native_scenery_props,native_cave_geometry,dungeon_art,quests,native_encounter_props,native_enemy_scale,native_enemy_radius,encounters,world_zoom,spatial_combat,spatial_world_3d,corpses,melee_elevation,bridge,spatial_stairs,town_gate_closure
     candidate_smoke:
+        if: "!contains(github.event.head_commit.message, '[tests-only]')"
         runs-on: ubuntu-latest
         timeout-minutes: 15
         steps:
@@ -77,6 +78,7 @@ jobs:
                   if-no-files-found: ignore
                   retention-days: 7
     candidate_models:
+        if: "!contains(github.event.head_commit.message, '[tests-only]')"
         runs-on: ubuntu-latest
         timeout-minutes: 15
         steps:

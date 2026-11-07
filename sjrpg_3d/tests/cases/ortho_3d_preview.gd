@@ -178,9 +178,16 @@ func run() -> void:
 	# replacing a dictionary membership assertion with another renderer name.
 	for entry: Dictionary in preview._native_residents.entries.values():
 		var resident: Villager = entry["owner"].get_ref()
-		var model: MeshInstance3D = entry["node"]
+		var model: Node3D = entry["node"]
 		check("resident model follows native floor position", model.position.is_equal_approx(preview.actor_foot(resident)))
-		check("resident has closed volumetric body rather than a quad", model.mesh.get_aabb().size.x > 0.4 and model.mesh.get_aabb().size.z > 0.2 and not model.mesh is QuadMesh)
+		var bounds: AABB = NativeResidents3D.local_bounds(model)
+		var meshes: Array[MeshInstance3D] = NativeResidents3D.descendant_meshes(model)
+		var actual_volume: bool = not meshes.is_empty() and bounds.size.x > 0.4 and bounds.size.z > 0.2
+		for part: MeshInstance3D in meshes:
+			actual_volume = actual_volume and part.mesh != null and not part.mesh is QuadMesh
+		check("resident retains real descendant body volume rather than a quad", actual_volume)
+		if NpcArt.identity(resident.display_name) == "merchant":
+			check("preview integration uses the imported merchant rather than a procedural substitute", str(entry["source"]) == "cc0_import" and entry["skeleton"] != null and entry["animation"] != null)
 	var town_position: Vector2 = game.player.position
 	game.player.position = game.village.gate_points[0] + (game.village.gate_points[0] - game.village.spawn_point).normalized() * 450.0
 	preview._process(0.016)
