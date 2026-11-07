@@ -35,3 +35,14 @@ static func number_size(tier: int) -> int:
 
 static func number_color(tier: int) -> Color:
 	return [Color(1, 0.95, 0.6), Color(1, 0.82, 0.4), Color(1, 0.6, 0.25), Color(1, 0.42, 0.22)][clampi(tier, LIGHT, KILL)]
+
+
+## JUICE #3: knockback speed (px/s, decays at 900/s) per tier. The original fixed 160 is kept for
+## bosses so their slam pacing does not change. This is the one tier effect that moves the target.
+const BOSS_KNOCKBACK := 160.0
+
+
+static func knockback(tier: int, boss: bool) -> float:
+	if boss:
+		return BOSS_KNOCKBACK
+	return [140.0, 180.0, 240.0, 260.0][clampi(tier, LIGHT, KILL)]

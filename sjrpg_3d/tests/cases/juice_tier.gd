@@ -22,8 +22,21 @@ func run() -> void:
 	foe.take_damage(4.0, game.player)
 	check("enemy records a LIGHT tier", foe.last_hit_tier == HitTier.LIGHT)
 	check("tier does not change the damage taken", is_equal_approx(foe.hp, 96.0))
+	check("a light hit pushes the enemy at the light speed", is_equal_approx(foe._knockback.length(), HitTier.knockback(HitTier.LIGHT, false)))
 	foe.take_damage(12.0, game.player)
 	check("enemy records a MEDIUM tier", foe.last_hit_tier == HitTier.MEDIUM and is_equal_approx(foe.hp, 84.0))
+	check("knockback grows with tier", HitTier.knockback(HitTier.LIGHT, false) < HitTier.knockback(HitTier.MEDIUM, false) and HitTier.knockback(HitTier.MEDIUM, false) < HitTier.knockback(HitTier.HEAVY, false))
+	check("boss keeps the original fixed knockback at every tier", HitTier.knockback(HitTier.LIGHT, true) == 160.0 and HitTier.knockback(HitTier.KILL, true) == 160.0)
+	check("a medium hit raises the push to the medium speed", is_equal_approx(foe._knockback.length(), HitTier.knockback(HitTier.MEDIUM, false)))
+	foe._knockback = Vector2.ZERO
+	foe.hp = 100.0
+	foe.take_damage(35.0, game.player)
+	check("a heavy hit pushes the enemy at the heavy speed", foe.last_hit_tier == HitTier.HEAVY and is_equal_approx(foe._knockback.length(), HitTier.knockback(HitTier.HEAVY, false)))
+	foe._knockback = Vector2(400, 0)
+	foe.hp = 100.0
+	foe.take_damage(2.0, game.player)
+	check("a stronger skill knockback already in progress is not reduced", is_equal_approx(foe._knockback.length(), 400.0))
+	foe.hp = 84.0
 	var numbers: Array = game.cosmetic_effects.filter(func(e: Effect) -> bool: return e.kind == "text")
 	check("light hit keeps the original 22pt number without a pop", numbers[0].font_size == 22 and not numbers[0].pop)
 	check("medium hit number is larger and pops", numbers[1].font_size == HitTier.number_size(HitTier.MEDIUM) and numbers[1].font_size > 22 and numbers[1].pop)
