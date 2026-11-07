@@ -84,9 +84,31 @@ func _chest_clearance(game: Node, props: NativeEncounterProps3D) -> void:
 				walkable_arc = true
 				break
 		all_approachable = all_approachable and walkable_arc
-		var hit_names: Array[String] = []
+		var hit_names: Array[Dictionary] = []
 		for hit: Dictionary in hits:
-			hit_names.append(str((hit["collider"] as Node).name))
+			var obstacle: StaticBody3D = hit["collider"]
+			var detail := {"name": str(obstacle.name), "kind": str(obstacle.get_meta("physics_kind", "")), "position": [obstacle.position.x, obstacle.position.y, obstacle.position.z], "source_polygon": str(obstacle.get_meta("source_polygon", PackedVector2Array()))}
+			for circle: Dictionary in world._circles:
+				if circle["body"] == obstacle:
+					detail["source_circle"] = {"point": str(circle["point"]), "radius": circle["radius"]}
+			var shapes: Array[Dictionary] = []
+			for child in obstacle.get_children():
+				if not child is CollisionShape3D:
+					continue
+				var shape: Shape3D = (child as CollisionShape3D).shape
+				var info := {"type": shape.get_class(), "position": str((child as CollisionShape3D).global_position)}
+				if shape is CylinderShape3D:
+					info["radius_m"] = (shape as CylinderShape3D).radius
+					info["height_m"] = (shape as CylinderShape3D).height
+				elif shape is ConvexPolygonShape3D:
+					info["points"] = str((shape as ConvexPolygonShape3D).points)
+				elif shape is ConcavePolygonShape3D:
+					info["faces"] = str((shape as ConcavePolygonShape3D).get_faces())
+				elif shape is BoxShape3D:
+					info["size"] = str((shape as BoxShape3D).size)
+				shapes.append(info)
+			detail["shapes"] = shapes
+			hit_names.append(detail)
 		reports.append({"index": chest.index, "radius_m": collider.radius, "height_m": collider.height, "lid_clear": hits.is_empty(), "obstacles": hit_names, "walkable_arc": walkable_arc})
 	check("every enlarged chest uses a ground-aligned native blocker matching the new envelope", colliders_match and reports.size() == game.chests.size())
 	check("all enlarged chest bodies and complete lid sweeps clear existing walls and props", all_clear, JSON.stringify(reports))
