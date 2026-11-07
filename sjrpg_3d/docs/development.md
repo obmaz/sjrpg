@@ -419,3 +419,10 @@ HUD는 체력·물약 수·쿨다운의 실제 변화를 감지합니다. 사운
 **?save_layout_review=1**은 새 격리 브라우저 프로필의 검수 전용 진입점입니다. 고유한 user://tests/save-layout-* 경로에서만 정식 create_slot/save_game으로 시나리오를 준비하며 운영 경로의 파일을 고치지 않습니다. 일반 실행에서는 로드하지 않습니다. 기존 __sjrpgClassButtons 중심 좌표와 slot_labels는 유지하고 실제 rect/visible/font/focus 및 save_layout 읽기 전용 측정값을 추가합니다.
 
 .github/workflows/save-layout-review.yml이 관련 변경의 빠른 검수·캡처를 담당합니다. 명시적인 **[layout-review]** 커밋은 기존 운영 배포를 건너뛰어 검수 중인 UI를 공개하지 않습니다. 소스와 실제 캡처의 독립 리뷰가 끝난 동일 소스 트리의 일반 커밋에서 전체 검사와 Pages 배포를 수행합니다.
+
+
+## 입체 소유권과 UI 비교 하네스
+
+`NativeResidents3D`·`NativeWarrior3D`·`NativeEnemyModels`는 기존 배우의 실제 발·이동/공격 진행·피격·사망 상태만 관찰합니다. 주민은 정적 배칭 뒤에 생성하고, 교체한 대상은 기존 원화 카드에서 개별 제외합니다. 시체는 원래 수명과 페이드를 공유합니다. 환경의 `remaining_sources`는 아직 원화를 사용하는 실제 원본의 역할·시트·발 위치를 남겨 교체 누락을 숨기지 않습니다.
+
+`?native_style_review=1`은 검수 전용 읽기 전용 상태 측정기를 연결합니다. `tools/check_native_style.mjs`는 새 브라우저 프로필에서 실제 시작·이동·물약/메뉴/스킬트리 입력과 회전·DPR2를 검사합니다. `native-style-review.yml`은 변경 전 커밋의 실제 게임도 따로 내보내 같은 위치의 PNG와 비교 이미지를 남깁니다. 기준본의 작은 입력 영역은 측정하되 새 기준 통과로 표시하지 않습니다. 렌더링 캡처는 별도 리뷰어가 모델 전체 면·재질·모바일 가독성을 판정하는 자료입니다.

@@ -155,6 +155,9 @@ func _build_forest() -> void:
 	var landmark_report := NativeLandmarks3D.build(preview, forest)
 	native.merge(landmark_report["owned_source_ids"])
 	report["native_landmarks"] = landmark_report["entries"].size()
+	report["native_landmark_surfaces"] = {}
+	for entry: Dictionary in landmark_report["entries"]:
+		report["native_landmark_surfaces"][str(entry["surface"]["id"])] = true
 	var flora_report := NativeForestFlora3D.build(preview, forest, _forest_world)
 	native.merge(flora_report["owned_source_ids"])
 	report["native_flora"] = flora_report["placements"].size()
@@ -264,7 +267,7 @@ func _build_bridge() -> void:
 
 func _build_raised_floors() -> void:
 	for surface: Dictionary in SpatialWorld3D.terrain_surfaces(preview.game.village):
-		if str(surface["id"]).begins_with("landmark_") and int(report.get("native_landmarks", 0)) == 4:
+		if (report.get("native_landmark_surfaces", {}) as Dictionary).has(str(surface["id"])):
 			continue
 		if float(surface["rise"]) <= 0.001:
 			continue

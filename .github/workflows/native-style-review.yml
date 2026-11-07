@@ -46,7 +46,7 @@ jobs:
               if: success() || failure()
               run: sjrpg_3d/tools/export_web.sh
             - name: Export the actual baseline for paired comparisons
-              if: success() || failure()
+              if: success()
               run: |
                   mkdir -p build/native-style-baseline
                   git fetch --depth=1 origin 3ec51c4bf4131da4a0e5dafa167a1db63709e714
@@ -61,7 +61,7 @@ jobs:
                   chmod +x build/native-style-baseline/tools/*.sh build/native-style-baseline/sjrpg_3d/tools/*.sh
                   build/native-style-baseline/sjrpg_3d/tools/export_web.sh
             - name: Run paired actual native style browser harness
-              if: success() || failure()
+              if: success()
               run: |
                   mkdir -p build/native-style-review/before build/native-style-review/after
                   python3 -m http.server 8780 --bind 127.0.0.1 --directory build/native-style-baseline/sjrpg_3d/build/web > build/native-style-review/before/server.log 2>&1 &
@@ -75,7 +75,7 @@ jobs:
                   SJRPG_STYLE_BASELINE=1 node sjrpg_3d/tools/check_native_style.mjs http://127.0.0.1:8780/ build/native-style-review/before
                   node sjrpg_3d/tools/check_native_style.mjs http://127.0.0.1:8781/ build/native-style-review/after
             - name: Compose actual before and after screenshots
-              if: success() || failure()
+              if: success()
               run: node sjrpg_3d/tools/compare_native_style.mjs build/native-style-review
             - uses: actions/upload-artifact@v6
               if: always()

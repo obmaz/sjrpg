@@ -33,7 +33,7 @@ func run() -> void:
 		preview._affordances.sync()
 		environment.sync(0.0, true)
 		check("cave switches spatial groups without a2D fallback", not environment.forest.visible and environment.cave.visible and preview.display.visible and preview._native_visible and game.dungeon._root.visibility_layer == 0)
-		check("cave uses actual textured spatial floors and wall volumes", int(environment.report["cave_walls"]) > 10 and int(environment.report["cave_sprites"]) > 10 and int(environment.report["cave_groups"]) < 12)
+		check("cave uses actual textured spatial floors and wall volumes", int(environment.report["cave_walls"]) > 10 and int(environment.report["cave_sprites"]) > 0 and int(environment.report.get("native_cave_lanterns", 0)) == 10 and int(environment.report["cave_groups"]) < 12)
 		check("native cave lamps follow the ten authored lantern pivots", environment._cave_lights.size() == 10)
 		check("native cave labels and portals exclude the town", environment.report["scope"] == "cave" and preview._affordances._art.is_empty())
 		var hidden_headers := true

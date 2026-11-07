@@ -41,6 +41,10 @@ func slot_visual_radius(index: int) -> float:
 
 
 func css_scale() -> float:
+	if OS.has_feature("web"):
+		var width: Variant = JavaScriptBridge.eval("window.innerWidth", true)
+		if (width is float or width is int) and float(width) > 0.0:
+			return get_viewport().get_visible_rect().size.x / float(width)
 	if DisplayServer.get_name() == "headless":
 		return 1.0
 	return get_viewport().get_visible_rect().size.x / maxf(1.0, float(get_window().size.x))

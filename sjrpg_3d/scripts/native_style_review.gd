@@ -3,11 +3,17 @@ extends Node
 ## Read-only inspection of the actual native scene; enabled only by explicit URL.
 var _root: Node
 var _elapsed := 0.0
+var _callback: JavaScriptObject
+var _gallery: Control
 func setup(root: Node) -> NativeStyleReview:
 	_root = root
 	return self
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	if OS.has_feature("web"):
+		_callback = JavaScriptBridge.create_callback(_action)
+		var window := JavaScriptBridge.get_interface("window")
+		window.__sjrpgNativeStyleAction = _callback
 func _process(delta: float) -> void:
 	_elapsed += delta
 	if _elapsed < 0.25 or not OS.has_feature("web"):
@@ -36,8 +42,8 @@ func _process(delta: float) -> void:
 		for child in p.find_children("*", "Button", true, false):
 			var button := child as Button
 			if button.is_visible_in_tree():
-				targets.append({"text": button.text, "rect": rect(button), "disabled": button.disabled})
-		panel = {"rect": rect(p._panel), "title": rect(p.title_label), "subtitle": rect(p.subtitle_label), "body": rect(p.body_holder), "buttons": targets, "type": p.get_script().resource_path}
+				targets.append({"text": button.text, "rect": rect(button), "disabled": button.disabled, "in_body": p.body.is_ancestor_of(button), "world_zoom": button.get_meta("world_zoom", -1.0)})
+		panel = {"rect": rect(p._panel), "title": rect(p.title_label), "subtitle": rect(p.subtitle_label), "body": rect(p.body_holder), "body_clip": rect(p.scroll), "subtitle_text": p.subtitle_label.text, "subtitle_visible": p.subtitle_label.is_visible_in_tree(), "buttons": targets, "type": p.get_script().resource_path}
 		if p is SkillTreePanel:
 			var nodes := []
 			for id: String in p._nodes:
@@ -63,12 +69,35 @@ func _process(delta: float) -> void:
 			var key: String = property["name"]
 			if key.begins_with("_native_") or key.begins_with("_resident") or key.begins_with("_enemy"):
 				var renderer: Variant = preview.get(key)
-				if renderer is Node and is_instance_valid(renderer) and renderer.has_method("review_snapshot"):
-					coverage[key] = renderer.review_snapshot()
+				if renderer is Object and is_instance_valid(renderer):
+					if renderer.has_method("review_snapshot"):
+						coverage[key] = renderer.review_snapshot()
+					elif renderer.has_method("snapshot"):
+						coverage[key] = renderer.snapshot()
 	var view := hud.controls.get_viewport_rect().size
-	var report := {"viewport": [view.x, view.y], "class": GameState.hero_class, "buttons": buttons, "avatar": [portrait.x-radius, portrait.y-radius, radius*2.0, radius*2.0], "hp": rect_value(geometry["hp"]), "mp": rect_value(geometry["mp"]), "level_badge": rect_value(geometry["level_badge"]), "level": GameState.level, "panel": panel, "paused": get_tree().paused, "native": game.native_ready, "coverage": coverage, "player": [game.player.position.x, game.player.position.y], "potions": [GameState.potions, GameState.mana_potions], "zoom": game.camera.zoom.x}
+	var report := {"viewport": [view.x, view.y], "class": GameState.hero_class, "buttons": buttons, "avatar": [portrait.x-radius, portrait.y-radius, radius*2.0, radius*2.0], "hp": rect_value(geometry["hp"]), "mp": rect_value(geometry["mp"]), "level_badge": rect_value(geometry["level_badge"]), "level": GameState.level, "panel": panel, "paused": get_tree().paused, "native": game.native_ready, "coverage": coverage, "player": [game.player.position.x, game.player.position.y], "potions": [GameState.potions, GameState.mana_potions], "zoom": game.camera.zoom.x, "world_zoom": Prefs.world_zoom}
+	report["gallery_available"] = ResourceLoader.exists("res://scripts/native_model_gallery.gd")
+	if is_instance_valid(_gallery) and _gallery.visible:
+		report["gallery"] = _gallery.review_snapshot()
 	JavaScriptBridge.eval("window.__sjrpgNativeStyleReview = " + JSON.stringify(report), true)
 static func rect(control: Control) -> Array:
 	return rect_value(control.get_global_rect())
 static func rect_value(box: Rect2) -> Array:
 	return [box.position.x, box.position.y, box.size.x, box.size.y]
+
+func _action(arguments: Array) -> void:
+	if arguments.size() != 2 or str(arguments[0]) != "gallery":
+		return
+	var face := int(arguments[1])
+	if face < 0:
+		if is_instance_valid(_gallery):
+			_gallery.hide()
+		return
+	if face > 3 or not ResourceLoader.exists("res://scripts/native_model_gallery.gd") or not (_root.current is NativeAdventure):
+		return
+	if not is_instance_valid(_gallery):
+		var source: Script = load("res://scripts/native_model_gallery.gd")
+		_gallery = source.new().setup(_root.current.simulation)
+		add_child(_gallery)
+	_gallery.show()
+	_gallery.set_face(face)

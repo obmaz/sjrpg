@@ -1,7 +1,7 @@
 class_name NativeEnemyModels
 extends RefCounted
 ## Articulated volume models. Gameplay owns motion, attack and corpse clocks.
-const KINDS := ["goblin", "wolf", "boar", "skeleton", "golem", "warrior"]
+const KINDS := ["goblin", "wolf", "boar", "skeleton", "golem"]
 var preview: Node
 var entries := {}
 static var _meshes := {}
@@ -68,7 +68,6 @@ static func build(kind: String) -> Dictionary:
 		"golem": skin = _material(Color("747665"))
 		"wolf": skin = _material(Color("66685f"))
 		"boar": skin = _material(Color("615243"))
-		"warrior": skin = _material(Color("aa9171"))
 	var materials: Array[StandardMaterial3D] = [skin, hide, iron, cloth, bone]
 	var legs: Array[Node3D] = []
 	var arms: Array[Node3D] = []
@@ -80,7 +79,7 @@ static func build(kind: String) -> Dictionary:
 		_part(torso, "round", Vector3(0, 0.66, 0.81), Vector3(0.28, 0.22, 0.32), hide)
 		for side in [-1.0, 1.0]:
 			_part(torso, "cone", Vector3(side * 0.15, 1.0, 0.49), Vector3(0.15, 0.28, 0.15), skin)
-			for depth in [-0.35, 0.34]:
+			for depth in [-0.22, 0.22]:
 				var leg := _pivot(root, Vector3(side * 0.20, 0.57, depth))
 				_part(leg, "round", Vector3(0, -0.23, 0), Vector3(0.14, 0.49, 0.15), skin)
 				_part(leg, "round", Vector3(0, -0.49, 0.06), Vector3(0.18, 0.13, 0.27), hide)
@@ -100,9 +99,9 @@ static func build(kind: String) -> Dictionary:
 		_part(torso, "box", Vector3(0, 1.47, 0.15), Vector3(0.22, 0.09, 0.05), hide)
 		for side in [-1.0, 1.0]:
 			_part(torso, "round", Vector3(side * 0.075, 1.52, 0.15), Vector3(0.05, 0.055, 0.045), hide)
-			var leg := _pivot(root, Vector3(side * 0.15 * wide, 0.76, 0))
-			_part(leg, "round", Vector3(0, -0.33, 0), Vector3(0.18 * wide, 0.66, 0.19), skin if kind == "skeleton" else hide)
-			_part(leg, "round", Vector3(0, -0.69, 0.07), Vector3(0.23 * wide, 0.14, 0.35), hide)
+			var leg := _pivot(root, Vector3(side * (0.12 if kind == "golem" else 0.15), 0.76, 0))
+			_part(leg, "round", Vector3(0, -0.33, 0), Vector3(0.17 if kind == "golem" else 0.18, 0.66, 0.19), skin if kind == "skeleton" else hide)
+			_part(leg, "round", Vector3(0, -0.69, 0.07), Vector3(0.18 if kind == "golem" else 0.23, 0.14, 0.35), hide)
 			legs.append(leg)
 			var arm := _pivot(torso, Vector3(side * 0.32 * wide, 1.25, 0))
 			_part(arm, "round", Vector3(side * 0.04, -0.25, 0), Vector3(0.19 * wide, 0.55, 0.21), skin)
@@ -111,16 +110,12 @@ static func build(kind: String) -> Dictionary:
 			if kind == "goblin":
 				var ear := _part(torso, "cone", Vector3(side * 0.22, 1.5, 0), Vector3(0.15, 0.31, 0.15), skin)
 				ear.rotation.z = side * -1.1
-			if kind in ["warrior", "skeleton"]:
+			if kind == "skeleton":
 				_part(arm, "round", Vector3(0, -0.02, 0), Vector3(0.27, 0.22, 0.28), iron)
-		if kind in ["goblin", "skeleton", "warrior"]:
+		if kind in ["goblin", "skeleton"]:
 			_part(arms[0], "box", Vector3(0, -0.47, 0.32), Vector3(0.08, 0.07, 0.70), iron)
 			_part(arms[0], "box", Vector3(0, -0.47, 0.02), Vector3(0.30, 0.08, 0.06), bone)
 			_part(arms[1], "round", Vector3(-0.04, -0.29, 0.15), Vector3(0.46, 0.59, 0.13), hide)
-		if kind == "warrior":
-			_part(torso, "round", Vector3(0, 1.05, 0.11), Vector3(0.53, 0.51, 0.25), iron)
-			_part(torso, "box", Vector3(0, 0.86, 0), Vector3(0.51, 0.09, 0.34), hide)
-			_part(torso, "round", Vector3(0, 1.65, -0.03), Vector3(0.35, 0.13, 0.32), hide)
 		if kind == "skeleton":
 			for index in 4:
 				_part(torso, "round", Vector3(0, 1.22 - index * 0.09, 0.09), Vector3(0.43 - index * 0.035, 0.045, 0.24), bone)
@@ -172,6 +167,8 @@ func sync() -> void:
 		if is_instance_valid(fading) and not candidates.has(fading):
 			candidates.append(fading)
 	for candidate in candidates:
+		if not is_instance_valid(candidate):
+			continue
 		var enemy := candidate as Enemy
 		if enemy == null or enemy.is_queued_for_deletion():
 			continue
@@ -195,7 +192,7 @@ func sync() -> void:
 			attack = 0.6 + 0.4 * clampf((enemy._recover_duration - enemy._timer) / enemy._recover_visual_duration, 0.0, 1.0)
 		var cycle := enemy._walk_cycle if enemy._state == "chase" or (enemy._state == "idle" and enemy._wander != Vector2.ZERO) else 0.0
 		pose(model, enemy.facing, cycle, attack)
-		tint(model, enemy.sprite.tint, enemy.sprite.flash, enemy.sprite.flash_tint, enemy.sprite.modulate.a)
+		tint(model, enemy.sprite.tint, enemy.sprite.flash, enemy.sprite.flash_tint, enemy.sprite.modulate.a * enemy.sprite.self_modulate.a)
 	for id in entries.keys():
 		if not live.has(id):
 			(entries[id]["root"] as Node3D).queue_free()

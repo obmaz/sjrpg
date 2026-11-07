@@ -114,22 +114,32 @@ func run() -> void:
 	game.enemies.append(enemy)
 	enemy.set_process(false)
 	enemy.take_damage(2.0, game.player)
-	# The real presenter synchronizes the hit camera before copying visual cards.
+	# The real presenter synchronizes the hit camera before observing native bodies.
 	preview._sync_camera()
-	preview._sync_cards()
-	var card: MeshInstance3D = preview._cards[enemy.get_instance_id()]["node"]
-	var ink := card.material_override as ShaderMaterial
-	var frame: Rect2 = enemy.sprite.atlas.regions[enemy.sprite.frame]
-	var factor := enemy.sprite.body_height / enemy.sprite.atlas.ref_height
-	var rect := Rect2(-enemy.sprite.atlas.anchors[enemy.sprite.frame] * factor, frame.size * factor)
-	var center := preview.camera.unproject_position(card.position)
-	var expected_center: Vector2 = game.camera.get_canvas_transform() * (enemy.position + enemy.sprite.position + rect.get_center())
-	check("real hit preserves body flash and visual recoil", float(ink.get_shader_parameter("flash_strength")) > 0.0 and enemy.sprite.position.length() > 0.0 and center.distance_to(expected_center) < 1.0)
+	preview._enemy_models.sync()
+	var native_model: Dictionary = preview._enemy_models.entries[enemy.get_instance_id()]
+	var body: Node3D = native_model["root"]
+	var ink := native_model["materials"][0] as StandardMaterial3D
+	check("real native hit preserves body flash and visual recoil", enemy.sprite.flash > 0.0 and ink.albedo_color != native_model["colors"][0] and enemy.sprite.position.length() > 0.0 and body.position.is_equal_approx(preview.actor_foot(enemy) + Ortho3DPreview.ground_position(enemy.sprite.position)))
+	check("native enemy never retains duplicate fallback artwork", not preview._cards.has(enemy.get_instance_id()))
 	enemy.take_damage(enemy.max_hp * 2.0, game.player)
 	await get_tree().create_timer(0.09).timeout
-	preview._sync_cards()
-	var tint: Color = ink.get_shader_parameter("tint")
-	check("dead enemy stays visible during its actual fade after leaving the live array", enemy.dead and not game.enemies.has(enemy) and card.visible and tint.a > 0.0 and tint.a < 0.95 and is_equal_approx(tint.a, enemy.sprite.modulate.a))
+	preview._enemy_models.sync()
+	check("dead native body stays visible during actual fade after leaving live array", enemy.dead and not game.enemies.has(enemy) and body.visible and ink.albedo_color.a > 0.0 and ink.albedo_color.a < 0.95 and is_equal_approx(ink.albedo_color.a, enemy.sprite.modulate.a))
+	# The game process is frozen by this fixture; advance its authoritative corpse clock.
+	game._tick_corpses(0.09)
+	preview._world_environment._sync_corpses()
+	var fallen: Dictionary = game.corpses.back()
+	var source: Node = fallen["visual"]
+	var corpse_model: Dictionary = preview._world_environment._corpses[source.get_instance_id()]
+	var corpse_root: Node3D = corpse_model["root"]
+	check("native corpse observes original source opacity", corpse_root.visible and is_equal_approx((corpse_model["materials"][0] as StandardMaterial3D).albedo_color.a, CorpseArt.opacity(float(fallen["time"]), float(fallen["lifetime"]))))
+	var saved_time: float = fallen["time"]
+	fallen["time"] = 0.0
+	preview._world_environment._sync_corpses()
+	check("expired native corpse no longer renders", not corpse_root.visible)
+	fallen["time"] = saved_time
+	preview._world_environment._sync_corpses()
 	Prefs.reduce_motion = old_reduce
 	var at: Vector2 = game.player.position + Vector2(24, -60)
 	var visible := preview.camera.unproject_position(Ortho3DPreview.spatial_position(at, 0.9))
@@ -163,7 +173,14 @@ func run() -> void:
 		check("town resident has both original source and native body/header: " + label, game.village.npc_nodes.has(label))
 		if game.village.npc_nodes.has(label):
 			var resident: Villager = game.village.npc_nodes[label]
-			check("town body and header are registered: " + label, preview._cards.has(resident.get_instance_id()) and preview._affordances._headers.has(resident.get_instance_id()))
+			check("town body and header are registered: " + label, preview._native_residents.entries.has(resident.get_instance_id()) and not preview._cards.has(resident.get_instance_id()) and preview._affordances._headers.has(resident.get_instance_id()))
+	# Resident native volumes retain each source foot and facing, rather than just
+	# replacing a dictionary membership assertion with another renderer name.
+	for entry: Dictionary in preview._native_residents.entries.values():
+		var resident: Villager = entry["owner"].get_ref()
+		var model: MeshInstance3D = entry["node"]
+		check("resident model follows native floor position", model.position.is_equal_approx(preview.actor_foot(resident)))
+		check("resident has closed volumetric body rather than a quad", model.mesh.get_aabb().size.x > 0.4 and model.mesh.get_aabb().size.z > 0.2 and not model.mesh is QuadMesh)
 	var town_position: Vector2 = game.player.position
 	game.player.position = game.village.gate_points[0] + (game.village.gate_points[0] - game.village.spawn_point).normalized() * 450.0
 	preview._process(0.016)
@@ -179,6 +196,7 @@ func run() -> void:
 	preview._process(0.016)
 	check("cave keeps native walls visible while the forest remains culled", preview.display.visible and preview._native_visible and game.field_root.visibility_layer == 0 and preview._world_environment.cave.visible and not preview._world_environment.forest.visible)
 	check("town portals names and quest markers do not leak into the cave", _town_affordances_hidden(game, preview))
+	check("native resident bodies do not leak into cave realm", preview._native_residents.review_snapshot()["visible"] == 0)
 	game.dungeon.leave("")
 	await get_tree().physics_frame
 	await get_tree().physics_frame

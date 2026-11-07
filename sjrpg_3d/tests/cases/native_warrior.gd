@@ -41,6 +41,13 @@ func run() -> void:
 	player._attack_time = player._attack_duration * 0.3
 	hero.sync(player)
 	check("real attack progress moves the sword shoulder in three dimensions", windup.distance_to(hero.arms[1].rotation) > 0.5)
+	player.sprite.trigger_flash(Color(1.0, 0.5, 0.3))
+	preview._sync_actor(0.0)
+	check("warrior follows actual spatial actor foot and source recoil", hero.position.is_equal_approx(preview.actor_foot(player) + Ortho3DPreview.ground_position(player.sprite.position)))
+	check("actual warrior injury state reaches all native surfaces", hero.meshes.all(func(mesh: MeshInstance3D): return mesh.material_overlay != null))
+	player.sprite.flash = 0.0
+	hero.sync(player)
+	check("cleared source flash removes native injury overlays", hero.meshes.all(func(mesh: MeshInstance3D): return mesh.material_overlay == null))
 	var before := hero.arms[1].rotation
 	get_tree().paused = true
 	player._attack_time = player._attack_duration * 0.9

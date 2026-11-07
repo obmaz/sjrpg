@@ -3,7 +3,7 @@
 NativeEnemyModels replaces the five stage-one enemy card archetypes with lit,
 closed-volume meshes: goblin ears and shield, skeletal ribs and shoulder armour,
 wolf long muzzle/tail, boar tusks and dorsal bristles, and broad stone golem plates.
-The warrior variant adds a cuirass, belt and hair silhouette to the biped rig.
+The player warrior has its own dedicated native model family.
 
 The source is reproducible GDScript geometry, not a generated image or imported
 skeletal animation. XZ floor/Y-up and +Z front follow the shared 120° camera contract.

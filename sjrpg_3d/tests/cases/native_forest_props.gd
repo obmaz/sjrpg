@@ -43,6 +43,33 @@ func run() -> void:
 		var faces: PackedVector3Array = entry["faces"]
 		check("landmark top shares exact physics triangle source", faces == SpatialWorld3D.surface_faces(surface))
 		check("landmark includes lit volume geometry", (entry["root"] as Node3D).get_child_count() >= 2)
+		for candidate in (entry["root"] as Node3D).find_children("*", "MeshInstance3D", true, false):
+			var node := candidate as MeshInstance3D
+			if not (str(node.name) == "CliffSides" or str(node.name).begins_with("WeatheredStone")):
+				continue
+			var arrays := node.mesh.surface_get_arrays(0)
+			var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+			var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+			var valid_uv := uv.size() == points.size()
+			var clockwise := true
+			var vertical_faces := 0
+			for i in range(0, points.size(), 3):
+				var geometric := (points[i + 1] - points[i]).cross(points[i + 2] - points[i])
+				if geometric.length_squared() <= 0.00000001:
+					continue
+				var uv_a := uv[i + 1] - uv[i]
+				var uv_b := uv[i + 2] - uv[i]
+				valid_uv = valid_uv and absf(uv_a.cross(uv_b)) > 0.00000001
+				clockwise = clockwise and geometric.dot(normals[i]) < 0.0
+				if absf(normals[i].y) < 0.7:
+					vertical_faces += 1
+					for offset in [1, 2]:
+						var point_delta := points[i + offset] - points[i]
+						# Vertical UV height always follows metre Y at 2.56m/tile.
+						valid_uv = valid_uv and is_equal_approx((uv[i + offset].y - uv[i].y) * 2.56, -point_delta.y)
+			check("landmark all mapped triangles retain area and vertical metre density " + str(node.name), valid_uv and vertical_faces > 0)
+			check("landmark winding is Godot clockwise with outward normals " + str(node.name), clockwise)
 	var children := environment.forest.get_child_count()
 	environment.sync(0.0, true)
 	environment.sync(0.0, true)

@@ -151,15 +151,44 @@ func _layout_nodes() -> void:
 		_nodes[slot[0]] = Rect2(center - Vector2.ONE * NODE_SIDE / 2.0, Vector2.ONE * NODE_SIDE)
 
 
+## Canvas labels do not inherit PanelFrame's control font boost.
+func graph_css_scale() -> float:
+	if OS.has_feature("web"):
+		var width: Variant = JavaScriptBridge.eval("window.innerWidth", true)
+		if (width is float or width is int) and float(width) > 0.0:
+			return get_viewport_rect().size.x / float(width)
+	if DisplayServer.get_name() == "headless":
+		return 1.0
+	return get_viewport_rect().size.x / maxf(1.0, float(get_window().size.x))
+
+
+static func graph_font_size(preferred: int, css_scale: float) -> int:
+	return maxi(preferred, ceili(12.0 * css_scale))
+
+
+func _graph_label(text: String, rect: Rect2, pixels: int, color: Color) -> void:
+	var font := UiKit.BOLD_FONT
+	var baseline := rect.position.y + (rect.size.y - font.get_height(pixels)) * 0.5 + font.get_ascent(pixels)
+	_tree.draw_string(font, Vector2(rect.position.x, baseline), text, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, pixels, color)
+
+
 func _draw_tree() -> void:
 	_layout_nodes()
 	var area := _tree.size
 	var font := UiKit.BOLD_FONT
+	var scale := graph_css_scale()
+	var tier_font := graph_font_size(19, scale)
+	var rank_font := graph_font_size(18, scale)
+	var mark_font := graph_font_size(17, scale)
 	for r in TIERS.size():
 		var y := TREE_PADDING + r * TIER_HEIGHT
 		_tree.draw_rect(Rect2(0, y, area.x, TIER_HEIGHT - 2.0), Color(1, 0.9, 0.7, 0.025 if r % 2 == 0 else 0.045))
 		var tier := "Lv.%d" % TIERS[r] if _tab != 3 else ""
-		_tree.draw_string(font, Vector2(4, y + 51.0), tier, HORIZONTAL_ALIGNMENT_LEFT, TIER_LABEL_WIDTH, 19, UiKit.MUTED)
+		if not tier.is_empty() and font.get_string_size(tier, HORIZONTAL_ALIGNMENT_LEFT, -1, tier_font).x > TIER_LABEL_WIDTH - 4.0:
+			_graph_label("Lv.", Rect2(0, y + 20.0, TIER_LABEL_WIDTH - 4.0, 32.0), tier_font, UiToneArt.MUTED)
+			_graph_label(str(TIERS[r]), Rect2(0, y + 52.0, TIER_LABEL_WIDTH - 4.0, 32.0), tier_font, UiToneArt.MUTED)
+		else:
+			_graph_label(tier, Rect2(0, y + 32.0, TIER_LABEL_WIDTH - 4.0, 48.0), tier_font, UiToneArt.MUTED)
 	# Prerequisite arrows inside this school.
 	for id in _nodes:
 		var s := GameState.skill(id)
@@ -170,12 +199,14 @@ func _draw_tree() -> void:
 			var to: Rect2 = _nodes[id]
 			var met := GameState.rank(req) >= int(s["requires"][req])
 			var col := Color(UiToneArt.BRONZE, 0.9) if met else Color(UiToneArt.MUTED, 0.4)
-			var a := Vector2(from.get_center().x, from.end.y + 27)
-			var b := Vector2(to.get_center().x, to.position.y - 4)
-			_tree.draw_line(a, b, col, 3.0, true)
-			var dir := (b - a).normalized()
-			var arrow := minf(10.0, maxf(3.0, a.distance_to(b) * 0.55))
-			_tree.draw_colored_polygon(PackedVector2Array([b, b - dir * arrow + dir.orthogonal() * arrow * 0.6, b - dir * arrow - dir.orthogonal() * arrow * 0.6]), col)
+			# Route outside the rank ribbon so its larger readable text cannot cover a dependency.
+			var edge_x := from.end.x + 8.0
+			var target_x := to.end.x + 8.0
+			var lane_y := from.end.y + 39.0
+			var b := Vector2(to.end.x + 3.0, to.get_center().y)
+			var route := PackedVector2Array([Vector2(from.end.x + 3.0, from.end.y - 12.0), Vector2(edge_x, from.end.y - 12.0), Vector2(edge_x, lane_y), Vector2(target_x, lane_y), Vector2(target_x, b.y), b])
+			_tree.draw_polyline(route, col, 2.5, true)
+			_tree.draw_colored_polygon(PackedVector2Array([b, b + Vector2(8, -5), b + Vector2(8, 5)]), col)
 	for id in _nodes:
 		var rect: Rect2 = _nodes[id]
 		var s := GameState.skill(id)
@@ -191,16 +222,22 @@ func _draw_tree() -> void:
 		if id == _selected:
 			_tree.draw_rect(rect.grow(4), UiToneArt.BRONZE, false, 2.0)
 		var badge := "%d/%d" % [rank, int(s["limit"])]
-		var bpos := rect.position + Vector2(0, rect.size.y + 22)
-		_tree.draw_string_outline(font, bpos, badge, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 18, 2, Color(0, 0, 0, 0.9))
-		_tree.draw_string(font, bpos, badge, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, 18, Color.WHITE if rank > 0 else Color(0.7, 0.7, 0.7))
+		var badge_size := Vector2(minf(rect.size.x, font.get_string_size(badge, HORIZONTAL_ALIGNMENT_LEFT, -1, rank_font).x + 10.0), font.get_height(rank_font) + 6.0)
+		var badge_rect := Rect2(Vector2(rect.get_center().x - badge_size.x * 0.5, rect.end.y + 4.0), badge_size)
+		_tree.draw_style_box(UiKit.panel_style(UiToneArt.CHARCOAL, UiToneArt.BRONZE.darkened(0.4), 3), badge_rect)
+		_graph_label(badge, badge_rect, rank_font, UiToneArt.IVORY if rank > 0 else UiToneArt.MUTED)
 		if s["passive"] and not s["basic"]:
-			_tree.draw_string(font, rect.position + Vector2(3, 14), "P", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, UiToneArt.MUTED)
+			var passive_size := Vector2(font.get_string_size("P", HORIZONTAL_ALIGNMENT_LEFT, -1, mark_font).x + 8.0, font.get_height(mark_font) + 4.0)
+			var passive_rect := Rect2(rect.position + Vector2(3, 3), passive_size)
+			_tree.draw_style_box(UiKit.panel_style(UiToneArt.CHARCOAL, UiToneArt.BRONZE.darkened(0.4), 3), passive_rect)
+			_graph_label("P", passive_rect, mark_font, UiToneArt.MUTED)
 		var slot_index: int = GameState.slots.find(id)
 		if slot_index >= 0:
 			var tag := "주" if slot_index == 0 else str(slot_index)
-			_tree.draw_circle(rect.position + Vector2(rect.size.x - 3, 5), 12, UiToneArt.BRONZE)
-			_tree.draw_string(font, rect.position + Vector2(rect.size.x - 15, 11), tag, HORIZONTAL_ALIGNMENT_CENTER, 24, 16, UiKit.INK)
+			var tag_side := maxf(24.0, font.get_height(mark_font) + 6.0)
+			var tag_rect := Rect2(rect.position + Vector2(rect.size.x - 3, 5) - Vector2.ONE * tag_side * 0.5, Vector2.ONE * tag_side)
+			_tree.draw_circle(tag_rect.get_center(), tag_side * 0.5, UiToneArt.BRONZE)
+			_graph_label(tag, tag_rect, mark_font, UiKit.INK)
 
 
 func _node_at(at: Vector2) -> String:
