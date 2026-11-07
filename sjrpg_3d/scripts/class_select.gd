@@ -571,7 +571,10 @@ func _place_slot_labels(index: int) -> void:
 	EntryUi.place(title, Rect2(Vector2(left, pad), Vector2(maxf(1.0, text_w - status_w - (gap if status.visible else 0.0)), title_h)))
 	EntryUi.place(status, Rect2(Vector2(row.size.x - pad - status_w, pad), Vector2(status_w, title_h)))
 	meta.size.x = text_w
-	var meta_h := maxf(meta.get_combined_minimum_size().y, 22.0 * _unit)
+	var font := meta.get_theme_font("font")
+	var flags := TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND | TextServer.BREAK_ADAPTIVE
+	var measured := font.get_multiline_string_size(meta.text, HORIZONTAL_ALIGNMENT_LEFT, text_w, meta.get_theme_font_size("font_size"), -1, flags)
+	var meta_h := maxf(measured.y, 22.0 * _unit)
 	EntryUi.place(meta, Rect2(Vector2(left, pad + title_h + maxf(4.0 * _unit, 3.0 * _slot_css)), Vector2(text_w, meta_h)))
 
 func _fit_delete_dialog() -> void:

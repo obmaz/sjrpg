@@ -76,6 +76,7 @@ func run() -> void:
 			check("class preview uses actual starting values", HudArt.stat(GameState.CLASSES[cls]["hp"]) in select.health.text and HudArt.res(GameState.CLASSES[cls]["resource_max"]) in select.resource.text)
 			_buttons_fit(select, dimensions)
 		select.slot_switch.pressed.emit()
+		await _frames(3)
 		check("slot change exposes exactly four independent choices", select._stage == "slots" and select.slot_buttons.size() == 4)
 		_buttons_fit(select, dimensions)
 		select.slot_buttons[2].pressed.emit()
