@@ -30,7 +30,7 @@
 | 10 | 보스 슬램 카메라 | 예정 | | |
 | 11 | 타격음 변주·고음 틱·처치음·연속 처치 피치 (보이스 6→8) | 완료, 청취 튜닝 필요 | `sound_fx.gd` `hit_names`·`play_hit`·`streak_pitch`, `enemy.gd` | `juice_tier` |
 | 12 | 속성별 적중음 (불·번개·얼음 짧은 악센트) | 완료, 청취 튜닝 필요 | `effects.gd` `contact_element`, `sound_fx.gd` `hit_names` | `juice_tier` |
-| 13 | 적 체력바 잔상 | 예정 | | |
+| 13 | 적 체력바 잔상 (0.35초 유지 후 초당 120% 소모) | 완료 | `enemy.gd` `ghost_hp`·`_update_ghost`·`_draw` | `juice_enemy` |
 | 14 | 카메라 줌 펀치 | 선택 | | |
 | 15 | 타격감 강도 설정 | 선택 | | |
 

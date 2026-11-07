@@ -40,6 +40,11 @@ var _state := "idle"
 var _hitstop := GameTempo.ContactStop.new()
 ## JUICE #1: tier of the most recent confirmed hit (HitTier); presentation only.
 var last_hit_tier := HitTier.LIGHT
+## JUICE #13: a pale "recent loss" segment trails the health bar, then drains after a short hold.
+const GHOST_HOLD := 0.35
+const GHOST_DRAIN := 1.2  # fractions of max health per second
+var ghost_hp := 0.0
+var _ghost_hold := 0.0
 var _timer := 0.0
 var _windup_duration := 0.55
 var _recover_duration := 0.7
@@ -163,6 +168,8 @@ func take_damage(amount: float, source: Node2D, visual_source: Node2D = null) ->
 		return  # A summon cannot be killed by the same resolved contact that created it.
 	if _cry_time > 0.0:
 		amount *= 1.0 + _cry_value
+	ghost_hp = maxf(ghost_hp, hp)  # JUICE #13: remember the health shown before this hit
+	_ghost_hold = GHOST_HOLD
 	hp -= amount
 	queue_redraw()
 	# JUICE #1: one tier drives every presentation below; "heavy" keeps its original meaning.
@@ -202,6 +209,21 @@ func take_damage(amount: float, source: Node2D, visual_source: Node2D = null) ->
 		_die()
 
 
+## JUICE #13: real-time, so a hit-stop does not freeze the trailing segment. Reduced motion shows no trail.
+func _update_ghost(delta: float) -> void:
+	if ghost_hp <= hp:
+		ghost_hp = hp
+		return
+	if Prefs.reduce_motion:
+		ghost_hp = hp
+		queue_redraw()
+		return
+	_ghost_hold = maxf(0.0, _ghost_hold - delta)
+	if _ghost_hold <= 0.0:
+		ghost_hp = maxf(hp, ghost_hp - max_hp * GHOST_DRAIN * delta)
+	queue_redraw()
+
+
 func _die() -> void:
 	if dead:
 		return
@@ -234,6 +256,7 @@ func _process(delta: float) -> void:
 	_taunt_time = maxf(0.0, _taunt_time - delta)
 	_cry_time = maxf(0.0, _cry_time - delta)
 	_update_tint()
+	_update_ghost(delta)
 	delta = _hitstop.consume(delta)
 	if delta <= 0.0:
 		return
@@ -351,4 +374,6 @@ func _draw() -> void:
 	var w := 120.0 if is_boss else 56.0
 	var y := -sprite.body_height - 14.0
 	draw_rect(Rect2(-w / 2 - 1, y - 1, w + 2, 8), Color(0, 0, 0, 0.7))
+	if ghost_hp > hp and not Prefs.reduce_motion:
+		draw_rect(Rect2(-w / 2, y, w * clampf(ghost_hp / max_hp, 0, 1), 6), Color(1.0, 0.86, 0.72, 0.9))
 	draw_rect(Rect2(-w / 2, y, w * clampf(hp / max_hp, 0, 1), 6), Color(0.85, 0.2, 0.18))
