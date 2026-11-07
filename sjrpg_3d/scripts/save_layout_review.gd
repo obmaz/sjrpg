@@ -148,7 +148,7 @@ func _publish() -> void:
 	if is_instance_valid(current):
 		if current.has_method("refresh_slots"):
 			screen = "selection"
-		elif current.has_method("near_npc"):
+		elif current is NativeAdventure:
 			screen = "adventure"
 	var report := {"ready": _configured, "scenario": _scenario, "screen": screen,
 		"fixture_error": _error, "file_hashes": file_hashes(), "hero_class": GameState.hero_class,
