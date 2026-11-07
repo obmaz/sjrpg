@@ -437,3 +437,8 @@ HUD는 체력·물약 수·쿨다운의 실제 변화를 감지합니다. 사운
 `tools/hero_art/fetch_sources.py`는 고정 원본과 실제 CC0 라이선스를 해시로 확인합니다. `export_cc0_merchant.py`는 원본 리그의 기준 자세 차이를 검증하고 대상 뼈 길이를 유지하는 30fps FK retarget과 미터 배율을 구웁니다. `publish_merchant_blobs.py`는 18k 상한·실제 GLB·원문 라이선스를 다시 검증하고 고정 엔진으로 실제 임포트 설정을 만듭니다. 후보 worker는 ref를 이동하지 않고 검수용 blob만 준비합니다. 출처·실제 해시는 `assets/source/native-residents/merchant/`에 보존합니다.
 
 `native_merchant`는 실제 스킨·골격·수동 동작·일시정지·전체 메시 피격·소유권과 기존 발 위치를 검사합니다. `SJRPG_STYLE_MERCHANT_ONLY=1` 브라우저 하네스와 `native-merchant-review.yml`은 변경 전 실제 빌드와 비교해 네 방향·모바일 두 방향·DPR2·실제 상점 버튼·일시정지를 검수합니다. rest AABB와 뼈 원점은 GPU로 변형된 발바닥/보이는 픽셀 경계와 구분합니다. 상점 상호작용 버튼은 다른 HUD와 겹치지 않는 44CSS px 이상 입력 영역을 유지합니다.
+
+
+## 음악 재생 객체의 소유권
+
+`MusicDirector`는 장면에서 나갈 때 소유한 세 `AudioStreamPlayer`를 정지하고 스트림 참조를 해제합니다. 같은 노드를 다시 붙이면 기존 세 플레이어에 트랙을 다시 연결하고 현재 지역의 페이드를 시작합니다. 앱 포커스로 인한 일시정지 상태는 별도로 유지하며 실제 재생을 시작한 뒤에도 적용합니다. 일시정지된 루프를 새로 시작하지 않도록 재생 객체의 존재는 `has_stream_playback()`으로 판정합니다. 음악 설정을 끄면 일시정지된 재생 객체도 정리됩니다. `music` 검사는 세 트랙의 실제 교차 재생·분리/재부착·포커스·게임 해제와 재생 객체 정리를 검증합니다.
