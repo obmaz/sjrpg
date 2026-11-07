@@ -359,11 +359,12 @@ func _setup_presentation() -> void:
 		slot_portraits.append(art)
 		var badge := Panel.new()
 		badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		badge.z_index = 1
 		badge.add_theme_stylebox_override("panel", SelectionUi.skin(Color("101b18"), SelectionUi.BRONZE, 4))
 		slot_buttons[index].add_child(badge)
 		slot_number_badges.append(badge)
-		slot_number_labels[index].z_index = 2
+		# Order locally inside the row; elevated canvas z would pierce modal dimmers.
+		slot_number_labels[index].z_index = 0
+		slot_buttons[index].move_child(slot_number_labels[index], slot_buttons[index].get_child_count() - 1)
 		slot_number_labels[index].add_theme_color_override("font_color", SelectionUi.IVORY)
 		slot_number_labels[index].add_theme_constant_override("outline_size", 0)
 	slot_surface.add_theme_stylebox_override("panel", SelectionUi.skin(Color(0.035, 0.065, 0.058, 0.54), Color("766b50"), 10))

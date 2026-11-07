@@ -21,6 +21,7 @@ func _buttons_fit(select: Control, dimensions: Vector2i) -> void:
 	for button: Button in controls:
 		if button.is_visible_in_tree() and (select._stage == "class" or not select.slot_buttons.has(button) and not select.delete_buttons.has(button)):
 			check("visible entry action remains safe and thumb-sized %s/%s" % [dimensions, button.text], bounds.encloses(button.get_global_rect()) and button.size.y >= 64.0 * unit)
+	check("entry Back target never overlaps the actual title rectangle", not select.back_button.get_global_rect().intersects(select.heading.get_global_rect()))
 	if select.showcase.is_visible_in_tree():
 		check("entry uses a full illustration without stretching or clipping its frame", bounds.encloses(select.showcase.get_global_rect()) and select.hero_art.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_CENTERED and select.hero_art.get_global_rect().size.is_equal_approx(select.showcase.get_global_rect().size))
 	if select._stage == "class":
