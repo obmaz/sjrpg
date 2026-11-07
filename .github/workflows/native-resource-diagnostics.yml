@@ -17,7 +17,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                partition: [full]
+                partition: [last]
         env:
             SJRPG_RESOURCE_PARTITION: ${{ matrix.partition }}
             SJRPG_QUIET_VERBOSE: "0"
@@ -45,7 +45,7 @@ jobs:
                   import re
                   focused = re.search(r"--only=([a-z0-9_,]+)", Path(".github/workflows/native-candidate-smoke.yml").read_text()).group(1).split(",")
                   partition = os.environ["SJRPG_RESOURCE_PARTITION"]
-                  selected = {"full": names, "entry": ["entry_layout", "entry_loading"]}[partition]
+                  selected = {"full": names, "entry": ["entry_layout", "entry_loading"], "last": ["world_zoom"]}[partition]
                   assert all(name in names for name in selected), "Unknown diagnostic case"
                   output = Path("build/resource-diagnostics") / partition
                   output.mkdir(parents=True, exist_ok=True)
