@@ -21,7 +21,7 @@ for(const profile of [{name:'portrait-mage-continue',width:390,height:844,dpr:1,
  page.on('console',m=>{if(m.type()==='error'||bad.test(m.text()))c.errors.push({kind:'console',text:m.text()});});
  const cdp=await context.newCDPSession(page);await cdp.send('Log.enable');
  cdp.on('Log.entryAdded',({entry})=>{if(entry.level==='error'||bad.test(entry.text))c.errors.push({kind:'browser',text:entry.text});});
- await page.addInitScript(()=>{
+ await page.addInitScript(({releaseForFresh})=>{
   const pad={id:'Xbox 360 Controller (STANDARD GAMEPAD Vendor: 045e Product: 028e)',index:0,connected:false,mapping:'standard',timestamp:0,axes:[0,0,0,0],buttons:Array.from({length:17},()=>({pressed:false,touched:false,value:0})),vibrationActuator:null};
   const stamp=()=>{pad.timestamp=performance.now();};
   const event=name=>{const e=new Event(name);Object.defineProperty(e,'gamepad',{value:pad});window.dispatchEvent(e);};
@@ -34,8 +34,21 @@ for(const profile of [{name:'portrait-mage-continue',width:390,height:844,dpr:1,
    neutral(){pad.axes.fill(0);for(const b of pad.buttons)Object.assign(b,{pressed:false,touched:false,value:0});stamp();},
    snapshot(){return JSON.parse(JSON.stringify(pad));}
   };
- });
- const read=()=>page.evaluate(()=>({review:window.__sjrpgGamepadReview,ui:window.__sjrpgClassButtons,loading:window.__sjrpgEntryLoading,adventure:window.__sjrpgAdventureReady===true,title:window.__sjrpgTitleReady,entry:window.__sjrpgEntryReady,window:[innerWidth,innerHeight],dpr:devicePixelRatio,virtual:window.__sjrpgVirtualXbox.snapshot()}));
+  window.__sjrpgVirtualXboxEntryTrace=[];let released=false,fresh=false;
+  new MutationObserver(()=>{
+   const state=window.__sjrpgEntryLoading;
+   if(!releaseForFresh||!state?.visible)return;
+   if(!released&&state.phase==='load'){
+    released=true;window.__sjrpgVirtualXbox.button(0,0);
+    window.__sjrpgVirtualXboxEntryTrace.push({kind:'release-entry-A',epoch:performance.timeOrigin+performance.now(),phase:state.phase,native_ready:window.__sjrpgAdventureReady===true,visible:state.visible});
+   }
+   if(released&&!fresh&&state.phase==='ready'&&window.__sjrpgAdventureReady===true){
+    fresh=true;window.__sjrpgVirtualXbox.button(2,1);
+    window.__sjrpgVirtualXboxEntryTrace.push({kind:'fresh-X-after-native-ready',epoch:performance.timeOrigin+performance.now(),phase:state.phase,native_ready:true,visible:state.visible});
+   }
+  }).observe(document,{attributes:true,childList:true,subtree:true});
+ },{releaseForFresh:!profile.newGame});
+ const read=()=>page.evaluate(()=>({review:window.__sjrpgGamepadReview,ui:window.__sjrpgClassButtons,loading:window.__sjrpgEntryLoading,adventure:window.__sjrpgAdventureReady===true,title:window.__sjrpgTitleReady,entry:window.__sjrpgEntryReady,window:[innerWidth,innerHeight],dpr:devicePixelRatio,virtual:window.__sjrpgVirtualXbox.snapshot(),entry_trace:window.__sjrpgVirtualXboxEntryTrace}));
  async function wait(predicate,label,timeout=15000){
   const end=Date.now()+timeout;let last;
   while(Date.now()<end){
@@ -105,7 +118,13 @@ for(const profile of [{name:'portrait-mage-continue',width:390,height:844,dpr:1,
   }
   s=await wait(s=>s.adventure&&s.review.native_ready&&!s.loading?.visible,'actual selected native game',90000);
   assert.equal(s.review.class,profile.newGame?'warrior':'mage');assert.equal(s.review.slot,profile.newGame?2:1);
-  assert.equal(s.review.player.serial,0,'held selection A must not leak an attack through loading');
+  assert.equal(s.review.player.serial,0,'entry input must not leak an attack through loading');
+  if(!profile.newGame){
+   assert(s.entry_trace.some(e=>e.kind==='release-entry-A'),'saved entry A really released during loading');
+   assert(s.entry_trace.some(e=>e.kind==='fresh-X-after-native-ready'&&e.native_ready&&e.visible),'fresh actual X injected after native ready but before DOM dismissal');
+   assert.equal(s.virtual.buttons[2].pressed,true,'fresh loading X remains physically held at exit');
+  }
+  c.entry_trace=s.entry_trace;
   await page.waitForTimeout(300);
   assert.equal((await read()).review.player.serial,0,'held entry A remains gated in live game');
   await neutral();

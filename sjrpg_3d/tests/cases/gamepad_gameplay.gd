@@ -213,3 +213,58 @@ func run() -> void:
 	get_tree().paused = false
 	game.queue_free()
 	await _frames(3)
+
+	# A second real world regresses targeted leap impact while RS keeps overwriting facing.
+	# The target is 40 degrees off-axis but inside the real manual acquisition cone.
+	var warrior_game: Node = await make_game("warrior")
+	var warrior: Player = warrior_game.player
+	GameState.level = 18
+	GameState.ranks = {"cleave": 1, "howl": 1, "leap": 1, "leapAttack": 1}
+	GameState.slots = ["cleave", "leapAttack", "", "", ""]
+	warrior.refresh_stats(true)
+	warrior.resource = warrior.resource_max
+	Input.joy_connection_changed.emit(DEVICE, true)
+	_neutral()
+	await _frames(6)
+	var leap_origin: Vector2 = warrior_game.village.point(Vector2(0.5, 1.15))
+	var leap_target_point := Vector2.ZERO
+	var leap_legal := false
+	for offset: Vector2 in [Vector2.ZERO, Vector2(180, 0), Vector2(-180, 0), Vector2(0, 200)]:
+		var point: Vector2 = leap_origin + offset
+		var candidate: Vector2 = point + Vector2.from_angle(deg_to_rad(40.0)) * 180.0
+		if not warrior_game._blocked(point, Player.RADIUS) and not warrior_game._blocked(candidate, Enemy.radius_for("goblin")) and warrior_game.can_melee_reach(point, candidate):
+			leap_origin = point
+			leap_target_point = candidate
+			leap_legal = true
+			break
+	check("off-axis leap fixture has legal actual terrain and approach", leap_legal)
+	if leap_legal:
+		warrior.position = leap_origin
+		var target := Enemy.new()
+		target.setup(warrior_game, "goblin", 1)
+		target.position = leap_target_point
+		target.hp = 500.0
+		target.max_hp = 500.0
+		target.damage = 0.0
+		target.speed = 0.0
+		target._timer = 100.0
+		warrior_game.world.add_child(target)
+		warrior_game.enemies.append(target)
+		await get_tree().physics_frame
+		await _frames(5)
+		_axis(JOY_AXIS_RIGHT_X, 0.9)
+		_axis(JOY_AXIS_RIGHT_Y, 0.0)
+		await _frames(3)
+		var target_hp: float = target.hp
+		_button(JOY_BUTTON_X, true)
+		await _frames(2)
+		_button(JOY_BUTTON_X, false)
+		check("off-axis X leap reaches actual impact damage with RS held", await _until(func(): return is_instance_valid(target) and target.hp < target_hp, 2500))
+		if is_instance_valid(target):
+			var landing_distance: float = warrior.position.distance_to(target.position)
+			check("off-axis leap lands within physical target plus slam reach", landing_distance <= target.radius + 70.0, str(landing_distance))
+			check("off-axis leap traveled toward selected body rather than raw RS", absf(angle_difference((warrior.position - leap_origin).angle(), deg_to_rad(40.0))) < deg_to_rad(12.0))
+	_neutral()
+	Input.joy_connection_changed.emit(DEVICE, false)
+	warrior_game.queue_free()
+	await _frames(3)

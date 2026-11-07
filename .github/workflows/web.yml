@@ -80,6 +80,16 @@ jobs:
                   curl --fail --silent --show-error --max-time 2 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 12 http://127.0.0.1:8780/ > /dev/null
                   node sjrpg_3d/tools/check_entry_loading.mjs http://127.0.0.1:8780/ build/review/save-layout/loading
 
+            - name: Check exported Xbox gamepad input
+              if: (success() || failure()) && steps.native_build.outcome == 'success'
+              run: |
+                  mkdir -p build/review/gamepad
+                  python3 -m http.server 8781 --bind 127.0.0.1 --directory build/web/3d > build/review/gamepad/server.log 2>&1 &
+                  SJRPG_GAMEPAD_SERVER_PID=$!
+                  trap 'kill "$SJRPG_GAMEPAD_SERVER_PID" 2>/dev/null || true' EXIT
+                  curl --fail --silent --show-error --max-time 2 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 12 http://127.0.0.1:8781/ > /dev/null
+                  node sjrpg_3d/tools/check_gamepad.mjs http://127.0.0.1:8781/ build/review/gamepad
+
             - uses: actions/upload-artifact@v6
               if: always()
               with:

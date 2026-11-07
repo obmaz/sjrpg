@@ -58,7 +58,7 @@ func _select_device(device: int) -> void:
 
 
 func _sample_hardware() -> void:
-	if not Input.get_connected_joypads().has(active_device):
+	if active_device < 0 or not _connected.has(active_device):
 		return
 	for button in range(JOY_BUTTON_MAX):
 		_buttons[button] = Input.is_joy_button_pressed(active_device, button)
