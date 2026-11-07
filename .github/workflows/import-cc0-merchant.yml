@@ -1,0 +1,57 @@
+name: Prepare licensed CC0 merchant candidate
+on:
+    push:
+        paths:
+            - ".github/workflows/import-cc0-merchant.yml"
+            - "sjrpg_3d/tools/hero_art/export_cc0_merchant.py"
+            - "sjrpg_3d/tools/hero_art/publish_merchant_blobs.py"
+    workflow_dispatch:
+permissions:
+    contents: write
+concurrency:
+    group: cc0-merchant-import-${{ github.sha }}
+    cancel-in-progress: false
+jobs:
+    prepare:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 25
+        env:
+            SJRPG_CHARACTER_SOURCE_DIR: /tmp/sjrpg-cc0-merchant-source
+            SJRPG_CC0_MERCHANT_OUT: ${{ github.workspace }}/build/cc0-merchant
+            SJRPG_MATERIAL_PILOT_MODE: clean
+        steps:
+            - uses: actions/checkout@v7.0.1
+            - name: Install offline model converter
+              run: |
+                  sudo apt-get update -qq
+                  sudo apt-get install -y blender
+                  blender --version
+            - uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.godot-tools
+                      ~/.local/share/godot/export_templates
+                  key: godot-${{ hashFiles('.godot-version') }}-tools-v1
+            - name: Verify exact official free source files and packaged CC0 licenses
+              run: python3 sjrpg_3d/tools/hero_art/fetch_sources.py
+            - name: Build actual adult merchant and verify exported geometry
+              run: blender --background --python sjrpg_3d/tools/hero_art/export_cc0_merchant.py
+            - name: Import with the pinned engine and publish candidate blobs without moving refs
+              env:
+                  SJRPG_ASSET_TOKEN: ${{ github.token }}
+              run: |
+                  chmod +x tools/*.sh sjrpg_3d/tools/*.sh sjrpg_2d/tools/*.sh
+                  tools/setup_godot.sh
+                  python3 sjrpg_3d/tools/hero_art/publish_merchant_blobs.py
+            - uses: actions/upload-artifact@v6
+              if: always()
+              with:
+                  name: cc0-merchant-candidate
+                  path: |
+                      build/cc0-merchant/merchant.glb
+                      build/cc0-merchant/provenance.json
+                      build/cc0-merchant/LICENSE-*.txt
+                      build/cc0-merchant/published-blobs.json
+                      build/cc0-merchant/godot-import/assets/art/native_residents
+                  if-no-files-found: ignore
+                  retention-days: 7
