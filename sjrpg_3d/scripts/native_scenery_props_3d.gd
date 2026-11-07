@@ -147,7 +147,7 @@ static func build(preview: Node, parent: Node3D, world: Node2D, cave: bool, excl
 			at = centre + forward * 0.85
 			basis = Basis(axis, Vector3.UP, forward)
 			opening = 1.40
-			mesh = arch_mesh(opening, minf(height, 3.4), 0.36, 0.50)
+			mesh = _entrance_mesh(minf(height, 3.4), SpatialWorld3D.radius_metres(120.0))
 		elif role == "crystal":
 			mesh = _crystal_mesh(height)
 		else:
@@ -166,8 +166,71 @@ static func build(preview: Node, parent: Node3D, world: Node2D, cave: bool, excl
 		node.material_override = crystal if role == "crystal" else stone
 		node.transform = Transform3D(basis, at)
 		root.add_child(node)
+		if role == "entrance":
+			var back := MeshInstance3D.new()
+			var back_shape := BoxMesh.new()
+			back_shape.size = Vector3(1.35, 2.0, 0.16)
+			back.mesh = back_shape
+			var dark := StandardMaterial3D.new()
+			dark.albedo_color = Color("25342f")
+			dark.roughness = 1.0
+			back.material_override = dark
+			back.position = Vector3(0, 1.5, -1.03)
+			back.name = "TunnelDepth"
+			node.add_child(back)
 		owned[source.get_instance_id()] = true
 		entries.append({"source_id": source.get_instance_id(), "role": role, "source_foot": source.global_position, "transform": node.transform, "clear_width": opening, "mesh": mesh})
 	var report := {"owned_source_ids": owned, "entries": entries, "root": root}
 	root.set_meta("native_scenery_report", report)
 	return report
+
+static func _polygon_volume(tool: SurfaceTool, polygon: PackedVector2Array, bottom: float, top: float, broken := false) -> void:
+	if polygon.size() < 3:
+		return
+	var centre := Vector3.ZERO
+	var high := PackedVector3Array()
+	var low := PackedVector3Array()
+	for i in polygon.size():
+		var p := polygon[i]
+		low.append(Vector3(p.x, bottom, p.y))
+		high.append(Vector3(p.x, top - (0.12 * (0.5 + 0.5 * sin(i * 2.3)) if broken else 0.0), p.y))
+		centre += low[-1]
+	centre /= polygon.size()
+	var indices := Geometry2D.triangulate_polygon(polygon)
+	for i in range(0, indices.size(), 3):
+		var a := high[indices[i]]
+		var b := high[indices[i + 1]]
+		var c := high[indices[i + 2]]
+		var normal := (b - a).cross(c - a).normalized()
+		if normal.y < 0:
+			normal = -normal
+		NativeLandmarks3D._tri(tool, a, b, c, normal)
+		NativeLandmarks3D._tri(tool, low[indices[i]], low[indices[i + 2]], low[indices[i + 1]], Vector3.DOWN)
+	for i in low.size():
+		_face(tool, low[i], low[(i + 1) % low.size()], high[(i + 1) % high.size()], high[i], centre + Vector3.UP * (top - bottom) * 0.5)
+
+static func _entrance_mesh(height: float, body_radius: float) -> ArrayMesh:
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var circle := PackedVector2Array()
+	for i in 16:
+		circle.append(Vector2(cos(TAU * i / 16.0) * body_radius, -0.85 + sin(TAU * i / 16.0) * body_radius))
+	# The original transition body is a solid cliff circle, not a freely walkable
+	# doorway. A 0.50m visible ledge exceeds MAX_STEP and marks that whole envelope.
+	_polygon_volume(tool, circle, 0.0, 0.50)
+	var regions := [
+		PackedVector2Array([Vector2(-5, -5), Vector2(-0.7, -5), Vector2(-0.7, 5), Vector2(-5, 5)]),
+		PackedVector2Array([Vector2(0.7, -5), Vector2(5, -5), Vector2(5, 5), Vector2(0.7, 5)]),
+		PackedVector2Array([Vector2(-0.7, -5), Vector2(0.7, -5), Vector2(0.7, -0.95), Vector2(-0.7, -0.95)])
+	]
+	for region: PackedVector2Array in regions:
+		for polygon in Geometry2D.intersect_polygons(circle, region):
+			_polygon_volume(tool, polygon, 0.5, height + 0.20, true)
+	var vault := arch_mesh(1.4, height, 0.36, 1.25)
+	var arrays := vault.surface_get_arrays(0)
+	var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+	for i in range(0, points.size(), 3):
+		var offset := Vector3(0, 0.5, -0.35)
+		NativeLandmarks3D._tri(tool, points[i] + offset, points[i + 1] + offset, points[i + 2] + offset, normals[i])
+	return tool.commit()

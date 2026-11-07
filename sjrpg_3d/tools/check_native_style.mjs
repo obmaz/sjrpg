@@ -26,7 +26,7 @@ async function capture(name,inline=false){const s=await read();await page.screen
 function hudGeometry(s,label){return verify(()=>strictHudGeometry(s,label),label);}
 function strictHudGeometry(s,label){
  assert(s.ui.native&&s.native?.native_active&&s.native?.simulation==='3d',label+' actual native world');
- if(!baseline){assert.deepEqual(s.ui.coverage.actor_cards,[],label+' no resident/enemy camera-facing object cards');const env=s.ui.coverage.environment;assert(env&&env.remaining_sources,label+' explicit retained source inventory');}
+ if(!baseline){assert.deepEqual(s.ui.coverage.actor_cards,[],label+' no resident/enemy camera-facing object cards');const env=s.ui.coverage.environment;assert(env&&env.remaining_sources,label+' explicit retained source inventory');for(const scope of['forest','cave'])assert.deepEqual(env.remaining_sources[scope],[],label+' no retained physical '+scope+' source cards');for(const key of['forest_sprites','forest_groups','cave_sprites','cave_groups'])assert.equal(Number(env[key]),0,label+' no physical fallback batches '+key);}
  const bounds={x:0,y:0,w:s.window[0],h:s.window[1]};
  const keys=['potion_hp','potion_mp','bar_bag','bar_skills','bar_quests','bar_gear'];
  for(const key of keys){const r=css(s,s.ui.buttons[key]);assert(inside(bounds,r),label+' bounds '+key);if(!baseline)assert(r.w>=43.5&&r.h>=43.5,label+' 44 CSS target '+key+' '+JSON.stringify(r));}
@@ -52,7 +52,7 @@ async function menuPanel(key,label){
  await capture(label);
  checks.push(label+' real menu click');
  if(key==='bar_gear'){
-  const seen=[];
+  const seen=[],nativeSizes=[];
   for(const amount of[.5,1,1.5]){
    let found;
    for(let attempt=0;attempt<20;attempt++){
@@ -63,9 +63,9 @@ async function menuPanel(key,label){
     if(attempt===19)throw Error('Actual settings scroll cannot expose zoom '+amount);
    }
    s=await wait(s=>Math.abs(s.ui.world_zoom-amount)<.001,'actual zoom changed');
-   seen.push(s.ui.zoom);await capture(label+'-zoom-'+amount);
+   seen.push(s.ui.zoom);nativeSizes.push(s.ui.native_camera_size);await capture(label+'-zoom-'+amount);
   }
-  assert(new Set(seen.map(x=>x.toFixed(4))).size===3,'three actual camera zoom values');checks.push(label+' real zoom settings');
+  assert(new Set(seen.map(x=>x.toFixed(4))).size===3,'three actual camera zoom values');assert(new Set(nativeSizes.map(x=>x.toFixed(4))).size===3,'three actual native orthographic camera sizes');checks.push(label+' real zoom settings');
  }
  await closePanel();
 }
@@ -122,8 +122,8 @@ try{
   await capture(cls+'-walking-native');
   assert(distance>1,'real WASD movement');checks.push(cls+' actual movement');
  }
- for(const [name,params]of[['bridge',{at:'bridge'}],['landmark0',{at:'lm0'}],['landmark1',{at:'lm1'}],['landmark2',{at:'lm2'}],['landmark3',{at:'lm3'}],['cave',{dungeon_preview:'entry'}],['enemy',{at:'field',encounter_preview:'active'}]]){
-  await boot('mage',params);await page.waitForTimeout(800);hudGeometry(await read(),name);await capture(name+'-native',true);
+ for(const [name,params]of[['bridge',{at:'bridge'}],['landmark0',{at:'lm0'}],['landmark1',{at:'lm1'}],['landmark2',{at:'lm2'}],['landmark3',{at:'lm3'}],['cave-outside',{at:'rowen',zoom:'0.8'}],['cave',{dungeon_preview:'entry'}],['enemy',{at:'field',encounter_preview:'active'}]]){
+  await boot('mage',params);await page.waitForTimeout(800);const state=await read();hudGeometry(state,name);if(name==='cave-outside'){assert.equal(state.ui.dungeon_active,false,'actual exterior remains forest');assert(state.ui.entry_distance<180,'actual exterior camera is at the real cave entrance');assert.equal(state.native.scope,'forest');}await capture(name+'-native',true);
  }
  await boot('mage',{at:'npc_courtyard'},2);hudGeometry(await read(),'mage DPR2 portrait');await capture('mage-dpr2-portrait',true);
  if(!baseline){

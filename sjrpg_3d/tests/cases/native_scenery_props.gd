@@ -37,6 +37,23 @@ func run() -> void:
 			check("field rock keeps its original native foot", transform.origin.is_equal_approx(Ortho3DPreview.ground_position(point, preview.surface_height(point))))
 		elif entry["role"] == "entrance":
 			entrance_count += 1
+			var transform: Transform3D = entry["transform"]
+			var source_foot: Vector2 = entry["source_foot"]
+			var body_centre := Ortho3DPreview.ground_position(source_foot + Vector2(0, -60))
+			var native_mesh: ArrayMesh = entry["mesh"]
+			var arrays := native_mesh.surface_get_arrays(0)
+			var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var fits_original_circle := not points.is_empty()
+			var foundation_covers_body := false
+			var radius := SpatialWorld3D.radius_metres(120.0)
+			for point in points:
+				var world := transform * point
+				var distance := Vector2(world.x - body_centre.x, world.z - body_centre.z).length()
+				fits_original_circle = fits_original_circle and distance <= radius + 0.002
+				foundation_covers_body = foundation_covers_body or (is_equal_approx(point.y, 0.5) and distance >= radius - 0.002)
+			check("field cave has volumetric cliff mass within the original circular blocker", fits_original_circle and foundation_covers_body and 0.50 > SpatialWorld3D.MAX_STEP)
+			var backs := forest.find_children("TunnelDepth", "MeshInstance3D", true, false)
+			check("field cave transition has actual dark tunnel depth behind its raised mouth", backs.size() == 1 and (backs[0].mesh as BoxMesh).size.z > 0.1)
 	check("actual field rocks and the existing scene-transition cave mouth have native owners", rock_count > 0 and entrance_count == 1)
 	game.player.position = game.dungeon.entry_point()
 	await _frames(2)
