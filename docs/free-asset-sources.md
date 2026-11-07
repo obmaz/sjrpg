@@ -38,7 +38,7 @@
 | Quaternius Modular Outfits + Universal Base + UAL | 위의 기존 CC0 원문·해시 고정 파일, 기존 검증 다운로더 | 성인 비례·Humanoid 가족. Base 공식 평균 약13k triangles는 팩 소개 평균이며 선택 모델의 실측 예산이 아님. Standard의 glTF/FBX와 UAL GLB가 출발점. **사람형 파일럿 1순위** |
 | KayKit Adventurers 1.0 / Kay Lousberg | 공식 저장소 LICENSE.txt를 직접 확인: https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/blob/672074b73ba276876a19e8816ecdc5241817ab47/LICENSE.txt . 고정 ZIP: https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/archive/672074b73ba276876a19e8816ecdc5241817ab47.zip | 해당 **1.0**은 4캐릭터·75동작·25개 이상 액세서리. 캐릭터 GLB, 소품 glTF가 공식 tree에 존재. 단일1024 atlas/모바일 지향. 큰 머리 비례이므로 우리 사람형에 즉시 채택하지 않음 |
 | KayKit Skeletons 1.0 / Kay Lousberg | 공식 저장소 LICENSE.txt 직접 확인: https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Skeletons-1.0/blob/15b62b9bad122f72926c10fb14d622c73819fa54/LICENSE.txt . 고정 ZIP: https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Skeletons-1.0/archive/15b62b9bad122f72926c10fb14d622c73819fa54.zip | 4종·90개 이상 동작, 실제 Characters/gltf/Skeleton_Mage.glb 등 확인. 공식 라이선스는 CC0. 기존 해골 전사 한 종의 비교 후보로 제한하며 비례·재질·움직임 retarget 검수 전에는 대체하지 않음 |
-| Kenney Castle Kit / Kenney | https://kenney.nl/assets/castle-kit 및 https://kenney-assets.itch.io/castle-kit . 공식 CC0 표기, 무료 kenney_castle-kit.zip | 공식 목록75개, 3D kit v2.0. ZIP 내부 형식·폴리곤·기단 규격은 이번에 미검사. 단순 castle silhouette를 현재 석재/문/벽에 그대로 혼합하지 않음. 연결 모듈 구조/경량 소품 후보 |
+| Kenney Castle Kit / Kenney | https://kenney.nl/assets/castle-kit 및 https://kenney-assets.itch.io/castle-kit . 공식 CC0 표기, 무료 kenney_castle-kit.zip | 공식 목록75개, 3D kit v2.0. 공식 itch는 OBJ/FBX/glTF와 무료 ZIP 2.1MB를 명시합니다. ZIP 내부 파일 목록·폴리곤·기단 규격은 미검사입니다. 단순 castle silhouette를 현재 석재/문/벽에 그대로 혼합하지 않음. 연결 모듈 구조/경량 소품 후보 |
 | Quaternius Medieval Village MegaKit Standard | https://quaternius.com/packs/medievalvillagemegakit.html 및 https://quaternius.itch.io/medieval-village-megakit | 공식 페이지는 CC0/glTF·FBX·OBJ·grid/interior+exterior 모듈 설명. Standard는 전체의 일부이며 Source 전용 Godot 프로젝트·custom collision을 무료 구성으로 착각하지 않음. **새 ZIP 내부 License 확인 후** 한 소품 또는 비주요 건물 후보 |
 | Quaternius Ultimate Monsters | https://quaternius.com/packs/ultimatemonsters.html | 공식 소개50종 animated/CC0 배지·glTF 등 형식. 새 archive License·clip·triangle 미검사, 구형 동물/괴물은 UAL humanoid와 자동 호환 아님. 기존5종의 종/실루엣/행동에 실제 대응하는 모델만 추후 선별 |
 
@@ -68,3 +68,16 @@ KayKit 1.0 기록을 현재 itch의 Adventurers **2.0** 무료5종 설명과 섞
 7. 시각/동작/모바일 비용이 나아진 후보만 반영합니다. 최종 credits에는 Quaternius 또는 Kay Lousberg/Kenney의 실제 채택분, License 원문, source URL/취득일/해시와 프로젝트 수정 내역을 연결합니다.
 
 건축 파일럿은 무료 Standard의 작은 소품 하나로 시작합니다. 성벽·성문은 현재 공통0.32m 석재 단 높이·띠장·흉벽·문 여닫힘·실제 충돌을 가진 한 가족이므로, 한 조각만 외부 팩으로 교체해 연결부를 다시 어긋나게 하지 않습니다.
+
+## 벽·건물의 우선 비교 후보
+
+다음은 **아직 게임에 도입하지 않은** 건축 후보 두 팩과 최소 검수 조합입니다. 아래 조합은 선정할 기능 범위이며, 다운로드하지 않은 파일의 정확한 모델명을 만들어 적은 것이 아닙니다.
+
+| 우선순위/용도 | 정확한 공식 취득·라이선스 근거 | 먼저 비교할 최소 조합과 채택 조건 |
+| --- | --- | --- |
+| 1 · 마을 비주요 건물의 벽/지붕 구조 | **Quaternius — Medieval Village MegaKit Standard**: [공식 소개](https://quaternius.com/packs/medievalvillagemegakit.html), [공식 다운로드](https://quaternius.itch.io/medieval-village-megakit). 현재 두 공식 페이지가 CC0를 명시하며 itch는 무료 `Medieval Village MegaKit[Standard].zip` 153MB와 유료 Pro/Source를 구분합니다. CC0 원문: https://creativecommons.org/publicdomain/zero/1.0/legalcode.en | Standard 파일 목록에서 **창 없는 벽 한 개 + 같은 계열의 직각 연결부 + 지붕/처마 한 쌍**이 실제로 무료인지 먼저 확인합니다. 내부/외부 면과 grid 모듈이 있어 건물 뒤·옆면 검수에 유리합니다. 기존 석회암/슬레이트 재질로 표면 밀도를 맞출 수 있는 UV·재질 슬롯인지 확인한 뒤 별도 작은 외양간/창고 조합으로만 비교합니다. Source 전용 shader나 collision은 가져온 것으로 간주하지 않습니다. |
+| 2 · 성벽의 연결/기단/흉벽 모듈 구조 | **Kenney — Castle Kit**: [공식 소개](https://kenney.nl/assets/castle-kit), [제작자 공식 itch](https://kenney-assets.itch.io/castle-kit). 공식 itch가 CC0 1.0 Universal, OBJ/FBX/glTF, 무료 `kenney_castle-kit.zip` 2.1MB를 명시합니다. 라이선스 원문: https://creativecommons.org/publicdomain/zero/1.0/legalcode.en | 실제 ZIP에서 **직선 벽 + 90° 코너 + 문 접속부**의 일관된 구성 여부를 확인합니다. 간결한 형상이 현재 성숙한 회화풍보다 가벼워 보일 수 있으므로 우선 연결 구조의 참고/경량 검수용으로 둡니다. 실제 도입은 현재 문·두 방향 벽·코너를 한 가족으로 구성하고 재질·비례를 함께 검수할 수 있을 때만 합니다. |
+
+두 팩 모두 glTF는 Godot4.7.2의 출발 형식일 뿐, 가져오기·충돌·프레임 예산 검증을 통과했다는 뜻은 아닙니다. 실제 검수 시 선택 조각을 **오프라인에서 균일한 미터 배율**로 맞추고, 현재 석재 단 높이0.32m·문 순폭/순높이·기단·배우 캡슐 통과·성문 힌지/바깥 열림 규칙과 비교합니다. 축마다 다르게 늘여 줄눈과 문틀을 맞추지 않습니다.
+
+카메라는 기존45°/35.264° 직교와120° 투영 축을 유지합니다. 네 방향에서 앞·뒤·옆면, 벽 상단/하단의 평행선, 지붕 양 경사와 코너 접점을 확인하고 같은 배우·빛·줌의 세로/가로 비교를 남깁니다. 파일럿 조합이 유료 부분에만 있거나 실제 ZIP의 License가 공식 소개와 다르면 그 후보를 도입하지 않고 취득 기록부터 다시 확인합니다.
