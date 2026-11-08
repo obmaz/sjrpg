@@ -91,12 +91,15 @@ func vibration_supported() -> bool:
 func fullscreen_supported() -> bool:
 	if OS.has_feature("web"):
 		return bool(fullscreen_state().get("supported", false))
-	return DisplayServer.get_name() != "headless"
+	# The Android app always runs in immersive full screen (export preset screen/immersive_mode).
+	return DisplayServer.get_name() != "headless" and not OS.has_feature("android")
 
 
 func is_fullscreen() -> bool:
 	if OS.has_feature("web"):
 		return bool(fullscreen_state().get("active", false))
+	if OS.has_feature("android"):
+		return true
 	return DisplayServer.window_get_mode() in [DisplayServer.WINDOW_MODE_FULLSCREEN, DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN]
 
 
@@ -108,6 +111,8 @@ func fullscreen_state() -> Dictionary:
 			if parsed is Dictionary:
 				return parsed
 		return {"active": false, "supported": false, "pending": false, "title": "전체화면 지원 안내", "detail": "이 브라우저에서 전체화면 기능을 확인할 수 없습니다."}
+	if OS.has_feature("android"):
+		return {"active": true, "supported": false, "pending": false, "title": "전체화면 사용 중", "detail": "안드로이드 앱은 항상 전체화면으로 실행됩니다."}
 	var supported := DisplayServer.get_name() != "headless"
 	var active := is_fullscreen()
 	return {"active": active, "supported": supported, "pending": false, "title": ("전체화면 끄기" if active else "전체화면 켜기") if supported else "전체화면 지원 안내", "detail": "게임 화면을 전체화면으로 전환합니다." if supported else "이 실행 환경은 전체화면 전환을 지원하지 않습니다."}

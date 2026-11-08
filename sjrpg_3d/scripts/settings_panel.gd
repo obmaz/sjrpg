@@ -231,6 +231,8 @@ func _choose_world_zoom(amount: float) -> void:
 
 func _version_card() -> Control:
 	var card := VBoxContainer.new()
+	if OS.has_feature("android"):
+		return card  # The edition chooser is a web page; the Android app ships the 3D adventure only.
 	card.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
 	card.add_child(PanelFrame.section("모험 선택"))
 	card.add_child(PanelFrame.wrap_label("현재 모험을 저장한 뒤 선택 화면으로 돌아갑니다.", 15, UiKit.MUTED))
