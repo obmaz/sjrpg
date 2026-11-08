@@ -1,0 +1,45 @@
+name: Audit repository cleanup
+on:
+  push:
+    paths: ['.github/workflows/repository-cleanup-audit.yml']
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Audit links and incoming references
+        shell: python
+        run: |
+          import pathlib,re,json,posixpath
+          root=pathlib.Path('.')
+          files=[p for p in root.rglob('*') if p.is_file() and '.git' not in p.parts and 'sjrpg_2d' not in p.parts]
+          texts={}
+          for p in files:
+           if p.suffix in {'.gd','.tscn','.tres','.json','.py','.sh','.mjs','.js','.html','.cfg','.godot','.md','.yml','.yaml','.txt'} or p.name in {'AGENTS.md','README.md'}:
+            try: texts[p.as_posix()]=p.read_text()
+            except UnicodeError: pass
+          broken=[]; preview=[]
+          for path,s in texts.items():
+           if path.endswith('.md'):
+            for m in re.finditer(r'!?\[[^\]]*\]\(([^)]+)\)',s):
+             target=m[1].split('#')[0]
+             if not target or '://' in target or target.startswith(('mailto:','/')): continue
+             dest=posixpath.normpath(posixpath.join(posixpath.dirname(path),target))
+             if not pathlib.Path(dest).exists():broken.append({'file':path,'target':target})
+           for n,line in enumerate(s.splitlines(),1):
+            if 'docs/previews' in line or '../previews/' in line or '../../previews/' in line:
+             preview.append({'file':path,'line':n,'text':line[:600]})
+          candidates=[]
+          for p in files:
+           path=p.as_posix()
+           if p.suffix not in {'.gd','.py','.mjs','.sh'} or path.startswith('.github/'):continue
+           name=p.name; stem=p.stem
+           refs=[q for q,s in texts.items() if q!=path and (name in s or ('class_name ' in texts.get(path,'') and re.search(r'\b'+re.escape(stem)+r'\b',s)))]
+           if not refs: candidates.append({'file':path,'class_name':re.findall(r'^class_name (\w+)',texts.get(path,''),re.M)})
+          sources=[{'file':p.as_posix(),'bytes':p.stat().st_size} for p in files if p.as_posix().startswith('sjrpg_3d/assets/source/') and p.suffix.lower() in {'.png','.jpg','.webp','.jpeg'}]
+          report={'broken_links':broken,'preview_references':preview,'unreferenced_code_candidates':candidates,'source_images':sources,'docs':[{'file':p,'bytes':len(s.encode())} for p,s in texts.items() if p.endswith('.md')]}
+          s=json.dumps(report,ensure_ascii=False)
+          for i in range(0,len(s),18000):print('CLEAN_AUDIT '+s[i:i+18000])
+          
