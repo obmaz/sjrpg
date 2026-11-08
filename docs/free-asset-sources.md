@@ -8,6 +8,8 @@
 
 첫 적용은 같은 Quaternius 성인 계열의 **상인 한 명**입니다. 실제 공식 다운로드에서 기록된21개 파일과 CC0 라이선스의 해시를 재검증했고, 변환된 모델·동작·원문은 [상인 provenance](../sjrpg_3d/assets/source/native-residents/merchant/provenance.json)와 같은 폴더의 LICENSE 파일에 남깁니다. [주민 제작 안내](../sjrpg_3d/docs/native-residents.md)에 실제 적용 범위·동작 변환·검수 방법을 기록합니다. 아래 다른 팩은 계속 후보이며 도입된 것으로 표시하지 않습니다.
 
+다음 적용은 보급원 미라의 실제 FREE Standard `Female_Ranger`와 여성 기본 머리입니다. [공식 원본 디자인](https://quaternius.itch.io/modular-character-outfits-fantasy)을 볼 수 있으며, 무료 ZIP에서 확인한 의상은 남녀 Peasant/Ranger 네 가지입니다. 미라는 두 glTF 해시와 패키지 CC0 원문을 먼저 대조하고 신규9개 파일의 바이트·SHA-256을 별도 [주민 소스 잠금](../sjrpg_3d/tools/hero_art/resident-source-provenance.json)에 기록합니다. 상인과 다른 후드·장구 실루엣을 사용하며 얼굴·손을 보존한 채 의상만 단순화합니다. [미라의 실제 모델·재현 기록](../sjrpg_3d/docs/native-residents.md#미라-구별되는-무료-여성-ranger)에 런타임 수치와 라이선스 경로가 있습니다.
+
 ## 현재 마법사의 실제 출처와 확보 증거
 
 저작자: **Quaternius**. 보존된 각 팩 라이선스는 **CC0 1.0 Universal**입니다. 실제 원문과 SHA-256은 [CC0_SOURCES.txt](../sjrpg_3d/tools/hero_art/CC0_SOURCES.txt), 파일별 바이트/해시는 [source-provenance.json](../sjrpg_3d/tools/hero_art/source-provenance.json)에 있습니다.

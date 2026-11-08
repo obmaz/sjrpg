@@ -101,6 +101,14 @@ try{
    await capture('residents-face-'+face);
    checks.push('actual NPC factory and hero scale face '+face);
   }
+  for(let face=0;face<4;face++){
+   const s=await action('residents',1,face),g=s.review.gallery;
+   assert(g&&g.count===3,'three actual runtime models in facial/clothing closeup');
+   assert.deepEqual(g.models.map(m=>m.identity).sort(),['merchant','mira','warrior']);
+   assert.equal(s.review.projection,'orthographic');assert(Math.abs(s.review.elevation-35.264389682754654)<1e-4);
+   for(const m of g.models)assert(m.bounds_max[1]-m.bounds_min[1]>=1.6&&m.bounds_max[1]-m.bounds_min[1]<=2.0,'same adult height in closeup '+m.identity);
+   await capture('npc-closeup-face-'+face);checks.push('actual three-model face/UV/hood closeup '+face);
+  }
  }
  console.log('TERRAIN_NPC_REVIEW_PASS '+JSON.stringify({baseline,npcs,captures:captures.length,checks:checks.length,errors:errors.length}));
 }catch(error){failure=String(error);console.error('TERRAIN_NPC_REVIEW_FAIL '+failure);try{await capture('failure');}catch{}process.exitCode=1;}

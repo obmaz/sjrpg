@@ -1,26 +1,26 @@
 # Native resident family
 
-The merchant is a single imported CC0 pilot from Quaternius's preserved FREE Standard adult family. The other seven identities remain the authored models described below. This pilot does not replace the warrior or the entire village population. Runtime source is `res://assets/art/native_residents/merchant.glb`; source, licence and offline conversion records accompany the generated asset. Actual before/after gallery and gameplay captures remain a separate review gate.
+The merchant and Mira use two distinct imported CC0 models from Quaternius's preserved FREE Standard adult family: a male Peasant merchant and a female Ranger traveller. The other six identities remain the authored models described below. These imports do not replace the warrior or the entire village population. Runtime sources are `res://assets/art/native_residents/merchant.glb` and `mira.glb`; exact licences, source locks and reproducible offline conversion records accompany both assets. Actual before/after gallery and gameplay captures remain a separate review gate.
 
 ## Shared runtime contract
 
-`NativeResidents3D.create(identity)` is the factory for both the actual village renderer and the review gallery. It returns a `Node3D` root: an imported merchant scene, or an authored `MeshInstance3D` for the other identities. Unknown identities return null. `build("merchant")` returns null, so tests and gallery code cannot accidentally validate an unused procedural substitute. A missing imported scene is visible as a missing owner and fails the pilot test rather than silently claiming conversion.
+`NativeResidents3D.create(identity)` is the factory for both the actual village renderer and the review gallery. It returns a `Node3D` root: an imported merchant/Mira scene, or an authored `MeshInstance3D` for the six other identities. Unknown identities return null. `build("merchant")` and `build("mira")` return null, so tests and gallery code cannot accidentally validate an unused procedural substitute. A missing imported scene is visible as a missing owner and fails the corresponding actual-scene test rather than silently claiming conversion.
 
-The merchant has Y-up metre geometry, +Z front, baked root/rig scale and sole Y=0. Its bareheaded adult height target is 1.78m, matching the authoritative 112px resident body height at the existing world-metre scale. The pilot preserves original CC0 UVs and colour textures with roughness 0.95 on its lit PBR materials; the merchant is not yet remapped to the generated shared actor atlas. That shared atlas still belongs to the seven authored residents. The old procedural merchant's 1.84m hat height is not applied to the bareheaded import.
+The merchant has Y-up metre geometry, +Z front, baked root/rig scale and sole Y=0. Its bareheaded adult height target is 1.78m, matching the authoritative 112px resident body height at the existing world-metre scale. Both imports preserve their own original CC0 UVs and colour textures with roughness0.95 on lit PBR materials; they are not remapped to the generated shared actor atlas. That shared atlas belongs to the six authored residents. The old procedural merchant's 1.84m hat height is not applied to the bareheaded import.
 
 AnimationPlayer uses manual sampling with zero crossfade and no autoplay. `sample_idle(model, source_time)` reads the original `Villager._time` clock, wraps it through the actual imported idle clip, seeks and applies the pose with zero time advance. There is no second timer; pause freezes the original resident clock and the imported skeleton. Repeating the same source time holds the pose. The gallery uses the same factory and sampling API.
 
 Runtime entries retain the source Villager by WeakRef and expose a Node3D root, all descendant body meshes, the actual AnimationPlayer/Skeleton3D and selected clip/time. Source foot position, facing, local visibility and forest/dungeon scope remain authoritative. Injury overlays apply to every imported mesh and clear without changing any shared base material. The import adds no collision body and preserves NPC interaction, name, quest marker and protection-state ownership.
 
-`local_bounds(model)` merges source/rest mesh AABBs through all descendant node transforms in actor-local coordinates, excluding current world placement. These are not evaluated GPU-skinned pose bounds or exact visible silhouette measurements; actual bone transforms and rendered poses are checked separately. `review_snapshot()` distinguishes imported/authored and animated counts; it does not report the remaining seven authored actors as imported.
+`local_bounds(model)` merges source/rest mesh AABBs through all descendant node transforms in actor-local coordinates, excluding current world placement. These are not evaluated GPU-skinned pose bounds or exact visible silhouette measurements; actual bone transforms and rendered poses are checked separately. `review_snapshot()` distinguishes imported/authored and animated counts; it does not report the remaining six authored actors as imported.
 
-## Seven authored identities
+## Six authored identities
 
-Seven remaining resident identities use closed, anatomically connected cross-section lofts rather than primitive cylinder bodies. NativeActorShapes is the reproducible geometry source; NativeActorMaterials supplies the shared generated painterly surface atlas. Source Villager identity, actor foot, facing, injury intensity, scope and gameplay remain authoritative.
+Six remaining resident identities use closed, anatomically connected cross-section lofts rather than primitive cylinder bodies. NativeActorShapes is the reproducible geometry source; NativeActorMaterials supplies the shared generated painterly surface atlas. Source Villager identity, actor foot, facing, injury intensity, scope and gameplay remain authoritative.
 
 The anatomy has a shoulder/chest/waist profile, elbow/forearm taper, hand volumes, curved toe/ankle/boot shafts and a jaw/cheek/temple skull profile. Eye whites and pupils sit beyond the face surface, below separate brow volumes. Nose bridge/tip and mouth line are separate features. An open back-and-side hair shell and six tapered locks replace the previous flat hair disk. Elder and smith beard shapes, female braid silhouettes and actual open collars connect the neck and head.
 
-Clothing is constructed by role: smith bare arms and front apron with neck straps; stable keeper open leather vest and saddle pouch; elder low hunched neckline, long folded robe and staff; Mira slender travel coat, short curved cape and shaped backpack; Elin open-face hood shell and ivory tabard; Noah shoulder hood and herb basket; Rowen asymmetric cloak, book and shaped shoulder plate. Front/back cloth shells have finite thickness and folded hems. These differences are actual geometry, not only palette substitutions.
+Clothing is constructed by role: smith bare arms and front apron with neck straps; stable keeper open leather vest and saddle pouch; elder low hunched neckline, long folded robe and staff; Elin open-face hood shell and ivory tabard; Noah shoulder hood and herb basket; Rowen asymmetric cloak, book and shaped shoulder plate. Front/back cloth shells have finite thickness and folded hems. These differences are actual geometry, not only palette substitutions.
 
 All geometry is batched by cloth/leather/skin/iron surface category, with no more than four shared opaque atlas materials per NPC. Hair shares the skin surface with dark vertex tint; bronze uses the iron surface with bronze tint. Models use Y-up metres, +Z front, sole Y=0 and baked identity scale. Adult variation includes an elder around1.72m and adult bareheaded role heights up to roughly1.78m. Native head/neck/hat bounds and every triangle/surface count are printed by native_residents; the current cap is6500triangles per model. This cap is a mobile creation constraint, not a measured FPS claim.
 
@@ -32,7 +32,7 @@ The earlier quick gallery was rejected for prototype silhouettes. This refinemen
 
 ## Verification
 
-`native_residents` checks the seven authored meshes and mixed-runtime owner/foot/visibility/flash contracts. `native_merchant` loads the actual imported scene and verifies source/rest volume, baked adult scale, the 18,000-triangle pilot gate, lit materials, real skin and skeleton, manually sampled bone motion, original-clock advance and pause, descendant injury cleanup, scope restoration and source-owner removal. Runtime mesh/surface/triangle/bounds records are measured; passing these checks does not establish visual improvement without the actual paired gallery and town captures.
+`native_residents` checks the six authored meshes and mixed-runtime owner/foot/visibility/flash contracts. `native_merchant` and `native_mira` load the actual imported scenes and verify source/rest volume, baked adult scale, the 18,000-triangle pilot gate, lit materials, real skin and skeleton, manually sampled bone motion, original-clock advance and pause, descendant injury cleanup, scope restoration and source-owner removal. The Mira case additionally verifies the textured female face, source/runtime hash and CC0 records, eight-surface cap and512px colour/256px eye limit. Runtime mesh/surface/triangle/bounds records are measured; passing these checks does not establish visual improvement without the actual paired gallery and town captures.
 
 
 ## CC0 상인 파일럿의 제작·성능 범위
@@ -41,4 +41,17 @@ The earlier quick gallery was rejected for prototype silhouettes. This refinemen
 
 실제 원본 의상과 UAL의 기준 자세는 최대 약 0.084m/회전 행렬 성분 0.192 차이가 있어 동작을 직접 복사하지 않습니다. 소스의 기준 대비 월드 회전 변화만 대상 기준 회전에 적용하고, 대상 부모/자식의 원래 뼈 길이와 간격을 유지하는 FK 방식으로 30fps idle을 다시 구웠습니다. 위치 변화는 단위가 확인된 root/pelvis에만 전달합니다. 모든 프레임의 뼈 길이·스케일과 다섯 대응 시점의 CPU 변형 메시/발 접지·제자리 유지 검사를 별도로 통과해야 합니다.
 
-이 한 명은 18,000삼각형의 명시적 파일럿 상한을 사용합니다. 변환된 모델은 17,612삼각형·8서피스·65관절·2.5초 idle이며 원본 디테일을 유지합니다. 기존 절차형 NPC의 6,500삼각형/4재질 상한은 나머지 일곱 명에 그대로 적용합니다. 이 예외를 전체 주민·몹에 자동 확대하지 않습니다. 텍스처는 원본 UV의 색을 보존하되 최대1024px, roughness0.95, 별도 Godot PNG 임포트는 손실 모드1을 사용합니다. 실제 다운로드/PCK 변화와 모바일 화면을 검수하며 폴리곤 수만으로 FPS 개선을 주장하지 않습니다.
+이 상인은 18,000삼각형의 명시적 파일럿 상한을 사용합니다. 변환된 모델은 17,612삼각형·8서피스·65관절·2.5초 idle이며 원본 디테일을 유지합니다. 기존 절차형 NPC의 6,500삼각형/4재질 상한은 나머지 여섯 명에 그대로 적용합니다. 이 예외를 전체 주민·몹에 자동 확대하지 않습니다. 텍스처는 원본 UV의 색을 보존하되 최대1024px, roughness0.95, 별도 Godot PNG 임포트는 손실 모드1을 사용합니다. 실제 다운로드/PCK 변화와 모바일 화면을 검수하며 폴리곤 수만으로 FPS 개선을 주장하지 않습니다.
+
+
+## 미라: 구별되는 무료 여성 Ranger
+
+미라는 같은 남성 Peasant의 색을 바꾼 복제가 아닙니다. FREE Standard에 실제로 들어 있는 `Female_Ranger`의 후드·어깨 장구·긴 소매·두 벨트와 여성 `Superhero_Female_FullBody`의 머리·눈을 사용합니다. 무료 의상 목록은 남녀 Peasant/Ranger 네 가지입니다. 공식 전체 팩 소개에 보이는 Priest/Noble 등을 무료 Standard에 포함된 것으로 간주하지 않습니다. 이번 교체는 미라 한 명이며 엘린을 Peasant에 이름만 붙여 교체하지 않습니다.
+
+`tools/hero_art/resident-source-plan.json`은 실제 ZIP에서 읽은 두 glTF의 원문 해시·취득 upload ID를 고정합니다. `resident-source-provenance.json`은 기존21개 CC0 원본을 그대로 보존하고 새 여성 모델/색 텍스처9개의 바이트·SHA-256을 추가한 총30개 잠금 기록입니다. ZIP의 Outfits/Base 라이선스가 보존된 CC0 원문과 바이트까지 같아야 취득을 진행합니다. 정상 경로가 아닌 선택적 normal 파일명은 보고만 하며 이름을 추측해 대체 파일을 받지 않습니다. 이번 런타임은 원본 BaseColor와 무광 PBR만 사용하고 큰 normal/ORM 텍스처는 받지 않습니다.
+
+실제 변환은 `fetch_resident_sources.py` → `export_cc0_resident.py` → `publish_resident_blobs.py`로 재현합니다. 여성 머리와 눈은 Head/neck 영향도로 몸통에서 분리하고 원래 UV·얼굴·노출된 손의 기하는 유지합니다. 의상만 오프라인으로 단순화한 뒤 같은 두 원본 재질별로 합치며, 피부와 천의 면별 재질 인덱스를 합친 후 복원합니다. 기존 상인 변환기의 미터 배율·FK·30fps idle·다섯 CPU 변형 자세/발 접지 검사를 공유합니다. 여성 의상과 UAL 원본 기준 자세는 최대0.1573m/회전 행렬 성분0.2283 차이이므로 동작을 직접 복사하지 않습니다. 미라 변환의 최대 뼈 길이 오차는0.00000037m, 수평 root 이동은0m, 다섯 자세의 발 최저점 변화 범위는약3.69mm였습니다.
+
+실측 런타임은 **17,595삼각형·5서피스·65관절·1.78m·2.5초 idle**이며 GLB는2,280,092바이트입니다. SHA-256은 `38e162930944aa156b8dac40877861637d9a3495f83c8a20e92ce26eaff7adcf`이고 실제 기록은 `assets/source/native-residents/mira/provenance.json`과 같은 폴더의 세 LICENSE 파일에 있습니다. 원본 색을512px 텍스처 네 장과256px 눈 텍스처 한 장으로 축소해 제한했습니다. 전체 mip을 RGBA8로 계산한 신규 이미지 메모리 상한 추정은5,941,924바이트(약5.67MiB)입니다. 이는 실제 GPU 할당량·전체 PCK 증가량·실제 기기 FPS 측정값이 아니므로 웹 내보내기/같은 화면 검수와 구별합니다.
+
+미라도 원래 Villager의 시계·발·방향·피격·퀘스트·상호작용을 따릅니다. 모델이나 애니메이션이 별도 충돌·독립 타이머를 만들지 않습니다. 실제 네 방향에서 얼굴/목/후드 접합과 피부·옷감의 색을 보고, 같은 세로/가로 게임 화면에서 주인공·상인과 비례/가림을 비교해야 합니다. 숫자 예산과 애니메이션 검사만으로 스타일 승인을 선언하지 않습니다.

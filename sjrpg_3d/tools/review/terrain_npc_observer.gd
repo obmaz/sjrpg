@@ -51,12 +51,15 @@ func _action(arguments: Array) -> void:
 func _layout_residents() -> void:
 	gallery.set_face(face)
 	var keys: Array[String] = ["warrior"]
-	keys.append_array(NativeResidents3D.IDS)
+	if role == 1:
+		keys.append_array(["merchant", "mira"])
+	else:
+		keys.append_array(NativeResidents3D.IDS)
 	var yaw := deg_to_rad(45.0 + face * 90.0)
 	var toward := Vector3(sin(yaw), 0, cos(yaw))
 	var right := Vector3(cos(yaw), 0, -sin(yaw))
 	var focus := Vector3(0, 0.9, 0)
-	gallery.camera.size = 10.4
+	gallery.camera.size = 4.0 if role == 1 else 10.4
 	gallery.camera.position = focus + Vector3(toward.x, tan(deg_to_rad(ELEVATION)), toward.z).normalized() * 35.0
 	gallery.camera.look_at(focus, Vector3.UP)
 	for index in gallery._models.size():
@@ -65,9 +68,12 @@ func _layout_residents() -> void:
 		gallery._models[index].visible = slot >= 0
 		gallery._names[index].visible = slot >= 0
 		if slot >= 0:
-			gallery._models[index].position = right * (float(slot % 3) - 1.0) * 3.0 + toward * (float(slot / 3) - 1.0) * (3.0 / sin(deg_to_rad(ELEVATION)))
+			if role == 1:
+				gallery._models[index].position = right * (float(slot) - 1.0) * 1.18
+			else:
+				gallery._models[index].position = right * (float(slot % 3) - 1.0) * 3.0 + toward * (float(slot / 3) - 1.0) * (3.0 / sin(deg_to_rad(ELEVATION)))
 			gallery._names[index].text = NAMES[key]
-	gallery._title.text = "마을 주민 · 실제 게임 모델 · %d°" % (45 + face * 90)
+	gallery._title.text = ("크기 · 얼굴 · 의상 비교 · %d°" if role == 1 else "마을 주민 · 실제 게임 모델 · %d°") % (45 + face * 90)
 	gallery._sample_residents()
 	gallery._layout()
 	for index in gallery._models.size():
@@ -105,7 +111,8 @@ func _process(delta: float) -> void:
 		var snapshot := gallery.review_snapshot()
 		var selected := []
 		for model: Dictionary in snapshot["models"]:
-			if model["identity"] == "warrior" or model["identity"] in NativeResidents3D.IDS:
+			var model_index: int = gallery._keys.find(str(model["identity"]))
+			if model_index >= 0 and gallery._models[model_index].visible:
 				selected.append(model)
 		snapshot["models"] = selected
 		snapshot["count"] = selected.size()

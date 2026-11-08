@@ -55,6 +55,11 @@ if after["npcs"]:
         write_jpeg("npc-designs-face-" + str(face) + ".jpg", picture)
     pair("residents-face-0", "Actual runtime NPCs + adult hero")
     pair("residents-face-2", "Actual runtime NPCs | opposite corner")
+    for face in range(4):
+        picture = Image.open(root / "after" / ("npc-closeup-face-" + str(face) + ".png")).convert("RGB")
+        write_jpeg("npc-closeup-face-" + str(face) + ".jpg", picture)
+    pair("npc-closeup-face-0", "Hero / Merchant / Mira | actual game models")
+    pair("npc-closeup-face-2", "Opposite corner | actual game models")
 
 summary = {"passed": True, "baseline": "99d0fd5e779752d5d2e4f14735fe585d8459313e", "candidate": os.environ.get("GITHUB_SHA"), "paired_captures": len(a), "physical_surfaces_unchanged": True, "camera_elevation": 35.264389682754654, "npcs": after["npcs"], "expected_imports": after["expectedImports"], "previews": []}
 for target in images:
@@ -67,7 +72,7 @@ for target in images:
             item["blob_sha"] = json.load(response)["sha"]
     summary["previews"].append(item)
     # Bounded actual JPEGs let the parent inspect the result without local files.
-    if target.name in ("terrain-0-portrait-face-0-comparison.jpg", "terrain-3-landscape-face-2-comparison.jpg", "npc-designs-face-0.jpg"):
+    if target.name in ("terrain-0-portrait-face-0-comparison.jpg", "terrain-3-landscape-face-2-comparison.jpg", "npc-designs-face-0.jpg", "npc-closeup-face-0-comparison.jpg"):
         encoded = base64.b64encode(data).decode("ascii")
         print("TERRAIN_NPC_IMAGE_BEGIN " + target.name + " image/jpeg " + str(len(encoded)), flush=True)
         for offset in range(0, len(encoded), 16384):

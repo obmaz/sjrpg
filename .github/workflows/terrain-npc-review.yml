@@ -32,7 +32,7 @@ jobs:
                 edition: [before, after]
         env:
             SJRPG_TERRAIN_EDITION: ${{ matrix.edition }}
-            SJRPG_REVIEW_NPCS: ${{ inputs.npcs || 'false' }}
+            SJRPG_REVIEW_NPCS: ${{ github.event_name == 'push' && 'true' || inputs.npcs || 'false' }}
             SJRPG_REVIEW_NPC_IDENTITIES: ${{ inputs.npc_identities || 'mira' }}
         steps:
             - uses: actions/checkout@v7.0.1

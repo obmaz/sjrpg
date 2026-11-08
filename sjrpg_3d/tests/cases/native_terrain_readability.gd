@@ -22,13 +22,7 @@ func run() -> void:
 		var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 		var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
 		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
-		if not _same_vertices(points, faces, Vector3.UP * 0.008):
-			var degenerate_count := 0
-			for triangle in range(0, faces.size(), 3):
-				if (faces[triangle + 1] - faces[triangle]).cross(faces[triangle + 2] - faces[triangle]).length_squared() < 0.00000001:
-					degenerate_count += 1
-			print("TERRAIN_DIAGNOSTIC_TOP ", JSON.stringify({"role": role, "rendered_count": points.size(), "physical_count": faces.size(), "source_degenerate_triangles": degenerate_count, "source": faces, "actual": points}))
-		check("all top and ramp vertices retain exact native support " + str(role), _same_vertices(points, faces, Vector3.UP * 0.008))
+		check("all top and ramp vertices retain exact native support " + str(role), _same_vertices(points, _visible_faces(faces), Vector3.UP * 0.008))
 		var correct_uv := uv.size() == points.size()
 		for i in points.size():
 			var expected := Vector2(points[i].x, points[i].z)
@@ -84,38 +78,152 @@ func _same_vertices(actual: PackedVector3Array, source: PackedVector3Array, offs
 	return true
 
 
+func _visible_faces(source: PackedVector3Array) -> PackedVector3Array:
+	# SurfaceTool deliberately omits zero-area physical triangles. Evaluate
+	# after the visual depth bias, exactly where the rendering primitive does.
+	var result := PackedVector3Array()
+	for i in range(0, source.size(), 3):
+		var a := source[i] + Vector3.UP * 0.008
+		var b := source[i + 1] + Vector3.UP * 0.008
+		var c := source[i + 2] + Vector3.UP * 0.008
+		if (b - a).cross(c - a).length_squared() >= 0.00000001:
+			result.append_array(PackedVector3Array([source[i], source[i + 1], source[i + 2]]))
+	return result
+
+
 func _check_earth(node: MeshInstance3D, surface: Dictionary, role: int) -> void:
-	var arrays := node.mesh.surface_get_arrays(0)
-	var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
-	var polygon: PackedVector2Array = surface["top"]
-	var entrance: PackedVector2Array = surface["entrance"]
-	var bounded := points.size() > 0
-	var walls_only := true
-	var entrance_clear := true
-	var diagnostics: Array[Dictionary] = []
-	var faces := SpatialWorld3D.surface_faces(surface)
+	# The physical source is the reference: retain each old vertical boundary
+	# quad to Y=-0.02m. Analytic height_at is not equivalent at clipped ramp
+	# corners, where flat pieces retain full rise and oblique ramp corners vary.
+	var sides := _physical_boundary(surface)
+	var group := node.get_parent()
+	var contained := true
+	var earth_rail := true
+	var outward := true
+	var mapped := true
+	for name: String in ["CliffSides", "ExposedEarth"]:
+		var part := group.get_node(name) as MeshInstance3D
+		var arrays := part.mesh.surface_get_arrays(0)
+		var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+		var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+		mapped = mapped and points.size() == normals.size() and points.size() == uv.size()
+		for i in range(0, points.size(), 3):
+			var triangle := PackedVector3Array([points[i], points[i + 1], points[i + 2]])
+			var owner := -1
+			for side in sides.size():
+				if _inside_side(triangle, sides[side]):
+					owner = side
+					break
+			if owner < 0:
+				contained = false
+				continue
+			var boundary: Dictionary = sides[owner]
+			var poly := PackedVector2Array()
+			for point in triangle:
+				var local := _side_point(point, boundary)
+				poly.append(local)
+				if name == "ExposedEarth":
+					var a: Vector3 = boundary["a"]
+					var b: Vector3 = boundary["b"]
+					var length: float = boundary["length"]
+					var upper := lerpf(a.y, b.y, clampf(local.x / length, 0.0, 1.0))
+					var lower := maxf(0.0, upper - 0.20)
+					earth_rail = earth_rail and (absf(point.y - upper) < 0.0001 or absf(point.y - lower) < 0.0001)
+			var pieces: Array = boundary["pieces"]
+			pieces.append(poly)
+			boundary["area"] = float(boundary["area"]) + _polygon_area(poly)
+			if name == "ExposedEarth":
+				boundary["earth_area"] = float(boundary["earth_area"]) + _polygon_area(poly)
+			var geometric := (points[i + 1] - points[i]).cross(points[i + 2] - points[i])
+			var expected_normal: Vector3 = boundary["normal"]
+			outward = outward and geometric.dot(normals[i]) < 0.0 and normals[i].dot(expected_normal) > 0.999 and absf(normals[i].y) < 0.001 and absf(normals[i].length() - 1.0) < 0.001
+			mapped = mapped and absf((uv[i + 1] - uv[i]).cross(uv[i + 2] - uv[i])) > 0.00000001
+			for offset in [1, 2]:
+				mapped = mapped and is_equal_approx((uv[i + offset].y - uv[i].y) * 2.56, -(points[i + offset].y - points[i].y))
+	var partitioned := not sides.is_empty()
+	var nonoverlapping := true
+	for boundary: Dictionary in sides:
+		var a: Vector3 = boundary["a"]
+		var b: Vector3 = boundary["b"]
+		var length: float = boundary["length"]
+		var expected := length * (a.y + b.y + 0.04) * 0.5
+		# A short side tapers naturally where the original ramp reaches ground.
+		var expected_earth := length * (minf(a.y, 0.20) + minf(b.y, 0.20)) * 0.5
+		partitioned = partitioned and absf(float(boundary["area"]) - expected) < maxf(0.0001, expected * 0.0001) and absf(float(boundary["earth_area"]) - expected_earth) < maxf(0.0001, expected_earth * 0.0001)
+		var pieces: Array = boundary["pieces"]
+		for i in pieces.size():
+			for j in range(i + 1, pieces.size()):
+				for overlap: PackedVector2Array in Geometry2D.intersect_polygons(pieces[i], pieces[j]):
+					nonoverlapping = nonoverlapping and _polygon_area(overlap) < 0.0001
+	check("soil and rock exactly partition original cliff faces without overlays " + str(role), contained and partitioned and nonoverlapping)
+	check("earth lower rail follows actual native top minus20cm or ground " + str(role), earth_rail)
+	check("all split cliff faces preserve clockwise outward winding and metre UVs " + str(role), outward and mapped)
+	# Containment and exact coverage above also preserve the old open entrance:
+	# no face can appear over a zero-height opening, while the preexisting
+	# partial face of an oblique ramp is not incorrectly treated as a new wall.
+	check("earth split preserves the original open passage and ramp footprint " + str(role), contained and partitioned)
+
+
+func _physical_boundary(surface: Dictionary) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var points := SpatialWorld3D.surface_faces(surface)
+	var outline: PackedVector2Array = surface["top"]
+	var used := {}
+	for triangle in range(0, points.size(), 3):
+		for edge in 3:
+			var a := points[triangle + edge]
+			var b := points[triangle + (edge + 1) % 3]
+			if maxf(a.y, b.y) < 0.001:
+				continue
+			var from := SpatialWorld3D.projected(a)
+			var to := SpatialWorld3D.projected(b)
+			var perimeter := false
+			for side in outline.size():
+				var p := outline[side]
+				var q := outline[(side + 1) % outline.size()]
+				perimeter = perimeter or (Geometry2D.get_closest_point_to_segment(from, p, q).distance_squared_to(from) < 0.0001 and Geometry2D.get_closest_point_to_segment(to, p, q).distance_squared_to(to) < 0.0001)
+			if not perimeter:
+				continue
+			var first := "%.5f:%.5f:%.5f" % [a.x, a.y, a.z]
+			var second := "%.5f:%.5f:%.5f" % [b.x, b.y, b.z]
+			var key := first + "|" + second if first < second else second + "|" + first
+			if used.has(key):
+				continue
+			used[key] = true
+			var along := Vector2(b.x - a.x, b.z - a.z)
+			if along.length_squared() < 0.00000001:
+				continue
+			var normal := Vector3(along.y, 0, -along.x).normalized()
+			var outside := (from + to) * 0.5 + Iso.project(Vector2(normal.x, normal.z) * Ortho3DPreview.GROUND_PER_METER).normalized()
+			if Geometry2D.is_point_in_polygon(outside, outline):
+				normal = -normal
+			result.append({"a": a, "b": b, "axis": along.normalized(), "length": along.length(), "normal": normal, "pieces": [], "area": 0.0, "earth_area": 0.0})
+	return result
+
+
+func _side_point(point: Vector3, side: Dictionary) -> Vector2:
+	var a: Vector3 = side["a"]
+	var axis: Vector2 = side["axis"]
+	return Vector2(Vector2(point.x - a.x, point.z - a.z).dot(axis), point.y)
+
+
+func _inside_side(triangle: PackedVector3Array, side: Dictionary) -> bool:
+	var a: Vector3 = side["a"]
+	var b: Vector3 = side["b"]
+	var axis: Vector2 = side["axis"]
+	var length: float = side["length"]
+	for point in triangle:
+		var flat := Vector2(point.x - a.x, point.z - a.z)
+		var local := _side_point(point, side)
+		var upper := lerpf(a.y, b.y, clampf(local.x / length, 0.0, 1.0))
+		if absf(flat.cross(axis)) > 0.0001 or local.x < -0.0001 or local.x > length + 0.0001 or point.y < -0.0201 or point.y > upper + 0.0001:
+			return false
+	return true
+
+
+func _polygon_area(points: PackedVector2Array) -> float:
+	var area := 0.0
 	for i in points.size():
-		var point := points[i]
-		var projected := SpatialWorld3D.projected(point)
-		var height := SpatialWorld3D._surface_height(surface, projected)
-		var fits_height := point.y <= height + 0.0001 and point.y >= maxf(0.0, height - 0.20) - 0.0001
-		bounded = bounded and fits_height
-		var on_boundary := false
-		for edge in polygon.size():
-			on_boundary = on_boundary or Geometry2D.get_closest_point_to_segment(projected, polygon[edge], polygon[(edge + 1) % polygon.size()]).distance_squared_to(projected) < 0.0001
-		var fits_wall := on_boundary and absf(normals[i].y) < 0.001
-		walls_only = walls_only and fits_wall
-		var entrance_distance := Geometry2D.get_closest_point_to_segment(projected, entrance[0], entrance[1]).distance_to(projected)
-		if diagnostics.size() < 20 and (not fits_height or not fits_wall or (entrance_distance < 0.01 and point.y >= 0.0001)):
-			var source_y: Array[float] = []
-			for source_point in faces:
-				if Vector2(source_point.x - point.x, source_point.z - point.z).length_squared() < 0.00000001:
-					source_y.append(source_point.y)
-			diagnostics.append({"point": point, "projected": projected, "sampled_height": height, "matching_source_y": source_y, "normal": normals[i], "on_boundary": on_boundary, "entrance_distance": entrance_distance})
-		if Geometry2D.get_closest_point_to_segment(projected, entrance[0], entrance[1]).distance_squared_to(projected) < 0.0001:
-			entrance_clear = entrance_clear and point.y < 0.0001
-	if not diagnostics.is_empty():
-		print("TERRAIN_DIAGNOSTIC_EARTH ", JSON.stringify({"role": role, "surface": surface, "points": diagnostics}))
-	check("earth stays in the exposed upper 20cm of actual cliff faces " + str(role), bounded and walls_only)
-	check("open ground entrance receives no blocking visual rim " + str(role), entrance_clear)
+		area += points[i].cross(points[(i + 1) % points.size()])
+	return absf(area) * 0.5

@@ -442,13 +442,13 @@ HUD는 체력·물약 수·쿨다운의 실제 변화를 감지합니다. 사운
 `?native_style_review=1`은 검수 전용 읽기 전용 상태 측정기를 연결합니다. `tools/check_native_style.mjs`는 새 브라우저 프로필에서 실제 시작·이동·물약/메뉴/스킬트리 입력과 회전·DPR2를 검사합니다. `native-style-review.yml`은 변경 전 커밋의 실제 게임도 따로 내보내 같은 위치의 PNG와 비교 이미지를 남깁니다. 기준본의 작은 입력 영역은 측정하되 새 기준 통과로 표시하지 않습니다. 렌더링 캡처는 별도 리뷰어가 모델 전체 면·재질·모바일 가독성을 판정하는 자료입니다.
 
 
-## CC0 상인과 공통 주민 factory
+## CC0 주민과 공통 주민 factory
 
-`NativeResidents3D.create(identity)`는 실제 마을과 검수 갤러리가 함께 사용하는 factory입니다. 상인만 `assets/art/native_residents/merchant.glb`를 생성하고 나머지 일곱 역할은 기존 절차형 메시를 유지합니다. 주민의 기존 `Villager._time`으로 AnimationPlayer를 수동 샘플링하며 자동 재생·독립 시계·추가 물리 몸체를 만들지 않습니다. 피격 오버레이는 imported root의 모든 자식 메시를 함께 처리하고 이름·의뢰·상점·동굴 범위는 원래 소스가 소유합니다.
+`NativeResidents3D.create(identity)`는 실제 마을과 검수 갤러리가 함께 사용하는 factory입니다. 상인과 미라는 각각 `assets/art/native_residents/merchant.glb`·`mira.glb`를 생성하고 나머지 여섯 역할은 기존 절차형 메시를 유지합니다. 주민의 기존 `Villager._time`으로 AnimationPlayer를 수동 샘플링하며 자동 재생·독립 시계·추가 물리 몸체를 만들지 않습니다. 피격 오버레이는 imported root의 모든 자식 메시를 함께 처리하고 이름·의뢰·상점·동굴 범위는 원래 소스가 소유합니다.
 
-`tools/hero_art/fetch_sources.py`는 고정 원본과 실제 CC0 라이선스를 해시로 확인합니다. `export_cc0_merchant.py`는 원본 리그의 기준 자세 차이를 검증하고 대상 뼈 길이를 유지하는 30fps FK retarget과 미터 배율을 구웁니다. `publish_merchant_blobs.py`는 18k 상한·실제 GLB·원문 라이선스를 다시 검증하고 고정 엔진으로 실제 임포트 설정을 만듭니다. 후보 worker는 ref를 이동하지 않고 검수용 blob만 준비합니다. 출처·실제 해시는 `assets/source/native-residents/merchant/`에 보존합니다.
+`tools/hero_art/fetch_sources.py`는 고정 원본과 실제 CC0 라이선스를 해시로 확인합니다. `export_cc0_merchant.py`는 원본 리그의 기준 자세 차이를 검증하고 대상 뼈 길이를 유지하는 30fps FK retarget과 미터 배율을 구웁니다. `publish_merchant_blobs.py`는 18k 상한·실제 GLB·원문 라이선스를 다시 검증하고 고정 엔진으로 실제 임포트 설정을 만듭니다. 후보 worker는 ref를 이동하지 않고 검수용 blob만 준비합니다. 출처·실제 해시는 `assets/source/native-residents/merchant/`에 보존합니다. 미라는 `resident-source-plan.json`에 고정한 실제 무료 여성 Ranger와 여성 기본 머리를 `fetch_resident_sources.py` → `export_cc0_resident.py` → `publish_resident_blobs.py`로 변환합니다. 별도 30파일 소스 잠금과 `assets/source/native-residents/mira/`의 원문 라이선스·실제 해시를 보존하며 원래 얼굴·손·UV는 유지하고 의상만 오프라인 단순화합니다. 미라의 실측은 17,595삼각형·5서피스·65관절이며 신규 색 텍스처는 512px 네 장과 256px 눈 한 장입니다.
 
-`native_merchant`는 실제 스킨·골격·수동 동작·일시정지·전체 메시 피격·소유권과 기존 발 위치를 검사합니다. `SJRPG_STYLE_MERCHANT_ONLY=1` 브라우저 하네스와 `native-merchant-review.yml`은 변경 전 실제 빌드와 비교해 네 방향·모바일 두 방향·DPR2·실제 상점 버튼·일시정지를 검수합니다. rest AABB와 뼈 원점은 GPU로 변형된 발바닥/보이는 픽셀 경계와 구분합니다. 상점 상호작용 버튼은 다른 HUD와 겹치지 않는 44CSS px 이상 입력 영역을 유지합니다.
+`native_merchant`·`native_mira`는 실제 스킨·골격·수동 동작·일시정지·전체 메시 피격·소유권과 기존 발 위치를 검사합니다. 미라는 원본/런타임 해시와 512px/눈256px 예산도 검사합니다. `terrain-npc-review.yml`은 CI에만 연결한 관찰기로 네 지형의 반대 모서리·모바일 두 방향과 실제 주민 factory/주인공의 네 방향·얼굴/후드 확대를 같은 변경 전후 조건에서 촬영합니다. 물리 지형 면은 전체 좌표를 대조하고, 실제 주민의 원래 시계가 골격 자세를 움직이는지도 확인합니다. `SJRPG_STYLE_MERCHANT_ONLY=1` 브라우저 하네스와 `native-merchant-review.yml`은 변경 전 실제 빌드와 비교해 네 방향·모바일 두 방향·DPR2·실제 상점 버튼·일시정지를 검수합니다. rest AABB와 뼈 원점은 GPU로 변형된 발바닥/보이는 픽셀 경계와 구분합니다. 상점 상호작용 버튼은 다른 HUD와 겹치지 않는 44CSS px 이상 입력 영역을 유지합니다.
 
 
 ## 음악 재생 객체의 소유권
