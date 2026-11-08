@@ -129,7 +129,7 @@ func _check_real_contact_and_restore() -> void:
 	if runtime.living(SITE) == 20:
 		var restored: Enemy = runtime._members[SITE][0]
 		check("continuation restores actual damage and the sprite variant", is_equal_approx(restored.hp, saved_health) and str(restored.get_meta("visual_variant", "")) == EncounterRuntime.CAVE_VISUAL_VARIANT)
-		_check_pack(game, 20)
+		_check_pack(game, 20, "restored")
 		await _prepare(game)
 		await _frames(2)
 		for member: Enemy in runtime._members[SITE].duplicate():

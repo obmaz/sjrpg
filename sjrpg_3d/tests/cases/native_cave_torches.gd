@@ -32,7 +32,7 @@ func _closed_volume(mesh: Mesh) -> bool:
 		var arrays := mesh.surface_get_arrays(surface)
 		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
-		var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+		var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
 		if normals.size() != vertices.size():
 			return false
 		var count := indices.size() if not indices.is_empty() else vertices.size()
