@@ -58,6 +58,7 @@ jobs:
                   node sjrpg_3d/web/check_install.mjs
                   node sjrpg_3d/web/check_fullscreen.mjs
                   node sjrpg_3d/web/check_canvas_budget.mjs
+                  node sjrpg_3d/tools/check_music_memory.mjs --self-test
                   tools/check.sh --export
                   touch build/web/.nojekyll
 
@@ -81,7 +82,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                review: [native, save, loading, gamepad]
+                review: [native, save, loading, gamepad, music]
         steps:
             - uses: actions/checkout@v7.0.1
             - uses: actions/setup-node@v6
@@ -111,6 +112,7 @@ jobs:
                       save) SJRPG_CHECKER=check_save_layout.mjs ;;
                       loading) SJRPG_CHECKER=check_entry_loading.mjs ;;
                       gamepad) SJRPG_CHECKER=check_gamepad.mjs ;;
+                      music) SJRPG_CHECKER=check_music_memory.mjs; export SJRPG_MUSIC_PROFILE=fold ;;
                       *) echo "Unknown browser review: $SJRPG_BROWSER_REVIEW" >&2; exit 2 ;;
                   esac
                   SJRPG_REVIEW_DIR="build/review/$SJRPG_BROWSER_REVIEW"
@@ -161,6 +163,7 @@ jobs:
                   mkdir -p build/published-review
                   curl --fail --silent --show-error --max-time 10 --retry 8 --retry-delay 2 https://obmaz.github.io/sjrpg/ > build/published-review/chooser.html
                   SJRPG_STYLE_SMOKE=1 node sjrpg_3d/tools/check_native_style.mjs "https://obmaz.github.io/sjrpg/3d/?v=${{ github.sha }}" build/published-review
+                  SJRPG_MUSIC_PROFILE=fold node sjrpg_3d/tools/check_music_memory.mjs "https://obmaz.github.io/sjrpg/3d/?v=${{ github.sha }}" build/published-review/music
             - uses: actions/upload-artifact@v6
               if: always()
               with:
