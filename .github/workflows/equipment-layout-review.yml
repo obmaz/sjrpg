@@ -1,0 +1,64 @@
+name: Review equipment capture harness
+on:
+    push:
+        paths:
+            - ".github/workflows/equipment-layout-review.yml"
+            - "sjrpg_3d/tools/screenshot.mjs"
+    workflow_dispatch:
+        inputs:
+            run_id:
+                description: "Web workflow run containing the checked game export"
+                required: true
+                type: string
+permissions:
+    contents: read
+    actions: read
+jobs:
+    review:
+        if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[layout-review]')
+        runs-on: ubuntu-latest
+        timeout-minutes: 12
+        steps:
+            - uses: actions/checkout@v7.0.1
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: 24
+                  cache: npm
+            - name: Resolve the checked parent game export for a harness-only revision
+              id: source
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  REVIEW_RUN: ${{ inputs.run_id }}
+                  REVIEW_PARENT: ${{ github.event.before }}
+              run: |
+                  set -euo pipefail
+                  if [[ -z "$REVIEW_RUN" ]]; then
+                      git show --format= --name-only HEAD | python3 -c 'import sys; paths=set(sys.stdin.read().splitlines()); allowed={".github/workflows/equipment-layout-review.yml","sjrpg_3d/tools/screenshot.mjs"}; assert paths <= allowed, paths'
+                      REVIEW_RUN=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$REVIEW_PARENT&per_page=30" --jq '.workflow_runs[] | select(.name=="Build web and deploy to GitHub Pages") | .id' | head -n 1)
+                  fi
+                  test -n "$REVIEW_RUN"
+                  echo "run_id=$REVIEW_RUN" >> "$GITHUB_OUTPUT"
+            - uses: actions/download-artifact@v6
+              with:
+                  name: exported-web-build
+                  path: build/web
+                  github-token: ${{ github.token }}
+                  run-id: ${{ steps.source.outputs.run_id }}
+            - name: Capture actual equipment panels from the checked export
+              run: |
+                  set -euo pipefail
+                  npm ci --ignore-scripts
+                  npx playwright install --with-deps chromium
+                  mkdir -p build/review/equipment
+                  python3 -m http.server 8779 --bind 127.0.0.1 --directory build/web/3d > build/review/equipment/server.log 2>&1 &
+                  REVIEW_SERVER_PID=$!
+                  trap 'kill "$REVIEW_SERVER_PID" 2>/dev/null || true' EXIT
+                  curl --fail --silent --show-error --max-time 2 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 12 http://127.0.0.1:8779/ > /dev/null
+                  node sjrpg_3d/tools/check_equipment_layout.mjs http://127.0.0.1:8779/ build/review/equipment
+            - uses: actions/upload-artifact@v6
+              if: always()
+              with:
+                  name: equipment-layout-review
+                  path: build/review/equipment
+                  if-no-files-found: ignore
+                  retention-days: 7

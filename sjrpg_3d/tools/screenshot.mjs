@@ -84,8 +84,8 @@ const SCENES = {
     cave_exit: 'dungeon_preview=exit',
     elin: 'at=elin&zoom=0.8',
     rowen: 'at=rowen&zoom=0.8',
-    bag: 'panel=bag&chests=1&gold=300',
-    shop: 'panel=shop&gold=300',
+    bag: 'gamepad_review=1&at=npc_nw&chests=1&gold=300',
+    shop: 'gamepad_review=1&at=npc_nw&gold=300',
     skills: 'panel=skills',
     settings: 'panel=settings',
     smith: 'panel=smith&chests=1',
@@ -278,6 +278,34 @@ if (scene === 'defender') {
     await page.waitForFunction(() => window.__sjrpgCorpsePreviewReady === true, null, {timeout: 30000});
     await page.waitForTimeout(1500);
 } else await page.waitForTimeout(settle);
+if (scene === 'bag' || scene === 'shop') {
+    // Use actual keyboard/touch entry after loading; early panel query timers
+    // can be overtaken by chest memories and new-slot initialization.
+    await page.waitForFunction(() => window.__sjrpgGamepadReview?.native_ready, null, {timeout: 15000});
+    for (let attempt = 0; attempt < 8; attempt++) {
+        const panel = await page.evaluate(() => window.__sjrpgGamepadReview?.panel);
+        if (!panel?.script) break;
+        await page.keyboard.press('Escape');
+        await page.waitForTimeout(250);
+    }
+    await page.keyboard.press('b');
+    await page.waitForFunction(() => window.__sjrpgGamepadReview?.panel?.script?.endsWith('/bag_panel.gd'), null, {timeout: 15000});
+    const shopping = scene === 'shop';
+    if (await page.evaluate(() => window.__sjrpgGamepadReview.panel.shopping) !== shopping) {
+        const target = await page.evaluate(text => {
+            const state = window.__sjrpgGamepadReview;
+            const button = state.panel.buttons.find(b => b.text === text);
+            if (!button) return null;
+            return [(button.rect[0] + button.rect[2] / 2) / state.viewport[0],
+                (button.rect[1] + button.rect[3] / 2) / state.viewport[1]];
+        }, shopping ? '상점' : '가방');
+        if (!target) throw new Error('Actual equipment mode switch is unavailable');
+        await tap(vp.width * target[0], vp.height * target[1]);
+    }
+    await page.waitForFunction(want => window.__sjrpgGamepadReview?.panel?.shopping === want, shopping, {timeout: 15000});
+    await page.waitForTimeout(650);
+    console.log('EQUIPMENT_PANEL_ACTUAL ' + JSON.stringify(await page.evaluate(() => window.__sjrpgGamepadReview.panel)));
+}
 if (scene === 'settings') {
     // Debug queries can be superseded by a new-slot start. Open the real panel.
     if (!await page.evaluate(() => Boolean(window.__sjrpgVersionButtons?.FullscreenToggle))) {
