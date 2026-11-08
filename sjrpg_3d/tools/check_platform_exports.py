@@ -126,7 +126,11 @@ def main():
         require(args.package_info is not None, "Android requires actual aapt2 package metadata")
         badging = args.package_info.read_text()
         require("name='com.obmaz.sjrpg3d'" in badging, "Android package identity changed")
-        require("sdkVersion:'24'" in badging and "targetSdkVersion:'36'" in badging, "Android SDK defaults disagree with Godot4.7.2")
+        minimum = re.search(r"(?m)^(?:minSdkVersion|sdkVersion):'(\\d+)'",badging)
+        target = re.search(r"(?m)^targetSdkVersion:'(\\d+)'",badging)
+        sdk_lines = [line for line in badging.splitlines() if "sdk" in line.lower()]
+        require(minimum is not None and target is not None and minimum[1] == "24" and target[1] == "36",
+                "Android SDK defaults disagree with Godot4.7.2: " + json.dumps(sdk_lines))
         with zipfile.ZipFile(args.android) as archive:
             names = archive.namelist()
             require("lib/arm64-v8a/libgodot_android.so" in names, "Missing actual native arm64 engine")
