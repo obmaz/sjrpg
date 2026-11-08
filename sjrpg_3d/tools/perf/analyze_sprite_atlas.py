@@ -50,6 +50,8 @@ for name,columns,rows,prefix in [("cave_crawler",config["columns"],config["rows"
     config[prefix+"frame_body_fractions"]=fractions
     if prefix:
         config["corpse_frame_width_fractions"]=widths
+    else:
+        config["body_fraction"]=max(fractions)
     assert len(set(hashes))==columns*rows,(name,"duplicated artwork frames")
     opaque=[pixel for pixel in image.getdata() if pixel[3]>=224]
     luminance=sum(.2126*p[0]+.7152*p[1]+.0722*p[2] for p in opaque)/max(1,len(opaque))

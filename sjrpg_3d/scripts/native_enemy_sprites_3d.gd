@@ -128,8 +128,9 @@ func _dimensions(cell: Vector2i, source_height: float, fallen := false) -> Vecto
 		var visible_width := float(_config.get("corpse_world_width", 1.6)) * maxf(1.0, source_height) / REFERENCE_BODY_HEIGHT
 		var width := visible_width / maxf(0.01, corpse_fraction)
 		return Vector2(width, width / aspect)
-	var fractions: Array = _config.get("frame_body_fractions", [])
-	var fraction: float = float(fractions[index]) if index < fractions.size() else float(_config.get("body_fraction", 0.8))
+	# One scale for the whole authored walk cycle: a crouched pose must remain
+	# shorter instead of making the entire quad grow wider to match standing height.
+	var fraction: float = float(_config.get("body_fraction", 0.8))
 	var height := maxf(1.0, source_height) / (FRAME_FACTOR * maxf(0.01, fraction))
 	return Vector2(height * aspect, height)
 

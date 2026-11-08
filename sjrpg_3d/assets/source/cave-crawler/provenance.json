@@ -129,7 +129,8 @@
     "measured_live_frames": 32,
     "measured_corpse_frames": 4,
     "metadata": "assets/data/cave_crawler_sprite.json",
-    "actual_normalized_uv_grid": "8x4 live and2x2 corpse; normalized regions preserve fractional cell boundaries"
+    "actual_normalized_uv_grid": "8x4 live and2x2 corpse; normalized regions preserve fractional cell boundaries",
+    "live_scale": "whole-atlas maximum measured body fraction; per-frame pivots only, preserving authored crouch instead of normalizing each pose height"
   },
   "validation": {
     "workflow": ".github/workflows/gameplay-polish-review.yml",
