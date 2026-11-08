@@ -7,6 +7,8 @@ extends RefCounted
 const OPEN_ANGLE := 1.50
 const JOINT_OVERLAP := 0.025
 const CRENEL_SPACING := 0.86
+const WALL_FACE_RECESS := 0.045
+const PIER_SPACING := 3.44
 var preview: Node
 var root: Node3D
 var dynamic_root: Node3D
@@ -17,6 +19,11 @@ var _tools := {}
 var _box_arrays: Array
 var _triangles := 0
 var _target: Node3D
+var _piers: Array[Dictionary] = []
+var _fields: Array[Dictionary] = []
+var _coped_pieces := 0
+var _mouldings := 0
+var _slit_reveals := 0
 
 
 static func build(presenter: Node) -> Ortho3DFortification:
@@ -90,7 +97,7 @@ func _build() -> void:
 		gates.append(entry)
 	var merged := _union(polygons)
 	for polygon in merged:
-		_horizontal(polygon, 0.0, height, "stone")
+		_wall_body(polygon, height)
 		for band in [[0.14, 0.16, 0.018], [height * 0.76, 0.08, 0.030], [height - 0.025, 0.10, 0.035]]:
 			var expanded := Geometry2D.offset_polygon(polygon, float(band[2]), Geometry2D.JOIN_MITER)
 			for shape in expanded:
@@ -100,7 +107,7 @@ func _build() -> void:
 		var point: Array = run[1]
 		var corner := Ortho3DPreview.ground_position(village.point(Vector2(point[0], point[1])))
 		corners.append(corner)
-		_box(corner + Vector3(0, height + 0.30, 0), Vector3(0.54, 0.54, 0.54), "stone")
+		_coped_box(corner + Vector3(0, height + 0.30, 0), Vector3(0.54, 0.54, 0.54), "stone")
 	var crenels := {}
 	for polygon in polygons:
 		_crenels(polygon, corners, crenels, height, thickness)
@@ -110,7 +117,9 @@ func _build() -> void:
 	report = {"wall_height": height, "wall_top": total_height, "projected_top_pixels": total_height * Ortho3DPreview.GROUND_PER_METER * Iso.S,
 		"wall_thickness": thickness, "wall_polygons": merged, "wing_joins": wings,
 		"corners": corners, "town_center": town_center, "gates": gates, "static_meshes": static_meshes,
-		"triangles": _triangles, "static_surfaces": static_meshes.size(), "stone": _materials["stone"]}
+		"triangles": _triangles, "static_surfaces": static_meshes.size(), "stone": _materials["stone"],
+		"wall_face_recess": WALL_FACE_RECESS, "wall_piers": _piers, "wall_fields": _fields,
+		"coped_pieces": _coped_pieces, "moulded_rings": _mouldings, "slit_reveals": _slit_reveals}
 	root.set_meta("fortification_detail", report)
 
 
@@ -206,7 +215,113 @@ func _crenels(polygon: PackedVector2Array, corners: Array[Vector3], used: Dictio
 		if near_corner or used.has(key):
 			continue
 		used[key] = true
-		_box(at, Vector3(0.47, 0.54, thickness) if along_x else Vector3(thickness, 0.54, 0.47), "stone")
+		_coped_box(at, Vector3(0.47, 0.54, thickness) if along_x else Vector3(thickness, 0.54, 0.47), "stone")
+
+
+## The ground plinth keeps the original solid footprint. Recessed wall fields,
+## piers and corbels stay inside that footprint, preserving every route/clearance.
+func _wall_body(polygon: PackedVector2Array, height: float) -> void:
+	_horizontal(polygon, 0.0, 0.28, "stone")
+	var inset := Geometry2D.offset_polygon(polygon, -WALL_FACE_RECESS, Geometry2D.JOIN_MITER)
+	if inset.is_empty():
+		push_error("Native wall field is too narrow for its measured relief")
+		return
+	for shape in inset:
+		_horizontal(shape, 0.28, height, "stone")
+	for index in polygon.size():
+		var a := polygon[index]
+		var b := polygon[(index + 1) % polygon.size()]
+		var edge := b - a
+		var length := edge.length()
+		if length < 2.2:
+			continue
+		var outward := edge.orthogonal().normalized()
+		if Geometry2D.is_point_in_polygon((a + b) * 0.5 + outward * 0.02, polygon):
+			outward = -outward
+		var normal := Vector3(outward.x, 0, outward.y)
+		var tangent := Vector3(normal.z, 0, -normal.x)
+		var basis := Basis(tangent, Vector3.UP, normal)
+		var count := maxi(1, floori(length / PIER_SPACING))
+		var bottom := 0.34
+		var shoulder := height * 0.76 - 0.17
+		for pier in count:
+			var along := (float(pier) + 0.5) / count
+			var point := a.lerp(b, along)
+			var frame := Transform3D(basis, Vector3(point.x, 0, point.y))
+			_box(Vector3(0, (bottom + shoulder) * 0.5, -0.045), Vector3(0.26, shoulder - bottom, 0.09), "stone", frame)
+			_coped_box(Vector3(0, shoulder + 0.07, -0.05), Vector3(0.36, 0.14, 0.10), "stone", frame)
+			_piers.append({"frame": frame, "height": (bottom + shoulder) * 0.5})
+			if pier + 1 < count:
+				var middle := a.lerp(b, (float(pier) + 1.0) / count)
+				var field_frame := Transform3D(basis, Vector3(middle.x, 0, middle.y))
+				_fields.append({"frame": field_frame, "height": (bottom + shoulder) * 0.5})
+				# A shallow corbel sits below the shared stringcourse. Its front
+				# never extends beyond the old solid boundary.
+				_box(Vector3(0, height * 0.76 - 0.10, -0.035), Vector3(0.16, 0.20, 0.07), "stone", field_frame)
+
+
+## One closed, bevelled coping piece, appended to the existing stone surface.
+## Only the top rim is chamfered: the original total height and sole stay exact.
+func _coped_box(at: Vector3, size: Vector3, material: String, frame := Transform3D.IDENTITY) -> void:
+	var bevel := minf(0.018, minf(size.x, minf(size.y, size.z)) * 0.25)
+	var half := size * 0.5
+	var rings: Array[PackedVector3Array] = []
+	for level in 3:
+		var cut := bevel if level == 2 else 0.0
+		var y := -half.y if level == 0 else half.y - bevel if level == 1 else half.y
+		rings.append(PackedVector3Array([
+			Vector3(-half.x + cut, y, -half.z + cut),
+			Vector3(half.x - cut, y, -half.z + cut),
+			Vector3(half.x - cut, y, half.z - cut),
+			Vector3(-half.x + cut, y, half.z - cut)]))
+	var transform := frame * Transform3D(Basis.IDENTITY, at)
+	var normal_basis := frame.basis.inverse().transposed()
+	for layer in 2:
+		for side in 4:
+			var next := (side + 1) % 4
+			var normal := (rings[0][side] + rings[0][next]) * Vector3(1, 0, 1)
+			normal = normal.normalized()
+			if layer == 1:
+				normal = (normal + Vector3.UP).normalized()
+			var points := [transform * rings[layer][side], transform * rings[layer][next], transform * rings[layer + 1][next], transform * rings[layer + 1][side]]
+			_triangle([points[0], points[1], points[2]], [Vector2.ZERO, Vector2.RIGHT, Vector2.ONE], (normal_basis * normal).normalized(), material)
+			_triangle([points[0], points[2], points[3]], [Vector2.ZERO, Vector2.ONE, Vector2.DOWN], (normal_basis * normal).normalized(), material)
+	for side in [0, 2]:
+		var normal := Vector3.DOWN if side == 0 else Vector3.UP
+		var points := [transform * rings[side][0], transform * rings[side][1], transform * rings[side][2], transform * rings[side][3]]
+		_triangle([points[0], points[1], points[2]], [Vector2.ZERO, Vector2.RIGHT, Vector2.ONE], (normal_basis * normal).normalized(), material)
+		_triangle([points[0], points[2], points[3]], [Vector2.ZERO, Vector2.ONE, Vector2.DOWN], (normal_basis * normal).normalized(), material)
+	_coped_pieces += 1
+
+
+## Four continuous radial rings have no internal caps or extra material draws.
+func _moulded_ring(at: Vector3, radius: float, height: float) -> void:
+	var bevel := minf(0.016, height * 0.25)
+	var profile := [Vector2(radius - bevel, -height * 0.5), Vector2(radius, -height * 0.5 + bevel), Vector2(radius, height * 0.5 - bevel), Vector2(radius - bevel, height * 0.5)]
+	for segment in 24:
+		var first := TAU * segment / 24.0
+		var last := TAU * (segment + 1) / 24.0
+		var middle := (first + last) * 0.5
+		var radial := Vector3(cos(middle), 0, sin(middle))
+		for layer in 3:
+			var lower: Vector2 = profile[layer]
+			var upper: Vector2 = profile[layer + 1]
+			var normal := radial * (upper.y - lower.y) + Vector3.UP * (lower.x - upper.x)
+			normal = normal.normalized()
+			var a := at + Vector3(cos(first) * lower.x, lower.y, sin(first) * lower.x)
+			var b := at + Vector3(cos(last) * lower.x, lower.y, sin(last) * lower.x)
+			var c := at + Vector3(cos(last) * upper.x, upper.y, sin(last) * upper.x)
+			var d := at + Vector3(cos(first) * upper.x, upper.y, sin(first) * upper.x)
+			_triangle([a, b, c], [Vector2.ZERO, Vector2.RIGHT, Vector2.ONE], normal, "stone")
+			_triangle([a, c, d], [Vector2.ZERO, Vector2.ONE, Vector2.DOWN], normal, "stone")
+		for end in [0, 3]:
+			var p: Vector2 = profile[end]
+			var normal := Vector3.DOWN if end == 0 else Vector3.UP
+			var center := at + Vector3.UP * p.y
+			var a := at + Vector3(cos(first) * p.x, p.y, sin(first) * p.x)
+			var b := at + Vector3(cos(last) * p.x, p.y, sin(last) * p.x)
+			_triangle([center, a, b], [Vector2(0.5, 0.5), Vector2.ZERO, Vector2.ONE], normal, "stone")
+	_mouldings += 1
 
 
 func _gate_arch(frame: Transform3D, width: float, depth: float, shoulder: float, wall_height: float) -> void:
@@ -234,7 +349,7 @@ func _gate_arch(frame: Transform3D, width: float, depth: float, shoulder: float,
 		_box(Vector3(side * (radius + order * 0.5), wall_height * 0.76 + 0.04, 0), Vector3(order + 0.04, 0.08, depth + 0.06), "stone", frame)
 	var count := maxi(3, roundi(width / 0.65))
 	for merlon in count:
-		_box(Vector3(lerpf(-radius, radius, float(merlon) / (count - 1)), crown + 0.30, 0), Vector3(0.42, 0.48, depth), "stone", frame)
+		_coped_box(Vector3(lerpf(-radius, radius, float(merlon) / (count - 1)), crown + 0.30, 0), Vector3(0.42, 0.48, depth), "stone", frame)
 
 
 func _towers(village: Village, index: int, wall_height: float) -> void:
@@ -251,18 +366,26 @@ func _towers(village: Village, index: int, wall_height: float) -> void:
 		var height := wall_height + 2.0
 		_cylinder(center + Vector3(0, height * 0.5, 0), radius, height, "stone")
 		for level in [0.14, wall_height * 0.76, wall_height, height - 0.12]:
-			_cylinder(center + Vector3(0, level, 0), radius + 0.035, 0.105, "stone")
+			if level < 0.2 or level > height - 0.15:
+				_moulded_ring(center + Vector3(0, level, 0), radius + 0.035, 0.105)
+			else:
+				_cylinder(center + Vector3(0, level, 0), radius + 0.035, 0.105, "stone")
 		for tooth in 10:
 			var angle := tooth * TAU / 10.0
 			var at := center + Vector3(cos(angle) * radius * 0.87, height + 0.26, sin(angle) * radius * 0.87)
-			_box(Vector3.ZERO, Vector3(0.32, 0.52, 0.29), "stone", Transform3D(Basis(Vector3.UP, -angle), at))
+			_coped_box(Vector3.ZERO, Vector3(0.32, 0.52, 0.29), "stone", Transform3D(Basis(Vector3.UP, -angle), at))
 		# Small iron slit/reveal pieces use real relief and shared matte material.
 		for face in 4:
 			var angle := face * PI * 0.5
 			var normal := Vector3(cos(angle), 0, sin(angle))
 			var frame := Transform3D(Basis(Vector3.UP, PI * 0.5 - angle), center + normal * (radius + 0.008))
 			_box(Vector3(0, wall_height * 0.64, 0), Vector3(0.075, 0.60, 0.025), "iron", frame)
-			_box(Vector3(0, wall_height * 0.64 - 0.11, 0.02), Vector3(0.20, 0.035, 0.035), "iron", frame)
+			var slit_y := wall_height * 0.64
+			for side in [-1.0, 1.0]:
+				_box(Vector3(side * 0.071, slit_y, -0.014), Vector3(0.065, 0.72, 0.07), "stone", frame)
+			for side in [-1.0, 1.0]:
+				_coped_box(Vector3(0, slit_y + side * 0.35, -0.0165), Vector3(0.208, 0.07, 0.075), "stone", frame)
+			_slit_reveals += 1
 	pose.free()
 
 

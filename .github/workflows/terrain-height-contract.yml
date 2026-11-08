@@ -1,10 +1,14 @@
-name: Check native terrain height contracts
+name: Check terrain and village geometry contracts
 on:
     push:
         paths:
             - ".github/workflows/terrain-height-contract.yml"
             - "sjrpg_3d/scripts/native_landmarks_3d.gd"
+            - "sjrpg_3d/scripts/ortho_3d_fortification.gd"
+            - "sjrpg_3d/scripts/native_house_3d.gd"
             - "sjrpg_3d/tests/cases/native_terrain_readability.gd"
+            - "sjrpg_3d/tests/cases/ortho_3d_fortification.gd"
+            - "sjrpg_3d/tests/cases/native_house_family.gd"
     workflow_dispatch:
 permissions:
     contents: read
@@ -14,7 +18,7 @@ concurrency:
 jobs:
     verify:
         runs-on: ubuntu-latest
-        timeout-minutes: 8
+        timeout-minutes: 10
         steps:
             - uses: actions/checkout@v7.0.1
             - uses: actions/cache@v4
@@ -23,8 +27,8 @@ jobs:
                       ~/.godot-tools
                       ~/.local/share/godot/export_templates
                   key: godot-${{ hashFiles('.godot-version') }}-tools-v1
-            - name: Verify original terrain supports and height-aware combat
+            - name: Verify original terrain supports, collision, village geometry and height-aware combat
               run: |
                   chmod +x tools/*.sh sjrpg_3d/tools/*.sh
                   tools/setup_godot.sh
-                  tools/check.sh --project=3d --only=native_terrain_readability,melee_elevation,spatial_stairs,bridge
+                  tools/check.sh --project=3d --only=native_terrain_readability,melee_elevation,spatial_stairs,bridge,ortho_3d_fortification,town_gate_closure,npc_clearance,native_house_family

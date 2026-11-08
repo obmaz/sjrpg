@@ -142,6 +142,7 @@ func run() -> void:
 				winding = winding and (vertices[b] - vertices[a]).cross(vertices[c] - vertices[a]).dot(normals[a]) <= 0.00001
 	check("both wall axes wings towers and corners share the same world-scaled limestone", stone_meshes.size() == 1 and stone.uv1_world_triplanar and stone.uv1_scale.is_equal_approx(Vector3.ONE * 0.390625))
 	check("fortification mesh normals UVs and winding remain valid", valid and winding)
+	_check_wall_relief(report, stone_meshes)
 	var reversed_safe: PackedVector2Array = game.village.safe_zone.duplicate()
 	reversed_safe.reverse()
 	var town_center: Vector3 = report["town_center"]
@@ -203,3 +204,37 @@ func run() -> void:
 	fixture.queue_free()
 	game.queue_free()
 	await _frames(2)
+
+
+## Ray measurements use the installed merged stone, including both wall axes and
+## inside/outside faces. Pick central fields to avoid gatehouse occlusion.
+func _check_wall_relief(report: Dictionary, stone_meshes: Array) -> void:
+	var piers: Array = report["wall_piers"]
+	var fields: Array = report["wall_fields"]
+	check("wall detail keeps its original stone and bounded face depth", is_equal_approx(float(report["wall_face_recess"]), 0.045) and piers.size() >= 8 and fields.size() >= 4)
+	check("all towers have stone slit surrounds and restrained moulded bands", int(report["slit_reveals"]) == 32 and int(report["moulded_rings"]) == 16 and int(report["coped_pieces"]) > 100)
+	var probes := {}
+	for family: String in ["wall_piers", "wall_fields"]:
+		var selected := {}
+		for entry: Dictionary in report[family]:
+			var frame: Transform3D = entry["frame"]
+			var normal := frame.basis.z
+			var key := "%d:%d" % [roundi(normal.x), roundi(normal.z)]
+			var clearance := INF
+			for gate: Dictionary in report["gates"]:
+				var gate_frame: Transform3D = gate["frame"]
+				clearance = minf(clearance, Vector2(frame.origin.x - gate_frame.origin.x, frame.origin.z - gate_frame.origin.z).length())
+			if not selected.has(key) or clearance > float(selected[key]["clearance"]):
+				selected[key] = {"entry": entry, "clearance": clearance}
+		check("wall relief has physical samples on both inside/outside axes " + family, selected.size() == 4)
+		var measurements := {}
+		for key: String in selected:
+			var entry: Dictionary = selected[key]["entry"]
+			var frame: Transform3D = entry["frame"]
+			var origin := frame.origin + Vector3.UP * float(entry["height"]) + frame.basis.z * 0.20
+			var measured := _nearest(stone_meshes, origin, -frame.basis.z)
+			var expected := 0.245 if family == "wall_fields" else 0.20
+			measurements[key] = measured
+			check("actual merged masonry preserves recessed field/pier relief " + family + " " + key, is_finite(measured) and absf(measured - expected) < 0.001)
+		probes[family] = measurements
+	print("ART_AUDIT native_wall_finish " + JSON.stringify({"triangles": report["triangles"], "static_surfaces": report["static_surfaces"], "piers": piers.size(), "fields": fields.size(), "coped_pieces": report["coped_pieces"], "moulded_rings": report["moulded_rings"], "slit_reveals": report["slit_reveals"], "actual_depths": probes}))
