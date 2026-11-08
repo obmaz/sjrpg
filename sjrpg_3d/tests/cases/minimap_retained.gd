@@ -124,5 +124,8 @@ func run() -> void:
 	minimap._gui_input(touch)
 	check("retained children leave the existing minimap touch action intact",
 		opened[0] == 1 and minimap.mouse_filter == Control.MOUSE_FILTER_STOP)
+	# The tap also opens the real HUD map panel; close it before freeing the fixture.
+	game.hud.close_panel()
+	check("the real map modal closes without leaving the next game paused", not get_tree().paused)
 	game.queue_free()
 	await _frames(2)
