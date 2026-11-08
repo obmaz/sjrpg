@@ -2,6 +2,23 @@
 export function installResourceTelemetry(){
  const state={started:performance.now(),buffers:[],frames:[],long_tasks:[],context_lost:[],context_restored:[],shaders:[],links:[],wasm:[],wasm_peak_bytes:0};
  window.__sjrpgStabilityState=state;
+ // AudioBuffer storage lives outside the small V8 JS heap. Count successful
+ // native allocations using scalar metadata; never retain buffers or source nodes.
+ const audio=window.__sjrpgAudioAllocation||(window.__sjrpgAudioAllocation={create_buffer_calls:0,created_pcm_bytes:0,create_source_calls:0,last_buffer:null,last_source_at:null,buffer_hook_available:false,source_hook_available:false});
+ const audioProto=window.BaseAudioContext?.prototype;
+ if(audioProto){
+  const createBuffer=audioProto.createBuffer,createSource=audioProto.createBufferSource;
+  audio.buffer_hook_available=typeof createBuffer==='function';audio.source_hook_available=typeof createSource==='function';
+  if(createBuffer&&!createBuffer.__sjrpgAudioAllocationWrapped){
+   const wrapped=function(channels,length,sampleRate){const value=Reflect.apply(createBuffer,this,arguments);const bytes=value.numberOfChannels*value.length*4;audio.create_buffer_calls++;audio.created_pcm_bytes+=bytes;audio.last_buffer={channels:value.numberOfChannels,length:value.length,sample_rate:value.sampleRate,pcm_bytes:bytes,at:performance.now()};return value;};
+   wrapped.__sjrpgAudioAllocationWrapped=true;audioProto.createBuffer=wrapped;
+  }
+  if(createSource&&!createSource.__sjrpgAudioAllocationWrapped){
+   const wrapped=function(){const value=Reflect.apply(createSource,this,arguments);audio.create_source_calls++;audio.last_source_at=performance.now();return value;};
+   wrapped.__sjrpgAudioAllocationWrapped=true;audioProto.createBufferSource=wrapped;
+  }
+ }
+
  const memories=[],NativeMemory=WebAssembly.Memory;
  const remember=instance=>{for(const value of Object.values(instance?.exports||{}))if(value instanceof NativeMemory)memories.push(new WeakRef(value));};
  WebAssembly.Memory=new Proxy(NativeMemory,{construct(target,args){const value=Reflect.construct(target,args,target);memories.push(new WeakRef(value));return value;}});

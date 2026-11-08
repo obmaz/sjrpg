@@ -12,6 +12,9 @@ func run() -> void:
 	var music: MusicDirector = game.music
 	var town_position: Vector2 = game.player.position
 	check("the game owns a music director", music != null)
+	for player: AudioStreamPlayer in music._players.values():
+		check("long music always streams instead of duplicating Web Audio samples",
+			player.playback_type == AudioServer.PLAYBACK_TYPE_STREAM)
 	for name in ["town", "field", "dungeon"]:
 		var looping: AudioStreamOggVorbis = MusicDirector.TRACKS[name]
 		check("%s track loops" % name, looping.loop)
@@ -20,6 +23,17 @@ func run() -> void:
 	check("town music begins fading in", music.current == "town" and music.is_playing("town") and music.level_of("town") > 0.0)
 	music.step(MusicDirector.FADE_SECONDS)
 	check("town music reaches full level and others stay silent", is_equal_approx(music.level_of("town"), 1.0) and not music.is_playing("field") and not music.is_playing("dungeon"))
+	var pause_writes := music.focus_pause_updates
+	var town_player: AudioStreamPlayer = music._players["town"]
+	var town_playback: AudioStreamPlayback = town_player.get_stream_playback()
+	var town_playback_id := town_playback.get_instance_id()
+	town_playback = null
+	for frame in 120:
+		music.step(1.0 / 60.0)
+	town_playback = town_player.get_stream_playback()
+	check("120 normal render steps never issue another unpause or replace the music decoder",
+		music.focus_pause_updates == pause_writes and town_playback.get_instance_id() == town_playback_id)
+	town_playback = null
 
 	game.player.position = Iso.project(Vector2(-2800, -2800))
 	check("outside the village the field track is chosen", MusicDirector.context_for(game) == "field")
@@ -52,6 +66,12 @@ func run() -> void:
 	music._notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
 	for player: AudioStreamPlayer in music._players.values():
 		check("focus loss pauses each actual audio player", player.stream_paused)
+	pause_writes = music.focus_pause_updates
+	music._notification(Node.NOTIFICATION_WM_WINDOW_FOCUS_OUT)
+	for frame in 120:
+		music.step(0.0)
+	check("duplicate focus-loss notifications and paused steps never repeat the pause bridge",
+		music.focus_pause_updates == pause_writes)
 	var players: Dictionary = music._players.duplicate()
 	game.remove_child(music)
 	check("detaching stops voices, releases streams and resets fade state", exits.size() == 1 and bool(exits[0]["released"]) and bool(exits[0]["reset"]))
@@ -93,7 +113,16 @@ func run() -> void:
 	music._next_check = 0.0
 	music._process(0.1)
 	check("re-enabling while unfocused preserves paused field playback", paused_field.has_stream_playback() and paused_field.stream_paused)
+	pause_writes = music.focus_pause_updates
 	music._notification(Node.NOTIFICATION_APPLICATION_FOCUS_IN)
+	check("focus return sends one resume for the one paused field voice",
+		music.focus_pause_updates == pause_writes + 1)
+	pause_writes = music.focus_pause_updates
+	music._notification(Node.NOTIFICATION_WM_WINDOW_FOCUS_IN)
+	for frame in 120:
+		music.step(0.0)
+	check("duplicate focus-return notifications and active steps never repeat unpause",
+		music.focus_pause_updates == pause_writes)
 	music.step(MusicDirector.FADE_SECONDS)
 	var field_player: AudioStreamPlayer = music._players["field"]
 	check("focus return resumes the actual field playback and normal fade", not field_player.stream_paused and field_player.playing and is_equal_approx(music.level_of("field"), 1.0))

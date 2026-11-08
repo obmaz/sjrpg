@@ -19,6 +19,8 @@ var _players := {}
 var _level := {}
 var _next_check := 0.0
 var _focus_paused := false
+var _applied_focus_pause := {}
+var focus_pause_updates := 0
 
 
 func _enter_tree() -> void:
@@ -29,7 +31,7 @@ func _enter_tree() -> void:
 		var player: AudioStreamPlayer = _players[name]
 		if is_instance_valid(player):
 			player.stream = TRACKS[name]
-			player.stream_paused = _focus_paused
+			_applied_focus_pause[name] = false
 			_level[name] = 0.0
 
 
@@ -44,6 +46,7 @@ func _exit_tree() -> void:
 			player.stop()
 			player.stream = null
 		_level[name] = 0.0
+	_applied_focus_pause.clear()
 
 
 func _ready() -> void:
@@ -53,10 +56,13 @@ func _ready() -> void:
 		var stream: AudioStreamOggVorbis = TRACKS[name]
 		stream.loop = true
 		var player := AudioStreamPlayer.new()
+		# Web samples copy a full decoded song on resume. Long looping music
+		# streams through the bounded audio mixer instead; sound effects keep samples.
+		player.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
 		player.stream = stream
 		player.volume_db = -80.0
 		add_child(player)
-		player.stream_paused = _focus_paused
+		_applied_focus_pause[name] = false
 		_players[name] = player
 		_level[name] = 0.0
 
@@ -89,9 +95,22 @@ func step(delta: float) -> void:
 			player.volume_db = BASE_DB + linear_to_db(level)
 			if not player.has_stream_playback():
 				player.play()
-			player.stream_paused = _focus_paused
+				# A new playback begins unpaused, independent of the last voice.
+				_applied_focus_pause[name] = false
+			_apply_focus_pause(name, player)
 		elif player.has_stream_playback():
 			player.stop()
+			_applied_focus_pause[name] = false
+
+
+## Godot4.7.2 Web sample pause(false) restarts and copies its AudioBuffer even
+## when already playing. Never send a repeated unpause across that bridge.
+func _apply_focus_pause(name: String, player: AudioStreamPlayer) -> void:
+	if bool(_applied_focus_pause.get(name, false)) == _focus_paused:
+		return
+	player.stream_paused = _focus_paused
+	_applied_focus_pause[name] = _focus_paused
+	focus_pause_updates += 1
 
 
 func level_of(name: String) -> float:
@@ -108,5 +127,9 @@ func _notification(what: int) -> void:
 	if not (lost or back):
 		return
 	_focus_paused = lost
-	for player: AudioStreamPlayer in _players.values():
-		player.stream_paused = _focus_paused
+	for name: String in _players:
+		var player: AudioStreamPlayer = _players[name]
+		if player.has_stream_playback():
+			_apply_focus_pause(name, player)
+		else:
+			_applied_focus_pause[name] = false
