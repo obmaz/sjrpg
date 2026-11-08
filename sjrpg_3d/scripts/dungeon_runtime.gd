@@ -153,7 +153,7 @@ func complete() -> bool:
 	return true
 
 
-func leave(message: String) -> void:
+func leave(message: String, save_progress := true) -> void:
 	if not active:
 		return
 	active = false
@@ -189,5 +189,6 @@ func leave(message: String) -> void:
 	art = null
 	GameState.location_mode = "forest"
 	GameState.return_to_cave_entrance = false
-	GameState.save_game()
+	if save_progress:
+		GameState.save_game()
 	game.toast(message)

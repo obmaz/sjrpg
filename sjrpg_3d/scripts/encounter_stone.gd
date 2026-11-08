@@ -53,9 +53,13 @@ func _draw() -> void:
 		text = "공격해 재소환 · %d/3" % int(state["charges"])
 		if int(state["charges"]) == 0:
 			text = "충전까지 %d초" % ceili(EncounterRuntime.RECHARGE_SECONDS - float(state["recharge"]))
+	if id == EncounterRuntime.CAVE_SITE:
+		text = "동굴 잠복자 · %d" % living if living > 0 else "공격해 소환 · 20마리"
 	var width := HudArt.FONT.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x + 18.0
 	var rect := Rect2(-width * 0.5, -128.0, width, 25.0)
 	draw_style_box(UiKit.panel_style(Color(0.04, 0.07, 0.06, 0.88), Color(0.4, 0.55, 0.47), 4), rect)
 	HudArt.text_outlined(self, text, rect.position + Vector2(0, 18), width, 15, Color("d4e3cd"))
+	if id == EncounterRuntime.CAVE_SITE:
+		return
 	for index in 3:
 		draw_circle(Vector2((index - 1) * 9, -95), 2.5, Color("a7ebd2") if index < int(state["charges"]) else Color("334139"))

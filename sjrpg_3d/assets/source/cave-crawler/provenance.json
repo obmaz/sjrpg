@@ -1,0 +1,72 @@
+{
+  "asset": "cave_crawler",
+  "status": "candidate_pending_browser_validation",
+  "projection": {
+    "type": "orthographic isometric",
+    "elevation_degrees": 35.2643897,
+    "ground_axes_degrees": [
+      30,
+      -30
+    ],
+    "axes_separation_degrees": 120
+  },
+  "style": "mature dark stylized painterly woodland fantasy; slate hide, bone plates, olive scraps, tiny amber eyes",
+  "user_reference": {
+    "path": "sjrpg_3d/assets/source/style/approved-game-reference.jpg",
+    "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+    "role": "retained style guide; not attached to the first new-image generation"
+  },
+  "generations": [
+    {
+      "tool": "image_gen.imagegen",
+      "transparent_background": true,
+      "actual_tool_references": [],
+      "prompt": "Create a production-ready transparent RGBA game sprite atlas, 1024 by 1024 pixels, exactly 4 columns by 4 rows, 16 separate equal 256x256 cells. This is one coherent animated enemy named CAVE CRAWLER for a mature dark stylized woodland action RPG, visual genre of Diablo Immortal, painterly detailed but clean at small mobile size, not photoreal, not pastel, not chibi, no pixel art. Creature: small lean hunched cave scavenger imp with elongated clawed forearms, compact powerful hind legs, a low horned brow, two tiny amber eyes, slate-gray leathery skin, bone-beige ridge plates along shoulders and back, dark desaturated olive scraps tied at waist. No weapons, no large glow or magic. Strong readable silhouette, dangerous feral personality, no gore. Same EXACT creature design, size, materials, lighting and proportions in all 16 cells. TRUE ORTHOGRAPHIC ISOMETRIC 2.5D: camera elevation exactly35.264 degrees, no perspective; ground axes +/-30 degrees, three projected axes120 degrees; visible tops of shoulders/head/feet, never an eye-level view. Rows are four distinct camera-relative ground facing directions: row1 faces southeast/down-right (face and chest visible); row2 faces southwest/down-left (face/chest mirrored direction but same neutral lighting); row3 faces northwest/up-left (back and left-side of head visible); row4 faces northeast/up-right (back and other side visible). Within EACH ROW show four successive frames of the same subtle looping walking stride: left contact, passing, right contact, passing. Four columns must keep same direction within each row; DO NOT rotate direction across columns. Whole complete creature fits INSIDE its cell, never crosses or touches cell border; leave at least22pixels transparent padding each side, top padding25pixels. Every foot-ground pivot centered at x=128 and y=225 within its256x256cell. Creature visible size approximately160pixelswide and175pixelstall, head at y45, lowest grounded foot y225. All sixteen cells perfectly aligned same scale, no individual zoom. No grid lines, labels, numbers, names, text, UI, logos, watermark, scenery, platforms, ground planes, dust or cast/contact shadows. Transparent clear empty background with REAL alpha, NOT painted checkerboard. Soft neutral diffuse illumination across all frames, restrained form shading and material grooves, no directional sun patches, no background-colored fringes. Keep narrow alpha fringes clean. Deliver only the exact square evenly spaced 4x4 sprite sheet.",
+      "output": "generated-atlas.png",
+      "git_blob_sha": "19d4373018ab10f98665be91577267d5f3f86f20",
+      "actual_size": [
+        1254,
+        1254
+      ],
+      "grid": [
+        4,
+        4
+      ]
+    },
+    {
+      "tool": "image_gen.imagegen",
+      "transparent_background": true,
+      "actual_tool_references": [
+        {
+          "conversation_image": "the generated 4x4 cave-crawler sheet",
+          "git_blob_sha": "19d4373018ab10f98665be91577267d5f3f86f20"
+        }
+      ],
+      "prompt": "Edit the supplied cave-crawler monster sprite atlas into a matching DEFEATED/CORPSE atlas of the SAME EXACT creature, materials, silhouette and drawing style. Output a square transparent RGBA spritesheet with exactly TWO columns by TWO rows: four isolated death poses. Cell1 upper-left: same slate-gray hunched bone-armored imp lying collapsed on its side, head pointing southeast/down-right. Cell2 upper-right head points southwest/down-left. Cell3 lower-left head points northwest/up-left. Cell4 lower-right head points northeast/up-right. Show all four as dead still bodies resting low on the ground, legs and long clawed forearms relaxed and folded naturally. Tiny amber eyes closed, no glow. No blood/gore, no dust, no ground patch or cast/contact shadow. SAME bone-beige shoulder/back plates, slate gray hide, dark desaturated olive waist scraps from the supplied creature. Mature dark stylized painterly action RPG, no photoreal skin, no chibi or cartoon outline. TRUE ORTHOGRAPHIC ISOMETRIC camera elevation35.264degrees and ground axes +/-30degrees/120degrees, all directions rendered from the same fixed camera; no perspective or eye-level view. Entire body fits its cell with at least40px TRANSPARENT padding on every side. All four are identical creature size, all four body centers aligned to exactcellcenter, consistent softneutral diffuse form shading with no directional sun. Keep the silhouette low/wide with clearly bent limbs so it unmistakably reads as a corpse rather than a standing monster rotated sideways. Empty REAL alpha background, not painted checkerboard or black; NO grid, words, labels, border, scenery, platform, logo or watermark. Deliver only the clean 2x2 corpse sprite sheet.",
+      "output": "generated-corpses.png",
+      "git_blob_sha": "af4095208abc0a65ba6c106b895f1f3a007e423b",
+      "actual_size": [
+        1254,
+        1254
+      ],
+      "grid": [
+        2,
+        2
+      ]
+    }
+  ],
+  "runtime": [
+    "assets/art/monsters/cave_crawler.png",
+    "assets/art/monsters/cave_crawler_corpses.png"
+  ],
+  "frame_metadata": "assets/data/cave_crawler_sprite.json",
+  "alpha_measurement": "tools/perf/analyze_sprite_atlas.py",
+  "import": {
+    "mode": "lossy texture import 1",
+    "quality": 0.85,
+    "mipmaps": true,
+    "fix_alpha_border": true,
+    "source_pixels_resized": false
+  },
+  "scope": "2D appearance on native 3D actors; other monsters keep existing 3D presentation"
+}

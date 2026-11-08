@@ -74,10 +74,11 @@ func _check_initial_and_far_packs() -> void:
 	var game := await make_game()
 	_freeze(game)
 	var runtime: EncounterRuntime = game.encounters
-	var fresh: bool = runtime.states.size() == 6 and runtime.stones.size() == 6
-	for state: Dictionary in runtime.states.values():
-		fresh = fresh and int(state["charges"]) == 3 and not state["initial_spawned"] and state["members"].is_empty()
-	check("fresh forest registers six unspent encounter sites", fresh)
+	var fresh: bool = runtime.states.size() == 7 and runtime.stones.size() == 7
+	for id: String in runtime.states:
+		var state: Dictionary = runtime.states[id]
+		fresh = fresh and int(state["charges"]) == 3 and bool(state["initial_spawned"]) == (id == EncounterRuntime.CAVE_SITE) and state["members"].is_empty()
+	check("fresh forest registers six dormant sites and one attack-ready cave marker", fresh)
 	game.player.position = _approach(game, "west")
 	var stone: EncounterStone = runtime.stones["west"]
 	check("a dormant site cannot bypass its first pack by being hit", not stone.take_damage(1.0, game.player) and int(runtime.states["west"]["charges"]) == 3)
@@ -246,10 +247,11 @@ func _check_live_restore() -> void:
 	add_child(game)
 	await _native_ready(game)
 	_freeze(game)
-	var fresh: bool = game.encounters.states.size() == 6
-	for state: Dictionary in game.encounters.states.values():
-		fresh = fresh and int(state["charges"]) == 3 and not state["initial_spawned"] and state["members"].is_empty()
-	check("continuing a legacy save creates six fresh sites", fresh and GameState.gold == 17)
+	var fresh: bool = game.encounters.states.size() == 7
+	for id: String in game.encounters.states:
+		var state: Dictionary = game.encounters.states[id]
+		fresh = fresh and int(state["charges"]) == 3 and bool(state["initial_spawned"]) == (id == EncounterRuntime.CAVE_SITE) and state["members"].is_empty()
+	check("continuing a legacy save adds the attack-ready cave marker without changing six fresh sites", fresh and GameState.gold == 17)
 	await _retire(game)
 
 

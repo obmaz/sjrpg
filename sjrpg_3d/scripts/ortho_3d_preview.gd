@@ -56,6 +56,9 @@ var _encounter_props: NativeEncounterProps3D
 var _cards := {}
 var _native_residents: NativeResidents3D
 var _enemy_models: NativeEnemyModels
+var _enemy_feedback: NativeEnemyFeedback3D
+var _enemy_sprites: NativeEnemySprites3D
+var _zone_fx: NativeZoneFx3D
 var _seen_impacts := {}
 var _contact_time := 0.0
 var _contact_energy := 0.0
@@ -162,6 +165,9 @@ func _ready() -> void:
 	_level_up_fx = Ortho3DLevelUp.new().setup(self)
 	_combat_fx = NativeCombatFx3D.new().setup(self)
 	_enemy_models = NativeEnemyModels.new().setup(self)
+	_enemy_feedback = NativeEnemyFeedback3D.new().setup(self)
+	_enemy_sprites = NativeEnemySprites3D.new().setup(self)
+	_zone_fx = NativeZoneFx3D.new().setup(self)
 	game.get_viewport().size_changed.connect(_resize)
 	Prefs.graphics_changed.connect(_resize)
 	_resize()
@@ -432,11 +438,14 @@ func _process(delta: float) -> void:
 	_sync_camera()
 	_sync_actor(0.0 if frozen else delta)
 	_enemy_models.sync()
+	_enemy_sprites.sync()
+	_enemy_feedback.sync()
 	_sync_cards()
 	_native_residents.sync()
 	_fortification.sync()
 	_level_up_fx.sync()
 	_combat_fx.sync()
+	_zone_fx.sync()
 	_town_props.sync()
 	_encounter_props.sync()
 	_affordances.sync()
@@ -521,6 +530,9 @@ func _publish_probe() -> void:
 		"generic_projectiles": _combat_fx.snapshot() if _combat_fx != null else {},
 		"native_residents": _native_residents.snapshot() if _native_residents != null else {},
 		"native_enemies": _enemy_models.snapshot() if _enemy_models != null else {},
+		"enemy_feedback": _enemy_feedback.snapshot() if _enemy_feedback != null else {},
+		"native_enemy_sprites": _enemy_sprites.snapshot() if _enemy_sprites != null else {},
+		"native_zones": _zone_fx.snapshot() if _zone_fx != null else {},
 		"native_trees": _trees.get_meta("native_tree_report")["source_count"] if _trees != null else 0,
 		"native_houses": _houses.values().map(func(house: Dictionary): return {"key": house["key"], "triangles": house["triangles"], "surfaces": house["surfaces"]}),
 		"gate_progress": _fortification.gates.map(func(gate: Dictionary): return gate["progress"]) if _fortification != null else [],
@@ -767,7 +779,7 @@ func _remember_frozen_sources() -> void:
 		var enemy := candidate as Enemy
 		if not is_instance_valid(enemy) or enemy.is_queued_for_deletion():
 			continue
-		_watch_frozen(enemy, ["position", "facing", "dead", "_state", "_timer", "_walk_cycle"])
+		_watch_frozen(enemy, ["position", "visible", "facing", "dead", "_state", "_timer", "_walk_cycle", "hp", "max_hp", "ghost_hp", "is_boss", "attack_range", "_windup_duration"])
 		_watch_sprite(enemy.sprite)
 	for candidate in game.village.npc_nodes.values():
 		var resident := candidate as Villager

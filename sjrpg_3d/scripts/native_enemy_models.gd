@@ -331,7 +331,7 @@ func sync() -> void:
 		if not is_instance_valid(candidate):
 			continue
 		var enemy := candidate as Enemy
-		if enemy == null or enemy.is_queued_for_deletion():
+		if enemy == null or enemy.is_queued_for_deletion() or NativeEnemySprites3D.supports(enemy):
 			continue
 		var id := enemy.get_instance_id()
 		live[id] = true

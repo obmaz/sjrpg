@@ -450,6 +450,7 @@ func sync(delta: float, frozen: bool) -> void:
 		_clock += delta
 		if _water_material != null:
 			_water_material.uv1_offset = Vector3(_clock * 0.025, _clock * 0.006, 0)
+	NativeCaveLanterns3D.sync(cave, _clock)
 	for light in _cave_lights:
 		light.light_energy = 2.6 if Prefs.reduce_motion else 2.6 + sin(_clock * 3.8 + light.position.x) * 0.10
 	for entry: Dictionary in _stone_cards.values():
@@ -481,6 +482,8 @@ func sync(delta: float, frozen: bool) -> void:
 func _sync_corpses() -> void:
 	var current := {}
 	for corpse: Dictionary in preview.game.corpses:
+		if NativeEnemySprites3D.supports_corpse(corpse):
+			continue
 		var source: Node = corpse.get("visual")
 		if not is_instance_valid(source):
 			continue

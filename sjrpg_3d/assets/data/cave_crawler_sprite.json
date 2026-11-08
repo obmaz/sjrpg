@@ -1,0 +1,51 @@
+{
+  "columns": 4,
+  "rows": 4,
+  "pivot": [
+    0.5,
+    0.94
+  ],
+  "body_fraction": 0.8,
+  "direction_rows": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "walk_columns": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "attack_column": 3,
+  "dead_frame": 0,
+  "corpse_texture": "res://assets/art/monsters/cave_crawler_corpses.png",
+  "corpse_columns": 2,
+  "corpse_rows": 2,
+  "corpse_cells": [
+    [
+      0,
+      0
+    ],
+    [
+      1,
+      0
+    ],
+    [
+      0,
+      1
+    ],
+    [
+      1,
+      1
+    ]
+  ],
+  "corpse_pivot": [
+    0.5,
+    0.8
+  ],
+  "corpse_body_fraction": 0.45,
+  "corpse_world_width": 1.6,
+  "corpse_body_width_fraction": 0.86
+}

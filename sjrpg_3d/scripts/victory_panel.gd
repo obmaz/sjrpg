@@ -4,6 +4,7 @@ extends PanelFrame
 ## 계속 탐험하거나 새 모험을 시작할 수 있습니다.
 
 signal restart_requested
+var _save_feedback: Label
 
 
 func _ready() -> void:
@@ -29,3 +30,13 @@ func _ready() -> void:
 	again.pressed.connect(func(): restart_requested.emit())
 	body.add_child(again)
 	add_footer("계속 탐험하기", func(): closed.emit(), true)
+
+
+## Preserve the achievement panel until its progress is safely committed.
+func show_save_error(message: String) -> void:
+	if _save_feedback == null:
+		_save_feedback = PanelFrame.wrap_label("", 16, Color(1.0, 0.69, 0.63))
+		_save_feedback.name = "SaveFeedback"
+		body.add_child(_save_feedback)
+	_save_feedback.text = message if not message.is_empty() else "저장하지 못했습니다. 다시 시도하면 진행을 저장하고 슬롯 선택으로 이동합니다."
+	scroll.ensure_control_visible.call_deferred(_save_feedback)

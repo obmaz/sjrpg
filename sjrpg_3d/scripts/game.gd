@@ -44,6 +44,7 @@ var cosmetic_effects: Array[Effect] = []
 var corpses: Array = []  # Transient image + skill eligibility; shared lifetime keeps visuals and targeting in sync.
 var _spawn_timer := 0.0
 var _save_timer := 0.0
+var _menu_exit_committed := false
 var _rng := RandomNumberGenerator.new()
 
 
@@ -1376,6 +1377,7 @@ func add_corpse(enemy: Enemy, searchable: bool) -> Dictionary:
 	var corpse := {
 		"pos": enemy.position, "time": CORPSE_LIFETIME, "lifetime": CORPSE_LIFETIME, "used": false,
 		"kind": enemy.kind, "facing": enemy.facing, "height": enemy.sprite.body_height,
+		"visual_variant": str(enemy.get_meta("visual_variant", "")),
 		"searchable": searchable,
 	}
 	var visual := CorpseArt.new()
@@ -1691,8 +1693,35 @@ func toast(text: String) -> void:
 		hud.toast(text)
 
 
-func quit_to_title() -> void:
+func quit_to_title() -> bool:
+	return _leave_to_menu(false)
+
+
+func return_to_selection() -> bool:
+	return _leave_to_menu(true)
+
+
+## Commit progress before releasing the paused settings panel or retiring the cave.
+func _leave_to_menu(restart: bool) -> bool:
+	if _menu_exit_committed:
+		return false
+	hud.apply_panel_changes()
+	var previous_location := GameState.location_mode
 	if dungeon.active:
-		dungeon.leave("동굴 입구로 돌아왔습니다")
-	if GameState.save_game():
+		# Match the existing menu-exit checkpoint without moving the live world yet.
+		GameState.location_mode = "forest"
+	if not GameState.save_game():
+		GameState.location_mode = previous_location
+		var panel: PanelFrame = hud._panel
+		if is_instance_valid(panel) and panel.has_method("show_save_error"):
+			panel.call("show_save_error", GameState.save_error)
+		return false
+	_menu_exit_committed = true
+	if dungeon.active:
+		dungeon.leave("동굴 입구로 돌아왔습니다", false)
+	hud.close_panel(false)
+	if restart:
+		restart_requested.emit()
+	else:
 		quit_requested.emit()
+	return true

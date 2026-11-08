@@ -209,7 +209,7 @@ func _open(panel: PanelFrame) -> void:
 	add_child(panel)
 
 
-func close_panel() -> void:
+func close_panel(save_progress := true) -> void:
 	Gamepad.require_neutral()
 	if _panel == null:
 		return
@@ -219,10 +219,16 @@ func close_panel() -> void:
 	_toast_plaque.visible = _toast_time > 0.0
 	if _level_up != null:
 		_level_up.visible = _level_up.active
+	if save_progress:
+		apply_panel_changes()
+		GameState.save_game()
+
+
+## Apply pending equipment/reward changes before a checked save or ordinary close.
+func apply_panel_changes() -> void:
 	game.player.refresh_stats()
-	if GameState.claim_boss_heart():
+	if GameState.claim_boss_heart(false):
 		game.toast("파수꾼의 심장을 받았습니다")
-	GameState.save_game()
 
 
 func open_skill_tree() -> void:
@@ -268,9 +274,7 @@ func interact(npc: String) -> void:
 
 func open_victory() -> void:
 	var panel := VictoryPanel.new()
-	panel.restart_requested.connect(func():
-		close_panel()
-		game.restart_requested.emit())
+	panel.restart_requested.connect(func(): game.return_to_selection())
 	_open(panel)
 
 
@@ -288,12 +292,8 @@ func open_smith() -> void:
 
 func open_settings() -> void:
 	var panel := SettingsPanel.new().setup(game)
-	panel.title_requested.connect(func():
-		close_panel()
-		game.quit_to_title())
-	panel.restart_requested.connect(func():
-		close_panel()
-		game.restart_requested.emit())
+	panel.title_requested.connect(func(): game.quit_to_title())
+	panel.restart_requested.connect(func(): game.return_to_selection())
 	_open(panel)
 
 

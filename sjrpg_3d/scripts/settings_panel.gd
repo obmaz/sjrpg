@@ -8,6 +8,7 @@ signal restart_requested
 
 var game: Node
 var _feedback := ""
+var _feedback_error := false
 var _install_button: Button
 var _install_hint: Label
 var _fullscreen_button: Button
@@ -93,12 +94,15 @@ func _rebuild() -> void:
 			game.dungeon.leave("동굴 입구로 돌아왔습니다")))
 	body.add_child(UiKit.divider())
 	body.add_child(PanelFrame.section("진행"))
-	body.add_child(PanelFrame.wrap_label("5초마다 이 기기에 자동 저장합니다. 다음에 이어하기로 돌아올 수 있습니다. 직업을 고르고 새 모험 시작을 확인하면 이전 진행을 덮어씁니다.", 15, UiKit.MUTED))
+	body.add_child(PanelFrame.wrap_label("5초마다 이 기기에 자동 저장합니다. 네 개의 슬롯에서 모험을 따로 이어 하거나 새로 시작할 수 있습니다. 기존 모험은 직접 삭제하기 전까지 유지됩니다.", 15, UiKit.MUTED))
 	if _feedback != "":
-		body.add_child(PanelFrame.wrap_label(_feedback, 16, Color(0.71, 1, 0.69)))
+		var feedback := PanelFrame.wrap_label(_feedback, 16, Color(1.0, 0.69, 0.63) if _feedback_error else Color(0.71, 1, 0.69))
+		feedback.name = "SaveFeedback"
+		body.add_child(feedback)
 	body.add_child(_action_row("진행 상황 지금 저장", func():
 		var saved := GameState.save_game()
 		_feedback = "현재 모험 진행이 저장되었습니다." if saved else GameState.save_error
+		_feedback_error = not saved
 		_rebuild()))
 	body.add_child(_action_row("저장하고 타이틀로", func(): title_requested.emit()))
 	var danger := _action_row("새 모험 준비", func(): _confirm_restart())
@@ -119,6 +123,13 @@ func _process(delta: float) -> void:
 		if OS.has_feature("web"):
 			_refresh_install()
 		_publish_version_buttons()
+
+
+## Failed menu exits keep this same panel paused and offer the normal save retry.
+func show_save_error(message: String) -> void:
+	_feedback = message if not message.is_empty() else "저장하지 못했습니다. 다시 저장한 뒤 이동해 주세요."
+	_feedback_error = true
+	_rebuild()
 
 
 func _request_fullscreen() -> void:
@@ -179,8 +190,8 @@ func _confirm_restart() -> void:
 		JavaScriptBridge.eval("window.__sjrpgVersionButtons = null")
 	clear_body()
 	body.add_child(PanelFrame.section("새 모험을 시작할까요?"))
-	body.add_child(PanelFrame.wrap_label("직업 선택으로 이동합니다. 새 모험 시작을 확인하기 전까지 현재 진행은 유지됩니다.", 18))
-	body.add_child(_action_row("직업 선택으로", func(): restart_requested.emit()))
+	body.add_child(PanelFrame.wrap_label("현재 모험을 저장하고 슬롯 선택으로 이동합니다. 빈 슬롯에서 새 모험을 시작할 수 있으며 기존 모험은 그대로 유지됩니다.", 18))
+	body.add_child(_action_row("저장하고 슬롯 선택으로", func(): restart_requested.emit()))
 	body.add_child(_action_row("취소", func(): _rebuild()))
 
 
@@ -320,8 +331,7 @@ func _version_card() -> Control:
 
 func _open_edition(edition: String) -> void:
 	if not EditionNavigation.open(edition):
-		_feedback = GameState.save_error
-		_rebuild()
+		show_save_error(GameState.save_error)
 
 
 ## A big switch row: label + hint on the left, ON/OFF pill on the right.

@@ -158,12 +158,14 @@ func _sync_stone(stone: EncounterStone, entry: Dictionary) -> void:
 	var header: Label3D = entry["header"]
 	header.global_basis = _preview.camera.global_basis
 	header.visible = stone.position.distance_squared_to(_game.player.position) < 240.0 * 240.0
-	header.text = status_text(state, living)
+	header.text = status_text(state, living, stone.id)
 	entry["observed_charges"] = int(state["charges"])
 	entry["observed_flash"] = stone._flash
 
 
-static func status_text(state: Dictionary, living: int) -> String:
+static func status_text(state: Dictionary, living: int, site_id := "") -> String:
+	if site_id == EncounterRuntime.CAVE_SITE:
+		return "동굴 잠복자 · %d" % living if living > 0 else "공격해 소환 · 20마리"
 	if living > 0:
 		return "주변의 적 · %d" % living
 	if int(state["charges"]) == 0:

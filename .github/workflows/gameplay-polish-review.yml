@@ -1,0 +1,42 @@
+name: Review cave swarm and combat visibility
+on:
+  push:
+    paths:
+      - ".github/workflows/gameplay-polish-review.yml"
+      - "sjrpg_3d/tools/perf/analyze_sprite_atlas.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.godot-tools
+            ~/.local/share/godot/export_templates
+          key: godot-${{ hashFiles('.godot-version') }}-tools-v1
+      - name: Import and test real combat, slots and cave contracts
+        run: |
+          tools/setup_godot.sh
+          sjrpg_3d/tools/check.sh --only=native_cave_torches,native_enemy_feedback,native_zone_fx,save_exit_guard,native_enemy_sprites,cave_swarm,native_cave_geometry,background,entry_loading,save_slots,quests,dungeon,encounters,encounter_combat,encounter_saving,native_encounter_props,native_projectile_fx,ortho_3d_motion,native_render_budget
+  atlas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Read actual generated atlas alpha and frame bounds
+        run: |
+          python3 -m pip install --disable-pip-version-check Pillow
+          python3 sjrpg_3d/tools/perf/analyze_sprite_atlas.py
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: cave-crawler-atlas-audit
+          path: sjrpg_3d/build/gameplay-review
+          retention-days: 7

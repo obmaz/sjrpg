@@ -5,6 +5,13 @@ extends Node
 
 const RECHARGE_SECONDS := 300.0
 const MAX_ENEMIES := 30
+const CAVE_SITE := "cave_swarm"
+const CAVE_WAVE_SIZE := 20
+# The new sprite pack reserves twenty extra slots; ordinary spawning still caps at thirty.
+const CAVE_ENEMY_LIMIT := MAX_ENEMIES + CAVE_WAVE_SIZE
+const CAVE_VISUAL_VARIANT := "cave_crawler"
+# Screen-ground offset keeps the marker beside, not over, the entrance/NPC/gate.
+const CAVE_STONE_OFFSET := Vector2(210, -20)
 const SITES := {
 	"west": Vector2(-1700, 320), "north": Vector2(320, -1700),
 	"east": Vector2(1700, -320), "south": Vector2(-320, 1700),
@@ -22,13 +29,20 @@ var _poll := 0.0
 func setup(world_game: Node) -> EncounterRuntime:
 	game = world_game
 	states = GameState.encounters
+	var sites := SITES.duplicate()
+	sites[CAVE_SITE] = Iso.unproject(game.dungeon.entry_point() + CAVE_STONE_OFFSET)
 	for key in states.keys():
-		if not SITES.has(key):
+		if not sites.has(key):
 			states.erase(key)
 	var asset: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/data/encounter_stone.json"))
-	for id in SITES:
-		var at := _stone_position(Iso.project(SITES[id]))
+	for id in sites:
+		var at := _stone_position(Iso.project(sites[id]))
 		var state: Dictionary = states.get(id, {"charges": 3, "recharge": 0.0, "initial_spawned": false, "members": []})
+		# This demonstration pack is always attack-triggered, including old saves.
+		if id == CAVE_SITE:
+			state["initial_spawned"] = true
+			state["charges"] = 3
+			state["recharge"] = 0.0
 		states[id] = state
 		_members[id] = []
 		_cleared_frame[id] = -1
@@ -113,7 +127,7 @@ func strike(id: String, source: Node2D) -> bool:
 	game.combat_feedback(stones[id].position, 0.65)
 	if source is Player:
 		source.confirm_melee_contact(false)
-	game.float_text(stones[id].position + Vector2(0, -110), "새로운 적의 기척", Color("b4eee0"))
+	game.float_text(stones[id].position + Vector2(0, -110), "동굴 잠복자 · 20마리" if id == CAVE_SITE else "새로운 적의 기척", Color("b4eee0"))
 	return true
 
 
@@ -132,6 +146,8 @@ func clear_line(from: Vector2, to: Vector2) -> bool:
 func spawn_wave(id: String, initial: bool) -> int:
 	if game.dungeon.active or game.player.dead or game.in_town(game.player.position) or living(id) > 0:
 		return 0
+	if id == CAVE_SITE:
+		return 0 if initial else _spawn_cave_wave()
 	var available: int = MAX_ENEMIES - game.enemies.filter(func(enemy: Enemy): return is_instance_valid(enemy) and not enemy.dead).size()
 	var near: bool = Iso.unproject(stones[id].position).length() < ForestBalance.NEAR_TOWN_RADIUS
 	var count := mini(4 if initial and near else 6 if initial or near else 8, available)
@@ -154,14 +170,72 @@ func spawn_wave(id: String, initial: bool) -> int:
 		_create_enemy(id, kind, ForestBalance.area_level(zone), point)
 		added += 1
 	if added > 0:
-		var state: Dictionary = states[id]
-		state["initial_spawned"] = true
-		if not initial:
-			if int(state["charges"]) == 3:
-				state["recharge"] = 0.0
-			state["charges"] = int(state["charges"]) - 1
-		capture()
+		_record_wave(id, initial)
 	return added
+
+
+
+## Reserve a complete pack before changing charges or retiring ambient actors.
+## A full/blocked battlefield never creates a misleading partial twenty-pack.
+func _spawn_cave_wave() -> int:
+	if not can_summon(CAVE_SITE):
+		return 0
+	var live: Array = game.enemies.filter(func(enemy: Enemy): return is_instance_valid(enemy) and not enemy.dead)
+	var shortfall := maxi(0, CAVE_WAVE_SIZE - (CAVE_ENEMY_LIMIT - live.size()))
+	var reclaimable: Array[Enemy] = []
+	for enemy: Enemy in live:
+		# Match the ordinary field-spawn retirement rule; never erase another
+		# encounter's saved pack, a boss or a protection-quest attacker.
+		if enemy.encounter_id.is_empty() and not enemy.is_boss and not enemy.is_threat and enemy.position.distance_to(game.player.position) > 1900.0:
+			reclaimable.append(enemy)
+	if reclaimable.size() < shortfall:
+		game.toast("주변의 적을 정리하면 20마리를 소환할 수 있습니다")
+		return 0
+	var positions := _cave_wave_positions()
+	if positions.size() != CAVE_WAVE_SIZE:
+		game.toast("소환 공간이 부족합니다 · 비석 주변을 비워 주세요")
+		return 0
+	for index in shortfall:
+		var enemy: Enemy = reclaimable[index]
+		game.enemies.erase(enemy)
+		enemy.queue_free()
+	for point: Vector2 in positions:
+		var zone := clampi(int((point.length() - 1300.0) / 900.0), 0, 3)
+		_create_enemy(CAVE_SITE, "goblin", ForestBalance.area_level(zone), point)
+	_record_wave(CAVE_SITE, false)
+	return CAVE_WAVE_SIZE
+
+
+func _cave_wave_positions() -> Array[Vector2]:
+	var planned: Array[Vector2] = []
+	var center: Vector2 = stones[CAVE_SITE].position
+	var radius := Enemy.radius_for("goblin")
+	for index in 256:
+		var distance := 220.0 + floorf(float(index) / 32.0) * 55.0
+		var desired := center + Vector2.from_angle(index * 2.399963) * distance
+		var point := _spawn_position(desired, center, index + 1, radius)
+		if not point.is_finite():
+			continue
+		var clear := true
+		for reserved: Vector2 in planned:
+			if point.distance_to(reserved) < radius * 2.0 + 8.0:
+				clear = false
+				break
+		if clear:
+			planned.append(point)
+			if planned.size() == CAVE_WAVE_SIZE:
+				break
+	return planned
+
+
+func _record_wave(id: String, initial: bool) -> void:
+	var state: Dictionary = states[id]
+	state["initial_spawned"] = true
+	if not initial and id != CAVE_SITE:
+		if int(state["charges"]) == 3:
+			state["recharge"] = 0.0
+		state["charges"] = int(state["charges"]) - 1
+	capture()
 
 
 func _spawn_position(desired: Vector2, fallback: Vector2, attempt: int, radius_pixels := Enemy.RADIUS) -> Vector2:
@@ -186,6 +260,9 @@ func _create_enemy(id: String, kind: String, level: int, at: Vector2) -> Enemy:
 	var enemy := Enemy.new()
 	enemy.setup(game, kind, level)
 	enemy.encounter_id = id
+	if id == CAVE_SITE:
+		enemy.set_meta("visual_variant", CAVE_VISUAL_VARIANT)
+		enemy.display_name = "동굴 잠복자"
 	enemy.encounter_spawn_frame = Engine.get_process_frames()
 	if Iso.unproject(stones[id].position).length() < ForestBalance.NEAR_TOWN_RADIUS:
 		enemy.max_hp *= ForestBalance.NEAR_TOWN_HP

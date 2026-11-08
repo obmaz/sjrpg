@@ -671,6 +671,7 @@ func _valid_encounters(value: Variant) -> bool:
 	if not value is Dictionary or value.size() > 12:
 		return false
 	var total_members := 0
+	var ordinary_members := 0
 	for id in value:
 		if not _encounter_id(id):
 			return false
@@ -688,11 +689,18 @@ func _valid_encounters(value: Variant) -> bool:
 		if not record.get("initial_spawned") is bool or not record.get("members") is Array:
 			return false
 		var members: Array = record["members"]
+		var cave_pack := str(id) == "cave_swarm"
 		total_members += members.size()
-		if members.size() > 12 or total_members > 30:
+		if not cave_pack:
+			ordinary_members += members.size()
+		if members.size() > (20 if cave_pack else 12) or total_members > 50 or ordinary_members > 30:
+			return false
+		if cave_pack and (not bool(record["initial_spawned"]) or int(record["charges"]) != 3 or float(recharge) != 0.0):
 			return false
 		for member in members:
 			if not member is Dictionary:
+				return false
+			if cave_pack and member.get("kind") != "goblin":
 				return false
 			if not ["goblin", "wolf", "boar", "skeleton"].has(member.get("kind")) or not _encounter_integer(member.get("level"), 1, 20):
 				return false
@@ -816,10 +824,11 @@ func collect_memory_reward() -> bool:
 	return true
 
 
-func claim_boss_heart() -> bool:
+func claim_boss_heart(save_progress := true) -> bool:
 	if not boss_heart_pending or inventory.size() >= Gear.CAPACITY:
 		return false
 	add_gear(new_gear("sentinel", 3, 6, 20, 0))
 	boss_heart_pending = false
-	save_game()
+	if save_progress:
+		save_game()
 	return true
