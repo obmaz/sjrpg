@@ -5,6 +5,8 @@ extends Control
 ## Multi-touch plus clickable HUD buttons. Empty slots open the skill tree.
 
 var game: Node
+var _paint_state: Array = []
+var redraw_requests := 0
 var _stick_center := Vector2.ZERO
 var _stick_knob := Vector2.ZERO
 var _stick_index := -2  # -2 none, -1 mouse
@@ -250,7 +252,25 @@ func _process(delta: float) -> void:
 				timers.erase(key)
 	_update_action_feedback()
 	_layout()
-	queue_redraw()
+	_refresh_drawing()
+
+
+## Canvas draw commands retain their GPU geometry between actual visual changes.
+## Cooldown wedges and feedback remain continuous; an idle or steady stick does not redraw.
+func _refresh_drawing() -> void:
+	var player: Player = game.player
+	var state: Array = [_unit, _buttons, _near_name, _stick_index, _stick_center, _stick_knob,
+		_held.values(), _feedback.duplicate(), _success_feedback.duplicate(), _denied_feedback.duplicate(),
+		GameState.potions, GameState.mana_potions, GameState.skill_points,
+		Gamepad.using_gamepad, css_scale(), Prefs.reduce_motion]
+	for slot in GameState.slots.size():
+		var id: String = GameState.slots[slot]
+		var affordable := id == "" or player.resource >= SkillDefs.cost(GameState.skill(id), GameState.effective_rank(id))
+		state.append([id, affordable, player.slot_cooldown_ratio(slot), slot_cooldown_remaining(slot)])
+	if state != _paint_state:
+		_paint_state = state
+		redraw_requests += 1
+		queue_redraw()
 
 
 ## Observe real state changes, including keyboard casts and potions; pressing alone is not success.

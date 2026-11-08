@@ -4,6 +4,11 @@ extends CanvasLayer
 
 var game: Node
 var _bars: Control
+var _mana_shimmer: Control
+var _bars_paint_state: Array = []
+var _area_paint_state: Array = []
+var bars_redraw_requests := 0
+var area_redraw_requests := 0
 var _level_badge: Label
 var _level_up: LevelUpBanner
 var _toast: Label
@@ -55,6 +60,12 @@ func _ready() -> void:
 	_level_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_level_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_bars.add_child(_level_badge)
+	_mana_shimmer = Control.new()
+	_mana_shimmer.name = "ManaShimmer"
+	_mana_shimmer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_mana_shimmer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_mana_shimmer.draw.connect(_draw_mana_shimmer)
+	_bars.add_child(_mana_shimmer)
 
 	controls = TouchControls.new()
 	controls.game = game
@@ -367,7 +378,48 @@ func _process(delta: float) -> void:
 	_update_heavy_hit_vignette()
 	_tick_toasts(delta)
 	_update_layout()
-	_bars.queue_redraw()
+	_refresh_bar_drawing()
+
+
+## Keep static canvas commands, including their GPU polygons, until painted data changes.
+## The mana glints animate by modulation on a child instead of rebuilding the whole HUD.
+func _refresh_bar_drawing() -> void:
+	var p: Player = game.player
+	var objective: String = game.dungeon.objective() if game.dungeon.active else Quests.main_objective()
+	var state: Array = [get_viewport().get_visible_rect().size, PanelFrame.safe_margins(get_viewport()),
+		p.hp, p.max_hp, p.resource, p.resource_max, p.is_mage,
+		GameState.hero_class, GameState.level, GameState.xp, GameState.xp_to_next(),
+		_health_trail if not Prefs.reduce_motion else p.hp / maxf(1.0, p.max_hp),
+		_hurt_feedback, _heal_feedback, Prefs.reduce_motion, objective,
+		_status.text, _status.position, _status.size]
+	if state != _bars_paint_state:
+		_bars_paint_state = state
+		bars_redraw_requests += 1
+		_bars.queue_redraw()
+	_update_mana_shimmer()
+
+
+func _update_mana_shimmer() -> void:
+	_mana_shimmer.visible = game.player.is_mage
+	_mana_shimmer.self_modulate.a = 0.65 if Prefs.reduce_motion else 0.55 + 0.1 * sin(Time.get_ticks_msec() / 800.0)
+
+
+func _draw_mana_shimmer() -> void:
+	var p: Player = game.player
+	if not p.is_mage:
+		return
+	var geometry := status_geometry()
+	var u: float = geometry["unit"]
+	var mp_rect: Rect2 = geometry["mp"]
+	var center: Vector2 = geometry["portrait"]
+	var join_radius: float = geometry["join_radius"]
+	var slope: float = geometry["slope"]
+	for fraction in [0.17, 0.78]:
+		if p.resource / p.resource_max < fraction:
+			continue
+		var at := HudArt.fill_point(mp_rect, fraction, 7.0 * u / mp_rect.size.y, mp_rect.size.y * slope, center, join_radius)
+		_mana_shimmer.draw_line(at - Vector2(4, 0) * u, at + Vector2(4, 0) * u, Color(0.8, 0.96, 1.0), 0.8 * u, true)
+		_mana_shimmer.draw_line(at - Vector2(0, 4) * u, at + Vector2(0, 4) * u, Color(0.8, 0.96, 1.0, 0.7), 0.8 * u, true)
 
 
 ## A slow, translucent full-screen warning leaves the scene and controls readable.
@@ -519,9 +571,12 @@ func _update_layout() -> void:
 		name = "강가"
 	if game.dungeon.active:
 		name = "바람 동굴"
-	if name != _area_name:
+	var area_state: Array = [name, map_rect, u]
+	if area_state != _area_paint_state:
+		_area_paint_state = area_state
 		_area_name = name
-	_area.queue_redraw()
+		area_redraw_requests += 1
+		_area.queue_redraw()
 
 
 func _draw_area_label() -> void:
@@ -575,6 +630,9 @@ func _draw_bars() -> void:
 	var p: Player = game.player
 	if p == null:
 		return
+	# Explicit refreshes from transitions/settings also update the retained child.
+	_update_mana_shimmer()
+	_mana_shimmer.queue_redraw()
 	var geometry := status_geometry()
 	var u: float = geometry["unit"]
 	var origin: Vector2 = geometry["origin"]
@@ -606,14 +664,6 @@ func _draw_bars() -> void:
 	HudArt.slanted_bar(_bars, mp_rect, p.resource / maxf(1.0, p.resource_max), top, bottom, back, mp_rect.size.y * slope, center, join_radius)
 	var info := GameState.class_info()
 	HudArt.text_in_rect(_bars, "%s %s" % [info["resource"], HudArt.res(p.resource)], geometry["mp_label"], roundi(18 * u), Color("e7f4f7"))
-	if p.is_mage:
-		var shimmer := 0.65 if Prefs.reduce_motion else 0.55 + 0.1 * sin(Time.get_ticks_msec() / 800.0)
-		for fraction in [0.17, 0.78]:
-			if p.resource / p.resource_max < fraction:
-				continue
-			var at := HudArt.fill_point(mp_rect, fraction, 7.0 * u / mp_rect.size.y, mp_rect.size.y * slope, center, join_radius)
-			_bars.draw_line(at - Vector2(4, 0) * u, at + Vector2(4, 0) * u, Color(0.8, 0.96, 1.0, shimmer), 0.8 * u, true)
-			_bars.draw_line(at - Vector2(0, 4) * u, at + Vector2(0, 4) * u, Color(0.8, 0.96, 1.0, shimmer * 0.7), 0.8 * u, true)
 	var xp_ratio := float(GameState.xp) / GameState.xp_to_next()
 	HudArt.slanted_bar(_bars, xp_rect, xp_ratio, Color("bfa361"), Color("8d733f"), Color("393530"), xp_rect.size.y * slope, center, join_radius)
 	HudArt.text_in_rect(_bars, "EXP %d%%" % floori(xp_ratio * 100.0), geometry["xp_label"], roundi(11 * u), Color("d9d0b9"))
