@@ -36,7 +36,7 @@ jobs:
                   set -euo pipefail
                   if [[ -z "$REVIEW_RUN" ]]; then
                       git show --format= --name-only HEAD | python3 -c 'import sys; paths=set(sys.stdin.read().splitlines()); allowed={".github/workflows/equipment-layout-review.yml","sjrpg_3d/tools/screenshot.mjs"}; assert paths <= allowed, paths'
-                      REVIEW_RUN=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/web.yml/runs?branch=main&per_page=30" --jq '.workflow_runs[] | select((.head_commit.message | contains("[layout-review]")) | not) | .id' | head -n 1)
+                      REVIEW_RUN=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/web.yml/runs?branch=main&per_page=30" --jq '[.workflow_runs[] | select((.head_commit.message | contains("[layout-review]")) | not)][0].id')
                   fi
                   test -n "$REVIEW_RUN"
                   echo "run_id=$REVIEW_RUN" >> "$GITHUB_OUTPUT"
