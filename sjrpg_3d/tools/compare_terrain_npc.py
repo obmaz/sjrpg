@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+"""Compare actual native captures; publish preview blobs only, never refs."""
+import base64
+import json
+import os
+from pathlib import Path
+import sys
+import urllib.request
+from PIL import Image, ImageDraw
+
+root = Path(sys.argv[1])
+before = json.loads((root / "before/proof.json").read_text())
+after = json.loads((root / "after/proof.json").read_text())
+assert before["passed"] and after["passed"], "Both actual browser runs must pass"
+a = {item["name"]: item for item in before["captures"]}
+b = {item["name"]: item for item in after["captures"]}
+assert set(a) == set(b), "Compare the same actual viewpoints"
+for name in sorted(a):
+    assert a[name]["review"]["physics"] == b[name]["review"]["physics"], name + ": shared physical floor/ramp data changed"
+    assert a[name]["review"]["face"] == b[name]["review"]["face"], name + ": camera corner changed"
+    assert abs(a[name]["review"]["elevation"] - 35.264389682754654) < 1e-4
+    assert abs(b[name]["review"]["elevation"] - 35.264389682754654) < 1e-4
+out = root / "previews"
+out.mkdir(parents=True, exist_ok=True)
+images = []
+
+def write_jpeg(name, picture):
+    target = out / name
+    picture.save(target, "JPEG", quality=86, optimize=True)
+    images.append(target)
+    return target
+
+def pair(name, title):
+    panels = []
+    for edition in ("before", "after"):
+        picture = Image.open(root / edition / (name + ".png")).convert("RGB")
+        picture.thumbnail((600, 740), Image.Resampling.LANCZOS)
+        panels.append(picture)
+    width = sum(p.width for p in panels)
+    height = max(p.height for p in panels) + 40
+    sheet = Image.new("RGB", (width, height), "#182321")
+    pen = ImageDraw.Draw(sheet)
+    x = 0
+    for edition, picture in zip(("BEFORE", "AFTER"), panels):
+        pen.text((x + 12, 14), title + " | " + edition, fill="#e4d8bd")
+        sheet.paste(picture, (x, 40))
+        x += picture.width
+    return write_jpeg(name + "-comparison.jpg", sheet)
+
+pair("terrain-0-portrait-face-0", "Raised meadow | azimuth 45")
+pair("terrain-3-landscape-face-2", "Raised pools | azimuth 225")
+if after["npcs"]:
+    for face in range(4):
+        picture = Image.open(root / "after" / ("residents-face-" + str(face) + ".png")).convert("RGB")
+        write_jpeg("npc-designs-face-" + str(face) + ".jpg", picture)
+    pair("residents-face-0", "Actual runtime NPCs + adult hero")
+    pair("residents-face-2", "Actual runtime NPCs | opposite corner")
+
+summary = {"passed": True, "baseline": "99d0fd5e779752d5d2e4f14735fe585d8459313e", "candidate": os.environ.get("GITHUB_SHA"), "paired_captures": len(a), "physical_surfaces_unchanged": True, "camera_elevation": 35.264389682754654, "npcs": after["npcs"], "expected_imports": after["expectedImports"], "previews": []}
+for target in images:
+    data = target.read_bytes()
+    item = {"path": str(target.relative_to(root)), "bytes": len(data)}
+    if os.environ.get("GH_TOKEN") and os.environ.get("GITHUB_REPOSITORY"):
+        payload = json.dumps({"encoding": "base64", "content": base64.b64encode(data).decode("ascii")}).encode()
+        req = urllib.request.Request("https://api.github.com/repos/" + os.environ["GITHUB_REPOSITORY"] + "/git/blobs", data=payload, method="POST", headers={"Authorization": "Bearer " + os.environ["GH_TOKEN"], "Accept": "application/vnd.github+json", "Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=40) as response:
+            item["blob_sha"] = json.load(response)["sha"]
+    summary["previews"].append(item)
+    # Bounded actual JPEGs let the parent inspect the result without local files.
+    if target.name in ("terrain-0-portrait-face-0-comparison.jpg", "terrain-3-landscape-face-2-comparison.jpg", "npc-designs-face-0.jpg"):
+        encoded = base64.b64encode(data).decode("ascii")
+        print("TERRAIN_NPC_IMAGE_BEGIN " + target.name + " image/jpeg " + str(len(encoded)), flush=True)
+        for offset in range(0, len(encoded), 16384):
+            print("TERRAIN_NPC_IMAGE_CHUNK " + target.name + " " + encoded[offset:offset + 16384], flush=True)
+        print("TERRAIN_NPC_IMAGE_END " + target.name, flush=True)
+(root / "comparison.json").write_text(json.dumps(summary, indent=2))
+print("TERRAIN_NPC_COMPARISON_PASS " + json.dumps(summary), flush=True)

@@ -203,6 +203,8 @@ python3 tools/prepare_town_remake.py /path/to/sjrpg
 
 ## 월드 화질
 
+`NativeLandmarks3D`는 세 잔디 랜드마크의 상단·경사에 기존 텍스처를 공유하는 세이지색 재질을 적용합니다. 기존 수직 절벽 상단 20cm는 같은 암석 텍스처의 흙 재질로 나누고, 상단의 0.008m 깊이 편향·2.56m UV·`surface_faces()`·입구·물리·카메라는 유지합니다. `native_terrain_readability`는 전체 상단·경사 정점과 UV, 공유 재질, 수직 흙층과 열린 입구, 비충돌과 재사용을 검사합니다.
+
 새 원화는 먼저 [레퍼런스 분위기 제작 가이드](reference-look-guide.md)·[아트 기준](art-direction.md)·[생성 프롬프트](art-prompts.md)를 읽고 사용자 원본과 같은 패밀리의 검수된 원화를 실제 생성 참조로 사용합니다. 작은 실제 플레이 장면에서 카메라·배우 비례·명암·식생을 먼저 맞추며, 스타일 컨셉과 게임용 투영 검증을 구분합니다. 투영 검사와 분위기 검수를 모두 통과해야 합니다. 가이드의 화면 목표값은 현재 구현값과 구분합니다.
 
 숲의 [전체 화면 기준](forest-reference.md)은 `lighting/ground-materials.png`의 석회암 포장, 기존 `remake/ground.png`의 흙·`grass-v2.png`·`remake/flora.png`와 `ForestArt`의 배치를 사용합니다. `prepare_forest_art.py`가 원본을 패킹하고 `forest_art.json`이 해시·접점을 고정합니다. 새 원화의 프롬프트·실제 참조·채택/탈락 이유는 `tools/extract/ground_light_generation.json`에 보존합니다.

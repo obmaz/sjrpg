@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "identity": "mira",
+  "height_m": 1.78,
+  "packs": [
+    {
+      "slug": "modular-character-outfits-fantasy",
+      "upload": "16289385",
+      "prefix": "Modular Character Outfits - Fantasy[Standard]",
+      "license_source": "adult-source/License_Standard.txt",
+      "models": [
+        {
+          "folder": "Exports/glTF (Godot-Unreal)/Outfits/",
+          "name": "Female_Ranger.gltf",
+          "fingerprint": {
+            "bytes": 45461,
+            "sha256": "9b98b2ae6af3b4a1ec22bf8928b939e0751f08b25b636de82bfa7364fb34d3e1"
+          },
+          "target": "adult-source/residents/mira/body"
+        }
+      ]
+    },
+    {
+      "slug": "universal-base-characters",
+      "upload": "15861669",
+      "prefix": "Universal Base Characters[Standard]",
+      "license_source": "adult-source/base/License_Standard.txt",
+      "models": [
+        {
+          "folder": "Base Characters/Godot - UE/",
+          "name": "Superhero_Female_FullBody.gltf",
+          "fingerprint": {
+            "bytes": 31656,
+            "sha256": "adedf28000a0716f689b009a70314506fc62f827498f77ba852acb5610f3f3f4"
+          },
+          "target": "adult-source/residents/mira/head"
+        }
+      ]
+    }
+  ]
+}
