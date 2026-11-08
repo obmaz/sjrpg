@@ -74,6 +74,8 @@ func _sync_art(sprite: IsoSprite, current: Dictionary) -> void:
 
 
 func _sprite_geometry(sprite: IsoSprite) -> Dictionary:
+	# Only actual fallback consumers request texture-normalized calibrated geometry.
+	sprite.ensure_warp_mesh()
 	var pixels := PackedVector3Array()
 	var uvs := PackedVector2Array()
 	var indices := PackedInt32Array()

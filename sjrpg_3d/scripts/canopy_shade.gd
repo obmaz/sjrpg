@@ -63,7 +63,7 @@ var _last_economy := false
 
 
 static func attach(source: IsoSprite, receiver: Node2D) -> CanopyShade:
-	if not is_instance_valid(source) or not is_instance_valid(receiver) or source.texture == null:
+	if not is_instance_valid(source) or not is_instance_valid(receiver) or not source.has_texture_source():
 		return null
 	# Existing tree art is affine. A structural texture warp needs its own projected
 	# mesh; refusing it avoids a shadow that disagrees with the visible caster.
@@ -105,6 +105,17 @@ func refresh() -> void:
 		queue_free()
 		return
 	visible = caster.is_visible_in_tree()
+	# Native trees own their lighting; a hidden legacy caster must not decode an atlas.
+	if not visible:
+		return
+	var frame_texture: Texture2D = caster.texture
+	if frame_texture == null:
+		visible = false
+		_texture = null
+		_initialized = false
+		if material != null:
+			(material as ShaderMaterial).set_shader_parameter("canopy_alpha", null)
+		return
 	var receiver := get_parent() as Node2D
 	if receiver == null or material == null:
 		return
@@ -120,11 +131,11 @@ func refresh() -> void:
 	var gvs: float = caster.def.get("gvs", 1.0)
 	var gvk: float = caster.def.get("gvk", 0.0)
 	var alpha := clampf(opacity, 0.0, 0.36) * caster.modulate.a * caster.self_modulate.a * caster.modulate_color.a
-	if _initialized and caster_pose == _last_caster and receiver_pose == _last_receiver and caster.k == _last_k and caster.flip == _last_flip and gvs == _last_gvs and gvk == _last_gvk and sun_direction == _last_light and cast_length == _last_length and source_rect == _source and contact == _foot and caster.texture == _texture and alpha == _last_alpha and Prefs.low_resolution == _last_economy:
+	if _initialized and caster_pose == _last_caster and receiver_pose == _last_receiver and caster.k == _last_k and caster.flip == _last_flip and gvs == _last_gvs and gvk == _last_gvk and sun_direction == _last_light and cast_length == _last_length and source_rect == _source and contact == _foot and frame_texture == _texture and alpha == _last_alpha and Prefs.low_resolution == _last_economy:
 		return
 	_source = source_rect
 	_foot = contact
-	_texture = caster.texture
+	_texture = frame_texture
 	_last_caster = caster_pose
 	_last_receiver = receiver_pose
 	_last_k = caster.k

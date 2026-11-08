@@ -4,8 +4,26 @@ extends Node2D
 ## The node origin is the feet point; the per-asset ground camera correction
 ## (groundVerticalScale/Skew) is applied exactly like the Flutter renderer.
 
+signal texture_changed(value: Texture2D)
+
 var def: Dictionary
-var texture: Texture2D
+var _texture: Texture2D
+var _texture_path := ""
+var _texture_attempted := false
+## Metadata-only sprites do not decode their sheet until an actual renderer asks.
+var texture: Texture2D:
+	get:
+		if _texture == null and not _texture_attempted and not _texture_path.is_empty():
+			_texture_attempted = true
+			_texture = IsoSprite.sheet(_texture_path)
+			texture_changed.emit(_texture)
+		return _texture
+	set(value):
+		_texture = value
+		_texture_attempted = true
+		_warp_mesh = null
+		texture_changed.emit(value)
+		queue_redraw()
 var k := 1.0  # world pixels per atlas pixel
 var modulate_color := Color.WHITE
 var flip := false
@@ -19,17 +37,55 @@ var _warp_mesh: ArrayMesh
 static var _textures := {}
 
 
+static func sheet_path(name: String) -> String:
+	return name if name.begins_with("res://") else "res://assets/art/village/%s.webp" % name.replace("forest-isometric-", "")
+
+
 static func sheet(name: String) -> Texture2D:
-	var path := name if name.begins_with("res://") else "res://assets/art/village/%s.webp" % name.replace("forest-isometric-", "")
+	var path := sheet_path(name)
 	if not _textures.has(path):
 		_textures[path] = load(path)
 	return _textures[path]
 
 
+## Read-only inspection never invokes the lazy texture getter.
+func is_texture_loaded() -> bool:
+	return _texture != null
+
+
+func texture_if_loaded() -> Texture2D:
+	return _texture
+
+
+func has_texture_source() -> bool:
+	return _texture != null or (not _texture_attempted and not _texture_path.is_empty())
+
+
+static func texture_snapshot() -> Dictionary:
+	var entries: Array[Dictionary] = []
+	var loaded := 0
+	var rgba8_base_estimate := 0
+	for path: String in _textures:
+		var resident: Texture2D = _textures[path]
+		var dimensions := Vector2i.ZERO
+		if resident != null:
+			dimensions = Vector2i(resident.get_size())
+			loaded += 1
+			rgba8_base_estimate += dimensions.x * dimensions.y * 4
+		entries.append({"path": path, "texture_loaded": resident != null,
+			"dimensions": [dimensions.x, dimensions.y]})
+	return {"cached_paths": _textures.size(), "loaded_textures": loaded,
+		"rgba8_base_bytes_estimate": rgba8_base_estimate, "textures": entries}
+
+
 ## `height` is in original world units (before Iso.S).
 func setup(d: Dictionary, height: float) -> IsoSprite:
 	def = d
-	texture = IsoSprite.sheet(d["sheet"])
+	_texture = null
+	_texture_path = sheet_path(str(d["sheet"]))
+	_texture_attempted = false
+	_warp_mesh = null
+	texture_changed.emit(null)
 	k = height / float(d["height"]) * Iso.S
 	return self
 
@@ -55,7 +111,17 @@ func _projected_pixel(pixel: Vector2) -> Vector2:
 	return source + (ArtWarp.point(def["warp"], origin + (pixel - source) / packing) - origin) * packing
 
 
-func _build_warp_mesh() -> void:
+## Source2D drawing and retained native cutouts both use the exact calibrated mesh.
+## Hidden/replaced sprites never need its texture-dependent UV normalization.
+func ensure_warp_mesh() -> void:
+	if _warp_mesh != null or not def.has("warp"):
+		return
+	var source_texture: Texture2D = texture
+	if source_texture != null:
+		_build_warp_mesh(source_texture.get_size())
+
+
+func _build_warp_mesh(texture_size: Vector2) -> void:
 	var calibration := ArtWarp.data(def["warp"])
 	var source := Vector2(def["source"][0], def["source"][1])
 	var origin := Vector2(def["origin"][0], def["origin"][1])
@@ -66,7 +132,7 @@ func _build_warp_mesh() -> void:
 	for row in calibration["points"]:
 		var local := _ground_delta(source + (Vector2(row[2], row[3]) - origin) * packing - foot) * k
 		vertices.append(Vector3(local.x, local.y, 0.0))
-		uvs.append((source + (Vector2(row[0], row[1]) - origin) * packing) / texture.get_size())
+		uvs.append((source + (Vector2(row[0], row[1]) - origin) * packing) / texture_size)
 	var indices := PackedInt32Array()
 	for triangle in calibration["triangles"]:
 		indices.append_array(PackedInt32Array(triangle))
@@ -107,7 +173,9 @@ func native_polygon(points: Array) -> PackedVector2Array:
 func make_strip(x0: float, x1: float, sort_at: Vector2) -> IsoSprite:
 	var strip := IsoSprite.new()
 	strip.def = def
-	strip.texture = texture
+	strip._texture = _texture
+	strip._texture_path = _texture_path
+	strip._texture_attempted = _texture_attempted
 	strip.k = k
 	strip.clip = Vector2(x0, x1)
 	var delta := _ground_delta(sort_at - Vector2(def["foot"][0], def["foot"][1])) * k
@@ -117,8 +185,12 @@ func make_strip(x0: float, x1: float, sort_at: Vector2) -> IsoSprite:
 
 
 func _draw() -> void:
+	var frame_texture: Texture2D = texture
+	if frame_texture == null:
+		return
+	ensure_warp_mesh()
 	if _warp_mesh != null:
-		draw_mesh(_warp_mesh, texture, Transform2D.IDENTITY, modulate_color)
+		draw_mesh(_warp_mesh, frame_texture, Transform2D.IDENTITY, modulate_color)
 		return
 	var src := Rect2(def["source"][0], def["source"][1], def["source"][2], def["source"][3])
 	if clip != Vector2.ZERO:
@@ -126,14 +198,12 @@ func _draw() -> void:
 	var foot := Vector2(def["foot"][0], def["foot"][1])
 	var sx := -k if flip else k
 	draw_set_transform_matrix(Transform2D(Vector2(sx, k * float(def["gvk"])), Vector2(0, k * float(def["gvs"])), draw_shift))
-	draw_texture_rect_region(texture, Rect2(src.position - foot, src.size), src, modulate_color)
+	draw_texture_rect_region(frame_texture, Rect2(src.position - foot, src.size), src, modulate_color)
 
 
 func _ready() -> void:
 	if material == null and WorldLighting.belongs_to_forest(self):
 		material = WorldLighting.material()
-	if def.has("warp"):
-		_build_warp_mesh()
 	var source := Rect2(def["source"][0], def["source"][1], def["source"][2], def["source"][3])
 	if clip != Vector2.ZERO:
 		source = Rect2(clip.x, source.position.y, clip.y - clip.x, source.size.y)

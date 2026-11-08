@@ -57,6 +57,7 @@ jobs:
                   node sjrpg_3d/web/check_shell.mjs
                   node sjrpg_3d/web/check_install.mjs
                   node sjrpg_3d/web/check_fullscreen.mjs
+                  node sjrpg_3d/web/check_canvas_budget.mjs
                   tools/check.sh --export
                   touch build/web/.nojekyll
 

@@ -14,9 +14,10 @@ static func attach(sprite: IsoSprite, is_portal: bool) -> PlazaWater:
 	animation.water_material = ShaderMaterial.new()
 	animation.water_material.shader = SHADER
 	WorldLighting.register_material(animation.water_material)
-	var src: Array = sprite.def["source"]
-	var size := sprite.texture.get_size()
-	animation.water_material.set_shader_parameter("atlas_region", Vector4(src[0] / size.x, src[1] / size.y, src[2] / size.x, src[3] / size.y))
+	# Native fountain/portal models use this phase clock, not the archived atlas.
+	# First real texture consumption configures UVs before the source draw executes.
+	sprite.texture_changed.connect(animation._texture_changed)
+	animation._texture_changed(sprite.texture_if_loaded())
 	animation.water_material.set_shader_parameter("portal", is_portal)
 	var profile: Dictionary = sprite.def.get("fluid_profile", {})
 	for key in ["basin_center", "basin_radius", "portal_center", "portal_radius"]:
@@ -30,6 +31,19 @@ static func attach(sprite: IsoSprite, is_portal: bool) -> PlazaWater:
 	sprite.material = animation.water_material
 	sprite.add_child(animation)
 	return animation
+
+
+func _texture_changed(value: Texture2D) -> void:
+	if value == null:
+		water_material.set_shader_parameter("atlas_region", Vector4.ZERO)
+		return
+	var size := value.get_size()
+	if size.x <= 0.0 or size.y <= 0.0:
+		water_material.set_shader_parameter("atlas_region", Vector4.ZERO)
+		return
+	var src: Array = surface.def["source"]
+	water_material.set_shader_parameter("atlas_region",
+		Vector4(src[0] / size.x, src[1] / size.y, src[2] / size.x, src[3] / size.y))
 
 
 func _ready() -> void:

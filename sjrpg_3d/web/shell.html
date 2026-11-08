@@ -11,6 +11,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="자연의 수호자">
+  <script src="canvas-budget.js"></script>
   <script src="fullscreen.js"></script>
   <script src="install.js"></script>
   <link rel="preload" href="loading-bg.webp" as="image">
@@ -106,6 +107,7 @@
     const GODOT_CONFIG = $GODOT_CONFIG;
     // Independent IDBFS database: do not mount the2D edition's/userfs snapshot.
     GODOT_CONFIG.persistentPaths = ['/userfs/sjrpg_3d'];
+    if (window.SjrpgCanvasBudget) window.SjrpgCanvasBudget.configure(GODOT_CONFIG);
     const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
     (() => {
       const preview3D = true;

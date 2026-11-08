@@ -15,9 +15,9 @@ export function installWalkingTelemetry(){
     else if(name==='bufferData'){
      const object=r._bound.get(a[0])?.deref(),source=a[1];
      let size=typeof source==='number'?source:(source?.byteLength||0);
-     if(source&&typeof source!=='number'&&a.length>=5){const unit=source.BYTES_PER_ELEMENT||1;size=a[4]?a[4]*unit:Math.max(0,size-(a[3]||0)*unit);}
+     if(source&&typeof source!=='number'&&a.length>=4){const unit=source.BYTES_PER_ELEMENT||1;size=a[4]?a[4]*unit:Math.max(0,size-(a[3]||0)*unit);}
      if(object){r.live_bytes+=size-(r._allocations.get(object)||0);r._allocations.set(object,size);r.peak_bytes=Math.max(r.peak_bytes,r.live_bytes);}r.data_calls++;
-    }else if(name==='bufferSubData')r.subdata_bytes+=a[2]?.byteLength||0;
+    }else if(name==='bufferSubData'){const source=a[2],unit=source?.BYTES_PER_ELEMENT||1;let size=source?.byteLength||0;if(a.length>=4)size=a[4]?a[4]*unit:Math.max(0,size-(a[3]||0)*unit);r.subdata_bytes+=size;}
     return v;
    };wrapped.__sjrpgWalkWrapped=true;proto[name]=wrapped;
   }

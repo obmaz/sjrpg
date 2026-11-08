@@ -25,10 +25,12 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
+                edition: [baseline, candidate]
                 variant: [mage-high-touch, mage-high-keys, warrior-high-touch, mage-low-touch]
         env:
+            SJRPG_WALK_EDITION: ${{ matrix.edition }}
             SJRPG_WALK_VARIANT: ${{ matrix.variant }}
-            SJRPG_WALK_SHA: ${{ github.event.inputs.source_ref || github.sha }}
+            SJRPG_WALK_SHA: ${{ matrix.edition == 'baseline' && '3f4c9fe347bd58fa2fc2c609671b4de549a1b09b' || github.event.inputs.source_ref || github.sha }}
             SJRPG_WALK_DURATION_MS: ${{ github.event.inputs.duration_ms || '90000' }}
         steps:
             - uses: actions/checkout@v7.0.1
@@ -75,16 +77,16 @@ jobs:
               run: sjrpg_3d/tools/export_web.sh
             - name: Walk from ordinary spawn through real controls
               run: |
-                  mkdir -p "build/town-walk/$SJRPG_WALK_VARIANT"
-                  python3 -m http.server 8792 --bind 127.0.0.1 --directory "$RUNNER_TEMP/walk-game/sjrpg_3d/build/web" > "build/town-walk/$SJRPG_WALK_VARIANT/server.log" 2>&1 &
+                  mkdir -p "build/town-walk/$SJRPG_WALK_EDITION/$SJRPG_WALK_VARIANT"
+                  python3 -m http.server 8792 --bind 127.0.0.1 --directory "$RUNNER_TEMP/walk-game/sjrpg_3d/build/web" > "build/town-walk/$SJRPG_WALK_EDITION/$SJRPG_WALK_VARIANT/server.log" 2>&1 &
                   SJRPG_WALK_SERVER=$!
                   trap 'kill "$SJRPG_WALK_SERVER" 2>/dev/null || true' EXIT
                   curl --fail --silent --show-error --max-time 2 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 12 http://127.0.0.1:8792/ > /dev/null
-                  node "$RUNNER_TEMP/walk-game/sjrpg_3d/tools/check_town_walking.mjs" http://127.0.0.1:8792/ "$GITHUB_WORKSPACE/build/town-walk/$SJRPG_WALK_VARIANT"
+                  node "$RUNNER_TEMP/walk-game/sjrpg_3d/tools/check_town_walking.mjs" http://127.0.0.1:8792/ "$GITHUB_WORKSPACE/build/town-walk/$SJRPG_WALK_EDITION/$SJRPG_WALK_VARIANT"
             - uses: actions/upload-artifact@v6
               if: always()
               with:
-                  name: town-walk-${{ matrix.variant }}
-                  path: build/town-walk/${{ matrix.variant }}
+                  name: town-walk-${{ matrix.edition }}-${{ matrix.variant }}
+                  path: build/town-walk/${{ matrix.edition }}/${{ matrix.variant }}
                   if-no-files-found: ignore
                   retention-days: 7

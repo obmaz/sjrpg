@@ -16,7 +16,7 @@ fi
 test -s "$ROOT/build/web/index.wasm" && test -s "$ROOT/build/web/index.pck"
 # The loading backdrop is available before the Godot pack is downloaded.
 cp "$ROOT/web/loading-bg.webp" "$ROOT/build/web/"
-cp "$ROOT/web/manifest.webmanifest" "$ROOT/web/fullscreen.js" "$ROOT/web/install.js" "$ROOT/web/install-sw.js" "$ROOT"/web/install-*.png "$ROOT/build/web/"
+cp "$ROOT/web/manifest.webmanifest" "$ROOT/web/canvas-budget.js" "$ROOT/web/fullscreen.js" "$ROOT/web/install.js" "$ROOT/web/install-sw.js" "$ROOT"/web/install-*.png "$ROOT/build/web/"
 touch "$ROOT/build/web/.nojekyll"
 # Immutable pack URLs prevent a cached prior deployment from supplying old game code.
 PACK="$(python3 "$ROOT/tools/stamp_web.py" "$ROOT/build/web")"
