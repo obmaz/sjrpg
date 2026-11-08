@@ -61,7 +61,7 @@ func run() -> void:
 	check("return portal retains its original anchor and native source ownership", metadata["native_props"].has(return_portal.get_instance_id()) and preview._town_props.owns(return_portal) and not metadata["retained"].has(return_portal.get_instance_id()) and not metadata["replaced"].has(return_portal.get_instance_id()) and return_portal.position.is_equal_approx(portal_anchor))
 	var material: StandardMaterial3D = rock["materials"]["inner"]
 	var outer_material: StandardMaterial3D = rock["materials"]["outer"]
-	check("inside wall and exposed rock reuse different recorded albedos with explicit metre UVs", material.albedo_texture.resource_path == "res://assets/art/cave/dark.webp" and outer_material.albedo_texture.resource_path == "res://assets/art/village/rock.webp" and not material.uv1_triplanar and not outer_material.uv1_triplanar and material.uv1_scale.is_equal_approx(Vector3.ONE) and outer_material.uv1_scale.is_equal_approx(Vector3.ONE) and material.roughness > 0.9 and outer_material.roughness > 0.9 and material.shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL and outer_material.shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL)
+	check("inside wall and exposed rock reuse distinct albedos with upright and normal-aware metre mapping", material.albedo_texture.resource_path == "res://assets/art/cave/dark.webp" and outer_material.albedo_texture.resource_path == "res://assets/art/village/rock.webp" and not material.uv1_triplanar and outer_material.uv1_triplanar and outer_material.uv1_world_triplanar and material.uv1_scale.is_equal_approx(Vector3.ONE) and outer_material.uv1_scale.is_equal_approx(Vector3.ONE / Ortho3DCaveRock.OUTER_TILE_METRES) and material.roughness > 0.9 and outer_material.roughness > 0.9 and material.shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL and outer_material.shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL)
 	_check_floor_surfaces(environment, layout)
 	var vertices_present := {}
 	var vertex_roles := {}
@@ -124,7 +124,7 @@ func run() -> void:
 	for count: int in edges.values():
 		closed = closed and count == 2
 	check("actual rock triangles form closed volumes across chunk boundaries", closed and valid and peak > 3.0)
-	check("all four wall directions have noncollapsed vertical UVs and exposed caps have separate XZ charts", uv_valid and wall_directions.size() == 4 and upper_caps > 10 and int(rock["surfaces"]) == int(rock["groups"]) * 2)
+	check("all four inner wall directions have noncollapsed vertical UVs and original exposed caps remain present", uv_valid and wall_directions.size() == 4 and upper_caps > 10 and int(rock["surfaces"]) == int(rock["groups"]) * 2)
 	var ridges_shared := true
 	for profile: Dictionary in rock["profiles"]:
 		for end in ["section_a", "section_b"]:

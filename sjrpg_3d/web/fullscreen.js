@@ -52,8 +52,10 @@
   let orientationDetail = '';
   let orientationLocked = false;
   let orientationOperation = 0;
+  let orientationRuntimeUnsupported = false;
+  let orientationLockTail = Promise.resolve();
   const orientationAPI = () => window.screen && window.screen.orientation;
-  const orientationSupported = () => Boolean(orientationAPI() &&
+  const orientationSupported = () => Boolean(!orientationRuntimeUnsupported && orientationAPI() &&
     typeof orientationAPI().lock === 'function' && typeof orientationAPI().unlock === 'function');
   function orientationState() {
     return {
@@ -95,18 +97,36 @@
         gesture && !element() && !appFullscreen && enabled() ? request().call(document.documentElement) : undefined;
       Promise.resolve(entering).then(() => {
         if (operation !== orientationOperation) return;
-        return orientationAPI().lock(choice);
-      }).then(() => {
+        // Serialize native locks: an old pending request cannot resolve after
+        // a newer successful lock and restore the wrong physical orientation.
+        const attempt = orientationLockTail.catch(() => {}).then(() => {
+          if (operation !== orientationOperation) return false;
+          return Promise.resolve(orientationAPI().lock(choice)).then(() => true);
+        });
+        orientationLockTail = attempt;
+        return attempt;
+      }).then(didLock => {
         if (operation !== orientationOperation) {
-          if (orientationChoice === 'auto') orientationAPI().unlock();
+          // Clean up a late lock after cancellation. A newer queued request owns
+          // the next lock, so never unlock over its pending/successful state.
+          if (didLock && !orientationPending && !orientationLocked) {
+            try { orientationAPI().unlock(); } catch (_) {}
+          }
           return;
         }
+        if (!didLock) return;
         orientationLocked = true;
         orientationDetail = choice === 'landscape' ? '가로 방향으로 고정했습니다.' : '세로 방향으로 고정했습니다.';
-      }).catch(() => {
+      }).catch(error => {
         if (operation !== orientationOperation) return;
         orientationLocked = false;
-        orientationDetail = '방향을 고정하지 못했습니다. 전체화면을 허용하고 다시 선택해 주세요.';
+        if (error && error.name === 'NotSupportedError') {
+          orientationRuntimeUnsupported = true;
+          try { orientationAPI().unlock(); } catch (_) {}
+          orientationDetail = '이 브라우저에서는 방향 고정을 지원하지 않습니다. 기기를 직접 돌려 주세요.';
+        } else {
+          orientationDetail = '방향을 고정하지 못했습니다. 전체화면을 허용하고 다시 선택해 주세요.';
+        }
       }).finally(() => {
         if (operation === orientationOperation) orientationPending = false;
       });
@@ -123,8 +143,11 @@
     restore: choice => setOrientation(choice, false)
   };
   document.addEventListener('fullscreenchange', () => {
-    if (!element() && !installedLaunch && orientationLocked) {
+    if (!element() && !(installedLaunch && fullscreen.matches) && (orientationPending || orientationLocked)) {
+      ++orientationOperation;
+      orientationPending = false;
       orientationLocked = false;
+      try { orientationAPI().unlock(); } catch (_) {}
       orientationDetail = '전체화면이 종료되어 방향 고정이 해제됐습니다. 다시 선택해 주세요.';
     }
   });

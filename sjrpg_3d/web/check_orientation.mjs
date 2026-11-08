@@ -27,7 +27,9 @@ async function fixture(kind='supported') {
     const api = {
       lock(choice) {
         window.orientationCalls.push({choice,fullscreen:Boolean(document.fullscreenElement)});
+        if (window.orientationNotSupported) return Promise.reject(new DOMException('unsupported','NotSupportedError'));
         if (window.orientationReject) return Promise.reject(new DOMException('denied','NotAllowedError'));
+        if (window.orientationDeferred) return new Promise(resolve=>{window.resolveOrientation=resolve;});
         return Promise.resolve();
       },
       unlock() {window.orientationCalls.push({choice:'auto'});}
@@ -101,6 +103,44 @@ try {
     'installed first-gesture fullscreen and orientation share the same transition');
   await installed.close();
 
+  const unsupportedRuntime = await fixture();
+  await unsupportedRuntime.evaluate(()=>{window.orientationNotSupported=true;});
+  await unsupportedRuntime.click('#portrait');
+  await unsupportedRuntime.waitForFunction(()=>!window.SjrpgOrientation.state().pending);
+  assert.equal(await unsupportedRuntime.evaluate(()=>window.SjrpgOrientation.state().supported),false,
+    'NotSupportedError marks the actual runtime unsupported even when methods exist');
+  assert.match(await unsupportedRuntime.evaluate(()=>window.SjrpgOrientation.state().detail),/지원하지 않습니다.*직접 돌려/);
+  await unsupportedRuntime.close();
+
+  const late = await fixture();
+  await late.evaluate(()=>{window.orientationDeferred=true;});
+  await late.click('#portrait');
+  await late.waitForFunction(()=>typeof window.resolveOrientation==='function');
+  await late.evaluate(()=>document.exitFullscreen());
+  await late.waitForFunction(()=>!window.SjrpgOrientation.state().pending && !window.SjrpgOrientation.state().locked);
+  assert.match(await late.evaluate(()=>window.SjrpgOrientation.state().detail),/종료/);
+  const unlocks = await late.evaluate(()=>window.orientationCalls.filter(c=>c.choice==='auto').length);
+  await late.evaluate(()=>window.resolveOrientation());
+  await late.waitForFunction(count=>window.orientationCalls.filter(c=>c.choice==='auto').length>count,unlocks);
+  assert.equal(await late.evaluate(()=>window.SjrpgOrientation.state().locked),false,'late success after fullscreen exit cannot relock');
+  await late.close();
+
+  const next = await fixture();
+  await next.evaluate(()=>{window.orientationDeferred=true;});
+  await next.click('#portrait');
+  await next.waitForFunction(()=>typeof window.resolveOrientation==='function');
+  await next.evaluate(()=>document.exitFullscreen());
+  await next.waitForFunction(()=>!window.SjrpgOrientation.state().pending);
+  await next.evaluate(()=>{window.orientationDeferred=false;});
+  await next.click('#landscape');
+  assert.equal(await next.evaluate(()=>window.orientationCalls.filter(c=>c.choice==='landscape').length),0,
+    'a fresh native lock waits for the old native request to settle');
+  await next.evaluate(()=>window.resolveOrientation());
+  await next.waitForFunction(()=>!window.SjrpgOrientation.state().pending && window.SjrpgOrientation.state().locked);
+  assert.equal(await next.evaluate(()=>window.orientationCalls.at(-1).choice),'landscape',
+    'late cancellation cleanup never unlocks over the newer successful choice');
+  await next.close();
+
   const actual = await browser.newPage();
   actual.on('pageerror', error=>errors.push(error.message));
   await actual.goto(base);
@@ -109,6 +149,7 @@ try {
   const result = await actual.evaluate(()=>window.SjrpgOrientation.state());
   assert.equal(typeof result.detail,'string');
   assert.equal(result.pending,false,'actual browser API completes or reports its platform limitation');
+  if (result.detail.includes('지원하지 않습니다')) assert.equal(result.supported,false);
   assert.equal(await actual.evaluate(()=>getComputedStyle(document.querySelector('#canvas')).transform),'none');
   await actual.close();
   assert.deepEqual(errors,[]);

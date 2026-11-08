@@ -90,6 +90,11 @@ func _build(layout: DungeonLayout, parent: Node3D, texture: Texture2D, segments:
 	# Explicit metre UVs avoid blending floor-like XZ stone into upright faces.
 	var material := _rock_material(texture, Color(0.64, 0.73, 0.82), "CaveInnerWall")
 	var outer := _rock_material(load(OUTER_TEXTURE), Color(0.70, 0.64, 0.53), "CaveOuterRock")
+	# Exposed shoulders and corner tapers can be steep even above the ridge.
+	# Use their real normals in world metres instead of stretching an XZ chart.
+	outer.uv1_triplanar = true
+	outer.uv1_world_triplanar = true
+	outer.uv1_scale = Vector3.ONE / OUTER_TILE_METRES
 	var materials := {INNER: material, OUTER: outer}
 	var meshes: Array[MeshInstance3D] = []
 	var surfaces := 0

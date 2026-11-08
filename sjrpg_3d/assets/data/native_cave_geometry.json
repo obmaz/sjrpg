@@ -7,8 +7,8 @@
   "family": "assets/data/cave_art.json",
   "generator": {
     "path": "scripts/ortho_3d_cave_rock.gd",
-    "sha256": "925a1a06874500d938e7009af1a1a1cc28f3a6071bcd4626e7a06a63094e6e0b",
-    "method": "Original closed native profile extrusion, vertices and miters preserved. Each chunk separates real inner profile faces from the original ridge/exposed faces; fixed metric vertical and XZ UV charts. No source image generation or pixel edits."
+    "sha256": "76fcdb6b12a39f59acea8ff512fc58d8725a9a5302b4bbd11b7281e409238866",
+    "method": "Original closed native profile extrusion, vertices and miters preserved. Each chunk separates actual inner faces from ridge/exposed faces. Upright inner metric UVs and normal-aware world-metre outer rock mapping; no source image or physics edits."
   },
   "material": {
     "path": "assets/art/cave/dark.webp",
@@ -81,7 +81,7 @@
       0.64,
       0.53
     ],
-    "uv": "Original top/shoulder/bottom faces use continuous native XZ; outer vertical back uses horizontal X or Z and native Y. Same volume, distinct existing coarse stone source."
+    "uv": "World-space triplanar XYZ/3.2m follows actual geometry normals at steep shoulders and corner tapers. Baked fallback UVs remain finite; no geometry stretch."
   },
   "floor_shader": {
     "path": "scripts/native_cave_floor.gdshader",
