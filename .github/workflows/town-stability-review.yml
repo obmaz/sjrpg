@@ -1,0 +1,93 @@
+name: Review sustained 3D town resource growth
+on:
+    push:
+        paths:
+            - ".github/workflows/town-stability-review.yml"
+            - "sjrpg_3d/tools/check_town_stability.mjs"
+            - "sjrpg_3d/tools/stability_telemetry.mjs"
+            - "sjrpg_3d/scripts/stability_resource_review.gd"
+    workflow_dispatch:
+        inputs:
+            edition:
+                description: Apps to compare with the same harness
+                type: choice
+                options: [pair, baseline, candidate]
+                default: pair
+            candidate_sha:
+                description: Optional exact candidate source SHA
+                required: false
+permissions:
+    contents: read
+jobs:
+    stability:
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        strategy:
+            fail-fast: false
+            matrix:
+                edition: ${{ fromJSON(github.event.inputs.edition == 'pair' && '["baseline","candidate"]' || github.event.inputs.edition == 'candidate' && '["candidate"]' || '["baseline"]') }}
+        env:
+            SJRPG_WALK_SHA: ${{ matrix.edition == 'baseline' && '991d38c6bbba7ddf347721a489f74160909d1133' || github.event.inputs.candidate_sha || github.sha }}
+            SJRPG_WALK_EDITION: ${{ matrix.edition }}
+            SJRPG_HARNESS_SHA: ${{ github.sha }}
+            SJRPG_FINAL_GC_DIAGNOSTIC: "1"
+        steps:
+            - uses: actions/checkout@v7.0.1
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: 24
+            - name: Validate diagnostics and install Chromium
+              run: |
+                  node --check sjrpg_3d/tools/check_town_stability.mjs
+                  node --check sjrpg_3d/tools/stability_telemetry.mjs
+                  node --check sjrpg_3d/tools/canvas_allocation_telemetry.mjs
+                  npm ci --ignore-scripts
+                  npx playwright install --with-deps chromium
+            - uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.godot-tools
+                      ~/.local/share/godot/export_templates
+                  key: godot-${{ hashFiles('.godot-version') }}-tools-v1
+            - name: Prepare one immutable app with read-only worker observers
+              run: |
+                  python3 - <<'PY'
+                  import os,re
+                  assert re.fullmatch(r"[0-9a-f]{40}",os.environ["SJRPG_WALK_SHA"])
+                  PY
+                  git fetch --no-tags --depth=1 origin "$SJRPG_WALK_SHA"
+                  mkdir -p "$RUNNER_TEMP/stability-game"
+                  git archive "$SJRPG_WALK_SHA" | tar -x -C "$RUNNER_TEMP/stability-game"
+                  cp sjrpg_3d/scripts/stability_resource_review.gd sjrpg_3d/scripts/canvas_allocation_review.gd "$RUNNER_TEMP/stability-game/sjrpg_3d/scripts/"
+                  python3 - <<'PY'
+                  import os
+                  from pathlib import Path
+                  main=Path(os.environ["RUNNER_TEMP"])/"stability-game/sjrpg_3d/scripts/main.gd"
+                  text=main.read_text()
+                  needle="\tshow_title()\n"
+                  hook='\tif OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get(\'walking_profile\')", true)) == "1":\n\t\tadd_child(load("res://scripts/stability_resource_review.gd").new().setup(self))\n\t\tadd_child(load("res://scripts/canvas_allocation_review.gd").new())\n'
+                  assert needle in text
+                  assert 'res://scripts/stability_resource_review.gd' not in text
+                  main.write_text(text.replace(needle,needle+hook,1))
+                  PY
+                  chmod +x "$RUNNER_TEMP/stability-game/tools/"*.sh "$RUNNER_TEMP/stability-game/sjrpg_3d/tools/"*.sh
+                  "$RUNNER_TEMP/stability-game/tools/setup_godot.sh"
+            - name: Export the exact app once
+              id: app_export
+              working-directory: ${{ runner.temp }}/stability-game
+              run: sjrpg_3d/tools/export_web.sh
+            - name: Walk through at least 1200 rendered frames and check late resource windows
+              run: |
+                  mkdir -p "build/town-stability/$SJRPG_WALK_EDITION"
+                  python3 -m http.server 8794 --bind 127.0.0.1 --directory "$RUNNER_TEMP/stability-game/sjrpg_3d/build/web" > "build/town-stability/$SJRPG_WALK_EDITION/server.log" 2>&1 &
+                  SJRPG_STABILITY_SERVER=$!
+                  trap 'kill "$SJRPG_STABILITY_SERVER" 2>/dev/null || true' EXIT
+                  curl --fail --silent --show-error --max-time 2 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 12 http://127.0.0.1:8794/ > /dev/null
+                  node sjrpg_3d/tools/check_town_stability.mjs http://127.0.0.1:8794/ "$GITHUB_WORKSPACE/build/town-stability/$SJRPG_WALK_EDITION"
+            - uses: actions/upload-artifact@v6
+              if: always()
+              with:
+                  name: town-stability-${{ matrix.edition }}
+                  path: build/town-stability/${{ matrix.edition }}
+                  if-no-files-found: ignore
+                  retention-days: 7
