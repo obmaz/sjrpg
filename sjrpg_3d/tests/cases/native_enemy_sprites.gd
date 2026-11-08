@@ -78,9 +78,20 @@ func run() -> void:
 		var cell: Vector2i = entry["cell"]
 		directions[cell.y] = true
 	check("all four screen-diagonal directions select different authored sheet rows", directions.size() == 4)
-	var cell: Vector2i = entry["cell"]
-	var rect: Vector4 = (entry["material"] as ShaderMaterial).get_shader_parameter("atlas_rect")
-	check("actual non-divisible atlas size uses exact fractional normalized quarters", is_equal_approx(rect.x, cell.x / 4.0) and is_equal_approx(rect.y, cell.y / 4.0) and rect.z == 0.25 and rect.w == 0.25)
+	var authored_frames := {}
+	var aligned := true
+	for direction in 4:
+		enemy.facing = (direction + 0.5) * PI * 0.5
+		for phase in 8:
+			enemy._walk_cycle = (phase + 0.5) / 8.0
+			sprites.sync()
+			var pose: Vector2i = entry["cell"]
+			authored_frames[pose] = true
+			var frame: Vector4 = (entry["material"] as ShaderMaterial).get_shader_parameter("atlas_rect")
+			aligned = aligned and pose == Vector2i(phase, direction) and is_equal_approx(frame.x, phase / 8.0) and is_equal_approx(frame.y, direction / 4.0) and frame.z == 0.125 and frame.w == 0.25
+			aligned = aligned and _pivot_world(entry).distance_to(preview.actor_foot(enemy)) < 0.00001
+	check("all 32 authored poses use eight distinct source-distance phases per direction with aligned feet", aligned and authored_frames.size() == 32)
+	check("eight-frame animation retains one shared texture and quad for twenty actors", (entry["card"] as MeshInstance3D).mesh == shared_mesh and (entry["material"] as ShaderMaterial).get_shader_parameter("atlas_texture") == shared_texture)
 	var hp := enemy.hp
 	enemy.take_damage(4.0, game.player)
 	sprites.sync()

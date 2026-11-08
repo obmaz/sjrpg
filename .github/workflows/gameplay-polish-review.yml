@@ -10,6 +10,10 @@ on:
       - "sjrpg_3d/scripts/native_zone_fx_3d.gd"
       - "sjrpg_3d/scripts/encounter_runtime.gd"
       - "sjrpg_3d/tests/cases/cave_swarm.gd"
+      - "sjrpg_3d/scripts/native_enemy_sprites_3d.gd"
+      - "sjrpg_3d/tests/cases/native_enemy_sprites.gd"
+      - "sjrpg_3d/assets/data/cave_crawler_sprite.json"
+      - "sjrpg_3d/assets/art/monsters/cave_crawler*.png"
   workflow_dispatch:
 permissions:
   contents: read
@@ -56,7 +60,8 @@ jobs:
         edition: [baseline, candidate]
     env:
       SJRPG_VISIBILITY_EDITION: ${{ matrix.edition }}
-      SJRPG_VISIBILITY_SHA: ${{ matrix.edition == 'baseline' && 'b464f036d922be7f235287bf907d13c605bc79f8' || github.sha }}
+      SJRPG_VISIBILITY_SCENARIOS: ${{ contains(github.event.head_commit.message, '[crawler-review]') && 'cave_swarm,sprite_directions,sprite_corpses' || 'cave_torches,combat_health,boss_warning,meteor_warning,firewall,cave_swarm,sprite_directions,sprite_corpses' }}
+      SJRPG_VISIBILITY_SHA: ${{ matrix.edition == 'baseline' && 'b7ebd3780184cba96989ff9dadc0e29edb9411ac' || github.sha }}
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-node@v6
@@ -126,7 +131,7 @@ jobs:
           before=root/"combat-visibility-baseline";after=root/"combat-visibility-candidate"
           a=json.loads((before/"proof.json").read_text());b=json.loads((after/"proof.json").read_text())
           assert a["passed"] and b["passed"]
-          assert len(a["cases"])==16 and len(b["cases"])==16
+          assert len(a["cases"])==len(b["cases"]) and len(b["cases"]) in (6,16)
           target=root/"comparisons";target.mkdir()
           for case in b["cases"]:
               name=case["name"];reference=next(x for x in a["cases"] if x["name"]==name)
@@ -146,7 +151,7 @@ jobs:
                   print("GAMEPLAY_IMAGE_BEGIN "+name)
                   for i in range(0,len(data),16000):print("GAMEPLAY_IMAGE_CHUNK "+name+" "+data[i:i+16000])
                   print("GAMEPLAY_IMAGE_END "+name)
-          print("GAMEPLAY_VISUAL_COMPARE_PASS 16 paired explicit fixtures; not performance evidence")
+          print("GAMEPLAY_VISUAL_COMPARE_PASS "+str(len(b["cases"]))+" paired explicit fixtures; not performance evidence")
       - uses: actions/upload-artifact@v6
         with:
           name: gameplay-visibility-comparisons

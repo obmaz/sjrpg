@@ -21,12 +21,13 @@ for name,columns,rows,prefix in [("cave_crawler",config["columns"],config["rows"
     assert image.mode=="RGBA",(name,image.mode)
     assert image.getchannel("A").getextrema()==(0,255),(name,"real alpha required")
     w,h=image.size
-    pivots=[];fractions=[];widths=[];boxes=[]
+    pivots=[];fractions=[];widths=[];boxes=[];hashes=[]
     for row in range(rows):
         for column in range(columns):
             left=round(column*w/columns);top=round(row*h/rows)
             right=round((column+1)*w/columns);bottom=round((row+1)*h/rows)
             cw,ch=right-left,bottom-top
+            hashes.append(hashlib.sha256(image.crop((left,top,right,bottom)).tobytes()).hexdigest())
             alpha=image.getchannel("A").crop((left,top,right,bottom))
             # A read-only eroded mask excludes isolated generation speckles.
             mask=alpha.point(lambda v:255 if v>=96 else 0).filter(ImageFilter.MinFilter(3))
@@ -49,6 +50,7 @@ for name,columns,rows,prefix in [("cave_crawler",config["columns"],config["rows"
     config[prefix+"frame_body_fractions"]=fractions
     if prefix:
         config["corpse_frame_width_fractions"]=widths
+    assert len(set(hashes))==columns*rows,(name,"duplicated artwork frames")
     opaque=[pixel for pixel in image.getdata() if pixel[3]>=224]
     luminance=sum(.2126*p[0]+.7152*p[1]+.0722*p[2] for p in opaque)/max(1,len(opaque))
     audit[name]={"mean_opaque_luminance":round(luminance,3),"rgba8_mip_bytes_estimate":round(w*h*4*4/3),"size":[w,h],"sha256":hashlib.sha256(path.read_bytes()).hexdigest(),"grid":[columns,rows],"frames":boxes}

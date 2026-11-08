@@ -10,7 +10,7 @@
     ],
     "axes_separation_degrees": 120
   },
-  "style": "mature dark stylized painterly woodland fantasy; slate hide, bone plates, olive scraps, tiny amber eyes",
+  "style": "mature painterly woodland fantasy; medium-light warm taupe/clay hide, pale ivory bone plates, tawny olive wraps, tiny amber eyes",
   "user_reference": {
     "path": "sjrpg_3d/assets/source/style/approved-game-reference.jpg",
     "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
@@ -32,7 +32,8 @@
         4,
         4
       ],
-      "sha256": "ee9651680c2be34ff1fccddbc24e206e097e2017c2b3394ad04353a964452d3e"
+      "sha256": "ee9651680c2be34ff1fccddbc24e206e097e2017c2b3394ad04353a964452d3e",
+      "historical_source_commit": "7ca98f0b8bf7cf473c0fda8f0ef488dfabc5294f"
     },
     {
       "tool": "image_gen.imagegen",
@@ -54,7 +55,58 @@
         2,
         2
       ],
-      "sha256": "23d69828e22da0219da7756d19654d29d9d08b6f988a4c472b44e8bcdc7bfbc1"
+      "sha256": "23d69828e22da0219da7756d19654d29d9d08b6f988a4c472b44e8bcdc7bfbc1",
+      "historical_source_commit": "7ca98f0b8bf7cf473c0fda8f0ef488dfabc5294f"
+    },
+    {
+      "tool": "image_gen.imagegen",
+      "transparent_background": true,
+      "actual_tool_references": [
+        {
+          "conversation_image": "approved reference preview",
+          "path": "sjrpg_3d/assets/source/style/approved-game-reference.jpg",
+          "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+        },
+        {
+          "conversation_image": "previous living and corpse atlas previews",
+          "historical_source_commit": "7ca98f0b8bf7cf473c0fda8f0ef488dfabc5294f"
+        }
+      ],
+      "prompt": "Edit the supplied CAVE CRAWLER living monster atlas (the 4x4 standing creature sheet) into a NEW brighter 8-FRAME WALK atlas of the SAME creature. Other supplied images are the approved mature woodland game style and the matching corpse sheet, only for identity/style. Output ONLY the new living walk sheet. Transparent RGBA, WIDE LANDSCAPE 2:1 canvas, ideally 2048x1024 pixels, EXACTLY EIGHT equal columns and FOUR equal rows, 32 isolated complete figures, no extra figures. Each of the 32 cells is square. No text, grid or borders.\n\nKeep original creature identity: lean hunched predatory imp, long clawed forearms, powerful bent hind legs, small swept horns, layered jagged shoulder/back plates, olive waist wraps, tiny amber eyes. RECOLOR to improve visibility in dark slate caves: medium-light WARM TAUPE / muted clay hide, PALE WARM IVORY shoulder/back/forearm armor plates, desaturated tawny olive waist wraps. Clearly brighter light midtones than the supplied charcoal-gray creature, while retaining carved form shading and dark narrow creases. No white glow, no emission, no pastel or cute/cartoon treatment. Mature painterly fantasy game rendering, clean bold readable masses at 50px character size, restrained surface detail, not photo realism.\n\nSTRICT TRUE ORTHOGRAPHIC ISOMETRIC 2.5D, fixed camera elevation 35.264 degrees, azimuth45, projected ground axes +/-30 degrees and120degrees between axes. Camera/scale/lighting constant across every frame. Row1 ALL EIGHT face SE/down-right, front/chest visible. Row2 ALL EIGHT face SW/down-left, front visible. Row3 ALL EIGHT face NW/up-left, back visible. Row4 ALL EIGHT face NE/up-right, back visible. NEVER rotate direction across columns. Rows1/2 should retain clear corresponding features, rows3/4 show corresponding back plates. No perspective or eye-level views.\n\nEACH row columns1 through8 is a coherent continuous EIGHT distinct successive walk poses: left contact, left recoil, left passing, left high-point, right contact, right recoil, right passing, right high-point; smooth loop back to first. Feet alternate distinctly, arms counter-swing naturally, center mass moves subtly without stretching. DO NOT simply duplicate four poses or merely recolor the old sheet. Same skeleton, same armor, proportions and size throughout. Slight crouched body, visible tops of head/shoulders/feet.\n\nEach square cell: body about70% cell height and65% width, perfectly centered, lowest grounded foot at85%cell height, at least10%transparent margin EVERY side. Foot support pivot centered horizontally. EVERY complete figure fits strictly inside its own cell, claws never overlap neighbors or touch borders. No floor, no shadow/contact shadow, no scenery, no particles, no labels/logo/watermark. REAL transparent background, not a painted checkerboard. Soft neutral diffuse illumination reveals the lighter taupe hide and ivory plates consistently across all32 figures. Deliver only this exact8x4, 2:1 transparent animation sheet.",
+      "correction_prompt": "Correct the supplied 8-column by4-row cave creature walk atlas for production. Keep SAME exact32 poses, four facing directions, brighter warm taupe/clay hide and ivory bone armor. KEEP a wide2:1 canvas with EXACTLY8columns4rows equal square cells. Critical edit: SHRINK EACH individual creature within its OWN cell to about70% of the previous figure size, and recenter it. Do not shrink the entire sheet as one object. Every cell must have at least12%cellwidth clear TRANSPARENT padding left/right and at least12%cellheight above head and below feet. At2048x1024, cells256 square, complete figure no largerthan180px tall and174px wide, centered x128 with lowest foot y216 and top about36. All32 complete silhouettes MUST stay away from every cell boundary. No cropped horn, foot, hand or claw. No overlap. Constant scale/creature identity and fixed orthographic isometric35.264degree camera, +/-30degree ground axes120degrees.\n\nCRITICAL ALPHA CLEANUP: there are dirty red, yellow, black and gray speckles around silhouettes in the supplied candidate. COMPLETELY REMOVE ALL these background/fringe artifacts. Every pixel outside the creature silhouette must be truly fully transparent alpha0. No colored halos, no yellow/rim glow, no red fog, no black/gray noise, no painted checkerboard. Keep only creature skin/ivory armor/olive wraps/tiny amber eyes; inside shading clean painterly mature fantasy. No ground or cast shadow. No labels/grid/border/scenery. Preserve the32 distinct walking poses with continuous8frame cycleperrow, rowsSE,SW,NW,NE. Return only the corrected, widely padded, clean transparent8x4 atlas.",
+      "output": "generated-atlas.png",
+      "git_blob_sha": "e74521b91749c0644cc60d2e2e6615ca52fd8a3d",
+      "actual_size": [
+        1774,
+        887
+      ],
+      "grid": [
+        8,
+        4
+      ],
+      "sha256": "82db79c8711dc8798aba993abb0dbb4b50885ff913eaacd75edbdbd9d8599187",
+      "selection": "Second padded generation adopted; first tightly packed candidate and later background-removal attempt not adopted. Raw source pixels preserved; runtime shader rejects low-alpha generation haze."
+    },
+    {
+      "tool": "image_gen.imagegen",
+      "transparent_background": true,
+      "actual_tool_references": [
+        "previous corpse preview",
+        "first brighter walk candidate",
+        "second padded brighter walk candidate"
+      ],
+      "prompt": "Create the matching brighter DEFEATED BODY atlas by editing the supplied2x2 corpse sheet to match the new bright warm-taupe/ivory8x4 WALK SHEET. Only output a clean square2columns2rows CORPSE atlas, four collapsed figures, not a living atlas. SAMEcreature: hunched imp with elongated claws, layered pointed back/shoulder boneplates, short swept horns and olive waistwraps. Recolor hide to medium-light warm taupe/mutedclay and boneplates to pale warmivory, same as the latest brighter walking sheet, restrained mature painterly fantasy. No photoreal skin, no pastel/chibi, no emissive body. Tiny amber eyes closed.\n\nFixed orthographic35.264degree isometric camera, groundaxes+/-30degrees/120degrees. Four actual collapsed bodies resting low, bentrelaxedlimbs and heads: upperleft SE/downright, upperright SW/downleft, lowerleft NW/upleft, lowerright NE/upright. Bodies must read as dead not standing sprites turned sideways. No blood/gore.\n\nSquarecanvas exact2x2equalcells. Entire corpse ineachcell, at least15%cleartransparent margins everyedge, consistent scale, centeredbody ineachcell, visiblewidthabout65%cellwidth andvisibleheightabout35%cellheight. No groundpatch, cast/contactshadow, dust, texturebehindcreature. TRUE alpha0outside silhouettes. REMOVE coloredred/yellow/grayfringes andbackgroundnoise: only clean creature pixels, no ghosthalos, no paintedcheckerboard, no haze. Neutral diffuse illumination, lighten the bodies like the new livecreature. No grid, borders, text, logo, or scenery. Deliveronlyfour wellpadded corpseposes inone2x2 transparentRGBAatlas.",
+      "output": "generated-corpses.png",
+      "git_blob_sha": "261d9d2a7948f27c7de2855ae3efb9cf5bf32be4",
+      "actual_size": [
+        1254,
+        1254
+      ],
+      "grid": [
+        2,
+        2
+      ],
+      "sha256": "e47aa135e0a39a7ffda6b74c1ed4cab506fe9c6e5ec9a0bf2239ea907ee13a9e"
     }
   ],
   "runtime": [
@@ -74,10 +126,10 @@
   "frame_alignment": {
     "method": "read-only alpha threshold96/min-filter3 bounding-box and lower-support centroid",
     "source_unchanged": true,
-    "measured_live_frames": 16,
+    "measured_live_frames": 32,
     "measured_corpse_frames": 4,
     "metadata": "assets/data/cave_crawler_sprite.json",
-    "actual_normalized_uv_grid": "4x4 and2x2; preserves fractional source-cell width1254/4"
+    "actual_normalized_uv_grid": "8x4 live and2x2 corpse; normalized regions preserve fractional cell boundaries"
   },
   "validation": {
     "workflow": ".github/workflows/gameplay-polish-review.yml",
@@ -90,8 +142,22 @@
       "cave_swarm"
     ],
     "real_alpha": true,
-    "measured_live_frames": 16,
+    "measured_live_frames": 32,
     "measured_corpse_frames": 4,
     "source_pixels_unchanged": true
+  },
+  "animation": {
+    "directions": 4,
+    "walk_frames_per_direction": 8,
+    "clock": "existing distance-driven Enemy._walk_cycle; no independent timer or doubled simulation rate",
+    "geometry": "one shared QuadMesh and shared atlas; per-actor material retained",
+    "sampling": "one atlas sample per fragment; discard alpha below0.38 and smooth edge0.38..0.65 before source tint alpha"
+  },
+  "texture_budget": {
+    "old_live_pixels": 1572516,
+    "new_live_pixels": 1573538,
+    "live_rgba8_mip_bytes_estimate": 8392203,
+    "corpse_rgba8_mip_bytes_estimate": 8386752,
+    "limitation": "estimated storage at original image dimensions, not measured device VRAM/FPS; corpse texture remains lazy"
   }
 }

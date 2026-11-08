@@ -13,6 +13,23 @@ var corpses := {}
 var _texture: Texture2D
 var _corpse_texture: Texture2D
 var _config: Dictionary = {}
+const SPRITE_CODE := """
+shader_type spatial;
+render_mode unshaded, blend_mix, depth_draw_never, cull_disabled;
+uniform sampler2D atlas_texture : source_color, filter_linear_mipmap;
+uniform vec4 atlas_rect = vec4(0.0, 0.0, 1.0, 1.0);
+uniform vec4 tint : source_color = vec4(1.0);
+uniform vec4 flash_color : source_color = vec4(1.0);
+uniform float flash_strength = 0.0;
+void fragment() {
+	vec4 ink = texture(atlas_texture, atlas_rect.xy + UV * atlas_rect.zw);
+	// The generated sheet has low-alpha haze outside the authored silhouettes.
+	// Reject it before blending; retain soft edges and source-owned death fades.
+	if (ink.a < 0.38) { discard; }
+	ALBEDO = mix(ink.rgb * tint.rgb, flash_color.rgb, clamp(flash_strength, 0.0, 0.65));
+	ALPHA = smoothstep(0.38, 0.65, ink.a) * tint.a;
+}
+"""
 static var _quad: QuadMesh
 static var _shader: Shader
 
@@ -52,7 +69,7 @@ func _ensure_art(fallen := false) -> bool:
 		_shader = Shader.new()
 		# Real depth testing remains enabled. Generated diffuse art is deliberately
 		# a 2D appearance, not a lit volume or a rectangular shadow caster.
-		_shader.code = Ortho3DPreview.CARD_CODE
+		_shader.code = SPRITE_CODE
 	return true
 
 
@@ -143,12 +160,11 @@ func _frame(entry: Dictionary, cell: Vector2i) -> void:
 	if entry["cell"] == cell:
 		return
 	entry["cell"] = cell
-	# Exact normalized quarters preserve the actual 1254px image's half-pixel cells.
-	# Integer atlas-region truncation would accumulate drift on this generated sheet.
+	# Preserve fractional cell boundaries on generated sheets of any grid size.
+	# Integer atlas regions can accumulate drift when dimensions are not divisible.
 	var fallen: bool = entry["fallen"]
 	var rect := Vector4(float(cell.x) / _columns(fallen), float(cell.y) / _rows(fallen), 1.0 / _columns(fallen), 1.0 / _rows(fallen))
 	_uniform(entry, "atlas_rect", rect)
-	_uniform(entry, "next_rect", rect)
 
 
 func _place(entry: Dictionary, cell: Vector2i, height: float, foot: Vector3, basis: Basis, squash := Vector2.ONE, fallen := false) -> void:
@@ -244,4 +260,4 @@ func snapshot() -> Dictionary:
 			"foot": [foot.x, foot.y, foot.z], "pivot_error": actual_pivot.distance_to(foot)})
 	return {"count": entries.size(), "corpses": corpses.size(), "appearance": "2d", "physics": "3d",
 		"texture_loaded": _texture != null, "corpse_texture_loaded": _corpse_texture != null, "texture_size": [_texture.get_width(), _texture.get_height()] if _texture != null else [],
-		"shared_mesh": true, "sources": sources}
+		"shared_mesh": true, "walk_frames": _config.get("walk_columns", []).size(), "sources": sources}
