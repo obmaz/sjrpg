@@ -1,0 +1,26 @@
+name: Review rendered frame pacing
+on:
+  push:
+    paths:
+      - ".github/workflows/frame-pacing-review.yml"
+      - "sjrpg_3d/tools/check_frame_pacing.mjs"
+      - "sjrpg_3d/scripts/frame_pacing_review.gd"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.godot-tools
+            ~/.local/share/godot/export_templates
+          key: godot-${{ hashFiles('.godot-version') }}-tools-v1
+      - name: Verify native movement, poses and combat feedback
+        run: |
+          tools/setup_godot.sh
+          sjrpg_3d/tools/check.sh --only=native_floor_query_budget,native_threshold_support,ortho_3d_motion,native_merchant,native_mira,native_warrior,native_enemy_models,native_enemy_recipe_cache,native_actor_materials,native_render_budget,hit_flash,town_gate_closure,gates

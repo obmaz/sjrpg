@@ -257,8 +257,8 @@ static func sample_idle(model: Node3D, source_time: float) -> Dictionary:
 	if changed:
 		animator.play(selected, 0.0)
 	if changed or not is_equal_approx(sample, previous):
+		# seek(update=true) applies the pose; a zero advance repeats the same evaluation.
 		animator.seek(sample, true)
-		animator.advance(0.0)
 		model.set_meta("resident_idle_sample", sample)
 	return {"clip": selected, "sample_time": sample, "source_time": source_time}
 
@@ -335,7 +335,8 @@ func sync() -> void:
 			flash.set_shader_parameter("flash_strength", resident._hurt_flash * 0.65)
 		var meshes: Array[MeshInstance3D] = entries[id]["meshes"]
 		for mesh: MeshInstance3D in meshes:
-			mesh.material_overlay = flash
+			if mesh.material_overlay != flash:
+				mesh.material_overlay = flash
 
 
 func review_snapshot() -> Dictionary:

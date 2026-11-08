@@ -72,8 +72,8 @@ func sync(player: Player, delta: float, paused := false) -> void:
 		# clip duration without resetting on standing turns or modifying the asset.
 		_idle_clock = fposmod(_idle_clock + (0.0 if held else maxf(delta, 0.0)), clip.length)
 		sample_time = _idle_clock
+	# update=true already evaluates all transform tracks at this source time.
 	_animation.seek(sample_time, true)
-	_animation.advance(0.0)
 	pose_updates += 1
 
 

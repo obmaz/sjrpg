@@ -295,7 +295,9 @@ static func tint(model: Dictionary, color: Color, flash: float, flash_color: Col
 		var ink: Color = colors[index] * color
 		ink = ink.lerp(flash_color, clampf(flash, 0.0, 0.65))
 		ink.a = alpha
-		material.albedo_color = ink
+		# GLES3 queues a uniform update even when the assigned value is unchanged.
+		if material.albedo_color != ink:
+			material.albedo_color = ink
 		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA if alpha < 0.999 else BaseMaterial3D.TRANSPARENCY_DISABLED
 
 static func pose(model: Dictionary, facing: float, cycle: float, attack: float, dead := false) -> void:

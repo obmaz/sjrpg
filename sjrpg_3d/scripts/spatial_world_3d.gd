@@ -163,7 +163,8 @@ func _move_body(body: CharacterBody3D, destination: Vector2) -> void:
 		if absf(floor_height - foot) > MAX_STEP:
 			break
 		var previous := body.position
-		var motion := Vector3(point.x, floor_height + height * 0.5 + SKIN, point.y) - body.position
+		var validated_pose := Vector3(point.x, floor_height + height * 0.5 + SKIN, point.y)
+		var motion := validated_pose - body.position
 		for slide in 3:
 			if motion.length_squared() < 0.0000001:
 				break
@@ -171,13 +172,17 @@ func _move_body(body: CharacterBody3D, destination: Vector2) -> void:
 			if hit == null:
 				break
 			motion = hit.get_remainder().slide(hit.get_normal())
-		_settle_support(body, previous, height)
+		_settle_support(body, previous, height, validated_pose)
 
 
-func _settle_support(body: CharacterBody3D, previous: Vector3, height: float) -> void:
+func _settle_support(body: CharacterBody3D, previous: Vector3, height: float, validated_pose := Vector3(INF, INF, INF)) -> void:
+	var actual := body.position
+	# An unobstructed step already sampled FLOOR and checked its height above.
+	# Reuse only that full pose within one micrometre; slides/recovery resample below.
+	if validated_pose.is_finite() and actual.distance_squared_to(validated_pose) <= 0.000000000001:
+		return
 	# Solid-edge recovery can lift a capsule, and a slide can change its XZ.
 	# FLOOR support belongs to that actual XZ, not to the intended step above.
-	var actual := body.position
 	var origin_foot := previous.y - height * 0.5 - SKIN
 	var support := _supported_pose(actual, origin_foot, height)
 	if not support.is_empty():

@@ -153,10 +153,13 @@ func build() -> NativeWarrior3D:
 
 
 func sync(player: Player) -> void:
-	_flash.set_shader_parameter("flash_color", player.sprite.flash_tint.lerp(Color.WHITE, 0.35))
-	_flash.set_shader_parameter("flash_strength", player.sprite.flash * 0.65)
+	var overlay: Material = _flash if player.sprite.flash > 0.0 else null
+	if overlay != null:
+		_flash.set_shader_parameter("flash_color", player.sprite.flash_tint.lerp(Color.WHITE, 0.35))
+		_flash.set_shader_parameter("flash_strength", player.sprite.flash * 0.65)
 	for mesh: MeshInstance3D in meshes:
-		mesh.material_overlay = _flash if player.sprite.flash > 0.0 else null
+		if mesh.material_overlay != overlay:
+			mesh.material_overlay = overlay
 	if (is_inside_tree() and get_tree().paused) or player._hitstop.remaining > 0.0:
 		return
 	var moving: bool = player._run_distance != _last_distance

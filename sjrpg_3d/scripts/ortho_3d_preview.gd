@@ -548,10 +548,13 @@ func _sync_actor(delta: float) -> void:
 		return
 	actor.position = actor_foot(player) + ground_position(player.sprite.position)
 	if _actor_flash != null:
-		_actor_flash.set_shader_parameter("flash_color", player.sprite.flash_tint.lerp(Color.WHITE, 0.35))
-		_actor_flash.set_shader_parameter("flash_strength", 0.65 * player.sprite.flash)
+		var overlay: Material = _actor_flash if player.sprite.flash > 0.0 else null
+		if overlay != null:
+			_actor_flash.set_shader_parameter("flash_color", player.sprite.flash_tint.lerp(Color.WHITE, 0.35))
+			_actor_flash.set_shader_parameter("flash_strength", 0.65 * player.sprite.flash)
 		for mesh in _actor_meshes:
-			mesh.material_overlay = _actor_flash if player.sprite.flash > 0.0 else null
+			if mesh.material_overlay != overlay:
+				mesh.material_overlay = overlay
 	var direction := ground_position(Vector2.from_angle(player.facing))
 	actor.rotation.y = atan2(direction.x, direction.z)
 	if _hero_motion != null:
