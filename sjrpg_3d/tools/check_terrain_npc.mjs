@@ -19,7 +19,7 @@ const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use
 const errors=[],captures=[],checks=[];let context,page,failure=null;
 function timed(promise,label,ms=30000){let timer;const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Timeout '+label)),ms);timer.unref();});return Promise.race([promise,timeout]).finally(()=>clearTimeout(timer));}
 const mark=(label,data={})=>console.log('TERRAIN_NPC_PROGRESS '+JSON.stringify({at:new Date().toISOString(),label,...data}));
-const read=()=>timed(page.evaluate(()=>({ui:window.__sjrpgNativeStyleReview,native:window.__sjrpg3dProbe,review:window.__sjrpgTerrainNpcReview,window:[innerWidth,innerHeight]})),'read native browser state');
+const read=()=>timed(page.evaluate(()=>({ui:window.__sjrpgNativeStyleReview,native:window.__sjrpg3dProbe,review:window.__sjrpgTerrainNpcReview,window:[innerWidth,innerHeight],adventureReady:window.__sjrpgAdventureReady===true})),'read native browser state');
 const watchdog=setTimeout(()=>{console.error('TERRAIN_NPC_WATCHDOG_FAIL '+JSON.stringify({captures:captures.map(c=>c.name),errors}));process.exit(2);},12*60*1000);watchdog.unref();
 async function wait(fn,label,timeout=90000){const end=Date.now()+timeout;while(Date.now()<end){assert.equal(errors.length,0,JSON.stringify(errors));const s=await read();if(fn(s))return s;await page.waitForTimeout(120);}throw Error('Timeout '+label+' '+JSON.stringify(await read()));}
 async function settle(frames=4){const first=(await read()).review.frame;return wait(s=>s.review.frame>=first+frames,'drawn native frames');}
@@ -40,7 +40,7 @@ async function boot(params={},quality=worldQuality){
   const b=await page.evaluate(key=>({p:window.__sjrpgClassButtons[key],w:innerWidth,h:innerHeight}),key);
   await page.mouse.click(b.p[0]*b.w,b.p[1]*b.h);await page.waitForTimeout(250);
  }
- mark('class selected');await wait(s=>s.review?.terrain?.length===4&&s.native?.native_active&&s.native?.physics_ticks>0,'actual native terrain ready');
+ mark('class selected');await wait(s=>s.adventureReady&&s.ui?.native&&s.review?.terrain?.length===4&&s.native?.native_active&&s.native?.physics_ticks>0,'completed actual adventure and native construction ready');
  await settle();mark('actual native ready',{quality});
 }
 async function action(mode,role,face){

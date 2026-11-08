@@ -1,4 +1,4 @@
-name: Review village architecture with exact collider diagnostics
+name: Review completed native village architecture
 
 on:
     push:

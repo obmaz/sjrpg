@@ -105,6 +105,11 @@ func _process(delta: float) -> void:
 	var game: Node = root.current.simulation
 	if not is_instance_valid(game.ortho_preview) or not is_instance_valid(game.spatial_world):
 		return
+	# Game._ready awaits the first physics frame, installs all six encounter
+	# stones, rebuilds native geometry, awaits the broad phase, then marks ready.
+	# Early renderer probes are not the completed construction boundary.
+	if not game.native_ready:
+		return
 	var preview: Node = game.ortho_preview
 	if terrain_owner != game.get_instance_id():
 		terrain_owner = game.get_instance_id()
