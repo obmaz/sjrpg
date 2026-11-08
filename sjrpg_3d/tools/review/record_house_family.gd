@@ -34,7 +34,7 @@ func run() -> void:
 			"openings": report["openings"].size(), "corner_quoins": report["corner_quoins"], "slate_tiles": report["slate_tiles"],
 			"timber_tile_m": report["timber_tile_m"], "slate_tile_m": report["slate_tile_m"], "roof_overhang_m": report["roof_overhang"]}
 		all_valid = all_valid and triangles >= 6000 and triangles <= 12000 and surfaces == 5
-		print("HOUSE_FAMILY_MEASURED ", JSON.stringify({"key": key, "geometry": geometry[key]}))
+		print("ART_AUDIT HOUSE_FAMILY_MEASURED ", JSON.stringify({"key": key, "geometry": geometry[key]}))
 	check("actual house candidate obeys the existing geometry/material cap", all_valid)
 	if all_valid:
 		var proof: Dictionary = baseline.duplicate(true)
@@ -61,6 +61,6 @@ func run() -> void:
 		if check("candidate house proof opens only under the ignored build directory", output != null):
 			output.store_string(JSON.stringify(proof, "\t") + "\n")
 			output.close()
-			print("HOUSE_FAMILY_PROVENANCE_READY ", JSON.stringify({"path": "sjrpg_3d/build/house-family-record/provenance.json", "generator_sha256": proof["generator"]["sha256"], "textures": proof["materials"]["textures"]}))
+			print("ART_AUDIT HOUSE_FAMILY_PROVENANCE_READY ", JSON.stringify({"path": "sjrpg_3d/build/house-family-record/provenance.json", "generator_sha256": proof["generator"]["sha256"], "textures": proof["materials"]["textures"]}))
 	game.queue_free()
 	await _frames(2)

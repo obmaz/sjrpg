@@ -87,7 +87,7 @@ try{
   for(let face=0;face<4;face++){
    const s=await action('residents',0,face),g=s.review.gallery;
    assert(g&&g.count===9,'eight actual residents and adult hero scale reference');
-   assert.equal(g.projection,'orthographic');assert.equal(g.elevation,35.264389682754654);
+   assert.equal(g.projection,'orthographic');assert(Math.abs(g.elevation-35.264389682754654)<1e-10,'gallery metadata preserves the true isometric elevation through Godot JSON rounding');
    assert(g.models.some(m=>m.identity==='warrior'),'actual hero scale reference');
    for(const m of g.models){
     assert(m.triangles>0&&m.surfaces>0,'actual native mesh '+m.identity);

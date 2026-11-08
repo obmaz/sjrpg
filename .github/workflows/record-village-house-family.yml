@@ -4,6 +4,8 @@ on:
         paths:
             - ".github/workflows/record-village-house-family.yml"
             - "sjrpg_3d/scripts/native_house_3d.gd"
+            - "sjrpg_3d/scripts/ortho_3d_fortification.gd"
+            - "sjrpg_3d/tests/cases/ortho_3d_fortification.gd"
             - "sjrpg_3d/tests/cases/native_house_family.gd"
             - "sjrpg_3d/tools/review/record_house_family.gd"
             - "sjrpg_3d/assets/art/preview3d/limestone.webp"

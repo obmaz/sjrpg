@@ -52,6 +52,7 @@ func run() -> void:
 		var valid := true
 		var winding := true
 		var envelope := true
+		var slate_uv := true
 		for mesh in meshes:
 			check("house reuses only its shared existing materials: " + str(mesh.name), NativeHouse3D.MATERIAL_KEYS.any(func(material: String) -> bool: return mesh.material_override == preview._materials["door" if material == "wood" else material]))
 			for surface in mesh.mesh.get_surface_count():
@@ -70,9 +71,12 @@ func run() -> void:
 					var b: int = indices[index + 1] if not indices.is_empty() else index + 1
 					var c: int = indices[index + 2] if not indices.is_empty() else index + 2
 					winding = winding and (points[b] - points[a]).cross(points[c] - points[a]).dot(normals[a]) <= 0.00001
+					if str(mesh.name).ends_with("_slate") and (points[b] - points[a]).cross(points[c] - points[a]).length_squared() > 0.00000001:
+						slate_uv = slate_uv and absf((uv[b] - uv[a]).cross(uv[c] - uv[a])) > 0.00000001
 		check("all house mesh surfaces have finite vertices/UV/unit normals: " + key, valid)
 		check("front/back/side roof faces keep clockwise outward winding: " + key, winding)
 		check("ground approach receives no new protruding geometry: " + key, envelope)
+		check("all slate slopes and ridge-cap faces retain a nonzero physical UV area: " + key, slate_uv)
 		for entry: Dictionary in report["openings"]:
 			var opening: Dictionary = entry["opening"]
 			if opening.get("role", "") not in ["closed_door", "window"]:

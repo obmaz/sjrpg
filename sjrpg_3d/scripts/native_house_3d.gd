@@ -606,7 +606,10 @@ func _planar_uv(point: Vector3, normal: Vector3, material: String) -> Vector2:
 	if material == "wood":
 		return _timber_uv(point, normal, Vector3.AXIS_Y)
 	if material == "slate":
-		return Vector2(point.z, point.x if absf(normal.y) > 0.7 else -point.y) / SLATE_TILE
+		if absf(normal.y) > 0.7:
+			return Vector2(point.z, point.x) / SLATE_TILE
+		# End caps face Z, so their physical horizontal axis is X rather than Z.
+		return Vector2(point.z if absf(normal.x) >= absf(normal.z) else point.x, -point.y) / SLATE_TILE
 	var tangent := Vector3(normal.z, 0, -normal.x)
 	return Vector2(point.dot(tangent), -point.y) / 2.56
 

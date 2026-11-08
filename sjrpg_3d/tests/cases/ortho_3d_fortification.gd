@@ -121,6 +121,17 @@ func run() -> void:
 	check("native fortification uses all four actual gate passages and eight wing joins", controller.gates.size() == 4 and report["wing_joins"].size() == 8 and report["corners"].size() == 4)
 	check("masonry geometry and material submissions stay bounded", int(report["triangles"]) < 30000 and int(report["triangles"]) > 1000 and int(report["static_surfaces"]) <= 3)
 	check("the total wall datum keeps its original projected height", absf(float(report["projected_top_pixels"]) - game.village.wall_height * Iso.S) < 0.001)
+	var installed: Array = report["static_meshes"].duplicate()
+	for gate: Dictionary in controller.gates:
+		installed.append_array(_leaf_meshes(gate))
+	var actual_triangles := 0
+	for mesh: MeshInstance3D in installed:
+		for surface in mesh.mesh.get_surface_count():
+			var arrays := mesh.mesh.surface_get_arrays(surface)
+			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+			actual_triangles += (indices.size() if not indices.is_empty() else vertices.size()) / 3
+	check("fortification budget counts actual installed static and moving geometry", actual_triangles == int(report["triangles"]) and actual_triangles < 30000)
 	var stone_meshes := []
 	var valid := true
 	var winding := true
@@ -269,6 +280,20 @@ func _check_tower_recesses(report: Dictionary, stone_meshes: Array) -> void:
 			continue
 		exposed += 1
 		var stone := _nearest(stone_meshes, origin, -frame.basis.z)
+		if stone <= 0.305:
+			var nearby := []
+			for polygon: PackedVector2Array in report["wall_polygons"]:
+				var front := Vector2(center.x, center.z)
+				var behind := center - frame.basis.z * 0.10
+				var back_point := Vector2(behind.x, behind.z)
+				var front_distance := INF
+				var back_distance := INF
+				for edge in polygon.size():
+					front_distance = minf(front_distance, front.distance_to(Geometry2D.get_closest_point_to_segment(front, polygon[edge], polygon[(edge + 1) % polygon.size()])))
+					back_distance = minf(back_distance, back_point.distance_to(Geometry2D.get_closest_point_to_segment(back_point, polygon[edge], polygon[(edge + 1) % polygon.size()])))
+				if minf(front_distance, back_distance) < 0.5:
+					nearby.append({"polygon": polygon, "front_inside": Geometry2D.is_point_in_polygon(front, polygon), "back_inside": Geometry2D.is_point_in_polygon(back_point, polygon), "front_distance": front_distance, "back_distance": back_distance})
+			print("WALL_SLOT_DIAGNOSTIC " + JSON.stringify({"index": index, "center": center, "normal": frame.basis.z, "stone": stone, "iron": back, "nearest_stone": _nearest_detail(stone_meshes, origin, -frame.basis.z), "nearby_original_walls": nearby}))
 		check("visible inset is not painted on an opaque cylinder " + str(index), stone > 0.305)
 		var inside := center - frame.basis.z * 0.05
 		for side in [-1.0, 1.0]:
@@ -276,3 +301,27 @@ func _check_tower_recesses(report: Dictionary, stone_meshes: Array) -> void:
 			check("actual stone side reveals enclose the slot volume " + str(index) + " " + str(side), is_finite(reveal) and absf(reveal - 0.0375) < 0.001)
 	check("at least two exposed real slot faces per tower remain readable", exposed >= 16)
 	print("ART_AUDIT native_tower_recess " + JSON.stringify({"slot_faces": frames.size(), "exposed": exposed, "actual_back_distance_min": depth_min, "actual_back_distance_max": depth_max, "depth_m": report["slit_depth"], "slot_height_m": report["slit_height"]}))
+
+
+func _nearest_detail(meshes: Array, origin: Vector3, direction: Vector3) -> Dictionary:
+	var nearest := INF
+	var result := {}
+	for mesh: MeshInstance3D in meshes:
+		for surface in mesh.mesh.get_surface_count():
+			var arrays := mesh.mesh.surface_get_arrays(surface)
+			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+			var count := indices.size() if not indices.is_empty() else vertices.size()
+			for index in range(0, count, 3):
+				var a: int = indices[index] if not indices.is_empty() else index
+				var b: int = indices[index + 1] if not indices.is_empty() else index + 1
+				var c: int = indices[index + 2] if not indices.is_empty() else index + 2
+				var p := mesh.global_transform * vertices[a]
+				var q := mesh.global_transform * vertices[b]
+				var r := mesh.global_transform * vertices[c]
+				var hit = Geometry3D.ray_intersects_triangle(origin, direction, p, q, r)
+				if hit is Vector3 and origin.distance_to(hit) < nearest:
+					nearest = origin.distance_to(hit)
+					result = {"distance": nearest, "hit": hit, "vertices": [p, q, r], "normal": mesh.global_basis * normals[a], "mesh": mesh.name}
+	return result
