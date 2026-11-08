@@ -1,6 +1,6 @@
 {
   "scope": "Existing Stage1 forest encounter stones and all existing chests only; source2D project unchanged.",
-  "method": "Reproducible native full-volume mesh construction. No new image/model generation, image painting, relighting or baked shadows.",
+  "method": "Reproducible native full-volume mesh construction. Reuses the current shared village material family; no prop-specific image/model generation, image painting, relighting or baked shadows.",
   "reference": {
     "path": "assets/source/style/approved-game-reference.jpg",
     "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
@@ -25,14 +25,14 @@
   ],
   "shared_family_provenance": {
     "path": "assets/art/preview3d/materials.json",
-    "sha256": "80b0581b66f5a2d5f578a4514dbaf89b5f3f17eecfc23d6122861f2f6d110f1d",
-    "bytes": 2799
+    "sha256": "6682bf64e151a8b306f55d1c647690d79477ffc557ea99c73d4f7e79fe45a87c",
+    "bytes": 4172
   },
   "shared_textures": [
     {
       "path": "assets/art/preview3d/limestone.webp",
-      "sha256": "8e71b8336aa7a8f6a1ec3ee272eda58296d52b7f5677a207aabf0cec7142c9e5",
-      "bytes": 192976
+      "sha256": "03983784223f8bdf5fc89549625c71555e80ba7240c43602ce3624d9df729a21",
+      "bytes": 194962
     },
     {
       "path": "assets/art/preview3d/timber.webp",
@@ -62,7 +62,7 @@
   "materials": {
     "stone": "Existing shared front-on generated limestone, 2.56m world tile / 8 courses; instance tint observes source flash.",
     "chest": "Existing shared front-on generated timber, .65 UV scale (1.538m tile), and shared iron colour/roughness/metallic response selected by geometry vertex mask. No painted iron overlay.",
-    "texel_density": "627px limestone:244.92px/m; timber:407.55px/m. No normal/roughness image maps invented.",
+    "texel_density": "768px limestone:300.00px/m; timber:407.55px/m. No normal/roughness image maps invented.",
     "limitations": "Reused generated albedos retain fine authored self-relief, not measured PBR scans."
   },
   "coordinates": {
@@ -245,5 +245,11 @@
     "chosen_delta_u_ground": 30,
     "reason": "Existing gate-snapped wall overlaps old chest centre; move authoritative source/body/model/reward anchor together along same exterior route. No wall/collision/test relaxation.",
     "validation": "Requires runtime obstacle metadata confirmation and unchanged all-placement physics checks plus exterior corridor walking both ways."
+  },
+  "shared_family_update": {
+    "scope": "Shared limestone is the same authorized material used by village walls, gates, chapel and houses. Original prop geometry, timber, source reference, ownership and collision remain unchanged.",
+    "source": "assets/source/preview3d/town-limestone/generation.json",
+    "physical_tile_m": 2.56,
+    "courses": 8
   }
 }

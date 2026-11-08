@@ -19,6 +19,13 @@ def main() -> None:
     parser.add_argument("--log", type=Path, required=True)
     parser.add_argument("--browser-proof", type=Path)
     args = parser.parse_args()
+    destination = ROOT / "assets/data/native_encounter_props.json"
+    previous = json.loads(destination.read_text()) if destination.is_file() else {}
+    family = json.loads((ROOT / "assets/art/preview3d/materials.json").read_text())
+    stone_px = family["materials"]["limestone"]["size"][0]
+    stone_tile = family["physical_scale"]["limestone_tile_m"]
+    timber_px = family["materials"]["timber"]["size"][0]
+    texel_density = f"{stone_px}px limestone:{stone_px / stone_tile:.2f}px/m; timber:{timber_px * .65:.2f}px/m. No normal/roughness image maps invented."
     lines = args.log.read_text().splitlines()
     metrics = [json.loads(line.removeprefix("NATIVE_ENCOUNTER_METRICS ")) for line in lines if line.startswith("NATIVE_ENCOUNTER_METRICS ")]
     if len(metrics) != 1 or not any(line.startswith("PASS native_encounter_props") for line in lines):
@@ -48,7 +55,7 @@ def main() -> None:
         "new_texture_bytes": 0,
         "new_binary_model_bytes": 0,
         "generators": [source("scripts/" + name) for name in ["native_encounter_mesh_3d.gd", "native_encounter_props_3d.gd", "native_chest_material.gdshader"]],
-        "materials": {"stone": "Existing shared front-on generated limestone, 2.56m world tile / 8 courses; instance tint observes source flash.", "chest": "Existing shared front-on generated timber, .65 UV scale (1.538m tile), and shared iron colour/roughness/metallic response selected by geometry vertex mask. No painted iron overlay.", "texel_density": "627px limestone:244.92px/m; timber:407.55px/m. No normal/roughness image maps invented.", "limitations": "Reused generated albedos retain fine authored self-relief, not measured PBR scans."},
+        "materials": {"stone": "Existing shared front-on generated limestone, 2.56m world tile / 8 courses; instance tint observes source flash.", "chest": "Existing shared front-on generated timber, .65 UV scale (1.538m tile), and shared iron colour/roughness/metallic response selected by geometry vertex mask. No painted iron overlay.", "texel_density": texel_density, "limitations": "Reused generated albedos retain fine authored self-relief, not measured PBR scans."},
         "coordinates": {"units": "metres", "up": "+Y", "ground": "XZ", "forward": "+Z", "baked_scale": [1, 1, 1], "camera_azimuth": 45, "camera_elevation": 35.2643897},
         "geometry": metrics[0],
         "stone_footprint_m": [.8, 32 / 65],
@@ -57,7 +64,18 @@ def main() -> None:
         "ownership": {"stone": "Only the art instance IDs of the exact six EncounterStone owners; excludes only those old environment cards.", "chest": "Only current Chest.body_sprite IDs; breaking replaces this sprite identity. Affordances remove the previous fallback and retain fallback when no model is owned.", "regions": "Explicit forest scope plus source-local visibility; hidden adapter ancestors are ignored. Native roots hidden in cave and cleaned when owners leave the source world.", "runtime": "Read-only EncounterRuntime states/charges/recharge/living/can_summon, EncounterStone source tint/flash and Chest.dead. No visual timer, altered collision or extra rewards."},
         "validation": {"headless": "native_encounter_props PASS; actual source strike/open, capsule collider release, hinge-volume check, hidden/cave/return/deletion ownership.", "gpu": gpu, "review_fixture_source": source("scripts/native_encounter_review.gd"), "review_fixture": "Explicit loot_review=1 in a fresh isolated browser profile only. Official create_slot binds a unique test session before original source state methods. Same source anchors and fixed120 camera; optional native-model rotation checks unseen faces, optional original-art cards provide same-world comparison."},
     }
-    destination = ROOT / "assets/data/native_encounter_props.json"
+    # Refresh measured sources without discarding the adopted enlargement,
+    # authoritative placement correction or previously qualified GPU evidence.
+    for key in ("chest_proportion_change", "placement_correction", "shared_family_update"):
+        if key in previous:
+            document[key] = previous[key]
+    if "runtime" in previous.get("ownership", {}):
+        document["ownership"]["runtime"] = previous["ownership"]["runtime"]
+    validation = dict(previous.get("validation", {}))
+    validation.update({key: value for key, value in document["validation"].items() if key != "gpu"})
+    if args.browser_proof or "gpu" not in validation:
+        validation["gpu"] = gpu
+    document["validation"] = validation
     destination.write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n")
     print(destination.relative_to(ROOT))
 

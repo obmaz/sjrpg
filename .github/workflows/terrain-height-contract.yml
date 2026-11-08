@@ -13,6 +13,10 @@ on:
             - "sjrpg_3d/tests/cases/ortho_3d_fortification.gd"
             - "sjrpg_3d/tests/cases/native_house_family.gd"
             - "sjrpg_3d/assets/source/preview3d/houses/provenance.json"
+            - "sjrpg_3d/assets/data/native_encounter_props.json"
+            - "sjrpg_3d/assets/art/preview3d/materials.json"
+            - "sjrpg_3d/assets/art/preview3d/limestone.webp"
+            - "sjrpg_3d/assets/art/preview3d/timber.webp"
     workflow_dispatch:
 permissions:
     contents: read
@@ -35,4 +39,4 @@ jobs:
               run: |
                   chmod +x tools/*.sh sjrpg_3d/tools/*.sh
                   tools/setup_godot.sh
-                  tools/check.sh --project=3d --only=native_terrain_readability,melee_elevation,spatial_stairs,bridge,ortho_3d_fortification,town_gate_closure,npc_clearance,native_house_family,ortho_3d_chapel
+                  tools/check.sh --project=3d --only=native_terrain_readability,melee_elevation,spatial_stairs,bridge,ortho_3d_fortification,town_gate_closure,npc_clearance,native_house_family,ortho_3d_chapel,native_encounter_props
