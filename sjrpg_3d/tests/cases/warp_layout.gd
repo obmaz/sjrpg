@@ -36,6 +36,8 @@ func run() -> void:
 		var visual := controls.interaction_visual_rect(target["center"], half)
 		var bounds := Rect2(Vector2.ZERO, Vector2(dimensions))
 		var u := controls._unit
+		if dimensions in [Vector2i(1157, 1280), Vector2i(1141, 1280)]:
+			check("fold interaction stays in the lower action lane clear of the hero", touch.position.y > dimensions.y * 0.70)
 		check("larger warp plaque fits its touch target and screen", bounds.encloses(touch) and touch.encloses(visual) and touch.size.x >= 64 and touch.size.y >= 64 and visual.size.x >= 180.0 * u and visual.size.y >= 54.0 * u)
 		var warp_font := controls.interaction_font_size()
 		for context in ["보급원 미라", "동굴 출구", "바람 동굴", "상인"]:

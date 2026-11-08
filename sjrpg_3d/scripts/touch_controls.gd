@@ -113,13 +113,13 @@ func _layout() -> void:
 	_near_name = npc
 	if npc != "" and npc != "탈것 상인":
 		var text_width := HudArt.FONT.get_string_size(interaction_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, interaction_font_size()).x
-		var half := Vector2(maxf(106.0 * u, text_width * 0.5 + 24.0 * u), maxf(32.0, 38.0 * u))
+		var half := Vector2(maxf(94.0 * u, text_width * 0.5 + 20.0 * u), maxf(32.0, 38.0 * u))
 		half.y = maxf(half.y, 22.0 * css_scale())
 		var rise := maxf(78.0 * u, half.y + menu_touch + 10.0 * u)
 		var stick := Vector2(104.0 * u, size.y * 0.72) if portrait else Vector2(112.0 * u, size.y - 178.0 * u)
 		if _stick_index != -2:
 			stick = _stick_center - safe_origin
-		var center := _clear_interaction_center(Vector2(size.x / 2.0, bar_y - rise), half, stick, u)
+		var center := _clear_interaction_center(Vector2(size.x / 2.0, bar_y - rise), half, stick, u, size)
 		var interaction := _button(center, 32.0 * u)
 		interaction["half_size"] = half
 		_buttons["near_shop"] = interaction
@@ -507,7 +507,7 @@ func interaction_font_size() -> int:
 
 func interaction_visual_rect(center: Vector2, half: Vector2) -> Rect2:
 	var text_width := HudArt.FONT.get_string_size(interaction_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, interaction_font_size()).x
-	var size := Vector2(minf(half.x * 2.0, maxf(184.0 * _unit, text_width + 40.0 * _unit)), minf(half.y * 2.0, maxf(56.0 * _unit, 44.0 * css_scale())))
+	var size := Vector2(minf(half.x * 2.0, maxf(184.0 * _unit, text_width + 32.0 * _unit)), minf(half.y * 2.0, maxf(56.0 * _unit, 44.0 * css_scale())))
 	return Rect2(center - size * 0.5, size)
 
 
@@ -654,7 +654,25 @@ func gamepad_hint_snapshot() -> Dictionary:
 	return {"visible": is_visible_in_tree() and not last_drawn_gamepad_hints.is_empty(), "glyphs": last_drawn_gamepad_hints.duplicate(true)}
 
 ## Foldable screens have a wider skill fan. Keep the whole input rectangle clear.
-func _clear_interaction_center(preferred: Vector2, half: Vector2, stick: Vector2, unit: float) -> Vector2:
+func _clear_interaction_center(preferred: Vector2, half: Vector2, stick: Vector2, unit: float, canvas_size: Vector2) -> Vector2:
+	# Keep the prompt below the player when a horizontal lane fits between thumbs.
+	var horizontal_gap := 6.0 * unit
+	var left := half.x + horizontal_gap
+	var right := canvas_size.x - half.x - horizontal_gap
+	var obstacles: Array[Rect2] = []
+	for other: Dictionary in _buttons.values():
+		var radius: float = other["radius"]
+		obstacles.append(Rect2(other["center"] - Vector2.ONE * radius, Vector2.ONE * radius * 2.0))
+	obstacles.append(Rect2(stick - Vector2.ONE * stick_radius(), Vector2.ONE * stick_radius() * 2.0))
+	for bounds: Rect2 in obstacles:
+		if preferred.y + half.y + horizontal_gap <= bounds.position.y or preferred.y - half.y - horizontal_gap >= bounds.end.y:
+			continue
+		if bounds.get_center().x < preferred.x:
+			left = maxf(left, bounds.end.x + half.x + horizontal_gap)
+		else:
+			right = minf(right, bounds.position.x - half.x - horizontal_gap)
+	if left <= right:
+		return Vector2(clampf(preferred.x, left, right), preferred.y)
 	var center := preferred
 	var gap := 8.0 * unit
 	for iteration in 12:

@@ -7,6 +7,7 @@ on:
       - "sjrpg_3d/scripts/touch_controls.gd"
       - ".github/workflows/cave-accessibility-review.yml"
       - "sjrpg_3d/tests/cases/native_cave_geometry.gd"
+      - "sjrpg_3d/scripts/touch_controls.gd"
   workflow_dispatch:
 permissions:
   contents: read
