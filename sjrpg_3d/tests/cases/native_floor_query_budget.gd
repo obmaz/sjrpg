@@ -17,8 +17,8 @@ func run() -> void:
 	var spatial: SpatialWorld3D = game.spatial_world
 	var measured := MeasuredWorld.new()
 	measured.game = game
-	measured.set_physics_process(false)
 	game.ortho_preview.stage.add_child(measured)
+	measured.set_physics_process(false)
 	var dimensions := SpatialWorld3D.actor_dimensions(game.player, Player.RADIUS)
 	var body := measured._new_body("MeasuredWalker", dimensions, false)
 	body.collision_layer = 0
