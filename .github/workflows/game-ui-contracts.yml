@@ -7,6 +7,7 @@ on:
       - "sjrpg_3d/tests/cases/system_back.gd"
       - "sjrpg_3d/tests/cases/fps_settings.gd"
       - "sjrpg_3d/web/check_back.mjs"
+      - "sjrpg_3d/tools/screenshot.mjs"
       - ".github/workflows/game-ui-contracts.yml"
   workflow_dispatch:
 permissions:
