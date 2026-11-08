@@ -9,6 +9,7 @@ on:
             - "sjrpg_3d/tests/cases/native_terrain_readability.gd"
             - "sjrpg_3d/tests/cases/ortho_3d_fortification.gd"
             - "sjrpg_3d/tests/cases/native_house_family.gd"
+            - "sjrpg_3d/assets/source/preview3d/houses/provenance.json"
     workflow_dispatch:
 permissions:
     contents: read

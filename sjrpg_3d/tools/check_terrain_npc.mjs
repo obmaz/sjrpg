@@ -9,40 +9,47 @@ const base=new URL(process.argv[2]||'http://127.0.0.1:8786/');
 const out=path.resolve(process.argv[3]||'build/terrain-npc-review');
 const baseline=process.env.SJRPG_TERRAIN_EDITION==='before';
 const npcs=process.env.SJRPG_REVIEW_NPCS==='true';
+const worldQuality=process.env.SJRPG_REVIEW_WORLD_QUALITY||'low';
+assert(['low','high'].includes(worldQuality),'explicit supported actual world quality');
 const expectedImports=(process.env.SJRPG_REVIEW_NPC_IDENTITIES||'').split(',').filter(Boolean);
 await mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
 const errors=[],captures=[],checks=[];let context,page,failure=null;
-const read=()=>page.evaluate(()=>({ui:window.__sjrpgNativeStyleReview,native:window.__sjrpg3dProbe,review:window.__sjrpgTerrainNpcReview,window:[innerWidth,innerHeight]}));
+function timed(promise,label,ms=30000){let timer;const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Timeout '+label)),ms);timer.unref();});return Promise.race([promise,timeout]).finally(()=>clearTimeout(timer));}
+const mark=(label,data={})=>console.log('TERRAIN_NPC_PROGRESS '+JSON.stringify({at:new Date().toISOString(),label,...data}));
+const read=()=>timed(page.evaluate(()=>({ui:window.__sjrpgNativeStyleReview,native:window.__sjrpg3dProbe,review:window.__sjrpgTerrainNpcReview,window:[innerWidth,innerHeight]})),'read native browser state');
+const watchdog=setTimeout(()=>{console.error('TERRAIN_NPC_WATCHDOG_FAIL '+JSON.stringify({captures:captures.map(c=>c.name),errors}));process.exit(2);},12*60*1000);watchdog.unref();
 async function wait(fn,label,timeout=90000){const end=Date.now()+timeout;while(Date.now()<end){assert.equal(errors.length,0,JSON.stringify(errors));const s=await read();if(fn(s))return s;await page.waitForTimeout(120);}throw Error('Timeout '+label+' '+JSON.stringify(await read()));}
 async function settle(frames=4){const first=(await read()).review.frame;return wait(s=>s.review.frame>=first+frames,'drawn native frames');}
-async function boot(params={}){
- if(context)await context.close();
+async function boot(params={},quality=worldQuality){
+ mark('boot begin',{params,quality});
+ if(context)await timed(context.close(),'close prior native context');
  context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1});
  page=await context.newPage();
  page.on('pageerror',e=>errors.push(String(e)));
  page.on('console',m=>{if(m.type()==='error'||/SCRIPT ERROR|ERROR:|INVALID_(OPERATION|VALUE|ENUM)/.test(m.text()))errors.push(m.text());});
- const url=new URL(base);url.searchParams.set('native_style_review','1');url.searchParams.set('quality','high');
+ const url=new URL(base);url.searchParams.set('native_style_review','1');url.searchParams.set('quality',quality);
  for(const[k,v]of Object.entries(params))url.searchParams.set(k,v);
- await page.goto(url.href,{waitUntil:'domcontentloaded'});
+ await page.goto(url.href,{waitUntil:'domcontentloaded'});mark('document ready',{url:url.href});
  await page.waitForFunction(()=>window.__sjrpgTitleReady&&window.__sjrpgEntryReady,null,{timeout:90000});
- await page.locator('#entry-start').click();
+ mark('title ready');await page.locator('#entry-start').click();
  await page.waitForFunction(()=>window.__sjrpgClassButtons?.stage==='class',null,{timeout:30000});
  for(const key of['mage','start']){
   const b=await page.evaluate(key=>({p:window.__sjrpgClassButtons[key],w:innerWidth,h:innerHeight}),key);
   await page.mouse.click(b.p[0]*b.w,b.p[1]*b.h);await page.waitForTimeout(250);
  }
- await wait(s=>s.review?.terrain?.length===4&&s.native?.native_active&&s.native?.physics_ticks>0,'actual native terrain ready');
- await settle();
+ mark('class selected');await wait(s=>s.review?.terrain?.length===4&&s.native?.native_active&&s.native?.physics_ticks>0,'actual native terrain ready');
+ await settle();mark('actual native ready',{quality});
 }
 async function action(mode,role,face){
- await page.evaluate(([mode,role,face])=>window.__sjrpgTerrainNpcAction(mode,role,face),[mode,role,face]);
+ mark('photography begin',{mode,role,face});
+ await timed(page.evaluate(([mode,role,face])=>window.__sjrpgTerrainNpcAction(mode,role,face),[mode,role,face]),'apply photography view');
  return wait(s=>s.review.mode===mode&&s.review.role===role&&s.review.face===face&&s.review.frame>=s.review.requested_frame+4,'actual native photography '+mode);
 }
 function poseDelta(a,b){if(!a?.length||a.length!==b?.length)return 0;const x=a.flat(),y=b.flat();return Math.max(...x.map((v,i)=>Math.abs(v-y[i])));}
 async function capture(name){
- const s=await read();await page.screenshot({path:path.join(out,name+'.png'),timeout:90000});
- captures.push({name,...s});return s;
+ mark('capture begin',{name});const s=await read();if(name!=='failure'){assert.equal(s.ui.paused,false,'actual game remains live during photography '+name);assert(!s.ui.panel.rect,'no gameplay overlay covers actual photograph '+name);assert.equal(s.ui.dungeon_active,false,'actual safe forest scene '+name);}await page.screenshot({path:path.join(out,name+'.png'),timeout:90000});
+ captures.push({name,...s});await writeFile(path.join(out,'progress.json'),JSON.stringify({captures:captures.map(c=>({name:c.name,frame:c.review.frame,quality:c.review.quality,render_size:c.review.render_size})),errors},null,2));mark('capture complete',{name,frame:s.review.frame,quality:s.review.quality,render_size:s.review.render_size,gallery_render_size:s.review.gallery?.render_size});return s;
 }
 function verifyTerrain(s,role){
  assert.equal(s.review.projection,'orthographic');assert(Math.abs(s.review.elevation-35.264389682754654)<1e-4,'measured true isometric camera elevation');
@@ -59,9 +66,11 @@ function verifyTerrain(s,role){
  checks.push('actual shared surface/material '+role+' '+s.review.azimuth);
 }
 try{
+ await boot({at:'npc_courtyard'});
+ const initial=(await read()).review.physics;
+ // Every native landmark is already built in this actual safe town scene.
+ // Move only the render camera; keep the real player safe and clocks live.
  for(const role of[0,1,2,3]){
-  await boot({at:'lm'+role});
-  const initial=(await read()).review.physics;
   for(const[label,width,height]of[['portrait',390,844],['landscape',844,390]]){
    await page.setViewportSize({width,height});
    await wait(s=>s.window[0]===width&&s.window[1]===height&&((width>height)===(s.ui.viewport[0]>s.ui.viewport[1])),'real orientation');
@@ -74,7 +83,7 @@ try{
   }
  }
  if(npcs){
-  await boot({at:'npc_courtyard'});await page.setViewportSize({width:1024,height:1024});await settle();
+  await boot({at:'npc_courtyard'},'high');await page.setViewportSize({width:1024,height:1024});await settle();
   for(let face=0;face<4;face++){
    const s=await action('residents',0,face),g=s.review.gallery;
    assert(g&&g.count===9,'eight actual residents and adult hero scale reference');
@@ -104,6 +113,7 @@ try{
   for(let face=0;face<4;face++){
    const s=await action('residents',1,face),g=s.review.gallery;
    assert(g&&g.count===3,'three actual runtime models in facial/clothing closeup');
+   assert.equal(s.review.quality,'high','actual high game profile for NPC closeup');assert(g.render_size[0]>=1024&&g.render_size[1]>=1024&&g.msaa>0,'full-resolution antialiased native model render');assert(g.world_render_disabled_behind_opaque_gallery,'unseen forest is not shaded behind the opaque model photograph');
    assert.deepEqual(g.models.map(m=>m.identity).sort(),['merchant','mira','warrior']);
    assert.equal(s.review.projection,'orthographic');assert(Math.abs(s.review.elevation-35.264389682754654)<1e-4);
    for(const m of g.models)assert(m.bounds_max[1]-m.bounds_min[1]>=1.6&&m.bounds_max[1]-m.bounds_min[1]<=2.0,'same adult height in closeup '+m.identity);
@@ -113,6 +123,6 @@ try{
  console.log('TERRAIN_NPC_REVIEW_PASS '+JSON.stringify({baseline,npcs,captures:captures.length,checks:checks.length,errors:errors.length}));
 }catch(error){failure=String(error);console.error('TERRAIN_NPC_REVIEW_FAIL '+failure);try{await capture('failure');}catch{}process.exitCode=1;}
 finally{
- await writeFile(path.join(out,'proof.json'),JSON.stringify({url:base.href,baseline,npcs,expectedImports,checks,captures,errors,failure,passed:!failure&&!errors.length},null,2));
+ clearTimeout(watchdog);await writeFile(path.join(out,'proof.json'),JSON.stringify({url:base.href,baseline,npcs,worldQuality,expectedImports,checks,captures,errors,failure,passed:!failure&&!errors.length},null,2));
  await browser.close();
 }

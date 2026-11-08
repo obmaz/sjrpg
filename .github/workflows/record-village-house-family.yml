@@ -1,0 +1,69 @@
+name: Record and verify actual village house family
+on:
+    push:
+        paths:
+            - ".github/workflows/record-village-house-family.yml"
+            - "sjrpg_3d/scripts/native_house_3d.gd"
+            - "sjrpg_3d/tests/cases/native_house_family.gd"
+            - "sjrpg_3d/tools/review/record_house_family.gd"
+            - "sjrpg_3d/assets/art/preview3d/limestone.webp"
+            - "sjrpg_3d/assets/art/preview3d/materials.json"
+    workflow_dispatch:
+permissions:
+    contents: write
+concurrency:
+    group: village-house-record-${{ github.sha }}
+    cancel-in-progress: false
+jobs:
+    record:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/checkout@v7.0.1
+            - uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.godot-tools
+                      ~/.local/share/godot/export_templates
+                  key: godot-${{ hashFiles('.godot-version') }}-tools-v1
+            - name: Measure the actual four-house geometry and all source hashes
+              run: |
+                  chmod +x tools/*.sh sjrpg_3d/tools/*.sh
+                  tools/setup_godot.sh
+                  cp sjrpg_3d/tools/review/record_house_family.gd sjrpg_3d/tests/cases/record_house_family.gd
+                  tools/check.sh --project=3d --only=record_house_family
+            - name: Verify the exact candidate proof using all unchanged contract gates
+              run: |
+                  cp sjrpg_3d/build/house-family-record/provenance.json sjrpg_3d/assets/source/preview3d/houses/provenance.json
+                  tools/check.sh --project=3d --only=native_terrain_readability,melee_elevation,spatial_stairs,bridge,ortho_3d_fortification,town_gate_closure,npc_clearance,native_house_family
+            - name: Publish the exact measured proof as a blob without moving refs
+              env:
+                  SJRPG_ASSET_TOKEN: ${{ github.token }}
+              run: |
+                  python3 - <<'PY'
+                  import base64, hashlib, json, os, urllib.request
+                  from pathlib import Path
+                  proof = Path("sjrpg_3d/build/house-family-record/provenance.json")
+                  target = Path("sjrpg_3d/assets/source/preview3d/houses/provenance.json")
+                  if proof.read_bytes() != target.read_bytes():
+                      raise RuntimeError("The verified proof changed")
+                  data = proof.read_bytes()
+                  repository = os.environ["GITHUB_REPOSITORY"]
+                  if repository != "obmaz/sjrpg":
+                      raise RuntimeError("Unexpected repository")
+                  request = urllib.request.Request("https://api.github.com/repos/" + repository + "/git/blobs",
+                      data=json.dumps({"content":base64.b64encode(data).decode("ascii"),"encoding":"base64"}).encode(),
+                      method="POST", headers={"Authorization":"Bearer "+os.environ["SJRPG_ASSET_TOKEN"],"Accept":"application/vnd.github+json","Content-Type":"application/json"})
+                  with urllib.request.urlopen(request, timeout=60) as response:
+                      blob = json.load(response)
+                  record={"path":str(target),"sha":blob["sha"],"bytes":len(data),"sha256":hashlib.sha256(data).hexdigest(),"recorded_commit":os.environ["GITHUB_SHA"],"strict_contract_cases_passed":8,"refs_changed":False}
+                  (proof.parent/"published-proof.json").write_text(json.dumps(record,indent=2)+"\n")
+                  print("HOUSE_FAMILY_PROOF_BLOB "+json.dumps(record),flush=True)
+                  PY
+            - uses: actions/upload-artifact@v6
+              if: always()
+              with:
+                  name: village-house-proof-candidate
+                  path: sjrpg_3d/build/house-family-record
+                  if-no-files-found: ignore
+                  retention-days: 7

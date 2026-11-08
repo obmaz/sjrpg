@@ -93,6 +93,10 @@ func _process(delta: float) -> void:
 	if mode == "terrain":
 		_photograph(preview)
 	elif mode == "residents" and is_instance_valid(gallery):
+		# The opaque isolated gallery fully covers the world. Keep real physics,
+		# source clocks and native skeleton sync alive, but do not shade an unseen
+		# forest behind this explicit CI photograph.
+		preview.viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 		if gallery._sample_residents():
 			gallery.viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	elapsed += delta
@@ -106,7 +110,7 @@ func _process(delta: float) -> void:
 	for axis: Vector3 in [Vector3.RIGHT, Vector3.FORWARD, Vector3.UP]:
 		var point := inspection_camera.unproject_position(inspection_camera.global_position - eye * 20.0 + axis) - origin
 		axes.append([point.x, point.y])
-	var data := {"mode": mode, "role": role, "face": face, "frame": Engine.get_process_frames(), "requested_frame": requested_frame, "terrain": terrain_cache, "physics": _physical_surfaces(game), "projection": "orthographic" if inspection_camera.projection == Camera3D.PROJECTION_ORTHOGONAL else "perspective", "azimuth": fposmod(rad_to_deg(atan2(eye.x, eye.z)), 360.0), "elevation": rad_to_deg(asin(eye.y)), "axes": axes, "player": [game.player.position.x, game.player.position.y], "residents": preview._native_residents.review_snapshot()}
+	var data := {"mode": mode, "role": role, "face": face, "frame": Engine.get_process_frames(), "requested_frame": requested_frame, "terrain": terrain_cache, "physics": _physical_surfaces(game), "projection": "orthographic" if inspection_camera.projection == Camera3D.PROJECTION_ORTHOGONAL else "perspective", "azimuth": fposmod(rad_to_deg(atan2(eye.x, eye.z)), 360.0), "elevation": rad_to_deg(asin(eye.y)), "axes": axes, "player": [game.player.position.x, game.player.position.y], "residents": preview._native_residents.review_snapshot(), "quality": "low" if Prefs.low_resolution else "high", "render_size": [preview.viewport.size.x, preview.viewport.size.y]}
 	if mode == "residents" and is_instance_valid(gallery):
 		var snapshot := gallery.review_snapshot()
 		var selected := []
@@ -116,6 +120,9 @@ func _process(delta: float) -> void:
 				selected.append(model)
 		snapshot["models"] = selected
 		snapshot["count"] = selected.size()
+		snapshot["render_size"] = [gallery.viewport.size.x, gallery.viewport.size.y]
+		snapshot["msaa"] = gallery.viewport.msaa_3d
+		snapshot["world_render_disabled_behind_opaque_gallery"] = preview.viewport.render_target_update_mode == SubViewport.UPDATE_DISABLED
 		data["gallery"] = snapshot
 		data["native_poses"] = _native_poses(preview)
 	JavaScriptBridge.eval("window.__sjrpgTerrainNpcReview = " + JSON.stringify(data), true)
@@ -182,8 +189,11 @@ func _photograph(preview: Node) -> void:
 		height = maxf(height, absf(offset.dot(camera.global_basis.y)) * 2.0)
 	var aspect := float(preview.viewport.size.x) / float(preview.viewport.size.y)
 	camera.size = maxf(height + 5.0, (width + 6.0) / aspect)
-	camera.near = 0.05
-	camera.far = 125.0
+	# Match the real presenter's fitted shadow depth slab instead of casting
+	# through an arbitrary 125m forest while photographing a nearby terrace.
+	var ground_depth := camera.size * 0.5 * sqrt(2.0)
+	camera.near = maxf(0.05, 52.0 - ground_depth - 20.0)
+	camera.far = 52.0 + ground_depth + 4.0
 	preview.viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 
 func _native_poses(preview: Node) -> Dictionary:

@@ -1,4 +1,4 @@
-name: Review terrain height cues and actual NPC designs
+name: Review safe town terrain and actual NPC designs
 
 on:
     push:

@@ -1,12 +1,15 @@
 class_name NativeHouse3D
 extends RefCounted
-## Draft native house family. Shared generated material pixels are unchanged.
+## Native house family with metre-scaled timber grain and layered slate.
 ## Closed doors and bounded alcoves preserve the existing solid house footprint.
 
 const WALL := 0.20
 const EAVES := 0.22
 const FLOOR := 0.16
 const MATERIAL_KEYS := ["stone", "slate", "wood", "iron", "glass"]
+const TIMBER_TILE := 1.0 / 0.65
+const SLATE_TILE := 2.6
+const ASHLAR_COURSE := 0.32
 var _root: Node3D
 var _materials := {}
 var _surfaces := {}
@@ -16,13 +19,15 @@ var _pieces := 0
 var _openings: Array[Dictionary] = []
 var _roof_edges: Array[Dictionary] = []
 var _key := ""
+var _slate_tiles := 0
+var _quoins := 0
 
 
 static func build(presenter: Node, root: Node3D, key: String, width: float, depth: float, height: float) -> Dictionary:
 	var builder := NativeHouse3D.new()
 	builder._root = root
 	for material: String in MATERIAL_KEYS:
-		builder._materials[material] = presenter._materials[material]
+		builder._materials[material] = presenter._materials["door" if material == "wood" else material]
 	return builder._build(key, width, depth, height)
 
 
@@ -84,6 +89,7 @@ func _build(key: String, width: float, depth: float, height: float) -> Dictionar
 	var triangle := PackedVector2Array([Vector2(-body_width * 0.5, eave_height), Vector2(body_width * 0.5, eave_height), Vector2(0, eave_height + rise)])
 	_prism(triangle, WALL, front, "stone")
 	_prism(triangle, WALL, back, "stone")
+	_corner_quoins(body_width, body_depth, minf(eave_height, 2.48) if key == "nw" else eave_height, eave_height)
 	_roof(width, depth, eave_height, rise)
 	for facade in [front, back]:
 		_beam(Vector3(-body_width * 0.5, eave_height + 0.02, 0.12), Vector3(0, eave_height + rise - 0.02, 0.12), 0.11, "wood", facade)
@@ -106,6 +112,8 @@ func _build(key: String, width: float, depth: float, height: float) -> Dictionar
 		"door_approach": Rect2(Vector2(door_x - door_width * 0.5 - 0.12, depth * 0.5), Vector2(door_width + 0.24, 0.85)),
 		"openings": _openings, "roof_edges": _roof_edges, "materials": MATERIAL_KEYS,
 		"collision_note": "Existing whole-house footprint remains solid; doors are closed, smith/stable recesses carry blocking worktops or rails. No enterable interior is promised.",
+		"timber_mapping": "beam-local longitudinal grain, shared existing door material; metre UVs",
+		"timber_tile_m": TIMBER_TILE, "slate_tile_m": SLATE_TILE, "slate_tiles": _slate_tiles, "corner_quoins": _quoins,
 		"projection_review": "Pending actual multi-face camera captures; geometry uses native orthogonal XYZ without sprite baking."}
 	_root.set_meta("native_house", report)
 	return report
@@ -238,8 +246,11 @@ func _window(opening: Dictionary, facade: Transform3D, shutters: bool) -> void:
 
 
 func _frame(width: float, top: float, facade: Transform3D, upper: bool, openings: Array[Dictionary]) -> void:
-	for side in [-1.0, 1.0]:
-		_box(Vector3(side * (width * 0.5 - 0.05), (FLOOR + top) * 0.5, 0.11), Vector3(0.14, top - FLOOR, 0.11), "wood", facade)
+	# Lower masonry corners are ashlar; timber posts belong to the inn upper story.
+	if upper:
+		var post_bottom := 2.48
+		for side in [-1.0, 1.0]:
+			_box(Vector3(side * (width * 0.5 - 0.05), (post_bottom + top) * 0.5, 0.11), Vector3(0.14, top - post_bottom, 0.11), "wood", facade)
 	for level in [top - 0.10, (2.48 if upper else 0.43)]:
 		var gaps: Array[Vector2] = []
 		for opening in openings:
@@ -249,13 +260,61 @@ func _frame(width: float, top: float, facade: Transform3D, upper: bool, openings
 		var cursor := -width * 0.5 - 0.04
 		for gap in gaps:
 			if gap.x > cursor:
-				_box(Vector3((cursor + gap.x) * 0.5, level, 0.11), Vector3(gap.x - cursor, 0.12, 0.11), "wood", facade)
+				_box(Vector3((cursor + gap.x) * 0.5, level, 0.11), Vector3(gap.x - cursor, 0.12, 0.11), "wood" if upper or level > 0.5 else "stone", facade)
 			cursor = maxf(cursor, gap.y)
 		if cursor < width * 0.5 + 0.04:
-			_box(Vector3((cursor + width * 0.5 + 0.04) * 0.5, level, 0.11), Vector3(width * 0.5 + 0.04 - cursor, 0.12, 0.11), "wood", facade)
+			_box(Vector3((cursor + width * 0.5 + 0.04) * 0.5, level, 0.11), Vector3(width * 0.5 + 0.04 - cursor, 0.12, 0.11), "wood" if upper or level > 0.5 else "stone", facade)
 	var count := maxi(4, ceili(width / 0.52))
 	for index in count:
 		_box(Vector3(lerpf(-width * 0.44, width * 0.44, (index + 0.5) / count), top - 0.23, 0.11), Vector3(0.075, 0.22, 0.12), "wood", facade)
+
+
+func _corner_quoins(width: float, depth: float, top: float, wall_top: float) -> void:
+	# Small bonded corner dressings remain inside the original ground envelope.
+	# They share the world's 32cm masonry courses and one stone surface.
+	# Close the exterior quarter at the intersection of the two thick wall panels.
+	for x in [-1.0, 1.0]:
+		for z in [-1.0, 1.0]:
+			_box(Vector3(x * (width * 0.5 + 0.05), (FLOOR + wall_top) * 0.5, z * (depth * 0.5 + 0.05)), Vector3(0.10, wall_top - FLOOR, 0.10), "stone", Transform3D.IDENTITY, false)
+	for row in ceili(top / ASHLAR_COURSE):
+		var low := maxf(FLOOR, row * ASHLAR_COURSE + 0.009)
+		var high := minf(top - 0.009, (row + 1) * ASHLAR_COURSE - 0.009)
+		if high - low < 0.035:
+			continue
+		for x in [-1.0, 1.0]:
+			for z in [-1.0, 1.0]:
+				var front := Transform3D(Basis(Vector3.UP, 0.0 if z > 0.0 else PI), Vector3(0, 0, z * depth * 0.5))
+				var side := Transform3D(Basis(Vector3.UP, x * PI * 0.5), Vector3(x * width * 0.5, 0, 0))
+				var across := x * z
+				var along := -x * z
+				var long := 0.38 if row % 2 == 0 else 0.29
+				var short := 0.29 if row % 2 == 0 else 0.38
+				var end_x := width * 0.5 + 0.092
+				var end_z := depth * 0.5 + 0.14
+				_relief_stone(minf(across * end_x, across * (end_x - long)), maxf(across * end_x, across * (end_x - long)), low, high, front)
+				_relief_stone(minf(along * end_z, along * (end_z - short)), maxf(along * end_z, along * (end_z - short)), low, high, side)
+				_quoins += 1
+
+
+func _relief_stone(left: float, right: float, bottom: float, top: float, facade: Transform3D) -> void:
+	# A closed shallow frustum has 7mm edge relief, not a pasted unlit outline.
+	var inset := 0.007
+	var back: Array[Vector3] = [Vector3(left, bottom, 0.092), Vector3(right, bottom, 0.092), Vector3(right, top, 0.092), Vector3(left, top, 0.092)]
+	var front: Array[Vector3] = [Vector3(left + inset, bottom + inset, 0.14), Vector3(right - inset, bottom + inset, 0.14), Vector3(right - inset, top - inset, 0.14), Vector3(left + inset, top - inset, 0.14)]
+	var outer: Array[Vector3] = []
+	var inner: Array[Vector3] = []
+	for index in 4:
+		outer.append(facade * front[index])
+		inner.append(facade * back[index])
+	_quad(outer, facade.basis * Vector3.BACK, "stone")
+	_quad(inner, facade.basis * Vector3.FORWARD, "stone")
+	for index in 4:
+		var next := (index + 1) % 4
+		var points: Array[Vector3] = [inner[index], inner[next], outer[next], outer[index]]
+		var normal: Vector3 = (points[1] - points[0]).cross(points[2] - points[0]).normalized()
+		# Use the actual sloping bevel plane for the shared directional light.
+		_quad(points, normal, "stone")
+	_pieces += 1
 
 
 func _roof(width: float, depth: float, top: float, rise: float) -> void:
@@ -263,19 +322,39 @@ func _roof(width: float, depth: float, top: float, rise: float) -> void:
 	var reach := depth * 0.5 + EAVES
 	var length := sqrt(half * half + rise * rise)
 	var rows := maxi(8, ceili(length / 0.28))
+	var columns := maxi(4, ceili(reach * 2.0 / 0.42))
+	var tile_width := reach * 2.0 / columns
 	for side in [-1.0, 1.0]:
 		var normal := Vector3(side * rise / half, 1, 0).normalized()
+		# Continuous underlay closes the narrow staggered joints. Course fronts sit
+		# above the previous course instead of overlapping coplanar roof triangles.
+		var base: Array[Vector3] = [Vector3(side * half, top, -reach), Vector3(side * half, top, reach), Vector3(0, top + rise, reach), Vector3(0, top + rise, -reach)]
+		var base_uv: Array[Vector2] = [Vector2(-reach, 0) / SLATE_TILE, Vector2(reach, 0) / SLATE_TILE, Vector2(reach, length) / SLATE_TILE, Vector2(-reach, length) / SLATE_TILE]
+		_quad(base, normal, "slate", base_uv)
 		for row in rows:
 			var low := float(row) / rows
 			var high := minf(1.0, float(row + 1) / rows + 0.014)
-			var a := Vector3(side * half * (1.0 - low), top + rise * low + 0.022, -reach)
-			var b := Vector3(a.x, a.y, reach)
-			var c := Vector3(side * half * (1.0 - high), top + rise * high + 0.022, reach)
-			var d := Vector3(c.x, c.y, -reach)
-			var uv := [Vector2(-reach / 2.6, low * length / 2.6), Vector2(reach / 2.6, low * length / 2.6), Vector2(reach / 2.6, high * length / 2.6), Vector2(-reach / 2.6, high * length / 2.6)]
-			_triangle([a, b, c], [uv[0], uv[1], uv[2]], normal, "slate")
-			_triangle([a, c, d], [uv[0], uv[2], uv[3]], normal, "slate")
-			_quad([a, a - Vector3.UP * 0.028, b - Vector3.UP * 0.028, b], Vector3(side, 0, 0), "slate")
+			var splits: Array[float] = [-reach, reach]
+			for column in columns + 1:
+				var edge := -reach + (column + (0.5 if row % 2 else 0.0)) * tile_width
+				if edge > -reach + 0.001 and edge < reach - 0.001:
+					splits.append(edge)
+			splits.sort()
+			for column in splits.size() - 1:
+				var from := splits[column] + (0.004 if column > 0 else 0.0)
+				var to := splits[column + 1] - (0.004 if column + 1 < splits.size() - 1 else 0.0)
+				var a := Vector3(side * half * (1.0 - low), top + rise * low, from) + normal * 0.028
+				var b := Vector3(a.x, a.y, to)
+				var c := Vector3(side * half * (1.0 - high), top + rise * high, to) + normal * 0.006
+				var d := Vector3(c.x, c.y, from)
+				var uv: Array[Vector2] = [Vector2(from, low * length) / SLATE_TILE, Vector2(to, low * length) / SLATE_TILE, Vector2(to, high * length) / SLATE_TILE, Vector2(from, high * length) / SLATE_TILE]
+				var tile_normal := (b - a).cross(d - a).normalized()
+				if tile_normal.y < 0.0:
+					tile_normal = -tile_normal
+				_quad([a, b, c, d], tile_normal, "slate", uv)
+				var edge_normal := Vector3(side * normal.y, -absf(normal.x), 0).normalized()
+				_quad([a, a - normal * 0.022, b - normal * 0.022, b], edge_normal, "slate", [uv[0], uv[0] + Vector2(0, 0.022 / SLATE_TILE), uv[1] + Vector2(0, 0.022 / SLATE_TILE), uv[1]])
+				_slate_tiles += 1
 		_box(Vector3(side * (half - 0.055), top - 0.025, 0), Vector3(0.11, 0.16, reach * 2.0), "wood")
 		for end in [-1.0, 1.0]:
 			var a := Vector3(side * (half - 0.06), top + rise * 0.06 / half + 0.015, end * (reach - 0.06))
@@ -286,7 +365,6 @@ func _roof(width: float, depth: float, top: float, rise: float) -> void:
 	var caps := maxi(4, ceili(reach * 2.0 / 0.38))
 	for index in caps:
 		_box(Vector3(0, top + rise + 0.06, lerpf(-reach, reach, (index + 0.5) / caps)), Vector3(0.19, 0.13, reach * 2.0 / caps - 0.012), "slate")
-
 
 func _chimney(width: float, depth: float, top: float, rise: float, twin: bool) -> void:
 	var center := Vector3(width * (-0.23 if _key == "se" else 0.23), top + rise * 0.69, -depth * 0.20)
@@ -372,7 +450,11 @@ func _dormer(width: float, depth: float, top: float, rise: float, side: float) -
 		var c := at * Vector3(0, 1.19, -0.63)
 		var d := at * Vector3(0, 1.19, 0.06)
 		var normal := (b - a).cross(d - a).normalized()
-		_quad([a, b, c, d], normal if normal.y >= 0.0 else -normal, "slate")
+		var slope := Vector2(0.44, 0.36).length()
+		var uv: Array[Vector2] = [Vector2(0.06, 0), Vector2(-0.63, 0), Vector2(-0.63, slope), Vector2(0.06, slope)]
+		for index in uv.size():
+			uv[index] /= SLATE_TILE
+		_quad([a, b, c, d], normal if normal.y >= 0.0 else -normal, "slate", uv)
 
 
 func _rivet(at: Vector3, facade: Transform3D) -> void:
@@ -401,6 +483,7 @@ func _box(at: Vector3, size: Vector3, material: String, transform := Transform3D
 	var amount := minf(0.004 if material == "iron" else (0.016 if material == "stone" else 0.012), minf(size.x, minf(size.y, size.z)) * 0.20)
 	var half := size * 0.5
 	var normals := transform.basis.inverse().transposed()
+	var grain := size.max_axis_index()
 	for axis in 3:
 		var across := (axis + 1) % 3
 		var along := (axis + 2) % 3
@@ -414,7 +497,7 @@ func _box(at: Vector3, size: Vector3, material: String, transform := Transform3D
 				points.append(transform * (at + point))
 			var normal := Vector3.ZERO
 			normal[axis] = side
-			_quad(points, (normals * normal).normalized(), material)
+			_quad(points, (normals * normal).normalized(), material, _box_uvs(points, normal, transform, at, grain, material))
 	for first in 3:
 		for second in range(first + 1, 3):
 			var third := 3 - first - second
@@ -430,7 +513,7 @@ func _box(at: Vector3, size: Vector3, material: String, transform := Transform3D
 					var normal := Vector3.ZERO
 					normal[first] = sign_a
 					normal[second] = sign_b
-					_quad(points, (normals * normal).normalized(), material)
+					_quad(points, (normals * normal).normalized(), material, _box_uvs(points, normal.normalized(), transform, at, grain, material))
 	for x in [-1.0, 1.0]:
 		for y in [-1.0, 1.0]:
 			for z in [-1.0, 1.0]:
@@ -440,8 +523,19 @@ func _box(at: Vector3, size: Vector3, material: String, transform := Transform3D
 					var point := (half - Vector3.ONE * amount) * signs
 					point[axis] += amount * signs[axis]
 					points.append(transform * (at + point))
-				_triangle(points, [Vector2.ZERO, Vector2.RIGHT, Vector2.ONE], (normals * signs).normalized(), material)
+				var coords := _box_uvs(points, signs.normalized(), transform, at, grain, material)
+				_triangle(points, coords if not coords.is_empty() else [Vector2.ZERO, Vector2.RIGHT, Vector2.ONE], (normals * signs).normalized(), material)
 	_pieces += 1
+
+
+func _box_uvs(points: Array, normal: Vector3, transform: Transform3D, at: Vector3, grain: int, material: String) -> Array:
+	var coords := []
+	if material != "wood":
+		return coords
+	var inverse := transform.affine_inverse()
+	for point: Vector3 in points:
+		coords.append(_timber_uv(inverse * point - at, normal, grain))
+	return coords
 
 
 func _append_mesh(mesh: Mesh, transform: Transform3D, material: String) -> void:
@@ -459,7 +553,7 @@ func _append_arrays(arrays: Array, transform: Transform3D, material: String) -> 
 	for index in count:
 		var source := indices[index] if not indices.is_empty() else index
 		tool.set_normal((normal_basis * normals[source]).normalized())
-		tool.set_uv(uv[source])
+		tool.set_uv(_planar_uv(transform * vertices[source], (normal_basis * normals[source]).normalized(), material) if material == "slate" else uv[source])
 		tool.add_vertex(transform * vertices[source])
 	_triangles += count / 3
 	_pieces += 1
@@ -484,7 +578,7 @@ func _prism(polygon: PackedVector2Array, depth: float, transform: Transform3D, m
 			for corner in 3:
 				var point := polygon[triangles[index + corner]]
 				points.append(transform * Vector3(point.x, point.y, side * depth * 0.5))
-				uv.append(Vector2(point.x, -point.y) / 2.6)
+				uv.append(Vector2(point.x, -point.y) / (TIMBER_TILE if material == "wood" else 2.6))
 			_triangle(points, uv, normal, material)
 	var area := 0.0
 	for index in polygon.size():
@@ -498,9 +592,32 @@ func _prism(polygon: PackedVector2Array, depth: float, transform: Transform3D, m
 	_pieces += 1
 
 
-func _quad(points: Array, normal: Vector3, material: String) -> void:
-	_triangle([points[0], points[1], points[2]], [Vector2.ZERO, Vector2.RIGHT, Vector2.ONE], normal, material)
-	_triangle([points[0], points[2], points[3]], [Vector2.ZERO, Vector2.ONE, Vector2.DOWN], normal, material)
+func _quad(points: Array, normal: Vector3, material: String, uv: Array = []) -> void:
+	var coords := uv
+	if coords.is_empty():
+		coords = []
+		for point: Vector3 in points:
+			coords.append(_planar_uv(point, normal, material))
+	_triangle([points[0], points[1], points[2]], [coords[0], coords[1], coords[2]], normal, material)
+	_triangle([points[0], points[2], points[3]], [coords[0], coords[2], coords[3]], normal, material)
+
+
+func _planar_uv(point: Vector3, normal: Vector3, material: String) -> Vector2:
+	if material == "wood":
+		return _timber_uv(point, normal, Vector3.AXIS_Y)
+	if material == "slate":
+		return Vector2(point.z, point.x if absf(normal.y) > 0.7 else -point.y) / SLATE_TILE
+	var tangent := Vector3(normal.z, 0, -normal.x)
+	return Vector2(point.dot(tangent), -point.y) / 2.56
+
+
+func _timber_uv(point: Vector3, normal: Vector3, grain: int) -> Vector2:
+	var first := (grain + 1) % 3
+	var second := (grain + 2) % 3
+	if absf(normal[grain]) > 0.8:
+		return Vector2(point[first], point[second]) / TIMBER_TILE
+	var across := first if absf(normal[first]) <= absf(normal[second]) else second
+	return Vector2(point[across], -point[grain]) / TIMBER_TILE
 
 
 func _triangle(points: Array, uv: Array, normal: Vector3, material: String) -> void:
