@@ -1,14 +1,22 @@
 #!/usr/bin/env python3
 """Read source alpha to measure atlas alignment; never modifies image pixels."""
-import hashlib,json
+import argparse,hashlib,json
 from pathlib import Path
 from PIL import Image,ImageFilter
 
 root=Path(__file__).resolve().parents[2]
 config=json.loads((root/"assets/data/cave_crawler_sprite.json").read_text())
+parser=argparse.ArgumentParser()
+parser.add_argument("--source",action="store_true",help="Audit newly generated source before runtime adoption")
+parser.add_argument("--columns",type=int)
+args=parser.parse_args()
+if args.columns:
+    config["columns"]=args.columns
+    config["walk_columns"]=list(range(args.columns))
+    config["attack_column"]=args.columns-1
 audit={}
-for name,columns,rows,prefix in [("cave_crawler",4,4,""),("cave_crawler_corpses",2,2,"corpse_")]:
-    path=root/"assets/art/monsters"/(name+".png")
+for name,columns,rows,prefix in [("cave_crawler",config["columns"],config["rows"],""),("cave_crawler_corpses",config["corpse_columns"],config["corpse_rows"],"corpse_")]:
+    path=(root/"assets/source/cave-crawler"/("generated-atlas.png" if not prefix else "generated-corpses.png")) if args.source else root/"assets/art/monsters"/(name+".png")
     image=Image.open(path)
     assert image.mode=="RGBA",(name,image.mode)
     assert image.getchannel("A").getextrema()==(0,255),(name,"real alpha required")
@@ -41,7 +49,9 @@ for name,columns,rows,prefix in [("cave_crawler",4,4,""),("cave_crawler_corpses"
     config[prefix+"frame_body_fractions"]=fractions
     if prefix:
         config["corpse_frame_width_fractions"]=widths
-    audit[name]={"size":[w,h],"sha256":hashlib.sha256(path.read_bytes()).hexdigest(),"grid":[columns,rows],"frames":boxes}
+    opaque=[pixel for pixel in image.getdata() if pixel[3]>=224]
+    luminance=sum(.2126*p[0]+.7152*p[1]+.0722*p[2] for p in opaque)/max(1,len(opaque))
+    audit[name]={"mean_opaque_luminance":round(luminance,3),"rgba8_mip_bytes_estimate":round(w*h*4*4/3),"size":[w,h],"sha256":hashlib.sha256(path.read_bytes()).hexdigest(),"grid":[columns,rows],"frames":boxes}
 out=root/"build/gameplay-review";out.mkdir(parents=True,exist_ok=True)
 (out/"atlas-audit.json").write_text(json.dumps(audit,indent=2)+"\n")
 (out/"measured-sprite-metadata.json").write_text(json.dumps(config,indent=2)+"\n")
