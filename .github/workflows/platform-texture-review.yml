@@ -1,4 +1,5 @@
 name: Review Web and Android texture compression
+# Preserve existing texture UIDs and record first engine assignments separately.
 
 on:
     push:

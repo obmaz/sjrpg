@@ -111,7 +111,7 @@ function verifyNormal(s,scene){
  if(expectedPaused)assert(s.dungeonPreviewReady&&s.ui.dungeon_active&&!s.ui.panel.rect,'explicit existing frozen cave photograph, not live gameplay or menu');
  assert(!s.ui.panel.rect,'no overlay covers actual game');
  assert.equal(s.texture.dungeon_active,scene==='cave','actual requested world');
- assert(s.texture.hud_visible,'normal game HUD remains visible');
+ assert(s.texture.hud_visible&&s.texture.hud_bars_visible&&s.texture.hud_controls_visible,'actual HUD layer, bars and controls stay enabled');
  assert.equal(s.texture.quality,quality,'same actual world quality');
  assert(Math.abs(s.texture.camera_elevation-35.264389682754654)<1e-4,'true isometric camera preserved');
  assert(s.gpu.contexts.some(c=>c.api==='webgl2'),'actual engine WebGL2 context');

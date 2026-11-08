@@ -53,6 +53,10 @@ for name in a:
     print("TEXTURE_IMAGE_END "+path.name,flush=True)
 normal = [m for m in after["measurements"] if not m["name"].startswith("etc2-")]
 assert len(normal) == 3 and all(m["selected_variant"] in ("s3tc","etc2") and m["gpu"]["compressed"]["bytes"] > 0 for m in normal)
+for current in normal:
+    original = next(m for m in before["measurements"] if m["name"] == current["name"])
+    dimensions = lambda m: {t["path"]:[t["width"],t["height"]] for t in m["texture"]["probe"]["textures"]}
+    assert dimensions(original) == dimensions(current), current["name"]+": logical source dimensions changed"
 def budgets(report):
     return [{"name":m["name"],"normal_before_probe":m["normal_texture_memory_before_probe"],
              "controlled_all_ten":m["texture"]["probe"]["texture_memory_after_bytes"],

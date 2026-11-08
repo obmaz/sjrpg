@@ -26,10 +26,10 @@ jobs:
     apk:
         runs-on: ubuntu-latest
         timeout-minutes: 25
-        env:
-            ANDROID_HOME: ${{ runner.temp }}/sjrpg-android-sdk
         steps:
             - uses: actions/checkout@v7.0.1
+            - name: Set Android SDK location
+              run: echo "ANDROID_HOME=$RUNNER_TEMP/sjrpg-android-sdk" >> "$GITHUB_ENV"
             - uses: actions/setup-java@v5
               with:
                   distribution: temurin

@@ -35,6 +35,7 @@ def main():
         raise RuntimeError("Source art bytes changed")
     selected = texture_policy.load_policy()
     records = []
+    initialized_uids = []
     repository = os.environ["GITHUB_REPOSITORY"]
     if repository != "obmaz/sjrpg":
         raise RuntimeError("Unexpected repository")
@@ -49,8 +50,14 @@ def main():
         retained_after = {k:v for k,v in actual.items() if k not in allowed}
         if retained_before != retained_after:
             raise RuntimeError("Non-policy image settings changed: "+relative+" "+json.dumps({"before":retained_before,"after":retained_after}))
-        if texture_policy.values(text,parts["remap"],relative).get("uid") != original["uid"]:
-            raise RuntimeError("Texture UID changed: "+relative)
+        actual_uid = texture_policy.values(text,parts["remap"],relative).get("uid")
+        if original["uid"] is not None:
+            if actual_uid != original["uid"]:
+                raise RuntimeError("Existing texture UID changed: "+relative)
+        else:
+            if not actual_uid or not actual_uid.startswith('"uid://') or not actual_uid.endswith('"'):
+                raise RuntimeError("Missing first engine-assigned texture UID: "+relative)
+            initialized_uids.append({"path":relative,"uid":actual_uid})
         if any(actual.get(k) != v for k,v in allowed.items()):
             raise RuntimeError("Policy import did not survive Godot: "+relative)
         data = path.read_bytes()
@@ -60,7 +67,7 @@ def main():
         with urllib.request.urlopen(request,timeout=60) as response:
             sha = json.load(response)["sha"]
         records.append({"path":"sjrpg_3d/"+relative,"sha":sha,"sha256":hashlib.sha256(data).hexdigest(),"bytes":len(data)})
-    report = {"source_commit":os.environ["GITHUB_SHA"],"source_files_unchanged":True,"nonpolicy_settings_unchanged":True,"uids_unchanged":True,"refs_changed":False,"imports":records}
+    report = {"source_commit":os.environ["GITHUB_SHA"],"source_files_unchanged":True,"nonpolicy_settings_unchanged":True,"existing_uids_preserved":True,"initialized_uids":initialized_uids,"refs_changed":False,"imports":records}
     args.out.with_name("verified-import-blobs.json").write_text(json.dumps(report,indent=2)+"\n")
     print("TEXTURE_IMPORT_BLOBS "+json.dumps(report),flush=True)
 

@@ -113,7 +113,10 @@ func _process(delta: float) -> void:
 		"camera_elevation": rad_to_deg(asin(eye.y)),
 		"camera_azimuth": fposmod(rad_to_deg(atan2(eye.x, eye.z)), 360.0),
 		"render_size": [preview.viewport.size.x, preview.viewport.size.y],
-		"hud_visible": game.hud.is_visible_in_tree(),
+		"hud_visible": game.hud.visible,
+		"hud_bars_visible": game.hud._bars.visible,
+		"hud_controls_visible": game.hud.controls.visible,
+		"hud_bars_visible_in_tree": game.hud._bars.is_visible_in_tree(),
 		"probe": _probe,
 	}
 	JavaScriptBridge.eval("window.__sjrpgTextureCompression = " + JSON.stringify(report), true)
