@@ -23,7 +23,7 @@ func run() -> void:
 	GameState.discovered_sanctuaries.assign(["town", "tree", "cave"])
 	game.player.position = game.exploration.gate_approach("town")
 	var controls: TouchControls = game.hud.controls
-	for dimensions in [Vector2i(720, 1280), Vector2i(1280, 720), Vector2i(540, 960), Vector2i(720, 1280)]:
+	for dimensions in [Vector2i(720, 1280), Vector2i(1280, 720), Vector2i(540, 960), Vector2i(1157, 1280), Vector2i(1141, 1280), Vector2i(720, 1280)]:
 		view.size = dimensions
 		await _frames(4)
 		controls._layout()
@@ -53,6 +53,10 @@ func run() -> void:
 			var radius: float = other["radius"]
 			var rect := Rect2(other["center"] - Vector2.ONE * radius, Vector2.ONE * radius * 2.0)
 			check("larger warp action avoids the menu and combat targets: " + name, not touch.intersects(rect))
+		var stick_rect := Rect2(controls._stick_center - Vector2.ONE * controls.stick_radius(), Vector2.ONE * controls.stick_radius() * 2.0)
+		check("interaction input stays clear of the joystick", not touch.intersects(stick_rect))
+		for point in [visual.position + Vector2.ONE, visual.end - Vector2.ONE, Vector2(visual.end.x - 1, visual.position.y + 1)]:
+			check("visible interaction corners belong to interaction after fold resize", controls._hit_button(point) == "near_shop")
 		game.hud.interact("워프게이트")
 		await _frames(5)
 		var panel: WarpGatePanel = game.hud._panel

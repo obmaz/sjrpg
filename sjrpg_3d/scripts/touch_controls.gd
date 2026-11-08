@@ -116,7 +116,11 @@ func _layout() -> void:
 		var half := Vector2(maxf(106.0 * u, text_width * 0.5 + 24.0 * u), maxf(32.0, 38.0 * u))
 		half.y = maxf(half.y, 22.0 * css_scale())
 		var rise := maxf(78.0 * u, half.y + menu_touch + 10.0 * u)
-		var interaction := _button(Vector2(size.x / 2.0, bar_y - rise), 32.0 * u)
+		var stick := Vector2(104.0 * u, size.y * 0.72) if portrait else Vector2(112.0 * u, size.y - 178.0 * u)
+		if _stick_index != -2:
+			stick = _stick_center - safe_origin
+		var center := _clear_interaction_center(Vector2(size.x / 2.0, bar_y - rise), half, stick, u)
+		var interaction := _button(center, 32.0 * u)
 		interaction["half_size"] = half
 		_buttons["near_shop"] = interaction
 	for button in _buttons.values():
@@ -648,3 +652,25 @@ func _draw_gamepad_hints(canvas: CanvasItem = null) -> void:
 
 func gamepad_hint_snapshot() -> Dictionary:
 	return {"visible": is_visible_in_tree() and not last_drawn_gamepad_hints.is_empty(), "glyphs": last_drawn_gamepad_hints.duplicate(true)}
+
+## Foldable screens have a wider skill fan. Keep the whole input rectangle clear.
+func _clear_interaction_center(preferred: Vector2, half: Vector2, stick: Vector2, unit: float) -> Vector2:
+	var center := preferred
+	var gap := 8.0 * unit
+	for iteration in 12:
+		var target := Rect2(center - half, half * 2.0).grow(gap)
+		var next_y := center.y
+		for other: Dictionary in _buttons.values():
+			var radius: float = other["radius"]
+			var bounds := Rect2(other["center"] - Vector2.ONE * radius, Vector2.ONE * radius * 2.0)
+			if target.intersects(bounds):
+				next_y = minf(next_y, bounds.position.y - half.y - gap)
+		var stick_bounds := Rect2(stick - Vector2.ONE * stick_radius(), Vector2.ONE * stick_radius() * 2.0)
+		if target.intersects(stick_bounds):
+			next_y = minf(next_y, stick_bounds.position.y - half.y - gap)
+		next_y = maxf(half.y + gap, next_y)
+		if is_equal_approx(next_y, center.y):
+			break
+		center.y = next_y
+	return center
+
