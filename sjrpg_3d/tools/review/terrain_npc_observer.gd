@@ -110,6 +110,7 @@ func _process(delta: float) -> void:
 		snapshot["models"] = selected
 		snapshot["count"] = selected.size()
 		data["gallery"] = snapshot
+		data["native_poses"] = _native_poses(preview)
 	JavaScriptBridge.eval("window.__sjrpgTerrainNpcReview = " + JSON.stringify(data), true)
 
 func _physical_surfaces(game: Node) -> Array:
@@ -177,3 +178,23 @@ func _photograph(preview: Node) -> void:
 	camera.near = 0.05
 	camera.far = 125.0
 	preview.viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+
+func _native_poses(preview: Node) -> Dictionary:
+	var result := {}
+	for entry: Dictionary in preview._native_residents.entries.values():
+		if str(entry["source"]) != "cc0_import":
+			continue
+		var body: Node3D = entry["node"]
+		var identity: String = str(body.get_meta("resident_identity", ""))
+		var source: Villager = (entry["owner"] as WeakRef).get_ref()
+		if not is_instance_valid(source):
+			continue
+		var poses := []
+		for child: Node in body.find_children("*", "Skeleton3D", true, false):
+			var skeleton := child as Skeleton3D
+			for index in skeleton.get_bone_count():
+				var at := skeleton.get_bone_pose(index)
+				var rotation := at.basis.orthonormalized().get_rotation_quaternion()
+				poses.append([at.origin.x, at.origin.y, at.origin.z, rotation.x, rotation.y, rotation.z, rotation.w])
+		result[identity] = {"source_time": source._time, "sample_time": entry["sample_time"], "clip": entry["clip"], "bone_poses": poses}
+	return result

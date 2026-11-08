@@ -39,6 +39,7 @@ async function action(mode,role,face){
  await page.evaluate(([mode,role,face])=>window.__sjrpgTerrainNpcAction(mode,role,face),[mode,role,face]);
  return wait(s=>s.review.mode===mode&&s.review.role===role&&s.review.face===face&&s.review.frame>=s.review.requested_frame+4,'actual native photography '+mode);
 }
+function poseDelta(a,b){if(!a?.length||a.length!==b?.length)return 0;const x=a.flat(),y=b.flat();return Math.max(...x.map((v,i)=>Math.abs(v-y[i])));}
 async function capture(name){
  const s=await read();await page.screenshot({path:path.join(out,name+'.png'),timeout:90000});
  captures.push({name,...s});return s;
@@ -88,6 +89,13 @@ try{
      assert(m.sample.clip.toLowerCase().includes('idle'),'source-clock idle sample '+m.identity);
      assert(m.triangles<=18000&&m.surfaces<=8,'bounded imported geometry '+m.identity);
      assert(m.bounds_max[1]-m.bounds_min[1]>=1.6&&m.bounds_max[1]-m.bounds_min[1]<=1.9,'adult height '+m.identity);
+    }
+   }
+   if(!baseline&&face===0){
+    for(const id of expectedImports){
+     const first=s.review.native_poses?.[id];assert(first?.bone_poses?.length>=20,'actual live native skeleton '+id);
+     await wait(next=>{const now=next.review.native_poses?.[id];return now&&now.source_time>first.source_time+.06&&poseDelta(first.bone_poses,now.bone_poses)>1e-6;},'actual live source-clock bone motion '+id);
+     checks.push('actual live source-clock skeletal idle '+id);
     }
    }
    await capture('residents-face-'+face);

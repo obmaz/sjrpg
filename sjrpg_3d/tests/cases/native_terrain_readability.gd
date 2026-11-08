@@ -22,6 +22,12 @@ func run() -> void:
 		var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 		var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
 		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+		if not _same_vertices(points, faces, Vector3.UP * 0.008):
+			var degenerate_count := 0
+			for triangle in range(0, faces.size(), 3):
+				if (faces[triangle + 1] - faces[triangle]).cross(faces[triangle + 2] - faces[triangle]).length_squared() < 0.00000001:
+					degenerate_count += 1
+			print("TERRAIN_DIAGNOSTIC_TOP ", JSON.stringify({"role": role, "rendered_count": points.size(), "physical_count": faces.size(), "source_degenerate_triangles": degenerate_count, "source": faces, "actual": points}))
 		check("all top and ramp vertices retain exact native support " + str(role), _same_vertices(points, faces, Vector3.UP * 0.008))
 		var correct_uv := uv.size() == points.size()
 		for i in points.size():
@@ -87,16 +93,29 @@ func _check_earth(node: MeshInstance3D, surface: Dictionary, role: int) -> void:
 	var bounded := points.size() > 0
 	var walls_only := true
 	var entrance_clear := true
+	var diagnostics: Array[Dictionary] = []
+	var faces := SpatialWorld3D.surface_faces(surface)
 	for i in points.size():
 		var point := points[i]
 		var projected := SpatialWorld3D.projected(point)
 		var height := SpatialWorld3D._surface_height(surface, projected)
-		bounded = bounded and point.y <= height + 0.0001 and point.y >= maxf(0.0, height - 0.20) - 0.0001
+		var fits_height := point.y <= height + 0.0001 and point.y >= maxf(0.0, height - 0.20) - 0.0001
+		bounded = bounded and fits_height
 		var on_boundary := false
 		for edge in polygon.size():
 			on_boundary = on_boundary or Geometry2D.get_closest_point_to_segment(projected, polygon[edge], polygon[(edge + 1) % polygon.size()]).distance_squared_to(projected) < 0.0001
-		walls_only = walls_only and on_boundary and absf(normals[i].y) < 0.001
+		var fits_wall := on_boundary and absf(normals[i].y) < 0.001
+		walls_only = walls_only and fits_wall
+		var entrance_distance := Geometry2D.get_closest_point_to_segment(projected, entrance[0], entrance[1]).distance_to(projected)
+		if diagnostics.size() < 20 and (not fits_height or not fits_wall or (entrance_distance < 0.01 and point.y >= 0.0001)):
+			var source_y: Array[float] = []
+			for source_point in faces:
+				if Vector2(source_point.x - point.x, source_point.z - point.z).length_squared() < 0.00000001:
+					source_y.append(source_point.y)
+			diagnostics.append({"point": point, "projected": projected, "sampled_height": height, "matching_source_y": source_y, "normal": normals[i], "on_boundary": on_boundary, "entrance_distance": entrance_distance})
 		if Geometry2D.get_closest_point_to_segment(projected, entrance[0], entrance[1]).distance_squared_to(projected) < 0.0001:
 			entrance_clear = entrance_clear and point.y < 0.0001
+	if not diagnostics.is_empty():
+		print("TERRAIN_DIAGNOSTIC_EARTH ", JSON.stringify({"role": role, "surface": surface, "points": diagnostics}))
 	check("earth stays in the exposed upper 20cm of actual cliff faces " + str(role), bounded and walls_only)
 	check("open ground entrance receives no blocking visual rim " + str(role), entrance_clear)

@@ -1,10 +1,11 @@
 class_name NativeResidents3D
 extends RefCounted
-## One imported CC0 merchant pilot plus seven authored resident identities.
+## Two distinct imported CC0 residents plus six authored resident identities.
 ## Gameplay clocks, feet, local visibility and injury state remain owned by Villager.
 const IDS := ["merchant", "smith", "stable", "elder", "mira", "elin", "noah", "rowen"]
 const IMPORTED_MERCHANT := "res://assets/art/native_residents/merchant.glb"
-const AUTHORED_IDS := ["smith", "stable", "elder", "mira", "elin", "noah", "rowen"]
+const IMPORTED_MODELS := {"merchant": IMPORTED_MERCHANT, "mira": "res://assets/art/native_residents/mira.glb"}
+const AUTHORED_IDS := ["smith", "stable", "elder", "elin", "noah", "rowen"]
 const COATS := ["74634c", "59605b", "68684c", "626e7a", "607b79", "677687", "637452", "526d7c"]
 static var _meshes: Dictionary = {}
 var preview: Node
@@ -92,7 +93,7 @@ static func build(identity: String) -> ArrayMesh:
 		return null
 	var b: Dictionary = {}
 	var cloth: String = "cloth" + str(index)
-	var female: bool = identity in ["mira", "elin"]
+	var female: bool = identity == "elin"
 	var elder: bool = identity == "elder"
 	var smith: bool = identity == "smith"
 	var width: float = 1.15 if smith else 0.90 if female else 1.0
@@ -101,12 +102,12 @@ static func build(identity: String) -> ArrayMesh:
 		_part(b, "leather", NativeActorShapes.boot(), Vector3(side * 0.115, 0, 0))
 		_loft(b, "trouser", [Vector4(0.25, 0.068, 0.076, 0), Vector4(0.47, 0.078, 0.083, 0), Vector4(0.56, 0.072, 0.080, 0.02), Vector4(0.82, 0.10, 0.10, 0)], Vector3(side * 0.11, 0, 0), 0.003, 12)
 		var arm_key: String = "skin" if smith or identity == "stable" else cloth
-		_part(b, arm_key, NativeActorShapes.sleeve(0.49, 0.095 if smith else 0.076), Vector3(side * 0.273 * width, 1.34 + shift, 0), Vector3.ONE, side * -0.10, -0.10 if identity in ["mira", "rowen"] else 0.04)
+		_part(b, arm_key, NativeActorShapes.sleeve(0.49, 0.095 if smith else 0.076), Vector3(side * 0.273 * width, 1.34 + shift, 0), Vector3.ONE, side * -0.10, -0.10 if identity == "rowen" else 0.04)
 		_loft(b, "leather" if smith else cloth, [Vector4(0, 0.060, 0.065, 0), Vector4(0.055, 0.065, 0.068, 0)], Vector3(side * 0.276 * width, 0.87 + shift, 0.047), 0.003, 12)
 		_round(b, "skin", Vector3(side * 0.276 * width, 0.79 + shift, 0.070), Vector3(0.104, 0.15, 0.091))
 	_part(b, cloth if not smith else "leather", NativeActorShapes.chest(), Vector3(0, shift, 0.045 if elder else 0), Vector3(width, 1, 1.0))
 	var long_robe: bool = identity in ["elder", "elin", "noah"]
-	var hem: float = 0.14 if long_robe else 0.48 if identity == "mira" else 0.69
+	var hem: float = 0.14 if long_robe else 0.69
 	_loft(b, cloth, [Vector4(hem, 0.29 if long_robe else 0.24 * width, 0.195, 0), Vector4(0.78, 0.225 * width, 0.15, 0), Vector4(0.99, 0.177 * width, 0.13, 0)], Vector3.ZERO, 0.014 if long_robe else 0.009, 24)
 	_loft(b, "leather", [Vector4(0.94, 0.19 * width, 0.153, 0), Vector4(1.01, 0.19 * width, 0.153, 0)], Vector3.ZERO, 0, 16)
 	_box(b, "bronze", Vector3(0, 0.974, 0.169), Vector3(0.069, 0.059, 0.020))
@@ -128,9 +129,6 @@ static func build(identity: String) -> ArrayMesh:
 		"elder":
 			_part(b, "wood", NativeActorShapes.sleeve(1.62, 0.023), Vector3(0.35, 1.64, 0.12))
 			_round(b, "bronze", Vector3(0.35, 1.65, 0.12), Vector3(0.10, 0.11, 0.10))
-		"mira":
-			_loft(b, "leather", [Vector4(0.95, 0.15, 0.09, -0.22), Vector4(1.31, 0.19, 0.11, -0.23), Vector4(1.42, 0.11, 0.08, -0.22)], Vector3.ZERO, 0, 16)
-			_loft(b, cloth, [Vector4(1.14, 0.26, 0.18, -0.025), Vector4(1.40, 0.24, 0.17, 0)], Vector3.ZERO, 0.009, 18, PI, PI, 0.018)
 		"elin":
 			_loft(b, "ivory", [Vector4(1.39, 0.18, 0.15, -0.025), Vector4(1.60, 0.17, 0.14, -0.025), Vector4(1.72, 0.145, 0.13, -0.02), Vector4(1.81, 0.065, 0.06, -0.02)], Vector3.ZERO, 0.004, 20, PI * 0.80, PI * 1.40, 0.018)
 			_loft(b, "ivory", [Vector4(0.28, 0.083, 0.022, 0.20), Vector4(1.20, 0.090, 0.025, 0.18)], Vector3.ZERO, 0.006, 12)
@@ -153,15 +151,16 @@ static func build(identity: String) -> ArrayMesh:
 	return result
 
 
-## The runtime and review gallery share this factory; no procedural merchant is silently substituted.
+## Runtime and review gallery share this factory; imports never silently use an authored substitute.
 static func create(identity: String) -> Node3D:
 	if not IDS.has(identity):
 		return null
 	var model: Node3D
-	if identity == "merchant":
-		if not ResourceLoader.exists(IMPORTED_MERCHANT):
+	if IMPORTED_MODELS.has(identity):
+		var path: String = IMPORTED_MODELS[identity]
+		if not ResourceLoader.exists(path):
 			return null
-		var scene: PackedScene = load(IMPORTED_MERCHANT) as PackedScene
+		var scene: PackedScene = load(path) as PackedScene
 		if scene == null:
 			return null
 		var candidate: Node = scene.instantiate()
@@ -170,7 +169,7 @@ static func create(identity: String) -> Node3D:
 			candidate.free()
 			return null
 		model.set_meta("resident_source", "cc0_import")
-		model.set_meta("resident_asset", IMPORTED_MERCHANT)
+		model.set_meta("resident_asset", path)
 		_configure_idle(model)
 	else:
 		var mesh: ArrayMesh = build(identity)

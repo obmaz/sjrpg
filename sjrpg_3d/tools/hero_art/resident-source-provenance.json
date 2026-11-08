@@ -1,0 +1,191 @@
+{
+  "version": 1,
+  "creator": "Quaternius",
+  "sourceLicense": "CC0 1.0 Universal",
+  "sources": [
+    {
+      "pack": "Modular Character Outfits - Fantasy Standard",
+      "url": "https://quaternius.com/packs/modularcharacteroutfitsfantasy.html",
+      "itchUploadID": "16289385"
+    },
+    {
+      "pack": "Universal Base Characters Standard",
+      "url": "https://quaternius.com/packs/universalbasecharacters.html",
+      "itchUploadID": "15861669"
+    },
+    {
+      "pack": "Universal Animation Library Standard",
+      "url": "https://quaternius.com/packs/universalanimationlibrary.html",
+      "itchUploadID": "17958403"
+    },
+    {
+      "pack": "Universal Animation Library 2 Standard",
+      "url": "https://quaternius.com/packs/universalanimationlibrary2.html",
+      "itchUploadID": "17958478"
+    }
+  ],
+  "plan": {
+    "version": 1,
+    "identity": "mira",
+    "height_m": 1.78,
+    "packs": [
+      {
+        "slug": "modular-character-outfits-fantasy",
+        "upload": "16289385",
+        "prefix": "Modular Character Outfits - Fantasy[Standard]",
+        "license_source": "adult-source/License_Standard.txt",
+        "models": [
+          {
+            "folder": "Exports/glTF (Godot-Unreal)/Outfits/",
+            "name": "Female_Ranger.gltf",
+            "fingerprint": {
+              "bytes": 45461,
+              "sha256": "9b98b2ae6af3b4a1ec22bf8928b939e0751f08b25b636de82bfa7364fb34d3e1"
+            },
+            "target": "adult-source/residents/mira/body"
+          }
+        ]
+      },
+      {
+        "slug": "universal-base-characters",
+        "upload": "15861669",
+        "prefix": "Universal Base Characters[Standard]",
+        "license_source": "adult-source/base/License_Standard.txt",
+        "models": [
+          {
+            "folder": "Base Characters/Godot - UE/",
+            "name": "Superhero_Female_FullBody.gltf",
+            "fingerprint": {
+              "bytes": 31656,
+              "sha256": "adedf28000a0716f689b009a70314506fc62f827498f77ba852acb5610f3f3f4"
+            },
+            "target": "adult-source/residents/mira/head"
+          }
+        ]
+      }
+    ]
+  },
+  "sourceFiles": {
+    "adult-source/Animation-License.txt": {
+      "bytes": 332,
+      "sha256": "6d01f55c6e4c49a2c9963e147e561945ae2c83958c8ca667d90a6bffdbfac061"
+    },
+    "adult-source/Animation-README.txt": {
+      "bytes": 702,
+      "sha256": "ccd02718886b5a57f10f0a8911a38cfe10c36880e1d6dfa3445923fba32d2a72"
+    },
+    "adult-source/License_Standard.txt": {
+      "bytes": 728,
+      "sha256": "2202cc2f608c4210790b112e5f121bc2e7f8dced7b5b1c7f4be6203461bdebbb"
+    },
+    "adult-source/Male_Ranger.bin": {
+      "bytes": 1746884,
+      "sha256": "5bbb0d42cb324c6c27ce00417e68a876d92978f07d161f83590f0d7c0570eff6"
+    },
+    "adult-source/Male_Ranger.gltf": {
+      "bytes": 41447,
+      "sha256": "e1033a212332d84d98c19bc4927c621635478d0aa15d13c79da68d3ba9e0196f"
+    },
+    "adult-source/Readme.txt": {
+      "bytes": 311,
+      "sha256": "2f87579c277cde1e1ddbd4b8d823bed618728781cb6597b4dee3978c589ff5c4"
+    },
+    "adult-source/T_Ranger_BaseColor.png": {
+      "bytes": 6630927,
+      "sha256": "846ef2170b04ee584ad83bb8a1e86dab57a9a43b1193204505912c274d949925"
+    },
+    "adult-source/T_Regular_Male_Dark_BaseColor.png": {
+      "bytes": 1316151,
+      "sha256": "b4dcc0f4139aab548d7c070c4655bd2080ef16caeaaabee6c4aeb693c524e802"
+    },
+    "adult-source/UAL1_Standard.glb": {
+      "bytes": 7618436,
+      "sha256": "69591853d817488edaa8fd9bf8fc1d821eaeaf789f8627b3cd23b41c4ed67997"
+    },
+    "adult-source/UAL2-License.txt": {
+      "bytes": 332,
+      "sha256": "6d01f55c6e4c49a2c9963e147e561945ae2c83958c8ca667d90a6bffdbfac061"
+    },
+    "adult-source/UAL2_Standard.glb": {
+      "bytes": 8091444,
+      "sha256": "8cee20ab1bc55130092447e810e26df22dd2803eccc54f52137a7d54d7ab88a8"
+    },
+    "adult-source/base/License_Standard.txt": {
+      "bytes": 806,
+      "sha256": "0f4beaf0fe360a7732e58bbe3dbf60a2422367fbea60cb9ea4add968f383268e"
+    },
+    "adult-source/base/Superhero_Male_FullBody.bin": {
+      "bytes": 720076,
+      "sha256": "459003f9745853ae562a85506a2b94dd56515c1f37728f9fa3d2ce1a3e4cd92f"
+    },
+    "adult-source/base/Superhero_Male_FullBody.gltf": {
+      "bytes": 30989,
+      "sha256": "e7fcea214ecf8855afbf910b50de6f9c7d1decfb71ca28bad8a4481452dafeb4"
+    },
+    "adult-source/base/T_Eye_Brown.png": {
+      "bytes": 35958,
+      "sha256": "d08e3356a83211bc6ca21fe3a8e39f4b5c1a3b8f85457fc2c0fb57be09935025"
+    },
+    "adult-source/base/T_Hair_1_BaseColor.png": {
+      "bytes": 1570376,
+      "sha256": "bc7aa863bd22ab0a995cd838cceb4d3a5186ee54ee2fb0108fad85d20c057e6e"
+    },
+    "adult-source/base/T_Superhero_Male_Dark.png": {
+      "bytes": 1384380,
+      "sha256": "df680cbc1967a61e85998bfafb8f7bc0a36dd604bb3266486c4b06b1a184bb45"
+    },
+    "adult-source/mage/Male_Peasant.bin": {
+      "bytes": 674764,
+      "sha256": "e46bde795f7b69b351d322d7a5628e07131cfb48ed0afe366293f1b3f530433c"
+    },
+    "adult-source/mage/Male_Peasant.gltf": {
+      "bytes": 32681,
+      "sha256": "8f5a6cf6c1cf96e0a0f8e1a861b4245d42b7f88d44e5076da3d48f3fc52f4e76"
+    },
+    "adult-source/mage/T_Peasant_BaseColor.png": {
+      "bytes": 5055760,
+      "sha256": "a43635628d95571cd62fd4db0cc3a6ea32778b2bc02f242dda224c89d07f1ade"
+    },
+    "adult-source/mage/T_Regular_Male_Dark_BaseColor.png": {
+      "bytes": 1316151,
+      "sha256": "b4dcc0f4139aab548d7c070c4655bd2080ef16caeaaabee6c4aeb693c524e802"
+    },
+    "adult-source/residents/mira/body/Female_Ranger.gltf": {
+      "bytes": 45461,
+      "sha256": "9b98b2ae6af3b4a1ec22bf8928b939e0751f08b25b636de82bfa7364fb34d3e1"
+    },
+    "adult-source/residents/mira/body/Female_Ranger.bin": {
+      "bytes": 1959556,
+      "sha256": "d015964ba0a26eee9c9d2ea6f07aa660bba88aa536cf8bb6b67944b9e97c46df"
+    },
+    "adult-source/residents/mira/body/T_Ranger_BaseColor.png": {
+      "bytes": 6630927,
+      "sha256": "846ef2170b04ee584ad83bb8a1e86dab57a9a43b1193204505912c274d949925"
+    },
+    "adult-source/residents/mira/body/T_Regular_Female_Dark_BaseColor.png": {
+      "bytes": 1348542,
+      "sha256": "3b6ab973f9f3d6f8961226a0dbd99cf6d1b72df3795a8a5c1620a55754c161c2"
+    },
+    "adult-source/residents/mira/head/Superhero_Female_FullBody.gltf": {
+      "bytes": 31656,
+      "sha256": "adedf28000a0716f689b009a70314506fc62f827498f77ba852acb5610f3f3f4"
+    },
+    "adult-source/residents/mira/head/Superhero_Female_FullBody.bin": {
+      "bytes": 990808,
+      "sha256": "3a8220a485b33d05d879115a50697728b45a151781106033afb8b8c243fca208"
+    },
+    "adult-source/residents/mira/head/T_Eye_Brown.png": {
+      "bytes": 35958,
+      "sha256": "d08e3356a83211bc6ca21fe3a8e39f4b5c1a3b8f85457fc2c0fb57be09935025"
+    },
+    "adult-source/residents/mira/head/T_Hair_2_BaseColor.png": {
+      "bytes": 1729467,
+      "sha256": "f9f4f2fb3eeeefb0b6f0fdef38b0770fd6607640c1c680b8139dd76697e9f9b3"
+    },
+    "adult-source/residents/mira/head/T_Superhero_Female_Dark_BaseColor.png": {
+      "bytes": 1319410,
+      "sha256": "d366843ee7d9e9f37ec87a0e1c98c7f2e45573c08eeb80a51a6d9344e68cf288"
+    }
+  },
+  "scope": "Only one selected female Ranger and matching adult female base/head; existing merchant/mage sources unchanged."
+}
