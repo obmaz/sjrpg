@@ -65,15 +65,15 @@ jobs:
             export SJRPG_PACING_GAME="$RUNNER_TEMP/pacing-$SJRPG_PACING_EDITION"
             mkdir -p "$SJRPG_PACING_GAME" "build/frame-pacing/$SJRPG_PACING_EDITION"
             git archive "$SJRPG_PACING_SHA" | tar -x -C "$SJRPG_PACING_GAME"
-            mkdir -p "$SJRPG_PACING_GAME/sjrpg_3d/tools/perf"
-            cp sjrpg_3d/tools/perf/frame_pacing_observer.gd "$SJRPG_PACING_GAME/sjrpg_3d/tools/perf/"
+            mkdir -p "$SJRPG_PACING_GAME/sjrpg_3d/scripts"
+            cp sjrpg_3d/tools/perf/frame_pacing_observer.gd "$SJRPG_PACING_GAME/sjrpg_3d/scripts/"
             python3 - <<'PY'
           import os
           from pathlib import Path
           main=Path(os.environ["SJRPG_PACING_GAME"])/"sjrpg_3d/scripts/main.gd"
           source=main.read_text()
           needle="\tshow_title()\n"
-          hook='\tif OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get(\'frame_pacing_profile\')", true)) == "1":\n\t\tadd_child(load("res://tools/perf/frame_pacing_observer.gd").new().setup(self))\n'
+          hook='\tif OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get(\'frame_pacing_profile\')", true)) == "1":\n\t\tadd_child(load("res://scripts/frame_pacing_observer.gd").new().setup(self))\n'
           assert needle in source and "frame_pacing_observer.gd" not in source
           main.write_text(source.replace(needle,needle+hook,1))
           PY
