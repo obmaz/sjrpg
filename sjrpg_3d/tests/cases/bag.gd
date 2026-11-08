@@ -35,6 +35,23 @@ func run() -> void:
 			bag._rebuild()
 			await _frames(1)
 		bag.tab = 0
+		# Both inventory and vendor comparisons must be readable without tapping.
+		var current: Gear = GameState.equipped["weapon"]
+		var candidate := GameState.new_gear(current.base["id"], 0, 1, 0, 0)
+		var expected := "현재 장비와 비교: 공격 %s → %s" % [HudArt.stat(current.attack()), HudArt.stat(candidate.attack())]
+		for offer in [false, true]:
+			bag.selected = null
+			bag.selected_offer = ""
+			var row := bag._gear_row(candidate, offer, 100)
+			check("%s collapsed %s comparison visible" % [cls, "shop" if offer else "inventory"], _comparison_count(row, expected) == 1)
+			row.free()
+			bag.selected = candidate
+			bag.selected_offer = "gear-%d" % candidate.base["index"]
+			row = bag._gear_row(candidate, offer, 100)
+			check("%s expanded comparison not duplicated" % cls, _comparison_count(row, expected) == 1)
+			row.free()
+		bag.selected = null
+		bag.selected_offer = ""
 		var usable: Gear = null
 		for g in GameState.inventory:
 			if GameState.can_equip(g) and not GameState.is_equipped(g):
@@ -117,3 +134,13 @@ func run() -> void:
 
 
 ## 120° 기준: 지면에 닿는 모든 원화는 보정 후 변 각도가 ±30°에서 2.5° 이내여야 합니다.
+
+
+func _comparison_count(node: Node, expected: String) -> int:
+	var count := 0
+	if node is Label and node.text == expected:
+		count += 1
+		check("comparison permits row input", node.mouse_filter == Control.MOUSE_FILTER_IGNORE)
+	for child in node.get_children():
+		count += _comparison_count(child, expected)
+	return count

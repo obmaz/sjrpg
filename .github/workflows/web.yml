@@ -84,7 +84,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                review: [native, save, loading, gamepad, music]
+                review: [native, save, loading, gamepad, music, equipment]
         steps:
             - uses: actions/checkout@v7.0.1
             - uses: actions/setup-node@v6
@@ -115,6 +115,7 @@ jobs:
                       loading) SJRPG_CHECKER=check_entry_loading.mjs ;;
                       gamepad) SJRPG_CHECKER=check_gamepad.mjs ;;
                       music) SJRPG_CHECKER=check_music_memory.mjs; export SJRPG_MUSIC_PROFILE=fold ;;
+                      equipment) SJRPG_CHECKER=check_equipment_layout.mjs ;;
                       *) echo "Unknown browser review: $SJRPG_BROWSER_REVIEW" >&2; exit 2 ;;
                   esac
                   SJRPG_REVIEW_DIR="build/review/$SJRPG_BROWSER_REVIEW"
