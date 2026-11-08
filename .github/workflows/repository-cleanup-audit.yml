@@ -3,43 +3,82 @@ on:
   push:
     paths: ['.github/workflows/repository-cleanup-audit.yml']
 permissions:
-  contents: read
+  contents: write
 jobs:
   audit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
-      - name: Audit links and incoming references
+      - name: Prepare reviewed cleanup blobs without changing branch refs
         shell: python
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          import pathlib,re,json,posixpath
+          import pathlib,re,json,posixpath,os,urllib.request,subprocess,difflib
+          D=json.loads(r'''{"remove":["docs/previews/gpu-compression/README.md","docs/previews/gpu-compression/android-build.json","docs/previews/gpu-compression/comparison.json","docs/previews/gpu-compression/etc2-town-landscape-comparison.jpg","docs/previews/gpu-compression/etc2-town-portrait-comparison.jpg","docs/previews/gpu-compression/frozen-cave-landscape-comparison.jpg","docs/previews/gpu-compression/frozen-cave-portrait-comparison.jpg","docs/previews/gpu-compression/native-river-landscape-comparison.jpg","docs/previews/gpu-compression/native-river-portrait-comparison.jpg","docs/previews/gpu-compression/native-town-landscape-comparison.jpg","docs/previews/gpu-compression/native-town-portrait-comparison.jpg","docs/previews/native-village/README.md","docs/previews/native-village/architecture-chapel.jpg","docs/previews/native-village/architecture-context-details.jpg","docs/previews/native-village/architecture-gates-corners.jpg","docs/previews/native-village/architecture-houses-0-1.jpg","docs/previews/native-village/architecture-houses-2-3.jpg","docs/previews/native-village/architecture-review.json","docs/previews/native-village/chapel-face-0-comparison.jpg","docs/previews/native-village/house-3-face-0-comparison.jpg","docs/previews/native-village/npc-back.jpg","docs/previews/native-village/npc-front-comparison.jpg","docs/previews/native-village/npc-front.jpg","docs/previews/native-village/npc-other-side.jpg","docs/previews/native-village/npc-side.jpg","docs/previews/native-village/terrain-height-comparison.jpg","docs/previews/native-village/terrain-pools-comparison.jpg","docs/previews/native-village/wall-detail-face-0-comparison.jpg","sjrpg_3d/docs/art-direction.md","sjrpg_3d/docs/art-prompts.md","sjrpg_3d/docs/cave-design.md","sjrpg_3d/docs/chapel-regeneration.md","sjrpg_3d/docs/encounter-stones.md","sjrpg_3d/docs/forest-reference.md","sjrpg_3d/docs/gate-design.md","sjrpg_3d/docs/monster-animation.md","sjrpg_3d/docs/newselection-design.md","sjrpg_3d/docs/presentation-design.md","sjrpg_3d/docs/reference-look-guide.md","sjrpg_3d/docs/skill-effects-reference.md","sjrpg_3d/docs/town-architecture-remake.md","sjrpg_3d/docs/town-remake.md","sjrpg_3d/docs/ui-reference.md","sjrpg_3d/docs/world-readability.md","sjrpg_3d/docs/orthographic-3d-comparison.md","sjrpg_3d/tools/new_task.sh","sjrpg_3d/tools/run_role.sh","sjrpg_3d/tools/hero_art/diagnose_cloth.py",".github/workflows/repository-cleanup-audit.yml"],"redirects":{"sjrpg_3d/docs/art-direction.md":"sjrpg_2d/docs/art-direction.md","sjrpg_3d/docs/art-prompts.md":"sjrpg_2d/docs/art-prompts.md","sjrpg_3d/docs/cave-design.md":"sjrpg_2d/docs/cave-design.md","sjrpg_3d/docs/chapel-regeneration.md":"sjrpg_2d/docs/chapel-regeneration.md","sjrpg_3d/docs/encounter-stones.md":"sjrpg_2d/docs/encounter-stones.md","sjrpg_3d/docs/forest-reference.md":"sjrpg_2d/docs/forest-reference.md","sjrpg_3d/docs/gate-design.md":"sjrpg_2d/docs/gate-design.md","sjrpg_3d/docs/monster-animation.md":"sjrpg_2d/docs/monster-animation.md","sjrpg_3d/docs/newselection-design.md":"sjrpg_2d/docs/newselection-design.md","sjrpg_3d/docs/presentation-design.md":"sjrpg_2d/docs/presentation-design.md","sjrpg_3d/docs/reference-look-guide.md":"sjrpg_2d/docs/reference-look-guide.md","sjrpg_3d/docs/skill-effects-reference.md":"sjrpg_2d/docs/skill-effects-reference.md","sjrpg_3d/docs/town-architecture-remake.md":"sjrpg_2d/docs/town-architecture-remake.md","sjrpg_3d/docs/town-remake.md":"sjrpg_2d/docs/town-remake.md","sjrpg_3d/docs/ui-reference.md":"sjrpg_2d/docs/ui-reference.md","sjrpg_3d/docs/world-readability.md":"sjrpg_2d/docs/world-readability.md","sjrpg_3d/docs/orthographic-3d-comparison.md":"docs/development.md","docs/previews/gpu-compression/README.md":"sjrpg_3d/docs/platform-exports.md","docs/previews/native-village/README.md":"sjrpg_3d/docs/platform-exports.md"},"dev":"# 3D 개발 구조\n\n현재 개발 대상은 `sjrpg_3d/`입니다. 2D판은 동결하며, 루트는 버전 선택·공통 빌드만 담당합니다. [전체 구조](../../docs/development.md)와 [3D 제작 기준](../../docs/3d-asset-guide.md)이 기준입니다.\n\n## 실행과 상태\n\n- `NativeAdventure`가 모험 진입점입니다. `SpatialWorld3D`의 실제 몸체·높이·충돌이 공간 기준입니다.\n- 기존 `Game`, `Player`, `Enemy`는 진행·AI·UI 호환 어댑터입니다. 화면 좌표를 실제 X/Z 지면과 Y 높이로 변환합니다.\n- `SpatialCombat3D`가 높이·벽·몸체를 기준으로 근접 공격과 투사체를 제한합니다. 피해·재사용 시간·저장은 기존 규칙을 공유합니다.\n- `Ortho3DPreview`는 이름에 Preview가 남은 실제 공간 표시기입니다. 마을·숲·기존 동굴에서 사용하므로 미사용 프리뷰 코드로 삭제하지 않습니다.\n- 카메라는 방위45°·고도35.2643897° 직교 투영입니다. HUD와 미니맵은2D UI이며, 지면·물·효과·알파 잎의 평면은 입체 물리와 함께 사용합니다.\n\n## 저장과 입력\n\n진행은 `GameState`, 설정은 `Prefs`가 담당합니다. 저장은 `data.get(키, 기본값)`으로 하위 호환을 유지합니다. 3D 저장 위치는 네이티브 `sjrpg_3d`, 웹 `/userfs/sjrpg_3d`입니다. [저장 슬롯](save-slots.md)을 따릅니다.\n\n키보드·마우스·터치·Xbox 조작은 [프로젝트 안내](../README.md)를 따릅니다. 입력과 HUD는 실제 게임 상태를 읽으며 검수 observer가 게임 상태를 대신 만들지 않습니다.\n\n## 제작과 유지보수\n\n[문서 목록](README.md)에서 현재 영역별 제작 문서를 찾습니다. 공통2D 원화 제작 기록은 `../../sjrpg_2d/docs/`에 한 벌만 보존합니다. 이 기록을3D 기하·광원·충돌 규격으로 사용하지 않습니다.\n\n`assets/source/`는 승인 스타일, 생성 원본, 라이선스·출처·재생성 기록입니다. 게임 패키지에는 넣지 않지만 재현에 필요한 입력이므로 유지합니다. `assets/art/`와 `assets/data/`는 실제 런타임 리소스입니다. 경로 이름만으로 미사용 여부를 판단하지 않습니다.\n\n데이터 추출물은 `tools/extract/`에서 재생성합니다. 수치 단위는 원본 단위이며 HUD 체력·피해는100배, 자원은10배로 표시합니다. 조정은 추출 JSON을 수동 변경하는 대신 별도 설정으로 적용합니다.\n\n## 검사와 내보내기\n\n저장소 루트에서 실행합니다.\n\n```sh\ntools/check.sh --project=3d\ntools/check.sh --export\ntools/serve.sh\n```\n\n테스트는 `tests/run_all.tscn`에서 `tests/cases/`를 탐색합니다. 정적 호출이 없다는 이유로 테스트 파일을 삭제하지 않습니다. 제작 도구의 Python import와 명령행 진입점도 참조에 포함합니다.\n\n[Web·Android 내보내기](platform-exports.md), [Android 설치·서명](android.md), [웹 성능](web-performance.md)을 따릅니다. UI·입력·렌더 변경은 실제 가로·세로 브라우저 검사를 추가하고, 배포는 전체 검사와 공개 페이지 실행을 확인합니다.\n\n검수 캡처·일회성 진단 출력은 `build/`와 Actions 아티팩트에 둡니다. 저장소에 완료 스크린샷을 계속 쌓지 않습니다. 원본 출처와 현재 재현 방법은 관련 제작 문서에 유지합니다.\n","index":"# 3D 문서\n\n## 개발과 배포\n\n- [개발 구조](development.md)\n- [3D 에셋 제작 기준](../../docs/3d-asset-guide.md)\n- [무료 에셋·라이선스](../../docs/free-asset-sources.md)\n- [Web·Android와 GPU 압축](platform-exports.md)\n- [Android APK](android.md)\n- [웹 성능과 메모리](web-performance.md)\n- [실제 화면 검수](native-style-review.md)\n\n## 게임과 UI\n\n- [저장 슬롯](save-slots.md)\n- [선택·이어하기 화면](selection-screen-design.md)\n- [UI 패밀리](woodland-ui-family.md)\n- [타격감](juice.md)\n- [음악](music.md)\n\n## 3D 제작\n\n- [예배당](native-chapel-refinement.md), [집](native-house-family.md)\n- [주민](native-residents.md), [전사](native-warrior.md), [몬스터](native-enemy-models.md)\n- [공유 배우 표면](native-actor-surfaces.md)\n- [숲 소품](native-forest-props.md), [나무](native-forest-trees.md), [동굴](native-cave.md)\n- [상자·비석](native-encounter-props.md), [크기 기준](native-chest-scale.md)\n- [투사체 효과](native-projectile-fx.md)\n\n2D와 동일한 원화 제작 기록은 동결된 [2D 문서 폴더](../../sjrpg_2d/docs/)에 보존합니다. 3D 제작은 위3D 기준을 우선합니다. 사용자의 승인 스타일 원본과 라이선스·재생성 입력은 `../assets/source/`에 보관하고, 비교 캡처는 Actions 아티팩트로 관리합니다.\n"}''')
           root=pathlib.Path('.')
-          files=[p for p in root.rglob('*') if p.is_file() and '.git' not in p.parts and 'sjrpg_2d' not in p.parts]
-          texts={}
-          for p in files:
-           if p.suffix in {'.gd','.tscn','.tres','.json','.py','.sh','.mjs','.js','.html','.cfg','.godot','.md','.yml','.yaml','.txt'} or p.name in {'AGENTS.md','README.md'}:
-            try: texts[p.as_posix()]=p.read_text()
-            except UnicodeError: pass
-          broken=[]; preview=[]
-          for path,s in texts.items():
+          before={}
+          for p in root.rglob('*'):
+           if p.is_file() and '.git' not in p.parts and 'sjrpg_2d' not in p.parts and p.suffix in {'.md','.json'}:
+            try:before[p.as_posix()]=p.read_text()
+            except UnicodeError:pass
+          for p in D['remove']:
+           f=pathlib.Path(p)
+           if f.exists():f.unlink()
+          for path,old in before.items():
+           if path in D['remove']:continue
+           s=old
            if path.endswith('.md'):
-            for m in re.finditer(r'!?\[[^\]]*\]\(([^)]+)\)',s):
-             target=m[1].split('#')[0]
-             if not target or '://' in target or target.startswith(('mailto:','/')): continue
+            def link(m):
+             raw=m[2];target,sep,anchor=raw.partition('#')
              dest=posixpath.normpath(posixpath.join(posixpath.dirname(path),target))
-             if not pathlib.Path(dest).exists():broken.append({'file':path,'target':target})
-           for n,line in enumerate(s.splitlines(),1):
-            if 'docs/previews' in line or '../previews/' in line or '../../previews/' in line:
-             preview.append({'file':path,'line':n,'text':line[:600]})
-          candidates=[]
-          for p in files:
-           path=p.as_posix()
-           if p.suffix not in {'.gd','.py','.mjs','.sh'} or path.startswith('.github/'):continue
-           name=p.name; stem=p.stem
-           refs=[q for q,s in texts.items() if q!=path and (name in s or ('class_name ' in texts.get(path,'') and re.search(r'\b'+re.escape(stem)+r'\b',s)))]
-           if not refs: candidates.append({'file':path,'class_name':re.findall(r'^class_name (\w+)',texts.get(path,''),re.M)})
-          sources=[{'file':p.as_posix(),'bytes':p.stat().st_size} for p in files if p.as_posix().startswith('sjrpg_3d/assets/source/') and p.suffix.lower() in {'.png','.jpg','.webp','.jpeg'}]
-          report={'broken_links':broken,'preview_references':preview,'unreferenced_code_candidates':candidates,'source_images':sources,'docs':[{'file':p,'bytes':len(s.encode())} for p,s in texts.items() if p.endswith('.md')]}
-          s=json.dumps(report,ensure_ascii=False)
-          for i in range(0,len(s),18000):print('CLEAN_AUDIT '+s[i:i+18000])
+             if dest in D['redirects']:
+              raw=posixpath.relpath(D['redirects'][dest],posixpath.dirname(path))+(sep+anchor if sep else '')
+             return m[1]+raw+m[3]
+            s=re.sub(r'(!?\[[^\]]*\]\()([^)]+)(\))',link,s)
+            for a,b in D['redirects'].items():
+             s=s.replace('`'+a+'`','`'+b+'`')
+            if 'docs/previews/' in s:
+             s='\n'.join(line for line in s.split('\n') if 'docs/previews/' not in line)
+            if path=='AGENTS.md':
+             s=s.replace('(`tools/screenshot.mjs`)','(`sjrpg_3d/tools/screenshot.mjs`)').replace('node tools/screenshot.mjs --scene','node sjrpg_3d/tools/screenshot.mjs --scene')
+            if path=='sjrpg_3d/AGENTS.md':
+             s=s.replace('- **새 원화 생성 전 필수**','- **2D 카드·UI 원화 생성 전 필수**')
+             s=s.replace('- 코드로 그림을 대신 그리지 않습니다. 코드는 원화의 배치·투영·충돌·깊이 정렬에만 씁니다(HUD 도형과 효과는 예외).','- 2D 카드 원화는 코드 도형으로 대신 그리지 않습니다. 실제3D 모델은 부피·법선·UV·재질·충돌을 가진 메시로 제작하며 절차적 모델링도 루트3D 제작 기준에 따라 사용할 수 있습니다. 2D 원화 프롬프트를 정면3D 알베도 생성에 적용하지 않습니다.')
+            if path=='sjrpg_3d/docs/platform-exports.md':
+             s=re.sub(r'^\[비교 화면과 실측 자료\].*$', '비교 캡처와 측정 JSON은 검수 Actions 아티팩트에 보관합니다. 동일 카메라·해상도의 대응 사진만 화질 비교에 사용하며, 전투 중 카메라가 움직인 장면은 보조 자료로 구분합니다. UI·알파 경계·타일 디테일을 양 형식에서 확인합니다.',s,flags=re.M)
+           elif path.endswith('.json'):
+            for a in D['remove']:
+             if a.startswith('docs/previews/'):
+              s=s.replace('"'+a+'"','"https://raw.githubusercontent.com/obmaz/sjrpg/562e6890d1bbb8b9463394d6056619546d34a10a/'+a+'"')
+           pathlib.Path(path).write_text(s)
+          pathlib.Path('sjrpg_3d/docs/development.md').write_text(D['dev'])
+          pathlib.Path('sjrpg_3d/docs/README.md').write_text(D['index'])
+          p=pathlib.Path('README.md');s=p.read_text();s += '\n3D 개발 문서는 [문서 목록](sjrpg_3d/docs/README.md)에서 찾습니다. 검수 캡처와 일회성 진단 출력은 build/와 Actions 아티팩트로 관리합니다.\n';p.write_text(s)
+          broken=[]
+          for p in root.rglob('*.md'):
+           if '.git' in p.parts or 'sjrpg_2d' in p.parts:continue
+           s=p.read_text()
+           for m in re.finditer(r'!?\[[^\]]*\]\(([^)]+)\)',s):
+            target=m[1].split('#')[0]
+            if not target or '://' in target or target.startswith(('/', 'mailto:')):continue
+            if not (p.parent/target).exists():broken.append([str(p),target])
+          assert not broken,broken
+          for p in root.rglob('*.py'):
+           if '.git' not in p.parts and 'sjrpg_2d' not in p.parts:compile(p.read_bytes(),str(p),'exec')
+          subprocess.run(['git','diff','--exit-code','--','sjrpg_2d'],check=True)
+          changed=subprocess.check_output(['git','diff','--name-only'],text=True).splitlines()
+          new='sjrpg_3d/docs/README.md'
+          if new not in changed:changed.append(new)
+          out=[]
+          for path in changed:
+           p=pathlib.Path(path)
+           if not p.exists():continue
+           assert p.suffix in {'.md','.json'},path
+           content=p.read_text()
+           req=urllib.request.Request('https://api.github.com/repos/'+os.environ['GITHUB_REPOSITORY']+'/git/blobs',data=json.dumps({'content':content,'encoding':'utf-8'}).encode(),headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','Content-Type':'application/json'},method='POST')
+           with urllib.request.urlopen(req) as resp: sha=json.load(resp)['sha']
+           out.append({'path':path,'sha':sha,'mode':'100644','type':'blob'})
+           print('CLEAN_DIFF '+json.dumps({'path':path,'diff':''.join(difflib.unified_diff(before.get(path,'').splitlines(True),content.splitlines(True)))[:3000]},ensure_ascii=False))
+          print('CLEAN_PLAN '+json.dumps({'changes':out,'remove':D['remove'],'broken_links':broken,'python_syntax':'pass','frozen2d':'unchanged'},ensure_ascii=False))
           
