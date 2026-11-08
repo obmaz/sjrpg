@@ -216,6 +216,10 @@ const tapEntry = async (key) => {
     const viewport = page.viewportSize();
     await tap(viewport.width * point[0], viewport.height * point[1]);
 };
+if ((scene === 'bag' || scene === 'shop') && await page.evaluate(() => window.__sjrpgClassButtons.stage) === 'slots') {
+    await tapEntry('slot2');
+    await page.waitForFunction(() => window.__sjrpgClassButtons.stage === 'class', null, {timeout: 15000});
+}
 await tapEntry(cls);
 await page.waitForTimeout(300);
 if (scene === 'select') {
