@@ -24,9 +24,9 @@ def main():
     for key, (x, y) in PATCHES.items():
         box = (x * tile, y * tile, (x + 1) * tile, (y + 1) * tile)
         target = OUT / (key + ".webp")
-        if key == "limestone" and (ROOT / "assets/source/preview3d/town-limestone/generated.png").is_file():
-            from prepare_limestone import pack_limestone
-            records[key] = pack_limestone()
+        if key in ("limestone", "slate") and (ROOT / f"assets/source/preview3d/town-{key}/generated.png").is_file():
+            from prepare_limestone import pack_limestone, pack_slate
+            records[key] = pack_limestone() if key == "limestone" else pack_slate()
             continue
         image.crop(box).save(target, "WEBP", quality=94, method=6)
         records[key] = {"source": str(SOURCE.relative_to(ROOT)), "source_sha256": sha(SOURCE),

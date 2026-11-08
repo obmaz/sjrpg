@@ -9,6 +9,8 @@ const FLOOR := 0.16
 const MATERIAL_KEYS := ["stone", "slate", "wood", "iron", "glass"]
 const TIMBER_TILE := 1.0 / 0.65
 const SLATE_TILE := 2.6
+const SLATE_COURSES := 8
+const SLATE_PITCH := SLATE_TILE / SLATE_COURSES
 const ASHLAR_COURSE := 0.32
 var _root: Node3D
 var _materials := {}
@@ -321,7 +323,7 @@ func _roof(width: float, depth: float, top: float, rise: float) -> void:
 	var half := width * 0.5 + EAVES
 	var reach := depth * 0.5 + EAVES
 	var length := sqrt(half * half + rise * rise)
-	var rows := maxi(8, ceili(length / 0.28))
+	var rows := maxi(1, ceili(length / SLATE_PITCH))
 	var columns := maxi(4, ceili(reach * 2.0 / 0.42))
 	var tile_width := reach * 2.0 / columns
 	for side in [-1.0, 1.0]:
@@ -332,8 +334,10 @@ func _roof(width: float, depth: float, top: float, rise: float) -> void:
 		var base_uv: Array[Vector2] = [Vector2(-reach, 0) / SLATE_TILE, Vector2(reach, 0) / SLATE_TILE, Vector2(reach, length) / SLATE_TILE, Vector2(-reach, length) / SLATE_TILE]
 		_quad(base, normal, "slate", base_uv)
 		for row in rows:
-			var low := float(row) / rows
-			var high := minf(1.0, float(row + 1) / rows + 0.014)
+			# The generated slate has eight physical courses per 2.6m tile.
+			# Keep every eave boundary on that UV grid; only the ridge course clips.
+			var low := row * SLATE_PITCH / length
+			var high := minf(1.0, (row + 1) * SLATE_PITCH / length)
 			var splits: Array[float] = [-reach, reach]
 			for column in columns + 1:
 				var edge := -reach + (column + (0.5 if row % 2 else 0.0)) * tile_width
