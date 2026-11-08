@@ -7,13 +7,17 @@ on:
       - "sjrpg_3d/scripts/touch_controls.gd"
       - ".github/workflows/cave-accessibility-review.yml"
       - "sjrpg_3d/tests/cases/native_cave_geometry.gd"
-      - "sjrpg_3d/scripts/touch_controls.gd"
   workflow_dispatch:
+    inputs:
+      rotation_only:
+        description: Run only the live rotation diagnostic and focused contracts
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
   capture:
-    if: "!contains(github.event.head_commit.message, '[test-only]') && !contains(github.event.head_commit.message, '[rotation-diagnostic]')"
+    if: "!inputs.rotation_only && !contains(github.event.head_commit.message, '[test-only]') && !contains(github.event.head_commit.message, '[rotation-diagnostic]')"
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -101,7 +105,7 @@ jobs:
            print('CAVE_IMAGE_BEGIN '+name)
            for i in range(0,len(data),16000):print('CAVE_IMAGE_CHUNK '+data[i:i+16000])
            print('CAVE_IMAGE_END '+name)
-          print('CAVE_CAPTURE_PASS 8 actual before/after views; cave fixtures paused, town/settings live; no device orientation lock claim')
+          print('CAVE_CAPTURE_PASS 8 actual before/after views; actual cave/town fixture state; settings opened through real input; no device orientation lock claim')
           
       - uses: actions/upload-artifact@v6
         with:
@@ -126,7 +130,7 @@ jobs:
           sjrpg_3d/tools/check.sh --only=native_cave_geometry,dungeon_art,warp_layout,world_zoom,screen_orientation,fullscreen_settings
 
   rotation_diagnostic:
-    if: contains(github.event.head_commit.message, '[rotation-diagnostic]')
+    if: inputs.rotation_only || contains(github.event.head_commit.message, '[rotation-diagnostic]')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
