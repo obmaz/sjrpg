@@ -65,7 +65,7 @@ func run() -> void:
 	shot.set_process(false)
 	Prefs.reduce_motion = true
 	fx.sync()
-	check("reduced motion removes tail/flicker while preserving the real body", not (entry["tail"] as MeshInstance3D).visible and body.visible and is_equal_approx((body.mesh as QuadMesh).size.x, 44.0 / (65.0 * Ortho3DPreview.PROJECTION_FACTOR)))
+	check("reduced motion removes tail/flicker while preserving the real body", not (entry["tail"] as MeshInstance3D).visible and body.visible and is_equal_approx((body.mesh as QuadMesh).size.x * body.global_transform.basis.x.length(), 44.0 / (65.0 * Ortho3DPreview.PROJECTION_FACTOR)))
 	Prefs.reduce_motion = false
 	shot._process(shot.life + 0.1)
 	fx.sync()

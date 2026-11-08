@@ -593,10 +593,15 @@ func _set_card_frame(card: MeshInstance3D, texture: Texture2D, frame: Rect2) -> 
 
 func _place_card(card: MeshInstance3D, at: Vector2, rect: Rect2, angle := 0.0, native_foot := Vector3(INF, INF, INF)) -> void:
 	var factor := GROUND_PER_METER * PROJECTION_FACTOR
-	(card.mesh as QuadMesh).size = rect.size / factor
+	var mesh_size: Vector2 = (card.mesh as QuadMesh).size
+	var desired_size := rect.size / factor
 	var offset := rect.get_center() / factor
 	var basis := camera.global_transform.basis * Basis(Vector3(0, 0, 1), -angle)
-	card.global_transform.basis = basis
+	# Animate the instance, not PrimitiveMesh.size: changing mesh size rebuilds
+	# its GPU surface on every impact/flicker frame. Offsets still use the
+	# unscaled camera basis, preserving every original billboard corner.
+	card.global_transform.basis = Basis(basis.x * (desired_size.x / mesh_size.x),
+		basis.y * (desired_size.y / mesh_size.y), basis.z)
 	var foot := native_foot if native_foot.is_finite() else ground_position(at, surface_height(at))
 	card.position = foot + basis.x * offset.x - basis.y * offset.y
 

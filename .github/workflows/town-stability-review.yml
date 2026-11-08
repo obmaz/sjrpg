@@ -25,7 +25,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                edition: ${{ fromJSON(github.event.inputs.edition == 'pair' && '["baseline","candidate"]' || github.event.inputs.edition == 'candidate' && '["candidate"]' || '["baseline"]') }}
+                edition: ${{ fromJSON(github.event.inputs.edition == 'pair' && '["baseline","candidate"]' || github.event.inputs.edition == 'baseline' && '["baseline"]' || '["candidate"]') }}
         env:
             SJRPG_WALK_SHA: ${{ matrix.edition == 'baseline' && '991d38c6bbba7ddf347721a489f74160909d1133' || github.event.inputs.candidate_sha || github.sha }}
             SJRPG_WALK_EDITION: ${{ matrix.edition }}

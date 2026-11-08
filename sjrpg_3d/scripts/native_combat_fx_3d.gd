@@ -98,5 +98,5 @@ func snapshot() -> Dictionary:
 		var at := source.native_position()
 		var screen: Vector2 = _preview.camera.unproject_position(at)
 		var previous: Vector3 = entry["previous"]
-		sources.append({"id": source.get_instance_id(), "age": source.age, "life": source.life, "position": [at.x, at.y, at.z], "previous_position": [previous.x, previous.y, previous.z], "previous_age": entry["previous_age"], "screen": [screen.x, screen.y], "width": (body.mesh as QuadMesh).size.x, "position_error": body.global_position.distance_to(at), "cell": entry["cell"], "tail": (entry["tail"] as MeshInstance3D).visible})
+		sources.append({"id": source.get_instance_id(), "age": source.age, "life": source.life, "position": [at.x, at.y, at.z], "previous_position": [previous.x, previous.y, previous.z], "previous_age": entry["previous_age"], "screen": [screen.x, screen.y], "width": (body.mesh as QuadMesh).size.x * body.global_transform.basis.x.length(), "position_error": body.global_position.distance_to(at), "cell": entry["cell"], "tail": (entry["tail"] as MeshInstance3D).visible})
 	return {"count": _entries.size(), "paused": _preview.get_tree().paused, "reduce_motion": Prefs.reduce_motion, "sources": sources}
