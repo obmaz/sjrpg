@@ -13,6 +13,7 @@ var gallery: NativeModelGallery
 var elapsed := 0.0
 var terrain_cache: Array = []
 var terrain_owner := 0
+var chapel_group: Node3D
 var static_physics_digest := ""
 var sampled_physics_digest := ""
 var static_physics_count := 0
@@ -40,7 +41,7 @@ func _action(arguments: Array) -> void:
 	var next_mode := str(arguments[0])
 	var next_role := int(arguments[1])
 	var next_face := int(arguments[2])
-	if next_mode not in ["terrain", "residents", "house", "gate", "corner", "wall_detail", "clear"] or next_face < 0 or next_face > 3:
+	if next_mode not in ["terrain", "residents", "house", "chapel", "gate", "corner", "wall_detail", "clear"] or next_face < 0 or next_face > 3:
 		return
 	if next_mode == "terrain" and (next_role < 0 or next_role > 3):
 		return
@@ -114,6 +115,11 @@ func _process(delta: float) -> void:
 	if terrain_owner != game.get_instance_id():
 		terrain_owner = game.get_instance_id()
 		terrain_cache = _terrain_report(game, preview)
+		chapel_group = null
+		for candidate: Node in preview.stage.find_children("*", "Node3D", true, false):
+			if candidate.has_meta("chapel_detail"):
+				chapel_group = candidate as Node3D
+				break
 		var construction := _static_geometry(game)
 		var serialized := JSON.stringify(construction)
 		static_physics_digest = serialized.sha256_text()
@@ -122,7 +128,7 @@ func _process(delta: float) -> void:
 		static_physics_original = construction
 		static_physics_original_json = serialized
 		JavaScriptBridge.eval("window.__sjrpgTerrainNpcStaticPhysics = " + serialized, true)
-	var architecture_mode := mode in ["house", "gate", "corner", "wall_detail"]
+	var architecture_mode := mode in ["house", "chapel", "gate", "corner", "wall_detail"]
 	if architecture_mode and not hid_hud:
 		original_hud_visible = game.hud.visible
 		game.hud.visible = false
@@ -246,7 +252,11 @@ func _frame_bounds(preview: Node, bounds: AABB, margin: Vector2) -> void:
 	# through an arbitrary 125m forest while photographing a nearby terrace.
 	var ground_depth := camera.size * 0.5 * sqrt(2.0)
 	camera.near = maxf(0.05, 52.0 - ground_depth - 20.0)
-	camera.far = 52.0 + ground_depth + 4.0
+	# Inspection focuses on building mid-height; visible ground behind that
+	# elevated target lies focus.y/sin(elevation) farther than a foot-level view.
+	# Keep the actual foreground/whole house while avoiding a clipped black band.
+	var ground_focus_depth := maxf(4.0, focus.y / sin(deg_to_rad(ELEVATION)) + 1.0)
+	camera.far = 52.0 + ground_depth + ground_focus_depth
 	preview.viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 
 func _native_poses(preview: Node) -> Dictionary:
@@ -297,6 +307,12 @@ func _architecture_bounds(preview: Node) -> AABB:
 	var fort: Ortho3DFortification = preview._fortification
 	var report: Dictionary = fort.report
 	var wall_height: float = report["wall_top"]
+	if mode == "chapel":
+		var chapel: Dictionary = chapel_group.get_meta("chapel_detail")
+		var footprint: Vector2 = chapel["footprint"]
+		# Chapel footprint and tower height are unchanged by slate UV/pixels.
+		# The actual metadata group includes nave, bell shaft and entire spire.
+		return chapel_group.global_transform * AABB(Vector3(-footprint.x * 0.5 - 0.45, 0, -footprint.y * 0.5 - 0.45), Vector3(footprint.x + 0.9, float(chapel["tower_height"]) + 0.25, footprint.y + 0.9))
 	if mode == "house":
 		var key: String = ["nw", "ne", "sw", "se"][role]
 		var house: Dictionary = preview._houses[key]
@@ -341,6 +357,21 @@ func _material_report(material: StandardMaterial3D) -> Dictionary:
 func _architecture_report(preview: Node) -> Dictionary:
 	var fort: Ortho3DFortification = preview._fortification
 	var data := {"kind": mode, "index": role, "bounds": _plain(_architecture_bounds(preview)), "stone": _material_report(preview._materials["stone"]), "wood": _material_report(preview._materials["wood"]), "slate": _material_report(preview._materials["slate"]), "same_fortification_stone": fort.report["stone"] == preview._materials["stone"], "fortification_triangles": fort.report["triangles"], "fortification_surfaces": fort.report["static_surfaces"]}
+	if mode == "chapel":
+		var chapel: Dictionary = chapel_group.get_meta("chapel_detail")
+		data["key"] = "chapel"
+		data["triangles"] = chapel["triangles"]
+		data["surfaces"] = chapel["surfaces"]
+		data["footprint"] = _plain(chapel["footprint"])
+		data["tower_height"] = chapel["tower_height"]
+		data["floor_height"] = chapel["floor_height"]
+		var shared := true
+		for mesh: MeshInstance3D in chapel["meshes"]:
+			if mesh.name == "ChapelDetail_stone":
+				shared = shared and mesh.material_override == preview._materials["stone"]
+			elif mesh.name == "ChapelDetail_slate":
+				data["slate"] = _material_report(mesh.material_override as StandardMaterial3D)
+		data["same_chapel_stone"] = shared
 	if mode == "house":
 		var key: String = ["nw", "ne", "sw", "se"][role]
 		var house: Dictionary = preview._houses[key]

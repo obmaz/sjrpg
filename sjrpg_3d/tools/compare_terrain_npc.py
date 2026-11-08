@@ -51,13 +51,14 @@ if "terrain-0-portrait-face-0" in a:
     pair("terrain-0-portrait-face-0", "Raised meadow | azimuth 45")
     pair("terrain-3-landscape-face-2", "Raised pools | azimuth 225")
 if after.get("scope") in ("architecture", "all"):
-    for name in sorted(a):
+    architecture_names = [name for name in sorted(a) if a[name]["review"]["mode"] in ("house", "chapel", "gate", "corner", "wall_detail", "clear")]
+    for name in architecture_names:
         if a[name]["review"]["mode"] != "clear":
             assert a[name]["review"]["hud_hidden"] and b[name]["review"]["hud_hidden"], "Inspection only: HUD deliberately hidden"
             assert abs(a[name]["review"]["camera_size"] - b[name]["review"]["camera_size"]) < 1e-4, name + ": paired camera size changed"
             assert all(abs(x-y) < 1e-4 for x,y in zip(a[name]["review"]["camera_position"], b[name]["review"]["camera_position"])), name + ": paired camera changed"
         assert a[name]["review"]["static_physics_sha256"] == b[name]["review"]["static_physics_sha256"], name + ": actual construction collider data changed"
-    for name in ("village-normal-portrait", "village-normal-landscape", "house-1-face-0", "house-3-face-0", "house-3-face-2", "gate-0-face-0", "gate-0-face-2", "wall-corner-0-face-0", "wall-detail-face-0", "wall-detail-face-2"):
+    for name in architecture_names:
         pair(name, "Actual village materials | " + name)
 if after["npcs"]:
     for face in range(4):
@@ -71,6 +72,28 @@ if after["npcs"]:
     pair("npc-closeup-face-0", "Hero / Merchant / Mira | actual game models")
     pair("npc-closeup-face-2", "Opposite corner | actual game models")
 
+# Four actual contact pages expose every opposite corner without printing sixteen
+# full-size pictures inline. Individual full-size paired JPEGs remain available.
+if after.get("scope") in ("architecture", "all"):
+    groups = [
+        ("architecture-houses-0-1.jpg", ["house-0-face-0", "house-0-face-2", "house-1-face-0", "house-1-face-2"]),
+        ("architecture-houses-2-3.jpg", ["house-2-face-0", "house-2-face-2", "house-3-face-0", "house-3-face-2"]),
+        ("architecture-chapel.jpg", ["chapel-face-0", "chapel-face-2"]),
+        ("architecture-gates-corners.jpg", ["gate-0-face-0", "gate-0-face-2", "wall-corner-0-face-0", "wall-corner-0-face-2"]),
+        ("architecture-context-details.jpg", ["village-normal-portrait", "village-normal-landscape", "wall-detail-face-0", "wall-detail-face-2"]),
+    ]
+    for filename, names in groups:
+        sheet = Image.new("RGB", (1200, 395 * ((len(names)+1)//2)), "#182321")
+        pen = ImageDraw.Draw(sheet)
+        for index, name in enumerate(names):
+            picture = Image.open(out / (name + "-comparison.jpg")).convert("RGB")
+            picture.thumbnail((600, 360), Image.Resampling.LANCZOS)
+            x = (index % 2) * 600
+            y = (index // 2) * 395
+            pen.text((x + 10, y + 10), name + " | actual BEFORE / AFTER", fill="#e4d8bd")
+            sheet.paste(picture, (x + (600-picture.width)//2, y + 32))
+        write_jpeg(filename, sheet)
+
 summary = {"passed": True, "baseline": "99d0fd5e779752d5d2e4f14735fe585d8459313e", "candidate": os.environ.get("GITHUB_SHA"), "paired_captures": len(a), "physical_surfaces_unchanged": True, "camera_elevation": 35.264389682754654, "npcs": after["npcs"], "scope": after.get("scope", "terrain"), "expected_imports": after["expectedImports"], "previews": []}
 for target in images:
     data = target.read_bytes()
@@ -82,7 +105,7 @@ for target in images:
             item["blob_sha"] = json.load(response)["sha"]
     summary["previews"].append(item)
     # Bounded actual JPEGs let the parent inspect the result without local files.
-    if target.name in ("terrain-0-portrait-face-0-comparison.jpg", "terrain-3-landscape-face-2-comparison.jpg", "npc-designs-face-0.jpg", "npc-closeup-face-0-comparison.jpg", "house-3-face-0-comparison.jpg", "gate-0-face-0-comparison.jpg", "wall-detail-face-0-comparison.jpg"):
+    if target.name.startswith("architecture-") or target.name in ("terrain-0-portrait-face-0-comparison.jpg", "terrain-3-landscape-face-2-comparison.jpg", "npc-designs-face-0.jpg", "npc-closeup-face-0-comparison.jpg", "house-3-face-0-comparison.jpg", "gate-0-face-0-comparison.jpg", "wall-detail-face-0-comparison.jpg"):
         encoded = base64.b64encode(data).decode("ascii")
         print("TERRAIN_NPC_IMAGE_BEGIN " + target.name + " image/jpeg " + str(len(encoded)), flush=True)
         for offset in range(0, len(encoded), 16384):

@@ -18,7 +18,7 @@ on:
                 description: Focused actual scene review
                 type: choice
                 options: [terrain, architecture, all]
-                default: terrain
+                default: architecture
 
 permissions:
     contents: read
@@ -64,7 +64,7 @@ jobs:
               if: matrix.edition == 'after'
               run: |
                   if test "$SJRPG_REVIEW_SCOPE" = architecture; then
-                      tools/check.sh --project=3d --only=native_house_family,ortho_3d_fortification,spatial_stairs,bridge
+                      tools/check.sh --project=3d --only=native_house_family,ortho_3d_chapel,ortho_3d_fortification,spatial_stairs,bridge
                   else
                       tools/check.sh --project=3d --only=native_terrain_readability,melee_elevation,spatial_stairs,bridge
                   fi

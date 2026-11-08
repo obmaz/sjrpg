@@ -98,6 +98,7 @@ try{
   // corner crown and a fixed original-wall section with visible pier/recess.
   const views=[
    ...[0,1,2,3].flatMap(role=>[0,2].map(face=>({mode:'house',role,face,label:'house-'+role+'-face-'+face}))),
+   ...[0,2].map(face=>({mode:'chapel',role:0,face,label:'chapel-face-'+face})),
    ...[0,2].map(face=>({mode:'gate',role:0,face,label:'gate-0-face-'+face})),
    ...[0,2].map(face=>({mode:'corner',role:0,face,label:'wall-corner-0-face-'+face})),
    ...[0,2].map(face=>({mode:'wall_detail',role:0,face,label:'wall-detail-face-'+face}))
@@ -122,6 +123,7 @@ try{
    assert(a.stone.triplanar&&a.stone.world_triplanar,'world-metre limestone material');
    assert(a.stone.uv_scale.every(v=>Math.abs(v-1/2.56)<1e-6),'same 2.56m source texel scale');
    if(view.mode==='house'){assert(a.same_house_stone&&a.closed_door,'actual house material/closed-door contract');assert(a.triangles>0&&a.surfaces<=5,'bounded actual house geometry');}
+   if(view.mode==='chapel'){assert.equal(a.key,'chapel');assert(a.same_chapel_stone&&a.triangles>0&&a.triangles<30000&&a.surfaces<=8,'actual bounded chapel geometry/material family');assert(a.tower_height>8&&a.tower_height<11.5,'full actual bell/spire height in inspection');}
    if(view.mode==='gate')sides.push(a.view_side);
    await capture(view.label);checks.push('actual architecture '+view.label);
   }
