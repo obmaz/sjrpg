@@ -9,10 +9,17 @@ var _entry_token := 0
 var _entry_sequence := 0
 var _entry_source: Node
 var _entry_source_mode := Node.PROCESS_MODE_INHERIT
+var _web_back_callback: Variant
 signal entry_loading_changed(phase: String)
 
 
 func _ready() -> void:
+	get_tree().quit_on_go_back = false
+	if OS.has_feature("web"):
+		_web_back_callback = JavaScriptBridge.create_callback(_on_web_back)
+		var api: Variant = JavaScriptBridge.get_interface("SjrpgBack")
+		if api != null:
+			api.attach(_web_back_callback)
 	get_tree().root.size_changed.connect(_fit_orientation)
 	_fit_orientation()
 	show_title()
@@ -45,6 +52,8 @@ func _swap(node: Node) -> void:
 		current.queue_free()
 	current = node
 	add_child(node)
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("if(window.SjrpgBack)window.SjrpgBack.setActive(" + ("true" if node is NativeAdventure else "false") + ");")
 	if is_instance_valid(_entry_loading):
 		move_child(_entry_loading, get_child_count() - 1)
 
@@ -232,6 +241,9 @@ func _cancel_entry_loading() -> void:
 
 
 func _exit_tree() -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("if(window.SjrpgBack)window.SjrpgBack.detach();")
+	_web_back_callback = null
 	_cancel_entry_loading()
 
 
@@ -252,3 +264,24 @@ func prepare_edition_exit() -> void:
 	await get_tree().process_frame
 	RenderingServer.force_draw(false)
 	get_tree().quit()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST and is_node_ready():
+		handle_system_back()
+
+
+func _on_web_back(_arguments: Array) -> void:
+	handle_system_back()
+
+
+## OS/browser Back always lands on settings, including while a panel pauses play.
+func handle_system_back() -> void:
+	if _entry_starting or _edition_exiting or not is_instance_valid(current):
+		return
+	if current is NativeAdventure and is_instance_valid(current.simulation):
+		var hud: Hud = current.simulation.hud
+		if not hud._panel is SettingsPanel:
+			if hud.panel_open():
+				hud.close_panel()
+			hud.open_settings()

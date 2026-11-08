@@ -58,6 +58,7 @@ jobs:
                   node sjrpg_3d/web/check_install.mjs
                   node sjrpg_3d/web/check_fullscreen.mjs
                   node sjrpg_3d/web/check_orientation.mjs
+                  node sjrpg_3d/web/check_back.mjs
                   node sjrpg_3d/web/check_canvas_budget.mjs
                   node sjrpg_3d/tools/check_music_memory.mjs --self-test
                   tools/check.sh --export

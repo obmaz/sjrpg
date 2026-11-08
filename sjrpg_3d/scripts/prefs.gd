@@ -3,6 +3,7 @@ extends Node
 ## Stored in user://settings.cfg (the browser's IndexedDB on the web).
 
 signal graphics_changed
+signal fps_changed
 
 const PATH := "user://settings.cfg"
 const WORLD_ZOOMS: Array[float] = [0.5, 0.75, 1.0, 1.25, 1.5]
@@ -17,6 +18,7 @@ var music_enabled := true
 var haptics_enabled := true
 var reduce_motion := false
 var low_resolution := false
+var show_fps := false
 var world_zoom := 1.0
 var screen_orientation := "auto"
 var _last_pulse := 0
@@ -32,6 +34,7 @@ func _ready() -> void:
 		haptics_enabled = bool(cfg.get_value("device", "haptics", true))
 		reduce_motion = bool(cfg.get_value("device", "reduce_motion", false))
 		low_resolution = bool(cfg.get_value("device", "low_resolution", false))
+		show_fps = bool(cfg.get_value("device", "show_fps", false))
 		world_zoom = normalize_world_zoom(cfg.get_value("device", "world_zoom", 1.0))
 		screen_orientation = normalize_screen_orientation(cfg.get_value("device", "screen_orientation", "auto"))
 	apply_screen_orientation()
@@ -44,6 +47,7 @@ func _save() -> void:
 	cfg.set_value("device", "haptics", haptics_enabled)
 	cfg.set_value("device", "reduce_motion", reduce_motion)
 	cfg.set_value("device", "low_resolution", low_resolution)
+	cfg.set_value("device", "show_fps", show_fps)
 	cfg.set_value("device", "world_zoom", world_zoom)
 	cfg.set_value("device", "screen_orientation", screen_orientation)
 	cfg.save(settings_path)
@@ -203,3 +207,11 @@ func set_low_resolution(on: bool) -> void:
 	low_resolution = on
 	_save()
 	graphics_changed.emit()
+
+
+func set_show_fps(on: bool) -> void:
+	if show_fps == on:
+		return
+	show_fps = on
+	_save()
+	fps_changed.emit()

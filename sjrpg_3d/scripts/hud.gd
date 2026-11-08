@@ -26,6 +26,7 @@ var _area_name := ""
 var _panel: PanelFrame
 var _save_warning: Button
 var _status: Label
+var _fps: FpsCounter
 var _last_hp := -1.0
 var _last_max_hp := -1.0
 var _health_trail := 1.0
@@ -79,6 +80,10 @@ func _ready() -> void:
 	_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_area.draw.connect(_draw_area_label)
 	add_child(_area)
+	_fps = FpsCounter.new()
+	_fps.visibility_changed.connect(_fit_fps)
+	add_child(_fps)
+	get_viewport().size_changed.connect(_fit_fps)
 
 	_toast_plaque = PanelContainer.new()
 	_toast_plaque.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -525,8 +530,14 @@ static func header_geometry(view: Vector2, m: Vector4) -> Dictionary:
 	return geometry
 
 
+func _fit_fps() -> void:
+	if is_instance_valid(_fps) and _fps.visible:
+		_fps.fit(get_viewport().get_visible_rect().size, PanelFrame.safe_margins(get_viewport()), unit())
+
+
 func _update_layout() -> void:
 	var u := unit()
+	_fit_fps()
 	var geometry := status_geometry()
 	var h: float = geometry["unit"]
 	var origin: Vector2 = geometry["origin"]

@@ -62,6 +62,11 @@ func _rebuild() -> void:
 		body.add_child(UiKit.divider())
 	body.add_child(PanelFrame.section("화면과 타격감"))
 	body.add_child(_world_zoom_card())
+	var fps_toggle := _toggle("FPS 표시", "화면 왼쪽 아래에 현재 프레임 수를 표시합니다.", Prefs.show_fps, func(on):
+		Prefs.set_show_fps(on)
+		_rebuild())
+	fps_toggle.name = "ShowFps"
+	body.add_child(fps_toggle)
 	body.add_child(_toggle("절약 화질", "배경·캐릭터 해상도를 낮춰 속도를 높입니다. 글자·버튼은 선명하게 유지합니다.", Prefs.low_resolution, func(on):
 		Prefs.set_low_resolution(on)
 		_rebuild()))

@@ -167,3 +167,36 @@
     document.addEventListener('keydown', firstGesture, true);
   }
 })();
+
+// Same-document Back guard: one live adventure entry, no exit confirmation.
+(() => {
+  let active = false, callback = null, armed = false;
+  const marker = 'sjrpgAdventureBack';
+  function arm() {
+    history.pushState({...history.state, [marker]: true}, '', location.href);
+    armed = true;
+  }
+  function setActive(value) {
+    active = Boolean(value);
+    if (active && !armed) arm();
+  }
+  addEventListener('popstate', () => {
+    armed = false;
+    if (!active) return;
+    arm();
+    if (callback) callback();
+  });
+  let wasFullscreen = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+  const fullscreenBack = () => {
+    const now = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+    if (active && wasFullscreen && !now && callback) callback();
+    wasFullscreen = now;
+  };
+  document.addEventListener('fullscreenchange', fullscreenBack);
+  document.addEventListener('webkitfullscreenchange', fullscreenBack);
+  window.SjrpgBack = {
+    attach(fn) { callback = fn; },
+    detach() { callback = null; active = false; },
+    setActive
+  };
+})();
