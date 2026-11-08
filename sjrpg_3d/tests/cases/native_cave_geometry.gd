@@ -200,13 +200,16 @@ func _check_floor_surfaces(environment: Ortho3DEnvironment, layout: DungeonLayou
 	var floors := environment.cave.find_children("CaveFloor_*", "MeshInstance3D", true, false)
 	var valid := floors.size() == layout.polygons.size()
 	var shared: ShaderMaterial
+	var diagnostics: Array[Dictionary] = []
 	for index in layout.polygons.size():
 		var node := environment.cave.get_node_or_null("CaveFloor_%d" % index) as MeshInstance3D
 		if node == null:
+			diagnostics.append({"index": index, "missing": true})
 			valid = false
 			continue
 		var material := node.material_override as ShaderMaterial
 		if material == null:
+			diagnostics.append({"index": index, "material_class": node.material_override.get_class() if node.material_override != null else "null"})
 			valid = false
 			continue
 		if shared == null:
@@ -217,10 +220,17 @@ func _check_floor_surfaces(environment: Ortho3DEnvironment, layout: DungeonLayou
 		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
 		var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
 		var polygon: PackedVector2Array = layout.polygons[index]
+		if vertices.size() != polygon.size():
+			diagnostics.append({"index": index, "vertices": vertices.size(), "source": polygon.size()})
 		valid = valid and vertices.size() == polygon.size()
 		for vertex_index in mini(vertices.size(), polygon.size()):
 			var expected := Ortho3DPreview.ground_position(polygon[vertex_index], 0.004)
-			valid = valid and vertices[vertex_index].is_equal_approx(expected) and normals[vertex_index].is_equal_approx(Vector3.UP) and uv[vertex_index].is_equal_approx(Vector2(expected.x, expected.z) / 2.6)
+			var expected_uv := Vector2(expected.x, expected.z) / 2.6
+			if diagnostics.size() < 8 and not (vertices[vertex_index].is_equal_approx(expected) and normals[vertex_index].is_equal_approx(Vector3.UP) and uv[vertex_index].is_equal_approx(expected_uv)):
+				diagnostics.append({"index": index, "vertex_index": vertex_index, "vertex": str(vertices[vertex_index]), "expected": str(expected), "position_error_m": vertices[vertex_index].distance_to(expected), "normal": str(normals[vertex_index]), "normal_up_error": normals[vertex_index].distance_to(Vector3.UP), "uv": str(uv[vertex_index]), "expected_uv": str(expected_uv), "uv_error": uv[vertex_index].distance_to(expected_uv), "shared": material == shared})
+			valid = valid and vertices[vertex_index].is_equal_approx(expected) and normals[vertex_index].is_equal_approx(Vector3.UP) and uv[vertex_index].is_equal_approx(expected_uv)
+	if not valid:
+		print("ART_AUDIT cave_floor_diagnostic ", JSON.stringify({"actual_floors": floors.size(), "expected_floors": layout.polygons.size(), "failures": diagnostics}))
 	check("warm cave floor preserves every original flat polygon vertex metre UV and shared lit material", valid and shared != null)
 	if shared == null:
 		return

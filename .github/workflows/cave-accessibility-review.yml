@@ -37,6 +37,12 @@ jobs:
           sjrpg_3d/tools/export_web.sh
           npm ci --ignore-scripts
           npx playwright install --with-deps chromium
+      - name: Use the same capture driver for both game revisions
+        env:
+          SJRPG_CAPTURE_REF: ${{ github.sha }}
+        run: |
+          git fetch --depth=1 origin "$SJRPG_CAPTURE_REF"
+          git show "$SJRPG_CAPTURE_REF:sjrpg_3d/tools/screenshot.mjs" >sjrpg_3d/tools/screenshot.mjs
       - name: Capture actual exported views
         run: |
           set -euo pipefail
@@ -99,3 +105,19 @@ jobs:
           name: cave-readability-comparisons
           path: build/cave-review/*-comparison.jpg
           retention-days: 7
+
+  focused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.godot-tools
+            ~/.local/share/godot/export_templates
+          key: godot-${{ hashFiles('.godot-version') }}-tools-v1
+      - name: Verify changed gameplay and settings contracts
+        run: |
+          tools/setup_godot.sh
+          sjrpg_3d/tools/check.sh --only=native_cave_geometry,dungeon_art,warp_layout,world_zoom,screen_orientation,fullscreen_settings

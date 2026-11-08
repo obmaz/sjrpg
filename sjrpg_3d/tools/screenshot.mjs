@@ -269,6 +269,14 @@ if (scene === 'defender') {
     await page.waitForFunction(() => window.__sjrpgCorpsePreviewReady === true, null, {timeout: 30000});
     await page.waitForTimeout(1500);
 } else await page.waitForTimeout(settle);
+if (scene === 'settings') {
+    // Debug queries can be superseded by a new-slot start. Open the real panel.
+    if (!await page.evaluate(() => Boolean(window.__sjrpgVersionButtons?.FullscreenToggle))) {
+        await page.keyboard.press('Escape');
+    }
+    await page.waitForFunction(() => Boolean(window.__sjrpgVersionButtons?.FullscreenToggle), null, {timeout: 15000});
+    await page.waitForTimeout(500);
+}
 if (args.taps) {
     for (const item of args.taps.split(',')) {
         const point = /^(\d+):(\d+)$/.exec(item);

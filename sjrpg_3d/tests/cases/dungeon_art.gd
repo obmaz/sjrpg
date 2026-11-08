@@ -43,13 +43,32 @@ func run() -> void:
 	check("generated floor source matches the collision and native layout input", floors_match)
 	check("both maps retain the generated floor layout", maps_match)
 	var environment: Ortho3DEnvironment = game.ortho_preview._world_environment
-	var spatial_floor_count: int = 0
-	for candidate: Node in environment.cave.find_children("*", "MeshInstance3D", true, false):
-		var rendered: MeshInstance3D = candidate as MeshInstance3D
-		var material: StandardMaterial3D = rendered.material_override as StandardMaterial3D
-		if material != null and material.albedo_texture == floor_texture:
-			spatial_floor_count += 1
-	check("every native cave floor uses the preserved generated material", spatial_floor_count == cave.layout.polygons.size())
+	var spatial_floor_count := 0
+	var spatial_geometry_matches := true
+	var spatial_material_shared: ShaderMaterial
+	for index in cave.layout.polygons.size():
+		var rendered := environment.cave.get_node_or_null("CaveFloor_%d" % index) as MeshInstance3D
+		if rendered == null:
+			spatial_geometry_matches = false
+			continue
+		var material := rendered.material_override as ShaderMaterial
+		if material == null or material.shader.resource_path != "res://scripts/native_cave_floor.gdshader" or material.get_shader_parameter("albedo_texture") != floor_texture:
+			spatial_geometry_matches = false
+			continue
+		if spatial_material_shared == null:
+			spatial_material_shared = material
+		spatial_geometry_matches = spatial_geometry_matches and material == spatial_material_shared and not material.shader.code.contains("unshaded") and not material.shader.code.contains("EMISSION")
+		spatial_floor_count += 1
+		var arrays := rendered.mesh.surface_get_arrays(0)
+		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+		var polygon: PackedVector2Array = cave.layout.polygons[index]
+		spatial_geometry_matches = spatial_geometry_matches and vertices.size() == polygon.size() and uv.size() == vertices.size()
+		for vertex_index in mini(vertices.size(), polygon.size()):
+			var expected := Ortho3DPreview.ground_position(polygon[vertex_index], 0.004)
+			spatial_geometry_matches = spatial_geometry_matches and vertices[vertex_index].is_equal_approx(expected) and uv[vertex_index].is_equal_approx(Vector2(expected.x, expected.z) / 2.6)
+	check("every native cave floor shares the preserved generated slab sampler in its lit shader", spatial_floor_count == cave.layout.polygons.size() and spatial_material_shared != null)
+	check("native slab shading preserves the exact source floor polygon vertices and metre UVs", spatial_geometry_matches)
 	check("native cave retains spatial walls and replaces physical prop cards", environment.cave.visible and environment.report["cave_walls"] > 0 and environment.report["cave_groups"] == 0 and environment.report["cave_sprites"] == 0 and environment.report["native_cave_lanterns"] == 10 and environment.report["native_cave_scenery"] >= 6 and environment.report["remaining_sources"]["cave"].is_empty() and cave._root.visibility_layer == 0)
 	var boundaries_match := not art.boundary_segments.is_empty()
 	var boundary_failures: Array[String] = []
