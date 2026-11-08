@@ -20,6 +20,8 @@ jobs:
         timeout-minutes: 12
         steps:
             - uses: actions/checkout@v7.0.1
+              with:
+                  fetch-depth: 2
             - uses: actions/setup-node@v6
               with:
                   node-version: 24
@@ -34,7 +36,7 @@ jobs:
                   set -euo pipefail
                   if [[ -z "$REVIEW_RUN" ]]; then
                       git show --format= --name-only HEAD | python3 -c 'import sys; paths=set(sys.stdin.read().splitlines()); allowed={".github/workflows/equipment-layout-review.yml","sjrpg_3d/tools/screenshot.mjs"}; assert paths <= allowed, paths'
-                      REVIEW_RUN=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$REVIEW_PARENT&per_page=30" --jq '.workflow_runs[] | select(.name=="Build web and deploy to GitHub Pages") | .id' | head -n 1)
+                      REVIEW_RUN=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/web.yml/runs?branch=main&per_page=30" --jq '.workflow_runs[] | select((.head_commit.message | contains("[layout-review]")) | not) | .id' | head -n 1)
                   fi
                   test -n "$REVIEW_RUN"
                   echo "run_id=$REVIEW_RUN" >> "$GITHUB_OUTPUT"
