@@ -144,11 +144,14 @@ for index, material in enumerate(slots):
     if material not in unique:
         unique.append(material)
     remap[index] = unique.index(material)
-for polygon in outfit.data.polygons:
-    polygon.material_index = remap[polygon.material_index]
+polygon_slots = [remap[polygon.material_index] for polygon in outfit.data.polygons]
 outfit.data.materials.clear()
 for material in unique:
     outfit.data.materials.append(material)
+# Clearing Blender material slots may reset polygon indices; restore them only
+# after the unique slots exist so exposed hands keep their original skin map.
+for polygon, material_index in zip(outfit.data.polygons, polygon_slots):
+    polygon.material_index = material_index
 # Keep a separately named feet mesh for the shared CPU deformation contact gate.
 # Separate only the source foot-weighted islands would lose surfaces/weights;
 # the entire outfit is used here and still includes both physical soles.
