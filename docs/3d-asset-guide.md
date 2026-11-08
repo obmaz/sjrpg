@@ -205,3 +205,9 @@ validation: <tests, actual paired browser captures, remaining asset gaps>
 ### CC0 주민의 적용 범위
 
 상인과 미라는 검증된 Quaternius FREE Standard의 남성 Peasant·여성 Ranger를 각각 사용합니다. 원래 얼굴·손·의복 UV와 색을 보존하고 실제 광원에 반응하는 무광 PBR/roughness0.95를 적용합니다. 상인은 최대1024px·17,612삼각형/8서피스, 미라는 의상만 오프라인 단순화하여 최대512px(눈256px)·17,595삼각형/5서피스입니다. 두 모델 모두65관절과 원래 Villager 시계로 샘플링하는 idle을 사용합니다. 나머지 여섯 주민은 기존 공유 회화형 atlas와6,500삼각형/4재질 상한을 유지합니다. 외부 모델의18k 한도는 이 두 개별 검수 범위에만 적용하며 전체 주민·몹의 예산으로 확대하지 않습니다. 원문 CC0·출처·실제 소스/런타임 해시와 피부·후드·전체 면·모바일 검수 계약은 [주민 제작 안내](../sjrpg_3d/docs/native-residents.md)를 따릅니다.
+
+## Web·Android 텍스처 전달
+
+3D판의 현재 GPU 압축 대상은 `sjrpg_3d/assets/data/texture_policy.json`의 불투명 월드10장입니다. `mode=2`, `high_quality=false`로 S3TC/ETC2를 생성하고 두 플랫폼에 필요한 변형을 실제 패키지에서 확인합니다. UI·효과·알파 잎·작은 얼굴/눈·유리에는 기존 `mode=1`과 알파·밉맵 설정을 유지합니다. 새로운 에셋도 먼저 보호 대상으로 시작하고 실제 양 코덱의 품질을 검수해 허용 목록을 갱신합니다.
+
+이미지를 다시 만들거나 해상도를 낮추는 작업과 GPU 압축을 구분합니다. 파일 해시·논리 해상도는 유지하며 코덱의 저장 블록 정렬은 별도로 기록합니다. 임포트 설정은 `tools/import_project.sh`를 통해 적용하고 기존 UID를 임의 재작성하지 않습니다. [플랫폼 설정과 실제 검수](../sjrpg_3d/docs/platform-exports.md)에 Web PCK·Android APK 검증과 메모리 수치의 범위를 기록합니다.

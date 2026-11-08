@@ -503,3 +503,11 @@ HUD는 체력·물약 수·쿨다운의 실제 변화를 감지합니다. 사운
 
 
 `check_music_memory.mjs`는 추가 Godot 관찰기가 없는 정상 웹 내보내기에서 마법사·실행 중인 AudioContext·실제 동작 갱신40회와 큰 AudioBuffer 추가 생성0회를 검사합니다. `--self-test`는 관찰기의 객체·호출·예외 보존을 검증합니다. 배포 브라우저 행렬의 `music`과 공개 페이지 확인에서도 실행하며, 폴드 조건은 `SJRPG_MUSIC_PROFILE=fold`로 고품질768×1024/DPR3를 사용합니다.
+
+## 플랫폼 내보내기와 텍스처 임포트
+
+[플랫폼 설정](platform-exports.md)의 `assets/data/texture_policy.json`은 불투명 월드10장과 보호 텍스처를 구분합니다. `tools/texture_policy.py`는 설정만 적용하고, 검사·Web·APK 내보내기의 공통 경계인 `tools/import_project.sh`가 Godot 재임포트 후 정책을 재검증합니다. UI/효과의 자동3D 압축 전환을 끄며 기존 알파·밉맵·해상도는 보존합니다. 생성 스크립트도 이 정책을 사용합니다.
+
+`tools/check_platform_exports.py`는 실제 Web PCK에 양쪽 압축 형식이 들어 있고 APK에는 Android용 형식만 포함됐는지 검사합니다. `tools/android-toolchain.env`가 엔진4.7.2의 API36·빌드 도구36.1.0 기준을 고정합니다. `tools/fetch_android_templates.py`는 공식1.28GB ZIP의 필요한 Android APK와 버전 파일만 Range 요청으로 받아 CRC·크기·버전을 확인합니다. 서명 키와 설치 도구는 저장소 밖에 둡니다.
+
+검수용 `texture_compression_observer.gd`는 CI에서 명시적 review 분기에만 연결하며 일반 모험 진입에는 넣지 않습니다. `check_texture_compression.mjs`는 실제 GPU 지원 형식과 업로드를 확인합니다. 모바일 UA만 바꿔 ETC2 검증으로 간주하지 않습니다. 비교기는 논리 해상도와 카메라가 일치한 사진만 통과 수에 넣고 실시간 강 장면의 카메라 이동은 별도로 기록합니다.

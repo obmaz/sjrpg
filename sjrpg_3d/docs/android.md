@@ -1,44 +1,43 @@
-# 안드로이드 빌드
+# Android APK 내보내기
 
-3D판을 안드로이드 앱(APK)으로 만드는 방법입니다. 같은 Godot 프로젝트(GL Compatibility)를 그대로 쓰며, 별도 소스는 없습니다.
-패키지 이름은 `com.obmaz.sjrpg3d`, 앱 이름은 "자연의 수호자", 아키텍처는 `arm64-v8a`(최근 휴대폰 대부분)입니다.
+같은 `sjrpg_3d/` 프로젝트를 GL Compatibility로 내보냅니다. 패키지 ID는 `com.obmaz.sjrpg3d`, 앱 이름은 “자연의 수호자”, CPU는 `arm64-v8a`입니다. 기존 앱 저장 경로를 유지합니다.
+
+## 빌드와 설치
+
+저장소 루트에서 실행합니다. Linux와 JDK 17 이상이 필요합니다.
 
 ```sh
-tools/setup_android.sh                # 한 번만: Android SDK·Godot 안드로이드 템플릿·디버그 키스토어·에디터 설정 (JDK 17+ 필요)
-tools/export_android.sh               # build/android/sjrpg_3d-debug.apk   (디버그 키로 서명, 시험 설치용)
-tools/export_android.sh --release     # build/android/sjrpg_3d-release.apk (릴리스 키가 필요, 아래 참고)
-adb install -r build/android/sjrpg_3d-debug.apk
+tools/setup_godot.sh
+sjrpg_3d/tools/setup_android.sh
+sjrpg_3d/tools/export_android.sh
+adb install -r sjrpg_3d/build/android/sjrpg_3d-debug.apk
 ```
 
-## 구성
+- 도구 버전은 `tools/android-toolchain.env`에 고정합니다. 현재 compile/target SDK 36, Build Tools 36.1.0이며 최소 Android API는 24입니다.
+- Godot의 미리 빌드된 APK 템플릿을 사용하므로 현재 APK 경로에는 Gradle·NDK가 필요 없습니다.
+- `ANDROID_HOME`은 SDK 경로, `JAVA_HOME`은 JDK 경로를 지정합니다. XDG 설정·데이터 경로도 지원합니다.
+- 설치 도구는 공식 Godot 템플릿 ZIP에서 Android 파일만 범위 다운로드합니다. 버전·ZIP 엔트리 CRC·크기와 개별 파일 SHA-256을 확인합니다. 전체 ZIP의 SHA-256을 검증했다는 뜻은 아닙니다.
+- 디버그 키스토어는 기본 `~/.android/debug.keystore`에 생성합니다. `GODOT_ANDROID_KEYSTORE_DEBUG_PATH`로 기존 키를 사용할 수 있습니다. 키를 저장소에 넣지 않습니다.
 
-- `export_presets.cfg`의 `Android` 프리셋: 그래들 빌드 없이 Godot가 제공하는 미리 만든 APK 템플릿에 게임 리소스를 넣어 서명합니다.
-  NDK·그래들이 필요 없고 빌드는 20초 안팎입니다. 테스트·도구·웹 셸(`tests/*`, `tools/*`, `web/*`)은 제외합니다.
-- 화면: 가로·세로 자동 회전(`window/handheld/orientation=4`), 몰입 모드(항상 전체화면), 진동 권한만 요청합니다.
-- `project.godot`의 `textures/vram_compression/import_etc2_astc=true`는 안드로이드 내보내기에 필수입니다. 웹 빌드에는 영향이 없습니다.
-- 안드로이드에서만 달라지는 곳: 설정의 전체화면 토글(항상 전체화면이라 비활성)과 "저장하고 선택 화면으로" 버튼(웹 전용이라 숨김).
-  나머지 웹 전용 코드는 `OS.has_feature("web")`로 막혀 있습니다. 저장·설정은 `user://`에 저장됩니다.
-- 용량: 디버그 약 57MB, 릴리스 약 56MB(네이티브 라이브러리 약 76MB를 압축한 값 포함).
+`Build Android APK` Actions가 같은 명령으로 APK를 만들고 다운로드 가능한 아티팩트를 보관합니다. [검증된 빌드](https://github.com/obmaz/sjrpg/actions/runs/42474336402)는 61,677,523바이트이며, 서명·16KiB ZIP 정렬·arm64·패키지 ID·최소 SDK 24/target SDK 36·ETC2 리소스를 통과했습니다. Android 기기나 에뮬레이터에서 실행한 결과는 아닙니다.
+
+## GPU 텍스처와 포함 리소스
+
+[플랫폼별 텍스처 정책](platform-exports.md)의 불투명 표면 10개를 ETC2로 넣습니다. Android 패키지에는 해당 표면의 S3TC 복사본을 넣지 않습니다. UI·잎·유리·효과·배우 텍스처의 기존 설정과 원본 해상도는 유지합니다.
+
+`tools/export_android.sh`는 정책 적용·Godot 임포트·내보내기 후 `zipalign`, `apksigner`, `aapt2`, 실제 APK 리소스 검사까지 수행합니다. 결과는 `build/android/export-report.json`, 패키지 정보는 `build/android/package.txt`입니다. 개발 도구·테스트·웹 셸·에셋 원본 보관 폴더는 앱에 넣지 않습니다.
+
+화면은 자동 회전·몰입 모드이며 설치 앱은 전체화면으로 시작합니다. 저장과 설정은 `user://`를 사용합니다. 실제 휴대폰에서 터치·화면 비율·음악·진동·장시간 메모리 안정성을 추가 확인해야 합니다.
 
 ## 릴리스 서명
 
-릴리스 APK는 **본인의 키스토어**로 서명해야 하며 키스토어는 저장소에 넣지 않습니다. 같은 키로 서명해야 이후 업데이트가 덮어 설치됩니다.
+본인 키스토어를 외부에 보관하고 환경 변수로 전달합니다. 기존 설치를 업데이트하려면 같은 서명 키를 유지해야 합니다.
 
 ```sh
-keytool -genkey -v -keystore ~/sjrpg-release.jks -alias sjrpg -keyalg RSA -keysize 2048 -validity 10000
-export GODOT_ANDROID_KEYSTORE_RELEASE_PATH=~/sjrpg-release.jks
+export GODOT_ANDROID_KEYSTORE_RELEASE_PATH=/secure/sjrpg-release.jks
 export GODOT_ANDROID_KEYSTORE_RELEASE_USER=sjrpg
-export GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD='...'
-tools/export_android.sh --release
+export GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD='본인 키 비밀번호'
+sjrpg_3d/tools/export_android.sh --release
 ```
 
-디버그 APK는 모든 개발자가 같은 디버그 키를 쓰므로 스토어에 올리면 안 됩니다. 플레이 스토어는 APK 대신 AAB를 요구하므로, 올리려면 `gradle_build/use_gradle_build=true`
-(그래들 빌드, `android_source.zip` 템플릿과 NDK 필요)와 `gradle_build/export_format=1`로 바꿔 별도 설정해야 합니다.
-
-## 알려진 한계
-
-- **실제 기기·에뮬레이터에서 실행해 보지 못했습니다.** 빌드 환경에는 기기와 KVM이 없어, APK의 패키지 정보·서명·네이티브 라이브러리·리소스 포함 여부만 정적으로 검사했습니다.
-  첫 실행에서 터치 조작, 화면 비율, 성능(3D 네이티브 장면), 음악·진동을 직접 확인해야 합니다.
-- 런처 아이콘은 `web/install-192.png`입니다. 적응형(adaptive) 아이콘이 필요하면 프리셋의 `launcher_icons/adaptive_*`에 432×432 이미지를 지정합니다.
-- 소리·진동 설정, 저장은 웹판과 같은 설정 화면을 씁니다. 안드로이드 뒤로가기 버튼 처리는 따로 하지 않았습니다.
-- 현재 CI는 웹 빌드만 만듭니다. APK를 CI에서 만들려면 `setup_android.sh`와 `export_android.sh`를 워크플로에 추가하면 됩니다.
+현재 CI는 시험 설치용 디버그 APK를 만듭니다. Google Play 제출용 AAB·Gradle 구성과 스토어 업로드는 별도 작업입니다.
