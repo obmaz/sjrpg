@@ -11,6 +11,7 @@ const WORLD_RADIUS := 1300.0
 
 var _circle := PackedVector2Array()
 var _geometry: Array[Dictionary] = []
+var _geometry_mesh: ArrayMesh
 var _geometry_source: Array[Dictionary] = []
 var _geometry_count := -1
 var _geometry_origin := Vector2.INF
@@ -106,6 +107,40 @@ func _update_geometry(origin: Vector2) -> void:
 		var bounds: Rect2 = shape["bounds"]
 		if bounds.grow(WORLD_RADIUS).has_point(origin):
 			_cache_shape(shape["poly"], shape["color"], origin)
+	_build_geometry_mesh()
+
+
+## One persistent canvas mesh keeps the original clipped polygon order and colors.
+## Replacing draw_colored_polygon calls avoids fresh GPU polygon buffers every frame.
+func _build_geometry_mesh() -> void:
+	var vertices := PackedVector2Array()
+	var colors := PackedColorArray()
+	var indices := PackedInt32Array()
+	var pieces: Array[Dictionary] = [{"poly": _circle, "color": PARCHMENT}]
+	pieces.append_array(_geometry)
+	for piece: Dictionary in pieces:
+		var polygon: PackedVector2Array = piece["poly"]
+		var triangles := Geometry2D.triangulate_polygon(polygon)
+		if triangles.is_empty():
+			push_error("Cannot triangulate cached minimap terrain")
+			continue
+		var first := vertices.size()
+		var color: Color = piece["color"]
+		for point: Vector2 in polygon:
+			vertices.append(point)
+			colors.append(color)
+		for index: int in triangles:
+			indices.append(first + index)
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = vertices
+	arrays[Mesh.ARRAY_COLOR] = colors
+	arrays[Mesh.ARRAY_INDEX] = indices
+	if _geometry_mesh == null:
+		_geometry_mesh = ArrayMesh.new()
+	else:
+		_geometry_mesh.clear_surfaces()
+	_geometry_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 
 
 func _draw() -> void:
@@ -116,9 +151,7 @@ func _draw() -> void:
 	var origin: Vector2 = game.player.position
 	_update_geometry(origin)
 	draw_circle(Vector2.ZERO, radius, Color(0.07, 0.08, 0.07, 0.9))
-	draw_colored_polygon(_circle, PARCHMENT)
-	for shape in _geometry:
-		draw_colored_polygon(shape["poly"], shape["color"])
+	draw_mesh(_geometry_mesh)
 	for marker in MapGeometry.markers(game):
 		var marker_at := _to_map(marker["pos"], origin)
 		var marker_radius := maxf(2.0, radius * 0.035)

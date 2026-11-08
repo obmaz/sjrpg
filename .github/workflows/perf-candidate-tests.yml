@@ -3,6 +3,8 @@ on:
     push:
         paths:
             - ".github/workflows/perf-candidate-tests.yml"
+            - "sjrpg_3d/scripts/minimap.gd"
+            - "sjrpg_3d/tests/cases/minimap_mesh_cache.gd"
             - "sjrpg_3d/scripts/iso_sprite.gd"
             - "sjrpg_3d/scripts/canopy_shade.gd"
             - "sjrpg_3d/scripts/plaza_water.gd"
@@ -54,4 +56,4 @@ jobs:
               run: tools/check.sh --project=3d --only=iso_sprite_lazy
             - name: Check lazy textures, UI idle work, rendering and gameplay
               run: |
-                  tools/check.sh --project=3d --only=iso_sprite_lazy,canopy_shade,plaza_animation,native_environment,native_town_props,ortho_3d_forest_trees,art_projection,axis,npc_clearance,actor_atlas_lazy,entry_probe_budget,native_render_budget,render_quality,native_enemy_models,native_enemy_scale,native_enemy_radius,corpses,melee_elevation,spatial_combat,world_zoom,entry_layout,gamepad_reconnect_epoch,gamepad_gameplay,ui_input
+                  tools/check.sh --project=3d --only=minimap_mesh_cache,minimap_border,render_budget,iso_sprite_lazy,canopy_shade,plaza_animation,native_environment,native_town_props,ortho_3d_forest_trees,art_projection,axis,npc_clearance,actor_atlas_lazy,entry_probe_budget,native_render_budget,render_quality,native_enemy_models,native_enemy_scale,native_enemy_radius,corpses,melee_elevation,spatial_combat,world_zoom,entry_layout,gamepad_reconnect_epoch,gamepad_gameplay,ui_input
