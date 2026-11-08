@@ -16,7 +16,7 @@ adb install -r sjrpg_3d/build/android/sjrpg_3d-debug.apk
 - 도구 버전은 `tools/android-toolchain.env`에 고정합니다. 현재 compile/target SDK 36, Build Tools 36.1.0이며 최소 Android API는 24입니다.
 - Godot의 미리 빌드된 APK 템플릿을 사용하므로 현재 APK 경로에는 Gradle·NDK가 필요 없습니다.
 - `ANDROID_HOME`은 SDK 경로, `JAVA_HOME`은 JDK 경로를 지정합니다. XDG 설정·데이터 경로도 지원합니다.
-- 설치 도구는 공식 Godot 템플릿 ZIP에서 Android 파일만 범위 다운로드합니다. 버전·ZIP 엔트리 CRC·크기와 개별 파일 SHA-256을 확인합니다. 전체 ZIP의 SHA-256을 검증했다는 뜻은 아닙니다.
+- 설치 도구는 공식 Godot 템플릿 ZIP에서 Android 파일만 범위 다운로드합니다. 버전·ZIP 엔트리 CRC·크기를 검증하고 개별 파일 SHA-256을 계산해 기록합니다. 전체 ZIP의 SHA-256을 검증했다는 뜻은 아닙니다.
 - 디버그 키스토어는 기본 `~/.android/debug.keystore`에 생성합니다. `GODOT_ANDROID_KEYSTORE_DEBUG_PATH`로 기존 키를 사용할 수 있습니다. 키를 저장소에 넣지 않습니다.
 
 `Build Android APK` Actions가 같은 명령으로 APK를 만들고 다운로드 가능한 아티팩트를 보관합니다. [검증된 빌드](https://github.com/obmaz/sjrpg/actions/runs/42474336402)는 61,677,523바이트이며, 서명·16KiB ZIP 정렬·arm64·패키지 ID·최소 SDK 24/target SDK 36·ETC2 리소스를 통과했습니다. Android 기기나 에뮬레이터에서 실행한 결과는 아닙니다.
