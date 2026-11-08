@@ -288,10 +288,14 @@ if (scene === 'settings') {
 }
 if (args['system-back'] === '1') {
     const url = page.url();
+    await page.evaluate(() => {
+        window.__sjrpgBackCapturePops = 0;
+        addEventListener('popstate', () => window.__sjrpgBackCapturePops++);
+    });
     for (let i=0;i<3;i++) {
         await page.evaluate(()=>history.back());
-        await page.waitForFunction(()=>window.__sjrpg3dProbe?.panel_open === true &&
-            window.__sjrpg3dProbe?.panel_script.endsWith('/settings_panel.gd'), null, {timeout:15000});
+        await page.waitForFunction(expected=>window.__sjrpgBackCapturePops >= expected && window.__sjrpg3dProbe?.panel_open === true &&
+            window.__sjrpg3dProbe?.panel_script.endsWith('/settings_panel.gd'), i+1, {timeout:15000});
         if(page.url()!==url)throw new Error('Browser Back navigated away from adventure');
     }
     console.log('SYSTEM_BACK_GAME_PASS repeated actual history back opens settings without navigating or exiting');
