@@ -64,7 +64,12 @@ func _state() -> Dictionary:
 	report["dungeon"] = game.dungeon.active
 	report["camera_locked"] = game._fx_review_focus != Vector2.ZERO
 	report["physics_ticks"] = game.spatial_world.physics_ticks
-	report["input"] = [game.player.move_input.x, game.player.move_input.y]
+	# Player.move_input is touch-only; keyboard reads Input directly in Player._process.
+	# Observe the same read-only precedence without writing either input source.
+	var movement: Vector2 = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	if game.player.move_input.length() > 0.05:
+		movement = game.player.move_input
+	report["input"] = [movement.x, movement.y]
 	var controls: TouchControls = game.hud.controls
 	report["stick"] = {"center": [controls._stick_center.x, controls._stick_center.y], "radius": controls.stick_radius()}
 	var presenter: Ortho3DPreview = game.ortho_preview

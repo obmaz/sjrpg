@@ -39,3 +39,5 @@ tools/serve.sh
 [Web·Android 내보내기](platform-exports.md), [Android 설치·서명](android.md), [웹 성능](web-performance.md)을 따릅니다. UI·입력·렌더 변경은 실제 가로·세로 브라우저 검사를 추가하고, 배포는 전체 검사와 공개 페이지 실행을 확인합니다.
 
 검수 캡처·일회성 진단 출력은 `build/`와 Actions 아티팩트에 둡니다. 저장소에 완료 스크린샷을 계속 쌓지 않습니다. 원본 출처와 현재 재현 방법은 관련 제작 문서에 유지합니다.
+
+프레임 비용은 `frame-pacing-review.yml`의 동일 worker 전후 비교로 검사합니다. `tools/perf/frame_pacing_observer.gd`는 임시 CI 빌드에만 연결하며 실제 렌더 제출 간격과 읽기 전용 엔진 모니터를 수집합니다. 정상 운영 장면에 관찰기를 연결하거나 입력·게임 상태를 바꾸지 않습니다. 측정 범위와 한계는 [웹 성능](web-performance.md)을 참고하세요.
