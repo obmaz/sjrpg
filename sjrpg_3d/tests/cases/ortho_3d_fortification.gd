@@ -293,7 +293,7 @@ func _check_tower_recesses(report: Dictionary, stone_meshes: Array) -> void:
 					back_distance = minf(back_distance, back_point.distance_to(Geometry2D.get_closest_point_to_segment(back_point, polygon[edge], polygon[(edge + 1) % polygon.size()])))
 				if minf(front_distance, back_distance) < 0.5:
 					nearby.append({"polygon": polygon, "front_inside": Geometry2D.is_point_in_polygon(front, polygon), "back_inside": Geometry2D.is_point_in_polygon(back_point, polygon), "front_distance": front_distance, "back_distance": back_distance})
-			print("WALL_SLOT_DIAGNOSTIC " + JSON.stringify({"index": index, "center": center, "normal": frame.basis.z, "stone": stone, "iron": back, "nearest_stone": _nearest_detail(stone_meshes, origin, -frame.basis.z), "nearby_original_walls": nearby}))
+			print("ART_AUDIT WALL_SLOT_DIAGNOSTIC " + JSON.stringify({"index": index, "center": center, "normal": frame.basis.z, "stone": stone, "iron": back, "nearest_stone": _nearest_detail(stone_meshes, origin, -frame.basis.z), "nearby_original_walls": nearby}))
 		check("visible inset is not painted on an opaque cylinder " + str(index), stone > 0.305)
 		var inside := center - frame.basis.z * 0.05
 		for side in [-1.0, 1.0]:
