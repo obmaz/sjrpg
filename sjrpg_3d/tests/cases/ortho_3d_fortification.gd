@@ -237,4 +237,42 @@ func _check_wall_relief(report: Dictionary, stone_meshes: Array) -> void:
 			measurements[key] = measured
 			check("actual merged masonry preserves recessed field/pier relief " + family + " " + key, is_finite(measured) and absf(measured - expected) < 0.001)
 		probes[family] = measurements
+	_check_tower_recesses(report, stone_meshes)
 	print("ART_AUDIT native_wall_finish " + JSON.stringify({"triangles": report["triangles"], "static_surfaces": report["static_surfaces"], "piers": piers.size(), "fields": fields.size(), "coped_pieces": report["coped_pieces"], "moulded_rings": report["moulded_rings"], "slit_reveals": report["slit_reveals"], "actual_depths": probes}))
+
+
+## Natural wall attachments may cover two faces of a tower. Test every actual
+## recessed back, and the visible cavities against their installed stone planes.
+func _check_tower_recesses(report: Dictionary, stone_meshes: Array) -> void:
+	var iron_meshes := []
+	for mesh: MeshInstance3D in report["static_meshes"]:
+		if mesh.material_override != report["stone"]:
+			iron_meshes.append(mesh)
+	var frames: Array = report["slit_frames"]
+	var exposed := 0
+	var depth_min := INF
+	var depth_max := 0.0
+	check("all eight actual towers have four real inset slot faces", frames.size() == 32 and is_equal_approx(float(report["slit_depth"]), 0.10))
+	for index in frames.size():
+		var frame: Transform3D = frames[index]
+		var center := frame.origin + Vector3.UP * float(report["slit_height"])
+		var origin := center + frame.basis.z * 0.20
+		var back := _nearest(iron_meshes, origin, -frame.basis.z)
+		depth_min = minf(depth_min, back)
+		depth_max = maxf(depth_max, back)
+		check("actual dark back is10cm behind the tower face " + str(index), is_finite(back) and absf(back - 0.30) < 0.001)
+		var occluded := false
+		var point := Vector2(center.x, center.z)
+		for polygon: PackedVector2Array in report["wall_polygons"]:
+			occluded = occluded or Geometry2D.is_point_in_polygon(point, polygon)
+		if occluded:
+			continue
+		exposed += 1
+		var stone := _nearest(stone_meshes, origin, -frame.basis.z)
+		check("visible inset is not painted on an opaque cylinder " + str(index), stone > 0.305)
+		var inside := center - frame.basis.z * 0.05
+		for side in [-1.0, 1.0]:
+			var reveal := _nearest(stone_meshes, inside, frame.basis.x * side)
+			check("actual stone side reveals enclose the slot volume " + str(index) + " " + str(side), is_finite(reveal) and absf(reveal - 0.0375) < 0.001)
+	check("at least two exposed real slot faces per tower remain readable", exposed >= 16)
+	print("ART_AUDIT native_tower_recess " + JSON.stringify({"slot_faces": frames.size(), "exposed": exposed, "actual_back_distance_min": depth_min, "actual_back_distance_max": depth_max, "depth_m": report["slit_depth"], "slot_height_m": report["slit_height"]}))

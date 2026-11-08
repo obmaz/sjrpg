@@ -273,20 +273,20 @@ func _corner_quoins(width: float, depth: float, top: float, wall_top: float) -> 
 	# Small bonded corner dressings remain inside the original ground envelope.
 	# They share the world's 32cm masonry courses and one stone surface.
 	# Close the exterior quarter at the intersection of the two thick wall panels.
-	for x in [-1.0, 1.0]:
-		for z in [-1.0, 1.0]:
+	for x: float in [-1.0, 1.0]:
+		for z: float in [-1.0, 1.0]:
 			_box(Vector3(x * (width * 0.5 + 0.05), (FLOOR + wall_top) * 0.5, z * (depth * 0.5 + 0.05)), Vector3(0.10, wall_top - FLOOR, 0.10), "stone", Transform3D.IDENTITY, false)
 	for row in ceili(top / ASHLAR_COURSE):
 		var low := maxf(FLOOR, row * ASHLAR_COURSE + 0.009)
 		var high := minf(top - 0.009, (row + 1) * ASHLAR_COURSE - 0.009)
 		if high - low < 0.035:
 			continue
-		for x in [-1.0, 1.0]:
-			for z in [-1.0, 1.0]:
+		for x: float in [-1.0, 1.0]:
+			for z: float in [-1.0, 1.0]:
 				var front := Transform3D(Basis(Vector3.UP, 0.0 if z > 0.0 else PI), Vector3(0, 0, z * depth * 0.5))
 				var side := Transform3D(Basis(Vector3.UP, x * PI * 0.5), Vector3(x * width * 0.5, 0, 0))
-				var across := x * z
-				var along := -x * z
+				var across: float = x * z
+				var along: float = -x * z
 				var long := 0.38 if row % 2 == 0 else 0.29
 				var short := 0.29 if row % 2 == 0 else 0.38
 				var end_x := width * 0.5 + 0.092

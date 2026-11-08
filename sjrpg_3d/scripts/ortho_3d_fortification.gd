@@ -24,6 +24,7 @@ var _fields: Array[Dictionary] = []
 var _coped_pieces := 0
 var _mouldings := 0
 var _slit_reveals := 0
+var _slit_frames: Array[Transform3D] = []
 
 
 static func build(presenter: Node) -> Ortho3DFortification:
@@ -119,7 +120,8 @@ func _build() -> void:
 		"corners": corners, "town_center": town_center, "gates": gates, "static_meshes": static_meshes,
 		"triangles": _triangles, "static_surfaces": static_meshes.size(), "stone": _materials["stone"],
 		"wall_face_recess": WALL_FACE_RECESS, "wall_piers": _piers, "wall_fields": _fields,
-		"coped_pieces": _coped_pieces, "moulded_rings": _mouldings, "slit_reveals": _slit_reveals}
+		"coped_pieces": _coped_pieces, "moulded_rings": _mouldings, "slit_reveals": _slit_reveals,
+		"slit_depth": 0.10, "slit_height": height * 0.60, "slit_frames": _slit_frames}
 	root.set_meta("fortification_detail", report)
 
 
@@ -364,7 +366,7 @@ func _towers(village: Village, index: int, wall_height: float) -> void:
 		var center := Vector3(bounds.get_center().x, 0, bounds.get_center().y)
 		var radius := minf(bounds.size.x, bounds.size.y) * 0.48
 		var height := wall_height + 2.0
-		_cylinder(center + Vector3(0, height * 0.5, 0), radius, height, "stone")
+		var slit_faces := _tower_shell(center, radius, height, wall_height * 0.60)
 		for level in [0.14, wall_height * 0.76, wall_height, height - 0.12]:
 			if level < 0.2 or level > height - 0.15:
 				_moulded_ring(center + Vector3(0, level, 0), radius + 0.035, 0.105)
@@ -374,19 +376,78 @@ func _towers(village: Village, index: int, wall_height: float) -> void:
 			var angle := tooth * TAU / 10.0
 			var at := center + Vector3(cos(angle) * radius * 0.87, height + 0.26, sin(angle) * radius * 0.87)
 			_coped_box(Vector3.ZERO, Vector3(0.32, 0.52, 0.29), "stone", Transform3D(Basis(Vector3.UP, -angle), at))
-		# Small iron slit/reveal pieces use real relief and shared matte material.
-		for face in 4:
-			var angle := face * PI * 0.5
-			var normal := Vector3(cos(angle), 0, sin(angle))
-			var frame := Transform3D(Basis(Vector3.UP, PI * 0.5 - angle), center + normal * (radius + 0.008))
-			_box(Vector3(0, wall_height * 0.64, 0), Vector3(0.075, 0.60, 0.025), "iron", frame)
-			var slit_y := wall_height * 0.64
+		# The shell has real recessed slots. The dark iron is their closed back,
+		# behind the stone reveals, rather than an overlay on an opaque cylinder.
+		for surface_frame: Transform3D in slit_faces:
+			_slit_frames.append(surface_frame)
+			var frame := surface_frame * Transform3D(Basis.IDENTITY, Vector3(0, 0, 0.008))
+			var slit_y := wall_height * 0.60
 			for side in [-1.0, 1.0]:
 				_box(Vector3(side * 0.071, slit_y, -0.014), Vector3(0.065, 0.72, 0.07), "stone", frame)
 			for side in [-1.0, 1.0]:
 				_coped_box(Vector3(0, slit_y + side * 0.35, -0.0165), Vector3(0.208, 0.07, 0.075), "stone", frame)
 			_slit_reveals += 1
 	pose.free()
+
+
+## Keep the former24-segment outer cylinder and smooth radial body normals, but
+## split its four cardinal facets around true10cm-deep, closed-back arrow slots.
+func _tower_shell(center: Vector3, radius: float, height: float, slit_y: float) -> Array[Transform3D]:
+	var frames: Array[Transform3D] = []
+	var half_width := radius * sin(PI / 24.0)
+	var face_radius := radius * cos(PI / 24.0)
+	var half_slot := 0.0375
+	var bottom := slit_y - 0.30
+	var top := slit_y + 0.30
+	for segment in 24:
+		var first := TAU * segment / 24.0
+		var last := TAU * (segment + 1) / 24.0
+		var middle := (first + last) * 0.5
+		var normal := Vector3(cos(middle), 0, sin(middle))
+		var tangent := Vector3(normal.z, 0, -normal.x)
+		var frame := Transform3D(Basis(tangent, Vector3.UP, normal), center + normal * face_radius)
+		if segment % 6 != 0:
+			_tower_panel(frame, -half_width, half_width, 0.0, height, 0.0, "stone", center)
+		else:
+			_tower_panel(frame, -half_width, -half_slot, 0.0, height, 0.0, "stone", center)
+			_tower_panel(frame, half_slot, half_width, 0.0, height, 0.0, "stone", center)
+			_tower_panel(frame, -half_slot, half_slot, 0.0, bottom, 0.0, "stone", center)
+			_tower_panel(frame, -half_slot, half_slot, top, height, 0.0, "stone", center)
+			var lb := frame * Vector3(-half_slot, bottom, 0)
+			var rb := frame * Vector3(half_slot, bottom, 0)
+			var lt := frame * Vector3(-half_slot, top, 0)
+			var rt := frame * Vector3(half_slot, top, 0)
+			var back := -frame.basis.z * 0.10
+			_quad(lt, lb, lb + back, lt + back, frame.basis.x, "stone")
+			_quad(rb, rt, rt + back, rb + back, -frame.basis.x, "stone")
+			_quad(lb, rb, rb + back, lb + back, Vector3.UP, "stone")
+			_quad(rt, lt, lt + back, rt + back, Vector3.DOWN, "stone")
+			_tower_panel(frame, -half_slot, half_slot, bottom, top, -0.10, "iron")
+			frames.append(frame)
+		var a := center + Vector3(cos(first) * radius, 0, sin(first) * radius)
+		var b := center + Vector3(cos(last) * radius, 0, sin(last) * radius)
+		_triangle([center, a, b], [Vector2(0.5, 0.5), Vector2.ZERO, Vector2.ONE], Vector3.DOWN, "stone")
+		_triangle([center + Vector3.UP * height, a + Vector3.UP * height, b + Vector3.UP * height], [Vector2(0.5, 0.5), Vector2.ZERO, Vector2.ONE], Vector3.UP, "stone")
+	return frames
+
+
+func _tower_panel(frame: Transform3D, left: float, right: float, bottom: float, top: float, depth: float, material: String, smooth_center := Vector3(INF, INF, INF)) -> void:
+	var local := PackedVector3Array([Vector3(left, bottom, depth), Vector3(right, bottom, depth), Vector3(right, top, depth), Vector3(left, top, depth)])
+	var tool := _tool(material)
+	for index in [0, 2, 1, 0, 3, 2]:
+		var point := frame * local[index]
+		var normal := frame.basis.z
+		if smooth_center.is_finite():
+			normal = ((point - smooth_center) * Vector3(1, 0, 1)).normalized()
+		tool.set_normal(normal)
+		tool.set_uv(Vector2(local[index].x, local[index].y) / 2.56)
+		tool.add_vertex(point)
+	_triangles += 2
+
+
+func _quad(a: Vector3, b: Vector3, c: Vector3, d: Vector3, normal: Vector3, material: String) -> void:
+	_triangle([a, b, c], [Vector2.ZERO, Vector2.RIGHT, Vector2.ONE], normal, material)
+	_triangle([a, c, d], [Vector2.ZERO, Vector2.ONE, Vector2.DOWN], normal, material)
 
 
 func _build_leaves(index: int) -> void:
