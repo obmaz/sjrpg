@@ -6,12 +6,7 @@ mkdir -p "$ROOT/build/web"
 # Local screenshots and prior exports are artifacts, not game resources.
 touch "$ROOT/build/.gdignore"
 LOG="$(mktemp)"; trap 'rm -f "$LOG"' EXIT
-"$ROOT/tools/godot.sh" --headless --import >"$LOG" 2>&1 || true
-if grep -q -E "SCRIPT ERROR|Parse Error" "$LOG"; then
-  grep -n -B 1 -A 3 -E "SCRIPT ERROR|Parse Error" "$LOG"
-  echo "스크립트 오류로 export 중단"
-  exit 1
-fi
+"$ROOT/tools/import_project.sh"
 "$ROOT/tools/godot.sh" --headless --export-release "Web" build/web/index.html >"$LOG" 2>&1 || { cat "$LOG"; exit 1; }
 test -s "$ROOT/build/web/index.wasm" && test -s "$ROOT/build/web/index.pck"
 # The loading backdrop is available before the Godot pack is downloaded.
@@ -20,4 +15,5 @@ cp "$ROOT/web/manifest.webmanifest" "$ROOT/web/canvas-budget.js" "$ROOT/web/full
 touch "$ROOT/build/web/.nojekyll"
 # Immutable pack URLs prevent a cached prior deployment from supplying old game code.
 PACK="$(python3 "$ROOT/tools/stamp_web.py" "$ROOT/build/web")"
+python3 "$ROOT/tools/check_platform_exports.py" --web "$ROOT/build/web/$PACK" --out "$ROOT/build/web/platform-export.json"
 printf "export ok: %s %s, wasm %s\n" "$PACK" "$(du -h "$ROOT/build/web/$PACK" | cut -f1)" "$(du -h "$ROOT/build/web/index.wasm" | cut -f1)"

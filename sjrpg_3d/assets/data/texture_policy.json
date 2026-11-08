@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "scope": "sjrpg_3d only; imported texture metadata, never source image bytes",
+  "gpu_compressed_settings": {
+    "compress/mode": "2",
+    "compress/high_quality": "false",
+    "mipmaps/generate": "true",
+    "process/size_limit": "0",
+    "detect_3d/compress_to": "0"
+  },
+  "protected_settings": {
+    "compress/mode": "1",
+    "detect_3d/compress_to": "0"
+  },
+  "gpu_compressed_textures": [
+    {
+      "path": "assets/art/preview3d/limestone.webp",
+      "usage": "Shared native chapel, houses, fortification stone"
+    },
+    {
+      "path": "assets/art/preview3d/slate.webp",
+      "usage": "Native chapel and house roofs"
+    },
+    {
+      "path": "assets/art/preview3d/timber.webp",
+      "usage": "Native beams, doors, gates and chest timber shader"
+    },
+    {
+      "path": "assets/art/preview3d/bark.webp",
+      "usage": "Shared native town and outer forest tree bark"
+    },
+    {
+      "path": "assets/art/forest/grass.webp",
+      "usage": "Native ground plane and raised turf"
+    },
+    {
+      "path": "assets/art/forest/paving.webp",
+      "usage": "Native roads, bridge deck and raised paving"
+    },
+    {
+      "path": "assets/art/village/rock.webp",
+      "usage": "Native river banks, cliffs and scenery"
+    },
+    {
+      "path": "assets/art/village/water.webp",
+      "usage": "Native river, pond and waterfall surfaces"
+    },
+    {
+      "path": "assets/art/cave/floor.webp",
+      "usage": "Native cave floor polygons"
+    },
+    {
+      "path": "assets/art/cave/dark.webp",
+      "usage": "Native volumetric cave wall albedo"
+    }
+  ],
+  "protected_rule": "Every other imported art texture keeps its current mipmap, alpha, quality and size settings. UI, effects, cutouts, actor sheets and extracted GLB textures stay in mode 1; automatic 3D conversion is disabled."
+}

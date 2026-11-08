@@ -35,7 +35,7 @@
   새 원화는 [측정·재생성 방법](sjrpg_2d/docs/chapel-regeneration.md)을 따릅니다.
 - HUD·팝업은 사용자가 승인한 최종 구도를 따릅니다([docs/ui-reference.md](sjrpg_2d/docs/ui-reference.md)). 상태창·스킬 부채꼴·조이스틱·하단 메뉴 비율과 얇은 청동/은색 테두리를 유지하고, 큰 단색 원·글자 대체 공격 아이콘·밝은 노란 버튼으로 되돌리지 않습니다.
 - 코드로 2D 원화를 대신 그리지 않습니다. 2D 원화에서는 배치·투영·충돌·깊이 정렬에만 씁니다(HUD 도형과 효과는 예외). 3D판에서는 실제 부피·법선·재질·미터 단위 충돌을 가진 메시 모델링을 사용할 수 있으며, 절차적 제작도 [3D 기준](docs/3d-asset-guide.md)의 전체 면·비례·실제 렌더 검수를 따릅니다.
-- 이미지를 새로 가져오면 `.import`의 `compress/mode`를 손실(1)로 두어 웹 번들 크기를 유지합니다(`tools/check.sh`는 크기를 점검하지 않으므로 export 결과 `pck`를 확인).
+- 3D판 텍스처는 `sjrpg_3d/assets/data/texture_policy.json`과 `tools/texture_policy.py`를 따릅니다. 지정한 불투명 월드 표면은 VRAM 압축(2, S3TC/ETC2)을 사용하고, UI·효과·투명 잎·유리·현재 배우 텍스처는 기존 손실 압축(1)과 알파/밉맵 설정을 보존합니다. 임의 리사이즈나 일괄 GPU 변환을 하지 않습니다. `tools/import_project.sh`로 정책 적용→Godot 재임포트→검증을 수행하며 최종 PCK/APK와 실제 모바일 화면을 확인합니다. 2D판은 동결합니다.
 - 그림·UI를 바꾸면 실제 브라우저 화면(`tools/screenshot.mjs`)으로 가로·세로를 함께 확인합니다. 헤드리스 테스트 통과로 시각 검증을 대신하지 않습니다.
 
 ## 데이터 출처

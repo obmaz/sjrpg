@@ -1,6 +1,8 @@
 """Pack generated front-on village materials, using exact crops and WebP only."""
 import hashlib
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 from PIL import Image
@@ -62,6 +64,8 @@ process/fix_alpha_border=true
               "physical_scale": {"limestone_tile_m": 2.56, "limestone_courses": 8, "slate_tile_m": 2.6},
               "limitations": "Generated albedo with fine authored relief shading, not a measured PBR scan. No ground or directional scene shadow is baked into the tiles."}
     (OUT / "materials.json").write_text(json.dumps(record, indent=2) + "\n")
+    # Normalize any newly created import metadata without touching packed image bytes.
+    subprocess.run([sys.executable, str(ROOT / "tools/texture_policy.py"), "--apply"], check=True)
     print("Packed", len(records), "material tiles at", tile, "px")
 
 

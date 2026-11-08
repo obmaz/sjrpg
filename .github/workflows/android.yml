@@ -1,0 +1,63 @@
+name: Build Android APK
+
+on:
+    push:
+        paths:
+            - ".github/workflows/android.yml"
+            - ".godot-version"
+            - "sjrpg_3d/project.godot"
+            - "sjrpg_3d/export_presets.cfg"
+            - "sjrpg_3d/scripts/**"
+            - "sjrpg_3d/scenes/**"
+            - "sjrpg_3d/assets/**"
+            - "sjrpg_3d/tools/*.sh"
+            - "sjrpg_3d/tools/android-toolchain.env"
+            - "sjrpg_3d/tools/texture_policy.py"
+            - "sjrpg_3d/tools/check_platform_exports.py"
+    workflow_dispatch:
+
+permissions:
+    contents: read
+concurrency:
+    group: android-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    apk:
+        runs-on: ubuntu-latest
+        timeout-minutes: 25
+        env:
+            ANDROID_HOME: ${{ runner.temp }}/sjrpg-android-sdk
+        steps:
+            - uses: actions/checkout@v7.0.1
+            - uses: actions/setup-java@v5
+              with:
+                  distribution: temurin
+                  java-version: 17
+            - uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.godot-tools
+                      ~/.local/share/godot/export_templates
+                  key: godot-${{ hashFiles('.godot-version') }}-android-tools-v1
+            - uses: actions/cache@v4
+              with:
+                  path: |
+                      ${{ env.ANDROID_HOME }}
+                      ~/.android/debug.keystore
+                  key: android-${{ runner.os }}-${{ hashFiles('sjrpg_3d/tools/android-toolchain.env') }}-debug-v1
+            - name: Install pinned engine and Android toolchain
+              run: |
+                  tools/setup_godot.sh
+                  sjrpg_3d/tools/setup_android.sh
+            - name: Export and verify signed arm64 debug APK
+              run: sjrpg_3d/tools/export_android.sh
+            - uses: actions/upload-artifact@v6
+              with:
+                  name: sjrpg-android-debug-${{ github.sha }}
+                  path: |
+                      sjrpg_3d/build/android/sjrpg_3d-debug.apk
+                      sjrpg_3d/build/android/export-report.json
+                      sjrpg_3d/build/android/package.txt
+                  if-no-files-found: error
+                  retention-days: 14

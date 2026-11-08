@@ -9,6 +9,8 @@ import base64
 import hashlib
 import json
 import os
+import subprocess
+import sys
 from pathlib import Path
 import urllib.request
 from PIL import Image, ImageStat
@@ -121,9 +123,9 @@ def main():
             raise RuntimeError("Unrelated family texture changed: " + name)
     if target.stat().st_size > 1024 * 1024:
         raise RuntimeError("Single shared color tile exceeds its compressed byte budget")
-    settings = target.with_name(target.name + ".import")
-    if "compress/mode=1" not in settings.read_text() or "mipmaps/generate=true" not in settings.read_text():
-        raise RuntimeError("Existing mipmapped lossy texture import must be preserved")
+    # The central policy owns metadata; packing never resizes/re-encodes another tile.
+    subprocess.run([sys.executable, str(ROOT / "tools/texture_policy.py"), "--apply"], check=True)
+    subprocess.run([sys.executable, str(ROOT / "tools/texture_policy.py"), "--check"], check=True)
     proof_path.parent.mkdir(parents=True, exist_ok=True)
     proof_path.write_text(json.dumps(proof, indent=2) + "\n")
     artifacts = [target, MANIFEST, proof_path]
