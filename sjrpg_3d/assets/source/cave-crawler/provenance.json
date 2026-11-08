@@ -1,6 +1,6 @@
 {
   "asset": "cave_crawler",
-  "status": "candidate_pending_browser_validation",
+  "status": "integrated atlas; source and actual-browser review, not user approval",
   "projection": {
     "type": "orthographic isometric",
     "elevation_degrees": 35.2643897,
@@ -78,5 +78,20 @@
     "measured_corpse_frames": 4,
     "metadata": "assets/data/cave_crawler_sprite.json",
     "actual_normalized_uv_grid": "4x4 and2x2; preserves fractional source-cell width1254/4"
+  },
+  "validation": {
+    "workflow": ".github/workflows/gameplay-polish-review.yml",
+    "scenarios": [
+      "cave_swarm-portrait",
+      "cave_swarm-landscape"
+    ],
+    "source_tests": [
+      "native_enemy_sprites",
+      "cave_swarm"
+    ],
+    "real_alpha": true,
+    "measured_live_frames": 16,
+    "measured_corpse_frames": 4,
+    "source_pixels_unchanged": true
   }
 }

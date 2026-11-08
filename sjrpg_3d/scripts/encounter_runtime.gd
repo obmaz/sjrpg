@@ -11,7 +11,7 @@ const CAVE_WAVE_SIZE := 20
 const CAVE_ENEMY_LIMIT := MAX_ENEMIES + CAVE_WAVE_SIZE
 const CAVE_VISUAL_VARIANT := "cave_crawler"
 # Screen-ground offset keeps the marker beside, not over, the entrance/NPC/gate.
-const CAVE_STONE_OFFSET := Vector2(210, -20)
+const CAVE_STONE_OFFSET := Vector2(210, -200)
 const SITES := {
 	"west": Vector2(-1700, 320), "north": Vector2(320, -1700),
 	"east": Vector2(1700, -320), "south": Vector2(-320, 1700),

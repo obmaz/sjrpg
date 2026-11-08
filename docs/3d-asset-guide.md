@@ -211,3 +211,7 @@ validation: <tests, actual paired browser captures, remaining asset gaps>
 3D판의 현재 GPU 압축 대상은 `sjrpg_3d/assets/data/texture_policy.json`의 불투명 월드10장입니다. `mode=2`, `high_quality=false`로 S3TC/ETC2를 생성하고 두 플랫폼에 필요한 변형을 실제 패키지에서 확인합니다. UI·효과·알파 잎·작은 얼굴/눈·유리에는 기존 `mode=1`과 알파·밉맵 설정을 유지합니다. 새로운 에셋도 먼저 보호 대상으로 시작하고 실제 양 코덱의 품질을 검수해 허용 목록을 갱신합니다.
 
 이미지를 다시 만들거나 해상도를 낮추는 작업과 GPU 압축을 구분합니다. 파일 해시·논리 해상도는 유지하며 코덱의 저장 블록 정렬은 별도로 기록합니다. 임포트 설정은 `tools/import_project.sh`를 통해 적용하고 기존 UID를 임의 재작성하지 않습니다. [플랫폼 설정과 실제 검수](../sjrpg_3d/docs/platform-exports.md)에 Web PCK·Android APK 검증과 메모리 수치의 범위를 기록합니다.
+
+## 대량 몬스터의 2D 표시 예외
+
+사용자가 요청한 동굴 입구의 `cave_crawler`20마리 무리는 `NativeEnemySprites3D`로 생성형2D 원화를 표시합니다. 게임 공간·실제 몸체·높낮이·벽 차폐·피해 판정은3D로 유지하며, 기존 다섯 몬스터를 일괄 전환하지 않습니다. 실제RGBA·방향별 크기·프레임별 발치·별도 시체 원화와 수명을 검수하고, 이미지·메시·셰이더를 공유합니다. 그림은 실시간 광원에 반응하는 입체 표면이 아니며, 표시 방식만으로 실제 기기의 FPS 향상을 보장하지 않습니다. 제작·생성 참조·픽셀 해시는 [원화 기록](../sjrpg_3d/assets/source/cave-crawler/provenance.json), 정렬은 `sjrpg_3d/assets/data/cave_crawler_sprite.json`을 따릅니다.

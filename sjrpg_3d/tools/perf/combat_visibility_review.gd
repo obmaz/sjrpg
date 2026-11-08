@@ -179,7 +179,7 @@ func _prepare(requested: String) -> void:
 			var site := "cave_swarm"
 			if not game.encounters.stones.has(site):
 				_proof["available"] = false
-				focus = game.dungeon.entry_point() + Vector2(210, -85)
+				focus = game.dungeon.entry_point() + Vector2(210, -265)
 			else:
 				var stone: EncounterStone = game.encounters.stones[site]
 				var approach := Vector2.INF

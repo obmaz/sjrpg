@@ -41,3 +41,13 @@ tools/serve.sh
 검수 캡처·일회성 진단 출력은 `build/`와 Actions 아티팩트에 둡니다. 저장소에 완료 스크린샷을 계속 쌓지 않습니다. 원본 출처와 현재 재현 방법은 관련 제작 문서에 유지합니다.
 
 프레임 비용은 `frame-pacing-review.yml`의 동일 worker 전후 비교로 검사합니다. `tools/perf/frame_pacing_observer.gd`는 임시 CI 빌드에만 연결하며 실제 렌더 제출 간격과 읽기 전용 엔진 모니터를 수집합니다. 정상 운영 장면에 관찰기를 연결하거나 입력·게임 상태를 바꾸지 않습니다. 측정 범위와 한계는 [웹 성능](web-performance.md)을 참고하세요.
+
+## 적 표시와 공격 피드백
+
+`NativeEnemyModels`는 기존 입체 몬스터를 표시합니다. `visual_variant=cave_crawler`인 동굴 비석 무리는 `NativeEnemySprites3D`가 실제 `actor_foot()` 위에 생성형 원화를 표시하며, 시체도 같은 변형 정보를 전달해 기존3D 시체와 중복되지 않게 합니다. 소스 몬스터의 방향·보행 주기·접촉 정지·피격·사망·시체 수명을 읽고 별도 전투 시계를 만들지 않습니다. 알파에서 측정한 프레임별 발 위치와 실제 크기는 `assets/data/cave_crawler_sprite.json`에 둡니다.
+
+`NativeEnemyFeedback3D`는 실제HP·최근 피해·보스 준비 타이머를 체력바와 지면 예고로 표시합니다. `NativeZoneFx3D`는 기존 `Effect`의 위치·높이·범위·나이·지연을 읽어 지속 마법을 표시합니다. 소스의 피해 판정이나 효과 수명을 바꾸지 않습니다. `NativeCaveLanterns3D`는 이전 source역할 이름을 유지하는 횃불 표시기이며, `Ortho3DEnvironment._clock`을 공유합니다.
+
+`EncounterRuntime.CAVE_SITE`는 직접 공격으로만20마리를 소환합니다. 일반 몬스터 예산30은 유지하고 이 특수 무리에만20개를 추가 예약합니다. 전체20개 배치 가능 위치를 먼저 검사해 부분 소환을 막습니다. 저장 검증은 일반 기록 합계30·특수 기록20·전체50을 각각 제한하며, 기존 저장 버전과 다른 비석의 충전 규칙은 유지합니다.
+
+메뉴 이동은 `Game._leave_to_menu()`의 저장 성공 후에만 장면을 해제합니다. 보상 적용과 동굴 위치 메타데이터를 저장에 포함하되, 실패하면 현재 팝업·일시정지·동굴 상태를 유지합니다. `close_panel(false)`, `dungeon.leave(...,false)`, `claim_boss_heart(false)`는 이 경로에서 중복 쓰기를 피하기 위한 내부 호출이며 기본 인자는 기존 일반 동작을 유지합니다.
