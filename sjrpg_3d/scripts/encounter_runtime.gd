@@ -69,7 +69,7 @@ func _stone_position(desired: Vector2) -> Vector2:
 
 
 func _process(delta: float) -> void:
-	if game.dungeon.active or GameState.encounter_capture != capture:
+	if not game.native_ready or game.dungeon.active or GameState.encounter_capture != capture:
 		return
 	for id in stones:
 		var state: Dictionary = states[id]
@@ -272,6 +272,12 @@ func _create_enemy(id: String, kind: String, level: int, at: Vector2) -> Enemy:
 	game.world.add_child(enemy)
 	game.enemies.append(enemy)
 	_members[id].append(enemy)
+	# Restored packs are created before Game finishes native setup. Do not
+	# let their first idle tick wander/attack behind the loading overlay.
+	var awake: bool = game.native_ready and enemy.position.distance_to(game.player.position) < 1650.0
+	enemy.visible = awake
+	enemy.set_process(awake)
+	enemy.sprite.set_process(awake)
 	return enemy
 
 

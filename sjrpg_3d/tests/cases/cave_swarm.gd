@@ -48,26 +48,31 @@ func _retire(game: Node) -> void:
 	await _frames(3)
 
 
-func _check_pack(game: Node, expected: int) -> void:
+func _check_pack(game: Node, expected: int, phase: String) -> void:
 	var members: Array = game.encounters._members[SITE]
 	var actual := 0
-	var valid := true
+	var violations: Array[Dictionary] = []
 	for index in members.size():
 		var enemy: Enemy = members[index]
 		if not is_instance_valid(enemy) or enemy.dead:
 			continue
 		actual += 1
-		valid = valid and enemy.kind == "goblin" and enemy.encounter_id == SITE
-		valid = valid and str(enemy.get_meta("visual_variant", "")) == EncounterRuntime.CAVE_VISUAL_VARIANT
-		valid = valid and not game.in_town(enemy.position) and game._inside_field(enemy.position, 80.0)
-		valid = valid and not game.spatial_world.blocked(enemy.position, enemy.radius + 10.0, true)
-		valid = valid and enemy.position.distance_to(game.player.position) > 135.0
+		var town: bool = game.in_town(enemy.position)
+		var inside: bool = game._inside_field(enemy.position, 80.0)
+		var blocked: bool = game.spatial_world.blocked(enemy.position, enemy.radius + 10.0, true)
+		var player_distance: float = enemy.position.distance_to(game.player.position)
+		var identity_ok := enemy.kind == "goblin" and enemy.encounter_id == SITE and str(enemy.get_meta("visual_variant", "")) == EncounterRuntime.CAVE_VISUAL_VARIANT
+		if not identity_ok or town or not inside or blocked or player_distance <= 135.0:
+			violations.append({"index": index, "position": [enemy.position.x, enemy.position.y], "identity_ok": identity_ok, "in_town": town, "inside_field": inside, "blocked": blocked, "player_distance": player_distance})
 		for previous in range(index):
 			var peer: Enemy = members[previous]
 			if is_instance_valid(peer) and not peer.dead:
-				valid = valid and enemy.position.distance_to(peer.position) >= enemy.radius + peer.radius + 8.0
-	check("cave wave retains exactly the requested living member count", actual == expected)
-	check("sprite enemies retain distinct native bodies on free supported forest ground", valid)
+				var distance := enemy.position.distance_to(peer.position)
+				var required := enemy.radius + peer.radius + 8.0
+				if distance < required:
+					violations.append({"index": index, "peer": previous, "position": [enemy.position.x, enemy.position.y], "peer_position": [peer.position.x, peer.position.y], "distance": distance, "required": required})
+	check(phase + " cave wave retains exactly the requested living member count", actual == expected)
+	check(phase + " sprite enemies retain distinct native bodies on free supported forest ground", violations.is_empty(), JSON.stringify({"phase": phase, "player": [game.player.position.x, game.player.position.y], "violations": violations}))
 
 
 func _check_real_contact_and_restore() -> void:
@@ -85,7 +90,7 @@ func _check_real_contact_and_restore() -> void:
 	if not check("one resolved melee contact summons all twenty at once", runtime.living(SITE) == 20):
 		await _retire(game)
 		return
-	_check_pack(game, 20)
+	_check_pack(game, 20, "fresh")
 	check("the unlimited demonstration marker does not consume a five-minute charge", int(runtime.states[SITE]["charges"]) == 3 and is_zero_approx(float(runtime.states[SITE]["recharge"])))
 	check("further hits cannot stack a second live wave", not stone.take_damage(1.0, game.player) and runtime.living(SITE) == 20)
 	await _frames(2)
@@ -99,10 +104,26 @@ func _check_real_contact_and_restore() -> void:
 	await _retire(game)
 	game = preload("res://scripts/game.gd").new()
 	add_child(game)
+	var saw_loading_pack := false
+	var quiet_loading_pack := true
+	var loading_positions: Array[Vector2] = []
 	while not game.native_ready:
-		await get_tree().physics_frame
-		await _frames(1)
+		if game.encounters._members.has(SITE):
+			var loading_members: Array = game.encounters._members[SITE]
+			if not saw_loading_pack:
+				saw_loading_pack = true
+				for member: Enemy in loading_members:
+					loading_positions.append(member.position)
+			game.encounters._process(0.5)
+			for index in loading_members.size():
+				var member: Enemy = loading_members[index]
+				quiet_loading_pack = quiet_loading_pack and not member.is_processing() and not member.sprite.is_processing()
+				quiet_loading_pack = quiet_loading_pack and member.position.distance_to(loading_positions[index]) < 0.01
+				quiet_loading_pack = quiet_loading_pack and member._state == "idle" and is_zero_approx(member._walk_cycle) and is_zero_approx(member._timer)
+		await get_tree().process_frame
 	_freeze(game)
+	check("continuation actually observes the restored pack before native startup completes", saw_loading_pack)
+	check("restored enemies keep their positions and idle clocks behind the loading overlay", quiet_loading_pack)
 	runtime = game.encounters
 	check("continuing restores the surviving twenty-pack without auto-summoning more", runtime.living(SITE) == 20)
 	if runtime.living(SITE) == 20:

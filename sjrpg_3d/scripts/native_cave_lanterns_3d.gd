@@ -118,7 +118,7 @@ static func _triangle(tool: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, out
 	if not reverse:
 		normal = -normal
 	# Godot's front faces are clockwise; all normals face outside the volume.
-	var ordered: Array[Vector3] = [a, c, b] if reverse else [a, b, c]
+	var ordered: Array = [a, c, b] if reverse else [a, b, c]
 	for point: Vector3 in ordered:
 		tool.set_normal(normal)
 		tool.set_uv(Vector2(point.x, point.y))

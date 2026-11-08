@@ -59,8 +59,8 @@ func run() -> void:
 	check("warning perimeter inverse-projects the actual source distance budget", matches and points.size() == NativeZoneFx3D.SEGMENTS)
 	var before_age := meteor.age
 	var before_params := meteor.params.duplicate(true)
-	var before_resource := game.player.resource
-	var before_children := game.world.get_child_count()
+	var before_resource: float = game.player.resource
+	var before_children: int = game.world.get_child_count()
 	var first_fall: Vector3 = entry["glow_offsets"][0]
 	for repeat in 4:
 		fx.sync()
@@ -86,7 +86,7 @@ func run() -> void:
 	meteor._process(float(meteor.params["delay"]) - meteor.age + 0.02)
 	fx.sync()
 	check("actual source impact switches to quiet continuing damage-zone cue", bool(meteor.params.get("impacted", false)) and str(entry["phase"]) == "active" and glows.multimesh.visible_instance_count == 5)
-	var impacts := game.world.get_children().filter(func(node): return node is Effect and node.kind == "skill_fx" and str(node.params.get("visual", "")) == "meteor").size()
+	var impacts: int = game.world.get_children().filter(func(node): return node is Effect and node.kind == "skill_fx" and str(node.params.get("visual", "")) == "meteor").size()
 	fx.sync()
 	check("native zone does not duplicate the existing one-shot authored meteor impact", impacts == 1 and game.world.get_children().filter(func(node): return node is Effect and node.kind == "skill_fx" and str(node.params.get("visual", "")) == "meteor").size() == impacts)
 	meteor._process(meteor.life + 0.1)

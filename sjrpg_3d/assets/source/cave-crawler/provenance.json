@@ -31,7 +31,8 @@
       "grid": [
         4,
         4
-      ]
+      ],
+      "sha256": "ee9651680c2be34ff1fccddbc24e206e097e2017c2b3394ad04353a964452d3e"
     },
     {
       "tool": "image_gen.imagegen",
@@ -52,7 +53,8 @@
       "grid": [
         2,
         2
-      ]
+      ],
+      "sha256": "23d69828e22da0219da7756d19654d29d9d08b6f988a4c472b44e8bcdc7bfbc1"
     }
   ],
   "runtime": [
@@ -68,5 +70,13 @@
     "fix_alpha_border": true,
     "source_pixels_resized": false
   },
-  "scope": "2D appearance on native 3D actors; other monsters keep existing 3D presentation"
+  "scope": "2D appearance on native 3D actors; other monsters keep existing 3D presentation",
+  "frame_alignment": {
+    "method": "read-only alpha threshold96/min-filter3 bounding-box and lower-support centroid",
+    "source_unchanged": true,
+    "measured_live_frames": 16,
+    "measured_corpse_frames": 4,
+    "metadata": "assets/data/cave_crawler_sprite.json",
+    "actual_normalized_uv_grid": "4x4 and2x2; preserves fractional source-cell width1254/4"
+  }
 }

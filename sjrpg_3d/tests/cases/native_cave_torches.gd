@@ -117,7 +117,7 @@ func run() -> void:
 	environment.sync(0.0, true)
 	var reduced: Array = report["outer_transforms"].duplicate()
 	environment.sync(0.31, false)
-	check("reduced motion keeps readable static volume fire while original lights remain steady", reduced == report["outer_transforms"] and environment._cave_lights[0].light_energy == 2.6)
+	check("reduced motion keeps readable static volume fire while original lights remain steady", reduced == report["outer_transforms"] and is_equal_approx(environment._cave_lights[0].light_energy, 2.6))
 	check("torch visuals add no obstacle and retain source props ownership", game.dungeon.layout.obstacles == obstacles and owned.size() == 10)
 	Prefs.reduce_motion = old_reduced
 	game.dungeon.leave("")

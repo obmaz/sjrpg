@@ -90,7 +90,7 @@ func _create(source: Effect) -> Dictionary:
 	atlas_ink.set_shader_parameter("atlas_texture", _atlas)
 	glows.material_override = atlas_ink
 	root.add_child(glows)
-	var offsets: Array[Vector3] = []
+	var offsets: Array = []
 	offsets.resize(MAX_GLOWS)
 	return {"root": root, "marker": marker, "glows": glows, "glow_offsets": offsets, "source": weakref(source),
 		"shape_key": [], "points": PackedVector2Array(), "phase": "", "age": source.age,
@@ -175,7 +175,7 @@ func _update(entry: Dictionary, source: Effect, at: Vector3) -> void:
 			Vector4(frame.position.x / size.x, frame.position.y / size.y, frame.size.x / size.x, frame.size.y / size.y))
 	var count := (1 if Prefs.reduce_motion else 3) if warning else (9 if wall else 5)
 	instances.visible_instance_count = count
-	var offsets: Array[Vector3] = entry["glow_offsets"]
+	var offsets: Array = entry["glow_offsets"]
 	var camera_basis: Basis = _preview.camera.global_transform.basis
 	var factor := Ortho3DPreview.GROUND_PER_METER * Ortho3DPreview.PROJECTION_FACTOR
 	for index in count:
