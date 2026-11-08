@@ -1,0 +1,50 @@
+name: Attribute native browser memory growth
+on:
+    push:
+        paths:
+            - ".github/workflows/town-native-memory-review.yml"
+            - "sjrpg_3d/tools/check_native_memory.mjs"
+    workflow_dispatch:
+permissions:
+    contents: read
+    actions: read
+jobs:
+    native_memory:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        env:
+            SJRPG_NATIVE_APP_SHA: 991d38c6bbba7ddf347721a489f74160909d1133
+        steps:
+            - uses: actions/checkout@v7.0.1
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: 24
+            - name: Validate the bounded diagnostic and install Chromium
+              run: |
+                  node --check sjrpg_3d/tools/check_native_memory.mjs
+                  npm ci --ignore-scripts
+                  npx playwright install --with-deps chromium
+            - name: Reuse the exact already published application
+              uses: actions/download-artifact@v6
+              with:
+                  github-token: ${{ github.token }}
+                  run-id: 42440737243
+                  name: exported-web-build
+                  path: build/native-memory-app
+            - name: Profile native allocation during ordinary idle
+              run: |
+                  set -euo pipefail
+                  mkdir -p build/native-memory-profile
+                  test -s build/native-memory-app/3d/index.html
+                  python3 -m http.server 8795 --bind 127.0.0.1 --directory build/native-memory-app/3d > build/native-memory-profile/server.log 2>&1 &
+                  SJRPG_NATIVE_MEMORY_SERVER=$!
+                  trap 'kill "$SJRPG_NATIVE_MEMORY_SERVER" 2>/dev/null || true' EXIT
+                  curl --fail --silent --show-error --max-time 2 --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 12 http://127.0.0.1:8795/ > /dev/null
+                  node sjrpg_3d/tools/check_native_memory.mjs http://127.0.0.1:8795/ build/native-memory-profile
+            - uses: actions/upload-artifact@v6
+              if: always()
+              with:
+                  name: native-memory-attribution
+                  path: build/native-memory-profile
+                  if-no-files-found: ignore
+                  retention-days: 7
