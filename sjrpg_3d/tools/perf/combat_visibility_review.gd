@@ -179,7 +179,7 @@ func _prepare(requested: String) -> void:
 			var records := []
 			for index in 4:
 				var offset := Vector2(-90.0 if index % 2 == 0 else 90.0, -55.0 if index < 2 else 105.0)
-				var target := _enemy(game, "goblin", center + offset)
+				var target := _enemy(game, "goblin", center + offset + Vector2(-140, 0))
 				target.set_meta("visual_variant", "cave_crawler")
 				target.display_name = "동굴 잠복자"
 				target.facing = PI * 0.25 + index * PI * 0.5
@@ -192,6 +192,11 @@ func _prepare(requested: String) -> void:
 			for node in game.world.get_children():
 				if node is Effect:
 					node.queue_free()
+			if requested == "sprite_corpses":
+				# Inspect after the genuine source crossfade, not its alpha-zero start.
+				for corpse: Dictionary in game.corpses:
+					corpse["time"] = maxf(0.0, float(corpse["lifetime"]) - 0.5)
+				_proof["corpse_age_seconds"] = 0.5
 			_proof["configured_sprite_directions"] = records
 			_proof["actual_source_deaths"] = 4 if requested == "sprite_corpses" else 0
 		"cave_swarm":
@@ -289,6 +294,13 @@ func _publish(ready: bool) -> void:
 		var sprites: Variant = presenter.get("_enemy_sprites")
 		if is_instance_valid(sprites):
 			result["enemy_sprites"] = sprites.snapshot()
+			var visible_corpses := 0
+			for entry: Dictionary in sprites.corpses.values():
+				var card: MeshInstance3D = entry["card"]
+				var tint: Color = entry["uniforms"].get("tint", Color.TRANSPARENT)
+				if card.is_visible_in_tree() and tint.a > 0.1:
+					visible_corpses += 1
+			result["visible_sprite_corpses"] = visible_corpses
 		var environment: Variant = presenter.get("_world_environment")
 		if is_instance_valid(environment):
 			result["cave_lights"] = environment._cave_lights.size()

@@ -39,7 +39,7 @@ function validate(scenario,s){
  if(scenario==='meteor_warning'){assert.equal(s.fixture.native_zones?.count,1);assert.equal(s.fixture.native_zones?.sources?.[0]?.phase,'warning');}
  if(scenario==='firewall'){assert.equal(s.fixture.native_zones?.count,1);assert.equal(s.fixture.native_zones?.sources?.[0]?.phase,'active');assert(s.fixture.native_zones?.sources?.[0]?.wall);}
  if(scenario==='sprite_directions'){assert.equal(s.fixture.enemy_sprites?.count,4);assert.deepEqual(s.fixture.enemy_sprites.sources.map(x=>x.cell[1]).sort(),[0,1,2,3]);assert(s.fixture.enemy_sprites.sources.every(x=>x.pivot_error<.001));}
- if(scenario==='sprite_corpses'){assert.equal(s.fixture.proof.actual_source_deaths,4);assert.equal(s.fixture.enemy_sprites?.count,0);assert.equal(s.fixture.enemy_sprites?.corpses,4);assert(s.fixture.enemy_sprites?.corpse_texture_loaded);}
+ if(scenario==='sprite_corpses'){assert.equal(s.fixture.proof.actual_source_deaths,4);assert.equal(s.fixture.enemy_sprites?.count,0);assert.equal(s.fixture.enemy_sprites?.corpses,4);assert.equal(s.fixture.visible_sprite_corpses,4,'corpses must actually be visible after fade-in');assert.equal(s.fixture.proof.corpse_age_seconds,.5);assert(s.fixture.enemy_sprites?.corpse_texture_loaded);}
  if(scenario==='cave_swarm'){assert(s.fixture.proof.actual_basic_attack);assert.equal(s.fixture.proof.living,20);assert.equal(s.fixture.enemy_sprites?.count,20);assert.equal(s.fixture.enemy_sprites?.appearance,'2d');assert.equal(s.fixture.enemy_sprites?.physics,'3d');assert(s.fixture.enemy_sprites?.sources?.every(x=>x.visible&&x.pivot_error<.001));}
 }
 try{
