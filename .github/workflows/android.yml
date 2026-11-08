@@ -14,6 +14,7 @@ on:
             - "sjrpg_3d/tools/android-toolchain.env"
             - "sjrpg_3d/tools/texture_policy.py"
             - "sjrpg_3d/tools/check_platform_exports.py"
+            - "sjrpg_3d/tools/fetch_android_templates.py"
     workflow_dispatch:
 
 permissions:
@@ -40,6 +41,7 @@ jobs:
                       ~/.godot-tools
                       ~/.local/share/godot/export_templates
                   key: godot-${{ hashFiles('.godot-version') }}-android-tools-v1
+                  restore-keys: godot-${{ hashFiles('.godot-version') }}-tools-v1
             - uses: actions/cache@v4
               with:
                   path: |

@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 source "$ROOT/tools/android-toolchain.env"
 VERSION="$(tr -d '[:space:]' < "$ROOT/../.godot-version")"
 SDK="${ANDROID_HOME:-$HOME/android-sdk}"
-TEMPLATES="$HOME/.local/share/godot/export_templates/$VERSION.stable"
+TEMPLATES="${XDG_DATA_HOME:-$HOME/.local/share}/godot/export_templates/$VERSION.stable"
 KEYSTORE="${GODOT_ANDROID_KEYSTORE_DEBUG_PATH:-$HOME/.android/debug.keystore}"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
@@ -25,16 +25,13 @@ if [ ! -x "$SDK/build-tools/$SJRPG_ANDROID_BUILD_TOOLS/apksigner" ] || [ ! -d "$
   "$MANAGER" --sdk_root="$SDK" "platform-tools" "build-tools;$SJRPG_ANDROID_BUILD_TOOLS" "platforms;android-$SJRPG_ANDROID_API"
 fi
 if [ ! -f "$TEMPLATES/android_release.apk" ] || [ ! -f "$TEMPLATES/android_debug.apk" ]; then
-  mkdir -p "$TEMPLATES" "$WORK/tpl"
-  curl --fail --silent --show-error --location --retry 3 -o "$WORK/templates.tpz" "https://github.com/godotengine/godot/releases/download/$VERSION-stable/Godot_v${VERSION}-stable_export_templates.tpz"
-  unzip -q "$WORK/templates.tpz" 'templates/android_debug.apk' 'templates/android_release.apk' 'templates/version.txt' -d "$WORK/tpl"
-  cp "$WORK"/tpl/templates/android_*.apk "$WORK/tpl/templates/version.txt" "$TEMPLATES/"
+  python3 "$ROOT/tools/fetch_android_templates.py" --version "$VERSION" --destination "$TEMPLATES"
 fi
 if [ ! -f "$KEYSTORE" ]; then
   mkdir -p "$(dirname "$KEYSTORE")"
   keytool -genkeypair -keystore "$KEYSTORE" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US" >/dev/null 2>&1
 fi
-SETTINGS="$HOME/.config/godot/editor_settings-${VERSION%.*}.tres"
+SETTINGS="${XDG_CONFIG_HOME:-$HOME/.config}/godot/editor_settings-${VERSION%.*}.tres"
 mkdir -p "$(dirname "$SETTINGS")"
 python3 - "$SETTINGS" "$SDK" "$JDK" "$KEYSTORE" <<'PY'
 import json, re, sys
