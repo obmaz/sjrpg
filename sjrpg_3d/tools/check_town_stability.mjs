@@ -6,16 +6,18 @@ import path from 'node:path';
 import {createRequire} from 'node:module';
 import {installResourceTelemetry,installWalkingTelemetry} from './stability_telemetry.mjs';
 import {installCanvasAllocationTelemetry} from './canvas_allocation_telemetry.mjs';
+import {insideTown as inside,townDirections as directions,chooseTownDirection as choose} from './town_stability_route.mjs';
 const {chromium}=createRequire(import.meta.url)('playwright');
 const base=new URL(process.argv[2]||'http://127.0.0.1:8792/'),out=path.resolve(process.argv[3]||'build/town-walk');
 const fold=process.env.SJRPG_STABILITY_PROFILE==='fold';
+const idleMode=process.env.SJRPG_STABILITY_MODE==='idle';
 const variant=fold?'mage-high-touch':'mage-low-keys';
 const [hero,quality,input]=variant.split('-');
 const profile=fold?{width:768,height:1024,dpr:3}:{width:270,height:480,dpr:1};
 const duration=fold?240000:720000,targetFrames=fold?60:1200,minWalkMilliseconds=90000;
 const processSamples=[];
 await mkdir(out,{recursive:true});
-const report={edition:process.env.SJRPG_WALK_EDITION||'actual',profile,diagnostic_kind:'constant-cost buffer counters, actual drawn frames, no forced GC during gameplay',target_drawn_frames:targetFrames,harness_sha:process.env.SJRPG_HARNESS_SHA,source_sha:process.env.SJRPG_WALK_SHA||null,variant,hero,quality,input,duration,passed:false,errors:[],samples:[],segments:[],limitations:['Chromium SwiftShader is a software-rendered CI route, not physical mobile FPS or driver memory certification.','Standalone/fullscreen display-mode is emulated at the requested fold viewport; this is not an installation or OS process-kill certification.','WebGL allocation counters are API storage estimates; Godot counters, Chrome RSS and PSS are reported separately.','Sum RSS double counts shared pages; aggregate PSS is reported when procfs permits.','Uninterrupted normal town gameplay can continue normal spawning, animation and autosave; no HP/gameplay-clock edits.']};
+const report={edition:process.env.SJRPG_WALK_EDITION||'actual',profile,stability_mode:idleMode?'idle':'walk',actual_input_after_entry:idleMode?'none':input,diagnostic_kind:'constant-cost buffer counters, actual drawn frames, no forced GC during gameplay',target_drawn_frames:targetFrames,harness_sha:process.env.SJRPG_HARNESS_SHA,source_sha:process.env.SJRPG_WALK_SHA||null,variant,hero,quality,input,duration,passed:false,errors:[],samples:[],segments:[],limitations:['Chromium SwiftShader is a software-rendered CI route, not physical mobile FPS or driver memory certification.','Standalone/fullscreen display-mode is emulated at the requested fold viewport; this is not an installation or OS process-kill certification.','WebGL allocation counters are API storage estimates; Godot counters, Chrome RSS and PSS are reported separately.','Sum RSS double counts shared pages; aggregate PSS is reported when procfs permits.','Uninterrupted normal town gameplay can continue normal spawning, animation and autosave; no HP/gameplay-clock edits.']};
 let browser,server,context,page,cdp,closing=false,monitor,rssBusy=false,touchActive=false;
 let latestProcessMemory=null;
 let latest=null,walkDistance=0,cameraDistance=0,priorPosition=null,priorCamera=null;
@@ -58,7 +60,7 @@ async function check(){
  if(latest.runtime?.adventure){
   assert(!latest.runtime.camera_locked,'walking route requires ordinary following camera');
   assert(!latest.runtime.dead,'hero died during town route');
-  assert(!latest.runtime.paused,'unexpected game pause during route');
+  assert(!latest.runtime.paused,'unexpected game pause during route');if(report.phase_drawn_start!==undefined)assert(latest.runtime.town,'town route escaped the real safe polygon');
   if(priorPosition){walkDistance+=Math.hypot(latest.runtime.player[0]-priorPosition[0],latest.runtime.player[1]-priorPosition[1]);}
   if(priorCamera&&latest.runtime.camera_3d){cameraDistance+=Math.hypot(...latest.runtime.camera_3d.map((v,i)=>v-priorCamera[i]));}
   priorPosition=latest.runtime.player;priorCamera=latest.runtime.camera_3d;
@@ -75,21 +77,14 @@ async function sample(phase){
 }
 async function holdIdle(phase,ms){const end=Date.now()+ms;while(Date.now()<end){await sample(phase);await page.waitForTimeout(900);}}
 async function entry(key){const s=await wait(s=>s.entry?.[key],'entry '+key);await page.mouse.click(s.entry[key][0]*s.size[0],s.entry[key][1]*s.size[1]);}
-function inside(p,polygon){let yes=false;for(let i=0,j=polygon.length-1;i<polygon.length;j=i++){const a=polygon[i],b=polygon[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])yes=!yes;}return yes;}
-const directions=[['w',0,-1],['w+d',.707,-.707],['d',1,0],['s+d',.707,.707],['s',0,1],['s+a',-.707,.707],['a',-1,0],['w+a',-.707,-.707]];
-function choose(r,index){
- const polygon=r.town_polygon,centroid=polygon.reduce((p,q)=>[p[0]+q[0]/polygon.length,p[1]+q[1]/polygon.length],[0,0]);
- const choices=directions.map((d,i)=>({d,i,p:[r.player[0]+d[1]*80,r.player[1]+d[2]*80]})).filter(c=>inside(c.p,polygon));
- if(!r.town)return choices.sort((a,b)=>Math.hypot(a.p[0]-centroid[0],a.p[1]-centroid[1])-Math.hypot(b.p[0]-centroid[0],b.p[1]-centroid[1]))[0]?.d||directions[index%8];
- return choices.find(c=>c.i===index%8)?.d||choices[index%Math.max(1,choices.length)]?.d||directions[index%8];
-}
+
 async function beginMove(d,s){
  if(input==='keys'){for(const key of d[0].split('+'))await page.keyboard.down(key);return;}
  const touch=s.runtime.touch_stick,scale=s.size[0]/s.runtime.viewport[0],x=touch.center[0]*scale,y=touch.center[1]*scale,r=touch.radius*scale*.85;
  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{id:7,x,y}]});touchActive=true;
  await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{id:7,x:x+d[1]*r,y:y+d[2]*r}]});
 }
-async function endMove(){if(input==='keys'){for(const key of ['w','a','s','d'])await page.keyboard.up(key);}else if(touchActive){await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});touchActive=false;}}
+async function endMove(){if(idleMode)return;if(input==='keys'){for(const key of ['w','a','s','d'])await page.keyboard.up(key);}else if(touchActive){await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});touchActive=false;}}
 async function resizeFold(width,height,label){
  await endMove();const before=await check(),ticks=before.runtime.physics_ticks;
  await page.setViewportSize({width,height});
@@ -107,8 +102,8 @@ async function capture(name){try{
 
 function median(values){const a=values.filter(Number.isFinite).sort((x,y)=>x-y);assert(a.length>0,'median requires actual samples');return a[Math.floor(a.length/2)];}
 function assessPlateau(){
- const start=report.walk_drawn_start,warm=start+400,end=start+report.actual_walking_drawn_frames;
- const rows=report.samples.filter(s=>s.phase.startsWith('walking-')&&s.runtime.drawn_frame>=warm&&s.runtime.drawn_frame<=end);
+ const start=report.phase_drawn_start,warm=start+400,end=start+report.actual_sustained_drawn_frames;
+ const rows=report.samples.filter(s=>(s.phase.startsWith('walking-')||s.phase==='standing-idle')&&s.runtime.drawn_frame>=warm&&s.runtime.drawn_frame<=end);
  const windowFrames=Math.max(200,Math.floor((end-warm)/3));
  const first=rows.filter(s=>s.runtime.drawn_frame<warm+windowFrames),last=rows.filter(s=>s.runtime.drawn_frame>=end-windowFrames);
  assert(first.length>=3&&last.length>=3,'late resource windows need at least three actual samples each');
@@ -126,7 +121,7 @@ function assessPlateau(){
  assert(pa.length>=3&&pb.length>=3,'OS PSS windows need at least three real process samples each');
  const pssBefore=median(pa.map(s=>s.pss_sum_bytes)),pssAfter=median(pb.map(s=>s.pss_sum_bytes));
  changes.chrome_pss={before:pssBefore,after:pssAfter,growth:pssAfter-pssBefore,limit:128*1024**2};checks.push(pssAfter-pssBefore<=128*1024**2);
- const wasmBefore=median(first.map(s=>s.telemetry.wasm?.bytes)),wasmAfter=median(last.map(s=>s.telemetry.wasm?.bytes));
+ const wasmBefore=median(first.map(s=>s.telemetry.wasm?.bytes)),wasmAfter=median(last.map(s=>s.telemetry.wasm?.bytes));assert(wasmBefore>0&&wasmAfter>0,'actual nonzero WASM capacity must be observed');
  changes.wasm_capacity={before:wasmBefore,after:wasmAfter,growth:wasmAfter-wasmBefore,limit:16*1024**2};checks.push(wasmAfter-wasmBefore<=16*1024**2);
  report.plateau={passed:checks.every(Boolean),window_frames:[warm,warm+windowFrames,end-windowFrames,end],sample_counts:[first.length,last.length,pa.length,pb.length],new_enemies:newEnemies,changes,limitations:'Diagnostic resource regression budgets after 400 warmup frames; Chrome software-driver PSS is not physical mobile RAM. No GC forced in either window.'};
  console.log('STABILITY_PLATEAU '+JSON.stringify(report.plateau));assert(report.plateau.passed,'late resource windows exceeded a declared growth budget');
@@ -160,26 +155,28 @@ try{
  if(selection.entry.stage==='class'){await entry(hero);await entry('start');}
  else {assert(selection.entry.slots_state?.some(s=>s.slot===selection.entry.selected_slot&&s.valid&&s.class===hero),'Continue must match the requested hero');await entry('continue');}
  await wait(s=>s.ready&&s.runtime?.adventure&&!s.loading?.visible&&!s.runtime.paused,'normal town ready');
- let s=await read();assert.equal(s.runtime.hero_class,hero,'actual selected hero');assert(s.runtime.town,'ordinary spawn must be in town');assert(s.runtime.camera_locked===false,'ordinary camera follows player');
+ let s=await read();assert.equal(s.runtime.hero_class,hero,'actual selected hero');assert.equal(s.runtime.quality_low,quality==='low','requested quality must be applied');assert(s.runtime.town,'ordinary spawn must be in town');assert(s.runtime.camera_locked===false,'ordinary camera follows player');
  report.start={player:s.runtime.player,camera:s.runtime.camera_3d,frame:s.runtime.frame,physics_ticks:s.runtime.physics_ticks};await capture('start');await holdIdle('idle-before',15000);
- const begin=Date.now(),drawnStart=latest.runtime.drawn_frame;assert(Number.isFinite(drawnStart),'observer must expose actual Engine.get_frames_drawn');report.walk_drawn_start=drawnStart;await page.evaluate(()=>window.__sjrpgCanvasAllocationStart=true);let index=0,covered=false,unfolded=false;
+ const begin=Date.now(),drawnStart=latest.runtime.drawn_frame;assert(Number.isFinite(drawnStart),'observer must expose actual Engine.get_frames_drawn');report.phase_drawn_start=drawnStart;report.phase_origin={player:latest.runtime.player,camera:latest.runtime.camera_3d};await page.evaluate(()=>window.__sjrpgCanvasAllocationStart=true);let index=0,covered=false,unfolded=false;
  while((latest.runtime.drawn_frame-drawnStart<targetFrames||Date.now()-begin<minWalkMilliseconds)&&Date.now()-begin<duration){
+  if(idleMode){await sample('standing-idle');await page.waitForTimeout(750);continue;}
   if(variant==='mage-high-touch'&&!covered&&Date.now()-begin>=minWalkMilliseconds/3){await resizeFold(390,844,'unfolded-to-cover');covered=true;}
   if(variant==='mage-high-touch'&&covered&&!unfolded&&Date.now()-begin>=minWalkMilliseconds*2/3){await resizeFold(768,1024,'cover-to-unfolded');unfolded=true;}
   s=await check();const d=choose(s.runtime,index++),segment={wall:Date.now(),direction:d[0],origin:s.runtime.player,town:s.runtime.town};report.segments.push(segment);
-  await beginMove(d,s);const stop=Date.now()+6000;
-  try{do{await sample('walking-'+d[0]);if(!latest.runtime?.town)break;await page.waitForTimeout(750);}while(Date.now()<stop&&Date.now()-begin<duration);}finally{await endMove();}
+  await beginMove(d,s);const stop=Date.now()+750;
+  try{do{await sample('walking-'+d[0]);if(!latest.runtime?.town)break;await page.waitForTimeout(150);}while(Date.now()<stop&&Date.now()-begin<duration);}finally{await endMove();}
   segment.end=(await check()).runtime.player;segment.distance=Math.hypot(segment.end[0]-segment.origin[0],segment.end[1]-segment.origin[1]);await appendFile(path.join(out,'segments.ndjson'),JSON.stringify(segment)+'\n');
  }
- await endMove();report.actual_walking_drawn_frames=latest.runtime.drawn_frame-drawnStart;assert(report.actual_walking_drawn_frames>=targetFrames,'actual drawn-frame target before diagnostic deadline: '+report.actual_walking_drawn_frames+'/'+targetFrames);await holdIdle('idle-after',15000);await capture('end');await osSample();
+ await endMove();report.actual_sustained_drawn_frames=latest.runtime.drawn_frame-drawnStart;assert(report.actual_sustained_drawn_frames>=targetFrames,'actual drawn-frame target before diagnostic deadline: '+report.actual_sustained_drawn_frames+'/'+targetFrames);await holdIdle('idle-after',15000);await capture('end');await osSample();
  s=await check();report.end={player:s.runtime.player,camera:s.runtime.camera_3d,frame:s.runtime.frame,physics_ticks:s.runtime.physics_ticks};
- if(variant==='mage-high-touch'){assert(covered&&unfolded&&report.resizes?.length===2,'both real fold resize directions must complete');}
- assert(walkDistance>=120,'route must contain real sustained movement, actual path='+walkDistance);
- assert(cameraDistance>=.25,'following camera must actually move, path='+cameraDistance);
+ if(variant==='mage-high-touch'&&!idleMode){assert(covered&&unfolded&&report.resizes?.length===2,'both real fold resize directions must complete');}
+ if(idleMode){const displacement=Math.hypot(s.runtime.player[0]-report.phase_origin.player[0],s.runtime.player[1]-report.phase_origin.player[1]);report.idle_displacement=displacement;assert(displacement<=1,'standing-idle actor must remain at its actual starting position');}
+ else assert(walkDistance>=120,'route must contain real sustained movement, actual path='+walkDistance);
+ if(!idleMode)assert(cameraDistance>=.25,'following camera must actually move, path='+cameraDistance);
  assert(report.end.frame-report.start.frame>=20,'actual rendered process frames must advance');
  assert(report.end.physics_ticks>report.start.physics_ticks,'real spatial physics must advance');
  report.walk_distance=walkDistance;report.camera_distance=cameraDistance;report.visual_captures_validated=(report.captures||[]).some(c=>c.name==='start')&&(report.captures||[]).some(c=>c.name==='end');assert(s.canvas_allocation?.probe?.status==='complete','20-frame Canvas attribution must disconnect before normal verdict');report.canvas_allocation=s.canvas_allocation;if(!fold)assessPlateau();assert(report.visual_captures_validated,'both compositor screenshots must be preserved');report.passed=true;
- console.log('STABILITY_PASS '+JSON.stringify({variant,actual_walking_drawn_frames:report.actual_walking_drawn_frames,plateau:report.plateau,visual_captures_validated:report.visual_captures_validated,samples:report.samples.length,walk_distance:walkDistance,camera_distance:cameraDistance,frames:report.end.frame-report.start.frame,physics_ticks:report.end.physics_ticks-report.start.physics_ticks,errors:report.errors.length}));
+ console.log('STABILITY_PASS '+JSON.stringify({variant,stability_mode:report.stability_mode,actual_input_after_entry:report.actual_input_after_entry,actual_sustained_drawn_frames:report.actual_sustained_drawn_frames,plateau:report.plateau,visual_captures_validated:report.visual_captures_validated,samples:report.samples.length,walk_distance:walkDistance,camera_distance:cameraDistance,frames:report.end.frame-report.start.frame,physics_ticks:report.end.physics_ticks-report.start.physics_ticks,errors:report.errors.length}));
 }catch(e){report.failure=String(e);console.error('STABILITY_FAIL '+JSON.stringify({variant,failure:report.failure,errors:report.errors,last:latest}));try{await endMove();}catch{}await capture('failure').catch(()=>{});process.exitCode=1;}
 finally{
  clearInterval(monitor);await osSample().catch(()=>{});

@@ -6,7 +6,17 @@ extends Control
 
 var game: Node
 var _paint_state: Array = []
+var _stick_paint_state: Array = []
+var _overlay_paint_state: Array = []
+var _hints_paint_state: Array = []
+var _stick_layer: Control
+var _overlay_layer: Control
+var _hints_layer: Control
 var redraw_requests := 0
+var base_redraw_requests := 0
+var stick_redraw_requests := 0
+var overlay_redraw_requests := 0
+var hints_redraw_requests := 0
 var _stick_center := Vector2.ZERO
 var _stick_knob := Vector2.ZERO
 var _stick_index := -2  # -2 none, -1 mouse
@@ -28,6 +38,20 @@ static var _reference_buttons: Texture2D
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stick_layer = _draw_layer("MovementStick", _draw_stick_layer, true)
+	_overlay_layer = _draw_layer("ActionFeedback", _draw_overlay_layer)
+	_hints_layer = _draw_layer("XboxHints", _draw_hints_layer)
+
+
+func _draw_layer(layer_name: String, callback: Callable, behind := false) -> Control:
+	var canvas := Control.new()
+	canvas.name = layer_name
+	canvas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	canvas.show_behind_parent = behind
+	canvas.draw.connect(callback)
+	add_child(canvas)
+	return canvas
 
 
 func stick_radius() -> float:
@@ -255,22 +279,73 @@ func _process(delta: float) -> void:
 	_refresh_drawing()
 
 
-## Canvas draw commands retain their GPU geometry between actual visual changes.
-## Cooldown wedges and feedback remain continuous; an idle or steady stick does not redraw.
+## Each retained canvas owns a different update frequency. Holding a cooling spell
+## no longer recreates static socket, potion, menu and joystick polygons every frame.
 func _refresh_drawing() -> void:
 	var player: Player = game.player
-	var state: Array = [_unit, _buttons, _near_name, _stick_index, _stick_center, _stick_knob,
-		_held.values(), _feedback.duplicate(), _success_feedback.duplicate(), _denied_feedback.duplicate(),
+	var pressed: Array[String] = []
+	var held_names := _held.values()
+	for name: String in _buttons:
+		if held_names.has(name) or float(_feedback.get(name, 0.0)) > 0.0:
+			pressed.append(name)
+	var base_state: Array = [_unit, _buttons, _near_name, pressed,
 		GameState.potions, GameState.mana_potions, GameState.skill_points,
-		Gamepad.using_gamepad, css_scale(), Prefs.reduce_motion]
+		Gamepad.using_gamepad, css_scale()]
+	var overlay_state: Array = [_unit, _buttons, _success_feedback.duplicate(),
+		_denied_feedback.duplicate(), Prefs.reduce_motion]
 	for slot in GameState.slots.size():
 		var id: String = GameState.slots[slot]
 		var affordable := id == "" or player.resource >= SkillDefs.cost(GameState.skill(id), GameState.effective_rank(id))
-		state.append([id, affordable, player.slot_cooldown_ratio(slot), slot_cooldown_remaining(slot)])
-	if state != _paint_state:
-		_paint_state = state
-		redraw_requests += 1
+		base_state.append([id, affordable])
+		overlay_state.append([id, player.slot_cooldown_ratio(slot), slot_cooldown_remaining(slot)])
+	var stick_state: Array = [_unit, _stick_center, _stick_knob, _stick_index != -2, Gamepad.using_gamepad]
+	var hints_state: Array = [_unit, _buttons, Gamepad.using_gamepad, css_scale()]
+	var changed := false
+	if base_state != _paint_state:
+		_paint_state = base_state
+		base_redraw_requests += 1
 		queue_redraw()
+		changed = true
+	if stick_state != _stick_paint_state:
+		_stick_paint_state = stick_state
+		stick_redraw_requests += 1
+		_stick_layer.queue_redraw()
+		changed = true
+	if overlay_state != _overlay_paint_state:
+		_overlay_paint_state = overlay_state
+		overlay_redraw_requests += 1
+		_overlay_layer.queue_redraw()
+		changed = true
+	if hints_state != _hints_paint_state:
+		_hints_paint_state = hints_state
+		hints_redraw_requests += 1
+		_hints_layer.queue_redraw()
+		changed = true
+	_stick_layer.visible = not Gamepad.using_gamepad
+	if changed:
+		redraw_requests += 1
+
+
+func _draw_stick_layer() -> void:
+	if not Gamepad.using_gamepad:
+		_draw_joystick(_stick_layer)
+
+
+func _draw_overlay_layer() -> void:
+	for name: String in _buttons:
+		var button: Dictionary = _buttons[name]
+		var center: Vector2 = button["center"]
+		var radius: float = button["visual_radius"]
+		if name.begins_with("slot"):
+			var slot := int(name.substr(4))
+			if str(GameState.slots[slot]).is_empty():
+				continue
+			_draw_cooldown(center, radius, game.player.slot_cooldown_ratio(slot), slot_cooldown_remaining(slot), slot == 0, _overlay_layer)
+		_draw_action_feedback(name, center, radius, _overlay_layer)
+
+
+func _draw_hints_layer() -> void:
+	_draw_gamepad_hints(_hints_layer)
 
 
 ## Observe real state changes, including keyboard casts and potions; pressing alone is not success.
@@ -297,17 +372,18 @@ func _update_action_feedback() -> void:
 	_last_potions = counts
 
 
-func _draw_action_feedback(name: String, center: Vector2, radius: float) -> void:
+func _draw_action_feedback(name: String, center: Vector2, radius: float, canvas: CanvasItem = null) -> void:
+	var target: CanvasItem = self if canvas == null else canvas
 	var denied: float = _denied_feedback.get(name, 0.0)
 	var success: float = _success_feedback.get(name, 0.0)
 	if denied > 0.0:
-		draw_arc(center, radius + 2.0 * _unit, 0, TAU, 64, Color(0.95, 0.33, 0.22, denied / 0.32), 2.0 * _unit, true)
+		target.draw_arc(center, radius + 2.0 * _unit, 0, TAU, 64, Color(0.95, 0.33, 0.22, denied / 0.32), 2.0 * _unit, true)
 	elif success > 0.0:
 		var life := 0.45 if name.begins_with("potion") else 0.38
 		var progress := 1.0 - success / life
 		var expansion := 0.0 if Prefs.reduce_motion else progress * 8.0 * _unit
 		var color := Color(0.93, 0.58, 0.45) if name == "potion_hp" else Color(0.65, 0.87, 1.0)
-		draw_arc(center, radius + 2.0 * _unit + expansion, 0, TAU, 64, Color(color, success / life * 0.8), 1.5 * _unit, true)
+		target.draw_arc(center, radius + 2.0 * _unit + expansion, 0, TAU, 64, Color(color, success / life * 0.8), 1.5 * _unit, true)
 
 
 ## Read the equipped skill every frame, so moving a cooling spell cannot bypass
@@ -324,65 +400,67 @@ static func cooldown_text(remaining: float) -> String:
 	return "%.1f" % (ceilf(remaining * 10.0) / 10.0) if remaining < 1.0 else str(ceili(remaining))
 
 
-func _draw_cooldown(center: Vector2, radius: float, ready: float, remaining: float, primary: bool) -> void:
+func _draw_cooldown(center: Vector2, radius: float, ready: float, remaining: float, primary: bool, canvas: CanvasItem = null) -> void:
+	var target: CanvasItem = self if canvas == null else canvas
 	if remaining <= 0.0:
 		return
 	var u := _unit
 	var inner := radius - 3.0 * u
 	# A dim base keeps the countdown readable on bright fire/lightning icons. The
 	# darker remaining sector recedes clockwise; the thin metal bezel stays clear.
-	draw_circle(center, inner, Color(0.015, 0.02, 0.03, 0.28))
+	target.draw_circle(center, inner, Color(0.015, 0.02, 0.03, 0.28))
 	if ready <= 0.001:
-		draw_circle(center, inner, Color(0.005, 0.01, 0.02, 0.52))
+		target.draw_circle(center, inner, Color(0.005, 0.01, 0.02, 0.52))
 	elif ready < 0.999:
 		var sector := PackedVector2Array([center])
 		var segments := maxi(2, ceili((1.0 - ready) * 64.0))
 		for i in segments + 1:
 			var angle := -PI / 2.0 + TAU * (ready + (1.0 - ready) * float(i) / segments)
 			sector.append(center + Vector2.from_angle(angle) * inner)
-		draw_colored_polygon(sector, Color(0.005, 0.01, 0.02, 0.52))
+		target.draw_colored_polygon(sector, Color(0.005, 0.01, 0.02, 0.52))
 	if ready > 0.001:
-		draw_arc(center, radius - u, -PI / 2.0, -PI / 2.0 + TAU * ready, 64, Color(0.9, 0.96, 1.0, 0.95), 2.0 * u, true)
+		target.draw_arc(center, radius - u, -PI / 2.0, -PI / 2.0 + TAU * ready, 64, Color(0.9, 0.96, 1.0, 0.95), 2.0 * u, true)
 	var font_size := int((32.0 if primary else 26.0) * u)
-	HudArt.text_outlined(self, cooldown_text(remaining), center + Vector2(-inner, 4.0 * u), inner * 2.0, font_size, Color(0.97, 0.96, 0.9))
-	HudArt.text_outlined(self, "초", center + Vector2(-inner, (20.0 if primary else 18.0) * u), inner * 2.0, int(12.0 * u), Color(0.78, 0.83, 0.88))
+	HudArt.text_outlined(target, cooldown_text(remaining), center + Vector2(-inner, 4.0 * u), inner * 2.0, font_size, Color(0.97, 0.96, 0.9))
+	HudArt.text_outlined(target, "초", center + Vector2(-inner, (20.0 if primary else 18.0) * u), inner * 2.0, int(12.0 * u), Color(0.78, 0.83, 0.88))
 
 
 # ───────── drawing ─────────
 
-func _draw_joystick() -> void:
+func _draw_joystick(canvas: CanvasItem = null) -> void:
+	var target: CanvasItem = self if canvas == null else canvas
 	var u := _unit
 	var c := _stick_center
 	var r := stick_radius()
 	var active := _stick_index != -2
 	var bronze := Color(0.62, 0.57, 0.42, 0.72 if active else 0.44)
-	draw_circle(c, r + 2.0 * u, Color(0.0, 0.0, 0.0, 0.12))
-	draw_circle(c, r, Color(0.025, 0.028, 0.023, 0.27 if active else 0.12))
-	draw_arc(c, r, 0, TAU, 96, bronze, 1.5 * u, true)
-	draw_arc(c, r - 4.0 * u, 0, TAU, 96, Color(bronze, 0.4), 1.0 * u, true)
-	draw_arc(c, r - 14.0 * u, 0, TAU, 72, Color(bronze, 0.42), 1.1 * u, true)
-	draw_arc(c, r * 0.54, 0, TAU, 64, Color(bronze, 0.28), 1.0 * u, true)
+	target.draw_circle(c, r + 2.0 * u, Color(0.0, 0.0, 0.0, 0.12))
+	target.draw_circle(c, r, Color(0.025, 0.028, 0.023, 0.27 if active else 0.12))
+	target.draw_arc(c, r, 0, TAU, 96, bronze, 1.5 * u, true)
+	target.draw_arc(c, r - 4.0 * u, 0, TAU, 96, Color(bronze, 0.4), 1.0 * u, true)
+	target.draw_arc(c, r - 14.0 * u, 0, TAU, 72, Color(bronze, 0.42), 1.1 * u, true)
+	target.draw_arc(c, r * 0.54, 0, TAU, 64, Color(bronze, 0.28), 1.0 * u, true)
 	# Fine etched triangles and ticks stay still, like the translucent seal in the reference.
 	for rotation in [0.0, PI]:
 		var seal := PackedVector2Array()
 		for i in 4:
 			seal.append(c + Vector2.from_angle(rotation - PI / 2.0 + i * TAU / 3.0) * r * 0.77)
-		draw_polyline(seal, Color(bronze, 0.32), 1.0 * u, true)
+		target.draw_polyline(seal, Color(bronze, 0.32), 1.0 * u, true)
 	for i in 16:
 		var direction := Vector2.from_angle(TAU * i / 16.0)
-		draw_line(c + direction * r * 0.79, c + direction * r * 0.84, Color(bronze, 0.42), 1.0 * u, true)
+		target.draw_line(c + direction * r * 0.79, c + direction * r * 0.84, Color(bronze, 0.42), 1.0 * u, true)
 	for i in 4:
 		var direction := Vector2.from_angle(i * PI / 2.0)
 		var tip := c + direction * (r - 8.0 * u)
 		var base := c + direction * (r - 19.0 * u)
 		var side := direction.orthogonal() * 5.0 * u
-		draw_colored_polygon(PackedVector2Array([tip, base + side, base - side]), Color(0.68, 0.63, 0.46, 0.48))
+		target.draw_colored_polygon(PackedVector2Array([tip, base + side, base - side]), Color(0.68, 0.63, 0.46, 0.48))
 	var kr := 30.5 * u
-	draw_circle(_stick_knob, kr + 2.0 * u, Color(0, 0, 0, 0.22))
-	draw_circle(_stick_knob, kr, Color(0.1, 0.092, 0.067, 0.7 if active else 0.42))
-	draw_arc(_stick_knob, kr, 0, TAU, 64, Color(0.62, 0.56, 0.4, 0.72), 1.1 * u, true)
-	draw_arc(_stick_knob, kr - 4.0 * u, 0, TAU, 56, Color(0.62, 0.56, 0.4, 0.25), 0.8 * u, true)
-	draw_arc(_stick_knob, kr - 7.0 * u, PI * 1.12, PI * 1.88, 24, Color(0.8, 0.75, 0.57, 0.2), 0.8 * u, true)
+	target.draw_circle(_stick_knob, kr + 2.0 * u, Color(0, 0, 0, 0.22))
+	target.draw_circle(_stick_knob, kr, Color(0.1, 0.092, 0.067, 0.7 if active else 0.42))
+	target.draw_arc(_stick_knob, kr, 0, TAU, 64, Color(0.62, 0.56, 0.4, 0.72), 1.1 * u, true)
+	target.draw_arc(_stick_knob, kr - 4.0 * u, 0, TAU, 56, Color(0.62, 0.56, 0.4, 0.25), 0.8 * u, true)
+	target.draw_arc(_stick_knob, kr - 7.0 * u, PI * 1.12, PI * 1.88, 24, Color(0.8, 0.75, 0.57, 0.2), 0.8 * u, true)
 
 
 func _draw_skill_bezel(center: Vector2, radius: float, pressed: bool) -> void:
@@ -479,8 +557,11 @@ func _draw() -> void:
 	if player == null:
 		return
 	var u := _unit
-	if not Gamepad.using_gamepad:
-		_draw_joystick()
+	# Explicit redraws from paused transitions also refresh the retained children.
+	_stick_layer.visible = not Gamepad.using_gamepad
+	_stick_layer.queue_redraw()
+	_overlay_layer.queue_redraw()
+	_hints_layer.queue_redraw()
 	var held_names := _held.values()
 	for name in _buttons:
 		var b: Dictionary = _buttons[name]
@@ -500,8 +581,6 @@ func _draw() -> void:
 			var inner := r - 3.0 * u
 			SkillIcons.draw_round(self, id, c, inner, Color.WHITE if affordable else Color(0.42, 0.42, 0.5))
 			_draw_skill_bezel(c, r, pressed)
-			var ready := player.slot_cooldown_ratio(slot)
-			_draw_cooldown(c, r, ready, slot_cooldown_remaining(slot), slot == 0)
 		elif name == "roll":
 			HudArt.round_plaque(self, "dodge", c, r, Color(0.82, 0.81, 0.75, 1.0 if pressed else 0.88))
 		elif name == "potion_hp":
@@ -515,12 +594,11 @@ func _draw() -> void:
 			if name == "bar_skills" and GameState.skill_points > 0:
 				_draw_skill_points(c, r, float(b["radius"]))
 
-		_draw_action_feedback(name, c, r)
-	_draw_gamepad_hints()
 
 
 ## Compact Xbox cues follow the existing buttons; keyboard/touch art is unchanged.
-func _draw_gamepad_hints() -> void:
+func _draw_gamepad_hints(canvas: CanvasItem = null) -> void:
+	var target: CanvasItem = self if canvas == null else canvas
 	last_drawn_gamepad_hints.clear()
 	if not Gamepad.using_gamepad:
 		return
@@ -549,9 +627,9 @@ func _draw_gamepad_hints() -> void:
 		skin.border_color = Color("8d7958")
 		skin.set_border_width_all(1)
 		skin.set_corner_radius_all(4)
-		draw_style_box(skin, rect)
+		target.draw_style_box(skin, rect)
 		var ink := Color("b8cfab") if text == "A" else Color("dba49a") if text == "B" else Color("a4bdd7") if text == "X" else Color("dec38a") if text == "Y" else UiToneArt.IVORY
-		HudArt.text_in_rect(self, text, rect, font_size, ink)
+		HudArt.text_in_rect(target, text, rect, font_size, ink)
 		last_drawn_gamepad_hints.append({"name": key, "text": text, "rect": [rect.position.x, rect.position.y, rect.size.x, rect.size.y], "font_size": font_size, "css_scale": css_scale()})
 	var move_width := HudArt.FONT.get_string_size("LS 이동 · RS 조준", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 8.0 * _unit
 	var move_left := maxf(8.0 * _unit, _stick_center.x - move_width * 0.5)
@@ -559,8 +637,8 @@ func _draw_gamepad_hints() -> void:
 	var move_skin := StyleBoxFlat.new()
 	move_skin.bg_color = Color(0.06, 0.08, 0.06, 0.88)
 	move_skin.set_corner_radius_all(4)
-	draw_style_box(move_skin, move_rect)
-	HudArt.text_in_rect(self, "LS 이동 · RS 조준", move_rect, font_size, UiToneArt.IVORY)
+	target.draw_style_box(move_skin, move_rect)
+	HudArt.text_in_rect(target, "LS 이동 · RS 조준", move_rect, font_size, UiToneArt.IVORY)
 	last_drawn_gamepad_hints.append({"name": "move_aim", "text": "LS 이동 · RS 조준", "rect": [move_rect.position.x, move_rect.position.y, move_rect.size.x, move_rect.size.y], "font_size": font_size})
 
 

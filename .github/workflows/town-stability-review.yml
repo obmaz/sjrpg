@@ -6,6 +6,8 @@ on:
             - "sjrpg_3d/tools/check_town_stability.mjs"
             - "sjrpg_3d/tools/stability_telemetry.mjs"
             - "sjrpg_3d/scripts/stability_resource_review.gd"
+            - "sjrpg_3d/tools/town_stability_route.mjs"
+            - "sjrpg_3d/tools/check_town_stability_route.mjs"
     workflow_dispatch:
         inputs:
             edition:
@@ -16,21 +18,28 @@ on:
             candidate_sha:
                 description: Optional exact candidate source SHA
                 required: false
+            mode:
+                description: Normal uninterrupted idle or sustained real input
+                type: choice
+                options: [idle, walk]
+                default: idle
 permissions:
     contents: read
 jobs:
     stability:
+        name: ${{ matrix.edition }} sustained ${{ github.event.inputs.mode || 'idle' }}
         runs-on: ubuntu-latest
         timeout-minutes: 20
         strategy:
             fail-fast: false
             matrix:
-                edition: ${{ fromJSON(github.event.inputs.edition == 'pair' && '["baseline","candidate"]' || github.event.inputs.edition == 'baseline' && '["baseline"]' || '["candidate"]') }}
+                edition: ${{ fromJSON(github.event.inputs.edition == 'baseline' && '["baseline"]' || github.event.inputs.edition == 'candidate' && '["candidate"]' || '["baseline","candidate"]') }}
         env:
             SJRPG_WALK_SHA: ${{ matrix.edition == 'baseline' && '991d38c6bbba7ddf347721a489f74160909d1133' || github.event.inputs.candidate_sha || github.sha }}
             SJRPG_WALK_EDITION: ${{ matrix.edition }}
             SJRPG_HARNESS_SHA: ${{ github.sha }}
             SJRPG_FINAL_GC_DIAGNOSTIC: "1"
+            SJRPG_STABILITY_MODE: ${{ github.event.inputs.mode || 'idle' }}
         steps:
             - uses: actions/checkout@v7.0.1
             - uses: actions/setup-node@v6
@@ -40,6 +49,7 @@ jobs:
               run: |
                   node --check sjrpg_3d/tools/check_town_stability.mjs
                   node --check sjrpg_3d/tools/stability_telemetry.mjs
+                  node sjrpg_3d/tools/check_town_stability_route.mjs
                   node --check sjrpg_3d/tools/canvas_allocation_telemetry.mjs
                   npm ci --ignore-scripts
                   npx playwright install --with-deps chromium
@@ -76,7 +86,7 @@ jobs:
               id: app_export
               working-directory: ${{ runner.temp }}/stability-game
               run: sjrpg_3d/tools/export_web.sh
-            - name: Walk through at least 1200 rendered frames and check late resource windows
+            - name: Observe at least 1200 actual rendered frames and check late resource windows
               run: |
                   mkdir -p "build/town-stability/$SJRPG_WALK_EDITION"
                   python3 -m http.server 8794 --bind 127.0.0.1 --directory "$RUNNER_TEMP/stability-game/sjrpg_3d/build/web" > "build/town-stability/$SJRPG_WALK_EDITION/server.log" 2>&1 &

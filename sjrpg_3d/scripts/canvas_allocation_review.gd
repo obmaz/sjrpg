@@ -51,7 +51,15 @@ func _observe(node: Node) -> void:
 	var item: CanvasItem = node as CanvasItem
 	var command: String = "window.__sjrpgCanvasDrawOwner=" + JSON.stringify({"script": script.resource_path, "name": str(item.name), "path": str(item.get_path())}) + ";window.__sjrpgCanvasDrawMark?.(window.__sjrpgCanvasDrawOwner)"
 	var callback: Callable = _mark_owner.bind(command)
+	# Bare controls render in existing draw-signal receivers rather than _draw.
+	# Put the marker first, preserving the original receiver order and flags.
+	# Removing only our marker later leaves the original ordering unchanged.
+	var listeners: Array[Dictionary] = item.get_signal_connection_list("draw")
+	for listener: Dictionary in listeners:
+		item.draw.disconnect(listener["callable"])
 	item.draw.connect(callback)
+	for listener: Dictionary in listeners:
+		item.draw.connect(listener["callable"], int(listener["flags"]))
 	_connections.append({"owner": weakref(item), "callback": callback})
 
 
