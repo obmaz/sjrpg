@@ -1,0 +1,76 @@
+name: Inspect completed native memory attribution
+on:
+    push:
+        paths:
+            - ".github/workflows/native-memory-report.yml"
+    workflow_dispatch:
+permissions:
+    contents: read
+    actions: read
+jobs:
+    report:
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        steps:
+            - uses: actions/download-artifact@v6
+              with:
+                  github-token: ${{ github.token }}
+                  run-id: 42449980110
+                  name: native-memory-attribution
+                  path: build/native-memory-input
+            - name: Inspect original memory trace and allocation diagnostics
+              run: |
+                  python3 - <<'PY'
+                  import json
+                  from pathlib import Path
+                  from collections import Counter
+                  root=Path("build/native-memory-input")
+                  files=list(root.rglob("*"))
+                  print("NATIVE_REPORT_FILES",json.dumps([{"path":str(p.relative_to(root)),"bytes":p.stat().st_size} for p in files if p.is_file()]))
+                  proofs=list(root.rglob("proof.json"))
+                  assert len(proofs)==1,proofs
+                  proof=json.loads(proofs[0].read_text())
+                  print("NATIVE_REPORT_STATUS",json.dumps({k:proof.get(k) for k in ("diagnostic_only","passed","failure","stop_reason","actual_pose_updates","memory_trace","finish_control","native_sampling")})[:20000])
+                  traces=list(root.rglob("memory-infra-trace.json"))
+                  for file in traces:
+                      trace=json.loads(file.read_text())
+                      events=trace.get("traceEvents",[])
+                      print("NATIVE_TRACE_KEYS",json.dumps({"keys":list(trace),"event_count":len(events),"top_events":Counter((str(e.get("name")),str(e.get("ph")),str(e.get("cat"))) for e in events).most_common(25)}))
+                      print("NATIVE_TRACE_EXAMPLES",json.dumps([{"name":e.get("name"),"ph":e.get("ph"),"cat":e.get("cat"),"pid":e.get("pid"),"args":e.get("args")} for e in events if "memory" in str(e.get("cat","")).lower() or e.get("ph")=="v"][:3])[:30000])
+                      results=[]
+                      def walk(value,pid,where,depth=0):
+                          if depth>10:return
+                          if isinstance(value,str):
+                              if value.startswith("{") or value.startswith("["):
+                                  try:walk(json.loads(value),pid,where+"[JSON]",depth+1)
+                                  except (json.JSONDecodeError,ValueError):pass
+                              return
+                          if isinstance(value,list):
+                              for i,child in enumerate(value[:10000]):walk(child,pid,where+"[]",depth+1)
+                              return
+                          if not isinstance(value,dict):return
+                          if isinstance(value.get("allocators"),dict):
+                              rows=[]
+                              for name,allocator in value["allocators"].items():
+                                  attrs={}
+                                  for key,entry in allocator.get("attrs",{}).items():
+                                      if entry.get("type")=="scalar" and entry.get("units")=="bytes":
+                                          try:attrs[key]=int(str(entry["value"]),16)
+                                          except (ValueError,TypeError):pass
+                                  if attrs:rows.append({"name":name,**attrs})
+                              rows.sort(key=lambda r:r.get("size",r.get("allocated_objects_size",0)),reverse=True)
+                              results.append({"pid":pid,"path":where,"process_totals":value.get("process_totals"),"top_allocators":rows[:30]})
+                          for key,child in value.items():
+                              if key not in ("allocators","maps"):walk(child,pid,where+"."+key,depth+1)
+                      for event in events:walk(event.get("args",{}),event.get("pid"),str(event.get("name")),0)
+                      for result in results:print("NATIVE_TRACE_ALLOCATORS",json.dumps(result))
+                      (root/"native-allocator-summary.json").write_text(json.dumps(results,indent=2))
+                  
+                  PY
+            - uses: actions/upload-artifact@v6
+              if: always()
+              with:
+                  name: native-memory-original-report
+                  path: build/native-memory-input
+                  if-no-files-found: error
+                  retention-days: 7
