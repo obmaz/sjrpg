@@ -286,14 +286,22 @@ if (scene === 'bag' || scene === 'shop') {
     // Use actual keyboard/touch entry after loading; early panel query timers
     // can be overtaken by chest memories and new-slot initialization.
     await page.waitForFunction(() => window.__sjrpgGamepadReview?.native_ready, null, {timeout: 15000});
+    await page.locator('canvas').focus();
     for (let attempt = 0; attempt < 8; attempt++) {
         const panel = await page.evaluate(() => window.__sjrpgGamepadReview?.panel);
         if (!panel?.script) break;
         await page.keyboard.press('Escape');
         await page.waitForTimeout(250);
     }
-    await page.keyboard.press('b');
-    await page.waitForFunction(() => window.__sjrpgGamepadReview?.panel?.script?.endsWith('/bag_panel.gd'), null, {timeout: 15000});
+    await page.locator('canvas').focus();
+    await page.keyboard.down('b');
+    await page.waitForTimeout(180);
+    await page.keyboard.up('b');
+    await page.waitForFunction(() => window.__sjrpgGamepadReview?.panel?.script?.endsWith('/bag_panel.gd'), null, {timeout: 15000}).catch(async error => {
+        console.log('EQUIPMENT_OPEN_FAILURE ' + JSON.stringify(await page.evaluate(() => ({review:window.__sjrpgGamepadReview,active:document.activeElement?.id,events:window.__sjrpgCaptureFocusEvents}))));
+        await capture({path: out});
+        throw error;
+    });
     const shopping = scene === 'shop';
     if (await page.evaluate(() => window.__sjrpgGamepadReview.panel.shopping) !== shopping) {
         const target = await page.evaluate(text => {
