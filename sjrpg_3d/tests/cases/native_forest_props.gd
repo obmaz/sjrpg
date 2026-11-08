@@ -121,7 +121,12 @@ func run() -> void:
 	if game.dungeon.enter():
 		preview._sync_scope()
 		environment.sync(0.0, true)
-		check("authored cave lanterns have native volume owners and existing lights", int(environment.report["native_cave_lanterns"]) == 10 and environment._cave_lights.size() == 10 and environment.cave.get_node("NativeCaveLanterns").get_child_count() == 10)
+		var torches := environment.cave.get_node("NativeCaveLanterns") as Node3D
+		var shared_torches := torches.get_child_count() == 4
+		for child in torches.get_children():
+			var batch := child as MultiMeshInstance3D
+			shared_torches = shared_torches and batch != null and batch.multimesh.instance_count == 10
+		check("ten authored cave torches share four native volume batches and preserve existing lights", int(environment.report["native_cave_lanterns"]) == 10 and environment._cave_lights.size() == 10 and shared_torches)
 		for record: Dictionary in environment.report["remaining_sources"]["cave"]:
 			check("converted cave lamp never remains in a card bucket", str(record["role"]) != "lantern")
 	game.queue_free()
