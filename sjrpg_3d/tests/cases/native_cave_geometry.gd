@@ -15,7 +15,7 @@ func _edge_key(a: Vector3, b: Vector3) -> String:
 func run() -> void:
 	var provenance: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/data/native_cave_geometry.json"))
 	var sources_match := true
-	for key in ["reference", "generator", "material"]:
+	for key in ["reference", "generator", "material", "outer_material", "floor_shader", "floor_material"]:
 		var source: Dictionary = provenance[key]
 		sources_match = sources_match and FileAccess.get_sha256("res://" + str(source["path"])) == str(source["sha256"])
 	check("native cave retains the actual guide generator and reused albedo provenance", sources_match)
@@ -59,15 +59,25 @@ func run() -> void:
 	var return_portal: IsoSprite = game.world.get_node("CaveReturnPortal")
 	var portal_anchor := Iso.project(DungeonLayout.EXIT + Vector2(50, -110))
 	check("return portal retains its original anchor and native source ownership", metadata["native_props"].has(return_portal.get_instance_id()) and preview._town_props.owns(return_portal) and not metadata["retained"].has(return_portal.get_instance_id()) and not metadata["replaced"].has(return_portal.get_instance_id()) and return_portal.position.is_equal_approx(portal_anchor))
-	var material: StandardMaterial3D = rock["material"]
-	check("rock uses the existing generated albedo in native world metres", material.uv1_world_triplanar and material.uv1_scale.is_equal_approx(Vector3.ONE / 2.6) and material.roughness > 0.9 and material.shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL)
+	var material: StandardMaterial3D = rock["materials"]["inner"]
+	var outer_material: StandardMaterial3D = rock["materials"]["outer"]
+	check("inside wall and exposed rock reuse different recorded albedos with explicit metre UVs", material.albedo_texture.resource_path == "res://assets/art/cave/dark.webp" and outer_material.albedo_texture.resource_path == "res://assets/art/village/rock.webp" and not material.uv1_triplanar and not outer_material.uv1_triplanar and material.uv1_scale.is_equal_approx(Vector3.ONE) and outer_material.uv1_scale.is_equal_approx(Vector3.ONE) and material.roughness > 0.9 and outer_material.roughness > 0.9 and material.shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL and outer_material.shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL)
+	_check_floor_surfaces(environment, layout)
 	var vertices_present := {}
+	var vertex_roles := {}
+	var wall_directions := {}
+	var uv_valid := true
+	var upper_caps := 0
 	var edges := {}
 	var valid := true
 	var peak := 0.0
 	for node: MeshInstance3D in rock["meshes"]:
-		valid = valid and node.has_meta("native_cave_boundary") and node.material_override == material
+		valid = valid and node.has_meta("native_cave_boundary") and node.material_override == null and node.mesh.get_surface_count() == 2
 		for surface in node.mesh.get_surface_count():
+			var surface_material := node.mesh.surface_get_material(surface)
+			var inner := surface_material == material
+			valid = valid and (inner or surface_material == outer_material)
+			var tile := Ortho3DCaveRock.TILE_METRES if inner else Ortho3DCaveRock.OUTER_TILE_METRES
 			var arrays := node.mesh.surface_get_arrays(surface)
 			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 			var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
@@ -75,7 +85,9 @@ func run() -> void:
 			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
 			for index in vertices.size():
 				valid = valid and vertices[index].is_finite() and uv[index].is_finite() and absf(normals[index].length() - 1.0) < 0.001
-				vertices_present[_point_key(vertices[index])] = true
+				var vertex_key := _point_key(vertices[index])
+				vertices_present[vertex_key] = true
+				vertex_roles[vertex_key] = int(vertex_roles.get(vertex_key, 0)) | (1 if inner else 2)
 				peak = maxf(peak, vertices[index].y)
 			for index in range(0, indices.size(), 3):
 				var a := vertices[indices[index]]
@@ -83,12 +95,42 @@ func run() -> void:
 				var c := vertices[indices[index + 2]]
 				valid = valid and (b - a).cross(c - a).length_squared() > 0.0000000001
 				valid = valid and (b - a).cross(c - a).dot(normals[indices[index]]) <= 0.00001
+				var ia := indices[index]
+				var ib := indices[index + 1]
+				var ic := indices[index + 2]
+				var edge_uv_a := uv[ib] - uv[ia]
+				var edge_uv_b := uv[ic] - uv[ia]
+				uv_valid = uv_valid and absf(edge_uv_a.cross(edge_uv_b)) > 0.00000001
+				var chart_x := true
+				var chart_z := true
+				var chart_cap := not inner
+				for vertex_index: int in [ia, ib, ic]:
+					var at := vertices[vertex_index]
+					var actual := uv[vertex_index] * tile
+					chart_x = chart_x and actual.is_equal_approx(Vector2(at.x, at.y))
+					chart_z = chart_z and actual.is_equal_approx(Vector2(at.z, at.y))
+					chart_cap = chart_cap and actual.is_equal_approx(Vector2(at.x, at.z))
+				uv_valid = uv_valid and (chart_x or chart_z or chart_cap)
+				if inner:
+					var normal := normals[ia]
+					var direction := ("x+" if normal.x > 0.0 else "x-") if absf(normal.x) > absf(normal.z) else ("z+" if normal.z > 0.0 else "z-")
+					wall_directions[direction] = true
+					uv_valid = uv_valid and not chart_cap
+				elif chart_cap and normals[ia].y > 0.1:
+					upper_caps += 1
 				for edge in [_edge_key(a, b), _edge_key(b, c), _edge_key(c, a)]:
 					edges[edge] = int(edges.get(edge, 0)) + 1
 	var closed := true
 	for count: int in edges.values():
 		closed = closed and count == 2
 	check("actual rock triangles form closed volumes across chunk boundaries", closed and valid and peak > 3.0)
+	check("all four wall directions have noncollapsed vertical UVs and exposed caps have separate XZ charts", uv_valid and wall_directions.size() == 4 and upper_caps > 10 and int(rock["surfaces"]) == int(rock["groups"]) * 2)
+	var ridges_shared := true
+	for profile: Dictionary in rock["profiles"]:
+		for end in ["section_a", "section_b"]:
+			var section: PackedVector3Array = profile[end]
+			ridges_shared = ridges_shared and int(vertex_roles.get(_point_key(section[4]), 0)) == 3
+	check("inside and exposed materials meet at the original shared profile ridge", ridges_shared)
 	var toes_match := true
 	var corners := {}
 	for profile: Dictionary in rock["profiles"]:
@@ -152,3 +194,37 @@ func run() -> void:
 	check("leaving cave restores the exact previous outdoor ambient and background", is_equal_approx(settings.ambient_light_energy, outdoor_energy) and settings.ambient_light_color == outdoor_color and settings.background_color == outdoor_background and not environment._cave_key.is_visible_in_tree())
 	game.queue_free()
 	await _frames(2)
+
+
+func _check_floor_surfaces(environment: Ortho3DEnvironment, layout: DungeonLayout) -> void:
+	var floors := environment.cave.find_children("CaveFloor_*", "MeshInstance3D", true, false)
+	var valid := floors.size() == layout.polygons.size()
+	var shared: ShaderMaterial
+	for index in layout.polygons.size():
+		var node := environment.cave.get_node_or_null("CaveFloor_%d" % index) as MeshInstance3D
+		if node == null:
+			valid = false
+			continue
+		var material := node.material_override as ShaderMaterial
+		if material == null:
+			valid = false
+			continue
+		if shared == null:
+			shared = material
+		valid = valid and material == shared
+		var arrays := node.mesh.surface_get_arrays(0)
+		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+		var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+		var polygon: PackedVector2Array = layout.polygons[index]
+		valid = valid and vertices.size() == polygon.size()
+		for vertex_index in mini(vertices.size(), polygon.size()):
+			var expected := Ortho3DPreview.ground_position(polygon[vertex_index], 0.004)
+			valid = valid and vertices[vertex_index].is_equal_approx(expected) and normals[vertex_index].is_equal_approx(Vector3.UP) and uv[vertex_index].is_equal_approx(Vector2(expected.x, expected.z) / 2.6)
+	check("warm cave floor preserves every original flat polygon vertex metre UV and shared lit material", valid and shared != null)
+	if shared == null:
+		return
+	var texture: Texture2D = shared.get_shader_parameter("albedo_texture")
+	var tone: Color = shared.get_shader_parameter("base_tone")
+	var detail: float = shared.get_shader_parameter("detail_strength")
+	check("walkable floor retains original slab pixels and lowers contrast without an unlit or emissive override", texture.resource_path == "res://assets/art/cave/floor.webp" and shared.shader.resource_path == "res://scripts/native_cave_floor.gdshader" and tone.r > tone.g and tone.g > tone.b and detail > 0.0 and detail < 1.0 and not shared.shader.code.contains("unshaded") and not shared.shader.code.contains("EMISSION"))

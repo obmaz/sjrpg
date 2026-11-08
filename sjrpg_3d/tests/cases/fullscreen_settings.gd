@@ -4,6 +4,9 @@ extends TestCase
 
 
 func run() -> void:
+	var previous_path := Prefs.settings_path
+	var previous_orientation := Prefs.screen_orientation
+	Prefs.settings_path = "user://tests/fullscreen-orientation.cfg"
 	var view := SubViewport.new()
 	view.size = Vector2i(720, 1280)
 	add_child(view)
@@ -30,7 +33,16 @@ func run() -> void:
 		check("fullscreen is a visible 64px+ top settings action %s" % dimensions, button.is_visible_in_tree() and bounds.size.y >= 64.0 and Rect2(Vector2.ZERO, Vector2(dimensions)).encloses(bounds) and button.get_index() == 1)
 		var state := Prefs.fullscreen_state()
 		check("fullscreen button and hint reflect real supported state %s" % dimensions, button.text == str(state["title"]) and button.disabled == (not bool(state["supported"]) or bool(state["pending"])) and not hint.text.is_empty())
+		check("settings expose all orientation choices while paused", panel._screen_orientation_buttons.size() == 3 and panel.find_child("ScreenOrientationHint", true, false) != null)
+		for choice: Button in panel._screen_orientation_buttons:
+			check("orientation choices remain touchable after layout rotation %s" % dimensions, choice.size.y >= 64.0 and panel._panel.get_global_rect().encloses(choice.get_global_rect()))
 		check("settings rotation keeps the same paused adventure", get_tree().paused and game.ortho_preview == preview and game.player.position == position and is_equal_approx(game.player.hp, hp))
+	var portrait := panel.find_child("Orientation_portrait", true, false) as Button
+	portrait.pressed.emit()
+	await _frames(3)
+	check("actual settings choice saves orientation and preserves the paused adventure", Prefs.screen_orientation == "portrait" and get_tree().paused and game.ortho_preview == preview and game.player.position == position)
+	var selected := panel.find_child("Orientation_portrait", true, false) as Button
+	check("the saved orientation is reflected after rebuilding settings", selected != null and selected.button_pressed)
 	if DisplayServer.get_name() == "headless":
 		check("headless fullscreen reports unsupported instead of pretending it changed", not Prefs.fullscreen_supported() and not Prefs.is_fullscreen())
 		Prefs.toggle_fullscreen()
@@ -42,3 +54,6 @@ func run() -> void:
 	game.hud.close_panel()
 	view.queue_free()
 	await _frames(2)
+	Prefs.set_screen_orientation(previous_orientation)
+	Prefs.settings_path = previous_path
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://tests/fullscreen-orientation.cfg"))
