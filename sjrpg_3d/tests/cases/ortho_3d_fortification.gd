@@ -261,6 +261,8 @@ func _check_tower_recesses(report: Dictionary, stone_meshes: Array) -> void:
 			iron_meshes.append(mesh)
 	var frames: Array = report["slit_frames"]
 	var exposed := 0
+	var partial_overlaps := 0
+	var partial_depths: Array[float] = []
 	var depth_min := INF
 	var depth_max := 0.0
 	check("all eight actual towers have four real inset slot faces", frames.size() == 32 and is_equal_approx(float(report["slit_depth"]), 0.10))
@@ -280,48 +282,37 @@ func _check_tower_recesses(report: Dictionary, stone_meshes: Array) -> void:
 			continue
 		exposed += 1
 		var stone := _nearest(stone_meshes, origin, -frame.basis.z)
-		if stone <= 0.305:
-			var nearby := []
-			for polygon: PackedVector2Array in report["wall_polygons"]:
-				var front := Vector2(center.x, center.z)
-				var behind := center - frame.basis.z * 0.10
-				var back_point := Vector2(behind.x, behind.z)
-				var front_distance := INF
-				var back_distance := INF
-				for edge in polygon.size():
-					front_distance = minf(front_distance, front.distance_to(Geometry2D.get_closest_point_to_segment(front, polygon[edge], polygon[(edge + 1) % polygon.size()])))
-					back_distance = minf(back_distance, back_point.distance_to(Geometry2D.get_closest_point_to_segment(back_point, polygon[edge], polygon[(edge + 1) % polygon.size()])))
-				if minf(front_distance, back_distance) < 0.5:
-					nearby.append({"polygon": polygon, "front_inside": Geometry2D.is_point_in_polygon(front, polygon), "back_inside": Geometry2D.is_point_in_polygon(back_point, polygon), "front_distance": front_distance, "back_distance": back_distance})
-			print("ART_AUDIT WALL_SLOT_DIAGNOSTIC " + JSON.stringify({"index": index, "center": center, "normal": frame.basis.z, "stone": stone, "iron": back, "nearest_stone": _nearest_detail(stone_meshes, origin, -frame.basis.z), "nearby_original_walls": nearby}))
-		check("visible inset is not painted on an opaque cylinder " + str(index), stone > 0.305)
+		var original_entry := _original_wall_entry(report, center, frame.basis.z)
+		if is_finite(original_entry):
+			partial_overlaps += 1
+			partial_depths.append(stone - 0.20)
+			check("original wall overlap keeps the independently predicted visible slot depth " + str(index), original_entry >= 0.05 and original_entry < 0.10 and absf(stone - (0.20 + original_entry)) < 0.001)
+		else:
+			check("fully exposed inset has no opaque cylinder or unexpected fill " + str(index), stone > 0.305)
 		var inside := center - frame.basis.z * 0.05
 		for side in [-1.0, 1.0]:
 			var reveal := _nearest(stone_meshes, inside, frame.basis.x * side)
 			check("actual stone side reveals enclose the slot volume " + str(index) + " " + str(side), is_finite(reveal) and absf(reveal - 0.0375) < 0.001)
 	check("at least two exposed real slot faces per tower remain readable", exposed >= 16)
-	print("ART_AUDIT native_tower_recess " + JSON.stringify({"slot_faces": frames.size(), "exposed": exposed, "actual_back_distance_min": depth_min, "actual_back_distance_max": depth_max, "depth_m": report["slit_depth"], "slot_height_m": report["slit_height"]}))
+	print("ART_AUDIT native_tower_recess " + JSON.stringify({"slot_faces": frames.size(), "exposed_mouths": exposed, "fully_exposed": exposed - partial_overlaps, "partial_wall_overlaps": partial_overlaps, "partial_visible_depths_m": partial_depths, "actual_back_distance_min": depth_min, "actual_back_distance_max": depth_max, "nominal_back_depth_m": report["slit_depth"], "slot_height_m": report["slit_height"]}))
 
 
-func _nearest_detail(meshes: Array, origin: Vector3, direction: Vector3) -> Dictionary:
+## Predict cavity occlusion from the unchanged original wall polygons and their
+## recorded4.5cm inset. No observed ray distance or failing slot index is used.
+func _original_wall_entry(report: Dictionary, mouth: Vector3, normal: Vector3) -> float:
+	var first := Vector2(mouth.x, mouth.z)
+	var last := first - Vector2(normal.x, normal.z) * float(report["slit_depth"])
 	var nearest := INF
-	var result := {}
-	for mesh: MeshInstance3D in meshes:
-		for surface in mesh.mesh.get_surface_count():
-			var arrays := mesh.mesh.surface_get_arrays(surface)
-			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-			var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
-			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
-			var count := indices.size() if not indices.is_empty() else vertices.size()
-			for index in range(0, count, 3):
-				var a: int = indices[index] if not indices.is_empty() else index
-				var b: int = indices[index + 1] if not indices.is_empty() else index + 1
-				var c: int = indices[index + 2] if not indices.is_empty() else index + 2
-				var p := mesh.global_transform * vertices[a]
-				var q := mesh.global_transform * vertices[b]
-				var r := mesh.global_transform * vertices[c]
-				var hit = Geometry3D.ray_intersects_triangle(origin, direction, p, q, r)
-				if hit is Vector3 and origin.distance_to(hit) < nearest:
-					nearest = origin.distance_to(hit)
-					result = {"distance": nearest, "hit": hit, "vertices": [p, q, r], "normal": mesh.global_basis * normals[a], "mesh": mesh.name}
-	return result
+	for polygon: PackedVector2Array in report["wall_polygons"]:
+		var crosses_original := false
+		for index in polygon.size():
+			var crossing: Variant = Geometry2D.segment_intersects_segment(first, last, polygon[index], polygon[(index + 1) % polygon.size()])
+			crosses_original = crosses_original or crossing is Vector2
+		if not crosses_original:
+			continue
+		for inset in Geometry2D.offset_polygon(polygon, -float(report["wall_face_recess"]), Geometry2D.JOIN_MITER):
+			for index in inset.size():
+				var crossing: Variant = Geometry2D.segment_intersects_segment(first, last, inset[index], inset[(index + 1) % inset.size()])
+				if crossing is Vector2:
+					nearest = minf(nearest, first.distance_to(crossing))
+	return nearest
