@@ -112,7 +112,8 @@ func _layout() -> void:
 	var npc: String = game.near_npc()
 	_near_name = npc
 	if npc != "" and npc != "탈것 상인":
-		var half := Vector2(106.0 * u, maxf(32.0, 38.0 * u)) if npc == "워프게이트" else Vector2(78.0 * u, maxf(32.0, 32.0 * u))
+		var text_width := HudArt.FONT.get_string_size(interaction_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, interaction_font_size()).x
+		var half := Vector2(maxf(106.0 * u, text_width * 0.5 + 24.0 * u), maxf(32.0, 38.0 * u))
 		half.y = maxf(half.y, 22.0 * css_scale())
 		var rise := maxf(78.0 * u, half.y + menu_touch + 10.0 * u)
 		var interaction := _button(Vector2(size.x / 2.0, bar_y - rise), 32.0 * u)
@@ -495,11 +496,14 @@ func interaction_text() -> String:
 	return ("LT · " if Gamepad.using_gamepad else "") + {"워프게이트": "워프 이동", "바람 동굴": "동굴 탐험", "동굴 출구": "동굴 나가기", "안식처": "안식처", "숲의 파수꾼": "도전하기", "상인": "상점", "대장장이": "대장간", "촌장": "대화", "보급원 미라": "대화"}.get(_near_name, "대화")
 
 
+## Shared type and plaque metrics for every contextual action, independent of world zoom.
+func interaction_font_size() -> int:
+	return roundi(maxf(22.0 * _unit, 18.0 * css_scale()))
+
+
 func interaction_visual_rect(center: Vector2, half: Vector2) -> Rect2:
-	var warp := _near_name == "워프게이트"
-	var font_size := roundi((22.0 if warp else 18.0) * _unit)
-	var text_width := HudArt.FONT.get_string_size(interaction_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
-	var size := Vector2(minf(half.x * 2.0, maxf((184.0 if warp else 92.0) * _unit, text_width + (40.0 if warp else 30.0) * _unit)), minf(half.y * 2.0, (56.0 if warp else 42.0) * _unit))
+	var text_width := HudArt.FONT.get_string_size(interaction_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, interaction_font_size()).x
+	var size := Vector2(minf(half.x * 2.0, maxf(184.0 * _unit, text_width + 40.0 * _unit)), minf(half.y * 2.0, maxf(56.0 * _unit, 44.0 * css_scale())))
 	return Rect2(center - size * 0.5, size)
 
 
@@ -549,7 +553,7 @@ func _draw_interaction(center: Vector2, half: Vector2, pressed: bool) -> void:
 		_interaction_normal = UiKit.panel_style(Color(0.065, 0.06, 0.048, 0.72), Color(0.51, 0.44, 0.29, 0.7), 21)
 		_interaction_pressed = UiKit.panel_style(Color(0.13, 0.105, 0.075, 0.92), Color(0.62, 0.53, 0.36, 0.9), 21)
 	draw_style_box(_interaction_pressed if pressed else _interaction_normal, rect)
-	HudArt.text_in_rect(self, interaction_text(), rect.grow(-5.0 * _unit), roundi((22.0 if _near_name == "워프게이트" else 18.0) * _unit), Color(0.89, 0.85, 0.73))
+	HudArt.text_in_rect(self, interaction_text(), rect.grow(-5.0 * _unit), interaction_font_size(), Color(0.89, 0.85, 0.73))
 
 
 func _draw() -> void:

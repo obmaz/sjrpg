@@ -5,7 +5,8 @@ extends Node
 signal graphics_changed
 
 const PATH := "user://settings.cfg"
-const WORLD_ZOOMS: Array[float] = [0.5, 1.0, 1.5]
+const WORLD_ZOOMS: Array[float] = [0.5, 0.75, 1.0, 1.25, 1.5]
+const SCREEN_ORIENTATIONS: Array[String] = ["auto", "landscape", "portrait"]
 ## Stored values remain relative UI choices; the new 1x view uses the former 0.75 scale.
 const WORLD_ZOOM_BASE := 0.75
 
@@ -17,6 +18,7 @@ var haptics_enabled := true
 var reduce_motion := false
 var low_resolution := false
 var world_zoom := 1.0
+var screen_orientation := "auto"
 var _last_pulse := 0
 
 
@@ -31,6 +33,8 @@ func _ready() -> void:
 		reduce_motion = bool(cfg.get_value("device", "reduce_motion", false))
 		low_resolution = bool(cfg.get_value("device", "low_resolution", false))
 		world_zoom = normalize_world_zoom(cfg.get_value("device", "world_zoom", 1.0))
+		screen_orientation = normalize_screen_orientation(cfg.get_value("device", "screen_orientation", "auto"))
+	apply_screen_orientation()
 
 
 func _save() -> void:
@@ -41,6 +45,7 @@ func _save() -> void:
 	cfg.set_value("device", "reduce_motion", reduce_motion)
 	cfg.set_value("device", "low_resolution", low_resolution)
 	cfg.set_value("device", "world_zoom", world_zoom)
+	cfg.set_value("device", "screen_orientation", screen_orientation)
 	cfg.save(settings_path)
 
 
@@ -67,6 +72,52 @@ func set_world_zoom(value: float) -> void:
 	world_zoom = next
 	_save()
 	graphics_changed.emit()
+
+
+## A shared preference; supported browser APIs or native Android perform the rotation.
+static func normalize_screen_orientation(value: Variant) -> String:
+	if value is String and value in SCREEN_ORIENTATIONS:
+		return str(value)
+	return "auto"
+
+
+static func screen_orientation_mode(value: Variant) -> int:
+	match normalize_screen_orientation(value):
+		"landscape":
+			return DisplayServer.SCREEN_SENSOR_LANDSCAPE
+		"portrait":
+			return DisplayServer.SCREEN_SENSOR_PORTRAIT
+	return DisplayServer.SCREEN_SENSOR
+
+
+func apply_screen_orientation(from_gesture := false) -> void:
+	if OS.has_feature("web"):
+		var method := "choose" if from_gesture else "restore"
+		JavaScriptBridge.eval("if(window.SjrpgOrientation)window.SjrpgOrientation." + method + "(" + JSON.stringify(screen_orientation) + ");")
+	elif OS.has_feature("android"):
+		DisplayServer.screen_set_orientation(screen_orientation_mode(screen_orientation))
+
+
+func screen_orientation_state() -> Dictionary:
+	if OS.has_feature("web"):
+		var raw: Variant = JavaScriptBridge.eval("JSON.stringify(window.SjrpgOrientation ? window.SjrpgOrientation.state() : {supported:false,pending:false,detail:'이 브라우저에서는 방향 고정을 지원하지 않습니다. 기기를 직접 돌려 주세요.'})", true)
+		if raw is String:
+			var parsed: Variant = JSON.parse_string(raw)
+			if parsed is Dictionary:
+				return parsed
+		return {"supported": false, "pending": false, "detail": "화면 방향 지원 상태를 확인할 수 없습니다."}
+	if OS.has_feature("android"):
+		return {"supported": true, "pending": false, "detail": "자동은 기기를 돌린 방향에 맞춥니다. 가로·세로를 선택하면 해당 방향을 유지합니다."}
+	return {"supported": false, "pending": false, "detail": "이 환경에서는 방향 고정을 지원하지 않습니다. 창 크기로 화면 방향을 바꿀 수 있습니다."}
+
+
+func set_screen_orientation(value: String, from_gesture := false) -> void:
+	var next := normalize_screen_orientation(value)
+	if screen_orientation != next:
+		screen_orientation = next
+		_save()
+	# Re-selecting the same choice retries a browser request that was denied.
+	apply_screen_orientation(from_gesture)
 
 
 func set_sound(on: bool) -> void:

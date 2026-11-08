@@ -318,8 +318,11 @@ func _build_cave() -> void:
 	var layout: DungeonLayout = preview.game.dungeon.layout
 	var textures: Dictionary = DungeonArt.data()["textures"]
 	var floor_texture: Texture2D = load("res://" + str(textures["floor"]["path"]))
-	for polygon in layout.polygons:
-		_floor(polygon, floor_texture, cave, 0.004, Color(0.90, 0.93, 0.94), 2.6)
+	var floor_material := Ortho3DCaveRock.floor_material(floor_texture)
+	for index in layout.polygons.size():
+		var surface := _floor(layout.polygons[index], floor_texture, cave, 0.004, Color.WHITE, Ortho3DCaveRock.TILE_METRES)
+		surface.name = "CaveFloor_%d" % index
+		surface.material_override = floor_material
 	var lanterns := NativeCaveLanterns3D.build(preview, cave, preview.game.dungeon.art.visuals)
 	var native_lantern_ids: Dictionary = lanterns["owned_source_ids"]
 	report["native_cave_lanterns"] = lanterns["count"]

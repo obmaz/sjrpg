@@ -1,0 +1,100 @@
+name: Review cave readability and settings
+on:
+  push:
+    paths:
+      - "sjrpg_3d/scripts/ortho_3d_cave_rock.gd"
+      - "sjrpg_3d/scripts/prefs.gd"
+      - "sjrpg_3d/scripts/touch_controls.gd"
+      - ".github/workflows/cave-accessibility-review.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        revision: [before, after]
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ matrix.revision == 'before' && '90b3a784a0a2835393dd04b92477d9269369f447' || github.sha }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.godot-tools
+            ~/.local/share/godot/export_templates
+          key: godot-${{ hashFiles('.godot-version') }}-tools-v1
+      - name: Export actual game
+        run: |
+          tools/setup_godot.sh
+          sjrpg_3d/tools/export_web.sh
+          npm ci --ignore-scripts
+          npx playwright install --with-deps chromium
+      - name: Capture actual exported views
+        run: |
+          set -euo pipefail
+          mkdir -p build/cave-review
+          python3 -m http.server 8779 --bind 127.0.0.1 --directory sjrpg_3d/build/web >build/cave-review/server.log 2>&1 &
+          SJRPG_SERVER_PID=$!
+          trap 'kill "$SJRPG_SERVER_PID" 2>/dev/null || true' EXIT
+          curl --fail --silent --retry 10 --retry-connrefused --retry-delay 1 http://127.0.0.1:8779/ >/dev/null
+          node sjrpg_3d/tools/screenshot.mjs --url http://127.0.0.1:8779/ --scene cave_entry --device phone --viewport 390x844 --dpr 1 --class mage --settle 1500 --capture-timeout 90000 --out build/cave-review/entry-portrait.png
+          node sjrpg_3d/tools/screenshot.mjs --url http://127.0.0.1:8779/ --scene cave_entry --device desktop --viewport 1280x720 --dpr 1 --class mage --settle 1500 --capture-timeout 90000 --out build/cave-review/entry-landscape.png
+          node sjrpg_3d/tools/screenshot.mjs --url http://127.0.0.1:8779/ --scene cave_branch --device desktop --viewport 1280x720 --dpr 1 --class mage --settle 1500 --capture-timeout 90000 --out build/cave-review/branch-landscape.png
+          node sjrpg_3d/tools/screenshot.mjs --url http://127.0.0.1:8779/ --scene cave_room --device phone --viewport 390x844 --dpr 1 --class mage --settle 1500 --capture-timeout 90000 --out build/cave-review/room-portrait.png
+          node sjrpg_3d/tools/screenshot.mjs --url http://127.0.0.1:8779/ --scene mira_approach --device phone --viewport 390x844 --dpr 1 --class mage --settle 1500 --capture-timeout 90000 --out build/cave-review/talk-portrait.png
+          node sjrpg_3d/tools/screenshot.mjs --url http://127.0.0.1:8779/ --scene plaza --device phone --viewport 390x844 --dpr 1 --class mage --settle 1500 --capture-timeout 90000 --out build/cave-review/warp-portrait.png
+          node sjrpg_3d/tools/screenshot.mjs --url http://127.0.0.1:8779/ --scene settings --device phone --viewport 390x844 --dpr 1 --class mage --settle 1500 --capture-timeout 90000 --out build/cave-review/settings-portrait.png
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: cave-readability-${{ matrix.revision }}
+          path: build/cave-review
+          retention-days: 7
+  compare:
+    needs: capture
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v6
+        with:
+          name: cave-readability-before
+          path: build/cave-review/before
+      - uses: actions/download-artifact@v6
+        with:
+          name: cave-readability-after
+          path: build/cave-review/after
+      - run: python3 -m pip install --disable-pip-version-check Pillow
+      - name: Compare actual captures
+        shell: python
+        run: |
+          import pathlib,json,base64,io
+          from PIL import Image,ImageDraw
+          root=pathlib.Path('build/cave-review')
+          for name in ["entry-portrait","entry-landscape","branch-landscape","room-portrait","talk-portrait","warp-portrait","settings-portrait"]:
+           a=Image.open(root/'before'/(name+'.png')).convert('RGB')
+           b=Image.open(root/'after'/(name+'.png')).convert('RGB')
+           assert a.size==b.size,(name,a.size,b.size)
+           scale=min(1,600/a.width);size=(int(a.width*scale),int(a.height*scale))
+           a=a.resize(size,Image.Resampling.LANCZOS);b=b.resize(size,Image.Resampling.LANCZOS)
+           pair=Image.new('RGB',(size[0]*2,size[1]+28),'#18201d')
+           pair.paste(a,(0,28));pair.paste(b,(size[0],28))
+           draw=ImageDraw.Draw(pair);draw.text((8,7),name+' | BEFORE',fill='#e9dfc9');draw.text((size[0]+8,7),'AFTER',fill='#e9dfc9')
+           target=root/(name+'-comparison.jpg');pair.save(target,quality=89)
+           data=base64.b64encode(target.read_bytes()).decode()
+           print('CAVE_IMAGE_BEGIN '+name)
+           for i in range(0,len(data),16000):print('CAVE_IMAGE_CHUNK '+data[i:i+16000])
+           print('CAVE_IMAGE_END '+name)
+          print('CAVE_CAPTURE_PASS 7 actual before/after views; cave fixtures paused, town/settings live; no device orientation lock claim')
+          
+      - uses: actions/upload-artifact@v6
+        with:
+          name: cave-readability-comparisons
+          path: build/cave-review/*-comparison.jpg
+          retention-days: 7

@@ -6,6 +6,13 @@ extends RefCounted
 const COLLISION_INSET := 0.04
 const OUTER_DEPTH := 1.05
 const TILE_METRES := 2.6
+const OUTER_TILE_METRES := 3.2
+const OUTER_TEXTURE := "res://assets/art/village/rock.webp"
+const FLOOR_SHADER := preload("res://scripts/native_cave_floor.gdshader")
+const FLOOR_TONE := Color(0.48, 0.44, 0.36)
+const FLOOR_DETAIL := 0.68
+const INNER := "inner"
+const OUTER := "outer"
 const STRIP_METRES := 0.80
 const CHUNK_METRES := 12.0
 const FRONT_HEIGHT := 0.45
@@ -71,33 +78,42 @@ func _build(layout: DungeonLayout, parent: Node3D, texture: Texture2D, segments:
 					var next := (face + 1) % PROFILE.size()
 					var edge: Vector2 = PROFILE[next] - PROFILE[face]
 					var expected := Vector3(outward.x * -edge.y, edge.x, outward.y * -edge.y)
-					_triangle(last[face], section[face], section[next], expected)
-					_triangle(last[face], section[next], last[next], expected)
+					# The real ridge is PROFILE[4], not a painted horizontal boundary.
+					var role := INNER if face < 4 else OUTER
+					var cap_uv := face in [4, 5, 7]
+					_triangle(last[face], section[face], section[next], expected, outward, role, cap_uv)
+					_triangle(last[face], section[next], last[next], expected, outward, role, cap_uv)
 			last = section
 		profiles.append({"a": a, "b": b, "outward": outward, "height": height, "strips": count,
 			"section_a": first, "section_b": last})
-	var material := StandardMaterial3D.new()
-	material.albedo_texture = texture
-	material.albedo_color = Color(0.92, 0.94, 0.91)
-	material.roughness = 0.96
-	material.uv1_triplanar = true
-	material.uv1_world_triplanar = true
-	material.uv1_scale = Vector3.ONE / TILE_METRES
-	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	# The inside and exposed rock share geometry, but not a triplanar skin.
+	# Explicit metre UVs avoid blending floor-like XZ stone into upright faces.
+	var material := _rock_material(texture, Color(0.64, 0.73, 0.82), "CaveInnerWall")
+	var outer := _rock_material(load(OUTER_TEXTURE), Color(0.70, 0.64, 0.53), "CaveOuterRock")
+	var materials := {INNER: material, OUTER: outer}
 	var meshes: Array[MeshInstance3D] = []
+	var surfaces := 0
 	for chunk: int in _tools:
-		var tool: SurfaceTool = _tools[chunk]
-		tool.index()
+		var tools: Dictionary = _tools[chunk]
+		var volume := ArrayMesh.new()
+		for role: String in [INNER, OUTER]:
+			if not tools.has(role):
+				continue
+			var tool: SurfaceTool = tools[role]
+			tool.index()
+			tool.commit(volume)
+			volume.surface_set_material(volume.get_surface_count() - 1, materials[role])
 		var mesh := MeshInstance3D.new()
 		mesh.name = "CaveRockChunk_%d" % chunk
-		mesh.mesh = tool.commit()
-		mesh.material_override = material
+		mesh.mesh = volume
 		mesh.set_meta("native_cave_boundary", true)
 		parent.add_child(mesh)
 		meshes.append(mesh)
+		surfaces += volume.get_surface_count()
 	var result := {"segments": segments.size(), "profiles": profiles, "corners": _corners.size(),
 		"front_cutaways": cutaways, "meshes": meshes, "groups": meshes.size(), "triangles": _triangles,
-		"material": material, "tile_metres": TILE_METRES, "outer_depth": OUTER_DEPTH,
+		"material": material, "materials": materials, "surfaces": surfaces,
+		"tile_metres": TILE_METRES, "outer_tile_metres": OUTER_TILE_METRES, "outer_depth": OUTER_DEPTH,
 		"collision_inset": COLLISION_INSET, "layout_id": layout.get_instance_id()}
 	parent.set_meta("native_cave_rock", result)
 	return result
@@ -123,7 +139,7 @@ static func _base_height(segment: Dictionary) -> float:
 	return CORRIDOR_HEIGHT
 
 
-func _triangle(a: Vector3, b: Vector3, c: Vector3, expected: Vector3) -> void:
+func _triangle(a: Vector3, b: Vector3, c: Vector3, expected: Vector3, outward: Vector2, role: String, cap_uv: bool) -> void:
 	var cross := (b - a).cross(c - a)
 	if cross.length_squared() <= 0.0000000001:
 		return
@@ -132,13 +148,46 @@ func _triangle(a: Vector3, b: Vector3, c: Vector3, expected: Vector3) -> void:
 		normal = -normal
 	var chunk := floori(((a.x + b.x + c.x) / 3.0) / CHUNK_METRES)
 	if not _tools.has(chunk):
+		_tools[chunk] = {}
+	var tools: Dictionary = _tools[chunk]
+	if not tools.has(role):
 		var tool := SurfaceTool.new()
 		tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-		_tools[chunk] = tool
-	var output: SurfaceTool = _tools[chunk]
+		tools[role] = tool
+	var output: SurfaceTool = tools[role]
+	var tile := TILE_METRES if role == INNER else OUTER_TILE_METRES
 	var vertices := [a, c, b] if cross.dot(normal) > 0.0 else [a, b, c]
 	for vertex: Vector3 in vertices:
 		output.set_normal(normal)
-		output.set_uv(Vector2(vertex.x, vertex.z) / TILE_METRES)
+		output.set_uv(_surface_uv(vertex, outward, cap_uv) / tile)
 		output.add_vertex(vertex)
 	_triangles += 1
+
+
+static func _surface_uv(vertex: Vector3, outward: Vector2, cap: bool) -> Vector2:
+	if cap:
+		return Vector2(vertex.x, vertex.z)
+	# Fixed per boundary face, so both triangles of a strip have the same chart.
+	# Texture V is native height on every upright wall, including reverse faces.
+	return Vector2(vertex.z if absf(outward.x) > 0.5 else vertex.x, vertex.y)
+
+
+static func _rock_material(texture: Texture2D, tint: Color, label: String) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.resource_name = label
+	material.albedo_texture = texture
+	material.albedo_color = tint
+	material.roughness = 0.98
+	material.metallic_specular = 0.16
+	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	return material
+
+
+static func floor_material(texture: Texture2D) -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.resource_name = "CaveWalkableFloor"
+	material.shader = FLOOR_SHADER
+	material.set_shader_parameter("albedo_texture", texture)
+	material.set_shader_parameter("base_tone", FLOOR_TONE)
+	material.set_shader_parameter("detail_strength", FLOOR_DETAIL)
+	return material

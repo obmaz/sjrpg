@@ -12,7 +12,7 @@ func run() -> void:
 	Prefs.settings_path = TEST_PATH
 	Prefs.set_world_zoom(1.0)
 	Prefs.set_low_resolution(false)
-	for invalid in [-1.0, 0.0, 0.75, 4.0, INF, NAN, "1.5", true, null]:
+	for invalid in [-1.0, 0.0, 0.9, 4.0, INF, NAN, "1.5", true, null]:
 		check("unsupported device zoom defaults to 1x", is_equal_approx(Prefs.normalize_world_zoom(invalid), 1.0))
 	var game := await make_game()
 	var baseline: Vector2 = game.camera.zoom
@@ -77,7 +77,7 @@ func run() -> void:
 	check("legacy device settings keep displayed default and existing values with the new actual base", is_equal_approx(loaded.world_zoom, 1.0) and is_equal_approx(loaded.actual_world_zoom(), 0.75) and not loaded.sound_enabled)
 	loaded.queue_free()
 	await _frames(2)
-	for old_choice: float in [0.5, 1.0, 1.5]:
+	for old_choice: float in Prefs.WORLD_ZOOMS:
 		cfg.set_value("device", "world_zoom", old_choice)
 		cfg.save(TEST_PATH)
 		loaded = PrefsScript.new()
@@ -118,22 +118,27 @@ func _check_settings_layout(game: Node) -> void:
 	for dimensions in [Vector2i(720, 1280), Vector2i(540, 960), Vector2i(1280, 720)]:
 		view.size = dimensions
 		await _frames(5)
-		check("settings exposes all three zoom choices", panel._zoom_buttons.size() == 3)
+		check("settings exposes all five zoom choices", panel._zoom_buttons.size() == 5)
+		check("all platforms expose three orientation choices", panel._screen_orientation_buttons.size() == 3)
+		panel.scroll.ensure_control_visible(panel._zoom_grid)
+		await _frames(3)
 		var frame := panel._panel.get_global_rect()
-		var previous_end := -INF
+		var occupied: Array[Rect2] = []
 		for button: Button in panel._zoom_buttons:
 			var box := button.get_global_rect()
-			check("zoom controls stay separated and touchable in %s" % dimensions, button.size.y >= PanelFrame.MIN_TOUCH and box.position.x >= previous_end and frame.encloses(box))
-			previous_end = box.end.x
-	var chosen: Button = panel._zoom_buttons[0]
+			check("zoom controls stay separated and touchable in %s" % dimensions, button.size.y >= PanelFrame.MIN_TOUCH and frame.encloses(box))
+			for other: Rect2 in occupied:
+				check("zoom rows never overlap", not box.intersects(other))
+			occupied.append(box)
+	var chosen: Button = panel._zoom_buttons[3]
 	chosen.pressed.emit()
 	await _frames(3)
-	check("real settings action applies the chosen zoom", is_equal_approx(Prefs.world_zoom, 0.5))
+	check("real settings action applies the chosen zoom", is_equal_approx(Prefs.world_zoom, 1.25))
 	var selected := 0
 	for button: Button in panel._zoom_buttons:
 		if button.button_pressed:
 			selected += 1
-			check("selected zoom is visible in the button state", is_equal_approx(float(button.get_meta("world_zoom")), 0.5))
+			check("selected zoom is visible in the button state", is_equal_approx(float(button.get_meta("world_zoom")), 1.25))
 	check("exactly one zoom remains selected", selected == 1)
 	view.queue_free()
 	await _frames(2)

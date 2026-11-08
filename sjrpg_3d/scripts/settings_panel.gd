@@ -14,6 +14,9 @@ var _fullscreen_button: Button
 var _fullscreen_hint: Label
 var _install_poll := 0.0
 var _zoom_buttons: Array[Button] = []
+var _zoom_grid: GridContainer
+var _screen_orientation_buttons: Array[Button] = []
+var _screen_orientation_hint: Label
 var _version_buttons: Array[Button] = []
 
 
@@ -33,6 +36,8 @@ func _ready() -> void:
 func _rebuild() -> void:
 	clear_body()
 	_zoom_buttons.clear()
+	_zoom_grid = null
+	_screen_orientation_buttons.clear()
 	_version_buttons.clear()
 	body.add_child(PanelFrame.section("화면"))
 	_fullscreen_button = _action_row("전체화면 켜기", _request_fullscreen)
@@ -42,6 +47,8 @@ func _rebuild() -> void:
 	_fullscreen_hint.name = "FullscreenHint"
 	body.add_child(_fullscreen_hint)
 	_refresh_fullscreen()
+	body.add_child(_screen_orientation_card())
+	_refresh_screen_orientation()
 	body.add_child(UiKit.divider())
 	if OS.has_feature("web"):
 		body.add_child(_version_card())
@@ -103,6 +110,7 @@ func _process(delta: float) -> void:
 	if _install_poll <= 0.0:
 		_install_poll = 0.5
 		_refresh_fullscreen()
+		_refresh_screen_orientation()
 		if OS.has_feature("web"):
 			_refresh_install()
 		_publish_version_buttons()
@@ -188,9 +196,12 @@ func _world_zoom_card() -> Control:
 	card.add_child(column)
 	column.add_child(UiKit.label("화면 확대", 22, UiKit.TEXT, true))
 	column.add_child(PanelFrame.wrap_label("배경·캐릭터의 크기를 조절합니다. 글자·버튼 크기는 유지됩니다.", 15, UiKit.MUTED))
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
-	column.add_child(row)
+	_zoom_grid = GridContainer.new()
+	_zoom_grid.columns = 3
+	_zoom_grid.add_theme_constant_override("h_separation", 12)
+	_zoom_grid.add_theme_constant_override("v_separation", 12)
+	_zoom_grid.resized.connect(_fit_zoom_targets)
+	column.add_child(_zoom_grid)
 	var group := ButtonGroup.new()
 	for amount: float in Prefs.WORLD_ZOOMS:
 		var button := UiKit.button("%s×" % ("1" if is_equal_approx(amount, 1.0) else str(amount)), 22)
@@ -202,9 +213,57 @@ func _world_zoom_card() -> Control:
 		button.set_meta("world_zoom", amount)
 		UiKit.style_button(button, false, button.button_pressed)
 		button.pressed.connect(_choose_world_zoom.bind(amount))
-		row.add_child(button)
+		_zoom_grid.add_child(button)
 		_zoom_buttons.append(button)
 	return card
+
+
+func _screen_orientation_card() -> Control:
+	var card := PanelContainer.new()
+	card.name = "ScreenOrientation"
+	card.add_theme_stylebox_override("panel", UiKit.panel_style(UiKit.SURFACE, UiKit.EDGE, 12))
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", PanelFrame.CARD_TEXT_GAP)
+	card.add_child(column)
+	column.add_child(UiKit.label("화면 방향", 22, UiKit.TEXT, true))
+	_screen_orientation_hint = PanelFrame.wrap_label("", 15, UiKit.MUTED)
+	_screen_orientation_hint.name = "ScreenOrientationHint"
+	column.add_child(_screen_orientation_hint)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	column.add_child(row)
+	var group := ButtonGroup.new()
+	var labels := {"auto": "자동", "landscape": "가로", "portrait": "세로"}
+	for choice: String in Prefs.SCREEN_ORIENTATIONS:
+		var button := UiKit.button(str(labels[choice]), 21)
+		button.name = "Orientation_" + choice
+		button.custom_minimum_size = Vector2(0, 76)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.toggle_mode = true
+		button.button_group = group
+		button.button_pressed = Prefs.screen_orientation == choice
+		button.set_meta("screen_orientation", choice)
+		button.set_meta("gamepad_key", "screen_orientation:" + choice)
+		UiKit.style_button(button, false, button.button_pressed)
+		button.pressed.connect(_choose_screen_orientation.bind(choice))
+		row.add_child(button)
+		_screen_orientation_buttons.append(button)
+	return card
+
+
+func _choose_screen_orientation(choice: String) -> void:
+	Prefs.set_screen_orientation(choice, true)
+	_rebuild()
+
+
+func _refresh_screen_orientation() -> void:
+	if not is_instance_valid(_screen_orientation_hint) or _screen_orientation_hint.is_queued_for_deletion():
+		return
+	var state := Prefs.screen_orientation_state()
+	_screen_orientation_hint.text = str(state.get("detail", ""))
+	for button: Button in _screen_orientation_buttons:
+		if is_instance_valid(button) and not button.is_queued_for_deletion():
+			button.disabled = bool(state.get("pending", false))
 
 
 func zoom_css_scale() -> float:
@@ -219,9 +278,17 @@ func zoom_css_scale() -> float:
 
 func _fit_zoom_targets() -> void:
 	var touch := 44.0 * zoom_css_scale()
-	for button in _zoom_buttons:
+	var minimum_width := touch
+	for button: Button in _zoom_buttons + _screen_orientation_buttons:
 		if is_instance_valid(button) and not button.is_queued_for_deletion():
 			button.custom_minimum_size = Vector2(touch, maxf(76.0, touch))
+			if button in _zoom_buttons:
+				minimum_width = maxf(minimum_width, button.get_minimum_size().x)
+	if is_instance_valid(_zoom_grid) and not _zoom_grid.is_queued_for_deletion():
+		var gap := float(_zoom_grid.get_theme_constant("h_separation"))
+		var fitting := maxi(1, floori((_zoom_grid.size.x + gap) / (minimum_width + gap)))
+		# Five fit across a wide card; narrow phones use a balanced three/two split.
+		_zoom_grid.columns = 5 if fitting >= 5 else mini(3, fitting)
 
 
 func _choose_world_zoom(amount: float) -> void:

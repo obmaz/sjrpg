@@ -8,6 +8,7 @@
   const installedLaunch = navigator.standalone === true || standalone.matches ||
     (fullscreen.matches && !element());
   let changing = false;
+  let fullscreenTransition = Promise.resolve();
   let failure = '';
   const request = () => document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
   const exit = () => document.exitFullscreen || document.webkitExitFullscreen;
@@ -34,7 +35,7 @@
     changing = true;
     try {
       const result = element() ? exit().call(document) : request().call(document.documentElement);
-      Promise.resolve(result).catch(() => {
+      fullscreenTransition = Promise.resolve(result).catch(() => {
         failure = '전체화면을 전환하지 못했습니다. 버튼을 다시 직접 눌러 주세요.';
       }).finally(() => { changing = false; });
     } catch (_) {
@@ -43,6 +44,90 @@
     }
     return state();
   }
+
+  // Orientation requests share the document fullscreen target with the existing
+  // button, preserving both the DOM entry overlay and Godot's input coordinates.
+  let orientationChoice = 'auto';
+  let orientationPending = false;
+  let orientationDetail = '';
+  let orientationLocked = false;
+  let orientationOperation = 0;
+  const orientationAPI = () => window.screen && window.screen.orientation;
+  const orientationSupported = () => Boolean(orientationAPI() &&
+    typeof orientationAPI().lock === 'function' && typeof orientationAPI().unlock === 'function');
+  function orientationState() {
+    return {
+      choice: orientationChoice, supported: orientationSupported(),
+      pending: orientationPending, locked: orientationLocked,
+      detail: orientationDetail || (orientationSupported() ?
+        '자동은 기기 방향에 맞춥니다. 방향 고정에는 전체화면 허용이 필요할 수 있습니다.' :
+        '이 브라우저에서는 방향 고정을 지원하지 않습니다. 기기를 직접 돌려 주세요.')
+    };
+  }
+  function setOrientation(choice, gesture) {
+    if (!['auto', 'landscape', 'portrait'].includes(choice)) choice = 'auto';
+    const operation = ++orientationOperation;
+    orientationChoice = choice;
+    orientationDetail = '';
+    orientationPending = false;
+    if (!orientationSupported()) return orientationState();
+    if (choice === 'auto') {
+      try {
+        orientationAPI().unlock();
+        orientationLocked = false;
+        orientationDetail = '자동 회전으로 전환했습니다. 기기를 원하는 방향으로 돌려 주세요.';
+      } catch (_) { orientationDetail = '자동 회전을 적용하지 못했습니다. 기기의 회전 설정을 확인해 주세요.'; }
+      return orientationState();
+    }
+    // Startup restores the saved choice without asking for fullscreen permission.
+    // A direct settings click retries it through the trusted gesture below.
+    if (!gesture && !element() && !installedLaunch) {
+      orientationDetail = '저장한 방향을 고정하려면 해당 버튼을 다시 눌러 주세요.';
+      return orientationState();
+    }
+    orientationPending = true;
+    orientationDetail = '화면 방향을 전환하고 있습니다.';
+    try {
+      // Invoke requestFullscreen synchronously inside Button.pressed. Waiting
+      // until a rejected lock() loses the activation required by mobile browsers.
+      const appFullscreen = installedLaunch && fullscreen.matches && !element();
+      const entering = changing ? fullscreenTransition :
+        gesture && !element() && !appFullscreen && enabled() ? request().call(document.documentElement) : undefined;
+      Promise.resolve(entering).then(() => {
+        if (operation !== orientationOperation) return;
+        return orientationAPI().lock(choice);
+      }).then(() => {
+        if (operation !== orientationOperation) {
+          if (orientationChoice === 'auto') orientationAPI().unlock();
+          return;
+        }
+        orientationLocked = true;
+        orientationDetail = choice === 'landscape' ? '가로 방향으로 고정했습니다.' : '세로 방향으로 고정했습니다.';
+      }).catch(() => {
+        if (operation !== orientationOperation) return;
+        orientationLocked = false;
+        orientationDetail = '방향을 고정하지 못했습니다. 전체화면을 허용하고 다시 선택해 주세요.';
+      }).finally(() => {
+        if (operation === orientationOperation) orientationPending = false;
+      });
+    } catch (_) {
+      orientationPending = false;
+      orientationLocked = false;
+      orientationDetail = '방향을 고정하지 못했습니다. 기기의 회전 설정을 확인해 주세요.';
+    }
+    return orientationState();
+  }
+  window.SjrpgOrientation = {
+    state: orientationState,
+    choose: choice => setOrientation(choice, true),
+    restore: choice => setOrientation(choice, false)
+  };
+  document.addEventListener('fullscreenchange', () => {
+    if (!element() && !installedLaunch && orientationLocked) {
+      orientationLocked = false;
+      orientationDetail = '전체화면이 종료되어 방향 고정이 해제됐습니다. 다시 선택해 주세요.';
+    }
+  });
 
   window.SjrpgFullscreen = { state, toggle };
   // Manifest fullscreen needs no API call. A platform falling back to standalone
