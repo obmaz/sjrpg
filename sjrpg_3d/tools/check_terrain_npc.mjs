@@ -8,7 +8,9 @@ const {chromium}=createRequire(import.meta.url)('playwright');
 const base=new URL(process.argv[2]||'http://127.0.0.1:8786/');
 const out=path.resolve(process.argv[3]||'build/terrain-npc-review');
 const baseline=process.env.SJRPG_TERRAIN_EDITION==='before';
-const npcs=process.env.SJRPG_REVIEW_NPCS==='true';
+const scope=process.env.SJRPG_REVIEW_SCOPE||'terrain';
+assert(['terrain','architecture','all'].includes(scope),'explicit focused review scope');
+const npcs=scope!=='architecture'&&process.env.SJRPG_REVIEW_NPCS==='true';
 const worldQuality=process.env.SJRPG_REVIEW_WORLD_QUALITY||'low';
 assert(['low','high'].includes(worldQuality),'explicit supported actual world quality');
 const expectedImports=(process.env.SJRPG_REVIEW_NPC_IDENTITIES||'').split(',').filter(Boolean);
@@ -67,7 +69,10 @@ function verifyTerrain(s,role){
 }
 try{
  await boot({at:'npc_courtyard'});
- const initial=(await read()).review.physics;
+ const initialState=await read(),initial=initialState.review.physics,initialStatic=initialState.review.static_physics_sha256;
+ const construction=await timed(page.evaluate(()=>window.__sjrpgTerrainNpcStaticPhysics),'read original native construction colliders');
+ await writeFile(path.join(out,'static-physics.json'),JSON.stringify(construction,null,2));
+ if(scope!=='architecture'){
  // Every native landmark is already built in this actual safe town scene.
  // Move only the render camera; keep the real player safe and clocks live.
  for(const role of[0,1,2,3]){
@@ -81,6 +86,42 @@ try{
     await capture('terrain-'+role+'-'+label+'-face-'+face);
    }
   }
+ }
+ }
+ if(scope==='architecture'||scope==='all'){
+  for(const[label,width,height]of[['portrait',390,844],['landscape',844,390]]){
+   await page.setViewportSize({width,height});await action('clear',0,0);await settle();
+   const s=await read();assert.equal(s.review.hud_hidden,false,'normal actual game keeps its HUD');assert.equal(s.ui.paused,false,'normal actual game is live');
+   await capture('village-normal-'+label);
+  }
+  // House facades/roof both opposite corners, gate exterior/interior,
+  // corner crown and a fixed original-wall section with visible pier/recess.
+  const views=[
+   ...[0,1,2,3].flatMap(role=>[0,2].map(face=>({mode:'house',role,face,label:'house-'+role+'-face-'+face}))),
+   ...[0,2].map(face=>({mode:'gate',role:0,face,label:'gate-0-face-'+face})),
+   ...[0,2].map(face=>({mode:'corner',role:0,face,label:'wall-corner-0-face-'+face})),
+   ...[0,2].map(face=>({mode:'wall_detail',role:0,face,label:'wall-detail-face-'+face}))
+  ];
+  await page.setViewportSize({width:768,height:768});await settle();
+  const sides=[];
+  for(const view of views){
+   const s=await action(view.mode,view.role,view.face),a=s.review.architecture;
+   assert(a&&a.kind===view.mode,'actual architecture report '+view.label);
+   assert.equal(s.ui.paused,false,'live original safe town clock');
+   assert.equal(s.review.hud_hidden,true,'explicit inspection removes only HUD coverage');
+   assert.deepEqual(s.review.physics,initial,'actual physical surfaces unchanged');
+   assert.equal(s.review.static_physics_sha256,initialStatic,'actual construction colliders unchanged during photo');
+   assert.equal(s.review.projection,'orthographic');assert(Math.abs(s.review.elevation-35.264389682754654)<1e-4,'actual isometric camera elevation');
+   assert(Math.abs(s.review.azimuth-(45+view.face*90))<1e-4,'actual requested opposite camera corner');
+   assert(a.same_fortification_stone,'actual shared wall/gate/house stone material');
+   assert(a.stone.triplanar&&a.stone.world_triplanar,'world-metre limestone material');
+   assert(a.stone.uv_scale.every(v=>Math.abs(v-1/2.56)<1e-6),'same 2.56m source texel scale');
+   if(view.mode==='house'){assert(a.same_house_stone&&a.closed_door,'actual house material/closed-door contract');assert(a.triangles>0&&a.surfaces<=5,'bounded actual house geometry');}
+   if(view.mode==='gate')sides.push(a.view_side);
+   await capture(view.label);checks.push('actual architecture '+view.label);
+  }
+  assert.deepEqual(sides.sort(),['inside','outside'],'photograph both actual gate sides');
+  await action('clear',0,0);await settle();assert.equal((await read()).review.hud_hidden,false,'inspection restores actual original HUD');
  }
  if(npcs){
   await boot({at:'npc_courtyard'},'high');await page.setViewportSize({width:1024,height:1024});await settle();
@@ -123,6 +164,6 @@ try{
  console.log('TERRAIN_NPC_REVIEW_PASS '+JSON.stringify({baseline,npcs,captures:captures.length,checks:checks.length,errors:errors.length}));
 }catch(error){failure=String(error);console.error('TERRAIN_NPC_REVIEW_FAIL '+failure);try{await capture('failure');}catch{}process.exitCode=1;}
 finally{
- clearTimeout(watchdog);await writeFile(path.join(out,'proof.json'),JSON.stringify({url:base.href,baseline,npcs,worldQuality,expectedImports,checks,captures,errors,failure,passed:!failure&&!errors.length},null,2));
+ clearTimeout(watchdog);await writeFile(path.join(out,'proof.json'),JSON.stringify({url:base.href,baseline,npcs,scope,worldQuality,expectedImports,checks,captures,errors,failure,passed:!failure&&!errors.length},null,2));
  await browser.close();
 }
