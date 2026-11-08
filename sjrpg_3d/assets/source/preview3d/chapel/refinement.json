@@ -196,7 +196,7 @@
     "run": "https://github.com/obmaz/sjrpg/actions/runs/42465788468",
     "paired_views": 18,
     "physical_surfaces_unchanged": true,
-    "source": "docs/previews/native-village/architecture-review.json",
+    "source": "https://raw.githubusercontent.com/obmaz/sjrpg/562e6890d1bbb8b9463394d6056619546d34a10a/docs/previews/native-village/architecture-review.json",
     "claim": "Actual paired runtime renders and source/collision gates; no user approval or reference-equivalence claim."
   }
 }
