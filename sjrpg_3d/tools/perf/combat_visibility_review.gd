@@ -7,7 +7,7 @@ var _busy := false
 var _scenario := ""
 var _proof := {}
 var _serial := 0
-const SCENARIOS := ["cave_torches", "combat_health", "boss_warning", "meteor_warning", "firewall", "cave_swarm"]
+const SCENARIOS := ["cave_torches", "combat_health", "boss_warning", "meteor_warning", "firewall", "cave_swarm", "sprite_directions", "sprite_corpses"]
 
 
 func setup(screen: Node) -> Node:
@@ -175,6 +175,25 @@ func _prepare(requested: String) -> void:
 					node.set_process(false)
 					node.age = 0.75
 			_proof["zone"] = {"kind": "firewall", "age": 0.75, "radius": 115.0, "wall": -PI / 6.0}
+		"sprite_directions", "sprite_corpses":
+			var records := []
+			for index in 4:
+				var offset := Vector2(-90.0 if index % 2 == 0 else 90.0, -55.0 if index < 2 else 105.0)
+				var target := _enemy(game, "goblin", center + offset)
+				target.set_meta("visual_variant", "cave_crawler")
+				target.display_name = "동굴 잠복자"
+				target.facing = PI * 0.25 + index * PI * 0.5
+				target._state = "chase"
+				target._walk_cycle = 0.25
+				target.xp_reward = 0
+				records.append({"direction": index, "facing": target.facing, "position": [target.position.x, target.position.y]})
+				if requested == "sprite_corpses":
+					target.take_damage(target.max_hp * 3.0, game.player)
+			for node in game.world.get_children():
+				if node is Effect:
+					node.queue_free()
+			_proof["configured_sprite_directions"] = records
+			_proof["actual_source_deaths"] = 4 if requested == "sprite_corpses" else 0
 		"cave_swarm":
 			var site := "cave_swarm"
 			if not game.encounters.stones.has(site):

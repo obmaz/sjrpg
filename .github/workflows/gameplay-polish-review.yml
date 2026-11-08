@@ -126,7 +126,7 @@ jobs:
           before=root/"combat-visibility-baseline";after=root/"combat-visibility-candidate"
           a=json.loads((before/"proof.json").read_text());b=json.loads((after/"proof.json").read_text())
           assert a["passed"] and b["passed"]
-          assert len(a["cases"])==12 and len(b["cases"])==12
+          assert len(a["cases"])==16 and len(b["cases"])==16
           target=root/"comparisons";target.mkdir()
           for case in b["cases"]:
               name=case["name"];reference=next(x for x in a["cases"] if x["name"]==name)
@@ -141,12 +141,12 @@ jobs:
               pair.paste(left,(0,28));pair.paste(right,(size[0],28))
               draw=ImageDraw.Draw(pair);draw.text((8,7),name+" | BEFORE",fill="#e9dfc9");draw.text((size[0]+8,7),"AFTER",fill="#e9dfc9")
               output=target/(name+".jpg");pair.save(output,quality=88)
-              if name in ["cave_torches-portrait","cave_swarm-portrait","boss_warning-landscape","meteor_warning-portrait"]:
+              if name in ["cave_torches-portrait","cave_swarm-portrait","sprite_directions-landscape","sprite_corpses-landscape"]:
                   data=base64.b64encode(output.read_bytes()).decode()
                   print("GAMEPLAY_IMAGE_BEGIN "+name)
                   for i in range(0,len(data),16000):print("GAMEPLAY_IMAGE_CHUNK "+name+" "+data[i:i+16000])
                   print("GAMEPLAY_IMAGE_END "+name)
-          print("GAMEPLAY_VISUAL_COMPARE_PASS 12 paired explicit fixtures; not performance evidence")
+          print("GAMEPLAY_VISUAL_COMPARE_PASS 16 paired explicit fixtures; not performance evidence")
       - uses: actions/upload-artifact@v6
         with:
           name: gameplay-visibility-comparisons
