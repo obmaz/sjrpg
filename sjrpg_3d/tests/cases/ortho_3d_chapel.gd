@@ -61,6 +61,8 @@ func run() -> void:
 	var spire_min := Vector2(INF, INF)
 	var spire_max := Vector2(-INF, -INF)
 	var spire_vertices := 0
+	var spire_y := Vector2(INF, -INF)
+	var spire_samples: Array[Dictionary] = []
 	var stone: MeshInstance3D
 	var oak: MeshInstance3D
 	for node: MeshInstance3D in report["meshes"]:
@@ -80,6 +82,10 @@ func run() -> void:
 					spire_min = spire_min.min(uv[index])
 					spire_max = spire_max.max(uv[index])
 					spire_vertices += 1
+					spire_y.x = minf(spire_y.x, vertices[index].y)
+					spire_y.y = maxf(spire_y.y, vertices[index].y)
+					if spire_samples.size() < 12:
+						spire_samples.append({"point": [vertices[index].x, vertices[index].y, vertices[index].z], "normal": [normals[index].x, normals[index].y, normals[index].z], "uv": [uv[index].x, uv[index].y]})
 			var count := indices.size() if not indices.is_empty() else vertices.size()
 			for index in range(0, count, 3):
 				var a: int = indices[index] if not indices.is_empty() else index
@@ -96,6 +102,22 @@ func run() -> void:
 	check("actual chapel lips align with the shared slate UV grid and retain area", slate_lips == int(report["roof_rows"]) * 4 and slate_lips > 0 and slate_course_grid)
 	var spire_perimeter := 4.0 * 2.0 * 1.04 * sin(PI / 4.0)
 	var spire_slope := Vector2(2.35, (1.04 - 0.035) * cos(PI / 4.0)).length()
+	var primitive := CylinderMesh.new()
+	primitive.top_radius = 0.035
+	primitive.bottom_radius = 1.04
+	primitive.height = 2.35
+	primitive.radial_segments = 4
+	var source_arrays := primitive.surface_get_arrays(0)
+	var source_uv: PackedVector2Array = source_arrays[Mesh.ARRAY_TEX_UV]
+	var source_normal: PackedVector3Array = source_arrays[Mesh.ARRAY_NORMAL]
+	var source_min := Vector2(INF, INF)
+	var source_max := Vector2(-INF, -INF)
+	for index in source_uv.size():
+		if absf(source_normal[index].y) < 0.99:
+			source_min = source_min.min(source_uv[index])
+			source_max = source_max.max(source_uv[index])
+	print("ART_AUDIT CHAPEL_SPIRE_UV_DIAGNOSTIC ", JSON.stringify({"vertices": spire_vertices, "actual_uv_min": [spire_min.x, spire_min.y], "actual_uv_max": [spire_max.x, spire_max.y], "actual_uv_span": [spire_max.x - spire_min.x, spire_max.y - spire_min.y], "expected_uv_span": [spire_perimeter / Ortho3DChapel.SLATE_TILE, spire_slope / Ortho3DChapel.SLATE_TILE], "selected_native_y": [spire_y.x, spire_y.y], "tower_height": report["tower_height"], "source_primitive_uv_min": [source_min.x, source_min.y], "source_primitive_uv_max": [source_max.x, source_max.y], "samples": spire_samples}))
+
 	check("actual spire slate UV covers its physical perimeter and slope rather than one stretched image", spire_vertices > 8 and absf((spire_max.x - spire_min.x) - spire_perimeter / Ortho3DChapel.SLATE_TILE) < 0.0001 and absf((spire_max.y - spire_min.y) - spire_slope / Ortho3DChapel.SLATE_TILE) < 0.0001)
 	check("chapel stone material is available for aperture checks", is_instance_valid(stone))
 	if is_instance_valid(stone):
