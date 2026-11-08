@@ -1,545 +1,554 @@
 {
-	"asset": "native_house_family",
-	"authoritative_reference": {
-		"path": "assets/source/style/approved-game-reference.jpg",
-		"sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
-	},
-	"camera": {
-		"azimuth_deg": 45.0,
-		"elevation_deg": 35.2643896827547,
-		"ground_axes_deg": [
-			-30.0,
-			30.0
-		],
-		"projection": "orthographic",
-		"vertical_deg": 90.0
-	},
-	"collision": {
-		"actual_roof_height_note": "Native mesh maxY is recorded; existing generic body collision is not claimed to be a triangle-exact roof/chimney collider.",
-		"door_policy": "closed leaves, no promised enterable interior",
-		"ground_envelope": "No actor-height components beyond supplied width/depth. Existing whole-house solid is preserved.",
-		"overhead_roof_allowance_m": 0.24,
-		"recess_policy": "smith worktop and stable rails block their alcoves",
-		"source": "existing Village house footprint consumed by SpatialWorld3D"
-	},
-	"construction_baseline": {
-		"files": [
-			{
-				"path": "scripts/ortho_3d_preview.gd",
-				"sha256": "630bbabfa8b640b7d801c2dad7abb5234703c8b8b3497714e05dd0ba6d4ed75d"
-			},
-			{
-				"path": "scripts/ortho_3d_chapel.gd",
-				"sha256": "cf8397b45e153ea27f0d16b7d856b0429cade4a302948139e74db32223d0f22c"
-			},
-			{
-				"path": "scripts/spatial_world_3d.gd",
-				"sha256": "1995dccdc5330b81da73d5daf53098321c60c96e8a8d8a450dbeecfa73d80985"
-			}
-		],
-		"git_commit": "a6d6f86fafbf1ba3585df16d8628f4ca158bf910"
-	},
-	"family_references_viewed": [
-		{
-			"path": "assets/source/remake/house-nw.png",
-			"sha256": "d75434ed6c1a692e177ffd528c84818a7a01dffe1458c7bbe2c84c01922a7707"
-		},
-		{
-			"path": "assets/source/remake/house-ne.png",
-			"sha256": "879907b9e0c66c31905ec002a48d09e0099f152716017d167578b977896d9618"
-		},
-		{
-			"path": "assets/source/remake/house-sw.png",
-			"sha256": "8f29d82f55782ce2efae9441f90e7aaf2793db7967c4bdf523869aec8044a7b1"
-		},
-		{
-			"path": "assets/source/remake/house-se.png",
-			"sha256": "7f963dcf60cf7bd4b10c7b6d50024877865bb4e9bb83130d7eb0ca262ef583d0"
-		}
-	],
-	"generation": {
-		"image_scope": "Shared limestone and blue slate basecolors through their recorded generators; existing timber pixels unchanged.",
-		"new_images_generated": true,
-		"operation": "Native bonded corner masonry, staggered overlapping slate and beam-aligned metre UVs. Shared family limestone is recorded independently in materials.json.",
-		"original_geometry": "Authored for this project; mesh assembly utilities follow existing Ortho3DChapel. No external model, download or third-party licence introduced.",
-		"tool": "Godot4.7.2 SurfaceTool/ArrayMesh native parametric geometry"
-	},
-	"generator": {
-		"api": "NativeHouse3D.build(presenter, root, key, width, depth, height) -> Dictionary",
-		"path": "scripts/native_house_3d.gd",
-		"sha256": "d0b47c728ea3af20ef657e4e4deacc2dbadbe96d0582e140046246ff3d23979a"
-	},
-	"geometry": {
-		"ne": {
-			"bounds_max": [
-				4.09835386276245,
-				4.9850001335144,
-				2.58670949935913
-			],
-			"bounds_min": [
-				-4.09835386276245,
-				0.0,
-				-2.58670949935913
-			],
-			"corner_quoins": 40,
-			"depth": 4.71498107910156,
-			"door_approach": {
-				"depth": 0.850000023841858,
-				"width": 1.3400000333786,
-				"x": 0.722942352294922,
-				"z": 2.35749053955078
-			},
-			"door_height": 2.12,
-			"door_width": 1.1,
-			"door_x": 1.39294238090515,
-			"height_max": 4.9850001335144,
-			"openings": 5,
-			"roof_overhang_m": 0.22921895980835,
-			"slate_tile_m": 2.6,
-			"slate_tiles": 350,
-			"surfaces": 5,
-			"timber_tile_m": 1.53846153846154,
-			"triangles": 9680,
-			"width": 7.7385687828064
-		},
-		"nw": {
-			"bounds_max": [
-				2.54623055458069,
-				6.26599979400635,
-				1.73324358463287
-			],
-			"bounds_min": [
-				-2.54623055458069,
-				0.0,
-				-1.73324358463287
-			],
-			"corner_quoins": 32,
-			"depth": 3.0,
-			"door_approach": {
-				"depth": 0.850000023841858,
-				"width": 1.62000000476837,
-				"x": -0.810000002384186,
-				"z": 1.5
-			},
-			"door_height": 2.25,
-			"door_width": 1.38,
-			"door_x": 0.0,
-			"height_max": 6.26599979400635,
-			"openings": 8,
-			"roof_overhang_m": 0.236232042312622,
-			"slate_tile_m": 2.6,
-			"slate_tiles": 170,
-			"surfaces": 5,
-			"timber_tile_m": 1.53846153846154,
-			"triangles": 11420,
-			"width": 4.61999702453613
-		},
-		"se": {
-			"bounds_max": [
-				2.88418197631836,
-				5.77500009536743,
-				1.75399875640869
-			],
-			"bounds_min": [
-				-2.88418197631836,
-				0.0,
-				-1.75399875640869
-			],
-			"corner_quoins": 44,
-			"depth": 3.04182553291321,
-			"door_approach": {
-				"depth": 0.850000023841858,
-				"width": 1.3400000333786,
-				"x": -1.72948825359344,
-				"z": 1.5209127664566
-			},
-			"door_height": 2.12,
-			"door_width": 1.1,
-			"door_x": -1.05948829650879,
-			"height_max": 5.77500009536743,
-			"openings": 7,
-			"roof_overhang_m": 0.235461235046387,
-			"slate_tile_m": 2.6,
-			"slate_tiles": 210,
-			"surfaces": 5,
-			"timber_tile_m": 1.53846153846154,
-			"triangles": 10480,
-			"width": 5.29744148254395
-		},
-		"sw": {
-			"bounds_max": [
-				2.67025065422058,
-				5.13500022888184,
-				1.91716122627258
-			],
-			"bounds_min": [
-				-2.67025065422058,
-				0.0,
-				-1.91716122627258
-			],
-			"corner_quoins": 40,
-			"depth": 3.3690447807312,
-			"door_approach": {
-				"depth": 0.850000023841858,
-				"width": 1.62000000476837,
-				"x": -0.810000002384186,
-				"z": 1.6845223903656
-			},
-			"door_height": 2.25,
-			"door_width": 1.38,
-			"door_x": 0.0,
-			"height_max": 5.13500022888184,
-			"openings": 4,
-			"roof_overhang_m": 0.234112501144409,
-			"slate_tile_m": 2.6,
-			"slate_tiles": 190,
-			"surfaces": 5,
-			"timber_tile_m": 1.53846153846154,
-			"triangles": 7700,
-			"width": 4.87227630615234
-		}
-	},
-	"materials": {
-		"actual_material_record": {
-			"authoritative_reference": {
-				"path": "assets/source/style/approved-game-reference.jpg",
-				"sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
-			},
-			"generation": "assets/source/preview3d/material-generation.json",
-			"limitations": "Generated albedo with fine authored relief shading, not a measured PBR scan. No ground or directional scene shadow is baked into the tiles.",
-			"materials": {
-				"bark": {
-					"crop": [
-						627.0,
-						627.0,
-						1254.0,
-						1254.0
-					],
-					"operation": "Exact quadrant crop and WebP encoding; no upscaling, painting or source relighting.",
-					"path": "assets/art/preview3d/bark.webp",
-					"sha256": "ca8532c220bb6dcb78a2b14a8dc4a78439885e0ee4f061ff92dee58007af7736",
-					"size": [
-						627.0,
-						627.0
-					],
-					"source": "assets/source/preview3d/village-materials.png",
-					"source_sha256": "0ab9f5bc5e5357abf9f5a81a5ddd38f4ea8ef1bc3cef87ebc72e261a112f3591"
-				},
-				"limestone": {
-					"courses": 8.0,
-					"generation": "assets/source/preview3d/town-limestone/generation.json",
-					"operation": "Full-source downsample to768px and WebP quality94; no painting, source relighting or seam blending.",
-					"path": "assets/art/preview3d/limestone.webp",
-					"physical_tile_m": [
-						2.56,
-						2.56
-					],
-					"runtime_bytes": 194962.0,
-					"sha256": "03983784223f8bdf5fc89549625c71555e80ba7240c43602ce3624d9df729a21",
-					"size": [
-						768.0,
-						768.0
-					],
-					"source": "assets/source/preview3d/town-limestone/generated.png",
-					"source_pixel_measurements": {
-						"edge_jump_rgb_mean_0_255": {
-							"left_right": 7.6916533758639,
-							"top_bottom": 17.7663476874003
-						},
-						"expected_courses": 8.0,
-						"observed_horizontal_joint_rows_px": [
-							155.0,
-							310.0,
-							467.0,
-							622.0,
-							780.0,
-							936.0,
-							1092.0
-						],
-						"review_note": "Quantitative observations only; actual repeated surfaces/corners must be visually reviewed."
-					},
-					"source_sha256": "a652af3ce841106044f3bccca41272b0ecee053d2cb1ca60fd9236fe7cd8be03",
-					"source_size": [
-						1254.0,
-						1254.0
-					]
-				},
-				"slate": {
-					"courses": 8.0,
-					"generation": "assets/source/preview3d/town-slate/generation.json",
-					"operation": "Full-source downsample to768px and WebP quality94; no painting, source relighting or seam blending.",
-					"path": "assets/art/preview3d/slate.webp",
-					"physical_tile_m": [
-						2.6,
-						2.6
-					],
-					"runtime_bytes": 102152.0,
-					"sha256": "daed024e7f2fc585cf1c300e43135bd447bfa3565c66f833424e3cf0e6e79350",
-					"size": [
-						768.0,
-						768.0
-					],
-					"source": "assets/source/preview3d/town-slate/generated.png",
-					"source_pixel_measurements": {
-						"edge_jump_rgb_mean_0_255": {
-							"left_right": 5.67410951621478,
-							"top_bottom": 6.50930356193514
-						},
-						"expected_courses": 8.0,
-						"observed_horizontal_joint_rows_px": [
-							161.0,
-							321.0,
-							479.0,
-							638.0,
-							798.0,
-							957.0,
-							1112.0
-						],
-						"review_note": "Quantitative observations only; actual repeated surfaces/corners must be visually reviewed."
-					},
-					"source_sha256": "0b8653597c6a26f476e8a98e4704b1703bcba1cabb158febbb9b658a92b73605",
-					"source_size": [
-						1254.0,
-						1254.0
-					]
-				},
-				"timber": {
-					"crop": [
-						0.0,
-						627.0,
-						627.0,
-						1254.0
-					],
-					"operation": "Exact quadrant crop and WebP encoding; no upscaling, painting or source relighting.",
-					"path": "assets/art/preview3d/timber.webp",
-					"sha256": "4cac472a9fb54db9e89bdaf1577db846bd49f936e759dca7b10101175f7dcb1c",
-					"size": [
-						627.0,
-						627.0
-					],
-					"source": "assets/source/preview3d/village-materials.png",
-					"source_sha256": "0ab9f5bc5e5357abf9f5a81a5ddd38f4ea8ef1bc3cef87ebc72e261a112f3591"
-				}
-			},
-			"physical_scale": {
-				"limestone_courses": 8.0,
-				"limestone_tile_m": 2.56,
-				"slate_tile_m": 2.6
-			},
-			"purpose": "Shared front-on native3D village albedos; 2D sprite art is unchanged."
-		},
-		"physical_tile_m": {
-			"slate": 2.6,
-			"stone": 2.56
-		},
-		"provenance": "assets/art/preview3d/materials.json",
-		"provenance_sha256": "6682bf64e151a8b306f55d1c647690d79477ffc557ea99c73d4f7e79fe45a87c",
-		"residential_glass": {
-			"base_color": "existing #182b36",
-			"emission_enabled": false,
-			"note": "Shared residential material, chapel stained glass remains separate",
-			"roughness": 0.46
-		},
-		"roughness_or_normal_maps_added": false,
-		"shared_resource_keys": [
-			"stone",
-			"slate",
-			"door",
-			"iron",
-			"glass"
-		],
-		"stone_courses": 8.0,
-		"surface_budget_exception": "5 shared resources preserve existing stone/slate/wood/iron/glass physical responses; no per-part draw/material proliferation. Initial general-house guide target is2–4.",
-		"textures": [
-			{
-				"path": "assets/art/preview3d/limestone.webp",
-				"sha256": "03983784223f8bdf5fc89549625c71555e80ba7240c43602ce3624d9df729a21"
-			},
-			{
-				"path": "assets/art/preview3d/slate.webp",
-				"sha256": "daed024e7f2fc585cf1c300e43135bd447bfa3565c66f833424e3cf0e6e79350"
-			},
-			{
-				"path": "assets/art/preview3d/timber.webp",
-				"sha256": "4cac472a9fb54db9e89bdaf1577db846bd49f936e759dca7b10101175f7dcb1c"
-			}
-		],
-		"timber_mapping": {
-			"extra_materials": 0,
-			"resource_key": "door",
-			"texture": "assets/art/preview3d/timber.webp",
-			"tile_m": 1.53846153846154,
-			"uv_source": "beam-local longitudinal, original vertical plank UVs"
-		}
-	},
-	"prior_geometry": {
-		"generator_sha256": "f1c5307281836fc03dffd2326c09f3e53dd74e46fd787e102551be0fa883210b",
-		"geometry": {
-			"ne": {
-				"bounds_max": [
-					4.09835386276245,
-					4.9850001335144,
-					2.58670949935913
-				],
-				"bounds_min": [
-					-4.09835386276245,
-					0.0,
-					-2.58670949935913
-				],
-				"corner_quoins": 40.0,
-				"depth": 4.71498107910156,
-				"door_approach": {
-					"depth": 0.850000023841858,
-					"width": 1.3400000333786,
-					"x": 0.722942352294922,
-					"z": 2.35749053955078
-				},
-				"door_height": 2.12,
-				"door_width": 1.1,
-				"door_x": 1.39294238090515,
-				"height_max": 4.9850001335144,
-				"openings": 5.0,
-				"roof_overhang_m": 0.22921895980835,
-				"slate_tile_m": 2.6,
-				"slate_tiles": 432.0,
-				"surfaces": 5.0,
-				"timber_tile_m": 1.53846153846154,
-				"triangles": 10008.0,
-				"width": 7.7385687828064
-			},
-			"nw": {
-				"bounds_max": [
-					2.54623055458069,
-					6.26599979400635,
-					1.73324358463287
-				],
-				"bounds_min": [
-					-2.54623055458069,
-					0.0,
-					-1.73324358463287
-				],
-				"corner_quoins": 32.0,
-				"depth": 3.0,
-				"door_approach": {
-					"depth": 0.850000023841858,
-					"width": 1.62000000476837,
-					"x": -0.810000002384186,
-					"z": 1.5
-				},
-				"door_height": 2.25,
-				"door_width": 1.38,
-				"door_x": 0.0,
-				"height_max": 6.26599979400635,
-				"openings": 8.0,
-				"roof_overhang_m": 0.236232042312622,
-				"slate_tile_m": 2.6,
-				"slate_tiles": 228.0,
-				"surfaces": 5.0,
-				"timber_tile_m": 1.53846153846154,
-				"triangles": 11652.0,
-				"width": 4.61999702453613
-			},
-			"se": {
-				"bounds_max": [
-					2.88418197631836,
-					5.77500009536743,
-					1.75399875640869
-				],
-				"bounds_min": [
-					-2.88418197631836,
-					0.0,
-					-1.75399875640869
-				],
-				"corner_quoins": 44.0,
-				"depth": 3.04182553291321,
-				"door_approach": {
-					"depth": 0.850000023841858,
-					"width": 1.3400000333786,
-					"x": -1.72948825359344,
-					"z": 1.5209127664566
-				},
-				"door_height": 2.12,
-				"door_width": 1.1,
-				"door_x": -1.05948829650879,
-				"height_max": 5.77500009536743,
-				"openings": 7.0,
-				"roof_overhang_m": 0.235461235046387,
-				"slate_tile_m": 2.6,
-				"slate_tiles": 246.0,
-				"surfaces": 5.0,
-				"timber_tile_m": 1.53846153846154,
-				"triangles": 10624.0,
-				"width": 5.29744148254395
-			},
-			"sw": {
-				"bounds_max": [
-					2.67025065422058,
-					5.13500022888184,
-					1.91716122627258
-				],
-				"bounds_min": [
-					-2.67025065422058,
-					0.0,
-					-1.91716122627258
-				],
-				"corner_quoins": 40.0,
-				"depth": 3.3690447807312,
-				"door_approach": {
-					"depth": 0.850000023841858,
-					"width": 1.62000000476837,
-					"x": -0.810000002384186,
-					"z": 1.6845223903656
-				},
-				"door_height": 2.25,
-				"door_width": 1.38,
-				"door_x": 0.0,
-				"height_max": 5.13500022888184,
-				"openings": 4.0,
-				"roof_overhang_m": 0.234112501144409,
-				"slate_tile_m": 2.6,
-				"slate_tiles": 230.0,
-				"surfaces": 5.0,
-				"timber_tile_m": 1.53846153846154,
-				"triangles": 7860.0,
-				"width": 4.87227630615234
-			}
-		},
-		"validation": {
-			"actual_browser_views": "Pending fresh same-source paired portrait/landscape and reverse-angle captures.",
-			"case": "tests/cases/native_house_family.gd",
-			"case_sha256": "fcacd8aab37c56308c366e1399d7240ae5dde9f8f9b3463526d94071637a89a6",
-			"engine": "4.7.2-stable (official)",
-			"geometry_budget": "pass, 6000-12000 triangles and five shared surfaces per house",
-			"recording": "actual runtime four-house meshes and material/source SHA-256 measured by CI-only recorder",
-			"source_record": "actual bytes; full contract tests and paired browser review run only after this candidate proof is committed"
-		}
-	},
-	"roles": {
-		"ne": "smithy worktop/hood",
-		"nw": "inn timber upper story",
-		"se": "apothecary twin dormers",
-		"sw": "stable barred side bay"
-	},
-	"schema": 1.0,
-	"transform": {
-		"front": "+Z",
-		"ground": "XZ",
-		"origin": "existing native house footprint center, Y0",
-		"runtime_scale": [
-			1.0,
-			1.0,
-			1.0
-		],
-		"units": "metres",
-		"up": "+Y"
-	},
-	"validation": {
-		"actual_browser_views": "Pending fresh same-source paired portrait/landscape and reverse-angle captures.",
-		"case": "tests/cases/native_house_family.gd",
-		"case_sha256": "5bd26d9d7aba42a8bd7e8339f431a4cab342bc95b4afcd9a004de9273548c3ab",
-		"engine": "4.7.2-stable (official)",
-		"geometry_budget": "pass, 6000-12000 triangles and five shared surfaces per house",
-		"recording": "actual runtime four-house meshes and material/source SHA-256 measured by CI-only recorder",
-		"source_record": "actual bytes; full contract tests and paired browser review run only after this candidate proof is committed"
-	}
+  "asset": "native_house_family",
+  "authoritative_reference": {
+    "path": "assets/source/style/approved-game-reference.jpg",
+    "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+  },
+  "camera": {
+    "azimuth_deg": 45,
+    "elevation_deg": 35.2643896827547,
+    "ground_axes_deg": [
+      -30,
+      30
+    ],
+    "projection": "orthographic",
+    "vertical_deg": 90
+  },
+  "collision": {
+    "actual_roof_height_note": "Native mesh maxY is recorded; existing generic body collision is not claimed to be a triangle-exact roof/chimney collider.",
+    "door_policy": "closed leaves, no promised enterable interior",
+    "ground_envelope": "No actor-height components beyond supplied width/depth. Existing whole-house solid is preserved.",
+    "overhead_roof_allowance_m": 0.24,
+    "recess_policy": "smith worktop and stable rails block their alcoves",
+    "source": "existing Village house footprint consumed by SpatialWorld3D"
+  },
+  "construction_baseline": {
+    "files": [
+      {
+        "path": "scripts/ortho_3d_preview.gd",
+        "sha256": "630bbabfa8b640b7d801c2dad7abb5234703c8b8b3497714e05dd0ba6d4ed75d"
+      },
+      {
+        "path": "scripts/ortho_3d_chapel.gd",
+        "sha256": "cf8397b45e153ea27f0d16b7d856b0429cade4a302948139e74db32223d0f22c"
+      },
+      {
+        "path": "scripts/spatial_world_3d.gd",
+        "sha256": "1995dccdc5330b81da73d5daf53098321c60c96e8a8d8a450dbeecfa73d80985"
+      }
+    ],
+    "git_commit": "a6d6f86fafbf1ba3585df16d8628f4ca158bf910"
+  },
+  "family_references_viewed": [
+    {
+      "path": "assets/source/remake/house-nw.png",
+      "sha256": "d75434ed6c1a692e177ffd528c84818a7a01dffe1458c7bbe2c84c01922a7707"
+    },
+    {
+      "path": "assets/source/remake/house-ne.png",
+      "sha256": "879907b9e0c66c31905ec002a48d09e0099f152716017d167578b977896d9618"
+    },
+    {
+      "path": "assets/source/remake/house-sw.png",
+      "sha256": "8f29d82f55782ce2efae9441f90e7aaf2793db7967c4bdf523869aec8044a7b1"
+    },
+    {
+      "path": "assets/source/remake/house-se.png",
+      "sha256": "7f963dcf60cf7bd4b10c7b6d50024877865bb4e9bb83130d7eb0ca262ef583d0"
+    }
+  ],
+  "generation": {
+    "image_scope": "Shared limestone and blue slate basecolors through their recorded generators; existing timber pixels unchanged.",
+    "new_images_generated": true,
+    "operation": "Native bonded corner masonry, staggered overlapping slate and beam-aligned metre UVs. Shared family limestone is recorded independently in materials.json.",
+    "original_geometry": "Authored for this project; mesh assembly utilities follow existing Ortho3DChapel. No external model, download or third-party licence introduced.",
+    "tool": "Godot4.7.2 SurfaceTool/ArrayMesh native parametric geometry"
+  },
+  "generator": {
+    "api": "NativeHouse3D.build(presenter, root, key, width, depth, height) -> Dictionary",
+    "path": "scripts/native_house_3d.gd",
+    "sha256": "d0b47c728ea3af20ef657e4e4deacc2dbadbe96d0582e140046246ff3d23979a"
+  },
+  "geometry": {
+    "ne": {
+      "bounds_max": [
+        4.09835386276245,
+        4.9850001335144,
+        2.58670949935913
+      ],
+      "bounds_min": [
+        -4.09835386276245,
+        0,
+        -2.58670949935913
+      ],
+      "corner_quoins": 40,
+      "depth": 4.71498107910156,
+      "door_approach": {
+        "depth": 0.850000023841858,
+        "width": 1.3400000333786,
+        "x": 0.722942352294922,
+        "z": 2.35749053955078
+      },
+      "door_height": 2.12,
+      "door_width": 1.1,
+      "door_x": 1.39294238090515,
+      "height_max": 4.9850001335144,
+      "openings": 5,
+      "roof_overhang_m": 0.22921895980835,
+      "slate_tile_m": 2.6,
+      "slate_tiles": 350,
+      "surfaces": 5,
+      "timber_tile_m": 1.53846153846154,
+      "triangles": 9680,
+      "width": 7.7385687828064
+    },
+    "nw": {
+      "bounds_max": [
+        2.54623055458069,
+        6.26599979400635,
+        1.73324358463287
+      ],
+      "bounds_min": [
+        -2.54623055458069,
+        0,
+        -1.73324358463287
+      ],
+      "corner_quoins": 32,
+      "depth": 3,
+      "door_approach": {
+        "depth": 0.850000023841858,
+        "width": 1.62000000476837,
+        "x": -0.810000002384186,
+        "z": 1.5
+      },
+      "door_height": 2.25,
+      "door_width": 1.38,
+      "door_x": 0,
+      "height_max": 6.26599979400635,
+      "openings": 8,
+      "roof_overhang_m": 0.236232042312622,
+      "slate_tile_m": 2.6,
+      "slate_tiles": 170,
+      "surfaces": 5,
+      "timber_tile_m": 1.53846153846154,
+      "triangles": 11420,
+      "width": 4.61999702453613
+    },
+    "se": {
+      "bounds_max": [
+        2.88418197631836,
+        5.77500009536743,
+        1.75399875640869
+      ],
+      "bounds_min": [
+        -2.88418197631836,
+        0,
+        -1.75399875640869
+      ],
+      "corner_quoins": 44,
+      "depth": 3.04182553291321,
+      "door_approach": {
+        "depth": 0.850000023841858,
+        "width": 1.3400000333786,
+        "x": -1.72948825359344,
+        "z": 1.5209127664566
+      },
+      "door_height": 2.12,
+      "door_width": 1.1,
+      "door_x": -1.05948829650879,
+      "height_max": 5.77500009536743,
+      "openings": 7,
+      "roof_overhang_m": 0.235461235046387,
+      "slate_tile_m": 2.6,
+      "slate_tiles": 210,
+      "surfaces": 5,
+      "timber_tile_m": 1.53846153846154,
+      "triangles": 10480,
+      "width": 5.29744148254395
+    },
+    "sw": {
+      "bounds_max": [
+        2.67025065422058,
+        5.13500022888184,
+        1.91716122627258
+      ],
+      "bounds_min": [
+        -2.67025065422058,
+        0,
+        -1.91716122627258
+      ],
+      "corner_quoins": 40,
+      "depth": 3.3690447807312,
+      "door_approach": {
+        "depth": 0.850000023841858,
+        "width": 1.62000000476837,
+        "x": -0.810000002384186,
+        "z": 1.6845223903656
+      },
+      "door_height": 2.25,
+      "door_width": 1.38,
+      "door_x": 0,
+      "height_max": 5.13500022888184,
+      "openings": 4,
+      "roof_overhang_m": 0.234112501144409,
+      "slate_tile_m": 2.6,
+      "slate_tiles": 190,
+      "surfaces": 5,
+      "timber_tile_m": 1.53846153846154,
+      "triangles": 7700,
+      "width": 4.87227630615234
+    }
+  },
+  "materials": {
+    "actual_material_record": {
+      "authoritative_reference": {
+        "path": "assets/source/style/approved-game-reference.jpg",
+        "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+      },
+      "generation": "assets/source/preview3d/material-generation.json",
+      "limitations": "Generated albedo with fine authored relief shading, not a measured PBR scan. No ground or directional scene shadow is baked into the tiles.",
+      "materials": {
+        "bark": {
+          "crop": [
+            627,
+            627,
+            1254,
+            1254
+          ],
+          "operation": "Exact quadrant crop and WebP encoding; no upscaling, painting or source relighting.",
+          "path": "assets/art/preview3d/bark.webp",
+          "sha256": "ca8532c220bb6dcb78a2b14a8dc4a78439885e0ee4f061ff92dee58007af7736",
+          "size": [
+            627,
+            627
+          ],
+          "source": "assets/source/preview3d/village-materials.png",
+          "source_sha256": "0ab9f5bc5e5357abf9f5a81a5ddd38f4ea8ef1bc3cef87ebc72e261a112f3591"
+        },
+        "limestone": {
+          "courses": 8,
+          "generation": "assets/source/preview3d/town-limestone/generation.json",
+          "operation": "Full-source downsample to768px and WebP quality94; no painting, source relighting or seam blending.",
+          "path": "assets/art/preview3d/limestone.webp",
+          "physical_tile_m": [
+            2.56,
+            2.56
+          ],
+          "runtime_bytes": 194962,
+          "sha256": "03983784223f8bdf5fc89549625c71555e80ba7240c43602ce3624d9df729a21",
+          "size": [
+            768,
+            768
+          ],
+          "source": "assets/source/preview3d/town-limestone/generated.png",
+          "source_pixel_measurements": {
+            "edge_jump_rgb_mean_0_255": {
+              "left_right": 7.6916533758639,
+              "top_bottom": 17.7663476874003
+            },
+            "expected_courses": 8,
+            "observed_horizontal_joint_rows_px": [
+              155,
+              310,
+              467,
+              622,
+              780,
+              936,
+              1092
+            ],
+            "review_note": "Quantitative observations only; actual repeated surfaces/corners must be visually reviewed."
+          },
+          "source_sha256": "a652af3ce841106044f3bccca41272b0ecee053d2cb1ca60fd9236fe7cd8be03",
+          "source_size": [
+            1254,
+            1254
+          ]
+        },
+        "slate": {
+          "courses": 8,
+          "generation": "assets/source/preview3d/town-slate/generation.json",
+          "operation": "Full-source downsample to768px and WebP quality94; no painting, source relighting or seam blending.",
+          "path": "assets/art/preview3d/slate.webp",
+          "physical_tile_m": [
+            2.6,
+            2.6
+          ],
+          "runtime_bytes": 102152,
+          "sha256": "daed024e7f2fc585cf1c300e43135bd447bfa3565c66f833424e3cf0e6e79350",
+          "size": [
+            768,
+            768
+          ],
+          "source": "assets/source/preview3d/town-slate/generated.png",
+          "source_pixel_measurements": {
+            "edge_jump_rgb_mean_0_255": {
+              "left_right": 5.67410951621478,
+              "top_bottom": 6.50930356193514
+            },
+            "expected_courses": 8,
+            "observed_horizontal_joint_rows_px": [
+              161,
+              321,
+              479,
+              638,
+              798,
+              957,
+              1112
+            ],
+            "review_note": "Quantitative observations only; actual repeated surfaces/corners must be visually reviewed."
+          },
+          "source_sha256": "0b8653597c6a26f476e8a98e4704b1703bcba1cabb158febbb9b658a92b73605",
+          "source_size": [
+            1254,
+            1254
+          ]
+        },
+        "timber": {
+          "crop": [
+            0,
+            627,
+            627,
+            1254
+          ],
+          "operation": "Exact quadrant crop and WebP encoding; no upscaling, painting or source relighting.",
+          "path": "assets/art/preview3d/timber.webp",
+          "sha256": "4cac472a9fb54db9e89bdaf1577db846bd49f936e759dca7b10101175f7dcb1c",
+          "size": [
+            627,
+            627
+          ],
+          "source": "assets/source/preview3d/village-materials.png",
+          "source_sha256": "0ab9f5bc5e5357abf9f5a81a5ddd38f4ea8ef1bc3cef87ebc72e261a112f3591"
+        }
+      },
+      "physical_scale": {
+        "limestone_courses": 8,
+        "limestone_tile_m": 2.56,
+        "slate_tile_m": 2.6
+      },
+      "purpose": "Shared front-on native3D village albedos; 2D sprite art is unchanged."
+    },
+    "physical_tile_m": {
+      "slate": 2.6,
+      "stone": 2.56
+    },
+    "provenance": "assets/art/preview3d/materials.json",
+    "provenance_sha256": "6682bf64e151a8b306f55d1c647690d79477ffc557ea99c73d4f7e79fe45a87c",
+    "residential_glass": {
+      "base_color": "existing #182b36",
+      "emission_enabled": false,
+      "note": "Shared residential material, chapel stained glass remains separate",
+      "roughness": 0.46
+    },
+    "roughness_or_normal_maps_added": false,
+    "shared_resource_keys": [
+      "stone",
+      "slate",
+      "door",
+      "iron",
+      "glass"
+    ],
+    "stone_courses": 8,
+    "surface_budget_exception": "5 shared resources preserve existing stone/slate/wood/iron/glass physical responses; no per-part draw/material proliferation. Initial general-house guide target is2–4.",
+    "textures": [
+      {
+        "path": "assets/art/preview3d/limestone.webp",
+        "sha256": "03983784223f8bdf5fc89549625c71555e80ba7240c43602ce3624d9df729a21"
+      },
+      {
+        "path": "assets/art/preview3d/slate.webp",
+        "sha256": "daed024e7f2fc585cf1c300e43135bd447bfa3565c66f833424e3cf0e6e79350"
+      },
+      {
+        "path": "assets/art/preview3d/timber.webp",
+        "sha256": "4cac472a9fb54db9e89bdaf1577db846bd49f936e759dca7b10101175f7dcb1c"
+      }
+    ],
+    "timber_mapping": {
+      "extra_materials": 0,
+      "resource_key": "door",
+      "texture": "assets/art/preview3d/timber.webp",
+      "tile_m": 1.53846153846154,
+      "uv_source": "beam-local longitudinal, original vertical plank UVs"
+    }
+  },
+  "prior_geometry": {
+    "generator_sha256": "f1c5307281836fc03dffd2326c09f3e53dd74e46fd787e102551be0fa883210b",
+    "geometry": {
+      "ne": {
+        "bounds_max": [
+          4.09835386276245,
+          4.9850001335144,
+          2.58670949935913
+        ],
+        "bounds_min": [
+          -4.09835386276245,
+          0,
+          -2.58670949935913
+        ],
+        "corner_quoins": 40,
+        "depth": 4.71498107910156,
+        "door_approach": {
+          "depth": 0.850000023841858,
+          "width": 1.3400000333786,
+          "x": 0.722942352294922,
+          "z": 2.35749053955078
+        },
+        "door_height": 2.12,
+        "door_width": 1.1,
+        "door_x": 1.39294238090515,
+        "height_max": 4.9850001335144,
+        "openings": 5,
+        "roof_overhang_m": 0.22921895980835,
+        "slate_tile_m": 2.6,
+        "slate_tiles": 432,
+        "surfaces": 5,
+        "timber_tile_m": 1.53846153846154,
+        "triangles": 10008,
+        "width": 7.7385687828064
+      },
+      "nw": {
+        "bounds_max": [
+          2.54623055458069,
+          6.26599979400635,
+          1.73324358463287
+        ],
+        "bounds_min": [
+          -2.54623055458069,
+          0,
+          -1.73324358463287
+        ],
+        "corner_quoins": 32,
+        "depth": 3,
+        "door_approach": {
+          "depth": 0.850000023841858,
+          "width": 1.62000000476837,
+          "x": -0.810000002384186,
+          "z": 1.5
+        },
+        "door_height": 2.25,
+        "door_width": 1.38,
+        "door_x": 0,
+        "height_max": 6.26599979400635,
+        "openings": 8,
+        "roof_overhang_m": 0.236232042312622,
+        "slate_tile_m": 2.6,
+        "slate_tiles": 228,
+        "surfaces": 5,
+        "timber_tile_m": 1.53846153846154,
+        "triangles": 11652,
+        "width": 4.61999702453613
+      },
+      "se": {
+        "bounds_max": [
+          2.88418197631836,
+          5.77500009536743,
+          1.75399875640869
+        ],
+        "bounds_min": [
+          -2.88418197631836,
+          0,
+          -1.75399875640869
+        ],
+        "corner_quoins": 44,
+        "depth": 3.04182553291321,
+        "door_approach": {
+          "depth": 0.850000023841858,
+          "width": 1.3400000333786,
+          "x": -1.72948825359344,
+          "z": 1.5209127664566
+        },
+        "door_height": 2.12,
+        "door_width": 1.1,
+        "door_x": -1.05948829650879,
+        "height_max": 5.77500009536743,
+        "openings": 7,
+        "roof_overhang_m": 0.235461235046387,
+        "slate_tile_m": 2.6,
+        "slate_tiles": 246,
+        "surfaces": 5,
+        "timber_tile_m": 1.53846153846154,
+        "triangles": 10624,
+        "width": 5.29744148254395
+      },
+      "sw": {
+        "bounds_max": [
+          2.67025065422058,
+          5.13500022888184,
+          1.91716122627258
+        ],
+        "bounds_min": [
+          -2.67025065422058,
+          0,
+          -1.91716122627258
+        ],
+        "corner_quoins": 40,
+        "depth": 3.3690447807312,
+        "door_approach": {
+          "depth": 0.850000023841858,
+          "width": 1.62000000476837,
+          "x": -0.810000002384186,
+          "z": 1.6845223903656
+        },
+        "door_height": 2.25,
+        "door_width": 1.38,
+        "door_x": 0,
+        "height_max": 5.13500022888184,
+        "openings": 4,
+        "roof_overhang_m": 0.234112501144409,
+        "slate_tile_m": 2.6,
+        "slate_tiles": 230,
+        "surfaces": 5,
+        "timber_tile_m": 1.53846153846154,
+        "triangles": 7860,
+        "width": 4.87227630615234
+      }
+    },
+    "validation": {
+      "actual_browser_views": "Pending fresh same-source paired portrait/landscape and reverse-angle captures.",
+      "case": "tests/cases/native_house_family.gd",
+      "case_sha256": "fcacd8aab37c56308c366e1399d7240ae5dde9f8f9b3463526d94071637a89a6",
+      "engine": "4.7.2-stable (official)",
+      "geometry_budget": "pass, 6000-12000 triangles and five shared surfaces per house",
+      "recording": "actual runtime four-house meshes and material/source SHA-256 measured by CI-only recorder",
+      "source_record": "actual bytes; full contract tests and paired browser review run only after this candidate proof is committed"
+    }
+  },
+  "roles": {
+    "ne": "smithy worktop/hood",
+    "nw": "inn timber upper story",
+    "se": "apothecary twin dormers",
+    "sw": "stable barred side bay"
+  },
+  "schema": 1,
+  "transform": {
+    "front": "+Z",
+    "ground": "XZ",
+    "origin": "existing native house footprint center, Y0",
+    "runtime_scale": [
+      1,
+      1,
+      1
+    ],
+    "units": "metres",
+    "up": "+Y"
+  },
+  "validation": {
+    "actual_browser_views": "Eighteen actual same-source paired architecture views passed; see browser_review and the preserved comparison gallery.",
+    "case": "tests/cases/native_house_family.gd",
+    "case_sha256": "5bd26d9d7aba42a8bd7e8339f431a4cab342bc95b4afcd9a004de9273548c3ab",
+    "engine": "4.7.2-stable (official)",
+    "geometry_budget": "pass, 6000-12000 triangles and five shared surfaces per house",
+    "recording": "actual runtime four-house meshes and material/source SHA-256 measured by CI-only recorder",
+    "source_record": "actual bytes; full contract tests and paired browser review run only after this candidate proof is committed"
+  },
+  "browser_review": {
+    "candidate": "8f28afe01e369228d0265f76714f9670bca631f8",
+    "baseline": "99d0fd5e779752d5d2e4f14735fe585d8459313e",
+    "run": "https://github.com/obmaz/sjrpg/actions/runs/42465788468",
+    "paired_views": 18,
+    "physical_surfaces_unchanged": true,
+    "source": "docs/previews/native-village/architecture-review.json",
+    "claim": "Actual paired runtime renders and source/collision gates; no user approval or reference-equivalence claim."
+  }
 }

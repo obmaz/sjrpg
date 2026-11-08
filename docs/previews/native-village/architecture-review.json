@@ -1,0 +1,138 @@
+{
+  "passed": true,
+  "baseline": "99d0fd5e779752d5d2e4f14735fe585d8459313e",
+  "candidate": "8f28afe01e369228d0265f76714f9670bca631f8",
+  "paired_captures": 18,
+  "physical_surfaces_unchanged": true,
+  "camera_elevation": 35.264389682754654,
+  "npcs": false,
+  "scope": "architecture",
+  "expected_imports": [
+    "mira"
+  ],
+  "previews": [
+    {
+      "path": "previews/chapel-face-0-comparison.jpg",
+      "bytes": 222232,
+      "blob_sha": "7a2d8fae8c18c5757c8be2a216189fbabbf737cf"
+    },
+    {
+      "path": "previews/chapel-face-2-comparison.jpg",
+      "bytes": 241088,
+      "blob_sha": "aea5e107a11af55cce63039f362aadb0d5fdfbe1"
+    },
+    {
+      "path": "previews/gate-0-face-0-comparison.jpg",
+      "bytes": 205260,
+      "blob_sha": "7eade6ecb615c7a2e6cd8673e43aef233dcbeec7"
+    },
+    {
+      "path": "previews/gate-0-face-2-comparison.jpg",
+      "bytes": 219918,
+      "blob_sha": "9fc7b6c039303aba893ee4924cef1b388338fe77"
+    },
+    {
+      "path": "previews/house-0-face-0-comparison.jpg",
+      "bytes": 215421,
+      "blob_sha": "6373be4de0f7f463c6099c10b33d64007e6eecea"
+    },
+    {
+      "path": "previews/house-0-face-2-comparison.jpg",
+      "bytes": 227947,
+      "blob_sha": "74a7aaf567d67505ca2163718e95ba5bb4cb374a"
+    },
+    {
+      "path": "previews/house-1-face-0-comparison.jpg",
+      "bytes": 207539,
+      "blob_sha": "723eaa43a07e4699a0795b4992762952cb19eca5"
+    },
+    {
+      "path": "previews/house-1-face-2-comparison.jpg",
+      "bytes": 233178,
+      "blob_sha": "f22a3017397c2d2219534acc1515562fe84d7eaf"
+    },
+    {
+      "path": "previews/house-2-face-0-comparison.jpg",
+      "bytes": 226131,
+      "blob_sha": "0b211e42f5bf42f0162ce577d648c46fda8aabdc"
+    },
+    {
+      "path": "previews/house-2-face-2-comparison.jpg",
+      "bytes": 221076,
+      "blob_sha": "988e677e974b9455de597a84a938408a90b545d4"
+    },
+    {
+      "path": "previews/house-3-face-0-comparison.jpg",
+      "bytes": 222564,
+      "blob_sha": "c2c996158d9c21ae4a4ae61495c365f5f3eda516"
+    },
+    {
+      "path": "previews/house-3-face-2-comparison.jpg",
+      "bytes": 215887,
+      "blob_sha": "a6469bcb7b6dcbe7e481fd7eddda87b490f8c560"
+    },
+    {
+      "path": "previews/village-normal-landscape-comparison.jpg",
+      "bytes": 105886,
+      "blob_sha": "0b187564849eeecb15aff7e5872a9c09a30ddb97"
+    },
+    {
+      "path": "previews/village-normal-portrait-comparison.jpg",
+      "bytes": 154364,
+      "blob_sha": "7f6a003353d4b8a3162a00503e505083e2a78b19"
+    },
+    {
+      "path": "previews/wall-corner-0-face-0-comparison.jpg",
+      "bytes": 192102,
+      "blob_sha": "cf2f80173cb44a2b0ce5e9f0cf5192dabbbf133b"
+    },
+    {
+      "path": "previews/wall-corner-0-face-2-comparison.jpg",
+      "bytes": 221412,
+      "blob_sha": "7bf9299673f58719eda39a54041eda2c561c0401"
+    },
+    {
+      "path": "previews/wall-detail-face-0-comparison.jpg",
+      "bytes": 193537,
+      "blob_sha": "ce3231603a6ce6ddadee6a2662e65bbb5d375525"
+    },
+    {
+      "path": "previews/wall-detail-face-2-comparison.jpg",
+      "bytes": 201612,
+      "blob_sha": "e441d272adc3d869f13e687559f2f918f7ab38ce"
+    },
+    {
+      "path": "previews/architecture-houses-0-1.jpg",
+      "bytes": 272690,
+      "blob_sha": "aea0816d32cc86317b240f3a43759030a0ab9ddb"
+    },
+    {
+      "path": "previews/architecture-houses-2-3.jpg",
+      "bytes": 275257,
+      "blob_sha": "039438b82d71530e00ad1493fc40e491a0df1c3e"
+    },
+    {
+      "path": "previews/architecture-chapel.jpg",
+      "bytes": 140982,
+      "blob_sha": "df2291f97deea4a9c596b6a308185fa295ce448c"
+    },
+    {
+      "path": "previews/architecture-gates-corners.jpg",
+      "bytes": 259694,
+      "blob_sha": "05c71100589b9c0f4f5091e5d67b788173bc2b21"
+    },
+    {
+      "path": "previews/architecture-context-details.jpg",
+      "bytes": 207372,
+      "blob_sha": "d06d2c4775d406cf40f0c6de5317309278b5e56d"
+    }
+  ],
+  "run": "https://github.com/obmaz/sjrpg/actions/runs/42465788468",
+  "runtime_geometry_unchanged_after_capture": true,
+  "checks": [
+    "Same orthographic azimuth, elevation and camera transform for each pair",
+    "Same original physical floor and ramp faces",
+    "Same complete static collision geometry digest during and across both editions",
+    "Normal portrait/landscape HUD retained; inspection HUD hidden only for architecture photos"
+  ]
+}
