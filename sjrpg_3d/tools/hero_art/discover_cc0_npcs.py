@@ -72,8 +72,14 @@ for pack in PACKS:
                 continue
             if "/" in uri or "\\" in uri or uri in (".", ".."):
                 raise RuntimeError("Unexpected relative source URI: " + uri)
-            linked = archive.getinfo(folder + uri)
-            files.append({"uri": uri, "zip_bytes": linked.file_size})
+            try:
+                linked = archive.getinfo(folder + uri)
+            except KeyError:
+                # Some upstream optional normal-map aliases are dangling. Report
+                # them verbatim instead of guessing a replacement source file.
+                files.append({"uri": uri, "missing_in_zip": True})
+            else:
+                files.append({"uri": uri, "zip_bytes": linked.file_size})
         entry = {
             "source": info.filename,
             "name": Path(info.filename).name,

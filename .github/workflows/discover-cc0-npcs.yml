@@ -1,4 +1,4 @@
-name: Discover exact CC0 NPC source candidates
+name: Discover actual CC0 NPC source candidates
 on:
     push:
         paths:

@@ -1,6 +1,10 @@
 class_name NativeLandmarks3D
 extends RefCounted
 const WATER_SHADER := preload("res://scripts/native_landmark_water.gdshader")
+## Upper turf is cooler/lighter than the warm yellow-green valley floor. These
+## are source-albedo gains, with the same real light/shadow response and texture.
+const UPPER_GRASS_TINT := Color(1.26, 1.52, 1.65, 1.0)
+const EARTH_STRATUM_DEPTH := 0.20
 ## Native terrain/solid picture built from the same authored footprint as physics.
 ## Simulation and colliders remain SpatialWorld3D's responsibility.
 
@@ -75,6 +79,14 @@ static func build(preview: Node, parent: Node3D) -> Dictionary:
 	rock_material.uv1_triplanar = true
 	rock_material.uv1_world_triplanar = true
 	rock_material.uv1_scale = Vector3.ONE / 2.56
+	# Share both materials across all raised grassy landmarks. Preserve the
+	# existing metre-based UVs instead of copying the 150m plane's 38 repeats.
+	var upper_turf := (preview._materials["grass"] as StandardMaterial3D).duplicate() as StandardMaterial3D
+	upper_turf.albedo_color = UPPER_GRASS_TINT
+	upper_turf.uv1_scale = Vector3.ONE
+	var earth := rock_material.duplicate() as StandardMaterial3D
+	earth.albedo_color = Color(0.54, 0.43, 0.31, 1.0)
+	earth.roughness = 1.0
 	var owned := {}
 	var entries: Array[Dictionary] = []
 	var water_materials: Array[ShaderMaterial] = []
@@ -104,15 +116,14 @@ static func build(preview: Node, parent: Node3D) -> Dictionary:
 			if normal.y < 0:
 				normal = -normal
 			_tri(floor_tool, a, b, c, normal)
-		var floor_material: Material = preview._materials["paving"]
-		if source.index in [0, 2, 3]:
-			var turf := (preview._materials["grass"] as StandardMaterial3D).duplicate() as StandardMaterial3D
-			turf.uv1_scale = Vector3.ONE
-			floor_material = turf
+		var grassy_rise := source.index in [0, 2, 3] and float(surface["rise"]) > 0.001
+		var floor_material: Material = upper_turf if grassy_rise else preview._materials["paving"]
 		_finish(floor_tool, floor_material, group, "WalkableTop")
 		var sides := SurfaceTool.new()
 		sides.begin(Mesh.PRIMITIVE_TRIANGLES)
 		var has_sides := false
+		var soil_edges := SurfaceTool.new()
+		soil_edges.begin(Mesh.PRIMITIVE_TRIANGLES)
 		var top: PackedVector2Array = surface["top"]
 		var used := {}
 		for triangle in range(0, points.size(), 3):
@@ -141,11 +152,23 @@ static func build(preview: Node, parent: Node3D) -> Dictionary:
 					normal = -normal
 				var low_a := Vector3(a.x, -0.02, a.z)
 				var low_b := Vector3(b.x, -0.02, b.z)
-				_tri(sides, a, low_a, low_b, normal)
-				_tri(sides, a, low_b, b, normal)
+				# Exposed earth belongs only to the existing vertical cliff faces.
+				# Split their upper 20cm instead of laying a rim over the walkable
+				# top, roads or ponds. It tapers to zero at the open ramp entrance.
+				var rock_a := a
+				var rock_b := b
+				if grassy_rise:
+					rock_a.y = maxf(0.0, a.y - EARTH_STRATUM_DEPTH)
+					rock_b.y = maxf(0.0, b.y - EARTH_STRATUM_DEPTH)
+					_tri(soil_edges, a, rock_a, rock_b, normal)
+					_tri(soil_edges, a, rock_b, b, normal)
+				_tri(sides, rock_a, low_a, low_b, normal)
+				_tri(sides, rock_a, low_b, rock_b, normal)
 				has_sides = true
 		if has_sides:
 			_finish(sides, rock_material, group, "CliffSides")
+			if grassy_rise:
+				_finish(soil_edges, earth, group, "ExposedEarth")
 		var definition: Dictionary = Landmark.data()[source.index]
 		for i in definition["solids"].size():
 			var polygon := source._poly(definition["solids"][i])
