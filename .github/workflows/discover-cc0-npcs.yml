@@ -1,0 +1,26 @@
+name: Discover exact CC0 NPC source candidates
+on:
+    push:
+        paths:
+            - ".github/workflows/discover-cc0-npcs.yml"
+    workflow_dispatch:
+permissions:
+    contents: read
+concurrency:
+    group: discover-cc0-npcs-${{ github.sha }}
+    cancel-in-progress: false
+jobs:
+    inspect:
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        steps:
+            - uses: actions/checkout@v7.0.1
+            - name: Check fixed Standard archive licenses and actual model metadata
+              run: python3 sjrpg_3d/tools/hero_art/discover_cc0_npcs.py
+            - uses: actions/upload-artifact@v6
+              if: always()
+              with:
+                  name: cc0-npc-source-discovery
+                  path: sjrpg_3d/build/public-npc-source-discovery
+                  if-no-files-found: error
+                  retention-days: 7
