@@ -151,7 +151,7 @@ func _draw() -> void:
 	var origin: Vector2 = game.player.position
 	_update_geometry(origin)
 	draw_circle(Vector2.ZERO, radius, Color(0.07, 0.08, 0.07, 0.9))
-	draw_mesh(_geometry_mesh)
+	draw_mesh(_geometry_mesh, null)
 	for marker in MapGeometry.markers(game):
 		var marker_at := _to_map(marker["pos"], origin)
 		var marker_radius := maxf(2.0, radius * 0.035)
