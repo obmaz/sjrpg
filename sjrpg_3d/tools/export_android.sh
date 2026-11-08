@@ -12,7 +12,7 @@ esac
 [ "$#" -le 1 ] || { echo "Unexpected Android export argument" >&2; exit 2; }
 VERSION="$(tr -d '[:space:]' < "$ROOT/../.godot-version")"
 SDK="${ANDROID_HOME:-$HOME/android-sdk}"
-test -f "$HOME/.local/share/godot/export_templates/$VERSION.stable/android_$MODE.apk" || { echo "Run tools/setup_android.sh first"; exit 1; }
+test -f "${XDG_DATA_HOME:-$HOME/.local/share}/godot/export_templates/$VERSION.stable/android_$MODE.apk" || { echo "Run tools/setup_android.sh first"; exit 1; }
 if [ "$MODE" = release ]; then
   : "${GODOT_ANDROID_KEYSTORE_RELEASE_PATH:?Release keystore path is required}"
   : "${GODOT_ANDROID_KEYSTORE_RELEASE_USER:?Release keystore alias is required}"
@@ -30,5 +30,6 @@ test -s "$OUT"
 "$SDK/build-tools/$SJRPG_ANDROID_BUILD_TOOLS/zipalign" -c -P 16 4 "$OUT"
 "$SDK/build-tools/$SJRPG_ANDROID_BUILD_TOOLS/apksigner" verify "$OUT"
 "$SDK/build-tools/$SJRPG_ANDROID_BUILD_TOOLS/aapt2" dump badging "$OUT" >"$ROOT/build/android/package.txt"
+grep -E "^(package:|sdkVersion:|targetSdkVersion:|native-code:|application-label:)" "$ROOT/build/android/package.txt"
 python3 "$ROOT/tools/check_platform_exports.py" --android "$OUT" --package-info "$ROOT/build/android/package.txt" --out "$ROOT/build/android/export-report.json"
 printf 'export ok: %s\n' "${OUT#$ROOT/}"
