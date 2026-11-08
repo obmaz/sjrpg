@@ -414,11 +414,21 @@ func _tower(center: Vector3, height: float) -> float:
 	var spire_uv: PackedVector2Array = spire_arrays[Mesh.ARRAY_TEX_UV]
 	var perimeter := spire.radial_segments * 2.0 * spire.bottom_radius * sin(PI / spire.radial_segments)
 	var slope := Vector2(spire.height, (spire.bottom_radius - spire.top_radius) * cos(PI / spire.radial_segments)).length()
+	var side_min := Vector2(INF, INF)
+	var side_max := Vector2(-INF, -INF)
+	for index in spire_points.size():
+		if absf(spire_normals[index].y) < 0.99:
+			side_min = side_min.min(spire_uv[index])
+			side_max = side_max.max(spire_uv[index])
+	var side_span := side_max - side_min
 	for index in spire_points.size():
 		if absf(spire_normals[index].y) > 0.99:
 			spire_uv[index] = Vector2(spire_points[index].x, spire_points[index].z) / SLATE_TILE
 		else:
-			spire_uv[index] = Vector2(spire_uv[index].x * perimeter, (1.0 - spire_uv[index].y) * slope) / SLATE_TILE
+			# The primitive reserves atlas space for caps; normalize its actual side
+			# chart before assigning the physical perimeter/slope repeat.
+			var unit := (spire_uv[index] - side_min) / side_span
+			spire_uv[index] = Vector2(unit.x * perimeter, (1.0 - unit.y) * slope) / SLATE_TILE
 	spire_arrays[Mesh.ARRAY_TEX_UV] = spire_uv
 	_append_arrays(spire_arrays, Transform3D(Basis(Vector3.UP, PI * 0.25), center + Vector3(0, spire_bottom + spire.height * 0.5, 0)), "slate")
 	for x in [-1.0, 1.0]:
