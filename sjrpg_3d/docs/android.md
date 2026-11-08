@@ -2,7 +2,17 @@
 
 같은 `sjrpg_3d/` 프로젝트를 GL Compatibility로 내보냅니다. 패키지 ID는 `com.obmaz.sjrpg3d`, 앱 이름은 “자연의 수호자”, CPU는 `arm64-v8a`입니다. 기존 앱 저장 경로를 유지합니다.
 
-## 빌드와 설치
+## GitHub Actions 수동 빌드
+
+APK는 사용자 명시 요청 시에만 빌드합니다. 푸시·PR·웹 배포로 자동 빌드하지 않습니다.
+
+1. [Build Android APK](https://github.com/obmaz/sjrpg/actions/workflows/android.yml)를 엽니다.
+2. **Run workflow**에서 브랜치를 선택하고 실행합니다(보통 `main`).
+3. 실행이 끝나면 **Artifacts**의 `sjrpg-android-debug-커밋SHA`를 다운로드합니다. APK와 검증 보고서가 함께 들어 있습니다.
+
+현재 워크플로는 시험 설치용 디버그 APK를 생성하며, 서명·16KiB ZIP 정렬·패키지·GPU 리소스를 검증합니다.
+
+## 명시 요청에 따른 로컬 빌드와 설치
 
 저장소 루트에서 실행합니다. Linux와 JDK 17 이상이 필요합니다.
 

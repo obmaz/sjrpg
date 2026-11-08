@@ -35,7 +35,7 @@
   새 원화는 [측정·재생성 방법](sjrpg_2d/docs/chapel-regeneration.md)을 따릅니다.
 - HUD·팝업은 사용자가 승인한 최종 구도를 따릅니다([docs/ui-reference.md](sjrpg_2d/docs/ui-reference.md)). 상태창·스킬 부채꼴·조이스틱·하단 메뉴 비율과 얇은 청동/은색 테두리를 유지하고, 큰 단색 원·글자 대체 공격 아이콘·밝은 노란 버튼으로 되돌리지 않습니다.
 - 코드로 2D 원화를 대신 그리지 않습니다. 2D 원화에서는 배치·투영·충돌·깊이 정렬에만 씁니다(HUD 도형과 효과는 예외). 3D판에서는 실제 부피·법선·재질·미터 단위 충돌을 가진 메시 모델링을 사용할 수 있으며, 절차적 제작도 [3D 기준](docs/3d-asset-guide.md)의 전체 면·비례·실제 렌더 검수를 따릅니다.
-- 3D판 텍스처는 `sjrpg_3d/assets/data/texture_policy.json`과 `tools/texture_policy.py`를 따릅니다. 지정한 불투명 월드 표면은 VRAM 압축(2, S3TC/ETC2)을 사용하고, UI·효과·투명 잎·유리·현재 배우 텍스처는 기존 손실 압축(1)과 알파/밉맵 설정을 보존합니다. 임의 리사이즈나 일괄 GPU 변환을 하지 않습니다. `tools/import_project.sh`로 정책 적용→Godot 재임포트→검증을 수행하며 최종 PCK/APK와 실제 모바일 화면을 확인합니다. 2D판은 동결합니다.
+- 3D판 텍스처는 `sjrpg_3d/assets/data/texture_policy.json`과 `tools/texture_policy.py`를 따릅니다. 지정한 불투명 월드 표면은 VRAM 압축(2, S3TC/ETC2)을 사용하고, UI·효과·투명 잎·유리·현재 배우 텍스처는 기존 손실 압축(1)과 알파/밉맵 설정을 보존합니다. 임의 리사이즈나 일괄 GPU 변환을 하지 않습니다. `tools/import_project.sh`로 정책 적용→Godot 재임포트→검증을 수행하며 최종 Web PCK와 실제 모바일 화면을 확인합니다. APK 빌드·패키지 검증은 아래 APK 실행 정책에 따라 사용자 명시 요청 시에만 수행합니다. 2D판은 동결합니다.
 - 그림·UI를 바꾸면 실제 브라우저 화면(`sjrpg_3d/tools/screenshot.mjs`)으로 가로·세로를 함께 확인합니다. 헤드리스 테스트 통과로 시각 검증을 대신하지 않습니다.
 
 ## 데이터 출처
@@ -72,3 +72,9 @@ tools/check.sh --export        # 웹 빌드까지
   <https://obmaz.github.io/sjrpg/> 로드까지 확인한 뒤 완료를 보고합니다. 배포 설정(Pages 소스 = GitHub Actions)은 저장소 설정에서 한 번만 바꿉니다.
 - 브랜치는 만들지 않고 `main`에 직접 커밋합니다(사용자 지시). 커밋 메시지는 변경의 이유를 적습니다.
 - 기능이 바뀌면 README의 사용자 안내와 `docs/development.md`의 구조를 함께 갱신합니다. 일회성 완료 기록은 문서에 쌓지 않습니다.
+
+## APK 빌드 실행 정책
+
+- Android APK 빌드·재빌드·수동 Actions 실행은 **사용자가 APK 빌드를 명시적으로 요청했을 때만** 수행합니다.
+- 일반 개발·수정·리뷰·푸시·웹 배포·검증 요청에는 APK 빌드를 포함하지 않습니다. 빌드 검증을 이유로 자동 실행하지 않습니다.
+- `.github/workflows/android.yml`은 `workflow_dispatch` 전용으로 유지합니다. `push`·PR·예약·다른 워크플로 호출로 APK를 자동 생성하지 않습니다. 웹 배포 흐름은 별도로 유지합니다.

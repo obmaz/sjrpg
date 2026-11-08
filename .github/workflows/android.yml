@@ -1,20 +1,6 @@
 name: Build Android APK
 
 on:
-    push:
-        paths:
-            - ".github/workflows/android.yml"
-            - ".godot-version"
-            - "sjrpg_3d/project.godot"
-            - "sjrpg_3d/export_presets.cfg"
-            - "sjrpg_3d/scripts/**"
-            - "sjrpg_3d/scenes/**"
-            - "sjrpg_3d/assets/**"
-            - "sjrpg_3d/tools/*.sh"
-            - "sjrpg_3d/tools/android-toolchain.env"
-            - "sjrpg_3d/tools/texture_policy.py"
-            - "sjrpg_3d/tools/check_platform_exports.py"
-            - "sjrpg_3d/tools/fetch_android_templates.py"
     workflow_dispatch:
 
 permissions:
@@ -25,6 +11,7 @@ concurrency:
 
 jobs:
     apk:
+        if: github.event_name == 'workflow_dispatch'
         runs-on: ubuntu-latest
         timeout-minutes: 25
         steps:
