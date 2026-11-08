@@ -126,8 +126,8 @@ def main():
         require(args.package_info is not None, "Android requires actual aapt2 package metadata")
         badging = args.package_info.read_text()
         require("name='com.obmaz.sjrpg3d'" in badging, "Android package identity changed")
-        minimum = re.search(r"(?m)^(?:minSdkVersion|sdkVersion):'(\\d+)'",badging)
-        target = re.search(r"(?m)^targetSdkVersion:'(\\d+)'",badging)
+        minimum = re.search(r"(?m)^(?:minSdkVersion|sdkVersion):'(\d+)'",badging)
+        target = re.search(r"(?m)^targetSdkVersion:'(\d+)'",badging)
         sdk_lines = [line for line in badging.splitlines() if "sdk" in line.lower()]
         require(minimum is not None and target is not None and minimum[1] == "24" and target[1] == "36",
                 "Android SDK defaults disagree with Godot4.7.2: " + json.dumps(sdk_lines))
