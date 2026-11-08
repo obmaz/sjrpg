@@ -1,4 +1,4 @@
-name: Review actual village architecture and shared materials
+name: Review village architecture with exact collider diagnostics
 
 on:
     push:

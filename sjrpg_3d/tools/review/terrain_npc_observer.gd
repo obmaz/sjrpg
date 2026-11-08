@@ -16,6 +16,10 @@ var terrain_owner := 0
 var static_physics_digest := ""
 var sampled_physics_digest := ""
 var static_physics_count := 0
+var static_physics_original: Array = []
+var static_physics_original_json := ""
+var static_physics_delta: Dictionary = {}
+var static_shape_owners: Dictionary = {}
 var hid_hud := false
 var original_hud_visible := true
 
@@ -49,7 +53,11 @@ func _action(arguments: Array) -> void:
 		if is_instance_valid(game.spatial_world):
 			# Resample actual installed collider geometry for every requested view,
 			# rather than comparing an initial cache against itself.
-			sampled_physics_digest = JSON.stringify(_static_geometry(game)).sha256_text()
+			var current := _static_geometry(game)
+			var serialized := JSON.stringify(current)
+			sampled_physics_digest = serialized.sha256_text()
+			static_physics_delta = _static_delta(current, serialized) if sampled_physics_digest != static_physics_digest else {}
+			JavaScriptBridge.eval("window.__sjrpgTerrainNpcCurrentStaticPhysics = " + serialized, true)
 	if is_instance_valid(gallery):
 		gallery.hide()
 	if mode == "residents" and is_instance_valid(root.current) and root.current is NativeAdventure:
@@ -106,6 +114,8 @@ func _process(delta: float) -> void:
 		static_physics_digest = serialized.sha256_text()
 		sampled_physics_digest = static_physics_digest
 		static_physics_count = construction.size()
+		static_physics_original = construction
+		static_physics_original_json = serialized
 		JavaScriptBridge.eval("window.__sjrpgTerrainNpcStaticPhysics = " + serialized, true)
 	var architecture_mode := mode in ["house", "gate", "corner", "wall_detail"]
 	if architecture_mode and not hid_hud:
@@ -137,7 +147,7 @@ func _process(delta: float) -> void:
 	for axis: Vector3 in [Vector3.RIGHT, Vector3.FORWARD, Vector3.UP]:
 		var point := inspection_camera.unproject_position(inspection_camera.global_position - eye * 20.0 + axis) - origin
 		axes.append([point.x, point.y])
-	var data := {"mode": mode, "role": role, "face": face, "frame": Engine.get_process_frames(), "requested_frame": requested_frame, "terrain": terrain_cache, "physics": _physical_surfaces(game), "projection": "orthographic" if inspection_camera.projection == Camera3D.PROJECTION_ORTHOGONAL else "perspective", "azimuth": fposmod(rad_to_deg(atan2(eye.x, eye.z)), 360.0), "elevation": rad_to_deg(asin(eye.y)), "axes": axes, "player": [game.player.position.x, game.player.position.y], "residents": preview._native_residents.review_snapshot(), "quality": "low" if Prefs.low_resolution else "high", "render_size": [preview.viewport.size.x, preview.viewport.size.y], "hud_hidden": not game.hud.visible, "static_physics_sha256": sampled_physics_digest, "initial_static_physics_sha256": static_physics_digest, "static_physics_shapes": static_physics_count, "camera_size": inspection_camera.size, "camera_position": _plain(inspection_camera.global_position)}
+	var data := {"mode": mode, "role": role, "face": face, "frame": Engine.get_process_frames(), "requested_frame": requested_frame, "terrain": terrain_cache, "physics": _physical_surfaces(game), "projection": "orthographic" if inspection_camera.projection == Camera3D.PROJECTION_ORTHOGONAL else "perspective", "azimuth": fposmod(rad_to_deg(atan2(eye.x, eye.z)), 360.0), "elevation": rad_to_deg(asin(eye.y)), "axes": axes, "player": [game.player.position.x, game.player.position.y], "residents": preview._native_residents.review_snapshot(), "quality": "low" if Prefs.low_resolution else "high", "render_size": [preview.viewport.size.x, preview.viewport.size.y], "hud_hidden": not game.hud.visible, "static_physics_sha256": sampled_physics_digest, "initial_static_physics_sha256": static_physics_digest, "static_physics_shapes": static_physics_count, "static_physics_delta": static_physics_delta, "camera_size": inspection_camera.size, "camera_position": _plain(inspection_camera.global_position)}
 	if architecture_mode:
 		data["architecture"] = _architecture_report(preview)
 	if mode == "residents" and is_instance_valid(gallery):
@@ -272,7 +282,9 @@ func _static_geometry(game: Node) -> Array:
 			data = (shape as ConvexPolygonShape3D).points
 		elif shape is ConcavePolygonShape3D:
 			data = (shape as ConcavePolygonShape3D).get_faces()
-		result.append({"kind": shape.get_class(), "transform": _plain(collider.global_transform), "data": _plain(data)})
+		var record := {"kind": shape.get_class(), "transform": _plain(collider.global_transform), "data": _plain(data)}
+		static_shape_owners[JSON.stringify(record)] = {"body_kind": str(collider.get_parent().get_meta("physics_kind", "")), "path": str(collider.get_path())}
+		result.append(record)
 	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return JSON.stringify(a) < JSON.stringify(b))
 	return result
 
@@ -351,3 +363,32 @@ func _architecture_report(preview: Node) -> Dictionary:
 		data["width"] = gate["width"]
 		data["depth"] = gate["depth"]
 	return data
+
+func _static_delta(current: Array, current_json: String) -> Dictionary:
+	var index := 0
+	while index < mini(static_physics_original_json.length(), current_json.length()) and static_physics_original_json[index] == current_json[index]:
+		index += 1
+	var old_counts := {}
+	var new_counts := {}
+	for item: Dictionary in static_physics_original:
+		var key := JSON.stringify(item)
+		old_counts[key] = int(old_counts.get(key, 0)) + 1
+	for item: Dictionary in current:
+		var key := JSON.stringify(item)
+		new_counts[key] = int(new_counts.get(key, 0)) + 1
+	var all_keys := old_counts.keys()
+	for key: String in new_counts:
+		if not old_counts.has(key):
+			all_keys.append(key)
+	var changes := []
+	for key: String in all_keys:
+		var before: int = int(old_counts.get(key, 0))
+		var after: int = int(new_counts.get(key, 0))
+		if before == after:
+			continue
+		var item: Dictionary = JSON.parse_string(key)
+		var data: Variant = item["data"]
+		changes.append({"owner": static_shape_owners.get(key, {}), "kind": item["kind"], "transform": item["transform"], "data_sha256": JSON.stringify(data).sha256_text(), "data_length": data.size() if data is Array or data is Dictionary else -1, "data_head": data.slice(0, 3) if data is Array else data, "count_before": before, "count_current": after, "record_text_head": key.left(240)})
+		if changes.size() >= 5:
+			break
+	return {"initial_count": static_physics_original.size(), "current_count": current.size(), "initial_text_length": static_physics_original_json.length(), "current_text_length": current_json.length(), "first_text_difference": index, "initial_text_slice": static_physics_original_json.substr(maxi(0, index - 90), 250), "current_text_slice": current_json.substr(maxi(0, index - 90), 250), "changed_records": changes}

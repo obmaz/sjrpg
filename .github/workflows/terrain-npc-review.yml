@@ -1,4 +1,4 @@
-name: Review live terrain and distinct NPC designs
+name: Review terrain water and elevation materials
 
 on:
     push:
@@ -14,6 +14,11 @@ on:
                 description: Comma-separated newly imported identities
                 type: string
                 default: mira
+            scope:
+                description: Focused actual scene review
+                type: choice
+                options: [terrain, architecture, all]
+                default: terrain
 
 permissions:
     contents: read
@@ -32,8 +37,9 @@ jobs:
                 edition: [before, after]
         env:
             SJRPG_TERRAIN_EDITION: ${{ matrix.edition }}
-            SJRPG_REVIEW_NPCS: ${{ github.event_name == 'push' && 'true' || inputs.npcs || 'false' }}
+            SJRPG_REVIEW_NPCS: ${{ inputs.npcs || 'false' }}
             SJRPG_REVIEW_NPC_IDENTITIES: ${{ inputs.npc_identities || 'mira' }}
+            SJRPG_REVIEW_SCOPE: ${{ inputs.scope || 'terrain' }}
         steps:
             - uses: actions/checkout@v7.0.1
             - uses: actions/setup-node@v6
@@ -56,7 +62,12 @@ jobs:
                   tools/setup_godot.sh
             - name: Check actual terrain and combat height contracts
               if: matrix.edition == 'after'
-              run: tools/check.sh --project=3d --only=native_terrain_readability,melee_elevation,spatial_stairs,bridge
+              run: |
+                  if test "$SJRPG_REVIEW_SCOPE" = architecture; then
+                      tools/check.sh --project=3d --only=native_house_family,ortho_3d_fortification,spatial_stairs,bridge
+                  else
+                      tools/check.sh --project=3d --only=native_terrain_readability,melee_elevation,spatial_stairs,bridge
+                  fi
             - name: Prepare exact edition with CI-only photography observer
               run: |
                   set -euo pipefail

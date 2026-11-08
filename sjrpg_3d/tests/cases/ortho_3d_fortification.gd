@@ -293,7 +293,7 @@ func _check_tower_recesses(report: Dictionary, stone_meshes: Array) -> void:
 		for side in [-1.0, 1.0]:
 			var reveal := _nearest(stone_meshes, inside, frame.basis.x * side)
 			check("actual stone side reveals enclose the slot volume " + str(index) + " " + str(side), is_finite(reveal) and absf(reveal - 0.0375) < 0.001)
-	check("at least two exposed real slot faces per tower remain readable", exposed >= 16)
+	check("at least sixteen exposed real slot mouths remain readable", exposed >= 16)
 	print("ART_AUDIT native_tower_recess " + JSON.stringify({"slot_faces": frames.size(), "exposed_mouths": exposed, "fully_exposed": exposed - partial_overlaps, "partial_wall_overlaps": partial_overlaps, "partial_visible_depths_m": partial_depths, "actual_back_distance_min": depth_min, "actual_back_distance_max": depth_max, "nominal_back_depth_m": report["slit_depth"], "slot_height_m": report["slit_height"]}))
 
 

@@ -14,8 +14,11 @@ void fragment() {
 	vec3 base = mix(vec3(0.035, 0.14, 0.15), vec3(0.09, 0.28, 0.29), lightness);
 	float filaments = pow(max(0.0, sin(UV.x * 43.0 + sin(UV.y * 6.0 - phase * 0.7 * motion) * 0.5)), 18.0);
 	ALBEDO = base + vec3(0.12, 0.16, 0.15) * filaments * (falling ? 0.65 : 0.12);
-	ROUGHNESS = 0.26;
-	METALLIC = 0.06;
+	// A broad dielectric sheen keeps the teal water readable at every camera
+	// heading; the former sharp metallic lobe clipped to white in bounce light.
+	ROUGHNESS = 0.58;
+	METALLIC = 0.0;
+	SPECULAR = 0.30;
 	float edge = smoothstep(0.0, 0.10, UV.x) * smoothstep(0.0, 0.10, 1.0 - UV.x);
 	ALPHA = falling ? edge * (0.62 + lightness * 0.20) : 0.76;
 }

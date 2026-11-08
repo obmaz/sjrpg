@@ -110,6 +110,11 @@ try{
    assert.equal(s.ui.paused,false,'live original safe town clock');
    assert.equal(s.review.hud_hidden,true,'explicit inspection removes only HUD coverage');
    assert.deepEqual(s.review.physics,initial,'actual physical surfaces unchanged');
+   if(s.review.static_physics_sha256!==initialStatic){
+    console.error('TERRAIN_NPC_STATIC_PHYSICS_DELTA '+JSON.stringify({initial_digest:initialStatic,current_digest:s.review.static_physics_sha256,delta:s.review.static_physics_delta}));
+    const current=await timed(page.evaluate(()=>window.__sjrpgTerrainNpcCurrentStaticPhysics),'read current installed collider geometry');
+    await writeFile(path.join(out,'current-static-physics.json'),JSON.stringify(current,null,2));
+   }
    assert.equal(s.review.static_physics_sha256,initialStatic,'actual construction colliders unchanged during photo');
    assert.equal(s.review.projection,'orthographic');assert(Math.abs(s.review.elevation-35.264389682754654)<1e-4,'actual isometric camera elevation');
    assert(Math.abs(s.review.azimuth-(45+view.face*90))<1e-4,'actual requested opposite camera corner');
