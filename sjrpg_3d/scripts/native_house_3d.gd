@@ -11,6 +11,8 @@ const TIMBER_TILE := 1.0 / 0.65
 const SLATE_TILE := 2.6
 const SLATE_COURSES := 8
 const SLATE_PITCH := SLATE_TILE / SLATE_COURSES
+const SLATE_COLUMNS := 6
+const SLATE_WIDTH := SLATE_TILE / SLATE_COLUMNS
 const ASHLAR_COURSE := 0.32
 var _root: Node3D
 var _materials := {}
@@ -324,8 +326,8 @@ func _roof(width: float, depth: float, top: float, rise: float) -> void:
 	var reach := depth * 0.5 + EAVES
 	var length := sqrt(half * half + rise * rise)
 	var rows := maxi(1, ceili(length / SLATE_PITCH))
-	var columns := maxi(4, ceili(reach * 2.0 / 0.42))
-	var tile_width := reach * 2.0 / columns
+	var first_column := floori(-reach / SLATE_WIDTH) - 1
+	var last_column := ceili(reach / SLATE_WIDTH) + 1
 	for side in [-1.0, 1.0]:
 		var normal := Vector3(side * rise / half, 1, 0).normalized()
 		# Continuous underlay closes the narrow staggered joints. Course fronts sit
@@ -339,8 +341,9 @@ func _roof(width: float, depth: float, top: float, rise: float) -> void:
 			var low := row * SLATE_PITCH / length
 			var high := minf(1.0, (row + 1) * SLATE_PITCH / length)
 			var splits: Array[float] = [-reach, reach]
-			for column in columns + 1:
-				var edge := -reach + (column + (0.5 if row % 2 else 0.0)) * tile_width
+			for column in range(first_column, last_column + 1):
+				# Anchor joint pitch and stagger to U=0, not the clipped roof edge.
+				var edge := (column + (0.5 if row % 2 else 0.0)) * SLATE_WIDTH
 				if edge > -reach + 0.001 and edge < reach - 0.001:
 					splits.append(edge)
 			splits.sort()

@@ -6,6 +6,9 @@ extends RefCounted
 
 const GLASS_PATH := "res://assets/art/preview3d/chapel-glass.webp"
 const ARCH_SEGMENTS := 12
+const SLATE_TILE := 2.6
+const SLATE_COURSES := 8
+const SLATE_PITCH := SLATE_TILE / SLATE_COURSES
 var _root: Node3D
 var _materials := {}
 var _surfaces := {}
@@ -342,21 +345,34 @@ func _roof(width: float, depth: float, top: float, rise: float) -> void:
 	var half := width * 0.5 + 0.19
 	var reach := depth * 0.5 + 0.20
 	var length := sqrt(half * half + rise * rise)
-	var rows := maxi(10, ceili(length / 0.27))
+	var rows := maxi(1, ceili(length / SLATE_PITCH))
 	_roof_rows = rows
 	for side in [-1.0, 1.0]:
 		var normal := Vector3(side * rise / half, 1, 0).normalized()
+		# A covered underlay and real raised course lips share the village slate grid.
+		var base: Array[Vector3] = [Vector3(side * half, top, -reach), Vector3(side * half, top, reach), Vector3(0, top + rise, reach), Vector3(0, top + rise, -reach)]
+		var base_uv: Array[Vector2] = [Vector2(-reach, 0) / SLATE_TILE, Vector2(reach, 0) / SLATE_TILE, Vector2(reach, length) / SLATE_TILE, Vector2(-reach, length) / SLATE_TILE]
+		_triangle([base[0], base[1], base[2]], [base_uv[0], base_uv[1], base_uv[2]], normal, "slate")
+		_triangle([base[0], base[2], base[3]], [base_uv[0], base_uv[2], base_uv[3]], normal, "slate")
 		for row in rows:
-			var low := float(row) / rows
-			var high := minf(1.0, float(row + 1) / rows + 0.010)
-			var a := Vector3(side * half * (1.0 - low), top + rise * low + 0.025, -reach)
+			var low := row * SLATE_PITCH / length
+			var high := minf(1.0, (row + 1) * SLATE_PITCH / length)
+			var a := Vector3(side * half * (1.0 - low), top + rise * low, -reach) + normal * 0.028
 			var b := Vector3(a.x, a.y, reach)
-			var c := Vector3(side * half * (1.0 - high), top + rise * high + 0.025, reach)
+			var c := Vector3(side * half * (1.0 - high), top + rise * high, reach) + normal * 0.006
 			var d := Vector3(c.x, c.y, -reach)
-			var uv := [Vector2(-reach / 2.6, low * length / 2.6), Vector2(reach / 2.6, low * length / 2.6), Vector2(reach / 2.6, high * length / 2.6), Vector2(-reach / 2.6, high * length / 2.6)]
-			_triangle([a, b, c], [uv[0], uv[1], uv[2]], normal, "slate")
-			_triangle([a, c, d], [uv[0], uv[2], uv[3]], normal, "slate")
-			_quad([a, a - Vector3.UP * 0.018, b - Vector3.UP * 0.018, b], Vector3(side, 0, 0), "slate")
+			var uv: Array[Vector2] = [Vector2(-reach, low * length) / SLATE_TILE, Vector2(reach, low * length) / SLATE_TILE, Vector2(reach, high * length) / SLATE_TILE, Vector2(-reach, high * length) / SLATE_TILE]
+			var tile_normal := (b - a).cross(d - a).normalized()
+			if tile_normal.y < 0.0:
+				tile_normal = -tile_normal
+			_triangle([a, b, c], [uv[0], uv[1], uv[2]], tile_normal, "slate")
+			_triangle([a, c, d], [uv[0], uv[2], uv[3]], tile_normal, "slate")
+			var low_a := a - normal * 0.022
+			var low_b := b - normal * 0.022
+			var edge_normal := Vector3(side * normal.y, -absf(normal.x), 0).normalized()
+			var drop := Vector2(0, 0.022 / SLATE_TILE)
+			_triangle([a, low_a, low_b], [uv[0], uv[0] + drop, uv[1] + drop], edge_normal, "slate")
+			_triangle([a, low_b, b], [uv[0], uv[1] + drop, uv[1]], edge_normal, "slate")
 		for end in [-1.0, 1.0]:
 			_beam(Vector3(side * half, top + 0.04, end * (reach - 0.025)), Vector3(0, top + rise + 0.06, end * (reach - 0.025)), 0.11, "stone")
 		_box(Vector3(side * (half - 0.025), top - 0.035, 0), Vector3(0.10, 0.13, depth + 0.40), "stone")
@@ -392,7 +408,19 @@ func _tower(center: Vector3, height: float) -> float:
 	spire.height = 2.35
 	spire.radial_segments = 4
 	var spire_bottom := bay_top + 0.18
-	_append_mesh(spire, Transform3D(Basis(Vector3.UP, PI * 0.25), center + Vector3(0, spire_bottom + spire.height * 0.5, 0)), "slate")
+	var spire_arrays := spire.surface_get_arrays(0)
+	var spire_points: PackedVector3Array = spire_arrays[Mesh.ARRAY_VERTEX]
+	var spire_normals: PackedVector3Array = spire_arrays[Mesh.ARRAY_NORMAL]
+	var spire_uv: PackedVector2Array = spire_arrays[Mesh.ARRAY_TEX_UV]
+	var perimeter := spire.radial_segments * 2.0 * spire.bottom_radius * sin(PI / spire.radial_segments)
+	var slope := Vector2(spire.height, (spire.bottom_radius - spire.top_radius) * cos(PI / spire.radial_segments)).length()
+	for index in spire_points.size():
+		if absf(spire_normals[index].y) > 0.99:
+			spire_uv[index] = Vector2(spire_points[index].x, spire_points[index].z) / SLATE_TILE
+		else:
+			spire_uv[index] = Vector2(spire_uv[index].x * perimeter, (1.0 - spire_uv[index].y) * slope) / SLATE_TILE
+	spire_arrays[Mesh.ARRAY_TEX_UV] = spire_uv
+	_append_arrays(spire_arrays, Transform3D(Basis(Vector3.UP, PI * 0.25), center + Vector3(0, spire_bottom + spire.height * 0.5, 0)), "slate")
 	for x in [-1.0, 1.0]:
 		for z in [-1.0, 1.0]:
 			_beam(center + Vector3(x * 0.72, spire_bottom + 0.02, z * 0.72), center + Vector3(0, spire_bottom + 2.38, 0), 0.065, "stone")

@@ -56,6 +56,11 @@ func run() -> void:
 	print("ART_AUDIT chapel_refinement " + JSON.stringify({"triangles": report["triangles"], "surfaces": report["surfaces"], "footprint": [report["footprint"].x, report["footprint"].y], "door_recess": report["door_recess"], "door_width": report["door_width"], "door_height": report["door_height"], "floor_height": report["floor_height"], "side_lancets": side_count, "rear_lancets": rear_count, "oculi": report["oculi"].size(), "tower_height": report["tower_height"], "roof_rows": report["roof_rows"], "bounds_min": [actual_bounds.position.x, actual_bounds.position.y, actual_bounds.position.z], "bounds_max": [actual_bounds.end.x, actual_bounds.end.y, actual_bounds.end.z]}))
 	var valid := true
 	var winding := true
+	var slate_course_grid := true
+	var slate_lips := 0
+	var spire_min := Vector2(INF, INF)
+	var spire_max := Vector2(-INF, -INF)
+	var spire_vertices := 0
 	var stone: MeshInstance3D
 	var oak: MeshInstance3D
 	for node: MeshInstance3D in report["meshes"]:
@@ -71,14 +76,27 @@ func run() -> void:
 			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
 			for index in vertices.size():
 				valid = valid and vertices[index].is_finite() and uv[index].is_finite() and absf(normals[index].length() - 1.0) < 0.001
+				if node.name == "ChapelDetail_slate" and vertices[index].y > float(report["tower_height"]) - 2.511 and absf(normals[index].y) < 0.99:
+					spire_min = spire_min.min(uv[index])
+					spire_max = spire_max.max(uv[index])
+					spire_vertices += 1
 			var count := indices.size() if not indices.is_empty() else vertices.size()
 			for index in range(0, count, 3):
 				var a: int = indices[index] if not indices.is_empty() else index
 				var b: int = indices[index + 1] if not indices.is_empty() else index + 1
 				var c: int = indices[index + 2] if not indices.is_empty() else index + 2
 				winding = winding and (vertices[b] - vertices[a]).cross(vertices[c] - vertices[a]).dot(normals[a]) <= 0.00001
+				if node.name == "ChapelDetail_slate" and normals[a].y < -0.05 and absf(normals[a].z) < 0.0001 and absf(normals[a].x) > 0.05:
+					var phase := minf(uv[a].y, minf(uv[b].y, uv[c].y)) * Ortho3DChapel.SLATE_COURSES
+					slate_course_grid = slate_course_grid and absf(phase - roundf(phase)) < 0.0001 and absf((uv[b] - uv[a]).cross(uv[c] - uv[a])) > 0.00000001
+					slate_lips += 1
 	check("all stone roof glass and trim surfaces have finite unit normals and UVs", valid)
 	check("actual front and back mesh faces keep consistent outward winding", winding)
+	check("chapel slate uses the same eight physical courses as the house family", Ortho3DChapel.SLATE_TILE == NativeHouse3D.SLATE_TILE and Ortho3DChapel.SLATE_COURSES == NativeHouse3D.SLATE_COURSES)
+	check("actual chapel lips align with the shared slate UV grid and retain area", slate_lips == int(report["roof_rows"]) * 4 and slate_lips > 0 and slate_course_grid)
+	var spire_perimeter := 4.0 * 2.0 * 1.04 * sin(PI / 4.0)
+	var spire_slope := Vector2(2.35, (1.04 - 0.035) * cos(PI / 4.0)).length()
+	check("actual spire slate UV covers its physical perimeter and slope rather than one stretched image", spire_vertices > 8 and absf((spire_max.x - spire_min.x) - spire_perimeter / Ortho3DChapel.SLATE_TILE) < 0.0001 and absf((spire_max.y - spire_min.y) - spire_slope / Ortho3DChapel.SLATE_TILE) < 0.0001)
 	check("chapel stone material is available for aperture checks", is_instance_valid(stone))
 	if is_instance_valid(stone):
 		var size: Vector2 = report["footprint"]

@@ -54,6 +54,8 @@ func run() -> void:
 		var envelope := true
 		var slate_uv := true
 		var slate_course_grid := true
+		var slate_column_grid := true
+		var measured_joints := 0
 		var measured_lips := 0
 		for mesh in meshes:
 			check("house reuses only its shared existing materials: " + str(mesh.name), NativeHouse3D.MATERIAL_KEYS.any(func(material: String) -> bool: return mesh.material_override == preview._materials["door" if material == "wood" else material]))
@@ -81,11 +83,20 @@ func run() -> void:
 							var phase := minf(uv[a].y, minf(uv[b].y, uv[c].y)) * NativeHouse3D.SLATE_COURSES
 							slate_course_grid = slate_course_grid and absf(phase - roundf(phase)) < 0.0001
 							measured_lips += 1
+							var stagger := fposmod(roundf(phase), 2.0) * 0.5
+							for vertex: int in [a, b, c]:
+								if absf(absf(points[vertex].z) - (depth * 0.5 + NativeHouse3D.EAVES)) < 0.005:
+									continue
+								var joint := uv[vertex].x * NativeHouse3D.SLATE_COLUMNS - stagger
+								var gutter := 0.004 / NativeHouse3D.SLATE_TILE * NativeHouse3D.SLATE_COLUMNS
+								slate_column_grid = slate_column_grid and absf(absf(joint - roundf(joint)) - gutter) < 0.0001
+								measured_joints += 1
 		check("all house mesh surfaces have finite vertices/UV/unit normals: " + key, valid)
 		check("front/back/side roof faces keep clockwise outward winding: " + key, winding)
 		check("ground approach receives no new protruding geometry: " + key, envelope)
 		check("all slate slopes and ridge-cap faces retain a nonzero physical UV area: " + key, slate_uv)
 		check("actual slate lips follow the eight-course texture grid without a second painted rhythm: " + key, measured_lips >= 100 and slate_course_grid)
+		check("actual slate column joints share the six-column UV pitch and stagger", measured_joints >= 100 and slate_column_grid)
 		for entry: Dictionary in report["openings"]:
 			var opening: Dictionary = entry["opening"]
 			if opening.get("role", "") not in ["closed_door", "window"]:

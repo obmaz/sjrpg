@@ -1,0 +1,64 @@
+{
+  "source": {
+    "path": "assets/source/preview3d/town-slate/generated.png",
+    "sha256": "0b8653597c6a26f476e8a98e4704b1703bcba1cabb158febbb9b658a92b73605",
+    "bytes": 2236328
+  },
+  "runtime": {
+    "source": "assets/source/preview3d/town-slate/generated.png",
+    "source_sha256": "0b8653597c6a26f476e8a98e4704b1703bcba1cabb158febbb9b658a92b73605",
+    "generation": "assets/source/preview3d/town-slate/generation.json",
+    "path": "assets/art/preview3d/slate.webp",
+    "sha256": "daed024e7f2fc585cf1c300e43135bd447bfa3565c66f833424e3cf0e6e79350",
+    "size": [
+      768,
+      768
+    ],
+    "operation": "Full-source downsample to768px and WebP quality94; no painting, source relighting or seam blending.",
+    "physical_tile_m": [
+      2.6,
+      2.6
+    ],
+    "courses": 8,
+    "source_size": [
+      1254,
+      1254
+    ],
+    "runtime_bytes": 102152,
+    "source_pixel_measurements": {
+      "observed_horizontal_joint_rows_px": [
+        161,
+        321,
+        479,
+        638,
+        798,
+        957,
+        1112
+      ],
+      "expected_courses": 8,
+      "edge_jump_rgb_mean_0_255": {
+        "left_right": 5.674109516214779,
+        "top_bottom": 6.509303561935141
+      },
+      "review_note": "Quantitative observations only; actual repeated surfaces/corners must be visually reviewed."
+    }
+  },
+  "unchanged_family_materials": {
+    "limestone": {
+      "sha256": "03983784223f8bdf5fc89549625c71555e80ba7240c43602ce3624d9df729a21",
+      "bytes": 194962
+    },
+    "timber": {
+      "sha256": "4cac472a9fb54db9e89bdaf1577db846bd49f936e759dca7b10101175f7dcb1c",
+      "bytes": 164210
+    },
+    "bark": {
+      "sha256": "ca8532c220bb6dcb78a2b14a8dc4a78439885e0ee4f061ff92dee58007af7736",
+      "bytes": 204322
+    }
+  },
+  "new_texture_slots": 0,
+  "same_runtime_resource_path": true,
+  "rgba8_full_mip_upper_bound_bytes": 3145720,
+  "limitations": "Byte and image budgets are not measured GPU allocations or FPS. No normal/roughness data was fabricated."
+}
