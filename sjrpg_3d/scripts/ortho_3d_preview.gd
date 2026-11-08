@@ -508,7 +508,7 @@ func _publish_probe() -> void:
 	var physics: SpatialWorld3D = game.get("spatial_world")
 	var ready := actor != null and (animation != null or not _native_mage) and (calls > 0 or _ready_published) and physics != null and physics.physics_ticks > 0
 	var eye := camera.global_transform.basis.z.normalized()
-	var report := {"ready": ready, "native_active": _native_visible, "native_width": viewport.size.x, "native_height": viewport.size.y,
+	var report := {"paused": get_tree().paused, "panel_open": game.hud.panel_open(), "panel_script": game.hud._panel.get_script().resource_path if game.hud.panel_open() else "", "logical_size": [game.get_viewport_rect().size.x, game.get_viewport_rect().size.y], "window_size": [get_window().size.x, get_window().size.y], "last_background_notification": game.get_meta("last_background_notification", -1), "ready": ready, "native_active": _native_visible, "native_width": viewport.size.x, "native_height": viewport.size.y,
 		"quality": "low" if Prefs.low_resolution else "high", "spatial_draw_calls": calls,
 		"spatial_primitives": viewport.get_render_info(Viewport.RENDER_INFO_TYPE_VISIBLE, Viewport.RENDER_INFO_PRIMITIVES_IN_FRAME),
 		"shadow_draw_calls": viewport.get_render_info(Viewport.RENDER_INFO_TYPE_SHADOW, Viewport.RENDER_INFO_DRAW_CALLS_IN_FRAME),

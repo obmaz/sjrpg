@@ -150,6 +150,15 @@ if (scene === 'title' && args['entry-flow'] === '1') {
         packArrived();
     });
 }
+await page.addInitScript(() => {
+    window.__sjrpgCaptureFocusEvents = [];
+    const record = event => {
+        const ring = window.__sjrpgCaptureFocusEvents;
+        ring.push({type:event.type,target:event.target?.id || event.target?.nodeName || 'window',at:performance.now(),visible:document.visibilityState,focused:document.hasFocus()});
+        if(ring.length>24)ring.shift();
+    };
+    for(const type of ['blur','focus','resize','visibilitychange']) window.addEventListener(type,record,true);
+});
 await page.goto(launchURL.toString());
 if (scene === 'title' && args['entry-flow'] === '1') {
     let timeout;
@@ -418,11 +427,21 @@ if (args.rotate === '1') {
     ]) {
         const ticks = await page.evaluate(() => window.__sjrpg3dProbe.physics_ticks);
         await page.setViewportSize(size);
+        try {
         await page.waitForFunction(({landscape, ticks}) => {
             const p = window.__sjrpg3dProbe;
             return p?.native_active && p.physics_ticks > ticks &&
                 (p.native_width > p.native_height) === landscape;
         }, {landscape: size.width > size.height, ticks}, {timeout: 15000});
+        } catch(error) {
+            console.log('ROTATION_FAILURE '+JSON.stringify(await page.evaluate(()=>({
+                probe:window.__sjrpg3dProbe,visible:document.visibilityState,focused:document.hasFocus(),active:document.activeElement?.id,
+                window:[innerWidth,innerHeight],canvas:Array.from(document.querySelectorAll('canvas')).map(c=>({id:c.id,width:c.width,height:c.height,css:[c.getBoundingClientRect().width,c.getBoundingClientRect().height]})),
+                orientation:window.SjrpgOrientation?.state(),events:window.__sjrpgCaptureFocusEvents
+            }))));
+            await capture({path:out.replace(/\.png$/, '-rotation-failed.png')});
+            throw error;
+        }
         await page.waitForTimeout(1200);
         await capture({path: out.replace(/\.png$/, `-${label}.png`)});
     }

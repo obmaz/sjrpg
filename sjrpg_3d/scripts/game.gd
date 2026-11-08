@@ -946,6 +946,7 @@ func _process(delta: float) -> void:
 func _notification(what: int) -> void:
 	if what in [NOTIFICATION_WM_WINDOW_FOCUS_OUT, NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_APPLICATION_PAUSED]:
 		if is_node_ready() and process_mode != Node.PROCESS_MODE_DISABLED:
+			set_meta("last_background_notification", what)
 			_pause_in_background()
 
 

@@ -13,7 +13,7 @@ permissions:
   contents: read
 jobs:
   capture:
-    if: "!contains(github.event.head_commit.message, '[test-only]')"
+    if: "!contains(github.event.head_commit.message, '[test-only]') && !contains(github.event.head_commit.message, '[rotation-diagnostic]')"
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -124,3 +124,35 @@ jobs:
         run: |
           tools/setup_godot.sh
           sjrpg_3d/tools/check.sh --only=native_cave_geometry,dungeon_art,warp_layout,world_zoom,screen_orientation,fullscreen_settings
+
+  rotation_diagnostic:
+    if: contains(github.event.head_commit.message, '[rotation-diagnostic]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.godot-tools
+            ~/.local/share/godot/export_templates
+          key: godot-${{ hashFiles('.godot-version') }}-tools-v1
+      - name: Export and run exact live rotation check
+        run: |
+          tools/setup_godot.sh
+          sjrpg_3d/tools/export_web.sh
+          npm ci --ignore-scripts
+          npx playwright install --with-deps chromium
+          mkdir -p build/web/3d build/rotation-review
+          cp -a sjrpg_3d/build/web/. build/web/3d/
+          tools/check_native_web.sh
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: native-live-rotation-diagnostic
+          path: build/review
+          retention-days: 7
