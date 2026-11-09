@@ -49,5 +49,4 @@ python3 tools/prepare_apk_version.py --project sjrpg \
 3. `upload_file`에 로컬 APK의 절대 경로를 `source_file`로, 기본 폴더와 규칙에 따른 전체 경로를 `destination_path`로 전달한다. `in_progress`이면 반환된 작업 ID와 권장 간격으로 `check_upload_file_status`를 사용한다. `completed`가 확인된 뒤 `latest-build.json`을 갱신한다.
 4. APK 이름 충돌 시 임의로 재시도하지 않는다. 최신 기록 교체·실패 복구·성공 후 임시 기록 정리는 [공통 전달 절차](../../../docs/apk-build-record.md)를 따른다. 빌드별 JSON은 업로드하지 않는다.
 5. 완료 응답의 실제 경로와 크기를 확인하고 보고한다. APK만 성공하고 JSON이 실패했다면 구분해 보고하고 APK를 다시 올리지 않는다. 서버 해시를 받지 않았다면 서버 해시 검증을 주장하지 않는다.
-6. 기존 `build_apk_dropbox.sh`, `upload_dropbox.py`, `dropbox_auth.py`는 이 작업에서 사용하지 않는다. 플러그인을 사용할 수 없으면 APK를 보존하고 연결이 필요함을 알린다.
-7. 빌드·전달 요청에 GitHub Actions, 공개 릴리스, 태그 또는 웹 배포를 추가하지 않는다.
+6. 빌드·전달 요청에 GitHub Actions, 공개 릴리스, 태그 또는 웹 배포를 추가하지 않는다.
