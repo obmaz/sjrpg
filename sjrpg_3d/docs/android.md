@@ -31,7 +31,7 @@ adb install -r sjrpg_3d/build/android/sjrpg_3d-debug.apk
 - 기본 폴더는 `/앱/sjrpg`이며 APK 이름은 `sjrpg-<실제 versionName>-arm64-<빌드한 커밋의 짧은 SHA>.apk`입니다. 버전 관리 기록은 `latest-build.json` 한 개만 사용하며 APK별 JSON은 생성하거나 업로드하지 않습니다. 사용자가 지정한 기본 설정이므로 같은 요청마다 목적지를 재확인하지 않습니다.
 - `list_folder`로 폴더와 이름 충돌을 확인한 뒤 `upload_file`에 로컬 파일 절대 경로와 전체 Dropbox 목적지를 전달합니다. 비동기 업로드는 `check_upload_file_status`로 완료를 확인합니다.
 - APK 전달 완료 후 실제 버전·커밋·크기·서명 지문·로컬 SHA-256·Dropbox 방식 content hash·검증 범위를 담은 `latest-build.json`만 생성하거나 플러그인이 지원하는 방식으로 갱신합니다. 서버 해시를 받지 않았다면 서버 해시 검증을 주장하지 않습니다.
-- 직접 API·환경변수 토큰·별도 업로드 스크립트로 우회하지 않습니다. 기존 `build_apk_dropbox.sh`, `upload_dropbox.py`, `dropbox_auth.py`는 이 전달 절차에서 사용하지 않습니다. 플러그인이 없으면 APK를 보존하고 연결이 필요함을 알립니다.
+- 직접 API·환경변수 토큰·별도 업로드 스크립트로 우회하지 않습니다. 플러그인이 없으면 APK를 보존하고 연결이 필요함을 알립니다.
 - 이름 충돌 시 덮어쓰기·삭제·다른 이름 재시도를 임의로 하지 않습니다. 공유 링크는 별도로 요청받았을 때만 만듭니다.
 - 완료 응답의 실제 경로·크기를 확인합니다. APK 전달과 `latest-build.json` 갱신의 성공 여부를 구분하고 기기·에뮬레이터 실행 여부도 보고합니다.
 
