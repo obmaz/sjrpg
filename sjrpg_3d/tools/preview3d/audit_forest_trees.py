@@ -73,6 +73,17 @@ def main():
                 maximum = max(maximum, fit_error(vertices, width, top, step*math.tau/16))
         variants.append({"mesh": variant["path"], "triangles": triangles,
                          "all_surface_vertices": len(vertices)})
+    additional = json.loads((PROJECT / recipe["additional_mesh_provenance"]).read_text())
+    assert hashlib.sha256((PROJECT / additional["generator"]).read_bytes()).hexdigest() == additional["generator_sha256"]
+    for variant in additional["variants"]:
+        assert hashlib.sha256((PROJECT / variant["path"]).read_bytes()).hexdigest() == variant["sha256"]
+        assert variant["surfaces"] == 2 and 0 < variant["triangles"] < 5000
+        assert not variant["authoring"]["billboard"]
+    material = json.loads((PROJECT / recipe["additional_material_provenance"]).read_text())
+    for path_key, hash_key in [("generator", "generator_sha256"), ("source", "source_sha256"), ("runtime", "sha256"), ("reference", "reference_sha256")]:
+        assert hashlib.sha256((PROJECT / material[path_key]).read_bytes()).hexdigest() == material[hash_key]
+    needles = Image.open(PROJECT / material["runtime"])
+    assert needles.size == tuple(material["size"]) and needles.mode == "RGBA"
     image = Image.open(PROJECT / "assets/art/preview3d/tree-leaves.webp")
     histogram = image.getchannel("A").histogram()
     threshold = recipe["budget"]["alpha_scissor_threshold"]
@@ -80,6 +91,8 @@ def main():
     assert coverage == recipe["budget"]["leaf_texture_alpha_coverage_at_threshold"]
     assert maximum < 1e-9
     print(json.dumps({"audit": "CPU source geometry/provenance only", "variants": variants,
+                      "additional_res_hashes_verified": len(additional["variants"]),
+                      "additional_res_geometry_validation": "Godot wild_vegetation_bridge and ortho_3d_trees cases",
                       "source_ids": len(sources), "yaw_samples_per_source": 16,
                       "maximum_fit_error_metres": maximum, "leaf_alpha_coverage": coverage,
                       "native_render_and_device_performance": "pending"}, indent=2))

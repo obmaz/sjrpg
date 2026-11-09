@@ -1,0 +1,78 @@
+{
+	"billboards": false,
+	"generator": "scripts/native_wild_vegetation.gd",
+	"generator_sha256": "5483f5004af0620e83f2ded934f82677cc1fc19292b7b7c589a8007cb2a58ca1",
+	"original_geometry": true,
+	"variants": [
+		{
+			"authoring": {
+				"billboard": false,
+				"branches": 49,
+				"kind": 0,
+				"root": "(0.0, 0.0, 0.0)",
+				"sprays": 193
+			},
+			"bounds": "[P: (-2.403, 0.0, -2.157965), S: (4.792865, 5.88, 4.305486)]",
+			"path": "assets/art/preview3d/dark-fir.res",
+			"sha256": "565af6dc0056759f26875746c70d1864786405779ee3d990d9f131d9d077d7ba",
+			"surfaces": 2,
+			"triangles": 3320
+		},
+		{
+			"authoring": {
+				"billboard": false,
+				"branches": 49,
+				"kind": 1,
+				"root": "(0.0, 0.0, 0.0)",
+				"sprays": 193
+			},
+			"bounds": "[P: (-2.54325, 0.0, -2.283348), S: (5.072723, 5.04, 4.556665)]",
+			"path": "assets/art/preview3d/black-pine.res",
+			"sha256": "1d8213c43c6cfc617c28f6bb775b2cdef601eb9deba9177aadd14206e27a0831",
+			"surfaces": 2,
+			"triangles": 3320
+		},
+		{
+			"authoring": {
+				"billboard": false,
+				"branches": 41,
+				"kind": 2,
+				"root": "(0.0, 0.0, 0.0)",
+				"sprays": 161
+			},
+			"bounds": "[P: (-1.417215, 0.0, -1.497983), S: (3.000137, 6.51, 3.069256)]",
+			"path": "assets/art/preview3d/spire-cypress.res",
+			"sha256": "7590ff60d402ad992163fb4b492cdd6e3ad6e6fd9faa329f0ef3ea8694b8758a",
+			"surfaces": 2,
+			"triangles": 2776
+		},
+		{
+			"authoring": {
+				"billboard": false,
+				"branches": 19,
+				"kind": 3,
+				"root": "(0.0, 0.0, 0.0)",
+				"sprays": 73
+			},
+			"bounds": "[P: (-1.000501, 0.0, -0.879353), S: (1.994284, 0.9975, 1.768913)]",
+			"path": "assets/art/preview3d/juniper.res",
+			"sha256": "24de665bbc5057c6734ef02663fff991bc8a2c687c36b7ba8a5dea5978fad080",
+			"surfaces": 2,
+			"triangles": 1280
+		},
+		{
+			"authoring": {
+				"billboard": false,
+				"branches": 91,
+				"kind": 4,
+				"root": "(0.0, 0.0, 0.0)",
+				"sprays": 37
+			},
+			"bounds": "[P: (-0.829138, 0.0, -0.750796), S: (1.686421, 0.9975, 1.49039)]",
+			"path": "assets/art/preview3d/thorn-bramble.res",
+			"sha256": "90f5212076ed5e634ef47a82c201af105d449c0800b74dc84237ee2498480bc7",
+			"surfaces": 2,
+			"triangles": 2432
+		}
+	]
+}

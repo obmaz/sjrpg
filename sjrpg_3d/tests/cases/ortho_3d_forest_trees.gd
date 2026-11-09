@@ -4,7 +4,7 @@ extends TestCase
 
 func run() -> void:
 	var recipe: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(Ortho3DForestTrees.RECIPE))
-	check("forest tree recipe pins its existing mesh and material provenance", recipe["mesh_provenance"] == "assets/art/preview3d/town-trees.json" and recipe["material_provenance"] == "assets/source/preview3d/trees/generation.json" and not recipe["new_generated_pixels"])
+	check("forest tree recipe pins its existing mesh and material provenance", recipe["mesh_provenance"] == "assets/art/preview3d/town-trees.json" and recipe["material_provenance"] == "assets/source/preview3d/trees/generation.json" and recipe["additional_mesh_provenance"] == "assets/source/preview3d/wild-vegetation/meshes.json")
 	var game := await make_game("mage")
 	if game.ortho_preview == null:
 		game._enable_ortho_preview()
@@ -21,7 +21,7 @@ func run() -> void:
 	var selected := Ortho3DForestTrees.sources(game.world, game.village.town_trees)
 	check("all 260 outer trees own real replacements instead of source cards", selected.size() >= 260 and report["trees"].size() == selected.size() and int(environment.report["native_forest_trees"]) == selected.size())
 	check("the placement audit contains every source-sized native transform", layout["placements"].size() == selected.size() and not JSON.stringify(layout).is_empty())
-	check("forest uses bounded spatial chunks instead of one forest-wide AABB", int(report["chunks"]) > 4 and int(report["groups"]) <= int(report["chunks"]) * 2 and float(report["chunk_metres"]) == 16.0)
+	check("forest uses bounded spatial chunks instead of one forest-wide AABB", int(report["chunks"]) > 4 and int(report["groups"]) <= int(report["chunks"]) * Ortho3DTrees.PATHS.size() and float(report["chunk_metres"]) == 16.0)
 	check("full native crowns keep measured source width and canopy top", float(report["max_fit_error"]) < 0.0001 and not report["billboards"])
 	var ownership := true
 	for tree: IsoSprite in game.village.town_trees:
@@ -60,12 +60,12 @@ func run() -> void:
 		keys[entry["key"]] = true
 	check("every root follows native ground and retains the original trunk collision", roots_match and collisions_match)
 	check("chunk AABBs contain every branch, root and full crown vertex", bounds_match)
-	check("all chunks share only the two approved shadow-casting native meshes", sharing and variation.size() == 2 and keys.size() == selected.size())
+	check("all chunks share the five shadow-casting tree variants", sharing and variation.size() == Ortho3DTrees.PATHS.size() and keys.size() == selected.size())
 	var town_report: Dictionary = preview._trees.get_meta("native_tree_report")
 	var town_shared := true
 	for entry: Dictionary in town_report["trees"]:
 		var mesh: Mesh = entry["batch"].multimesh.mesh
-		town_shared = town_shared and (mesh == library[0]["mesh"] or mesh == library[1]["mesh"])
+		town_shared = town_shared and library.any(func(entry: Dictionary) -> bool: return mesh == entry["mesh"])
 	check("town and outer forest share native mesh and lit material resources", town_shared)
 	# Fresh nodes and changed child order must not change persistent source-key variation.
 	var fixture := Node2D.new()

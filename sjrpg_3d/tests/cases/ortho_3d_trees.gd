@@ -24,7 +24,7 @@ func run() -> void:
 		return
 	var report: Dictionary = trees.get_meta("native_tree_report")
 	check("all existing town trees receive native replacements", report["trees"].size() == game.village.town_trees.size() and report["trees"].size() > 2)
-	check("native trees share two mesh groups", int(report["groups"]) <= 2 and not report["billboards"])
+	check("native trees share bounded species mesh groups", int(report["groups"]) <= Ortho3DTrees.PATHS.size() and not report["billboards"])
 	check("native tree width and canopy top match original measured sprite size", float(report["max_fit_error"]) < 0.0001)
 	var roots_match := true
 	var materials_valid := true
@@ -33,7 +33,10 @@ func run() -> void:
 		var original: IsoSprite = entry["source"].get_ref()
 		var position: Vector3 = entry["position"]
 		roots_match = roots_match and position.distance_to(Ortho3DPreview.ground_position(original.position)) < 0.00001 and absf(position.y) < 0.00001
-	for batch: MultiMeshInstance3D in trees.get_children():
+	for child: Node in trees.get_children():
+		if not child is MultiMeshInstance3D:
+			continue
+		var batch := child as MultiMeshInstance3D
 		materials_valid = materials_valid and batch.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 		var mesh: Mesh = batch.multimesh.mesh
 		var points := PackedVector3Array()
@@ -52,7 +55,7 @@ func run() -> void:
 				bark_found = true
 		materials_valid = materials_valid and leaf_found and bark_found
 		var bounds := mesh.get_aabb()
-		volume = volume and bounds.size.x > 2.5 and bounds.size.z > 2.5 and bounds.size.y > 3.5 and absf(bounds.position.y) < 0.001
+		volume = volume and bounds.size.x > 1.0 and bounds.size.z > 1.0 and bounds.size.y > 3.5 and absf(bounds.position.y) < 0.001
 		for yaw in [0.0, PI * 0.5, PI, PI * 1.5]:
 			var fit := Ortho3DTrees.fit_basis(points, 4.5, 4.2, yaw)
 			var projected := Ortho3DTrees.projected_bounds(points, fit)

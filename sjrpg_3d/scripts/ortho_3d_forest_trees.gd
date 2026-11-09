@@ -74,7 +74,7 @@ static func build(preview: Node, parent: Node3D, world: Node2D) -> Node3D:
 			continue
 		var frame: Array = tree.def["source"]
 		var foot: Array = tree.def["foot"]
-		var width := float(frame[2]) * tree.k / factor
+		var width := float(frame[2]) * tree.k / factor * Ortho3DTrees.crown_ratio(variant)
 		var top := (float(foot[1]) - float(frame[1])) * tree.k / factor
 		if width <= 0.0 or top <= 0.0:
 			continue
@@ -96,7 +96,7 @@ static func build(preview: Node, parent: Node3D, world: Node2D) -> Node3D:
 		buckets[bucket_key]["entries"].append(entry)
 		report["max_fit_error"] = maxf(float(report["max_fit_error"]), fit_error)
 		# A JSON-safe complete placement audit, including the full source sizing recipe.
-		record["placements"].append({"key": key, "source_frame": frame.duplicate(), "source_foot": foot.duplicate(), "source_k": tree.k, "source_flip": tree.flip, "source_position": [point.x, point.y], "variant": variant, "mesh": Ortho3DTrees.PATHS[variant], "yaw": yaw, "position": _v3(position), "basis": _basis_record(basis), "width": width, "top": top, "collision_radius_pixels": radius})
+		record["placements"].append({"key": key, "source_frame": frame.duplicate(), "source_foot": foot.duplicate(), "source_k": tree.k, "source_flip": tree.flip, "crown_ratio": Ortho3DTrees.crown_ratio(variant), "source_position": [point.x, point.y], "variant": variant, "mesh": Ortho3DTrees.PATHS[variant], "yaw": yaw, "position": _v3(position), "basis": _basis_record(basis), "width": width, "top": top, "collision_radius_pixels": radius})
 	var chunks := {}
 	for key: String in buckets:
 		var bucket: Dictionary = buckets[key]
@@ -134,8 +134,9 @@ static func build(preview: Node, parent: Node3D, world: Node2D) -> Node3D:
 		multi.custom_aabb = bounds.grow(0.02)
 		batch.set_meta("chunk", chunk)
 		chunks[chunk] = true
-	report["groups"] = root.get_child_count()
+	report["groups"] = buckets.size()
 	report["chunks"] = chunks.size()
+	NativeWildVegetation.build_shrubs(preview, root, selected)
 	root.set_meta("native_forest_tree_report", report)
 	root.set_meta("native_forest_tree_layout", record)
 	return root

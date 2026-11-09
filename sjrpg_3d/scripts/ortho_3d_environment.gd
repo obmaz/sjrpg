@@ -260,12 +260,7 @@ func _build_river() -> void:
 func _build_bridge() -> void:
 	var bridge: Bridge = preview.game.village.bridge
 	_floor(bridge.deck_polygon(), load("res://assets/art/forest/paving.webp"), forest, 0.045)
-	var deck := bridge.deck_polygon()
-	for pair in [[deck[0], deck[1]], [deck[3], deck[2]]]:
-		var a := Ortho3DPreview.ground_position(pair[0])
-		var b := Ortho3DPreview.ground_position(pair[1])
-		var rail: MeshInstance3D = preview._box((a + b) * 0.5 + Vector3.UP * 0.48, Vector3(a.distance_to(b), 0.96, 0.22), preview._materials["stone"], forest)
-		rail.rotation.y = -atan2((b - a).z, (b - a).x)
+	NativeBridge3D.build(preview, forest)
 
 
 func _build_raised_floors() -> void:

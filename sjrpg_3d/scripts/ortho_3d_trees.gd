@@ -3,12 +3,17 @@ extends RefCounted
 ## Fixed three-dimensional leaf sprays and branches; source simulation keeps tree collision.
 ## Alpha-cutout leaves receive actual light and cast depth-tested shadows, never billboard.
 
-const PATHS := ["res://assets/art/preview3d/town-oak-0.glb", "res://assets/art/preview3d/town-oak-1.glb"]
+const PATHS := ["res://assets/art/preview3d/town-oak-0.glb", "res://assets/art/preview3d/town-oak-1.glb", "res://assets/art/preview3d/dark-fir.res", "res://assets/art/preview3d/black-pine.res", "res://assets/art/preview3d/spire-cypress.res"]
 const LEAVES := "res://assets/art/preview3d/tree-leaves.webp"
 const BARK := "res://assets/art/preview3d/bark.webp"
 const CAMERA_UP := Vector3(-0.408248290463863, 0.816496580927726, -0.408248290463863)
 const CAMERA_RIGHT := Vector3(0.707106781186548, 0, -0.707106781186548)
 static var _default_library: Array[Dictionary] = []
+static var _bark_ink: StandardMaterial3D
+static var _needle_ink: StandardMaterial3D
+
+static func crown_ratio(variant: int) -> float:
+	return [1.0, 1.0, 0.68, 0.86, 0.52][variant]
 
 
 static func _material(texture: Texture2D, leaves: bool) -> StandardMaterial3D:
@@ -45,7 +50,7 @@ static func _points(mesh: Mesh) -> PackedVector3Array:
 	return points
 
 
-## Town and outer forest share the same two meshes/materials, not one copy per chunk.
+## 마을과 외곽 숲은 5종 메시와 공유 재질을 재사용하고 청크마다 복제하지 않는다.
 ## Only the default family is cached; temporary comparison textures cannot grow a registry.
 static func mesh_library(leaf_texture_path: String = LEAVES) -> Array[Dictionary]:
 	if leaf_texture_path == LEAVES and not _default_library.is_empty():
@@ -55,25 +60,35 @@ static func mesh_library(leaf_texture_path: String = LEAVES) -> Array[Dictionary
 	var bark_texture: Texture2D = load(BARK)
 	var leaf_material := _material(leaf_texture, true)
 	var bark_material := _material(bark_texture, false)
+	var needle_material := _material(load(NativeWildVegetation.NEEDLES) if leaf_texture_path == LEAVES else leaf_texture, true)
+	needle_material.alpha_scissor_threshold = 0.28
+	if leaf_texture_path == LEAVES:
+		_bark_ink = bark_material
+		_needle_ink = needle_material
 	for path: String in PATHS:
 		var entry := {"path": path, "mesh": null, "points": PackedVector3Array()}
 		library.append(entry)
 		if not ResourceLoader.exists(path):
 			continue
-		var packed := load(path) as PackedScene
-		if packed == null:
-			continue
-		var imported := packed.instantiate()
-		var source := _find_mesh(imported)
-		if source != null and source.mesh != null:
-			var mesh: Mesh = source.mesh.duplicate()
+		var resource: Resource = load(path)
+		var mesh: Mesh
+		var imported: Node
+		if resource is Mesh:
+			mesh = resource.duplicate() as Mesh
+		elif resource is PackedScene:
+			imported = (resource as PackedScene).instantiate()
+			var source := _find_mesh(imported)
+			if source != null and source.mesh != null:
+				mesh = source.mesh.duplicate() as Mesh
+		if mesh != null:
 			for surface in mesh.get_surface_count():
 				var original := mesh.surface_get_material(surface)
 				var is_leaf := original != null and original.resource_name.begins_with("LeafSprays")
-				mesh.surface_set_material(surface, leaf_material if is_leaf else bark_material)
+				mesh.surface_set_material(surface, (needle_material if original.resource_name == "LeafSpraysNeedles" else leaf_material) if is_leaf else bark_material)
 			entry["mesh"] = mesh
 			entry["points"] = _points(mesh)
-		imported.free()
+		if imported != null:
+			imported.free()
 	if leaf_texture_path == LEAVES:
 		_default_library = library
 	return library
@@ -150,7 +165,7 @@ static func build(preview: Node, leaf_texture_path: String = LEAVES) -> Node3D:
 			var tree: IsoSprite = selected[index]
 			var frame: Array = tree.def["source"]
 			var foot: Array = tree.def["foot"]
-			var width: float = float(frame[2]) * tree.k / factor
+			var width: float = float(frame[2]) * tree.k / factor * crown_ratio(variant)
 			var top: float = (float(foot[1]) - float(frame[1])) * tree.k / factor
 			var yaw := fmod(float(index) * 2.39996322973 + float(variant) * 0.71, TAU)
 			var basis := fit_basis(points, width, top, yaw)
@@ -163,5 +178,6 @@ static func build(preview: Node, leaf_texture_path: String = LEAVES) -> Node3D:
 			report["max_fit_error"] = maxf(float(report["max_fit_error"]), error)
 			report["trees"].append({"source": weakref(tree), "batch": batch, "index": index, "position": position, "transform": transform, "target_width": width, "target_top": top, "projected_bounds": bounds, "fit_error": error})
 		report["groups"] = int(report["groups"]) + 1
+	NativeWildVegetation.build_shrubs(preview, root, source_trees)
 	root.set_meta("native_tree_report", report)
 	return root

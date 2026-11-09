@@ -43,3 +43,11 @@ Android 도구 준비는 `sjrpg_3d/tools/setup_android.sh`에서 수행합니다
 `sjrpg_3d/tools/preview3d/make_surface_variety.py`는 원본 수식에서 512px 알베도 18종을 재현합니다. 기존 이미지를 재색칠하지 않으며 원본 PNG·고정 시드·런타임 해시는 `assets/source/preview3d/surface-variety/provenance.json`에 보존합니다. 벽/자연물은 2.56m, 지붕은 2.6m의 기존 UV와 실제 기하를 유지합니다. 새 표면은 mode=1 보호 규칙을 적용하며 법선/거칠기 맵으로 가장하지 않습니다. `NativeHouse3D.STYLES`가 집별 벽·지붕·목재를 연결하고, `NativeSceneryProps3D`는 위치에서 공유 바위 재질을 고릅니다. 지면 변형은 지형 역할 번호에 고정되어 로드 순서에 영향받지 않습니다. 원래 풀잎 결은 기본 알베도로 보존하고 새 헤더·이끼 표면을 세부 재질로 혼합해 큰 단색 얼룩을 피합니다.
 
 `NativeEnemyModels._form`은 유기체에 한정해 제한된 단면 보간과 연속 법선을 사용합니다. 바위와 철물의 모서리는 유지하며, 같은 관절별 메시 캐시를 재사용합니다. 몸체·공격·시체·실제 충돌은 기존 규칙을 유지합니다. 회귀 검사는 실제 삼각형 부피·바깥 법선·6천 삼각형 예산·재질 독립성과 공유 메시를 검사합니다.
+
+## 침엽수·관목과 다리 디테일
+
+`NativeWildVegetation`은 새 침엽수 3종과 관목 2종의 원본 입체 메시를 제작합니다. `python3 sjrpg_3d/tools/preview3d/make_needles.py`로 프로젝트 소유의 512px RGBA 바늘잎을 만들고, `sjrpg_3d/tools/godot.sh --headless res://tools/preview3d/generate_wild_vegetation.tscn`으로 텍스처를 중복 내장하지 않는 `.res` 메시와 실제 해시·삼각형 기록을 만듭니다. 원본과 제작 기록은 `assets/source/preview3d/wild-vegetation/`에 보존합니다. 잎 묶음은 고정된 곡면이며 빌보드가 아닙니다. 기존 활엽수의 alpha-scissor 0.42는 유지하고 작은 바늘잎은 밉맵 가독성을 위해 0.28을 사용합니다.
+
+`Ortho3DTrees`와 `Ortho3DForestTrees`는 5종의 메시를 공유합니다. 새 침엽수는 기존 수관 폭의 0.68/0.86/0.52 안에서 높이와 뿌리·줄기 충돌을 보존합니다. 종류는 기존 위치 기반 FNV-1a 시드에서 결정하며 게임 RNG를 소모하지 않습니다. 관목은 기존 줄기 충돌 안에만 배치하고, 24m 공간 묶음의 실제 전체 AABB로 컬링합니다. 나무는 기존 16m 공간 묶음을 유지합니다.
+
+`NativeBridge3D`는 공유 `Bridge.deck_polygon()`과 기존 난간 경계를 읽습니다. 기둥·줄눈·아치·덮개돌·철물·포장석을 4개 정적 서피스로 묶습니다. 장식 아케이드 뒤의 연속 석재는 기존 충돌/투사체 차폐와 일치시키기 위한 구조이며 실제 열린 통로로 표시하지 않습니다. 새 콜라이더를 만들거나 발판 높이를 바꾸지 않고 포장석에는 5mm의 표시 깊이 편향만 적용합니다.

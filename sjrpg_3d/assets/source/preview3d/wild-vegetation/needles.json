@@ -1,0 +1,16 @@
+{
+  "제작": "고정된 3D 곡면 가지에 쓰는 바늘잎. 카메라 빌보드가 아니다. 원본 수식에서 생성한 프로젝트 소유 알베도이며 법선/거칠기 맵이 아니다.",
+  "reference": "assets/source/style/approved-game-reference.jpg",
+  "reference_sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
+  "seed": 76451,
+  "generator": "tools/preview3d/make_needles.py",
+  "generator_sha256": "801cf67201c3f1ac7a95da2f92ac6f812fae1c669be7909c10b7108e407286c8",
+  "source": "assets/source/preview3d/wild-vegetation/needles.png",
+  "source_sha256": "313980c749beeccaa32bd5e4c1c98cae4e75bc75aeca4d18fb2f87d6d6f33f27",
+  "runtime": "assets/art/preview3d/needle-sprays.webp",
+  "sha256": "fb8b7f2603dacd040fa9d2261c80baaef456b04bd7f14f85adfc8fcc15157db5",
+  "size": [
+    512,
+    512
+  ]
+}
