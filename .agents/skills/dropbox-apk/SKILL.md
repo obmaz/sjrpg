@@ -9,7 +9,7 @@ description: SJRPG 3D APK를 로컬에서 빌드하고 연결된 Dropbox 플러�
 
 - 대상 프로젝트는 `obmaz/sjrpg`이다.
 - 기본 Dropbox 폴더는 `/앱/sjrpg`이다.
-- APK 이름은 `sjrpg-<실제 versionName>-arm64-<빌드한 커밋의 짧은 SHA>.apk`로 한다.
+- APK 이름은 `sjrpg-<실제 versionName>.apk`로 한다.
 - APK와 같은 폴더의 `latest-build.json`만 전달·갱신한다. 빌드별 JSON은 만들지 않는다.
 - 사용자는 이 기본 경로·파일명 규칙·APK와 기록의 전달을 지정했다. 이후 APK 빌드 및 Dropbox 업로드 요청에서는 이 설정을 적용하고 경로 확인을 반복하지 않는다. 사용자가 다른 경로를 명시하면 그 요청을 따른다. 원본이나 목적지가 실제로 모호하거나 이름이 충돌하면 확인한다.
 - Dropbox 플러그인만 사용한다. 직접 API·별도 업로드 스크립트·환경변수의 Dropbox 자격 증명으로 우회하지 않는다. 공유 링크는 요청받았을 때만 만든다. 플러그인을 사용할 수 없으면 APK를 보존하고 연결이 필요함을 알린다.
