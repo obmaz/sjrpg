@@ -25,14 +25,14 @@
   ],
   "shared_family_provenance": {
     "path": "assets/art/preview3d/materials.json",
-    "sha256": "6682bf64e151a8b306f55d1c647690d79477ffc557ea99c73d4f7e79fe45a87c",
-    "bytes": 4172
+    "sha256": "db42d22825b9808f19ca7d9ffe8f33c39dc9135189e44b07a4a7e2c4d152f123",
+    "bytes": 3759
   },
   "shared_textures": [
     {
       "path": "assets/art/preview3d/limestone.webp",
-      "sha256": "03983784223f8bdf5fc89549625c71555e80ba7240c43602ce3624d9df729a21",
-      "bytes": 194962
+      "sha256": "d3ace7fb2e0ef041c3a6d79f32c05aa2db733ef1d52fa859c0b1432179b9351c",
+      "bytes": 17894
     },
     {
       "path": "assets/art/preview3d/timber.webp",
@@ -60,10 +60,10 @@
     }
   ],
   "materials": {
-    "stone": "Existing shared front-on generated limestone, 2.56m world tile / 8 courses; instance tint observes source flash.",
+    "stone": "Shared clean dressed limestone (procedural, make_clean_masonry.py), 2.56m world tile / 8 courses; instance tint observes source flash.",
     "chest": "Existing shared front-on generated timber, .65 UV scale (1.538m tile), and shared iron colour/roughness/metallic response selected by geometry vertex mask. No painted iron overlay.",
     "texel_density": "768px limestone:300.00px/m; timber:407.55px/m. No normal/roughness image maps invented.",
-    "limitations": "Reused generated albedos retain fine authored self-relief, not measured PBR scans."
+    "limitations": "Shared albedos are base colors with intrinsic edge tone only, not measured PBR scans."
   },
   "coordinates": {
     "units": "metres",
@@ -248,7 +248,7 @@
   },
   "shared_family_update": {
     "scope": "Shared limestone is the same authorized material used by village walls, gates, chapel and houses. Original prop geometry, timber, source reference, ownership and collision remain unchanged.",
-    "source": "assets/source/preview3d/town-limestone/generation.json",
+    "source": "tools/preview3d/make_clean_masonry.py",
     "physical_tile_m": 2.56,
     "courses": 8
   }

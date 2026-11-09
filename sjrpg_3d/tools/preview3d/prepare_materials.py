@@ -22,13 +22,14 @@ def main():
     assert image.width == image.height and image.width % 2 == 0
     tile = image.width // 2
     records = {}
+    previous = json.loads((OUT / "materials.json").read_text())
     OUT.mkdir(parents=True, exist_ok=True)
     for key, (x, y) in PATCHES.items():
         box = (x * tile, y * tile, (x + 1) * tile, (y + 1) * tile)
         target = OUT / (key + ".webp")
-        if key in ("limestone", "slate") and (ROOT / f"assets/source/preview3d/town-{key}/generated.png").is_file():
-            from prepare_limestone import pack_limestone, pack_slate
-            records[key] = pack_limestone() if key == "limestone" else pack_slate()
+        if key in ("limestone", "slate"):
+            # Owned by make_clean_masonry.py; keep its reviewed record unchanged.
+            records[key] = previous["materials"][key]
             continue
         image.crop(box).save(target, "WEBP", quality=94, method=6)
         records[key] = {"source": str(SOURCE.relative_to(ROOT)), "source_sha256": sha(SOURCE),
@@ -57,13 +58,13 @@ mipmaps/generate=true
 process/fix_alpha_border=true
 ''')
     record = {"purpose": "Shared front-on native3D village albedos; 2D sprite art is unchanged.",
-              "generation": "assets/source/preview3d/material-generation.json",
+              "generation": previous["generation"],
               "authoritative_reference": {"path": "assets/source/style/approved-game-reference.jpg",
                                           "sha256": sha(ROOT / "assets/source/style/approved-game-reference.jpg")},
               "materials": records,
               "physical_scale": {"limestone_tile_m": 2.56, "limestone_courses": 8, "slate_tile_m": 2.6},
-              "limitations": "Generated albedo with fine authored relief shading, not a measured PBR scan. No ground or directional scene shadow is baked into the tiles."}
-    (OUT / "materials.json").write_text(json.dumps(record, indent=2) + "\n")
+              "limitations": previous["limitations"]}
+    (OUT / "materials.json").write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n")
     # Normalize any newly created import metadata without touching packed image bytes.
     subprocess.run([sys.executable, str(ROOT / "tools/texture_policy.py"), "--apply"], check=True)
     print("Packed", len(records), "material tiles at", tile, "px")
