@@ -50,4 +50,4 @@ sjrpg_3d/tools/export_android.sh --release
 
 비교 캡처와 측정 JSON은 검수 Actions 아티팩트에 보관합니다. 동일 카메라·해상도의 대응 사진만 화질 비교에 사용하며, 전투 중 카메라가 움직인 장면은 보조 자료로 구분합니다. UI·알파 경계·타일 디테일을 양 형식에서 확인합니다.
 
-`Build Android APK` 워크플로는 사용자 명시 요청 시 `Run workflow`로만 실행하며, 빌드·서명·패키지 검증과 APK 아티팩트를 만듭니다. 푸시·PR·웹 배포에서는 APK를 생성하지 않습니다. `Review Web and Android texture compression`은 임포트와 실제 GPU 촬영을, `Compose verified GPU texture review`는 같은 런타임 소스의 촬영 자료만 재사용해 비교를 만듭니다. 정상 웹 배포는 전체 테스트와 저장·로딩·패드·음악 브라우저 검사를 유지합니다.
+APK는 GitHub Actions에서 만들지 않고, 사용자 명시 요청 시에만 로컬에서 빌드·서명·패키지 검증 후 Dropbox로 전달합니다([Android 문서](android.md)). 푸시·PR·웹 배포에서는 APK를 생성하지 않습니다. `Review Web and Android texture compression`은 임포트와 실제 GPU 촬영을, `Compose verified GPU texture review`는 같은 런타임 소스의 촬영 자료만 재사용해 비교를 만듭니다. 정상 웹 배포는 전체 테스트와 저장·로딩·패드·음악 브라우저 검사를 유지합니다.

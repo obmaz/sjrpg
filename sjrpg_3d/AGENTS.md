@@ -69,6 +69,6 @@ tools/check.sh --export        # 웹 빌드까지
 
 ## APK 빌드 실행 정책
 
-- Android APK 빌드·재빌드·수동 Actions 실행은 **사용자가 APK 빌드를 명시적으로 요청했을 때만** 수행합니다.
+- Android APK 빌드·재빌드·Dropbox 업로드는 **사용자가 APK 빌드를 명시적으로 요청했을 때만** 수행합니다.
 - 일반 개발·수정·리뷰·푸시·웹 배포·검증 요청에는 APK 빌드를 포함하지 않습니다. 빌드 검증을 이유로 자동 실행하지 않습니다.
-- `.github/workflows/android.yml`은 `workflow_dispatch` 전용으로 유지합니다. `push`·PR·예약·다른 워크플로 호출로 APK를 자동 생성하지 않습니다. 웹 배포 흐름은 별도로 유지합니다.
+- APK는 GitHub Actions에서 만들지 않습니다(워크플로 제거). 로컬(또는 개발 컨테이너)에서 `sjrpg_3d/tools/build_apk_dropbox.sh`로 빌드하고 Dropbox에 올립니다. 절차·환경 변수는 `.claude/skills/apk-dropbox/SKILL.md`와 [Android 문서](docs/android.md)를 따르며, Dropbox 자격 증명은 환경 변수로만 받고 저장소·로그에 남기지 않습니다. `push`·PR·예약·웹 배포 흐름에 APK 생성을 연결하지 않습니다.
