@@ -18,6 +18,8 @@ Godot **4.7.2**로 만드는 120° 직교 쿼터뷰 액션 RPG입니다.
 3D판은 네 개의 독립 저장 슬롯에서 모험을 만들고 이어 하거나 삭제할 수 있습니다. 설정 맨 위에서 전체화면을 켜고 끄며, 설치한 웹 앱은 지원되는 기기에서 전체화면으로 시작합니다. 자세한 조작과 현재 입체 자산은 [3D판 안내](sjrpg_3d/README.md)를 참고하세요.
 
 ```sh
+tools/setup_env.sh                # 새 클론에서 한 번: Godot 설치 + 두 프로젝트 임포트 (--check: 상태만 확인)
+tools/setup_env.sh --templates web  # 웹 빌드가 필요하면 export 템플릿도 설치
 tools/check.sh                    # 두 프로젝트 전체 검사
 tools/check.sh --project=3d       # 3D판 검사
 tools/check.sh --export           # 검사 후 선택 화면 + 두 버전 웹 빌드
