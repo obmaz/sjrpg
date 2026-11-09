@@ -5,16 +5,19 @@ Credentials come only from the environment and are never printed or stored:
   DROPBOX_APP_KEY, DROPBOX_APP_SECRET, DROPBOX_REFRESH_TOKEN   (preferred; short-lived access tokens are refreshed)
   DROPBOX_ACCESS_TOKEN                                         (fallback for a single manual run)
 
-The app needs the files.content.write scope (and sharing.write for --link).
+The app needs the files.content.write scope (and sharing.write for --link). dropbox_auth.py issues the refresh token.
 For an "App folder" app, --dest-dir is relative to that folder.
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
+import http.client
 import json
 import os
+import re
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -24,13 +27,20 @@ API = "https://api.dropboxapi.com/2"
 CONTENT = "https://content.dropboxapi.com/2"
 TOKEN_URL = "https://api.dropbox.com/oauth2/token"
 CHUNK = 8 * 1024 * 1024  # Multiple of 4 MiB, which Dropbox recommends for upload sessions.
-SINGLE_LIMIT = 100 * 1024 * 1024  # /files/upload accepts up to 150 MiB; stay well below it.
+# Larger bodies use short upload-session requests: the egress proxy can abort one long POST mid-transfer
+# (seen as a bare connection reset), and a short request is cheap to retry.
+SINGLE_LIMIT = 16 * 1024 * 1024
+ATTEMPTS = 4
 HASH_BLOCK = 4 * 1024 * 1024  # Dropbox content_hash block size.
 TIMEOUT = 120
 
 
 class DropboxError(RuntimeError):
     pass
+
+
+class TransientError(DropboxError):
+    """Connection drops, 429 and 5xx: worth retrying. Auth and request errors are not."""
 
 
 def request(url: str, *, headers: dict[str, str], data: bytes | None = None) -> bytes:
@@ -40,13 +50,31 @@ def request(url: str, *, headers: dict[str, str], data: bytes | None = None) -> 
             return resp.read()
     except urllib.error.HTTPError as err:
         body = err.read().decode("utf-8", "replace")[:600]
-        raise DropboxError(f"HTTP {err.code} from {urllib.parse.urlparse(url).path}: {body}") from None
-    except urllib.error.URLError as err:
-        raise DropboxError(f"Cannot reach {urllib.parse.urlparse(url).netloc}: {err.reason}") from None
+        kind = TransientError if err.code == 429 or err.code >= 500 else DropboxError
+        raise kind(f"HTTP {err.code} from {urllib.parse.urlparse(url).path}: {body}") from None
+    except (OSError, http.client.HTTPException) as err:  # URLError is an OSError
+        reason = getattr(err, "reason", err)
+        raise TransientError(f"Cannot reach {urllib.parse.urlparse(url).netloc}: {reason}") from None
+
+
+def retry(call):
+    for attempt in range(1, ATTEMPTS + 1):
+        try:
+            return call()
+        except TransientError as err:
+            if attempt == ATTEMPTS:
+                raise
+            print(f"  retry {attempt}/{ATTEMPTS - 1} after: {err}", file=sys.stderr, flush=True)
+            time.sleep(2 * attempt)
 
 
 def access_token() -> str:
     refresh = os.environ.get("DROPBOX_REFRESH_TOKEN", "")
+    if refresh.startswith("sl."):
+        # The App Console's "Generated access token" is short-lived (about 4 hours) and is not a refresh token.
+        print("DROPBOX_REFRESH_TOKEN holds an access token (sl.); using it as one. It expires soon: run dropbox_auth.py.",
+              file=sys.stderr)
+        return refresh
     key = os.environ.get("DROPBOX_APP_KEY", "")
     secret = os.environ.get("DROPBOX_APP_SECRET", "")
     if refresh and key and secret:
@@ -99,20 +127,28 @@ def upload(token: str, path: Path, dest: str, mode: str) -> dict:
     commit = {"path": dest, "mode": mode, "autorename": mode == "add", "mute": True}
     size = path.stat().st_size
     if size <= SINGLE_LIMIT:
-        return content(token, "files/upload", commit, path.read_bytes())
+        return retry(lambda: content(token, "files/upload", commit, path.read_bytes()))
+    session = retry(lambda: content(token, "files/upload_session/start", {"close": False}, b""))["session_id"]
+    offset = 0
     with path.open("rb") as handle:
-        first = handle.read(CHUNK)
-        session = content(token, "files/upload_session/start", {"close": False}, first)["session_id"]
-        offset = len(first)
-        while size - offset > CHUNK:
+        while True:
+            handle.seek(offset)
             block = handle.read(CHUNK)
             cursor = {"session_id": session, "offset": offset}
-            content(token, "files/upload_session/append_v2", {"cursor": cursor, "close": False}, block)
+            final = offset + len(block) >= size
+            try:
+                if final:
+                    return retry(lambda: content(token, "files/upload_session/finish", {"cursor": cursor, "commit": commit}, block))
+                retry(lambda: content(token, "files/upload_session/append_v2", {"cursor": cursor, "close": False}, block))
+            except DropboxError as err:
+                # A reset after Dropbox already stored the chunk: resume from the offset it reports.
+                found = re.search(r'"correct_offset":\s*(\d+)', str(err))
+                if not found or int(found.group(1)) == offset:
+                    raise
+                offset = int(found.group(1))
+                continue
             offset += len(block)
             print(f"  uploaded {offset / size:6.1%}", flush=True)
-        tail = handle.read()
-        cursor = {"session_id": session, "offset": offset}
-        return content(token, "files/upload_session/finish", {"cursor": cursor, "commit": commit}, tail)
 
 
 def shared_link(token: str, dest: str) -> str:
