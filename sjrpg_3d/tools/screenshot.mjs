@@ -286,22 +286,27 @@ if (scene === 'bag' || scene === 'shop') {
     // Use actual keyboard/touch entry after loading; early panel query timers
     // can be overtaken by chest memories and new-slot initialization.
     await page.waitForFunction(() => window.__sjrpgGamepadReview?.native_ready, null, {timeout: 15000});
-    await page.locator('canvas').focus();
-    for (let attempt = 0; attempt < 8; attempt++) {
-        const panel = await page.evaluate(() => window.__sjrpgGamepadReview?.panel);
-        if (!panel?.script) break;
-        await page.keyboard.press('Escape');
-        await page.waitForTimeout(250);
+    // Chest rewards can queue another memory immediately after a panel closes.
+    // Dismiss the actual visible Control and retry entry until the bag is observed.
+    let opened = false;
+    for (let attempt = 0; attempt < 20; attempt++) {
+        const state = await page.evaluate(() => window.__sjrpgGamepadReview);
+        if (state.panel?.script?.endsWith('/bag_panel.gd')) { opened = true; break; }
+        if (state.panel?.script) {
+            const close = state.panel.buttons.find(b => b.text === '닫기') ??
+                state.panel.buttons.find(b => b.text === '×');
+            if (!close) throw new Error('Visible popup has no actual close control');
+            await tap(vp.width * (close.rect[0] + close.rect[2]/2) / state.viewport[0],
+                vp.height * (close.rect[1] + close.rect[3]/2) / state.viewport[1]);
+        } else {
+            await page.locator('canvas').focus();
+            await page.keyboard.down('b');
+            await page.waitForTimeout(180);
+            await page.keyboard.up('b');
+        }
+        await page.waitForTimeout(500);
     }
-    await page.locator('canvas').focus();
-    await page.keyboard.down('b');
-    await page.waitForTimeout(180);
-    await page.keyboard.up('b');
-    await page.waitForFunction(() => window.__sjrpgGamepadReview?.panel?.script?.endsWith('/bag_panel.gd'), null, {timeout: 15000}).catch(async error => {
-        console.log('EQUIPMENT_OPEN_FAILURE ' + JSON.stringify(await page.evaluate(() => ({review:window.__sjrpgGamepadReview,active:document.activeElement?.id,events:window.__sjrpgCaptureFocusEvents}))));
-        await capture({path: out});
-        throw error;
-    });
+    if (!opened) throw new Error('EQUIPMENT_OPEN_FAILURE ' + JSON.stringify(await page.evaluate(() => window.__sjrpgGamepadReview)));
     const shopping = scene === 'shop';
     if (await page.evaluate(() => window.__sjrpgGamepadReview.panel.shopping) !== shopping) {
         const target = await page.evaluate(text => {
