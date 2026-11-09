@@ -31,3 +31,5 @@ Godot 에디터에서는 각 폴더의 `project.godot`를 별도로 엽니다. �
 새 모델·재질은 [3D 에셋 제작 기준](docs/3d-asset-guide.md)의 실제 미터 배율·120° 직교 카메라·공유 재질·충돌·모바일 검수 규격을 따릅니다. 기존2D 제작 가이드는2D판에 보존합니다. 2D판의 기존3D 비교 코드는 분리 정리를 마쳤습니다. 이후2D판은 동결하고 기능·디자인 개선은3D판에서만 진행합니다.
 
 3D 개발 문서는 [문서 목록](sjrpg_3d/docs/README.md)에서 찾습니다. 검수 캡처와 일회성 진단 출력은 `build/`와 Actions 아티팩트로 관리합니다.
+
+Android 시험 APK는 `obmaz/commuzip`과 같은 공용 디버그 키를 사용합니다. 로컬 준비와 서명 설정은 [Android 안내](sjrpg_3d/docs/android.md)를 따릅니다.

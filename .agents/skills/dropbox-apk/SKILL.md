@@ -36,7 +36,7 @@ python3 tools/prepare_apk_version.py --project sjrpg \
 ## 로컬 빌드와 검증
 
 1. `AGENTS.md`, 현재 브랜치와 작업 트리를 읽고 원격 HEAD를 확인한다. 동기화를 요청받지 않았다면 작업 트리를 임의로 변경하지 않는다.
-2. [Android 안내](../../../sjrpg_3d/docs/android.md)와 [개발 안내](../../../docs/development.md)를 따른다. 기본 대상은 `sjrpg_3d/`이며 `sjrpg_2d/`는 수정하지 않는다. 엔진은 `.godot-version`에 고정한 Godot 4.7.2를 사용한다. 저장소 루트에서 `tools/setup_godot.sh`, `sjrpg_3d/tools/setup_android.sh`, `sjrpg_3d/tools/export_android.sh` 순서로 로컬 빌드한다. 기본은 기존 시험 설치용 디버그 키를 유지하며 산출물은 `sjrpg_3d/build/android/sjrpg_3d-debug.apk`이다. 정식 배포용 서명은 명시적으로 요청받았을 때만 사용한다.
+2. [Android 안내](../../../sjrpg_3d/docs/android.md)와 [개발 안내](../../../docs/development.md)를 따른다. 기본 대상은 `sjrpg_3d/`이며 `sjrpg_2d/`는 수정하지 않는다. 엔진은 `.godot-version`에 고정한 Godot 4.7.2를 사용한다. 저장소 루트에서 `tools/setup_godot.sh`, `sjrpg_3d/tools/setup_android.sh`, `sjrpg_3d/tools/export_android.sh` 순서로 로컬 빌드한다. 기본은 `obmaz/commuzip`과 동일한 저장소의 공용 시험 키 `sjrpg_3d/tools/keys/debug-keystore.jks`를 사용하며 산출물은 `sjrpg_3d/build/android/sjrpg_3d-debug.apk`이다. 정식 배포용 서명은 명시적으로 요청받았을 때만 사용한다.
 3. SDK·템플릿·Java 경로를 확인한다. `JAVA_HOME`은 실제 Java 설치 디렉터리를 가리켜야 한다. `XDG_CONFIG_HOME`을 사용한다면 빌드 도구가 저장한 설정을 엔진도 같은 위치에서 읽도록 맞춘다. Android 도구 버전은 `sjrpg_3d/tools/android-toolchain.env`를 따른다. `XDG_DATA_HOME`을 사용한다면 Android export template도 엔진이 읽는 위치에 있어야 한다.
 4. 필요한 저장소 검사와 3D판 회귀 검사를 `tools/check.sh --project=3d`로 수행한다. 같은 소스에서 이미 통과한 검사는 반복하지 않는다. 검증 실패 시 전달하지 않는다.
 5. 새 APK 생성과 빌드 성공을 확인한다. 실패한 빌드 대신 이전 산출물을 전달하지 않는다. `aapt2 dump badging`으로 실제 버전·패키지·arm64 ABI·권한을 확인하고 `apksigner verify --verbose --print-certs` 및 `zipalign -c -P 16 4`로 서명과 정렬을 확인한다. `export_android.sh`의 패키지·SDK·ETC2 리소스 검사 및 `export-report.json`도 확인한다. 기기에서 실행하지 않았다면 그 범위를 명시한다.

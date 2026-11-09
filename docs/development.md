@@ -24,6 +24,8 @@
 
 웹 빌드(`tools/check.sh --export`)에는 `--templates web`(1.3 GB), 포털·웹 셸 검사에는 `--npm`, APK용 템플릿에는 `--templates android`(필요한 항목만 Range로 수신하고, 실패하면 SHA-512로 검증하는 전체 묶음으로 대체)를 더합니다. 템플릿 다운로드는 간헐적 504로 실패할 수 있어 다시 실행하면 이어서 성공하기도 합니다. JDK·Android SDK는 설치하지 않으며 APK 요청이 있을 때 `sjrpg_3d/tools/setup_android.sh`가 맡습니다. `--check`는 아무것도 설치하지 않고 준비 상태만 보고합니다. 에이전트별 환경 설정에는 이 스크립트를 호출하는 한 줄만 두고 설치 절차를 복사하지 않습니다.
 
+Android 도구 준비는 `sjrpg_3d/tools/setup_android.sh`에서 수행합니다. 공용 시험 키는 `sjrpg_3d/tools/keys/debug-keystore.jks`이며 `obmaz/commuzip`의 키를 그대로 보관합니다. 설정 도구는 키를 생성하지 않고 alias를 확인한 뒤 Godot 에디터 설정에 기록합니다. 출처·지문은 [키 안내](../sjrpg_3d/tools/keys/README.md)에 있습니다.
+
 ## 검사
 
 루트 `tools/check.sh`는 두 앱의 기존 검사 도구를 순차 실행합니다. 3D 물리와 투사체의 회귀 검사는3D 프로젝트에 추가하고, 2D의 기존 검사는 계속 실행합니다. `tools/test_portal.mjs`는 모바일·가로 화면의 선택 링크와 이전 주소 이동을 확인합니다. 웹 배포 후 두 직접 경로가 실제 게임까지 열리는지 확인합니다.

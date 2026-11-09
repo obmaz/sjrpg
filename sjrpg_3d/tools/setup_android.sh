@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
-# Install the pinned Android APK toolchain; release signing material stays external.
+# Install the pinned toolchain and shared debug key; release keys stay external.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 source "$ROOT/tools/android-toolchain.env"
 VERSION="$(tr -d '[:space:]' < "$ROOT/../.godot-version")"
 SDK="${ANDROID_HOME:-$HOME/android-sdk}"
 TEMPLATES="${XDG_DATA_HOME:-$HOME/.local/share}/godot/export_templates/$VERSION.stable"
-KEYSTORE="${GODOT_ANDROID_KEYSTORE_DEBUG_PATH:-$HOME/.android/debug.keystore}"
+KEYSTORE="${GODOT_ANDROID_KEYSTORE_DEBUG_PATH:-$ROOT/tools/keys/debug-keystore.jks}"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 command -v java >/dev/null || { echo "JDK 17 or newer is required"; exit 1; }
 command -v keytool >/dev/null || { echo "JDK keytool is required"; exit 1; }
+test -f "$KEYSTORE" || { echo "Missing debug keystore: $KEYSTORE" >&2; exit 1; }
+keytool -list -keystore "$KEYSTORE" -storepass android -alias androiddebugkey >/dev/null 2>&1 || {
+  echo "Debug keystore must contain androiddebugkey with the standard Android debug password" >&2
+  exit 1
+}
 JDK="${JAVA_HOME:-$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")}"
 MANAGER="$SDK/cmdline-tools/sjrpg-$SJRPG_ANDROID_COMMANDLINE_TOOLS/bin/sdkmanager"
 if [ ! -x "$MANAGER" ]; then
@@ -26,10 +31,6 @@ if [ ! -x "$SDK/build-tools/$SJRPG_ANDROID_BUILD_TOOLS/apksigner" ] || [ ! -d "$
 fi
 if [ ! -f "$TEMPLATES/android_release.apk" ] || [ ! -f "$TEMPLATES/android_debug.apk" ]; then
   python3 "$ROOT/tools/fetch_android_templates.py" --version "$VERSION" --destination "$TEMPLATES"
-fi
-if [ ! -f "$KEYSTORE" ]; then
-  mkdir -p "$(dirname "$KEYSTORE")"
-  keytool -genkeypair -keystore "$KEYSTORE" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US" >/dev/null 2>&1
 fi
 SETTINGS="${XDG_CONFIG_HOME:-$HOME/.config}/godot/editor_settings-${VERSION%.*}.tres"
 mkdir -p "$(dirname "$SETTINGS")"

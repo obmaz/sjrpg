@@ -20,7 +20,9 @@ adb install -r sjrpg_3d/build/android/sjrpg_3d-debug.apk
 - Godot의 미리 빌드된 APK 템플릿을 사용하므로 현재 APK 경로에는 Gradle·NDK가 필요 없습니다.
 - `ANDROID_HOME`은 SDK 경로, `JAVA_HOME`은 JDK 경로를 지정합니다. XDG 설정·데이터 경로도 지원합니다.
 - 설치 도구는 공식 Godot 템플릿 ZIP에서 Android 파일만 범위 다운로드합니다. 버전·ZIP 엔트리 CRC·크기를 검증하고 개별 파일 SHA-256을 계산해 기록합니다. 전체 ZIP의 SHA-256을 검증했다는 뜻은 아닙니다.
-- 디버그 키스토어는 기본 `~/.android/debug.keystore`에 생성합니다. `GODOT_ANDROID_KEYSTORE_DEBUG_PATH`로 기존 키를 사용할 수 있습니다. 키를 저장소에 넣지 않습니다.
+- 디버그 키스토어는 `obmaz/commuzip`과 같은 공용 시험 키 `tools/keys/debug-keystore.jks`를 기본으로 사용합니다. alias는 `androiddebugkey`, 비밀번호는 Android 디버그 표준값 `android`입니다. 환경마다 새 키를 생성하지 않으며 파일 누락·잘못된 키는 설정 단계에서 실패합니다. 출처·해시는 [키 안내](../tools/keys/README.md)를 참고합니다. `GODOT_ANDROID_KEYSTORE_DEBUG_PATH`로 같은 alias·비밀번호의 별도 키를 명시할 수 있으며, 정식 릴리스 키는 저장소에 넣지 않습니다.
+
+이전 환경별 SJRPG 디버그 키로 서명한 설치본은 새 공용 키와 서명이 달라 덮어쓰기 설치가 실패할 수 있습니다.
 
 `export_android.sh`는 서명·16KiB ZIP 정렬·arm64·패키지 ID·최소 SDK 24/target SDK 36·ETC2 리소스를 검사합니다. 이 검사는 Android 기기나 에뮬레이터에서 실행한 결과가 아닙니다.
 
