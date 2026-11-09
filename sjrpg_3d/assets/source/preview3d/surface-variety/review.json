@@ -1,0 +1,109 @@
+{
+  "기준_커밋": "c03d1a1",
+  "검수": "실제 WebGL 네 방향 모델 캡처. 사용자 승인이나 실제 Android 기기 성능 측정을 뜻하지 않는다.",
+  "gallery": "build/review/variety-release/proof.json",
+  "before": "build/review/variety-before/proof.json",
+  "models": [
+    {
+      "kind": "goblin",
+      "triangles": 3992,
+      "surfaces": 16,
+      "factory_bounds_size_m": [
+        0.8800004124641421,
+        1.66999983787537,
+        0.9275692254304889
+      ]
+    },
+    {
+      "kind": "wolf",
+      "triangles": 5960,
+      "surfaces": 13,
+      "factory_bounds_size_m": [
+        0.538331806659698,
+        1.1381573081016552,
+        2.0967576503753698
+      ]
+    },
+    {
+      "kind": "boar",
+      "triangles": 4688,
+      "surfaces": 13,
+      "factory_bounds_size_m": [
+        0.547794818878174,
+        1.06205928325653,
+        1.523911237716675
+      ]
+    },
+    {
+      "kind": "skeleton",
+      "triangles": 5816,
+      "surfaces": 11,
+      "factory_bounds_size_m": [
+        0.8799999356269841,
+        1.6760672926902753,
+        0.918176844716072
+      ]
+    },
+    {
+      "kind": "golem",
+      "triangles": 1512,
+      "surfaces": 8,
+      "factory_bounds_size_m": [
+        1.291849017143249,
+        1.70360088348389,
+        0.575879037380219
+      ]
+    }
+  ],
+  "runtime_geometry_sha256": {
+    "native_enemy_models.gd": "4c942812ed8ba2c5a5534c9e07823700e8b7c823cd2df06bba2fe5bfe05fa37a",
+    "native_house_3d.gd": "0a310f4bab1b4ddee619a8c16dd3aa41a75bba863c2bad8f54fbcc602978540c",
+    "native_landmarks_3d.gd": "3e105b29c69d15f347a3b142efc5613eb183df04d14d37044f19363257c9b5ff",
+    "native_scenery_props_3d.gd": "173c486f2cbaf46793fb41b33247f38559cde2cea7d09e194da5c226d8bad68b"
+  },
+  "images": {
+    "build/review/variety-release/native-gallery-face-2.png": "06d50c33c0f1bf40e88a0b3696fe626f3394da1cd07b3e73277184538ab7f298",
+    "build/review/variety-release/native-gallery-face-1.png": "7e010a480f9f710e3766f57744b7be3d843378a9ef24fedecc1133dc1e7b7888",
+    "build/review/variety-release/native-gallery-face-3.png": "d77a0f1d39813d5eaf26f1c1bd3231180795bb031bb1fcf9e8f1c61e2097d670",
+    "build/review/variety-release/native-gallery-face-0.png": "00b92558a768111427128ce02254ee0496b95b97220bd62e71a20fbd147492db"
+  },
+  "runtime_scaling": "기존 Enemy.sprite.body_height / (65 * Iso.S) / base_height 배율을 유지한다. native_enemy_scale 회귀 검사에서 실제 종별 높이와 캡슐을 별도로 검증한다.",
+  "release_geometry_sha256": {
+    "native_enemy_models.gd": "4c942812ed8ba2c5a5534c9e07823700e8b7c823cd2df06bba2fe5bfe05fa37a",
+    "native_house_3d.gd": "0a310f4bab1b4ddee619a8c16dd3aa41a75bba863c2bad8f54fbcc602978540c",
+    "native_landmarks_3d.gd": "bf911b533ed1db661961a051d3fcc301796158e9cd2f86c1dfa90f8294eea6df",
+    "native_scenery_props_3d.gd": "173c486f2cbaf46793fb41b33247f38559cde2cea7d09e194da5c226d8bad68b"
+  },
+  "world_reviews": [
+    {
+      "path": "build/review/surfaces-before/proof.json",
+      "captures": 12,
+      "errors": 0
+    },
+    {
+      "path": "build/review/surfaces-after/proof.json",
+      "captures": 12,
+      "errors": 0
+    },
+    {
+      "path": "build/review/terrain-release/proof.json",
+      "captures": 4,
+      "errors": 0
+    },
+    {
+      "path": "build/review/moss-before/proof.json",
+      "captures": 2,
+      "errors": 0
+    },
+    {
+      "path": "build/review/moss-release/proof.json",
+      "captures": 2,
+      "errors": 0
+    }
+  ],
+  "final_terrain_reviews": [
+    "build/review/terrain-release",
+    "build/review/moss-release"
+  ],
+  "world_note": "건물은 surfaces-after에서 검수했다. 지면은 색 얼룩을 수정하고 원본 풀잎 결을 보존한 terrain-release/moss-release가 최종 화면이다."
+}

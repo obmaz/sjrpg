@@ -10,10 +10,10 @@ const MATERIAL_KEYS := ["stone", "wall", "slate", "wood", "iron", "glass"]
 ## Each house reads as its own building: wall infill, trim stone and roof cover
 ## differ by role, while timber, iron and glass stay shared with the family.
 const STYLES := {
-	"nw": {"wall": "plaster", "stone": "stone", "slate": "clay", "label": "half-timbered merchant shop"},
-	"ne": {"wall": "rubble", "stone": "stone", "slate": "slate_dark", "label": "fieldstone smithy"},
-	"sw": {"wall": "planks", "stone": "rubble", "slate": "shingle", "label": "timber stable house"},
-	"se": {"wall": "brick", "stone": "stone", "slate": "slate", "label": "brick dormer house"},
+	"nw": {"wall": "wall_shop", "stone": "stone", "slate": "roof_shop", "wood": "door_shop", "label": "half-timbered merchant shop"},
+	"ne": {"wall": "wall_smith", "stone": "stone", "slate": "roof_smith", "wood": "door_smith", "label": "fieldstone smithy"},
+	"sw": {"wall": "wall_stable", "stone": "rubble", "slate": "shingle", "wood": "door_stable", "label": "timber stable house"},
+	"se": {"wall": "wall_home", "stone": "stone", "slate": "roof_home", "wood": "door_home", "label": "brick dormer house"},
 }
 const TIMBER_TILE := 1.0 / 0.65
 const SLATE_TILE := 2.6
@@ -46,7 +46,7 @@ static func build(presenter: Node, root: Node3D, key: String, width: float, dept
 ## The presenter material used for one of this house's surface roles.
 static func resource_key(key: String, material: String) -> String:
 	if material == "wood":
-		return "door"
+		return str(STYLES.get(key, {}).get("wood", "door"))
 	var style: Dictionary = STYLES.get(key, {})
 	return str(style.get(material, "stone" if material == "wall" else material))
 

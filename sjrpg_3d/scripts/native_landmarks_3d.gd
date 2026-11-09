@@ -83,10 +83,18 @@ static func build(preview: Node, parent: Node3D) -> Dictionary:
 	# existing metre-based UVs instead of copying the 150m plane's 38 repeats.
 	var upper_turf := (preview._materials["grass"] as StandardMaterial3D).duplicate() as StandardMaterial3D
 	upper_turf.albedo_color = UPPER_GRASS_TINT
+	# 원래 풀잎의 세밀한 결을 보존하고 서식지별 표면을 낮은 비율로 혼합한다.
+	upper_turf.detail_enabled = true
+	upper_turf.detail_albedo = load("res://assets/art/preview3d/ground_heather.webp")
+	upper_turf.detail_mask = upper_turf.detail_albedo
+	upper_turf.detail_blend_mode = BaseMaterial3D.BLEND_MODE_MIX
 	upper_turf.uv1_scale = Vector3.ONE
 	var earth := rock_material.duplicate() as StandardMaterial3D
 	earth.albedo_color = Color(0.54, 0.43, 0.31, 1.0)
 	earth.roughness = 1.0
+	var moss_turf := upper_turf.duplicate() as StandardMaterial3D
+	moss_turf.detail_albedo = load("res://assets/art/preview3d/ground_moss.webp")
+	moss_turf.detail_mask = moss_turf.detail_albedo
 	var owned := {}
 	var entries: Array[Dictionary] = []
 	var water_materials: Array[ShaderMaterial] = []
@@ -118,6 +126,8 @@ static func build(preview: Node, parent: Node3D) -> Dictionary:
 			_tri(floor_tool, a, b, c, normal)
 		var grassy_rise := source.index in [0, 2, 3] and float(surface["rise"]) > 0.001
 		var floor_material: Material = upper_turf if grassy_rise else preview._materials["paving"]
+		if grassy_rise and posmod(source.index, 2) == 1:
+			floor_material = moss_turf
 		_finish(floor_tool, floor_material, group, "WalkableTop")
 		var sides := SurfaceTool.new()
 		sides.begin(Mesh.PRIMITIVE_TRIANGLES)

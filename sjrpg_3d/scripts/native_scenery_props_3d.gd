@@ -109,6 +109,12 @@ static func build(preview: Node, parent: Node3D, world: Node2D, cave: bool, excl
 	stone.uv1_world_triplanar = true
 	stone.uv1_scale = Vector3.ONE / 2.56
 	stone.roughness = 0.95
+	# 위치에서 선택하는 공유 표면: 재접속이나 카메라 회전에도 바뀌지 않는다.
+	var stone_variants: Array[StandardMaterial3D] = [stone]
+	for surface: String in ["rock_lichen", "rock_iron"]:
+		var variant := stone.duplicate() as StandardMaterial3D
+		variant.albedo_texture = load("res://assets/art/preview3d/" + surface + ".webp")
+		stone_variants.append(variant)
 	var crystal := StandardMaterial3D.new()
 	crystal.albedo_color = Color("648889")
 	crystal.roughness = 0.42
@@ -163,7 +169,8 @@ static func build(preview: Node, parent: Node3D, world: Node2D, cave: bool, excl
 		var node := MeshInstance3D.new()
 		node.name = "Native_" + role + "_" + str(entries.size())
 		node.mesh = mesh
-		node.material_override = crystal if role == "crystal" else stone
+		var variant_index: int = posmod(roundi(at.x * 7.0 + at.z * 11.0), stone_variants.size())
+		node.material_override = crystal if role == "crystal" else stone_variants[variant_index]
 		node.transform = Transform3D(basis, at)
 		root.add_child(node)
 		if role == "entrance":

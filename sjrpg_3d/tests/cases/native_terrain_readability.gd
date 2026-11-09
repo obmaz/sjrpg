@@ -11,6 +11,7 @@ func run() -> void:
 	var low_grass: StandardMaterial3D = preview._materials["grass"]
 	var shared_top: StandardMaterial3D
 	var shared_earth: StandardMaterial3D
+	var turf_variants := {}
 	var styled_count := 0
 	for entry: Dictionary in report["entries"]:
 		var surface: Dictionary = entry["surface"]
@@ -42,7 +43,9 @@ func run() -> void:
 		if shared_top == null:
 			shared_top = turf
 			shared_earth = earthy.material_override as StandardMaterial3D
-		check("raised turf shares the original texture and one material " + str(role), turf == shared_top and turf.albedo_texture == low_grass.albedo_texture and turf.uv1_scale == Vector3.ONE)
+		var expected_texture: Texture2D = load("res://assets/art/preview3d/ground_moss.webp" if role == 3 else "res://assets/art/preview3d/ground_heather.webp")
+		check("raised terrain keeps its authored habitat and metre scale " + str(role), turf.albedo_texture == low_grass.albedo_texture and turf.detail_enabled and turf.detail_albedo == expected_texture and turf.detail_mask == expected_texture and turf.uv1_scale == Vector3.ONE)
+		turf_variants[turf.get_instance_id()] = true
 		check("upper grass is visibly cooler and lighter without emissive light " + str(role), turf.albedo_color.b / turf.albedo_color.g > low_grass.albedo_color.b / low_grass.albedo_color.g * 1.25 and turf.albedo_color.get_luminance() > low_grass.albedo_color.get_luminance() * 1.10 and not turf.emission_enabled and turf.shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL)
 		var earth := earthy.material_override as StandardMaterial3D
 		var cliff := (group.get_node("CliffSides") as MeshInstance3D).material_override as StandardMaterial3D
@@ -50,6 +53,7 @@ func run() -> void:
 		_check_earth(earthy, surface, role)
 		check("visual turf and earth do not add collision " + str(role), group.find_children("*", "CollisionObject3D", true, false).is_empty())
 	check("all three raised grass landmarks are styled", styled_count == 3)
+	check("three landmarks share exactly two habitat materials", turf_variants.size() == 2)
 	var nodes := root.get_child_count()
 	var top_id := shared_top.get_instance_id() if shared_top != null else 0
 	var earth_id := shared_earth.get_instance_id() if shared_earth != null else 0

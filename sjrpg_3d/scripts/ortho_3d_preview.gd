@@ -10,8 +10,8 @@ const PROJECTION_FACTOR := 1.224744871391589 * Iso.S
 const CAMERA_DIRECTION := Vector3(1, 1, 1)
 const MAGE_PATH := "res://assets/art/preview3d/mage.glb"
 const MATERIAL_ROOT := "res://assets/art/preview3d/"
-const WALL_TEXTURES := ["chapel_stone", "brick", "rubble", "plaster", "planks"]
-const ROOF_TEXTURES := ["slate", "clay", "shingle"]
+const WALL_TEXTURES := ["chapel_stone", "brick", "rubble", "plaster", "planks", "wall_shop", "wall_smith", "wall_stable", "wall_home"]
+const ROOF_TEXTURES := ["slate", "clay", "shingle", "roof_shop", "roof_smith", "roof_home"]
 const CARD_CODE := """
 shader_type spatial;
 render_mode unshaded, blend_mix, depth_draw_never, cull_disabled;
@@ -287,6 +287,8 @@ func _setup_materials() -> void:
 	_materials["wood"].uv1_triplanar = true
 	_materials["wood"].uv1_scale = Vector3.ONE * 0.65
 	_materials["door"] = _material(MATERIAL_ROOT + "timber.webp")
+	for key: String in ["door_shop", "door_smith", "door_stable", "door_home"]:
+		_materials[key] = _material(MATERIAL_ROOT + key + ".webp")
 	_materials["grass"] = _material("res://assets/art/forest/grass.webp", ForestArt.GRASS_TINT, 38.0)
 	_materials["paving"] = _material("res://assets/art/forest/paving.webp")
 	_materials["iron"] = _material("", Color("292b29"))

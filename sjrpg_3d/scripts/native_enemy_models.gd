@@ -18,7 +18,9 @@ func setup(presenter: Node) -> NativeEnemyModels:
 
 static func _material(color: Color, surface := "leather") -> StandardMaterial3D:
 	# Independent uniform state per actor; generated surface textures remain shared.
-	return NativeActorMaterials.material(surface, color).duplicate() as StandardMaterial3D
+	var result := NativeActorMaterials.material(surface, color).duplicate() as StandardMaterial3D
+	result.set_meta("anatomy_surface", surface)
+	return result
 
 static func _pivot(parent: Node3D, at: Vector3) -> Node3D:
 	var node := Node3D.new()
@@ -44,7 +46,13 @@ static func build(kind: String) -> Dictionary:
 		"golem": skin = _material(Color("777a6b"), "rock")
 		"wolf": skin = _material(Color("666c66"), "fur")
 		"boar": skin = _material(Color("675643"), "fur")
-	var materials: Array[StandardMaterial3D] = [skin, hide, iron, cloth, bone, shadow]
+	var surface_path: String = "beast_fur" if kind in ["wolf", "boar"] else ("grave_bone" if kind == "skeleton" else ("scar_skin" if kind == "goblin" else "rock_iron"))
+	skin.albedo_texture = load("res://assets/art/preview3d/" + surface_path + ".webp")
+	if kind == "golem":
+		skin.albedo_color = Color(0.95, 1.0, 1.03)
+	var eye: StandardMaterial3D = _material(Color("be693c"), "iron")
+	eye.roughness = 0.28
+	var materials: Array[StandardMaterial3D] = [skin, hide, iron, cloth, bone, shadow, eye]
 	var legs: Array[Node3D] = []
 	var arms: Array[Node3D] = []
 	var quadruped: bool = kind in ["wolf", "boar"]
@@ -69,7 +77,7 @@ static func build(kind: String) -> Dictionary:
 			var ear: MeshInstance3D = _form(torso, Vector3(side * 0.13, 0.96, 0.48), [[0.0, 0.09, 0.055, 0.0, 0.0], [0.11, 0.055, 0.035, side * 0.03, -0.03], [0.19 if not boar else 0.12, 0.004, 0.004, side * 0.02, -0.04]], skin, 4)
 			ear.rotation.z = -side * (0.28 if not boar else 0.65)
 			_bone(torso, Vector3(side * 0.13, 0.85, 0.65), Vector3(side * 0.18, 0.86, 0.56), Vector2(0.025, 0.018), Vector2(0.025, 0.018), shadow)
-			_rock(torso, Vector3(side * 0.145, 0.85, 0.66), Vector3(0.035, 0.027, 0.035), bone, 0)
+			_rock(torso, Vector3(side * 0.145, 0.85, 0.66), Vector3(0.035, 0.020, 0.035), eye, 0)
 			for depth: float in [-0.22, 0.22]:
 				var rear: bool = depth < 0.0
 				var leg: Node3D = _pivot(root, Vector3(side * 0.18, 0.58, depth))
@@ -85,6 +93,10 @@ static func build(kind: String) -> Dictionary:
 					for toe: float in [-1.0, 0.0, 1.0]:
 						_bone(leg, Vector3(toe * 0.033, -0.55, 0.12), Vector3(toe * 0.033, -0.55, 0.155), Vector2(0.009, 0.012), Vector2(0.003, 0.003), bone)
 				legs.append(leg)
+			# 실제 곡면 주둥이 아래로 드러나는 위/아래 송곳니.
+			if not boar:
+				for tooth_z: float in [0.78, 0.90]:
+					_bone(torso, Vector3(side * 0.075, 0.735, tooth_z), Vector3(side * 0.07, 0.665, tooth_z + 0.015), Vector2(0.018, 0.018), Vector2(0.002, 0.002), bone, 6)
 			if boar:
 				_bone(torso, Vector3(side * 0.14, 0.63, 0.79), Vector3(side * 0.22, 0.72, 0.88), Vector2(0.034, 0.03), Vector2(0.025, 0.022), bone)
 				_bone(torso, Vector3(side * 0.22, 0.72, 0.88), Vector3(side * 0.21, 0.84, 0.85), Vector2(0.025, 0.022), Vector2(0.002, 0.002), bone)
@@ -121,6 +133,7 @@ static func build(kind: String) -> Dictionary:
 			_bone(torso, Vector3(-0.09, 1.40, 0.06), Vector3(0.09, 1.40, 0.06), Vector2(0.025, 0.035), Vector2(0.025, 0.035), bone)
 			for side: float in [-1.0, 1.0]:
 				_rock(torso, Vector3(side * 0.064, 1.55, 0.09), Vector3(0.095, 0.075, 0.026), shadow, 1)
+				_rock(torso, Vector3(side * 0.064, 1.55, 0.108), Vector3(0.022, 0.017, 0.012), eye, 0)
 				_bone(torso, Vector3(side * 0.12, 1.60, 0.11), Vector3(side * 0.025, 1.60, 0.14), Vector2(0.022, 0.023), Vector2(0.025, 0.022), bone)
 				_bone(torso, Vector3(side * 0.13, 1.49, 0.10), Vector3(side * 0.07, 1.47, 0.13), Vector2(0.020, 0.022), Vector2(0.022, 0.02), bone)
 				_bone(torso, Vector3(side * 0.10, 1.40, 0.06), Vector3(side * 0.115, 1.50, 0.015), Vector2(0.018, 0.025), Vector2(0.02, 0.022), bone)
@@ -136,7 +149,7 @@ static func build(kind: String) -> Dictionary:
 			_rock(torso, Vector3(0.02, 0.92, 0.13), Vector3(0.44, 0.32, 0.29), skin, 3)
 			_rock(torso, Vector3(0.01, 1.49, 0.015), Vector3(0.39, 0.40, 0.36), skin, 7)
 			for side: float in [-1.0, 1.0]:
-				_rock(torso, Vector3(side * 0.08, 1.52, 0.183), Vector3(0.085, 0.025, 0.025), cloth, 0)
+				_rock(torso, Vector3(side * 0.08, 1.52, 0.183), Vector3(0.085, 0.025, 0.025), eye, 0)
 				_rock(torso, Vector3(side * 0.43, 1.27, 0), Vector3(0.39, 0.38, 0.43), skin, int(side) + 5)
 				_rock(torso, Vector3(side * 0.17, 1.13, 0.235), Vector3(0.14, 0.29, 0.035), hide, 2)
 		else:
@@ -149,7 +162,7 @@ static func build(kind: String) -> Dictionary:
 			_bone(torso, Vector3(-0.075, 1.40, 0.12), Vector3(0.075, 1.40, 0.12), Vector2(0.02, 0.014), Vector2(0.02, 0.014), shadow, 4)
 			for side: float in [-1.0, 1.0]:
 				_rock(torso, Vector3(side * 0.085, 1.54, 0.13), Vector3(0.08, 0.045, 0.035), shadow, 1)
-				_rock(torso, Vector3(side * 0.080, 1.542, 0.151), Vector3(0.027, 0.023, 0.014), bone, 0)
+				_rock(torso, Vector3(side * 0.080, 1.542, 0.151), Vector3(0.027, 0.018, 0.014), eye, 0)
 				var brow: MeshInstance3D = _rock(torso, Vector3(side * 0.083, 1.58, 0.14), Vector3(0.12, 0.04, 0.055), skin, 0)
 				brow.rotation.z = side * -0.20
 				var ear: MeshInstance3D = _form(torso, Vector3(side * 0.15, 1.52, 0), [[-0.035, 0.06, 0.045, 0.0, 0.0], [0.08, 0.055, 0.025, side * 0.09, -0.01], [0.13, 0.002, 0.003, side * 0.15, -0.04]], skin, 4)
@@ -428,10 +441,50 @@ static func _tri(tool: SurfaceTool, a: Vector3, b: Vector3, c: Vector3) -> void:
 static func _form(parent: Node3D, at: Vector3, rows: Array, material: Material, facets := 8, irregular := 0.0) -> MeshInstance3D:
 	_surface_forms_built += 1
 	# Authored horizontal sections, not scaled capsule primitives. Triangles have
-	# independent face normals so broad designed planes respond to real lighting.
+	# skin/털/뼈에는 연속 법선, 철물과 바위에는 면 법선을 사용한다.
 	var tool: SurfaceTool = SurfaceTool.new()
 	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-	tool.set_smooth_group(-1)
+	var surface: String = str(material.get_meta("anatomy_surface", ""))
+	var organic: bool = surface in ["skin", "fur", "bone"]
+	# 연속 법선은 근육·주둥이·뼈의 곡률을 살리고 철물·바위는 선명하게 남긴다.
+	# 큰 근육과 두개골의 단면 끝을 둥글게 닫는다. 넓은 평면 뚜껑이
+	# 어깨·이마에서 드러나지 않도록 기존 높이 안에서 끝단을 수축한다.
+	if organic and surface != "bone" and facets >= 8 and rows.size() >= 3:
+		var first: Array = rows[0].duplicate()
+		var lower: Array = rows[0].duplicate()
+		var upper: Array = rows.back().duplicate()
+		var last: Array = rows.back().duplicate()
+		lower[0] = lerpf(float(rows[0][0]), float(rows[1][0]), 0.25)
+		upper[0] = lerpf(float(rows.back()[0]), float(rows[rows.size() - 2][0]), 0.25)
+		for component: int in [1, 2]:
+			first[component] = float(first[component]) * 0.08
+			last[component] = float(last[component]) * 0.08
+		var rounded: Array = [first, lower]
+		for level: int in range(1, rows.size() - 1):
+			rounded.append(rows[level])
+		rounded.append_array([upper, last])
+		rows = rounded
+	if organic:
+		irregular = minf(irregular, 0.004)
+		facets = maxi(facets, 8 if surface == "bone" else 16)
+	if organic and surface != "bone":
+		var curved: Array = []
+		for level: int in rows.size() - 1:
+			var first: Array = rows[level]
+			var last: Array = rows[level + 1]
+			curved.append(first)
+			var mid: Array = []
+			for component: int in 5:
+				var a: float = float(first[component])
+				var b: float = float(last[component])
+				var before: float = float(rows[maxi(0, level - 1)][component])
+				var after: float = float(rows[mini(rows.size() - 1, level + 2)][component])
+				var value: float = (9.0 * (a + b) - before - after) / 16.0
+				mid.append((a + b) * 0.5 if component == 0 else clampf(value, minf(a, b), maxf(a, b)))
+			curved.append(mid)
+		curved.append(rows.back())
+		rows = curved
+	tool.set_smooth_group(0 if organic else -1)
 	var rings: Array[PackedVector3Array] = []
 	for row_index: int in rows.size():
 		var row: Array = rows[row_index]
@@ -446,6 +499,7 @@ static func _form(parent: Node3D, at: Vector3, rows: Array, material: Material, 
 			var next: int = (index + 1) % facets
 			_tri(tool, rings[level][index], rings[level + 1][index], rings[level + 1][next])
 			_tri(tool, rings[level][index], rings[level + 1][next], rings[level][next])
+	tool.set_smooth_group(-1)
 	var bottom: Vector3 = Vector3(float(rows[0][3]), float(rows[0][0]), float(rows[0][4]))
 	var last: Array = rows.back()
 	var top: Vector3 = Vector3(float(last[3]), float(last[0]), float(last[4]))
@@ -473,11 +527,13 @@ static func _bone(parent: Node3D, a: Vector3, b: Vector3, first: Vector2, last: 
 	return node
 
 static func _rock(parent: Node3D, at: Vector3, size: Vector3, material: Material, seed_value: int) -> MeshInstance3D:
+	var organic: bool = str(material.get_meta("anatomy_surface", "")) in ["skin", "fur", "bone"]
+	var end_radius: float = 0.035 if organic else 0.30
 	var node: MeshInstance3D = _form(parent, at, [
-		[-0.5 * size.y, 0.30 * size.x, 0.33 * size.z, -0.04 * size.x, 0.0],
+		[-0.5 * size.y, end_radius * size.x, end_radius * size.z, -0.04 * size.x, 0.0],
 		[-0.29 * size.y, 0.51 * size.x, 0.49 * size.z, 0.0, 0.0],
 		[0.19 * size.y, 0.47 * size.x, 0.52 * size.z, 0.02 * size.x, -0.04 * size.z],
-		[0.5 * size.y, 0.29 * size.x, 0.32 * size.z, -0.06 * size.x, 0.02 * size.z]], material, 7, 0.12)
+		[0.5 * size.y, end_radius * size.x, end_radius * size.z, -0.06 * size.x, 0.02 * size.z]], material, 7, 0.12)
 	node.rotation = Vector3(0.06 * sin(seed_value), 0.19 * seed_value, 0.08 * cos(seed_value))
 	return node
 

@@ -1,0 +1,231 @@
+{
+  "제작": "원본 수식 기반 절차적 알베도. 집별 문양·조각과 자연물 변형. 법선/거칠기 맵은 만들지 않았다.",
+  "license": "Original project artwork",
+  "generator": "tools/preview3d/make_surface_variety.py",
+  "materials": {
+    "wall_shop": {
+      "path": "assets/art/preview3d/wall_shop.webp",
+      "sha256": "58b176ed6194f5e322d643f99ab064483a5a18b8a898ecbcf4d6b60b2c700ecc",
+      "source": "assets/source/preview3d/surface-variety/wall_shop.png",
+      "source_sha256": "9dd119e871659dbba29f3303f115e0c6a5e4def6927450338cb6e8f96cafad0e",
+      "size": [
+        512,
+        512
+      ],
+      "tile_m": 2.56,
+      "seed": 92137
+    },
+    "wall_smith": {
+      "path": "assets/art/preview3d/wall_smith.webp",
+      "sha256": "eed310a7fc2873d2e45f9e31ac6646a2d91a58877a35d6f949f8a9a752099057",
+      "source": "assets/source/preview3d/surface-variety/wall_smith.png",
+      "source_sha256": "65236a773d66cda628fa635cbf987ed39efb6e31b535c13404edaf4bb82648e5",
+      "size": [
+        512,
+        512
+      ],
+      "tile_m": 2.56,
+      "seed": 92168
+    },
+    "wall_stable": {
+      "path": "assets/art/preview3d/wall_stable.webp",
+      "sha256": "81a5dbe9137be8ccb2b943403bd53f6d0a39bbcf180d1ae196474deb23ac8ce4",
+      "source": "assets/source/preview3d/surface-variety/wall_stable.png",
+      "source_sha256": "e966e890f301f332f7edcdf696bc9cf9a40a074b862193417d92c49a14d9e9b6",
+      "size": [
+        512,
+        512
+      ],
+      "tile_m": 2.56,
+      "seed": 92199
+    },
+    "wall_home": {
+      "path": "assets/art/preview3d/wall_home.webp",
+      "sha256": "ad4d6e0bcbed023bb46bdfce04a50d419b40437c1c2f28f8ca3454a713a82e3d",
+      "source": "assets/source/preview3d/surface-variety/wall_home.png",
+      "source_sha256": "432c19faf8a3e75d9a7bc8a032e3597e4da133a9f85425e4b4b28e07af3722a5",
+      "size": [
+        512,
+        512
+      ],
+      "tile_m": 2.56,
+      "seed": 92230
+    },
+    "door_shop": {
+      "path": "assets/art/preview3d/door_shop.webp",
+      "sha256": "9fc1860325ea828c223a36cad91a89f9a30c2ccd5addd58a0a6dc2997a75bb7b",
+      "source": "assets/source/preview3d/surface-variety/door_shop.png",
+      "source_sha256": "f86d434216b00fac86875a92b7f6e0b607becbf9d87586c7afbf224af409cd1c",
+      "size": [
+        512,
+        512
+      ],
+      "tile_m": 1.5384615384615383,
+      "seed": 92261
+    },
+    "door_smith": {
+      "path": "assets/art/preview3d/door_smith.webp",
+      "sha256": "67165ea5efbb733b40184cfb3c1ae3af93b97290d676818622bc6904f95cac1e",
+      "source": "assets/source/preview3d/surface-variety/door_smith.png",
+      "source_sha256": "099d1bc3d40a23cf0947dff58d67f8c4bef6a5c3c60d7e5fb23a77a15dc9ae70",
+      "size": [
+        512,
+        512
+      ],
+      "tile_m": 1.5384615384615383,
+      "seed": 92292
+    },
+    "door_stable": {
+      "path": "assets/art/preview3d/door_stable.webp",
+      "sha256": "6036c4b4f4b72460cb478613557f889a99529aefc41679fda415a851abd4a279",
+      "source": "assets/source/preview3d/surface-variety/door_stable.png",
+      "source_sha256": "41ab2acc370a3e3b8b728bf8f659f21bdf1406d48c47ab3a03baf53c7f015da1",
+      "size": [
+        512,
+        512
+      ],
+      "tile_m": 1.5384615384615383,
+      "seed": 92323
+    },
+    "door_home": {
+      "path": "assets/art/preview3d/door_home.webp",
+      "sha256": "1329e607b9ad28423319aabd04af0370a1b5e7832159ec81840ec09260768490",
+      "source": "assets/source/preview3d/surface-variety/door_home.png",
+      "source_sha256": "ee685a53083e2773616bc3d8fe21c0fca50e7da468692c9234667483bfb9e18b",
+      "size": [
+        512,
+        512
+      ],
+      "tile_m": 1.5384615384615383,
+      "seed": 92354
+    },
+    "roof_shop": {
+      "path": "assets/art/preview3d/roof_shop.webp",
+      "sha256": "a72cc889faf2fc26d5bc0e485428bc79423c52d724845ba09218ee2338f8868b",
+      "source": "assets/source/preview3d/surface-variety/roof_shop.png",
+      "source_sha256": "1109265b5f307c0875d8395992c090c09997e8a2e1c07c30e4be420dd8c56c88",
+      "size": [
+        512,
+        512
+      ],
+      "tile_m": 2.6,
+      "seed": 92385
+    },
+    "roof_smith": {
+      "path": "assets/art/preview3d/roof_smith.webp",
+      "sha256": "9e1417829612feca7959ba9602bbb6b9d64bd5d6bfe07ec484e7e30f8735d76b",
+      "source": "assets/source/preview3d/surface-variety/roof_smith.png",
+      "source_sha256": "1def242906579ad7d52fd0e114eaf773e41091af3247038ceb93218049688e0b",
+      "size": [
+        512,
+        512
+      ],
+      "tile_m": 2.6,
+      "seed": 92416
+    },
+    "roof_home": {
+      "path": "assets/art/preview3d/roof_home.webp",
+      "sha256": "d78948eb98e24430649a3fdd306cdc09c900dc2089df71d100a7e50648ace551",
+      "source": "assets/source/preview3d/surface-variety/roof_home.png",
+      "source_sha256": "51ebf3b35caef13cbd6a3508488b2a3fb03193510d2b021ca9ddcf673c1dfaba",
+      "size": [
+        512,
+        512
+      ],
+      "tile_m": 2.6,
+      "seed": 92447
+    },
+    "rock_lichen": {
+      "path": "assets/art/preview3d/rock_lichen.webp",
+      "sha256": "a31ed1fe2cfc6c7e0b5f92d73570ee194ff1ab3e2154aa14e8c690dae9a16215",
+      "source": "assets/source/preview3d/surface-variety/rock_lichen.png",
+      "source_sha256": "949522d6ff8238c2c127e501ad3f9122bc446dd2811976a1a41f6d676899d4c3",
+      "size": [
+        512,
+        512
+      ],
+      "tile_m": 2.56,
+      "seed": 92478
+    },
+    "rock_iron": {
+      "path": "assets/art/preview3d/rock_iron.webp",
+      "sha256": "c6f9c2a7e8a71551c305695d15f12e312f01ed3f1de0d28caa49af55a9527cda",
+      "source": "assets/source/preview3d/surface-variety/rock_iron.png",
+      "source_sha256": "aa70294857174bf4a8f9ef412beaca18a879882c5ef1c9ab2a035f914357cdcc",
+      "size": [
+        512,
+        512
+      ],
+      "tile_m": 2.56,
+      "seed": 92509,
+      "actor_golem_tile_m": 0.6
+    },
+    "ground_heather": {
+      "path": "assets/art/preview3d/ground_heather.webp",
+      "sha256": "1d0d063e6a1751ac2c8b2259d7ae06c9e525b7e9f745f1956d9ebbf37c9ca614",
+      "source": "assets/source/preview3d/surface-variety/ground_heather.png",
+      "source_sha256": "c66a1f801bde025cf46c11b7813a56365651dacb40df4963c8d03a5281691e89",
+      "size": [
+        512,
+        512
+      ],
+      "tile_m": 2.56,
+      "seed": 92540
+    },
+    "ground_moss": {
+      "path": "assets/art/preview3d/ground_moss.webp",
+      "sha256": "c9e4997a270be0d422eb2ca34b1522954e691cf2c62bba428dd956d8ffb39fa6",
+      "source": "assets/source/preview3d/surface-variety/ground_moss.png",
+      "source_sha256": "59e9557229f72ae22a27aa9900096af725900edd2a78c0901875357337bd22db",
+      "size": [
+        512,
+        512
+      ],
+      "tile_m": 2.56,
+      "seed": 92571
+    },
+    "beast_fur": {
+      "path": "assets/art/preview3d/beast_fur.webp",
+      "sha256": "df21ba9640db3afeb65ecdfab97aebb83fe3bad6798fe361bcfdff7bd58fee28",
+      "source": "assets/source/preview3d/surface-variety/beast_fur.png",
+      "source_sha256": "f0fcd633a4c9a574128e514abbedbc50ce3d32ebb850b7eab504bb316671c4e2",
+      "size": [
+        512,
+        512
+      ],
+      "tile_m": 0.5,
+      "seed": 92602
+    },
+    "grave_bone": {
+      "path": "assets/art/preview3d/grave_bone.webp",
+      "sha256": "3e0914b1430f358a79481f85504ddf924dce7c835997d08a1fbeaf032c3f6f43",
+      "source": "assets/source/preview3d/surface-variety/grave_bone.png",
+      "source_sha256": "6d2265bd88a99b8ed5f5948740cdc5bb66bc6b89dc5729650698afc04d874f51",
+      "size": [
+        512,
+        512
+      ],
+      "tile_m": 0.3,
+      "seed": 92633
+    },
+    "scar_skin": {
+      "path": "assets/art/preview3d/scar_skin.webp",
+      "sha256": "ff40254799e9e24370ac8b1d45ae7d09df34c109191c9f4477c76ee3e34e71a6",
+      "source": "assets/source/preview3d/surface-variety/scar_skin.png",
+      "source_sha256": "8d610e71ad5bc1234e0a92ee029f808c1ca652e0271205422bf214e13f72a8f2",
+      "size": [
+        512,
+        512
+      ],
+      "tile_m": 0.3,
+      "seed": 92664
+    }
+  },
+  "generator_sha256": "c1056405d6782de9e49cfe35fe760d7bcb94253b8cf5b51c92222010e58262b4",
+  "geometry": {
+    "native_enemy_models.gd": "4c942812ed8ba2c5a5534c9e07823700e8b7c823cd2df06bba2fe5bfe05fa37a",
+    "native_house_3d.gd": "0a310f4bab1b4ddee619a8c16dd3aa41a75bba863c2bad8f54fbcc602978540c",
+    "native_landmarks_3d.gd": "bf911b533ed1db661961a051d3fcc301796158e9cd2f86c1dfa90f8294eea6df",
+    "native_scenery_props_3d.gd": "173c486f2cbaf46793fb41b33247f38559cde2cea7d09e194da5c226d8bad68b"
+  }
+}
