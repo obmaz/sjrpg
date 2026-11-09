@@ -22,10 +22,12 @@ echo "── 1/3 임포트"
 "$ROOT/tools/import_project.sh" || exit 1
 
 echo "── 2/3 테스트"
-if [ -n "$ONLY" ]; then "$GODOT_SH" --headless --verbose res://tests/run_all.tscn -- "$ONLY" >"$LOG" 2>&1
-else "$GODOT_SH" --headless --verbose res://tests/run_all.tscn >"$LOG" 2>&1; fi
+TEST_COMMAND=("$GODOT_SH" --headless --verbose res://tests/run_all.tscn)
+if [ -n "$ONLY" ]; then TEST_COMMAND+=(-- "$ONLY"); fi
+# 원격에서 멈춘 케이스도 확인할 수 있게 진행만 즉시 내보낸다.
+# 전체 엔진 출력과 pipefail 종료 상태는 기존 실패 판정에 그대로 보존한다.
+"${TEST_COMMAND[@]}" 2>&1 | tee "$LOG" | awk '/^── case:|^(PASS|FAIL|RESULT|ART_AUDIT)|SCRIPT ERROR|^ERROR/ { print; fflush(); }'
 code=$?
-grep -E "^(PASS|FAIL|RESULT|ART_AUDIT)|^FAIL |SCRIPT ERROR|^ERROR" "$LOG"
 if [ $code -ne 0 ] || grep -qE "SCRIPT ERROR|^ERROR:" "$LOG"; then
   fail=1
   # Keep engine resource paths and instance details when shutdown itself fails.
