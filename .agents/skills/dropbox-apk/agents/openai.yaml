@@ -1,4 +1,4 @@
 interface:
   display_name: "로컬 APK → Dropbox"
   short_description: "SJRPG 3D APK를 로컬 빌드해 Dropbox 플러그인으로 전달"
-  default_prompt: "$dropbox-apk로 현재 SJRPG 3D 소스를 로컬 빌드하고 검증한 뒤 기본 Dropbox 폴더에 APK와 빌드 기록을 올려줘."
+  default_prompt: "$dropbox-apk로 현재 SJRPG 3D 소스를 로컬 빌드하고 검증한 뒤 기본 Dropbox 폴더에 APK를 올리고 latest-build.json을 관리해줘."

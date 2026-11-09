@@ -10,7 +10,7 @@ description: SJRPG 3D APK를 로컬에서 빌드하고 연결된 Dropbox 플러�
 - 대상 프로젝트는 `obmaz/sjrpg`이다.
 - 기본 Dropbox 폴더는 `/앱/sjrpg`이다.
 - APK 이름은 `sjrpg-<실제 versionName>-arm64-<빌드한 커밋의 짧은 SHA>.apk`로 한다.
-- 같은 이름에서 확장자만 `.json`으로 바꾼 빌드 기록도 같은 폴더에 전달한다.
+- 전달 파일은 APK이며 버전 관리 기록은 `latest-build.json` 한 개만 사용한다. APK와 같은 이름의 빌드별 JSON은 생성하거나 업로드하지 않는다.
 - 사용자는 이 기본 경로·파일명 규칙·APK와 기록의 전달을 지정했다. 이후 APK 빌드 및 Dropbox 업로드 요청에서는 이 설정을 적용하고 경로 확인을 반복하지 않는다. 사용자가 다른 경로를 명시하면 그 요청을 따른다. 원본이나 목적지가 실제로 모호하거나 이름이 충돌하면 확인한다.
 - Dropbox 플러그인만 사용한다. 직접 API·별도 업로드 스크립트·환경변수의 Dropbox 자격 증명으로 우회하지 않는다. 공유 링크는 요청받았을 때만 만든다. 플러그인을 사용할 수 없으면 APK를 보존하고 연결이 필요함을 알린다.
 
@@ -21,9 +21,9 @@ description: SJRPG 3D APK를 로컬에서 빌드하고 연결된 Dropbox 플러�
 
 ## 빌드 전 버전 번호 결정
 
-- **빌드 전에** `/앱/sjrpg/latest-build.json`을 Dropbox 플러그인으로 읽는다. 이 파일의 `versionCode`를 기준으로 해당 앱의 후속 APK·빌드별 JSON도 확인하고 항상 더 큰 새 번호를 정한다. 같은 소스의 재빌드도 이전 번호를 재사용하지 않는다.
-- 기준 파일이 없거나 읽기 실패·앱 불일치·번호 모순이 있으면 빌드를 중단하고 올바른 기록 경로와 현재 번호를 확인한다. 임의로 1을 쓰거나 다른 앱의 기록으로 대체하지 않는다. 최초 파일이 없고 사용자가 현재 설치본 번호를 명시해 초기화를 승인한 경우에는 그 번호로 로컬 기준을 만든다. 초기 기준의 출처를 기록하고 새 APK와 빌드별 JSON 전달 성공 후 동일 내용의 최초 `latest-build.json`을 생성한다.
-- 플러그인으로 읽은 원문을 로컬 `build/reports/latest-build.json`에 저장한 뒤 아래 도구로 Android 프리셋을 갱신한다. 더 최신인 해당 앱의 빌드별 기록은 `--history <로컬 JSON 경로>`로 모두 전달한다. 기준 기록을 직접 API나 별도 인증 스크립트로 가져오지 않는다.
+- **빌드 전에** `/앱/sjrpg/latest-build.json`을 Dropbox 플러그인으로 읽는다. 이 파일의 `versionCode`를 기준으로 해당 앱의 후속 APK와 이미 존재하는 과거 기록도 확인하고 항상 더 큰 새 번호를 정한다. 같은 소스의 재빌드도 이전 번호를 재사용하지 않는다.
+- 기준 파일이 없거나 읽기 실패·앱 불일치·번호 모순이 있으면 빌드를 중단하고 올바른 기록 경로와 현재 번호를 확인한다. 임의로 1을 쓰거나 다른 앱의 기록으로 대체하지 않는다. 최초 파일이 없고 사용자가 현재 설치본 번호를 명시해 초기화를 승인한 경우에는 그 번호로 로컬 기준을 만든다. 초기 기준의 출처를 기록하고 새 APK 전달 성공 후 최초 `latest-build.json`을 생성한다.
+- 플러그인으로 읽은 원문을 로컬 `build/reports/latest-build.json`에 저장한 뒤 아래 도구로 Android 프리셋을 갱신한다. 이미 존재하는 더 최신의 해당 앱 과거 기록은 `--history <로컬 JSON 경로>`로 모두 전달한다. 기준 기록을 직접 API나 별도 인증 스크립트로 가져오지 않는다.
 
 ```sh
 python3 tools/prepare_apk_version.py --project sjrpg \
@@ -46,8 +46,8 @@ python3 tools/prepare_apk_version.py --project sjrpg \
 
 1. 플러그인의 `list_folder`로 `/앱/sjrpg`의 존재와 이름 충돌을 확인하고 페이지가 남으면 이어 읽는다. 반환된 namespace 경로는 그대로 재사용한다.
 2. APK의 로컬 SHA-256과 Dropbox content hash를 계산한다. JSON은 [APK 빌드 기록 형식](../../../docs/apk-build-record.md)의 camelCase 필드로 작성하고 실제 버전·빌드 번호·빌드한 커밋·미커밋 변경 여부·파일명·크기·서명 SHA-256 지문·로컬 해시·검증 범위를 기록한다. 스킬이나 문서만 나중에 커밋했다면 APK를 실제로 빌드한 SHA를 유지한다.
-3. `upload_file`에 로컬 APK의 절대 경로를 `source_file`로, 기본 폴더와 규칙에 따른 전체 경로를 `destination_path`로 전달한다. `in_progress`이면 반환된 작업 ID와 권장 간격으로 `check_upload_file_status`를 사용한다. `completed`가 확인된 뒤 JSON을 업로드한다.
-4. 이름 충돌 시 덮어쓰기·삭제·다른 이름 재시도를 임의로 수행하지 않는다. 기존 기록을 덮어쓰거나 삭제하지 않는다.
-5. 완료 응답의 실제 경로와 크기를 확인하고 보고한다. APK만 성공하고 JSON이 실패했다면 구분해 보고하고 APK를 다시 올리지 않는다. 서버 해시를 받지 않았다면 서버 해시 검증을 주장하지 않는다.
+3. `upload_file`에 로컬 APK의 절대 경로를 `source_file`로, 기본 폴더와 규칙에 따른 전체 경로를 `destination_path`로 전달한다. `in_progress`이면 반환된 작업 ID와 권장 간격으로 `check_upload_file_status`를 사용한다. `completed`가 확인된 뒤 `latest-build.json`만 생성하거나 플러그인이 지원하는 방식으로 갱신한다. APK별 JSON 파일은 추가하지 않는다.
+4. 이름 충돌 시 덮어쓰기·삭제·다른 이름 재시도를 임의로 수행하지 않는다. `latest-build.json` 갱신 기능이 플러그인에 없으면 갱신 미완료를 보고한다. 직접 API·삭제 후 재생성·다른 JSON 이름으로 우회하지 않는다.
+5. 완료 응답의 실제 경로와 크기를 확인하고 보고한다. APK 전달은 성공했지만 `latest-build.json` 갱신이 실패했다면 구분해 보고하고 APK를 다시 올리지 않는다. 서버 해시를 받지 않았다면 서버 해시 검증을 주장하지 않는다.
 6. 기존 `build_apk_dropbox.sh`, `upload_dropbox.py`, `dropbox_auth.py`는 이 작업에서 사용하지 않는다. 플러그인을 사용할 수 없으면 APK를 보존하고 연결이 필요함을 알린다.
 7. 빌드·전달 요청에 GitHub Actions, 공개 릴리스, 태그 또는 웹 배포를 추가하지 않는다.
