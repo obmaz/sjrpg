@@ -54,6 +54,7 @@ func _build(layout: DungeonLayout, parent: Node3D, texture: Texture2D, segments:
 		var count := maxi(1, ceili(a.distance_to(b) / (SpatialWorld3D.UNITS * STRIP_METRES)))
 		var last := PackedVector3Array()
 		var first := PackedVector3Array()
+		var sections: Array[PackedVector3Array] = []
 		for station in count + 1:
 			var point := a.lerp(b, float(station) / count)
 			var direction := outward
@@ -71,6 +72,7 @@ func _build(layout: DungeonLayout, parent: Node3D, texture: Texture2D, segments:
 			for offset: Vector2 in PROFILE:
 				var flat := point / SpatialWorld3D.UNITS + direction * offset.x
 				section.append(Vector3(flat.x, native_height * offset.y, flat.y))
+			sections.append(section)
 			if station == 0:
 				first = section
 			if not last.is_empty():
@@ -85,7 +87,7 @@ func _build(layout: DungeonLayout, parent: Node3D, texture: Texture2D, segments:
 					_triangle(last[face], section[next], last[next], expected, outward, role, cap_uv)
 			last = section
 		profiles.append({"a": a, "b": b, "outward": outward, "height": height, "strips": count,
-			"section_a": first, "section_b": last})
+			"section_a": first, "section_b": last, "sections": sections})
 	# The inside and exposed rock share geometry, but not a triplanar skin.
 	# Explicit metre UVs avoid blending floor-like XZ stone into upright faces.
 	var material := _rock_material(texture, Color(0.64, 0.73, 0.82), "CaveInnerWall")

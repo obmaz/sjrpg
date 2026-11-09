@@ -1,8 +1,12 @@
 class_name NativeCaveLanterns3D
 extends RefCounted
-## Legacy "lantern" source ownership is retained; the native picture is a wood/iron torch.
-## Four shared batches cover all ten torches. Fire reads the existing cave light clock.
-const FLAME_BASE := 0.44
+## Legacy lantern ownership is retained; actual rock triangles own wall-sconce placement.
+## Four shared batches cover ten larger torches; the existing cave clock drives fire.
+const SCALE := 1.7
+const MOUNT_HEIGHT := 1.55
+const TORCH_DEPTH := 0.32
+const HANDLE_BOTTOM := -0.25
+const FLAME_BASE := 0.44 * SCALE + HANDLE_BOTTOM
 
 
 static func build(preview: Node, parent: Node3D, sources: Array) -> Dictionary:
@@ -11,42 +15,104 @@ static func build(preview: Node, parent: Node3D, sources: Array) -> Dictionary:
 	parent.add_child(root)
 	var owned := {}
 	var anchors := PackedVector3Array()
+	var mounts: Array[Transform3D] = []
+	var contacts: Array[Dictionary] = []
+	var lights := PackedVector3Array()
+	var rock: Dictionary = parent.get_meta("native_cave_rock", {})
+	var profiles: Array = rock.get("profiles", [])
 	for source in sources:
 		if not source is IsoSprite or str(source.get_meta("cave_role", "")) != "lantern":
 			continue
+		var anchor := Ortho3DPreview.ground_position(source.global_position, 0.0)
+		var mount := _wall_mount(anchor, profiles)
+		if mount.is_empty():
+			push_error("Cave torch has no supporting rendered wall")
+			continue
+		var transform: Transform3D = mount["transform"]
+		mount["source_id"] = source.get_instance_id()
 		owned[source.get_instance_id()] = true
-		anchors.append(Ortho3DPreview.ground_position(source.global_position, 0.0))
+		anchors.append(anchor)
+		mounts.append(transform)
+		contacts.append(mount)
+		lights.append(transform * Vector3(0, FLAME_BASE + 0.24, TORCH_DEPTH + 0.10))
 	var timber := SurfaceTool.new()
 	timber.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var handle := CylinderMesh.new()
-	handle.bottom_radius = 0.022
-	handle.top_radius = 0.042
-	handle.height = 0.44
+	handle.bottom_radius = 0.022 * SCALE
+	handle.top_radius = 0.042 * SCALE
+	handle.height = 0.44 * SCALE
 	handle.radial_segments = 8
 	handle.rings = 1
-	timber.append_from(handle, 0, Transform3D(Basis.IDENTITY, Vector3(0, 0.22, 0)))
+	timber.append_from(handle, 0, Transform3D(Basis.IDENTITY, Vector3(0, 0.22 * SCALE + HANDLE_BOTTOM, TORCH_DEPTH)))
 	var iron := SurfaceTool.new()
 	iron.begin(Mesh.PRIMITIVE_TRIANGLES)
-	_ring(iron, 0.29, 0.035, 0.048, 0.048, 0.011)
-	_ring(iron, 0.36, 0.12, 0.047, 0.086, 0.013)
-	var outer := _flame(0.11, 0.46, 0.065)
-	var core := _flame(0.052, 0.30, -0.018)
+	# One closed iron mesh includes the flush backplate, arm and diagonal brace.
+	_box(iron, Vector3(0.24, 0.54, 0.08), Transform3D(Basis.IDENTITY, Vector3(0, 0, 0.04)))
+	_box(iron, Vector3(0.10, 0.07, TORCH_DEPTH), Transform3D(Basis.IDENTITY, Vector3(0, -0.13, TORCH_DEPTH * 0.5)))
+	var brace_from := Vector3(0, -0.23, 0.08)
+	var brace_to := Vector3(0, -0.11, TORCH_DEPTH)
+	var brace_direction := brace_to - brace_from
+	_box(iron, Vector3(0.065, brace_direction.length(), 0.065),
+		Transform3D(Basis(Quaternion(Vector3.UP, brace_direction.normalized())), (brace_from + brace_to) * 0.5))
+	var cup := SurfaceTool.new()
+	cup.begin(Mesh.PRIMITIVE_TRIANGLES)
+	_ring(cup, 0.29 * SCALE + HANDLE_BOTTOM, 0.035 * SCALE, 0.048 * SCALE, 0.048 * SCALE, 0.011 * SCALE)
+	_ring(cup, 0.36 * SCALE + HANDLE_BOTTOM, 0.12 * SCALE, 0.047 * SCALE, 0.086 * SCALE, 0.013 * SCALE)
+	iron.append_from(cup.commit(), 0, Transform3D(Basis.IDENTITY, Vector3(0, 0, TORCH_DEPTH)))
+	var outer := _flame(0.11 * SCALE, 0.46 * SCALE, 0.065 * SCALE)
+	var core := _flame(0.052 * SCALE, 0.30 * SCALE, -0.018 * SCALE)
 	var batches := {
-		"wood": _batch(root, "TorchWood", timber.commit(), preview._materials["wood"], anchors, true),
-		"iron": _batch(root, "TorchIron", iron.commit(), preview._materials["iron"], anchors, true),
-		"outer": _batch(root, "TorchFlame", outer, _fire_material(Color("c85818"), Color("f17b24"), 0.5), anchors, false),
-		"core": _batch(root, "TorchCore", core, _fire_material(Color("f3cf8d"), Color("ffd584"), 0.6), anchors, false)
+		"wood": _batch(root, "TorchWood", timber.commit(), preview._materials["wood"], mounts, true),
+		"iron": _batch(root, "TorchIron", iron.commit(), preview._materials["iron"], mounts, true),
+		"outer": _batch(root, "TorchFlame", outer, _fire_material(Color("c85818"), Color("f17b24"), 0.5), mounts, false),
+		"core": _batch(root, "TorchCore", core, _fire_material(Color("f3cf8d"), Color("ffd584"), 0.6), mounts, false)
 	}
 	var report := {"owned_source_ids": owned, "root": root, "count": owned.size(),
-		"anchors": anchors, "batches": batches, "visual_key": [],
-		"outer_transforms": [], "core_transforms": [], "style": "torch"}
+		"anchors": anchors, "mount_transforms": mounts, "wall_contacts": contacts,
+		"light_positions": lights, "batches": batches, "visual_key": [],
+		"outer_transforms": [], "core_transforms": [], "style": "torch", "mounting": "wall", "scale": SCALE}
 	root.set_meta("native_lantern_report", report)
 	sync(parent, 0.0)
 	return report
 
 
-## Called from Ortho3DEnvironment.sync with its authoritative light clock.
-## No TIME shader, process callback, extra light, particle system or shadow pass.
+## Ray tests use the very same inner-face triangles as the rendered rock.
+## Front cutaways are deliberately excluded: a tall flame must have a supporting wall.
+static func _wall_mount(anchor: Vector3, profiles: Array) -> Dictionary:
+	var best := {}
+	var distance := INF
+	var origin := Vector3(anchor.x, MOUNT_HEIGHT, anchor.z)
+	for profile: Dictionary in profiles:
+		if float(profile["height"]) < Ortho3DCaveRock.CHAMBER_HEIGHT:
+			continue
+		var outward: Vector2 = profile["outward"]
+		var ray := Vector3(outward.x, 0, outward.y)
+		var sections: Array = profile.get("sections", [])
+		for station in range(sections.size() - 1):
+			var a: PackedVector3Array = sections[station]
+			var b: PackedVector3Array = sections[station + 1]
+			for face in 4:
+				for triangle: Array in [[a[face], b[face], b[face + 1]], [a[face], b[face + 1], a[face + 1]]]:
+					var hit: Variant = Geometry3D.ray_intersects_triangle(origin, ray, triangle[0], triangle[1], triangle[2])
+					if not hit is Vector3:
+						continue
+					var point: Vector3 = hit
+					var gap := point.distance_squared_to(origin)
+					if gap >= distance:
+						continue
+					var normal: Vector3 = (triangle[1] - triangle[0]).cross(triangle[2] - triangle[0]).normalized()
+					if normal.dot(ray) > 0.0:
+						normal = -normal
+					var right := Vector3.UP.cross(normal).normalized()
+					var up := normal.cross(right).normalized()
+					distance = gap
+					best = {"transform": Transform3D(Basis(right, up, normal), point),
+						"triangle": triangle, "inward": normal, "source_origin": origin,
+						"wall_outward": ray, "wall_height": profile["height"]}
+	return best
+
+
+## No extra process callback, particle system, light or shadow pass.
 static func sync(parent: Node3D, clock: float) -> void:
 	if not is_instance_valid(parent) or not parent.is_visible_in_tree():
 		return
@@ -57,16 +123,15 @@ static func sync(parent: Node3D, clock: float) -> void:
 	var key: Array = [0.0 if Prefs.reduce_motion else clock, Prefs.reduce_motion]
 	if report["visual_key"] == key:
 		return
-	var anchors: PackedVector3Array = report["anchors"]
+	var mounts: Array = report["mount_transforms"]
 	var batches: Dictionary = report["batches"]
 	var outer: Array[Transform3D] = []
 	var core: Array[Transform3D] = []
-	for index in anchors.size():
-		var transform := _fire_transform(anchors[index], clock, index, Prefs.reduce_motion)
+	for index in mounts.size():
+		var mount: Transform3D = mounts[index]
+		var transform := _fire_transform(mount, clock, index, Prefs.reduce_motion)
 		var centre := transform
-		# The pale inner tongue remains a small real volume, visible on the front
-		# of the orange flame from the fixed 45-degree quarter-view camera.
-		centre.origin += Vector3(0.048, 0.0, 0.048)
+		centre.origin += mount.basis.z * 0.048 + mount.basis.x * 0.025
 		(batches["outer"] as MultiMeshInstance3D).multimesh.set_instance_transform(index, transform)
 		(batches["core"] as MultiMeshInstance3D).multimesh.set_instance_transform(index, centre)
 		outer.append(transform)
@@ -76,22 +141,28 @@ static func sync(parent: Node3D, clock: float) -> void:
 	report["visual_key"] = key
 
 
-static func _fire_transform(at: Vector3, clock: float, index: int, still: bool) -> Transform3D:
+static func _fire_transform(mount: Transform3D, clock: float, index: int, still: bool) -> Transform3D:
 	var phase := clock * 5.3 + index * 1.73
 	var width := 1.0 if still else 0.95 + sin(phase * 1.31) * 0.06
 	var height := 1.0 if still else 0.97 + sin(phase) * 0.08
 	var lean := 0.0 if still else sin(phase * 0.83) * 0.07
-	var basis := Basis(Vector3.FORWARD, lean) * Basis.from_scale(Vector3(width, height, width))
-	return Transform3D(basis, at + Vector3.UP * FLAME_BASE)
+	var basis := mount.basis * Basis(Vector3.FORWARD, lean) * Basis.from_scale(Vector3(width, height, width))
+	return Transform3D(basis, mount * Vector3(0, FLAME_BASE, TORCH_DEPTH))
 
 
-static func _batch(parent: Node3D, label: String, mesh: Mesh, material: Material, anchors: PackedVector3Array, shadows: bool) -> MultiMeshInstance3D:
+static func _box(tool: SurfaceTool, size: Vector3, transform: Transform3D) -> void:
+	var box := BoxMesh.new()
+	box.size = size
+	tool.append_from(box, 0, transform)
+
+
+static func _batch(parent: Node3D, label: String, mesh: Mesh, material: Material, mounts: Array[Transform3D], shadows: bool) -> MultiMeshInstance3D:
 	var shared := MultiMesh.new()
 	shared.transform_format = MultiMesh.TRANSFORM_3D
 	shared.mesh = mesh
-	shared.instance_count = anchors.size()
-	for index in anchors.size():
-		shared.set_instance_transform(index, Transform3D(Basis.IDENTITY, anchors[index]))
+	shared.instance_count = mounts.size()
+	for index in mounts.size():
+		shared.set_instance_transform(index, mounts[index])
 	var node := MultiMeshInstance3D.new()
 	node.name = label
 	node.multimesh = shared

@@ -68,6 +68,9 @@ func run() -> void:
 		return
 	var report: Dictionary = root.get_meta("native_lantern_report")
 	var anchors: PackedVector3Array = report["anchors"]
+	var mounts: Array = report["mount_transforms"]
+	var contacts: Array = report["wall_contacts"]
+	var light_positions: PackedVector3Array = report["light_positions"]
 	var batches: Dictionary = report["batches"]
 	var owned: Dictionary = report["owned_source_ids"]
 	var index := 0
@@ -78,10 +81,34 @@ func run() -> void:
 		var expected := Ortho3DPreview.ground_position(source.global_position, 0.0)
 		same_sources = same_sources and owned.has(source.get_instance_id()) and anchors[index].is_equal_approx(expected)
 		var light: OmniLight3D = environment._cave_lights[index]
-		same_sources = same_sources and light.position.is_equal_approx(expected + Vector3.UP * 0.55)
+		same_sources = same_sources and light.position.is_equal_approx(light_positions[index])
 		same_sources = same_sources and light.light_color.is_equal_approx(Color(1.0, 0.66, 0.29)) and is_equal_approx(light.omni_range, 5.0) and not light.shadow_enabled
 		index += 1
-	check("all ten authored torch feet and existing warm bounded lights keep their exact anchors", same_sources and index == 10 and int(report["count"]) == index and environment._cave_lights.size() == index)
+	check("all ten authored sources retain ownership while their existing warm lights follow the wall-mounted heads", same_sources and index == 10 and int(report["count"]) == index and environment._cave_lights.size() == index)
+	var mounted := mounts.size() == 10 and contacts.size() == 10 and str(report["mounting"]) == "wall"
+	var normals := {}
+	for torch_index in mounts.size():
+		var mount: Transform3D = mounts[torch_index]
+		var contact: Dictionary = contacts[torch_index]
+		var triangle: Array = contact["triangle"]
+		var hit: Variant = Geometry3D.ray_intersects_triangle(contact["source_origin"], contact["wall_outward"], triangle[0], triangle[1], triangle[2])
+		var outward: Vector3 = contact["wall_outward"]
+		normals["%d:%d" % [roundi(outward.x), roundi(outward.z)]] = true
+		mounted = mounted and hit is Vector3 and mount.origin.is_equal_approx(hit)
+		mounted = mounted and is_equal_approx(mount.origin.y, NativeCaveLanterns3D.MOUNT_HEIGHT)
+		mounted = mounted and mount.basis.z.dot(-outward) > 0.95 and mount.basis.y.y > 0.95 and is_equal_approx(mount.basis.determinant(), 1.0)
+		mounted = mounted and float(contact["wall_height"]) == Ortho3DCaveRock.CHAMBER_HEIGHT
+		mounted = mounted and light_positions[torch_index].is_equal_approx(mount * Vector3(0, NativeCaveLanterns3D.FLAME_BASE + 0.24, NativeCaveLanterns3D.TORCH_DEPTH + 0.10))
+	check("each backplate actually touches a rendered tall inner wall on both wall orientations", mounted and normals.size() == 2)
+	var wood: MultiMeshInstance3D = batches["wood"]
+	var wood_bounds := wood.multimesh.mesh.get_aabb()
+	var clear_floor := true
+	for mount: Transform3D in mounts:
+		for x in [wood_bounds.position.x, wood_bounds.end.x]:
+			for y in [wood_bounds.position.y, wood_bounds.end.y]:
+				for z in [wood_bounds.position.z, wood_bounds.end.z]:
+					clear_floor = clear_floor and (mount * Vector3(x, y, z)).y > 1.20
+	check("larger torch handles are suspended above the floor rather than standing on it", clear_floor and is_equal_approx(wood_bounds.size.y, 0.44 * 1.7))
 	var valid := root.get_child_count() == 4 and batches.size() == 4 and str(report["style"]) == "torch"
 	var triangles := 0
 	for key: String in batches:
@@ -107,7 +134,8 @@ func run() -> void:
 	var bases_match := true
 	for torch_index in anchors.size():
 		var transform: Transform3D = report["outer_transforms"][torch_index]
-		bases_match = bases_match and transform.origin.is_equal_approx(anchors[torch_index] + Vector3.UP * NativeCaveLanterns3D.FLAME_BASE)
+		var mount: Transform3D = mounts[torch_index]
+		bases_match = bases_match and transform.origin.is_equal_approx(mount * Vector3(0, NativeCaveLanterns3D.FLAME_BASE, NativeCaveLanterns3D.TORCH_DEPTH))
 	check("flame animation cannot drift away from any source-owned torch", bases_match)
 	var held: Array = report["outer_transforms"].duplicate()
 	var energy := environment._cave_lights[0].light_energy

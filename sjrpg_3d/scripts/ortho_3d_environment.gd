@@ -323,6 +323,10 @@ func _build_cave() -> void:
 		var surface := _floor(layout.polygons[index], floor_texture, cave, 0.004, Color.WHITE, Ortho3DCaveRock.TILE_METRES)
 		surface.name = "CaveFloor_%d" % index
 		surface.material_override = floor_material
+	var rock: Texture2D = load("res://" + str(textures["dark"]["path"]))
+	# DungeonArt recorded this union before the separate return-portal obstacle
+	# was added; a prop must not become a new cave boundary cell.
+	_cave_rock = Ortho3DCaveRock.build(layout, cave, rock, preview.game.dungeon.art.boundary_segments)
 	var lanterns := NativeCaveLanterns3D.build(preview, cave, preview.game.dungeon.art.visuals)
 	var native_lantern_ids: Dictionary = lanterns["owned_source_ids"]
 	report["native_cave_lanterns"] = lanterns["count"]
@@ -354,20 +358,14 @@ func _build_cave() -> void:
 			report["cave_sprites"] = int(report["cave_sprites"]) + 1
 			retained.append(node.get_instance_id())
 	report["cave_groups"] = _flush(buckets, cave, "CaveArt_")
-	var rock: Texture2D = load("res://" + str(textures["dark"]["path"]))
-	# DungeonArt recorded this union before the separate return-portal obstacle
-	# was added; a prop must not become a new cave boundary cell.
-	_cave_rock = Ortho3DCaveRock.build(layout, cave, rock, preview.game.dungeon.art.boundary_segments)
 	report["cave_walls"] = int(_cave_rock["segments"])
 	report["cave_rock_triangles"] = int(_cave_rock["triangles"])
 	report["cave_rock_groups"] = int(_cave_rock["groups"])
 	report["cave_replaced_wall_sources"] = replaced
 	report["cave_retained_sources"] = retained
-	for source in preview.game.dungeon.art.visuals:
-		if source.get_meta("cave_role", "") != "lantern":
-			continue
+	for position: Vector3 in lanterns["light_positions"]:
 		var light := OmniLight3D.new()
-		light.position = Ortho3DPreview.ground_position(source.global_position, 0.55)
+		light.position = position
 		light.light_color = Color(1.0, 0.66, 0.29)
 		light.light_energy = 2.6
 		light.omni_range = 5.0

@@ -60,8 +60,8 @@ jobs:
         edition: [baseline, candidate]
     env:
       SJRPG_VISIBILITY_EDITION: ${{ matrix.edition }}
-      SJRPG_VISIBILITY_SCENARIOS: ${{ contains(github.event.head_commit.message, '[crawler-review]') && 'cave_swarm,sprite_directions,sprite_corpses' || 'cave_torches,combat_health,boss_warning,meteor_warning,firewall,cave_swarm,sprite_directions,sprite_corpses' }}
-      SJRPG_VISIBILITY_SHA: ${{ matrix.edition == 'baseline' && 'b7ebd3780184cba96989ff9dadc0e29edb9411ac' || github.sha }}
+      SJRPG_VISIBILITY_SCENARIOS: ${{ contains(github.event.head_commit.message, '[torch-review]') && 'cave_torches,cave_torches_north' || contains(github.event.head_commit.message, '[crawler-review]') && 'cave_swarm,sprite_directions,sprite_corpses' || 'cave_torches,cave_torches_north,combat_health,boss_warning,meteor_warning,firewall,cave_swarm,sprite_directions,sprite_corpses' }}
+      SJRPG_VISIBILITY_SHA: ${{ matrix.edition == 'baseline' && '8340b5dbefbcc4ccd4a1c3e1677d3c1b1ff4fbf9' || github.sha }}
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-node@v6
@@ -131,7 +131,7 @@ jobs:
           before=root/"combat-visibility-baseline";after=root/"combat-visibility-candidate"
           a=json.loads((before/"proof.json").read_text());b=json.loads((after/"proof.json").read_text())
           assert a["passed"] and b["passed"]
-          assert len(a["cases"])==len(b["cases"]) and len(b["cases"]) in (6,16)
+          assert len(a["cases"])==len(b["cases"]) and len(b["cases"]) in (4,6,18)
           target=root/"comparisons";target.mkdir()
           for case in b["cases"]:
               name=case["name"];reference=next(x for x in a["cases"] if x["name"]==name)
@@ -146,7 +146,7 @@ jobs:
               pair.paste(left,(0,28));pair.paste(right,(size[0],28))
               draw=ImageDraw.Draw(pair);draw.text((8,7),name+" | BEFORE",fill="#e9dfc9");draw.text((size[0]+8,7),"AFTER",fill="#e9dfc9")
               output=target/(name+".jpg");pair.save(output,quality=88)
-              if name in ["cave_torches-portrait","cave_swarm-portrait","sprite_directions-landscape","sprite_corpses-landscape"]:
+              if name.startswith("cave_torches") or name in ["cave_torches-portrait","cave_swarm-portrait","sprite_directions-landscape","sprite_corpses-landscape"]:
                   data=base64.b64encode(output.read_bytes()).decode()
                   print("GAMEPLAY_IMAGE_BEGIN "+name)
                   for i in range(0,len(data),16000):print("GAMEPLAY_IMAGE_CHUNK "+name+" "+data[i:i+16000])

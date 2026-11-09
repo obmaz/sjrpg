@@ -8,7 +8,7 @@ const {chromium}=createRequire(import.meta.url)('playwright');
 const base=new URL(process.argv[2]||'http://127.0.0.1:8797/');
 const out=path.resolve(process.argv[3]||'build/combat-visibility');
 const edition=process.env.SJRPG_VISIBILITY_EDITION||'candidate';
-const all=['cave_torches','combat_health','boss_warning','meteor_warning','firewall','cave_swarm','sprite_directions','sprite_corpses'];
+const all=['cave_torches','cave_torches_north','combat_health','boss_warning','meteor_warning','firewall','cave_swarm','sprite_directions','sprite_corpses'];
 const requested=(process.env.SJRPG_VISIBILITY_SCENARIOS||all.join(',')).split(',').filter(Boolean);
 const orientations=(process.env.SJRPG_VISIBILITY_ORIENTATIONS||'portrait,landscape').split(',');
 for(const s of requested)assert(all.includes(s),'valid scenario '+s);
@@ -31,9 +31,10 @@ async function start(hero){await wait(s=>s.title&&!s.ready&&s.command,'ordinary 
 function validate(scenario,s){
  assert(s.fixture.ready&&!s.fixture.busy&&s.fixture.fixture&&!s.fixture.performance_evidence);
  assert(s.fixture.paused,'explicit fixture is paused');assert.equal(s.fixture.scenario,scenario);assert.equal(s.visibility,'visible');
- assert.equal(s.fixture.scope,scenario==='cave_torches'?'cave':'forest');
+ assert.equal(s.fixture.scope,scenario.startsWith('cave_torches')?'cave':'forest');
  if(scenario==='cave_torches'){assert(s.fixture.proof.actual_cave_enter);assert.equal(s.fixture.cave_lights,10);}
  if(edition==='baseline')return;
+ if(scenario.startsWith('cave_torches')){assert.equal(s.fixture.torches?.mounting,'wall');assert.equal(s.fixture.torches?.count,10);assert.equal(s.fixture.torches?.batches,4);assert.equal(s.fixture.torches?.scale,1.7);assert.equal(s.fixture.torches?.heights.length,10);assert(s.fixture.torches.heights.every(y=>Math.abs(y-1.55)<.001));}
  if(scenario==='combat_health'){assert.equal(s.fixture.enemy_feedback?.bars,3,'native health bars for three actual damaged enemies');assert.equal(s.fixture.enemy_feedback?.telegraphs,0);}
  if(scenario==='boss_warning'){assert.equal(s.fixture.enemy_feedback?.telegraphs,1,'native boss windup warning');assert.equal(s.fixture.proof.boss.state,'windup');}
  if(scenario==='meteor_warning'){assert.equal(s.fixture.native_zones?.count,1);assert.equal(s.fixture.native_zones?.sources?.[0]?.phase,'warning');}
@@ -46,7 +47,7 @@ try{
  browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
  for(const orientation of orientations){
   for(const hero of ['warrior','mage']){
-   const scenarios=requested.filter(s=>(['cave_torches','cave_swarm','sprite_directions','sprite_corpses'].includes(s)?'warrior':'mage')===hero);if(!scenarios.length)continue;
+   const scenarios=requested.filter(s=>(['cave_torches','cave_torches_north','cave_swarm','sprite_directions','sprite_corpses'].includes(s)?'warrior':'mage')===hero);if(!scenarios.length)continue;
    current={hero,orientation,errors:[]};closing=false;
    const viewport=orientation==='portrait'?{width:390,height:844}:{width:1280,height:720};
    context=await browser.newContext({viewport,deviceScaleFactor:1,hasTouch:true,isMobile:orientation==='portrait'});

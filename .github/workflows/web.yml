@@ -153,6 +153,9 @@ jobs:
                   enablement: true
             - uses: actions/deploy-pages@v5.0.1
               id: deployment
+              with:
+                  # File sync and activation exceeded the default 10-minute limit.
+                  timeout: 1200000
 
             - uses: actions/checkout@v7.0.1
             - uses: actions/setup-node@v6

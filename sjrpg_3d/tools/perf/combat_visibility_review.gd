@@ -7,7 +7,7 @@ var _busy := false
 var _scenario := ""
 var _proof := {}
 var _serial := 0
-const SCENARIOS := ["cave_torches", "combat_health", "boss_warning", "meteor_warning", "firewall", "cave_swarm", "sprite_directions", "sprite_corpses"]
+const SCENARIOS := ["cave_torches", "cave_torches_north", "combat_health", "boss_warning", "meteor_warning", "firewall", "cave_swarm", "sprite_directions", "sprite_corpses"]
 
 
 func setup(screen: Node) -> Node:
@@ -131,18 +131,20 @@ func _prepare(requested: String) -> void:
 	_teleport(game, center + Vector2(-140, 90))
 	var focus: Vector2 = center + Vector2(0, -45)
 	match requested:
-		"cave_torches":
+		"cave_torches", "cave_torches_north":
 			_teleport(game, game.dungeon.entry_point())
 			if not game.dungeon.enter():
 				_fail("the real cave entrance rejected the visual fixture")
 				return
 			_halt(game)
 			_clear(game)
-			var at := Iso.project(Vector2(650, 0))
+			var room_index := 1 if requested == "cave_torches_north" else 0
+			var room: Vector2 = DungeonLayout.ROOMS[room_index]
+			var at := Iso.project(room + Vector2(-50, 0))
 			_teleport(game, at)
-			focus = Iso.project(Vector2(480, 0)) + Vector2(0, -30)
+			focus = Iso.project(room + Vector2(-220, 0)) + Vector2(0, -30)
 			_proof["actual_cave_enter"] = true
-			_proof["authored_room"] = 0
+			_proof["authored_room"] = room_index
 		"combat_health":
 			var targets := []
 			for index in 3:
@@ -304,4 +306,14 @@ func _publish(ready: bool) -> void:
 		var environment: Variant = presenter.get("_world_environment")
 		if is_instance_valid(environment):
 			result["cave_lights"] = environment._cave_lights.size()
+			if is_instance_valid(environment.cave):
+				var torches: Node = environment.cave.get_node_or_null("NativeCaveLanterns")
+				if is_instance_valid(torches):
+					var torches_report: Dictionary = torches.get_meta("native_lantern_report")
+					var heights := []
+					for mount: Transform3D in torches_report.get("mount_transforms", []):
+						heights.append(mount.origin.y)
+					result["torches"] = {"count": torches_report["count"], "mounting": torches_report.get("mounting", "floor"),
+						"scale": torches_report.get("scale", 1.0), "heights": heights, "batches": torches_report["batches"].size()}
+
 	JavaScriptBridge.eval("window.__sjrpgCombatVisibility = " + JSON.stringify(result), true)
