@@ -149,6 +149,12 @@ func run() -> void:
 	var reduced: Array = report["outer_transforms"].duplicate()
 	environment.sync(0.31, false)
 	check("reduced motion keeps readable static volume fire while original lights remain steady", reduced == report["outer_transforms"] and is_equal_approx(environment._cave_lights[0].light_energy, 2.6))
+	var visible_cores := true
+	var outer_mesh: Mesh = (batches["outer"] as MultiMeshInstance3D).multimesh.mesh
+	var core_mesh: Mesh = (batches["core"] as MultiMeshInstance3D).multimesh.mesh
+	for torch_index in mounts.size():
+		visible_cores = visible_cores and _exposed_core(outer_mesh, core_mesh, report["outer_transforms"][torch_index], report["core_transforms"][torch_index], preview.camera.global_transform.basis.z.normalized())
+	check("opaque outer fire cannot hide every middle-ring surface of the brighter inner fire", visible_cores)
 	check("torch visuals add no obstacle and retain source props ownership", game.dungeon.layout.obstacles == obstacles and owned.size() == 10)
 	Prefs.reduce_motion = old_reduced
 	game.dungeon.leave("")
@@ -156,3 +162,23 @@ func run() -> void:
 	check("leaving the cave hides every torch with its native cave parent", not root.is_visible_in_tree())
 	game.queue_free()
 	await _frames(2)
+
+
+func _exposed_core(outer: Mesh, core: Mesh, shell: Transform3D, inside: Transform3D, toward_camera: Vector3) -> bool:
+	var outer_faces := outer.get_faces()
+	for sample: Vector3 in core.get_faces():
+		# Inspect the body of the flame, not an incidental exposed base or tip.
+		if sample.y < 0.08 or sample.y > 0.42:
+			continue
+		var target := inside * sample
+		var origin := target + toward_camera * 4.0
+		var blocked := false
+		for index in range(0, outer_faces.size(), 3):
+			var hit: Variant = Geometry3D.ray_intersects_triangle(origin, -toward_camera,
+				shell * outer_faces[index], shell * outer_faces[index + 1], shell * outer_faces[index + 2])
+			if hit is Vector3 and origin.distance_to(hit) < 3.9999:
+				blocked = true
+				break
+		if not blocked:
+			return true
+	return false

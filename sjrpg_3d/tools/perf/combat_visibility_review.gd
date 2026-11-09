@@ -142,7 +142,8 @@ func _prepare(requested: String) -> void:
 			var room: Vector2 = DungeonLayout.ROOMS[room_index]
 			var at := Iso.project(room + Vector2(-50, 0))
 			_teleport(game, at)
-			focus = Iso.project(room + Vector2(-220, 0)) + Vector2(0, -30)
+			var framing := Vector2(0, -200) if room_index == 1 else Vector2(-220, 0)
+			focus = Iso.project(room + framing) + Vector2(0, -30)
 			_proof["actual_cave_enter"] = true
 			_proof["authored_room"] = room_index
 		"combat_health":

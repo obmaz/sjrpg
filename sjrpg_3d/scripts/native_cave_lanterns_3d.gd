@@ -128,7 +128,8 @@ static func sync(parent: Node3D, clock: float) -> void:
 		var mount: Transform3D = mounts[index]
 		var transform := _fire_transform(mount, clock, index, Prefs.reduce_motion)
 		var centre := transform
-		centre.origin += mount.basis.z * 0.048 + mount.basis.x * 0.025
+		# Keep the opaque pale core on the camera-facing shell at the larger scale.
+		centre.origin += Vector3(0.048, 0.0, 0.048) * SCALE
 		(batches["outer"] as MultiMeshInstance3D).multimesh.set_instance_transform(index, transform)
 		(batches["core"] as MultiMeshInstance3D).multimesh.set_instance_transform(index, centre)
 		outer.append(transform)
