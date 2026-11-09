@@ -54,11 +54,8 @@ static func build(preview: Node, parent: Node3D, sources: Array) -> Dictionary:
 	var brace_direction := brace_to - brace_from
 	_box(iron, Vector3(0.065, brace_direction.length(), 0.065),
 		Transform3D(Basis(Quaternion(Vector3.UP, brace_direction.normalized())), (brace_from + brace_to) * 0.5))
-	var cup := SurfaceTool.new()
-	cup.begin(Mesh.PRIMITIVE_TRIANGLES)
-	_ring(cup, 0.29 * SCALE + HANDLE_BOTTOM, 0.035 * SCALE, 0.048 * SCALE, 0.048 * SCALE, 0.011 * SCALE)
-	_ring(cup, 0.36 * SCALE + HANDLE_BOTTOM, 0.12 * SCALE, 0.047 * SCALE, 0.086 * SCALE, 0.013 * SCALE)
-	iron.append_from(cup.commit(), 0, Transform3D(Basis.IDENTITY, Vector3(0, 0, TORCH_DEPTH)))
+	_ring(iron, 0.29 * SCALE + HANDLE_BOTTOM, 0.035 * SCALE, 0.048 * SCALE, 0.048 * SCALE, 0.011 * SCALE, TORCH_DEPTH)
+	_ring(iron, 0.36 * SCALE + HANDLE_BOTTOM, 0.12 * SCALE, 0.047 * SCALE, 0.086 * SCALE, 0.013 * SCALE, TORCH_DEPTH)
 	var outer := _flame(0.11 * SCALE, 0.46 * SCALE, 0.065 * SCALE)
 	var core := _flame(0.052 * SCALE, 0.30 * SCALE, -0.018 * SCALE)
 	var batches := {
@@ -153,7 +150,14 @@ static func _fire_transform(mount: Transform3D, clock: float, index: int, still:
 static func _box(tool: SurfaceTool, size: Vector3, transform: Transform3D) -> void:
 	var box := BoxMesh.new()
 	box.size = size
-	tool.append_from(box, 0, transform)
+	# Keep iron parts unindexed together: appending an indexed primitive to
+	# custom unindexed rings can leave those ring vertices out of the final draw.
+	var faces := box.get_faces()
+	for index in range(0, faces.size(), 3):
+		var a := transform * faces[index]
+		var b := transform * faces[index + 1]
+		var c := transform * faces[index + 2]
+		_triangle(tool, a, b, c, ((a + b + c) / 3.0 - transform.origin).normalized())
 
 
 static func _batch(parent: Node3D, label: String, mesh: Mesh, material: Material, mounts: Array[Transform3D], shadows: bool) -> MultiMeshInstance3D:
@@ -196,14 +200,14 @@ static func _triangle(tool: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, out
 		tool.add_vertex(point)
 
 
-static func _ring(tool: SurfaceTool, bottom: float, height: float, lower: float, upper: float, thickness: float) -> void:
+static func _ring(tool: SurfaceTool, bottom: float, height: float, lower: float, upper: float, thickness: float, depth := 0.0) -> void:
 	var rings: Array[PackedVector3Array] = []
 	for section: Vector3 in [Vector3(lower, bottom, 0), Vector3(upper, bottom + height, 0),
 			Vector3(lower - thickness, bottom, 0), Vector3(upper - thickness, bottom + height, 0)]:
 		var ring := PackedVector3Array()
 		for index in 8:
 			var angle := TAU * index / 8.0
-			ring.append(Vector3(cos(angle) * section.x, section.y, sin(angle) * section.x))
+			ring.append(Vector3(cos(angle) * section.x, section.y, sin(angle) * section.x + depth))
 		rings.append(ring)
 	for index in 8:
 		var next := (index + 1) % 8

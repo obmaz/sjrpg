@@ -7,8 +7,8 @@
   "family": "assets/data/cave_art.json",
   "generator": {
     "path": "scripts/ortho_3d_cave_rock.gd",
-    "sha256": "76fcdb6b12a39f59acea8ff512fc58d8725a9a5302b4bbd11b7281e409238866",
-    "method": "Original closed native profile extrusion, vertices and miters preserved. Each chunk separates actual inner faces from ridge/exposed faces. Upright inner metric UVs and normal-aware world-metre outer rock mapping; no source image or physics edits."
+    "sha256": "c399cdd4eda1b5612f9336351e31c4b836385b7861dcccd5a0c7a2caaf571c95",
+    "method": "Original closed native profile extrusion, vertices and miters preserved. Each chunk separates actual inner faces from ridge/exposed faces. Upright inner metric UVs and normal-aware world-metre outer rock mapping; no source image or physics edits. Exact emitted cross-sections are retained as read-only wall-attachment metadata; no rock vertex or triangle is changed."
   },
   "material": {
     "path": "assets/art/cave/dark.webp",
@@ -65,7 +65,8 @@
     "authored_lamp_count": 10,
     "lamp_energy": 2.6,
     "local_shadow_passes": 0,
-    "outdoor_settings": "Captured on entry, restored exactly on exit."
+    "outdoor_settings": "Captured on entry, restored exactly on exit.",
+    "lamp_mount": "Existing ten lights follow enlarged wall torches at actual inner-wall triangle contacts; no additional local light or shadow pass."
   },
   "validation": {
     "headless": "Pending current native_cave_geometry/native_environment/dungeon_art checks; original geometric, collision, ownership and lighting assertions retained.",

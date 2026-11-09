@@ -109,6 +109,9 @@ func run() -> void:
 				for z in [wood_bounds.position.z, wood_bounds.end.z]:
 					clear_floor = clear_floor and (mount * Vector3(x, y, z)).y > 1.20
 	check("larger torch handles are suspended above the floor rather than standing on it", clear_floor and is_equal_approx(wood_bounds.size.y, 0.44 * 1.7))
+	var iron: MultiMeshInstance3D = batches["iron"]
+	var iron_bounds := iron.multimesh.mesh.get_aabb()
+	check("combined iron geometry retains both wall backplate and the full raised cup", iron_bounds.position.z <= 0.001 and iron_bounds.end.z > 0.45 and iron_bounds.end.y > 0.55 and iron_bounds.size.x > 0.28)
 	var valid := root.get_child_count() == 4 and batches.size() == 4 and str(report["style"]) == "torch"
 	var triangles := 0
 	for key: String in batches:
