@@ -1,4 +1,4 @@
-// 같은 네 집과 지형을 실제 게임의 세로/가로 화면에서 검수한다.
+// 집·지형과 선택한 배우 검수 장면을 실제 게임의 세로/가로 화면에서 검수한다.
 import {createRequire} from 'node:module';
 import {mkdir,writeFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
@@ -26,12 +26,20 @@ try{
    await page.mouse.click(p.p[0]*p.w,p.p[1]*p.h);await page.waitForTimeout(300);
   }
   await page.waitForFunction(()=>window.__sjrpg3dProbe?.native_active&&window.__sjrpg3dProbe.physics_ticks>3,null,{timeout:90000});
+  if(url.searchParams.get('scale_scene')==='actors')await page.waitForFunction(()=>window.__sjrpgScaleReview?.phase==='live'&&window.__sjrpgScaleReview.actors.length===5,null,{timeout:90000});
   for(const [orientation,width,height] of [['portrait',390,844],['landscape',844,390]]){
    await page.setViewportSize({width,height});await page.waitForTimeout(900);
    const probe=await page.evaluate(()=>window.__sjrpg3dProbe);
+   const scale=await page.evaluate(()=>window.__sjrpgScaleReview??null);
+   if(scale?.scene==='actors'){
+    const heights={goblin:1.69,wolf:1.469,boar:1.586,skeleton:2.21,golem:3.705};
+    const radii={goblin:32.5,wolf:46.8,boar:49.4,skeleton:32.5,golem:57.2};
+    assert.equal(scale.actors.length,5);
+    for(const actor of scale.actors){assert(Math.abs(actor.model.world_size_m[1]-heights[actor.kind])<.035,actor.kind+' actual mesh height');assert(Math.abs(actor.collision.height_m-heights[actor.kind])<.035,actor.kind+' actual capsule height');assert(Math.abs(actor.collision.radius_px-radii[actor.kind])<.01,actor.kind+' actual footprint');}
+   }
    assert.equal(probe.native_active,true);assert.equal(errors.length,0,JSON.stringify(errors));
    await page.screenshot({path:`${out}/${at}-${orientation}.png`,timeout:90000});
-   captures.push({at,orientation,probe});console.log('CAPTURE',at,orientation);
+   captures.push({at,orientation,probe,scale});console.log('CAPTURE',at,orientation);
   }
  }
 }finally{await writeFile(`${out}/proof.json`,JSON.stringify({base,captures,errors},null,2));await browser.close();}

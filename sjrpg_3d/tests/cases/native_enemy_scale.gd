@@ -64,6 +64,10 @@ func run() -> void:
 		var model: Dictionary = preview._enemy_models.entries[enemy.get_instance_id()]
 		var root: Node3D = model["root"]
 		var metres: float = Enemy.NATIVE_HEIGHT_METRES[kind]
+		var old_heights := {"goblin": 1.30, "wolf": 1.13, "boar": 1.22, "skeleton": 1.70, "golem": 2.85}
+		var old_radii := {"goblin": 25.0, "wolf": 36.0, "boar": 38.0, "skeleton": 25.0, "golem": 44.0}
+		check("all species grow by thirty percent in height and footprint " + kind, is_equal_approx(metres / float(old_heights[kind]), 1.30) and is_equal_approx(enemy.radius / float(old_radii[kind]), 1.30))
+		check("larger body retains its previous melee reach from the rim " + kind, is_equal_approx(enemy.attack_range - enemy.radius, float(Enemy.KINDS[kind]["range"]) - float(old_radii[kind])))
 		var dimensions: Vector2 = SpatialWorld3D.actor_dimensions(enemy, enemy.radius)
 		var body: CharacterBody3D = backend.actor_bodies[enemy.get_instance_id()]
 		var shape := (body.get_child(0) as CollisionShape3D).shape as CapsuleShape3D

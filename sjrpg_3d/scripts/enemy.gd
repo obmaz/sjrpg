@@ -13,9 +13,10 @@ const KINDS := {
 
 ## Native body heights in metres, independent of the legacy atlas catalogue.
 ## Source body_height drives meshes, corpse size, health labels and attack origin height.
-const NATIVE_HEIGHT_METRES := {"goblin": 1.30, "wolf": 1.13, "boar": 1.22, "skeleton": 1.70, "golem": 2.85}
-const RADIUS := 25.0  # Generic fallback only when the species is not known.
-const NATIVE_RADIUS_PIXELS := {"goblin": 25.0, "wolf": 36.0, "boar": 38.0, "skeleton": 25.0, "golem": 44.0}
+const SIZE_FACTOR := 1.30
+const NATIVE_HEIGHT_METRES := {"goblin": 1.30 * SIZE_FACTOR, "wolf": 1.13 * SIZE_FACTOR, "boar": 1.22 * SIZE_FACTOR, "skeleton": 1.70 * SIZE_FACTOR, "golem": 2.85 * SIZE_FACTOR}
+const RADIUS := 25.0 * SIZE_FACTOR  # 알 수 없는 종의 기본 반경도 같은 배율을 따른다.
+const NATIVE_RADIUS_PIXELS := {"goblin": 25.0 * SIZE_FACTOR, "wolf": 36.0 * SIZE_FACTOR, "boar": 38.0 * SIZE_FACTOR, "skeleton": 25.0 * SIZE_FACTOR, "golem": 44.0 * SIZE_FACTOR}
 var radius: float:
 	get:
 		return radius_for(kind)
@@ -91,7 +92,8 @@ func setup(g: Node, k: String, level: int) -> void:
 	speed = def["speed"]
 	damage = def["damage"] * (1.0 + (level - 1) * 0.15)
 	xp_reward = int(def["xp"] * (1.0 + (level - 1) * 0.25))
-	attack_range = def["range"]
+	# 몸 가장자리에서 닿는 거리는 보존한다. 커진 늑대가 공격 거리 밖에서 멈추지 않게 한다.
+	attack_range = float(def["range"]) + radius * (1.0 - 1.0 / SIZE_FACTOR)
 	atlas = ActorAtlas.get_atlas(k)
 	sprite = ActorSprite.new()
 	sprite.body_height = float(NATIVE_HEIGHT_METRES[k]) * SpatialCombat3D.HEIGHT_PIXELS
@@ -114,7 +116,7 @@ func make_boss() -> void:
 	max_hp = ForestBalance.BOSS_HP
 	hp = max_hp
 	damage = ForestBalance.BOSS_DAMAGE
-	attack_range = 150.0
+	attack_range = 150.0 + radius * (1.0 - 1.0 / SIZE_FACTOR)
 	_state = "chase"
 
 

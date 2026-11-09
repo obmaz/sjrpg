@@ -257,7 +257,8 @@ func _check_projectile_sweep() -> void:
 	await NativeFixture.settle(get_tree())
 	var base := SpatialWorld3D.projected(Vector3(120, 0, 120))
 	var far := _fixture_enemy(game, base + Vector2(130, 0))
-	var near := _fixture_enemy(game, base + Vector2(60, 0))
+	# 커진 실제 캡슐과 투사체 반경 바깥에 수명 제한 검사용 빈 거리를 남긴다.
+	var near := _fixture_enemy(game, base + Vector2(Enemy.radius_for("goblin") + SpatialCombat3D.PROJECTILE_RADIUS + 18.0, 0))
 	var shot := _fixture_projectile(game, base)
 	shot._process(0.35)
 	check("slow projectile frame hits nearest enemy regardless of array order", near.hp == 97.0 and far.hp == 100.0 and shot.is_queued_for_deletion())

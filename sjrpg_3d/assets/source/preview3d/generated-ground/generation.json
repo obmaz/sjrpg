@@ -1,0 +1,88 @@
+{
+  "tool": "image_gen.imagegen",
+  "제작": "사용자의 생성형 바닥 요청에 따라 바닥 아틀라스를 먼저 생성하고 그 이미지를 실제 첨부해 같은 재질의 연결 아틀라스를 생성했다. 원본 해상도를 보존해 복사했으며 이미지 편집으로 새 원화를 대신하지 않았다.",
+  "구성": {
+    "base": [
+      "낡은 석재",
+      "이끼 틈 석재",
+      "초지 클로버",
+      "숲 바닥 타임"
+    ],
+    "edge": [
+      "얕은 돌·클로버 경계",
+      "빠진 돌·흙 경계",
+      "이끼 돌·풀 경계",
+      "돌 파편·숲길 경계"
+    ]
+  },
+  "원화의_한계": [
+    "생성 원화에는 미세 자체 음영이 남아 있으며 PBR 스캔이나 법선·거칠기 맵이 아니다.",
+    "마주 보는 가장자리의 완벽한 반복을 가정하지 않는다. 런타임 반사 반복·공간 혼합·아틀라스 내부 여백으로 이음을 완화한다."
+  ],
+  "records": [
+    {
+      "role": "base",
+      "source": "assets/source/preview3d/generated-ground/base-atlas.png",
+      "runtime": "assets/art/preview3d/generated-ground-base.png",
+      "sha256": "6ce98c643be077218cdb3bb8c0b606f0704521daedd7aafcc262e5174250a082",
+      "runtime_sha256": "6ce98c643be077218cdb3bb8c0b606f0704521daedd7aafcc262e5174250a082",
+      "pixels": [
+        1254,
+        1254
+      ],
+      "quadrants": 4,
+      "tile_pixels": [
+        627,
+        627
+      ],
+      "tile_metres": 2.56,
+      "pixels_per_metre": 244.921875,
+      "prompt": "assets/source/preview3d/generated-ground/base-prompt.txt",
+      "prompt_sha256": "1f7740f64ebded57ce5787ed219cbec059e8d8c559650185fd1b76edee4ca2a9",
+      "actual_references": [
+        {
+          "path": "assets/source/style/approved-game-reference.jpg",
+          "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+        },
+        {
+          "path": "assets/art/forest/paving.webp",
+          "sha256": "293bb740e1c277bf7e6cd566c8c9f6a05105e5e7ca0e8960e041ad23e2b2d9ef"
+        },
+        {
+          "path": "assets/art/forest/grass.webp",
+          "sha256": "5fa133204811b3e6603416280109f5fbdbe75da1d0dab964828b6731e71bffc7"
+        }
+      ]
+    },
+    {
+      "role": "edge",
+      "source": "assets/source/preview3d/generated-ground/edge-atlas.png",
+      "runtime": "assets/art/preview3d/generated-ground-edge.png",
+      "sha256": "24964b22539548be27cdafe6a7dd8061d40d1f1c76e68ed0756dd8cfe3f644e4",
+      "runtime_sha256": "24964b22539548be27cdafe6a7dd8061d40d1f1c76e68ed0756dd8cfe3f644e4",
+      "pixels": [
+        1254,
+        1254
+      ],
+      "quadrants": 4,
+      "tile_pixels": [
+        627,
+        627
+      ],
+      "tile_metres": 2.56,
+      "pixels_per_metre": 244.921875,
+      "prompt": "assets/source/preview3d/generated-ground/edge-prompt.txt",
+      "prompt_sha256": "c920ef3a8953254b7b1eaeac5369c7be48036c602ca76cf7517c6d9a0904e794",
+      "actual_references": [
+        {
+          "path": "assets/source/preview3d/generated-ground/base-atlas.png",
+          "sha256": "6ce98c643be077218cdb3bb8c0b606f0704521daedd7aafcc262e5174250a082"
+        },
+        {
+          "path": "assets/source/style/approved-game-reference.jpg",
+          "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+        }
+      ]
+    }
+  ]
+}

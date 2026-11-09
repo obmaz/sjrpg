@@ -328,32 +328,7 @@ static func roof_mesh(size: Vector2) -> ArrayMesh:
 
 
 func _build_ground() -> void:
-	var floor_mesh := PlaneMesh.new()
-	floor_mesh.size = Vector2(150, 150)
-	_mesh(floor_mesh, _materials["grass"], Vector3.ZERO)
-	for polygon: PackedVector2Array in game.village.map_roads:
-		var points := PackedVector2Array()
-		for point in polygon:
-			points.append(Iso.unproject(point) / GROUND_PER_METER)
-		var indices := Geometry2D.triangulate_polygon(points)
-		var vertices := PackedVector3Array()
-		var normals := PackedVector3Array()
-		var uvs := PackedVector2Array()
-		for point in points:
-			vertices.append(Vector3(point.x, 0.012, point.y))
-			normals.append(Vector3.UP)
-			uvs.append(point / (180.0 / GROUND_PER_METER))
-		var arrays := []
-		arrays.resize(Mesh.ARRAY_MAX)
-		arrays[Mesh.ARRAY_VERTEX] = vertices
-		arrays[Mesh.ARRAY_NORMAL] = normals
-		arrays[Mesh.ARRAY_TEX_UV] = uvs
-		arrays[Mesh.ARRAY_INDEX] = indices
-		var road := ArrayMesh.new()
-		road.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-		var material := (_materials["paving"] as StandardMaterial3D).duplicate() as StandardMaterial3D
-		material.cull_mode = BaseMaterial3D.CULL_DISABLED
-		_mesh(road, material, Vector3.ZERO)
+	NativeGround3D.build(self)
 
 
 func _building_bounds(key: String) -> Rect2:

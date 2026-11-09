@@ -30,7 +30,7 @@ adb install -r sjrpg_3d/build/android/sjrpg_3d-debug.apk
 
 로컬 빌드 후 **ChatGPT에 연결된 Dropbox 플러그인으로만 업로드**합니다. 전체 절차는 [APK 전달 스킬](../../.agents/skills/dropbox-apk/SKILL.md)을 따릅니다. APK 빌드·업로드는 사용자 명시 요청 시에만 수행합니다.
 
-- 기본 폴더는 `/앱/sjrpg`이며 APK 이름은 `sjrpg-<실제 versionName>-arm64-<빌드한 커밋의 짧은 SHA>.apk`입니다. 버전 관리 기록은 `latest-build.json` 한 개만 사용하며 APK별 JSON은 생성하거나 업로드하지 않습니다. 사용자가 지정한 기본 설정이므로 같은 요청마다 목적지를 재확인하지 않습니다.
+- 기본 폴더는 `/앱/sjrpg`이며 APK 이름은 `sjrpg-<실제 versionName>.apk`입니다. 버전 관리 기록은 `latest-build.json` 한 개만 사용하며 APK별 JSON은 생성하거나 업로드하지 않습니다. 사용자가 지정한 기본 설정이므로 같은 요청마다 목적지를 재확인하지 않습니다.
 - `list_folder`로 폴더와 이름 충돌을 확인한 뒤 `upload_file`에 로컬 파일 절대 경로와 전체 Dropbox 목적지를 전달합니다. 비동기 업로드는 `check_upload_file_status`로 완료를 확인합니다.
 - APK 전달 완료 후 실제 버전·커밋·크기·서명 지문·로컬 SHA-256·Dropbox 방식 content hash·검증 범위를 담은 `latest-build.json`만 생성하거나 플러그인이 지원하는 방식으로 갱신합니다. 서버 해시를 받지 않았다면 서버 해시 검증을 주장하지 않습니다.
 - 직접 API·환경변수 토큰·별도 업로드 스크립트로 우회하지 않습니다. 플러그인이 없으면 APK를 보존하고 연결이 필요함을 알립니다.
