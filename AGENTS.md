@@ -73,11 +73,13 @@ tools/check.sh --export        # 웹 빌드까지
 - 브랜치는 만들지 않고 `main`에 직접 커밋합니다(사용자 지시). 커밋 메시지는 변경의 이유를 적습니다.
 - 기능이 바뀌면 README의 사용자 안내와 `docs/development.md`의 구조를 함께 갱신합니다. 일회성 완료 기록은 문서에 쌓지 않습니다.
 
-## APK 빌드 실행 정책
+- 지침과 스킬은 한국어로 작성합니다. 명령어·경로·API 식별자는 원래 표기를 유지합니다.
 
-- Android APK 빌드·재빌드·Dropbox 업로드는 **사용자가 APK 빌드를 명시적으로 요청했을 때만** 수행합니다.
-- 일반 개발·수정·리뷰·푸시·웹 배포·검증 요청에는 APK 빌드를 포함하지 않습니다. 빌드 검증을 이유로 자동 실행하지 않습니다.
-- APK는 GitHub Actions에서 만들지 않습니다(워크플로 제거). 저장소 루트에서 `sjrpg_3d/tools/build_apk_dropbox.sh --link`로 로컬 빌드 후 Dropbox에 올립니다(`--skip-build`는 업로드만). 단계·옵션은 [Android 문서](sjrpg_3d/docs/android.md)를 따르며, `push`·PR·예약·웹 배포 흐름에 APK 생성을 연결하지 않습니다.
-- Dropbox 자격 증명은 환경 변수 `DROPBOX_APP_KEY`·`DROPBOX_APP_SECRET`·`DROPBOX_REFRESH_TOKEN`(또는 일회성 `DROPBOX_ACCESS_TOKEN`)으로만 받습니다. 값을 출력·커밋·로그에 남기지 않습니다.
-- `invalid_grant`·`missing_scope` 같은 인증·권한 실패는 사용자에게 알리고 멈춥니다. 리프레시 토큰은 앱 소유자의 브라우저 승인이 필요해 AI가 발급할 수 없으므로, `sjrpg_3d/tools/dropbox_auth.py`를 사용자가 직접 실행해 환경 설정에 넣도록 안내합니다(권한 설정 순서는 Android 문서). 토큰을 채팅에 붙여 넣게 하지 않고, 다른 토큰을 찾아 쓰거나 우회하지 않습니다. 빌드만 성공하고 업로드가 실패하면 원인과 APK 위치(`sjrpg_3d/build/android/`)를 보고합니다.
-- 보고에는 APK 크기, Dropbox 경로(링크가 있으면 링크), 해시 검증 결과를 적고, 기기·에뮬레이터에서 실행했는지 밝힙니다.
+## APK 빌드와 Dropbox 전달
+
+- APK 빌드·재빌드·Dropbox 업로드는 사용자가 명시적으로 요청했을 때만 수행합니다. 일반 개발·리뷰·검증·푸시·웹 배포에 APK 빌드를 추가하지 않습니다.
+- [APK 전달 스킬](.agents/skills/dropbox-apk/SKILL.md)을 따릅니다. 로컬에서 빌드하고 연결된 Dropbox 플러그인으로 전달합니다. 직접 API·별도 업로드 스크립트·환경변수의 Dropbox 자격 증명으로 우회하지 않습니다.
+- 사용자가 지정한 기본 폴더는 `/앱/sjrpg`입니다. 스킬의 파일명 규칙에 따른 APK와 빌드 기록 JSON을 전달하며 같은 요청에서 목적지 확인을 반복하지 않습니다. 실제 모호함·이름 충돌은 확인합니다.
+- GitHub Actions·공개 릴리스·태그·공유 링크·웹 배포는 APK 전달 요청만으로 추가하지 않습니다. 별도로 요청받았을 때만 수행합니다.
+- 성공한 빌드와 필요한 검증을 확인한 뒤 업로드하며, 완료 응답의 실제 경로·크기와 기기 실행 여부를 보고합니다. APK만 전달되고 JSON이 실패했다면 구분해 보고합니다.
+- 기본 대상은 `sjrpg_3d/`이며 `sjrpg_2d/`는 동결 상태를 유지합니다. 빌드 명령과 Android 도구 버전은 스킬 및 3D판 Android 문서를 따릅니다.

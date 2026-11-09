@@ -24,29 +24,16 @@ adb install -r sjrpg_3d/build/android/sjrpg_3d-debug.apk
 
 `export_android.sh`는 서명·16KiB ZIP 정렬·arm64·패키지 ID·최소 SDK 24/target SDK 36·ETC2 리소스를 검사합니다. 이 검사는 Android 기기나 에뮬레이터에서 실행한 결과가 아닙니다.
 
-## Dropbox 업로드
+## Dropbox 플러그인으로 전달
 
-빌드한 APK를 Dropbox로 전달하려면 한 번에 실행합니다. 환경 변수 `DROPBOX_APP_KEY`, `DROPBOX_APP_SECRET`, `DROPBOX_REFRESH_TOKEN`(또는 일회성 `DROPBOX_ACCESS_TOKEN`)이 필요하며 빌드 전에 먼저 확인합니다. 값은 저장소·로그에 남기지 않습니다.
+로컬 빌드 후 **ChatGPT에 연결된 Dropbox 플러그인으로만 업로드**합니다. 전체 절차는 [APK 전달 스킬](../../.agents/skills/dropbox-apk/SKILL.md)을 따릅니다. APK 빌드·업로드는 사용자 명시 요청 시에만 수행합니다.
 
-```sh
-sjrpg_3d/tools/build_apk_dropbox.sh --link
-```
-
-- `sjrpg_3d/tools/upload_dropbox.py`가 리프레시 토큰으로 액세스 토큰을 갱신해 `/sjrpg/sjrpg_3d-debug-날짜-커밋.apk`로 올립니다(앱 폴더형 앱이면 앱 폴더 기준).
-- 업로드 후 Dropbox의 `content_hash`·크기를 로컬 파일과 비교하며 일치할 때만 성공입니다.
-- `--skip-build`는 이미 만든 APK만 올리고, `--dest-dir`로 폴더를 바꾸며, `--link`는 공유 링크(`sharing.write` 권한)를 출력합니다.
-- 100MiB 대신 16MiB 이하만 단일 업로드하고 그 이상은 8MiB 청크로 나눕니다. 끊긴 연결은 최대 4번 재시도하고, 이미 저장된 청크는 Dropbox가 알려 주는 오프셋부터 이어 올립니다.
-
-### 토큰 발급
-
-Dropbox는 앱 소유자가 브라우저에서 승인해야만 리프레시 토큰을 발급하므로 AI 세션이 대신할 수 없습니다. 사람이 한 번만 실행합니다.
-
-1. [App Console](https://www.dropbox.com/developers/apps)의 Permissions 탭에서 `files.content.write`(링크용 `sharing.write`)를 켜고 Submit합니다. 토큰은 승인 시점에 켜진 권한만 가지므로 권한을 먼저 켭니다.
-2. 본인 터미널에서 `DROPBOX_APP_KEY=… DROPBOX_APP_SECRET=… python3 sjrpg_3d/tools/dropbox_auth.py`를 실행해 안내 URL에서 Allow를 누르고, 화면에 나온 코드를 붙여 넣으면 `DROPBOX_REFRESH_TOKEN` 값이 출력됩니다.
-3. 그 값을 클라우드 환경 설정의 환경 변수 `DROPBOX_REFRESH_TOKEN`에 넣습니다. 저장소·채팅에 붙여 넣지 않습니다. 새 세션부터 적용됩니다.
-
-콘솔의 "Generated access token"(`sl.`로 시작, 약 4시간 유효)은 리프레시 토큰이 아닙니다. 그 값이 `DROPBOX_REFRESH_TOKEN`에 들어 있으면 업로더가 경고하고 액세스 토큰으로 쓰지만 곧 만료됩니다.
-`missing_scope … files.content.write`는 권한이 꺼진 상태에서 발급된 토큰이라는 뜻이므로 권한을 켠 뒤 토큰을 다시 발급합니다. `invalid_grant`는 토큰이 폐기·오류라는 뜻입니다.
+- 기본 폴더는 `/앱/sjrpg`이며 APK 이름은 `sjrpg-<실제 versionName>-arm64-<빌드한 커밋의 짧은 SHA>.apk`입니다. 같은 이름의 `.json` 빌드 기록도 전달합니다. 사용자가 지정한 기본 설정이므로 같은 요청마다 목적지를 재확인하지 않습니다.
+- `list_folder`로 폴더와 이름 충돌을 확인한 뒤 `upload_file`에 로컬 파일 절대 경로와 전체 Dropbox 목적지를 전달합니다. 비동기 업로드는 `check_upload_file_status`로 완료를 확인합니다.
+- APK 전달 완료 후 실제 버전·커밋·크기·서명 지문·로컬 SHA-256·Dropbox 방식 content hash·검증 범위를 담은 JSON을 업로드합니다. 서버 해시를 받지 않았다면 서버 해시 검증을 주장하지 않습니다.
+- 직접 API·환경변수 토큰·별도 업로드 스크립트로 우회하지 않습니다. 기존 `build_apk_dropbox.sh`, `upload_dropbox.py`, `dropbox_auth.py`는 이 전달 절차에서 사용하지 않습니다. 플러그인이 없으면 APK를 보존하고 연결이 필요함을 알립니다.
+- 이름 충돌 시 덮어쓰기·삭제·다른 이름 재시도를 임의로 하지 않습니다. 공유 링크는 별도로 요청받았을 때만 만듭니다.
+- 완료 응답의 실제 경로·크기를 확인합니다. APK와 JSON의 성공 여부를 구분하고 기기·에뮬레이터 실행 여부도 보고합니다.
 
 ## GPU 텍스처와 포함 리소스
 
@@ -67,4 +54,4 @@ export GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD='본인 키 비밀번호'
 sjrpg_3d/tools/export_android.sh --release
 ```
 
-현재 CI는 시험 설치용 디버그 APK를 만듭니다. Google Play 제출용 AAB·Gradle 구성과 스토어 업로드는 별도 작업입니다.
+시험 설치용 디버그 APK는 로컬에서만 만듭니다. Google Play 제출용 AAB·Gradle 구성과 스토어 업로드는 별도 작업입니다.
