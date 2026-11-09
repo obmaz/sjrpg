@@ -15,11 +15,39 @@
   "gpu_compressed_textures": [
     {
       "path": "assets/art/preview3d/limestone.webp",
-      "usage": "Shared native chapel, houses, fortification stone"
+      "usage": "Shared native fortification ashlar and building trim stone"
     },
     {
       "path": "assets/art/preview3d/slate.webp",
-      "usage": "Native chapel and house roofs"
+      "usage": "Native chapel, dormer house and smithy roofs"
+    },
+    {
+      "path": "assets/art/preview3d/shingle.webp",
+      "usage": "Native stable house cedar shingle roof"
+    },
+    {
+      "path": "assets/art/preview3d/clay.webp",
+      "usage": "Native merchant shop terracotta roof"
+    },
+    {
+      "path": "assets/art/preview3d/planks.webp",
+      "usage": "Native stable house weatherboard walls"
+    },
+    {
+      "path": "assets/art/preview3d/plaster.webp",
+      "usage": "Native merchant shop plaster infill"
+    },
+    {
+      "path": "assets/art/preview3d/rubble.webp",
+      "usage": "Native smithy fieldstone walls and stable plinth"
+    },
+    {
+      "path": "assets/art/preview3d/brick.webp",
+      "usage": "Native dormer house brick walls"
+    },
+    {
+      "path": "assets/art/preview3d/chapel_stone.webp",
+      "usage": "Native chapel wall ashlar"
     },
     {
       "path": "assets/art/preview3d/timber.webp",

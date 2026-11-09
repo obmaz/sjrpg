@@ -25,14 +25,14 @@
   ],
   "shared_family_provenance": {
     "path": "assets/art/preview3d/materials.json",
-    "sha256": "db42d22825b9808f19ca7d9ffe8f33c39dc9135189e44b07a4a7e2c4d152f123",
-    "bytes": 3759
+    "sha256": "41d0e50e736fe486e95b75bb5bb6e5a82f71293de4dd1fe8cb2f0cc52282ee67",
+    "bytes": 10199
   },
   "shared_textures": [
     {
       "path": "assets/art/preview3d/limestone.webp",
-      "sha256": "d3ace7fb2e0ef041c3a6d79f32c05aa2db733ef1d52fa859c0b1432179b9351c",
-      "bytes": 17894
+      "sha256": "2561c1be419f951bf0bce7b9fd5085c24a92600cf66424a4775e16cd37b58e6c",
+      "bytes": 17806
     },
     {
       "path": "assets/art/preview3d/timber.webp",

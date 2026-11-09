@@ -102,13 +102,13 @@ func _build() -> void:
 		for band in [[0.14, 0.16, 0.018], [height * 0.76, 0.08, 0.030], [height - 0.025, 0.10, 0.035]]:
 			var expanded := Geometry2D.offset_polygon(polygon, float(band[2]), Geometry2D.JOIN_MITER)
 			for shape in expanded:
-				_horizontal(shape, float(band[0]), float(band[0]) + float(band[1]), "stone")
+				_horizontal(shape, float(band[0]), float(band[0]) + float(band[1]), "granite")
 	var corners: Array[Vector3] = []
 	for run: Array in village.data["wall_runs"]:
 		var point: Array = run[1]
 		var corner := Ortho3DPreview.ground_position(village.point(Vector2(point[0], point[1])))
 		corners.append(corner)
-		_coped_box(corner + Vector3(0, height + 0.30, 0), Vector3(0.54, 0.54, 0.54), "stone")
+		_coped_box(corner + Vector3(0, height + 0.30, 0), Vector3(0.54, 0.54, 0.54), "granite")
 	var crenels := {}
 	for polygon in polygons:
 		_crenels(polygon, corners, crenels, height, thickness)
@@ -118,7 +118,7 @@ func _build() -> void:
 	report = {"wall_height": height, "wall_top": total_height, "projected_top_pixels": total_height * Ortho3DPreview.GROUND_PER_METER * Iso.S,
 		"wall_thickness": thickness, "wall_polygons": merged, "wing_joins": wings,
 		"corners": corners, "town_center": town_center, "gates": gates, "static_meshes": static_meshes,
-		"triangles": _triangles, "static_surfaces": static_meshes.size(), "stone": _materials["stone"],
+		"triangles": _triangles, "static_surfaces": static_meshes.size(), "stone": _materials["stone"], "iron": _materials["iron"],
 		"wall_face_recess": WALL_FACE_RECESS, "wall_piers": _piers, "wall_fields": _fields,
 		"coped_pieces": _coped_pieces, "moulded_rings": _mouldings, "slit_reveals": _slit_reveals,
 		"slit_depth": 0.10, "slit_height": height * 0.60, "slit_frames": _slit_frames}
@@ -217,13 +217,14 @@ func _crenels(polygon: PackedVector2Array, corners: Array[Vector3], used: Dictio
 		if near_corner or used.has(key):
 			continue
 		used[key] = true
-		_coped_box(at, Vector3(0.47, 0.54, thickness) if along_x else Vector3(thickness, 0.54, 0.47), "stone")
+		_coped_box(at, Vector3(0.47, 0.54, thickness) if along_x else Vector3(thickness, 0.54, 0.47), "granite")
 
 
 ## The ground plinth keeps the original solid footprint. Recessed wall fields,
 ## piers and corbels stay inside that footprint, preserving every route/clearance.
 func _wall_body(polygon: PackedVector2Array, height: float) -> void:
-	_horizontal(polygon, 0.0, 0.28, "stone")
+	# Darker granite plinth, string courses and copings frame the pale ashlar.
+	_horizontal(polygon, 0.0, 0.28, "granite")
 	var inset := Geometry2D.offset_polygon(polygon, -WALL_FACE_RECESS, Geometry2D.JOIN_MITER)
 	if inset.is_empty():
 		push_error("Native wall field is too narrow for its measured relief")
@@ -251,7 +252,7 @@ func _wall_body(polygon: PackedVector2Array, height: float) -> void:
 			var point := a.lerp(b, along)
 			var frame := Transform3D(basis, Vector3(point.x, 0, point.y))
 			_box(Vector3(0, (bottom + shoulder) * 0.5, -0.045), Vector3(0.26, shoulder - bottom, 0.09), "stone", frame)
-			_coped_box(Vector3(0, shoulder + 0.07, -0.05), Vector3(0.36, 0.14, 0.10), "stone", frame)
+			_coped_box(Vector3(0, shoulder + 0.07, -0.05), Vector3(0.36, 0.14, 0.10), "granite", frame)
 			_piers.append({"frame": frame, "height": (bottom + shoulder) * 0.5})
 			if pier + 1 < count:
 				var middle := a.lerp(b, (float(pier) + 1.0) / count)
@@ -351,7 +352,7 @@ func _gate_arch(frame: Transform3D, width: float, depth: float, shoulder: float,
 		_box(Vector3(side * (radius + order * 0.5), wall_height * 0.76 + 0.04, 0), Vector3(order + 0.04, 0.08, depth + 0.06), "stone", frame)
 	var count := maxi(3, roundi(width / 0.65))
 	for merlon in count:
-		_coped_box(Vector3(lerpf(-radius, radius, float(merlon) / (count - 1)), crown + 0.30, 0), Vector3(0.42, 0.48, depth), "stone", frame)
+		_coped_box(Vector3(lerpf(-radius, radius, float(merlon) / (count - 1)), crown + 0.30, 0), Vector3(0.42, 0.48, depth), "granite", frame)
 
 
 func _towers(village: Village, index: int, wall_height: float) -> void:
@@ -371,11 +372,11 @@ func _towers(village: Village, index: int, wall_height: float) -> void:
 			if level < 0.2 or level > height - 0.15:
 				_moulded_ring(center + Vector3(0, level, 0), radius + 0.035, 0.105)
 			else:
-				_cylinder(center + Vector3(0, level, 0), radius + 0.035, 0.105, "stone")
+				_cylinder(center + Vector3(0, level, 0), radius + 0.035, 0.105, "granite")
 		for tooth in 10:
 			var angle := tooth * TAU / 10.0
 			var at := center + Vector3(cos(angle) * radius * 0.87, height + 0.26, sin(angle) * radius * 0.87)
-			_coped_box(Vector3.ZERO, Vector3(0.32, 0.52, 0.29), "stone", Transform3D(Basis(Vector3.UP, -angle), at))
+			_coped_box(Vector3.ZERO, Vector3(0.32, 0.52, 0.29), "granite", Transform3D(Basis(Vector3.UP, -angle), at))
 		# The shell has real recessed slots. The dark iron is their closed back,
 		# behind the stone reveals, rather than an overlay on an opaque cylinder.
 		for surface_frame: Transform3D in slit_faces:
@@ -385,7 +386,7 @@ func _towers(village: Village, index: int, wall_height: float) -> void:
 			for side in [-1.0, 1.0]:
 				_box(Vector3(side * 0.071, slit_y, -0.014), Vector3(0.065, 0.72, 0.07), "stone", frame)
 			for side in [-1.0, 1.0]:
-				_coped_box(Vector3(0, slit_y + side * 0.35, -0.0165), Vector3(0.208, 0.07, 0.075), "stone", frame)
+				_coped_box(Vector3(0, slit_y + side * 0.35, -0.0165), Vector3(0.208, 0.07, 0.075), "granite", frame)
 			_slit_reveals += 1
 	pose.free()
 

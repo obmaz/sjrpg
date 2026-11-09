@@ -47,6 +47,9 @@ func _build(width: float, depth: float, height: float) -> Dictionary:
 	glass.roughness = 0.52
 	_materials["chapel_glass"] = glass
 	_materials["oak"] = _materials["wood"]
+	# Pale long ashlar sets the chapel apart; buttresses, bands, arches and
+	# steps keep the shared limestone trim.
+	_materials["wall"] = _materials["chapel_stone"]
 	var floor := 0.28
 	var top := height + floor
 	var rise := 2.4
@@ -142,7 +145,7 @@ func _wall(width: float, floor: float, top: float, openings: Array, transform: T
 func _panel(left: float, right: float, bottom: float, top: float, transform: Transform3D) -> void:
 	if right <= left or top <= bottom:
 		return
-	_box(Vector3((left + right) * 0.5, (bottom + top) * 0.5, 0), Vector3(right - left, top - bottom, 0.28), "stone", transform)
+	_box(Vector3((left + right) * 0.5, (bottom + top) * 0.5, 0), Vector3(right - left, top - bottom, 0.28), "wall", transform)
 
 
 static func _arch_y(x: float, width: float, shoulder: float) -> float:
@@ -301,7 +304,7 @@ func _gable_piece(polygon: PackedVector2Array, facade: Transform3D) -> void:
 	if clean.size() > 1 and clean[0].distance_squared_to(clean[clean.size() - 1]) < 0.0000000001:
 		clean.remove_at(clean.size() - 1)
 	if clean.size() >= 3:
-		_prism(clean, 0.28, facade, "stone")
+		_prism(clean, 0.28, facade, "wall")
 
 
 func _rose_local(at: Vector3, radius: float, transform: Transform3D, recessed := false) -> void:

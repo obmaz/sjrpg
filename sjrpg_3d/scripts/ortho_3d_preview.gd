@@ -10,6 +10,8 @@ const PROJECTION_FACTOR := 1.224744871391589 * Iso.S
 const CAMERA_DIRECTION := Vector3(1, 1, 1)
 const MAGE_PATH := "res://assets/art/preview3d/mage.glb"
 const MATERIAL_ROOT := "res://assets/art/preview3d/"
+const WALL_TEXTURES := ["chapel_stone", "brick", "rubble", "plaster", "planks"]
+const ROOF_TEXTURES := ["slate", "clay", "shingle"]
 const CARD_CODE := """
 shader_type spatial;
 render_mode unshaded, blend_mix, depth_draw_never, cull_disabled;
@@ -263,8 +265,24 @@ func _setup_materials() -> void:
 	# Eight 32cm courses per generated tile; the same world scale crosses every
 	# gate, wall, corner and building instead of stretching a cropped stone sample.
 	_materials["stone"].uv1_scale = Vector3.ONE / 2.56
-	_materials["slate"] = _material(MATERIAL_ROOT + "slate.webp")
-	_materials["slate"].cull_mode = BaseMaterial3D.CULL_DISABLED
+	# Each building has its own wall/roof character (make_clean_masonry.py);
+	# limestone remains the shared trim so the family still reads as one village.
+	for key: String in WALL_TEXTURES:
+		var wall := _material(MATERIAL_ROOT + key + ".webp")
+		wall.uv1_triplanar = true
+		wall.uv1_world_triplanar = true
+		wall.uv1_scale = Vector3.ONE / 2.56
+		_materials[key] = wall
+	# Darker granite bands and copings on the fortification reuse the ashlar
+	# pixels with a cool tint instead of shipping another texture.
+	_materials["granite"] = _materials["stone"].duplicate()
+	_materials["granite"].albedo_color = Color(0.74, 0.76, 0.80)
+	for key: String in ROOF_TEXTURES:
+		_materials[key] = _material(MATERIAL_ROOT + key + ".webp")
+		_materials[key].cull_mode = BaseMaterial3D.CULL_DISABLED
+	# Soot-darkened slate for the smithy.
+	_materials["slate_dark"] = _materials["slate"].duplicate()
+	_materials["slate_dark"].albedo_color = Color(0.70, 0.70, 0.72)
 	_materials["wood"] = _material(MATERIAL_ROOT + "timber.webp")
 	_materials["wood"].uv1_triplanar = true
 	_materials["wood"].uv1_scale = Vector3.ONE * 0.65

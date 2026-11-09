@@ -6,7 +6,15 @@ extends RefCounted
 const WALL := 0.20
 const EAVES := 0.22
 const FLOOR := 0.16
-const MATERIAL_KEYS := ["stone", "slate", "wood", "iron", "glass"]
+const MATERIAL_KEYS := ["stone", "wall", "slate", "wood", "iron", "glass"]
+## Each house reads as its own building: wall infill, trim stone and roof cover
+## differ by role, while timber, iron and glass stay shared with the family.
+const STYLES := {
+	"nw": {"wall": "plaster", "stone": "stone", "slate": "clay", "label": "half-timbered merchant shop"},
+	"ne": {"wall": "rubble", "stone": "stone", "slate": "slate_dark", "label": "fieldstone smithy"},
+	"sw": {"wall": "planks", "stone": "rubble", "slate": "shingle", "label": "timber stable house"},
+	"se": {"wall": "brick", "stone": "stone", "slate": "slate", "label": "brick dormer house"},
+}
 const TIMBER_TILE := 1.0 / 0.65
 const SLATE_TILE := 2.6
 const SLATE_COURSES := 8
@@ -31,8 +39,16 @@ static func build(presenter: Node, root: Node3D, key: String, width: float, dept
 	var builder := NativeHouse3D.new()
 	builder._root = root
 	for material: String in MATERIAL_KEYS:
-		builder._materials[material] = presenter._materials["door" if material == "wood" else material]
+		builder._materials[material] = presenter._materials[resource_key(key, material)]
 	return builder._build(key, width, depth, height)
+
+
+## The presenter material used for one of this house's surface roles.
+static func resource_key(key: String, material: String) -> String:
+	if material == "wood":
+		return "door"
+	var style: Dictionary = STYLES.get(key, {})
+	return str(style.get(material, "stone" if material == "wall" else material))
 
 
 func _build(key: String, width: float, depth: float, height: float) -> Dictionary:
@@ -91,8 +107,8 @@ func _build(key: String, width: float, depth: float, height: float) -> Dictionar
 	_frame(body_width, eave_height, front, key == "nw", front_openings)
 	_frame(body_width, eave_height, back, key == "nw", rear_openings)
 	var triangle := PackedVector2Array([Vector2(-body_width * 0.5, eave_height), Vector2(body_width * 0.5, eave_height), Vector2(0, eave_height + rise)])
-	_prism(triangle, WALL, front, "stone")
-	_prism(triangle, WALL, back, "stone")
+	_prism(triangle, WALL, front, "wall")
+	_prism(triangle, WALL, back, "wall")
 	_corner_quoins(body_width, body_depth, minf(eave_height, 2.48) if key == "nw" else eave_height, eave_height)
 	_roof(width, depth, eave_height, rise)
 	for facade in [front, back]:
@@ -114,7 +130,7 @@ func _build(key: String, width: float, depth: float, height: float) -> Dictionar
 		"eaves_height": eave_height, "roof_rise": rise, "roof_overhang_nominal": EAVES, "roof_overhang": maxf(maxf(-bounds.position.x - width * 0.5, bounds.end.x - width * 0.5), maxf(-bounds.position.z - depth * 0.5, bounds.end.z - depth * 0.5)), "height_max": bounds.end.y, "bounds": bounds,
 		"closed_door": true, "door_x": door_x, "door_width": door_width, "door_height": door_height,
 		"door_approach": Rect2(Vector2(door_x - door_width * 0.5 - 0.12, depth * 0.5), Vector2(door_width + 0.24, 0.85)),
-		"openings": _openings, "roof_edges": _roof_edges, "materials": MATERIAL_KEYS,
+		"openings": _openings, "roof_edges": _roof_edges, "materials": MATERIAL_KEYS, "style": STYLES.get(key, {}),
 		"collision_note": "Existing whole-house footprint remains solid; doors are closed, smith/stable recesses carry blocking worktops or rails. No enterable interior is promised.",
 		"timber_mapping": "beam-local longitudinal grain, shared existing door material; metre UVs",
 		"timber_tile_m": TIMBER_TILE, "slate_tile_m": SLATE_TILE, "slate_tiles": _slate_tiles, "corner_quoins": _quoins,
@@ -166,13 +182,13 @@ func _wall_column(a: float, b: float, low_a: float, low_b: float, top: float, fa
 	if absf(low_a - low_b) < 0.00001:
 		_panel(a, b, low_a, top, facade)
 	else:
-		_prism(PackedVector2Array([Vector2(a, low_a), Vector2(b, low_b), Vector2(b, top), Vector2(a, top)]), WALL, facade, "stone")
+		_prism(PackedVector2Array([Vector2(a, low_a), Vector2(b, low_b), Vector2(b, top), Vector2(a, top)]), WALL, facade, "wall")
 
 
 func _panel(left: float, right: float, bottom: float, top: float, facade: Transform3D) -> void:
 	if right - left <= 0.001 or top - bottom <= 0.001:
 		return
-	_box(Vector3((left + right) * 0.5, (bottom + top) * 0.5, 0), Vector3(right - left, top - bottom, WALL), "stone", facade, false)
+	_box(Vector3((left + right) * 0.5, (bottom + top) * 0.5, 0), Vector3(right - left, top - bottom, WALL), "wall", facade, false)
 
 
 func _arch_height(opening: Dictionary, x: float) -> float:

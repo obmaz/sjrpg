@@ -2,7 +2,7 @@
   "baseline_commit": "a6d6f86fafbf1ba3585df16d8628f4ca158bf910",
   "baseline_helper": {
     "path": "scripts/ortho_3d_chapel.gd",
-    "sha256": "cf8397b45e153ea27f0d16b7d856b0429cade4a302948139e74db32223d0f22c"
+    "sha256": "9b61362fd7d3845d5a5eb66caad7e7d4d9619548bc76e2dec786a1a429953039"
   },
   "budget": {
     "exception_to_general_house_budget": "This landmark includes a full bell tower/spire, genuinely cut arch/oculus walls, paired lancet tracery and all four sides; repeated pieces merge by shared material. Small side roses and linear cylinders use lower tessellation than main gable detail.",
@@ -60,7 +60,7 @@
     "api": "Ortho3DChapel.build(presenter, root, width, depth, height)",
     "method": "Runtime ArrayMesh construction from dimensioned native stone/wood/roof solids, pointed arch paths and actual wall apertures. No facade billboard or viewport texture.",
     "path": "scripts/ortho_3d_chapel.gd",
-    "sha256": "df20e138ada0b1d21633c2f7ec7b465162d867f03faffa0fbc7c82f0b3ca3a94"
+    "sha256": "9b61362fd7d3845d5a5eb66caad7e7d4d9619548bc76e2dec786a1a429953039"
   },
   "inputs": [
     {
@@ -81,11 +81,11 @@
     },
     {
       "path": "assets/art/preview3d/materials.json",
-      "sha256": "db42d22825b9808f19ca7d9ffe8f33c39dc9135189e44b07a4a7e2c4d152f123"
+      "sha256": "41d0e50e736fe486e95b75bb5bb6e5a82f71293de4dd1fe8cb2f0cc52282ee67"
     },
     {
       "path": "assets/art/preview3d/limestone.webp",
-      "sha256": "d3ace7fb2e0ef041c3a6d79f32c05aa2db733ef1d52fa859c0b1432179b9351c"
+      "sha256": "2561c1be419f951bf0bce7b9fd5085c24a92600cf66424a4775e16cd37b58e6c"
     },
     {
       "path": "assets/art/preview3d/slate.webp",
@@ -94,6 +94,10 @@
     {
       "path": "assets/art/preview3d/timber.webp",
       "sha256": "4cac472a9fb54db9e89bdaf1577db846bd49f936e759dca7b10101175f7dcb1c"
+    },
+    {
+      "path": "assets/art/preview3d/chapel_stone.webp",
+      "sha256": "5599ac267a69d9016a58c4c874a63b2271525caf91c7b3a5e63e709484b863df"
     }
   ],
   "limitations": [
@@ -150,7 +154,7 @@
       "api": "Ortho3DChapel.build(presenter, root, width, depth, height)",
       "method": "Runtime ArrayMesh construction from dimensioned native stone/wood/roof solids, pointed arch paths and actual wall apertures. No facade billboard or viewport texture.",
       "path": "scripts/ortho_3d_chapel.gd",
-      "sha256": "d254cf3f54b9f83cb831c7b1c8910b5fb0de6e92ecceffad10974dc34be2b2df"
+      "sha256": "9b61362fd7d3845d5a5eb66caad7e7d4d9619548bc76e2dec786a1a429953039"
     },
     "verification": {
       "case": "ortho_3d_chapel",

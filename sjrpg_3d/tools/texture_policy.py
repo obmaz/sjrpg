@@ -68,8 +68,8 @@ def load_policy():
         if relative in selected:
             raise ValueError("Duplicate texture policy path: " + relative)
         selected[relative] = entry["usage"]
-    if len(selected) != 10:
-        raise ValueError("The reviewed native opaque allowlist must contain exactly 10 textures")
+    if len(selected) != 17:
+        raise ValueError("The reviewed native opaque allowlist must contain exactly 17 textures")
     return selected
 
 

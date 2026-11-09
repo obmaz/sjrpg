@@ -57,6 +57,9 @@ compress/lossy_quality=0.9
 mipmaps/generate=true
 process/fix_alpha_border=true
 ''')
+    # Walls/roofs owned by make_clean_masonry.py keep their reviewed records.
+    for key, entry in previous["materials"].items():
+        records.setdefault(key, entry)
     record = {"purpose": "Shared front-on native3D village albedos; 2D sprite art is unchanged.",
               "generation": previous["generation"],
               "authoritative_reference": {"path": "assets/source/style/approved-game-reference.jpg",

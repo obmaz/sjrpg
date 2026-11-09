@@ -113,13 +113,15 @@ func run() -> void:
 	stone.uv1_triplanar = true
 	stone.uv1_world_triplanar = true
 	stone.uv1_scale = Vector3.ONE * 0.390625
-	fixture._materials = {"stone": stone, "wood": StandardMaterial3D.new(), "iron": StandardMaterial3D.new()}
+	var granite := stone.duplicate() as StandardMaterial3D
+	granite.albedo_color = Color(0.74, 0.76, 0.80)
+	fixture._materials = {"stone": stone, "granite": granite, "wood": StandardMaterial3D.new(), "iron": StandardMaterial3D.new()}
 	add_child(fixture)
 	fixture.add_child(fixture.stage)
 	var controller := Ortho3DFortification.build(fixture)
 	var report: Dictionary = controller.report
 	check("native fortification uses all four actual gate passages and eight wing joins", controller.gates.size() == 4 and report["wing_joins"].size() == 8 and report["corners"].size() == 4)
-	check("masonry geometry and material submissions stay bounded", int(report["triangles"]) < 30000 and int(report["triangles"]) > 1000 and int(report["static_surfaces"]) <= 3)
+	check("masonry geometry and material submissions stay bounded", int(report["triangles"]) < 30000 and int(report["triangles"]) > 1000 and int(report["static_surfaces"]) <= 4)
 	check("the total wall datum keeps its original projected height", absf(float(report["projected_top_pixels"]) - game.village.wall_height * Iso.S) < 0.001)
 	var installed: Array = report["static_meshes"].duplicate()
 	for gate: Dictionary in controller.gates:
@@ -136,7 +138,7 @@ func run() -> void:
 	var valid := true
 	var winding := true
 	for mesh: MeshInstance3D in report["static_meshes"]:
-		if mesh.material_override == stone:
+		if mesh.material_override == stone or mesh.material_override == granite:
 			stone_meshes.append(mesh)
 		for surface in mesh.mesh.get_surface_count():
 			var arrays := mesh.mesh.surface_get_arrays(surface)
@@ -151,7 +153,9 @@ func run() -> void:
 				var b := indices[index + 1]
 				var c := indices[index + 2]
 				winding = winding and (vertices[b] - vertices[a]).cross(vertices[c] - vertices[a]).dot(normals[a]) <= 0.00001
-	check("both wall axes wings towers and corners share the same world-scaled limestone", stone_meshes.size() == 1 and stone.uv1_world_triplanar and stone.uv1_scale.is_equal_approx(Vector3.ONE * 0.390625))
+	# Pale ashlar body plus darker granite plinth/bands/copings: two masonry
+	# surfaces sharing the same world-scaled course grid.
+	check("both wall axes wings towers and corners share the same world-scaled limestone", stone_meshes.size() == 2 and stone.uv1_world_triplanar and stone.uv1_scale.is_equal_approx(Vector3.ONE * 0.390625) and granite.uv1_scale == stone.uv1_scale and granite.uv1_world_triplanar)
 	check("fortification mesh normals UVs and winding remain valid", valid and winding)
 	_check_wall_relief(report, stone_meshes)
 	var reversed_safe: PackedVector2Array = game.village.safe_zone.duplicate()
@@ -257,7 +261,7 @@ func _check_wall_relief(report: Dictionary, stone_meshes: Array) -> void:
 func _check_tower_recesses(report: Dictionary, stone_meshes: Array) -> void:
 	var iron_meshes := []
 	for mesh: MeshInstance3D in report["static_meshes"]:
-		if mesh.material_override != report["stone"]:
+		if mesh.material_override == report["iron"]:
 			iron_meshes.append(mesh)
 	var frames: Array = report["slit_frames"]
 	var exposed := 0
