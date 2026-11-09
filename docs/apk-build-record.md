@@ -1,33 +1,39 @@
 # APK 빌드 기록 형식
 
-Dropbox의 해당 앱 폴더에 있는 `latest-build.json`을 다음 `versionCode`의 기준으로 읽습니다. 파일명은 `latest-build.json`이며 `lates-build.json`이 아닙니다. 다른 앱의 기록은 번호 기준으로 사용하지 않습니다.
+`obmaz/commuzip`, `obmaz/initialsj`, `obmaz/sjrpg`는 이 문서와 [공통 JSON 스키마](apk-build-record.schema.json)를 동일하게 유지합니다.
+Dropbox에는 APK와 `latest-build.json`만 전달합니다. 빌드별 JSON·별도 검사 결과 JSON은 업로드하지 않습니다.
+이 스키마 파일은 저장소의 검증 기준이며 Dropbox 전달 파일이 아닙니다.
 
-## 빌드 전 번호 결정
+## 공통 필드
 
-1. Dropbox 플러그인의 `list_folder`와 `fetch` 또는 `download_link`로 해당 앱의 `latest-build.json` 및 전달 기록을 읽습니다. 플러그인이 반환한 원문을 로컬 JSON 파일로 저장합니다. 환경변수 토큰이나 직접 API로 가져오지 않습니다.
-2. `versionCode`는 실제 전달 APK의 값입니다. `latest-build.json` 이후에 전달된 APK나 이미 존재하는 과거 JSON이 있으면 그 번호도 확인합니다. APK는 전달됐지만 기록 업로드가 실패한 경우도 포함합니다.
-3. 다음 번호는 해당 앱의 `latest-build.json`, 확인된 후속 전달본, 현재 Android 프리셋의 `version/code` 중 최댓값에 1을 더합니다. 단순 재빌드도 기존 번호를 재사용하지 않습니다. 새 `buildNumber`와 `versionCode`는 그 번호이며 `versionName`은 `1.0.<번호>`입니다.
-4. 기준 파일이 없거나 읽기에 실패했거나 실제 앱·설치본·기록이 모순되면 빌드 전에 멈추고 올바른 경로와 번호를 확인합니다. 누락을 최초 빌드로 간주해 1을 쓰거나 다른 앱의 번호를 가져오지 않습니다. 사용자가 최초 파일이 없음을 확인하고 현재 설치본의 `versionCode`를 명시한 경우에만, 그 번호와 해당 앱의 확인된 이전 전달 기록으로 로컬 초기 기준을 만듭니다. 이때 `versionBaseline`에 사용자 확인에 따른 초기화임을 기록하고, 다음 번호의 APK 전달 성공 후 최초 `latest-build.json`을 생성합니다.
-5. `tools/prepare_apk_version.py`는 플러그인에서 읽어 저장한 로컬 기록만 받아 Android 프리셋의 버전을 갱신합니다. 업로드·토큰 처리·네트워크 요청은 하지 않습니다. 빌드 후에는 `aapt` 또는 `aapt2`로 실제 APK 버전이 결정한 번호와 정확히 일치하는지 확인합니다.
+UTF-8 JSON 객체로 아래 11개 필드를 모두 작성합니다. 필드명은 camelCase이며 다른 필드를 추가하거나 snake_case로 바꾸지 않습니다.
+JSON 키의 순서는 의미에 영향을 주지 않지만 생성할 때는 아래 순서를 사용합니다.
 
-## JSON 필드
-
-버전 관리 기록은 `latest-build.json` 한 개만 사용하고 아래 camelCase 필드명으로 작성합니다. APK와 같은 이름의 빌드별 JSON은 생성하거나 업로드하지 않습니다.
-
-| 필드 | 형식과 의미 |
+| 필드 | 자료형·의미 |
 | --- | --- |
-| `buildNumber` | 정수. 이번에 결정한 빌드 번호 |
-| `versionName` | 문자열. APK에서 실제 확인한 버전 이름 |
-| `versionCode` | 정수. APK에서 실제 확인한 버전 코드 |
-| `commit` | 빌드한 소스의 전체 Git SHA |
-| `sourceDirty` | 불리언. 빌드 당시 프리셋 버전 변경을 포함한 미커밋 변경 여부 |
-| `fileName` | 실제 전달 APK 파일명 |
-| `sha256` | 로컬 APK의 SHA-256 |
-| `sizeBytes` | 로컬 APK 크기(바이트) |
-| `signingCertificateSha256` | 실제 APK 서명 인증서의 SHA-256 지문 |
-| `contentHash` | 로컬에서 계산한 Dropbox 방식 content hash |
-| `builtAt` | 시간대가 포함된 ISO 8601 빌드 시각 |
+| `buildNumber` | 양의 정수. `versionCode`와 같은 값 |
+| `versionName` | 문자열. 실제 APK에서 확인한 버전 이름 |
+| `versionCode` | 1~2100000000 정수. 실제 APK의 버전 코드 |
+| `commit` | 빌드 소스의 전체 Git SHA, 소문자 16진수 40자 |
+| `sourceDirty` | 불리언. 버전 설정을 포함한 미커밋 변경 여부 |
+| `fileName` | 전달 APK의 파일명, 경로 제외 |
+| `sha256` | APK SHA-256, 소문자 16진수 64자 |
+| `sizeBytes` | APK 크기, 양의 정수 바이트 |
+| `signingCertificateSha256` | 실제 APK 서명 인증서 SHA-256, 소문자 16진수 64자 |
+| `contentHash` | 로컬에서 계산한 Dropbox 방식 content hash, 소문자 16진수 64자 |
+| `builtAt` | 시간대가 포함된 ISO 8601 문자열. UTC `Z` 또는 `+00:00` 권장 |
 
-`project`, `abi`, `validation`, `deviceTested`, `versionBaseline` 등 추가 필드는 사용할 수 있습니다. `contentHash`를 계산했다는 사실만으로 Dropbox 서버 해시까지 검증했다고 보고하지 않습니다. 예전 snake_case 빌드별 기록은 이력 확인용으로만 읽을 수 있으며 새 기록은 위 형식을 사용합니다.
+추가 설명·검증 로그·초기 번호를 확인한 근거는 로컬 작업 기록이나 채팅에 남깁니다.
+이전 기록의 추가 필드·snake_case는 확인용이며 새 기록에 복사하지 않습니다.
+`contentHash`가 있다고 서버 해시 검증까지 했다고 보고하지 않습니다.
 
-APK 전달 성공 후 `latest-build.json`을 생성하거나 플러그인이 지원하는 방식으로 갱신합니다. 플러그인이 기존 파일 갱신을 지원하지 않으면 APK 전달 성공과 기록 갱신 미완료를 구분해 보고합니다. 직접 API·삭제 후 재생성·빌드별 JSON 추가로 우회하지 않습니다. 다음 번호 결정 시 기준 파일 이후 전달된 APK도 확인하여 중복 번호를 쓰지 않습니다.
+## 번호와 전달 순서
+
+1. 각 앱의 Dropbox `/앱/<저장소 이름>/latest-build.json`을 플러그인으로 읽습니다. 다른 앱의 번호를 섞지 않습니다.
+2. 다음 번호는 **`versionCode + 1`**입니다. `buildNumber`와 일치하는지 확인합니다. 누락·읽기 실패·실제 전달 이력과 불일치가 있으면 빌드하지 않고 기준 기록부터 정정합니다. 로컬 프리셋·파일명·대화 기억의 최댓값으로 대체하지 않습니다.
+3. 기존 빌드 도구로 해당 앱의 버전을 반영하고 실제 APK 버전·서명·크기를 검증합니다. 이 문서가 Flutter와 Godot의 빌드 명령을 통일하는 것은 아닙니다.
+4. APK를 먼저 플러그인으로 업로드하고 `completed` 및 크기를 확인한 뒤 같은 폴더의 `latest-build.json`을 갱신합니다.
+5. 기존 파일 덮어쓰기가 지원되지 않으면 도구의 확인 절차에 따라 기존 기록을 임시 보관한 뒤 새 최신 기록을 생성합니다. 변경 직전 원격 기록을 다시 확인해 다른 작업의 최신 전달을 덮지 않습니다. 갱신 실패 시 보관본을 복구하고 다음 빌드를 중단합니다. 직접 API·인증정보로 우회하지 않습니다.
+6. 원격 최신 JSON을 다시 읽어 버전·파일명·해시가 로컬 검증값과 일치하는지 확인합니다. 임시 보관 JSON은 성공 확인 후 정리하며 빌드별 JSON을 계속 쌓지 않습니다. 삭제는 정확한 대상을 확인하고 플러그인 절차를 따릅니다.
+
+APK 전달만 성공하고 최신 기록 갱신이 실패했다면 두 결과를 나누어 보고합니다. 실제 파일이나 이전 전달 근거 없이 번호·서명·해시를 만들어 넣지 않습니다.

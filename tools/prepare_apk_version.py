@@ -13,6 +13,9 @@ def read_record(path, project, legacy=False):
     code = record.get("versionCode", record.get("version_code") if legacy else None)
     if type(code) is not int or not 1 <= code < 2100000000:
         raise ValueError(f"{path}: 유효한 정수 versionCode가 필요합니다")
+    number = record.get("buildNumber", code)
+    if type(number) is not int or number != code:
+        raise ValueError(f"{path}: buildNumber와 versionCode가 같아야 합니다")
     name = record.get("fileName", record.get("filename") if legacy else None)
     prefixes = (project + "-", "sjrpg_3d-" if project == "sjrpg" else project + "-")
     if not isinstance(name, str) or not name.startswith(prefixes):
@@ -43,7 +46,9 @@ def prepare(latest, preset, project, history=()):
     current = re.findall(r"(?m)^version/code=(\d+)$", options)
     if len(current) != 1 or len(re.findall(r'(?m)^version/name="[^"\n]+"$', options)) != 1:
         raise ValueError("Android version/code 및 version/name을 확인해야 합니다")
-    number = max(codes + [int(current[0])]) + 1
+    number = codes[0] + 1
+    if any(code > codes[0] for code in codes[1:]) or int(current[0]) > number:
+        raise ValueError("latest-build.json이 전달 이력 또는 프리셋보다 뒤처져 있습니다. 최신 기록부터 정정하세요")
     if number > 2100000000:
         raise ValueError("다음 versionCode가 Android 허용 범위를 초과합니다")
     version = f"1.0.{number}"
