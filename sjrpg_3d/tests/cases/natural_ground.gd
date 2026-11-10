@@ -7,6 +7,8 @@ func run() -> void:
 	var ground := preview._forest_stage.get_node("NativeNaturalGround") as MeshInstance3D
 	var report: Dictionary = ground.get_meta("native_ground")
 	check("one lit surface supplies four ground and four transition variants", report["base_variants"] == 4 and report["edge_variants"] == 4 and report["surfaces"] == 1 and ground.material_override is ShaderMaterial)
+	var material := ground.material_override as ShaderMaterial
+	check("four distinct grass families share the original native floor", report["grass_variants"] == 4 and material.get_shader_parameter("grass_atlas") == load(NativeGround3D.GRASS))
 	check("ground keeps native floor and adds no obstacles", ground.position == Vector3.ZERO and report["height_bias"] == 0.0 and report["collision_changes"] == 0 and ground.find_children("*", "CollisionObject3D", true, false).is_empty())
 	var record: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(NativeGround3D.FIELD))
 	var field_path := "res://" + str(record["field"])

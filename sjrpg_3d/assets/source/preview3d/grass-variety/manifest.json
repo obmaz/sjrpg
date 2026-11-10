@@ -1,0 +1,39 @@
+{
+  "asset": "네 종류의 저채도 숲 잔디 전용 알베도",
+  "tool": "OpenAI image_gen.imagegen — 참조 이미지 편집",
+  "actual_tool_references": [
+    {
+      "path": "assets/source/style/approved-game-reference.jpg",
+      "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+    },
+    {
+      "path": "assets/art/preview3d/generated-ground-base.png",
+      "sha256": "6ce98c643be077218cdb3bb8c0b606f0704521daedd7aafcc262e5174250a082"
+    }
+  ],
+  "prompt": "prompt.txt",
+  "generation_output": "exec-ed6a6cb9-373e-4273-8ce0-eb686741b30e.png",
+  "source": "assets/source/preview3d/grass-variety/generated-grass-variety.png",
+  "runtime": "assets/art/preview3d/generated-grass-variety.png",
+  "sha256": "644ba4865402c89d1048bfe6f9b1ff555d00bf2b0db1e570fd5b0ff5cb6f8bad",
+  "size": [
+    1254,
+    1254
+  ],
+  "tile_grid": [
+    2,
+    2
+  ],
+  "tile_metres": 2.56,
+  "texels_per_metre": 244.921875,
+  "maps": [
+    "base_color"
+  ],
+  "import": {
+    "compress_mode": 1,
+    "mipmaps": true,
+    "source_resize": false
+  },
+  "blend": "월드 좌표에서 군락·광역 분포와 방향·반 타일 이동을 혼합. 실측 법선·거칠기 맵 아님.",
+  "collision_changes": 0
+}

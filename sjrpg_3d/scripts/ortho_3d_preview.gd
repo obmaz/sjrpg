@@ -289,7 +289,7 @@ func _setup_materials() -> void:
 	_materials["door"] = _material(MATERIAL_ROOT + "timber.webp")
 	for key: String in ["door_shop", "door_smith", "door_stable", "door_home"]:
 		_materials[key] = _material(MATERIAL_ROOT + key + ".webp")
-	_materials["grass"] = _material("res://assets/art/forest/grass.webp", ForestArt.GRASS_TINT, 38.0)
+	_materials["grass"] = NativeGround3D.grass_material()
 	_materials["paving"] = _material("res://assets/art/forest/paving.webp")
 	_materials["iron"] = _material("", Color("292b29"))
 	_materials["glass"] = _material("", Color("182b36"))

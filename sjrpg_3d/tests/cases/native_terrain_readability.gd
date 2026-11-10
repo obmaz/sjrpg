@@ -8,8 +8,8 @@ func run() -> void:
 	var environment: Ortho3DEnvironment = preview._world_environment
 	var root: Node3D = environment.forest.get_node("NativeLandmarks")
 	var report: Dictionary = root.get_meta("native_landmark_report")
-	var low_grass: StandardMaterial3D = preview._materials["grass"]
-	var shared_top: StandardMaterial3D
+	var low_grass: ShaderMaterial = preview._materials["grass"]
+	var shared_top: ShaderMaterial
 	var shared_earth: StandardMaterial3D
 	var turf_variants := {}
 	var styled_count := 0
@@ -37,16 +37,18 @@ func run() -> void:
 			check("stone garden keeps paving and has no grass or earth rim", top.material_override == preview._materials["paving"] and earthy == null)
 			continue
 		styled_count += 1
-		var turf := top.material_override as StandardMaterial3D
+		var turf := top.material_override as ShaderMaterial
 		if not check("only measured raised grass receives the new family " + str(role), float(surface["rise"]) > 0.001 and turf != null and earthy != null):
 			continue
 		if shared_top == null:
 			shared_top = turf
 			shared_earth = earthy.material_override as StandardMaterial3D
-		var expected_texture: Texture2D = load("res://assets/art/preview3d/ground_moss.webp" if role == 3 else "res://assets/art/preview3d/ground_heather.webp")
-		check("raised terrain keeps its authored habitat and metre scale " + str(role), turf.albedo_texture == low_grass.albedo_texture and turf.detail_enabled and turf.detail_albedo == expected_texture and turf.detail_mask == expected_texture and turf.uv1_scale == Vector3.ONE)
+		var expected_bias: float = 1.25 if role == 3 else .45
+		check("raised terrain keeps its authored habitat and metre scale " + str(role), turf.get_shader_parameter("grass_atlas") == low_grass.get_shader_parameter("grass_atlas") and is_equal_approx(float(turf.get_shader_parameter("habitat_bias")),expected_bias))
 		turf_variants[turf.get_instance_id()] = true
-		check("upper grass is visibly cooler and lighter without emissive light " + str(role), turf.albedo_color.b / turf.albedo_color.g > low_grass.albedo_color.b / low_grass.albedo_color.g * 1.25 and turf.albedo_color.get_luminance() > low_grass.albedo_color.get_luminance() * 1.10 and not turf.emission_enabled and turf.shading_mode == BaseMaterial3D.SHADING_MODE_PER_PIXEL)
+		var tint: Color = turf.get_shader_parameter("surface_tint")
+		var low_tint: Color = low_grass.get_shader_parameter("surface_tint")
+		check("upper grass is visibly cooler and lighter without emissive light " + str(role), tint.b/tint.g > low_tint.b/low_tint.g*1.25 and tint.get_luminance() > low_tint.get_luminance()*1.10 and not turf.shader.code.contains("EMISSION") and not turf.shader.code.contains("unshaded"))
 		var earth := earthy.material_override as StandardMaterial3D
 		var cliff := (group.get_node("CliffSides") as MeshInstance3D).material_override as StandardMaterial3D
 		check("earth uses one opaque lit rock texture at its original world scale " + str(role), earth == shared_earth and earth.albedo_texture == cliff.albedo_texture and earth.uv1_world_triplanar and earth.uv1_scale.is_equal_approx(Vector3.ONE / 2.56) and earth.transparency == BaseMaterial3D.TRANSPARENCY_DISABLED and not earth.emission_enabled)

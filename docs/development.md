@@ -59,3 +59,9 @@ Android 도구 준비는 `sjrpg_3d/tools/setup_android.sh`에서 수행합니다
 길의 데이터 마스크는 원화를 편집해서 만들지 않습니다. `sjrpg_3d/tools/godot.sh --headless res://tools/preview3d/capture_road_geometry.tscn`이 실제 `Village.map_roads` 7개와 기하 합집합을 기록하고, `python3 sjrpg_3d/tools/preview3d/bake_ground_field.py`가 경계까지의 부호 거리와 XZ 바깥 법선을 굽습니다. `assets/data/native_ground_field.png`는 선형·무손실·밉맵 없는 데이터 텍스처로 3D 원화 압축 대상과 구별합니다. 교차로 내부에는 별도 길 경계를 그리지 않으며 실제 길 좌표가 바뀌면 `natural_ground` 검사가 재생성을 요구합니다. 바닥 Y=0과 실제 물리 지형을 보존하고 2D판은 변경하지 않습니다.
 
 `Enemy.SIZE_FACTOR=1.30`은 모든 종의 높이·폭·실제 캡슐과 기본 반경에 함께 적용됩니다. 모델·공격 높이·표시·시체는 같은 원본 크기를 읽습니다. 근접 거리는 늘어난 반경만큼 중심 거리만 더해 기존 몸 가장자리의 도달 거리를 유지합니다. 스폰 검색은 확대된 종별 반경으로 실제 장애물을 검사합니다.
+
+### 잔디 결의 다양성
+
+`generated-grass-variety.png`는 사용자 기준 화면과 기존 바닥 패밀리를 실제 참조로 편집한 2×2 전용 잔디 알베도입니다. 1254px 원본을 리사이즈하지 않고 각 칸 627px/2.56m(약245px/m)로 사용합니다. 원본·실제 프롬프트·첨부 참조 SHA-256은 `sjrpg_3d/assets/source/preview3d/grass-variety/`에 보존합니다. mode=1·밉맵을 사용하며 VRAM 압축 허용 목록과 다른 이미지 설정은 바꾸지 않습니다.
+
+`grass_variety.gdshaderinc`는 서로 다른 풀 결 네 장을 11.5m 생육 구역·3.4m 군락·27m 광역 변화로 혼합합니다. 각 이미지의 방향과 반 타일 이동을 달리하고 밉맵 미분을 전달해 격자 경계와 반복 무늬를 줄입니다. `native_ground.gdshader`의 기존 길 거리장과 포장석·접합부는 보존합니다. 높은 잔디 지형은 `native_grass.gdshader`와 두 서식지 공유 재질을 사용하며 기존 높이별 색 비율만 적용합니다. 지형 메시·미터 UV·실제 충돌·카메라 줌은 바꾸지 않습니다.

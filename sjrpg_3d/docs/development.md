@@ -53,3 +53,7 @@ tools/serve.sh
 `EncounterRuntime.CAVE_SITE`는 직접 공격으로만20마리를 소환합니다. 일반 몬스터 예산30은 유지하고 이 특수 무리에만20개를 추가 예약합니다. 전체20개 배치 가능 위치를 먼저 검사해 부분 소환을 막습니다. 저장 검증은 일반 기록 합계30·특수 기록20·전체50을 각각 제한하며, 기존 저장 버전과 다른 비석의 충전 규칙은 유지합니다.
 
 메뉴 이동은 `Game._leave_to_menu()`의 저장 성공 후에만 장면을 해제합니다. 보상 적용과 동굴 위치 메타데이터를 저장에 포함하되, 실패하면 현재 팝업·일시정지·동굴 상태를 유지합니다. `close_panel(false)`, `dungeon.leave(...,false)`, `claim_boss_heart(false)`는 이 경로에서 중복 쓰기를 피하기 위한 내부 호출이며 기본 인자는 기존 일반 동작을 유지합니다.
+
+### 잔디 패턴 혼합
+
+네 종류의 생성형 잔디를 `scripts/grass_variety.gdshaderinc`에서 월드 좌표로 혼합합니다. 낮은 들판과 높은 지형은 같은 2.56m 배율을 사용하며 높은 지형의 색 대비와 길 거리장·충돌은 유지합니다. 원본·프롬프트·해시는 `assets/source/preview3d/grass-variety/manifest.json`을 따릅니다.

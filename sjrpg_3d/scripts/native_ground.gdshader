@@ -3,6 +3,7 @@ render_mode cull_back;
 uniform sampler2D base_atlas : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
 uniform sampler2D edge_atlas : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
 uniform sampler2D distance_field : filter_linear, repeat_disable;
+#include "res://scripts/grass_variety.gdshaderinc"
 uniform vec2 field_origin;
 uniform vec2 field_extent;
 varying vec2 ground_world;
@@ -41,8 +42,7 @@ void fragment() {
 		d = 2.0;
 	}
 	vec2 uv = ground_world / 2.56;
-	float habitat = 0.10 + ground_noise(ground_world / 4.7) * 0.8;
-	vec3 grass = mix(base_tile(uv, vec2(0.0, 1.0)), base_tile(uv + vec2(0.17, 0.31), vec2(1.0, 1.0)), habitat);
+	vec3 grass = grass_surface(ground_world,0.0);
 	vec3 color = grass;
 	if (d < 1.25) {
 		vec3 paving = mix(base_tile(uv, vec2(0.0)), base_tile(uv, vec2(1.0, 0.0)), ground_noise(ground_world / 3.8));

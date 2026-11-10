@@ -79,22 +79,13 @@ static func build(preview: Node, parent: Node3D) -> Dictionary:
 	rock_material.uv1_triplanar = true
 	rock_material.uv1_world_triplanar = true
 	rock_material.uv1_scale = Vector3.ONE / 2.56
-	# Share both materials across all raised grassy landmarks. Preserve the
-	# existing metre-based UVs instead of copying the 150m plane's 38 repeats.
-	var upper_turf := (preview._materials["grass"] as StandardMaterial3D).duplicate() as StandardMaterial3D
-	upper_turf.albedo_color = UPPER_GRASS_TINT
-	# 원래 풀잎의 세밀한 결을 보존하고 서식지별 표면을 낮은 비율로 혼합한다.
-	upper_turf.detail_enabled = true
-	upper_turf.detail_albedo = load("res://assets/art/preview3d/ground_heather.webp")
-	upper_turf.detail_mask = upper_turf.detail_albedo
-	upper_turf.detail_blend_mode = BaseMaterial3D.BLEND_MODE_MIX
-	upper_turf.uv1_scale = Vector3.ONE
+	# 융기 지형은 두 잔디 재질을 공유한다. 월드 좌표로 바닥과 같은 결 크기를
+	# 유지하고, 서식 분포와 고도별 색 비율만 달리한다.
+	var upper_turf := NativeGround3D.grass_material(UPPER_GRASS_TINT,.45)
 	var earth := rock_material.duplicate() as StandardMaterial3D
 	earth.albedo_color = Color(0.54, 0.43, 0.31, 1.0)
 	earth.roughness = 1.0
-	var moss_turf := upper_turf.duplicate() as StandardMaterial3D
-	moss_turf.detail_albedo = load("res://assets/art/preview3d/ground_moss.webp")
-	moss_turf.detail_mask = moss_turf.detail_albedo
+	var moss_turf := NativeGround3D.grass_material(UPPER_GRASS_TINT,1.25)
 	var owned := {}
 	var entries: Array[Dictionary] = []
 	var water_materials: Array[ShaderMaterial] = []
