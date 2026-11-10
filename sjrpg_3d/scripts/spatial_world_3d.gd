@@ -455,9 +455,7 @@ func _notification(what: int) -> void:
 
 func _build_forest() -> void:
 	var field: Rect2 = game.FIELD
-	var floor_shape := BoxShape3D.new()
-	floor_shape.size = Vector3(field.size.x / UNITS, 0.20, field.size.y / UNITS)
-	_shape_body(floor_shape, Transform3D(Basis.IDENTITY, Vector3(0, -0.10, 0)), FLOOR, "Ground")
+	_triangle_body(NativeGroundRelief.faces(game.village), FLOOR, "Ground")
 	var boundary := PackedVector2Array([field.position, Vector2(field.end.x, field.position.y), field.end, Vector2(field.position.x, field.end.y)])
 	for index in boundary.size():
 		_segment(Vector3(boundary[index].x, 0, boundary[index].y) / UNITS, Vector3(boundary[(index + 1) % boundary.size()].x, 0, boundary[(index + 1) % boundary.size()].y) / UNITS, 0.0, 8.0, SOLID)
@@ -508,19 +506,10 @@ func _build_forest() -> void:
 		var radius: float = circle[1]
 		if point.is_equal_approx(NativeCavePlan.body_center(game.dungeon.entry_point())):
 			var cave_frame := NativeCavePlan.frame(game.dungeon.entry_point())
-			for polygon: PackedVector2Array in NativeCavePlan.ground_regions(radius_metres(radius)):
-				var vertices := PackedVector3Array()
-				for vertex: Vector2 in polygon:
-					vertices.append(Vector3(vertex.x,0,vertex.y))
-					vertices.append(Vector3(vertex.x,NativeCavePlan.HILL_HEIGHT,vertex.y))
-				var rock := ConvexPolygonShape3D.new()
-				rock.points = vertices
-				rock.margin = 0.001
-				_shape_body(rock,cave_frame,SOLID,"NativeCaveHill")
-			var roof := ConvexPolygonShape3D.new()
-			roof.points = NativeCavePlan.roof_points()
-			roof.margin = 0.001
-			_shape_body(roof,cave_frame,SOLID,"NativeCaveRoof")
+			var cave_mesh := NativeCaveEntrance3D.mesh(NativeCavePlan.HILL_HEIGHT,radius_metres(radius))
+			var rock := cave_mesh.create_trimesh_shape()
+			rock.margin = 0.001
+			_shape_body(rock,cave_frame,SOLID,"NativeCaveHill")
 			continue
 		var chest := _chest_at(point)
 		var shape := CylinderShape3D.new()
@@ -617,7 +606,7 @@ func _construction_height(point: Vector2) -> float:
 	for surface in _surfaces:
 		if _contains(surface["top"], point):
 			return _surface_height(surface, point)
-	return 0.0
+	return NativeGroundRelief.at(game.village,point)
 
 
 static func _contains(polygon: PackedVector2Array, point: Vector2) -> bool:
@@ -678,7 +667,7 @@ static func surface_height_at(village: Village, point: Vector2) -> float:
 	for surface in terrain_surfaces(village):
 		if _contains(surface["top"], point):
 			return _surface_height(surface, point)
-	return 0.0
+	return NativeGroundRelief.at(village,point)
 
 
 static func _native_chapel(village: Village) -> Dictionary:

@@ -18,13 +18,10 @@ func run() -> void:
 		var portal: IsoSprite = game.village.portal_sprites[id]
 		var base: PackedVector2Array = game.village.portal_footprints[id]
 		check("field gate matches the town gate's actual drawing scale: " + id, is_equal_approx(portal.k, town_portal.k) and portal.def == town_portal.def and portal.position == route.gate_point(id))
-		var same_base := base.size() == town_footprint.size()
-		var center := Vector2.ZERO
-		for i in base.size():
-			same_base = same_base and (base[i] - portal.position).distance_to(town_footprint[i] - town_portal.position) < 0.01
-			center += base[i]
-		center /= base.size()
-		check("equal-size gate stone bases use equal collision footprints: " + id, same_base and game.village.solids.has(base) and game._blocked(center, Player.RADIUS))
+		if id == "town":
+			check("town gate keeps its upright stone blocker",game.village.solids.has(base))
+		else:
+			check("field waypoint is a walkable ground seal",not game.village.solids.has(base) and not game._blocked(portal.position,Player.RADIUS))
 		if id == "tree":
 			var terrace_clear := true
 			for landmark in game.village.landmarks:

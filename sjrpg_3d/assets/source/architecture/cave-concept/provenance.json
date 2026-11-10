@@ -6,16 +6,36 @@
   "usage": "구릉 아래의 큰 입구·층진 암반·깊은 통로를 위한 구조 컨셉. 평면 배경으로 사용하지 않는다.",
   "implementation": [
     {
+      "path": "assets/models/environment/cave_entrance/albedo.png",
+      "sha256": "bc5bc131298b820246722d64ecbe1e45957f25f58db1c82e9f6dee094961a7be"
+    },
+    {
+      "path": "assets/models/environment/cave_entrance/bake.gd",
+      "sha256": "1694745c8ecb927d1a761fa16ac49c0ace29532d78631ae714d4fb1ab079e046"
+    },
+    {
+      "path": "assets/models/environment/cave_entrance/bake.tscn",
+      "sha256": "7043f052e358a5d7ace3df396e5d188fba1031ff254aba320e36b91951d9c0ba"
+    },
+    {
       "path": "assets/models/environment/cave_entrance/model.gd",
-      "sha256": "396d0c1b9ed010c4cf7a5246072395f51a346531d4821163414cd944f3a8ab06"
+      "sha256": "0887a058d57e8aea9d4f00febaea117c0e0bce11283fff94cee08ac40dd896e1"
+    },
+    {
+      "path": "assets/models/environment/cave_entrance/model.res",
+      "sha256": "510e724473b46289d62419b26af0963e0d89cf7619791a88dc4a73c8575d7ae7"
     },
     {
       "path": "assets/models/environment/cave_entrance/plan.gd",
-      "sha256": "c40b4939c736848920b6e167b3490cf72a161531c897cb62a40143516ca10be4"
+      "sha256": "9e6462b1fa011d258c50c9daf23bffd5ab39a6b30ffba5d2922e370e3bd626a4"
+    },
+    {
+      "path": "assets/models/environment/cave_entrance/sculpt.gd",
+      "sha256": "eef9a7190b587120e7292e2fbbc0ce21a929658d5da97cf8910be81f04748e49"
     },
     {
       "path": "assets/models/environment/cave_entrance/surface.gdshader",
-      "sha256": "763ac8fa3e8c85b582a75e00e18a39d4710f01f523c576f91a09005e44b71021"
+      "sha256": "672b442ad35e52824e514660010e0c8a23b7c21f8cc88f8897318dce558beb8f"
     }
   ]
 }

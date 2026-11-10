@@ -68,6 +68,12 @@ static func build(preview: Node, parent: Node3D) -> Node3D:
 			_box(caps, Vector3(x, 1.105, side), Vector3(0.19, 0.035, 0.19))
 			# 작은 철제 고정 장식은 실제 입체 부품이다.
 			_box(iron, Vector3(x, 0.72, side + (0.12 if side == 0.0 else -0.12)), Vector3(0.075, 0.10, 0.02))
+	# 낮은 강바닥까지 내려가는 실제 하부 아치. 보행면은 원래 지면에 접속한다.
+	_box(masonry,Vector3(length*0.5,-0.14,width*0.5),Vector3(length,0.28,width))
+	for span: int in 2:
+		_arch(masonry,Vector3((span+0.5)*length*0.5,-1.70,width*0.5),length*0.5-0.42,1.33,0.28,width-0.06)
+	for pier: int in 3:
+		_box(masonry,Vector3(pier*length*0.5,-0.85,width*0.5),Vector3(0.46,1.70,width+0.03))
 	# 보행면의 높이와 끝점은 공유 충돌의 원래 값에서 바꾸지 않는다.
 	for index: int in bays * 2:
 		var x := (index + 0.5) * length / (bays * 2)

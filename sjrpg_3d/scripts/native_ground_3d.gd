@@ -1,6 +1,6 @@
 class_name NativeGround3D
 extends RefCounted
-## 실제 길 합집합의 거리장 위에 생성형 바닥/연결 타일을 놓는다. 물리는 바꾸지 않는다.
+## 길 거리장과 실제 강둑·동굴 하강로 위에 생성형 재질을 놓는다.
 const BASE := "res://assets/art/preview3d/generated-ground-base.png"
 const EDGE := "res://assets/art/preview3d/generated-ground-edge.png"
 const GRASS := "res://assets/art/preview3d/generated-grass-variety.png"
@@ -32,14 +32,19 @@ static func build(preview: Node) -> MeshInstance3D:
 	material.set_shader_parameter("shore_field", load("res://" + str(record["shore_field"])))
 	material.set_shader_parameter("rock_texture", load("res://assets/art/village/rock.webp"))
 	material.set_shader_parameter("earth_texture", load("res://assets/art/forest/earth.webp"))
+	material.set_shader_parameter("bank_atlas",load("res://assets/models/environment/riverbank/albedo.png"))
 	material.set_shader_parameter("field_origin", Vector2(origin[0], origin[1]))
 	material.set_shader_parameter("field_extent", Vector2(extent[0], extent[1]))
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(150, 150)
+	var faces := NativeGroundRelief.faces(preview.game.village)
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for index in range(0,faces.size(),3):
+		NativeLandmarks3D._tri(tool,faces[index],faces[index+1],faces[index+2],Vector3.UP)
+	var plane := tool.commit()
 	var ground: MeshInstance3D = preview._mesh(plane, material, Vector3.ZERO)
 	ground.name = "NativeNaturalGround"
 	ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	ground.set_meta("native_ground", {"base_variants": 4, "edge_variants": 4, "grass_variants":4,"tile_metres": TILE_METRES, "road_count": record["roads"].size(), "surfaces": 1, "collision_changes": 0, "height_bias": 0.0})
+	ground.set_meta("native_ground", {"base_variants": 4, "edge_variants": 4, "grass_variants":4,"tile_metres": TILE_METRES, "road_count": record["roads"].size(), "surfaces": 1, "collision_changes": 1, "height_bias": 0.0})
 	return ground
 
 static func roads_match(roads: Array[PackedVector2Array]) -> bool:

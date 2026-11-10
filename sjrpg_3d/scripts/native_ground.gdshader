@@ -10,7 +10,9 @@ uniform sampler2D rock_texture : source_color, filter_linear_mipmap_anisotropic,
 uniform sampler2D earth_texture : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform vec2 field_origin;
 uniform vec2 field_extent;
+uniform sampler2D bank_atlas : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
 varying vec2 ground_world;
+varying float ground_height;
 
 float hash_ground(vec2 p) {
 	vec2 q = fract(p * vec2(0.1031, 0.1030));
@@ -37,6 +39,7 @@ vec3 edge_tile(vec2 uv, vec2 cell) {
 }
 void vertex() {
 	ground_world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xz;
+	ground_height = VERTEX.y;
 }
 void fragment() {
 	vec2 field_uv = (ground_world - field_origin) / field_extent;
@@ -76,6 +79,18 @@ void fragment() {
 		vec3 stones = texture(rock_texture, uv * 1.24).rgb;
 		vec3 bank = mix(stones * 0.67, mix(stones, soil, 0.63), smoothstep(-0.05, 0.45, broken));
 		color = mix(color, bank, 1.0 - smoothstep(0.12, 1.18, broken));
+	}
+	if (ground_height < -0.015) {
+		vec2 local_uv = mix(vec2(0.018),vec2(0.982),mirrored(ground_world/2.0));
+		vec3 wet = texture(bank_atlas,local_uv*0.5).rgb;
+		vec3 roots = texture(bank_atlas,(vec2(1.0,0.0)+local_uv)*0.5).rgb;
+		vec3 turf = texture(bank_atlas,(vec2(0.0,1.0)+local_uv)*0.5).rgb;
+		vec3 riverbed = texture(bank_atlas,(vec2(1.0)+local_uv)*0.5).rgb;
+		float water_distance = (texture(shore_field,field_uv).r*2.0-1.0)*2.0;
+		vec3 slopes = mix(turf,mix(roots,wet,ground_noise(ground_world*1.3)),smoothstep(0.0,0.9,-ground_height));
+		slopes = mix(slopes,riverbed,smoothstep(1.35,1.80,-ground_height));
+		vec3 descent = texture(earth_texture,uv).rgb*vec3(0.62,0.60,0.54);
+		color = mix(color,mix(slopes,descent,smoothstep(1.5,1.9,water_distance)),smoothstep(0.01,0.14,-ground_height));
 	}
 	ALBEDO = color;
 	ROUGHNESS = 0.98;

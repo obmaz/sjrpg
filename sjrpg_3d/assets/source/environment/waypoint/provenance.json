@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "waypoint",
+  "tool": "image_gen.imagegen",
+  "source": {
+    "path": "assets/source/environment/waypoint/original.png",
+    "sha256": "c7617b3cbee4837bb9a4f8744ec55c61cd2aa5ba416062ba6441fc334baa1dba"
+  },
+  "prompt": {
+    "path": "assets/source/environment/waypoint/prompt.txt",
+    "sha256": "485fe4e6665399a4c2cc6fa4790ed3a63bf49da41e8b3a91d41472f378ce67a1"
+  },
+  "actualReferences": [],
+  "runtime": [
+    {
+      "path": "assets/models/environment/waypoint/albedo.png",
+      "sha256": "c7617b3cbee4837bb9a4f8744ec55c61cd2aa5ba416062ba6441fc334baa1dba"
+    },
+    {
+      "path": "assets/models/environment/waypoint/model.gd",
+      "sha256": "92872df8017bd62c29d75409ef6ebb3f16dd35383fa0ab5fc1a37e0efef29d23"
+    },
+    {
+      "path": "assets/models/environment/waypoint/surface.gdshader",
+      "sha256": "8bd5eb921b3c448f6af36ddb8ec231700b67704646518fc6e562407839c647dc"
+    }
+  ],
+  "mapping": "whole circular top surface"
+}

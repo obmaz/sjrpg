@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "id": "descending-cave",
+  "tool": "image_gen.imagegen",
+  "source": {
+    "path": "assets/source/environment/descending-cave/original.png",
+    "sha256": "9f91cb680152e4eb78639920fad10e07210162d4278763d9a82b897157aaecff"
+  },
+  "prompt": {
+    "path": "assets/source/environment/descending-cave/prompt.txt",
+    "sha256": "8380421cb84ee0e65847c632a4cf6e1687893a575e526dcd8523fb22e221cb5b"
+  },
+  "actualReferences": [
+    {
+      "path": "assets/source/architecture/cave-concept/original.png",
+      "sha256": "0950cc3a370bbabb60a3c31aeec3d83b771e60554d68c358d59f993d513a307d"
+    }
+  ],
+  "runtime": [
+    {
+      "path": "assets/models/environment/cave_entrance/albedo.png",
+      "sha256": "bc5bc131298b820246722d64ecbe1e45957f25f58db1c82e9f6dee094961a7be"
+    },
+    {
+      "path": "assets/models/environment/cave_entrance/bake.gd",
+      "sha256": "1694745c8ecb927d1a761fa16ac49c0ace29532d78631ae714d4fb1ab079e046"
+    },
+    {
+      "path": "assets/models/environment/cave_entrance/bake.tscn",
+      "sha256": "7043f052e358a5d7ace3df396e5d188fba1031ff254aba320e36b91951d9c0ba"
+    },
+    {
+      "path": "assets/models/environment/cave_entrance/model.gd",
+      "sha256": "0887a058d57e8aea9d4f00febaea117c0e0bce11283fff94cee08ac40dd896e1"
+    },
+    {
+      "path": "assets/models/environment/cave_entrance/model.res",
+      "sha256": "510e724473b46289d62419b26af0963e0d89cf7619791a88dc4a73c8575d7ae7"
+    },
+    {
+      "path": "assets/models/environment/cave_entrance/plan.gd",
+      "sha256": "9e6462b1fa011d258c50c9daf23bffd5ab39a6b30ffba5d2922e370e3bd626a4"
+    },
+    {
+      "path": "assets/models/environment/cave_entrance/sculpt.gd",
+      "sha256": "eef9a7190b587120e7292e2fbbc0ce21a929658d5da97cf8910be81f04748e49"
+    },
+    {
+      "path": "assets/models/environment/cave_entrance/surface.gdshader",
+      "sha256": "672b442ad35e52824e514660010e0c8a23b7c21f8cc88f8897318dce558beb8f"
+    }
+  ],
+  "mapping": "3D modeling reference; not a billboard"
+}

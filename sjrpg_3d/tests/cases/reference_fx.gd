@@ -20,6 +20,9 @@ class ContactProbe:
 
 
 func run() -> void:
+	check("reference combat starts with an unpaused scene",not get_tree().paused)
+	if get_tree().paused:
+		get_tree().paused = false
 	var previous := Prefs.reduce_motion
 	Prefs.reduce_motion = false
 	_check_art_contract()
@@ -149,7 +152,8 @@ func _check_warrior_contacts() -> void:
 	var spins := _authored(game, "spin")
 	check("one native whirlwind creates one continuous authored sweep", spins.size() == 1)
 	var sweep: Effect = spins[0] if not spins.is_empty() else null
-	await get_tree().create_timer(0.35, false).timeout
+	await get_tree().create_timer(0.35, true).timeout
+	check("combat timing must not be interrupted by a paused panel",not get_tree().paused)
 	check("actual whirlwind contact gives the attacker a contact stop", enemy.contact_stop_seen)
 	check("dodge after the first contact cancels remaining whirlwind ticks", enemy.contacts == 1 and hero._roll_time > 0.0)
 	check("cancelled whirlwind cannot leave its sweep behind", not is_instance_valid(sweep) or sweep.is_queued_for_deletion())
@@ -160,7 +164,8 @@ func _check_warrior_contacts() -> void:
 	enemy.dodge_on_first = false
 	spin = hero._prepare("whirlwind", SkillDefs.get_def("whirlwind"), 1)
 	spin.call()
-	await get_tree().create_timer(0.35, false).timeout
+	await get_tree().create_timer(0.35, true).timeout
+	check("combat timing must not be interrupted by a paused panel",not get_tree().paused)
 	check("uninterrupted whirlwind retains its three native damage ticks", enemy.contacts == int(SkillDefs.get_def("whirlwind")["ticks"]))
 	hero._cancel_actions()
 	enemy.contacts = 0
@@ -181,6 +186,8 @@ func _check_warrior_contacts() -> void:
 		before = enemy.hp
 		slam._process(0.1)
 		check("landing artwork never repeats its resolved damage", enemy.hp == before and enemy.contacts == 1 and slam.damage == 0.0)
+	if game.hud.panel_open():
+		game.hud.close_panel()
 	game.queue_free()
 	await _frames(2)
 

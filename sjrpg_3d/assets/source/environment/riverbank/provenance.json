@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "riverbank",
+  "tool": "image_gen.imagegen",
+  "source": {
+    "path": "assets/source/environment/riverbank/original.png",
+    "sha256": "9d71bdb9e90a1150c6111c677e427e2c5298470e899e7a7c7aa26274ce7e414e"
+  },
+  "prompt": {
+    "path": "assets/source/environment/riverbank/prompt.txt",
+    "sha256": "bffd10bded5c557e7948b2a373c26949dc06d110708cb5cc50da9a37a5000adc"
+  },
+  "actualReferences": [],
+  "runtime": [
+    {
+      "path": "assets/models/environment/riverbank/albedo.png",
+      "sha256": "9d71bdb9e90a1150c6111c677e427e2c5298470e899e7a7c7aa26274ce7e414e"
+    }
+  ],
+  "mapping": "2x2 atlas, 2 metre tiles"
+}

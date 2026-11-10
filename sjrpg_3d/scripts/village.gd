@@ -690,13 +690,20 @@ static func portal_base(portal: IsoSprite) -> PackedVector2Array:
 ## Only the three discovered travel destinations belong to this registry.
 func _add_warp_portal(id: String, at: Vector2, world: Node2D) -> IsoSprite:
 	var portal := create_portal(at)
+	if id != "town":
+		portal.set_meta("ground_waypoint",id)
 	portal.name = "WarpGate_" + id
 	portal_points[id] = at
 	portal_sprites[id] = portal
 	world.add_child(portal)
 	var footprint := portal_base(portal)
+	if id != "town":
+		footprint = PackedVector2Array()
+		for i: int in 24:
+			footprint.append(at+Iso.project(Vector2.from_angle(TAU*i/24.0)*NativeWaypoint3D.RADIUS*SpatialWorld3D.UNITS))
 	portal_footprints[id] = footprint
-	solids.append(footprint)
+	if id == "town":
+		solids.append(footprint)
 	var src: Array = portal.def["source"]
 	var corners := portal.atlas_polygon([[src[0], src[1]], [src[0] + src[2], src[1]], [src[0] + src[2], src[1] + src[3]], [src[0], src[1] + src[3]]])
 	clear_rects.append(Iso.poly_bounds(corners).grow(40.0))
@@ -711,8 +718,38 @@ func _build_sanctuaries(world: Node2D) -> void:
 	var tree_point := mid + (mid - _top_center(tree)).normalized() * 160.0
 	sanctuary_points = {"town": spawn_point, "tree": tree_point, "cave": quest_sites["sun"] + Vector2(-220, 220)}
 	for id in ["tree", "cave"]:
-		var point: Vector2 = sanctuary_points[id]
-		clear_rects.append(Rect2(point - Vector2(220, 220), Vector2(440, 440)))
-		# The full-size tree gate needs room beside the terrace's descending entrance.
-		var gate_offset := Vector2(-80, -110) if id == "tree" else Vector2(0, -110)
-		_add_warp_portal(id, point + gate_offset, world)
+		var proposed: Vector2 = sanctuary_points[id]+Vector2(-320,210)
+		var chosen := _waypoint_clearing(proposed)
+		sanctuary_points[id] = chosen
+		clear_rects.append(Rect2(chosen-Vector2(240,240),Vector2(480,480)))
+		_add_warp_portal(id,chosen,world)
+
+
+func _waypoint_clearing(proposed: Vector2) -> Vector2:
+	# 건물·강·모든 높은 지형과 동굴의 실제 외곽에서 여유를 확보한다.
+	for ring: int in 16:
+		for index: int in 16:
+			var at := proposed+Iso.project(Vector2.from_angle(TAU*index/16.0)*ring*85.0)
+			var ground_at := Iso.unproject(at)
+			if near_water(ground_at,150.0):
+				continue
+			var clear := true
+			for polygon: PackedVector2Array in solids:
+				if Geometry2D.is_point_in_polygon(at,polygon):
+					clear = false
+				for i: int in polygon.size():
+					if at.distance_to(Geometry2D.get_closest_point_to_segment(at,polygon[i],polygon[(i+1)%polygon.size()]))<230.0:
+						clear = false
+			for circle: Array in circles:
+				if at.distance_to(circle[0])<float(circle[1])+260.0:
+					clear = false
+			for landmark: Landmark in landmarks:
+				if Geometry2D.is_point_in_polygon(at,landmark.top):
+					clear = false
+				for i: int in landmark.top.size():
+					if at.distance_to(Geometry2D.get_closest_point_to_segment(at,landmark.top[i],landmark.top[(i+1)%landmark.top.size()]))<230.0:
+						clear = false
+			if clear:
+				return at
+	push_error("웨이포인트를 위한 빈 지형을 찾지 못했습니다")
+	return proposed

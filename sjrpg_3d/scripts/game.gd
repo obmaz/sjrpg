@@ -334,6 +334,11 @@ func _read_debug_params() -> void:
 					_fx_review_focus = middle + Vector2(0, -140)
 				"portal":
 					player.position = exploration.gate_approach("town")
+				"waypoint_tree", "waypoint_cave", "waypoint_tree_active", "waypoint_cave_active":
+					var id := "tree" if kv[1].contains("tree") else "cave"
+					var at: Vector2 = village.portal_points[id]
+					player.position = at if kv[1].ends_with("active") else at+Vector2(0,165)
+					_fx_review_focus = at
 				"boss":
 					player.position = village.boss_point + Vector2(0, 130)
 				"field":

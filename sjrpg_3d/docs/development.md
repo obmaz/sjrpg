@@ -64,10 +64,17 @@ tools/serve.sh
 
 네 종류의 생성형 잔디를 `scripts/grass_variety.gdshaderinc`에서 월드 좌표로 혼합합니다. 낮은 들판과 높은 지형은 같은 2.56m 배율을 사용하며 높은 지형의 색 대비와 길 거리장·충돌은 유지합니다. 원본·프롬프트·해시는 `assets/source/preview3d/grass-variety/manifest.json`을 따릅니다.
 
-`NativeChapelPlan`은 확대된 예배당의 3단 계단과 실제 FLOOR를 공유합니다. `NativeTerrainForms`의 지층·흙 사면은 동일 정점을 표시와 SOLID에 사용합니다. 생성형 참고 이미지와 성벽·집 벽면의 원본/프롬프트는 `assets/source/preview3d/world-refinement/`에 보존합니다. 길의 합집합·막다른 끝·강안 거리 데이터는 `capture_road_geometry` → `bake_ground_field.py`로 재현하며, 끝 포장은 흙으로, 강안은 젖은 돌→흙→풀로 연결됩니다.
+`NativeChapelPlan`은 확대된 예배당의 3단 계단과 실제 FLOOR를 공유합니다. `NativeTerrainForms`의 지층·흙 사면은 동일 정점을 표시와 SOLID에 사용합니다. 생성형 건물 표면과 동굴의 원본/프롬프트는 `assets/source/architecture/`, 웨이포인트·강둑·하강 동굴 원화는 `assets/source/environment/`에 보존합니다. 성벽·기존 지형의 채택 원본은 `assets/source/preview3d/world-refinement/`에 유지합니다. 길의 합집합·막다른 끝·강안 거리 데이터는 `capture_road_geometry` → `bake_ground_field.py`로 재현하며, 끝 포장은 흙으로, 강안은 젖은 돌→흙→풀로 연결됩니다.
 
 성곽은 사용자가 첨부한 회색 석조 성채의 높은 원형 망루·원뿔 지붕·돌출된 상부를 구조 참고로 사용합니다. `NativeFortressPlan`의 몸체 반경1.30m·처마5.05m·지붕 정상6.95m가 표시와 실제 SOLID의 공통 기준입니다. 모서리마다 3개 높이의 창을 실제로 파고, 상층에는 아치와10cm 깊이의 어두운 뒷면을 만듭니다. 기존 슬레이트와 네 종류 석재를 재사용하며 새 이미지를 추가하지 않습니다. 원통의 불필요한 중간 축 방향 분할을 제거하고 망루를16각으로 제작해 성문·성벽·이동 문짝을 합한 실제29,760삼각형·정적4서피스를 유지합니다. `ortho_3d_fortification`은 실제 합친 메시의 창 깊이·지붕 경사·몸체와 지붕의 물리 일치·열린 성문 통행을 검사합니다.
 
 ## 에셋별 독립 작업
 
-[에셋 협업](asset-workflow.md)의 폴더 계약을 사용합니다. 건물 다섯 종류는 `assets/models/architecture/<id>/asset.json`의 생성형 네 면 표면을 사용하며 다리는 같은 계열의 석재/덮개/포장을 적용합니다. `NativeAssetSurface`는 전역 목록 없이 폴더를 읽습니다. 동굴 입구는 `assets/models/environment/cave_entrance/`의 전용 제작기와 공통 윤곽·입구·천장 설계로 암반 표시와 충돌을 연결합니다. 생성 원본·프롬프트·해시는 `assets/source/architecture/`에 보존합니다. 일회성 비교 리뷰와 후보 원화는 현재 제작 규격에 섞지 않습니다.
+[에셋 협업](asset-workflow.md)의 폴더 계약을 사용합니다. 건물 다섯 종류는 `assets/models/architecture/<id>/asset.json`의 생성형 네 면 표면을 사용하며 다리는 같은 계열의 석재/덮개/포장을 적용합니다. `NativeAssetSurface`는 전역 목록 없이 폴더를 읽습니다. 동굴 입구는 `assets/models/environment/cave_entrance/`에서 밀도장으로 조형하고 구운 `model.res`를 표시와 실제 삼각형 SOLID에 함께 사용합니다. 공통 윤곽·좌표계·하강로는 `plan.gd`가 담당합니다. 생성 원본·프롬프트·해시는 `assets/source/architecture/`에 보존합니다. 일회성 비교 리뷰와 후보 원화는 현재 제작 규격에 섞지 않습니다.
+
+
+## 낮은 강과 야외 웨이포인트
+
+`NativeGroundRelief`는 낮은 강바닥·완만한 강둑·다리 양 끝의 흙 교대·동굴 하강로를 하나의 정점 집합으로 만듭니다. `NativeGround3D` 표시 메시와 `SpatialWorld3D`의 FLOOR가 그 정점을 공유합니다. 강 수면은-1.2m, 깊은 바닥은-1.85m이고, 다리의 기존0m 보행면은 유지합니다. 육지의 대부분은3m, 강둑·동굴 주변만0.5m로 나누며 정점은 마을 세션에서 캐시합니다.
+
+야외 tree/cave 지점은 `assets/models/environment/waypoint/`의 바닥 문양입니다. `Village._waypoint_clearing()`이 강·건물·높은 지형·동굴에서 떨어진 빈 위치를 선택하고, 표식은 SOLID를 만들지 않습니다. `Exploration.on_waypoint()`가 실제 발 위치로 첫 활성화를 검사하고 기존 `discovered_sanctuaries`에 저장합니다. 단순 근접이나 미활성 상태의 안식처 접근은 첫 발견을 대신하지 않습니다. 공용 표시기는 저장 상태를 읽어 문양의 발광과 입자를 동기화합니다. 마을의 수직 워프문과 동굴 귀환문은 유지합니다.

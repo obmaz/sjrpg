@@ -78,6 +78,9 @@ func source_ids() -> Dictionary:
 func _sync_source(source: IsoSprite, role: String, current: Dictionary) -> void:
 	if not is_instance_valid(source) or not _scenes.has(role):
 		return  # Existing art remains available until the reviewed native asset exists.
+	if source.has_meta("ground_waypoint"):
+		_sync_waypoint(source,current)
+		return
 	var id := source.get_instance_id()
 	var footprint: PackedVector2Array = source.atlas_polygon(_game.village.data["frames"]["pool"]["ground"]) if role == "fountain" else Village.portal_base(source)
 	var centre := Vector2.ZERO
@@ -159,3 +162,30 @@ func _sync_motes(node: MultiMeshInstance3D, phase: float, motion: float) -> void
 		var fade := sin(t * PI) * (0.25 if motion == 0.0 else 0.45)
 		node.multimesh.set_instance_transform(index, Transform3D(Basis.IDENTITY, at))
 		node.multimesh.set_instance_color(index, Color(0.45, 0.82, 0.88, fade))
+
+
+func _sync_waypoint(source: IsoSprite, current: Dictionary) -> void:
+	var id := source.get_instance_id()
+	current[id] = true
+	if not _entries.has(id):
+		_entries[id] = NativeWaypoint3D.create(_preview.stage,_mote_mesh)
+		_entries[id]["source"] = weakref(source)
+	var entry: Dictionary = _entries[id]
+	var root: Node3D = entry["root"]
+	root.position = Ortho3DPreview.ground_position(source.position,_preview.surface_height(source.position))
+	root.visible = source.visible
+	var active := GameState.discovered_sanctuaries.has(str(source.get_meta("ground_waypoint")))
+	var fluid: ShaderMaterial = entry["fluid"]
+	fluid.set_shader_parameter("phase",_source_phase(source))
+	fluid.set_shader_parameter("motion",0.0 if Prefs.reduce_motion else 1.0)
+	fluid.set_shader_parameter("strength",1.0 if active else 0.0)
+	var motes: MultiMeshInstance3D = entry["motes"]
+	motes.visible = active
+	(entry["light"] as OmniLight3D).visible = active
+	if active:
+		_sync_motes(motes,_source_phase(source),0.0 if Prefs.reduce_motion else 1.0)
+		for i: int in MOTE_COUNT:
+			var transform := motes.multimesh.get_instance_transform(i)
+			var angle := TAU*i/MOTE_COUNT
+			transform.origin = Vector3(cos(angle)*1.27,0.10+transform.origin.y*0.16,sin(angle)*1.27)
+			motes.multimesh.set_instance_transform(i,transform)

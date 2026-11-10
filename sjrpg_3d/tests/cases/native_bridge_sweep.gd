@@ -23,7 +23,7 @@ func run() -> void:
 					if stalled >= 12:
 						break
 			if game.player.position.distance_to(game.village.bridge.axis_point(1.0)) >= 40.0:
-				failures_at.append({"step": distance, "offset": offset, "at": str(game.player.position)})
+				failures_at.append({"step": distance, "offset": offset, "at": str(game.player.position), "height":spatial.height_at(game.player.position)})
 	check("native bridge sweeps clear the actual abutment across thirty step/approach combinations", failures_at.is_empty(), JSON.stringify(failures_at))
 	game.queue_free()
 	await _frames(2)

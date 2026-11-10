@@ -29,8 +29,14 @@ func gate_origin() -> String:
 		return ""
 	for id in NAMES:
 		if game.player.position.distance_to(gate_point(id)) < GATE_RANGE:
+			if id != "town" and not GameState.discovered_sanctuaries.has(id) and not on_waypoint(id):
+				continue
 			return id
 	return ""
+
+
+func on_waypoint(id: String) -> bool:
+	return (Iso.unproject(game.player.position-gate_point(id))/SpatialWorld3D.UNITS).length() <= NativeWaypoint3D.RADIUS*0.86
 
 
 func gate_nearby() -> bool:
@@ -48,10 +54,14 @@ func discover_current() -> String:
 	var id := current_origin()
 	if id == "":
 		return ""
+	if id != "town" and not GameState.discovered_sanctuaries.has(id):
+		if not on_waypoint(id):
+			return ""
 	var changed := false
 	if not GameState.discovered_sanctuaries.has(id):
 		GameState.discovered_sanctuaries.append(id)
-		game.toast("안식처 발견 · " + NAMES[id])
+		game.toast(("안식처 발견 · " if id == "town" else "웨이포인트 활성화 · ") + NAMES[id])
+		SoundFx.play("warp")
 		changed = true
 	if GameState.last_sanctuary != id:
 		GameState.last_sanctuary = id
@@ -78,6 +88,9 @@ func _origin_block_reason(require_gate: bool) -> String:
 		return "워프게이트 곁에서 사용할 수 있습니다."
 	if not require_gate and current_origin() == "":
 		return "워프게이트나 안식처 곁에서 이동할 수 있습니다."
+	var origin := current_origin()
+	if origin != "" and origin != "town" and not GameState.discovered_sanctuaries.has(origin) and not on_waypoint(origin):
+		return "바닥의 웨이포인트를 밟아 활성화하세요."
 	if GameState.boss_summoned and not GameState.boss_defeated:
 		return "파수꾼 도전 중에는 이동할 수 없습니다."
 	if game.quest_runtime.defender_active():
@@ -128,7 +141,9 @@ func safe_point(id: String) -> Vector2:
 
 
 func gate_approach(id := "town") -> Vector2:
-	# Land in front of the stone base, within interaction range and outside all solids.
+	if id != "town":
+		return _safe_near(gate_point(id),id)
+	# 마을의 수직 성문은 앞쪽으로, 야외 지면 표식은 중앙으로 도착한다.
 	return _safe_near(gate_point(id) + Vector2(0, 72), id)
 
 

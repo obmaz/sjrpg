@@ -248,7 +248,7 @@ func _build_river() -> void:
 	var water := PackedVector2Array()
 	for point in river.polygon:
 		water.append(Iso.project(point))
-	var surface := _floor(water, load("res://assets/art/village/water.webp"), forest, 0.022, Color(0.78, 0.91, 0.96), River.TILE_UNITS / Ortho3DPreview.GROUND_PER_METER)
+	var surface := _floor(water, load("res://assets/art/village/water.webp"), forest, NativeGroundRelief.WATER_LEVEL, Color(0.78, 0.91, 0.96), River.TILE_UNITS / Ortho3DPreview.GROUND_PER_METER)
 	var record: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(NativeGround3D.FIELD))
 	_water_material = ShaderMaterial.new()
 	_water_material.shader = load("res://scripts/native_river.gdshader")

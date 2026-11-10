@@ -512,7 +512,7 @@ func surface_height(point: Vector2) -> float:
 	for surface: Dictionary in SpatialWorld3D.terrain_surfaces(game.village):
 		if SpatialWorld3D._contains(surface["top"], point):
 			return SpatialWorld3D._surface_height(surface, point)
-	return 0.0
+	return NativeGroundRelief.at(game.village,point)
 
 
 func _publish_probe() -> void:
