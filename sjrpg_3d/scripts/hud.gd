@@ -483,14 +483,16 @@ func unit() -> float:
 
 ## Reference proportions are anchored to the safe top; tall phones must not push the HUD down.
 func status_geometry() -> Dictionary:
-	return header_geometry(get_viewport().get_visible_rect().size, PanelFrame.safe_margins(get_viewport()))
+	var view := get_viewport().get_visible_rect().size
+	return header_geometry(view, PanelFrame.safe_margins(get_viewport()), TouchControls.mobile_layout(view))
 
 
-static func header_geometry(view: Vector2, m: Vector4) -> Dictionary:
+static func header_geometry(view: Vector2, m: Vector4, mobile := false) -> Dictionary:
 	var screen_unit := header_unit(view, m)
 	var u := screen_unit * 0.902  # 10% larger than the previous 82% header; map/controls retain their scale.
 	var available := view - Vector2(m.x + m.z, m.y + m.w)
-	var safe_top := m.y + 16.0 * screen_unit
+	var top_gap := 6.0 if mobile or view.y > view.x else 16.0
+	var safe_top := m.y + top_gap * screen_unit
 	# The portrait crest extends five header units above its origin. Align painted
 	# outlines at the safe top instead of pushing both groups down with screen height.
 	var origin := Vector2(m.x, safe_top + 5.0 * u)

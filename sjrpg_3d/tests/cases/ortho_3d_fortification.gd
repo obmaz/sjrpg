@@ -160,6 +160,7 @@ func run() -> void:
 	check("fortress shares four generated masonry variants across two opaque lit materials", stone_meshes.size() == 2 and stone is ShaderMaterial and granite is ShaderMaterial and stone.get_shader_parameter("masonry_atlas") == load("res://assets/art/preview3d/fortress-atlas.png") and granite.get_shader_parameter("dressed") == true and report["masonry_variants"] == 4)
 	check("corner crowns rise above the wall battlements", float(report["corner_top"]) > float(report["wall_top"]) + 0.60)
 	check("fortification mesh normals UVs and winding remain valid", valid and winding)
+	_check_corner_towers(report, stone_meshes, game)
 	_check_wall_relief(report, stone_meshes)
 	var reversed_safe: PackedVector2Array = game.village.safe_zone.duplicate()
 	reversed_safe.reverse()
@@ -222,6 +223,44 @@ func run() -> void:
 	fixture.queue_free()
 	game.queue_free()
 	await _frames(2)
+
+
+## 실제 설치된 지붕·창 깊이·높은 몸체의 충돌을 측정한다.
+func _check_corner_towers(report: Dictionary, masonry: Array, game: Node) -> void:
+	var roofs := []
+	var backs := []
+	for mesh: MeshInstance3D in report["static_meshes"]:
+		if mesh.material_override == report["corner_roof"]:
+			roofs.append(mesh)
+		if mesh.material_override == report["iron"]:
+			backs.append(mesh)
+	check("four corner towers share a single textured slate surface", roofs.size() == 1 and report["corner_roof"].albedo_texture == load("res://assets/art/preview3d/slate.webp"))
+	for corner: Vector3 in report["corners"]:
+		for axis: Vector3 in [Vector3.RIGHT, Vector3.BACK]:
+			var from := corner + axis * 0.55 + Vector3.UP * 9.0
+			var roof := _nearest(roofs, from, Vector3.DOWN)
+			check("actual conical slate roof rises well above the curtain wall", roof > 2.3 and roof < 3.3)
+			var roof_query := PhysicsRayQueryParameters3D.create(from, from - Vector3.UP * 5.0, SpatialWorld3D.SOLID)
+			var roof_hit: Dictionary = game.spatial_world.get_world_3d().direct_space_state.intersect_ray(roof_query)
+			check("roof has the same sloping native solid rather than an invisible box", not roof_hit.is_empty() and roof_hit["collider"].get_meta("physics_kind", "") == "CornerRoof" and absf(from.distance_to(roof_hit["position"]) - roof) < 0.04)
+		var outward: Vector3 = ((corner - report["town_center"]) * Vector3(1, 0, 1)).normalized()
+		var origin := corner + outward * 3.0 + Vector3.UP * 3.80
+		var visible := _nearest(masonry, origin, -outward)
+		var query := PhysicsRayQueryParameters3D.create(origin, origin - outward * 3.0, SpatialWorld3D.SOLID)
+		var hit: Dictionary = game.spatial_world.get_world_3d().direct_space_state.intersect_ray(query)
+		check("tall corner shaft has matching solid collision above the old wall top", is_finite(visible) and not hit.is_empty() and hit["collider"].get_meta("physics_kind", "") == "CornerBastion" and absf(origin.distance_to(hit["position"]) - visible) < 0.04)
+	var windows: Array = report["corner_windows"]
+	var measured := 0
+	for window: Dictionary in windows:
+		if float(window["height"]) < 3.1:
+			continue
+		var frame: Transform3D = window["frame"]
+		var origin := frame.origin + Vector3.UP * float(window["height"]) + frame.basis.z * 0.20
+		var back := _nearest(backs, origin, -frame.basis.z)
+		check("upper tower windows have real stone openings and recessed dark backs", _nearest(masonry, origin, -frame.basis.z) > 0.305 and absf(back - 0.30) < 0.001)
+		measured += 1
+	check("each corner has readable upper shaft and gallery windows on all sides", measured == 32)
+	print("ART_AUDIT roofed_corner_towers " + JSON.stringify({"roof_surfaces": roofs.size(), "upper_window_depths_checked": measured, "triangles": report["triangles"]}))
 
 
 ## Ray measurements use the installed merged stone, including both wall axes and

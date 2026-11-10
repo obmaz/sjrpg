@@ -26,7 +26,7 @@ func run() -> void:
 			check("entire map rim fits and avoids the portrait/status ribbon", available.encloses(map_ink) and not map_ink.intersects(geometry["paint_bounds"]))
 			check("portrait crest and minimap rim share the same safe top", absf(map_ink.position.y - portrait_ink.position.y) < 0.01)
 			var top_gap: float = (portrait_ink.position.y - safe.y) / float(geometry["map_unit"])
-			check("header stays close to the safe top in either orientation", top_gap >= 12.0 and top_gap <= 20.0)
+			check("mobile header rises while desktop keeps its top padding", absf(top_gap - (6.0 if view.y > view.x else 16.0)) < 0.01)
 			var plate: PackedVector2Array = geometry["plate"]
 			var avatar: Vector2 = geometry["portrait"]
 			var join_radius: float = float(geometry["radius"]) + 2.0 * u
@@ -79,6 +79,10 @@ func run() -> void:
 	check("level medallion sits on the upper-left rim", badge.get_center().distance_to(portrait) < float(reference["radius"]) + badge.size.x * 0.25 and badge.size.x / (2.0 * float(reference["radius"])) >= 0.3)
 	var tall := Hud.header_geometry(Vector2(720, 1600), Vector4.ZERO)
 	check("tall phones preserve the approved top anchor", reference["origin"] == tall["origin"])
+	var landscape_safe := Vector4(44, 30, 20, 16)
+	var mobile_landscape := Hud.header_geometry(Vector2(1280, 720), landscape_safe, true)
+	var desktop_landscape := Hud.header_geometry(Vector2(1280, 720), landscape_safe, false)
+	check("touch landscape raises both header and map without crossing the notch", mobile_landscape["paint_bounds"].position.y >= landscape_safe.y and mobile_landscape["map"].position.y < desktop_landscape["map"].position.y and mobile_landscape["hp"].position.y < desktop_landscape["hp"].position.y)
 	var objective := HudArt.elide("아주 긴 의뢰의 설명도 미니맵 이름이나 화면 바깥으로 넘어가면 안 됩니다", 280, 16)
 	check("long objectives stay within the header width", objective.ends_with("…") and HudArt.FONT.get_string_size(objective, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x <= 280)
 	map.free()

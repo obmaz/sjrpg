@@ -126,7 +126,7 @@
     "terrain": "모서리를 깎은 암반 선반·흙 사면의 실제 정점을 NativeTerrainForms로 표시/SOLID에 공유. 기존 상면·경사로의 높이는 유지하고 새 잔디 4종의 월드 좌표 군락을 같은 2.56m로 혼합.",
     "chapel": "source 배율 1.25, NativeChapelPlan의 실제 3단 계단과 FLOOR 공유.",
     "fountain": "모든 정점·물줄기·source footprint 2배. 중심 유지, root scale 단위값.",
-    "walls": "생성 알베도 4종. NativeFortressPlan.CORNER_RADIUS=1.02m의 원형 망루 몸체와 실제 충돌을 공유하고 상부 코핑/흉벽을 층지게 구성."
+    "walls": "생성 알베도4종과 기존 슬레이트 재사용. 사용자가 첨부한 석조 성채의 높은 원형 망루·원뿔 지붕·돌출 상부를 구조 참고로 제작. 몸체 반경1.30m, 처마5.05m, 지붕 정상6.95m. 실제 아치 창·10cm 깊이의 뒷면·8개 돌 받침. 16각 망루의 몸체/상층/원뿔 SOLID가 같은 설계를 사용한다."
   },
   "validation": {
     "unit_and_integration": {
@@ -229,7 +229,7 @@
     },
     {
       "path": "scripts/native_fortress_plan.gd",
-      "sha256": "651fea418b4cc8b7191cb72aba43517c13f4537e8db49c7fef4166533df3ddf1"
+      "sha256": "87f8be5b61cf8ae2c872c0f016fb6cb3a01c8e147530181f99133dc7b8fbdd93"
     },
     {
       "path": "scripts/native_terrain_forms.gd",
@@ -253,11 +253,11 @@
     },
     {
       "path": "scripts/ortho_3d_fortification.gd",
-      "sha256": "857d5582f33e2b3730acb3ecf700a7fbadb6ea29f302c2cd58809c692b8f9b69"
+      "sha256": "997bef20a6e7c4e4fc7620e1c1ee61ef76c2cfb092f650643f2db294c6afc8d0"
     },
     {
       "path": "scripts/spatial_world_3d.gd",
-      "sha256": "0cf375be753fbe10c4ffae92c106bf52ec3e177840fb589a728dac1fa8b03505"
+      "sha256": "b05eaf2853b4c7e6515ed91975a1ccfe44a5c19d7824f57866425e128c3dc8da"
     },
     {
       "path": "scripts/village.gd",
@@ -283,5 +283,55 @@
       "path": "tests/cases/native_threshold_support.gd",
       "sha256": "bbe90f5d0300e7005c2ecde906b8e183d368880c65fb0dd041e73b3eaa10a9ad"
     }
-  ]
+  ],
+  "roofed_corner_revision": {
+    "reference": "2026-11-10 사용자 대화 첨부: 회색 성벽 양 끝의 높은 원형 망루와 원뿔 지붕. 시각 구조 참고이며 외부 모델/텍스처를 복제하지 않음.",
+    "generator": "scripts/ortho_3d_fortification.gd",
+    "collision": "scripts/native_fortress_plan.gd + scripts/spatial_world_3d.gd",
+    "triangles_whole_family": 29760,
+    "static_surfaces": 4,
+    "new_texture_bytes": 0,
+    "pivot": "Y-up, world XZ ground, corner base at Y=0, metre units, no scale transform",
+    "reused_materials": [
+      {
+        "path": "assets/art/preview3d/fortress-atlas.png",
+        "sha256": "c4f81fa840cfe0c63f0eaee26426a656a6f8c4e829cb19bf45d81c4a43c55631"
+      },
+      {
+        "path": "assets/art/preview3d/slate.webp",
+        "sha256": "bf862f2b2f2caa8297d8ca6dc5419963d747a9f33f977a8588b9dda65cfb7688"
+      }
+    ],
+    "validation_cases": [
+      "ortho_3d_fortification",
+      "hud_header",
+      "hud_layout"
+    ],
+    "browser_capture_directory": "build/review/roofed-fortress/",
+    "physical_device_tested": false,
+    "browser": {
+      "proof": "build/review/roofed-fortress/browser-proof.json",
+      "sha256": "deca81010fbcadc3ae48089339270f9e43d662ca4c1fd977208e4bae3a4c41a6",
+      "captures": [
+        "corner0-full.png",
+        "corner1-full.png",
+        "corner2-full.png",
+        "corner3-full.png",
+        "hud-landscape.png"
+      ],
+      "console_errors": 0,
+      "actual_touch_landscape_skill_entry": true,
+      "quality": "low: 네 모서리 전체/모바일 가로 터치. 기본 화질: 세로 HUD/모서리 확대.",
+      "baseline_commit": "d9e1d1721b853c5b4c0016a3c936a51be7af9bc1",
+      "baseline_captures": [
+        "corner0-before.png",
+        "hud-portrait-before.png"
+      ]
+    },
+    "full_check": {
+      "cases": 135,
+      "failed": 0,
+      "log": "build/reports/fortress-full-check.log"
+    }
+  }
 }

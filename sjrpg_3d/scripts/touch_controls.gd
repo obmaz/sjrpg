@@ -77,6 +77,10 @@ func css_scale() -> float:
 	return get_viewport().get_visible_rect().size.x / maxf(1.0, float(get_window().size.x))
 
 
+static func mobile_layout(view: Vector2) -> bool:
+	return view.y > view.x or OS.has_feature("mobile") or DisplayServer.is_touchscreen_available()
+
+
 func _layout() -> void:
 	var margins := PanelFrame.safe_margins(get_viewport())
 	var safe_origin := Vector2(margins.x, margins.y)
@@ -84,9 +88,11 @@ func _layout() -> void:
 	_unit = clampf(minf(size.x, size.y) / 720.0, 0.75, 2.0)
 	var u := _unit
 	var portrait := size.y > size.x
-	# The 714×1280 reference has the primary skill at (559, 948). Keep its fan
-	# together at a fixed scale, then adapt the anchor to the available height.
-	var main := Vector2(size.x - 156.0 * u, size.y * 0.741) if portrait else Vector2(size.x - 156.0 * u, size.y - 178.0 * u)
+	# 모바일에서는 전투 부채꼴과 조이스틱을 아래로 옮겨 중앙 시야를 넓힌다.
+	# 메뉴 위의 터치 여백과 안전 영역은 유지하고 그림/입력이 같은 좌표를 쓴다.
+	var combat_bottom := 144.0 if mobile_layout(size) else 178.0
+	var main := Vector2(size.x - 156.0 * u, size.y * 0.790) if portrait else Vector2(size.x - 156.0 * u, size.y - combat_bottom * u)
+	var stick_anchor := Vector2(104.0 * u, size.y * 0.780) if portrait else Vector2(112.0 * u, size.y - combat_bottom * u)
 	_buttons = {"slot0": _button(main, 67.0 * u)}
 	var offsets := [Vector2(-119, 0), Vector2(-85, -84), Vector2(-4, -121), Vector2(79, -84)]
 	var radii := [44.0, 42.0, 42.0, 42.0]
@@ -116,7 +122,7 @@ func _layout() -> void:
 		var half := Vector2(maxf(94.0 * u, text_width * 0.5 + 20.0 * u), maxf(32.0, 38.0 * u))
 		half.y = maxf(half.y, 22.0 * css_scale())
 		var rise := maxf(78.0 * u, half.y + menu_touch + 10.0 * u)
-		var stick := Vector2(104.0 * u, size.y * 0.72) if portrait else Vector2(112.0 * u, size.y - 178.0 * u)
+		var stick := stick_anchor
 		if _stick_index != -2:
 			stick = _stick_center - safe_origin
 		var center := _clear_interaction_center(Vector2(size.x / 2.0, bar_y - rise), half, stick, u, size)
@@ -126,7 +132,7 @@ func _layout() -> void:
 	for button in _buttons.values():
 		button["center"] += safe_origin
 	if _stick_index == -2:
-		_stick_center = Vector2(104.0 * u, size.y * 0.72) if portrait else Vector2(112.0 * u, size.y - 178.0 * u)
+		_stick_center = stick_anchor
 		_stick_center += safe_origin
 		_stick_knob = _stick_center
 

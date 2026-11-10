@@ -109,7 +109,7 @@ func run() -> void:
 		check("dodge is beside primary skill", roll.x > main.x and absf(roll.y - main.y) < 3.0)
 		check("joystick avoids combat fan", controls._stick_center.distance_to(main) > controls.stick_radius() + float(controls._buttons["slot0"]["radius"]) + 40.0)
 		if dimensions == Vector2i(720, 1280):
-			check("primary skill follows reference composition", absf(main.x / dimensions.x - 0.783) < 0.02 and absf(main.y / dimensions.y - 0.741) < 0.015)
+			check("mobile combat controls sit lower and retain the full touch fan", absf(main.x / dimensions.x - 0.783) < 0.02 and absf(main.y / dimensions.y - 0.790) < 0.015 and controls._stick_center.y > dimensions.y * 0.77)
 			check("bottom menu leaves reference breathing room", controls._buttons["bar_bag"]["center"].y < dimensions.y * 0.93)
 	# A landscape viewport without enough painted top gap must retain the fallback.
 	view.size = Vector2i(860, 720)

@@ -490,8 +490,16 @@ func _build_forest() -> void:
 	for corner: Vector3 in NativeFortressPlan.corners(game.village):
 		var shape := CylinderShape3D.new()
 		shape.radius = NativeFortressPlan.CORNER_RADIUS
-		shape.height = game.village.wall_height / UNITS
+		shape.height = NativeFortressPlan.CORNER_SHAFT_TOP
 		_shape_body(shape, Transform3D(Basis.IDENTITY, corner + Vector3.UP * shape.height * 0.5), SOLID, "CornerBastion")
+		var gallery := CylinderShape3D.new()
+		gallery.radius = NativeFortressPlan.CORNER_GALLERY_RADIUS
+		gallery.height = NativeFortressPlan.CORNER_EAVES - NativeFortressPlan.CORNER_SHAFT_TOP
+		_shape_body(gallery, Transform3D(Basis.IDENTITY, corner + Vector3.UP * (NativeFortressPlan.CORNER_EAVES - gallery.height * 0.5)), SOLID, "CornerGallery")
+		var roof := ConvexPolygonShape3D.new()
+		roof.points = NativeFortressPlan.roof_points(corner)
+		roof.margin = 0.001
+		_shape_body(roof, Transform3D.IDENTITY, SOLID, "CornerRoof")
 	# Bridge rails are full-height native solids even though their deck has zero rise.
 	for polygon in game.village.bridge.solids():
 		_prism_body(polygon, 0.0, 0.96, SOLID, "BridgeRail")

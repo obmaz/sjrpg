@@ -25,6 +25,7 @@ var _coped_pieces := 0
 var _mouldings := 0
 var _slit_reveals := 0
 var _slit_frames: Array[Transform3D] = []
+var _corner_windows: Array[Dictionary] = []
 
 
 static func build(presenter: Node) -> Ortho3DFortification:
@@ -37,6 +38,13 @@ static func build(presenter: Node) -> Ortho3DFortification:
 
 func _build() -> void:
 	_materials = preview._materials.duplicate()
+	# 기존 마을의 회청색 슬레이트를 공유한다. 원뿔의 UV는 경사 길이 기준이다.
+	var slate := StandardMaterial3D.new()
+	slate.albedo_texture = load("res://assets/art/preview3d/slate.webp")
+	slate.albedo_color = Color(0.76, 0.80, 0.84)
+	slate.roughness = 0.96
+	slate.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	_materials["tower_slate"] = slate
 	for key: String in ["stone", "granite"]:
 		var material := ShaderMaterial.new()
 		material.shader = load("res://scripts/native_fortress.gdshader")
@@ -112,7 +120,7 @@ func _build() -> void:
 	var corners: Array[Vector3] = []
 	for corner: Vector3 in NativeFortressPlan.corners(village):
 		corners.append(corner)
-		_corner_crown(corner, height)
+		_corner_tower(corner)
 	# 성문 날개 끝의 층진 기둥머리. 지상 통로는 기존 벽 폭 그대로 둔다.
 	for wing: Dictionary in wings:
 		var at: Vector3 = wing["join"]
@@ -132,26 +140,104 @@ func _build() -> void:
 		"coped_pieces": _coped_pieces, "moulded_rings": _mouldings, "slit_reveals": _slit_reveals,
 		"slit_depth": 0.10, "slit_height": height * 0.60, "slit_frames": _slit_frames}
 	root.set_meta("fortification_detail", report)
-	report["corner_top"] = height + 1.43
+	report["corner_top"] = NativeFortressPlan.CORNER_ROOF_TOP + 0.36
+	report["corner_windows"] = _corner_windows
+	report["corner_eaves"] = NativeFortressPlan.CORNER_EAVES
+	report["corner_roof"] = slate
 	report["masonry_variants"] = 4
 	report["granite"] = _materials["granite"]
 
 
-func _corner_crown(at: Vector3, height: float) -> void:
-	# 망루 몸체와 실제 물리는 공용 설계의 반경을 사용한다.
-	_cylinder(at + Vector3.UP * height * 0.5, NativeFortressPlan.CORNER_RADIUS, height, "stone", 16)
-	for level: float in [0.18, 0.68, height - 0.18]:
-		_cylinder(at + Vector3.UP * level, NativeFortressPlan.CORNER_RADIUS, 0.15, "granite", 16)
-	_cylinder(at + Vector3.UP * (height + 0.02), 1.02, 0.28, "granite", 16)
-	_cylinder(at + Vector3.UP * (height + 0.28), 1.10, 0.24, "stone", 16)
-	_cylinder(at + Vector3.UP * (height + 0.45), 1.18, 0.12, "granite", 16)
+func _corner_tower(at: Vector3) -> void:
+	var radius := NativeFortressPlan.CORNER_RADIUS
+	_corner_storey(at, radius, 0.0, 2.15, 1.30, 0.10, 0.62, false)
+	_corner_storey(at, radius, 2.15, NativeFortressPlan.CORNER_SHAFT_TOP, 3.40, 0.14, 0.74, true)
+	for level: float in [0.14, 0.54, 2.16, 3.87]:
+		_cylinder(at + Vector3.UP * level, radius + 0.025, 0.105, "granite", 16)
+	# 돌출된 상부를 돌 받침과 연속 경사 돌띠가 실제로 지탱한다.
 	for i: int in 8:
 		var angle := TAU * i / 8.0
-		var frame := Transform3D(Basis(Vector3.UP, -angle), at + Vector3(cos(angle) * 1.03, height + 0.78, sin(angle) * 1.03))
-		_coped_box(Vector3.ZERO, Vector3(0.38, 0.56, 0.34), "granite", frame)
-	_coped_box(at + Vector3.UP * (height + 0.78), Vector3(0.32, 0.55, 0.32), "stone")
-	_coped_box(at + Vector3.UP * (height + 1.12), Vector3(0.45, 0.14, 0.45), "granite")
-	_cylinder(at + Vector3.UP * (height + 1.31), 0.14, 0.24, "iron", 16)
+		var frame := Transform3D(Basis(Vector3.UP, -angle), at + Vector3(cos(angle) * 1.31, 3.99, sin(angle) * 1.31))
+		_box(Vector3.ZERO, Vector3(0.22, 0.30, 0.23), "granite", frame)
+	_radial_band(at, 1.30, 1.50, 4.08, NativeFortressPlan.CORNER_GALLERY_BASE, "granite")
+	_corner_storey(at, NativeFortressPlan.CORNER_GALLERY_RADIUS, NativeFortressPlan.CORNER_GALLERY_BASE, NativeFortressPlan.CORNER_EAVES, 4.65, 0.28, 0.52, true)
+	_cylinder(at + Vector3.UP * 4.28, 1.52, 0.09, "granite", 16)
+	_cylinder(at + Vector3.UP * 5.02, 1.54, 0.10, "granite", 16)
+	_conical_roof(at)
+	_cylinder(at + Vector3.UP * (NativeFortressPlan.CORNER_ROOF_TOP + 0.11), 0.027, 0.50, "iron", 8)
+	_radial_band(at, 0.09, 0.015, 6.88, 7.05, "iron")
+
+
+## 네 방향 모두 실제 개구부와10cm 깊이의 측면/아치/어두운 뒷면을 가진다.
+func _corner_storey(at: Vector3, radius: float, bottom: float, top: float, window_y: float, width: float, opening_height: float, arched: bool) -> void:
+	var half_face := radius * sin(PI / 16.0)
+	var half_slot := width * 0.5
+	var sill := window_y - opening_height * 0.5
+	var head := window_y + opening_height * 0.5
+	var shoulder := head - half_slot if arched else head
+	for segment: int in 16:
+		var angle := TAU * (segment + 0.5) / 16.0
+		var normal := Vector3(cos(angle), 0, sin(angle))
+		var frame := Transform3D(Basis(Vector3(normal.z, 0, -normal.x), Vector3.UP, normal), at + normal * radius * cos(PI / 16.0))
+		if segment % 4 != 0:
+			_tower_panel(frame, -half_face, half_face, bottom, top, 0.0, "stone", at)
+			continue
+		_tower_panel(frame, -half_face, -half_slot, bottom, top, 0.0, "stone", at)
+		_tower_panel(frame, half_slot, half_face, bottom, top, 0.0, "stone", at)
+		_tower_panel(frame, -half_slot, half_slot, bottom, sill, 0.0, "stone", at)
+		var back := -normal * 0.10
+		for side: float in [-1.0, 1.0]:
+			var lower := frame * Vector3(side * half_slot, sill, 0)
+			var upper := frame * Vector3(side * half_slot, shoulder, 0)
+			_quad(lower, upper, upper + back, lower + back, -frame.basis.x * side, "granite")
+		var left := frame * Vector3(-half_slot, sill, 0)
+		var right := frame * Vector3(half_slot, sill, 0)
+		_quad(left, right, right + back, left + back, Vector3.UP, "granite")
+		var pieces := 4 if arched else 1
+		for piece: int in pieces:
+			var x0 := lerpf(-half_slot, half_slot, float(piece) / pieces)
+			var x1 := lerpf(-half_slot, half_slot, float(piece + 1) / pieces)
+			var y0 := shoulder + sqrt(maxf(0.0, half_slot * half_slot - x0 * x0)) if arched else head
+			var y1 := shoulder + sqrt(maxf(0.0, half_slot * half_slot - x1 * x1)) if arched else head
+			var a := frame * Vector3(x0, y0, 0)
+			var b := frame * Vector3(x1, y1, 0)
+			_quad(a, b, frame * Vector3(x1, top, 0), frame * Vector3(x0, top, 0), normal, "stone")
+			_quad(a, a + back, b + back, b, (frame.basis.x * (y1 - y0) - Vector3.UP * (x1 - x0)).normalized(), "granite")
+		_tower_panel(frame, -half_slot, half_slot, sill, head, -0.10, "iron")
+		_corner_windows.append({"frame": frame, "height": window_y, "width": width})
+
+
+func _radial_band(at: Vector3, lower_radius: float, upper_radius: float, bottom: float, top: float, material: String) -> void:
+	for segment: int in 16:
+		var a := TAU * segment / 16.0
+		var b := TAU * (segment + 1) / 16.0
+		var normal := Vector3(cos((a + b) * 0.5) * (top - bottom), lower_radius - upper_radius, sin((a + b) * 0.5) * (top - bottom)).normalized()
+		_quad(at + Vector3(cos(a) * lower_radius, bottom, sin(a) * lower_radius), at + Vector3(cos(b) * lower_radius, bottom, sin(b) * lower_radius), at + Vector3(cos(b) * upper_radius, top, sin(b) * upper_radius), at + Vector3(cos(a) * upper_radius, top, sin(a) * upper_radius), normal, material)
+
+
+## 실제 겹친 여덟 단 너비와 경사 길이로 슬레이트 UV를 배치한다.
+func _conical_roof(at: Vector3) -> void:
+	var base := NativeFortressPlan.CORNER_EAVES
+	var height := NativeFortressPlan.CORNER_ROOF_TOP - base
+	var radius := NativeFortressPlan.CORNER_ROOF_RADIUS
+	var slope := Vector2(radius, height).length()
+	for course: int in 8:
+		var t0 := course / 8.0
+		var t1 := (course + 1) / 8.0
+		var r0 := radius * (1.0 - t0)
+		var r1 := maxf(0.012, radius * (1.0 - t1))
+		for segment: int in 16:
+			var a := TAU * segment / 16.0
+			var b := TAU * (segment + 1) / 16.0
+			var normal := Vector3(cos((a + b) * 0.5) * height, radius, sin((a + b) * 0.5) * height).normalized()
+			var vertices := [at + Vector3(cos(a) * r0, base + height * t0, sin(a) * r0), at + Vector3(cos(b) * r0, base + height * t0, sin(b) * r0), at + Vector3(cos(b) * r1, base + height * t1 + 0.025, sin(b) * r1), at + Vector3(cos(a) * r1, base + height * t1 + 0.025, sin(a) * r1)]
+			# 방향은 원주를 따라, 기와 단은 지붕의 경사를 가로지른다.
+			var uv := [Vector2(a * radius, t0 * slope) / 2.6, Vector2(b * radius, t0 * slope) / 2.6, Vector2(b * radius, t1 * slope) / 2.6, Vector2(a * radius, t1 * slope) / 2.6]
+			_triangle([vertices[0], vertices[1], vertices[2]], [uv[0], uv[1], uv[2]], normal, "tower_slate")
+			_triangle([vertices[0], vertices[2], vertices[3]], [uv[0], uv[2], uv[3]], normal, "tower_slate")
+			# 다음 단의 아래 끝을 닫아 얇은 기와 턱과 처마 두께를 만든다.
+			_quad(vertices[2], vertices[3], vertices[3] - Vector3.UP * 0.025, vertices[2] - Vector3.UP * 0.025, normal, "tower_slate")
+	_radial_band(at, radius, radius, base - 0.055, base, "iron")
 
 
 ## No independent tween or timer: pause, accessibility and real threat scan remain authoritative.
@@ -524,7 +610,7 @@ func _cylinder(at: Vector3, radius: float, height: float, material: String, segm
 	cylinder.bottom_radius = radius
 	cylinder.height = height
 	cylinder.radial_segments = segments
-	cylinder.rings = 1
+	cylinder.rings = 0
 	_append(cylinder.surface_get_arrays(0), Transform3D(Basis.IDENTITY, at), material)
 
 
