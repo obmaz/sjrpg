@@ -78,7 +78,7 @@
       ],
       "bounds_min": [
         -4.09835386276245,
-        0,
+        0.0,
         -2.58670949935913
       ],
       "corner_quoins": 40,
@@ -97,7 +97,7 @@
       "roof_overhang_m": 0.22921895980835,
       "slate_tile_m": 2.6,
       "slate_tiles": 350,
-      "surfaces": 5,
+      "surfaces": 6,
       "timber_tile_m": 1.53846153846154,
       "triangles": 9680,
       "width": 7.7385687828064
@@ -110,11 +110,11 @@
       ],
       "bounds_min": [
         -2.54623055458069,
-        0,
+        0.0,
         -1.73324358463287
       ],
       "corner_quoins": 32,
-      "depth": 3,
+      "depth": 3.0,
       "door_approach": {
         "depth": 0.850000023841858,
         "width": 1.62000000476837,
@@ -123,13 +123,13 @@
       },
       "door_height": 2.25,
       "door_width": 1.38,
-      "door_x": 0,
+      "door_x": 0.0,
       "height_max": 6.26599979400635,
       "openings": 8,
       "roof_overhang_m": 0.236232042312622,
       "slate_tile_m": 2.6,
       "slate_tiles": 170,
-      "surfaces": 5,
+      "surfaces": 6,
       "timber_tile_m": 1.53846153846154,
       "triangles": 11420,
       "width": 4.61999702453613
@@ -142,7 +142,7 @@
       ],
       "bounds_min": [
         -2.88418197631836,
-        0,
+        0.0,
         -1.75399875640869
       ],
       "corner_quoins": 44,
@@ -161,7 +161,7 @@
       "roof_overhang_m": 0.235461235046387,
       "slate_tile_m": 2.6,
       "slate_tiles": 210,
-      "surfaces": 5,
+      "surfaces": 6,
       "timber_tile_m": 1.53846153846154,
       "triangles": 10480,
       "width": 5.29744148254395
@@ -174,7 +174,7 @@
       ],
       "bounds_min": [
         -2.67025065422058,
-        0,
+        0.0,
         -1.91716122627258
       ],
       "corner_quoins": 40,
@@ -187,13 +187,13 @@
       },
       "door_height": 2.25,
       "door_width": 1.38,
-      "door_x": 0,
+      "door_x": 0.0,
       "height_max": 5.13500022888184,
       "openings": 4,
       "roof_overhang_m": 0.234112501144409,
       "slate_tile_m": 2.6,
       "slate_tiles": 190,
-      "surfaces": 5,
+      "surfaces": 6,
       "timber_tile_m": 1.53846153846154,
       "triangles": 7700,
       "width": 4.87227630615234
@@ -508,13 +508,24 @@
     "roughness_or_normal_maps_added": false,
     "shared_resource_keys": [
       "stone",
-      "slate",
-      "door",
+      "wall_shop",
+      "roof_shop",
+      "door_shop",
       "iron",
-      "glass"
+      "glass",
+      "wall_smith",
+      "roof_smith",
+      "door_smith",
+      "rubble",
+      "wall_stable",
+      "shingle",
+      "door_stable",
+      "wall_home",
+      "roof_home",
+      "door_home"
     ],
     "stone_courses": 8,
-    "surface_budget_exception": "5 shared resources preserve existing stone/slate/wood/iron/glass physical responses; no per-part draw/material proliferation. Initial general-house guide target is2–4.",
+    "surface_budget_exception": "6 shared slots (stone, wall infill, roof, timber, iron, glass) per house; no per-part material proliferation.",
     "textures": [
       {
         "path": "assets/art/preview3d/limestone.webp",
@@ -598,11 +609,57 @@
       }
     ],
     "timber_mapping": {
-      "extra_materials": 0,
-      "resource_key": "door",
-      "texture": "assets/art/preview3d/timber.webp",
+      "resource_key_by_house": {
+        "ne": "door_smith",
+        "nw": "door_shop",
+        "se": "door_home",
+        "sw": "door_stable"
+      },
+      "surface_slots_per_house": 6,
       "tile_m": 1.53846153846154,
-      "uv_source": "beam-local longitudinal, original vertical plank UVs"
+      "uv_source": "beam-local longitudinal grain"
+    },
+    "logical_material_keys": [
+      "stone",
+      "wall",
+      "slate",
+      "wood",
+      "iron",
+      "glass"
+    ],
+    "resource_keys_by_house": {
+      "ne": {
+        "glass": "glass",
+        "iron": "iron",
+        "slate": "roof_smith",
+        "stone": "stone",
+        "wall": "wall_smith",
+        "wood": "door_smith"
+      },
+      "nw": {
+        "glass": "glass",
+        "iron": "iron",
+        "slate": "roof_shop",
+        "stone": "stone",
+        "wall": "wall_shop",
+        "wood": "door_shop"
+      },
+      "se": {
+        "glass": "glass",
+        "iron": "iron",
+        "slate": "roof_home",
+        "stone": "stone",
+        "wall": "wall_home",
+        "wood": "door_home"
+      },
+      "sw": {
+        "glass": "glass",
+        "iron": "iron",
+        "slate": "shingle",
+        "stone": "rubble",
+        "wall": "wall_stable",
+        "wood": "door_stable"
+      }
     }
   },
   "prior_geometry": {
@@ -771,8 +828,8 @@
     "case": "tests/cases/native_house_family.gd",
     "case_sha256": "5bd26d9d7aba42a8bd7e8339f431a4cab342bc95b4afcd9a004de9273548c3ab",
     "engine": "4.7.2-stable (official)",
-    "geometry_budget": "pass, 6000-12000 triangles and five shared surfaces per house",
-    "recording": "actual runtime four-house meshes and material/source SHA-256 measured by CI-only recorder",
+    "geometry_budget": "pass, 6000-12000 triangles and 6 shared surfaces per house",
+    "recording": "Actual runtime four-house meshes and current role material keys measured by tools/review/record_house_family.gd.",
     "source_record": "actual bytes; full contract tests and paired browser review run only after this candidate proof is committed"
   },
   "browser_review": {

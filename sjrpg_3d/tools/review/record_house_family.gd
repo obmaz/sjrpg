@@ -33,7 +33,7 @@ func run() -> void:
 			"door_approach": {"x": approach.position.x, "z": approach.position.y, "width": approach.size.x, "depth": approach.size.y},
 			"openings": report["openings"].size(), "corner_quoins": report["corner_quoins"], "slate_tiles": report["slate_tiles"],
 			"timber_tile_m": report["timber_tile_m"], "slate_tile_m": report["slate_tile_m"], "roof_overhang_m": report["roof_overhang"]}
-		all_valid = all_valid and triangles >= 6000 and triangles <= 12000 and surfaces == 5
+		all_valid = all_valid and triangles >= 6000 and triangles <= 12000 and surfaces == NativeHouse3D.MATERIAL_KEYS.size()
 		print("ART_AUDIT HOUSE_FAMILY_MEASURED ", JSON.stringify({"key": key, "geometry": geometry[key]}))
 	check("actual house candidate obeys the existing geometry/material cap", all_valid)
 	if all_valid:
@@ -44,16 +44,31 @@ func run() -> void:
 		var material_data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/art/preview3d/materials.json"))
 		for texture: Dictionary in proof["materials"]["textures"]:
 			texture["sha256"] = FileAccess.get_sha256("res://" + str(texture["path"]))
-		proof["materials"]["shared_resource_keys"] = ["stone", "slate", "door", "iron", "glass"]
-		proof["materials"]["timber_mapping"] = {"resource_key": "door", "texture": "assets/art/preview3d/timber.webp", "uv_source": "beam-local longitudinal, original vertical plank UVs", "tile_m": NativeHouse3D.TIMBER_TILE, "extra_materials": 0}
+		proof["materials"]["logical_material_keys"] = NativeHouse3D.MATERIAL_KEYS.duplicate()
+		var role_materials := {}
+		var timber_keys := {}
+		var shared_keys: Array[String] = []
+		for key: String in geometry:
+			var roles := {}
+			for slot: String in NativeHouse3D.MATERIAL_KEYS:
+				var resource := NativeHouse3D.resource_key(key, slot)
+				roles[slot] = resource
+				if not shared_keys.has(resource):
+					shared_keys.append(resource)
+			role_materials[key] = roles
+			timber_keys[key] = roles["wood"]
+		proof["materials"]["shared_resource_keys"] = shared_keys
+		proof["materials"]["resource_keys_by_house"] = role_materials
+		proof["materials"]["surface_budget_exception"] = "%d shared slots (stone, wall infill, roof, timber, iron, glass) per house; no per-part material proliferation." % NativeHouse3D.MATERIAL_KEYS.size()
+		proof["materials"]["timber_mapping"] = {"resource_key_by_house": timber_keys, "uv_source": "beam-local longitudinal grain", "tile_m": NativeHouse3D.TIMBER_TILE, "surface_slots_per_house": NativeHouse3D.MATERIAL_KEYS.size()}
 		proof["materials"]["actual_material_record"] = material_data
 		proof["geometry"] = geometry
 		proof["generation"]["operation"] = "Native bonded corner masonry, staggered overlapping slate and beam-aligned metre UVs. Shared family limestone is recorded independently in materials.json."
 		proof["generation"]["new_images_generated"] = true
-		proof["generation"]["image_scope"] = "Shared limestone and blue slate basecolors through their recorded generators; existing timber pixels unchanged."
+		proof["generation"]["image_scope"] = "Shared family materials use materials.json; house-specific generated wall sources use world-refinement/provenance.json and surface-variety/provenance.json."
 		proof["validation"] = {"case": "tests/cases/native_house_family.gd", "case_sha256": FileAccess.get_sha256("res://tests/cases/native_house_family.gd"), "engine": Engine.get_version_info()["string"],
 			"recording": "actual runtime four-house meshes and material/source SHA-256 measured by CI-only recorder",
-			"geometry_budget": "pass, 6000-12000 triangles and five shared surfaces per house",
+			"geometry_budget": "pass, 6000-12000 triangles and %d shared surfaces per house" % NativeHouse3D.MATERIAL_KEYS.size(),
 			"source_record": "actual bytes; full contract tests and paired browser review run only after this candidate proof is committed",
 			"actual_browser_views": "Pending fresh same-source paired portrait/landscape and reverse-angle captures."}
 		DirAccess.make_dir_recursive_absolute("res://build/house-family-record")

@@ -3,14 +3,8 @@ extends TestCase
 
 
 func run() -> void:
-	GameState.delete_save()
-	GameState.new_game("warrior")
-	var game := preload("res://scripts/game.gd").new()
-	add_child(game)
-	await _frames(2)
-	for e in game.enemies:
-		e.queue_free()
-	game.enemies.clear()
+	# 실제 공간 준비와 초기 적 배치가 끝난 뒤 걷기 검사를 시작한다.
+	var game := await make_game("warrior")
 	var player: Player = game.player
 	var v: Village = game.village
 	# Walk from the forecourt over the deck to the far bank.
@@ -19,8 +13,7 @@ func run() -> void:
 		await _walk(player, v.bridge.axis_point(t), 240)
 	var far := player.position.distance_to(v.bridge.axis_point(1.0)) < 40.0
 	print("bridge crossing: %s" % ("ok" if far else "FAIL at %s" % player.position))
-	if not far:
-		failures += 1
+	check("native bridge crossing reaches the far bank", far, str(player.position))
 	# From the near bank, walking straight into the river must be stopped.
 	var start := v.forecourt_g + Vector2(350, -60)
 	player.position = Iso.project(start)
@@ -29,9 +22,7 @@ func run() -> void:
 	var moved := g.y < start.y - 40.0
 	var wet := v.river_band.grow(-20.0).has_point(g)
 	print("river blocks: %s (moved %.0f, v=%.0f, band top %.0f)" % ["FAIL in water" if wet or not moved else "ok", start.y - g.y, g.y, v.river_band.end.y])
-	if not moved:
-		failures += 1
-	if wet:
-		failures += 1
+	check("native river approach moves before meeting the bank", moved, "start=%s actual=%s" % [start, g])
+	check("native river blocks entry into water", not wet, "actual=%s band=%s" % [g, v.river_band])
 	game.queue_free()
 	await _frames(2)
