@@ -27,6 +27,21 @@ var _layout_id := 0
 var _resolver: CharacterBody3D
 var _resolver_shape: CapsuleShape3D
 var _sphere := SphereShape3D.new()
+## Forest collision is static for a session; it leaves the tree during a cave visit
+## and returns intact instead of being triangulated and rebuilt on the way out.
+var _forest_cache := {}
+var forest_builds := 0
+# Reused query objects: these run many times per frame and per placement search.
+var _blocked_shape := CapsuleShape3D.new()
+var _shape_query := PhysicsShapeQueryParameters3D.new()
+var _floor_query := PhysicsRayQueryParameters3D.new()
+var _live_enemies := {}
+
+
+func _init() -> void:
+	# Fixtures create this node without setup(), so the shared ray is ready at once.
+	_floor_query.collision_mask = FLOOR
+	_floor_query.hit_back_faces = true
 
 
 func setup(world_game: Node, stage: Node3D) -> SpatialWorld3D:
@@ -218,12 +233,7 @@ func _supported_pose(point: Vector3, origin_foot: float, height: float) -> Dicti
 
 
 func _clear_pose(body: CharacterBody3D, point: Vector3) -> bool:
-	var query := PhysicsShapeQueryParameters3D.new()
-	query.shape = (body.get_child(0) as CollisionShape3D).shape
-	query.transform = Transform3D(Basis.IDENTITY, point)
-	query.collision_mask = body.collision_mask
-	query.exclude = [body.get_rid()]
-	query.margin = body.safe_margin
+	var query := _query((body.get_child(0) as CollisionShape3D).shape, point, body.collision_mask, body.safe_margin, [body.get_rid()])
 	return get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty()
 
 
@@ -262,14 +272,23 @@ func blocked(point: Vector2, radius: float, monster := false) -> bool:
 	var floor_info := _floor_sample(point)
 	if not bool(floor_info.get("found", false)):
 		return true
-	var capsule := CapsuleShape3D.new()
+	var capsule := _blocked_shape
 	capsule.radius = radius_metres(radius)
 	capsule.height = maxf(1.65, capsule.radius * 2.0 + 0.05)
-	var query := PhysicsShapeQueryParameters3D.new()
-	query.shape = capsule
-	query.transform = Transform3D(Basis.IDENTITY, native_point(point, float(floor_info["height"]) + capsule.height * 0.5 + SKIN))
-	query.collision_mask = SOLID | PROP | (MONSTER_BOUNDARY if monster else 0)
+	var query := _query(capsule, native_point(point, float(floor_info["height"]) + capsule.height * 0.5 + SKIN),
+		SOLID | PROP | (MONSTER_BOUNDARY if monster else 0))
 	return not get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty()
+
+
+## One shared shape query; every caller sets all the fields it relies on.
+func _query(shape: Shape3D, at: Vector3, mask: int, margin := 0.0, exclude: Array[RID] = []) -> PhysicsShapeQueryParameters3D:
+	_shape_query.shape = shape
+	_shape_query.transform = Transform3D(Basis.IDENTITY, at)
+	_shape_query.collision_mask = mask
+	_shape_query.margin = margin
+	_shape_query.exclude = exclude
+	_shape_query.motion = Vector3.ZERO
+	return _shape_query
 
 
 func height_at(point: Vector2) -> float:
@@ -291,8 +310,9 @@ func contains(point: Vector2, radius := 0.0) -> bool:
 
 func _floor_sample(point: Vector2) -> Dictionary:
 	var at := native_point(point)
-	var ray := PhysicsRayQueryParameters3D.create(at + Vector3.UP * 40.0, at - Vector3.UP * 10.0, FLOOR)
-	ray.hit_back_faces = true
+	var ray := _floor_query
+	ray.from = at + Vector3.UP * 40.0
+	ray.to = at - Vector3.UP * 10.0
 	var hit := get_world_3d().direct_space_state.intersect_ray(ray)
 	if hit.is_empty():
 		return {"found": false}
@@ -320,11 +340,8 @@ func can_melee(from: Vector2, to: Vector2) -> bool:
 func projectile_fraction(from: Vector3, to: Vector3, radius_m: float) -> float:
 	sync_scope()
 	_sphere.radius = maxf(radius_m, 0.005)
-	var query := PhysicsShapeQueryParameters3D.new()
-	query.shape = _sphere
-	query.transform = Transform3D(Basis.IDENTITY, from)
+	var query := _query(_sphere, from, SOLID)
 	query.motion = to - from
-	query.collision_mask = SOLID
 	var state := get_world_3d().direct_space_state
 	if not state.intersect_shape(query, 1).is_empty():
 		return 0.0
@@ -337,13 +354,15 @@ func _physics_process(_delta: float) -> void:
 	sync_scope()
 	if is_instance_valid(game.player):
 		register_actor(game.player, Player.RADIUS)
+	_live_enemies.clear()
 	for source: Enemy in game.enemies:
 		if is_instance_valid(source) and not source.dead:
+			_live_enemies[source.get_instance_id()] = true
 			register_actor(source, (source as Enemy).radius, true)
 	for id in actor_bodies.keys():
 		var source: Node2D = _sources[id].get_ref()
 		var body: CharacterBody3D = actor_bodies[id]
-		if source == null or source.is_queued_for_deletion() or (source is Enemy and (source.dead or not game.enemies.has(source))):
+		if source == null or source.is_queued_for_deletion() or (source is Enemy and not _live_enemies.has(id)):
 			body.collision_layer = 0
 			body.queue_free()
 			actor_bodies.erase(id)
@@ -362,7 +381,7 @@ func sync_scope(force := false) -> void:
 	if force or (realm == "cave") != cave or identity != _layout_id:
 		realm = "cave" if cave else "forest"
 		_layout_id = identity
-		_rebuild()
+		_rebuild(force)
 	# Every spatial query enters here, many times per frame. Assigning an unchanged
 	# layer still reaches the physics server, so only real state changes are written.
 	for index in _gates.size():
@@ -377,27 +396,58 @@ func sync_scope(force := false) -> void:
 			body.collision_layer = prop_layer
 
 
-func _rebuild() -> void:
+func _rebuild(force := false) -> void:
+	if force:
+		_drop_forest_cache()
 	if is_instance_valid(_geometry):
-		for child in _geometry.find_children("*", "CollisionObject3D", true, false):
-			(child as CollisionObject3D).collision_layer = 0
-		_geometry.queue_free()
-	_geometry = Node3D.new()
-	_geometry.name = "CavePhysics" if realm == "cave" else "ForestPhysics"
-	add_child(_geometry)
-	_gates.clear()
-	_circles.clear()
-	_props.clear()
-	if realm == "cave":
-		_build_cave()
+		# The node name is not reliable: a rebuild in the same frame gets a unique suffix.
+		if not force and bool(_geometry.get_meta("forest", false)):
+			# Leaving the tree removes every body from the physics space at once.
+			remove_child(_geometry)
+			_forest_cache = {"geometry": _geometry, "gates": _gates, "circles": _circles, "props": _props}
+		else:
+			for child in _geometry.find_children("*", "CollisionObject3D", true, false):
+				(child as CollisionObject3D).collision_layer = 0
+			_geometry.queue_free()
+	_gates = []
+	_circles = []
+	_props = []
+	if realm != "cave" and not _forest_cache.is_empty():
+		_geometry = _forest_cache["geometry"]
+		_gates = _forest_cache["gates"]
+		_circles = _forest_cache["circles"]
+		_props = _forest_cache["props"]
+		_forest_cache = {}
+		_geometry.name = "ForestPhysics"
+		add_child(_geometry)
 	else:
-		_build_forest()
+		_geometry = Node3D.new()
+		_geometry.name = "CavePhysics" if realm == "cave" else "ForestPhysics"
+		_geometry.set_meta("forest", realm != "cave")
+		add_child(_geometry)
+		if realm == "cave":
+			_build_cave()
+		else:
+			forest_builds += 1
+			_build_forest()
 	for id in actor_bodies:
 		var source: Node2D = _sources[id].get_ref()
 		if source != null:
 			var body: CharacterBody3D = actor_bodies[id]
 			body.position = native_point(source.position, _construction_height(source.position) + float(body.get_meta("height")) * 0.5 + SKIN)
 			body.set_meta("projected", source.position)
+
+
+func _drop_forest_cache() -> void:
+	if not _forest_cache.is_empty():
+		(_forest_cache["geometry"] as Node3D).free()
+		_forest_cache = {}
+
+
+func _notification(what: int) -> void:
+	# A stowed forest is outside the tree, so the tree cannot free it for us.
+	if what == NOTIFICATION_PREDELETE:
+		_drop_forest_cache()
 
 
 func _build_forest() -> void:
