@@ -93,11 +93,22 @@ func _ready() -> void:
 	var ink := ShaderMaterial.new()
 	ink.shader = _shader
 	material = ink
+	if is_instance_valid(caster):
+		caster.visibility_changed.connect(_wake)
+		caster.tree_exited.connect(_wake)
 	refresh()
 
 
 func _process(_delta: float) -> void:
 	refresh()
+	# The native 3D game keeps every legacy caster hidden. Sleep until its
+	# visibility or tree membership changes instead of polling each frame.
+	if not is_queued_for_deletion() and is_instance_valid(caster) and not caster.is_visible_in_tree():
+		set_process(false)
+
+
+func _wake() -> void:
+	set_process(true)
 
 
 func refresh() -> void:

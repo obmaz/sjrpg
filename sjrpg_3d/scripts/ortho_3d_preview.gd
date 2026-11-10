@@ -42,6 +42,7 @@ void fragment() { ALBEDO = flash_color.rgb; ALPHA = flash_strength; }
 static var _card_shader: Shader
 static var _add_shader: Shader
 static var _actor_flash_shader: Shader
+static var _impact_texture: Texture2D
 
 var game: Node2D
 var viewport: SubViewport
@@ -66,6 +67,7 @@ var _contact_time := 0.0
 var _contact_energy := 0.0
 var _probe_clock := 0.0
 var _ready_published := false
+var _probe_enabled := false
 var _labels := {}
 var _native_mage := false
 var _contact_fresh := false
@@ -125,6 +127,9 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.__sjrpg3dReady = false; window.__sjrpg3dProbe = null")
+		# The full report serves automated browser checks (WebDriver) and explicit
+		# ?probe=1 / ?benchmark=1 reviews; ordinary play skips building it.
+		_probe_enabled = bool(JavaScriptBridge.eval("navigator.webdriver === true || /[?&](probe|benchmark)=1(&|$)/.test(window.location.search)", true))
 	game.set_forest_rendered(false)
 	viewport = SubViewport.new()
 	viewport.own_world_3d = true
@@ -478,7 +483,8 @@ func _sync_scope() -> bool:
 		contact_light.visible = false
 	_native_visible = true
 	display.visible = true
-	game.set_forest_rendered(false)
+	if game.field_root.visible or game.field_root.visibility_layer != 0:
+		game.set_forest_rendered(false)
 	return true
 
 
@@ -511,6 +517,12 @@ func _publish_probe() -> void:
 	var calls := viewport.get_render_info(Viewport.RENDER_INFO_TYPE_VISIBLE, Viewport.RENDER_INFO_DRAW_CALLS_IN_FRAME)
 	var physics: SpatialWorld3D = game.get("spatial_world")
 	var ready := actor != null and (animation != null or not _native_mage) and (calls > 0 or _ready_published) and physics != null and physics.physics_ticks > 0
+	if not _probe_enabled:
+		# Players only need the one-time readiness flag, not a report twice a second.
+		if ready and not _ready_published:
+			_ready_published = true
+			JavaScriptBridge.eval("window.__sjrpg3dReady = true")
+		return
 	var eye := camera.global_transform.basis.z.normalized()
 	var report := {"paused": get_tree().paused, "panel_open": game.hud.panel_open(), "panel_script": game.hud._panel.get_script().resource_path if game.hud.panel_open() else "", "logical_size": [game.get_viewport_rect().size.x, game.get_viewport_rect().size.y], "window_size": [get_window().size.x, get_window().size.y], "last_background_notification": game.get_meta("last_background_notification", -1), "ready": ready, "native_active": _native_visible, "native_width": viewport.size.x, "native_height": viewport.size.y,
 		"quality": "low" if Prefs.low_resolution else "high", "spatial_draw_calls": calls,
@@ -626,9 +638,8 @@ func _sync_cards() -> void:
 			continue
 		if owner is Effect:
 			(entry["node"] as MeshInstance3D).visible = owner.get_parent() == game.world
-	for node in game.world.get_children():
-		var effect := node as Effect
-		if effect == null or effect.is_queued_for_deletion():
+	for effect in Effect.in_world(game.world):
+		if effect.is_queued_for_deletion():
 			continue
 		var id := effect.get_instance_id()
 		if effect.kind == "text":
@@ -695,7 +706,9 @@ func _sync_cards() -> void:
 		var columns := PresentationArt.impact_columns(phase)
 		var frame := PresentationArt.impact_frame(int(effect.params.get("cell", 0)), int(columns.x)) if impact else ReferenceFxArt.frame(key, int(columns.x))
 		var next := PresentationArt.impact_frame(int(effect.params.get("cell", 0)), int(columns.y)) if impact else ReferenceFxArt.frame(key, int(columns.y))
-		var texture: Texture2D = load("res://" + str(PresentationArt.data()["impact"]["path"])) if impact else ReferenceFxArt.texture(key)
+		if impact and _impact_texture == null:
+			_impact_texture = load("res://" + str(PresentationArt.data()["impact"]["path"]))
+		var texture: Texture2D = _impact_texture if impact else ReferenceFxArt.texture(key)
 		if not _cards.has(id):
 			if _cards.size() > 96:
 				continue

@@ -38,8 +38,9 @@ func _process(delta: float) -> void:
 	art.modulate_color = Color.WHITE if ready else Color(0.58, 0.66, 0.63)
 	if _flash > 0.0 and not Prefs.reduce_motion:
 		art.modulate_color = art.modulate_color.lerp(Color(0.55, 1.0, 0.9), _flash / 0.18)
-	art.queue_redraw()
-	queue_redraw()
+	if is_visible_in_tree():
+		art.queue_redraw()
+		queue_redraw()
 
 
 func _draw() -> void:

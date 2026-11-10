@@ -4,6 +4,7 @@ extends Node2D
 ## trail, strike, hydra, ward, text.
 
 const GROUND_Y := 0.577350269
+const GROUP := "world_effects"
 
 var kind := ""
 var color := Color.WHITE
@@ -189,6 +190,22 @@ static func cast_hand_offset(facing: float, body_height: float) -> Vector2:
 	return Vector2(forward.x * body_height * 0.25, -body_height * 0.55 + forward.y * body_height * 0.11)
 
 
+func _init() -> void:
+	add_to_group(GROUP)
+
+
+## Presenters read effects every frame; the group avoids walking every tree, rock
+## and plant that shares the world node. Order matches the world's child order.
+static func in_world(world: Node) -> Array[Effect]:
+	var result: Array[Effect] = []
+	if not is_instance_valid(world) or not world.is_inside_tree():
+		return result
+	for node in world.get_tree().get_nodes_in_group(GROUP):
+		if node.get_parent() == world:
+			result.append(node as Effect)
+	return result
+
+
 func _ready() -> void:
 	if SpatialCombat3D.world(game) != null:
 		var at := _ground() if kind in ["proj", "orb"] else position
@@ -299,7 +316,8 @@ func _process(delta: float) -> void:
 			_orb_burst()
 		queue_free()
 		return
-	queue_redraw()
+	if is_visible_in_tree():
+		queue_redraw()
 
 
 # ───────── behaviour ─────────
