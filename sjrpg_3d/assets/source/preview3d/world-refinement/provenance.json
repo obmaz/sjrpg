@@ -152,12 +152,12 @@
       "native_fountain_authoring_and_glb_checks": 7
     },
     "web_export": {
-      "log": "build/reports/refinement-push-export.log",
+      "log": "build/reports/refinement-collision-export.log",
       "controlled_gpu_textures": 17,
       "passed": true,
-      "pack": "index-87c3999de14470cb51c9.pck",
-      "bytes": 43655284,
-      "sha256": "87c3999de14470cb51c9ae88b7be83c0ad0c29b86d338f283342d71418ef4d99"
+      "pack": "index-d3f30d730bdd456c2f47.pck",
+      "bytes": 43655268,
+      "sha256": "d3f30d730bdd456c2f47bef07cef2085ce347dbfb02fdf7413145bfe5e40e35e"
     },
     "browser": {
       "state": "합친 최종 코드의 실제 Chromium 검수 완료",
@@ -192,6 +192,12 @@
     "ci": {
       "workflow": "Build web and deploy to GitHub Pages",
       "trigger": "main push: 전체 검사·브라우저 검수·공개 배포를 자동 실행"
+    },
+    "post_collision_fix": {
+      "cases": 7,
+      "failed": 0,
+      "log": "build/reports/refinement-bridge-real-fix.log",
+      "coverage": "보스 다음 다리 통행·계단 지지·실제 캡슐 비침투·네이티브 공간/바닥 조회 계약"
     }
   },
   "shared_grass": {
@@ -247,7 +253,7 @@
     },
     {
       "path": "scripts/spatial_world_3d.gd",
-      "sha256": "296419d569f06e7ad45a44688f0b623ca64d3546859d6ecae22dbec84c4a55c9"
+      "sha256": "9a6dc6f980a283d098b1e1a571251baa927763f5085e0bf5428d5a9472529eed"
     },
     {
       "path": "scripts/village.gd",
