@@ -188,12 +188,6 @@ func _move_body(body: CharacterBody3D, destination: Vector2) -> void:
 				break
 			motion = hit.get_remainder().slide(hit.get_normal())
 		_settle_support(body, previous, height, validated_pose)
-		# 계단 높이가 바뀌는 프레임에도 벽 접촉 복구가 캡슐을 안으로
-		# 밀어 넣지 않도록 마지막으로 확인된 지지점을 보존한다.
-		# 스윕이 이미 safe_margin을 적용했다. 여기서 같은 여유를 다시
-		# 부풀리면 난간 접촉 뒤의 정상적인 미끄러짐까지 되돌리게 된다.
-		if not _clear_pose(body, body.position, 0.0):
-			body.position = previous
 
 
 func _settle_support(body: CharacterBody3D, previous: Vector3, height: float, validated_pose := Vector3(INF, INF, INF)) -> void:
@@ -208,6 +202,8 @@ func _settle_support(body: CharacterBody3D, previous: Vector3, height: float, va
 	var support := _supported_pose(actual, origin_foot, height)
 	if not support.is_empty():
 		var grounded: Vector3 = support["position"]
+		# 바닥 높이를 바꾸지 않는 정상적인 스윕/미끄러짐은 그대로 보존한다.
+		# 높이를 보정해야 할 때는 벽을 통과해 발을 내리지 않도록 검사한다.
 		if absf(actual.y - grounded.y) <= 0.00001 or _clear_pose(body, grounded):
 			body.position = grounded
 			return
@@ -238,9 +234,9 @@ func _supported_pose(point: Vector3, origin_foot: float, height: float) -> Dicti
 	return {"position": Vector3(point.x, float(sample["height"]) + height * 0.5 + SKIN, point.z)}
 
 
-func _clear_pose(body: CharacterBody3D, point: Vector3, margin := -1.0) -> bool:
+func _clear_pose(body: CharacterBody3D, point: Vector3) -> bool:
 	var query := _query((body.get_child(0) as CollisionShape3D).shape, point, body.collision_mask,
-		body.safe_margin if margin < 0.0 else margin, [body.get_rid()])
+		body.safe_margin, [body.get_rid()])
 	return get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty()
 
 

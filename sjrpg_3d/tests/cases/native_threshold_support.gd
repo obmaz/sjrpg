@@ -18,6 +18,10 @@ func run() -> void:
 	var capsule_clear := true
 	var trials := 0
 	var first_overlap := ""
+	# float 좌표의 접촉 오차(수십 μm)와 실제 관통을 구분한다.
+	# 허용 폭 0.1mm는 native safe_margin 2mm보다 훨씬 작다.
+	var tolerance := 0.0001
+	var maximum_penetration := 0.0
 	for distance in [0.20, 0.50, 1.0, 2.0, 4.0, 8.0, 16.0, 40.0]:
 		for offset in [-10.0, 0.0, 10.0]:
 			spatial.teleport_source_actor(game.player, bottom + across * offset, Player.RADIUS)
@@ -37,12 +41,32 @@ func run() -> void:
 			query.transform = body.global_transform
 			query.collision_mask = SpatialWorld3D.SOLID | SpatialWorld3D.PROP
 			query.exclude = [body.get_rid()]
-			var overlaps := spatial.get_world_3d().direct_space_state.intersect_shape(query, 1)
-			if not overlaps.is_empty() and first_overlap.is_empty():
-				first_overlap = "%s floor=%s foot=%s step=%s" % [overlaps[0]["collider"].name, spatial.height_at(game.player.position), spatial.actor_foot(game.player), distance]
-			capsule_clear = capsule_clear and overlaps.is_empty()
+			var depth := _penetration(spatial, query)
+			maximum_penetration = maxf(maximum_penetration, depth)
+			if depth > tolerance and first_overlap.is_empty():
+				first_overlap = "depth=%s floor=%s foot=%s step=%s" % [depth, spatial.height_at(game.player.position), spatial.actor_foot(game.player), distance]
+			capsule_clear = capsule_clear and depth <= tolerance
 			trials += 1
 	check("doorway remains native-solid across varied movement steps", body_clear and capsule_clear and trials == 24, first_overlap)
 	check("solid-edge recovery preserves actual native FLOOR support at every step", worst_error < 0.001, worst_detail)
+	# 같은 검사가 실제로 벽을 뚫은 캡슐을 잡는지 검증한다.
+	var body := spatial.register_actor(game.player, Player.RADIUS)
+	var query := PhysicsShapeQueryParameters3D.new()
+	query.shape = (body.get_child(0) as CollisionShape3D).shape
+	query.transform = body.global_transform
+	query.transform.origin += Vector3.FORWARD * 0.03
+	query.collision_mask = SpatialWorld3D.SOLID | SpatialWorld3D.PROP
+	query.exclude = [body.get_rid()]
+	var control := _penetration(spatial, query)
+	check("contact tolerance still detects actual wall penetration", control > 0.01)
+	print("ART_AUDIT THRESHOLD_SOLID ", JSON.stringify({"maximum_contact_m": maximum_penetration, "tolerance_m": tolerance, "negative_control_m": control}))
 	game.queue_free()
 	await _frames(2)
+
+
+func _penetration(spatial: SpatialWorld3D, query: PhysicsShapeQueryParameters3D) -> float:
+	var contacts := spatial.get_world_3d().direct_space_state.collide_shape(query, 16)
+	var depth := 0.0
+	for i in range(0, contacts.size(), 2):
+		depth = maxf(depth, contacts[i].distance_to(contacts[i + 1]))
+	return depth

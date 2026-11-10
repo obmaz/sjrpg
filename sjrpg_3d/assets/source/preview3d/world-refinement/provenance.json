@@ -152,15 +152,15 @@
       "native_fountain_authoring_and_glb_checks": 7
     },
     "web_export": {
-      "log": "build/reports/refinement-collision-export.log",
+      "log": "build/reports/main-push-fixed-export.log",
       "controlled_gpu_textures": 17,
       "passed": true,
-      "pack": "index-d3f30d730bdd456c2f47.pck",
-      "bytes": 43655268,
-      "sha256": "d3f30d730bdd456c2f47bef07cef2085ce347dbfb02fdf7413145bfe5e40e35e"
+      "pack": "index-eab8c519a58293570892.pck",
+      "bytes": 43655172,
+      "sha256": "eab8c519a582935708923cdc85fa345e39d010b8ef2284b0af5536619800270a"
     },
     "browser": {
-      "state": "합친 최종 코드의 실제 Chromium 검수 완료",
+      "state": "건축·재질·공격의 실제 Chromium 검수 완료. 이동 복구 변경은 post_collision_fix 검사와 CI 브라우저 단계에서 별도로 검증한다.",
       "orientations": [
         [
           1280,
@@ -194,10 +194,14 @@
       "trigger": "main push: 전체 검사·브라우저 검수·공개 배포를 자동 실행"
     },
     "post_collision_fix": {
-      "cases": 7,
+      "cases": 14,
       "failed": 0,
-      "log": "build/reports/refinement-bridge-real-fix.log",
-      "coverage": "보스 다음 다리 통행·계단 지지·실제 캡슐 비침투·네이티브 공간/바닥 조회 계약"
+      "log": "build/reports/main-push-merged-proof.log",
+      "coverage": "원격 성능 개선과 합친 뒤 전체 검사 앞부분·다리 이동 30조합·계단 지지·바닥 높이·공간 스윕·프레임 비용 계약",
+      "cause": "완료된 스윕에 겹침 쿼리를 다시 적용하면서 수십 μm의 정상 접촉도 이동 취소로 처리했다. 높이 보정에 필요한 충돌 검사는 유지한다.",
+      "maximum_threshold_contact_m": 5.38825988769531e-05,
+      "allowed_contact_error_m": 0.0001,
+      "deliberate_penetration_detected_m": 0.0296802520751953
     }
   },
   "shared_grass": {
@@ -213,7 +217,7 @@
   "implementation": [
     {
       "path": "scripts/native_enemy_models.gd",
-      "sha256": "164dfd324bcf4e93fc45ae512101f2a18ebc50eee2da2ea14635322cb6fcbd6c"
+      "sha256": "e6eb9b7378e8b817ae0751e3aa78bd9cbff57c72f1c961528c6c2895425454da"
     },
     {
       "path": "scripts/native_cave_plan.gd",
@@ -253,7 +257,7 @@
     },
     {
       "path": "scripts/spatial_world_3d.gd",
-      "sha256": "9a6dc6f980a283d098b1e1a571251baa927763f5085e0bf5428d5a9472529eed"
+      "sha256": "0cf375be753fbe10c4ffae92c106bf52ec3e177840fb589a728dac1fa8b03505"
     },
     {
       "path": "scripts/village.gd",
@@ -270,6 +274,14 @@
     {
       "path": "scripts/native_river.gdshader",
       "sha256": "119bc9a9dd3cad4dbd2aedef2ef116422807389a058cb80cfa2b7dc2948ad441"
+    },
+    {
+      "path": "tests/cases/native_bridge_sweep.gd",
+      "sha256": "350a8730211a184287c6650f8dcf0e34024752659486a2fa17479eacbf687216"
+    },
+    {
+      "path": "tests/cases/native_threshold_support.gd",
+      "sha256": "bbe90f5d0300e7005c2ecde906b8e183d368880c65fb0dd041e73b3eaa10a9ad"
     }
   ]
 }
