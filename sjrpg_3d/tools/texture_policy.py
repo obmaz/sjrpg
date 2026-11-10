@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Enforce the 3D texture import policy without opening source image files.
 
-Only [params] values in assets/art/*.import metadata can be written. Godot owns
+Only [params] values in assets/art/ and assets/models/ import metadata can be written. Godot owns
 the generated [remap]/[deps] compressed artifacts after the next import.
 """
 import argparse
@@ -48,10 +48,12 @@ def values(text, span, label):
 
 def resource_path(relative):
     path = Path(relative)
-    if path.is_absolute() or ".." in path.parts or not relative.startswith("assets/art/"):
-        raise ValueError("Policy path is outside 3D art: " + relative)
-    if (ROOT / path).resolve().is_relative_to((ROOT / "assets/art").resolve()) is False:
-        raise ValueError("Policy path escapes 3D art: " + relative)
+    roots = ("assets/art/", "assets/models/")
+    if path.is_absolute() or ".." in path.parts or not relative.startswith(roots):
+        raise ValueError("Policy path is outside 3D art/model assets: " + relative)
+    allowed = any((ROOT / path).resolve().is_relative_to((ROOT / part).resolve()) for part in roots)
+    if not allowed:
+        raise ValueError("Policy path escapes 3D assets: " + relative)
     return path
 
 
@@ -107,7 +109,8 @@ def run(apply=False):
     protected_mips = {}
     updates = []
     protected_count = 0
-    for path in sorted((ROOT / "assets/art").rglob("*.import")):
+    imports = list((ROOT / "assets/art").rglob("*.import")) + list((ROOT / "assets/models").rglob("*.import"))
+    for path in sorted(imports):
         relative = path.relative_to(ROOT).as_posix()
         resource_path(relative)
         original = path.read_text()

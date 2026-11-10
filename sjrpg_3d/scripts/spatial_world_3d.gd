@@ -506,6 +506,22 @@ func _build_forest() -> void:
 	for circle: Array in game.village.circles:
 		var point: Vector2 = circle[0]
 		var radius: float = circle[1]
+		if point.is_equal_approx(NativeCavePlan.body_center(game.dungeon.entry_point())):
+			var cave_frame := NativeCavePlan.frame(game.dungeon.entry_point())
+			for polygon: PackedVector2Array in NativeCavePlan.ground_regions(radius_metres(radius)):
+				var vertices := PackedVector3Array()
+				for vertex: Vector2 in polygon:
+					vertices.append(Vector3(vertex.x,0,vertex.y))
+					vertices.append(Vector3(vertex.x,NativeCavePlan.HILL_HEIGHT,vertex.y))
+				var rock := ConvexPolygonShape3D.new()
+				rock.points = vertices
+				rock.margin = 0.001
+				_shape_body(rock,cave_frame,SOLID,"NativeCaveHill")
+			var roof := ConvexPolygonShape3D.new()
+			roof.points = NativeCavePlan.roof_points()
+			roof.margin = 0.001
+			_shape_body(roof,cave_frame,SOLID,"NativeCaveRoof")
+			continue
 		var chest := _chest_at(point)
 		var shape := CylinderShape3D.new()
 		shape.radius = radius_metres(radius)

@@ -6,11 +6,13 @@ func run() -> void:
 	var walls := {}
 	var doors := {}
 	for key: String in NativeHouse3D.STYLES:
-		var wall: StandardMaterial3D = preview._materials[NativeHouse3D.resource_key(key, "wall")]
+		var id: String = {"nw":"shop","ne":"smith","sw":"stable","se":"home"}[key]
+		var wall := NativeAssetSurface.material(id, Vector3(6,5,6))
+		var texture: Texture2D = wall.get_shader_parameter("atlas")
 		var door: StandardMaterial3D = preview._materials[NativeHouse3D.resource_key(key, "wood")]
-		walls[wall.albedo_texture.get_instance_id()] = true
+		walls[texture.get_instance_id()] = true
 		doors[door.albedo_texture.get_instance_id()] = true
-		check("house wall keeps world-space metre texture " + key, wall.uv1_world_triplanar and wall.uv1_scale.is_equal_approx(Vector3.ONE / 2.56))
+		check("house wall uses a dedicated nonrepeating four-face atlas " + key, wall.get_shader_parameter("tile") == false and texture.get_width() >= 1254)
 	check("each real house uses different wall artwork and carved wood", walls.size() == 4 and doors.size() == 4)
 	for kind: String in ["wolf", "boar", "goblin", "skeleton"]:
 		var model: Dictionary = NativeEnemyModels.build(kind)

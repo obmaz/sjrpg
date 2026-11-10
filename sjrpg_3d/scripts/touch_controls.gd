@@ -92,7 +92,8 @@ func _layout() -> void:
 	# 메뉴 위의 터치 여백과 안전 영역은 유지하고 그림/입력이 같은 좌표를 쓴다.
 	var combat_bottom := 144.0 if mobile_layout(size) else 178.0
 	var main := Vector2(size.x - 156.0 * u, size.y * 0.790) if portrait else Vector2(size.x - 156.0 * u, size.y - combat_bottom * u)
-	var stick_anchor := Vector2(104.0 * u, size.y * 0.780) if portrait else Vector2(112.0 * u, size.y - combat_bottom * u)
+	var stick_left := 128.0 if portrait else 136.0 if mobile_layout(size) else 112.0
+	var stick_anchor := Vector2(stick_left * u, size.y * 0.780 if portrait else size.y - combat_bottom * u)
 	_buttons = {"slot0": _button(main, 67.0 * u)}
 	var offsets := [Vector2(-119, 0), Vector2(-85, -84), Vector2(-4, -121), Vector2(79, -84)]
 	var radii := [44.0, 42.0, 42.0, 42.0]
@@ -119,7 +120,8 @@ func _layout() -> void:
 	_near_name = npc
 	if npc != "" and npc != "탈것 상인":
 		var text_width := HudArt.FONT.get_string_size(interaction_text(), HORIZONTAL_ALIGNMENT_LEFT, -1, interaction_font_size()).x
-		var half := Vector2(maxf(94.0 * u, text_width * 0.5 + 20.0 * u), maxf(32.0, 38.0 * u))
+		var folded := portrait and size.x / size.y > 0.8
+		var half := Vector2(maxf((90.0 if folded else 94.0) * u, text_width * 0.5 + 20.0 * u), maxf(32.0, 38.0 * u))
 		half.y = maxf(half.y, 22.0 * css_scale())
 		var rise := maxf(78.0 * u, half.y + menu_touch + 10.0 * u)
 		var stick := stick_anchor
@@ -662,7 +664,8 @@ func gamepad_hint_snapshot() -> Dictionary:
 ## Foldable screens have a wider skill fan. Keep the whole input rectangle clear.
 func _clear_interaction_center(preferred: Vector2, half: Vector2, stick: Vector2, unit: float, canvas_size: Vector2) -> Vector2:
 	# Keep the prompt below the player when a horizontal lane fits between thumbs.
-	var horizontal_gap := 6.0 * unit
+	var folded := canvas_size.y > canvas_size.x and canvas_size.x / canvas_size.y > 0.8
+	var horizontal_gap := (1.0 if folded else 6.0) * unit
 	var left := half.x + horizontal_gap
 	var right := canvas_size.x - half.x - horizontal_gap
 	var obstacles: Array[Rect2] = []

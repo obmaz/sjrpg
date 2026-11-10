@@ -1,0 +1,8 @@
+{
+  "tool": "image_gen.imagegen",
+  "source": "original.png",
+  "prompt": "prompt.txt",
+  "sha256": "bade5f91bc567991b23c7659291974d1765c7dcbfccb9bcef5c91d74b317943b",
+  "runtime": "sjrpg_3d/assets/models/architecture/shop/albedo.png",
+  "notes": "생성 원본 무가공 사용. 네 면은 각 셀에 한 번 매핑. 미세 자체 음영은 남아 있으며 법선 맵은 아님."
+}

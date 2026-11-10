@@ -1,0 +1,8 @@
+{
+  "tool": "image_gen.imagegen",
+  "source": "original.png",
+  "prompt": "prompt.txt",
+  "sha256": "f14b78e53860d2e760e4e17b041225172ccb71723d358e48596096b6ad894283",
+  "runtime": "sjrpg_3d/assets/models/architecture/bridge/albedo.png",
+  "notes": "생성 원본 무가공 사용. 네 면은 각 셀에 한 번 매핑. 미세 자체 음영은 남아 있으며 법선 맵은 아님."
+}

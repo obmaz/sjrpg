@@ -40,7 +40,7 @@ Android 도구 준비는 `sjrpg_3d/tools/setup_android.sh`에서 수행합니다
 
 ## 집별 표면과 몬스터 곡면
 
-`sjrpg_3d/tools/preview3d/make_surface_variety.py`는 원본 수식에서 512px 알베도 18종을 재현합니다. 기존 이미지를 재색칠하지 않으며 원본 PNG·고정 시드·런타임 해시는 `assets/source/preview3d/surface-variety/provenance.json`에 보존합니다. 벽/자연물은 2.56m, 지붕은 2.6m의 기존 UV와 실제 기하를 유지합니다. 새 표면은 mode=1 보호 규칙을 적용하며 법선/거칠기 맵으로 가장하지 않습니다. `NativeHouse3D.STYLES`가 집별 벽·지붕·목재를 연결하고, `NativeSceneryProps3D`는 위치에서 공유 바위 재질을 고릅니다. 지면 변형은 지형 역할 번호에 고정되어 로드 순서에 영향받지 않습니다. 원래 풀잎 결은 기본 알베도로 보존하고 새 헤더·이끼 표면을 세부 재질로 혼합해 큰 단색 얼룩을 피합니다.
+`sjrpg_3d/tools/preview3d/make_surface_variety.py`는 원본 수식에서 512px 공유 알베도 14종을 재현합니다. 기존 이미지를 재색칠하지 않으며 원본 PNG·고정 시드·런타임 해시는 `assets/source/preview3d/surface-variety/provenance.json`에 보존합니다. 벽/자연물은 2.56m, 지붕은 2.6m의 기존 UV와 실제 기하를 유지합니다. 새 표면은 mode=1 보호 규칙을 적용하며 법선/거칠기 맵으로 가장하지 않습니다. 건물 벽 채움은 독립 생성형 원화 패키지를 사용하며 `NativeHouse3D.STYLES`가 집별 표면 ID·지붕·목재를 연결하고, `NativeSceneryProps3D`는 위치에서 공유 바위 재질을 고릅니다. 지면 변형은 지형 역할 번호에 고정되어 로드 순서에 영향받지 않습니다. 원래 풀잎 결은 기본 알베도로 보존하고 새 헤더·이끼 표면을 세부 재질로 혼합해 큰 단색 얼룩을 피합니다.
 
 `NativeEnemyModels._form`은 유기체에 한정해 제한된 단면 보간과 연속 법선을 사용합니다. 바위와 철물의 모서리는 유지하며, 같은 관절별 메시 캐시를 재사용합니다. 몸체·공격·시체·실제 충돌은 기존 규칙을 유지합니다. 회귀 검사는 실제 삼각형 부피·바깥 법선·6천 삼각형 예산·재질 독립성과 공유 메시를 검사합니다.
 
@@ -65,3 +65,7 @@ Android 도구 준비는 `sjrpg_3d/tools/setup_android.sh`에서 수행합니다
 `generated-grass-variety.png`는 사용자 기준 화면과 기존 바닥 패밀리를 실제 참조로 편집한 2×2 전용 잔디 알베도입니다. 1254px 원본을 리사이즈하지 않고 각 칸 627px/2.56m(약245px/m)로 사용합니다. 원본·실제 프롬프트·첨부 참조 SHA-256은 `sjrpg_3d/assets/source/preview3d/grass-variety/`에 보존합니다. mode=1·밉맵을 사용하며 VRAM 압축 허용 목록과 다른 이미지 설정은 바꾸지 않습니다.
 
 `grass_variety.gdshaderinc`는 서로 다른 풀 결 네 장을 11.5m 생육 구역·3.4m 군락·27m 광역 변화로 혼합합니다. 각 이미지의 방향과 반 타일 이동을 달리하고 밉맵 미분을 전달해 격자 경계와 반복 무늬를 줄입니다. `native_ground.gdshader`의 기존 길 거리장과 포장석·접합부는 보존합니다. 높은 잔디 지형은 `native_grass.gdshader`와 두 서식지 공유 재질을 사용하며 기존 높이별 색 비율만 적용합니다. 지형 메시·미터 UV·실제 충돌·카메라 줌은 바꾸지 않습니다.
+
+## 독립 에셋 작업
+
+건물별 생성형 원화·다리 표면과 동굴 입구 모델은 에셋 폴더별로 관리합니다. 공용 코드 변경 없이 같은 에셋의 원화나 제작기를 교체하는 범위, 외부 모델의 미터·축·원점·충돌·소켓 계약은 [에셋 협업](../sjrpg_3d/docs/asset-workflow.md)을 따릅니다. 완료 리뷰·후보 비교는 현재 제작 규격과 구별하며 일회성 결과는 `build/`와 CI 아티팩트에 둡니다.

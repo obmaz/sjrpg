@@ -340,6 +340,9 @@ func _read_debug_params() -> void:
 					player.position = village.point(Vector2(0.5, 1.15))
 				"gate0", "gate1", "gate2", "gate3":
 					player.position = village.gate_points[int(kv[1].substr(4))] + Vector2(0, 150)
+				"cave_exterior":
+					player.position = dungeon.entry_point() + Vector2(0, 180)
+					_fx_review_focus = dungeon.entry_point() + Vector2(0, -180)
 				"bridge":
 					player.position = village.bridge.axis_point(0.5)
 				"mira":

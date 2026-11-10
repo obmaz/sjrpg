@@ -10,7 +10,7 @@ const PROJECTION_FACTOR := 1.224744871391589 * Iso.S
 const CAMERA_DIRECTION := Vector3(1, 1, 1)
 const MAGE_PATH := "res://assets/art/preview3d/mage.glb"
 const MATERIAL_ROOT := "res://assets/art/preview3d/"
-const WALL_TEXTURES := ["chapel_stone", "brick", "rubble", "plaster", "planks", "wall_shop", "wall_smith", "wall_stable", "wall_home"]
+const WALL_TEXTURES := ["chapel_stone", "brick", "rubble", "plaster", "planks"]
 const ROOF_TEXTURES := ["slate", "clay", "shingle", "roof_shop", "roof_smith", "roof_home"]
 const CARD_CODE := """
 shader_type spatial;
@@ -282,8 +282,7 @@ func _setup_materials() -> void:
 	# Each building has its own wall/roof character (make_clean_masonry.py);
 	# limestone remains the shared trim so the family still reads as one village.
 	for key: String in WALL_TEXTURES:
-		var replacement := {"wall_shop": "shop-plaster.png", "wall_stable": "stable-oak.png"}
-		var wall := _material(MATERIAL_ROOT + str(replacement.get(key, key + ".webp")))
+		var wall := _material(MATERIAL_ROOT + key + ".webp")
 		wall.uv1_triplanar = true
 		wall.uv1_world_triplanar = true
 		wall.uv1_scale = Vector3.ONE / 2.56

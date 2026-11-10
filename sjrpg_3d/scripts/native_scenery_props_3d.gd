@@ -145,15 +145,12 @@ static func build(preview: Node, parent: Node3D, world: Node2D, cave: bool, excl
 			opening = a.distance_to(b)
 			mesh = arch_mesh(opening, height)
 		elif role == "entrance":
-			# This is a scene-transition mouth, not a newly walkable floor.
-			# Keep the existing circular cliff body behind its open frontal portal.
-			var centre := Ortho3DPreview.ground_position(source.global_position + Vector2(0, -60))
-			var forward := Vector3(1, 0, 1).normalized()
-			var axis := Vector3(1, 0, -1).normalized()
-			at = centre + forward * 0.85
-			basis = Basis(axis, Vector3.UP, forward)
-			opening = 1.40
-			mesh = _entrance_mesh(minf(height, 3.4), SpatialWorld3D.radius_metres(NativeCavePlan.SOURCE_RADIUS))
+			# 열려 있는 바닥 홈과 양옆/후면의 실제 암반을 공용 설계로 배치한다.
+			var cave_frame := NativeCavePlan.frame(source.global_position + NativeCavePlan.ENTRY_OFFSET)
+			at = cave_frame.origin
+			basis = cave_frame.basis
+			opening = NativeCavePlan.OPENING_WIDTH
+			mesh = NativeCaveEntrance3D.mesh(NativeCavePlan.HILL_HEIGHT, SpatialWorld3D.radius_metres(NativeCavePlan.SOURCE_RADIUS))
 		elif role == "crystal":
 			mesh = _crystal_mesh(height)
 		else:
@@ -170,115 +167,18 @@ static func build(preview: Node, parent: Node3D, world: Node2D, cave: bool, excl
 		node.name = "Native_" + role + "_" + str(entries.size())
 		node.mesh = mesh
 		var variant_index: int = posmod(roundi(at.x * 7.0 + at.z * 11.0), stone_variants.size())
-		node.material_override = crystal if role == "crystal" else stone_variants[0 if role == "entrance" else variant_index]
+		node.material_override = crystal if role == "crystal" else stone_variants[variant_index]
+		if role == "entrance":
+			var hill := ShaderMaterial.new()
+			hill.shader = load("res://assets/models/environment/cave_entrance/surface.gdshader")
+			hill.set_shader_parameter("stone", load("res://assets/models/environment/cave_entrance/albedo.png"))
+			hill.set_shader_parameter("grass", load("res://assets/art/forest/grass.webp"))
+			hill.set_shader_parameter("earth", load("res://assets/art/forest/earth.webp"))
+			node.material_override = hill
 		node.transform = Transform3D(basis, at)
 		root.add_child(node)
-		if role == "entrance":
-			var back := MeshInstance3D.new()
-			var back_shape := BoxMesh.new()
-			back_shape.size = Vector3(1.36, 1.90, 0.12)
-			back.mesh = back_shape
-			var dark := StandardMaterial3D.new()
-			dark.albedo_color = Color("101c1b")
-			dark.roughness = 1.0
-			back.material_override = dark
-			back.position = Vector3(0, 1.50, -0.92)
-			back.name = "TunnelDepth"
-			node.add_child(back)
 		owned[source.get_instance_id()] = true
 		entries.append({"source_id": source.get_instance_id(), "role": role, "source_foot": source.global_position, "transform": node.transform, "clear_width": opening, "mesh": mesh})
 	var report := {"owned_source_ids": owned, "entries": entries, "root": root}
 	root.set_meta("native_scenery_report", report)
 	return report
-
-static func _polygon_volume(tool: SurfaceTool, polygon: PackedVector2Array, bottom: float, top: float, broken := false) -> void:
-	if polygon.size() < 3:
-		return
-	var centre := Vector3.ZERO
-	var high := PackedVector3Array()
-	var low := PackedVector3Array()
-	var planar_centre := Vector2.ZERO
-	for point in polygon:
-		planar_centre += point
-	planar_centre /= polygon.size()
-	for i in polygon.size():
-		var p := polygon[i]
-		low.append(Vector3(p.x, bottom, p.y))
-		var peak := top
-		if broken:
-			var radius := SpatialWorld3D.radius_metres(NativeCavePlan.SOURCE_RADIUS)
-			var radial := Vector2(p.x, p.y + 0.85).length() / radius
-			peak = 0.50 + (top - 0.50) * pow(clampf(1.0 - radial, 0.0, 1.0), 0.60)
-			peak += 0.07 * sin(p.x * 3.1) * (1.0 - radial)
-		var roof_point := p
-		high.append(Vector3(roof_point.x, peak, roof_point.y))
-		centre += low[-1]
-	centre /= polygon.size()
-	if broken:
-		var radius := SpatialWorld3D.radius_metres(NativeCavePlan.SOURCE_RADIUS)
-		var radial := Vector2(centre.x, centre.z + 0.85).length() / radius
-		var peak := Vector3(centre.x, 0.50 + (top - 0.50) * pow(clampf(1.0 - radial, 0.0, 1.0), 0.60), centre.z)
-		for i: int in high.size():
-			NativeLandmarks3D._tri(tool, peak, high[i], high[(i + 1) % high.size()], Vector3.UP)
-	var indices := Geometry2D.triangulate_polygon(polygon)
-	for i in range(0, indices.size(), 3):
-		var a := high[indices[i]]
-		var b := high[indices[i + 1]]
-		var c := high[indices[i + 2]]
-		var normal := (b - a).cross(c - a).normalized()
-		if normal.y < 0:
-			normal = -normal
-		if not broken:
-			NativeLandmarks3D._tri(tool, a, b, c, normal)
-		NativeLandmarks3D._tri(tool, low[indices[i]], low[indices[i + 2]], low[indices[i + 1]], Vector3.DOWN)
-	for i in low.size():
-		_face(tool, low[i], low[(i + 1) % low.size()], high[(i + 1) % high.size()], high[i], centre + Vector3.UP * (top - bottom) * 0.5)
-
-static func _entrance_mesh(height: float, body_radius: float) -> ArrayMesh:
-	var tool := SurfaceTool.new()
-	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var circle := PackedVector2Array()
-	for i in 16:
-		circle.append(Vector2(cos(TAU * i / 16.0) * body_radius, -0.85 + sin(TAU * i / 16.0) * body_radius))
-	# The original transition body is a solid cliff circle, not a freely walkable
-	# doorway. A 0.50m visible ledge exceeds MAX_STEP and marks that whole envelope.
-	_polygon_volume(tool, circle, 0.0, 0.50)
-	var regions := [
-		PackedVector2Array([Vector2(-5, -5), Vector2(-0.7, -5), Vector2(-0.7, 5), Vector2(-5, 5)]),
-		PackedVector2Array([Vector2(0.7, -5), Vector2(5, -5), Vector2(5, 5), Vector2(0.7, 5)]),
-		PackedVector2Array([Vector2(-0.7, -5), Vector2(0.7, -5), Vector2(0.7, -0.95), Vector2(-0.7, -0.95)])
-	]
-	for region: PackedVector2Array in regions:
-		for polygon in Geometry2D.intersect_polygons(circle, region):
-			var fractured := PackedVector2Array()
-			for i: int in polygon.size():
-				var a := polygon[i]
-				var b := polygon[(i + 1) % polygon.size()]
-				var pieces := maxi(1, ceili(a.distance_to(b) / 0.60))
-				for part: int in pieces:
-					fractured.append(a.lerp(b, float(part) / pieces))
-			_polygon_volume(tool, fractured, 0.5, height + 0.20, true)
-	# 생성형 동굴 컨셉의 비대칭 파쇄암 입구. 규칙적인 석조 아치를 쓰지 않는다.
-	var inner := PackedVector2Array([Vector2(-0.70, 0.50), Vector2(-0.84, 1.35), Vector2(-0.66, 2.45), Vector2(-0.31, 2.88), Vector2(0.22, 3.02), Vector2(0.62, 2.58), Vector2(0.79, 1.52), Vector2(0.70, 0.50)])
-	var outer := PackedVector2Array([Vector2(-1.25, 0.50), Vector2(-1.32, 1.47), Vector2(-1.26, 2.67), Vector2(-0.54, 3.39), Vector2(0.29, 3.54), Vector2(1.03, 3.06), Vector2(1.32, 1.83), Vector2(1.23, 0.50)])
-	for i: int in inner.size():
-		inner[i].y = 0.50 + (inner[i].y - 0.50) * 0.82
-		outer[i].y = 0.50 + (outer[i].y - 0.50) * 0.82
-	for i in range(inner.size() - 1):
-		var a := Vector3(inner[i].x, inner[i].y, 0.10 + 0.07 * sin(i * 2.3))
-		var b := Vector3(inner[i + 1].x, inner[i + 1].y, 0.10 + 0.07 * sin((i + 1) * 2.3))
-		var c := Vector3(outer[i + 1].x, outer[i + 1].y, -0.30)
-		var d := Vector3(outer[i].x, outer[i].y, -0.30)
-		var ridge := (a + b + c + d) * 0.25 + Vector3(0.03 * sin(i), 0.03, 0.17)
-		for pair: Array in [[a, b], [b, c], [c, d], [d, a]]:
-			NativeLandmarks3D._tri(tool, pair[0], pair[1], ridge, Vector3.BACK)
-		# 실제로 뒤로 들어간 천장·측벽이 입구 안쪽의 어둠을 만든다.
-		var back_a := Vector3(a.x * 0.82, a.y, -1.15)
-		var back_b := Vector3(b.x * 0.82, b.y, -1.15)
-		_face(tool, a, back_a, back_b, b, Vector3(0, 1.6, -0.5))
-		var back_c := Vector3(c.x * 0.94, c.y - 0.12, -1.15)
-		var back_d := Vector3(d.x * 0.94, d.y - 0.12, -1.15)
-		var rock_center := (a + b + c + d + back_a + back_b + back_c + back_d) / 8.0
-		_face(tool, d, c, back_c, back_d, rock_center)
-		_face(tool, back_a, back_d, back_c, back_b, rock_center)
-	return tool.commit()

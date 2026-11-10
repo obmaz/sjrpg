@@ -3,30 +3,6 @@
   "license": "Original project artwork",
   "generator": "tools/preview3d/make_surface_variety.py",
   "materials": {
-    "wall_smith": {
-      "path": "assets/art/preview3d/wall_smith.webp",
-      "sha256": "eed310a7fc2873d2e45f9e31ac6646a2d91a58877a35d6f949f8a9a752099057",
-      "source": "assets/source/preview3d/surface-variety/wall_smith.png",
-      "source_sha256": "65236a773d66cda628fa635cbf987ed39efb6e31b535c13404edaf4bb82648e5",
-      "size": [
-        512,
-        512
-      ],
-      "tile_m": 2.56,
-      "seed": 92168
-    },
-    "wall_home": {
-      "path": "assets/art/preview3d/wall_home.webp",
-      "sha256": "ad4d6e0bcbed023bb46bdfce04a50d419b40437c1c2f28f8ca3454a713a82e3d",
-      "source": "assets/source/preview3d/surface-variety/wall_home.png",
-      "source_sha256": "432c19faf8a3e75d9a7bc8a032e3597e4da133a9f85425e4b4b28e07af3722a5",
-      "size": [
-        512,
-        512
-      ],
-      "tile_m": 2.56,
-      "seed": 92230
-    },
     "door_shop": {
       "path": "assets/art/preview3d/door_shop.webp",
       "sha256": "9fc1860325ea828c223a36cad91a89f9a30c2ccd5addd58a0a6dc2997a75bb7b",
@@ -197,7 +173,7 @@
       "seed": 92664
     }
   },
-  "generator_sha256": "1d75a8908792d183335a2ade1319a5232dfb84e956168debd45e1240c4d80294",
+  "generator_sha256": "1d868e3677f5c7a6e1440182da87cdba33f5a8b22d7864eee3d279420888d257",
   "geometry": {
     "native_enemy_models.gd": "164dfd324bcf4e93fc45ae512101f2a18ebc50eee2da2ea14635322cb6fcbd6c",
     "native_house_3d.gd": "0a310f4bab1b4ddee619a8c16dd3aa41a75bba863c2bad8f54fbcc602978540c",

@@ -3,6 +3,7 @@
 ## 개발과 배포
 
 - [개발 구조](development.md)
+- [독립 에셋 제작·다른 AI와의 협업](asset-workflow.md)
 - [3D 에셋 제작 기준](../../docs/3d-asset-guide.md)
 - [무료 에셋·라이선스](../../docs/free-asset-sources.md)
 - [Web·Android와 GPU 압축](platform-exports.md)

@@ -237,7 +237,7 @@ func _build_quest_sites(world: Node2D) -> void:
 	var cave := IsoSprite.new().setup(cdef, float(cdef["world_height"]) * 1.6)
 	cave.position = Iso.project(cave_ground)
 	world.add_child(cave)
-	circles.append([cave.position + Vector2(0, -60), NativeCavePlan.SOURCE_RADIUS])
+	circles.append([cave.position + NativeCavePlan.CENTER_OFFSET, NativeCavePlan.SOURCE_RADIUS])
 	clear_rects.append(Rect2(cave.position - Vector2(300, 280), Vector2(600, 420)))
 	quest_sites["sun"] = cave.position + Vector2(150, 90)
 	_npc("수녀 엘린", 1, quest_sites["roots"] + Vector2(-30, 10), world, true)

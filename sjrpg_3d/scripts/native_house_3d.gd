@@ -10,10 +10,10 @@ const MATERIAL_KEYS := ["stone", "wall", "slate", "wood", "iron", "glass"]
 ## Each house reads as its own building: wall infill, trim stone and roof cover
 ## differ by role, while timber, iron and glass stay shared with the family.
 const STYLES := {
-	"nw": {"wall": "wall_shop", "stone": "stone", "slate": "roof_shop", "wood": "door_shop", "label": "half-timbered merchant shop"},
-	"ne": {"wall": "wall_smith", "stone": "stone", "slate": "roof_smith", "wood": "door_smith", "label": "fieldstone smithy"},
-	"sw": {"wall": "wall_stable", "stone": "rubble", "slate": "shingle", "wood": "door_stable", "label": "timber stable house"},
-	"se": {"wall": "wall_home", "stone": "stone", "slate": "roof_home", "wood": "door_home", "label": "brick dormer house"},
+	"nw": {"wall": "shop", "stone": "stone", "slate": "roof_shop", "wood": "door_shop", "label": "half-timbered merchant shop"},
+	"ne": {"wall": "smith", "stone": "stone", "slate": "roof_smith", "wood": "door_smith", "label": "fieldstone smithy"},
+	"sw": {"wall": "stable", "stone": "rubble", "slate": "shingle", "wood": "door_stable", "label": "timber stable house"},
+	"se": {"wall": "home", "stone": "stone", "slate": "roof_home", "wood": "door_home", "label": "brick dormer house"},
 }
 const TIMBER_TILE := 1.0 / 0.65
 const SLATE_TILE := 2.6
@@ -39,7 +39,8 @@ static func build(presenter: Node, root: Node3D, key: String, width: float, dept
 	var builder := NativeHouse3D.new()
 	builder._root = root
 	for material: String in MATERIAL_KEYS:
-		builder._materials[material] = presenter._materials[resource_key(key, material)]
+		if material != "wall":
+			builder._materials[material] = presenter._materials[resource_key(key, material)]
 	return builder._build(key, width, depth, height)
 
 
@@ -58,6 +59,8 @@ func _build(key: String, width: float, depth: float, height: float) -> Dictionar
 	_box_arrays = unit.surface_get_arrays(0)
 	var eave_height := height * (1.24 if key == "nw" else (1.10 if key == "se" else 1.0)) + FLOOR
 	var rise := 1.80 if key == "nw" else (1.40 if key == "ne" else (1.55 if key == "sw" else 1.90))
+	var surface_id: String = STYLES[key]["wall"]
+	_materials["wall"] = NativeAssetSurface.material(surface_id, Vector3(width - 0.40, eave_height, depth - 0.40))
 	var body_width := width - 0.40
 	var body_depth := depth - 0.40
 	var door_width := minf(1.38 if key in ["nw", "sw"] else 1.10, body_width * 0.38)
@@ -134,7 +137,7 @@ func _build(key: String, width: float, depth: float, height: float) -> Dictionar
 		"collision_note": "Existing whole-house footprint remains solid; doors are closed, smith/stable recesses carry blocking worktops or rails. No enterable interior is promised.",
 		"timber_mapping": "beam-local longitudinal grain, shared existing door material; metre UVs",
 		"timber_tile_m": TIMBER_TILE, "slate_tile_m": SLATE_TILE, "slate_tiles": _slate_tiles, "corner_quoins": _quoins,
-		"projection_review": "Pending actual multi-face camera captures; geometry uses native orthogonal XYZ without sprite baking."}
+		"surface_mapping": "one unique atlas cell per local wall face; structural trim retains metre UVs"}
 	_root.set_meta("native_house", report)
 	return report
 

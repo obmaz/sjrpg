@@ -36,13 +36,7 @@ def make(kind, seed):
     if kind.startswith('roof_'):
         colors={'roof_shop':['7d5637','a2784c','91613c'], 'roof_smith':['333c42','4d5152','3e454c'], 'roof_home':['39585a','456866','587571']}
         return m.roof_tiles(SIZE,seed,[m.srgb(c) for c in colors[kind]],'20282a',lambda u:.91+.09*np.cos(u*np.pi*2),fine=noise,tone=.09)
-    if kind=='wall_smith':
-        rgb=m.coursed(SIZE,seed,2.56,12,(.30,.65),[m.srgb(c) for c in ['615d59','79716a','69685f']],.012,'403f39',noise)
-    elif kind=='wall_home':
-        rgb=m.coursed(SIZE,seed,2.56,24,(.22,.31),[m.srgb(c) for c in ['965e4c','825747','a7735e']],.009,'a89d85',noise)
-        diamond=(np.abs((x*4)%1-.5)+np.abs((y*4)%1-.5))<.25
-        rgb=np.where(diamond[:,:,None],rgb*np.array([.72,.84,.86]),rgb)
-    elif kind.startswith('rock_'):
+    if kind.startswith('rock_'):
         base=m.rubble(SIZE)
         patch=m.periodic_noise(SIZE,4,seed,3)
         if kind=='rock_lichen':
@@ -63,10 +57,9 @@ def make(kind, seed):
 
 def main():
     SOURCE.mkdir(parents=True,exist_ok=True); (SOURCE/'.gdignore').touch()
-    kinds=['wall_shop','wall_smith','wall_stable','wall_home','door_shop','door_smith','door_stable','door_home','roof_shop','roof_smith','roof_home','rock_lichen','rock_iron','ground_heather','ground_moss','beast_fur','grave_bone','scar_skin']
+    kinds=['door_shop','door_smith','door_stable','door_home','roof_shop','roof_smith','roof_home','rock_lichen','rock_iron','ground_heather','ground_moss','beast_fur','grave_bone','scar_skin']
     record={'제작':'원본 수식 기반 절차적 알베도. 집별 문양·조각과 자연물 변형. 법선/거칠기 맵은 만들지 않았다.','license':'Original project artwork','generator':str(Path(__file__).relative_to(ROOT)),'materials':{}}
-    for i,kind in enumerate(kinds):
-        if kind in ['wall_shop','wall_stable']: continue  # 생성형 전용 벽면, 기존 시드 인덱스 보존
+    for i,kind in enumerate(kinds, start=4):
         image=Image.fromarray(np.clip(make(kind,92137+i*31),0,255).astype('uint8'))
         source=SOURCE/(kind+'.png'); image.save(source)
         path=ART/(kind+'.webp'); image.save(path,'WEBP',quality=92,method=6)

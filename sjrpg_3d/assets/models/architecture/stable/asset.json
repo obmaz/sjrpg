@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "stable",
+  "kind": "surface",
+  "mapping": "facade",
+  "albedo": "albedo.png",
+  "atlasGrid": [
+    2,
+    2
+  ],
+  "tileMetres": 2.56,
+  "roughness": 0.94
+}

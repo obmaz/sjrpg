@@ -72,7 +72,6 @@ static func build(preview: Node, parent: Node3D) -> Node3D:
 	for index: int in bays * 2:
 		var x := (index + 0.5) * length / (bays * 2)
 		_box(paving, Vector3(x, 0.035, width * 0.5), Vector3(length / (bays * 2) - 0.012, 0.03, width - 0.25))
-	var trim := preview._materials["granite"] as StandardMaterial3D
 	var metal := (preview._materials["iron"] as StandardMaterial3D).duplicate() as StandardMaterial3D
 	metal.metallic = 0.55
 	metal.roughness = 0.68
@@ -80,7 +79,7 @@ static func build(preview: Node, parent: Node3D) -> Node3D:
 	var index := 0
 	for tool: SurfaceTool in [masonry, caps, iron, paving]:
 		var mesh := tool.commit()
-		var material: Material = [preview._materials["stone"], trim, metal, preview._materials["paving"]][index]
+		var material: Material = [NativeAssetSurface.material("bridge", Vector3.ONE, 0), NativeAssetSurface.material("bridge", Vector3.ONE, 1), metal, NativeAssetSurface.material("bridge", Vector3.ONE, 2)][index]
 		var node := MeshInstance3D.new()
 		node.mesh = mesh
 		node.material_override = material

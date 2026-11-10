@@ -2,26 +2,6 @@
   "기준": "docs/3d-asset-guide.md와 사용자 원본 화면. 컨셉은 사용자 승인이나 실제 기하 검증의 대체물이 아님.",
   "images": [
     {
-      "path": "assets/source/preview3d/world-refinement/cave-concept.png",
-      "sha256": "b6d27056709f3aa312e643966acfbe9e8c14ab1e8866a17209a3c991f17512b1",
-      "purpose": "모델 제작 참고 컨셉",
-      "size": [
-        1536,
-        1024
-      ],
-      "tool": "image_gen.imagegen",
-      "prompt": {
-        "path": "assets/source/preview3d/world-refinement/cave-prompt.txt",
-        "sha256": "aef82d144728602c3ba50812c2beb0d136456da2629dbd745f761a4d5c3be283"
-      },
-      "actual_references": [
-        {
-          "path": "assets/source/style/approved-game-reference.jpg",
-          "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
-        }
-      ]
-    },
-    {
       "path": "assets/source/preview3d/world-refinement/terrain-concept.png",
       "sha256": "e19098093782130af8c6bf81d93ee71d47aa188a4fe19e31ff9e1b648024fbae",
       "purpose": "모델 제작 참고 컨셉",
@@ -69,140 +49,14 @@
         "sha256": "c4f81fa840cfe0c63f0eaee26426a656a6f8c4e829cb19bf45d81c4a43c55631"
       },
       "derivation": "생성 원본 픽셀을 수정하지 않고 복사. 법선·높이·거칠기 맵은 생성하지 않음."
-    },
-    {
-      "path": "assets/source/preview3d/world-refinement/shop-plaster.png",
-      "sha256": "632eca10ca599dc2a3fb09c44c6c3dd99c05188f9668c510137e2d27139a8645",
-      "purpose": "불투명 알베도, 2.56m",
-      "size": [
-        1254,
-        1254
-      ],
-      "tool": "image_gen.imagegen",
-      "prompt": {
-        "path": "assets/source/preview3d/world-refinement/shop-prompt.txt",
-        "sha256": "397e71e7ad54f1b3332280d7e4c96c52cb5e7859463c634e3068a71e8ca7558c"
-      },
-      "actual_references": [
-        {
-          "path": "assets/source/style/approved-game-reference.jpg",
-          "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
-        }
-      ],
-      "runtime": {
-        "path": "assets/art/preview3d/shop-plaster.png",
-        "sha256": "632eca10ca599dc2a3fb09c44c6c3dd99c05188f9668c510137e2d27139a8645"
-      },
-      "derivation": "생성 원본 픽셀을 수정하지 않고 복사. 법선·높이·거칠기 맵은 생성하지 않음."
-    },
-    {
-      "path": "assets/source/preview3d/world-refinement/stable-oak.png",
-      "sha256": "51c1d9f30c775e86f990521924848ba63f8c4a8cd248aec70497a5cb0fe3caef",
-      "purpose": "불투명 알베도, 2.56m",
-      "size": [
-        1254,
-        1254
-      ],
-      "tool": "image_gen.imagegen",
-      "prompt": {
-        "path": "assets/source/preview3d/world-refinement/stable-prompt.txt",
-        "sha256": "86dda9c92a885a099a125616614ce7801c8a56e8d95f15f0504a66b6e6ff56e5"
-      },
-      "actual_references": [
-        {
-          "path": "assets/source/style/approved-game-reference.jpg",
-          "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
-        }
-      ],
-      "runtime": {
-        "path": "assets/art/preview3d/stable-oak.png",
-        "sha256": "51c1d9f30c775e86f990521924848ba63f8c4a8cd248aec70497a5cb0fe3caef"
-      },
-      "derivation": "생성 원본 픽셀을 수정하지 않고 복사. 법선·높이·거칠기 맵은 생성하지 않음."
     }
   ],
   "modeling": {
-    "cave": "생성형 컨셉을 참고한 넓은 파쇄암 사면, 비대칭 입구와 두께가 있는 천장/측벽. NativeCavePlan.SOURCE_RADIUS=200으로 실제 원형 전이 지형과 표시 범위를 함께 확장.",
+    "cave": "assets/models/environment/cave_entrance의 구릉 모델과 공용 치수. 채택 컨셉은 assets/source/architecture/cave-concept/original.png.",
     "terrain": "모서리를 깎은 암반 선반·흙 사면의 실제 정점을 NativeTerrainForms로 표시/SOLID에 공유. 기존 상면·경사로의 높이는 유지하고 새 잔디 4종의 월드 좌표 군락을 같은 2.56m로 혼합.",
     "chapel": "source 배율 1.25, NativeChapelPlan의 실제 3단 계단과 FLOOR 공유.",
     "fountain": "모든 정점·물줄기·source footprint 2배. 중심 유지, root scale 단위값.",
     "walls": "생성 알베도4종과 기존 슬레이트 재사용. 사용자가 첨부한 석조 성채의 높은 원형 망루·원뿔 지붕·돌출 상부를 구조 참고로 제작. 몸체 반경1.30m, 처마5.05m, 지붕 정상6.95m. 실제 아치 창·10cm 깊이의 뒷면·8개 돌 받침. 16각 망루의 몸체/상층/원뿔 SOLID가 같은 설계를 사용한다."
-  },
-  "validation": {
-    "unit_and_integration": {
-      "cases": 133,
-      "passed": 133,
-      "segments": [
-        {
-          "log": "build/reports/refinement-complete-check.log",
-          "passed": 107,
-          "note": "전체 실행이 사용자 중단되기 전 PASS가 기록된 케이스"
-        },
-        {
-          "log": "build/reports/refinement-remaining-check.log",
-          "passed": 26,
-          "failed": 0
-        }
-      ],
-      "merged_grass_checks": {
-        "cases": 9,
-        "failed": 0,
-        "log": "build/reports/refinement-merged-check.log"
-      },
-      "native_fountain_authoring_and_glb_checks": 7
-    },
-    "web_export": {
-      "log": "build/reports/main-push-fixed-export.log",
-      "controlled_gpu_textures": 17,
-      "passed": true,
-      "pack": "index-eab8c519a58293570892.pck",
-      "bytes": 43655172,
-      "sha256": "eab8c519a582935708923cdc85fa345e39d010b8ef2284b0af5536619800270a"
-    },
-    "browser": {
-      "state": "건축·재질·공격의 실제 Chromium 검수 완료. 이동 복구 변경은 post_collision_fix 검사와 CI 브라우저 단계에서 별도로 검증한다.",
-      "orientations": [
-        [
-          1280,
-          720
-        ],
-        [
-          720,
-          1280
-        ]
-      ],
-      "environment_captures": 6,
-      "attack_captures": 4,
-      "native_enemy_species_including_crawler": 6,
-      "reports": [
-        {
-          "path": "build/review/world-refinement/push-environment-capture.json",
-          "captures": 6,
-          "console_errors": 0
-        },
-        {
-          "path": "build/review/world-refinement/push-attack-capture.json",
-          "captures": 4,
-          "console_errors": 0
-        }
-      ],
-      "physical_device_tested": false,
-      "performance_evidence": false
-    },
-    "ci": {
-      "workflow": "Build web and deploy to GitHub Pages",
-      "trigger": "main push: 전체 검사·브라우저 검수·공개 배포를 자동 실행"
-    },
-    "post_collision_fix": {
-      "cases": 14,
-      "failed": 0,
-      "log": "build/reports/main-push-merged-proof.log",
-      "coverage": "원격 성능 개선과 합친 뒤 전체 검사 앞부분·다리 이동 30조합·계단 지지·바닥 높이·공간 스윕·프레임 비용 계약",
-      "cause": "완료된 스윕에 겹침 쿼리를 다시 적용하면서 수십 μm의 정상 접촉도 이동 취소로 처리했다. 높이 보정에 필요한 충돌 검사는 유지한다.",
-      "maximum_threshold_contact_m": 5.38825988769531e-05,
-      "allowed_contact_error_m": 0.0001,
-      "deliberate_penetration_detected_m": 0.0296802520751953
-    }
   },
   "shared_grass": {
     "manifest": "assets/source/preview3d/grass-variety/manifest.json",
@@ -220,8 +74,8 @@
       "sha256": "e6eb9b7378e8b817ae0751e3aa78bd9cbff57c72f1c961528c6c2895425454da"
     },
     {
-      "path": "scripts/native_cave_plan.gd",
-      "sha256": "0b0d93f8def9a43804e288c4f78fee192d189014330d87cfde621c94dcfed88b"
+      "path": "assets/models/environment/cave_entrance/plan.gd",
+      "sha256": "c40b4939c736848920b6e167b3490cf72a161531c897cb62a40143516ca10be4"
     },
     {
       "path": "scripts/native_chapel_plan.gd",
@@ -241,7 +95,7 @@
     },
     {
       "path": "scripts/native_scenery_props_3d.gd",
-      "sha256": "b981f6b010a85b09aec6f07a174c850ca49f03feffe46de61cbfca6d5024f59c"
+      "sha256": "0ca0c2a4c25b0bdd125c137419d8e7d39a2d0e4205c72d57d69ea45587e69bb7"
     },
     {
       "path": "scripts/native_landmarks_3d.gd",
@@ -249,7 +103,7 @@
     },
     {
       "path": "scripts/ortho_3d_chapel.gd",
-      "sha256": "b5a1d0b006a34493901c3500f8daaad92228e5d5b218c9e6d0b7a6596fc1a63f"
+      "sha256": "4ffb1fbc530c6faf89414b1bf60329a377db957d1de1df06b68e740a633c3dfd"
     },
     {
       "path": "scripts/ortho_3d_fortification.gd",
@@ -257,11 +111,11 @@
     },
     {
       "path": "scripts/spatial_world_3d.gd",
-      "sha256": "b05eaf2853b4c7e6515ed91975a1ccfe44a5c19d7824f57866425e128c3dc8da"
+      "sha256": "da59e3665ad31bdec99863e1ff1959ebf5d5643cc46ba4aeecc8b8ff4401d1a4"
     },
     {
       "path": "scripts/village.gd",
-      "sha256": "6ea1b13b4f51e6881bc4dcaa0217b2e66709d2772133ad4f4319adb6fd4e424c"
+      "sha256": "4da6b42cac30893ade598062c5fc0bc2094d7e77d5e4b9ddd5d0a326cd6c9364"
     },
     {
       "path": "scripts/native_ground.gdshader",
@@ -302,36 +156,6 @@
         "sha256": "bf862f2b2f2caa8297d8ca6dc5419963d747a9f33f977a8588b9dda65cfb7688"
       }
     ],
-    "validation_cases": [
-      "ortho_3d_fortification",
-      "hud_header",
-      "hud_layout"
-    ],
-    "browser_capture_directory": "build/review/roofed-fortress/",
-    "physical_device_tested": false,
-    "browser": {
-      "proof": "build/review/roofed-fortress/browser-proof.json",
-      "sha256": "deca81010fbcadc3ae48089339270f9e43d662ca4c1fd977208e4bae3a4c41a6",
-      "captures": [
-        "corner0-full.png",
-        "corner1-full.png",
-        "corner2-full.png",
-        "corner3-full.png",
-        "hud-landscape.png"
-      ],
-      "console_errors": 0,
-      "actual_touch_landscape_skill_entry": true,
-      "quality": "low: 네 모서리 전체/모바일 가로 터치. 기본 화질: 세로 HUD/모서리 확대.",
-      "baseline_commit": "d9e1d1721b853c5b4c0016a3c936a51be7af9bc1",
-      "baseline_captures": [
-        "corner0-before.png",
-        "hud-portrait-before.png"
-      ]
-    },
-    "full_check": {
-      "cases": 135,
-      "failed": 0,
-      "log": "build/reports/fortress-full-check.log"
-    }
+    "physical_device_tested": false
   }
 }

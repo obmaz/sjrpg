@@ -39,37 +39,50 @@ func run() -> void:
 			entrance_count += 1
 			var transform: Transform3D = entry["transform"]
 			var source_foot: Vector2 = entry["source_foot"]
-			var body_centre := Ortho3DPreview.ground_position(source_foot + Vector2(0, -60))
+			var body_centre := Ortho3DPreview.ground_position(source_foot + NativeCavePlan.CENTER_OFFSET)
 			var native_mesh: ArrayMesh = entry["mesh"]
+			check("cave is a broad hill with a large entrance", native_mesh.get_aabb().size.x > 10.0 and native_mesh.get_aabb().end.y > 4.5 and float(entry["clear_width"]) > 3.0)
 			var arrays := native_mesh.surface_get_arrays(0)
 			var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 			var fits_original_circle := not points.is_empty()
-			var foundation_covers_body := false
+			var has_ground_contact := false
 			var radius := SpatialWorld3D.radius_metres(NativeCavePlan.SOURCE_RADIUS)
 			for point in points:
 				var world := transform * point
 				var distance := Vector2(world.x - body_centre.x, world.z - body_centre.z).length()
 				fits_original_circle = fits_original_circle and distance <= radius + 0.002
-				foundation_covers_body = foundation_covers_body or (is_equal_approx(point.y, 0.5) and distance >= radius - 0.002)
-			check("field cave has volumetric cliff mass within the original circular blocker", fits_original_circle and foundation_covers_body and 0.50 > SpatialWorld3D.MAX_STEP)
-			var backs := forest.find_children("TunnelDepth", "MeshInstance3D", true, false)
-			check("field cave transition has actual dark tunnel depth behind its raised mouth", backs.size() == 1 and (backs[0].mesh as BoxMesh).size.z > 0.1)
-			if backs.size() == 1:
-				var back := backs[0] as MeshInstance3D
-				var shape := back.mesh as BoxMesh
-				var visible_back := true
-				for x in [-0.25, 0.0, 0.25]:
-					for y in [1.0, 1.8, 2.2]:
-						var nearest_rock := -INF
-						for i in range(0, points.size(), 3):
-							var hit: Variant = Geometry3D.ray_intersects_triangle(Vector3(x, y, 4), Vector3.FORWARD, points[i], points[i + 1], points[i + 2])
-							if hit != null:
-								var hit_point: Vector3 = hit
-								nearest_rock = maxf(nearest_rock, hit_point.z)
-						visible_back = visible_back and back.position.z + shape.size.z * 0.5 > nearest_rock + 0.02
-				check("the dark tunnel back is visible ahead of rear rock, never coplanar or buried", visible_back)
+				has_ground_contact = has_ground_contact or (is_zero_approx(point.y))
+			check("hill fits its shared placement envelope and meets the real ground", fits_original_circle and has_ground_contact)
+			var deep_rock := true
+			for x: float in [-1.0, 0.0, 1.0]:
+				for y: float in [1.0, 1.8, 2.2]:
+					var nearest := -INF
+					for i in range(0,points.size(),3):
+						var hit: Variant = Geometry3D.ray_intersects_triangle(Vector3(x,y,4),Vector3.FORWARD,points[i],points[i+1],points[i+2])
+						if hit is Vector3:
+							nearest = maxf(nearest,hit.z)
+					deep_rock = deep_rock and nearest < -3.40 and nearest > -3.60
+			check("entrance shows three metres of actual recessed stone instead of a flat dark plane", deep_rock and forest.find_children("TunnelDepth","MeshInstance3D",true,false).is_empty())
 	check("actual field rocks and the existing scene-transition cave mouth have native owners", rock_count > 0 and entrance_count == 1)
-	game.player.position = game.dungeon.entry_point()
+	game.player.set_process(false)
+	game.spatial_world.teleport_source_actor(game.player, game.dungeon.entry_point() + Vector2(0, 260), Player.RADIUS)
+	for step: int in 80:
+		game.spatial_world.move_source_actor(game.player, game.player.position.move_toward(game.dungeon.entry_point(), 4.0), Player.RADIUS)
+	check("real capsule can approach the enlarged hill and use the original cave interaction", game.dungeon.enter_block_reason().is_empty(), JSON.stringify({"at":str(game.player.position),"entry":str(game.dungeon.entry_point()),"reason":game.dungeon.enter_block_reason()}))
+	var hill_center := NativeCavePlan.body_center(game.dungeon.entry_point())
+	for step: int in 100:
+		game.spatial_world.move_source_actor(game.player, game.player.position.move_toward(hill_center, 4.0), Player.RADIUS)
+	var cave_frame := NativeCavePlan.frame(game.dungeon.entry_point())
+	var local := cave_frame.affine_inverse() * Ortho3DPreview.ground_position(game.player.position)
+	check("real capsule walks into the recess and stops at the rear rock", absf(local.x) < 1.96 and local.z < -2.0 and local.z > -3.5 and absf(game.spatial_world.height_at(game.player.position)) < 0.01)
+	var side_ray := PhysicsRayQueryParameters3D.create(cave_frame * Vector3(0,1.0,-1.0), cave_frame * Vector3(3.0,1.0,-1.0), SpatialWorld3D.SOLID)
+	check("the actual entrance has solid rock at its side rather than a full circular blocker", not game.spatial_world.get_world_3d().direct_space_state.intersect_ray(side_ray).is_empty())
+	var roof_ray := PhysicsRayQueryParameters3D.create(cave_frame * Vector3(0,1.0,-1.0), cave_frame * Vector3(0,4.0,-1.0), SpatialWorld3D.SOLID)
+	var roof_hit: Dictionary = game.spatial_world.get_world_3d().direct_space_state.intersect_ray(roof_ray)
+	check("the walkable entrance also has actual solid rock overhead", not roof_hit.is_empty() and roof_hit["collider"].get_meta("physics_kind","") == "NativeCaveRoof")
+	for step: int in 120:
+		game.spatial_world.move_source_actor(game.player, game.player.position.move_toward(game.dungeon.entry_point(), 4.0), Player.RADIUS)
+	check("walking out of the rock recess retains the existing transition interaction", game.dungeon.enter_block_reason().is_empty())
 	await _frames(2)
 	if check("existing cave entry remains playable", game.dungeon.enter()):
 		preview._sync_scope()

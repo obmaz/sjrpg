@@ -108,6 +108,7 @@ def main():
     rows = packed["entries"]
     by_name = {r["path"].removeprefix("res://"): r for r in rows}
     text_files = list((PROJECT / "scripts").glob("**/*.gd")) + list((PROJECT / "scenes").glob("**/*.tscn"))
+    text_files += list((PROJECT / "assets/models").rglob("*.gd")) + list((PROJECT / "assets/models").rglob("*.tscn"))
     source_references = []
     for file in text_files:
         for line_number, line in enumerate(file.read_text().splitlines(), 1):
@@ -147,7 +148,7 @@ def main():
                "ignored_ancestor": any((folder / ".gdignore").exists() for folder in [file.parent, *file.parents] if folder == PROJECT or PROJECT in folder.parents)}
         images.append(row)
     meshes = [{"path": str(file.relative_to(PROJECT)), "encoded_bytes": file.stat().st_size, "sha256": sha256_file(file), **glb_metadata(file)}
-              for file in sorted((PROJECT / "assets/art").rglob("*.glb"))]
+              for file in sorted(list((PROJECT / "assets/art").rglob("*.glb")) + list((PROJECT / "assets/models").rglob("*.glb")))]
     source_pack = [r for r in rows if "assets/source/" in r["path"]]
     source_images_packed = [r for r in images if r["path"].startswith("assets/source/") and (r["packed_import_bytes"] or r["directly_packed_bytes"])]
     exported_images = [r for r in images if r["packed_import_bytes"] or r["directly_packed_bytes"]]

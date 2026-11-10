@@ -1,0 +1,21 @@
+{
+  "tool": "image_gen.imagegen",
+  "source": "original.png",
+  "prompt": "prompt.txt",
+  "sha256": "0950cc3a370bbabb60a3c31aeec3d83b771e60554d68c358d59f993d513a307d",
+  "usage": "구릉 아래의 큰 입구·층진 암반·깊은 통로를 위한 구조 컨셉. 평면 배경으로 사용하지 않는다.",
+  "implementation": [
+    {
+      "path": "assets/models/environment/cave_entrance/model.gd",
+      "sha256": "396d0c1b9ed010c4cf7a5246072395f51a346531d4821163414cd944f3a8ab06"
+    },
+    {
+      "path": "assets/models/environment/cave_entrance/plan.gd",
+      "sha256": "c40b4939c736848920b6e167b3490cf72a161531c897cb62a40143516ca10be4"
+    },
+    {
+      "path": "assets/models/environment/cave_entrance/surface.gdshader",
+      "sha256": "763ac8fa3e8c85b582a75e00e18a39d4710f01f523c576f91a09005e44b71021"
+    }
+  ]
+}

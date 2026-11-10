@@ -51,7 +51,7 @@ func run() -> void:
 		print("ART_AUDIT native_house " + JSON.stringify({"key": key, "triangles": report["triangles"], "surfaces": report["surfaces"], "width": width, "depth": depth, "height_max": report["height_max"], "door_x": report["door_x"], "door_width": report["door_width"], "door_height": report["door_height"], "door_approach": {"x": report["door_approach"].position.x, "z": report["door_approach"].position.y, "width": report["door_approach"].size.x, "depth": report["door_approach"].size.y}, "openings": report["openings"].size(), "bounds_min": [actual_bounds.position.x, actual_bounds.position.y, actual_bounds.position.z], "bounds_max": [actual_bounds.end.x, actual_bounds.end.y, actual_bounds.end.z]}))
 		check("native house stays within its triangle/material budget: " + key, int(report["triangles"]) >= 6000 and int(report["triangles"]) <= 12000 and int(report["surfaces"]) == 6)
 		var style: Dictionary = report["style"]
-		check("each house has its own wall infill and roof cover: " + key, str(style["wall"]) != "stone" and preview._materials.has(str(style["wall"])) and preview._materials.has(str(style["slate"])))
+		check("each house has its own wall infill and roof cover: " + key, str(style["wall"]) != "stone" and FileAccess.file_exists(NativeAssetSurface.ROOT + {"nw":"shop","ne":"smith","sw":"stable","se":"home"}[key] + "/asset.json") and preview._materials.has(str(style["slate"])))
 		check("roof edge thickness remains inside recorded overhead allowance: " + key, actual_bounds.position.x >= -width * 0.5 - 0.24 and actual_bounds.end.x <= width * 0.5 + 0.24 and actual_bounds.position.z >= -depth * 0.5 - 0.24 and actual_bounds.end.z <= depth * 0.5 + 0.24)
 		check("house keeps the actual old collision footprint: " + key, (report["footprint"] as Vector2).is_equal_approx(Vector2(width, depth)) and report["closed_door"])
 		check("all houses use bonded edge dressings and staggered slate volumes: " + key, int(report["corner_quoins"]) >= 24 and int(report["slate_tiles"]) >= 100)
@@ -65,7 +65,11 @@ func run() -> void:
 		var measured_joints := 0
 		var measured_lips := 0
 		for mesh in meshes:
-			check("house reuses only its shared existing materials: " + str(mesh.name), NativeHouse3D.MATERIAL_KEYS.any(func(material: String) -> bool: return mesh.material_override == preview._materials[NativeHouse3D.resource_key(key, material)]))
+			var role := String(mesh.name).trim_prefix("House_" + key + "_")
+			if role == "wall":
+				check("house installs its independent facade material", mesh.material_override is ShaderMaterial and mesh.material_override.has_meta("asset_id"))
+			else:
+				check("house keeps shared structural materials", mesh.material_override == preview._materials[NativeHouse3D.resource_key(key, role)])
 			for surface in mesh.mesh.get_surface_count():
 				var arrays := mesh.mesh.surface_get_arrays(surface)
 				var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
