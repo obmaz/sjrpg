@@ -43,8 +43,6 @@ static var _card_shader: Shader
 static var _add_shader: Shader
 static var _actor_flash_shader: Shader
 static var _impact_texture: Texture2D
-## Every camera card is the same unit quad scaled by its instance transform.
-static var _card_quad: QuadMesh
 
 var game: Node2D
 var viewport: SubViewport
@@ -72,6 +70,9 @@ var _probe_enabled := false
 var _labels := {}
 ## Retired effect cards and combat-text labels wait here hidden. Combat spawns
 ## and expires them constantly; reuse avoids creating GPU materials and meshes.
+## Every camera card is the same unit quad scaled by its instance transform. It
+## belongs to this presenter, so it is released with the stage, not at engine exit.
+var _card_quad: QuadMesh
 var _card_pool: Array[MeshInstance3D] = []
 var _label_pool: Array[Label3D] = []
 var card_builds := 0
