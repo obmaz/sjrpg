@@ -17,7 +17,7 @@ func run() -> void:
 	game.player.position = point
 	preview._sync_scope()
 	environment.sync(0.0, true)
-	check("leaving town never restores the archived canvas renderer", preview.display.visible and preview._native_visible and game.field_root.visibility_layer == 0 and preview.viewport.render_target_update_mode == SubViewport.UPDATE_ALWAYS)
+	check("leaving town never restores the archived canvas renderer", preview.display.visible and game.field_root.visibility_layer == 0 and preview.viewport.render_target_update_mode == SubViewport.UPDATE_ALWAYS)
 	check("forest uses its spatial realm group", environment.forest.visible and environment.report["scope"] == "forest")
 	var root_count := environment.forest.get_child_count()
 	for index in 4:
@@ -32,7 +32,7 @@ func run() -> void:
 		preview._sync_scope()
 		preview._affordances.sync()
 		environment.sync(0.0, true)
-		check("cave switches spatial groups without a2D fallback", not environment.forest.visible and environment.cave.visible and preview.display.visible and preview._native_visible and game.dungeon._root.visibility_layer == 0)
+		check("cave switches spatial groups without a2D fallback", not environment.forest.visible and environment.cave.visible and preview.display.visible and game.dungeon._root.visibility_layer == 0)
 		check("cave uses actual textured spatial floors and wall volumes", int(environment.report["cave_walls"]) > 10 and int(environment.report["cave_sprites"]) == 0 and int(environment.report.get("native_cave_lanterns", 0)) == 10 and int(environment.report["cave_groups"]) == 0 and int(environment.report.get("native_cave_scenery", 0)) == 6)
 		check("native cave lamps follow the ten authored lantern pivots", environment._cave_lights.size() == 10)
 		check("native cave labels and portals exclude the town", environment.report["scope"] == "cave" and preview._affordances._art.is_empty())
@@ -46,6 +46,6 @@ func run() -> void:
 		check("cave return never shows source canvas even transiently", not game.field_root.visible)
 		preview._sync_scope()
 		environment.sync(0.0, true)
-		check("cave return restores the native forest only", environment.forest.visible and not environment.cave.visible and game.field_root.visibility_layer == 0 and preview._native_visible)
+		check("cave return restores the native forest only", environment.forest.visible and not environment.cave.visible and game.field_root.visibility_layer == 0)
 	game.queue_free()
 	await _frames(2)

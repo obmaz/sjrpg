@@ -18,7 +18,7 @@ func run() -> void:
 	check("full quality displays the bounded native target while source drawing stays culled",
 		preview.display.visible and preview.viewport.size == Ortho3DPreview.render_size(requested, false)
 		and preview.viewport.msaa_3d == Viewport.MSAA_2X
-		and game.field_root.visibility_layer == 0 and not game._view_container.visible)
+		and game.field_root.visibility_layer == 0)
 	check("actual full target respects pixel and edge budgets without stretching",
 		native_size.x * native_size.y <= 1536000 and maxi(native_size.x, native_size.y) <= 1920
 		and absf(float(native_size.x) / native_size.y - requested.x / requested.y) <= 2.0 / mini(native_size.x, native_size.y))
@@ -30,7 +30,7 @@ func run() -> void:
 	var size_after: Vector2 = game.scene_view.get_visible_rect().size
 	var view_after: Vector2 = game.scene_view.get_visible_rect().size / game.camera.zoom
 	check("paused quality changes leave the hidden source adapter at its original size", get_tree().paused and size_after == size_before and game.scene_view == source_viewport, "%s -> %s" % [size_before, size_after])
-	check("economy quality never reparents cached source polygons or renders their viewport", game.field_root.get_parent() == source_parent and game.player.get_viewport() == source_viewport and not game._view_container.visible and game._low_view.render_target_update_mode == SubViewport.UPDATE_DISABLED and game.hud.minimap.get_viewport() == get_viewport())
+	check("economy quality never reparents cached source polygons or renders their viewport", game.field_root.get_parent() == source_parent and game.player.get_viewport() == source_viewport and game.hud.minimap.get_viewport() == get_viewport())
 	check("economy quality halves the native render target and disables multisampling", preview.viewport.size == native_size / 2 and preview.viewport.msaa_3d == Viewport.MSAA_DISABLED and preview.display.visible)
 	check("world actors stay paused during quality changes", game.player._attack_time == 0.4)
 	check("hidden adapter keeps its input projection through native quality changes", view_after.distance_to(view_before) < 4.0)

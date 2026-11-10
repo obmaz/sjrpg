@@ -43,6 +43,8 @@ static var _card_shader: Shader
 static var _add_shader: Shader
 static var _actor_flash_shader: Shader
 static var _impact_texture: Texture2D
+## Every camera card is the same unit quad scaled by its instance transform.
+static var _card_quad: QuadMesh
 
 var game: Node2D
 var viewport: SubViewport
@@ -69,17 +71,21 @@ var _probe_clock := 0.0
 var _ready_published := false
 var _probe_enabled := false
 var _labels := {}
+## Retired effect cards and combat-text labels wait here hidden. Combat spawns
+## and expires them constantly; reuse avoids creating GPU materials and meshes.
+var _card_pool: Array[MeshInstance3D] = []
+var _label_pool: Array[Label3D] = []
+var card_builds := 0
+var label_builds := 0
 var _native_mage := false
 var _contact_fresh := false
 var _actor_meshes: Array[MeshInstance3D] = []
 var _actor_flash: ShaderMaterial
-var _native_visible := true
 var _town_props: NativeTownProps3D
 var _affordances: Ortho3DAffordances
 var _was_paused := false
 var _static_batch := {}
 var _batch_gpu_error := -1.0
-var enabled := true
 var _hero_motion: Ortho3DHeroMotion
 var _level_up_fx: Ortho3DLevelUp
 var _combat_fx: NativeCombatFx3D
@@ -160,6 +166,10 @@ func _ready() -> void:
 	_build_village()
 	_trees = Ortho3DTrees.build(self)
 	_static_batch = Ortho3DStaticBatch.apply(stage)
+	# Exported native builds never publish the browser probe; editor runs keep the
+	# per-box records for the batching tests.
+	if not OS.has_feature("web") and not OS.has_feature("editor"):
+		_static_batch.erase("sources")
 	_forest_stage = Node3D.new()
 	_forest_stage.name = "NativeForest"
 	stage.add_child(_forest_stage)
@@ -481,25 +491,23 @@ func _sync_scope() -> bool:
 		_contact_time = 0.0
 		_contact_fresh = false
 		contact_light.visible = false
-	_native_visible = true
 	display.visible = true
 	if game.field_root.visible or game.field_root.visibility_layer != 0:
 		game.set_forest_rendered(false)
 	return true
 
 
-func set_enabled(_value: bool) -> void:
-	# Kept as a compatibility adapter for old startup calls; never activates a2D renderer.
-	enabled = true
+## Re-reads scope and camera at once, e.g. after a fixture moves the hero.
+func refresh() -> void:
 	_sync_scope()
 	_sync_camera()
 	_was_paused = false
 
 
 func surface_height(point: Vector2) -> float:
-	var spatial: Node = game.get("spatial_world")
-	if is_instance_valid(spatial) and spatial.has_method("height_at"):
-		return float(spatial.height_at(point))
+	var spatial := game.get("spatial_world") as SpatialWorld3D
+	if is_instance_valid(spatial):
+		return spatial.height_at(point)
 	if game.dungeon.active:
 		return 0.0
 	# Only used while the backend is being attached after the presenter becomes ready.
@@ -512,8 +520,10 @@ func surface_height(point: Vector2) -> float:
 func _publish_probe() -> void:
 	if not OS.has_feature("web"):
 		return
-	if _batch_gpu_error < 0.0:
+	if _batch_gpu_error < 0.0 and _probe_enabled:
 		_batch_gpu_error = Ortho3DStaticBatch.corner_error(_static_batch)
+	# One record per merged box only serves that single measurement.
+	_static_batch.erase("sources")
 	var calls := viewport.get_render_info(Viewport.RENDER_INFO_TYPE_VISIBLE, Viewport.RENDER_INFO_DRAW_CALLS_IN_FRAME)
 	var physics: SpatialWorld3D = game.get("spatial_world")
 	var ready := actor != null and (animation != null or not _native_mage) and (calls > 0 or _ready_published) and physics != null and physics.physics_ticks > 0
@@ -524,7 +534,7 @@ func _publish_probe() -> void:
 			JavaScriptBridge.eval("window.__sjrpg3dReady = true")
 		return
 	var eye := camera.global_transform.basis.z.normalized()
-	var report := {"paused": get_tree().paused, "panel_open": game.hud.panel_open(), "panel_script": game.hud._panel.get_script().resource_path if game.hud.panel_open() else "", "logical_size": [game.get_viewport_rect().size.x, game.get_viewport_rect().size.y], "window_size": [get_window().size.x, get_window().size.y], "last_background_notification": game.get_meta("last_background_notification", -1), "ready": ready, "native_active": _native_visible, "native_width": viewport.size.x, "native_height": viewport.size.y,
+	var report := {"paused": get_tree().paused, "panel_open": game.hud.panel_open(), "panel_script": game.hud._panel.get_script().resource_path if game.hud.panel_open() else "", "logical_size": [game.get_viewport_rect().size.x, game.get_viewport_rect().size.y], "window_size": [get_window().size.x, get_window().size.y], "last_background_notification": game.get_meta("last_background_notification", -1), "ready": ready, "native_active": true, "native_width": viewport.size.x, "native_height": viewport.size.y,
 		"quality": "low" if Prefs.low_resolution else "high", "spatial_draw_calls": calls,
 		"spatial_primitives": viewport.get_render_info(Viewport.RENDER_INFO_TYPE_VISIBLE, Viewport.RENDER_INFO_PRIMITIVES_IN_FRAME),
 		"shadow_draw_calls": viewport.get_render_info(Viewport.RENDER_INFO_TYPE_SHADOW, Viewport.RENDER_INFO_DRAW_CALLS_IN_FRAME),
@@ -581,8 +591,8 @@ func _sync_actor(delta: float) -> void:
 
 
 func actor_foot(source: Node2D) -> Vector3:
-	var spatial: Node = game.get("spatial_world")
-	if is_instance_valid(spatial) and spatial.has_method("actor_foot"):
+	var spatial := game.get("spatial_world") as SpatialWorld3D
+	if is_instance_valid(spatial):
 		return spatial.actor_foot(source)
 	return ground_position(source.position, surface_height(source.position))
 
@@ -596,8 +606,9 @@ func _new_card(texture: Texture2D, frame: Rect2, additive: bool) -> MeshInstance
 		_add_shader.code = CARD_CODE.replace("blend_mix, depth_draw_never", "blend_add, depth_draw_never, depth_test_disabled")
 	var ink := ShaderMaterial.new()
 	ink.shader = _add_shader if additive else _card_shader
-	var plane := QuadMesh.new()
-	var card := _mesh(plane, ink, Vector3.ZERO)
+	if _card_quad == null:
+		_card_quad = QuadMesh.new()
+	var card := _mesh(_card_quad, ink, Vector3.ZERO)
 	card.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_set_card_frame(card, texture, frame)
 	return card
@@ -633,7 +644,9 @@ func _sync_cards() -> void:
 		var entry: Dictionary = _cards[id]
 		var owner: Node2D = entry["owner"].get_ref()
 		if owner == null or owner.is_queued_for_deletion():
-			entry["node"].queue_free()
+			var retired: MeshInstance3D = entry["node"]
+			retired.visible = false
+			_card_pool.append(retired)
 			_cards.erase(id)
 			continue
 		if owner is Effect:
@@ -644,16 +657,22 @@ func _sync_cards() -> void:
 		var id := effect.get_instance_id()
 		if effect.kind == "text":
 			if not _labels.has(id):
-				var fresh_label := Label3D.new()
-				fresh_label.font = UiKit.BOLD_FONT
-				fresh_label.font_size = 22
-				fresh_label.outline_size = 5
-				fresh_label.pixel_size = 1.0 / (GROUND_PER_METER * PROJECTION_FACTOR)
-				fresh_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-				fresh_label.no_depth_test = true
-				# Combat text sits above foreground foliage, like the source2D z20.
-				fresh_label.render_priority = 20
-				stage.add_child(fresh_label)
+				var fresh_label: Label3D
+				if _label_pool.is_empty():
+					label_builds += 1
+					fresh_label = Label3D.new()
+					fresh_label.font = UiKit.BOLD_FONT
+					fresh_label.font_size = 22
+					fresh_label.outline_size = 5
+					fresh_label.pixel_size = 1.0 / (GROUND_PER_METER * PROJECTION_FACTOR)
+					fresh_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+					fresh_label.no_depth_test = true
+					# Combat text sits above foreground foliage, like the source2D z20.
+					fresh_label.render_priority = 20
+					stage.add_child(fresh_label)
+				else:
+					fresh_label = _label_pool.pop_back()
+					fresh_label.visible = true
 				_labels[id] = {"node": fresh_label, "owner": weakref(effect)}
 			var label: Label3D = _labels[id]["node"]
 			label.text = effect.text
@@ -712,7 +731,15 @@ func _sync_cards() -> void:
 		if not _cards.has(id):
 			if _cards.size() > 96:
 				continue
-			_cards[id] = {"node": _new_card(texture, frame, true), "owner": weakref(effect), "static": false}
+			var fresh_card: MeshInstance3D
+			if _card_pool.is_empty():
+				card_builds += 1
+				fresh_card = _new_card(texture, frame, true)
+			else:
+				# Texture, both frames, blend and tint are all written below every frame.
+				fresh_card = _card_pool.pop_back()
+				fresh_card.visible = true
+			_cards[id] = {"node": fresh_card, "owner": weakref(effect), "static": false}
 		var card: MeshInstance3D = _cards[id]["node"]
 		var material := card.material_override as ShaderMaterial
 		_set_card_frame(card, texture, frame)
@@ -735,7 +762,9 @@ func _sync_cards() -> void:
 	for id in _labels.keys():
 		var owner: Node = _labels[id]["owner"].get_ref()
 		if owner == null or owner.is_queued_for_deletion():
-			_labels[id]["node"].queue_free()
+			var spare: Label3D = _labels[id]["node"]
+			spare.visible = false
+			_label_pool.append(spare)
 			_labels.erase(id)
 		else:
 			(_labels[id]["node"] as Label3D).visible = owner.get_parent() == game.world
@@ -752,6 +781,13 @@ static func render_size(native: Vector2, economy: bool) -> Vector2i:
 	if economy:
 		factor *= 0.5
 	return Vector2i(maxi(1, floori(safe.x * factor)), maxi(1, floori(safe.y * factor)))
+
+
+## Source-pixel rectangle the camera shows, grown so tall bodies and raised
+## terrain near an edge still count as on screen.
+func source_view_rect(margin := 320.0) -> Rect2:
+	var size: Vector2 = game.scene_view.get_visible_rect().size / game.camera.zoom
+	return Rect2(game.camera.get_screen_center_position() - size * 0.5, size).grow(margin)
 
 
 func request_redraw() -> void:

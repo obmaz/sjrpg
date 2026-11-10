@@ -47,6 +47,10 @@ func run() -> void:
 		return
 	var seed_enemy := game.enemies[0] as Enemy
 	var spawn: Vector2 = seed_enemy.position
+	# Models are only posed for enemies the camera can see: look at the measured spot.
+	game.camera.position = spawn
+	game.camera.reset_smoothing()
+	game.camera.force_update_scroll()
 	for old_enemy in game.enemies:
 		old_enemy.queue_free()
 	game.enemies.clear()
