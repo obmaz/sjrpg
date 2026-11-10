@@ -12,7 +12,7 @@
 
 이동은 네이티브 캡슐 스윕과 미끄러짐을 보존하고, 바닥에 맞춰 높이를 보정할 때 추가 충돌을 확인합니다. 모든 이동 뒤에 겹침 여부만으로 되돌리면 정상적인 교대 모서리 접촉도 막힙니다. `native_bridge_sweep`는 30가지 이동 간격·진입 위치를 검사하며, `native_threshold_support`는 실제 접촉 깊이를 측정하고, 벽 안으로 3cm 이동한 검사 캡슐은 관통으로 검출되는지도 확인합니다.
 
-`NativePlayerOcclusion`은 실제 카메라 방향으로 발·몸통·머리의 가림을100ms 간격으로 검사합니다. 바운딩 박스 검사 뒤 공유 메시별 TriangleMesh BVH로 실제 삼각형을 확인하므로 성벽의 빈 안뜰이나 모델의 빈 틈은 가림으로 판단하지 않습니다. `mark_object(root)`로 지정한 정적 모델의 어느 부품이 가리면 전체 부품을 하나의 전환 상태로 묶어 약20% 불투명도까지 함께 조절하고 함께 복원합니다. StandardMaterial·ShaderMaterial 모두 같은 알파 승수를 적용하며 부분 마스크나 디더링은 사용하지 않습니다. `Ortho3DStaticBatch`는 재질별 배칭 후에도 원래 오브젝트 소속과 CPU 변환을 보존합니다. 나무·수풀은 `occlusion_static_instances`로 지정한 MultiMesh에서 개별 인스턴스 전체를 처리합니다. 몬스터·배우·NPC는 정적 모델로 등록하지 않으며, `occlusion_dynamic` 하위와 실제 CharacterBody3D·Skeleton3D 하위도 제외합니다. 연속된 지면·물·길은 등록하지 않습니다. 물리·진행 상태는 수정하지 않으며 일시정지 중 전환도 멈춥니다. 브라우저 검수의 `at=occlusion`·`at=tree_occlusion`과 `probe=1&occlusion=off`로 비교할 수 있습니다.
+`NativePlayerOcclusion`은 실제 카메라 방향으로 발·몸통·머리의 가림을100ms 간격으로 검사합니다. 바운딩 박스 검사 뒤 공유 메시별 TriangleMesh BVH로 실제 삼각형을 확인하므로 성벽의 빈 안뜰이나 모델의 빈 틈은 가림으로 판단하지 않습니다. `mark_object(root)`로 지정한 정적 모델의 어느 부품이 가리면 전체 부품을 하나의 전환 상태로 묶어 약20% 불투명도까지 함께 조절하고 함께 복원합니다. StandardMaterial·ShaderMaterial 모두 같은 알파 승수를 적용하며 부분 마스크나 디더링은 사용하지 않습니다. `Ortho3DStaticBatch`는 재질별 배칭 후에도 원래 오브젝트 소속과 CPU 변환을 보존합니다. 나무·수풀은 `occlusion_static_instances`로 지정한 MultiMesh에서 개별 인스턴스 전체를 처리합니다. 몬스터·배우·NPC는 정적 모델로 등록하지 않으며, `occlusion_dynamic` 하위와 실제 CharacterBody3D·Skeleton3D 하위도 제외합니다. 연속된 지면·물·길은 등록하지 않습니다. `warm_up()`이 플레이 준비 완료 전에 공유 BVH·재질 원형을 만들고 `NativeOcclusionWarmup`의64×64 별도 뷰포트에서 한 번 실제로 그립니다. 이는 [Compatibility의 첫 셰이더 컴파일 지연](https://docs.godotengine.org/en/stable/tutorials/rendering/jitter_stutter.html#stutter)을 로딩 단계에서 처리하기 위한 것입니다. 정적 월드 변환·AABB·역변환을 재사용하며8m 공간 셀로 시선 구역에 있는 후보만 검사합니다. 배칭 노드별로 변환을 한 번 확인하므로 재배치와 삭제도 색인에 반영합니다.  같은 오브젝트의 같은 재질은 공유합니다. 최근16개 오브젝트는 분리한 표시 노드와 재질을 보관하며 원본 슬롯/재질을 복원한 뒤 숨깁니다. 활성 전환은 캐시 퇴출에서 보호하고, 퇴출 재질은 렌더 서버 참조가 끝나도록3프레임 유지합니다. 물리·진행 상태는 수정하지 않으며 일시정지 중 전환도 멈춥니다. 브라우저 검수의 `at=occlusion`·`at=tree_occlusion`과 `probe=1&occlusion=off`로 비교할 수 있습니다.
 
 `Player.MOVE_SPEED_MULTIPLIER=1.2`는 기존 직업별 속도·이동 패시브·질주 보너스·게임 템포에 곱하는 주인공 전용 이동 배율입니다. 공격·투사체·적의 속도와 구르기 거리/시간은 이 배율을 읽지 않습니다. 달리기 동작은 실제 이동 거리로 샘플링해 빨라진 발걸음과 맞춥니다.
 
@@ -83,14 +83,14 @@ tools/serve.sh
 
 `NativeGroundRelief`는 낮은 강바닥·완만한 강둑·다리 양 끝의 흙 교대·동굴 하강로를 하나의 정점 집합으로 만듭니다. `NativeGround3D` 표시 메시와 `SpatialWorld3D`의 FLOOR가 그 정점을 공유합니다. 강 수면은-1.2m, 깊은 바닥은-1.85m이고, 다리의 기존0m 보행면은 유지합니다. 육지의 대부분은3m, 강둑·동굴 주변만0.5m로 나누며 공유 모서리의 높이는 한 번만 계산하며 같은 필드 규격의 정점 집합을 재사용합니다.
 
-야외 tree/cave 지점은 `assets/models/environment/waypoint/`의24cm 돌 기단과 문양입니다. `SpatialWorld3D.terrain_surfaces()`가 기단의 실제 FLOOR를 공유하고 표시기의 원점은 주변 지면 높이에 고정합니다. `Village._waypoint_clearing()`이 강·건물·높은 지형·동굴에서 떨어진 빈 위치를 선택하고, 표식은 SOLID를 만들지 않습니다. `Exploration.on_waypoint()`가 실제 발 위치로 첫 활성화를 검사하고 기존 `discovered_sanctuaries`에 저장합니다. 단순 근접이나 미활성 상태의 안식처 접근은 첫 발견을 대신하지 않습니다. 공용 표시기는 저장 상태를 읽어 문양의 발광과 입자를 동기화합니다. 마을의 수직 워프문과 동굴 귀환문은 유지합니다.
+야외 tree/cave 지점은 `assets/models/environment/waypoint/`의10cm 돌 기단과 문양입니다. `SpatialWorld3D.terrain_surfaces()`가 기단의 실제 FLOOR를 공유하고 표시기의 원점은 주변 지면 높이에 고정합니다. `Village._waypoint_clearing()`이 강·건물·높은 지형·동굴에서 떨어진 빈 위치를 선택하고, 표식은 SOLID를 만들지 않습니다. `Exploration.on_waypoint()`가 실제 발 위치로 첫 활성화를 검사하고 기존 `discovered_sanctuaries`에 저장합니다. 단순 근접이나 미활성 상태의 안식처 접근은 첫 발견을 대신하지 않습니다. 공용 표시기는 저장 상태를 읽어 어두운 회색→차분한 석재색과 네 대각 모퉁이의 작은 불/비그림자 광원을 함께 전환합니다. 큰 중앙 광원이나 청록색 발광 고리는 사용하지 않습니다. 첫 발견은 `RewardFx.discover_waypoint()`로 기존 금빛 원화와 실제 링 메시를1.6초 표시하고 `LevelUpBanner`에 장소 이름과 활성화 안내를2.6초 보여 줍니다. `waypoint_position`이 실제 기단의 고정 원점이며 움직이는 영웅을 따라가지 않습니다. 재방문·저장 재개는 재생하지 않고, 준비 완료 전에는 자동 발견을 진행하지 않습니다. 일시정지는 효과와 알림의 시계를 함께 멈춥니다. 동시 레벨업은 우선 표시한 뒤 발견 알림을 이어서 보여 줍니다. 실제 첫 활성화 검수는 `at=waypoint_cave_active&waypoint_preview=1&probe=1`로 고정할 수 있습니다. 마을의 수직 워프문과 동굴 귀환문은 유지합니다.
 
 
 ## 확장한 숲과 암반 골짜기
 
 `ForestRegion`의 실제 지면 범위는(-3600,-3600)에서(10800,10800)입니다. 마을·북서 경계를 유지한 채 가로·세로가 각각2배이며 `Game.FIELD`, 물리 외곽, 지도, 생성 지형이 같은 범위를 사용합니다. 나무·수풀·돌의 필드 배치 수는 면적에 맞춰 늘리고 모델·재질·공간 묶음은 공유합니다.
 
-동굴은 지면 좌표(7600,7600)의 독립 암반 지대에 있습니다. `NativeCavePlan.approach_height()`와 `NativeGroundRelief`가 약20m의 하강로,3.2m의 바깥 고저차와1.2m의 안쪽 하강을 함께 만듭니다. 암반 측면·바닥은 생성형 돌/자갈 원화를 사용하며, 포장길이나 웨이포인트를 암반 지대에 겹쳐 배치하지 않습니다. `frame()`의 실제 원점은 주변 땅보다3.2m 낮습니다.
+동굴은 지면 좌표(7600,7600)의 독립 암반 지대에 있습니다. `NativeCavePlan.approach_height()`와 `NativeGroundRelief`가 약20m의 하강로,3.2m의 바깥 고저차와1.2m의 안쪽 하강을 함께 만듭니다. 암반 측면·바닥은 생성형 돌/자갈 원화를 사용하며, 포장길이나 웨이포인트를 암반 지대에 겹쳐 배치하지 않습니다. `frame()`의 실제 원점은 주변 땅보다3.2m 낮습니다. 동굴 웨이포인트는 과거 의뢰 위치 대신 하강로 전방 약40m의 열린 곳을 기준으로 선택합니다. `NativeCaveTrail`의 미터 단위5개 경유점을 지면 셰이더·식생 제외·실제 통행 테스트가 공유합니다. 생성형 흙/자갈 표면은 기존 지면 메시 위에 폭이 불규칙한 흙길로 혼합하며 새 평면이나 포장길을 겹치지 않습니다.
 
 강은 동쪽 경계까지 연장하고 다리의 지면X는9000으로 옮깁니다. 도로/강 거리장은 `capture_road_geometry.tscn`과 `bake_ground_field.py`로 함께 재생성합니다. `native_river.gdshader`는 시간에 따라 두 물결 표면을 이동시키고 이동 포말·수면 법선을 갱신합니다. 정적 메시를 매 프레임 다시 만들지 않으며 일시정지에는 같은 phase를 유지합니다.
 

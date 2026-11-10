@@ -58,7 +58,7 @@ func _check_boss_slam() -> void:
 	var hp: float = game.player.hp
 	boss._process(0.05)
 	check("slam completes and enters recovery", boss._state == "recover")
-	check("a dodged slam still reaches the camera", game._impact_offset.length() > 0.0 and game._impact_offset.length() <= 7.0)
+	check("a dodged slam still reaches the camera", game._impact_offset.length() > 0.0 and game._impact_offset.length() <= 0.65)
 	check("the hero outside its reach takes no damage", game.player.hp == hp)
 	Prefs.reduce_motion = true
 	game._impact_offset = Vector2.ZERO
@@ -195,6 +195,7 @@ func _check_zoom_punch() -> void:
 	game.player.set_process(false)
 	game._update_zoom()
 	var base: Vector2 = game.camera.zoom
+	check("combat zoom cap stays at two tenths of one percent",game.ZOOM_PUNCH_LIMIT<=0.002)
 	var foe := _foe(game, 300.0)
 	foe.take_damage(4.0, game.player)
 	check("a light hit does not punch the zoom", game.camera.zoom.is_equal_approx(base))
@@ -240,7 +241,7 @@ func _check_boss_defeat() -> void:
 	check("surviving enemies pause with the world", bystander._hitstop.remaining > 0.0)
 	check("a large burst marks the defeat", game.cosmetic_effects.filter(func(e: Effect) -> bool: return e.kind == "nova" and e.radius >= 260.0).size() == novas_before + 1)
 	check("the camera punches in on the defeat", game.camera.zoom.x > base.x)
-	check("the camera shakes on the defeat", game._impact_offset.length() > 0.0 and game._impact_offset.length() <= 7.0)
+	check("the camera shakes on the defeat", game._impact_offset.length() > 0.0 and game._impact_offset.length() <= 0.65)
 	GameState.boss_defeated = false
 	Prefs.reduce_motion = true
 	game._update_zoom_punch(1.0)

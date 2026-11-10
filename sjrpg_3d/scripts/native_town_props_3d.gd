@@ -181,11 +181,6 @@ func _sync_waypoint(source: IsoSprite, current: Dictionary) -> void:
 	fluid.set_shader_parameter("strength",1.0 if active else 0.0)
 	var motes: MultiMeshInstance3D = entry["motes"]
 	motes.visible = active
-	(entry["light"] as OmniLight3D).visible = active
-	if active:
-		_sync_motes(motes,_source_phase(source),0.0 if Prefs.reduce_motion else 1.0)
-		for i: int in MOTE_COUNT:
-			var transform := motes.multimesh.get_instance_transform(i)
-			var angle := TAU*i/MOTE_COUNT
-			transform.origin = Vector3(cos(angle)*1.27,NativeWaypoint3D.HEIGHT+0.10+transform.origin.y*0.16,sin(angle)*1.27)
-			motes.multimesh.set_instance_transform(i,transform)
+	(entry["stone"] as StandardMaterial3D).albedo_color = Color("74756c") if active else Color("424440")
+	for light: OmniLight3D in entry["lights"]:
+		light.visible = active

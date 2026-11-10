@@ -12,7 +12,8 @@ void fragment() {
 	float angle = atan(p.y,p.x);
 	float spokes = (1.0-smoothstep(0.012,0.025,abs(sin(angle*4.0))))*smoothstep(0.12,0.22,r)*(1.0-smoothstep(0.39,0.42,r));
 	float pulse = 0.88+0.12*sin(phase*1.5)*motion;
-	ALBEDO = stone*mix(0.64,1.0,strength);
-	EMISSION = vec3(0.12,0.74,0.92)*(ring+spokes)*strength*pulse*1.8;
+	float grey = dot(stone,vec3(0.299,0.587,0.114));
+	ALBEDO = mix(vec3(grey)*vec3(0.69,0.70,0.67),mix(vec3(grey),stone,0.12),strength)*mix(0.46,0.68,strength);
+	EMISSION = vec3(0.25,0.35,0.32)*(ring+spokes)*strength*pulse*0.18;
 	ROUGHNESS = 0.92;
 }

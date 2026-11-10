@@ -13,6 +13,7 @@ uniform vec2 field_extent;
 uniform sampler2D bank_atlas : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
 uniform sampler2D site_rock : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform mat4 world_to_cave;
+uniform vec2 cave_trail[5];
 varying vec2 ground_world;
 varying float ground_height;
 
@@ -103,6 +104,20 @@ void fragment() {
 		vec3 ravine = mix(shale,gravel*vec3(0.78,0.76,0.68),path*0.74);
 		ravine = mix(ravine,grass,ground_noise(ground_world/1.7)*0.30*smoothstep(-1.0,0.6,ground_height));
 		color = mix(color,ravine,zone);
+	}
+	// 웨이포인트에서 바위 골짜기로 이어지는 흙길. 실제 높이 메시 위에서만 착색한다.
+	if (site.z > 10.0 && site.z < cave_trail[0].y+2.5 && abs(site.x) < abs(cave_trail[0].x)+4.0) {
+		float trail_d = 100.0;
+		for (int i=0; i<4; i++) {
+			vec2 a = cave_trail[i];
+			vec2 segment = cave_trail[i+1]-a;
+			float t = clamp(dot(site.xz-a,segment)/max(dot(segment,segment),0.001),0.0,1.0);
+			trail_d = min(trail_d,length(site.xz-a-segment*t));
+		}
+		float worn = 1.0-smoothstep(0.64,1.6,trail_d+(ground_noise(ground_world*2.4)-0.5)*0.42);
+		vec3 soil = texture(earth_texture,ground_world/2.56).rgb*vec3(0.83,0.78,0.66);
+		vec3 grit = texture(bank_atlas,(vec2(1.0)+mix(vec2(0.018),vec2(0.982),mirrored(ground_world/2.0)))*0.5).rgb;
+		color = mix(color,mix(soil,grit*0.73,0.18+zone*0.25),worn*0.92);
 	}
 	ALBEDO = color;
 	ROUGHNESS = 0.98;

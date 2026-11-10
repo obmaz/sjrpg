@@ -35,6 +35,7 @@ static func build(preview: Node) -> MeshInstance3D:
 	material.set_shader_parameter("bank_atlas",load("res://assets/models/environment/riverbank/albedo.png"))
 	material.set_shader_parameter("site_rock",load("res://assets/models/environment/cave_entrance/albedo.png"))
 	material.set_shader_parameter("world_to_cave",NativeCavePlan.frame(Iso.project(preview.game.village.cave_ground)+NativeCavePlan.ENTRY_OFFSET).affine_inverse())
+	material.set_shader_parameter("cave_trail",NativeCaveTrail.points(preview.game.village))
 	material.set_shader_parameter("field_origin", Vector2(origin[0], origin[1]))
 	material.set_shader_parameter("field_extent", Vector2(extent[0], extent[1]))
 	var faces := NativeGroundRelief.faces(preview.game.village)

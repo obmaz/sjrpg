@@ -271,6 +271,8 @@ func _npc(name: String, kind: int, at: Vector2, world: Node2D, elevated: bool) -
 
 func near_water(g: Vector2, margin: float) -> bool:
 	var sp := Iso.project(g)
+	if sanctuary_points.has("cave") and NativeCaveTrail.distance_to(self,g)<3.1+margin/65.0:
+		return true
 	for r in clear_rects:
 		if r.grow(margin).has_point(sp):
 			return true
@@ -724,9 +726,9 @@ func _build_sanctuaries(world: Node2D) -> void:
 	var entrance: int = Landmark.data()[tree.index]["entrance"]
 	var mid := (tree._pt(outline[entrance]) + tree._pt(outline[(entrance + 1) % outline.size()])) / 2.0
 	var tree_point := mid + (mid - _top_center(tree)).normalized() * 160.0
-	sanctuary_points = {"town": spawn_point, "tree": tree_point, "cave": quest_sites["sun"] + Vector2(-220, 220)}
+	sanctuary_points = {"town": spawn_point, "tree": tree_point}
 	for id in ["tree", "cave"]:
-		var proposed: Vector2 = sanctuary_points[id]+Vector2(-320,210)
+		var proposed: Vector2 = NativeCaveTrail.proposal(self) if id=="cave" else sanctuary_points[id]+Vector2(-320,210)
 		var chosen := _waypoint_clearing(proposed)
 		sanctuary_points[id] = chosen
 		clear_rects.append(Rect2(chosen-Vector2(240,240),Vector2(480,480)))

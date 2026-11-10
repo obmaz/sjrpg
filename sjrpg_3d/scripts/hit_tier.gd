@@ -62,4 +62,4 @@ static func squash(tier: int) -> float:
 
 ## JUICE #14: camera zoom-in on heavy contact, as a fraction of the selected zoom (capped by game.gd ZOOM_PUNCH_LIMIT).
 static func zoom_punch(tier: int) -> float:
-	return 0.015 if tier == HEAVY else (0.02 if tier == KILL else 0.0)
+	return 0.001 if tier == HEAVY else (0.0015 if tier == KILL else 0.0)

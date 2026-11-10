@@ -26,8 +26,7 @@ var _fx_review_focus := Vector2.ZERO
 var player: Player
 var _impact_offset := Vector2.ZERO
 var _impact_fresh := false
-var _impact_age := 1.0
-var _impact_cross := Vector2.ZERO
+const IMPACT_LIMIT := 0.65
 var camera: Camera2D
 var hud: Hud
 var encounters: EncounterRuntime
@@ -161,6 +160,9 @@ func _ready() -> void:
 	_read_debug_params()
 	for i in 12:
 		_spawn_enemy(true)
+	await ortho_preview._occlusion.warm_up()
+	if is_queued_for_deletion():
+		return
 	native_ready = true
 	toast("미니맵에서 의뢰 위치를 확인하세요 · 마을의 미라가 기다립니다")
 	if OS.has_feature("web"):
@@ -178,7 +180,7 @@ func _update_zoom() -> void:
 
 ## JUICE #14: a brief zoom-in on heavy contact. It multiplies the selected zoom (never replaces it), is
 ## capped, decays in ~0.1s and is off for reduced motion. The native 3D camera reads camera.zoom each sync.
-const ZOOM_PUNCH_LIMIT := 0.04
+const ZOOM_PUNCH_LIMIT := 0.002
 var _base_zoom := Vector2.ONE
 var _zoom_punch := 0.0
 var _zoom_punch_fresh := false
@@ -304,6 +306,8 @@ func _read_debug_params() -> void:
 			_warp_preview.call_deferred()
 		elif kv.size() == 2 and kv[0] == "hitfeel_preview" and kv[1] in ["1", "peak"]:
 			_hit_feel_preview.call_deferred()
+		elif kv.size() == 2 and kv[0] == "waypoint_preview" and kv[1] == "1":
+			_waypoint_discovery_preview.call_deferred()
 		elif kv.size() == 2 and kv[0] == "combat_preview":
 			_combat_preview.call_deferred()
 		elif kv.size() == 2 and kv[0] == "combat_text_preview" and kv[1] == "1":
@@ -865,6 +869,28 @@ func _corpse_preview(surface := "1") -> void:
 
 
 ## Explicit review query only. Exercise real grant/chest paths, never run in a normal adventure.
+## 실제 첫 활성화가 발생한 뒤 표시 시계만 진행하여 검수 장면을 고정한다.
+func _waypoint_discovery_preview() -> void:
+	for frame in 180:
+		await get_tree().process_frame
+		if is_queued_for_deletion():
+			return
+		if not native_ready:
+			continue
+		for effect: Effect in cosmetic_effects:
+			if effect.is_queued_for_deletion() or not effect.params.has("waypoint_position"):
+				continue
+			effect._process(0.16)
+			effect._process(0.16)
+			hud._level_up._process(0.06)
+			hud._level_up._process(0.12)
+			ortho_preview._process(0.0)
+			ortho_preview._publish_probe()
+			get_tree().paused = true
+			JavaScriptBridge.eval("window.__sjrpgWaypointDiscoveryReview = true")
+			return
+
+
 func _reward_preview(mode := "1") -> void:
 	await get_tree().create_timer(2.0, false).timeout
 	if is_queued_for_deletion():
@@ -910,9 +936,8 @@ func combat_feedback(at: Vector2, strength: float, hurt := false) -> void:
 	var direction := (player.position - at).normalized()
 	if direction.length_squared() < 0.1:
 		direction = Vector2(0.6, -0.8)
-	_impact_offset = (_impact_offset + direction * clampf(strength, 0.0, 1.0) * (5.0 if hurt else 4.8)).limit_length(7.0)
-	_impact_age = 0.0
-	_impact_cross = direction.orthogonal() * clampf(strength, 0.0, 1.0) * 0.65
+	# 연타·광역 명중도 누적하지 않는다. 강타는 몸의 반동과 소리로 전달한다.
+	_impact_offset = direction * clampf(strength, 0.0, 1.0) * (IMPACT_LIMIT if hurt else 0.45)
 	_impact_fresh = true
 	camera.offset = _impact_offset
 
@@ -921,13 +946,10 @@ func combat_feedback(at: Vector2, strength: float, hurt := false) -> void:
 func _update_impact_camera(delta: float) -> void:
 	if Prefs.reduce_motion:
 		_impact_offset = Vector2.ZERO
-		_impact_cross = Vector2.ZERO
 	else:
 		_impact_offset *= exp(-18.0 * (minf(delta, 0.012) if _impact_fresh else delta))
-	_impact_age += minf(delta, 0.012) if _impact_fresh else delta
 	_impact_fresh = false
-	var ripple := _impact_cross * sin(_impact_age * TAU * 32.0) * maxf(0.0, 1.0 - _impact_age / 0.16)
-	camera.offset = (_impact_offset + ripple).limit_length(7.0)
+	camera.offset = _impact_offset
 
 
 func _process(delta: float) -> void:

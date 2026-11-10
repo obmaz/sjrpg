@@ -36,17 +36,21 @@ func run() -> void:
 	game.encounters.set_process(false)
 	var preview: Ortho3DPreview = game.ortho_preview
 	var backend: SpatialWorld3D = game.spatial_world
-	# Use the real outside-town spawn search, including the enlarged radius margin.
+	# 실제 생성 위치 중 가장 큰 종과 한 걸음의 여유까지 들어가는 공터를 고른다.
+	# 작은 고블린의 합법 위치가 늑대·골렘까지 수용한다고 가정하지 않는다.
+	var spawn := Vector2.INF
 	for attempt: int in 30:
 		game._spawn_enemy(true)
-		if not game.enemies.is_empty():
+		for candidate: Enemy in game.enemies:
+			if not backend.blocked(candidate.position,Enemy.radius_for("golem")+20.0,true):
+				spawn = candidate.position
+				break
+		if spawn.is_finite():
 			break
-	if not check("larger enemy footprint still finds a legal actual forest spawn", not game.enemies.is_empty()):
+	if not check("larger enemy footprint still finds a legal actual forest spawn", spawn.is_finite()):
 		game.queue_free()
 		await _frames(2)
 		return
-	var seed_enemy := game.enemies[0] as Enemy
-	var spawn: Vector2 = seed_enemy.position
 	# Models are only posed for enemies the camera can see: look at the measured spot.
 	game.camera.position = spawn
 	game.camera.reset_smoothing()

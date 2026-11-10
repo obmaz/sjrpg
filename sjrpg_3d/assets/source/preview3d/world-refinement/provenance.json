@@ -115,15 +115,15 @@
     },
     {
       "path": "scripts/village.gd",
-      "sha256": "4c7c684dc618bc2ac3efb66780832ea39bafcba0dbe99245c3aaae6e5bb67831"
+      "sha256": "8768492e0bb5d95c619f4996d92d47dbf424b71ade1de429cf16f2d988e3f8c5"
     },
     {
       "path": "scripts/native_ground.gdshader",
-      "sha256": "86a37c649c90b7ff46d1bd83e36c4d632e5e4936f73f606b85501860bbaddb4e"
+      "sha256": "40f058e41c7143993edb315cddf89342e95ace77326d96273bb2454998042135"
     },
     {
       "path": "scripts/native_ground_3d.gd",
-      "sha256": "ced3eb3e7151ea1bac6c18ae853d6d12402f1067db436986fe75d5707e665957"
+      "sha256": "730d423b8fa6550a397cf884b5bb145b2b3c3898d2036190476c8a61381874eb"
     },
     {
       "path": "scripts/native_river.gdshader",

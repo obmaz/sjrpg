@@ -18,11 +18,11 @@
     },
     {
       "path": "assets/models/environment/waypoint/model.gd",
-      "sha256": "f2d4a4be93dc683a4b98f63e8ccab9df04a1a10905bab5efd1d686789b757e14"
+      "sha256": "785bdd61fad360cdb4fb41dfa364ddf2396a92bf3b948583a3f2f4c5a7aaa117"
     },
     {
       "path": "assets/models/environment/waypoint/surface.gdshader",
-      "sha256": "8bd5eb921b3c448f6af36ddb8ec231700b67704646518fc6e562407839c647dc"
+      "sha256": "90ed2f8baf0fd1386cc73c61f569fee70cd4c76c897fcb5be3af672ebcd57a77"
     }
   ],
   "mapping": "whole circular top surface",
@@ -37,7 +37,7 @@
     },
     {
       "path": "scripts/native_ground.gdshader",
-      "sha256": "86a37c649c90b7ff46d1bd83e36c4d632e5e4936f73f606b85501860bbaddb4e"
+      "sha256": "40f058e41c7143993edb315cddf89342e95ace77326d96273bb2454998042135"
     },
     {
       "path": "scripts/native_river.gdshader",

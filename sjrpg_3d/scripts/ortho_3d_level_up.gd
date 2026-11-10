@@ -43,13 +43,13 @@ func sync() -> void:
 
 func _create(source: Effect) -> Dictionary:
 	var root := Node3D.new()
-	root.name = "LevelUpCelebration"
+	root.name = "WaypointDiscovery" if source.params.has("waypoint_position") else "LevelUpCelebration"
 	_preview.stage.add_child(root)
 	var ring := MeshInstance3D.new()
 	ring.name = "FootRing"
 	var torus := TorusMesh.new()
-	torus.inner_radius = 0.70
-	torus.outer_radius = 0.76
+	torus.inner_radius = NativeWaypoint3D.RADIUS+0.15 if source.params.has("waypoint_position") else 0.70
+	torus.outer_radius = torus.inner_radius+0.06
 	torus.rings = 32
 	torus.ring_segments = 4
 	ring.mesh = torus
@@ -75,8 +75,11 @@ func _create(source: Effect) -> Dictionary:
 
 
 func _update(entry: Dictionary, source: Effect) -> void:
+	var waypoint := source.params.has("waypoint_position")
 	var foot := source.position + Vector2(0, 32)
-	if is_instance_valid(source.owner_node):
+	if waypoint:
+		foot = source.params["waypoint_position"]
+	elif is_instance_valid(source.owner_node):
 		foot = source.owner_node.position
 	var root: Node3D = entry["root"]
 	var spatial = _preview.game.get("spatial_world")
@@ -96,6 +99,8 @@ func _update(entry: Dictionary, source: Effect) -> void:
 		var spark: MeshInstance3D = entry["sparks"][index]
 		var angle := TAU * float(index) / SPARK_COUNT + pose * 0.22
 		var spread := 0.50 + float(index % 2) * 0.12 + pose * 0.08
+		if waypoint:
+			spread = NativeWaypoint3D.RADIUS+0.12+pose*0.32
 		var height := 0.14 + float(index % 3) * 0.16 + pose * (1.40 + float(index % 3) * 0.15)
 		spark.position = Vector3(cos(angle) * spread, height, sin(angle) * spread)
 		spark.basis = _preview.camera.global_transform.basis

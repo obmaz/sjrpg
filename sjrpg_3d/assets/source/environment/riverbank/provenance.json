@@ -29,7 +29,7 @@
     },
     {
       "path": "scripts/native_ground.gdshader",
-      "sha256": "86a37c649c90b7ff46d1bd83e36c4d632e5e4936f73f606b85501860bbaddb4e"
+      "sha256": "40f058e41c7143993edb315cddf89342e95ace77326d96273bb2454998042135"
     },
     {
       "path": "scripts/native_river.gdshader",

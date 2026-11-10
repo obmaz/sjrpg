@@ -1,5 +1,5 @@
 extends TestCase
-## 필드 확장, 포장길과 분리된 암반 진입로, 실제 장거리 하강과 두꺼운 표식.
+## 필드 확장, 포장길과 분리된 암반 진입로, 실제 장거리 하강과 낮은 돌 표식.
 func run() -> void:
 	var game := await make_game("mage")
 	game.player.set_process(false)
@@ -38,7 +38,7 @@ func run() -> void:
 	var source: IsoSprite = game.village.portal_sprites["cave"]
 	var root: Node3D = props._entries[source.get_instance_id()]["root"]
 	var body: MeshInstance3D = root.get_node("BeveledStonePlinth")
-	check("waypoint has a real thick bevel and matching walking floor",body.get_aabb().size.y>0.23 and absf(game.spatial_world.height_at(source.position)-root.position.y-NativeWaypoint3D.HEIGHT)<0.01)
+	check("waypoint has a thin real bevel and matching walking floor",body.get_aabb().size.y>=0.09 and body.get_aabb().size.y<=0.11 and absf(game.spatial_world.height_at(source.position)-root.position.y-NativeWaypoint3D.HEIGHT)<0.01)
 	var env: Ortho3DEnvironment = game.ortho_preview._world_environment
 	game.ortho_preview.set_process(false)
 	var phase: float = env._water_material.get_shader_parameter("phase")

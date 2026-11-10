@@ -190,6 +190,15 @@ func show_level_up(level: int) -> void:
 	_level_up.visible = not panel_open()
 
 
+func show_waypoint_discovery(place: String) -> void:
+	if _level_up == null:
+		_level_up = LevelUpBanner.new()
+		_level_up.name = "LevelUpBanner"
+		add_child(_level_up)
+	_level_up.show_waypoint(place)
+	_level_up.visible = not panel_open()
+
+
 func panel_open() -> bool:
 	return _panel != null
 

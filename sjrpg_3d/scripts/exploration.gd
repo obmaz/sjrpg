@@ -60,7 +60,11 @@ func discover_current() -> String:
 	var changed := false
 	if not GameState.discovered_sanctuaries.has(id):
 		GameState.discovered_sanctuaries.append(id)
-		game.toast(("안식처 발견 · " if id == "town" else "웨이포인트 활성화 · ") + NAMES[id])
+		if id == "town":
+			game.toast("안식처 발견 · " + NAMES[id])
+		else:
+			RewardFx.discover_waypoint(game,gate_point(id))
+			game.hud.show_waypoint_discovery(NAMES[id])
 		SoundFx.play("warp")
 		changed = true
 	if GameState.last_sanctuary != id:
@@ -72,6 +76,8 @@ func discover_current() -> String:
 
 
 func _process(delta: float) -> void:
+	if not game.native_ready:
+		return
 	if discover_current() == "":
 		return
 	if travel_block_reason() == "":

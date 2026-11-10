@@ -13,7 +13,7 @@ func run() -> void:
 		props.sync()
 		var entry: Dictionary = props._entries[source.get_instance_id()]
 		var material: ShaderMaterial = entry["fluid"]
-		check("unvisited field waypoint stays dark: "+id,float(material.get_shader_parameter("strength"))==0.0 and not entry["motes"].visible)
+		check("unvisited field waypoint stays dark: "+id,float(material.get_shader_parameter("strength"))==0.0 and not entry["motes"].visible and entry["lights"].size()==4 and entry["lights"].all(func(light: OmniLight3D): return not light.visible))
 		game.player.position = at+Iso.project(Vector2(1.8,0)*SpatialWorld3D.UNITS)
 		game.exploration.discover_current()
 		check("walking beside the seal does not activate it: "+id,not GameState.discovered_sanctuaries.has(id))
@@ -21,7 +21,9 @@ func run() -> void:
 		check("ground waypoint centre is physically walkable: "+id,game.player.position.distance_to(at)<1.0 and not game._blocked(at,Player.RADIUS))
 		game.exploration.discover_current()
 		props.sync()
-		check("stepping on the seal persists discovery and turns on its light: "+id,GameState.discovered_sanctuaries.has(id) and float(material.get_shader_parameter("strength"))==1.0 and entry["motes"].visible)
+		check("stepping on the seal persists discovery and turns on its light: "+id,GameState.discovered_sanctuaries.has(id) and float(material.get_shader_parameter("strength"))==1.0 and entry["motes"].visible and entry["lights"].all(func(light: OmniLight3D): return light.visible and not light.shadow_enabled and light.light_energy<=0.25))
+		var lights: Array = entry["lights"]
+		check("four lights occupy distinct corners instead of a central glow: "+id,lights[0].position.x<0 and lights[0].position.z<0 and lights[1].position.x>0 and lights[1].position.z<0 and lights[2].position.x<0 and lights[2].position.z>0 and lights[3].position.x>0 and lights[3].position.z>0)
 		check("field waypoint has no upright portal volume: "+id,entry["root"].get_node("EngravedGroundSeal").get_aabb().size.y<0.05)
 		for landmark: Landmark in game.village.landmarks:
 			var distance := INF

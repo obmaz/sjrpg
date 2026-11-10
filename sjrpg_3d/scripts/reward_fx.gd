@@ -34,6 +34,14 @@ static func spawn(world_game: Node, at: Vector2, cell := 0, large := false) -> R
 	return effect
 
 
+static func discover_waypoint(world_game: Node, at: Vector2) -> RewardFx:
+	var effect := spawn(world_game,at+Vector2(0,-32),1,true)
+	effect.owner_node = null
+	effect.params["waypoint_position"] = at
+	effect.life = 1.6
+	return effect
+
+
 func _process(delta: float) -> void:
 	# Ensure one visible update even on a slow frame, then expire normally offscreen/headless too.
 	var elapsed := minf(delta, life * 0.1) if _first_update else delta
@@ -42,7 +50,9 @@ func _process(delta: float) -> void:
 	if age >= life:
 		queue_free()
 		return
-	if _large and is_instance_valid(owner_node):
+	if params.has("waypoint_position"):
+		pass  # 발견 빛은 이동하는 영웅을 따라가지 않고 표식의 중앙에 남는다.
+	elif _large and is_instance_valid(owner_node):
 		position = owner_node.position + _anchor
 	elif not Prefs.reduce_motion:
 		position.y -= 14.0 * elapsed

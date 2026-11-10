@@ -236,7 +236,7 @@
   "files": [
     {
       "path": "scripts/native_town_props_3d.gd",
-      "sha256": "52bfe964070f72a7926eebdc154ca0df1290c9e77785c42431ae95e214b972f8"
+      "sha256": "8ce0ef0f6c7d2d88566bf8aded4669d8743cfae488a5f9f83621724b1fd2ea2d"
     },
     {
       "path": "scripts/native_prop_portal.gdshader",

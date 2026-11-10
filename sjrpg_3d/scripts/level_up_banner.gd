@@ -8,6 +8,10 @@ var level := 1
 var age := 0.0
 var active := false
 var _first_update := true
+var heading := TITLE
+var detail := ""
+var duration := DURATION
+var _pending: Array[Dictionary] = []
 
 
 func _ready() -> void:
@@ -19,6 +23,24 @@ func _ready() -> void:
 
 func show_level(value: int) -> void:
 	level = value
+	# 동시에 발생해도 발견 알림을 버리지 않고 레벨업 안내 뒤에 보여 준다.
+	if active and heading != TITLE:
+		_pending.push_front({"heading":heading,"detail":detail,"duration":duration})
+	_present({"heading":TITLE,"detail":"Lv. %d" % level,"duration":DURATION})
+
+
+func show_waypoint(place: String) -> void:
+	var notice := {"heading":"웨이포인트 발견","detail":place+" · 워프 이동 가능","duration":2.6}
+	if active:
+		_pending.append(notice)
+	else:
+		_present(notice)
+
+
+func _present(notice: Dictionary) -> void:
+	heading = notice["heading"]
+	detail = notice["detail"]
+	duration = notice["duration"]
 	age = 0.0
 	active = true
 	_first_update = true
@@ -32,9 +54,11 @@ func _process(delta: float) -> void:
 	# Present the announcement before consuming a stalled first frame.
 	age += minf(delta, 0.06) if _first_update else delta
 	_first_update = false
-	if age >= DURATION:
+	if age >= duration:
 		active = false
 		hide()
+		if not _pending.is_empty():
+			_present(_pending.pop_front())
 	queue_redraw()
 
 
@@ -47,7 +71,7 @@ static func banner_rect(view: Vector2, margins := Vector4.ZERO) -> Rect2:
 
 
 func rise_offset() -> float:
-	return 0.0 if Prefs.reduce_motion else -18.0 * clampf(age / DURATION, 0.0, 1.0)
+	return 0.0 if Prefs.reduce_motion else -18.0 * clampf(age / duration, 0.0, 1.0)
 
 
 func _draw() -> void:
@@ -56,16 +80,19 @@ func _draw() -> void:
 	var rect := banner_rect(get_viewport_rect().size, PanelFrame.safe_margins(get_viewport()))
 	var unit := rect.size.y / 98.0
 	rect.position.y += rise_offset() * unit
-	var alpha := minf(clampf(age / 0.12, 0.0, 1.0), clampf((DURATION - age) / 0.55, 0.0, 1.0))
+	var alpha := minf(clampf(age / 0.12, 0.0, 1.0), clampf((duration - age) / 0.55, 0.0, 1.0))
 	var tint := Color(1.0, 0.90, 0.63, alpha)
 	var title_size := roundi(44.0 * unit)
 	var subtitle_size := roundi(21.0 * unit)
 	var font: Font = UiKit.BOLD_FONT
-	var title_width := font.get_string_size(TITLE, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x
+	var title_width := font.get_string_size(heading, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x
+	if title_width>rect.size.x:
+		title_size = floori(title_size*rect.size.x/title_width)
+		title_width = font.get_string_size(heading,HORIZONTAL_ALIGNMENT_LEFT,-1,title_size).x
 	var title_at := Vector2(rect.get_center().x - title_width * 0.5, rect.position.y + 46.0 * unit)
-	draw_string_outline(font, title_at, TITLE, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size, maxi(2, roundi(3.0 * unit)), Color(0.09, 0.08, 0.05, alpha * 0.85))
-	draw_string(font, title_at, TITLE, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size, tint)
-	var subtitle := "Lv. %d" % level
+	draw_string_outline(font, title_at, heading, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size, maxi(2, roundi(3.0 * unit)), Color(0.09, 0.08, 0.05, alpha * 0.85))
+	draw_string(font, title_at, heading, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size, tint)
+	var subtitle := detail
 	var sub_width := font.get_string_size(subtitle, HORIZONTAL_ALIGNMENT_LEFT, -1, subtitle_size).x
 	var sub_at := Vector2(rect.get_center().x - sub_width * 0.5, rect.position.y + 78.0 * unit)
 	draw_string_outline(font, sub_at, subtitle, HORIZONTAL_ALIGNMENT_LEFT, -1, subtitle_size, 2, Color(0.09, 0.08, 0.05, alpha * 0.8))
