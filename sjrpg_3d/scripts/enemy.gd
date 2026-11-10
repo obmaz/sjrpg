@@ -51,6 +51,7 @@ var _state := "idle"
 var _hitstop := GameTempo.ContactStop.new()
 ## JUICE #1: tier of the most recent confirmed hit (HitTier); presentation only.
 var last_hit_tier := HitTier.LIGHT
+var hit_reaction_age := 1.0
 ## JUICE #13: a pale "recent loss" segment trails the health bar, then drains after a short hold.
 const TELEGRAPH_COLOR := Color(1.0, 0.82, 0.25)
 const GHOST_HOLD := 0.35
@@ -188,12 +189,20 @@ func take_damage(amount: float, source: Node2D, visual_source: Node2D = null) ->
 	# JUICE #1: one tier drives every presentation below; "heavy" keeps its original meaning.
 	var tier := HitTier.of(amount, max_hp, hp <= 0.0)
 	last_hit_tier = tier
+	hit_reaction_age = 0.0
 	var heavy := HitTier.is_heavy(tier)
 	# Zone ticks have elemental visuals without acquiring direct-hit knockback or weapon effects.
 	var impact_source: Node2D = visual_source if is_instance_valid(visual_source) else source
 	var impact := Effect.spawn_impact(game, position + Vector2(0, -sprite.body_height * 0.55), impact_source, heavy)
 	impact.spatial_floor_height = SpatialCombat3D.floor_at(game, position)
-	game.combat_feedback(position, 0.8 if heavy else 0.32, false)
+	impact.params["tier"] = tier
+	var incoming := Effect.contact_direction(impact_source, position)
+	var native_incoming := Ortho3DPreview.ground_position(incoming).normalized()
+	impact.params["contact_position"] = SpatialCombat3D.point(position, impact.spatial_floor_height) + Vector3.UP * (sprite.body_height * 0.55 / SpatialCombat3D.HEIGHT_PIXELS) - native_incoming * SpatialWorld3D.radius_metres(radius) * 0.65
+	if impact_source is Effect and impact_source.kind == "proj":
+		impact.params["contact_position"] = impact_source.native_position()
+	impact.angle = incoming.angle()
+	game.combat_feedback(position, float([0.36, 0.55, 0.92, 1.0][tier]), false)
 	if is_instance_valid(impact_source) and not Prefs.reduce_motion:
 		_recoil_direction = Effect.contact_direction(impact_source, position)
 		_recoil_size = HitTier.KILL_RECOIL if tier == HitTier.KILL else (8.0 if heavy else 5.0)  # JUICE #5
@@ -207,7 +216,7 @@ func take_damage(amount: float, source: Node2D, visual_source: Node2D = null) ->
 		source.confirm_melee_contact(heavy, tier == HitTier.KILL)
 	if GameState.has_gift("frost") and source != null and source is Player:
 		slow(0.67)
-	SoundFx.play_hit(tier, Effect.contact_element(impact_source))  # JUICE #11, #12
+	SoundFx.play_hit(tier, Effect.contact_element(impact_source), kind)  # JUICE #11, #12
 	Prefs.pulse("hit")
 	sprite.trigger_squash(HitTier.squash(tier))  # JUICE #4
 	if tier >= HitTier.HEAVY:
@@ -281,6 +290,7 @@ func _process(delta: float) -> void:
 	_update_tint()
 	_update_ghost(delta)
 	delta = _hitstop.consume(delta)
+	hit_reaction_age += delta
 	if delta <= 0.0:
 		return
 	if _knockback.length() > 1.0:

@@ -50,6 +50,10 @@ var _attack_lunges := false
 var _resolving_melee_contact := false
 var _pending: Callable
 var _action_serial := 0
+const CONTACT_PROGRESS := 0.45
+var contact_serial := 0
+var contact_action_serial := -1
+var _swing_sound_pending := false
 var _release_pending := false
 var _release_sound := ""
 var _invulnerable := 0.0
@@ -195,7 +199,10 @@ func _process(delta: float) -> void:
 		var progress := 1.0 - _attack_time / _attack_duration
 		# Set the actual contact pose before damage callbacks request a presentation hold.
 		sprite.set_frame(attack_atlas, attack_atlas.action_frame(facing, progress))
-		if _pending.is_valid() and progress >= 0.45:
+		if _swing_sound_pending and progress >= 0.30:
+			SoundFx.play("slash")
+			_swing_sound_pending = false
+		if _pending.is_valid() and progress >= CONTACT_PROGRESS:
 			var action := _pending
 			_pending = Callable()
 			_resolving_melee_contact = _attack_melee
@@ -379,7 +386,8 @@ func _cast_feedback(d: Dictionary) -> void:
 		SoundFx.play("prepare")
 	else:
 		_release_sound = ""
-		SoundFx.play(sound)
+		_swing_sound_pending = not is_mage and _attack_melee
+		SoundFx.play("weapon_draw" if _swing_sound_pending else sound)
 	Prefs.pulse("skill")
 
 
@@ -392,6 +400,7 @@ func try_roll() -> void:
 	_action_serial += 1
 	_release_pending = false
 	_release_sound = ""
+	_swing_sound_pending = false
 	_hitstop.clear()
 	Effect.spawn_dodge_echo(game, self)
 	_roll_dir = dir.normalized()
@@ -409,6 +418,9 @@ func try_roll() -> void:
 ## Only the current contact callback may hold the swing; passive/reflected damage also names this player.
 func confirm_melee_contact(heavy: bool, kill := false) -> void:
 	if not dead and _resolving_melee_contact:
+		if contact_action_serial != _action_serial:
+			contact_action_serial = _action_serial
+			contact_serial += 1
 		if kill:
 			_hitstop.trigger(HitTier.KILL_STOP, HitTier.KILL_STOP_LIMIT)  # JUICE #5
 		else:
@@ -890,6 +902,7 @@ func _cancel_actions() -> void:
 	_resolving_melee_contact = false
 	_release_pending = false
 	_release_sound = ""
+	_swing_sound_pending = false
 	_roll_time = 0.0
 	_roll_dir = Vector2.ZERO
 	held_slots.clear()

@@ -93,6 +93,8 @@ var _trees: Node3D
 var _fortification: Ortho3DFortification
 var _houses := {}
 var _forest_stage: Node3D
+var _hit_feel: NativeHitFeel3D
+var _contact_duration := 0.16
 var _occlusion: NativePlayerOcclusion
 var _world_environment: Ortho3DEnvironment
 var _scope_is_cave := false
@@ -191,6 +193,7 @@ func _ready() -> void:
 	_sync_camera()
 	_world_environment = Ortho3DEnvironment.new().setup(self, _forest_stage)
 	_occlusion = NativePlayerOcclusion.new().setup(self)
+	_hit_feel = NativeHitFeel3D.new().setup(self)
 	_affordances.sync()
 
 
@@ -452,6 +455,7 @@ func _process(delta: float) -> void:
 	_enemy_models.sync()
 	_enemy_feedback.sync()
 	_sync_cards()
+	_hit_feel.sync(0.0 if frozen else delta)
 	_native_residents.sync()
 	_fortification.sync()
 	_level_up_fx.sync()
@@ -478,7 +482,7 @@ func _process(delta: float) -> void:
 		_paused_nodes.clear()
 		_paused_corpses.clear()
 	contact_light.visible = _contact_time > 0.0
-	contact_light.light_energy = _contact_energy * pow(_contact_time / 0.22, 2.0) * (0.35 if Prefs.reduce_motion else 1.0)
+	contact_light.light_energy = _contact_energy * pow(_contact_time / _contact_duration, 2.0) * (0.35 if Prefs.reduce_motion else 1.0)
 	_tick_probe(delta)
 
 
@@ -554,6 +558,7 @@ func _publish_probe() -> void:
 		"native_enemies": _enemy_models.snapshot() if _enemy_models != null else {},
 		"enemy_feedback": _enemy_feedback.snapshot() if _enemy_feedback != null else {},
 		"native_zones": _zone_fx.snapshot() if _zone_fx != null else {},
+		"hit_feel": _hit_feel.snapshot() if _hit_feel != null else {},
 		"player_occluders": _occlusion._active.size() if _occlusion != null else 0,
 		"player_occlusion_instances": _occlusion._active.values().filter(func(state: Dictionary): return state["index"] >= 0).size() if _occlusion != null else 0,
 		"native_trees": _trees.get_meta("native_tree_report")["source_count"] if _trees != null else 0,
@@ -682,19 +687,28 @@ func _sync_cards() -> void:
 				_labels[id] = {"node": fresh_label, "owner": weakref(effect)}
 			var label: Label3D = _labels[id]["node"]
 			label.text = effect.text
+			if label.font_size != effect.font_size:
+				label.font_size = effect.font_size
+			label.scale = Vector3.ONE * (Effect.text_pop_scale(effect.age) if effect.pop and not Prefs.reduce_motion else 1.0)
 			label.modulate = Color(effect.color, clampf(2.0 - effect.age / effect.life * 2.0, 0.0, 1.0))
 			label.position = ground_position(effect.position, surface_height(effect.position))
 			continue
 		if effect.kind == "impact" and not _seen_impacts.has(id):
 			_seen_impacts[id] = weakref(effect)
-			_contact_time = 0.22
-			_contact_fresh = true
-			_contact_energy = 5.5
-			contact_light.position = spatial_position(effect.position, 0.9) + Vector3.UP * surface_height(effect.position)
-			if effect.has_method("native_position"):
-				contact_light.position = effect.native_position() + Vector3.UP * (0.15 if is_finite(effect.spatial_height) else 0.9)
-			var colors := [Color(1, 0.75, 0.45), Color(1, 0.36, 0.08), Color(0.65, 0.5, 1), Color(0.25, 0.65, 1)]
-			contact_light.light_color = colors[int(effect.params.get("cell", 0))]
+			var tier: int = effect.params.get("tier", HitTier.LIGHT)
+			var energy := 5.5 if tier >= HitTier.HEAVY else 3.0
+			if energy >= _contact_energy * pow(_contact_time / _contact_duration, 2.0):
+				_contact_duration = 0.16 if tier >= HitTier.HEAVY else 0.11
+				_contact_time = _contact_duration
+				_contact_fresh = true
+				_contact_energy = energy
+				contact_light.position = spatial_position(effect.position, 0.9) + Vector3.UP * surface_height(effect.position)
+				if effect.has_method("native_position"):
+					contact_light.position = effect.native_position() + Vector3.UP * (0.15 if is_finite(effect.spatial_height) else 0.9)
+				if effect.params.has("contact_position"):
+					contact_light.position = effect.params["contact_position"]
+				var colors := [Color(1, 0.75, 0.45), Color(1, 0.36, 0.08), Color(0.65, 0.5, 1), Color(0.25, 0.65, 1)]
+				contact_light.light_color = colors[int(effect.params.get("cell", 0))]
 		var key: String = str(effect.params.get("visual", ""))
 		if effect.kind == "slash":
 			key = "slash"
@@ -718,7 +732,7 @@ func _sync_cards() -> void:
 			phase = 1.0 / 3.0 if Prefs.reduce_motion else 0.32 + 0.06 * sin(effect.age * 20.0)
 			alpha = 0.65 if Prefs.reduce_motion else 0.9
 		if effect.kind == "impact":
-			width = effect.radius * (0.86 if Prefs.reduce_motion else lerpf(0.64, 1.16, ease(time, 0.3)))
+			width = effect.radius * (0.86 if Prefs.reduce_motion else lerpf(0.55, 0.92, ease(time, 0.3)))
 			angle = 0.0 if Prefs.reduce_motion else effect.angle
 			alpha = pow(1.0 - clampf((time - 0.10) / 0.90, 0.0, 1.0), 1.6) * (0.58 if Prefs.reduce_motion else 0.95)
 		elif effect.kind == "cast":
@@ -761,6 +775,8 @@ func _sync_cards() -> void:
 		var native_effect := Vector3(INF, INF, INF)
 		if effect.has_method("native_position"):
 			native_effect = effect.native_position()
+		if effect.kind == "impact" and effect.params.has("contact_position"):
+			native_effect = effect.params["contact_position"]
 		_place_card(card, effect.position, rect, angle, native_effect)
 	for id in _seen_impacts.keys():
 		if _seen_impacts[id].get_ref() == null:

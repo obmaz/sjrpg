@@ -10,6 +10,7 @@ var last_pose: Dictionary = {}
 var weapon: Node3D
 var _last_distance: float = -1.0
 var _flash: ShaderMaterial
+var _contact_serial := 0
 
 
 func _part(parent: Node3D, key: String, geometry: Mesh, at: Vector3 = Vector3.ZERO, rotation: Vector3 = Vector3.ZERO) -> MeshInstance3D:
@@ -160,7 +161,11 @@ func sync(player: Player) -> void:
 	for mesh: MeshInstance3D in meshes:
 		if mesh.material_overlay != overlay:
 			mesh.material_overlay = overlay
-	if (is_inside_tree() and get_tree().paused) or player._hitstop.remaining > 0.0:
+	if is_inside_tree() and get_tree().paused:
+		return
+	var contact := player.contact_serial != _contact_serial and player.contact_action_serial == player._action_serial and player._attack_time > 0.0
+	_contact_serial = player.contact_serial
+	if not contact and (player._hitstop.remaining > 0.0 or player.sprite.contact_hold > 0.0):
 		return
 	var moving: bool = player._run_distance != _last_distance
 	_last_distance = player._run_distance
@@ -177,10 +182,17 @@ func sync(player: Player) -> void:
 	var progress: float = 0.0
 	if player._attack_time > 0.0:
 		progress = clampf(1.0 - player._attack_time / player._attack_duration, 0, 1)
-		var strike: float = smoothstep(0.18, 0.55, progress)
-		arms[1].rotation.x = lerpf(-1.30, 0.75, strike)
-		arms[1].rotation.y = lerpf(-0.7, 0.8, strike)
-		torso.rotation.y = sin(progress * PI) * 0.18
+		if contact:
+			progress = Player.CONTACT_PROGRESS
+		var prepare := smoothstep(0.0, 0.27, progress)
+		var strike := smoothstep(0.28, Player.CONTACT_PROGRESS, progress)
+		var recover := smoothstep(0.60, 1.0, progress)
+		arms[1].rotation.x = lerpf(-1.55 * prepare, 0.90, strike) * (1.0 - recover)
+		arms[1].rotation.y = lerpf(-0.85 * prepare, 0.95, strike) * (1.0 - recover)
+		arms[1].rotation.z = -0.18 * sin(progress * PI)
+		arms[0].rotation.x = -0.55 * sin(progress * PI)
+		torso.rotation.y = lerpf(-0.28 * prepare, 0.30, strike) * (1.0 - recover)
+		torso.rotation.x = 0.10 * strike * (1.0 - recover)
 	if player._roll_time > 0.0:
 		torso.rotation.x = -0.75
 	if player.dead:

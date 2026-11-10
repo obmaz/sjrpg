@@ -4,6 +4,12 @@ extends Node
 const RATE := 22050
 const PROFILES := {
 	# name: [pitch, endPitch, duration, noiseFreq, noiseGain, toneGain, wave]
+	# Godot 전용: 실제 칼 휘두름 직전의 준비음과 살·뼈·암석 접촉 악센트.
+	# 합성 PCM과 믹스 여유를 검사한다. Android 실기 청음은 별도 검수 대상이다.
+	"weapon_draw": [190.0, 290.0, 0.08, 1500.0, 0.035, 0.005, "sine"],
+	"hit_flesh": [125.0, 42.0, 0.095, 1100.0, 0.055, 0.04, "sine"],
+	"hit_bone": [1650.0, 480.0, 0.075, 5200.0, 0.06, 0.03, "triangle"],
+	"hit_stone": [80.0, 28.0, 0.14, 3600.0, 0.07, 0.045, "sine"],
 	"slash": [290.0, 85.0, 0.13, 2600.0, 0.14, 0.035, "triangle"],
 	"prepare": [340.0, 520.0, 0.075, 1700.0, 0.025, 0.008, "sine"],
 	"fire": [180.0, 55.0, 0.25, 650.0, 0.15, 0.055, "sine"],
@@ -19,7 +25,7 @@ const PROFILES := {
 	"warp": [440.0, 1040.0, 0.32, 1200.0, 0.02, 0.04, "sine"],
 	# JUICE #11: not in the original audio_profile.dart. Godot-side additions so contact is not one repeated
 	# thud: two light variants, a medium variant, a short high "tick" transient layered on harder hits and a
-	# descending "kill" thud. Values are first guesses tuned by ear, not measured.
+	# descending "kill" thud. Synthetic transients; Android listening is still a separate device check.
 	"impact_b": [215.0, 56.0, 0.10, 1500.0, 0.13, 0.065, "sine"],
 	"impact_c": [150.0, 42.0, 0.14, 1400.0, 0.14, 0.072, "sine"],
 	"tick": [1900.0, 900.0, 0.04, 5200.0, 0.10, 0.02, "triangle"],
@@ -42,6 +48,8 @@ const STREAK_MAX := 5
 var _hit_variant := 0
 var _streak := 0
 var _last_kill_ms := -100000
+var _last_hit_ms := -100000
+var _last_hit_tier := -1
 
 
 func _ready() -> void:
@@ -111,14 +119,38 @@ static func streak_pitch(count: int) -> float:
 	return pow(2.0, clampi(count, 0, STREAK_MAX) / 12.0)
 
 
-func play_hit(tier: int, element := 0) -> void:
+static func contact_volume_db(name: String) -> float:
+	return -8.0 if name.begins_with("impact") else -12.0
+
+static func material_hit_name(species: String) -> String:
+	if species == "skeleton":
+		return "hit_bone"
+	if species == "golem":
+		return "hit_stone"
+	return "hit_flesh" if species in ["goblin", "wolf", "boar"] else ""
+
+func play_hit(tier: int, element := 0, species := "") -> void:
+	var kill_pitch := _next_kill_pitch() if tier == HitTier.KILL else 1.0
+	var now := Time.get_ticks_msec()
+	var grouped := now - _last_hit_ms < 70
+	if grouped and tier <= _last_hit_tier:
+		return
+	if grouped:
+		# 한 광역 공격 안에서도 약한 접촉음보다 강한 마무리를 우선한다.
+		for voice: AudioStreamPlayer in _players:
+			if voice.get_meta("contact_voice", false):
+				voice.stop()
+		for gate in ["impact", "tick", "kill", "hit_material", "hit_fire", "hit_ice", "hit_lightning"]:
+			_last[gate] = -100000
+	_last_hit_ms = now
+	_last_hit_tier = tier
 	var names := hit_names(tier, _hit_variant, element)
 	_hit_variant += 1
+	var material := material_hit_name(species)
+	if not material.is_empty():
+		names.append(material)
 	for sound in names:
-		if sound == "kill":
-			play(sound, false, _next_kill_pitch())
-		else:
-			play(sound)
+		play(sound, false, kill_pitch if sound == "kill" else 1.0)
 
 
 func _next_kill_pitch() -> float:
@@ -133,7 +165,7 @@ func play(name: String, preview := false, pitch_multiplier := 1.0) -> void:
 		return
 	var now := Time.get_ticks_msec()
 	# Every contact variant shares one gate so area attacks cannot layer a wall of thuds.
-	var gate := "impact" if name.begins_with("impact") else name
+	var gate := "impact" if name.begins_with("impact") else ("hit_material" if name in ["hit_flesh", "hit_bone", "hit_stone"] else name)
 	if not preview and now - int(_last.get(gate, 0)) < 70:
 		return
 	_last[gate] = now
@@ -141,5 +173,7 @@ func play(name: String, preview := false, pitch_multiplier := 1.0) -> void:
 	_next = (_next + 1) % _players.size()
 	player.stream = _streams[name]
 	player.pitch_scale = (_variation.randf_range(0.96, 1.04) if name in ["slash", "impact", "impact_b", "impact_c", "impact_heavy", "fire", "ice", "lightning", "hit_fire", "hit_ice", "hit_lightning"] else 1.0) * pitch_multiplier
-	player.volume_db = -4.0
+	var contact := name.begins_with("impact") or name.begins_with("hit_") or name in ["tick", "kill"]
+	player.set_meta("contact_voice", contact)
+	player.volume_db = contact_volume_db(name) if contact else -4.0
 	player.play()

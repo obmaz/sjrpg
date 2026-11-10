@@ -17,6 +17,7 @@ var _idle_clock := 0.0
 var _last_position := Vector2.ZERO
 var _last_run_distance := 0.0
 var _has_source := false
+var _contact_serial := 0
 
 
 func setup(animator: AnimationPlayer, model: Node = null) -> Ortho3DHeroMotion:
@@ -47,7 +48,10 @@ func sync(player: Player, delta: float, paused := false) -> void:
 	moving = _has_source and (player.position.distance_squared_to(_last_position) > 0.01 or absf(run_distance - _last_run_distance) > 0.001)
 	held = paused or (player.is_inside_tree() and player.get_tree().paused) or player.sprite.contact_hold > 0.0 or player._hitstop.remaining > 0.0
 	_remember(player)
-	if held and pose_updates > 0:
+	var contact := not paused and not (player.is_inside_tree() and player.get_tree().paused) and player.contact_serial != _contact_serial and player.contact_action_serial == player._action_serial and player._attack_time > 0.0
+	if not paused:
+		_contact_serial = player.contact_serial
+	if held and pose_updates > 0 and not contact:
 		return
 	var desired := "cast" if player._attack_time > 0.0 else ("run" if moving else "idle")
 	var selected: String = str(_clips.get(desired, ""))
@@ -63,7 +67,7 @@ func sync(player: Player, delta: float, paused := false) -> void:
 		active_clip = selected
 	if desired == "cast":
 		var progress := 1.0 - player._attack_time / maxf(player._attack_duration, 0.0001)
-		sample_time = clampf(progress, 0.0, 1.0) * clip.length
+		sample_time = (Player.CONTACT_PROGRESS if contact else clampf(progress, 0.0, 1.0)) * clip.length
 	elif desired == "run":
 		# Same eight-step128-world-unit stride as the authoritative sprite.
 		sample_time = fposmod(run_distance / 128.0, 1.0) * clip.length

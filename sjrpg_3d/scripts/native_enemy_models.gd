@@ -463,6 +463,35 @@ static func pose(model: Dictionary, facing: float, cycle: float, attack: float, 
 		torso.rotation.y = lerpf(-0.30 * prepare, 0.35, strike) * hold
 		torso.rotation.x = 0.16 * strike * hold
 
+## 명중 방향으로 흉곽·머리·무기를 젖힌다. 발과 실제 충돌체는 옮기지 않는다.
+static func hit_reaction(model: Dictionary, enemy: Enemy) -> void:
+	model["hit_lean"] = 0.0
+	if Prefs.reduce_motion or enemy.hit_reaction_age >= 0.30:
+		return
+	var root: Node3D = model["root"]
+	var direction := Ortho3DPreview.ground_position(enemy._recoil_direction).normalized()
+	var local := root.basis.orthonormalized().inverse() * direction
+	var envelope := exp(-10.0 * enemy.hit_reaction_age) * (1.0 - smoothstep(0.16, 0.30, enemy.hit_reaction_age))
+	var mass := 0.35 if enemy.is_boss or enemy.kind == "golem" else (0.65 if enemy.kind == "boar" else 1.0)
+	var strength: float = [0.16, 0.23, 0.32, 0.38][enemy.last_hit_tier] * envelope * mass
+	model["hit_lean"] = strength
+	var torso: Node3D = model["torso"]
+	var lean := Basis.from_euler(Vector3(local.z * strength, 0.0, -local.x * strength))
+	var pivot := Vector3(0, float(model["base_height"]) * 0.42, 0)
+	var impulse := Transform3D(lean, pivot - lean * pivot + Vector3(local.x, -0.025, local.z) * strength * 0.10)
+	torso.transform = impulse * torso.transform
+	if model["joints"].has("head"):
+		var head: Node3D = model["joints"]["head"]
+		head.rotation.x += local.z * strength * 0.65
+		head.rotation.z -= local.x * strength * 0.65
+	for index in model["arms"].size():
+		var arm: Node3D = model["arms"][index]
+		if enemy.kind not in ["wolf", "boar"] and model["kind"] != CRAWLER:
+			# 어깨 원점도 흉곽을 따라가야 팔과 몸통이 벌어지지 않는다.
+			arm.transform = impulse * arm.transform
+		arm.rotation.x += strength * 0.7
+		arm.rotation.z += strength * (0.45 if index == 0 else -0.45)
+
 func sync() -> void:
 	var live := {}
 	var view: Rect2 = preview.source_view_rect()
@@ -506,6 +535,7 @@ func sync() -> void:
 			attack = 0.6 + 0.4 * clampf((enemy._recover_duration - enemy._timer) / enemy._recover_visual_duration, 0.0, 1.0)
 		var cycle := enemy._walk_cycle if enemy._state == "chase" or (enemy._state == "idle" and enemy._wander != Vector2.ZERO) else 0.0
 		pose(model, enemy.facing, cycle, attack)
+		hit_reaction(model, enemy)
 		tint(model, enemy.sprite.tint, enemy.sprite.flash, enemy.sprite.flash_tint, enemy.sprite.modulate.a * enemy.sprite.self_modulate.a)
 	for id in entries.keys():
 		if not live.has(id):
@@ -519,7 +549,7 @@ func snapshot() -> Dictionary:
 		if not is_instance_valid(enemy):
 			continue
 		var root: Node3D = model["root"]
-		sources.append({"kind": model["kind"], "facing": enemy.facing, "visible": root.visible, "pivot_error": root.position.distance_to(preview.actor_foot(enemy) + Ortho3DPreview.ground_position(enemy.sprite.position))})
+		sources.append({"kind": model["kind"], "facing": enemy.facing, "visible": root.visible, "hit_lean": model.get("hit_lean", 0.0), "pivot_error": root.position.distance_to(preview.actor_foot(enemy) + Ortho3DPreview.ground_position(enemy.sprite.position))})
 	return {"count": entries.size(), "kinds": KINDS, "volume": true, "sources": sources}
 
 static func place_corpse(presenter: Node, model: Dictionary, corpse: Dictionary) -> void:

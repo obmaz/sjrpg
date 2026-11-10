@@ -302,6 +302,8 @@ func _read_debug_params() -> void:
 			_dungeon_preview.call_deferred(kv[1])
 		elif kv.size() == 2 and kv[0] == "warp_preview" and kv[1] == "1":
 			_warp_preview.call_deferred()
+		elif kv.size() == 2 and kv[0] == "hitfeel_preview" and kv[1] in ["1", "peak"]:
+			_hit_feel_preview.call_deferred()
 		elif kv.size() == 2 and kv[0] == "combat_preview":
 			_combat_preview.call_deferred()
 		elif kv.size() == 2 and kv[0] == "combat_text_preview" and kv[1] == "1":
@@ -615,6 +617,36 @@ func _warp_preview() -> void:
 
 
 ## Explicit visual-review query only: real equipped-skill casts against a stationary target.
+## 기본 체력의 실제 적에게 실제 기본 공격을 반복한다. 피해/모션을 가짜로 재생하지 않는다.
+func _hit_feel_preview() -> void:
+	encounters.set_process(false)
+	_spawn_timer = 10000.0
+	for foe: Enemy in enemies:
+		foe.queue_free()
+	enemies.clear()
+	await get_tree().create_timer(2.0).timeout
+	var target: Enemy
+	var species := ["goblin", "skeleton", "wolf", "boar"]
+	var round := 0
+	for index in 160:
+		if not is_inside_tree() or is_queued_for_deletion():
+			return
+		if not is_instance_valid(target) or target.dead:
+			target = Enemy.new()
+			target.setup(self, species[round % species.size()], 1)
+			target.xp_reward = 0
+			round += 1
+			target.position = player.position + Vector2(65, 10)
+			target.facing = (player.position - target.position).angle()
+			world.add_child(target)
+			enemies.append(target)
+			target.stun(90.0)
+		if player._attack_time <= 0.0 and float(player.cooldowns.get(GameState.slots[0], 0.0)) <= 0.0:
+			target.position = player.position + Vector2(65, 10)
+			target._knockback = Vector2.ZERO
+			player.cast_slot(0, true)
+		await get_tree().create_timer(0.37, false).timeout
+
 func _combat_preview() -> void:
 	encounters.set_process(false)
 	_spawn_timer = 10000.0
@@ -878,7 +910,7 @@ func combat_feedback(at: Vector2, strength: float, hurt := false) -> void:
 	var direction := (player.position - at).normalized()
 	if direction.length_squared() < 0.1:
 		direction = Vector2(0.6, -0.8)
-	_impact_offset = (_impact_offset + direction * clampf(strength, 0.0, 1.0) * (5.0 if hurt else 3.8)).limit_length(7.0)
+	_impact_offset = (_impact_offset + direction * clampf(strength, 0.0, 1.0) * (5.0 if hurt else 4.8)).limit_length(7.0)
 	_impact_age = 0.0
 	_impact_cross = direction.orthogonal() * clampf(strength, 0.0, 1.0) * 0.65
 	_impact_fresh = true

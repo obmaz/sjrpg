@@ -1,79 +1,48 @@
-# 타격감(Juice) 정리
+# 전투 피드백과 타격감
 
-3D판(`sjrpg_3d`)의 타격감 구조와 현재 수치, 튜닝 위치, 남은 일을 정리한 문서입니다.
-항목 번호(#1~#15)는 최초 제안 문서의 번호이며, 개선한 코드에는 `JUICE #번호` 주석이 있습니다.
+명중 순간의 자세·소리·피격 반응이 같은 박자를 읽도록 구성합니다. 참고한 [게임에서 타격감을 살리기 위한 요소들](https://m.blog.naver.com/PostView.naver?blogId=dasoong15&logNo=221317381188)의 방향성, 피격 형태, 순간적인 시간 절제와 주변 대비를 현재3D 전투에 맞춰 적용합니다.
+
+## 명중과 시간
+
+`Player.CONTACT_PROGRESS=0.45`에서 실제 공격 콜백이 실행됩니다. `contact_serial`은 그 공격에서 첫 명중이 확정됐을 때만 증가합니다. `NativeWarrior3D`·`Ortho3DHeroMotion`은 새 명중의 접촉 자세를 먼저 샘플링하고 그 뒤에 자세를 유지합니다. 앞 프레임의 준비 자세를 그대로 멈추지 않습니다. 전사의 준비→빠른 베기→후속 회복과 휘두르는 소리는 이 접촉 시점을 기준으로 합니다.
+
+`Engine.time_scale`은 변경하지 않습니다. `GameTempo.ContactStop`이 실제 맞은 액터와 명중한 근접 공격자의 짧은 정지만 담당합니다. 일반 적40ms·강타55ms, 근접 공격자35/50ms, 처치75ms(상한80ms)이며 연속 접촉의 정지 누적을 막는 회복 창을 유지합니다. 쿨다운·상태 시간·UI는 원래 시간을 읽습니다.
+
+## 피해 단계와3D 반응
+
+`Enemy.take_damage()`가 피해/최대 체력과 처치 여부로 `HitTier`를 한 번 정합니다. 숫자·소리·카메라·피격 반응이 이를 공유합니다.
+
+| 단계 | 기준 | 숫자 | 넉백 px/s | 몸통 기울기 rad |
+| --- | --- | --- | --- | --- |
+| LIGHT | 10% 미만 | 22pt 연노랑 | 140 | 0.16 |
+| MEDIUM | 10% 이상 | 26pt 노랑 | 180 | 0.23 |
+| HEAVY | 30% 이상 | 32pt 주황 | 240 | 0.32 |
+| KILL | 처치 | 36pt 적주황 | 260 | 0.38 |
+
+`NativeEnemyModels.hit_reaction()`은 실제 공격 방향을 리그의 로컬 축으로 변환해 흉곽·머리·무기를 젖혔다가300ms 안에 감쇠시킵니다. 반응 시간은 적의 로컬 히트스톱을 따릅니다. 보스·골렘은 기울기를35%, 멧돼지는65%만 적용합니다. 실제 바닥 접점과 충돌체는 이 기울기로 옮기지 않습니다. 기존 단계별 눌림5~12%와 물리 넉백을 함께 사용하며, 보스의 넉백은160으로 유지합니다.
+
+`Label3D`는 `Effect.font_size`와 팝 상태를 그대로 읽습니다. MEDIUM 이상 숫자는1.4배에서80ms 동안 원래 크기로 돌아옵니다. 재사용하는 라벨도 크기·배율을 매번 갱신해 처치 숫자의 크기가 다음 일반 피해에 남지 않게 합니다. 피해 수치 표기 배율은 바꾸지 않습니다.
+
+## 접촉점과 화면
+
+`Enemy`가 실제3D 접촉점을 명중 효과에 기록합니다. 근접은 공격자 쪽 흉곽 표면, 투사체는 스윕 판정으로 얻은 실제 충돌 위치입니다. 핵심 명중 원화·접촉 광원·파편이 이 위치를 공유합니다.
+
+`NativeHitFeel3D`의 짧은 선형 파편은 접촉면 바깥으로 튀며 실제 깊이 검사를 합니다. 공유 Quad·재질과 최대12개 MultiMesh 묶음을 재사용하며, 묶음당 최대8개로96개 파편을 넘지 않습니다. 원래 효과의 시간·수명과 일시정지를 읽고 피해 판정은 만들지 않습니다.
+
+강타110ms·처치150ms 동안 명중점 주변은 유지하고 바깥 장면의 대비를 살짝 낮춥니다. 고화질에서는 짧은 색 분리도 더합니다. 저화질은 색 분리를 생략합니다. 이 셰이더는3D 장면 텍스처에만 적용되어 HUD·미니맵·조작 버튼에는 영향을 주지 않습니다.
+
+카메라는 단계별로 더 강한 감쇠 충격을 주되 기존7px 상한을 유지합니다. 기존 강타1.5%·처치2%·보스 처치4% 줌 펀치도 같은 명중 박자에 맞춥니다. 한 개의 접촉 조명을 재사용하며 일반 명중은110ms/에너지3, 강타는160ms/에너지5.5입니다. 같은 프레임의 약한 명중이 더 강한 광원을 덮어쓰지 않습니다.
+
+## 소리와 설정
+
+`SoundFx`는 기본 타격음의 변주에 살·뼈·암석 악센트와 속성 악센트를 겹칩니다. 같은70ms 묶음에서는 더 강한 명중음을 우선하며 약한 소리를 계속 쌓지 않습니다. 재생 보이스는8개를 유지하고, 기본 타격음-8dB·악센트-12dB의 실제 합성 PCM 믹스에 여유가 있는지 `native_hit_feel`에서 검사합니다. 원본 Dart에 없는 합성 프로필은 `sound_fx.gd`에 표시합니다. 이 검사는 Android 실기 청음을 대신하지 않습니다.
+
+`Prefs.reduce_motion`은 추가 몸통 기울기·파편·초점/색 분리·숫자 팝을 끕니다. 기존 플래시·조명은 약화하고 정지·눌림·줌은 기존 설정 계약을 따릅니다. 효과음과 진동은 각각 `SoundFx`·`Prefs.pulse()`를 통과합니다.
+
+## 검증
 
 ```sh
-grep -rn "JUICE #" scripts tests          # 개선한 지점 전부
-tools/check.sh --project=3d --only=juice_tier,juice_enemy,juice_player,juice
+sjrpg_3d/tools/check.sh --only=native_hit_feel,juice_tier,juice_enemy,juice_player,juice,native_warrior,ortho_3d_motion
 ```
 
-## 원칙
-
-- `Engine.time_scale`은 쓰지 않습니다. 정지는 `GameTempo.ContactStop`처럼 맞은 액터(또는 때린 플레이어) 단위로만 합니다.
-- 연출은 표시 전용이며 피해량·쿨다운을 바꾸지 않습니다. 위치를 움직이는 #3(넉백)·#7(근접 전진)은 예외이고, 이 경우에도 피해량은 그대로입니다.
-- 새 연출은 모두 `Prefs.reduce_motion`에서 끄거나 약화하고 테스트로 확인합니다.
-- 첫 갱신을 `minf(delta, 0.012)`로 제한해 느린 브라우저 프레임에서도 첫 장면이 한 번은 보이게 합니다.
-- 장식 효과는 `cosmetic_effects` 64개 예산 안에서 만듭니다.
-- 원본 `audio_profile.dart`에 없는 합성 효과음은 `sound_fx.gd` `PROFILES` 주석에 그 사실을 남깁니다.
-
-## 구조: 피해 단계(`HitTier`)
-
-`Enemy.take_damage`가 `HitTier.of(피해, 최대 체력, 처치 여부)`로 단계를 **한 번** 계산하고, 아래 연출이 모두 이 값을 읽습니다.
-HEAVY는 원래의 "강타" 규칙(피해 ≥ 최대 체력 30% 또는 처치)과 같아 기존 임팩트·카메라·정지 동작은 그대로입니다.
-
-| 단계 | 기준(피해/최대 체력) | 숫자 | 넉백(px/s) | 눌림 | 타격음 |
-| --- | --- | --- | --- | --- | --- |
-| LIGHT | 10% 미만 | 22pt 연노랑, 팝 없음 | 140 | 5% | `impact`·`impact_b` 번갈아 |
-| MEDIUM | 10% 이상 | 26pt 노랑, 팝 | 180 | 7% | `impact_c` + `tick` |
-| HEAVY | 30% 이상 | 32pt 주황, 팝 | 240 | 10% | `impact_heavy` + `tick` |
-| KILL | 처치 | 36pt 적주황, 팝 | 260 | 12% | `impact_heavy` + `kill` |
-
-보스는 넉백이 모든 단계에서 160으로 고정입니다(슬램 박자 보존). 속성(불·번개·얼음) 공격은 `hit_fire`·`hit_lightning`·`hit_ice` 악센트가 위에 더해집니다.
-
-## 구현 항목
-
-| # | 항목 | 상태 | 코드 | 테스트 |
-| --- | --- | --- | --- | --- |
-| 1 | 피해 단계화 | 완료 | `hit_tier.gd`, `enemy.gd` `take_damage` | `juice_tier` |
-| 2 | 데미지 숫자 크기·색·팝(1.4배→1.0, 0.08초) | 완료 | `hit_tier.gd`, `effects.gd` `font_size`·`pop`, `game.gd` `float_text` | `juice_tier` |
-| 3 | 넉백 스케일 | 완료 | `hit_tier.gd` `knockback`, `enemy.gd` | `juice_tier` |
-| 4 | 스쿼시(0.12초, 적만) | 완료 | `actor_sprite.gd` `trigger_squash`, `native_enemy_models.gd` `sync` | `juice_enemy` |
-| 5 | 처치 연출: 공격자 정지 75ms(상한 80ms), 흰색 플래시, 파편 링, 반동 14px, 페이드 0.25초 | 완료 | `hit_tier.gd` KILL_*, `enemy.gd`, `player.gd` `confirm_melee_contact`, `game_tempo.gd` | `juice_enemy` |
-| 6 | 보스 처치 연출: 플레이어·남은 적 0.12초 정지, 큰 파편 링(260), 라이트 펄스, `warcry`, 카메라 충격 2회(즉시·0.25초 뒤), 줌 펀치 4% | 완료 | `game.gd` `_boss_defeat_presentation` | `juice_enemy` |
-| 7 | 근접 전진: 기본 근접만, 접촉 전 16px | 완료 | `player.gd` `_lunge` | `juice_player` |
-| 8 | 큰 피해 피격 비네트: 한 번에 최대 체력 15% 이상, 0.22초, 최대 50% | 완료 | `hud.gd` `_build_heavy_hit_vignette` | `juice_player` |
-| 9 | 일반 적 공격 예고: 윈드업 시작 노란 플래시(강도 0.55) | 완료 | `enemy.gd` `TELEGRAPH_COLOR`, `actor_sprite.gd` | `juice_enemy` |
-| 10 | 보스 슬램 착지 카메라 충격(피해 무관) | 완료 | `enemy.gd` | `juice_enemy` |
-| 11 | 타격음 변주·`tick`·`kill`·연속 처치 피치(+1반음/회, 최대 +5, 2.5초 창), 보이스 6→8 | 완료 | `sound_fx.gd` | `juice_tier` |
-| 12 | 속성별 적중음 | 완료 | `effects.gd` `contact_element`, `sound_fx.gd` | `juice_tier` |
-| 13 | 적 체력바 잔상(0.35초 유지, 초당 최대 체력 120% 소모) | 완료 | `enemy.gd` `ghost_hp` | `juice_enemy` |
-| 14 | 카메라 줌 펀치: HEAVY 1.5%, KILL 2%, 보스 처치 4%(상한 4%), 약 0.1초 감쇠 | 완료 | `game.gd` `zoom_punch`·`_update_zoom_punch`, `hit_tier.gd` `zoom_punch` | `juice_enemy` |
-| 15 | 타격감 강도 설정 | 제외(필요 없음) | | |
-
-## 튜닝 위치
-
-| 바꾸고 싶은 것 | 위치 |
-| --- | --- |
-| 단계 경계(10%·30%) | `hit_tier.gd` `MEDIUM_RATIO`·`HEAVY_RATIO` |
-| 숫자 크기·색, 넉백, 눌림 | `hit_tier.gd` `number_size`·`number_color`·`knockback`·`squash` |
-| 처치 정지·반동·페이드 | `hit_tier.gd` `KILL_*` |
-| 숫자 팝 | `effects.gd` `POP_SECONDS`·`POP_START` |
-| 효과음 모양 | `sound_fx.gd` `PROFILES`(피치·길이·노이즈·게인), 연속 처치 `STREAK_*` |
-| 근접 전진 | `player.gd` `LUNGE_*` |
-| 비네트 | `hud.gd` `HEAVY_HIT_*` |
-| 공격 예고 색 | `enemy.gd` `TELEGRAPH_COLOR` |
-| 체력바 잔상 | `enemy.gd` `GHOST_*` |
-| 줌 펀치 | `hit_tier.gd` `zoom_punch`, `game.gd` `ZOOM_PUNCH_LIMIT` |
-| 보스 처치 정지·연출 | `game.gd` `BOSS_DEFEAT_PAUSE`·`_boss_defeat_presentation` |
-| 일반 접촉 정지(35~55ms)·반동·카메라 7px | 기존 값: `game_tempo.gd`, `enemy.gd`, `player.gd`, `game.gd` `combat_feedback` |
-
-## 알려진 한계와 이어서 할 일
-
-- **소리는 귀로 조정하지 않았습니다.** `impact_b`·`impact_c`·`tick`·`kill`·`hit_*`의 값은 첫 추정치이고 합성 파형만 테스트했습니다. 실제 기기에서 듣고 `PROFILES`를 조정해야 합니다.
-- **체감 수치 검증은 일부만 했습니다.** 브라우저에서 데미지 숫자와 맞은 적의 눌림·HUD 정상 표시는 확인했지만, 정지·넉백·근접 전진의 손맛과 진동은 직접 플레이로 확인해야 합니다.
-- **히어로는 눌림이 없습니다.** 히어로 3D 루트 스케일은 1로 유지하는 규칙(`native_warrior` 테스트)이라 제외했습니다. 필요하면 몸통 노드 단위로 별도 설계합니다.
-- **근접 전진은 실효 사거리를 최대 16px 늘립니다.** 밸런스에 문제가 있으면 `LUNGE_DISTANCE`를 줄입니다.
-- **줌 펀치는 멀미 위험이 있습니다.** 선택한 줌 위에 곱하는 방식이고 상한 4%, `동작 줄이기`에서는 꺼집니다. 불편하면 `hit_tier.gd` `zoom_punch` 값이나 `game.gd` `ZOOM_PUNCH_LIMIT`을 줄입니다.
-- **강도 설정(#15)은 만들지 않기로 했습니다.** 조절은 `동작 줄이기` 하나로 하고 수치는 코드에서 조정합니다.
-- 플레이어 피격(체력 감소)에는 단계별 숫자·소리를 아직 나누지 않았습니다. 필요하면 `Player.take_damage`에서 같은 `HitTier`를 쓰면 됩니다.
+`native_hit_feel`은 실제 기본 공격의 피해 콜백, 접촉 자세 고정, 방향 반전 피격,3D 숫자 팝, 일시정지, 파편 재사용/예산, 동작 줄이기와 소리 믹스를 검증합니다. 브라우저의 `?at=field&hitfeel_preview=1&probe=1`은 기본 체력의 실제 적에게 실제 기본 공격을 반복합니다. `hitfeel_preview=peak`는 실제 접촉 자세와 명중 효과를 적용한 뒤 검수용으로 그 프레임을 정지합니다. 원거리 마법은 기존 `fx_preview=iceBolt`로 함께 확인합니다. 가로·세로 화면과 연속 전투 영상을 검수하고 Android 전달 시 실제 기기 실행 여부를 구분합니다.

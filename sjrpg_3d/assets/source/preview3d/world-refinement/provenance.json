@@ -71,7 +71,7 @@
   "implementation": [
     {
       "path": "scripts/native_enemy_models.gd",
-      "sha256": "e6eb9b7378e8b817ae0751e3aa78bd9cbff57c72f1c961528c6c2895425454da"
+      "sha256": "b892a77e79973c8947ec37065376badb799fe76a9e109fbc1f3ba25aa3f3362c"
     },
     {
       "path": "assets/models/environment/cave_entrance/plan.gd",
