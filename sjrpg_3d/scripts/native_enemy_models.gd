@@ -5,6 +5,7 @@ const KINDS := ["goblin", "wolf", "boar", "skeleton", "golem"]
 const CRAWLER := "cave_crawler"
 var preview: Node
 var entries := {}
+var offscreen := 0
 static var _rig_meshes := {}
 static var _rest_bounds_by_kind := {}
 ## Immutable geometry/transform recipes contain no live Node or actor material references.
@@ -464,6 +465,8 @@ static func pose(model: Dictionary, facing: float, cycle: float, attack: float, 
 
 func sync() -> void:
 	var live := {}
+	var view: Rect2 = preview.source_view_rect()
+	offscreen = 0
 	var candidates: Array = preview.game.enemies.duplicate()
 	for entry: Dictionary in entries.values():
 		var fading: Node = entry["owner"].get_ref()
@@ -484,6 +487,12 @@ func sync() -> void:
 			entries[id] = model
 		var model: Dictionary = entries[id]
 		var root: Node3D = model["root"]
+		# An enemy well outside the camera is neither posed, tinted nor drawn into
+		# the shadow map; it is fully refreshed on the frame it comes back.
+		if not view.has_point(enemy.position):
+			root.visible = false
+			offscreen += 1
+			continue
 		var size := enemy.sprite.body_height / (Ortho3DPreview.GROUND_PER_METER * Iso.S) / float(model["base_height"])
 		# JUICE #4: the 3D body follows the sprite's contact squash (feet stay planted at the root origin).
 		var squash := enemy.sprite.squash_scale()

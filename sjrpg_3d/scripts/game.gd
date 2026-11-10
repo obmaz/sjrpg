@@ -15,8 +15,6 @@ const AUTOSAVE_SECONDS := 30.0
 
 var scene_view: Viewport
 var scene_root: Node
-var _low_view: SubViewport
-var _view_container: SubViewportContainer
 var world: Node2D
 var forest_details: Array[IsoSprite] = []
 var forest_lighting: ForestLighting
@@ -55,19 +53,6 @@ func _ready() -> void:
 	Gamepad.set_combat_enabled(false)
 	Gamepad.action_pressed.connect(_gamepad_action)
 	_rng.seed = 7
-	# Allocate the optional economy render target; full quality keeps drawing directly into the main viewport.
-	_view_container = SubViewportContainer.new()
-	_view_container.stretch = true
-	_view_container.stretch_shrink = 2
-	_view_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_view_container.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	add_child(_view_container)
-	_low_view = SubViewport.new()
-	_low_view.disable_3d = true
-	_low_view.handle_input_locally = false
-	_view_container.add_child(_low_view)
-	_view_container.visible = false
-	_low_view.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	scene_root = self
 	scene_view = get_viewport()
 	field_root = Node2D.new()
@@ -184,7 +169,6 @@ func _ready() -> void:
 
 func _update_zoom() -> void:
 	var size := get_viewport_rect().size
-	_view_container.size = size
 	# Keep characters similarly sized in portrait and landscape.
 	var short_side := minf(size.x, size.y)
 	var z := clampf(short_side / 720.0, 0.5, 1.6)
@@ -232,8 +216,6 @@ func _update_render_quality() -> void:
 	# The legacy canvas is a hidden rules adapter, never a render target. Reparenting
 	# its cached Polygon2D surfaces triggers a4.7.2 WebGL index-buffer update bug.
 	# Native viewport quality is owned by Ortho3DPreview._resize instead.
-	_view_container.visible = false
-	_low_view.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	_update_zoom()
 	camera.make_current()
 
@@ -409,7 +391,7 @@ func _place_at_chapel_reference() -> void:
 ## Native3D owns spatial movement; this node adapts the existing rules and HUD.
 func _enable_ortho_preview() -> void:
 	if is_instance_valid(ortho_preview):
-		ortho_preview.set_enabled(true)
+		ortho_preview.refresh()
 		return
 	ortho_preview = Ortho3DPreview.new().setup(self)
 	add_child(ortho_preview)

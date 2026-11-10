@@ -191,7 +191,7 @@ func run() -> void:
 	var town_position: Vector2 = game.player.position
 	game.player.position = game.village.gate_points[0] + (game.village.gate_points[0] - game.village.spawn_point).normalized() * 450.0
 	preview._process(0.016)
-	check("leaving town keeps native rendering and the source field culled", preview.display.visible and preview._native_visible and game.field_root.visibility_layer == 0 and preview.viewport.render_target_update_mode == SubViewport.UPDATE_ALWAYS)
+	check("leaving town keeps native rendering and the source field culled", preview.display.visible and game.field_root.visibility_layer == 0 and preview.viewport.render_target_update_mode == SubViewport.UPDATE_ALWAYS)
 	check("native forest remains visible in its own realm", preview._world_environment.forest.visible and preview._world_environment.report["scope"] == "forest")
 	game.player.position = town_position
 	preview._process(0.016)
@@ -201,7 +201,7 @@ func run() -> void:
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	preview._process(0.016)
-	check("cave keeps native walls visible while the forest remains culled", preview.display.visible and preview._native_visible and game.field_root.visibility_layer == 0 and preview._world_environment.cave.visible and not preview._world_environment.forest.visible)
+	check("cave keeps native walls visible while the forest remains culled", preview.display.visible and game.field_root.visibility_layer == 0 and preview._world_environment.cave.visible and not preview._world_environment.forest.visible)
 	check("town portals names and quest markers do not leak into the cave", _town_affordances_hidden(game, preview))
 	check("native resident bodies do not leak into cave realm", preview._native_residents.review_snapshot()["visible"] == 0)
 	game.dungeon.leave("")
