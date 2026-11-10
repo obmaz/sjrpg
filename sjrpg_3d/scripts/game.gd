@@ -909,7 +909,7 @@ func _process(delta: float) -> void:
 	_update_zoom_punch(delta)
 	camera.position = _camera_focus()
 	if dungeon.active:
-		WorldOcclusion.update(player.global_position, false)
+		WorldOcclusion.update(player.global_position, false, field_root.is_visible_in_tree())
 		dungeon.tick(delta)
 		_save_timer += delta
 		if _save_timer >= 5.0:
@@ -924,7 +924,7 @@ func _process(delta: float) -> void:
 			break
 	# Passing beneath an arch stays on the ground; local occlusion keeps the body readable.
 	player.z_index = 1 if elevated else 0
-	WorldOcclusion.update(player.global_position if not player.dead else Vector2(1000000, 1000000), elevated)
+	WorldOcclusion.update(player.global_position if not player.dead else Vector2(1000000, 1000000), elevated, field_root.is_visible_in_tree())
 	_tick_corpses(delta)
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
@@ -1408,7 +1408,7 @@ func _tick_corpses(delta: float) -> void:
 			remove_corpse(corpse)
 		else:
 			var visual: Node2D = corpse.get("visual")
-			if is_instance_valid(visual):
+			if is_instance_valid(visual) and visual.is_visible_in_tree():
 				visual.queue_redraw()
 
 

@@ -369,11 +369,18 @@ func sync_scope(force := false) -> void:
 		realm = "cave" if cave else "forest"
 		_layout_id = identity
 		_rebuild()
+	# Every spatial query enters here, many times per frame. Assigning an unchanged
+	# layer still reaches the physics server, so only real state changes are written.
 	for index in _gates.size():
-		_gates[index].collision_layer = SOLID if not cave and game.town_gates.closed[index] else 0
+		var gate_layer := SOLID if not cave and game.town_gates.closed[index] else 0
+		if _gates[index].collision_layer != gate_layer:
+			_gates[index].collision_layer = gate_layer
 	for entry in _props:
 		var source: Chest = entry["owner"].get_ref()
-		(entry["body"] as StaticBody3D).collision_layer = PROP if is_instance_valid(source) and not source.dead else 0
+		var body: StaticBody3D = entry["body"]
+		var prop_layer := PROP if is_instance_valid(source) and not source.dead else 0
+		if body.collision_layer != prop_layer:
+			body.collision_layer = prop_layer
 
 
 func _rebuild() -> void:

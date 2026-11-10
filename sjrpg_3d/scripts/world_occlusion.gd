@@ -20,7 +20,9 @@ static func bounds_of(rect: Rect2, transform: Transform2D) -> Rect2:
 	return bounds
 
 
-static func update(position: Vector2, above: bool) -> void:
+## `scan` is false while the source canvas is hidden (the native 3D game): no silhouette
+## can cover the hero there, so only the shader globals are published.
+static func update(position: Vector2, above: bool, scan := true) -> void:
 	RenderingServer.global_shader_parameter_set("hero_world_position", position)
 	RenderingServer.global_shader_parameter_set("hero_above", above)
 	if _material == null:
@@ -28,7 +30,7 @@ static func update(position: Vector2, above: bool) -> void:
 		_material.shader = SHADER
 		WorldLighting.register_material(_material)
 	var selected: Array[Node2D] = []
-	if not above:
+	if scan and not above:
 		var body := Rect2(position - Vector2(38, 100), Vector2(76, 116))
 		var tree := Engine.get_main_loop() as SceneTree
 		for item in tree.get_nodes_in_group("world_occluders"):

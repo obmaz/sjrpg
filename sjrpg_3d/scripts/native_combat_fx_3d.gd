@@ -21,10 +21,10 @@ static func supports(source: Effect) -> bool:
 
 func sync() -> void:
 	var current := {}
-	var children: Array = _preview.game.world.get_children()
+	var children: Array[Effect] = Effect.in_world(_preview.game.world)
 	# A bounded recent-shot picture cannot remove any gameplay projectile.
 	for index in range(children.size() - 1, -1, -1):
-		var source := children[index] as Effect
+		var source := children[index]
 		if not is_instance_valid(source) or source.is_queued_for_deletion() or not supports(source) or source.age >= source.life:
 			continue
 		var at := source.native_position()
