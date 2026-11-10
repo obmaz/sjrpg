@@ -52,6 +52,7 @@ jobs:
                   tools/setup_godot.sh
                   python3 sjrpg_2d/tools/test_stamp_web.py
                   python3 sjrpg_3d/tools/test_stamp_web.py
+                  python3 sjrpg_3d/tools/test_import_project.py
                   node tools/test_portal.mjs
                   node sjrpg_2d/web/check_shell.mjs
                   node sjrpg_3d/web/check_shell.mjs

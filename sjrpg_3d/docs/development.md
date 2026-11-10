@@ -40,6 +40,8 @@ tools/serve.sh
 
 테스트는 `tests/run_all.tscn`에서 `tests/cases/`를 탐색합니다. 정적 호출이 없다는 이유로 테스트 파일을 삭제하지 않습니다. 제작 도구의 Python import와 명령행 진입점도 참조에 포함합니다.
 
+`tools/import_project.sh`는 새 캐시에서 프로젝트 폰트를 먼저 요청한 첫 임포트가 리소스 생성을 마친 뒤 종료 코드134로 중단된 경우 한 번 재검사합니다. 스크립트 오류·미완료 임포트·두 번째 실패는 통과시키지 않습니다. 이 경계는 `python3 sjrpg_3d/tools/test_import_project.py`로 검증합니다.
+
 [Web·Android 내보내기](platform-exports.md), [Android 설치·서명](android.md), [웹 성능](web-performance.md)을 따릅니다. UI·입력·렌더 변경은 실제 가로·세로 브라우저 검사를 추가하고, 배포는 전체 검사와 공개 페이지 실행을 확인합니다.
 
 검수 캡처·일회성 진단 출력은 `build/`와 Actions 아티팩트에 둡니다. 저장소에 완료 스크린샷을 계속 쌓지 않습니다. 원본 출처와 현재 재현 방법은 관련 제작 문서에 유지합니다.
