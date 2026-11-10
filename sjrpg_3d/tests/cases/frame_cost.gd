@@ -37,5 +37,20 @@ func run() -> void:
 	world.sync_scope()
 	check("opening a gate clears its body on the next query", gate.collision_layer == 0)
 	game.town_gates.closed[0] = before
+
+	# A cave visit stows the forest collision and brings the same bodies back.
+	var builds := world.forest_builds
+	var blocked_before := world.blocked(game.village.npc_points["촌장"], Player.RADIUS)
+	game.player.position = game.dungeon.entry_point()
+	check("the real cave can be entered", game.dungeon.enter())
+	world.sync_scope()
+	await _frames(3)
+	check("forest collision leaves the physics space in the cave", world.realm == "cave" and not gate.is_inside_tree() and is_instance_valid(gate))
+	game.dungeon.leave("", false)
+	world.sync_scope()
+	await _frames(3)
+	check("returning restores the same forest bodies without a rebuild", world.realm == "forest" and world.forest_builds == builds and gate.is_inside_tree() and world._gates[0] == gate)
+	check("restored forest collision still blocks a resident's spot", blocked_before and world.blocked(game.village.npc_points["촌장"], Player.RADIUS))
+	check("autosave is a 30 second safety net", is_equal_approx(game.AUTOSAVE_SECONDS, 30.0))
 	game.queue_free()
 	await _frames(2)

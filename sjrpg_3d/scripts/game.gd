@@ -9,6 +9,9 @@ const FIELD := Rect2(-3600, -3600, 7200, 7200)
 const CORPSE_LIFETIME := 30.0
 const CORPSE_LIMIT := 32
 const CAMERA_WORLD_SCALE := 1.6
+## Periodic safety net only. Loot, level-ups, quests, purchases and backgrounding
+## save at once; a synchronous write every few seconds caused needless hitches.
+const AUTOSAVE_SECONDS := 30.0
 
 var scene_view: Viewport
 var scene_root: Node
@@ -912,7 +915,7 @@ func _process(delta: float) -> void:
 		WorldOcclusion.update(player.global_position, false, field_root.is_visible_in_tree())
 		dungeon.tick(delta)
 		_save_timer += delta
-		if _save_timer >= 5.0:
+		if _save_timer >= AUTOSAVE_SECONDS:
 			_save_timer = 0.0
 			GameState.save_game()
 		return
@@ -939,7 +942,7 @@ func _process(delta: float) -> void:
 		if ambient < ForestBalance.field_limit(near_home) and enemies.size() < EncounterRuntime.MAX_ENEMIES:
 			_spawn_enemy()
 	_save_timer += delta
-	if _save_timer >= 5.0:
+	if _save_timer >= AUTOSAVE_SECONDS:
 		_save_timer = 0.0
 		GameState.save_game()
 
@@ -1127,10 +1130,13 @@ func separation(enemy: Enemy) -> Vector2:
 		if other == enemy or other.dead:
 			continue
 		var d := enemy.position - other.position
-		var l := d.length()
 		var spacing: float = enemy.radius + other.radius + 4.0
-		if l < spacing and l > 0.01:
-			push += d / l * (1.0 - l / spacing)
+		# Most pairs are far apart: reject them before taking a square root.
+		var squared := d.length_squared()
+		if squared >= spacing * spacing or squared <= 0.0001:
+			continue
+		var l := sqrt(squared)
+		push += d / l * (1.0 - l / spacing)
 	return push
 
 
