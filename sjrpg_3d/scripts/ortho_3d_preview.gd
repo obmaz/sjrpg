@@ -518,7 +518,7 @@ func surface_height(point: Vector2) -> float:
 
 
 func _publish_probe() -> void:
-	if not OS.has_feature("web"):
+	if not OS.has_feature("web") or (_ready_published and not _probe_enabled):
 		return
 	if _batch_gpu_error < 0.0 and _probe_enabled:
 		_batch_gpu_error = Ortho3DStaticBatch.corner_error(_static_batch)
