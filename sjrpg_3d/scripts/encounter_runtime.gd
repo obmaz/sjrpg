@@ -11,7 +11,6 @@ const CAVE_WAVE_SIZE := 20
 const CAVE_ENEMY_LIMIT := MAX_ENEMIES + CAVE_WAVE_SIZE
 const CAVE_VISUAL_VARIANT := "cave_crawler"
 # Screen-ground offset keeps the marker beside, not over, the entrance/NPC/gate.
-const CAVE_STONE_OFFSET := Vector2(210, -200)
 const SITES := {
 	"west": Vector2(-1700, 320), "north": Vector2(320, -1700),
 	"east": Vector2(1700, -320), "south": Vector2(-320, 1700),
@@ -30,7 +29,9 @@ func setup(world_game: Node) -> EncounterRuntime:
 	game = world_game
 	states = GameState.encounters
 	var sites := SITES.duplicate()
-	sites[CAVE_SITE] = Iso.unproject(game.dungeon.entry_point() + CAVE_STONE_OFFSET)
+	var cave_frame := NativeCavePlan.frame(game.dungeon.entry_point())
+	# 넓고 완만한 골짜기 바닥에서 비석을 공격할 수 있게 한다.
+	sites[CAVE_SITE] = Iso.unproject(SpatialWorld3D.projected(cave_frame*Vector3(1.5,0,8.0)))
 	for key in states.keys():
 		if not sites.has(key):
 			states.erase(key)
@@ -40,6 +41,22 @@ func setup(world_game: Node) -> EncounterRuntime:
 		var state: Dictionary = states.get(id, {"charges": 3, "recharge": 0.0, "initial_spawned": false, "members": []})
 		# This demonstration pack is always attack-triggered, including old saves.
 		if id == CAVE_SITE:
+			# 옮긴 동굴의 저장된 무리는 체력·구성을 유지한 채 새 비석 주변으로 옮긴다.
+			var saved_members: Array = state.get("members",[])
+			if not saved_members.is_empty():
+				var old_anchor := Vector2.ZERO
+				var old: Array = state.get("anchor",[])
+				if old.size()==2:
+					old_anchor = Vector2(old[0],old[1])
+				else:
+					for member: Dictionary in saved_members:
+						old_anchor += Vector2(member["position"][0],member["position"][1])
+					old_anchor /= saved_members.size()
+				if old_anchor.distance_to(at)>1200.0:
+					for member: Dictionary in saved_members:
+						var shifted := Vector2(member["position"][0],member["position"][1])+at-old_anchor
+						member["position"] = [shifted.x,shifted.y]
+			state["anchor"] = [at.x,at.y]
 			state["initial_spawned"] = true
 			state["charges"] = 3
 			state["recharge"] = 0.0

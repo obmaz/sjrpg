@@ -267,7 +267,7 @@ func _build_bridge() -> void:
 
 func _build_raised_floors() -> void:
 	for surface: Dictionary in SpatialWorld3D.terrain_surfaces(preview.game.village):
-		if str(surface["id"]) == "chapel":
+		if str(surface["id"]) == "chapel" or str(surface["id"]).begins_with("waypoint_"):
 			continue  # 실제 디딤판 위에 경사 포장을 겹쳐 그리지 않는다.
 		if (report.get("native_landmark_surfaces", {}) as Dictionary).has(str(surface["id"])):
 			continue

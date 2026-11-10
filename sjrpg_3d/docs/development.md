@@ -75,6 +75,19 @@ tools/serve.sh
 
 ## 낮은 강과 야외 웨이포인트
 
-`NativeGroundRelief`는 낮은 강바닥·완만한 강둑·다리 양 끝의 흙 교대·동굴 하강로를 하나의 정점 집합으로 만듭니다. `NativeGround3D` 표시 메시와 `SpatialWorld3D`의 FLOOR가 그 정점을 공유합니다. 강 수면은-1.2m, 깊은 바닥은-1.85m이고, 다리의 기존0m 보행면은 유지합니다. 육지의 대부분은3m, 강둑·동굴 주변만0.5m로 나누며 정점은 마을 세션에서 캐시합니다.
+`NativeGroundRelief`는 낮은 강바닥·완만한 강둑·다리 양 끝의 흙 교대·동굴 하강로를 하나의 정점 집합으로 만듭니다. `NativeGround3D` 표시 메시와 `SpatialWorld3D`의 FLOOR가 그 정점을 공유합니다. 강 수면은-1.2m, 깊은 바닥은-1.85m이고, 다리의 기존0m 보행면은 유지합니다. 육지의 대부분은3m, 강둑·동굴 주변만0.5m로 나누며 공유 모서리의 높이는 한 번만 계산하며 같은 필드 규격의 정점 집합을 재사용합니다.
 
-야외 tree/cave 지점은 `assets/models/environment/waypoint/`의 바닥 문양입니다. `Village._waypoint_clearing()`이 강·건물·높은 지형·동굴에서 떨어진 빈 위치를 선택하고, 표식은 SOLID를 만들지 않습니다. `Exploration.on_waypoint()`가 실제 발 위치로 첫 활성화를 검사하고 기존 `discovered_sanctuaries`에 저장합니다. 단순 근접이나 미활성 상태의 안식처 접근은 첫 발견을 대신하지 않습니다. 공용 표시기는 저장 상태를 읽어 문양의 발광과 입자를 동기화합니다. 마을의 수직 워프문과 동굴 귀환문은 유지합니다.
+야외 tree/cave 지점은 `assets/models/environment/waypoint/`의24cm 돌 기단과 문양입니다. `SpatialWorld3D.terrain_surfaces()`가 기단의 실제 FLOOR를 공유하고 표시기의 원점은 주변 지면 높이에 고정합니다. `Village._waypoint_clearing()`이 강·건물·높은 지형·동굴에서 떨어진 빈 위치를 선택하고, 표식은 SOLID를 만들지 않습니다. `Exploration.on_waypoint()`가 실제 발 위치로 첫 활성화를 검사하고 기존 `discovered_sanctuaries`에 저장합니다. 단순 근접이나 미활성 상태의 안식처 접근은 첫 발견을 대신하지 않습니다. 공용 표시기는 저장 상태를 읽어 문양의 발광과 입자를 동기화합니다. 마을의 수직 워프문과 동굴 귀환문은 유지합니다.
+
+
+## 확장한 숲과 암반 골짜기
+
+`ForestRegion`의 실제 지면 범위는(-3600,-3600)에서(10800,10800)입니다. 마을·북서 경계를 유지한 채 가로·세로가 각각2배이며 `Game.FIELD`, 물리 외곽, 지도, 생성 지형이 같은 범위를 사용합니다. 나무·수풀·돌의 필드 배치 수는 면적에 맞춰 늘리고 모델·재질·공간 묶음은 공유합니다.
+
+동굴은 지면 좌표(7600,7600)의 독립 암반 지대에 있습니다. `NativeCavePlan.approach_height()`와 `NativeGroundRelief`가 약20m의 하강로,3.2m의 바깥 고저차와1.2m의 안쪽 하강을 함께 만듭니다. 암반 측면·바닥은 생성형 돌/자갈 원화를 사용하며, 포장길이나 웨이포인트를 암반 지대에 겹쳐 배치하지 않습니다. `frame()`의 실제 원점은 주변 땅보다3.2m 낮습니다.
+
+강은 동쪽 경계까지 연장하고 다리의 지면X는9000으로 옮깁니다. 도로/강 거리장은 `capture_road_geometry.tscn`과 `bake_ground_field.py`로 함께 재생성합니다. `native_river.gdshader`는 시간에 따라 두 물결 표면을 이동시키고 이동 포말·수면 법선을 갱신합니다. 정적 메시를 매 프레임 다시 만들지 않으며 일시정지에는 같은 phase를 유지합니다.
+
+일반 푸시의 CI는 검사와 로컬 웹 산출물 검수까지만 수행합니다. Pages 공개 배포는 사용자가 별도로 요청한 뒤 `web.yml`을 `workflow_dispatch`의 `publish=true`로 실행할 때만 허용합니다. 기본 “배포”는 [APK 전달 스킬](../../.agents/skills/dropbox-apk/SKILL.md)의 Dropbox 전달입니다.
+
+동굴 소환 비석은 골짜기 바닥의 완만한 지점에 둡니다. 저장된 소환 무리는 비석 기준점을 기록하고, 이전 위치의 저장은 무리 구성을 보존한 채 새 암반 지대로 옮긴 후 실제 지형에 재배치합니다. 시험용 전투장은 `native_combat_fixture.remote_at()`으로 필드 범위 밖에 두어 실제 지형 확장과 겹치지 않게 합니다.

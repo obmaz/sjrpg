@@ -8,6 +8,7 @@ description: SJRPG 3D APK를 로컬에서 빌드하고 연결된 Dropbox 플러�
 ## 사용자가 지정한 기본 전달 설정
 
 - 대상 프로젝트는 `obmaz/sjrpg`이다.
+- 사용자의 “배포”는 Dropbox APK 전달을 뜻한다. 웹 배포는 별도로 명시할 때만 수행하며, 일반 푸시나 APK 전달로 GitHub Pages를 갱신하지 않는다.
 - 기본 Dropbox 폴더는 `/앱/sjrpg`이다.
 - APK 이름은 `sjrpg-<실제 versionName>.apk`로 한다.
 - APK와 같은 폴더의 `latest-build.json`만 전달·갱신한다. 빌드별 JSON은 만들지 않는다.

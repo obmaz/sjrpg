@@ -5,7 +5,7 @@ signal quit_requested
 signal restart_requested
 
 ## Field in ground units (original scale): the town perimeter is data-driven.
-const FIELD := Rect2(-3600, -3600, 7200, 7200)
+const FIELD := ForestRegion.FIELD
 const CORPSE_LIFETIME := 30.0
 const CORPSE_LIMIT := 32
 const CAMERA_WORLD_SCALE := 1.6
@@ -345,6 +345,10 @@ func _read_debug_params() -> void:
 					player.position = village.point(Vector2(0.5, 1.15))
 				"gate0", "gate1", "gate2", "gate3":
 					player.position = village.gate_points[int(kv[1].substr(4))] + Vector2(0, 150)
+				"cave_descent":
+					var cave_frame := NativeCavePlan.frame(dungeon.entry_point())
+					player.position = SpatialWorld3D.projected(cave_frame*Vector3(0,0,18))
+					_fx_review_focus = SpatialWorld3D.projected(cave_frame*Vector3(0,0,6))
 				"cave_exterior":
 					player.position = dungeon.entry_point() + Vector2(0, 180)
 					_fx_review_focus = dungeon.entry_point() + Vector2(0, -180)

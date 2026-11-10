@@ -62,8 +62,8 @@ tools/check.sh --export        # 웹 빌드까지
 - 새 기능은 `tests/cases/`에 케이스를 추가합니다(`extends TestCase`, `run()` 구현). 실패는 `check()`/`failures += 1`로 남깁니다.
   게임 장면은 `await make_game()`으로 만들고, 걷기·프레임 대기는 `_walk`/`_frames`를 씁니다.
 - UI·입력·렌더링을 바꾸면 `tools/export_web.sh` → `tools/serve.sh` → `node tools/screenshot.mjs --scene … --device phone|desktop`으로 화면을 확인합니다.
-- **푸시·배포를 요청받으면** `main`의 해당 커밋에 대한 워크플로 "Build web and deploy to GitHub Pages" 성공과 공개 페이지
-  <https://obmaz.github.io/sjrpg/> 로드까지 확인한 뒤 완료를 보고합니다. 배포 설정(Pages 소스 = GitHub Actions)은 저장소 설정에서 한 번만 바꿉니다.
+- **“배포”의 기본 의미는 Dropbox APK 전달**입니다. 웹 배포는 사용자가 별도로 명시한 경우에만 수행합니다. 일반 푸시·APK 배포는 GitHub Pages를 갱신하지 않습니다. 웹 워크플로는 검사와 빌드만 자동 수행하며, 공개 배포는 명시적 요청 후 workflow_dispatch의 publish=true로만 실행합니다.
+- 웹 배포를 명시적으로 요청받은 경우에만 해당 커밋의 Pages 배포 성공과 공개 페이지 로드까지 확인합니다.
 - 브랜치는 만들지 않고 `main`에 직접 커밋합니다(사용자 지시). 커밋 메시지는 변경의 이유를 적습니다.
 - 기능이 바뀌면 README의 사용자 안내와 `docs/development.md`의 구조를 함께 갱신합니다. 일회성 완료 기록은 문서에 쌓지 않습니다.
 
@@ -73,7 +73,7 @@ tools/check.sh --export        # 웹 빌드까지
 
 - 빌드 전에 Dropbox의 `/앱/sjrpg/latest-build.json`을 읽어 다음 `versionCode`를 정합니다. 후속 전달 이력까지 확인해 기존 번호보다 반드시 크게 만들며, 기준 파일을 읽지 못하면 번호를 추정하거나 빌드하지 않습니다. 세부와 JSON 형식은 APK 전달 스킬을 따릅니다.
 
-- APK 빌드·재빌드·Dropbox 업로드는 사용자가 명시적으로 요청했을 때만 수행합니다. 일반 개발·리뷰·검증·푸시·웹 배포에 APK 빌드를 추가하지 않습니다.
+- APK 빌드·재빌드·Dropbox 업로드는 사용자가 명시적으로 요청했을 때 수행하며, 단순히 “배포”라고 요청한 경우도 Dropbox APK 전달 요청입니다. 일반 개발·리뷰·검증·푸시·웹 배포에 APK 빌드를 추가하지 않습니다.
 - [APK 전달 스킬](../.agents/skills/dropbox-apk/SKILL.md)을 따릅니다. 로컬에서 빌드하고 연결된 Dropbox 플러그인으로 전달합니다. 직접 API·별도 업로드 스크립트·환경변수의 Dropbox 자격 증명으로 우회하지 않습니다.
 - 사용자가 지정한 기본 폴더는 `/앱/sjrpg`입니다. 스킬의 파일명 규칙에 따른 APK를 전달하고 버전 기록은 `latest-build.json` 한 개만 관리하며 같은 요청에서 목적지 확인을 반복하지 않습니다. 실제 모호함·이름 충돌은 확인합니다.
 - GitHub Actions·공개 릴리스·태그·공유 링크·웹 배포는 APK 전달 요청만으로 추가하지 않습니다. 별도로 요청받았을 때만 수행합니다.

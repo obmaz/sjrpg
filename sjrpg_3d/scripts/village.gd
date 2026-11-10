@@ -37,7 +37,7 @@ var chapel_solids := Vector2i.ZERO
 var landmarks: Array[Landmark] = []
 ## 의뢰 장소 (world px): roots 석조 정원 제단, moon 고목의 쉼터, sun 동굴.
 var quest_sites := {}
-var cave_ground := Vector2(500, 3100)
+var cave_ground := ForestRegion.CAVE_GROUND
 var boss_point := Iso.project(Vector2(-2600, 300))
 ## Screen-plane rects (world px) the field scatter must keep clear.
 var clear_rects: Array[Rect2] = []
@@ -160,11 +160,11 @@ func _build_paving(layer: Node2D) -> void:
 	# Dirt roads continue outward from the gates; the east road ends at the
 	# bridge forecourt and a narrower road crosses the bridge northwards.
 	var dirt := ForestArt.texture("earth")
-	var east_end := Vector2(0.94 + 390.0 / extent, 0.5)
+	var east_end := Vector2(ForestRegion.BRIDGE_U/extent+spawn_uv.x,0.5)
 	var roads := [
-		[Vector2(0.5, 0.10), Vector2(0.5, -0.9), extent * 0.055],
-		[Vector2(0.5, 0.90), Vector2(0.5, 1.9), extent * 0.055],
-		[Vector2(0.04, 0.5), Vector2(-0.9, 0.5), extent * 0.055],
+		[Vector2(0.5, 0.10), Vector2(0.5,(-3400.0/extent)+spawn_uv.y), extent * 0.055],
+		[Vector2(0.5, 0.90), Vector2(0.5,(10200.0/extent)+spawn_uv.y), extent * 0.055],
+		[Vector2(0.04, 0.5), Vector2((-3400.0/extent)+spawn_uv.x,0.5), extent * 0.055],
 		[Vector2(0.94, 0.5), east_end, extent * 0.055],
 		[east_end, east_end + Vector2(0, -2400.0 / extent), 95.0],
 	]
@@ -186,7 +186,7 @@ func _build_paving(layer: Node2D) -> void:
 # ───────── river & bridge ─────────
 
 func _build_river(layer: Node2D, world: Node2D) -> void:
-	forecourt_g = Iso.unproject(gate_points[3]) + Vector2(390, 0)
+	forecourt_g = Vector2(ForestRegion.BRIDGE_U,Iso.unproject(gate_points[3]).y)
 	bridge = Bridge.new().setup(Iso.project(forecourt_g))
 	world.add_child(bridge)
 	# The water spans the bridge axis, tucked 70 units under each bank end.
@@ -194,8 +194,8 @@ func _build_river(layer: Node2D, world: Node2D) -> void:
 	var far_v := Iso.unproject(bridge.axis_point(1.0)).y
 	var v0 := far_v + 70.0
 	var v1 := near_v - 70.0
-	var u0 := forecourt_g.x - 190.0
-	var u1 := 3500.0
+	var u0 := Iso.unproject(gate_points[3]).x+200.0
+	var u1 := ForestRegion.RIVER_END_U
 	river_band = Rect2(u0 - 110.0, v0, u1 - u0 + 110.0, v1 - v0)
 	river = River.new().setup(u0, u1, v0, v1, 110.0)
 	layer.add_child(river)
@@ -228,7 +228,7 @@ func _build_landmarks(world: Node2D) -> void:
 
 
 func _build_quest_sites(world: Node2D) -> void:
-	# 석조 정원(제단)과 고목의 쉼터는 높은 윗면 위, 동굴은 남쪽 길 끝에 있음.
+	# 정원·고목은 기존 높은 지형 위, 동굴은 확장한 남동쪽 암반 골짜기에 둔다.
 	var garden: Landmark = landmarks[1]
 	var tree: Landmark = landmarks[0]
 	quest_sites["roots"] = _top_center(garden)
@@ -238,7 +238,7 @@ func _build_quest_sites(world: Node2D) -> void:
 	cave.position = Iso.project(cave_ground)
 	world.add_child(cave)
 	circles.append([cave.position + NativeCavePlan.CENTER_OFFSET, NativeCavePlan.SOURCE_RADIUS])
-	clear_rects.append(Rect2(cave.position - Vector2(300, 280), Vector2(600, 420)))
+	clear_rects.append(Rect2(cave.position-Vector2(2300,1850),Vector2(4600,3700)))
 	quest_sites["sun"] = cave.position + Vector2(150, 90)
 	_npc("수녀 엘린", 1, quest_sites["roots"] + Vector2(-30, 10), world, true)
 	_npc("약초사 노아", 1, quest_sites["moon"] + Vector2(-30, 10), world, true)
@@ -609,8 +609,9 @@ func _build_npcs(world: Node2D) -> void:
 func build_field(world: Node2D, field: Rect2, rng: RandomNumberGenerator) -> void:
 	var town := Rect2(ground(Vector2(-0.05, 0.0)), Vector2(extent * 1.1, extent))
 	var placed: Array[Vector2] = []
+	var tree_cells := {}
 	var attempts := 0
-	while placed.size() < 260 and attempts < 9000:
+	while placed.size() < 1040 and attempts < 24000:
 		attempts += 1
 		var g := Vector2(rng.randf_range(field.position.x, field.end.x), rng.randf_range(field.position.y, field.end.y))
 		if town.grow(120).has_point(g) or near_water(g, 60.0):
@@ -624,13 +625,20 @@ func build_field(world: Node2D, field: Rect2, rng: RandomNumberGenerator) -> voi
 		if (hash(cell) % 100) < 30 and rng.randf() < 0.6:
 			continue
 		var ok := true
-		for q in placed:
-			if q.distance_to(g) < 150.0:
-				ok = false
-				break
+		var placement_cell := Vector2i((g/150.0).floor())
+		# 150단위 이내의 나무는 인접한 아홉 셀에만 있다. 배치/RNG는 유지한다.
+		for dx: int in range(-1,2):
+			for dy: int in range(-1,2):
+				var peers: Array = tree_cells.get(placement_cell+Vector2i(dx,dy),[])
+				for q: Vector2 in peers:
+					if q.distance_to(g)<150.0:
+						ok = false
 		if not ok:
 			continue
 		placed.append(g)
+		var bucket: Array = tree_cells.get(placement_cell,[])
+		bucket.append(g)
+		tree_cells[placement_cell] = bucket
 		var variant := rng.randi_range(0, 17)
 		var def: Dictionary = data["sprites"]["tree-%d" % variant]
 		var tree := IsoSprite.new().setup(def, float(def["world_height"]))
@@ -639,7 +647,7 @@ func build_field(world: Node2D, field: Rect2, rng: RandomNumberGenerator) -> voi
 		tree.modulate_color = FOLIAGE
 		world.add_child(tree)
 		circles.append([tree.position, 16.0 + float(def["world_height"]) * 0.03])
-	for i in 220:
+	for i in 880:
 		var g2 := Vector2(rng.randf_range(field.position.x, field.end.x), rng.randf_range(field.position.y, field.end.y))
 		if town.has_point(g2) or near_water(g2, 0.0):
 			continue
@@ -648,7 +656,7 @@ func build_field(world: Node2D, field: Rect2, rng: RandomNumberGenerator) -> voi
 		var plant := IsoSprite.new().setup(pd, float(pd["world_height"]))
 		plant.position = Iso.project(g2)
 		world.add_child(plant)
-	for i in 30:
+	for i in 120:
 		var g3 := Vector2(rng.randf_range(field.position.x, field.end.x), rng.randf_range(field.position.y, field.end.y))
 		if town.grow(200).has_point(g3) or near_water(g3, 40.0):
 			continue
@@ -727,11 +735,14 @@ func _build_sanctuaries(world: Node2D) -> void:
 
 func _waypoint_clearing(proposed: Vector2) -> Vector2:
 	# 건물·강·모든 높은 지형과 동굴의 실제 외곽에서 여유를 확보한다.
-	for ring: int in 16:
+	for ring: int in 40:
 		for index: int in 16:
 			var at := proposed+Iso.project(Vector2.from_angle(TAU*index/16.0)*ring*85.0)
 			var ground_at := Iso.unproject(at)
-			if near_water(ground_at,150.0):
+			if not ForestRegion.FIELD.grow(-300.0).has_point(ground_at) or near_water(ground_at,150.0):
+				continue
+			var cave_at := NativeCavePlan.frame(Iso.project(cave_ground)+NativeCavePlan.ENTRY_OFFSET).origin
+			if (ground_at/65.0-Vector2(cave_at.x,cave_at.z)).length()<NativeCavePlan.SITE_RADIUS+6.0:
 				continue
 			var clear := true
 			for polygon: PackedVector2Array in solids:

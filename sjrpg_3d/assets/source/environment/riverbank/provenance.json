@@ -17,5 +17,23 @@
       "sha256": "9d71bdb9e90a1150c6111c677e427e2c5298470e899e7a7c7aa26274ce7e414e"
     }
   ],
-  "mapping": "2x2 atlas, 2 metre tiles"
+  "mapping": "2x2 atlas, 2 metre tiles",
+  "integrationInputs": [
+    {
+      "path": "scripts/forest_region.gd",
+      "sha256": "b3f80e6037c107a628f1cef7649fef905c4d5a44836c7a1680a3ea6a769164e9"
+    },
+    {
+      "path": "scripts/native_ground_relief.gd",
+      "sha256": "894ecf56b8c7d73efc83dd1af5fa5443ef859874616372f5380b37ac2047ad50"
+    },
+    {
+      "path": "scripts/native_ground.gdshader",
+      "sha256": "86a37c649c90b7ff46d1bd83e36c4d632e5e4936f73f606b85501860bbaddb4e"
+    },
+    {
+      "path": "scripts/native_river.gdshader",
+      "sha256": "5fd6a51de5aee5c5a84bed2b1ae8d9d382a1a478859d9f39175e4d5876b5556b"
+    }
+  ]
 }

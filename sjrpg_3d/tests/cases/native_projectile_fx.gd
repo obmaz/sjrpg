@@ -28,9 +28,9 @@ func run() -> void:
 	game.exploration.set_process(false)
 	var preview: Ortho3DPreview = game.ortho_preview
 	var fx: NativeCombatFx3D = preview._combat_fx
-	var floor_body := Fixture.box(game.spatial_world, Vector3(120, 2.5, 120), Vector3(30, 1, 30), SpatialWorld3D.FLOOR)
+	var floor_body := Fixture.box(game.spatial_world, Fixture.remote_at(Vector3(120, 2.5, 120)), Vector3(30, 1, 30), SpatialWorld3D.FLOOR)
 	await Fixture.settle(get_tree())
-	game.spatial_world.teleport_source_actor(game.player, SpatialWorld3D.projected(Vector3(120, 3, 120)), Player.RADIUS)
+	game.spatial_world.teleport_source_actor(game.player, SpatialWorld3D.projected(Fixture.remote_at(Vector3(120, 3, 120))), Player.RADIUS)
 	game.player.facing = 0.0
 	check("fresh mage actually equips starter firebolt", str(GameState.slots[0]) == "firebolt")
 	var shot := _cast(game, "firebolt")

@@ -75,7 +75,7 @@
     },
     {
       "path": "assets/models/environment/cave_entrance/plan.gd",
-      "sha256": "9e6462b1fa011d258c50c9daf23bffd5ab39a6b30ffba5d2922e370e3bd626a4"
+      "sha256": "a89b2998b4d7ef3a59e085a6f5bd2392392d59f6abdeeb75b5c7fdc6a484a0e7"
     },
     {
       "path": "scripts/native_chapel_plan.gd",
@@ -111,23 +111,23 @@
     },
     {
       "path": "scripts/spatial_world_3d.gd",
-      "sha256": "60f8cbd20336441fb0fe74555a8bd9c53df40c168194f17901fdb8503431b3ad"
+      "sha256": "229982658f4458e2478dcc3d0c938cb100bda3ce357b35b487f0cb8b1c74e497"
     },
     {
       "path": "scripts/village.gd",
-      "sha256": "a938236084d549d8856e22c60cebbb05db2df92971ddc011be21e018a100b52e"
+      "sha256": "4c7c684dc618bc2ac3efb66780832ea39bafcba0dbe99245c3aaae6e5bb67831"
     },
     {
       "path": "scripts/native_ground.gdshader",
-      "sha256": "1f0092c61b913b4a1bb99135de2ed38a6fecd6c17cd560cb808729293d25a481"
+      "sha256": "86a37c649c90b7ff46d1bd83e36c4d632e5e4936f73f606b85501860bbaddb4e"
     },
     {
       "path": "scripts/native_ground_3d.gd",
-      "sha256": "7fd581f4325cbdcdbeb863c95beeb9cb2ba83040a05d15f70c23c481fa40f3f6"
+      "sha256": "ced3eb3e7151ea1bac6c18ae853d6d12402f1067db436986fe75d5707e665957"
     },
     {
       "path": "scripts/native_river.gdshader",
-      "sha256": "119bc9a9dd3cad4dbd2aedef2ef116422807389a058cb80cfa2b7dc2948ad441"
+      "sha256": "5fd6a51de5aee5c5a84bed2b1ae8d9d382a1a478859d9f39175e4d5876b5556b"
     },
     {
       "path": "tests/cases/native_bridge_sweep.gd",

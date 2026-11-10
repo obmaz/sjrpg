@@ -11,6 +11,8 @@ uniform sampler2D earth_texture : source_color, filter_linear_mipmap_anisotropic
 uniform vec2 field_origin;
 uniform vec2 field_extent;
 uniform sampler2D bank_atlas : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
+uniform sampler2D site_rock : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform mat4 world_to_cave;
 varying vec2 ground_world;
 varying float ground_height;
 
@@ -91,6 +93,16 @@ void fragment() {
 		slopes = mix(slopes,riverbed,smoothstep(1.35,1.80,-ground_height));
 		vec3 descent = texture(earth_texture,uv).rgb*vec3(0.62,0.60,0.54);
 		color = mix(color,mix(slopes,descent,smoothstep(1.5,1.9,water_distance)),smoothstep(0.01,0.14,-ground_height));
+	}
+	vec3 site = (world_to_cave*vec4(ground_world.x,ground_height,ground_world.y,1.0)).xyz;
+	float zone = 1.0-smoothstep(0.82,1.12,length(vec2(site.x/16.0,(site.z-2.0)/24.0)));
+	if (zone > 0.0) {
+		vec3 shale = texture(site_rock,ground_world/3.2).rgb*vec3(0.80,0.81,0.76);
+		vec3 gravel = texture(bank_atlas,(vec2(1.0)+mix(vec2(0.018),vec2(0.982),mirrored(ground_world/2.0)))*0.5).rgb;
+		float path = 1.0-smoothstep(2.0,4.0,abs(site.x));
+		vec3 ravine = mix(shale,gravel*vec3(0.78,0.76,0.68),path*0.74);
+		ravine = mix(ravine,grass,ground_noise(ground_world/1.7)*0.30*smoothstep(-1.0,0.6,ground_height));
+		color = mix(color,ravine,zone);
 	}
 	ALBEDO = color;
 	ROUGHNESS = 0.98;

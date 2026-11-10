@@ -7,6 +7,12 @@ const ENTRY_OFFSET := Vector2(30, 100)
 const HILL_HEIGHT := 5.8
 const OPENING_WIDTH := 3.92
 const DESCENT := 1.20
+const SITE_DEPTH := 3.20
+const APPROACH_LENGTH := 20.0
+const SITE_RADIUS := 32.0
+
+static func approach_height(z: float) -> float:
+	return -SITE_DEPTH+floor_height(z) if z<1.2 else -SITE_DEPTH*(1.0-smoothstep(1.2,APPROACH_LENGTH,z))
 
 static func floor_height(z: float) -> float:
 	return -DESCENT * smoothstep(1.20,-3.50,z)
@@ -20,7 +26,7 @@ static func body_center(entry: Vector2) -> Vector2:
 static func frame(entry: Vector2) -> Transform3D:
 	var forward := Vector3(1, 0, 1).normalized()
 	var axis := Vector3(1, 0, -1).normalized()
-	return Transform3D(Basis(axis, Vector3.UP, forward), Ortho3DPreview.ground_position(body_center(entry)) + forward * front_offset())
+	return Transform3D(Basis(axis, Vector3.UP, forward), Ortho3DPreview.ground_position(body_center(entry),-SITE_DEPTH) + forward * front_offset())
 
 static func outline(radius: float) -> PackedVector2Array:
 	var points := PackedVector2Array()

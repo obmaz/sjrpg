@@ -67,12 +67,12 @@ func _area_arena(game: Node) -> Dictionary:
 	# Five metres exceeds warcry's 200+26px spatial budget (about3.58m).
 	# A low ledge may legitimately be within an area attack's3D range.
 	var bodies: Array[StaticBody3D] = []
-	bodies.append(NativeFixture.box(game.spatial_world, Vector3(120, -0.5, 120), Vector3(20, 1, 20), SpatialWorld3D.FLOOR))
-	bodies.append(NativeFixture.box(game.spatial_world, Vector3(122, 4.9, 120), Vector3(4, 0.2, 4), SpatialWorld3D.FLOOR))
+	bodies.append(NativeFixture.box(game.spatial_world, NativeFixture.remote_at(Vector3(120, -0.5, 120)), Vector3(20, 1, 20), SpatialWorld3D.FLOOR))
+	bodies.append(NativeFixture.box(game.spatial_world, NativeFixture.remote_at(Vector3(122, 4.9, 120)), Vector3(4, 0.2, 4), SpatialWorld3D.FLOOR))
 	await NativeFixture.settle(get_tree())
-	var upper := SpatialWorld3D.projected(Vector3(120.6, 5, 120))
-	var lower := SpatialWorld3D.projected(Vector3(119.4, 0, 120))
-	var center := SpatialWorld3D.projected(Vector3(122, 5, 120))
+	var upper := SpatialWorld3D.projected(NativeFixture.remote_at(Vector3(120.6, 5, 120)))
+	var lower := SpatialWorld3D.projected(NativeFixture.remote_at(Vector3(119.4, 0, 120)))
+	var center := SpatialWorld3D.projected(NativeFixture.remote_at(Vector3(122, 5, 120)))
 	var anchor := _target(game, upper.lerp(center, 0.08))
 	game.spatial_world.teleport_source_actor(anchor, anchor.position, Enemy.RADIUS, true)
 	check("area fixture uses a real five-metre native floor separation", is_equal_approx(game.spatial_world.height_at(upper), 5.0) and is_zero_approx(game.spatial_world.height_at(lower)))

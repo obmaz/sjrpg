@@ -253,9 +253,9 @@ func _check_projectile_sweep() -> void:
 	game.encounters.set_process(false)
 	game.exploration.set_process(false)
 	# Timing/ordering must not depend on changing scenery around the town spawn.
-	NativeFixture.box(game.spatial_world, Vector3(120, -0.5, 120), Vector3(40, 1, 40), SpatialWorld3D.FLOOR)
+	NativeFixture.box(game.spatial_world, NativeFixture.remote_at(Vector3(120, -0.5, 120)), Vector3(40, 1, 40), SpatialWorld3D.FLOOR)
 	await NativeFixture.settle(get_tree())
-	var base := SpatialWorld3D.projected(Vector3(120, 0, 120))
+	var base := SpatialWorld3D.projected(NativeFixture.remote_at(Vector3(120, 0, 120)))
 	var far := _fixture_enemy(game, base + Vector2(130, 0))
 	# 커진 실제 캡슐과 투사체 반경 바깥에 수명 제한 검사용 빈 거리를 남긴다.
 	var near := _fixture_enemy(game, base + Vector2(Enemy.radius_for("goblin") + SpatialCombat3D.PROJECTILE_RADIUS + 18.0, 0))

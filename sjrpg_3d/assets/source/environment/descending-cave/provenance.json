@@ -39,7 +39,7 @@
     },
     {
       "path": "assets/models/environment/cave_entrance/plan.gd",
-      "sha256": "9e6462b1fa011d258c50c9daf23bffd5ab39a6b30ffba5d2922e370e3bd626a4"
+      "sha256": "a89b2998b4d7ef3a59e085a6f5bd2392392d59f6abdeeb75b5c7fdc6a484a0e7"
     },
     {
       "path": "assets/models/environment/cave_entrance/sculpt.gd",
@@ -50,5 +50,23 @@
       "sha256": "672b442ad35e52824e514660010e0c8a23b7c21f8cc88f8897318dce558beb8f"
     }
   ],
-  "mapping": "3D modeling reference; not a billboard"
+  "mapping": "3D modeling reference; not a billboard",
+  "integrationInputs": [
+    {
+      "path": "scripts/forest_region.gd",
+      "sha256": "b3f80e6037c107a628f1cef7649fef905c4d5a44836c7a1680a3ea6a769164e9"
+    },
+    {
+      "path": "scripts/native_ground_relief.gd",
+      "sha256": "894ecf56b8c7d73efc83dd1af5fa5443ef859874616372f5380b37ac2047ad50"
+    },
+    {
+      "path": "scripts/native_ground.gdshader",
+      "sha256": "86a37c649c90b7ff46d1bd83e36c4d632e5e4936f73f606b85501860bbaddb4e"
+    },
+    {
+      "path": "scripts/native_river.gdshader",
+      "sha256": "5fd6a51de5aee5c5a84bed2b1ae8d9d382a1a478859d9f39175e4d5876b5556b"
+    }
+  ]
 }

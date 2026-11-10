@@ -41,3 +41,9 @@ static func remove(bodies: Array) -> void:
 	for body: StaticBody3D in bodies:
 		body.collision_layer = 0
 		body.queue_free()
+
+
+## 지도가 커져도 시험용 전투장은 실제 월드 지형과 겹치지 않는다.
+static func remote_at(point: Vector3) -> Vector3:
+	var edge := ForestRegion.native_bounds().end+Vector2(60,60)
+	return Vector3(edge.x+point.x-120.0,point.y,edge.y+point.z-120.0)

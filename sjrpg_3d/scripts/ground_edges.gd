@@ -161,6 +161,9 @@ static func root_record(receiver: Node2D, village: Village) -> Dictionary:
 	var size := Vector2i(maxi(4, ceili(ratio.x * ROOT_MASK_LIMIT)), maxi(4, ceili(ratio.y * ROOT_MASK_LIMIT)))
 	var image := Image.create(size.x, size.y, false, Image.FORMAT_RGBA8)
 	image.fill(Color(0, 0, 0, 1))
+	# 커진 지도에서도 한 텍셀보다 작은 발 접점은 보수적으로 남긴다.
+	var footprint := bounds.size/Vector2(size)
+	var pixel_radius := (inverse.basis_xform(Vector2(footprint.x,0)).length()+inverse.basis_xform(Vector2(0,footprint.y)).length())*0.5
 	for index in trees.size():
 		var center := centers[index]
 		var radius := radii[index]
@@ -171,7 +174,7 @@ static func root_record(receiver: Node2D, village: Village) -> Dictionary:
 		for y in range(first.y, last.y + 1):
 			for x in range(first.x, last.x + 1):
 				var at := bounds.position + Vector2(x + 0.5, y + 0.5) / Vector2(size) * bounds.size
-				var distance := (inverse * at).distance_to(contact) / radius
+				var distance := maxf(0.0,(inverse * at).distance_to(contact)-pixel_radius) / radius
 				var coverage := 1.0 - smoothstep(0.15, 1.0, distance)
 				if coverage > image.get_pixel(x, y).r:
 					image.set_pixel(x, y, Color(coverage, 0, 0, 1))

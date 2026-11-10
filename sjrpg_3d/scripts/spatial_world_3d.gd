@@ -468,6 +468,8 @@ func _build_forest() -> void:
 			_triangle_body(NativeTerrainForms.faces(surface), SOLID, "NaturalGeology")
 		for polygon: PackedVector2Array in surface["blockers"]:
 			terrain_blockers.append(polygon)
+		if str(surface["id"]).begins_with("waypoint_"):
+			continue
 		var top: PackedVector2Array = surface["top"]
 		for edge in top.size():
 			if _is_entrance(surface, top[edge], top[(edge + 1) % top.size()]):
@@ -656,6 +658,8 @@ static func terrain_surfaces(village: Village) -> Array[Dictionary]:
 				surface = surface.duplicate()
 				surface["top"] = NativeTerrainForms.outline(surface)
 			result.append(surface)
+	for id: String in ["tree","cave"]:
+		result.push_front({"id":"waypoint_"+id,"top":village.portal_footprints[id],"rise":NativeWaypoint3D.HEIGHT*VERTICAL,"blockers":[]})
 	result.push_front(_native_chapel(village))
 	village.set_meta("native_terrain_surfaces", result)
 	return result

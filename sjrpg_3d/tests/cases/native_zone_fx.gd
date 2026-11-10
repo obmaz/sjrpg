@@ -30,9 +30,9 @@ func run() -> void:
 	var preview: Ortho3DPreview = game.ortho_preview
 	preview.set_process(false)
 	var fx: NativeZoneFx3D = preview._zone_fx
-	var floor_body := Fixture.box(game.spatial_world, Vector3(120, 2.5, 120), Vector3(30, 1, 30), SpatialWorld3D.FLOOR)
+	var floor_body := Fixture.box(game.spatial_world, Fixture.remote_at(Vector3(120, 2.5, 120)), Vector3(30, 1, 30), SpatialWorld3D.FLOOR)
 	await Fixture.settle(get_tree())
-	game.spatial_world.teleport_source_actor(game.player, SpatialWorld3D.projected(Vector3(120, 3, 120)), Player.RADIUS)
+	game.spatial_world.teleport_source_actor(game.player, SpatialWorld3D.projected(Fixture.remote_at(Vector3(120, 3, 120))), Player.RADIUS)
 	game.player.facing = 0.0
 	var meteor := _cast(game, "meteor")
 	if not check("real meteor creates the skipped persistent source", meteor != null and str(meteor.params["visual"]) == "meteor"):

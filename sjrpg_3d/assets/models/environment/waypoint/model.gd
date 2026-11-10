@@ -1,9 +1,10 @@
 class_name NativeWaypoint3D
 extends RefCounted
 const RADIUS := 1.55
+const HEIGHT := 0.24
 const SHADER := preload("res://assets/models/environment/waypoint/surface.gdshader")
 
-static func create(parent: Node3D, mote_mesh: Mesh) -> Dictionary:
+static func create(parent: Node3D, mote_mesh: Mesh, stone: Material) -> Dictionary:
 	var root := Node3D.new()
 	root.name = "NativeGroundWaypoint"
 	parent.add_child(root)
@@ -15,7 +16,7 @@ static func create(parent: Node3D, mote_mesh: Mesh) -> Dictionary:
 		for p: Vector3 in [Vector3.ZERO,Vector3(cos(a),0,sin(a))*RADIUS,Vector3(cos(b),0,sin(b))*RADIUS]:
 			tool.set_normal(Vector3.UP)
 			tool.set_uv(Vector2(p.x,p.z)/(RADIUS*2.0)+Vector2.ONE*0.5)
-			tool.add_vertex(p+Vector3.UP*0.025)
+			tool.add_vertex(p+Vector3.UP*(HEIGHT+0.005))
 	var fluid := ShaderMaterial.new()
 	fluid.shader = SHADER
 	fluid.set_shader_parameter("albedo",load("res://assets/models/environment/waypoint/albedo.png"))
@@ -26,6 +27,21 @@ static func create(parent: Node3D, mote_mesh: Mesh) -> Dictionary:
 	seal.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	seal.set_meta("exclude_static_batch",true)
 	root.add_child(seal)
+	var edge := SurfaceTool.new()
+	edge.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var profile := [Vector2(RADIUS+0.10,0.0),Vector2(RADIUS+0.10,0.08),Vector2(RADIUS,HEIGHT)]
+	for ring: int in 2:
+		for i: int in 64:
+			var a := TAU*i/64.0
+			var b := TAU*(i+1)/64.0
+			var lower: Vector2 = profile[ring]
+			var upper: Vector2 = profile[ring+1]
+			NativeSceneryProps3D._face(edge,Vector3(cos(a)*lower.x,lower.y,sin(a)*lower.x),Vector3(cos(b)*lower.x,lower.y,sin(b)*lower.x),Vector3(cos(b)*upper.x,upper.y,sin(b)*upper.x),Vector3(cos(a)*upper.x,upper.y,sin(a)*upper.x),Vector3.UP*HEIGHT*0.5)
+	var plinth := MeshInstance3D.new()
+	plinth.name = "BeveledStonePlinth"
+	plinth.mesh = edge.commit()
+	plinth.material_override = stone
+	root.add_child(plinth)
 	var motes := MultiMeshInstance3D.new()
 	motes.name = "WaypointSparks"
 	motes.multimesh = MultiMesh.new()

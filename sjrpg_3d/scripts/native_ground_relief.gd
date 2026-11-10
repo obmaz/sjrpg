@@ -4,6 +4,7 @@ extends RefCounted
 const WATER_LEVEL := -1.20
 const BED_LEVEL := -1.85
 const BANK_WIDTH := 2.80
+static var _faces_cache := {}
 
 static func river_outline(village: Village) -> PackedVector2Array:
 	var result := PackedVector2Array()
@@ -30,10 +31,15 @@ static func height(p: Vector2, river: PackedVector2Array, cave_frame: Transform3
 	var abutment := (1.0-smoothstep(1.80,3.8,end_distance))*(1.0-smoothstep(width*0.5+1.70,width*0.5+3.50,absf(local_deck.y-width*0.5)))
 	river_y *= 1.0-abutment
 	var local := cave_frame.affine_inverse() * Vector3(p.x,0,p.y)
-	var cave_y := 0.0
-	if absf(local.x) <= NativeCavePlan.OPENING_WIDTH*0.5+0.20 and local.z > -4.2 and local.z < 1.4:
-		cave_y = NativeCavePlan.floor_height(local.z)
-	return minf(river_y,cave_y)
+	var site_radius := Vector2(local.x/16.0,(local.z-2.0)/24.0).length()
+	var site_blend := 1.0-smoothstep(0.82,1.12,site_radius)
+	var rim := 0.95+0.42*sin(local.x*0.57)*cos(local.z*0.29)+0.10*sin(local.x*2.7+local.z*1.6)
+	var valley := NativeCavePlan.approach_height(local.z)
+	var half_width := lerpf(2.16,4.5,smoothstep(1.2,NativeCavePlan.APPROACH_LENGTH,local.z))
+	var shoulder := smoothstep(half_width,half_width+5.0,absf(local.x))
+	shoulder = maxf(shoulder,1.0-smoothstep(-7.0,-3.7,local.z))
+	var geology := lerpf(valley,rim,shoulder)*site_blend
+	return river_y+geology
 
 static func bridge_outline(village: Village) -> PackedVector2Array:
 	var result := PackedVector2Array()
@@ -48,7 +54,7 @@ static func at(village: Village, point: Vector2) -> float:
 	var frame := NativeCavePlan.frame(Iso.project(village.cave_ground)+NativeCavePlan.ENTRY_OFFSET)
 	var origin := (p/3.0).floor()*3.0
 	var river_bounds := Iso.poly_bounds(river).grow(BANK_WIDTH+3.0)
-	var dense := river_bounds.intersects(Rect2(origin,Vector2(3,3))) or origin.distance_to(Vector2(frame.origin.x,frame.origin.z))<9.0
+	var dense := river_bounds.intersects(Rect2(origin,Vector2(3,3))) or origin.distance_to(Vector2(frame.origin.x,frame.origin.z))<NativeCavePlan.SITE_RADIUS
 	var pitch := 0.5 if dense else 3.0
 	var a := origin+((p-origin)/pitch).floor()*pitch
 	var uv := (p-a)/pitch
@@ -63,17 +69,23 @@ static func at(village: Village, point: Vector2) -> float:
 static func faces(village: Village) -> PackedVector3Array:
 	if village.has_meta("native_ground_relief_faces"):
 		return village.get_meta("native_ground_relief_faces")
+	var cache_key := str([ForestRegion.FIELD,village.cave_ground,village.river.polygon,village.bridge.deck_polygon()])
+	if _faces_cache.has(cache_key):
+		village.set_meta("native_ground_relief_faces",_faces_cache[cache_key])
+		return _faces_cache[cache_key]
 	var river := river_outline(village)
 	var deck := bridge_outline(village)
+	var heights := {}
 	var river_bounds := Iso.poly_bounds(river).grow(BANK_WIDTH+3.0)
 	var frame := NativeCavePlan.frame(Iso.project(village.cave_ground)+NativeCavePlan.ENTRY_OFFSET)
 	var mouth := Vector2(frame.origin.x,frame.origin.z)
 	var result := PackedVector3Array()
 	# 먼 지형은3m, 강둑과 입구만0.5m로 나눈다.
-	for ix in range(-25,25):
-		for iz in range(-25,25):
+	var bounds := ForestRegion.native_bounds().grow(20.0)
+	for ix in range(floori(bounds.position.x/3.0),ceili(bounds.end.x/3.0)):
+		for iz in range(floori(bounds.position.y/3.0),ceili(bounds.end.y/3.0)):
 			var origin := Vector2(ix*3.0,iz*3.0)
-			var dense := river_bounds.intersects(Rect2(origin,Vector2(3,3))) or origin.distance_to(mouth)<9.0
+			var dense := river_bounds.intersects(Rect2(origin,Vector2(3,3))) or origin.distance_to(mouth)<NativeCavePlan.SITE_RADIUS
 			var steps := 6 if dense else 1
 			var pitch := 3.0/steps
 			for x: int in steps:
@@ -84,7 +96,13 @@ static func faces(village: Village) -> PackedVector3Array:
 					var d := a+Vector2(0,pitch)
 					var vertices := PackedVector3Array()
 					for q: Vector2 in [a,b,c,d]:
-						vertices.append(Vector3(q.x,height(q,river,frame,deck),q.y))
+						if not heights.has(q):
+							var affected := river_bounds.has_point(q) or q.distance_to(mouth)<NativeCavePlan.SITE_RADIUS
+							heights[q] = height(q,river,frame,deck) if affected else 0.0
+						vertices.append(Vector3(q.x,float(heights[q]),q.y))
 					result.append_array(PackedVector3Array([vertices[0],vertices[2],vertices[1],vertices[0],vertices[3],vertices[2]]))
+	if _faces_cache.size()>=2:
+		_faces_cache.clear()
+	_faces_cache[cache_key] = result
 	village.set_meta("native_ground_relief_faces",result)
 	return result

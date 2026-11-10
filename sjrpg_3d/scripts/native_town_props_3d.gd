@@ -168,11 +168,11 @@ func _sync_waypoint(source: IsoSprite, current: Dictionary) -> void:
 	var id := source.get_instance_id()
 	current[id] = true
 	if not _entries.has(id):
-		_entries[id] = NativeWaypoint3D.create(_preview.stage,_mote_mesh)
+		_entries[id] = NativeWaypoint3D.create(_preview.stage,_mote_mesh,_materials["stone"])
 		_entries[id]["source"] = weakref(source)
 	var entry: Dictionary = _entries[id]
 	var root: Node3D = entry["root"]
-	root.position = Ortho3DPreview.ground_position(source.position,_preview.surface_height(source.position))
+	root.position = Ortho3DPreview.ground_position(source.position,NativeGroundRelief.at(_game.village,source.position))
 	root.visible = source.visible
 	var active := GameState.discovered_sanctuaries.has(str(source.get_meta("ground_waypoint")))
 	var fluid: ShaderMaterial = entry["fluid"]
@@ -187,5 +187,5 @@ func _sync_waypoint(source: IsoSprite, current: Dictionary) -> void:
 		for i: int in MOTE_COUNT:
 			var transform := motes.multimesh.get_instance_transform(i)
 			var angle := TAU*i/MOTE_COUNT
-			transform.origin = Vector3(cos(angle)*1.27,0.10+transform.origin.y*0.16,sin(angle)*1.27)
+			transform.origin = Vector3(cos(angle)*1.27,NativeWaypoint3D.HEIGHT+0.10+transform.origin.y*0.16,sin(angle)*1.27)
 			motes.multimesh.set_instance_transform(i,transform)
