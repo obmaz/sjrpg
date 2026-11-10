@@ -157,6 +157,7 @@ static func build(preview: Node, parent: Node3D, world: Node2D) -> Dictionary:
 			bounds = box if i == 0 else bounds.merge(box)
 		multi.custom_aabb = bounds.grow(0.02)
 		var batch := MultiMeshInstance3D.new()
+		batch.set_meta("occlusion_static_instances", true)
 		batch.name = "Flora_" + key.replace(":", "_")
 		batch.position = origin
 		batch.multimesh = multi

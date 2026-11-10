@@ -371,6 +371,7 @@ func _build_house(key: String) -> void:
 	var chapel := key == "chapel"
 	var height := 3.5 * NativeChapelPlan.SIZE_FACTOR if chapel else 2.9
 	var root := Node3D.new()
+	NativePlayerOcclusion.mark_object(root)
 	stage.add_child(root)
 	root.position = Vector3(center.x, 0, center.y)
 	if chapel:

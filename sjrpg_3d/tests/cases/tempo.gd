@@ -6,7 +6,7 @@ func run() -> void:
 	player.set_process(false)
 	var old_reduce := Prefs.reduce_motion
 	Prefs.reduce_motion = false
-	check("movement is fifty percent faster without speeding the engine clock", is_equal_approx(player.speed(), player.base_speed * 1.5) and Engine.time_scale == 1.0)
+	check("hero movement is twenty percent faster than the existing action tempo", is_equal_approx(player.speed(), player.base_speed * 1.8) and Engine.time_scale == 1.0)
 	var weapon: Gear = GameState.equipped["weapon"]
 	var original_interval := maxf(0.12, float(weapon.base["tempo"]) / (1.0 + float(weapon.base["haste"])))
 	check("weapon action speed and reported interval share the same tempo", is_equal_approx(player.weapon_melee()["tempo"], original_interval / 1.5))

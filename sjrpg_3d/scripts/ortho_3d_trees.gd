@@ -158,6 +158,7 @@ static func build(preview: Node, leaf_texture_path: String = LEAVES) -> Node3D:
 		multi.instance_count = selected.size()
 		var batch := MultiMeshInstance3D.new()
 		batch.name = "OakVariant%d" % variant
+		batch.set_meta("occlusion_static_instances", true)
 		batch.multimesh = multi
 		batch.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 		root.add_child(batch)

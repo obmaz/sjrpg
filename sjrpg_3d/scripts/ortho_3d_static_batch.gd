@@ -27,12 +27,14 @@ static func apply(stage: Node3D) -> Dictionary:
 		# Layers and flipped winding also affect rendering, so never merge across them.
 		var key := "%s:%s:%s:%s" % [material_id, node.cast_shadow, node.layers, box.flip_faces]
 		if not groups.has(key):
-			groups[key] = {"material": material, "shadow": node.cast_shadow, "layers": node.layers, "flip": box.flip_faces, "instances": [], "margin": 0.0}
+			groups[key] = {"material": material, "shadow": node.cast_shadow, "layers": node.layers, "flip": box.flip_faces, "instances": [], "objects": [], "margin": 0.0}
 		var world := node.global_transform
 		var local := to_stage * world * Transform3D(Basis.from_scale(box.size), Vector3.ZERO)
 		var entries: Array = groups[key]["instances"]
 		var index := entries.size()
 		entries.append(local)
+		var owner := NativePlayerOcclusion.static_owner(node)
+		groups[key]["objects"].append("object:%s" % owner.get_instance_id() if owner != null else "")
 		groups[key]["margin"] = maxf(groups[key]["margin"], node.extra_cull_margin)
 		# A test can compare all eight unit-box corners after this size transform
 		# against the original world transform applied to size/2 corners.
@@ -55,6 +57,8 @@ static func apply(stage: Node3D) -> Dictionary:
 		var batch := MultiMeshInstance3D.new()
 		batch.name = "StaticBoxBatch%d" % batches.size()
 		batch.multimesh = multimesh
+		batch.set_meta("occlusion_objects", group["objects"])
+		batch.set_meta("occlusion_transforms", entries)
 		batch.material_override = group["material"]
 		batch.cast_shadow = group["shadow"]
 		batch.layers = group["layers"]

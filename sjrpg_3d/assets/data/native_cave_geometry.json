@@ -7,7 +7,7 @@
   "family": "assets/data/cave_art.json",
   "generator": {
     "path": "scripts/ortho_3d_cave_rock.gd",
-    "sha256": "c399cdd4eda1b5612f9336351e31c4b836385b7861dcccd5a0c7a2caaf571c95",
+    "sha256": "a5465e8a3104c9f1e7217ebc877072b38bbfc53a8858ca130dd5652f5b9b0efb",
     "method": "Original closed native profile extrusion, vertices and miters preserved. Each chunk separates actual inner faces from ridge/exposed faces. Upright inner metric UVs and normal-aware world-metre outer rock mapping; no source image or physics edits. Exact emitted cross-sections are retained as read-only wall-attachment metadata; no rock vertex or triangle is changed."
   },
   "material": {

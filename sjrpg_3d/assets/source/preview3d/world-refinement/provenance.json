@@ -95,11 +95,11 @@
     },
     {
       "path": "scripts/native_scenery_props_3d.gd",
-      "sha256": "0ca0c2a4c25b0bdd125c137419d8e7d39a2d0e4205c72d57d69ea45587e69bb7"
+      "sha256": "27872b38e31f9e39eb55672e25a5a04edf7068f4e8dce1230e8b947f9eb8a7b7"
     },
     {
       "path": "scripts/native_landmarks_3d.gd",
-      "sha256": "f95eebb78b5ffc7d8daf413efdb4ebb701bb856e9f468f02e023d66b60745067"
+      "sha256": "6ca306ee462c046ae3934c515646357d2a2519a839029bb821d7980fb12fa6a1"
     },
     {
       "path": "scripts/ortho_3d_chapel.gd",
@@ -107,7 +107,7 @@
     },
     {
       "path": "scripts/ortho_3d_fortification.gd",
-      "sha256": "997bef20a6e7c4e4fc7620e1c1ee61ef76c2cfb092f650643f2db294c6afc8d0"
+      "sha256": "cd67fc5c2c755e241c65684e737b5ceca7df281667b1bdfc22a499bc06df1c83"
     },
     {
       "path": "scripts/spatial_world_3d.gd",

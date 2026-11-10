@@ -6,6 +6,8 @@ signal died
 signal open_skills_requested
 
 const RADIUS := 18.0
+# 주인공 보행만 기존 템포보다20% 빠르게 한다.
+const MOVE_SPEED_MULTIPLIER := 1.2
 const ROLL_TIME := 0.32 / GameTempo.RATE
 const ROLL_DISTANCE := 170.0
 
@@ -120,7 +122,7 @@ func speed() -> float:
 	var s := base_speed * (1.0 + passive("speed"))
 	s *= 1.0 + buff_value("sprint")
 	s *= 1.0 + frenzy_stacks * 0.08
-	return GameTempo.speed(s)
+	return GameTempo.speed(s) * MOVE_SPEED_MULTIPLIER
 
 
 func damage_for(id: String, mult: float) -> float:

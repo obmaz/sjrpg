@@ -112,6 +112,7 @@ func _build(layout: DungeonLayout, parent: Node3D, texture: Texture2D, segments:
 			volume.surface_set_material(volume.get_surface_count() - 1, materials[role])
 		var mesh := MeshInstance3D.new()
 		mesh.name = "CaveRockChunk_%d" % chunk
+		NativePlayerOcclusion.mark_object(mesh)
 		mesh.mesh = volume
 		mesh.set_meta("native_cave_boundary", true)
 		parent.add_child(mesh)

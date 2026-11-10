@@ -6,8 +6,11 @@ const INTERVAL := 0.10
 var preview: Ortho3DPreview
 var _roots := {}
 var _shaders := {}
+var _triangles := {}
 var _entries: Array[Dictionary] = []
 var _active := {}
+var _objects := {}
+var _fades := {}
 var _retired: Array[Dictionary] = []
 var _clock := INTERVAL
 var _debug_disabled := false
@@ -18,18 +21,53 @@ func setup(presenter: Ortho3DPreview) -> NativePlayerOcclusion:
 		_debug_disabled = bool(JavaScriptBridge.eval("new URLSearchParams(location.search).get('occlusion') === 'off'"))
 	return self
 
+## 제작자 계약: 분리된 벽·지붕도 같은 루트에 표시하면 하나의 정적 오브젝트다.
+static func mark_object(node: Node) -> void:
+	node.set_meta("occlusion_static_object", true)
+
+static func static_owner(node: Node) -> Node:
+	var owner: Node
+	var cursor := node
+	while cursor != null:
+		if cursor.get_meta("occlusion_dynamic", false) or cursor is CharacterBody3D or cursor is Skeleton3D:
+			return null
+		if owner == null and cursor.get_meta("occlusion_static_object", false):
+			owner = cursor
+		cursor = cursor.get_parent()
+	return owner
+
 func _register(root: Node3D) -> void:
 	if not is_instance_valid(root) or _roots.has(root.get_instance_id()):
 		return
 	_entries = _entries.filter(func(entry: Dictionary): return is_instance_valid(entry["node"]))
+	for key in _objects.keys():
+		_objects[key] = _objects[key].filter(func(entry: Dictionary): return is_instance_valid(entry["node"]))
+		if _objects[key].is_empty():
+			_objects.erase(key)
 	_roots[root.get_instance_id()] = true
 	for child in root.find_children("*", "GeometryInstance3D", true, false):
-		if child is MeshInstance3D and child.mesh != null:
-			_entries.append({"node": child, "index": -1, "box": child.mesh.get_aabb()})
+		var owner := static_owner(child)
+		var object_key := "object:%s" % owner.get_instance_id() if owner != null else ""
+		if child is MeshInstance3D and child.mesh != null and not object_key.is_empty():
+			_add_entry({"node": child, "index": -1, "box": child.mesh.get_aabb(), "object": object_key})
 		elif child is MultiMeshInstance3D and child.multimesh != null and child.multimesh.mesh != null:
 			var mesh: MultiMesh = child.multimesh
+			var owners: Array = child.get_meta("occlusion_objects", [])
+			var frames: Array = child.get_meta("occlusion_transforms", [])
 			for index in mesh.instance_count:
-				_entries.append({"node": child, "index": index, "box": mesh.mesh.get_aabb(), "transform": mesh.get_instance_transform(index)})
+				var key: String = owners[index] if index < owners.size() else object_key
+				if key.is_empty() and child.get_meta("occlusion_static_instances", false):
+					key = "instance:%s:%s" % [child.get_instance_id(), index]
+				if key.is_empty():
+					continue
+				_add_entry({"node": child, "index": index, "box": mesh.mesh.get_aabb(), "transform": frames[index] if index < frames.size() else mesh.get_instance_transform(index), "object": key})
+
+func _add_entry(entry: Dictionary) -> void:
+	_entries.append(entry)
+	var key: String = entry["object"]
+	if not _objects.has(key):
+		_objects[key] = []
+	_objects[key].append(entry)
 
 func sync(delta: float) -> void:
 	if _debug_disabled:
@@ -39,18 +77,22 @@ func sync(delta: float) -> void:
 	_register(preview._world_environment.cave)
 	for props in [preview._town_props, preview._encounter_props]:
 		for entry: Dictionary in props._entries.values():
+			mark_object(entry["root"])
 			_register(entry["root"])
 	_clock += delta
 	if _clock >= INTERVAL:
 		_clock = 0.0
 		_find_occluders()
-	var foot := preview.actor_foot(preview.game.player)
+	for fade: Dictionary in _fades.values():
+		fade["alpha"] = move_toward(fade["alpha"], MIN_OPACITY if fade["wanted"] else 1.0, delta * 4.5)
 	for key in _active.keys():
 		var state: Dictionary = _active[key]
 		if not is_instance_valid(state["source"]) or not is_instance_valid(state["draw"]):
 			_active.erase(key)
 			continue
-		state["alpha"] = move_toward(state["alpha"], MIN_OPACITY if state["wanted"] else 1.0, delta * 4.5)
+		var fade: Dictionary = _fades[state["object"]]
+		state["alpha"] = fade["alpha"]
+		state["wanted"] = fade["wanted"]
 		for material: Material in state["inks"]:
 			if material is BaseMaterial3D:
 				var color: Color = material.get_meta("occlusion_color")
@@ -61,14 +103,18 @@ func sync(delta: float) -> void:
 				for parameter: StringName in material.get_meta("occlusion_animated"):
 					material.set_shader_parameter(parameter, source.get_shader_parameter(parameter))
 				material.set_shader_parameter("occlusion_opacity", state["alpha"])
-				material.set_shader_parameter("occlusion_hero", foot + Vector3.UP)
 		if state["alpha"] >= 1.0 and not state["wanted"]:
 			_restore(state)
 			_active.erase(key)
 
+	for key in _fades.keys():
+		if _fades[key]["alpha"] >= 1.0 and not _fades[key]["wanted"]:
+			_fades.erase(key)
+
 func _find_occluders() -> void:
-	for state: Dictionary in _active.values():
-		state["wanted"] = false
+	for fade: Dictionary in _fades.values():
+		fade["wanted"] = false
+	var wanted := {}
 	var foot := preview.actor_foot(preview.game.player)
 	var toward := preview.camera.global_basis.z * 45.0
 	for entry: Dictionary in _entries:
@@ -91,20 +137,30 @@ func _find_occluders() -> void:
 				var local_box: AABB = entry["box"]
 				if local_box.intersects_segment(inverse * (target + toward), inverse * (target + toward.normalized() * 0.35)) == null:
 					continue
-				# 넓은 지면의 AABB는 평지까지 덮는다. 실제 앞쪽 사면이 있을 때만 전환한다.
-				if node.name == "NativeNaturalGround":
-					var ray := PhysicsRayQueryParameters3D.create(target + toward.normalized() * 0.35, target + toward, SpatialWorld3D.FLOOR)
-					ray.hit_back_faces = true
-					if preview.game.spatial_world.get_world_3d().direct_space_state.intersect_ray(ray).is_empty():
-						continue
+
+				var mesh: Mesh = node.multimesh.mesh if entry["index"] >= 0 else node.mesh
+				var mesh_id := mesh.get_instance_id()
+				if not _triangles.has(mesh_id):
+					_triangles[mesh_id] = mesh.generate_triangle_mesh()
+				var triangles: TriangleMesh = _triangles[mesh_id]
+				if triangles == null or triangles.intersect_segment(inverse * (target + toward), inverse * (target + toward.normalized() * 0.35)).is_empty():
+					continue
 				hit = true
 				break
 		if not hit:
 			continue
-		var key := "%s:%s" % [node.get_instance_id(), entry["index"]]
-		if not _active.has(key):
-			_active[key] = _activate(entry)
-		_active[key]["wanted"] = true
+		wanted[entry["object"]] = true
+	for object_key: String in wanted:
+		if not _fades.has(object_key):
+			_fades[object_key] = {"alpha": 1.0, "wanted": true}
+		_fades[object_key]["wanted"] = true
+		for entry: Dictionary in _objects[object_key]:
+			if not is_instance_valid(entry["node"]) or not entry["node"].is_visible_in_tree() or entry["node"].is_queued_for_deletion():
+				continue
+			var key := "%s:%s" % [entry["node"].get_instance_id(), entry["index"]]
+			if not _active.has(key):
+				_active[key] = _activate(entry)
+			_active[key]["object"] = object_key
 
 func _ink(source: Material, inks: Array[Material]) -> Material:
 	if source == null:
@@ -136,11 +192,11 @@ func _ink(source: Material, inks: Array[Material]) -> Material:
 			if code[end] == "{": depth += 1
 			elif code[end] == "}": depth -= 1
 			end += 1
-		# 알파 블렌딩으로 바닥을 투명 큐에 보내면 다른 투명 건축을 덮는다.
-		# 픽셀 커버리지로 비쳐 보이게 하여 기존 깊이 쓰기와 잎 알파를 유지한다.
-		var fade := "\nvec3 hero_view = (VIEW_MATRIX * vec4(occlusion_hero, 1.0)).xyz;\nfloat aperture = 1.0 - smoothstep(0.65, 1.0, length((VERTEX.xy - hero_view.xy) / vec2(1.15, 1.65)));\nfloat cover = 1.0 - (1.0 - occlusion_opacity) * aperture * step(hero_view.z + 0.20, VERTEX.z);\nfloat threshold = fract(dot(floor(FRAGCOORD.xy), vec2(0.75487766, 0.56984029)));\nif (threshold > cover) { discard; }\n"
+		# 원래 표면 알파만 보존하고 오브젝트 전체에 동일한 승수를 적용한다.
+		var assignment := RegEx.create_from_string("\\bALPHA\\s*=")
+		var alpha := "ALPHA" if assignment.search(code) != null else "1.0"
 		var shader := Shader.new()
-		shader.code = code.insert(end - 1, fade).replace("shader_type spatial;", "shader_type spatial;\nuniform float occlusion_opacity = 1.0;\nuniform vec3 occlusion_hero = vec3(0.0);")
+		shader.code = code.insert(end - 1, "\nALPHA = %s * occlusion_opacity;\n" % alpha).replace("shader_type spatial;", "shader_type spatial;\nuniform float occlusion_opacity = 1.0;")
 		_shaders[shader_key] = shader
 		ink.shader = shader
 	else:

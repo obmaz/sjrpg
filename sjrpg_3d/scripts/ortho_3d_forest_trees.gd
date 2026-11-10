@@ -110,6 +110,7 @@ static func build(preview: Node, parent: Node3D, world: Node2D) -> Node3D:
 		multi.instance_count = entries.size()
 		var batch := MultiMeshInstance3D.new()
 		batch.name = "ForestOak_%d_%d_V%d" % [chunk.x, chunk.y, int(bucket["variant"])]
+		batch.set_meta("occlusion_static_instances", true)
 		batch.position = origin
 		batch.multimesh = multi
 		batch.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON

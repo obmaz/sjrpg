@@ -56,10 +56,12 @@ func _build() -> void:
 	_box_arrays = unit.surface_get_arrays(0)
 	root = Node3D.new()
 	root.name = "NativeFortification"
+	NativePlayerOcclusion.mark_object(root)
 	preview.stage.add_child(root)
 	_target = root
 	dynamic_root = Node3D.new()
 	dynamic_root.name = "MovingGateLeaves"
+	dynamic_root.set_meta("occlusion_dynamic", true)
 	dynamic_root.set_meta("exclude_static_batch", true)
 	root.add_child(dynamic_root)
 	var village: Village = preview.game.village

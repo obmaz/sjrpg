@@ -165,6 +165,7 @@ static func build(preview: Node, parent: Node3D, world: Node2D, cave: bool, excl
 			continue
 		var node := MeshInstance3D.new()
 		node.name = "Native_" + role + "_" + str(entries.size())
+		NativePlayerOcclusion.mark_object(node)
 		node.mesh = mesh
 		var variant_index: int = posmod(roundi(at.x * 7.0 + at.z * 11.0), stone_variants.size())
 		node.material_override = crystal if role == "crystal" else stone_variants[variant_index]

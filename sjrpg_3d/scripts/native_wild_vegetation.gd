@@ -179,6 +179,7 @@ static func build_shrubs(preview: Node, parent: Node3D, trees: Array) -> Node3D:
 			bounds = box if i == 0 else bounds.merge(box)
 		multi.custom_aabb = bounds.grow(0.02)
 		var node := MultiMeshInstance3D.new()
+		node.set_meta("occlusion_static_instances", true)
 		node.multimesh = multi
 		root.add_child(node)
 	root.set_meta("underbrush", {"count": count, "variants": _shrubs.size(), "solid_changes": 0, "chunk_metres": 24.0})

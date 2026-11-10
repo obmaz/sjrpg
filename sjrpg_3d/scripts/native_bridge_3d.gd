@@ -35,6 +35,7 @@ static func build(preview: Node, parent: Node3D) -> Node3D:
 	var width := a.distance_to(c)
 	var root := Node3D.new()
 	root.name = "NativeDetailedBridge"
+	NativePlayerOcclusion.mark_object(root)
 	root.transform = Transform3D(Basis(along, Vector3.UP, across), a)
 	parent.add_child(root)
 	var masonry := SurfaceTool.new()

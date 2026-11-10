@@ -111,6 +111,7 @@ static func build(preview: Node, parent: Node3D) -> Dictionary:
 			continue
 		var group := Node3D.new()
 		group.name = "Landmark%d" % source.index
+		NativePlayerOcclusion.mark_object(group)
 		root.add_child(group)
 		var floor_tool := SurfaceTool.new()
 		floor_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
