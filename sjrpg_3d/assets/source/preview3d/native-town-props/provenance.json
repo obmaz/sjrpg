@@ -1,10 +1,10 @@
 {
-  "status": "exported/imported; focused tests and production browser approach pass; temporary transition diagnostic isolated/fixed; cave-wall occlusion documented",
+  "status": "우물 실제 메시와 source footprint를 중심 유지 2배로 확대. 이번 검증은 world-refinement/provenance.json에 기록.",
   "guide_read": "docs/3d-asset-guide.md",
   "references": [
     {
       "path": "docs/3d-asset-guide.md",
-      "sha256": "0cc4b438bfa4be43597ef7eca92fb13cfc146d54b5b3b65298f427d21fa53d4c"
+      "sha256": "89e275a126afa80e665c60ee94491fc07379f1391e58863524c05d2d885abfe3"
     },
     {
       "path": "sjrpg_3d/assets/source/style/approved-game-reference.jpg",
@@ -20,7 +20,7 @@
     },
     {
       "path": "sjrpg_3d/assets/art/preview3d/limestone.webp",
-      "sha256": "8e71b8336aa7a8f6a1ec3ee272eda58296d52b7f5677a207aabf0cec7142c9e5"
+      "sha256": "2561c1be419f951bf0bce7b9fd5085c24a92600cf66424a4775e16cd37b58e6c"
     },
     {
       "path": "sjrpg_3d/assets/art/preview3d/timber.webp",
@@ -117,7 +117,7 @@
   },
   "generator": {
     "path": "tools/preview3d/build_native_town_props.py",
-    "sha256": "80f07c7d2ad4d66a04fb7114ed643738f60327a1e22d6cbac8639ddf1b9ab524",
+    "sha256": "d75237bfec4016b4683fdd359605d74ca0755928ad171fafea8120da9ee0b502",
     "coordinate_conversion": "author native(X,Y,Z) -> Blender(X,-Z,Y) -> GLB Y-up",
     "command": "blender -b -t 2 --python tools/preview3d/build_native_town_props.py -- --export",
     "version": "Blender 4.3.2",
@@ -127,25 +127,25 @@
     "models": [
       {
         "path": "assets/art/preview3d/native-fountain.glb",
-        "sha256": "7375cb11df09d6e950c57ad8aa01ecb06bf99494a35138b32a234936f6af25f2",
-        "bytes": 270920,
+        "sha256": "bce0d06d56f67548ab5804a937b9a5e67ce57c08ad99ec8777288e317728708c",
+        "bytes": 270912,
         "triangles": 3612,
         "surfaces": 3,
         "bounds_m": {
           "min": [
-            -1.2999999523162842,
+            -2.5999999046325684,
             0,
-            -1.2999999523162842
+            -2.5999999046325684
           ],
           "max": [
-            1.2999999523162842,
-            1.940000057220459,
-            1.2999999523162842
+            2.5999999046325684,
+            3.880000114440918,
+            2.5999999046325684
           ],
           "size": [
-            2.5999999046325684,
-            1.940000057220459,
-            2.5999999046325684
+            5.199999809265137,
+            3.880000114440918,
+            5.199999809265137
           ]
         },
         "embedded_images": 0,
@@ -236,7 +236,7 @@
   "files": [
     {
       "path": "scripts/native_town_props_3d.gd",
-      "sha256": "d8a5d4794c64c2b8768738794aba2558969ab127c1834537443483ad8fb28dd2"
+      "sha256": "52bfe964070f72a7926eebdc154ca0df1290c9e77785c42431ae95e214b972f8"
     },
     {
       "path": "scripts/native_prop_portal.gdshader",
@@ -244,15 +244,15 @@
     },
     {
       "path": "scripts/native_prop_water.gdshader",
-      "sha256": "2ef9011eb22fc05c977c930901dc60d32a1b016406f8b2c657d37c14e86d6715"
+      "sha256": "ae290e6c6ee15fba64ad2c3652d5f2a97fada500edf26727785f3ab304335952"
     },
     {
       "path": "tools/preview3d/build_native_town_props.py",
-      "sha256": "80f07c7d2ad4d66a04fb7114ed643738f60327a1e22d6cbac8639ddf1b9ab524"
+      "sha256": "d75237bfec4016b4683fdd359605d74ca0755928ad171fafea8120da9ee0b502"
     },
     {
       "path": "tools/preview3d/test_native_town_props.py",
-      "sha256": "d35e0c94b3391719a29e1802a024716f416526935ff7f2d7a8876a43522ab0ea"
+      "sha256": "69efd96a969d787643ca3a6c260ef905495b813f8b474ff6e710ca68369b818c"
     },
     {
       "path": "tests/cases/native_town_props.gd",

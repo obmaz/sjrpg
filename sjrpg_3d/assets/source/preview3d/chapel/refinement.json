@@ -60,7 +60,7 @@
     "api": "Ortho3DChapel.build(presenter, root, width, depth, height)",
     "method": "Runtime ArrayMesh construction from dimensioned native stone/wood/roof solids, pointed arch paths and actual wall apertures. No facade billboard or viewport texture.",
     "path": "scripts/ortho_3d_chapel.gd",
-    "sha256": "9b61362fd7d3845d5a5eb66caad7e7d4d9619548bc76e2dec786a1a429953039"
+    "sha256": "b5a1d0b006a34493901c3500f8daaad92228e5d5b218c9e6d0b7a6596fc1a63f"
   },
   "inputs": [
     {
@@ -154,7 +154,7 @@
       "api": "Ortho3DChapel.build(presenter, root, width, depth, height)",
       "method": "Runtime ArrayMesh construction from dimensioned native stone/wood/roof solids, pointed arch paths and actual wall apertures. No facade billboard or viewport texture.",
       "path": "scripts/ortho_3d_chapel.gd",
-      "sha256": "9b61362fd7d3845d5a5eb66caad7e7d4d9619548bc76e2dec786a1a429953039"
+      "sha256": "b5a1d0b006a34493901c3500f8daaad92228e5d5b218c9e6d0b7a6596fc1a63f"
     },
     "verification": {
       "case": "ortho_3d_chapel",
@@ -202,5 +202,32 @@
     "physical_surfaces_unchanged": true,
     "source": "https://raw.githubusercontent.com/obmaz/sjrpg/562e6890d1bbb8b9463394d6056619546d34a10a/docs/previews/native-village/architecture-review.json",
     "claim": "Actual paired runtime renders and source/collision gates; no user approval or reference-equivalence claim."
+  },
+  "current_dimensions": {
+    "bounds_max": [
+      2.000324010849,
+      10.5299997329712,
+      2.68035984039307
+    ],
+    "bounds_min": [
+      -2.000324010849,
+      0.0,
+      -1.75267457962036
+    ],
+    "door_height": 2.82,
+    "door_recess": 0.28,
+    "door_width": 1.38,
+    "floor_height": 0.28,
+    "footprint": [
+      3.5,
+      3.00072002410889
+    ],
+    "oculi": 2,
+    "rear_lancets": 1,
+    "roof_rows": 10,
+    "side_lancets": 4,
+    "surfaces": 7,
+    "tower_height": 10.535,
+    "triangles": 27264
   }
 }

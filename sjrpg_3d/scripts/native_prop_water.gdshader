@@ -4,8 +4,8 @@ uniform float phase = 0.0;
 uniform float motion = 1.0;
 varying vec3 local_point;
 void vertex() {
- local_point = VERTEX;
- VERTEX.y += motion * 0.002 * sin(VERTEX.x * 21.0 + VERTEX.z * 17.0 - phase * 2.5);
+ local_point = VERTEX * 0.5;
+ VERTEX.y += motion * 0.004 * sin(local_point.x * 21.0 + local_point.z * 17.0 - phase * 2.5);
 }
 void fragment() {
  float r = length(local_point.xz);

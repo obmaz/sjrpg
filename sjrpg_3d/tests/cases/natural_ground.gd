@@ -16,6 +16,14 @@ func run() -> void:
 	var image := Image.load_from_file(field_path)
 	var origin: Array = record["origin"]
 	var extent: Array = record["extent"]
+	var soil_ends := true
+	for terminal: Dictionary in record["terminals"]:
+		var center: Array = terminal["center"]
+		var uv := (Vector2(center[0], center[1]) - Vector2(origin[0], origin[1])) / Vector2(extent[0], extent[1])
+		var pixel := Vector2i(uv * Vector2(image.get_width(), image.get_height()))
+		soil_ends = soil_ends and image.get_pixelv(pixel).a > 0.85
+	check("dead ends have an actual soil fade in the baked data", soil_ends and record["terminals"].size() >= 3)
+	check("river bank retains its exact distance data", FileAccess.get_sha256("res://" + str(record["shore_field"])) == record["shore_sha256"] and record["river"].size() == game.village.river.polygon.size())
 	var contours: Array[PackedVector2Array] = []
 	for source: Array in record["union"]:
 		var polygon := PackedVector2Array()

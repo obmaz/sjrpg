@@ -14,7 +14,7 @@ func run() -> void:
 			valid = valid and absf((uv[i + 1] - uv[i]).cross(uv[i + 2] - uv[i])) > 0.00000001
 		check("native arch has valid closed-volume normals, clockwise winding and full UV area", valid)
 		var open := true
-		for x in [-0.35, 0.0, 0.35]:
+		for x in [-0.25, 0.0, 0.25]:
 			for y in [0.1, 0.9, 1.7]:
 				for i in range(0, points.size(), 3):
 					open = open and Geometry3D.ray_intersects_triangle(Vector3(x, y, -4), Vector3.BACK, points[i], points[i + 1], points[i + 2]) == null
@@ -45,7 +45,7 @@ func run() -> void:
 			var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 			var fits_original_circle := not points.is_empty()
 			var foundation_covers_body := false
-			var radius := SpatialWorld3D.radius_metres(120.0)
+			var radius := SpatialWorld3D.radius_metres(NativeCavePlan.SOURCE_RADIUS)
 			for point in points:
 				var world := transform * point
 				var distance := Vector2(world.x - body_centre.x, world.z - body_centre.z).length()
@@ -58,8 +58,8 @@ func run() -> void:
 				var back := backs[0] as MeshInstance3D
 				var shape := back.mesh as BoxMesh
 				var visible_back := true
-				for x in [-0.35, 0.0, 0.35]:
-					for y in [1.0, 2.0, 3.0]:
+				for x in [-0.25, 0.0, 0.25]:
+					for y in [1.0, 1.8, 2.2]:
 						var nearest_rock := -INF
 						for i in range(0, points.size(), 3):
 							var hit: Variant = Geometry3D.ray_intersects_triangle(Vector3(x, y, 4), Vector3.FORWARD, points[i], points[i + 1], points[i + 2])

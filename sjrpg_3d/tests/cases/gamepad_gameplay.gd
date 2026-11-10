@@ -185,6 +185,8 @@ func run() -> void:
 	await _tap(JOY_BUTTON_B)
 	check("pad resumes after focus return and neutral release", not get_tree().paused and not game.hud.panel_open())
 
+	# 입력 전환 검사는 커진 우물/주민에 막히지 않는 광장 바닥에서 수행한다.
+	game.spatial_world.teleport_source_actor(player, game.village.spawn_point + Vector2(0, 180), Player.RADIUS)
 	origin = player.position
 	_key(KEY_D, true)
 	check("keyboard still moves after pad use", await _until(func(): return player.position.distance_to(origin) > 5.0))

@@ -36,9 +36,12 @@ func _ready() -> void:
 		for point: Vector2 in contour:
 			points.append([point.x, point.y])
 		union.append(points)
+	var river: Array = []
+	for point: Vector2 in village.river.polygon:
+		river.append([point.x / 65.0, point.y / 65.0])
 	var path := "res://assets/source/preview3d/generated-ground/roads.json"
 	var file := FileAccess.open(path, FileAccess.WRITE)
-	file.store_string(JSON.stringify({"roads": roads, "union": union, "source": "Village.map_roads", "metres": true}, "\t") + "\n")
+	file.store_string(JSON.stringify({"roads": roads, "union": union, "river": river, "source": "Village.map_roads", "metres": true}, "\t") + "\n")
 	file.close()
 	print("ROAD_GEOMETRY ", roads.size())
 	ground.queue_free()

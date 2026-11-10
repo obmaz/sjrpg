@@ -1,0 +1,269 @@
+{
+  "기준": "docs/3d-asset-guide.md와 사용자 원본 화면. 컨셉은 사용자 승인이나 실제 기하 검증의 대체물이 아님.",
+  "images": [
+    {
+      "path": "assets/source/preview3d/world-refinement/cave-concept.png",
+      "sha256": "b6d27056709f3aa312e643966acfbe9e8c14ab1e8866a17209a3c991f17512b1",
+      "purpose": "모델 제작 참고 컨셉",
+      "size": [
+        1536,
+        1024
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": {
+        "path": "assets/source/preview3d/world-refinement/cave-prompt.txt",
+        "sha256": "aef82d144728602c3ba50812c2beb0d136456da2629dbd745f761a4d5c3be283"
+      },
+      "actual_references": [
+        {
+          "path": "assets/source/style/approved-game-reference.jpg",
+          "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+        }
+      ]
+    },
+    {
+      "path": "assets/source/preview3d/world-refinement/terrain-concept.png",
+      "sha256": "e19098093782130af8c6bf81d93ee71d47aa188a4fe19e31ff9e1b648024fbae",
+      "purpose": "모델 제작 참고 컨셉",
+      "size": [
+        1536,
+        1024
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": {
+        "path": "assets/source/preview3d/world-refinement/terrain-prompt.txt",
+        "sha256": "18cf269e37c6fd2ada4f9e2b0c32d4f52a41d4379daea0a3c719de60fe460e7f"
+      },
+      "actual_references": [
+        {
+          "path": "assets/source/style/approved-game-reference.jpg",
+          "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+        }
+      ]
+    },
+    {
+      "path": "assets/source/preview3d/world-refinement/fortress-atlas.png",
+      "sha256": "c4f81fa840cfe0c63f0eaee26426a656a6f8c4e829cb19bf45d81c4a43c55631",
+      "purpose": "불투명 알베도 2×2, 셀당 2.56m",
+      "size": [
+        1254,
+        1254
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": {
+        "path": "assets/source/preview3d/world-refinement/fortress-prompt.txt",
+        "sha256": "214297eb53dbd4bb0b8511d61922b17a47be29a4b8ac7ad769dedcb055d799af"
+      },
+      "actual_references": [
+        {
+          "path": "assets/source/style/approved-game-reference.jpg",
+          "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+        },
+        {
+          "path": "assets/art/preview3d/limestone.webp",
+          "sha256": "2561c1be419f951bf0bce7b9fd5085c24a92600cf66424a4775e16cd37b58e6c"
+        }
+      ],
+      "runtime": {
+        "path": "assets/art/preview3d/fortress-atlas.png",
+        "sha256": "c4f81fa840cfe0c63f0eaee26426a656a6f8c4e829cb19bf45d81c4a43c55631"
+      },
+      "derivation": "생성 원본 픽셀을 수정하지 않고 복사. 법선·높이·거칠기 맵은 생성하지 않음."
+    },
+    {
+      "path": "assets/source/preview3d/world-refinement/shop-plaster.png",
+      "sha256": "632eca10ca599dc2a3fb09c44c6c3dd99c05188f9668c510137e2d27139a8645",
+      "purpose": "불투명 알베도, 2.56m",
+      "size": [
+        1254,
+        1254
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": {
+        "path": "assets/source/preview3d/world-refinement/shop-prompt.txt",
+        "sha256": "397e71e7ad54f1b3332280d7e4c96c52cb5e7859463c634e3068a71e8ca7558c"
+      },
+      "actual_references": [
+        {
+          "path": "assets/source/style/approved-game-reference.jpg",
+          "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+        }
+      ],
+      "runtime": {
+        "path": "assets/art/preview3d/shop-plaster.png",
+        "sha256": "632eca10ca599dc2a3fb09c44c6c3dd99c05188f9668c510137e2d27139a8645"
+      },
+      "derivation": "생성 원본 픽셀을 수정하지 않고 복사. 법선·높이·거칠기 맵은 생성하지 않음."
+    },
+    {
+      "path": "assets/source/preview3d/world-refinement/stable-oak.png",
+      "sha256": "51c1d9f30c775e86f990521924848ba63f8c4a8cd248aec70497a5cb0fe3caef",
+      "purpose": "불투명 알베도, 2.56m",
+      "size": [
+        1254,
+        1254
+      ],
+      "tool": "image_gen.imagegen",
+      "prompt": {
+        "path": "assets/source/preview3d/world-refinement/stable-prompt.txt",
+        "sha256": "86dda9c92a885a099a125616614ce7801c8a56e8d95f15f0504a66b6e6ff56e5"
+      },
+      "actual_references": [
+        {
+          "path": "assets/source/style/approved-game-reference.jpg",
+          "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+        }
+      ],
+      "runtime": {
+        "path": "assets/art/preview3d/stable-oak.png",
+        "sha256": "51c1d9f30c775e86f990521924848ba63f8c4a8cd248aec70497a5cb0fe3caef"
+      },
+      "derivation": "생성 원본 픽셀을 수정하지 않고 복사. 법선·높이·거칠기 맵은 생성하지 않음."
+    }
+  ],
+  "modeling": {
+    "cave": "생성형 컨셉을 참고한 넓은 파쇄암 사면, 비대칭 입구와 두께가 있는 천장/측벽. NativeCavePlan.SOURCE_RADIUS=200으로 실제 원형 전이 지형과 표시 범위를 함께 확장.",
+    "terrain": "모서리를 깎은 암반 선반·흙 사면의 실제 정점을 NativeTerrainForms로 표시/SOLID에 공유. 기존 상면·경사로의 높이는 유지하고 새 잔디 4종의 월드 좌표 군락을 같은 2.56m로 혼합.",
+    "chapel": "source 배율 1.25, NativeChapelPlan의 실제 3단 계단과 FLOOR 공유.",
+    "fountain": "모든 정점·물줄기·source footprint 2배. 중심 유지, root scale 단위값.",
+    "walls": "생성 알베도 4종. NativeFortressPlan.CORNER_RADIUS=1.02m의 원형 망루 몸체와 실제 충돌을 공유하고 상부 코핑/흉벽을 층지게 구성."
+  },
+  "validation": {
+    "unit_and_integration": {
+      "cases": 133,
+      "passed": 133,
+      "segments": [
+        {
+          "log": "build/reports/refinement-complete-check.log",
+          "passed": 107,
+          "note": "전체 실행이 사용자 중단되기 전 PASS가 기록된 케이스"
+        },
+        {
+          "log": "build/reports/refinement-remaining-check.log",
+          "passed": 26,
+          "failed": 0
+        }
+      ],
+      "merged_grass_checks": {
+        "cases": 9,
+        "failed": 0,
+        "log": "build/reports/refinement-merged-check.log"
+      },
+      "native_fountain_authoring_and_glb_checks": 7
+    },
+    "web_export": {
+      "log": "build/reports/refinement-push-export.log",
+      "controlled_gpu_textures": 17,
+      "passed": true,
+      "pack": "index-87c3999de14470cb51c9.pck",
+      "bytes": 43655284,
+      "sha256": "87c3999de14470cb51c9ae88b7be83c0ad0c29b86d338f283342d71418ef4d99"
+    },
+    "browser": {
+      "state": "합친 최종 코드의 실제 Chromium 검수 완료",
+      "orientations": [
+        [
+          1280,
+          720
+        ],
+        [
+          720,
+          1280
+        ]
+      ],
+      "environment_captures": 6,
+      "attack_captures": 4,
+      "native_enemy_species_including_crawler": 6,
+      "reports": [
+        {
+          "path": "build/review/world-refinement/push-environment-capture.json",
+          "captures": 6,
+          "console_errors": 0
+        },
+        {
+          "path": "build/review/world-refinement/push-attack-capture.json",
+          "captures": 4,
+          "console_errors": 0
+        }
+      ],
+      "physical_device_tested": false,
+      "performance_evidence": false
+    },
+    "ci": {
+      "workflow": "Build web and deploy to GitHub Pages",
+      "trigger": "main push: 전체 검사·브라우저 검수·공개 배포를 자동 실행"
+    }
+  },
+  "shared_grass": {
+    "manifest": "assets/source/preview3d/grass-variety/manifest.json",
+    "sha256": "ba6178e08db743ab7a1c8e01f17e848e053163a547dd4cd89ab508d859e85375",
+    "variants": 4,
+    "tile_metres": 2.56,
+    "upstream_commits_preserved": [
+      "d45aab0972955e7e32e98d791ab70dfc3f9d5485",
+      "478628bf2179c0c28f2babcc0a28a74c68da5d4c"
+    ]
+  },
+  "implementation": [
+    {
+      "path": "scripts/native_enemy_models.gd",
+      "sha256": "164dfd324bcf4e93fc45ae512101f2a18ebc50eee2da2ea14635322cb6fcbd6c"
+    },
+    {
+      "path": "scripts/native_cave_plan.gd",
+      "sha256": "0b0d93f8def9a43804e288c4f78fee192d189014330d87cfde621c94dcfed88b"
+    },
+    {
+      "path": "scripts/native_chapel_plan.gd",
+      "sha256": "1cc4946694efd8dd01519747a6d47607ec465db92f32e8e98cfe4a97bcf01d4a"
+    },
+    {
+      "path": "scripts/native_fortress_plan.gd",
+      "sha256": "651fea418b4cc8b7191cb72aba43517c13f4537e8db49c7fef4166533df3ddf1"
+    },
+    {
+      "path": "scripts/native_terrain_forms.gd",
+      "sha256": "f63721d4b75e67533cd6c70c746bcaf7a0803fada63546da8588a5d0e092c68d"
+    },
+    {
+      "path": "scripts/native_terrain.gdshader",
+      "sha256": "5eac6e92219e17b764868471fcce1625bd39f2f0aef98f6987fb40a77f2b8f0b"
+    },
+    {
+      "path": "scripts/native_scenery_props_3d.gd",
+      "sha256": "b981f6b010a85b09aec6f07a174c850ca49f03feffe46de61cbfca6d5024f59c"
+    },
+    {
+      "path": "scripts/native_landmarks_3d.gd",
+      "sha256": "f95eebb78b5ffc7d8daf413efdb4ebb701bb856e9f468f02e023d66b60745067"
+    },
+    {
+      "path": "scripts/ortho_3d_chapel.gd",
+      "sha256": "b5a1d0b006a34493901c3500f8daaad92228e5d5b218c9e6d0b7a6596fc1a63f"
+    },
+    {
+      "path": "scripts/ortho_3d_fortification.gd",
+      "sha256": "857d5582f33e2b3730acb3ecf700a7fbadb6ea29f302c2cd58809c692b8f9b69"
+    },
+    {
+      "path": "scripts/spatial_world_3d.gd",
+      "sha256": "296419d569f06e7ad45a44688f0b623ca64d3546859d6ecae22dbec84c4a55c9"
+    },
+    {
+      "path": "scripts/village.gd",
+      "sha256": "6ea1b13b4f51e6881bc4dcaa0217b2e66709d2772133ad4f4319adb6fd4e424c"
+    },
+    {
+      "path": "scripts/native_ground.gdshader",
+      "sha256": "428a1343a3096f0293188ada4fac8475c525e72f1839b75f89cc50c8b4911138"
+    },
+    {
+      "path": "scripts/native_ground_3d.gd",
+      "sha256": "d57c8d701aa5be1ab3625427818cbe06d5f3cb2dcff6f3b2ac075de2e5cd86a7"
+    },
+    {
+      "path": "scripts/native_river.gdshader",
+      "sha256": "119bc9a9dd3cad4dbd2aedef2ef116422807389a058cb80cfa2b7dc2948ad441"
+    }
+  ]
+}

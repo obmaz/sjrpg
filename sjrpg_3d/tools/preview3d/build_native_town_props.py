@@ -168,6 +168,11 @@ def fountain():
             p=[0,y,0];p[axis]=r;jet.append(tuple(p))
         m.tube(jet,.014,6,'water')
         m.sockets[f'spout_{axis}']={'start':spout[-1],'splash':jet[-1]}
+    # 사용자 요청: 가로·세로·높이 2배, 런타임 보정 없이 실제 정점에 적용.
+    for group in m.groups.values():
+        group.vertices = [mul(p, 2.0) for p in group.vertices]
+    m.sockets = {name: {key: mul(value, 2.0) for key, value in socket.items()}
+                 for name, socket in m.sockets.items()}
     return m
 
 

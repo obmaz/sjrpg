@@ -173,6 +173,10 @@ func _move_body(body: CharacterBody3D, destination: Vector2) -> void:
 				break
 			motion = hit.get_remainder().slide(hit.get_normal())
 		_settle_support(body, previous, height, validated_pose)
+		# 계단 높이가 바뀌는 프레임에도 벽 접촉 복구가 캡슐을 안으로
+		# 밀어 넣지 않도록 마지막으로 확인된 지지점을 보존한다.
+		if not _clear_pose(body, body.position):
+			body.position = previous
 
 
 func _settle_support(body: CharacterBody3D, previous: Vector3, height: float, validated_pose := Vector3(INF, INF, INF)) -> void:
@@ -406,6 +410,8 @@ func _build_forest() -> void:
 		var faces := surface_faces(surface)
 		if not faces.is_empty():
 			_triangle_body(faces, FLOOR, "RaisedFloor_" + str(surface["id"]))
+		if str(surface["id"]) in ["landmark_0", "landmark_2", "landmark_3"]:
+			_triangle_body(NativeTerrainForms.faces(surface), SOLID, "NaturalGeology")
 		for polygon: PackedVector2Array in surface["blockers"]:
 			terrain_blockers.append(polygon)
 		var top: PackedVector2Array = surface["top"]
@@ -425,6 +431,11 @@ func _build_forest() -> void:
 		_prism_body(polygon, base, base + 3.5, PROP if _attackable_polygon(polygon) else SOLID, "Obstacle")
 	var chapel := _native_chapel(game.village)
 	_prism_body(chapel["building"], 0.28, 8.0, SOLID, "NativeChapelBody")
+	for corner: Vector3 in NativeFortressPlan.corners(game.village):
+		var shape := CylinderShape3D.new()
+		shape.radius = NativeFortressPlan.CORNER_RADIUS
+		shape.height = game.village.wall_height / UNITS
+		_shape_body(shape, Transform3D(Basis.IDENTITY, corner + Vector3.UP * shape.height * 0.5), SOLID, "CornerBastion")
 	# Bridge rails are full-height native solids even though their deck has zero rise.
 	for polygon in game.village.bridge.solids():
 		_prism_body(polygon, 0.0, 0.96, SOLID, "BridgeRail")
@@ -539,6 +550,14 @@ static func _contains(polygon: PackedVector2Array, point: Vector2) -> bool:
 
 
 static func _surface_height(surface: Dictionary, point: Vector2) -> float:
+	if surface.has("native_steps"):
+		var flat := Iso.unproject(point) / UNITS
+		var step_height := 0.0
+		for tier: Dictionary in surface["native_steps"]:
+			var rect: Rect2 = tier["rect"]
+			if rect.has_point(flat):
+				step_height = maxf(step_height, float(tier["height"]))
+		return step_height if step_height > 0.0 else NativeChapelPlan.FLOOR
 	var height := float(surface["rise"]) / VERTICAL
 	if surface.has("ramp") and _contains(surface["ramp"], point):
 		var bottom: Vector2 = surface["bottom"]
@@ -564,6 +583,9 @@ static func terrain_surfaces(village: Village) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for surface in TerrainLevels._surfaces(village):
 		if str(surface["id"]) != "chapel":
+			if str(surface["id"]) in ["landmark_0", "landmark_2", "landmark_3"]:
+				surface = surface.duplicate()
+				surface["top"] = NativeTerrainForms.outline(surface)
 			result.append(surface)
 	result.push_front(_native_chapel(village))
 	village.set_meta("native_terrain_surfaces", result)
@@ -590,10 +612,10 @@ static func _native_chapel(village: Village) -> Dictionary:
 	var width := maxf(3.5, bounds.size.x)
 	var depth := maxf(3.0, bounds.size.y)
 	var front := center.y + depth * 0.5
-	var door_width := minf(1.38, width * 0.40) + 0.42
+	var door_width := NativeChapelPlan.stair_width(width)
 	var base := Rect2(center - Vector2(width + 0.30, depth + 0.30) * 0.5, Vector2(width + 0.30, depth + 0.30))
 	var platform := PackedVector2Array([base.position, Vector2(base.end.x, base.position.y), base.end, Vector2(base.position.x, base.end.y)])
-	var ramp := PackedVector2Array([Vector2(center.x - door_width * 0.5, front + 0.60), Vector2(center.x + door_width * 0.5, front + 0.60), Vector2(center.x + door_width * 0.5, front + 0.02), Vector2(center.x - door_width * 0.5, front + 0.02)])
+	var ramp := PackedVector2Array([Vector2(center.x - door_width * 0.5, front + 0.04 + NativeChapelPlan.RUN), Vector2(center.x + door_width * 0.5, front + 0.04 + NativeChapelPlan.RUN), Vector2(center.x + door_width * 0.5, front + 0.04), Vector2(center.x - door_width * 0.5, front + 0.04)])
 	var merged := Geometry2D.merge_polygons(platform, ramp)
 	var top_native: PackedVector2Array = merged[0] if not merged.is_empty() else platform
 	var top := PackedVector2Array()
@@ -606,7 +628,8 @@ static func _native_chapel(village: Village) -> Dictionary:
 	for point in [center + Vector2(-width, -depth) * 0.5, center + Vector2(width, -depth) * 0.5, center + Vector2(width, depth) * 0.5, center + Vector2(-width, depth) * 0.5]:
 		building.append(Iso.project(point * UNITS))
 	return {"id": "chapel", "top": top, "ramp": projected_ramp, "rise": 0.28 * VERTICAL,
-		"bottom": Iso.project(Vector2(center.x, front + 0.60) * UNITS), "upper": Iso.project(Vector2(center.x, front + 0.02) * UNITS),
+		"native_steps": NativeChapelPlan.tiers(center, width, depth),
+		"bottom": Iso.project(Vector2(center.x, front + 0.04 + NativeChapelPlan.RUN) * UNITS), "upper": Iso.project(Vector2(center.x, front + 0.04) * UNITS),
 		"entrance": PackedVector2Array([projected_ramp[0], projected_ramp[1]]), "blockers": [] as Array[PackedVector2Array], "building": building}
 
 
@@ -615,6 +638,22 @@ static func _native_chapel(village: Village) -> Dictionary:
 static func surface_faces(surface: Dictionary) -> PackedVector3Array:
 	var result := PackedVector3Array()
 	var top: PackedVector2Array = surface["top"]
+	if surface.has("native_steps"):
+		for polygon: PackedVector2Array in Geometry2D.clip_polygons(top, surface["ramp"]):
+			result.append_array(_floor_region(polygon, surface, NativeChapelPlan.FLOOR))
+		var tiers: Array = surface["native_steps"]
+		for i: int in tiers.size():
+			var rect: Rect2 = tiers[i]["rect"]
+			if i + 1 < tiers.size():
+				var next: Rect2 = tiers[i + 1]["rect"]
+				var original: Rect2 = tiers[i]["rect"]
+				rect.position.y = next.end.y
+				rect.size.y = original.end.y - next.end.y
+			var polygon := PackedVector2Array()
+			for point: Vector2 in NativeChapelPlan.polygon(rect):
+				polygon.append(Iso.project(point * UNITS))
+			result.append_array(_floor_region(polygon, surface, float(tiers[i]["height"])))
+		return result
 	var flat: Array[PackedVector2Array] = [top]
 	var ramp: Array[PackedVector2Array] = []
 	if surface.has("ramp"):

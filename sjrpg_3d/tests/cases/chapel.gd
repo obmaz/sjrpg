@@ -23,7 +23,7 @@ func run() -> void:
 	var door_a := chapel.native_point(Vector2(door["a"][0], door["a"][1]))
 	var door_b := chapel.native_point(Vector2(door["b"][0], door["b"][1]))
 	var door_height := door_a.distance_to(door_b) / Iso.S
-	check("the actual timber opening keeps human proportions", door_height >= 120.0 and door_height <= 130.0, str(door_height))
+	check("enlarged chapel source retains its doorway proportions", door_height >= 120.0 * NativeChapelPlan.SIZE_FACTOR and door_height <= 130.0 * NativeChapelPlan.SIZE_FACTOR, str(door_height))
 	var area := 0.0
 	for index in v.terrace.size():
 		area += v.terrace[index].cross(v.terrace[(index + 1) % v.terrace.size()])
@@ -107,7 +107,7 @@ func run() -> void:
 		await _walk(player, to, 180)
 		check("both native wall faces allow normal parallel walking", player.position.distance_to(to) < 8.0, str(player.position))
 		await _frames(2)
-		check("ground beside the native church stays at ground elevation", absf(game.spatial_world.actor_foot(player).y) < 0.03)
+		check("walking beside the church follows its actual ground or stair tread", absf(game.spatial_world.actor_foot(player).y - game.spatial_world.height_at(player.position)) < 0.03)
 		player.position = SpatialWorld3D.projected(mid + outward * clearance)
 		await _walk(player, SpatialWorld3D.projected(mid - outward), 180)
 		var foot := SpatialWorld3D.native_point(player.position)

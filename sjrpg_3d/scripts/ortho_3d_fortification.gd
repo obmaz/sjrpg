@@ -37,6 +37,12 @@ static func build(presenter: Node) -> Ortho3DFortification:
 
 func _build() -> void:
 	_materials = preview._materials.duplicate()
+	for key: String in ["stone", "granite"]:
+		var material := ShaderMaterial.new()
+		material.shader = load("res://scripts/native_fortress.gdshader")
+		material.set_shader_parameter("masonry_atlas", load("res://assets/art/preview3d/fortress-atlas.png"))
+		material.set_shader_parameter("dressed", key == "granite")
+		_materials[key] = material
 	var unit := BoxMesh.new()
 	unit.size = Vector3.ONE
 	_box_arrays = unit.surface_get_arrays(0)
@@ -104,11 +110,14 @@ func _build() -> void:
 			for shape in expanded:
 				_horizontal(shape, float(band[0]), float(band[0]) + float(band[1]), "granite")
 	var corners: Array[Vector3] = []
-	for run: Array in village.data["wall_runs"]:
-		var point: Array = run[1]
-		var corner := Ortho3DPreview.ground_position(village.point(Vector2(point[0], point[1])))
+	for corner: Vector3 in NativeFortressPlan.corners(village):
 		corners.append(corner)
-		_coped_box(corner + Vector3(0, height + 0.30, 0), Vector3(0.54, 0.54, 0.54), "granite")
+		_corner_crown(corner, height)
+	# 성문 날개 끝의 층진 기둥머리. 지상 통로는 기존 벽 폭 그대로 둔다.
+	for wing: Dictionary in wings:
+		var at: Vector3 = wing["join"]
+		_coped_box(at + Vector3.UP * (height + 0.13), Vector3(0.72, 0.28, 0.72), "granite")
+		_coped_box(at + Vector3.UP * (height + 0.43), Vector3(0.46, 0.32, 0.46), "stone")
 	var crenels := {}
 	for polygon in polygons:
 		_crenels(polygon, corners, crenels, height, thickness)
@@ -123,6 +132,26 @@ func _build() -> void:
 		"coped_pieces": _coped_pieces, "moulded_rings": _mouldings, "slit_reveals": _slit_reveals,
 		"slit_depth": 0.10, "slit_height": height * 0.60, "slit_frames": _slit_frames}
 	root.set_meta("fortification_detail", report)
+	report["corner_top"] = height + 1.43
+	report["masonry_variants"] = 4
+	report["granite"] = _materials["granite"]
+
+
+func _corner_crown(at: Vector3, height: float) -> void:
+	# 망루 몸체와 실제 물리는 공용 설계의 반경을 사용한다.
+	_cylinder(at + Vector3.UP * height * 0.5, NativeFortressPlan.CORNER_RADIUS, height, "stone", 16)
+	for level: float in [0.18, 0.68, height - 0.18]:
+		_cylinder(at + Vector3.UP * level, NativeFortressPlan.CORNER_RADIUS, 0.15, "granite", 16)
+	_cylinder(at + Vector3.UP * (height + 0.02), 1.02, 0.28, "granite", 16)
+	_cylinder(at + Vector3.UP * (height + 0.28), 1.10, 0.24, "stone", 16)
+	_cylinder(at + Vector3.UP * (height + 0.45), 1.18, 0.12, "granite", 16)
+	for i: int in 8:
+		var angle := TAU * i / 8.0
+		var frame := Transform3D(Basis(Vector3.UP, -angle), at + Vector3(cos(angle) * 1.03, height + 0.78, sin(angle) * 1.03))
+		_coped_box(Vector3.ZERO, Vector3(0.38, 0.56, 0.34), "granite", frame)
+	_coped_box(at + Vector3.UP * (height + 0.78), Vector3(0.32, 0.55, 0.32), "stone")
+	_coped_box(at + Vector3.UP * (height + 1.12), Vector3(0.45, 0.14, 0.45), "granite")
+	_cylinder(at + Vector3.UP * (height + 1.31), 0.14, 0.24, "iron", 16)
 
 
 ## No independent tween or timer: pause, accessibility and real threat scan remain authoritative.
@@ -489,12 +518,12 @@ func _build_leaves(index: int) -> void:
 	_target = root
 
 
-func _cylinder(at: Vector3, radius: float, height: float, material: String) -> void:
+func _cylinder(at: Vector3, radius: float, height: float, material: String, segments := 24) -> void:
 	var cylinder := CylinderMesh.new()
 	cylinder.top_radius = radius
 	cylinder.bottom_radius = radius
 	cylinder.height = height
-	cylinder.radial_segments = 24
+	cylinder.radial_segments = segments
 	cylinder.rings = 1
 	_append(cylinder.surface_get_arrays(0), Transform3D(Basis.IDENTITY, at), material)
 

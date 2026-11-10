@@ -7,7 +7,7 @@ const RECHARGE_SECONDS := 300.0
 const MAX_ENEMIES := 30
 const CAVE_SITE := "cave_swarm"
 const CAVE_WAVE_SIZE := 20
-# The new sprite pack reserves twenty extra slots; ordinary spawning still caps at thirty.
+# The cave swarm reserves twenty extra native actors; ordinary spawning still caps at thirty.
 const CAVE_ENEMY_LIMIT := MAX_ENEMIES + CAVE_WAVE_SIZE
 const CAVE_VISUAL_VARIANT := "cave_crawler"
 # Screen-ground offset keeps the marker beside, not over, the entrance/NPC/gate.

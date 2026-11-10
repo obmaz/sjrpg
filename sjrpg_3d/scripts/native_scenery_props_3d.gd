@@ -153,7 +153,7 @@ static func build(preview: Node, parent: Node3D, world: Node2D, cave: bool, excl
 			at = centre + forward * 0.85
 			basis = Basis(axis, Vector3.UP, forward)
 			opening = 1.40
-			mesh = _entrance_mesh(minf(height, 3.4), SpatialWorld3D.radius_metres(120.0))
+			mesh = _entrance_mesh(minf(height, 3.4), SpatialWorld3D.radius_metres(NativeCavePlan.SOURCE_RADIUS))
 		elif role == "crystal":
 			mesh = _crystal_mesh(height)
 		else:
@@ -170,19 +170,19 @@ static func build(preview: Node, parent: Node3D, world: Node2D, cave: bool, excl
 		node.name = "Native_" + role + "_" + str(entries.size())
 		node.mesh = mesh
 		var variant_index: int = posmod(roundi(at.x * 7.0 + at.z * 11.0), stone_variants.size())
-		node.material_override = crystal if role == "crystal" else stone_variants[variant_index]
+		node.material_override = crystal if role == "crystal" else stone_variants[0 if role == "entrance" else variant_index]
 		node.transform = Transform3D(basis, at)
 		root.add_child(node)
 		if role == "entrance":
 			var back := MeshInstance3D.new()
 			var back_shape := BoxMesh.new()
-			back_shape.size = Vector3(1.35, 3.3, 0.16)
+			back_shape.size = Vector3(1.36, 1.90, 0.12)
 			back.mesh = back_shape
 			var dark := StandardMaterial3D.new()
 			dark.albedo_color = Color("101c1b")
 			dark.roughness = 1.0
 			back.material_override = dark
-			back.position = Vector3(0, 2.15, -0.97)
+			back.position = Vector3(0, 1.50, -0.92)
 			back.name = "TunnelDepth"
 			node.add_child(back)
 		owned[source.get_instance_id()] = true
@@ -206,14 +206,20 @@ static func _polygon_volume(tool: SurfaceTool, polygon: PackedVector2Array, bott
 		low.append(Vector3(p.x, bottom, p.y))
 		var peak := top
 		if broken:
-			# The front descends toward the visible mouth; the rear is an irregular
-			# rocky ridge, rather than a constant-height capped cylinder.
-			peak -= 0.65 * clampf((p.y + 0.85) / 1.55, 0.0, 1.0)
-			peak += 0.16 * sin(p.x * 3.1) + 0.13 * cos(p.y * 2.4)
-		var roof_point := p.lerp(planar_centre, 0.14) if broken else p
+			var radius := SpatialWorld3D.radius_metres(NativeCavePlan.SOURCE_RADIUS)
+			var radial := Vector2(p.x, p.y + 0.85).length() / radius
+			peak = 0.50 + (top - 0.50) * pow(clampf(1.0 - radial, 0.0, 1.0), 0.60)
+			peak += 0.07 * sin(p.x * 3.1) * (1.0 - radial)
+		var roof_point := p
 		high.append(Vector3(roof_point.x, peak, roof_point.y))
 		centre += low[-1]
 	centre /= polygon.size()
+	if broken:
+		var radius := SpatialWorld3D.radius_metres(NativeCavePlan.SOURCE_RADIUS)
+		var radial := Vector2(centre.x, centre.z + 0.85).length() / radius
+		var peak := Vector3(centre.x, 0.50 + (top - 0.50) * pow(clampf(1.0 - radial, 0.0, 1.0), 0.60), centre.z)
+		for i: int in high.size():
+			NativeLandmarks3D._tri(tool, peak, high[i], high[(i + 1) % high.size()], Vector3.UP)
 	var indices := Geometry2D.triangulate_polygon(polygon)
 	for i in range(0, indices.size(), 3):
 		var a := high[indices[i]]
@@ -222,7 +228,8 @@ static func _polygon_volume(tool: SurfaceTool, polygon: PackedVector2Array, bott
 		var normal := (b - a).cross(c - a).normalized()
 		if normal.y < 0:
 			normal = -normal
-		NativeLandmarks3D._tri(tool, a, b, c, normal)
+		if not broken:
+			NativeLandmarks3D._tri(tool, a, b, c, normal)
 		NativeLandmarks3D._tri(tool, low[indices[i]], low[indices[i + 2]], low[indices[i + 1]], Vector3.DOWN)
 	for i in low.size():
 		_face(tool, low[i], low[(i + 1) % low.size()], high[(i + 1) % high.size()], high[i], centre + Vector3.UP * (top - bottom) * 0.5)
@@ -243,12 +250,35 @@ static func _entrance_mesh(height: float, body_radius: float) -> ArrayMesh:
 	]
 	for region: PackedVector2Array in regions:
 		for polygon in Geometry2D.intersect_polygons(circle, region):
-			_polygon_volume(tool, polygon, 0.5, height + 0.20, true)
-	var vault := arch_mesh(1.4, height, 0.36, 1.25)
-	var arrays := vault.surface_get_arrays(0)
-	var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
-	for i in range(0, points.size(), 3):
-		var offset := Vector3(0, 0.5, -0.35)
-		NativeLandmarks3D._tri(tool, points[i] + offset, points[i + 1] + offset, points[i + 2] + offset, normals[i])
+			var fractured := PackedVector2Array()
+			for i: int in polygon.size():
+				var a := polygon[i]
+				var b := polygon[(i + 1) % polygon.size()]
+				var pieces := maxi(1, ceili(a.distance_to(b) / 0.60))
+				for part: int in pieces:
+					fractured.append(a.lerp(b, float(part) / pieces))
+			_polygon_volume(tool, fractured, 0.5, height + 0.20, true)
+	# 생성형 동굴 컨셉의 비대칭 파쇄암 입구. 규칙적인 석조 아치를 쓰지 않는다.
+	var inner := PackedVector2Array([Vector2(-0.70, 0.50), Vector2(-0.84, 1.35), Vector2(-0.66, 2.45), Vector2(-0.31, 2.88), Vector2(0.22, 3.02), Vector2(0.62, 2.58), Vector2(0.79, 1.52), Vector2(0.70, 0.50)])
+	var outer := PackedVector2Array([Vector2(-1.25, 0.50), Vector2(-1.32, 1.47), Vector2(-1.26, 2.67), Vector2(-0.54, 3.39), Vector2(0.29, 3.54), Vector2(1.03, 3.06), Vector2(1.32, 1.83), Vector2(1.23, 0.50)])
+	for i: int in inner.size():
+		inner[i].y = 0.50 + (inner[i].y - 0.50) * 0.82
+		outer[i].y = 0.50 + (outer[i].y - 0.50) * 0.82
+	for i in range(inner.size() - 1):
+		var a := Vector3(inner[i].x, inner[i].y, 0.10 + 0.07 * sin(i * 2.3))
+		var b := Vector3(inner[i + 1].x, inner[i + 1].y, 0.10 + 0.07 * sin((i + 1) * 2.3))
+		var c := Vector3(outer[i + 1].x, outer[i + 1].y, -0.30)
+		var d := Vector3(outer[i].x, outer[i].y, -0.30)
+		var ridge := (a + b + c + d) * 0.25 + Vector3(0.03 * sin(i), 0.03, 0.17)
+		for pair: Array in [[a, b], [b, c], [c, d], [d, a]]:
+			NativeLandmarks3D._tri(tool, pair[0], pair[1], ridge, Vector3.BACK)
+		# 실제로 뒤로 들어간 천장·측벽이 입구 안쪽의 어둠을 만든다.
+		var back_a := Vector3(a.x * 0.82, a.y, -1.15)
+		var back_b := Vector3(b.x * 0.82, b.y, -1.15)
+		_face(tool, a, back_a, back_b, b, Vector3(0, 1.6, -0.5))
+		var back_c := Vector3(c.x * 0.94, c.y - 0.12, -1.15)
+		var back_d := Vector3(d.x * 0.94, d.y - 0.12, -1.15)
+		var rock_center := (a + b + c + d + back_a + back_b + back_c + back_d) / 8.0
+		_face(tool, d, c, back_c, back_d, rock_center)
+		_face(tool, back_a, back_d, back_c, back_b, rock_center)
 	return tool.commit()

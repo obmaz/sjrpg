@@ -1,10 +1,8 @@
 class_name NativeLandmarks3D
 extends RefCounted
 const WATER_SHADER := preload("res://scripts/native_landmark_water.gdshader")
-## Upper turf is cooler/lighter than the warm yellow-green valley floor. These
-## are source-albedo gains, with the same real light/shadow response and texture.
-const UPPER_GRASS_TINT := Color(1.26, 1.52, 1.65, 1.0)
 const EARTH_STRATUM_DEPTH := 0.20
+const UPPER_GRASS_TINT := Color(1.26, 1.52, 1.65, 1.0)
 ## Native terrain/solid picture built from the same authored footprint as physics.
 ## Simulation and colliders remain SpatialWorld3D's responsibility.
 
@@ -79,13 +77,22 @@ static func build(preview: Node, parent: Node3D) -> Dictionary:
 	rock_material.uv1_triplanar = true
 	rock_material.uv1_world_triplanar = true
 	rock_material.uv1_scale = Vector3.ONE / 2.56
-	# 융기 지형은 두 잔디 재질을 공유한다. 월드 좌표로 바닥과 같은 결 크기를
-	# 유지하고, 서식 분포와 고도별 색 비율만 달리한다.
-	var upper_turf := NativeGround3D.grass_material(UPPER_GRASS_TINT,.45)
 	var earth := rock_material.duplicate() as StandardMaterial3D
-	earth.albedo_color = Color(0.54, 0.43, 0.31, 1.0)
-	earth.roughness = 1.0
-	var moss_turf := NativeGround3D.grass_material(UPPER_GRASS_TINT,1.25)
+	earth.albedo_texture = load("res://assets/art/forest/earth.webp")
+	earth.albedo_color = Color(0.72, 0.65, 0.52)
+	var terrain_materials := {}
+	for role: int in [0, 2, 3]:
+		for cliff: bool in [false, true]:
+			var material := ShaderMaterial.new()
+			material.shader = load("res://scripts/native_terrain.gdshader")
+			material.set_shader_parameter("grass_atlas", load(NativeGround3D.GRASS))
+			material.set_shader_parameter("habitat_bias", 1.25 if role == 3 else 0.45)
+			material.set_shader_parameter("surface_tint", Color(UPPER_GRASS_TINT.r / ForestArt.GRASS_TINT.r, UPPER_GRASS_TINT.g / ForestArt.GRASS_TINT.g, UPPER_GRASS_TINT.b / ForestArt.GRASS_TINT.b))
+			material.set_shader_parameter("rock_texture", rock_material.albedo_texture)
+			material.set_shader_parameter("earth_texture", earth.albedo_texture)
+			material.set_shader_parameter("rock_shelf", role == 0)
+			material.set_shader_parameter("cliff", cliff)
+			terrain_materials["%s:%s" % [role, cliff]] = material
 	var owned := {}
 	var entries: Array[Dictionary] = []
 	var water_materials: Array[ShaderMaterial] = []
@@ -116,9 +123,7 @@ static func build(preview: Node, parent: Node3D) -> Dictionary:
 				normal = -normal
 			_tri(floor_tool, a, b, c, normal)
 		var grassy_rise := source.index in [0, 2, 3] and float(surface["rise"]) > 0.001
-		var floor_material: Material = upper_turf if grassy_rise else preview._materials["paving"]
-		if grassy_rise and posmod(source.index, 2) == 1:
-			floor_material = moss_turf
+		var floor_material: Material = terrain_materials["%s:false" % source.index] if grassy_rise else preview._materials["paving"]
 		_finish(floor_tool, floor_material, group, "WalkableTop")
 		var sides := SurfaceTool.new()
 		sides.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -167,9 +172,19 @@ static func build(preview: Node, parent: Node3D) -> Dictionary:
 				_tri(sides, rock_a, low_b, rock_b, normal)
 				has_sides = true
 		if has_sides:
-			_finish(sides, rock_material, group, "CliffSides")
+			_finish(sides, terrain_materials["%s:true" % source.index] if grassy_rise else rock_material, group, "CliffSides")
 			if grassy_rise:
 				_finish(soil_edges, earth, group, "ExposedEarth")
+		if grassy_rise:
+			var geology := SurfaceTool.new()
+			geology.begin(Mesh.PRIMITIVE_TRIANGLES)
+			var geology_faces := NativeTerrainForms.faces(surface)
+			for i in range(0, geology_faces.size(), 3):
+				var a := geology_faces[i]
+				var b := geology_faces[i + 1]
+				var c := geology_faces[i + 2]
+				_tri(geology, a, b, c, (b - a).cross(c - a).normalized())
+			_finish(geology, terrain_materials["%s:true" % source.index], group, "NaturalGeology")
 		var definition: Dictionary = Landmark.data()[source.index]
 		for i in definition["solids"].size():
 			var polygon := source._poly(definition["solids"][i])

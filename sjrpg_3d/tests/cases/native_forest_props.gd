@@ -30,7 +30,7 @@ func run() -> void:
 		if child is IsoSprite and NativeForestFlora3D.accepts(child):
 			count += 1
 			check("supported original flora is owned exactly once", report["owned_source_ids"].has(child.get_instance_id()))
-	check("native flora covers the authored close scene rather than a demo object", count > 200 and report["placements"].size() == count and report["groups"] <= count)
+	check("native flora covers the scene while keeping the enlarged chapel steps clear", count > 200 and report["placements"].size() + report["suppressed_at_chapel"].size() == count and report["groups"] <= count)
 	for placement: Dictionary in report["placements"]:
 		var transform: Transform3D = placement["transform"]
 		var foot: Vector2 = placement["source_foot"]

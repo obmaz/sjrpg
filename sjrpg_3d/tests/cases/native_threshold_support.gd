@@ -17,6 +17,7 @@ func run() -> void:
 	var body_clear := true
 	var capsule_clear := true
 	var trials := 0
+	var first_overlap := ""
 	for distance in [0.20, 0.50, 1.0, 2.0, 4.0, 8.0, 16.0, 40.0]:
 		for offset in [-10.0, 0.0, 10.0]:
 			spatial.teleport_source_actor(game.player, bottom + across * offset, Player.RADIUS)
@@ -36,9 +37,12 @@ func run() -> void:
 			query.transform = body.global_transform
 			query.collision_mask = SpatialWorld3D.SOLID | SpatialWorld3D.PROP
 			query.exclude = [body.get_rid()]
-			capsule_clear = capsule_clear and spatial.get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty()
+			var overlaps := spatial.get_world_3d().direct_space_state.intersect_shape(query, 1)
+			if not overlaps.is_empty() and first_overlap.is_empty():
+				first_overlap = "%s floor=%s foot=%s step=%s" % [overlaps[0]["collider"].name, spatial.height_at(game.player.position), spatial.actor_foot(game.player), distance]
+			capsule_clear = capsule_clear and overlaps.is_empty()
 			trials += 1
-	check("doorway remains native-solid across varied movement steps", body_clear and capsule_clear and trials == 24)
+	check("doorway remains native-solid across varied movement steps", body_clear and capsule_clear and trials == 24, first_overlap)
 	check("solid-edge recovery preserves actual native FLOOR support at every step", worst_error < 0.001, worst_detail)
 	game.queue_free()
 	await _frames(2)

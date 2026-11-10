@@ -43,19 +43,27 @@ func run() -> void:
 		if shared_top == null:
 			shared_top = turf
 			shared_earth = earthy.material_override as StandardMaterial3D
-		var expected_bias: float = 1.25 if role == 3 else .45
-		check("raised terrain keeps its authored habitat and metre scale " + str(role), turf.get_shader_parameter("grass_atlas") == low_grass.get_shader_parameter("grass_atlas") and is_equal_approx(float(turf.get_shader_parameter("habitat_bias")),expected_bias))
+		var expected_bias: float = 1.25 if role == 3 else 0.45
+		check("raised terrain shares the four generated grass families at metre scale " + str(role), turf.get_shader_parameter("grass_atlas") == low_grass.get_shader_parameter("grass_atlas") and is_equal_approx(float(turf.get_shader_parameter("habitat_bias")), expected_bias) and turf.get_shader_parameter("rock_shelf") == (role == 0))
 		turf_variants[turf.get_instance_id()] = true
 		var tint: Color = turf.get_shader_parameter("surface_tint")
 		var low_tint: Color = low_grass.get_shader_parameter("surface_tint")
-		check("upper grass is visibly cooler and lighter without emissive light " + str(role), tint.b/tint.g > low_tint.b/low_tint.g*1.25 and tint.get_luminance() > low_tint.get_luminance()*1.10 and not turf.shader.code.contains("EMISSION") and not turf.shader.code.contains("unshaded"))
+		check("upper grass retains its cool lit tint " + str(role), tint.b / tint.g > low_tint.b / low_tint.g * 1.25 and tint.get_luminance() > low_tint.get_luminance() * 1.10 and not turf.shader.code.contains("EMISSION") and not turf.shader.code.contains("unshaded"))
+		var geology := group.get_node("NaturalGeology") as MeshInstance3D
+		check("geological silhouette uses the actual solid shell " + str(role), _same_vertices(geology.mesh.get_faces(), NativeTerrainForms.faces(surface), Vector3.ZERO))
+		var outside := 0
+		for point: Vector3 in geology.mesh.get_faces():
+			if not Geometry2D.is_point_in_polygon(SpatialWorld3D.projected(point), surface["top"]):
+				outside += 1
+		check("natural slopes extend beyond the old vertical cliff " + str(role), outside > 20)
+		print("ART_AUDIT geological_shell " + JSON.stringify({"role": role, "faces": geology.mesh.get_faces().size(), "outside": outside, "bounds": str(geology.mesh.get_aabb())}))
+
 		var earth := earthy.material_override as StandardMaterial3D
-		var cliff := (group.get_node("CliffSides") as MeshInstance3D).material_override as StandardMaterial3D
-		check("earth uses one opaque lit rock texture at its original world scale " + str(role), earth == shared_earth and earth.albedo_texture == cliff.albedo_texture and earth.uv1_world_triplanar and earth.uv1_scale.is_equal_approx(Vector3.ONE / 2.56) and earth.transparency == BaseMaterial3D.TRANSPARENCY_DISABLED and not earth.emission_enabled)
+		check("earth uses one opaque lit rock texture at its original world scale " + str(role), earth == shared_earth and earth.albedo_texture == load("res://assets/art/forest/earth.webp") and earth.uv1_world_triplanar and earth.uv1_scale.is_equal_approx(Vector3.ONE / 2.56) and earth.transparency == BaseMaterial3D.TRANSPARENCY_DISABLED and not earth.emission_enabled)
 		_check_earth(earthy, surface, role)
 		check("visual turf and earth do not add collision " + str(role), group.find_children("*", "CollisionObject3D", true, false).is_empty())
 	check("all three raised grass landmarks are styled", styled_count == 3)
-	check("three landmarks share exactly two habitat materials", turf_variants.size() == 2)
+	check("three landmarks share three rock and earth habitat materials", turf_variants.size() == 3)
 	var nodes := root.get_child_count()
 	var top_id := shared_top.get_instance_id() if shared_top != null else 0
 	var earth_id := shared_earth.get_instance_id() if shared_earth != null else 0

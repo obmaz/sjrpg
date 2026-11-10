@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cu3n5mvwvxbqt"
-path="res://.godot/imported/wall_shop.webp-b11c83a45d66123fdce29dcbb0db27c0.ctex"
+uid="uid://drwduaop28oa7"
+path="res://.godot/imported/stable-oak.png-aa9f7d49441dc376f947b9a9f45ee422.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/preview3d/wall_shop.webp"
-dest_files=["res://.godot/imported/wall_shop.webp-b11c83a45d66123fdce29dcbb0db27c0.ctex"]
+source_file="res://assets/art/preview3d/stable-oak.png"
+dest_files=["res://.godot/imported/stable-oak.png-aa9f7d49441dc376f947b9a9f45ee422.ctex"]
 
 [params]
 

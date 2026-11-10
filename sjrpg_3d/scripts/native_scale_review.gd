@@ -58,10 +58,15 @@ func _prepare() -> void:
 		var centre: Vector2 = _game.village.boss_point
 		_game.spatial_world.teleport_source_actor(_game.player, centre + Vector2(0, 160), Player.RADIUS)
 		var index := 0
-		for kind: String in Enemy.KINDS:
+		var kinds: Array = Enemy.KINDS.keys()
+		if str(JavaScriptBridge.eval("new URLSearchParams(location.search).get('scale_crawler') || '0'", true)) == "1":
+			kinds.append(NativeEnemyModels.CRAWLER)
+		for kind: String in kinds:
 			var enemy := Enemy.new()
-			enemy.setup(_game, kind, 1)
-			enemy.position = centre + Vector2((index - 2) * 95.0, 0)
+			enemy.setup(_game, "goblin" if kind == NativeEnemyModels.CRAWLER else kind, 1)
+			if kind == NativeEnemyModels.CRAWLER:
+				enemy.set_meta("visual_variant", NativeEnemyModels.CRAWLER)
+			enemy.position = centre + Vector2((index - (kinds.size() - 1) * 0.5) * 95.0, 0)
 			enemy.facing = PI * 0.5
 			enemy.xp_reward = 0
 			_game.world.add_child(enemy)
@@ -77,6 +82,8 @@ func _prepare() -> void:
 		var approach: Vector2 = _chest.position + Vector2(70, 100)
 		_game.spatial_world.teleport_source_actor(_game.player, approach, Player.RADIUS)
 		_game._fx_review_focus = _chest.position + Vector2(0, -42)
+	elif _scene in ["landmark0", "landmark2", "landmark3", "cave_mouth", "chapel", "fountain", "shop", "stable", "wall", "bank", "road_end"]:
+		_frame_environment(_scene)
 	_game.camera.position = _game._camera_focus()
 	_game.camera.reset_smoothing()
 	await get_tree().physics_frame
@@ -94,9 +101,53 @@ func _action(args: Array) -> void:
 				if is_instance_valid(enemy) and not enemy.dead:
 					enemy.facing = angle
 			_game.player.facing = angle
+		"environment":
+			if args.size() > 1:
+				_scene = str(args[1])
+				_frame_environment(_scene)
+		"freeze":
+			get_tree().paused = true
+			_preview._presentation_dirty = true
+		"attack":
+			var phase := clampf(float(args[1]), 0.0, 1.0) if args.size() > 1 else 0.60
+			for enemy: Enemy in _review_enemies:
+				enemy._state = "windup" if phase < 0.60 else "recover"
+				enemy._timer = enemy._windup_duration * (1.0 - phase / 0.60) if phase < 0.60 else enemy._recover_duration - (phase - 0.60) / 0.40 * enemy._recover_visual_duration
+			_preview._presentation_dirty = true
+
 		"corpses":
 			if _scene == "actors" and _phase == "live":
 				_make_corpses.call_deferred()
+
+
+func _frame_environment(scene: String) -> void:
+	var focus: Vector2 = _game.player.position
+	if scene.begins_with("landmark"):
+		var index := int(scene.trim_prefix("landmark"))
+		var source: Landmark = _game.village.landmarks[clampi(index, 0, 3)]
+		focus = Iso.poly_bounds(source.top).get_center()
+	elif scene == "cave_mouth":
+		focus = _game.dungeon.entry_point() + Vector2(0, -110)
+	elif scene == "chapel":
+		var surface := SpatialWorld3D._native_chapel(_game.village)
+		focus = Iso.poly_bounds(surface["building"]).get_center() + Vector2(0, -140)
+	elif scene == "fountain":
+		focus = Iso.poly_bounds(_game.village.fountain.atlas_polygon(_game.village.data["frames"]["pool"]["ground"])).get_center() + Vector2(0, -80)
+	elif scene in ["shop", "stable"]:
+		var key := "nw" if scene == "shop" else "sw"
+		var house: IsoSprite = _game.village.buildings[key]
+		focus = Iso.poly_bounds(house.atlas_polygon(_game.village.data["frames"][key]["ground"])).get_center() + Vector2(0, -100)
+	elif scene == "wall":
+		focus = _game.village.point(Vector2(0.04, 0.10)) + Vector2(0, -60)
+	elif scene == "bank":
+		focus = Iso.project(_game.village.forecourt_g + Vector2(140, 0))
+	elif scene == "road_end":
+		focus = Iso.project(Vector2(0, -4520))
+	_game._fx_review_focus = focus
+	_game.camera.position = focus
+	_game.camera.reset_smoothing()
+	_game.camera.force_update_scroll()
+	_preview._presentation_dirty = true
 
 func _make_corpses() -> void:
 	_phase = "dying"

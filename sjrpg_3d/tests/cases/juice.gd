@@ -335,6 +335,8 @@ func _check_death_cancellation() -> void:
 
 func _check_chain_target_lifetime() -> void:
 	var game := await make_game("mage")
+	# 연쇄 대상 수명 회귀는 확대된 우물 뒤의 차폐와 분리해 열린 광장에서 검사한다.
+	game.spatial_world.teleport_source_actor(game.player, game.village.spawn_point + Vector2(0, 180), Player.RADIUS)
 	game.player.set_process(false)
 	var at: Vector2 = game.player.position
 	var first := _fixture_enemy(game, at + Vector2(100, 0))

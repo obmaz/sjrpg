@@ -7,7 +7,7 @@ var _busy := false
 var _scenario := ""
 var _proof := {}
 var _serial := 0
-const SCENARIOS := ["cave_torches", "cave_torches_north", "combat_health", "boss_warning", "meteor_warning", "firewall", "cave_swarm", "sprite_directions", "sprite_corpses"]
+const SCENARIOS := ["cave_torches", "cave_torches_north", "combat_health", "boss_warning", "meteor_warning", "firewall", "cave_swarm", "crawler_directions", "crawler_corpses"]
 
 
 func setup(screen: Node) -> Node:
@@ -178,7 +178,7 @@ func _prepare(requested: String) -> void:
 					node.set_process(false)
 					node.age = 0.75
 			_proof["zone"] = {"kind": "firewall", "age": 0.75, "radius": 115.0, "wall": -PI / 6.0}
-		"sprite_directions", "sprite_corpses":
+		"crawler_directions", "crawler_corpses":
 			var records := []
 			for index in 4:
 				var offset := Vector2(-90.0 if index % 2 == 0 else 90.0, -55.0 if index < 2 else 105.0)
@@ -190,18 +190,18 @@ func _prepare(requested: String) -> void:
 				target._walk_cycle = 0.25
 				target.xp_reward = 0
 				records.append({"direction": index, "facing": target.facing, "position": [target.position.x, target.position.y]})
-				if requested == "sprite_corpses":
+				if requested == "crawler_corpses":
 					target.take_damage(target.max_hp * 3.0, game.player)
 			for node in game.world.get_children():
 				if node is Effect:
 					node.queue_free()
-			if requested == "sprite_corpses":
+			if requested == "crawler_corpses":
 				# Inspect after the genuine source crossfade, not its alpha-zero start.
 				for corpse: Dictionary in game.corpses:
 					corpse["time"] = maxf(0.0, float(corpse["lifetime"]) - 0.5)
 				_proof["corpse_age_seconds"] = 0.5
-			_proof["configured_sprite_directions"] = records
-			_proof["actual_source_deaths"] = 4 if requested == "sprite_corpses" else 0
+			_proof["configured_crawler_directions"] = records
+			_proof["actual_source_deaths"] = 4 if requested == "crawler_corpses" else 0
 		"cave_swarm":
 			var site := "cave_swarm"
 			if not game.encounters.stones.has(site):
@@ -294,18 +294,14 @@ func _publish(ready: bool) -> void:
 		var zones: Variant = presenter.get("_zone_fx")
 		if is_instance_valid(zones):
 			result["native_zones"] = zones.snapshot()
-		var sprites: Variant = presenter.get("_enemy_sprites")
-		if is_instance_valid(sprites):
-			result["enemy_sprites"] = sprites.snapshot()
-			var visible_corpses := 0
-			for entry: Dictionary in sprites.corpses.values():
-				var card: MeshInstance3D = entry["card"]
-				var tint: Color = entry["uniforms"].get("tint", Color.TRANSPARENT)
-				if card.is_visible_in_tree() and tint.a > 0.1:
-					visible_corpses += 1
-			result["visible_sprite_corpses"] = visible_corpses
+		result["enemy_models"] = presenter._enemy_models.snapshot()
 		var environment: Variant = presenter.get("_world_environment")
 		if is_instance_valid(environment):
+			var visible_corpses := 0
+			for model: Dictionary in environment._corpses.values():
+				if (model["root"] as Node3D).visible:
+					visible_corpses += 1
+			result["visible_native_corpses"] = visible_corpses
 			result["cave_lights"] = environment._cave_lights.size()
 			if is_instance_valid(environment.cave):
 				var torches: Node = environment.cave.get_node_or_null("NativeCaveLanterns")

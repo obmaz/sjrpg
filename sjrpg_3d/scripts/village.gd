@@ -237,7 +237,7 @@ func _build_quest_sites(world: Node2D) -> void:
 	var cave := IsoSprite.new().setup(cdef, float(cdef["world_height"]) * 1.6)
 	cave.position = Iso.project(cave_ground)
 	world.add_child(cave)
-	circles.append([cave.position + Vector2(0, -60), 120.0])
+	circles.append([cave.position + Vector2(0, -60), NativeCavePlan.SOURCE_RADIUS])
 	clear_rects.append(Rect2(cave.position - Vector2(300, 280), Vector2(600, 420)))
 	quest_sites["sun"] = cave.position + Vector2(150, 90)
 	_npc("수녀 엘린", 1, quest_sites["roots"] + Vector2(-30, 10), world, true)
@@ -406,6 +406,9 @@ func _build_buildings(world: Node2D) -> void:
 ## 좌표는 원화 원본 픽셀이라 `native_polygon`으로 월드에 옮긴다.
 func _build_chapel(world: Node2D) -> void:
 	var s := _placed("chapel")
+	var old_center := Iso.poly_bounds(s.atlas_polygon(data["frames"]["chapel"]["ground"])).get_center()
+	s.k *= NativeChapelPlan.SIZE_FACTOR
+	s.position += old_center - Iso.poly_bounds(s.atlas_polygon(data["frames"]["chapel"]["ground"])).get_center()
 	world.add_child(s)
 	buildings["chapel"] = s
 	var yard: Dictionary = data["chapel"]
@@ -428,8 +431,11 @@ func _build_chapel(world: Node2D) -> void:
 
 func _build_plaza(world: Node2D) -> void:
 	fountain = _placed("pool")
-	# A central plaza feature: 5/3 the previous width, with a matching stone-base footprint.
+	# 중심을 유지하며 우물의 모든 치수를 두 배로 넓힌다.
 	fountain.k *= 2.4
+	var old_center := Iso.poly_bounds(fountain.atlas_polygon(data["frames"]["pool"]["ground"])).get_center()
+	fountain.k *= 2.0
+	fountain.position += old_center - Iso.poly_bounds(fountain.atlas_polygon(data["frames"]["pool"]["ground"])).get_center()
 	PlazaWater.attach(fountain, false)
 	world.add_child(fountain)
 	# Authored frame points follow the same measured source projection as its stone base.

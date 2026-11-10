@@ -22,7 +22,7 @@ var forest: Node3D
 var cave: Node3D
 var _cave_source_id := 0
 var _forest_world: Node2D
-var _water_material: StandardMaterial3D
+var _water_material: ShaderMaterial
 var _cave_lights: Array[OmniLight3D] = []
 var _cave_key: DirectionalLight3D
 var _cave_entry_light: OmniLight3D
@@ -248,13 +248,15 @@ func _build_river() -> void:
 	var water := PackedVector2Array()
 	for point in river.polygon:
 		water.append(Iso.project(point))
-	var outer := Geometry2D.offset_polygon(water, 62.0)
-	if not outer.is_empty():
-		_floor(outer[0], load("res://assets/art/village/rock.webp"), forest, 0.014)
 	var surface := _floor(water, load("res://assets/art/village/water.webp"), forest, 0.022, Color(0.78, 0.91, 0.96), River.TILE_UNITS / Ortho3DPreview.GROUND_PER_METER)
-	_water_material = surface.material_override as StandardMaterial3D
-	_water_material.roughness = 0.35
-	_water_material.metallic = 0.12
+	var record: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(NativeGround3D.FIELD))
+	_water_material = ShaderMaterial.new()
+	_water_material.shader = load("res://scripts/native_river.gdshader")
+	_water_material.set_shader_parameter("water_texture", load("res://assets/art/village/water.webp"))
+	_water_material.set_shader_parameter("shore_field", load("res://" + str(record["shore_field"])))
+	_water_material.set_shader_parameter("field_origin", Vector2(record["origin"][0], record["origin"][1]))
+	_water_material.set_shader_parameter("field_extent", Vector2(record["extent"][0], record["extent"][1]))
+	surface.material_override = _water_material
 
 
 func _build_bridge() -> void:
@@ -265,6 +267,8 @@ func _build_bridge() -> void:
 
 func _build_raised_floors() -> void:
 	for surface: Dictionary in SpatialWorld3D.terrain_surfaces(preview.game.village):
+		if str(surface["id"]) == "chapel":
+			continue  # 실제 디딤판 위에 경사 포장을 겹쳐 그리지 않는다.
 		if (report.get("native_landmark_surfaces", {}) as Dictionary).has(str(surface["id"])):
 			continue
 		if float(surface["rise"]) <= 0.001:
@@ -442,7 +446,7 @@ func sync(delta: float, frozen: bool) -> void:
 	if not frozen:
 		_clock += delta
 		if _water_material != null:
-			_water_material.uv1_offset = Vector3(_clock * 0.025, _clock * 0.006, 0)
+			_water_material.set_shader_parameter("phase", _clock)
 	NativeCaveLanterns3D.sync(cave, _clock)
 	for light in _cave_lights:
 		light.light_energy = 2.6 if Prefs.reduce_motion else 2.6 + sin(_clock * 3.8 + light.position.x) * 0.10
@@ -475,15 +479,13 @@ func sync(delta: float, frozen: bool) -> void:
 func _sync_corpses() -> void:
 	var current := {}
 	for corpse: Dictionary in preview.game.corpses:
-		if NativeEnemySprites3D.supports_corpse(corpse):
-			continue
 		var source: Node = corpse.get("visual")
 		if not is_instance_valid(source):
 			continue
 		var id := source.get_instance_id()
 		current[id] = true
 		if not _corpses.has(id):
-			var model := NativeEnemyModels.build(str(corpse.get("kind", "goblin")))
+			var model := NativeEnemyModels.build(NativeEnemyModels.corpse_kind(corpse))
 			preview.stage.add_child(model["root"])
 			_corpses[id] = model
 		NativeEnemyModels.place_corpse(preview, _corpses[id], corpse)

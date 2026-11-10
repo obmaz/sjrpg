@@ -8,7 +8,7 @@ const PORTAL := "res://assets/art/preview3d/native-warp-gate.glb"
 const WATER_SHADER := preload("res://scripts/native_prop_water.gdshader")
 const PORTAL_SHADER := preload("res://scripts/native_prop_portal.gdshader")
 const MOTE_COUNT := 12
-const FOUNTAIN_SIZE := Vector3(2.60, 1.94, 2.60)
+const FOUNTAIN_SIZE := Vector3(5.20, 3.88, 5.20)
 const PORTAL_SIZE := Vector3(3.098, 3.065, 1.28)
 
 var _preview: Node

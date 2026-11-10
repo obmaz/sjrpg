@@ -8,7 +8,7 @@ const {chromium}=createRequire(import.meta.url)('playwright');
 const base=new URL(process.argv[2]||'http://127.0.0.1:8797/');
 const out=path.resolve(process.argv[3]||'build/combat-visibility');
 const edition=process.env.SJRPG_VISIBILITY_EDITION||'candidate';
-const all=['cave_torches','cave_torches_north','combat_health','boss_warning','meteor_warning','firewall','cave_swarm','sprite_directions','sprite_corpses'];
+const all=['cave_torches','cave_torches_north','combat_health','boss_warning','meteor_warning','firewall','cave_swarm','crawler_directions','crawler_corpses'];
 const requested=(process.env.SJRPG_VISIBILITY_SCENARIOS||all.join(',')).split(',').filter(Boolean);
 const orientations=(process.env.SJRPG_VISIBILITY_ORIENTATIONS||'portrait,landscape').split(',');
 for(const s of requested)assert(all.includes(s),'valid scenario '+s);
@@ -39,15 +39,15 @@ function validate(scenario,s){
  if(scenario==='boss_warning'){assert.equal(s.fixture.enemy_feedback?.telegraphs,1,'native boss windup warning');assert.equal(s.fixture.proof.boss.state,'windup');}
  if(scenario==='meteor_warning'){assert.equal(s.fixture.native_zones?.count,1);assert.equal(s.fixture.native_zones?.sources?.[0]?.phase,'warning');}
  if(scenario==='firewall'){assert.equal(s.fixture.native_zones?.count,1);assert.equal(s.fixture.native_zones?.sources?.[0]?.phase,'active');assert(s.fixture.native_zones?.sources?.[0]?.wall);}
- if(scenario==='sprite_directions'){assert.equal(s.fixture.enemy_sprites?.count,4);assert.deepEqual(s.fixture.enemy_sprites.sources.map(x=>x.cell[1]).sort(),[0,1,2,3]);assert(s.fixture.enemy_sprites.sources.every(x=>x.pivot_error<.001));}
- if(scenario==='sprite_corpses'){assert.equal(s.fixture.proof.actual_source_deaths,4);assert.equal(s.fixture.enemy_sprites?.count,0);assert.equal(s.fixture.enemy_sprites?.corpses,4);assert.equal(s.fixture.visible_sprite_corpses,4,'corpses must actually be visible after fade-in');assert.equal(s.fixture.proof.corpse_age_seconds,.5);assert(s.fixture.enemy_sprites?.corpse_texture_loaded);}
- if(scenario==='cave_swarm'){assert(s.fixture.proof.actual_basic_attack);assert.equal(s.fixture.proof.living,20);assert.equal(s.fixture.enemy_sprites?.count,20);assert.equal(s.fixture.enemy_sprites?.appearance,'2d');assert.equal(s.fixture.enemy_sprites?.physics,'3d');assert(s.fixture.enemy_sprites?.sources?.every(x=>x.visible&&x.pivot_error<.001));}
+ if(scenario==='crawler_directions'){assert.equal(s.fixture.enemy_models?.count,4);assert(s.fixture.enemy_models.volume);assert(s.fixture.enemy_models.sources.every(x=>x.kind==='cave_crawler'&&x.pivot_error<.001));assert.equal(new Set(s.fixture.enemy_models.sources.map(x=>Math.round(x.facing*100))).size,4);}
+ if(scenario==='crawler_corpses'){assert.equal(s.fixture.proof.actual_source_deaths,4);assert.equal(s.fixture.enemy_models?.count,0);assert.equal(s.fixture.visible_native_corpses,4);assert.equal(s.fixture.proof.corpse_age_seconds,.5);}
+ if(scenario==='cave_swarm'){assert(s.fixture.proof.actual_basic_attack);assert.equal(s.fixture.proof.living,20);assert.equal(s.fixture.enemy_models?.count,20);assert(s.fixture.enemy_models?.volume);assert(s.fixture.enemy_models?.sources?.every(x=>x.visible&&x.kind==='cave_crawler'&&x.pivot_error<.001));}
 }
 try{
  browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
  for(const orientation of orientations){
   for(const hero of ['warrior','mage']){
-   const scenarios=requested.filter(s=>(['cave_torches','cave_torches_north','cave_swarm','sprite_directions','sprite_corpses'].includes(s)?'warrior':'mage')===hero);if(!scenarios.length)continue;
+   const scenarios=requested.filter(s=>(['cave_torches','cave_torches_north','cave_swarm','crawler_directions','crawler_corpses'].includes(s)?'warrior':'mage')===hero);if(!scenarios.length)continue;
    current={hero,orientation,errors:[]};closing=false;
    const viewport=orientation==='portrait'?{width:390,height:844}:{width:1280,height:720};
    context=await browser.newContext({viewport,deviceScaleFactor:1,hasTouch:true,isMobile:orientation==='portrait'});
@@ -71,7 +71,7 @@ try{
     const result={name,hero,orientation,viewport,dpr:s.dpr,fixture:true,performance_evidence:false,passed:true,state:s.fixture,native:s.native,errors:[...current.errors],screenshot:name+'.png'};
     report.cases.push(result);
     await writeFile(path.join(out,name+'.json'),JSON.stringify(result,null,2));
-    console.log('COMBAT_VISIBILITY_SCENE '+JSON.stringify({edition,name,hero,fixture:true,performance_evidence:false,serial:s.fixture.serial,scope:s.fixture.scope,enemy_count:s.fixture.enemy_count,health:s.fixture.enemy_feedback?.bars??null,telegraphs:s.fixture.enemy_feedback?.telegraphs??null,zones:s.fixture.native_zones?.count??null,sprite_count:s.fixture.enemy_sprites?.count??null,actual_basic_attack:s.fixture.proof.actual_basic_attack??null}));
+    console.log('COMBAT_VISIBILITY_SCENE '+JSON.stringify({edition,name,hero,fixture:true,performance_evidence:false,serial:s.fixture.serial,scope:s.fixture.scope,enemy_count:s.fixture.enemy_count,health:s.fixture.enemy_feedback?.bars??null,telegraphs:s.fixture.enemy_feedback?.telegraphs??null,zones:s.fixture.native_zones?.count??null,native_enemy_count:s.fixture.enemy_models?.count??null,actual_basic_attack:s.fixture.proof.actual_basic_attack??null}));
    }
    closing=true;await context.close();context=null;page=null;
   }

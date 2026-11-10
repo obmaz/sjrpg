@@ -26,15 +26,15 @@
     "files": [
       {
         "path": "scripts/ortho_3d_preview.gd",
-        "sha256": "630bbabfa8b640b7d801c2dad7abb5234703c8b8b3497714e05dd0ba6d4ed75d"
+        "sha256": "030b76f7a04e1352916b4b0487325bf7dc9c7f4ca3cfd0fb907ef53db8976cec"
       },
       {
         "path": "scripts/ortho_3d_chapel.gd",
-        "sha256": "9b61362fd7d3845d5a5eb66caad7e7d4d9619548bc76e2dec786a1a429953039"
+        "sha256": "b5a1d0b006a34493901c3500f8daaad92228e5d5b218c9e6d0b7a6596fc1a63f"
       },
       {
         "path": "scripts/spatial_world_3d.gd",
-        "sha256": "1995dccdc5330b81da73d5daf53098321c60c96e8a8d8a450dbeecfa73d80985"
+        "sha256": "296419d569f06e7ad45a44688f0b623ca64d3546859d6ecae22dbec84c4a55c9"
       }
     ],
     "git_commit": "a6d6f86fafbf1ba3585df16d8628f4ca158bf910"
@@ -553,16 +553,16 @@
         "sha256": "c7ba4be858f1744a143f0edfd7e129df71b6127f4bce2d7bfddd06888f9bda76"
       },
       {
-        "path": "assets/art/preview3d/wall_shop.webp",
-        "sha256": "58b176ed6194f5e322d643f99ab064483a5a18b8a898ecbcf4d6b60b2c700ecc"
+        "path": "assets/art/preview3d/shop-plaster.png",
+        "sha256": "632eca10ca599dc2a3fb09c44c6c3dd99c05188f9668c510137e2d27139a8645"
       },
       {
         "path": "assets/art/preview3d/wall_smith.webp",
         "sha256": "eed310a7fc2873d2e45f9e31ac6646a2d91a58877a35d6f949f8a9a752099057"
       },
       {
-        "path": "assets/art/preview3d/wall_stable.webp",
-        "sha256": "81a5dbe9137be8ccb2b943403bd53f6d0a39bbcf180d1ae196474deb23ac8ce4"
+        "path": "assets/art/preview3d/stable-oak.png",
+        "sha256": "51c1d9f30c775e86f990521924848ba63f8c4a8cd248aec70497a5cb0fe3caef"
       },
       {
         "path": "assets/art/preview3d/wall_home.webp",

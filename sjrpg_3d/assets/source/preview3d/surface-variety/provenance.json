@@ -3,18 +3,6 @@
   "license": "Original project artwork",
   "generator": "tools/preview3d/make_surface_variety.py",
   "materials": {
-    "wall_shop": {
-      "path": "assets/art/preview3d/wall_shop.webp",
-      "sha256": "58b176ed6194f5e322d643f99ab064483a5a18b8a898ecbcf4d6b60b2c700ecc",
-      "source": "assets/source/preview3d/surface-variety/wall_shop.png",
-      "source_sha256": "9dd119e871659dbba29f3303f115e0c6a5e4def6927450338cb6e8f96cafad0e",
-      "size": [
-        512,
-        512
-      ],
-      "tile_m": 2.56,
-      "seed": 92137
-    },
     "wall_smith": {
       "path": "assets/art/preview3d/wall_smith.webp",
       "sha256": "eed310a7fc2873d2e45f9e31ac6646a2d91a58877a35d6f949f8a9a752099057",
@@ -26,18 +14,6 @@
       ],
       "tile_m": 2.56,
       "seed": 92168
-    },
-    "wall_stable": {
-      "path": "assets/art/preview3d/wall_stable.webp",
-      "sha256": "81a5dbe9137be8ccb2b943403bd53f6d0a39bbcf180d1ae196474deb23ac8ce4",
-      "source": "assets/source/preview3d/surface-variety/wall_stable.png",
-      "source_sha256": "e966e890f301f332f7edcdf696bc9cf9a40a074b862193417d92c49a14d9e9b6",
-      "size": [
-        512,
-        512
-      ],
-      "tile_m": 2.56,
-      "seed": 92199
     },
     "wall_home": {
       "path": "assets/art/preview3d/wall_home.webp",
@@ -221,11 +197,11 @@
       "seed": 92664
     }
   },
-  "generator_sha256": "c1056405d6782de9e49cfe35fe760d7bcb94253b8cf5b51c92222010e58262b4",
+  "generator_sha256": "1d75a8908792d183335a2ade1319a5232dfb84e956168debd45e1240c4d80294",
   "geometry": {
-    "native_enemy_models.gd": "4c942812ed8ba2c5a5534c9e07823700e8b7c823cd2df06bba2fe5bfe05fa37a",
+    "native_enemy_models.gd": "164dfd324bcf4e93fc45ae512101f2a18ebc50eee2da2ea14635322cb6fcbd6c",
     "native_house_3d.gd": "0a310f4bab1b4ddee619a8c16dd3aa41a75bba863c2bad8f54fbcc602978540c",
-    "native_landmarks_3d.gd": "bf911b533ed1db661961a051d3fcc301796158e9cd2f86c1dfa90f8294eea6df",
-    "native_scenery_props_3d.gd": "173c486f2cbaf46793fb41b33247f38559cde2cea7d09e194da5c226d8bad68b"
+    "native_landmarks_3d.gd": "f95eebb78b5ffc7d8daf413efdb4ebb701bb856e9f468f02e023d66b60745067",
+    "native_scenery_props_3d.gd": "b981f6b010a85b09aec6f07a174c850ca49f03feffe46de61cbfca6d5024f59c"
   }
 }

@@ -109,17 +109,19 @@ func run() -> void:
 	var fixture := Fixture.new()
 	fixture.game = game
 	fixture.stage = Node3D.new()
-	var stone := StandardMaterial3D.new()
-	stone.uv1_triplanar = true
-	stone.uv1_world_triplanar = true
-	stone.uv1_scale = Vector3.ONE * 0.390625
-	var granite := stone.duplicate() as StandardMaterial3D
-	granite.albedo_color = Color(0.74, 0.76, 0.80)
+	var stone: Material = StandardMaterial3D.new()
+	(stone as StandardMaterial3D).uv1_triplanar = true
+	(stone as StandardMaterial3D).uv1_world_triplanar = true
+	(stone as StandardMaterial3D).uv1_scale = Vector3.ONE * 0.390625
+	var granite: Material = stone.duplicate()
+	(granite as StandardMaterial3D).albedo_color = Color(0.74, 0.76, 0.80)
 	fixture._materials = {"stone": stone, "granite": granite, "wood": StandardMaterial3D.new(), "iron": StandardMaterial3D.new()}
 	add_child(fixture)
 	fixture.add_child(fixture.stage)
 	var controller := Ortho3DFortification.build(fixture)
 	var report: Dictionary = controller.report
+	stone = report["stone"]
+	granite = report["granite"]
 	check("native fortification uses all four actual gate passages and eight wing joins", controller.gates.size() == 4 and report["wing_joins"].size() == 8 and report["corners"].size() == 4)
 	check("masonry geometry and material submissions stay bounded", int(report["triangles"]) < 30000 and int(report["triangles"]) > 1000 and int(report["static_surfaces"]) <= 4)
 	check("the total wall datum keeps its original projected height", absf(float(report["projected_top_pixels"]) - game.village.wall_height * Iso.S) < 0.001)
@@ -155,7 +157,8 @@ func run() -> void:
 				winding = winding and (vertices[b] - vertices[a]).cross(vertices[c] - vertices[a]).dot(normals[a]) <= 0.00001
 	# Pale ashlar body plus darker granite plinth/bands/copings: two masonry
 	# surfaces sharing the same world-scaled course grid.
-	check("both wall axes wings towers and corners share the same world-scaled limestone", stone_meshes.size() == 2 and stone.uv1_world_triplanar and stone.uv1_scale.is_equal_approx(Vector3.ONE * 0.390625) and granite.uv1_scale == stone.uv1_scale and granite.uv1_world_triplanar)
+	check("fortress shares four generated masonry variants across two opaque lit materials", stone_meshes.size() == 2 and stone is ShaderMaterial and granite is ShaderMaterial and stone.get_shader_parameter("masonry_atlas") == load("res://assets/art/preview3d/fortress-atlas.png") and granite.get_shader_parameter("dressed") == true and report["masonry_variants"] == 4)
+	check("corner crowns rise above the wall battlements", float(report["corner_top"]) > float(report["wall_top"]) + 0.60)
 	check("fortification mesh normals UVs and winding remain valid", valid and winding)
 	_check_wall_relief(report, stone_meshes)
 	var reversed_safe: PackedVector2Array = game.village.safe_zone.duplicate()

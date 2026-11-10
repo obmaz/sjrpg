@@ -2,6 +2,7 @@ class_name NativeEnemyModels
 extends RefCounted
 ## Articulated volume models. Gameplay owns motion, attack and corpse clocks.
 const KINDS := ["goblin", "wolf", "boar", "skeleton", "golem"]
+const CRAWLER := "cave_crawler"
 var preview: Node
 var entries := {}
 static var _rig_meshes := {}
@@ -33,6 +34,10 @@ static func build(kind: String) -> Dictionary:
 		_recipe_hits += 1
 		return _instantiate_recipe(_recipes[kind])
 	_source_builds += 1
+	if kind == CRAWLER:
+		var crawler := _build_crawler()
+		_recipes[kind] = _capture_recipe(crawler)
+		return crawler
 	var root: Node3D = Node3D.new()
 	root.name = "Native_" + kind
 	var bone: StandardMaterial3D = _material(Color("b7ae91"), "bone")
@@ -55,6 +60,7 @@ static func build(kind: String) -> Dictionary:
 	var materials: Array[StandardMaterial3D] = [skin, hide, iron, cloth, bone, shadow, eye]
 	var legs: Array[Node3D] = []
 	var arms: Array[Node3D] = []
+	var joints := {}
 	var quadruped: bool = kind in ["wolf", "boar"]
 	var torso: Node3D = _pivot(root, Vector3.ZERO)
 	if quadruped:
@@ -68,10 +74,12 @@ static func build(kind: String) -> Dictionary:
 		body.position.z = 0.0
 		# Layered shoulder/chest planes, angular jaw, tapered skull and cheek.
 		_form(torso, Vector3(0, 0, 0.28), [[0.45, 0.12, 0.13, 0.0, 0.0], [0.70, 0.25 if boar else 0.21, 0.22, 0.0, 0.0], [0.91, 0.18, 0.16, 0.0, 0.03]], skin, 8)
+		var head_parts: Array[Node3D] = []
+		var head_start := torso.get_child_count()
 		var skull: MeshInstance3D = _form(torso, Vector3(0, 0.77, 0.49), [[-0.18, 0.13, 0.13, 0.0, 0.0], [-0.03, 0.20 if boar else 0.16, 0.20, 0.0, 0.0], [0.18, 0.15, 0.17, 0.0, -0.01], [0.24, 0.09, 0.10, 0.0, -0.03]], skin, 8)
 		skull.rotation.x = -0.20
 		_bone(torso, Vector3(0, 0.75, 0.58), Vector3(0, 0.63 if boar else 0.74, 0.88 if boar else 1.01), Vector2(0.12, 0.12), Vector2(0.10 if boar else 0.055, 0.075), skin, 7)
-		_bone(torso, Vector3(-0.06, 0.64, 0.65), Vector3(0, 0.60 if boar else 0.68, 0.86 if boar else 0.98), Vector2(0.06, 0.045), Vector2(0.065, 0.027), hide, 6)
+		var lower_jaw := _bone(torso, Vector3(-0.06, 0.64, 0.65), Vector3(0, 0.60 if boar else 0.68, 0.86 if boar else 0.98), Vector2(0.06, 0.045), Vector2(0.065, 0.027), hide, 6)
 		_rock(torso, Vector3(0, 0.64 if boar else 0.75, 0.90 if boar else 1.035), Vector3(0.18 if boar else 0.11, 0.10, 0.075), shadow, 0)
 		for side: float in [-1.0, 1.0]:
 			var ear: MeshInstance3D = _form(torso, Vector3(side * 0.13, 0.96, 0.48), [[0.0, 0.09, 0.055, 0.0, 0.0], [0.11, 0.055, 0.035, side * 0.03, -0.03], [0.19 if not boar else 0.12, 0.004, 0.004, side * 0.02, -0.04]], skin, 4)
@@ -100,6 +108,17 @@ static func build(kind: String) -> Dictionary:
 			if boar:
 				_bone(torso, Vector3(side * 0.14, 0.63, 0.79), Vector3(side * 0.22, 0.72, 0.88), Vector2(0.034, 0.03), Vector2(0.025, 0.022), bone)
 				_bone(torso, Vector3(side * 0.22, 0.72, 0.88), Vector3(side * 0.21, 0.84, 0.85), Vector2(0.025, 0.022), Vector2(0.002, 0.002), bone)
+		for i: int in range(head_start, torso.get_child_count()):
+			head_parts.append(torso.get_child(i) as Node3D)
+		# 머리와 아래턱은 독립 관절이다. 물기 동작이 몸통의 단순 기울기에 그치지 않는다.
+		var head := _pivot(torso, Vector3(0, 0.77, 0.49))
+		for part: Node3D in head_parts:
+			part.reparent(head, false)
+			part.position -= head.position
+		var jaw := _pivot(head, Vector3(0, -0.10, 0.23))
+		lower_jaw.reparent(jaw, false)
+		lower_jaw.position -= jaw.position
+		joints = {"head": head, "jaw": jaw}
 		if boar:
 			# A low broken bristle ridge, not dinosaur plates.
 			for index: int in 10:
@@ -207,7 +226,7 @@ static func build(kind: String) -> Dictionary:
 		if kind in ["goblin", "skeleton"]:
 			_weapon(arms[0], iron, hide)
 			_shield(arms[1], hide, iron)
-	_batch(kind, [torso] + legs + arms, materials)
+	_batch(kind, [torso] + legs + arms + joints.values(), materials)
 	if not _rest_bounds_by_kind.has(kind):
 		_rest_bounds_by_kind[kind] = rest_bounds(root)
 	var rest: AABB = _rest_bounds_by_kind[kind]
@@ -218,6 +237,7 @@ static func build(kind: String) -> Dictionary:
 	for material in materials:
 		base_colors.append(material.albedo_color)
 	var model: Dictionary = {"root": root, "torso": torso, "legs": legs, "arms": arms, "materials": materials, "colors": base_colors, "kind": kind, "base_height": rest.size.y, "leg_origins": legs.map(func(leg: Node3D): return leg.position)}
+	_motion_data(model, joints)
 	_recipes[kind] = _capture_recipe(model)
 	return model
 
@@ -244,7 +264,7 @@ static func _capture_recipe(model: Dictionary) -> Dictionary:
 	_recipe_node(model["root"], -1, nodes, indices, materials)
 	var palette: Array[Dictionary] = []
 	for material: StandardMaterial3D in materials:
-		palette.append({"surface": str(material.get_meta("actor_surface_kind")), "color": material.albedo_color,
+		palette.append({"surface": str(material.get_meta("actor_surface_kind")), "color": material.albedo_color, "texture": material.albedo_texture,
 			"alias": materials.find(material)})
 	var legs: Array[int] = []
 	var arms: Array[int] = []
@@ -252,7 +272,11 @@ static func _capture_recipe(model: Dictionary) -> Dictionary:
 		legs.append(int(indices[node.get_instance_id()]))
 	for node: Node3D in model["arms"]:
 		arms.append(int(indices[node.get_instance_id()]))
+	var joints := {}
+	for key: String in model["joints"]:
+		joints[key] = indices[(model["joints"][key] as Node3D).get_instance_id()]
 	return {"nodes": nodes, "palette": palette, "torso": int(indices[(model["torso"] as Node3D).get_instance_id()]),
+		"joints": joints,
 		"legs": legs, "arms": arms, "kind": model["kind"], "base_height": model["base_height"],
 		"leg_origins": (model["leg_origins"] as Array).duplicate()}
 
@@ -266,6 +290,7 @@ static func _instantiate_recipe(recipe: Dictionary) -> Dictionary:
 		var color: Color = descriptor["color"]
 		var alias: int = int(descriptor["alias"])
 		materials.append(materials[alias] if alias < materials.size() else _material(color, str(descriptor["surface"])))
+		materials[-1].albedo_texture = descriptor["texture"]
 		colors.append(color)
 	var built: Array[Node3D] = []
 	for record: Dictionary in recipe["nodes"]:
@@ -291,10 +316,79 @@ static func _instantiate_recipe(recipe: Dictionary) -> Dictionary:
 		legs.append(built[index])
 	for index: int in recipe["arms"]:
 		arms.append(built[index])
-	return {"root": root, "torso": built[int(recipe["torso"])], "legs": legs, "arms": arms,
+	var model := {"root": root, "torso": built[int(recipe["torso"])], "legs": legs, "arms": arms,
 		"materials": materials, "colors": colors, "kind": recipe["kind"], "base_height": recipe["base_height"],
 		"leg_origins": (recipe["leg_origins"] as Array).duplicate()}
+	var joints := {}
+	for key: String in recipe["joints"]:
+		joints[key] = built[int(recipe["joints"][key])]
+	_motion_data(model, joints)
+	return model
 
+
+static func model_kind(enemy: Enemy) -> String:
+	return CRAWLER if str(enemy.get_meta("visual_variant", "")) == CRAWLER else enemy.kind
+
+static func corpse_kind(corpse: Dictionary) -> String:
+	return CRAWLER if str(corpse.get("visual_variant", "")) == CRAWLER else str(corpse.get("kind", "goblin"))
+
+static func _motion_data(model: Dictionary, joints: Dictionary) -> void:
+	model["joints"] = joints
+	model["joint_rest"] = {}
+	for key: String in joints:
+		model["joint_rest"][key] = (joints[key] as Node3D).transform
+	model["torso_origin"] = (model["torso"] as Node3D).position
+	model["leg_origins"] = (model["legs"] as Array).map(func(n: Node3D) -> Vector3: return n.position)
+	model["arm_origins"] = (model["arms"] as Array).map(func(n: Node3D) -> Vector3: return n.position)
+
+static func _build_crawler() -> Dictionary:
+	var root := Node3D.new()
+	root.name = "NativeCaveCrawler"
+	var skin := _material(Color("aaa28c"), "skin")
+	skin.albedo_texture = load("res://assets/art/preview3d/scar_skin.webp")
+	var bone := _material(Color("c7bea5"), "bone")
+	var mouth := _material(Color("302a28"), "leather")
+	var eyes := _material(Color("b07a47"), "iron")
+	var materials: Array[StandardMaterial3D] = [skin, bone, mouth, eyes]
+	var torso := _pivot(root, Vector3.ZERO)
+	_form(torso, Vector3(0, 0, -0.08), [[0.36, 0.10, 0.12, 0.0, -0.12], [0.62, 0.20, 0.22, 0.0, -0.07], [0.86, 0.27, 0.20, 0.0, 0.04], [1.02, 0.15, 0.14, 0.0, 0.13]], skin, 9, 0.04)
+	var head := _pivot(torso, Vector3(0, 0.96, 0.30))
+	_form(head, Vector3.ZERO, [[-0.13, 0.11, 0.13, 0.0, 0.0], [0.04, 0.18, 0.17, 0.0, 0.03], [0.20, 0.14, 0.14, 0.0, -0.02], [0.25, 0.07, 0.07, 0.0, -0.04]], skin, 9)
+	var jaw := _pivot(head, Vector3(0, -0.06, 0.12))
+	_form(jaw, Vector3.ZERO, [[-0.09, 0.11, 0.09, 0.0, 0.02], [-0.01, 0.13, 0.10, 0.0, 0.04], [0.025, 0.10, 0.07, 0.0, 0.04]], mouth, 8)
+	for side: float in [-1.0, 1.0]:
+		_rock(head, Vector3(side * 0.105, 0.065, 0.165), Vector3(0.095, 0.075, 0.045), mouth, 0)
+		_rock(head, Vector3(side * 0.105, 0.065, 0.188), Vector3(0.030, 0.024, 0.020), eyes, 0)
+		_bone(head, Vector3(side * 0.10, 0.12, 0.13), Vector3(side * 0.19, 0.14, 0.03), Vector2(0.035, 0.025), Vector2(0.02, 0.02), bone)
+		for tooth: int in 3:
+			var x := side * (0.035 + tooth * 0.035)
+			_bone(head, Vector3(x, -0.035, 0.18), Vector3(x, -0.10, 0.22), Vector2(0.012, 0.012), Vector2(0.002, 0.002), bone, 5)
+			_bone(jaw, Vector3(x, 0.01, 0.10), Vector3(x, 0.055, 0.11), Vector2(0.010, 0.010), Vector2(0.002, 0.002), bone, 5)
+	var legs: Array[Node3D] = []
+	var arms: Array[Node3D] = []
+	for side: float in [-1.0, 1.0]:
+		var leg := _pivot(root, Vector3(side * 0.17, 0.48, -0.22))
+		_bone(leg, Vector3.ZERO, Vector3(side * 0.03, -0.22, -0.14), Vector2(0.10, 0.11), Vector2(0.06, 0.06), skin)
+		_bone(leg, Vector3(side * 0.03, -0.22, -0.14), Vector3(0, -0.44, 0.02), Vector2(0.06, 0.06), Vector2(0.035, 0.035), skin)
+		_form(leg, Vector3(0, -0.44, 0.07), [[-0.04, 0.08, 0.14, 0.0, 0.0], [0.04, 0.065, 0.10, 0.0, -0.02]], skin, 7)
+		legs.append(leg)
+		var arm := _pivot(root, Vector3(side * 0.26, 0.80, 0.10))
+		_bone(arm, Vector3.ZERO, Vector3(side * 0.08, -0.34, 0.10), Vector2(0.085, 0.09), Vector2(0.05, 0.05), skin)
+		_bone(arm, Vector3(side * 0.08, -0.34, 0.10), Vector3(side * 0.02, -0.70, 0.24), Vector2(0.055, 0.06), Vector2(0.035, 0.04), skin)
+		_rock(arm, Vector3(side * 0.02, -0.72, 0.27), Vector3(0.14, 0.10, 0.15), skin, 0)
+		for finger: int in 3:
+			var x := side * 0.02 + (finger - 1) * 0.045
+			_bone(arm, Vector3(x, -0.72, 0.29), Vector3(x, -0.78, 0.42), Vector2(0.018, 0.02), Vector2(0.004, 0.005), bone, 5)
+		arms.append(arm)
+	for ridge: int in 5:
+		_rock(torso, Vector3(0, 0.93 - ridge * 0.085, 0.02 - ridge * 0.06), Vector3(0.10, 0.10, 0.14), bone, ridge)
+	_batch(CRAWLER, [torso] + legs + arms + [head, jaw], materials)
+	var rest := rest_bounds(root)
+	for child: Node3D in root.get_children():
+		child.position.y -= rest.position.y
+	var model := {"root": root, "torso": torso, "legs": legs, "arms": arms, "materials": materials, "colors": materials.map(func(m: StandardMaterial3D) -> Color: return m.albedo_color), "kind": CRAWLER, "base_height": rest.size.y}
+	_motion_data(model, {"head": head, "jaw": jaw})
+	return model
 
 static func cache_stats() -> Dictionary:
 	return {"recipes": _recipes.size(), "hits": _recipe_hits, "source_builds": _source_builds,
@@ -316,22 +410,57 @@ static func tint(model: Dictionary, color: Color, flash: float, flash_color: Col
 static func pose(model: Dictionary, facing: float, cycle: float, attack: float, dead := false) -> void:
 	var root: Node3D = model["root"]
 	var direction := Iso.unproject(Vector2.from_angle(facing)).normalized()
-	root.rotation.y = atan2(direction.x, direction.y)
-	var legs: Array = model["legs"]
-	for index in legs.size():
-		var limb := legs[index] as Node3D
-		limb.rotation.x = sin(cycle * TAU + (PI if index % 2 else 0.0)) * 0.48
-		var origin: Vector3 = model["leg_origins"][index]
-		limb.position.y = origin.y * cos(limb.rotation.x)
-	var arms: Array = model["arms"]
-	for index in arms.size():
-		var limb := arms[index] as Node3D
-		limb.rotation.x = -sin(cycle * TAU + index * PI) * 0.26 - sin(attack * PI) * (1.7 if index == 0 else 0.4)
+	root.rotation = Vector3(0, atan2(direction.x, direction.y), PI * 0.5 if dead else 0.0)
 	var torso: Node3D = model["torso"]
-	torso.rotation.x = -sin(attack * PI) * 0.20
-	if dead:
-		root.rotation.z = PI * 0.5
-		torso.rotation.x = 0.0
+	torso.position = model["torso_origin"]
+	torso.rotation = Vector3.ZERO
+	for key: String in model["joints"]:
+		(model["joints"][key] as Node3D).transform = model["joint_rest"][key]
+	var legs: Array = model["legs"]
+	var arms: Array = model["arms"]
+	for i: int in legs.size():
+		var limb := legs[i] as Node3D
+		limb.position = model["leg_origins"][i]
+		limb.rotation = Vector3(sin(cycle * TAU + (PI if i % 2 else 0.0)) * 0.48, 0, 0)
+		limb.position.y *= cos(limb.rotation.x)
+	for i: int in arms.size():
+		var limb := arms[i] as Node3D
+		limb.position = model["arm_origins"][i]
+		limb.rotation = Vector3(-sin(cycle * TAU + i * PI) * 0.26, 0, 0)
+	if dead or attack <= 0.0001:
+		return
+	# .60에서 실제 피해가 발생한다. 그 전에 준비하고, 그 순간에 착지/베기를 끝낸다.
+	var a := clampf(attack, 0.0, 1.0)
+	var prepare := smoothstep(0.0, 0.42, a)
+	var strike := smoothstep(0.42, 0.60, a)
+	var settle := smoothstep(0.60, 1.0, a)
+	var hold := 1.0 - settle
+	var kind: String = model["kind"]
+	if kind in ["wolf", "boar", CRAWLER]:
+		var leap := sin(clampf((a - 0.32) / 0.28, 0.0, 1.0) * PI) * (0.18 if kind == "boar" else 0.28)
+		var thrust := strike * hold * (0.20 if kind == "boar" else 0.26)
+		var move := Vector3(0, leap, thrust)
+		for node: Node3D in [torso] + legs + arms:
+			node.position += move
+		torso.rotation.x = lerpf(-0.12 * prepare, 0.23, strike) * hold
+		for i: int in legs.size():
+			(legs[i] as Node3D).rotation.x = (-0.72 if i % 2 else 0.75) * sin(a * PI) * hold
+		for i: int in arms.size():
+			(arms[i] as Node3D).rotation.x = lerpf(0.45, -1.05, strike) * prepare * hold
+			(arms[i] as Node3D).rotation.z = (0.20 if i == 0 else -0.20) * strike * hold
+		if model["joints"].has("jaw"):
+			(model["joints"]["jaw"] as Node3D).rotation.x = -0.65 * prepare * (1.0 - strike) - 0.08 * strike * hold
+			(model["joints"]["head"] as Node3D).rotation.x = (-0.10 * prepare + 0.25 * strike) * hold
+	elif kind == "golem":
+		for i: int in arms.size():
+			(arms[i] as Node3D).rotation.x = lerpf(-2.50 * prepare, -0.18, strike) * hold
+		torso.rotation.x = lerpf(-0.12 * prepare, 0.32, strike) * hold
+	else:
+		(arms[0] as Node3D).rotation.x = lerpf(-2.55 * prepare, -0.45, strike) * hold
+		(arms[0] as Node3D).rotation.z = lerpf(-0.34 * prepare, 0.18, strike) * hold
+		(arms[1] as Node3D).rotation.x = -0.62 * prepare * hold
+		torso.rotation.y = lerpf(-0.30 * prepare, 0.35, strike) * hold
+		torso.rotation.x = 0.16 * strike * hold
 
 func sync() -> void:
 	var live := {}
@@ -344,12 +473,12 @@ func sync() -> void:
 		if not is_instance_valid(candidate):
 			continue
 		var enemy := candidate as Enemy
-		if enemy == null or enemy.is_queued_for_deletion() or NativeEnemySprites3D.supports(enemy):
+		if enemy == null or enemy.is_queued_for_deletion():
 			continue
 		var id := enemy.get_instance_id()
 		live[id] = true
 		if not entries.has(id):
-			var model := build(enemy.kind)
+			var model := build(model_kind(enemy))
 			model["owner"] = weakref(enemy)
 			preview.stage.add_child(model["root"])
 			entries[id] = model
@@ -375,7 +504,14 @@ func sync() -> void:
 			entries.erase(id)
 
 func snapshot() -> Dictionary:
-	return {"count": entries.size(), "kinds": KINDS, "volume": true}
+	var sources := []
+	for model: Dictionary in entries.values():
+		var enemy: Enemy = model["owner"].get_ref()
+		if not is_instance_valid(enemy):
+			continue
+		var root: Node3D = model["root"]
+		sources.append({"kind": model["kind"], "facing": enemy.facing, "visible": root.visible, "pivot_error": root.position.distance_to(preview.actor_foot(enemy) + Ortho3DPreview.ground_position(enemy.sprite.position))})
+	return {"count": entries.size(), "kinds": KINDS, "volume": true, "sources": sources}
 
 static func place_corpse(presenter: Node, model: Dictionary, corpse: Dictionary) -> void:
 	var root: Node3D = model["root"]

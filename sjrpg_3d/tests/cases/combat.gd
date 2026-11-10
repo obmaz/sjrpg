@@ -20,6 +20,8 @@ func run() -> void:
 	game.hud.close_panel()
 	# Use real attack execution to verify the displayed weapon interval and reach.
 	game.player.set_process(false)
+	# 확대된 광장 우물과 무관하게 무기 자체의 사거리/간격을 검사한다.
+	game.spatial_world.teleport_source_actor(game.player, game.village.spawn_point + Vector2(0, 180), Player.RADIUS)
 	for id in ["rapier", "spear", "greatsword"]:
 		weapon = Gear.make(GameState.next_serial, id)
 		GameState.next_serial += 1

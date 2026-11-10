@@ -3,17 +3,14 @@ on:
   push:
     paths:
       - ".github/workflows/gameplay-polish-review.yml"
-      - "sjrpg_3d/tools/perf/analyze_sprite_atlas.py"
       - "sjrpg_3d/tools/check_combat_visibility.mjs"
       - "sjrpg_3d/tools/perf/combat_visibility_review.gd"
       - "sjrpg_3d/scripts/native_cave_lanterns_3d.gd"
       - "sjrpg_3d/scripts/native_zone_fx_3d.gd"
       - "sjrpg_3d/scripts/encounter_runtime.gd"
       - "sjrpg_3d/tests/cases/cave_swarm.gd"
-      - "sjrpg_3d/scripts/native_enemy_sprites_3d.gd"
-      - "sjrpg_3d/tests/cases/native_enemy_sprites.gd"
-      - "sjrpg_3d/assets/data/cave_crawler_sprite.json"
-      - "sjrpg_3d/assets/art/monsters/cave_crawler*.png"
+      - "sjrpg_3d/scripts/native_enemy_models.gd"
+      - "sjrpg_3d/tests/cases/native_cave_crawler.gd"
   workflow_dispatch:
 permissions:
   contents: read
@@ -32,24 +29,7 @@ jobs:
       - name: Import and test real combat, slots and cave contracts
         run: |
           tools/setup_godot.sh
-          sjrpg_3d/tools/check.sh --only=native_forest_props,native_cave_torches,native_enemy_feedback,native_zone_fx,save_exit_guard,native_enemy_sprites,cave_swarm,native_cave_geometry,background,entry_loading,save_slots,quests,dungeon,encounters,encounter_combat,encounter_saving,native_encounter_props,native_projectile_fx,ortho_3d_motion,native_render_budget
-  atlas:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-      - name: Read actual generated atlas alpha and frame bounds
-        run: |
-          python3 -m pip install --disable-pip-version-check Pillow
-          python3 sjrpg_3d/tools/perf/analyze_sprite_atlas.py
-      - uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: cave-crawler-atlas-audit
-          path: sjrpg_3d/build/gameplay-review
-          retention-days: 7
+          sjrpg_3d/tools/check.sh --only=native_forest_props,native_cave_torches,native_enemy_feedback,native_zone_fx,save_exit_guard,native_cave_crawler,cave_swarm,native_cave_geometry,background,entry_loading,save_slots,quests,dungeon,encounters,encounter_combat,encounter_saving,native_encounter_props,native_projectile_fx,ortho_3d_motion,native_render_budget
   capture:
     if: "!contains(github.event.head_commit.message, '[test-only]')"
     runs-on: ubuntu-latest
@@ -60,7 +40,7 @@ jobs:
         edition: [baseline, candidate]
     env:
       SJRPG_VISIBILITY_EDITION: ${{ matrix.edition }}
-      SJRPG_VISIBILITY_SCENARIOS: ${{ contains(github.event.head_commit.message, '[torch-review]') && 'cave_torches,cave_torches_north' || contains(github.event.head_commit.message, '[crawler-review]') && 'cave_swarm,sprite_directions,sprite_corpses' || 'cave_torches,cave_torches_north,combat_health,boss_warning,meteor_warning,firewall,cave_swarm,sprite_directions,sprite_corpses' }}
+      SJRPG_VISIBILITY_SCENARIOS: ${{ matrix.edition == 'baseline' && (contains(github.event.head_commit.message, '[torch-review]') && 'cave_torches,cave_torches_north' || 'cave_torches,cave_torches_north,combat_health,boss_warning,meteor_warning,firewall') || (contains(github.event.head_commit.message, '[torch-review]') && 'cave_torches,cave_torches_north' || contains(github.event.head_commit.message, '[crawler-review]') && 'cave_swarm,crawler_directions,crawler_corpses' || 'cave_torches,cave_torches_north,combat_health,boss_warning,meteor_warning,firewall,cave_swarm,crawler_directions,crawler_corpses') }}
       SJRPG_VISIBILITY_SHA: ${{ matrix.edition == 'baseline' && '8340b5dbefbcc4ccd4a1c3e1677d3c1b1ff4fbf9' || github.sha }}
     steps:
       - uses: actions/checkout@v7.0.1
@@ -131,10 +111,14 @@ jobs:
           before=root/"combat-visibility-baseline";after=root/"combat-visibility-candidate"
           a=json.loads((before/"proof.json").read_text());b=json.loads((after/"proof.json").read_text())
           assert a["passed"] and b["passed"]
-          assert len(a["cases"])==len(b["cases"]) and len(b["cases"]) in (4,6,18)
+          assert len(a["cases"]) in (4,12) and len(b["cases"]) in (4,6,18)
           target=root/"comparisons";target.mkdir()
           for case in b["cases"]:
-              name=case["name"];reference=next(x for x in a["cases"] if x["name"]==name)
+              name=case["name"];reference=next((x for x in a["cases"] if x["name"]==name),None)
+              if reference is None:
+                  assert name.startswith(("cave_swarm-","crawler_directions-","crawler_corpses-"))
+                  (target/(name+"-native.png")).write_bytes((after/case["screenshot"]).read_bytes())
+                  continue
               assert case["viewport"]==reference["viewport"]
               assert case["state"]["native_size"]==reference["state"]["native_size"]
               left=Image.open(before/case["screenshot"]).convert("RGB")
@@ -146,12 +130,12 @@ jobs:
               pair.paste(left,(0,28));pair.paste(right,(size[0],28))
               draw=ImageDraw.Draw(pair);draw.text((8,7),name+" | BEFORE",fill="#e9dfc9");draw.text((size[0]+8,7),"AFTER",fill="#e9dfc9")
               output=target/(name+".jpg");pair.save(output,quality=88)
-              if name.startswith("cave_torches") or name in ["cave_torches-portrait","cave_swarm-portrait","sprite_directions-landscape","sprite_corpses-landscape"]:
+              if name.startswith("cave_torches") or name in ["cave_torches-portrait","cave_swarm-portrait","crawler_directions-landscape","crawler_corpses-landscape"]:
                   data=base64.b64encode(output.read_bytes()).decode()
                   print("GAMEPLAY_IMAGE_BEGIN "+name)
                   for i in range(0,len(data),16000):print("GAMEPLAY_IMAGE_CHUNK "+name+" "+data[i:i+16000])
                   print("GAMEPLAY_IMAGE_END "+name)
-          print("GAMEPLAY_VISUAL_COMPARE_PASS "+str(len(b["cases"]))+" paired explicit fixtures; not performance evidence")
+          print("GAMEPLAY_VISUAL_COMPARE_PASS "+str(len(b["cases"]))+" candidate fixtures; shared scenarios paired, native crawlers reviewed separately; not performance evidence")
       - uses: actions/upload-artifact@v6
         with:
           name: gameplay-visibility-comparisons

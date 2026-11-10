@@ -1,5 +1,5 @@
 extends TestCase
-## Real stone contacts create an atomic twenty-sprite pack with bounded native physics.
+## Real stone contacts create an atomic twenty-native crawler models with bounded native physics.
 const NativeFixture := preload("res://tests/native_combat_fixture.gd")
 const SITE := EncounterRuntime.CAVE_SITE
 
@@ -72,7 +72,7 @@ func _check_pack(game: Node, expected: int, phase: String) -> void:
 				if distance < required:
 					violations.append({"index": index, "peer": previous, "position": [enemy.position.x, enemy.position.y], "peer_position": [peer.position.x, peer.position.y], "distance": distance, "required": required})
 	check(phase + " cave wave retains exactly the requested living member count", actual == expected)
-	check(phase + " sprite enemies retain distinct native bodies on free supported forest ground", violations.is_empty(), JSON.stringify({"phase": phase, "player": [game.player.position.x, game.player.position.y], "violations": violations}))
+	check(phase + " native crawler enemies retain distinct native bodies on free supported forest ground", violations.is_empty(), JSON.stringify({"phase": phase, "player": [game.player.position.x, game.player.position.y], "violations": violations}))
 
 
 func _check_real_contact_and_restore() -> void:
@@ -128,7 +128,7 @@ func _check_real_contact_and_restore() -> void:
 	check("continuing restores the surviving twenty-pack without auto-summoning more", runtime.living(SITE) == 20)
 	if runtime.living(SITE) == 20:
 		var restored: Enemy = runtime._members[SITE][0]
-		check("continuation restores actual damage and the sprite variant", is_equal_approx(restored.hp, saved_health) and str(restored.get_meta("visual_variant", "")) == EncounterRuntime.CAVE_VISUAL_VARIANT)
+		check("continuation restores actual damage and the native visual variant", is_equal_approx(restored.hp, saved_health) and str(restored.get_meta("visual_variant", "")) == EncounterRuntime.CAVE_VISUAL_VARIANT)
 		_check_pack(game, 20, "restored")
 		await _prepare(game)
 		await _frames(2)
@@ -166,7 +166,7 @@ func _check_reserved_budget() -> void:
 	for index in EncounterRuntime.MAX_ENEMIES:
 		var site_id: String = ["north", "east", "south"][mini(2, floori(float(index) / 12.0))]
 		_filler(game, index, site_id)
-	check("the twenty reserved sprite slots work even while all thirty ordinary slots are occupied", runtime.stones[SITE].take_damage(1.0, game.player) and runtime.living(SITE) == 20 and game.enemies.size() == EncounterRuntime.CAVE_ENEMY_LIMIT)
+	check("the twenty reserved crawler slots work even while all thirty ordinary slots are occupied", runtime.stones[SITE].take_damage(1.0, game.player) and runtime.living(SITE) == 20 and game.enemies.size() == EncounterRuntime.CAVE_ENEMY_LIMIT)
 	_freeze(game)
 	check("the actual save accepts twenty cave members alongside thirty ordinary saved members", GameState.save_game())
 	var stored_members := 0

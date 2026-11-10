@@ -77,10 +77,10 @@ func _build(width: float, depth: float, height: float) -> Dictionary:
 		for opening: Dictionary in side_openings:
 			_window(opening, facade)
 	_door(door, front)
-	for step in 3:
-		var reach := 0.60 - step * 0.20
-		var step_height := 0.08 * (step + 1)
-		_box(Vector3(0, step_height * 0.5, depth * 0.5 + reach * 0.5), Vector3(door_width + 0.42, step_height, reach), "stone")
+	for tier: Dictionary in NativeChapelPlan.tiers(Vector2.ZERO, width, depth):
+		var rect: Rect2 = tier["rect"]
+		var step_height: float = tier["height"]
+		_box(Vector3(rect.get_center().x, step_height * 0.5, rect.get_center().y), Vector3(rect.size.x, step_height, rect.size.y), "stone")
 	# Repeated courses and tapered buttress caps remain within the old plinth band.
 	for side in [-1.0, 1.0]:
 		for along in [-0.43, 0.0, 0.43]:

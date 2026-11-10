@@ -4,6 +4,10 @@ uniform sampler2D base_atlas : source_color, filter_linear_mipmap_anisotropic, r
 uniform sampler2D edge_atlas : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
 uniform sampler2D distance_field : filter_linear, repeat_disable;
 #include "res://scripts/grass_variety.gdshaderinc"
+
+uniform sampler2D shore_field : filter_linear, repeat_disable;
+uniform sampler2D rock_texture : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D earth_texture : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform vec2 field_origin;
 uniform vec2 field_extent;
 varying vec2 ground_world;
@@ -36,7 +40,8 @@ void vertex() {
 }
 void fragment() {
 	vec2 field_uv = (ground_world - field_origin) / field_extent;
-	vec3 encoded = texture(distance_field, field_uv).rgb;
+	vec4 data = texture(distance_field, field_uv);
+	vec3 encoded = data.rgb;
 	float d = (encoded.r * 2.0 - 1.0) * 2.0;
 	if (any(lessThan(field_uv, vec2(0.0))) || any(greaterThan(field_uv, vec2(1.0)))) {
 		d = 2.0;
@@ -59,6 +64,18 @@ void fragment() {
 				mix(edge_tile(join_uv, vec2(0.0, 1.0)), edge_tile(join_uv, vec2(1.0)), a), b);
 			color = mix(color, joins, 1.0 - smoothstep(0.60, 1.15, abs(edge_d)));
 		}
+	}
+	// 막다른 포장길은 흙길로 좁아지며 풀 속으로 이어진다.
+	float terminal = data.a;
+	if (all(greaterThanEqual(field_uv, vec2(0.0))) && all(lessThanEqual(field_uv, vec2(1.0)))) {
+		vec3 soil = texture(earth_texture, uv).rgb;
+		float speckle = ground_noise(ground_world * 3.1);
+		color = mix(color, soil, smoothstep(0.05, 0.88, terminal + (speckle - 0.5) * 0.18));
+		float bank_d = (texture(shore_field, field_uv).r * 2.0 - 1.0) * 2.0;
+		float broken = bank_d + (ground_noise(ground_world * 1.9) - 0.5) * 0.48;
+		vec3 stones = texture(rock_texture, uv * 1.24).rgb;
+		vec3 bank = mix(stones * 0.67, mix(stones, soil, 0.63), smoothstep(-0.05, 0.45, broken));
+		color = mix(color, bank, 1.0 - smoothstep(0.12, 1.18, broken));
 	}
 	ALBEDO = color;
 	ROUGHNESS = 0.98;

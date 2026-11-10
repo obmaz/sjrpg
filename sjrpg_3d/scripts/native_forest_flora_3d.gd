@@ -110,12 +110,20 @@ static func build(preview: Node, parent: Node3D, world: Node2D) -> Dictionary:
 	root.name = "NativeBorderFlora"
 	parent.add_child(root)
 	var owned := {}
+	var suppressed: Array[int] = []
+	var chapel: Dictionary = SpatialWorld3D._native_chapel(preview.game.village)
+	var clear_zone := Geometry2D.offset_polygon(chapel["top"], 18.0)
 	var buckets := {}
 	var placements: Array[Dictionary] = []
 	for child in world.get_children():
 		if not child is IsoSprite or not accepts(child):
 			continue
 		var source := child as IsoSprite
+		if not clear_zone.is_empty() and Geometry2D.is_point_in_polygon(source.global_position, clear_zone[0]):
+			# 확대된 예배당의 기단과 계단을 식물이 뚫지 않게 한다.
+			owned[source.get_instance_id()] = true
+			suppressed.append(source.get_instance_id())
+			continue
 		var species := species_of(source)
 		var height := float(source.def.get("height", 0)) * source.k / (Ortho3DPreview.GROUND_PER_METER * Iso.S)
 		if not is_finite(height) or height <= 0.0 or height > 2.5:
@@ -153,6 +161,6 @@ static func build(preview: Node, parent: Node3D, world: Node2D) -> Dictionary:
 		batch.position = origin
 		batch.multimesh = multi
 		root.add_child(batch)
-	var report := {"owned_source_ids": owned, "placements": placements, "groups": root.get_child_count(), "root": root, "billboards": false}
+	var report := {"owned_source_ids": owned, "suppressed_at_chapel": suppressed, "placements": placements, "groups": root.get_child_count(), "root": root, "billboards": false}
 	root.set_meta("native_flora_report", report)
 	return report

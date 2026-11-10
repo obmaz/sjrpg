@@ -36,16 +36,16 @@ class GeometryPlanTests(unittest.TestCase):
 
     def test_fountain_has_two_real_water_heights_and_open_basin_void(self):
         model=author.fountain();water=model.groups['water'].vertices
-        self.assertTrue(any(abs(p[1]-.345)<1e-6 for p in water))
-        self.assertTrue(any(abs(p[1]-1.505)<1e-6 for p in water))
-        rim=[p for p in model.groups['limestone'].vertices if abs(p[1]-.53)<1e-6]
+        self.assertTrue(any(abs(p[1]-.690)<1e-6 for p in water))
+        self.assertTrue(any(abs(p[1]-3.010)<1e-6 for p in water))
+        rim=[p for p in model.groups['limestone'].vertices if abs(p[1]-1.06)<1e-6]
         radii=[math.hypot(p[0],p[2]) for p in rim]
-        self.assertTrue(any(abs(r-.945)<1e-6 for r in radii))
-        self.assertTrue(any(abs(r-1.14)<1e-6 for r in radii))
-        self.assertFalse(any(math.hypot(p[0],p[2])<.9 for p in rim))
+        self.assertTrue(any(abs(r-1.89)<1e-6 for r in radii))
+        self.assertTrue(any(abs(r-2.28)<1e-6 for r in radii))
+        self.assertFalse(any(math.hypot(p[0],p[2])<1.8 for p in rim))
         for socket in model.sockets.values():
-            self.assertAlmostEqual(socket['splash'][1],.345)
-            self.assertLess(math.hypot(socket['splash'][0],socket['splash'][2]),.936)
+            self.assertAlmostEqual(socket['splash'][1],.690)
+            self.assertLess(math.hypot(socket['splash'][0],socket['splash'][2]),1.872)
 
     def test_closed_bronze_spouts_have_outward_winding(self):
         group=author.fountain().groups['bronze']

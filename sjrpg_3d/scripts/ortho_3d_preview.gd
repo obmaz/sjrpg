@@ -59,7 +59,6 @@ var _cards := {}
 var _native_residents: NativeResidents3D
 var _enemy_models: NativeEnemyModels
 var _enemy_feedback: NativeEnemyFeedback3D
-var _enemy_sprites: NativeEnemySprites3D
 var _zone_fx: NativeZoneFx3D
 var _seen_impacts := {}
 var _contact_time := 0.0
@@ -168,7 +167,6 @@ func _ready() -> void:
 	_combat_fx = NativeCombatFx3D.new().setup(self)
 	_enemy_models = NativeEnemyModels.new().setup(self)
 	_enemy_feedback = NativeEnemyFeedback3D.new().setup(self)
-	_enemy_sprites = NativeEnemySprites3D.new().setup(self)
 	_zone_fx = NativeZoneFx3D.new().setup(self)
 	game.get_viewport().size_changed.connect(_resize)
 	Prefs.graphics_changed.connect(_resize)
@@ -268,7 +266,8 @@ func _setup_materials() -> void:
 	# Each building has its own wall/roof character (make_clean_masonry.py);
 	# limestone remains the shared trim so the family still reads as one village.
 	for key: String in WALL_TEXTURES:
-		var wall := _material(MATERIAL_ROOT + key + ".webp")
+		var replacement := {"wall_shop": "shop-plaster.png", "wall_stable": "stable-oak.png"}
+		var wall := _material(MATERIAL_ROOT + str(replacement.get(key, key + ".webp")))
 		wall.uv1_triplanar = true
 		wall.uv1_world_triplanar = true
 		wall.uv1_scale = Vector3.ONE / 2.56
@@ -353,7 +352,7 @@ func _build_house(key: String) -> void:
 	var width := maxf(3.5, bounds.size.x)
 	var depth := maxf(3.0, bounds.size.y)
 	var chapel := key == "chapel"
-	var height := 3.5 if chapel else 2.9
+	var height := 3.5 * NativeChapelPlan.SIZE_FACTOR if chapel else 2.9
 	var root := Node3D.new()
 	stage.add_child(root)
 	root.position = Vector3(center.x, 0, center.y)
@@ -433,7 +432,6 @@ func _process(delta: float) -> void:
 	_sync_camera()
 	_sync_actor(0.0 if frozen else delta)
 	_enemy_models.sync()
-	_enemy_sprites.sync()
 	_enemy_feedback.sync()
 	_sync_cards()
 	_native_residents.sync()
@@ -526,7 +524,6 @@ func _publish_probe() -> void:
 		"native_residents": _native_residents.snapshot() if _native_residents != null else {},
 		"native_enemies": _enemy_models.snapshot() if _enemy_models != null else {},
 		"enemy_feedback": _enemy_feedback.snapshot() if _enemy_feedback != null else {},
-		"native_enemy_sprites": _enemy_sprites.snapshot() if _enemy_sprites != null else {},
 		"native_zones": _zone_fx.snapshot() if _zone_fx != null else {},
 		"native_trees": _trees.get_meta("native_tree_report")["source_count"] if _trees != null else 0,
 		"native_houses": _houses.values().map(func(house: Dictionary): return {"key": house["key"], "triangles": house["triangles"], "surfaces": house["surfaces"]}),
