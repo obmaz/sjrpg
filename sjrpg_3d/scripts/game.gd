@@ -364,6 +364,9 @@ func _read_debug_params() -> void:
 				"lm0", "lm1", "lm2", "lm3":
 					var lmk: Landmark = village.landmarks[int(kv[1].substr(2))]
 					player.position = lmk.position + Vector2(0, 140)
+				"tree_occlusion":
+					var tree: IsoSprite = village.town_trees[0]
+					player.position = SpatialWorld3D.projected(Ortho3DPreview.ground_position(tree.position) - Vector3(1.7, 0, 1.7))
 				"occlusion":
 					var building: IsoSprite = village.buildings["nw"]
 					var footprint := building.atlas_polygon(village.data["frames"]["nw"]["ground"])

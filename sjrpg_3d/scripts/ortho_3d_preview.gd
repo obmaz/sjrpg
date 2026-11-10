@@ -93,6 +93,7 @@ var _trees: Node3D
 var _fortification: Ortho3DFortification
 var _houses := {}
 var _forest_stage: Node3D
+var _occlusion: NativePlayerOcclusion
 var _world_environment: Ortho3DEnvironment
 var _scope_is_cave := false
 var _presentation_dirty := true
@@ -189,6 +190,7 @@ func _ready() -> void:
 	_resize()
 	_sync_camera()
 	_world_environment = Ortho3DEnvironment.new().setup(self, _forest_stage)
+	_occlusion = NativePlayerOcclusion.new().setup(self)
 	_affordances.sync()
 
 
@@ -458,6 +460,10 @@ func _process(delta: float) -> void:
 	_encounter_props.sync()
 	_affordances.sync()
 	_world_environment.sync(0.0 if frozen else delta, frozen)
+	# 측정은 가림 전 원본 배치에서 한다. 임시 분리 슬롯은 의도적으로 숨겨진다.
+	if OS.has_feature("web") and _probe_enabled and _batch_gpu_error < 0.0:
+		_batch_gpu_error = Ortho3DStaticBatch.corner_error(_static_batch)
+	_occlusion.sync(0.0 if frozen else delta)
 	if not frozen:
 		if _contact_fresh:
 			_contact_fresh = false
@@ -547,6 +553,8 @@ func _publish_probe() -> void:
 		"native_enemies": _enemy_models.snapshot() if _enemy_models != null else {},
 		"enemy_feedback": _enemy_feedback.snapshot() if _enemy_feedback != null else {},
 		"native_zones": _zone_fx.snapshot() if _zone_fx != null else {},
+		"player_occluders": _occlusion._active.size() if _occlusion != null else 0,
+		"player_occlusion_instances": _occlusion._active.values().filter(func(state: Dictionary): return state["index"] >= 0).size() if _occlusion != null else 0,
 		"native_trees": _trees.get_meta("native_tree_report")["source_count"] if _trees != null else 0,
 		"native_houses": _houses.values().map(func(house: Dictionary): return {"key": house["key"], "triangles": house["triangles"], "surfaces": house["surfaces"]}),
 		"gate_progress": _fortification.gates.map(func(gate: Dictionary): return gate["progress"]) if _fortification != null else [],
