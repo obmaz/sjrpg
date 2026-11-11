@@ -49,17 +49,16 @@ func tick(delta: float) -> void:
 		if not trap.dangerous() or not _near(trap, COMBAT_RADIUS_METRES):
 			continue
 		var player: Player = game.player
-		if (
-			not player.dead
-			and player._invulnerable <= 0
-			and not trap.hit_actors.has(player.get_instance_id())
-		):
+		if not player.dead and not trap.hit_actors.has(player.get_instance_id()):
 			var foot: Vector3 = game.spatial_world.actor_foot(player)
 			if trap.contains_foot(foot, SpatialWorld3D.radius_metres(Player.RADIUS)):
-				trap.hit_actors[player.get_instance_id()] = true
-				player.take_damage(player.max_hp * .18)
-				if not game.dungeon.active or player.dead:
-					return
+				if player._invulnerable > 0.0:
+					player.confirm_roll_avoid()
+				else:
+					trap.hit_actors[player.get_instance_id()] = true
+					player.take_damage(player.max_hp * .18)
+					if not game.dungeon.active or player.dead:
+						return
 		# 적을 장치 쪽으로 유인하는 전술도 가능하다. 같은 분출에서는 각각 한 번만 맞는다.
 		if not snapshot_ready:
 			enemies = game.enemies.duplicate()

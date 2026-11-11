@@ -310,7 +310,7 @@ func _read_debug_params() -> void:
 			_encounter_preview.call_deferred(kv[1])
 		elif (
 			kv.size() == 2 and kv[0] == "dungeon_preview"
-			and kv[1] in ["entry", "room", "branch", "exit", "upper", "lower",
+			and kv[1] in ["entry", "room", "branch", "exit", "upper", "lower", "dodge",
 				"spikes", "spikes_warn", "spikes_live", "flame", "flame_warn", "flame_live",
 				"entry_live", "room_clear", "all_clear_live"]
 		):
@@ -331,6 +331,8 @@ func _read_debug_params() -> void:
 			_gate_closure_preview.call_deferred(int(kv[1]))
 		elif kv.size() == 2 and kv[0] == "enemy_warning" and kv[1] in ["wolf", "goblin", "skeleton"]:
 			NativeEnemyReview.run.call_deferred(self, kv[1])
+		elif kv.size() == 2 and kv[0] == "dodge_feedback" and kv[1] == "enemy":
+			NativeEnemyReview.run.call_deferred(self, "goblin", true)
 		elif kv.size() == 2 and kv[0] == "chest_response" and kv[1] in ["hit", "opening", "open", "closed"]:
 			NativeChestReview.run.call_deferred(self, kv[1])
 		elif kv.size() == 2 and kv[0] == "corpse_preview" and kv[1] in ["1", "bridge", "terrace", "beasts"]:
@@ -529,6 +531,11 @@ func _dungeon_preview(which: String) -> void:
 			ground = Vector2(1125, -500)
 		"lower":
 			ground = Vector2(2825, 500)
+		"dodge":
+			var target: DungeonTrap = dungeon.hazards.traps[1]
+			target.phase = DungeonTrap.Phase.ACTIVE
+			target.age = .3
+			ground = Iso.unproject(target.position)
 		"spikes", "spikes_warn", "spikes_live", "flame", "flame_warn", "flame_live":
 			var target: DungeonTrap = dungeon.hazards.traps[5 if which.begins_with("flame") else 0]
 			target.phase = (
@@ -551,6 +558,21 @@ func _dungeon_preview(which: String) -> void:
 				enemy.take_damage(enemy.hp, null)
 	player.position = Iso.project(ground)
 	player.move_input = Vector2.ZERO
+	if which == "dodge":
+		spatial_world.teleport_source_actor(player, player.position, Player.RADIUS)
+		player.set_process(false)
+		player.move_input = Vector2.RIGHT
+		var before := player.hp
+		player.try_roll()
+		player._process(.04)
+		dungeon.hazards.tick(.01)
+		for effect: Effect in Effect.in_world(world):
+			if effect.kind in ["text", "nova", "dodge_echo"]:
+				effect._process(.08)
+		if not player._roll_confirmed or player.hp != before:
+			push_error("Cave dodge review failed to avoid actual spike contact")
+			return
+		JavaScriptBridge.eval("window.__sjrpgDodgeFeedback = {confirmed:true, mode:'trap'}")
 	hud.controls.release_all()
 	_impact_offset = Vector2.ZERO
 	camera.offset = Vector2.ZERO

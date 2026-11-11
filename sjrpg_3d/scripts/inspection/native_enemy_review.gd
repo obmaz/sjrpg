@@ -2,8 +2,8 @@ class_name NativeEnemyReview
 extends RefCounted
 
 
-## 명시적 검수 쿼리에서만 실제 AI를 진행해 공격 준비 순간을 멈춘다.
-static func run(game: Node, kind: String) -> void:
+## 명시적 검수 쿼리에서만 실제 AI의 준비 또는 회피 접촉 순간을 멈춘다.
+static func run(game: Node, kind: String, dodge := false) -> void:
 	await game.get_tree().create_timer(1.5, false).timeout
 	if not is_instance_valid(game) or game.is_queued_for_deletion():
 		return
@@ -39,7 +39,21 @@ static func run(game: Node, kind: String) -> void:
 	for step in 8:
 		enemy._process(elapsed / 8.0)
 		enemy.sprite._process(elapsed / 8.0)
-	game.player.facing = (enemy.position - game.player.position).angle()
+	if dodge:
+		var hp: float = game.player.hp
+		game.player.move_input = Vector2.UP
+		game.player.try_roll()
+		game.player._process(.04)
+		enemy._process(enemy._timer + .001)
+		for effect: Effect in Effect.in_world(game.world):
+			if effect.kind in ["text", "nova", "dodge_echo"]:
+				effect._process(.08)
+		if not game.player._roll_confirmed or game.player.hp != hp:
+			push_error("Dodge review failed to avoid an actual AI contact")
+			return
+		JavaScriptBridge.eval("window.__sjrpgDodgeFeedback = {confirmed:true, mode:'enemy'}")
+	else:
+		game.player.facing = (enemy.position - game.player.position).angle()
 	game._fx_review_focus = (enemy.position + game.player.position) * .5
 	game.camera.position = game._camera_focus()
 	game.camera.reset_smoothing()

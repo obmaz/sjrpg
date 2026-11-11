@@ -143,3 +143,5 @@ HUD는 Viewport 크기 변경 신호에서도 표시를 갱신합니다. `TouchC
 일반 적의 공격 준비 게이지는 `NativeEnemyFeedback3D`가 실제 AI 타이머에서 표시합니다. 명시적 검수 쿼리의 준비 장면은 `scripts/inspection/native_enemy_review.gd`에 분리하며 운영 전투 시계를 만들지 않습니다.
 
 `Chest`는 실제 피해·보상과 함께 짧은 피격/개봉 표시 시간도 소유합니다. 반응 중에만 `_process`를 활성화하고, `NativeEncounterProps3D`는 같은 힌지 범위의 `lid_fraction()`만 읽습니다. [타격감 구조](juice.md)를 참고하세요.
+
+실제 구르기 피격 방지는 `Player.confirm_roll_avoid()`에서 한 번만 표시합니다. 대상 연결 문자는 `Effect`의 약한 참조/마지막 접점과 실제3D 발에서 배치하며 [타격감 구조](juice.md)를 따릅니다.

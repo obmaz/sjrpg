@@ -61,6 +61,7 @@ var _native_residents: NativeResidents3D
 var _enemy_models: NativeEnemyModels
 var _enemy_feedback: NativeEnemyFeedback3D
 var _zone_fx: NativeZoneFx3D
+var _nova_fx: NativeNovaFx3D
 var _seen_impacts := {}
 var _contact_time := 0.0
 var _contact_energy := 0.0
@@ -189,6 +190,7 @@ func _ready() -> void:
 	_enemy_models = NativeEnemyModels.new().setup(self)
 	_enemy_feedback = NativeEnemyFeedback3D.new().setup(self)
 	_zone_fx = NativeZoneFx3D.new().setup(self)
+	_nova_fx = NativeNovaFx3D.new().setup(self)
 	game.get_viewport().size_changed.connect(_resize)
 	Prefs.graphics_changed.connect(_resize)
 	_resize()
@@ -465,6 +467,7 @@ func _process(delta: float) -> void:
 	_level_up_fx.sync()
 	_combat_fx.sync()
 	_zone_fx.sync()
+	_nova_fx.sync()
 	_town_props.sync()
 	_encounter_props.sync()
 	_affordances.sync()
@@ -581,6 +584,7 @@ func _publish_probe() -> void:
 		"native_enemies": _enemy_models.snapshot() if _enemy_models != null else {},
 		"enemy_feedback": _enemy_feedback.snapshot() if _enemy_feedback != null else {},
 		"native_zones": _zone_fx.snapshot() if _zone_fx != null else {},
+		"native_novas": _nova_fx.snapshot() if _nova_fx != null else {},
 		"hit_feel": _hit_feel.snapshot() if _hit_feel != null else {},
 		"player_occluders": _occlusion._active.size() if _occlusion != null else 0,
 		"occlusion_warmed_materials": _occlusion.warmed_materials,
@@ -681,6 +685,20 @@ func _place_card(card: MeshInstance3D, at: Vector2, rect: Rect2, angle := 0.0, n
 	card.position = foot + basis.x * offset.x - basis.y * offset.y
 
 
+## 배우에 연결된 문자는 실제 발과 카메라 평면에서 띄운다. 사망 뒤에는 마지막 바닥을 쓴다.
+func _text_position(effect: Effect) -> Vector3:
+	if not effect.has_actor_text_anchor():
+		return ground_position(effect.position, surface_height(effect.position))
+	var point := effect.text_ground_point()
+	var actor := effect.text_actor()
+	var foot := actor_foot(actor) if actor != null else ground_position(point, surface_height(point))
+	if actor is Enemy:
+		foot.y += enemy_pose_lift(actor)
+	var offset := effect.position - point
+	var factor := GROUND_PER_METER * PROJECTION_FACTOR
+	return foot + camera.global_basis.x * (offset.x / factor) - camera.global_basis.y * (offset.y / factor)
+
+
 func _sync_cards() -> void:
 	for id in _cards.keys():
 		var entry: Dictionary = _cards[id]
@@ -724,7 +742,7 @@ func _sync_cards() -> void:
 				label.font_size = effect.font_size
 			label.scale = Vector3.ONE * (Effect.text_pop_scale(effect.age) if effect.pop and not Prefs.reduce_motion else 1.0)
 			label.modulate = Color(effect.color, clampf(2.0 - effect.age / effect.life * 2.0, 0.0, 1.0))
-			label.position = ground_position(effect.position, surface_height(effect.position))
+			label.position = _text_position(effect)
 			continue
 		if effect.kind == "impact" and not _seen_impacts.has(id):
 			_seen_impacts[id] = weakref(effect)

@@ -47,6 +47,8 @@ const SCENES = {
     dodge: 'at=field',
     corpses: 'corpse_preview=1',
     corpses_beasts: 'corpse_preview=beasts&zoom=0.95',
+    dodge_enemy: 'dodge_feedback=enemy&zoom=1.15',
+    dodge_trap: 'dungeon_preview=dodge',
     chest_hit: 'chest_response=hit&zoom=1.25',
     chest_opening: 'chest_response=opening&zoom=1.25',
     chest_open: 'chest_response=open&zoom=1.25',
@@ -295,7 +297,12 @@ if (scene === 'defender') {
     }
 } else if (scene === 'warp_trip') {
     await page.waitForFunction(() => Array.isArray(window.__sjrpgWarpPreviewButton), null, {timeout: 30000});
-} else if (scene.startsWith('chest_')) {
+} else if (scene === 'dodge_enemy' || scene === 'dodge_trap') {
+    await page.waitForFunction(() => window.__sjrpgDodgeFeedback?.confirmed, null, {timeout: 30000});
+    await page.waitForFunction(() => window.__sjrpg3dProbe?.native_novas?.active > 0, null, {timeout: 15000});
+    console.log('DODGE_CONFIRMATION', JSON.stringify(await page.evaluate(() => ({...window.__sjrpgDodgeFeedback, native:window.__sjrpg3dProbe.native_novas}))));
+}
+if (scene.startsWith('chest_')) {
     await page.waitForFunction(() => window.__sjrpgChestResponse, null, {timeout: 30000});
     const response = await page.evaluate(() => window.__sjrpgChestResponse);
     if (response.mode === 'opening' && !(response.fraction > 0 && response.fraction < 1 && response.dead)) throw Error('Chest opening is not intermediate');

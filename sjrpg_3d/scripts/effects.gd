@@ -119,16 +119,30 @@ func _place_damage_stream(peers: Array) -> void:
 
 
 ## Weak targets never keep a dying monster alive. Its last anchor survives removal.
+func has_actor_text_anchor() -> bool:
+	return _text_target_id != 0
+
+
+## 대상 제거 뒤에도 마지막 접점을 보존한다. 화면 위 여백을 다른 바닥 좌표로 읽지 않는다.
+func text_ground_point() -> Vector2:
+	return _text_anchor - _text_offset if has_actor_text_anchor() else position
+
+
+func text_actor() -> Node2D:
+	if _text_target == null:
+		return null
+	var actor := _text_target.get_ref() as Node2D
+	if not is_instance_valid(actor) or actor.is_queued_for_deletion() or actor.get_parent() != get_parent():
+		return null
+	return null if actor is Enemy and actor.dead else actor
+
+
 func _sync_text_position() -> void:
 	if _text_target == null:
 		return
-	var target := _text_target.get_ref() as Node2D
-	if is_instance_valid(target) and not target.is_queued_for_deletion():
-		var follow := true
-		if target is Enemy:
-			follow = not target.dead
-		if follow:
-			_text_anchor = target.position + _text_offset
+	var target := text_actor()
+	if target != null:
+		_text_anchor = target.position + _text_offset
 	position = _text_anchor - Vector2(0, _text_rise)
 
 

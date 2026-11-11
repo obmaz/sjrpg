@@ -59,6 +59,7 @@ var _release_pending := false
 var _release_sound := ""
 var _invulnerable := 0.0
 var _roll_time := 0.0
+var _roll_confirmed := false
 var _hitstop := GameTempo.ContactStop.new()
 var _roll_dir := Vector2.ZERO
 var _roll_cooldown := 0.0
@@ -410,6 +411,7 @@ func try_roll() -> void:
 	_roll_dir = dir.normalized()
 	facing = _roll_dir.angle()
 	_roll_time = ROLL_TIME
+	_roll_confirmed = false
 	sprite.clear_contact_hold()
 	SoundFx.play("dodge")
 	Prefs.pulse("dodge")
@@ -417,6 +419,28 @@ func try_roll() -> void:
 	_invulnerable = ROLL_TIME + GameTempo.duration(0.05)
 	_attack_time = 0.0
 	_pending = Callable()
+
+
+## 실제 피격을 회피 무적으로 막았을 때만 한 번 알려 준다. 판정과 회피 시간은 바꾸지 않는다.
+func confirm_roll_avoid() -> bool:
+	if (
+		dead
+		or warp_locked
+		or _roll_time <= 0.0
+		or _invulnerable <= 0.0
+		or _roll_confirmed
+		or not is_inside_tree()
+		or get_tree().paused
+	):
+		return false
+	_roll_confirmed = true
+	game.float_text(
+		position + Vector2(0, -sprite.body_height - 24), "회피", Color("d4e4ed"), self, 18
+	)
+	if not Prefs.reduce_motion:
+		game.spawn_nova(position, 46.0, Color("b4d1df"), true)
+	SoundFx.play("evade_confirm")
+	return true
 
 
 ## Only the current contact callback may hold the swing; passive/reflected damage also names this player.
@@ -841,7 +865,11 @@ func use_mana_potion() -> void:
 
 
 func take_damage(amount: float, attacker: Node2D = null) -> void:
-	if dead or warp_locked or _invulnerable > 0.0:
+	if dead or warp_locked:
+		return
+	if _invulnerable > 0.0:
+		if amount > 0.0:
+			confirm_roll_avoid()
 		return
 	var armor := defense()
 	var dealt := maxf(1.0, amount * (1.0 - armor / (armor + 30.0))) * (1.0 - minf(0.5, passive("resist")))
@@ -908,6 +936,7 @@ func _cancel_actions() -> void:
 	_release_sound = ""
 	_swing_sound_pending = false
 	_roll_time = 0.0
+	_roll_confirmed = false
 	_roll_dir = Vector2.ZERO
 	held_slots.clear()
 	move_input = Vector2.ZERO
