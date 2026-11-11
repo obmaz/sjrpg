@@ -28,7 +28,7 @@
 
 `NativeEnemyModels`는 게임 상태를 읽는 표시 어댑터입니다. `NativeEnemyAssets`는 종별 `visual.tscn`을 캐시하며 `NativeEnemyVisual`이 GLB의 `AnimationPlayer`를 수동 시계로 샘플링합니다. `asset.json`은 실제 클립 이름·길이·타격 시각·높이·사망 접지·몸통 기준 뼈·공격 기준 뼈를 보관합니다. 존재하지 않는 제어 뼈 이름을 런타임 마커로 쓰지 않습니다.
 
-기존 준비/회복 진행도0.60이 실제 피해 판정 시점입니다. 표시기는 클립별 `contact_time`을 이 시점에 맞추고 마지막에 같은 idle로 돌아갑니다. 보행은 원래 거리 주기를 따르며 root motion으로 물리를 이동시키지 않습니다. idle은 전달된 delta로 진행하고 일시정지·개별 hitstop 때 고정합니다. 화면 밖 모델은 포즈·색·그림자 갱신을 생략합니다. 피격은 씬의 `HitPivot` 전체에 적용하며 실제 캡슐·발 위치는 옮기지 않습니다.
+기존 준비/회복 진행도0.60이 실제 피해 판정 시점입니다. 표시기는 클립별 `contact_time`을 이 시점에 맞추고 마지막에 같은 idle로 돌아갑니다. 보행은 `Enemy._run_distance_m`의 실제 자력 이동 XZ 거리와 모델별 `locomotion.distance_per_clip_m`을 연결합니다. 화면 픽셀 거리와 무관하며 보스의 균일 확대는 보폭도 늘립니다. 밀침·순간이동은 보폭에 더하지 않고 벽에 막히거나 일시정지하면 진행하지 않습니다. root motion으로 물리를 이동시키지 않습니다. idle은 전달된 delta로 진행하고 일시정지·개별 hitstop 때 고정합니다. 화면 밖 모델은 포즈·색·그림자 갱신을 생략합니다. 피격은 씬의 `HitPivot` 전체에 적용하며 실제 캡슐·발 위치는 옮기지 않습니다.
 
 마지막 death 스킨 자세를 실제 사망 위치 중심에 정렬하고 최저점을 오프라인에서 접지합니다. 시체는 그 자세를 고정하며 실제 바닥 위0.012m에 놓습니다. 바인드 AABB를 회전해 접지를 추측하지 않습니다. 기존0.18초 사망 페이드·30초 수명·소모·숲/동굴 소유권은 유지합니다.
 
@@ -47,12 +47,17 @@ python3 sjrpg_3d/tools/enemy_art/rebuild.py --kind boar
 python3 sjrpg_3d/tools/enemy_art/rebuild.py --kind golem
 python3 sjrpg_3d/tools/enemy_art/rebuild.py --kind cave_crawler
 SJRPG_FBX2GLTF=/absolute/path/FBX2glTF python3 sjrpg_3d/tools/enemy_art/rebuild.py --kind skeleton
+sjrpg_3d/tools/godot.sh --headless res://tools/enemy_art/measure_stride.tscn -- --write
 python3 sjrpg_3d/tools/check_enemy_assets.py
 ```
 
 스켈레톤 변환기는 [FBX2glTF0.9.7 Linux x64](https://github.com/facebookincubator/FBX2glTF/releases/download/v0.9.7/FBX2glTF-linux-x64), SHA-256 `b38210352fdd29d50ba53a6514c3ff05ccbb5d1e0a6442db7a49834bf34a3145`입니다. 실행 전 원본 기록의 해시와 비교하며 도구 바이너리는 런타임이나 저장소에 넣지 않습니다. Blender4.3.2의 NumPy로 오프라인 스킨 피팅을 수행합니다.
 
 고블린/늑대는 기존 `export_enemy.py`, 새 네 종류는 `export_remaining.py`와 `skin_weights.py`를 사용합니다. 멧돼지/잠복자의 형태·포즈 보정은 각 소스 폴더의 `authoring.py`에 분리하고 의존 해시로 기록합니다. Blender의 Python 오류는 재현 명령의 실패 종료 코드로 전달합니다. 새 모델을 다시 만들면 실제 변환/런타임 측정이 갱신되므로 원본 잠금은 유지하고 화면·접지·예산·라이선스를 재검수합니다. 기존 두 종의 임시 `model.bake.json`은 검수 후 소스의 `conversion.json`으로 정리하며 런타임 폴더에 남기지 않습니다.
+
+`measure_stride.tscn`은 최종 GLB를120Hz로 샘플링해 지정된 발 뼈의 낮은25% 높이 구간에서 후방 이동 속도의 중앙값을 구합니다. 각 클립 전체의 이동 거리이며 여러 걸음이 든 클립도 허용합니다. 현재 고블린2.3141m·늑대4.1709m·멧돼지1.7358m·스켈레톤15.9099m·골렘4.5813m·잠복자0.8861m입니다. 발 회수·도약을 제외한 평균 접지 보정이며 프레임마다 모든 발을 완전히 고정하는 IK는 아닙니다. 모델을 교체하면 자기 manifest의 발 뼈를 지정해 다시 측정하고 GLB 해시·실제 이동 화면을 검수합니다. 런타임에 발 정점이나 보폭을 재측정하지 않습니다.
+
+`native_enemy_locomotion`은 실제 골격의 측정값·몸체 확대·세 투영 방향의 물리 이동·벽 정지·순간이동·일시정지·공격 우선순위를 검증합니다.
 
 ## 검수와 협업
 

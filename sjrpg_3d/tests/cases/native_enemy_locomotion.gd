@@ -1,0 +1,108 @@
+extends TestCase
+## 실제 GLB 발의 보폭과 물리 이동·투영 방향·충돌·공격의 연결을 검사한다.
+const MeasureStride := preload("res://tools/enemy_art/measure_stride.gd")
+const Fixture := preload("res://tests/native_combat_fixture.gd")
+
+
+func run() -> void:
+	for kind: String in NativeEnemyModels.KINDS + [NativeEnemyModels.CRAWLER]:
+		var model := NativeEnemyModels.build(kind)
+		var visual: NativeEnemyVisual = model["visual"]
+		add_child(visual)
+		var gait: Dictionary = visual.manifest["locomotion"]
+		var actual := MeasureStride.measure(visual)
+		print("STRIDE_RECHECK ", kind, " ", JSON.stringify(actual))
+		check(
+			"stride measures the current GLB contact feet " + kind,
+			(
+				actual["contact_bones"] == gait["contact_bones"]
+				and actual["model_sha256"] == gait["model_sha256"]
+				and int(actual["contact_samples"]) == int(gait["contact_samples"])
+				and (
+					absf(float(actual["distance_per_clip_m"]) - float(gait["distance_per_clip_m"]))
+					< 0.00001
+				)
+			)
+		)
+		var distance: float = gait["distance_per_clip_m"]
+		for scale_factor: float in [1.0, 1.4]:
+			var phase := visual.travel_cycle(distance * scale_factor * 0.37, scale_factor)
+			NativeEnemyModels.pose(model, 0.7, phase, 0.0)
+			check(
+				"scaled body travels its own stride " + kind,
+				is_equal_approx(
+					visual.sample_time, float(visual.manifest["clips"]["run"]["length"]) * 0.37
+				)
+			)
+		visual.free()
+	var game := await make_game("mage")
+	game.set_process(false)
+	game.player.set_process(false)
+	game.exploration.set_process(false)
+	game.encounters.set_process(false)
+	var backend: SpatialWorld3D = game.spatial_world
+	var centre := Fixture.remote_at(Vector3(120, 0, 120))
+	var floor_body := Fixture.box(
+		backend, centre + Vector3(0, -0.25, 0), Vector3(40, 0.5, 40), SpatialWorld3D.FLOOR
+	)
+	var wall := Fixture.box(
+		backend, centre + Vector3(3.0, 2, 0), Vector3(0.5, 4, 15), SpatialWorld3D.SOLID
+	)
+	var enemy := Enemy.new()
+	enemy.setup(game, "wolf", 1)
+	enemy.position = SpatialWorld3D.projected(centre)
+	game.world.add_child(enemy)
+	game.enemies.append(enemy)
+	enemy.set_process(false)
+	await Fixture.settle(get_tree())
+	game.camera.position = enemy.position
+	game.camera.reset_smoothing()
+	game.camera.force_update_scroll()
+	for axis in [Vector2.RIGHT, Vector2.DOWN, Vector2(1, 1).normalized()]:
+		backend.teleport_source_actor(enemy, SpatialWorld3D.projected(centre), enemy.radius, true)
+		var start := enemy._run_distance_m
+		var walked := 0.0
+		for step in 10:
+			var before := backend.actor_foot(enemy)
+			enemy._step(Iso.project(axis).normalized(), 0.01)
+			var after := backend.actor_foot(enemy)
+			walked += Vector2(after.x - before.x, after.z - before.z).length()
+		check(
+			"gait follows real metres in every camera direction " + str(axis),
+			walked > 0.05 and absf(enemy._run_distance_m - start - walked) < 0.0001
+		)
+	# 벽에 닿아 추적을 계속해도 이동하지 못하면 보행 위상이 늘지 않는다.
+	for step in 80:
+		enemy._step(Iso.project(Vector2.RIGHT).normalized(), 0.02)
+	var stopped := enemy._run_distance_m
+	for step in 5:
+		enemy._step(Iso.project(Vector2.RIGHT).normalized(), 0.02)
+	check("blocked pursuit never pedals in place", absf(enemy._run_distance_m - stopped) < 0.0001)
+	backend.teleport_source_actor(enemy, SpatialWorld3D.projected(centre), enemy.radius, true)
+	check("teleport does not count as a stride", is_equal_approx(enemy._run_distance_m, stopped))
+	enemy._state = "chase"
+	game.ortho_preview._enemy_models.sync()
+	var live: Dictionary = game.ortho_preview._enemy_models.entries[enemy.get_instance_id()]
+	var rendered: NativeEnemyVisual = live["visual"]
+	check(
+		"production presenter uses measured metres instead of the old 70px cycle",
+		is_equal_approx(
+			rendered.sample_time,
+			(
+				fposmod(rendered.travel_cycle(stopped, 1.0), 1.0)
+				* float(rendered.manifest["clips"]["run"]["length"])
+			)
+		)
+	)
+	var held := rendered.sample_time
+	get_tree().paused = true
+	game.ortho_preview._enemy_models.sync(1.0)
+	check("pause holds gait pose", is_equal_approx(rendered.sample_time, held))
+	get_tree().paused = false
+	enemy._state = "windup"
+	enemy._timer = enemy._windup_duration * 0.3
+	game.ortho_preview._enemy_models.sync()
+	check("distance never overrides attack timing", rendered.active_clip == "attack")
+	Fixture.remove([floor_body, wall])
+	game.queue_free()
+	await _frames(2)

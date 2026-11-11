@@ -39,5 +39,16 @@
   ],
   "collision_policy": "기존 캡슐이 몸통 중심을 담당하며 발끝·무기·장식은 별도 충돌체가 아니다.",
   "display_name": "스켈레톤",
-  "attack_bone": "ORG-hand_R"
+  "attack_bone": "ORG-hand_R",
+  "locomotion": {
+    "distance_per_clip_m": 15.9099,
+    "contact_bones": [
+      "ORG-toe_L",
+      "ORG-toe_R"
+    ],
+    "sample_hz": 120.0,
+    "contact_height_fraction": 0.25,
+    "contact_samples": 572,
+    "model_sha256": "4d7d69acadc8e67f59aa9e4b4f2f4fb0e28386375462af345a3e0937a6b07eae"
+  }
 }

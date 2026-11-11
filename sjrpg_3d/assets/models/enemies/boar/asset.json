@@ -39,5 +39,18 @@
   ],
   "collision_policy": "기존 캡슐이 몸통 중심을 담당하며 발끝·무기·장식은 별도 충돌체가 아니다.",
   "display_name": "멧돼지",
-  "attack_bone": "head"
+  "attack_bone": "head",
+  "locomotion": {
+    "distance_per_clip_m": 1.7358,
+    "contact_bones": [
+      "body.001_L.002",
+      "body.001_R.002",
+      "body_L.002",
+      "body_R.002"
+    ],
+    "sample_hz": 120.0,
+    "contact_height_fraction": 0.25,
+    "contact_samples": 243,
+    "model_sha256": "0ee0e09658e2308a4b6365725d30af7b546ae9bfd66b2abf6db4103a6830daac"
+  }
 }

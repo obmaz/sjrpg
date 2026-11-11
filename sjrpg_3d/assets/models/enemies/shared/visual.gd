@@ -64,6 +64,13 @@ func advance_idle(delta: float, held: bool) -> void:
 		idle_clock += maxf(delta, 0.0)
 
 
+## GLB의 접지 구간에서 실측한 보폭. 보스 등 균일 확대는 보폭도 함께 늘린다.
+func travel_cycle(distance_m: float, body_scale: float) -> float:
+	prepare()
+	var locomotion: Dictionary = manifest["locomotion"]
+	return distance_m / (float(locomotion["distance_per_clip_m"]) * body_scale)
+
+
 func sample(clip: String, time: float) -> void:
 	prepare()
 	var name: String = manifest["clips"][clip]["name"]

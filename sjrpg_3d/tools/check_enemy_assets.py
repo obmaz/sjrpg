@@ -36,6 +36,10 @@ def check(kind):
         and conversion["max_discarded_skin_weight"] < 0.02
     )
     assert digest(folder / "model.glb") == proof["runtime_sha256"]
+    gait = spec["locomotion"]
+    assert gait["model_sha256"] == proof["runtime_sha256"]
+    assert 0.2 < gait["distance_per_clip_m"] < 30.0
+    assert gait["contact_samples"] >= 12 and gait["sample_hz"] == 120
     assert digest(ROOT / proof["converter"]) == proof["converter_sha256"]
     assert conversion.get("max_skin_fit_error_m", 0.0) < 0.02
     for dependency in proof.get("converter_dependencies", []):
@@ -63,6 +67,7 @@ def check(kind):
     )
     bone_names = {gltf["nodes"][index]["name"] for index in gltf["skins"][0]["joints"]}
     assert set(spec["body_core_bones"] + [spec["attack_bone"]]) <= bone_names
+    assert len(gait["contact_bones"]) >= 2 and set(gait["contact_bones"]) <= bone_names
     triangles = 0
     for mesh in gltf["meshes"]:
         for primitive in mesh["primitives"]:

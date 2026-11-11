@@ -141,12 +141,12 @@ func sync(delta := 0.0) -> void:
 					)
 				)
 			)
+		var visual: NativeEnemyVisual = model["visual"]
 		var cycle := (
-			enemy._walk_cycle
+			visual.travel_cycle(enemy._run_distance_m, size)
 			if enemy._state == "chase" or (enemy._state == "idle" and enemy._wander != Vector2.ZERO)
 			else 0.0
 		)
-		var visual: NativeEnemyVisual = model["visual"]
 		visual.moving = (
 			enemy._state == "chase" or (enemy._state == "idle" and enemy._wander != Vector2.ZERO)
 		)
@@ -180,11 +180,16 @@ func snapshot() -> Dictionary:
 		if not is_instance_valid(enemy):
 			continue
 		var root: Node3D = model["root"]
+		var visual: NativeEnemyVisual = model["visual"]
+		var gait: Dictionary = visual.manifest["locomotion"]
 		sources.append(
 			{
 				"kind": model["kind"],
 				"model_type": "glb",
-				"clip": (model["visual"] as NativeEnemyVisual).active_clip,
+				"clip": visual.active_clip,
+				"sample_time": visual.sample_time,
+				"run_distance_m": enemy._run_distance_m,
+				"run_stride_m": float(gait["distance_per_clip_m"]),
 				"facing": enemy.facing,
 				"visible": root.visible,
 				"hit_lean": model.get("hit_lean", 0.0),

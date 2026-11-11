@@ -114,7 +114,7 @@
     },
     {
       "path": "scripts/grass_variety.gdshaderinc",
-      "sha256": "96498a9c9241934bb30baad28032541ebdc7856bfdb85f70ccc2cc5afc9af636"
+      "sha256": "919d9c2339c990b63830672ba8b9854bd75fcd6aac7ddf345e4655d1ff36901d"
     },
     {
       "path": "assets/models/materials/terrain/surfaces.gd",

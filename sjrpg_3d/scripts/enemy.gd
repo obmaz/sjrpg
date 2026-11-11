@@ -63,6 +63,8 @@ var _windup_duration := 0.55
 var _recover_duration := 0.7
 var _recover_visual_duration := 0.28
 var _walk_cycle := 0.0
+## 실제 자력 이동의 XZ 거리(m). 밀침·순간이동·카메라 투영은 보행에 넣지 않는다.
+var _run_distance_m := 0.0
 var _recoil := Vector2.ZERO
 var _recoil_direction := Vector2.ZERO
 var _recoil_size := 0.0
@@ -388,6 +390,7 @@ func _step(direction: Vector2, delta: float) -> void:
 	var from := position
 	var moved: Vector2 = SpatialCombat3D.move_actor(game, self, target, radius, true)
 	_walk_cycle += moved.distance_to(from) / 70.0
+	_run_distance_m += Iso.unproject(moved - from).length() / Ortho3DPreview.GROUND_PER_METER
 	position = moved
 	sprite.set_frame(atlas, atlas.walk_frame(facing, _walk_cycle))
 

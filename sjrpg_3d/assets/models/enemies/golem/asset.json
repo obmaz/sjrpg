@@ -39,5 +39,16 @@
   ],
   "collision_policy": "기존 캡슐이 몸통 중심을 담당하며 발끝·무기·장식은 별도 충돌체가 아니다.",
   "display_name": "골렘",
-  "attack_bone": "arm.R"
+  "attack_bone": "arm.R",
+  "locomotion": {
+    "distance_per_clip_m": 4.5813,
+    "contact_bones": [
+      "foot.L",
+      "foot.R"
+    ],
+    "sample_hz": 120.0,
+    "contact_height_fraction": 0.25,
+    "contact_samples": 156,
+    "model_sha256": "42a4a4eeeb9efd0f6c5dac56b50cd5e3083fa8d9dcf151148741bc2803069d6d"
+  }
 }

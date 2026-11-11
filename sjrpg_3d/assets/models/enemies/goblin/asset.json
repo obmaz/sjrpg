@@ -40,5 +40,16 @@
   ],
   "collision_policy": "기존 게임 캡슐이 몸통 중심을 담당한다. 보행 중 발끝·꼬리·무기는 시각적 돌출이며 별도 충돌체가 아니다.",
   "display_name": "고블린",
-  "attack_bone": "hand_R"
+  "attack_bone": "hand_R",
+  "locomotion": {
+    "distance_per_clip_m": 2.3141,
+    "contact_bones": [
+      "toe_L",
+      "toe_R"
+    ],
+    "sample_hz": 120.0,
+    "contact_height_fraction": 0.25,
+    "contact_samples": 168,
+    "model_sha256": "9c4b8a2ae23f884391061c694f0ea3acec4d26ed7a336b17d248c06e946d74d1"
+  }
 }

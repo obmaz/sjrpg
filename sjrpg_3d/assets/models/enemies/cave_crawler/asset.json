@@ -39,5 +39,16 @@
   ],
   "collision_policy": "기존 캡슐이 몸통 중심을 담당하며 발끝·무기·장식은 별도 충돌체가 아니다.",
   "display_name": "동굴 잠복자",
-  "attack_bone": "joint18"
+  "attack_bone": "joint18",
+  "locomotion": {
+    "distance_per_clip_m": 0.8861,
+    "contact_bones": [
+      "joint8",
+      "joint8.001"
+    ],
+    "sample_hz": 120.0,
+    "contact_height_fraction": 0.25,
+    "contact_samples": 123,
+    "model_sha256": "ff9eb64731614ce5f0145f266e48fac4cc0a0060d35d2d4bea055157834e70e8"
+  }
 }

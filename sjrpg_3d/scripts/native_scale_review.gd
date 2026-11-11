@@ -14,6 +14,23 @@ var _elapsed := 0.0
 var _review_enemies: Array[Enemy] = []
 var _chest: Chest
 var _chest_index := 0
+var _walking := false
+
+func _physics_process(delta: float) -> void:
+	if not _ready_for_review or not _walking or get_tree().paused:
+		return
+	var centre := Vector2.ZERO
+	var count := 0
+	for enemy: Enemy in _review_enemies:
+		if not is_instance_valid(enemy) or enemy.dead:
+			continue
+		# 격리 검수에서도 운영 이동 모터·거리 누적·표시기를 그대로 사용한다.
+		enemy._state = "chase"
+		enemy._step(Vector2.DOWN, delta)
+		centre += enemy.position
+		count += 1
+	if count > 0:
+		_game._fx_review_focus = centre / count + Vector2(0, 15)
 
 func setup(root: Node) -> NativeScaleReview:
 	_root = root
@@ -95,6 +112,12 @@ func _action(args: Array) -> void:
 	if not _ready_for_review or args.is_empty():
 		return
 	match str(args[0]):
+		"walk":
+			if _scene == "actors":
+				_walking = bool(args[1]) if args.size() > 1 else true
+				for enemy: Enemy in _review_enemies:
+					enemy._state = "chase" if _walking else "idle"
+				_phase = "walking" if _walking else "live"
 		"face":
 			var angle: float = float(args[1]) if args.size() > 1 else PI * 0.5
 			for enemy: Enemy in _review_enemies:
@@ -102,6 +125,7 @@ func _action(args: Array) -> void:
 					enemy.facing = angle
 			_game.player.facing = angle
 		"environment":
+			_walking = false
 			if args.size() > 1:
 				_scene = str(args[1])
 				_frame_environment(_scene)
@@ -109,6 +133,7 @@ func _action(args: Array) -> void:
 			get_tree().paused = true
 			_preview._presentation_dirty = true
 		"attack":
+			_walking = false
 			var phase := clampf(float(args[1]), 0.0, 1.0) if args.size() > 1 else 0.60
 			for enemy: Enemy in _review_enemies:
 				enemy._state = "windup" if phase < 0.60 else "recover"
@@ -116,6 +141,7 @@ func _action(args: Array) -> void:
 			_preview._presentation_dirty = true
 
 		"corpses":
+			_walking = false
 			if _scene == "actors" and _phase == "live":
 				_make_corpses.call_deferred()
 
