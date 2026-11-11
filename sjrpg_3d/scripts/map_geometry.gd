@@ -76,6 +76,12 @@ static func _npc(game: Node, name: String) -> Node2D:
 
 static func category(marker: Dictionary) -> String:
 	var id: String = marker["id"]
+	if id.begins_with("treasure:gold:"):
+		return "장비 보물"
+	if id.begins_with("treasure:iron:"):
+		return "보급 보물"
+	if id.begins_with("treasure:"):
+		return "보물 상자"
 	if id.begins_with("cave:room:"):
 		return "전투 구역"
 	if id.begins_with("hazard:spike"):
@@ -131,6 +137,7 @@ static func markers(game: Node) -> Array[Dictionary]:
 						game.dungeon.rooms.detail(room)
 					)
 				)
+		_append_treasure(markers, game)
 		if game.dungeon.hazards != null:
 			for trap: DungeonTrap in game.dungeon.hazards.traps:
 				var ink := Color("e5ba6b") if trap.kind == "spike" else Color("e7866f")
@@ -215,3 +222,33 @@ static func markers(game: Node) -> Array[Dictionary]:
 		)
 		markers.append(_marker("boss", at, "파수꾼", Color("ff9e65"), "숲의 파수꾼 도전"))
 	return markers
+
+
+## 활성 동굴의 실물만 읽는다. 별도 위치 목록·개봉 기록·상자 참조를 지도에 보관하지 않는다.
+static func _append_treasure(markers: Array[Dictionary], game: Node) -> void:
+	for candidate in game.chests:
+		if not is_instance_valid(candidate):
+			continue
+		var chest := candidate as Chest
+		if (
+			chest == null
+			or chest.is_queued_for_deletion()
+			or chest.dead
+			or chest.persistent
+			or chest.get_parent() != game.world
+		):
+			continue
+		var gold := chest.variant == "gold"
+		var iron := chest.variant == "iron"
+		var detail := "좋은 장비 위주 · 적이 나오지 않음" if gold else "내용물은 열어서 확인"
+		if iron:
+			detail = "내구도 %d/%d · 포션·골드 위주" % [int(chest.hp), int(chest.max_hp)]
+		markers.append(
+			_marker(
+				"treasure:%s:%d" % [chest.variant, chest.index],
+				chest.position,
+				"황금 상자" if gold else ("쇠 상자" if iron else "나무 상자"),
+				Color("edcb77") if gold else Color("afc3d6"),
+				detail
+			)
+		)

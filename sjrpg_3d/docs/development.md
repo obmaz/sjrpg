@@ -22,7 +22,7 @@
 
 ## 지도
 
-`MapWorldState`는 실제 건축 루트·성문 변환과 공유 지형 설계를 프레임당 한 번 확인하고 변경 시에만 두 지도용 도형과 메시를 갱신합니다. `MapGeometry`는 살아 있는 시설·진입 노드에서 표식을 만들고, `WorldMapCanvas`와 `MapPlaceRow`는 같은 번호/좌표를 표시합니다. 행은 터치 입력을 부모 스크롤에 전달하는 리스트 컨트롤이며, `GamepadNavigation`은 `gamepad_target`과 `pressed` 신호를 가진 비버튼 컨트롤도 탐색합니다. 상세 계약과 검사는 [지도 구조](world-map.md)를 따릅니다.
+`MapWorldState`는 실제 건축 루트·성문 변환과 공유 지형 설계를 프레임당 한 번 확인하고 변경 시에만 두 지도용 도형과 메시를 갱신합니다. `MapGeometry`는 살아 있는 시설·진입 노드와 활성 동굴의 미개봉 상자에서 표식을 만들고, `WorldMapCanvas`와 `MapPlaceRow`는 같은 번호/좌표를 표시합니다. 행은 터치 입력을 부모 스크롤에 전달하는 리스트 컨트롤이며, `GamepadNavigation`은 `gamepad_target`과 `pressed` 신호를 가진 비버튼 컨트롤도 탐색합니다. 상세 계약과 검사는 [지도 구조](world-map.md)를 따릅니다.
 
 ## 저장과 입력
 

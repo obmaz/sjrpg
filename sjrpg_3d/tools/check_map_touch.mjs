@@ -4,6 +4,8 @@ import {createRequire} from 'node:module';
 import {mkdir, writeFile} from 'node:fs/promises';
 const {chromium} = createRequire(import.meta.url)('playwright');
 const args = Object.fromEntries(process.argv.slice(2).reduce((all, arg, i, source) => arg.startsWith('--') ? [...all, [arg.slice(2), source[i + 1]]] : all, []));
+const cave = args.scope === 'cave';
+if (args.scope && !['forest', 'cave'].includes(args.scope)) throw Error('--scope must be forest or cave');
 const out = args.out ?? 'build/review/map-touch';
 await mkdir(out, {recursive: true});
 const browser = await chromium.launch({args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']});
@@ -34,7 +36,7 @@ const swipe = (state, direction, amount = .6) => {
 };
 try {
     const url = new URL(args.url ?? 'http://localhost:8878/index.html');
-    url.searchParams.set('panel', 'map'); url.searchParams.set('probe', '1'); url.searchParams.set('quality', 'low');
+    url.searchParams.set('panel', cave ? 'dungeon_map' : 'map'); url.searchParams.set('probe', '1'); url.searchParams.set('quality', 'low');
     await page.goto(String(url));
     await page.locator('#entry-start').click({timeout: 90000});
     await page.waitForFunction(() => window.__sjrpgClassButtons?.stage === 'class', null, {timeout: 90000});
@@ -64,10 +66,13 @@ try {
     state = await snapshot();
     check(state.places[0].row[1] < initial - 50, 'real finger drag scrolls across list rows');
     check(state.selected === '', 'swiping never activates a place');
-    check(state.places.filter(place => place.category === '웨이포인트').length === 3, 'all waypoint locations share the place list');
+    if (cave) {
+        check(state.places.filter(place => place.category === '장비 보물').length === 3
+            && state.places.filter(place => place.category === '보급 보물').length === 2, 'all live cave treasure types share the place list');
+    } else check(state.places.filter(place => place.category === '웨이포인트').length === 3, 'all waypoint locations share the place list');
     const colors = new Map(state.places.map(place => [place.category, place.color]));
     check(new Set(colors.values()).size === colors.size, 'types have distinct visible colors and labels');
-    const target = 'sanctuary:cave';
+    const target = cave ? state.places.find(place => place.category === '장비 보물').id : 'sanctuary:cave';
     for (let step = 0; step < 14; step++) {
         state = await snapshot(); const row = state.places.find(place => place.id === target).row;
         if (row[1] >= state.list[1] && row[1] + row[3] <= state.list[1] + state.list[3]) break;
@@ -78,7 +83,7 @@ try {
     await page.waitForFunction(id => window.__sjrpgMapPanel?.selected === id, target, {timeout: 10000});
     state = await snapshot(); proof.steps.push(state);
     const place = state.places.find(place => place.id === target);
-    check(Math.hypot(place.world[0] - state.center[0], place.world[1] - state.center[1]) < .01, 'waypoint tap focuses its actual coordinate');
+    check(Math.hypot(place.world[0] - state.center[0], place.world[1] - state.center[1]) < .01, 'place tap focuses its actual coordinate');
     await page.screenshot({path: out + '/portrait.png', timeout: 90000});
     await page.setViewportSize({width: 960, height: 540}); await wait(1200);
     state = await snapshot(); proof.steps.push(state);
@@ -86,7 +91,7 @@ try {
     check(state.map[0] + state.map[2] < state.list[0] && selected[1] >= state.list[1] - 1 && selected[1] + selected[3] <= state.list[1] + state.list[3] + 1, 'landscape keeps the selected list row visible beside the map');
     await swipe(state, -1, .3);
     state = await snapshot();
-    check(state.selected === target, 'landscape drag preserves the selected waypoint');
+    check(state.selected === target, 'landscape drag preserves the selected place');
     await page.screenshot({path: out + '/landscape.png', timeout: 90000});
     check(errors.length === 0, 'browser has no script or rendering errors');
     console.log('MAP_TOUCH_BROWSER_PASS');
