@@ -105,15 +105,17 @@ func run() -> void:
 	Input.action_press("attack")
 	Input.action_press("move_right")
 	var gold := GameState.gold
-	check("a quiet discovered gate performs the actual warp", route.warp("tree"))
+	check("a quiet discovered gate accepts the warp", route.warp("tree"))
+	await route.transition.finished
 	check("arrival is safely in front of the selected physical gate", not game._blocked(game.player.position, Player.RADIUS) and route.gate_origin() == "tree" and GameState.last_sanctuary == "tree")
 	check("warp restores health and resource without charging gold", game.player.hp == game.player.max_hp and game.player.resource == game.player.resource_max and GameState.gold == gold)
 	check("warp clears pending and held attacks before the next game tick", not game.player._pending.is_valid() and game.player._attack_time == 0.0 and not delayed["called"] and game.player.held_slots.is_empty() and game.player.move_input == Vector2.ZERO and not Input.is_action_pressed("attack") and not Input.is_action_pressed("move_right"))
-	check("arrival camera matches the destination without an old shake", game.camera.position == game.player.position and game.camera.offset == Vector2.ZERO)
+	check("arrival camera matches the destination without an old shake", game.camera.position == game._camera_focus() and game.camera.offset == Vector2.ZERO)
 	game.hud.interact("워프게이트")
 	await _frames(2)
 	panel = game.hud._panel
 	panel._choose("town")
+	await route.transition.finished
 	check("the destination button returns to the town gate and resumes play", not game.hud.panel_open() and not get_tree().paused and route.gate_origin() == "town")
 	game.player.position = game.dungeon.entry_point()
 	check("warp cave test can enter the existing Stage1 cave", game.dungeon.enter())

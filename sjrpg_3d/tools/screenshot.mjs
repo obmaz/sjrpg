@@ -420,7 +420,7 @@ if (scene.startsWith('corpses') && args.lifecycle === '1') {
     await page.waitForFunction(() => window.__sjrpgCorpsePreviewExpired === true, null, {timeout: 120000});
     await page.waitForTimeout(200);
     await capture({path: out.replace(/\.png$/, '-expired.png')});
-    console.log('시체 수명 종료: 게임 시간 30초 후 실제 제거 확인');
+    console.log('시체 수명 종료: 게임 시간 15초 후 실제 제거 확인');
 }
 if (scene === 'cooldowns') {
     await page.keyboard.up('Space');

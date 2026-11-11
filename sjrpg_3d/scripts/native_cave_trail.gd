@@ -1,7 +1,8 @@
 class_name NativeCaveTrail
 extends RefCounted
 
-const SIGN_INDICES := [0, 3, 5]
+const SIGN_INDICES := [0, 2, 4, 5]
+const HALF_WIDTH := 1.8
 
 
 ## 같은 미터 경로를 흙길 재질·식생 제외·실제 보행에서 공유한다.
@@ -50,7 +51,7 @@ static func points(village: Village) -> PackedVector2Array:
 
 
 static func bounds(village: Village) -> Rect2:
-	return Iso.poly_bounds(points(village)).grow(3.0)
+	return Iso.poly_bounds(points(village)).grow(3.4)
 
 
 static func signs(village: Village) -> Array[Dictionary]:

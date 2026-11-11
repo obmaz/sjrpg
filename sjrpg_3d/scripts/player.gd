@@ -34,6 +34,7 @@ var buffs := {}  # name -> {"time": float, "value": float, ...}
 var cooldowns := {}  # skill id -> seconds left
 var frenzy_stacks := 0
 var dead := false
+var warp_locked := false
 
 var _run_distance := 0.0
 var _blaze_distance := 0.0
@@ -145,7 +146,7 @@ func damage_for(id: String, mult: float) -> float:
 # ───────────────────────── loop ─────────────────────────
 
 func _process(delta: float) -> void:
-	if dead:
+	if dead or warp_locked:
 		return
 	_tick_timers(delta)
 	var regen := 7.0 * (1.0 + passive("regen"))
@@ -319,7 +320,7 @@ func slot_cooldown_ratio(index: int) -> float:
 
 ## Returns true when the skill was cast. `repeat` is set for held buttons.
 func cast_slot(index: int, repeat := false) -> bool:
-	if dead or _roll_time > 0.0:
+	if dead or warp_locked or _roll_time > 0.0:
 		return false
 	var id: String = GameState.slots[index]
 	if id == "":
@@ -392,7 +393,7 @@ func _cast_feedback(d: Dictionary) -> void:
 
 
 func try_roll() -> void:
-	if dead or _roll_time > 0.0 or _roll_cooldown > 0.0:
+	if dead or warp_locked or _roll_time > 0.0 or _roll_cooldown > 0.0:
 		return
 	var dir: Vector2 = _movement_direction()
 	if dir.length() < 0.1:
@@ -837,7 +838,7 @@ func use_mana_potion() -> void:
 
 
 func take_damage(amount: float, attacker: Node2D = null) -> void:
-	if dead or _invulnerable > 0.0:
+	if dead or warp_locked or _invulnerable > 0.0:
 		return
 	var armor := defense()
 	var dealt := maxf(1.0, amount * (1.0 - armor / (armor + 30.0))) * (1.0 - minf(0.5, passive("resist")))

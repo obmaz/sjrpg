@@ -244,6 +244,8 @@ func review_snapshot() -> Dictionary:
 				{
 					"id": marker["id"],
 					"name": marker["label"],
+					"category": MapGeometry.category(marker),
+					"color": marker["color"].to_html(),
 					"world": [marker["pos"].x, marker["pos"].y],
 					"point": [point.x, point.y],
 					"badge": [badge.position.x, badge.position.y, badge.size.x, badge.size.y],

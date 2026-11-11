@@ -2,7 +2,7 @@ class_name GamepadNavigation
 extends Node
 ## Ordered focus scopes; gameplay remains owned by Game/Gamepad.
 var _scope: Control
-var _buttons: Array[BaseButton] = []
+var _buttons: Array[Control] = []
 var _focus_index := 0
 var _refresh_time := 0.0
 var _last_key := ""
@@ -53,22 +53,22 @@ func _process(delta: float) -> void:
 		_refresh()
 
 
-func _valid(button: BaseButton) -> bool:
-	return is_instance_valid(button) and not button.is_queued_for_deletion() and button.is_visible_in_tree() and not button.disabled
+func _valid(button: Control) -> bool:
+	return is_instance_valid(button) and not button.is_queued_for_deletion() and button.is_visible_in_tree() and (not button is BaseButton or not (button as BaseButton).disabled)
 
 
-func _collect(node: Node, result: Array[BaseButton]) -> void:
+func _collect(node: Node, result: Array[Control]) -> void:
 	for child: Node in node.get_children():
 		if child.is_queued_for_deletion():
 			continue
-		if child is BaseButton:
-			var button := child as BaseButton
+		if child is BaseButton or (child is Control and child.get_meta("gamepad_target", false) and child.has_signal("pressed")):
+			var button := child as Control
 			if _valid(button) and (button.mouse_filter != Control.MOUSE_FILTER_IGNORE or bool(button.get_meta("gamepad_target", false))):
 				result.append(button)
 		_collect(child, result)
 
 
-func _key(button: BaseButton) -> String:
+func _key(button: Control) -> String:
 	if button.has_meta("gamepad_key"):
 		return str(button.get_meta("gamepad_key"))
 	if button is Button and not (button as Button).text.is_empty():
@@ -80,7 +80,7 @@ func _refresh() -> void:
 	if not is_instance_valid(_scope):
 		_buttons.clear()
 		return
-	var found: Array[BaseButton] = []
+	var found: Array[Control] = []
 	if _scope is PanelFrame:
 		var frame := _scope as PanelFrame
 		_collect(frame.tab_row, found)
@@ -90,7 +90,7 @@ func _refresh() -> void:
 	else:
 		_collect(_scope, found)
 	_buttons = found
-	for button: BaseButton in _buttons:
+	for button: Control in _buttons:
 		button.focus_mode = Control.FOCUS_ALL
 		if not button.has_meta("gamepad_focus_style"):
 			var border := StyleBoxFlat.new()
@@ -104,7 +104,7 @@ func _refresh() -> void:
 	if not Gamepad.using_gamepad or _buttons.is_empty():
 		return
 	var focused := get_viewport().gui_get_focus_owner()
-	if focused is BaseButton and _buttons.has(focused):
+	if focused != null and _buttons.has(focused):
 		_focus_index = _buttons.find(focused)
 		_last_key = _key(focused)
 		return
@@ -120,7 +120,7 @@ func _refresh() -> void:
 				target = index
 				break
 	if target < 0 and _scope.has_method("gamepad_initial_focus"):
-		var preferred := _scope.call("gamepad_initial_focus") as BaseButton
+		var preferred := _scope.call("gamepad_initial_focus") as Control
 		target = _buttons.find(preferred)
 	if target < 0:
 		target = mini(_focus_index, _buttons.size() - 1)
@@ -141,13 +141,13 @@ func _focus(index: int) -> void:
 		parent = parent.get_parent()
 
 
-func _activate(button: BaseButton) -> void:
+func _activate(button: Control) -> void:
 	if not _valid(button):
 		return
 	Gamepad.require_neutral()
-	if button.toggle_mode:
-		button.button_pressed = not button.button_pressed
-	button.pressed.emit()
+	if button is BaseButton and (button as BaseButton).toggle_mode:
+		(button as BaseButton).button_pressed = not (button as BaseButton).button_pressed
+	button.emit_signal("pressed")
 	_refresh_time = 0.0
 
 
@@ -164,7 +164,7 @@ func _back() -> void:
 	if _scope.has_method("gamepad_back") and bool(_scope.call("gamepad_back")):
 		Gamepad.require_neutral()
 		return
-	for button: BaseButton in _buttons:
+	for button: Control in _buttons:
 		if button is Button and (button as Button).text == "취소":
 			_activate(button)
 			return
@@ -199,7 +199,7 @@ func _action(action: String) -> void:
 					_scope.call("gamepad_accept")
 				else:
 					_refresh()
-					var focus := get_viewport().gui_get_focus_owner() as BaseButton
+					var focus := get_viewport().gui_get_focus_owner() as Control
 					if focus != null and _buttons.has(focus):
 						_activate(focus)
 			"roll":
@@ -240,7 +240,7 @@ func review_snapshot() -> Dictionary:
 	if focus != null:
 		rect = focus.get_global_rect()
 	var keys: Array[String] = []
-	for button: BaseButton in _buttons:
+	for button: Control in _buttons:
 		if _valid(button) and is_instance_valid(_scope):
 			keys.append(_key(button))
 	return {"target_keys": keys, "focus_text": (focus as Button).text if focus is Button else "", "scope": str(_scope.name) if is_instance_valid(_scope) else "",

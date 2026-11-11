@@ -21,7 +21,7 @@ func _clear(game: Node) -> void:
 func run() -> void:
 	var sheet: Texture2D = load("res://assets/art/actors/corpses.webp")
 	check("corpse atlas contains the five generated enemy images", sheet != null and sheet.get_size() == Vector2(1280, 256))
-	check("new corpse crossfades from the actor", CorpseArt.opacity(30.0) == 0.0 and is_equal_approx(CorpseArt.opacity(29.82), 1.0))
+	check("new corpse crossfades from the actor", CorpseArt.opacity(15.0) == 0.0 and is_equal_approx(CorpseArt.opacity(14.82), 1.0))
 	var game := await make_game()
 	game._spawn_timer = 10000.0
 	game.player.set_process(false)
@@ -109,7 +109,7 @@ func run() -> void:
 	var cave_visual: Node2D = cave_body["visual"]
 	check("map swap culls the forest body and parents the cave body locally", game.field_root.visibility_layer == 0 and forest_visual.is_inside_tree() and cave_visual.get_parent() == game.world and cave_visual.z_index == -1)
 	game.dungeon.tick(1.0)
-	check("cave uses the same timer while hidden forest bodies stay frozen", cave_body["time"] == game.CORPSE_LIFETIME - 1.0 and forest_body["time"] == game.CORPSE_LIFETIME)
+	check("cave and hidden forest bodies share elapsed adventure time", cave_body["time"] == game.CORPSE_LIFETIME - 1.0 and forest_body["time"] == game.CORPSE_LIFETIME-1.0)
 	var cave_action: Callable = game.player._prepare("findItem", guaranteed_item, 1)
 	game.dungeon.leave("시체 검사")
 	check("leaving cave restores only forest bodies and invalidates cave targets", game.corpses.size() == 1 and game.corpses.has(forest_body) and cave_body["used"] and cave_body["time"] == 0.0)

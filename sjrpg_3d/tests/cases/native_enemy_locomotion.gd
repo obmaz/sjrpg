@@ -16,6 +16,7 @@ func run() -> void:
 			"stride measures the current GLB contact feet " + kind,
 			(
 				actual["contact_bones"] == gait["contact_bones"]
+				and _curves_near(actual["distance_curve"], gait["distance_curve"])
 				and actual["model_sha256"] == gait["model_sha256"]
 				and int(actual["contact_samples"]) == int(gait["contact_samples"])
 				and (
@@ -29,11 +30,11 @@ func run() -> void:
 			var phase := visual.travel_cycle(distance * scale_factor * 0.37, scale_factor)
 			NativeEnemyModels.pose(model, 0.7, phase, 0.0)
 			check(
-				"scaled body travels its own stride " + kind,
-				is_equal_approx(
-					visual.sample_time, float(visual.manifest["clips"]["run"]["length"]) * 0.37
-				)
+				"scaled body uses the same contact-distance clock " + kind,
+				absf(_curve_at(gait["distance_curve"], fposmod(phase, 1.0)) - .37) < .00001
 			)
+
+		_check_foot_slide(kind, visual)
 		visual.free()
 	var game := await make_game("mage")
 	game.set_process(false)
@@ -106,3 +107,69 @@ func run() -> void:
 	Fixture.remove([floor_body, wall])
 	game.queue_free()
 	await _frames(2)
+
+
+func _curve_at(curve: Array, phase: float) -> float:
+	var index := phase * (curve.size() - 1)
+	var first := mini(floori(index), curve.size() - 2)
+	return lerpf(float(curve[first]), float(curve[first + 1]), index - first)
+
+
+func _check_foot_slide(kind: String, visual: NativeEnemyVisual) -> void:
+	var gait: Dictionary = visual.manifest["locomotion"]
+	var names: Array = gait["contact_bones"]
+	var curve: Array = gait["distance_curve"]
+	var frames := curve.size() - 1
+	var poses: Array[PackedVector3Array] = []
+	var lows := PackedFloat64Array()
+	var spans := PackedFloat64Array()
+	for name: String in names:
+		poses.append(PackedVector3Array())
+	for frame in frames + 1:
+		visual.sample("run", float(visual.manifest["clips"]["run"]["length"]) * frame / frames)
+		visual.skeleton.force_update_all_bone_transforms()
+		for foot in names.size():
+			poses[foot].append(
+				visual.skeleton.get_bone_global_pose(visual.skeleton.find_bone(names[foot])).origin
+			)
+	for track in poses:
+		var low := INF
+		var high := -INF
+		for p in track:
+			low = minf(low, p.y)
+			high = maxf(high, p.y)
+		lows.append(low)
+		spans.append(maxf(.05, high - low))
+	var residual := 0.0
+	var samples := 0
+	for frame in frames:
+		var lowest := INF
+		var foot_delta := 0.0
+		for foot in names.size():
+			var a := poses[foot][frame]
+			var b := poses[foot][frame + 1]
+			var height := ((a.y + b.y) * .5 - lows[foot]) / spans[foot]
+			if height < .25 and (a.z - b.z) * frames > .05 and height < lowest:
+				lowest = height
+				foot_delta = b.z - a.z
+		if is_finite(lowest):
+			var body_delta: float = (
+				(float(curve[frame + 1]) - float(curve[frame])) * float(gait["distance_per_clip_m"])
+			)
+			# 지면에 둔 발의 월드 변위: 몸체 이동 + 실제 골격의 로컬 이동.
+			residual += absf(body_delta + foot_delta) / body_delta
+			samples += 1
+	print("GROUNDED_FOOT_SLIDE ", kind, " ", residual / samples)
+	check(
+		"grounded feet stay within 10 percent longitudinal slip " + kind,
+		samples >= 12 and residual / samples < .10
+	)
+
+
+func _curves_near(a: Array, b: Array) -> bool:
+	if a.size() != b.size():
+		return false
+	for i in a.size():
+		if absf(float(a[i]) - float(b[i])) > .000001:
+			return false
+	return true

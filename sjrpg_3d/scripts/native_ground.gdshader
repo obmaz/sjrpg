@@ -14,7 +14,7 @@ uniform sampler2D site_rock : source_color, filter_linear_mipmap_anisotropic, re
 uniform mat4 world_to_cave;
 uniform vec2 cave_trail[10];
 uniform vec4 cave_trail_bounds;
-varying vec2 ground_world;
+varying highp vec2 ground_world;
 varying float ground_height;
 
 float hash_ground(vec2 p) {
@@ -113,12 +113,12 @@ void fragment() {
 			trail_d = min(trail_d,length(site.xz-a-segment*t));
 		}
 		float wear_d = trail_d+(ground_noise(ground_world*2.4)-0.5)*0.42;
-		float verge = 1.0-smoothstep(1.2,2.6,wear_d);
+		float verge = 1.0-smoothstep(2.0,3.0,wear_d);
 		color = mix(color,grass*vec3(0.88,0.84,0.69),verge*0.50);
-		float worn = 1.0-smoothstep(0.78,1.7,wear_d);
-		vec3 soil = texture(earth_texture,ground_world/2.56).rgb*vec3(0.83,0.78,0.66);
+		float worn = 1.0-smoothstep(1.25,2.0,wear_d);
+		vec3 soil = texture(earth_texture,ground_world/2.56).rgb*vec3(1.30,1.12,0.86);
 		vec3 grit = texture(bank_atlas,(vec2(1.0)+mix(vec2(0.018),vec2(0.982),mirrored(ground_world/2.0)))*0.5).rgb;
-		color = mix(color,mix(soil,grit*0.73,0.18+zone*0.25),worn*0.92);
+		color = mix(color,mix(soil,grit*0.97,0.28+zone*0.25),worn);
 	}
 	vec3 dx = dFdx(vec3(ground_world.x,paving_relief,ground_world.y));
 	vec3 dy = dFdy(vec3(ground_world.x,paving_relief,ground_world.y));

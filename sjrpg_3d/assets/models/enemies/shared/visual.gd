@@ -68,7 +68,20 @@ func advance_idle(delta: float, held: bool) -> void:
 func travel_cycle(distance_m: float, body_scale: float) -> float:
 	prepare()
 	var locomotion: Dictionary = manifest["locomotion"]
-	return distance_m / (float(locomotion["distance_per_clip_m"]) * body_scale)
+	var cycles := distance_m / (float(locomotion["distance_per_clip_m"]) * body_scale)
+	var whole := floorf(cycles)
+	var distance := cycles - whole
+	var curve: Array = locomotion["distance_curve"]
+	var low := 0
+	var high := curve.size() - 1
+	while high - low > 1:
+		var middle := (low + high) / 2
+		if float(curve[middle]) <= distance:
+			low = middle
+		else:
+			high = middle
+	var fraction := inverse_lerp(float(curve[low]), float(curve[high]), distance)
+	return whole + (low + fraction) / (curve.size() - 1)
 
 
 func sample(clip: String, time: float) -> void:

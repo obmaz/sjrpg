@@ -82,7 +82,7 @@
     },
     {
       "path": "scripts/native_ground.gdshader",
-      "sha256": "cd8ba55352d6130f8b50b848e25b7dc9408c7e36e3a78ccf62956afe8259a155"
+      "sha256": "642ff3354a6036e285bc6a5edce9c149ecc21d1eba45f725a798dc17f4151aa6"
     },
     {
       "path": "scripts/native_ground_3d.gd",
@@ -114,7 +114,7 @@
     },
     {
       "path": "scripts/grass_variety.gdshaderinc",
-      "sha256": "919d9c2339c990b63830672ba8b9854bd75fcd6aac7ddf345e4655d1ff36901d"
+      "sha256": "297adbefb2c6ba6b5a5a636717aadc8f9ad779ab9aec13286d46e0c9f6d03873"
     },
     {
       "path": "assets/models/materials/terrain/surfaces.gd",

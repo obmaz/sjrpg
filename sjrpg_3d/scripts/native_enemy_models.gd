@@ -223,7 +223,7 @@ static func place_corpse(presenter: Node, model: Dictionary, corpse: Dictionary)
 		model["_corpse_placement_key"] = key
 		model["_corpse_placement_updates"] = int(model.get("_corpse_placement_updates", 0)) + 1
 	var opacity := CorpseArt.opacity(
-		float(corpse.get("time", 0.0)), float(corpse.get("lifetime", 30.0))
+		float(corpse.get("time", 0.0)), float(corpse.get("lifetime", 15.0))
 	)
 	root.visible = not bool(corpse.get("used", false)) and opacity > 0.0
 	tint(model, Color.WHITE, 0.0, Color.WHITE, opacity)

@@ -16,13 +16,13 @@ func _draw() -> void:
 	draw(self, corpse)
 
 
-static func opacity(remaining: float, lifetime := 30.0) -> float:
+static func opacity(remaining: float, lifetime := 15.0) -> float:
 	# Crossfade from the falling actor, then fade out during the last three seconds.
 	return clampf((lifetime - remaining) / 0.18, 0.0, 1.0) * clampf(remaining / 3.0, 0.0, 1.0)
 
 
 static func draw(canvas: Node2D, corpse: Dictionary) -> void:
-	var alpha := opacity(float(corpse.get("time", 0.0)), float(corpse.get("lifetime", 30.0)))
+	var alpha := opacity(float(corpse.get("time", 0.0)), float(corpse.get("lifetime", 15.0)))
 	if alpha <= 0.0 or corpse.get("used", false):
 		return
 	if _sheet == null:

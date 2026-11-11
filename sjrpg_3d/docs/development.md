@@ -22,7 +22,7 @@
 
 ## 지도
 
-`MapWorldState`는 실제 건축 루트·성문 변환과 공유 지형 설계를 프레임당 한 번 확인하고 변경 시에만 두 지도용 도형과 메시를 갱신합니다. `MapGeometry`는 살아 있는 시설·진입 노드에서 표식을 만들고, `WorldMapCanvas`와 `MapPlaceRow`는 같은 번호/좌표를 표시합니다. 상세 계약과 검사는 [지도 구조](world-map.md)를 따릅니다.
+`MapWorldState`는 실제 건축 루트·성문 변환과 공유 지형 설계를 프레임당 한 번 확인하고 변경 시에만 두 지도용 도형과 메시를 갱신합니다. `MapGeometry`는 살아 있는 시설·진입 노드에서 표식을 만들고, `WorldMapCanvas`와 `MapPlaceRow`는 같은 번호/좌표를 표시합니다. 행은 터치 입력을 부모 스크롤에 전달하는 리스트 컨트롤이며, `GamepadNavigation`은 `gamepad_target`과 `pressed` 신호를 가진 비버튼 컨트롤도 탐색합니다. 상세 계약과 검사는 [지도 구조](world-map.md)를 따릅니다.
 
 ## 저장과 입력
 
@@ -125,3 +125,7 @@ tools/serve.sh
 ## 건물 씬과 제작 도구
 
 마을의 주택 네 채·예배당·성곽/성문·다리는 `NativeArchitectureAssets`가 개별 GLB 씬을 인스턴스화합니다. 메시·UV·문짝 피벗은 GLB, 엔진 전용 표면은 씬의 공유 재질, 측정/노드 경로는 자산별 `layout.tres`에 있습니다. `NativeHouse3D`·`Ortho3DChapel`·`NativeBridge3D`는 배치 어댑터이며 `Ortho3DFortification`은 기존 성문 상태만 연결합니다. 실제 이동/충돌은 기존 Plan과 `SpatialWorld3D`가 유지합니다. 모델링 코드는 `tools/architecture_art/`로 옮겼으며 APK/Web에서 제외합니다. 자산별 재현·외부 제작·검수는 [건물 GLB 계약](native-architecture-models.md)을 따릅니다.
+
+몬스터 보행의 `locomotion.distance_curve`는 오프라인120Hz 지지발 측정으로 만든 거리→GLB 시각 표입니다. 실시간 실제 이동 거리를 역보간하며, 접지 시각마다 평균 속도에서 어긋나던 앞뒤 발 움직임을 보정합니다. [모델·재측정 계약](native-enemy-models.md)을 따릅니다.
+
+`WarpTravel`은 수락·잠금·전환 시계를, `Exploration._complete_warp`는 실제 도착 재검증·공간 이동·회복·저장을 소유합니다. `NativeWarpFx`는 그 시계만 읽어 전체 배우 알파와 재사용하는 빛을 표시합니다. `Game._tick_corpse_list`는 활성 영역과 동굴 방문 중 숨겨진 필드의 시체 수명을 같은 모험 시계로 처리합니다. 기본15초/끝3초 페이드이며 삭제 시 스킬 대상·원본 기록·3D 표시를 함께 정리합니다. `warp_transition`과 `corpse_expiry`가 실제 공간/재질 복원과 정상 프레임 만료를 검증합니다.

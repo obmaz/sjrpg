@@ -40,6 +40,10 @@ def check(kind):
     assert gait["model_sha256"] == proof["runtime_sha256"]
     assert 0.2 < gait["distance_per_clip_m"] < 30.0
     assert gait["contact_samples"] >= 12 and gait["sample_hz"] == 120
+    curve = gait["distance_curve"]
+    assert gait["method"] == "support_distance_v1" and len(curve) >= 60
+    assert curve[0] == 0.0 and curve[-1] == 1.0
+    assert all(0 <= a < b <= 1 for a, b in zip(curve, curve[1:]))
     assert digest(ROOT / proof["converter"]) == proof["converter_sha256"]
     assert conversion.get("max_skin_fit_error_m", 0.0) < 0.02
     for dependency in proof.get("converter_dependencies", []):

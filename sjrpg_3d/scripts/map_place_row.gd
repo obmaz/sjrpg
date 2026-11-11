@@ -1,20 +1,29 @@
 class_name MapPlaceRow
-extends Button
-## 긴 장소명/설명은 줄바꿈하고 행 높이를 늘린다. 지도 번호와 동일한 번호를 표시한다.
+extends PanelContainer
+## 터치 드래그를 부모 ScrollContainer에 전달하고 짧은 탭/키보드 확인만 선택으로 처리한다.
+signal pressed
 var place_id := ""
 var _number: Label
 var _name: Label
 var _detail: Label
+var _category: Label
 var _margin: MarginContainer
+var _ink := Color.WHITE
+var _selected := false
+var _pointer := -2
+var _drag := Vector2.ZERO
 
 
 func setup(index: int, marker: Dictionary) -> MapPlaceRow:
 	place_id = marker["id"]
-	custom_minimum_size = Vector2(0, 78)
+	_ink = marker["color"]
+	custom_minimum_size = Vector2(0, 82)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	UiKit.style_button(self)
+	mouse_filter = Control.MOUSE_FILTER_PASS
+	focus_mode = Control.FOCUS_ALL
+	set_meta("gamepad_target", true)
+	set_meta("gamepad_key", "map:" + place_id)
 	_margin = MarginContainer.new()
-	_margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
 		_margin.add_theme_constant_override("margin_" + side, 10)
 	_margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -23,7 +32,7 @@ func setup(index: int, marker: Dictionary) -> MapPlaceRow:
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_theme_constant_override("separation", 12)
 	_margin.add_child(row)
-	_number = UiKit.label(str(index), 21, marker["color"], true)
+	_number = UiKit.label(str(index), 21, _ink, true)
 	_number.custom_minimum_size.x = 34
 	_number.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(_number)
@@ -31,28 +40,66 @@ func setup(index: int, marker: Dictionary) -> MapPlaceRow:
 	words.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(words)
+	_category = UiKit.label(MapGeometry.category(marker), 14, _ink)
+	words.add_child(_category)
 	_name = UiKit.label(marker["label"], 19, UiKit.TEXT, true)
 	_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	words.add_child(_name)
 	_detail = UiKit.label("", 15, UiKit.MUTED)
 	_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_detail.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	words.add_child(_detail)
+	for label: Label in [_category, _name, _detail]:
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_margin.minimum_size_changed.connect(_fit_height)
+	focus_entered.connect(_restyle)
+	focus_exited.connect(_restyle)
+	_restyle()
 	return self
 
 
+func _restyle() -> void:
+	var skin := StyleBoxFlat.new()
+	skin.bg_color = Color(_ink, .13 if _selected else .025)
+	skin.border_color = Color(_ink, .85 if _selected or has_focus() else .23)
+	skin.border_width_bottom = 1
+	skin.border_width_left = 3 if _selected or has_focus() else 0
+	add_theme_stylebox_override("panel", skin)
+
+
 func _fit_height() -> void:
-	custom_minimum_size.y = maxf(78, _margin.get_combined_minimum_size().y)
+	custom_minimum_size.y = maxf(82, _margin.get_combined_minimum_size().y)
 
 
 func update_state(marker: Dictionary, distance_m: float, selected: bool) -> void:
 	var summary := "%d m · %s" % [roundi(distance_m), marker["detail"]]
-	if _detail.text != summary:
-		_detail.text = summary
-	if _name.text != marker["label"]:
-		_name.text = marker["label"]
-	if bool(get_meta("selected", false)) != selected:
-		UiKit.style_button(self, false, selected)
-		set_meta("selected", selected)
+	_detail.text = summary
+	_name.text = marker["label"]
+	if selected != _selected:
+		_selected = selected
+		_restyle()
+
+
+func _gui_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_accept") and not event.is_echo():
+		pressed.emit()
+		accept_event()
+	elif event is InputEventScreenTouch:
+		_pointer_event(event.position, event.pressed, event.index)
+	elif event is InputEventScreenDrag and event.index == _pointer:
+		_drag += event.relative
+	elif event is InputEventMouseButton and event.device != InputEvent.DEVICE_ID_EMULATION:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			_pointer_event(event.position, event.pressed, -1)
+	elif event is InputEventMouseMotion and _pointer == -1:
+		_drag += event.relative
+
+
+func _pointer_event(at: Vector2, down: bool, index: int) -> void:
+	if down:
+		_pointer = index
+		_drag = Vector2.ZERO
+	elif index == _pointer:
+		_pointer = -2
+		if _drag.length() < 12 and Rect2(Vector2.ZERO, size).has_point(at):
+			grab_focus()
+			pressed.emit()

@@ -50,8 +50,8 @@ func run() -> void:
 	check(
 		"corpse lifetime remains game-owned",
 		(
-			is_zero_approx(CorpseArt.opacity(30))
-			and is_equal_approx(CorpseArt.opacity(15), 1)
+			is_zero_approx(CorpseArt.opacity(15))
+			and is_equal_approx(CorpseArt.opacity(7.5), 1)
 			and is_zero_approx(CorpseArt.opacity(0))
 		)
 	)

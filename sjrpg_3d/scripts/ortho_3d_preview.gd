@@ -87,6 +87,7 @@ var _was_paused := false
 var _static_batch := {}
 var _batch_gpu_error := -1.0
 var _hero_motion: Ortho3DHeroMotion
+var _warp_fx: NativeWarpFx
 var _level_up_fx: Ortho3DLevelUp
 var _combat_fx: NativeCombatFx3D
 var _trees: Node3D
@@ -183,6 +184,7 @@ func _ready() -> void:
 	_build_residents()
 	_affordances = Ortho3DAffordances.new().setup(self)
 	_level_up_fx = Ortho3DLevelUp.new().setup(self)
+	_warp_fx = NativeWarpFx.new().setup(self)
 	_combat_fx = NativeCombatFx3D.new().setup(self)
 	_enemy_models = NativeEnemyModels.new().setup(self)
 	_enemy_feedback = NativeEnemyFeedback3D.new().setup(self)
@@ -453,6 +455,7 @@ func _process(delta: float) -> void:
 	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE if frozen else SubViewport.UPDATE_ALWAYS
 	_sync_camera()
 	_sync_actor(0.0 if frozen else delta)
+	_warp_fx.sync()
 	_enemy_models.sync(0.0 if frozen else delta)
 	_enemy_feedback.sync()
 	_sync_cards()
@@ -553,11 +556,13 @@ func _publish_probe() -> void:
 		"batch_corner_error_m": _batch_gpu_error,
 		"physics_bodies": physics.actor_bodies.size() if physics != null else 0,
 		"physics_ticks": physics.physics_ticks if physics != null else 0,
+		"warp_transition": {"active": game.exploration.transition.active, "age": game.exploration.transition.age, "opacity": game.exploration.transition.opacity(), "transferred": game.exploration.transition.transferred},
 		"level_up_fx": _level_up_fx._entries.size() if _level_up_fx != null else 0,
 		"waypoint_discoveries": _level_up_fx._entries.values().filter(func(entry: Dictionary): return entry["root"].name == "WaypointDiscovery").size(),
 		"announcement": game.hud._level_up.heading if is_instance_valid(game.hud._level_up) and game.hud._level_up.active else "",
 		"generic_projectiles": _combat_fx.snapshot() if _combat_fx != null else {},
 		"native_residents": _native_residents.snapshot() if _native_residents != null else {},
+		"native_corpses": _world_environment._corpses.size() if _world_environment != null else 0,
 		"native_enemies": _enemy_models.snapshot() if _enemy_models != null else {},
 		"enemy_feedback": _enemy_feedback.snapshot() if _enemy_feedback != null else {},
 		"native_zones": _zone_fx.snapshot() if _zone_fx != null else {},

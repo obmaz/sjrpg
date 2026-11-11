@@ -21,9 +21,9 @@ func run() -> void:
 		Iso.unproject(start).distance_to(Vector2(0, 6500)) < .01
 	)
 	check(
-		"three actual signs share the route plan",
+		"four actual signs guide both the field route and waypoint approach",
 		(
-			NativeCaveTrail.signs(game.village).size() == 3
+			NativeCaveTrail.signs(game.village).size() == 4
 			and (
 				(
 					game
@@ -33,7 +33,7 @@ func run() -> void:
 					. find_children("CaveTrailSign*", "Node3D", true, false)
 					. size()
 				)
-				== 3
+				== 4
 			)
 		)
 	)

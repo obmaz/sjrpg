@@ -5,9 +5,13 @@ extends Node
 const NAMES := {"town": "숲 마을", "tree": "고목의 쉼터", "cave": "동굴 입구"}
 const GATE_RANGE := 100.0
 var game: Node
+var transition: WarpTravel
+
 
 func setup(g: Node) -> Exploration:
 	game = g
+	transition = WarpTravel.new().setup(g)
+	add_child(transition)
 	return self
 
 
@@ -29,14 +33,21 @@ func gate_origin() -> String:
 		return ""
 	for id in NAMES:
 		if game.player.position.distance_to(gate_point(id)) < GATE_RANGE:
-			if id != "town" and not GameState.discovered_sanctuaries.has(id) and not on_waypoint(id):
+			if (
+				id != "town"
+				and not GameState.discovered_sanctuaries.has(id)
+				and not on_waypoint(id)
+			):
 				continue
 			return id
 	return ""
 
 
 func on_waypoint(id: String) -> bool:
-	return (Iso.unproject(game.player.position-gate_point(id))/SpatialWorld3D.UNITS).length() <= NativeWaypoint3D.RADIUS*0.86
+	return (
+		(Iso.unproject(game.player.position - gate_point(id)) / SpatialWorld3D.UNITS).length()
+		<= NativeWaypoint3D.RADIUS * 0.86
+	)
 
 
 func gate_nearby() -> bool:
@@ -63,7 +74,7 @@ func discover_current() -> String:
 		if id == "town":
 			game.toast("안식처 발견 · " + NAMES[id])
 		else:
-			RewardFx.discover_waypoint(game,gate_point(id))
+			RewardFx.discover_waypoint(game, gate_point(id))
 			game.hud.show_waypoint_discovery(NAMES[id])
 		SoundFx.play("warp")
 		changed = true
@@ -81,11 +92,17 @@ func _process(delta: float) -> void:
 	if discover_current() == "":
 		return
 	if travel_block_reason() == "":
-		game.player.hp = minf(game.player.max_hp, game.player.hp + game.player.max_hp * 0.15 * delta)
-		game.player.resource = minf(game.player.resource_max, game.player.resource + game.player.resource_max * 0.2 * delta)
+		game.player.hp = minf(
+			game.player.max_hp, game.player.hp + game.player.max_hp * 0.15 * delta
+		)
+		game.player.resource = minf(
+			game.player.resource_max, game.player.resource + game.player.resource_max * 0.2 * delta
+		)
 
 
 func _origin_block_reason(require_gate: bool) -> String:
+	if transition.active:
+		return "워프 중입니다."
 	if game.dungeon.active:
 		return "동굴 안에서는 워프하거나 안식처로 이동할 수 없습니다."
 	if game.player.dead:
@@ -95,7 +112,12 @@ func _origin_block_reason(require_gate: bool) -> String:
 	if not require_gate and current_origin() == "":
 		return "워프게이트나 안식처 곁에서 이동할 수 있습니다."
 	var origin := current_origin()
-	if origin != "" and origin != "town" and not GameState.discovered_sanctuaries.has(origin) and not on_waypoint(origin):
+	if (
+		origin != ""
+		and origin != "town"
+		and not GameState.discovered_sanctuaries.has(origin)
+		and not on_waypoint(origin)
+	):
 		return "바닥의 웨이포인트를 밟아 활성화하세요."
 	if GameState.boss_summoned and not GameState.boss_defeated:
 		return "파수꾼 도전 중에는 이동할 수 없습니다."
@@ -135,7 +157,10 @@ func _safe_near(center: Vector2, gate_id := "") -> Vector2:
 			if gate_id != "" and candidate.distance_to(gate_point(gate_id)) >= GATE_RANGE:
 				continue
 			var resolved: Vector2 = game.resolve_movement(candidate, candidate, Player.RADIUS)
-			if resolved.distance_to(candidate) < 1.0 and not game._blocked(candidate, Player.RADIUS):
+			if (
+				resolved.distance_to(candidate) < 1.0
+				and not game._blocked(candidate, Player.RADIUS)
+			):
 				return candidate
 	return Vector2.INF
 
@@ -148,7 +173,7 @@ func safe_point(id: String) -> Vector2:
 
 func gate_approach(id := "town") -> Vector2:
 	if id != "town":
-		return _safe_near(gate_point(id),id)
+		return _safe_near(gate_point(id), id)
 	# 마을의 수직 성문은 앞쪽으로, 야외 지면 표식은 중앙으로 도착한다.
 	return _safe_near(gate_point(id) + Vector2(0, 72), id)
 
@@ -172,29 +197,42 @@ func _move_to(destination: String, require_gate: bool) -> bool:
 	if not arrival.is_finite():
 		game.toast("도착 지점이 막혀 이동할 수 없습니다")
 		return false
-	# A paused destination panel must not preserve a held cast or a delayed melee contact across the map.
+	_clear_warp_input()
+	transition.begin(destination)
+	return true
+
+
+func _clear_warp_input() -> void:
+	# 일시정지 패널의 누른 입력·지연 타격·마우스 이동 목표를 양쪽 단계에서 비운다.
 	game.player.move_input = Vector2.ZERO
 	game.player.held_slots.clear()
 	game.player._pending = Callable()
 	game.player._attack_time = 0.0
+	game.player._release_pending = false
+	game.player._swing_sound_pending = false
+	game.player._release_sound = ""
+	game.player._hitstop.clear()
 	game.player._roll_time = 0.0
 	game.player.sprite.clear_contact_hold()
 	game.hud.controls.release_all()
 	for action in ["move_left", "move_right", "move_up", "move_down", "attack", "skill"]:
 		Input.action_release(action)
-	var departure: Vector2 = game.player.position
-	RewardFx.spawn(game, departure + Vector2(0, -24), 1)
-	game.player.position = arrival
-	RewardFx.spawn(game, arrival + Vector2(0, -24), 1)
+	game.player.clear_move_target()
+
+
+func _complete_warp(destination: String) -> bool:
+	var arrival := gate_approach(destination)
+	if not arrival.is_finite():
+		game.toast("도착 지점이 막혀 워프를 취소했습니다")
+		return false
+	game.spatial_world.teleport_source_actor(game.player, arrival, Player.RADIUS)
 	game.player.refresh_stats(true)
 	game.player.resource = game.player.resource_max
-	game.camera.position = game.player.position
+	game.camera.position = game._camera_focus()
 	game.camera.offset = Vector2.ZERO
 	game._impact_offset = Vector2.ZERO
 	game.camera.reset_smoothing()
 	GameState.last_sanctuary = destination
 	GameState.save_game()
-	SoundFx.play("warp")
-	Prefs.pulse("dodge")
 	game.toast("워프 완료 · " + NAMES[destination])
 	return true

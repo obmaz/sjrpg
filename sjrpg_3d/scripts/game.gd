@@ -6,7 +6,7 @@ signal restart_requested
 
 ## Field in ground units (original scale): the town perimeter is data-driven.
 const FIELD := ForestRegion.FIELD
-const CORPSE_LIFETIME := 30.0
+const CORPSE_LIFETIME := 15.0
 const CORPSE_LIMIT := 32
 const CAMERA_WORLD_SCALE := 1.6
 ## Periodic safety net only. Loot, level-ups, quests, purchases and backgrounding
@@ -166,6 +166,9 @@ func _ready() -> void:
 	for i in 12:
 		_spawn_enemy(true)
 	await ortho_preview._occlusion.warm_up()
+	if is_queued_for_deletion():
+		return
+	await ortho_preview._warp_fx.warm_up()
 	if is_queued_for_deletion():
 		return
 	native_ready = true
@@ -638,6 +641,8 @@ func _warp_preview() -> void:
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.__sjrpgWarpPreviewButton = " + JSON.stringify([center.x, center.y]))
 	await panel.closed
+	if exploration.transition.active:
+		await exploration.transition.finished
 	if not is_queued_for_deletion() and OS.has_feature("web"):
 		var arrived := GameState.last_sanctuary == "tree" and exploration.gate_origin() == "tree" and not _blocked(player.position, Player.RADIUS)
 		JavaScriptBridge.eval("window.__sjrpgWarpPreviewArrived = " + ("true" if arrived else "false"))
@@ -1065,7 +1070,7 @@ func screen_to_world(screen: Vector2) -> Vector2:
 
 ## Pad actions are device-owned; they never synthesize keyboard or touch holds.
 func _gamepad_playable() -> bool:
-	return native_ready and is_instance_valid(player) and not player.dead and not get_tree().paused and is_instance_valid(hud) and not hud.panel_open() and not Gamepad.loading_blocked() and not Gamepad.navigation_scope()
+	return native_ready and is_instance_valid(player) and not player.dead and not player.warp_locked and not get_tree().paused and is_instance_valid(hud) and not hud.panel_open() and not Gamepad.loading_blocked() and not Gamepad.navigation_scope()
 
 
 func _gamepad_action(action: String) -> void:
@@ -1492,10 +1497,18 @@ func add_corpse(enemy: Enemy, searchable: bool) -> Dictionary:
 
 
 func _tick_corpses(delta: float) -> void:
-	for corpse in corpses.duplicate():
+	_tick_corpse_list(corpses, delta)
+	if dungeon.active:
+		_tick_corpse_list(dungeon._forest_corpses, delta)
+
+
+func _tick_corpse_list(records: Array, delta: float) -> void:
+	for corpse in records.duplicate():
 		corpse["time"] = maxf(0.0, float(corpse["time"]) - delta)
 		if corpse["time"] <= 0.0:
 			remove_corpse(corpse)
+			# 활성 목록 외에 보관 중인 필드 목록에서도 만료 기록을 지운다.
+			records.erase(corpse)
 		else:
 			var visual: Node2D = corpse.get("visual")
 			if is_instance_valid(visual) and visual.is_visible_in_tree():
