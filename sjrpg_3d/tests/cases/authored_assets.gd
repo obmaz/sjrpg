@@ -3,6 +3,16 @@ extends TestCase
 
 ## 독립 패키지가 실제 런타임 표면으로 연결되고 임포트 품질을 보존하는지 검사한다.
 func run() -> void:
+	var world_sources: Dictionary = JSON.parse_string(
+		FileAccess.get_file_as_string(
+			"res://assets/source/preview3d/world-refinement/provenance.json"
+		)
+	)
+	for source: Dictionary in world_sources["implementation"]:
+		check(
+			"world construction record matches current source " + str(source["path"]),
+			FileAccess.get_sha256("res://" + str(source["path"])) == source["sha256"]
+		)
 	var textures := {}
 	for id: String in ["shop", "smith", "stable", "home", "chapel", "bridge"]:
 		var material := NativeAssetSurface.material(id, Vector3(6, 5, 4), -1, 2.0)
@@ -46,12 +56,18 @@ func run() -> void:
 	var roof := NativeAssetSurface.roof_material("smith")
 	check(
 		"smith package selects its single-piece slate material",
-		roof.get_shader_parameter("cell") == 0 and roof.get_shader_parameter("atlas") == load(NativeVillageSurfaces.ROOT + "roof.png")
+		(
+			roof.get_shader_parameter("cell") == 0
+			and roof.get_shader_parameter("atlas") == load(NativeVillageSurfaces.ROOT + "roof.png")
+		)
 	)
 	var game := await make_game("mage")
 	check(
 		"the actual smithy uses its detailed roof source",
-		game.ortho_preview._materials["roof_smith"].get_shader_parameter("atlas") == roof.get_shader_parameter("atlas")
+		(
+			game.ortho_preview._materials["roof_smith"].get_shader_parameter("atlas")
+			== roof.get_shader_parameter("atlas")
+		)
 	)
 	game.queue_free()
 	await _frames(2)
