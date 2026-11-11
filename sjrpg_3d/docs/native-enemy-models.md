@@ -70,3 +70,5 @@ python3 sjrpg_3d/tools/check_enemy_assets.py
 보행 측정은 `tools/godot.sh --headless res://tools/enemy_art/measure_stride.tscn -- --write --kinds=boar,cave_crawler`처럼 종을 지정할 수 있습니다. 지정하지 않으면 전체를 측정하며 독립 모델 교체에서는 자기 종만 갱신합니다.
 
 일반 적의 공격 준비는 실제 타이머를 읽는 작은 황금색 게이지로 표시합니다. 로컬 검수는 `tools/screenshot.mjs --scene enemy_wolf|enemy_goblin|enemy_skeleton`으로 실제 AI의 준비 순간을 확인합니다. 표시·중단·일시정지와 자원 재사용 계약은 [타격감](juice.md)을 따릅니다.
+
+해골의 개별 FBX는 종별 `assets/source/enemies/skeleton/authoring.py`가 첫 idle의 실제 스킨 바닥을 한 번 측정해 동일한 기준으로 정규화합니다. 모든 클립에 같은 상수를 적용해 공격 앞뒤의 idle 블렌드도 접지하며, 공격·피격의 상대적인 수직 움직임은 보존합니다. `native_enemy_assets`가 실제 공격/피격 스킨과 블렌드 양 끝의 바닥 범위를 확인합니다.

@@ -65,10 +65,10 @@
       "duration_seconds": 4.966666666666667,
       "contact_seconds": 3.7666666666666666,
       "samples": 150,
-      "final_floor_m": 1.8769124746322632,
+      "final_floor_m": 0.0,
       "runtime_floor_range_m": [
-        1.8359777927398682,
-        1.9109762907028198
+        0.0,
+        0.0340631827712059
       ],
       "authored_auxiliary": false
     },
@@ -77,10 +77,10 @@
       "duration_seconds": 4.966666666666667,
       "contact_seconds": null,
       "samples": 150,
-      "final_floor_m": 1.8767726421356201,
+      "final_floor_m": 0.0,
       "runtime_floor_range_m": [
-        1.854538917541504,
-        1.9001905918121338
+        0.0,
+        0.02327805384993553
       ],
       "authored_auxiliary": false
     },

@@ -76,6 +76,6 @@ Android 도구 준비는 `sjrpg_3d/tools/setup_android.sh`에서 수행합니다
 
 동굴의 실제 바닥·경사·경계는 `DungeonRelief`가 공유하고, `DungeonHazards`가 장치의 시계·피해를 소유합니다. `NativeDungeonHazards`와 HUD·지도는 같은 상태를 읽습니다. 방별 진행은 `DungeonRooms`가 적 ID를 추적하고 HUD와 지도에 공유합니다. 모델 교체 경계·수명·검사는 [동굴 구조](../sjrpg_3d/docs/native-cave.md)를 따릅니다.
 
-멧돼지·잠복자의 사망 클립은 종별 원본 폴더의 `authoring.py`에서 정규화된 Z-up 공간으로 저작합니다. 변환·실제 스킨 접지·독립 보행 재측정은 [몬스터 모델 안내](../sjrpg_3d/docs/native-enemy-models.md)를 따릅니다.
+멧돼지·잠복자의 사망 클립과 해골 FBX의 공통 발 기준은 종별 원본 폴더의 `authoring.py`에서 정규화된 Z-up 공간으로 저작합니다. 변환·실제 스킨 접지·독립 보행 재측정은 [몬스터 모델 안내](../sjrpg_3d/docs/native-enemy-models.md)를 따릅니다.
 
 `NativeEnemyFeedback3D`는 체력/최근 피해·일반 적 준비 게이지·우두머리 범위를 표시합니다. AI의 실제 상태·타이머를 읽고 새 전투 시계나 판정은 소유하지 않습니다. [타격감 구조](../sjrpg_3d/docs/juice.md)를 참고하세요.

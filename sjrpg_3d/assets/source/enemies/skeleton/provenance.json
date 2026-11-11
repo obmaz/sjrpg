@@ -11,7 +11,7 @@
   "payload_sha256": "dfd455f7613e4e80636dc35af9244a61747d91d4872b11815a3cc07243efd297",
   "license_sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
   "runtime": "assets/models/enemies/skeleton/model.glb",
-  "runtime_sha256": "4d7d69acadc8e67f59aa9e4b4f2f4fb0e28386375462af345a3e0937a6b07eae",
+  "runtime_sha256": "4496b0bcd964c1f7ecffab3462fb38c5e1ded5dd901f51069096eed203dccd35",
   "conversion": "conversion.json",
   "converter": "tools/enemy_art/export_remaining.py",
   "converter_sha256": "4cfacde051d831e621c0fac072a37ab02cf68697cb0aa5ea8ef8e3b0b9b874bf",
@@ -23,6 +23,10 @@
     {
       "path": "tools/enemy_art/skin_weights.py",
       "sha256": "9bc3bede33b29b7708821b0ba5aa2ff094ecbda8d3779db5373502a1c9aa37fb"
+    },
+    {
+      "path": "assets/source/enemies/skeleton/authoring.py",
+      "sha256": "38c0321a5e836f9f47d3daab2fac9de889b5a82c64b02a01fdab8f69c598cbee"
     }
   ]
 }

@@ -62,6 +62,25 @@ func run() -> void:
 			for point in visual.posed_vertices():
 				minimum = minf(minimum, point.y)
 			check("attack skin stays above the floor " + kind + "/" + str(phase), minimum >= -.01)
+			if kind == "skeleton":
+				check("the grounded axe strike stays near its feet " + str(phase), minimum < .12)
+		if kind == "skeleton":
+			# 공격 앞뒤의 idle 블렌드와 별도 피격 FBX도 같은 발 기준이어야 한다.
+			for role in ["attack", "hit"]:
+				for fraction in [0.0, .05, .95, 1.0]:
+					visual.sample(role, float(visual.manifest["clips"][role]["length"]) * fraction)
+					var bottom := INF
+					for point in visual.posed_vertices():
+						bottom = minf(bottom, point.y)
+					check(
+						(
+							"source clip blends preserve the shared floor "
+							+ role
+							+ "/"
+							+ str(fraction)
+						),
+						bottom >= -.01 and bottom < .12
+					)
 		NativeEnemyModels.pose(model, 0, 0, 1.0)
 		check(
 			"recovery returns to the same idle without shifting physics " + kind,
