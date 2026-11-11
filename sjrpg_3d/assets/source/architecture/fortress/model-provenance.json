@@ -9,7 +9,7 @@
     },
     {
       "path": "tools/architecture_art/fortress_builder.gd",
-      "sha256": "7a244c8adb5fdba3bd121c8a734a406966bd410f1547f1eb998caa76b3182cc4"
+      "sha256": "7c4455bce47b23e02d3fe74956680335c497a1422d27e7fd442af1eb2cbd6318"
     },
     {
       "path": "scripts/iso.gd",
@@ -25,21 +25,21 @@
     },
     {
       "path": "scripts/native_fortress_plan.gd",
-      "sha256": "331d62dc95b13428497e317e3050495e8ca351e17f39bdee641ea9cbefd817e9"
+      "sha256": "8164e5fa8e50eef2298a39ec7734283d578f3a3905707af675625f9add2c3cf3"
     }
   ],
   "outputs": [
     {
       "path": "model.glb",
-      "sha256": "f88af51d0f2b95bde55e120a24e1e8e24c1a20abfb8dd6bb83ad1d0894519e86"
+      "sha256": "d3aad6d99b7038b3d45afd11ec5c6c2ca8c43729de263e522a5a1d85694bef10"
     },
     {
       "path": "layout.tres",
-      "sha256": "d3ada1b7eb435062659a088880b88a85ce93a47cfb463f2d1e5e16c2ec1c826e"
+      "sha256": "5894c40a319175724d033a1fa640b5d549f35ad3909ec0f80bc49f1c6aa1ee90"
     },
     {
       "path": "visual.tscn",
-      "sha256": "e89ec233e28dd7bd720e9b90d09242f0e618168d697572d43d17690473325a66"
+      "sha256": "41b04f79935b546a7b78b42ec04f7761d65243f8c3a8609fbe1ad21db4f9b77a"
     },
     {
       "path": "asset.json",
@@ -47,7 +47,7 @@
     },
     {
       "path": "materials/wood.tres",
-      "sha256": "4dcb7abe01abc26b934a03ab230db3128486dd40a70735b6b7e4821e9aaef18f"
+      "sha256": "cad44c48da5f9a65c1f21860f5dc2146412317d67e6cd97147a5762361278dae"
     },
     {
       "path": "materials/iron.tres",
@@ -60,20 +60,15 @@
     {
       "path": "materials/granite.tres",
       "sha256": "f299f946e441e2583f53f7c5e133cbf04328599027dd5595bc57523490c51df2"
-    },
-    {
-      "path": "materials/tower_slate.tres",
-      "sha256": "c4dc4f09bf728f143cb0d7c3396cc89146401278dfa69664129f05b80f3b7737"
     }
   ],
-  "triangles": 32136,
-  "meshes": 21,
+  "triangles": 36928,
+  "meshes": 20,
   "materialRoles": [
     "wood",
     "iron",
     "stone",
-    "granite",
-    "tower_slate"
+    "granite"
   ],
   "units": "metres; +Y up; existing +Z front and foot datum",
   "materialPolicy": "GLB contains neutral PBR slots; visual.tscn binds original Godot shaders and shared textures without image copies.",

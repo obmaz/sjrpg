@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://assets/models/architecture/shared/visual.gd" id="visual"]
 [ext_resource type="PackedScene" path="res://assets/models/architecture/fortress/model.glb" id="model"]
@@ -7,11 +7,10 @@
 [ext_resource type="Material" path="res://assets/models/architecture/fortress/materials/iron.tres" id="iron"]
 [ext_resource type="Material" path="res://assets/models/architecture/fortress/materials/stone.tres" id="stone"]
 [ext_resource type="Material" path="res://assets/models/architecture/fortress/materials/granite.tres" id="granite"]
-[ext_resource type="Material" path="res://assets/models/architecture/fortress/materials/tower_slate.tres" id="tower_slate"]
 
 [node name="Fortress" type="Node3D"]
 script = ExtResource("visual")
 layout = ExtResource("layout")
-materials = {"wood": ExtResource("wood"), "iron": ExtResource("iron"), "stone": ExtResource("stone"), "granite": ExtResource("granite"), "tower_slate": ExtResource("tower_slate")}
+materials = {"wood": ExtResource("wood"), "iron": ExtResource("iron"), "stone": ExtResource("stone"), "granite": ExtResource("granite")}
 
 [node name="Geometry" parent="." instance=ExtResource("model")]

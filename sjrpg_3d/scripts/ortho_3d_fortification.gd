@@ -12,7 +12,7 @@ var report := {}
 static func build(presenter: Node) -> Ortho3DFortification:
 	var controller := Ortho3DFortification.new()
 	controller.preview = presenter
-	var shared := {"wood": presenter._materials["wood"], "iron": presenter._materials["iron"]}
+	var shared := {"iron": presenter._materials["iron"]}
 	var visual := NativeArchitectureAssets.create("fortress", shared)
 	controller.root = visual
 	visual.name = "NativeFortification"

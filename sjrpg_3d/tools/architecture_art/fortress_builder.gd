@@ -26,6 +26,8 @@ var _mouldings := 0
 var _slit_reveals := 0
 var _slit_frames: Array[Transform3D] = []
 var _corner_windows: Array[Dictionary] = []
+var _arcades := 0
+var _decks: Array[Dictionary] = []
 
 
 static func build(presenter: Node) -> NativeFortressBuilder:
@@ -38,17 +40,16 @@ static func build(presenter: Node) -> NativeFortressBuilder:
 
 func _build() -> void:
 	_materials = preview._materials.duplicate()
-	# 기존 마을의 회청색 슬레이트를 공유한다. 원뿔의 UV는 경사 길이 기준이다.
-	var slate := StandardMaterial3D.new()
-	slate.albedo_texture = load("res://assets/art/preview3d/slate.webp")
-	slate.albedo_color = Color(0.76, 0.80, 0.84)
-	slate.roughness = 0.96
-	slate.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
-	_materials["tower_slate"] = slate
+	# 성곽 통로/문은 2D 원본의 낡은 중성 참나무색을 사용하고 다른 건물과 분리한다.
+	var oak := (_materials["wood"] as StandardMaterial3D).duplicate() as StandardMaterial3D
+	oak.albedo_color = Color(.52, .55, .58)
+	_materials["wood"] = oak
 	for key: String in ["stone", "granite"]:
 		var material := ShaderMaterial.new()
 		material.shader = load("res://scripts/native_fortress.gdshader")
-		material.set_shader_parameter("masonry_atlas", load("res://assets/art/preview3d/fortress-atlas.png"))
+		material.set_shader_parameter(
+			"masonry_atlas", load("res://assets/art/preview3d/fortress-atlas.png")
+		)
 		material.set_shader_parameter("dressed", key == "granite")
 		_materials[key] = material
 	var unit := BoxMesh.new()
@@ -98,8 +99,17 @@ func _build() -> void:
 		var shoulder := 2.55
 		var outward := _outward_normal(village.safe_zone, center)
 		var opening_sign := signf(basis.z.dot(outward))
-		var entry := {"frame": frame, "width": width, "depth": gate_depth, "shoulder": shoulder,
-			"point": Ortho3DPreview.ground_position(village.gate_points[index]), "outward": outward, "opening_sign": opening_sign, "leaves": [], "progress": 0.0}
+		var entry := {
+			"frame": frame,
+			"width": width,
+			"depth": gate_depth,
+			"shoulder": shoulder,
+			"point": Ortho3DPreview.ground_position(village.gate_points[index]),
+			"outward": outward,
+			"opening_sign": opening_sign,
+			"leaves": [],
+			"progress": 0.0
+		}
 		for native_end: Vector2 in village.gate_ends[index]:
 			var join := Vector3(native_end.x, 0, native_end.y) / Ortho3DPreview.GROUND_PER_METER
 			var end := inverse * join
@@ -114,9 +124,13 @@ func _build() -> void:
 		gates.append(entry)
 	var merged := _union(polygons)
 	for polygon in merged:
-		_wall_body(polygon, height)
-		for band in [[0.14, 0.16, 0.018], [height * 0.76, 0.08, 0.030], [height - 0.025, 0.10, 0.035]]:
-			var expanded := Geometry2D.offset_polygon(polygon, float(band[2]), Geometry2D.JOIN_MITER)
+		_wall_body(polygon, height, town_center)
+		for band in [
+			[0.14, 0.16, 0.018], [height * 0.76, 0.08, 0.030], [height - 0.025, 0.10, 0.035]
+		]:
+			var expanded := Geometry2D.offset_polygon(
+				polygon, float(band[2]), Geometry2D.JOIN_MITER
+			)
 			for shape in expanded:
 				_horizontal(shape, float(band[0]), float(band[0]) + float(band[1]), "granite")
 	var corners: Array[Vector3] = []
@@ -137,20 +151,40 @@ func _build() -> void:
 	var static_meshes := _flush("Fortification")
 	for index in gates.size():
 		_build_leaves(index)
-	report = {"wall_height": height, "wall_top": total_height, "projected_top_pixels": total_height * Ortho3DPreview.GROUND_PER_METER * Iso.S,
-		"wall_thickness": thickness, "wall_polygons": merged, "wing_joins": wings,
-		"corners": corners, "town_center": town_center, "gates": gates, "static_meshes": static_meshes,
-		"triangles": _triangles, "static_surfaces": static_meshes.size(), "stone": _materials["stone"], "iron": _materials["iron"],
-		"wall_face_recess": WALL_FACE_RECESS, "wall_piers": _piers, "wall_fields": _fields,
-		"coped_pieces": _coped_pieces, "moulded_rings": _mouldings, "slit_reveals": _slit_reveals,
-		"slit_depth": 0.10, "slit_height": height * 0.60, "slit_frames": _slit_frames}
+	report = {
+		"wall_height": height,
+		"wall_top": total_height,
+		"projected_top_pixels": total_height * Ortho3DPreview.GROUND_PER_METER * Iso.S,
+		"wall_thickness": thickness,
+		"wall_polygons": merged,
+		"wing_joins": wings,
+		"corners": corners,
+		"town_center": town_center,
+		"gates": gates,
+		"static_meshes": static_meshes,
+		"triangles": _triangles,
+		"static_surfaces": static_meshes.size(),
+		"stone": _materials["stone"],
+		"iron": _materials["iron"],
+		"wall_face_recess": WALL_FACE_RECESS,
+		"wall_piers": _piers,
+		"wall_fields": _fields,
+		"coped_pieces": _coped_pieces,
+		"moulded_rings": _mouldings,
+		"slit_reveals": _slit_reveals,
+		"slit_depth": 0.10,
+		"slit_height": height * 0.60,
+		"slit_frames": _slit_frames
+	}
 	root.set_meta("fortification_detail", report)
-	report["corner_top"] = NativeFortressPlan.CORNER_ROOF_TOP + 0.36
+	report["corner_top"] = NativeFortressPlan.CORNER_TOP
 	report["corner_windows"] = _corner_windows
-	report["corner_eaves"] = NativeFortressPlan.CORNER_EAVES
-	report["corner_roof"] = slate
+	report["tower_decks"] = _decks
+	report["arcade_recesses"] = _arcades
+	report["reference_style"] = "open_battlement_2d"
 	report["masonry_variants"] = 4
 	report["granite"] = _materials["granite"]
+	report["wood"] = _materials["wood"]
 	report["wall_walk"] = walk
 
 
@@ -163,19 +197,27 @@ func _corner_tower(at: Vector3) -> void:
 	# 돌출된 상부를 돌 받침과 연속 경사 돌띠가 실제로 지탱한다.
 	for i: int in 8:
 		var angle := TAU * i / 8.0
-		var frame := Transform3D(Basis(Vector3.UP, -angle), at + Vector3(cos(angle) * 1.31, 3.99, sin(angle) * 1.31))
+		var frame := Transform3D(
+			Basis(Vector3.UP, -angle), at + Vector3(cos(angle) * 1.31, 3.99, sin(angle) * 1.31)
+		)
 		_box(Vector3.ZERO, Vector3(0.22, 0.30, 0.23), "granite", frame)
 	_radial_band(at, 1.30, 1.50, 4.08, NativeFortressPlan.CORNER_GALLERY_BASE, "granite")
-	_corner_storey(at, NativeFortressPlan.CORNER_GALLERY_RADIUS, NativeFortressPlan.CORNER_GALLERY_BASE, NativeFortressPlan.CORNER_EAVES, 4.65, 0.28, 0.52, true)
-	_cylinder(at + Vector3.UP * 4.28, 1.52, 0.09, "granite", 16)
-	_cylinder(at + Vector3.UP * 5.02, 1.54, 0.10, "granite", 16)
-	_conical_roof(at)
-	_cylinder(at + Vector3.UP * (NativeFortressPlan.CORNER_ROOF_TOP + 0.11), 0.027, 0.50, "iron", 8)
-	_radial_band(at, 0.09, 0.015, 6.88, 7.05, "iron")
+	_open_crown(
+		at, NativeFortressPlan.CORNER_GALLERY_RADIUS, NativeFortressPlan.CORNER_GALLERY_BASE
+	)
 
 
 ## 네 방향 모두 실제 개구부와10cm 깊이의 측면/아치/어두운 뒷면을 가진다.
-func _corner_storey(at: Vector3, radius: float, bottom: float, top: float, window_y: float, width: float, opening_height: float, arched: bool) -> void:
+func _corner_storey(
+	at: Vector3,
+	radius: float,
+	bottom: float,
+	top: float,
+	window_y: float,
+	width: float,
+	opening_height: float,
+	arched: bool
+) -> void:
 	var half_face := radius * sin(PI / 16.0)
 	var half_slot := width * 0.5
 	var sill := window_y - opening_height * 0.5
@@ -184,7 +226,10 @@ func _corner_storey(at: Vector3, radius: float, bottom: float, top: float, windo
 	for segment: int in 16:
 		var angle := TAU * (segment + 0.5) / 16.0
 		var normal := Vector3(cos(angle), 0, sin(angle))
-		var frame := Transform3D(Basis(Vector3(normal.z, 0, -normal.x), Vector3.UP, normal), at + normal * radius * cos(PI / 16.0))
+		var frame := Transform3D(
+			Basis(Vector3(normal.z, 0, -normal.x), Vector3.UP, normal),
+			at + normal * radius * cos(PI / 16.0)
+		)
 		if segment % 4 != 0:
 			_tower_panel(frame, -half_face, half_face, bottom, top, 0.0, "stone", at)
 			continue
@@ -203,47 +248,62 @@ func _corner_storey(at: Vector3, radius: float, bottom: float, top: float, windo
 		for piece: int in pieces:
 			var x0 := lerpf(-half_slot, half_slot, float(piece) / pieces)
 			var x1 := lerpf(-half_slot, half_slot, float(piece + 1) / pieces)
-			var y0 := shoulder + sqrt(maxf(0.0, half_slot * half_slot - x0 * x0)) if arched else head
-			var y1 := shoulder + sqrt(maxf(0.0, half_slot * half_slot - x1 * x1)) if arched else head
+			var y0 := (
+				shoulder + sqrt(maxf(0.0, half_slot * half_slot - x0 * x0)) if arched else head
+			)
+			var y1 := (
+				shoulder + sqrt(maxf(0.0, half_slot * half_slot - x1 * x1)) if arched else head
+			)
 			var a := frame * Vector3(x0, y0, 0)
 			var b := frame * Vector3(x1, y1, 0)
 			_quad(a, b, frame * Vector3(x1, top, 0), frame * Vector3(x0, top, 0), normal, "stone")
-			_quad(a, a + back, b + back, b, (frame.basis.x * (y1 - y0) - Vector3.UP * (x1 - x0)).normalized(), "granite")
+			_quad(
+				a,
+				a + back,
+				b + back,
+				b,
+				(frame.basis.x * (y1 - y0) - Vector3.UP * (x1 - x0)).normalized(),
+				"granite"
+			)
 		_tower_panel(frame, -half_slot, half_slot, sill, head, -0.10, "iron")
 		_corner_windows.append({"frame": frame, "height": window_y, "width": width})
 
 
-func _radial_band(at: Vector3, lower_radius: float, upper_radius: float, bottom: float, top: float, material: String) -> void:
+func _radial_band(
+	at: Vector3,
+	lower_radius: float,
+	upper_radius: float,
+	bottom: float,
+	top: float,
+	material: String
+) -> void:
 	for segment: int in 16:
 		var a := TAU * segment / 16.0
 		var b := TAU * (segment + 1) / 16.0
-		var normal := Vector3(cos((a + b) * 0.5) * (top - bottom), lower_radius - upper_radius, sin((a + b) * 0.5) * (top - bottom)).normalized()
-		_quad(at + Vector3(cos(a) * lower_radius, bottom, sin(a) * lower_radius), at + Vector3(cos(b) * lower_radius, bottom, sin(b) * lower_radius), at + Vector3(cos(b) * upper_radius, top, sin(b) * upper_radius), at + Vector3(cos(a) * upper_radius, top, sin(a) * upper_radius), normal, material)
+		var normal := (
+			Vector3(
+				cos((a + b) * 0.5) * (top - bottom),
+				lower_radius - upper_radius,
+				sin((a + b) * 0.5) * (top - bottom)
+			)
+			. normalized()
+		)
+		_quad(
+			at + Vector3(cos(a) * lower_radius, bottom, sin(a) * lower_radius),
+			at + Vector3(cos(b) * lower_radius, bottom, sin(b) * lower_radius),
+			at + Vector3(cos(b) * upper_radius, top, sin(b) * upper_radius),
+			at + Vector3(cos(a) * upper_radius, top, sin(a) * upper_radius),
+			normal,
+			material
+		)
 
 
-## 실제 겹친 여덟 단 너비와 경사 길이로 슬레이트 UV를 배치한다.
-func _conical_roof(at: Vector3) -> void:
-	var base := NativeFortressPlan.CORNER_EAVES
-	var height := NativeFortressPlan.CORNER_ROOF_TOP - base
-	var radius := NativeFortressPlan.CORNER_ROOF_RADIUS
-	var slope := Vector2(radius, height).length()
-	for course: int in 8:
-		var t0 := course / 8.0
-		var t1 := (course + 1) / 8.0
-		var r0 := radius * (1.0 - t0)
-		var r1 := maxf(0.012, radius * (1.0 - t1))
-		for segment: int in 16:
-			var a := TAU * segment / 16.0
-			var b := TAU * (segment + 1) / 16.0
-			var normal := Vector3(cos((a + b) * 0.5) * height, radius, sin((a + b) * 0.5) * height).normalized()
-			var vertices := [at + Vector3(cos(a) * r0, base + height * t0, sin(a) * r0), at + Vector3(cos(b) * r0, base + height * t0, sin(b) * r0), at + Vector3(cos(b) * r1, base + height * t1 + 0.025, sin(b) * r1), at + Vector3(cos(a) * r1, base + height * t1 + 0.025, sin(a) * r1)]
-			# 방향은 원주를 따라, 기와 단은 지붕의 경사를 가로지른다.
-			var uv := [Vector2(a * radius, t0 * slope) / 2.6, Vector2(b * radius, t0 * slope) / 2.6, Vector2(b * radius, t1 * slope) / 2.6, Vector2(a * radius, t1 * slope) / 2.6]
-			_triangle([vertices[0], vertices[1], vertices[2]], [uv[0], uv[1], uv[2]], normal, "tower_slate")
-			_triangle([vertices[0], vertices[2], vertices[3]], [uv[0], uv[2], uv[3]], normal, "tower_slate")
-			# 다음 단의 아래 끝을 닫아 얇은 기와 턱과 처마 두께를 만든다.
-			_quad(vertices[2], vertices[3], vertices[3] - Vector3.UP * 0.025, vertices[2] - Vector3.UP * 0.025, normal, "tower_slate")
-	_radial_band(at, radius, radius, base - 0.055, base, "iron")
+## 중앙을 비운 돌 난간과 실제 목재 바닥. 지붕/천장으로 열린 상부를 덮지 않는다.
+func _open_crown(at: Vector3, radius: float, floor_y: float) -> void:
+	for part: Dictionary in NativeFortressPlan.crown_parts(at, radius, floor_y):
+		_box(Vector3.ZERO, part["size"], part["material"], part["frame"])
+	_cylinder(at + Vector3.UP * (floor_y - .034), radius - .16, .08, "wood", 24)
+	_decks.append({"at": at, "radius": radius - .16, "height": floor_y + .006})
 
 
 ## No independent tween or timer: pause, accessibility and real threat scan remain authoritative.
@@ -252,7 +312,9 @@ func sync() -> void:
 		return
 	var state: TownGateRuntime = preview.game.town_gates
 	for index in gates.size():
-		var value := (1.0 if state.closed[index] else 0.0) if Prefs.reduce_motion else state.progress[index]
+		var value := (
+			(1.0 if state.closed[index] else 0.0) if Prefs.reduce_motion else state.progress[index]
+		)
 		value = clampf(value, 0.0, 1.0)
 		var gate: Dictionary = gates[index]
 		gate["progress"] = value
@@ -323,27 +385,43 @@ static func _union(source: Array[PackedVector2Array]) -> Array[PackedVector2Arra
 	return shapes
 
 
-func _crenels(polygon: PackedVector2Array, corners: Array[Vector3], used: Dictionary, height: float, thickness: float) -> void:
+func _crenels(
+	polygon: PackedVector2Array,
+	corners: Array[Vector3],
+	used: Dictionary,
+	height: float,
+	thickness: float
+) -> void:
 	var bounds := Iso.poly_bounds(polygon)
 	var along_x := bounds.size.x > bounds.size.y
 	var first := bounds.position.x if along_x else bounds.position.y
 	var last := bounds.end.x if along_x else bounds.end.y
 	var cross := bounds.get_center().y if along_x else bounds.get_center().x
 	for index in range(ceili(first / CRENEL_SPACING), floori(last / CRENEL_SPACING) + 1):
-		var at := Vector3(index * CRENEL_SPACING, height + 0.30, cross) if along_x else Vector3(cross, height + 0.30, index * CRENEL_SPACING)
+		var at := (
+			Vector3(index * CRENEL_SPACING, height + 0.30, cross)
+			if along_x
+			else Vector3(cross, height + 0.30, index * CRENEL_SPACING)
+		)
 		var near_corner := false
 		for corner in corners:
-			near_corner = near_corner or Vector2(at.x, at.z).distance_to(Vector2(corner.x, corner.z)) < 0.62
+			near_corner = (
+				near_corner or Vector2(at.x, at.z).distance_to(Vector2(corner.x, corner.z)) < 0.62
+			)
 		var key := "%d:%d" % [roundi(at.x * 20.0), roundi(at.z * 20.0)]
 		if near_corner or used.has(key):
 			continue
 		used[key] = true
-		_coped_box(at, Vector3(0.47, 0.54, thickness) if along_x else Vector3(thickness, 0.54, 0.47), "granite")
+		_coped_box(
+			at,
+			Vector3(0.47, 0.54, thickness) if along_x else Vector3(thickness, 0.54, 0.47),
+			"granite"
+		)
 
 
 ## The ground plinth keeps the original solid footprint. Recessed wall fields,
 ## piers and corbels stay inside that footprint, preserving every route/clearance.
-func _wall_body(polygon: PackedVector2Array, height: float) -> void:
+func _wall_body(polygon: PackedVector2Array, height: float, town_center: Vector3) -> void:
 	# Darker granite plinth, string courses and copings frame the pale ashlar.
 	_horizontal(polygon, 0.0, 0.28, "granite")
 	var inset := Geometry2D.offset_polygon(polygon, -WALL_FACE_RECESS, Geometry2D.JOIN_MITER)
@@ -365,6 +443,9 @@ func _wall_body(polygon: PackedVector2Array, height: float) -> void:
 		var normal := Vector3(outward.x, 0, outward.y)
 		var tangent := Vector3(normal.z, 0, -normal.x)
 		var basis := Basis(tangent, Vector3.UP, normal)
+		# 안쪽 통로 뒤의 보이지 않는 아치 장식은 만들지 않는다.
+		if normal.dot(town_center - Vector3((a.x + b.x) * .5, 0, (a.y + b.y) * .5)) < 0:
+			_arch_frieze(a, b, basis, height)
 		var count := maxi(1, floori(length / PIER_SPACING))
 		var bottom := 0.34
 		var shoulder := height * 0.76 - 0.17
@@ -372,8 +453,15 @@ func _wall_body(polygon: PackedVector2Array, height: float) -> void:
 			var along := (float(pier) + 0.5) / count
 			var point := a.lerp(b, along)
 			var frame := Transform3D(basis, Vector3(point.x, 0, point.y))
-			_box(Vector3(0, (bottom + shoulder) * 0.5, -0.045), Vector3(0.26, shoulder - bottom, 0.09), "stone", frame)
-			_coped_box(Vector3(0, shoulder + 0.07, -0.05), Vector3(0.36, 0.14, 0.10), "granite", frame)
+			_box(
+				Vector3(0, (bottom + shoulder) * 0.5, -0.045),
+				Vector3(0.26, shoulder - bottom, 0.09),
+				"stone",
+				frame
+			)
+			_coped_box(
+				Vector3(0, shoulder + 0.07, -0.05), Vector3(0.36, 0.14, 0.10), "granite", frame
+			)
 			_piers.append({"frame": frame, "height": (bottom + shoulder) * 0.5})
 			if pier + 1 < count:
 				var middle := a.lerp(b, (float(pier) + 1.0) / count)
@@ -381,23 +469,71 @@ func _wall_body(polygon: PackedVector2Array, height: float) -> void:
 				_fields.append({"frame": field_frame, "height": (bottom + shoulder) * 0.5})
 				# A shallow corbel sits below the shared stringcourse. Its front
 				# never extends beyond the old solid boundary.
-				_box(Vector3(0, height * 0.76 - 0.10, -0.035), Vector3(0.16, 0.20, 0.07), "stone", field_frame)
+				_box(
+					Vector3(0, height * 0.76 - 0.10, -0.035),
+					Vector3(0.16, 0.20, 0.07),
+					"stone",
+					field_frame
+				)
+
+
+## 돌 벽의 기존 경계 안에 아치형 음각과 받침의 명암을 만든다.
+func _arch_frieze(a: Vector2, b: Vector2, basis: Basis, height: float) -> void:
+	var count := maxi(1, floori(a.distance_to(b) / .86))
+	for index in count:
+		var point := a.lerp(b, (float(index) + .5) / count)
+		var frame := Transform3D(basis, Vector3(point.x, height - .28, point.y))
+		for segment in 4:
+			var first := PI * segment / 4.0
+			var last := PI * (segment + 1) / 4.0
+			var inner_a := Vector3(cos(first) * .17, sin(first) * .17, 0)
+			var inner_b := Vector3(cos(last) * .17, sin(last) * .17, 0)
+			var outer_a := Vector3(cos(first) * .24, sin(first) * .24, 0)
+			var outer_b := Vector3(cos(last) * .24, sin(last) * .24, 0)
+			_quad(
+				frame * inner_a,
+				frame * inner_b,
+				frame * outer_b,
+				frame * outer_a,
+				basis.z,
+				"granite"
+			)
+			var back := basis.z * -.045
+			var normal := -(
+				basis.x * cos((first + last) * .5) + Vector3.UP * sin((first + last) * .5)
+			)
+			_quad(
+				frame * inner_a,
+				frame * inner_a + back,
+				frame * inner_b + back,
+				frame * inner_b,
+				normal,
+				"granite"
+			)
+		_arcades += 1
 
 
 ## One closed, bevelled coping piece, appended to the existing stone surface.
 ## Only the top rim is chamfered: the original total height and sole stay exact.
-func _coped_box(at: Vector3, size: Vector3, material: String, frame := Transform3D.IDENTITY) -> void:
+func _coped_box(
+	at: Vector3, size: Vector3, material: String, frame := Transform3D.IDENTITY
+) -> void:
 	var bevel := minf(0.018, minf(size.x, minf(size.y, size.z)) * 0.25)
 	var half := size * 0.5
 	var rings: Array[PackedVector3Array] = []
 	for level in 3:
 		var cut := bevel if level == 2 else 0.0
 		var y := -half.y if level == 0 else half.y - bevel if level == 1 else half.y
-		rings.append(PackedVector3Array([
-			Vector3(-half.x + cut, y, -half.z + cut),
-			Vector3(half.x - cut, y, -half.z + cut),
-			Vector3(half.x - cut, y, half.z - cut),
-			Vector3(-half.x + cut, y, half.z - cut)]))
+		rings.append(
+			PackedVector3Array(
+				[
+					Vector3(-half.x + cut, y, -half.z + cut),
+					Vector3(half.x - cut, y, -half.z + cut),
+					Vector3(half.x - cut, y, half.z - cut),
+					Vector3(-half.x + cut, y, half.z - cut)
+				]
+			)
+		)
 	var transform := frame * Transform3D(Basis.IDENTITY, at)
 	var normal_basis := frame.basis.inverse().transposed()
 	for layer in 2:
@@ -407,21 +543,56 @@ func _coped_box(at: Vector3, size: Vector3, material: String, frame := Transform
 			normal = normal.normalized()
 			if layer == 1:
 				normal = (normal + Vector3.UP).normalized()
-			var points := [transform * rings[layer][side], transform * rings[layer][next], transform * rings[layer + 1][next], transform * rings[layer + 1][side]]
-			_triangle([points[0], points[1], points[2]], [Vector2.ZERO, Vector2.RIGHT, Vector2.ONE], (normal_basis * normal).normalized(), material)
-			_triangle([points[0], points[2], points[3]], [Vector2.ZERO, Vector2.ONE, Vector2.DOWN], (normal_basis * normal).normalized(), material)
+			var points := [
+				transform * rings[layer][side],
+				transform * rings[layer][next],
+				transform * rings[layer + 1][next],
+				transform * rings[layer + 1][side]
+			]
+			_triangle(
+				[points[0], points[1], points[2]],
+				[Vector2.ZERO, Vector2.RIGHT, Vector2.ONE],
+				(normal_basis * normal).normalized(),
+				material
+			)
+			_triangle(
+				[points[0], points[2], points[3]],
+				[Vector2.ZERO, Vector2.ONE, Vector2.DOWN],
+				(normal_basis * normal).normalized(),
+				material
+			)
 	for side in [0, 2]:
 		var normal := Vector3.DOWN if side == 0 else Vector3.UP
-		var points := [transform * rings[side][0], transform * rings[side][1], transform * rings[side][2], transform * rings[side][3]]
-		_triangle([points[0], points[1], points[2]], [Vector2.ZERO, Vector2.RIGHT, Vector2.ONE], (normal_basis * normal).normalized(), material)
-		_triangle([points[0], points[2], points[3]], [Vector2.ZERO, Vector2.ONE, Vector2.DOWN], (normal_basis * normal).normalized(), material)
+		var points := [
+			transform * rings[side][0],
+			transform * rings[side][1],
+			transform * rings[side][2],
+			transform * rings[side][3]
+		]
+		_triangle(
+			[points[0], points[1], points[2]],
+			[Vector2.ZERO, Vector2.RIGHT, Vector2.ONE],
+			(normal_basis * normal).normalized(),
+			material
+		)
+		_triangle(
+			[points[0], points[2], points[3]],
+			[Vector2.ZERO, Vector2.ONE, Vector2.DOWN],
+			(normal_basis * normal).normalized(),
+			material
+		)
 	_coped_pieces += 1
 
 
 ## Four continuous radial rings have no internal caps or extra material draws.
 func _moulded_ring(at: Vector3, radius: float, height: float) -> void:
 	var bevel := minf(0.016, height * 0.25)
-	var profile := [Vector2(radius - bevel, -height * 0.5), Vector2(radius, -height * 0.5 + bevel), Vector2(radius, height * 0.5 - bevel), Vector2(radius - bevel, height * 0.5)]
+	var profile := [
+		Vector2(radius - bevel, -height * 0.5),
+		Vector2(radius, -height * 0.5 + bevel),
+		Vector2(radius, height * 0.5 - bevel),
+		Vector2(radius - bevel, height * 0.5)
+	]
 	for segment in 24:
 		var first := TAU * segment / 24.0
 		var last := TAU * (segment + 1) / 24.0
@@ -444,36 +615,68 @@ func _moulded_ring(at: Vector3, radius: float, height: float) -> void:
 			var center := at + Vector3.UP * p.y
 			var a := at + Vector3(cos(first) * p.x, p.y, sin(first) * p.x)
 			var b := at + Vector3(cos(last) * p.x, p.y, sin(last) * p.x)
-			_triangle([center, a, b], [Vector2(0.5, 0.5), Vector2.ZERO, Vector2.ONE], normal, "stone")
+			_triangle(
+				[center, a, b], [Vector2(0.5, 0.5), Vector2.ZERO, Vector2.ONE], normal, "stone"
+			)
 	_mouldings += 1
 
 
-func _gate_arch(frame: Transform3D, width: float, depth: float, shoulder: float, wall_height: float) -> void:
+func _gate_arch(
+	frame: Transform3D, width: float, depth: float, shoulder: float, wall_height: float
+) -> void:
 	var radius := width * 0.5
 	var order := 0.22
 	var crown := shoulder + radius + order + 0.16
 	for side in [-1.0, 1.0]:
-		_box(Vector3(side * (radius + order * 0.5), shoulder * 0.5, 0), Vector3(order, shoulder, depth), "stone", frame)
+		_box(
+			Vector3(side * (radius + order * 0.5), shoulder * 0.5, 0),
+			Vector3(order, shoulder, depth),
+			"stone",
+			frame
+		)
 	for segment in 24:
 		var a := segment * PI / 24.0 + 0.004
 		var b := (segment + 1) * PI / 24.0 - 0.004
-		var polygon := PackedVector2Array([
-			Vector2(cos(a), sin(a)) * radius + Vector2(0, shoulder),
-			Vector2(cos(b), sin(b)) * radius + Vector2(0, shoulder),
-			Vector2(cos(b), sin(b)) * (radius + order) + Vector2(0, shoulder),
-			Vector2(cos(a), sin(a)) * (radius + order) + Vector2(0, shoulder)])
+		var polygon := PackedVector2Array(
+			[
+				Vector2(cos(a), sin(a)) * radius + Vector2(0, shoulder),
+				Vector2(cos(b), sin(b)) * radius + Vector2(0, shoulder),
+				Vector2(cos(b), sin(b)) * (radius + order) + Vector2(0, shoulder),
+				Vector2(cos(a), sin(a)) * (radius + order) + Vector2(0, shoulder)
+			]
+		)
 		_prism(polygon, depth + 0.045, frame, "stone")
 		var x0 := cos(b) * (radius + order)
 		var x1 := cos(a) * (radius + order)
 		var bottom := shoulder + maxf(sin(a), sin(b)) * (radius + order)
 		if crown > bottom:
-			_box(Vector3((x0 + x1) * 0.5, (bottom + crown) * 0.5, 0), Vector3(x1 - x0 + 0.003, crown - bottom, depth), "stone", frame)
-	_box(Vector3(0, crown + 0.035, 0), Vector3(width + order * 2.0, 0.10, depth + 0.08), "stone", frame)
+			_box(
+				Vector3((x0 + x1) * 0.5, (bottom + crown) * 0.5, 0),
+				Vector3(x1 - x0 + 0.003, crown - bottom, depth),
+				"stone",
+				frame
+			)
+	_box(
+		Vector3(0, crown + 0.035, 0),
+		Vector3(width + order * 2.0, 0.10, depth + 0.08),
+		"stone",
+		frame
+	)
 	for side in [-1.0, 1.0]:
-		_box(Vector3(side * (radius + order * 0.5), wall_height * 0.76 + 0.04, 0), Vector3(order + 0.04, 0.08, depth + 0.06), "stone", frame)
+		_box(
+			Vector3(side * (radius + order * 0.5), wall_height * 0.76 + 0.04, 0),
+			Vector3(order + 0.04, 0.08, depth + 0.06),
+			"stone",
+			frame
+		)
 	var count := maxi(3, roundi(width / 0.65))
 	for merlon in count:
-		_coped_box(Vector3(lerpf(-radius, radius, float(merlon) / (count - 1)), crown + 0.30, 0), Vector3(0.42, 0.48, depth), "granite", frame)
+		_coped_box(
+			Vector3(lerpf(-radius, radius, float(merlon) / (count - 1)), crown + 0.30, 0),
+			Vector3(0.42, 0.48, depth),
+			"granite",
+			frame
+		)
 
 
 func _towers(village: Village, index: int, wall_height: float) -> void:
@@ -494,10 +697,7 @@ func _towers(village: Village, index: int, wall_height: float) -> void:
 				_moulded_ring(center + Vector3(0, level, 0), radius + 0.035, 0.105)
 			else:
 				_cylinder(center + Vector3(0, level, 0), radius + 0.035, 0.105, "granite")
-		for tooth in 10:
-			var angle := tooth * TAU / 10.0
-			var at := center + Vector3(cos(angle) * radius * 0.87, height + 0.26, sin(angle) * radius * 0.87)
-			_coped_box(Vector3.ZERO, Vector3(0.32, 0.52, 0.29), "granite", Transform3D(Basis(Vector3.UP, -angle), at))
+		_open_crown(center, radius, height - .05)
 		# The shell has real recessed slots. The dark iron is their closed back,
 		# behind the stone reveals, rather than an overlay on an opaque cylinder.
 		for surface_frame: Transform3D in slit_faces:
@@ -505,16 +705,28 @@ func _towers(village: Village, index: int, wall_height: float) -> void:
 			var frame := surface_frame * Transform3D(Basis.IDENTITY, Vector3(0, 0, 0.008))
 			var slit_y := wall_height * 0.60
 			for side in [-1.0, 1.0]:
-				_box(Vector3(side * 0.071, slit_y, -0.014), Vector3(0.065, 0.72, 0.07), "stone", frame)
+				_box(
+					Vector3(side * 0.071, slit_y, -0.014),
+					Vector3(0.065, 0.72, 0.07),
+					"stone",
+					frame
+				)
 			for side in [-1.0, 1.0]:
-				_coped_box(Vector3(0, slit_y + side * 0.35, -0.0165), Vector3(0.208, 0.07, 0.075), "granite", frame)
+				_coped_box(
+					Vector3(0, slit_y + side * 0.35, -0.0165),
+					Vector3(0.208, 0.07, 0.075),
+					"granite",
+					frame
+				)
 			_slit_reveals += 1
 	pose.free()
 
 
 ## Keep the former24-segment outer cylinder and smooth radial body normals, but
 ## split its four cardinal facets around true10cm-deep, closed-back arrow slots.
-func _tower_shell(center: Vector3, radius: float, height: float, slit_y: float) -> Array[Transform3D]:
+func _tower_shell(
+	center: Vector3, radius: float, height: float, slit_y: float
+) -> Array[Transform3D]:
 	var frames: Array[Transform3D] = []
 	var half_width := radius * sin(PI / 24.0)
 	var face_radius := radius * cos(PI / 24.0)
@@ -548,13 +760,31 @@ func _tower_shell(center: Vector3, radius: float, height: float, slit_y: float) 
 			frames.append(frame)
 		var a := center + Vector3(cos(first) * radius, 0, sin(first) * radius)
 		var b := center + Vector3(cos(last) * radius, 0, sin(last) * radius)
-		_triangle([center, a, b], [Vector2(0.5, 0.5), Vector2.ZERO, Vector2.ONE], Vector3.DOWN, "stone")
-		_triangle([center + Vector3.UP * height, a + Vector3.UP * height, b + Vector3.UP * height], [Vector2(0.5, 0.5), Vector2.ZERO, Vector2.ONE], Vector3.UP, "stone")
+		_triangle(
+			[center, a, b], [Vector2(0.5, 0.5), Vector2.ZERO, Vector2.ONE], Vector3.DOWN, "stone"
+		)
+
 	return frames
 
 
-func _tower_panel(frame: Transform3D, left: float, right: float, bottom: float, top: float, depth: float, material: String, smooth_center := Vector3(INF, INF, INF)) -> void:
-	var local := PackedVector3Array([Vector3(left, bottom, depth), Vector3(right, bottom, depth), Vector3(right, top, depth), Vector3(left, top, depth)])
+func _tower_panel(
+	frame: Transform3D,
+	left: float,
+	right: float,
+	bottom: float,
+	top: float,
+	depth: float,
+	material: String,
+	smooth_center := Vector3(INF, INF, INF)
+) -> void:
+	var local := PackedVector3Array(
+		[
+			Vector3(left, bottom, depth),
+			Vector3(right, bottom, depth),
+			Vector3(right, top, depth),
+			Vector3(left, top, depth)
+		]
+	)
 	var tool := _tool(material)
 	for index in [0, 2, 1, 0, 3, 2]:
 		var point := frame * local[index]
@@ -567,7 +797,9 @@ func _tower_panel(frame: Transform3D, left: float, right: float, bottom: float, 
 	_triangles += 2
 
 
-func _quad(a: Vector3, b: Vector3, c: Vector3, d: Vector3, normal: Vector3, material: String) -> void:
+func _quad(
+	a: Vector3, b: Vector3, c: Vector3, d: Vector3, normal: Vector3, material: String
+) -> void:
 	_triangle([a, b, c], [Vector2.ZERO, Vector2.RIGHT, Vector2.ONE], normal, material)
 	_triangle([a, c, d], [Vector2.ZERO, Vector2.ONE, Vector2.DOWN], normal, material)
 
@@ -596,13 +828,37 @@ func _build_leaves(index: int) -> void:
 			var b := half * (plank + 1) / 7.0 - 0.004
 			var left := minf(-side * a, -side * b)
 			var right := maxf(-side * a, -side * b)
-			var first_y := shoulder + sqrt(maxf(0.0, half * half - pow(side * half + left, 2.0))) - 0.07
-			var last_y := shoulder + sqrt(maxf(0.0, half * half - pow(side * half + right, 2.0))) - 0.07
-			_prism(PackedVector2Array([Vector2(left, 0.035), Vector2(right, 0.035), Vector2(right, last_y), Vector2(left, first_y)]), 0.10, Transform3D.IDENTITY, "wood")
+			var first_y := (
+				shoulder + sqrt(maxf(0.0, half * half - pow(side * half + left, 2.0))) - 0.07
+			)
+			var last_y := (
+				shoulder + sqrt(maxf(0.0, half * half - pow(side * half + right, 2.0))) - 0.07
+			)
+			_prism(
+				PackedVector2Array(
+					[
+						Vector2(left, 0.035),
+						Vector2(right, 0.035),
+						Vector2(right, last_y),
+						Vector2(left, first_y)
+					]
+				),
+				0.10,
+				Transform3D.IDENTITY,
+				"wood"
+			)
 		for level in [0.60, 1.70, 2.40]:
-			_box(Vector3(-side * half * 0.5, level, 0.065), Vector3(half * 0.94, 0.075, 0.045), "iron")
+			_box(
+				Vector3(-side * half * 0.5, level, 0.065),
+				Vector3(half * 0.94, 0.075, 0.045),
+				"iron"
+			)
 			for rivet in 4:
-				_box(Vector3(-side * half * (0.12 + rivet * 0.24), level, 0.096), Vector3(0.035, 0.035, 0.022), "iron")
+				_box(
+					Vector3(-side * half * (0.12 + rivet * 0.24), level, 0.096),
+					Vector3(0.035, 0.035, 0.022),
+					"iron"
+				)
 		_cylinder(Vector3(0, 1.52, 0.045), 0.040, 2.20, "iron")
 		_box(Vector3(-side * half * 0.82, 1.30, 0.10), Vector3(0.045, 0.19, 0.055), "iron")
 		_flush("Leaf")
@@ -625,7 +881,12 @@ func _box(at: Vector3, size: Vector3, material: String, frame := Transform3D.IDE
 
 
 func _horizontal(polygon: PackedVector2Array, bottom: float, top: float, material: String) -> void:
-	_prism(polygon, top - bottom, Transform3D(Basis(Vector3.RIGHT, PI * 0.5), Vector3(0, (top + bottom) * 0.5, 0)), material)
+	_prism(
+		polygon,
+		top - bottom,
+		Transform3D(Basis(Vector3.RIGHT, PI * 0.5), Vector3(0, (top + bottom) * 0.5, 0)),
+		material
+	)
 
 
 func _append(arrays: Array, transform: Transform3D, material: String) -> void:
@@ -652,7 +913,9 @@ func _tool(material: String) -> SurfaceTool:
 	return _tools[material] as SurfaceTool
 
 
-func _prism(polygon: PackedVector2Array, depth: float, frame: Transform3D, material: String) -> void:
+func _prism(
+	polygon: PackedVector2Array, depth: float, frame: Transform3D, material: String
+) -> void:
 	var triangles := Geometry2D.triangulate_polygon(polygon)
 	var normal_basis := frame.basis.inverse().transposed()
 	var bounds := Iso.poly_bounds(polygon)
@@ -673,14 +936,33 @@ func _prism(polygon: PackedVector2Array, depth: float, frame: Transform3D, mater
 		var b := polygon[(index + 1) % polygon.size()]
 		var delta := b - a
 		var normal := (normal_basis * Vector3(delta.y, -delta.x, 0) * signf(area)).normalized()
-		var vertices := [frame * Vector3(a.x, a.y, -depth * 0.5), frame * Vector3(b.x, b.y, -depth * 0.5), frame * Vector3(b.x, b.y, depth * 0.5), frame * Vector3(a.x, a.y, depth * 0.5)]
-		_triangle([vertices[0], vertices[1], vertices[2]], [Vector2.ZERO, Vector2.RIGHT, Vector2.ONE], normal, material)
-		_triangle([vertices[0], vertices[2], vertices[3]], [Vector2.ZERO, Vector2.ONE, Vector2.DOWN], normal, material)
+		var vertices := [
+			frame * Vector3(a.x, a.y, -depth * 0.5),
+			frame * Vector3(b.x, b.y, -depth * 0.5),
+			frame * Vector3(b.x, b.y, depth * 0.5),
+			frame * Vector3(a.x, a.y, depth * 0.5)
+		]
+		_triangle(
+			[vertices[0], vertices[1], vertices[2]],
+			[Vector2.ZERO, Vector2.RIGHT, Vector2.ONE],
+			normal,
+			material
+		)
+		_triangle(
+			[vertices[0], vertices[2], vertices[3]],
+			[Vector2.ZERO, Vector2.ONE, Vector2.DOWN],
+			normal,
+			material
+		)
 
 
 func _triangle(vertices: Array, uv: Array, normal: Vector3, material: String) -> void:
 	var tool := _tool(material)
-	var order := [0, 2, 1] if (vertices[1] - vertices[0]).cross(vertices[2] - vertices[0]).dot(normal) > 0.0 else [0, 1, 2]
+	var order := (
+		[0, 2, 1]
+		if (vertices[1] - vertices[0]).cross(vertices[2] - vertices[0]).dot(normal) > 0.0
+		else [0, 1, 2]
+	)
 	for index in order:
 		tool.set_normal(normal)
 		tool.set_uv(uv[index])

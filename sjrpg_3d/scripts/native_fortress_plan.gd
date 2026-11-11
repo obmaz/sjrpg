@@ -4,10 +4,8 @@ extends RefCounted
 const CORNER_RADIUS := 1.30
 const CORNER_SHAFT_TOP := 4.15
 const CORNER_GALLERY_BASE := 4.25
-const CORNER_EAVES := 5.05
-const CORNER_ROOF_TOP := 6.95
+const CORNER_TOP := 5.15
 const CORNER_GALLERY_RADIUS := 1.48
-const CORNER_ROOF_RADIUS := 1.65
 const WALK_WIDTH := 1.12
 const WALK_HEADROOM := 2.02
 
@@ -49,24 +47,19 @@ static func wall_walk(village: Village) -> Dictionary:
 			"wood"
 		)
 		var rail_z := cross + WALK_WIDTH * 0.5 - 0.055
-		for rail_y: float in [0.42, 0.84]:
+		# 2D 성벽과 같이 목재 통로의 안쪽도 석조 흉벽으로 닫는다.
+		_walk_box(
+			parts, frame, Vector3(0, floor_y + .085, rail_z), Vector3(length, .17, .26), "stone"
+		)
+		var teeth := maxi(1, roundi(length / .86))
+		for index in teeth:
+			var x := lerpf(-length * .5 + .24, length * .5 - .24, (float(index) + .5) / teeth)
 			_walk_box(
-				parts,
-				frame,
-				Vector3(0, floor_y + rail_y, rail_z),
-				Vector3(length, 0.085, 0.10),
-				"wood"
+				parts, frame, Vector3(x, floor_y + .435, rail_z), Vector3(.47, .53, .28), "granite"
 			)
 		var bays := maxi(1, ceili(length / 2.8))
 		for index in bays + 1:
 			var x := lerpf(-length * 0.5 + 0.08, length * 0.5 - 0.08, float(index) / bays)
-			_walk_box(
-				parts,
-				frame,
-				Vector3(x, floor_y + 0.40, rail_z),
-				Vector3(0.115, 0.95, 0.115),
-				"wood"
-			)
 			_walk_box(
 				parts,
 				frame,
@@ -111,19 +104,35 @@ static func wall_walk_faces(plan: Dictionary) -> PackedVector3Array:
 	return result
 
 
-static func roof_points(at: Vector3) -> PackedVector3Array:
-	var points := PackedVector3Array([at + Vector3.UP * CORNER_ROOF_TOP])
-	for segment: int in 16:
-		var angle := TAU * segment / 16.0
-		points.append(
-			(
-				at
-				+ Vector3(
-					cos(angle) * CORNER_ROOF_RADIUS, CORNER_EAVES, sin(angle) * CORNER_ROOF_RADIUS
-				)
-			)
+## 열린 망루의 난간과 흉벽. 제작기와 실제 SOLID가 같은 상자 목록을 사용한다.
+static func crown_parts(at: Vector3, radius: float, floor_y: float) -> Array[Dictionary]:
+	var parts: Array[Dictionary] = []
+	var centre_radius := radius - .13
+	for index in 24:
+		var angle := TAU * index / 24.0
+		var normal := Vector3(cos(angle), 0, sin(angle))
+		var tangent := Vector3(normal.z, 0, -normal.x)
+		var frame := Transform3D(Basis(tangent, Vector3.UP, normal), at + normal * centre_radius)
+		_walk_box(
+			parts,
+			frame,
+			Vector3(0, floor_y + .19, 0),
+			Vector3(2 * centre_radius * tan(PI / 24.0) + .015, .38, .26),
+			"stone"
 		)
-	return points
+	for index in 12:
+		var angle := TAU * index / 12.0
+		var normal := Vector3(cos(angle), 0, sin(angle))
+		var tangent := Vector3(normal.z, 0, -normal.x)
+		var frame := Transform3D(Basis(tangent, Vector3.UP, normal), at + normal * centre_radius)
+		_walk_box(
+			parts,
+			frame,
+			Vector3(0, floor_y + .64, 0),
+			Vector3(clampf(radius * .32, .25, .47), .52, .29),
+			"granite"
+		)
+	return parts
 
 
 static func corners(village: Village) -> Array[Vector3]:

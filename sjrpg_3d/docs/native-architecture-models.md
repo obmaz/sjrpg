@@ -9,7 +9,7 @@
 | stable | 마구간 | 7,700 | 6 |
 | home | 주택 | 10,480 | 6 |
 | chapel | 예배당 | 6,124 | 5 |
-| fortress | 성벽·망루·성문 네 곳, 여덟 문짝 | 32,136 | 5 |
+| fortress | 성벽·망루·성문 네 곳, 여덟 문짝 | 36,928 | 4 |
 | bridge | 갑판·석조 아치·교각·난간 | 4,356 | 4 |
 
 ## 파일과 책임
@@ -51,3 +51,5 @@ sjrpg_3d/tools/check.sh --only=native_architecture_assets,native_house_family,or
 `native_architecture_assets`는 실제 가져온 씬의 출처·독립 노드·공유 메시/재질·삼각형·시각/물리 분리를 확인합니다. 기존 주택 검사, 예배당, 성문 개폐, 다리와 가림 검사는 임포트된 실제 메시를 계속 측정합니다. `tools/check.sh`가 몬스터와 건물의 자산 해시/구조 검사도 실행합니다.
 
 네 방향 건물 렌더는 `tools/preview3d/render_facades.tscn`을 사용합니다. 실제 모바일 가로/세로에서 마을·성문·다리를 확인하고 기존 화면과 같은 카메라·광원으로 비교합니다. 일회성 비교와 진단 출력은 `build/`에 둡니다. 실제 Android 기기 실행과 로컬 브라우저 검수는 구분합니다.
+
+성곽은 2D 기준 원화(`assets/source/style/{wall-base-design,gate-wall-design}.png`)의 열린 원형 망루·양쪽 흉벽·목재 통로·외측 아치 음각을 따른다. 정적 재질은 5개에서4개로 줄이고, 열린 난간과 안쪽 흉벽을 추가한 기하 예산은38,000삼각형 미만이다. 그림과 충돌의 상부는 `NativeFortressPlan.crown_parts`를 공유한다. 실제 중앙 수직 광선이 지붕 없이 목재 바닥에 도달하며, 화살창·문짝·지상 통로 검사를 유지한다.

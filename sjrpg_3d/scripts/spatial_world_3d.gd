@@ -512,12 +512,11 @@ func _build_forest() -> void:
 		_shape_body(shape, Transform3D(Basis.IDENTITY, corner + Vector3.UP * shape.height * 0.5), SOLID, "CornerBastion")
 		var gallery := CylinderShape3D.new()
 		gallery.radius = NativeFortressPlan.CORNER_GALLERY_RADIUS
-		gallery.height = NativeFortressPlan.CORNER_EAVES - NativeFortressPlan.CORNER_SHAFT_TOP
-		_shape_body(gallery, Transform3D(Basis.IDENTITY, corner + Vector3.UP * (NativeFortressPlan.CORNER_EAVES - gallery.height * 0.5)), SOLID, "CornerGallery")
-		var roof := ConvexPolygonShape3D.new()
-		roof.points = NativeFortressPlan.roof_points(corner)
-		roof.margin = 0.001
-		_shape_body(roof, Transform3D.IDENTITY, SOLID, "CornerRoof")
+		gallery.height = NativeFortressPlan.CORNER_GALLERY_BASE - NativeFortressPlan.CORNER_SHAFT_TOP
+		_shape_body(gallery, Transform3D(Basis.IDENTITY, corner + Vector3.UP * (NativeFortressPlan.CORNER_GALLERY_BASE - gallery.height * .5)), SOLID, "CornerGallery")
+		var crown := {"parts": NativeFortressPlan.crown_parts(corner,
+			NativeFortressPlan.CORNER_GALLERY_RADIUS, NativeFortressPlan.CORNER_GALLERY_BASE)}
+		_triangle_body(NativeFortressPlan.wall_walk_faces(crown), SOLID, "CornerCrown")
 	# 상부 부피는 실제 충돌을 가지며 아래 지상 바닥의 높이는 바꾸지 않는다.
 	_triangle_body(NativeFortressPlan.wall_walk_faces(NativeFortressPlan.wall_walk(game.village)), SOLID, "WallWalkStructure")
 	# Bridge rails are full-height native solids even though their deck has zero rise.

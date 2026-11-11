@@ -27,7 +27,7 @@
     "terrain": "모서리를 깎은 암반 선반·흙 사면의 실제 정점을 NativeTerrainForms로 표시/SOLID에 공유. 기존 상면·경사로의 높이는 유지하고 새 잔디10종의 월드 좌표 군락을 같은 2.56m로 혼합.",
     "chapel": "실제 사용자 approved-game-reference.jpg를 직접 참고한 돌출 입구·두 박공·굵은 종탑. 창·문·세공은 생성형 전체 면 원화. 바닥0.28m·왼쪽3단 계단·L자 몸체를 표시와 물리에 공유.",
     "fountain": "모든 정점·물줄기·source footprint 2배. 중심 유지, root scale 단위값.",
-    "walls": "생성 알베도4종과 기존 슬레이트 재사용. 사용자가 첨부한 석조 성채의 높은 원형 망루·원뿔 지붕·돌출 상부를 구조 참고로 제작. 몸체 반경1.30m, 처마5.05m, 지붕 정상6.95m. 실제 아치 창·10cm 깊이의 뒷면·8개 돌 받침. 16각 망루의 몸체/상층/원뿔 SOLID가 같은 설계를 사용한다. 성 안쪽 여덟 구간의 상부 통로·난간·석재 받침·목재 보는 공유 부피를 합친 SOLID를 사용한다."
+    "walls": "2D 원본의 열린 원형 망루·양쪽 석조 흉벽·목재 바닥과 외측 아치 음각. 몸체 반경1.30m, 전망 바닥4.25m, 성가퀴 정상5.15m. 닫힌 원뿔 지붕은 사용하지 않는다. 상부 난간은 NativeFortressPlan.crown_parts의 같은 부피로 제작/SOLID에 연결한다. 기존 화살창·돌 받침·8개 상부 통로·독립 문짝을 유지한다."
   },
   "shared_grass": {
     "manifest": "assets/source/materials/grass/provenance.json",
@@ -46,7 +46,7 @@
     },
     {
       "path": "scripts/native_fortress_plan.gd",
-      "sha256": "331d62dc95b13428497e317e3050495e8ca351e17f39bdee641ea9cbefd817e9"
+      "sha256": "8164e5fa8e50eef2298a39ec7734283d578f3a3905707af675625f9add2c3cf3"
     },
     {
       "path": "scripts/native_terrain_forms.gd",
@@ -70,11 +70,11 @@
     },
     {
       "path": "tools/architecture_art/fortress_builder.gd",
-      "sha256": "7a244c8adb5fdba3bd121c8a734a406966bd410f1547f1eb998caa76b3182cc4"
+      "sha256": "7c4455bce47b23e02d3fe74956680335c497a1422d27e7fd442af1eb2cbd6318"
     },
     {
       "path": "scripts/spatial_world_3d.gd",
-      "sha256": "5ff5da7858e16e50eb2c4ff7576aec97861851141a3f7aafe45555585f387e76"
+      "sha256": "6223d9cd05ea9c43945599d717980847c61285c11aa7e8a2db75dbf5cb069f17"
     },
     {
       "path": "scripts/village.gd",
@@ -121,21 +121,18 @@
       "sha256": "0c1a1a87241b34c1bbcfb215f1fdf08c79ecfbfa4e04e6c82b79918dff72fcfc"
     }
   ],
-  "roofed_corner_revision": {
-    "reference": "2026-11-10 사용자 대화 첨부: 회색 성벽 양 끝의 높은 원형 망루와 원뿔 지붕. 시각 구조 참고이며 외부 모델/텍스처를 복제하지 않음.",
+  "fortress_surface_provenance": "assets/source/environment/fortress/provenance.json",
+  "open_corner_design": {
+    "reference": "2D 성벽과 성문 원본의 열린 망루·돌 난간·목재 통로",
     "generator": "tools/architecture_art/fortress_builder.gd",
     "collision": "scripts/native_fortress_plan.gd + scripts/spatial_world_3d.gd",
-    "triangles_whole_family": 32136,
-    "static_surfaces": 5,
+    "triangles_whole_family": 36928,
+    "static_surfaces": 4,
     "pivot": "Y-up, world XZ ground, corner base at Y=0, metre units, no scale transform",
     "reused_materials": [
       {
         "path": "assets/art/preview3d/fortress-atlas.png",
         "sha256": "a01fe62a241126e00f99dcdd81ecd43169daa0aadd0630e4517888b8c25f4e80"
-      },
-      {
-        "path": "assets/art/preview3d/slate.webp",
-        "sha256": "bf862f2b2f2caa8297d8ca6dc5419963d747a9f33f977a8588b9dda65cfb7688"
       },
       {
         "path": "assets/models/materials/village_craft/oak.png",
@@ -146,10 +143,19 @@
     "wall_walk": {
       "width_m": 1.12,
       "minimum_ground_headroom_m": 2.02,
-      "parts": 198,
+      "parts": 284,
       "routes": 8,
       "collision": "Shared SOLID triangles, separate from ground FLOOR"
-    }
-  },
-  "fortress_surface_provenance": "assets/source/environment/fortress/provenance.json"
+    },
+    "reference_images": [
+      {
+        "path": "assets/source/style/wall-base-design.png",
+        "sha256": "6cdea76128d02ec19f02629c89a059e726bd1f636cedd9fedfea6c2af2057e3b"
+      },
+      {
+        "path": "assets/source/style/gate-wall-design.png",
+        "sha256": "32589bc30226b4d6e641bbcfd59304a4cd996119de79e28bb1b0bab102731ff3"
+      }
+    ]
+  }
 }
