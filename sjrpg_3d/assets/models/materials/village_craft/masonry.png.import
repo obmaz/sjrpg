@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://rnh8y78khack"
-path="res://.godot/imported/door_shop.webp-6d7cc98a7cf42ee231d630b7c050233f.ctex"
+uid="uid://bma8l2qtkavt7"
+path="res://.godot/imported/masonry.png-5bcb39fd0c5daaf862a7c2d641d4b8fc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/preview3d/door_shop.webp"
-dest_files=["res://.godot/imported/door_shop.webp-6d7cc98a7cf42ee231d630b7c050233f.ctex"]
+source_file="res://assets/models/materials/village_craft/masonry.png"
+dest_files=["res://.godot/imported/masonry.png-5bcb39fd0c5daaf862a7c2d641d4b8fc.ctex"]
 
 [params]
 
@@ -23,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""

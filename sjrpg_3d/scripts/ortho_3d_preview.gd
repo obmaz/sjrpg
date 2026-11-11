@@ -11,7 +11,7 @@ const CAMERA_DIRECTION := Vector3(1, 1, 1)
 const MAGE_PATH := "res://assets/art/preview3d/mage.glb"
 const MATERIAL_ROOT := "res://assets/art/preview3d/"
 const WALL_TEXTURES := ["chapel_stone", "brick", "rubble", "plaster", "planks"]
-const ROOF_TEXTURES := ["slate", "clay", "shingle", "roof_shop", "roof_smith", "roof_home"]
+const ROOF_TEXTURES := ["slate", "clay", "shingle"]
 const CARD_CODE := """
 shader_type spatial;
 render_mode unshaded, blend_mix, depth_draw_never, cull_disabled;
@@ -297,24 +297,18 @@ func _setup_materials() -> void:
 	_materials["granite"] = _materials["stone"].duplicate()
 	_materials["granite"].albedo_color = Color(0.74, 0.76, 0.80)
 	for key: String in ROOF_TEXTURES:
-		var custom_roof := (
-			NativeAssetSurface.roof_path(key.trim_prefix("roof_"))
-			if key.begins_with("roof_") else ""
-		)
-		var texture_path := custom_roof if not custom_roof.is_empty() else MATERIAL_ROOT + key + ".webp"
-		_materials[key] = _material(texture_path)
-		if not custom_roof.is_empty():
-			_materials[key].albedo_color = NativeAssetSurface.roof_tint(key.trim_prefix("roof_"))
+		_materials[key] = _material(MATERIAL_ROOT + key + ".webp")
 		_materials[key].cull_mode = BaseMaterial3D.CULL_DISABLED
+	for id: String in ["shop", "smith", "stable", "home"]:
+		_materials["roof_" + id] = NativeAssetSurface.roof_material(id)
+	_materials["village_stone"] = NativeVillageSurfaces.masonry()
 	# Soot-darkened slate for the smithy.
 	_materials["slate_dark"] = _materials["slate"].duplicate()
 	_materials["slate_dark"].albedo_color = Color(0.70, 0.70, 0.72)
-	_materials["wood"] = _material(MATERIAL_ROOT + "timber.webp")
-	_materials["wood"].uv1_triplanar = true
-	_materials["wood"].uv1_scale = Vector3.ONE * 0.65
-	_materials["door"] = _material(MATERIAL_ROOT + "timber.webp")
+	_materials["wood"] = NativeVillageSurfaces.oak(true)
+	_materials["door"] = NativeVillageSurfaces.oak()
 	for key: String in ["door_shop", "door_smith", "door_stable", "door_home"]:
-		_materials[key] = _material(MATERIAL_ROOT + key + ".webp")
+		_materials[key] = _materials["door"]
 	_materials["grass"] = NativeGround3D.grass_material()
 	_materials["paving"] = _material("res://assets/art/forest/paving.webp")
 	_materials["iron"] = _material("", Color("292b29"))
@@ -684,6 +678,8 @@ func _sync_cards() -> void:
 			continue
 		var id := effect.get_instance_id()
 		if effect.kind == "text":
+			if effect.age < 0.0:
+				continue
 			if not _labels.has(id):
 				var fresh_label: Label3D
 				if _label_pool.is_empty():
@@ -806,7 +802,7 @@ func _sync_cards() -> void:
 			_label_pool.append(spare)
 			_labels.erase(id)
 		else:
-			(_labels[id]["node"] as Label3D).visible = owner.get_parent() == game.world
+			(_labels[id]["node"] as Label3D).visible = owner.get_parent() == game.world and owner.age >= 0.0
 
 
 

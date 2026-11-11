@@ -1,6 +1,6 @@
 class_name NativeBridge3D
 extends RefCounted
-## 공유 다리 발판과 난간 경계를 그대로 읽고 장식만 입체 메시로 만든다.
+## 발판·난간은 기존 경계, 강바닥 기초는 NativeBridgePlan의 실제 부피를 사용한다.
 static func _arch(tool: SurfaceTool, centre: Vector3, width: float, rise: float, thickness: float, depth: float) -> void:
 	var radius := width * 0.5
 	for segment: int in 10:
@@ -29,14 +29,12 @@ static func build(preview: Node, parent: Node3D) -> Node3D:
 	var a := Ortho3DPreview.ground_position(deck[0])
 	var b := Ortho3DPreview.ground_position(deck[1])
 	var c := Ortho3DPreview.ground_position(deck[3])
-	var along := (b - a).normalized()
-	var across := (c - a).normalized()
 	var length := a.distance_to(b)
 	var width := a.distance_to(c)
 	var root := Node3D.new()
 	root.name = "NativeDetailedBridge"
 	NativePlayerOcclusion.mark_object(root)
-	root.transform = Transform3D(Basis(along, Vector3.UP, across), a)
+	root.transform = NativeBridgePlan.frame(bridge)
 	parent.add_child(root)
 	var masonry := SurfaceTool.new()
 	masonry.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -75,6 +73,11 @@ static func build(preview: Node, parent: Node3D) -> Node3D:
 		_arch(masonry,Vector3((span+0.5)*length*0.5,-1.70,width*0.5),length*0.5-0.42,1.33,0.28,width-0.06)
 	for pier: int in 3:
 		_box(masonry,Vector3(pier*length*0.5,-0.85,width*0.5),Vector3(0.46,1.70,width+0.03))
+	for part: Dictionary in NativeBridgePlan.foundations(bridge):
+		var faces := NativeBridgePlan.faces(part)
+		for index in range(0, faces.size(), 3):
+			var normal := (faces[index + 2] - faces[index]).cross(faces[index + 1] - faces[index]).normalized()
+			NativeLandmarks3D._tri(masonry, faces[index], faces[index + 1], faces[index + 2], normal)
 	# 보행면의 높이와 끝점은 공유 충돌의 원래 값에서 바꾸지 않는다.
 	for index: int in bays * 2:
 		var x := (index + 0.5) * length / (bays * 2)
@@ -86,7 +89,7 @@ static func build(preview: Node, parent: Node3D) -> Node3D:
 	var index := 0
 	for tool: SurfaceTool in [masonry, caps, iron, paving]:
 		var mesh := tool.commit()
-		var material: Material = [NativeAssetSurface.material("bridge", Vector3.ONE, 0), NativeAssetSurface.material("bridge", Vector3.ONE, 1), metal, NativeAssetSurface.material("bridge", Vector3.ONE, 2)][index]
+		var material: Material = [NativeAssetSurface.material("bridge", Vector3.ONE, 0), NativeVillageSurfaces.masonry(1), metal, NativeAssetSurface.material("bridge", Vector3.ONE, 2)][index]
 		var node := MeshInstance3D.new()
 		node.mesh = mesh
 		node.material_override = material
@@ -94,5 +97,5 @@ static func build(preview: Node, parent: Node3D) -> Node3D:
 		root.add_child(node)
 		triangles += mesh.surface_get_array_len(0) / 3
 		index += 1
-	root.set_meta("bridge_detail", {"deck": deck, "length_m": length, "width_m": width, "bays": bays, "arches": arches, "triangles": triangles, "surfaces": 4, "solid_arcade_backing": true, "deck_height": 0.045, "collision_changes": 0, "opening_guards": true})
+	root.set_meta("bridge_detail", {"deck": deck, "length_m": length, "width_m": width, "bays": bays, "arches": arches, "triangles": triangles, "surfaces": 4, "solid_arcade_backing": true, "deck_height": 0.045, "collision_changes": 1, "opening_guards": true, "foundation_parts": 9})
 	return root

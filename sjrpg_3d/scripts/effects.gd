@@ -36,6 +36,8 @@ var _text_anchor := Vector2.ZERO
 var _text_rise := 0.0
 const TEXT_STREAM_GAP := 4.0
 const TEXT_STREAM_MAX_RISE := 240.0
+const TEXT_STAGGER_SECONDS := 0.04
+const TEXT_STAGGER_MAX := 0.20
 
 
 ## Monster damage uses its own vertical stream; rewards retain nearby free placement.
@@ -52,6 +54,7 @@ func place_text(peers: Array, damage_target: Node2D = null) -> void:
 		_text_target_id = damage_target.get_instance_id()
 		_text_offset = position - damage_target.position
 		_text_anchor = position
+		_stagger_damage_text(peers, damage_target.get_parent())
 		_place_damage_stream(peers)
 		return
 	var offsets := [Vector2.ZERO, Vector2(-96, 0), Vector2(96, 0),
@@ -70,6 +73,30 @@ func place_text(peers: Array, damage_target: Node2D = null) -> void:
 	for peer in peers:
 		if is_instance_valid(peer) and not peer.is_queued_for_deletion() and peer.kind == "text" and text_bounds().intersects(peer.text_bounds()):
 			peer.queue_free()
+
+
+## 피해는 즉시 처리한다. 음수 나이는 숫자 표시만 늦추고 일시정지도 함께 따른다.
+## 밀집 타격은 대기 중인 숫자의 간격만 압축해 마지막 숫자가 한꺼번에 몰리지 않게 한다.
+func _stagger_damage_text(peers: Array, scope: Node) -> void:
+	var delay := 0.0
+	var first_gap := 0.0
+	var waiting: Array[Effect] = []
+	for peer in peers:
+		if not is_instance_valid(peer) or peer.is_queued_for_deletion() or peer.kind != "text" or peer._text_target_id == 0 or peer.get_parent() != scope:
+			continue
+		delay = maxf(delay, TEXT_STAGGER_SECONDS - peer.age)
+		if peer.age < 0.0:
+			waiting.append(peer)
+		else:
+			first_gap = maxf(first_gap, TEXT_STAGGER_SECONDS - peer.age)
+	if delay <= TEXT_STAGGER_MAX + 0.000001:
+		age = -minf(delay, TEXT_STAGGER_MAX)
+		return
+	waiting.append(self)
+	for index in waiting.size():
+		var scheduled := -lerpf(first_gap, TEXT_STAGGER_MAX, float(index) / (waiting.size() - 1))
+		# 후속 타격은 앞선 숫자를 앞당길 수만 있다. 이미 기다린 시간을 다시 늘리지 않는다.
+		waiting[index].age = scheduled if waiting[index] == self else maxf(waiting[index].age, scheduled)
 
 
 ## Newest hit stays by the target; preceding hits move up in their original order.
@@ -265,6 +292,7 @@ static func spawn_impact(world_game: Node, at: Vector2, source: Node2D, heavy :=
 
 
 func _process(delta: float) -> void:
+	var previous_age := age
 	var active_delta := minf(delta, maxf(0.0, life - age))
 	# A slow frame must not discard a new cosmetic impact before its first render.
 	# Only the first update is bounded; headless/offscreen effects still expire normally.
@@ -273,6 +301,8 @@ func _process(delta: float) -> void:
 		_impact_started = true
 	else:
 		age += delta
+	if kind == "text":
+		active_delta = maxf(0.0, minf(age, life) - maxf(previous_age, 0.0))
 	match kind:
 		"skill_fx":
 			if params.get("visual", "") == "spin":
@@ -308,7 +338,7 @@ func _process(delta: float) -> void:
 				if _text_rise > TEXT_STREAM_MAX_RISE:
 					queue_free()
 			elif not Prefs.reduce_motion:
-				position.y -= 42.0 * delta
+				position.y -= 42.0 * active_delta
 	if is_queued_for_deletion():
 		return
 	if age >= life:
@@ -575,6 +605,8 @@ func visual_phase() -> float:
 
 
 func _draw() -> void:
+	if kind == "text" and age < 0.0:
+		return
 	var t := age / life
 	match kind:
 		"skill_fx":

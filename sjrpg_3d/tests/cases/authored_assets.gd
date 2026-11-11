@@ -43,15 +43,15 @@ func run() -> void:
 				)
 			)
 	check("all six roles use independent authored atlases", textures.size() == 6)
-	var roof := NativeAssetSurface.roof_path("smith")
+	var roof := NativeAssetSurface.roof_material("smith")
 	check(
-		"smith roof resolves inside its independent surface package",
-		roof == "res://assets/models/architecture/smith/roof.png"
+		"smith package selects its single-piece slate material",
+		roof.get_shader_parameter("cell") == 0 and roof.get_shader_parameter("atlas") == load(NativeVillageSurfaces.ROOT + "roof.png")
 	)
 	var game := await make_game("mage")
 	check(
 		"the actual smithy uses its detailed roof source",
-		game.ortho_preview._materials["roof_smith"].albedo_texture == load(roof)
+		game.ortho_preview._materials["roof_smith"].get_shader_parameter("atlas") == roof.get_shader_parameter("atlas")
 	)
 	game.queue_free()
 	await _frames(2)

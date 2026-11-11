@@ -715,7 +715,7 @@ func _damage_stream_preview() -> void:
 		await get_tree().process_frame
 		var rows := 0
 		for effect in cosmetic_effects:
-			if is_instance_valid(effect) and not effect.is_queued_for_deletion() and effect is Effect and effect.kind == "text" and effect._text_target_id == targets[0].get_instance_id():
+			if is_instance_valid(effect) and not effect.is_queued_for_deletion() and effect is Effect and effect.kind == "text" and effect.age >= 0.0 and effect._text_target_id == targets[0].get_instance_id():
 				rows += 1
 		if rows >= 4:
 			get_tree().paused = true

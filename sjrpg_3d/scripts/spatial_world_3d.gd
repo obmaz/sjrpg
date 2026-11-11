@@ -500,9 +500,13 @@ func _build_forest() -> void:
 		roof.points = NativeFortressPlan.roof_points(corner)
 		roof.margin = 0.001
 		_shape_body(roof, Transform3D.IDENTITY, SOLID, "CornerRoof")
+	# 상부 부피는 실제 충돌을 가지며 아래 지상 바닥의 높이는 바꾸지 않는다.
+	_triangle_body(NativeFortressPlan.wall_walk_faces(NativeFortressPlan.wall_walk(game.village)), SOLID, "WallWalkStructure")
 	# Bridge rails are full-height native solids even though their deck has zero rise.
 	for polygon in game.village.bridge.solids():
 		_prism_body(polygon, 0.0, 0.96, SOLID, "BridgeRail")
+	for part: Dictionary in NativeBridgePlan.foundations(game.village.bridge):
+		_triangle_body(NativeBridgePlan.faces(part, NativeBridgePlan.frame(game.village.bridge)), SOLID, "BridgeFoundation")
 	for circle: Array in game.village.circles:
 		var point: Vector2 = circle[0]
 		var radius: float = circle[1]

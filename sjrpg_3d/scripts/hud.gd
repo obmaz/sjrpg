@@ -506,9 +506,12 @@ static func header_geometry(view: Vector2, m: Vector4, mobile := false) -> Dicti
 	var safe_top := m.y + top_gap * screen_unit
 	# The portrait crest extends five header units above its origin. Align painted
 	# outlines at the safe top instead of pushing both groups down with screen height.
-	var origin := Vector2(m.x, safe_top + 5.0 * u)
 	var map_size := Vector2.ONE * 136.0 * screen_unit
 	var map_ink := Minimap.painted_bounds(64.0 * screen_unit, map_size)
+	var side_padding := 144.0 * screen_unit - map_ink.end.x
+	# 실제로 그린 초상화 테두리와 미니맵 테두리의 안전 영역 여백을 맞춘다.
+	var portrait_left := (57.0 - 50.0 - 4.5) * u
+	var origin := Vector2(m.x + side_padding - portrait_left, safe_top + 5.0 * u)
 	var center := origin + Vector2(57, 53) * u
 	var radius := 50.0 * u
 	var right := origin.x + minf(455.0 * u, available.x - 169.0 * screen_unit)

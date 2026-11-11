@@ -304,9 +304,6 @@ def refresh_dependents(manifest):
     shared = {MANIFEST.relative_to(ROOT).as_posix(): MANIFEST}
     for key in list(WALLS) + list(ROOFS):
         shared[manifest["materials"][key]["path"]] = ROOT / manifest["materials"][key]["path"]
-    # The house/chapel builders now pick these per-building material roles.
-    for script in ("scripts/native_house_3d.gd", "scripts/ortho_3d_chapel.gd"):
-        shared[script] = ROOT / script
 
     def update(node):
         if isinstance(node, dict):
@@ -321,25 +318,7 @@ def refresh_dependents(manifest):
             for value in node:
                 update(value)
 
-    houses = ROOT / "assets/source/preview3d/houses/provenance.json"
-    record = json.loads(houses.read_text())
-    textures = record["materials"]["textures"]
-    listed = {entry["path"] for entry in textures}
-    for key in ("brick", "rubble", "plaster", "planks", "clay", "shingle"):
-        path = manifest["materials"][key]["path"]
-        if path not in listed:
-            textures.append({"path": path, "sha256": ""})
-    update(record)
-    record["materials"]["actual_material_record"] = manifest
-    record["materials"]["provenance_sha256"] = sha(MANIFEST)
-    houses.write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n")
-    chapel_record = ROOT / "assets/source/preview3d/chapel/refinement.json"
-    record = json.loads(chapel_record.read_text())
-    path = manifest["materials"]["chapel_stone"]["path"]
-    if path not in {entry["path"] for entry in record["inputs"]}:
-        record["inputs"].append({"path": path, "sha256": ""})
-    update(record)
-    chapel_record.write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n")
+    # 마을 건축의 생성형 재료 기록은 각 독립 패키지가 소유한다.
     props = ROOT / "assets/data/native_encounter_props.json"
     record = json.loads(props.read_text())
     update(record)

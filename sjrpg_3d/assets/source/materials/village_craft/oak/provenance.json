@@ -1,0 +1,22 @@
+{
+  "tool": "image_gen.imagegen",
+  "source": "original.png",
+  "prompt": "prompt.txt",
+  "sha256": "79dd01b7c5bc2a26cf527f0d00b1b382b0bfb4d2e24e6bf168a174c07692272f",
+  "runtime": "sjrpg_3d/assets/models/materials/village_craft/oak.png",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "references": [
+    {
+      "path": "assets/source/style/approved-game-reference.jpg",
+      "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+    },
+    {
+      "path": "assets/source/remake/house-nw.png",
+      "sha256": "d75434ed6c1a692e177ffd528c84818a7a01dffe1458c7bbe2c84c01922a7707"
+    }
+  ],
+  "notes": "생성 픽셀 무가공 채택. 기하의 역할에 맞게 별도 셀을 매핑한다. 별도 법선/거칠기 맵은 만들지 않았다."
+}

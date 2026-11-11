@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""집별 전용 문양과 자연물 표면을 고정 시드로 제작한다. 기존 이미지 편집 없이 수식에서 생성한다."""
+"""기존 자연물 표면을 고정 시드로 재현한다. 기존 이미지 편집 없이 수식에서 생성한다."""
 import json, hashlib
 from pathlib import Path
 import numpy as np
@@ -23,19 +23,6 @@ def make(kind, seed):
             return m.srgb('b7b19d')[None,None,:]*(1+patch[:,:,None]*.15)*np.where(pores,.68,1)[:,:,None]
         scars=np.abs(np.sin((x*5+y*2+patch*.6)*np.pi*2))<.045
         return m.srgb('9a9d85')[None,None,:]*(1+noise[:,:,None])*np.where(scars,.64,1)[:,:,None]
-    if kind.startswith('door_'):
-        palette={'door_shop':'635044','door_smith':'443c35','door_stable':'715b3c','door_home':'4d6060'}
-        grain=m.periodic_noise(SIZE,48,seed,3,cells_y=3)*.15
-        rgb=m.srgb(palette[kind])[None,None,:]*np.ones((SIZE,SIZE,1))*(1+grain[:,:,None])
-        joints=np.minimum((x*6)%1,1-(x*6)%1)<.025
-        # 실제 조각처럼 좁은 반복 홈과 중앙 마름모. 조명/철물은 메시가 담당한다.
-        carving=np.abs(((x+y)*4)%1-.5)<.025
-        carving|=np.abs(((x-y)*4)%1-.5)<.025
-        rgb*=np.where(joints,.52,np.where(carving,.76,1))[:,:,None]
-        return rgb
-    if kind.startswith('roof_'):
-        colors={'roof_shop':['7d5637','a2784c','91613c'], 'roof_smith':['333c42','4d5152','3e454c'], 'roof_home':['39585a','456866','587571']}
-        return m.roof_tiles(SIZE,seed,[m.srgb(c) for c in colors[kind]],'20282a',lambda u:.91+.09*np.cos(u*np.pi*2),fine=noise,tone=.09)
     if kind.startswith('rock_'):
         base=m.rubble(SIZE)
         patch=m.periodic_noise(SIZE,4,seed,3)
@@ -57,26 +44,14 @@ def make(kind, seed):
 
 def main():
     SOURCE.mkdir(parents=True,exist_ok=True); (SOURCE/'.gdignore').touch()
-    kinds=['door_shop','door_smith','door_stable','door_home','roof_shop','roof_smith','roof_home','rock_lichen','rock_iron','ground_heather','ground_moss','beast_fur','grave_bone','scar_skin']
-    record={'제작':'원본 수식 기반 절차적 알베도. 집별 문양·조각과 자연물 변형. 법선/거칠기 맵은 만들지 않았다.','license':'Original project artwork','generator':str(Path(__file__).relative_to(ROOT)),'materials':{}}
-    for i,kind in enumerate(kinds, start=4):
-        if kind=='roof_smith':
-            continue  # 대장간 지붕은 architecture/smith의 원화 기반 패키지가 소유한다.
+    kinds=['rock_lichen','rock_iron','ground_heather','ground_moss','beast_fur','grave_bone','scar_skin']
+    record={'제작':'원본 수식 기반 절차적 알베도. 자연물 변형. 법선/거칠기 맵은 만들지 않았다.','license':'Original project artwork','generator':str(Path(__file__).relative_to(ROOT)),'materials':{}}
+    for i,kind in enumerate(kinds, start=11):
         image=Image.fromarray(np.clip(make(kind,92137+i*31),0,255).astype('uint8'))
         source=SOURCE/(kind+'.png'); image.save(source)
         path=ART/(kind+'.webp'); image.save(path,'WEBP',quality=92,method=6)
-        record['materials'][kind]={'path':str(path.relative_to(ROOT)),'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'source':str(source.relative_to(ROOT)),'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'size':[SIZE,SIZE],'tile_m':(1.0/0.65 if kind.startswith('door_') else (0.5 if kind=='beast_fur' else (0.3 if kind in ['scar_skin','grave_bone'] else (2.6 if kind.startswith('roof_') else 2.56)))),'seed':92137+i*31}
+        record['materials'][kind]={'path':str(path.relative_to(ROOT)),'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'source':str(source.relative_to(ROOT)),'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'size':[SIZE,SIZE],'tile_m':(0.5 if kind=='beast_fur' else (0.3 if kind in ['scar_skin','grave_bone'] else 2.56)),'seed':92137+i*31}
         if kind=='rock_iron': record['materials'][kind]['actor_golem_tile_m']=0.6
-    # 건물 패밀리 기록도 재현 실행 한 번으로 함께 갱신한다.
-    m.refresh_dependents(json.loads(m.MANIFEST.read_text()))
-    house_path=ROOT/'assets/source/preview3d/houses/provenance.json'
-    house=json.loads(house_path.read_text())
-    textures=house['materials']['textures']
-    for key,entry in record['materials'].items():
-        if key.startswith(('wall_','door_','roof_')):
-            textures[:]=[v for v in textures if v['path']!=entry['path']]
-            textures.append({'path':entry['path'],'sha256':entry['sha256']})
-    house_path.write_text(json.dumps(house,ensure_ascii=False,indent=2)+'\n')
     record['generator_sha256']=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
     record['geometry']={name:hashlib.sha256((ROOT/'scripts'/name).read_bytes()).hexdigest() for name in ['native_enemy_models.gd','native_house_3d.gd','native_landmarks_3d.gd','native_scenery_props_3d.gd']}
     (SOURCE/'provenance.json').write_text(json.dumps(record,ensure_ascii=False,indent=2)+'\n')

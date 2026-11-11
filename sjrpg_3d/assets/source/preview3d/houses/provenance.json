@@ -2,92 +2,40 @@
   "generator": {
     "api": "NativeHouse3D.build(presenter, root, key, width, depth, height) -> Dictionary",
     "path": "scripts/native_house_3d.gd",
-    "sha256": "a2fc24dc6b59ec61a8a98581ed6eebd5782020335ebc2585a69729ce5df03ad3"
+    "sha256": "af3fed42d571d145dbe7823e07272da00dfdf0599520b958881b46fc1457b729"
   },
   "materials": {
     "textures": [
       {
-        "path": "assets/art/preview3d/limestone.webp",
-        "sha256": "2561c1be419f951bf0bce7b9fd5085c24a92600cf66424a4775e16cd37b58e6c"
-      },
-      {
-        "path": "assets/art/preview3d/slate.webp",
-        "sha256": "bf862f2b2f2caa8297d8ca6dc5419963d747a9f33f977a8588b9dda65cfb7688"
-      },
-      {
-        "path": "assets/art/preview3d/timber.webp",
-        "sha256": "4cac472a9fb54db9e89bdaf1577db846bd49f936e759dca7b10101175f7dcb1c"
-      },
-      {
-        "path": "assets/art/preview3d/brick.webp",
-        "sha256": "44d8f14eb0d86986f70e7020de7e7b7b0dcf58fd775e1f5339dc3c7af0a135ee"
-      },
-      {
-        "path": "assets/art/preview3d/rubble.webp",
-        "sha256": "7fc64bfe3814a1b3576ce0fec10b79bb7f6edc5f026133e444d2ace1e7da578e"
-      },
-      {
-        "path": "assets/art/preview3d/plaster.webp",
-        "sha256": "3847da83df10d4957b6e91a16f5d5d82d4a72670d075a110e0e2aa0ef31fc286"
-      },
-      {
-        "path": "assets/art/preview3d/planks.webp",
-        "sha256": "0cebe6305ee1ab1e0e14dfdcc8724a55bb02f7c383e729f980b7f6ca6a39965b"
-      },
-      {
-        "path": "assets/art/preview3d/clay.webp",
-        "sha256": "96dfb4bd535b5fe264473854eaf235e7a41d4e640d1c88075026a26e1ad2d15c"
-      },
-      {
-        "path": "assets/art/preview3d/shingle.webp",
-        "sha256": "c7ba4be858f1744a143f0edfd7e129df71b6127f4bce2d7bfddd06888f9bda76"
-      },
-      {
-        "path": "assets/art/preview3d/door_shop.webp",
-        "sha256": "9fc1860325ea828c223a36cad91a89f9a30c2ccd5addd58a0a6dc2997a75bb7b"
-      },
-      {
-        "path": "assets/art/preview3d/door_smith.webp",
-        "sha256": "67165ea5efbb733b40184cfb3c1ae3af93b97290d676818622bc6904f95cac1e"
-      },
-      {
-        "path": "assets/art/preview3d/door_stable.webp",
-        "sha256": "6036c4b4f4b72460cb478613557f889a99529aefc41679fda415a851abd4a279"
-      },
-      {
-        "path": "assets/art/preview3d/door_home.webp",
-        "sha256": "1329e607b9ad28423319aabd04af0370a1b5e7832159ec81840ec09260768490"
-      },
-      {
-        "path": "assets/art/preview3d/roof_shop.webp",
-        "sha256": "a72cc889faf2fc26d5bc0e485428bc79423c52d724845ba09218ee2338f8868b"
-      },
-      {
-        "path": "assets/art/preview3d/roof_home.webp",
-        "sha256": "d78948eb98e24430649a3fdd306cdc09c900dc2089df71d100a7e50648ace551"
-      },
-      {
         "path": "assets/models/architecture/shop/albedo.png",
-        "sha256": "b9b96b542ee11c8763513f50cc698488243545a2e0f95f5d338d7d6d8258c44e"
+        "sha256": "98259f0a2146a0b3a7fcc4b6235339bb199ab7553b8793647b48269d67007c28"
       },
       {
         "path": "assets/models/architecture/smith/albedo.png",
-        "sha256": "baab00cfcaa6cbedf246b388b5ee3d0961a4b3311e344991f0f4e3f57f4095d1"
+        "sha256": "e2c920d2f6097dbda972ea9ce34534dbfbc29c4c2efd90b93a91ee2b1b959408"
       },
       {
         "path": "assets/models/architecture/stable/albedo.png",
-        "sha256": "5e034e00e98eca863763a20342c026b015e7509de005b2137b4360a5ae523e01"
+        "sha256": "eca0646dc97b5488b838ad5a77a56c78b2419d8666d88e0dd3d29dceffb10628"
       },
       {
         "path": "assets/models/architecture/home/albedo.png",
-        "sha256": "94761fb4e7e5758dce6f2fc81777b5bf63d457a3268256d214fc2b8a24994dbd"
+        "sha256": "98fc2f0be4bd466f25ffff00ef6cd03344986fdd717f0cec05fc662161f89487"
       },
       {
-        "path": "assets/models/architecture/smith/roof.png",
-        "sha256": "537d091030ddb89ad1d8b98a06ebf6a4c247602d01e35793585269d825dd0588"
+        "path": "assets/models/materials/village_craft/masonry.png",
+        "sha256": "7008c8010864d5730202121b93af6e55d4dde3c4fa24073992d5a8b5ac715ccf"
+      },
+      {
+        "path": "assets/models/materials/village_craft/oak.png",
+        "sha256": "79dd01b7c5bc2a26cf527f0d00b1b382b0bfb4d2e24e6bf168a174c07692272f"
+      },
+      {
+        "path": "assets/models/materials/village_craft/roof.png",
+        "sha256": "ff275f834176bb746401edccf391f1b2805015a1984aa23f2b4f1053c5f0fff5"
       }
     ],
-    "wall_mapping": "독립 건물별 2x2 네 면 원화. 구조재와 지붕은 공유 미터 UV."
+    "wall_mapping": "네 면 전체 인필 원화. 문/창/골조 그림 없이 실제 기하가 경계를 만든다. roofCell은 기와 한 조각 재질을 선택한다."
   },
   "coordinate_contract": {
     "units": "metres",

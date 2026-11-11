@@ -3,6 +3,8 @@ render_mode cull_back;
 uniform sampler2D base_atlas : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
 uniform sampler2D edge_atlas : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
 uniform sampler2D distance_field : filter_linear, repeat_disable;
+uniform sampler2D village_craft : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
+uniform vec4 town_bounds;
 #include "res://scripts/grass_variety.gdshaderinc"
 
 uniform sampler2D shore_field : filter_linear, repeat_disable;
@@ -57,6 +59,10 @@ void fragment() {
 	vec3 color = grass;
 	if (d < 1.25) {
 		vec3 paving = mix(base_tile(uv, vec2(0.0)), base_tile(uv, vec2(1.0, 0.0)), ground_noise(ground_world / 3.8));
+		vec2 town_edge = min(ground_world - town_bounds.xy, town_bounds.zw - ground_world);
+		float town = smoothstep(-0.2, 0.5, min(town_edge.x, town_edge.y));
+		vec3 plaza = texture(village_craft, (vec2(0.0, 1.0) + mix(vec2(0.018), vec2(0.982), mirrored(uv))) * 0.5).rgb;
+		paving = mix(paving, plaza, town);
 		float irregular = (ground_noise(ground_world * 2.3) - 0.5) * 0.22;
 		float edge_d = d + irregular;
 		color = mix(paving, grass, smoothstep(-0.18, 0.18, edge_d));

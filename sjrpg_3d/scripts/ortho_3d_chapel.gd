@@ -24,6 +24,8 @@ static func build(presenter: Node, root: Node3D, width: float, depth: float, hei
 	var builder := Ortho3DChapel.new()
 	builder._root = root
 	builder._materials = presenter._materials.duplicate()
+	builder._materials["stone"] = presenter._materials["village_stone"]
+	builder._materials["slate"] = NativeAssetSurface.roof_material("chapel")
 	return builder._build(width, depth, height)
 
 

@@ -1,80 +1,8 @@
 {
-  "제작": "원본 수식 기반 절차적 알베도. 집별 문양·조각과 자연물 변형. 법선/거칠기 맵은 만들지 않았다.",
+  "제작": "원본 수식 기반 자연물 알베도. 법선/거칠기 맵은 만들지 않았다.",
   "license": "Original project artwork",
   "generator": "tools/preview3d/make_surface_variety.py",
   "materials": {
-    "door_shop": {
-      "path": "assets/art/preview3d/door_shop.webp",
-      "sha256": "9fc1860325ea828c223a36cad91a89f9a30c2ccd5addd58a0a6dc2997a75bb7b",
-      "source": "assets/source/preview3d/surface-variety/door_shop.png",
-      "source_sha256": "f86d434216b00fac86875a92b7f6e0b607becbf9d87586c7afbf224af409cd1c",
-      "size": [
-        512,
-        512
-      ],
-      "tile_m": 1.5384615384615383,
-      "seed": 92261
-    },
-    "door_smith": {
-      "path": "assets/art/preview3d/door_smith.webp",
-      "sha256": "67165ea5efbb733b40184cfb3c1ae3af93b97290d676818622bc6904f95cac1e",
-      "source": "assets/source/preview3d/surface-variety/door_smith.png",
-      "source_sha256": "099d1bc3d40a23cf0947dff58d67f8c4bef6a5c3c60d7e5fb23a77a15dc9ae70",
-      "size": [
-        512,
-        512
-      ],
-      "tile_m": 1.5384615384615383,
-      "seed": 92292
-    },
-    "door_stable": {
-      "path": "assets/art/preview3d/door_stable.webp",
-      "sha256": "6036c4b4f4b72460cb478613557f889a99529aefc41679fda415a851abd4a279",
-      "source": "assets/source/preview3d/surface-variety/door_stable.png",
-      "source_sha256": "41ab2acc370a3e3b8b728bf8f659f21bdf1406d48c47ab3a03baf53c7f015da1",
-      "size": [
-        512,
-        512
-      ],
-      "tile_m": 1.5384615384615383,
-      "seed": 92323
-    },
-    "door_home": {
-      "path": "assets/art/preview3d/door_home.webp",
-      "sha256": "1329e607b9ad28423319aabd04af0370a1b5e7832159ec81840ec09260768490",
-      "source": "assets/source/preview3d/surface-variety/door_home.png",
-      "source_sha256": "ee685a53083e2773616bc3d8fe21c0fca50e7da468692c9234667483bfb9e18b",
-      "size": [
-        512,
-        512
-      ],
-      "tile_m": 1.5384615384615383,
-      "seed": 92354
-    },
-    "roof_shop": {
-      "path": "assets/art/preview3d/roof_shop.webp",
-      "sha256": "a72cc889faf2fc26d5bc0e485428bc79423c52d724845ba09218ee2338f8868b",
-      "source": "assets/source/preview3d/surface-variety/roof_shop.png",
-      "source_sha256": "1109265b5f307c0875d8395992c090c09997e8a2e1c07c30e4be420dd8c56c88",
-      "size": [
-        512,
-        512
-      ],
-      "tile_m": 2.6,
-      "seed": 92385
-    },
-    "roof_home": {
-      "path": "assets/art/preview3d/roof_home.webp",
-      "sha256": "d78948eb98e24430649a3fdd306cdc09c900dc2089df71d100a7e50648ace551",
-      "source": "assets/source/preview3d/surface-variety/roof_home.png",
-      "source_sha256": "51ebf3b35caef13cbd6a3508488b2a3fb03193510d2b021ca9ddcf673c1dfaba",
-      "size": [
-        512,
-        512
-      ],
-      "tile_m": 2.6,
-      "seed": 92447
-    },
     "rock_lichen": {
       "path": "assets/art/preview3d/rock_lichen.webp",
       "sha256": "a31ed1fe2cfc6c7e0b5f92d73570ee194ff1ab3e2154aa14e8c690dae9a16215",
@@ -161,12 +89,10 @@
       "seed": 92664
     }
   },
-  "generator_sha256": "410e714a94ce57e0370d6ea51df9195f35acee77798d25f73b4d86234c103e9c",
+  "generator_sha256": "34099dea02999f577ffff30d5e18e943b50254b2542ed0f9063c3154e2e10921",
   "geometry": {
     "native_enemy_models.gd": "b892a77e79973c8947ec37065376badb799fe76a9e109fbc1f3ba25aa3f3362c",
-    "native_house_3d.gd": "da833e2ecb8c7e5cfe6774b36080d78d4e5fa7152508aa3262751ad17909dd41",
     "native_landmarks_3d.gd": "6ca306ee462c046ae3934c515646357d2a2519a839029bb821d7980fb12fa6a1",
     "native_scenery_props_3d.gd": "27872b38e31f9e39eb55672e25a5a04edf7068f4e8dce1230e8b947f9eb8a7b7"
-  },
-  "independent_roof": "assets/source/architecture/smith/roof-provenance.json"
+  }
 }

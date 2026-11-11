@@ -28,6 +28,12 @@ static func build(preview: Node) -> MeshInstance3D:
 	material.set_shader_parameter("base_atlas", load(BASE))
 	material.set_shader_parameter("edge_atlas", load(EDGE))
 	material.set_shader_parameter("grass_atlas", load(GRASS))
+	material.set_shader_parameter("village_craft", load(NativeVillageSurfaces.ROOT + "masonry.png"))
+	var town := PackedVector2Array()
+	for point: Vector2 in preview.game.village.safe_zone:
+		town.append(Iso.unproject(point) / Ortho3DPreview.GROUND_PER_METER)
+	var town_bounds := Iso.poly_bounds(town)
+	material.set_shader_parameter("town_bounds", Vector4(town_bounds.position.x, town_bounds.position.y, town_bounds.end.x, town_bounds.end.y))
 	material.set_shader_parameter("distance_field", load("res://" + str(record["field"])))
 	material.set_shader_parameter("shore_field", load("res://" + str(record["shore_field"])))
 	material.set_shader_parameter("rock_texture", load("res://assets/art/village/rock.webp"))

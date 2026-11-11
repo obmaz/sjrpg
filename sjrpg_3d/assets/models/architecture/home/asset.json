@@ -10,5 +10,7 @@
   ],
   "tileMetres": 2.56,
   "roughness": 0.94,
-  "fullFacade": true
+  "fullFacade": true,
+  "roofCell": 3,
+  "infillOnly": true
 }

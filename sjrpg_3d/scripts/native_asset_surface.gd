@@ -14,17 +14,17 @@ static func _spec(id: String) -> Dictionary:
 	return spec
 
 
-static func roof_path(id: String) -> String:
-	var spec := _spec(id)
-	var path: String = spec.get("roofAlbedo", "")
-	assert(not path.contains("/") and not path.contains(".."))
-	return ROOT + id + "/" + path if not path.is_empty() else ""
-
-
-static func roof_tint(id: String) -> Color:
+static func roof_material(id: String) -> ShaderMaterial:
 	var spec := _spec(id)
 	var tint: Array = spec.get("roofTint", [1.0, 1.0, 1.0])
-	return Color(float(tint[0]), float(tint[1]), float(tint[2]))
+	var material := NativeVillageSurfaces.roof(
+		int(spec["roofCell"]), Color(float(tint[0]), float(tint[1]), float(tint[2]))
+	)
+	var albedo: String = spec.get("roofAlbedo", "")
+	if not albedo.is_empty():
+		assert(not albedo.contains("/") and not albedo.contains(".."))
+		material.set_shader_parameter("atlas", load(ROOT + id + "/" + albedo))
+	return material
 
 
 static func material(id: String, bounds: Vector3, cell := -1, gable_rise := 0.0) -> ShaderMaterial:

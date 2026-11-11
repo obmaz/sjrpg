@@ -123,7 +123,7 @@ func run() -> void:
 	stone = report["stone"]
 	granite = report["granite"]
 	check("native fortification uses all four actual gate passages and eight wing joins", controller.gates.size() == 4 and report["wing_joins"].size() == 8 and report["corners"].size() == 4)
-	check("masonry geometry and material submissions stay bounded", int(report["triangles"]) < 30000 and int(report["triangles"]) > 1000 and int(report["static_surfaces"]) <= 4)
+	check("masonry and the merged guard walk stay within their measured budget", int(report["triangles"]) < 34000 and int(report["triangles"]) > 1000 and int(report["static_surfaces"]) <= 5)
 	check("the total wall datum keeps its original projected height", absf(float(report["projected_top_pixels"]) - game.village.wall_height * Iso.S) < 0.001)
 	var installed: Array = report["static_meshes"].duplicate()
 	for gate: Dictionary in controller.gates:
@@ -135,7 +135,7 @@ func run() -> void:
 			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
 			actual_triangles += (indices.size() if not indices.is_empty() else vertices.size()) / 3
-	check("fortification budget counts actual installed static and moving geometry", actual_triangles == int(report["triangles"]) and actual_triangles < 30000)
+	check("fortification budget counts actual installed static and moving geometry", actual_triangles == int(report["triangles"]) and actual_triangles < 34000)
 	var stone_meshes := []
 	var valid := true
 	var winding := true

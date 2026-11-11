@@ -128,7 +128,7 @@ func run() -> void:
 		frozen = frozen and label._text_target.get_ref() == null
 	check("dying and freed targets retain the last safe column anchor", frozen and _column(dying_stream, final_x))
 	for label: Effect in _labels(game):
-		label._process(1.0)
+		label._process(1.0 + Effect.TEXT_STAGGER_MAX)
 	await _frames(2)
 	var before_dense := target.hp
 	for index in 100:
@@ -140,7 +140,7 @@ func run() -> void:
 		bounded = bounded and label._text_rise <= Effect.TEXT_STREAM_MAX_RISE and label.text == HudArt.stat(float(101 - dense.size() + index) * 0.01)
 	check("dense real hits retain ordered individual amounts in a bounded column", bounded and is_equal_approx(before_dense - target.hp, 50.5))
 	for label: Effect in _labels(game):
-		label._process(1.0)
+		label._process(1.0 + Effect.TEXT_STAGGER_MAX)
 	await _frames(2)
 	game.float_text(at, "새 타격\n+9 XP", Color.WHITE)
 	labels = _labels(game)

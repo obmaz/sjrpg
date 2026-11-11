@@ -2,7 +2,7 @@
   "tool": "image_gen.imagegen",
   "source": "original.png",
   "prompt": "prompt.txt",
-  "sha256": "5e034e00e98eca863763a20342c026b015e7509de005b2137b4360a5ae523e01",
+  "sha256": "eca0646dc97b5488b838ad5a77a56c78b2419d8666d88e0dd3d29dceffb10628",
   "runtime": "sjrpg_3d/assets/models/architecture/stable/albedo.png",
   "dimensions": [
     1254,
@@ -10,12 +10,12 @@
   ],
   "references": [
     {
-      "path": "assets/source/remake/house-sw.png",
-      "sha256": "8f29d82f55782ce2efae9441f90e7aaf2793db7967c4bdf523869aec8044a7b1"
+      "path": "assets/source/architecture/stable/infill-input.png",
+      "sha256": "9bb0e7e46b6e1e02b55d80a79fbfde4ae5e0f97f7482595564dcf398766cd72f"
     },
     {
-      "path": "assets/source/architecture/stable/layout.png",
-      "sha256": "3b70359ae987ebfd3f739be871bbeef6e778654e1a7f9849b9fe911873b53762"
+      "path": "assets/source/remake/house-sw.png",
+      "sha256": "8f29d82f55782ce2efae9441f90e7aaf2793db7967c4bdf523869aec8044a7b1"
     },
     {
       "path": "assets/source/style/approved-game-reference.jpg",
@@ -27,5 +27,36 @@
     "path": "tools/preview3d/render_facades.gd",
     "sha256": "a71425f9a521950597e9565bfd9887dd05d6f005869c0f567b2ba22d8a624898"
   },
-  "notes": "기존 건물 원화와 실제 네 방향 배치도를 첨부해 생성한 면 전체 원화. 생성 픽셀 무가공 채택. 실제 창·문 구멍과 돌출 골조는 3D 기하가 유지하며 박공까지 한 번 매핑한다. 미세 자체 음영은 포함하지만 법선/거칠기 맵으로 취급하지 않는다."
+  "notes": "생성 픽셀 무가공 채택. 재료 고유색이며 별도 법선/거칠기 맵은 만들지 않았다. 개구부/골조는 실제 3D 기하가 담당한다.",
+  "inputGeneration": {
+    "tool": "image_gen.imagegen",
+    "source": "infill-input.png",
+    "prompt": "infill-input-prompt.txt",
+    "sha256": "9bb0e7e46b6e1e02b55d80a79fbfde4ae5e0f97f7482595564dcf398766cd72f",
+    "runtime": "sjrpg_3d/assets/models/architecture/stable/albedo.png",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "references": [
+      {
+        "path": "assets/source/remake/house-sw.png",
+        "sha256": "8f29d82f55782ce2efae9441f90e7aaf2793db7967c4bdf523869aec8044a7b1"
+      },
+      {
+        "path": "assets/source/architecture/stable/layout.png",
+        "sha256": "3b70359ae987ebfd3f739be871bbeef6e778654e1a7f9849b9fe911873b53762"
+      },
+      {
+        "path": "assets/source/style/approved-game-reference.jpg",
+        "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+      }
+    ],
+    "layout": "layout.json",
+    "layoutGenerator": {
+      "path": "tools/preview3d/render_facades.gd",
+      "sha256": "a71425f9a521950597e9565bfd9887dd05d6f005869c0f567b2ba22d8a624898"
+    },
+    "notes": "생성 픽셀 무가공 채택. 재료 고유색이며 별도 법선/거칠기 맵은 만들지 않았다. 개구부/골조는 실제 3D 기하가 담당한다."
+  }
 }

@@ -1,0 +1,26 @@
+{
+  "tool": "image_gen.imagegen",
+  "source": "original.png",
+  "prompt": "prompt.txt",
+  "sha256": "7008c8010864d5730202121b93af6e55d4dde3c4fa24073992d5a8b5ac715ccf",
+  "runtime": "sjrpg_3d/assets/models/materials/village_craft/masonry.png",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "references": [
+    {
+      "path": "assets/source/style/approved-game-reference.jpg",
+      "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+    },
+    {
+      "path": "assets/art/preview3d/fortress-atlas.png",
+      "sha256": "a01fe62a241126e00f99dcdd81ecd43169daa0aadd0630e4517888b8c25f4e80"
+    },
+    {
+      "path": "assets/source/remake/chapel-v2.png",
+      "sha256": "e197ff7e23687a692fa02e4b9371c82998fefe51ceb6e47a9b5ab07681317171"
+    }
+  ],
+  "notes": "생성 픽셀 무가공 채택. 기하의 역할에 맞게 별도 셀을 매핑한다. 별도 법선/거칠기 맵은 만들지 않았다."
+}

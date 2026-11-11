@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cifd1q60jj5mt"
-path="res://.godot/imported/roof_shop.webp-6728cec87877a5b8c415301ece2d3903.ctex"
+uid="uid://bxqj1ewhbpnln"
+path="res://.godot/imported/roof.png-3056e43d829e8ab24739943f6c1aca3d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/preview3d/roof_shop.webp"
-dest_files=["res://.godot/imported/roof_shop.webp-6728cec87877a5b8c415301ece2d3903.ctex"]
+source_file="res://assets/models/materials/village_craft/roof.png"
+dest_files=["res://.godot/imported/roof.png-3056e43d829e8ab24739943f6c1aca3d.ctex"]
 
 [params]
 
@@ -23,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""

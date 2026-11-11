@@ -23,6 +23,7 @@ func run() -> void:
 			map.radius = 64.0 * float(geometry["map_unit"])
 			var map_ink := map.paint_bounds()
 			map_ink.position += map_rect.position
+			check("avatar and minimap share equal painted side padding", absf((geometry["paint_bounds"].position.x - safe.x) - (available.end.x - map_ink.end.x)) < 0.01)
 			check("entire map rim fits and avoids the portrait/status ribbon", available.encloses(map_ink) and not map_ink.intersects(geometry["paint_bounds"]))
 			check("portrait crest and minimap rim share the same safe top", absf(map_ink.position.y - portrait_ink.position.y) < 0.01)
 			var top_gap: float = (portrait_ink.position.y - safe.y) / float(geometry["map_unit"])

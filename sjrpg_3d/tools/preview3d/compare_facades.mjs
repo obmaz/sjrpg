@@ -18,7 +18,7 @@ main{display:grid;grid-template-columns:1fr 1fr}figure{margin:0;position:relativ
 img{display:block;width:100%;height:auto}figcaption{position:absolute;top:12px;left:14px;background:#15201bdd;padding:8px 14px;border-radius:4px}
 </style><header>
 <label>건물 <select id="asset">${Object.entries(assets).map(([id,label])=>`<option value="${id}">${label}</option>`).join('')}</select></label>
-<span>동일 카메라 · 동일 조명 · 벽 원화 변경</span>
+<span>동일 카메라 · 동일 조명 · 벽·지붕·골조 재질 변경</span>
 <label>방향 <select id="angle">${[0,90,180,270].map(angle=>`<option value="${angle}">${angle}°</option>`).join('')}</select></label>
 </header><main><figure><img id="before"><figcaption>적용 전</figcaption></figure>
 <figure><img id="after"><figcaption>적용 후</figcaption></figure></main>

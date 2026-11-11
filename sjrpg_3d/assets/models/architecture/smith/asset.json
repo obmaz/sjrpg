@@ -10,11 +10,7 @@
   ],
   "tileMetres": 2.56,
   "roughness": 0.94,
-  "roofAlbedo": "roof.png",
-  "roofTint": [
-    0.64,
-    0.7,
-    0.8
-  ],
-  "fullFacade": true
+  "fullFacade": true,
+  "roofCell": 0,
+  "infillOnly": true
 }

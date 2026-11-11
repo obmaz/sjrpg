@@ -38,16 +38,42 @@ def check(folder):
             actual = (ROOT / reference['path']).resolve()
             assert actual.is_relative_to(ROOT) and actual.is_file()
             assert hashlib.sha256(actual.read_bytes()).hexdigest() == reference['sha256']
+    if spec['mapping'] == 'facade':
+        assert spec['infillOnly'] is True and spec['roofCell'] in range(4)
     if 'roofAlbedo' in spec:
         roof_name = spec['roofAlbedo']
         assert Path(roof_name).name == roof_name and '..' not in roof_name
+        roof_proof = json.loads((source / 'roof-provenance.json').read_text())
         roof = folder / roof_name
-        proof = json.loads((source / 'roof-provenance.json').read_text())
-        assert roof.read_bytes() == (source / 'roof-original.png').read_bytes()
-        assert hashlib.sha256(roof.read_bytes()).hexdigest() == proof['sha256']
+        assert roof.read_bytes() == (source / roof_proof['source']).read_bytes()
+        assert hashlib.sha256(roof.read_bytes()).hexdigest() == roof_proof['sha256']
         with Image.open(roof) as pixels:
-            assert pixels.width == pixels.height and pixels.width >= 1254
+            assert pixels.width == pixels.height and pixels.width >= 1254 and pixels.width % 2 == 0
+    if 'inputGeneration' in proof:
+        input_proof = proof['inputGeneration']
+        assert hashlib.sha256((source / input_proof['source']).read_bytes()).hexdigest() == input_proof['sha256']
+        assert (source / input_proof['prompt']).read_text().strip()
+        for reference in input_proof['references']:
+            assert hashlib.sha256((ROOT / reference['path']).read_bytes()).hexdigest() == reference['sha256']
     print(f'ASSET_PACKAGE_PASS {folder.name} {dimensions[0]}x{dimensions[1]} {spec["mapping"]}')
+
+
+def check_craft():
+    folder = ROOT / 'assets/models/materials/village_craft'
+    spec = json.loads((folder / 'asset.json').read_text())
+    assert spec['kind'] == 'material_family' and spec['id'] == folder.name
+    for role in ('masonry', 'oak', 'roof'):
+        runtime = folder / spec[role]['albedo']
+        source = ROOT / spec['source'] / role
+        proof = json.loads((source / 'provenance.json').read_text())
+        assert runtime.read_bytes() == (source / proof['source']).read_bytes()
+        assert hashlib.sha256(runtime.read_bytes()).hexdigest() == proof['sha256']
+        assert (source / proof['prompt']).read_text().strip()
+        with Image.open(runtime) as pixels:
+            assert list(pixels.size) == proof['dimensions'] and pixels.width >= 1254
+        for reference in proof['references']:
+            assert hashlib.sha256((ROOT / reference['path']).read_bytes()).hexdigest() == reference['sha256']
+    print('ASSET_PACKAGE_PASS village_craft masonry/oak/roof')
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -62,6 +88,8 @@ def main():
     assert folders
     for folder in folders:
         check(folder)
+    if not args.asset:
+        check_craft()
 
 if __name__ == '__main__':
     main()

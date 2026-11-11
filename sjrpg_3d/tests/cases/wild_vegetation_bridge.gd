@@ -29,7 +29,7 @@ func run() -> void:
 	var environment: Ortho3DEnvironment = game.ortho_preview._world_environment
 	var bridge := environment.forest.get_node("NativeDetailedBridge") as Node3D
 	var report: Dictionary = bridge.get_meta("bridge_detail")
-	check("detailed bridge preserves the actual playable deck endpoints", report["deck"] == game.village.bridge.deck_polygon() and report["collision_changes"] == 0 and before == game.village.bridge.solids())
+	check("detailed bridge preserves the actual playable deck and rail endpoints", report["deck"] == game.village.bridge.deck_polygon() and report["foundation_parts"] == 9 and before == game.village.bridge.solids())
 	check("bridge has real arches, closed recess backing and a bounded material budget", report["arches"] >= 4 and report["solid_arcade_backing"] and report["triangles"] < 6000 and report["surfaces"] == 4)
 	check("bridge does not mirror front faces or add hidden colliders", bridge.basis.determinant() > 0.0 and bridge.find_children("*", "CollisionObject3D", true, false).is_empty())
 	for child: MeshInstance3D in bridge.get_children():

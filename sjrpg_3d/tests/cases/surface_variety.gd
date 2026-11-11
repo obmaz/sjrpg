@@ -13,7 +13,7 @@ func run() -> void:
 		walls[texture.get_instance_id()] = true
 		doors[door.albedo_texture.get_instance_id()] = true
 		check("house wall uses a dedicated nonrepeating four-face atlas " + key, wall.get_shader_parameter("tile") == false and texture.get_width() >= 1254)
-	check("each real house uses different wall artwork and carved wood", walls.size() == 4 and doors.size() == 4)
+	check("houses retain four distinct facades and share clean generated oak without painted door frames", walls.size() == 4 and doors.size() == 1 and (preview._materials["door"] as StandardMaterial3D).albedo_texture == load(NativeVillageSurfaces.ROOT + "oak.png"))
 	for kind: String in ["wolf", "boar", "goblin", "skeleton"]:
 		var model: Dictionary = NativeEnemyModels.build(kind)
 		var root: Node3D = model["root"]

@@ -1,9 +1,10 @@
 {
   "budget": {
     "exception_to_general_house_budget": "This landmark includes a full bell tower/spire, genuinely cut arch/oculus walls, paired lancet tracery and all four sides; repeated pieces merge by shared material. Small side roses and linear cylinders use lower tessellation than main gable detail.",
-    "merged_surfaces": 6,
+    "merged_surfaces": 7,
     "surface_groups": [
       "stone",
+      "wall",
       "oak (shared wood material)",
       "slate",
       "lead",
@@ -47,7 +48,7 @@
     "api": "Ortho3DChapel.build(presenter, root, width, depth, height)",
     "method": "Runtime ArrayMesh construction from dimensioned native stone/wood/roof solids, pointed arch paths and actual wall apertures. No facade billboard or viewport texture.",
     "path": "scripts/ortho_3d_chapel.gd",
-    "sha256": "6a2775c560600e11d0fe00d051d56b0c5ea2f5d578f6c3acafb2fefe53f869c1"
+    "sha256": "91cd946535018572efdcc5f05998d39d22232192b87732d3344711bb144a196f"
   },
   "inputs": [
     {
@@ -67,24 +68,20 @@
       "sha256": "07fcea6475236e54b4cc73a561aa16509ff8bca6108214f3ab64b98d7ffb09f3"
     },
     {
-      "path": "assets/art/preview3d/materials.json",
-      "sha256": "41d0e50e736fe486e95b75bb5bb6e5a82f71293de4dd1fe8cb2f0cc52282ee67"
+      "path": "assets/models/architecture/chapel/albedo.png",
+      "sha256": "551b9546f5ced2f317d53e07e2beff50d5179467a603825ccc09ab4a97ceab26"
     },
     {
-      "path": "assets/art/preview3d/limestone.webp",
-      "sha256": "2561c1be419f951bf0bce7b9fd5085c24a92600cf66424a4775e16cd37b58e6c"
+      "path": "assets/models/materials/village_craft/masonry.png",
+      "sha256": "7008c8010864d5730202121b93af6e55d4dde3c4fa24073992d5a8b5ac715ccf"
     },
     {
-      "path": "assets/art/preview3d/slate.webp",
-      "sha256": "bf862f2b2f2caa8297d8ca6dc5419963d747a9f33f977a8588b9dda65cfb7688"
+      "path": "assets/models/materials/village_craft/oak.png",
+      "sha256": "79dd01b7c5bc2a26cf527f0d00b1b382b0bfb4d2e24e6bf168a174c07692272f"
     },
     {
-      "path": "assets/art/preview3d/timber.webp",
-      "sha256": "4cac472a9fb54db9e89bdaf1577db846bd49f936e759dca7b10101175f7dcb1c"
-    },
-    {
-      "path": "assets/art/preview3d/chapel_stone.webp",
-      "sha256": "5599ac267a69d9016a58c4c874a63b2271525caf91c7b3a5e63e709484b863df"
+      "path": "assets/models/materials/village_craft/roof.png",
+      "sha256": "ff275f834176bb746401edccf391f1b2805015a1984aa23f2b4f1053c5f0fff5"
     }
   ],
   "surface_package": "assets/models/architecture/chapel/asset.json"

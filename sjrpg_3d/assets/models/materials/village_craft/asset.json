@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "village_craft",
+  "kind": "material_family",
+  "masonry": {"albedo": "masonry.png", "atlasGrid": [2, 2], "tileMetres": 2.56, "cells": ["eight-course ashlar", "single-piece limestone", "eight-by-eight plaza setts", "four-course foundation"]},
+  "roof": {"albedo": "roof.png", "atlasGrid": [2, 2], "cells": ["blue slate", "terracotta", "cedar", "sage slate"], "mapping": "one cell per actual roof piece; 8 courses and 6 columns per 2.6m"},
+  "oak": {"albedo": "oak.png", "tileMetres": 1.5384615385},
+  "source": "assets/source/materials/village_craft"
+}

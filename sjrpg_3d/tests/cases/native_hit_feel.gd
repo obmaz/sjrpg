@@ -56,6 +56,9 @@ func run() -> void:
 	var numbers: Array = game.cosmetic_effects.filter(func(effect: Effect): return effect.kind == "text" and effect.font_size == HitTier.number_size(HitTier.HEAVY))
 	check("heavy hits generate tiered numbers", not numbers.is_empty())
 	var number: Effect = numbers.back()
+	check("simultaneous follow-up number waits before its native pop", number.age < 0.0 and not preview._labels.has(number.get_instance_id()))
+	number._process(-number.age)
+	preview._sync_cards()
 	var label: Label3D = preview._labels[number.get_instance_id()]["node"]
 	check("actual 3D text honors heavy font size and initial pop", label.font_size == HitTier.number_size(HitTier.HEAVY) and label.scale.x > 1.3)
 	number.age = 0.12

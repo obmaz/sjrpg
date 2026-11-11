@@ -131,6 +131,9 @@ func _build() -> void:
 	var crenels := {}
 	for polygon in polygons:
 		_crenels(polygon, corners, crenels, height, thickness)
+	var walk := NativeFortressPlan.wall_walk(village)
+	for part: Dictionary in walk["parts"]:
+		_box(Vector3.ZERO, part["size"], part["material"], part["frame"])
 	var static_meshes := _flush("Fortification")
 	for index in gates.size():
 		_build_leaves(index)
@@ -148,6 +151,7 @@ func _build() -> void:
 	report["corner_roof"] = slate
 	report["masonry_variants"] = 4
 	report["granite"] = _materials["granite"]
+	report["wall_walk"] = walk
 
 
 func _corner_tower(at: Vector3) -> void:

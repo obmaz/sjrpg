@@ -10,10 +10,10 @@ const MATERIAL_KEYS := ["stone", "wall", "slate", "wood", "iron", "glass"]
 ## Each house reads as its own building: wall infill, trim stone and roof cover
 ## differ by role, while timber, iron and glass stay shared with the family.
 const STYLES := {
-	"nw": {"wall": "shop", "stone": "stone", "slate": "roof_shop", "wood": "door_shop", "label": "half-timbered merchant shop"},
-	"ne": {"wall": "smith", "stone": "stone", "slate": "roof_smith", "wood": "door_smith", "label": "fieldstone smithy"},
-	"sw": {"wall": "stable", "stone": "rubble", "slate": "shingle", "wood": "door_stable", "label": "timber stable house"},
-	"se": {"wall": "home", "stone": "stone", "slate": "roof_home", "wood": "door_home", "label": "lime-plaster dormer house"},
+	"nw": {"wall": "shop", "stone": "village_stone", "slate": "roof_shop", "wood": "door_shop", "label": "half-timbered merchant shop"},
+	"ne": {"wall": "smith", "stone": "village_stone", "slate": "roof_smith", "wood": "door_smith", "label": "fieldstone smithy"},
+	"sw": {"wall": "stable", "stone": "village_stone", "slate": "roof_stable", "wood": "door_stable", "label": "timber stable house"},
+	"se": {"wall": "home", "stone": "village_stone", "slate": "roof_home", "wood": "door_home", "label": "lime-plaster dormer house"},
 }
 const TIMBER_TILE := 1.0 / 0.65
 const SLATE_TILE := 2.6
