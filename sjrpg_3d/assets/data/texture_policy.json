@@ -108,6 +108,134 @@
     {
       "path": "assets/models/materials/paving/paving-5.png",
       "usage": "Opaque generated paving variation with mipmaps"
+    },
+    {
+      "path": "assets/models/materials/cave/floor/floor-0.png",
+      "usage": "Opaque generated cave floor variation"
+    },
+    {
+      "path": "assets/models/materials/cave/floor/floor-1.png",
+      "usage": "Opaque generated cave floor variation"
+    },
+    {
+      "path": "assets/models/materials/cave/floor/floor-2.png",
+      "usage": "Opaque generated cave floor variation"
+    },
+    {
+      "path": "assets/models/materials/cave/floor/floor-3.png",
+      "usage": "Opaque generated cave floor variation"
+    },
+    {
+      "path": "assets/models/materials/cave/floor/floor-4.png",
+      "usage": "Opaque generated cave floor variation"
+    },
+    {
+      "path": "assets/models/materials/cave/floor/floor-5.png",
+      "usage": "Opaque generated cave floor variation"
+    },
+    {
+      "path": "assets/models/materials/cave/wall/wall-0.png",
+      "usage": "Opaque generated cave wall variation"
+    },
+    {
+      "path": "assets/models/materials/cave/wall/wall-1.png",
+      "usage": "Opaque generated cave wall variation"
+    },
+    {
+      "path": "assets/models/materials/cave/wall/wall-2.png",
+      "usage": "Opaque generated cave wall variation"
+    },
+    {
+      "path": "assets/models/materials/cave/wall/wall-3.png",
+      "usage": "Opaque generated cave wall variation"
+    },
+    {
+      "path": "assets/models/materials/cave/wall/wall-4.png",
+      "usage": "Opaque generated cave wall variation"
+    },
+    {
+      "path": "assets/models/materials/cave/wall/wall-5.png",
+      "usage": "Opaque generated cave wall variation"
+    },
+    {
+      "path": "assets/models/materials/grass/grass-0.png",
+      "usage": "Native grass generated surface 1/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/models/materials/grass/grass-1.png",
+      "usage": "Native grass generated surface 2/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/models/materials/grass/grass-2.png",
+      "usage": "Native grass generated surface 3/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/models/materials/grass/grass-3.png",
+      "usage": "Native grass generated surface 4/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/models/materials/grass/grass-4.png",
+      "usage": "Native grass generated surface 5/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/models/materials/grass/grass-5.png",
+      "usage": "Native grass generated surface 6/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/models/materials/grass/grass-6.png",
+      "usage": "Native grass generated surface 7/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/models/materials/grass/grass-7.png",
+      "usage": "Native grass generated surface 8/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/models/materials/grass/grass-8.png",
+      "usage": "Native grass generated surface 9/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/models/materials/grass/grass-9.png",
+      "usage": "Native grass generated surface 10/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/models/materials/water/water-0.png",
+      "usage": "Native water generated surface 1/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/models/materials/water/water-1.png",
+      "usage": "Native water generated surface 2/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/models/materials/water/water-2.png",
+      "usage": "Native water generated surface 3/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/models/materials/water/water-3.png",
+      "usage": "Native water generated surface 4/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/models/materials/water/water-4.png",
+      "usage": "Native water generated surface 5/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/models/materials/water/water-5.png",
+      "usage": "Native water generated surface 6/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/models/materials/water/water-6.png",
+      "usage": "Native water generated surface 7/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/models/materials/water/water-7.png",
+      "usage": "Native water generated surface 8/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/models/materials/water/water-8.png",
+      "usage": "Native water generated surface 9/10; shared compressed Texture2DArray"
+    },
+    {
+      "path": "assets/models/materials/water/water-9.png",
+      "usage": "Native water generated surface 10/10; shared compressed Texture2DArray"
     }
   ],
   "protected_rule": "Every other imported art texture keeps its current mipmap, alpha, quality and size settings. UI, effects, cutouts, actor sheets and extracted GLB textures stay in mode 1; automatic 3D conversion is disabled."

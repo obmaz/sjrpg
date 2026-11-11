@@ -6,11 +6,7 @@ extends RefCounted
 const COLLISION_INSET := 0.04
 const OUTER_DEPTH := 1.05
 const TILE_METRES := 2.6
-const OUTER_TILE_METRES := 3.2
-const OUTER_TEXTURE := "res://assets/art/village/rock.webp"
-const FLOOR_SHADER := preload("res://scripts/native_cave_floor.gdshader")
-const FLOOR_TONE := Color(0.48, 0.44, 0.36)
-const FLOOR_DETAIL := 0.68
+const OUTER_TILE_METRES := 2.6
 const INNER := "inner"
 const OUTER := "outer"
 const STRIP_METRES := 0.80
@@ -26,12 +22,12 @@ var _triangles := 0
 var _segment_id := -1
 
 
-static func build(layout: DungeonLayout, parent: Node3D, texture: Texture2D, boundary_sources: Array[Dictionary]) -> Dictionary:
+static func build(layout: DungeonLayout, parent: Node3D, boundary_sources: Array[Dictionary]) -> Dictionary:
 	var builder := Ortho3DCaveRock.new()
-	return builder._build(layout, parent, texture, boundary_sources)
+	return builder._build(layout, parent, boundary_sources)
 
 
-func _build(layout: DungeonLayout, parent: Node3D, texture: Texture2D, segments: Array[Dictionary]) -> Dictionary:
+func _build(layout: DungeonLayout, parent: Node3D, segments: Array[Dictionary]) -> Dictionary:
 	for segment in segments:
 		var height := _base_height(segment)
 		for point: Vector2 in [segment["a"], segment["b"]]:
@@ -92,13 +88,8 @@ func _build(layout: DungeonLayout, parent: Node3D, texture: Texture2D, segments:
 			"section_a": first, "section_b": last, "sections": sections})
 	# The inside and exposed rock share geometry, but not a triplanar skin.
 	# Explicit metre UVs avoid blending floor-like XZ stone into upright faces.
-	var material := _rock_material(texture, Color(0.64, 0.73, 0.82), "CaveInnerWall")
-	var outer := _rock_material(load(OUTER_TEXTURE), Color(0.70, 0.64, 0.53), "CaveOuterRock")
-	# Exposed shoulders and corner tapers can be steep even above the ridge.
-	# Use their real normals in world metres instead of stretching an XZ chart.
-	outer.uv1_triplanar = true
-	outer.uv1_world_triplanar = true
-	outer.uv1_scale = Vector3.ONE / OUTER_TILE_METRES
+	var material := NativeCaveSurfaces.material("wall")
+	var outer := NativeCaveSurfaces.material("wall",true)
 	var materials := {INNER: material, OUTER: outer}
 	var meshes: Array[MeshInstance3D] = []
 	var surfaces := 0
@@ -183,22 +174,5 @@ static func _surface_uv(vertex: Vector3, outward: Vector2, cap: bool) -> Vector2
 	return Vector2(vertex.z if absf(outward.x) > 0.5 else vertex.x, vertex.y)
 
 
-static func _rock_material(texture: Texture2D, tint: Color, label: String) -> StandardMaterial3D:
-	var material := StandardMaterial3D.new()
-	material.resource_name = label
-	material.albedo_texture = texture
-	material.albedo_color = tint
-	material.roughness = 0.98
-	material.metallic_specular = 0.16
-	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
-	return material
-
-
-static func floor_material(texture: Texture2D) -> ShaderMaterial:
-	var material := ShaderMaterial.new()
-	material.resource_name = "CaveWalkableFloor"
-	material.shader = FLOOR_SHADER
-	material.set_shader_parameter("albedo_texture", texture)
-	material.set_shader_parameter("base_tone", FLOOR_TONE)
-	material.set_shader_parameter("detail_strength", FLOOR_DETAIL)
-	return material
+static func floor_material() -> ShaderMaterial:
+	return NativeCaveSurfaces.material("floor")

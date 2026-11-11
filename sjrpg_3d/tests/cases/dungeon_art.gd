@@ -52,9 +52,11 @@ func run() -> void:
 			spatial_geometry_matches = false
 			continue
 		var material := rendered.material_override as ShaderMaterial
-		if material == null or material.shader.resource_path != "res://scripts/native_cave_floor.gdshader" or material.get_shader_parameter("albedo_texture") != floor_texture:
+		if material == null or material.shader.resource_path != "res://scripts/native_cave_floor.gdshader":
 			spatial_geometry_matches = false
 			continue
+		for variant in 6:
+			spatial_geometry_matches = spatial_geometry_matches and material.get_shader_parameter("surface_%d" % variant) == load("res://assets/models/materials/cave/floor/floor-%d.png" % variant)
 		if spatial_material_shared == null:
 			spatial_material_shared = material
 		spatial_geometry_matches = spatial_geometry_matches and material == spatial_material_shared and not material.shader.code.contains("unshaded") and not material.shader.code.contains("EMISSION")
@@ -67,8 +69,8 @@ func run() -> void:
 		for vertex_index in mini(vertices.size(), polygon.size()):
 			var expected := Ortho3DPreview.ground_position(polygon[vertex_index], 0.004)
 			spatial_geometry_matches = spatial_geometry_matches and vertices[vertex_index].is_equal_approx(expected) and uv[vertex_index].is_equal_approx(Vector2(expected.x, expected.z) / 2.6)
-	check("every native cave floor shares the preserved generated slab sampler in its lit shader", spatial_floor_count == cave.layout.polygons.size() and spatial_material_shared != null)
-	check("native slab shading preserves the exact source floor polygon vertices and metre UVs", spatial_geometry_matches)
+	check("every native cave floor shares all six generated floor samplers in its lit shader", spatial_floor_count == cave.layout.polygons.size() and spatial_material_shared != null)
+	check("native variant shading preserves the exact source floor polygon vertices and metre UVs", spatial_geometry_matches)
 	check("native cave retains spatial walls and replaces physical prop cards", environment.cave.visible and environment.report["cave_walls"] > 0 and environment.report["cave_groups"] == 0 and environment.report["cave_sprites"] == 0 and environment.report["native_cave_lanterns"] == 10 and environment.report["native_cave_scenery"] >= 6 and environment.report["remaining_sources"]["cave"].is_empty() and cave._root.visibility_layer == 0)
 	var boundaries_match := not art.boundary_segments.is_empty()
 	var boundary_failures: Array[String] = []

@@ -15,6 +15,7 @@ var _triangles := 0
 var _pieces := 0
 var _roof_rows := 0
 var _offset := Vector3.ZERO
+var _facade_reliefs := 0
 
 
 static func build(
@@ -35,11 +36,7 @@ func _build(width: float, depth: float, _height: float) -> Dictionary:
 	_box_arrays = unit.surface_get_arrays(0)
 	_materials["stone"] = NativeAssetSurface.material("chapel", Vector3.ONE, 3)
 	_materials["stone"].set_shader_parameter("tile", true)
-	var facade := StandardMaterial3D.new()
-	facade.albedo_texture = load("res://assets/models/architecture/chapel/albedo.png")
-	facade.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
-	facade.roughness = 0.96
-	_materials["facade"] = facade
+	_materials["facade"] = NativeChapelFacade.material()
 	var bronze := StandardMaterial3D.new()
 	bronze.albedo_color = Color("82704a")
 	bronze.metallic = 0.5
@@ -50,15 +47,27 @@ func _build(width: float, depth: float, _height: float) -> Dictionary:
 	var nave_width := width * 0.60
 	var porch_x := NativeChapelPlan.entrance_x(width)
 	var nave_x := width * 0.20
-	var nave_front := depth * 0.18
-	var nave_depth := depth * 0.68
+	var nave_front := depth * NativeChapelPlan.NAVE_FRONT_FRACTION
+	var nave_depth := depth * NativeChapelPlan.NAVE_DEPTH_FRACTION
 	# 돌출된 왼쪽 입구와 오른쪽 본당이 각각 독립한 박공을 갖는다.
-	_hall(Vector3(porch_x, 0, 0), porch_width, depth, 3.25, 1.45, 0)
 	_hall(
-		Vector3(nave_x, 0, (nave_front - depth * 0.5) * 0.5), nave_width, nave_depth, 3.45, 1.65, 1
+		Vector3(porch_x, 0, 0),
+		porch_width,
+		depth,
+		NativeChapelPlan.PORCH_EAVES,
+		NativeChapelPlan.PORCH_RISE,
+		0
+	)
+	_hall(
+		Vector3(nave_x, 0, (nave_front - depth * 0.5) * 0.5),
+		nave_width,
+		nave_depth,
+		NativeChapelPlan.NAVE_EAVES,
+		NativeChapelPlan.NAVE_RISE,
+		1
 	)
 	_offset = Vector3.ZERO
-	var tower_height := _tower(Vector3(porch_x, 0, -depth * 0.16), 4.65)
+	var tower_height := _tower(Vector3(porch_x, 0, -depth * 0.16), 5.0)
 	_box(Vector3(0, 0.12, 0), Vector3(width + 0.30, 0.24, depth + 0.30), "stone")
 	_box(Vector3(0, 0.26, 0), Vector3(width + 0.18, 0.04, depth + 0.18), "stone")
 	for tier: Dictionary in NativeChapelPlan.tiers(Vector2.ZERO, width, depth):
@@ -90,6 +99,12 @@ func _build(width: float, depth: float, _height: float) -> Dictionary:
 		"tower_height": tower_height,
 		"hybrid_facade": true,
 		"gable_count": 2,
+		"gable_heights":
+		Vector2(
+			NativeChapelPlan.PORCH_EAVES + NativeChapelPlan.PORCH_RISE,
+			NativeChapelPlan.NAVE_EAVES + NativeChapelPlan.NAVE_RISE
+		),
+		"facade_reliefs": _facade_reliefs,
 		"entrance_offset": porch_x,
 		"nave_front": nave_front,
 		"reference": "assets/source/style/approved-game-reference.jpg",
@@ -144,6 +159,81 @@ func _facade(
 			)
 			uv.append((corner + Vector2(0.018, 0.018) + unit_uv * 0.964) * 0.5)
 		_triangle(points, uv, frame.basis.z, "facade")
+	_facade_relief(width, bottom, eaves + rise, frame, cell)
+
+
+## 그림의 정규 좌표를 실제 벽과 같은 UV 역변환으로 옮긴다. 몰딩과 그림의 경계가 같다.
+func _painted_point(uv: Vector2, width: float, bottom: float, top: float, cell: int) -> Vector2:
+	var unit := (uv - Vector2.ONE * .018) / .964
+	return Vector2((unit.x - .5) * width, NativeChapelFacade.height(cell, uv.y, bottom, top))
+
+
+func _facade_relief(width: float, bottom: float, top: float, frame: Transform3D, cell: int) -> void:
+	var arches: Array[Array] = []
+	if cell == 0:
+		arches.append([.19, .81, .985, .60, .33, .075])
+	elif cell == 1:
+		arches.append([.08, .46, .95, .64, .44, .065])
+		arches.append([.54, .92, .95, .64, .44, .065])
+		arches.append([.40, .60, .39, .16, .03, .045])
+	elif cell == 2:
+		arches.append([.07, .43, .88, .31, .11, .065])
+		arches.append([.57, .93, .88, .31, .11, .065])
+	for plan: Array in arches:
+		var low := _painted_point(Vector2(plan[0], plan[2]), width, bottom, top, cell)
+		var high := _painted_point(Vector2(plan[1], plan[4]), width, bottom, top, cell)
+		var shoulder := _painted_point(Vector2(.5, plan[3]), width, bottom, top, cell).y
+		var thickness: float = plan[5]
+		_painted_arch(low.x, high.x, low.y, shoulder, high.y, thickness, frame)
+		_facade_reliefs += 1
+
+
+static func _painted_path(
+	left: float, right: float, bottom: float, shoulder: float, top: float
+) -> PackedVector2Array:
+	var path := PackedVector2Array([Vector2(left, bottom), Vector2(left, shoulder)])
+	var centre := (left + right) * .5
+	for index in range(1, 13):
+		var t := float(index) / 12.0
+		path.append(
+			Vector2(lerpf(left, centre, t * t), lerpf(shoulder, top, 1.0 - pow(1.0 - t, 2)))
+		)
+	for index in range(1, 13):
+		var t := float(index) / 12.0
+		path.append(
+			Vector2(lerpf(centre, right, 1.0 - pow(1.0 - t, 2)), lerpf(top, shoulder, t * t))
+		)
+	path.append(Vector2(right, bottom))
+	return path
+
+
+func _painted_arch(
+	left: float,
+	right: float,
+	bottom: float,
+	shoulder: float,
+	top: float,
+	thickness: float,
+	frame: Transform3D
+) -> void:
+	var outer := _painted_path(left, right, bottom, shoulder, top)
+	var inner := _painted_path(
+		left + thickness, right - thickness, bottom, shoulder - thickness * .2, top - thickness
+	)
+	var outer_frame := frame.translated_local(Vector3(0, 0, .055))
+	for index in outer.size() - 1:
+		var a := outer[index].lerp(outer[index + 1], .01)
+		var b := outer[index + 1].lerp(outer[index], .01)
+		var c := inner[index + 1].lerp(inner[index], .01)
+		var d := inner[index].lerp(inner[index + 1], .01)
+		_prism(PackedVector2Array([a, b, c, d]), .13, outer_frame, "stone")
+	var sill := BoxMesh.new()
+	sill.size = Vector3(right - left + .10, .10, .22)
+	_append_mesh(
+		sill,
+		frame * Transform3D(Basis.IDENTITY, Vector3((left + right) * .5, bottom - .025, .065)),
+		"stone"
+	)
 
 
 static func _arch_path(width: float, bottom: float, shoulder: float) -> PackedVector2Array:

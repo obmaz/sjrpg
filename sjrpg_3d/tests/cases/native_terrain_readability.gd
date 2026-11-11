@@ -44,7 +44,7 @@ func run() -> void:
 			shared_top = turf
 			shared_earth = earthy.material_override as StandardMaterial3D
 		var expected_bias: float = 1.25 if role == 3 else 0.45
-		check("raised terrain shares the four generated grass families at metre scale " + str(role), turf.get_shader_parameter("grass_atlas") == low_grass.get_shader_parameter("grass_atlas") and is_equal_approx(float(turf.get_shader_parameter("habitat_bias")), expected_bias) and turf.get_shader_parameter("rock_shelf") == (role == 0))
+		check("raised terrain shares the ten generated grass families at metre scale " + str(role), turf.get_shader_parameter("grass_layers") == low_grass.get_shader_parameter("grass_layers") and is_equal_approx(float(turf.get_shader_parameter("habitat_bias")), expected_bias) and turf.get_shader_parameter("rock_shelf") == (role == 0))
 		turf_variants[turf.get_instance_id()] = true
 		var tint: Color = turf.get_shader_parameter("surface_tint")
 		var low_tint: Color = low_grass.get_shader_parameter("surface_tint")

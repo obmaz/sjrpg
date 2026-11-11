@@ -40,6 +40,13 @@ def check(folder):
             assert hashlib.sha256(actual.read_bytes()).hexdigest() == reference['sha256']
     if spec['mapping'] == 'facade':
         assert (spec['infillOnly'] is True or spec.get('hybridFacade') is True) and spec['roofCell'] in range(4)
+    if folder.name == 'chapel' and spec.get('hybridFacade'):
+        for key, count in [('entrance', 5), ('nave', 8)]:
+            rows = spec['facadeWarp'][key]
+            assert len(rows) == count and all(len(row) == 2 for row in rows)
+            assert rows[0] == [0, .018] and rows[-1] == [1, .982]
+            assert all(0 <= row[0] <= 1 and .018 <= row[1] <= .982 for row in rows)
+            assert all(rows[i][0] < rows[i+1][0] and rows[i][1] < rows[i+1][1] for i in range(count-1))
     if 'roofAlbedo' in spec:
         roof_name = spec['roofAlbedo']
         assert Path(roof_name).name == roof_name and '..' not in roof_name
@@ -76,6 +83,36 @@ def check_craft():
     print('ASSET_PACKAGE_PASS village_craft masonry/oak/roof')
 
 
+def check_surface_families():
+    for family, role, count in [('grass', 'grass', 10), ('water', 'water', 10),
+                                 ('cave/floor', 'floor', 6), ('cave/wall', 'wall', 6)]:
+        source = ROOT / 'assets/source/materials' / family
+        proof = json.loads((source / 'provenance.json').read_text())
+        assert len(proof['images']) == count
+        unique = set()
+        for index, entry in enumerate(proof['images']):
+            expected = f'assets/models/materials/{family}/{role}-{index}.png'
+            assert entry['path'] == expected
+            runtime = ROOT / expected
+            original = (source / entry['original']).resolve()
+            prompt = (source / entry['prompt']).resolve()
+            assert original.is_relative_to(source) and prompt.is_relative_to(source)
+            pixels = runtime.read_bytes()
+            digest = hashlib.sha256(pixels).hexdigest()
+            assert digest == entry['sha256'] and len(pixels) == entry['bytes']
+            assert pixels == original.read_bytes() and prompt.read_text().strip()
+            unique.add(digest)
+            with Image.open(runtime) as image:
+                assert image.size == (1254, 1254) and image.mode == 'RGB'
+            assert entry['actual_references']
+            for reference in entry['actual_references']:
+                path = (ROOT / reference['path']).resolve()
+                assert path.is_relative_to(ROOT) and path.is_file()
+                assert hashlib.sha256(path.read_bytes()).hexdigest() == reference['sha256']
+        assert len(unique) == count
+        print(f'ASSET_PACKAGE_PASS {family} {count} unmodified generated originals')
+
+
 def check_world_sources():
     record = json.loads((ROOT / 'assets/source/preview3d/world-refinement/provenance.json').read_text())
     for source in record['implementation']:
@@ -99,6 +136,7 @@ def main():
         check(folder)
     if not args.asset:
         check_craft()
+        check_surface_families()
         check_world_sources()
 
 if __name__ == '__main__':

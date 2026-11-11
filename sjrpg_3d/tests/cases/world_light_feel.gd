@@ -21,7 +21,7 @@ func run() -> void:
 	check("native sun casts real geometry shadows with a separate softer fill", preview.sunlight.visible and preview.sunlight.shadow_enabled and preview.sunlight.light_energy > bounce.light_energy and bounce.visible and not bounce.shadow_enabled)
 	check("hidden Canvas lighting cannot double-tint native bodies", not WorldLighting.is_enabled() and WorldLighting.color_at(game.player.position) == Color.WHITE and not game.field_root.is_visible_in_tree())
 	var grass: ShaderMaterial = preview._materials["grass"]
-	check("native grass keeps its approved albedo and receives spatial lighting", grass.get_shader_parameter("surface_tint") == Color.WHITE and grass.get_shader_parameter("grass_atlas") == load(NativeGround3D.GRASS) and not grass.shader.code.contains("unshaded"))
+	check("native grass keeps its approved albedo and receives spatial lighting", grass.get_shader_parameter("surface_tint") == Color.WHITE and grass.get_shader_parameter("grass_layers") == NativeTerrainSurfaces.layers("grass") and not grass.shader.code.contains("unshaded"))
 	var light: OmniLight3D = preview.contact_light
 	var impact := Effect.spawn_impact(game, game.player.position, game.player)
 	impact.set_process(false)

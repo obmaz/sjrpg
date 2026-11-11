@@ -129,11 +129,19 @@ func _check_wall_ownership(game: Node) -> void:
 			else:
 				sample_found = true
 				for surface in wall.mesh.get_surface_count():
-					var ink := wall.get_surface_override_material(surface) as StandardMaterial3D
+					var ink := wall.get_surface_override_material(surface) as ShaderMaterial
 					all_surfaces_match = (
 						all_surfaces_match
 						and ink != null
-						and absf(ink.albedo_color.a - NativePlayerOcclusion.MIN_OPACITY) < .001
+						and (
+							absf(
+								(
+									float(ink.get_shader_parameter("occlusion_opacity"))
+									- NativePlayerOcclusion.MIN_OPACITY
+								)
+							)
+							< .001
+						)
 					)
 	check(
 		"actual player sightlines fade only occluding wall objects and keep other walls solid",

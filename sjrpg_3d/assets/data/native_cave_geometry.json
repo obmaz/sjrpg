@@ -7,23 +7,24 @@
   "family": "assets/data/cave_art.json",
   "generator": {
     "path": "scripts/ortho_3d_cave_rock.gd",
-    "sha256": "83782c17e719b1fad2f6652b8fd3a5bf4dbbf35f632c1e447947ff7f3096328b",
+    "sha256": "6f47b613ae514fa41e119b470bdc796d899427a778d3f45c9ddd4307c153b99b",
     "method": "Original closed native profile extrusion, vertices and miters preserved. Each chunk separates actual inner faces from ridge/exposed faces. Upright inner metric UVs and normal-aware world-metre outer rock mapping; no source image or physics edits. Exact emitted cross-sections are retained as read-only wall-attachment metadata; no rock vertex or triangle is changed."
   },
   "material": {
-    "path": "assets/art/cave/dark.webp",
-    "sha256": "943feb5680f4ab46fb7a4aa658fbcb6f9d54848a762d350422fccfd1eb86bb84",
+    "path": "assets/models/materials/cave/wall/wall-0.png",
+    "sha256": "190ffbb3b14841ee3f2464536d6d7451ec08777a04cdb4beef83cfa39effdc4f",
     "tile_metres": 2.6,
-    "pixels_per_metre": 196.9230769230769,
-    "roughness": 0.98,
-    "normal_source": "Actual geometry face normals; no normal-map asset",
-    "limitation": "Existing generated albedo retains its authored micro self-shading; not a PBR scan.",
-    "uv": "Explicit face UV: horizontal native X or Z /2.6; vertical native Y /2.6. No triplanar mixing or second material UV scale.",
-    "tint": [
-      0.64,
-      0.73,
-      0.82
-    ]
+    "variants": [
+      "assets/models/materials/cave/wall/wall-0.png",
+      "assets/models/materials/cave/wall/wall-1.png",
+      "assets/models/materials/cave/wall/wall-2.png",
+      "assets/models/materials/cave/wall/wall-3.png",
+      "assets/models/materials/cave/wall/wall-4.png",
+      "assets/models/materials/cave/wall/wall-5.png"
+    ],
+    "provenance": "assets/source/materials/cave/wall/provenance.json",
+    "uv": "지면은 원래 XZ UV, 안쪽은 원래 수직 UV, 바깥쪽은 실제 법선의 월드 트라이플래너를 사용한다.",
+    "normal_source": "원래 입체 기하 법선. 추가 높이/법선 이미지는 없다."
   },
   "geometry": {
     "units": "metres",
@@ -71,33 +72,53 @@
     "gpu": "입구·방·갈림길의 실제 가로/세로 화면을 확인한다. 일회성 캡처는 build/에 둔다."
   },
   "outer_material": {
-    "path": "assets/art/village/rock.webp",
-    "sha256": "28cb23eec83e30ae610ad1d46c48276a7174991b280bf47c5e32f17e33227738",
-    "tile_metres": 3.2,
-    "roughness": 0.98,
-    "tint": [
-      0.7,
-      0.64,
-      0.53
+    "path": "assets/models/materials/cave/wall/wall-0.png",
+    "sha256": "190ffbb3b14841ee3f2464536d6d7451ec08777a04cdb4beef83cfa39effdc4f",
+    "tile_metres": 2.6,
+    "variants": [
+      "assets/models/materials/cave/wall/wall-0.png",
+      "assets/models/materials/cave/wall/wall-1.png",
+      "assets/models/materials/cave/wall/wall-2.png",
+      "assets/models/materials/cave/wall/wall-3.png",
+      "assets/models/materials/cave/wall/wall-4.png",
+      "assets/models/materials/cave/wall/wall-5.png"
     ],
-    "uv": "World-space triplanar XYZ/3.2m follows actual geometry normals at steep shoulders and corner tapers. Baked fallback UVs remain finite; no geometry stretch."
+    "provenance": "assets/source/materials/cave/wall/provenance.json",
+    "uv": "지면은 원래 XZ UV, 안쪽은 원래 수직 UV, 바깥쪽은 실제 법선의 월드 트라이플래너를 사용한다.",
+    "normal_source": "원래 입체 기하 법선. 바닥의 작은 표면 법선만 광원용으로 추가한다."
   },
   "floor_shader": {
     "path": "scripts/native_cave_floor.gdshader",
-    "sha256": "c35652abc2aad717f203389ce82019f4727a1dfdebf0a3507389e4e24d06fdc6",
+    "sha256": "308a8111d630793dc56cfe0654135e76476ac570baa8c1cd141680b4d278f75b",
     "method": "Shared lit slab shader; original2.6m UV and pixels, reduced albedo contrast/detail0.68 and a warm neutral base. No emission, normal-map fabrication or light changes."
   },
   "floor_material": {
-    "path": "assets/art/cave/floor.webp",
-    "sha256": "2dcf79cdcc806c4c055c76fa0987870a903de753504c63740bc994e5fe185ef4",
+    "path": "assets/models/materials/cave/floor/floor-0.png",
+    "sha256": "e19b8062dfa8e8744b11833373f669ec1e5cd6d85166cb6d95c9409fbb2f806f",
     "tile_metres": 2.6,
-    "height_bias_metres": 0.004,
-    "base_tone": [
-      0.48,
-      0.44,
-      0.36
+    "variants": [
+      "assets/models/materials/cave/floor/floor-0.png",
+      "assets/models/materials/cave/floor/floor-1.png",
+      "assets/models/materials/cave/floor/floor-2.png",
+      "assets/models/materials/cave/floor/floor-3.png",
+      "assets/models/materials/cave/floor/floor-4.png",
+      "assets/models/materials/cave/floor/floor-5.png"
     ],
-    "detail_strength": 0.68,
-    "roughness": 0.97
+    "provenance": "assets/source/materials/cave/floor/provenance.json",
+    "uv": "지면은 원래 XZ UV, 안쪽은 원래 수직 UV, 바깥쪽은 실제 법선의 월드 트라이플래너를 사용한다.",
+    "normal_source": "원래 입체 기하 법선. 바닥의 작은 표면 법선만 광원용으로 추가한다.",
+    "height_bias_metres": 0.004
+  },
+  "surface_generator": {
+    "path": "assets/models/materials/cave/surfaces.gd",
+    "sha256": "373c42b56f055ddd035a9683166f4431313f0a10dabb70f356bbf42297c7c2d3"
+  },
+  "wall_shader": {
+    "path": "assets/models/materials/cave/wall.gdshader",
+    "sha256": "99caa3fcfb9e04feb3735bc8f16592ed3b071a73a166a53a4504787021b929cc"
+  },
+  "variant_shader": {
+    "path": "assets/models/materials/cave/variants.gdshaderinc",
+    "sha256": "96f10418b8f84fbff0a5316dc04c2c8423cc8bd9db0cea40055d1d9a28e5336b"
   }
 }

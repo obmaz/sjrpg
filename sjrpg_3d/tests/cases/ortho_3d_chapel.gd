@@ -5,7 +5,9 @@ extends TestCase
 func run() -> void:
 	var game := await make_game("mage")
 	var report := {}
-	for child in game.ortho_preview._world_environment.forest.find_children("*", "Node3D", true, false):
+	for child in game.ortho_preview._world_environment.forest.find_children(
+		"*", "Node3D", true, false
+	):
 		if child.has_meta("chapel_detail"):
 			report = child.get_meta("chapel_detail")
 	check("chapel model is installed", not report.is_empty())
@@ -31,13 +33,42 @@ func run() -> void:
 		"hybrid detail is merged and bounded",
 		report["surfaces"] <= 6 and report["triangles"] < 12000
 	)
+	check(
+		"reference nave rises clearly above the projecting entrance",
+		report["gable_heights"].y - report["gable_heights"].x > 1.5 and report["footprint"].x > 5.5
+	)
+	check(
+		"painted Gothic surrounds have physical shadow-casting relief",
+		report["facade_reliefs"] >= 8
+	)
+	var spec: Dictionary = JSON.parse_string(
+		FileAccess.get_file_as_string("res://assets/models/architecture/chapel/asset.json")
+	)
+	var oculus: Array = spec["oculusBounds"]
+	var drawn_width: float = float(oculus[2]) / .964 * float(report["footprint"].x) * .4
+	var upper := NativeChapelFacade.height(
+		0,
+		float(oculus[1]),
+		NativeChapelPlan.FLOOR,
+		NativeChapelPlan.PORCH_EAVES + NativeChapelPlan.PORCH_RISE
+	)
+	var lower := NativeChapelFacade.height(
+		0,
+		float(oculus[1]) + float(oculus[3]),
+		NativeChapelPlan.FLOOR,
+		NativeChapelPlan.PORCH_EAVES + NativeChapelPlan.PORCH_RISE
+	)
+	check(
+		"actual facade mapping keeps the rose ornament close to round instead of a tall oval",
+		absf((upper - lower) / drawn_width - 1.0) < .2
+	)
 	var has_facade := false
 	var actual_triangles := 0
 	var valid := true
 	for mesh: MeshInstance3D in report["meshes"]:
 		if mesh.name == "ChapelDetail_facade":
 			has_facade = (
-				(mesh.material_override as StandardMaterial3D).albedo_texture
+				(mesh.material_override as ShaderMaterial).get_shader_parameter("atlas")
 				== load("res://assets/models/architecture/chapel/albedo.png")
 			)
 		var arrays := mesh.mesh.surface_get_arrays(0)
@@ -61,7 +92,7 @@ func run() -> void:
 	var size: Vector2 = report["footprint"]
 	var bounds: Rect2 = game.ortho_preview._building_bounds("chapel")
 	var centre: Vector2 = bounds.get_center()
-	var recess: Vector2 = centre + Vector2(size.x * 0.25, size.y * 0.36)
+	var recess: Vector2 = centre + Vector2(size.x * 0.25, size.y * 0.41)
 	check(
 		"recessed nave forecourt has no invisible rectangular building wall",
 		not Geometry2D.is_point_in_polygon(Iso.project(recess * 65.0), surface["building"])

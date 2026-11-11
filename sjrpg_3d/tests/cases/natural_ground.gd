@@ -22,10 +22,13 @@ func run() -> void:
 	)
 	var material := ground.material_override as ShaderMaterial
 	check(
-		"four distinct grass families share the original native floor",
+		"ten distinct grass families share the original native floor",
 		(
-			report["grass_variants"] == 4
-			and material.get_shader_parameter("grass_atlas") == load(NativeGround3D.GRASS)
+			report["grass_variants"] == 10
+			and (
+				material.get_shader_parameter("grass_layers")
+				== NativeTerrainSurfaces.layers("grass")
+			)
 		)
 	)
 	check(
@@ -115,5 +118,69 @@ func run() -> void:
 			)
 		)
 	check("six paving images are distinct authored arrangements", hashes.size() == 6)
+	var grass := NativeTerrainSurfaces.layers("grass")
+	var water := NativeTerrainSurfaces.layers("water")
+	check(
+		"all terrain materials share one ten-layer array per family",
+		(
+			grass.get_layers() == 10
+			and water.get_layers() == 10
+			and grass == NativeTerrainSurfaces.layers("grass")
+			and (
+				water
+				== preview._world_environment._water_material.get_shader_parameter("water_layers")
+			)
+		)
+	)
+	for kind: String in ["grass", "water"]:
+		var family: Dictionary = JSON.parse_string(
+			FileAccess.get_file_as_string("res://assets/source/materials/%s/provenance.json" % kind)
+		)
+		var unique := {}
+		var texture: Texture2DArray = grass if kind == "grass" else water
+		var intact: bool = (
+			texture.get_width() == 1256
+			and texture.get_height() == 1256
+			and texture.has_mipmaps()
+			and family["images"].size() == 10
+		)
+		for index in 10:
+			var source: Dictionary = family["images"][index]
+			var path := "res://" + str(source["path"])
+			var hash := FileAccess.get_sha256(path)
+			unique[hash] = true
+			var imported := (
+				ResourceLoader.load(path, "Texture2D", ResourceLoader.CACHE_MODE_IGNORE)
+				as Texture2D
+			)
+			var imported_image := imported.get_image()
+			intact = (
+				intact
+				and hash == source["sha256"]
+				and imported.get_width() == 1254
+				and imported_image.get_width() == texture.get_width()
+				and imported_image.get_format() == texture.get_format()
+			)
+		check(
+			"%s binds ten distinct originals at the imported array dimensions and format" % kind,
+			intact and unique.size() == 10
+		)
+	var environment: Ortho3DEnvironment = preview._world_environment
+	var held: float = environment._water_material.get_shader_parameter("phase")
+	get_tree().paused = true
+	await _frames(3)
+	check(
+		"native river pause holds the existing flow phase",
+		is_equal_approx(float(environment._water_material.get_shader_parameter("phase")), held)
+	)
+	get_tree().paused = false
+	await _frames(3)
+	check(
+		"native river resumes continuous flow with the same shared water array",
+		(
+			float(environment._water_material.get_shader_parameter("phase")) > held
+			and environment._water_material.get_shader_parameter("water_layers") == water
+		)
+	)
 	game.queue_free()
 	await _frames(2)

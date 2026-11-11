@@ -76,7 +76,7 @@ tools/serve.sh
 
 ### 잔디 패턴 혼합
 
-네 종류의 생성형 잔디를 `scripts/grass_variety.gdshaderinc`에서 월드 좌표로 혼합합니다. 낮은 들판과 높은 지형은 같은 2.56m 배율을 사용하며 높은 지형의 색 대비와 길 거리장·충돌은 유지합니다. 원본·프롬프트·해시는 `assets/source/preview3d/grass-variety/manifest.json`을 따릅니다.
+[야외 표면](native-outdoor-surfaces.md)은 생성형 잔디10종과 강물10종을 월드 좌표로 혼합합니다. `NativeTerrainSurfaces`가 가져온 압축 데이터를 종류별 `Texture2DArray`로 한 번 묶어 공유합니다. 낮은 들판과 높은 지형은 같은2.56m 배율을 사용하며 길 거리장·충돌은 유지합니다. 원본·프롬프트·실제 참조·해시는 `assets/source/materials/{grass,water}/provenance.json`을 따릅니다.
 
 `NativeChapelPlan`은 확대된 예배당의 3단 계단과 실제 FLOOR를 공유합니다. `NativeTerrainForms`의 지층·흙 사면은 동일 정점을 표시와 SOLID에 사용합니다. 생성형 건물 표면과 동굴의 원본/프롬프트는 `assets/source/architecture/`, 웨이포인트·강둑·하강 동굴 원화는 `assets/source/environment/`에 보존합니다. 성벽·기존 지형의 채택 원본은 `assets/source/preview3d/world-refinement/`에 유지합니다. 길의 합집합·막다른 끝·강안 거리 데이터는 `capture_road_geometry` → `bake_ground_field.py`로 재현하며, 끝 포장은 흙으로, 강안은 젖은 돌→흙→풀로 연결됩니다.
 
@@ -100,7 +100,7 @@ tools/serve.sh
 
 동굴은 지면 좌표(7600,7600)의 독립 암반 지대에 있습니다. `NativeCavePlan.approach_height()`와 `NativeGroundRelief`가 약20m의 하강로,3.2m의 바깥 고저차와1.2m의 안쪽 하강을 함께 만듭니다. 암반 측면·바닥은 생성형 돌/자갈 원화를 사용하며, 포장길이나 웨이포인트를 암반 지대에 겹쳐 배치하지 않습니다. `frame()`의 실제 원점은 주변 땅보다3.2m 낮습니다. 동굴 웨이포인트는 과거 의뢰 위치 대신 하강로 전방 약40m의 열린 곳을 기준으로 선택합니다. `NativeCaveTrail`의 남쪽 필드 길 분기점부터 웨이포인트를 거치는 미터 단위10개 경유점을 지면 셰이더·식생 제외·실제 통행 테스트가 공유합니다. 생성형 흙/자갈 표면은 기존 지면 메시 위에 폭이 불규칙한 흙길로 혼합하며 새 평면이나 포장길을 겹치지 않습니다. `NativeCaveTrailMarkers3D`의 세 목재 표지는 같은 계획에서 위치·진행 방향을 읽고 `SpatialWorld3D`가 유한한 기둥 충돌을 만듭니다. `cave_trail`은 필드부터 입구까지 실제 캡슐 이동을 검사합니다.
 
-동굴 상자·내구력·금속 표면·지역별 표시 수명은 [입체 소품](native-encounter-props.md), 크기·배치·보상 계약은 [상자 규격](native-chest-scale.md)에 정리합니다. `Ortho3DCaveRock`은 연결된 원래 벽 구간별로 안/바깥 재질을 한 가림 오브젝트로 묶습니다. 떨어진 벽을 X좌표만으로 합치지 않으며 `cave_treasure`가 실제 가림 시선·복원·몬스터 제외를 검사합니다.
+동굴 상자·내구력·금속 표면·지역별 표시 수명은 [입체 소품](native-encounter-props.md), 크기·배치·보상 계약은 [상자 규격](native-chest-scale.md)에 정리합니다. `Ortho3DCaveRock`은 연결된 원래 벽 구간별로 안/바깥 재질을 한 가림 오브젝트로 묶습니다. 떨어진 벽을 X좌표만으로 합치지 않으며 `cave_treasure`가 실제 가림 시선·복원·몬스터 제외를 검사합니다. 바닥/벽 각각6종의 생성 원본·공유 재질·표면 검수는 [동굴 재질](native-cave-surfaces.md)에 정리합니다.
 
 강은 동쪽 경계까지 연장하고 다리의 지면X는9000으로 옮깁니다. 도로/강 거리장은 `capture_road_geometry.tscn`과 `bake_ground_field.py`로 함께 재생성합니다. `native_river.gdshader`는 시간에 따라 두 물결 표면을 이동시키고 이동 포말·수면 법선을 갱신합니다. 정적 메시를 매 프레임 다시 만들지 않으며 일시정지에는 같은 phase를 유지합니다.
 

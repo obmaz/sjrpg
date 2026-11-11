@@ -24,7 +24,8 @@
 - [예배당](native-chapel-refinement.md), [집](native-house-family.md)
 - [주민](native-residents.md), [전사](native-warrior.md), [몬스터](native-enemy-models.md)
 - [공유 배우 표면](native-actor-surfaces.md)
-- [숲 소품](native-forest-props.md), [나무](native-forest-trees.md), [동굴](native-cave.md)
+- [야외 잔디와 강물](native-outdoor-surfaces.md): 생성형10+10종과 압축 텍스처 배열.
+- [숲 소품](native-forest-props.md), [나무](native-forest-trees.md), [동굴](native-cave.md) · [동굴 재질](native-cave-surfaces.md)
 - [상자·비석](native-encounter-props.md), [크기 기준](native-chest-scale.md)
 - [투사체 효과](native-projectile-fx.md)
 

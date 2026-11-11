@@ -253,7 +253,7 @@ func _build_river() -> void:
 	var record: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(NativeGround3D.FIELD))
 	_water_material = ShaderMaterial.new()
 	_water_material.shader = load("res://scripts/native_river.gdshader")
-	_water_material.set_shader_parameter("water_texture", load("res://assets/art/village/water.webp"))
+	_water_material.set_shader_parameter("water_layers", NativeTerrainSurfaces.layers("water"))
 	_water_material.set_shader_parameter("shore_field", load("res://" + str(record["shore_field"])))
 	_water_material.set_shader_parameter("field_origin", Vector2(record["origin"][0], record["origin"][1]))
 	_water_material.set_shader_parameter("field_extent", Vector2(record["extent"][0], record["extent"][1]))
@@ -316,17 +316,14 @@ func _build_cave() -> void:
 	_cave_source_id = preview.game.dungeon._root.get_instance_id()
 	_cave_lights.clear()
 	var layout: DungeonLayout = preview.game.dungeon.layout
-	var textures: Dictionary = DungeonArt.data()["textures"]
-	var floor_texture: Texture2D = load("res://" + str(textures["floor"]["path"]))
-	var floor_material := Ortho3DCaveRock.floor_material(floor_texture)
+	var floor_material := Ortho3DCaveRock.floor_material()
 	for index in layout.polygons.size():
-		var surface := _floor(layout.polygons[index], floor_texture, cave, 0.004, Color.WHITE, Ortho3DCaveRock.TILE_METRES)
+		var surface := _floor(layout.polygons[index], null, cave, 0.004, Color.WHITE, Ortho3DCaveRock.TILE_METRES)
 		surface.name = "CaveFloor_%d" % index
 		surface.material_override = floor_material
-	var rock: Texture2D = load("res://" + str(textures["dark"]["path"]))
 	# DungeonArt recorded this union before the separate return-portal obstacle
 	# was added; a prop must not become a new cave boundary cell.
-	_cave_rock = Ortho3DCaveRock.build(layout, cave, rock, preview.game.dungeon.art.boundary_segments)
+	_cave_rock = Ortho3DCaveRock.build(layout, cave, preview.game.dungeon.art.boundary_segments)
 	var lanterns := NativeCaveLanterns3D.build(preview, cave, preview.game.dungeon.art.visuals)
 	var native_lantern_ids: Dictionary = lanterns["owned_source_ids"]
 	report["native_cave_lanterns"] = lanterns["count"]

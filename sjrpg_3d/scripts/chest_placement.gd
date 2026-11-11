@@ -20,38 +20,46 @@ static func find(village: Village, origin: Vector2) -> Vector2:
 		village.set_meta("chest_clearance", blockers)
 	var surfaces := SpatialWorld3D.terrain_surfaces(village)
 	var height := SpatialWorld3D.surface_height_at(village, origin)
-	for ring in 12:
-		for step in 1 if ring == 0 else 16:
-			var point := origin + Iso.project(Vector2.from_angle(step * TAU / 16.0) * ring * 30.0)
-			var flat := Iso.unproject(point)
-			if absf(SpatialWorld3D.surface_height_at(village, point) - height) > 0.01:
-				continue
-			var clear := true
-			# 낮은 기단도 뚜껑의 회전 반경 안에 들어오면 겹침이다.
-			for surface: Dictionary in surfaces:
-				var top: PackedVector2Array = surface["top"]
-				for edge in top.size():
-					var a := Iso.unproject(top[edge])
-					var b := Iso.unproject(top[(edge + 1) % top.size()])
+	var heights: Array[float] = [height]
+	# 건물 확대가 덮은 낮은 기단에는 공간이 없을 수 있다. 이때만 같은 마당의 땅으로 옮긴다.
+	# 폭포/암반 위의 높은 보물상자는 원래 높이를 유지한다.
+	if height > 0.0 and height <= NativeChapelPlan.FLOOR + .001:
+		heights.append(0.0)
+	for target_height: float in heights:
+		for ring in 12:
+			for step in 1 if ring == 0 else 16:
+				var point := (
+					origin + Iso.project(Vector2.from_angle(step * TAU / 16.0) * ring * 30.0)
+				)
+				var flat := Iso.unproject(point)
+				if absf(SpatialWorld3D.surface_height_at(village, point) - target_height) > 0.01:
+					continue
+				var clear := true
+				# 낮은 기단도 뚜껑의 회전 반경 안에 들어오면 겹침이다.
+				for surface: Dictionary in surfaces:
+					var top: PackedVector2Array = surface["top"]
+					for edge in top.size():
+						var a := Iso.unproject(top[edge])
+						var b := Iso.unproject(top[(edge + 1) % top.size()])
+						if (
+							flat.distance_to(Geometry2D.get_closest_point_to_segment(flat, a, b))
+							< radius
+						):
+							clear = false
+							break
+				for polygon in blockers:
+					if Geometry2D.is_point_in_polygon(flat, polygon):
+						clear = false
+						break
+				if not clear:
+					continue
+				for circle: Array in village.circles:
 					if (
-						flat.distance_to(Geometry2D.get_closest_point_to_segment(flat, a, b))
-						< radius
+						flat.distance_to(Iso.unproject(circle[0]))
+						< radius + float(circle[1]) / (sqrt(1.5) * Iso.S)
 					):
 						clear = false
 						break
-			for polygon in blockers:
-				if Geometry2D.is_point_in_polygon(flat, polygon):
-					clear = false
-					break
-			if not clear:
-				continue
-			for circle: Array in village.circles:
-				if (
-					flat.distance_to(Iso.unproject(circle[0]))
-					< radius + float(circle[1]) / (sqrt(1.5) * Iso.S)
-				):
-					clear = false
-					break
-			if clear:
-				return point
+				if clear:
+					return point
 	return origin

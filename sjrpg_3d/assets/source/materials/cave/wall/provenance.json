@@ -1,0 +1,89 @@
+{
+  "tool": "image_gen.imagegen",
+  "tile_metres": 2.6,
+  "images": [
+    {
+      "path": "assets/models/materials/cave/wall/wall-0.png",
+      "sha256": "190ffbb3b14841ee3f2464536d6d7451ec08777a04cdb4beef83cfa39effdc4f",
+      "bytes": 2753937,
+      "original": "original-0.png",
+      "prompt": "prompt-0.txt",
+      "actual_references": [
+        {
+          "path": "assets/source/style/approved-game-reference.jpg",
+          "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+        },
+        {
+          "path": "assets/models/environment/cave_entrance/albedo.png",
+          "sha256": "bc5bc131298b820246722d64ecbe1e45957f25f58db1c82e9f6dee094961a7be"
+        }
+      ]
+    },
+    {
+      "path": "assets/models/materials/cave/wall/wall-1.png",
+      "sha256": "410e5dc2b7afbce96e45c9d7a5457562f63171680c05979af66e6182b42be848",
+      "bytes": 2595515,
+      "original": "original-1.png",
+      "prompt": "prompt-1.txt",
+      "actual_references": [
+        {
+          "path": "assets/source/style/approved-game-reference.jpg",
+          "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+        }
+      ]
+    },
+    {
+      "path": "assets/models/materials/cave/wall/wall-2.png",
+      "sha256": "5338af2b36eb84ce2b48857d239b911e45a9642e9a7ebc2a5fa67eb5aa6ed0bd",
+      "bytes": 2518191,
+      "original": "original-2.png",
+      "prompt": "prompt-2.txt",
+      "actual_references": [
+        {
+          "path": "assets/source/style/approved-game-reference.jpg",
+          "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+        }
+      ]
+    },
+    {
+      "path": "assets/models/materials/cave/wall/wall-3.png",
+      "sha256": "3e91c78371db82d1ca0f5e5d6803dd88408baa15cbb22ad946cef3981a7b227e",
+      "bytes": 2514212,
+      "original": "original-3.png",
+      "prompt": "prompt-3.txt",
+      "actual_references": [
+        {
+          "path": "assets/source/style/approved-game-reference.jpg",
+          "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+        }
+      ]
+    },
+    {
+      "path": "assets/models/materials/cave/wall/wall-4.png",
+      "sha256": "c81d9733faad99dd20d36bbfc63d40903937f972d2a54750be74c73c1e89d7cd",
+      "bytes": 2768431,
+      "original": "original-4.png",
+      "prompt": "prompt-4.txt",
+      "actual_references": [
+        {
+          "path": "assets/source/style/approved-game-reference.jpg",
+          "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+        }
+      ]
+    },
+    {
+      "path": "assets/models/materials/cave/wall/wall-5.png",
+      "sha256": "c31a01e63d7aeaa4777488b1f863a0feb96ed9c2ad2e12101553c2906b8216e9",
+      "bytes": 2836807,
+      "original": "original-5.png",
+      "prompt": "prompt-5.txt",
+      "actual_references": [
+        {
+          "path": "assets/source/style/approved-game-reference.jpg",
+          "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+        }
+      ]
+    }
+  ],
+  "method": "서로 다른 자연 지질·마모·습기 상태를 표현한 독립 평면 알베도6종. 생성 원본 그대로 사용한다."
+}

@@ -85,7 +85,7 @@ static func build(preview: Node, parent: Node3D) -> Dictionary:
 		for cliff: bool in [false, true]:
 			var material := ShaderMaterial.new()
 			material.shader = load("res://scripts/native_terrain.gdshader")
-			material.set_shader_parameter("grass_atlas", load(NativeGround3D.GRASS))
+			material.set_shader_parameter("grass_layers", NativeTerrainSurfaces.layers("grass"))
 			material.set_shader_parameter("habitat_bias", 1.25 if role == 3 else 0.45)
 			material.set_shader_parameter("surface_tint", Color(UPPER_GRASS_TINT.r / ForestArt.GRASS_TINT.r, UPPER_GRASS_TINT.g / ForestArt.GRASS_TINT.g, UPPER_GRASS_TINT.b / ForestArt.GRASS_TINT.b))
 			material.set_shader_parameter("rock_texture", rock_material.albedo_texture)

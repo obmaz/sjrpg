@@ -14,16 +14,21 @@
   "coordinate_contract": {
     "native_axis": "Y-up; +Z front; metres",
     "floor_m": 0.28,
-    "footprint_scale": 1.3,
+    "footprint_scale": 1.6,
     "entry_x_fraction": -0.3,
     "body_outline": "NativeChapelPlan.body_polygon",
-    "roof_count": 2
+    "roof_count": 2,
+    "gable_heights_m": [
+      4.6,
+      6.2
+    ],
+    "nave_front_depth_fraction": 0.3
   },
   "generator": {
     "api": "Ortho3DChapel.build(presenter, root, width, depth, height)",
     "method": "닫힌 입체 몸체·두 지붕·열린 종탑·부벽·계단과 생성형 전체 면 원화를 결합한 혼합 모델.",
     "path": "scripts/ortho_3d_chapel.gd",
-    "sha256": "d0d0e929ac112a48d2921716ae82434d243fc58141aa6ef3e0f8367f9efbafd4"
+    "sha256": "fb1a15b62506244e4dc87911d37103be5eaf30ab6c9153714df3f932186427ec"
   },
   "inputs": [
     {
@@ -32,8 +37,22 @@
     },
     {
       "path": "assets/models/architecture/chapel/albedo.png",
-      "sha256": "080e5ab1b08240f9296b95e38d7fda872b3d88e1b5c750b00142f4981e30be3a"
+      "sha256": "b2c3568fd0434d6d78b52e633769e8e925414a11283170f26527678b7103352b"
     }
   ],
-  "surface_package": "assets/models/architecture/chapel/asset.json"
+  "surface_package": "assets/models/architecture/chapel/asset.json",
+  "helpers": [
+    {
+      "path": "scripts/native_chapel_plan.gd",
+      "sha256": "e006c262ee0ba7d3f4a0d1a4600c9aeae88ab93dcfccda3956d4deb92103b7ce"
+    },
+    {
+      "path": "assets/models/architecture/chapel/facade.gd",
+      "sha256": "96354ef3db55adbe5b1deae2da4ace685122a79c90e580f9d00fab3afa4696ce"
+    },
+    {
+      "path": "assets/models/architecture/chapel/facade.gdshader",
+      "sha256": "3c4796eba0f568a1f059e57c1ccbd545984884042e5561790812c15c05c61b18"
+    }
+  ]
 }

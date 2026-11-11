@@ -2,7 +2,13 @@ class_name NativeChapelPlan
 extends RefCounted
 ## 표시와 실제 물리가 공용하는 세 디딤판의 미터 단위 설계.
 const SIZE_FACTOR := 1.25
-const FOOTPRINT_SCALE := 1.30
+const FOOTPRINT_SCALE := 1.60
+const NAVE_FRONT_FRACTION := 0.30
+const NAVE_DEPTH_FRACTION := 0.80
+const PORCH_EAVES := 3.0
+const PORCH_RISE := 1.6
+const NAVE_EAVES := 3.5
+const NAVE_RISE := 2.7
 const FLOOR := 0.28
 const RUN := 1.14
 const STEPS := 3
@@ -48,8 +54,8 @@ static func body_polygon(center: Vector2, width: float, depth: float) -> PackedV
 		[
 			Vector2(-width * 0.5, -depth * 0.5),
 			Vector2(width * 0.5, -depth * 0.5),
-			Vector2(width * 0.5, depth * 0.18),
-			Vector2(-width * 0.10, depth * 0.18),
+			Vector2(width * 0.5, depth * NAVE_FRONT_FRACTION),
+			Vector2(-width * 0.10, depth * NAVE_FRONT_FRACTION),
 			Vector2(-width * 0.10, depth * 0.5),
 			Vector2(-width * 0.5, depth * 0.5)
 		]

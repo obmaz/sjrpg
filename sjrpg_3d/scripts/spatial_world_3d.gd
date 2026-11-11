@@ -731,7 +731,7 @@ static func _native_chapel(village: Village) -> Dictionary:
 		building.append(Iso.project(point * UNITS))
 	return {"id": "chapel", "top": top, "ramp": projected_ramp, "rise": 0.28 * VERTICAL,
 		"native_steps": NativeChapelPlan.tiers(center, width, depth),
-		"native_bodies": [Rect2(center+Vector2(-width*0.5,-depth*0.5),Vector2(width*0.4,depth)),Rect2(center+Vector2(-width*0.1,-depth*0.5),Vector2(width*0.6,depth*0.68))],
+		"native_bodies": [Rect2(center+Vector2(-width*0.5,-depth*0.5),Vector2(width*0.4,depth)),Rect2(center+Vector2(-width*0.1,-depth*0.5),Vector2(width*0.6,depth*NativeChapelPlan.NAVE_DEPTH_FRACTION))],
 		"bottom": Iso.project(Vector2(door_x, front + 0.04 + NativeChapelPlan.RUN) * UNITS), "upper": Iso.project(Vector2(door_x, front + 0.04) * UNITS),
 		"entrance": PackedVector2Array([projected_ramp[0], projected_ramp[1]]), "blockers": [] as Array[PackedVector2Array], "building": building}
 
