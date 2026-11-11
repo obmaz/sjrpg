@@ -98,6 +98,11 @@ func _process(_delta: float) -> void:
 	_sync_retained()
 
 
+## 멈춘 화면에서도 새 Control 크기에 맞춰 보관한 지도 도형과 테두리를 갱신한다.
+func refresh_layout() -> void:
+	_sync_retained()
+
+
 func _create_retained_layers() -> void:
 	_backdrop = Node2D.new()
 	_backdrop.name = "MapBackdrop"

@@ -84,7 +84,6 @@ func _ready() -> void:
 	_fps = FpsCounter.new()
 	_fps.visibility_changed.connect(_fit_fps)
 	add_child(_fps)
-	get_viewport().size_changed.connect(_fit_fps)
 
 	_toast_plaque = PanelContainer.new()
 	_toast_plaque.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -133,6 +132,15 @@ func _ready() -> void:
 	_critical_warning.hide()
 	add_child(_critical_warning)
 	_build_heavy_hit_vignette()
+	get_viewport().size_changed.connect(_on_viewport_resized)
+
+
+## 표시만 다시 배치한다. 일시정지 중 회전에도 물약/스킬/알림의 시계를 진행시키지 않는다.
+func _on_viewport_resized() -> void:
+	_update_layout()
+	_refresh_bar_drawing()
+	controls.refresh_layout()
+	minimap.refresh_layout()
 
 
 ## Radial gradient: clear centre, red edges. A texture rather than a shader keeps the web build light.

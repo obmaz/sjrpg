@@ -329,7 +329,7 @@ func _read_debug_params() -> void:
 			_reference_fx_preview.call_deferred(kv[1])
 		elif kv.size() == 2 and kv[0] == "gate_preview" and kv[1] in ["0", "1", "2", "3"]:
 			_gate_closure_preview.call_deferred(int(kv[1]))
-		elif kv.size() == 2 and kv[0] == "corpse_preview" and kv[1] in ["1", "bridge", "terrace"]:
+		elif kv.size() == 2 and kv[0] == "corpse_preview" and kv[1] in ["1", "bridge", "terrace", "beasts"]:
 			_corpse_preview.call_deferred(kv[1])
 		elif kv.size() == 2 and kv[0] == "reward_preview" and kv[1] in ["1", "levelup"]:
 			_reward_preview.call_deferred(kv[1])
@@ -886,7 +886,11 @@ func _corpse_preview(surface := "1") -> void:
 	player.position = resolve_movement(village.spawn_point, village.spawn_point + Vector2(0, -10), Player.RADIUS)
 	var positions: Array[Vector2] = []
 	var kinds: Array[String] = []
-	if surface == "bridge":
+	if surface == "beasts":
+		player.position = village.point(Vector2(0.5, 1.15))
+		positions = [player.position + Vector2(-130, -70), player.position + Vector2(130, -70)]
+		kinds = ["boar", "goblin"]
+	elif surface == "bridge":
 		player.position = village.bridge.axis_point(0.5)
 		positions = [village.bridge.axis_point(0.4), village.bridge.axis_point(0.65)]
 		kinds = ["wolf", "skeleton"]
@@ -912,6 +916,8 @@ func _corpse_preview(surface := "1") -> void:
 	for kind in kinds:
 		var enemy := Enemy.new()
 		enemy.setup(self, kind, 1)
+		if surface == "beasts" and kind == "goblin":
+			enemy.set_meta("visual_variant", NativeEnemyModels.CRAWLER)
 		enemy.position = positions[index]
 		enemy.xp_reward = 0
 		world.add_child(enemy)
@@ -921,6 +927,8 @@ func _corpse_preview(surface := "1") -> void:
 		index += 1
 	await get_tree().create_timer(0.25, false).timeout
 	if not is_queued_for_deletion() and OS.has_feature("web"):
+		if surface == "beasts":
+			get_tree().paused = true
 		JavaScriptBridge.eval("window.__sjrpgCorpsePreviewReady = true")
 	await get_tree().create_timer(CORPSE_LIFETIME + 0.1, false).timeout
 	if not is_queued_for_deletion() and OS.has_feature("web"):

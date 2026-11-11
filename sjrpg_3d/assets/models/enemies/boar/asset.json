@@ -255,6 +255,6 @@
     "sample_hz": 120.0,
     "contact_height_fraction": 0.25,
     "contact_samples": 185,
-    "model_sha256": "0ee0e09658e2308a4b6365725d30af7b546ae9bfd66b2abf6db4103a6830daac"
+    "model_sha256": "8aec17ea3ca55038c1af83e48d0c262b17c3554f1c9554e4e05d5f511a8fc928"
   }
 }

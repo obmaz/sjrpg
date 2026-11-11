@@ -59,6 +59,10 @@ def pose_world(matrices, rig, role, t):
                 forearm = (side * 0.04, -0.30 - 0.60 * reach, -0.76 + 0.90 * reach)
             _aim(matrices, rig, upper, elbow, arm)
             _aim(matrices, rig, elbow, wrist, forearm)
+    if role == "death":
+        # 관절 roll에 의존하지 않고 실제 Z-up 공간에서 쓰러뜨린다. 변환기가 매 샘플의 발치를 맞춘다.
+        turn = Matrix.Rotation((t * t * (3 - 2 * t)) * math.pi * 0.5, 4, "X")
+        matrices = {name: turn @ matrix for name, matrix in matrices.items()}
     return matrices
 
 
@@ -71,6 +75,4 @@ def pose_basis(basis, role, t, root_name):
         basis["joint2"] = basis["joint2"] @ Matrix.Rotation(
             math.sin(t * math.pi) * -0.3, 4, "X"
         )
-    elif role == "death":
-        basis[root_name] = Matrix.Rotation(t * 1.5, 4, "X") @ basis[root_name]
     return basis

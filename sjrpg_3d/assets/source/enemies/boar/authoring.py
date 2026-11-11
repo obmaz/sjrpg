@@ -96,6 +96,12 @@ def pose_basis(basis, role, t, root_name):
         basis["body.001"] = basis["body.001"] @ Matrix.Rotation(
             math.sin(t * math.pi) * 0.22, 4, "X"
         )
-    elif role == "death":
-        basis[root_name] = Matrix.Rotation(t * 1.5, 4, "Y") @ basis[root_name]
     return basis
+
+
+def pose_world(matrices, rig, role, t):
+    if role == "death":
+        # 정규화된 Z-up 공간에서 몸의 긴 축을 따라 눕힌다. 루트 뼈의 local 축은 지면 축이 아니다.
+        turn = Matrix.Rotation((t * t * (3 - 2 * t)) * math.pi * 0.5, 4, "Y")
+        return {name: turn @ matrix for name, matrix in matrices.items()}
+    return matrices

@@ -53,7 +53,7 @@ python3 sjrpg_3d/tools/check_enemy_assets.py
 
 스켈레톤 변환기는 [FBX2glTF0.9.7 Linux x64](https://github.com/facebookincubator/FBX2glTF/releases/download/v0.9.7/FBX2glTF-linux-x64), SHA-256 `b38210352fdd29d50ba53a6514c3ff05ccbb5d1e0a6442db7a49834bf34a3145`입니다. 실행 전 원본 기록의 해시와 비교하며 도구 바이너리는 런타임이나 저장소에 넣지 않습니다. Blender4.3.2의 NumPy로 오프라인 스킨 피팅을 수행합니다.
 
-고블린/늑대는 기존 `export_enemy.py`, 새 네 종류는 `export_remaining.py`와 `skin_weights.py`를 사용합니다. 멧돼지/잠복자의 형태·포즈 보정은 각 소스 폴더의 `authoring.py`에 분리하고 의존 해시로 기록합니다. Blender의 Python 오류는 재현 명령의 실패 종료 코드로 전달합니다. 새 모델을 다시 만들면 실제 변환/런타임 측정이 갱신되므로 원본 잠금은 유지하고 화면·접지·예산·라이선스를 재검수합니다. 기존 두 종의 임시 `model.bake.json`은 검수 후 소스의 `conversion.json`으로 정리하며 런타임 폴더에 남기지 않습니다.
+고블린/늑대는 기존 `export_enemy.py`, 새 네 종류는 `export_remaining.py`와 `skin_weights.py`를 사용합니다. 멧돼지/잠복자의 형태·포즈 보정은 각 소스 폴더의 `authoring.py`에 분리하고 의존 해시로 기록합니다. Blender의 Python 오류는 재현 명령의 실패 종료 코드로 전달합니다. 멧돼지·잠복자의 쓰러짐은 정규화된 Z-up 공간에서 전체 골격을 수평축으로 회전하고 매 샘플의 바닥/중심을 맞춥니다. 뼈 local 축으로 돌리면 서 있는 채 방향만 바뀔 수 있으므로 실제 스킨 높이도 검사합니다. 새 모델을 다시 만들면 실제 변환/런타임 측정이 갱신되므로 원본 잠금은 유지하고 화면·접지·예산·라이선스를 재검수합니다. 기존 두 종의 임시 `model.bake.json`은 검수 후 소스의 `conversion.json`으로 정리하며 런타임 폴더에 남기지 않습니다.
 
 `measure_stride.tscn`은 최종 GLB를120Hz로 샘플링해 지정된 발 중 낮은25% 높이 구간에서 가장 낮은 지지발의 후방 변위를 적분합니다. 도약 구간은 앞뒤 접지 속도를 원형으로 보간하고 접지 전환만 한 표본씩 평활화합니다. 누적 거리 표와 한 클립의 이동 거리를 `asset.json`에 굽고 런타임은 이 표를 이진 탐색합니다. 여러 걸음이 든 클립도 허용합니다. 현재 고블린2.9966m·늑대4.2332m·멧돼지1.4651m·스켈레톤15.7539m·골렘3.7053m·잠복자1.0004m입니다. 런타임에 골격을 재측정하거나 root motion으로 물리를 옮기지 않습니다. 프레임마다 모든 발을 고정하는 IK는 아니며 방향 전환·옆 흔들림·경사면의 개별 발 접지는 별개입니다. 모델을 교체하면 자기 manifest의 발 뼈를 지정해 다시 측정하고 GLB 해시·실제 이동 화면을 검수합니다.
 
@@ -66,3 +66,5 @@ python3 sjrpg_3d/tools/check_enemy_assets.py
 다른 AI/제작자는 자기 종 폴더의 GLB·씬·manifest와 대응 소스만 교체합니다. 게임 코드의 종 등록과 전투 규칙은 통합 담당자가 다룹니다. 새 렌더 계약이나 클립 역할을 바꿀 때만 공용 표시기를 함께 수정합니다.
 
 `tools/preview3d/render_enemy_pilot.tscn`은 종별 네 방향과 idle/run/attack/death를 같은 광원·직교 카메라로 촬영합니다. `--kinds=boar,skeleton,golem,cave_crawler --label=after`로 범위를 고를 수 있습니다. 실제 브라우저 가로/세로·타격·지역 전환도 확인하며 일회성 비교·측정은 루트 `build/`에 둡니다. 격리된 렌더나 헤드리스 검사만으로 스타일·실기기 성능이 승인됐다고 판단하지 않습니다.
+
+보행 측정은 `tools/godot.sh --headless res://tools/enemy_art/measure_stride.tscn -- --write --kinds=boar,cave_crawler`처럼 종을 지정할 수 있습니다. 지정하지 않으면 전체를 측정하며 독립 모델 교체에서는 자기 종만 갱신합니다.

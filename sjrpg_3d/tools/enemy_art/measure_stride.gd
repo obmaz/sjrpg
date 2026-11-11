@@ -6,7 +6,21 @@ const CONTACT_HEIGHT_FRACTION := 0.25
 
 
 func _ready() -> void:
-	for kind: String in NativeEnemyModels.KINDS + [NativeEnemyModels.CRAWLER]:
+	var kinds: Array = NativeEnemyModels.KINDS + [NativeEnemyModels.CRAWLER]
+	for argument: String in OS.get_cmdline_user_args():
+		if argument.begins_with("--kinds="):
+			var selected: Array = Array(argument.trim_prefix("--kinds=").split(",", false))
+			if selected.is_empty():
+				push_error("No enemy stride kinds selected")
+				get_tree().quit(1)
+				return
+			for kind: String in selected:
+				if not kinds.has(kind):
+					push_error("Unknown enemy stride kind: " + kind)
+					get_tree().quit(1)
+					return
+			kinds = selected
+	for kind: String in kinds:
 		var model := NativeEnemyModels.build(kind)
 		var visual: NativeEnemyVisual = model["visual"]
 		add_child(visual)

@@ -46,6 +46,7 @@ const SCENES = {
     pc_controls: 'at=field',
     dodge: 'at=field',
     corpses: 'corpse_preview=1',
+    corpses_beasts: 'corpse_preview=beasts&zoom=0.95',
     corpses_bridge: 'corpse_preview=bridge&zoom=1.2',
     corpses_terrace: 'corpse_preview=terrace&zoom=1.1',
     rewards: 'reward_preview=1',

@@ -43,6 +43,12 @@ func _ready() -> void:
 	_hints_layer = _draw_layer("XboxHints", _draw_hints_layer)
 
 
+## 화면 크기 변경용: 피드백·쿨다운을 진행시키지 않고 그림과 터치 범위를 함께 옮긴다.
+func refresh_layout() -> void:
+	_layout()
+	_refresh_drawing()
+
+
 func _draw_layer(layer_name: String, callback: Callable, behind := false) -> Control:
 	var canvas := Control.new()
 	canvas.name = layer_name

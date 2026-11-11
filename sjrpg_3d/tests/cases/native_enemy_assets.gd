@@ -100,6 +100,14 @@ func run() -> void:
 		var corpse_bounds := AABB(dead[0], Vector3.ZERO)
 		for point in dead:
 			corpse_bounds = corpse_bounds.expand(point)
+		if kind in ["boar", "cave_crawler"]:
+			var standing := AABB(idle[0], Vector3.ZERO)
+			for point in idle:
+				standing = standing.expand(point)
+			check(
+				"death falls onto the ground rather than yawing upright " + kind,
+				corpse_bounds.size.y < standing.size.y * .75
+			)
 		var center := corpse_bounds.get_center()
 		check(
 			"corpse remains centered on the actual death location " + kind,
