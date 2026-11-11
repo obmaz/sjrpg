@@ -27,7 +27,7 @@ static func roof_tint(id: String) -> Color:
 	return Color(float(tint[0]), float(tint[1]), float(tint[2]))
 
 
-static func material(id: String, bounds: Vector3, cell := -1) -> ShaderMaterial:
+static func material(id: String, bounds: Vector3, cell := -1, gable_rise := 0.0) -> ShaderMaterial:
 	var folder := ROOT + id + "/"
 	var spec := _spec(id)
 	var grid: Array = spec["atlasGrid"]
@@ -38,6 +38,7 @@ static func material(id: String, bounds: Vector3, cell := -1) -> ShaderMaterial:
 	result.shader = preload("res://scripts/native_asset_surface.gdshader")
 	result.set_shader_parameter("atlas", load(folder + texture_path))
 	result.set_shader_parameter("extent", bounds.max(Vector3.ONE * 0.01))
+	result.set_shader_parameter("gable_rise", gable_rise if spec.get("fullFacade", false) else 0.0)
 	result.set_shader_parameter("tile", spec["mapping"] == "tile")
 	result.set_shader_parameter("tile_metres", float(spec["tileMetres"]))
 	result.set_shader_parameter("cell_override", cell)

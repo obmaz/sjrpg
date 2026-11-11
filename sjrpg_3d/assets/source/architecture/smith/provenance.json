@@ -2,13 +2,30 @@
   "tool": "image_gen.imagegen",
   "source": "original.png",
   "prompt": "prompt.txt",
-  "sha256": "b64721237188246e34a5271e8c29a6534358c8408057396573beea47b09b6a02",
+  "sha256": "baab00cfcaa6cbedf246b388b5ee3d0961a4b3311e344991f0f4e3f57f4095d1",
   "runtime": "sjrpg_3d/assets/models/architecture/smith/albedo.png",
-  "actualReferences": [
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "references": [
     {
       "path": "assets/source/remake/house-ne.png",
       "sha256": "879907b9e0c66c31905ec002a48d09e0099f152716017d167578b977896d9618"
+    },
+    {
+      "path": "assets/source/architecture/smith/layout.png",
+      "sha256": "e60662c17cbbb75072b8598aeb03cd5128006064925018f12c1db3dad14f8753"
+    },
+    {
+      "path": "assets/source/style/approved-game-reference.jpg",
+      "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
     }
   ],
-  "notes": "2D 원본의 재료를 참조하여 정면 2×2 알베도로 재구성. 생성 원본 픽셀을 그대로 사용하며 새 법선·거칠기 이미지 맵은 만들지 않음."
+  "layout": "layout.json",
+  "layoutGenerator": {
+    "path": "tools/preview3d/render_facades.gd",
+    "sha256": "a71425f9a521950597e9565bfd9887dd05d6f005869c0f567b2ba22d8a624898"
+  },
+  "notes": "기존 건물 원화와 실제 네 방향 배치도를 첨부해 생성한 면 전체 원화. 생성 픽셀 무가공 채택. 실제 창·문 구멍과 돌출 골조는 3D 기하가 유지하며 박공까지 한 번 매핑한다. 미세 자체 음영은 포함하지만 법선/거칠기 맵으로 취급하지 않는다."
 }

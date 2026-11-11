@@ -47,7 +47,7 @@
     "api": "Ortho3DChapel.build(presenter, root, width, depth, height)",
     "method": "Runtime ArrayMesh construction from dimensioned native stone/wood/roof solids, pointed arch paths and actual wall apertures. No facade billboard or viewport texture.",
     "path": "scripts/ortho_3d_chapel.gd",
-    "sha256": "4ffb1fbc530c6faf89414b1bf60329a377db957d1de1df06b68e740a633c3dfd"
+    "sha256": "6a2775c560600e11d0fe00d051d56b0c5ea2f5d578f6c3acafb2fefe53f869c1"
   },
   "inputs": [
     {

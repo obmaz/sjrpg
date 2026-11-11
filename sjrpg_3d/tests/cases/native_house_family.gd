@@ -68,6 +68,7 @@ func run() -> void:
 			var role := String(mesh.name).trim_prefix("House_" + key + "_")
 			if role == "wall":
 				check("house installs its independent facade material", mesh.material_override is ShaderMaterial and mesh.material_override.has_meta("asset_id"))
+				check("actual house facade reaches its measured gable peak: " + key, is_equal_approx(mesh.material_override.get_shader_parameter("gable_rise"), float(report["roof_rise"])) and (mesh.material_override.get_shader_parameter("extent") as Vector3).is_equal_approx(Vector3(width - 0.40, report["eaves_height"], depth - 0.40)))
 			else:
 				check("house keeps shared structural materials", mesh.material_override == preview._materials[NativeHouse3D.resource_key(key, role)])
 			for surface in mesh.mesh.get_surface_count():

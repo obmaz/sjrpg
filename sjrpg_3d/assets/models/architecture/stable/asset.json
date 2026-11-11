@@ -9,5 +9,6 @@
     2
   ],
   "tileMetres": 2.56,
-  "roughness": 0.94
+  "roughness": 0.94,
+  "fullFacade": true
 }

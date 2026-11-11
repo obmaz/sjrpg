@@ -2,7 +2,7 @@
   "generator": {
     "api": "NativeHouse3D.build(presenter, root, key, width, depth, height) -> Dictionary",
     "path": "scripts/native_house_3d.gd",
-    "sha256": "da833e2ecb8c7e5cfe6774b36080d78d4e5fa7152508aa3262751ad17909dd41"
+    "sha256": "a2fc24dc6b59ec61a8a98581ed6eebd5782020335ebc2585a69729ce5df03ad3"
   },
   "materials": {
     "textures": [
@@ -68,19 +68,19 @@
       },
       {
         "path": "assets/models/architecture/shop/albedo.png",
-        "sha256": "bade5f91bc567991b23c7659291974d1765c7dcbfccb9bcef5c91d74b317943b"
+        "sha256": "b9b96b542ee11c8763513f50cc698488243545a2e0f95f5d338d7d6d8258c44e"
       },
       {
         "path": "assets/models/architecture/smith/albedo.png",
-        "sha256": "b64721237188246e34a5271e8c29a6534358c8408057396573beea47b09b6a02"
+        "sha256": "baab00cfcaa6cbedf246b388b5ee3d0961a4b3311e344991f0f4e3f57f4095d1"
       },
       {
         "path": "assets/models/architecture/stable/albedo.png",
-        "sha256": "6de4b7da1566f67a73d979292b705f1d69c71966685c1aebe80e523f4b116864"
+        "sha256": "5e034e00e98eca863763a20342c026b015e7509de005b2137b4360a5ae523e01"
       },
       {
         "path": "assets/models/architecture/home/albedo.png",
-        "sha256": "93fbefb7625190657dedb8719e61bbb8bbf921df6c4e3e3132f447135e3df6fd"
+        "sha256": "94761fb4e7e5758dce6f2fc81777b5bf63d457a3268256d214fc2b8a24994dbd"
       },
       {
         "path": "assets/models/architecture/smith/roof.png",

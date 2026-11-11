@@ -1,6 +1,7 @@
 shader_type spatial;
 uniform sampler2D atlas : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
 uniform vec3 extent = vec3(6.0,5.0,6.0);
+uniform float gable_rise = 0.0;
 uniform bool tile = false;
 uniform float tile_metres = 2.56;
 uniform int cell_override = -1;
@@ -15,8 +16,10 @@ void fragment() {
 	float width = side ? extent.z : extent.x;
 	float orientation = side ? -sign(n.x) : sign(n.z);
 	int face = side ? (n.x > 0.0 ? 1 : 3) : (n.z > 0.0 ? 0 : 2);
-	vec2 uv = vec2(horizontal * orientation / width + 0.5, 1.0-point.y/extent.y);
-	if (!tile && point.y > extent.y) { uv.y = clamp(0.35+(point.y-extent.y)*0.08,0.35,0.65); }
+	// 앞뒤는 박공 꼭대기까지, 양 측면은 처마까지 각각 한 장을 배치한다.
+	float height = extent.y + (side ? 0.0 : gable_rise);
+	vec2 uv = vec2(horizontal * orientation / width + 0.5, 1.0-point.y/height);
+	if (!tile && gable_rise == 0.0 && point.y > extent.y) { uv.y = clamp(0.35+(point.y-extent.y)*0.08,0.35,0.65); }
 	if (tile) {
 		uv = abs(n.y)>0.7 ? point.xz/tile_metres : vec2(horizontal, -point.y)/tile_metres;
 		uv = 1.0-abs(fract(uv*0.5)*2.0-1.0);

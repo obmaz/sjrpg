@@ -2,7 +2,30 @@
   "tool": "image_gen.imagegen",
   "source": "original.png",
   "prompt": "prompt.txt",
-  "sha256": "bade5f91bc567991b23c7659291974d1765c7dcbfccb9bcef5c91d74b317943b",
+  "sha256": "b9b96b542ee11c8763513f50cc698488243545a2e0f95f5d338d7d6d8258c44e",
   "runtime": "sjrpg_3d/assets/models/architecture/shop/albedo.png",
-  "notes": "생성 원본 무가공 사용. 네 면은 각 셀에 한 번 매핑. 미세 자체 음영은 남아 있으며 법선 맵은 아님."
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "references": [
+    {
+      "path": "assets/source/remake/house-nw.png",
+      "sha256": "d75434ed6c1a692e177ffd528c84818a7a01dffe1458c7bbe2c84c01922a7707"
+    },
+    {
+      "path": "assets/source/architecture/shop/layout.png",
+      "sha256": "0d287a01b405b236ccc2bd84377c87e07cdfc2f69b892c6ac1fc450a3d6e3dc0"
+    },
+    {
+      "path": "assets/source/style/approved-game-reference.jpg",
+      "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+    }
+  ],
+  "layout": "layout.json",
+  "layoutGenerator": {
+    "path": "tools/preview3d/render_facades.gd",
+    "sha256": "a71425f9a521950597e9565bfd9887dd05d6f005869c0f567b2ba22d8a624898"
+  },
+  "notes": "기존 건물 원화와 실제 네 방향 배치도를 첨부해 생성한 면 전체 원화. 생성 픽셀 무가공 채택. 실제 창·문 구멍과 돌출 골조는 3D 기하가 유지하며 박공까지 한 번 매핑한다. 미세 자체 음영은 포함하지만 법선/거칠기 맵으로 취급하지 않는다."
 }

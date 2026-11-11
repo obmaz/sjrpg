@@ -1,0 +1,13 @@
+{
+  "cell_order": [
+    "front+Z",
+    "right+X",
+    "back-Z",
+    "left-X"
+  ],
+  "depth_m": 2.64182553291321,
+  "eaves_m": 3.35,
+  "gable_rise_m": 1.9,
+  "inset": 0.018,
+  "width_m": 4.89744148254394
+}

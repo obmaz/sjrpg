@@ -13,7 +13,7 @@ const STYLES := {
 	"nw": {"wall": "shop", "stone": "stone", "slate": "roof_shop", "wood": "door_shop", "label": "half-timbered merchant shop"},
 	"ne": {"wall": "smith", "stone": "stone", "slate": "roof_smith", "wood": "door_smith", "label": "fieldstone smithy"},
 	"sw": {"wall": "stable", "stone": "rubble", "slate": "shingle", "wood": "door_stable", "label": "timber stable house"},
-	"se": {"wall": "home", "stone": "stone", "slate": "roof_home", "wood": "door_home", "label": "brick dormer house"},
+	"se": {"wall": "home", "stone": "stone", "slate": "roof_home", "wood": "door_home", "label": "lime-plaster dormer house"},
 }
 const TIMBER_TILE := 1.0 / 0.65
 const SLATE_TILE := 2.6
@@ -60,7 +60,9 @@ func _build(key: String, width: float, depth: float, height: float) -> Dictionar
 	var eave_height := height * (1.24 if key == "nw" else (1.10 if key == "se" else 1.0)) + FLOOR
 	var rise := 1.80 if key == "nw" else (1.40 if key == "ne" else (1.55 if key == "sw" else 1.90))
 	var surface_id: String = STYLES[key]["wall"]
-	_materials["wall"] = NativeAssetSurface.material(surface_id, Vector3(width - 0.40, eave_height, depth - 0.40))
+	_materials["wall"] = NativeAssetSurface.material(
+		surface_id, Vector3(width - 0.40, eave_height, depth - 0.40), -1, rise
+	)
 	var body_width := width - 0.40
 	var body_depth := depth - 0.40
 	var door_width := minf(1.38 if key in ["nw", "sw"] else 1.10, body_width * 0.38)
@@ -141,7 +143,7 @@ func _build(key: String, width: float, depth: float, height: float) -> Dictionar
 		"collision_note": "Existing whole-house footprint remains solid; doors are closed, smith/stable recesses carry blocking worktops or rails. No enterable interior is promised.",
 		"timber_mapping": "beam-local longitudinal grain, shared existing door material; metre UVs",
 		"timber_tile_m": TIMBER_TILE, "slate_tile_m": SLATE_TILE, "slate_tiles": _slate_tiles, "corner_quoins": _quoins,
-		"surface_mapping": "one unique atlas cell per local wall face; structural trim retains metre UVs"}
+		"surface_mapping": "one complete facade per cell, including front/rear gables; structural trim retains metre UVs"}
 	_root.set_meta("native_house", report)
 	return report
 
@@ -150,7 +152,7 @@ func _opening(x: float, width: float, bottom: float, height: float) -> Dictionar
 	return {"x": x, "width": width, "bottom": bottom, "height": height, "arch": false, "role": "window"}
 
 
-func _wall(width: float, bottom: float, top: float, openings: Array[Dictionary], facade: Transform3D) -> void:
+func _wall(width: float, bottom: float, top: float, openings: Array[Dictionary], facade: Transform3D, material := "wall") -> void:
 	var splits: Array[float] = [-width * 0.5, width * 0.5]
 	for opening in openings:
 		var left := float(opening["x"]) - float(opening["width"]) * 0.5
@@ -177,25 +179,25 @@ func _wall(width: float, bottom: float, top: float, openings: Array[Dictionary],
 		var low_b := bottom
 		for opening in active:
 			var next := float(opening["bottom"])
-			_wall_column(a, b, low_a, low_b, next, facade)
+			_wall_column(a, b, low_a, low_b, next, facade, material)
 			low_a = _arch_height(opening, a) if opening["arch"] else next + float(opening["height"])
 			low_b = _arch_height(opening, b) if opening["arch"] else next + float(opening["height"])
-		_wall_column(a, b, low_a, low_b, top, facade)
+		_wall_column(a, b, low_a, low_b, top, facade, material)
 
 
-func _wall_column(a: float, b: float, low_a: float, low_b: float, top: float, facade: Transform3D) -> void:
+func _wall_column(a: float, b: float, low_a: float, low_b: float, top: float, facade: Transform3D, material: String) -> void:
 	if top <= maxf(low_a, low_b) + 0.00001:
 		return
 	if absf(low_a - low_b) < 0.00001:
-		_panel(a, b, low_a, top, facade)
+		_panel(a, b, low_a, top, facade, material)
 	else:
-		_prism(PackedVector2Array([Vector2(a, low_a), Vector2(b, low_b), Vector2(b, top), Vector2(a, top)]), WALL, facade, "wall")
+		_prism(PackedVector2Array([Vector2(a, low_a), Vector2(b, low_b), Vector2(b, top), Vector2(a, top)]), WALL, facade, material)
 
 
-func _panel(left: float, right: float, bottom: float, top: float, facade: Transform3D) -> void:
+func _panel(left: float, right: float, bottom: float, top: float, facade: Transform3D, material: String) -> void:
 	if right - left <= 0.001 or top - bottom <= 0.001:
 		return
-	_box(Vector3((left + right) * 0.5, (bottom + top) * 0.5, 0), Vector3(right - left, top - bottom, WALL), "wall", facade, false)
+	_box(Vector3((left + right) * 0.5, (bottom + top) * 0.5, 0), Vector3(right - left, top - bottom, WALL), material, facade, false)
 
 
 func _arch_height(opening: Dictionary, x: float) -> float:
@@ -477,7 +479,8 @@ func _dormer(width: float, depth: float, top: float, rise: float, side: float) -
 	var y := top + rise * 0.41 + 0.04
 	var at := Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(x, y, side * depth * 0.23))
 	var opening := _opening(0.0, 0.48, 0.08, 0.61)
-	_wall(0.78, 0.0, 0.82, [opening] as Array[Dictionary], at)
+	# 작은 지붕창은 본채 외벽의 창·문 그림을 다시 투영하지 않는다.
+	_wall(0.78, 0.0, 0.82, [opening] as Array[Dictionary], at, "stone")
 	_window(opening, at, false)
 	for direction in [-1.0, 1.0]:
 		_box(Vector3(direction * 0.37, 0.38, -0.27), Vector3(0.10, 0.76, 0.60), "wood", at)

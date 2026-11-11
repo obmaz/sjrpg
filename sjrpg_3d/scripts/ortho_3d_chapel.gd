@@ -49,7 +49,7 @@ func _build(width: float, depth: float, height: float) -> Dictionary:
 	_materials["oak"] = _materials["wood"]
 	# Pale long ashlar sets the chapel apart; buttresses, bands, arches and
 	# steps keep the shared limestone trim.
-	_materials["wall"] = NativeAssetSurface.material("chapel", Vector3(width, height + 0.28, depth))
+	_materials["wall"] = NativeAssetSurface.material("chapel", Vector3(width, height + 0.28, depth), -1, 2.4)
 	var floor := 0.28
 	var top := height + floor
 	var rise := 2.4

@@ -27,6 +27,17 @@ def check(folder):
     original = source / 'original.png'
     assert hashlib.sha256(original.read_bytes()).hexdigest() == proof['sha256']
     assert image.read_bytes() == original.read_bytes(), 'Runtime atlas must preserve the adopted source'
+    if spec.get('fullFacade', False):
+        assert spec['mapping'] == 'facade' and spec['fullFacade'] is True
+        assert proof['dimensions'] == list(dimensions)
+        layout = json.loads((source / proof['layout']).read_text())
+        assert layout['cell_order'] == ['front+Z', 'right+X', 'back-Z', 'left-X']
+        assert all(layout[key] > 0 for key in ('width_m', 'depth_m', 'eaves_m', 'gable_rise_m'))
+        assert len(proof['references']) == 3
+        for reference in proof['references']:
+            actual = (ROOT / reference['path']).resolve()
+            assert actual.is_relative_to(ROOT) and actual.is_file()
+            assert hashlib.sha256(actual.read_bytes()).hexdigest() == reference['sha256']
     if 'roofAlbedo' in spec:
         roof_name = spec['roofAlbedo']
         assert Path(roof_name).name == roof_name and '..' not in roof_name
