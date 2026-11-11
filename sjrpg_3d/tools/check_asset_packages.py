@@ -75,6 +75,15 @@ def check_craft():
             assert hashlib.sha256((ROOT / reference['path']).read_bytes()).hexdigest() == reference['sha256']
     print('ASSET_PACKAGE_PASS village_craft masonry/oak/roof')
 
+
+def check_world_sources():
+    record = json.loads((ROOT / 'assets/source/preview3d/world-refinement/provenance.json').read_text())
+    for source in record['implementation']:
+        path = (ROOT / source['path']).resolve()
+        assert path.is_relative_to(ROOT) and path.is_file()
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == source['sha256'], source['path']
+    print('ASSET_PACKAGE_PASS world_structure implementation hashes')
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--asset', help='검사할 에셋 폴더명; 생략하면 전체')
@@ -90,6 +99,7 @@ def main():
         check(folder)
     if not args.asset:
         check_craft()
+        check_world_sources()
 
 if __name__ == '__main__':
     main()

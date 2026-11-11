@@ -27,7 +27,7 @@
     "terrain": "모서리를 깎은 암반 선반·흙 사면의 실제 정점을 NativeTerrainForms로 표시/SOLID에 공유. 기존 상면·경사로의 높이는 유지하고 새 잔디 4종의 월드 좌표 군락을 같은 2.56m로 혼합.",
     "chapel": "source 배율 1.25, NativeChapelPlan의 실제 3단 계단과 FLOOR 공유.",
     "fountain": "모든 정점·물줄기·source footprint 2배. 중심 유지, root scale 단위값.",
-    "walls": "생성 알베도4종과 기존 슬레이트 재사용. 사용자가 첨부한 석조 성채의 높은 원형 망루·원뿔 지붕·돌출 상부를 구조 참고로 제작. 몸체 반경1.30m, 처마5.05m, 지붕 정상6.95m. 실제 아치 창·10cm 깊이의 뒷면·8개 돌 받침. 16각 망루의 몸체/상층/원뿔 SOLID가 같은 설계를 사용한다."
+    "walls": "생성 알베도4종과 기존 슬레이트 재사용. 사용자가 첨부한 석조 성채의 높은 원형 망루·원뿔 지붕·돌출 상부를 구조 참고로 제작. 몸체 반경1.30m, 처마5.05m, 지붕 정상6.95m. 실제 아치 창·10cm 깊이의 뒷면·8개 돌 받침. 16각 망루의 몸체/상층/원뿔 SOLID가 같은 설계를 사용한다. 성 안쪽 여덟 구간의 상부 통로·난간·석재 받침·목재 보는 공유 부피를 합친 SOLID를 사용한다."
   },
   "shared_grass": {
     "manifest": "assets/source/preview3d/grass-variety/manifest.json",
@@ -54,7 +54,7 @@
     },
     {
       "path": "scripts/native_fortress_plan.gd",
-      "sha256": "87f8be5b61cf8ae2c872c0f016fb6cb3a01c8e147530181f99133dc7b8fbdd93"
+      "sha256": "331d62dc95b13428497e317e3050495e8ca351e17f39bdee641ea9cbefd817e9"
     },
     {
       "path": "scripts/native_terrain_forms.gd",
@@ -74,15 +74,15 @@
     },
     {
       "path": "scripts/ortho_3d_chapel.gd",
-      "sha256": "4ffb1fbc530c6faf89414b1bf60329a377db957d1de1df06b68e740a633c3dfd"
+      "sha256": "91cd946535018572efdcc5f05998d39d22232192b87732d3344711bb144a196f"
     },
     {
       "path": "scripts/ortho_3d_fortification.gd",
-      "sha256": "cd67fc5c2c755e241c65684e737b5ceca7df281667b1bdfc22a499bc06df1c83"
+      "sha256": "f0a321889c8b87cf8e9a0e1c65b3954c98e1fd382b1733356af68177c9b9118d"
     },
     {
       "path": "scripts/spatial_world_3d.gd",
-      "sha256": "229982658f4458e2478dcc3d0c938cb100bda3ce357b35b487f0cb8b1c74e497"
+      "sha256": "78cbdccad113ebcf19792a4f815a5aa864b7cdd46c272d00fe26c5b0856677bf"
     },
     {
       "path": "scripts/village.gd",
@@ -90,11 +90,11 @@
     },
     {
       "path": "scripts/native_ground.gdshader",
-      "sha256": "40f058e41c7143993edb315cddf89342e95ace77326d96273bb2454998042135"
+      "sha256": "a6f25f7a86fff9bb2308a9f3e8eb081f0084e5507abc1fbd2f2560fe0c1b8409"
     },
     {
       "path": "scripts/native_ground_3d.gd",
-      "sha256": "730d423b8fa6550a397cf884b5bb145b2b3c3898d2036190476c8a61381874eb"
+      "sha256": "ed66c2ef7687e9d9aaa90227911ff97c9678aa62a8ace2796e5773dedc84c5c4"
     },
     {
       "path": "scripts/native_river.gdshader",
@@ -107,15 +107,26 @@
     {
       "path": "tests/cases/native_threshold_support.gd",
       "sha256": "bbe90f5d0300e7005c2ecde906b8e183d368880c65fb0dd041e73b3eaa10a9ad"
+    },
+    {
+      "path": "scripts/native_bridge_plan.gd",
+      "sha256": "f2b6563e0c55b384a04b5f225017cde7b56f6daafef36f13a4b3565cfc7ef51e"
+    },
+    {
+      "path": "scripts/native_bridge_3d.gd",
+      "sha256": "caec8144322c354980b67c13a338d9aaa64e937facf8b456d2d768e834c39bc4"
+    },
+    {
+      "path": "assets/models/materials/village_craft/surfaces.gd",
+      "sha256": "b17ceaa572c1281af04909e1d3bcdeb311aebd83ef134f3677627cff664ad66d"
     }
   ],
   "roofed_corner_revision": {
     "reference": "2026-11-10 사용자 대화 첨부: 회색 성벽 양 끝의 높은 원형 망루와 원뿔 지붕. 시각 구조 참고이며 외부 모델/텍스처를 복제하지 않음.",
     "generator": "scripts/ortho_3d_fortification.gd",
     "collision": "scripts/native_fortress_plan.gd + scripts/spatial_world_3d.gd",
-    "triangles_whole_family": 29760,
-    "static_surfaces": 4,
-    "new_texture_bytes": 0,
+    "triangles_whole_family": 32136,
+    "static_surfaces": 5,
     "pivot": "Y-up, world XZ ground, corner base at Y=0, metre units, no scale transform",
     "reused_materials": [
       {
@@ -125,9 +136,20 @@
       {
         "path": "assets/art/preview3d/slate.webp",
         "sha256": "bf862f2b2f2caa8297d8ca6dc5419963d747a9f33f977a8588b9dda65cfb7688"
+      },
+      {
+        "path": "assets/models/materials/village_craft/oak.png",
+        "sha256": "79dd01b7c5bc2a26cf527f0d00b1b382b0bfb4d2e24e6bf168a174c07692272f"
       }
     ],
-    "physical_device_tested": false
+    "physical_device_tested": false,
+    "wall_walk": {
+      "width_m": 1.12,
+      "minimum_ground_headroom_m": 2.02,
+      "parts": 198,
+      "routes": 8,
+      "collision": "Shared SOLID triangles, separate from ground FLOOR"
+    }
   },
   "fortress_surface_provenance": "assets/source/environment/fortress/provenance.json"
 }
