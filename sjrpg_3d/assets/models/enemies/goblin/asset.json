@@ -39,5 +39,6 @@
     "spine4"
   ],
   "collision_policy": "기존 게임 캡슐이 몸통 중심을 담당한다. 보행 중 발끝·꼬리·무기는 시각적 돌출이며 별도 충돌체가 아니다.",
-  "display_name": "고블린"
+  "display_name": "고블린",
+  "attack_bone": "hand_R"
 }

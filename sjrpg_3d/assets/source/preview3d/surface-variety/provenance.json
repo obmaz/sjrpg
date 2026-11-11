@@ -25,8 +25,7 @@
         512
       ],
       "tile_m": 2.56,
-      "seed": 92509,
-      "actor_golem_tile_m": 0.6
+      "seed": 92509
     },
     "ground_heather": {
       "path": "assets/art/preview3d/ground_heather.webp",
@@ -51,48 +50,11 @@
       ],
       "tile_m": 2.56,
       "seed": 92571
-    },
-    "beast_fur": {
-      "path": "assets/art/preview3d/beast_fur.webp",
-      "sha256": "df21ba9640db3afeb65ecdfab97aebb83fe3bad6798fe361bcfdff7bd58fee28",
-      "source": "assets/source/preview3d/surface-variety/beast_fur.png",
-      "source_sha256": "f0fcd633a4c9a574128e514abbedbc50ce3d32ebb850b7eab504bb316671c4e2",
-      "size": [
-        512,
-        512
-      ],
-      "tile_m": 0.5,
-      "seed": 92602
-    },
-    "grave_bone": {
-      "path": "assets/art/preview3d/grave_bone.webp",
-      "sha256": "3e0914b1430f358a79481f85504ddf924dce7c835997d08a1fbeaf032c3f6f43",
-      "source": "assets/source/preview3d/surface-variety/grave_bone.png",
-      "source_sha256": "6d2265bd88a99b8ed5f5948740cdc5bb66bc6b89dc5729650698afc04d874f51",
-      "size": [
-        512,
-        512
-      ],
-      "tile_m": 0.3,
-      "seed": 92633
-    },
-    "scar_skin": {
-      "path": "assets/art/preview3d/scar_skin.webp",
-      "sha256": "ff40254799e9e24370ac8b1d45ae7d09df34c109191c9f4477c76ee3e34e71a6",
-      "source": "assets/source/preview3d/surface-variety/scar_skin.png",
-      "source_sha256": "8d610e71ad5bc1234e0a92ee029f808c1ca652e0271205422bf214e13f72a8f2",
-      "size": [
-        512,
-        512
-      ],
-      "tile_m": 0.3,
-      "seed": 92664
     }
   },
-  "generator_sha256": "34099dea02999f577ffff30d5e18e943b50254b2542ed0f9063c3154e2e10921",
+  "generator_sha256": "d4fa660ac4dd1c6f50fa46d5fd7c3c1a8943f3e6ca4e9f7557432dc1dffa447b",
   "geometry": {
-    "native_enemy_models.gd": "b892a77e79973c8947ec37065376badb799fe76a9e109fbc1f3ba25aa3f3362c",
-    "native_landmarks_3d.gd": "6ca306ee462c046ae3934c515646357d2a2519a839029bb821d7980fb12fa6a1",
+    "native_landmarks_3d.gd": "828f055cd0e08e513afd72930e074a171fbea3783b1ea0cc7faa13e8bb3dfd04",
     "native_scenery_props_3d.gd": "27872b38e31f9e39eb55672e25a5a04edf7068f4e8dce1230e8b947f9eb8a7b7"
   }
 }

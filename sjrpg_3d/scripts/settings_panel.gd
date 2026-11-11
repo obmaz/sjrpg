@@ -407,4 +407,6 @@ func _add_asset_credits() -> void:
 			continue
 		var source: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
 		var credit: String = "%s: %s · %s\n원본: %s\n라이선스: %s\n게임용으로 수정해 사용했습니다." % [source["display_name"], source["author"], source["license"], source["source_url"], source["license_url"]]
-		body.add_child(PanelFrame.wrap_label(credit, 15, UiKit.MUTED))
+		var label := PanelFrame.wrap_label(credit, 15, UiKit.MUTED)
+		label.set_meta("asset_credit", true)
+		body.add_child(label)

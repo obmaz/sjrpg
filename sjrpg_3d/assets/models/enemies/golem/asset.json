@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "kind": "golem",
+  "model": "model.glb",
+  "height_m": 3.705,
+  "clips": {
+    "idle": {
+      "name": "idle",
+      "length": 10.633333333333333
+    },
+    "run": {
+      "name": "run",
+      "length": 2.033333333333333
+    },
+    "attack": {
+      "name": "attack",
+      "length": 3.533333333333333,
+      "contact_time": 1.1333333333333333
+    },
+    "hit": {
+      "name": "hit",
+      "length": 1.4666666666666666
+    },
+    "death": {
+      "name": "death",
+      "length": 5.8
+    }
+  },
+  "death_floor_m": 0.0,
+  "author": "Dm3d · hendori-sama · umask007",
+  "license": "CC-BY-3.0",
+  "source_url": "https://opengameart.org/content/rock-golem",
+  "license_url": "https://creativecommons.org/licenses/by/3.0/",
+  "changes": "미터·축·발 원점 정규화, 실제 골격의 FK 클립 변환, 스킨 접지·사망 중심 보정. 원본 Mirror를 적용하고 던지는 돌 오브젝트는 제외.",
+  "body_core_bones": [
+    "Bone",
+    "chest",
+    "hip"
+  ],
+  "collision_policy": "기존 캡슐이 몸통 중심을 담당하며 발끝·무기·장식은 별도 충돌체가 아니다.",
+  "display_name": "골렘",
+  "attack_bone": "arm.R"
+}

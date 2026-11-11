@@ -37,6 +37,11 @@ def check(kind):
     )
     assert digest(folder / "model.glb") == proof["runtime_sha256"]
     assert digest(ROOT / proof["converter"]) == proof["converter_sha256"]
+    assert conversion.get("max_skin_fit_error_m", 0.0) < 0.02
+    for dependency in proof.get("converter_dependencies", []):
+        assert digest(ROOT / dependency["path"]) == dependency["sha256"]
+    for item in proof.get("additional_inputs", []):
+        assert digest(source / item["path"]) == item["sha256"]
     scene = (folder / "visual.tscn").read_text()
     assert "enemies/shared/visual.gd" in scene and f"enemies/{kind}/model.glb" in scene
     assert "CollisionShape3D" not in scene and "CharacterBody3D" not in scene
@@ -50,12 +55,14 @@ def check(kind):
     assert (
         len(gltf["meshes"]) == 1
         and len(gltf["skins"]) == 1
-        and 30 <= len(gltf["skins"][0]["joints"]) <= 64
+        and 8 <= len(gltf["skins"][0]["joints"]) <= 64
     )
     assert len(gltf["materials"]) <= 4 and all(
         all(abs(v - 1) < 0.0001 for v in n.get("scale", [1, 1, 1]))
         for n in gltf["nodes"]
     )
+    bone_names = {gltf["nodes"][index]["name"] for index in gltf["skins"][0]["joints"]}
+    assert set(spec["body_core_bones"] + [spec["attack_bone"]]) <= bone_names
     triangles = 0
     for mesh in gltf["meshes"]:
         for primitive in mesh["primitives"]:
@@ -71,7 +78,7 @@ def check(kind):
             triangles += gltf["accessors"][primitive["indices"]]["count"] // 3
     assert 0 < triangles < 6000
     animations = {a["name"]: a for a in gltf["animations"]}
-    assert set(spec["clips"]) <= animations.keys()
+    assert set(spec["clips"]) == {"idle", "run", "attack", "hit", "death"}
     for role, clip in spec["clips"].items():
         assert clip["name"] in animations and clip["length"] > 0
     assert (
@@ -84,7 +91,7 @@ def check(kind):
         payload = binary[offset : offset + view["byteLength"]]
         assert payload[:8] == b"\x89PNG\r\n\x1a\n"
         width, height = struct.unpack_from(">II", payload, 16)
-        assert 0 < width <= 1024 and 0 < height <= 1024
+        assert 0 < width <= 2048 and 0 < height <= 2048
     print(
         f'ENEMY_ASSET_PASS {kind} triangles={triangles} surfaces={len(gltf["materials"])} joints={len(gltf["skins"][0]["joints"])} clips={len(animations)}'
     )

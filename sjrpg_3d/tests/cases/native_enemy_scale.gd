@@ -30,31 +30,17 @@ func _bounds(root: Node3D, align_axes := true, skinned := false) -> AABB:
 
 
 func _stance_radius(root: Node3D, height: float) -> float:
-	var radius: float = 0.0
-	var orientation: Basis = root.global_transform.basis.orthonormalized().inverse()
-	if root is NativeEnemyVisual:
-		# 외부 모델의 이동 캡슐은 몸통 중심을 나타내며 발끝/꼬리의 보폭은 별도 충돌체가 아니다.
-		var visual := root as NativeEnemyVisual
-		for name: String in visual.manifest["body_core_bones"]:
-			var bone := visual.skeleton.find_bone(name)
-			var at := (
-				visual.skeleton.global_transform * visual.skeleton.get_bone_global_pose(bone).origin
-				- root.global_position
-			)
-			radius = maxf(radius, Vector2(at.x, at.z).length())
-		return radius
-	for child in root.find_children("*", "MeshInstance3D", true, false):
-		var instance := child as MeshInstance3D
-		for surface: int in instance.mesh.get_surface_count():
-			var arrays: Array = instance.mesh.surface_get_arrays(surface)
-			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-			for vertex: Vector3 in vertices:
-				var point: Vector3 = (
-					orientation
-					* (instance.global_transform * vertex - root.global_transform.origin)
-				)
-				if point.y <= height * 0.15:
-					radius = maxf(radius, Vector2(point.x, point.z).length())
+	var radius := 0.0
+	var visual := root as NativeEnemyVisual
+	for name: String in visual.manifest["body_core_bones"]:
+		var bone := visual.skeleton.find_bone(name)
+		if not check("body core marker exists: " + name, bone >= 0):
+			continue
+		var at := (
+			visual.skeleton.global_transform * visual.skeleton.get_bone_global_pose(bone).origin
+			- root.global_position
+		)
+		radius = maxf(radius, Vector2(at.x, at.z).length())
 	return radius
 
 

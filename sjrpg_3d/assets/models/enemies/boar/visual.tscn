@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3]
+[ext_resource type="Script" path="res://assets/models/enemies/shared/visual.gd" id="1"]
+[ext_resource type="PackedScene" path="res://assets/models/enemies/boar/model.glb" id="2"]
+[node name="BoarVisual" type="Node3D"]
+script = ExtResource("1")
+manifest_path = "res://assets/models/enemies/boar/asset.json"
+[node name="HitPivot" type="Node3D" parent="."]
+[node name="Model" parent="HitPivot" instance=ExtResource("2")]
+[node name="HitEffect" type="Marker3D" parent="HitPivot"]
+position = Vector3(0, 0.872, 0.15)

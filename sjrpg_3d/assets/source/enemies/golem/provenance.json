@@ -1,0 +1,30 @@
+{
+  "author": "Dm3d · hendori-sama · umask007",
+  "license": "CC-BY-3.0",
+  "source_url": "https://opengameart.org/content/rock-golem",
+  "license_url": "https://creativecommons.org/licenses/by/3.0/",
+  "license_text_url": "https://raw.githubusercontent.com/spdx/license-list-data/main/text/CC-BY-3.0.txt",
+  "download_url": "https://opengameart.org/sites/default/files/RockGolem.blend",
+  "original": "original.blend",
+  "original_sha256": "6205d1a19ffaa97b4b3ba9e083590bf76ed1fb718f6a6e4b966b0e9f1371aa17",
+  "original_bytes": 11482372,
+  "payload_sha256": "6205d1a19ffaa97b4b3ba9e083590bf76ed1fb718f6a6e4b966b0e9f1371aa17",
+  "license_sha256": "e6bc9e9c474700b708f568bac9e5a8a9bcb2b1dad53442f5ba449fcb848b8e76",
+  "runtime": "assets/models/enemies/golem/model.glb",
+  "runtime_sha256": "42a4a4eeeb9efd0f6c5dac56b50cd5e3083fa8d9dcf151148741bc2803069d6d",
+  "conversion": "conversion.json",
+  "converter": "tools/enemy_art/export_remaining.py",
+  "converter_sha256": "4cfacde051d831e621c0fac072a37ab02cf68697cb0aa5ea8ef8e3b0b9b874bf",
+  "additional_inputs": [],
+  "changes": "미터·축·발 원점 정규화, 실제 골격의 FK 클립 변환, 스킨 접지·사망 중심 보정. 원본 Mirror를 적용하고 던지는 돌 오브젝트는 제외.",
+  "upstream_sources": [
+    "https://opengameart.org/content/fireicestone-golem",
+    "http://www.blendswap.com/blends/view/68618"
+  ],
+  "converter_dependencies": [
+    {
+      "path": "tools/enemy_art/skin_weights.py",
+      "sha256": "9bc3bede33b29b7708821b0ba5aa2ff094ecbda8d3779db5373502a1c9aa37fb"
+    }
+  ]
+}

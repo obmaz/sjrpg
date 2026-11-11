@@ -116,4 +116,4 @@ tools/serve.sh
 
 ## 몬스터의 독립 씬
 
-`NativeEnemyModels`는 게임 상태를 관찰하는 표시 어댑터입니다. 고블린·늑대는 `assets/models/enemies/<kind>/`의 GLB·`visual.tscn`·`asset.json`을 읽고, `shared/visual.gd`가 실제 클립과 타격 시각을 연결합니다. 각 인스턴스의 골격·재질은 분리하고 원본 메시·클립은 공유합니다. `shared/procedural.gd`는 아직 교체하지 않은 세 종류와 잠복자만 담당합니다. 제작·접지·캐시·검수·출처는 [몬스터 안내](native-enemy-models.md)를 따릅니다.
+`NativeEnemyModels`는 게임 상태를 관찰하는 표시 어댑터입니다. 몬스터 여섯 종은 `assets/models/enemies/<kind>/`의 GLB·`visual.tscn`·`asset.json`을 읽고, `shared/visual.gd`가 실제 클립과 타격 시각을 연결합니다. 각 인스턴스의 골격·재질은 분리하고 원본 메시·클립은 공유합니다. 절차형 몬스터 생성기는 제거했으며 원본/클립 변환은 오프라인 도구가 담당합니다. 제작·접지·캐시·검수·출처는 [몬스터 안내](native-enemy-models.md)를 따릅니다.

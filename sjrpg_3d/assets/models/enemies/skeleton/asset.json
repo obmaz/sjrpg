@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "kind": "skeleton",
+  "model": "model.glb",
+  "height_m": 2.21,
+  "clips": {
+    "idle": {
+      "name": "idle",
+      "length": 4.966666666666667
+    },
+    "run": {
+      "name": "run",
+      "length": 4.966666666666667
+    },
+    "attack": {
+      "name": "attack",
+      "length": 4.966666666666667,
+      "contact_time": 3.7666666666666666
+    },
+    "hit": {
+      "name": "hit",
+      "length": 4.966666666666667
+    },
+    "death": {
+      "name": "death",
+      "length": 4.966666666666667
+    }
+  },
+  "death_floor_m": 0.0,
+  "author": "KevDev",
+  "license": "CC0-1.0",
+  "source_url": "https://opengameart.org/content/skeleton-outlaw-3d-character",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "changes": "미터·축·발 원점 정규화, 실제 골격의 FK 클립 변환, 스킨 접지·사망 중심 보정. 원본 모발·금속 턱·과장된 어깨 갑옷·안구 장식 제외. ASCII FBX는 FBX2glTF 0.9.7로 변환. 장화 대신 원본 뼈 발 사용.",
+  "body_core_bones": [
+    "ORG-hips",
+    "ORG-spine",
+    "ORG-chest"
+  ],
+  "collision_policy": "기존 캡슐이 몸통 중심을 담당하며 발끝·무기·장식은 별도 충돌체가 아니다.",
+  "display_name": "스켈레톤",
+  "attack_bone": "ORG-hand_R"
+}

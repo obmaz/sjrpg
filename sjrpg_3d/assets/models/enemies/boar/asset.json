@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "kind": "boar",
+  "model": "model.glb",
+  "height_m": 1.586,
+  "clips": {
+    "idle": {
+      "name": "idle",
+      "length": 1.6
+    },
+    "run": {
+      "name": "run",
+      "length": 1.6666666666666667
+    },
+    "attack": {
+      "name": "attack",
+      "length": 1.0,
+      "contact_time": 0.8
+    },
+    "hit": {
+      "name": "hit",
+      "length": 0.3333333333333333
+    },
+    "death": {
+      "name": "death",
+      "length": 0.8
+    }
+  },
+  "death_floor_m": 0.0,
+  "author": "Teh_Bucket",
+  "license": "CC0-1.0",
+  "source_url": "https://opengameart.org/content/boar",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "changes": "원본 UVMap을 복구하고 Mirror와 1단계 곡면 세분화를 적용. 네 발의 지지 중심에 발 원점을 맞추고, 보행·공격 34포즈의 정점 궤적을 8가중치로 피팅(최대 샘플 오차 0.009422m). 대기·피격·쓰러짐 보조 키프레임 추가. 머리 골격을 따르는 굽은 어금니 추가.",
+  "body_core_bones": [
+    "body",
+    "body.001",
+    "body.002"
+  ],
+  "collision_policy": "기존 캡슐이 몸통 중심을 담당하며 발끝·무기·장식은 별도 충돌체가 아니다.",
+  "display_name": "멧돼지",
+  "attack_bone": "head"
+}

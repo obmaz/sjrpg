@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "kind": "cave_crawler",
+  "model": "model.glb",
+  "height_m": 1.69,
+  "clips": {
+    "idle": {
+      "name": "idle",
+      "length": 1.8
+    },
+    "run": {
+      "name": "run",
+      "length": 1.6
+    },
+    "attack": {
+      "name": "attack",
+      "length": 1.0,
+      "contact_time": 0.6
+    },
+    "hit": {
+      "name": "hit",
+      "length": 0.3333333333333333
+    },
+    "death": {
+      "name": "death",
+      "length": 1.0
+    }
+  },
+  "death_floor_m": 0.0,
+  "author": "City Building Game Art / HorrorGameMaker.com",
+  "license": "CC0-1.0",
+  "source_url": "https://opengameart.org/content/3d-horror-game-monster",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "changes": "미터·축·발 원점 정규화, 실제 골격의 FK 클립 변환, 스킨 접지·사망 중심 보정. 구부린 상체·할퀴기·피격·쓰러짐 키프레임을 오프라인에서 추가. 전방으로 늘어뜨린 팔과 할퀴기를 실제 관절 방향으로 저작.",
+  "body_core_bones": [
+    "joint1",
+    "joint2",
+    "joint3"
+  ],
+  "collision_policy": "기존 캡슐이 몸통 중심을 담당하며 발끝·무기·장식은 별도 충돌체가 아니다.",
+  "display_name": "동굴 잠복자",
+  "attack_bone": "joint18"
+}

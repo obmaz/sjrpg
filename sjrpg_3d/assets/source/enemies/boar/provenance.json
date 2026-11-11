@@ -1,0 +1,30 @@
+{
+  "author": "Teh_Bucket",
+  "license": "CC0-1.0",
+  "source_url": "https://opengameart.org/content/boar",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "license_text_url": "https://raw.githubusercontent.com/spdx/license-list-data/main/text/CC0-1.0.txt",
+  "download_url": "https://opengameart.org/sites/default/files/boar_0.blend",
+  "original": "original.blend",
+  "original_sha256": "c16625680d056f0402d1be209c41d16a63394aec94b082a63ad32f562e9f2d2d",
+  "original_bytes": 1780848,
+  "payload_sha256": "c16625680d056f0402d1be209c41d16a63394aec94b082a63ad32f562e9f2d2d",
+  "license_sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+  "runtime": "assets/models/enemies/boar/model.glb",
+  "runtime_sha256": "0ee0e09658e2308a4b6365725d30af7b546ae9bfd66b2abf6db4103a6830daac",
+  "conversion": "conversion.json",
+  "converter": "tools/enemy_art/export_remaining.py",
+  "converter_sha256": "4cfacde051d831e621c0fac072a37ab02cf68697cb0aa5ea8ef8e3b0b9b874bf",
+  "additional_inputs": [],
+  "changes": "원본 UVMap을 복구하고 Mirror와 1단계 곡면 세분화를 적용. 네 발의 지지 중심에 발 원점을 맞추고, 보행·공격 34포즈의 정점 궤적을 8가중치로 피팅(최대 샘플 오차 0.009422m). 대기·피격·쓰러짐 보조 키프레임 추가. 머리 골격을 따르는 굽은 어금니 추가.",
+  "converter_dependencies": [
+    {
+      "path": "tools/enemy_art/skin_weights.py",
+      "sha256": "9bc3bede33b29b7708821b0ba5aa2ff094ecbda8d3779db5373502a1c9aa37fb"
+    },
+    {
+      "path": "assets/source/enemies/boar/authoring.py",
+      "sha256": "92484acefa48f8fcf04807a8f76c8e2915ca4dc97ed18f2bad3c282fd9e929de"
+    }
+  ]
+}

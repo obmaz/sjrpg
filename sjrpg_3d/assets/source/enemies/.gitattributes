@@ -1,2 +1,5 @@
-# 채택 당시 외부 원문 페이지의 공백을 포함한 바이트를 보존합니다.
-*/source-page.html -whitespace
+# 외부 원문과 라이선스는 공백·줄바꿈까지 보존합니다.
+*/source-page.html -text -whitespace
+*/upstream-page.html -text -whitespace
+*/README.txt -text -whitespace
+*/LICENSE.txt -text

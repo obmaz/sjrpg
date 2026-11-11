@@ -49,7 +49,7 @@ func run() -> void:
 		var first: Dictionary = NativeEnemyModels.build(kind)
 		var first_us: int = Time.get_ticks_usec() - first_start
 		var after_first: Dictionary = NativeEnemyModels.cache_stats()
-		var cold: bool = int(after_first["source_builds"]) > int(before["source_builds"])
+		var cold: bool = int(after_first["asset_loads"]) > int(before["asset_loads"])
 		var first_root: Node3D = first["root"]
 		add_child(first_root)
 		var second: Dictionary = NativeEnemyModels.build(kind)
@@ -74,18 +74,6 @@ func run() -> void:
 			"fresh actor rig has independent root and torso " + kind,
 			first_root != second_root and first["torso"] != second["torso"]
 		)
-		for field: String in ["legs", "arms"]:
-			var original: Array = first[field]
-			var replay: Array = second[field]
-			check(
-				"recipe preserves joint count " + kind + "/" + field,
-				original.size() == replay.size()
-			)
-			for index: int in mini(original.size(), replay.size()):
-				check(
-					"joints never reference the cached source actor " + kind + "/" + field,
-					original[index] != replay[index] and second_root.is_ancestor_of(replay[index])
-				)
 		var first_materials: Array = first["materials"]
 		var second_materials: Array = second["materials"]
 		check(
@@ -150,26 +138,15 @@ func run() -> void:
 		var hot_us: int = Time.get_ticks_usec() - hot_start
 		var hot_after: Dictionary = NativeEnemyModels.cache_stats()
 		check(
-			"cache hit performs zero authored SurfaceTool geometry builds " + kind,
+			"repeated actors reuse the imported PackedScene " + kind,
 			(
-				int(hot_after["source_builds"]) == int(hot_before["source_builds"])
-				and int(hot_after["surface_forms"]) == int(hot_before["surface_forms"])
-				and int(hot_after["hits"]) - int(hot_before["hits"]) == 12
+				int(hot_after["asset_loads"]) == int(hot_before["asset_loads"])
+				and int(hot_after["cache_hits"]) - int(hot_before["cache_hits"]) == 12
 			)
 		)
 		check(
-			(
-				"cold path loads imported geometry or constructs the remaining procedural geometry "
-				+ kind
-			),
-			(
-				not cold
-				or (
-					NativeEnemyAssets.uses_asset(kind)
-					and int(after_first["surface_forms"]) == int(before["surface_forms"])
-				)
-				or int(after_first["surface_forms"]) > int(before["surface_forms"])
-			)
+			"a cold species loads its imported scene once " + kind,
+			int(after_first["asset_loads"]) - int(before["asset_loads"]) == (1 if cold else 0)
 		)
 		benchmark.append(
 			{
@@ -179,10 +156,7 @@ func run() -> void:
 				"hit_count": 12,
 				"hits_total_us": hot_us,
 				"hit_mean_us": float(hot_us) / 12.0,
-				"first_surface_forms":
-				int(after_first["surface_forms"]) - int(before["surface_forms"]),
-				"hit_surface_forms":
-				int(hot_after["surface_forms"]) - int(hot_before["surface_forms"])
+				"cached_species": int(hot_after["cached_species"])
 			}
 		)
 		second_root.free()

@@ -2,16 +2,19 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dwvi2x67e1try"
-path="res://.godot/imported/grave_bone.webp-eba7041b418069162be449c7c7efc8fe.ctex"
+uid="uid://dorasvjogjhb7"
+path="res://.godot/imported/model_GolemTex_v10.png-763a532f72317742280e9f20f024effc.ctex"
 metadata={
 "vram_texture": false
+}
+generator_parameters={
+"md5": "54fb59ac571c8bc0e2f4ac466a9137ea"
 }
 
 [deps]
 
-source_file="res://assets/art/preview3d/grave_bone.webp"
-dest_files=["res://.godot/imported/grave_bone.webp-eba7041b418069162be449c7c7efc8fe.ctex"]
+source_file="res://assets/models/enemies/golem/model_GolemTex_v10.png"
+dest_files=["res://.godot/imported/model_GolemTex_v10.png-763a532f72317742280e9f20f024effc.ctex"]
 
 [params]
 

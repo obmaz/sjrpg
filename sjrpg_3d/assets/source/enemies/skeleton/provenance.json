@@ -1,0 +1,28 @@
+{
+  "author": "KevDev",
+  "license": "CC0-1.0",
+  "source_url": "https://opengameart.org/content/skeleton-outlaw-3d-character",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "license_text_url": "https://raw.githubusercontent.com/spdx/license-list-data/main/text/CC0-1.0.txt",
+  "download_url": "https://opengameart.org/sites/default/files/SkeletonOutlaw_0.zip",
+  "original": "original.zip",
+  "original_sha256": "dfd455f7613e4e80636dc35af9244a61747d91d4872b11815a3cc07243efd297",
+  "original_bytes": 4875182,
+  "payload_sha256": "dfd455f7613e4e80636dc35af9244a61747d91d4872b11815a3cc07243efd297",
+  "license_sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+  "runtime": "assets/models/enemies/skeleton/model.glb",
+  "runtime_sha256": "4d7d69acadc8e67f59aa9e4b4f2f4fb0e28386375462af345a3e0937a6b07eae",
+  "conversion": "conversion.json",
+  "converter": "tools/enemy_art/export_remaining.py",
+  "converter_sha256": "4cfacde051d831e621c0fac072a37ab02cf68697cb0aa5ea8ef8e3b0b9b874bf",
+  "additional_inputs": [],
+  "changes": "미터·축·발 원점 정규화, 실제 골격의 FK 클립 변환, 스킨 접지·사망 중심 보정. 원본 모발·금속 턱·과장된 어깨 갑옷·안구 장식 제외. ASCII FBX는 FBX2glTF 0.9.7로 변환. 장화 대신 원본 뼈 발 사용.",
+  "fbx2gltf_sha256": "b38210352fdd29d50ba53a6514c3ff05ccbb5d1e0a6442db7a49834bf34a3145",
+  "fbx2gltf_url": "https://github.com/facebookincubator/FBX2glTF/releases/download/v0.9.7/FBX2glTF-linux-x64",
+  "converter_dependencies": [
+    {
+      "path": "tools/enemy_art/skin_weights.py",
+      "sha256": "9bc3bede33b29b7708821b0ba5aa2ff094ecbda8d3779db5373502a1c9aa37fb"
+    }
+  ]
+}

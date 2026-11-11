@@ -1,0 +1,45 @@
+{
+  "author": "City Building Game Art / HorrorGameMaker.com",
+  "license": "CC0-1.0",
+  "source_url": "https://opengameart.org/content/3d-horror-game-monster",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "license_text_url": "https://raw.githubusercontent.com/spdx/license-list-data/main/text/CC0-1.0.txt",
+  "download_url": "https://opengameart.org/sites/default/files/Poses.zip",
+  "original": "original.fbx",
+  "original_sha256": "de52b941baf984e367c6cb3e0f821127c7eb8034cff108fb52770d4bb4cc4959",
+  "original_bytes": 15647696,
+  "payload_sha256": "de52b941baf984e367c6cb3e0f821127c7eb8034cff108fb52770d4bb4cc4959",
+  "license_sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+  "runtime": "assets/models/enemies/cave_crawler/model.glb",
+  "runtime_sha256": "ff9eb64731614ce5f0145f266e48fac4cc0a0060d35d2d4bea055157834e70e8",
+  "conversion": "conversion.json",
+  "converter": "tools/enemy_art/export_remaining.py",
+  "converter_sha256": "4cfacde051d831e621c0fac072a37ab02cf68697cb0aa5ea8ef8e3b0b9b874bf",
+  "additional_inputs": [
+    {
+      "path": "run.fbx",
+      "sha256": "bcef908881fd18d65165cfbe93cf7cbf437e248596d69ef9b5ec48525ecc8260"
+    },
+    {
+      "path": "albedo.png",
+      "sha256": "534484c07d9af54f37ef347f35002078636d14721c066b436977905fd66eee04"
+    },
+    {
+      "path": "README.txt",
+      "sha256": "8796160e55983daa282a1b54388ac25faccb8b7103073cc6c5f23df11a51f3e7"
+    }
+  ],
+  "changes": "미터·축·발 원점 정규화, 실제 골격의 FK 클립 변환, 스킨 접지·사망 중심 보정. 구부린 상체·할퀴기·피격·쓰러짐 키프레임을 오프라인에서 추가. 전방으로 늘어뜨린 팔과 할퀴기를 실제 관절 방향으로 저작.",
+  "download_archive_sha256": "10b7f947b64a6e1cf4f845800f8417d91e830f6df56c24a03922065df2cf0af3",
+  "original_member": "Poses/Idle.fbx",
+  "converter_dependencies": [
+    {
+      "path": "tools/enemy_art/skin_weights.py",
+      "sha256": "9bc3bede33b29b7708821b0ba5aa2ff094ecbda8d3779db5373502a1c9aa37fb"
+    },
+    {
+      "path": "assets/source/enemies/cave_crawler/authoring.py",
+      "sha256": "c1259af125d0253b67fe41b3b76d4e42734a578f97aa76909bffbe1bd287e0ff"
+    }
+  ]
+}

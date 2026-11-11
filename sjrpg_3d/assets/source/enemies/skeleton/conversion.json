@@ -1,0 +1,101 @@
+{
+  "kind": "skeleton",
+  "source": "original.zip",
+  "target_height_m": 2.21,
+  "normalizer": [
+    [
+      70.15003967285156,
+      0.0,
+      0.0,
+      -0.39241352677345276
+    ],
+    [
+      0.0,
+      70.15003967285156,
+      0.0,
+      0.09239635616540909
+    ],
+    [
+      0.0,
+      0.0,
+      70.15003967285156,
+      1.97423255443573
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "bones": 65,
+  "deform_bones": 56,
+  "rest_error": 5.289912223815918e-05,
+  "max_discarded_skin_weight": 0.0,
+  "max_skin_fit_error_m": 0.0,
+  "skin_fit_samples": 0,
+  "influences": 4,
+  "clips": {
+    "idle": {
+      "source_action": "Idle00",
+      "duration_seconds": 4.966666666666667,
+      "contact_seconds": null,
+      "samples": 150,
+      "final_floor_m": 0.0,
+      "runtime_floor_range_m": [
+        0.0,
+        0.0
+      ],
+      "authored_auxiliary": false
+    },
+    "run": {
+      "source_action": "Run00",
+      "duration_seconds": 4.966666666666667,
+      "contact_seconds": null,
+      "samples": 150,
+      "final_floor_m": 0.0,
+      "runtime_floor_range_m": [
+        0.0,
+        0.0
+      ],
+      "authored_auxiliary": false
+    },
+    "attack": {
+      "source_action": "Attack00",
+      "duration_seconds": 4.966666666666667,
+      "contact_seconds": 3.7666666666666666,
+      "samples": 150,
+      "final_floor_m": 1.8769124746322632,
+      "runtime_floor_range_m": [
+        1.8359777927398682,
+        1.9109762907028198
+      ],
+      "authored_auxiliary": false
+    },
+    "hit": {
+      "source_action": "Damage00",
+      "duration_seconds": 4.966666666666667,
+      "contact_seconds": null,
+      "samples": 150,
+      "final_floor_m": 1.8767726421356201,
+      "runtime_floor_range_m": [
+        1.854538917541504,
+        1.9001905918121338
+      ],
+      "authored_auxiliary": false
+    },
+    "death": {
+      "source_action": "Dead00",
+      "duration_seconds": 4.966666666666667,
+      "contact_seconds": null,
+      "samples": 150,
+      "final_floor_m": 0.0,
+      "runtime_floor_range_m": [
+        0.0,
+        0.0
+      ],
+      "authored_auxiliary": false
+    }
+  },
+  "tool": "Blender 4.3.2"
+}

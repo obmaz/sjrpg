@@ -63,3 +63,5 @@ GLB/텍스처/라이선스·원본 출처·제작 도구 버전은 같은 에셋
 ## 몬스터 GLB와 씬
 
 몬스터는 [GLB + 독립 씬 계약](native-enemy-models.md)을 따릅니다. 제작자는 `assets/models/enemies/<kind>/{model.glb,visual.tscn,asset.json}`과 대응 소스 폴더를 담당합니다. 씬에는 모델·시각 피벗·효과 부착점을 조립하고 AI·충돌·저장·피해를 넣지 않습니다. 기존 종의 폴더에 검수된 씬을 추가하면 공용 표시 어댑터가 찾아 사용하므로 대형 몬스터 생성기를 함께 수정하지 않습니다. `asset.json`의 클립별 실제 이름·길이·타격 시각·높이·사망 접지를 GLB와 함께 갱신합니다. 다른 AI가 납품할 때도 같은 미터/축/발 기준, 실제 가로·세로 게임 화면, 기하·재질·관절·가중치 예산, 원본과 라이선스/수정 내역을 포함합니다.
+
+종별 오프라인 형상/동작 보정도 필요한 경우 `assets/source/enemies/<kind>/authoring.py`에 둡니다. 공용 변환기가 선택적으로 호출하는 `refine_meshes`, `foot_center`, `build_details`, `pose_world`, `pose_basis`를 사용하며 채택 원본의 잠금 해시와 보정 스크립트 의존 해시를 분리합니다. 이 스크립트는 앱에 포함하지 않습니다. 원본 Blender 파일에서 직접 완성한 GLB를 납품할 때도 같은 런타임 씬/manifest/출처 계약을 유지합니다.

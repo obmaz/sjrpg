@@ -9,8 +9,35 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--kind", choices=["goblin", "wolf"], required=True)
+parser.add_argument(
+    "--kind",
+    choices=["goblin", "wolf", "boar", "skeleton", "golem", "cave_crawler"],
+    required=True,
+)
 args = parser.parse_args()
+if args.kind not in ["goblin", "wolf"]:
+    command = [
+        "blender",
+        "-b",
+        "--python-exit-code",
+        "1",
+        "--python",
+        str(Path(__file__).with_name("export_remaining.py")),
+        "--",
+        "--kind",
+        args.kind,
+    ]
+    if args.kind == "skeleton":
+        import os
+
+        converter = os.environ.get("SJRPG_FBX2GLTF")
+        if not converter:
+            parser.error(
+                "스켈레톤 원본 ASCII FBX 변환용 SJRPG_FBX2GLTF 경로가 필요합니다. 몬스터 문서의 고정 버전/해시를 확인하세요."
+            )
+        command += ["--fbx2gltf", converter]
+    subprocess.run(command, check=True)
+    raise SystemExit(0)
 source = ROOT / "assets/source/enemies" / args.kind
 proof = json.loads((source / "provenance.json").read_text())
 original = source / proof["original"]
@@ -30,6 +57,8 @@ subprocess.run(
     [
         "blender",
         "-b",
+        "--python-exit-code",
+        "1",
         "--python",
         str(Path(__file__).with_name("export_enemy.py")),
         "--",

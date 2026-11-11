@@ -1,6 +1,6 @@
 class_name NativeEnemyModels
 extends RefCounted
-## 게임 상태를 관찰해 개별 몬스터 씬 또는 아직 남은 절차형 자산을 표시한다.
+## 게임 상태를 관찰해 종별 GLB 씬을 표시한다. 물리·AI·피해를 소유하지 않는다.
 const KINDS := ["goblin", "wolf", "boar", "skeleton", "golem"]
 const CRAWLER := "cave_crawler"
 var preview: Node
@@ -14,32 +14,18 @@ func setup(presenter: Node) -> NativeEnemyModels:
 
 
 static func build(kind: String) -> Dictionary:
-	return (
-		NativeEnemyAssets.build(kind)
-		if NativeEnemyAssets.uses_asset(kind)
-		else NativeProceduralEnemy.build(kind)
-	)
+	assert(kind in KINDS or kind == CRAWLER)
+	return NativeEnemyAssets.build(kind)
 
 
 static func pose(
 	model: Dictionary, facing: float, cycle: float, attack: float, dead := false
 ) -> void:
-	if model.has("visual"):
-		(model["visual"] as NativeEnemyVisual).pose(facing, cycle, attack, dead)
-	else:
-		NativeProceduralEnemy.pose(model, facing, cycle, attack, dead)
+	(model["visual"] as NativeEnemyVisual).pose(facing, cycle, attack, dead)
 
 
 static func cache_stats() -> Dictionary:
-	var stats := NativeProceduralEnemy.cache_stats()
-	stats["hits"] += NativeEnemyAssets.hits
-	stats["source_builds"] += NativeEnemyAssets.loads
-	stats["asset_loads"] = NativeEnemyAssets.loads
-	return stats
-
-
-static func rest_bounds(root: Node3D) -> AABB:
-	return NativeProceduralEnemy.rest_bounds(root)
+	return NativeEnemyAssets.cache_stats()
 
 
 static func model_kind(enemy: Enemy) -> String:
@@ -96,17 +82,6 @@ static func hit_reaction(model: Dictionary, enemy: Enemy) -> void:
 		lean, pivot - lean * pivot + Vector3(local.x, -0.025, local.z) * strength * 0.10
 	)
 	torso.transform = impulse * torso.transform
-	if model["joints"].has("head"):
-		var head: Node3D = model["joints"]["head"]
-		head.rotation.x += local.z * strength * 0.65
-		head.rotation.z -= local.x * strength * 0.65
-	for index in model["arms"].size():
-		var arm: Node3D = model["arms"][index]
-		if enemy.kind not in ["wolf", "boar"] and model["kind"] != CRAWLER:
-			# 어깨 원점도 흉곽을 따라가야 팔과 몸통이 벌어지지 않는다.
-			arm.transform = impulse * arm.transform
-		arm.rotation.x += strength * 0.7
-		arm.rotation.z += strength * (0.45 if index == 0 else -0.45)
 
 
 func sync(delta := 0.0) -> void:
@@ -171,20 +146,18 @@ func sync(delta := 0.0) -> void:
 			if enemy._state == "chase" or (enemy._state == "idle" and enemy._wander != Vector2.ZERO)
 			else 0.0
 		)
-		if model.has("visual"):
-			var visual: NativeEnemyVisual = model["visual"]
-			visual.moving = (
-				enemy._state == "chase"
-				or (enemy._state == "idle" and enemy._wander != Vector2.ZERO)
+		var visual: NativeEnemyVisual = model["visual"]
+		visual.moving = (
+			enemy._state == "chase" or (enemy._state == "idle" and enemy._wander != Vector2.ZERO)
+		)
+		visual.advance_idle(
+			delta,
+			(
+				enemy.get_tree().paused
+				or enemy.sprite.contact_hold > 0.0
+				or enemy._hitstop.remaining > 0.0
 			)
-			visual.advance_idle(
-				delta,
-				(
-					enemy.get_tree().paused
-					or enemy.sprite.contact_hold > 0.0
-					or enemy._hitstop.remaining > 0.0
-				)
-			)
+		)
 		pose(model, enemy.facing, cycle, attack)
 		hit_reaction(model, enemy)
 		tint(
@@ -210,9 +183,8 @@ func snapshot() -> Dictionary:
 		sources.append(
 			{
 				"kind": model["kind"],
-				"model_type": "glb" if model.has("visual") else "procedural",
-				"clip":
-				(model["visual"] as NativeEnemyVisual).active_clip if model.has("visual") else "",
+				"model_type": "glb",
+				"clip": (model["visual"] as NativeEnemyVisual).active_clip,
 				"facing": enemy.facing,
 				"visible": root.visible,
 				"hit_lean": model.get("hit_lean", 0.0),
@@ -242,18 +214,7 @@ static func place_corpse(presenter: Node, model: Dictionary, corpse: Dictionary)
 		)
 		root.scale = Vector3.ONE * ratio
 		pose(model, facing, 0.0, 0.0, true)
-		# Rest the whole rotated mesh on the real floor, not the old picture's square.
-		var minimum := 0.0
-		for child in (
-			[] if model.has("visual") else root.find_children("*", "MeshInstance3D", true, false)
-		):
-			var mesh := child as MeshInstance3D
-			var local := root.global_transform.affine_inverse() * mesh.global_transform
-			for index in 8:
-				minimum = minf(
-					minimum, (root.basis * (local * mesh.get_aabb().get_endpoint(index))).y
-				)
-		root.position = Ortho3DPreview.ground_position(at, floor_height - minimum + 0.012)
+		root.position = Ortho3DPreview.ground_position(at, floor_height + 0.012)
 		model["_corpse_placement_key"] = key
 		model["_corpse_placement_updates"] = int(model.get("_corpse_placement_updates", 0)) + 1
 	var opacity := CorpseArt.opacity(

@@ -87,3 +87,10 @@ KayKit 1.0 기록을 현재 itch의 Adventurers **2.0** 무료5종 설명과 섞
 ## 고블린·늑대의 실제 채택 원본
 
 고블린은 CDmir·TinyWorlds의 [Goblin](https://opengameart.org/content/goblin-1), CC0-1.0의 `goblin-FINAL.blend`입니다. Danimal의 다른 고블린/무기 팩과 혼동하지 않습니다. 늑대는 CoinCoin의 [[Animated] Wolf](https://opengameart.org/content/animated-wolf), CC-BY-4.0의 `low-poly-wolf.zip`입니다. 모델과 원본 클립을 변환했으며 저작자·원본 URL·라이선스 URL·게임용 수정 표기를 설정 ‘아트 출처’에 표시합니다. 원문 페이지·원본 파일·라이선스 법률문(SPDX 보존문)·잠금 해시·변환/런타임 기록은 `sjrpg_3d/assets/source/enemies/{goblin,wolf}/`에 있습니다. GLB·씬·검수와 현재 적용 범위는 [몬스터 안내](../sjrpg_3d/docs/native-enemy-models.md)를 따릅니다.
+
+
+## 나머지 몬스터의 실제 채택 원본
+
+멧돼지는 Teh_Bucket의 [Boar](https://opengameart.org/content/boar), 스켈레톤은 KevDev의 [Skeleton Outlaw](https://opengameart.org/content/skeleton-outlaw-3d-character), 동굴 잠복자는 City Building Game Art / HorrorGameMaker.com의 [3D Horror Game Monster](https://opengameart.org/content/3d-horror-game-monster)를 사용하며 모두 CC0-1.0입니다. 골렘은 Dm3d의 [Rock Golem](https://opengameart.org/content/rock-golem)에 제시된 CC-BY-3.0/CC-BY-SA-3.0 중 **CC-BY-3.0**을 선택하고, 원 제작자 hendori-sama와 UV/리깅의 umask007도 함께 표기합니다. [상류 원본 페이지](https://opengameart.org/content/fireicestone-golem)와 원문 라이선스를 보존합니다.
+
+원본/보조 파일과 라이선스·변환기 해시는 `sjrpg_3d/assets/source/enemies/<kind>/`에 있으며, 삭제한 모발/장식·피팅한 스킨·추가한 보조 클립 등의 실제 수정은 [몬스터 안내](../sjrpg_3d/docs/native-enemy-models.md)에 구분해 기록합니다. 배포물은 설정 ‘아트 출처’에서 저작자·원본·라이선스 URL·수정 표기를 읽을 수 있습니다.

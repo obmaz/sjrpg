@@ -24,13 +24,10 @@ static func build(kind: String) -> Dictionary:
 		"kind": kind,
 		"base_height": root.manifest["height_m"],
 		"torso": root.hit_pivot,
-		"torso_origin": Vector3.ZERO,
-		"legs": [],
-		"arms": [],
-		"joints": {},
-		"joint_rest": {},
-		"leg_origins": [],
-		"arm_origins": [],
 		"materials": root.materials,
 		"colors": root.colors
 	}
+
+
+static func cache_stats() -> Dictionary:
+	return {"asset_loads": loads, "cache_hits": hits, "cached_species": _scenes.size()}

@@ -1,41 +1,37 @@
 extends TestCase
+## 실제 스킨 골격이 준비·타격·복귀를 따르며 피해 시점과 발 루트를 바꾸지 않는다.
 
 
-## 실제 타격 위상 전후의 관절 이동과 복귀를 확인한다.
 func run() -> void:
-	for kind: String in (
-		NativeEnemyModels.KINDS.filter(func(k): return not NativeEnemyAssets.uses_asset(k))
-		+ [NativeEnemyModels.CRAWLER]
-	):
+	for kind: String in NativeEnemyModels.KINDS + [NativeEnemyModels.CRAWLER]:
 		var model := NativeEnemyModels.build(kind)
-		var root: Node3D = model["root"]
-		var torso: Node3D = model["torso"]
-		NativeEnemyModels.pose(model, 0.7, 0.0, 0.0)
-		var rest := torso.transform
-		var arms: Array = model["arms"]
-		var arm_rest: Transform3D = (
-			arms[0].transform if not arms.is_empty() else Transform3D.IDENTITY
-		)
-		NativeEnemyModels.pose(model, 0.7, 0.0, 0.42)
-		var prepared := torso.transform
-		var arm_prepared: Transform3D = (
-			arms[0].transform if not arms.is_empty() else Transform3D.IDENTITY
-		)
-		NativeEnemyModels.pose(model, 0.7, 0.0, 0.60)
+		var visual: NativeEnemyVisual = model["visual"]
+		add_child(visual)
+		var bone := visual.skeleton.find_bone(visual.manifest["attack_bone"])
+		check("authored attack marker exists " + kind, bone >= 0)
+		NativeEnemyModels.pose(model, .7, 0, 0)
+		visual.skeleton.force_update_all_bone_transforms()
+		var rest := visual.skeleton.get_bone_global_pose(bone)
+		NativeEnemyModels.pose(model, .7, 0, .42)
+		visual.skeleton.force_update_all_bone_transforms()
+		var prepared := visual.skeleton.get_bone_global_pose(bone)
+		NativeEnemyModels.pose(model, .7, 0, .60)
+		visual.skeleton.force_update_all_bone_transforms()
+		var contact := visual.skeleton.get_bone_global_pose(bone)
 		check(
-			"attack moves the real body or weapon at impact " + kind,
-			(
-				not torso.transform.is_equal_approx(prepared)
-				or (not arms.is_empty() and not arms[0].transform.is_equal_approx(arm_prepared))
+			"real weapon/head/jaw changes at contact " + kind, not contact.is_equal_approx(prepared)
+		)
+		check(
+			"source damage phase samples the clip contact time " + kind,
+			is_equal_approx(
+				visual.sample_time, float(visual.manifest["clips"]["attack"]["contact_time"])
 			)
 		)
-		check("attack keeps the physical foot root fixed " + kind, root.position == Vector3.ZERO)
-		NativeEnemyModels.pose(model, 0.7, 0.0, 1.0)
+		check("attack keeps the physical foot root fixed " + kind, visual.position == Vector3.ZERO)
+		NativeEnemyModels.pose(model, .7, 0, 1.0)
+		visual.skeleton.force_update_all_bone_transforms()
 		check(
-			"recovery returns body and weapon to rest " + kind,
-			(
-				torso.transform.is_equal_approx(rest)
-				and (arms.is_empty() or arms[0].transform.is_equal_approx(arm_rest))
-			)
+			"recovery returns the actual skeleton to idle " + kind,
+			visual.skeleton.get_bone_global_pose(bone).is_equal_approx(rest)
 		)
-		root.free()
+		visual.free()

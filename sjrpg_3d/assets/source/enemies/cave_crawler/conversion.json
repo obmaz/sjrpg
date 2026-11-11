@@ -1,0 +1,101 @@
+{
+  "kind": "cave_crawler",
+  "source": "original.fbx",
+  "target_height_m": 1.69,
+  "normalizer": [
+    [
+      0.9057429432868958,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.9057429432868958,
+      0.0,
+      0.005777478683739901
+    ],
+    [
+      0.0,
+      0.0,
+      0.9057429432868958,
+      0.0005304357619024813
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "bones": 70,
+  "deform_bones": 58,
+  "rest_error": 8.821487426757812e-06,
+  "max_discarded_skin_weight": 0.0,
+  "max_skin_fit_error_m": 0.0,
+  "skin_fit_samples": 0,
+  "influences": 8,
+  "clips": {
+    "idle": {
+      "source_action": "idle",
+      "duration_seconds": 1.8,
+      "contact_seconds": null,
+      "samples": 55,
+      "final_floor_m": 0.0,
+      "runtime_floor_range_m": [
+        0.0,
+        0.0
+      ],
+      "authored_auxiliary": true
+    },
+    "run": {
+      "source_action": "run",
+      "duration_seconds": 1.6,
+      "contact_seconds": null,
+      "samples": 49,
+      "final_floor_m": 0.0,
+      "runtime_floor_range_m": [
+        0.0,
+        0.0
+      ],
+      "authored_auxiliary": false
+    },
+    "attack": {
+      "source_action": "idle",
+      "duration_seconds": 1.0,
+      "contact_seconds": 0.6,
+      "samples": 31,
+      "final_floor_m": 0.0,
+      "runtime_floor_range_m": [
+        0.0,
+        0.0
+      ],
+      "authored_auxiliary": true
+    },
+    "hit": {
+      "source_action": "idle",
+      "duration_seconds": 0.3333333333333333,
+      "contact_seconds": null,
+      "samples": 11,
+      "final_floor_m": 0.0,
+      "runtime_floor_range_m": [
+        0.0,
+        0.0
+      ],
+      "authored_auxiliary": true
+    },
+    "death": {
+      "source_action": "idle",
+      "duration_seconds": 1.0,
+      "contact_seconds": null,
+      "samples": 31,
+      "final_floor_m": 0.0,
+      "runtime_floor_range_m": [
+        0.0,
+        0.0
+      ],
+      "authored_auxiliary": true
+    }
+  },
+  "tool": "Blender 4.3.2"
+}

@@ -10,7 +10,7 @@ func _different(a: PackedVector3Array, b: PackedVector3Array) -> bool:
 
 
 func run() -> void:
-	for kind in ["goblin", "wolf"]:
+	for kind: String in NativeEnemyModels.KINDS + [NativeEnemyModels.CRAWLER]:
 		check(
 			"species uses its independently editable imported scene " + kind,
 			NativeEnemyAssets.uses_asset(kind)
@@ -25,7 +25,7 @@ func run() -> void:
 			"imported model has actual weighted geometry and a skeleton " + kind,
 			(
 				idle.size() > 500
-				and visual.skeleton.get_bone_count() >= 30
+				and visual.skeleton.get_bone_count() >= 8
 				and visual.meshes.size() == 1
 				and visual.materials.size() <= 4
 			)

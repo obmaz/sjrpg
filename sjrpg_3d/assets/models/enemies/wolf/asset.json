@@ -40,5 +40,6 @@
     "thorax"
   ],
   "collision_policy": "기존 게임 캡슐이 몸통 중심을 담당한다. 보행 중 발끝·꼬리·무기는 시각적 돌출이며 별도 충돌체가 아니다.",
-  "display_name": "늑대"
+  "display_name": "늑대",
+  "attack_bone": "museau"
 }

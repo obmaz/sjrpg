@@ -2,16 +2,19 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c4jt4gwcvxjss"
-path="res://.godot/imported/scar_skin.webp-988076903daa1dd237b30cf79b36f7e2.ctex"
+uid="uid://bf4hio2qq2nkn"
+path="res://.godot/imported/model_albedo.png-37a19a5c4b1c5230a7fa6bf0b4c47612.ctex"
 metadata={
 "vram_texture": false
+}
+generator_parameters={
+"md5": "9923d87287593bbee11aa3032965cf9a"
 }
 
 [deps]
 
-source_file="res://assets/art/preview3d/scar_skin.webp"
-dest_files=["res://.godot/imported/scar_skin.webp-988076903daa1dd237b30cf79b36f7e2.ctex"]
+source_file="res://assets/models/enemies/cave_crawler/model_albedo.png"
+dest_files=["res://.godot/imported/model_albedo.png-37a19a5c4b1c5230a7fa6bf0b4c47612.ctex"]
 
 [params]
 

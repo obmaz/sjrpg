@@ -44,21 +44,30 @@ func _ready() -> void:
 	camera.look_at(Vector3(0, .85, 0))
 	var output := ProjectSettings.globalize_path("res://../build/review/enemy-glb-pilot")
 	DirAccess.make_dir_recursive_absolute(output)
-	for kind in ["goblin", "wolf"]:
+	var kinds: Array = NativeEnemyModels.KINDS + [NativeEnemyModels.CRAWLER]
+	var label := "after"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--kinds="):
+			kinds = Array(arg.trim_prefix("--kinds=").split(","))
+		elif arg.begins_with("--label="):
+			label = arg.trim_prefix("--label=")
+	for kind: String in kinds:
+		var height: float = Enemy.NATIVE_HEIGHT_METRES.get(
+			kind, Enemy.NATIVE_HEIGHT_METRES["goblin"]
+		)
+		camera.size = height * 2.6
+		camera.position = Vector3(8, 8 + height * .5, 8)
+		camera.look_at(Vector3(0, height * .5, 0))
 		for edition in (
-			["candidate"] if "--candidate-only" in OS.get_cmdline_user_args() else ["after"]
+			["candidate"] if "--candidate-only" in OS.get_cmdline_user_args() else [label]
 		):
 			var root: Node3D
 			var model := {}
 			var animator: AnimationPlayer
-			if edition == "after":
+			if edition != "candidate":
 				model = NativeEnemyModels.build(kind)
 				root = model["root"]
-				root.scale = (
-					Vector3.ONE
-					* float(Enemy.NATIVE_HEIGHT_METRES[kind])
-					/ float(model["base_height"])
-				)
+				root.scale = (Vector3.ONE * height / float(model["base_height"]))
 			else:
 				root = (
 					(load("res://assets/models/enemies/%s/model.glb" % kind) as PackedScene)
@@ -70,7 +79,7 @@ func _ready() -> void:
 				)
 			add_child(root)
 			for phase in ["idle", "run", "attack", "death"]:
-				if edition == "after":
+				if edition != "candidate":
 					NativeEnemyModels.pose(
 						model,
 						0,
@@ -103,5 +112,5 @@ func _ready() -> void:
 					var file := "%s/%s-%s-%s-%d.png" % [output, kind, edition, phase, yaw]
 					assert(get_viewport().get_texture().get_image().save_png(file) == OK)
 			root.free()
-	print("ENEMY_PILOT_RENDER_PASS views=32")
+	print("ENEMY_PILOT_RENDER_PASS views=", kinds.size() * 16)
 	get_tree().quit()
