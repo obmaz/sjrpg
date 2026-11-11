@@ -3,12 +3,33 @@ extends RefCounted
 ## 개별 에셋 폴더만 수정해 교체하는 표면 계약. 전역 목록을 유지하지 않는다.
 const ROOT := "res://assets/models/architecture/"
 
-static func material(id: String, bounds: Vector3, cell := -1) -> ShaderMaterial:
+
+static func _spec(id: String) -> Dictionary:
 	assert(id.is_valid_identifier(), "Invalid surface asset identifier")
-	var folder := ROOT + id + "/"
-	var spec: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(folder + "asset.json"))
+	var spec: Dictionary = JSON.parse_string(
+		FileAccess.get_file_as_string(ROOT + id + "/asset.json")
+	)
 	assert(int(spec.get("schemaVersion", 0)) == 1 and spec.get("id") == id)
 	assert(spec.get("kind") == "surface")
+	return spec
+
+
+static func roof_path(id: String) -> String:
+	var spec := _spec(id)
+	var path: String = spec.get("roofAlbedo", "")
+	assert(not path.contains("/") and not path.contains(".."))
+	return ROOT + id + "/" + path if not path.is_empty() else ""
+
+
+static func roof_tint(id: String) -> Color:
+	var spec := _spec(id)
+	var tint: Array = spec.get("roofTint", [1.0, 1.0, 1.0])
+	return Color(float(tint[0]), float(tint[1]), float(tint[2]))
+
+
+static func material(id: String, bounds: Vector3, cell := -1) -> ShaderMaterial:
+	var folder := ROOT + id + "/"
+	var spec := _spec(id)
 	var grid: Array = spec["atlasGrid"]
 	assert(grid.size() == 2 and int(grid[0]) == 2 and int(grid[1]) == 2)
 	var texture_path: String = spec["albedo"]

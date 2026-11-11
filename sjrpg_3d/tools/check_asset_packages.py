@@ -27,6 +27,15 @@ def check(folder):
     original = source / 'original.png'
     assert hashlib.sha256(original.read_bytes()).hexdigest() == proof['sha256']
     assert image.read_bytes() == original.read_bytes(), 'Runtime atlas must preserve the adopted source'
+    if 'roofAlbedo' in spec:
+        roof_name = spec['roofAlbedo']
+        assert Path(roof_name).name == roof_name and '..' not in roof_name
+        roof = folder / roof_name
+        proof = json.loads((source / 'roof-provenance.json').read_text())
+        assert roof.read_bytes() == (source / 'roof-original.png').read_bytes()
+        assert hashlib.sha256(roof.read_bytes()).hexdigest() == proof['sha256']
+        with Image.open(roof) as pixels:
+            assert pixels.width == pixels.height and pixels.width >= 1254
     print(f'ASSET_PACKAGE_PASS {folder.name} {dimensions[0]}x{dimensions[1]} {spec["mapping"]}')
 
 def main():

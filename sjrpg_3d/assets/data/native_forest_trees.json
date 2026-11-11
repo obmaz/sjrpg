@@ -31,9 +31,9 @@
     "new_render_passes": 0
   },
   "budget": {
-    "triangles_per_tree": 4358,
-    "leaf_triangles_per_tree": 2488,
-    "leaf_sprays_per_tree": 311,
+    "triangles_per_tree": 4886,
+    "leaf_triangles_per_tree": 3016,
+    "leaf_sprays_per_tree": 377,
     "surfaces_per_mesh": 2,
     "leaf_texture_pixels": [
       1024,

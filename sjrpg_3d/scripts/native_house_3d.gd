@@ -96,6 +96,8 @@ func _build(key: String, width: float, depth: float, height: float) -> Dictionar
 		var side_openings: Array[Dictionary] = []
 		if key == "sw" and side > 0.0:
 			side_openings.append({"x": 0.0, "width": minf(body_depth * 0.70, 2.12), "bottom": 0.54, "height": 1.66, "arch": false, "role": "stable_bay"})
+		elif key == "ne" and side > 0.0:
+			side_openings.append({"x":0.0,"width":minf(body_depth*0.70,2.60),"bottom":0.66,"height":1.42,"arch":false,"role":"smith_bay"})
 		else:
 			side_openings.append(_opening(0.0, minf(0.86, body_depth * 0.37), 1.03, 1.18))
 			if key == "nw":
@@ -104,6 +106,8 @@ func _build(key: String, width: float, depth: float, height: float) -> Dictionar
 		for opening in side_openings:
 			if opening.get("role", "") == "stable_bay":
 				_stable_bay(opening, facade)
+			elif opening.get("role", "") == "smith_bay":
+				_smith_bay(opening,facade)
 			else:
 				_window(opening, facade, true)
 		_frame(body_depth, eave_height, facade, key == "nw", side_openings)
@@ -432,6 +436,16 @@ func _smith_bay(opening: Dictionary, facade: Transform3D) -> void:
 	for side in [-1.0, 1.0]:
 		_box(Vector3(x + side * (width * 0.5 + 0.035), 1.38, 0.065), Vector3(0.11, 1.58, 0.14), "wood", facade)
 	_box(Vector3(x, 2.13, 0.06), Vector3(width + 0.20, 0.12, 0.14), "wood", facade)
+	# 원본 대장간의 작업대·받침·도구 선반을 실제 벽 홈 안에 둔다.
+	for plank in 4:
+		_box(Vector3(x+width*((plank+0.5)/4.0-0.5),0.88,-0.13),Vector3(width/4.0-0.012,0.08,0.38),"wood",facade)
+	_box(Vector3(x,1.14,-0.28),Vector3(width*0.85,0.055,0.18),"wood",facade)
+	for side in [-1.0,1.0]:
+		_box(Vector3(x+side*width*0.39,0.58,-0.12),Vector3(0.10,0.52,0.12),"wood",facade)
+	# 작은 모루의 받침·목·비대칭 뿔을 별도 면으로 만든다.
+	_box(Vector3(x+width*0.23,0.98,-0.08),Vector3(0.29,0.12,0.20),"iron",facade)
+	_box(Vector3(x+width*0.23,1.09,-0.08),Vector3(0.14,0.14,0.15),"iron",facade)
+	_prism(PackedVector2Array([Vector2(x+width*0.23-0.27,1.14),Vector2(x+width*0.23+0.17,1.14),Vector2(x+width*0.23+0.17,1.22),Vector2(x+width*0.23-0.16,1.22)]),0.16,facade*Transform3D(Basis.IDENTITY,Vector3(0,0,-0.08)),"iron")
 	# Tools hang behind a worktop; this recess is deliberately not a doorway.
 	for tool in [-1.0, 0.0, 1.0]:
 		_box(Vector3(x + tool * width * 0.25, 1.32, -0.29), Vector3(0.035, 0.48, 0.035), "iron", facade)

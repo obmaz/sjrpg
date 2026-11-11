@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://5j1mrpcldoo5"
-path="res://.godot/imported/roof_smith.webp-26de2b118b9fd1d428ddc18d5633c348.ctex"
+uid="uid://bt2cshcd1yoyt"
+path="res://.godot/imported/albedo.png-79f36c99b566c8408c7368d11daaa370.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/preview3d/roof_smith.webp"
-dest_files=["res://.godot/imported/roof_smith.webp-26de2b118b9fd1d428ddc18d5633c348.ctex"]
+source_file="res://assets/models/environment/fountain/albedo.png"
+dest_files=["res://.godot/imported/albedo.png-79f36c99b566c8408c7368d11daaa370.ctex"]
 
 [params]
 

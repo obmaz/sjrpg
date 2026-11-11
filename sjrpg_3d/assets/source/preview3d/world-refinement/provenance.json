@@ -20,35 +20,6 @@
           "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
         }
       ]
-    },
-    {
-      "path": "assets/source/preview3d/world-refinement/fortress-atlas.png",
-      "sha256": "c4f81fa840cfe0c63f0eaee26426a656a6f8c4e829cb19bf45d81c4a43c55631",
-      "purpose": "불투명 알베도 2×2, 셀당 2.56m",
-      "size": [
-        1254,
-        1254
-      ],
-      "tool": "image_gen.imagegen",
-      "prompt": {
-        "path": "assets/source/preview3d/world-refinement/fortress-prompt.txt",
-        "sha256": "214297eb53dbd4bb0b8511d61922b17a47be29a4b8ac7ad769dedcb055d799af"
-      },
-      "actual_references": [
-        {
-          "path": "assets/source/style/approved-game-reference.jpg",
-          "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
-        },
-        {
-          "path": "assets/art/preview3d/limestone.webp",
-          "sha256": "2561c1be419f951bf0bce7b9fd5085c24a92600cf66424a4775e16cd37b58e6c"
-        }
-      ],
-      "runtime": {
-        "path": "assets/art/preview3d/fortress-atlas.png",
-        "sha256": "c4f81fa840cfe0c63f0eaee26426a656a6f8c4e829cb19bf45d81c4a43c55631"
-      },
-      "derivation": "생성 원본 픽셀을 수정하지 않고 복사. 법선·높이·거칠기 맵은 생성하지 않음."
     }
   ],
   "modeling": {
@@ -149,7 +120,7 @@
     "reused_materials": [
       {
         "path": "assets/art/preview3d/fortress-atlas.png",
-        "sha256": "c4f81fa840cfe0c63f0eaee26426a656a6f8c4e829cb19bf45d81c4a43c55631"
+        "sha256": "a01fe62a241126e00f99dcdd81ecd43169daa0aadd0630e4517888b8c25f4e80"
       },
       {
         "path": "assets/art/preview3d/slate.webp",
@@ -157,5 +128,6 @@
       }
     ],
     "physical_device_tested": false
-  }
+  },
+  "fortress_surface_provenance": "assets/source/environment/fortress/provenance.json"
 }

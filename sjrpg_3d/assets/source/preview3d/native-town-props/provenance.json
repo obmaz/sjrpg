@@ -1,5 +1,5 @@
 {
-  "status": "우물 실제 메시와 source footprint를 중심 유지 2배로 확대. 이번 검증은 world-refinement/provenance.json에 기록.",
+  "status": "기존 확대 크기·기능을 보존하고 2D 원본 재료·물 픽셀과 실제 아치 몰딩으로 분수 디테일을 보강.",
   "guide_read": "docs/3d-asset-guide.md",
   "references": [
     {
@@ -36,11 +36,10 @@
     }
   ],
   "generation": {
-    "images_generated": false,
-    "tool": "reproducible explicit volumetric mesh authoring; Blender 4.3.2 glTF export",
-    "actual_tool_image_attachments": [],
-    "reference_use": "existing user/family images inspected; no image-generation tool called",
-    "licence": "project-authored procedural geometry; existing project shared material provenance retained"
+    "images_generated": true,
+    "surface_provenance": "assets/source/environment/fountain/provenance.json",
+    "geometry": "Blender 4.3.2, tools/preview3d/build_native_town_props.py",
+    "legacy_water": "기존 assets/art/village/remake-pool.webp의 물 UV 영역을 재사용. 새 수면 원화나 전체 오브젝트 판을 만들지 않음."
   },
   "transform": {
     "units": "metres",
@@ -58,66 +57,13 @@
     "new_colliders": false
   },
   "validation": {
-    "geometry": "seven pure authoring-buffer and actual-GLB checks passed via python3 tools/preview3d/test_native_town_props.py",
-    "Godot": "4.7.2 import and native_town_props,ortho_3d_preview: RESULT cases=2 failed=0",
-    "browser": {
-      "production": "actual Chromium phone714x1280 at=portal&preview3d=1: zero errors, no QA fixture or camera override",
-      "fixture": "all owned fluid phases advanced; pause held all clocks; reduced phase/motion zero; forest/cave/forest ownership correct",
-      "strict_fixture_console": {
-        "historical_warning": "one JSON NaN warning from fixture-invalid actor landing, not prop geometry/shaders",
-        "diagnosis": {
-          "origin": "temporary review fixture assigned Vector2.INF from gate_approach immediately after cave leave, before native forest floors were physics-flushed",
-          "observed_fields": [
-            "production_probe.actor_position[0]=inf",
-            "production_probe.actor_position[2]=nan"
-          ],
-          "production_behavior": "Exploration._move_to already rejects non-finite arrivals; production portal approach has zero browser errors",
-          "fixture_fix": "await two physics frames after cave leave; reject non-finite fixture landings before assigning player.position",
-          "cpu_replay_before": "failed with exact non-finite field labels, /tmp/sjrpg-props-cpu-trace.log",
-          "cpu_replay_after": "same full actual fixture/production-probe sequence PASS, 1 case/0 failures/zero errors, /tmp/sjrpg-props-cpu-trace-fixed.log",
-          "gpu_rerun_after_fixture_fix": "not run; GPU slot handed back to root; production default browser frame already passed cleanly"
-        }
-      },
-      "known_visual_gap": "existing tall cave-wall cutout partially occludes native cave-return gate; native cave wall replacement queued separately",
-      "captures": [
-        {
-          "file": "/tmp/sjrpg-props-review/production-portal-approach.png",
-          "sha256": "ddf188c897488345a8846ac6af4c40f239ca759db1927af6f7da01c66b872a7c"
-        },
-        {
-          "file": "/tmp/sjrpg-props-review/fountain-portrait.png",
-          "sha256": "d63eabcc925eb58d4196d11726a28949fb0b78fe961ecdda0a2c812445614079"
-        },
-        {
-          "file": "/tmp/sjrpg-props-review/town-portrait.png",
-          "sha256": "5e06eefed501293a80480e10adad2cf5654210c1def88b8f0c34b3671f29c1ff"
-        },
-        {
-          "file": "/tmp/sjrpg-props-review/plaza-landscape.png",
-          "sha256": "40ca26fa3b432151021790d9bae29191e17c5b39a4c4b3167c61dd88fcc4e30b"
-        },
-        {
-          "file": "/tmp/sjrpg-props-review/guardian.png",
-          "sha256": "97886a28f771d19f21f410b09744d4c4b2bcb91030ced35ee4752c9612dfb552"
-        },
-        {
-          "file": "/tmp/sjrpg-props-review/cave_entry.png",
-          "sha256": "20ea9fa9b47ae89ccae841da722d20ce1366e88b8c9c3e42de1ddc2b55429bfd"
-        },
-        {
-          "file": "/tmp/sjrpg-props-review/cave_return.png",
-          "sha256": "20a6254e410c8128547409a2f97e31ac41e0807be37de58198b7ae05793b1257"
-        }
-      ],
-      "camera_note": "production approach uses normal camera; other captures explicitly asset-centred review overviews; shared model scale remains1"
-    },
-    "performance": "authored primitive/surface counts measured; no actual-device frame-time claim",
-    "known_tool_note": "Blender optional Draco library unavailable; uncompressed GLB export succeeded and no Draco extension is used",
-    "cpu_transition_diagnostic": "recursive finite inspection before JSON of actual temporary-fixture and production-probe fields: original replay failed; physics-flushed guarded fixture replay passed"
+    "geometry": "seven authoring-buffer / actual GLB checks passed, fountain 3932 triangles / 3 surfaces, gate 1883 / 4",
+    "Godot": "native_town_props, native_house_family, player_occlusion and related regression cases",
+    "browser": "실제 세로·가로 마을 화면으로 석재·수면·그림자·접지와 기존 동작을 검수한다. 실제 Android 기기 성능은 측정하지 않음."
   },
   "generator": {
     "path": "tools/preview3d/build_native_town_props.py",
-    "sha256": "d75237bfec4016b4683fdd359605d74ca0755928ad171fafea8120da9ee0b502",
+    "sha256": "848cf01dd90deb7b6f3996e924f481961edd82df2e6a5c653c82ff6a70c23a1b",
     "coordinate_conversion": "author native(X,Y,Z) -> Blender(X,-Z,Y) -> GLB Y-up",
     "command": "blender -b -t 2 --python tools/preview3d/build_native_town_props.py -- --export",
     "version": "Blender 4.3.2",
@@ -127,9 +73,9 @@
     "models": [
       {
         "path": "assets/art/preview3d/native-fountain.glb",
-        "sha256": "bce0d06d56f67548ab5804a937b9a5e67ce57c08ad99ec8777288e317728708c",
-        "bytes": 270912,
-        "triangles": 3612,
+        "sha256": "135a3cff87b30c7e7c929e3b425a556686257cef9a4094f2ac05fdbf915af781",
+        "bytes": 299072,
+        "triangles": 3932,
         "surfaces": 3,
         "bounds_m": {
           "min": [
@@ -231,12 +177,19 @@
       "mesh": "shared small effect sphere",
       "instances_per_gate": 12,
       "draws_per_gate": 1
+    },
+    "fountain_stone": {
+      "package": "assets/models/environment/fountain/",
+      "maps": [
+        "generated albedo only"
+      ],
+      "mapping": "pier facade + basin/coping/foundation triplanar"
     }
   },
   "files": [
     {
       "path": "scripts/native_town_props_3d.gd",
-      "sha256": "8ce0ef0f6c7d2d88566bf8aded4669d8743cfae488a5f9f83621724b1fd2ea2d"
+      "sha256": "ac3c219debf0b67f9da399f825709ebda05fe2c6e3a13a92fccefbcb2e8c8cdb"
     },
     {
       "path": "scripts/native_prop_portal.gdshader",
@@ -244,19 +197,31 @@
     },
     {
       "path": "scripts/native_prop_water.gdshader",
-      "sha256": "ae290e6c6ee15fba64ad2c3652d5f2a97fada500edf26727785f3ab304335952"
+      "sha256": "41a7c8f659c026e09e93734bd861faed700d1d60358e72c2b8024588008b9c12"
     },
     {
       "path": "tools/preview3d/build_native_town_props.py",
-      "sha256": "d75237bfec4016b4683fdd359605d74ca0755928ad171fafea8120da9ee0b502"
+      "sha256": "848cf01dd90deb7b6f3996e924f481961edd82df2e6a5c653c82ff6a70c23a1b"
     },
     {
       "path": "tools/preview3d/test_native_town_props.py",
-      "sha256": "69efd96a969d787643ca3a6c260ef905495b813f8b474ff6e710ca68369b818c"
+      "sha256": "985362233923cb91127b96b861b7b2c45f0de208a98d6578975ce84a68295dc4"
     },
     {
       "path": "tests/cases/native_town_props.gd",
-      "sha256": "d1a676879cb4e0f70d40104e7d9153069e4ff233911b19810c7b23a662a9f76c"
+      "sha256": "668fcbc360ba2f409c50a5ea84ae6343a07775bf541d62012591cecde60e43ba"
+    },
+    {
+      "path": "assets/models/environment/fountain/material.gd",
+      "sha256": "96a4cb5a57cd36c9011b7cef4a3308dcff9e305e5dfb85f4b6c8e763879178e7"
+    },
+    {
+      "path": "assets/models/environment/fountain/surface.gdshader",
+      "sha256": "fe0ed8fed4f6b0e1b18355bfcfa8dda86683af4658cf376094e2b93f5a60a129"
+    },
+    {
+      "path": "assets/models/environment/fountain/asset.json",
+      "sha256": "bc40832250cfc50bcdd56f2f65f2f1333504325b189be5f2a2c72290fc1169d5"
     }
   ]
 }

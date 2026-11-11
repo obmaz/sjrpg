@@ -2,7 +2,13 @@
   "tool": "image_gen.imagegen",
   "source": "original.png",
   "prompt": "prompt.txt",
-  "sha256": "99d44ac7a0f321cdea04b9c7f099aa309f7cab8ac27d0a1ca5fb5886e3559f82",
+  "sha256": "b64721237188246e34a5271e8c29a6534358c8408057396573beea47b09b6a02",
   "runtime": "sjrpg_3d/assets/models/architecture/smith/albedo.png",
-  "notes": "생성 원본 무가공 사용. 네 면은 각 셀에 한 번 매핑. 미세 자체 음영은 남아 있으며 법선 맵은 아님."
+  "actualReferences": [
+    {
+      "path": "assets/source/remake/house-ne.png",
+      "sha256": "879907b9e0c66c31905ec002a48d09e0099f152716017d167578b977896d9618"
+    }
+  ],
+  "notes": "2D 원본의 재료를 참조하여 정면 2×2 알베도로 재구성. 생성 원본 픽셀을 그대로 사용하며 새 법선·거칠기 이미지 맵은 만들지 않음."
 }

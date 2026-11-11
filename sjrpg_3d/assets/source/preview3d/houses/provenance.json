@@ -2,7 +2,7 @@
   "generator": {
     "api": "NativeHouse3D.build(presenter, root, key, width, depth, height) -> Dictionary",
     "path": "scripts/native_house_3d.gd",
-    "sha256": "a302e64e2d2e5aeae3cb0a044aeb665ea832324eab6e298db11c883b3c834eae"
+    "sha256": "da833e2ecb8c7e5cfe6774b36080d78d4e5fa7152508aa3262751ad17909dd41"
   },
   "materials": {
     "textures": [
@@ -63,10 +63,6 @@
         "sha256": "a72cc889faf2fc26d5bc0e485428bc79423c52d724845ba09218ee2338f8868b"
       },
       {
-        "path": "assets/art/preview3d/roof_smith.webp",
-        "sha256": "9e1417829612feca7959ba9602bbb6b9d64bd5d6bfe07ec484e7e30f8735d76b"
-      },
-      {
         "path": "assets/art/preview3d/roof_home.webp",
         "sha256": "d78948eb98e24430649a3fdd306cdc09c900dc2089df71d100a7e50648ace551"
       },
@@ -76,7 +72,7 @@
       },
       {
         "path": "assets/models/architecture/smith/albedo.png",
-        "sha256": "99d44ac7a0f321cdea04b9c7f099aa309f7cab8ac27d0a1ca5fb5886e3559f82"
+        "sha256": "b64721237188246e34a5271e8c29a6534358c8408057396573beea47b09b6a02"
       },
       {
         "path": "assets/models/architecture/stable/albedo.png",
@@ -85,6 +81,10 @@
       {
         "path": "assets/models/architecture/home/albedo.png",
         "sha256": "93fbefb7625190657dedb8719e61bbb8bbf921df6c4e3e3132f447135e3df6fd"
+      },
+      {
+        "path": "assets/models/architecture/smith/roof.png",
+        "sha256": "537d091030ddb89ad1d8b98a06ebf6a4c247602d01e35793585269d825dd0588"
       }
     ],
     "wall_mapping": "독립 건물별 2x2 네 면 원화. 구조재와 지붕은 공유 미터 UV."

@@ -1,0 +1,14 @@
+{
+  "tool": "image_gen.imagegen",
+  "source": "original.png",
+  "prompt": "prompt.txt",
+  "sha256": "909349e20f22e16273b22348821c968e05f216ba8cb4cbb2ec451c7c8ed066f4",
+  "runtime": "sjrpg_3d/assets/models/environment/fountain/albedo.png",
+  "actualReferences": [
+    {
+      "path": "assets/source/remake/fountain.png",
+      "sha256": "e343fc456ada5de04ef96b0c571a702c041f98f3e5aa4ab39b8a31897d5434b2"
+    }
+  ],
+  "notes": "2D 원본의 재료를 참조하여 정면 2×2 알베도로 재구성. 생성 원본 픽셀을 그대로 사용하며 새 법선·거칠기 이미지 맵은 만들지 않음."
+}

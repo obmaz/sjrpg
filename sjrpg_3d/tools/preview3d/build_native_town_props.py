@@ -148,6 +148,13 @@ def fountain():
     # Carved square pier: inset field between proud corner fillets and upper/lower collars.
     m.bevel_box((0,.91,0),(.34,1.02,.34),.014)
     for x,z in itertools.product((-.183,.183),repeat=2): m.bevel_box((x,.91,z),(.065,1.02,.065),.012)
+    # 원본 분수의 뾰족 아치 몰딩을 네 면의 실제 얕은 입체로 만든다.
+    for side in range(4):
+        angle=side*TAU/4
+        points=[]
+        for x,y in [(-.105,.57),(-.105,.87),(-.075,.97),(0,1.07),(.075,.97),(.105,.87),(.105,.57)]:
+            points.append((x*math.cos(angle)+.176*math.sin(angle),y,-x*math.sin(angle)+.176*math.cos(angle)))
+        m.tube(points,.009,6,'limestone')
     m.bevel_box((0,.47,0),(.46,.10,.46),.016)
     m.bevel_box((0,1.40,0),(.52,.13,.52),.020)
     m.sphere((0,1.72,0),.22,24,14)
@@ -210,6 +217,16 @@ def export_blender(model, target):
         mesh=bpy.data.meshes.new(model.role+'_'+name)
         # Blender Z-up -> glTF/Godot Y-up, front +Z, without runtime scale corrections.
         mesh.from_pydata([(x,-z,y) for x,y,z in g.vertices],[],g.triangles);mesh.update()
+        # 둥근 장식구만 실제 방사형 정점 법선을 사용하고 석재 모서리는 평평하게 보존한다.
+        if model.role=='fountain' and name=='limestone':
+            from mathutils import Vector
+            centre=Vector((0,0,3.44));normals=[None]*len(mesh.loops)
+            for polygon in mesh.polygons:
+                sphere=all(abs((mesh.vertices[v].co-centre).length-.44)<1e-5 for v in polygon.vertices)
+                polygon.use_smooth=sphere
+                for loop in polygon.loop_indices:
+                    normals[loop]=(mesh.vertices[mesh.loops[loop].vertex_index].co-centre).normalized() if sphere else polygon.normal.copy()
+            mesh.normals_split_custom_set(normals)
         obj=bpy.data.objects.new(name,mesh);bpy.context.collection.objects.link(obj)
         material=bpy.data.materials.get(name) or bpy.data.materials.new(name)
         material.diffuse_color={'limestone':(.58,.57,.52,1),'bronze':(.30,.23,.15,1),'timber':(.18,.12,.08,1),'water':(.06,.29,.31,.7),'portal':(.05,.35,.40,.65)}[name]

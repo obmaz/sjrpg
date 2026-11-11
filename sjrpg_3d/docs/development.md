@@ -12,6 +12,8 @@
 
 이동은 네이티브 캡슐 스윕과 미끄러짐을 보존하고, 바닥에 맞춰 높이를 보정할 때 추가 충돌을 확인합니다. 모든 이동 뒤에 겹침 여부만으로 되돌리면 정상적인 교대 모서리 접촉도 막힙니다. `native_bridge_sweep`는 30가지 이동 간격·진입 위치를 검사하며, `native_threshold_support`는 실제 접촉 깊이를 측정하고, 벽 안으로 3cm 이동한 검사 캡슐은 관통으로 검출되는지도 확인합니다.
 
+가림 처리 모듈은 `scripts/rendering/occlusion/`에 모았습니다. [전체 오브젝트 전환](../scripts/rendering/occlusion/player_occlusion.gd), [공간 색인](../scripts/rendering/occlusion/spatial_index.gd), [로딩 중 재질 준비](../scripts/rendering/occlusion/warmup.gd)를 나눕니다. 공간 색인은 재질이나 게임 상태를 변경하지 않으며 표시기는 실제 삼각형 검사와 전체 모델 투명도만 담당합니다.
+
 `NativePlayerOcclusion`은 실제 카메라 방향으로 발·몸통·머리의 가림을100ms 간격으로 검사합니다. 바운딩 박스 검사 뒤 공유 메시별 TriangleMesh BVH로 실제 삼각형을 확인하므로 성벽의 빈 안뜰이나 모델의 빈 틈은 가림으로 판단하지 않습니다. `mark_object(root)`로 지정한 정적 모델의 어느 부품이 가리면 전체 부품을 하나의 전환 상태로 묶어 약20% 불투명도까지 함께 조절하고 함께 복원합니다. StandardMaterial·ShaderMaterial 모두 같은 알파 승수를 적용하며 부분 마스크나 디더링은 사용하지 않습니다. `Ortho3DStaticBatch`는 재질별 배칭 후에도 원래 오브젝트 소속과 CPU 변환을 보존합니다. 나무·수풀은 `occlusion_static_instances`로 지정한 MultiMesh에서 개별 인스턴스 전체를 처리합니다. 몬스터·배우·NPC는 정적 모델로 등록하지 않으며, `occlusion_dynamic` 하위와 실제 CharacterBody3D·Skeleton3D 하위도 제외합니다. 연속된 지면·물·길은 등록하지 않습니다. `warm_up()`이 플레이 준비 완료 전에 공유 BVH·재질 원형을 만들고 `NativeOcclusionWarmup`의64×64 별도 뷰포트에서 한 번 실제로 그립니다. 이는 [Compatibility의 첫 셰이더 컴파일 지연](https://docs.godotengine.org/en/stable/tutorials/rendering/jitter_stutter.html#stutter)을 로딩 단계에서 처리하기 위한 것입니다. 정적 월드 변환·AABB·역변환을 재사용하며8m 공간 셀로 시선 구역에 있는 후보만 검사합니다. 배칭 노드별로 변환을 한 번 확인하므로 재배치와 삭제도 색인에 반영합니다.  같은 오브젝트의 같은 재질은 공유합니다. 최근16개 오브젝트는 분리한 표시 노드와 재질을 보관하며 원본 슬롯/재질을 복원한 뒤 숨깁니다. 활성 전환은 캐시 퇴출에서 보호하고, 퇴출 재질은 렌더 서버 참조가 끝나도록3프레임 유지합니다. 물리·진행 상태는 수정하지 않으며 일시정지 중 전환도 멈춥니다. 브라우저 검수의 `at=occlusion`·`at=tree_occlusion`과 `probe=1&occlusion=off`로 비교할 수 있습니다.
 
 `Player.MOVE_SPEED_MULTIPLIER=1.2`는 기존 직업별 속도·이동 패시브·질주 보너스·게임 템포에 곱하는 주인공 전용 이동 배율입니다. 공격·투사체·적의 속도와 구르기 거리/시간은 이 배율을 읽지 않습니다. 달리기 동작은 실제 이동 거리로 샘플링해 빨라진 발걸음과 맞춥니다.
@@ -97,3 +99,9 @@ tools/serve.sh
 일반 푸시의 CI는 검사와 로컬 웹 산출물 검수까지만 수행합니다. Pages 공개 배포는 사용자가 별도로 요청한 뒤 `web.yml`을 `workflow_dispatch`의 `publish=true`로 실행할 때만 허용합니다. 기본 “배포”는 [APK 전달 스킬](../../.agents/skills/dropbox-apk/SKILL.md)의 Dropbox 전달입니다.
 
 동굴 소환 비석은 골짜기 바닥의 완만한 지점에 둡니다. 저장된 소환 무리는 비석 기준점을 기록하고, 이전 위치의 저장은 무리 구성을 보존한 채 새 암반 지대로 옮긴 후 실제 지형에 재배치합니다. 시험용 전투장은 `native_combat_fixture.remote_at()`으로 필드 범위 밖에 두어 실제 지형 확장과 겹치지 않게 합니다.
+
+분수의 전용 표면은 `assets/models/environment/fountain/`에서 교체합니다. `asset.json`이 기둥·수조·덮개·기초의2×2 표면과 기존2D 물 원화의 UV 영역을 지정합니다. 물은 기존 `remake-pool.webp`의90×60px 물 부분을 재사용하며 원본 그림이나 모델 전체를 카메라 방향 판으로 붙이지 않습니다. 기존 `PlazaWater.phase`로 표면과 낙수점 파문을 움직이고 메뉴·동작 줄이기 설정을 따릅니다. 석재 원본·실제 참조·생성 문구는 `assets/source/environment/{fountain,fortress}/`와 `assets/source/architecture/smith/`에 보존합니다. 대장간의 양쪽 작업 홈은 기존 여섯 재질의 실제 기하이며 기존 전체 건물 충돌 안에 있습니다. 활엽수는377개 잎 묶음·4,886삼각형으로 수관을 채우되 같은 두 공유 메시와 기존 발치·충돌을 유지합니다.
+
+대장간 지붕은 `assets/models/architecture/smith/roof.png`의 원화 기반 정면 슬레이트를 사용합니다. `NativeAssetSurface.roof_path()`가 패키지의 `roofAlbedo`를 읽고 실제 지붕 재질에 연결합니다. 분수 낙수는 높이로 수면과 구분해 밝은 물결을 표시하며 장식구의 실제 정점 법선만 부드럽게 만들고 주변 석재의 각은 유지합니다.
+
+새 렌더링 헬퍼는 탭 들여쓰기·명시적 자료형과100자 줄 길이를 사용합니다. `Dictionary`에서 꺼낸 값은 자료형을 지정하고, 주석은 실제 단위·수명·소유권과 선택 이유를 설명합니다. 정적 모델·표면 패키지와 게임 상태를 분리하며 화면 알림의 공통 생성은 HUD의 한 헬퍼를 재사용합니다.

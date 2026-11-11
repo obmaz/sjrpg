@@ -11,3 +11,9 @@ func run() -> void:
 		var path := NativeAssetSurface.ROOT + id + "/albedo.png"
 		check("authored wall retains loss compression and mipmaps " + id, metadata.load(path + ".import") == OK and metadata.get_value("params", "compress/mode") == 1 and metadata.get_value("params", "mipmaps/generate"))
 	check("all six roles use independent authored atlases", textures.size() == 6)
+	var roof := NativeAssetSurface.roof_path("smith")
+	check("smith roof resolves inside its independent surface package",roof=="res://assets/models/architecture/smith/roof.png")
+	var game := await make_game("mage")
+	check("the actual smithy uses its detailed roof source",game.ortho_preview._materials["roof_smith"].albedo_texture==load(roof))
+	game.queue_free()
+	await _frames(2)

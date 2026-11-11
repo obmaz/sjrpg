@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "fountain",
+  "kind": "surface",
+  "albedo": "albedo.png",
+  "atlasGrid": [2, 2],
+  "cells": ["pier_niche", "basin", "coping", "foundation"],
+  "legacyWater": {
+    "texture": "res://assets/art/village/remake-pool.webp",
+    "regionPixels": [268, 402, 90, 60],
+    "imagePixels": [1024, 1024]
+  }
+}

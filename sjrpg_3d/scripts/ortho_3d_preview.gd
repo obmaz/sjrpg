@@ -297,7 +297,14 @@ func _setup_materials() -> void:
 	_materials["granite"] = _materials["stone"].duplicate()
 	_materials["granite"].albedo_color = Color(0.74, 0.76, 0.80)
 	for key: String in ROOF_TEXTURES:
-		_materials[key] = _material(MATERIAL_ROOT + key + ".webp")
+		var custom_roof := (
+			NativeAssetSurface.roof_path(key.trim_prefix("roof_"))
+			if key.begins_with("roof_") else ""
+		)
+		var texture_path := custom_roof if not custom_roof.is_empty() else MATERIAL_ROOT + key + ".webp"
+		_materials[key] = _material(texture_path)
+		if not custom_roof.is_empty():
+			_materials[key].albedo_color = NativeAssetSurface.roof_tint(key.trim_prefix("roof_"))
 		_materials[key].cull_mode = BaseMaterial3D.CULL_DISABLED
 	# Soot-darkened slate for the smithy.
 	_materials["slate_dark"] = _materials["slate"].duplicate()

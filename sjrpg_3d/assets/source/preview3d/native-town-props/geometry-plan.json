@@ -3,9 +3,9 @@
   "models": [
     {
       "role": "fountain",
-      "triangles": 3612,
+      "triangles": 3932,
       "material_groups": {
-        "limestone": 2940,
+        "limestone": 3260,
         "water": 488,
         "bronze": 184
       },

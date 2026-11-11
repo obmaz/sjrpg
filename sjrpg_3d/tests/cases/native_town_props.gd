@@ -34,7 +34,7 @@ func _check_geometry(entry: Dictionary, expected_triangles: int, expected_surfac
 			surfaces += 1
 		bindings = bindings and mesh.material_override != null and mesh.scale.is_equal_approx(Vector3.ONE)
 		if mesh.name == "limestone":
-			bindings = bindings and mesh.material_override == _preview_material("stone")
+			bindings = bindings and mesh.material_override == _preview_material("fountain_stone" if root.name=="NativeFountain" else "stone")
 		elif mesh.name == "timber":
 			bindings = bindings and mesh.material_override == _preview_material("wood")
 	check("%s imports actual bounded volume and baked scale" % root.name, not first and bounds.position.y >= -0.001 and bounds.size.is_equal_approx(size) and root.scale.is_equal_approx(Vector3.ONE))
@@ -65,7 +65,7 @@ func run() -> void:
 	var footprint_before := fountain_polygon.duplicate()
 	check("native fountain and every forest warp role replace their own source only", props.owns(fountain) and props._entries.size() == game.village.portal_sprites.size() + 2)
 	var fountain_entry: Dictionary = props._entries[fountain.get_instance_id()]
-	_check_geometry(fountain_entry, 3612, 3, NativeTownProps3D.FOUNTAIN_SIZE)
+	_check_geometry(fountain_entry, 3932, 3, NativeTownProps3D.FOUNTAIN_SIZE)
 	var portal: IsoSprite = game.village.portal_sprites["town"]
 	var portal_entry: Dictionary = props._entries[portal.get_instance_id()]
 	_check_geometry(portal_entry, 1883, 4, NativeTownProps3D.PORTAL_SIZE)
@@ -81,6 +81,9 @@ func run() -> void:
 	clock._process(0.2)
 	props.sync()
 	var ink: ShaderMaterial = fountain_entry["fluid"]
+	check("fountain water reuses the actual original 2D fountain pixels",ink.get_shader_parameter("legacy_water")==load("res://assets/art/village/remake-pool.webp"))
+	var region: Vector4 = ink.get_shader_parameter("water_region")
+	check("water UVs sample only a bounded portion of the original image",region.x>0.0 and region.y>0.0 and region.z>0.0 and region.w>0.0 and region.z<0.2 and region.w<0.2 and region.x+region.z<1.0 and region.y+region.w<1.0)
 	check("native water follows the original source clock", is_equal_approx(float(ink.get_shader_parameter("phase")), clock.phase))
 	var portal_clock := _phase(portal)
 	portal_clock._process(0.3)

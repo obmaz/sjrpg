@@ -1,6 +1,6 @@
 class_name Ortho3DLevelUp
 extends RefCounted
-## Native presentation of the real level-up RewardFx; the source owns every clock.
+## 확정된 레벨업·웨이포인트 발견을 입체로 표시한다. 원본 RewardFx가 수명을 소유한다.
 
 const MAX_ACTIVE := 2
 const SPARK_COUNT := 8
@@ -22,7 +22,13 @@ func sync() -> void:
 	var sources: Array = _preview.game.cosmetic_effects
 	for index in range(sources.size() - 1, -1, -1):
 		var source = sources[index]
-		if not is_instance_valid(source) or source.is_queued_for_deletion() or source.kind != "reward" or not source.params.get("large", false) or source.age >= source.life:
+		if (
+			not is_instance_valid(source)
+			or source.is_queued_for_deletion()
+			or source.kind != "reward"
+			or not source.params.get("large", false)
+			or source.age >= source.life
+		):
 			continue
 		# Inactive forest sources retain their paused clocks during a cave visit.
 		if source.get_parent() != _preview.game.world:
@@ -43,13 +49,17 @@ func sync() -> void:
 
 func _create(source: Effect) -> Dictionary:
 	var root := Node3D.new()
-	root.name = "WaypointDiscovery" if source.params.has("waypoint_position") else "LevelUpCelebration"
+	root.name = (
+		"WaypointDiscovery" if source.params.has("waypoint_position") else "LevelUpCelebration"
+	)
 	_preview.stage.add_child(root)
 	var ring := MeshInstance3D.new()
 	ring.name = "FootRing"
 	var torus := TorusMesh.new()
-	torus.inner_radius = NativeWaypoint3D.RADIUS+0.15 if source.params.has("waypoint_position") else 0.70
-	torus.outer_radius = torus.inner_radius+0.06
+	torus.inner_radius = (
+		NativeWaypoint3D.RADIUS + 0.15 if source.params.has("waypoint_position") else 0.70
+	)
+	torus.outer_radius = torus.inner_radius + 0.06
 	torus.rings = 32
 	torus.ring_segments = 4
 	ring.mesh = torus
@@ -100,7 +110,7 @@ func _update(entry: Dictionary, source: Effect) -> void:
 		var angle := TAU * float(index) / SPARK_COUNT + pose * 0.22
 		var spread := 0.50 + float(index % 2) * 0.12 + pose * 0.08
 		if waypoint:
-			spread = NativeWaypoint3D.RADIUS+0.12+pose*0.32
+			spread = NativeWaypoint3D.RADIUS + 0.12 + pose * 0.32
 		var height := 0.14 + float(index % 3) * 0.16 + pose * (1.40 + float(index % 3) * 0.15)
 		spark.position = Vector3(cos(angle) * spread, height, sin(angle) * spread)
 		spark.basis = _preview.camera.global_transform.basis

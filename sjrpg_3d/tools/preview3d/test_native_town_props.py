@@ -71,7 +71,7 @@ class GeometryPlanTests(unittest.TestCase):
         self.assertNotIn('CollisionShape3D.new',helper)
 
     def test_actual_glbs_are_bounded_without_embedded_images_or_scale_fixes(self):
-        for name, triangles, surfaces in [('native-fountain',3612,3),('native-warp-gate',1883,4)]:
+        for name, triangles, surfaces in [('native-fountain',3932,3),('native-warp-gate',1883,4)]:
             data=(ROOT/'assets/art/preview3d'/f'{name}.glb').read_bytes()
             self.assertEqual(data[:4],b'glTF')
             length,kind=struct.unpack_from('<II',data,12)

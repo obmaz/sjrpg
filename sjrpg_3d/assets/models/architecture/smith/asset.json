@@ -9,5 +9,11 @@
     2
   ],
   "tileMetres": 2.56,
-  "roughness": 0.94
+  "roughness": 0.94,
+  "roofAlbedo": "roof.png",
+  "roofTint": [
+    0.64,
+    0.7,
+    0.8
+  ]
 }

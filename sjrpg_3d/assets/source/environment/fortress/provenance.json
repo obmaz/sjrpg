@@ -1,0 +1,14 @@
+{
+  "tool": "image_gen.imagegen",
+  "source": "original.png",
+  "prompt": "prompt.txt",
+  "sha256": "a01fe62a241126e00f99dcdd81ecd43169daa0aadd0630e4517888b8c25f4e80",
+  "runtime": "sjrpg_3d/assets/art/preview3d/fortress-atlas.png",
+  "actualReferences": [
+    {
+      "path": "assets/source/style/gate-wall-design.png",
+      "sha256": "32589bc30226b4d6e641bbcfd59304a4cd996119de79e28bb1b0bab102731ff3"
+    }
+  ],
+  "notes": "2D 원본의 재료를 참조하여 정면 2×2 알베도로 재구성. 생성 원본 픽셀을 그대로 사용하며 새 법선·거칠기 이미지 맵은 만들지 않음."
+}

@@ -382,6 +382,18 @@ func _read_debug_params() -> void:
 					player.position = village.chapel_steps[village.chapel_steps.size() - 1]
 				"chapel_reference":
 					_place_at_chapel_reference()
+				"house_ne":
+					var bounds := ortho_preview._building_bounds("ne")
+					var middle := bounds.get_center()
+					spatial_world.teleport_source_actor(player,Iso.project((middle+Vector2(0,bounds.size.y*0.5+1.2))*65.0),Player.RADIUS)
+					_fx_review_focus = Iso.project(middle*65.0)-Vector2(0,100)
+				"plaza_detail":
+					var outline := village.fountain.atlas_polygon(village.data["frames"]["pool"]["ground"])
+					var middle := Vector2.ZERO
+					for point: Vector2 in outline:
+						middle += point/outline.size()
+					spatial_world.teleport_source_actor(player,middle+Vector2(0,230),Player.RADIUS)
+					_fx_review_focus = middle-Vector2(0,90)
 				"bank":
 					player.position = Iso.project(village.forecourt_g + Vector2(0, -60))
 				"corner0":
@@ -1357,7 +1369,7 @@ func rng_range(a: float, b: float) -> float:
 
 
 ## JUICE #6: the 1.2s before the victory panel carries the moment: a short world pause, a large burst, a light
-## pulse, a deep cry, a strong zoom punch and a second camera pulse. Presentation only; reduced motion drops
+## pulse, a deep cry, a restrained zoom and a second subpixel camera pulse. Presentation only; reduced motion drops
 ## the pause, zoom and shake (the burst, light and sound remain).
 const BOSS_DEFEAT_PAUSE := 0.12
 const BOSS_DEFEAT_PAUSE_LIMIT := 0.15

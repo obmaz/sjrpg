@@ -23,6 +23,7 @@ func setup(presenter: Node, material_map: Dictionary = {}) -> NativeTownProps3D:
 	_preview = presenter
 	_game = presenter.game
 	_materials = material_map.duplicate()
+	_materials["fountain_stone"] = NativeFountainSurface.material()
 	for pair in [["fountain", FOUNTAIN], ["portal", PORTAL]]:
 		if ResourceLoader.exists(pair[1]):
 			_scenes[pair[0]] = load(pair[1])
@@ -79,16 +80,24 @@ func _sync_source(source: IsoSprite, role: String, current: Dictionary) -> void:
 	if not is_instance_valid(source) or not _scenes.has(role):
 		return  # Existing art remains available until the reviewed native asset exists.
 	if source.has_meta("ground_waypoint"):
-		_sync_waypoint(source,current)
+		_sync_waypoint(source, current)
 		return
 	var id := source.get_instance_id()
-	var footprint: PackedVector2Array = source.atlas_polygon(_game.village.data["frames"]["pool"]["ground"]) if role == "fountain" else Village.portal_base(source)
+	var footprint: PackedVector2Array = (
+		source.atlas_polygon(_game.village.data["frames"]["pool"]["ground"])
+		if role == "fountain"
+		else Village.portal_base(source)
+	)
 	var centre := Vector2.ZERO
 	for at in footprint:
 		centre += at
 	centre /= footprint.size()
-	var edge := Ortho3DPreview.ground_position(footprint[1]) - Ortho3DPreview.ground_position(footprint[0])
-	var side := Ortho3DPreview.ground_position(footprint[2]) - Ortho3DPreview.ground_position(footprint[1])
+	var edge := (
+		Ortho3DPreview.ground_position(footprint[1]) - Ortho3DPreview.ground_position(footprint[0])
+	)
+	var side := (
+		Ortho3DPreview.ground_position(footprint[2]) - Ortho3DPreview.ground_position(footprint[1])
+	)
 	var model_size := FOUNTAIN_SIZE if role == "fountain" else PORTAL_SIZE
 	if model_size.x > edge.length() + 0.001 or model_size.z > side.length() + 0.001:
 		return  # Never stretch one axis or silently protrude outside the existing collision.
@@ -117,11 +126,15 @@ func _create(source: IsoSprite, role: String) -> Dictionary:
 	_preview.stage.add_child(root)
 	var fluid := ShaderMaterial.new()
 	fluid.shader = WATER_SHADER if role == "fountain" else PORTAL_SHADER
+	if role == "fountain":
+		NativeFountainSurface.bind_water(fluid)
 	for candidate in root.find_children("*", "MeshInstance3D", true, false):
 		var mesh := candidate as MeshInstance3D
 		var slot := str(mesh.name).to_lower()
 		if slot == "limestone":
-			mesh.material_override = _materials["stone"]
+			mesh.material_override = (
+				_materials["fountain_stone"] if role == "fountain" else _materials["stone"]
+			)
 		elif slot == "timber":
 			mesh.material_override = _materials["wood"]
 		elif slot == "bronze":
@@ -168,19 +181,23 @@ func _sync_waypoint(source: IsoSprite, current: Dictionary) -> void:
 	var id := source.get_instance_id()
 	current[id] = true
 	if not _entries.has(id):
-		_entries[id] = NativeWaypoint3D.create(_preview.stage,_mote_mesh,_materials["stone"])
+		_entries[id] = NativeWaypoint3D.create(_preview.stage, _mote_mesh, _materials["stone"])
 		_entries[id]["source"] = weakref(source)
 	var entry: Dictionary = _entries[id]
 	var root: Node3D = entry["root"]
-	root.position = Ortho3DPreview.ground_position(source.position,NativeGroundRelief.at(_game.village,source.position))
+	root.position = Ortho3DPreview.ground_position(
+		source.position, NativeGroundRelief.at(_game.village, source.position)
+	)
 	root.visible = source.visible
 	var active := GameState.discovered_sanctuaries.has(str(source.get_meta("ground_waypoint")))
 	var fluid: ShaderMaterial = entry["fluid"]
-	fluid.set_shader_parameter("phase",_source_phase(source))
-	fluid.set_shader_parameter("motion",0.0 if Prefs.reduce_motion else 1.0)
-	fluid.set_shader_parameter("strength",1.0 if active else 0.0)
+	fluid.set_shader_parameter("phase", _source_phase(source))
+	fluid.set_shader_parameter("motion", 0.0 if Prefs.reduce_motion else 1.0)
+	fluid.set_shader_parameter("strength", 1.0 if active else 0.0)
 	var motes: MultiMeshInstance3D = entry["motes"]
 	motes.visible = active
-	(entry["stone"] as StandardMaterial3D).albedo_color = Color("74756c") if active else Color("424440")
+	(entry["stone"] as StandardMaterial3D).albedo_color = (
+		Color("74756c") if active else Color("424440")
+	)
 	for light: OmniLight3D in entry["lights"]:
 		light.visible = active

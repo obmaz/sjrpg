@@ -1,9 +1,11 @@
 class_name NativeOcclusionWarmup
 extends RefCounted
+
+
 ## Compatibility는 투명 변형을 실제로 그려야 컴파일한다. 작은 별도 월드라 화면에 노출되지 않는다.
 static func draw(preview: Ortho3DPreview, samples: Array) -> int:
 	var view := SubViewport.new()
-	view.size = Vector2i(64,64)
+	view.size = Vector2i(64, 64)
 	view.own_world_3d = true
 	view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	preview.add_child(view)
@@ -18,18 +20,21 @@ static func draw(preview: Ortho3DPreview, samples: Array) -> int:
 	glow.position.z = 3.0
 	glow.omni_range = 15.0
 	view.add_child(glow)
-	for first in range(0,samples.size(),16):
+	for first in range(0, samples.size(), 16):
 		var batch := Node3D.new()
 		view.add_child(batch)
-		for index in range(first,mini(first+16,samples.size())):
+		for index in range(first, mini(first + 16, samples.size())):
 			var sample: Dictionary = samples[index]
 			var mesh := MeshInstance3D.new()
 			mesh.mesh = sample["mesh"]
 			mesh.material_override = sample["ink"]
 			var box := mesh.mesh.get_aabb()
-			var scale := 1.4/maxf(0.01,maxf(box.size.x,maxf(box.size.y,box.size.z)))
-			mesh.scale = Vector3.ONE*scale
-			mesh.position = Vector3((index%4)*2.0-3.0,3.0-floorf((index-first)/4.0)*2.0,0.0)-box.get_center()*scale
+			var scale := 1.4 / maxf(0.01, maxf(box.size.x, maxf(box.size.y, box.size.z)))
+			mesh.scale = Vector3.ONE * scale
+			mesh.position = (
+				Vector3((index % 4) * 2.0 - 3.0, 3.0 - floorf((index - first) / 4.0) * 2.0, 0.0)
+				- box.get_center() * scale
+			)
 			batch.add_child(mesh)
 		# 작은 뷰포트에서 각 투명 변형을 최소 한 프레임 실제로 그린다.
 		await RenderingServer.frame_post_draw

@@ -163,7 +163,7 @@ def build_blender():
             # Fill the actual bough volume as well as its tips. Staggered heights,
             # nonuniform azimuths and independently curved sprays preserve gaps
             # without exposing the entire radial scaffold like a pollarded tree.
-            for j in range(10):
+            for j in range(12):
                 center = base.lerp(tip, .23 + (j % 5) * .15)
                 center += Vector((rng.uniform(-.28, .28), rng.uniform(-.08, .42), rng.uniform(-.28, .28)))
                 angle = a + j * 1.73 + rng.uniform(-.4, .4)
@@ -174,7 +174,7 @@ def build_blender():
                 fork = tip + Vector((math.cos(fork_angle) * rng.uniform(.25, .55), rng.uniform(-.1, .38), math.sin(fork_angle) * rng.uniform(.25, .55)))
                 start = middle.lerp(tip, .43 + j * .1)
                 branch([start, start.lerp(fork, .55) + Vector((0, .1, 0)), fork], [.032, .019, .004], 5)
-                for k in range(4):
+                for k in range(5):
                     center = fork + Vector((rng.uniform(-.24, .24), rng.uniform(-.22, .22), rng.uniform(-.24, .24)))
                     # Crown normals vary in both axes; leaf fronts retain a mild upward tendency.
                     normal = Vector((math.cos(fork_angle + k * 1.7), rng.uniform(.35, 1.0), math.sin(fork_angle + k * 1.7)))

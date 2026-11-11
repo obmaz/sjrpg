@@ -181,22 +181,24 @@ func _build_death() -> void:
 	_death.add_child(l)
 
 
-func show_level_up(level: int) -> void:
+func _announcement_banner() -> LevelUpBanner:
 	if _level_up == null:
 		_level_up = LevelUpBanner.new()
 		_level_up.name = "LevelUpBanner"
 		add_child(_level_up)
-	_level_up.show_level(level)
-	_level_up.visible = not panel_open()
+	return _level_up
+
+
+func show_level_up(level: int) -> void:
+	var banner := _announcement_banner()
+	banner.show_level(level)
+	banner.visible = not panel_open()
 
 
 func show_waypoint_discovery(place: String) -> void:
-	if _level_up == null:
-		_level_up = LevelUpBanner.new()
-		_level_up.name = "LevelUpBanner"
-		add_child(_level_up)
-	_level_up.show_waypoint(place)
-	_level_up.visible = not panel_open()
+	var banner := _announcement_banner()
+	banner.show_waypoint(place)
+	banner.visible = not panel_open()
 
 
 func panel_open() -> bool:

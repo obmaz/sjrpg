@@ -1,6 +1,6 @@
 {
   "generator": "tools/preview3d/prepare_trees.py",
-  "generator_sha256": "31676f9ea3c855c17df9cd71d1afb91d4ae04d182e597dce5bede946a0bebe39",
+  "generator_sha256": "f4f7055006eefc74c77a2bb646e8fc575dea75a4d620a926c3a0ed9225fb1340",
   "geometry_license": "Original geometry authored for this project under the repository license; no external model downloaded",
   "source_material_provenance": "assets/source/preview3d/trees/generation.json",
   "camera": {
@@ -15,12 +15,12 @@
   "variants": [
     {
       "path": "assets/art/preview3d/town-oak-0.glb",
-      "sha256": "762e1a1ae051dd66a05ac88cfa78586bba86b9bddda65dfcd88714f57113ead4",
-      "bytes": 188064,
+      "sha256": "4598087a3dc0cc98dd6298e65e0fea4b837fa91266eb0e6c6df9464c970dc470",
+      "bytes": 216580,
       "branches": 62,
-      "leaf_sprays": 311,
-      "triangles": 4358,
-      "vertices": 4047,
+      "leaf_sprays": 377,
+      "triangles": 4886,
+      "vertices": 4641,
       "leaf_material": "LeafSprays",
       "native_root": [
         0,
@@ -33,12 +33,12 @@
     },
     {
       "path": "assets/art/preview3d/town-oak-1.glb",
-      "sha256": "163faf1cdb15c0fee6d6e81be9ffa12f06e0796ac24f08e0b1da86ea8f2663e4",
-      "bytes": 187812,
+      "sha256": "d69df92a7cc83b75477845c6dc5cac4f56b2f84ba5a32baf40ae2ba6f9f60662",
+      "bytes": 216516,
       "branches": 62,
-      "leaf_sprays": 311,
-      "triangles": 4358,
-      "vertices": 4047,
+      "leaf_sprays": 377,
+      "triangles": 4886,
+      "vertices": 4641,
       "leaf_material": "LeafSprays",
       "native_root": [
         0,

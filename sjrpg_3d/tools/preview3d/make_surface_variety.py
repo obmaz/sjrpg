@@ -60,6 +60,8 @@ def main():
     kinds=['door_shop','door_smith','door_stable','door_home','roof_shop','roof_smith','roof_home','rock_lichen','rock_iron','ground_heather','ground_moss','beast_fur','grave_bone','scar_skin']
     record={'제작':'원본 수식 기반 절차적 알베도. 집별 문양·조각과 자연물 변형. 법선/거칠기 맵은 만들지 않았다.','license':'Original project artwork','generator':str(Path(__file__).relative_to(ROOT)),'materials':{}}
     for i,kind in enumerate(kinds, start=4):
+        if kind=='roof_smith':
+            continue  # 대장간 지붕은 architecture/smith의 원화 기반 패키지가 소유한다.
         image=Image.fromarray(np.clip(make(kind,92137+i*31),0,255).astype('uint8'))
         source=SOURCE/(kind+'.png'); image.save(source)
         path=ART/(kind+'.webp'); image.save(path,'WEBP',quality=92,method=6)
