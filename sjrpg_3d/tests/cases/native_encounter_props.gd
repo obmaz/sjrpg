@@ -246,6 +246,9 @@ func run() -> void:
 	props.sync()
 	chest.take_damage(1.0, game.player)
 	check("real consumed chest opens once without duplicating art rewards or blockers", chest.dead and GameState.opened_chests.has(chest.index) and GameState.gold == gold_after and not game.spatial_world.blocked(chest.position, 1.0) and props.owns(chest.body_sprite) and not props.source_ids().has(old_art_id) and preview._affordances._art.is_empty())
+	# 실제 개봉 시계를 끝까지 진행한 뒤 원래 완전 개방/충돌 범위를 검사한다.
+	chest._process(Chest.OPEN_SECONDS)
+	props.sync()
 	check("opened native chest keeps its source anchor and a real empty lid pose", chest.position == original_anchor and is_equal_approx((chest_entry["lid"] as Node3D).rotation.x, deg_to_rad(NativeEncounterMesh3D.OPEN_ANGLE)) and (chest_entry["splinters"] as MeshInstance3D).visible and chest_root.position.is_equal_approx(Ortho3DPreview.ground_position(chest.position, preview.surface_height(chest.position))))
 	var empty := NativeEncounterProps3D.new().setup(preview, {})
 	empty.sync()

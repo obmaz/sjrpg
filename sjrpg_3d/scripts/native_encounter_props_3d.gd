@@ -93,8 +93,9 @@ func _sync_source(source: Node2D, role: String, current: Dictionary) -> void:
 		_sync_stone(source as EncounterStone, entry)
 	else:
 		var chest := source as Chest
-		(entry["lid"] as Node3D).rotation.x = deg_to_rad(NativeEncounterMesh3D.OPEN_ANGLE) if chest.dead else 0.0
-		(entry["splinters"] as MeshInstance3D).visible = chest.dead
+		var fraction := chest.lid_fraction()
+		(entry["lid"] as Node3D).rotation.x = deg_to_rad(NativeEncounterMesh3D.OPEN_ANGLE) * fraction
+		(entry["splinters"] as MeshInstance3D).visible = chest.dead and fraction > .7
 		entry["consumed"] = chest.dead
 		if entry.has("chest_header"):
 			var header: Label3D = entry["chest_header"]

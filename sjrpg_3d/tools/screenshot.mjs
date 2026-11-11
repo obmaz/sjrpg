@@ -47,6 +47,10 @@ const SCENES = {
     dodge: 'at=field',
     corpses: 'corpse_preview=1',
     corpses_beasts: 'corpse_preview=beasts&zoom=0.95',
+    chest_hit: 'chest_response=hit&zoom=1.25',
+    chest_opening: 'chest_response=opening&zoom=1.25',
+    chest_open: 'chest_response=open&zoom=1.25',
+    chest_closed: 'chest_response=closed&zoom=1.25',
     enemy_wolf: 'enemy_warning=wolf&zoom=1.25',
     enemy_goblin: 'enemy_warning=goblin&zoom=1.25',
     enemy_skeleton: 'enemy_warning=skeleton&zoom=0.95',
@@ -291,7 +295,14 @@ if (scene === 'defender') {
     }
 } else if (scene === 'warp_trip') {
     await page.waitForFunction(() => Array.isArray(window.__sjrpgWarpPreviewButton), null, {timeout: 30000});
-} else if (scene.startsWith('enemy_')) {
+} else if (scene.startsWith('chest_')) {
+    await page.waitForFunction(() => window.__sjrpgChestResponse, null, {timeout: 30000});
+    const response = await page.evaluate(() => window.__sjrpgChestResponse);
+    if (response.mode === 'opening' && !(response.fraction > 0 && response.fraction < 1 && response.dead)) throw Error('Chest opening is not intermediate');
+    if (response.mode === 'hit' && !(response.fraction > 0 && !response.dead && response.hp === 3)) throw Error('Chest resisted hit has no actual response');
+    console.log('CHEST_RESPONSE', JSON.stringify(response));
+}
+if (scene.startsWith('enemy_')) {
     await page.waitForFunction(() => window.__sjrpgEnemyPreparationReady === true, null, {timeout: 30000});
     await page.waitForFunction(() => window.__sjrpg3dProbe?.enemy_feedback?.preparations === 1, null, {timeout:15000});
     console.log('ENEMY_PREPARATION '+JSON.stringify(await page.evaluate(()=>window.__sjrpg3dProbe.enemy_feedback)));

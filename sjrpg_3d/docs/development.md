@@ -141,3 +141,5 @@ tools/serve.sh
 HUD는 Viewport 크기 변경 신호에서도 표시를 갱신합니다. `TouchControls.refresh_layout()`과 `Minimap.refresh_layout()`은 조작·피드백·알림 시계를 진행시키지 않고 그림/터치 범위를 재배치합니다. `hud_pause_resize`는 실제 일시정지 중 가로·세로 왕복 신호와 시간 정지를 검사합니다.
 
 일반 적의 공격 준비 게이지는 `NativeEnemyFeedback3D`가 실제 AI 타이머에서 표시합니다. 명시적 검수 쿼리의 준비 장면은 `scripts/inspection/native_enemy_review.gd`에 분리하며 운영 전투 시계를 만들지 않습니다.
+
+`Chest`는 실제 피해·보상과 함께 짧은 피격/개봉 표시 시간도 소유합니다. 반응 중에만 `_process`를 활성화하고, `NativeEncounterProps3D`는 같은 힌지 범위의 `lid_fraction()`만 읽습니다. [타격감 구조](juice.md)를 참고하세요.
