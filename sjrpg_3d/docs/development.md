@@ -135,3 +135,5 @@ tools/serve.sh
 `Game._tick_corpse_list`는 활성 영역과 동굴 방문 중 숨겨진 필드의 시체 수명을 같은 모험 시계로 처리합니다. 기본15초/끝3초 페이드이며 삭제 시 스킬 대상·원본 기록·3D 표시를 함께 정리합니다. `warp_transition`·`actor_warp_fade`·`corpse_expiry`가 실제 공간/재질 복원과 정상 프레임 만료를 검증합니다.
 
 동굴의 실제 바닥·경사·경계는 `DungeonRelief`가 공유하고, `DungeonHazards`가 장치의 시계·피해를 소유합니다. `NativeDungeonHazards`와 HUD·지도는 같은 상태를 읽습니다. 모델 교체 경계·수명·검사는 [동굴 구조](native-cave.md)를 따릅니다.
+
+동굴의 방별 처치 진행은 `DungeonRooms`가 생성 시 등록한 적 ID를 추적합니다. HUD와 지도는 같은 상태를 읽으며 `DungeonRuntime`이 사망·재입장 수명을 연결합니다.

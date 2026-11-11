@@ -74,4 +74,4 @@ Android 도구 준비는 `sjrpg_3d/tools/setup_android.sh`에서 수행합니다
 
 건물별 생성형 원화·다리 표면과 동굴 입구 모델은 에셋 폴더별로 관리합니다. 공용 코드 변경 없이 같은 에셋의 원화나 제작기를 교체하는 범위, 외부 모델의 미터·축·원점·충돌·소켓 계약은 [에셋 협업](../sjrpg_3d/docs/asset-workflow.md)을 따릅니다. 완료 리뷰·후보 비교는 현재 제작 규격과 구별하며 일회성 결과는 `build/`와 CI 아티팩트에 둡니다.
 
-동굴의 실제 바닥·경사·경계는 `DungeonRelief`가 공유하고, `DungeonHazards`가 장치의 시계·피해를 소유합니다. `NativeDungeonHazards`와 HUD·지도는 같은 상태를 읽습니다. 모델 교체 경계·수명·검사는 [동굴 구조](../sjrpg_3d/docs/native-cave.md)를 따릅니다.
+동굴의 실제 바닥·경사·경계는 `DungeonRelief`가 공유하고, `DungeonHazards`가 장치의 시계·피해를 소유합니다. `NativeDungeonHazards`와 HUD·지도는 같은 상태를 읽습니다. 방별 진행은 `DungeonRooms`가 적 ID를 추적하고 HUD와 지도에 공유합니다. 모델 교체 경계·수명·검사는 [동굴 구조](../sjrpg_3d/docs/native-cave.md)를 따릅니다.

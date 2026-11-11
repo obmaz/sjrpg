@@ -38,7 +38,7 @@ func run() -> void:
 	GameState.level += 1
 	check("leveling does not rescale existing cave enemies", game.enemies[0].max_hp == hp)
 	check("sanctuary travel is disabled in cave", not game.exploration.travel("town"))
-	check("cave has only its own map markers", MapGeometry.markers(game).size() == 2+game.dungeon.hazards.traps.size())
+	check("cave has only its own map markers", MapGeometry.markers(game).size() == 2 + DungeonLayout.ROOMS.size() + game.dungeon.hazards.traps.size())
 	# Walk both branch choices through actual collision resolution, without teleporting through walls.
 	for side in [-500.0, 500.0]:
 		var current := Vector2.ZERO

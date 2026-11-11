@@ -86,6 +86,8 @@ const SCENES = {
     cave_upper: 'dungeon_preview=upper',
     cave_lower: 'dungeon_preview=lower',
     cave_room: 'dungeon_preview=room',
+    cave_room_clear: 'dungeon_preview=room_clear',
+    cave_all_clear: 'dungeon_preview=all_clear_live',
     cave_branch: 'dungeon_preview=branch',
     cave_exit: 'dungeon_preview=exit',
     elin: 'at=elin&zoom=0.8',

@@ -76,6 +76,8 @@ static func _npc(game: Node, name: String) -> Node2D:
 
 static func category(marker: Dictionary) -> String:
 	var id: String = marker["id"]
+	if id.begins_with("cave:room:"):
+		return "전투 구역"
 	if id.begins_with("hazard:spike"):
 		return "가시 함정"
 	if id.begins_with("hazard:flame"):
@@ -107,7 +109,28 @@ static func markers(game: Node) -> Array[Dictionary]:
 		)
 		var portal := game.world.get_node_or_null("CaveReturnPortal") as Node2D
 		var at := portal.position if portal != null else Iso.project(DungeonLayout.EXIT)
-		markers.append(_marker("cave:return", at, "귀환문", Color("c4a5ee"), "동굴 끝의 귀환 지점"))
+		var cleared: bool = game.dungeon.defeated == game.dungeon.total
+		markers.append(
+			_marker(
+				"cave:return",
+				at,
+				"귀환문",
+				Color("c4a5ee"),
+				"정리 완료 · 이곳에서 탐험 완료 보상 받기" if cleared else "모든 적을 정리한 뒤 탐험 완료 보상 받기"
+			)
+		)
+		if game.dungeon.rooms != null:
+			for room in DungeonLayout.ROOMS.size():
+				var ready: bool = game.dungeon.rooms.remaining[room] == 0
+				markers.append(
+					_marker(
+						"cave:room:%d" % room,
+						Iso.project(DungeonLayout.ROOMS[room]),
+						"%d번 방" % (room + 1),
+						Color("85bdaf") if ready else Color("dfc18b"),
+						game.dungeon.rooms.detail(room)
+					)
+				)
 		if game.dungeon.hazards != null:
 			for trap: DungeonTrap in game.dungeon.hazards.traps:
 				var ink := Color("e5ba6b") if trap.kind == "spike" else Color("e7866f")

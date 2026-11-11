@@ -11,6 +11,7 @@ var defeated := 0
 var total := 0
 var layout: DungeonLayout
 var hazards: DungeonHazards
+var rooms: DungeonRooms
 var _hazard_hint: DungeonHazardHint
 var art: DungeonArt
 var _root: Node2D
@@ -20,6 +21,7 @@ var _forest_chests: Array[Chest] = []
 var _forest_corpses: Array = []
 var _forest_shapes: Array[Dictionary] = []
 var _rng := RandomNumberGenerator.new()
+
 
 func setup(g: Node) -> DungeonRuntime:
 	game = g
@@ -48,6 +50,7 @@ func enter() -> bool:
 	_rng.randomize()
 	layout = DungeonLayout.new()
 	hazards = DungeonHazards.new().setup(game)
+	rooms = DungeonRooms.new()
 	remaining = DURATION
 	entry_level = GameState.level + 2
 	defeated = 0
@@ -84,7 +87,9 @@ func enter() -> bool:
 	_build_chests()
 	# The measured base extends left/back from its foot. Keep it inside the exit
 	# chamber's wall lip, beside the incoming route rather than across the cliff.
-	var portal: IsoSprite = game.village.create_portal(Iso.project(DungeonLayout.EXIT + Vector2(50, -110)))
+	var portal: IsoSprite = game.village.create_portal(
+		Iso.project(DungeonLayout.EXIT + Vector2(50, -110))
+	)
 	portal.name = "CaveReturnPortal"
 	world.add_child(portal)
 	layout.obstacles.append(Village.portal_base(portal))
@@ -97,7 +102,7 @@ func enter() -> bool:
 	game.camera.reset_smoothing()
 	game.hud._update_layout()
 	GameState.save_game()
-	game.toast("바람 동굴 · 5분 안에 적을 정리하고 마지막 귀환문으로 가세요")
+	game.hud.toast("바람 동굴 · 5분 안에 적을 정리하고 마지막 귀환문으로 가세요", _root)
 	return true
 
 
@@ -106,7 +111,9 @@ func _build_art(world: Node2D) -> void:
 	art = DungeonArt.new().setup(layout, world)
 	_root.add_child(art)
 	for polygon in layout.polygons:
-		game.map_shapes.append({"poly": polygon, "bounds": Iso.poly_bounds(polygon), "color": Color("777970")})
+		game.map_shapes.append(
+			{"poly": polygon, "bounds": Iso.poly_bounds(polygon), "color": Color("777970")}
+		)
 
 
 func _build_enemies() -> void:
@@ -116,11 +123,14 @@ func _build_enemies() -> void:
 			var enemy := Enemy.new()
 			var kind: String = ["goblin", "wolf", "boar", "skeleton"][(room + index) % 4]
 			enemy.setup(game, kind, entry_level)
-			enemy.position = center + Vector2.from_angle(index * TAU / DungeonLayout.COUNTS[room]) * 110.0
+			enemy.position = (
+				center + Vector2.from_angle(index * TAU / DungeonLayout.COUNTS[room]) * 110.0
+			)
 			enemy.patrol_center = center
 			enemy.patrol_radius = 170.0
 			game.world.add_child(enemy)
 			game.enemies.append(enemy)
+			rooms.register(enemy, room)
 			total += 1
 
 
@@ -134,19 +144,43 @@ func tick(delta: float) -> void:
 		leave("시간이 끝나 동굴 입구로 돌아왔습니다")
 
 
-func on_enemy_killed(_enemy: Enemy) -> void:
+func on_enemy_killed(enemy: Enemy) -> void:
+	if not active or rooms == null:
+		return
+	var room := rooms.defeat(enemy)
+	if room < 0:
+		return
 	defeated += 1
 	GameState.gold += 2 + entry_level
 	if _rng.randf() < 0.15:
-		var gear := Gear.roll_loot(GameState.hero_class, GameState.level, GameState.next_serial, _rng)
+		var gear := Gear.roll_loot(
+			GameState.hero_class, GameState.level, GameState.next_serial, _rng
+		)
 		if GameState.add_gear(gear):
 			game.toast("동굴 전리품 · " + gear.display_name())
 		else:
 			GameState.gold += gear.sale_value()
 
+	if not game.player.dead:
+		if defeated == total:
+			game.hud.toast("모든 방 정리 완료 · 마지막 귀환문에서 추가 보상을 받으세요", _root)
+		elif rooms.remaining[room] == 0:
+			game.hud.toast(
+				"%d번 방 정리 완료 · %d/%d개 방" % [room + 1, rooms.cleared, rooms.remaining.size()], _root
+			)
+
 
 func objective() -> String:
-	return "적 %d/%d · %d:%02d 남음 · 마지막 귀환문으로" % [defeated, total, int(remaining) / 60, int(remaining) % 60]
+	var time := "%d:%02d" % [int(remaining) / 60, int(remaining) % 60]
+	if rooms == null:
+		return "바람 동굴 · " + time
+	var next := rooms.nearest_remaining(game.player.position)
+	if next < 0:
+		return time + " · 정리 완료 · 귀환문으로"
+	return (
+		"%s · 정리 %d/%d · %d번 방 적 %d"
+		% [time, rooms.cleared, rooms.remaining.size(), next + 1, rooms.remaining[next]]
+	)
 
 
 func at_exit() -> bool:
@@ -167,6 +201,7 @@ func leave(message: String, save_progress := true) -> void:
 		return
 	active = false
 	hazards = null
+	rooms = null
 	if is_instance_valid(_hazard_hint):
 		_hazard_hint.queue_free()
 	_hazard_hint = null
@@ -209,9 +244,22 @@ func leave(message: String, save_progress := true) -> void:
 
 func _build_chests() -> void:
 	# 각 방의 구석에 보상을 두고 주 통로와 남북 갈림길의 중심선은 비운다.
-	var spots := [Vector2(850,-210),Vector2(1700,-210),Vector2(2550,210),Vector2(3400,210),Vector2(4250,-210)]
+	var spots := [
+		Vector2(850, -210),
+		Vector2(1700, -210),
+		Vector2(2550, 210),
+		Vector2(3400, 210),
+		Vector2(4250, -210)
+	]
 	for index in spots.size():
-		var kind := "gold" if index in [1,3,4] else "iron"
-		var chest := Chest.new().setup(game,10000+index,Iso.project(spots[index]),game.village.data["sprites"]["chest"],game.village.data["sprites"]["chest-broken"],kind)
+		var kind := "gold" if index in [1, 3, 4] else "iron"
+		var chest := Chest.new().setup(
+			game,
+			10000 + index,
+			Iso.project(spots[index]),
+			game.village.data["sprites"]["chest"],
+			game.village.data["sprites"]["chest-broken"],
+			kind
+		)
 		game.world.add_child(chest)
 		game.chests.append(chest)

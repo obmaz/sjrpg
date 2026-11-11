@@ -37,7 +37,14 @@ func _process(_delta: float) -> void:
 		return
 	var viewport := get_viewport_rect().size
 	size = Vector2(minf(420, viewport.x - 32), 42)
-	position = Vector2((viewport.x - size.x) * .5, viewport.y * .21)
+	var blockers: Array[Rect2] = []
+	if game.hud._toast_plaque.visible:
+		blockers.append(game.hud._toast_plaque.get_global_rect())
+	if game.hud._level_up != null and game.hud._level_up.active:
+		blockers.append(
+			LevelUpBanner.banner_rect(viewport, PanelFrame.safe_margins(get_viewport()))
+		)
+	position = fit_rect(viewport, size, blockers).position
 	_label.text = trap.title() + " · " + trap.detail()
 	if _last_phase == trap.phase:
 		return
@@ -58,3 +65,13 @@ func _process(_delta: float) -> void:
 	panel.content_margin_top = 7
 	panel.content_margin_bottom = 7
 	add_theme_stylebox_override("panel", panel)
+
+
+## 기존 보상/확인 알림과 겹치는 때만 아래로 옮긴다. 경고의 시간과 터치 영역은 바꾸지 않는다.
+static func fit_rect(view: Vector2, extent: Vector2, blockers: Array[Rect2]) -> Rect2:
+	var rect := Rect2(Vector2((view.x - extent.x) * .5, view.y * .21), extent)
+	for _pass in 2:
+		for blocker: Rect2 in blockers:
+			if rect.intersects(blocker.grow(10)):
+				rect.position.y = blocker.end.y + 12
+	return rect

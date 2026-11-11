@@ -16,6 +16,7 @@ var _toast_plaque: PanelContainer
 var _toast_queue: Array[Dictionary] = []
 var _toast_clock := 0.0
 var _toast_time := 0.0
+var _toast_owner: WeakRef
 const TOAST_PENDING_LIMIT := 4
 const TOAST_MAX_AGE := 8.0
 var _death: Control
@@ -325,37 +326,62 @@ func hide_death() -> void:
 
 
 ## Confirmations wait briefly instead of replacing a reward/level-up delivered in the same frame.
-func toast(text: String) -> void:
+func toast(text: String, lifetime: Node = null) -> void:
 	text = text.strip_edges()
-	if text.is_empty() or (_toast_time > 0.0 and _toast.text == text):
+	if (
+		text.is_empty()
+		or (_toast_time > 0.0 and _toast.text == text and _toast_owner_alive(_toast_owner))
+	):
 		return
+	_toast_queue = _toast_queue.filter(_toast_pending_valid)
 	for pending in _toast_queue:
 		if pending["text"] == text:
 			return
 	if _toast_queue.size() >= TOAST_PENDING_LIMIT:
 		_toast_queue.pop_front()
-	_toast_queue.append({"text": text, "expires": _toast_clock + TOAST_MAX_AGE})
+	_toast_queue.append(
+		{
+			"text": text,
+			"expires": _toast_clock + TOAST_MAX_AGE,
+			"owner": weakref(lifetime) if lifetime != null else null
+		}
+	)
 	if _toast_time <= 0.0:
 		_advance_toast()
+
+
+## 알림이 속한 방문/장면이 끝나면 현재 표시와 대기 항목을 함께 버린다.
+static func _toast_owner_alive(owner: WeakRef) -> bool:
+	if owner == null:
+		return true
+	var node := owner.get_ref() as Node
+	return is_instance_valid(node) and not node.is_queued_for_deletion()
+
+
+func _toast_pending_valid(pending: Dictionary) -> bool:
+	var owner: WeakRef = pending.get("owner")
+	return float(pending["expires"]) > _toast_clock and _toast_owner_alive(owner)
 
 
 func _advance_toast() -> void:
 	while not _toast_queue.is_empty():
 		var next: Dictionary = _toast_queue.pop_front()
-		if float(next["expires"]) <= _toast_clock:
+		if not _toast_pending_valid(next):
 			continue
 		_toast.text = next["text"]
+		_toast_owner = next.get("owner")
 		_toast_time = clampf(2.0 + _toast.text.length() * 0.025, 2.4, 3.6)
 		_toast_plaque.visible = not panel_open()
 		return
 	_toast.text = ""
+	_toast_owner = null
 	_toast_plaque.hide()
 
 
 func _tick_toasts(delta: float) -> void:
 	_toast_clock += delta
-	_toast_time = maxf(0.0, _toast_time - delta)
-	_toast_queue = _toast_queue.filter(func(pending): return float(pending["expires"]) > _toast_clock)
+	_toast_time = maxf(0.0, _toast_time - delta) if _toast_owner_alive(_toast_owner) else 0.0
+	_toast_queue = _toast_queue.filter(_toast_pending_valid)
 	if _toast_time <= 0.0:
 		_advance_toast()
 	_toast_plaque.modulate.a = 1.0 if Prefs.reduce_motion else clampf(_toast_time / 0.35, 0.0, 1.0)

@@ -311,7 +311,8 @@ func _read_debug_params() -> void:
 		elif (
 			kv.size() == 2 and kv[0] == "dungeon_preview"
 			and kv[1] in ["entry", "room", "branch", "exit", "upper", "lower",
-				"spikes", "spikes_warn", "spikes_live", "flame", "flame_warn", "flame_live", "entry_live"]
+				"spikes", "spikes_warn", "spikes_live", "flame", "flame_warn", "flame_live",
+				"entry_live", "room_clear", "all_clear_live"]
 		):
 			_dungeon_preview.call_deferred(kv[1])
 		elif kv.size() == 2 and kv[0] == "warp_preview" and kv[1] == "1":
@@ -513,7 +514,7 @@ func _dungeon_preview(which: String) -> void:
 		return
 	var ground := Vector2.ZERO
 	match which:
-		"room":
+		"room", "room_clear", "all_clear_live":
 			ground = DungeonLayout.ROOMS[0]
 		"branch":
 			ground = Vector2(1125, -500)
@@ -539,6 +540,10 @@ func _dungeon_preview(which: String) -> void:
 				else target.position
 			)
 
+	if which in ["room_clear", "all_clear_live"]:
+		for enemy: Enemy in enemies.duplicate():
+			if which == "all_clear_live" or enemy.patrol_center == Iso.project(DungeonLayout.ROOMS[0]):
+				enemy.take_damage(enemy.hp, null)
 	player.position = Iso.project(ground)
 	player.move_input = Vector2.ZERO
 	hud.controls.release_all()
