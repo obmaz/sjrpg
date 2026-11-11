@@ -104,7 +104,7 @@ func run() -> void:
 	game.player.position = Vector2.ZERO
 	minimap._sync_retained()
 	check("realm changes remove forest markers and terrain",
-		minimap._dots.size() == 2 and minimap._geometry.is_empty())
+		minimap._dots.size() == 1 and minimap._geometry.is_empty())
 	var cave_marker: Dictionary = MapGeometry.markers(game)[0]
 	check("cave markers retain their actual source positions and colors",
 		minimap._dots[0].position.is_equal_approx(minimap._to_map(cave_marker["pos"], game.player.position))

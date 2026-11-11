@@ -183,8 +183,17 @@ func objective() -> String:
 	)
 
 
+## 표시·지도·상호작용이 같은 실제 소품을 읽는다. 제거된 문은 빈 좌표로 대체하지 않는다.
+func return_portal() -> Node2D:
+	if not active:
+		return null
+	var portal := game.world.get_node_or_null("CaveReturnPortal") as Node2D
+	return portal if portal != null and not portal.is_queued_for_deletion() else null
+
+
 func at_exit() -> bool:
-	return game.player.position.distance_to(Iso.project(DungeonLayout.EXIT)) < 150.0
+	var portal := return_portal()
+	return portal != null and game.player.position.distance_to(portal.position) < 150.0
 
 
 func complete() -> bool:

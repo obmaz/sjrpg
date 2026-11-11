@@ -113,18 +113,18 @@ static func markers(game: Node) -> Array[Dictionary]:
 		markers.append(
 			_marker("cave:entry", Vector2.ZERO, "동굴 입구", Color("96c9ee"), "입구에서 탐험을 마칠 수 있습니다")
 		)
-		var portal := game.world.get_node_or_null("CaveReturnPortal") as Node2D
-		var at := portal.position if portal != null else Iso.project(DungeonLayout.EXIT)
-		var cleared: bool = game.dungeon.defeated == game.dungeon.total
-		markers.append(
-			_marker(
-				"cave:return",
-				at,
-				"귀환문",
-				Color("c4a5ee"),
-				"정리 완료 · 이곳에서 탐험 완료 보상 받기" if cleared else "모든 적을 정리한 뒤 탐험 완료 보상 받기"
+		var portal: Node2D = game.dungeon.return_portal()
+		if portal != null:
+			var cleared: bool = game.dungeon.defeated == game.dungeon.total
+			markers.append(
+				_marker(
+					"cave:return",
+					portal.position,
+					"귀환문",
+					Color("c4a5ee"),
+					"정리 완료 · 이곳에서 탐험 완료 보상 받기" if cleared else "모든 적을 정리한 뒤 탐험 완료 보상 받기"
+				)
 			)
-		)
 		if game.dungeon.rooms != null:
 			for room in DungeonLayout.ROOMS.size():
 				var ready: bool = game.dungeon.rooms.remaining[room] == 0

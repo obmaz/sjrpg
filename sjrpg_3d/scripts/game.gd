@@ -523,7 +523,8 @@ func _dungeon_preview(which: String) -> void:
 		"branch":
 			ground = Vector2(1125, -500)
 		"exit":
-			ground = DungeonLayout.EXIT
+			# 원래 완료 판정이 빠지던 문 반대편의 실제 보행 지점을 검수한다.
+			ground = Iso.unproject(dungeon.return_portal().position + Vector2(110, 0))
 		"upper":
 			ground = Vector2(1125, -500)
 		"lower":
