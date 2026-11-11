@@ -137,6 +137,8 @@ def main():
     if not args.asset:
         check_craft()
         check_surface_families()
+        from check_enemy_assets import check_all
+        check_all()
         check_world_sources()
 
 if __name__ == '__main__':

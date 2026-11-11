@@ -453,7 +453,7 @@ func _process(delta: float) -> void:
 	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE if frozen else SubViewport.UPDATE_ALWAYS
 	_sync_camera()
 	_sync_actor(0.0 if frozen else delta)
-	_enemy_models.sync()
+	_enemy_models.sync(0.0 if frozen else delta)
 	_enemy_feedback.sync()
 	_sync_cards()
 	_hit_feel.sync(0.0 if frozen else delta)

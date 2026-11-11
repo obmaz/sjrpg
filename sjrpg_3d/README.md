@@ -67,7 +67,7 @@ tools/check.sh --export
 
 ## 입체 배우와 UI 패밀리
 
-전사·주민 여덟 역할·기존 몬스터 다섯 종류와 시체는 발 위치·피격·사망 수명을 기존 게임에서 읽는 입체 모델을 사용합니다. [주민](docs/native-residents.md), [전사](docs/native-warrior.md), [몬스터와 시체](docs/native-enemy-models.md), [숲 장식과 랜드마크](docs/native-forest-props.md)에 제작 범위와 공유 재질을 기록합니다. 카메라는 기존 120° 직교 쿼터뷰를 유지합니다. 배우의 천·가죽·철·피부·털·바위는 [생성형 공유 표면](docs/native-actor-surfaces.md)을 실제 입체 형태에 적용합니다.
+고블린·늑대는 외부 GLB와 종별 `.tscn`을 사용하고, 남은 세 몬스터·동굴 잠복자는 절차형 모델을 유지합니다. 각 모델과 시체는 실제 발·공격·피격·사망 수명을 기존 게임에서 읽습니다. [주민](docs/native-residents.md), [전사](docs/native-warrior.md), [몬스터와 시체](docs/native-enemy-models.md), [숲 장식과 랜드마크](docs/native-forest-props.md)에 제작 범위와 공유 재질을 기록합니다. 카메라는 기존 120° 직교 쿼터뷰를 유지합니다. 배우의 천·가죽·철·피부·털·바위는 [생성형 공유 표면](docs/native-actor-surfaces.md)을 실제 입체 형태에 적용합니다.
 
 물약·하단 메뉴·직업별 아바타는 [회화형 숲 UI 패밀리](docs/woodland-ui-family.md)를 공유합니다. 스킬트리는 같은 청동·아이보리·숯색으로 상태를 구분하고, 모바일 물약과 하단 메뉴 입력 영역은 실제 CSS 크기 44px 이상으로 배치합니다.
 

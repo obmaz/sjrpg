@@ -110,6 +110,7 @@ func _rebuild() -> void:
 	body.add_child(PanelFrame.section("게임패드 조작"))
 	body.add_child(PanelFrame.wrap_label("LS 이동 · RS 조준\nA 기본 공격 / 확인 · B 회피 / 뒤로\nX · Y · RB · RT 보조 기술 1–4\nLT 대화 / 상호작용 · LB 체력 물약 · ↑ 자원 물약\n← 가방 · → 의뢰 · ↓ 스킬\nMenu 설정 · View 지도\n메뉴에서는 LS / 방향키로 선택하고 A로 확인합니다.", 16, UiKit.MUTED))
 	body.add_child(UiKit.divider())
+	_add_asset_credits()
 	_fit_zoom_targets()
 	_publish_version_buttons.call_deferred()
 
@@ -395,3 +396,15 @@ class Pill:
 		var left := 8.0 if on else size.y
 		var right := size.x - size.y if on else size.x - 8.0
 		draw_string(UiKit.BOLD_FONT, Vector2((left + right - width) / 2.0, size.y * 0.66), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 21, UiKit.TEXT)
+
+
+## 채택한 자산의 저작자·원본·라이선스와 수정 표기를 설정에서 읽을 수 있게 한다.
+func _add_asset_credits() -> void:
+	body.add_child(PanelFrame.section("아트 출처"))
+	for kind: String in DirAccess.get_directories_at("res://assets/models/enemies"):
+		var path := "res://assets/models/enemies/%s/asset.json" % kind
+		if not FileAccess.file_exists(path):
+			continue
+		var source: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+		var credit: String = "%s: %s · %s\n원본: %s\n라이선스: %s\n게임용으로 수정해 사용했습니다." % [source["display_name"], source["author"], source["license"], source["source_url"], source["license_url"]]
+		body.add_child(PanelFrame.wrap_label(credit, 15, UiKit.MUTED))

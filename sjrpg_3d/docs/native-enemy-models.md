@@ -1,91 +1,43 @@
-# Native enemy model family
+# 몬스터 모델과 애니메이션
 
-NativeEnemyModels replaces the five stage-one enemy card archetypes with lit,
-closed-volume articulated models. Source geometry is reproducible GDScript,
-not an imported skeletal asset or a camera-facing picture.
+몬스터 교체의 기본 형식은 **GLB + 몬스터별 `visual.tscn`**입니다. GLB는 메시·UV·재질·골격·클립을 담고, 씬은 모델·피격용 피벗·효과 부착점을 조립합니다. AI·실제 이동·충돌·피해·체력·저장·시체 수명은 기존 `Enemy`와 `SpatialWorld3D`가 소유합니다. 직교45°/35.2643897° 카메라는 모델 형식과 독립적입니다.
 
-The goblin has an authored brow, cheek, pointed nose and ears, segmented leather
-tunic, diagonal strap, belt and boots. The skeleton has an empty ribcage, spine,
-pelvis, separate thigh/shin bones, knees/ankles/toes, skull, recessed framed
-sockets, mandible and teeth. The golem uses irregular offset faceted slabs and
-joint gaps rather than cubes or rounded capsules. Wolves use lean withers,
-a long tapered muzzle, segmented legs/hocks, paws and a tapered downward tail.
-Boars use the heavier barrel, paired curved tusks, cloven hooves and a low rough
-bristle crest. Weapons have a separate grip, guard and tapered blade; shields
-have five boards, binding rails and a central boss.
+| 종류 | 현재 표시 자산 | 원본·동작 |
+| --- | --- | --- |
+| 고블린 | `assets/models/enemies/goblin/{model.glb,visual.tscn,asset.json}` | CDmir·TinyWorlds의 CC0 고블린. 원본의 idle/run/attack/death와 별도 피격 클립, 짧은 칼을 사용합니다. |
+| 늑대 | `assets/models/enemies/wolf/{model.glb,visual.tscn,asset.json}` | CoinCoin의 CC BY4.0 늑대. 원본의 idle/run/attack/hit/death를 사용합니다. |
+| 멧돼지·스켈레톤·골렘·동굴 잠복자 | `assets/models/enemies/shared/procedural.gd` | 아직 교체하지 않은 절차형 자산입니다. GLB로 전환했다고 표시하지 않습니다. |
 
-Generated shared flat cloth/leather/iron/skin/fur/rock materials come from
-NativeActorMaterials. Textures are cached and triplanar; materials are cloned
-per actor so status tint, contact flash and death alpha cannot mutate another
-actor or corpse. The skeleton's pale bone uses the neutral skin swatch alias.
-Material source/prompt provenance belongs to the shared atlas contract.
+고블린은3,664삼각형·3서피스·46관절·정점당 최대8가중치, 늑대는1,334삼각형·1서피스·32관절·최대4가중치입니다. 고블린의 원본 가중치를4개로 제한하면 한 정점에서 최대 약30%를 버리므로8개를 사용합니다. 최대 버림 비율은 약1.41%이며 새 원본에서는 실제 값과 화면을 다시 검사합니다. 두 모델의 색 텍스처는 원본1024px/256px을 사용합니다. 몸에서 분리되는 원본 Neck 장식은 제외합니다. 원본의 미사용 UV·페인트 마스크를 잘못 glTF의 첫 UV/정점색으로 전달하지 않습니다. 런타임의 메시·애니메이션은 공유하고, 각 인스턴스의 골격·플레이어·피격 재질은 분리합니다. 이 예산은 실기기 FPS 보장이 아닙니다.
 
-XZ floor/Y-up and +Z front follow the shared 120-degree orthographic contract.
-Mesh resources are cached by archetype, joint and palette role. Authored pieces
-are merged by material inside each independently posed joint. No colliders are
-added. Native actor_foot owns elevation; sprite recoil and contact squash are
-presentation offsets. Facing, actual walk distance, attack state timers,
-flash/tint and death alpha are observed from the original actor. No independent
-animation or gameplay clock is introduced. The leg pivots compensate for the
-pendulum's vertical lift so walking does not lift both feet off the floor.
-Dying actors remain weakly referenced through the original 0.18-second fade.
+## 게임과 표시의 연결
 
-Enemy.NATIVE_HEIGHT_METRES is the single native height policy: goblin 1.30m,
-wolf 1.13m, boar 1.22m, skeleton 1.70m and golem 2.85m. The legacy atlas catalogue
-heights remain as source provenance. Enemy.setup sets body_height to those metres
-times 65*Iso.S, which also moves health bars, hit feedback and corpse size with
-the body. Enemy collider height uses this value directly; the former additional
-1.25 multiplier remains only on existing non-enemy adapters.
+`NativeEnemyModels`는 표시 어댑터입니다. `NativeEnemyAssets`가 종별 폴더의 `visual.tscn`을 찾아 캐시하며, 새로 교체한 종을 위해 공용 생성기에 분기를 추가할 필요가 없습니다. 씬 루트의 `NativeEnemyVisual`은 GLB의 `AnimationPlayer`를 수동 시계로 샘플링합니다. 각 모델의 `asset.json`에는 실제 클립 이름·길이·타격 시각·기준 높이·사망 자세의 접지 높이가 있습니다.
 
-NativeEnemyModels measures every actual resting vertex through all descendant
-local transforms once per species, caches that AABB, moves its minimum Y to zero
-and stores the measured height as base_height. Live bodies and corpses use the
-same body_height/(65*Iso.S)/base_height scalar. The source JUICE contact squash
-temporarily modifies live visual scale but does not enlarge the collider or corpse.
-The player warrior has its own NativeWarrior3D model family and is not changed.
+기존 준비/회복 진행도의0.60이 실제 피해 판정 시점입니다. 어댑터는 각 공격 클립의 `contact_time`을 이 시점에 맞추고, 끝에서 같은 idle로 돌아갑니다. 기존 보행 주기를 달리기 클립에 연결하며 별도 root motion으로 몸체를 이동시키지 않습니다. idle만 표시기의 전달된 delta로 진행하고 일시정지·개별 hitstop 때 고정합니다. 화면 밖 모델은 포즈·색·그림자 갱신을 생략합니다. 피격은 씬의 `HitPivot`에 적용하고 실제 캡슐이나 발 위치를 옮기지 않습니다.
 
-The species footprint is Enemy.radius, a read-only getter of radius_for(kind):
-goblin/skeleton 25px, wolf 36px, boar 38px and golem 44px. At the shared horizontal
-projection these are about .324/.466/.492/.570m. Actual low-stance radii measured
-from the normalized mesh vertices were .215/.265/.430/.458/.516m respectively;
-the selected capsules cover the measured stance plus the .015m native skin.
-Enemy.RADIUS remains 25px only as a generic fallback before a species is known.
-Long tails, snouts, weapons and shoulder overhang are not treated as solid feet.
+공격을 포함한 최종 LBS 스킨의 접지를 오프라인에서 보정합니다. 시체는 실제 death 클립의 마지막 스킨 자세를 사망 위치 중심에 정렬해 고정합니다. 바인드 자세 AABB를 눕힌 것으로 접지를 추정하지 않습니다. 오프라인에서 측정한 마지막 자세의 최저점을 `HitPivot`에 반영해 지면에 맞추고, 시체 루트는 실제 바닥 위0.012m에 놓습니다. 현재의0.18초 사망 페이드·30초 시체 수명·소모·동굴/숲 소유권은 유지합니다.
 
-Movement, knockback, native body registration/rebuild, teleports, area broad
-phase, ordinary projectile targets, wave placement and survivor restore all use
-the same instance/kind radius. Explicit custom projectile radii remain respected.
-Ambient spawn chooses the kind before its native overlap query. Encounter waves
-revalidate a generic candidate after choosing the kind, and pack spacing/separation
-use the two actors' actual radii. Monster-boundary collision is never relaxed to
-fit a larger model. AI attack reach,
-damage, health, speed, experience and save formats are unchanged.
+`Enemy.NATIVE_HEIGHT_METRES`가 게임의 크기 기준이며 현재는 고블린1.69m, 늑대1.469m, 멧돼지1.586m, 스켈레톤2.21m, 골렘3.705m입니다. 새 모델은 미터·Y-up·정면+Z·발 원점·단위 배율로 내보냅니다. 기준 높이는 바인드/제작 자세이며 숨쉬기·웅크림·공격 중 모든 포즈가 같은 높이라는 뜻은 아닙니다. 이동/공격/투사체는 기존 캡슐을 공유합니다. 외부 생물의 보행 중 발끝·꼬리·무기 돌출은 별도 충돌체가 아니며, 실제 몸통 중심·벽 접근·공격 도달을 함께 검수합니다.
 
-Corpse visuals reuse the corresponding model rotated prone. The full transformed
-mesh bounds place the resting body on its actual floor. CorpseArt.opacity with
-the actual remaining time/lifetime and used flag owns visibility and expiry.
-Forest/cave ownership follows the current source corpse list.
+## 제작·재현·출처
 
-Validation includes native_enemy_models normals/all-axis volume/material light,
-real joint pose changes, alpha, and the 6k-triangle/20-mesh upper bound. The
-ortho_3d_preview integration case checks no duplicate enemy card, real visual
-recoil/flash at native feet, dying fade after removal from the live array, and
-the native corpse's original opacity/expiry. Four-facing gallery screenshots
-and real portrait/landscape gameplay review remain required for adoption.
+변환기는 `tools/enemy_art/export_enemy.py`이며 Blender4.3.2로 기존 골격의 월드 변화를 새 미터/FK 기준에 구워30fps 클립을 내보냅니다. 새 EditBone은 길이를 먼저 정한 뒤 방향을 적용하고, 원본 대비 기준 행렬 오차를 검사합니다. 모델과 함께 inverse bind·메시·관절 이동을 변환하며 원본 제어용 뼈를 런타임 스킨에서 제외합니다. 좌우 방향과 root 이동을 정리하고 공격의 처음/끝은 같은 idle 자세로 연결합니다.
 
-## Native size validation
+원본 파일·파일 URL·원문 페이지·라이선스·원본/런타임 해시·변환 측정은 `assets/source/enemies/<kind>/`에 보존하며 배포물에서는 제외합니다. 원본 잠금과 원문 라이선스 확인 없이 새 다운로드로 바꾸지 않습니다. 늑대의 CC BY4.0 저작자·원본·라이선스·수정 표기는 게임 설정의 ‘아트 출처’에도 표시합니다.
 
-native_enemy_scale creates a real game after native readiness, uses the actual
-outside-town spawn search, and builds each species through Enemy.setup and the
-normal presenter. It measures transformed mesh vertices in metres; compares
-sprite height, physics capsule and visual top/foot; checks walking and hit/death
-presentation retain native feet/base scale; tests default versus explicit
-projectile radii; and verifies the real death corpse uses the same scale and floor.
-PASS NATIVE_SIZE_METRES logs actual mesh bounds and capsule dimensions for CI review.
+저장소 루트에서 다음 명령으로 보존한 원본에서 다시 만듭니다. 네트워크나 유료 서비스는 필요하지 않습니다.
 
-native_enemy_radius additionally checks real open-gate exclusion for all species,
-bridge clearance under existing native rules, the actual boss-clearing spawn,
-all real cave spawns and a large boar traversing the native narrow cave branch.
-The existing encounters persistence test now preserves the largest pack member
-and verifies its restored native body metadata, legal position and pair spacing
-against the species radii.
+```sh
+python3 sjrpg_3d/tools/enemy_art/rebuild.py --kind goblin
+python3 sjrpg_3d/tools/enemy_art/rebuild.py --kind wolf
+python3 sjrpg_3d/tools/check_enemy_assets.py
+```
+
+새 GLB를 다시 만든 후 원본 잠금은 유지하고, 실제 변환 결과·death 접지 값·클립 길이/타격 시각·런타임/변환기 해시를 검수해 갱신합니다. `model.bake.json`은 임시 변환 결과이며 런타임 폴더에 남기지 않고 소스의 `conversion.json`으로 정리합니다.
+
+## 검수
+
+`native_enemy_assets`는 실제 스킨 정점 변화·공격의 타격 시각·독립 골격/피격 재질·공유 메시/클립·사망 접지를 검사합니다. 남은 절차형의 닫힌 부피/법선은 `native_enemy_models`와 `native_enemy_attack`에서 검사합니다. `native_enemy_recipe_cache`는 두 방식의 공유 리소스·독립 인스턴스·반복 생성·시체 위치 캐시를, `native_enemy_scale`은 원래 게임의 높이·캡슐·공격·피격·시체와 실제 지형을 함께 검사합니다.
+
+`tools/preview3d/render_enemy_pilot.tscn`은 현재 씬의 네 방향과 idle/run/attack/death를 같은 광원·직교 카메라에서 촬영합니다. 실제 게임의 가로/세로·일시정지·지역 전환·타격도 함께 확인합니다. 격리된 모델 렌더나 테스트 통과만으로 스타일·모바일 성능이 승인됐다고 판단하지 않습니다. 일회성 비교와 성능 기록은 저장소 루트 `build/`에만 둡니다.

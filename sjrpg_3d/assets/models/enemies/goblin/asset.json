@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "kind": "goblin",
+  "model": "model.glb",
+  "height_m": 1.69,
+  "clips": {
+    "idle": {
+      "name": "idle",
+      "length": 3.7333333333333334
+    },
+    "run": {
+      "name": "run",
+      "length": 1.3333333333333333
+    },
+    "attack": {
+      "name": "attack",
+      "length": 1.0333333333333334,
+      "contact_time": 0.6333333333333333
+    },
+    "death": {
+      "name": "death",
+      "length": 2.1
+    },
+    "hit": {
+      "name": "hit",
+      "length": 0.3
+    }
+  },
+  "death_floor_m": 0.0,
+  "author": "CDmir, TinyWorlds",
+  "license": "CC0-1.0",
+  "source_url": "https://opengameart.org/content/goblin-1",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "changes": "미터 배율·축·발 원점 정규화, 제자리 FK 동작 변환, 무광 재질. 고블린은 짧은 칼과 피격 동작 추가. 실제 런타임 스킨의 접지 보정과 사망 자세 중심 정렬. 원본 애니메이션에서 분리되는 Neck 장식 제외.",
+  "body_core_bones": [
+    "spine1",
+    "spine2",
+    "spine3",
+    "spine4"
+  ],
+  "collision_policy": "기존 게임 캡슐이 몸통 중심을 담당한다. 보행 중 발끝·꼬리·무기는 시각적 돌출이며 별도 충돌체가 아니다.",
+  "display_name": "고블린"
+}

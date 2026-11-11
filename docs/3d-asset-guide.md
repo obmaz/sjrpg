@@ -210,7 +210,7 @@ validation: <tests, actual paired browser captures, remaining asset gaps>
 
 ## Web·Android 텍스처 전달
 
-3D판의 현재 GPU 압축 대상은 `sjrpg_3d/assets/data/texture_policy.json`의 불투명 월드17장입니다. `mode=2`, `high_quality=false`로 S3TC/ETC2를 생성하고 두 플랫폼에 필요한 변형을 실제 패키지에서 확인합니다. UI·효과·알파 잎·작은 얼굴/눈·유리에는 기존 `mode=1`과 알파·밉맵 설정을 유지합니다. 새로운 에셋도 먼저 보호 대상으로 시작하고 실제 양 코덱의 품질을 검수해 허용 목록을 갱신합니다.
+3D판의 현재 GPU 압축 대상은 `sjrpg_3d/assets/data/texture_policy.json`의 불투명 월드56장입니다. `mode=2`, `high_quality=false`로 S3TC/ETC2를 생성하고 두 플랫폼에 필요한 변형을 실제 패키지에서 확인합니다. UI·효과·알파 잎·작은 얼굴/눈·유리에는 기존 `mode=1`과 알파·밉맵 설정을 유지합니다. 새로운 에셋도 먼저 보호 대상으로 시작하고 실제 양 코덱의 품질을 검수해 허용 목록을 갱신합니다.
 
 이미지를 다시 만들거나 해상도를 낮추는 작업과 GPU 압축을 구분합니다. 파일 해시·논리 해상도는 유지하며 코덱의 저장 블록 정렬은 별도로 기록합니다. 임포트 설정은 `tools/import_project.sh`를 통해 적용하고 기존 UID를 임의 재작성하지 않습니다. [플랫폼 설정과 실제 검수](../sjrpg_3d/docs/platform-exports.md)에 Web PCK·Android APK 검증과 메모리 수치의 범위를 기록합니다.
 
@@ -221,3 +221,5 @@ validation: <tests, actual paired browser captures, remaining asset gaps>
 예배당은 사용자의 최신 지시에 따라 창·문·석재 세공을 면 전체 생성형 이미지로 표현할 수 있습니다. 실제 기준은 `approved-game-reference.jpg`이며 파생 원화를 기준으로 대체하지 않습니다. 몸체·돌출 입구·두 박공 지붕·종탑·계단은 고정된 입체이고, 그림의 깊이를 실제 개구부/세공 기하로 주장하지 않습니다.
 
 예배당의 전면 이미지는 정면 높이 구간별 UV를 사용해 장미창·창 머리가 세로로 늘어나지 않도록 합니다. `assets/models/architecture/chapel/facade.gd`와 그림 위 실제 몰딩이 `asset.json`의 같은 좌표 표를 읽습니다. 예배당의 약7단 석재 채움은2.24m 타일로 약0.32m 단 높이를 맞추며, 지붕은 기존 공유 슬레이트 배율을 사용합니다.
+
+신규 몬스터 교체는 GLB와 자산별 `.tscn`을 기본으로 합니다. 현재 고블린·늑대부터 적용하며 [몬스터 제작/게임 연결 계약](../sjrpg_3d/docs/native-enemy-models.md)을 따릅니다. GLB는 형상·골격·클립, 씬은 조립/편집, 게임 코드는 물리·AI·피해·저장을 소유합니다. 이동 캡슐은 몸통 중심의 물리 기준이며 움직이는 발끝·꼬리·무기를 각각 충돌체로 등록하지 않습니다.

@@ -83,3 +83,7 @@ KayKit 1.0 기록을 현재 itch의 Adventurers **2.0** 무료5종 설명과 섞
 두 팩 모두 glTF는 Godot4.7.2의 출발 형식일 뿐, 가져오기·충돌·프레임 예산 검증을 통과했다는 뜻은 아닙니다. 실제 검수 시 선택 조각을 **오프라인에서 균일한 미터 배율**로 맞추고, 현재 석재 단 높이0.32m·문 순폭/순높이·기단·배우 캡슐 통과·성문 힌지/바깥 열림 규칙과 비교합니다. 축마다 다르게 늘여 줄눈과 문틀을 맞추지 않습니다.
 
 카메라는 기존45°/35.264° 직교와120° 투영 축을 유지합니다. 네 방향에서 앞·뒤·옆면, 벽 상단/하단의 평행선, 지붕 양 경사와 코너 접점을 확인하고 같은 배우·빛·줌의 세로/가로 비교를 남깁니다. 파일럿 조합이 유료 부분에만 있거나 실제 ZIP의 License가 공식 소개와 다르면 그 후보를 도입하지 않고 취득 기록부터 다시 확인합니다.
+
+## 고블린·늑대의 실제 채택 원본
+
+고블린은 CDmir·TinyWorlds의 [Goblin](https://opengameart.org/content/goblin-1), CC0-1.0의 `goblin-FINAL.blend`입니다. Danimal의 다른 고블린/무기 팩과 혼동하지 않습니다. 늑대는 CoinCoin의 [[Animated] Wolf](https://opengameart.org/content/animated-wolf), CC-BY-4.0의 `low-poly-wolf.zip`입니다. 모델과 원본 클립을 변환했으며 저작자·원본 URL·라이선스 URL·게임용 수정 표기를 설정 ‘아트 출처’에 표시합니다. 원문 페이지·원본 파일·라이선스 법률문(SPDX 보존문)·잠금 해시·변환/런타임 기록은 `sjrpg_3d/assets/source/enemies/{goblin,wolf}/`에 있습니다. GLB·씬·검수와 현재 적용 범위는 [몬스터 안내](../sjrpg_3d/docs/native-enemy-models.md)를 따릅니다.

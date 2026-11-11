@@ -38,7 +38,7 @@
   "implementation": [
     {
       "path": "scripts/native_enemy_models.gd",
-      "sha256": "b892a77e79973c8947ec37065376badb799fe76a9e109fbc1f3ba25aa3f3362c"
+      "sha256": "8b18924d3bba995b3fad10ffb3118b609bb717d505e0bf2119d346320eb49f3a"
     },
     {
       "path": "assets/models/environment/cave_entrance/plan.gd",
@@ -123,6 +123,18 @@
     {
       "path": "assets/models/materials/terrain/surfaces.gd",
       "sha256": "0c1a1a87241b34c1bbcfb215f1fdf08c79ecfbfa4e04e6c82b79918dff72fcfc"
+    },
+    {
+      "path": "assets/models/enemies/shared/catalog.gd",
+      "sha256": "b4c7ad43454a9c5cc3dd6a58225ab62f2887b6d8fc3ebd47139ba22ae1c2dae0"
+    },
+    {
+      "path": "assets/models/enemies/shared/visual.gd",
+      "sha256": "6c6dc382163a7619f6384d37d1a8544a9392ef21a138c9b99dfb0fc288283435"
+    },
+    {
+      "path": "assets/models/enemies/shared/procedural.gd",
+      "sha256": "e8a68199ecb4d27517b7f7a8783db943171644bb18de2f1674f226b58eed1f0e"
     }
   ],
   "roofed_corner_revision": {

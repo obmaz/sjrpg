@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "kind": "wolf",
+  "model": "model.glb",
+  "height_m": 1.469,
+  "clips": {
+    "idle": {
+      "name": "idle",
+      "length": 1.3
+    },
+    "run": {
+      "name": "run",
+      "length": 0.6
+    },
+    "attack": {
+      "name": "attack",
+      "length": 1.9,
+      "contact_time": 1.4333333333333333
+    },
+    "hit": {
+      "name": "hit",
+      "length": 1.2
+    },
+    "death": {
+      "name": "death",
+      "length": 0.8666666666666667
+    }
+  },
+  "death_floor_m": -2.9802322387695312e-08,
+  "author": "CoinCoin",
+  "license": "CC-BY-4.0",
+  "source_url": "https://opengameart.org/content/animated-wolf",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "changes": "미터 배율·축·발 원점 정규화, 제자리 FK 동작 변환, 무광 재질. 실제 런타임 스킨의 접지 보정과 사망 자세 중심 정렬.",
+  "body_core_bones": [
+    "bassin",
+    "spine1",
+    "spine2",
+    "spine3",
+    "thorax"
+  ],
+  "collision_policy": "기존 게임 캡슐이 몸통 중심을 담당한다. 보행 중 발끝·꼬리·무기는 시각적 돌출이며 별도 충돌체가 아니다.",
+  "display_name": "늑대"
+}

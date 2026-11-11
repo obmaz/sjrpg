@@ -1,0 +1,19 @@
+{
+  "author": "CoinCoin",
+  "license": "CC-BY-4.0",
+  "source_url": "https://opengameart.org/content/animated-wolf",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "license_text_url": "https://raw.githubusercontent.com/spdx/license-list-data/main/text/CC-BY-4.0.txt",
+  "download_url": "https://opengameart.org/sites/default/files/low-poly-wolf.zip",
+  "original": "original.zip",
+  "original_sha256": "6ea91928a630225fdd7dd76a84371d2390fe78be8e07bc410681e7b5e87e79be",
+  "original_bytes": 3096809,
+  "payload_sha256": "2743e7cfba22433bc466be6300889b3b9032a542650b51595ba3f480fbb6f939",
+  "license_sha256": "d557539df68e771cc1eedcc91d13f70fca930e508d11eedcafa4b15db49e3744",
+  "runtime": "assets/models/enemies/wolf/model.glb",
+  "runtime_sha256": "1420c3d510413399098beefa266adaa7843d9bb22756fdc8faa6b6a68a07ecae",
+  "conversion": "conversion.json",
+  "converter": "tools/enemy_art/export_enemy.py",
+  "changes": "미터 배율·축·발 원점 정규화, 제자리 FK 동작 변환, 무광 재질. 실제 런타임 스킨의 접지 보정과 사망 자세 중심 정렬.",
+  "converter_sha256": "4e4f8deb21c40b713e1ac75bf7fae83a81d98f500ede908e9311f71c9331626d"
+}

@@ -1,0 +1,19 @@
+{
+  "author": "CDmir, TinyWorlds",
+  "license": "CC0-1.0",
+  "source_url": "https://opengameart.org/content/goblin-1",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "license_text_url": "https://raw.githubusercontent.com/spdx/license-list-data/main/text/CC0-1.0.txt",
+  "download_url": "https://opengameart.org/sites/default/files/goblin-FINAL.blend",
+  "original": "original.blend",
+  "original_sha256": "cec34eb0c06d6efd35b42f8a70c7921a0d404aa6755ac6ba526a6b4585faab1a",
+  "original_bytes": 7498900,
+  "payload_sha256": "cec34eb0c06d6efd35b42f8a70c7921a0d404aa6755ac6ba526a6b4585faab1a",
+  "license_sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+  "runtime": "assets/models/enemies/goblin/model.glb",
+  "runtime_sha256": "9c4b8a2ae23f884391061c694f0ea3acec4d26ed7a336b17d248c06e946d74d1",
+  "conversion": "conversion.json",
+  "converter": "tools/enemy_art/export_enemy.py",
+  "changes": "미터 배율·축·발 원점 정규화, 제자리 FK 동작 변환, 무광 재질. 고블린은 짧은 칼과 피격 동작 추가. 실제 런타임 스킨의 접지 보정과 사망 자세 중심 정렬. 원본 애니메이션에서 분리되는 Neck 장식 제외.",
+  "converter_sha256": "4e4f8deb21c40b713e1ac75bf7fae83a81d98f500ede908e9311f71c9331626d"
+}

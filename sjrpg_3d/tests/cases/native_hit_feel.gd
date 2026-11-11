@@ -37,9 +37,25 @@ func run() -> void:
 	var torso: Node3D = model["torso"]
 	var first_lean := Vector2(torso.rotation.x, torso.rotation.z)
 	check("confirmed hit tilts real chest and head while keeping the collision foot", first_lean.length() > 0.15 and foe.position == at and float(model["hit_lean"]) > 0.2)
-	var shoulder: Node3D = model["arms"][0]
-	var shoulder_anchor: Vector3 = model["arm_origins"][0] - model["torso_origin"]
-	check("shoulder anchors stay attached to the recoiling ribcage", (torso.transform.affine_inverse() * shoulder.position).distance_to(shoulder_anchor) < 0.001)
+	if model.has("visual"):
+		var visual: NativeEnemyVisual = model["visual"]
+		NativeEnemyModels.pose(model, foe.facing, 0.0, 0.0)
+		visual.skeleton.force_update_all_bone_transforms()
+		var bone := visual.skeleton.find_bone("shoulder_R")
+		var bone_pose := visual.skeleton.get_bone_global_pose(bone).origin
+		var resting := visual.skeleton.global_transform * bone_pose
+		var local_anchor := torso.global_transform.affine_inverse() * resting
+		NativeEnemyModels.hit_reaction(model, foe)
+		var recoiling := visual.skeleton.global_transform * bone_pose
+		check(
+			"skinned shoulder stays attached to the actual recoil pivot",
+			resting.distance_to(recoiling) > .001
+			and (torso.global_transform.affine_inverse() * recoiling).distance_to(local_anchor) < .001
+		)
+	else:
+		var shoulder: Node3D = model["arms"][0]
+		var shoulder_anchor: Vector3 = model["arm_origins"][0] - model["torso_origin"]
+		check("shoulder anchors stay attached to the recoiling ribcage", (torso.transform.affine_inverse() * shoulder.position).distance_to(shoulder_anchor) < 0.001)
 	var hit_age := foe.hit_reaction_age
 	foe._process(0.01)
 	check("victim flinch shares its bounded local hit-stop", foe.hit_reaction_age == hit_age)

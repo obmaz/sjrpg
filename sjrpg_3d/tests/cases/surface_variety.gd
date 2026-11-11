@@ -19,14 +19,20 @@ func run() -> void:
 		var root: Node3D = model["root"]
 		var curved := 0
 		for mesh: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
-			var arrays: Array = mesh.mesh.surface_get_arrays(0)
-			var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-			var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
-			for i: int in range(0, points.size(), 3):
-				var face: Vector3 = (points[i + 2] - points[i]).cross(points[i + 1] - points[i]).normalized()
-				var alignment: float = face.dot(normals[i])
-				if alignment > 0.1 and alignment < 0.995:
-					curved += 1
+			for surface in mesh.mesh.get_surface_count():
+				var arrays: Array = mesh.mesh.surface_get_arrays(surface)
+				var points: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+				var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+				var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
+				var count := indices.size() if not indices.is_empty() else points.size()
+				for i: int in range(0,count,3):
+					var a: int = indices[i] if not indices.is_empty() else i
+					var b: int = indices[i+1] if not indices.is_empty() else i+1
+					var c: int = indices[i+2] if not indices.is_empty() else i+2
+					var face := (points[c]-points[a]).cross(points[b]-points[a]).normalized()
+					var alignment := face.dot(normals[a])
+					if alignment > .1 and alignment < .995:
+						curved += 1
 		check("organic anatomy exports real smooth corner normals " + kind, curved > 30)
 		root.free()
 	game.queue_free()
