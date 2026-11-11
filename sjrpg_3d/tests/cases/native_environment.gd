@@ -41,7 +41,7 @@ func run() -> void:
 			hidden_headers = hidden_headers and not (header["root"] as Node3D).visible
 		check("town resident headers remain hidden in cave", hidden_headers)
 		var rock: Dictionary = environment.cave.get_meta("native_cave_rock")
-		check("cave rock uses bounded native chunks rather than painted wall strips", int(rock["groups"]) <= 8 and int(rock["segments"]) > 10 and int(rock["triangles"]) < 20000)
+		check("cave rock keeps independent connected wall objects within its triangle budget", int(rock["groups"]) == int(rock["segments"]) and int(rock["segments"]) > 10 and int(rock["triangles"]) < 20000)
 		game.dungeon.leave("")
 		check("cave return never shows source canvas even transiently", not game.field_root.visible)
 		preview._sync_scope()

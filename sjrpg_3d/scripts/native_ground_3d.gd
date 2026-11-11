@@ -1,8 +1,6 @@
 class_name NativeGround3D
 extends RefCounted
 ## 길 거리장과 실제 강둑·동굴 하강로 위에 생성형 재질을 놓는다.
-const BASE := "res://assets/art/preview3d/generated-ground-base.png"
-const EDGE := "res://assets/art/preview3d/generated-ground-edge.png"
 const GRASS := "res://assets/art/preview3d/generated-grass-variety.png"
 const FIELD := "res://assets/data/native_ground_field.json"
 const TILE_METRES := 2.56
@@ -25,10 +23,9 @@ static func build(preview: Node) -> MeshInstance3D:
 	var extent: Array = record["extent"]
 	var material := ShaderMaterial.new()
 	material.shader = _shader
-	material.set_shader_parameter("base_atlas", load(BASE))
-	material.set_shader_parameter("edge_atlas", load(EDGE))
 	material.set_shader_parameter("grass_atlas", load(GRASS))
-	material.set_shader_parameter("village_craft", load(NativeVillageSurfaces.ROOT + "masonry.png"))
+	for variant in 6:
+		material.set_shader_parameter("paving_%d"%variant,load("res://assets/models/materials/paving/paving-%d.png"%variant))
 	var town := PackedVector2Array()
 	for point: Vector2 in preview.game.village.safe_zone:
 		town.append(Iso.unproject(point) / Ortho3DPreview.GROUND_PER_METER)
@@ -42,6 +39,8 @@ static func build(preview: Node) -> MeshInstance3D:
 	material.set_shader_parameter("site_rock",load("res://assets/models/environment/cave_entrance/albedo.png"))
 	material.set_shader_parameter("world_to_cave",NativeCavePlan.frame(Iso.project(preview.game.village.cave_ground)+NativeCavePlan.ENTRY_OFFSET).affine_inverse())
 	material.set_shader_parameter("cave_trail",NativeCaveTrail.points(preview.game.village))
+	var trail_bounds := NativeCaveTrail.bounds(preview.game.village)
+	material.set_shader_parameter("cave_trail_bounds",Vector4(trail_bounds.position.x,trail_bounds.position.y,trail_bounds.end.x,trail_bounds.end.y))
 	material.set_shader_parameter("field_origin", Vector2(origin[0], origin[1]))
 	material.set_shader_parameter("field_extent", Vector2(extent[0], extent[1]))
 	var faces := NativeGroundRelief.faces(preview.game.village)
@@ -53,7 +52,7 @@ static func build(preview: Node) -> MeshInstance3D:
 	var ground: MeshInstance3D = preview._mesh(plane, material, Vector3.ZERO)
 	ground.name = "NativeNaturalGround"
 	ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	ground.set_meta("native_ground", {"base_variants": 4, "edge_variants": 4, "grass_variants":4,"tile_metres": TILE_METRES, "road_count": record["roads"].size(), "surfaces": 1, "collision_changes": 1, "height_bias": 0.0})
+	ground.set_meta("native_ground", {"base_variants": 6, "edge_variants": 6, "paving_tile_metres":3.2, "grass_variants":4,"tile_metres": TILE_METRES, "road_count": record["roads"].size(), "surfaces": 1, "collision_changes": 1, "height_bias": 0.0})
 	return ground
 
 static func roads_match(roads: Array[PackedVector2Array]) -> bool:

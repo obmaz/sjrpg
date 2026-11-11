@@ -7,7 +7,7 @@
   "family": "assets/data/cave_art.json",
   "generator": {
     "path": "scripts/ortho_3d_cave_rock.gd",
-    "sha256": "a5465e8a3104c9f1e7217ebc877072b38bbfc53a8858ca130dd5652f5b9b0efb",
+    "sha256": "83782c17e719b1fad2f6652b8fd3a5bf4dbbf35f632c1e447947ff7f3096328b",
     "method": "Original closed native profile extrusion, vertices and miters preserved. Each chunk separates actual inner faces from ridge/exposed faces. Upright inner metric UVs and normal-aware world-metre outer rock mapping; no source image or physics edits. Exact emitted cross-sections are retained as read-only wall-attachment metadata; no rock vertex or triangle is changed."
   },
   "material": {
@@ -34,12 +34,10 @@
     "rear_chamber_height_max": 3.5,
     "rear_corridor_height": 1.45,
     "front_cutaway_height": 0.45,
-    "chunk_length": 12,
     "triangle_budget": 20000,
-    "chunk_budget": 8,
-    "actual_runtime_counts": "Existing closed-volume triangle/chunk budgets retained. Actual material/UV/closed-edge and floor-layout guards must pass on this candidate.",
-    "surface_budget": 16,
-    "material_boundary": "Original PROFILE[4] ridge; inner faces0–3, exposed faces4–7. Positions/triangle winding/camera/physics unchanged."
+    "actual_runtime_counts": "native_cave_geometry가 원래 경계 수와 모델 수의 일치·닫힌 삼각형·2재질·예산을 검사한다.",
+    "material_boundary": "Original PROFILE[4] ridge; inner faces0–3, exposed faces4–7. Positions/triangle winding/camera/physics unchanged.",
+    "grouping": "원래 연결된 직선 벽 구간마다 하나의 가림 오브젝트; 안쪽/바깥쪽 두 재질을 함께 투명화한다."
   },
   "replacement": {
     "metadata": "cave_role",
@@ -69,8 +67,8 @@
     "lamp_mount": "Existing ten lights follow enlarged wall torches at actual inner-wall triangle contacts; no additional local light or shadow pass."
   },
   "validation": {
-    "headless": "Pending current native_cave_geometry/native_environment/dungeon_art checks; original geometric, collision, ownership and lighting assertions retained.",
-    "gpu_and_paired_captures": "Pending paired actual entry/room/branch portrait and landscape captures; no visual approval inferred from constants or metadata."
+    "headless": "native_cave_geometry와 cave_treasure가 기하·출처·실제 플레이어 시선 가림/복원·몬스터 제외를 검사한다.",
+    "gpu": "입구·방·갈림길의 실제 가로/세로 화면을 확인한다. 일회성 캡처는 build/에 둔다."
   },
   "outer_material": {
     "path": "assets/art/village/rock.webp",

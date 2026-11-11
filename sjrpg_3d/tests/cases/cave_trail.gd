@@ -10,10 +10,32 @@ func run() -> void:
 	var frame := NativeCaveTrail.frame(game.village)
 	var points := NativeCaveTrail.points(game.village)
 	var start: Vector2 = game.village.sanctuary_points["cave"]
-	var expected := SpatialWorld3D.projected(frame * Vector3(points[0].x, 0, points[0].y))
+	var expected := SpatialWorld3D.projected(frame * Vector3(points[5].x, 0, points[5].y))
 	check(
-		"cave waypoint starts the marked approach beside the expanded cave",
-		start.distance_to(expected) < 0.01 and points[0].y >= 38.0 and points[0].y < 48.0
+		"field trail joins the cave waypoint before the descent",
+		start.distance_to(expected) < 0.01 and points[5].y >= 38.0 and points[5].y < 48.0
+	)
+	start = SpatialWorld3D.projected(frame * Vector3(points[0].x, 0, points[0].y))
+	check(
+		"trail branches directly from the existing south field road",
+		Iso.unproject(start).distance_to(Vector2(0, 6500)) < .01
+	)
+	check(
+		"three actual signs share the route plan",
+		(
+			NativeCaveTrail.signs(game.village).size() == 3
+			and (
+				(
+					game
+					. ortho_preview
+					. _world_environment
+					. forest
+					. find_children("CaveTrailSign*", "Node3D", true, false)
+					. size()
+				)
+				== 3
+			)
+		)
 	)
 	game.spatial_world.teleport_source_actor(game.player, start, Player.RADIUS)
 	var reached := true
@@ -21,7 +43,7 @@ func run() -> void:
 		var destination := SpatialWorld3D.projected(
 			frame * Vector3(points[index].x, 0, points[index].y)
 		)
-		for step in 500:
+		for step in 1100:
 			if game.player.position.distance_to(destination) < 3.0:
 				break
 			game.spatial_world.move_source_actor(
@@ -33,11 +55,11 @@ func run() -> void:
 			game.village.near_water(Iso.unproject(destination), 0.0)
 		)
 	check(
-		"the real player can follow every dirt-trail bend downhill",
+		"the real player can walk from the field road through every trail bend downhill",
 		reached and game.spatial_world.height_at(game.player.position) < -1.0
 	)
 	var mouth := SpatialWorld3D.projected(frame * Vector3(0, 0, 0.4))
-	for step in 500:
+	for step in 1100:
 		if game.player.position.distance_to(mouth) < 3.0:
 			break
 		game.spatial_world.move_source_actor(

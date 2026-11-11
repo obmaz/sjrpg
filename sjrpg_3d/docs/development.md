@@ -36,7 +36,9 @@
 
 `assets/source/`는 승인 스타일, 생성 원본, 라이선스·출처·재생성 기록입니다. 게임 패키지에는 넣지 않지만 재현에 필요한 입력이므로 유지합니다. `assets/art/`와 `assets/data/`는 실제 런타임 리소스입니다. 경로 이름만으로 미사용 여부를 판단하지 않습니다.
 
-주택·예배당의 `NativeAssetSurface`는 `fullFacade`의 벽 한 면 전체를 처마/박공 높이에 맞춰 한 번 배치합니다. `infillOnly` 원화에 문·창·기둥 그림을 넣지 않고 실제3D 구멍과 골조가 경계를 만듭니다. `NativeVillageSurfaces`는 전용 생성형 목재·석재·기와 조각을 공유하며 기단/계단/덮개와 광장 포장을 구별합니다. 원본·참조 해시·협업 경계는 [에셋 협업](asset-workflow.md)을 따릅니다.
+주택의 `NativeAssetSurface`는 `fullFacade`의 벽 한 면 전체를 처마/박공 높이에 맞춰 한 번 배치합니다. `infillOnly` 원화에 문·창·기둥 그림을 넣지 않고 실제3D 구멍과 골조가 경계를 만듭니다. `NativeVillageSurfaces`는 전용 생성형 목재·석재·기와 조각을 공유하며 기단/계단/덮개와 광장 포장을 구별합니다. 원본·참조 해시·협업 경계는 [에셋 협업](asset-workflow.md)을 따릅니다.
+
+예배당은 사용자가 재확인한 실제 게임 화면을 기준으로 전체 면 원화를 입힌 입체 구조를 사용합니다. 돌출 입구·두 박공·열린 종탑과 L자 몸체/왼쪽 계단은 [예배당](native-chapel-refinement.md)의 공유 설계를 따릅니다.
 
 데이터 추출물은 `tools/extract/`에서 재생성합니다. 수치 단위는 원본 단위이며 HUD 체력·피해는100배, 자원은10배로 표시합니다. 조정은 추출 JSON을 수동 변경하는 대신 별도 설정으로 적용합니다.
 
@@ -84,19 +86,21 @@ tools/serve.sh
 
 [에셋 협업](asset-workflow.md)의 폴더 계약을 사용합니다. 건물 다섯 종류는 `assets/models/architecture/<id>/asset.json`의 생성형 네 면 표면을 사용하며 다리는 같은 계열의 석재/덮개/포장을 적용합니다. `NativeAssetSurface`는 전역 목록 없이 폴더를 읽습니다. 동굴 입구는 `assets/models/environment/cave_entrance/`에서 밀도장으로 조형하고 구운 `model.res`를 표시와 실제 삼각형 SOLID에 함께 사용합니다. 공통 윤곽·좌표계·하강로는 `plan.gd`가 담당합니다. 생성 원본·프롬프트·해시는 `assets/source/architecture/`에 보존합니다. 일회성 비교 리뷰와 후보 원화는 현재 제작 규격에 섞지 않습니다.
 
-
 ## 낮은 강과 야외 웨이포인트
 
 `NativeGroundRelief`는 낮은 강바닥·완만한 강둑·다리 양 끝의 흙 교대·동굴 하강로를 하나의 정점 집합으로 만듭니다. `NativeGround3D` 표시 메시와 `SpatialWorld3D`의 FLOOR가 그 정점을 공유합니다. 강 수면은-1.2m, 깊은 바닥은-1.85m이고, 다리의 기존0m 보행면은 유지합니다. 육지의 대부분은3m, 강둑·동굴 주변만0.5m로 나누며 공유 모서리의 높이는 한 번만 계산하며 같은 필드 규격의 정점 집합을 재사용합니다.
 
-야외 tree/cave 지점은 `assets/models/environment/waypoint/`의10cm 돌 기단과 문양입니다. `SpatialWorld3D.terrain_surfaces()`가 기단의 실제 FLOOR를 공유하고 표시기의 원점은 주변 지면 높이에 고정합니다. `Village._waypoint_clearing()`이 강·건물·높은 지형·동굴에서 떨어진 빈 위치를 선택하고, 표식은 SOLID를 만들지 않습니다. `Exploration.on_waypoint()`가 실제 발 위치로 첫 활성화를 검사하고 기존 `discovered_sanctuaries`에 저장합니다. 단순 근접이나 미활성 상태의 안식처 접근은 첫 발견을 대신하지 않습니다. 공용 표시기는 저장 상태를 읽어 어두운 회색→차분한 석재색과 네 대각 모퉁이의 작은 불/비그림자 광원을 함께 전환합니다. 큰 중앙 광원이나 청록색 발광 고리는 사용하지 않습니다. 첫 발견은 `RewardFx.discover_waypoint()`로 기존 금빛 원화와 실제 링 메시를1.6초 표시하고 `LevelUpBanner`에 장소 이름과 활성화 안내를2.6초 보여 줍니다. `waypoint_position`이 실제 기단의 고정 원점이며 움직이는 영웅을 따라가지 않습니다. 재방문·저장 재개는 재생하지 않고, 준비 완료 전에는 자동 발견을 진행하지 않습니다. 일시정지는 효과와 알림의 시계를 함께 멈춥니다. 동시 레벨업은 우선 표시한 뒤 발견 알림을 이어서 보여 줍니다. 실제 첫 활성화 검수는 `at=waypoint_cave_active&waypoint_preview=1&probe=1`로 고정할 수 있습니다. 마을의 수직 워프문과 동굴 귀환문은 유지합니다.
+포장6종의 원본·프롬프트·실제 첨부 참조와 해시는 `assets/source/materials/paving/`에 있습니다. `assets/models/materials/paving/surface.gdshaderinc`가 고정된 월드 좌표에서 호환되는 재질을 구역별로 혼합합니다. `NativeGround3D`는6개 밉맵/VRAM 압축 텍스처를 같은 지면 재질에 연결하며, 길 거리장·보행 충돌·강둑 고저차를 보존합니다. `native_ground.gdshader`의 미세 요철은 광원용 법선이며 개별 돌을 이동 장애물로 만들지 않습니다. `natural_ground`가6종 실파일·해시·바인딩·거리장을 검사하고 실제 브라우저에서 혼합 경계를 확인합니다.
 
+야외 tree/cave 지점은 `assets/models/environment/waypoint/`의10cm 돌 기단과 문양입니다. `SpatialWorld3D.terrain_surfaces()`가 기단의 실제 FLOOR를 공유하고 표시기의 원점은 주변 지면 높이에 고정합니다. `Village._waypoint_clearing()`이 강·건물·높은 지형·동굴에서 떨어진 빈 위치를 선택하고, 표식은 SOLID를 만들지 않습니다. `Exploration.on_waypoint()`가 실제 발 위치로 첫 활성화를 검사하고 기존 `discovered_sanctuaries`에 저장합니다. 단순 근접이나 미활성 상태의 안식처 접근은 첫 발견을 대신하지 않습니다. 공용 표시기는 저장 상태를 읽어 어두운 회색→차분한 석재색과 네 대각 모퉁이의 작은 불/비그림자 광원을 함께 전환합니다. 큰 중앙 광원이나 청록색 발광 고리는 사용하지 않습니다. 첫 발견은 `RewardFx.discover_waypoint()`로 기존 금빛 원화와 실제 링 메시를1.6초 표시하고 `LevelUpBanner`에 장소 이름과 활성화 안내를2.6초 보여 줍니다. `waypoint_position`이 실제 기단의 고정 원점이며 움직이는 영웅을 따라가지 않습니다. 재방문·저장 재개는 재생하지 않고, 준비 완료 전에는 자동 발견을 진행하지 않습니다. 일시정지는 효과와 알림의 시계를 함께 멈춥니다. 동시 레벨업은 우선 표시한 뒤 발견 알림을 이어서 보여 줍니다. 실제 첫 활성화 검수는 `at=waypoint_cave_active&waypoint_preview=1&probe=1`로 고정할 수 있습니다. 마을의 수직 워프문과 동굴 귀환문은 유지합니다.
 
 ## 확장한 숲과 암반 골짜기
 
 `ForestRegion`의 실제 지면 범위는(-3600,-3600)에서(10800,10800)입니다. 마을·북서 경계를 유지한 채 가로·세로가 각각2배이며 `Game.FIELD`, 물리 외곽, 지도, 생성 지형이 같은 범위를 사용합니다. 나무·수풀·돌의 필드 배치 수는 면적에 맞춰 늘리고 모델·재질·공간 묶음은 공유합니다.
 
-동굴은 지면 좌표(7600,7600)의 독립 암반 지대에 있습니다. `NativeCavePlan.approach_height()`와 `NativeGroundRelief`가 약20m의 하강로,3.2m의 바깥 고저차와1.2m의 안쪽 하강을 함께 만듭니다. 암반 측면·바닥은 생성형 돌/자갈 원화를 사용하며, 포장길이나 웨이포인트를 암반 지대에 겹쳐 배치하지 않습니다. `frame()`의 실제 원점은 주변 땅보다3.2m 낮습니다. 동굴 웨이포인트는 과거 의뢰 위치 대신 하강로 전방 약40m의 열린 곳을 기준으로 선택합니다. `NativeCaveTrail`의 미터 단위5개 경유점을 지면 셰이더·식생 제외·실제 통행 테스트가 공유합니다. 생성형 흙/자갈 표면은 기존 지면 메시 위에 폭이 불규칙한 흙길로 혼합하며 새 평면이나 포장길을 겹치지 않습니다.
+동굴은 지면 좌표(7600,7600)의 독립 암반 지대에 있습니다. `NativeCavePlan.approach_height()`와 `NativeGroundRelief`가 약20m의 하강로,3.2m의 바깥 고저차와1.2m의 안쪽 하강을 함께 만듭니다. 암반 측면·바닥은 생성형 돌/자갈 원화를 사용하며, 포장길이나 웨이포인트를 암반 지대에 겹쳐 배치하지 않습니다. `frame()`의 실제 원점은 주변 땅보다3.2m 낮습니다. 동굴 웨이포인트는 과거 의뢰 위치 대신 하강로 전방 약40m의 열린 곳을 기준으로 선택합니다. `NativeCaveTrail`의 남쪽 필드 길 분기점부터 웨이포인트를 거치는 미터 단위10개 경유점을 지면 셰이더·식생 제외·실제 통행 테스트가 공유합니다. 생성형 흙/자갈 표면은 기존 지면 메시 위에 폭이 불규칙한 흙길로 혼합하며 새 평면이나 포장길을 겹치지 않습니다. `NativeCaveTrailMarkers3D`의 세 목재 표지는 같은 계획에서 위치·진행 방향을 읽고 `SpatialWorld3D`가 유한한 기둥 충돌을 만듭니다. `cave_trail`은 필드부터 입구까지 실제 캡슐 이동을 검사합니다.
+
+동굴 상자·내구력·금속 표면·지역별 표시 수명은 [입체 소품](native-encounter-props.md), 크기·배치·보상 계약은 [상자 규격](native-chest-scale.md)에 정리합니다. `Ortho3DCaveRock`은 연결된 원래 벽 구간별로 안/바깥 재질을 한 가림 오브젝트로 묶습니다. 떨어진 벽을 X좌표만으로 합치지 않으며 `cave_treasure`가 실제 가림 시선·복원·몬스터 제외를 검사합니다.
 
 강은 동쪽 경계까지 연장하고 다리의 지면X는9000으로 옮깁니다. 도로/강 거리장은 `capture_road_geometry.tscn`과 `bake_ground_field.py`로 함께 재생성합니다. `native_river.gdshader`는 시간에 따라 두 물결 표면을 이동시키고 이동 포말·수면 법선을 갱신합니다. 정적 메시를 매 프레임 다시 만들지 않으며 일시정지에는 같은 phase를 유지합니다.
 

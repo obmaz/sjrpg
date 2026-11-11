@@ -31,7 +31,7 @@ func run() -> void:
 			center += point
 		center /= water.size()
 		check("waterfall pool blocks movement", game._blocked(center, Player.RADIUS))
-	check("waterfall treasure is on a dry path", waterfall.contains_top(game.chests[8].position) and not game._blocked(game.chests[8].position + Vector2(50, 0), Player.RADIUS))
+	check("waterfall treasure is on a dry path", waterfall.contains_top(game.chests[8].position) and not game._blocked(game.chests[8].position + Vector2(Chest.COLLISION_RADIUS + Player.RADIUS + 10.0, 0), Player.RADIUS))
 	var roads := 0
 	for shape in game.map_shapes:
 		if shape["poly"] == game.village.map_roads[0]:

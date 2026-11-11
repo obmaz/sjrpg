@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Record code-built volume and reused family sources; never generate/paint art."""
+"""입체 소품 실측과 현재 공유 재질·생성형 상자 표면 출처를 기록한다."""
 from __future__ import annotations
 import argparse
 import hashlib
@@ -20,12 +20,10 @@ def main() -> None:
     parser.add_argument("--browser-proof", type=Path)
     args = parser.parse_args()
     destination = ROOT / "assets/data/native_encounter_props.json"
-    previous = json.loads(destination.read_text()) if destination.is_file() else {}
     family = json.loads((ROOT / "assets/art/preview3d/materials.json").read_text())
     stone_px = family["materials"]["limestone"]["size"][0]
     stone_tile = family["physical_scale"]["limestone_tile_m"]
-    timber_px = family["materials"]["timber"]["size"][0]
-    texel_density = f"{stone_px}px limestone:{stone_px / stone_tile:.2f}px/m; timber:{timber_px * .65:.2f}px/m. No normal/roughness image maps invented."
+    texel_density = f"{stone_px}px limestone:{stone_px / stone_tile:.2f}px/m. 상자는 각 면 원화를 한 번 배치한다. 별도 법선/거칠기 이미지는 없다."
     lines = args.log.read_text().splitlines()
     metrics = [json.loads(line.removeprefix("NATIVE_ENCOUNTER_METRICS ")) for line in lines if line.startswith("NATIVE_ENCOUNTER_METRICS ")]
     if len(metrics) != 1 or not any(line.startswith("PASS native_encounter_props") for line in lines):
@@ -46,36 +44,25 @@ def main() -> None:
             "interpretation": "Actual coordinated captures were inspected separately; recording evidence is not automatic style approval.",
         }
     document = {
-        "scope": "Existing Stage1 forest encounter stones and all existing chests only; source2D project unchanged.",
-        "method": "Reproducible native full-volume mesh construction. No new image/model generation, image painting, relighting or baked shadows.",
+        "scope": "숲1장 비석·목재 상자와 선택형 동굴의 쇠·황금 상자. 2D판은 동결한다.",
+        "method": "실제 입체 상자와 힌지·내부·철물을 공유 메시로 만들고, 생성형 평면 알베도로 쇠·황금 표면을 구분한다.",
         "reference": source("assets/source/style/approved-game-reference.jpg"),
         "source_art": [source(path) for path in ["assets/art/village/encounter-stone.webp", "assets/art/village/remake-chest.webp", "assets/art/village/remake-chest-broken.webp"]],
         "shared_family_provenance": source("assets/art/preview3d/materials.json"),
-        "shared_textures": [source("assets/art/preview3d/" + name + ".webp") for name in ["limestone", "timber"]],
-        "new_texture_bytes": 0,
+        "shared_textures": [source("assets/art/preview3d/" + name + ".webp") for name in ["limestone"]] + [source("assets/models/materials/chests/albedo.png")],
+        "metal_surface_provenance": source("assets/source/materials/chests/provenance.json"),
+        "new_texture_bytes": (ROOT / "assets/models/materials/chests/albedo.png").stat().st_size,
         "new_binary_model_bytes": 0,
         "generators": [source("scripts/" + name) for name in ["native_encounter_mesh_3d.gd", "native_encounter_props_3d.gd", "native_chest_material.gdshader"]],
-        "materials": {"stone": "Existing shared front-on generated limestone, 2.56m world tile / 8 courses; instance tint observes source flash.", "chest": "Existing shared front-on generated timber, .65 UV scale (1.538m tile), and shared iron colour/roughness/metallic response selected by geometry vertex mask. No painted iron overlay.", "texel_density": texel_density, "limitations": "Reused generated albedos retain fine authored self-relief, not measured PBR scans."},
+        "materials": {"stone": "Existing shared front-on generated limestone, 2.56m world tile / 8 courses; instance tint observes source flash.", "chest": "목재·쇠·황금의 앞면·옆면·펼친 곡면 뚜껑 전용 원화를 면 전체 UV로 한 번 배치한다. 실제 철물 정점 마스크와 면 영역을 정점색으로 보존한다.", "texel_density": texel_density, "limitations": "Reused generated albedos retain fine authored self-relief, not measured PBR scans."},
         "coordinates": {"units": "metres", "up": "+Y", "ground": "XZ", "forward": "+Z", "baked_scale": [1, 1, 1], "camera_azimuth": 45, "camera_elevation": 35.2643897},
         "geometry": metrics[0],
         "stone_footprint_m": [.8, 32 / 65],
         "stone_height_m": 1.58,
-        "chest_proportion_change": "The old ~111.7-world-unit target sprite was replaced by a below-knee-height physical chest bounded by its existing 24px-radius cylinder; the old source card was much wider/taller than that inset physical collider. The original centre/ground source point, collider and consumed lifetime remain unchanged.",
-        "ownership": {"stone": "Only the art instance IDs of the exact six EncounterStone owners; excludes only those old environment cards.", "chest": "Only current Chest.body_sprite IDs; breaking replaces this sprite identity. Affordances remove the previous fallback and retain fallback when no model is owned.", "regions": "Explicit forest scope plus source-local visibility; hidden adapter ancestors are ignored. Native roots hidden in cave and cleaned when owners leave the source world.", "runtime": "Read-only EncounterRuntime states/charges/recharge/living/can_summon, EncounterStone source tint/flash and Chest.dead. No visual timer, altered collision or extra rewards."},
+        "chest_scale": "기존 입체 상자 대비 세 축2배. 닫힌1.140×1.058×0.750m; PROP 반경60투영단위(0.777m), 높이1.06m. 표시 배율(1,1,1). ChestPlacement가 기단 경계·건물·나무를 피해 숲 상자를 배치하고 저장 ID는 보존한다.",
+        "ownership": {"stone": "Only the art instance IDs of the exact six EncounterStone owners; excludes only those old environment cards.", "chest": "Only current Chest.body_sprite IDs; breaking replaces this sprite identity. Affordances remove the previous fallback and retain fallback when no model is owned.", "regions": "현재 지역의 소스만 표시한다. 동굴에서는 숲 모델을 숨겨 보관하고 새 동굴 상자만 표시하며, 복귀 시 숲의 소모 상태를 복원한다.", "runtime": "표시기는 실제 비석 상태와 Chest.dead/hp/variant만 읽는다. 보상·내구력은 Chest와 Game이 소유하고 공간 충돌은 SpatialWorld3D가 소유한다."},
         "validation": {"headless": "native_encounter_props PASS; actual source strike/open, capsule collider release, hinge-volume check, hidden/cave/return/deletion ownership.", "gpu": gpu, "review_fixture_source": source("scripts/native_encounter_review.gd"), "review_fixture": "Explicit loot_review=1 in a fresh isolated browser profile only. Official create_slot binds a unique test session before original source state methods. Same source anchors and fixed120 camera; optional native-model rotation checks unseen faces, optional original-art cards provide same-world comparison."},
     }
-    # Refresh measured sources without discarding the adopted enlargement,
-    # authoritative placement correction or previously qualified GPU evidence.
-    for key in ("chest_proportion_change", "placement_correction", "shared_family_update"):
-        if key in previous:
-            document[key] = previous[key]
-    if "runtime" in previous.get("ownership", {}):
-        document["ownership"]["runtime"] = previous["ownership"]["runtime"]
-    validation = dict(previous.get("validation", {}))
-    validation.update({key: value for key, value in document["validation"].items() if key != "gpu"})
-    if args.browser_proof or "gpu" not in validation:
-        validation["gpu"] = gpu
-    document["validation"] = validation
     destination.write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n")
     print(destination.relative_to(ROOT))
 

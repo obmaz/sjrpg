@@ -76,6 +76,7 @@ func enter() -> bool:
 	GameState.location_mode = "cave"
 	_build_art(world)
 	_build_enemies()
+	_build_chests()
 	# The measured base extends left/back from its foot. Keep it inside the exit
 	# chamber's wall lip, beside the incoming route rather than across the cliff.
 	var portal: IsoSprite = game.village.create_portal(Iso.project(DungeonLayout.EXIT + Vector2(50, -110)))
@@ -192,3 +193,13 @@ func leave(message: String, save_progress := true) -> void:
 	if save_progress:
 		GameState.save_game()
 	game.toast(message)
+
+
+func _build_chests() -> void:
+	# 각 방의 구석에 보상을 두고 주 통로와 남북 갈림길의 중심선은 비운다.
+	var spots := [Vector2(850,-210),Vector2(1700,-210),Vector2(2550,210),Vector2(3400,210),Vector2(4250,-210)]
+	for index in spots.size():
+		var kind := "gold" if index in [1,3,4] else "iron"
+		var chest := Chest.new().setup(game,10000+index,Iso.project(spots[index]),game.village.data["sprites"]["chest"],game.village.data["sprites"]["chest-broken"],kind)
+		game.world.add_child(chest)
+		game.chests.append(chest)

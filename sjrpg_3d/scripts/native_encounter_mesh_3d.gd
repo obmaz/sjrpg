@@ -3,8 +3,8 @@ extends RefCounted
 ## Reproducible, fully sided metre geometry. No camera-facing asset planes.
 
 const STONE_SIZE := Vector3(0.80, 1.58, 32.0 / 65.0)
-## All authored chest coordinates are baked 25% larger; native nodes stay scale ONE.
-const CHEST_SCALE := 1.25
+## 현재 요청에 따라 기존 상자의 각 축을 2배로 굽는다. 노드 배율은 ONE이다.
+const CHEST_SCALE := 2.50
 const CHEST_COLLISION_HEIGHT := 0.424 * CHEST_SCALE
 const CHEST_WIDTH := 0.44
 const CHEST_DEPTH := 0.26
@@ -16,6 +16,7 @@ var _tools := {}
 var _triangles := 0
 var _unit: Array
 var _merge_wood_iron := false
+var _barrel_lid := false
 
 
 static func build() -> Dictionary:
@@ -28,43 +29,82 @@ static func build() -> Dictionary:
 	base._chest_base()
 	var lid := NativeEncounterMesh3D.new()
 	lid._merge_wood_iron = true
+	lid._barrel_lid = true
 	lid._chest_lid()
 	var broken := NativeEncounterMesh3D.new()
 	broken._merge_wood_iron = true
 	broken._splinters()
-	return {"stone": stone._finish(), "glyph": glyph._finish(), "base": base._finish(),
-		"lid": lid._finish(), "splinters": broken._finish(),
+	return {
+		"stone": stone._finish(),
+		"glyph": glyph._finish(),
+		"base": base._finish(),
+		"lid": lid._finish(),
+		"splinters": broken._finish(),
 		"stone_triangles": stone._triangles + glyph._triangles,
-		"chest_triangles": base._triangles + lid._triangles + broken._triangles}
+		"chest_triangles": base._triangles + lid._triangles + broken._triangles
+	}
 
 
 func _stone() -> void:
 	_box(Vector3(0, 0.035, 0), Vector3(0.80, 0.07, STONE_SIZE.z), "stone")
 	_box(Vector3(0, 0.115, 0), Vector3(0.72, 0.09, 0.42), "stone")
 	_box(Vector3(0, 0.185, 0), Vector3(0.64, 0.05, 0.35), "stone")
-	_prism(PackedVector2Array([Vector2(-0.25, 0.21), Vector2(0.25, 0.21), Vector2(0.25, 1.43), Vector2(0.19, 1.51), Vector2(0, 1.58), Vector2(-0.21, 1.51), Vector2(-0.25, 1.44)]), 0.26, Transform3D.IDENTITY, "stone")
+	_prism(
+		PackedVector2Array(
+			[
+				Vector2(-0.25, 0.21),
+				Vector2(0.25, 0.21),
+				Vector2(0.25, 1.43),
+				Vector2(0.19, 1.51),
+				Vector2(0, 1.58),
+				Vector2(-0.21, 1.51),
+				Vector2(-0.25, 1.44)
+			]
+		),
+		0.26,
+		Transform3D.IDENTITY,
+		"stone"
+	)
 	for side in [-1.0, 1.0]:
 		for end in [-1.0, 1.0]:
 			_box(Vector3(side * 0.29, 0.30, end * 0.15), Vector3(0.075, 0.22, 0.075), "stone")
 		# Both faces have a real shallow frame around an inlaid marker.
-		var face := Transform3D(Basis(Vector3.UP, 0.0 if side > 0 else PI), Vector3(0, 0, side * 0.131))
-		var diamond := PackedVector2Array([Vector2(0, 0.68), Vector2(0.145, 1.04), Vector2(0, 1.40), Vector2(-0.145, 1.04)])
+		var face := Transform3D(
+			Basis(Vector3.UP, 0.0 if side > 0 else PI), Vector3(0, 0, side * 0.131)
+		)
+		var diamond := PackedVector2Array(
+			[Vector2(0, 0.68), Vector2(0.145, 1.04), Vector2(0, 1.40), Vector2(-0.145, 1.04)]
+		)
 		for edge in 4:
 			var a := diamond[edge]
 			var b := diamond[(edge + 1) % 4]
 			var vector := b - a
-			var transform := face * Transform3D(Basis(Vector3.FORWARD, atan2(vector.x, vector.y)), Vector3((a.x + b.x) * 0.5, (a.y + b.y) * 0.5, 0.012))
+			var transform := (
+				face
+				* Transform3D(
+					Basis(Vector3.FORWARD, atan2(vector.x, vector.y)),
+					Vector3((a.x + b.x) * 0.5, (a.y + b.y) * 0.5, 0.012)
+				)
+			)
 			_box_at(transform, Vector3(0.035, vector.length() + 0.018, 0.025), "stone")
 
 
 func _glyph() -> void:
 	for side in [-1.0, 1.0]:
-		var face := Transform3D(Basis(Vector3.UP, 0.0 if side > 0 else PI), Vector3(0, 0, side * 0.133))
-		var outer := PackedVector2Array([Vector2(0, 0.72), Vector2(0.118, 1.04), Vector2(0, 1.36), Vector2(-0.118, 1.04)])
+		var face := Transform3D(
+			Basis(Vector3.UP, 0.0 if side > 0 else PI), Vector3(0, 0, side * 0.133)
+		)
+		var outer := PackedVector2Array(
+			[Vector2(0, 0.72), Vector2(0.118, 1.04), Vector2(0, 1.36), Vector2(-0.118, 1.04)]
+		)
 		_prism(outer, 0.008, face, "iron")
-		var diamond := PackedVector2Array([Vector2(0, 0.78), Vector2(0.089, 1.04), Vector2(0, 1.30), Vector2(-0.089, 1.04)])
+		var diamond := PackedVector2Array(
+			[Vector2(0, 0.78), Vector2(0.089, 1.04), Vector2(0, 1.30), Vector2(-0.089, 1.04)]
+		)
 		_prism(diamond, 0.008, face.translated_local(Vector3(0, 0, 0.006)), "rune")
-		var core := PackedVector2Array([Vector2(0, 0.94), Vector2(0.043, 1.04), Vector2(0, 1.14), Vector2(-0.043, 1.04)])
+		var core := PackedVector2Array(
+			[Vector2(0, 0.94), Vector2(0.043, 1.04), Vector2(0, 1.14), Vector2(-0.043, 1.04)]
+		)
 		_prism(core, 0.008, face.translated_local(Vector3(0, 0, 0.011)), "iron")
 
 
@@ -74,17 +114,34 @@ func _chest_base() -> void:
 	for side in [-1.0, 1.0]:
 		_box(Vector3(0, 0.16, side * 0.118), Vector3(CHEST_WIDTH, 0.24, 0.024), "wood")
 		_box(Vector3(side * 0.208, 0.16, 0), Vector3(0.024, 0.24, CHEST_DEPTH - 0.048), "wood")
-		for level in [0.075, 0.255]:
-			_box(Vector3(0, level, side * 0.133), Vector3(CHEST_WIDTH + 0.008, 0.037, 0.008), "iron")
-			_box(Vector3(side * 0.224, level, 0), Vector3(0.008, 0.037, CHEST_DEPTH + 0.008), "iron")
+		for level in [0.0672, 0.238]:
+			_box(
+				Vector3(0, level, side * 0.133), Vector3(CHEST_WIDTH + 0.008, 0.033, 0.008), "iron"
+			)
+			_box(
+				Vector3(side * 0.224, level, 0), Vector3(0.008, 0.033, CHEST_DEPTH + 0.008), "iron"
+			)
 		for end in [-1.0, 1.0]:
-			_box(Vector3(side * 0.145, 0.16, end * 0.133), Vector3(0.025, 0.20, 0.008), "iron")
+			_box(Vector3(side * 0.145, 0.16, end * 0.133), Vector3(0.036, 0.24, 0.008), "iron")
 			for level in [0.08, 0.25]:
 				_octahedron(Vector3(side * 0.145, level, end * 0.141), 0.009, "iron")
 		# Actual rear hinge knuckles remain with the box, while the lid pivots here.
 		_box(Vector3(side * 0.145, CHEST_RIM - 0.014, -0.135), Vector3(0.052, 0.035, 0.025), "iron")
-	_box(Vector3(0, 0.228, 0.139), Vector3(0.055, 0.080, 0.012), "iron")
-	_box(Vector3(0, 0.237, 0.147), Vector3(0.012, 0.025, 0.006), "iron")
+	# 생성한 정면 그림의 중앙 방패형 잠금쇠와 같은 위치·윤곽이다.
+	_prism(
+		PackedVector2Array(
+			[
+				Vector2(-.040, .235),
+				Vector2(.040, .235),
+				Vector2(.035, .180),
+				Vector2(0, .145),
+				Vector2(-.035, .180)
+			]
+		),
+		.009,
+		Transform3D(Basis.IDENTITY, Vector3(0, 0, .1455)),
+		"iron"
+	)
 
 
 func _chest_lid() -> void:
@@ -95,7 +152,9 @@ func _chest_lid() -> void:
 		profile.append(Vector2(LID_RADIUS * cos(angle), LID_RADIUS * sin(angle)))
 	for index in range(12, -1, -1):
 		var angle: float = PI * index / 12.0
-		profile.append(Vector2((LID_RADIUS - 0.018) * cos(angle), (LID_RADIUS - 0.018) * sin(angle)))
+		profile.append(
+			Vector2((LID_RADIUS - 0.018) * cos(angle), (LID_RADIUS - 0.018) * sin(angle))
+		)
 	var origin := Vector3(0, 0, LID_RADIUS)
 	_prism(profile, CHEST_WIDTH, Transform3D(rotation, origin), "wood")
 	var end_profile := PackedVector2Array()
@@ -103,24 +162,56 @@ func _chest_lid() -> void:
 		var angle: float = PI * index / 12.0
 		end_profile.append(Vector2(LID_RADIUS * cos(angle), LID_RADIUS * sin(angle)))
 	for side in [-1.0, 1.0]:
-		_prism(end_profile, 0.016, Transform3D(rotation, origin + Vector3(side * (CHEST_WIDTH * 0.5 - 0.008), 0, 0)), "wood")
+		_prism(
+			end_profile,
+			0.016,
+			Transform3D(rotation, origin + Vector3(side * (CHEST_WIDTH * 0.5 - 0.008), 0, 0)),
+			"wood"
+		)
 		var band := PackedVector2Array()
 		for index in 13:
 			var angle: float = PI * index / 12.0
-			band.append(Vector2((LID_RADIUS + 0.007) * cos(angle), (LID_RADIUS + 0.007) * sin(angle)))
+			band.append(
+				Vector2((LID_RADIUS + 0.007) * cos(angle), (LID_RADIUS + 0.007) * sin(angle))
+			)
 		for index in range(12, -1, -1):
 			var angle: float = PI * index / 12.0
-			band.append(Vector2((LID_RADIUS + 0.001) * cos(angle), (LID_RADIUS + 0.001) * sin(angle)))
+			band.append(
+				Vector2((LID_RADIUS + 0.001) * cos(angle), (LID_RADIUS + 0.001) * sin(angle))
+			)
 		_prism(band, 0.027, Transform3D(rotation, origin + Vector3(side * 0.145, 0, 0)), "iron")
 		for index in [1, 4, 7, 10]:
 			var angle: float = PI * index / 12.0
-			_octahedron(Vector3(side * 0.145, (LID_RADIUS + 0.011) * sin(angle), LID_RADIUS + (LID_RADIUS + 0.011) * cos(angle)), 0.007, "iron")
+			_octahedron(
+				Vector3(
+					side * 0.145,
+					(LID_RADIUS + 0.011) * sin(angle),
+					LID_RADIUS + (LID_RADIUS + 0.011) * cos(angle)
+				),
+				0.007,
+				"iron"
+			)
 
 
 func _splinters() -> void:
 	for side in [-1.0, 1.0]:
-		var points := PackedVector2Array([Vector2(-0.032, 0), Vector2(0.029, 0), Vector2(0.009, 0.070), Vector2(-0.008, 0.040), Vector2(-0.020, 0.095)])
-		_prism(points, 0.018, Transform3D(Basis(Vector3.UP, side * 0.25), Vector3(side * 0.12, CHEST_RIM - 0.018, 0.065)), "wood")
+		var points := PackedVector2Array(
+			[
+				Vector2(-0.032, 0),
+				Vector2(0.029, 0),
+				Vector2(0.009, 0.070),
+				Vector2(-0.008, 0.040),
+				Vector2(-0.020, 0.095)
+			]
+		)
+		_prism(
+			points,
+			0.018,
+			Transform3D(
+				Basis(Vector3.UP, side * 0.25), Vector3(side * 0.12, CHEST_RIM - 0.018, 0.065)
+			),
+			"wood"
+		)
 
 
 func _box(center: Vector3, size: Vector3, slot: String) -> void:
@@ -136,10 +227,18 @@ func _box_at(transform: Transform3D, size: Vector3, slot: String) -> void:
 	var normals: PackedVector3Array = _unit[Mesh.ARRAY_NORMAL]
 	var indices: PackedInt32Array = _unit[Mesh.ARRAY_INDEX]
 	for index in range(0, indices.size(), 3):
-		_triangle(transform * (vertices[indices[index]] * size), transform * (vertices[indices[index + 1]] * size), transform * (vertices[indices[index + 2]] * size), transform.basis * normals[indices[index]], slot)
+		_triangle(
+			transform * (vertices[indices[index]] * size),
+			transform * (vertices[indices[index + 1]] * size),
+			transform * (vertices[indices[index + 2]] * size),
+			transform.basis * normals[indices[index]],
+			slot
+		)
 
 
-func _prism(outline: PackedVector2Array, depth: float, transform: Transform3D, slot: String) -> void:
+func _prism(
+	outline: PackedVector2Array, depth: float, transform: Transform3D, slot: String
+) -> void:
 	var indices := Geometry2D.triangulate_polygon(outline)
 	for side in [-1.0, 1.0]:
 		for index in range(0, indices.size(), 3):
@@ -147,7 +246,9 @@ func _prism(outline: PackedVector2Array, depth: float, transform: Transform3D, s
 			for corner in 3:
 				var point := outline[indices[index + corner]]
 				vertices.append(transform * Vector3(point.x, point.y, side * depth * 0.5))
-			_triangle(vertices[0], vertices[1], vertices[2], transform.basis * Vector3(0, 0, side), slot)
+			_triangle(
+				vertices[0], vertices[1], vertices[2], transform.basis * Vector3(0, 0, side), slot
+			)
 	for index in outline.size():
 		var first := outline[index]
 		var last := outline[(index + 1) % outline.size()]
@@ -166,7 +267,9 @@ func _octahedron(center: Vector3, radius: float, slot: String) -> void:
 		var top := center + Vector3(0, radius * side, 0)
 		for edge in 4:
 			var first := center + Vector3(cos(edge * PI * 0.5), 0, sin(edge * PI * 0.5)) * radius
-			var last := center + Vector3(cos((edge + 1) * PI * 0.5), 0, sin((edge + 1) * PI * 0.5)) * radius
+			var last := (
+				center + Vector3(cos((edge + 1) * PI * 0.5), 0, sin((edge + 1) * PI * 0.5)) * radius
+			)
 			_triangle(top, first, last, ((top + first + last) / 3.0 - center).normalized(), slot)
 
 
@@ -181,18 +284,62 @@ func _triangle(a: Vector3, b: Vector3, c: Vector3, expected: Vector3, slot: Stri
 	var normal := cross.normalized()
 	if normal.dot(expected) < 0.0:
 		normal = -normal
+	var interior := false
+	if _merge_wood_iron:
+		var centre := (a + b + c) / (3.0 * CHEST_SCALE)
+		if _barrel_lid:
+			interior = normal.dot(Vector3(0, centre.y, centre.z - LID_RADIUS)) < -.01
+			interior = interior or (absf(normal.x) > .5 and normal.x * centre.x < 0)
+		else:
+			interior = (
+				(absf(normal.z) > .5 and absf(centre.z) > .10 and normal.z * centre.z < 0)
+				or (absf(normal.x) > .5 and absf(centre.x) > .18 and normal.x * centre.x < 0)
+				or (normal.y > .5 and centre.y < .053)
+			)
 	var group := "chest" if _merge_wood_iron else slot
 	if not _tools.has(group):
 		var tool := SurfaceTool.new()
 		tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 		_tools[group] = tool
 	var output: SurfaceTool = _tools[group]
-	for vertex: Vector3 in ([a, c, b] if cross.dot(normal) > 0.0 else [a, b, c]):
+	for vertex: Vector3 in [a, c, b] if cross.dot(normal) > 0.0 else [a, b, c]:
 		output.set_normal(normal)
-		# Metre UVs keep the shared timber tile consistent on all six faces.
 		var dominant := normal.abs().max_axis_index()
-		output.set_uv(Vector2(vertex.z, vertex.y) if dominant == 0 else Vector2(vertex.x, vertex.z) if dominant == 1 else Vector2(vertex.x, vertex.y))
-		output.set_color(Color(1, 0, 0) if slot == "iron" else Color(0, 0, 0))
+		if _merge_wood_iron:
+			var at := vertex / CHEST_SCALE
+			var face := 1 if dominant == 0 else 0
+			var uv := (
+				Vector2(at.z / CHEST_DEPTH + .5, 1.0 - at.y / CHEST_RIM)
+				if face == 1
+				else Vector2(at.x / CHEST_WIDTH + .5, 1.0 - at.y / CHEST_RIM)
+			)
+			if _barrel_lid:
+				face = 2
+				uv = Vector2(
+					at.x / CHEST_WIDTH + .5, 1.0 - atan2(maxf(at.y, 0), at.z - LID_RADIUS) / PI
+				)
+				if dominant == 0:
+					uv = Vector2(at.z / CHEST_DEPTH, 1.0 - at.y / CHEST_DEPTH)
+			elif dominant == 1:
+				face = 2
+				uv = Vector2(at.x / CHEST_WIDTH + .5, at.z / CHEST_DEPTH + .5)
+			output.set_uv(uv.clamp(Vector2.ZERO, Vector2.ONE))
+			output.set_color(
+				Color(1.0 if slot == "iron" else 0.0, float(face) * .5, 1.0 if interior else 0.0)
+			)
+		else:
+			output.set_uv(
+				(
+					Vector2(vertex.z, vertex.y)
+					if dominant == 0
+					else (
+						Vector2(vertex.x, vertex.z)
+						if dominant == 1
+						else Vector2(vertex.x, vertex.y)
+					)
+				)
+			)
+			output.set_color(Color(1, 0, 0) if slot == "iron" else Color(0, 0, 0))
 		output.add_vertex(vertex)
 	_triangles += 1
 

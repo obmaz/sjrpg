@@ -89,7 +89,6 @@ func _ready() -> void:
 	village = Village.new()
 	village.build(ground_layer, world)
 	village.build_field(world, FIELD.grow(-150), _rng)
-	forest_details = ForestArt.decorate(village, world)
 	forest_lighting = ForestLighting.new()
 	field_root.add_child(forest_lighting)
 	forest_lighting.setup(ground_layer, village)
@@ -100,12 +99,16 @@ func _ready() -> void:
 	var chest_def: Dictionary = village.data["sprites"]["chest"]
 	var broken_def: Dictionary = village.data["sprites"]["chest-broken"]
 	for i in village.chest_points.size():
+		village.chest_points[i] = ChestPlacement.find(village,village.chest_points[i])
 		var chest := Chest.new().setup(self, i, village.chest_points[i], chest_def, broken_def)
 		world.add_child(chest)
 		if i == 8:
 			chest.z_index = 1
 		chests.append(chest)
 		village.circles.append([chest.position, Chest.COLLISION_RADIUS])
+
+	# 확대된 상자의 최종 기준점·반경을 정한 뒤 식생을 배치해야 재생성도 같다.
+	forest_details = ForestArt.decorate(village, world)
 
 	quest_runtime = QuestRuntime.new().setup(self)
 	add_child(quest_runtime)
@@ -351,6 +354,12 @@ func _read_debug_params() -> void:
 					player.position = village.point(Vector2(0.5, 1.15))
 				"gate0", "gate1", "gate2", "gate3":
 					player.position = village.gate_points[int(kv[1].substr(4))] + Vector2(0, 150)
+				"cave_trail", "cave_trail_middle":
+					var trail := NativeCaveTrail.points(village)
+					var index := 0 if kv[1] == "cave_trail" else 3
+					var frame := NativeCaveTrail.frame(village)
+					player.position = SpatialWorld3D.projected(frame*Vector3(trail[index].x,0,trail[index].y))
+					_fx_review_focus = player.position
 				"cave_descent":
 					var cave_frame := NativeCavePlan.frame(dungeon.entry_point())
 					player.position = SpatialWorld3D.projected(cave_frame*Vector3(0,0,18))
@@ -1297,13 +1306,15 @@ func on_chest_broken(chest: Chest) -> void:
 	spawn_nova(chest.position, 70.0, Color(0.95, 0.8, 0.45), true)
 	SoundFx.play("loot")
 	Prefs.pulse("loot")
-	var content := GameState.chest_content(chest.index)
+	var content := "gear" if chest.variant == "gold" else (("supplies" if _rng.randf() < 0.55 else "coins") if chest.variant == "iron" else GameState.chest_content(chest.index))
 	var gold: int = {"gear": 18, "supplies": 8, "coins": 10, "ambush": 0}[content]
 	if content == "ambush":
 		gold = 6
 		toast("매복이다!")
 		for i in 2:
 			_spawn_enemy_near(chest.position)
+	if chest.variant == "iron":
+		gold += 20 + GameState.level * 5
 	GameState.gold += gold
 	if gold > 0:
 		RewardFx.spawn(self, chest.position + Vector2(0, -35), 0)
@@ -1317,6 +1328,8 @@ func on_chest_broken(chest: Chest) -> void:
 		content = "gear"
 	if content == "gear":
 		var g := Gear.roll_loot(GameState.hero_class, GameState.level, GameState.next_serial, _rng, true)
+		if chest.variant == "gold":
+			g = Gear.make(g.serial, str(g.base["id"]), 3 if _rng.randf() < 0.10 else 2, maxi(g.power,4),maxi(g.vitality,8),maxi(g.focus,4),GameState.level+1)
 		if chest.index == 8:
 			g = GameState.new_gear("shortsword" if GameState.hero_class == "warrior" else "wand", 2, 4, 8)
 		if GameState.add_gear(g):

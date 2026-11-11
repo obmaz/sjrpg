@@ -1,6 +1,6 @@
 {
-  "scope": "Existing Stage1 forest encounter stones and all existing chests only; source2D project unchanged.",
-  "method": "Reproducible native full-volume mesh construction. Reuses the current shared village material family; no prop-specific image/model generation, image painting, relighting or baked shadows.",
+  "scope": "숲1장 비석·목재 상자와 선택형 동굴의 쇠·황금 상자. 2D판은 동결한다.",
+  "method": "실제 입체 상자와 힌지·내부·철물을 공유 메시로 만들고, 생성형 평면 알베도로 쇠·황금 표면을 구분한다.",
   "reference": {
     "path": "assets/source/style/approved-game-reference.jpg",
     "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a",
@@ -35,35 +35,40 @@
       "bytes": 17806
     },
     {
-      "path": "assets/art/preview3d/timber.webp",
-      "sha256": "4cac472a9fb54db9e89bdaf1577db846bd49f936e759dca7b10101175f7dcb1c",
-      "bytes": 164210
+      "path": "assets/models/materials/chests/albedo.png",
+      "sha256": "7e31a1fd2740f40389da36888223ea0841cf226877a7d5f6330cadb0c90eabd2",
+      "bytes": 3127826
     }
   ],
-  "new_texture_bytes": 0,
+  "metal_surface_provenance": {
+    "path": "assets/source/materials/chests/provenance.json",
+    "sha256": "e288208d979cab6d1dc1c4eb87e59509e620fbc5a8fe9e8a4d75cb3f2396f21b",
+    "bytes": 1046
+  },
+  "new_texture_bytes": 3127826,
   "new_binary_model_bytes": 0,
   "generators": [
     {
       "path": "scripts/native_encounter_mesh_3d.gd",
-      "sha256": "600e9c6b42293ebb712061b10c2d34b6b320a03e3429d3f04a41c92929038b90",
-      "bytes": 9709
+      "sha256": "85b43d1d37558c23743693e735fa5654eaf03a2263d691f253159572c749d3c6",
+      "bytes": 11547
     },
     {
       "path": "scripts/native_encounter_props_3d.gd",
-      "sha256": "adeb28c386466c808ef9e218a0e1bb29f63fdcfc1bdd8b602bdfe27b8d5c7133",
-      "bytes": 8883
+      "sha256": "98fce3e0e8c84fe3e624f61eeb555349f68085ffc27dc44cdc1e530cd41cac5f",
+      "bytes": 9712
     },
     {
       "path": "scripts/native_chest_material.gdshader",
-      "sha256": "67fb7891b5a05b8f92a26c4ddcc91e680418b95898e13f0e21450ee7103b3412",
-      "bytes": 791
+      "sha256": "4097ea9ee6bb53d54cf300f08017f4c8fd5d1e7fca85d82e682bad0a20591181",
+      "bytes": 1160
     }
   ],
   "materials": {
-    "stone": "Shared clean dressed limestone (procedural, make_clean_masonry.py), 2.56m world tile / 8 courses; instance tint observes source flash.",
-    "chest": "Existing shared front-on generated timber, .65 UV scale (1.538m tile), and shared iron colour/roughness/metallic response selected by geometry vertex mask. No painted iron overlay.",
-    "texel_density": "768px limestone:300.00px/m; timber:407.55px/m. No normal/roughness image maps invented.",
-    "limitations": "Shared albedos are base colors with intrinsic edge tone only, not measured PBR scans."
+    "stone": "Existing shared front-on generated limestone, 2.56m world tile / 8 courses; instance tint observes source flash.",
+    "chest": "목재·쇠·황금의 앞면·옆면·펼친 곡면 뚜껑 전용 원화를 면 전체 UV로 한 번 배치한다. 실제 철물 정점 마스크와 면 영역을 정점색으로 보존한다.",
+    "texel_density": "768px limestone:300.00px/m. 상자는 각 면 원화를 한 번 배치한다. 별도 법선/거칠기 이미지는 없다.",
+    "limitations": "Reused generated albedos retain fine authored self-relief, not measured PBR scans."
   },
   "coordinates": {
     "units": "metres",
@@ -80,28 +85,28 @@
   },
   "geometry": {
     "chest_closed_bounds_m": [
-      0.5700000002980238,
-      0.5289944261312487,
-      0.37500001490116125
+      1.13999998569489,
+      1.05798888206482,
+      0.75
     ],
     "chest_closed_surfaces": 2,
     "chest_open_surfaces": 3,
-    "chest_sweep_radius_m": 0.3755138441920275,
-    "chest_triangles": 808,
+    "chest_sweep_radius_m": 0.751027703285217,
+    "chest_triangles": 800,
     "meshes": {
       "base": {
         "bounds_m": [
-          0.5700000002980238,
-          0.3543750196695325,
-          0.37500001490116125
+          1.13999998569489,
+          0.708750009536743,
+          0.75
         ],
         "origin_m": [
-          -0.2850000001490113,
-          0,
-          -0.18750000745058001
+          -0.569999992847443,
+          0.0,
+          -0.375
         ],
         "surfaces": 1,
-        "triangles": 316
+        "triangles": 308
       },
       "glyph": {
         "bounds_m": [
@@ -119,28 +124,28 @@
       },
       "lid": {
         "bounds_m": [
-          0.5499999970197675,
-          0.1789944246411325,
-          0.35024441778659876
+          1.10000002384186,
+          0.357988834381104,
+          0.700488805770874
         ],
         "origin_m": [
-          -0.27499999850988377,
-          0,
-          -0.008749999105930325
+          -0.550000011920929,
+          0.0,
+          -0.0174999982118607
         ],
         "surfaces": 1,
         "triangles": 460
       },
       "splinters": {
         "bounds_m": [
-          0.379446148872375,
-          0.11874999850988388,
-          0.04159284755587575
+          0.758892297744751,
+          0.237500011920929,
+          0.0831857025623322
         ],
         "origin_m": [
-          -0.19153978675603872,
-          0.3274999931454663,
-          0.06045357324182987
+          -0.383079588413239,
+          0.654999971389771,
+          0.120907142758369
         ],
         "surfaces": 1,
         "triangles": 32
@@ -153,7 +158,7 @@
         ],
         "origin_m": [
           -0.400000005960464,
-          0,
+          0.0,
           -0.246153846383095
         ],
         "surfaces": 1,
@@ -161,95 +166,28 @@
       }
     },
     "stone_surfaces": 3,
-    "stone_triangles": 276,
-    "chest_collision_radius_m": 0.3884995626936048,
-    "chest_collision_height_m": 0.53,
-    "chest_lid_radial_clearance_m": 0.012985718501577315,
-    "source_projection_scale": 0.97,
-    "horizontal_units_per_m": 77.22016414123968
+    "stone_triangles": 276
   },
   "stone_footprint_m": [
     0.8,
     0.49230769230769234
   ],
   "stone_height_m": 1.58,
-  "chest_proportion_change": "Native chest geometry is baked uniformly 25% larger: closed 0.570 x 0.529 x 0.375m, continuous lid sweep radius 0.375514m. Its source collision circle grows with it from24px to30px (0.3884996m native radius from Iso.S=0.97; previous24px radius0.3107997m; lid sweep radial clearance0.0129857m); native blocker height is0.530m instead of the legacy2.2m resident cylinder. Reward IDs, consumed collision lifetime and save progression remain unchanged. The east memory chest index7 moves from ground(1450,260) to(1480,260) to clear the actual gate-snapped east wall; other centres remain unchanged. Materials keep metre UV density; no runtime node scaling.",
+  "chest_scale": "기존 입체 상자 대비 세 축2배. 닫힌1.140×1.058×0.750m; PROP 반경60투영단위(0.777m), 높이1.06m. 표시 배율(1,1,1). ChestPlacement가 기단 경계·건물·나무를 피해 숲 상자를 배치하고 저장 ID는 보존한다.",
   "ownership": {
     "stone": "Only the art instance IDs of the exact six EncounterStone owners; excludes only those old environment cards.",
     "chest": "Only current Chest.body_sprite IDs; breaking replaces this sprite identity. Affordances remove the previous fallback and retain fallback when no model is owned.",
-    "regions": "Explicit forest scope plus source-local visibility; hidden adapter ancestors are ignored. Native roots hidden in cave and cleaned when owners leave the source world.",
-    "runtime": "Read-only EncounterRuntime states/charges/recharge/living/can_summon, EncounterStone source tint/flash and Chest.dead. No visual timer or extra rewards. Chest source/native collision shares the explicit30px envelope; consumed state releases it as before."
+    "regions": "현재 지역의 소스만 표시한다. 동굴에서는 숲 모델을 숨겨 보관하고 새 동굴 상자만 표시하며, 복귀 시 숲의 소모 상태를 복원한다.",
+    "runtime": "표시기는 실제 비석 상태와 Chest.dead/hp/variant만 읽는다. 보상·내구력은 Chest와 Game이 소유하고 공간 충돌은 SpatialWorld3D가 소유한다."
   },
   "validation": {
-    "headless": "Updated native_encounter_props checks every source placement against real SOLID/PROP geometry, full continuous hinge envelope, matching ground-aligned native cylinders, actual capsule approach/adjacent walk and existing single-reward consumption. Pending candidate execution.",
+    "headless": "native_encounter_props PASS; actual source strike/open, capsule collider release, hinge-volume check, hidden/cave/return/deletion ownership.",
+    "gpu": "Pending coordinated actual browser captures; CPU metadata is not visual acceptance.",
     "review_fixture_source": {
       "path": "scripts/native_encounter_review.gd",
       "sha256": "8956760b66dbacf2a254038be5ccd1a3e81b1d0231b714d8c949fef45eabe7aa",
       "bytes": 8045
     },
-    "review_fixture": "Explicit loot_review=1 in a fresh isolated browser profile only. Official create_slot binds a unique test session before original source state methods. Same source anchors and fixed120 camera; optional native-model rotation checks unseen faces, optional original-art cards provide same-world comparison.",
-    "previous_geometry_evidence": {
-      "evidence_sha256": "f34a6087e227b10b49135c843b23be0fe8dd6f69ec13a16218a49005a62bc348",
-      "captures": 12,
-      "unexpected_errors": 0,
-      "quality_modes": [
-        "high",
-        "low"
-      ],
-      "viewports": [
-        "390x844",
-        "844x390"
-      ],
-      "observed_cases": [
-        "clear-stone-native-portrait",
-        "clear-stone-back-landscape",
-        "clear-stone-real-hit",
-        "clear-stone-source-cooldown",
-        "clear-chest-closed",
-        "clear-chest-real-open",
-        "clear-cave-no-forest-props",
-        "clear-return-consumed-chest",
-        "clear-chest-closed",
-        "clear-chest-real-open",
-        "clear-chest-open-landscape",
-        "clear-cave-no-forest-props"
-      ],
-      "interpretation": "Actual coordinated captures were inspected separately; recording evidence is not automatic style approval."
-    },
-    "required_gpu": "Before acceptance compare unchanged camera/lights at actual native zoom0.75 (new UI label1), portrait/landscape, all nine placements and closed/open/full-face states. Previous captures predate enlargement and do not validate this candidate."
-  },
-  "placement_correction": {
-    "source": "scripts/village.gd MEMORY_SPOTS[2]",
-    "chest_index": 7,
-    "old_ground": [
-      1450,
-      260
-    ],
-    "new_ground": [
-      1480,
-      260
-    ],
-    "wall_line_ground": [
-      [
-        1422.1559590810868,
-        199.281936446339
-      ],
-      [
-        1408,
-        1200
-      ]
-    ],
-    "wall_half_thickness_ground": 32,
-    "old_signed_exterior_clearance_ground": -3.299924758787011,
-    "minimum_delta_u_with_skin_ground": 29.530350281622766,
-    "chosen_delta_u_ground": 30,
-    "reason": "Existing gate-snapped wall overlaps old chest centre; move authoritative source/body/model/reward anchor together along same exterior route. No wall/collision/test relaxation.",
-    "validation": "Requires runtime obstacle metadata confirmation and unchanged all-placement physics checks plus exterior corridor walking both ways."
-  },
-  "shared_family_update": {
-    "scope": "Shared limestone is the same authorized material used by village walls, gates, chapel and houses. Original prop geometry, timber, source reference, ownership and collision remain unchanged.",
-    "source": "tools/preview3d/make_clean_masonry.py",
-    "physical_tile_m": 2.56,
-    "courses": 8
+    "review_fixture": "Explicit loot_review=1 in a fresh isolated browser profile only. Official create_slot binds a unique test session before original source state methods. Same source anchors and fixed120 camera; optional native-model rotation checks unseen faces, optional original-art cards provide same-world comparison."
   }
 }

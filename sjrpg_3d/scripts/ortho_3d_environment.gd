@@ -147,6 +147,7 @@ func _floor(polygon: PackedVector2Array, texture: Texture2D, parent: Node3D, hei
 func _build_forest() -> void:
 	report["remaining_sources"] = {"forest": [], "cave": []}
 	var buckets := {}
+	NativeCaveTrailMarkers3D.build(preview,forest)
 	var native: Dictionary = preview._town_props.source_ids()
 	var forest_trees := Ortho3DForestTrees.build(preview, forest, _forest_world)
 	var tree_report: Dictionary = forest_trees.get_meta("native_forest_tree_report")

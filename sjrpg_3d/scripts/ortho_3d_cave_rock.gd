@@ -14,7 +14,7 @@ const FLOOR_DETAIL := 0.68
 const INNER := "inner"
 const OUTER := "outer"
 const STRIP_METRES := 0.80
-const CHUNK_METRES := 12.0
+
 const FRONT_HEIGHT := 0.45
 const CHAMBER_HEIGHT := 3.50
 const CORRIDOR_HEIGHT := 1.45
@@ -23,6 +23,7 @@ const PROFILE := [Vector2(-COLLISION_INSET, 0), Vector2(-COLLISION_INSET, 0.20),
 var _tools := {}
 var _corners := {}
 var _triangles := 0
+var _segment_id := -1
 
 
 static func build(layout: DungeonLayout, parent: Node3D, texture: Texture2D, boundary_sources: Array[Dictionary]) -> Dictionary:
@@ -45,6 +46,7 @@ func _build(layout: DungeonLayout, parent: Node3D, texture: Texture2D, segments:
 	var profiles: Array[Dictionary] = []
 	var cutaways := 0
 	for segment in segments:
+		_segment_id += 1
 		var a: Vector2 = segment["a"]
 		var b: Vector2 = segment["b"]
 		var outward: Vector2 = segment["outward"]
@@ -115,6 +117,7 @@ func _build(layout: DungeonLayout, parent: Node3D, texture: Texture2D, segments:
 		NativePlayerOcclusion.mark_object(mesh)
 		mesh.mesh = volume
 		mesh.set_meta("native_cave_boundary", true)
+		mesh.set_meta("cave_wall_segment", chunk)
 		parent.add_child(mesh)
 		meshes.append(mesh)
 		surfaces += volume.get_surface_count()
@@ -154,7 +157,7 @@ func _triangle(a: Vector3, b: Vector3, c: Vector3, expected: Vector3, outward: V
 	var normal := cross.normalized()
 	if normal.dot(expected) < 0.0:
 		normal = -normal
-	var chunk := floori(((a.x + b.x + c.x) / 3.0) / CHUNK_METRES)
+	var chunk := _segment_id
 	if not _tools.has(chunk):
 		_tools[chunk] = {}
 	var tools: Dictionary = _tools[chunk]

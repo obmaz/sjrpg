@@ -1,0 +1,45 @@
+{
+  "tool": "image_gen.imagegen",
+  "source": "original.png",
+  "prompt": "prompt.txt",
+  "runtime": "assets/models/materials/chests/albedo.png",
+  "sha256": "7e31a1fd2740f40389da36888223ea0841cf226877a7d5f6330cadb0c90eabd2",
+  "references": [
+    {
+      "path": "assets/source/style/approved-game-reference.jpg",
+      "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
+    },
+    {
+      "path": "assets/source/remake/props-cells/chest.png",
+      "sha256": "9879b9b340d1ba85f48f3c7d4d5d6c81e7fa4c5a5615b0c96040948261a03069"
+    }
+  ],
+  "mapping": {
+    "rows": [
+      "wood",
+      "iron",
+      "gold"
+    ],
+    "columns_px": [
+      [
+        0,
+        522
+      ],
+      [
+        522,
+        836
+      ],
+      [
+        836,
+        1254
+      ]
+    ],
+    "row_height_px": 418,
+    "faces": [
+      "front_body",
+      "side_body",
+      "unwrapped_barrel_lid"
+    ],
+    "method": "실제 생성 원본의 면 경계를 UV로 지정한다. 원본 이미지는 자르거나 보정하지 않는다."
+  }
+}

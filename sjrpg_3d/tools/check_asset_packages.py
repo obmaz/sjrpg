@@ -39,7 +39,7 @@ def check(folder):
             assert actual.is_relative_to(ROOT) and actual.is_file()
             assert hashlib.sha256(actual.read_bytes()).hexdigest() == reference['sha256']
     if spec['mapping'] == 'facade':
-        assert spec['infillOnly'] is True and spec['roofCell'] in range(4)
+        assert (spec['infillOnly'] is True or spec.get('hybridFacade') is True) and spec['roofCell'] in range(4)
     if 'roofAlbedo' in spec:
         roof_name = spec['roofAlbedo']
         assert Path(roof_name).name == roof_name and '..' not in roof_name

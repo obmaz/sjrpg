@@ -80,6 +80,34 @@
     {
       "path": "assets/art/cave/dark.webp",
       "usage": "Native volumetric cave wall albedo"
+    },
+    {
+      "path": "assets/models/materials/chests/albedo.png",
+      "usage": "Shared opaque iron and gold chest atlas with mipmaps"
+    },
+    {
+      "path": "assets/models/materials/paving/paving-0.png",
+      "usage": "Opaque generated paving variation with mipmaps"
+    },
+    {
+      "path": "assets/models/materials/paving/paving-1.png",
+      "usage": "Opaque generated paving variation with mipmaps"
+    },
+    {
+      "path": "assets/models/materials/paving/paving-2.png",
+      "usage": "Opaque generated paving variation with mipmaps"
+    },
+    {
+      "path": "assets/models/materials/paving/paving-3.png",
+      "usage": "Opaque generated paving variation with mipmaps"
+    },
+    {
+      "path": "assets/models/materials/paving/paving-4.png",
+      "usage": "Opaque generated paving variation with mipmaps"
+    },
+    {
+      "path": "assets/models/materials/paving/paving-5.png",
+      "usage": "Opaque generated paving variation with mipmaps"
     }
   ],
   "protected_rule": "Every other imported art texture keeps its current mipmap, alpha, quality and size settings. UI, effects, cutouts, actor sheets and extracted GLB textures stay in mode 1; automatic 3D conversion is disabled."

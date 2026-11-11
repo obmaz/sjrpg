@@ -42,7 +42,7 @@ func run() -> void:
 	environment.sync(0.0, true)
 	var rock: Dictionary = environment._cave_rock
 	check("native rock follows the existing layout instance without changing rooms or props", int(rock["layout_id"]) == layout.get_instance_id() and layout.polygons == source_polygons and layout.obstacles == source_obstacles and DungeonLayout.ROOMS.size() == 5)
-	check("native rock replaces the full original boundary with bounded chunks", int(rock["segments"]) == game.dungeon.art.boundary_segments.size() and int(rock["groups"]) <= 8 and int(rock["triangles"]) > 1000 and int(rock["triangles"]) < 20000)
+	check("native rock replaces the full original boundary with bounded chunks", int(rock["segments"]) == game.dungeon.art.boundary_segments.size() and int(rock["groups"]) == int(rock["segments"]) and int(rock["triangles"]) > 1000 and int(rock["triangles"]) < 20000)
 	var metadata: Dictionary = environment.cave.get_meta("boundary_sources")
 	var ownership := true
 	var wall_count := 0

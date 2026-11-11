@@ -1,9 +1,6 @@
 shader_type spatial;
 render_mode cull_back;
-uniform sampler2D base_atlas : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
-uniform sampler2D edge_atlas : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
 uniform sampler2D distance_field : filter_linear, repeat_disable;
-uniform sampler2D village_craft : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
 uniform vec4 town_bounds;
 #include "res://scripts/grass_variety.gdshaderinc"
 
@@ -15,7 +12,8 @@ uniform vec2 field_extent;
 uniform sampler2D bank_atlas : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
 uniform sampler2D site_rock : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform mat4 world_to_cave;
-uniform vec2 cave_trail[5];
+uniform vec2 cave_trail[10];
+uniform vec4 cave_trail_bounds;
 varying vec2 ground_world;
 varying float ground_height;
 
@@ -35,13 +33,7 @@ float ground_noise(vec2 p) {
 vec2 mirrored(vec2 uv) {
 	return 1.0 - abs(fract(uv * 0.5) * 2.0 - 1.0);
 }
-vec3 base_tile(vec2 uv, vec2 cell) {
-	return texture(base_atlas, (cell + mix(vec2(0.012), vec2(0.988), mirrored(uv))) * 0.5).rgb;
-}
-vec3 edge_tile(vec2 uv, vec2 cell) {
-	vec2 local = vec2(clamp(uv.x, 0.0, 1.0), mirrored(uv).y);
-	return texture(edge_atlas, (cell + mix(vec2(0.012), vec2(0.988), local)) * 0.5).rgb;
-}
+#include "res://assets/models/materials/paving/surface.gdshaderinc"
 void vertex() {
 	ground_world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xz;
 	ground_height = VERTEX.y;
@@ -57,26 +49,26 @@ void fragment() {
 	vec2 uv = ground_world / 2.56;
 	vec3 grass = grass_surface(ground_world,0.0);
 	vec3 color = grass;
-	if (d < 1.25) {
-		vec3 paving = mix(base_tile(uv, vec2(0.0)), base_tile(uv, vec2(1.0, 0.0)), ground_noise(ground_world / 3.8));
-		vec2 town_edge = min(ground_world - town_bounds.xy, town_bounds.zw - ground_world);
-		float town = smoothstep(-0.2, 0.5, min(town_edge.x, town_edge.y));
-		vec3 plaza = texture(village_craft, (vec2(0.0, 1.0) + mix(vec2(0.018), vec2(0.982), mirrored(uv))) * 0.5).rgb;
-		paving = mix(paving, plaza, town);
-		float irregular = (ground_noise(ground_world * 2.3) - 0.5) * 0.22;
-		float edge_d = d + irregular;
-		color = mix(paving, grass, smoothstep(-0.18, 0.18, edge_d));
-		if (abs(edge_d) < 1.15) {
-			vec2 outward = normalize(encoded.gb * 2.0 - 1.0 + vec2(0.00001));
-			vec2 tangent = vec2(-outward.y, outward.x);
-			vec2 join_uv = vec2(0.5 + edge_d / 2.56, dot(ground_world, tangent) / 2.56);
-			float a = ground_noise(ground_world / 3.1 + vec2(8.0, 0.0));
-			float b = ground_noise(ground_world / 2.7 + vec2(0.0, 12.0));
-			vec3 joins = mix(mix(edge_tile(join_uv, vec2(0.0)), edge_tile(join_uv, vec2(1.0, 0.0)), a),
-				mix(edge_tile(join_uv, vec2(0.0, 1.0)), edge_tile(join_uv, vec2(1.0)), a), b);
-			color = mix(color, joins, 1.0 - smoothstep(0.60, 1.15, abs(edge_d)));
-		}
+	float paving_relief = 0.0;
+	if (d < 1.5) {
+		vec2 town_edge = min(ground_world-town_bounds.xy,town_bounds.zw-ground_world);
+		float town = smoothstep(-0.8,1.2,min(town_edge.x,town_edge.y));
+		vec3 paving = paving_surface(ground_world,town);
+		float irregular = (ground_noise(ground_world*1.65)-.5)*mix(1.55,.48,town);
+		float edge_d = d+irregular;
+		float feather = mix(.85,.32,town);
+		float cover = 1.0-smoothstep(-feather,feather,edge_d);
+		// 바깥길은 빠진 돌·흙 패치와 길 안까지 들어온 풀로 중심선의 반복도 깬다.
+		float encroach = smoothstep(.57,.77,ground_noise(ground_world/1.45+vec2(5.0)));
+		encroach *= mix(.72,.13,town)*smoothstep(-1.7,-.10,d+ground_noise(ground_world*2.0)*.6);
+		vec3 soil = texture(earth_texture,ground_world/2.56).rgb;
+		paving = mix(paving,soil,encroach*.44);
+		paving = mix(paving,grass,encroach*.78);
+		color = mix(grass,paving,cover);
+		// 낮은 표면 요철만 광원에 반응한다. 보행 지형의 매크로 높이는 기존 공유 메시다.
+		paving_relief = smoothstep(.16,.55,dot(paving,vec3(.30,.55,.15)))*.045*cover;
 	}
+
 	// 막다른 포장길은 흙길로 좁아지며 풀 속으로 이어진다.
 	float terminal = data.a;
 	if (all(greaterThanEqual(field_uv, vec2(0.0))) && all(lessThanEqual(field_uv, vec2(1.0)))) {
@@ -111,20 +103,28 @@ void fragment() {
 		ravine = mix(ravine,grass,ground_noise(ground_world/1.7)*0.30*smoothstep(-1.0,0.6,ground_height));
 		color = mix(color,ravine,zone);
 	}
-	// 웨이포인트에서 바위 골짜기로 이어지는 흙길. 실제 높이 메시 위에서만 착색한다.
-	if (site.z > 10.0 && site.z < cave_trail[0].y+2.5 && abs(site.x) < abs(cave_trail[0].x)+4.0) {
+	// 필드 갈림길에서 웨이포인트와 바위 골짜기로 이어지는 닳은 흙·잔디 길.
+	if (all(greaterThan(site.xz,cave_trail_bounds.xy)) && all(lessThan(site.xz,cave_trail_bounds.zw))) {
 		float trail_d = 100.0;
-		for (int i=0; i<4; i++) {
+		for (int i=0; i<9; i++) {
 			vec2 a = cave_trail[i];
 			vec2 segment = cave_trail[i+1]-a;
 			float t = clamp(dot(site.xz-a,segment)/max(dot(segment,segment),0.001),0.0,1.0);
 			trail_d = min(trail_d,length(site.xz-a-segment*t));
 		}
-		float worn = 1.0-smoothstep(0.64,1.6,trail_d+(ground_noise(ground_world*2.4)-0.5)*0.42);
+		float wear_d = trail_d+(ground_noise(ground_world*2.4)-0.5)*0.42;
+		float verge = 1.0-smoothstep(1.2,2.6,wear_d);
+		color = mix(color,grass*vec3(0.88,0.84,0.69),verge*0.50);
+		float worn = 1.0-smoothstep(0.78,1.7,wear_d);
 		vec3 soil = texture(earth_texture,ground_world/2.56).rgb*vec3(0.83,0.78,0.66);
 		vec3 grit = texture(bank_atlas,(vec2(1.0)+mix(vec2(0.018),vec2(0.982),mirrored(ground_world/2.0)))*0.5).rgb;
 		color = mix(color,mix(soil,grit*0.73,0.18+zone*0.25),worn*0.92);
 	}
+	vec3 dx = dFdx(vec3(ground_world.x,paving_relief,ground_world.y));
+	vec3 dy = dFdy(vec3(ground_world.x,paving_relief,ground_world.y));
+	vec3 detail = normalize(cross(dx,dy));
+	if (detail.y < 0.0) { detail = -detail; }
+	NORMAL = normalize(NORMAL+(VIEW_MATRIX*vec4(detail-vec3(0.0,1.0,0.0),0.0)).xyz);
 	ALBEDO = color;
 	ROUGHNESS = 0.98;
 }

@@ -10,7 +10,19 @@
   ],
   "tileMetres": 2.56,
   "roughness": 0.94,
-  "fullFacade": true,
+  "fullFacade": false,
   "roofCell": 0,
-  "infillOnly": true
+  "infillOnly": false,
+  "hybridFacade": true,
+  "roofTint": [
+    0.65,
+    0.75,
+    0.85
+  ],
+  "cells": [
+    "entrance",
+    "nave_front",
+    "nave_side",
+    "plain_stone"
+  ]
 }

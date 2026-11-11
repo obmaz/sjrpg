@@ -52,7 +52,7 @@ func _chest_clearance(game: Node, props: NativeEncounterProps3D) -> void:
 			continue
 		var collider: CylinderShape3D = (body.get_child(0) as CollisionShape3D).shape
 		var anchor := world.native_point(chest.position, world.height_at(chest.position))
-		colliders_match = colliders_match and is_equal_approx(collider.radius, world.radius_metres(Chest.COLLISION_RADIUS)) and collider.height >= 0.529 and collider.height <= 0.54 and absf(body.position.y - collider.height * 0.5 - anchor.y) < 0.001
+		colliders_match = colliders_match and is_equal_approx(collider.radius, world.radius_metres(Chest.COLLISION_RADIUS)) and absf(collider.height - NativeEncounterMesh3D.CHEST_COLLISION_HEIGHT) < 0.001 and absf(body.position.y - collider.height * 0.5 - anchor.y) < 0.001
 		# Conservative cylinder contains fixed geometry plus every continuous lid pose.
 		# Floor is deliberately not an obstruction; cliff side faces remain SOLID.
 		var envelope := CylinderShape3D.new()
@@ -128,7 +128,7 @@ func run() -> void:
 	var textures_match := true
 	for source: Dictionary in provenance["shared_textures"]:
 		textures_match = textures_match and FileAccess.get_sha256("res://" + str(source["path"])) == str(source["sha256"])
-	check("native props retain the recorded original shared generated albedos", textures_match and int(provenance["new_texture_bytes"]) == 0 and FileAccess.get_sha256("res://" + str(provenance["reference"]["path"])) == str(provenance["reference"]["sha256"]))
+	check("native props retain the recorded original shared generated albedos", textures_match and int(provenance["new_texture_bytes"]) == FileAccess.get_file_as_bytes("res://assets/models/materials/chests/albedo.png").size() and FileAccess.get_sha256("res://" + str(provenance["reference"]["path"])) == str(provenance["reference"]["sha256"]))
 	var game: Node = await make_game("mage")
 	game.set_process(false)
 	game.player.set_process(false)
@@ -153,7 +153,7 @@ func run() -> void:
 	var base_bounds: AABB = (models["base"] as ArrayMesh).get_aabb()
 	var lid_bounds: AABB = Transform3D(Basis.IDENTITY, NativeEncounterMesh3D.LID_PIVOT) * (models["lid"] as ArrayMesh).get_aabb()
 	var chest_bounds := base_bounds.merge(lid_bounds)
-	check("closed chest reads as a broad low box without any runtime axis scale", chest_bounds.size.y < chest_bounds.size.x and absf(chest_bounds.size.y - 0.5290) < 0.001 and absf(chest_bounds.size.x - 0.570) < 0.001 and absf(chest_bounds.size.z - 0.375) < 0.001)
+	check("closed chest reads as a broad low box without any runtime axis scale", chest_bounds.size.y < chest_bounds.size.x and absf(chest_bounds.size.y - 1.0580) < 0.001 and absf(chest_bounds.size.x - 1.140) < 0.001 and absf(chest_bounds.size.z - 0.750) < 0.001)
 	print("NATIVE_ENCOUNTER_METRICS " + JSON.stringify({"meshes": mesh_report, "stone_triangles": models["stone_triangles"], "chest_triangles": models["chest_triangles"], "stone_surfaces": 3, "chest_closed_surfaces": 2, "chest_open_surfaces": 3, "chest_closed_bounds_m": [chest_bounds.size.x, chest_bounds.size.y, chest_bounds.size.z], "chest_sweep_radius_m": props._lid_sweep_radius}))
 	check("stone and chest retain bounded full-volume mobile mesh budgets", int(models["stone_triangles"]) < 2000 and int(models["chest_triangles"]) < 2000 and (models["stone"] as ArrayMesh).get_surface_count() + (models["glyph"] as ArrayMesh).get_surface_count() <= 3 and (models["base"] as ArrayMesh).get_surface_count() + (models["lid"] as ArrayMesh).get_surface_count() + (models["splinters"] as ArrayMesh).get_surface_count() <= 3)
 	var stone_bounds: AABB = (models["stone"] as ArrayMesh).get_aabb()
@@ -169,7 +169,7 @@ func run() -> void:
 				sweep = maxf(sweep, Vector2(point.x, point.z).length())
 	check("every sampled hinge pose stays within the enlarged chest collision radius", sweep <= SpatialWorld3D.radius_metres(Chest.COLLISION_RADIUS) and sweep <= props._lid_sweep_radius + 0.0001, "sweep=%s radius=%s" % [sweep, SpatialWorld3D.radius_metres(Chest.COLLISION_RADIUS)])
 	await _chest_clearance(game, props)
-	check("chest reuses actual family timber and iron response in one shared material", props._chest_material.get_shader_parameter("timber") == (preview._materials["wood"] as StandardMaterial3D).albedo_texture and props._chest_material.get_shader_parameter("iron_tint") == (preview._materials["iron"] as StandardMaterial3D).albedo_color)
+	check("all chest variants share the generated full-face atlas with distinct material states",props._chest_material.get_shader_parameter("surface_atlas")==load("res://assets/models/materials/chests/albedo.png") and props._chest_variants["iron"].get_shader_parameter("variant")==1 and props._chest_variants["gold"].get_shader_parameter("variant")==2)
 	var no_colliders := true
 	for entry: Dictionary in props._entries.values():
 		no_colliders = no_colliders and (entry["root"] as Node3D).find_children("*", "CollisionObject3D", true, false).is_empty()
@@ -257,8 +257,10 @@ func run() -> void:
 	preview._affordances.sync()
 	var hidden := true
 	for item: Dictionary in props._entries.values():
-		hidden = hidden and not (item["root"] as Node3D).visible
-	check("forest props and chest fallback cards never ghost into the cave", hidden and preview._affordances._art.is_empty())
+		var owner: Node2D = (item["owner"] as WeakRef).get_ref()
+		var in_cave: bool = owner.get_parent() == game.world
+		hidden = hidden and (item["root"] as Node3D).visible == in_cave
+	check("only current cave chest models are visible while forest props stay hidden", hidden and preview._affordances._art.is_empty())
 	game.dungeon.leave("")
 	props.sync()
 	check("cave return restores the same forest models and consumed chest state", root.visible and chest_root.visible and chest.dead and props._entries.size() == expected)

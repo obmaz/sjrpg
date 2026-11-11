@@ -2,7 +2,7 @@
   "tool": "image_gen.imagegen",
   "source": "original.png",
   "prompt": "prompt.txt",
-  "sha256": "551b9546f5ced2f317d53e07e2beff50d5179467a603825ccc09ab4a97ceab26",
+  "sha256": "080e5ab1b08240f9296b95e38d7fda872b3d88e1b5c750b00142f4981e30be3a",
   "runtime": "sjrpg_3d/assets/models/architecture/chapel/albedo.png",
   "dimensions": [
     1254,
@@ -10,53 +10,9 @@
   ],
   "references": [
     {
-      "path": "assets/source/architecture/chapel/infill-input.png",
-      "sha256": "4a3b9fb92d80e8495754e6d468b4af15fc6b00bfdc2bae2e3086ab8a66dc9b0e"
-    },
-    {
-      "path": "assets/source/remake/chapel-v2.png",
-      "sha256": "e197ff7e23687a692fa02e4b9371c82998fefe51ceb6e47a9b5ab07681317171"
-    },
-    {
       "path": "assets/source/style/approved-game-reference.jpg",
       "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
     }
   ],
-  "layout": "layout.json",
-  "layoutGenerator": {
-    "path": "tools/preview3d/render_facades.gd",
-    "sha256": "a71425f9a521950597e9565bfd9887dd05d6f005869c0f567b2ba22d8a624898"
-  },
-  "notes": "생성 픽셀 무가공 채택. 재료 고유색이며 별도 법선/거칠기 맵은 만들지 않았다. 개구부/골조는 실제 3D 기하가 담당한다.",
-  "inputGeneration": {
-    "tool": "image_gen.imagegen",
-    "source": "infill-input.png",
-    "prompt": "infill-input-prompt.txt",
-    "sha256": "4a3b9fb92d80e8495754e6d468b4af15fc6b00bfdc2bae2e3086ab8a66dc9b0e",
-    "runtime": "sjrpg_3d/assets/models/architecture/chapel/albedo.png",
-    "dimensions": [
-      1254,
-      1254
-    ],
-    "references": [
-      {
-        "path": "assets/source/remake/chapel-v2.png",
-        "sha256": "e197ff7e23687a692fa02e4b9371c82998fefe51ceb6e47a9b5ab07681317171"
-      },
-      {
-        "path": "assets/source/architecture/chapel/layout.png",
-        "sha256": "d181056062b56985f411e5b0c55347f0dba854dd0c434f677560cefc0742cc98"
-      },
-      {
-        "path": "assets/source/style/approved-game-reference.jpg",
-        "sha256": "c81286d93319f3aa34c2e60ff16ad7347585be4e5a9d0e7a03866451dd4bf40a"
-      }
-    ],
-    "layout": "layout.json",
-    "layoutGenerator": {
-      "path": "tools/preview3d/render_facades.gd",
-      "sha256": "a71425f9a521950597e9565bfd9887dd05d6f005869c0f567b2ba22d8a624898"
-    },
-    "notes": "생성 픽셀 무가공 채택. 재료 고유색이며 별도 법선/거칠기 맵은 만들지 않았다. 개구부/골조는 실제 3D 기하가 담당한다."
-  }
+  "notes": "사용자가 재확인한 실제 게임 레퍼런스를 직접 첨부했다. 사용자가 허용한 전체 면 그림 방식으로 창·문·몰딩을 표현하며, 몸체·두 지붕·종탑·부벽·계단은 실제 입체다. 미세 자체 음영을 포함한 알베도이며 PBR 스캔이 아니다."
 }

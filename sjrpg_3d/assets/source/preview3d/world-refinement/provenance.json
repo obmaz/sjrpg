@@ -25,7 +25,7 @@
   "modeling": {
     "cave": "assets/models/environment/cave_entrance의 구릉 모델과 공용 치수. 채택 컨셉은 assets/source/architecture/cave-concept/original.png.",
     "terrain": "모서리를 깎은 암반 선반·흙 사면의 실제 정점을 NativeTerrainForms로 표시/SOLID에 공유. 기존 상면·경사로의 높이는 유지하고 새 잔디 4종의 월드 좌표 군락을 같은 2.56m로 혼합.",
-    "chapel": "source 배율 1.25, NativeChapelPlan의 실제 3단 계단과 FLOOR 공유.",
+    "chapel": "실제 사용자 approved-game-reference.jpg를 직접 참고한 돌출 입구·두 박공·굵은 종탑. 창·문·세공은 생성형 전체 면 원화. 바닥0.28m·왼쪽3단 계단·L자 몸체를 표시와 물리에 공유.",
     "fountain": "모든 정점·물줄기·source footprint 2배. 중심 유지, root scale 단위값.",
     "walls": "생성 알베도4종과 기존 슬레이트 재사용. 사용자가 첨부한 석조 성채의 높은 원형 망루·원뿔 지붕·돌출 상부를 구조 참고로 제작. 몸체 반경1.30m, 처마5.05m, 지붕 정상6.95m. 실제 아치 창·10cm 깊이의 뒷면·8개 돌 받침. 16각 망루의 몸체/상층/원뿔 SOLID가 같은 설계를 사용한다. 성 안쪽 여덟 구간의 상부 통로·난간·석재 받침·목재 보는 공유 부피를 합친 SOLID를 사용한다."
   },
@@ -50,7 +50,7 @@
     },
     {
       "path": "scripts/native_chapel_plan.gd",
-      "sha256": "1cc4946694efd8dd01519747a6d47607ec465db92f32e8e98cfe4a97bcf01d4a"
+      "sha256": "fde12950328393aa054ae0e11f785a6b68553838bc566fc2a42079ec50987731"
     },
     {
       "path": "scripts/native_fortress_plan.gd",
@@ -74,7 +74,7 @@
     },
     {
       "path": "scripts/ortho_3d_chapel.gd",
-      "sha256": "91cd946535018572efdcc5f05998d39d22232192b87732d3344711bb144a196f"
+      "sha256": "d0d0e929ac112a48d2921716ae82434d243fc58141aa6ef3e0f8367f9efbafd4"
     },
     {
       "path": "scripts/ortho_3d_fortification.gd",
@@ -82,7 +82,7 @@
     },
     {
       "path": "scripts/spatial_world_3d.gd",
-      "sha256": "78cbdccad113ebcf19792a4f815a5aa864b7cdd46c272d00fe26c5b0856677bf"
+      "sha256": "e762afff86507c20123d3a1899c524cc159caaad45f963851f1e11626e1f2ea4"
     },
     {
       "path": "scripts/village.gd",
@@ -90,11 +90,11 @@
     },
     {
       "path": "scripts/native_ground.gdshader",
-      "sha256": "a6f25f7a86fff9bb2308a9f3e8eb081f0084e5507abc1fbd2f2560fe0c1b8409"
+      "sha256": "cd8ba55352d6130f8b50b848e25b7dc9408c7e36e3a78ccf62956afe8259a155"
     },
     {
       "path": "scripts/native_ground_3d.gd",
-      "sha256": "ed66c2ef7687e9d9aaa90227911ff97c9678aa62a8ace2796e5773dedc84c5c4"
+      "sha256": "c0b5ede36c0428422a844e864a8661930d5ae04585f16b12885129ca44881cc8"
     },
     {
       "path": "scripts/native_river.gdshader",

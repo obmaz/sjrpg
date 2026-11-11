@@ -2,22 +2,24 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bhv6f5w1b56fs"
-path="res://.godot/imported/chapel-glass.webp-625cc3ecd5470d400c2c80da7c47a0df.ctex"
+uid="uid://dyrd5s2isgxhy"
+path.s3tc="res://.godot/imported/paving-2.png-4d17a550c0281c46654a6c26c73bb246.s3tc.ctex"
+path.etc2="res://.godot/imported/paving-2.png-4d17a550c0281c46654a6c26c73bb246.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 
 [deps]
 
-source_file="res://assets/art/preview3d/chapel-glass.webp"
-dest_files=["res://.godot/imported/chapel-glass.webp-625cc3ecd5470d400c2c80da7c47a0df.ctex"]
+source_file="res://assets/models/materials/paving/paving-2.png"
+dest_files=["res://.godot/imported/paving-2.png-4d17a550c0281c46654a6c26c73bb246.s3tc.ctex", "res://.godot/imported/paving-2.png-4d17a550c0281c46654a6c26c73bb246.etc2.ctex"]
 
 [params]
 
-compress/mode=1
+compress/mode=2
 compress/high_quality=false
-compress/lossy_quality=0.9
+compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1

@@ -180,13 +180,20 @@ func _move_body(body: CharacterBody3D, destination: Vector2) -> void:
 		var previous := body.position
 		var validated_pose := Vector3(point.x, floor_height + height * 0.5 + SKIN, point.y)
 		var motion := validated_pose - body.position
+		var wall_separation := Vector3.ZERO
 		for slide in 3:
 			if motion.length_squared() < 0.0000001:
 				break
 			var hit := body.move_and_collide(motion, false, 0.002, true, 4)
 			if hit == null:
 				break
-			motion = hit.get_remainder().slide(hit.get_normal())
+			var normal := hit.get_normal()
+			if absf(normal.y) < 0.6:
+				wall_separation += Vector3(normal.x, 0, normal.z)
+			motion = hit.get_remainder().slide(normal)
+		# 확정된 벽 접촉에만 1mm 수평 분리 이동을 적용해 회복 접촉의 미세 관통을 없앤다.
+		if wall_separation.length_squared() > 0.01:
+			body.move_and_collide(wall_separation.normalized() * 0.001, false, 0.002, true, 4)
 		_settle_support(body, previous, height, validated_pose)
 
 
@@ -485,8 +492,19 @@ func _build_forest() -> void:
 		var center := Iso.poly_bounds(polygon).get_center()
 		var base := _construction_height(center)
 		_prism_body(polygon, base, base + 3.5, PROP if _attackable_polygon(polygon) else SOLID, "Obstacle")
+	for sign: Dictionary in NativeCaveTrail.signs(game.village):
+		var point: Vector2 = sign["point"]
+		var pole := CylinderShape3D.new()
+		pole.radius = .14
+		pole.height = 1.55
+		_shape_body(pole,Transform3D(Basis.IDENTITY,native_point(point,_construction_height(point)+.775)),SOLID,"CaveTrailSign")
 	var chapel := _native_chapel(game.village)
-	_prism_body(chapel["building"], 0.28, 8.0, SOLID, "NativeChapelBody")
+	# L자 건물은 두 직교 상자로 구성해 내부 삼각형 이음새의 회복 접촉을 없앤다.
+	for rect: Rect2 in chapel["native_bodies"]:
+		var shape := BoxShape3D.new()
+		shape.size = Vector3(rect.size.x, 7.72, rect.size.y)
+		shape.margin = 0.001
+		_shape_body(shape, Transform3D(Basis.IDENTITY,Vector3(rect.get_center().x,4.14,rect.get_center().y)),SOLID,"NativeChapelBody")
 	for corner: Vector3 in NativeFortressPlan.corners(game.village):
 		var shape := CylinderShape3D.new()
 		shape.radius = NativeFortressPlan.CORNER_RADIUS
@@ -602,6 +620,12 @@ func _build_cave() -> void:
 			_segment(Vector3(xs[x], 0, zs[z]), Vector3(xs[x + 1], 0, zs[z]), 0.0, 3.5, SOLID)
 		if not cells.has(cell + Vector2i.DOWN):
 			_segment(Vector3(xs[x], 0, zs[z + 1]), Vector3(xs[x + 1], 0, zs[z + 1]), 0.0, 3.5, SOLID)
+	for chest: Chest in game.chests:
+		var shape := CylinderShape3D.new()
+		shape.radius = radius_metres(Chest.COLLISION_RADIUS)
+		shape.height = NativeEncounterMesh3D.CHEST_COLLISION_HEIGHT
+		var body := _shape_body(shape,Transform3D(Basis.IDENTITY,native_point(chest.position,shape.height*0.5)),PROP,"CaveChest")
+		_props.append({"owner":weakref(chest),"body":body})
 	for obstacle in layout.obstacles:
 		_prism_body(obstacle, 0.0, 2.5, SOLID, "CaveObstacle")
 
@@ -686,13 +710,14 @@ static func _native_chapel(village: Village) -> Dictionary:
 		ground.append(Iso.unproject(point) / UNITS)
 	var bounds := Iso.poly_bounds(ground)
 	var center := bounds.get_center()
-	var width := maxf(3.5, bounds.size.x)
-	var depth := maxf(3.0, bounds.size.y)
+	var width := maxf(3.5, bounds.size.x) * NativeChapelPlan.FOOTPRINT_SCALE
+	var depth := maxf(3.0, bounds.size.y) * NativeChapelPlan.FOOTPRINT_SCALE
 	var front := center.y + depth * 0.5
+	var door_x := center.x + NativeChapelPlan.entrance_x(width)
 	var door_width := NativeChapelPlan.stair_width(width)
 	var base := Rect2(center - Vector2(width + 0.30, depth + 0.30) * 0.5, Vector2(width + 0.30, depth + 0.30))
 	var platform := PackedVector2Array([base.position, Vector2(base.end.x, base.position.y), base.end, Vector2(base.position.x, base.end.y)])
-	var ramp := PackedVector2Array([Vector2(center.x - door_width * 0.5, front + 0.04 + NativeChapelPlan.RUN), Vector2(center.x + door_width * 0.5, front + 0.04 + NativeChapelPlan.RUN), Vector2(center.x + door_width * 0.5, front + 0.04), Vector2(center.x - door_width * 0.5, front + 0.04)])
+	var ramp := PackedVector2Array([Vector2(door_x - door_width * 0.5, front + 0.04 + NativeChapelPlan.RUN), Vector2(door_x + door_width * 0.5, front + 0.04 + NativeChapelPlan.RUN), Vector2(door_x + door_width * 0.5, front + 0.04), Vector2(door_x - door_width * 0.5, front + 0.04)])
 	var merged := Geometry2D.merge_polygons(platform, ramp)
 	var top_native: PackedVector2Array = merged[0] if not merged.is_empty() else platform
 	var top := PackedVector2Array()
@@ -702,11 +727,12 @@ static func _native_chapel(village: Village) -> Dictionary:
 	for point in ramp:
 		projected_ramp.append(Iso.project(point * UNITS))
 	var building := PackedVector2Array()
-	for point in [center + Vector2(-width, -depth) * 0.5, center + Vector2(width, -depth) * 0.5, center + Vector2(width, depth) * 0.5, center + Vector2(-width, depth) * 0.5]:
+	for point in NativeChapelPlan.body_polygon(center, width, depth):
 		building.append(Iso.project(point * UNITS))
 	return {"id": "chapel", "top": top, "ramp": projected_ramp, "rise": 0.28 * VERTICAL,
 		"native_steps": NativeChapelPlan.tiers(center, width, depth),
-		"bottom": Iso.project(Vector2(center.x, front + 0.04 + NativeChapelPlan.RUN) * UNITS), "upper": Iso.project(Vector2(center.x, front + 0.04) * UNITS),
+		"native_bodies": [Rect2(center+Vector2(-width*0.5,-depth*0.5),Vector2(width*0.4,depth)),Rect2(center+Vector2(-width*0.1,-depth*0.5),Vector2(width*0.6,depth*0.68))],
+		"bottom": Iso.project(Vector2(door_x, front + 0.04 + NativeChapelPlan.RUN) * UNITS), "upper": Iso.project(Vector2(door_x, front + 0.04) * UNITS),
 		"entrance": PackedVector2Array([projected_ramp[0], projected_ramp[1]]), "blockers": [] as Array[PackedVector2Array], "building": building}
 
 

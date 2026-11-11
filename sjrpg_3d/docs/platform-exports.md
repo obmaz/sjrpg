@@ -12,11 +12,12 @@
 
 ## 이미지 정책
 
-`assets/data/texture_policy.json`의 17개 불투명 표면만 VRAM 압축(`compress/mode=2`)합니다.
+`assets/data/texture_policy.json`의 24개 불투명 표면만 VRAM 압축(`compress/mode=2`)합니다.
 
 - 건축: limestone·slate·timber·bark
 - 숲: grass·paving
 - 강·절벽: rock·water
+- 전용 표면: 목재/쇠/황금 상자 전체 면 아틀라스1개, 서로 어울리는 포장6종
 - 동굴: floor·dark
 
 원본 파일·UV·논리 해상도·크기 제한은 유지하고 밉맵을 사용합니다. 코덱의4px 저장 블록 정렬과 원본 논리 해상도를 구분합니다. UI·효과·잎·유리·현재 배우 텍스처는 기존 손실 임포트(`mode=1`)와 품질·밉맵·알파 설정을 보존합니다. 자동3D 감지는 꺼서 이후 임포트가 이 구분을 바꾸지 않게 합니다. 런타임에 `.bin`에서 만드는 배우 ImageTexture는 별도 경로입니다.

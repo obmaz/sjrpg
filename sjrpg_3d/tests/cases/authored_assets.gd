@@ -44,7 +44,7 @@ func run() -> void:
 					and is_zero_approx(material.get_shader_parameter("gable_rise"))
 				)
 			)
-		else:
+		elif id != "chapel":
 			check(
 				"complete facade covers its gable without repeating the eaves",
 				(

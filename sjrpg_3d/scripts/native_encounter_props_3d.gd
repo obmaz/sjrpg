@@ -1,6 +1,6 @@
 class_name NativeEncounterProps3D
 extends RefCounted
-## Forest interactables observe source identity, charge/flash and consumed state.
+## Forest and cave interactables observe source identity, durability and consumed state.
 ## Source ancestors stay hidden adapters; no new timers, rewards or collision.
 
 const CHEST_SHADER := preload("res://scripts/native_chest_material.gdshader")
@@ -12,6 +12,7 @@ var _meshes := {}
 var _entries := {}
 var _source_ids := {}
 var _chest_material: ShaderMaterial
+var _chest_variants := {}
 var _lid_sweep_radius := 0.0
 
 
@@ -20,25 +21,21 @@ func setup(presenter: Node, material_map: Dictionary) -> NativeEncounterProps3D:
 	_game = presenter.game
 	_forest_world = _game.village.fountain.get_parent()
 	_materials = material_map.duplicate()
-	if not _materials.has("stone") or not _materials.has("wood") or not _materials.has("iron"):
+	if not _materials.has("stone") or not _materials.has("iron"):
 		return self  # A missing native family keeps individual source-art fallbacks.
-	if not _materials["stone"] is StandardMaterial3D or not _materials["wood"] is StandardMaterial3D or not _materials["iron"] is StandardMaterial3D:
+	if not _materials["stone"] is StandardMaterial3D or not _materials["iron"] is StandardMaterial3D:
 		return self
-	if (_materials["stone"] as StandardMaterial3D).albedo_texture == null or (_materials["wood"] as StandardMaterial3D).albedo_texture == null:
+	if (_materials["stone"] as StandardMaterial3D).albedo_texture == null:
 		return self
 	_meshes = NativeEncounterMesh3D.build()
 	_lid_sweep_radius = _chest_sweep_radius()
-	var wood: StandardMaterial3D = _materials["wood"]
-	var iron: StandardMaterial3D = _materials["iron"]
 	_chest_material = ShaderMaterial.new()
 	_chest_material.shader = CHEST_SHADER
-	_chest_material.set_shader_parameter("timber", wood.albedo_texture)
-	_chest_material.set_shader_parameter("timber_tint", wood.albedo_color)
-	_chest_material.set_shader_parameter("timber_scale", wood.uv1_scale.x)
-	_chest_material.set_shader_parameter("timber_roughness", wood.roughness)
-	_chest_material.set_shader_parameter("iron_tint", iron.albedo_color)
-	_chest_material.set_shader_parameter("iron_roughness", iron.roughness)
-	_chest_material.set_shader_parameter("iron_metallic", iron.metallic)
+	_chest_material.set_shader_parameter("surface_atlas",load("res://assets/models/materials/chests/albedo.png"))
+	for kind: String in ["iron","gold"]:
+		var material := _chest_material.duplicate() as ShaderMaterial
+		material.set_shader_parameter("variant",1 if kind == "iron" else 2)
+		_chest_variants[kind] = material
 	if OS.has_feature("web") and str(JavaScriptBridge.eval("window.location.search", true)).contains("loot_review=1"):
 		_start_review.call_deferred()
 	return self
@@ -55,6 +52,9 @@ func sync() -> void:
 	if not _meshes.is_empty():
 		for source in _game.encounters.stones.values():
 			_sync_source(source, "stone", current)
+		if _game.dungeon.active:
+			for source in _game.dungeon._forest_chests:
+				_sync_source(source, "chest", current)
 		for source in _game.chests:
 			_sync_source(source, "chest", current)
 	for id in _entries.keys():
@@ -72,7 +72,7 @@ func source_ids() -> Dictionary:
 
 
 func _sync_source(source: Node2D, role: String, current: Dictionary) -> void:
-	if not is_instance_valid(source) or source.is_queued_for_deletion() or source.get_parent() != _forest_world:
+	if not is_instance_valid(source) or source.is_queued_for_deletion() or source.get_parent() not in [_game.world, _forest_world]:
 		return
 	var sprite: IsoSprite = (source as EncounterStone).art if role == "stone" else (source as Chest).body_sprite
 	if not is_instance_valid(sprite) or sprite.is_queued_for_deletion():
@@ -87,7 +87,8 @@ func _sync_source(source: Node2D, role: String, current: Dictionary) -> void:
 	var entry: Dictionary = _entries[id]
 	var root: Node3D = entry["root"]
 	root.position = Ortho3DPreview.ground_position(source.position, _preview.surface_height(source.position))
-	root.visible = not _game.dungeon.active and source.visible and sprite.visible
+	var in_realm: bool = source.get_parent() == _game.world
+	root.visible = in_realm and source.visible and sprite.visible
 	if role == "stone":
 		_sync_stone(source as EncounterStone, entry)
 	else:
@@ -95,6 +96,10 @@ func _sync_source(source: Node2D, role: String, current: Dictionary) -> void:
 		(entry["lid"] as Node3D).rotation.x = deg_to_rad(NativeEncounterMesh3D.OPEN_ANGLE) if chest.dead else 0.0
 		(entry["splinters"] as MeshInstance3D).visible = chest.dead
 		entry["consumed"] = chest.dead
+		if entry.has("chest_header"):
+			var header: Label3D = entry["chest_header"]
+			header.visible = not chest.dead
+			header.text = "황금 상자" if chest.variant == "gold" else "쇠 상자 %d/%d" % [int(chest.hp),int(chest.max_hp)]
 
 
 func _create(source: Node2D, role: String) -> Dictionary:
@@ -125,14 +130,26 @@ func _create(source: Node2D, role: String) -> Dictionary:
 		root.add_child(header)
 		entry.merge({"stone": stone, "rune": rune, "header": header})
 	else:
-		_instance(_meshes["base"], root, {"chest": _chest_material})
+		var chest := source as Chest
+		var ink: ShaderMaterial = _chest_variants.get(chest.variant,_chest_material)
+		_instance(_meshes["base"], root, {"chest": ink})
 		var lid := Node3D.new()
 		lid.name = "ObservedConsumedLid"
 		lid.position = NativeEncounterMesh3D.LID_PIVOT
 		root.add_child(lid)
-		_instance(_meshes["lid"], lid, {"chest": _chest_material})
-		var splinters := _instance(_meshes["splinters"], root, {"chest": _chest_material})
+		_instance(_meshes["lid"], lid, {"chest": ink})
+		var splinters := _instance(_meshes["splinters"], root, {"chest": ink})
 		entry.merge({"lid": lid, "splinters": splinters, "consumed": false})
+		if chest.variant != "wood":
+			var header := Label3D.new()
+			header.font = UiKit.BOLD_FONT
+			header.font_size = 18
+			header.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			header.pixel_size = 0.012
+			header.position.y = NativeEncounterMesh3D.CHEST_COLLISION_HEIGHT+0.20
+			header.modulate = Color("e4c16b") if chest.variant == "gold" else Color("c4ced5")
+			root.add_child(header)
+			entry["chest_header"] = header
 	return entry
 
 
@@ -174,6 +191,8 @@ static func status_text(state: Dictionary, living: int, site_id := "") -> String
 
 
 func _chest_radius(source: Chest) -> float:
+	if _game.dungeon.active and source.get_parent() == _game.world:
+		return SpatialWorld3D.radius_metres(Chest.COLLISION_RADIUS)
 	for circle: Array in _game.village.circles:
 		var point: Vector2 = circle[0]
 		if point.distance_squared_to(source.position) < 1.0:
