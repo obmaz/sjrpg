@@ -1,0 +1,8 @@
+[gd_scene load_steps=4 format=3]
+[ext_resource type="PackedScene" path="res://assets/models/environment/traps/spikes/model.glb" id="model"]
+[ext_resource type="Script" path="res://assets/models/environment/traps/shared/visual.gd" id="script"]
+[ext_resource type="Material" path="res://assets/models/environment/traps/shared/stone.tres" id="stone"]
+[node name="Trap" type="Node3D"]
+script=ExtResource("script")
+stone=ExtResource("stone")
+[node name="Geometry" parent="." instance=ExtResource("model")]

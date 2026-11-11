@@ -69,7 +69,7 @@ func _build(layout: DungeonLayout, parent: Node3D, segments: Array[Dictionary]) 
 			var section := PackedVector3Array()
 			for offset: Vector2 in PROFILE:
 				var flat := point / SpatialWorld3D.UNITS + direction * offset.x
-				section.append(Vector3(flat.x, native_height * offset.y, flat.y))
+				section.append(Vector3(flat.x, DungeonRelief.flat_height(flat * SpatialWorld3D.UNITS) + native_height * offset.y, flat.y))
 			sections.append(section)
 			if station == 0:
 				first = section

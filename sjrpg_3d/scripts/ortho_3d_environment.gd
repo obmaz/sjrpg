@@ -29,6 +29,7 @@ var _cave_entry_light: OmniLight3D
 var _lighting_scope_cave := false
 var _ambient_outside := {}
 var _cave_rock := {}
+var _hazards: NativeDungeonHazards
 var _stone_cards := {}
 var _corpses := {}
 var _clock := 0.0
@@ -317,10 +318,11 @@ func _build_cave() -> void:
 	_cave_lights.clear()
 	var layout: DungeonLayout = preview.game.dungeon.layout
 	var floor_material := Ortho3DCaveRock.floor_material()
-	for index in layout.polygons.size():
-		var surface := _floor(layout.polygons[index], null, cave, 0.004, Color.WHITE, Ortho3DCaveRock.TILE_METRES)
-		surface.name = "CaveFloor_%d" % index
-		surface.material_override = floor_material
+	var surface: MeshInstance3D = preview._mesh(
+		layout.relief.mesh(), floor_material, Vector3(0, .004, 0), cave
+	)
+	surface.name = "CaveFloor"
+	surface.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	# DungeonArt recorded this union before the separate return-portal obstacle
 	# was added; a prop must not become a new cave boundary cell.
 	_cave_rock = Ortho3DCaveRock.build(layout, cave, preview.game.dungeon.art.boundary_segments)
@@ -329,7 +331,9 @@ func _build_cave() -> void:
 	report["native_cave_lanterns"] = lanterns["count"]
 	var native_scenery_excluded: Dictionary = preview._town_props.source_ids()
 	native_scenery_excluded.merge(native_lantern_ids)
-	var scenery := NativeSceneryProps3D.build(preview, cave, preview.game.world, true, native_scenery_excluded)
+	var scenery := NativeSceneryProps3D.build(
+		preview, cave, preview.game.world, true, native_scenery_excluded
+	)
 	var native_scenery_ids: Dictionary = scenery["owned_source_ids"]
 	report["native_cave_scenery"] = scenery["entries"].size()
 	report["native_cave_prop_sources"] = native_scenery_excluded.keys() + native_scenery_ids.keys()
@@ -338,7 +342,12 @@ func _build_cave() -> void:
 	var retained: Array[int] = []
 	report["remaining_sources"]["cave"] = []
 	for node in preview.game.dungeon.art.visuals:
-		if node is IsoSprite and not preview._town_props.owns(node) and not native_lantern_ids.has(node.get_instance_id()) and not native_scenery_ids.has(node.get_instance_id()):
+		if (
+			node is IsoSprite
+			and not preview._town_props.owns(node)
+			and not native_lantern_ids.has(node.get_instance_id())
+			and not native_scenery_ids.has(node.get_instance_id())
+		):
 			# Wall strips and end caps share atlases with useful lamps. Replace
 			# only the metadata-owned boundary art, never the whole texture bucket.
 			if str(node.get_meta("cave_role", "")) == "wall":
@@ -349,7 +358,13 @@ func _build_cave() -> void:
 			retained.append(node.get_instance_id())
 			report["cave_sprites"] = int(report["cave_sprites"]) + 1
 	for node in preview.game.world.get_children():
-		if node is IsoSprite and not preview._town_props.owns(node) and not native_lantern_ids.has(node.get_instance_id()) and not native_scenery_ids.has(node.get_instance_id()) and not preview.game.dungeon.art.visuals.has(node):
+		if (
+			node is IsoSprite
+			and not preview._town_props.owns(node)
+			and not native_lantern_ids.has(node.get_instance_id())
+			and not native_scenery_ids.has(node.get_instance_id())
+			and not preview.game.dungeon.art.visuals.has(node)
+		):
 			_sprite(node, buckets)
 			report["remaining_sources"]["cave"].append(_source_record(node))
 			report["cave_sprites"] = int(report["cave_sprites"]) + 1
@@ -370,9 +385,17 @@ func _build_cave() -> void:
 		cave.add_child(light)
 		_cave_lights.append(light)
 	_build_cave_fill()
+	_hazards = NativeDungeonHazards.new().setup(preview, cave)
 	var batch := Ortho3DStaticBatch.apply(cave)
 	cave.set_meta("static_batch", batch)
-	cave.set_meta("boundary_sources", {"replaced": replaced, "retained": retained, "native_props": report["native_cave_prop_sources"]})
+	cave.set_meta(
+		"boundary_sources",
+		{
+			"replaced": replaced,
+			"retained": retained,
+			"native_props": report["native_cave_prop_sources"]
+		}
+	)
 
 
 func _build_cave_fill() -> void:
@@ -427,7 +450,13 @@ func sync(delta: float, frozen: bool) -> void:
 	NativeLandmarks3D.sync_water(forest, preview.game.village)
 	var inside: bool = preview.game.dungeon.active
 	forest.visible = not inside
-	if inside and (_cave_source_id != preview.game.dungeon._root.get_instance_id() or not is_instance_valid(cave)):
+	if (
+		inside
+		and (
+			_cave_source_id != preview.game.dungeon._root.get_instance_id()
+			or not is_instance_valid(cave)
+		)
+	):
 		report["cave_sprites"] = 0
 		report["cave_walls"] = 0
 		_build_cave()
@@ -446,8 +475,12 @@ func sync(delta: float, frozen: bool) -> void:
 		if _water_material != null:
 			_water_material.set_shader_parameter("phase", _clock)
 	NativeCaveLanterns3D.sync(cave, _clock)
+	if _hazards != null:
+		_hazards.sync()
 	for light in _cave_lights:
-		light.light_energy = 2.6 if Prefs.reduce_motion else 2.6 + sin(_clock * 3.8 + light.position.x) * 0.10
+		light.light_energy = (
+			2.6 if Prefs.reduce_motion else 2.6 + sin(_clock * 3.8 + light.position.x) * 0.10
+		)
 	for entry: Dictionary in _stone_cards.values():
 		var owner: EncounterStone = entry["owner"].get_ref()
 		var card: MeshInstance3D = entry["card"]
@@ -461,13 +494,20 @@ func sync(delta: float, frozen: bool) -> void:
 		var minimum := 0.0
 		for vertex: Vector3 in entry["vertices"]:
 			minimum = minf(minimum, (basis * vertex).y)
-		var foot := Ortho3DPreview.ground_position(owner.position, preview.surface_height(owner.position))
+		var foot := Ortho3DPreview.ground_position(
+			owner.position, preview.surface_height(owner.position)
+		)
 		card.position = foot + basis.z * (-minimum / basis.z.y + 0.018)
-		(card.material_override as ShaderMaterial).set_shader_parameter("tint", owner.art.modulate_color)
+		(card.material_override as ShaderMaterial).set_shader_parameter(
+			"tint", owner.art.modulate_color
+		)
 		var header: Label3D = entry["header"]
 		header.basis = basis
 		header.position = foot + basis.y * 1.72
-		header.visible = card.visible and owner.position.distance_squared_to(preview.game.player.position) < 240.0 * 240.0
+		header.visible = (
+			card.visible
+			and owner.position.distance_squared_to(preview.game.player.position) < 240.0 * 240.0
+		)
 		var living: int = owner.runtime.living(owner.id)
 		var state: Dictionary = owner.runtime.states[owner.id]
 		header.text = NativeEncounterProps3D.status_text(state, living)

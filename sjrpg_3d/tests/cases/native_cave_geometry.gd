@@ -268,8 +268,16 @@ func run() -> void:
 		collision_match = collision_match and (native - middle).dot(outward) <= limit
 		# A missing floor alone also stops the motor. Independently hit the
 		# actual SOLID wall at the visible toe, so this cannot pass without it.
-		var ray_from := Vector3(middle.x - outward.x * 0.60, 0.10, middle.y - outward.y * 0.60)
-		var ray_to := Vector3(middle.x + outward.x * 0.60, 0.10, middle.y + outward.y * 0.60)
+		var ray_from := Vector3(
+			middle.x - outward.x * 0.60,
+			DungeonRelief.flat_height(middle * 65) + .10,
+			middle.y - outward.y * 0.60
+		)
+		var ray_to := Vector3(
+			middle.x + outward.x * 0.60,
+			DungeonRelief.flat_height(middle * 65) + .10,
+			middle.y + outward.y * 0.60
+		)
 		var query := PhysicsRayQueryParameters3D.create(ray_from, ray_to, SpatialWorld3D.SOLID)
 		var hit: Dictionary = game.spatial_world.get_world_3d().direct_space_state.intersect_ray(
 			query
@@ -338,38 +346,25 @@ func run() -> void:
 
 
 func _check_floor_surfaces(environment: Ortho3DEnvironment, layout: DungeonLayout) -> void:
-	var floors := environment.cave.find_children("CaveFloor_*", "MeshInstance3D", true, false)
-	var valid := floors.size() == layout.polygons.size()
-	var shared: ShaderMaterial
-	for index in layout.polygons.size():
-		var node := environment.cave.get_node_or_null("CaveFloor_%d" % index) as MeshInstance3D
-		if node == null:
-			valid = false
-			continue
-		var material := node.material_override as ShaderMaterial
-		if material == null:
-			valid = false
-			continue
-		if shared == null:
-			shared = material
-		valid = valid and material == shared
-		var arrays := node.mesh.surface_get_arrays(0)
-		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
-		var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
-		var polygon: PackedVector2Array = layout.polygons[index]
-		valid = valid and vertices.size() == polygon.size()
-		for vertex_index in mini(vertices.size(), polygon.size()):
-			var expected := Ortho3DPreview.ground_position(polygon[vertex_index], 0.004)
-			# ArrayMesh normals are octahedral uint16 pairs; measured UP error is 1/65535.
-			valid = (
-				valid
-				and vertices[vertex_index].is_equal_approx(expected)
-				and normals[vertex_index].distance_to(Vector3.UP) <= 2.0 / 65535.0
-				and uv[vertex_index].is_equal_approx(Vector2(expected.x, expected.z) / 2.6)
-			)
+	var node := environment.cave.get_node_or_null("CaveFloor") as MeshInstance3D
+	check("cave floor is one cached union mesh", node != null and node.mesh == layout.relief.mesh())
+	if node == null:
+		return
+	var shared := node.material_override as ShaderMaterial
+	var arrays := node.mesh.surface_get_arrays(0)
+	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+	var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+	var valid := vertices.size() == layout.relief.floor_faces.size()
+	for index in vertices.size():
+		valid = valid and vertices[index].distance_to(layout.relief.floor_faces[index]) < .0001
+		valid = valid and normals[index].y > .72 and absf(normals[index].length() - 1) < .001
+		valid = (
+			valid
+			and uv[index].distance_to(Vector2(vertices[index].x, vertices[index].z) / 2.6) < .0001
+		)
 	check(
-		"warm cave floor preserves every original flat polygon vertex metre UV and shared lit material",
+		"the lit sloping union keeps metre UVs, upward normals and original XZ coverage",
 		valid and shared != null
 	)
 	if shared == null:

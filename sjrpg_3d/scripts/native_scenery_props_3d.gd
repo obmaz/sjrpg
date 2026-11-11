@@ -140,6 +140,7 @@ static func build(preview: Node, parent: Node3D, world: Node2D, cave: bool, excl
 			var a := Ortho3DPreview.ground_position(left)
 			var b := Ortho3DPreview.ground_position(right)
 			at = (a + b) * 0.5
+			at.y = preview.surface_height((left+right)*.5)
 			var axis := (b - a).normalized()
 			basis = Basis(axis, Vector3.UP, axis.cross(Vector3.UP))
 			opening = a.distance_to(b)

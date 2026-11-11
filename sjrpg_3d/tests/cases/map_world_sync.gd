@@ -155,14 +155,22 @@ func run() -> void:
 			"return marker tracks the real portal rather than the EXIT constant",
 			_marker(game, "cave:return")["pos"] == portal.position
 		)
-		var polygon: PackedVector2Array = game.dungeon.layout.polygons[0]
+		# 지도는 이전 평면 방 배열이 아니라 실제 FLOOR 설계의 합집합 셀을 읽는다.
+		var relief: DungeonRelief = game.dungeon.layout.relief
+		var cell: Rect2 = relief.cells[0]
 		var previous := model.revision
-		polygon[0] += Vector2(-12, 0)
-		game.dungeon.layout.polygons[0] = polygon
+		cell.position += Vector2(-.12, 0)
+		relief.cells[0] = cell
 		model.refresh(true)
 		check(
-			"same-count cave floor edits invalidate geometry",
-			model.revision == previous + 1 and _shape(game, "cave:0")["poly"] == polygon
+			"same-count shared cave floor edits invalidate geometry",
+			(
+				model.revision == previous + 1
+				and (
+					_shape(game, "cave:0")["poly"][0].distance_to(Iso.project(cell.position * 65))
+					< .001
+				)
+			)
 		)
 		game.dungeon.leave("", false)
 		model.refresh(true)

@@ -1,0 +1,13 @@
+{
+  "animated_node": "Spikes",
+  "collision": "timed damage only; flush floor plate; no movement blocker",
+  "id": "spikes",
+  "material": "GLB metal PBR slots; scene binds shared generated cave rock without embedded texture copies",
+  "model": "model.glb",
+  "modelSha256": "7e1c171cb965582554467320481f2272d02831538e7e4aef92ea6564fdf9b61c",
+  "scene": "visual.tscn",
+  "source": "tools/dungeon_art/bake_traps.gd",
+  "sourceSha256": "787d7982c147d035097883c8a0ad85b6f7773ad0f248f1d20412086b87c90ffe",
+  "triangles": 848,
+  "units": "metres; +Y up; +Z firing direction; floor origin Y=0"
+}

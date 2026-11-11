@@ -133,3 +133,5 @@ tools/serve.sh
 `MapPlaceRow`는 드래그 임계값을 넘긴 상태를 손을 뗄 때까지 유지합니다. 방향 반전·터치 취소·다른 손가락이 탭을 만들지 않으며 부모 목록의 스크롤을 막지 않습니다. `map_place_row_input`과 실제 터치 도구 `tools/check_map_touch.mjs`가 이를 검증합니다.
 
 `Game._tick_corpse_list`는 활성 영역과 동굴 방문 중 숨겨진 필드의 시체 수명을 같은 모험 시계로 처리합니다. 기본15초/끝3초 페이드이며 삭제 시 스킬 대상·원본 기록·3D 표시를 함께 정리합니다. `warp_transition`·`actor_warp_fade`·`corpse_expiry`가 실제 공간/재질 복원과 정상 프레임 만료를 검증합니다.
+
+동굴의 실제 바닥·경사·경계는 `DungeonRelief`가 공유하고, `DungeonHazards`가 장치의 시계·피해를 소유합니다. `NativeDungeonHazards`와 HUD·지도는 같은 상태를 읽습니다. 모델 교체 경계·수명·검사는 [동굴 구조](native-cave.md)를 따릅니다.

@@ -162,7 +162,7 @@ func _sync_map() -> void:
 	if not _rows.has(selected_id):
 		selected_id = ""
 		canvas.selected_id = ""
-		_selected.text = "흰 화살표: 내 위치 · 빨강: 적"
+		_selected.text = "밝음: 높은 길 · 어두움: 낮은 길" if game.dungeon.active else "흰 화살표: 내 위치 · 빨강: 적"
 	for marker in markers:
 		var distance := (
 			Iso.unproject(marker["pos"] - game.player.position).length() / SpatialWorld3D.UNITS

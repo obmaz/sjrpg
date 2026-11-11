@@ -71,7 +71,7 @@ func _source_signature() -> int:
 			[
 				"cave",
 				game.dungeon.get_instance_id(),
-				game.dungeon.layout.polygons if game.dungeon.layout != null else game.map_shapes
+				game.dungeon.layout.relief.cells if game.dungeon.layout != null else game.map_shapes
 			]
 		)
 	_bind_native()
@@ -135,15 +135,22 @@ func refresh(force_check := false) -> bool:
 		if game.dungeon.layout == null:
 			shapes = game.map_shapes
 		else:
-			for index in game.dungeon.layout.polygons.size():
-				shapes.append(
-					MapGeometry.shape(
-						"cave:%d" % index,
-						"floor",
-						game.dungeon.layout.polygons[index],
-						Color("777970")
-					)
-				)
+			# 실제 FLOOR 셀과 높이를 그대로 표시한다. 위/아래 길의 좌표는 바꾸지 않는다.
+			var relief: DungeonRelief = game.dungeon.layout.relief
+			for index in relief.cells.size():
+				var cell: Rect2 = relief.cells[index]
+				var polygon := PackedVector2Array()
+				for point: Vector2 in [
+					cell.position,
+					Vector2(cell.end.x, cell.position.y),
+					cell.end,
+					Vector2(cell.position.x, cell.end.y)
+				]:
+					polygon.append(Iso.project(point * 65))
+				var height := DungeonRelief.flat_height(cell.get_center() * 65)
+				var ink := Color("565c60").lerp(Color("a39b83"), clampf((height + 2.4) / 3.5, 0, 1))
+				shapes.append(MapGeometry.shape("cave:%d" % index, "floor", polygon, ink))
+
 	else:
 		shapes = MapGeometry.build(game.village)
 		if _native_bound:

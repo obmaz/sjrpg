@@ -1,0 +1,21 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://assets/models/materials/cave/wall.gdshader" id="1_0ry1w"]
+[ext_resource type="Texture2D" path="res://assets/models/materials/cave/wall/wall-0.png" id="2_h23e8"]
+[ext_resource type="Texture2D" path="res://assets/models/materials/cave/wall/wall-1.png" id="3_235a5"]
+[ext_resource type="Texture2D" path="res://assets/models/materials/cave/wall/wall-2.png" id="4_7wakt"]
+[ext_resource type="Texture2D" path="res://assets/models/materials/cave/wall/wall-3.png" id="5_qbbau"]
+[ext_resource type="Texture2D" path="res://assets/models/materials/cave/wall/wall-4.png" id="6_64yro"]
+[ext_resource type="Texture2D" path="res://assets/models/materials/cave/wall/wall-5.png" id="7_8ycnv"]
+
+[resource]
+resource_name = "CaveInnerWall"
+render_priority = 0
+shader = ExtResource("1_0ry1w")
+shader_parameter/surface_0 = ExtResource("2_h23e8")
+shader_parameter/surface_1 = ExtResource("3_235a5")
+shader_parameter/surface_2 = ExtResource("4_7wakt")
+shader_parameter/surface_3 = ExtResource("5_qbbau")
+shader_parameter/surface_4 = ExtResource("6_64yro")
+shader_parameter/surface_5 = ExtResource("7_8ycnv")
+shader_parameter/exposed = false

@@ -518,16 +518,18 @@ func refresh() -> void:
 
 
 func surface_height(point: Vector2) -> float:
+	# 소품/횃불은 물리 서버에 새 영역이 반영되기 전에도 같은 정적 높이를 읽는다.
+	var dungeon := game.get("dungeon") as DungeonRuntime
+	if dungeon != null and dungeon.active:
+		return DungeonRelief.at(point)
 	var spatial := game.get("spatial_world") as SpatialWorld3D
 	if is_instance_valid(spatial):
 		return spatial.height_at(point)
-	if game.dungeon.active:
-		return 0.0
 	# Only used while the backend is being attached after the presenter becomes ready.
 	for surface: Dictionary in SpatialWorld3D.terrain_surfaces(game.village):
 		if SpatialWorld3D._contains(surface["top"], point):
 			return SpatialWorld3D._surface_height(surface, point)
-	return NativeGroundRelief.at(game.village,point)
+	return NativeGroundRelief.at(game.village, point)
 
 
 func _publish_probe() -> void:
@@ -556,6 +558,10 @@ func _publish_probe() -> void:
 		"batch_corner_error_m": _batch_gpu_error,
 		"physics_bodies": physics.actor_bodies.size() if physics != null else 0,
 		"physics_ticks": physics.physics_ticks if physics != null else 0,
+		"dungeon_traps": (
+			_world_environment._hazards.snapshot()
+			if _world_environment != null and _world_environment._hazards != null else []
+		),
 		"warp_transition": {"active": game.exploration.transition.active, "age": game.exploration.transition.age, "opacity": game.exploration.transition.opacity(), "transferred": game.exploration.transition.transferred},
 		"level_up_fx": _level_up_fx._entries.size() if _level_up_fx != null else 0,
 		"waypoint_discoveries": _level_up_fx._entries.values().filter(func(entry: Dictionary): return entry["root"].name == "WaypointDiscovery").size(),

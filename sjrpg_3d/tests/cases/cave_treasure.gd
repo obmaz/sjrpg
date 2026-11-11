@@ -111,12 +111,21 @@ func _check_wall_ownership(game: Node) -> void:
 	var unrelated_stays_solid := true
 	var all_surfaces_match := true
 	var samples := [
-		Vector2(1125, -500), Vector2(2825, -500), Vector2(1125, 500), Vector2(2825, 500)
+		Vector2(750, -420),
+		Vector2(2450, -420),
+		Vector2(1125, -500),
+		Vector2(2825, -500),
+		Vector2(1125, 500),
+		Vector2(2825, 500)
 	]
 	for room: Vector2 in DungeonLayout.ROOMS:
 		samples.append(room + Vector2(180, 180))
 	for sample: Vector2 in samples:
 		game.spatial_world.teleport_source_actor(game.player, Iso.project(sample), Player.RADIUS)
+		game.camera.position = game._camera_focus()
+		game.camera.reset_smoothing()
+		game.camera.force_update_scroll()
+		preview._sync_camera()
 		fade.sync(1.0)
 		for wall: MeshInstance3D in rock["meshes"]:
 			var key := "object:%s" % wall.get_instance_id()

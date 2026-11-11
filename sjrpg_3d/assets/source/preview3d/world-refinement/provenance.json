@@ -58,7 +58,7 @@
     },
     {
       "path": "scripts/native_scenery_props_3d.gd",
-      "sha256": "27872b38e31f9e39eb55672e25a5a04edf7068f4e8dce1230e8b947f9eb8a7b7"
+      "sha256": "aea3362f57750fd41e59ff3b1b0e83834c7e7404c7ea23bb09cb908265c1999f"
     },
     {
       "path": "scripts/native_landmarks_3d.gd",
@@ -74,7 +74,7 @@
     },
     {
       "path": "scripts/spatial_world_3d.gd",
-      "sha256": "6223d9cd05ea9c43945599d717980847c61285c11aa7e8a2db75dbf5cb069f17"
+      "sha256": "174e39d72e2cf3c361abcd953348d4ed299d5c5c07f09ae54f017774a96ab93f"
     },
     {
       "path": "scripts/village.gd",

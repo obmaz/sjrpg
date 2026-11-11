@@ -308,7 +308,11 @@ func _read_debug_params() -> void:
 			_hud_preview.call_deferred(kv[1])
 		elif kv.size() == 2 and kv[0] == "encounter_preview" and kv[1] in ["ready", "active", "empty"]:
 			_encounter_preview.call_deferred(kv[1])
-		elif kv.size() == 2 and kv[0] == "dungeon_preview" and kv[1] in ["entry", "room", "branch", "exit"]:
+		elif (
+			kv.size() == 2 and kv[0] == "dungeon_preview"
+			and kv[1] in ["entry", "room", "branch", "exit", "upper", "lower",
+				"spikes", "spikes_warn", "spikes_live", "flame", "flame_warn", "flame_live", "entry_live"]
+		):
 			_dungeon_preview.call_deferred(kv[1])
 		elif kv.size() == 2 and kv[0] == "warp_preview" and kv[1] == "1":
 			_warp_preview.call_deferred()
@@ -515,6 +519,26 @@ func _dungeon_preview(which: String) -> void:
 			ground = Vector2(1125, -500)
 		"exit":
 			ground = DungeonLayout.EXIT
+		"upper":
+			ground = Vector2(1125, -500)
+		"lower":
+			ground = Vector2(2825, 500)
+		"spikes", "spikes_warn", "spikes_live", "flame", "flame_warn", "flame_live":
+			var target: DungeonTrap = dungeon.hazards.traps[5 if which.begins_with("flame") else 0]
+			target.phase = (
+				DungeonTrap.Phase.WARNING if which.ends_with("warn") else DungeonTrap.Phase.ACTIVE
+			)
+			target.age = .40
+			ground = (
+				Iso.unproject(target.position)
+				+ (Vector2(0, 225) if target.kind == "flame" else Vector2(-130, 0))
+			)
+			_fx_review_focus = (
+				target.position + Iso.project(Vector2(0, 75))
+				if target.kind == "flame"
+				else target.position
+			)
+
 	player.position = Iso.project(ground)
 	player.move_input = Vector2.ZERO
 	hud.controls.release_all()
@@ -530,8 +554,12 @@ func _dungeon_preview(which: String) -> void:
 	hud._bars.queue_redraw()
 	hud.minimap.queue_redraw()
 	# The fresh entry notice would otherwise stay frozen across the cave artwork.
-	hud._toast_plaque.hide()
-	get_tree().paused = true
+	if which != "entry_live":
+		hud._toast_plaque.hide()
+	get_tree().paused = not which.ends_with("live")
+	if which.ends_with("live"):
+		for enemy: Enemy in enemies:
+			enemy.set_process(false)
 	JavaScriptBridge.eval("window.__sjrpgDungeonPreviewReady = true")
 
 

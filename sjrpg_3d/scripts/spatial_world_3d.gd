@@ -19,6 +19,7 @@ var physics_ticks := 0
 var realm := "forest"
 var _sources := {}
 var _geometry: Node3D
+var _cave_floor: StaticBody3D
 var _gates: Array[StaticBody3D] = []
 var _circles: Array[Dictionary] = []
 var _props: Array[Dictionary] = []
@@ -31,6 +32,7 @@ var _sphere := SphereShape3D.new()
 ## and returns intact instead of being triangulated and rebuilt on the way out.
 var _forest_cache := {}
 var forest_builds := 0
+var cave_support_repairs := 0
 # Reused query objects: these run many times per frame and per placement search.
 var _blocked_shape := CapsuleShape3D.new()
 var _shape_query := PhysicsShapeQueryParameters3D.new()
@@ -325,6 +327,17 @@ func _floor_sample(point: Vector2) -> Dictionary:
 	ray.to = at - Vector3.UP * 10.0
 	var hit := get_world_3d().direct_space_state.intersect_ray(ray)
 	if hit.is_empty():
+		if (
+			realm == "cave"
+			and game.dungeon.layout != null
+			and is_instance_valid(_cave_floor)
+			and _cave_floor.is_inside_tree()
+			and (_cave_floor.collision_layer & FLOOR) != 0
+		):
+			var support: Dictionary = game.dungeon.layout.relief.sample(Vector2(at.x, at.z))
+			if bool(support.get("found", false)):
+				cave_support_repairs += 1
+				return support
 		return {"found": false}
 	var position: Vector3 = hit["position"]
 	return {"found": true, "height": position.y, "normal": hit["normal"]}
@@ -576,66 +589,49 @@ func _chest_at(point: Vector2) -> Chest:
 
 func _build_cave() -> void:
 	var layout: DungeonLayout = game.dungeon.layout
-	var xs: Array[float] = []
-	var zs: Array[float] = []
-	var rects: Array[Rect2] = []
-	for polygon in layout.polygons:
-		var flat := PackedVector2Array()
-		for point in polygon:
-			flat.append(Iso.unproject(point) / UNITS)
-		var bounds := Iso.poly_bounds(flat)
-		# Project/unproject uses float Vector2s; shared authored rectangle edges
-		# can differ by micrometres. Canonicalize before the union-cell boundary
-		# construction, or a false microscopic empty cell becomes a real wall.
-		var minimum := bounds.position.snapped(Vector2.ONE * 0.001)
-		var maximum := bounds.end.snapped(Vector2.ONE * 0.001)
-		bounds = Rect2(minimum, maximum - minimum)
-		rects.append(bounds)
-		for x in [bounds.position.x, bounds.end.x]:
-			if not xs.has(x):
-				xs.append(x)
-		for z in [bounds.position.y, bounds.end.y]:
-			if not zs.has(z):
-				zs.append(z)
-		_floor_polygon(polygon, 0.0, "CaveFloor")
-	xs.sort()
-	zs.sort()
-	var cells := {}
-	for x in xs.size() - 1:
-		for z in zs.size() - 1:
-			var center := Vector2((xs[x] + xs[x + 1]) * 0.5, (zs[z] + zs[z + 1]) * 0.5)
-			for rect in rects:
-				if rect.has_point(center):
-					cells[Vector2i(x, z)] = true
-					break
-	for cell: Vector2i in cells:
-		var x := cell.x
-		var z := cell.y
-		if not cells.has(cell + Vector2i.LEFT):
-			_segment(Vector3(xs[x], 0, zs[z]), Vector3(xs[x], 0, zs[z + 1]), 0.0, 3.5, SOLID)
-		if not cells.has(cell + Vector2i.RIGHT):
-			_segment(Vector3(xs[x + 1], 0, zs[z]), Vector3(xs[x + 1], 0, zs[z + 1]), 0.0, 3.5, SOLID)
-		if not cells.has(cell + Vector2i.UP):
-			_segment(Vector3(xs[x], 0, zs[z]), Vector3(xs[x + 1], 0, zs[z]), 0.0, 3.5, SOLID)
-		if not cells.has(cell + Vector2i.DOWN):
-			_segment(Vector3(xs[x], 0, zs[z + 1]), Vector3(xs[x + 1], 0, zs[z + 1]), 0.0, 3.5, SOLID)
+	# 바닥/벽의 높이 꺾임을 같은 union 격자로 구성해 중복 평면과 숨은 단차를 없앤다.
+	_cave_floor = _triangle_body(layout.relief.floor_faces, FLOOR, "CaveFloor")
+	for segment: Dictionary in layout.relief.boundary_segments:
+		var normal: Vector2 = segment["outward"]
+		var points := PackedVector3Array()
+		for endpoint: Vector2 in [segment["a"], segment["b"]]:
+			for side: float in [-1.0, 1.0]:
+				var at := DungeonRelief.vertex(endpoint / UNITS + normal * .04 * side)
+				points.append(at - Vector3.UP * .08)
+				points.append(at + Vector3.UP * 3.5)
+		var wall := ConvexPolygonShape3D.new()
+		wall.points = points
+		wall.margin = .001
+		_shape_body(wall, Transform3D.IDENTITY, SOLID, "CaveBoundary")
 	for chest: Chest in game.chests:
 		var shape := CylinderShape3D.new()
 		shape.radius = radius_metres(Chest.COLLISION_RADIUS)
 		shape.height = NativeEncounterMesh3D.CHEST_COLLISION_HEIGHT
-		var body := _shape_body(shape,Transform3D(Basis.IDENTITY,native_point(chest.position,shape.height*0.5)),PROP,"CaveChest")
-		_props.append({"owner":weakref(chest),"body":body})
+		var body := _shape_body(
+			shape,
+			Transform3D(
+				Basis.IDENTITY,
+				native_point(
+					chest.position, _construction_height(chest.position) + shape.height * 0.5
+				)
+			),
+			PROP,
+			"CaveChest"
+		)
+		_props.append({"owner": weakref(chest), "body": body})
 	for obstacle in layout.obstacles:
-		_prism_body(obstacle, 0.0, 2.5, SOLID, "CaveObstacle")
+		var center := Iso.poly_bounds(obstacle).get_center()
+		var base := _construction_height(center)
+		_prism_body(obstacle, base, base + 2.5, SOLID, "CaveObstacle")
 
 
 func _construction_height(point: Vector2) -> float:
 	if realm == "cave":
-		return 0.0
+		return DungeonRelief.at(point)
 	for surface in _surfaces:
 		if _contains(surface["top"], point):
 			return _surface_height(surface, point)
-	return NativeGroundRelief.at(game.village,point)
+	return NativeGroundRelief.at(game.village, point)
 
 
 static func _contains(polygon: PackedVector2Array, point: Vector2) -> bool:

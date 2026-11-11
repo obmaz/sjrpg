@@ -23,7 +23,7 @@ static func build(preview: Node, parent: Node3D, sources: Array) -> Dictionary:
 	for source in sources:
 		if not source is IsoSprite or str(source.get_meta("cave_role", "")) != "lantern":
 			continue
-		var anchor := Ortho3DPreview.ground_position(source.global_position, 0.0)
+		var anchor := Ortho3DPreview.ground_position(source.global_position, DungeonRelief.at(source.global_position))
 		var mount := _wall_mount(anchor, profiles)
 		if mount.is_empty():
 			push_error("Cave torch has no supporting rendered wall")
@@ -78,7 +78,7 @@ static func build(preview: Node, parent: Node3D, sources: Array) -> Dictionary:
 static func _wall_mount(anchor: Vector3, profiles: Array) -> Dictionary:
 	var best := {}
 	var distance := INF
-	var origin := Vector3(anchor.x, MOUNT_HEIGHT, anchor.z)
+	var origin := Vector3(anchor.x, anchor.y + MOUNT_HEIGHT, anchor.z)
 	for profile: Dictionary in profiles:
 		if float(profile["height"]) < Ortho3DCaveRock.CHAMBER_HEIGHT:
 			continue

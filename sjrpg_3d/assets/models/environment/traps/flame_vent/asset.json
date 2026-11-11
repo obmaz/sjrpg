@@ -1,0 +1,13 @@
+{
+  "animated_node": "",
+  "collision": "timed damage only; flush floor plate; no movement blocker",
+  "id": "flame_vent",
+  "material": "GLB metal PBR slots; scene binds shared generated cave rock without embedded texture copies",
+  "model": "model.glb",
+  "modelSha256": "da6d4b6b4ec24235d123564da221149e8028023219aa522589c428cbb95cd414",
+  "scene": "visual.tscn",
+  "source": "tools/dungeon_art/bake_traps.gd",
+  "sourceSha256": "787d7982c147d035097883c8a0ad85b6f7773ad0f248f1d20412086b87c90ffe",
+  "triangles": 264,
+  "units": "metres; +Y up; +Z firing direction; floor origin Y=0"
+}

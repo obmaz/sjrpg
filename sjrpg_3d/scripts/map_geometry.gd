@@ -76,6 +76,10 @@ static func _npc(game: Node, name: String) -> Node2D:
 
 static func category(marker: Dictionary) -> String:
 	var id: String = marker["id"]
+	if id.begins_with("hazard:spike"):
+		return "가시 함정"
+	if id.begins_with("hazard:flame"):
+		return "화염 장치"
 	if id.begins_with("quest:"):
 		return "의뢰"
 	if id.begins_with("sanctuary:"):
@@ -104,6 +108,18 @@ static func markers(game: Node) -> Array[Dictionary]:
 		var portal := game.world.get_node_or_null("CaveReturnPortal") as Node2D
 		var at := portal.position if portal != null else Iso.project(DungeonLayout.EXIT)
 		markers.append(_marker("cave:return", at, "귀환문", Color("c4a5ee"), "동굴 끝의 귀환 지점"))
+		if game.dungeon.hazards != null:
+			for trap: DungeonTrap in game.dungeon.hazards.traps:
+				var ink := Color("e5ba6b") if trap.kind == "spike" else Color("e7866f")
+				markers.append(
+					_marker(
+						"hazard:" + trap.id,
+						trap.position,
+						trap.title(),
+						ink,
+						trap.detail() + " · 높이 %+.1f m" % DungeonRelief.at(trap.position)
+					)
+				)
 		return markers
 	for definition in Quests.DEFS:
 		var id: String = definition["id"]

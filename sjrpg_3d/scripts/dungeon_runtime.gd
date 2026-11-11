@@ -10,6 +10,8 @@ var entry_level := 1
 var defeated := 0
 var total := 0
 var layout: DungeonLayout
+var hazards: DungeonHazards
+var _hazard_hint: DungeonHazardHint
 var art: DungeonArt
 var _root: Node2D
 var _forest_world: Node2D
@@ -45,6 +47,7 @@ func enter() -> bool:
 		return false
 	_rng.randomize()
 	layout = DungeonLayout.new()
+	hazards = DungeonHazards.new().setup(game)
 	remaining = DURATION
 	entry_level = GameState.level + 2
 	defeated = 0
@@ -73,6 +76,8 @@ func enter() -> bool:
 	game.quest_runtime.set_process(false)
 	game.exploration.set_process(false)
 	active = true
+	_hazard_hint = DungeonHazardHint.new().setup(game)
+	game.hud.add_child(_hazard_hint)
 	GameState.location_mode = "cave"
 	_build_art(world)
 	_build_enemies()
@@ -121,6 +126,9 @@ func _build_enemies() -> void:
 
 func tick(delta: float) -> void:
 	remaining = maxf(0.0, remaining - delta)
+	hazards.tick(delta)
+	if not active:
+		return
 	game._tick_corpses(delta)
 	if remaining <= 0.0:
 		leave("시간이 끝나 동굴 입구로 돌아왔습니다")
@@ -158,6 +166,10 @@ func leave(message: String, save_progress := true) -> void:
 	if not active:
 		return
 	active = false
+	hazards = null
+	if is_instance_valid(_hazard_hint):
+		_hazard_hint.queue_free()
+	_hazard_hint = null
 	for corpse in game.corpses.duplicate():
 		game.remove_corpse(corpse)
 	game.player.reparent(_forest_world, false)

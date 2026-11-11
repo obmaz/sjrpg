@@ -8,6 +8,7 @@ const EXIT := Vector2(4700, 0)
 var polygons: Array[PackedVector2Array] = []
 var obstacles: Array[PackedVector2Array] = []
 var bounds := Rect2()
+var relief: DungeonRelief
 
 func _init() -> void:
 	var rects: Array[Rect2] = [Rect2(-220, -220, 440, 440), Rect2(0, -110, 700, 220), Rect2(4500, -220, 420, 440)]
@@ -30,6 +31,7 @@ func _init() -> void:
 	for polygon in polygons:
 		for point in polygon:
 			bounds = bounds.expand(point)
+	relief = DungeonRelief.new().setup(polygons)
 
 
 func contains(point: Vector2, radius := 0.0) -> bool:

@@ -24,7 +24,7 @@ func setup(cave_layout: DungeonLayout, world: Node2D) -> DungeonArt:
 
 
 func _ready() -> void:
-	boundary_segments = outer_boundaries(layout)
+	boundary_segments = layout.relief.boundary_segments
 	_build_floor()
 	_build_walls()
 	_build_passages()
@@ -56,71 +56,6 @@ func _floor(polygon: PackedVector2Array, path: String) -> Polygon2D:
 	add_child(surface)
 	return surface
 
-
-## Merge the rectangle union before placing any wall; seams between rooms are never blocked.
-static func outer_boundaries(cave_layout: DungeonLayout) -> Array[Dictionary]:
-	var xs: Array[int] = []
-	var ys: Array[int] = []
-	for polygon in cave_layout.polygons:
-		for point in polygon:
-			var ground := Iso.unproject(point)
-			if not xs.has(roundi(ground.x)):
-				xs.append(roundi(ground.x))
-			if not ys.has(roundi(ground.y)):
-				ys.append(roundi(ground.y))
-	xs.sort()
-	ys.sort()
-	var groups := {}
-	for x in range(xs.size() - 1):
-		for y in range(ys.size() - 1):
-			var minimum := Vector2(xs[x], ys[y])
-			var maximum := Vector2(xs[x + 1], ys[y + 1])
-			if not cave_layout._inside(Iso.project((minimum + maximum) * 0.5)):
-				continue
-			var edges := [
-				[Vector2(minimum.x, minimum.y), Vector2(maximum.x, minimum.y), Vector2(0, -1)],
-				[Vector2(minimum.x, maximum.y), Vector2(maximum.x, maximum.y), Vector2(0, 1)],
-				[Vector2(minimum.x, minimum.y), Vector2(minimum.x, maximum.y), Vector2(-1, 0)],
-				[Vector2(maximum.x, minimum.y), Vector2(maximum.x, maximum.y), Vector2(1, 0)],
-			]
-			for edge in edges:
-				var a: Vector2 = edge[0]
-				var b: Vector2 = edge[1]
-				var outward: Vector2 = edge[2]
-				if cave_layout._inside(Iso.project((a + b) * 0.5 + outward * 2.0)):
-					continue
-				var along_x := a.y == b.y
-				var fixed := a.y if along_x else a.x
-				var key := "%s/%d/%s" % [along_x, roundi(fixed), outward]
-				if not groups.has(key):
-					groups[key] = {"x": along_x, "fixed": fixed, "outward": outward, "spans": []}
-				groups[key]["spans"].append(Vector2(a.x, b.x) if along_x else Vector2(a.y, b.y))
-	var segments: Array[Dictionary] = []
-	for key in groups:
-		var group: Dictionary = groups[key]
-		var spans: Array = group["spans"]
-		spans.sort_custom(func(left: Vector2, right: Vector2) -> bool: return left.x < right.x)
-		var from: float = spans[0].x
-		var to: float = spans[0].y
-		for index in range(1, spans.size()):
-			var next: Vector2 = spans[index]
-			if next.x <= to + 0.01:
-				to = maxf(to, next.y)
-			else:
-				segments.append(_edge(group, from, to))
-				from = next.x
-				to = next.y
-		segments.append(_edge(group, from, to))
-	return segments
-
-
-static func _edge(group: Dictionary, from: float, to: float) -> Dictionary:
-	var fixed: float = group["fixed"]
-	return {
-		"a": Vector2(from, fixed) if group["x"] else Vector2(fixed, from),
-		"b": Vector2(to, fixed) if group["x"] else Vector2(fixed, to),
-		"outward": group["outward"],
-	}
 
 
 func _build_walls() -> void:

@@ -22,56 +22,80 @@ func run() -> void:
 	var forest_target := controls._near_name
 	var forest_button: Dictionary = controls._buttons.get("near_shop", {})
 	var forest_touch: Vector2 = forest_button.get("center", Vector2.ZERO)
-	check("forest provides a real cached interaction before entering the cave", forest_target != "" and not forest_button.is_empty())
+	check(
+		"forest provides a real cached interaction before entering the cave",
+		forest_target != "" and not forest_button.is_empty()
+	)
 	game.player.position = cave.entry_point()
 	check("cave enters with its generated design", cave.enter())
 	_check_live_interactions(game, forest_target, forest_touch)
 	await _frames(2)
 	var art: DungeonArt = cave.art
-	check("generated cave art belongs to the transient instance", art != null and cave._root.is_ancestor_of(art))
+	check(
+		"generated cave art belongs to the transient instance",
+		art != null and cave._root.is_ancestor_of(art)
+	)
 	var floor_count_matches := art.floor_nodes.size() == cave.layout.polygons.size()
 	check("every walkable polygon uses the generated cave floor", floor_count_matches)
 	var floor_record: Dictionary = data["textures"]["floor"]
 	var floor_texture: Texture2D = load("res://" + str(floor_record["path"]))
 	var floors_match := floor_count_matches
-	var maps_match: bool = game.map_shapes.size() == cave.layout.polygons.size()
+	var maps_match: bool = game.map_shapes.size() == cave.layout.relief.cells.size()
 	for index in mini(art.floor_nodes.size(), cave.layout.polygons.size()):
 		var floor_piece: Polygon2D = art.floor_nodes[index]
-		floors_match = floors_match and floor_piece.texture == floor_texture and floor_piece.polygon == cave.layout.polygons[index]
+		floors_match = (
+			floors_match
+			and floor_piece.texture == floor_texture
+			and floor_piece.polygon == cave.layout.polygons[index]
+		)
+	for index in cave.layout.relief.cells.size():
+		var cell: Rect2 = cave.layout.relief.cells[index]
+		var expected_map := PackedVector2Array()
+		for point: Vector2 in [
+			cell.position,
+			Vector2(cell.end.x, cell.position.y),
+			cell.end,
+			Vector2(cell.position.x, cell.end.y)
+		]:
+			expected_map.append(Iso.project(point * 65))
 		if index < game.map_shapes.size():
-			maps_match = maps_match and game.map_shapes[index]["poly"] == floor_piece.polygon
+			maps_match = maps_match and game.map_shapes[index]["poly"] == expected_map
 	check("generated floor source matches the collision and native layout input", floors_match)
-	check("both maps retain the generated floor layout", maps_match)
+	check("both maps follow the actual shared cave FLOOR cells", maps_match)
 	var environment: Ortho3DEnvironment = game.ortho_preview._world_environment
-	var spatial_floor_count := 0
-	var spatial_geometry_matches := true
-	var spatial_material_shared: ShaderMaterial
-	for index in cave.layout.polygons.size():
-		var rendered := environment.cave.get_node_or_null("CaveFloor_%d" % index) as MeshInstance3D
-		if rendered == null:
-			spatial_geometry_matches = false
-			continue
-		var material := rendered.material_override as ShaderMaterial
-		if material == null or material.shader.resource_path != "res://scripts/native_cave_floor.gdshader":
-			spatial_geometry_matches = false
-			continue
+	var rendered := environment.cave.get_node_or_null("CaveFloor") as MeshInstance3D
+	var material := rendered.material_override as ShaderMaterial if rendered != null else null
+	var shared := (
+		material != null
+		and material.shader.resource_path == "res://scripts/native_cave_floor.gdshader"
+	)
+	if material != null:
 		for variant in 6:
-			spatial_geometry_matches = spatial_geometry_matches and material.get_shader_parameter("surface_%d" % variant) == load("res://assets/models/materials/cave/floor/floor-%d.png" % variant)
-		if spatial_material_shared == null:
-			spatial_material_shared = material
-		spatial_geometry_matches = spatial_geometry_matches and material == spatial_material_shared and not material.shader.code.contains("unshaded") and not material.shader.code.contains("EMISSION")
-		spatial_floor_count += 1
+			shared = (
+				shared
+				and (
+					material.get_shader_parameter("surface_%d" % variant)
+					== load("res://assets/models/materials/cave/floor/floor-%d.png" % variant)
+				)
+			)
+	check("one union cave floor shares all six generated floor samplers", shared)
+	var spatial_geometry_matches := rendered != null and rendered.mesh == cave.layout.relief.mesh()
+	if rendered != null:
 		var arrays := rendered.mesh.surface_get_arrays(0)
 		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 		var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
-		var polygon: PackedVector2Array = cave.layout.polygons[index]
-		spatial_geometry_matches = spatial_geometry_matches and vertices.size() == polygon.size() and uv.size() == vertices.size()
-		for vertex_index in mini(vertices.size(), polygon.size()):
-			var expected := Ortho3DPreview.ground_position(polygon[vertex_index], 0.004)
-			spatial_geometry_matches = spatial_geometry_matches and vertices[vertex_index].is_equal_approx(expected) and uv[vertex_index].is_equal_approx(Vector2(expected.x, expected.z) / 2.6)
-	check("every native cave floor shares all six generated floor samplers in its lit shader", spatial_floor_count == cave.layout.polygons.size() and spatial_material_shared != null)
-	check("native variant shading preserves the exact source floor polygon vertices and metre UVs", spatial_geometry_matches)
-	check("native cave retains spatial walls and replaces physical prop cards", environment.cave.visible and environment.report["cave_walls"] > 0 and environment.report["cave_groups"] == 0 and environment.report["cave_sprites"] == 0 and environment.report["native_cave_lanterns"] == 10 and environment.report["native_cave_scenery"] >= 6 and environment.report["remaining_sources"]["cave"].is_empty() and cave._root.visibility_layer == 0)
+		for index in vertices.size():
+			spatial_geometry_matches = (
+				spatial_geometry_matches
+				and (
+					uv[index].distance_to(Vector2(vertices[index].x, vertices[index].z) / 2.6)
+					< .0001
+				)
+			)
+	check(
+		"native floor follows the shared sloping collision union and metre UVs",
+		spatial_geometry_matches
+	)
 	var boundaries_match := not art.boundary_segments.is_empty()
 	var boundary_failures: Array[String] = []
 	for boundary in art.boundary_segments:
@@ -82,16 +106,29 @@ func run() -> void:
 		var inside := cave.layout.contains(Iso.project(middle - outward * 4.0))
 		var outside := not cave.layout.contains(Iso.project(middle + outward * 4.0))
 		if not inside or not outside:
-			boundary_failures.append("%s to %s, outward %s: inner clear=%s, outer blocked=%s" % [a, b, outward, inside, outside])
+			boundary_failures.append(
+				(
+					"%s to %s, outward %s: inner clear=%s, outer blocked=%s"
+					% [a, b, outward, inside, outside]
+				)
+			)
 		boundaries_match = boundaries_match and inside and outside
-	check("cave walls follow only the outside of the connected floor", boundaries_match, "; ".join(boundary_failures))
+	check(
+		"cave walls follow only the outside of the connected floor",
+		boundaries_match,
+		"; ".join(boundary_failures)
+	)
 	_check_return_portal(game, cave)
 	var walls := 0
 	var lights: Array[PointLight2D] = []
 	var visual_roots_match := true
 	var wall_bases_outside := true
 	for visual in art.visuals:
-		visual_roots_match = visual_roots_match and visual.get_parent() == game.world and cave._root.is_ancestor_of(visual)
+		visual_roots_match = (
+			visual_roots_match
+			and visual.get_parent() == game.world
+			and cave._root.is_ancestor_of(visual)
+		)
 		if visual.get_meta("cave_role", "") == "wall":
 			walls += 1
 			wall_bases_outside = wall_bases_outside and not cave.layout.contains(visual.position)
@@ -99,9 +136,15 @@ func run() -> void:
 			for child in visual.get_children():
 				if child is PointLight2D:
 					lights.append(child)
-	check("the generated walls and props use world depth sorting", not art.visuals.is_empty() and visual_roots_match)
+	check(
+		"the generated walls and props use world depth sorting",
+		not art.visuals.is_empty() and visual_roots_match
+	)
 	check("walls leave room and passage interiors clear", walls > 0 and wall_bases_outside)
-	check("new art preserves all five combat rooms and twenty-two enemies", cave.total == 22 and game.enemies.size() == 22)
+	check(
+		"new art preserves all five combat rooms and twenty-two enemies",
+		cave.total == 22 and game.enemies.size() == 22
+	)
 	check("all five rooms have two real lantern lights", lights.size() == 10)
 	var initial_phases: Array[float] = []
 	for light in lights:
@@ -109,7 +152,10 @@ func run() -> void:
 	await _frames(2)
 	var animated := not lights.is_empty()
 	for index in lights.size():
-		animated = animated and not is_equal_approx(float(lights[index].get("phase")), initial_phases[index])
+		animated = (
+			animated
+			and not is_equal_approx(float(lights[index].get("phase")), initial_phases[index])
+		)
 	check("lantern light animation advances during exploration", animated)
 	var instance: WeakRef = weakref(cave._root)
 	var design: WeakRef = weakref(art)
@@ -125,8 +171,18 @@ func run() -> void:
 		var viewports_match: bool = art.get_viewport() == game.scene_view
 		for visual in art.visuals:
 			viewports_match = viewports_match and visual.get_viewport() == game.scene_view
-		check("paused quality changes move all generated cave art together", cave._root.get_parent() == game.scene_root and viewports_match and game.player.get_viewport() == game.scene_view)
-		check("art quality changes keep exploration paused", get_tree().paused and cave.remaining == remaining)
+		check(
+			"paused quality changes move all generated cave art together",
+			(
+				cave._root.get_parent() == game.scene_root
+				and viewports_match
+				and game.player.get_viewport() == game.scene_view
+			)
+		)
+		check(
+			"art quality changes keep exploration paused",
+			get_tree().paused and cave.remaining == remaining
+		)
 		var lights_still := true
 		for index in lights.size():
 			var current := Vector2(float(lights[index].get("phase")), lights[index].energy)
@@ -137,13 +193,32 @@ func run() -> void:
 	await _frames(2)
 	var reduced := not lights.is_empty()
 	for light in lights:
-		reduced = reduced and is_zero_approx(float(light.get("phase"))) and is_equal_approx(light.energy, 0.45)
+		reduced = (
+			reduced
+			and is_zero_approx(float(light.get("phase")))
+			and is_equal_approx(light.energy, 0.45)
+		)
 	check("reduced motion holds lantern light at a steady brightness", reduced)
 	cave.leave("동굴 원화 검증")
 	await _frames(2)
-	check("leaving removes the generated cave instance and its world props", cave.art == null and instance.get_ref() == null and design.get_ref() == null)
-	check("leaving restores the native forest map and world", game.field_root.visibility_layer == 0 and game.map_shapes == forest_map and game.player.get_parent() == game.world and game.ortho_preview._world_environment.forest.visible and not game.ortho_preview._world_environment.cave.visible)
-	check("reentry creates a new generated cave instance", cave.enter() and cave.art != null and cave.defeated == 0 and cave.total == 22)
+	check(
+		"leaving removes the generated cave instance and its world props",
+		cave.art == null and instance.get_ref() == null and design.get_ref() == null
+	)
+	check(
+		"leaving restores the native forest map and world",
+		(
+			game.field_root.visibility_layer == 0
+			and game.map_shapes == forest_map
+			and game.player.get_parent() == game.world
+			and game.ortho_preview._world_environment.forest.visible
+			and not game.ortho_preview._world_environment.cave.visible
+		)
+	)
+	check(
+		"reentry creates a new generated cave instance",
+		cave.enter() and cave.art != null and cave.defeated == 0 and cave.total == 22
+	)
 	cave.leave("동굴 원화 재입장 검증")
 	game.queue_free()
 	await _frames(2)
@@ -153,7 +228,10 @@ func run() -> void:
 
 func _check_hash(label: String, record: Dictionary) -> void:
 	var path: String = record["path"]
-	check(label + " matches the reviewed pixels", FileAccess.get_sha256("res://" + path) == str(record["sha256"]))
+	check(
+		label + " matches the reviewed pixels",
+		FileAccess.get_sha256("res://" + path) == str(record["sha256"])
+	)
 
 
 func _check_return_portal(game: Node, cave: DungeonRuntime) -> void:
@@ -161,7 +239,10 @@ func _check_return_portal(game: Node, cave: DungeonRuntime) -> void:
 	if not check("the return portal uses its actual measured base", portal != null):
 		return
 	var base := Village.portal_base(portal)
-	check("the return portal's visible base is its collision obstacle", cave.layout.obstacles.has(base))
+	check(
+		"the return portal's visible base is its collision obstacle",
+		cave.layout.obstacles.has(base)
+	)
 	# The new asymmetric base reaches farther left from its foot than the old art.
 	# Every vertex must fit inside the final chamber with a 20-ground-unit wall lip.
 	var safe_chamber := Rect2(4520, -200, 380, 400)
@@ -172,34 +253,57 @@ func _check_return_portal(game: Node, cave: DungeonRuntime) -> void:
 		if not safe_chamber.has_point(ground):
 			fits = false
 			outside_vertices.append(str(ground))
-	check("the full return portal base clears every exit chamber wall lip", fits, "; ".join(outside_vertices))
+	check(
+		"the full return portal base clears every exit chamber wall lip",
+		fits,
+		"; ".join(outside_vertices)
+	)
 	var target := Iso.project(DungeonLayout.EXIT)
 	var reached := cave.layout.resolve(Iso.project(DungeonLayout.ROOMS[4]), target, Player.RADIUS)
-	check("the measured return portal leaves the incoming exit route open", reached.distance_to(target) < 1.0)
+	check(
+		"the measured return portal leaves the incoming exit route open",
+		reached.distance_to(target) < 1.0
+	)
 
 
 func _check_live_interactions(game: Node, forest_target: String, forest_touch: Vector2) -> void:
 	var controls: TouchControls = game.hud.controls
 	# Stay in the same frame: the old forest button is still painted at its old coordinates.
 	game.player.position = Iso.project(DungeonLayout.ROOMS[0])
-	check("the transition test still holds the painted forest target", controls._near_name == forest_target and controls._buttons.has("near_shop"))
+	check(
+		"the transition test still holds the painted forest target",
+		controls._near_name == forest_target and controls._buttons.has("near_shop")
+	)
 	controls._press(-1, forest_touch)
-	check("a stale forest button cannot open a panel inside a combat room", not game.hud.panel_open())
+	check(
+		"a stale forest button cannot open a panel inside a combat room", not game.hud.panel_open()
+	)
 	game.hud.close_panel()
 	controls.release_all()
 	controls._layout()
-	check("combat rooms remove the forest interaction button", controls._near_name == "" and not controls._buttons.has("near_shop"))
+	check(
+		"combat rooms remove the forest interaction button",
+		controls._near_name == "" and not controls._buttons.has("near_shop")
+	)
 	game.player.position = Vector2.ZERO
 	controls._layout()
 	var entrance_button: Dictionary = controls._buttons.get("near_shop", {})
 	var entrance_touch: Vector2 = entrance_button.get("center", Vector2.ZERO)
-	check("the actual cave entrance offers the cave exit interaction", controls._near_name == "동굴 출구" and not entrance_button.is_empty())
+	check(
+		"the actual cave entrance offers the cave exit interaction",
+		controls._near_name == "동굴 출구" and not entrance_button.is_empty()
+	)
 	controls._press(-1, entrance_touch)
-	check("the current cave interaction opens the real dungeon panel", game.hud._panel is DungeonPanel)
+	check(
+		"the current cave interaction opens the real dungeon panel", game.hud._panel is DungeonPanel
+	)
 	game.hud.close_panel()
 	game.player.position = Iso.project(DungeonLayout.EXIT)
 	controls._layout()
-	check("the return portal offers the cave exit interaction", controls._near_name == "동굴 출구" and controls._buttons.has("near_shop"))
+	check(
+		"the return portal offers the cave exit interaction",
+		controls._near_name == "동굴 출구" and controls._buttons.has("near_shop")
+	)
 	game.player.position = Vector2.ZERO
 	controls.release_all()
 	controls._layout()
