@@ -75,7 +75,7 @@ func take_damage(_amount: float, _source: Node2D) -> void:
 		_impact_time = 0.0 if Prefs.reduce_motion else RATTLE_SECONDS
 		set_process(_impact_time > 0.0)
 		SoundFx.play("tick")
-		game.float_text(position + Vector2(0, -130), "내구도 -1", Color("c9d1d3"))
+		game.float_text(position + Vector2(0, -130), "내구도 -1", Color("c9d1d3")).anchor_text_ground(position)
 		return
 	dead = true
 	_impact_time = 0.0

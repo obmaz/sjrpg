@@ -144,7 +144,7 @@ func strike(id: String, source: Node2D) -> bool:
 	game.combat_feedback(stones[id].position, 0.65)
 	if source is Player:
 		source.confirm_melee_contact(false)
-	game.float_text(stones[id].position + Vector2(0, -110), "동굴 잠복자 · 20마리" if id == CAVE_SITE else "새로운 적의 기척", Color("b4eee0"))
+	game.float_text(stones[id].position + Vector2(0, -110), "동굴 잠복자 · 20마리" if id == CAVE_SITE else "새로운 적의 기척", Color("b4eee0")).anchor_text_ground(stones[id].position)
 	return true
 
 

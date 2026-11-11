@@ -34,6 +34,7 @@ var _text_target_id := 0
 var _text_offset := Vector2.ZERO
 var _text_anchor := Vector2.ZERO
 var _text_rise := 0.0
+var _text_ground := Vector2.INF
 const TEXT_STREAM_GAP := 4.0
 const TEXT_STREAM_MAX_RISE := 240.0
 const TEXT_STAGGER_SECONDS := 0.04
@@ -123,9 +124,21 @@ func has_actor_text_anchor() -> bool:
 	return _text_target_id != 0
 
 
+## 보상/회복은 기존 자유 배치와 즉시 표시를 유지하며 생성 당시의 바닥만 별도로 보존한다.
+func anchor_text_ground(point: Vector2) -> Effect:
+	_text_ground = point
+	return self
+
+
+func has_text_ground_anchor() -> bool:
+	return has_actor_text_anchor() or _text_ground.is_finite()
+
+
 ## 대상 제거 뒤에도 마지막 접점을 보존한다. 화면 위 여백을 다른 바닥 좌표로 읽지 않는다.
 func text_ground_point() -> Vector2:
-	return _text_anchor - _text_offset if has_actor_text_anchor() else position
+	if has_actor_text_anchor():
+		return _text_anchor - _text_offset
+	return _text_ground if _text_ground.is_finite() else position
 
 
 func text_actor() -> Node2D:

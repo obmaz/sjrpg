@@ -29,6 +29,24 @@ func run() -> void:
 			"hidden travel cannot attack or take incidental damage " + hero,
 			not game.player.cast_slot(0) and game.player.hp == health
 		)
+		var energy: float = game.player.resource
+		game.player.hp -= 20
+		game.player.resource = 0
+		var potions := GameState.potions
+		var mana := GameState.mana_potions
+		game.player.use_potion()
+		game.player.use_mana_potion()
+		check(
+			"warp input cannot spend potions before the free arrival recovery " + hero,
+			(
+				GameState.potions == potions
+				and GameState.mana_potions == mana
+				and game.player.hp == health - 20
+				and game.player.resource == 0
+			)
+		)
+		game.player.hp = health
+		game.player.resource = energy
 		game.player.cooldowns["test"] = 2.0
 		game.player.buffs["storm"] = {"time": 3.0, "rank": 1}
 		game.player._storm_timer = .1

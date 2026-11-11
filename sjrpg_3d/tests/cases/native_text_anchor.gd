@@ -37,5 +37,41 @@ func run() -> void:
 		"actor-bound text keeps its intended pixel offset above an elevated foot",
 		actual.distance_to(expected) < .1
 	)
+	var iron: Chest = game.chests[0]
+	var bodies: int = game.spatial_world.actor_bodies.size()
+	iron.take_damage(1, game.player)
+	text = game.cosmetic_effects.back()
+	preview._sync_cards()
+	label = preview._labels[text.get_instance_id()]["node"]
+	var chest_foot := Ortho3DPreview.ground_position(iron.position, DungeonRelief.at(iron.position))
+	expected = (
+		preview.camera.unproject_position(chest_foot)
+		+ (text.position - iron.position) * pixels_per_source
+	)
+	actual = preview.camera.unproject_position(label.global_position)
+	print("CHEST_TEXT_ANCHOR_ERROR ", actual.distance_to(expected))
+	check(
+		"the real first iron chest keeps text above its own floor near the upper ramp",
+		actual.distance_to(expected) < .1
+	)
+	check(
+		"grounded prop text never creates an actor body",
+		game.spatial_world.actor_bodies.size() == bodies
+	)
+	game.player.hp -= 20
+	game.player.use_potion()
+	text = game.cosmetic_effects.back()
+	preview._sync_cards()
+	label = preview._labels[text.get_instance_id()]["node"]
+	expected = (
+		preview.camera.unproject_position(foot)
+		+ (text.position - game.player.position) * pixels_per_source
+	)
+	actual = preview.camera.unproject_position(label.global_position)
+	print("POTION_TEXT_ANCHOR_ERROR ", actual.distance_to(expected))
+	check(
+		"free potion rewards retain their ground anchor without joining damage staggering",
+		actual.distance_to(expected) < .1 and is_zero_approx(text.age)
+	)
 	game.queue_free()
 	await _frames(2)

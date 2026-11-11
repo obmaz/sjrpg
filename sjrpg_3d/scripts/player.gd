@@ -682,10 +682,10 @@ func _shadow(id: String, d: Dictionary, power: float) -> void:
 	if contacts >= 3:
 		if GameState.has_gift("comboFury"):
 			resource = minf(resource_max, resource + 6.0)
-			game.float_text(position + Vector2(0, -100), "연격의 격정", Color(1, 0.7, 0.4))
+			game.float_text(position + Vector2(0, -100), "연격의 격정", Color(1, 0.7, 0.4)).anchor_text_ground(position)
 		if GameState.has_gift("comboGuard"):
 			buffs["combo_guard"] = {"time": 0.75, "value": 0.25}
-			game.float_text(position + Vector2(0, -100), "연격의 수호", Color(0.6, 0.8, 1))
+			game.float_text(position + Vector2(0, -100), "연격의 수호", Color(0.6, 0.8, 1)).anchor_text_ground(position)
 
 
 func _prepare_leap(id: String, d: Dictionary, rank: int, power: float) -> Callable:
@@ -826,19 +826,19 @@ func _corpse(d: Dictionary, rank: int, corpse: Dictionary) -> void:
 			if randf() < chance:
 				if randf() < 0.5:
 					GameState.potions += 1
-					game.float_text(corpse["pos"] + Vector2(0, -30), "탐색 성공\n생명 물약 +1", Color(0.62, 0.85, 0.69))
+					game.float_text(corpse["pos"] + Vector2(0, -30), "탐색 성공\n생명 물약 +1", Color(0.62, 0.85, 0.69)).anchor_text_ground(corpse["pos"])
 				else:
 					GameState.mana_potions += 1
-					game.float_text(corpse["pos"] + Vector2(0, -30), "탐색 성공\n%s 물약 +1" % GameState.class_info()["resource"], Color(0.6, 0.79, 0.93))
+					game.float_text(corpse["pos"] + Vector2(0, -30), "탐색 성공\n%s 물약 +1" % GameState.class_info()["resource"], Color(0.6, 0.79, 0.93)).anchor_text_ground(corpse["pos"])
 			else:
-				game.float_text(corpse["pos"] + Vector2(0, -30), "아무것도 없음", Color(0.8, 0.8, 0.8))
+				game.float_text(corpse["pos"] + Vector2(0, -30), "아무것도 없음", Color(0.8, 0.8, 0.8)).anchor_text_ground(corpse["pos"])
 		"item":
 			if randf() < chance:
 				var bonus := 6 + GameState.level * 3
 				game.grant_xp(bonus)
-				game.float_text(corpse["pos"] + Vector2(0, -30), "탐색 성공\n전리품 +%d XP" % bonus, Color(0.91, 0.78, 0.49))
+				game.float_text(corpse["pos"] + Vector2(0, -30), "탐색 성공\n전리품 +%d XP" % bonus, Color(0.91, 0.78, 0.49)).anchor_text_ground(corpse["pos"])
 			else:
-				game.float_text(corpse["pos"] + Vector2(0, -30), "아무것도 없음", Color(0.8, 0.8, 0.8))
+				game.float_text(corpse["pos"] + Vector2(0, -30), "아무것도 없음", Color(0.8, 0.8, 0.8)).anchor_text_ground(corpse["pos"])
 		"ward":
 			game.spawn_ward(corpse["pos"], d["duration"] + d["dur_growth"] * (rank - 1), d["radius"])
 	game.remove_corpse(corpse)
@@ -846,22 +846,22 @@ func _corpse(d: Dictionary, rank: int, corpse: Dictionary) -> void:
 
 ## 치유 물약: flat +55 (원본 CombatBalance.potionHealing), shown ×100.
 func use_potion() -> void:
-	if dead or GameState.potions <= 0 or hp >= max_hp:
+	if dead or warp_locked or GameState.potions <= 0 or hp >= max_hp:
 		return
 	var restored := minf(55.0, max_hp - hp)
 	GameState.potions -= 1
 	hp = minf(max_hp, hp + 55.0)
-	game.float_text(position + Vector2(0, -80), "+%s 생명" % HudArt.stat(restored), Color(1.0, 0.71, 0.63))
+	game.float_text(position + Vector2(0, -80), "+%s 생명" % HudArt.stat(restored), Color(1.0, 0.71, 0.63)).anchor_text_ground(position)
 
 
 ## 마나/분노 물약: flat +60 (원본 potionEnergy), shown ×10.
 func use_mana_potion() -> void:
-	if dead or GameState.mana_potions <= 0 or resource >= resource_max:
+	if dead or warp_locked or GameState.mana_potions <= 0 or resource >= resource_max:
 		return
 	var restored := minf(60.0, resource_max - resource)
 	GameState.mana_potions -= 1
 	resource = minf(resource_max, resource + 60.0)
-	game.float_text(position + Vector2(0, -80), "+%s %s" % [HudArt.res(restored), GameState.class_info()["resource"]], Color(0.62, 0.87, 1.0))
+	game.float_text(position + Vector2(0, -80), "+%s %s" % [HudArt.res(restored), GameState.class_info()["resource"]], Color(0.62, 0.87, 1.0)).anchor_text_ground(position)
 
 
 func take_damage(amount: float, attacker: Node2D = null) -> void:
@@ -893,7 +893,7 @@ func take_damage(amount: float, attacker: Node2D = null) -> void:
 	sprite.trigger_flash(Color(1.0, 0.45, 0.4))
 	if not is_mage:
 		resource = minf(resource_max, resource + 4.0)
-	game.float_text(position + Vector2(0, -90), HudArt.stat(dealt), Color(1, 0.4, 0.35))
+	game.float_text(position + Vector2(0, -90), HudArt.stat(dealt), Color(1, 0.4, 0.35)).anchor_text_ground(position)
 	if attacker and is_instance_valid(attacker) and buffs.has("armor"):
 		_armor_retaliate(attacker)
 	if hp <= 0.0:

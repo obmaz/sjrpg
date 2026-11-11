@@ -1399,7 +1399,7 @@ func on_chest_broken(chest: Chest) -> void:
 	GameState.gold += gold
 	if gold > 0:
 		RewardFx.spawn(self, chest.position + Vector2(0, -35), 0)
-	float_text(chest.position + Vector2(0, -70), "+%d G" % gold, Color(1, 0.88, 0.45))
+	float_text(chest.position + Vector2(0, -70), "+%d G" % gold, Color(1, 0.88, 0.45)).anchor_text_ground(chest.position)
 	# 원본: 보급 상자와 숲의 첫 상자는 치유·자원 물약을 하나씩 줌.
 	if content == "supplies" or chest.index == 0:
 		GameState.potions += 1
@@ -1512,10 +1512,10 @@ func on_enemy_killed(enemy: Enemy) -> void:
 		quest_runtime.on_enemy_killed(enemy)
 	if GameState.has_gift("renewal") and not player.dead:
 		player.hp = minf(player.max_hp, player.hp + 4.0)
-		float_text(player.position + Vector2(0, -80), "+%s" % HudArt.stat(4.0), Color(0.6, 1, 0.7))
+		float_text(player.position + Vector2(0, -80), "+%s" % HudArt.stat(4.0), Color(0.6, 1, 0.7)).anchor_text_ground(player.position)
 	if enemy.is_boss:
 		on_boss_defeated(enemy)
-	float_text(enemy.position + Vector2(0, -enemy.sprite.body_height - 40), "+%d XP" % enemy.xp_reward, Color(0.7, 0.85, 1))
+	float_text(enemy.position + Vector2(0, -enemy.sprite.body_height - 40), "+%d XP" % enemy.xp_reward, Color(0.7, 0.85, 1)).anchor_text_ground(enemy.position)
 	if enemy.xp_reward > 0:
 		RewardFx.spawn(self, enemy.position + Vector2(0, -28), 1)
 	# 원본: 몬스터 처치로는 물약이 나오지 않음 (상자·구매·물약 발견만).
@@ -1845,7 +1845,7 @@ func spawn_ward(at: Vector2, duration: float, radius: float) -> void:
 	_add_effect(e)
 
 
-func float_text(at: Vector2, text: String, color: Color, damage_target: Node2D = null, font_size := 22, pop := false) -> void:
+func float_text(at: Vector2, text: String, color: Color, damage_target: Node2D = null, font_size := 22, pop := false) -> Effect:
 	var e := Effect.new()
 	e.kind = "text"
 	e.font_size = font_size
@@ -1857,6 +1857,7 @@ func float_text(at: Vector2, text: String, color: Color, damage_target: Node2D =
 	e.z_index = 20
 	e.place_text(cosmetic_effects, damage_target)
 	_add_effect(e)
+	return e
 
 
 func toast(text: String) -> void:

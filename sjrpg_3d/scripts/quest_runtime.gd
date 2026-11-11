@@ -89,7 +89,7 @@ func report(id: String) -> void:
 	s["phase"] = "completed"
 	var exp: int = d["exp"] * Quests.EXPERIENCE_MULTIPLIER
 	GameState.gold += int(d["gold"])
-	game.float_text(game.player.position + Vector2(0, -110), "+%d G  +%d XP" % [d["gold"], exp], Color(1, 0.9, 0.5))
+	game.float_text(game.player.position + Vector2(0, -110), "+%d G  +%d XP" % [d["gold"], exp], Color(1, 0.9, 0.5)).anchor_text_ground(game.player.position)
 	game.toast("의뢰 완료 · %s" % d["title"])
 	game.grant_xp(exp)
 	SoundFx.play("loot")
@@ -206,7 +206,7 @@ func damage_defender(amount: float) -> void:
 			# Include the damage font's descent, outline, and a six-pixel clear gap.
 			text_at = defender.position + Vector2(0, header_top - UiKit.BOLD_FONT.get_descent(22) - 12.0)
 			defender.show_hurt()
-		game.float_text(text_at, HudArt.stat(amount), Color(1, 0.55, 0.45))
+		game.float_text(text_at, HudArt.stat(amount), Color(1, 0.55, 0.45)).anchor_text_ground(defender.position)
 		# Local feedback only: defending a distant NPC must never shake the hero's camera.
 		Effect.spawn_impact(game, defender.position + Vector2(0, -Villager.BODY_HEIGHT * 0.55), null,
 			float(s["defender_hp"]) <= 0.0 or actual_damage >= Quests.DEFENDER_HP * 0.15)

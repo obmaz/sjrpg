@@ -20,6 +20,8 @@
 
 `Player.contact_serial`은 실제 근접 공격의 첫 명중만 알리며, 네이티브 전사와 GLB 모션은 접촉 자세를 적용한 뒤 정지합니다. `Enemy.hit_reaction_age`는 로컬 히트스톱 뒤에 흐르고 `NativeEnemyModels`의 흉곽·머리·무기 반응을 구동합니다. `NativeHitFeel3D`는 실제 명중 효과의 접촉점/단계를 관찰해 재사용하는 파편과3D 장면 전용 초점 셰이더를 표시합니다. 숫자는 원본 `Effect`의 크기·팝·표시 대기(40ms 간격/상한200ms)를 그대로 읽고 소리는 재질 악센트와 강한 명중의 우선순위를 적용합니다. 피해·공격 간격은 이 연출에서 계산하지 않습니다. 현재 수치·예산·동작 줄이기와 검증 방법은 [타격감](juice.md)을 따릅니다.
 
+배우 연결 문자는 실제 발을 읽고, 자유 배치 문자는 `Effect.anchor_text_ground()`의 생성 지면과 화면 여백을 분리합니다. 상자·시체·보상에 별도 물리 배우를 만들거나 피해 숫자의 표시 대기에 넣지 않습니다.
+
 ## 지도
 
 `MapWorldState`는 실제 건축 루트·성문 변환과 공유 지형 설계를 프레임당 한 번 확인하고 변경 시에만 두 지도용 도형과 메시를 갱신합니다. `MapGeometry`는 살아 있는 시설·진입 노드와 활성 동굴의 미개봉 상자에서 표식을 만들고, 동굴 귀환문은 완료 판정과 같은 `DungeonRuntime.return_portal()`을 읽습니다. `WorldMapCanvas`와 `MapPlaceRow`는 같은 번호/좌표를 표시합니다. 행은 터치 입력을 부모 스크롤에 전달하는 리스트 컨트롤이며, `GamepadNavigation`은 `gamepad_target`과 `pressed` 신호를 가진 비버튼 컨트롤도 탐색합니다. 상세 계약과 검사는 [지도 구조](world-map.md)를 따릅니다.
@@ -62,7 +64,7 @@ tools/serve.sh
 
 `tools/import_project.sh`는 새 캐시에서 프로젝트 폰트를 먼저 요청한 첫 임포트가 리소스 생성을 마친 뒤 종료 코드134로 중단된 경우 한 번 재검사합니다. 스크립트 오류·미완료 임포트·두 번째 실패는 통과시키지 않습니다. 이 경계는 `python3 sjrpg_3d/tools/test_import_project.py`로 검증합니다.
 
-[Web·Android 내보내기](platform-exports.md), [Android 설치·서명](android.md), [웹 성능](web-performance.md)을 따릅니다. UI·입력·렌더 변경은 실제 가로·세로 브라우저 검사를 추가하고, 배포는 전체 검사와 공개 페이지 실행을 확인합니다.
+[Web·Android 내보내기](platform-exports.md), [Android 설치·서명](android.md), [웹 성능](web-performance.md)을 따릅니다. UI·입력·렌더 변경은 실제 가로·세로 브라우저 검사를 추가하고, 배포는 전체 검사와 요청한 대상의 전달 결과를 확인합니다. 공개 페이지 실행은 웹 배포를 명시적으로 요청한 경우에만 확인합니다.
 
 검수 캡처·일회성 진단 출력은 `build/`와 Actions 아티팩트에 둡니다. 저장소에 완료 스크린샷을 계속 쌓지 않습니다. 원본 출처와 현재 재현 방법은 관련 제작 문서에 유지합니다.
 
@@ -128,7 +130,7 @@ tools/serve.sh
 
 몬스터 보행의 `locomotion.distance_curve`는 오프라인120Hz 지지발 측정으로 만든 거리→GLB 시각 표입니다. 실시간 실제 이동 거리를 역보간하며, 접지 시각마다 평균 속도에서 어긋나던 앞뒤 발 움직임을 보정합니다. [모델·재측정 계약](native-enemy-models.md)을 따릅니다.
 
-`WarpTravel`은 수락·잠금·전환 시계를, `Exploration._complete_warp`는 실제 도착 재검증·공간 이동·회복·저장을 소유합니다. 워프 연출의 프레임 간격만 최대1/15초로 제한하고 전환 프레임은 완전 숨김으로 고정합니다. 플레이어 쿨다운·버프·회복은 실제 delta를 사용하며 워프 중 능동/주기 공격은 실행하지 않습니다. `NativeWarpFx`는 그 시계만 읽어 재사용하는 빛을 표시하고, [ActorWarpFade](../scripts/rendering/actor_warp_fade.gd)가 배우 전체 표시/재질 복원을 담당합니다. 매 출발에 현재 표면을 다시 읽고 Standard/ORM 등 `BaseMaterial3D`의 얕은 사본을 표면 간 공유하며 종료/취소에 재질·오버레이·그림자·표시 상태를 복원합니다. 텍스처는 복제하지 않습니다. 임의 ShaderMaterial·다중 패스·기본 재질은 알파 계약을 추측하지 않고 배우 전체를 동시에 숨김/표시하며 원본 표면을 바꾸지 않습니다. 이 경우 빛은 유지하지만 부드러운 배우 페이드는 적용하지 않습니다.
+`WarpTravel`은 수락·잠금·전환 시계를, `Exploration._complete_warp`는 실제 도착 재검증·공간 이동·회복·저장을 소유합니다. 워프 연출의 프레임 간격만 최대1/15초로 제한하고 전환 프레임은 완전 숨김으로 고정합니다. 플레이어 쿨다운·버프·회복은 실제 delta를 사용하며 워프 중 능동/주기 공격과 물약 사용은 실행하지 않습니다. `NativeWarpFx`는 그 시계만 읽어 재사용하는 빛을 표시하고, [ActorWarpFade](../scripts/rendering/actor_warp_fade.gd)가 배우 전체 표시/재질 복원을 담당합니다. 매 출발에 현재 표면을 다시 읽고 Standard/ORM 등 `BaseMaterial3D`의 얕은 사본을 표면 간 공유하며 종료/취소에 재질·오버레이·그림자·표시 상태를 복원합니다. 텍스처는 복제하지 않습니다. 임의 ShaderMaterial·다중 패스·기본 재질은 알파 계약을 추측하지 않고 배우 전체를 동시에 숨김/표시하며 원본 표면을 바꾸지 않습니다. 이 경우 빛은 유지하지만 부드러운 배우 페이드는 적용하지 않습니다.
 
 `MapPlaceRow`는 드래그 임계값을 넘긴 상태를 손을 뗄 때까지 유지합니다. 방향 반전·터치 취소·다른 손가락이 탭을 만들지 않으며 부모 목록의 스크롤을 막지 않습니다. `map_place_row_input`과 실제 터치 도구 `tools/check_map_touch.mjs`가 이를 검증합니다.
 

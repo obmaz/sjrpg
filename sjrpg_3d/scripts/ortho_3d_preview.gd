@@ -687,7 +687,7 @@ func _place_card(card: MeshInstance3D, at: Vector2, rect: Rect2, angle := 0.0, n
 
 ## 배우에 연결된 문자는 실제 발과 카메라 평면에서 띄운다. 사망 뒤에는 마지막 바닥을 쓴다.
 func _text_position(effect: Effect) -> Vector3:
-	if not effect.has_actor_text_anchor():
+	if not effect.has_text_ground_anchor():
 		return ground_position(effect.position, surface_height(effect.position))
 	var point := effect.text_ground_point()
 	var actor := effect.text_actor()
@@ -906,7 +906,7 @@ func _remember_frozen_sources() -> void:
 		var effect := candidate as Effect
 		if is_instance_valid(effect) and not effect.is_queued_for_deletion():
 			_watch_frozen(effect, ["position", "kind", "age", "life", "radius", "angle", "velocity",
-				"text", "color", "spatial_height", "spatial_floor_height", "params"])
+				"text", "color", "spatial_height", "spatial_floor_height", "_text_ground", "params"])
 
 
 func _frozen_sources_match() -> bool:
