@@ -68,3 +68,5 @@ python3 sjrpg_3d/tools/check_enemy_assets.py
 `tools/preview3d/render_enemy_pilot.tscn`은 종별 네 방향과 idle/run/attack/death를 같은 광원·직교 카메라로 촬영합니다. `--kinds=boar,skeleton,golem,cave_crawler --label=after`로 범위를 고를 수 있습니다. 실제 브라우저 가로/세로·타격·지역 전환도 확인하며 일회성 비교·측정은 루트 `build/`에 둡니다. 격리된 렌더나 헤드리스 검사만으로 스타일·실기기 성능이 승인됐다고 판단하지 않습니다.
 
 보행 측정은 `tools/godot.sh --headless res://tools/enemy_art/measure_stride.tscn -- --write --kinds=boar,cave_crawler`처럼 종을 지정할 수 있습니다. 지정하지 않으면 전체를 측정하며 독립 모델 교체에서는 자기 종만 갱신합니다.
+
+일반 적의 공격 준비는 실제 타이머를 읽는 작은 황금색 게이지로 표시합니다. 로컬 검수는 `tools/screenshot.mjs --scene enemy_wolf|enemy_goblin|enemy_skeleton`으로 실제 AI의 준비 순간을 확인합니다. 표시·중단·일시정지와 자원 재사용 계약은 [타격감](juice.md)을 따릅니다.

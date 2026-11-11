@@ -517,6 +517,15 @@ func refresh() -> void:
 	_was_paused = false
 
 
+## 피드백 표시가 살아 있는 GLB의 위쪽 이동을 읽는 경계. AI의 바닥/판정 높이는 유지한다.
+func enemy_pose_lift(enemy: Enemy) -> float:
+	if _enemy_models == null:
+		return 0.0
+	var model: Dictionary = _enemy_models.entries.get(enemy.get_instance_id(), {})
+	var visual: NativeEnemyVisual = model.get("visual")
+	return visual.pose_lift_metres() if is_instance_valid(visual) else 0.0
+
+
 func surface_height(point: Vector2) -> float:
 	# 소품/횃불은 물리 서버에 새 영역이 반영되기 전에도 같은 정적 높이를 읽는다.
 	var dungeon := game.get("dungeon") as DungeonRuntime

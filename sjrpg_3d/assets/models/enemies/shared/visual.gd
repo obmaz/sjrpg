@@ -14,6 +14,7 @@ var sample_time := 0.0
 var pose_updates := 0
 var moving := false
 var _prepared := false
+var _pose_root := -1
 @onready var hit_pivot: Node3D = $HitPivot
 
 
@@ -40,6 +41,18 @@ func prepare() -> void:
 	hit_pivot = get_node("HitPivot")
 	_collect(hit_pivot)
 	assert(animator != null and skeleton != null)
+	# 발 등 별도 루트가 있어도 몸체 코어의 부모 체인을 선택한다.
+	var cores: Array = manifest.get("body_core_bones", [])
+	if not cores.is_empty():
+		_pose_root = skeleton.find_bone(str(cores[0]))
+	if _pose_root >= 0:
+		while skeleton.get_bone_parent(_pose_root) >= 0:
+			_pose_root = skeleton.get_bone_parent(_pose_root)
+	else:
+		for bone in skeleton.get_bone_count():
+			if skeleton.get_bone_parent(bone) < 0:
+				_pose_root = bone
+				break
 	animator.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
 	animator.playback_default_blend_time = 0.0
 	animator.autoplay = ""
@@ -57,6 +70,17 @@ func prepare() -> void:
 				colors.append(ink.albedo_color)
 			mesh.set_surface_override_material(surface, cloned[id])
 	_prepared = true
+
+
+## 부모 없는 몸체 뼈의 위치는 Skeleton 좌표다. 표시의 도약 높이만 읽고 물리는 옮기지 않는다.
+func pose_lift_metres() -> float:
+	prepare()
+	if _pose_root < 0 or not skeleton.is_inside_tree():
+		return 0.0
+	var offset := (
+		skeleton.get_bone_pose_position(_pose_root) - skeleton.get_bone_rest(_pose_root).origin
+	)
+	return maxf(0.0, (skeleton.global_basis * offset).y)
 
 
 func advance_idle(delta: float, held: bool) -> void:

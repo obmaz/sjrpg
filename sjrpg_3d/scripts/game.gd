@@ -329,6 +329,8 @@ func _read_debug_params() -> void:
 			_reference_fx_preview.call_deferred(kv[1])
 		elif kv.size() == 2 and kv[0] == "gate_preview" and kv[1] in ["0", "1", "2", "3"]:
 			_gate_closure_preview.call_deferred(int(kv[1]))
+		elif kv.size() == 2 and kv[0] == "enemy_warning" and kv[1] in ["wolf", "goblin", "skeleton"]:
+			NativeEnemyReview.run.call_deferred(self, kv[1])
 		elif kv.size() == 2 and kv[0] == "corpse_preview" and kv[1] in ["1", "bridge", "terrace", "beasts"]:
 			_corpse_preview.call_deferred(kv[1])
 		elif kv.size() == 2 and kv[0] == "reward_preview" and kv[1] in ["1", "levelup"]:

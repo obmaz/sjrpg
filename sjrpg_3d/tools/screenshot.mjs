@@ -47,6 +47,10 @@ const SCENES = {
     dodge: 'at=field',
     corpses: 'corpse_preview=1',
     corpses_beasts: 'corpse_preview=beasts&zoom=0.95',
+    enemy_wolf: 'enemy_warning=wolf&zoom=1.25',
+    enemy_goblin: 'enemy_warning=goblin&zoom=1.25',
+    enemy_skeleton: 'enemy_warning=skeleton&zoom=0.95',
+    enemy_skeleton_close: 'enemy_warning=skeleton&zoom=1.25',
     corpses_bridge: 'corpse_preview=bridge&zoom=1.2',
     corpses_terrace: 'corpse_preview=terrace&zoom=1.1',
     rewards: 'reward_preview=1',
@@ -287,6 +291,11 @@ if (scene === 'defender') {
     }
 } else if (scene === 'warp_trip') {
     await page.waitForFunction(() => Array.isArray(window.__sjrpgWarpPreviewButton), null, {timeout: 30000});
+} else if (scene.startsWith('enemy_')) {
+    await page.waitForFunction(() => window.__sjrpgEnemyPreparationReady === true, null, {timeout: 30000});
+    await page.waitForFunction(() => window.__sjrpg3dProbe?.enemy_feedback?.preparations === 1, null, {timeout:15000});
+    console.log('ENEMY_PREPARATION '+JSON.stringify(await page.evaluate(()=>window.__sjrpg3dProbe.enemy_feedback)));
+    await page.waitForTimeout(300);
 } else if (scene.startsWith('corpses')) {
     await page.waitForFunction(() => window.__sjrpgCorpsePreviewReady === true, null, {timeout: 30000});
     await page.waitForTimeout(1500);
